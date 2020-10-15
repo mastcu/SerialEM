@@ -20,23 +20,28 @@
 #include "CorrectDefects.h"
 #include "parse_params.h"
 #include "b3dutil.h"
+#include "mxmlwrap.h"
 
 // Local functions
 static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth, 
                                UShortVec &partial, ShortVec &partWidth, UShortVec &startY,
                                UShortVec &endY, int upFac, int downFac, int addFac);
-
+static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac, 
+                                  int addFac);
 static void CorrectEdge(void *array, int type, int numBad, int taper, int length,
-                     int sumLength, int indStart, int stepAlong, int stepBetween);
+                        int sumLength, int indStart, int stepAlong, int stepBetween);
 static int RandomIntFillFromIntSum(int isum, int nsum);
 static int RandomIntFillFromFloat(float value);
-static void CorrectColumn(void *array, int type, int nx, int xstride, int ystride, 
-                       int indStart, int num, int ystart, int yend);
+static void CorrectColumn(void *array, int type, int nx, int ny, int xstride, int ystride,
+                          int indStart, int num, int ystart, int yend, int superFac,
+                          int numAvgSuper);
 static void CorrectPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
-                      int ypix, int useMean, float mean);
+                         int ypix, int useMean, float mean);
 static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
-                      int ypix, int useMean, float mean);
-static void CorrectPixels2Ways(CameraDefects *param, void *array, int type, int sizeX, 
+                              int ypix, int useMean, float mean);
+static void CorrectJumboPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
+                              int ypix, int useMean, float mean);
+static void CorrectPixels3Ways(CameraDefects *param, void *array, int type, int sizeX, 
                                int sizeY, int binning, int top, int left, int useMean, 
                                float mean);
 static int CheckIfPointInFullLines(int xx, UShortVec &columns, ShortVec &widths);
@@ -60,6 +65,7 @@ static void AddRowsOrColumns(int xmin, int xmax, int ymin, int ymax, int camSize
                              UShortVec &badPixelY);
 static void BadRowsOrColsToString(UShortVec &starts, ShortVec &widths, std::string &strng,
                                   std::string &strbuf, char *buf, const char *name);
+static void clearDefectList(CameraDefects &defects);
 
 /////////////////////////////////////////////////////////////
 // ACTUAL DEFECT CORRECTION ROUTINES
@@ -71,7 +77,7 @@ static void BadRowsOrColsToString(UShortVec &starts, ShortVec &widths, std::stri
 void CorDefCorrectDefects(CameraDefects *param, void *array, int type, 
                         int binning, int top, int left, int bottom, int right)
 {
-  int firstBad, numBad, i, badStart, badEnd, yStart, yEnd;
+  int firstBad, numBad, i, badStart, badEnd, yStart, yEnd, superFac = 0;
   int taper = 5;
   float mean, SD;
   int sizeX = right - left;
@@ -83,10 +89,15 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
   if (sumY > 50)
     sumY = 50;
   
+  if (param->FalconType && param->wasScaled == 1)
+    superFac = 2;
+  if (param->FalconType && param->wasScaled == 2)
+    superFac = 4;
+
   // If there are any pixels that should use mean, get the mean and correct them first
   if (param->pixUseMean.size()) {
     CorDefSampleMeanSD(array, type, sizeX, sizeY, &mean, &SD);
-    CorrectPixels2Ways(param, array, type, sizeX, sizeY, binning, top, left, 1, mean);
+    CorrectPixels3Ways(param, array, type, sizeX, sizeY, binning, top, left, 1, mean);
   }
 
   // Correct on the top
@@ -128,8 +139,8 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
     badStart = param->badColumnStart[i] / binning;
     badEnd = (param->badColumnStart[i] + param->badColumnWidth[i] - 1) / binning;
 
-    CorrectColumn(array, type, sizeX, 1, sizeX, badStart - left, 
-      badEnd + 1 - badStart, 0, sizeY - 1);
+    CorrectColumn(array, type, sizeX, sizeY, 1, sizeX, badStart - left, 
+                  badEnd + 1 - badStart, 0, sizeY - 1, superFac, param->numAvgSuperRes);
   }
 
   // Correct partial bad columns
@@ -143,8 +154,8 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
     if (yStart < sizeY && yEnd >= 0 && yStart <= yEnd) {
       yStart = B3DMAX(0, yStart);
       yEnd = B3DMIN(sizeY - 1, yEnd);
-      CorrectColumn(array, type, sizeX, 1, sizeX, badStart - left, 
-        badEnd + 1 - badStart, yStart, yEnd); 
+      CorrectColumn(array, type, sizeX, sizeY, 1, sizeX, badStart - left, 
+                    badEnd + 1 - badStart, yStart, yEnd, superFac,param->numAvgSuperRes); 
     }
   }
 
@@ -156,8 +167,8 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
     badStart = param->badRowStart[i] / binning;
     badEnd = (param->badRowStart[i] + param->badRowHeight[i] - 1) / binning;
 
-    CorrectColumn(array, type, sizeY, sizeX, 1, badStart - top, 
-      badEnd + 1 - badStart, 0, sizeX - 1);
+    CorrectColumn(array, type, sizeY, sizeX, sizeX, 1, badStart - top, 
+                  badEnd + 1 - badStart, 0, sizeX - 1, superFac, param->numAvgSuperRes);
   }
 
   // Correct partial bad rows
@@ -171,13 +182,13 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
     if (yStart < sizeX && yEnd >= 0 && yStart <= yEnd) {
       yStart = B3DMAX(0, yStart);
       yEnd = B3DMIN(sizeX - 1, yEnd);
-      CorrectColumn(array, type, sizeY, sizeX, 1, badStart - top, 
-        badEnd + 1 - badStart, yStart, yEnd); 
+      CorrectColumn(array, type, sizeY, sizeX, sizeX, 1, badStart - top, 
+                    badEnd + 1 - badStart, yStart, yEnd, superFac,param->numAvgSuperRes); 
     }
   }
 
   // Correct bad pixels with neighboring values
-  CorrectPixels2Ways(param, array, type, sizeX, sizeY, binning, top, left, 0, 0.);
+  CorrectPixels3Ways(param, array, type, sizeX, sizeY, binning, top, left, 0, 0.);
 }
 
 // Macro to get initial sum at beginning of last good row
@@ -339,12 +350,12 @@ static int RandomIntFillFromFloat(float value)
   }                                                                     \
   break;
 
-// This one uses up to 4 columns x 3 rows on each side to sample pixels with random
-// indexes, but still averages the two sides.  However, the averaging factor also
-// randomly varies from the linear ramp
+// This one uses up to 16 columns x 15 rows on one side to sample pixels with random
+// indexes, and randomly alternates between the two sides.  
 #define CORRECT_FIVE_PLUS_COL(c, a, b, d, e)                            \
   case c:                                                               \
-  if (ystart < fullStart) {                                             \
+  for (i = ystart; i < fullStart; i++, ind += yStride, indLeft += yStride, \
+         indRight += yStride) {                                         \
     fill = ((fLeft * ((d)a[indLeft] + a[indLeft + yStride] +            \
                       a[indLeft - xStride] + a[indLeft + yStride - xStride]) + \
              fRight * ((d)a[indRight] + a[indRight + yStride] +         \
@@ -358,18 +369,16 @@ static int RandomIntFillFromFloat(float value)
   for (i = fullStart; i <= fullEnd; i++, ind += yStride, indLeft += yStride, \
          indRight += yStride) {                                         \
     pseudo = (197 * (pseudo + 1)) & 0xFFFFF;                            \
-    flUse = fLeft + (ranFac * (float)(pseudo & 0x3FFFF) - maxVary);     \
-    B3DCLAMP(flUse, 0.f, 1.f);                                          \
-    frUse = 1.f - flUse;                                                \
-    iy1 = (pseudo >> 2) % 3;                                            \
-    ifx1 = (pseudo >> 4) & 3;                                           \
-    iy2 = (pseudo >> 6) % 3;                                            \
-    ifx2 = (pseudo >> 8) & 3;                                           \
-    fill = ((flUse * (float)(a[indLeft + (iy1 - 1) * yStride - ifx1 * xStride]) + \
-             frUse * (float)(a[indRight + (iy2 - 1) * yStride + ifx2 * xStride]))); \
+    iy1 = (pseudo >> 2) % 15;                                           \
+    ifx1 = (pseudo >> 6) & 15;                                          \
+    if (pseudo & 2048)                                                  \
+      fill = a[indLeft + (iy1 - 7) * yStride - ifx1 * xStride];         \
+    else                                                                \
+      fill = a[indRight + (iy1 - 7) * yStride + ifx1 * xStride];         \
     a[ind] = (b)e(fill);                                                \
   }                                                                     \
-  if (yend > fullEnd) {                                                 \
+  for (i = fullEnd + 1; i <= yend; i++, ind += yStride, indLeft += yStride, \
+         indRight += yStride) {                                         \
     fill = ((fLeft * ((d)a[indLeft - yStride] + a[indLeft] +            \
                       a[indLeft - xStride - yStride] + a[indLeft - xStride]) + \
              fRight * ((d)a[indRight - yStride] + a[indRight] +         \
@@ -379,20 +388,62 @@ static int RandomIntFillFromFloat(float value)
   }                                                                     \
   break;
 
+// Get the sum of the 2 or 4 pixels across the line and distribute the mean evenly
+// That is it for floats, but there is a remainder for the rest
+#define CAC_SUM_TWO(typ, sum, dat, men)                                 \
+  case typ:                                                             \
+  sum = dat[ind] + dat[ind + xStride];                                  \
+  men = sum / 2;                                                        \
+  dat[ind] = men;                                                       \
+  dat[ind + xStride] = men;                                             \
+  break;
+
+#define CAC_SUM_FOUR(typ, sum, dat, men)                                \
+  case typ:                                                             \
+  sum = dat[ind] + dat[ind + xStride] + dat[ind + 2 * xStride] +        \
+    dat[ind + 3 * xStride];                                             \
+  men = sum / 4;                                                        \
+  dat[ind] = men;                                                       \
+  dat[ind + xStride] = men;                                             \
+  dat[ind + 2 * xStride] = men;                                         \
+  dat[ind + 3 * xStride] = men;                                         \
+  break;
+
+// Randomly choose which pixel gets the remainder
+#define CAC_ADD_ONE_REM(typ, dat)                                       \
+  case typ:                                                             \
+  pseudo = (197 * (pseudo + 1)) & 0xFFFFF;                              \
+  ifx1 = (pseudo >> 2) & 1;                                             \
+  dat[ind + ifx1 * xStride]++;                                          \
+  break;
+
+#define CAC_ADD_REMAINDER(typ, dat)                                     \
+  case typ:                                                             \
+  for (i = 0; i < irem; i++) {                                          \
+    pseudo = (197 * (pseudo + 1)) & 0xFFFFF;                            \
+    ifx1 = (pseudo >> 2) & 3;                                           \
+    dat[ind + ifx1 * xStride]++;                                        \
+  }                                                                     \
+  break;
+
+
 // Correct a column defect which can be multiple columns
-static void CorrectColumn(void *array, int type, int nx, int xStride, int yStride, 
-                       int indStart, int num, int ystart, int yend)
+static void CorrectColumn(void *array, int type, int nx, int ny, int xStride, int yStride,
+                          int indStart, int num, int ystart, int yend, int superFac,
+                          int numAvgSuper)
 {
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
   float *fdata = (float *)array;
   unsigned char *bdata = (unsigned char *)array;
-  float fLeft, fRight, flUse, frUse, fill;
+  float fLeft, fRight, fill, fsum, fmean;
   static int pseudo = 456789;
   bool fivePlusOK;
-  int ind, i, col, indLeft, indRight, fullStart, fullEnd, ifx1, iy1, ifx2, iy2;
+  int ind, i, col, indLeft, indRight, fullStart, fullEnd, ifx1, iy1;
+  int irem, isum, imean, nloop, loop;
   float maxVary = 0.33f;
   float ranFac = maxVary / (float)0x1FFFF;
+  int sideStarts[2 * MAX_AVG_SUPER_RES];
   
   // Adjust indStart or num if on edge of image; return if nothing left
   if (indStart < 0) {
@@ -405,6 +456,60 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
 
   if (num <= 0)
     return;
+  
+  if (superFac > 0) {
+    nloop = 0;
+    for (i = 0; i < numAvgSuper; i++) {
+      indLeft = indStart - (i + 1) * superFac;
+      if (indLeft >= 0)
+        sideStarts[nloop++] = indLeft;
+      indLeft = indStart + num + i * superFac;
+      if (indLeft < nx)
+        sideStarts[nloop++] = indLeft;
+    }
+
+    for (loop = 0; loop < nloop; loop++) {
+      indLeft = sideStarts[loop];
+      if (superFac == 2) {
+        for (iy1 = ystart; iy1 <= yend; iy1++) {
+          ind = indLeft * xStride + iy1 * yStride;
+          switch (type) {
+            CAC_SUM_TWO(SLICE_MODE_BYTE, isum, bdata, imean);
+            CAC_SUM_TWO(SLICE_MODE_SHORT, isum, sdata, imean);
+            CAC_SUM_TWO(SLICE_MODE_USHORT, isum, usdata, imean);
+            CAC_SUM_TWO(SLICE_MODE_FLOAT, fsum, fdata, fmean);
+          }
+          if (type != SLICE_MODE_FLOAT) {
+            if (isum % 2) {
+              switch (type) {
+                CAC_ADD_ONE_REM(SLICE_MODE_BYTE, bdata);
+                CAC_ADD_ONE_REM(SLICE_MODE_SHORT, sdata);
+                CAC_ADD_ONE_REM(SLICE_MODE_USHORT, usdata);
+              }
+            }
+          }
+        }
+      } else {
+        for (iy1 = ystart; iy1 <= yend; iy1++) {
+          ind = indLeft * xStride + iy1 * yStride;
+          switch (type) {
+            CAC_SUM_FOUR(SLICE_MODE_BYTE, isum, bdata, imean);
+            CAC_SUM_FOUR(SLICE_MODE_SHORT, isum, sdata, imean);
+            CAC_SUM_FOUR(SLICE_MODE_USHORT, isum, usdata, imean);
+            CAC_SUM_FOUR(SLICE_MODE_FLOAT, fsum, fdata, fmean);
+          }
+          if (type != SLICE_MODE_FLOAT) {
+            irem = isum % 4;
+            switch (type) {
+              CAC_ADD_REMAINDER(SLICE_MODE_BYTE, bdata);
+              CAC_ADD_REMAINDER(SLICE_MODE_SHORT, sdata);
+              CAC_ADD_REMAINDER(SLICE_MODE_USHORT, usdata);
+            }
+          }
+        }
+      }
+    }
+  }
 
   for (col = 0; col < num; col++) {
     
@@ -419,7 +524,7 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
       indLeft = indRight;
     if (indRight >= nx)
       indRight = indLeft;
-    fivePlusOK = indLeft > 2 && indRight < nx - 3;
+    fivePlusOK = indLeft > 14 && indRight < nx - 15;
     indLeft *= xStride;
     indRight *= xStride;
     ind = (indStart + col) * xStride;
@@ -428,19 +533,16 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
     indRight += yStride * ystart;
     fullStart = ystart;
     fullEnd = yend;
-    if (!ystart)
-      fullStart++;
-    if (yend >= nx - 1)
-      fullEnd--;
+    if (ystart < 7)
+      fullStart += 7 - ystart;
+    if (yend >= ny - 7)
+      fullEnd -= yend + 8 - ny;
 
-    if (num >= 5 && yend - ystart >= 3 && fivePlusOK) {
+    if (num >= 3 && yend - ystart >= 15 && fivePlusOK) {
       switch (type) {
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_BYTE, bdata, unsigned char, int,
-                              RandomIntFillFromFloat);
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_SHORT, sdata, short int, int,
-                              RandomIntFillFromFloat);
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int,
-                              RandomIntFillFromFloat);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_BYTE, bdata, unsigned char, int, +);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_SHORT, sdata, short int, int, +);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int, +);
         CORRECT_FIVE_PLUS_COL(SLICE_MODE_FLOAT, fdata, float, float, +);
       }
     } else if (num >= 3 && yend - ystart >= 1) {
@@ -612,7 +714,9 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
     iy = ypix + idy[i];
     if (ix >= 0 && ix < nx && iy >= 0 && iy < ny) {
       nsum++;
-      if (type == SLICE_MODE_SHORT)
+      if (type == SLICE_MODE_BYTE) 
+        isum += bdata[ix + iy * nxdim];
+      else if (type == SLICE_MODE_SHORT)
         isum += sdata[ix + iy * nxdim];
       else if (type == SLICE_MODE_USHORT)
         isum += usdata[ix + iy * nxdim];
@@ -634,8 +738,131 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
     fdata[index] = fdata[index + 1] = fdata[ipn] = fdata[ipn + 1] = (float)(fsum / nsum);
 }
 
+// Macro to correct 16 pixels with random values from a sum of 64 surrounding ones
+#define CORRECT_JUMBO_PIXEL(swty, data, typ)                            \
+  case swty:                                                            \
+  for (i = 0 ; i < 64; i++) {                                           \
+    ix = xpix + idx[i];                                                 \
+    iy = ypix + idy[i];                                                 \
+    isum += data[ix + iy * nxdim];                                      \
+  }                                                                     \
+  for (iy = 0; iy < 4; iy++)                                            \
+    for (ix = 0; ix < 4; ix++)                                          \
+      data[index + ix + iy * nxdim] =                                   \
+        (typ)RandomIntFillFromIntSum(isum, 64);                         \
+  break;
+
+
+// Correct a single-pixel defect in super-res x4 image
+static void CorrectJumboPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
+                      int ypix, int useMean, float mean)
+{
+  short int *sdata = (short int *)array;
+  unsigned short int *usdata = (unsigned short int *)array;
+  float *fdata = (float *)array;
+  unsigned char *bdata = (unsigned char *)array;
+  int jdx[4] = {-4, 4, 0, 0};
+  int jdy[4] = {0, 0, -4, 4};
+  int idx[64], idy[64];
+  int isum = 0, nsum = 0;
+  float fsum = 0.f;
+  int ix, iy, jx, jy, i, index = xpix + ypix * nxdim;
+
+  if (useMean) {
+    if (type == SLICE_MODE_BYTE) {
+      for (iy = 0; iy < 4; iy++)
+        for (ix = 0; ix < 4; ix++)
+          bdata[index + ix + iy * nxdim] = (unsigned char)RandomIntFillFromFloat(mean);
+    } else if (type == SLICE_MODE_SHORT) {
+      for (iy = 0; iy < 4; iy++)
+        for (ix = 0; ix < 4; ix++)
+          sdata[index + ix + iy * nxdim] = (short)RandomIntFillFromFloat(mean);
+    } else if (type == SLICE_MODE_USHORT) {
+      for (iy = 0; iy < 4; iy++)
+        for (ix = 0; ix < 4; ix++)
+          usdata[index + ix + iy * nxdim] = (unsigned short)RandomIntFillFromFloat(mean);
+    } else {
+      for (iy = 0; iy < 4; iy++)
+        for (ix = 0; ix < 4; ix++)
+          fdata[index + ix + iy * nxdim] = mean;
+    }
+    return;
+  }
+
+
+  // Set up deltas
+  ix = 0;
+  for (i = 0 ; i < 4; i++) {
+    for (jy = 0; jy < 4; jy++) {
+      for (jx = 0; jx < 4; jx++) {
+        idx[ix] = xpix + jdx[i] + jx;
+        idy[ix++] = ypix + jdy[i] + jy;
+      }
+    }
+  }
+
+  
+  // Average 4 chip pixels around the point if they all exist
+  if (xpix > 5 && xpix < nx - 7 && ypix > 5 && ypix < ny - 7) {
+    switch (type) {
+      CORRECT_JUMBO_PIXEL(SLICE_MODE_BYTE, bdata, unsigned char);
+      CORRECT_JUMBO_PIXEL(SLICE_MODE_SHORT, sdata, short);
+      CORRECT_JUMBO_PIXEL(SLICE_MODE_USHORT, usdata, unsigned short);
+    case SLICE_MODE_FLOAT:
+      for (i = 0 ; i < 64; i++) {
+        ix = xpix + idx[i];
+        iy = ypix + idy[i];
+        fsum += fdata[ix + iy * nxdim];
+      }
+      fsum /= 64.;
+      for (iy = 0; iy < 4; iy++)
+        for (ix = 0; ix < 4; ix++)
+          fdata[index + ix + iy * nxdim] = fsum;
+      break;
+    }
+    return;
+  }
+  
+  // Or average whatever is there
+  for (i = 0 ; i < 64; i++) {
+    ix = xpix + idx[i];
+    iy = ypix + idy[i];
+    if (ix >= 0 && ix < nx && iy >= 0 && iy < ny) {
+      nsum++;
+      if (type == SLICE_MODE_BYTE) 
+        isum += bdata[ix + iy * nxdim];
+      else if (type == SLICE_MODE_SHORT)
+        isum += sdata[ix + iy * nxdim];
+      else if (type == SLICE_MODE_USHORT)
+        isum += usdata[ix + iy * nxdim];
+      else
+        fsum += fdata[ix + iy * nxdim];
+    }
+  }
+  
+  if (type == SLICE_MODE_BYTE) {
+    for (iy = 0; iy < 4; iy++)
+      for (ix = 0; ix < 4; ix++)
+        bdata[index + ix + iy * nxdim] =
+          (unsigned char)RandomIntFillFromIntSum(isum, nsum);
+  } else if (type == SLICE_MODE_SHORT) {
+    for (iy = 0; iy < 4; iy++)
+      for (ix = 0; ix < 4; ix++)
+        sdata[index + ix + iy * nxdim] = (short)RandomIntFillFromIntSum(isum, nsum);
+  } else if (type == SLICE_MODE_USHORT) {
+    for (iy = 0; iy < 4; iy++)
+      for (ix = 0; ix < 4; ix++)
+        usdata[index + ix + iy * nxdim] =
+          (unsigned short)RandomIntFillFromIntSum(isum, nsum);
+  } else {
+    for (iy = 0; iy < 4; iy++)
+      for (ix = 0; ix < 4; ix++)
+        fdata[index + ix + iy * nxdim] = (float)(fsum / nsum);
+  }
+}
+
 // Correct pixels with either the mean or with neighboring values
-static void CorrectPixels2Ways(CameraDefects *param, void *array, int type, int sizeX, 
+static void CorrectPixels3Ways(CameraDefects *param, void *array, int type, int sizeX, 
                                int sizeY, int binning, int top, int left, int useMean, 
                                float mean)
 {
@@ -646,6 +873,8 @@ static void CorrectPixels2Ways(CameraDefects *param, void *array, int type, int 
       xx = param->badPixelX[i] / binning - left;
       yy = param->badPixelY[i] / binning - top;
       if (xx >= 0 && yy >= 0 && xx < sizeX && yy < sizeY) {
+        if (param->wasScaled > 1)
+          CorrectJumboPixel(array, type, sizeX, sizeX, sizeY, xx, yy, useMean, mean); 
         if (param->wasScaled > 0 && binning == 1)
           CorrectSuperPixel(array, type, sizeX, sizeX, sizeY, xx, yy, useMean, mean); 
         else
@@ -704,9 +933,23 @@ float CorDefSurroundingMean(void *frame, int type, int nx, int ny, float truncLi
 // Scale defects for a K2 up or down by AND set the flag that it has been scaled
 void CorDefScaleDefectsForK2(CameraDefects *param, bool scaleDown)
 {
-  int i, upFac = scaleDown ? 1 : 2, downFac = scaleDown ? 2 : 1;
+  int upFac = scaleDown ? 1 : 2, downFac = scaleDown ? 2 : 1;
   int addFac = scaleDown ? 0 : 1;
   param->wasScaled = scaleDown ? -1 : 1;
+  ScaleDefectsByFactors(param, upFac, downFac, addFac);
+}
+
+// Scale defects for a Falcon up by 2 or 4 AND set the flag that it has been scaled
+// Factor MUST be 2 or 4
+void CorDefScaleDefectsForFalcon(CameraDefects *param, int factor)
+{
+  param->wasScaled = factor / 2;
+  ScaleDefectsByFactors(param, factor, 1, factor - 1);
+}
+
+static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac, 
+                                  int addFac)
+{
   param->usableTop = param->usableTop * upFac / downFac;
   param->usableLeft = param->usableLeft * upFac / downFac;
   param->usableBottom = param->usableBottom * upFac / downFac;
@@ -721,7 +964,7 @@ void CorDefScaleDefectsForK2(CameraDefects *param, bool scaleDown)
   ScaleRowsOrColumns(param->badRowStart, param->badRowHeight,
     param->partialBadRow, param->partialBadHeight, param->partialBadStartX, 
     param->partialBadEndX, upFac, downFac, addFac);
-  for (i = 0; i < (int)param->badPixelX.size(); i++) {
+  for (int i = 0; i < (int)param->badPixelX.size(); i++) {
     param->badPixelX[i] = param->badPixelX[i] * upFac / downFac;
     param->badPixelY[i] = param->badPixelY[i] * upFac / downFac;
   }
@@ -751,7 +994,9 @@ void CorDefFlipDefectsInY(CameraDefects *param, int camSizeX, int camSizeY, int 
   int pixelFlip, i, tmp, yflip = camSizeY - 1;;
   if (!wasScaled)
     wasScaled = param->wasScaled;
-  pixelFlip = camSizeY - (wasScaled > 0 ? 2 : 1);
+  pixelFlip = yflip;
+  if (wasScaled > 0)
+    pixelFlip = camSizeY - (wasScaled > 1 ? 4 : 2);
   tmp = param->usableBottom ? (yflip - param->usableBottom) : 0;
   param->usableBottom = param->usableTop ? (yflip - param->usableTop) : 0;
   param->usableTop = tmp;
@@ -777,7 +1022,9 @@ void CorDefRotateFlipDefects(CameraDefects &defects, int rotationFlip, int camSi
                              int camSizeY)
 {
   CameraDefects newDef;
-  int ind, xx1, xx2, yy1, yy2, operation = rotationFlip;
+  int ind, xx1, xx2, yy1, yy2, operation = rotationFlip, pixelAdd = 0;
+  if (defects.wasScaled > 0)
+    pixelAdd = defects.wasScaled > 1 ? 3 : 1;
   if (defects.rotationFlip == rotationFlip)
     return;
 
@@ -795,8 +1042,8 @@ void CorDefRotateFlipDefects(CameraDefects &defects, int rotationFlip, int camSi
 
     // For super-res, need the converted coordinates of the other corner of the cluster of
     // doubled pixels, then take the minimum of the operated result
-    xx2 = xx1 + (defects.wasScaled > 0 ? 1 : 0);
-    yy2 = yy1 + (defects.wasScaled > 0 ? 1 : 0);
+    xx2 = xx1 + pixelAdd;
+    yy2 = yy1 + pixelAdd;
     CorDefRotFlipCCDcoord(operation, camSizeX, camSizeY, xx1, yy1);
     CorDefRotFlipCCDcoord(operation, camSizeX, camSizeY, xx2, yy2);
     defects.badPixelX[ind] = B3DMIN(xx1, xx2);
@@ -914,12 +1161,13 @@ void CorDefFindTouchingPixels(CameraDefects &defects, int camSizeX, int camSizeY
 {
   std::map<unsigned int, int> pointMap;
   unsigned int mapKey;
-  int ind, xx, yy, xdiff, ydiff;
+  int ind, xx, yy, xdiff = 1, ydiff;
 
   if (!wasScaled)
     wasScaled = defects.wasScaled;
-  xdiff = wasScaled > 0 ? 2 : 1;
-  ydiff = 65536 * (wasScaled > 0 ? 2 : 1);
+  if (wasScaled > 0)
+    xdiff = wasScaled > 1 ? 4 : 2;
+  ydiff = 65536 * xdiff;
   
   defects.pixUseMean.clear();
 
@@ -1297,6 +1545,10 @@ void CorDefDefectsToString(CameraDefects &defects, std::string &strng, int camSi
   strng += buf;
   sprintf(buf, "K2Type %d\n", defects.K2Type);
   strng += buf;
+  sprintf(buf, "FalconType %d\n", defects.FalconType);
+  strng += buf;
+  sprintf(buf, "NumToAvgSuperRes %d\n", defects.numAvgSuperRes);
+  strng += buf;
   sprintf(buf, "UsableArea %d %d %d %d\n", defects.usableTop, defects.usableLeft,
     defects.usableBottom, defects.usableRight);
   strng += buf;
@@ -1374,29 +1626,8 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
   int ind, pipErr, numToGet, fullLen, nextInd, len, curInd = 0;
   bool endReached = false;
   const char *tab, *space, *nextEol;
-  defects.usableTop = 0;
-  defects.usableLeft = 0;
-  defects.usableBottom = 0;
-  defects.usableRight = 0;
-  defects.rotationFlip = 0;
   camSizeX = camSizeY = 0;
-  defects.wasScaled = 0;
-  defects.K2Type = 0;
-  defects.badColumnStart.clear();
-  defects.badColumnWidth.clear();
-  defects.partialBadCol.clear();
-  defects.partialBadWidth.clear();
-  defects.partialBadStartY.clear();
-  defects.partialBadEndY.clear();
-  defects.badRowStart.clear();
-  defects.badRowHeight.clear();
-  defects.partialBadRow.clear();
-  defects.partialBadHeight.clear();
-  defects.partialBadStartX.clear();
-  defects.partialBadEndX.clear();
-  defects.badPixelX.clear();
-  defects.badPixelY.clear();
-  defects.pixUseMean.clear();
+  clearDefectList(defects);
 
   if (!fromString) {
     fp = fopen(strng, "r");
@@ -1489,6 +1720,14 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
       if (!numToGet || pipErr)
         return 2;
       defects.K2Type = values[0];
+    } else if (!strncmp(buf, "FalconType", len)) {
+      if (!numToGet || pipErr)
+        return 2;
+      defects.FalconType = values[0];
+    } else if (!strncmp(buf, "NumToAvgSuperRes", len)) {
+      if (!numToGet || pipErr)
+        return 2;
+      defects.numAvgSuperRes = values[0];
     } else if (!strncmp(buf, "UsableArea", len)) {
       if (numToGet < 4 || pipErr)
         return 2;
@@ -1527,11 +1766,130 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
   }
   return 0;
 }
+static void clearDefectList(CameraDefects &defects)
+{
+  defects.usableTop = 0;
+  defects.usableLeft = 0;
+  defects.usableBottom = 0;
+  defects.usableRight = 0;
+  defects.rotationFlip = 0;
+  defects.wasScaled = 0;
+  defects.K2Type = 0;
+  defects.FalconType = 0;
+  defects.badColumnStart.clear();
+  defects.badColumnWidth.clear();
+  defects.partialBadCol.clear();
+  defects.partialBadWidth.clear();
+  defects.partialBadStartY.clear();
+  defects.partialBadEndY.clear();
+  defects.badRowStart.clear();
+  defects.badRowHeight.clear();
+  defects.partialBadRow.clear();
+  defects.partialBadHeight.clear();
+  defects.partialBadStartX.clear();
+  defects.partialBadEndX.clear();
+  defects.badPixelX.clear();
+  defects.badPixelY.clear();
+  defects.pixUseMean.clear();
+}
 
-#define SET_PIXEL(x, y) { ix = (x) + ixOffset;    \
+int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
+{
+  int xmlInd, num, startInd, err, tagInd, elemInd, numList;
+  char *rootElement, *value;
+  int *valList;
+  const char *tags[6] = {"row", "col", "area", "nonmaskingpoint", "point", 
+                         "nonmaskingpoint"};
+
+  clearDefectList(defects);
+  xmlInd = ixmlLoadString(strng, 0, &rootElement);
+  if (xmlInd < 0)
+    return xmlInd;
+  if (!rootElement || strcmp(rootElement, "defects")) {
+    free(rootElement);
+    ixmlClear(xmlInd);
+    return -4;
+  }
+  free(rootElement);
+
+  for (tagInd = 0; tagInd < 6; tagInd++) {
+    err = ixmlFindElements(xmlInd, 0, tags[tagInd], &startInd, &num);
+    if (err) {
+      ixmlClear(xmlInd);
+      return -err;
+    }
+
+    for (elemInd = 0; elemInd < num; elemInd++) {
+      err = ixmlGetStringValue(xmlInd, startInd + elemInd, &value);
+      if (err || !value) {
+        if (!err)
+          err = -5;
+        free(value);
+        ixmlClear(xmlInd);
+        return -err;
+      }
+
+      valList = parselist(value, &numList);
+      free(value);
+      if (!valList) {
+        ixmlClear(xmlInd);
+        return 6 - numList;
+      }
+ 
+      if (((tagInd == 2 || tagInd == 3) && numList != 4) || 
+          ((tagInd == 4 || tagInd == 5) && numList != 2)) {
+        free(valList);
+        ixmlClear(xmlInd);
+        return 10;
+      }
+      
+      err = valList[0];
+      switch (tagInd) {
+      case 0:
+        defects.badRowStart.push_back(valList[0]);
+        defects.badRowHeight.push_back(numList);
+        break;
+
+      case 1:
+        defects.badColumnStart.push_back(valList[0]);
+        defects.badColumnWidth.push_back(numList);
+        break;
+
+      case 2:
+      case 3:
+        if (valList[2] - valList[0] > valList[3] - valList[1]) {
+          defects.partialBadRow.push_back(valList[1]);
+          defects.partialBadHeight.push_back(1 + valList[3] - valList[1]);
+          defects.partialBadStartX.push_back(valList[0]);
+          defects.partialBadEndX.push_back(valList[2]);
+        } else {
+          defects.partialBadCol.push_back(valList[0]);
+          defects.partialBadWidth.push_back(1 + valList[2] - valList[0]);
+          defects.partialBadStartY.push_back(valList[1]);
+          defects.partialBadEndY.push_back(valList[3]);
+        }
+        break;
+
+      case 4:
+      case 5:
+        defects.badPixelX.push_back(valList[0]);
+        defects.badPixelY.push_back(valList[1]);
+        break;
+      }
+
+      free(valList);
+    }
+  }
+  defects.FalconType = 1;
+  B3DCLAMP(pad, 0, MAX_AVG_SUPER_RES);
+  defects.numAvgSuperRes = pad;
+  return 0;
+}
+
+#define SET_PIXEL(x, y, v) { ix = (x) + ixOffset;   \
     iy = (y) + iyOffset;                          \
     if (ix >= 0 && ix < nx && iy >= 0 && iy < ny) \
-      array[ix + iy * nx] = 1; }
+      array[ix + iy * nx] = v; }
 
 // Fill an array with a binary map (0 and 1) of all pixels contained in defects.  The 
 // camera size (after scaling, if any) is taken from the arguments rather than the defect
@@ -1539,14 +1897,18 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
 // the image is assumed to be centered on the camera, and defects at the edge are extended
 // if an image is oversized
 int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
-                          unsigned char *array, int nx, int ny)
+                          unsigned char *array, int nx, int ny, bool doFalconPad)
 {
-  int ix, iy, badX, badY, ind, row, col, xLowExtra, xHighExtra, yLowExtra, yHighExtra;
+  int jx, jy, badX, badY, ind, row, col, xLowExtra, xHighExtra, yLowExtra, yHighExtra;
+  int ix, iy;   // THESE ARE USED IN SET_PIXEL, DO NOT REUSE
   int ixOffset = (nx - camSizeX) / 2;
   int iyOffset = (ny - camSizeY) / 2;
+  int numPix = param->wasScaled > 1 ? 4 : 2;
   if (nx <= 0 || ny <= 0 || camSizeX <= 0 || camSizeY <= 0)
     return 1;
   memset(array, 0, nx * ny);
+  doFalconPad = doFalconPad && param->FalconType && param->numAvgSuperRes > 0 && 
+    param->wasScaled;
 
   // Get the limits for defects at edge if the image is oversized
   xLowExtra = 0;
@@ -1566,11 +1928,14 @@ int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
   for (ind = 0; ind < (int)param->badPixelX.size(); ind++) {
     badX = param->badPixelX[ind];
     badY = param->badPixelY[ind];
-    SET_PIXEL(badX, badY);
     if (param->wasScaled > 0) {
-      SET_PIXEL(badX + 1, badY);
-      SET_PIXEL(badX, badY + 1);    
-      SET_PIXEL(badX + 1, badY + 1);
+      for (jy = 0; jy < numPix; jy++) {
+        for (jx = 0; jx < numPix; jx++) {
+          SET_PIXEL(badX + jx, badY + jy, 1);
+        }
+      }
+    } else {
+      SET_PIXEL(badX, badY, 1);
     }
   }
 
@@ -1579,14 +1944,39 @@ int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
     for (ind = 0; ind < param->badColumnWidth[col]; ind++) {
       badX = param->badColumnStart[col] + ind;
       for (badY = yLowExtra; badY < yHighExtra; badY++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
+    }
+    if (doFalconPad) {
+      for (ind = 0; ind < param->numAvgSuperRes; ind++) {
+        badX = param->badColumnStart[col] - (ind + 1) * numPix;
+        if (badX >= 0)
+          for (badY = yLowExtra; badY < yHighExtra; badY++)
+            SET_PIXEL(badX, badY, MAP_COL_AVG_SUPER);
+        badX = param->badColumnStart[col] + param->badColumnWidth[col] + ind * numPix;
+        if (badX < nx)
+          for (badY = yLowExtra; badY < yHighExtra; badY++)
+            SET_PIXEL(badX, badY, MAP_COL_AVG_SUPER);
+      }
     }
   }
+
   for (row = 0; row < (int)param->badRowStart.size(); row++) {
     for (ind = 0; ind < param->badRowHeight[row]; ind++) {
       badY = param->badRowStart[row] + ind;
       for (badX = xLowExtra; badX < xHighExtra; badX++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
+    }
+    if (doFalconPad) {
+      for (ind = 0; ind < param->numAvgSuperRes; ind++) {
+        badY = param->badRowStart[row] - (ind + 1) * numPix;
+        if (badY >= 0)
+          for (badX = xLowExtra; badX < xHighExtra; badX++)
+            SET_PIXEL(badX, badY, MAP_ROW_AVG_SUPER);
+        badY = param->badRowStart[row] + param->badRowHeight[row] + ind * numPix;
+        if (badY < ny)
+          for (badX = xLowExtra; badX < xHighExtra; badX++)
+            SET_PIXEL(badX, badY, MAP_ROW_AVG_SUPER);
+      }
     }
   }
 
@@ -1596,7 +1986,21 @@ int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
       badX = param->partialBadCol[col] + ind;
       for (badY = param->partialBadStartY[col]; badY <= param->partialBadEndY[col];
            badY++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
+    }
+    if (doFalconPad) {
+      for (ind = 0; ind < param->numAvgSuperRes; ind++) {
+        badX = param->badColumnStart[col] - (ind + 1) * numPix;
+        if (badX >= 0)
+          for (badY = param->partialBadStartY[col]; badY <= param->partialBadEndY[col];
+               badY++)
+            SET_PIXEL(badX, badY, MAP_COL_AVG_SUPER);
+        badX = param->badColumnStart[col] + param->badColumnWidth[col] + ind * numPix;
+        if (badX < nx)
+          for (badY = param->partialBadStartY[col]; badY <= param->partialBadEndY[col];
+               badY++)
+            SET_PIXEL(badX, badY, MAP_COL_AVG_SUPER);
+      }
     }
   }
   
@@ -1605,7 +2009,21 @@ int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
       badY = param->partialBadRow[row] + ind;
       for (badX = param->partialBadStartX[row]; badX <= param->partialBadEndX[row]; 
            badX++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
+    }
+    if (doFalconPad) {
+      for (ind = 0; ind < param->numAvgSuperRes; ind++) {
+        badY = param->badRowStart[row] - (ind + 1) * numPix;
+        if (badY >= 0)
+          for (badX = param->partialBadStartX[row]; badX <= param->partialBadEndX[row]; 
+               badX++)
+            SET_PIXEL(badX, badY, MAP_ROW_AVG_SUPER);
+        badY = param->badRowStart[row] + param->badRowHeight[row] + ind * numPix;
+        if (badY < ny)
+          for (badX = param->partialBadStartX[row]; badX <= param->partialBadEndX[row]; 
+               badX++)
+            SET_PIXEL(badX, badY, MAP_ROW_AVG_SUPER);
+      }
     }
   }
 
@@ -1613,21 +2031,151 @@ int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
   if (param->usableLeft > 0)
     for (badX = xLowExtra; badX < param->usableLeft; badX++)
       for (badY = yLowExtra; badY < yHighExtra; badY++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
   if (param->usableRight > 0)
     for (badX = param->usableRight + 1; badX < xHighExtra; badX++)
       for (badY = yLowExtra; badY < yHighExtra; badY++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
   if (param->usableTop > 0)
     for (badY = yLowExtra; badY < param->usableTop; badY++)
       for (badX = xLowExtra; badX < xHighExtra; badX++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
   if (param->usableBottom > 0)
     for (badY = param->usableBottom + 1; badY < xHighExtra; badY++)
       for (badX = xLowExtra; badX < xHighExtra; badX++)
-        SET_PIXEL(badX, badY);
+        SET_PIXEL(badX, badY, 1);
   
   return 0;
+}
+
+// Expand a gain reference by a factor of 2 or 4 by simple replication of the value for a 
+// pixel for all the super-resolution pixels within it.
+void CorDefExpandGainReference(float *refIn, int nxIn, int nyIn, int factor,
+                               float *refOut)
+{
+  int ix, iy, nxOut = nxIn * factor;
+  float *fIn, *outLine, *fOut;
+  for (iy = nyIn - 1; iy >= 0; iy--) {
+    fIn = refIn + iy * nxIn;
+    fOut = outLine = refOut + (iy * factor + factor - 1) * nxOut;
+    if (factor == 2) {
+      for (ix = 0; ix < nxIn; ix++) {
+        *fOut++ = fIn[ix];
+        *fOut++ = fIn[ix];
+      }
+    } else {
+      for (ix = 0; ix < nxIn; ix++) {
+        *fOut++ = fIn[ix];
+        *fOut++ = fIn[ix];
+        *fOut++ = fIn[ix];
+        *fOut++ = fIn[ix];
+      }
+    }
+    memcpy(outLine - nxOut, outLine, nxOut * sizeof(float));
+    if (factor > 2) {
+      memcpy(outLine - 2 * nxOut, outLine, nxOut * sizeof(float));
+    memcpy(outLine - 3 * nxOut, outLine, nxOut * sizeof(float));
+    }
+  }
+}
+
+// Read a file of super-resolution gain adjustment factors and return an array
+// of bias arrays at a grid of positions.  The centers of the analyzed regions
+// start at xStart, yStart and have the given spacing.
+//
+int CorDefReadSuperGain(const char *filename, int superFac, 
+                        std::vector<std::vector<float> > &biases, int &numInX, 
+                        int &xStart, int &xSpacing, int &numInY, int &yStart,
+                        int &ySpacing)
+{
+  std::vector<float> bias4, bias16;
+  int scanRet, version, ix, iy, doneAtFac;
+  FILE *fp = fopen(filename, "r");
+  if (!fp)
+    return 1;
+  scanRet = fscanf(fp, "%d %d", &version, &doneAtFac);
+  if (scanRet == EOF)
+    return 2;
+  if (scanRet && scanRet < 2)
+    return 4;
+  if (version != 1 || (doneAtFac != 2 && doneAtFac != 4) || doneAtFac < superFac)
+    return 3;
+  scanRet = fscanf(fp, "%d %d %d %d %d %d", &numInX, &xStart, &xSpacing, &numInY, &yStart,
+                   &ySpacing);
+  if (scanRet == EOF)
+    return 2;
+  if (scanRet && scanRet < 6)
+    return 4;
+  biases.clear();
+  bias4.resize(4);
+  bias16.resize(16);
+  if (superFac != doneAtFac) {
+    xStart /= superFac / doneAtFac;
+    yStart /= superFac / doneAtFac;
+    xSpacing /= superFac / doneAtFac;
+    ySpacing /= superFac / doneAtFac;
+  }
+  for (iy = 0; iy < numInY; iy++) {
+    for (ix = 0; ix < numInX; ix++) {
+      scanRet = fscanf(fp, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f",
+                       &bias16[0], &bias16[1], &bias16[2], &bias16[3],
+                       &bias16[4], &bias16[5], &bias16[6], &bias16[7],
+                       &bias16[8], &bias16[9], &bias16[10], &bias16[11],
+                       &bias16[12], &bias16[13], &bias16[14], &bias16[15]);
+        if (scanRet == EOF)
+          return 2;
+      if (scanRet && scanRet < 16)
+        return 4;
+      scanRet = fscanf(fp, "%f %f %f %f", &bias4[0], &bias4[1], &bias4[2], &bias4[3]);
+        if (scanRet == EOF)
+          return 2;
+      if (scanRet && scanRet < 4)
+        return 4;
+      if (superFac == 2)
+        biases.push_back(bias4);
+      else
+        biases.push_back(bias16);
+    }
+  }
+  fclose(fp);
+  return 0;
+}
+
+
+// Multiply an expanded gain reference by super-resolution gain adjustment factors
+// superFac must be the same as when the file was read
+//
+void CorDefRefineSuperResRef(float *ref, int nx, int ny, int superFac, 
+                             std::vector<std::vector<float> > &biases, int numInX,
+                             int xStart, int xSpacing, int numInY, int yStart, 
+                             int ySpacing)
+{
+  int xdiv, ydiv, ix, iy, divInd, iy0, iy1, ix0, ix1, indBase, ixBase, ind;
+  int xbase = xSpacing / 2 - xStart;
+  int ybase = ySpacing / 2 - xStart;
+  float *bias;
+
+  // Loop on the divisions, find limits of pixels belonging to each
+  for (ydiv = 0; ydiv < numInY; ydiv++) {
+    iy0 = B3DMAX(0, yStart + ydiv * ySpacing - ySpacing / 2);
+    iy1 = B3DMIN(ny - 1, yStart + (ydiv + 1) * ySpacing - ySpacing / 2);
+    for (xdiv = 0; xdiv < numInX; xdiv++) {
+      ix0 = B3DMAX(0, xStart + xdiv * xSpacing - xSpacing / 2);
+      ix1 = B3DMIN(nx - 1, xStart + (xdiv + 1) * xSpacing - xSpacing / 2);
+      divInd = xdiv + ydiv * numInX;
+      bias = &biases[divInd][0];
+
+      // Loop on pixels, apply bias
+      for (iy = iy0; iy < iy1; iy++) {
+        indBase = superFac * (iy % superFac);
+        ixBase = iy * nx;
+        for (ix = ix0; ix < ix1; ix++) {
+          ind = ix % superFac + indBase;
+          ref[ix + ixBase] *= bias[ind];
+        }
+      }
+    }
+  }
 }
 
 // Find edges of an image that are dark because drift correction was done without filling
@@ -1649,50 +2197,36 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   int yStart = B3DMAX(0, ny / 2 - analyzeLen / 2);
   int xEnd = B3DMIN(nx, xStart + analyzeLen);
   int yEnd = B3DMIN(ny, yStart + analyzeLen);
-  bool isFloat = type == SLICE_MODE_FLOAT;
   unsigned short *usData, *usNext;
   short *sData, *sNext;
-  float maxBelow, ratioMedian, ratioMADN, minAbove, fLineSum, fDiffSum, fDiff;
-  float *lineMean, *diffMean, *diffSD, *diffRatio, *temp, *fData, *fNext;
-  float *fxLineSums = NULL, *fxDiffSums = NULL;
-  int *xLineSums = NULL, *xDiffSums = NULL;
+  float maxBelow, ratioMedian, ratioMADN, minAbove;
+  float *lineMean, *diffMean, *diffSD, *diffRatio, *temp;
+  int *xLineSums, *xDiffSums;
   double *xDiffSumSq;
 
-  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT && !isFloat)
+  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT)
     return 1;
   lineMean = B3DMALLOC(float, 4 * maxWidth);
   diffMean = B3DMALLOC(float, 4 * maxWidth);
   diffSD = B3DMALLOC(float, 4 * maxWidth);
   diffRatio = B3DMALLOC(float, 4 * maxWidth);
-  if (isFloat) {
-    fxLineSums = B3DMALLOC(float, 2 * maxWidth);
-    fxDiffSums = B3DMALLOC(float, 2 * maxWidth);
-  } else {
-    xLineSums = B3DMALLOC(int, 2 * maxWidth);
-    xDiffSums = B3DMALLOC(int, 2 * maxWidth);
-  }
+  xLineSums = B3DMALLOC(int, 2 * maxWidth);
+  xDiffSums = B3DMALLOC(int, 2 * maxWidth);
   xDiffSumSq = B3DMALLOC(double, 2 * maxWidth);
-  if (!lineMean || !diffMean || !diffSD || (!isFloat && (!xLineSums || !xDiffSums)) ||
-    (isFloat && (!fxLineSums || !fxDiffSums)) || !xDiffSumSq || !diffRatio) {
+  if (!lineMean || !diffMean || !diffSD || !xLineSums || !xDiffSums || !xDiffSumSq ||
+      !diffRatio) {
     B3DFREE(lineMean);
     B3DFREE(diffMean);
     B3DFREE(diffSD);
     B3DFREE(diffRatio);
     B3DFREE(xLineSums);
     B3DFREE(xDiffSums);
-    B3DFREE(fxLineSums);
-    B3DFREE(fxDiffSums);
     B3DFREE(xDiffSumSq);
     return 2;
   }
   temp = (float *)xDiffSumSq;
-  if (isFloat) {
-    memset(fxLineSums, 0, 2 * maxWidth * sizeof(float));
-    memset(fxDiffSums, 0, 2 * maxWidth * sizeof(float));
-  } else {
-    memset(xLineSums, 0, 2 * maxWidth * sizeof(int));
-    memset(xDiffSums, 0, 2 * maxWidth * sizeof(int));
-  }
+  memset(xLineSums, 0, 2 * maxWidth * sizeof(int));
+  memset(xDiffSums, 0, 2 * maxWidth * sizeof(int));
   memset(xDiffSumSq, 0, 2 * maxWidth * sizeof(double));
 
   // Do lines at Y levels, store their results first in arrays
@@ -1701,17 +2235,7 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
       iy = idir ? ny - 1 - wid : wid;
       lineSum = diffSum = 0;
       diffSumSq = 0.;
-      if (isFloat) {
-        fLineSum = fDiffSum = 0.;
-        fData = (float *)array + iy * nx;
-        fNext = fData + (1 - 2 * idir) * nx;
-        for (ix = xStart; ix < xEnd; ix++) {
-          fDiff = fNext[ix] - fData[ix];
-          fLineSum += fData[ix];
-          fDiffSum += fDiff;
-          diffSumSq += (double)fDiff * fDiff;
-        }
-      } else if (type == SLICE_MODE_SHORT) {
+      if (type == SLICE_MODE_SHORT) {
         sData = (short *)array + iy * nx;
         sNext = sData + (1 - 2 * idir) * nx;
         for (ix = xStart; ix < xEnd; ix++) {
@@ -1731,9 +2255,9 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
         }
       }
       ind = idir * maxWidth + wid;
-      sumsToAvgSDdbl((isFloat ? fDiffSum : (double)diffSum), diffSumSq, 1, xEnd - xStart,
-        &diffMean[ind], &diffSD[ind]);
-      lineMean[ind] = (isFloat ? fLineSum : (float)lineSum) / (float)(xEnd - xStart);
+      sumsToAvgSDdbl((double)diffSum, diffSumSq, 1, xEnd - xStart, &diffMean[ind],
+                     &diffSD[ind]);
+      lineMean[ind] = (float)lineSum / (float)(xEnd - xStart);
       diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
     }
   }
@@ -1743,17 +2267,7 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
     for (loop = 0; loop < 2; loop++) {
       idir = 1 - 2 * loop;
       ix = loop ? nx - 1: 0;
-      if (isFloat) {
-        fData = (float *)array + iy * nx;
-        for (wid = 0; wid < maxWidth; wid++) {
-          ind = wid + loop * maxWidth;
-          fDiff = fData[ix + idir] - fData[ix];
-          fxLineSums[ind] += fData[ix];
-          fxDiffSums[ind] += fDiff;
-          xDiffSumSq[ind] += (double)fDiff * fDiff;
-          ix += idir;
-        }
-      } else if (type == SLICE_MODE_SHORT) {
+      if (type == SLICE_MODE_SHORT) {
         sData = (short *)array + iy * nx;
         for (wid = 0; wid < maxWidth; wid++) {
           ind = wid + loop * maxWidth;
@@ -1780,10 +2294,9 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   // Get the mean and SD and ratio for each column
   for (wid = 0; wid < 2 * maxWidth; wid++) {
     ind = wid + 2 * maxWidth;
-    sumsToAvgSDdbl((isFloat ? fxDiffSums[wid] : (double)xDiffSums[wid]), xDiffSumSq[wid],
-      1, yEnd - yStart, &diffMean[ind], &diffSD[ind]);
-    lineMean[ind] = (isFloat ? fxLineSums[wid] : (float)xLineSums[wid]) / 
-      (float)(yEnd - yStart);
+    sumsToAvgSDdbl((double)xDiffSums[wid], xDiffSumSq[wid], 1, yEnd - yStart, 
+      &diffMean[ind], &diffSD[ind]);
+    lineMean[ind] = (float)xLineSums[wid] / (float)(yEnd - yStart);
     diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
   }
 
@@ -1834,8 +2347,6 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   B3DFREE(diffRatio);
   B3DFREE(xLineSums);
   B3DFREE(xDiffSums);
-  B3DFREE(fxLineSums);
-  B3DFREE(fxDiffSums);
   B3DFREE(xDiffSumSq);
   return 0;
 }
@@ -2001,12 +2512,27 @@ void CorDefSampleMeanSD(void *array, int type, int nxdim, int nx, int ny, int ix
   free(linePtrs);
 }
 
+// Handle initial scaling of a defect list for K2 or Falcon and deduce the binning
 int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &camSizeX,
                        int &camSizeY, int scaleDefects, float setBinning, int &useBinning,
                        const char *binOpt)
 {
   char bintext[8];
   bool scaledForK2;
+  int scaling;
+
+  // Falcon must always be unscaled and scaling by 2 or 4 is allowed with an exact match
+  if (defects.FalconType && (nxFull > camSizeX || nyFull > camSizeY)) {
+    if (defects.wasScaled > 1)
+      return 1;
+    scaling = B3DNINT(nxFull / camSizeX);
+    if (camSizeX * scaling != nxFull || camSizeY * scaling != nyFull || 
+        (scaling != 2 && scaling != 4))
+      return 1;
+    CorDefScaleDefectsForFalcon(&defects, scaling);
+    camSizeX *= scaling;
+    camSizeY *= scaling;
+  }
 
   // See if the defects need to be scaled up: a one-time error or action
   if (nxFull > camSizeX * 2 || nyFull > camSizeY * 2)
@@ -2036,7 +2562,8 @@ int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &ca
       else
         sprintf(bintext, "%d", useBinning);
       if (binOpt)
-        std::cout << "Assuming binning of " << bintext << " instead of a small subarea;" 
+        std::cout << "Assuming binning of " << bintext 
+                  << " for defect correction instead of a small subarea;" 
                   << std::endl << "    use the " << binOpt 
                   << " option to set a binning if this is" " incorrect." << std::endl;
     }

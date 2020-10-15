@@ -469,7 +469,8 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
     mFlagsForUnpadCall = (noisePadOnGpu ? GPU_DO_NOISE_TAPER : 0) |
       (binPadOnGpu ? GPU_DO_BIN_PAD : 0) | 
       (stackOnGpu ? STACK_FULL_ON_GPU : 0) |
-      ((stackOnGpu && gpuStackLimit > 0) ? GPU_STACK_LIMITED : 0);
+      ((stackOnGpu && gpuStackLimit > 0) ? GPU_STACK_LIMITED : 0) |
+      (gpuFlags & (GPU_AVG_SUPER_2X | GPU_AVG_SUPER_4X));
     sFgpuSetUnpaddedSize(nx, ny, mFlagsForUnpadCall, 
                          (mDebug ? 1 : 0) + (mReportTimes ? 10 : 0));
     if (!mGpuSumming || mDeferSumming)
@@ -675,7 +676,7 @@ void FrameAlign::cleanup()
  */
 int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
 {
-  int err = 0;
+  int err = 0, lastSlash;
 #if defined(_WIN32) && defined(DELAY_LOAD_FGPU)
   int lastErr = 0;
   struct _stat statbuf;
@@ -694,6 +695,9 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
         TCHAR dllPath[MAX_PATH];
         if (GetModuleFileName(thisModule, &dllPath[0], MAX_PATH)) {
           std::string hereStr = dllPath;
+          lastSlash = (int)hereStr.rfind('\\');
+          if (lastSlash >= 0)
+            hereStr.resize(lastSlash + 1);
           hereStr += "\\";
           hereStr += GPU_DLL_NAME;
           if (!_stat(hereStr.c_str(), &statbuf))
@@ -1062,7 +1066,7 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
         camSizeYforGPU /= 2;
       }
       CorDefFillDefectArray(&gpuDefects, camSizeXforGPU, camSizeYforGPU, defectMap, mNx,
-                            mNy);
+                            mNy, true);
     }
 
     // It tests for both defectMap and camSizeX, so no need to make it 0 if not preproc

@@ -23,26 +23,29 @@
 
 #define B3DMIN(a,b) ((a) < (b) ? (a) : (b))
 #define B3DMAX(a,b) ((a) > (b) ? (a) : (b))
-#define B3DCLAMP(a,b,c) a = B3DMAX((b), B3DMIN((c), (a)))
+#define B3DSIGN(a,b) ((b) < 0 ? -(a) : (a))
+#define B3DCLAMP(val,minv,maxv) val = B3DMAX((minv), B3DMIN((maxv), (val)))
 #define B3DNINT(a) (int)floor((a) + 0.5)
 #define B3DABS(a) ((a) >= 0 ? (a) : -(a))
-#define B3DFREE(a) {if (a) {free(a); a = NULL;}}
-#define B3DMALLOC(a,b) (a *)malloc((b) * sizeof(a))
-#define B3DREALLOC(a,b,c) a = (b *)realloc(a, (c) * sizeof(b))
-#define B3DSWAP(a,b,c) {c = (a); a = (b); b = c;}
-#define B3DCHOICE(a,b,c) ((a) ? (b) : (c))
-#define ACCUM_MAX(a, b) a = ((a) > (b) ? (a) : (b))
-#define ACCUM_MIN(a, b) a = ((a) < (b) ? (a) : (b))
+#define B3DFREE(a) {free(a); a = NULL;}
+#define B3DMALLOC(type,num) (type *)malloc((num) * sizeof(type))
+#define B3DREALLOC(var,type,num) var = (type *)realloc(var, (num) * sizeof(type))
+#define B3DSWAP(a,b,tmp) {tmp = (a); a = (b); b = tmp;}
+#define B3DCHOICE(test,ifT,ifF) ((test) ? (ifT) : (ifF))
+#define ACCUM_MAX(maxv, val) maxv = ((maxv) > (val) ? (maxv) : (val))
+#define ACCUM_MIN(minv, val) minv = ((minv) < (val) ? (minv) : (val))
 
 #define IMOD_MRC_STAMP 1146047817
 #define WRITE_SBYTES_DEFAULT 1
 #define WRITE_SBYTES_ENV_VAR "WRITE_MODE0_SIGNED"
 #define READ_SBYTES_ENV_VAR "READ_MODE0_SIGNED"
-#define MRC_FLAGS_SBYTES  1
-#define MRC_FLAGS_INV_ORIGIN 4
-#define MRC_FLAGS_BAD_RMS_NEG  8
-#define MRC_FLAGS_4BIT_BYTES  16
-#define INVERT_MRC_ORIGIN_DEFAULT 0
+#define MRC_FLAGS_SBYTES          1
+#define MRC_FLAGS_PIXEL_FROM_EXT  2
+#define MRC_FLAGS_INV_ORIGIN      4
+#define MRC_FLAGS_BAD_RMS_NEG     8
+#define MRC_FLAGS_4BIT_BYTES     16
+#define MRC_FLAGS_CTF_CORRECTED  32
+#define INVERT_MRC_ORIGIN_DEFAULT 1
 #define INVERT_MRC_ORIGIN_ENV_VAR "INVERT_MRC_ORIGIN"
 
 /* Duplicate definitions of output-capable IITYPE values to avoid including iimage.h */
@@ -84,6 +87,7 @@ extern "C" {
   char *f2cString(const char *str, int strSize);
   int c2fString(const char *cStr, char *fStr, int fSize);
   void b3dSetStoreError(int ival);
+  int b3dGetStoreError();
   void b3dError(FILE *stream, const char *format, ...);
   char *b3dGetError(void);
 
@@ -95,6 +99,8 @@ extern "C" {
   int mrcHugeSeek(FILE *fp, int base, int x, int y, int z, int nx, int ny, 
                   int dsize, int flag);
   int fgetline(FILE *fp, char s[],int limit);
+  /*int readLinesForValues(FILE *fp, float *values1, float *values2, int *numToGet,
+    int valSize, char *line, int maxLine);*/
 
   void b3dHeaderItemBytes(int *nflags, int *nbytes);
   int extraIsNbytesAndFlags(int nint, int nreal);
@@ -102,6 +108,8 @@ extern "C" {
   int numberInList(int num, int *list, int nlist, int noListValue);
   void balancedGroupLimits(int numTotal, int numGroups, int groupInd, int *start, 
                            int *end);
+  void groupLimitsRemainderAtEnd(int numTotal, int numGroups, int groupInd, int *start, 
+                                 int *end);
   unsigned char **makeLinePointers(void *array, int xsize, int ysize, int dsize);
 
   int b3dIMin(int narg, ...);
@@ -130,6 +138,7 @@ extern "C" {
   int numCoresAndLogicalProcs(int *physical, int *logical);
   int totalCudaCores(int major, int minor, int multiprocCount);
   double b3dPhysicalMemory();
+  double b3dAddressableMemory();
   char **expandArgList(const char **argVec, int numArg, int *newNum, int *ifAlloc,
                        int *noMatchInd);
   int replaceFileArgVec(const char ***argv, int *argc, int *firstInd, int *ifAlloc);

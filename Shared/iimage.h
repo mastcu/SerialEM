@@ -25,6 +25,7 @@ extern "C" {
 #define IIFILE_RAW     4
 #define IIFILE_HDF     5
 #define IIFILE_JPEG    6
+#define IIFILE_ADOC    7
 
   /* Values for the format member of ImodImageFile, describing kind data */
 #define IIFORMAT_LUMINANCE 0
@@ -56,13 +57,19 @@ extern "C" {
 #define IICOMPRESSION_JPEG  7
 #define IICOMPRESSION_ZIP   8
 
+  /* EER format supported compression codes */
+#define IICOMPRESSION_EER_8BIT  65000
+#define IICOMPRESSION_EER_7BIT  65001
+#define FEI_TIFF_DEFECT_TAG     65100
+
   /* Error codes, used by check routines */
-#define IIERR_BAD_CALL  -1
-#define IIERR_NOT_FORMAT 1
-#define IIERR_IO_ERROR   2
-#define IIERR_MEMORY_ERR 3
-#define IIERR_NO_SUPPORT 4
-#define IIERR_QUITTING   5
+#define IIERR_BAD_CALL   -1
+#define IIERR_NOT_FORMAT  1
+#define IIERR_IO_ERROR    2
+#define IIERR_MEMORY_ERR  3
+#define IIERR_NO_SUPPORT  4
+#define IIERR_QUITTING    5
+#define IIERR_NOT_PRESENT 6
 
   /* Codes for source of HDF files */
 #define IIHDF_IMOD       1
@@ -80,6 +87,12 @@ extern "C" {
   /* Flags for userData */
 #define IIFLAG_BYTES_SWAPPED   1
 #define IIFLAG_TVIPS_DATA      2
+
+  /* Flags for calling tiffEERsuperResAndFlags */
+#define IIFLAG_SKIP_EER_DIRS     1
+#define IIFLAG_ADD_TO_EER_SUM    2
+#define IIFLAG_START_END_EER_SUM 4
+
 /* END_CODE */
 
   /* DOC_CODE Raw mode codes */
@@ -151,11 +164,14 @@ extern "C" {
     int  anyTiffPixSize;     /* Set non-0 to have TIFF pixel size put into [xyz]scale */
     int  rawPaletteBytes;    /* Set non-zero to have palette image returned as bytes */
     int  tiffCompression;    /* Compression type in tiff file */
+    int  readEERasSuperRes;  /* Super-resolution factor when reading EER file */
+    int  numFramesInEERfile; /* Actual number of frames in file when autogrouping */
     int  tileSizeX;          /* Tile size in X, or 0 if no tiles */
     int  tileSizeY;          /* Tile size in Y if tiles, strip size if not */
     int  lastWrittenZ;       /* Last Z written, needed if sequential writing only */
     int  packed4bits;        /* Data in file are 4-bit, packed 2 pixels per byte */
     int fillOrder;           /* Fill order for the 4-bit data */
+    Ilist *directoryNums;    /* List of directory numbers for qualifying images in file */
 
     /* HDF variables */
     Ilist *stackSetList;     /* Names, ID's for stack of single-image datasets */
@@ -338,6 +354,8 @@ extern "C" {
   int tiffReopen(ImodImageFile *inFile);
   void tiffDelete(ImodImageFile *inFile);
   void tiffSetMapping(int value);
+  void tiffSetEERreadProperties(int superRes, int autogroup, int flags);
+  int tiffGetMaxEERsuperRes();
   void tiffAddDescription(const char *text);
   int tiffNumReadThreads(int nx, int ny, int compression, int maxThreads);
   int tiffParallelRead(ImodImageFile **fileCopies, int maxThreads, int llx, int urx,
@@ -363,6 +381,8 @@ extern "C" {
   int iiInitReadSectionAny(MrcHeader *hdata, IloadInfo *li, unsigned char *buf,
                            LineProcData *d, int *freeMap, int *yEnd, const char *caller);
   void iiBestTileSize(int imSize, int *tileSize, int *numTiles, int multipleOf);
+  void iiLimitedTileSize(int imSize, int *tileSize, int *numTiles, int multipleOf,
+                         int limit);
   int iiTestIfHDF(const char *filename);
 
   int iiJPEGCheck(ImodImageFile *inFile);
@@ -371,6 +391,7 @@ extern "C" {
                        int quality);
   int iiSimpleFillMrcHeader(ImodImageFile *inFile, MrcHeader *hdata);
 
+  int iiADOCCheck(ImodImageFile *inFile);
   /* This is here in case a program links with iiqimage */
   int iiQImageCheck(ImodImageFile *inFile);
 
@@ -381,6 +402,7 @@ extern "C" {
   void parWrtClose();
   int parWrtRecloseHDF(ImodImageFile *iiFile, MrcHeader *hdata);
   int parWrtFlushBuffers(ImodImageFile *iiFile, MrcHeader *hdata);
+  int parWrtToHDFchunk(ImodImageFile *iiFile, MrcHeader *hdata, void *buf, int section);
 
 #ifdef __cplusplus
 }

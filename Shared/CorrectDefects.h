@@ -16,15 +16,21 @@ typedef std::vector<float> FloatVec;
 #endif
 #endif
 
+#define MAX_AVG_SUPER_RES 4
+#define MAP_COL_AVG_SUPER 254
+#define MAP_ROW_AVG_SUPER 255
+
 struct CameraDefects
 {
   int wasScaled;           // flag for whether data have been scaled: 1 if up, -1 if down
   int rotationFlip;        // Rotation - flip value of these coordinates relative to CCD
   int K2Type;              // Flag that camera is K2
+  int FalconType;          // Flag that camera is Falcon
   int usableTop;           // Usable area, defined by first and last good rows and columns
   int usableLeft;
   int usableBottom;
   int usableRight;
+  int numAvgSuperRes;      // # of adjacent physical pixels to average super-res pixels in
   UShortVec badColumnStart;  // First column of each entry
   ShortVec badColumnWidth;  // Number of adjacent bad columns
   UShortVec partialBadCol;   // the partial starting column
@@ -47,6 +53,7 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type, int binni
 float CorDefSurroundingMean(void *frame, int type, int nx, int ny, float truncLimit,
                             int ix, int iy);
 void CorDefScaleDefectsForK2(CameraDefects *param, bool scaleDown);
+void CorDefScaleDefectsForFalcon(CameraDefects *param, int factor);
 void CorDefFlipDefectsInY(CameraDefects *param, int camSizeX, int camSizeY, int wasScaled);
 void CorDefMergeDefectLists(CameraDefects &defects, unsigned short *xyPairs, 
                             int numPoints, int camSizeX, int camSizeY, int rotationFlip);
@@ -79,9 +86,20 @@ void CorDefSampleMeanSD(void *array, int type, int nxdim, int nx, int ny, float 
 void CorDefSampleMeanSD(void *array, int type, int nx, int ny, float *mean, float *sd);
 int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects, 
                         int &camSizeX, int &camSizeY);
+int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad);
 int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &camSizeX,
                        int &camSizeY, int scaleDefects, float setBinning,
                        int &useBinning, const char *binOpt);
 int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
-                          unsigned char *array, int nx, int ny);
+                          unsigned char *array, int nx, int ny, bool doFalconPad);
+void CorDefExpandGainReference(float *refIn, int nxIn, int nyIn, int factor,
+                               float *refOut);
+int CorDefReadSuperGain(const char *filename, int superFac, 
+                        std::vector<std::vector<float> > &biases, int &numInX,
+                        int &xStart, int &xSpacing, int &numInY, int &yStart,
+                        int &ySpacing);
+void CorDefRefineSuperResRef(float *ref, int nx, int ny, int superFac, 
+                             std::vector<std::vector<float> > &biases, int numInX,
+                             int xStart, int xSpacing, int numInY, int yStart, 
+                             int ySpacing);
 #endif
