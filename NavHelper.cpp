@@ -1397,7 +1397,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
                                      ControlSet *conSet, int baseNum, BOOL hideLDoff) 
 {
   ControlSet *conSets = mWinApp->GetConSets();
-  int  binning, xFrame, yFrame, area;
+  int  binning, xFrame, yFrame, area, top, left, bottom, right;
   float defocus;
   StateParams stateParam;
   LowDoseParams *ldp;
@@ -1436,9 +1436,19 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
 
       // Save the conSet and modify it to the map parameters
       mSavedConset = conSets[mRIconSetNum];
-      StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
+      /*StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
         conSets[mRIconSetNum].left, conSets[mRIconSetNum].right, 
-        conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);
+        conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);*/
+      top = mSavedConset.top / binning;
+      left = mSavedConset.left / binning;
+      bottom = mSavedConset.bottom / binning;
+      right = mSavedConset.right / binning;
+      mCamera->AdjustSizes(xFrame, camP->sizeX, camP->moduloX, left, right, yFrame,
+        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera);
+      conSets[mRIconSetNum].top = top * binning;
+      conSets[mRIconSetNum].left = left * binning;
+      conSets[mRIconSetNum].bottom = bottom * binning;
+      conSets[mRIconSetNum].right = right * binning;
       conSets[mRIconSetNum].binning = binning;
 
       if (!mRIuseCurrentLDparams) {
