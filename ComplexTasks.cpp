@@ -103,6 +103,7 @@ CComplexTasks::CComplexTasks()
   mImBufs = mWinApp->GetImBufs();
   mMagStackInd = 0;
   mVerbose = false;
+  mUseTrialSize = false;
   mTotalDose = 0.;
   mOnAxisDose = 0.;
   mMinLMSlitWidth = 25;
@@ -420,14 +421,16 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
 
   // Set up control set for captures based on trial set
   *conSet = mConSets[baseConset];
-  conSet->left = 0;
-  conSet->right = camParam->sizeX;
-  conSet->top = 0;
-  conSet->bottom = camParam->sizeY;
+  if (!mUseTrialSize) {
+    conSet->left = 0;
+    conSet->right = camParam->sizeX;
+    conSet->top = 0;
+    conSet->bottom = camParam->sizeY;
+  }
   conSet->mode = SINGLE_FRAME;
   conSet->saveFrames = 0;
   conSet->doseFrac = 0;
-  int size = camParam->sizeX < camParam->sizeY ? camParam->sizeX : camParam->sizeY;
+  int size = B3DMIN(conSet->right - conSet->left, conSet->bottom - conSet->top);
 
   // loop until the binned image size reaches the target size
   while (size / conSet->binning > targetSize && !camParam->K2Type) {

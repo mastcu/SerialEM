@@ -81,6 +81,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, WalkSTEMfocusInterval);
   GetSetMember(int, EucenRestoreStageXY);
   GetMember(int, LowMagConSet);
+  GetSetMember(BOOL, UseTrialSize);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -153,6 +154,7 @@ class CComplexTasks : public CCmdTarget
   CShiftManager *mShiftManager;
   BOOL mVerbose;
   int mLowMagConSet;              // control used for low mag tracking shots
+  BOOL mUseTrialSize;             // Flag to use current trial size instead of full-field
 
   float mMinRSRAField;            // Minimum field size for reset-realign
   int mSavedMagInd[MAX_MAG_STACK];         // Mag at which procedure started
