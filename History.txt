@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/16/20: Fixed some broken functions in script processors.
+
+10/16/20: Made Realign to Item work with non-centered subarea when staying in
+low dose for alignments shots.
+
+10/16/20: Added property to use Trial size for tasks instead of full field.
+
 10/16/20: Improved detection of lens relaxation completion on JEOL (In 3.8).
 
 10/8/20: Fixed taking frames totalling more than with 4 Gpixels with Tietz
