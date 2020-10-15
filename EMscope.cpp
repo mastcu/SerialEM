@@ -306,6 +306,7 @@ CEMscope::CEMscope()
   mJeolSD.usePLforIS = false;
   mJeolSD.useCLA2forSTEM = false;
 
+  mJeolSD.relaxStartTime = mJeolSD.relaxEndTime = GetTickCount();
   mJeolSD.internalMagTime = -1.;
   mJeolSD.changedMagTime = -1.;
   mJeolSD.skipMagEventTime = 700;
@@ -3576,8 +3577,9 @@ BOOL CEMscope::SetMagIndex(int inIndex)
         if (ticks < mJeolSTEMPreMagDelay)
           Sleep(mJeolSTEMPreMagDelay - ticks);
       }
+      ticks = GetTickCount();
       PLUGSCOPE_SET(MagnificationIndex, inIndex);
-      WaitForLensRelaxation(RELAX_FOR_MAG);
+      WaitForLensRelaxation(RELAX_FOR_MAG, ticks);
 
     } else {  // FEIlike
 
@@ -5678,8 +5680,9 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
     }
 
     // Make final change to spot size
+    startTime = GetTickCount();
     PLUGSCOPE_SET(SpotSize, inIndex);
-    WaitForLensRelaxation(RELAX_FOR_SPOT);
+    WaitForLensRelaxation(RELAX_FOR_SPOT, startTime);
 
     // Wait for a beam shift to show up on Hitachi
     if (HitachiScope) {
@@ -5762,6 +5765,7 @@ int CEMscope::FastAlpha(void)
 BOOL CEMscope::SetAlpha(int inIndex)
 {
   BOOL result = true;
+  double startTime = GetTickCount();
   if (!sInitialized || mHasNoAlpha)
     return false;
 
@@ -5776,7 +5780,7 @@ BOOL CEMscope::SetAlpha(int inIndex)
     result = false;
   }
   ScopeMutexRelease("SetAlpha");
-  WaitForLensRelaxation(RELAX_FOR_ALPHA);
+  WaitForLensRelaxation(RELAX_FOR_ALPHA, startTime);
   return result;
 }
 
@@ -7273,37 +7277,43 @@ int CEMscope::GetSpectroscopyMode()
 
 // Waits for the lens relaxation events to come in that it has started and finished
 // on a JEOL after changing the given type of lens
-int CEMscope::WaitForLensRelaxation(int type)
+int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
 {
   double startTime;
-  BOOL state;
+  BOOL state, eventTime;
   if (!JEOLscope || !(type & sJeolRelaxationFlags))
     return 0;
   startTime = GetTickCount();
   while (SEMTickInterval(startTime) < sJeolStartRelaxTimeout) {
     SEMAcquireJeolDataMutex();
     state = sJeolSD->relaxingLenses;
+    eventTime = sJeolSD->relaxStartTime;
     SEMReleaseJeolDataMutex();
+    if (SEMTickInterval(eventTime, earliestTime) > 0.)
+      state = 1;
     if (state)
       break;
     Sleep(50);
   }
   if (!state) {
-    PrintfToLog("WARNING: Lens relaxation event not detected within %d msec timeout,"
-      " going on", sJeolStartRelaxTimeout);
+    PrintfToLog("%.3f: WARNING: Lens relaxation event not detected within %d msec "
+      "timeout, going on", SEMSecondsSinceStart(), sJeolStartRelaxTimeout);
     return 1;
   }
   while (SEMTickInterval(startTime) < sJeolEndRelaxTimeout) {
     SEMAcquireJeolDataMutex();
     state = sJeolSD->relaxingLenses;
+    eventTime = sJeolSD->relaxEndTime;
     SEMReleaseJeolDataMutex();
+    if (SEMTickInterval(eventTime, earliestTime) > 0.)
+      state = 0;
     if (!state)
       break;
     Sleep(50);
   }
   if (state) {
-    PrintfToLog("WARNING: End of lens relaxation not detected within %d msec, going on",
-      sJeolEndRelaxTimeout);
+    PrintfToLog("%.3f: WARNING: End of lens relaxation not detected within %d msec, "
+      "going on", SEMSecondsSinceStart(), sJeolEndRelaxTimeout);
     return 1;
   }
   return 0;

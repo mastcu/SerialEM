@@ -8250,9 +8250,10 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           SEMTrace('i', "PostMag setting raw IS %.3f %.3f", td->ISX, td->ISY);
 
         if (JEOLscope) {  // JEOL
+          dblStartTime = GetTickCount();
           td->scopePlugFuncs->SetMagnificationIndex(td->NewMagIndex);
           SEMSetJeolStateMag(td->NewMagIndex, true);
-          CEMscope::WaitForLensRelaxation(RELAX_FOR_MAG);
+          CEMscope::WaitForLensRelaxation(RELAX_FOR_MAG, dblStartTime);
           if (td->PostMagFixIS) {
             td->scopePlugFuncs->UseMagInNextSetISXY(td->NewMagIndex);
             td->scopePlugFuncs->SetImageShift(td->ISX, td->ISY);

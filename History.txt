@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/16/20: Improved detection of lens relaxation completion on JEOL (In 3.8).
+
 10/8/20: Fixed taking frames totalling more than with 4 Gpixels with Tietz
 burst mode (may work only with GPU version) (In 3.8).
 

@@ -460,7 +460,7 @@ class DLL_IM_EX CEMscope
   int GetMDSMode();
   BOOL SetSpectroscopyMode(int which);
   int GetSpectroscopyMode();
-  static int WaitForLensRelaxation(int type);
+  static int WaitForLensRelaxation(int type, double earliestTime);
   static void WaitForStageDone(StageMoveInfo *smi, char *procName);
 
   // General variables that need to be public
