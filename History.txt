@@ -8,6 +8,9 @@ significance.
 10/8/20: Fixed taking frames totalling more than with 4 Gpixels with Tietz
 burst mode (may work only with GPU version) (In 3.8).
 
+10/7/20: Converted script processor from using huge switch statement to using
+functions for commands.
+
 10/5/20: Fixed continuous mode for Tietz cameras with 32-bit EM-Menu (In 3.8).
 
 10/4/20: Fixed names of counting mode movies for newer DE servers (In 3.8).

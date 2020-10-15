@@ -255,6 +255,7 @@ class CMacCmd : public CMacroProcessor
   int ReportAccumShift(void);
   int ResetAccumShift(void);
   int ReportAlignTrimming(void);
+  int CameraToISMatrix(void);
   int ReportClock(void);
   int ResetClock(void);
   int ReportMinuteTime(void);
@@ -321,6 +322,7 @@ class CMacCmd : public CMacroProcessor
   int CompareNoCase(void);
   int StripEndingDigits(void);
   int MailSubject(void);
+  int SendEmail(void);
   int ClearAlignment(void);
   int ResetImageShift(void);
   int ResetShiftIfAbove(void);
@@ -353,6 +355,7 @@ class CMacCmd : public CMacroProcessor
   int ReportVacuumGauge(void);
   int ReportHighVoltage(void);
   int SetSlitWidth(void);
+  int SetEnergyLoss(void);
   int SetSlitIn(void);
   int RefineZLP(void);
   int SelectCamera(void);
@@ -397,6 +400,7 @@ class CMacCmd : public CMacroProcessor
   int RealignToNavItem(void);
   int RealignToMapDrawnOn(void);
   int GetRealignToItemError(void);
+  int ReportNavItem(void);
   int ReportItemAcquire(void);
   int SetItemAcquire(void);
   int NavIndexWithLabel(void);
@@ -464,6 +468,7 @@ class CMacCmd : public CMacroProcessor
   int RestoreFocus(void);
   int SaveBeamTilt(void);
   int RestoreBeamTilt(void);
+  int SelectPiezo(void);
   int ReportPiezoXY(void);
   int ReportPiezoZ(void);
   int MovePiezoXY(void);

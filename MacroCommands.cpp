@@ -125,7 +125,7 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"AutoFocus", 0, 0, &CMacCmd::AutoFocus}, {"Break", 0, 4, &CMacCmd::Break},
   {"Call", 1, 4, &CMacCmd::DoMacro}, {"CallMacro", 1, 4, &CMacCmd::DoMacro},
   {"CenterBeamFromImage", 0, 0, &CMacCmd::CenterBeamFromImage},
-  {"ChangeEnergyLoss", 1, 1, &CMacCmd::SetSlitWidth},
+  {"ChangeEnergyLoss", 1, 1, &CMacCmd::SetEnergyLoss},
   {"ChangeFocus", 1, 1, &CMacCmd::ChangeFocus},
   {"ChangeIntensityBy", 1, 1, &CMacCmd::SetIntensityByLastTilt},
   {"ChangeMag", 1, 1, &CMacCmd::ChangeMag},
@@ -166,8 +166,8 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ReportFocus", 0, 0, &CMacCmd::ReportFocus}, {"ReportMag", 0, 0, &CMacCmd::ReportMag},
   {"ReportMagIndex", 0, 0, &CMacCmd::ReportMagIndex},
   {"ReportMeanCounts", 0, 0, &CMacCmd::ReportMeanCounts},
-  {"ReportNavItem", 0, 0, &CMacCmd::GetRealignToItemError},
-  {"ReportOtherItem", 1, 0, &CMacCmd::GetRealignToItemError},
+  {"ReportNavItem", 0, 0, &CMacCmd::ReportNavItem},
+  {"ReportOtherItem", 1, 0, &CMacCmd::ReportNavItem},
   {"ReportPercentC2", 0, 0, &CMacCmd::ReportPercentC2},
   {"ReportShiftDiffFrom", 1, 0, &CMacCmd::ReportAlignShift},
   {"ReportSpotSize", 0, 0, &CMacCmd::ReportSpotSize},
@@ -188,7 +188,7 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"SetColumnOrGunValve", 1, 0, &CMacCmd::SetColumnOrGunValve},
   {"SetDefocus", 1, 0, &CMacCmd::SetDefocus},
   {"SetDirectory", 1, 6, &CMacCmd::SetDirectory},
-  {"SetEnergyLoss", 1, 0, &CMacCmd::SetSlitWidth},
+  {"SetEnergyLoss", 1, 0, &CMacCmd::SetEnergyLoss},
   {"SetExposure", 2, 0, &CMacCmd::SetExposure},
   {"SetIntensityByLastTilt", 0, 2, &CMacCmd::SetIntensityByLastTilt},
   {"SetIntensityForMean", 0, 0, &CMacCmd::SetIntensityByLastTilt},
@@ -224,7 +224,7 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ChangeMagAndIntensity", 1, 1, &CMacCmd::ChangeMagAndIntensity},
   {"OpenOldFile", 1, 4, &CMacCmd::OpenOldFile}, {"verbose", 1, 4, &CMacCmd::verbose},
   {"MailSubject", 1, 4, &CMacCmd::MailSubject},
-  {"SendEmail", 1, 0, &CMacCmd::MailSubject},
+  {"SendEmail", 1, 0, &CMacCmd::SendEmail},
   {"UpdateItemZ", 0, 4, &CMacCmd::UpdateItemZ},
   {"UpdateGroupZ", 0, 4, &CMacCmd::UpdateItemZ},
   {"ReportGroupStatus", 0, 0, &CMacCmd::ReportGroupStatus},
@@ -345,7 +345,7 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"SetJeolGIF", 1, 0, &CMacCmd::SetJeolGIF},
   {"TiltDuringRecord", 2, 1, &CMacCmd::TiltDuringRecord},
   {"SetLDContinuousUpdate", 1, 4, &CMacCmd::SetLDContinuousUpdate},
-  {"ErrorBoxSendEmail", 1, 4, &CMacCmd::MailSubject},
+  {"ErrorBoxSendEmail", 1, 4, &CMacCmd::SendEmail},
   {"ReportLastFrameFile", 0, 4, &CMacCmd::ReportCurrentFilename},
   {"Test", 1, 4, &CMacCmd::Test}, {"AbortIfFailed", 1, 4, &CMacCmd::Pause},
   {"PauseIfFailed", 0, 4, &CMacCmd::Pause},
@@ -442,14 +442,14 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"RestoreBeamTilt", 0, 0, &CMacCmd::RestoreBeamTilt},
   {"ReportComaVsISmatrix", 0, 0, &CMacCmd::ReportComaVsISmatrix},
   {"AdjustBeamTiltforIS", 0, 0, &CMacCmd::AdjustBeamTiltforIS},
-  {"LoadNavMap", 0, 0, &CMacCmd::GetRealignToItemError},
-  {"LoadOtherMap", 1, 0, &CMacCmd::GetRealignToItemError},
+  {"LoadNavMap", 0, 0, &CMacCmd::ReportNavItem},
+  {"LoadOtherMap", 1, 0, &CMacCmd::ReportNavItem},
   {"ReportLensFLCStatus", 1, 0, &CMacCmd::ReportLensFLCStatus},
   {"TestNextMultiShot", 1, 0, &CMacCmd::TestNextMultiShot},
   {"EnterString", 2, 4, &CMacCmd::EnterString},
   {"CompareStrings", 2, 4, &CMacCmd::CompareNoCase},
   {"CompareNoCase", 2, 4, &CMacCmd::CompareNoCase},
-  {"ReportNextNavAcqItem", 0, 4, &CMacCmd::GetRealignToItemError},
+  {"ReportNextNavAcqItem", 0, 4, &CMacCmd::ReportNavItem},
   {"ReportNumTableItems", 0, 4, &CMacCmd::ReportNumTableItems},
   {"ChangeItemColor", 2, 4, &CMacCmd::ChangeItemRegistration},
   {"ChangeItemLabel", 2, 4, &CMacCmd::ChangeItemRegistration},
@@ -568,18 +568,18 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ModifyFrameTSShifts", 3, 5, &CMacCmd::ModifyFrameTSShifts},
   {"ReplaceFrameTSFocus", 2, 4, &CMacCmd::ReplaceFrameTSFocus},
   {"ReplaceFrameTSShifts", 1, 4, &CMacCmd::ReplaceFrameTSFocus},
-  {"CameraToISMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"ISToCameraMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"CameraToStageMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"StageToCameraMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"CameraToSpecimenMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"SpecimenToCameraMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"ISToSpecimenMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"SpecimenToISMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"ISToStageMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"StageToISMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"StageToSpecimenMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
-  {"SpecimenToStageMatrix", 1, 4, &CMacCmd::ReportAlignTrimming},
+  {"CameraToISMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"ISToCameraMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"CameraToStageMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"StageToCameraMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"CameraToSpecimenMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"SpecimenToCameraMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"ISToSpecimenMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"SpecimenToISMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"ISToStageMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"StageToISMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"StageToSpecimenMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
+  {"SpecimenToStageMatrix", 1, 4, &CMacCmd::CameraToISMatrix},
   {"ReportISforBufferShift", 0, 0, &CMacCmd::ReportAlignShift},
   {"AlignWithRotation", 3, 0, &CMacCmd::AlignWithRotation}, {"Try", 0, 4, &CMacCmd::Try},
   {"Catch", 0, 4, &CMacCmd::Catch}, {"EndTry", 0, 4, &CMacCmd::EndTry},
@@ -4453,12 +4453,14 @@ int CMacCmd::ReportAlignTrimming(void)
     "Reference: %d %d", cIx0, cIx1, cIy0, cIy1);
   SetReportedValues(&mStrItems[1], cIx0, cIx1, cIy0, cIy1);
   return 0;
+}
 
-
-  // CameraToISMatrix,  ISToCameraMatrix, CameraToStageMatrix, StageToCameraMatrix,
-  // CameraToSpecimenMatrix, SpecimenToCameraMatrix, ISToSpecimenMatrix,
-  // SpecimenToISMatrix, ISToStageMatrix, StageToISMatrix,
-  // StageToSpecimenMatrix, SpecimenToStageMatrix
+// CameraToISMatrix,  ISToCameraMatrix, CameraToStageMatrix, StageToCameraMatrix,
+// CameraToSpecimenMatrix, SpecimenToCameraMatrix, ISToSpecimenMatrix,
+// SpecimenToISMatrix, ISToStageMatrix, StageToISMatrix,
+// StageToSpecimenMatrix, SpecimenToStageMatrix
+int CMacCmd::CameraToISMatrix(void)
+{
   cIndex = mItemInt[1];
   if (cIndex <= 0)
     cIndex = mScope->GetMagIndex();
@@ -5549,8 +5551,6 @@ int CMacCmd::ProgramTimeStamps(void)
 {
   mWinApp->AppendToLog(mWinApp->GetStartupMessage(mItemInt[1] != 0));
   return 0;
-
-  // IsVersionAtLeast, SkipIfVersionLessThan  break;
 }
 
 // IsVersionAtLeast, SkipIfVersionLessThan
@@ -5688,9 +5688,12 @@ int CMacCmd::MailSubject(void)
 {
   SubstituteVariables(&mStrLine, 1, mStrLine);
   mWinApp->mParamIO->StripItems(mStrLine, 1, mMailSubject);
-
   return 0;
-  // SendEmail, ErrorBoxSendEmail
+}
+
+// SendEmail, ErrorBoxSendEmail
+int CMacCmd::SendEmail(void)
+{
   SubstituteVariables(&mStrLine, 1, mStrLine);
   mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
   if (CMD_IS(SENDEMAIL)) {
@@ -6179,9 +6182,12 @@ int CMacCmd::SetSlitWidth(void)
   mWinApp->mFilterControl.UpdateSettings();
   mCamera->SetupFilter();
   UpdateLDAreaIfSaved();
-
   return 0;
-  // SetEnergyLoss, ChangeEnergyLoss
+}
+
+// SetEnergyLoss, ChangeEnergyLoss
+int CMacCmd::SetEnergyLoss(void)
+{
   if (mItemEmpty[1])
     ABORT_LINE(mStrItems[0] + " must be followed by a number in: \n\n");
   cDelISX = mItemDbl[1];
@@ -7011,65 +7017,68 @@ int CMacCmd::GetRealignToItemError(void)
   mNavHelper->GetLastStageError(cBacklashX, cBacklashY, cBmin, cBmax);
   SetReportedValues(&mStrItems[1], cBacklashX, cBacklashY, cBmin, cBmax);
   return 0;
+}
 
-  // ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap
-    ABORT_NONAV;
-    cTruth = CMD_IS(REPORTNEXTNAVACQITEM);
-    if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {
-      cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-      if (cIndex < 0)
-        ABORT_LINE("There is no current Navigator item for line:\n\n.");
-      cIndex2 = 1;
-    } else if (cTruth) {
-      if (!mNavigator->GetAcquiring())
-        ABORT_LINE("The Navigator must be acquiring for line:\n\n");
-      cNavItem = mNavigator->FindNextAcquireItem(cIndex);
-      if (cIndex < 0) {
-        mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
-        SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR, -1, false);
-        SetReportedValues(-1);
-      }
-    } else {
-      if (mItemInt[1] < 0) {
-        cIndex = mNavigator->GetNumNavItems() + mItemInt[1];
-      } else
-        cIndex = mItemInt[1] - 1;
-      cNavItem = mNavigator->GetOtherNavItem(cIndex);
-      if (!cNavItem)
-        ABORT_LINE("Index is out of range in statement:\n\n");
-      cIndex2 = 2;
+// ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap
+int CMacCmd::ReportNavItem(void)
+{
+  ABORT_NONAV;
+  cTruth = CMD_IS(REPORTNEXTNAVACQITEM);
+  if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {
+    cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
+    if (cIndex < 0)
+      ABORT_LINE("There is no current Navigator item for line:\n\n.");
+    cIndex2 = 1;
+  } else if (cTruth) {
+    if (!mNavigator->GetAcquiring())
+      ABORT_LINE("The Navigator must be acquiring for line:\n\n");
+    cNavItem = mNavigator->FindNextAcquireItem(cIndex);
+    if (cIndex < 0) {
+      mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
+      SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR, -1, false);
+      SetReportedValues(-1);
     }
+  } else {
+    if (mItemInt[1] < 0) {
+      cIndex = mNavigator->GetNumNavItems() + mItemInt[1];
+    } else
+      cIndex = mItemInt[1] - 1;
+    cNavItem = mNavigator->GetOtherNavItem(cIndex);
+    if (!cNavItem)
+      ABORT_LINE("Index is out of range in statement:\n\n");
+    cIndex2 = 2;
+  }
 
-    if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (cTruth && cIndex >= 0)) {
-      mLogRpt.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s",
-        cTruth ? "Next i" : "I", cIndex + 1, cNavItem->mStageX, cNavItem->mStageY,
-        cNavItem->mStageZ, (LPCTSTR)cNavItem->mLabel);
-      if (!cNavItem->mNote.IsEmpty())
-        mLogRpt += "\r\n    Note: " + cNavItem->mNote;
-      SetReportedValues(cIndex + 1., cNavItem->mStageX, cNavItem->mStageY,
-       cNavItem->mStageZ, (double)cNavItem->mType);
-      cReport.Format("%d", cIndex + 1);
-      SetVariable("NAVINDEX", cReport, VARTYPE_REGULAR, -1, false);
-      SetVariable("NAVLABEL", cNavItem->mLabel, VARTYPE_REGULAR, -1, false);
-      SetVariable("NAVNOTE", cNavItem->mNote, VARTYPE_REGULAR, -1, false);
-      SetVariable("NAVCOLOR", cNavItem->mColor, VARTYPE_REGULAR, -1, false);
-      SetVariable("NAVREGIS", cNavItem->mRegistration, VARTYPE_REGULAR, -1, false);
-      cIndex = atoi(cNavItem->mLabel);
-      cReport.Format("%d", cIndex);
-      SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR, -1, false);
-      if (mNavigator->GetAcquiring()) {
-        cReport.Format("%d", mNavigator->GetNumAcquired() + (cTruth ? 2 : 1));
-        SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR, -1, false);
-      }
-    } else if (!cTruth) {
-      if (cNavItem->mType != ITEM_TYPE_MAP)
-        ABORT_LINE("The Navigator item is not a map for line:\n\n");
-      if (ConvertBufferLetter(mStrItems[cIndex2], mBufferManager->GetBufToReadInto(),
-        false, cIx0, cReport))
-        ABORT_LINE(cReport);
-      mNavigator->DoLoadMap(false, cNavItem, cIx0);
-      mLoadingMap = true;
+  if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (cTruth && cIndex >= 0)) {
+    mLogRpt.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s",
+      cTruth ? "Next i" : "I", cIndex + 1, cNavItem->mStageX, cNavItem->mStageY,
+      cNavItem->mStageZ, (LPCTSTR)cNavItem->mLabel);
+    if (!cNavItem->mNote.IsEmpty())
+      mLogRpt += "\r\n    Note: " + cNavItem->mNote;
+    SetReportedValues(cIndex + 1., cNavItem->mStageX, cNavItem->mStageY,
+      cNavItem->mStageZ, (double)cNavItem->mType);
+    cReport.Format("%d", cIndex + 1);
+    SetVariable("NAVINDEX", cReport, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVLABEL", cNavItem->mLabel, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVNOTE", cNavItem->mNote, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVCOLOR", cNavItem->mColor, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVREGIS", cNavItem->mRegistration, VARTYPE_REGULAR, -1, false);
+    cIndex = atoi(cNavItem->mLabel);
+    cReport.Format("%d", cIndex);
+    SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR, -1, false);
+    if (mNavigator->GetAcquiring()) {
+      cReport.Format("%d", mNavigator->GetNumAcquired() + (cTruth ? 2 : 1));
+      SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR, -1, false);
     }
+  } else if (!cTruth) {
+    if (cNavItem->mType != ITEM_TYPE_MAP)
+      ABORT_LINE("The Navigator item is not a map for line:\n\n");
+    if (ConvertBufferLetter(mStrItems[cIndex2], mBufferManager->GetBufToReadInto(),
+      false, cIx0, cReport))
+      ABORT_LINE(cReport);
+    mNavigator->DoLoadMap(false, cNavItem, cIx0);
+    mLoadingMap = true;
+  }
   return 0;
 }
 
@@ -7323,47 +7332,47 @@ int CMacCmd::ReadNavFile(void)
 // ChangeItemRegistration, ChangeItemColor, ChangeItemLabel, ChangeItemNote
 int CMacCmd::ChangeItemRegistration(void)
 {
-    ABORT_NONAV;
-    cIndex = mItemInt[1];
-    cIndex2 = mItemInt[2];
-    cNavItem = mNavigator->GetOtherNavItem(cIndex - 1);
-    cReport.Format("The Navigator item index, %d, is out of range in:\n\n", cIndex);
-    if (!cNavItem)
+  ABORT_NONAV;
+  cIndex = mItemInt[1];
+  cIndex2 = mItemInt[2];
+  cNavItem = mNavigator->GetOtherNavItem(cIndex - 1);
+  cReport.Format("The Navigator item index, %d, is out of range in:\n\n", cIndex);
+  if (!cNavItem)
+    ABORT_LINE(cReport);
+  if (CMD_IS(CHANGEITEMREGISTRATION)) {
+    cReport.Format("The Navigator item with index %d is a registration point in:\n\n",
+      cIndex);
+    if (cNavItem->mRegPoint)
       ABORT_LINE(cReport);
-    if (CMD_IS(CHANGEITEMREGISTRATION)) {
-      cReport.Format("The Navigator item with index %d is a registration point in:\n\n",
-        cIndex);
-      if (cNavItem->mRegPoint)
+    if (mNavigator->ChangeItemRegistration(cIndex - 1, cIndex2, cReport))
+      ABORT_LINE(cReport + " in line:\n\n");
+  } else {
+    if (CMD_IS(CHANGEITEMCOLOR)) {
+      cReport.Format("The Navigator item color must be between 0 and %d in:\n\n",
+        NUM_ITEM_COLORS - 1);
+      if (cIndex2 < 0 || cIndex2 >= NUM_ITEM_COLORS)
         ABORT_LINE(cReport);
-      if (mNavigator->ChangeItemRegistration(cIndex - 1, cIndex2, cReport))
-        ABORT_LINE(cReport + " in line:\n\n");
-    } else {
-      if (CMD_IS(CHANGEITEMCOLOR)) {
-        cReport.Format("The Navigator item color must be between 0 and %d in:\n\n",
-          NUM_ITEM_COLORS - 1);
-        if (cIndex2 < 0 || cIndex2 >= NUM_ITEM_COLORS)
-          ABORT_LINE(cReport);
-        cNavItem->mColor = cIndex2;
-      } else if (CMD_IS(CHANGEITEMNOTE)) {
-        SubstituteVariables(&mStrLine, 1, mStrLine);
-        if (mItemEmpty[2])
-          mStrCopy = "";
-        else
-          mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
-        cNavItem->mNote = mStrCopy;
-      } else {
-        SubstituteVariables(&mStrLine, 1, mStrLine);
+      cNavItem->mColor = cIndex2;
+    } else if (CMD_IS(CHANGEITEMNOTE)) {
+      SubstituteVariables(&mStrLine, 1, mStrLine);
+      if (mItemEmpty[2])
+        mStrCopy = "";
+      else
         mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
-        cReport.Format("The Navigator label size must be no more than %d characters "
-          "in:\n\n", MAX_LABEL_SIZE);
-        if (mStrCopy.GetLength() > MAX_LABEL_SIZE)
-          ABORT_LINE(cReport);
-        cNavItem->mLabel = mStrCopy;
-      }
-      mNavigator->SetChanged(true);
-      mNavigator->UpdateListString(cIndex - 1);
-      mNavigator->Redraw();
+      cNavItem->mNote = mStrCopy;
+    } else {
+      SubstituteVariables(&mStrLine, 1, mStrLine);
+      mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+      cReport.Format("The Navigator label size must be no more than %d characters "
+        "in:\n\n", MAX_LABEL_SIZE);
+      if (mStrCopy.GetLength() > MAX_LABEL_SIZE)
+        ABORT_LINE(cReport);
+      cNavItem->mLabel = mStrCopy;
     }
+    mNavigator->SetChanged(true);
+    mNavigator->UpdateListString(cIndex - 1);
+    mNavigator->Redraw();
+  }
   return 0;
 }
 
@@ -8208,19 +8217,24 @@ int CMacCmd::RestoreBeamTilt(void)
 {
   cIndex = mScope->GetProbeMode();
   if (mBeamTiltXtoRestore[cIndex] < EXTRA_VALUE_TEST) {
-     cReport = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
+    cReport = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
       "restored already";
-     if (FEIscope)
-       cReport += " for " + CString(cIndex ? "micro" : "nano") + "probe mode";
-     ABORT_NOLINE(cReport);
+    if (FEIscope)
+      cReport += " for " + CString(cIndex ? "micro" : "nano") + "probe mode";
+    ABORT_NOLINE(cReport);
   }
   mScope->SetBeamTilt(mBeamTiltXtoRestore[cIndex], mBeamTiltYtoRestore[cIndex]);
   mNumStatesToRestore--;
   mBeamTiltXtoRestore[cIndex] = mBeamTiltYtoRestore[cIndex] = EXTRA_NO_VALUE;
   mCompensatedBTforIS = false;
   return 0;
+}
 
-  // PIEZO COMMANDS
+// PIEZO COMMANDS
+
+// SelectPiezo
+int CMacCmd::SelectPiezo(void)
+{
   if (mWinApp->mPiezoControl->SelectPiezo(mItemInt[1], mItemInt[2])) {
     AbortMacro();
     return 1;
