@@ -431,7 +431,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   if (sdCutoff < 0.)
     sdCutoff = mParams.SDcutoff;
   if (blackCutoff < 0.)
-    mParams.blackFracCutoff;
+    blackCutoff = mParams.blackFracCutoff;
   if (layoutType < 0)
     layoutType = mParams.layoutType;
   SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff);
