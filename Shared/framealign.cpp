@@ -676,37 +676,49 @@ void FrameAlign::cleanup()
  */
 int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
 {
-  int err = 0, lastSlash;
+  int err = 0;
 #if defined(_WIN32) && defined(DELAY_LOAD_FGPU)
-  int lastErr = 0;
-  struct _stat statbuf;
+  int ind, lastErr = 0, lastSlash;
+
+  // Try loading from current directory, from upper directory (for shrmemframe), and
+  // from Shrmemframe directory because there seemed to be a point where GMS 3.42 
+  // would not load from the current dir, but would from a subdir
+  const char *prefixDirs[] = {"", "..\\", "Shrmemframe\\"};
   *memory = 0.;
   if (mGpuLibLoaded == 0)
     return 0;
   if (mGpuLibLoaded < 0) {
-    sGpuModule = LoadLibrary(GPU_DLL_NAME);
-    if (!sGpuModule) {
-      lastErr = GetLastError();
-      if (lastErr == ERROR_MOD_NOT_FOUND) {
+    struct _stat statbuf;
+    HMODULE thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
+    TCHAR dllPath[MAX_PATH];
+    std::string absPathStr, hereStr;
 
-        // Look for the file in the current directory, if it IS there it is worthy of
-        // a message
-        HMODULE thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
-        TCHAR dllPath[MAX_PATH];
-        if (GetModuleFileName(thisModule, &dllPath[0], MAX_PATH)) {
-          std::string hereStr = dllPath;
-          lastSlash = (int)hereStr.rfind('\\');
-          if (lastSlash >= 0)
-            hereStr.resize(lastSlash + 1);
-          hereStr += "\\";
-          hereStr += GPU_DLL_NAME;
-          if (!_stat(hereStr.c_str(), &statbuf))
-            err = 1;
-        }
+    // Get the absolute path of the current plugin and strip off the plugin name
+    if (GetModuleFileName(thisModule, &dllPath[0], MAX_PATH)) {
+      absPathStr = dllPath;
+      lastSlash = (int)absPathStr.rfind('\\');
+      if (lastSlash >= 0)
+        absPathStr.resize(lastSlash);
+      absPathStr += '\\';
+    }
+
+    // Loop on the possibilities, first seeing if file exists, then trying to load it
+    for (ind = 0; ind < sizeof(prefixDirs) / sizeof(const char *); ind++) {
+      hereStr = absPathStr + prefixDirs[ind] + GPU_DLL_NAME;
+      if (!_stat(hereStr.c_str(), &statbuf)) {
+        sGpuModule = LoadLibrary(hereStr.c_str());
+        if (sGpuModule)
+          break;
+        lastErr = GetLastError();
+        utilPrint("Error %d occurred trying to load %s\n", lastErr, hereStr.c_str());
+        err = 1;
       }
-      if (err || lastErr != ERROR_MOD_NOT_FOUND)
-        utilPrint("GPU is not available: error %d occurred trying to load %s\n",
-                  lastErr, GPU_DLL_NAME);
+    }
+
+    // Give message on definite failure to load
+    if (!sGpuModule) {
+      if (err)
+        utilPrint("GPU is not directly available, SEMCCD could not load FrameGPU.dll\n");
       mGpuLibLoaded = 0;
       return 0;
     }

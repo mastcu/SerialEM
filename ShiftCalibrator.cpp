@@ -746,6 +746,7 @@ void CShiftCalibrator::ShiftDone()
       mat->ypy);
     mWinApp->AppendToLog(report, action);
     mScope->SetImageShift(mBaseISX, mBaseISY);
+    mSM->SetISTimeOut(mCalDelayFactor * mSM->GetLastISDelay());
     if (sqrt(delX0 * delX0 + delY0 * delY0) < 5. || 
       sqrt(delX2 * delX2 + delY2 * delY2) < 5.) {
         report.Format("The image displacement was less than 5 pixels in one of the two "
