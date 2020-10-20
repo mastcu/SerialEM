@@ -3,7 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-10/16/20: SEM_3-8-3
+10/18/20: SEM_3-8-3
+10/18/20: Fixed problems with builds of shrmemframe and FrameGPU which should
+fix GPU problems in multiple contexts; SEMCCD still fails to load FrameGPU in
+GMS 3.42, but shrmemframe will load a FrameGPU in the parent plugins directory
+and frame alignment can use the GPU under 3.42 through shared memory (In 3.8).
+
 10/16/20: Fixed lack of delay after image shift at end of first round of IS
 from Scratch, which caused drift in first image of second round (In 3.8).
 
