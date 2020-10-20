@@ -2285,6 +2285,7 @@ int CMacCmd::MultipleRecords(void)
     AbortMacro();
     return 1;
   }
+  SetReportedValues(-cIy1);
   return 0;
 }
 
@@ -5065,14 +5066,24 @@ int CMacCmd::ReportMeanCounts(void)
   if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
     ABORT_LINE(cReport);
   cImBuf = &mImBufs[cIndex];
-  cDelX = mWinApp->mProcessImage->WholeImageMean(cImBuf);
-  if (mStrItems[2] == "1" && cImBuf->mBinning && cImBuf->mExposure > 0.) {
-    cDelX /= cImBuf->mBinning * cImBuf->mBinning * cImBuf->mExposure *
-      mWinApp->GetGainFactor(cImBuf->mCamera, cImBuf->mBinning);
-    mLogRpt.Format("Mean of buffer %s = %.2f unbinned counts/sec", mStrItems[1], cDelX);
-  } else
-    mLogRpt.Format("Mean of buffer %s = %.1f", mStrItems[1], cDelX);
-  SetReportedValues(cDelX);
+  if (mItemEmpty[2] || mItemInt[2] < 2) {
+    cDelX = mWinApp->mProcessImage->WholeImageMean(cImBuf);
+    if (mStrItems[2] == "1" && cImBuf->mBinning && cImBuf->mExposure > 0.) {
+      cDelX /= cImBuf->mBinning * cImBuf->mBinning * cImBuf->mExposure *
+        mWinApp->GetGainFactor(cImBuf->mCamera, cImBuf->mBinning);
+      mLogRpt.Format("Mean of buffer %s = %.2f unbinned counts/sec", mStrItems[1], cDelX);
+    } else
+      mLogRpt.Format("Mean of buffer %s = %.1f", mStrItems[1], cDelX);
+    SetReportedValues(cDelX);
+  } else {
+    cImage = mImBufs[cIndex].mImage;
+    cImage->getSize(cSizeX, cSizeY);
+    ProcMinMaxMeanSD(cImage->getData(), cImage->getType(), cSizeX, cSizeY, 0,
+      cSizeX - 1, 0, cSizeY - 1, &cBmean, &cBmin, &cBmax, &cBSD);
+    mLogRpt.Format("Buffer %s: mean = %.1f  sd = %.2f  min = %.1f  max = %.1f",
+      mStrItems[1], cBmean, cBSD, cBmin, cBmax);
+    SetReportedValues(cBmean, cBSD, cBmin, cBmax);
+  }
   return 0;
 }
 
