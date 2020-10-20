@@ -988,6 +988,7 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
 }
 
 ///////////////////////////////////////////////////////
+    SetReportedValues(-iy1);
 
 void CMacroProcessor::AbortMacro()
 {

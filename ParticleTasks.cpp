@@ -177,7 +177,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (ItemIsEmptyMultishot(item)) {
       PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped", 
         (LPCTSTR)item->mLabel);
-      return -1;
+      return 0;
     }
   }
 
@@ -343,7 +343,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSLastHoleISX = mMSHoleISX[mMSNumHoles - 1];
   mMSLastHoleISY = mMSHoleISY[mMSNumHoles - 1];
 
-  return StartOneShotOfMulti();
+  ind = StartOneShotOfMulti();
+  if (ind)
+    return ind;
+  return -(mMSNumHoles * (mMSNumPeripheral + (mMSDoCenter ? 1 : 0)));
 }
 
 /*
