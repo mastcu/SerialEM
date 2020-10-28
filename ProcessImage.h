@@ -40,7 +40,9 @@ public:
                      int left, int bottom, int right, float absCrit,
                      float numSDCrit, int useBothCrit, BOOL verbose);
   float EquivalentRecordMean(int bufNum);
-  float ForeshortenedMean(int nufNum);
+  float ForeshortenedMean(int bufNum);
+  int ForeshortenedSubareaMean(int bufNum, float fracOrSizeX, float fracOrSizeY,
+    bool useShift, float &mean, CString *message);
   void GetFFT(int binning, int capFlag);
   void GetFFT(EMimageBuffer *imBuf, int binning, int capFlag);
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,

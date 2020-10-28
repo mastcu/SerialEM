@@ -782,6 +782,85 @@ float CProcessImage::ForeshortenedMean(int bufNum)
   return (float)retVal;
 }
 
+// Compute a mean of a tilt-foreshortened subarea of a specified size or fraction of the 
+// field, optionally applying stored shift
+int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX, 
+  float fracOrSizeY, bool useShift, float &mean, CString *message)
+{
+  EMimageBuffer *imBuf = &mImBufs[bufNum];
+  KImage *image = imBuf->mImage;
+  CameraParameters *camP = mWinApp->GetCamParams();
+  int nx, ny, nxuse, nyuse, ix0, ix1, iy0, iy1, ixShift, iyShift;
+  float tiltAngle, shiftX = 0., shiftY = 0.;
+  double factor;
+
+  // Check conditions: need camera and mag in buffer if doing fractions
+  if (!image) {
+    if (message)
+      *message = "There is no image in the buffer passed to ForeshortenedSubareaMean";
+    return 1;
+  }
+  if (imBuf->mCamera < 0 || imBuf->mMagInd <= 0 || 
+    (imBuf->mBinning <= 0 && (fracOrSizeX <= 1. || fracOrSizeY <= 0.))) {
+    if (message)
+      *message = "The image buffer is missing information needed to get the foreshorted "
+      "subarea mean";
+    return 1;
+  }
+  if (!imBuf->GetTiltAngle(tiltAngle)) {
+    if (message)
+      *message = "The image buffer passed to ForeshortenedSubareaMean has no stored tilt "
+      "angle";
+    return 1;
+  }
+
+  // Set up shifts if requested, and set up size to try to use
+  image->getSize(nx, ny);
+  if (useShift)
+    image->getShifts(shiftX, shiftY);
+  ixShift = B3DNINT(shiftX);
+  iyShift = B3DNINT(shiftY);
+  nxuse = B3DNINT(fracOrSizeY);
+  if (fracOrSizeY <= 1.)
+    nxuse = B3DNINT(fracOrSizeY * camP[imBuf->mCamera].sizeY / imBuf->mBinning);
+  nyuse = B3DNINT(fracOrSizeY);
+  if (fracOrSizeY <= 1.)
+    nyuse = B3DNINT(fracOrSizeY * camP[imBuf->mCamera].sizeY / imBuf->mBinning);
+  if (nxuse > nx || nyuse > ny) {
+    if (message)
+      message->Format("The specified subarea size (%d x %d) is bigger than the image"
+        "(%d x %d)", nxuse, nyuse, nx, ny);
+    return 1;
+  }
+
+  // reduce the size perpendicular to the nearest axis
+  factor = cos(DTOR * tiltAngle);
+  if (fabs(tan(DTOR * mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd)))
+    > 1.)
+    nxuse = B3DNINT(nxuse * factor);
+  else
+    nyuse = B3DNINT(nyuse * factor);
+  if (nxuse < 10 || nyuse < 10) {
+    if (message)
+      message->Format("The specified subarea is too small after foreshortening "
+        "(%d x %d)", nxuse, nyuse);
+    return 1;
+  }
+
+  // Get coordinate limits and make sure they are legal
+  ix0 = B3DMAX(0, (nx - nxuse) / 2 - ixShift);
+  ix1 = B3DMIN((nx + nxuse) / 2 - ixShift - 1, nx - 1);
+  iy0 = B3DMAX(0, (ny - nyuse) / 2 - iyShift);
+  iy1 = B3DMIN((ny + nyuse) / 2 - iyShift - 1, ny - 1);
+  image->Lock();
+  mean = (float)ProcImageMean(image->getData(), image->getType(), nx, ny, ix0, ix1, iy0,
+    iy1);
+  SEMTrace('1',"ForeshortenedSubareaMean using %d x %d, at %d, %d", ix1 + 1 - ix0, 
+    iy1 + 1 - iy0, (ix0 + ix1) / 2, (iy0 + iy1) / 2);
+  image->UnLock();
+  return 0;
+}
+
 void CProcessImage::OnProcessZerotiltmean() 
 {
   float mean;

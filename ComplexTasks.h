@@ -82,6 +82,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(int, EucenRestoreStageXY);
   GetMember(int, LowMagConSet);
   GetSetMember(BOOL, UseTrialSize);
+  GetSetMember(float, FESizeOrFracForMean);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -260,6 +261,7 @@ class CComplexTasks : public CCmdTarget
   int mFEIterationLimit;          // Allowed iterations of fine sequence
   int mFEIterationCount;          // Number of iterations
   double mFEMaxFineIS;            // Maximum image shift in fine
+  float mFESizeOrFracForMean;     // Frac or size of subarea to get foreshortened means
   float mCumMovedX;
   float mLastAxisOffset;          // Axis offset in last run of fine eucentricity
   BOOL mFEUseTrialInLD;           // Flag to use trial in low dose for fine eucentricity

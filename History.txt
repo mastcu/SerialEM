@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/28/20: Added property to get means of a subarea during the fine
+eucentricity routine.
+
 10/28/20: Extended "UsableAtMag" property to apply at all mags with a 0 mag
 index (In 3.8).
 

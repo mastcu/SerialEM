@@ -20,6 +20,7 @@
 #include "BeamAssessor.h"
 #include "TSController.h"
 #include "NavigatorDlg.h"
+#include "ProcessImage.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -155,6 +156,7 @@ CComplexTasks::CComplexTasks()
   mLastAxisOffset = -999.;
   mFEUseTrialInLD = false;
   mFEWarnedUseTrial = false;
+  mFESizeOrFracForMean = 0.;
   mZMicronsPerDialMark = 3.1f;
   mManualHitachiBacklash = 10.;
   mWalkUseViewInLD = false;
@@ -1594,6 +1596,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (!mImBufs->GetTiltAngle(angle))
       angle = (float)mFETargetAngles[mFEFineIndex];
     mFEFineAngles[mFEFineIndex] = angle;
+
     if (mFEFineIndex > 0) {
       mShiftManager->AutoAlign(1, 0);
       mImBufs->mImage->getShifts(shiftX, shiftY);
@@ -1611,7 +1614,16 @@ void CComplexTasks::EucentricityNextTask(int param)
     specY = cMat.ypx * ISX + cMat.ypy * ISY;
     mCumMovedX += movedX;
     mFEFineShifts[mFEFineIndex] = (float)specY;
-      
+
+    if (mFESizeOrFracForMean > 0.) {
+      if (mWinApp->mProcessImage->ForeshortenedSubareaMean(0, mFESizeOrFracForMean,
+        mFESizeOrFracForMean, true, delY, &report)) {
+        mWinApp->AppendToLog(report);
+      } else {
+        PrintfToLog("Mean of tilt-foreshortened subarea at %.1f = %.1f", angle, delY);
+      }
+    }
+
     report.Format("Angle = %.2f, shift = %.1f, %.1f pixels, %.3f, %.3f um"
       /*", Cumul, Y = %.3f"/*, %.3f*/", IS = %.3f, %.3f",
       mFEFineAngles[mFEFineIndex], shiftX, shiftY, movedX, movedY,
