@@ -8,7 +8,8 @@ Sensor Hardware ROI
 Auto Repeat Reference - Multiple Acquisitions
 Motion Correction   (before 2.1)
 Protection Cover Operation Mode
-Autosave Frames - Format
+Autosave Frames - Format (before 2.3)
+Autosave File Format (2.3 on)
 Temperature Control
 Camera Position Status
 Frames Per Second (Max)
@@ -46,7 +47,8 @@ Temperature - Detector (Celsius)
 Temperature Control
 Ignore Number of Frames
 Faraday Plate - Last Exposure Peak Density (pA/cm^2)
-Autosave Frames - Previous Dataset Name
+Autosave Frames - Previous Dataset Name (before 2.3)
+Autosave Previous Dataset Name (2.3 on)
 Autosave Movie - Correction Mode
 Autosave Movie - Pixel Depth
 Image Processing - Motion Correction

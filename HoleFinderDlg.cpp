@@ -718,6 +718,12 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     return 1;
   }
 
+  if (mParams.spacing < mParams.diameter + 0.5f) {
+    SEMMessageBox("The hole spacing is a center-to-center distance and must be at "
+      "least 0.5 micron bigger than the hole size");
+    return 1;
+  }
+
   // Get some sizes, get a nav item regardless of montage so it can be used as drawn on
   // and for registration and stage Z
   curDiam = mParams.diameter / mPixelSize;
@@ -1136,7 +1142,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   }
   mLastHoleSize = 0.01f * B3DNINT(100.f * 2.f * mBestRadius * mReduction * mPixelSize);
   mLastHoleSpacing = 0.01f * B3DNINT(100.f * mTrueSpacing * mPixelSize);
-  statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  sep: %.2f",
+  statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  spa: %.2f",
     formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd],
     numPoints, mLastHoleSize, mLastHoleSpacing);
   if (mIsOpen)

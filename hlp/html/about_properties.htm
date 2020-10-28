@@ -1556,8 +1556,10 @@
             and the&nbsp; top, left, bottom, and right coordinates of the last good column 
             or row, in unbinned pixels.&nbsp; The top and bottom entries can be set to 0 to 
             avoid limiting the Y dimension, or the left and right entries can be 0 to avoid 
-            limiting X.&nbsp; Each entry applies only at one magnification and currently has 
-            an effect only when setting up montages through Navigator.</TD>
+            limiting X.&nbsp; Each entry with a positive magnification index applies only at 
+            one magnification and currently has an effect only when setting up montages through
+             Navigator.&nbsp; Alternatively, you can make one entry with a magnification index
+             of 0 to limit the coordinates at all magnifications.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SubareasAreBad</TD>

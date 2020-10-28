@@ -122,7 +122,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
       // Update file format if no user value yet
       if (mFormatForAutoSave < 0) {
-        if (mDECamera->getStringProperty("Autosave Frames - Format", value)) {
+        if (mDECamera->getStringProperty(FileFormatProperty(), value)) {
           CComboBox   *correctComboBox = ((CComboBox *) GetDlgItem(ID_DE_autosaveF));
           temp_int = value == "TIFF" ? 0 : 1;
           correctComboBox->SetCurSel(temp_int);  //0==TIFF and 1==HDF5 or MRC
@@ -249,7 +249,7 @@ void DirectElectronToolDlg::ApplyUserSettings()
   if ((isDE12 || isSurvey) && mFormatForAutoSave >= 0) {
     B3DCLAMP(mFormatForAutoSave, 0, 1);
     ((CComboBox *) GetDlgItem(ID_DE_autosaveF))->SetCurSel(mFormatForAutoSave);
-    mDECamera->setStringProperty("Autosave Frames - Format", mFormatForAutoSave ? 
+    mDECamera->setStringProperty(FileFormatProperty(), mFormatForAutoSave ? 
       mHdfMrcSaveOption : "TIFF");
   }
   if (camParam->DE_FramesPerSec > 0) {
@@ -340,6 +340,12 @@ double DirectElectronToolDlg::GetFramesPerSecond(void)
   return atof(value);
 }
 
+const char * DirectElectronToolDlg::FileFormatProperty()
+{
+  static const char *names[2] = {"Autosave Frames - Format", "Autosave File Format"};
+  return names[mDECamera->GetServerVersion() >= DE_AUTOSAVE_RENAMES1 ? 1 : 0];
+}
+
 // Change the state the protection if it does not match the incoming state
 void DirectElectronToolDlg::SetProtectionCoverMode(int nIndex)
 {
@@ -394,7 +400,7 @@ void DirectElectronToolDlg::FormatChange()
   CComboBox  *corrComboBox = ((CComboBox *) GetDlgItem(ID_DE_autosaveF));
   int nIndex = corrComboBox->GetCurSel();
 
-  CString stringname = "Autosave Frames - Format";
+  CString stringname = FileFormatProperty();
   if (nIndex == 0) {
     mDECamera->setStringProperty(stringname, "TIFF");
   } else if (nIndex == 1) {

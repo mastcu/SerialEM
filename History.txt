@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/28/20: Extended "UsableAtMag" property to apply at all mags with a 0 mag
+index (In 3.8).
+
+10/28/20: In Hole Finder, required hole spacing to be at least 0.5 um more
+than the diameter (In 3.8).
+
+10/28/20: More property name changes for new DE server version (In 3.8).
+
+10/28/20: Fixed crash on starting program with a beam intensity calibration
+that is all zeros (In 3.8).
+
 10/20/20: Fixed MakeNavPointsAtHoles command (In 3.8).
 
 10/18/20: SEM_3-8-3

@@ -3485,7 +3485,8 @@ void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int camNum,
     LimitOneSizeToUsable(ysize, cam->sizeY, cam->defects.usableTop, 
     cam->defects.usableBottom, binning, cam->moduloY);
   for (ind = 0; ind < (int)mMontageLimits.GetSize(); ind++) {
-    if (mMontageLimits[ind].camera == camNum && mMontageLimits[ind].magInd == magInd) {
+    if (mMontageLimits[ind].camera == camNum && 
+      (mMontageLimits[ind].magInd == magInd || !mMontageLimits[ind].magInd)) {
       div = BinDivisorI(cam);
       if (mMontageLimits[ind].right)
         LimitOneSizeToUsable(xsize, cam->sizeX, div * mMontageLimits[ind].left, 

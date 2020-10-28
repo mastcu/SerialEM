@@ -84,4 +84,5 @@ public:
 	afx_msg void OnEnKillfocusDecoverdelay();
   afx_msg void FormatChange();
   double GetFramesPerSecond(void);
+  const char *FileFormatProperty();
 };

@@ -2849,7 +2849,7 @@ void CShiftManager::ListBeamShiftCals()
         MagForCamera(iCam, useMag));
     }
     str1 += str2;
-    PrintfToLog("%s", (LPCTSTR)str1);
+    mWinApp->AppendToLog(str1);
   }
 }
 

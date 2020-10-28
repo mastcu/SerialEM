@@ -52,6 +52,7 @@ CBeamAssessor::CBeamAssessor()
   mNumTables = 0;
   mNumDoseTables = 0;
   mFreeIndex = 0;
+  mStartIntensity = 0.;
   mBeamTables[0].intensities = &mAllIntensities[0];
   mBeamTables[0].currents = &mAllCurrents[0];
   mBeamTables[0].logCurrents = &mAllLogs[0];
@@ -2776,7 +2777,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
     &table, mCalTable);
   if (table.aboveCross / 2 == 0) {
     str2.Format(", aboveCross %d, start intensity %.5f, crossover %.5f", table.aboveCross,
-      mStartIntensity, mScope->GetCrossover(table.spotSize));
+      mStartIntensity, mWinApp->mScope->GetCrossover(table.spotSize));
     str += str2;
   }
   if (FEIscope)

@@ -1419,20 +1419,6 @@ BOOL CSerialEMApp::InitInstance()
   mScope->ReadProbeMode();
   mAlignFocusWindow.Update();
 
-  if (numMontSearchCopy) {
-    message = "The settings file did not have camera parameter sets for\r\n"
-      "Search and/or Montage-mapping.  New parameter sets for\r\n""Search"
-      " and Mont-map have been created from View and Record sets, respectively.\r\n\r\n"
-      "You can hide the Search set and use the View parameters for\r\n"
-      "Search by selecting the Camera menu item \"Use View for Search\".\r\n\r\n"
-      "The Mont-map set can selected to use for montaging instead\r\n"
-      "of Record; this could be useful for mapping.  You can hide\r\n"
-      "it by selecting the Camera menu item \"No Mont. Map Params\".";
-    AfxMessageBox(message, MB_OK | MB_ICONINFORMATION);
-    message = "\r\n" + message + "\r\n";
-    AppendToLog(message, LOG_SWALLOW_IF_CLOSED);
-  }
-
   // Zero the image shifts
   if (mScope->GetInitialized()) {
     BOOL doReset = !(JEOLscope && mScope->GetSTEMmode());

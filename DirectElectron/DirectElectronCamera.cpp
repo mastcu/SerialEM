@@ -2133,7 +2133,8 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
         mDeServer->getProperty(DE_PROP_AUTOMOVIE"Completed", &valStr);
     }
 
-    if (mDeServer->getProperty("Autosave Frames - Previous Dataset Name", 
+    if (mDeServer->getProperty(mServerVersion >= DE_AUTOSAVE_RENAMES1 ? 
+      "Autosave Previous Dataset Name" : "Autosave Frames - Previous Dataset Name",
       &valStr) && valStr.length() > 0) {
 
         // Valid name: return it and save the time and store the two numeric components
