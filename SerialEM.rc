@@ -3260,11 +3260,11 @@ BEGIN
     EDITTEXT        IDC_EDIT_THRESHOLDS,92,78,47,12,ES_AUTOHSCROLL
     CONTROL         "Exclude holes outside polygon",IDC_EXCLUDE_OUTSIDE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,29,108,10
-    LTEXT           "Hole size",IDC_STATIC,10,5,29,8
-    EDITTEXT        IDC_EDIT_HOLE_SIZE,40,3,22,12,ES_AUTOHSCROLL
-    LTEXT           "Spacing",IDC_STATIC,70,5,26,8
-    EDITTEXT        IDC_EDIT_SPACING,97,3,22,12,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATIC,120,5,25,8
+    RTEXT           "Hole size",IDC_STATIC,4,5,29,8
+    EDITTEXT        IDC_EDIT_HOLE_SIZE,35,3,20,12,ES_AUTOHSCROLL
+    RTEXT           "Periodicity",IDC_STATIC,58,5,33,8
+    EDITTEXT        IDC_EDIT_SPACING,93,3,20,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_UM_SIZE_SEP,114,5,36,8
     PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,4,102,40,12
     LTEXT           "",IDC_STAT_STATUS_OUTPUT,7,116,136,8
     CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,129,118,12
@@ -3298,7 +3298,7 @@ BEGIN
     PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_DATA,110,102,40,12
     CONTROL         "Bracket last filter/threshold values",IDC_BRACKET_LAST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,116,10
-    PUSHBUTTON      "Set Size/Spacing",IDC_BUT_SET_SIZE_SPACE,48,102,58,12
+    PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,102,56,12
 END
 
 IDD_MULTI_COMBINER DIALOGEX 0, 0, 122, 76
@@ -4348,7 +4348,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
-    IDC_BUT_SET_SIZE_SPACE  "Set size and spacing text boxes above with values from last hole-finding"
+    IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
 END
 
 STRINGTABLE
@@ -5945,7 +5945,7 @@ BEGIN
     IDC_EDIT_THRESHOLDS     "Enter one or more thresholds (small % value) to try for edge detection"
     IDC_EXCLUDE_OUTSIDE     "Look for an appropriate polygon to use as a boundary for points"
     IDC_EDIT_HOLE_SIZE      "Enter the nominal size of holes, in microns"
-    IDC_EDIT_SPACING        "Enter the nominal spacing between hole centers, in microns"
+    IDC_EDIT_SPACING        "Enter the nominal distance between hole centers, in microns"
     IDC_BUT_FIND_HOLES      "Run the hole-finding routine with given parameters"
     IDC_SLIDER_LOW_MEAN     "Select the mean intensity below which holes will be excluded"
     IDC_EDIT_LOWER_MEAN     "Enter the mean intensity below which holes will be excluded"

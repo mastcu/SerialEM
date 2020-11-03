@@ -45,6 +45,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_strMinSDcutoff(_T(""))
   , m_strMaxSDcutoff(_T(""))
   , m_strSDcutoff(_T(""))
+  , m_strUmSizeSep(_T("um"))
   , m_intSDcutoff(0)
   , m_strMinBlackPct(_T(""))
   , m_strMaxBlackPct(_T(""))
@@ -125,6 +126,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BRACKET_LAST, m_butBracketLast);
   DDX_Check(pDX, IDC_BRACKET_LAST, m_bBracketLast);
   DDX_Control(pDX, IDC_BUT_SET_SIZE_SPACE, m_butSetSizeSpace);
+  DDX_Text(pDX, IDC_STAT_UM_SIZE_SEP, m_strUmSizeSep);
 }
 
 
@@ -212,6 +214,7 @@ void CHoleFinderDlg::CloseWindow()
 void CHoleFinderDlg::OnKillfocusEditHoleSize()
 {
   UpdateData(true);
+  ManageSizeSeparation(true);
   mWinApp->RestoreViewFocus();
 }
 
@@ -219,6 +222,7 @@ void CHoleFinderDlg::OnKillfocusEditHoleSize()
 void CHoleFinderDlg::OnKillfocusEditSpacing()
 {
   UpdateData(true);
+  ManageSizeSeparation(true);
   mWinApp->RestoreViewFocus();
 }
 
@@ -314,6 +318,7 @@ void CHoleFinderDlg::OnButSetSizeSpace()
     return;
   m_fHolesSize = mLastHoleSize;
   m_fSpacing = mLastHoleSpacing;
+  ManageSizeSeparation(false);
   UpdateData(false);
 }
 
@@ -546,6 +551,7 @@ void CHoleFinderDlg::ParamsToDialog()
     mParams.upperMeanCutoff : 0.);
   m_fSpacing = mParams.spacing;
   m_fHolesSize = mParams.diameter;
+  ManageSizeSeparation(false);
   m_fMaxError = mParams.maxError;
   m_bExcludeOutside = mParams.useBoundary;
   m_bBracketLast = mParams.bracketLast;
@@ -596,6 +602,13 @@ void CHoleFinderDlg::ManageEnables()
   m_butInGroups.EnableWindow(mHaveHoles && mHelper->GetGridGroupSize() > 0);
   m_butMakeNavPts.EnableWindow(HaveHolesToDrawOrMakePts());
   UpdateData(false);
+}
+
+void CHoleFinderDlg::ManageSizeSeparation(bool update)
+{
+  m_strUmSizeSep.Format("um (%.1f/%.1f)", m_fHolesSize, m_fSpacing - m_fHolesSize);
+  if (update)
+    UpdateData(false);
 }
 
 // New settings: copy master params, send to dialog
@@ -1142,7 +1155,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   }
   mLastHoleSize = 0.01f * B3DNINT(100.f * 2.f * mBestRadius * mReduction * mPixelSize);
   mLastHoleSpacing = 0.01f * B3DNINT(100.f * mTrueSpacing * mPixelSize);
-  statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  spa: %.2f",
+  statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  per: %.2f",
     formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd],
     numPoints, mLastHoleSize, mLastHoleSpacing);
   if (mIsOpen)

@@ -180,8 +180,12 @@ void CAutocenSetupDlg::PostNcDestroy()
 BOOL CAutocenSetupDlg::PreTranslateMessage(MSG* pMsg)
 {
   //PrintfToLog("message %d  keydown %d  param %d return %d", pMsg->message, WM_KEYDOWN, pMsg->wParam, VK_RETURN);
-  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+  // This one restores focus to the main window because when the exposure edit box loses
+  // foucs, it does NOT restore view focus
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN) {
     SetFocus();
+    mWinApp->RestoreViewFocus();
+  }
   return CDialog::PreTranslateMessage(pMsg);
 }
 
@@ -300,7 +304,9 @@ void CAutocenSetupDlg::OnKillfocusEditExposure()
     UpdateData(false);
   }
 
-  mWinApp->RestoreViewFocus();
+  // For unknown reasons, this one edit box can't restore focus because that tosses the
+  // focus right back to it and other controls don't work well or at all
+  //mWinApp->RestoreViewFocus();
 }
 
 // Bigger/smaller buttons

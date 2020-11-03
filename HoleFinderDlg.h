@@ -15,6 +15,7 @@ public:
 	CHoleFinderDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CHoleFinderDlg();
   void ManageEnables();
+  void ManageSizeSeparation(bool update);
   void UpdateSettings();
   bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<bool> **exclude,
     BOOL &incl, BOOL &excl);
@@ -153,6 +154,7 @@ public:
   afx_msg void OnRadioLayoutType();
   CButton m_butMakeNavPts;
   afx_msg void OnButMakeNavPts();
+  CString m_strUmSizeSep;
 
 private:
   void DialogToParams();

@@ -23,7 +23,7 @@
       This edge image is correlated with a series of circular templates to determine 
       the best size, preliminary positions are found, the edge image is averaged over 
       the positions with the strongest correlations, and this average edge template is 
-      correlated with the edge image.&nbsp; Positions are then analyzed for whether 
+      correlated with the edge image.&nbsp; Positions are then analyzed for whether they
       are at regular spacings and angles with respect to each other.&nbsp; The actual 
       reduced image is then averaged at most of the found positions and the resulting 
       image template is correlated with the reduced image.&nbsp; The positions from 
@@ -43,10 +43,10 @@
       position on a specific montage piece that can be used with the Realign to Item 
       routine.&nbsp; This method can overcome the deficiencies in the alignment of 
       pieces in the overview image, provided that the error in alignment of adjacent 
-      pieces is less than half&nbsp; the spacing between holes.&nbsp; If the error is 
+      pieces is less than half&nbsp; the periodicity of the holes.&nbsp; If the error is 
       larger than this, the program will not be able to resolve positions between the 
       pieces accurately, and some holes will be missed or duplicated.</p>
-    <p>When an overview has bad piece alignments (half a hole spacing or more), tyou 
+    <p>When an overview has bad piece alignments (half a hole periodicity or more), you 
       need to get an overview with less error, not a perfect alignment. The recourse 
       is:</p>
     <ol>
@@ -76,17 +76,19 @@
       Enter the size of the holes in microns.&nbsp; This needs to be accurate to 
       within ~10%, preferably better.&nbsp; After you successfully find holes with 
       your initial value and get an estimate of the actual hole size, use the <strong>
-      Set Size/Spacing</strong> button to adopt that new size for future runs.&nbsp;
+      Set Size/Period</strong> button to adopt that new size for future runs.&nbsp;
       <strong>To measure hole size, zoom up so that the holes are at least half the 
       size of the control panels on the screen. </strong>&nbsp;Measurements in an 
       unzoomed image may not be accurate enough.&nbsp; Hold down the shift key and the 
       left mouse button to draw a line across a hole.</p>
     <p>
-      <strong>Spacing</strong></p>
+      <strong>Periodicity</strong></p>
     <p>
-      Enter the spacing between 
-      the centers of the holes in microns.&nbsp; This needs to be accurate 
-      within ~15%.&nbsp; <strong>To measure hole spacing, zoom up so that the holes 
+      Enter the distance between 
+      the centers of the holes in microns.&nbsp; This is not the separation between the edges 
+      of adjacent holes; that value is shown in the label to the right that include the 
+      conventional (size/sep) designation for grids.&nbsp; The periodicity needs to be accurate 
+      within ~15%.&nbsp; <strong>To measure hole periodicity, zoom up so that the holes 
       are at least half the size of the control panels on the screen. </strong>&nbsp;Hold 
       down the shift key and use the left mouse button to draw a line from the edge of 
       one hole to the edge of the next one, being careful not to measure between 
@@ -148,11 +150,11 @@
       each trial pair of filter and threshold values will be shown on a line below 
       this button: the number of points found, and the number missing from a regular 
       grid.&nbsp; When the trials are done, the final result will be shown, along with 
-      the hole size and spacing found.&nbsp;
+      the hole size and periodicity found.&nbsp;
       </p>
-    <p><strong>Set Size/Spacing</strong></p>
+    <p><strong>Set Size/Period</strong></p>
     <p>Use the hole size and separation from the last hole-finding operation to set 
-      the values in the size and spacing text boxes above.&nbsp; It is useful to do 
+      the values in the size and periodicity text boxes above.&nbsp; It is useful to do 
       this once to replace the nominal values that you start with.</p>
     <p><strong>Clear Data</strong></p>
     <p>Use this button to remove the display of found points and free up all memory 

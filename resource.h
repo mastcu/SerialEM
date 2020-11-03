@@ -1630,6 +1630,7 @@
 #define IDC_STAT_STAR_TILT              2658
 #define IDC_STAT_STAR_TILT2             2659
 #define IDC_STAT_STAR_BIDIR             2660
+#define IDC_STAT_UM_SIZE_SEP            2661
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2122,7 +2123,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        249
 #define _APS_NEXT_COMMAND_VALUE         33395
-#define _APS_NEXT_CONTROL_VALUE         2661
+#define _APS_NEXT_CONTROL_VALUE         2662
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

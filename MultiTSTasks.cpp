@@ -1004,6 +1004,8 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
   }
   SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity, 
     mScope->GetC2Percent(spotSize, mAcSavedIntensity, probe));
+  mAcSavedProbe = probe;
+  mAcSavedSpot = spotSize;
 
   // Get the param and make sure it works
   param = mWinApp->mMultiTSTasks->GetAutocenSettings(mWinApp->GetCurrentCamera(), magInd,
@@ -1081,7 +1083,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
     }
 
     // Center the beam: if it fails, remove the post-shift to undo the original shift
-    err = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
+    err = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0,
       mAcMaxShift);
 
     // These high error codes were added for the case where the beam wasn't moved but the
@@ -1112,6 +1114,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
     return;
   }
+
 
   // If there is an added beam shift after centering, apply it now (or restore after err)
   if (postShiftX || postShiftY)
