@@ -2913,7 +2913,7 @@
         <TR VALIGN="top">
           <TD>StageMontageBacklash</TD>
           <TD>Microns of movement to adjust for backlash when taking a montage with stage 
-            movement, and in some othe situations. Default is 5 microns for FEI, 10 microns
+            movement, and in some other situations. Default is 5 microns for FEI, 10 microns
             for JEOL, and 20 microns for 
             Hitachi.&nbsp; This entry must be positive; a negative entry makes it use the 
             default.</TD>
@@ -3058,6 +3058,18 @@
           <TD>EucentricityMaxFineIS</TD>
           <TD>Maximum image shift for the fine eucentricity task before it changes Z height 
             and starts a new iteration (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityMaxFineAngle</TD>
+          <TD>Maximum angle to go to in the fine eucentricity task (default 24).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineIntervalAtZero</TD>
+          <TD>Tilt increment to use at zero tilt in the fine eucentricity task (default 8).&nbsp; 
+            Tilt increments vary as the cosine of the angle.&nbsp; The minimum increment for 
+            fine eucentricity is controlled by &#39;WalkUpMinInterval&#39;.&nbsp; The increment used 
+            will be somewhat different from the entered value in order to make the tilt steps reach 
+            the highest angle with regularly varying intervals.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>EucentricityFineSubareaMeans</TD>
