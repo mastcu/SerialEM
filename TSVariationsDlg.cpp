@@ -357,7 +357,7 @@ void CTSVariationsDlg::OnDeltaposSpinTsvSeriesPower(NMHDR *pNMHDR, LRESULT *pRes
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   int newVal = mSeriesPowerInd + pNMUpDown->iDelta;
-  if (newVal < 0 || newVal >= mCosinePowers->size()) {
+  if (newVal < 0 || newVal >= (int)mCosinePowers->size()) {
     *pResult = 1;
     return;
   }

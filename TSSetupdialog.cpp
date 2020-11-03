@@ -1236,7 +1236,7 @@ void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult)
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   UpdateData(true);
   int newVal = mCosPowerInd + pNMUpDown->iDelta;
-  if (newVal < 0 || newVal >= mCosinePowers.size()) {
+  if (newVal < 0 || newVal >= (int)mCosinePowers.size()) {
     *pResult = 1;
     return;
   }
