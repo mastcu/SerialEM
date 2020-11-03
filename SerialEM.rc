@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1417,11 +1413,10 @@ EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Tilt Series Setup"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,231,103,10
-    CONTROL         "Vary intensity as 1/cosine of tilt angle to the 1/1",IDC_RINTENSITYCOSINE,
-                    "Button",BS_AUTORADIOBUTTON,14,242,151,10
+    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,12,231,103,10
+    CONTROL         "Vary intensity to be 1.99",IDC_RINTENSITYCOSINE,"Button",BS_AUTORADIOBUTTON,12,242,85,10
     CONTROL         "Set intensity to keep mean counts of  Record images at",IDC_RINTENSITYMEAN,
-                    "Button",BS_AUTORADIOBUTTON,14,255,179,10
+                    "Button",BS_AUTORADIOBUTTON,12,255,179,10
     LTEXT           "Beam Intensity or Exposure Control",IDC_TSS_TITLE3,25,209,168,8
     CONTROL         "Average Record dark references",IDC_AVERAGERECREF,
                     "Button",BS_AUTOCHECKBOX,10,382,112,10
@@ -1464,8 +1459,8 @@ BEGIN
     LTEXT           "Limit image shift to ",IDC_STATLIMITIS,10,145,57,8
     EDITTEXT        IDC_EDITLIMITIS,68,143,24,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um at start",IDC_STATISMICRONS,95,145,34,8
-    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,166,240,10,14
-    LTEXT           "power",IDC_STATPOWER,180,242,20,8
+    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,97,240,10,14
+    LTEXT           "higher at 60 deg (1/cos to 1/1.99 power)",IDC_STATPOWER,108,242,117,8
     EDITTEXT        IDC_EDITCOUNTS,194,254,25,12,ES_AUTOHSCROLL | WS_GROUP
     CTEXT           "The image in buffer A implies a Record zero-tilt mean of",IDC_STATCURRENTCOUNTS,6,267,216,8
     CONTROL         "Keep intensity below current value (use if intensity already set up)",IDC_LIMITTOCURRENT,
@@ -3363,9 +3358,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3855,89 +3848,89 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT
+IDD_MACRO AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT
+IDD_STATEDLG AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
