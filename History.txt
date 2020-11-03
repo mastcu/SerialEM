@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/2/20: Changed cosine power specification in the tilt series setup dialog to
+be expressed in terms of increase in exposure from 0 to 60 degrees.
+
+11/2/20: Added properties to control tilt range and increment of the fine
+eucenticity task.
+
 11/1/20: Fixed crash when autocentering beam and fixed focus problems with
 autocenter setup dialog (In 3.8).
 

@@ -345,15 +345,17 @@
         exposure time during the series. Unless you are in low dose mode, the program 
         will actually do nothing to keep the intensity or exposure time constant, and 
         you are free to adjust it yourself.</P>
-      <P><B>Vary intensity as 1/cosine of angle to 1/n power</B></P>
-      <P>With a power of 1, this option would vary beam intensity or exposure time 
+      <P><B>Vary intensity to be x higher at 60 deg (1/cos to 1/y power)</B></P>
+      <P>This option allows you to vary the beam intensity or exposure time so as to 
+        achieve a selected increase from zero to 60 degrees.&nbsp; The increase will be 
+        computed as 1 over the cosine of the tilt angle, raised to an inverse power.&nbsp; 
+        Prior to serialEM 3.9, this increase was specified as powers from 1/1 to 1/5; 
+        now the setting is more flexible and more intuitive.&nbsp; With an increase of 
+        2, corresponding to a power of 1, this option would vary beam intensity or exposure time 
         proportional to the effective thickness of the sample as it tilts. This would 
         probably do a good job only if the fraction of electrons transmitted through 
-        the specimen and objective aperture is about 0.5 at zero tilt. With a higher 
-        power, the variation in specimen exposure will be less; for example, with a 
-        power of two the specimen exposure will vary by the square root of the inverse 
-        cosine and thus change by a factor of 1.41 from 0 to 60&deg;; for a power of 4 the 
-          factor is only 1.19.</P>
+        the specimen and objective aperture is about 0.5 at zero tilt. Both lower and higher 
+        increases than this can be selected.</P>
       <P><B>Set intensity to keep mean counts constant</B></P>
       <P>Select this option to have the beam or exposure time continually adjusted during 
         the series so that Record images will have the mean value specified in the text 

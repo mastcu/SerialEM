@@ -179,6 +179,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_fBidirAngle = 0.;
   m_strBidirMag = _T("");
   m_strNumEarlyFrames = _T("");
+  m_strCosPower = _T("");
   m_bDoEarlyReturn = FALSE;
   mMaxTiltAngle = ((CSerialEMApp *)AfxGetApp())->mScope->GetMaxTiltAngle();
   if (mMaxTiltAngle < -900.)
@@ -293,6 +294,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATPIXEL, m_strPixel);
   DDX_Text(pDX, IDC_STATRECORDMAG, m_strRecordMag);
   DDX_Text(pDX, IDC_STATTOTALTILT, m_strTotalTilt);
+  DDX_Text(pDX, IDC_STATPOWER, m_strCosPower);
   DDX_Check(pDX, IDC_USEANCHOR, m_bUseAnchor);
   DDX_Text(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord);
   DDV_MinMaxFloat(pDX, m_fRepeatRecord, 0.f, 99.f);
@@ -580,6 +582,23 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_statTargMicrons.SetWindowTextA("um*");
   }
 
+  // Set up cosine powers/multipliers
+  for (index = 5; index > 1; index--) {
+    mCosinePowers.push_back((float)index);
+    mCosMultipliers.push_back((float)pow(2., 1. / index));
+  }
+  for (index = 0; index < 6; index++) {
+    mCosMultipliers.push_back((float)(1.6 + 0.2 * index));
+    mCosinePowers.push_back((float)(log(2.) / log(1.6 + 0.2 * index)));
+  }
+
+  // Find nearest power to incoming value
+  mCosPowerInd = 0;
+  for (index = 1; index < (int)mCosinePowers.size(); index++)
+    if (fabs(mTSParam.cosinePower - mCosinePowers[index]) <
+      fabs(mTSParam.cosinePower - mCosinePowers[mCosPowerInd]))
+      mCosPowerInd = index;
+
   // Load the dialog box with parameters
   m_fStartAngle = mTSParam.startingTilt;
   m_fEndAngle = mTSParam.endingTilt;
@@ -622,10 +641,6 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_iBeamControl = 0;
   m_sbcCosinePower.SetRange(0, 100);
   m_sbcCosinePower.SetPos(50);
-  mCosPower = mTSParam.cosinePower;
-  m_butIntensityCosine.GetWindowText(str);
-  str.SetAt(str.GetLength() - 1, (TCHAR)('0' + mCosPower));
-  m_butIntensityCosine.SetWindowText(str);
   m_iCounts = mTSParam.meanCounts;
   m_statCurrentCounts.GetWindowText(str);
   str2.Format("%s %d", str, mMeanInBufferA);
@@ -723,6 +738,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   ManageIntersetStatus();
   ManageEarlyReturn();
   ManageDriftWait();
+  ManageCosinePower();
 
   // Set up the camera buttons
   int i = 0;
@@ -1001,6 +1017,7 @@ void CTSSetupDialog::SetTotalTilts()
   int total, iDir, spotSize;
   double angle = m_fStartAngle;
   float signedInc = m_fIncrement;
+  float cosPower = mCosinePowers[mCosPowerInd];
   double totalDose = 0.;
   double topDose, curDose, intensity, zeroDose;
 
@@ -1021,13 +1038,13 @@ void CTSSetupDialog::SetTotalTilts()
     if (m_iBeamControl == 0)
       totalDose += 1.;
     else if (m_iBeamControl == 1)
-      totalDose += (float)pow(1. / cos(DTOR * angle), 1. / mCosPower);
+      totalDose += (float)pow(1. / cos(DTOR * angle), 1. / cosPower);
     total++;
   }
 
   topDose = totalDose;
   if (m_iBeamControl == 1)
-    topDose = totalDose / pow(1. / cos(DTOR * m_fStartAngle), 1. / mCosPower);
+    topDose = totalDose / pow(1. / cos(DTOR * m_fStartAngle), 1. / cosPower);
   m_strTotalTilt.Format("Total # of tilts: %d", total);
 
   if (mSTEMindex) {
@@ -1048,8 +1065,8 @@ void CTSSetupDialog::SetTotalTilts()
         angle = 0.;
       zeroDose = topDose = curDose;
       if (m_iBeamControl == 1) {
-        zeroDose = curDose * pow(cos(DTOR * angle), 1. / mCosPower);
-        topDose = zeroDose * pow(1. / cos(DTOR * m_fStartAngle), 1. / mCosPower);
+        zeroDose = curDose * pow(cos(DTOR * angle), 1. / cosPower);
+        topDose = zeroDose * pow(1. / cos(DTOR * m_fStartAngle), 1. / cosPower);
       }
       totalDose *= zeroDose;
       m_strTotalDose.Format("Dose: %.2f e/A2 at 0 deg;  %.2f e/A2 at %.0f deg;  "
@@ -1119,6 +1136,8 @@ void CTSSetupDialog::OnButSetChanges()
   dlg.m_bNumFramesFixed = mWinApp->mTSController->GetExpSeriesFixNumFrames();
   dlg.mTopAngle = B3DMAX(fabs(m_fStartAngle), fabs(m_fEndAngle));
   dlg.mSTEMmode = mSTEMindex != 0;
+  dlg.mSeriesPowerInd = mCosPowerInd;
+  dlg.mCosinePowers = &mCosinePowers;
   dlg.DoModal();
   mWinApp->mTSController->SetExpSeriesStep(dlg.m_fSeriesStep);
   mWinApp->mTSController->SetExpSeriesFixNumFrames(dlg.m_bNumFramesFixed);
@@ -1214,18 +1233,15 @@ void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult)
 // Change in cosine power button
 void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult) 
 {
-  CString str;
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   UpdateData(true);
-  int newVal = mCosPower + pNMUpDown->iDelta;
-  if (newVal < 1 || newVal > MAX_COSINE_POWER) {
+  int newVal = mCosPowerInd + pNMUpDown->iDelta;
+  if (newVal < 0 || newVal >= mCosinePowers.size()) {
     *pResult = 1;
     return;
   }
-	mCosPower = newVal;
-  m_butIntensityCosine.GetWindowText(str);
-  str.SetAt(str.GetLength() - 1, (TCHAR)('0' + mCosPower));
-  m_butIntensityCosine.SetWindowText(str);
+	mCosPowerInd = newVal;
+  ManageCosinePower();
 	*pResult = 0;
   SetTotalTilts();
 }
@@ -1710,6 +1726,25 @@ void CTSSetupDialog::ManageDriftWait()
   SetDlgItemText(IDC_STAT_DW_DEGREES, str + str2);
 }
 
+void CTSSetupDialog::ManageCosinePower()
+{
+  CString str;
+  int typeVaries[MAX_VARY_TYPES];
+
+  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
+    typeVaries, NULL);
+  str.Format("Vary %s to be %.2f", m_bChangeExposure && (mSTEMindex ||
+    !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE])) ? "exposure" : "intensity", 
+    mCosMultipliers[mCosPowerInd]);
+  UtilTrimTrailingZeros(str);
+  m_butIntensityCosine.SetWindowText(str);
+  str.Format("%.2f", mCosinePowers[mCosPowerInd]);
+  UtilTrimTrailingZeros(str);
+  m_strCosPower.Format("x higher at 60 deg (1/cos to 1/%s power)", (LPCTSTR)str);
+    
+  UpdateData(false);
+}
+
 int CTSSetupDialog::RegularOrEFTEMMag(int magIndex)
 {
   return MagForCamera(&mCamParams[mCurrentCamera], magIndex);
@@ -1766,7 +1801,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.binning =  mBinning;
   mTSParam.trackLowMag = m_bLowMagTrack;
   mTSParam.beamControl =  beamCodes[m_iBeamControl];
-  mTSParam.cosinePower = mCosPower;
+  mTSParam.cosinePower = mCosinePowers[mCosPowerInd];
   mTSParam.meanCounts = m_iCounts;
   mTSParam.limitIntensity = m_bLimitIntensity;
   mTSParam.limitToCurrent = m_bLimitToCurrent;
