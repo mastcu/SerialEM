@@ -1413,10 +1413,10 @@ EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Tilt Series Setup"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,12,231,103,10
-    CONTROL         "Vary intensity to be 1.99",IDC_RINTENSITYCOSINE,"Button",BS_AUTORADIOBUTTON,12,242,85,10
+    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,231,103,10
+    CONTROL         "Vary exposure to be 1.99",IDC_RINTENSITYCOSINE,"Button",BS_AUTORADIOBUTTON,10,242,84,10
     CONTROL         "Set intensity to keep mean counts of  Record images at",IDC_RINTENSITYMEAN,
-                    "Button",BS_AUTORADIOBUTTON,12,255,179,10
+                    "Button",BS_AUTORADIOBUTTON,10,255,179,10
     LTEXT           "Beam Intensity or Exposure Control",IDC_TSS_TITLE3,25,209,168,8
     CONTROL         "Average Record dark references",IDC_AVERAGERECREF,
                     "Button",BS_AUTOCHECKBOX,10,382,112,10
@@ -1459,9 +1459,9 @@ BEGIN
     LTEXT           "Limit image shift to ",IDC_STATLIMITIS,10,145,57,8
     EDITTEXT        IDC_EDITLIMITIS,68,143,24,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um at start",IDC_STATISMICRONS,95,145,34,8
-    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,97,240,10,14
-    LTEXT           "higher at 60 deg (1/cos to 1/1.99 power)",IDC_STATPOWER,108,242,117,8
-    EDITTEXT        IDC_EDITCOUNTS,194,254,25,12,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,94,240,10,14
+    LTEXT           "x higher at 60 deg (1/cos to 1/1.99 power)",IDC_STATPOWER,105,242,121,8
+    EDITTEXT        IDC_EDITCOUNTS,190,254,25,12,ES_AUTOHSCROLL | WS_GROUP
     CTEXT           "The image in buffer A implies a Record zero-tilt mean of",IDC_STATCURRENTCOUNTS,6,267,216,8
     CONTROL         "Keep intensity below current value (use if intensity already set up)",IDC_LIMITTOCURRENT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,291,208,10
