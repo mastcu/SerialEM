@@ -1556,7 +1556,7 @@ bool CMacroProcessor::SetVariable(CString name, double value, int type,
 {
   CString str;
   str.Format("%f", value);
-  TrimTrailingZeros(str);
+  UtilTrimTrailingZeros(str);
   return SetVariable(name, str, type, index, mustBeNew, errStr, rowsFor2d);
 }
 
@@ -2573,7 +2573,7 @@ void CMacroProcessor::ReplaceWithResult(double result, CString * strItems, int i
                                         int & numItems, int numDrop)
 {
   strItems[index].Format("%f", result);
-  TrimTrailingZeros(strItems[index]);
+  UtilTrimTrailingZeros(strItems[index]);
   numItems -= numDrop;
   for (int lr = index + 1; lr < numItems; lr++)
     strItems[lr] = strItems[lr + numDrop];
@@ -2618,7 +2618,7 @@ void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
     str = *valStr;
   else {
     str.Format("%f", value);
-    TrimTrailingZeros(str);
+    UtilTrimTrailingZeros(str);
   }
   if (index == 1)
     ClearVariables(VARTYPE_REPORT);
@@ -3291,21 +3291,6 @@ bool CMacroProcessor::ArithmeticIsAllowed(CString &str)
   std::string sstr = (LPCTSTR)str;
   return ((str.Find("SET") == 0 && mArithDenied.count(sstr) <= 0) || 
     mArithAllowed.count(sstr) > 0);
-}
-
-// Remove zeros from end of a string to be stored in a variable
-void CMacroProcessor::TrimTrailingZeros(CString &str)
-{
-  int length, trim = 0;
-  if (str.Find('.')) {
-    length = str.GetLength();
-    while (str.GetAt(length - trim - 1) == '0')
-      trim++;
-    if (str.GetAt(length - trim - 1) == '.')
-      trim++;
-    if (trim)
-      str = str.Left(length - trim);
-  }
 }
 
 // Check for the return values from an intensity change and issue warning or message

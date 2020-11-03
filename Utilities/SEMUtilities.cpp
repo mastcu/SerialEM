@@ -421,6 +421,21 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
   filename += toAdd;
 }
 
+// Remove zeros from end of a string ending in a floating point number
+void UtilTrimTrailingZeros(CString & str)
+{
+  int length, trim = 0;
+  if (str.Find('.')) {
+    length = str.GetLength();
+    while (str.GetAt(length - trim - 1) == '0')
+      trim++;
+    if (str.GetAt(length - trim - 1) == '.')
+      trim++;
+    if (trim)
+      str = str.Left(length - trim);
+  }
+}
+
 // Creates a directory for frame-saving if it does not already exist, checks if parent
 // does not exist; returns error in errStr if nonNULL or does debug output on given letter
 int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)

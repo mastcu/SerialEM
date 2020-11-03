@@ -511,7 +511,6 @@ public:
   void ClearFunctionArray(int index);
   MacroFunction * FindCalledFunction(CString strLine, bool scanning, int &macroNum, int &argInd, int currentMac = -1);
   void ScanMacroIfNeeded(int index, bool scanning);
-  void TrimTrailingZeros(CString & str);
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
