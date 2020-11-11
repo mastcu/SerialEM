@@ -99,7 +99,7 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
 typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
 // Initial state of tool dialogs
-static int  initialDlgState[MAX_DIALOGS] = 
+static int  initialDlgState[MAX_TOOL_DLGS] = 
   {3, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Tool dialog colors
@@ -108,6 +108,11 @@ static COLORREF dlgBorderColors[] =
 RGB(0,128,255), RGB(0,140,60), RGB(255,255,0), RGB(255,0,255), RGB(128,64,64), 
 RGB(0,255,255), RGB(127,0,192), RGB(150,160,0), RGB(255,170,255), RGB(75,75,0), 
 RGB(0,0,0), RGB(255,255,255)};
+
+static UINT sToolDlgIDs[] = 
+{IDD_BUFFERSTATUS, IDD_BUFFERCONTROL, IDD_IMAGELEVEL, IDD_SCOPESTATUS, IDD_REMOTE_CONTROL,
+IDD_TILTCONTROL, IDD_CAMERA_MACRO, IDD_ALIGNFOCUS, IDD_LOWDOSE, IDD_MONTAGECONTROL,
+IDD_STEMCONTROL, IDD_FILTERCONTROL, IDD_DETOOLDLG};
 
 // Static variable for com and other errors to be reported in, watched by OnIdle
 static int sThreadError = 0;
@@ -212,6 +217,7 @@ CSerialEMApp::CSerialEMApp()
   mStageMoveTool = NULL;
   mScreenShotDialog = NULL;
   mAdministrator = false;
+  mAdministratorMode = 0;
   mShiftScriptOnlyInAdmin = false;
   mCalNotSaved = false;
   mEFTEMMode = false;
@@ -652,7 +658,7 @@ CSerialEMApp::CSerialEMApp()
     mTssPanelStates[i] = (!i || i == NUM_TSS_PANELS - 1) ? 1 : 0;
 
   // Initialize dialog panel placements and log window status
-  for (i = 0; i < MAX_DIALOGS; i++)
+  for (i = 0; i < MAX_TOOL_DLGS; i++)
     mDlgPlacements[i].right = 0;
   mLogPlacement.rcNormalPosition.right = 0;
   mNavPlacement.rcNormalPosition.right = 0;
@@ -701,6 +707,7 @@ CSerialEMApp::CSerialEMApp()
   mMadeLittleFont = false;
   mAllowCameraInSTEMmode = false;
   mDoseLifetimeHours = 24;
+  mBasicMode = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -800,6 +807,11 @@ BOOL CSerialEMApp::InitInstance()
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
   bool anyFrameSavers = false;
   CString message, dropCameras, settingsFile;
+  void *toolDlgs[] = {&mStatusWindow, &mBufferWindow, &mImageLevel, &mScopeStatus,
+  &mRemoteControl, &mTiltWindow, &mCameraMacroTools, &mAlignFocusWindow, &mLowDoseDlg,
+    &mMontageWindow, &mSTEMcontrol, &mFilterControl, &mDEToolDlg};
+  for (mag = 0; mag < sizeof(toolDlgs) / sizeof(void *); mag++)
+    mToolDlgs[mag] = (CToolDlg *)toolDlgs[mag];
 
   AfxEnableControlContainer();
 
@@ -902,6 +914,7 @@ BOOL CSerialEMApp::InitInstance()
   if (!pMainFrame->LoadFrame(IDR_MAINFRAME))
     return FALSE;
   m_pMainWnd = pMainFrame;
+  mMainFrame = (CMainFrame *)m_pMainWnd;
 
   // Parse command line for standard shell commands, DDE, file open
   CCommandLineInfo cmdInfo;
@@ -1247,58 +1260,35 @@ BOOL CSerialEMApp::InitInstance()
   CNavRotAlignDlg::InitializeStatics();
 
   // Start the tool windows
-  mNumToolDlg = 4;
-  for (iSet = 0; iSet < MAX_DIALOGS; iSet++)
+  mNumToolDlg = 0;
+  for (iSet = 0; iSet < MAX_TOOL_DLGS; iSet++)
     mDlgColorIndex[iSet] = iSet;
 
-  mStatusWindow.Create(IDD_BUFFERSTATUS);
-  mDialogTable[0].pDialog = (CToolDlg *)&mStatusWindow;
-  mBufferWindow.Create(IDD_BUFFERCONTROL);
-  mDialogTable[1].pDialog = (CToolDlg *)&mBufferWindow;
-  mImageLevel.Create(IDD_IMAGELEVEL);
-  mDialogTable[2].pDialog = (CToolDlg *)&mImageLevel;
-  mScopeStatus.Create(IDD_SCOPESTATUS);
-  mDialogTable[3].pDialog = (CToolDlg *)&mScopeStatus;
-
-  if (mShowRemoteControl) {
-    mRemoteControl.Create(IDD_REMOTE_CONTROL);
-    mDlgColorIndex[mNumToolDlg] = 4;
-    mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)(&mRemoteControl);
-  }
-  mTiltWindow.Create(IDD_TILTCONTROL);
-  mDlgColorIndex[mNumToolDlg] = 5;
-  mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mTiltWindow;
-  mCameraMacroTools.Create(IDD_CAMERA_MACRO);
-  mDlgColorIndex[mNumToolDlg] = 6;
-  mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mCameraMacroTools;
-  mAlignFocusWindow.Create(IDD_ALIGNFOCUS);
-  mDlgColorIndex[mNumToolDlg] = 7;
-  mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mAlignFocusWindow;
-  mLowDoseDlg.Create(IDD_LOWDOSE);
-  mDlgColorIndex[mNumToolDlg] = 8;
-  mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mLowDoseDlg;
-  mMontageWindow.Create(IDD_MONTAGECONTROL);
-  mDlgColorIndex[mNumToolDlg] = 9;
-  mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mMontageWindow;
-  if (mScopeHasSTEM) {
-    mSTEMcontrol.Create(IDD_STEMCONTROL);
-    mDlgColorIndex[mNumToolDlg] = 11;
-    mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mSTEMcontrol;
-  }
-  if (mScopeHasFilter) {
-    mFilterControl.Create(IDD_FILTERCONTROL);
-    mDlgColorIndex[mNumToolDlg] = 10;
-    mDialogTable[mNumToolDlg++].pDialog = (CToolDlg *)&mFilterControl;
+#define CREATE_IF_SHOWING(cond, color) \
+  if (cond) {  \
+    mToolDlgs[color]->Create(sToolDlgIDs[color]);  \
+    mDlgColorIndex[mNumToolDlg] = color;  \
+    mDialogTable[mNumToolDlg++].pDialog = mToolDlgs[color];  \
   }
 
-  //DE Tool Dialog
-  if (deCamCount > 0)//Did the program locate any Direct Electron Cameras.
-  {
-	  mDEToolDlg.Create(IDD_DETOOLDLG);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-10), 0);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-11), 1);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-12), 2);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-13), 3);
+  if (IsIDinHideSet(-14))
+    mShowRemoteControl = false;
+  CREATE_IF_SHOWING(mShowRemoteControl, 4);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-15), 5);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-16), 6);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-17), 7);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-18), 8);
+  CREATE_IF_SHOWING(!IsIDinHideSet(-19), 9);
+  CREATE_IF_SHOWING(mScopeHasSTEM && !IsIDinHideSet(-20), 10);
+  CREATE_IF_SHOWING(mScopeHasFilter && !IsIDinHideSet(-21), 11);
+  CREATE_IF_SHOWING(deCamCount > 0 && !IsIDinHideSet(-22), 12);
+
+  if (deCamCount > 0)
 	  mDEToolDlg.setUpDialogNames(DE_camNames,deCamCount);
-	  mDlgColorIndex[mNumToolDlg] = 12;
-	  mDialogTable[mNumToolDlg++].pDialog = ( DirectElectronToolDlg*) &mDEToolDlg;
-  }
 
   pMainFrame->InitializeDialogTable(mDialogTable, initialDlgState, mNumToolDlg, 
     dlgBorderColors, mDlgColorIndex, mDlgPlacements);
@@ -1506,6 +1496,8 @@ BOOL CSerialEMApp::InitInstance()
   }
 
   mExternalTools->AddMenuItems();
+  mMainFrame->RemoveHiddenItemsFromMenus();
+  
   mStartingProgram = false;
   DoResizeMain();
   return TRUE;
@@ -1760,7 +1752,7 @@ void CSerialEMApp::SetCurrentBuffer(int index, bool fftBuf)
       mNeedFFTWindow = true;
       DoResizeMain();
       ViewOpening();
-      ((CMainFrame *)m_pMainWnd)->OnWindowNew();
+      mMainFrame->OnWindowNew();
     }
   } else
     mMainView->SetCurrentBuffer(index);
@@ -1868,16 +1860,15 @@ void CSerialEMApp::SetActiveView(CSerialEMView *inActiveView)
   mActiveView = inActiveView;
   if (mMainView == NULL) {
     mMainView = inActiveView;
-    ((CMainFrame *)m_pMainWnd)->SetDialogOffset(mMainView);   
+    mMainFrame->SetDialogOffset(mMainView);   
   }
 }
 
 // Return the rectange and dialog offset of the main frame for positioning clients
 void CSerialEMApp::GetMainRect(CRect * rect, int & dialogOffset)
 {
-  CMainFrame *mainFrame =  (CMainFrame *)m_pMainWnd;
   dialogOffset = mMaxDialogWidth;
-  mainFrame->GetWindowRect(rect);
+  mMainFrame->GetWindowRect(rect);
 }
 
 // Add a buffer to the stack view; first time, set pointer and open window
@@ -1888,7 +1879,7 @@ int CSerialEMApp::AddToStackView(EMimageBuffer * imBuf, int angleOrder)
   }
   mStackViewImBuf = imBuf;
   ViewOpening();
-  ((CMainFrame *)m_pMainWnd)->OnWindowNew();
+  mMainFrame->OnWindowNew();
   return 0;
 }
 
@@ -1951,7 +1942,7 @@ void CSerialEMApp::DoResizeMain(int whichBuf)
 {
   // ResizeToFit crashes on very small screens (<= 800x600) on some systems so skip during
   // startup and do at very end of startup
-  if (mStartingProgram || ((CMainFrame *)m_pMainWnd)->GetClosingProgram())
+  if (mStartingProgram || mMainFrame->GetClosingProgram())
     return;
   CRect rect;
   m_pMainWnd->GetWindowRect(rect);
@@ -2073,7 +2064,7 @@ void CSerialEMApp::AddIdleTask(int (__cdecl *busyFunc)(void), void (__cdecl *nex
 
   // Start the timer if necessary if not using the idle processing
 #ifdef TASK_TIMER_INTERVAL
-  if (!((CMainFrame *)m_pMainWnd)->NewTask())
+  if (!mMainFrame->NewTask())
     AfxMessageBox("Failed to start timer to monitor completion of tasks",
       MB_EXCLAME);
 #endif
@@ -2414,10 +2405,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
   if (!mBlinkText.IsEmpty() && time > mNextBlinkTime) {
     if (mBlinkOn) {
       mNextBlinkTime += BLINK_TIME_OFF;
-      ((CMainFrame *)m_pMainWnd)->SetStatusText(SIMPLE_PANE, mBlinkText);
+      mMainFrame->SetStatusText(SIMPLE_PANE, mBlinkText);
     } else {
       mNextBlinkTime += BLINK_TIME_ON;
-      ((CMainFrame *)m_pMainWnd)->SetStatusText(SIMPLE_PANE, "");
+      mMainFrame->SetStatusText(SIMPLE_PANE, "");
     }
     mBlinkOn = !mBlinkOn;
   }
@@ -2886,7 +2877,7 @@ CString CSerialEMApp::GetDebugKeys(void)
 // Pass the state change on to manager in MainFrm
 void CSerialEMApp::DialogChangedState(CToolDlg *inDialog, int inState)
 {
-  ((CMainFrame *)m_pMainWnd)->DialogChangedState(inDialog, inState);
+  mMainFrame->DialogChangedState(inDialog, inState);
 }
 BOOL CSerialEMApp::GetWindowPlacement(WINDOWPLACEMENT *winPlace)
 {
@@ -2900,7 +2891,7 @@ BOOL CSerialEMApp::SetWindowPlacement(WINDOWPLACEMENT *winPlace)
 
 void CSerialEMApp::SetStatusText(int iPane, CString strText)
 {
-  ((CMainFrame *)m_pMainWnd)->SetStatusText(iPane, strText);
+  mMainFrame->SetStatusText(iPane, strText);
   if (iPane != SIMPLE_PANE)
     return;
   mBlinkText = strText;
@@ -2912,9 +2903,9 @@ void CSerialEMApp::SetTitleFile(CString fileName)
 {
   CString progName = mDummyInstance ? "DUMMY SerialEM" : "SerialEM";
   if (fileName.IsEmpty())
-    ((CMainFrame *)m_pMainWnd)->SetWindowText(progName);
+    mMainFrame->SetWindowText(progName);
   else
-    ((CMainFrame *)m_pMainWnd)->SetWindowText(progName + "  -  " + fileName);
+    mMainFrame->SetWindowText(progName + "  -  " + fileName);
 }
 
 // Central call to update control panel dialogs when program state changes
@@ -2940,7 +2931,7 @@ void CSerialEMApp::UpdateBufferWindows()
   else
     mNavHelper->UpdateStateDlg();
   if (mNavHelper->mMultiShotDlg)
-    mNavHelper->mMultiShotDlg->ManagePanels();
+    mNavHelper->mMultiShotDlg->ManagePanels(true);
   if (mDocWnd->mReadFileDlg)
     mDocWnd->mReadFileDlg->Update();
   if (mStageMoveTool)
@@ -3257,9 +3248,18 @@ void CSerialEMApp::StartMontageOrTrial(BOOL inTrial)
     mMontageController->StartMontage(inTrial ? MONT_TRIAL_IMAGE : MONT_NOT_TRIAL, false);
 }
 
+void CSerialEMApp::SetAdministratorMode(int inVal)
+{
+  if (mAdministratorMode < 0)
+    return;
+  mAdministrator = mAdministratorMode > 0;
+  mAdministratorMode = inVal;
+}
+
 void CSerialEMApp::OnCalibrationAdministrator() 
 {
   mAdministrator = !mAdministrator; 
+  mAdministratorMode = mAdministrator ? 1 : 0;
   if (mFilterParams.firstGIFCamera >= 0)
     mFilterControl.Update();
   UpdateAllEditers();
@@ -3267,7 +3267,7 @@ void CSerialEMApp::OnCalibrationAdministrator()
 
 void CSerialEMApp::OnUpdateCalibrationAdministrator(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable();
+  pCmdUI->Enable(mAdministratorMode >= 0);
   pCmdUI->SetCheck(mAdministrator ? 1 : 0);
 }
 
@@ -3275,10 +3275,10 @@ void CSerialEMApp::OnShowScopeControlPanel()
 {
   if (!mShowRemoteControl) {
     mRemoteControl.Create(IDD_REMOTE_CONTROL);
-    ((CMainFrame *)m_pMainWnd)->InsertOneDialog((CToolDlg *)(&mRemoteControl), 
+    mMainFrame->InsertOneDialog((CToolDlg *)(&mRemoteControl), 
       REMOTE_PANEL_INDEX, dlgBorderColors);
   } else {
-    if (((CMainFrame *)m_pMainWnd)->RemoveOneDialog(REMOTE_PANEL_INDEX))
+    if (mMainFrame->RemoveOneDialog(REMOTE_PANEL_INDEX))
       return;
     mRemoteControl.mInitialized = false;
   }
@@ -4177,6 +4177,33 @@ int SEMNumFEIChannels()
 double CSerialEMApp::ProgramStartTime(void)
 {
   return sStartTime;
+}
+
+// Toggle basic mode, managing tool dlgs and calling various things to manage menu/dialogs
+void CSerialEMApp::SetBasicMode(BOOL inVal)
+{
+  int ind;
+  mBasicMode = inVal;
+  if (mStartingProgram)
+    return;
+
+  for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
+    if (mBasicIDsToHide.count(-10 - ind)) {
+      if (ind == REMOTE_PANEL_INDEX) {
+        if (BOOL_EQUIV(mShowRemoteControl, inVal))
+          OnShowScopeControlPanel();
+      } else if (inVal) {
+        mToolDlgs[ind]->mInitialized = false;
+        mMainFrame->RemoveOneDialog(ind);
+      } else {
+        mToolDlgs[ind]->Create(sToolDlgIDs[ind]);
+        mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors);
+      }
+    }
+  }
+  mMainFrame->RemoveHiddenItemsFromMenus();
+  UpdateBufferWindows();
+  UpdateWindowSettings();
 }
 
 // Given a color index for a tool panel, find its index in the dialog table

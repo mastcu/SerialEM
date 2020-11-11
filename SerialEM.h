@@ -41,6 +41,8 @@
 
 #include <math.h>
 #include <afxtempl.h>
+#include <set>
+#include <string>
 #include "resource.h"       // main symbols
 #include "EMimageBuffer.h"  // Added by ClassView
 #include "ImageLevelDlg.h"  // Added by ClassView
@@ -64,6 +66,8 @@
 #include "RemoteControl.h"
 #include "./DirectElectron/DirectElectronToolDlg.h"
 #include "Utilities\SEMUtilities.h"
+
+typedef std::set<std::string> StringSet;
 
 enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIFT,
   TASK_REVERSE_TILT, TASK_WALKUP, TASK_EUCENTRICITY, TASK_RESET_REALIGN, 
@@ -110,7 +114,7 @@ struct JeolParams;
 #define MAX_EXTRA_RECORDS 30
 #define MAX_TS_VARIES  50
 #define MAX_VARY_TYPES  6
-#define MAX_DIALOGS  16
+#define MAX_TOOL_DLGS  16
 #define MAX_LOWDOSE_SETS 5
 #define LAD_INDEX_BASE  30
 #define IDLE_TIMEOUT_ERROR  -99
@@ -302,6 +306,7 @@ class CStageMoveTool;
 class CAutoTuning;
 class CExternalTools;
 class CScreenShotDialog;
+class CMainFrame;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMApp:
@@ -377,141 +382,141 @@ public:
   void WarnIfUsingOldFilterAlign();
   SetMember(CString, StartupMessage);
   CString GetStartupMessage(bool original = false);
-  SetMember(BOOL, StartupInfo)
-  SetMember(BOOL, ExitOnScopeError)
-  void SetAdministratorMode(BOOL inVal) {mAdministrator = inVal;};
-  BOOL GetAdministratorMode() {return mAdministrator;};
+  SetMember(BOOL, StartupInfo);
+  SetMember(BOOL, ExitOnScopeError);
+  void SetAdministratorMode(int inVal);
+  int GetAdministratorMode() { return mAdministratorMode; };
   GetMember(BOOL, Administrator);
   void SetDebugOutput(CString keys);
-  BOOL ScopeHasFilter() {return mScopeHasFilter;};
-  BOOL ScopeHasSTEM() {return mScopeHasSTEM;};
+  BOOL ScopeHasFilter() { return mScopeHasFilter; };
+  BOOL ScopeHasSTEM() { return mScopeHasSTEM; };
   void NavigatorClosing();
-  BOOL CalibrationsNotSaved() {return mCalNotSaved;};
-  void SetCalibrationsNotSaved(BOOL inVal) {mCalNotSaved = inVal;};
+  BOOL CalibrationsNotSaved() { return mCalNotSaved; };
+  void SetCalibrationsNotSaved(BOOL inVal) { mCalNotSaved = inVal; };
   GetMember(BOOL, Any16BitCameras)
-  void CopyCameraToCurrentLDP();
+    void CopyCameraToCurrentLDP();
   void CopyCurrentToCameraLDP();
   BOOL CheckIdleTasks();
-  FilterParams *GetFilterParams() {return &mFilterParams;};
+  FilterParams *GetFilterParams() { return &mFilterParams; };
   GetMember(BOOL, EFTEMMode)
-  BOOL GetFilterMode();
+    BOOL GetFilterMode();
   void SetEFTEMMode(BOOL inState);
   GetMember(BOOL, STEMMode);
   GetSetMember(int, ActiveCamListSize)
-  GetMember(int, NumActiveCameras)
-  GetMember(int, NumReadInCameras)
-  int *GetActiveCameraList() {return &mActiveCameraList[0];};
-  int *GetOriginalActiveList() {return &mOriginalActiveList[0];};
+    GetMember(int, NumActiveCameras)
+    GetMember(int, NumReadInCameras)
+    int *GetActiveCameraList() { return &mActiveCameraList[0]; };
+  int *GetOriginalActiveList() { return &mOriginalActiveList[0]; };
   SetMember(int, InitialCurrentCamera)
-  void TransferConSet(int inSet, int fromCam, int toCam);
+    void TransferConSet(int inSet, int fromCam, int toCam);
   void CopyConSets(int inCam);
   void SetActiveCameraNumber(int inNum);
   void SetNumberOfActiveCameras(int inNum, int readIn);
   GetSetMember(BOOL, RetractOnEFTEM)
-  afx_msg LRESULT OnCommandHelp(WPARAM, LPARAM lParam);
+    afx_msg LRESULT OnCommandHelp(WPARAM, LPARAM lParam);
   void SetTitleFile(CString fileName);
   BOOL LowDoseMode();
   void UpdateWindowSettings();
   BOOL StartedTiltSeries();
   BOOL DoingTiltSeries();
   GetSetMember(BOOL, ActPostExposure)
-  BOOL ActPostExposure(ControlSet *conSet = NULL, bool alignHereOK = false);
+    BOOL ActPostExposure(ControlSet *conSet = NULL, bool alignHereOK = false);
   BOOL DoingComplexTasks();
   GetSetMember(BOOL, SmallFontsBad)
-  GetSetMember(BOOL, DisplayNotTruly120DPI)
-  void SetStatusText(int iPane, CString strText);
+    GetSetMember(BOOL, DisplayNotTruly120DPI)
+    void SetStatusText(int iPane, CString strText);
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
   void ErrorOccurred(int error);
   void AppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
   void LogClosing();
-  WINDOWPLACEMENT *GetLogPlacement() {return &mLogPlacement;};
-  WINDOWPLACEMENT *GetNavPlacement() {return &mNavPlacement;};
+  WINDOWPLACEMENT *GetLogPlacement() { return &mLogPlacement; };
+  WINDOWPLACEMENT *GetNavPlacement() { return &mNavPlacement; };
   WINDOWPLACEMENT *GetStageToolPlacement();
   void OpenStageMoveTool();
   void OpenScreenShotDlg();
   WINDOWPLACEMENT *GetScreenShotPlacement();
   SetMember(bool, ReopenLog);
-  void SetReopenMacroEditor(int index, bool open) {mReopenMacroEditor[index] = open;};
+  void SetReopenMacroEditor(int index, bool open) { mReopenMacroEditor[index] = open; };
   void StartMontageOrTrial(BOOL inTrial);
   void SetMontaging(BOOL inVal);
   void UserRequestedCapture(int whichMode);
-  void AddIdleTask(int (__cdecl *busyFunc)(void), void (__cdecl *nextFunc)(int),
-                   void (__cdecl *errorFunc)(int), int source, int param, int timeOut);
-  void AddIdleTask(int (__cdecl *busyFunc)(void), void (__cdecl *nextFunc)(int),
-                   void (__cdecl *errorFunc)(int), int param, int timeOut);
-  void AddIdleTask(int (__cdecl *busyFunc)(void), int source, int param, int timeOut);
+  void AddIdleTask(int(__cdecl *busyFunc)(void), void(__cdecl *nextFunc)(int),
+    void(__cdecl *errorFunc)(int), int source, int param, int timeOut);
+  void AddIdleTask(int(__cdecl *busyFunc)(void), void(__cdecl *nextFunc)(int),
+    void(__cdecl *errorFunc)(int), int param, int timeOut);
+  void AddIdleTask(int(__cdecl *busyFunc)(void), int source, int param, int timeOut);
   void AddIdleTask(int source, int param, int timeOut);
   void UpdateBufferWindows();
   void OnCameraParameters();
   void OnResizeMain();
   void DoResizeMain(int whichBuf = 0);
   GetSetMember(int, SelectedConSet)
-  GetMember(int, CurrentCamera)
-  GetMember(int, CurrentActiveCamera)
-  GetMember(CameraParameters *, CamParams)
-  GetSetMember(float, MemoryLimit)
-  CameraParameters *GetActiveCamParam(int index = -1);
+    GetMember(int, CurrentCamera)
+    GetMember(int, CurrentActiveCamera)
+    GetMember(CameraParameters *, CamParams)
+    GetSetMember(float, MemoryLimit)
+    CameraParameters *GetActiveCamParam(int index = -1);
   void UpdateStatusWindow();
   void DialogChangedState(CToolDlg *inDialog, int inState);
   void RestoreViewFocus();
-  int GetNewViewProperties(CSerialEMView *inView, int &iBordLeft, int &iBordTop, int &iBordRight, 
-                            int &iBordBottom, EMimageBuffer *&imBufs, int &iImBufNumber, int &iImBufIndex);
+  int GetNewViewProperties(CSerialEMView *inView, int &iBordLeft, int &iBordTop, int &iBordRight,
+    int &iBordBottom, EMimageBuffer *&imBufs, int &iImBufNumber, int &iImBufIndex);
   void SetImBufIndex(int inIndex, bool fftBuf = false);
-  int GetImBufIndex(bool fftBuf = false) {return fftBuf ? mFFTbufIndex : mImBufIndex;};
+  int GetImBufIndex(bool fftBuf = false) { return fftBuf ? mFFTbufIndex : mImBufIndex; };
   void SetCurrentBuffer(int index, bool fftBuf = false);
   CSerialEMApp();
   ~CSerialEMApp();
   void SetActiveView(CSerialEMView *inActiveView);
-  void SetDisplayTruncation(float inPctLo, float inPctHi) {mPctLo = inPctLo; mPctHi = inPctHi;};
-  void GetDisplayTruncation(float &outPctLo, float &outPctHi) {outPctLo = mPctLo; outPctHi = mPctHi;};
-  void SetPctAreaFraction(float inAreaFrac) {mAreaFrac = inAreaFrac;};
-  float GetPctAreaFraction() {return mAreaFrac;};
-  BOOL Montaging() {return mMontaging;};
-  BOOL SavingOther() {return mSavingOther;};
+  void SetDisplayTruncation(float inPctLo, float inPctHi) { mPctLo = inPctLo; mPctHi = inPctHi; };
+  void GetDisplayTruncation(float &outPctLo, float &outPctHi) { outPctLo = mPctLo; outPctHi = mPctHi; };
+  void SetPctAreaFraction(float inAreaFrac) { mAreaFrac = inAreaFrac; };
+  float GetPctAreaFraction() { return mAreaFrac; };
+  BOOL Montaging() { return mMontaging; };
+  BOOL SavingOther() { return mSavingOther; };
   SetMember(bool, SavingOther)
-  BOOL DoingTasks(); 
-  BOOL DoingImagingTasks(); 
+    BOOL DoingTasks();
+  BOOL DoingImagingTasks();
   GetMember(LowDoseParams *, LowDoseParams)
-  LowDoseParams *GetCamLowDoseParams() {return &mCamLowDoseParams[0][0];};
-  MontParam *GetMontParam() {return &mMontParam;};
+    LowDoseParams *GetCamLowDoseParams() { return &mCamLowDoseParams[0][0]; };
+  MontParam *GetMontParam() { return &mMontParam; };
   GetMember(EMimageBuffer *, ImBufs);
   GetMember(EMimageBuffer *, FFTBufs);
   GetMember(ControlSet *, ConSets);
-  ControlSet *GetCamConSets() {return &mCamConSets[0][0];};
-  CString *GetModeNames() {return mModeName;};
+  ControlSet *GetCamConSets() { return &mCamConSets[0][0]; };
+  CString *GetModeNames() { return mModeName; };
   GetMember(CString *, Macros)
-  CString *GetMacroSaveFiles() {return mMacroSaveFile;};
-  CString *GetMacroFileNames() {return mMacroFileName;};
-  CString *GetMacroNames() {return mMacroName;};
-  CString *GetLongMacroNames() {return mLongMacroName;};
-  MagTable *GetMagTable() {return mMagTab;};
-  int *GetCamLenTable() {return &mCamLengths[0];};
+    CString *GetMacroSaveFiles() { return mMacroSaveFile; };
+  CString *GetMacroFileNames() { return mMacroFileName; };
+  CString *GetMacroNames() { return mMacroName; };
+  CString *GetLongMacroNames() { return mLongMacroName; };
+  MagTable *GetMagTable() { return mMagTab; };
+  int *GetCamLenTable() { return &mCamLengths[0]; };
   float *GetCamLenCalibrated() { return &mCamLenCalibrated[0]; };
-  MacroControl *GetMacControl() {return &mMacControl;};
+  MacroControl *GetMacControl() { return &mMacControl; };
   int *GetInitialDlgState();
   GetMember(DialogTable *, DialogTable)
-  GetMember(int, NumToolDlg)
-  GetMember(RECT *, DlgPlacements)
-  GetSetMember(BOOL, ExitWithUnsavedLog)
-  GetSetMember(BOOL, TestGainFactors)
-  GetSetMember(BOOL, SkipGainRefWarning)
-  SetMember(BOOL, ProcessHere)
-  SetMember(BOOL, ReopenMacroToolbar)
-  NavParams *GetNavParams() {return &mNavParams;};
-  CookParams *GetCookParams() {return &mCookParams;};
+    GetMember(int, NumToolDlg)
+    GetMember(RECT *, DlgPlacements)
+    GetSetMember(BOOL, ExitWithUnsavedLog)
+    GetSetMember(BOOL, TestGainFactors)
+    GetSetMember(BOOL, SkipGainRefWarning)
+    SetMember(BOOL, ProcessHere)
+    SetMember(BOOL, ReopenMacroToolbar)
+    NavParams *GetNavParams() { return &mNavParams; };
+  CookParams *GetCookParams() { return &mCookParams; };
   SetMember(BOOL, DeferBufWinUpdates)
-  GetSetMember(BOOL, ContinuousSaveLog)
-  GetSetMember(BOOL, OpenStateWithNav)
-  GetSetMember(BOOL, NonGIFMatchIntensity)
-  GetSetMember(BOOL, NonGIFMatchPixel)
-  GetSetMember(int, FirstSTEMcamera)
-  GetSetMember(BOOL, STEMmatchPixel)
-  GetSetMember(BOOL, ScreenSwitchSTEM)
-  GetSetMember(BOOL, InvertSTEMimages)
-  GetSetMember(float, AddedSTEMrotation)
-  GetSetMember(BOOL, KeepPixelTime)
-  GetSetMember(BOOL, RetractToUnblankSTEM);
+    GetSetMember(BOOL, ContinuousSaveLog)
+    GetSetMember(BOOL, OpenStateWithNav)
+    GetSetMember(BOOL, NonGIFMatchIntensity)
+    GetSetMember(BOOL, NonGIFMatchPixel)
+    GetSetMember(int, FirstSTEMcamera)
+    GetSetMember(BOOL, STEMmatchPixel)
+    GetSetMember(BOOL, ScreenSwitchSTEM)
+    GetSetMember(BOOL, InvertSTEMimages)
+    GetSetMember(float, AddedSTEMrotation)
+    GetSetMember(BOOL, KeepPixelTime)
+    GetSetMember(BOOL, RetractToUnblankSTEM);
   GetSetMember(BOOL, BlankBeamInSTEM);
   GetSetMember(BOOL, MustUnblankWithScreen);
   GetSetMember(BOOL, RetractOnSTEM);
@@ -530,7 +535,7 @@ public:
   GetSetMember(int, BkgdGrayOfFFT);
   GetSetMember(float, TruncDiamOfFFT);
   GetSetMember(int, SystemDPI);
-  GetSetMember(int, ToolExtraWidth); 
+  GetSetMember(int, ToolExtraWidth);
   GetSetMember(int, ToolExtraHeight);
   GetSetMember(int, ToolTitleHeight);
   GetSetMember(BOOL, ShowRemoteControl);
@@ -542,13 +547,29 @@ public:
   GetSetMember(float, BottomBorderFrac);
   GetSetMember(float, MainFFTsplitFrac);
   GetSetMember(int, AssumeCamForDummy);
-  int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
+  int *GetDlgColorIndex() { return &mDlgColorIndex[0]; };
   GetSetMember(bool, AbsoluteDlgIndex);
   GetSetMember(BOOL, AllowCameraInSTEMmode);
   GetSetMember(int, DoseLifetimeHours);
   GetSetMember(int, AddDPItoSnapshots);
   GetSetMember(BOOL, SettingsFixedForIACal);
   GetSetMember(BOOL, ShiftScriptOnlyInAdmin);
+  std::set<int> *GetIDsToHide() { return &mIDsToHide; };
+  std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
+  std::set<int>  *GetIDsToDisable() { return &mIDsToDisable; };
+  std::set<int>  *GetBasicIDsToHide() { return &mBasicIDsToHide; };
+  std::set<int>  *GetBasicLineHideIDs() { return &mBasicLineHideIDs; };
+  std::set<int>  *GetBasicIDsToDisable() { return &mBasicIDsToDisable; };
+  StringSet *GetHideStrings() { return &mHideStrings; };
+  StringSet *GetBasicHideStrings() { return &mBasicHideStrings; };
+  bool IsIDinHideSet(UINT nID) { return mIDsToHide.count(nID) > 0 ||
+      (mBasicMode && mBasicIDsToHide.count(nID)); };
+  bool IsIDinLineHides(UINT nID) { return mLineHideIDs.count(nID) > 0 ||
+      (mBasicMode && mBasicLineHideIDs.count(nID)); };
+  bool IsIDinDisableSet(UINT nID) { return mIDsToDisable.count(nID) ||
+    (mBasicMode && mBasicIDsToDisable.count(nID)); };
+  bool IsStringInHideSet(std::string &str) { return mHideStrings.count(str) ||
+    (mBasicMode && mBasicHideStrings.count(str)); };
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -576,6 +597,7 @@ public:
   CFilterControlDlg mFilterControl;
   CSTEMcontrolDlg mSTEMcontrol;
   DirectElectronToolDlg mDEToolDlg;
+  CMainFrame *mMainFrame;
 
   EMbufferManager *mBufferManager;
   KImageStore  *mStoreMRC;
@@ -676,6 +698,7 @@ private:
   CString mMacroSaveFile[MAX_MACROS];
   int mSelectedConSet;
   BOOL mAdministrator;
+  int mAdministratorMode;
   BOOL mCalNotSaved;
   BOOL mComModuleInited;
   BOOL mExitOnScopeError;
@@ -690,12 +713,13 @@ private:
   float mAreaFrac;
   int mBkgdGrayOfFFT;                  // Mean gray level for background of FFT
   float mTruncDiamOfFFT;                 // Diameter of FFT area to truncate as frac of size
-  DialogTable mDialogTable[MAX_DIALOGS];
+  DialogTable mDialogTable[MAX_TOOL_DLGS];
   int mMaxDialogWidth;
   int mNumToolDlg;
-  RECT mDlgPlacements[MAX_DIALOGS];
-  int mDlgColorIndex[MAX_DIALOGS];
+  RECT mDlgPlacements[MAX_TOOL_DLGS];
+  int mDlgColorIndex[MAX_TOOL_DLGS];
   bool mAbsoluteDlgIndex;
+  CToolDlg *mToolDlgs[MAX_TOOL_DLGS];
   WINDOWPLACEMENT mLogPlacement;
   WINDOWPLACEMENT mNavPlacement;
   WINDOWPLACEMENT mCamSetupPlacement;
@@ -797,7 +821,16 @@ private:
   int mDoseLifetimeHours;       // Validity of electron dose calibration in hours
   int mAddDPItoSnapshots;       // 0 not to, 1 to use true pixel, > 1 for value to use
   BOOL mSettingsFixedForIACal;  // Flag that settings have been converted for IA limit cal
-  BOOL mShiftScriptOnlyInAdmin;  // Flag that scripts can be shifted up/down only in Admin
+  BOOL mShiftScriptOnlyInAdmin; // Flag that scripts can be shifted up/down only in Admin
+  std::set<int>  mIDsToHide;
+  std::set<int>  mLineHideIDs;
+  std::set<int>  mIDsToDisable;
+  std::set<int>  mBasicIDsToHide;
+  std::set<int>  mBasicLineHideIDs;
+  std::set<int>  mBasicIDsToDisable;
+  StringSet mHideStrings;
+  StringSet mBasicHideStrings;
+  BOOL mBasicMode;
 
 public:
   void UpdateAllEditers(void);
@@ -840,6 +873,8 @@ public:
   PlugDoingFunc RegisterPlugDoingFunc(PlugDoingFunc func, bool imaging, bool &wasImaging);
   bool DoingRegisteredPlugCall(void);
   double ProgramStartTime(void);
+  GetMember(BOOL, BasicMode);
+  void SetBasicMode(BOOL inVal);
   int LookupToolDlgIndex(int colorInd);
 afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
 afx_msg void OnShowScopeControlPanel();

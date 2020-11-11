@@ -409,7 +409,7 @@ void CMacroEditer::UpdateButtons()
   m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0);
   m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0);
   inactive = inactive && (!mWinApp->GetShiftScriptOnlyInAdmin() || 
-    mWinApp->GetAdministratorMode());
+    mWinApp->GetAdministrator());
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
 }
