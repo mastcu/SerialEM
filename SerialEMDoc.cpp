@@ -62,6 +62,7 @@ static char THIS_FILE[] = __FILE__;
 #define PROGRAM_LOG "SEMRunLog.txt"
 #define SHORT_TERM_NAME "SEMshortTermCal.txt"
 #define FLYBACK_NAME "SEMflybackTimes.txt"
+#define BASIC_MODE_NAME "SEMbasicModeItems.txt"
 #define MAX_SETTINGS_MRU 4
 
 static char *defaultSysPath = NULL;
@@ -133,6 +134,8 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnUpdateSkipFilePropertiesDlg)
   ON_COMMAND(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnSettingsDiscardOnExit)
   ON_UPDATE_COMMAND_UI(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnUpdateSettingsDiscardOnExit)
+  ON_COMMAND(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnSettingsBasicmode)
+  ON_UPDATE_COMMAND_UI(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnUpdateSettingsBasicmode)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -833,7 +836,7 @@ void CSerialEMDoc::CloseAllStores()
 // Switches between Save single and Save to Other if there is an open file
 void CSerialEMDoc::ManageSaveSingle(void)
 {
-  UtilModifyMenuItem(0, IDM_FILE_SAVEOTHER,
+  UtilModifyMenuItem("File", IDM_FILE_SAVEOTHER,
     mNumStores ? "Sa&ve to Other..." : "Sa&ve Single...");
 }
 
@@ -1755,6 +1758,11 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   else if (!mSettingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
 
+  // Set up basic mode file name, can be overridden in properties
+  strSys = mSystemPath + "\\" + BASIC_MODE_NAME;
+  if (CFile::GetStatus((LPCTSTR)strSys, status))
+    mBasicModeFile = strSys;
+
   // Read properties; but first set gain reference path to system path
   // Try the current path which may have come from settings file, then try the
   // default path in case it has changed
@@ -1812,6 +1820,12 @@ void CSerialEMDoc::ReadSetPropCalFiles()
     if (mParamIO->ReadFlybackTimes(strSys))
       AfxMessageBox("Error reading flyback time file", MB_EXCLAME);
   }
+
+  // Read basic mode file if non-empty
+  if (!mBasicModeFile.IsEmpty())
+    mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(), 
+      mWinApp->GetBasicHideStrings());
 
   // Once calibrations are read, need to reset the IS offsets
   mWinApp->mScope->SetApplyISoffset(mWinApp->mScope->GetApplyISoffset());
@@ -1955,7 +1969,7 @@ void CSerialEMDoc::OnSettingsReadagain()
 void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen);
-  UtilModifyMenuItem(1, ID_SETTINGS_READAGAIN, "&Reload " + 
+  UtilModifyMenuItem("Settings", ID_SETTINGS_READAGAIN, "&Reload " + 
     (mSettingsReadable && mSettingsOpen ? mCurrentSettingsPath : "settings"));
 }
 
@@ -2270,6 +2284,18 @@ void CSerialEMDoc::CalibrationWasDone(int type)
     return;
   mNumCalsDone[type]++;
   mWinApp->SetCalibrationsNotSaved(true);
+}
+
+// Toggle basic mode
+void CSerialEMDoc::OnSettingsBasicmode()
+{
+  mWinApp->SetBasicMode(!mWinApp->GetBasicMode());
+}
+
+void CSerialEMDoc::OnUpdateSettingsBasicmode(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mBasicModeFile.IsEmpty());
+  pCmdUI->SetCheck(mWinApp->GetBasicMode() ? 1 : 0);
 }
 
 // Append an entry to the log book file; return 1 if no log book defined, -1 if error
