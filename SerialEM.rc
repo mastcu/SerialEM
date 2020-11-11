@@ -2913,8 +2913,8 @@ CAPTION "Multiple Record Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "None",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,19,65,34,10
-    CONTROL         "Before others",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,58,65,51,10
-    CONTROL         "After others",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,118,65,48,10
+    CONTROL         "Before others",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,58,65,51,10
+    CONTROL         "After others",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,118,65,48,10
     GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,13,56,155,23,WS_GROUP
     CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,236,120,10
     CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,246,110,10
