@@ -176,6 +176,7 @@ class CMacCmd : public CMacroProcessor
   int AllowFileOverwrite(void);
   int SetDirectory(void);
   int ReportDirectory(void);
+  int DoesFileExist(void);
   int MakeDateTimeDir(void);
   int SwitchToFile(void);
   int ReportFileNumber(void);
@@ -328,6 +329,7 @@ class CMacCmd : public CMacroProcessor
   int ResetShiftIfAbove(void);
   int Eucentricity(void);
   int ReportLastAxisOffset(void);
+  int SetTiltAxisOffset(void);
   int WalkUpTo(void);
   int ReverseTilt(void);
   int DriftWaitTask(void);
@@ -473,7 +475,6 @@ class CMacCmd : public CMacroProcessor
   int ReportPiezoZ(void);
   int MovePiezoXY(void);
   int MovePiezoZ(void);
-  int DoesFileExist(void);
 };
 
 #endif  // MACROCOMMANDS_H

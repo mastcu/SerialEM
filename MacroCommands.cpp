@@ -596,9 +596,11 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"SetItemTargetDefocus", 2, 4, &CMacCmd::SetItemTargetDefocus},
   {"SetItemSeriesAngles", 3, 4, &CMacCmd::SetItemSeriesAngles},
   {"SuspendNavRedraw", 0, 4, &CMacCmd::SuspendNavRedraw},
-  {"DeferLogUpdates", 0, 4, &CMacCmd::DeferLogUpdates}, /*CAI3.9*/
+  {"DeferLogUpdates", 0, 4, &CMacCmd::DeferLogUpdates},
+  {"SetTiltAxisOffset", 1, 4, &CMacCmd::SetTiltAxisOffset}, /*CAI3.9*/
   {NULL, 0, 0}
 };
+// # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
 // The longest is now 25 characters but 23 is a more common limit
 
 // Be sure to add an entry for longHasTime when adding long operation
@@ -3291,6 +3293,17 @@ int CMacCmd::ReportDirectory(void)
   return 0;
 }
 
+// DoesFileExist
+int CMacCmd::DoesFileExist(void)
+{
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+    return 1;
+  cIndex = CFile::GetStatus((LPCTSTR)cReport, cStatus) ? 1 : 0;
+  mLogRpt.Format("File %s DOES%s exist", cReport, cIndex ? "" : " NOT");
+  SetReportedValues(cIndex);
+  return 0;
+}
+
 // MakeDateTimeDir
 int CMacCmd::MakeDateTimeDir(void)
 {
@@ -5787,6 +5800,15 @@ int CMacCmd::ReportLastAxisOffset(void)
     ABORT_NOLINE("There is no last axis offset; fine eucentricity has not been run");
   mLogRpt.Format("Lateral axis offset in last run of Fine Eucentricity was %.2f", cDelX);
   SetReportedValues(&mStrItems[1], cDelX);
+  return 0;
+}
+
+// SetTiltAxisOffset
+int CMacCmd::SetTiltAxisOffset(void)
+{
+  if (fabs(mItemDbl[1]) > 25.)
+    ABORT_LINE("The tilt axis offset must be less than 25 microns in line:\n\n");
+  mScope->SetTiltAxisOffset(mItemFlt[1]);
   return 0;
 }
 
@@ -8315,17 +8337,6 @@ int CMacCmd::MovePiezoZ(void)
       return 1;
   }
   mMovedPiezo = true;
-  return 0;
-}
-
-// DoesFileExist
-int CMacCmd::DoesFileExist(void)
-{
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
-    return 1;
-  cIndex = CFile::GetStatus((LPCTSTR)cReport, cStatus) ? 1 : 0;
-  mLogRpt.Format("File %s DOES%s exist", cReport, cIndex ? "" : " NOT");
-  SetReportedValues(cIndex);
   return 0;
 }
 

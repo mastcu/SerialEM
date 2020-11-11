@@ -1,0 +1,458 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Hiding and Disabling Menu and Dialog Items</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="about_hide_disable"></A><B><FONT size="3">Hiding and Disabling
+    Menu and Dialog Items</FONT></B></P>
+    <P>
+      This page describes the mechanism for hiding or disabling menu items and dialog
+      elements in SerialEM.&nbsp; This can be done either to prevent users from doing
+      some operations, or to simplify the interface for some users.&nbsp; There can be
+      two different files, corresponding to these two main purposes, listing items to
+      be hidden or disabled.&nbsp; One kind of file modifies the interface
+      unconditionally during the run of the program; it is specified with the property
+      entry &#39;DisableOrHideFile&#39; followed by the full path of the file, which can be
+      anywhere.&nbsp; The other kind of file defines a basic mode for the interface
+      that can be toggled with the <a href="menu_settings.htm#hid_settings_basicmode">
+      Basic Mode</a> command in the Settings menu.&nbsp; By default, the program will
+      look for such a file, named &#39;SEMbasicModeItems.txt&#39; in the system directory
+      where the properties and calibration files reside.&nbsp; The property
+      &#39;BasicModeDisableHideFile&#39; can be entered with the full path to an alternative
+      file, which can be anywhere and named anything.</P>
+    <P>
+      Each line in one of these files consists of two entries: an initial value of 1
+      or 2 to indicate whether the item should be disabled or hidden, and a unique
+      identifier for the item.&nbsp; The first table below lists items for which the
+      identifier is a string that is defined in the program; when using one of these,
+      you need to copy the exact string shown.&nbsp; However, any item in the
+      program&#39;s menus can be hidden simply by entering its numeric ID as the
+      identifier for that item, so the second table below lists these IDs for all menu
+      items.&nbsp; That table also shows the menu strings; these are not required in
+      the file, but you should copy enough of the string so that you know what the
+      item is afterwards.<P>
+      These files can also have blank lines and comment lines with a # as the first
+      character.<P>
+      <strong>Table of Items Defined by Strings</strong><P>
+      These are items currently eligible to be disabled or hidden.&nbsp; If you want
+      to have an item added to this table, contact the SerialEM developers.&nbsp; To
+      hide or disable an item, you must copy the whole identifier string shown here
+      into your file to use it.&nbsp; The entries in this table start with &#39;1&#39; if the
+      item can disabled but not hidden, &#39;2&#39; if the item can be hidden but not
+      disabled, or &#39;1 OR 2&#39; if it can both hidden and disabled.&nbsp; In the latter
+      case, after copying the line, remove the &#39;OR 2&#39; to disable the item or &#39;1 OR&#39; to
+      hide the item.<P>
+      The first few lines of this table illustrate some features:<ul>
+      <li>Some entries will hide all the elements on a dialog line.</li>
+      <li>To hide the contents of a group box, you must also include the string for the
+        group box as well as the one(s) for the items in the box.&nbsp; If all the items
+        are in one line, it will take only one entry to hide them; if they are
+        vertically arranged, a separate entry will be needed for each.</li>
+      <li>&nbsp;Menu items will be identified with part or all of the menu name, items
+        in dialogs will have a string based on the dialog.</li>
+      <li>&nbsp;Submenu items will have a string indicating the submenu name.</li>
+      <li>&nbsp;An entire top-level menu can be hidden.</li>
+      <li>Control panels can be hidden.</li>
+    </ul>
+      <pre>
+# Must include the group too
+# Removes whole line
+2  MultishotDlg - Center shots
+2  MultishotDlg - Center shot group
+# Removes whole line
+2  MultishotDlg - Second ring
+# A sub-menu item
+2  Cal - ISStage - Stage Shift
+# A main menu item
+2  Cal - Mag Energy Shifts
+# An entire menu
+2  Calibration menu
+# Control panels
+2  Buffer Status panel
+2  Buffer Control panel
+2  Image Display panel
+2  Scope Control panel
+2  Tilt panel
+      </pre>
+    </P>
+    <P>
+      <strong>Table of All Menu Items and Their IDs</strong></P>
+    <P>
+      To hide a menu item not listed above, you can copy the line for that item from
+      this table into your file.&nbsp; The text after the ID number is optional but
+      will help you identify the entry.<pre>
+  
+FILE MENU
+2 32775 Open New
+2 32776 Open Old
+2 32965 New Montage
+2 32778 Montage Setup
+2 32779 Close
+2 32784 Save A
+2 32780 Save Active
+2 32805 Overwrite
+2 32772 Save Single
+2 32781 Set Truncation
+2 32926 Set 16-bit Policy
+2 32944 Set Signed Policy
+2 33289 Skip File Properties Dlg
+2 32773 Read
+2 32783 Read from Other
+2 32806 Read Piece
+2 32812 Open Log
+2 32813 Save Log
+2 32864 Save Log As
+2 32950 Read & Append
+2 33056 Continuous Save
+2 33392 Reset Log Position
+2 33181 Open .mdoc for Frames
+2 33180 Close Frames .mdoc
+  
+SETTINGS MENU
+2 32795 Open
+2 32801 Reload
+2 32797 Save
+2 32798 Save As
+2 32799 Close
+2 33307 Discard on Exit
+2 32802 Read Defaults
+2 32930 Autosave
+2 33272 Set a Property
+2 33395 Basic Mode
+  
+CAMERA MENU
+2 32786 Parameters
+2 32907 Prepare Gain Ref
+2 32998 Gain Ref Policy
+2 33282 Search
+2 32788 View
+2 32789 Focus
+2 32790 Trial
+2 32791 Record
+2 32894 Preview
+2 32807 Montage
+2 32808 Prescan
+  
+   Correlation Filter submenu
+   2 33248 Use Filter Set 2
+   2 33249 Use Set 2 in Low Dose
+   2 33250 Divide Filter Set 1 by 2
+   2 33251 Divide Filter Set 2 by 2
+   2 33252 Test Values for Set 1
+   2 33253 Test Values for Set 2
+   2 33254 Redo Corr when Read
+  
+2 33044 Set Minimum Counts
+2 32794 Stop Acquire
+2 33280 Use View for Search
+2 33281 No Mont. Map Params
+2 32900 Show Gain Ref
+2 32901 Show Dark Ref
+2 32878 Post-actions
+2 32937 Normalize Here
+2 32933 Divide 16-bit by 2
+2 33387 Set Extra Divisions
+2 33388 Return Float Images
+2 33073 Interpolate Dark Refs
+2 33271 Set Frame Align Lines
+  
+   Special Settings submenu
+   2 33233 No Norm of DS Dose Frac
+   2 33333 Always Antialias K2/K3
+   2 32897 Set Timing
+   2 33197 Set Quality
+   2 32942 Set Scanning
+   2 33055 Set Drift Interval
+   2 32936 Set Corrections
+   2 32792 Screen Down
+   2 32793 Simulation
+  
+2 32898 Debug Mode
+  
+CALIBRATION MENU
+   Image & Stage Shift submenu
+   2 32804 Image Shift
+   2 32874 IS from Scratch
+   2 32916 Stage Shift
+   2 33153 Whole Image Corr
+   2 33159 Set Cycle Lengths
+   2 33224 Use Trial Binning
+   2 33225 Use Trial Size
+   2 32949 List IS Vectors
+   2 32953 List Stage Cals
+   2 33229 Remove IS Cal
+   2 33230 Remove Stage Cal
+   2 32980 Mag IS Offsets
+   2 32981 EFTEM IS Offset
+   2 33099 Set IS Delay Factor
+  
+   Pixel Size submenu
+   2 33053 Find Pixel Size
+   2 33054 Try Again with Marker
+   2 33115 Set Binned Size
+   2 33164 Add n*90 to a Rotation
+   2 33076 List Relative Rotations
+   2 33193 Catalase Crystal
+   2 33216 Mesh for Grid Bars
+  
+   Focus & Tuning submenu
+   2 32814 Autofocus
+   2 32848 Set Focus Range
+   2 32996 Standard Focus
+   2 33103 STEM Focus Vs. Z
+   2 33214 Base Focus Values
+   2 33294 Astigmatism by CTF
+   2 33236 Astigmatism by BTID
+   2 33241 Setup Astigmatism
+   2 33303 Coma vs. Image Shift
+  
+      Old Coma-free Alignment sub-submenu
+      2 33237 BTID Coma-free Aligment
+      2 33240 Setup BTID Coma-free
+  
+   2 33207 List Calibrations
+  
+   Beam & Spot submenu
+   2 32927 Beam Crossover
+   2 32865 Beam Intensity
+   2 32945 Spot Intensity
+   2 32925 Set C2 Factor
+   2 33391 Illuminated Area Limits
+   2 32895 Beam Shift
+   2 33390 Refine Beam Shift
+   2 33122 Alpha Beam Shifts
+   2 33217 Spot Beam Shifts
+   2 33334 List Calibrations
+  
+2 33148 Set Aperture Size
+2 32924 Electron Dose
+2 32946 Purge Old Calibs
+2 32915 Distortion
+2 32928 Set Overlaps
+2 32902 Mag Energy Shifts
+2 32910 List Mags
+2 32943 Neutral IS Values
+2 33215 Restore Neutral IS
+2 33075 Stage Stretch
+2 33257 High-Defocus Mag
+2 33258 List Focus-Mag Cals
+2 32935 Camera Timing
+2 33114 Quick Flyback Time
+2 32954 Shutter Dead Time
+2 32815 Administrator
+2 32803 Save Calibrations
+2 32956 Set Debug Output
+  
+FOCUS/TUNE MENU
+2 32817 Measure Defocus
+2 32818 Autofocus
+2 32883 Move Focus Center
+2 32908 Check Autofocus
+2 32821 Report Shift & Drift
+2 32912 Report on Existing
+2 32970 Show Existing Corr
+2 33223 Show Image Stretch
+2 32816 Set Target
+2 32819 Set Beam Tilt
+2 32913 Set Offset
+2 32820 Set Threshold
+2 33151 Set Tilt Direction
+2 33209 Set Min Binning
+2 33212 Test Filter Cutoffs
+2 32822 Drift Protection
+2 33268 Set Absolute Limits
+2 33269 Use Absolute Limits
+2 33270 Limit Offset Defocus
+2 33296 Correct Astigmatism by CTF
+2 33298 Coma-free Alignment by CTF
+2 33297 Set CTF Acquire Params
+2 33302 Set CTF Coma-free Params
+2 33275 Beam-tilted FFT Array
+2 33238 Correct Astigmatism by BTID
+2 33242 Set BTID Astig Beam Tilt
+  
+   Old Coma-free Alignment submenu
+   2 33239 BTID Coma-free Alignment
+   2 33243 Set Beam Tilt
+   2 33276 Set Iterations
+   2 33274 Run Another Iteration
+  
+2 32938 Reset Defocus
+2 32891 Verbose
+  
+SCRIPT MENU
+2 33288 Edit/Run One Line
+2 32843 Stop
+2 32844 End
+2 32845 Resume
+2 33000 Toolbar
+2 33038 Set Height
+2 32846 Controls
+2 33381 Load New Package
+2 33382 Save Package
+2 33383 Save Package As
+2 33182 Load Many
+2 33235 List Functions
+2 33380 List Persistent Vars
+2 33284 Clear Persistent Vars
+2 33277 Set Indent Size
+2 33306 Open Editors on Start
+2 33057 Verbose
+  
+TASKS MENU
+2 32880 Set intensity
+2 33177 Set Dose Rate
+2 32896 Move beam
+2 32982 Center Beam
+2 33048 Autocenter Beam
+2 33047 Setup Autocenter
+2 32871 Eucentric - Rough
+2 32872 Eucentric - Fine
+2 32873 Eucentric - Both
+2 32881 Refine & Realign
+2 32932 Set Tilt Axis Offset
+2 33069 Use Trial in LD Refine
+2 33094 Walk Up
+2 32914 Walkup & Anchor
+2 33120 Use View in LD
+2 33010 Set Increments
+2 33045 Setup Cooker
+2 33046 Cook Specimen
+2 33063 Assess Angle Range
+2 33108 Assess Interset Shifts
+2 33110 Revise/Cancel Shifts
+2 33095 Reset IS & Realign
+2 32939 Set Iteration Limit
+2 32940 Use Trial in LD
+2 33378 Setup VPP Conditioning
+2 33335 Setup Wait for Drift
+2 32875 Reverse Tilt
+2 32892 Verbose
+  
+   Specialized Options submenu
+   2 33190 Skip Beam Shift in TS
+   2 33189 Piezo for LD Axis Shift
+   2 33206 Disable Dark Trim in Align
+   2 33219 Allow Continuous in TS
+   2 33220 Normalize via View for Autofocus 
+   2 33231 Adjust Focus on Probe Mode Change
+   2 33278 Normalize All on Mag Change
+   2 33377 Skip Blanking in LD when Screen Up
+  
+TILT SERIES MENU
+2 32879 Setup/Start
+2 32890 Terminate
+2 32966 Extra Output
+2 33003 Batch Policies
+2 32999 Reset Pole Angle
+2 33245 Run Script in TS 
+2 33246 Set Script to Run
+2 33185 Call TS Plugins
+2 33060 Send Email at End
+2 33061 Set Email Address
+2 33263 Fixed # of K2/3 Frames
+2 32884 STOP
+2 32885 End Loop
+2 32887 Back Up
+2 32886 Resume
+2 32888 One Loop
+2 32889 One Step
+2 33232 Save X/Y/Z File
+2 33234 Autosave X/Y/Z File
+2 32893 Verbose
+2 32911 Autosave Log
+2 32909 Debug Mode
+  
+PROCESS MENU
+2 32866 Min/Max/Mean
+2 32876 Zero-tilt Mean
+2 32867 FFT
+2 32868 Binned FFT
+2 32967 Live FFT
+2 33227 Side by Side
+2 33259 Automatic Single FFTs
+2 33005 Circle on Live FFT
+2 33261 Set Defocus for Circles
+2 33291 Do CTF Fit on Click
+2 33292 Set CTF Fit Options
+2 32869 Rotate Left
+2 32870 Rotate Right
+2 33074 Crop Image
+2 33290 Reduce Image
+2 33201 Crop & Average
+2 33062 Make Color Overlay
+2 32955 Show Cross-corr
+2 33123 Autocorrelation
+2 32903 Fix Dark X-rays
+2 32905 Set Dark Criteria
+2 32951 Fix Image X-rays
+2 32952 Set Image Criteria
+  
+NAVIGATOR MENU
+2 32917 Open
+2 32920 Read & Open
+2 33194 Merge File
+2 33088 Save
+2 33089 Save As
+2 32921 Close
+  
+   Montaging & Grids submenu
+   2 33090 Setup Corner Montage
+   2 33091 Setup Polygon Montage
+   2 32931 Setup Full Montage
+   2 32995 Set Grid Limits
+   2 32948 Setup Super Montage
+   2 33016 Polygon Super Montage
+   2 33385 Find Holes in Regular Grid
+   2 33042 Add Grid of Points
+   2 33305 Add Grid Like Last One
+   2 33221 Divide Points into Groups
+   2 33222 Set Group Radius
+   2 33286 Set Multi-shot Parameters
+   2 33386 Combine Points for Multi-shots
+   2 33285 Show Shots when Show Acquire
+   2 33304 Show Whole Area for All Points
+   2 33013 Add Circle Polygon
+   2 33101 Polygon from Corners
+  
+   Options submenu
+   2 33267 Set Point Label Threshold
+   2 32929 Autosave Nav File
+   2 33264 Write as XML File
+   2 32941 Convert Maps to Bytes
+   2 32994 Load Maps Unbinned
+   2 33279 Use Current LD Params in Realign
+   2 33393 Search + and - Scaling in Realign
+  
+2 33092 Transform Items
+2 33040 Undo Transformation
+2 32979 Change Registration
+2 32991 Shift to Marker
+2 32992 Undo Last Shift
+2 33071 Align with Rotation
+2 33085 New Map from Image
+2 33039 Import Map
+2 32987 Rotate Map
+2 33117 Adjust for Backlash
+2 33118 Backlash Settings
+2 33064 Open Imaging States 
+2 33009 Set Map Acquire State
+2 33008 Restore State
+2 33086 Acquire at Items
+2 33004 End Acquire
+2 33043 List Files/Series/States
+2 33087 Delete Item
+2 32988 Realign to Item
+2 33203 Force Center Align
+2 33112 Try Scaling in Realign
+      </pre>
+    <P>
+    </P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/10/20: Added command to set tilt axis offset.
+
+11/10/20: Added capability to define dialog and menu items to hide or disable
+unconditionally and also to define a selectable "basic mode" with a list of
+items to hide or disable.
+
+11/10/20: Made it possible to set Administrator mode to -1 to prevent people
+from saving calibrations.
+
 11/6/20: Made install script kill DigitalMicrograph if ncessary (In 3.8).
 
 11/6/20: Prevented shutter dead time calibration for direct detectors

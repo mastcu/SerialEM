@@ -793,6 +793,12 @@
     <None Include="hlp\html\hidd_multi_combiner.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
+    <None Include="hlp\html\about_hide_disable.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hide_disable_stub.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlignFocusWindow.cpp">

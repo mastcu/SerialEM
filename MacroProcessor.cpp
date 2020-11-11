@@ -1393,7 +1393,7 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
 bool CMacroProcessor::SetVariable(CString name, CString value, int type, 
   int index, bool mustBeNew, CString *errStr, CArray<ArrayRow, ArrayRow> *rowsFor2d)
 {
-  int ind, leftInd, rightInd, rightInd2, arrInd, rowInd, numElements = 1;
+  int ind, leftInd, rightInd, rightInd2, arrInd, rowInd, numElements;
   int *oldNumElemPtr;
   CString *oldValuePtr;
   CString temp;
@@ -1412,6 +1412,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 
   // Count number of elements in new value
   ind = 0;
+  numElements = value.IsEmpty() ? 0 : 1;
   while ((ind = value.Find("\n", ind + 1)) >= 0)
     numElements++;
 

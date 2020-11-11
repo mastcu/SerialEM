@@ -36,9 +36,9 @@ struct DisableHideItem {
 
 static DisableHideItem sDisableHideList[] =
 {
-  {"MultishotDlg - Center shots", 2, 1, IDC_RNO_CENTER},  // Must include next one
+  {"MultishotDlg - Center shots", 2, 1, IDC_RNO_CENTER},  // Must include the group too
   {"MultishotDlg - Center shot group", 2, 0, IDC_STAT_CENTER_GROUP},
-  {"MultishotDlg - Second ring", 2, 1, IDC_SPIN_RING2_NUM},    // A whole line of controls
+  {"MultishotDlg - Second ring", 2, 1, IDC_SPIN_RING2_NUM},
   {"Cal - IS&Stage - Stage Shift", 2, 0, ID_CALIBRATION_STAGESHIFT},  // A sub-menu item
   {"Cal - Mag Energy Shifts", 2, 0, ID_CALIBRATION_MAGENERGYSHIFTS}, // A main menu item
   {"Calibration menu", 2, 0, -1},                                    // An entire menu
