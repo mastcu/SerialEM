@@ -7068,7 +7068,7 @@ void CTSController::ManageTerminateMenu(void)
   if (mStartedTS && mBidirSeriesPhase == DOSYM_ALTERNATING_PART && 
     (mNeedTilt || mTiltIndex < mNumDoseSymTilts - 1))
     ind = 2;
-  UtilModifyMenuItem(7, ID_TILTSERIES_TERMINATE, entries[ind]);
+  UtilModifyMenuItem("Tilt Series", ID_TILTSERIES_TERMINATE, entries[ind]);
 }
 
 // Looks up the name of an action from string array, return its corresponding action index
