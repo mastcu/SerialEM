@@ -136,8 +136,9 @@ BOOL CImageLevelDlg::OnInitDialog()
 
   CRect rect;
   m_eBlackLevel.GetWindowRect(&rect);
-  mFont.CreateFont(rect.Height() - (int)(4 * mWinApp->GetScalingForDPI()), 0, 0, 0, 
-    FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+  if (!mFont.m_hObject)
+    mFont.CreateFont(rect.Height() - (int)(4 * mWinApp->GetScalingForDPI()), 0, 0, 0,
+      FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   m_eBlackLevel.SetFont(&mFont);
@@ -147,6 +148,7 @@ BOOL CImageLevelDlg::OnInitDialog()
     // Set up the spin control and a zoom
   m_sbcZoom.SetRange(0,100);
   m_sbcZoom.SetPos(50);
+  mInitialized = true;
 
   NewZoom(1.0);
   UpdateSettings();
@@ -165,7 +167,8 @@ void CImageLevelDlg::UpdateSettings()
   m_bAntialias = (mWinApp->mBufferManager->GetAntialias() != 0);
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
-  UpdateData(false);
+  if (mInitialized)
+    UpdateData(false);
 }
 
 void CImageLevelDlg::OnTruncation() 
@@ -319,7 +322,8 @@ void CImageLevelDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 
 void CImageLevelDlg::OnInvertContrast()
 {
-  UpdateData(true);
+  if (mInitialized)
+    UpdateData(true);
   if (mWinApp->mActiveView) {
     EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
     if (imBuf->mImageScale) {
@@ -349,14 +353,16 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
   mSampleMin = inImageScale->GetSampleMin();
   mSampleMax = inImageScale->GetSampleMax();
   m_bInvertCon = inImageScale->GetInverted() != 0;
-  SetEditBoxes();
+  if (mInitialized)
+    SetEditBoxes();
 }
 
 // External call to invert contrast with a hot key
 void CImageLevelDlg::ToggleInvertContrast(void)
 {
   m_bInvertCon = !m_bInvertCon;
-  UpdateData(false);
+  if (mInitialized)
+    UpdateData(false);
   OnInvertContrast();
 }
 
@@ -387,6 +393,8 @@ void CImageLevelDlg::NewZoom(double inZoom)
   char format[6];
   int zoom = (int)floor((inZoom >= 0.1 ? 100. : 1000.) * inZoom + 0.5);
   int ndec = inZoom >= 0.1 ? 2 : 3;
+  if (!mInitialized)
+    return;
   while (zoom > 0 && zoom % 10 == 0 && ndec > 0) {
     zoom /= 10;
     ndec--;

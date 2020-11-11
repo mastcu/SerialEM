@@ -290,7 +290,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
   mWinApp->mMontageWindow.SetOpenClosed(dlgState);
   mWinApp->DialogChangedState((CToolDlg *)(&mWinApp->mMontageWindow), dlgState);
   mWinApp->UpdateBufferWindows();
-  UtilModifyMenuItem(0, ID_FILE_OVERWRITE, (LPCTSTR)menuText);
+  UtilModifyMenuItem("File", ID_FILE_OVERWRITE, (LPCTSTR)menuText);
 }
 
 ///////////////////////////////////

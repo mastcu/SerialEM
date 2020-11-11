@@ -142,7 +142,8 @@ BOOL CTiltWindow::OnInitDialog()
   CRect rect;
   CStatic *statTilt = (CStatic *)GetDlgItem(IDC_TILT_TEXT);
   statTilt->GetWindowRect(&rect);
-  mFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
+  if (!mFont.m_hObject)
+    mFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
@@ -157,6 +158,8 @@ BOOL CTiltWindow::OnInitDialog()
 
 void CTiltWindow::UpdateEnables()
 {
+  if (!mInitialized)
+    return;
   mProgramReady = !(mWinApp->DoingTasks() || mWinApp->StartedTiltSeries());
   if (mWinApp->mCamera && mWinApp->mCamera->CameraBusy())
     mProgramReady = false;
@@ -180,6 +183,8 @@ void CTiltWindow::EnableTiltButtons()
 
 void CTiltWindow::UpdateSettings()
 {
+  if (!mInitialized)
+    return;
   m_bCosineTilt = mWinApp->mScope->GetCosineTilt();
   UpdateData(false);
   UpdateEnables();

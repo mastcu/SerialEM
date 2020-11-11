@@ -2115,6 +2115,7 @@
 #define ID_WINDOW_RESCUELOGWINDOW       33392
 #define ID_OPTIONS_SEARCH               33393
 #define IDM_MARKER_TO_CENTER            33394
+#define ID_SETTINGS_BASICMODE           33395
 
 // Next default values for new objects
 // 
@@ -2122,7 +2123,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        249
-#define _APS_NEXT_COMMAND_VALUE         33395
+#define _APS_NEXT_COMMAND_VALUE         33396
 #define _APS_NEXT_CONTROL_VALUE         2662
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

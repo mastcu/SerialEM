@@ -32,6 +32,8 @@ public:
 	void SetDialogOffset(CSerialEMView *mainView);
 	BOOL NewTask();
 	void InitializeStatusBar();
+  void RemoveHiddenItemsFromMenus();
+  void RemoveItemsFromOneMenu(CMenu *menu, int level);
 	void SetStatusText(int iPane, CString strText);
 	void SetDialogPositions();
   void InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 

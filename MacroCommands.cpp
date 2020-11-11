@@ -1502,13 +1502,9 @@ int CMacCmd::NewArrayCmd(void)
   }
   if (cIndex < 0 || (cTruth && cIndex2 < 0))
     ABORT_LINE("The number of elements to create must be positive in:\n\n");
-  if (cIndex > 0) {
-    mStrCopy = "0";
-    for (cIx1 = 1; cIx1 < cIndex; cIx1++)
-      mStrCopy += "\n0";
-  }
-  else
-    mStrCopy = "";
+  mStrCopy = "";
+  for (cIx1 = 0; cIx1 < cIndex; cIx1++)
+    mStrCopy += cIx1 ? "\n0" : "0";
 
   // Create the 2D array rows and add string to the rows
   if (cTruth) {

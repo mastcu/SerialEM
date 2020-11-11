@@ -53,6 +53,10 @@
           <TD class="style1"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
           <TD>Changes the value of one program property setting.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_settings_basicmode">Basic Mode</a></TD>
+          <TD>Toggles a mode with fewer menu and dialog items displayed if one is defined.</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="about_settings"></A><B>About Settings Files</B></P>
@@ -160,6 +164,12 @@
       the properties that can be set, an error message is given.&nbsp; Otherwise, 
       another dialog box opens for entering the property value.&nbsp; The existing 
       value of the property is NOT shown in the box, just a 0.</P>
+      <P><A NAME="hid_settings_basicmode"></A><B>Basic Mode command (Settings menu)</B></P>
+      <p>Use this command to toggle a mode in which selected menu items and dialog 
+        elements are not displayed or are disabled.&nbsp; This basic mode must be 
+        defined in a file with a list of the desired elements, either a file 
+        SEMbasicModeItems.txt in the system directory with the properties file, or a 
+        file specified with the property 'BasicModeDisableHideFile'.</p>
     </basefont>
   </BODY>
 </HTML>

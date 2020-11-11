@@ -100,7 +100,6 @@ public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
   CString m_strC2Name;
-  bool mInitialized;
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, int &pendingCamLen);
   void CtrlChanged(bool pressed);

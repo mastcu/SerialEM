@@ -1613,7 +1613,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 	  if(mTD.DE_Cam)
 		  mTD.DE_Cam->setCameraName(mParam->name);
   }
-  UtilModifyMenuItem(2, ID_CAMERA_ACQUIREGAINREF, (mParam->DE_camType && 
+  UtilModifyMenuItem("Camera", ID_CAMERA_ACQUIREGAINREF, (mParam->DE_camType && 
     !CanProcessHere(mParam)) ? "Ac&quire Ref in Server" : "Ac&quire Gain Ref");
 
   // When switching to an FEI camera and there is more than one, invalidate its index

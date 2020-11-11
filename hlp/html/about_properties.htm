@@ -242,13 +242,28 @@
         </TR>
         <TR VALIGN="top">
           <TD>StartAsAdministrator</TD>
-          <TD>Set to 1 to turn on Administrator mode when starting the program.</TD>
+          <TD>Set to 1 to turn on Administrator mode when starting the program, or -1 to prevent
+            Administrator mode from being turned on, which will prevent calibrations from being saved.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ShiftScriptOnlyInAdmin</TD>
           <TD>Enable the script editor buttons to shift scripts up and down only if 
             Adminstrator mode is on.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DisableOrHideFile</TD>
+          <TD>Full path name of a file listing dialog and menu items to be disabled or 
+            hidden unconditionally during the run of the program.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BasicModeDisableHideFile</TD>
+          <TD>Full path name of a file listing dialog and menu items to be disabled or 
+            hidden when Basic Mode is turned on in the Settings menu.&nbsp; This file will 
+            be read instead of looking for and reading SEMbasicModeItems.txt in the system 
+            directory.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">

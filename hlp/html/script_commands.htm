@@ -1425,9 +1425,10 @@
         </TR>
         <TR>
           <TD class="scriptcommand">DoesFileExist file</TD>
-          <TD>Reports if <b>file</b> exists in the current working directory. Command added in 3.9, 11/8/20.</TD>
+          <TD>Reports if <b>file</b> exists in the current working directory
+          if the name includes no path, or at the indicated path if includes a
+          path.&nbsp; Command added in 3.9, 11/8/20.</TD>
         </TR>
-
         <TR>
           <TD class="scriptcommand">AllowFileOverwrite #</TD>
           <TD>Allows 'OpenNewFile', 'OpenNewMontage', and 'OpenTextFile ID W...' to overwrite an existing file if <b>#</b> is
