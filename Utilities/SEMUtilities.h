@@ -61,8 +61,7 @@ bool NewSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int oldVal, int lowerLim,
 bool NewSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim, int upperLim,
   int &newVal);
 void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow);
-void UtilModifyMenuItem(const char *popupName, UINT itemID, const char * newText);
-void UtilGetMenuString(CMenu *menu, int position, CString &name, UINT nFlags);
+void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char * newText);;
 bool UtilCamRadiosNeedSmallFont(CButton *radio);
 double UtilGoodAngle(double angle);
 int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, bool takeK3Binned, 

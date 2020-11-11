@@ -374,7 +374,7 @@ void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
       menuText.Format("Run %d", ind + 1);
     else
       menuText.Format("%d: %s", ind + 1, (LPCTSTR)mMacNames[ind]);
-    UtilModifyMenuItem("Script", ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
+    UtilModifyMenuItem(5, ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
   }
 
 }

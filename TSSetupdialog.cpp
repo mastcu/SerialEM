@@ -20,7 +20,6 @@
 #include "TSVariationsDlg.h"
 #include "TSDoseSymDlg.h"
 #include "DriftWaitSetupDlg.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -83,8 +82,8 @@ static int idTable[] = {
   IDC_TSS_PLUS6, 0, 0, IDC_TSS_TITLE6, IDC_TSS_LINE6,
   IDC_REFINEEUCEN, IDC_LEAVEANCHOR, IDC_EDITANCHOR, IDC_STATANCHORDEG,IDC_USEAFORREF,
   IDC_USEANCHOR, IDC_STATANCHORBUF, IDC_SPINANCHOR, IDC_CLOSE_VALVES, PANEL_END,
-  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, 
-  IDC_TSWAITFORDRIFT, IDC_BUT_SETUP_DRIFT_WAIT,
+  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, IDC_TSWAITFORDRIFT,
+  IDC_BUT_SETUP_DRIFT_WAIT,
   IDC_REPEATRECORD, IDC_EDITREPEATRECORD, IDC_CONFIRM_LOWDOSE_REPEAT,
   IDC_EDITPREDICTERRORXY, IDC_RTRACKBEFORE, IDC_STAT_DW_DEGREES,
   IDC_RTRACKAFTER, IDC_RTRACKBOTH, IDC_ALIGNTRACKONLY, IDC_PREVIEWBEFOREREF,
@@ -96,7 +95,6 @@ static int idTable[] = {
   IDC_BUTHELP, PANEL_END, TABLE_END};
 
 static int topTable[sizeof(idTable) / sizeof(int)];
-static int heightTable[sizeof(idTable) / sizeof(int)];
 static int leftTable[sizeof(idTable) / sizeof(int)];
 
 
@@ -108,9 +106,9 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_bChangeSettling(FALSE)
   , m_bChangeExposure(FALSE)
   , m_bAutocenInterval(FALSE)
-  , m_iAutocenInterval(1)
+  , m_iAutocenInterval(0)
   , m_bAutocenCrossing(FALSE)
-  , m_fAutocenAngle(1.f)
+  , m_fAutocenAngle(0)
   , m_bConfirmLowDoseRepeat(FALSE)
   , m_strInterset(_T(""))
   , m_bUseDoseSym(FALSE)
@@ -124,7 +122,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_fCheckFocus = 0.0f;
   m_iCounts = 0;
   m_fEndAngle = 0.0f;
-  m_fIncrement = 0.05f;
+  m_fIncrement = 0.0f;
   m_fLimitIS = 0.0f;
   m_fRepeatFocus = 0.0f;
   m_fStartAngle = 0.0f;
@@ -152,7 +150,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_bRampBeam = FALSE;
   m_fTaperAngle = 0.0f;
   m_iTaperCounts = 0;
-  m_fNewTrackDiff = 0.2f;
+  m_fNewTrackDiff = 0.0f;
   m_bAlignTrackOnly = FALSE;
   m_fPredictErrorXY = 0.0f;
   m_fPredictErrorZ = 0.0f;
@@ -530,8 +528,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   mPostpone = false;
   mSingleStep = false;
 
-  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart, heightTable, 
-    5);
+  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
 
   // The +/- bold used to work without a member variable, but not for high DPI
   wnd = GetDlgItem(IDC_TSS_PLUS1);
@@ -1883,13 +1880,12 @@ void CTSSetupDialog::OnSinglestep()
 // Manage the open and closing of panels in the dialog
 void CTSSetupDialog::ManagePanels(void)
 {
-  int panel, curTop = topTable[0], cumulDrop, firstDropped, topPos, drawnMaxBottom;
-  int topAtLastDraw;
+  int panel, curTop = topTable[0];
   CRect rect, winRect;
-  int panelTop, leftTop, index, id, nextTop, buttonHigh, ixOffset = 0;
+  int panelTop, leftTop, index, id, nextTop, buttonHigh, minTop = 0, ixOffset = 0;
   CWnd *wnd;
   HDWP positions;
-  bool draw, twoCol, drop, droppingLine;
+  bool draw, twoCol;
   wnd = GetDlgItem(idTable[0]);
   wnd->GetClientRect(rect);
   buttonHigh = rect.Height();
@@ -1904,12 +1900,17 @@ void CTSSetupDialog::ManagePanels(void)
   // First determine if two columns or one
   twoCol = PanelDisplayType() == 2;
   m_statVertline.ShowWindow(twoCol ? SW_SHOW : SW_HIDE);
+  minTop = topTable[mPanelStart[NUM_LEFT_PANELS]] - topTable[mPanelStart[0]] + 
+    (twoCol ? 0 : 6 * buttonHigh);
 
   for (panel = 0; panel < mNumPanels; panel++) {
+    if (panel == mNumPanels - 1 && curTop < minTop)
+      curTop = minTop;
     panelTop = topTable[mPanelStart[panel]];
     
-    // Draw the first 4 unconditionally
-    for (index = mPanelStart[panel]; index < mPanelStart[panel] +  4; index++) {
+    // Draw the first 4 unconditionally, and 5th (line) also if open
+    for (index = mPanelStart[panel];
+      index < mPanelStart[panel] + (mPanelOpen[panel] ? 5 : 4); index++) {
       id = idTable[index];
       if (id > 0) {
         wnd = GetDlgItem(id);
@@ -1932,64 +1933,27 @@ void CTSSetupDialog::ManagePanels(void)
     }
 
     // Now draw or hide the rest of the widgets
-    cumulDrop = 0;
-    firstDropped = -1;
-    droppingLine = false;
-    drawnMaxBottom = 0;
-    topAtLastDraw = 0;
-    for (index = mPanelStart[panel] + B3DCHOICE(panel < mNumPanels - 1, 5, 4);
+    for (index = mPanelStart[panel] + 5;
       index < mPanelStart[panel] + mNumInPanel[panel]; index++) {
       wnd = GetDlgItem(idTable[index]);
       draw = true;
-      drop = false;
-      for (id = (mNumCameras > 1 ? mNumCameras : 0); id < MAX_DLG_CAMERAS; id++) {
-        if (idTable[index] == IDC_RCAMERA1 + id) {
+      for (id = (mNumCameras > 1 ? mNumCameras : 0); id < MAX_DLG_CAMERAS; id++)
+        if (idTable[index] == IDC_RCAMERA1 + id)
           draw = false;
-          drop = mNumCameras == 1;
-        }
-      }
       if (mFuture > 0 && (idTable[index] == IDC_TSGO || idTable[index] == IDC_SINGLESTEP))
         draw = false;
       if (mSTEMindex && idTable[index] == IDC_CENTER_FROM_TRIAL || 
         !mSTEMindex && idTable[index] == IDC_STAT_INTERSET)
         draw = false;
-
-      // Take care of dropping then draw or not, keeping track of top and maximum bottom
-      // when draw
-      ManageDropping(topTable, index, idTable[index], topAtLastDraw, cumulDrop,
-        firstDropped, droppingLine, drop);
-      if (mPanelOpen[panel] && draw && !drop) {
-        topPos = (curTop - cumulDrop) + topTable[index] - panelTop;
-        ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
-        topAtLastDraw = topTable[index];
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
-          ixOffset, topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
-      } else {
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0,
+      if (mPanelOpen[panel] && draw) {
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] + 
+          ixOffset, curTop + topTable[index] - panelTop, 0, 0, 
+          SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+      } else
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0, 
           SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW);
-      }
     }
-
-    // If last one in panel dropped, add to cumulative distance
-    if (firstDropped >= 0 &&
-      B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit)
-      cumulDrop += topTable[mPanelStart[panel + 1]] - topTable[firstDropped];
-
-    // Now draw the bottom line in an open panel except for the last panel
-    if (mPanelOpen[panel] && panel < mNumPanels - 1) {
-      index = mPanelStart[panel] + 4;
-      id = idTable[index];
-      if (id > 0) {
-        wnd = GetDlgItem(id);
-        topPos = (curTop - cumulDrop) + (topTable[index] - panelTop) +
-          (cumulDrop ? mBottomDrawMargin : 0);
-        ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
-          ixOffset, topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
-      }
-      nextTop -= cumulDrop;
-    }
-    curTop = B3DMAX(drawnMaxBottom, nextTop);
+    curTop = nextTop;
     if (twoCol && panel == NUM_LEFT_PANELS - 1) {
       leftTop = curTop;
       curTop = topTable[0];

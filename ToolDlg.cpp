@@ -38,7 +38,6 @@ CToolDlg::CToolDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mBorderColor = RGB(192, 192, 192);
   mIDD = inIDD;
-  mInitialized = false;
 }
 
 
@@ -159,8 +158,7 @@ int CToolDlg::GetMidHeight()
   CRect rect;
   CButton *butOpen = (CButton *)GetDlgItem(IDC_BUTOPEN);
   butOpen->GetWindowRect(&rect);
-  if (!mButFont.m_hObject)
-    mButFont.CreateFont((rect.Height() + 4), 0, 0, 0, FW_BOLD,
+  mButFont.CreateFont((rect.Height() + 4), 0, 0, 0, FW_BOLD,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
@@ -169,8 +167,7 @@ int CToolDlg::GetMidHeight()
   if (!butMore)
     return 0;
   butMore->SetFont(&mButFont);
-  mMidHeight = CurrentButHeight(butMore);
-  return mMidHeight;
+  return CurrentButHeight(butMore);
 }
 
 // Get the mid-height or equivalent value for a different button

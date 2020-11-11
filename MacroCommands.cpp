@@ -590,6 +590,7 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ReportItemUserValue", 2, 0, &CMacCmd::SetNavItemUserValue},/* End in 3.8 */
   {"FilterImage", 5, 0, &CMacCmd::FilterImage},
   // Place for others to add commands
+  { "DoesFileExist", 1, 0, &CMacCmd::DoesFileExist },
   // End of reserved region
   {"SetFolderForFrames", 1, 4, &CMacCmd::SetFolderForFrames},
   {"SetItemTargetDefocus", 2, 4, &CMacCmd::SetItemTargetDefocus},
@@ -1501,9 +1502,13 @@ int CMacCmd::NewArrayCmd(void)
   }
   if (cIndex < 0 || (cTruth && cIndex2 < 0))
     ABORT_LINE("The number of elements to create must be positive in:\n\n");
-  mStrCopy = "0";
-  for (cIx1 = 1; cIx1 < cIndex; cIx1++)
-    mStrCopy += "\n0";
+  if (cIndex > 0) {
+    mStrCopy = "0";
+    for (cIx1 = 1; cIx1 < cIndex; cIx1++)
+      mStrCopy += "\n0";
+  }
+  else
+    mStrCopy = "";
 
   // Create the 2D array rows and add string to the rows
   if (cTruth) {
@@ -8314,6 +8319,17 @@ int CMacCmd::MovePiezoZ(void)
       return 1;
   }
   mMovedPiezo = true;
+  return 0;
+}
+
+// DoesFileExist
+int CMacCmd::DoesFileExist(void)
+{
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+    return 1;
+  cIndex = CFile::GetStatus((LPCTSTR)cReport, cStatus) ? 1 : 0;
+  mLogRpt.Format("File %s DOES%s exist", cReport, cIndex ? "" : " NOT");
+  SetReportedValues(cIndex);
   return 0;
 }
 

@@ -473,7 +473,7 @@ class CMacCmd : public CMacroProcessor
   int ReportPiezoZ(void);
   int MovePiezoXY(void);
   int MovePiezoZ(void);
-
+  int DoesFileExist(void);
 };
 
 #endif  // MACROCOMMANDS_H

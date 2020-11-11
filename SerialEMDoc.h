@@ -116,7 +116,6 @@ public:
   GetSetMember(CString, CurScriptPackPath);
   GetSetMember(BOOL, ScriptPackBackedUp);
   SetMember(CString, SettingsName);
-  GetSetMember(CString, BasicModeFile);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void FixSettingsForIALimitCal();
@@ -262,7 +261,6 @@ private:
   bool mShowFileDlgOnce;         // Flag to be able to show it once
   bool mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
-  CString mBasicModeFile;        // File with disables/hides for basic mode
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -304,8 +302,6 @@ afx_msg void OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI);
 int AddTitlesToFrameMdoc(CString &message);
 int DoOpenFrameMdoc(CString & filename);
 void DoCloseFrameMdoc();
-afx_msg void OnSettingsBasicmode();
-afx_msg void OnUpdateSettingsBasicmode(CCmdUI *pCmdUI);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

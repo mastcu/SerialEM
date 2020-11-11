@@ -148,6 +148,7 @@ private:
   CShiftManager *mShiftManager;
   CEMscope *mScope;
 	CFont mBigFont;			// Font for bigger things
+	BOOL mInitialized;
 	BOOL mIgnoreIS;
   BOOL mTrulyLowDose;
   BOOL mHideOffState;

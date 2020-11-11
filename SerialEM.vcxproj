@@ -1150,7 +1150,6 @@
     <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DERefMakerDlg.h" />
-    <ClInclude Include="DisableHideTable.h" />
     <ClInclude Include="DriftWaitSetupDlg.h" />
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />

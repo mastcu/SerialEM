@@ -548,61 +548,6 @@ void CMainFrame::InitializeStatusBar()
 
 }
 
-// Remove items to be hidden from the menus, restroing if necessary
-void CMainFrame::RemoveHiddenItemsFromMenus()
-{
-  CMenu *mainMenu;
-
-  // Reload the menu except when starting program
-  if (!mWinApp->GetStartingProgram() && !mWinApp->GetBasicMode()) {
-    mainMenu = new CMenu();
-    mainMenu->LoadMenu(IDR_SERIALTYPE);
-    SetMenu(NULL);
-    ::DestroyMenu(m_hMenuDefault);
-
-    // Contrary to the documentation example, you have to set this before setting the menu
-    m_hMenuDefault = mainMenu->m_hMenu;
-    SetMenu(mainMenu);
-  }
-
-  mainMenu = GetMenu();
-  RemoveItemsFromOneMenu(mainMenu, 0);
-  DrawMenuBar();
-}
-
-// Remove items for a single menu/popup recursively
-void CMainFrame::RemoveItemsFromOneMenu(CMenu *menu, int level)
-{
-  int ind;
-  UINT ID;
-  CMenu *subMenu;
-  CString name;
-  for (ind = (int)menu->GetMenuItemCount() - 1; ind >= 0; ind--) {
-    ID = menu->GetMenuItemID(ind);
-    if ((int)ID == -1) {
-
-      // If it is a popup, first see if it is top-level to be removed
-      if (!level) {
-        UtilGetMenuString(menu, ind, name, MF_BYPOSITION);
-        if (mWinApp->IsStringInHideSet(std::string((LPCTSTR)name))) {
-          menu->DeleteMenu(ind, MF_BYPOSITION);
-          continue;
-        }
-      }
-
-      // then recurse and remove from it
-      subMenu = menu->GetSubMenu(ind);
-      if (subMenu)
-        RemoveItemsFromOneMenu(subMenu, level + 1);
-    } else if (ID > 0) {
-
-      // Otherwise if not a separator, remove if it is to be hidden
-      if (mWinApp->IsIDinHideSet(ID))
-        menu->RemoveMenu(ID, MF_BYCOMMAND);
-    }
-  }
-}
-
 // Functions to start and check a timer if an interval is set
 #ifdef TASK_TIMER_INTERVAL
 BOOL CMainFrame::NewTask()

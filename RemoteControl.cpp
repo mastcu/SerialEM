@@ -35,6 +35,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_iStageNotBeam(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
+  mInitialized = false;
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
   mFocusIncrementIndex = 3 * MAX_FOCUS_DECIMALS;

@@ -61,9 +61,6 @@ static char THIS_FILE[]=__FILE__;
 #define MatchNoCase(a) (strItems[0].CompareNoCase(a) == 0)
 #define NAME_IS(a) (strItems[0] == (a))
 
-#include "DisableHideTable.h"
-
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -347,7 +344,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
 
       } else if (NAME_IS("Macro")) {
-        err = ReadOneMacro(itemInt[1], strLine, strItems,
+        err = ReadOneMacro(itemInt[1], strLine, strItems, 
           MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
         if (err > 0) {
           retval = err;
@@ -702,13 +699,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ToolDialogStates") || NAME_IS("ToolDialogStates2")) {
         index = 0;
         mWinApp->SetAbsoluteDlgIndex(NAME_IS("ToolDialogStates2"));
-        while (!strItems[index + 1].IsEmpty() && index < MAX_TOOL_DLGS) {
+        while (!strItems[index + 1].IsEmpty() && index < MAX_DIALOGS) {
           initialDlgState[index] = atoi((LPCTSTR)strItems[index + 1]);
           index++;
         }
       } else if (NAME_IS("ToolDialogPlacement")) {
         index = itemInt[1];
-        if (index < 0 || index >= MAX_TOOL_DLGS || strItems[5].IsEmpty()) {
+        if (index < 0 || index >= MAX_DIALOGS || strItems[5].IsEmpty()) {
             AfxMessageBox("Error in panel placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
@@ -1624,7 +1621,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(oneState);
 
     // Save states of tool windows, but set montage closed
-    for (i = 0; i < MAX_TOOL_DLGS; i++) {
+    for (i = 0; i < MAX_DIALOGS; i++) {
       j = mWinApp->LookupToolDlgIndex(i);
       int state = j >= 0 ? dlgTable[j].state : 0;
       if (i == MONTAGE_DIALOG_INDEX)
@@ -2005,89 +2002,6 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
   }
 }
 
-// Reads a file to hide or disable items containing either defined strings in the
-// table in sDisableHideList or menu item IDs to be hidden
-void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
-  std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
-{
-  CStdioFile *file;
-  int err = 0, type, ind, space;
-  int numInTable = sizeof(sDisableHideList) / sizeof(DisableHideItem);
-  CString strLine, tag, mess = "Error opening";
-  std::string sstr;
-  char *endPtr;
-  try {
-    file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
-    mess = "Error reading from";
-    while (file->ReadString(strLine)) {
-      if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
-        continue;
-
-      // Separate the type from the tag string and convert the type
-      if (ParseString(strLine, &tag, 1, false) == 2) {
-        type = atoi((LPCTSTR)tag);
-        if (type < 1) {
-          AfxMessageBox("Incorrect number for disabling or hiding in line:\n" +
-            strLine + "\n\nin file:  " + filename, MB_EXCLAME);
-        } else {
-          StripItems(strLine, 1, tag);
-
-          // See if the tag starts with a legal number which is assumed to be an ID to
-          // hide if hiding is specified
-          sstr = tag;
-          ind = strtol(sstr.c_str(), &endPtr, 10);
-          if (ind > 0 && ind < 65536  && (*endPtr == 0x00 || *endPtr == ' ') && 
-            type == 2) {
-            IDsToHide->insert(ind);
-          } else {
-
-            // Otherwise look up the string in the list
-            for (ind = 0; ind < numInTable; ind++) {
-              if (!tag.CompareNoCase(sDisableHideList[ind].descrip)) {
-                if (sDisableHideList[ind].disableOrHide & type) {
-
-                  // Store as string, disable, lin ehide, or simple hide
-                  if (sDisableHideList[ind].nID < 1 && sDisableHideList[ind].nID > -10) {
-                    space = tag.ReverseFind(' ');
-                    tag = tag.Left(space);
-                    stringHides->insert(std::string((LPCTSTR)tag));
-                  } else if (type == 1)
-                    IDsToDisable->insert(sDisableHideList[ind].nID);
-                  else if (sDisableHideList[ind].wholeLine)
-                    lineHideIDs->insert(sDisableHideList[ind].nID);
-                  else
-                    IDsToHide->insert(sDisableHideList[ind].nID);
-                } else {
-                  tag.Format("This menu item can only be %s not %s in line:\n",
-                    type == 1 ? "hidden" : "disabled", type > 1 ? "hidden" : "disabled");
-                  AfxMessageBox(tag + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
-                }
-                break;
-              }
-            }
-            if (ind >= numInTable) {
-              AfxMessageBox("Unrecognized description of item to disable or hide in "
-                "line:\n" + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
-            }
-          }
-        }
-      } else
-        AfxMessageBox("Incomplete entry to disable or hide in line:\n"
-          + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
-    }
-    file->Close();
-  }
-  catch (CFileException *perr) {
-    perr->Delete();
-    err = 1;
-  }
-  if (file) {
-    delete file;
-    file = NULL;
-  }
-  if (err)
-    AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
-}
 
 // Properties are measured outside the program, entered by hand into the
 // text file
@@ -2886,15 +2800,6 @@ int CParameterIO::ReadProperties(CString strFileName)
           index++;
         }
         camera->SetNumIgnoreDM(ind, index);
-
-      } else if (NAME_IS("DisableOrHideFile")) {
-        StripItems(strLine, 1, message);
-        ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
-          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings());
-
-      } else if (NAME_IS("BasicModeDisableHideFile")) {
-        StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetBasicModeFile(message);
 
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];

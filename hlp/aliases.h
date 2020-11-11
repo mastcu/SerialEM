@@ -95,7 +95,6 @@ hid_settings_discardonexit  		= SerialEM.chm::/html\menu_settings.htm#hid_settin
 hid_settings_readdefaults				= SerialEM.chm::/html\menu_settings.htm#hid_settings_readdefaults
 hid_settings_autosave						= SerialEM.chm::/html\menu_settings.htm#hid_settings_autosave
 hid_settings_setaproperty				= SerialEM.chm::/html\menu_settings.htm#hid_settings_setaproperty
-hid_settings_basicmode          = SerialEM.chm::/html\menu_settings.htm#hid_settings_basicmode
 hid_camera_parameters						= SerialEM.chm::/html\menu_camera.htm#hid_camera_parameters
 hid_camera_acquiregainref				= SerialEM.chm::/html\menu_camera.htm#hid_camera_acquiregainref
 hid_camera_gainrefpolicy				= SerialEM.chm::/html\menu_camera.htm#hid_camera_gainrefpolicy
