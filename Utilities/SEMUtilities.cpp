@@ -909,12 +909,29 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
 }
 
 // Modify a menu item given its submenu # and ID
-void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char *newText)
+void UtilModifyMenuItem(const char *popupName, UINT itemID, const char *newText)
 {
-  CMenu *menu;
-  menu = sWinApp->m_pMainWnd->GetMenu()->GetSubMenu(subMenuNum);
-  menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
-  sWinApp->m_pMainWnd->DrawMenuBar();
+  CMenu *menu, *mainMenu;
+  CString name;
+  mainMenu = sWinApp->m_pMainWnd->GetMenu();
+  for (int ind = 0; ind < (int)mainMenu->GetMenuItemCount(); ind++) {
+    UtilGetMenuString(mainMenu, ind, name, MF_BYPOSITION);
+    if (!name.Compare(popupName)) {
+      menu = mainMenu->GetSubMenu(ind);
+      menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
+      sWinApp->m_pMainWnd->DrawMenuBar();
+      return;
+    }
+  }
+}
+
+// Get a menu string and strip the accelerator
+void UtilGetMenuString(CMenu *menu, int position, CString &name, UINT nFlags)
+{
+  menu->GetMenuString(position, name, nFlags);
+  name.Replace("&&", "|");
+  name.Replace("&", "");
+  name.Replace("|", "&");
 }
 
 bool UtilCamRadiosNeedSmallFont(CButton *radio) 
