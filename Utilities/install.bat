@@ -351,15 +351,28 @@ if %BIT64% EQU 1 (
 
 Rem # Run the register batch file if one was defined
 set packDir=%cd%
-IF NOT %REGISTER% == 0 (
-  echo First make sure DigitalMicrograph is not running!
-  echo Allow a little extra time if you have to close it.
-  pause
-  COPY /Y %REGISTER% ..
-  CD ..
-  Rem # Use call to return to here
-  CALL %REGISTER%
+IF %REGISTER% == 0 GOTO :RegisterDone
+
+echo First make sure DigitalMicrograph is not running!
+echo Allow a little extra time if you have to close it.
+pause
+
+@echo off
+tasklist /fi "IMAGENAME eq DigitalMicrograph.exe" /nh | find "DigitalMicrograph.exe" > nul 
+IF %errorlevel%==0 (
+  echo Running instance of Digital Micrograph detected, requesting termination now, will forcibly end process in 15 seconds ...
+  taskkill /im DigitalMicrograph.exe > nul
+  ping -n 15 localhost> nul
+  taskkill /f /im DigitalMicrograph.exe > nul 2>&1
 )
+
+COPY /Y %REGISTER% ..
+CD ..
+Rem # Use call to return to here
+CALL %REGISTER%
+
+:RegisterDone
+
 CD "%packDir%"
 
 Rem # Update FrameGPU.dll if it is there

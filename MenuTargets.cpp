@@ -197,8 +197,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
 	ON_COMMAND(ID_NAVIGATOR_ALIGNEDSUPERMONTAGE, OnNavigatorAlignedsupermontage)
 	ON_COMMAND(ID_CALIBRATION_LISTISVECTORS, OnCalibrationListisvectors)
 	ON_COMMAND(ID_CALIBRATION_LISTSTAGECALS, OnCalibrationListstagecals)
-	ON_COMMAND(ID_CALIBRATION_SHUTTERDEADTIME, OnCalibrationShutterdeadtime)
-	ON_COMMAND(ID_CALIBRATION_SETDEBUGOUTPUT, OnCalibrationSetdebugoutput)
+  ON_COMMAND(ID_CALIBRATION_SHUTTERDEADTIME, OnCalibrationShutterdeadtime)
+  ON_COMMAND(ID_CALIBRATION_SETDEBUGOUTPUT, OnCalibrationSetdebugoutput)
 	ON_COMMAND(ID_TILTSERIES_EXTRAOUTPUT, OnTiltseriesExtraoutput)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_CAMERATIMING, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_LOAD_NAV_FILE, OnUpdateLoadNavFile)
@@ -230,7 +230,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
 	ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_ALIGNEDSUPERMONTAGE, OnUpdateNavigatorSkewedsupermontage)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_LISTISVECTORS, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_LISTSTAGECALS, OnUpdateNoTasks)
-	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_SHUTTERDEADTIME, OnUpdateNoTasksNoSTEM)
+	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_SHUTTERDEADTIME, OnUpdateCalibrationShutterdeadtime)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_SETDEBUGOUTPUT, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_TILTSERIES_EXTRAOUTPUT, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_MAGISOFFSETS, OnUpdateNoTasksNoSTEM)
@@ -2411,6 +2411,12 @@ void CMenuTargets::OnUpdateCalibrationQuickFlybackTime(CCmdUI *pCmdUI)
 void CMenuTargets::OnCalibrationShutterdeadtime() 
 {
   mWinApp->mCalibTiming->CalibrateDeadTime(); 	
+}
+
+void CMenuTargets::OnUpdateCalibrationShutterdeadtime(CCmdUI *pCmdUI)
+{
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  pCmdUI->SetCheck(!mCamera->IsDirectDetector(camParam));
 }
 
 void CMenuTargets::OnCalibrationSetdebugoutput() 

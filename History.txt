@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/6/20: Made install script kill DigitalMicrograph if ncessary (In 3.8).
+
+11/6/20: Prevented shutter dead time calibration for direct detectors
+(In 3.8).
+
+11/3/20: Added property to skip the check of neutral IS values on a JEOL
+(In 3.8).
+
 11/2/20: Changed cosine power specification in the tilt series setup dialog to
 be expressed in terms of increase in exposure from 0 to 60 degrees.
 

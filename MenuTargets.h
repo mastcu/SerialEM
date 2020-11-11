@@ -158,8 +158,9 @@ protected:
 	afx_msg void OnNavigatorAlignedsupermontage();
 	afx_msg void OnCalibrationListisvectors();
 	afx_msg void OnCalibrationListstagecals();
-	afx_msg void OnCalibrationShutterdeadtime();
-	afx_msg void OnCalibrationSetdebugoutput();
+  afx_msg void OnCalibrationShutterdeadtime();
+  afx_msg void OnUpdateCalibrationShutterdeadtime(CCmdUI *pCmdUI);
+  afx_msg void OnCalibrationSetdebugoutput();
 	afx_msg void OnTiltseriesExtraoutput();
 	afx_msg void OnCalibrationEftemISoffset();
 	//}}AFX_MSG

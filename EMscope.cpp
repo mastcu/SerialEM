@@ -341,6 +341,7 @@ CEMscope::CEMscope()
   mJeolSTEMdefocusFac = 0.7143; // Measured on Indiana 3200
   mReportsSmallScreen = true;
   mReportsLargeScreen = 1;
+  mSkipJeolNeutralCheck = false;
   mStandardLMFocus = -999.;
 
   // This was never initialized for FEI before...
@@ -2630,7 +2631,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
     }
 
     // Check the neutral image shift one time at this mag
-    if (JEOLscope && !mLastSTEMmode && mLastMagIndex > 0 && 
+    if (JEOLscope && !mLastSTEMmode && mLastMagIndex > 0 && !mSkipJeolNeutralCheck &&
       mLastMagIndex < (int)mCheckedNeutralIS.size() && !mCheckedNeutralIS[mLastMagIndex]){
         magIndex = mPlugFuncs->GetMagnificationIndex();
         if (!mCheckedNeutralIS[magIndex]) {

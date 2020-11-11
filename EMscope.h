@@ -418,6 +418,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
+  GetSetMember(BOOL, SkipJeolNeutralCheck);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void GetNumCameraLengths(int &reg, int &LAD) { reg = mNumRegularCamLens; LAD = mNumLADCamLens; };
   void SetNumCameraLengths(int reg, int LAD) { mNumRegularCamLens = reg; mNumLADCamLens = LAD; };
@@ -723,6 +724,7 @@ private:
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
   std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested
+  BOOL mSkipJeolNeutralCheck;  // Flag to skip the check of neutral values
   int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array

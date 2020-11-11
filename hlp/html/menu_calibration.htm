@@ -2005,7 +2005,8 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
         determine the dead time of the beam shutter, namely the amount of exposure 
         lost. The calibration is needed on JEOLs because the dead time can be ~0.01 
         sec, and this can lead to incorrect shutter time changes in routines that need 
-        to change the shutter time to reduce specimen exposure. Before running it, set 
+        to change the shutter time to reduce specimen exposure. It cannot be run for direct 
+        detector cameras, which have other constraints  that prevent very small exposure times.  Before running it, set 
         the Trial exposure to 0.1 second and adjust the beam and binning to give a 
         moderate number of counts (1/4 - 1/2 saturation). Start the routine and accept 
         the default for the starting exposure time. The program will take 7 pictures 
