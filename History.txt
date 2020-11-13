@@ -3,13 +3,26 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/12/20: Added property to add some text after "SerialEM" in the title bar.
+
+11/12/20: Added hot keys to toggle "Extra info" and crosshairs in the
+display.
+
+11/12/20: Added ability to select scripts to run at program startup and exit.
+
 11/12/20: SEM_3-8-4
 11/12/20: Fixed installer to copy SEMCCD-GMS3.01-64.dll for GMS 3.0 - 3.2
 (In 3.8).
 
 11/12/20: Set the default for LowestGainIndex to 2 for XF416 (In 3.8).
 
-11/10/20: Added command to set tilt axis offset.
+11/11/20: Add script commands to add, subtract, multiply and divide two images
+and to scale the values in an image; changed FilterImage to place the output
+in A or in a specified buffer.
+
+11/11/20: Made it possible to use an autofocus calibration in LM.
+
+11/10/20: Added script command to set tilt axis offset.
 
 11/10/20: Added capability to define dialog and menu items to hide or disable
 unconditionally and also to define a selectable "basic mode" with a list of

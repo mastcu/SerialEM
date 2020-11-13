@@ -26,6 +26,10 @@
       &#39;BasicModeDisableHideFile&#39; can be entered with the full path to an alternative
       file, which can be anywhere and named anything.</P>
     <P>
+      Before you add a &#39;DisableOrHideFile&#39; entry that makes settings unavailable, be
+      sure that the settings files being used have good values for those settings,
+      since it will become impossible for users to fix a bad value.</P>
+    <P>
       Each line in one of these files consists of two entries: an initial value of 1
       or 2 to indicate whether the item should be disabled or hidden, and a unique
       identifier for the item.&nbsp; The first table below lists items for which the
@@ -297,6 +301,8 @@ SCRIPT MENU
 2 33382 Save Package
 2 33383 Save Package As
 2 33182 Load Many
+2 33396 Run at Program Start
+2 33397 Run at Program End
 2 33235 List Functions
 2 33380 List Persistent Vars
 2 33284 Clear Persistent Vars

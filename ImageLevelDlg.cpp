@@ -420,6 +420,14 @@ void CImageLevelDlg::OnScalebar()
   mWinApp->RestoreViewFocus();
 }
 
+void CImageLevelDlg::ToggleExtraInfo(void)
+{
+  mWinApp->mBufferManager->SetDrawScaleBar(!mWinApp->mBufferManager->GetDrawScaleBar());
+  UpdateSettings();
+  if (mWinApp->mActiveView)
+    mWinApp->mActiveView->DrawImage();
+}
+
 void CImageLevelDlg::OnCrosshairs()
 {
   UpdateData(true);
@@ -427,6 +435,15 @@ void CImageLevelDlg::OnCrosshairs()
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();
+}
+
+void CImageLevelDlg::ToggleCrosshairs()
+{
+  mWinApp->mBufferManager->SetDrawCrosshairs(
+    !mWinApp->mBufferManager->GetDrawCrosshairs());
+  UpdateSettings();
+  if (mWinApp->mActiveView)
+    mWinApp->mActiveView->DrawImage();
 }
 
 void CImageLevelDlg::OnAntialias()

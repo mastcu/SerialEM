@@ -776,6 +776,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           letString = CString(" - ") + (mWinApp->GetModeNames())[imBuf->mConSetUsed];
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
+      if (!mFFTWindow && !mStackWindow && scaleCrit > 0 &&
+        mImBufIndex < mWinApp->mBufferManager->GetShiftsOnAcquire()) {
+        cdc.SelectObject(useLabelFont);
+        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), "Rolling");
+      }
 
       // Dose rate output for direct detector and channel name for STEM
       bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()
@@ -2445,6 +2450,11 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (mWinApp->mNavigator && cChar == 'N' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessNKey();
  
+  } else if (cChar == 'X' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mImageLevel.ToggleExtraInfo();
+  } else if (cChar == 'H' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mImageLevel.ToggleCrosshairs();
+
     // Otherwise use arrow keys to adjust offset
   } else if (nChar >= VK_LEFT && nChar <= VK_DOWN) {
     int iDx = 0;
