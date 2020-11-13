@@ -356,6 +356,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptPackagePath")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mDocWnd->SetCurScriptPackPath(strCopy);
+      } else if (NAME_IS("ScriptToRunAtStart")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetScriptToRunAtStart(strCopy);
+      } else if (NAME_IS("ScriptToRunAtEnd")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetScriptToRunAtEnd(strCopy);
       } else if (NAME_IS("FrameNameData")) {
         camera->SetFrameNameFormat(itemInt[1]);
         camera->SetFrameNumberStart(itemInt[2]);
@@ -1347,6 +1353,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString("SerialEMSettings\n");
     WriteString("SystemPath", mWinApp->mDocWnd->GetSysPathForSettings());
     WriteString("ScriptPackagePath", mWinApp->mDocWnd->GetCurScriptPackPath());
+    oneState = mWinApp->GetScriptToRunAtStart();
+    if (!oneState.IsEmpty())
+      WriteString("ScriptToRunAtStart", oneState);
+    oneState = mWinApp->GetScriptToRunAtEnd();
+    if (!oneState.IsEmpty())
+      WriteString("ScriptToRunAtEnd", oneState);
 
     // Write any consets that are initialized (right != 0)
     for (int iCam = 0; iCam < MAX_CAMERAS; iCam++) {
@@ -2895,6 +2907,10 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (NAME_IS("BasicModeDisableHideFile")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetBasicModeFile(message);
+
+      } else if (NAME_IS("ProgramTitleText")) {
+        StripItems(strLine, 1, message);
+        mWinApp->SetProgramTitleText(message);
 
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];

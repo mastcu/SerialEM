@@ -84,7 +84,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_GAIN_REF, TASK_ALIGN_DE_FRAMES, TASK_START_NAV_ACQ, TASK_CTF_BASED, 
   TASK_CAL_COMA_VS_IS, TASK_REMOTE_CTRL, TASK_MOVE_APERTURE, TASK_WAIT_FOR_DRIFT,
   TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
-  TASK_CAL_IA_LIMITS
+  TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -554,6 +554,9 @@ public:
   GetSetMember(int, AddDPItoSnapshots);
   GetSetMember(BOOL, SettingsFixedForIACal);
   GetSetMember(BOOL, ShiftScriptOnlyInAdmin);
+  GetSetMember(CString, ScriptToRunAtStart);
+  GetSetMember(CString, ScriptToRunAtEnd);
+  GetSetMember(CString, ProgramTitleText);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
   std::set<int>  *GetIDsToDisable() { return &mIDsToDisable; };
@@ -831,6 +834,10 @@ private:
   StringSet mHideStrings;
   StringSet mBasicHideStrings;
   BOOL mBasicMode;
+  CString mScriptToRunAtStart;
+  CString mScriptToRunAtEnd;
+  CString mProgramTitleText;
+
 
 public:
   void UpdateAllEditers(void);

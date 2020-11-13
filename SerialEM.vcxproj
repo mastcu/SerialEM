@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1215,6 +1215,7 @@
     <ClInclude Include="HoleFinderDlg.h" />
     <ClInclude Include="Image\MdocDefines.h" />
     <ClInclude Include="MacroCommands.h" />
+    <ClInclude Include="MacroSelector.h" />
     <ClInclude Include="MultiCombinerDlg.h" />
     <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
@@ -2152,6 +2153,7 @@ echo.
     <ClCompile Include="FrameAlignDlg.cpp" />
     <ClCompile Include="HoleFinderDlg.cpp" />
     <ClCompile Include="MacroCommands.cpp" />
+    <ClCompile Include="MacroSelector.cpp" />
     <ClCompile Include="MultiCombinerDlg.cpp" />
     <ClCompile Include="MultiHoleCombiner.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />

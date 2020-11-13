@@ -1500,6 +1500,10 @@ BOOL CSerialEMApp::InitInstance()
   
   mStartingProgram = false;
   DoResizeMain();
+  SetTitleFile("");
+  iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
+  if (iCam >= 0)
+    mMacroProcessor->Run(iCam);
   return TRUE;
 }
 
@@ -2164,6 +2168,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mScope->ApertureBusy();
     else if (idc->source == TASK_WAIT_FOR_DRIFT)
       busy = mParticleTasks->WaitForDriftBusy();
+    else if (idc->source == TASK_MACRO_AT_EXIT)
+      busy = mMacroProcessor->DoingMacro() ? 1 : 0;
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -2298,6 +2304,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mGainRefMaker->AcquiringRefNextTask(idc->param);
         else if (idc->source == TASK_FIND_HOLES)
           mNavHelper->mHoleFinderDlg->ScanningNextTask(idc->param);
+        else if (idc->source == TASK_MACRO_AT_EXIT)
+          mMainFrame->DoClose(true);
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
@@ -2402,7 +2410,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
   }
 
   // Manage the blinking pane
-  if (!mBlinkText.IsEmpty() && time > mNextBlinkTime) {
+  if (!mBlinkText.IsEmpty() && time > mNextBlinkTime && !mAppExiting) {
     if (mBlinkOn) {
       mNextBlinkTime += BLINK_TIME_OFF;
       mMainFrame->SetStatusText(SIMPLE_PANE, mBlinkText);
@@ -2902,6 +2910,8 @@ void CSerialEMApp::SetStatusText(int iPane, CString strText)
 void CSerialEMApp::SetTitleFile(CString fileName)
 {
   CString progName = mDummyInstance ? "DUMMY SerialEM" : "SerialEM";
+  if (!mProgramTitleText.IsEmpty())
+    progName += " - " + mProgramTitleText;
   if (fileName.IsEmpty())
     mMainFrame->SetWindowText(progName);
   else
