@@ -73,7 +73,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define VERSION_STRING  "SerialEM Version 3.9.0beta"
-#define TAG_STRING      "(Tagged SEM_3-8-3, 10/16/20)"
+#define TAG_STRING      "(Tagged SEM_3-8-4, 11/12/20)"
 
 // Offsets for static window inside main frame
 #define STATIC_BORDER_TOP      0
@@ -299,7 +299,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].TietzCanPreExpose = false;
     mCamParams[i].restoreBBmode = -1;
     mCamParams[i].TietzGainIndex = 1;
-    mCamParams[i].LowestGainIndex = 1;
+    mCamParams[i].LowestGainIndex = -1;
     mCamParams[i].TietzImageGeometry = -1;  // So even a property 0 will be sent out
     mCamParams[i].TietzBlocks = 0;
     mCamParams[i].dropFrameFlags = 0;

@@ -146,6 +146,8 @@ static int sGIFisSocket;             // 0 or 1 if GIF is on socket interface
 
 #define TIETZ_ROTATING(a) ((a)->TietzImageGeometry > 0 && ((a)->TietzImageGeometry & 20) != 0)
 
+#define MIN_XF416_TYPE 15
+
 #define FALCON_DIR_UNSET "NotSetByUser"
 
 static int restrictedSizeIndex;       // Index to last selected restricted size
@@ -690,13 +692,13 @@ int CCameraController::Initialize(int whichCameras)
       param->canTakeFrames = 0;
 
       // Turn it on for Tietz XF416 types
-      if (param->TietzType >= 15)
+      if (param->TietzType >= MIN_XF416_TYPE)
         param->canTakeFrames = 3;
     }
     if (param->canTakeFrames) {
       if (param->TietzType >= 11) {
         jnd = TIETZ_ROTATING(param) ? param->sizeX : param->sizeY;
-        tietzFrame = (float)((param->TietzType >= 15 ? 0.01 : 0.1) * 
+        tietzFrame = (float)((param->TietzType >= MIN_XF416_TYPE ? 0.01 : 0.1) * 
           B3DNINT(jnd / 1024.));
       }
       for (jnd = 0; jnd < param->numBinnings; jnd++) {
@@ -3304,8 +3306,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   // rolling shutter here, let this be translated into mode and speed indexes in the call 
   if (mParam->TietzType) {
     mTD.GatanReadMode = -1;
-    if ((mParam->TietzType >= 15 && mParam->TietzType <= 18) || mParam->canTakeFrames ||
-      !mTD.TietzFlatfieldDir.IsEmpty()) {
+    if ((mParam->TietzType >= MIN_XF416_TYPE && mParam->TietzType <= 18) || 
+      mParam->canTakeFrames || !mTD.TietzFlatfieldDir.IsEmpty()) {
       mTD.GatanReadMode = conSet.doseFrac ? 1 : 0;
       if (conSet.doseFrac)
         mTD.RestoreBBmode = true;
@@ -10360,6 +10362,8 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
           return 1;
         camP->failedToInitialize = true;
       } else {
+        if (camP->LowestGainIndex < 0)
+          camP->LowestGainIndex = (camP->TietzType >= MIN_XF416_TYPE) ? 2 : 1;
         numGain = mPlugFuncs[ind]->GetNumberOfGains();
         if (numGain > 0) {
           B3DCLAMP(camP->TietzGainIndex, camP->LowestGainIndex, 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/12/20: SEM_3-8-4
+11/12/20: Set the default for LowestGainIndex to 2 for XF416 (In 3.8).
+
 11/10/20: Added command to set tilt axis offset.
 
 11/10/20: Added capability to define dialog and menu items to hide or disable
@@ -12,7 +15,7 @@ items to hide or disable.
 11/10/20: Made it possible to set Administrator mode to -1 to prevent people
 from saving calibrations.
 
-11/6/20: Made install script kill DigitalMicrograph if ncessary (In 3.8).
+11/6/20: Made install script kill DigitalMicrograph if necessary (In 3.8).
 
 11/6/20: Prevented shutter dead time calibration for direct detectors
 (In 3.8).

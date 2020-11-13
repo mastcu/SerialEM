@@ -1357,16 +1357,17 @@
         </TR>
         <TR VALIGN="top">
           <TD>TietzGainIndex</TD>
-          <TD>Gain index to use for a Tietz camera. This is not the gain itself but 
+          <TD>Gain index to use for a Tietz camera.&nbsp; This is not the gain itself but 
             generally a number 
             between 1 and the number of gains available, which is obtained from the camera 
-            interface. The default is 1.</TD>
+            interface.&nbsp; The default is 2 for XF416, 1 otherwise.&nbsp; For XF416, 2 is 
+            high sensitivity mode and 3 is extended dynamic range mode.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>LowestGainIndex</TD>
-          <TD>Minimum value of the gain index.&nbsp; If it is not 1 (the default), then the 
+          <TD>Minimum value of the gain index.&nbsp; If it is not 1, then the 
             gain index is constrained to be between this number and this number plus the 
-            number of gains minus 1.</TD>
+            number of gains minus 1.&nbsp; The default is 2 for XF416, 1 otherwise.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TietzImageGeometry</TD>
