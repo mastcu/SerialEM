@@ -4,6 +4,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance.
 ============================================================================
 11/12/20: SEM_3-8-4
+11/12/20: Fixed installer to copy SEMCCD-GMS3.01-64.dll for GMS 3.0 - 3.2
+(In 3.8).
+
 11/12/20: Set the default for LowestGainIndex to 2 for XF416 (In 3.8).
 
 11/10/20: Added command to set tilt axis offset.

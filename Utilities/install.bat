@@ -263,8 +263,8 @@ Rem YOU CANNOT DO AN ELSE AFTER A COMPOUND IF
 IF %Major% EQU 3 IF %Minor% GEQ 30 GOTO :VS2015GM3
 
 IF %Major% EQU 3 (
-  set versRange64=2.31 to 3.2x
-  set SEMCCD64=SEMCCD-GMS2.31-64.dll
+  set versRange64=3.01 to 3.2x
+  set SEMCCD64=SEMCCD-GMS3.01-64.dll
   set BIT64=1
 ) ELSE IF %Minor% LSS 30 (
   set versRange32=2.0-2.2
@@ -279,7 +279,7 @@ IF %Major% EQU 3 (
 ) ELSE (
   set versRange32=2.30 and higher
   set SEMCCD32=SEMCCD-GMS2.30-32.dll
-  set versRange64=2.31 to 3.2x
+  set versRange64=2.31 - 2.3x
   set SEMCCD64=SEMCCD-GMS2.31-64.dll
 )
 GOTO :SetupSEMCCDdone
