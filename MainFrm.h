@@ -46,6 +46,7 @@ public:
 	void DialogChangedState(CToolDlg *inDialog, int inState);
 	virtual ~CMainFrame();
   bool GetClosingProgram() {return mClosingProgram;};
+  void DoClose(bool afterScript);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;

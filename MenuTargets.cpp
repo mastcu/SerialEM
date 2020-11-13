@@ -14,6 +14,7 @@
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include ".\MenuTargets.h"
+#include "MacroSelector.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "MapDrawItem.h"
@@ -2211,9 +2212,13 @@ void CMenuTargets::OnUpdateTiltseriesRunMacro(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnTiltseriesSetMacroToRun()
 {
+  CMacroSelector dlg;
   int macNum = mTSController->GetMacroToRun();
-  if (!KGetOneInt("Enter number of script to run:", macNum))
+  dlg.mMacroIndex = macNum;
+  dlg.m_strEntryText = "Select script to run before step in tilt series";
+  if (dlg.DoModal() == IDCANCEL)
     return;
+  macNum = dlg.mMacroIndex;
   mTSController->SetMacroToRun(macNum);
   macNum = mTSController->GetStepAfterMacro();
   B3DCLAMP(macNum, 1, TSMACRO_PRE_RECORD);

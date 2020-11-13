@@ -16,6 +16,7 @@
 #include "ChildFrm.h"
 #include "LogWindow.h"
 #include "EMscope.h"
+#include "MacroProcessor.h"
 #include "AutocenSetupDlg.h"
 #include "shiftManager.h"
 #include "TSController.h"
@@ -374,65 +375,80 @@ void CMainFrame::OnMove(int x, int y)
 //}
 
 
-void CMainFrame::OnClose() 
+void CMainFrame::OnClose()
+{
+  DoClose(false);
+}
+
+void CMainFrame::DoClose(bool afterScript)
 {
   WINDOWPLACEMENT winPlace;
-  int magInd;
+  int magInd, macNum;
   bool skipReset = false;
   BOOL wasLD = mWinApp->LowDoseMode();
 
-  if (  mClosingProgram)
+  if (mClosingProgram)
     return;
-    mClosingProgram = true;
+  mClosingProgram = true;
 
-  if (mWinApp->mTSController->TerminateOnExit()) {
+  if (!afterScript) {
+    if (mWinApp->mTSController->TerminateOnExit()) {
       mClosingProgram = false;
-    return;
-  }
-
-  if (mWinApp->mFalconHelper->GetStackingFrames()) {
-    if (AfxMessageBox("It SEEMS that camera frames are still being stacked or aligned\n"
-      "Do you really want to exit?", MB_QUESTION) != IDYES) {
-        mClosingProgram = false;
       return;
     }
-  }
 
-
-  if (mWinApp->mNavigator)
-    mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
-
-  // Auto save files, may save some inquiries
-  mWinApp->mDocWnd->AutoSaveFiles();
-
-  // Want to shut off low dose mode now so that parameters return
-  // to their normal states before settings are saved
-  mWinApp->mLowDoseDlg.SetLowDoseMode(false);
-
-  if (mWinApp->mScope->GetDoingLongOperation() && 
-    mWinApp->mScope->StopLongOperation(true)) {
-    if (wasLD)
-      mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    if (mWinApp->mFalconHelper->GetStackingFrames()) {
+      if (AfxMessageBox("It SEEMS that camera frames are still being stacked or aligned\n"
+        "Do you really want to exit?", MB_QUESTION) != IDYES) {
         mClosingProgram = false;
         return;
-  }
-  
-  if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
-    (!mWinApp->GetExitWithUnsavedLog() && 
-    mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
-    mWinApp->mNavigator && mWinApp->mNavigator->AskIfSave("exiting?")) {
-    if (wasLD)
-      mWinApp->mLowDoseDlg.SetLowDoseMode(true);
-    mClosingProgram = false;
-    return;
-  }
+      }
+    }
 
-  if (mWinApp->mBufferManager->CheckAsyncSaving()) {
-    if (AfxMessageBox("Do want to save that image somewhere before exiting?", 
-      MB_QUESTION) == IDYES) {
+
+    if (mWinApp->mNavigator)
+      mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
+
+    // Auto save files, may save some inquiries
+    mWinApp->mDocWnd->AutoSaveFiles();
+
+    // Want to shut off low dose mode now so that parameters return
+    // to their normal states before settings are saved
+    mWinApp->mLowDoseDlg.SetLowDoseMode(false);
+
+    if (mWinApp->mScope->GetDoingLongOperation() &&
+      mWinApp->mScope->StopLongOperation(true)) {
       if (wasLD)
         mWinApp->mLowDoseDlg.SetLowDoseMode(true);
       mClosingProgram = false;
+      return;
+    }
+
+    if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
+      (!mWinApp->GetExitWithUnsavedLog() &&
+        mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
+      mWinApp->mNavigator && mWinApp->mNavigator->AskIfSave("exiting?")) {
+      if (wasLD)
+        mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+      mClosingProgram = false;
+      return;
+    }
+
+    if (mWinApp->mBufferManager->CheckAsyncSaving()) {
+      if (AfxMessageBox("Do want to save that image somewhere before exiting?",
+        MB_QUESTION) == IDYES) {
+        if (wasLD)
+          mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+        mClosingProgram = false;
+        return;
+      }
+    }
+    macNum = mWinApp->mMacroProcessor->FindMacroByNameOrTextNum(
+      mWinApp->GetScriptToRunAtEnd());
+    if (macNum >= 0) {
+      mWinApp->mMacroProcessor->Run(macNum);
+      mClosingProgram = false;
+      mWinApp->AddIdleTask(TASK_MACRO_AT_EXIT, 0, 0);
       return;
     }
   }
