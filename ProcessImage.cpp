@@ -458,8 +458,8 @@ void CProcessImage::RotateImage(BOOL bLeft)
 }
 
 // Filter the image in the given buffer with the standard filter parameters
-int CProcessImage::FilterImage(EMimageBuffer *imBuf, float sigma1, float sigma2,
-  float radius1, float radius2)
+int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1,
+  float sigma2, float radius1, float radius2)
 {
   KImage *image = imBuf->mImage;
   int nx, ny, nxpad, nypad, nxdim, dir = 1;
@@ -485,19 +485,167 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, float sigma1, float sigma2,
   XCorrFilter((float *)image->getData(), image->getType(), nx, ny, brray, nxpad, nypad, 
     delta, ctf);
   image->UnLock();
-  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1);
+
+  // If the destination buffer has no image, copy the source first to keep 
+  // NewprocessedImage happy
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(&mImBufs[outBufNum], (short *)brray, kFLOAT, nx, ny, 1);
   return 0;
 }
 
+// Do arithmetic operation between two images
+int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation)
+{
+  KImage *image1 = mImBufs[bufNum1].mImage;
+  KImage *image2 = mImBufs[bufNum2].mImage;
+  int type1 = image1->getType();
+  int type2 = image2->getType();
+  int nx, ny, ind;
+  float *inArray1, *inArray2, *outArray;
+  if (!image1 || !image2)
+    return -1;
+  image1->getSize(nx, ny);
+  if (type1 == kRGB || type2 == kRGB) {
+    SEMMessageBox("You cannot do arithmetic operations on RGB images");
+    return 1;
+  }
+  if (image2->getWidth() != nx || image2->getHeight() != ny) {
+    SEMMessageBox("You cannot do arithmetic operations on different-sized images");
+    return 1;
+  }
+
+  // Get float array for result
+  image1->Lock();
+  image2->Lock();
+  NewArray(outArray, float, nx * ny);
+  if (outArray) {
+
+    //Either assign this as the input array if 1 already float, or copy 1 into the array
+    if (type1 == kFLOAT) {
+      inArray1 = (float *)image1->getData();
+    } else {
+      sliceTaperOutPad(image1->getData(), type1, nx, ny, outArray, nx, nx, ny, 1, 0.);
+      inArray1 = outArray;
+    }
+
+    // If 2 is already float use it as input, otherwise get array and copy to it
+    if (type2 == kFLOAT) {
+      inArray2 = (float *)image2->getData();
+    } else {
+      NewArray(inArray2, float, nx * ny);
+      if (inArray2)
+        sliceTaperOutPad(image2->getData(), type2, nx, ny, inArray2, nx, nx, ny, 1, 0.);
+      else
+        delete[] outArray;
+    }
+  }
+  if (!outArray || !inArray2) {
+    SEMMessageBox("Failed to get memory for combining two images");
+    image1->UnLock();
+    image2->UnLock();
+    return 1;
+  }
+
+  // Do the operation
+  switch (operation) {
+  case PROC_ADD_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] + inArray2[ind];
+    break;
+
+  case PROC_SUBTRACT_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] - inArray2[ind];
+    break;
+
+  case PROC_MULTIPLY_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] * inArray2[ind];
+    break;
+
+  case PROC_DIVIDE_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++) {
+      if (inArray2[ind] != 0.)
+        outArray[ind] = inArray1[ind] / inArray2[ind];
+      else
+        outArray[ind] = 0.;
+    }
+    break;
+  }
+
+  // Clean up and replace the buffer
+  image1->UnLock();
+  image2->UnLock();
+  if (type2 != kFLOAT)
+    delete[] inArray2;
+
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
+  NewProcessedImage(&mImBufs[outBufNum], (short *)outArray, kFLOAT, nx, ny, 1);
+  return 0;
+}
+
+// Multiple by a factor and add an offset to the image in imBuf, put in the indicated
+// output buffer, keeping the same type if retainType is true
+int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, 
+  float offset, bool retainType)
+{
+  KImage *image = imBuf->mImage;
+  int nx, ny, type, newType = kFLOAT, dataSize = 4, numChan = 1;
+  unsigned char *array;
+  void *inArray;
+  if (!image)
+    return -1;
+  type = image->getType();
+  if (type == kRGB && !retainType) {
+    SEMMessageBox("You cannot scale an RGB image into a floating point image");
+    return 1;
+  }
+
+  // Going to scale into a new array regardless, get one of the right size
+  if (retainType) {
+    dataSizeForMode(type, &dataSize, &numChan);
+    newType = type;
+  }
+  image->getSize(nx, ny);
+  NewArray(array, unsigned char, nx * ny * dataSize * numChan);
+  if (!array) {
+    SEMMessageBox("Failed to get memory for scaling image");
+    return 1;
+  }
+
+  // Convert the data into the float array here if not staying the same type
+  image->Lock();
+  inArray = image->getData();
+  if (!retainType) {
+    sliceTaperOutPad(inArray, type, nx, ny, (float *)array, nx, nx, ny, 1, 0.);
+    inArray = array;
+  }
+
+  // Scale and get into output buffer
+  ProcScaleImage(inArray, type == kRGB ? type : newType, nx * numChan, ny, factor, offset,
+    array);
+  image->UnLock();
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(&mImBufs[outBufNum], (short *)array, newType, nx, ny, 1);
+  return 0;
+}
+
+// Common routine for putting a newly processed image into the given buffer
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
                                       int nx, int ny, int moreBinning, int capFlag,
                                       bool fftWindow)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
-  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs);
+  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), imBuf);
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
+  int bufNum = imBuf - mImBufs;
+  if (bufNum < 0 || bufNum >= MAX_BUFFERS)
+    bufNum = 0;
 
   // Make a temporary copy of the imBuf because it may get displaced on the roll
   EMimageBuffer imBufTmp;
@@ -505,7 +653,8 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
 
   // Roll the buffers just like on acquire
   int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, bufferManager->GetShiftsOnAcquire());
-  if (!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
+  if ((!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
+    || imBuf != mImBufs)
     nRoll = 0;
   for (int i = nRoll; i > 0 ; i--)
     bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
@@ -521,7 +670,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   bufferManager->CopyImBuf(&imBufTmp, toImBuf, false);
 
   // Replace the image, again cleaning up on failure
-  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, 0, capFlag,
+  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, bufNum, capFlag,
     imBuf->mConSetUsed, fftWindow) ) {
     delete [] brray;
     return;

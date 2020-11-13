@@ -1284,7 +1284,7 @@
             side-by-side FFT window if that option is on.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FilterImage buf sig1 rad1 rad2 sig2</TD>
+          <TD class="scriptcommand">FilterImage buf sig1 rad1 rad2 sig2 [obuf]</TD>
           <TD>Applies a filter in Fourier space to the image in the given buffer; the filter is
             the product of two separate filters, one controlled by <B>sig1</B> (sigma1) and the other
             by <B>rad2</B> (radius2) and <B>sig2</B> (sigma2).&nbsp; Sigma1 provides low-frequency filtering
@@ -1294,7 +1294,42 @@
             If radius1 is positive, a Gaussian with the same sigma falls off to the left of radius1.&nbsp;
             If sigma1 is negative, it provides a band-pass filter peaking at 1.414 * |sigma1|.&nbsp; See 
             Filterplot in IMOD for a complete description and ability to graph any filter.&nbsp; 
-            The units are reciprocal pixels (0 to 0.5 along an axis).&nbsp; Command added in 3.9, 9/12/20.</TD>
+            The units are reciprocal pixels (0 to 0.5 along an axis).&nbsp; The floating point output is 
+            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
+            is added specifying a different buffer, which can be <b>buf</b>.&nbsp; Command added in 3.9, 9/12/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddImages buf1 buf2 [obuf]</TD>
+          <TD>Adds the two images in buffers <b>buf1</b> and <b>buf2</b>&nbsp; The floating point output is 
+            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
+            is added specifying a different buffer, which can be <b>buf1</b> or <b>buf2</b>.&nbsp; Command
+            added in 3.9, 11/11/20.
+          </TD></TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SubtractImages buf1 buf2 [obuf]</TD>
+          <TD>Like 'AddImages', except that <b>buf2</b> is subtracted from <b>buf1</b>.&nbsp;Command
+            added in 3.9, 11/11/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MultiplyImages buf1 buf2 [obuf]</TD>
+          <TD>Like 'AddImages', except that <b>buf2</b> is multiplied by <b>buf1</b>&nbsp;Command
+            added in 3.9, 11/11/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">DivideImages buf1 buf2 [obuf]</TD>
+          <TD>Like 'AddImages', except that <b>buf1</b> is divided by <b>buf2</b>, with 0 in the 
+            output at pixels where <b>buf2</b> is zero.&nbsp;Command added in 3.9, 11/11/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ScaleImage buf #S #A [obuf] [#K]</TD>
+          <TD>Scales the image in buffer <b>buf</b> by multiplying by <b>#S</b> then adding
+            <b>#A</b>.&nbsp; The output is 
+            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
+            is added specifying a different buffer, which can be <b>buf</b>.&nbsp; The resulting image
+            is floating point unless the optional <b>#K</b> is non-zero to keep the existing image 
+            type.&nbsp; Command added in 3.9, 11/11/20.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>

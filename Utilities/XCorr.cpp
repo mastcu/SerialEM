@@ -312,6 +312,42 @@ void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int n
   }
 }
 
+#define SCALE_ARRAY(nam, in, out, lo, hi, typ) \
+  case nam:   \
+    for (ind = 0; ind < nx * ny; ind++) {  \
+      value = in[ind] * factor + offset;   \
+      B3DCLAMP(value, lo, hi);   \
+      out[ind] = (typ)value;  \
+    }   \
+    break;
+
+// Scale an array of the given type by a factor and add an offset, clamping as needed
+// for non-float types
+void ProcScaleImage(void *array, int type, int nx, int ny, float factor, float offset,
+  void *brray)
+{
+  int ind;
+  float value;
+  float *fData = (float *)array;
+  unsigned char *bData = (unsigned char *)array;
+  unsigned short *usData = (unsigned short *)array;
+  short *sData = (short *)array;
+  float *fOut = (float *)brray;
+  unsigned char *bOut = (unsigned char *)brray;
+  unsigned short *usOut = (unsigned short *)brray;
+  short *sOut = (short *)brray;
+
+  switch (type) {
+    SCALE_ARRAY(BYTE, bData, bOut, 0., 255., unsigned char);
+    SCALE_ARRAY(SIGNED_SHORT, sData, sOut, -32768., 32767., short);
+    SCALE_ARRAY(UNSIGNED_SHORT, usData, usOut, 0., 65535., unsigned short);
+
+  case FLOAT:
+    for (ind = 0; ind < nx * ny; ind++)
+      fOut[ind] = fData[ind] * factor + offset;
+    break;
+  }
+}
 
 void XCorrBinBy2(void *array, int type, int nxin, int nyin, short int *brray)
 {

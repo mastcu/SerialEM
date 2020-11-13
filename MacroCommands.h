@@ -303,6 +303,8 @@ class CMacCmd : public CMacroProcessor
   int ReduceImage(void);
   int FFT(void);
   int FilterImage(void);
+  int CombineImages(void);
+  int ScaleImage(void);
   int CtfFind(void);
   int ImageProperties(void);
   int ImageLowDoseSet(void);

@@ -598,6 +598,11 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"SuspendNavRedraw", 0, 4, &CMacCmd::SuspendNavRedraw},
   {"DeferLogUpdates", 0, 4, &CMacCmd::DeferLogUpdates},
   {"SetTiltAxisOffset", 1, 4, &CMacCmd::SetTiltAxisOffset}, /*CAI3.9*/
+  {"AddImages", 2, 1, &CMacCmd::CombineImages},
+  {"SubtractImages", 2, 1, &CMacCmd::CombineImages},
+  {"MultiplyImages", 2, 1, &CMacCmd::CombineImages},
+  {"DivideImages", 2, 1, &CMacCmd::CombineImages}, 
+  {"ScaleImage", 3, 1, &CMacCmd::ScaleImage},
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -750,7 +755,7 @@ int CMacCmd::NextCommand(bool startingOut)
     cIx1 = cIx0 + mCropXafterShot - 1;
     cIy1 = cIy0 + mCropYafterShot - 1;
     mCropXafterShot = -1;
-    cIx0 = mWinApp->mProcessImage->CropImage(mImBufs, cIy0, cIx0, cIy1, cIx1);
+    cIx0 = mProcessImage->CropImage(mImBufs, cIy0, cIx0, cIy1, cIx1);
     if (cIx0) {
       cReport.Format("Error # %d attempting to crop new image to match buffer", cIx0);
       ABORT_NOLINE(cReport);
@@ -3791,7 +3796,7 @@ int CMacCmd::ChangeMag(void)
   cIx0 = B3DNINT(mItemDbl[1]);
   if (!CMD_IS(CHANGEMAG)) {
     cIx0 = mItemDbl[1] < 0 ? - 1 : 1;
-    cTruth = mWinApp->mProcessImage->GetFoundPixelSize(cIy0, cIndex) > 0.;
+    cTruth = mProcessImage->GetFoundPixelSize(cIy0, cIndex) > 0.;
     SetReportedValues(cTruth ? 1. : 0.);
   }
   if (CMD_IS(CHANGEMAG) || cTruth) {
@@ -4167,7 +4172,7 @@ int CMacCmd::SetBeamShift(void)
 // MoveBeamByMicrons
 int CMacCmd::MoveBeamByMicrons(void)
 {
-  if (mWinApp->mProcessImage->MoveBeam(NULL, mItemFlt[1], mItemFlt[2]))
+  if (mProcessImage->MoveBeam(NULL, mItemFlt[1], mItemFlt[2]))
     ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
     " line:\n\n");
   return 0;
@@ -4176,7 +4181,7 @@ int CMacCmd::MoveBeamByMicrons(void)
 // MoveBeamByFieldFraction
 int CMacCmd::MoveBeamByFieldFraction(void)
 {
-  if (mWinApp->mProcessImage->MoveBeamByCameraFraction(mItemFlt[1],
+  if (mProcessImage->MoveBeamByCameraFraction(mItemFlt[1],
     mItemFlt[2]))
     ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
     " line:\n\n");
@@ -5081,7 +5086,7 @@ int CMacCmd::ReportMeanCounts(void)
     ABORT_LINE(cReport);
   cImBuf = &mImBufs[cIndex];
   if (mItemEmpty[2] || mItemInt[2] < 2) {
-    cDelX = mWinApp->mProcessImage->WholeImageMean(cImBuf);
+    cDelX = mProcessImage->WholeImageMean(cImBuf);
     if (mStrItems[2] == "1" && cImBuf->mBinning && cImBuf->mExposure > 0.) {
       cDelX /= cImBuf->mBinning * cImBuf->mBinning * cImBuf->mExposure *
         mWinApp->GetGainFactor(cImBuf->mCamera, cImBuf->mBinning);
@@ -5164,7 +5169,7 @@ int CMacCmd::ElectronStats(void)
   if (mImBufs[cIndex].mCamera < 0 || !cDelX || !mImBufs[cIndex].mExposure)
     ABORT_LINE("Image buffer does not have enough information for dose statistics in:"
     "\r\n\r\n");
-  cCpe = mWinApp->mProcessImage->CountsPerElectronForImBuf(&mImBufs[cIndex]);
+  cCpe = mProcessImage->CountsPerElectronForImBuf(&mImBufs[cIndex]);
   if (!cCpe)
     ABORT_LINE("Camera does not have a CountsPerElectron property for:\r\n\r\n");
   cImage = mImBufs[cIndex].mImage;
@@ -5182,7 +5187,7 @@ int CMacCmd::ElectronStats(void)
   cBacklashY = cBacklashX;
   if (CMD_IS(ELECTRONSTATS)) {
     if (mImBufs[cIndex].mK2ReadMode > 0)
-      cBacklashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[cIndex].mCamera,
+      cBacklashY = mProcessImage->LinearizedDoseRate(mImBufs[cIndex].mCamera,
         cBacklashX);
     if (mImBufs[cIndex].mDoseRatePerUBPix > 0.) {
       SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", 
@@ -5225,7 +5230,7 @@ int CMacCmd::CropImage(void)
     cIx1 = cIx0 + mItemInt[2] - 1;
     cIy1 = cIy0 + mItemInt[3] - 1;
   }
-  cIx0 = mWinApp->mProcessImage->CropImage(&mImBufs[cIndex], cIy0, cIx0, cIy1, cIx1);
+  cIx0 = mProcessImage->CropImage(&mImBufs[cIndex], cIy0, cIx0, cIy1, cIx1);
   if (cIx0) {
     cReport.Format("Error # %d attempting to crop image in buffer %c in statement: \n\n"
       , cIx0, mStrItems[1].GetAt(0));
@@ -5244,7 +5249,7 @@ int CMacCmd::ReduceImage(void)
 {
   if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
     ABORT_LINE(cReport);
-  cIx0 = mWinApp->mProcessImage->ReduceImage(&mImBufs[cIndex], mItemFlt[2],
+  cIx0 = mProcessImage->ReduceImage(&mImBufs[cIndex], mItemFlt[2],
     &cReport);
   if (cIx0) {
     cReport += " in statement:\n\n";
@@ -5263,18 +5268,50 @@ int CMacCmd::FFT(void)
     cIndex2 = mItemInt[2];
   if (cIndex2 < 1 || cIndex2 > 8)
     ABORT_LINE("Binning must be between 1 and 8 in line:\n\n");
-  mWinApp->mProcessImage->GetFFT(&mImBufs[cIndex], cIndex2, BUFFER_FFT);
+  mProcessImage->GetFFT(&mImBufs[cIndex], cIndex2, BUFFER_FFT);
   return 0;
 }
 
 // FilterImage
 int CMacCmd::FilterImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) || 
+    ConvertBufferLetter(mStrItems[6], 0, false, cIndex2, cReport))
     ABORT_LINE(cReport);
-  if (mWinApp->mProcessImage->FilterImage(&mImBufs[cIndex], mItemFlt[2], mItemFlt[5],
+  if (mProcessImage->FilterImage(&mImBufs[cIndex], cIndex2, mItemFlt[2], mItemFlt[5],
     mItemFlt[3], mItemFlt[4]))
     ABORT_LINE("Failed to filter image for line:\n\n");
+  return 0;
+}
+
+// AddImages, SubtractImages, MultiplyImages, DivideImages
+int CMacCmd::CombineImages(void)
+{
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) ||
+    ConvertBufferLetter(mStrItems[2], -1, true, cIndex2, cReport) ||
+    ConvertBufferLetter(mStrItems[3], 0, false, cIx1, cReport))
+    ABORT_LINE(cReport);
+  cIx0 = PROC_ADD_IMAGES;
+  if (CMD_IS(SUBTRACTIMAGES))
+    cIx0 = PROC_SUBTRACT_IMAGES;
+  if (CMD_IS(MULTIPLYIMAGES))
+    cIx0 = PROC_MULTIPLY_IMAGES;
+  if (CMD_IS(DIVIDEIMAGES))
+    cIx0 = PROC_DIVIDE_IMAGES;
+  if (mProcessImage->CombineImages(cIndex, cIndex2, cIx1, cIx0))
+    ABORT_LINE("Failed to combine images for line:\n\n");
+  return 0;
+}
+
+// ScaleImage
+int CMacCmd::ScaleImage(void)
+{
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) ||
+    ConvertBufferLetter(mStrItems[4], 0, false, cIndex2, cReport))
+    ABORT_LINE(cReport);
+  if (mProcessImage->ScaleImage(&mImBufs[cIndex], cIndex2, mItemFlt[2], mItemFlt[3],
+    !mItemEmpty[5] && mItemInt[5]))
+    ABORT_LINE("Failed to scale image for line:\n\n");
   return 0;
 }
 
@@ -5285,7 +5322,7 @@ int CMacCmd::CtfFind(void)
     ABORT_LINE(cReport);
   CtffindParams param;
   float resultsArray[7];
-  if (mWinApp->mProcessImage->InitializeCtffindParams(&mImBufs[cIndex], param))
+  if (mProcessImage->InitializeCtffindParams(&mImBufs[cIndex], param))
     ABORT_LINE("Error initializing Ctffind parameters for line:\n\n");
   if (mItemDbl[2] > 0. || mItemDbl[3] > 0. || mItemDbl[2] < -100 || mItemDbl[3] < -100)
     ABORT_LINE("Minimum and maximum defocus must be negative and in microns");
@@ -5308,7 +5345,7 @@ int CMacCmd::CtfFind(void)
   if (!mItemEmpty[6]) {
     cDelX = mItemDbl[6] * DTOR;
     if (cDelX == 0)
-      cDelX = mWinApp->mProcessImage->GetPlatePhase();
+      cDelX = mProcessImage->GetPlatePhase();
     param.minimum_additional_phase_shift = param.maximum_additional_phase_shift =
       (float)(cDelX);
     param.find_additional_phase_shift = true;
@@ -5329,10 +5366,10 @@ int CMacCmd::CtfFind(void)
       param.known_astigmatism_angle = 0.;
     }
   }
-  mWinApp->mProcessImage->SetCtffindParamsForDefocus(param,
+  mProcessImage->SetCtffindParamsForDefocus(param,
     0.8 *mItemDbl[2] + 0.2 * mItemDbl[3], true);
   param.compute_extra_stats = true;
-  if (mWinApp->mProcessImage->RunCtffind(&mImBufs[cIndex], param, resultsArray))
+  if (mProcessImage->RunCtffind(&mImBufs[cIndex], param, resultsArray))
     ABORT_LINE("Ctffind fitting returned an error for line:\n\n");
   SetReportedValues(-(resultsArray[0] + resultsArray[1]) / 20000.,
     (resultsArray[0] - resultsArray[1]) / 10000., resultsArray[2],
@@ -5419,7 +5456,7 @@ int CMacCmd::MeasureBeamSize(void)
 {
   if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
     ABORT_LINE(cReport);
-  cIx0 = mWinApp->mProcessImage->FindBeamCenter(&mImBufs[cIndex], cBacklashX, cBacklashY,
+  cIx0 = mProcessImage->FindBeamCenter(&mImBufs[cIndex], cBacklashX, cBacklashY,
     cCpe, cBmin, cBmax, cBmean, cBSD, cIndex2, cIx1, cShiftX, cShiftY, cFitErr);
   if (cIx0)
     ABORT_LINE("No beam edges were detected in image for line:\n\n");
@@ -5494,7 +5531,7 @@ int CMacCmd::CheckForBadStripe(void)
         " versus vertical analysis in:\n\n");
     cIx0 = (mWinApp->GetCamParams() + mImBufs[cIndex].mCamera)->rotationFlip % 2;
   }
-  cIndex2 = mWinApp->mProcessImage->CheckForBadStripe(&mImBufs[cIndex], cIx0, cIx1);
+  cIndex2 = mProcessImage->CheckForBadStripe(&mImBufs[cIndex], cIx0, cIx1);
   if (!cIndex2)
     mLogRpt = "No bad stripes detected";
   else
@@ -5531,7 +5568,7 @@ int CMacCmd::CircleFromPoints(void)
 // FindPixelSize
 int CMacCmd::FindPixelSize(void)
 {
-  mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0.);
+  mProcessImage->FindPixelSize(0., 0., 0., 0.);
   return 0;
 }
 
@@ -5920,7 +5957,7 @@ int CMacCmd::CenterBeamFromImage(void)
 {
   cTruth = mItemInt[1] != 0;
   cDelISX = !mItemEmpty[2] ? mItemDbl[2] : 0.;
-  cIndex = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., cTruth, cDelISX);
+  cIndex = mProcessImage->CenterBeamFromActiveImage(0., 0., cTruth, cDelISX);
   if (cIndex > 0 && cIndex <= 3)
     ABORT_LINE("Script aborted centering beam because of no image,\n"
     "unusable image type, or failure to get memory");
@@ -5962,7 +5999,7 @@ int CMacCmd::SetIntensityByLastTilt(void)
         "(or, if in Low Dose mode, because the image in\n"
         " Buffer A is not from the Record area)");
     cDelISX = mItemDbl[1] /
-      mWinApp->mProcessImage->EquivalentRecordMean(0);
+      mProcessImage->EquivalentRecordMean(0);
   } else if (CMD_IS(SETINTENSITYBYLASTTILT)) {
     cDelISX = mIntensityFactor;
   } else {
@@ -5984,7 +6021,7 @@ int CMacCmd::SetDoseRate(void)
     ABORT_LINE("Dose rate must be positive for line:\n\n");
   if (!mImBufs->mImage)
     ABORT_LINE("There must be an image in buffer A for line:\n\n");
-  cIndex = mWinApp->mProcessImage->DoSetIntensity(true, mItemFlt[1]);
+  cIndex = mProcessImage->DoSetIntensity(true, mItemFlt[1]);
   if (cIndex < 0) {
     AbortMacro();
     return 1;
@@ -6397,7 +6434,7 @@ int CMacCmd::SetExposureForMean(void)
     " Buffer A is not from the Record area) for line:\n\n");
   if (mItemDbl[1] <= 0)
     ABORT_LINE("Exposure time must be positive for line:\n\n");
-  cDelISX = mItemDbl[1] / mWinApp->mProcessImage->EquivalentRecordMean(0);
+  cDelISX = mItemDbl[1] / mProcessImage->EquivalentRecordMean(0);
   cDelISY = cDelISX * B3DMAX(0.001, mConSets[cIndex].exposure - mCamParams->deadTime) +
     mCamParams->deadTime;
   if (mItemInt[2]) {
