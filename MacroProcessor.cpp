@@ -33,6 +33,7 @@
 #include "OneLineScript.h"
 #include "Mailer.h"
 #include "PiezoAndPPControl.h"
+#include "MacroSelector.h"
 #include "Utilities\KGetOne.h"
 
 
@@ -121,6 +122,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGE, OnUpdateNoTasks)
   ON_COMMAND(ID_SCRIPT_SAVEPACKAGEAS, OnScriptSavePackageAs)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGEAS, OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_RUNONPROGRAMSTART, OnRunOnProgramStart)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONPROGRAMSTART, OnUpdateRunOnProgramStart)
+  ON_COMMAND(ID_SCRIPT_RUNATPROGRAMEND, OnRunAtProgramEnd)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNATPROGRAMEND, OnUpdateRunAtProgramEnd)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -206,6 +211,7 @@ void CMacroProcessor::Initialize()
   mBufferManager = mWinApp->mBufferManager;
   mShiftManager = mWinApp->mShiftManager;
   mNavHelper = mWinApp->mNavHelper;
+  mProcessImage = mWinApp->mProcessImage;
   if (GetDebugOutput('%')) {
     mWinApp->AppendToLog("Commands allowing arithmetic in arguments:");
     for (int i = 0; i < mNumCommands - 1; i++)
@@ -669,6 +675,50 @@ void CMacroProcessor::OnMacroControls()
   conDlg.mControl = *mControl;
   if (conDlg.DoModal() == IDOK)
     *mControl = conDlg.mControl;
+}
+
+void CMacroProcessor::OnRunOnProgramStart()
+{
+  CString str = mWinApp->GetScriptToRunAtStart();
+  if (!SelectScriptAtStartEnd(str, "at program startup"))
+    mWinApp->SetScriptToRunAtStart(str);
+}
+
+void CMacroProcessor::OnUpdateRunOnProgramStart(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mWinApp->GetScriptToRunAtStart().IsEmpty() ? 0 : 1);
+}
+
+void CMacroProcessor::OnRunAtProgramEnd()
+{
+  CString str = mWinApp->GetScriptToRunAtEnd();
+  if (!SelectScriptAtStartEnd(str, "at program end"))
+    mWinApp->SetScriptToRunAtEnd(str);
+}
+
+void CMacroProcessor::OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mWinApp->GetScriptToRunAtEnd().IsEmpty() ? 0 : 1);
+}
+
+// Common routine for opening the macro selector with the current selection and getting
+// a new one, returns 1 if canceled
+int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
+{
+  CMacroSelector dlg;
+  dlg.m_strEntryText = "Select script to run " + CString(when);
+  dlg.mMacroIndex = FindMacroByNameOrTextNum(name);
+  if (dlg.DoModal() == IDCANCEL)
+    return 1;
+  name = "";
+  if (dlg.mMacroIndex >= 0) {
+    name = mMacNames[dlg.mMacroIndex];
+    if (name.IsEmpty())
+      name.Format("%d", dlg.mMacroIndex + 1);
+  }
+  return 0;
 }
 
 // TASK HANDLERS AND ANCILLARY FUNCTIONS
@@ -1277,6 +1327,27 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
     AfxMessageBox("No script has a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
   return index;
+}
+
+// Look up a macro given its name or number in 1-based text form
+int CMacroProcessor::FindMacroByNameOrTextNum(CString name)
+{
+  CString str;
+  int num, index;
+  if (name.IsEmpty())
+    return -1;
+  for (index = 0; index < MAX_MACROS; index++)
+    ScanMacroIfNeeded(index, true);
+  num = atoi((LPCTSTR)name);
+  if (num > 0 && num <= MAX_MACROS) {
+    str.Format("%d", num);
+    if (str == name)
+      return num - 1;
+  }
+  for (index = 0; index < MAX_MACROS; index++)
+    if (name == mMacNames[index])
+      return index;
+  return -1;
 }
 
 // Make sure macro is unloaded and name scanned for any macros being edited

@@ -451,6 +451,9 @@ BEGIN
         MENUITEM "Save Package &As...",         ID_SCRIPT_SAVEPACKAGEAS
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
         MENUITEM SEPARATOR
+        MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
+        MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
+        MENUITEM SEPARATOR
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
         MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
         MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
@@ -3318,6 +3321,18 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,62,113,10
 END
 
+IDD_MACROSELECTER DIALOGEX 0, 0, 241, 72
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Script Chooser"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,54,51,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,137,51,50,14
+    CTEXT           "Select the script to run on program shutdown or ""None"" not to run one",IDC_STAT_ENTRY_TEXT,7,18,225,8
+    CTEXT           "",IDC_STAT_INFO_TEXT,7,8,225,8
+    COMBOBOX        IDC_COMBO_SELECTOR,70,31,100,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3801,6 +3816,14 @@ BEGIN
         TOPMARGIN, 3
         BOTTOMMARGIN, 72
     END
+
+    IDD_MACROSELECTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 234
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3936,6 +3959,11 @@ BEGIN
 END
 
 IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_MACROSELECTER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5969,6 +5997,8 @@ BEGIN
                             "Bring the log window up in the upper left corner of screen"
     ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
     ID_SETTINGS_BASICMODE   "Toggle basic mode with simpler interface on or off"
+    ID_SCRIPT_RUNONPROGRAMSTART "Select script to run when the program starts"
+    ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
 END
 
 #endif    // English (United States) resources

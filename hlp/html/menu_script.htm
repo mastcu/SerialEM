@@ -14,7 +14,10 @@
         width: 483px;
       }
       .auto-style1 {
-        width: 506px;
+        width: 557px;
+      }
+      .auto-style2 {
+        width: 180px;
       }
   --></style>
   </HEAD>
@@ -24,90 +27,100 @@
       <P>The Script menu offers the following commands for controlling scripts:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD class="style1">Edit</TD>
+          <TD class="auto-style2">Edit</TD>
           <TD class="auto-style1">Opens a submenu for opening script editors</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_edit1">Edit 1, 2, ...</A></TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_edit1">Edit 1, 2, ...</A></TD>
           <TD class="auto-style1">Opens a window for editing a script.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">Run</TD>
+          <TD class="auto-style2">Run</TD>
           <TD class="auto-style1">Opens a submenu for running scripts.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_run1">Run 1, 2, ...</A></TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_run1">Run 1, 2, ...</A></TD>
           <TD class="auto-style1">Runs a script.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_runonecommand">Edit/Run One Line</a>...</TD>
+          <TD class="auto-style2"><a href="#hid_script_runonecommand">Edit/Run One Line</a>...</TD>
           <TD class="auto-style1">Opens window to allow up to 5 one-line scripts.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_stop">Stop</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_stop">Stop</A></TD>
           <TD class="auto-style1">Stops script at next command.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_end">End</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_end">End</A></TD>
           <TD class="auto-style1">Stops script at end of loop or repeat.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_resume">Resume</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_resume">Resume</A></TD>
           <TD class="auto-style1">Resumes script at place where it stopped.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_toolbar">Toolbar</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_toolbar">Toolbar</A></TD>
           <TD class="auto-style1">Opens a toolbar with buttons for all scripts.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_setlength">Set Height</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_setlength">Set Height</A></TD>
           <TD class="auto-style1">Sets the number of buttons and button height in the script toolbar.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_controls">Controls</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_controls">Controls</A></TD>
           <TD class="auto-style1">Opens dialog box to set conditions for stopping a script.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_loadnewpackage">Load New Package...</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_loadnewpackage">Load New Package...</a></TD>
           <TD class="auto-style1">Loads all scripts from a file and makes that file be the 
             current package.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_savepackage">Save Package</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_savepackage">Save Package</a></TD>
           <TD class="auto-style1">Saves all scripts to the current package file. </TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_savepackageas">Save Package As</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_savepackageas">Save Package As</a></TD>
           <TD class="auto-style1">Saves all scripts to a new file and makes that the new 
             current package. </TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_macro_readmany">Load Many</a></TD>
+          <TD class="auto-style2"><a href="#hid_macro_readmany">Load Many</a></TD>
           <TD class="auto-style1">Loads all scripts in a file into their given script numbers.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_macro_listfunctions">List Functions</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
+          <TD class="auto-style1">Toggles whether to run a script on program startup and 
+            lets you select script</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_runatprogramend">Run at Program End...</a></TD>
+          <TD class="auto-style1">Toggles whether to run a script on program exit and lets 
+            you select script</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_macro_listfunctions">List Functions</a></TD>
           <TD class="auto-style1">Lists all functions defined in scripts.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_listpersistentvars">List Persistent Vars</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_listpersistentvars">List Persistent Vars</a></TD>
           <TD class="auto-style1">List sall persistent variables defined by scripts in the log window.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_clearpersistentvars">Clear Persistent Vars</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_clearpersistentvars">Clear Persistent Vars</a></TD>
           <TD class="auto-style1">Clears all persistent variables defined by scripts.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_verbose">Set Indent Size</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_verbose">Set Indent Size</A></TD>
           <TD class="auto-style1">Sets number of spaces for automatic indenting in editor.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
+          <TD class="auto-style2"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
           <TD class="auto-style1">Toggles whether editing windows will be restored on program 
             startup.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_verbose">Verbose</A></TD>
+          <TD class="auto-style2"><A HREF="#hid_macro_verbose">Verbose</A></TD>
           <TD class="auto-style1">Toggles echoing of each line at start of script.</TD>
         </TR>
         </TABLE>
@@ -202,6 +215,22 @@
         now in script package files, so this command can be used to read only the scripts from a 
         settings file. However a single script saved from the editing window cannot be 
         read with this command because it does not have these starting and ending lines.</P>
+      <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B>
+        <P>Use this command to choose a script to run when the program starts.&nbsp; The 
+          menu entry shows up as checked when a script has been chosen.&nbsp; When you 
+          select this command, a dialog will open with a drop-down list in which you can 
+          select the script by its name or number.&nbsp; It is best to have a (short) name 
+          assigned to the script so that if scripts are rearranged, or a different set is 
+          loaded, the program will not run the wrong script.&nbsp; This script may do 
+          complex operations.</P>
+      <P><A NAME="hid_script_runatprogramend"></a><B>Run at Program End command (Script menu)</B>
+        <P>Use this command to choose a script to run when the program exits, just as for 
+          previous command for a startup script.&nbsp; This script is run after the 
+          program asks whether to save the Navigator and log and leaves Low Dose mode, if 
+          appropriate, and saves settings.&nbsp; These steps will be skipped when the 
+          program re-enters its exit routine after the script is run.&nbsp; While the 
+          script may do complex operations, the user should be warned if they are going to 
+          take more than a few seconds.</P>
       <P><A NAME="hid_macro_listfunctions"></A><B>List Functions command (Script menu)</B></P>
     <P>Use this command to get a list in the log window of all functions defined in 
       all scripts.&nbsp; The function name will be followed by the number of 

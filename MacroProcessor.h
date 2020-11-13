@@ -176,7 +176,8 @@ enum {CME_SCRIPTEND = 0, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKEY
   CME_DOESFILEXIST,
   // End of reserved region
   CME_SETFOLDERFORFRAMES, CME_SETITEMTARGETDEFOCUS, CME_SETITEMSERIESANGLES,
-  CME_SUSPENDNAVREDRAW, CME_DEFERLOGUPDATES, CME_SETTILTAXISOFFSET 
+  CME_SUSPENDNAVREDRAW, CME_DEFERLOGUPDATES, CME_SETTILTAXISOFFSET, CME_ADDIMAGES,
+  CME_SUBTRACTIMAGES, CME_MULTIPLYIMAGES, CME_DIVIDEIMAGES, CME_SCALE_IMAGE
 };
 
 struct MacroFunction {
@@ -296,6 +297,7 @@ protected:
   CCameraController *mCamera;
   EMbufferManager *mBufferManager;
   CNavHelper *mNavHelper;
+  CProcessImage *mProcessImage;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;
   CString mModeCaps[5];
@@ -482,6 +484,7 @@ public:
   BOOL MacroRunnable(int index);
   afx_msg void OnUpdateMacroEnd(CCmdUI *pCmdUI);
   int FindCalledMacro(CString strLine, bool scanning);
+  int FindMacroByNameOrTextNum(CString name);
   void InsertDomacro(CString * strItem);
   BOOL WordIsReserved(CString str);
   int CheckIntensityChangeReturn(int err);
@@ -566,6 +569,11 @@ public:
   void UpdateAllForNewScripts(bool oneLinersToo);
   afx_msg void OnScriptSavePackage();
   afx_msg void OnScriptSavePackageAs();
+  afx_msg void OnRunOnProgramStart();
+  afx_msg void OnUpdateRunOnProgramStart(CCmdUI *pCmdUI);
+  afx_msg void OnRunAtProgramEnd();
+  afx_msg void OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI);
+  int SelectScriptAtStartEnd(CString &name, const char *when);
 };
 
 #include "MacroCommands.h"

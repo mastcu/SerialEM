@@ -908,6 +908,27 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
   pMyComboBox->MoveWindow(&rctDropDown); //enable changes
 }
 
+// Loads macro names in to a combo box, using the long names if present if useLong is
+// true and putting None as first entry if addNone true
+void LoadMacrosIntoDropDown(CComboBox &combo, bool useLong, bool addNone)
+{
+  CString str;
+  CString *names = sWinApp->GetMacroNames();
+  CString *longNames = sWinApp->GetLongMacroNames();
+  if (addNone)
+    combo.AddString("None");
+  for (int ind = 0; ind < MAX_MACROS; ind++) {
+    if (useLong && !longNames[ind].IsEmpty())
+      str = longNames[ind];
+    else if (names[ind].IsEmpty())
+      str.Format("# %d", ind + 1);
+    else
+      str = names[ind];
+    combo.AddString((LPCTSTR)str);
+  }
+  SetDropDownHeight(&combo, MAX_MACROS + (addNone ? 1 : 0));
+}
+
 // Modify a menu item given its submenu # and ID
 void UtilModifyMenuItem(const char *popupName, UINT itemID, const char *newText)
 {
