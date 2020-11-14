@@ -67,6 +67,17 @@ import os, sys
 indent = ('', '   ', '      ')
 descrip = (' menu', ' submenu', ' sub-submenu')
 
+if os.path.exists(helpFile):
+   rcTime = os.path.getmtime(rcFile)
+   incTime = os.path.getmtime(incFile)
+   resTime = os.path.getmtime(resFile)
+   stubTime = os.path.getmtime(stubFile)
+   helpTime = os.path.getmtime(helpFile)
+   if helpTime > rcTime and helpTime > incTime and helpTime > resTime and \
+      helpTime > stubTime:
+      sys.stdout.write('Hide/disable help file is up to date - nothing to do\n')
+      sys.exit(0)
+
 # Read the files
 resources = readTextFile(resFile)
 menus = readTextFile(rcFile)
