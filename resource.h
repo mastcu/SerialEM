@@ -2122,6 +2122,7 @@
 #define ID_SETTINGS_BASICMODE           33395
 #define ID_SCRIPT_RUNONPROGRAMSTART     33396
 #define ID_SCRIPT_RUNATPROGRAMEND       33397
+#define ID_OPTIONS_USEITEMLABELSINFILENAMES 33398
 
 // Next default values for new objects
 // 
@@ -2129,7 +2130,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        251
-#define _APS_NEXT_COMMAND_VALUE         33398
+#define _APS_NEXT_COMMAND_VALUE         33399
 #define _APS_NEXT_CONTROL_VALUE         2665
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
