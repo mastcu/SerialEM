@@ -597,13 +597,11 @@ void CMainFrame::RemoveItemsFromOneMenu(CMenu *menu, int level)
     ID = menu->GetMenuItemID(ind);
     if ((int)ID == -1) {
 
-      // If it is a popup, first see if it is top-level to be removed
-      if (!level) {
-        UtilGetMenuString(menu, ind, name, MF_BYPOSITION);
-        if (mWinApp->IsStringInHideSet(std::string((LPCTSTR)name))) {
-          menu->DeleteMenu(ind, MF_BYPOSITION);
-          continue;
-        }
+      // If it is a popup, see if it is the string table
+      UtilGetMenuString(menu, ind, name, MF_BYPOSITION);
+      if (mWinApp->IsStringInHideSet(std::string((LPCTSTR)name))) {
+        menu->DeleteMenu(ind, MF_BYPOSITION);
+        continue;
       }
 
       // then recurse and remove from it

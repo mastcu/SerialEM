@@ -38,7 +38,7 @@ def writeTextFile(filename, strings):
       exitError(errString)
 
 
-def extractText(item):
+def extractText(item, fromTable):
    startQuote = item.find('"')
    if startQuote < 0:
       return None
@@ -50,6 +50,8 @@ def extractText(item):
    tabInd = quoted.find('\\t')
    if tabInd > 0:
       quoted = quoted[:tabInd]
+   if fromTable:
+      return quoted
    return quoted.replace('&&', '|').replace('&', '').replace('|', '&').replace('...', '')
 
 
@@ -119,7 +121,7 @@ for line in menus:
 
    if line.startswith('POPUP'):
       level += 1
-      name = extractText(line)
+      name = extractText(line, False)
       if not name:
          exitError('Failed to extract POPUP name from line: ' + line)
 
@@ -143,7 +145,7 @@ for line in menus:
       continue
    
    if line.startswith('MENUITEM') and 'SEPARATOR' not in line:
-      name = extractText(line)
+      name = extractText(line, False)
       if name == None:
          exitError('Failed to extract item name from line: ' + line)
       
@@ -178,7 +180,7 @@ for line in table:
    if not line or '{' not in line or line == '{':
       continue
 
-   name = extractText(line)
+   name = extractText(line, True)
    lsplit = line.split(',')
    if len(lsplit) < 4:
       exitError('Not enough entries on table line: ' + line)
@@ -195,7 +197,7 @@ for line in table:
    if typ < 1 or typ > 3:
       exitError('Second value is out of range in line: ' + line)
 
-   outTable.append(typeText[typ - 1] + '  ' + name)
+   outTable.append(typeText[typ - 1] + ' ' + name)
 
 helpLines = []
 for line in stubLines:

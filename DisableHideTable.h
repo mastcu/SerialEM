@@ -42,6 +42,7 @@ static DisableHideItem sDisableHideList[] =
   {"Cal - IS&Stage - Stage Shift", 2, 0, ID_CALIBRATION_STAGESHIFT},  // A sub-menu item
   {"Cal - Mag Energy Shifts", 2, 0, ID_CALIBRATION_MAGENERGYSHIFTS}, // A main menu item
   {"Calibration menu", 2, 0, -1},                                    // An entire menu
+  {"Beam & Spot submenu", 2, 0, -1},                                 // An entire submenu
   {"Buffer Status panel", 2, 0, -10},                                // Control panels
   {"Buffer Control panel", 2, 0, -11},
   {"Image Display panel", 2, 0, -12},
