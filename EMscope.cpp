@@ -403,6 +403,7 @@ CEMscope::CEMscope()
   mUsePLforIS = false;
   mJeolHasNitrogenClass = false;
   mJeolHasExtraApertures = false;
+  mSequentialLensRelax = false;
   mJeolHasBrightnessZoom = false;
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 45;
@@ -645,7 +646,8 @@ int CEMscope::Initialize()
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
       mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0) |
-        (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0);
+        (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0) |
+        (mSequentialLensRelax ? JEOL_SEQUENTIAL_RELAX : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
@@ -3648,10 +3650,13 @@ BOOL CEMscope::SetMagIndex(int inIndex)
           if (normAll && FEIscope) {
             mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
           } else {
-            mPlugFuncs->NormalizeLens(pnmProjector);
+            if (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector))
+              mPlugFuncs->NormalizeLens(pnmProjector);
             if (normAll) {
-              mPlugFuncs->NormalizeLens(nmCondenser);
-              mPlugFuncs->NormalizeLens(pnmObjective);
+              if (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))
+                mPlugFuncs->NormalizeLens(nmCondenser);
+              if (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective))
+                mPlugFuncs->NormalizeLens(pnmObjective);
             }
           }
         }
@@ -4313,7 +4318,8 @@ BOOL CEMscope::NormalizeProjector()
   try {
     // What to do for JEOL? Keep the normalization time in case whatever evoked
     // this call needs some settling anyway
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector)))
+    {
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmProjector);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4345,7 +4351,7 @@ BOOL CEMscope::NormalizeCondenser()
 
   try {
     // This is not available on the JEOL
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))){
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(nmCondenser);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4372,7 +4378,8 @@ BOOL CEMscope::NormalizeObjective()
   ScopeMutexAcquire(routine, true);
 
   try {
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective)))
+    {
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmObjective);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4391,12 +4398,20 @@ BOOL CEMscope::NormalizeAll(int illumProj)
 {
   BOOL success = true;
   bool unblankAfter;
+  CString str;
   const char *routine = "NormalizeAll";
 
   if (!sInitialized)
     return false;
-  if (!FEIscope) {
-    SEMMessageBox("The NormalizeAll function is available only for FEI scopes");
+  if (!(FEIscope || (JEOLscope && !((illumProj & 1) && !SEMLookupJeolRelaxData(nmAll)) &&
+    !((illumProj & 2) && !SEMLookupJeolRelaxData(pnmAll))))) {
+    if (JEOLscope) {
+      str.Format("The NormalizeAll function is available for JEOL\n"
+        "only with one or two of the lens groups defined\n"
+        " with the JeolLensRelaxProgram property with indexes %d and %d", pnmAll, nmAll);
+        SEMMessageBox(str);
+    } else
+      SEMMessageBox("The NormalizeAll function is not available for this scope");
     return false;
   }
 
@@ -4421,6 +4436,23 @@ BOOL CEMscope::NormalizeAll(int illumProj)
   }
   ScopeMutexRelease(routine);
   return success;
+}
+
+// Look through the array of lens programs for one matching the normalization index
+LensRelaxData *SEMLookupJeolRelaxData(int normInd)
+{
+  CEMscope *scope = ((CSerialEMApp *)AfxGetApp())->mScope;
+  LensRelaxData *ret;
+  CArray<LensRelaxData, LensRelaxData> *relaxProgs = scope->GetLensRelaxProgs();
+  int ind;
+  for (ind = 0; ind < (int)relaxProgs->GetSize(); ind++) {
+    LensRelaxData &relax = relaxProgs->ElementAt(ind);
+    if (relax.normIndex == normInd) {
+      ret = relaxProgs->GetData();
+      return &ret[ind];
+    }
+  }
+  return NULL;
 }
 
 /* Return Defocus in Microns */
@@ -5705,7 +5737,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 
     // Then normalize if selected
     if (normalize > 0) {
-      if (mPlugFuncs->NormalizeLens)
+      if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(nmSpotsize)))
         mPlugFuncs->NormalizeLens(nmSpotsize);
       mLastNormalization = GetTickCount();
     }

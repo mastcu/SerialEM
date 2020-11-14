@@ -35,6 +35,7 @@ enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 #define nmAll 6
 #define nmCondenser 3
 #define nmSpotsize 1
+
 enum {CassetteSlotStatus_Unknown, CassetteSlotStatus_Occupied, CassetteSlotStatus_Empty};
 enum {RefrigerantLevel_AutoloaderDewar = 0,
     RefrigerantLevel_ColumnDewar, RefrigerantLevel_HeliumDewar};
@@ -210,6 +211,7 @@ class DLL_IM_EX CEMscope
   BOOL GetEFTEM();
   BOOL SetProbeMode(int micro, BOOL fromLowDose = false);
   CArray<ChannelSet, ChannelSet> *GetBlockedChannels() {return &mBlockedChannels;};
+  CArray<LensRelaxData, LensRelaxData> *GetLensRelaxProgs() { return &mLensRelaxProgs; };
 
   static void TaskScreenError(int error);
   static int TaskScreenBusy();
@@ -318,6 +320,7 @@ class DLL_IM_EX CEMscope
   GetMember(double, UpdateSawMagTime);
   GetSetMember(BOOL, JeolHasNitrogenClass);
   GetSetMember(BOOL, JeolHasExtraApertures);
+  GetSetMember(BOOL, SequentialLensRelax);
   GetSetMember(int, JeolFlashFegTimeout);
   GetSetMember(int, JeolEmissionTimeout);
   void SetJeolReadStageForWait(BOOL inVal);
@@ -651,6 +654,7 @@ private:
   int mJeolSwitchTEMsleep;    // Msec to sleep after switching back to TEM, if different
   BOOL mJeolSTEMunitsX;       // Flag that STEM mag units come through as X not ABC
   CArray<ChannelSet, ChannelSet> mBlockedChannels;
+  CArray<LensRelaxData, LensRelaxData> mLensRelaxProgs;
   BOOL mUsePLforIS;           // Flag to use PL when initialize scope
   BOOL mUseCLA2forSTEM;       // Flag to use CLA2 for JEOL STEM
   bool mXYbacklashValid;      // Flag that backlash values are still valid for a position
@@ -709,6 +713,7 @@ private:
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   BOOL mJeolHasNitrogenClass; // Flag to create the nitrogen class
   BOOL mJeolHasExtraApertures; // Flag to use Ex aperture calls
+  BOOL mSequentialLensRelax;  // Flag to do lens relaxation sequentially not interleaved
   int mJeolRefillTimeout;     // Timeout for refilling
   int mJeolFlashFegTimeout;   // Timeout for flashing FEG
   int mJeolEmissionTimeout;   // Timeout for turning emission off or on

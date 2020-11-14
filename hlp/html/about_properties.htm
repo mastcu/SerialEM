@@ -3846,7 +3846,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>JeolRelaxationFlags</TD>
-          <TD>Flags for the operations after which the program should wait for lens 
+          <TD>Flags for the operations after which the program should wait for the scope&#39;s lens 
             relaxation to finish on a JEOL: set to the sum of 1 for magnification, 2 for 
             spot size, and 4 for alpha changes.</TD>
         </TR>
@@ -3859,6 +3859,28 @@
           <TD>JeolEndRelaxTimeout</TD>
           <TD>Timeout in milliseconds when waiting to see lens relaxation end after a 
             change.&nbsp; The initial placekeeper default is 10000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolLensRelaxProgram</TD>
+          <TD>A sequence of lens changes to normalize or relax them using free lens control.&nbsp; Using
+             a procedure developed by Mike Strauss, each lens is stepped
+            in a negative direction by half the given amplitude, stepped in a positive direction
+            by the full amplitude, then stepped back to its original value. &nbsp;Each program has
+            a normalization index when determines where it is used in the program.&nbsp; Follow with:<br />
+            Normalization index: 1 for spot, 3 for condenser, 10 for objective, 11 for projector, 
+            6 for a condenser group used for NormalizeAll, and 12 for a projector group used for NormalizeAll.<br />
+            Number of steps in the positive direction.<br />
+            Delay after each step (can certainly be 0 if multiple changes are interleaved).<br />
+            Lens number #1: lens numbers for FLC calls are: 0: CL1,  2: CL3,  6: OL Coarse,
+              7: OL Fine,  8: OM,  I0: IL1,  11: IL2,  12: IL3, 13: IL4,  14: PL1,  15 or 16: PL2,
+              19: FL Coarse,  20: FL Fine,  21: FL Ratio.<br />
+            Amplitude #1: size of change in positive direction.  Changes should generally be under 0.05.<br />
+            Follow with up to 5 more lens number and amplitude pairs.  
+        </TR>
+        <TR VALIGN="top">
+          <TD>RelaxLensesSequentially</TD>
+          <TD>Set to 1 to have a sequence of changes specified with 'JeolLensRelaxProgram'
+             done completely for one lens at a time, instead of interleaving the changes.&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfAlphas</TD>

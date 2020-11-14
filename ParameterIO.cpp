@@ -2141,10 +2141,13 @@ int CParameterIO::ReadProperties(CString strFileName)
   CArray<ChannelSet, ChannelSet> *blockSets = scope->GetBlockedChannels();
   CArray<PiezoScaling, PiezoScaling> *piezoScalings = 
     mWinApp->mPiezoControl->GetScalings();
-  CArray<MontLimits, MontLimits> *montLimits = mWinApp->mMontageController->GetMontageLimits();
+  CArray<MontLimits, MontLimits> *montLimits = 
+    mWinApp->mMontageController->GetMontageLimits();
+  CArray<LensRelaxData, LensRelaxData> *relaxData = scope->GetLensRelaxProgs();
   CString *K2FilterNames = camera->GetK2FilterNames();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   RotStretchXform rotXform;
+  LensRelaxData relax;
   PiezoScaling pzScale;
   ChannelSet chanSet;
   MontLimits montLim;
@@ -3141,6 +3144,26 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (!strItems[2].IsEmpty())
           index = itemInt[2];
         scope->SetJeolPostMagDelay(itemInt[1], index);
+
+      } else if (MatchNoCase("JeolLensRelaxProgram")) {
+        relax.normIndex = (short)itemInt[1];
+        relax.numLens = 0;
+        relax.numSteps = (short)itemInt[2];
+        relax.delay = itemInt[3];
+        for (ind = 0; ind < MAX_LENS_TO_RELAX; ind++) {
+          if (itemEmpty[2 * ind + 5])
+            break;
+          relax.lensTypes[relax.numLens] = (short)itemInt[2 * ind + 4];
+          relax.amplitudes[relax.numLens++] = itemFlt[2 * ind + 5];
+        }
+        if (!itemEmpty[2 * ind + 5]) {
+          message.Format("More that %d lenses were entered in property line:\n%s\n\n"
+            "Request that developers make the array size larger",
+            MAX_LENS_TO_RELAX, (LPCTSTR)strLine);
+          AfxMessageBox(message);
+        }
+        relaxData->Add(relax);
+
       } else if (MatchNoCase("ImageDetectorIDs")) {
         index = 1;
         while (!itemEmpty[index])
