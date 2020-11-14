@@ -9425,8 +9425,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
       if (mParam->STEMcamera)
         extra->mChannelName = mParam->channelName[mTD.ChannelIndex[chan]];
-      if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() && 
-        !mWinApp->DoingTiltSeries()) {
+      if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
           ix = mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem);
           extra->mNavLabel = navItem->mLabel;
       }
