@@ -30,6 +30,7 @@
 #define MONTAGE_CONSET 8
 #define ISCAL_CONSET   7
 #define TRACK_CONSET   7
+#define MAX_LENS_TO_RELAX 6
 
 //#define TASK_TIMER_INTERVAL 50
 
@@ -331,6 +332,15 @@ struct IdleCallBack {
   BOOL extendTimeOut;               // Flag to extend timeouts after long intervals
 };
 
+struct LensRelaxData {
+  short normIndex;                     // One of nm... defines
+  short numLens;                       // Number of lenses to do together
+  short numSteps;                      // Number of steps in full direction
+  short delay;                           // msec delay after all lenses changed
+  short lensTypes[MAX_LENS_TO_RELAX];  // Type numbers in the FLC calls
+  float amplitudes[MAX_LENS_TO_RELAX]; // Change in the full direction
+};
+
 // GLOBAL error reporting and other functions; some for plugin access defined in EMscope
 void DLL_IM_EX SEMReportCOMError(_com_error E, CString inString, CString *outStr = NULL,
   bool skipErr = false);
@@ -375,6 +385,7 @@ void SetNumFEIChannels(int inval);
 double DLL_IM_EX SEMSecondsSinceStart();
 void DLL_IM_EX SEMSetFunctionCalled(const char *name, const char *descrip = NULL);
 void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore);
+LensRelaxData DLL_IM_EX *SEMLookupJeolRelaxData(int normInd);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {

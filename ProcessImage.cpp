@@ -643,7 +643,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
-  int bufNum = imBuf - mImBufs;
+  int bufNum = (int)(imBuf - mImBufs);
   if (bufNum < 0 || bufNum >= MAX_BUFFERS)
     bufNum = 0;
 

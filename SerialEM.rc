@@ -611,6 +611,7 @@ BEGIN
         POPUP "Options"
         BEGIN
             MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
+            MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
             MENUITEM "&Autosave Nav File",          ID_NAVIGATOR_AUTOSAVE
             MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
@@ -5999,6 +6000,8 @@ BEGIN
     ID_SETTINGS_BASICMODE   "Toggle basic mode with simpler interface on or off"
     ID_SCRIPT_RUNONPROGRAMSTART "Select script to run when the program starts"
     ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
+    ID_OPTIONS_USEITEMLABELSINFILENAMES 
+                            "Substitute item's label for previous one when generating new filenames"
 END
 
 #endif    // English (United States) resources

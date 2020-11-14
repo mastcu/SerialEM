@@ -476,6 +476,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_OPTIONS_SEARCH, OnOptionsSearchPlusMinus)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_SEARCH, OnUpdateOptionsSearchPlusMinus)
     ON_COMMAND(IDM_MARKER_TO_CENTER, OnMarkerToCenter)
+    ON_COMMAND(ID_OPTIONS_USEITEMLABELSINFILENAMES, OnUseItemLabelsInFilenames)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_USEITEMLABELSINFILENAMES, OnUpdateUseItemLabelsInFilenames)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -815,6 +817,17 @@ void CMenuTargets::OnSetPointLabelThreshold()
     return;
   mNavHelper->SetPointLabelDrawThresh(thresh);
   mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnUseItemLabelsInFilenames()
+{
+  mNavHelper->SetUseLabelInFilenames(!mNavHelper->GetUseLabelInFilenames());
+}
+
+void CMenuTargets::OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(true);
+  pCmdUI->SetCheck(mNavHelper->GetUseLabelInFilenames() ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorShowMultiShot()

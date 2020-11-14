@@ -108,6 +108,7 @@ CNavHelper::CNavHelper(void)
   mAutoBacklashMinField = 5.f;
   mAutoBacklashNewMap = 1;  // ASK
   mPointLabelDrawThresh = 15;
+  mUseLabelInFilenames = false;
   mEnableMultiShot = 0;
   mMultiShotParams.beamDiam = 0.2f;
   mMultiShotParams.spokeRad[0] = 0.5f;
@@ -2470,10 +2471,15 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum)
 // or digits followed by one non-digit before the extension or at the end,
 // will be incremented by 1 and output with the same number of digits or more if needed
 // If there are no digits, a "2" is added before the extension or at the end of the name
-CString CNavHelper::NextAutoFilename(CString inStr)
+CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString newLabel)
 {
   int dirInd, extInd, digInd, curnum, numdig, numroot;
   CString str, format, ext = "";
+  if (mUseLabelInFilenames && !oldLabel.IsEmpty() && oldLabel != newLabel &&
+    inStr.Find(oldLabel) >= 0) {
+    inStr.Replace(oldLabel, newLabel);
+    return inStr;
+  }
   dirInd = inStr.ReverseFind('\\');
   extInd = inStr.ReverseFind('.');
   if (extInd > dirInd && extInd > 0) {
@@ -2575,7 +2581,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
         item->mTSparamIndex = item2->mTSparamIndex;
         *propIndexp = item2->mFilePropIndex;
         *montIndexp = item2->mMontParamIndex;
-        autoName = NextAutoFilename(item2->mFileToOpen);
+        autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, 1);
       }
     } else if (item2->mTSparamIndex < 0) {
@@ -2583,7 +2589,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
         
         // Force a new parameter set if last one is fitting to polygon and this is a 
         // polygon item - otherwise let it inherit the fit
-        autoName = NextAutoFilename(item2->mFileToOpen);
+        autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         if (item2->mMontParamIndex >= 0) {
           montp = mMontParArray->GetAt(item2->mMontParamIndex);
           breakForFit = montp->wasFitToPolygon && item->mType == ITEM_TYPE_POLYGON;
@@ -2596,7 +2602,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
           sched2 = mGroupFiles->GetAt(index);
           *propIndexp = sched2->filePropIndex;
           *montIndexp = sched2->montParamIndex;
-          autoName = NextAutoFilename(sched2->filename);
+          autoName = NextAutoFilename(sched2->filename, item2->mLabel, item->mLabel);
         }
       }
     }
@@ -2995,6 +3001,14 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
   filename = *namep;
   if (!namep->IsEmpty())
     lpszFileName = (LPCTSTR)filename;
+  else if (mUseLabelInFilenames) {
+    filename = item->mLabel;
+    if (fileType == STORE_TYPE_MRC)
+      filename += ".mrc";
+    if (fileType == STORE_TYPE_TIFF)
+      filename += ".tif";
+    lpszFileName = (LPCTSTR)filename;
+  }
   if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename))
     return -1;
 

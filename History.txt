@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/14/20: Added ability to define a set of lens changes for normalizing lenses
+on a JEOL.
+
+11/14/20: Added Navigator option (in Options menu) to incorporate the label
+into names of files to be opened instead of adding sequential numbers when
+new names are generated automatically.
+
 11/12/20: Added property to add some text after "SerialEM" in the title bar.
 
 11/12/20: Added hot keys to toggle "Extra info" and crosshairs in the

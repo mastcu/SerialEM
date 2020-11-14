@@ -429,6 +429,7 @@ hid_deleteitem									= SerialEM.chm::/html\menu_navigator.htm#hid_deleteitem
 hid_navigator_aligntoitem				= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_aligntoitem
 hid_navigator_autosave					= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_autosave
 hid_options_setpointlabelthreshold = SerialEM.chm::/html\menu_navigator.htm#hid_options_setpointlabelthreshold
+hid_options_useitemlabelsinfilenames = SerialEM.chm::/html\menu_navigator.htm#hid_options_useitemlabelsinfilenames
 hid_navigator_convertmapstobytes = SerialEM.chm::/html\menu_navigator.htm#hid_navigator_convertmapstobytes
 hid_navigator_loadunbinned			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_loadunbinned
 hid_navoptions_usecurrentldparamsinri = SerialEM.chm::/html\menu_navigator.htm#hid_navoptions_usecurrentldparamsinri
