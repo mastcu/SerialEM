@@ -894,19 +894,31 @@ void CFocusManager::CalFocusData(float inX, float inY)
   mWinApp->mDocWnd->CalibrationWasDone(CAL_DONE_FOCUS);
 }
 
-
+// Returns true if focus is calibrated the given mag (-1 for current/default) and current
+// probe mode or alpha
 BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
 {
   FocusTable focTmp;
-  int hasCal;
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
+  int hasCal, probe, alpha;
   if (!mScope)
     return false;
   if (mWinApp->GetSTEMMode())
     return (mSFnormalizedSlope[mScope->GetProbeMode()] != 0.);
-  if (magInd < 0)
-    magInd = mScope->FastMagIndex();
-  hasCal = GetFocusCal(magInd, mWinApp->GetCurrentCamera(), mScope->GetProbeMode(), 
-    mScope->FastAlpha(), focTmp);
+
+  // Use actual parameters in low dose
+  if (mWinApp->LowDoseMode()) {
+    probe = ldParm[FOCUS_CONSET].probeMode;
+    alpha = (int)ldParm[FOCUS_CONSET].beamAlpha;
+    if (magInd < 0 && ldParm[FOCUS_CONSET].magIndex)
+      magInd = ldParm[FOCUS_CONSET].magIndex;
+  } else {
+    probe = mScope->GetProbeMode();
+    alpha = mScope->FastAlpha();
+    if (magInd < 0)
+      magInd = mScope->FastMagIndex();
+  }
+  hasCal = GetFocusCal(magInd, mWinApp->GetCurrentCamera(), probe, alpha, focTmp);
   if (calibrated)
     *calibrated = hasCal != 0;
   if (hasCal)

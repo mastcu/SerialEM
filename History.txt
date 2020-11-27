@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/25/20: Fixed problem with using the current probe mode or alpha for
+assessing whether focus calibration exists in Low Dose; used Focus area values
+instead (In 3.8).
+
+11/25/20: SEM_3-9-0beta1
 11/24/20: Added support for HDF files.
 
 11/24/20: Added property JeolBeamRampupTimeout to allow beam to be turned on
