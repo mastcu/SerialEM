@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-11/23/20: Added property NoScopeControlOnStatup to work around a problem in
+11/24/20: Fixed reordering of montage Z coordinates for dose-symmetric series,
+in case that should ever happen (In 3.8).
+
+11/23/20: Added property NoScopeControlOnStartup to work around a problem in
 JEOL software when program starts with beam ramping up.
 
 11/23/20: Stopped turning off beam when program crashes (In 3.8).

@@ -1634,6 +1634,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
 {
   int ind, err = 0;
   CString mess;
+  IntVec sectMap;
   if (mBufferManager->CheckAsyncSaving())
     return 1;
   mBfcReorderWholeFile = tiltAngles != NULL;
@@ -1642,9 +1643,12 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
     mBfcSectOrder[ind] = tiltAngles ? ind : (zmax - 1 - ind);
   if (tiltAngles)
     rsSortIndexedFloats(tiltAngles, &mBfcSectOrder[0], zmax);
-  
+  sectMap.resize(zmax);
+  for (ind = 0; ind < zmax; ind++)
+    sectMap[mBfcSectOrder[ind]] = ind;
+
   if (mWinApp->Montaging()) {
-    err = mWinApp->mStoreMRC->ReorderPieceZCoords(&mBfcSectOrder[0]);
+    err = mWinApp->mStoreMRC->ReorderPieceZCoords(&sectMap[0]);
     if (err && err < 3)
       mess.Format("An error (code %d) occurred trying to invert the\nZ coordinates in the"
       " image file header.\nThe state of the file is unknown.\n\n", err);
