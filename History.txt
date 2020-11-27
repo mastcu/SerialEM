@@ -7,7 +7,7 @@ significance.
 in case that should ever happen (In 3.8).
 
 11/23/20: Added property NoScopeControlOnStartup to work around a problem in
-JEOL software when program starts with beam ramping up.
+JEOL software when program starts with beam ramping up (In 3.8).
 
 11/23/20: Stopped turning off beam when program crashes (In 3.8).
 
