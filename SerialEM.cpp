@@ -1648,6 +1648,9 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
         message += "\n\nThe log has been saved to:\n" +
         winApp->mLogWindow->GetLastFilePath();
     }
+
+    // Try to close files and rescue HDF
+    winApp->mDocWnd->CloseAllStores();
   }
   catch (...) {
   }

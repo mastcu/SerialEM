@@ -45,6 +45,7 @@ protected:
   double     mMeanSum;
   int        mNumWritten;
   float      mPixelSpacing;
+  float      mUpdateTimePerSect;
 
 public:
 	         KImageStore(CString inFilename);
@@ -65,6 +66,7 @@ public:
   virtual int     AppendImage(KImage *inImage) {return 1;};
 	virtual int     WriteSection(KImage * inImage, int inSect) {return 1;};
   virtual	void    SetPixelSpacing(float pixel);
+  virtual void    SetUpdateTimePerSect(float inVal) { mUpdateTimePerSect = inVal; };
   virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam) {return 0;}; 
   virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ) {return -1;};

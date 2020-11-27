@@ -37,4 +37,5 @@ public:
   virtual int ReorderHdfStackZvalues(int *sectOrder);
 private:
   ImodImageFile *mIIfile;
+  int mUpdateCounter;
 };

@@ -199,7 +199,7 @@ void CFilePropDlg::ManageStates()
   m_statTruncBlack.EnableWindow(bEnable);
   m_editTruncBlack.EnableWindow(bEnable);
 
-  m_statCompress.EnableWindow(tiffFile);
+  m_statCompress.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
   m_butNoComp.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
   m_butLZWComp.EnableWindow(tiffFile);
   m_butZIPComp.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);

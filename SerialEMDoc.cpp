@@ -322,6 +322,10 @@ int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc, int file
     return 1;
   CopyMasterFileOpts(&mStoreList[mCurrentStore].fileOpt, COPY_FROM_MASTER);
   mStoreList[mCurrentStore].fileOpt.useMdoc = useMdoc;
+  if (mStoreList[mCurrentStore].fileOpt.isMontage())
+    mStoreList[mCurrentStore].fileOpt.montFileType = fileType;
+  else
+    mStoreList[mCurrentStore].fileOpt.fileType = fileType;
   mWinApp->mStoreMRC = OpenNewFileByName(filename, &mStoreList[mCurrentStore].fileOpt);
   mStoreList[mCurrentStore].store = mWinApp->mStoreMRC;
   if (mWinApp->mStoreMRC)
@@ -845,7 +849,8 @@ void CSerialEMDoc::CloseAllStores()
   for (int i = 0; i < mNumStores; i++) {
     if (mStoreList[i].montage)
       delete mStoreList[i].montParam;
-    delete mStoreList[i].store;
+    if (i != mCurrentStore || mWinApp->mStoreMRC)
+      delete mStoreList[i].store;
   }
 }
 

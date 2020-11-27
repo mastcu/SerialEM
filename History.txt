@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/24/20: Added support for HDF files.
+
+11/24/20: Added property JeolBeamRampupTimeout to allow beam to be turned on
+from within SerialEM on systems with rampup problem.
+
 11/24/20: Fixed reordering of montage Z coordinates for dose-symmetric series,
 in case that should ever happen (In 3.8).
 

@@ -55,16 +55,28 @@
         many other software packages. These files 
         can hold multiple images in a stack, and have both a header for standard 
         information about the file and an extended header in which SerialEM stores 
-        a small amount of additional information associated with each image, referred to as metadata.</LI>
-      <LI>HDF files, which can be processed in IMOD and EMAN2.&nbsp; These files can also 
-        hold a stack of images and have several advantages over MRC files:&nbsp; they 
-        contain all of the metadata for each image that is saved in a separate &#39;.mdoc&#39; 
+        a small amount of additional information associated with each image, referred to as metadata.&nbsp; 
+        This header is updated after every section saved in case the program crashes; 
+        this feature also allows a file to be opened in 3dmod as the file is still being 
+        saved to.</LI>
+      <LI>HDF files, which can be processed in IMOD and EMAN2.&nbsp; HDF stands for 
+        &quot;high performance data format&quot;, which is a misnomer in our context. These files can also 
+        hold a stack of images and have several advantages over MRC files:&nbsp;they 
+        contain all of the metadata for each image that has to be saved in a separate &#39;.mdoc&#39; 
         file for MRC files (see below); images can be saved with ZIP compression; and 
-        the output file can be re-ordered for bidirectional and dose-symmetric series 
-        without having to copy to a new stack.</LI>
+        the output file can be rapidly re-ordered in place for bidirectional and dose-symmetric series 
+        instead of having to copy to a new stack.&nbsp; A disadvantage of these files, 
+        aside from their limited portability, is that the time to write the header with 
+        all these metadata is significant and increases with the number of sections.&nbsp; 
+        SerialEM limits the frequency of header updates so that the time consumed per 
+        section written is limited by the property
+        <a href="file://about_properties.htm#hdf_update_time">HdfUpdateTimePerSection</a>.&nbsp; 
+        The consequence is that not all the saved sections may be available when opening 
+        the file with 3dmod during acquisition or after some kinds of program crashes 
+        that do not close files properly.</LI>
       <LI>
         TIFF files for single images. This option is available only when saving an 
-        image (either when saving if there is no open file, or when using hen using <A HREF="menu_file.htm#hidm_file_saveother">
+        image (either when saving if there is no open file, or when using <A HREF="menu_file.htm#hidm_file_saveother">
           Save Single/Save to other</A> in the File menu). The file is closed after 
         writing one image.</LI>
       <LI>
@@ -95,15 +107,26 @@
       (e.g., defocus) than would otherwise be available.
     </P>
     <P>Both kinds of autodoc files, image and metadata, contain identical information 
-      about each image. The files also have information at the top that replicates 
+      about each image, described in <a href="file://about_formats.htm#metadata">File 
+      Formats and Other Documentation</a>.&nbsp; The files also have information at the top that replicates 
       some of the information that would appear in an MRC header.&nbsp; This includes 
-      the &#39;Pixel spacing&#39;, which is the pixel size in Angstroms.&nbsp; The IMOD programs extracttilts and extractpieces can extract 
+      the &#39;Pixel spacing&#39;, which is the pixel size in Angstroms.&nbsp; The IMOD programs 
+      Extracttilts and Extractpieces can extract 
       the same information from either type of file as they can from the extended 
       header of the MRC file.&nbsp; In fact, they will automatically look for 
       information in an associated autodoc file if the values are not found in the 
-      extended header. In addition, newstack and edmont can transfer information from 
+      extended header. In addition, Newstack and Edmont can transfer information from 
       the autodoc file associated with an input file to a new autodoc for an output 
       file.&nbsp; </P>
+    <P>The same metadata are stored in an HDF file in a way that makes transfers 
+      between an HDF file and an autodoc file easy.&nbsp; Newstack and Edmont can 
+      transfer metadata between HDF files, into an HDF file from an autodoc file, or 
+      into an autodoc file from an HDF file.&nbsp; Extracttilts can get tilt angles 
+      and other information from an HDF file, Extractpieces can get the piece list out 
+      of an HDF file, and Extracttilts can be used to create an autodoc file with a 
+      command like:</P>
+    <P>&nbsp;&nbsp;&nbsp;&nbsp; extracttilts -attr filename.hdf&nbsp; 
+      filename.hdf.mdoc&nbsp;&nbsp;</P>
     <P><B>Save non-float data as:</B></P>
     <P>Allows integer data to be saved as bytes or 16-bit integers. If there is a 
       16-bit camera and values are not being divided by 2, or if there are any buffers 
@@ -142,10 +165,10 @@
       Image</a> command in the Process menu or the ReduceImage script command.</P>
     <P><B>Save in extended header:</B></P>
     <P>Select whether to save tilt angle, C2 intensity value, stage position, 
-      magnification, or dose in the header. The dose is referred to as 'exposure 
+      magnification, or dose in the MRC file header. The dose is referred to as 'exposure 
       dose' because it is the dose incurred during the time when the camera is 
       exposed to the beam, excluding any pre-exposure of the specimen. All of these 
-      values can be extracted from an MRC file with the IMOD program extracttilts 
+      values can be extracted from an MRC file with the IMOD program Extracttilts 
       (use 'extracttilts -h' to see options). Regardless of which items are selected, 
       all of these values and more can be saved in a metadata autodoc file.</P>
     <P><B>Maximum number of sections:</B></P>
@@ -174,10 +197,10 @@
       starting with 0000.&nbsp; Your selection here will be saved in the settings file 
       when saving a single image with the <a href="menu_file.htm#hidm_file_saveother">
       Save Single/Save to Other</a> command in the File menu.</P>
-    <P><B>Type of compression in TIFF file:</B></P>
+    <P><B>Type of compression in TIFF or HDF file:</B></P>
     <P>Select whether TIFF files will be saved with no compression, the type of 
       compression used in Zip and PNG files, LZW (Lempel-Ziv-Welch) compression, or 
-      JPEG compression. ZIP and LZW are both loss-less compression methods that may not save much space.&nbsp; 
+      JPEG compression, or select whether HDF files are saved with ZIP compression. ZIP and LZW are both loss-less compression methods that may not save much space.&nbsp; 
       JPEG compression does lose a small amount of information but can save much more 
       space. Your 
       selection here will be saved in your settings file, and separate values are 
@@ -185,7 +208,7 @@
       <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
       command versus other situations.&nbsp; In contrast, the default values 
       for most other options in this dialog are controlled by entries in the 
-      SerialEMproperties.txt file.</P>
+      SerialEMproperties.txt file.&nbsp; </P>
     <P><b>Skip this dialog (turn skipping off in the File menu):</b></P>
     <P>Select this option to avoid seeing this dialog every time you open a new file.&nbsp; 
       Instead, existing values will be used.&nbsp; With this option selected, the 

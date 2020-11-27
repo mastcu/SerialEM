@@ -2187,7 +2187,7 @@
       </TABLE>
       <BR>
       <P><A NAME="file_option_properties"></A><B>File Options</B></P>
-      <P>These properties determine the default options that are selected when the file 
+      <P>Most of these properties determine the default options that are selected when the file 
         properties dialog box is opened.&nbsp; For two options, the default depends on 
         whether the microscope is in STEM mode or not.</P>
       <TABLE BORDER cols="2">
@@ -2262,6 +2262,20 @@
           <TD>Set to 1 to enable saving to file in a background thread, or 0 to disable it.&nbsp; 
             This was turned on by default in version 3.4.0 beta, so 0 is needed to disable 
             it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><A NAME="hdf_update_time"></A> HdfUpdateTimePerSection</TD>
+          <TD>Sets the average time per saved section that will be spent updating the header 
+            of HDF files.&nbsp; The program measures the time spent updating&nbsp; after an 
+            image is saved and sets an appropriate interval to the next update when it 
+            exceeds this value.&nbsp; The default is 0.05 sec; set to 0 to disable updating 
+            the header before the file is closed.&nbsp; Update time increases with the 
+            number of sections already saved, and the time will become significant at some 
+            point, depending on the speed of data access.&nbsp; For example, in tests, the 
+            updating time per saved section increased by 0.4 msec/section for an SSD, 0.8 
+            msec/section for an external USB 2 hard drive, and&nbsp; 1.3 msec/section for 
+            saving over a 1 GB network, and 600 msec/section for an old USB 2 memory stick.&nbsp; 
+            Set Debug Output to &#39;y&#39; to see reports of the update time.</TD>
         </TR>
       </TABLE>
       <BR>

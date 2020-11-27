@@ -30,6 +30,7 @@
 #include "TSController.h"
 #include "Utilities\XCorr.h"
 #include "Shared\iimage.h"
+#include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 
 
@@ -66,6 +67,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mAsyncFromImage = false;
   mImageAsyncFailed = false;
   mNextSecToRead = NO_SUPPLIED_SECTION;
+  mHdfUpdateTimePerSect = 0.05f;
 }
 
 EMbufferManager::~EMbufferManager()
@@ -368,6 +370,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (inStore == mWinApp->mStoreMRC)
       toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
   }
+  inStore->SetUpdateTimePerSect(mHdfUpdateTimePerSect);
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
@@ -404,7 +407,12 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   if (extra)
     extra->mDividedBy2 = oldDivided;
   if (err) {
-    ReportError(err);
+    if (inStore->getStoreType() == STORE_TYPE_HDF) {
+      str = ComposeErrorMessage(err, " ");
+      str = str + " :\n" + b3dGetError();
+      SEMMessageBox(str);
+    } else
+      ReportError(err);
     return 1;
   }
 

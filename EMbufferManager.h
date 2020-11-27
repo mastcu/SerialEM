@@ -39,6 +39,7 @@ public :
   GetSetMember(BOOL, DrawCrosshairs)
   GetSetMember(float, UnsignedTruncLimit);
   GetSetMember(BOOL, SaveAsynchronously);
+  GetSetMember(float, HdfUpdateTimePerSect);
   SetMember(CString, OtherFile);
   int GetConfirmBeforeDestroy (int inWhich)
     { return mConfirmDestroy[inWhich]; }
@@ -101,6 +102,7 @@ public :
   bool mAsyncFromImage;
   bool mImageAsyncFailed;
   int mNextSecToRead;
+  float mHdfUpdateTimePerSect;  // Maximum time per section to spend updating HDF header
 
 public:
   int AddToStackWindow(int bufNum, int binning, int secNum, bool convert, int angleOrder);

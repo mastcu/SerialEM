@@ -102,6 +102,11 @@
     <P>Global data replicate some of the information that is in an MRC file header.&nbsp; 
       In addition, the titles for an MRC file are stored in section headers of the 
       type &quot;T&quot;.</P>
+    <P>&nbsp;The IMOD library used by SerialEM uses the same internal autodoc 
+      structure to access the metadata in HDF files.&nbsp; It is thus simple to 
+      extract all of these metadata information into a text file in the autodoc 
+      format, with a command like:</P>
+    <P>&nbsp;&nbsp;&nbsp; extracttilts -attr filename.hdf&nbsp; filename.hdf.mdoc&nbsp;</P>
       <TABLE cols="2" BORDER style="Z-INDEX: 0">
         <TBODY>
           <TR VALIGN="top">

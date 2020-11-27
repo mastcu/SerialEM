@@ -431,6 +431,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mMontageController->SetDivFilterSet2By2(itemInt[4] != 0);
       } else if (NAME_IS("TIFFcompression"))
         defFileOpt->compression = itemInt[1];
+      else if (NAME_IS("HDFcompression"))
+        defFileOpt->hdfCompression = itemInt[1];
       else if (MatchNoCase("FileOptionsPctTruncLo"))
         defFileOpt->pctTruncLo = itemFlt[1];
       else if (MatchNoCase("FileOptionsPctTruncHi"))
@@ -1485,6 +1487,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
     WriteInt("TIFFcompression", fileOpt->compression);
+    WriteInt("HDFcompression", fileOpt->hdfCompression);
     WriteFloat("FileOptionsPctTruncLo", fileOpt->pctTruncLo);
     WriteFloat("FileOptionsPctTruncHi", fileOpt->pctTruncHi);
     oneState.Format("SingleFileOptions %d %d %f %f\n", otherFileOpt->fileType, 

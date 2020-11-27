@@ -13,7 +13,7 @@ KStoreIMOD::KStoreIMOD(CString filename)
   : KImageStore()
 {
   CommonInit();
-  mIIfile = iiOpen((char *)((LPCTSTR)filename), "rb");
+  mIIfile = iiOpen((char *)((LPCTSTR)filename), "rb+");
   if (!mIIfile)
     return;
   mFilename = filename;
@@ -26,7 +26,7 @@ KStoreIMOD::KStoreIMOD(CString filename)
   mMeanSum = mIIfile->amean * mDepth;
   mNumWritten = mDepth;
   if (mIIfile->file == IIFILE_HDF) {
-    mStoreType = STORE_TYPE_HDF;   // This may not matter yet, or it may not be right
+    mStoreType = STORE_TYPE_HDF;
     mAdocIndex = mIIfile->adocIndex;
   }
 }
@@ -53,6 +53,8 @@ KStoreIMOD::KStoreIMOD(CString inFilename, FileOptions inFileOpt)
     B3DCHOICE(isHdf, IIFILE_HDF, isJpeg ? IIFILE_JPEG : IIFILE_TIFF));
   if (!mIIfile)
     return;
+
+  // Handle HDF, consult environment variable about compression level IF it is selected
   if (isHdf) {
     mStoreType = STORE_TYPE_HDF;
     mAdocIndex = mIIfile->adocIndex;
@@ -180,6 +182,7 @@ void KStoreIMOD::Close(void)
   CString str;
   if (mStoreType == STORE_TYPE_HDF) {
     if (AdocGetMutexSetCurrent(mAdocIndex) < 0) {
+      SEMMessageBox("Failed to get mutex for writing header of HDF file");
     } else {
       if (iiWriteHeader(mIIfile)) {
         str.Format("Error writing header of HDF file:\n%s", b3dGetError());
@@ -454,12 +457,13 @@ int KStoreIMOD::AppendImage(KImage *inImage)
 // Write a section to an HDF file
 int KStoreIMOD::WriteSection(KImage *inImage, int inSect)
 {
+  double wallStart, updateTime;
   char *idata;
   int retval = 0;
   bool needToReflip, needToDelete, needNewSect, gotMutex;
   if (inImage == NULL)
     return 1;
-  if (!mIIfile)
+  if (!mIIfile || mIIfile->state != IISTATE_READY)
     return 2;
 
   if (mWidth != inImage->getWidth() || mHeight != inImage->getHeight())
@@ -480,8 +484,35 @@ int KStoreIMOD::WriteSection(KImage *inImage, int inSect)
       mIIfile->amin, mIIfile->amax, mIIfile->amean);
     retval = AddExtraValuesToAdoc(inImage, inSect, needNewSect, gotMutex);
   }
-  if (!retval)
+  if (!retval) {
     UpdateHdfMrcHeader();
+
+    // See if header updaing is enabled at all, and if it time to do the next one
+    if (mUpdateTimePerSect > 0) {
+      mUpdateCounter--;
+      if (mUpdateCounter <= 0) {
+        mUpdateCounter = 1000000;
+        wallStart = wallTime();
+        if (iiWriteHeader(mIIfile)) {
+          retval = 7;
+        } else {
+          iiClose(mIIfile);
+          if (iiReopen(mIIfile))
+            retval = 7;
+          else {
+
+            // Set interval to next update based on measured time
+            updateTime = wallTime() - wallStart;
+            mUpdateCounter = 1;
+            if (updateTime >= mUpdateTimePerSect)
+              mUpdateCounter = (int)ceil(updateTime / mUpdateTimePerSect);
+            SEMTrace('y', "HDF header update time %.3f, counter to next %d", updateTime,
+              mUpdateCounter);
+          }
+        }
+      }
+    }
+  }
 
   if (needToReflip) {
     inImage->flipY();
@@ -490,6 +521,8 @@ int KStoreIMOD::WriteSection(KImage *inImage, int inSect)
   if (needToDelete)
     delete[] idata;
   inImage->UnLock();
+  if (gotMutex)
+    AdocReleaseMutex();
   return retval;
 }
 
