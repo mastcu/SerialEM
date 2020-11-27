@@ -177,6 +177,10 @@
           <TD class="style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
           <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
+          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
@@ -561,6 +565,13 @@
        camera opening its shutter and SerialEM discovering that the screen is down.&nbsp; Select this option to 
        prevent the blanking if it is problematic for some reason.
      </p> 
+     <p> 
+     <A NAME="hid_specializedoptions_closevalvesafterlonginactivity"></A><B>Turn Off Beam After Long Inactivity command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+      <p>With this option, you can enable the program to close valves or turn off the 
+        filament if it is left idle for longer than a specified length of time.&nbsp; 
+        After selecting the option, enter the number of minutes of inactivity after 
+        which the program should turn off the beam, or 0 to disable this feature.&nbsp; 
+        The option appears checked in the menu when a positive time has been entered.</p>
       </basefont>
   </BODY>
 </HTML>

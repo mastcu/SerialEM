@@ -511,6 +511,7 @@ BEGIN
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
             MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
             MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
+            MENUITEM "&Turn Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
         END
     END
     POPUP "T&ilt Series"
@@ -1732,11 +1733,11 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,111,122,8,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,118,122,1,19
     PUSHBUTTON      "S",IDC_COPYTOSEARCH,93,199,14,8
-    PUSHBUTTON      "Vie.",IDC_GOTO_VIEW,23,80,16,12
-    PUSHBUTTON      "Foc.",IDC_GOTO_FOCUS,42,80,17,12
-    PUSHBUTTON      "Tri.",IDC_GOTO_TRIAL,62,80,16,12
-    PUSHBUTTON      "Rec.",IDC_GOTO_RECORD,81,80,16,12
-    PUSHBUTTON      "Sea.",IDC_GOTO_SEARCH,100,80,16,12
+    CONTROL         "Vie.",IDC_GOTO_VIEW,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,23,80,16,12
+    CONTROL         "Foc.",IDC_GOTO_FOCUS,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,42,80,17,12
+    CONTROL         "Tri.",IDC_GOTO_TRIAL,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,62,80,16,12
+    CONTROL         "Rec.",IDC_GOTO_RECORD,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,81,80,16,12
+    CONTROL         "Sea.",IDC_GOTO_SEARCH,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,80,16,12
     LTEXT           "Go to:",IDC_STATIC,3,81,18,8
 END
 
@@ -4384,6 +4385,7 @@ STRINGTABLE
 BEGIN
     IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
     IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
+    IDC_RHDFFILE            "Save to HDF file that can hold multiple images"
 END
 
 STRINGTABLE
@@ -5104,7 +5106,6 @@ BEGIN
     IDC_RLZWCOMPRESS        "Save TIFF file with Zempel-Liv compression"
     IDC_BUTSWAPXY           "Exchange X and Y coordinates"
     IDC_RMRCFILE            "Save to MRC file that can hold multiple images"
-    IDC_RHDFFILE            "Save to HDF file that can hold multiple images"
     IDC_RTIFFFILE           "Save image in TIFF file and close file"
 END
 
@@ -6009,6 +6010,8 @@ BEGIN
     ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
     ID_OPTIONS_USEITEMLABELSINFILENAMES 
                             "Substitute item's label for previous one when generating new filenames"
+    ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 
+                            "Close valves or turn off filament when program is idle for specified time"
 END
 
 #endif    // English (United States) resources

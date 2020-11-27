@@ -711,6 +711,7 @@ CSerialEMApp::CSerialEMApp()
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
+  mLastActivityTime = sStartTime;
   appThreadID = GetCurrentThreadId();
   SEMBuildTime(__DATE__, __TIME__);
 }
@@ -2119,6 +2120,9 @@ BOOL CSerialEMApp::CheckIdleTasks()
     ErrorOccurred(sThreadError);
     sThreadError = 0;
   }
+
+  if (mIdleArray.GetSize())
+    mLastActivityTime = time;
   
   // Look through the list of tasks if any
   for (i = 0; i < mIdleArray.GetSize(); i++) {

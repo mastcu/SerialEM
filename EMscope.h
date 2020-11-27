@@ -359,6 +359,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, AdjustFocusForProbe);
   SetMember(double, FirstFocusForProbe);
   GetSetMember(int, NormAllOnMagChange);
+  GetSetMember(int, IdleTimeToCloseValves);
   void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax)
   {outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];};
   void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax)
@@ -741,6 +742,8 @@ private:
   BOOL mJeolHasBrightnessZoom; // Flag for whether TemExt version has BrightnessZoom
   int mAdjustForISSkipBacklash; // Flag for astig/BT adjustments for IS not to backlash
   float mAddToRawIntensity;    // Amount to add to an intensity value to keep it in range
+  int mIdleTimeToCloseValves;  // Minutes of no activity after which to close the valves
+  bool mClosedValvesAfterIdle; // Flag that it happened
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc

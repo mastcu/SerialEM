@@ -472,6 +472,7 @@ CEMscope::CEMscope()
   mXLensModeAvailable = 0;
   mTiltSpeedFactor = 0.;
   mRestoreStageXYdelay = 100;
+  mIdleTimeToCloseValves = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -1611,11 +1612,28 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     mWinApp->mCamera->CheckAndFreeK2References(false);
   }
 
-  // Check if valves should be closed
+  // Check if valves should be closed due to message box up
   if (sCloseValvesInterval > 0. && 
     SEMTickInterval(sCloseValvesStart) > sCloseValvesInterval) {
     SetColumnValvesOpen(false);
     sCloseValvesInterval = 0.;
+  }
+
+  // Or if the option is set to close after inactivity
+  if (mIdleTimeToCloseValves > 0 && SEMTickInterval(mWinApp->GetLastActivityTime()) >
+    60000. * mIdleTimeToCloseValves) {
+    if (!mClosedValvesAfterIdle) {
+      SetColumnValvesOpen(false);
+      if (mNoColumnValve)
+        PrintfToLog("Turned off beam after %d minutes of inactivity",
+          mIdleTimeToCloseValves);
+      else
+        PrintfToLog("Closed valve%s after %d minutes of inactivity",
+          mIdleTimeToCloseValves, JEOLscope ? "" : "s");
+    }
+    mClosedValvesAfterIdle = true;
+  } else {
+    mClosedValvesAfterIdle = false;
   }
 
   if (mPlugFuncs->DoingUpdate) {

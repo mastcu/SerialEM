@@ -416,6 +416,7 @@ void CSerialEMView::DrawImage(void)
   HDC hdc = ::GetDC(m_hWnd); // handle to device context
   DrawToScreenOrBuffer(cdcWin, hdc, rect, 1., 0, false);
   ::ReleaseDC(m_hWnd, hdc);
+  mWinApp->SetLastActivityTime(GetTickCount());
 }
 
 // Main drawing routine to screen or buffer.  Skipextra is one to skip some items plus

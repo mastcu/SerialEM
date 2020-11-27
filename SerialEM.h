@@ -568,6 +568,7 @@ public:
   GetSetMember(CString, ScriptToRunAtStart);
   GetSetMember(CString, ScriptToRunAtEnd);
   GetSetMember(CString, ProgramTitleText);
+  GetSetMember(double, LastActivityTime);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
   std::set<int>  *GetIDsToDisable() { return &mIDsToDisable; };
@@ -848,6 +849,7 @@ private:
   CString mScriptToRunAtStart;
   CString mScriptToRunAtEnd;
   CString mProgramTitleText;
+  double mLastActivityTime;     // Tick time of last redisplay or something in idle array
 
 
 public:
