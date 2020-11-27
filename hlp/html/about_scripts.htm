@@ -220,7 +220,11 @@
             is used on the left side of an assignment statement, the script will fail during 
             initial checking.&nbsp; Otherwise it will run, but if such a variable name is 
             assigned to by a command, such as in the mechanism just described, the program 
-            will print a warning in the log.</LI>
+            will print a warning in the log.&nbsp; The list of reserved names can be seen in
+            <a href="https://bio3d.colorado.edu/SerialEM/OpenSerialEM/MacroProcessor.cpp">
+            MacroProcessor.cpp</a> at the top of the class constructor, 
+            CMacroProcessor::CMacroProcessor(), in the arrays <em>tmpOp1</em>, <em>tmpOp2</em>, 
+            and <em>keywords</em>.</LI>
     </OL>
     <P><A NAME="arrayVars"></A><b>Array Variables</b></P>
     <P>Variables can also be set to an array of values, and individual values can be 
