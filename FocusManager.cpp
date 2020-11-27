@@ -900,7 +900,7 @@ BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
 {
   FocusTable focTmp;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
-  int hasCal, probe, alpha;
+  int probe, alpha;
   if (!mScope)
     return false;
   if (mWinApp->GetSTEMMode())
