@@ -307,6 +307,7 @@ CEMscope::CEMscope()
   mJeolSD.useCLA2forSTEM = false;
 
   mJeolSD.relaxStartTime = mJeolSD.relaxEndTime = GetTickCount();
+  mJeolSD.rampupStartTime = -1.;
   mJeolSD.internalMagTime = -1.;
   mJeolSD.changedMagTime = -1.;
   mJeolSD.skipMagEventTime = 700;
@@ -408,6 +409,7 @@ CEMscope::CEMscope()
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 45;
   mJeolEmissionTimeout = 180;
+  mBeamRampupTimeout = 0;
   mAdjustForISSkipBacklash = -1;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
@@ -650,6 +652,7 @@ int CEMscope::Initialize()
         (mSequentialLensRelax ? JEOL_SEQUENTIAL_RELAX : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
+      mJeolParams.beamRampupTimeout = mBeamRampupTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
       mJeolSD.pairedDetectorID = mPairedDetectorID;

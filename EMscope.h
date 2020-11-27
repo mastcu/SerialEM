@@ -323,6 +323,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, SequentialLensRelax);
   GetSetMember(int, JeolFlashFegTimeout);
   GetSetMember(int, JeolEmissionTimeout);
+  GetSetMember(int, BeamRampupTimeout);
   void SetJeolReadStageForWait(BOOL inVal);
   BOOL GetJeolReadStageForWait();
   GetSetMember(BOOL, SkipAdvancedScripting);
@@ -717,6 +718,7 @@ private:
   int mJeolRefillTimeout;     // Timeout for refilling
   int mJeolFlashFegTimeout;   // Timeout for flashing FEG
   int mJeolEmissionTimeout;   // Timeout for turning emission off or on
+  int mBeamRampupTimeout;     // Timeout in sec for not accessing beam state in rampup
   int mPostJeolGIFdelay;      // Delay time after setting GIF mode
   BOOL mUseInvertedMagRange;  // Flag to step up in Titan inverted range to find mag
   int mUpdateBeamBlank;       // Flag to update beam blanker

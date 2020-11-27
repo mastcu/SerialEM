@@ -2238,7 +2238,7 @@
         <TR VALIGN="top">
           <TD>FileOptionsFileType</TD>
           <TD>0 for MRC file, 1 for a series of numbered TIFF files described in an image 
-            autodoc</TD>
+            autodoc, 2 for HDF file</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FileOptionsSaveMdocFile</TD>
@@ -2251,9 +2251,10 @@
           <TD>MontageAutodocOptions</TD>
           <TD>Set to non-zero to have the file type and metadata autodoc options be set to 
             separate defaults and maintained as separate values for montages during a 
-            program run. Set to 1 to have the metadata option on by default for montages; 2 
+            program run.&nbsp; Set to 1 or 9 to have the metadata option on by default for montages; 2 
             to have the file type be numbered TIFFs for montages, 3 for both of these 
-            settings to be on, or 4 for neither to be on.&nbsp; The default is 1, to give .mdoc 
+            settings to be on, 4 for neither to be on, and 8 or 9 to have the file type be 
+            HDF.&nbsp; The default is 1, to give .mdoc 
             files for montages.</TD>
         </TR>
         <TR VALIGN="top">
@@ -3867,15 +3868,18 @@
             in a negative direction by half the given amplitude, stepped in a positive direction
             by the full amplitude, then stepped back to its original value. &nbsp;Each program has
             a normalization index when determines where it is used in the program.&nbsp; Follow with:<br />
-            Normalization index: 1 for spot, 3 for condenser, 10 for objective, 11 for projector, 
-            6 for a condenser group used for NormalizeAll, and 12 for a projector group used for NormalizeAll.<br />
+            Normalization index: 1 for spot, 2 for condenser, 3 for objective, 4 for projector, 
+            5 for a condenser group used for NormalizeAll with flag 1, and 6 for a projector group 
+            used for NormalizeAll with flag 2.<br />
             Number of steps in the positive direction.<br />
             Delay after each step (can certainly be 0 if multiple changes are interleaved).<br />
             Lens number #1: lens numbers for FLC calls are: 0: CL1,  2: CL3,  6: OL Coarse,
               7: OL Fine,  8: OM,  I0: IL1,  11: IL2,  12: IL3, 13: IL4,  14: PL1,  15 or 16: PL2,
               19: FL Coarse,  20: FL Fine,  21: FL Ratio.<br />
             Amplitude #1: size of change in positive direction.  Changes should generally be under 0.05.<br />
-            Follow with up to 5 more lens number and amplitude pairs.  
+            Follow with up to 5 more lens number and amplitude pairs. <br />
+            On a 3200, a good entry for a condenser normalization that includes IL1 is:<br />
+            2 10 0 0  0.002 2 0.005 10 0.00
         </TR>
         <TR VALIGN="top">
           <TD>RelaxLensesSequentially</TD>
@@ -4068,7 +4072,12 @@
           <TD>NoScopeControlOnStartup</TD>
           <TD>Set to 1 to keep the Scope Control panel closed on program startup, which 
             works around a bug in JEOL software that stops the beam from turning on when 
-            this panel is open and the state of the beam is being accessed.</TD>
+            this panel is open and the state of the beam switch is being accessed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolBeamRampupTimeout</TD>
+          <TD>Set a time in seconds after turning on the beam during which the state of the 
+            beam switch will not be accessed, to work around th same JEOL bug.</TD>
         </TR>
       </TABLE>
       <BR>

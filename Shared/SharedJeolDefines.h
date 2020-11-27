@@ -135,6 +135,7 @@ struct JeolStateData {
   BOOL relaxingLenses;
   unsigned int relaxStartTime;
   unsigned int relaxEndTime;
+  double rampupStartTime;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };
@@ -165,6 +166,7 @@ struct JeolParams {
   int flashFegTimeout;
   int fillNitrogenTimeout;
   int emissionTimeout;
+  int beamRampupTimeout;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };
