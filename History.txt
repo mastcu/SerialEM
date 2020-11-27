@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/26/20: Fixed taking current parameters for number of montage frames instead
+of ones the montage was taken with when making a map (In 3.8).
+
 11/25/20: Fixed problem with using the current probe mode or alpha for
 assessing whether focus calibration exists in Low Dose; used Focus area values
 instead (In 3.8).

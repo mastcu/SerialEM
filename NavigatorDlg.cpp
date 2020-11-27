@@ -6048,6 +6048,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     item->mMapFramesX = montp->xNframes;
     item->mMapFramesY = montp->yNframes;
     item->mFitToPolygonID = montp->fitToPolygonID;
+    if (montSect >= 0) {
+      AdocGetTwoIntegers(ADOC_MONT_SECT, montSect, ADOC_MONT_FRAMES, &item->mMapFramesX,
+        &item->mMapFramesY);
+      AdocGetInteger(ADOC_MONT_SECT, montSect, ADOC_FIT_POLY_ID, &item->mFitToPolygonID);
+    }
 
     // A read-in montage with no MontSection will have this as MONTAGE_CONSET, so this is
     // reliable otherwise

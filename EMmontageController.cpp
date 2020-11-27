@@ -4567,6 +4567,10 @@ int EMmontageController::MapParamsToAutodoc(void)
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_ALPHA, mScope->GetAlpha());
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_FILTER,
     (filtering && filtParam->slitIn) ? 1 : 0, filtering ? filtParam->slitWidth : 0.);
+  errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_FIT_POLY_ID,
+    mParam->fitToPolygonID);
+  errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_FRAMES, mParam->xNframes,
+    mParam->yNframes);
   if (mWinApp->mStoreMRC->getStoreType() != STORE_TYPE_HDF && 
     AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0)
     errSum -= 1000;

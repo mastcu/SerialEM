@@ -44,6 +44,8 @@ using namespace AdocDefs;
 #define ADOC_MONT_BACKLASH "MontBacklash"
 #define ADOC_VALID_BACKLASH "ValidBacklash"
 #define ADOC_MONT_SIZE "FullMontSize"
+#define ADOC_MONT_FRAMES "FullMontNumFrames"
+#define ADOC_FIT_POLY_ID "FitToPolyID"
 #define ADOC_DRIFT "DriftSettling"
 #define ADOC_CAM_MODES  "CameraModes"
 #define ADOC_FOCUS_OFFSET "FocusOffset"
