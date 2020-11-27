@@ -786,7 +786,7 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
 int CTSController::StartTiltSeries(BOOL singleStep, int external)
 {
   float ratio, derate;
-  double angle, curIntensity;
+  double curAngle, curIntensity, sumAngle;
   int error, spot, iDir, probe, numTilts, imSize, newBaseZ, i, magToSet = 0;
   CString message, str, bidirStr;
   MontParam *montP = mWinApp->GetMontParam();
@@ -819,7 +819,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   if (magToSet)
     mTSParam.magIndex[mSTEMindex] = magToSet;
   mWinApp->UpdateWindowSettings();
-  angle = mScope->GetTiltAngle();
+  curAngle = mScope->GetTiltAngle();
 
    // Return to external control, make sure startup flag is set in case TSMB postpones
   // The external flag indicates "user is not there" and the control flag is the true
@@ -1023,14 +1023,14 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     // Check available disk space
     // First add up the tilts
     iDir = (mTSParam.endingTilt < mTSParam.startingTilt) ? -1 : 1;
-    angle = mTSParam.startingTilt;
+    sumAngle = mTSParam.startingTilt;
     numTilts = 0;
-    while (iDir * (angle - mTSParam.endingTilt) <= 0.1 * mTSParam.tiltIncrement) {
+    while (iDir * (sumAngle - mTSParam.endingTilt) <= 0.1 * mTSParam.tiltIncrement) {
       numTilts++;
       if (mTSParam.cosineTilt && !mDoingDoseSymmetric)
-        angle += iDir * mTSParam.tiltIncrement * cos(DTOR * angle);
+        sumAngle += iDir * mTSParam.tiltIncrement * cos(DTOR * sumAngle);
       else
-        angle += iDir * mTSParam.tiltIncrement;
+        sumAngle += iDir * mTSParam.tiltIncrement;
     }
 
     // Get image size and call check
@@ -1237,7 +1237,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mDidResetIS = false;
     mDidTiltAfterMove = false;
     mRunningMacro = false;
-    mOriginalAngle = mTSParam.intensitySetAtZero ? 0. : angle;
+    mOriginalAngle = mTSParam.intensitySetAtZero ? 0. : curAngle;
     mRestoredTrackBuf = 0;
     mLDTrialWasMoved = false;
     mNeedDeferredSum = false;
@@ -1292,7 +1292,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
       // Otherwise, if it is usable from the current angle,
       // save a preview in align buffer, and set flags for preview or track
-      else if (UsableRefInA(angle, mTSParam.magIndex[mSTEMindex])) {
+      else if (UsableRefInA(curAngle, mTSParam.magIndex[mSTEMindex])) {
         if (mLowDoseMode && mCamera->ConSetToLDArea(mImBufs->mConSetUsed) == 3) {
           mBufferManager->CopyImageBuffer(0, mAlignBuf);
           mHaveZeroTiltPreview = true;
