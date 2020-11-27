@@ -1827,7 +1827,8 @@ void CMenuTargets::OnCameraSetExtraDivisionBy2()
 {
   int curVal = mCamera->GetExtraDivideBy2();
   if (!KGetOneInt("Extra division is on top of \"Divide 16-bit by 2\", which need not be "
-    "on", "Enter number of added times to divide by 2:", curVal))
+    "on", "Enter number of added times to divide by 2 (for division by 2 to this "
+    "power):", curVal))
     return;
   B3DCLAMP(curVal, 0, PLUGCAM_MOREDIV_MASK);
   mCamera->SetExtraDivideBy2(curVal);
