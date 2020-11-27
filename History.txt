@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/23/20: Added property NoScopeControlOnStatup to work around a problem in
+JEOL software when program starts with beam ramping up.
+
+11/23/20: Stopped turning off beam when program crashes (In 3.8).
+
+11/23/20: Fixed crash when autocentering beam with parameters from a higher
+spot size (In 3.8).
+
 11/22/20: Fixed SnapshotToFile command with first value 0 (In 3.8).
 
 11/22/20: Made it possible to pick Navigator points on an overlay made from
@@ -29,7 +37,6 @@ new names are generated automatically.
 display.
 
 11/12/20: Added ability to select scripts to run at program startup and exit.
-
 11/12/20: SEM_3-8-4
 11/12/20: Fixed installer to copy SEMCCD-GMS3.01-64.dll for GMS 3.0 - 3.2
 (In 3.8).

@@ -2956,6 +2956,8 @@ int CParameterIO::ReadProperties(CString strFileName)
       }
       else if (MatchNoCase("TotalMemoryLimitMB"))
         mWinApp->SetMemoryLimit((float)(1000000. * itemInt[1]));
+      else if (MatchNoCase("NoScopeControlOnStartup"))
+        mWinApp->SetShowRemoteControl(false);
       
       else if (MatchNoCase("SingleTecnaiObject")) {
       } else if (MatchNoCase("CookerScreenTiltDelay")) {

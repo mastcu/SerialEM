@@ -659,7 +659,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
       posSpotChg = intChg > 1. ? intChg : 1. / intChg;
       if (posSpotChg > lowestSpotChg || intChg > maxSpotChg || intChg < minSpotChg)
         continue;
-      
+
       // Modify binning and exposure to work with this intensity change
       if (intChg < 1.) {
 
@@ -667,7 +667,9 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
         useRatio = 1.;
         for (j = 0; j < camParam->numBinnings; j++) {
           bin = camParam->binnings[j];
-          ratio = (float)(bin * bin) / (float)(parmP->binning * parmP->binning);
+          ratio = (float)(bin * bin * mWinApp->GetGainFactor(camera, bin)) /
+            (float)(parmP->binning * parmP->binning *
+              mWinApp->GetGainFactor(camera, parmP->binning));
           if (bin < parmP->binning || camsize / bin < minCamsize || ratio > posSpotChg)
             continue;
           newbin = bin;
@@ -684,11 +686,13 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
         if (newexp <  minExposure) {
           
           // Search for a binning that allows an exposure above limits
-          for (j = camParam->numBinnings; j >= 0; j--) {
+          for (j = camParam->numBinnings - 1; j >= 0; j--) {
             bin = camParam->binnings[j];
             if (bin >= parmP->binning)
               continue;
-            ratio = (float)(bin * bin) / (float)(parmP->binning * parmP->binning);
+            ratio = (float)(bin * bin * mWinApp->GetGainFactor(camera, bin)) / 
+              (float)(parmP->binning * parmP->binning * 
+                mWinApp->GetGainFactor(camera, parmP->binning));
             newexp = (parmP->exposure - deadTime) / (intChg * ratio) + deadTime;
             if (newexp >= minExposure) {
               newbin = bin;
@@ -933,7 +937,7 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
   ControlSet  *conSets = mWinApp->GetConSets();
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   conSets[TRACK_CONSET] = conSets[TRIAL_CONSET];
-  conSets[TRACK_CONSET].binning = B3DMAX(1, param->binning);
+  conSets[TRACK_CONSET].binning = param->binning;
   conSets[TRACK_CONSET].exposure = (float)param->exposure;
   conSets[TRACK_CONSET].forceDark = false;
   conSets[TRACK_CONSET].onceDark = false;
