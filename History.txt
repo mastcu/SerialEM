@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/26/20: Fixed initial exposure time being used at highest tilt angle instead
+of zero tilt with cosine intensity changes, broken 8/4/20 (In 3.8).
+
 11/26/20: Added entry to Task-Specialized Options menu for making the program
 close vales/turn off beam when idle for long enough.
 
