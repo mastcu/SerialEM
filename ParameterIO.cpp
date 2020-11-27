@@ -5620,6 +5620,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mScope->GetSkipBlankingInLowDose())
     mWinApp->AppendToLog("Special option is set to skip blanking in Low Dose when the "
       "screen is up");
+  if (mWinApp->mScope->GetIdleTimeToCloseValves() > 0)
+    PrintfToLog("Special option is set to turn off beam after %d minutes of inactivity",
+      mWinApp->mScope->GetIdleTimeToCloseValves());
 }
 
 // Outputs a short or float vector in as many lines as it takes

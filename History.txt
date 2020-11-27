@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/26/20: Added entry to Task-Specialized Options menu for making the program
+close vales/turn off beam when idle for long enough.
+
+11/26/20: Made current "Go to" button in Low Dose panel appear depressed.
+
+11/26/20: Added script commands CloseNavigator and OpenNavigator; the latter
+lets you define the output file name.
+
 11/26/20: Fixed taking current parameters for number of montage frames instead
 of ones the montage was taken with when making a map (In 3.8).
 
@@ -10,7 +18,7 @@ of ones the montage was taken with when making a map (In 3.8).
 assessing whether focus calibration exists in Low Dose; used Focus area values
 instead (In 3.8).
 
-11/25/20: SEM_3-9-0beta1
+11/25/20: SEM_3-9-0beta1  REQUIRED FOR USING LATER BETA SERIALEM.EXE
 11/24/20: Added support for HDF files.
 
 11/24/20: Added property JeolBeamRampupTimeout to allow beam to be turned on

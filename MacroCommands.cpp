@@ -597,12 +597,14 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"SetItemSeriesAngles", 3, 4, &CMacCmd::SetItemSeriesAngles},
   {"SuspendNavRedraw", 0, 4, &CMacCmd::SuspendNavRedraw},
   {"DeferLogUpdates", 0, 4, &CMacCmd::DeferLogUpdates},
-  {"SetTiltAxisOffset", 1, 4, &CMacCmd::SetTiltAxisOffset}, /*CAI3.9*/
+  {"SetTiltAxisOffset", 1, 4, &CMacCmd::SetTiltAxisOffset}, 
   {"AddImages", 2, 1, &CMacCmd::CombineImages},
   {"SubtractImages", 2, 1, &CMacCmd::CombineImages},
   {"MultiplyImages", 2, 1, &CMacCmd::CombineImages},
   {"DivideImages", 2, 1, &CMacCmd::CombineImages}, 
-  {"ScaleImage", 3, 1, &CMacCmd::ScaleImage},
+  {"ScaleImage", 3, 1, &CMacCmd::ScaleImage}, 
+  {"CloseNavigator", 0, 0, &CMacCmd::CloseNavigator},
+  {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, /*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -1423,8 +1425,7 @@ int CMacCmd::LinearFitToVars(void)
 // SetStringVar
 int CMacCmd::SetStringVar(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   cIndex = mStrItems[1] == "@=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
   if (SetVariable(mStrItems[0], mStrCopy, cIndex, -1, false, &cReport))
     ABORT_LINE(cReport + " in script line: \n\n");
@@ -2084,8 +2085,7 @@ int CMacCmd::WriteFrameSeriesAngles(void)
   float frame = mCamera->GetFrameTSFrameTime();
   if (!angles->size())
     ABORT_NOLINE("There are no angles available from a frame tilt series");
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   CString message = "Error opening file ";
   CStdioFile *csFile = NULL;
   try {
@@ -2682,8 +2682,7 @@ int CMacCmd::OpenNewFile(void)
         " in statement:\n\n");
   }
   if (CMD_IS(OPENFRAMESUMFILE)) {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, cIndex, mStrCopy);
+    SubstituteLineStripItems(mStrLine, cIndex, mStrCopy);
     cReport = mCamera->GetFrameFilename() + mStrCopy;
     mWinApp->AppendToLog("Opening file: " + cReport, LOG_SWALLOW_IF_CLOSED);
   } else if (CheckConvertFilename(mStrItems, mStrLine, cIndex, cReport))
@@ -3267,8 +3266,7 @@ int CMacCmd::AllowFileOverwrite(void)
 // SetDirectory, MakeDirectory
 int CMacCmd::SetDirectory(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (mStrCopy.IsEmpty())
     ABORT_LINE("Missing directory name in statement:\n\n");
   if (CMD_IS(SETDIRECTORY)) {
@@ -3362,8 +3360,7 @@ int CMacCmd::AddToAutodoc(void)
   if (AdocGetMutexSetCurrent(cIndex) < 0)
     ABORT_LINE("Error making autodoc be the current one for: \n\n");
   if (CMD_IS(ADDTOAUTODOC)) {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+    SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     if (AdocSetKeyValue(
       cIndex2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
@@ -3389,8 +3386,7 @@ int CMacCmd::AddToFrameMdoc(void)
     "Error adding to frame .mdoc in:\n\n",
     "Error writing to frame .mdoc in:\n\n" };
   if (CMD_IS(ADDTOFRAMEMDOC)) {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+    SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     cIndex = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
   }
@@ -3444,8 +3440,7 @@ int CMacCmd::CloseFrameMdoc(void)
 int CMacCmd::AddToNextFrameStackMdoc(void)
 {
   cDoBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   if (mCamera->AddToNextFrameStackMdoc(mStrItems[1], mStrCopy, cDoBack, &cReport))
     ABORT_LINE(cReport + " in:\n\n");
@@ -3503,8 +3498,7 @@ int CMacCmd::SaveLogOpenNew(void)
   }
   mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
   if (!mItemEmpty[1] && !cTruth) {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+    SubstituteLineStripItems(mStrLine, 1, cReport);
     mWinApp->mLogWindow->UpdateSaveFile(true, cReport);
   }
   return 0;
@@ -3522,8 +3516,7 @@ int CMacCmd::SaveLog(void)
     else
       mWinApp->OnFileSavelog();
   } else {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 2, cReport);
+    SubstituteLineStripItems(mStrLine, 2, cReport);
     mWinApp->mLogWindow->UpdateSaveFile(true, cReport, true, mItemInt[1] != 0);
     mWinApp->mLogWindow->DoSave();
   }
@@ -5577,8 +5570,7 @@ int CMacCmd::FindPixelSize(void)
 // Echo
 int CMacCmd::Echo(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+  SubstituteLineStripItems(mStrLine, 1, cReport);
   cReport.Replace("\n", "  ");
   mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
   return 0;
@@ -5639,8 +5631,7 @@ int CMacCmd::Pause(void)
     cDoPause = CMD_IS(PAUSEIFFAILED);
     cDoAbort = CMD_IS(ABORTIFFAILED);
     if (!(cDoPause || cDoAbort) || !mLastTestResult) {
-      SubstituteVariables(&mStrLine, 1, mStrLine);
-      mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+      SubstituteLineStripItems(mStrLine, 1, cReport);
       if (cDoPause || cDoAbort)
         mWinApp->AppendToLog(cReport);
       cDoPause = cDoPause || CMD_IS(PAUSE);
@@ -5661,8 +5652,7 @@ int CMacCmd::Pause(void)
 // OKBox
 int CMacCmd::OKBox(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+  SubstituteLineStripItems(mStrLine, 1, cReport);
   AfxMessageBox(cReport, MB_OK | MB_ICONINFORMATION);
   return 0;
 }
@@ -5715,8 +5705,7 @@ int CMacCmd::CompareNoCase(void)
   cVar = LookupVariable(mItem1upper, cIndex2);
   if (!cVar)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   if (CMD_IS(COMPARESTRINGS))
     cIndex = cVar->value.Compare(mStrCopy);
   else
@@ -5750,16 +5739,14 @@ int CMacCmd::StripEndingDigits(void)
 // MailSubject
 int CMacCmd::MailSubject(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mMailSubject);
+  SubstituteLineStripItems(mStrLine, 1, mMailSubject);
   return 0;
 }
 
 // SendEmail, ErrorBoxSendEmail
 int CMacCmd::SendEmail(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+  SubstituteLineStripItems(mStrLine, 1, cReport);
   if (CMD_IS(SENDEMAIL)) {
     mWinApp->mMailer->SendMail(mMailSubject, cReport);
   } else {
@@ -6843,8 +6830,7 @@ int CMacCmd::SetFolderForFrames(void)
   if (!(mCamera->IsDirectDetector(mCamParams) ||
     (mCamParams->canTakeFrames & FRAMES_CAN_BE_SAVED)))
     ABORT_LINE("Cannot save frames from the current camera for line:\n\n");
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (mCamParams->DE_camType || (mCamParams->FEItype && FCAM_ADVANCED(mCamParams))) {
     if (mStrCopy.FindOneOf("/\\") >= 0)
       ABORT_LINE("Only a single folder can be entered for this camera type in:\n\n");
@@ -7197,8 +7183,7 @@ int CMacCmd::SetItemAcquire(void)
 int CMacCmd::NavIndexWithLabel(void)
 {
   ABORT_NONAV;
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   cTruth = CMD_IS(NAVINDEXWITHNOTE);
   mNavigator->FindItemWithString(mStrCopy, cTruth);
   cIndex = mNavigator->GetFoundItem() + 1;
@@ -7362,6 +7347,10 @@ int CMacCmd::SetNavRegistration(void)
 int CMacCmd::SaveNavigator(void)
 {
   ABORT_NONAV;
+  if (!mItemEmpty[1]) {
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+    mWinApp->mNavigator->SetCurrentNavFile(mStrCopy);
+  }
   mNavigator->DoSave();
   return 0;
 }
@@ -7392,14 +7381,34 @@ int CMacCmd::ReadNavFile(void)
   } else  {
     mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   }
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (!CFile::GetStatus((LPCTSTR)mStrCopy, cStatus))
     ABORT_LINE("The file " + mStrCopy + " does not exist in line:\n\n");
   if (mWinApp->mNavigator->LoadNavFile(false, CMD_IS(MERGENAVFILE), &mStrCopy))
     ABORT_LINE("Script stopped due to error processing Navigator file for line:\n\n");
   return 0;
 
+}
+
+// CloseNavigator
+int CMacCmd::CloseNavigator(void)
+{
+  ABORT_NONAV;
+  mNavigator->DoClose();
+  return 0;
+}
+
+// OpenNavigator
+int CMacCmd::OpenNavigator(void)
+{
+  if (!mItemEmpty[1] && mWinApp->mNavigator)
+    ABORT_LINE("The Navigator must not be open for line:\n\n");
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
+  if (!mItemEmpty[1]) {
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+    mWinApp->mNavigator->SetCurrentNavFile(mStrCopy);
+  }
+  return 0;
 }
 
 // ChangeItemRegistration, ChangeItemColor, ChangeItemLabel, ChangeItemNote
@@ -7434,8 +7443,7 @@ int CMacCmd::ChangeItemRegistration(void)
         mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
       cNavItem->mNote = mStrCopy;
     } else {
-      SubstituteVariables(&mStrLine, 1, mStrLine);
-      mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+      SubstituteLineStripItems(mStrLine, 2, mStrCopy);
       cReport.Format("The Navigator label size must be no more than %d characters "
         "in:\n\n", MAX_LABEL_SIZE);
       if (mStrCopy.GetLength() > MAX_LABEL_SIZE)
@@ -7650,8 +7658,7 @@ int CMacCmd::NewMap(void)
     cIndex = mItemInt[1];
     if (mItemEmpty[2])
       ABORT_LINE("There must be text for the Navigator note after the number in:\n\n");
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+    SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   }
   if (mNavigator->NewMap(false, cIndex, mItemEmpty[1] ? NULL : &mStrCopy)) {
     mCurrentIndex = mLastIndex;
@@ -8080,8 +8087,7 @@ int CMacCmd::SetLDAddedBeamButton(void)
 // ShowMessageOnScope
 int CMacCmd::ShowMessageOnScope(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (!FEIscope)
     ABORT_LINE("This command can be run only on an FEI scope");
   if (mScope->GetPluginVersion() < FEI_PLUGIN_MESSAGE_BOX) {
@@ -8110,8 +8116,7 @@ int CMacCmd::SetupScopeMessage(void)
   if (!mItemEmpty[2])
     mBoxOnScopeInterval = mItemFlt[2];
   if (!mItemEmpty[3]) {
-    SubstituteVariables(&mStrLine, 1, mStrLine);
-    mWinApp->mParamIO->StripItems(mStrLine, 3, mBoxOnScopeText);
+    SubstituteLineStripItems(mStrLine, 3, mBoxOnScopeText);
   }
   return 0;
 }
@@ -8199,8 +8204,7 @@ int CMacCmd::NewDEserverDarkRef(void)
 // RunInShell
 int CMacCmd::RunInShell(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mEnteredName);
+  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
   mProcessThread = AfxBeginThread(RunInShellProc, &mEnteredName, THREAD_PRIORITY_NORMAL,
      0, CREATE_SUSPENDED);
   mProcessThread->m_bAutoDelete = false;
@@ -8211,16 +8215,14 @@ int CMacCmd::RunInShell(void)
 // NextProcessArgs
 int CMacCmd::NextProcessArgs(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mNextProcessArgs);
+  SubstituteLineStripItems(mStrLine, 1, mNextProcessArgs);
   return 0;
 }
 
 // CreateProcess
 int CMacCmd::CreateProcess(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   cIndex = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs);
   mNextProcessArgs = "";
   if (cIndex)
@@ -8238,8 +8240,7 @@ int CMacCmd::ExternalToolArgPlace(void)
 // RunExternalTool
 int CMacCmd::RunExternalTool(void)
 {
-  SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   cIndex = mWinApp->mExternalTools->RunToolCommand(mStrCopy, mNextProcessArgs,
     mRunToolArgPlacement);
   mNextProcessArgs = "";

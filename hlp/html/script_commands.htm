@@ -3119,10 +3119,26 @@
             and 2 if there is a Navigator file defined 2.&nbsp; Virtually all of the commands 
             described in this section will generate an error if the Navigator is not open.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">OpenNavigator [name]</TD>
+          <TD>Opens the Navigator window, which must not already be open.&nbsp; If the optional
+             <b>name</b> is entered, this file is set as the Navigator file to save to.
+            &nbsp; Command added in 3.9.0, 11/26/20.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CloseNavigator</TD>
+          <TD>Closes the Navigator window, which must be open.&nbsp; If there are unsaved changes
+            and the <A HREF="menu_navigator.htm#hid_navigator_autosave">Autosave Nav File</A> 
+            option is not on, the user will be asked whether to save.
+            &nbsp; Command added in 3.9.0, 11/26/20.
+          </TD>
+        </TR>
          <TR>
-          <TD class="scriptcommand">SaveNavigator</TD>
-          <TD>Saves the Navigator data to the current file or opens a file chooser for 
-            saving if a file is not yet defined.</TD>
+          <TD class="scriptcommand">SaveNavigator [name]</TD>
+          <TD>If the optional <b>name</b> is not present, saves the Navigator data to the current file
+             or opens a file chooser for saving if a file is not yet defined.&nbsp; If a <b>name</b> is
+             entered, it saves to this file instead.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadNavFile name</TD>

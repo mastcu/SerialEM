@@ -419,6 +419,8 @@ class CMacCmd : public CMacroProcessor
   int SaveNavigator(void);
   int ReportIfNavOpen(void);
   int ReadNavFile(void);
+  int CloseNavigator(void);
+  int OpenNavigator(void);
   int ChangeItemRegistration(void);
   int SetItemTargetDefocus(void);
   int SetItemSeriesAngles(void);

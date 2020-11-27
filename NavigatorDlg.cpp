@@ -7165,9 +7165,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     if (inFilename) {
       mMergeName = *inFilename;
       if (!mergeFile) {
-        mNavFilename = *inFilename;
-        UtilSplitPath(mNavFilename, str, str2);
-        SetWindowText("Navigator:  " + str2);
+        SetCurrentNavFile(*inFilename);
       }
     } else {
       if (GetNavFilename(true, OFN_HIDEREADONLY, mergeFile))
@@ -7833,9 +7831,7 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
     return 1;
   if (mergeFile)
     return 0;
-  mNavFilename = mMergeName;
-  UtilSplitPath(mNavFilename, str, str2);
-  SetWindowText("Navigator:  " + str2);
+  SetCurrentNavFile(mMergeName);
   return 0;
 }
 
@@ -9842,4 +9838,12 @@ void CNavigatorDlg::GetCurrentNavDir(CString &navPath)
     UtilSplitPath(mNavFilename, navPath, str);
   if (!navPath.IsEmpty() && navPath.GetAt(navPath.GetLength() - 1) != '\\')
     navPath += '\\';
+}
+
+void CNavigatorDlg::SetCurrentNavFile(CString & inFile)
+{
+  CString str, str2;
+  mNavFilename = inFile;
+  UtilSplitPath(mNavFilename, str, str2);
+  SetWindowText("Navigator:  " + str2);
 }
