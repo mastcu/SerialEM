@@ -2,8 +2,7 @@
 //                          message handlers for opening, reading and writing
 //                          image files and settings files
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2020 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -47,6 +46,8 @@
 #include "StateDlg.h"
 #include "DummyDlg.h"
 #include "XFolderDialog\XWinVer.h"
+#include "Shared\\iimage.h"
+#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -155,6 +156,7 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.fileType = STORE_TYPE_MRC;
   mDefFileOpt.compression = COMPRESS_NONE;
   mDefFileOpt.jpegQuality = -1;
+  mDefFileOpt.hdfCompression = COMPRESS_NONE;
   mDefFileOpt.useMdoc = false;
   mDefFileOpt.leaveExistingMdoc = false;
   mDfltUseMdoc = -1;
@@ -166,6 +168,7 @@ CSerialEMDoc::CSerialEMDoc()
   mOtherFileOpt.pctTruncHi = 0.5f;
   mOtherFileOpt.fileType = STORE_TYPE_MRC;
   mOtherFileOpt.compression = COMPRESS_NONE;
+  mOtherFileOpt.hdfCompression = COMPRESS_NONE;
   mShowFileDlgOnce = true;
   mSkipFileDlg = true;
   mSTEMfileMode = 1;
@@ -210,6 +213,7 @@ CSerialEMDoc::CSerialEMDoc()
   mNumCalsAskThresh[CAL_DONE_BEAM] = 1;
   mNumCalsAskThresh[CAL_DONE_SPOT] = 1;
   mAbandonSettings = false;
+  mHDFsupported = iiTestIfHDF("Animpossible63873Filename_629384") != -2;
 }
 
 CSerialEMDoc::~CSerialEMDoc()
@@ -312,7 +316,7 @@ void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI)
 }
 
 // Open new file to replace the current one
-int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc)
+int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType)
 {
   if (mCurrentStore < 0)
     return 1;
@@ -333,7 +337,13 @@ int CSerialEMDoc::UserOpenOldMrcCFile(CFile **file, CString &cFilename, bool imo
     "*.mrc; *.st; *.map; *.idoc; *.adoc|All files (*.*)|*.*||";
   static char imodFilter[] = "Image files (*.mrc, *.st, *.map, *.tif*, *.dm3, *.dm4)|"
     "*.mrc; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
+  static char mrcHdfFilter[] = "Image stacks (*.mrc, *.hdf, *.st, *.map, *.idoc, *.adoc)|"
+    "*.mrc; *.hdf; *.st; *.map; *.idoc; *.adoc|All files (*.*)|*.*||";
+  static char imodHdfFilter[] = "Image files (*.mrc, *.hdf, *.st, *.map, *.tif*, *.dm3,"
+    " *.dm4)|*.mrc; *.hdf; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
   char *szFilter = imodOK ? imodFilter : mrcFilter;
+  if (mHDFsupported)
+    szFilter = imodOK ? imodHdfFilter : mrcHdfFilter;
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
   MyFileDialog fileDlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, szFilter);
@@ -370,6 +380,9 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     if (!(KStoreADOC::IsADOC(cFilename)).IsEmpty())
       return MRC_OPEN_ADOC;
 
+    if (mHDFsupported && iiTestIfHDF((char *)(LPCTSTR)cFilename) == 1)
+      return MRC_OPEN_HDF;
+
     if (!imodOK)
       SEMMessageBox("Error: File is not an MRC file.", MB_EXCLAME);
     return MRC_OPEN_NOTMRC;
@@ -384,7 +397,7 @@ void CSerialEMDoc::OnFileOpenold()
   CFile *file;
   CString cFilename;
   err = UserOpenOldMrcCFile(&file, cFilename, false);
-  if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC)
+  if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC && err != MRC_OPEN_HDF)
     return;
   OpenOldFile(file, cFilename, err);
 }
@@ -398,10 +411,12 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
   LeaveCurrentFile();
-  if (err == MRC_OPEN_NOERR) 
+  if (err == MRC_OPEN_NOERR)
     mWinApp->mStoreMRC = new KStoreMRC(file);
-  else
+  else if (err == MRC_OPEN_ADOC)
     mWinApp->mStoreMRC = new KStoreADOC(cFilename);
+  else
+    mWinApp->mStoreMRC = new KStoreIMOD(cFilename);
   if (mWinApp->mStoreMRC != NULL) {
     if (mWinApp->mStoreMRC->FileOK()) {
       SetFileOptsForSTEM();
@@ -601,7 +616,8 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
   mFileOpt.typext &= ~MONTAGE_MASK;
   mFileOpt.montageInMdoc = false;
   if ((param->xNframes - 1) * (param->xFrame - param->xOverlap) > 65536 ||
-    (param->yNframes - 1) * (param->yFrame - param->yOverlap) > 65536)
+    (param->yNframes - 1) * (param->yFrame - param->yOverlap) > 65536 ||
+    mFileOpt.fileType == STORE_TYPE_HDF)
     mFileOpt.montageInMdoc = true;
   else
     mFileOpt.typext |= MONTAGE_MASK;
@@ -910,7 +926,7 @@ KImageStore *CSerialEMDoc::GetStoreForSaving(int type)
   if (!store)
     return NULL;
   if (store->getStoreType() == STORE_TYPE_MRC || 
-    store->getStoreType() == STORE_TYPE_ADOC) {
+    store->getStoreType() == STORE_TYPE_ADOC || store->getStoreType() == STORE_TYPE_HDF) {
     mWinApp->mStoreMRC = store;
     AddCurrentStore();
   }
@@ -1280,8 +1296,10 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
     "JPEG files (*.jpg)|*.jpg|All files (*.*)|*.*||";
   static char BASED_CODE adocFilter[] = 
     "Image Autodoc files (*.idoc)|*.idoc|All files (*.*)|*.*||";
+  static char BASED_CODE hdfFilter[] =
+    "HDF image stacks (*.hdf)|*.hdf|All files (*.*)|*.*||";
   char *mrcExceptions[] = {".st", ".map"};
-  char *extensions[] = {".tif", ".idoc", ".mrc", ".jpg"};
+  char *extensions[] = {".tif", ".idoc", ".mrc", ".jpg", ".hdf"};
   char *filter = &szFilter[0];
 
   // If a filename is supplied, do not add an extension to it
@@ -1294,6 +1312,9 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
   } else if (fileType == STORE_TYPE_ADOC) {
     filter = &adocFilter[0];
     ext = extensions[1];
+  } else if (fileType == STORE_TYPE_HDF) {
+    filter = &hdfFilter[0];
+    ext = extensions[4];
   } else if (fileType == STORE_TYPE_JPEG) {
     filter = &jpegFilter[0];
     ext = extensions[3];
@@ -1326,6 +1347,8 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
 {
   MontParam *param = mWinApp->GetMontParam();
   KImageStore *store;
+  int fileType = fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType;
+  CString str = "Error Opening File";
   if (FileAlreadyOpen(cFilename, 
     "A new file was not opened; you need to close the existing one first."))
     return NULL;
@@ -1348,12 +1371,16 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
     
   } else {
     
-    if ((fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType)
-      == STORE_TYPE_ADOC) {
+    if (fileType == STORE_TYPE_ADOC) {
 
       // ADOC series
       KStoreADOC *storeADOC = new KStoreADOC(cFilename, *fileOptp);
       store = (KImageStore *)storeADOC;
+    } else if (fileType == STORE_TYPE_HDF) {
+
+      // HDF file
+      KStoreIMOD *storeHDF = new KStoreIMOD(cFilename, *fileOptp);
+      store = (KImageStore *)storeHDF;
     } else {
 
       // MRC file
@@ -1370,7 +1397,9 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
 
     // Test if OK, etc
     if (store == NULL || !store->FileOK()) {
-      AfxMessageBox("Error Opening File", MB_EXCLAME);
+      if (fileType == STORE_TYPE_HDF)
+        str += b3dGetError();
+      AfxMessageBox(str, MB_EXCLAME);
       mWinApp->RestoreViewFocus();
       if (store)
         delete store;

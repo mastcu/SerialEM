@@ -1635,6 +1635,7 @@
 #define IDC_STAT_ENTRY_TEXT             2662
 #define IDC_STAT_INFO_TEXT              2663
 #define IDC_COMBO_SELECTOR              2664
+#define IDC_RHDFFILE                    2665
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2129,9 +2130,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        251
+#define _APS_NEXT_RESOURCE_VALUE        252
 #define _APS_NEXT_COMMAND_VALUE         33399
-#define _APS_NEXT_CONTROL_VALUE         2665
+#define _APS_NEXT_CONTROL_VALUE         2666
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

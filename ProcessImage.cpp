@@ -490,7 +490,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   // NewprocessedImage happy
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
-  NewProcessedImage(&mImBufs[outBufNum], (short *)brray, kFLOAT, nx, ny, 1);
+  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, -1, false, outBufNum);
   return 0;
 }
 
@@ -582,7 +582,8 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
 
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
-  NewProcessedImage(&mImBufs[outBufNum], (short *)outArray, kFLOAT, nx, ny, 1);
+  NewProcessedImage(&mImBufs[bufNum1], (short *)outArray, kFLOAT, nx, ny, 1, -1, false, 
+    outBufNum);
   return 0;
 }
 
@@ -629,38 +630,37 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   image->UnLock();
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
-  NewProcessedImage(&mImBufs[outBufNum], (short *)array, newType, nx, ny, 1);
+  NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, -1, false, outBufNum);
   return 0;
 }
 
-// Common routine for putting a newly processed image into the given buffer
+// Common routine for putting a newly processed image based on the given buffer into 
+// buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
                                       int nx, int ny, int moreBinning, int capFlag,
-                                      bool fftWindow)
+                                      bool fftWindow, int toBufNum)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
-  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), imBuf);
+  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs +toBufNum);
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
-  int bufNum = (int)(imBuf - mImBufs);
-  if (bufNum < 0 || bufNum >= MAX_BUFFERS)
-    bufNum = 0;
 
   // Make a temporary copy of the imBuf because it may get displaced on the roll
   EMimageBuffer imBufTmp;
   bufferManager->CopyImBuf(imBuf, &imBufTmp, false);
 
-  // Roll the buffers just like on acquire
-  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, bufferManager->GetShiftsOnAcquire());
+  // Roll the buffers just like on acquire if going to A
+  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, 
+    bufferManager->GetShiftsOnAcquire());
   if ((!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
-    || imBuf != mImBufs)
+    || toBufNum > 0)
     nRoll = 0;
   for (int i = nRoll; i > 0 ; i--)
     bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
 
   // Make sure it's OK to destroy A now: if not delete data
-  if (!fftWindow && !bufferManager->OKtoDestroy(0, "Processing this image")) {
+  if (!fftWindow && !bufferManager->OKtoDestroy(toBufNum, "Processing this image")) {
     delete [] brray;
     return;
   }
@@ -670,7 +670,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   bufferManager->CopyImBuf(&imBufTmp, toImBuf, false);
 
   // Replace the image, again cleaning up on failure
-  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, bufNum, capFlag,
+  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
     imBuf->mConSetUsed, fftWindow) ) {
     delete [] brray;
     return;
@@ -690,7 +690,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
     toImBuf->mUserPtY = userPtYsave;
   }
 
-  mWinApp->SetCurrentBuffer(0, fftWindow);
+  mWinApp->SetCurrentBuffer(toBufNum, fftWindow);
 }
 
 void CProcessImage::OnProcessCropimage()

@@ -2616,6 +2616,8 @@ int CMacCmd::SaveToOtherFile(void)
   cIndex2 = -1;
   if (mStrItems[cIx0] == "MRC")
     cIndex2 = STORE_TYPE_MRC;
+  else if (mStrItems[cIx0] == "HDF")
+    cIndex2 = STORE_TYPE_HDF;
   else if (mStrItems[cIx0] == "TIF" || mStrItems[2] == "TIFF")
     cIndex2 = STORE_TYPE_TIFF;
   else if (mStrItems[cIx0] == "JPG" || mStrItems[2] == "JPEG")
@@ -2623,8 +2625,8 @@ int CMacCmd::SaveToOtherFile(void)
   else if (mStrItems[cIx0] != "CUR" && mStrItems[2] != "-1")
     ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
       "\n\n");
-  if (cTruth && cIndex2 == STORE_TYPE_MRC)
-    ABORT_LINE("A snapshot cannot be saved to an MRC file in line:\n\n");
+  if (cTruth && (cIndex2 == STORE_TYPE_MRC || cIndex2 == STORE_TYPE_HDF))
+    ABORT_LINE("A snapshot cannot be saved to an MRC or HDF file in line:\n\n");
   cIx1 = -1;
   if (mStrItems[cIx0 + 1] == "NONE")
     cIx1 = COMPRESS_NONE;
@@ -2649,7 +2651,7 @@ int CMacCmd::SaveToOtherFile(void)
     cIy1 = mWinApp->mActiveView->TakeSnapshot(mItemFlt[1], mItemFlt[2],
       mItemInt[3], cIndex2, cIx1, snapParams->jpegQuality, cReport);
     if (CScreenShotDialog::GetSnapshotError(cIy1, cReport)) {
-      ABORT_LINE("Error taking snapshot, " + cReport + "for line:\n\n");
+      ABORT_LINE("Error taking snapshot, " + cReport + " for line:\n\n");
     }
   } else {
     cIy1 = mWinApp->mDocWnd->SaveToOtherFile(cIndex, cIndex2, cIx1, &cReport);

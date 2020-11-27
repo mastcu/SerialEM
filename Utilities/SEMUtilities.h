@@ -8,7 +8,7 @@ struct FrameAliParams;
 
 struct MontParam;
 struct CameraParameters;
-class KStoreMRC;
+class KImageStore;
 const char *SEMCCDErrorMessage(int code);
 int MontageConSetNum(MontParam *param, bool trueSet, int lowDose = -1);
 int MontageLDAreaIndex(MontParam *param);
@@ -16,7 +16,7 @@ void SEMUtilInitialize();
 bool UtilOKtoAllocate(int numBytes);
 int UtilThreadBusy(CWinThread **threadpp, DWORD *exitPtr = NULL);
 void UtilThreadCleanup(CWinThread **threadpp);
-KStoreMRC *UtilOpenOldMRCFile(CString filename);
+KImageStore *UtilOpenOldMRCFile(CString filename);
 int UtilOpenFileReadImage(CString filename, CString descrip);
 int UtilSaveSingleImage(CString filename, CString descrip, bool useMdoc);
 int UtilCheckDiskFreeSpace(float needed, const char *operation);

@@ -77,7 +77,6 @@ if os.path.exists(helpFile):
    helpTime = os.path.getmtime(helpFile)
    if helpTime > rcTime and helpTime > incTime and helpTime > resTime and \
       helpTime > stubTime:
-      sys.stdout.write('Hide/disable help file is up to date - nothing to do\n')
       sys.exit(0)
 
 # Read the files
@@ -209,6 +208,7 @@ for line in stubLines:
       helpLines.append(line)
 
 writeTextFile(helpFile, helpLines)
+sys.stdout.write('New hide/disable help file written\n')
 
 sys.exit(0)
 

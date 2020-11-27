@@ -47,7 +47,7 @@ public:
   void GetFFT(int binning, int capFlag);
   void GetFFT(EMimageBuffer *imBuf, int binning, int capFlag);
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,
-    int moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false);
+    int moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false, int toBufNum = 0);
   void RotateImage(BOOL bLeft);
   int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2);
   int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);

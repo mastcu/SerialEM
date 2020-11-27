@@ -13,7 +13,7 @@
 class CReadFileDlg;
 
 enum {MRC_OPEN_NOERR = 0, MRC_OPEN_CANCEL, MRC_OPEN_ALREADY_OPEN,
-MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC};
+MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC, MRC_OPEN_HDF};
 
 DLL_IM_EX const char *SEMDefaultSysPath(void);
 
@@ -113,6 +113,7 @@ public:
   GetMember(CString, FlybackName);
   GetMember(int, DfltUseMdoc);
   GetMember(int, FrameAdocIndex);
+  GetMember(bool, HDFsupported);
   GetSetMember(CString, CurScriptPackPath);
   GetSetMember(BOOL, ScriptPackBackedUp);
   SetMember(CString, SettingsName);
@@ -263,6 +264,7 @@ private:
   bool mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
   CString mBasicModeFile;        // File with disables/hides for basic mode
+  bool mHDFsupported;            // Flag that HDF files are supported
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -279,7 +281,7 @@ public:
   void MontParamInitFromConSet(MontParam * param, int setNum);
   CString DateTimeForFrameSaving(void);
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
-  int OpenNewReplaceCurrent(CString filename, bool useMdoc);
+  int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);
   CString DateTimeForTitle(void);
   afx_msg void OnFileOpenMdoc();
   afx_msg void OnFileCloseMdoc();

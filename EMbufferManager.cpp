@@ -658,7 +658,8 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
 
     // IF not reading piece, need to check if this file is a montage;
     if (inStore->getStoreType() == STORE_TYPE_MRC || 
-      inStore->getStoreType() == STORE_TYPE_ADOC) {
+      inStore->getStoreType() == STORE_TYPE_ADOC || 
+      inStore->getStoreType() == STORE_TYPE_HDF) {
       param = *masterMont;
       montErr = inStore->CheckMontage(&param);
 

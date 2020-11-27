@@ -9,7 +9,7 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_fileproperties"></A><B><FONT size="3">File Properties Dialog</FONT></B></P>
-    <P>This dialog box provides options for file storage. Most of them have to do with 
+    <P>This dialog box provides options for file storage. The ones at the top have to do with 
       how to treat unsigned 16-bit integer data, produced by 16-bit cameras. 
       The MRC standard used to be that MRC files in integer mode stored data as signed 
       integers, ranging from -32768 to 32767. However, 16-bit cameras have the 
@@ -48,16 +48,23 @@
         images with very low counts if the bias of the camera drifts downwards after 
         taking a dark reference.</LI></OL>
     <P>Independent of these choices of how to treat the numeric values, this box 
-      provides four options for the format of the file in which data can be saved.</P>
+      provides five options for the format of the file in which data can be saved.</P>
     <OL>
       <LI>
-        MRC files, which can be processed in IMOD and some other software. These files 
+        MRC files, which can be processed in IMOD and 
+        many other software packages. These files 
         can hold multiple images in a stack, and have both a header for standard 
         information about the file and an extended header in which SerialEM stores 
-        additional information associated with each image, referred to as metadata.</LI>
+        a small amount of additional information associated with each image, referred to as metadata.</LI>
+      <LI>HDF files, which can be processed in IMOD and EMAN2.&nbsp; These files can also 
+        hold a stack of images and have several advantages over MRC files:&nbsp; they 
+        contain all of the metadata for each image that is saved in a separate &#39;.mdoc&#39; 
+        file for MRC files (see below); images can be saved with ZIP compression; and 
+        the output file can be re-ordered for bidirectional and dose-symmetric series 
+        without having to copy to a new stack.</LI>
       <LI>
         TIFF files for single images. This option is available only when saving an 
-        image (either when saving if there is no open file, or when using <A HREF="menu_file.htm#hidm_file_saveother">
+        image (either when saving if there is no open file, or when using hen using <A HREF="menu_file.htm#hidm_file_saveother">
           Save Single/Save to other</A> in the File menu). The file is closed after 
         writing one image.</LI>
       <LI>
@@ -101,8 +108,8 @@
     <P>Allows integer data to be saved as bytes or 16-bit integers. If there is a 
       16-bit camera and values are not being divided by 2, or if there are any buffers 
       with unsigned data in them, an option to save in unsigned integer 
-      mode is also available.&nbsp; These options are not available if you are saving 
-      a floating-point image, because there is no provision yet for conversion of 
+      mode is also available.&nbsp; These options are apply only if you are saving 
+      a non-floating-point image, because there is no provision yet for conversion of 
       floats to integers or bytes.</P>
     <P><B>When saving 16-bit data:</B></P>
     <P>Controls the treatment of unsigned 16-bit integer data being saved to a signed 
@@ -158,7 +165,7 @@
       opened and the range of coordinates is too large to store in the extended 
       header, a '.mdoc' file is created automatically.</P>
     <P><B>Save images to:</B></P>
-    <P>Select whether to save data in an MRC file, a TIFF or JPEG&nbsp; file holding a single image 
+    <P>Select whether to save data in an MRC file, an HDF file, a TIFF or JPEG&nbsp; file holding a single image 
       (not always available), or a series of TIFF files listed in an autodoc file, as 
       explained above. When you select the latter option, the file chooser for 
       specifying the file will attach the extension '.idoc' if you type in a root 

@@ -2,11 +2,14 @@
 #include <direct.h>
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
+#include "..\SerialEMDoc.h"
+#include "..\Image\KStoreIMOD.h"
 #include "..\EMscope.h"
 #include "..\CameraController.h"
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
 #include "..\Shared\autodoc.h"
+#include "..\Shared\iimage.h"
 #include "..\Shared\framealign.h"
 
 
@@ -173,11 +176,19 @@ void UtilThreadCleanup(CWinThread **threadpp)
 }
 
 // Open an existing file and return a KStoreMRC
-KStoreMRC *UtilOpenOldMRCFile(CString filename)
+KImageStore *UtilOpenOldMRCFile(CString filename)
 {
   CFile *file;
   KStoreMRC *storeMRC = NULL;
+  KStoreIMOD *storeHDF = NULL;
 
+  if (sWinApp->mDocWnd->GetHDFsupported() && iiTestIfHDF((char *)(LPCTSTR)filename) == 1){
+    storeHDF = new KStoreIMOD(filename);
+    if (storeHDF && storeHDF->FileOK())
+      return storeHDF;
+    delete storeHDF;
+    return NULL;
+  }
   try {
     file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite);
   }
@@ -196,7 +207,7 @@ KStoreMRC *UtilOpenOldMRCFile(CString filename)
 // Open an existing file and read the first image int the read buffer
 int UtilOpenFileReadImage(CString filename, CString descrip)
 {
-  KStoreMRC *storeMRC = UtilOpenOldMRCFile(filename);
+  KImageStore *storeMRC = UtilOpenOldMRCFile(filename);
   if (!storeMRC) {
     SEMMessageBox("Cannot reopen the file with " + descrip + " image.", MB_EXCLAME);
     return 1;

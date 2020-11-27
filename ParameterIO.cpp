@@ -2148,6 +2148,8 @@ int CParameterIO::ReadProperties(CString strFileName)
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   RotStretchXform rotXform;
   LensRelaxData relax;
+  short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
+    pnmAll};
   PiezoScaling pzScale;
   ChannelSet chanSet;
   MontLimits montLim;
@@ -2948,11 +2950,15 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("FileOptionsSignToUnsignOption"))
         defFileOpt->signToUnsignOpt = itemInt[1];
       else if (MatchNoCase("FileOptionsFileType"))
-        defFileOpt->fileType = itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
+        defFileOpt->fileType = B3DCHOICE(itemInt[1] > 1, STORE_TYPE_HDF,
+        itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC);
       else if (MatchNoCase("MontageAutodocOptions")) {
         defFileOpt->separateForMont = itemInt[1] != 0;
         defFileOpt->montUseMdoc = itemInt[1] % 2 != 0;
-        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
+        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC : 
+          STORE_TYPE_MRC;
+        if (itemInt[1] == 8 || itemInt[1] == 9)
+          defFileOpt->montFileType = STORE_TYPE_HDF;
       }
       else if (MatchNoCase("TotalMemoryLimitMB"))
         mWinApp->SetMemoryLimit((float)(1000000. * itemInt[1]));
@@ -3148,23 +3154,30 @@ int CParameterIO::ReadProperties(CString strFileName)
         scope->SetJeolPostMagDelay(itemInt[1], index);
 
       } else if (MatchNoCase("JeolLensRelaxProgram")) {
-        relax.normIndex = (short)itemInt[1];
-        relax.numLens = 0;
-        relax.numSteps = (short)itemInt[2];
-        relax.delay = itemInt[3];
-        for (ind = 0; ind < MAX_LENS_TO_RELAX; ind++) {
-          if (itemEmpty[2 * ind + 5])
-            break;
-          relax.lensTypes[relax.numLens] = (short)itemInt[2 * ind + 4];
-          relax.amplitudes[relax.numLens++] = itemFlt[2 * ind + 5];
+        ind = sizeof(lensNormMap) / sizeof(short);
+        if (itemInt[1] < 1 || itemInt[1] > ind) {
+          message.Format("Index value (%d) must be between 1 and %d for in property "
+            "line:\n", itemInt[1], ind);
+          AfxMessageBox(message + strLine, MB_EXCLAME);
+        } else {
+          relax.normIndex = lensNormMap[itemInt[1] - 1];
+          relax.numLens = 0;
+          relax.numSteps = (short)itemInt[2];
+          relax.delay = itemInt[3];
+          for (ind = 0; ind < MAX_LENS_TO_RELAX; ind++) {
+            if (itemEmpty[2 * ind + 5])
+              break;
+            relax.lensTypes[relax.numLens] = (short)itemInt[2 * ind + 4];
+            relax.amplitudes[relax.numLens++] = itemFlt[2 * ind + 5];
+          }
+          if (!itemEmpty[2 * ind + 5]) {
+            message.Format("More that %d lenses were entered in property line:\n%s\n\n"
+              "Request that developers make the array size larger",
+              MAX_LENS_TO_RELAX, (LPCTSTR)strLine);
+            AfxMessageBox(message);
+          }
+          relaxData->Add(relax);
         }
-        if (!itemEmpty[2 * ind + 5]) {
-          message.Format("More that %d lenses were entered in property line:\n%s\n\n"
-            "Request that developers make the array size larger",
-            MAX_LENS_TO_RELAX, (LPCTSTR)strLine);
-          AfxMessageBox(message);
-        }
-        relaxData->Add(relax);
 
       } else if (MatchNoCase("ImageDetectorIDs")) {
         index = 1;

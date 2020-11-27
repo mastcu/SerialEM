@@ -7,7 +7,7 @@ significance.
 in case that should ever happen (In 3.8).
 
 11/23/20: Added property NoScopeControlOnStartup to work around a problem in
-JEOL software when program starts with beam ramping up (In 3.8).
+JEOL software when program starts with beam ramping up.
 
 11/23/20: Stopped turning off beam when program crashes (In 3.8).
 
@@ -39,7 +39,8 @@ new names are generated automatically.
 11/12/20: Added hot keys to toggle "Extra info" and crosshairs in the
 display.
 
-11/12/20: Added ability to select scripts to run at program startup and exit.
+11/12/20: Added options to script menu to select scripts to run at program
+startup and exit.
 11/12/20: SEM_3-8-4
 11/12/20: Fixed installer to copy SEMCCD-GMS3.01-64.dll for GMS 3.0 - 3.2
 (In 3.8).
