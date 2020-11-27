@@ -393,6 +393,8 @@ public:
   afx_msg void OnMarkerToCenter();
   afx_msg void OnUseItemLabelsInFilenames();
   afx_msg void OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI);
+  afx_msg void OnCloseValvesAfterLongInactivity();
+  afx_msg void OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////
