@@ -5932,8 +5932,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     if (!imBuf->mImage || imBuf->mCaptured < 0) {
       if (unsuitableOK)
         return -1;
-      SEMMessageBox("Buffer A does not contain an image that can be saved as a map\n"
-        "(one that is newly captured or read in from a file).", MB_EXCLAME);
+      SEMMessageBox("Buffer A does not contain an image that can be saved as a\n"
+        "map (one that is newly captured or read in from a file).", MB_EXCLAME);
       return 1;
     }
     hasStage = imBuf->GetStagePosition(stageX, stageY) && imBuf->mCaptured;

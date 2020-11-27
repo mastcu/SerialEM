@@ -631,7 +631,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         acParmP->magIndex = itemInt[2];
         acParmP->spotSize = itemInt[3];
         acParmP->intensity = itemDbl[4];
-        acParmP->binning = itemInt[5];
+        acParmP->binning = B3DMAX(1, itemInt[5]);
         acParmP->exposure = itemFlt[6];
         acParmP->useCentroid = itemInt[7];
         acParmP->probeMode = itemInt[8] < 0 ? 1 : itemInt[8];
@@ -5739,23 +5739,35 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 // Macros and Function for setting a property value from menu
 #define INT_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) { \
-    if (KGetOneInt(propStr + a, ival)) \
+    ival = b##Get##c();       \
+    if (KGetOneInt(propStr + a, ival)) { \
       b##Set##c(ival); \
+      ivalIn = ival;   \
+    }  \
   }
 #define BOOL_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) { \
-    if (KGetOneInt(boolStr + a, ival)) \
+    ival = b##Get##c() ? 1 : 0;       \
+    if (KGetOneInt(boolStr + a, ival)) { \
       b##Set##c(ival != 0); \
+      ivalIn = ival;   \
+    }  \
   }
 #define FLOAT_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) { \
-    if (KGetOneFloat(propStr + a, fval, 2)) \
+    fval = b##Get##c();       \
+    if (KGetOneFloat(propStr + a, fval, 2)) { \
       b##Set##c(fval); \
+      fvalIn = fval;  \
+    }  \
   }
 #define DBL_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) { \
-    if (KGetOneFloat(propStr + a, fval, 2)) \
-      b##Set##c((double)fval); \
+    fval = (float)b##Get##c();       \
+    if (KGetOneFloat(propStr + a, fval, 2)) { \
+      b##Set##c((double)fval);  \
+      fvalIn = fval;  \
+    }  \
   }
 
 void CParameterIO::UserSetProperty(void)
@@ -5766,8 +5778,8 @@ void CParameterIO::UserSetProperty(void)
   CString propStr = "Enter value for property ";
   CString boolStr = "Enter 0 or 1 for property ";
   CString name;
-  int ival = 0;
-  float fval = 0.;
+  int ival = 0, ivalIn = -1000000000;
+  float fval = 0., fvalIn = EXTRA_NO_VALUE;
   bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
   if (!KGetOneString("Enter full name of property to set (case insensitive):", name))
     return;
@@ -5814,6 +5826,10 @@ void CParameterIO::UserSetProperty(void)
     AfxMessageBox(name + " is not a recognized property or cannot be set by this "
       "command");
   }
+  if (ivalIn > -1000000000)
+    PrintfToLog("Property %s set to %d\n", (LPCTSTR)name, ival);
+  if (fvalIn > EXTRA_VALUE_TEST)
+    PrintfToLog("Property %s set to %f\n", (LPCTSTR)name, fval);
 }
 #undef INT_PROP_TEST
 #undef BOOL_PROP_TEST

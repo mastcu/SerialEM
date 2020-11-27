@@ -282,7 +282,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   imageRect->getSize(nxImage, nyImage);
 
   // For 1:1 whole image drawing, set size to fill image and zoom to 1
-  if (zoomBy < 0) {
+  if (zoomBy <= 0) {
     zoomUse = 1.;
     memBMX = nxImage;
     memBMY = nyImage;

@@ -2750,6 +2750,9 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
   EMimageBuffer *imbufs[3], *firstBuf;
   unsigned char *array, *inptr, *outptr;
   KImage *rect;
+  BOOL gotScale = false;
+  ScaleMat aMat;
+  float delX, delY;
   imbufs[0] = redBuf;
   imbufs[1] = grnBuf;
   imbufs[2] = bluBuf;
@@ -2801,6 +2804,8 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
   for (i = 0; i < 3; i++) {
     if (!imbufs[i])
       continue;
+    if (!gotScale)
+      gotScale = mWinApp->mNavigator->BufferStageToImage(imbufs[i], aMat, delX, delY);
     rect = imbufs[i]->mPixMap->getImRectPtr();
     rect->Lock();
 
@@ -2816,6 +2821,11 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
   }
 
   NewProcessedImage(firstBuf, (short *)array, SLICE_MODE_RGB, xsize, ysize, 1);
+  if (gotScale) {
+    mImBufs->mStage2ImMat = aMat;
+    mImBufs->mStage2ImDelX = delX;
+    mImBufs->mStage2ImDelY = delY;
+  }
 
   return true;
 }

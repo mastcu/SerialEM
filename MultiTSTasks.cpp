@@ -933,7 +933,7 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
   ControlSet  *conSets = mWinApp->GetConSets();
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   conSets[TRACK_CONSET] = conSets[TRIAL_CONSET];
-  conSets[TRACK_CONSET].binning = param->binning;
+  conSets[TRACK_CONSET].binning = B3DMAX(1, param->binning);
   conSets[TRACK_CONSET].exposure = (float)param->exposure;
   conSets[TRACK_CONSET].forceDark = false;
   conSets[TRACK_CONSET].onceDark = false;

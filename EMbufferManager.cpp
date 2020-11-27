@@ -953,6 +953,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   EMimageBuffer *imBuf = &mImBufsp[bufNum];
   KImage *image = imBuf->mImage;
   KImageShort *newImage;
+  KImageFloat *floatIm;
   EMimageBuffer *newBuf;
   int binning;
   short int *array;
@@ -975,7 +976,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   // Get array for binned data or copy, and bin or copy data into it
   newWidth = width / binning;
   newHeight = height / binning;
-  NewArray(array, short int, newWidth * newHeight);
+  NewArray(array, short int, newWidth * newHeight * (type == kFLOAT ? 2 : 1));
   if (!array)
     return 2;
   image->Lock();
@@ -983,14 +984,20 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   if (binning > 1)
     XCorrBinByN(data, type, width, height, binning, array);
   else
-    memcpy(array, data, width * height * 2);
+    memcpy(array, data, width * height * (type == kFLOAT ? 4 : 2));
   image->UnLock();
 
   // Make new image and imbuf and get scaling
-  newImage = new KImageShort();
-  if (type == kUSHORT)
-    newImage->setType(kUSHORT);
-  newImage->useData((char *)array, newWidth, newHeight);
+  if (type == kFLOAT) {
+    floatIm = new KImageFloat();
+    floatIm->useData((char *)array, newWidth, newHeight);
+    newImage = (KImageShort *)floatIm;
+  } else {
+    newImage = new KImageShort();
+    if (type == kUSHORT)
+      newImage->setType(kUSHORT);
+    newImage->useData((char *)array, newWidth, newHeight);
+  }
   newBuf = new EMimageBuffer();
   newBuf->mImage = newImage;
   newBuf->mCaptured = BUFFER_STACK_IMAGE;
