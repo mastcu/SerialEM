@@ -352,7 +352,7 @@ void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORRE
 {
   CRect winRect, clientRect, butRect;
   int iLeft, iTop, border;
-  thickness = (int)(thickness * mWinApp->GetScalingForDPI());
+  thickness = mWinApp->ScaleValueForDPI(thickness);
   GetWindowRect(&winRect);
   GetClientRect(&clientRect);
   border = (winRect.Width() - clientRect.Width()) / 2;
