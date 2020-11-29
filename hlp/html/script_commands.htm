@@ -1434,7 +1434,11 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetDirectory dir</TD>
-          <TD>Changes the working directory to <b>dir</b>, which can contain spaces.</TD>
+          <TD>Changes the working directory to <b>dir</b>, which can contain spaces.&nbsp; 
+            The working directory is the location where script commands will access files 
+            when the names given to commands do not include a path, but it is not the 
+            directory where file choosers will open unless the &#39;OpenChooserInCurrentDir&#39; 
+            command is used.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDirectory</TD>
@@ -1446,7 +1450,18 @@
           <TD>Opens a directory chooser dialog to allow user to select or make a directory,
             and change the working directory to it.&nbsp; If the optional <b>prompt</b> string is
             not supplied, the dialog title is &#39;Choose a new current working directory&#39;.&nbsp;
-            The chosen directory is stored in <I>reportedValue1</I>.</TD>
+            The chosen directory is stored in <I>reportedValue1</I>.&nbsp; This is the 
+            directory where script commands will access files when given a name with a path. 
+            but file choosers will not open there unless the &#39;OpenChooserInCurrentDir&#39; 
+            command is used.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">OpenChooserInCurrentDir</TD>
+          <TD>Makes the next file chooser dialog open in the current working directory.&nbsp; 
+            If the user selects a different directory in the chooser, the next file chooser 
+            will open in that directory, just as if this command was not given, although the 
+            location will be kept track of by the program rather than by the operating 
+            system.&nbsp; Command added in 3.9,0, 11/29/20</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">MakeDirectory dir</TD>

@@ -604,7 +604,8 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"DivideImages", 2, 1, &CMacCmd::CombineImages}, 
   {"ScaleImage", 3, 1, &CMacCmd::ScaleImage}, 
   {"CloseNavigator", 0, 0, &CMacCmd::CloseNavigator},
-  {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, /*CAI3.9*/
+  {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, 
+  {"OpenChooserInCurrentDir", 0, 0, &CMacCmd::OpenChooserInCurrentDir}, /*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -3042,6 +3043,13 @@ int CMacCmd::UserSetDirectory(void)
       SUSPEND_NOLINE("because of failure to change directory to " + dlg.GetPath());
   }
   SetOneReportedValue(dlg.GetPath(), 1);
+  return 0;
+}
+
+// OpenChooserInCurrentDir
+int CMacCmd::OpenChooserInCurrentDir(void)
+{
+  mWinApp->mDocWnd->SetInitialDirToCurrentDir();
   return 0;
 }
 

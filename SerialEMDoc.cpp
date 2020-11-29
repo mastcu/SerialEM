@@ -2639,6 +2639,14 @@ int CSerialEMDoc::WriteFrameMdoc(void)
   return retval;
 }
 
+static char sInitialDir[_MAX_PATH + 1] = "";
+
+void CSerialEMDoc::SetInitialDirToCurrentDir()
+{
+  _getcwd(sInitialDir, _MAX_PATH + 1);
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // FILE DIALOG MESS
 
@@ -2669,7 +2677,7 @@ MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
     ofn.lpstrTitle = "Open    -    Push \"Open\" to see files after changing filter";
   }
 #endif
-  mfdTD.lpstrInitialDir = (LPCTSTR)emptyString;
+  mfdTD.lpstrInitialDir = (LPCTSTR)sInitialDir;
 }
 
 MyFileDialog::~MyFileDialog()
@@ -2683,6 +2691,9 @@ MyFileDialog::~MyFileDialog()
 // Function for the DoModal operation
 int MyFileDialog::DoModal()
 {
+  bool changeInitial = mfdTD.lpstrInitialDir == (LPCTSTR)sInitialDir;
+  CString newDir, str;
+  int retval;
 #ifdef USE_SDK_FILEDLG
 #ifdef USE_DUMMYDLG
   CDummyDlg dummy;
@@ -2698,7 +2709,7 @@ int MyFileDialog::DoModal()
   while (!mfdTD.done) {
     Sleep(50);
   }
-  return mfdTD.retval;
+  retval = mfdTD.retval;
 #endif
 
 #else
@@ -2707,15 +2718,21 @@ int MyFileDialog::DoModal()
   char *startDir = _getcwd(NULL, MAX_PATH);
   OPENFILENAME &ofn = mFileDlg->GetOFN();
   ofn.lpstrInitialDir = mfdTD.lpstrInitialDir;
-  int retval = (int)mFileDlg->DoModal();
+  retval = (int)mFileDlg->DoModal();
   mfdTD.pathName = mFileDlg->GetPathName();
   mfdTD.fileName = mFileDlg->GetFileName();
   if (startDir) {
     _chdir(startDir);
     free(startDir);
   }
-  return retval;
 #endif
+
+  // keep track of change in directory IF it was not set by caller
+  if (changeInitial && retval == IDOK) {
+    UtilSplitPath(mfdTD.pathName, newDir, str);
+    strncpy(sInitialDir, (LPCTSTR)newDir, _MAX_PATH);
+  }
+  return retval;
 }
 
 #ifdef USE_SDK_FILEDLG

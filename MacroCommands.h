@@ -166,6 +166,7 @@ class CMacCmd : public CMacroProcessor
   int FlushTextFile(void);
   int IsTextFileOpen(void);
   int UserSetDirectory(void);
+  int OpenChooserInCurrentDir(void);
   int SetNewFileType(void);
   int OpenOldFile(void);
   int CloseFile(void);

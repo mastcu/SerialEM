@@ -293,6 +293,7 @@ public:
   void DateTimeComponents(CString & date, CString & time, BOOL numericDate);
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);
+  void SetInitialDirToCurrentDir();
   int UpdateLastMdocFrame(KImage * image);
   void ComposeTitlebarLine(void);
   void CalibrationWasDone(int type);
