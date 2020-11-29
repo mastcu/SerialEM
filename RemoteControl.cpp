@@ -296,12 +296,14 @@ void CRemoteControl::OnButValves()
 {
   int state = mScope->GetColumnValvesOpen();
   if (state >= 0) {
-    mScope->SetColumnValvesOpen(state == 0);
-    if (mScope->GetNoColumnValve())
-      PrintfToLog("Beam should now be turning %s", state ? "OFF" : "ON");
-    else
-      PrintfToLog("Valve%s now %s", JEOLscope ? " is" : "s are", 
-        state ? "CLOSED" : "OPEN");
+    if (mScope->SetColumnValvesOpen(state == 0) &&
+      mScope->GetColumnValvesOpen() != state) {
+      if (mScope->GetNoColumnValve())
+        PrintfToLog("Beam should now be turning %s", state ? "OFF" : "ON");
+      else
+        PrintfToLog("Valve%s now %s", JEOLscope ? " is" : "s are",
+          state ? "CLOSED" : "OPEN");
+    }
   }
   SetFocus();
   mWinApp->RestoreViewFocus();
