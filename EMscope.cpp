@@ -1622,14 +1622,15 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   // Or if the option is set to close after inactivity
   if (mIdleTimeToCloseValves > 0 && SEMTickInterval(mWinApp->GetLastActivityTime()) >
     60000. * mIdleTimeToCloseValves) {
-    if (!mClosedValvesAfterIdle) {
-      SetColumnValvesOpen(false);
+    if (!mClosedValvesAfterIdle && GetColumnValvesOpen() > 0) {
+      mClosedValvesAfterIdle = true;
+      SetColumnValvesOpen(false, true);
       if (mNoColumnValve)
         PrintfToLog("Turned off beam after %d minutes of inactivity",
           mIdleTimeToCloseValves);
       else
         PrintfToLog("Closed valve%s after %d minutes of inactivity",
-          mIdleTimeToCloseValves, JEOLscope ? "" : "s");
+          JEOLscope ? "" : "s", mIdleTimeToCloseValves);
     }
     mClosedValvesAfterIdle = true;
   } else {
