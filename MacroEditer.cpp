@@ -220,8 +220,18 @@ void CMacroEditer::JustCloseWindow(void)
 // But there don't seem to be other options
 BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
 {
+  static bool ctrlPressed = false;
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB)
     pMsg->wParam = VK_OEM_3;
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_CONTROL)
+    ctrlPressed = true;
+  if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
+    ctrlPressed = false;
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
+    m_butRun.IsWindowEnabled()) {
+    OnRunmacro();
+    pMsg->wParam = 0x00;
+  }
   return CDialog::PreTranslateMessage(pMsg);
 }
 

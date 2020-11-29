@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/29/20: Fixed which Run button has focus in one-line script window so Enter
+will run the script just edited; made Ctrl-A and Ctrl-Z work there (In 3.8).
+
 11/26/20: SEM_3-8-5
 11/26/20: Fixed initial exposure time being used at highest tilt angle instead
 of zero tilt with cosine intensity changes, broken 8/4/20 (In 3.8).

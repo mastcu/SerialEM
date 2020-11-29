@@ -19,8 +19,9 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual void OnOK();
-	virtual void OnCancel();
+  virtual void OnOK();
+  virtual void OnPaint();
+  virtual void OnCancel();
 	virtual BOOL OnInitDialog();
   virtual void PostNcDestroy();
   virtual void OnRunClicked(UINT nID);
@@ -41,6 +42,9 @@ private:
   int m_iEditXorig, m_iEditHeight;
   int m_iWinXorig;
   bool mInitialized;
+  int mLineWithFocus;
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
+  afx_msg void OnEnKillfocusEditOneLine(UINT nID);
+  afx_msg void OnEnSetfocusEditOneLine(UINT nID);
 };

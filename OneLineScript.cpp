@@ -20,6 +20,7 @@ COneLineScript::COneLineScript(CWnd* pParent /*=NULL*/)
 {
   mNonModal = true;
   mInitialized = false;
+  mLineWithFocus = -1;
 }
 
 COneLineScript::~COneLineScript()
@@ -51,7 +52,10 @@ void COneLineScript::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(COneLineScript, CDialog)
   ON_CONTROL_RANGE(EN_CHANGE, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnChangeEditOneLine)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_RUN_ONE_LINE1, IDC_RUN_ONE_LINE5, OnRunClicked)
+  ON_CONTROL_RANGE(EN_KILLFOCUS, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnKillfocusEditOneLine)
+  ON_CONTROL_RANGE(EN_SETFOCUS,IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnSetfocusEditOneLine)
   ON_WM_SIZE()
+  ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 BOOL COneLineScript::OnInitDialog()
@@ -87,12 +91,23 @@ BOOL COneLineScript::OnInitDialog()
   }
   UpdateData(false);
   mInitialized = true;
+  SetDefID(45678); 
+  Invalidate();
   return FALSE;
 }
 
 // COneLineScript message handlers
 void COneLineScript::OnOK()
 {
+}
+
+void COneLineScript::OnPaint()
+{
+  CPaintDC dc(this); // device context for painting: IT DOESN'T PAINT UNLESS THIS HAPPENS
+  if (!mInitialized || mLineWithFocus < 0 || mLineWithFocus > 4)
+    return;
+  CToolDlg::DrawButtonOutline(this, dc,
+    (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, RGB(0, 0, 0), -7);
 }
 
 // Run one of them
@@ -145,10 +160,24 @@ void COneLineScript::OnSize(UINT nType, int cx, int cy)
 }
 
 // Translate tab to our completion character.  It is good on US standard keyboards only
+// Keep track of Ctrl so Ctrl A and Ctrl Z can be implemented
 BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
 {
+  static bool ctrlPressed = false;
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB)
     pMsg->wParam = VK_OEM_3;
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_CONTROL)
+    ctrlPressed = true;
+  if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
+    ctrlPressed = false;
+  if (ctrlPressed && pMsg->message == WM_KEYDOWN && mLineWithFocus >= 0 &&
+    mLineWithFocus < 5) {
+    if (pMsg->wParam == 'A')
+      ((CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE))->SetSel(0xFFFF0000);
+    if (pMsg->wParam == 'Z')
+      ((CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE))->Undo();
+    pMsg->wParam = 0x00;
+  }
   return CDialog::PreTranslateMessage(pMsg);
 }
 
@@ -176,4 +205,27 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
     m_editOneLine[ind].SetSel(sel2, sel2);
   }
 }
+
+// Set Run to default when a line gets focus
+// Keep track of which line has the focus so outline, Ctrl, Ctrl Z work
+void COneLineScript::OnEnSetfocusEditOneLine(UINT nID)
+{
+  if (!mInitialized || mWinApp->GetStartingProgram())
+    return;
+  mLineWithFocus = nID - IDC_EDIT_ONE_LINE;
+  SetDefID(mLineWithFocus + IDC_RUN_ONE_LINE1);
+  ((CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1))->SetButtonStyle(
+    BS_DEFPUSHBUTTON);
+  Invalidate();
+}
+
+// When focus lost, set line to -1
+void COneLineScript::OnEnKillfocusEditOneLine(UINT nID)
+{
+  if (!mInitialized || mWinApp->GetStartingProgram())
+    return;
+  mLineWithFocus = -1;
+  SetDefID(45678);
+}
+
 

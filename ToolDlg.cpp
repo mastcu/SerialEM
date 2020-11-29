@@ -350,17 +350,24 @@ void CToolDlg::DrawSideBorders(CPaintDC &dc)
 // Draw a box around a button
 void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORREF color)
 {
+  DrawButtonOutline(this, dc, but, thickness, color, -1);
+}
+
+void CToolDlg::DrawButtonOutline(CWnd * wnd, CPaintDC & dc, CWnd * but, int thickness, 
+  COLORREF color, int offset)
+{
   CRect winRect, clientRect, butRect;
   int iLeft, iTop, border;
-  thickness = mWinApp->ScaleValueForDPI(thickness);
-  GetWindowRect(&winRect);
-  GetClientRect(&clientRect);
+  thickness = (int)(thickness * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
+  offset = (int)(offset * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
+  wnd->GetWindowRect(&winRect);
+  wnd->GetClientRect(&clientRect);
   border = (winRect.Width() - clientRect.Width()) / 2;
   but->GetWindowRect(&butRect);
-  iLeft = butRect.left - winRect.left - (thickness + 2);
+  iLeft = (butRect.left - winRect.left) + offset - thickness;
   iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -
     (thickness - 1);
-  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1), 
+  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1),
     iTop + butRect.Height() + (thickness + 1));
   CPen pen;
   CBrush brush;
@@ -369,7 +376,7 @@ void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORRE
   // "transparent" brush
   brush.CreateStockObject(HOLLOW_BRUSH);
   dc.SelectObject(&pen);
-  dc.SelectObject(&brush); 
+  dc.SelectObject(&brush);
   dc.Rectangle(&dcRect);
 }
 
