@@ -398,8 +398,15 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   fileOpt.fileType = fileType;
   fileOpt.compression = compression;
   fileOpt.jpegQuality = quality;
+  fileOpt.montageInMdoc = false;
+  fileOpt.typext = 0;
   KStoreIMOD *store = new KStoreIMOD(filename, fileOpt);
-  err = store->WriteSection(image);
+  if (store->FileOK()) {
+    err = store->WriteSection(image);
+  } else {
+    SEMMessageBox(CString("Error opening file for snapshot: ") + b3dGetError());
+    err = 2;
+  }
   delete image;
   delete store;
   return -err;
