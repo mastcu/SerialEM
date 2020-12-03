@@ -2205,9 +2205,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       break;
     }
 
-    while (retval == 0 && 
+    while (retval == 0 &&
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
-                            MAX_TOKENS)) == 0) {
+        MAX_TOKENS)) == 0) {
       recognized = true;
       recognized2 = true;
       recognized30 = true;
@@ -2240,12 +2240,12 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (iset >= 0) {
           camP = &mCamParam[iset];
           if (camEntered[iset]) {
-              message.Format("More than one entry in properties file for camera %d", iset);
-              AfxMessageBox(message, MB_EXCLAME);
+            message.Format("More than one entry in properties file for camera %d", iset);
+            AfxMessageBox(message, MB_EXCLAME);
           }
           camEntered[iset] = 1;
         }
-        while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+        while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
           itemFlt, MAX_TOKENS)) == 0) {
           message = strItems[0];
           if (iset >= 0) {
@@ -2288,7 +2288,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               index++;
             }
           } else if (MatchNoCase("MakesUnsignedImages"))
-           camP->unsignedImages = itemInt[1] != 0;
+            camP->unsignedImages = itemInt[1] != 0;
           else if (MatchNoCase("FourPortReadout"))
             camP->fourPort = itemInt[1] != 0;
           else if (MatchNoCase("CoordsMustBeMultiple"))
@@ -2343,25 +2343,25 @@ int CParameterIO::ReadProperties(CString strFileName)
             // Direct Electron camera is centered only except DE-12
             camP->DE_camType = itemInt[1];
             camP->centeredOnly = itemInt[1] >= 2 ? 0 : 1;
-          } else if(MatchNoCase("DEImageRotation"))
+          } else if (MatchNoCase("DEImageRotation"))
             camP->DE_ImageRot = itemInt[1];
-          else if(MatchNoCase("DEImageInvertXAxis"))
-            camP->DE_ImageInvertX = itemInt[1]; 
-          else if(MatchNoCase("DEAutosaveFolder"))
+          else if (MatchNoCase("DEImageInvertXAxis"))
+            camP->DE_ImageInvertX = itemInt[1];
+          else if (MatchNoCase("DEAutosaveFolder"))
             StripItems(strLine, 1, camP->DE_AutosaveDir);
-          else if(MatchNoCase("DECameraServerIP"))
+          else if (MatchNoCase("DECameraServerIP"))
             camP->DEServerIP = strItems[1];
-          else if(MatchNoCase("DECameraReadPort"))
-            camP->DE_ServerReadPort = itemInt[1]; 
-          else if(MatchNoCase("DECameraWritePort"))
-            camP->DE_ServerWritePort = itemInt[1]; 
-          else if(MatchNoCase("AlsoInsertCamera"))
-            camP->alsoInsertCamera = itemInt[1]; 
-          else if(MatchNoCase("SamePhysicalCamera"))
-            camP->samePhysicalCamera = itemInt[1]; 
+          else if (MatchNoCase("DECameraReadPort"))
+            camP->DE_ServerReadPort = itemInt[1];
+          else if (MatchNoCase("DECameraWritePort"))
+            camP->DE_ServerWritePort = itemInt[1];
+          else if (MatchNoCase("AlsoInsertCamera"))
+            camP->alsoInsertCamera = itemInt[1];
+          else if (MatchNoCase("SamePhysicalCamera"))
+            camP->samePhysicalCamera = itemInt[1];
           else if (MatchNoCase("TietzCameraType")) {
             camP->TietzType = itemInt[1];
-            if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 || 
+            if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 ||
               itemInt[1] == 13)
               camP->TietzBlocks = 1024;
             if (itemInt[1] >= 15 && itemInt[1] <= 18) {
@@ -2458,8 +2458,8 @@ int CParameterIO::ReadProperties(CString strFileName)
               camera->SetSubareaShiftDelay(itemInt[2]);
           } else if (MatchNoCase("ChannelName")) {
             if (camP->numChannels < MAX_STEM_CHANNELS)
-              StripItems(strLine, 1, 
-              camP->channelName[camP->numChannels++]);
+              StripItems(strLine, 1,
+                camP->channelName[camP->numChannels++]);
           } else if (MatchNoCase("DetectorName")) {
             if (itemInt[1] >= 0 && itemInt[1] < MAX_STEM_CHANNELS)
               StripItems(strLine, 2, camP->detectorName[itemInt[1]]);
@@ -2491,18 +2491,18 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("StartDelayPerFrame"))
             camP->startDelayPerFrame = itemFlt[1];
           else if (MatchNoCase("ExtraUnblankTime"))
-            camP->extraUnblankTime = 
-              itemFlt[1];
+            camP->extraUnblankTime =
+            itemFlt[1];
           else if (MatchNoCase("ExtraOpenShutterTime"))
-            camP->extraOpenShutterTime = 
-              itemFlt[1];
+            camP->extraOpenShutterTime =
+            itemFlt[1];
           else if (MatchNoCase("ExtraBeamTime"))
             camP->extraBeamTime = itemFlt[1];
           else if (MatchNoCase("MinimumDriftSettling"))
             camP->minimumDrift = itemFlt[1];
           else if (MatchNoCase("MinimumBlankedExposure"))
-            camP->minBlankedExposure = 
-              itemFlt[1];
+            camP->minBlankedExposure =
+            itemFlt[1];
           else if (MatchNoCase("ShutterDeadTime"))
             camP->deadTime = itemFlt[1];
           else if (MatchNoCase("MinimumExposure"))
@@ -2515,7 +2515,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             montLim.bottom = itemInt[4];
             montLim.right = itemInt[5];
             montLimits->Add(montLim);
-          } else 
+          } else
             recognizedc1 = false;
 
           if (recognizedc1) {
@@ -2577,7 +2577,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               mMagTab[magInd].rotation[iset] = itemFlt[3];
               mMagTab[magInd].pixelSize[iset] = (float)(0.001 * itemDbl[4]);
             }
-          
+
           } else if (MatchNoCase("Binnings")) {
             index = 0;
             while (!strItems[index + 1].IsEmpty()) {
@@ -2592,19 +2592,19 @@ int CParameterIO::ReadProperties(CString strFileName)
             }
             camP->numBinnings = index;
           } else if (MatchNoCase("RelativeGainFactors")) {
-            StoreFloatsPerBinning(strItems, "gain factor", iset, strFileName, 
+            StoreFloatsPerBinning(strItems, "gain factor", iset, strFileName,
               camP->gainFactor);
           } else if (MatchNoCase("OneViewMinExposures")) {
-            StoreFloatsPerBinning(strItems, "OneView minimum exposure", -1, strFileName, 
+            StoreFloatsPerBinning(strItems, "OneView minimum exposure", -1, strFileName,
               camera->GetOneViewMinExposure(0));
           } else if (MatchNoCase("OneViewDeltaExposures")) {
-            StoreFloatsPerBinning(strItems, "OneView exposure increment", -1, strFileName, 
+            StoreFloatsPerBinning(strItems, "OneView exposure increment", -1, strFileName,
               camera->GetOneViewDeltaExposure(0));
           } else if (MatchNoCase("RioMinExposures")) {
-            StoreFloatsPerBinning(strItems, "Rio minimum exposure", -1, strFileName, 
+            StoreFloatsPerBinning(strItems, "Rio minimum exposure", -1, strFileName,
               camera->GetOneViewMinExposure(1));
           } else if (MatchNoCase("RioDeltaExposures")) {
-            StoreFloatsPerBinning(strItems, "Rio exposure increment", -1, strFileName, 
+            StoreFloatsPerBinning(strItems, "Rio exposure increment", -1, strFileName,
               camera->GetOneViewDeltaExposure(1));
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
@@ -2621,22 +2621,22 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->defects.usableBottom = itemInt[3];
             if (!strItems[4].IsEmpty())
               camP->defects.usableRight = itemInt[4];
-          
+
           } else if (MatchNoCase("BadColumns")) {
-            ReadBadColumns(strItems, camP->defects.badColumnStart, 
+            ReadBadColumns(strItems, camP->defects.badColumnStart,
               camP->defects.badColumnWidth);
 
           } else if (MatchNoCase("BadRows")) {
-            ReadBadColumns(strItems, camP->defects.badRowStart, 
+            ReadBadColumns(strItems, camP->defects.badRowStart,
               camP->defects.badRowHeight);
 
           } else if (MatchNoCase("PartialBadColumn")) {
             ReadPartialBad(strItems, itemInt, camP->defects.partialBadCol,
-              camP->defects.partialBadWidth, camP->defects.partialBadStartY, 
+              camP->defects.partialBadWidth, camP->defects.partialBadStartY,
               camP->defects.partialBadEndY, "column", strLine);
 
           } else if (MatchNoCase("PartialBadRow")) {
-            ReadPartialBad(strItems, itemInt, camP->defects.partialBadRow, 
+            ReadPartialBad(strItems, itemInt, camP->defects.partialBadRow,
               camP->defects.partialBadHeight, camP->defects.partialBadStartX,
               camP->defects.partialBadEndX, "row", strLine);
 
@@ -2665,7 +2665,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->hotPixelX.push_back(atoi((LPCTSTR)strItems[index++]));
               camP->hotPixelY.push_back(atoi((LPCTSTR)strItems[index++]));
             }
-            
+
           } else if (MatchNoCase("BadPixels")) {
             index = 1;
             while (!strItems[index + 1].IsEmpty()) {
@@ -2676,12 +2676,12 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("BinningOffset")) {
             if (strItems[4].IsEmpty()) {
               message.Format("Binning offset entry needs four numbers\n"
-              "for camera %d: %s",  iset, strLine);
+                "for camera %d: %s", iset, strLine);
               AfxMessageBox(message, MB_EXCLAME);
             } else if (camP->numBinnedOffsets >= MAX_BINNINGS) {
-                message.Format("Too many binning offsets for camera %d\n"
-                  "in properties file %s", iset, strFileName);
-                AfxMessageBox(message, MB_EXCLAME);
+              message.Format("Too many binning offsets for camera %d\n"
+                "in properties file %s", iset, strFileName);
+              AfxMessageBox(message, MB_EXCLAME);
             } else {
               camP->offsetBinning[camP->numBinnedOffsets] =
                 itemInt[1];
@@ -2696,12 +2696,12 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("SpecialRelativeRotation")) {
             ind = mWinApp->mShiftManager->GetNumRelRotations();
             if (strItems[3].IsEmpty()) {
-             message.Format("Relative rotation entry needs three numbers\n"
-              "for camera %d: %s",  iset, strLine);
+              message.Format("Relative rotation entry needs three numbers\n"
+                "for camera %d: %s", iset, strLine);
               AfxMessageBox(message, MB_EXCLAME);
             } else if (ind >= MAX_REL_ROT) {
-                AfxMessageBox("Too many special relative rotations for arrays",
-                  MB_EXCLAME);
+              AfxMessageBox("Too many special relative rotations for arrays",
+                MB_EXCLAME);
             } else {
               relRotations[ind].camera = iset;
               relRotations[ind].fromMag = itemInt[1];
@@ -2712,7 +2712,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
 
           } else if (MatchNoCase("RotationStretchXform")) {
-            rotXform.camera = iset;          
+            rotXform.camera = iset;
             rotXform.magInd = itemInt[1];
             rotXform.mat.xpx = itemFlt[2];
             rotXform.mat.xpy = itemFlt[3];
@@ -2737,14 +2737,14 @@ int CParameterIO::ReadProperties(CString strFileName)
             nMags = itemInt[1];
             scale = itemEmpty[2] ? 1.f : itemFlt[2];
             if (nMags <= 0 || scale <= 0) {
-              message.Format("Incorrect DoseRateTable entry for camera %d: %s",  
+              message.Format("Incorrect DoseRateTable entry for camera %d: %s",
                 iset, strLine);
               AfxMessageBox(message, MB_EXCLAME);
-         
+
             } else {
               err = 0;
               for (ind = 0; ind < nMags; ind++) {
-                if (ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+                if (ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
                   itemFlt, MAX_TOKENS) || itemEmpty[1]) {
                   err++;
                 } else {
@@ -2754,12 +2754,12 @@ int CParameterIO::ReadProperties(CString strFileName)
               }
               if (err) {
                 message.Format("%d errors occurred reading the Dose Rate table for "
-                  "camera %d",  err, iset);
+                  "camera %d", err, iset);
                 AfxMessageBox(message, MB_EXCLAME);
               }
             }
 
-          // 4/24/06: make image criteria be user settings
+            // 4/24/06: make image criteria be user settings
 
           } else if (!strItems[0].IsEmpty()) {
             // Unrecognized camera parameter
@@ -2774,7 +2774,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           retval = 1;
           break;
         }
-      } else 
+      } else
         recognizedc = false;
 
       if (recognizedc) {
@@ -2802,8 +2802,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         camera->SetDarkMaxMeanCrit(itemFlt[1]);
         if (!itemEmpty[2])
           camera->SetDarkMaxSDcrit(itemFlt[2]);
-      }
-      else if (MatchNoCase("K2FilterName")) {
+      } else if (MatchNoCase("K2FilterName")) {
         ind = camera->GetNumK2Filters();
         if (ind < MAX_K2_FILTERS && ind > 0) {
           StripItems(strLine, 1, K2FilterNames[ind]);
@@ -2816,12 +2815,10 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("K2CountingReference")) {
         StripItems(strLine, 1, message);
         camera->SetCountingRef(message);
-      }
-      else if (MatchNoCase("K2PackRawFramesDefault")) {
+      } else if (MatchNoCase("K2PackRawFramesDefault")) {
         if (camera->GetSaveRawPacked() < 0)
           camera->SetSaveRawPacked(itemInt[1] != 0 ? 1 : 0);
-      }
-      else if (MatchNoCase("DEProtectionCoverOpen"))
+      } else if (MatchNoCase("DEProtectionCoverOpen"))
         mWinApp->mDEToolDlg.SetProtCoverChoice(itemInt[1] ? 0 : 1);
       else if (MatchNoCase("FalconFrameConfigFile")) {
         StripItems(strLine, 1, message);
@@ -2864,17 +2861,17 @@ int CParameterIO::ReadProperties(CString strFileName)
 #endif 
         if (itemInt[1] < 0 || itemEmpty[2])
           AfxMessageBox("The SocketServerIP property needs two values: a socket"
-          " ID and the IP address", MB_EXCLAME);
+            " ID and the IP address", MB_EXCLAME);
         CBaseSocket::SetServerIP(itemInt[1], strItems[2]);
 #ifdef _WIN64
-     } else if (MatchNoCase("SocketServerPort") || MatchNoCase("SocketServerPortIf64")) {
+      } else if (MatchNoCase("SocketServerPort") || MatchNoCase("SocketServerPortIf64")) {
 #else
-     } else if (MatchNoCase("SocketServerPortIf64")) {
-     } else if (MatchNoCase("SocketServerPort")) {
+      } else if (MatchNoCase("SocketServerPortIf64")) {
+      } else if (MatchNoCase("SocketServerPort")) {
 #endif
         if (itemInt[1] < 0 || itemEmpty[2])
           AfxMessageBox("The SocketServerPort property needs two values: a socket"
-          " ID and the port number", MB_EXCLAME);
+            " ID and the port number", MB_EXCLAME);
         CBaseSocket::SetServerPort(itemInt[1], itemInt[2]);
       } else if (MatchNoCase("InitialCurrentCamera"))
         mWinApp->SetInitialCurrentCamera(itemInt[1]);
@@ -2894,11 +2891,11 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("IgnoreGatanCameras") || MatchNoCase("IgnoreSocketCameras")
         || MatchNoCase("IgnoreAMTCameras")) {
-          ind = 0;
-          if (MatchNoCase("IgnoreSocketCameras"))
-            ind = 1;
-          if (MatchNoCase("IgnoreAMTCameras"))
-            ind = 2;
+        ind = 0;
+        if (MatchNoCase("IgnoreSocketCameras"))
+          ind = 1;
+        if (MatchNoCase("IgnoreAMTCameras"))
+          ind = 2;
         index = 0;
         kvList = camera->GetIgnoreDMList(ind);
         while (!strItems[index + 1].IsEmpty() && index < MAX_IGNORE_GATAN) {
@@ -2923,15 +2920,15 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_CONSETS || strItems[2].IsEmpty())
-           AfxMessageBox("Index out of range or missing control set name in properties"
-             " file " + strFileName + " : " + strLine , MB_EXCLAME);
+          AfxMessageBox("Index out of range or missing control set name in properties"
+            " file " + strFileName + " : " + strLine, MB_EXCLAME);
         else
           mModeNames[index] = strItems[2];
 
       } else if (MatchNoCase("SearchAreaName")) {
         if (strItems[1].IsEmpty())
-           AfxMessageBox("Missing area name in properties file " + strFileName + 
-           " : " + strLine , MB_EXCLAME);
+          AfxMessageBox("Missing area name in properties file " + strFileName +
+            " : " + strLine, MB_EXCLAME);
         else
           mWinApp->mLowDoseDlg.SetSearchName(strItems[1]);
       } else if (MatchNoCase("FileOptionsMode")) {
@@ -2962,17 +2959,14 @@ int CParameterIO::ReadProperties(CString strFileName)
           STORE_TYPE_MRC;
         if (itemInt[1] == 8 || itemInt[1] == 9)
           defFileOpt->montFileType = STORE_TYPE_HDF;
-      }
-      else if (MatchNoCase("TotalMemoryLimitMB"))
+      } else if (MatchNoCase("TotalMemoryLimitMB"))
         mWinApp->SetMemoryLimit((float)(1000000. * itemInt[1]));
       else if (MatchNoCase("NoScopeControlOnStartup"))
         mWinApp->SetShowRemoteControl(false);
-      
+
       else if (MatchNoCase("SingleTecnaiObject")) {
       } else if (MatchNoCase("CookerScreenTiltDelay")) {
-      } else if (MatchNoCase("NoScope"))
-        scope->SetNoScope(itemInt[1]);
-      else if (MatchNoCase("BackgroundSocketToFEI"))
+      } else if (MatchNoCase("BackgroundSocketToFEI"))
         SetNumFEIChannels(itemInt[1] ? 4 : 3);
       else if (MatchNoCase("UseTEMScripting")) {
         scope->SetUseTEMScripting(itemInt[1]);

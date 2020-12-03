@@ -1059,6 +1059,13 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
       }
     }
   }
+
+  // Better give distinct error return when no peak is within limits
+  if (bestWgtCCC < 0.) {
+    AutoalignCleanup();
+    return -1;
+  }
+
   *fracPtr = fracBest;
   *CCCptr = CCCbest;
   if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128 && 

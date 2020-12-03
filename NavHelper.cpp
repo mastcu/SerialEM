@@ -321,8 +321,8 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       alignedMap = 1;
     }
     drawnMap = inItem->mDrawnOnMapID == item->mMapID ? 1 : 0;
-    samePosMap = differentMap && inItem->mAtSamePosID > 0 && 
-      inItem->mAtSamePosID == item->mAtSamePosID ? 1 : 0;
+    samePosMap = (differentMap && inItem->mAtSamePosID > 0 && 
+      inItem->mAtSamePosID == item->mAtSamePosID) ? 1 : 0;
 
     if (InsideContour(item->mPtX, item->mPtY, item->mNumPoints, targetX, targetY)) {
 
@@ -398,14 +398,19 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // aligned and beyond wanted distance or if the target is more interior
       // Treat drawn on map same way as aligned to map - maybe it should count for more
       // but there is no criterion for "enough" border to apply here
+      SEMTrace('h',"Map %d: spm %d msp %d betm %d dmin %.2f mmw %.2f alm %d mal %d drm %d"
+        " mdr %d dmax %f bdis %.2f bmax %.2f", mapInd, samePosMap, maxSamePos, betterMap,
+        distMin, mMinMarginWanted, alignedMap, maxAligned, drawnMap, maxDrawn, distMax,
+        borderDist, borderMax);
       if ((samePosMap && !maxSamePos && (betterMap || distMin >= mMinMarginWanted)) ||
-        ((!maxSamePos || distMin < mMinMarginWanted) &&
+        ((!maxSamePos || distMin < mMinMarginWanted) && 
         (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) || 
         (((alignedMap && !maxAligned) || (drawnMap && !maxDrawn)) && 
         (betterMap || distMin >= mMinMarginWanted)) ||
         (betterMap && (!(((!alignedMap && maxAligned) || (!drawnMap && maxDrawn)) && 
         distMax >= mMinMarginWanted) ||
         (distMin == distMax && borderDist > borderMax)))))) {
+        SEMTrace('h', "Accepted %d as better", mapInd);
           distMax = distMin;
           borderMax = borderDist;
           maxAligned = alignedMap;

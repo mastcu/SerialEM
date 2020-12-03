@@ -2320,7 +2320,11 @@
         <TR VALIGN="top">
           <TD>LensNormalizationDelay</TD>
           <TD>Time delay after projector lens normalization, in milliseconds, to be added to 
-            a built-in 800 msec delay before exposure starts.&nbsp; The default is 2000.</TD>
+            a built-in 800 msec delay before exposure starts.&nbsp; The default is 2000.&nbsp;
+            For Krios, the recommended value is 5000-6000.&nbsp; One way to assess the adequacy
+             of a value is to autofocus twice in Low Dose mode after coming out of a 
+            lower-magnification View area and see how the drift rate declines.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>LowMagNormalizationDelay</TD>
@@ -3521,9 +3525,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>RealignItemMinMarginNeeded</TD>
-          <TD>When running Realign to Item, Navigator must find a map containing<BR>
+          <TD>When running Realign to Item, Navigator must find a map containing
             the item with at least this much distance from the center of an image
-            <BR>
             frame to the edge of the map. The default is 1.5 microns.</TD>
         </TR>
         <TR VALIGN="top">
@@ -3535,9 +3538,15 @@
         </TR>
         <TR VALIGN="top">
           <TD>RealignItemMinMarginWanted</TD>
-          <TD>When running Realign to Item, a frame that is closer to the target will be 
+          <TD>When selecting a map for Realign to Item, this value plays two roles: 
+            1) Within a montage map, a frame that is closer to the target will be 
             preferred for the first round of alignment as long as the distance from the 
-            frame center to map edge is bigger than this value. The default is 5 microns.</TD>
+            frame center to map edge is bigger than this value.&nbsp; 2) When picking a map
+            for aligning, a map can be selected over one that is better in other ways for 
+            several reasons, but the distance to its edge must be bigger than this value.
+            &nbsp; In particular, an anchor map taken at the same position as a higher mag map
+            can be guaranteed to be picked for alignment if half of its shortest side is more
+            than this value.  The default is 5 microns.</TD>
         </TR>
         <TR>
           <TD height="20">RealignItemMaxIS</TD>

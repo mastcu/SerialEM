@@ -2634,13 +2634,17 @@
         </TR>
         <TR>
           <TD class="scriptcommand">A or Autoalign</TD>
-          <TD>Aligns buffer A to autoalign buffer</TD>
+          <TD>Aligns buffer A to autoalign buffer.&nbsp; The script is suspended if there is an
+            error such as memory allocation or mismatched binnings, but if a maximum shift limit has
+            been set with 'LimitNextAutoAlign' and there are no eligible peaks with that distance,
+            it will set <i>reportedValue1</i> to -1 instead of 0 rather than stopping the script.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AlignTo buf [#N] [#T]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
             avoid changing microscope image shift, and 1 for <b>#T</b> to prevent trimming of 
-            dark borders.</TD>
+            dark borders.&nbsp; Behaves like 'Autoalign' on errors.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearAlignment [#N]</TD>
@@ -2664,7 +2668,9 @@
         <TR>
           <TD class="scriptcommand">ConicalAlignTo buf #R [#S]</TD>
           <TD>Aligns buffer A to the given buffer <b>buf</b> assuming a specimen rotation given by
-            <b>#R</b>. Optionally, enter 1 for <b>#S</b> to show the cross-correlation.</TD>
+            <b>#R</b>. Optionally, enter 1 for <b>#S</b> to show the cross-correlation.
+            &nbsp; Behaves like 'Autoalign' on errors.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportAlignTrimming</TD>
