@@ -6,6 +6,8 @@ significance.
 12/2/20: Fixed behavior when LimitNextAutoAlign is used and there are no peaks
 within the limit (In 3.8).
 
+11/29/20: Fixed window snapshotting, broken by HDF changes.
+
 11/29/20: Added script command to make the next file chooser open in the
 current working directory instead of last one accessed by the chooser.
 

@@ -227,6 +227,8 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
     ctrlPressed = true;
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
+  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed)
+    m_editMacro.SetSel(0xFFFF0000);
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
     m_butRun.IsWindowEnabled()) {
     OnRunmacro();

@@ -2334,8 +2334,9 @@ int CMacCmd::AutoAlign(void)
   cIndex2 = mShiftManager->AutoAlign(cIndex, 0, cDoShift, cTruth, NULL, 0., 0., 
     (float)cDelX);
   mDisableAlignTrim = false;
-  if (cIndex2)
+  if (cIndex2 > 0)
     SUSPEND_NOLINE("because of failure to autoalign");
+  SetReportedValues(cIndex2);
   return 0;
 }
 
