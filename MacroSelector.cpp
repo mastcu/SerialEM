@@ -13,7 +13,7 @@ CMacroSelector::CMacroSelector(CWnd* pParent /*=NULL*/)
   , m_strInfoText(_T(""))
   , m_strEntryText(_T(""))
 {
-
+  mAddNone = false;
 }
 
 CMacroSelector::~CMacroSelector()
@@ -35,8 +35,8 @@ BOOL CMacroSelector::OnInitDialog()
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(IDD), RT_DIALOG),
       m_hWnd, IDD, B3DNINT(1.25 * winApp->GetSystemDPI()));
   CDialog::OnInitDialog();
-  LoadMacrosIntoDropDown(m_comboBox, false, true);
-  m_comboBox.SetCurSel(mMacroIndex + 1);
+  LoadMacrosIntoDropDown(m_comboBox, false, mAddNone);
+  m_comboBox.SetCurSel(mMacroIndex + (mAddNone ? 1 : 0));
   return TRUE;
 }
 
@@ -61,5 +61,5 @@ END_MESSAGE_MAP()
 
 void CMacroSelector::OnCbnSelendokComboSelector()
 {
-  mMacroIndex = m_comboBox.GetCurSel() - 1;
+  mMacroIndex = m_comboBox.GetCurSel() - (mAddNone ? 1 : 0);
 }

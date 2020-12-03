@@ -30,5 +30,6 @@ public:
   CString m_strInfoText;
   CString m_strEntryText;
   CComboBox m_comboBox;
+  bool mAddNone;
   afx_msg void OnCbnSelendokComboSelector();
 };

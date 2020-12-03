@@ -710,6 +710,7 @@ int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
   CMacroSelector dlg;
   dlg.m_strEntryText = "Select script to run " + CString(when);
   dlg.mMacroIndex = FindMacroByNameOrTextNum(name);
+  dlg.mAddNone = true;
   if (dlg.DoModal() == IDCANCEL)
     return 1;
   name = "";

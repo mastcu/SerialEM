@@ -2229,12 +2229,15 @@ void CMenuTargets::OnUpdateTiltseriesRunMacro(CCmdUI *pCmdUI)
 void CMenuTargets::OnTiltseriesSetMacroToRun()
 {
   CMacroSelector dlg;
+
+  // The series macro is numbered from 1, 0 means not do one
+  // The dialog is 0 based
   int macNum = mTSController->GetMacroToRun();
-  dlg.mMacroIndex = macNum;
+  dlg.mMacroIndex = B3DMAX(macNum - 1, 0);
   dlg.m_strEntryText = "Select script to run before step in tilt series";
   if (dlg.DoModal() == IDCANCEL)
     return;
-  macNum = dlg.mMacroIndex;
+  macNum = dlg.mMacroIndex + 1;
   mTSController->SetMacroToRun(macNum);
   macNum = mTSController->GetStepAfterMacro();
   B3DCLAMP(macNum, 1, TSMACRO_PRE_RECORD);
