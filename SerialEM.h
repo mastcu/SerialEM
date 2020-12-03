@@ -712,8 +712,8 @@ private:
   CString mMacroFileName[MAX_MACROS];
   CString mMacroSaveFile[MAX_MACROS];
   int mSelectedConSet;
-  BOOL mAdministrator;
-  int mAdministratorMode;
+  BOOL mAdministrator;       // The boolean for whether in Admin mode or not
+  int mAdministratorMode;    // And a value that can be negative to forbid turning it 0
   BOOL mCalNotSaved;
   BOOL mComModuleInited;
   BOOL mExitOnScopeError;

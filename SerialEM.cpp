@@ -3270,7 +3270,7 @@ void CSerialEMApp::SetAdministratorMode(int inVal)
 {
   if (mAdministratorMode < 0)
     return;
-  mAdministrator = mAdministratorMode > 0;
+  mAdministrator = inVal > 0;
   mAdministratorMode = inVal;
 }
 
