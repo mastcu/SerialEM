@@ -248,8 +248,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   if (!testRun) {
     str.Format("Starting multiple Records (%d position%s in %d hole%s) %s beam tilt%s "
-      "compensation", mMSNumPeripheral + mMSDoCenter, mMSNumPeripheral + mMSDoCenter > 1 ?
-      "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
+      "compensation", mMSNumPeripheral + (mMSDoCenter ? 1 : 0), mMSNumPeripheral + 
+      mMSDoCenter > 1 ? "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
       mMSAdjustBeamTilt ? "WITH" : "WITHOUT", mMSAdjustAstig ? "/astigmatism" : "");
     mWinApp->AppendToLog(str);
   }
