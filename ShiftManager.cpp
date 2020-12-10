@@ -2838,6 +2838,7 @@ void CShiftManager::ListBeamShiftCals()
   mWinApp->AppendToLog(str1 + "    Matrix                                           Mag");
   for (ind = 0; ind < mNumBeamShiftCals; ind++) {
     str1.Format("%2d  ", mBeamCalMagInd[ind]);
+    str2 = "";
     if (FEIscope)
       str2 = mBeamCalProbe[ind] ? "   uP   " : "   nP   ";
     else if (JEOLscope && !mScope->GetHasNoAlpha())
