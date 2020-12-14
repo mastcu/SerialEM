@@ -312,6 +312,7 @@ bool CShiftManager::ImposeImageShiftOnScope(float delX, float delY, int magInd,
   double delISX, delISY;
   ScaleMat bMat, bInv;
   CString str;
+  bool fail = mScope->FastTiltAngle() > 10.;
   bMat = IStoGivenCamera(magInd, camera);
   if (!bMat.xpx) {
     if (!incremental) {
@@ -443,7 +444,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   int extra, baseXshift, ix0A, ix1A, ix0C, ix1C, baseYshift, iy0A, iy1A, iy0C, iy1C;
   //int height, width;
   //int minWidth, minHeight;
-  int binA, binC, peakXoffset, peakYoffset;
+  int binA, binC, peakXoffset, peakYoffset, retval = 0;
   float cshiftX, cshiftY;
   void *tempA, *tempC;
   //short int *crray;
@@ -1192,7 +1193,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
     // Have to make sure A is the current buffer : but this doesn't work, so pass
     // the A buffer to SetAlignShifts so it knows who to modify
-    SetAlignShifts(cshiftX, cshiftY, false, mImBufs, doImShift && !mScope->GetNoScope());
+    retval = SetAlignShifts(cshiftX, cshiftY, false, mImBufs, doImShift && 
+      !mScope->GetNoScope());
 
     // If montaging and this is montage center and overview is in B, shift
     // overview also, 
@@ -1200,7 +1202,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
       mImBufs[1].mImage && mImBufs[1].IsMontageOverview()) {
         binC = mImBufs[1].mBinning;
         mWinApp->SetCurrentBuffer(1);
-        SetAlignShifts((cshiftX * binA) / binC, (cshiftY * binA) / binC,
+        retval = SetAlignShifts((cshiftX * binA) / binC, (cshiftY * binA) / binC,
           false, mImBufs + 1);
         // restore display to A unless show overview at end is set and we were still
         // looking at it
@@ -1215,7 +1217,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   ((CMainFrame *)(mWinApp->m_pMainWnd))->MDIGetActive(NULL)->SetFocus();
   AutoalignCleanup();
   
-  return 0;
+  return retval;
 }
 
 
