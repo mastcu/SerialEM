@@ -236,14 +236,14 @@
         the tilt series.</P>
       <P><B>Pixel size</B></P>
       <P>The status message shows the pixel size, given the magnification and binning.</P>
-      <P><B>Track at lower magnification when needed</B></P>
+      <P><B>At start and when needed, track at magnification X</B></P>
       <P>Select this option to have tracking images taken at a lower magnification at the 
         start of the tilt series, or at other times when the Tilt Series Controller 
         thinks that tracking at the regular magnification might fail, such as after 
         resetting image shift. With the option selected, you can adjust the 
         magnification for the tracking images with the up and down arrows. Choose a 
         magnification where tracking occurs reliably.</P>
-      <P><B>Limit image shift</B></P>
+      <P><B>Limit image shift to X microns</B></P>
       <P>Enter the maximum image shift that should be allowed to accumulate before the 
         program resets image shifts.&nbsp; For a dose-symmetric series, the limit shown 
           applies only at the start of the series.</P>
@@ -275,7 +275,7 @@
         allows the beam to be centered before it becomes constricted at high angles. 
         Enter a positive angle even if angles are negative in the second half of the 
         series.&nbsp; This option is unavailable for dose-symmetric series.</P>
-      <P><B>Refine zero-loss peak</B></P>
+      <P><B>Refine the zero-loss peak every X minutes</B></P>
       <P>If you have an energy filter, this option is available to refine the alignment 
         of the zero-loss peak periodically during the tilt series. After selecting the 
         option, enter the interval in minutes between refinements. The refinement will 
@@ -356,14 +356,14 @@
         probably do a good job only if the fraction of electrons transmitted through 
         the specimen and objective aperture is about 0.5 at zero tilt. Both lower and higher 
         increases than this can be selected.</P>
-      <P><B>Set intensity to keep mean counts constant</B></P>
+      <P><B>Set intensity to keep mean counts of Record images at </B></P>
       <P>Select this option to have the beam or exposure time continually adjusted during 
         the series so that Record images will have the mean value specified in the text 
         box. Mean counts are measured in the tilt-foreshortened area of an image, i.e., 
         the part that corresponds to what would be visible at zero tilt. The line 
         following this option will report what a Record image would have at the current 
         intensity, based upon the counts in the image in Buffer A.</P>
-      <P><B>Taper counts down at high tilt</B></P>
+      <P><B>Taper counts down to X above +/- Y degrees</B></P>
       <P>If you have selected the last option to keep mean counts constant, then this 
         option is available to reduce the target mean value at high tilts. This is 
         useful if the beam cannot be condensed enough to give the desired number of 
@@ -412,7 +412,7 @@
         the change in Record exposure. Note that if you stop the series, you are free 
         to change these exposure times in the Camera Parameters dialog box, although 
         you may be prevented from changing the record exposure time.</P>
-      <P><B>Change drift settling proportional to Record change</B></P>
+      <P><B>Change drift settling proportional to exposure change</B></P>
       <P>Select this option to have drift settling changed proportional to a change in 
         exposure time whenever an exposure time is changed for a camera parameter set. 
         The option is available if all exposures are being changed via the option just 
@@ -473,27 +473,27 @@
       <P><strong>Iteration threshold</strong></P>
       <P>The threshold change for the autofocus routine to do another iteration will 
           appear in this text box and a new value can be entered.</P>
-      <P><B>Do autofocus at certain interval</B></P>
+      <P><B>Do autofocus at least every X degrees</B></P>
       <P>The Tilt Series Controller will skip autofocusing when the prediction for focus 
         seems reliable enough; however, it will always do an autofocus when the tilt 
         interval since the last time it was done is longer than the value entered in 
         this text box.</P>
-      <P><B>Skip autofocus</B></P>
+      <P><B>Skip autofocusing</B></P>
       <P>This option can be selected to skip autofocusing during the 
         series, which can be useful if autofocusing is not reliable. The initial 
         autofocus during the startup of the tilt series will also be skipped.</P>
-      <P><B>Focus every time at high tilt</B></P>
+      <P><B>Focus every time above X degrees </B></P>
       <P>If this option is selected, the program will do autofocus at every tilt angle 
         above the value entered in the text box. Enter a positive angle; it will apply 
         on both the positive and negative sides of the tilt series.&nbsp; With 
           dose-symmetric tilting, the starting angle of the series will be added to the 
           specified number to determine the actual threshold angles.</P>
-      <P><B>Repeat autofocus if error is high</B></P>
+      <P><B>Repeat autofocus if focus differs from prediction by &gt; X um</B></P>
       <P>When this option is selected, the program will repeat the autofocus procedure 
         when the defocus measured by a first autofocus differs from the predicted value 
         by more than the criterion entered in the text box. It does this even if the 
         prediction had a high standard error and was likely to be in error itself.</P>
-      <P><B>Do autofocus when prediction error is high</B></P>
+      <P><B>Do autofocus when when error in focus prediction exceeds X um</B></P>
       <P>This entry determines when the program will autofocus rather than relying on the 
         prediction of the focus on the next tilt. This criterion is compared with two 
         different errors. At every tilt, the program computes a predicted defocus and a 
@@ -502,7 +502,8 @@
         done at the previous tilt, there is an actual error, the difference between the 
         measured defocus and the predicted value. Autofocus will be done if this actual 
         error exceeded the criterion.</P>
-      <P><A NAME="tss_action_buttons"></A><B>Check autofocus and stop if inadequate</B></P>
+      <P><A NAME="tss_action_buttons"></A><B>Check autofocus, stop if measured &lt; N X 
+        actual defocus</B></P>
       <P>If this option is selected, the program will run a routine to check the accuracy 
         of autofocus at high tilt, and stop the tilt series if the accuracy is not 
         greater than the specified amount. The routine measures defocus at the current 
@@ -510,7 +511,7 @@
         of the actual change can be measured. If this fraction is less than the amount 
         specified in the text box, then the tilt series is stopped and some 
         recommendations are given for proceeding.</P>
-    <P><b>Stop if autofocus exceeds absolute limits</b></P>
+    <P><b>Stop if autofocus exceeds absolute focus limits</b></P>
     <P>This is one of two options for limiting the focus changes that occur during a 
       tilt series.&nbsp; This option causes autofocus to fail, original focus to be 
       restored, and the tilt series to stop if focus exceeds the absolute limits 
@@ -519,7 +520,7 @@
       focus from being set in a range that would activate the Falcon Dose Protector.&nbsp; 
       It applies to any autofocus done at the start or during the course of the 
       series.</P>
-    <P><b>Stop if autofocus change exceeds X microns</b></P>
+    <P><b>Stop if autofocus change exceeds X um</b></P>
     <P>This option can be used to protect against large changes in focus, such as when 
       a grid bar or piece of contamination comes into the focusing area.&nbsp; If the 
       focus change imposed by autofocusing would exceed the amount entered in the text 
@@ -530,7 +531,7 @@
       <P><i><B><FONT size="3">Initial and Final Actions</FONT></B></i></P>
       <P>The options in this group will be enabled as appropriate, depending on whether 
         you are at zero tilt or at the starting tilt of the series.</P>
-      <P><B>Buffer A has image of desired area</B></P>
+      <P><B>Align to image now in Buffer A</B></P>
       <P>Select this option if you have left an image in buffer A aligned on the desired 
         area before opening the dialog box. If this option is not selected, the Tilt 
         Series Controller will take its first reference for alignment as soon as 
@@ -541,12 +542,12 @@
       <P><B>Refine eucentricity</B></P>
       <P>Select this option to have the eucentricity refined before going up to high 
         tilt.</P>
-      <P><B>Leave mid-tilt anchor</B></P>
+      <P><B>Leave mid-tilt anchor near plus or minus X degrees</B></P>
       <P>Select this option to have the 'Walk Up' procedure leave an 'anchor' image near 
         the angle specified in the text box. When the tilt series reaches that angle, 
         the anchor will become the reference for alignment, and this will pull the 
         series into alignment.</P>
-      <P><B>Use mid-tilt anchor</B></P>
+      <P><B>Use mid-tilt anchor that you have left in buffer X</B></P>
       <P>Select this option if you have taken an 'anchor' image at an intermediate tilt 
         angle which you want the program to use for alignment when that angle is 
         reached in the tilt series. Use the up or down arrows to select the buffer in 
@@ -592,7 +593,7 @@
           threshold for iterating within the autofocus routine, autofocus will be done 
           even if predictions indicated that it could be skipped.&nbsp; (Iterations with 
           the autofocus routine are suppressed when it run to measure drift).</P>
-      <P><B>Repeat Record if certain percentage of field is lost</B></P>
+      <P><B>Repeat Record if percentage of field lost is more than</B></P>
       <P>With this option selected, the program will repeat the acquisition of a Record 
         image when its error in position is sufficiently high. The error is expressed 
         as the percentage of the field of interest missing from the image. In computing 
@@ -615,7 +616,7 @@
       program will retake the image up to three times even in low dose mode.&nbsp; 
       This is useful if you are using low dose mode to get different magnifications 
       for tracking or focusing and the extra exposure of the specimen is not an issue.</P>
-      <P><B>Stop when Autoalign gives a large shift</B></P>
+      <P><B>Stop if Autoalign shifts more than X % of image size</B></P>
       <P>With this option selected, the program will examine all Autoalignments at the 
         regular magnification and will stop the tilt series if the alignment shift 
         exceeds the specified percentage of the size of the image being aligned. This 
@@ -626,7 +627,7 @@
         series instead.</P>
       <P>Note that when montaging, the image size for this comparison will be that of the 
         Montage Center, i.e., the size of a single frame, not of the whole montage.</P>
-      <P><B>Get tracking image when prediction error is high</B></P>
+      <P><B>Get tracking image when error in X/Y prediction is &gt; X % of field</B></P>
       <P>This entry determines when the program will acquire a tracking image rather than 
         relying on the prediction of the position on the next tilt. The criterion that 
         is entered is expressed as a percentage of the size of the camera area that is 
@@ -648,7 +649,7 @@
         SerialEM will adjust the focus as necessary to compensate for the lateral shift 
         in position. If drift is really bad, one could select tracking both before and 
         after focusing.</P>
-      <P><B>Stop after aligning tracking image</B></P>
+      <P><B>Stop after aligning tracking image to allow manual adjustment</B></P>
       <P>Selecting this option activates a manual tracking mode in which the program will 
         stop after acquiring and aligning a tracking image. You can then adjust the 
         alignment position manually and resume. When you resume with the One Loop 
@@ -656,7 +657,7 @@
         reference. Thus, in this mode one can simply adjust the tracking position as 
         necessary and push One Loop to go on. When manual tracking is no longer needed, 
         turn off this option.</P>
-      <P><B>Align only with tracking images</B></P>
+      <P><B>Align only with tracking images, not Record images</B></P>
       <P>This option is available in low dose mode, where the program will ordinarily 
         align with tracking images in the Trial area when necessary, and refine the 
         alignment on every tilt with images from the Record area. The alignments 
@@ -673,7 +674,7 @@
         Preview should take less time to acquire, the track reference location will be 
         more accurate. This presumes that Preview is set up to take a fast, binned 
         image that will not contribute much to the dose on the Record area.</P>
-      <P><B>Get new track reference if Record alignment differs</B></P>
+      <P><B>Get new track reference if Record alignment differs by &gt; X %</B></P>
       <P>The criterion entered in this text box comes into play both in low dose mode and 
         when low magnification tracking is enabled. In both of these cases, it is 
         possible for the alignment specified by the tracking images to diverge from the 

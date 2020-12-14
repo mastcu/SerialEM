@@ -8021,7 +8021,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->FEItype -= 10;
       }
       params->CamFlags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
-      SEMTrace('E', "index ret %x  flags %x  mind %d  maxd %d", params->eagleIndex, 
+      SEMTrace('E', "index ret %x  flags %x  mind %f  maxd %f", params->eagleIndex, 
         params->CamFlags, minDrift, maxDrift);
       if (doMessage) {
         mWinApp->AppendToLog(CString("Connected to ") +

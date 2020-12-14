@@ -1656,6 +1656,7 @@ void CTSController::NextAction(int param)
 
     // Dispatch to where call started from, or to error stop on error
     if (mWhereDefSumStarted == DEFSUM_TERM_ERROR) {
+      mTermOnErrorCalled = false;
       TerminateOnError();
       return;
     } else if (error || mWhereDefSumStarted == DEFSUM_ERROR_STOP) {
