@@ -3,8 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-12/13/20: Made tilt series controller stop properly if absolute image limit
-is reached when autoaligning (In 3.8).
+12/14/20: Fixed problem with frames not being saved when aligning whole tilt
+series in IMOD is selected and the Save checkbox is not checked (In 3.8).
+
+12/13/20: Made tilt series controller stop properly if absolute image shift
+limit is reached when autoaligning (In 3.8).
 
 12/10/20: Changed to set pixel size in TIFF files as dots per cm.
 

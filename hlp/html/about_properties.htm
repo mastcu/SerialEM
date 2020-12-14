@@ -1957,8 +1957,10 @@
        <TR VALIGN="top">
           <TD>CanTakeFrames</TD>
           <TD>If taking frames from a particular camera is supported, set to 1 to enable 
-              saving frames from SerialEM, 2 to enable aligning frames with the Framealign 
-              module, or 3 to enable both saving and aligning.&nbsp; This is the same frame 
+              saving frames, 2 to enable aligning frames, or 3 to enable both saving and 
+            aligning.&nbsp; For a OneView or Rio camera, saving and aligning are done through
+             the SEMCCD plugin just as for a K2 or K3 camera.&nbsp;  For other cameras, saving and
+            aligning are done within SerialEM.&nbsp; This is the same frame 
               alignment that SerialEM provides for direct detectors, which is suitable for 
               low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilties are 
               turned on by default for a particular camera, enter 0 to have them not appear in

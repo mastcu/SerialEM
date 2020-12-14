@@ -2855,7 +2855,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTiltBefore = (float)mScope->GetTiltAngle();
 
   // Make sure doseFrac is off if it means something
-  if (!(((mParam->canTakeFrames | FRAMES_CAN_BE_SAVED) && conSet.saveFrames) ||
+  if (mParam->canTakeFrames && 
+    !(((mParam->canTakeFrames | FRAMES_CAN_BE_SAVED) && conSet.saveFrames) ||
     ((mParam->canTakeFrames | FRAMES_CAN_BE_ALIGNED) && conSet.alignFrames)))
     conSet.doseFrac = 0;
 
