@@ -473,6 +473,7 @@ CEMscope::CEMscope()
   mTiltSpeedFactor = 0.;
   mRestoreStageXYdelay = 100;
   mIdleTimeToCloseValves = 0;
+  mUpdateDuringAreaChange = false;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -1098,10 +1099,14 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
   if (!sInitialized || mSelectedSTEM < 0)
     return;
+  mWinApp->ManageBlinkingPane(GetTickCount());
+
   if (sSuspendCount > 0) {
     sSuspendCount--;
     return;
   }
+  if (mChangingLDArea && !mUpdateDuringAreaChange)
+    return;
 
   // Routine makes no direct calls to JEOL so doesn't need scope mutex, but does
   // need the data mutex to access thread data
@@ -4860,6 +4865,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
     return;
 
   mChangingLDArea = -1;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "CHANGING LD AREA");
 
   // Use designated params if set by nav helper, otherwise use set area params
   if (!mLdsaParams)
@@ -4885,7 +4892,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
   if (bDebug || lDebug)
-    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f", newArea, GetDefocus());
+    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea, GetDefocus(), mAutosaveCount);
   if (bDebug && lDebug && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
     GetBeamTilt(curISX, curISY);
@@ -4985,6 +4992,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // and impose accumulated beam shifts from this mode after translating to new mode
   // First back off a beam shift; it didn't work to include that in the converted shift
   // But then defer the probe change if going out of LM
+  Sleep(2);
   if (ldArea->probeMode >= 0) {
     if (mProbeMode != ldArea->probeMode || (leavingLowMag && oldArea < 0)) {
       if (oldArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
@@ -4997,6 +5005,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     }
   } else
     ldArea->probeMode = mProbeMode;
+  SleepMsg(2);
 
   // Mag and spot size will be set only if they change.  Do intensity unconditionally
   // If something is not initialized, set it up with current value
@@ -5009,6 +5018,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     } else
       ldArea->spotSize = GetSpotSize();
   }
+  SleepMsg(2);
 
   // Set alpha before mag if it is changing to a lower mag since scope can impose a beam
   // shift in the mag change that may depend on alpha  The reason for doing THIS at a 
@@ -5038,10 +5048,12 @@ void CEMscope::GotoLowDoseArea(int newArea)
       ldArea->diffFocus = GetDiffractionFocus();
   }
   magTime = GetTickCount();
+  SleepMsg(2);
 
   // Now that mag is done, do the probe change if coming out of LM
   if (!probeDone)
     SetProbeMode(ldArea->probeMode, true);
+  SleepMsg(2);
 
   // For FEI, set spot size (if it isn't right) again because mag range change can set 
   // spot size; afraid to just move spot size change down here because of note above
@@ -5119,6 +5131,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       mWinApp->mAutocenDlg->ManageLDtrackText(manage);
   } else if (!STEMmode)
     ldArea->intensity = GetIntensity();
+  SleepMsg(2);
 
   // Shift image now after potential mag change
   if (!ISdone)
@@ -5176,7 +5189,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     SEMTrace('L', "LD: from %d to %d  was %.3f, %.3f  inc by %.3f, %.3f  now %.3f, %.3f",
       oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
   if (GetDebugOutput('l')) {
-    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f\r\n", GetDefocus());
+    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f update count %d\r\n", GetDefocus(), mAutosaveCount);
     if (GetDebugOutput('b') && !STEMmode) {
       GetBeamShift(curISX, curISY);
       GetBeamTilt(curISX, curISY);
@@ -5185,6 +5198,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   mLdsaParams = NULL;
   mChangingLDArea = 0;
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mWinApp->UpdateBufferWindows();
   mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
 }
 

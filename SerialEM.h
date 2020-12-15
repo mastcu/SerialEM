@@ -436,6 +436,7 @@ public:
   GetSetMember(BOOL, SmallFontsBad)
     GetSetMember(BOOL, DisplayNotTruly120DPI)
     void SetStatusText(int iPane, CString strText);
+  void ManageBlinkingPane(DWORD time);
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
   void ErrorOccurred(int error);

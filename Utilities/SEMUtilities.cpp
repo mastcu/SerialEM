@@ -1114,3 +1114,29 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
   retStr = retStr.TrimRight('.');
   return retStr + suffix;
 }
+
+// Sleep for specified, processing messages
+BOOL SleepMsg(DWORD dwTime_ms)
+{
+  DWORD dwStart = GetTickCount();
+  DWORD dwElapsed;
+  while ((dwElapsed = GetTickCount() - dwStart) < dwTime_ms) {
+    DWORD dwStatus = MsgWaitForMultipleObjects(0, NULL, FALSE,
+      dwTime_ms - dwElapsed, QS_ALLINPUT);
+
+    if (dwStatus == WAIT_OBJECT_0) {
+      MSG msg;
+      while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+          PostQuitMessage((int)msg.wParam);
+          return FALSE; // abandoned due to WM_QUIT
+        }
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+  }
+
+  return TRUE;
+}

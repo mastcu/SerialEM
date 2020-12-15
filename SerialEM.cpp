@@ -2417,17 +2417,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
     }
   }
 
-  // Manage the blinking pane
-  if (!mBlinkText.IsEmpty() && time > mNextBlinkTime && !mAppExiting) {
-    if (mBlinkOn) {
-      mNextBlinkTime += BLINK_TIME_OFF;
-      mMainFrame->SetStatusText(SIMPLE_PANE, mBlinkText);
-    } else {
-      mNextBlinkTime += BLINK_TIME_ON;
-      mMainFrame->SetStatusText(SIMPLE_PANE, "");
-    }
-    mBlinkOn = !mBlinkOn;
-  }
+  ManageBlinkingPane(time);
 
   // Dump debug output to log window
   if (debugOutput && 
@@ -2915,6 +2905,21 @@ void CSerialEMApp::SetStatusText(int iPane, CString strText)
   mNextBlinkTime = GetTickCount() + BLINK_TIME_ON;
 }
 
+// Manage the blinking pane
+void CSerialEMApp::ManageBlinkingPane(DWORD time)
+{
+  if (!mBlinkText.IsEmpty() && time > mNextBlinkTime && !mAppExiting) {
+    if (mBlinkOn) {
+      mNextBlinkTime += BLINK_TIME_OFF;
+      mMainFrame->SetStatusText(SIMPLE_PANE, mBlinkText);
+    } else {
+      mNextBlinkTime += BLINK_TIME_ON;
+      mMainFrame->SetStatusText(SIMPLE_PANE, "");
+    }
+    mBlinkOn = !mBlinkOn;
+  }
+}
+
 void CSerialEMApp::SetTitleFile(CString fileName)
 {
   CString progName = mDummyInstance ? "DUMMY SerialEM" : "SerialEM";
@@ -3041,7 +3046,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 
 BOOL CSerialEMApp::DoingTasks()
 {
-  return (DoingImagingTasks() ||
+  return (DoingImagingTasks() || mScope->GetChangingLDArea() != 0 ||
     mMacroProcessor->DoingMacro() ||
     mShiftManager->ResettingIS() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||

@@ -334,6 +334,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, JeolHasBrightnessZoom);
   GetSetMember(int, AdjustForISSkipBacklash);
   GetSetMember(float, AddToRawIntensity);
+  GetSetMember(BOOL, UpdateDuringAreaChange);
 
   void SetJeolRelaxationFlags(int inVal);
   int GetJeolRelaxationFlags();
@@ -744,6 +745,7 @@ private:
   float mAddToRawIntensity;    // Amount to add to an intensity value to keep it in range
   int mIdleTimeToCloseValves;  // Minutes of no activity after which to close the valves
   bool mClosedValvesAfterIdle; // Flag that it happened
+  BOOL mUpdateDuringAreaChange; // Flag to allow scope updates during LD area change
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc
