@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/16/20: Moved slow lens changes with normalizations into threads so that the
+user interface stays responsive during long changes.
+
+12/15/20: Added option to draw tilt axis to Image Display panel and added a
+tilt axis line on View/Serach images when defining Trial/Focus areas.
+
 12/14/20: Fixed problem with frames not being saved when aligning whole tilt
 series in IMOD is selected and the Save checkbox is not checked (In 3.8).
 

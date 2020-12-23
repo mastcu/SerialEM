@@ -2901,6 +2901,8 @@ void CSerialEMApp::SetStatusText(int iPane, CString strText)
   if (iPane != SIMPLE_PANE)
     return;
   mBlinkText = strText;
+  if (strText.IsEmpty())
+    return;
   mBlinkOn = true;
   mNextBlinkTime = GetTickCount() + BLINK_TIME_ON;
 }
@@ -3046,7 +3048,8 @@ BOOL CSerialEMApp::DoingImagingTasks()
 
 BOOL CSerialEMApp::DoingTasks()
 {
-  return (DoingImagingTasks() || mScope->GetChangingLDArea() != 0 ||
+  return (DoingImagingTasks() || mScope->GetChangingLDArea() != 0 || 
+    mScope->DoingSynchroThread() ||
     mMacroProcessor->DoingMacro() ||
     mShiftManager->ResettingIS() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
