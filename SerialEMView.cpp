@@ -869,11 +869,18 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     // Draw tilt axis if option set or when defining LD area on View
     if (((bufferOK && mWinApp->mLowDoseDlg.m_iDefineArea > 0) || 
       (mWinApp->mBufferManager->GetDrawTiltAxis() && 
-      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && !(skipExtra & 1))) && 
+      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() || 
+        imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW || 
+        imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN || 
+        imBuf->mCaptured == BUFFER_MONTAGE_CENTER) && !(skipExtra & 1))) &&
       imBuf->mCamera >= 0 && imBuf->mMagInd > 0) {
       tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
       CPoint point = rect.CenterPoint();
-      tempY = (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd);
+      tempY = 0.;
+      if (imBuf->mMagInd >= mWinApp->mScope->GetLowestMModeMagInd())
+        mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
+      tempY += (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, 
+          imBuf->mMagInd);
       ptX = (float)cos(DTOR * tempY) * tempX;
       ptY = -(float)sin(DTOR * tempY) * tempX;
       CPen pnSolidPen(PS_SOLID, thick1, RGB(255, 255, 0));
