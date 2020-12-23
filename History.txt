@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/23/20: Added script command to set a PLA offset between cameras on JEOL
+scopes using PLA for image shift, and a camera property to designate cameras
+as on or off axis on scopes using IS.
+
 12/16/20: Moved slow lens changes with normalizations into threads so that the
 user interface stays responsive during long changes.
 

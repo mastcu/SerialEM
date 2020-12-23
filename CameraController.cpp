@@ -205,6 +205,8 @@ CCameraController::CCameraController()
     mPlugFuncs[j] = NULL;
     for (i = 0; i < MAX_DARK_REFS; i++)
       mDarkRefs[j][i].UseCount = 0;
+    mISXcameraOffset[j] = 0.;
+    mISYcameraOffset[j] = 0.;
   }
   mRefArray.SetSize(0,5);
   OutOfSTEMUpdate();
@@ -426,6 +428,7 @@ CCameraController::CCameraController()
   mFrameStackMdocInd = -1;
   mLastShotUsedCDS = -1;
   mNoFilterControl = false;
+  mLastJeolDetectorID = -1;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -1592,12 +1595,15 @@ void CCameraController::SetDebugMode(BOOL inVal)
 // Set camera parameters
 void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 {
+  float offsetX = 0., offsetY = 0., lastX, lastY;
+  double shiftX, shiftY;
   mParam = &mAllParams[currentCam];
   mFilmShutter = 1 - mParam->beamShutter;
   mTD.Camera = activeCam;
   mTD.SelectCamera = mParam->cameraNumber;  // See how simple this is (if it works)?
   mProcessHere = mParam->processHere > 0;
   mTD.plugFuncs = mPlugFuncs[currentCam];
+  mTD.scopePlugFuncs = mScope->GetPlugFuncs();
   sSocketCurrent = (mParam->GatanCam && mParam->useSocket) ? 1 : 0;
   sAmtCurrent = mParam->AMTtype ? 1 : 0;
   mNeedToSelectDM = mParam->DMCamera;
@@ -1608,7 +1614,34 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 
   // Inform scope about the shutterless status
   mScope->SetShutterlessCamera(mParam->noShutter * (mParam->sideMount ? -1 : 1));
-   
+
+  // JEOL detector switching for on/off axis cameras using PLA: use internal offsets
+  if (JEOLscope && mScope->GetUsePLforIS()) {
+    mScope->GetDetectorOffsets(lastX, lastY);
+    offsetX = mISXcameraOffset[currentCam];
+    offsetY = mISYcameraOffset[currentCam];
+    mScope->GetImageShift(shiftX, shiftY);
+    mScope->SetDetectorOffsets(offsetX, offsetY);
+    if (lastX != offsetX || lastY != offsetY);
+      mScope->SetImageShift(shiftX, shiftY);
+  }
+
+  // And for scopes using IS, it can using the built-in mechanism with PLA
+  if (JEOLscope && mParam->JeolDetectorID != mLastJeolDetectorID && 
+    !mScope->GetUsePLforIS()) {
+    try {
+      if (mLastJeolDetectorID >= 0)
+        mTD.scopePlugFuncs->SetDetectorSelected(mLastJeolDetectorID, 0);
+      if (mParam->JeolDetectorID >= 0)
+        mTD.scopePlugFuncs->SetDetectorSelected(mParam->JeolDetectorID, 1);
+      mLastJeolDetectorID = mParam->JeolDetectorID;
+    }
+    catch (_com_error E) {
+      SEMReportCOMError(E, _T("changing JEOL detector selections for on/off axis cameras "
+      ));
+    }
+  }
+
   //Had to add this for DE camera switching TM.
   //3_28_11 for DE12
   if (mParam->DE_camType) {

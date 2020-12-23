@@ -292,6 +292,7 @@ class CMacCmd : public CMacroProcessor
   int SetLensWithFLC(void);
   int ReportLensFLCStatus(void);
   int SetJeolSTEMflags(void);
+  int SetCameraPLAOffset(void);
   int RemoveAperture(void);
   int PhasePlateToNextPos(void);
   int ReportPhasePlatePos(void);

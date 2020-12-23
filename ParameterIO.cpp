@@ -2566,6 +2566,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->autoGainAtBinning = itemInt[1];
           else if (MatchNoCase("Falcon3ScalingPower"))
             camP->falcon3ScalePower = itemInt[1];
+          else if (MatchNoCase("JeolDetectorID"))
+            camP->JeolDetectorID = itemInt[1];
           else if (MatchNoCase("RotationAndPixel")) {
             magInd = itemInt[1];
             if (magInd < 1 || magInd >= MAX_MAGS) {
@@ -4063,6 +4065,10 @@ int CParameterIO::ReadCalibration(CString strFileName)
           break;
         }
 
+      } else if (NAME_IS("CameraISOffset")) {
+        index = itemInt[1];
+        B3DCLAMP(index, 0, MAX_CAMERAS - 1);
+        mWinApp->mCamera->SetCameraISOffset(index, itemFlt[2], itemFlt[3]);
       } else if (NAME_IS("SpotBeamShifts")) {
         for (index = 0; index < 2; index++) {
           minSpot[index] = itemEmpty[1 + 2 * index] ? 0 : itemInt[1 + 2 * index];
@@ -4279,6 +4285,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
 void CParameterIO::WriteCalibration(CString strFileName)
 {
   int i, j, nCal, nCal2, ind, k, probe, nCalN[4], minSpot[2], maxSpot[2];
+  float offsetX, offsetY;
   int indMicro[2] = {-1, -1}, indNano[2] = {-1, -1};
   CString string;
   int err = 0;
@@ -4585,6 +4592,13 @@ void CParameterIO::WriteCalibration(CString strFileName)
       WriteInt("AlphaBeamShifts", nCal);
       for (i = 0; i < nCal; i++) {
         string.Format("%f %f\n", alphaBeamShifts[2 * i], alphaBeamShifts[2 * i + 1]);
+        mFile->WriteString(string);
+      }
+    }
+    for (i = 0; i < MAX_CAMERAS; i++) {
+      mWinApp->mCamera->GetCameraISOffset(i, offsetX, offsetY);
+      if (offsetX != 0. || offsetY != 0.) {
+        string.Format("CameraISOffset %d %f %f\n", i, offsetX, offsetY);
         mFile->WriteString(string);
       }
     }

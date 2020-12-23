@@ -605,7 +605,8 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ScaleImage", 3, 1, &CMacCmd::ScaleImage}, 
   {"CloseNavigator", 0, 0, &CMacCmd::CloseNavigator},
   {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, 
-  {"OpenChooserInCurrentDir", 0, 0, &CMacCmd::OpenChooserInCurrentDir}, /*CAI3.9*/
+  {"OpenChooserInCurrentDir", 0, 0, &CMacCmd::OpenChooserInCurrentDir}, 
+  {"SetCameraPLAOffset", 0, 0, &CMacCmd::SetCameraPLAOffset},/*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -5042,6 +5043,27 @@ int CMacCmd::SetJeolSTEMflags(void)
       ABORT_LINE("Entries must fit in 24 and 4 bits in: \n\n");
   mCamera->SetBaseJeolSTEMflags(mItemInt[1] + (mItemInt[2] << 24));
 
+  return 0;
+}
+
+// SetCameraPLAOffset
+int CMacCmd::SetCameraPLAOffset(void)
+{
+  if (!mImBufs[0].mImage || !mImBufs[1].mImage)
+    ABORT_NOLINE("There must be images in both buffers A and B to refine detector "
+      "offset");
+  if (!mScope->GetUsePLforIS() || !JEOLscope)
+    ABORT_NOLINE("SetCameraPLAOffset can be used only on a JEOL scope using"
+      " PLA for image shift");
+  mScope->GetImageShift(cDelISX, cDelISY);
+  mScope->GetDetectorOffsets(cFloatX, cFloatY);
+  cShiftX = cFloatX + (float)(cDelISX - mImBufs[1].mISX);
+  cShiftY = cFloatY + (float)(cDelISY - mImBufs[1].mISY);
+  PrintfToLog("Camera offset changed from %.3f  %.3f to %.3f %.3f", cFloatX, cFloatY, 
+    cShiftX, cShiftY);
+  mCamera->SetCameraISOffset(mWinApp->GetCurrentCamera(), cShiftX, cShiftY);
+  mScope->SetDetectorOffsets(cShiftX, cShiftY);
+  mScope->SetImageShift(cDelISX, cDelISY);
   return 0;
 }
 

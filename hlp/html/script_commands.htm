@@ -3756,6 +3756,20 @@
             through three points whose coordinates are given on the line as <b>#X1:#Y1 #X2:#Y2 #X3:#Y3</b>.&nbsp;
             Values can be assigned to variables at end of command.</TD>
         </TR>
+         <TR>
+          <TD class="scriptcommand">SetCameraPLAOffset</TD>
+          <TD>Sets or refines a PLA offset between two cameras on a JEOL scope using PLA for 
+            image shift.&nbsp; To use:<br />
+            Take an image with the camera to be aligned to (e.g., an on-axis camera).<br />
+            Center a feature and take a new image.<br />
+            Switch to the other camera (e.g., an off-axis camera).<br />
+            Use right mouse-shifting, or set the marker point and use the <strong>To Marker</strong> 
+            button or Shift P hot key to center the feature with image shift only.<br />
+            Run this command.&nbsp; It will report the existing and new offsets.<br />
+            Iterate if desired for a more accurate result.&nbsp; If aligning more than two 
+            cameras, use one camera as a reference for aligning each of the others to.&nbsp; 
+            Command added in 3.9, 12/23/20.</TD>
+        </TR>
        <TR>
           <TD width="207">Plugin name func [args]</TD>
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with appropriate

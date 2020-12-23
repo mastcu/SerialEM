@@ -411,7 +411,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].specToCamDoseFac = 0.;
     mCamParams[i].invertFocusRamp = false;
     mCamParams[i].numChannels = 0;
-    mCamParams[i].maxChannels = 0;
+    mCamParams[i].JeolDetectorID = -1;
     for (j = 0; j < MAX_STEM_CHANNELS; j++) {
       mCamParams[i].availableChan[j] = true;
       mCamParams[i].needShotToInsert[j] = false;
@@ -982,6 +982,7 @@ BOOL CSerialEMApp::InitInstance()
   mScope = new CEMscope();
 
   // Get the camera controller: can do this early now that there are no smart pointers
+  // But no earlier than this: the constructor assumes scope pointer etc exist already
   mCamera = new CCameraController();
 
   // Detect if display is not 120 DPI and initialize accordingly

@@ -452,6 +452,8 @@ public:
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
+  void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
+  void GetDetectorOffsets(float &outX, float &outY) { outX = mDetectorOffsetX; outY = mDetectorOffsetY; };
   void GetNumCameraLengths(int &reg, int &LAD) { reg = mNumRegularCamLens; LAD = mNumLADCamLens; };
   void SetNumCameraLengths(int reg, int LAD) { mNumRegularCamLens = reg; mNumLADCamLens = LAD; };
   int ScreenBusy();
@@ -774,6 +776,8 @@ private:
   int mIdleTimeToCloseValves;  // Minutes of no activity after which to close the valves
   bool mClosedValvesAfterIdle; // Flag that it happened
   BOOL mUpdateDuringAreaChange; // Flag to allow scope updates during LD area change
+  float mDetectorOffsetX;         // PLA offsets potentially for each detector/camera
+  float mDetectorOffsetY;
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc

@@ -475,6 +475,7 @@ CEMscope::CEMscope()
   mRestoreStageXYdelay = 100;
   mIdleTimeToCloseValves = 0;
   mUpdateDuringAreaChange = false;
+  mDetectorOffsetX = mDetectorOffsetY = 0.;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -1369,8 +1370,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
           indOldIS = LookupRingIS(lastMag, changedJeolEFTEM);
           // However it is gotten, adjust the IS stored on the ring
           if (indOldIS >= 0) {
-            ISX = mJeolSD.ringISX[indOldIS] - oldTab->neutralISX[oldNeutralInd];
-            ISY = mJeolSD.ringISY[indOldIS] - oldTab->neutralISY[oldNeutralInd]; 
+            ISX = mJeolSD.ringISX[indOldIS] - (oldTab->neutralISX[oldNeutralInd] + 
+              mDetectorOffsetX);
+            ISY = mJeolSD.ringISY[indOldIS] - (oldTab->neutralISY[oldNeutralInd] + 
+              mDetectorOffsetY); 
             if (mApplyISoffset) {
               ISX -= oldTab->calOffsetISX[oldOffCalInd];
               ISY -= oldTab->calOffsetISY[oldOffCalInd];
@@ -1405,8 +1408,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (manageISonMagChg && (changedJeolEFTEM ||
         !shiftManager->CanTransferIS(lastMag, magIndex, STEMmode != 0))) {
         if (!JEOLscope) {
-          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX);
-          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY);
+          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX + 
+            mDetectorOffsetX);
+          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY + 
+            mDetectorOffsetY);
         }
 
         // convert to specimen coords and back to new IS coords at new mag and modify del
@@ -2774,14 +2779,14 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
     if (jeolEFTEM) {
 
       // When JEOL EFTEM is switching, the neutral index has the new state, needed here
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + 
+      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
         (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISX[mNeutralIndex] : 0.);
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + 
+      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
         (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISY[mNeutralIndex] : 0.);
     } else {
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + 
+      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
         mMagTab[mLastMagIndex].offsetISX;
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + 
+      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
         mMagTab[mLastMagIndex].offsetISY;
     }
   } else if (JEOLscope) {
@@ -3818,10 +3823,10 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
     // If image shifts are not congruent, then get real shift including tilt axis offset
     // and convert to specimen coordinates at old mag then IS coords at new mag
     if (convertIS) {
-      realISX = oldISX + axisISX - mMagTab[fromInd].neutralISX[mNeutralIndex] - 
-        mMagTab[fromInd].offsetISX;
-      realISY = oldISY + axisISY - mMagTab[fromInd].neutralISY[mNeutralIndex] - 
-        mMagTab[fromInd].offsetISY;
+      realISX = oldISX + axisISX - (mMagTab[fromInd].neutralISX[mNeutralIndex] +
+        mDetectorOffsetX) - mMagTab[fromInd].offsetISX;
+      realISY = oldISY + axisISY - (mMagTab[fromInd].neutralISY[mNeutralIndex] +
+        mDetectorOffsetY) - mMagTab[fromInd].offsetISY;
       mShiftManager->TransferGeneralIS(fromInd, realISX, realISY, toInd,
         tranISX, tranISY);
       delISX += tranISX - realISX;
@@ -3847,14 +3852,16 @@ BOOL CEMscope::AssessRestoreIS(int fromInd, int toInd, double &newISX, double &n
   double realISX, realISY;
   if (!SaveOrRestoreIS(toInd, fromInd) || mMagIndSavedIS < 0 || mCalNeutralStartMag >= 0)
     return false;
-  realISX = mSavedISX - mMagTab[mMagIndSavedIS].neutralISX[mNeutralIndex] - 
-    mMagTab[mMagIndSavedIS].offsetISX;
-  realISY = mSavedISY - mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] - 
-    mMagTab[mMagIndSavedIS].offsetISY;
+  realISX = mSavedISX - (mMagTab[mMagIndSavedIS].neutralISX[mNeutralIndex] +
+    mDetectorOffsetX) - mMagTab[mMagIndSavedIS].offsetISX;
+  realISY = mSavedISY - (mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] + 
+    mDetectorOffsetY) - mMagTab[mMagIndSavedIS].offsetISY;
   mShiftManager->TransferGeneralIS(mMagIndSavedIS, realISX, realISY, toInd, newISX, 
     newISY);
-  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mMagTab[toInd].offsetISX;
-  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mMagTab[toInd].offsetISY;
+  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mDetectorOffsetX + 
+    mMagTab[toInd].offsetISX;
+  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mDetectorOffsetY + 
+    mMagTab[toInd].offsetISY;
   mMagIndSavedIS = -1;
   SEMTrace('i', "Restoring raw IS %.3f %.3f, going from %d to %d", newISX, newISY,
     fromInd, toInd);
@@ -8742,7 +8749,7 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   const char *routine)
 {
   int retval;
-  const char *statusText[] = {"CHANGING MAG", "CHANGING SPOT", "CHANGING PROBE MODE",
+  const char *statusText[] = {"CHANGING MAG", "CHANGING SPOT", "CHANGING PROBE",
     "CHANGING ALPHA", "NORMALIZING"};
   if (mSynchronousThread)
     return false;
@@ -8785,7 +8792,8 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
     retval = UtilThreadBusy(&mSynchronousThread);
     if (retval <= 0)
       break;
-    SleepMsg(10);
+    mWinApp->ManageBlinkingPane(GetTickCount());
+    SleepMsg(20);
   }
 
   // Restore windows

@@ -1211,6 +1211,15 @@
             'BM-Falcon' thereafter.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>JeolDetectorID</TD>
+          <TD>Use this entry to designate a camera as on-axis or off-axis on a JEOL scope 
+            using IS deflectors for image shift.&nbsp; SerialEM will select the detector in 
+            the JEOL software when the camera is switched to, causing the scope to apply or 
+            remove a stored PLA offset for off-axis cameras.&nbsp; The IDs may be 16 for 
+            on-axis and 17 for off-axis.&nbsp; This is untested; use the SetCameraPLAOffset 
+            script command for scopes using PLA.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>UseSocket</TD>
           <TD>For a Gatan camera, set to 1 to connect with this camera through a socket 
             instead of COM interface.</TD>
