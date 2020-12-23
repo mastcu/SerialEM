@@ -325,8 +325,13 @@ void CFilePropDlg::OnOK()
     filety = STORE_TYPE_TIFF;
   if (m_iFileType == RADIO_TYPE_ADOC)
     filety = STORE_TYPE_ADOC;
-  if (m_iFileType == RADIO_TYPE_HDF)
+  if (m_iFileType == RADIO_TYPE_HDF) {
     filety = STORE_TYPE_HDF;
+    if (mFileOpt.isMontage()) {
+      mFileOpt.montageInMdoc = true;
+      mFileOpt.typext &= ~MONTAGE_MASK;
+    }
+  }
   if (m_iFileType == RADIO_TYPE_JPEG)
     filety = STORE_TYPE_JPEG;
   if (mFileOpt.useMont())
