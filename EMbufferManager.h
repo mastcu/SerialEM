@@ -29,14 +29,15 @@ public :
   GetSetMember(int, CopyOnSave)
   GetSetMember(int, BufToReadInto)
   GetSetMember(int, FifthCopyToBuf);
-  GetSetMember(int, BufToSave)
-  GetSetMember(int, AlignOnSave)
-  GetSetMember(int, StackWinMaxXY)
-  GetSetMember(int, AutoZoom)
-  GetSetMember(int, Antialias)
-  GetSetMember(int, FixedZoomStep)
-  GetSetMember(int, DrawScaleBar)
-  GetSetMember(BOOL, DrawCrosshairs)
+  GetSetMember(int, BufToSave);
+  GetSetMember(int, AlignOnSave);
+  GetSetMember(int, StackWinMaxXY);
+  GetSetMember(int, AutoZoom);
+  GetSetMember(int, Antialias);
+  GetSetMember(int, FixedZoomStep);
+  GetSetMember(int, DrawScaleBar);
+  GetSetMember(BOOL, DrawCrosshairs);
+  GetSetMember(BOOL, DrawTiltAxis);
   GetSetMember(float, UnsignedTruncLimit);
   GetSetMember(BOOL, SaveAsynchronously);
   GetSetMember(float, HdfUpdateTimePerSect);
@@ -84,6 +85,7 @@ public :
   int mFixedZoomStep;
   int mDrawScaleBar;
   BOOL mDrawCrosshairs;
+  BOOL mDrawTiltAxis;
   CString *mModeNames;
   EMimageBuffer *mImBufsp;
   CSerialEMApp *mWinApp;

@@ -60,6 +60,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mStackWinMaxXY = 512;
   mRotateAxisAngle = false;
   mDrawCrosshairs = false;
+  mDrawTiltAxis = false;
   mUnsignedTruncLimit = 0.01f;
   mSaveAsynchronously = true;
   mSavingThread = NULL;

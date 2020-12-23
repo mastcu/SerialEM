@@ -34,6 +34,7 @@ CImageLevelDlg::CImageLevelDlg(CWnd* pParent /*=NULL*/)
   , m_bInvertCon(FALSE)
   , mBlackSlider(0)
   , mWhiteSlider(255)
+  , m_bTiltAxis(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CImageLevelDlg)
@@ -87,6 +88,7 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Slider(pDX, IDC_SLIDER_BLACK, mBlackSlider);
   DDX_Control(pDX, IDC_SLIDER_WHITE, m_scWhite);
   DDX_Slider(pDX, IDC_SLIDER_WHITE, mWhiteSlider);
+  DDX_Check(pDX, IDC_TILTAXIS, m_bTiltAxis);
 }
 
 
@@ -105,7 +107,8 @@ BEGIN_MESSAGE_MAP(CImageLevelDlg, CToolDlg)
   ON_BN_CLICKED(IDC_SCALEBAR, OnScalebar)
   ON_BN_CLICKED(IDC_CROSSHAIRS, OnCrosshairs)
   ON_BN_CLICKED(IDC_ANTIALIAS, OnAntialias)
-  ON_BN_CLICKED(IDC_INVERT_CON, &CImageLevelDlg::OnInvertContrast)
+  ON_BN_CLICKED(IDC_INVERT_CON, OnInvertContrast)
+  ON_BN_CLICKED(IDC_TILTAXIS, OnTiltaxis)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -167,6 +170,7 @@ void CImageLevelDlg::UpdateSettings()
   m_bAntialias = (mWinApp->mBufferManager->GetAntialias() != 0);
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
+  m_bTiltAxis = mWinApp->mBufferManager->GetDrawTiltAxis();
   if (mInitialized)
     UpdateData(false);
 }
@@ -450,6 +454,16 @@ void CImageLevelDlg::OnAntialias()
 {
   UpdateData(true);
   mWinApp->mBufferManager->SetAntialias(m_bAntialias ? 1 : 0);
+  if (mWinApp->mActiveView)
+    mWinApp->mActiveView->DrawImage();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CImageLevelDlg::OnTiltaxis()
+{
+  UpdateData(true);
+  mWinApp->mBufferManager->SetDrawTiltAxis(m_bTiltAxis);
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();

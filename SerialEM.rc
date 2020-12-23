@@ -792,9 +792,9 @@ BEGIN
     EDITTEXT        IDC_EDITZOOM,82,54,24,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Extra info",IDC_SCALEBAR,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,80,38,10
     EDITTEXT        IDC_BLACK,82,8,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Autozoom",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,80,41,10
+    CONTROL         "Autozoom",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,90,41,10
     EDITTEXT        IDC_WHITE,82,21,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Antialias filtering for zoom < 1",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,99,10
+    CONTROL         "Antialiasing",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,57,10
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
@@ -814,6 +814,7 @@ BEGIN
     CONTROL         "Invert",IDC_INVERT_CON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,82,43,31,10
     CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,11,67,10
     CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,22,67,10
+    CONTROL         "Tlit axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,80,45,10
 END
 
 IDD_BUFFERCONTROL DIALOGEX 0, 0, 119, 108
@@ -3976,6 +3977,11 @@ BEGIN
     0
 END
 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4386,6 +4392,7 @@ BEGIN
     IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
     IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
     IDC_RHDFFILE            "Save to HDF file that can hold multiple images"
+    IDC_TILTAXIS            "Draw the tilt axis on the image"
 END
 
 STRINGTABLE

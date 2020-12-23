@@ -107,6 +107,8 @@ public:
   CSliderCtrl m_scWhite;
   int mWhiteSlider;
   void ProcessNewBlackWhite(void);
+  BOOL m_bTiltAxis;
+  afx_msg void OnTiltaxis();
 };
 
 //{{AFX_INSERT_LOCATION}}

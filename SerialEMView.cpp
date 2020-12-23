@@ -858,11 +858,38 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mMainWindow) {
 
     // If this is a view image in low dose, draw record and trial/focus areas as long as
-    // there won't be a
-    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && 
+    // there won't be one around Nav point
+    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) &&
       (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
-      imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt && !(skipExtra & 1)) {
+      imBuf->mLowDoseArea && !(skipExtra & 1);
+    if (bufferOK && !mDrewLDAreasAtNavPt) {
       DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1);
+    }
+
+    // Draw tilt axis if option set or when defining LD area on View
+    if (((bufferOK && mWinApp->mLowDoseDlg.m_iDefineArea > 0) || 
+      (mWinApp->mBufferManager->GetDrawTiltAxis() && 
+      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && !(skipExtra & 1))) && 
+      imBuf->mCamera >= 0 && imBuf->mMagInd > 0) {
+      tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
+      CPoint point = rect.CenterPoint();
+      tempY = (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd);
+      ptX = (float)cos(DTOR * tempY) * tempX;
+      ptY = -(float)sin(DTOR * tempY) * tempX;
+      CPen pnSolidPen(PS_SOLID, thick1, RGB(255, 255, 0));
+      CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
+
+      // Make our own dashes
+      point.x -= B3DNINT(0.48 * ptX);
+      point.y -= B3DNINT(0.48 * ptY);;
+      for (loop = 0; loop < 10; loop++) {
+        cdc.MoveTo(point);
+        point.x += B3DNINT(0.06 * ptX);
+        point.y += B3DNINT(0.06 * ptY);
+        cdc.LineTo(point);
+        point.x += B3DNINT(0.04 * ptX);
+        point.y += B3DNINT(0.04 * ptY);
+      }
     }
   }
 
