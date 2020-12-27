@@ -14,6 +14,7 @@
 #define FIND_EUCENTRICITY_COARSE   1
 #define FIND_EUCENTRICITY_FINE     2
 #define REFINE_EUCENTRICITY_ALIGN  4
+#define MAX_FINE_STEPS       10
 #define MAX_MAG_STACK      4
 
 class CComplexTasks : public CCmdTarget
@@ -80,10 +81,6 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, WalkSTEMfocusInterval);
   GetSetMember(int, EucenRestoreStageXY);
   GetMember(int, LowMagConSet);
-  GetSetMember(BOOL, UseTrialSize);
-  GetSetMember(float, FESizeOrFracForMean);
-  GetSetMember(float, MaxFEFineAngle);
-  GetSetMember(float, MaxFEFineInterval);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -156,7 +153,6 @@ class CComplexTasks : public CCmdTarget
   CShiftManager *mShiftManager;
   BOOL mVerbose;
   int mLowMagConSet;              // control used for low mag tracking shots
-  BOOL mUseTrialSize;             // Flag to use current trial size instead of full-field
 
   float mMinRSRAField;            // Minimum field size for reset-realign
   int mSavedMagInd[MAX_MAG_STACK];         // Mag at which procedure started
@@ -252,19 +248,16 @@ class CComplexTasks : public CCmdTarget
   int mFECoarseFine;              // Saved flags from external call
   int mFEFineIndex;               // index to current angle
   BOOL mFEActPostExposure;        // flag for using post actions
-  FloatVec mFETargetAngles;
-  FloatVec mFEFineAngles;
-  FloatVec mFEFineShifts;
-  FloatVec mAngleSines;
-  FloatVec mAngleCosines;
-  float mMaxFEFineAngle;
-  float mMaxFEFineInterval;
+  double mFETargetAngles[MAX_FINE_STEPS];
+  double mFEFineAngles[MAX_FINE_STEPS];
+  float mFEFineShifts[MAX_FINE_STEPS];
+  float mAngleSines[MAX_FINE_STEPS];
+  float mAngleCosines[MAX_FINE_STEPS];
   int mFENumFineSteps;
   BOOL mRepeatFine;               // Flag to repeat fine sequence
   int mFEIterationLimit;          // Allowed iterations of fine sequence
   int mFEIterationCount;          // Number of iterations
   double mFEMaxFineIS;            // Maximum image shift in fine
-  float mFESizeOrFracForMean;     // Frac or size of subarea to get foreshortened means
   float mCumMovedX;
   float mLastAxisOffset;          // Axis offset in last run of fine eucentricity
   BOOL mFEUseTrialInLD;           // Flag to use trial in low dose for fine eucentricity

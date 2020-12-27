@@ -14,10 +14,8 @@ void DLL_IM_EX XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, i
 	float deltap, float *ctfp, float *peak);
 void DLL_IM_EX XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int nypad, 
 	float deltap, float *ctfp);
-void DLL_IM_EX XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int nxpad, int nypad, 
+void DLL_IM_EX XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad, 
                  float delta, float *ctf);
-void DLL_IM_EX ProcScaleImage(void *array, int type, int nx, int ny, float factor, float offset,
-  void *brray);
 int DLL_IM_EX XCorrNiceFrame(int num, int idnum, int limit);
 void DLL_IM_EX XCorrBinBy2(void *array, int type, int nxin, int nyin, short int *brray);
 void DLL_IM_EX XCorrBinByN(void *array, int type, int nxin, int nyin, int nbin, short int *brray);

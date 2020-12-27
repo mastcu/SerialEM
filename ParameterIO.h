@@ -71,8 +71,6 @@ public:
   void WriteAllMacros(int numWrite);
   int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros);
   void WriteMacrosToFile(CString filename, int maxMacros);
-  void ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide, 
-    std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides);
   void ReportSpecialOptions(void);
   void OutputVector(const char * key, int size, ShortVec * shorts, FloatVec* floats);
   void StoreFloatsPerBinning(CString * strItems, const char * descrip, int iset, CString & strFileName, float * values);

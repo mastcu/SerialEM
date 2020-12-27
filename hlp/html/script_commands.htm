@@ -531,20 +531,6 @@
             variables.&nbsp; Including 0 for the optional <b>#</b> reenables printing.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SuspendNavRedraw [#]</TD>
-          <TD>Disables updating of the table list box in the Navigator window and redrawing of
-            the image window when Navigator items are changed, to speed up scripting changes of
-            multiple items.&nbsp; Updating is reenabled and done when this command is given again
-            with 0 for the optional <b>#</b> or when the script ends.&nbsp; Command added in 3.9, 9/23/20.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">DeferLogUpdates [#]</TD>
-          <TD>Makes output to the log window be held in a buffer and added to the window
-             periodically, to speed up repetitive printing to log.&nbsp; The buffering ends
-             when this command is given again with 0 for the optional <b>#</b> or when the script
-             ends.&nbsp; Command added in 3.9, 9/23/20.</TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">ErrorsToLog [#]</TD>
           <TD>Makes most script error messages be duplicated in the log
             window.&nbsp; Follow with a 0 to turn off the feature again.</TD>
@@ -958,15 +944,6 @@
             'EarlyReturnNextShot', or the next deferred tilt sum available from a frame tilt 
             series.</TD>
         </TR> 
-        <TR>
-          <TD class="scriptcommand">SetFolderForFrames dir</TD>
-          <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp; A simple 
-            directory name without path separators is required for DE cameras and FEI cameras run with
-             Advanced Scripting.&nbsp; For other cameras, an absolute path is required,
-             either a network path starting with two slashes or one starting with a drive 
-            letter.&nbsp; Command added in 3.9, 9/12/20.
-          </TD>
-        </TR> 
                 <TR>
           <TD class="scriptcommand">FrameThresholdNextShot #T [#S] [#E] [#D]</TD>
           <TD>Skips saving frames whose mean value is below the given threshold <b>#T</b> in the next 
@@ -1284,54 +1261,6 @@
             side-by-side FFT window if that option is on.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FilterImage buf sig1 rad1 rad2 sig2 [obuf]</TD>
-          <TD>Applies a filter in Fourier space to the image in the given buffer; the filter is
-            the product of two separate filters, one controlled by <B>sig1</B> (sigma1) and the other
-            by <B>rad2</B> (radius2) and <B>sig2</B> (sigma2).&nbsp; Sigma1 provides low-frequency filtering
-            with an inverted Gaussian rising from 0 to 1 with that sigma, and starting at either 0 frequency or 
-            the frequency specified by |<B>rad1</B>| (radius1) if it is negative.&nbsp; Radius2 and sigma2 provide
-            high-frequency filtering with a Gaussian that falls past radius2 with that sigma.&nbsp;  
-            If radius1 is positive, a Gaussian with the same sigma falls off to the left of radius1.&nbsp;
-            If sigma1 is negative, it provides a band-pass filter peaking at 1.414 * |sigma1|.&nbsp; See 
-            Filterplot in IMOD for a complete description and ability to graph any filter.&nbsp; 
-            The units are reciprocal pixels (0 to 0.5 along an axis).&nbsp; The floating point output is 
-            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
-            is added specifying a different buffer, which can be <b>buf</b>.&nbsp; Command added in 3.9, 9/12/20.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">AddImages buf1 buf2 [obuf]</TD>
-          <TD>Adds the two images in buffers <b>buf1</b> and <b>buf2</b>&nbsp; The floating point output is 
-            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
-            is added specifying a different buffer, which can be <b>buf1</b> or <b>buf2</b>.&nbsp; Command
-            added in 3.9, 11/11/20.
-          </TD></TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SubtractImages buf1 buf2 [obuf]</TD>
-          <TD>Like 'AddImages', except that <b>buf2</b> is subtracted from <b>buf1</b>.&nbsp;Command
-            added in 3.9, 11/11/20.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">MultiplyImages buf1 buf2 [obuf]</TD>
-          <TD>Like 'AddImages', except that <b>buf2</b> is multiplied by <b>buf1</b>&nbsp;Command
-            added in 3.9, 11/11/20.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">DivideImages buf1 buf2 [obuf]</TD>
-          <TD>Like 'AddImages', except that <b>buf1</b> is divided by <b>buf2</b>, with 0 in the 
-            output at pixels where <b>buf2</b> is zero.&nbsp;Command added in 3.9, 11/11/20.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ScaleImage buf #S #A [obuf] [#K]</TD>
-          <TD>Scales the image in buffer <b>buf</b> by multiplying by <b>#S</b> then adding
-            <b>#A</b>.&nbsp; The output is 
-            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
-            is added specifying a different buffer, which can be <b>buf</b>.&nbsp; The resulting image
-            is floating point unless the optional <b>#K</b> is non-zero to keep the existing image 
-            type.&nbsp; Command added in 3.9, 11/11/20.
-          </TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>
           <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
             used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>.
@@ -1351,9 +1280,8 @@
         <TR>
           <TD class="scriptcommand">ReportMeanCounts [buf] [#]</TD>
           <TD>Reports the mean counts of the A buffer, or of the buffer indicated by <b>buf</b>;
-            add a 1 as <b>#</b> to get unbinned counts per second, or add a 2 as <b>#</b> to get
-            a report of mean, standard deviation, minimum and maximum.&nbsp; No optional 
-            assignment to variables.</TD>
+            add a 1 as <b>#</b> to get unbinned counts per second.
+            &nbsp; No optional assignment to variable.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ElectronStats [buf]</TD>
@@ -1434,11 +1362,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetDirectory dir</TD>
-          <TD>Changes the working directory to <b>dir</b>, which can contain spaces.&nbsp; 
-            The working directory is the location where script commands will access files 
-            when the names given to commands do not include a path, but it is not the 
-            directory where file choosers will open unless the &#39;OpenChooserInCurrentDir&#39; 
-            command is used.</TD>
+          <TD>Changes the working directory to <b>dir</b>, which can contain spaces.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDirectory</TD>
@@ -1450,18 +1374,7 @@
           <TD>Opens a directory chooser dialog to allow user to select or make a directory,
             and change the working directory to it.&nbsp; If the optional <b>prompt</b> string is
             not supplied, the dialog title is &#39;Choose a new current working directory&#39;.&nbsp;
-            The chosen directory is stored in <I>reportedValue1</I>.&nbsp; This is the 
-            directory where script commands will access files when given a name with a path. 
-            but file choosers will not open there unless the &#39;OpenChooserInCurrentDir&#39; 
-            command is used.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">OpenChooserInCurrentDir</TD>
-          <TD>Makes the next file chooser dialog open in the current working directory.&nbsp; 
-            If the user selects a different directory in the chooser, the next file chooser 
-            will open in that directory, just as if this command was not given, although the 
-            location will be kept track of by the program rather than by the operating 
-            system.&nbsp; Command added in 3.9,0, 11/29/20</TD>
+            The chosen directory is stored in <I>reportedValue1</I>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">MakeDirectory dir</TD>
@@ -1472,12 +1385,6 @@
           <TD class="scriptcommand">MakeDateTimeDir</TD>
           <TD>Creates a directory named by the date and time (e.g., Aug15_12.23.15) under the
             current directory and change to this as the new working directory.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">DoesFileExist file</TD>
-          <TD>Reports if <b>file</b> exists in the current working directory
-          if the name includes no path, or at the indicated path if it includes a
-          path.&nbsp; <b>file</b> can be a directory.&nbsp; Command added in 3.9, 11/8/20.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AllowFileOverwrite #</TD>
@@ -1599,7 +1506,7 @@
         <TR>
           <TD class="scriptcommand">SaveToOtherFile buf typ cmp file</TD>
           <TD>Saves one image in the given buffer <b>buf</b> to the file with the given name and closes 
-            the file.&nbsp; <b>typ</b> specifies the type of file and can be MRC, HDF, TIF, TIFF, 
+            the file.&nbsp; <b>typ</b> specifies the type of file and can be MRC, TIF, TIFF, 
             JPG, JPEG, CUR, 
             or -1 (case insensitive), where CUR or -1 means use the current file type for 
             the File menu entry Save Single/Save to Other.&nbsp; If that type is a series of 
@@ -2964,10 +2871,6 @@
             Eucentricity run; aborts the script if no offset is available.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetTiltAxisOffset #</TD>
-          <TD>Sets the lateral offset of the tilt axis to <b>#</b>.&nbsp; Command added in 3.9, 11/10/20.</TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">WalkUpTo #</TD>
           <TD>Tilts up to given angle in steps and track image position</TD>
         </TR>
@@ -3140,26 +3043,10 @@
             and 2 if there is a Navigator file defined 2.&nbsp; Virtually all of the commands 
             described in this section will generate an error if the Navigator is not open.</TD>
         </TR>
-        <TR>
-          <TD class="scriptcommand">OpenNavigator [name]</TD>
-          <TD>Opens the Navigator window, which must not already be open.&nbsp; If the optional
-             <b>name</b> is entered, this file is set as the Navigator file to save to.
-            &nbsp; Command added in 3.9.0, 11/26/20.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">CloseNavigator</TD>
-          <TD>Closes the Navigator window, which must be open.&nbsp; If there are unsaved changes
-            and the <A HREF="menu_navigator.htm#hid_navigator_autosave">Autosave Nav File</A> 
-            option is not on, the user will be asked whether to save.
-            &nbsp; Command added in 3.9.0, 11/26/20.
-          </TD>
-        </TR>
          <TR>
-          <TD class="scriptcommand">SaveNavigator [name]</TD>
-          <TD>If the optional <b>name</b> is not present, saves the Navigator data to the current file
-             or opens a file chooser for saving if a file is not yet defined.&nbsp; If a <b>name</b> is
-             entered, it saves to this file instead.</TD>
+          <TD class="scriptcommand">SaveNavigator</TD>
+          <TD>Saves the Navigator data to the current file or opens a file chooser for 
+            saving if a file is not yet defined.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadNavFile name</TD>
@@ -3351,42 +3238,8 @@
         <TR>
           <TD class="scriptcommand">ItemForSuperCoord #</TD>
           <TD>Sets the item number that Navigator supplies supermontage coordinates from when
-            a montage image is acquired. Sets the number to 0 to restore Navigator to using
+            a montage image is acquired. Set the number to 0 to restore Navigator to using
             coordinates from the item currently being acquired.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetItemTargetDefocus #I #D</TD>
-          <TD>Sets the target defocus to <b>#D</b> for the Navigator item specified by <b>#I</b> 
-            (positive for table index, 0 for current or acquired item, or negative for index from 
-            end).&nbsp; The item must be marked for acquisition or a tilt series. &nbsp;The target is
-            not restored after acquisition, so the target would then apply for the next single image
-            acquisition but be superceded by the value in the parameters for the next tilt series. &nbsp;
-            If this command is used in a script run before the main action, the target will apply in a
-            script or tilt series but not to an autofocus done by the Navigator before the main action.
-             &nbsp;Items with this value set will have a line including 'F targ' and the target in the
-             listing produced by the Navigator menu item 
-            <A HREF="menu_navigator.htm#hid_montage_listfilestoopen">List Files/Series/States</A>. &nbsp;
-            When <b>TS Params</b> is pressed for an item with this set, the target defocus that
-            shows in setup dialog will be the one in the parameter set, which may apply to many tilt
-            series, and <i>not</i> this set value.&nbsp; The label after the target will be <b>um*</b> to 
-            indicate that it is being overridden.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetItemSeriesAngles #I #S #E [#B]</TD>
-          <TD>Sets the starting and ending tilt series angles to <B>#S</B> and <b>#E</b> and optionally
-            sets the bidirectional starting angle to <b>#B</b> for the Navigator item specified by <b>#I</b> 
-            (positive for table index, 0 for current or acquired item, or negative for index from 
-            end).&nbsp; The item must be marked for tilt series acquisition. &nbsp;The command can be used
-            in a script run before the tilt series. &nbsp;In the
-             listing produced by the Navigator menu item 
-            <A HREF="menu_navigator.htm#hid_montage_listfilestoopen">List Files/Series/States</A>, the 
-            tilt series angles specified by this command will be shown, with a '*' to indicate the override. &nbsp;
-            When <b>TS Params</b> is pressed for an item with angles set, the angles that
-            appear in setup dialog will be the ones in the parameter set, which may apply to many tilt
-            series, and <i>not</i> these set values.&nbsp; There will be a <b>*</b> after the text box to
-            indicate that they are being overridden.&nbsp; Command added in 3.9, 9/16/20
-          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
@@ -3395,13 +3248,13 @@
             end). &nbsp;Up to 8 user values are currently allowed, with a number from 1 to 8 specified by
              <b>#V</b> (numbers do not have to be used sequentially). &nbsp;The <b>text</b> on the
              rest of the line is assigned as the value after variable substitution but not arithmetic;
-             text can be omitted to clear out a value.&nbsp; Command added in 3.9, 9/16/20</TD>
+             text can be omitted to clear out a value.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportItemUserValue #I #V</TD>
           <TD>Reports an arbitrary value set for the Navigator item specified by <b>#I</b> 
             (positive for table index, 0 for current or acquired item, or negative for index from 
-            end), or 'none' if no value is set. &nbsp;Sets <i>reportedValue1</i> with the text 
+            end), or 'none' if no value is set. &nbsp;Set <i>reportedValue1</i> with the text 
             value.<TD>
         </TR>
         <TR>
@@ -3755,20 +3608,6 @@
           <TD>Reports the X and Y center coordinate and the radius in microns for the circle
             through three points whose coordinates are given on the line as <b>#X1:#Y1 #X2:#Y2 #X3:#Y3</b>.&nbsp;
             Values can be assigned to variables at end of command.</TD>
-        </TR>
-         <TR>
-          <TD class="scriptcommand">SetCameraPLAOffset</TD>
-          <TD>Sets or refines a PLA offset between two cameras on a JEOL scope using PLA for 
-            image shift.&nbsp; To use:<br />
-            Take an image with the camera to be aligned to (e.g., an on-axis camera).<br />
-            Center a feature and take a new image.<br />
-            Switch to the other camera (e.g., an off-axis camera).<br />
-            Use right mouse-shifting, or set the marker point and use the <strong>To Marker</strong> 
-            button or Shift P hot key to center the feature with image shift only.<br />
-            Run this command.&nbsp; It will report the existing and new offsets.<br />
-            Iterate if desired for a more accurate result.&nbsp; If aligning more than two 
-            cameras, use one camera as a reference for aligning each of the others to.&nbsp; 
-            Command added in 3.9, 12/23/20.</TD>
         </TR>
        <TR>
           <TD width="207">Plugin name func [args]</TD>
