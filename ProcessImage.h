@@ -11,6 +11,7 @@
 
 struct CtffindParams;
 class CCtffindParamDlg;
+enum { PROC_ADD_IMAGES, PROC_SUBTRACT_IMAGES, PROC_MULTIPLY_IMAGES, PROC_DIVIDE_IMAGES };
 
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage command target
@@ -40,12 +41,17 @@ public:
                      int left, int bottom, int right, float absCrit,
                      float numSDCrit, int useBothCrit, BOOL verbose);
   float EquivalentRecordMean(int bufNum);
-  float ForeshortenedMean(int nufNum);
+  float ForeshortenedMean(int bufNum);
+  int ForeshortenedSubareaMean(int bufNum, float fracOrSizeX, float fracOrSizeY,
+    bool useShift, float &mean, CString *message);
   void GetFFT(int binning, int capFlag);
   void GetFFT(EMimageBuffer *imBuf, int binning, int capFlag);
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,
-    int moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false);
+    int moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false, int toBufNum = 0);
   void RotateImage(BOOL bLeft);
+  int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2);
+  int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);
+  int ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, float offset, bool retainType);
   BOOL GetLiveFFT() {return mLiveFFT;};
   GetSetMember(BOOL, CircleOnLiveFFT)
   GetSetMember(bool, SideBySideFFT);

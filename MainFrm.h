@@ -32,6 +32,8 @@ public:
 	void SetDialogOffset(CSerialEMView *mainView);
 	BOOL NewTask();
 	void InitializeStatusBar();
+  void RemoveHiddenItemsFromMenus();
+  void RemoveItemsFromOneMenu(CMenu *menu, int level);
 	void SetStatusText(int iPane, CString strText);
 	void SetDialogPositions();
   void InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 
@@ -44,6 +46,7 @@ public:
 	void DialogChangedState(CToolDlg *inDialog, int inState);
 	virtual ~CMainFrame();
   bool GetClosingProgram() {return mClosingProgram;};
+  void DoClose(bool afterScript);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;

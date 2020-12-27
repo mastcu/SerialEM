@@ -129,6 +129,10 @@ public:
   signed char mNumXholes, mNumYholes;  // Defined array size for multi-hole acquire
   short mNumSkipHoles;            // Number of holes to skip
   unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)
+  float mTSstartAngle;    // Special stored starting and ending angle for tilt series
+  float mTSendAngle;
+  float mTSbidirAngle;    // And bidirectional start angle
+  float mTargetDefocus;   // Target defocus to set when acquiring this item
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to
   std::map<int, std::string> mUserValueMap;
   int mFilePropIndex;     // Indexes into arrays of file properties and other params

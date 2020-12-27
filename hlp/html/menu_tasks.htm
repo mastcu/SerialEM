@@ -177,6 +177,10 @@
           <TD class="style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
           <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
+          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
@@ -270,11 +274,14 @@
         return the stage to your pre-existing tilt at the end.</P>
       <P>The fine eucentricity procedure first switches to a low magnification (or, in 
         low dose mode, it uses the parameters of the View area). It then takes pictures 
-        at a set of tilts between -24 and + 24 degrees. From the image displacements 
+        at a set of tilts between -24 and +24 degrees. From the image displacements 
         during this series, it can compute both the distance in Z from the eucentric 
         point and the lateral displacement of the tilt axis from the optical axis. If 
         image displacements become too large, the program will adjust Z height then 
         repeat the procedure from the beginning.</P>
+    <P>For specialized uses it may be desirable to change the maximum angle or tilt 
+      increment.&nbsp; These parameters can be changed with the properties 
+      'EucentricityMaxFineAngle' and 'EucentricityFineIntervalAtZero'.</P>
       <P><A NAME="hid_eucentricity_both"></A><B>Eucentric - Both command (Tasks menu)</B></P>
       <P>Use this command to run the rough eucentricity procedure followed immediately by 
         the fine eucentricity procedure. This sequence does make any attempt to keep 
@@ -558,6 +565,13 @@
        camera opening its shutter and SerialEM discovering that the screen is down.&nbsp; Select this option to 
        prevent the blanking if it is problematic for some reason.
      </p> 
+     <p> 
+     <A NAME="hid_specializedoptions_closevalvesafterlonginactivity"></A><B>Turn Off Beam After Long Inactivity command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+      <p>With this option, you can enable the program to close valves or turn off the 
+        filament if it is left idle for longer than a specified length of time.&nbsp; 
+        After selecting the option, enter the number of minutes of inactivity after 
+        which the program should turn off the beam, or 0 to disable this feature.&nbsp; 
+        The option appears checked in the menu when a positive time has been entered.</p>
       </basefont>
   </BODY>
 </HTML>

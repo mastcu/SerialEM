@@ -3,14 +3,35 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/23/20: Added script command to set a PLA offset between cameras on JEOL
+scopes using PLA for image shift, and a camera property to designate cameras
+as on or off axis on scopes using IS.
+
+12/16/20: Moved slow lens changes with normalizations into threads so that the
+user interface stays responsive during long changes.
+
+12/15/20: Added option to draw tilt axis to Image Display panel and added a
+tilt axis line on View/Serach images when defining Trial/Focus areas.
+
 12/14/20: Fixed problem with frames not being saved when aligning whole tilt
 series in IMOD is selected and the Save checkbox is not checked (In 3.8).
 
 12/13/20: Made tilt series controller stop properly if absolute image shift
 limit is reached when autoaligning (In 3.8).
 
+12/10/20: Changed to set pixel size in TIFF files as dots per cm.
+
+12/3/20: Fixed selection of script to run in tilt series.
+
+12/3/20: Fixed StartAsAdministrator.
+
 12/2/20: Fixed behavior when LimitNextAutoAlign is used and there are no peaks
 within the limit (In 3.8).
+
+11/29/20: Fixed window snapshotting, broken by HDF changes.
+
+11/29/20: Added script command to make the next file chooser open in the
+current working directory instead of last one accessed by the chooser.
 
 11/29/20: Fixed which Run button has focus in one-line script window so Enter
 will run the script just edited; made Ctrl-A and Ctrl-Z work there (In 3.8).
@@ -19,12 +40,26 @@ will run the script just edited; made Ctrl-A and Ctrl-Z work there (In 3.8).
 11/26/20: Fixed initial exposure time being used at highest tilt angle instead
 of zero tilt with cosine intensity changes, broken 8/4/20 (In 3.8).
 
+11/26/20: Added entry to Task-Specialized Options menu for making the program
+close vales/turn off beam when idle for long enough.
+
+11/26/20: Made current "Go to" button in Low Dose panel appear depressed.
+
+11/26/20: Added script commands CloseNavigator and OpenNavigator; the latter
+lets you define the output file name.
+
 11/26/20: Fixed taking current parameters for number of montage frames instead
 of ones the montage was taken with when making a map (In 3.8).
 
 11/25/20: Fixed problem with using the current probe mode or alpha for
 assessing whether focus calibration exists in Low Dose; used Focus area values
 instead (In 3.8).
+
+11/25/20: SEM_3-9-0beta1  REQUIRED FOR USING LATER BETA SERIALEM.EXE
+11/24/20: Added support for HDF files.
+
+11/24/20: Added property JeolBeamRampupTimeout to allow beam to be turned on
+from within SerialEM on systems with rampup problem.
 
 11/24/20: Fixed reordering of montage Z coordinates for dose-symmetric series,
 in case that should ever happen (In 3.8).
@@ -44,14 +79,46 @@ two imported maps (In 3.8).
 
 11/21/20: Fixed crash adding float image to tilt series mini-stack (In 3.8).
 
+11/21/20: Fixed divide by 0 crash when using "Test Acquire" in beam
+autocenter (In 3.8).
+
 11/16/20: Made Settings - Set a Property show the current value and print the
 new value to the log (In 3.8).
 
+11/14/20: Added ability to define a set of lens changes for normalizing lenses
+on a JEOL.
+
+11/14/20: Added Navigator option (in Options menu) to incorporate the label
+into names of files to be opened instead of adding sequential numbers when
+new names are generated automatically.
+
+11/12/20: Added property to add some text after "SerialEM" in the title bar.
+
+11/12/20: Added hot keys to toggle "Extra info" and crosshairs in the
+display.
+
+11/12/20: Added options to script menu to select scripts to run at program
+startup and exit.
 11/12/20: SEM_3-8-4
 11/12/20: Fixed installer to copy SEMCCD-GMS3.01-64.dll for GMS 3.0 - 3.2
 (In 3.8).
 
 11/12/20: Set the default for LowestGainIndex to 2 for XF416 (In 3.8).
+
+11/11/20: Added script commands to add, subtract, multiply and divide two images
+and to scale the values in an image; changed FilterImage to place the output
+in A or in a specified buffer.
+
+11/11/20: Made it possible to use an autofocus calibration in LM.
+
+11/10/20: Added script command to set tilt axis offset.
+
+11/10/20: Added capability to define dialog and menu items to hide or disable
+unconditionally and also to define a selectable "basic mode" with a list of
+items to hide or disable.
+
+11/10/20: Made it possible to set Administrator mode to -1 to prevent people
+from saving calibrations.
 
 11/6/20: Made install script kill DigitalMicrograph if necessary (In 3.8).
 
@@ -61,8 +128,17 @@ new value to the log (In 3.8).
 11/3/20: Added property to skip the check of neutral IS values on a JEOL
 (In 3.8).
 
+11/2/20: Changed cosine power specification in the tilt series setup dialog to
+be expressed in terms of increase in exposure from 0 to 60 degrees.
+
+11/2/20: Added properties to control tilt range and increment of the fine
+eucenticity task.
+
 11/1/20: Fixed crash when autocentering beam and fixed focus problems with
 autocenter setup dialog (In 3.8).
+
+10/28/20: Added property to get means of a subarea during the fine
+eucentricity routine.
 
 10/28/20: Extended "UsableAtMag" property to apply at all mags with a 0 mag
 index (In 3.8).
@@ -88,12 +164,25 @@ from Scratch, which caused drift in first image of second round (In 3.8).
 
 10/15/20: Improved detection of lens relaxation completion on JEOL (In 3.8).
 
+10/16/20: Fixed some broken functions in script processors.
+
+10/16/20: Made Realign to Item work with non-centered subarea when staying in
+low dose for alignments shots.
+
+10/16/20: Added property to use Trial size for tasks instead of full field.
+
+
 10/8/20: Fixed taking frames totalling more than with 4 Gpixels with Tietz
 burst mode (may work only with GPU version) (In 3.8).
+
+10/7/20: Converted script processor from using huge switch statement to using
+functions for commands.
 
 10/5/20: Fixed continuous mode for Tietz cameras with 32-bit EM-Menu (In 3.8).
 
 10/4/20: Fixed names of counting mode movies for newer DE servers (In 3.8).
+
+10/4/20: Enabled display of Low Dose areas on Search images.
 
 10/3/20: Fixed rounding of exposure times when setting up variable frame sums
 for K3 and improved behavior of frame summing setup upon changes (In 3.8).
@@ -119,11 +208,22 @@ and objective lenses also (In 3.8).
 property to set the fraction that the region outside the beam has to be below
 the mean (In 3.8).
 
+9/23/20: Added script commands DeferLogUpdates and SuspendNavRedraw and
+avoided returning to event loop when possible to speed up repetitive script
+actions.
+
 9/20/20: Fixed bug that sometimes loaded a map without assigning its ID to a
 buffer; fixed display of labels around the current point and shift-double-click
 deletion of one multihole position with groups collapsed; improved display of
 multishot pattern with hole combiner open; added grid of points or found holes
 to the table viewer in one step at the end (In 3.8).
+
+9/16/20: Added script commands SetItemSeriesAngles to set angle range and
+bidirectional start for Navigator items marked for series, and
+SetItemTargetDefocus to set target for items marked for any acquisition.
+
+9/16/20: Added script commands SetFolderForFrames to set path or folder for
+saving frames, and FilterImage to apply a Fourier filter to a buffer.
 
 9/16/20: Fixed output of TargetDefocus to mdoc file (In 3.8).
 
@@ -135,6 +235,9 @@ script commands (In 3.8).
 9/12/20: SEM_3-8-1
 9/12/20: Changed DE calls to accommodate changes in the server, fixing
 the behavior when servers >= 2.1.15 do rotation/flip (In 3.8).
+
+9/11/20: Added property to shift intensity values from FEI scripting into
+allowed range of 0 to 1.
 
 9/8/20: Fixed problems with running F416 with the proper size of 4100 x 4100
 (In 3.8).

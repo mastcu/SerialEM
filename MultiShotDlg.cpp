@@ -39,8 +39,9 @@ IDC_STAT_BEAM_UM, IDC_CHECK_USE_ILLUM_AREA, IDC_STAT_EXTRA_DELAY, IDC_STAT_SEC,
 IDC_CHECK_ADJUST_BEAM_TILT, IDC_STAT_COMA_IS_CAL,
 IDC_STAT_COMA_CONDITIONS, IDCANCEL, IDOK, IDC_BUTHELP, PANEL_END, TABLE_END};
 
-static int topTable[sizeof(idTable) / sizeof(int)];
-static int leftTable[sizeof(idTable) / sizeof(int)];
+static int sTopTable[sizeof(idTable) / sizeof(int)];
+static int sLeftTable[sizeof(idTable) / sizeof(int)];
+static int sHeightTable[sizeof(idTable) / sizeof(int)];
 
 // CMultiShotDlg dialog
 
@@ -206,8 +207,10 @@ BOOL CMultiShotDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   if (!mHasIlluminatedArea)
-    mIDsToHide[mNumIDsToHide++] = IDC_CHECK_USE_ILLUM_AREA;
-  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
+    mIDsToDrop.push_back(IDC_CHECK_USE_ILLUM_AREA);
+  SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+    sHeightTable);
+  mLastPanelStates[6] = false;
   UpdateSettings();
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
@@ -312,7 +315,7 @@ BOOL CMultiShotDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 // Adjust the panels for changes in selections, and close up most of dialog to "disable"
-void CMultiShotDlg::ManagePanels(void)
+void CMultiShotDlg::ManagePanels(bool adjust)
 {
   BOOL states[7] = {true, true, true, true, true, true, true};
   int ind, numStates = sizeof(states) / sizeof(BOOL);
@@ -332,8 +335,9 @@ void CMultiShotDlg::ManagePanels(void)
     ManageEnables();
   }
   for (ind = 0; ind < numStates; ind++) {
-    if (!BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
-      AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+    if (adjust || !BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
+      AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+        sHeightTable);
       mWinApp->RestoreViewFocus();
       break;
     }

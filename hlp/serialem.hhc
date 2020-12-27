@@ -83,6 +83,11 @@
 			</OBJECT>
 			<A HREF="html/script_commands.htm">Script Commands</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Hiding and Disabling Menu and Dialog Items">
+			<param name="Local" value="html/about_hide_disable.htm">
+			</OBJECT>
+			<A HREF="html/about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Setting Up SerialEM">
 			<param name="Local" value="html/setting_up_serialem.htm">
 			</OBJECT>
