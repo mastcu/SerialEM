@@ -1111,19 +1111,24 @@ void CMenuTargets::OnNavigatorDeleteGroup()
 
 void CMenuTargets::OnUpdateNavigatorDeleteGroup(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->CurrentIsInGroup() && 
+  pCmdUI->Enable(mNavigator && mNavigator->CurrentIsInGroup() &&
     !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorAlignToMap()
 {
+  if (!mNavHelper->OKtoAlignWithRotation()) {
+    AfxMessageBox("To open this dialog, there must be a map in the Read buffer\n"
+      "and an image in buffer A or a montage overview in B\n(and montage center in A) at"
+      " a different registration from the map", MB_OK | MB_ICONINFORMATION);
+    return;
+  }
   mNavHelper->OpenRotAlignDlg();
 }
 
 void CMenuTargets::OnUpdateNavigatorAlignToMap(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && !DoingTasks() && !mNavigator->GetAcquiring() &&
-    mNavHelper->OKtoAlignWithRotation());
+  pCmdUI->Enable(mNavigator && !DoingTasks() && !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnCalibrationStagestretch()

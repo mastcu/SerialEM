@@ -4128,7 +4128,7 @@ WINDOWPLACEMENT *CNavHelper::GetRotAlignPlacement(void)
 int CNavHelper::BufferForRotAlign(int &registration)
 {
   int topBuf = 0;
-  if (mWinApp->Montaging() && mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW &&
+  if (mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW &&
     mImBufs[0].mCaptured == BUFFER_MONTAGE_CENTER)
     topBuf = 1;
   registration = mImBufs[topBuf].mRegistration ? mImBufs[topBuf].mRegistration :
