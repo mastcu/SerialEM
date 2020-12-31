@@ -17,7 +17,6 @@
 class CMontageSetupDlg;
 struct TiltSeriesParam;
 class CNavAcquireDlg;
-class CMacCmd;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -263,7 +262,6 @@ private:
   NavParams *mParam;
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
-  CMacCmd *mMacroProcessor;
 
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;
@@ -625,7 +623,6 @@ CMapDrawItem *FindNextAcquireItem(int &index);
 bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
 float ContourArea(float *ptx, float *pty, int numPoints);
 void GetCurrentNavDir(CString &navPath);
-void SetCurrentNavFile(CString &inFile);
 void ManageListHeader(CString str = "Label");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();

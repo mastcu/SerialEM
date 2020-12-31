@@ -89,6 +89,8 @@ class FrameAlign {
                                       int binning, bool hasGain, bool hasDefect,
                                       bool hasTrunc, int numExpected, float freeMem,
                                       float stackMargin, int inFlags, int &outFlags);
+  int setTruncationLimit(void *array, int nx, int ny, int useMode, float truncLimit,
+                         float &truncUse);
 
   
  private:

@@ -34,7 +34,6 @@ CImageLevelDlg::CImageLevelDlg(CWnd* pParent /*=NULL*/)
   , m_bInvertCon(FALSE)
   , mBlackSlider(0)
   , mWhiteSlider(255)
-  , m_bTiltAxis(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CImageLevelDlg)
@@ -88,7 +87,6 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Slider(pDX, IDC_SLIDER_BLACK, mBlackSlider);
   DDX_Control(pDX, IDC_SLIDER_WHITE, m_scWhite);
   DDX_Slider(pDX, IDC_SLIDER_WHITE, mWhiteSlider);
-  DDX_Check(pDX, IDC_TILTAXIS, m_bTiltAxis);
 }
 
 
@@ -107,8 +105,7 @@ BEGIN_MESSAGE_MAP(CImageLevelDlg, CToolDlg)
   ON_BN_CLICKED(IDC_SCALEBAR, OnScalebar)
   ON_BN_CLICKED(IDC_CROSSHAIRS, OnCrosshairs)
   ON_BN_CLICKED(IDC_ANTIALIAS, OnAntialias)
-  ON_BN_CLICKED(IDC_INVERT_CON, OnInvertContrast)
-  ON_BN_CLICKED(IDC_TILTAXIS, OnTiltaxis)
+  ON_BN_CLICKED(IDC_INVERT_CON, &CImageLevelDlg::OnInvertContrast)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -139,9 +136,8 @@ BOOL CImageLevelDlg::OnInitDialog()
 
   CRect rect;
   m_eBlackLevel.GetWindowRect(&rect);
-  if (!mFont.m_hObject)
-    mFont.CreateFont(rect.Height() - (int)(4 * mWinApp->GetScalingForDPI()), 0, 0, 0,
-      FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+  mFont.CreateFont(rect.Height() - (int)(4 * mWinApp->GetScalingForDPI()), 0, 0, 0, 
+    FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   m_eBlackLevel.SetFont(&mFont);
@@ -151,7 +147,6 @@ BOOL CImageLevelDlg::OnInitDialog()
     // Set up the spin control and a zoom
   m_sbcZoom.SetRange(0,100);
   m_sbcZoom.SetPos(50);
-  mInitialized = true;
 
   NewZoom(1.0);
   UpdateSettings();
@@ -170,9 +165,7 @@ void CImageLevelDlg::UpdateSettings()
   m_bAntialias = (mWinApp->mBufferManager->GetAntialias() != 0);
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
-  m_bTiltAxis = mWinApp->mBufferManager->GetDrawTiltAxis();
-  if (mInitialized)
-    UpdateData(false);
+  UpdateData(false);
 }
 
 void CImageLevelDlg::OnTruncation() 
@@ -326,8 +319,7 @@ void CImageLevelDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 
 void CImageLevelDlg::OnInvertContrast()
 {
-  if (mInitialized)
-    UpdateData(true);
+  UpdateData(true);
   if (mWinApp->mActiveView) {
     EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
     if (imBuf->mImageScale) {
@@ -357,16 +349,14 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
   mSampleMin = inImageScale->GetSampleMin();
   mSampleMax = inImageScale->GetSampleMax();
   m_bInvertCon = inImageScale->GetInverted() != 0;
-  if (mInitialized)
-    SetEditBoxes();
+  SetEditBoxes();
 }
 
 // External call to invert contrast with a hot key
 void CImageLevelDlg::ToggleInvertContrast(void)
 {
   m_bInvertCon = !m_bInvertCon;
-  if (mInitialized)
-    UpdateData(false);
+  UpdateData(false);
   OnInvertContrast();
 }
 
@@ -397,8 +387,6 @@ void CImageLevelDlg::NewZoom(double inZoom)
   char format[6];
   int zoom = (int)floor((inZoom >= 0.1 ? 100. : 1000.) * inZoom + 0.5);
   int ndec = inZoom >= 0.1 ? 2 : 3;
-  if (!mInitialized)
-    return;
   while (zoom > 0 && zoom % 10 == 0 && ndec > 0) {
     zoom /= 10;
     ndec--;
@@ -424,14 +412,6 @@ void CImageLevelDlg::OnScalebar()
   mWinApp->RestoreViewFocus();
 }
 
-void CImageLevelDlg::ToggleExtraInfo(void)
-{
-  mWinApp->mBufferManager->SetDrawScaleBar(!mWinApp->mBufferManager->GetDrawScaleBar());
-  UpdateSettings();
-  if (mWinApp->mActiveView)
-    mWinApp->mActiveView->DrawImage();
-}
-
 void CImageLevelDlg::OnCrosshairs()
 {
   UpdateData(true);
@@ -441,29 +421,10 @@ void CImageLevelDlg::OnCrosshairs()
   mWinApp->RestoreViewFocus();
 }
 
-void CImageLevelDlg::ToggleCrosshairs()
-{
-  mWinApp->mBufferManager->SetDrawCrosshairs(
-    !mWinApp->mBufferManager->GetDrawCrosshairs());
-  UpdateSettings();
-  if (mWinApp->mActiveView)
-    mWinApp->mActiveView->DrawImage();
-}
-
 void CImageLevelDlg::OnAntialias()
 {
   UpdateData(true);
   mWinApp->mBufferManager->SetAntialias(m_bAntialias ? 1 : 0);
-  if (mWinApp->mActiveView)
-    mWinApp->mActiveView->DrawImage();
-  mWinApp->RestoreViewFocus();
-}
-
-
-void CImageLevelDlg::OnTiltaxis()
-{
-  UpdateData(true);
-  mWinApp->mBufferManager->SetDrawTiltAxis(m_bTiltAxis);
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();
