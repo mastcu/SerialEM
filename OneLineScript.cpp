@@ -107,7 +107,7 @@ void COneLineScript::OnPaint()
   if (!mInitialized || mLineWithFocus < 0 || mLineWithFocus > 4)
     return;
   CToolDlg::DrawButtonOutline(this, dc,
-    (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, RGB(0, 0, 0), -7);
+    (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, RGB(0, 0, 0), -10);
 }
 
 // Run one of them

@@ -344,7 +344,8 @@ void CToolDlg::DrawSideBorders(CPaintDC &dc)
     clientRect.Height(), mBorderColor);
 }
 
-// Draw a box around a button
+// Draw a box around a button.
+// Non-tool dialogs need a big offset that dose NOT need DPI scaling
 void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORREF color)
 {
   DrawButtonOutline(this, dc, but, thickness, color, -1);
@@ -356,7 +357,6 @@ void CToolDlg::DrawButtonOutline(CWnd * wnd, CPaintDC & dc, CWnd * but, int thic
   CRect winRect, clientRect, butRect;
   int iLeft, iTop, border;
   thickness = (int)(thickness * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
-  offset = (int)(offset * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
   wnd->GetWindowRect(&winRect);
   wnd->GetClientRect(&clientRect);
   border = (winRect.Width() - clientRect.Width()) / 2;
