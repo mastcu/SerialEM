@@ -2,14 +2,11 @@
 #include <direct.h>
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
-#include "..\SerialEMDoc.h"
-#include "..\Image\KStoreIMOD.h"
 #include "..\EMscope.h"
 #include "..\CameraController.h"
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
 #include "..\Shared\autodoc.h"
-#include "..\Shared\iimage.h"
 #include "..\Shared\framealign.h"
 
 
@@ -176,19 +173,11 @@ void UtilThreadCleanup(CWinThread **threadpp)
 }
 
 // Open an existing file and return a KStoreMRC
-KImageStore *UtilOpenOldMRCFile(CString filename)
+KStoreMRC *UtilOpenOldMRCFile(CString filename)
 {
   CFile *file;
   KStoreMRC *storeMRC = NULL;
-  KStoreIMOD *storeHDF = NULL;
 
-  if (sWinApp->mDocWnd->GetHDFsupported() && iiTestIfHDF((char *)(LPCTSTR)filename) == 1){
-    storeHDF = new KStoreIMOD(filename);
-    if (storeHDF && storeHDF->FileOK())
-      return storeHDF;
-    delete storeHDF;
-    return NULL;
-  }
   try {
     file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite);
   }
@@ -207,7 +196,7 @@ KImageStore *UtilOpenOldMRCFile(CString filename)
 // Open an existing file and read the first image int the read buffer
 int UtilOpenFileReadImage(CString filename, CString descrip)
 {
-  KImageStore *storeMRC = UtilOpenOldMRCFile(filename);
+  KStoreMRC *storeMRC = UtilOpenOldMRCFile(filename);
   if (!storeMRC) {
     SEMMessageBox("Cannot reopen the file with " + descrip + " image.", MB_EXCLAME);
     return 1;
@@ -430,21 +419,6 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
   if (!filename.IsEmpty())
     filename += CString(sep);
   filename += toAdd;
-}
-
-// Remove zeros from end of a string ending in a floating point number
-void UtilTrimTrailingZeros(CString & str)
-{
-  int length, trim = 0;
-  if (str.Find('.')) {
-    length = str.GetLength();
-    while (str.GetAt(length - trim - 1) == '0')
-      trim++;
-    if (str.GetAt(length - trim - 1) == '.')
-      trim++;
-    if (trim)
-      str = str.Left(length - trim);
-  }
 }
 
 // Creates a directory for frame-saving if it does not already exist, checks if parent
@@ -919,51 +893,13 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
   pMyComboBox->MoveWindow(&rctDropDown); //enable changes
 }
 
-// Loads macro names in to a combo box, using the long names if present if useLong is
-// true and putting None as first entry if addNone true
-void LoadMacrosIntoDropDown(CComboBox &combo, bool useLong, bool addNone)
-{
-  CString str;
-  CString *names = sWinApp->GetMacroNames();
-  CString *longNames = sWinApp->GetLongMacroNames();
-  if (addNone)
-    combo.AddString("None");
-  for (int ind = 0; ind < MAX_MACROS; ind++) {
-    if (useLong && !longNames[ind].IsEmpty())
-      str = longNames[ind];
-    else if (names[ind].IsEmpty())
-      str.Format("# %d", ind + 1);
-    else
-      str = names[ind];
-    combo.AddString((LPCTSTR)str);
-  }
-  SetDropDownHeight(&combo, MAX_MACROS + (addNone ? 1 : 0));
-}
-
 // Modify a menu item given its submenu # and ID
-void UtilModifyMenuItem(const char *popupName, UINT itemID, const char *newText)
+void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char *newText)
 {
-  CMenu *menu, *mainMenu;
-  CString name;
-  mainMenu = sWinApp->m_pMainWnd->GetMenu();
-  for (int ind = 0; ind < (int)mainMenu->GetMenuItemCount(); ind++) {
-    UtilGetMenuString(mainMenu, ind, name, MF_BYPOSITION);
-    if (!name.Compare(popupName)) {
-      menu = mainMenu->GetSubMenu(ind);
-      menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
-      sWinApp->m_pMainWnd->DrawMenuBar();
-      return;
-    }
-  }
-}
-
-// Get a menu string and strip the accelerator
-void UtilGetMenuString(CMenu *menu, int position, CString &name, UINT nFlags)
-{
-  menu->GetMenuString(position, name, nFlags);
-  name.Replace("&&", "|");
-  name.Replace("&", "");
-  name.Replace("|", "&");
+  CMenu *menu;
+  menu = sWinApp->m_pMainWnd->GetMenu()->GetSubMenu(subMenuNum);
+  menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
+  sWinApp->m_pMainWnd->DrawMenuBar();
 }
 
 bool UtilCamRadiosNeedSmallFont(CButton *radio) 
@@ -1113,30 +1049,4 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
     retStr = retStr.TrimRight('0');
   retStr = retStr.TrimRight('.');
   return retStr + suffix;
-}
-
-// Sleep for specified, processing messages
-BOOL SleepMsg(DWORD dwTime_ms)
-{
-  DWORD dwStart = GetTickCount();
-  DWORD dwElapsed;
-  while ((dwElapsed = GetTickCount() - dwStart) < dwTime_ms) {
-    DWORD dwStatus = MsgWaitForMultipleObjects(0, NULL, FALSE,
-      dwTime_ms - dwElapsed, QS_ALLINPUT);
-
-    if (dwStatus == WAIT_OBJECT_0) {
-      MSG msg;
-      while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        if (msg.message == WM_QUIT) {
-          PostQuitMessage((int)msg.wParam);
-          return FALSE; // abandoned due to WM_QUIT
-        }
-
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-    }
-  }
-
-  return TRUE;
 }

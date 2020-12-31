@@ -39,9 +39,8 @@ IDC_STAT_BEAM_UM, IDC_CHECK_USE_ILLUM_AREA, IDC_STAT_EXTRA_DELAY, IDC_STAT_SEC,
 IDC_CHECK_ADJUST_BEAM_TILT, IDC_STAT_COMA_IS_CAL,
 IDC_STAT_COMA_CONDITIONS, IDCANCEL, IDOK, IDC_BUTHELP, PANEL_END, TABLE_END};
 
-static int sTopTable[sizeof(idTable) / sizeof(int)];
-static int sLeftTable[sizeof(idTable) / sizeof(int)];
-static int sHeightTable[sizeof(idTable) / sizeof(int)];
+static int topTable[sizeof(idTable) / sizeof(int)];
+static int leftTable[sizeof(idTable) / sizeof(int)];
 
 // CMultiShotDlg dialog
 
@@ -207,10 +206,8 @@ BOOL CMultiShotDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   if (!mHasIlluminatedArea)
-    mIDsToDrop.push_back(IDC_CHECK_USE_ILLUM_AREA);
-  SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
-    sHeightTable);
-  mLastPanelStates[6] = false;
+    mIDsToHide[mNumIDsToHide++] = IDC_CHECK_USE_ILLUM_AREA;
+  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   UpdateSettings();
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
@@ -233,7 +230,7 @@ void CMultiShotDlg::UpdateSettings(void)
   mSavedParams = *mActiveParams;
   m_iEarlyReturn = mActiveParams->doEarlyReturn;
   m_iEarlyFrames = mActiveParams->numEarlyFrames;
-  m_iCenterShot = mActiveParams->doCenter < 0 ? 2 : mActiveParams->doCenter;
+  m_iCenterShot = mActiveParams->doCenter < 0 ? 1 : (2 * mActiveParams->doCenter);
   m_fBeamDiam = mActiveParams->beamDiam;
   m_fSpokeDist = mActiveParams->spokeRad[0];
   m_fRing2Dist = mActiveParams->spokeRad[1];
@@ -315,7 +312,7 @@ BOOL CMultiShotDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 // Adjust the panels for changes in selections, and close up most of dialog to "disable"
-void CMultiShotDlg::ManagePanels(bool adjust)
+void CMultiShotDlg::ManagePanels(void)
 {
   BOOL states[7] = {true, true, true, true, true, true, true};
   int ind, numStates = sizeof(states) / sizeof(BOOL);
@@ -335,9 +332,8 @@ void CMultiShotDlg::ManagePanels(bool adjust)
     ManageEnables();
   }
   for (ind = 0; ind < numStates; ind++) {
-    if (adjust || !BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
-      AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
-        sHeightTable);
+    if (!BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
+      AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
       mWinApp->RestoreViewFocus();
       break;
     }
@@ -729,7 +725,7 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   UpdateData(true);
   mActiveParams->doEarlyReturn = m_iEarlyReturn;
   mActiveParams->numEarlyFrames = m_iEarlyFrames;
-  mActiveParams->doCenter = m_iCenterShot > 1 ? -1 : m_iCenterShot;
+  mActiveParams->doCenter = m_iCenterShot == 1 ? -1 : (m_iCenterShot / 2);
   mActiveParams->beamDiam = m_fBeamDiam;
   mActiveParams->spokeRad[0] = m_fSpokeDist;
   mActiveParams->doSecondRing = m_bDoSecondRing;

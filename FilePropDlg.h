@@ -70,11 +70,9 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CFilePropDlg)
-  afx_msg void OnRbyte();
-  afx_msg void OnRfileType();
-  virtual void OnOK();
+	afx_msg void OnRbyte();
+	virtual void OnOK();
 	virtual BOOL OnInitDialog();
-  void SetCompressionFromFileOpt();
 	afx_msg void OnKillfocusTruncblackedit();
 	afx_msg void OnKillfocusTruncwhiteedit();
 	afx_msg void OnKillfocusMaxsectsedit();
