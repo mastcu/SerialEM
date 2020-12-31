@@ -177,6 +177,7 @@ CEMscope::CEMscope()
   mScreenThread = NULL;
   mFilmThread = NULL;
   mApertureThread = NULL;
+  mSynchronousThread = NULL;
   for (i = 0; i < MAX_LONG_THREADS; i++)
     mLongOpThreads[i] = NULL;
   for (i = 0; i < MAX_LONG_OPERATIONS; i++) {
@@ -307,6 +308,7 @@ CEMscope::CEMscope()
   mJeolSD.useCLA2forSTEM = false;
 
   mJeolSD.relaxStartTime = mJeolSD.relaxEndTime = GetTickCount();
+  mJeolSD.rampupStartTime = -1.;
   mJeolSD.internalMagTime = -1.;
   mJeolSD.changedMagTime = -1.;
   mJeolSD.skipMagEventTime = 700;
@@ -327,6 +329,7 @@ CEMscope::CEMscope()
   mJeolSD.miniBaseFocus = 0x8000;
   mJeolSD.relaxingLenses = false;
   mC2IntensityFactor[0] = mC2IntensityFactor[1] = 1.;
+  mAddToRawIntensity = 0.;
   mJeolUpdateSleep = 200;
   mInitializeJeolDelay = 3000;
   mUpdateByEvent = true;
@@ -402,10 +405,12 @@ CEMscope::CEMscope()
   mUsePLforIS = false;
   mJeolHasNitrogenClass = false;
   mJeolHasExtraApertures = false;
+  mSequentialLensRelax = false;
   mJeolHasBrightnessZoom = false;
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 45;
   mJeolEmissionTimeout = 180;
+  mBeamRampupTimeout = 0;
   mAdjustForISSkipBacklash = -1;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
@@ -468,6 +473,9 @@ CEMscope::CEMscope()
   mXLensModeAvailable = 0;
   mTiltSpeedFactor = 0.;
   mRestoreStageXYdelay = 100;
+  mIdleTimeToCloseValves = 0;
+  mUpdateDuringAreaChange = false;
+  mDetectorOffsetX = mDetectorOffsetY = 0.;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -644,9 +652,11 @@ int CEMscope::Initialize()
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
       mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0) |
-        (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0);
+        (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0) |
+        (mSequentialLensRelax ? JEOL_SEQUENTIAL_RELAX : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
+      mJeolParams.beamRampupTimeout = mBeamRampupTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
       mJeolSD.pairedDetectorID = mPairedDetectorID;
@@ -1089,12 +1099,17 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     return;
   }
 
+  mAutosaveCount++;
   if (!sInitialized || mSelectedSTEM < 0)
     return;
+  mWinApp->ManageBlinkingPane(GetTickCount());
+
   if (sSuspendCount > 0) {
     sSuspendCount--;
     return;
   }
+  if ((mChangingLDArea && !mUpdateDuringAreaChange) || mSynchronousThread)
+    return;
 
   // Routine makes no direct calls to JEOL so doesn't need scope mutex, but does
   // need the data mutex to access thread data
@@ -1355,8 +1370,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
           indOldIS = LookupRingIS(lastMag, changedJeolEFTEM);
           // However it is gotten, adjust the IS stored on the ring
           if (indOldIS >= 0) {
-            ISX = mJeolSD.ringISX[indOldIS] - oldTab->neutralISX[oldNeutralInd];
-            ISY = mJeolSD.ringISY[indOldIS] - oldTab->neutralISY[oldNeutralInd]; 
+            ISX = mJeolSD.ringISX[indOldIS] - (oldTab->neutralISX[oldNeutralInd] + 
+              mDetectorOffsetX);
+            ISY = mJeolSD.ringISY[indOldIS] - (oldTab->neutralISY[oldNeutralInd] + 
+              mDetectorOffsetY); 
             if (mApplyISoffset) {
               ISX -= oldTab->calOffsetISX[oldOffCalInd];
               ISY -= oldTab->calOffsetISY[oldOffCalInd];
@@ -1391,8 +1408,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (manageISonMagChg && (changedJeolEFTEM ||
         !shiftManager->CanTransferIS(lastMag, magIndex, STEMmode != 0))) {
         if (!JEOLscope) {
-          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX);
-          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY);
+          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX + 
+            mDetectorOffsetX);
+          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY + 
+            mDetectorOffsetY);
         }
 
         // convert to specimen coords and back to new IS coords at new mag and modify del
@@ -1595,7 +1614,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   // When count is up, check for autosaving of settings, navigator
-  if (mAutosaveCount++ > AUTOSAVE_INTERVAL_MIN * 60000 / mUpdateInterval) {
+  if (mAutosaveCount > AUTOSAVE_INTERVAL_MIN * 60000 / mUpdateInterval) {
     mAutosaveCount = 0;
     mWinApp->mDocWnd->AutoSaveFiles();
   }
@@ -1605,11 +1624,29 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     mWinApp->mCamera->CheckAndFreeK2References(false);
   }
 
-  // Check if valves should be closed
+  // Check if valves should be closed due to message box up
   if (sCloseValvesInterval > 0. && 
     SEMTickInterval(sCloseValvesStart) > sCloseValvesInterval) {
     SetColumnValvesOpen(false);
     sCloseValvesInterval = 0.;
+  }
+
+  // Or if the option is set to close after inactivity
+  if (mIdleTimeToCloseValves > 0 && SEMTickInterval(mWinApp->GetLastActivityTime()) >
+    60000. * mIdleTimeToCloseValves) {
+    if (!mClosedValvesAfterIdle && GetColumnValvesOpen() > 0) {
+      mClosedValvesAfterIdle = true;
+      SetColumnValvesOpen(false, true);
+      if (mNoColumnValve)
+        PrintfToLog("Turned off beam after %d minutes of inactivity",
+          mIdleTimeToCloseValves);
+      else
+        PrintfToLog("Closed valve%s after %d minutes of inactivity",
+          JEOLscope ? "" : "s", mIdleTimeToCloseValves);
+    }
+    mClosedValvesAfterIdle = true;
+  } else {
+    mClosedValvesAfterIdle = false;
   }
 
   if (mPlugFuncs->DoingUpdate) {
@@ -1678,8 +1715,10 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
     if (mUseIllumAreaForC2) {
       PLUGSCOPE_GET(IlluminatedArea, rawIntensity, 1.e4);
       rawIntensity = IllumAreaToIntensity(rawIntensity);
-    } else
+    } else {
       PLUGSCOPE_GET(Intensity, rawIntensity, 1.);
+      rawIntensity += mAddToRawIntensity;
+    }
     PLUGSCOPE_GET(SpotSize, spotSize, 1);
     // TEMP FOR BAD VM!
     if (!sCheckPosOnScreenError)
@@ -2740,14 +2779,14 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
     if (jeolEFTEM) {
 
       // When JEOL EFTEM is switching, the neutral index has the new state, needed here
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + 
+      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
         (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISX[mNeutralIndex] : 0.);
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + 
+      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
         (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISY[mNeutralIndex] : 0.);
     } else {
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + 
+      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
         mMagTab[mLastMagIndex].offsetISX;
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + 
+      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
         mMagTab[mLastMagIndex].offsetISY;
     }
   } else if (JEOLscope) {
@@ -3497,12 +3536,12 @@ int CEMscope::LookupSTEMmagFEI(double curMag, int curMode, double & minDiff)
 // Set the magnification by its index
 BOOL CEMscope::SetMagIndex(int inIndex)
 {
-  double tranISX, tranISY, focusStart, startTime, startISX, startISY, curISX, curISY;
+  double tranISX, tranISY, curISX, curISY;
   double axisISX, axisISY;
   BOOL result = true;
-  BOOL convertIS, restoreIS, ifSTEM, normAll;
-  bool focusChanged = false, ISchanged, unblankAfter;
-  int mode, newmode, lowestM, ticks;
+  BOOL convertIS, restoreIS, ifSTEM;
+  bool unblankAfter;
+  int lowestM, ticks;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   const char *routine = "SetMagIndex";
   ScaleMat bsmFrom, bsmTo;
@@ -3519,7 +3558,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   }
   if (!sInitialized)
     return false;
-  
+
   int currentIndex = GetMagIndex(true);
   if (currentIndex == inIndex)
     return true;
@@ -3552,7 +3591,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
         (bsmFrom.xpx * posChangingISX + bsmFrom.xpy * posChangingISY);
       delBSY = bsmTo.ypx * newPCX + bsmTo.ypy * newPCY -
         (bsmFrom.ypx * posChangingISX + bsmFrom.ypy * posChangingISY);
-      /*PrintfToLog("PCIS %.3f %.3f  newPC %.3f %.3f delBS %.5g %.5g", posChangingISX, 
+      /*PrintfToLog("PCIS %.3f %.3f  newPC %.3f %.3f delBS %.5g %.5g", posChangingISX,
       posChangingISY, newPCX, newPCY, delBSX, delBSY);*/
     }
   }
@@ -3563,107 +3602,31 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   SaveISifNeeded(currentIndex, inIndex);
   if (!ifSTEM)
     restoreIS = AssessRestoreIS(currentIndex, inIndex, tranISX, tranISY);
-  try {
 
-    unblankAfter = BlankTransientIfNeeded(routine);
-    
-    if (JEOLscope) { 
+  unblankAfter = BlankTransientIfNeeded(routine);
+  mSynchroTD.initialSleep = 0;
+  mSynchroTD.ifSTEM = ifSTEM;
+  mSynchroTD.lowestM = lowestM;
 
-      // JEOL STEM dies if mag is changed too soon after last image; 
-      if (ifSTEM && !camParam->pluginName.IsEmpty()) {
-        ticks = (int)SEMTickInterval(1000. * mWinApp->mCamera->GetLastImageTime());
-        if (ticks < mJeolSTEMPreMagDelay)
-          Sleep(mJeolSTEMPreMagDelay - ticks);
-      }
-      ticks = GetTickCount();
-      PLUGSCOPE_SET(MagnificationIndex, inIndex);
-      WaitForLensRelaxation(RELAX_FOR_MAG, ticks);
+  // JEOL STEM dies if mag is changed too soon after last image; 
+  if (JEOLscope && ifSTEM && !camParam->pluginName.IsEmpty()) {
+    ticks = (int)SEMTickInterval(1000. * mWinApp->mCamera->GetLastImageTime());
+    mSynchroTD.initialSleep = B3DMAX(0, mJeolSTEMPreMagDelay - ticks);
+  }
+  if (ifSTEM)
+    mSynchroTD.STEMmag = mMagTab[inIndex].STEMmag;
 
-    } else {  // FEIlike
+  result = RunSynchronousThread(SYNCHRO_DO_MAG, inIndex, currentIndex, routine);
+  UnblankAfterTransient(unblankAfter, routine);
+  if (result) {
+    if (!ifSTEM) {
+      mLastNormalization = mSynchroTD.lastNormalizationTime;
+      mLastNormMagIndex = inIndex;
+    } else
+      mProbeMode = mSynchroTD.newProbeMode;
 
-      if (HitachiScope && !ifSTEM) {
-        focusStart = mPlugFuncs->GetAbsFocus();
-        mPlugFuncs->GetImageShift(&startISX, &startISY);
-      }
-    
-      // Tecnai: if in diffraction mode, set back to imaging
-      if (!currentIndex) {
-        if (mPlugFuncs->SetImagingMode)
-          mPlugFuncs->SetImagingMode(pmImaging);
-      }
-
-      if (ifSTEM) {
-        PLUGSCOPE_GET(ProbeMode, mode, 1);
-        mode = (mode == imMicroProbe ? 1 : 0);
-        newmode = inIndex >= mLowestMicroSTEMmag ? 1 : 0;
-        if (mode != newmode) {
-          PLUGSCOPE_SET(ProbeMode, (newmode ? imMicroProbe : imNanoProbe));
-          mProbeMode = newmode;
-        }
-        PLUGSCOPE_SET(STEMMagnification, mMagTab[inIndex].STEMmag);
-      } else {
-
-        // Disable autonormalization, change mag, normalize and reenable
-        AUTONORMALIZE_SET(*vFalse);
-        PLUGSCOPE_SET(MagnificationIndex, inIndex);
-
-        // Hitachi needs to poll and make sure associated changes are done
-        if (HitachiScope) {
-          startTime = GetTickCount();
-          ISchanged = inIndex >= mLowestMModeMagInd && inIndex < mLowestSecondaryMag;
-          while (1) {
-            if (SEMTickInterval(startTime) > mHitachiMagFocusDelay ||
-              (focusChanged && SEMTickInterval(startTime) > mHitachiMagISDelay)) {
-              SEMTrace('i', "Timeout waiting for %s %s %s change", 
-                focusChanged ? "" : "focus", ISchanged || focusChanged ? "" : "and",
-                ISchanged ? "" : "IS");
-              break;
-            }
-            if (!focusChanged && focusStart != mPlugFuncs->GetAbsFocus()) {
-              focusChanged = true;
-              SEMTrace('i', "Focus change seen in %.0f", SEMTickInterval(startTime));
-            }
-            if (!ISchanged) {
-              mPlugFuncs->GetImageShift(&curISX, &curISY);
-              ISchanged = curISX != startISX || curISY != startISY;
-              if (ISchanged)
-              SEMTrace('i', "IS change seen in %.0f", SEMTickInterval(startTime));
-            }
-            if (focusChanged && ISchanged)
-              break;
-            Sleep(30);
-          }
-        }
-
-        if (mPlugFuncs->NormalizeLens && mCalNeutralStartMag < 0) {
-
-          // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
-          // or always if option is 2.  This used to do condenser in addition, but now
-          // it does "all", which adds objective
-          normAll = !ifSTEM && (!BOOL_EQUIV(currentIndex < lowestM, inIndex < lowestM) ||
-            (inIndex < lowestM && mNormAllOnMagChange > 0) || mNormAllOnMagChange > 1);
-          if (normAll && FEIscope) {
-            mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
-          } else {
-            mPlugFuncs->NormalizeLens(pnmProjector);
-            if (normAll) {
-              mPlugFuncs->NormalizeLens(nmCondenser);
-              mPlugFuncs->NormalizeLens(pnmObjective);
-            }
-          }
-        }
-        mLastNormalization = GetTickCount();
-        mLastNormMagIndex = inIndex;
-
-        AUTONORMALIZE_SET(*vTrue);
-
-      }
-    }
-    UnblankAfterTransient(unblankAfter, routine);
-    
     // set so that this is not detected as a user change
     SetMagChanged(inIndex);
-    mLastNormalization = GetTickCount();
 
     // Mode used to be handled here too.
     // Plugin changes the mode after the delay, but not the mag.
@@ -3679,10 +3642,6 @@ BOOL CEMscope::SetMagIndex(int inIndex)
     if (IS_FALCON2_OR_3(camParam))
       mShiftManager->SetGeneralTimeOut(mLastNormalization, mFalconPostMagDelay);
     HandleNewMag(inIndex);
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting magnification "));
-    result = false;
   }
 
   // If there is change in base image shift or mag change resets it, then put out the
@@ -3712,6 +3671,112 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   }
   ScopeMutexRelease(routine);
   return result;
+}
+
+BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
+{
+  DWORD ticks;
+  double focusStart, startTime, startISX, startISY, curISX, curISY;
+  bool focusChanged = false, ISchanged, normAll;
+  int mode;
+  int currentIndex = sytd->curIndex, inIndex = sytd->newIndex;
+  try {
+    if (JEOLscope) {
+
+      if (sytd->initialSleep > 0)
+        Sleep(sytd->initialSleep);
+
+      ticks = GetTickCount();
+      PLUGSCOPE_SET(MagnificationIndex, inIndex);
+      WaitForLensRelaxation(RELAX_FOR_MAG, ticks);
+
+    } else {  // FEIlike
+
+      if (HitachiScope && !sytd->ifSTEM) {
+        focusStart = mPlugFuncs->GetAbsFocus();
+        mPlugFuncs->GetImageShift(&startISX, &startISY);
+      }
+
+      // Tecnai: if in diffraction mode, set back to imaging
+      if (!currentIndex) {
+        if (mPlugFuncs->SetImagingMode)
+          mPlugFuncs->SetImagingMode(pmImaging);
+      }
+
+      if (sytd->ifSTEM) {
+        PLUGSCOPE_GET(ProbeMode, mode, 1);
+        mode = (mode == imMicroProbe ? 1 : 0);
+        sytd->newProbeMode = inIndex >= sytd->lowestMicroSTEMmag ? 1 : 0;
+        if (mode != sytd->newProbeMode) {
+          PLUGSCOPE_SET(ProbeMode, (sytd->newProbeMode ? imMicroProbe : imNanoProbe));
+        }
+        PLUGSCOPE_SET(STEMMagnification, sytd->STEMmag);
+      } else {
+
+        // Disable autonormalization, change mag, normalize and reenable
+        AUTONORMALIZE_SET(*vFalse);
+        PLUGSCOPE_SET(MagnificationIndex, inIndex);
+
+        // Hitachi needs to poll and make sure associated changes are done
+        if (HitachiScope) {
+          startTime = GetTickCount();
+          ISchanged = inIndex >= sytd->lowestMModeMagInd && inIndex < sytd->lowestSecondaryMag;
+          while (1) {
+            if (SEMTickInterval(startTime) > sytd->HitachiMagFocusDelay ||
+              (focusChanged && SEMTickInterval(startTime) > sytd->HitachiMagISDelay)) {
+              SEMTrace('i', "Timeout waiting for %s %s %s change",
+                focusChanged ? "" : "focus", ISchanged || focusChanged ? "" : "and",
+                ISchanged ? "" : "IS");
+              break;
+            }
+            if (!focusChanged && focusStart != mPlugFuncs->GetAbsFocus()) {
+              focusChanged = true;
+              SEMTrace('i', "Focus change seen in %.0f", SEMTickInterval(startTime));
+            }
+            if (!ISchanged) {
+              mPlugFuncs->GetImageShift(&curISX, &curISY);
+              ISchanged = curISX != startISX || curISY != startISY;
+              if (ISchanged)
+                SEMTrace('i', "IS change seen in %.0f", SEMTickInterval(startTime));
+            }
+            if (focusChanged && ISchanged)
+              break;
+            Sleep(30);
+          }
+        }
+
+        if (mPlugFuncs->NormalizeLens && sytd->normalize > 0) {
+
+          // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
+          // or always if option is 2.  This used to do condenser in addition, but now
+          // it does "all", which adds objective
+          normAll = !sytd->ifSTEM && (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM, sytd->newIndex < sytd->lowestM) ||
+            (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) || sytd->normAllOnMagChange > 1);
+          if (normAll && FEIscope) {
+            mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
+          } else {
+            if (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector))
+              mPlugFuncs->NormalizeLens(pnmProjector);
+            if (normAll) {
+              if (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))
+                mPlugFuncs->NormalizeLens(nmCondenser);
+              if (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective))
+                mPlugFuncs->NormalizeLens(pnmObjective);
+            }
+          }
+        }
+        sytd->lastNormalizationTime = GetTickCount();
+
+        AUTONORMALIZE_SET(*vTrue);
+
+      }
+    }
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting magnification "));
+    return false;
+  }
+  return true;
 }
 
 bool CEMscope::SetSTEMMagnification(double magVal)
@@ -3758,10 +3823,10 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
     // If image shifts are not congruent, then get real shift including tilt axis offset
     // and convert to specimen coordinates at old mag then IS coords at new mag
     if (convertIS) {
-      realISX = oldISX + axisISX - mMagTab[fromInd].neutralISX[mNeutralIndex] - 
-        mMagTab[fromInd].offsetISX;
-      realISY = oldISY + axisISY - mMagTab[fromInd].neutralISY[mNeutralIndex] - 
-        mMagTab[fromInd].offsetISY;
+      realISX = oldISX + axisISX - (mMagTab[fromInd].neutralISX[mNeutralIndex] +
+        mDetectorOffsetX) - mMagTab[fromInd].offsetISX;
+      realISY = oldISY + axisISY - (mMagTab[fromInd].neutralISY[mNeutralIndex] +
+        mDetectorOffsetY) - mMagTab[fromInd].offsetISY;
       mShiftManager->TransferGeneralIS(fromInd, realISX, realISY, toInd,
         tranISX, tranISY);
       delISX += tranISX - realISX;
@@ -3787,14 +3852,16 @@ BOOL CEMscope::AssessRestoreIS(int fromInd, int toInd, double &newISX, double &n
   double realISX, realISY;
   if (!SaveOrRestoreIS(toInd, fromInd) || mMagIndSavedIS < 0 || mCalNeutralStartMag >= 0)
     return false;
-  realISX = mSavedISX - mMagTab[mMagIndSavedIS].neutralISX[mNeutralIndex] - 
-    mMagTab[mMagIndSavedIS].offsetISX;
-  realISY = mSavedISY - mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] - 
-    mMagTab[mMagIndSavedIS].offsetISY;
+  realISX = mSavedISX - (mMagTab[mMagIndSavedIS].neutralISX[mNeutralIndex] +
+    mDetectorOffsetX) - mMagTab[mMagIndSavedIS].offsetISX;
+  realISY = mSavedISY - (mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] + 
+    mDetectorOffsetY) - mMagTab[mMagIndSavedIS].offsetISY;
   mShiftManager->TransferGeneralIS(mMagIndSavedIS, realISX, realISY, toInd, newISX, 
     newISY);
-  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mMagTab[toInd].offsetISX;
-  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mMagTab[toInd].offsetISY;
+  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mDetectorOffsetX + 
+    mMagTab[toInd].offsetISX;
+  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mDetectorOffsetY + 
+    mMagTab[toInd].offsetISY;
   mMagIndSavedIS = -1;
   SEMTrace('i', "Restoring raw IS %.3f %.3f, going from %d to %d", newISX, newISY,
     fromInd, toInd);
@@ -4310,7 +4377,8 @@ BOOL CEMscope::NormalizeProjector()
   try {
     // What to do for JEOL? Keep the normalization time in case whatever evoked
     // this call needs some settling anyway
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector)))
+    {
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmProjector);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4342,7 +4410,7 @@ BOOL CEMscope::NormalizeCondenser()
 
   try {
     // This is not available on the JEOL
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))){
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(nmCondenser);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4369,7 +4437,8 @@ BOOL CEMscope::NormalizeObjective()
   ScopeMutexAcquire(routine, true);
 
   try {
-    if (mPlugFuncs->NormalizeLens) {
+    if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective)))
+    {
       unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmObjective);
       UnblankAfterTransient(unblankAfter, routine);
@@ -4388,36 +4457,65 @@ BOOL CEMscope::NormalizeAll(int illumProj)
 {
   BOOL success = true;
   bool unblankAfter;
+  CString str;
   const char *routine = "NormalizeAll";
 
   if (!sInitialized)
     return false;
-  if (!FEIscope) {
-    SEMMessageBox("The NormalizeAll function is available only for FEI scopes");
+  if (!(FEIscope || (JEOLscope && !((illumProj & 1) && !SEMLookupJeolRelaxData(nmAll)) &&
+    !((illumProj & 2) && !SEMLookupJeolRelaxData(pnmAll))))) {
+    if (JEOLscope) {
+      str.Format("The NormalizeAll function is available for JEOL\n"
+        "only with one or two of the lens groups defined\n"
+        " with the JeolLensRelaxProgram property with indexes %d and %d", pnmAll, nmAll);
+        SEMMessageBox(str);
+    } else
+      SEMMessageBox("The NormalizeAll function is not available for this scope");
     return false;
   }
 
-  ScopeMutexAcquire(routine, true);
-  try {
-    if (mPlugFuncs->NormalizeLens) {
-      unblankAfter = BlankTransientIfNeeded(routine);
-      if (!illumProj) {
-        mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
-      } else {
-        if (illumProj & 1)
-          mPlugFuncs->NormalizeLens(nmAll);
-        if (illumProj & 2)
-          mPlugFuncs->NormalizeLens(pnmAll);
-      }
-      UnblankAfterTransient(unblankAfter, routine);
+  if (mPlugFuncs->NormalizeLens) {
+    unblankAfter = BlankTransientIfNeeded(routine);
+    if (!illumProj) {
+      success = RunSynchronousThread(SYNCHRO_DO_NORM, ALL_INSTRUMENT_LENSES, 0, NULL);
+    } else {
+      if (illumProj & 1)
+        success = RunSynchronousThread(SYNCHRO_DO_NORM, nmAll, 0, NULL);
+      if (success && (illumProj & 2))
+        success = RunSynchronousThread(SYNCHRO_DO_NORM, pnmAll, 0, NULL);
     }
+    UnblankAfterTransient(unblankAfter, routine);
+  }
+  return success;
+}
+
+BOOL CEMscope::NormalizeKernel(SynchroThreadData *sytd)
+{
+  try {
+    mPlugFuncs->NormalizeLens(sytd->newIndex);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("normalizing all lenses "));
-    success = false;
+    SEMReportCOMError(E, _T("normalizing lenses "));
+    return false;
   }
-  ScopeMutexRelease(routine);
-  return success;
+  return true;
+}
+
+// Look through the array of lens programs for one matching the normalization index
+LensRelaxData *SEMLookupJeolRelaxData(int normInd)
+{
+  CEMscope *scope = ((CSerialEMApp *)AfxGetApp())->mScope;
+  LensRelaxData *ret;
+  CArray<LensRelaxData, LensRelaxData> *relaxProgs = scope->GetLensRelaxProgs();
+  int ind;
+  for (ind = 0; ind < (int)relaxProgs->GetSize(); ind++) {
+    LensRelaxData &relax = relaxProgs->ElementAt(ind);
+    if (relax.normIndex == normInd) {
+      ret = relaxProgs->GetData();
+      return &ret[ind];
+    }
+  }
+  return NULL;
 }
 
 /* Return Defocus in Microns */
@@ -4803,6 +4901,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
     return;
 
   mChangingLDArea = -1;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "CHANGING LD AREA");
 
   // Use designated params if set by nav helper, otherwise use set area params
   if (!mLdsaParams)
@@ -4828,7 +4928,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
   if (bDebug || lDebug)
-    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f", newArea, GetDefocus());
+    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea, GetDefocus(), mAutosaveCount);
   if (bDebug && lDebug && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
     GetBeamTilt(curISX, curISY);
@@ -4928,6 +5028,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // and impose accumulated beam shifts from this mode after translating to new mode
   // First back off a beam shift; it didn't work to include that in the converted shift
   // But then defer the probe change if going out of LM
+  Sleep(2);
   if (ldArea->probeMode >= 0) {
     if (mProbeMode != ldArea->probeMode || (leavingLowMag && oldArea < 0)) {
       if (oldArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
@@ -4940,6 +5041,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     }
   } else
     ldArea->probeMode = mProbeMode;
+  SleepMsg(2);
 
   // Mag and spot size will be set only if they change.  Do intensity unconditionally
   // If something is not initialized, set it up with current value
@@ -4952,6 +5054,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     } else
       ldArea->spotSize = GetSpotSize();
   }
+  SleepMsg(2);
 
   // Set alpha before mag if it is changing to a lower mag since scope can impose a beam
   // shift in the mag change that may depend on alpha  The reason for doing THIS at a 
@@ -4981,10 +5084,12 @@ void CEMscope::GotoLowDoseArea(int newArea)
       ldArea->diffFocus = GetDiffractionFocus();
   }
   magTime = GetTickCount();
+  SleepMsg(2);
 
   // Now that mag is done, do the probe change if coming out of LM
   if (!probeDone)
     SetProbeMode(ldArea->probeMode, true);
+  SleepMsg(2);
 
   // For FEI, set spot size (if it isn't right) again because mag range change can set 
   // spot size; afraid to just move spot size change down here because of note above
@@ -5062,6 +5167,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       mWinApp->mAutocenDlg->ManageLDtrackText(manage);
   } else if (!STEMmode)
     ldArea->intensity = GetIntensity();
+  SleepMsg(2);
 
   // Shift image now after potential mag change
   if (!ISdone)
@@ -5119,7 +5225,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     SEMTrace('L', "LD: from %d to %d  was %.3f, %.3f  inc by %.3f, %.3f  now %.3f, %.3f",
       oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
   if (GetDebugOutput('l')) {
-    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f\r\n", GetDefocus());
+    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f update count %d\r\n", GetDefocus(), mAutosaveCount);
     if (GetDebugOutput('b') && !STEMmode) {
       GetBeamShift(curISX, curISY);
       GetBeamTilt(curISX, curISY);
@@ -5128,6 +5234,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   mLdsaParams = NULL;
   mChangingLDArea = 0;
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mWinApp->UpdateBufferWindows();
   mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
 }
 
@@ -5392,6 +5500,7 @@ double CEMscope::GetIntensity()
 
   try {
     PLUGSCOPE_GET(Intensity, result, 1.);
+    result += mAddToRawIntensity;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting beam intensity "));
@@ -5423,7 +5532,7 @@ BOOL CEMscope::SetIntensity(double inVal, int spot, int probe)
   ScopeMutexAcquire("SetIntensity", true);
 
   try {
-    PLUGSCOPE_SET(Intensity, inVal);
+    PLUGSCOPE_SET(Intensity, inVal - mAddToRawIntensity);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting beam intensity "));
@@ -5633,7 +5742,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
   BOOL result = true;
   int curSpot = -1;
   bool fixBeam, unblankAfter;
-  double startTime, beamXorig, beamYorig, curBSX, curBSY, startBSX, startBSY;
+  double beamXorig, beamYorig;
   const char *routine = "SetSpotSize";
 
   if (!sInitialized || inIndex < mMinSpotSize)
@@ -5645,30 +5754,54 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
     return true;
 
   // If we have calibrated shift, get starting beam shift as basis for fix
-  fixBeam = curSpot >= mMinSpotWithBeamShift[mSecondaryMode] && 
+  fixBeam = curSpot >= mMinSpotWithBeamShift[mSecondaryMode] &&
     curSpot <= mMaxSpotWithBeamShift[mSecondaryMode] &&
-    inIndex >= mMinSpotWithBeamShift[mSecondaryMode] && 
+    inIndex >= mMinSpotWithBeamShift[mSecondaryMode] &&
     inIndex <= mMaxSpotWithBeamShift[mSecondaryMode];
   if (fixBeam)
     GetBeamShift(beamXorig, beamYorig);
 
-  ScopeMutexAcquire(routine, true);
+  unblankAfter = BlankTransientIfNeeded(routine);
+
+  // Change the spot size.  
+  mSynchroTD.normalize = normalize;
+  result = RunSynchronousThread(SYNCHRO_DO_SPOT, inIndex, curSpot, NULL);
+
+  UnblankAfterTransient(unblankAfter, routine);
+  if (normalize > 0)
+    mLastNormalization = mSynchroTD.lastNormalizationTime;
+
+  // Finally, call the routine to set the fixed beam shift
+  if (result && fixBeam) {
+    beamXorig += mSpotBeamShifts[mSecondaryMode][inIndex][0] -
+      mSpotBeamShifts[mSecondaryMode][curSpot][0];
+    beamYorig += mSpotBeamShifts[mSecondaryMode][inIndex][1] -
+      mSpotBeamShifts[mSecondaryMode][curSpot][1];
+    SEMTrace('b', "Fixing BS to %f %f", beamXorig, beamYorig);
+    SetBeamShift(beamXorig, beamYorig);
+  }
+  return result;
+}
+
+// Does the real work, is called from the synchronous thread
+BOOL CEMscope::SetSpotKernel(SynchroThreadData *sytd)
+{
+  double startTime, curBSX, curBSY, startBSX, startBSY;
 
   try {
-    unblankAfter = BlankTransientIfNeeded(routine);
-     
-    // Change the spot size.  If normalization requested (or forbidden), disable autonorm,
-    // then later normalize, and set normalization time to give some delay
-    if (normalize)
-      AUTONORMALIZE_SET(*vFalse);
 
+    // If normalization requested(or forbidden), disable autonorm,
+    // then later normalize, and set normalization time to give some delay 
+    if (sytd->normalize)
+      AUTONORMALIZE_SET(*vFalse);
+    
     // Hitachi hysteresis is ferocious.  Things are somewhat stable by always going up
     // from spot 1 instead of down.
     if (HitachiScope) {
-      if (inIndex < curSpot) {
-        for (int i = 1; i < inIndex; i++) {
+      if (sytd->newIndex < sytd->curIndex) {
+        for (int i = 1; i < sytd->newIndex; i++) {
           mPlugFuncs->SetSpotSize(i);
-          Sleep(mHitachiSpotStepDelay);
+          Sleep(sytd->HitachiSpotStepDelay);
         }
       }
 
@@ -5678,14 +5811,14 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 
     // Make final change to spot size
     startTime = GetTickCount();
-    PLUGSCOPE_SET(SpotSize, inIndex);
+    PLUGSCOPE_SET(SpotSize, sytd->newIndex);
     WaitForLensRelaxation(RELAX_FOR_SPOT, startTime);
 
     // Wait for a beam shift to show up on Hitachi
     if (HitachiScope) {
       startTime = GetTickCount();
       while (1) {
-        if (SEMTickInterval(startTime) > mHitachiSpotBeamWait) {
+        if (SEMTickInterval(startTime) > sytd->HitachiSpotBeamWait) {
           SEMTrace('b', "Timeout waiting for beam shift change after spot change");
           break;
         }
@@ -5700,33 +5833,22 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
     }
 
     // Then normalize if selected
-    if (normalize > 0) {
-      if (mPlugFuncs->NormalizeLens)
+    if (sytd->normalize > 0) {
+      if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(nmSpotsize)))
         mPlugFuncs->NormalizeLens(nmSpotsize);
-      mLastNormalization = GetTickCount();
+      sytd->lastNormalizationTime = GetTickCount();
     }
 
     // Re-enable autonormalization
-    if (normalize)
+    if (sytd->normalize)
       AUTONORMALIZE_SET(*vTrue);
-    UnblankAfterTransient(unblankAfter, routine);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting spot size "));
-    result = false;
+    return false;
   }
-  ScopeMutexRelease(routine);
 
-  // Finally, call the routine to set the fixed beam shift
-  if (result && fixBeam) {
-    beamXorig += mSpotBeamShifts[mSecondaryMode][inIndex][0] - 
-      mSpotBeamShifts[mSecondaryMode][curSpot][0];
-    beamYorig += mSpotBeamShifts[mSecondaryMode][inIndex][1] - 
-      mSpotBeamShifts[mSecondaryMode][curSpot][1];
-    SEMTrace('b', "Fixing BS to %f %f", beamXorig, beamYorig);
-    SetBeamShift(beamXorig, beamYorig);
-  }
-  return result;
+  return true;
 }
 
 // Get alpha value on JEOL, or -999
@@ -5762,23 +5884,26 @@ int CEMscope::FastAlpha(void)
 BOOL CEMscope::SetAlpha(int inIndex)
 {
   BOOL result = true;
-  double startTime = GetTickCount();
   if (!sInitialized || mHasNoAlpha)
     return false;
 
-  ScopeMutexAcquire("SetAlpha", true);
+  return RunSynchronousThread(SYNCHRO_DO_ALPHA, inIndex, 0, NULL);
+}
+
+BOOL CEMscope::SetAlphaKernel(SynchroThreadData *sytd)
+{
+  double startTime = GetTickCount();
 
   // It will check the current alpha
   try {
-    mPlugFuncs->SetAlpha(inIndex);
+    mPlugFuncs->SetAlpha(sytd->newIndex);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting alpha value "));
-    result = false;
+    return false;
   }
-  ScopeMutexRelease("SetAlpha");
   WaitForLensRelaxation(RELAX_FOR_ALPHA, startTime);
-  return result;
+  return true;
 }
 
 // Get GIF mode on JEOL
@@ -6450,7 +6575,6 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
   if (ReadProbeMode() == (micro ? 1 : 0))
     return true;
 
-  ScopeMutexAcquire("SetProbeMode", true);
   if (fromLowDose && mFirstBeamXforProbe > EXTRA_VALUE_TEST && FEIscope) {
     magInd = GetMagIndex();
     fromMat = mShiftManager->GetBeamShiftCal(magInd, -3333, micro ? 0 : 1);
@@ -6458,62 +6582,69 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
     adjustShift = toMat.xpx != 0. && fromMat.xpx != 0.;
   }
 
-  try {
     // This is not available on the JEOL
     // In TEM mode, save and restore image shift and adjust focus if option is on
-    if (FEIscope) {
-      ifSTEM = GetSTEMmode();
-      if (!ifSTEM) { 
-        if (!GetImageShift(ISX, ISY))
-          success = false;
-        if (adjustFocus)
-          delFocus = GetDefocus() - mFirstFocusForProbe;
-        if (adjustShift) {
-          if (GetBeamShift(beamX, beamY)) {
-            beamX -= mFirstBeamXforProbe;
-            beamY -= mFirstBeamYforProbe;
-            toMat = MatMul(MatInv(fromMat), toMat);
-            toBeamX = beamX * toMat.xpx + beamY * toMat.xpy;
-            toBeamY = beamX * toMat.ypx + beamY * toMat.ypy;
-            SEMTrace('b', "Probe change  first beam %.3f %.3f  net change %.3f %.3f  "
-              "converted %.3f %.3f",
-              mFirstBeamXforProbe, mFirstBeamYforProbe, beamX, beamY, toBeamX, toBeamY);
-          } else
-            success = false;
-        }
-        
-      }
-      PLUGSCOPE_SET(ProbeMode, (micro ? imMicroProbe : imNanoProbe));
-      mReturnedProbeMode = mProbeMode = micro ? 1 : 0;
-      if (!ifSTEM) {
-        mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostProbeDelay);
-        if (success && !SetImageShift(ISX, ISY))
-          success = false;
-        if (adjustFocus && delFocus) {
-          IncDefocus(delFocus);
-        }
-        if (success && adjustShift) {
-          if (GetBeamShift(beamX, beamY)) {
-            SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY,
-              beamX + toBeamX, beamY + toBeamY);
-            if (!SetBeamShift(beamX + toBeamX, beamY + toBeamY))
-              success = false;
-          } else {
-            success = false;
-          }
-        }
-        mFirstFocusForProbe = GetDefocus();
-        if (!GetBeamShift(mFirstBeamXforProbe, mFirstBeamYforProbe))
+  if (FEIscope) {
+    ifSTEM = GetSTEMmode();
+    if (!ifSTEM) {
+      if (!GetImageShift(ISX, ISY))
+        success = false;
+      if (adjustFocus)
+        delFocus = GetDefocus() - mFirstFocusForProbe;
+      if (adjustShift) {
+        if (GetBeamShift(beamX, beamY)) {
+          beamX -= mFirstBeamXforProbe;
+          beamY -= mFirstBeamYforProbe;
+          toMat = MatMul(MatInv(fromMat), toMat);
+          toBeamX = beamX * toMat.xpx + beamY * toMat.xpy;
+          toBeamY = beamX * toMat.ypx + beamY * toMat.ypy;
+          SEMTrace('b', "Probe change  first beam %.3f %.3f  net change %.3f %.3f  "
+            "converted %.3f %.3f",
+            mFirstBeamXforProbe, mFirstBeamYforProbe, beamX, beamY, toBeamX, toBeamY);
+        } else
           success = false;
       }
+
     }
+    if (!RunSynchronousThread(SYNCHRO_DO_PROBE, (micro ? imMicroProbe : imNanoProbe),
+      0, NULL))
+      return false;
+    mReturnedProbeMode = mProbeMode = micro ? 1 : 0;
+    if (!ifSTEM) {
+      mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostProbeDelay);
+      if (success && !SetImageShift(ISX, ISY))
+        success = false;
+      if (adjustFocus && delFocus) {
+        IncDefocus(delFocus);
+      }
+      if (success && adjustShift) {
+        if (GetBeamShift(beamX, beamY)) {
+          SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY,
+            beamX + toBeamX, beamY + toBeamY);
+          if (!SetBeamShift(beamX + toBeamX, beamY + toBeamY))
+            success = false;
+        } else {
+          success = false;
+        }
+      }
+      mFirstFocusForProbe = GetDefocus();
+      if (!GetBeamShift(mFirstBeamXforProbe, mFirstBeamYforProbe))
+        success = false;
+    }
+  }
+  return success;
+}
+
+BOOL CEMscope::SetProbeKernel(SynchroThreadData *sytd)
+{
+  try {
+    mPlugFuncs->SetProbeMode(sytd->newIndex);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting probe mode "));
-    success = false;
+    return false;
   }
-  ScopeMutexRelease("SetProbeMode");
-  return success;
+  return true;
 }
 
 // Get microprobe/nanoprobe on FEI or return the default value for TEM/STEM on other scope
@@ -8613,7 +8744,116 @@ int CEMscope::StopLongOperation(bool exiting, int index)
   return retval;
 }
 
-void CEMscope::SetMessageBoxArgs(int type, CString &title, CString &message) 
+// Starts a thread and waits for it complete, allowing messages to be processed
+BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
+  const char *routine)
+{
+  int retval;
+  const char *statusText[] = {"CHANGING MAG", "CHANGING SPOT", "CHANGING PROBE",
+    "CHANGING ALPHA", "NORMALIZING"};
+  if (mSynchronousThread)
+    return false;
+
+  // Release the mutex if caller claimed it
+  if (routine)
+    CEMscope::ScopeMutexRelease(routine);
+
+  // Fill the thread data.  Callers are responsible for setting normalize, ifSTEM, 
+  // STEMmag, initialSleep and lowestM is relevant, and setting 
+  // mLastNormalization and mProbeMode afterwards when appropriate
+  mSynchroTD.actionType = action;
+  mSynchroTD.newIndex = newIndex;
+  mSynchroTD.curIndex = curIndex;
+  mSynchroTD.normAllOnMagChange = mNormAllOnMagChange;
+  mSynchroTD.lowestMModeMagInd = mLowestMModeMagInd;
+  mSynchroTD.lowestSecondaryMag = mLowestSecondaryMag;
+  mSynchroTD.lowestMicroSTEMmag = mLowestMicroSTEMmag;
+  mSynchroTD.HitachiMagFocusDelay = mHitachiMagFocusDelay;
+  mSynchroTD.HitachiMagISDelay = mHitachiMagISDelay;
+  mSynchroTD.HitachiSpotBeamWait = mHitachiSpotBeamWait;
+  mSynchroTD.HitachiSpotStepDelay = mHitachiSpotStepDelay;
+
+  // Start the thread
+  double startTime = wallTime();
+  int startCount = mAutosaveCount;
+  mSynchronousThread = AfxBeginThread(SynchronousProc, &mSynchroTD,
+    THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+  mSynchronousThread->m_bAutoDelete = false;
+  mSynchronousThread->ResumeThread();
+
+  // Unless already handled, set an action and update windows
+  if (!mChangingLDArea) {
+    mWinApp->UpdateBufferWindows();
+    mWinApp->SetStatusText(SIMPLE_PANE, statusText[action]);
+  }
+
+  // Wait until done
+  while (1) {
+    retval = UtilThreadBusy(&mSynchronousThread);
+    if (retval <= 0)
+      break;
+    mWinApp->ManageBlinkingPane(GetTickCount());
+    SleepMsg(20);
+  }
+
+  // Restore windows
+  if (!mChangingLDArea) {
+    mWinApp->UpdateBufferWindows();
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
+  }
+
+  // Get mutex back if needed.  Return TRUE on success like other routines
+  if (routine)
+    CEMscope::ScopeMutexAcquire(routine, true);
+  return retval == 0;
+}
+
+// The thread procedure for synchronous threads
+// Get mutex, set up to do operations in thread, and dispatch to proper function
+UINT CEMscope::SynchronousProc(LPVOID pParam)
+{
+  SynchroThreadData *sytd = (SynchroThreadData *)pParam;
+  BOOL retval = true;
+  CoInitializeEx(NULL, COINIT_MULTITHREADED);
+  CEMscope::ScopeMutexAcquire("SynchronousProc", true);
+
+  if (FEIscope && mPlugFuncs->BeginThreadAccess(1, 
+    PLUGFEI_MAKE_ILLUM | PLUGFEI_MAKE_PROJECT)) {
+    SEMMessageBox("Error creating second instance of microscope object for synchronous "
+      "thread");
+    SEMErrorOccurred(1);
+    retval = FALSE;
+  }
+  if (retval) {
+    switch (sytd->actionType) {
+    case SYNCHRO_DO_MAG:
+      retval = SetMagKernel(sytd);
+      break;
+    case SYNCHRO_DO_SPOT:
+      retval = SetSpotKernel(sytd);
+      break;
+    case SYNCHRO_DO_PROBE:
+      retval = SetProbeKernel(sytd);
+      break;
+    case SYNCHRO_DO_ALPHA:
+      retval = SetAlphaKernel(sytd);
+      break;
+    case SYNCHRO_DO_NORM:
+      retval = NormalizeKernel(sytd);
+      break;
+    }
+  }
+
+  if (FEIscope) {
+    mPlugFuncs->EndThreadAccess(1);
+  }
+  CoUninitialize();
+  CEMscope::ScopeMutexRelease("SynchronousProc");
+  return retval ? 0 : 1;
+}
+
+// Message box on scope functions
+void CEMscope::SetMessageBoxArgs(int type, CString &title, CString &message)
 {
   sMessageBoxType = type;
   sMessageBoxTitle = title;

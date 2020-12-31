@@ -30,6 +30,7 @@
 #include "TSController.h"
 #include "Utilities\XCorr.h"
 #include "Shared\iimage.h"
+#include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 
 
@@ -59,6 +60,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mStackWinMaxXY = 512;
   mRotateAxisAngle = false;
   mDrawCrosshairs = false;
+  mDrawTiltAxis = false;
   mUnsignedTruncLimit = 0.01f;
   mSaveAsynchronously = true;
   mSavingThread = NULL;
@@ -66,6 +68,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mAsyncFromImage = false;
   mImageAsyncFailed = false;
   mNextSecToRead = NO_SUPPLIED_SECTION;
+  mHdfUpdateTimePerSect = 0.05f;
 }
 
 EMbufferManager::~EMbufferManager()
@@ -368,6 +371,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (inStore == mWinApp->mStoreMRC)
       toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
   }
+  inStore->SetUpdateTimePerSect(mHdfUpdateTimePerSect);
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
@@ -404,7 +408,12 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   if (extra)
     extra->mDividedBy2 = oldDivided;
   if (err) {
-    ReportError(err);
+    if (inStore->getStoreType() == STORE_TYPE_HDF) {
+      str = ComposeErrorMessage(err, " ");
+      str = str + " :\n" + b3dGetError();
+      SEMMessageBox(str);
+    } else
+      ReportError(err);
     return 1;
   }
 
@@ -658,7 +667,8 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
 
     // IF not reading piece, need to check if this file is a montage;
     if (inStore->getStoreType() == STORE_TYPE_MRC || 
-      inStore->getStoreType() == STORE_TYPE_ADOC) {
+      inStore->getStoreType() == STORE_TYPE_ADOC || 
+      inStore->getStoreType() == STORE_TYPE_HDF) {
       param = *masterMont;
       montErr = inStore->CheckMontage(&param);
 
