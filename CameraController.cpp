@@ -1622,7 +1622,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     offsetY = mISYcameraOffset[currentCam];
     mScope->GetImageShift(shiftX, shiftY);
     mScope->SetDetectorOffsets(offsetX, offsetY);
-    if (lastX != offsetX || lastY != offsetY);
+    if (lastX != offsetX || lastY != offsetY)
       mScope->SetImageShift(shiftX, shiftY);
   }
 
