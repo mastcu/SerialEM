@@ -157,6 +157,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_GOTO_TRIAL, m_butGotoTrial);
   DDX_Control(pDX, IDC_GOTO_RECORD, m_butGotoRecord);
   DDX_Control(pDX, IDC_GOTO_SEARCH, m_butGotoSearch);
+  DDX_Radio(pDX, IDC_GOTO_VIEW, m_iGoToArea);
 }
 
 
@@ -427,6 +428,8 @@ void CLowDoseDlg::OnLowdosemode()
   if (m_iDefineArea > 0)
     TurnOffDefine();
   m_iDefineArea = 0;
+  if (!m_bLowDoseMode)
+    DeselectGoToButtons(-1);
   Update();
 
   // If read buffer is in proper relation to # of rolls, then change it to allow
@@ -1161,6 +1164,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
   m_sbcViewDefocus.SetRange(0, 100);
   m_sbcViewDefocus.SetPos(50);
+  DeselectGoToButtons(-1);
 
   // Assume all variables are set into this dialog
 
@@ -1300,6 +1304,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   CString str;
   CString C2units = mScope->GetC2Units();
 
+  if (inSetArea != mLastSetArea)
+    DeselectGoToButtons(inSetArea);
   if (inSetArea < 0) {
     if (inSetArea != mLastSetArea) {
       m_strMagSpot = "Undefined";
@@ -1312,7 +1318,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     }
     return;
   }
-  
+
   mag = 0;
   if (ldArea->magIndex) {
     MagTable *magTab = mWinApp->GetMagTable() + ldArea->magIndex;
@@ -2352,4 +2358,15 @@ void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
     mLDParams[toArea] = mLDParams[fromArea];
     mLDParams[toArea].delayFactor = delay;
   }
+}
+
+// Make sure all buttons are unselected except the active area if there is one
+void CLowDoseDlg::DeselectGoToButtons(int area)
+{
+  CButton *but;
+  for (int ind = 0; ind < 5; ind++) {
+    but = (CButton *)GetDlgItem(IDC_GOTO_VIEW + ind);
+    but->SetCheck(area == ind ? BST_CHECKED : BST_UNCHECKED);
+  }
+  m_iGoToArea = area;
 }

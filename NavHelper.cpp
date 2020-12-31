@@ -108,6 +108,7 @@ CNavHelper::CNavHelper(void)
   mAutoBacklashMinField = 5.f;
   mAutoBacklashNewMap = 1;  // ASK
   mPointLabelDrawThresh = 15;
+  mUseLabelInFilenames = false;
   mEnableMultiShot = 0;
   mMultiShotParams.beamDiam = 0.2f;
   mMultiShotParams.spokeRad[0] = 0.5f;
@@ -1402,7 +1403,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
                                      ControlSet *conSet, int baseNum, BOOL hideLDoff) 
 {
   ControlSet *conSets = mWinApp->GetConSets();
-  int  binning, xFrame, yFrame, area;
+  int  binning, xFrame, yFrame, area, top, left, bottom, right;
   float defocus;
   StateParams stateParam;
   LowDoseParams *ldp;
@@ -1441,9 +1442,19 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
 
       // Save the conSet and modify it to the map parameters
       mSavedConset = conSets[mRIconSetNum];
-      StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
+      /*StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
         conSets[mRIconSetNum].left, conSets[mRIconSetNum].right, 
-        conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);
+        conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);*/
+      top = mSavedConset.top / binning;
+      left = mSavedConset.left / binning;
+      bottom = mSavedConset.bottom / binning;
+      right = mSavedConset.right / binning;
+      mCamera->AdjustSizes(xFrame, camP->sizeX, camP->moduloX, left, right, yFrame,
+        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera);
+      conSets[mRIconSetNum].top = top * binning;
+      conSets[mRIconSetNum].left = left * binning;
+      conSets[mRIconSetNum].bottom = bottom * binning;
+      conSets[mRIconSetNum].right = right * binning;
       conSets[mRIconSetNum].binning = binning;
 
       if (!mRIuseCurrentLDparams) {
@@ -2465,10 +2476,15 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum)
 // or digits followed by one non-digit before the extension or at the end,
 // will be incremented by 1 and output with the same number of digits or more if needed
 // If there are no digits, a "2" is added before the extension or at the end of the name
-CString CNavHelper::NextAutoFilename(CString inStr)
+CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString newLabel)
 {
   int dirInd, extInd, digInd, curnum, numdig, numroot;
   CString str, format, ext = "";
+  if (mUseLabelInFilenames && !oldLabel.IsEmpty() && oldLabel != newLabel &&
+    inStr.Find(oldLabel) >= 0) {
+    inStr.Replace(oldLabel, newLabel);
+    return inStr;
+  }
   dirInd = inStr.ReverseFind('\\');
   extInd = inStr.ReverseFind('.');
   if (extInd > dirInd && extInd > 0) {
@@ -2570,7 +2586,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
         item->mTSparamIndex = item2->mTSparamIndex;
         *propIndexp = item2->mFilePropIndex;
         *montIndexp = item2->mMontParamIndex;
-        autoName = NextAutoFilename(item2->mFileToOpen);
+        autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, 1);
       }
     } else if (item2->mTSparamIndex < 0) {
@@ -2578,7 +2594,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
         
         // Force a new parameter set if last one is fitting to polygon and this is a 
         // polygon item - otherwise let it inherit the fit
-        autoName = NextAutoFilename(item2->mFileToOpen);
+        autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         if (item2->mMontParamIndex >= 0) {
           montp = mMontParArray->GetAt(item2->mMontParamIndex);
           breakForFit = montp->wasFitToPolygon && item->mType == ITEM_TYPE_POLYGON;
@@ -2591,7 +2607,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
           sched2 = mGroupFiles->GetAt(index);
           *propIndexp = sched2->filePropIndex;
           *montIndexp = sched2->montParamIndex;
-          autoName = NextAutoFilename(sched2->filename);
+          autoName = NextAutoFilename(sched2->filename, item2->mLabel, item->mLabel);
         }
       }
     }
@@ -2659,7 +2675,7 @@ int CNavHelper::SetTSParams(int itemNum)
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2;
   bool needNew = false;
-  int future = 1, futureLDstate = -1, ldMagInd = 0;
+  int future = 1, futureLDstate = -1, ldMagInd = 0, overrideFlags = 0;
   int prevIndex = item->mTSparamIndex;
   CString inheritors;
 
@@ -2669,18 +2685,18 @@ int CNavHelper::SetTSParams(int itemNum)
     mWinApp->mTSController->CopyParamToMaster(tspSrc, false);
     future = 2;
   }
-  
+
   // Set some parameters if montaging: magLocked indicates montaging
   tsp = mWinApp->mTSController->GetTiltSeriesParam();
   tsp->magLocked = item->mMontParamIndex >= 0;
   if (tsp->magLocked) {
     montp = mMontParArray->GetAt(item->mMontParamIndex);
-    mWinApp->mTSController->MontageMagIntoTSparam(montp, tsp);      
+    mWinApp->mTSController->MontageMagIntoTSparam(montp, tsp);
     tsp->binning = montp->binning;
   }
 
   // Find the last state set for a TS param and set the future LD state from it
-  for (i = itemNum; i>= 0; i--) {
+  for (i = itemNum; i >= 0; i--) {
     item2 = mItemArray->GetAt(i);
     if (item2->mTSparamIndex >= 0 && item2->mStateIndex >= 0) {
       StateParams *state = mAcqStateArray->GetAt(item2->mStateIndex);
@@ -2691,7 +2707,17 @@ int CNavHelper::SetTSParams(int itemNum)
     }
   }
 
-  err = mWinApp->mTSController->SetupTiltSeries(future, futureLDstate, ldMagInd);
+  // Set flags for special parameters set in the Nav item
+  if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
+    overrideFlags |= NAV_OVERRIDE_TILT;
+    if (item->mTSbidirAngle > EXTRA_VALUE_TEST)
+      overrideFlags |= NAV_OVERRIDE_BIDIR;
+  }
+  if (item->mTargetDefocus > EXTRA_VALUE_TEST)
+    overrideFlags |= NAV_OVERRIDE_DEF_TARG;
+
+  err = mWinApp->mTSController->SetupTiltSeries(future, futureLDstate, ldMagInd,
+    overrideFlags);
   if (err)
     return err;
 
@@ -2980,6 +3006,14 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
   filename = *namep;
   if (!namep->IsEmpty())
     lpszFileName = (LPCTSTR)filename;
+  else if (mUseLabelInFilenames) {
+    filename = item->mLabel;
+    if (fileType == STORE_TYPE_MRC)
+      filename += ".mrc";
+    if (fileType == STORE_TYPE_TIFF)
+      filename += ".tif";
+    lpszFileName = (LPCTSTR)filename;
+  }
   if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename))
     return -1;
 
@@ -3246,8 +3280,16 @@ void CNavHelper::EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile)
     ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
     item->mTSparamIndex = -1;
   }
-  if (!item->mAcquire && !mWinApp->GetDummyInstance())
-    item->mFocusAxisPos = EXTRA_NO_VALUE;
+  if (!mWinApp->GetDummyInstance()) {
+    if (!item->mAcquire && item->mTSparamIndex < 0) {
+      item->mFocusAxisPos = EXTRA_NO_VALUE;
+      item->mTargetDefocus = EXTRA_NO_VALUE;
+    }
+    if (item->mTSparamIndex < 0) {
+      item->mTSstartAngle = EXTRA_NO_VALUE;
+      item->mTSbidirAngle = EXTRA_NO_VALUE;
+    }
+  }
   if (item->mFilePropIndex >= 0) {
     ChangeRefCount(NAVARRAY_FILEOPT, item->mFilePropIndex, -1);
     item->mFilePropIndex = -1;
@@ -3790,6 +3832,7 @@ void CNavHelper::ListFilesToOpen(void)
   CameraParameters *camp;
   int montParInd, stateInd, num, numacq;
   int i, j, k, numGroups = 0;
+  float starting, ending, bidir;
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
   bool seen, single = false;
 
@@ -3836,10 +3879,24 @@ void CNavHelper::ListFilesToOpen(void)
         } else if (item->mTSparamIndex >= 0) {
           tsp = mTSparamArray->GetAt(item->mTSparamIndex);
           camp = mWinApp->GetActiveCamParam(tsp->cameraIndex);
-          mess.Format("Tilt series with camera %d,   binning %d,   %.1f to %.1f at %.2f "
-            "deg,  item # %d,  label %s", tsp->cameraIndex + 1,
-            tsp->binning / BinDivisorI(camp), tsp->startingTilt,
-            tsp->endingTilt, tsp->tiltIncrement, i, (LPCTSTR)item->mLabel);
+          starting = tsp->startingTilt;
+          ending = tsp->endingTilt;
+          bidir = tsp->bidirAngle;
+          if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
+            starting = item->mTSstartAngle;
+            ending = item->mTSendAngle;
+            if (item->mTSbidirAngle > EXTRA_VALUE_TEST)
+              bidir = item->mTSbidirAngle;
+          }
+          mess2.Format("%.1f to %.1f at %.2f", starting, ending, tsp->tiltIncrement);
+          if (tsp->doBidirectional) {
+            mess.Format(", start %.1f", bidir);
+            mess2 += mess;
+          }
+          mess.Format("Tilt series with camera %d,   binning %d,   %s "
+            "deg%s,  item # %d,  label %s", tsp->cameraIndex + 1,
+            tsp->binning / BinDivisorI(camp), (LPCTSTR)mess2, 
+            item->mTSstartAngle > EXTRA_VALUE_TEST ? "*" : "", i, (LPCTSTR)item->mLabel);
           single = true;
         } else {
           mess.Format("Single item # %d,  label %s", i, (LPCTSTR)item->mLabel);
@@ -3883,14 +3940,21 @@ void CNavHelper::ListFilesToOpen(void)
           mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         }
       }
-      if (item->mFocusAxisPos > EXTRA_VALUE_TEST) {
+      if (item->mFocusAxisPos > EXTRA_VALUE_TEST || 
+        item->mTargetDefocus > EXTRA_VALUE_TEST) {
         mess = "";
         if (!single)
           mess.Format("Item # %d,  label %s", i, (LPCTSTR)item->mLabel);
-        mess2.Format("  F pos %.2f angle %d off %d %d", item->mFocusAxisPos,
-          item->mFocusAxisAngle, item->mFocusXoffset / focusSet->binning,
-          item->mFocusYoffset / focusSet->binning);
-        mess += mess2;
+        if (item->mFocusAxisPos > EXTRA_VALUE_TEST) {
+          mess2.Format("  F pos %.2f angle %d off %d %d", item->mFocusAxisPos,
+            item->mFocusAxisAngle, item->mFocusXoffset / focusSet->binning,
+            item->mFocusYoffset / focusSet->binning);
+          mess += mess2;
+        }
+        if (item->mTargetDefocus > EXTRA_VALUE_TEST) {
+          mess2.Format("  F targ %.2f", item->mTargetDefocus);
+          mess += mess2;
+        }
         mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
       }
     }
@@ -3960,6 +4024,36 @@ int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum)
       if (navPath == filename && !CFile::GetStatus((LPCTSTR)item->mMapFile, status))
         return item->mMapID;
     }
+  }
+  return 0;
+}
+
+// Check the validity of tilt series angles entered in script call or when about to be
+// used and return error message
+int CNavHelper::CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir,
+  CString &errMess)
+{
+  float minAng = B3DMIN(start, end);
+  float maxAng = B3DMAX(start, end);
+  float minSep = 6.;
+  TiltSeriesParam *tsp = mTSparamArray->GetAt(paramInd);
+  if (fabs(start) > mScope->GetMaxTiltAngle() || fabs(end) > mScope->GetMaxTiltAngle()) {
+    errMess.Format("The starting or ending tilt angle (%.1f and %.1f) stored in the "
+      "Navigator item is beyond the maximum angle (%.1f)", start, end,
+      mScope->GetMaxTiltAngle());
+    return 1;
+  }
+  if (maxAng < minAng + 2.) {
+    errMess.Format("The starting or ending tilt angle (%.1f and %.1f) stored in the "
+      "Navigator item do not have enough range", start, end);
+    return 1;
+  }
+  if (bidir > EXTRA_VALUE_TEST && tsp->doBidirectional && 
+    (bidir < minAng + minSep || bidir > maxAng - minSep)) {
+    errMess.Format("The bidirectional starting angle (%.1f) stored in the "
+      "Navigator item is too close to one end of the range (%.1f to %.1f)", bidir, start,
+      end);
+    return 1;
   }
   return 0;
 }

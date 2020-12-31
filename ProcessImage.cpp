@@ -437,7 +437,7 @@ void CProcessImage::RotateImage(BOOL bLeft)
     brray = (short int *)frray;
   }
   if (!brray) {
-    AfxMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
+    SEMMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
     return;
   }
   
@@ -457,12 +457,191 @@ void CProcessImage::RotateImage(BOOL bLeft)
   SEMTrace('1',"Time %f", SEMTickInterval((double)start));*/
 }
 
+// Filter the image in the given buffer with the standard filter parameters
+int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1,
+  float sigma2, float radius1, float radius2)
+{
+  KImage *image = imBuf->mImage;
+  int nx, ny, nxpad, nypad, nxdim, dir = 1;
+  float ctf[8193], delta, *brray;
+  float padFrac = 0.05f;
+  if (!image)
+    return -1;
+  if (image->getType() == kRGB) {
+    SEMMessageBox("You cannot filter an RGB image");
+    return 1;
+  }
+  image->getSize(nx, ny);
+  nxpad = XCorrNiceFrame((int)((1. + padFrac) * nx), 2, 19);
+  nypad = XCorrNiceFrame((int)((1. + padFrac) * ny), 2, 19);
+  nxdim = nxpad + 2;
+  NewArray(brray, float, nxdim * nypad);
+  if (!brray) {
+    SEMMessageBox("Failed to get memory for filtering image");
+    return 1;
+  }
+  XCorrSetCTF(sigma1, sigma2, radius1, radius2, ctf, nxpad, nypad, &delta);
+  image->Lock();
+  XCorrFilter((float *)image->getData(), image->getType(), nx, ny, brray, nxpad, nypad, 
+    delta, ctf);
+  image->UnLock();
+
+  // If the destination buffer has no image, copy the source first to keep 
+  // NewprocessedImage happy
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, -1, false, outBufNum);
+  return 0;
+}
+
+// Do arithmetic operation between two images
+int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation)
+{
+  KImage *image1 = mImBufs[bufNum1].mImage;
+  KImage *image2 = mImBufs[bufNum2].mImage;
+  int type1 = image1->getType();
+  int type2 = image2->getType();
+  int nx, ny, ind;
+  float *inArray1, *inArray2, *outArray;
+  if (!image1 || !image2)
+    return -1;
+  image1->getSize(nx, ny);
+  if (type1 == kRGB || type2 == kRGB) {
+    SEMMessageBox("You cannot do arithmetic operations on RGB images");
+    return 1;
+  }
+  if (image2->getWidth() != nx || image2->getHeight() != ny) {
+    SEMMessageBox("You cannot do arithmetic operations on different-sized images");
+    return 1;
+  }
+
+  // Get float array for result
+  image1->Lock();
+  image2->Lock();
+  NewArray(outArray, float, nx * ny);
+  if (outArray) {
+
+    //Either assign this as the input array if 1 already float, or copy 1 into the array
+    if (type1 == kFLOAT) {
+      inArray1 = (float *)image1->getData();
+    } else {
+      sliceTaperOutPad(image1->getData(), type1, nx, ny, outArray, nx, nx, ny, 1, 0.);
+      inArray1 = outArray;
+    }
+
+    // If 2 is already float use it as input, otherwise get array and copy to it
+    if (type2 == kFLOAT) {
+      inArray2 = (float *)image2->getData();
+    } else {
+      NewArray(inArray2, float, nx * ny);
+      if (inArray2)
+        sliceTaperOutPad(image2->getData(), type2, nx, ny, inArray2, nx, nx, ny, 1, 0.);
+      else
+        delete[] outArray;
+    }
+  }
+  if (!outArray || !inArray2) {
+    SEMMessageBox("Failed to get memory for combining two images");
+    image1->UnLock();
+    image2->UnLock();
+    return 1;
+  }
+
+  // Do the operation
+  switch (operation) {
+  case PROC_ADD_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] + inArray2[ind];
+    break;
+
+  case PROC_SUBTRACT_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] - inArray2[ind];
+    break;
+
+  case PROC_MULTIPLY_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++)
+      outArray[ind] = inArray1[ind] * inArray2[ind];
+    break;
+
+  case PROC_DIVIDE_IMAGES:
+    for (ind = 0; ind < nx * ny; ind++) {
+      if (inArray2[ind] != 0.)
+        outArray[ind] = inArray1[ind] / inArray2[ind];
+      else
+        outArray[ind] = 0.;
+    }
+    break;
+  }
+
+  // Clean up and replace the buffer
+  image1->UnLock();
+  image2->UnLock();
+  if (type2 != kFLOAT)
+    delete[] inArray2;
+
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
+  NewProcessedImage(&mImBufs[bufNum1], (short *)outArray, kFLOAT, nx, ny, 1, -1, false, 
+    outBufNum);
+  return 0;
+}
+
+// Multiple by a factor and add an offset to the image in imBuf, put in the indicated
+// output buffer, keeping the same type if retainType is true
+int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, 
+  float offset, bool retainType)
+{
+  KImage *image = imBuf->mImage;
+  int nx, ny, type, newType = kFLOAT, dataSize = 4, numChan = 1;
+  unsigned char *array;
+  void *inArray;
+  if (!image)
+    return -1;
+  type = image->getType();
+  if (type == kRGB && !retainType) {
+    SEMMessageBox("You cannot scale an RGB image into a floating point image");
+    return 1;
+  }
+
+  // Going to scale into a new array regardless, get one of the right size
+  if (retainType) {
+    dataSizeForMode(type, &dataSize, &numChan);
+    newType = type;
+  }
+  image->getSize(nx, ny);
+  NewArray(array, unsigned char, nx * ny * dataSize * numChan);
+  if (!array) {
+    SEMMessageBox("Failed to get memory for scaling image");
+    return 1;
+  }
+
+  // Convert the data into the float array here if not staying the same type
+  image->Lock();
+  inArray = image->getData();
+  if (!retainType) {
+    sliceTaperOutPad(inArray, type, nx, ny, (float *)array, nx, nx, ny, 1, 0.);
+    inArray = array;
+  }
+
+  // Scale and get into output buffer
+  ProcScaleImage(inArray, type == kRGB ? type : newType, nx * numChan, ny, factor, offset,
+    array);
+  image->UnLock();
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, -1, false, outBufNum);
+  return 0;
+}
+
+// Common routine for putting a newly processed image based on the given buffer into 
+// buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
                                       int nx, int ny, int moreBinning, int capFlag,
-                                      bool fftWindow)
+                                      bool fftWindow, int toBufNum)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
-  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs);
+  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs +toBufNum);
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
@@ -471,15 +650,17 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   EMimageBuffer imBufTmp;
   bufferManager->CopyImBuf(imBuf, &imBufTmp, false);
 
-  // Roll the buffers just like on acquire
-  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, bufferManager->GetShiftsOnAcquire());
-  if (!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
+  // Roll the buffers just like on acquire if going to A
+  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, 
+    bufferManager->GetShiftsOnAcquire());
+  if ((!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
+    || toBufNum > 0)
     nRoll = 0;
   for (int i = nRoll; i > 0 ; i--)
     bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
 
   // Make sure it's OK to destroy A now: if not delete data
-  if (!fftWindow && !bufferManager->OKtoDestroy(0, "Processing this image")) {
+  if (!fftWindow && !bufferManager->OKtoDestroy(toBufNum, "Processing this image")) {
     delete [] brray;
     return;
   }
@@ -489,7 +670,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   bufferManager->CopyImBuf(&imBufTmp, toImBuf, false);
 
   // Replace the image, again cleaning up on failure
-  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, 0, capFlag,
+  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
     imBuf->mConSetUsed, fftWindow) ) {
     delete [] brray;
     return;
@@ -509,7 +690,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
     toImBuf->mUserPtY = userPtYsave;
   }
 
-  mWinApp->SetCurrentBuffer(0, fftWindow);
+  mWinApp->SetCurrentBuffer(toBufNum, fftWindow);
 }
 
 void CProcessImage::OnProcessCropimage()
@@ -748,6 +929,85 @@ float CProcessImage::ForeshortenedMean(int bufNum)
     (nx - nxuse) / 2, (nx + nxuse) / 2 - 1, (ny - nyuse) / 2, (ny + nyuse) / 2 - 1);
   image->UnLock();
   return (float)retVal;
+}
+
+// Compute a mean of a tilt-foreshortened subarea of a specified size or fraction of the 
+// field, optionally applying stored shift
+int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX, 
+  float fracOrSizeY, bool useShift, float &mean, CString *message)
+{
+  EMimageBuffer *imBuf = &mImBufs[bufNum];
+  KImage *image = imBuf->mImage;
+  CameraParameters *camP = mWinApp->GetCamParams();
+  int nx, ny, nxuse, nyuse, ix0, ix1, iy0, iy1, ixShift, iyShift;
+  float tiltAngle, shiftX = 0., shiftY = 0.;
+  double factor;
+
+  // Check conditions: need camera and mag in buffer if doing fractions
+  if (!image) {
+    if (message)
+      *message = "There is no image in the buffer passed to ForeshortenedSubareaMean";
+    return 1;
+  }
+  if (imBuf->mCamera < 0 || imBuf->mMagInd <= 0 || 
+    (imBuf->mBinning <= 0 && (fracOrSizeX <= 1. || fracOrSizeY <= 0.))) {
+    if (message)
+      *message = "The image buffer is missing information needed to get the foreshorted "
+      "subarea mean";
+    return 1;
+  }
+  if (!imBuf->GetTiltAngle(tiltAngle)) {
+    if (message)
+      *message = "The image buffer passed to ForeshortenedSubareaMean has no stored tilt "
+      "angle";
+    return 1;
+  }
+
+  // Set up shifts if requested, and set up size to try to use
+  image->getSize(nx, ny);
+  if (useShift)
+    image->getShifts(shiftX, shiftY);
+  ixShift = B3DNINT(shiftX);
+  iyShift = B3DNINT(shiftY);
+  nxuse = B3DNINT(fracOrSizeY);
+  if (fracOrSizeY <= 1.)
+    nxuse = B3DNINT(fracOrSizeY * camP[imBuf->mCamera].sizeY / imBuf->mBinning);
+  nyuse = B3DNINT(fracOrSizeY);
+  if (fracOrSizeY <= 1.)
+    nyuse = B3DNINT(fracOrSizeY * camP[imBuf->mCamera].sizeY / imBuf->mBinning);
+  if (nxuse > nx || nyuse > ny) {
+    if (message)
+      message->Format("The specified subarea size (%d x %d) is bigger than the image"
+        "(%d x %d)", nxuse, nyuse, nx, ny);
+    return 1;
+  }
+
+  // reduce the size perpendicular to the nearest axis
+  factor = cos(DTOR * tiltAngle);
+  if (fabs(tan(DTOR * mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd)))
+    > 1.)
+    nxuse = B3DNINT(nxuse * factor);
+  else
+    nyuse = B3DNINT(nyuse * factor);
+  if (nxuse < 10 || nyuse < 10) {
+    if (message)
+      message->Format("The specified subarea is too small after foreshortening "
+        "(%d x %d)", nxuse, nyuse);
+    return 1;
+  }
+
+  // Get coordinate limits and make sure they are legal
+  ix0 = B3DMAX(0, (nx - nxuse) / 2 - ixShift);
+  ix1 = B3DMIN((nx + nxuse) / 2 - ixShift - 1, nx - 1);
+  iy0 = B3DMAX(0, (ny - nyuse) / 2 - iyShift);
+  iy1 = B3DMIN((ny + nyuse) / 2 - iyShift - 1, ny - 1);
+  image->Lock();
+  mean = (float)ProcImageMean(image->getData(), image->getType(), nx, ny, ix0, ix1, iy0,
+    iy1);
+  SEMTrace('1',"ForeshortenedSubareaMean using %d x %d, at %d, %d", ix1 + 1 - ix0, 
+    iy1 + 1 - iy0, (ix0 + ix1) / 2, (iy0 + iy1) / 2);
+  image->UnLock();
+  return 0;
 }
 
 void CProcessImage::OnProcessZerotiltmean() 
