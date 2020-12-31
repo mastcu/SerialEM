@@ -82,6 +82,8 @@ COPY /Y libifft-*.dll ..
 COPY /Y libiomp5md.dll ..
 COPY /Y libmmd.dll ..
 COPY /Y libctffind.dll ..
+COPY /Y imodzlib1.dll ..
+COPY /Y hdf5.dll ..
 
 Rem # If neither properties file seen, just copy them
 if %SAWPROPS% EQU 0 (

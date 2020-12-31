@@ -885,6 +885,11 @@
         interest, there is no need to have an autofocus calibration at more than one 
         magnification. It is better to have one high quality focus calibration over a 
         large focus range rather than poorer calibrations at several magnifications.</P>
+    <P>As of SerialEM 3.9, 10/11/20, a calibration done in low magnification will be 
+      used when autofocusing in LM, instead of automatically going to a standard 
+      focus.&nbsp; You will probably want to calibrate over a much larger range of 
+      focus values than the default to get sizeable changes in the shifts during the 
+      calibration.</P>
     <P>In STEM mode, this command is used to get an estimate of the amount that the 
       beam increases in size as defocus is changed away from focus.&nbsp; The value is 
       needed for autofocusing, but need not be very accurate.&nbsp; Nevertheless, if 

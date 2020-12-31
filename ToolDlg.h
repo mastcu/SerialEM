@@ -80,6 +80,7 @@ private:
 	int mMidHeight;	  // The height when midway open
 	int mState;			// The state flags
 public:
+  bool mInitialized;
   void DrawSideBorders(CPaintDC & dc);
   void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness, COLORREF color);
   static void DrawButtonOutline(CWnd *wnd, CPaintDC & dc, CWnd * but, int thickness, 

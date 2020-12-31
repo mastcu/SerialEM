@@ -11,7 +11,7 @@ enum {NO_NAV_RUNNING = 0, NAV_RUNNING_NO_SCRIPT_TS, NAV_PAUSED, NAV_TS_RUNNING,
   NAV_TS_STOPPED, NAV_PRE_TS_RUNNING, NAV_PRE_TS_STOPPED, NAV_SCRIPT_RUNNING,
   NAV_SCRIPT_STOPPED};
 
-class CMacroProcessor;
+class CMacCmd;
 class CNavigatorDlg;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  CMacroProcessor *mMacProcessor;
+  CMacCmd *mMacProcessor;
   CNavigatorDlg *mNav;   // Set by GetNavigatorState
 	BOOL mDoingTS;
   BOOL mDoingCalISO;

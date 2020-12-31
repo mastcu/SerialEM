@@ -119,7 +119,7 @@ private:
 
   // Bidirectional File copy (mBfc) variables
   CString mBfcNameFirstHalf;      // Filename for first half
-  KStoreMRC *mBfcStoreFirstHalf;  // Store that it is open on
+  KImageStore *mBfcStoreFirstHalf;  // Store that it is open on
   CString mBfcAdocFirstHalf;      // Name of mdoc file if any
   int mBfcNumToCopy;              // Number of sections to copy
   int mBfcCopyIndex;              // Index of next section to copy
