@@ -320,6 +320,7 @@ hid_tasks_assess_interset_shifts	= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_
 hid_reset_realign							  = SerialEM.chm::/html\menu_tasks.htm#hid_reset_realign
 hid_tasks_setiterationlimit			= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_setiterationlimit
 hid_tasks_usetrialinld					= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_usetrialinld
+hid_tasks_roughusesearchifinlm  = SerialEM.chm::/html\menu_tasks.htm#hid_tasks_roughusesearchifinlm
 hid_tasks_setupvppconditioning  = SerialEM.chm::/html\menu_tasks.htm#hid_tasks_setupvppconditioning
 hid_tasks_setupwaitfordrift     = SerialEM.chm::/html\menu_tasks.htm#hid_tasks_setupwaitfordrift
 hid_reverse_tilt								= SerialEM.chm::/html\menu_tasks.htm#hid_reverse_tilt

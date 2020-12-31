@@ -89,6 +89,8 @@ BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_TASKS_TRIAL_IN_LD_REFINE, OnUpdateTrialInLdRefine)
   ON_COMMAND(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnTasksUseViewInLowdose)
   ON_UPDATE_COMMAND_UI(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnUpdateTasksUseViewInLowdose)
+  ON_COMMAND(ID_TASKS_ROUGHUSESEARCHIFINLM, OnRoughUseSearchIfInLM)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_ROUGHUSESEARCHIFINLM, OnUpdateRoughUseSearchIfInLM)
 END_MESSAGE_MAP()
 
 
@@ -149,6 +151,7 @@ CComplexTasks::CComplexTasks()
   mLastAxisOffset = -999.;
   mFEUseTrialInLD = false;
   mFEWarnedUseTrial = false;
+  mFEUseSearchIfInLM = false;
   mFESizeOrFracForMean = 0.;
   mZMicronsPerDialMark = 3.1f;
   mManualHitachiBacklash = 10.;
@@ -383,6 +386,18 @@ void CComplexTasks::OnUpdateTasksUsetrialinld(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mRSRAUseTrialInLDMode ? 1 : 0);
+}
+
+void CComplexTasks::OnRoughUseSearchIfInLM()
+{
+  mFEUseSearchIfInLM = !mFEUseSearchIfInLM;
+}
+
+
+void CComplexTasks::OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable();
+  pCmdUI->SetCheck(mFEUseSearchIfInLM ? 1 : 0);
 }
 
 // ComplexTasks will report in on tasks from MultiTSTasks too!
@@ -1302,10 +1317,12 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   ControlSet  *conSet = mConSets + TRACK_CONSET;
   double ISX, ISY;
   CString mess;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   int action, loop, numSteps, stepsToTarg[2], ind, middle, dir, lastDir;
   float firstAngle, curAngle, increm, diffToTarg[2];
   int stackInd = mMagStackInd > 0 ? mMagStackInd - 1 : 0;
   int curMag = mScope->GetMagIndex();
+  bool obeyDelay = true;
 
   if (!mDoingEucentricity) {
 
@@ -1413,6 +1430,13 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     mFEUsersAngle = 0.;
     if (coarseFine & FIND_EUCENTRICITY_COARSE) {
       LowerMagIfNeeded(mMaxFECoarseMagInd, 0.7f, 0.3f, TRACK_CONSET);
+      if (mFEUseSearchIfInLM && mWinApp->LowDoseMode() &&
+        curMag < mScope->GetLowestMModeMagInd() &&
+        ldp[SEARCH_AREA].magIndex < mScope->GetLowestMModeMagInd()) {
+        mLowMagConSet = SEARCH_CONSET;
+        obeyDelay = mShiftManager->GetPixelSize(
+          mWinApp->GetCurrentCamera(), ldp[SEARCH_AREA].magIndex) < 0.1;
+      }
       action = FE_COARSE_RESET;
       mFECoarseFine &= ~REFINE_EUCENTRICITY_ALIGN;
     } else if (coarseFine & REFINE_EUCENTRICITY_ALIGN) {
@@ -1454,7 +1478,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "FINDING EUCENTRICITY");
   mCamera->SetRequiredRoll(1);
-  mCamera->SetObeyTiltDelay(true);
+  mCamera->SetObeyTiltDelay(obeyDelay);
 
   // If doing fine & align, set up to get first shot
   if (action == FE_FINE_ALIGNSHOT1) {

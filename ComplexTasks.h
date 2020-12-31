@@ -69,7 +69,8 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(int, FEIterationLimit)
   GetSetMember(double, FEMaxFineIS)
   SetMember(BOOL, SkipNextBeamShift);
-  GetSetMember(BOOL, FEUseTrialInLD)
+  GetSetMember(BOOL, FEUseTrialInLD);
+  GetSetMember(BOOL, FEUseSearchIfInLM);
   GetMember(BOOL, WalkDidResetShift)
   GetMember(BOOL, LastWalkCompleted);
   GetSetMember(float, ZMicronsPerDialMark);
@@ -269,6 +270,7 @@ class CComplexTasks : public CCmdTarget
   float mLastAxisOffset;          // Axis offset in last run of fine eucentricity
   BOOL mFEUseTrialInLD;           // Flag to use trial in low dose for fine eucentricity
   BOOL mFEWarnedUseTrial;         // Flag that they were warned
+  BOOL mFEUseSearchIfInLM;        // Flag to use Search for rough eucentricity if in LM
   float mZMicronsPerDialMark;     // Scale on Hitachi scope
   float mManualHitachiBacklash;   // Amount to target for manual adjustment
   float mStageTimeoutFactor;      // Multiplier to idle task timeout for stage moves
@@ -288,6 +290,8 @@ public:
   afx_msg void OnUpdateTasksUseViewInLowdose(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasksNoTSNoHitachi(CCmdUI *pCmdUI);
   void ReportManualZChange(float delZ, const char *roughFine);
+  afx_msg void OnRoughUseSearchIfInLM();
+  afx_msg void OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI);
 };
 
 #endif // !defined(AFX_COMPLEXTASKS_H__83D1F77E_0AB8_47A4_B1C7_C4C29586A770__INCLUDED_)

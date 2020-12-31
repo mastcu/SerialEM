@@ -111,9 +111,13 @@
           <TD>Set minimum Image Shift for reiterating Reset &amp; Realign</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD Refine</A></TD>
           <TD>Use Trial area in Low Dose mode for Reset &amp; Realign</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_roughusesearchifinlm">Rough Use Search if in LM</A></TD>
+          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM</TD>
+        </TR>              
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_tasks_setupvppconditioning">Setup VPP Conditioning</A></TD>
           <TD>Opens dialog to set up conditioning of a phase plate and optionally run 
@@ -430,6 +434,14 @@
         small (~1 micron), if the field of view of the trial area is fairly large (2 
         microns), and if your stage is adjusted so that stage movements are reliable at 
         high tilt for the holder being used.</P>
+     <P><A NAME="hid_tasks_roughusesearchifinlm"></A><B>Rough Use Search if in LM command (Tasks menu)</B></P>
+      <P>Toggle this entry to switch between using the View area for the rough 
+        eucentricity procedure in Low Dose mode and using the Search area, if it is 
+        defined as being in low magnification <em>and</em> if the microscope is already 
+        in low magnification.&nbsp; Running this procedure in LM may be accurate enough 
+        for some purposes, so this option allows it to be run with the Search area 
+        without losing the time involved in leaving low magnification just for this 
+        purpose.</P>
       <P><A NAME="hid_tasks_setupvppconditioning"></A><B>Setup VPP Conditioning command (Tasks menu)</B></P>
       <P>Use this command to open the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup 
           dialog box</A> and set parameters for conditioning a Volta phase plate. The dialog allows one to

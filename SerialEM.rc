@@ -476,6 +476,7 @@ BEGIN
         MENUITEM "Refine && Re&align",          ID_TASKS_FINEREALIGN
         MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
         MENUITEM "Use Trial in LD Refine",      ID_TASKS_TRIAL_IN_LD_REFINE
+        MENUITEM "Rough Use Search if in LM",   ID_TASKS_ROUGHUSESEARCHIFINLM
         MENUITEM SEPARATOR
         MENUITEM "&Walk Up",                    ID_TASKS_WALKUP
         MENUITEM "Wal&kup && Anchor",           ID_TASKS_WALKUPANCHOR
@@ -6019,6 +6020,8 @@ BEGIN
                             "Substitute item's label for previous one when generating new filenames"
     ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 
                             "Close valves or turn off filament when program is idle for specified time"
+    ID_TASKS_ROUGHUSESEARCHIFINLM 
+                            "Use Search in Low Dose for rough eucentricity if scope and Search are in LM"
 END
 
 #endif    // English (United States) resources

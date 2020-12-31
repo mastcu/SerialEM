@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/27/20: Added ability to do rough euncentricity with Search area.
+
 12/23/20: Added script command to set a PLA offset between cameras on JEOL
 scopes using PLA for image shift, and a camera property to designate cameras
 as on or off axis on scopes using IS.
