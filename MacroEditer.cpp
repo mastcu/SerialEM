@@ -227,8 +227,6 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
     ctrlPressed = true;
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
-  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed)
-    m_editMacro.SetSel(0xFFFF0000);
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
     m_butRun.IsWindowEnabled()) {
     OnRunmacro();
@@ -421,7 +419,7 @@ void CMacroEditer::UpdateButtons()
   m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0);
   m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0);
   inactive = inactive && (!mWinApp->GetShiftScriptOnlyInAdmin() || 
-    mWinApp->GetAdministrator());
+    mWinApp->GetAdministratorMode());
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
 }

@@ -148,6 +148,7 @@ private:
   CShiftManager *mShiftManager;
   CEMscope *mScope;
 	CFont mBigFont;			// Font for bigger things
+	BOOL mInitialized;
 	BOOL mIgnoreIS;
   BOOL mTrulyLowDose;
   BOOL mHideOffState;
@@ -221,7 +222,6 @@ public:
   afx_msg void OnRadioShowOffset();
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
-  void DeselectGoToButtons(int area);
   CButton m_butCopyToSearch;
   afx_msg void OnGotoArea(UINT nID);
   CButton m_butGotoView;
@@ -232,7 +232,6 @@ public:
   void SetBeamShiftButton(BOOL state);
   bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
   bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
-  int m_iGoToArea;
 };
 
 //{{AFX_INSERT_LOCATION}}

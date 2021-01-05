@@ -120,8 +120,8 @@ BOOL CTSVariationsDlg::OnInitDialog()
   m_listViewer.SetTabStops(6, tabs);
 
   mInitialized = true;
-  m_strPower.Format("Use cosine to the 1/%.2f", mCosinePowers->at(mSeriesPowerInd));
-  UtilTrimTrailingZeros(m_strPower);
+  mSeriesPower = mParam->cosinePower;
+  m_strPower.Format("Use cosine to the 1/%d", mSeriesPower);
   m_sbcSeriesPower.SetRange(0, 100);
   m_sbcSeriesPower.SetPos(50);
 
@@ -335,7 +335,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
     while (newExp <= mVaries[mNumVaries - 1].value)
       newExp += baseTime;
     factor = newExp / recExp;
-    angle = acos(1. / pow(factor, (double)mCosinePowers->at(mSeriesPowerInd))) / DTOR;
+    angle = acos(1. / pow(factor, (double)mSeriesPower)) / DTOR;
     if (angle > mTopAngle + 2.)
       break;
     if (mNumVaries + (fixedFrames ? 1 : 0) >= MAX_TS_VARIES) {
@@ -356,14 +356,13 @@ void CTSVariationsDlg::OnButTsvAddSeries()
 void CTSVariationsDlg::OnDeltaposSpinTsvSeriesPower(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  int newVal = mSeriesPowerInd + pNMUpDown->iDelta;
-  if (newVal < 0 || newVal >= (int)mCosinePowers->size()) {
+  int newVal = mSeriesPower + pNMUpDown->iDelta;
+  if (newVal < 1 || newVal > MAX_COSINE_POWER) {
     *pResult = 1;
     return;
   }
-	mSeriesPowerInd = newVal;
-  m_strPower.Format("Use cosine to the 1/%.2f", mCosinePowers->at(mSeriesPowerInd));
-  UtilTrimTrailingZeros(m_strPower);
+	mSeriesPower = newVal;
+  m_strPower.Format("Use cosine to the 1/%d", mSeriesPower);
   UpdateData(false);
   *pResult = 0;
 }

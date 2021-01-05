@@ -9,7 +9,6 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
-#include "SerialEMDoc.h"
 #include ".\FilePropDlg.h"
 #include "Image\KStoreMRC.h"
 
@@ -26,9 +25,6 @@ static char THIS_FILE[] = __FILE__;
     mFileOpt.typext &= ~(b);
 
 static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
-
-enum { RADIO_TYPE_MRC = 0, RADIO_TYPE_HDF, RADIO_TYPE_TIFF, RADIO_TYPE_ADOC, 
-  RADIO_TYPE_JPEG };
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilePropDlg dialog
@@ -123,11 +119,10 @@ BEGIN_MESSAGE_MAP(CFilePropDlg, CBaseDlg)
 	ON_BN_CLICKED(IDC_SAVE_INTENSITY, OnRbyte)
 	ON_BN_CLICKED(IDC_EXPOSURE_DOSE, OnRbyte)
 	ON_BN_CLICKED(IDC_RUNSIGNED, OnRbyte)
-  ON_BN_CLICKED(IDC_RMRCFILE, OnRfileType)
-  ON_BN_CLICKED(IDC_RHDFFILE, OnRfileType)
-  ON_BN_CLICKED(IDC_RTIFFFILE, OnRfileType)
-	ON_BN_CLICKED(IDC_RADOCFILE, OnRfileType)
-	ON_BN_CLICKED(IDC_RJPEGFILE, OnRfileType)
+	ON_BN_CLICKED(IDC_RMRCFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RTIFFFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RADOCFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RJPEGFILE, OnRbyte)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_SAVEMDOC, OnSaveMdoc)
   ON_BN_CLICKED(IDC_RNOCOMPRESS, OnRNoCompress)
@@ -139,34 +134,17 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CFilePropDlg message handlers
 
-void CFilePropDlg::OnRbyte()
+void CFilePropDlg::OnRbyte() 
 {
   UpdateData(TRUE); 
-
-  if ((m_iFileType == RADIO_TYPE_TIFF || m_iFileType == RADIO_TYPE_ADOC) && 
-    mFileOpt.mode == MRC_MODE_FLOAT && m_iCompress == 3) {
+  if ((m_iFileType == 1 || m_iFileType == 2) && mFileOpt.mode == MRC_MODE_FLOAT &&
+    m_iCompress == 3) {
     m_iCompress = 1;
     UpdateData(false);
   }
   ManageStates(); 
 }
 
-void CFilePropDlg::OnRfileType()
-{
-  int prevFileType = m_iFileType;
-  UpdateData(true);
-
-  // Unload the compression appropriately for the previous file type
-  if (prevFileType == RADIO_TYPE_HDF)
-    mFileOpt.hdfCompression = compressions[m_iCompress];
-  else
-    mFileOpt.compression = compressions[m_iCompress];
-
-  // Load in the respective one for the new file type
-  SetCompressionFromFileOpt();
-  UpdateData(false);
-  ManageStates();
-}
 
 /*void CFilePropDlg::OnChangeMaxsectsedit() 
 {
@@ -187,9 +165,8 @@ void CFilePropDlg::OnChangeTruncwhiteedit()
 // or whether any extra header info is being selected
 void CFilePropDlg::ManageStates()
 {
-  BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == RADIO_TYPE_TIFF) || 
-    m_iFileType == RADIO_TYPE_ADOC;
-  BOOL jpegFile = m_iFileType == RADIO_TYPE_JPEG;
+  BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == 1) || m_iFileType == 2;
+  BOOL jpegFile = m_iFileType == 3;
   BOOL notFloat = mFileOpt.mode != MRC_MODE_FLOAT;
   BOOL bEnable = (m_iByteInt == 0 || (tiffFile && compressions[m_iCompress] == 
     COMPRESS_JPEG) || jpegFile) && notFloat;
@@ -199,10 +176,10 @@ void CFilePropDlg::ManageStates()
   m_statTruncBlack.EnableWindow(bEnable);
   m_editTruncBlack.EnableWindow(bEnable);
 
-  m_statCompress.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
-  m_butNoComp.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
+  m_statCompress.EnableWindow(tiffFile);
+  m_butNoComp.EnableWindow(tiffFile);
   m_butLZWComp.EnableWindow(tiffFile);
-  m_butZIPComp.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
+  m_butZIPComp.EnableWindow(tiffFile);
   m_butJPEGComp.EnableWindow(tiffFile && notFloat);
 
   bEnable = (!tiffFile || compressions[m_iCompress] != COMPRESS_JPEG) && !jpegFile &&
@@ -217,7 +194,7 @@ void CFilePropDlg::ManageStates()
   m_butDivide.EnableWindow(bEnable);
   m_butShiftDown.EnableWindow(bEnable);
 
-  bEnable = m_iFileType == RADIO_TYPE_MRC;
+  bEnable = m_iFileType == 0;
   m_statExtended.EnableWindow(bEnable);
   m_butTiltangle.EnableWindow(bEnable);
   m_butStagePos.EnableWindow(bEnable);
@@ -238,7 +215,6 @@ void CFilePropDlg::ManageStates()
 BOOL CFilePropDlg::OnInitDialog() 
 {
   CBaseDlg::OnInitDialog();
-  CButton *hdfBut = (CButton *)GetDlgItem(IDC_RHDFFILE);
 
   // Set the variables based on the FileOption structure
   m_iByteInt = mFileOpt.mode < 2 ? mFileOpt.mode : 2;
@@ -260,22 +236,19 @@ BOOL CFilePropDlg::OnInitDialog()
   m_butJpegFile.EnableWindow(mFileOpt.TIFFallowed && mFileOpt.mode != MRC_MODE_FLOAT);
   if ((mFileOpt.fileType == STORE_TYPE_TIFF ||  mFileOpt.fileType == STORE_TYPE_ADOC) &&
     mFileOpt.TIFFallowed)
-    m_iFileType = RADIO_TYPE_TIFF;
+    m_iFileType = 1;
   else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) == 
     STORE_TYPE_ADOC)
-    m_iFileType = RADIO_TYPE_ADOC;
-  else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) ==
-    STORE_TYPE_HDF)
-    m_iFileType = RADIO_TYPE_HDF;
-  if (!mWinApp->mDocWnd->GetHDFsupported()) {
-    hdfBut->EnableWindow(false);
-    if (m_iFileType == RADIO_TYPE_HDF)
-      m_iFileType = RADIO_TYPE_MRC;
-  }
-
+    m_iFileType = 2;
   if (mFileOpt.fileType == STORE_TYPE_JPEG && mFileOpt.mode == MRC_MODE_FLOAT)
-    m_iFileType = (mFileOpt.TIFFallowed ? RADIO_TYPE_TIFF : RADIO_TYPE_MRC);
-  SetCompressionFromFileOpt();
+    m_iFileType = (mFileOpt.TIFFallowed ? 1 : 0);
+  m_iCompress = 0;
+  for (int i = 0; i < 4; i++)
+    if (mFileOpt.compression == compressions[i])
+      m_iCompress = i;
+  if ((m_iFileType == 1  || m_iFileType == 2) && mFileOpt.mode == MRC_MODE_FLOAT && 
+    m_iCompress == 3)
+    m_iCompress = 1;
 
   UpdateData(FALSE);
   ManageStates();
@@ -284,19 +257,6 @@ BOOL CFilePropDlg::OnInitDialog()
     OnOK();
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-void CFilePropDlg::SetCompressionFromFileOpt()
-{
-  m_iCompress = 0;
-  for (int i = 0; i < 4; i++)
-    if (mFileOpt.compression == compressions[i])
-      m_iCompress = i;
-  if (m_iFileType == RADIO_TYPE_HDF)
-    m_iCompress = mFileOpt.hdfCompression == COMPRESS_ZIP ? 1 : 0;
-  if ((m_iFileType == RADIO_TYPE_TIFF || m_iFileType == RADIO_TYPE_ADOC) &&
-    mFileOpt.mode == MRC_MODE_FLOAT && m_iCompress == 3)
-    m_iCompress = 1;
 }
 
 void CFilePropDlg::OnOK() 
@@ -321,27 +281,17 @@ void CFilePropDlg::OnOK()
     else
       mFileOpt.useMdoc = m_bSaveMdoc;
   }
-  if (m_iFileType == RADIO_TYPE_TIFF)
+  if (m_iFileType == 1)
     filety = STORE_TYPE_TIFF;
-  if (m_iFileType == RADIO_TYPE_ADOC)
+  if (m_iFileType == 2)
     filety = STORE_TYPE_ADOC;
-  if (m_iFileType == RADIO_TYPE_HDF) {
-    filety = STORE_TYPE_HDF;
-    if (mFileOpt.isMontage()) {
-      mFileOpt.montageInMdoc = true;
-      mFileOpt.typext &= ~MONTAGE_MASK;
-    }
-  }
-  if (m_iFileType == RADIO_TYPE_JPEG)
+  if (m_iFileType == 3)
     filety = STORE_TYPE_JPEG;
   if (mFileOpt.useMont())
     mFileOpt.montFileType = filety;
   else
     mFileOpt.fileType = filety;
-  if (m_iFileType == RADIO_TYPE_HDF)
-    mFileOpt.hdfCompression = compressions[m_iCompress];
-  else
-    mFileOpt.compression = compressions[m_iCompress];
+  mFileOpt.compression = compressions[m_iCompress];
   CDialog::OnOK();
 }
 

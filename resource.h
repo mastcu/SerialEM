@@ -78,7 +78,6 @@
 #define IDD_VPP_EXPOSE_SETUP            232
 #define IDD_HOLE_FINDER                 233
 #define IDD_MULTI_COMBINER              234
-#define IDD_MACROSELECTER               249
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1628,15 +1627,7 @@
 #define IDC_EDIT_RING2_DIST             2655
 #define IDC_BUT_TO_MARKER               2656
 #define IDC_BUT_SET_SIZE_SPACE          2657
-#define IDC_STAT_STAR_TILT              2658
-#define IDC_STAT_STAR_TILT2             2659
-#define IDC_STAT_STAR_BIDIR             2660
-#define IDC_STAT_UM_SIZE_SEP            2661
-#define IDC_STAT_ENTRY_TEXT             2662
-#define IDC_STAT_INFO_TEXT              2663
-#define IDC_COMBO_SELECTOR              2664
-#define IDC_RHDFFILE                    2665
-#define IDC_TILTAXIS                    2666
+#define IDC_STAT_UM_SIZE_SEP            2658
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2121,21 +2112,15 @@
 #define ID_WINDOW_RESCUELOGWINDOW       33392
 #define ID_OPTIONS_SEARCH               33393
 #define IDM_MARKER_TO_CENTER            33394
-#define ID_SETTINGS_BASICMODE           33395
-#define ID_SCRIPT_RUNONPROGRAMSTART     33396
-#define ID_SCRIPT_RUNATPROGRAMEND       33397
-#define ID_OPTIONS_USEITEMLABELSINFILENAMES 33398
-#define ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 33399
-#define ID_TASKS_ROUGHUSESEARCHIFINLM   33400
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        253
-#define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2667
+#define _APS_NEXT_RESOURCE_VALUE        249
+#define _APS_NEXT_COMMAND_VALUE         33395
+#define _APS_NEXT_CONTROL_VALUE         2659
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

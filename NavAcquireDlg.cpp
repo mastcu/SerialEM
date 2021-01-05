@@ -151,6 +151,8 @@ void CNavAcquireDlg::UnloadTSdependentFromDlg(int acquireType)
 
 BOOL CNavAcquireDlg::OnInitDialog() 
 {
+  int ind;
+  CString str;
 	CBaseDlg::OnInitDialog();
   mPostponed = false;
   mParam = mWinApp->GetNavParams();
@@ -168,9 +170,19 @@ BOOL CNavAcquireDlg::OnInitDialog()
   m_bCloseValves = mParam->acqCloseValves;
   ManageEnables();
   m_butGroupFocus.EnableWindow(m_bAutofocus);
-  LoadMacrosIntoDropDown(m_comboPremacro, false, false);
-  LoadMacrosIntoDropDown(m_comboPostmacro, false, false);
-  LoadMacrosIntoDropDown(m_comboMacro, false, false);
+  CString *names = mWinApp->GetMacroNames();
+  for (ind = 0; ind < MAX_MACROS; ind++) {
+    if (names[ind].IsEmpty())
+      str.Format("# %d", ind + 1);
+    else
+      str = names[ind];
+    m_comboPremacro.AddString((LPCTSTR)str);
+    m_comboPostmacro.AddString((LPCTSTR)str);
+    m_comboMacro.AddString((LPCTSTR)str);
+  }
+  SetDropDownHeight(&m_comboPremacro, MAX_MACROS);
+  SetDropDownHeight(&m_comboPostmacro, MAX_MACROS);
+  SetDropDownHeight(&m_comboMacro, MAX_MACROS);
   LoadTSdependentToDlg();
   ManageOutputFile();
 
