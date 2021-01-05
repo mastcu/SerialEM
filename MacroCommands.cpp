@@ -788,7 +788,7 @@ int CMacCmd::NextCommand(bool startingOut)
     mStrCopy = mStrLine;
 
     // Parse the line
-    if (mWinApp->mParamIO->ParseString(mStrCopy, mStrItems, MAX_MACRO_TOKENS,
+    if (mParamIO->ParseString(mStrCopy, mStrItems, MAX_MACRO_TOKENS,
       mParseQuotes))
       ABORT_LINE("Too many items on line in script: \n\n");
     if (mStrItems[0].Find("/*") == 0) {
@@ -1208,7 +1208,7 @@ int CMacCmd::DoMacro(void)
         }
       }
       if (!cTruth && cFunc->ifStringArg) {
-        mWinApp->mParamIO->StripItems(mStrLine, cIndex + cIx0, mStrCopy);
+        mParamIO->StripItems(mStrLine, cIndex + cIx0, mStrCopy);
         cTruth = SetVariable(cFunc->argNames[cIndex], mStrCopy, VARTYPE_LOCAL,
           - 1, false, &cReport);
       }
@@ -1477,7 +1477,7 @@ int CMacCmd::IsVariableDefined(void)
 {
   cIndex = B3DCHOICE(LookupVariable(mItem1upper, cIndex2) != NULL, 1, 0);
   SubstituteVariables(&mStrLine, 1, mStrLine);
-  mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+  mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   mLogRpt.Format("Variable %s %s defined", (LPCTSTR)mStrItems[1],
     B3DCHOICE(cIndex, "IS", "is NOT"));
   SetReportedValues(&mStrItems[2], cIndex);
@@ -2781,7 +2781,7 @@ int CMacCmd::EnterNameOpenFile(void)
 {
   mStrCopy = "Enter name for new file:";
   if (!mStrItems[1].IsEmpty())
-    mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+    mParamIO->StripItems(mStrLine, 1, mStrCopy);
   if (!KGetOneString(mStrCopy, mEnteredName, 100))
     SUSPEND_NOLINE("because no new file was opened");
   if (mWinApp->mDocWnd->DoOpenNewFile(mEnteredName))
@@ -2823,7 +2823,7 @@ int CMacCmd::ReadTextFile(void)
   }
   if (cTruth)
     rowsFor2d = new CArray < ArrayRow, ArrayRow > ;
-  while ((cIndex = mWinApp->mParamIO->ReadAndParse(csFile, cReport, mStrItems,
+  while ((cIndex = mParamIO->ReadAndParse(csFile, cReport, mStrItems,
     MAX_MACRO_TOKENS)) == 0) {
     if (cTruth)
       newVar = "";
@@ -2949,7 +2949,7 @@ int CMacCmd::ReadLineToArray(void)
 
   // Skip blank lines, skip comment lines if reading into array
   for (;;) {
-    cIndex = mWinApp->mParamIO->ReadAndParse(cTxFile->csFile, cReport, mStrItems,
+    cIndex = mParamIO->ReadAndParse(cTxFile->csFile, cReport, mStrItems,
       MAX_MACRO_TOKENS, mParseQuotes);
     if (cIndex || !mStrItems[0].IsEmpty() || (!cTruth && !cReport.IsEmpty()))
       break;
@@ -3035,7 +3035,7 @@ int CMacCmd::UserSetDirectory(void)
 {
   mStrCopy = "Choose a new current working directory:";
   if (!mStrItems[1].IsEmpty())
-    mWinApp->mParamIO->StripItems(mStrLine, 1, mStrCopy);
+    mParamIO->StripItems(mStrLine, 1, mStrCopy);
   char *cwd = _getcwd(NULL, _MAX_PATH);
   CXFolderDialog dlg(cwd);
   dlg.SetTitle(mStrCopy);
@@ -3166,6 +3166,7 @@ int CMacCmd::GetFileInWatchedDir(void)
 {
   WIN32_FIND_DATA findFileData;
   CStdioFile *sFile = NULL;
+  CString direc, fname;
   if (CMD_IS(RUNSCRIPTINWATCHEDDIR)) {
     if (mNumTempMacros >= MAX_TEMP_MACROS)
       ABORT_LINE("No free temporary scripts available for line:\n\n");
@@ -3182,6 +3183,7 @@ int CMacCmd::GetFileInWatchedDir(void)
     if (cTruth && (cStatus.m_attribute & CFile::directory))
       cReport += "\\*";
   }
+  UtilSplitPath(cReport, direc, fname);
   HANDLE hFind = FindFirstFile((LPCTSTR)cReport, &findFileData);
   if (hFind == INVALID_HANDLE_VALUE) {
     SetReportedValues(0.);
@@ -3210,6 +3212,7 @@ int CMacCmd::GetFileInWatchedDir(void)
   if (!cTruth) {
     SetReportedValues(0.);
   } else {
+    cReport = direc + "\\" + cReport;
     SetOneReportedValue(1., 1);
     SetOneReportedValue(cReport, 2);
     mLogRpt = "Found file " + cReport;
@@ -3371,7 +3374,7 @@ int CMacCmd::AddToAutodoc(void)
     ABORT_LINE("Error making autodoc be the current one for: \n\n");
   if (CMD_IS(ADDTOAUTODOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-    mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     if (AdocSetKeyValue(
       cIndex2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
       ADOC_IMAGE, ADOC_ZVALUE) : ADOC_GLOBAL,
@@ -3397,7 +3400,7 @@ int CMacCmd::AddToFrameMdoc(void)
     "Error writing to frame .mdoc in:\n\n" };
   if (CMD_IS(ADDTOFRAMEMDOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-    mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     cIndex = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
   }
   else {
@@ -3451,7 +3454,7 @@ int CMacCmd::AddToNextFrameStackMdoc(void)
 {
   cDoBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-  mWinApp->mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+  mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   if (mCamera->AddToNextFrameStackMdoc(mStrItems[1], mStrCopy, cDoBack, &cReport))
     ABORT_LINE(cReport + " in:\n\n");
   return 0;
@@ -3556,7 +3559,7 @@ int CMacCmd::SaveCalibrations(void)
 // SetProperty
 int CMacCmd::SetProperty(void)
 {
-  if (mWinApp->mParamIO->MacroSetProperty(mStrItems[1], mItemDbl[2]))
+  if (mParamIO->MacroSetProperty(mStrItems[1], mItemDbl[2]))
     AbortMacro();
   return 0;
 }
@@ -3566,8 +3569,8 @@ int CMacCmd::ReportUserSetting(void)
 {
   cTruth = CMD_IS(REPORTPROPERTY);
   mStrCopy = cTruth ? "property" : "user setting";
-  if ((!cTruth && mWinApp->mParamIO->MacroGetSetting(mStrItems[1], cDelX)) ||
-    (cTruth && mWinApp->mParamIO->MacroGetProperty(mStrItems[1], cDelX)))
+  if ((!cTruth && mParamIO->MacroGetSetting(mStrItems[1], cDelX)) ||
+    (cTruth && mParamIO->MacroGetProperty(mStrItems[1], cDelX)))
     ABORT_LINE(mStrItems[1] + " is not a recognized " + mStrCopy + " or cannot be "
     "accessed by script command in:\n\n");
   SetReportedValues(&mStrItems[2], cDelX);
@@ -3578,8 +3581,8 @@ int CMacCmd::ReportUserSetting(void)
 // SetUserSetting
 int CMacCmd::SetUserSetting(void)
 {
-  if (mWinApp->mParamIO->MacroGetSetting(mStrItems[1], cDelX) ||
-    mWinApp->mParamIO->MacroSetSetting(mStrItems[1], mItemDbl[2]))
+  if (mParamIO->MacroGetSetting(mStrItems[1], cDelX) ||
+    mParamIO->MacroSetSetting(mStrItems[1], mItemDbl[2]))
       ABORT_LINE(mStrItems[1] + " is not a recognized setting or cannot be set by "
       "script command in:\n\n");
   mWinApp->UpdateWindowSettings();
@@ -4988,7 +4991,7 @@ int CMacCmd::ReportColumnMode(void)
 // ReportLens
 int CMacCmd::ReportLens(void)
 {
-  mWinApp->mParamIO->StripItems(mStrLine, 1, cReport);
+  mParamIO->StripItems(mStrLine, 1, cReport);
   if (!mScope->GetLensByName(cReport, cDelX)) {
     AbortMacro();
     return 1;
@@ -5703,7 +5706,7 @@ int CMacCmd::EnterOneNumber(void)
     if (cIndex2 < 0)
       cIx0 = mItemInt[1];
   }
-  mWinApp->mParamIO->StripItems(mStrLine, cIndex, mStrCopy);
+  SubstituteLineStripItems(mStrLine, cIndex, mStrCopy);
   if (cIndex2 >= 0) {
     cTruth = KGetOneFloat(mStrCopy, cBacklashX, cIndex2);
   } else {
@@ -5722,7 +5725,7 @@ int CMacCmd::EnterString(void)
 {
   mStrCopy = "Enter a text string:";
   cReport = "";
-  mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   if (!KGetOneString(mStrCopy, cReport))
     SUSPEND_NOLINE("because no string was entered");
   if (SetVariable(mItem1upper, cReport, VARTYPE_REGULAR, -1, false))
@@ -7471,7 +7474,7 @@ int CMacCmd::ChangeItemRegistration(void)
       if (mItemEmpty[2])
         mStrCopy = "";
       else
-        mWinApp->mParamIO->StripItems(mStrLine, 2, mStrCopy);
+        mParamIO->StripItems(mStrLine, 2, mStrCopy);
       cNavItem->mNote = mStrCopy;
     } else {
       SubstituteLineStripItems(mStrLine, 2, mStrCopy);

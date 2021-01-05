@@ -212,6 +212,7 @@ void CMacroProcessor::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   mNavHelper = mWinApp->mNavHelper;
   mProcessImage = mWinApp->mProcessImage;
+  mParamIO = mWinApp->mParamIO;
   if (GetDebugOutput('%')) {
     mWinApp->AppendToLog("Commands allowing arithmetic in arguments:");
     for (int i = 0; i < mNumCommands - 1; i++)
@@ -391,7 +392,7 @@ void CMacroProcessor::OnMacroReadMany()
   CString filename;
   if (mWinApp->mDocWnd->GetTextFileName(true, false, filename))
     return;
-  mWinApp->mParamIO->ReadMacrosFromFile(filename, "", MAX_MACROS);
+  mParamIO->ReadMacrosFromFile(filename, "", MAX_MACROS);
   UpdateAllForNewScripts(false);
 }
 
@@ -418,7 +419,7 @@ void CMacroProcessor::OnScriptLoadNewPackage()
     if (AfxMessageBox("Save current scripts to current file before loading a new"
       " package file?", MB_QUESTION) == IDYES) {
       mWinApp->mDocWnd->ManageScriptPackBackup();
-      mWinApp->mParamIO->WriteMacrosToFile(oldFile, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+      mParamIO->WriteMacrosToFile(oldFile, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
     }
   }
   if (mWinApp->mDocWnd->GetTextFileName(true, false, filename, NULL, &path))
@@ -426,11 +427,11 @@ void CMacroProcessor::OnScriptLoadNewPackage()
   mWinApp->ClearAllMacros();
 
   // Try to read, try to revert if fails, and if THAT fails, assign the default name
-  if (mWinApp->mParamIO->ReadMacrosFromFile(filename, "",
+  if (mParamIO->ReadMacrosFromFile(filename, "",
     MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
     mWinApp->ClearAllMacros();
     filename = oldFile;
-    if (mWinApp->mParamIO->ReadMacrosFromFile(filename, "",
+    if (mParamIO->ReadMacrosFromFile(filename, "",
       MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
       oldFile = mWinApp->mDocWnd->GetCurrentSettingsPath();
       UtilSplitExtension(oldFile, filename, filen);
@@ -465,7 +466,7 @@ void CMacroProcessor::OnScriptSavePackage()
   if (filename.IsEmpty())
     OnScriptSavePackageAs();
   else
-    mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+    mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 }
 
 // Save to new package file
@@ -477,7 +478,7 @@ void CMacroProcessor::OnScriptSavePackageAs()
     UtilSplitPath(oldFile, path, filen);
   if (mWinApp->mDocWnd->GetTextFileName(false, false, filename, NULL, &path))
     return;
-  mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+  mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
   mWinApp->mDocWnd->SetCurScriptPackPath(filename);
   mWinApp->mDocWnd->SetScriptPackBackedUp(false);
   mWinApp->AppendToLog("Current script package file is now " + filename);
@@ -917,7 +918,7 @@ void CMacroProcessor::RunOrResume()
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
       mConSets[mConsetNums[ind]] = mChangedConsets[ind];
   for (ind = 0 ; ind < (int)mSavedSettingNames.size(); ind++)
-    mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+    mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mNewSettingValues[ind]);
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
@@ -1064,7 +1065,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
 
   // restore user settings
   for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
-    mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+    mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mSavedSettingValues[ind]);
   if (mSavedSettingNames.size())
     mWinApp->UpdateWindowSettings();
@@ -1251,12 +1252,12 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   while (currentIndex < macro->GetLength()) {
     GetNextLine(macro, currentIndex, strLine);
     if (!strLine.IsEmpty()) {
-      mWinApp->mParamIO->ParseString(strLine, strItem, MAX_MACRO_TOKENS);
+      mParamIO->ParseString(strLine, strItem, MAX_MACRO_TOKENS);
       if ((strItem[0].CompareNoCase("MacroName") == 0 ||
         strItem[0].CompareNoCase("ScriptName") == 0) && !strItem[1].IsEmpty()) {
-        mWinApp->mParamIO->StripItems(strLine, 1, newName);
+        mParamIO->StripItems(strLine, 1, newName);
       } else if (strItem[0].CompareNoCase("LongName") == 0 && !strItem[1].IsEmpty()) {
-        mWinApp->mParamIO->StripItems(strLine, 1, longName);
+        mParamIO->StripItems(strLine, 1, longName);
 
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
@@ -1307,7 +1308,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
 {
   CString strCopy;
   int index, index2;
-  mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+  mParamIO->StripItems(strLine, 1, strCopy);
 
   // Look for the name
   index = -1;
@@ -1377,7 +1378,7 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
     currentMac = mCurrentMacro;
 
   // Reparse the line so everthing is original case
-  mWinApp->mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS);
+  mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS);
 
   // No colon, name is first item and need to search all
   if (colonLineInd < 0) {
@@ -2759,7 +2760,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         inComment = false;
       continue;
     }
-    if (mWinApp->mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS))
+    if (mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS))
       FAIL_CHECK_LINE("Too many items on line");
     if (strItems[0].Find("/*") == 0) {
       inComment = true;
@@ -3210,7 +3211,7 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
     mCurrentIndex = nextIndex;
     GetNextLine(macro, nextIndex, strLine);
     if (!strLine.IsEmpty()) {
-      mWinApp->mParamIO->ParseString(strLine, strItems, 4);
+      mParamIO->ParseString(strLine, strItems, 4);
       strItems[0].MakeUpper();
       cmdIndex = LookupCommandIndex(strItems[0]);
       isCATCH = CMD_IS(CATCH);
@@ -3282,7 +3283,7 @@ int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops,
     mCurrentIndex = nextIndex;
     GetNextLine(macro, nextIndex, strLine);
     if (!strLine.IsEmpty()) {
-      mWinApp->mParamIO->ParseString(strLine, strItems, 4);
+      mParamIO->ParseString(strLine, strItems, 4);
       strItems[0].MakeUpper();
       cmdIndex = LookupCommandIndex(strItems[0]);
 
@@ -3400,7 +3401,7 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
 
   // Get the filename in original case
   SubstituteVariables(&strLine, 1, strLine);
-  mWinApp->mParamIO->StripItems(strLine, index, strCopy);
+  mParamIO->StripItems(strLine, index, strCopy);
   fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
   if (!fullp) {
     SEMMessageBox("The filename cannot be converted to an absolute path in statement:"
@@ -3795,7 +3796,7 @@ void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip,
   CString &strCopy)
 {
   SubstituteVariables(&strLine, 1, strLine);
-  mWinApp->mParamIO->StripItems(strLine, numStrip, strCopy);
+  mParamIO->StripItems(strLine, numStrip, strCopy);
 }
 
 // Convert letter after command to LD area # or abort if not legal.  Tests for whether

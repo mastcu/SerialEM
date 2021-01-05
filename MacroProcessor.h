@@ -300,6 +300,7 @@ protected:
   EMbufferManager *mBufferManager;
   CNavHelper *mNavHelper;
   CProcessImage *mProcessImage;
+  CParameterIO *mParamIO;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;
   CString mModeCaps[5];
