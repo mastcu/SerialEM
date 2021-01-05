@@ -77,6 +77,8 @@ void EMstatusWindow::Update()
   int indStat = 1;
   int width, height;
   bool spaceIt;
+  if (!mInitialized)
+    return;
   mBufText[0] = (CStatic *)GetDlgItem(IDC_DISPLAYEDBUF);
   mBufText[1] = (CStatic *)GetDlgItem(IDC_OTHERBUF1);
   mBufText[2] = (CStatic *)GetDlgItem(IDC_OTHERBUF2);
@@ -211,6 +213,7 @@ BOOL EMstatusWindow::OnInitDialog()
 
   m_sbcChangeBuf.SetRange(0,100);
   m_sbcChangeBuf.SetPos(50);
+  mInitialized = true;
   Update();
 
   return TRUE;  // return TRUE unless you set the focus to a control
