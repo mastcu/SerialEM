@@ -35,6 +35,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_iStageNotBeam(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
+  mInitialized = false;
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
   mFocusIncrementIndex = 3 * MAX_FOCUS_DECIMALS;
@@ -100,7 +101,6 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_SCREEN_UPDOWN, OnButScreenUpdown)
   ON_BN_CLICKED(IDC_RBEAM_CONTROL, OnBeamControl)
   ON_BN_CLICKED(IDC_RSTAGE_CONTROL, OnBeamControl)
-  ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 
@@ -155,15 +155,6 @@ BOOL CRemoteControl::OnInitDialog()
   return TRUE;
 }
 
-void CRemoteControl::OnPaint()
-{
-  CPaintDC dc(this); // device context for painting
-
-  DrawSideBorders(dc);
-  if (mLastGunOn > 0)
-     DrawButtonOutline(dc, &m_butValves, 3, RGB(0, 255, 0));
-}
-
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
@@ -210,7 +201,6 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     else
       m_butValves.SetWindowText(inGunOn > 0 ? "Close Valves" : "Open Valves");
     m_butValves.EnableWindow(inGunOn >= 0 && baseEnable);
-    Invalidate();
   }
 
   if (inProbe != mLastProbeMode && FEIscope) {

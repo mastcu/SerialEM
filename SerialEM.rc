@@ -176,7 +176,6 @@ BEGIN
         MENUITEM "A&utosave",                   ID_SETTINGS_AUTOSAVE
         MENUITEM SEPARATOR
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
-        MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
     END
     POPUP "&Camera"
     BEGIN
@@ -451,9 +450,6 @@ BEGIN
         MENUITEM "Save Package &As...",         ID_SCRIPT_SAVEPACKAGEAS
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
         MENUITEM SEPARATOR
-        MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
-        MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
-        MENUITEM SEPARATOR
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
         MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
         MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
@@ -476,7 +472,6 @@ BEGIN
         MENUITEM "Refine && Re&align",          ID_TASKS_FINEREALIGN
         MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
         MENUITEM "Use Trial in LD Refine",      ID_TASKS_TRIAL_IN_LD_REFINE
-        MENUITEM "Rough Use Search if in LM",   ID_TASKS_ROUGHUSESEARCHIFINLM
         MENUITEM SEPARATOR
         MENUITEM "&Walk Up",                    ID_TASKS_WALKUP
         MENUITEM "Wal&kup && Anchor",           ID_TASKS_WALKUPANCHOR
@@ -512,7 +507,6 @@ BEGIN
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
             MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
             MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
-            MENUITEM "&Turn Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
         END
     END
     POPUP "T&ilt Series"
@@ -613,7 +607,6 @@ BEGIN
         POPUP "Options"
         BEGIN
             MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
-            MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
             MENUITEM "&Autosave Nav File",          ID_NAVIGATOR_AUTOSAVE
             MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
@@ -793,9 +786,9 @@ BEGIN
     EDITTEXT        IDC_EDITZOOM,82,54,24,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Extra info",IDC_SCALEBAR,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,80,38,10
     EDITTEXT        IDC_BLACK,82,8,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Autozoom",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,90,41,10
+    CONTROL         "Autozoom",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,80,41,10
     EDITTEXT        IDC_WHITE,82,21,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Antialiasing",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,57,10
+    CONTROL         "Antialias filtering for zoom < 1",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,99,10
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
@@ -815,7 +808,6 @@ BEGIN
     CONTROL         "Invert",IDC_INVERT_CON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,82,43,31,10
     CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,11,67,10
     CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,22,67,10
-    CONTROL         "Tlit axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,80,45,10
 END
 
 IDD_BUFFERCONTROL DIALOGEX 0, 0, 119, 108
@@ -854,7 +846,7 @@ BEGIN
     GROUPBOX        "Copy Active Image to Buffer",IDC_STATIC,4,7,111,26
 END
 
-IDD_FILEPROPERTIES DIALOGEX 0, 0, 181, 345
+IDD_FILEPROPERTIES DIALOGEX 0, 0, 181, 334
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "File Properties"
@@ -869,19 +861,18 @@ BEGIN
     CONTROL         "Subtract 32768",IDC_RSHIFTDOWN,"Button",BS_AUTORADIOBUTTON,93,42,60,10
     GROUPBOX        "When saving 16 bit data",IDC_STATSAVING16,88,9,89,49,WS_GROUP
     CONTROL         "MRC stack file",IDC_RMRCFILE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,218,59,10
-    CONTROL         "HDF stack file",IDC_RHDFFILE,"Button",BS_AUTORADIOBUTTON,20,229,60,10
-    CONTROL         "TIFF file (one image per file)",IDC_RTIFFFILE,"Button",BS_AUTORADIOBUTTON,20,240,99,10
+    CONTROL         "TIFF file (one image per file)",IDC_RTIFFFILE,"Button",BS_AUTORADIOBUTTON,20,229,99,10
     CONTROL         "Series of TIFF files listed in an Autodoc file",IDC_RADOCFILE,
-                    "Button",BS_AUTORADIOBUTTON,20,251,141,10
-    CONTROL         "JPEG file (one image per file)",IDC_RJPEGFILE,"Button",BS_AUTORADIOBUTTON,20,262,103,10
-    GROUPBOX        "Save images to",IDC_STATIC,15,207,153,71,WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON,20,240,141,10
+    CONTROL         "JPEG file (one image per file)",IDC_RJPEGFILE,"Button",BS_AUTORADIOBUTTON,20,251,103,10
+    GROUPBOX        "Save images to",IDC_STATIC,15,207,153,60,WS_GROUP
     CONTROL         "Save extra information in a '.mdoc' metadata file",IDC_SAVEMDOC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,194,157,10
-    CONTROL         "None",IDC_RNOCOMPRESS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,23,294,33,10
-    CONTROL         "ZIP",IDC_RZIPCOMPRESS,"Button",BS_AUTORADIOBUTTON,59,294,33,10
-    CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,95,294,33,10
-    CONTROL         "JPEG",IDC_RJPEGCOMPRESS,"Button",BS_AUTORADIOBUTTON,131,294,34,10
-    GROUPBOX        "Type of compression in TIFF or HDF file",IDC_STATCOMPRESS,15,284,153,25,WS_GROUP
+    CONTROL         "None",IDC_RNOCOMPRESS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,23,283,33,10
+    CONTROL         "ZIP",IDC_RZIPCOMPRESS,"Button",BS_AUTORADIOBUTTON,59,283,33,10
+    CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,95,283,33,10
+    CONTROL         "JPEG",IDC_RJPEGCOMPRESS,"Button",BS_AUTORADIOBUTTON,131,283,34,10
+    GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,15,273,153,25,WS_GROUP
     GROUPBOX        "Percent of pixels to truncate converting to bytes",IDC_TRUNCGROUP,10,65,160,30
     LTEXT           "As black (0):",IDC_TRUNCBLACKTEXT,16,78,38,8
     EDITTEXT        IDC_TRUNCBLACKEDIT,55,76,24,14,ES_AUTOHSCROLL
@@ -896,11 +887,11 @@ BEGIN
     LTEXT           "Maximum number of sections:",IDC_MAXSECTSTEXT,31,173,89,8
     LTEXT           "(Be generous)",IDC_BEGENEROUS,51,182,44,8
     EDITTEXT        IDC_MAXSECTSEDIT,122,174,27,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,32,329,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,98,329,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,165,333,10,10
+    DEFPUSHBUTTON   "OK",IDOK,32,318,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,98,318,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,165,322,10,10
     CONTROL         "Skip this dialog in future (re-enable in File menu)",IDC_SKIP_FILE_DLG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,313,157,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,302,157,10
 END
 
 IDD_BUFFERSTATUS DIALOGEX 0, 0, 119, 58
@@ -1426,10 +1417,11 @@ EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Tilt Series Setup"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,231,103,10
-    CONTROL         "Vary exposure to be 1.99",IDC_RINTENSITYCOSINE,"Button",BS_AUTORADIOBUTTON,10,242,84,10
+    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,231,103,10
+    CONTROL         "Vary intensity as 1/cosine of tilt angle to the 1/1",IDC_RINTENSITYCOSINE,
+                    "Button",BS_AUTORADIOBUTTON,14,242,151,10
     CONTROL         "Set intensity to keep mean counts of  Record images at",IDC_RINTENSITYMEAN,
-                    "Button",BS_AUTORADIOBUTTON,10,255,179,10
+                    "Button",BS_AUTORADIOBUTTON,14,255,179,10
     LTEXT           "Beam Intensity or Exposure Control",IDC_TSS_TITLE3,25,209,168,8
     CONTROL         "Average Record dark references",IDC_AVERAGERECREF,
                     "Button",BS_AUTOCHECKBOX,10,382,112,10
@@ -1444,8 +1436,6 @@ BEGIN
     CONTROL         "After",IDC_RTRACKAFTER,"Button",BS_AUTORADIOBUTTON,70,689,28,10
     CONTROL         "Before && after     Autofocusing",IDC_RTRACKBOTH,"Button",BS_AUTORADIOBUTTON,101,689,103,10
     LTEXT           "Track:",IDC_STATTRACKWHEN,11,689,19,8
-    LTEXT           "",IDC_STAT_STAR_TILT,114,16,4,8
-    LTEXT           "",IDC_STAT_STAR_BIDIR,145,41,4,8
     LTEXT           "Start at",IDC_STATSTARTAT,10,16,22,8
     EDITTEXT        IDC_EDITSTARTANGLE,33,14,27,12,ES_AUTOHSCROLL
     LTEXT           "End at",IDC_STATENDAT,65,16,20,8
@@ -1472,9 +1462,9 @@ BEGIN
     LTEXT           "Limit image shift to ",IDC_STATLIMITIS,10,145,57,8
     EDITTEXT        IDC_EDITLIMITIS,68,143,24,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um at start",IDC_STATISMICRONS,95,145,34,8
-    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,94,240,10,14
-    LTEXT           "x higher at 60 deg (1/cos to 1/1.99 power)",IDC_STATPOWER,105,242,121,8
-    EDITTEXT        IDC_EDITCOUNTS,190,254,25,12,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,166,240,10,14
+    LTEXT           "power",IDC_STATPOWER,180,242,20,8
+    EDITTEXT        IDC_EDITCOUNTS,194,254,25,12,ES_AUTOHSCROLL | WS_GROUP
     CTEXT           "The image in buffer A implies a Record zero-tilt mean of",IDC_STATCURRENTCOUNTS,6,267,216,8
     CONTROL         "Keep intensity below current value (use if intensity already set up)",IDC_LIMITTOCURRENT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,291,208,10
@@ -1482,7 +1472,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,303,191,10
     LTEXT           "Defocus target:",IDC_STATDEFTARG,10,423,46,8
     EDITTEXT        IDC_EDITFOCUSTARGET,62,421,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATTARGMICRONS,88,423,15,8
+    LTEXT           "um",IDC_STATTARGMICRONS,88,423,10,8
     LTEXT           "Beam tilt:",IDC_STATBEAMTILT,125,423,28,8
     EDITTEXT        IDC_EDITBEAMTILT,155,421,24,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "milliradians",IDC_STATMILLIRAD,181,423,42,8
@@ -1735,11 +1725,11 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,111,122,8,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,118,122,1,19
     PUSHBUTTON      "S",IDC_COPYTOSEARCH,93,199,14,8
-    CONTROL         "Vie.",IDC_GOTO_VIEW,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,23,80,16,12
-    CONTROL         "Foc.",IDC_GOTO_FOCUS,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,42,80,17,12
-    CONTROL         "Tri.",IDC_GOTO_TRIAL,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,62,80,16,12
-    CONTROL         "Rec.",IDC_GOTO_RECORD,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,81,80,16,12
-    CONTROL         "Sea.",IDC_GOTO_SEARCH,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,80,16,12
+    PUSHBUTTON      "Vie.",IDC_GOTO_VIEW,23,80,16,12
+    PUSHBUTTON      "Foc.",IDC_GOTO_FOCUS,42,80,17,12
+    PUSHBUTTON      "Tri.",IDC_GOTO_TRIAL,62,80,16,12
+    PUSHBUTTON      "Rec.",IDC_GOTO_RECORD,81,80,16,12
+    PUSHBUTTON      "Sea.",IDC_GOTO_SEARCH,100,80,16,12
     LTEXT           "Go to:",IDC_STATIC,3,81,18,8
 END
 
@@ -2415,8 +2405,8 @@ BEGIN
     PUSHBUTTON      "Apply Image Shift on Scope",IDC_BUT_APPLY_IS,70,32,88,12
 END
 
-IDD_TSVARIATIONS DIALOGEX 0, 0, 169, 287
-STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+IDD_TSVARIATIONS DIALOGEX 0, 0, 161, 287
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Tilt Series Scheduled Changes"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
@@ -2426,32 +2416,32 @@ BEGIN
     EDITTEXT        IDC_EDIT_TSV_VALUE,104,5,36,14,ES_AUTOHSCROLL
     CONTROL         "Change at both plus and minus angles",IDC_CHECK_TSV_PLUS_MINUS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,22,127,10
-    CONTROL         "Exposure time",IDC_TSV_EXPOSURE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,43,56,10
-    CONTROL         "Drift settling",IDC_TSV_DRIFT,"Button",BS_AUTORADIOBUTTON,14,54,50,10
-    CONTROL         "Defocus target",IDC_TSV_DEFOCUS,"Button",BS_AUTORADIOBUTTON,14,65,57,10
-    CONTROL         "Energy loss",IDC_TSV_ENERGY,"Button",BS_AUTORADIOBUTTON,14,76,48,10
-    CONTROL         "Slit width",IDC_TSV_SLIT_WIDTH,"Button",BS_AUTORADIOBUTTON,14,87,42,10
-    CONTROL         "Frame time",IDC_TSV_FRAME_TIME,"Button",BS_AUTORADIOBUTTON,14,98,49,10
-    GROUPBOX        "Set",IDC_STATIC,8,34,66,77,WS_GROUP
-    CONTROL         "Use fixed value",IDC_TSV_FIXED_VALUE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,91,43,59,10
-    CONTROL         "Change linearly",IDC_TSV_LINEAR_CHANGE,"Button",BS_AUTORADIOBUTTON,91,56,60,10
-    GROUPBOX        "Above angle",IDC_STATIC,87,34,72,39,WS_GROUP
+    CONTROL         "Exposure time",IDC_TSV_EXPOSURE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,43,56,10
+    CONTROL         "Drift settling",IDC_TSV_DRIFT,"Button",BS_AUTORADIOBUTTON,9,54,50,10
+    CONTROL         "Defocus target",IDC_TSV_DEFOCUS,"Button",BS_AUTORADIOBUTTON,9,65,57,10
+    CONTROL         "Energy loss",IDC_TSV_ENERGY,"Button",BS_AUTORADIOBUTTON,9,76,48,10
+    CONTROL         "Slit width",IDC_TSV_SLIT_WIDTH,"Button",BS_AUTORADIOBUTTON,9,87,42,10
+    CONTROL         "Frame time",IDC_TSV_FRAME_TIME,"Button",BS_AUTORADIOBUTTON,9,98,49,10
+    GROUPBOX        "Set",IDC_STATIC,3,34,66,77,WS_GROUP
+    CONTROL         "Use fixed value",IDC_TSV_FIXED_VALUE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,86,43,59,10
+    CONTROL         "Change linearly",IDC_TSV_LINEAR_CHANGE,"Button",BS_AUTORADIOBUTTON,86,56,60,10
+    GROUPBOX        "Above angle",IDC_STATIC,82,34,72,39,WS_GROUP
     PUSHBUTTON      "Add Item",IDC_BUT_TSV_ADD_ITEM,3,130,40,14
     PUSHBUTTON      "Remove",IDC_BUT_TSV_REMOVE,3,152,40,14
-    LISTBOX         IDC_LIST_TSV_TABLE,3,190,162,75,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST_TSV_TABLE,3,190,154,75,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON   "OK",IDOK,28,269,45,14
     PUSHBUTTON      "Cancel",IDCANCEL,87,269,45,14
     PUSHBUTTON      "?",IDC_BUTHELP,146,273,10,10
     PUSHBUTTON      "Add Series",IDC_BUT_TSV_ADD_SERIES,84,167,41,14
     LTEXT           "Step factor",IDC_STATIC,57,130,34,8
     EDITTEXT        IDC_EDIT_TSV_SERIES_STEP,94,128,25,12,ES_AUTOHSCROLL
-    LTEXT           "Use cosine to the 1/1.99",IDC_STAT_SERIES_POWER,57,142,71,8
-    CONTROL         "",IDC_SPIN_TSV_SERIES_POWER,"msctls_updown32",UDS_ARROWKEYS,129,139,9,14
-    LTEXT           "power",IDC_STATIC,140,142,20,8
+    LTEXT           "Use cosine to the 1/1",IDC_STAT_SERIES_POWER,57,142,63,8
+    CONTROL         "",IDC_SPIN_TSV_SERIES_POWER,"msctls_updown32",UDS_ARROWKEYS,121,139,9,14
+    LTEXT           "power",IDC_STATIC,133,142,20,8
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,3,115,154,1
     CONTROL         "Keep # of frames constant",IDC_CHECK_TSV_NFRAMES_FIXED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,58,155,93,10
-    GROUPBOX        "Cosine exposure series",IDC_STATIC,52,118,113,68
+    GROUPBOX        "Cosine exposure series",IDC_STATIC,52,118,105,68
 END
 
 IDD_NCMIR4K DIALOGEX 0, 0, 319, 198
@@ -3326,18 +3316,6 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,62,113,10
 END
 
-IDD_MACROSELECTER DIALOGEX 0, 0, 241, 72
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Script Chooser"
-FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,54,51,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,137,51,50,14
-    CTEXT           "Select the script to run on program shutdown or ""None"" not to run one",IDC_STAT_ENTRY_TEXT,7,18,225,8
-    CTEXT           "",IDC_STAT_INFO_TEXT,7,8,225,8
-    COMBOBOX        IDC_COMBO_SELECTOR,70,31,100,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3418,7 +3396,7 @@ BEGIN
 
     IDD_FILEPROPERTIES, DIALOG
     BEGIN
-        BOTTOMMARGIN, 343
+        BOTTOMMARGIN, 332
     END
 
     IDD_BUFFERSTATUS, DIALOG
@@ -3661,7 +3639,7 @@ BEGIN
     IDD_TSVARIATIONS, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 165
+        RIGHTMARGIN, 157
         TOPMARGIN, 2
         BOTTOMMARGIN, 283
     END
@@ -3821,14 +3799,6 @@ BEGIN
         TOPMARGIN, 3
         BOTTOMMARGIN, 72
     END
-
-    IDD_MACROSELECTER, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 234
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 65
-    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3964,21 +3934,6 @@ BEGIN
 END
 
 IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_MACROSELECTER AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -4392,8 +4347,6 @@ STRINGTABLE
 BEGIN
     IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
     IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
-    IDC_RHDFFILE            "Save to HDF file that can hold multiple images"
-    IDC_TILTAXIS            "Draw the tilt axis on the image"
 END
 
 STRINGTABLE
@@ -5110,7 +5063,7 @@ BEGIN
     IDC_NA_COOKSPECIMEN     "Run specimen cooking routine"
     IDC_NA_CENTERBEAM       "Run beam autocentering routine"
     IDC_RNOCOMPRESS         "Save TIFF file without compression"
-    IDC_RZIPCOMPRESS        "Save TIFF or HDF file with Zip (deflate) compression"
+    IDC_RZIPCOMPRESS        "Save TIFF file with Zip (deflate) compression"
     IDC_RLZWCOMPRESS        "Save TIFF file with Zempel-Liv compression"
     IDC_BUTSWAPXY           "Exchange X and Y coordinates"
     IDC_RMRCFILE            "Save to MRC file that can hold multiple images"
@@ -6013,15 +5966,6 @@ BEGIN
     ID_WINDOW_RESCUELOGWINDOW 
                             "Bring the log window up in the upper left corner of screen"
     ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
-    ID_SETTINGS_BASICMODE   "Toggle basic mode with simpler interface on or off"
-    ID_SCRIPT_RUNONPROGRAMSTART "Select script to run when the program starts"
-    ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
-    ID_OPTIONS_USEITEMLABELSINFILENAMES 
-                            "Substitute item's label for previous one when generating new filenames"
-    ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 
-                            "Close valves or turn off filament when program is idle for specified time"
-    ID_TASKS_ROUGHUSESEARCHIFINLM 
-                            "Use Search in Low Dose for rough eucentricity if scope and Search are in LM"
 END
 
 #endif    // English (United States) resources
