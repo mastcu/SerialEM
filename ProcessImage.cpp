@@ -2067,6 +2067,7 @@ void CProcessImage::OnMeshForGridBars()
 #define MAX_GRID_PEAKS 10000
 #define MAX_SCAN 64
 #define MAX_AUTO_TARGET 7
+#define MAX_MESS_BUF 200
 
 // Find a pixel size either de novo or from point marked in autocorrelation
 void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale, 
@@ -2091,15 +2092,13 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   int targetMinBlocks[MAX_AUTO_TARGET] = {170, 125, 12, 8, 5, 3, 0};
   int autoTargetSizes[MAX_AUTO_TARGET] = {2048, 1536, 1024, 768, 512, 384, 256};
   double gridNM = 1000000 / mGridLinesPerMM;
-  float delX[2], delY[2], delta, corMin, corMax, tryX, tryY;
-  float delpX[MAX_SCAN], delpY[MAX_SCAN], perpMedian[MAX_SCAN];
-  float variation, varTry, tryMedian, maxPerpMed;
-  int trimX, trimY, nxPad, nyPad, ix1, iy1, nxTaper, nyTaper, ind1, ind2, i, numDiv;
-  int indTry, numTry, indst, indp[MAX_SCAN], nump[MAX_SCAN], indfarp[MAX_SCAN];
-  double dist, dist1, dist2, distp[MAX_SCAN], distmin, angle, pixel, totdist, maxtot;
+  float delta, corMin, corMax, tryX;
+  int trimX, trimY, nxPad, nyPad, ix1, iy1, nxTaper, nyTaper, ind1, ind2, numDiv;
+  double dist, pixel;
+  float angle, dist1, dist2;
   double pixel1, pixel2;
   CString report, str;
-  int num[2], indfar[2], div, isc;
+  int num[2];
   KImage *image = mImBufs->mImage;
   int nx = image->getWidth();
   int ny = image->getHeight();
@@ -2117,6 +2116,7 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   data = image->getData();
   bool doCatalase = mCatalaseForPixel && mGridMeshSize <= 0;
   int magInd = mImBufs->mMagInd;
+  char messBuf[MAX_MESS_BUF];
 
   if (mGridMeshSize > 0)
     gridNM = 2.54e7 / mGridMeshSize;
@@ -2196,133 +2196,14 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   // Set up the filter and get the cross-correlation and find peaks
   XCorrSetCTF(sigma1, 0.f, 0.f, 0.f, CTF, nxPad, nyPad, &delta);
   XCorrCrossCorr(array, array, nxPad, nyPad, delta, CTF);
-  XCorrPeakFind(array, nxPad + 2, nyPad, &Xpeaks[0], &Ypeaks[0], 
-    &peak[0], numPeaks);
 
-  if (!markedX && !markedY) {
-
-    // Find mean distance to central ~8 peaks
-    ind1 = 0;
-    dist1 = 0.;
-    for (i = 0; i < 9; i++) {
-      if (peak[i] > -1.e29) {
-        dist = sqrt((double)(Xpeaks[i] * Xpeaks[i] + Ypeaks[i] * Ypeaks[i]));
-        if (dist > 1.) {
-          ind1++;
-          dist1 += dist;
-        }
-      }
-    }
-
-    // Set number to scan.  Not sure why scanning so many, but surely catalase should
-    // scan fewer
-    if (ind1 > 0) {
-      dist = dist1 / ind1;
-      numScan = (int)(1.3 * size / dist);
-      numScan = B3DMIN(doCatalase ? 16 : 64, B3DMAX(8, numScan));
-    }
-
-    // Scan peaks not at center on right side
-    ind1 = -1;
-    maxtot = 0.;
-    distmin = 1.e10;
-    maxPerpMed = -1.e37f;
-    isc = -1;
-    for (i = 0; i < numScan; i++) {
-      if (!(peak[i] > -1.e29 && Xpeaks[i] >= 0. && 
-        (fabs((double)Xpeaks[i]) > 1. || fabs((double)Ypeaks[i]) > 1.)))
-        continue;
-
-      // Get the series from this peak
-      isc++;
-      if (isc >= MAX_SCAN) {
-        isc--;
-        break;
-      }
-      delpX[isc] = Xpeaks[i];
-      delpY[isc] = Ypeaks[i];
-      indfarp[isc] = i;
-      indst = i;
-      indp[isc] = i;
-      FindPeakSeries(Xpeaks, Ypeaks, peak, numPeaks, delpX[isc], delpY[isc], indfarp[isc],
-        nump[isc], ind2, variation);
-      /*SEMTrace('1', "peak %.1f %.1f  value %.6g  num %d  variation %f", delpX[isc], 
-        delpY[isc], peak[i], nump[isc], variation);*/
-      perpMedian[isc] = PerpendicularLineMedian(array, nxPad, nyPad, delpX[isc], 
-        delpY[isc]);
-
-      // Then check for divisions of this point giving valid series
-      distp[isc] = sqrt((double)(delpX[isc] * delpX[isc] + delpY[isc] * delpY[isc]));
-      totdist = nump[isc] * distp[isc];
-      numDiv = (int)(distp[isc] / minDivDist);
-      for (div = 2; div <= numDiv; div++) {
-        tryX = Xpeaks[indst] / div;
-        tryY = Ypeaks[indst] / div;
-        indTry = -1;
-        FindPeakSeries(Xpeaks, Ypeaks, peak, numPeaks, tryX, tryY, indTry, numTry, ind2,
-          varTry);
-        if (indTry >= 0) {
-          /*SEMTrace('1', "div %d  value %.6g  num %d  variation %f", div, peak[ind2],
-            numTry, varTry);*/
-          tryMedian = PerpendicularLineMedian(array, nxPad, nyPad, tryX, tryY);
-        }       
-
-        // If it found a series and: it goes at least to the scanned peak and nearly as far
-        // as the original and its variation is not much higher and its perpendicular 
-        // median is good enough, take it
-        dist = sqrt((double)(tryX * tryX + tryY * tryY));
-        if (indTry >= 0 && numTry >= div && dist * numTry >= totDistCrit * totdist && 
-          varTry < 2.5 * variation && (doCatalase ||
-          tryMedian > perpMedCrit * B3DMAX(maxPerpMed, perpMedian[isc]))) {
-            distp[isc] = dist;
-            delpX[isc] = tryX;
-            delpY[isc] = tryY;
-            indfarp[isc] = indTry;
-            nump[isc] = numTry;
-            indp[isc] = ind2;
-            perpMedian[isc] = tryMedian;
-          }
-      }
-      if (indp[isc] >= 0) {  // WHAT WAS THIS TEST SUPPOSED TO BE? IT WAS (indp >= 0)
-        totdist = nump[isc] * distp[isc];
-        maxtot = B3DMAX(totdist, maxtot);
-        maxPerpMed = B3DMAX(maxPerpMed, perpMedian[isc]);
-      }
-    }
-
-    // Now that maximum extent has been determined, select the smallest interval that 
-    // gives a long enough maximum extent and has a good enough perpendicular median
-    for (i = 0; i <= isc; i++) {
-      totdist = nump[i] * distp[i];
-      if (distp[i] <= distmin && totdist >= totMaxCrit * maxtot && 
-        (doCatalase || perpMedian[i] > perpMedCrit * maxPerpMed)) {
-          dist1 = distp[i];
-          delX[0] = delpX[i];
-          delY[0] = delpY[i];
-          indfar[0] = indfarp[i];
-          num[0] = nump[i];
-          ind1 = indp[i];
-          distmin = distp[i];
-      }
-    }
-
-  } else {
-
-    // Find peak near user point
-    ind1 = ClosestRightSidePeak(Xpeaks, Ypeaks, peak, numPeaks, markedX, markedY);
-    if (ind1 >= 0) {
-      indfar[0] = ind1;
-      delX[0] = Xpeaks[ind1];
-      delY[0] = Ypeaks[ind1];
-      FindPeakSeries(Xpeaks, Ypeaks, peak, numPeaks, delX[0], delY[0], indfar[0], num[0],
-        ind1, variation);
-      dist1 = sqrt((double)(delX[0] * delX[0] + delY[0] * delY[0]));
-    }
-  }
+  ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], numPeaks,
+    doCatalase ? 16 : 64, catalFac, markedX, markedY, &dist1, &dist2, &angle, num, &ind1,
+    &messBuf[0], MAX_MESS_BUF);
 
   // Now take care of display regardless, display point
   if (!CorrelationToBufferA(array, nxPad, nyPad, 1, corMin, corMax)) {
-    if (ind1 >= 0) {
+    if (ind2 >= 0) {
       delta = 32000.f * (peak[1] - corMin) / (corMax - corMin);
       delta = delta + B3DMIN(0.1f * (32000.f - delta), 0.2f * delta);
       if (mImBufs->mImageScale) {
@@ -2347,48 +2228,14 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   }
   delete [] array;
 
-  if (ind1 < 0) {
-    AfxMessageBox("Did not find a peak away from the center of the autocorrelation", 
-      MB_EXCLAME);
+  if (ind2) {
+    SEMMessageBox(messBuf);
     return;
   }
-
-  // Find closest valid point to one of the two 90 degree rotations
-  ind2 = ClosestRightSidePeak(Xpeaks, Ypeaks, peak, numPeaks, catalFac * delY[0], 
-    -catalFac * delX[0]);
-  if (ind2 < 0) {
-    AfxMessageBox("Did not find another peak 90 degrees away from best one", MB_EXCLAME);
-    return;
-  }
-
-  dist2 = sqrt((double)(Xpeaks[ind2] * Xpeaks[ind2] + Ypeaks[ind2] * Ypeaks[ind2]));
-  angle = acos((delX[0] * Xpeaks[ind2] + delY[0] * Ypeaks[ind2]) / 
-    (dist1 * dist2)) / DTOR;
-  if (fabs(angle - 90.) > 10.) {
-    report.Format("The angle between the two peaks that were found\n"
-      "is %.1f degrees, not close enough to 90 degrees", angle);
-    AfxMessageBox(report, MB_EXCLAME);
-    return;
-  }
-  if (fabs(catalFac * dist1 - dist2) / B3DMAX(catalFac * dist1, dist2) > 0.2) {
-    report.Format("The distances from the center to the two peaks that were found,\n"
-      "%.1f and %.1f, differ by more than 20%%", dist1, dist2);
-    AfxMessageBox(report, MB_EXCLAME);
-    return;
-  }
-
-  // Walk out from the second peak
-  delX[1] = Xpeaks[ind2];
-  delY[1] = Ypeaks[ind2];
-  indfar[1] = ind2;
-  FindPeakSeries(Xpeaks, Ypeaks, peak, numPeaks, delX[1], delY[1], indfar[1],
-    num[1], indst, variation);
 
   dist1 *= needBin;
-  dist2 = sqrt(delX[1] * delX[1] + delY[1] * delY[1]) * needBin;
+  dist2 *= needBin;
 
-  // Get the average angle by adding the two and subtracting 90, - for Y inversion
-  angle = -0.5 * ((atan2(delY[0], delX[0]) + atan2(delY[1], delX[1]))/ DTOR - 90.);
   if (doCatalase) {
     pixel1 = mShortCatalaseNM / dist1;
     pixel2 = 2. * mLongCatalaseNM / dist2;
@@ -2475,178 +2322,6 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
       mWinApp->mDocWnd->SetShortTermNotSaved();
     }
   }
-  /*  Hang on to this in case diagonals start showing up
-  // Now need to check if this is a diagonal: rotate by 45 degrees
-  if (delY[0] < 0.) {
-    tryX = delX[0] / 2 - delY[0] / 2;
-    tryY = delX[0] / 2 + delY[0] / 2;
-  } else {
-    tryX = delX[0] / 2 + delY[0] / 2;
-    tryY = -delX[0] / 2 + delY[0] / 2;
-  }
-
-  // Get a series, use it if it is half as long as other one
-  indTry = -1;
-  FindPeakSeries(Xpeaks, Ypeaks, peak, numPeaks, tryX, tryY, indTry, numTry, ind2);
-  dist = sqrt((double)(tryX * tryX + tryY * tryY));
-  if (indTry >= 0 && numTry * dist > num[0] * dist1 / 2.) {
-    dist1 = dist;
-    delX[0] = tryX;
-    delY[0] = tryY;
-    indfar[0] = indTry;
-    num[0] = numTry;
-    ind1 = ind2;
-  } */
-}
-
-// Walk out from the given point in a series, as far as possible
-void CProcessImage::FindPeakSeries(float *Xpeaks, float *Ypeaks, float *peak, 
-                                   int numPeaks, float &delX, float &delY, 
-                                   int &indFar, int &numSeries, int &indNear, 
-                                   float &variation)
-{
-  float critBase = 1.;
-  float critAdd = 0.02f;
-  int i, ind;
-  float expectX, expectY, dist, dx, dy, critsq, diffSum, peakMin, peakMax, lastPeak;
-  dist = (float)sqrt((double)(delX * delX + delY * delY));
-  critsq = critBase + critAdd * dist;
-  critsq = critsq * critsq;
-  diffSum = 0.;
-  numSeries = 0;
-
-  // If there is a point defined, set the peak values
-  if (indFar >= 0) {
-    numSeries = 1;
-    peakMin = peakMax = lastPeak = peak[indFar];
-  }
-  indNear = indFar;
-  while (1) {
-    ind = -1;
-
-    // Set expected position then look for peak at position
-    expectX = (float)(numSeries + 1) * delX;
-    expectY = (float)(numSeries + 1) * delY;
-    for (i = 0; i < numPeaks; i++) {
-      if (peak[i] < -1.e-29 || Xpeaks[i] < 0 || 
-        (Xpeaks[i] < 1. && fabs((double)Ypeaks[i]) < 1.))
-        continue;
-      dx = Xpeaks[i] - expectX;
-      dy = Ypeaks[i] - expectY;
-      dist = dx * dx + dy * dy;
-      if (dist < critsq) {
-        ind = i;
-        break;
-      }
-    }
-
-    // If didn't find one, done; otherwise refine the interval
-    if (ind < 0)
-      break;
-    indFar = ind;
-    numSeries++;
-    delX = Xpeaks[ind] / numSeries;
-    delY = Ypeaks[ind] / numSeries;
-
-    // Keep track of min, max, and sum of differences
-    if (indNear < 0) {
-      indNear = indFar;
-      peakMin = peakMax = lastPeak = peak[indFar];
-    } else {
-      peakMin = B3DMIN(peakMin, peak[ind]);
-      peakMax = B3DMAX(peakMax, peak[ind]);
-      diffSum += (float)fabs((double)(peak[ind] - lastPeak));
-      lastPeak = peak[ind];
-    }
-  }
-  variation = 1.;
-  if (numSeries > 2 && peakMax - peakMin > 1.e-35 * diffSum)
-    variation = diffSum / (peakMax - peakMin);
-}
-
-// Given a position delX, delY that can be on either side, it finds the closest peak
-// on the right side to either the point or its mirror
-int CProcessImage::ClosestRightSidePeak(float * Xpeaks, float * Ypeaks, float * peak, 
-                                        int numPeaks, float delX, float delY)
-{
-  int ind1, i;
-  float dist, dist2, dx, dy, distmin;
-  distmin = 1.e30f;
-  ind1 = -1;
-  for (i = 0; i < numPeaks; i++) {
-    if (peak[i] < -1.e-29 || Xpeaks[i] < 0)
-      continue;
-    dist = Xpeaks[i] * Xpeaks[i] + Ypeaks[i] * Ypeaks[i];
-    if (dist < 2)
-      continue;
-    dx = Xpeaks[i] - delX;
-    dy = Ypeaks[i] - delY;
-    dist = dx *dx + dy * dy;
-    dx = Xpeaks[i] + delX;
-    dy = Ypeaks[i] + delY;
-    dist2 = dx *dx + dy * dy;
-    if (B3DMIN(dist, dist2) < distmin) {
-      ind1 = i;
-      distmin = B3DMIN(dist, dist2);
-    }
-  }
-  return ind1;
-}
-
-// Find pixels near a line perpendicular to the vector from the origin to the peak 
-// position and compute the median of their values
-float CProcessImage::PerpendicularLineMedian(float *acorr, int nxPad, int nyPad, 
-  float xPeak, float yPeak)
-{
-  int ix, iy, ixCor, iyCor;
-  float lineT, xtmp, ytmp, distSq, median = -1.e37f;
-  std::vector<float> values;
-  int nxDim = nxPad + 2;
-  float thickFrac = 1.f / 30.f;
-  float lengthFrac = 0.8f;
-  float minLength = 10.f;
-  float peakDist = (float)sqrt((double)xPeak * xPeak + yPeak * yPeak);
-  float maxDist = B3DMAX(0.72f, thickFrac * peakDist);
-  float maxDistSq = maxDist * maxDist;
-
-  // Get vector and start of segment and its length
-  float vecSize = B3DMAX(minLength / 2.f, lengthFrac * peakDist) / peakDist;
-  float vecX = -vecSize * yPeak;
-  float vecY = vecSize * xPeak;
-  float xStart = xPeak - vecX;
-  float yStart = yPeak - vecY;
-  float xLen = 2.f * vecX;
-  float yLen = 2.f * vecY;
-  float denom = xLen * xLen + yLen * yLen;
-
-  // The box within which to evaluate pixels
-  int ixMin = B3DNINT(B3DMIN(xStart, xPeak + vecX) - maxDist - 2.);
-  int ixMax = B3DNINT(B3DMAX(xStart, xPeak + vecX) + maxDist + 2.);
-  int iyMin = B3DNINT(B3DMIN(yStart, yPeak + vecY) - maxDist - 2.);
-  int iyMax = B3DNINT(B3DMAX(yStart, yPeak + vecY) + maxDist + 2.);
-
-  // Loop on points in box, get distance from line (squared) and pixel value if close
-  for (iy = iyMin; iy <= iyMax; iy++) {
-    for (ix = ixMin; ix <= ixMax; ix++) {
-      lineT = (xLen * (ix - xStart) + yLen * (iy - yStart)) / denom;
-      B3DCLAMP(lineT, 0.f, 1.f);
-      xtmp = xLen * lineT + xStart - ix;
-      ytmp = yLen * lineT + yStart - iy;
-      distSq = xtmp * xtmp + ytmp * ytmp;
-      if (distSq <= maxDistSq) {
-        ixCor = B3DCHOICE(ix < 0, ix + nxPad, ix);
-        iyCor = B3DCHOICE(iy < 0, iy + nyPad, iy);
-        values.push_back(acorr[ixCor + iyCor * nxDim]);
-      }
-    }
-  }
-
-  // Get the median
-  if (values.size() > 4)
-    rsFastMedianInPlace(&values[0], (int)values.size(), &median);
-  /*PrintfToLog("Peak %.2f  %.2f  n = %d  median = %g", xPeak, yPeak, values.size(), 
-    median);*/
-  return median;
 }
 
 // Output the relative rotations between mags with pixel size measurements
