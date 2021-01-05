@@ -290,7 +290,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
   mWinApp->mMontageWindow.SetOpenClosed(dlgState);
   mWinApp->DialogChangedState((CToolDlg *)(&mWinApp->mMontageWindow), dlgState);
   mWinApp->UpdateBufferWindows();
-  UtilModifyMenuItem(0, ID_FILE_OVERWRITE, (LPCTSTR)menuText);
+  UtilModifyMenuItem("File", ID_FILE_OVERWRITE, (LPCTSTR)menuText);
 }
 
 ///////////////////////////////////
@@ -365,7 +365,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   CString statText = "MONTAGING";
   CString statPiece, mess;
   CMapDrawItem *navItem;
-  KStoreMRC *storeMRC;
+  KImageStore *storeMRC;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
 
   CameraParameters *cam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
@@ -936,6 +936,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   // Figure out backlash by move from first to second piece, except for IS align
+  mMoveBackX = mMoveBackY = 0.;
   if (!mReadingMontage && mParam->moveStage) {
     mMoveInfo.backX = mStageBacklash;
     mMoveInfo.backY = mStageBacklash;
@@ -2089,7 +2090,7 @@ void EMmontageController::SavePiece()
   image = mImBufs[0].mImage;
   type = image->getType();
   dataSizeForMode(type, &dataSize, &i);
-  if ((mExpectingFloats ? 4 : 2) != dataSize) {
+  if (!BOOL_EQUIV(mExpectingFloats, dataSize == 4)) {
     report.Format("SavePiece in montaging got a %s image when expecting %s",
       mExpectingFloats ? "integer" : "float", mExpectingFloats ? "floats" : "integers");
     SEMMessageBox(report);
@@ -2747,10 +2748,9 @@ void EMmontageController::SavePiece()
         extra1->ValuesIntoShorts();
         mImBufs[1].mISX = mHaveStageOffsets ? 0 : extra1->mISX;
         mImBufs[1].mISY = mHaveStageOffsets ? 0 : extra1->mISY;
-        GetLastBacklash(mImBufs[1].mBacklashX, mImBufs[1].mBacklashY);
-        if (mDoZigzagStage) {
-          mImBufs[1].mBacklashX = mImBufs[1].mBacklashY = 0.;
-        }
+        mImBufs[1].mBacklashX = mImBufs[1].mBacklashY = 0.;
+        if (!mDoZigzagStage)
+          GetLastBacklash(mImBufs[1].mBacklashX, mImBufs[1].mBacklashY);
         mImBufs[1].mConSetUsed = MontageConSetNum(mParam, true);
         mImBufs[1].mLowDoseArea = mWinApp->LowDoseMode();
         if (IS_SET_VIEW_OR_SEARCH(mImBufs[1].mConSetUsed) && mImBufs[1].mLowDoseArea)
@@ -4409,7 +4409,8 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
       return 3;
     if (AdocGetMutexSetCurrent(adocInd) < 0)
       return 1;
-    if (AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
+    if (store->getStoreType() != STORE_TYPE_HDF && 
+      AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
       retval = 3;
   }
   AdocReleaseMutex();
@@ -4450,7 +4451,8 @@ int EMmontageController::AutodocStageOffsetIO(bool write, int pieceInd)
     // This may now be unneeded
     if (mBufferManager->CheckAsyncSaving())
       return 3;
-    if (AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
+    if (store->getStoreType() != STORE_TYPE_HDF && 
+      AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
       retval = 3;
   }
   AdocReleaseMutex();
@@ -4490,7 +4492,8 @@ int EMmontageController::StoreAlignedCoordsInAdoc(void)
     }
   }
 
-  if (AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
+  if (store->getStoreType() != STORE_TYPE_HDF && 
+    AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
     retval = 3;
   AdocReleaseMutex();
   return retval;
@@ -4503,7 +4506,7 @@ int EMmontageController::MapParamsToAutodoc(void)
   int errSum = 0, index;
   ControlSet *conSet = &mConSets[mImBufs[1].mConSetUsed];
   FilterParams *filtParam = mWinApp->GetFilterParams();
-  float backX, backY;
+  float backX = 0, backY = 0;
   CString str;
   float netShiftX, netShiftY, beamShiftX, beamShiftY, beamTiltX, beamTiltY;
   bool filtering = mCamParams[mImBufs[0].mCamera].GIF || mScope->GetHasOmegaFilter();
@@ -4568,7 +4571,8 @@ int EMmontageController::MapParamsToAutodoc(void)
     mParam->fitToPolygonID);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_FRAMES, mParam->xNframes,
     mParam->yNframes);
-  if (AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0)
+  if (mWinApp->mStoreMRC->getStoreType() != STORE_TYPE_HDF && 
+    AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0)
     errSum -= 1000;
   AdocReleaseMutex();
   return errSum;
