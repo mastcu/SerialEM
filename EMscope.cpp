@@ -3607,6 +3607,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   mSynchroTD.initialSleep = 0;
   mSynchroTD.ifSTEM = ifSTEM;
   mSynchroTD.lowestM = lowestM;
+  mSynchroTD.normalize = 1;
 
   // JEOL STEM dies if mag is changed too soon after last image; 
   if (JEOLscope && ifSTEM && !camParam->pluginName.IsEmpty()) {
@@ -3744,33 +3745,37 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
             Sleep(30);
           }
         }
-
-        if (mPlugFuncs->NormalizeLens && sytd->normalize > 0) {
-
-          // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
-          // or always if option is 2.  This used to do condenser in addition, but now
-          // it does "all", which adds objective
-          normAll = !sytd->ifSTEM && (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM, sytd->newIndex < sytd->lowestM) ||
-            (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) || sytd->normAllOnMagChange > 1);
-          if (normAll && FEIscope) {
-            mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
-          } else {
-            if (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector))
-              mPlugFuncs->NormalizeLens(pnmProjector);
-            if (normAll) {
-              if (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))
-                mPlugFuncs->NormalizeLens(nmCondenser);
-              if (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective))
-                mPlugFuncs->NormalizeLens(pnmObjective);
-            }
-          }
-        }
-        sytd->lastNormalizationTime = GetTickCount();
-
-        AUTONORMALIZE_SET(*vTrue);
-
       }
     }
+
+    // Normalization: has to be outside of the non-JEOL section now
+    if (!sytd->ifSTEM && mPlugFuncs->NormalizeLens && sytd->normalize > 0) {
+
+      // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
+      // or always if option is 2.  This used to do condenser in addition, but now
+      // it does "all", which adds objective
+      normAll = (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM, 
+        sytd->newIndex < sytd->lowestM) ||
+        (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) || 
+        sytd->normAllOnMagChange > 1);
+      if (normAll && FEIscope) {
+        mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
+      } else {
+        if (!JEOLscope || SEMLookupJeolRelaxData(pnmProjector)) {
+          mPlugFuncs->NormalizeLens(pnmProjector);
+        } if (normAll) {
+          if (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))
+            mPlugFuncs->NormalizeLens(nmCondenser);
+          if (!JEOLscope || SEMLookupJeolRelaxData(pnmObjective))
+            mPlugFuncs->NormalizeLens(pnmObjective);
+        }
+      }
+    }
+    sytd->lastNormalizationTime = GetTickCount();
+
+    if (!JEOLscope)
+      AUTONORMALIZE_SET(*vTrue);
+
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting magnification "));
