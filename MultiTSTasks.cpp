@@ -872,7 +872,8 @@ WINDOWPLACEMENT *CMultiTSTasks::GetAutocenPlacement(void)
 // Trial or we are going to Trial in Low dose
 bool CMultiTSTasks::AutocenTrackingState(int changing)
 {
-  return mWinApp->mAutocenDlg && !mWinApp->DoingTasks() && 
+  return mWinApp->mAutocenDlg && (!mWinApp->DoingTasks() || 
+    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) && 
     ((!mWinApp->LowDoseMode() && mWinApp->mAutocenDlg->m_bSetState) ||
     (mWinApp->LowDoseMode() && 
       (mScope->GetLowDoseArea() == TRIAL_CONSET || changing == ACTRACK_TO_TRIAL)));

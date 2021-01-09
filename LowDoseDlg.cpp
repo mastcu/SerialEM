@@ -1267,8 +1267,9 @@ void CLowDoseDlg::Update()
     !bCentered && !usePiezo);
   m_butTieFocusTrial.EnableWindow(bEnable && !usePiezo);
 
-  // Turn off define position if doing tasks
-  if (mWinApp->DoingTasks() && m_iDefineArea > 0)
+  // Turn off define position if doing tasks for real
+  if (m_iDefineArea > 0 && mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
+    !mWinApp->GetJustDoingSynchro())
     TurnOffDefine();
 
   // Disable the position and overlap stuff if define area is off

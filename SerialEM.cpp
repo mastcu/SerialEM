@@ -3049,8 +3049,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 
 BOOL CSerialEMApp::DoingTasks()
 {
-  return (DoingImagingTasks() || mScope->GetChangingLDArea() != 0 || 
-    mScope->DoingSynchroThread() ||
+  bool trulyBusy = DoingImagingTasks()|| 
     mMacroProcessor->DoingMacro() ||
     mShiftManager->ResettingIS() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
@@ -3058,7 +3057,10 @@ BOOL CSerialEMApp::DoingTasks()
     (mNavigator && mNavigator->GetLoadingMap()) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
-    (mPlugDoingFunc && mPlugDoingFunc()));
+    (mPlugDoingFunc && mPlugDoingFunc());
+  mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
+  mJustDoingSynchro = !trulyBusy && mScope->DoingSynchroThread();
+  return trulyBusy || mJustChangingLDarea || mJustDoingSynchro;
 }
 
 // Register a stop function of form "void stopFunc(int error)" to be called by 

@@ -2362,7 +2362,8 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   // If not a specific action, do continuous update in complex pane
-  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks()) {
+  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks() || 
+    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) {
     EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
     CRect rect;
     GetClientRect(&rect);

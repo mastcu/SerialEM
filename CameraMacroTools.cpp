@@ -430,8 +430,8 @@ void CCameraMacroTools::Update()
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
-  stopEnabled = (mWinApp->DoingTasks() && !mWinApp->mScope->GetChangingLDArea() &&
-    !mWinApp->mScope->DoingSynchroThread()) ||
+  stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
+    !mWinApp->GetJustDoingSynchro()) ||
     camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;

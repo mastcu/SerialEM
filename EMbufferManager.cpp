@@ -239,7 +239,8 @@ BOOL EMbufferManager::OKtoDestroy(int inWhich, char *inMessage)
   EMimageBuffer *toBuf = mImBufsp + inWhich;
   if (toBuf->mImage == NULL || toBuf->GetSaveCopyFlag() != 1 ||
       !mConfirmDestroy[toBuf->mConSetUsed] ||
-      mWinApp->Montaging() || mWinApp->DoingTasks())
+      mWinApp->Montaging() || (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea()
+        && !mWinApp->GetJustDoingSynchro()))
     return true;
   char buf = 'A' + inWhich;
   CString text;

@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/8/21: Made various normalizations happen after a mag change on a JEOL if
+appropriate lens change sequences are defined for each relevant type.
+
+1/8/21: Fixed projector normalization when changing mag, broken 12/16.
+
+1/8/21: Fixed beam autocenter intensity being set to current trial value when
+dialog is opened or Trial is gone to with scope tracking on, broken 12/15.
+
+1/8/21: Added script commands EchoNoVarSub to echo without variable
+substitutions, ReportEnvironVar to get an environment variable, and
+ReportSettingsFile and ReportSettingsFile.
+
 1/5/21: Fixed RunScriptInWatchedDir to work outside the current directory
 (In 3.8).
 
@@ -13,7 +25,7 @@ vs. before), broken 6/3/20 (In 3.8).
 12/30/20: Fixed orientation of drawn circles for multiple Records in a hole to
 match what will be taken (In 3.8).
 
-12/27/20: Added ability to do rough euncentricity with Search area.
+12/27/20: Added ability to do rough eucentricity with Search area.
 
 12/23/20: Added script command to set a PLA offset between cameras on JEOL
 scopes using PLA for image shift, and a camera property to designate cameras
