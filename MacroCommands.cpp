@@ -13,6 +13,7 @@
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include ".\MacroProcessor.h"
+#include "MenuTargets.h"
 #include "FocusManager.h"
 #include "AutoTuning.h"
 #include "ShiftManager.h"
@@ -607,6 +608,10 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, 
   {"OpenChooserInCurrentDir", 0, 0, &CMacCmd::OpenChooserInCurrentDir}, 
   {"SetCameraPLAOffset", 0, 0, &CMacCmd::SetCameraPLAOffset},/*CAI3.9*/
+  {"EchoNoVarSub", 0, 4, &CMacCmd::Echo}, 
+  {"ReportEnvironVar", 1, 0, &CMacCmd::ReportEnvironVar}, 
+  {"ReportSettingsFile", 1, 0, &CMacCmd::ReportSettingsFile},
+  {"ListAllCalibrations", 0, 0, &CMacCmd::ListAllCalibrations},
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -5601,10 +5606,12 @@ int CMacCmd::FindPixelSize(void)
   return 0;
 }
 
-// Echo
+// Echo, EchoNoVarSub
 int CMacCmd::Echo(void)
 {
-  SubstituteLineStripItems(mStrLine, 1, cReport);
+  if (CMD_IS(ECHO))
+    SubstituteVariables(&mStrLine, 1, mStrLine);
+  mParamIO->StripItems(mStrLine, 1, cReport);
   cReport.Replace("\n", "  ");
   mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
   return 0;
@@ -5659,27 +5666,70 @@ int CMacCmd::IsVersionAtLeast(void)
   return 0;
 }
 
+// ReportEnvironVar
+int CMacCmd::ReportEnvironVar(void)
+{
+  char *envar;
+  SubstituteVariables(&mStrItems[1], 1, mStrLine);
+  envar = getenv((LPCTSTR)mStrItems[1]);
+  if (envar)
+    mLogRpt.Format("Environment variable %s = %s", (LPCTSTR)mStrItems[1], envar);
+  else
+    mLogRpt.Format("Environment variable %s is not set", (LPCTSTR)mStrItems[1]);
+  SetOneReportedValue(&mStrItems[2], envar ? 1. : 0., 1);
+  if (envar)
+    SetOneReportedValue(&mStrItems[2], CString(envar), 2);
+  return 0;
+}
+
+// ReportSettingsFile
+int CMacCmd::ReportSettingsFile(void)
+{
+  cReport = mWinApp->mDocWnd->GetCurrentSettingsPath();
+  mWinApp->AppendToLog("Current settings file: " + cReport);
+  SetOneReportedValue(&mStrItems[1], cReport, 1);
+  cReport = "None";
+  if (mWinApp->mDocWnd->GetReadScriptPack()) {
+    cReport = mWinApp->mDocWnd->GetCurScriptPackPath();
+    mWinApp->AppendToLog("Current script package: " + cReport);
+  }
+  SetOneReportedValue(&mStrItems[1], cReport, 2);
+  return 0;
+}
+
+// ListAllCalibrations
+int CMacCmd::ListAllCalibrations(void)
+{
+  mWinApp->mMenuTargets.DoListISVectors(true);
+  mWinApp->mMenuTargets.DoListStageCals();
+  mShiftManager->ListBeamShiftCals();
+  mWinApp->mBeamAssessor->ListIntensityCalibrations();
+  mWinApp->mBeamAssessor->ListSpotCalibrations();
+
+  return 0;
+}
+
 // Pause, YesNoBox, PauseIfFailed, AbortIfFailed
 int CMacCmd::Pause(void)
 {
-    cDoPause = CMD_IS(PAUSEIFFAILED);
-    cDoAbort = CMD_IS(ABORTIFFAILED);
-    if (!(cDoPause || cDoAbort) || !mLastTestResult) {
-      SubstituteLineStripItems(mStrLine, 1, cReport);
-      if (cDoPause || cDoAbort)
-        mWinApp->AppendToLog(cReport);
-      cDoPause = cDoPause || CMD_IS(PAUSE);
-      if (cDoPause) {
-        cReport += "\n\nDo you want to proceed with the script?";
-        cIndex = AfxMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
-      } else
-        cIndex = SEMMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
-      if ((cDoPause && cIndex == IDNO) || cDoAbort) {
-        SuspendMacro(cDoAbort);
-        return 1;
-      } else
-        SetReportedValues(cIndex == IDYES ? 1. : 0.);
-    }
+  cDoPause = CMD_IS(PAUSEIFFAILED);
+  cDoAbort = CMD_IS(ABORTIFFAILED);
+  if (!(cDoPause || cDoAbort) || !mLastTestResult) {
+    SubstituteLineStripItems(mStrLine, 1, cReport);
+    if (cDoPause || cDoAbort)
+      mWinApp->AppendToLog(cReport);
+    cDoPause = cDoPause || CMD_IS(PAUSE);
+    if (cDoPause) {
+      cReport += "\n\nDo you want to proceed with the script?";
+      cIndex = AfxMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
+    } else
+      cIndex = SEMMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
+    if ((cDoPause && cIndex == IDNO) || cDoAbort) {
+      SuspendMacro(cDoAbort);
+      return 1;
+    } else
+      SetReportedValues(cIndex == IDYES ? 1. : 0.);
+  }
   return 0;
 }
 

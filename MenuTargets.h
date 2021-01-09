@@ -172,6 +172,8 @@ public:
   BOOL DoingTasks();
   CNavigatorDlg *mNavigator;
   int SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2, int &value);
+  void DoListStageCals();
+  void DoListISVectors(BOOL useCalPixel);
 
 private:
   CSerialEMApp *mWinApp;

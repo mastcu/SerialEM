@@ -1384,7 +1384,15 @@ void CMenuTargets::OnAutoalign()
 }
 
 // List image shift vectors as lengths and angles on specimen
-void CMenuTargets::OnCalibrationListisvectors() 
+void CMenuTargets::OnCalibrationListisvectors()
+{
+  BOOL useCalPixel = AfxMessageBox("Do you want to use calibrated pixel sizes where "
+    "available\ninstead of nominal pixel sizes calculated from the magnification?",
+    MB_YESNO, MB_ICONQUESTION) == IDYES;
+  DoListISVectors(useCalPixel);
+}
+
+void CMenuTargets::DoListISVectors(BOOL useCalPixel)
 {
   CString str;
   int numCam = mWinApp->GetNumActiveCameras();
@@ -1394,10 +1402,6 @@ void CMenuTargets::OnCalibrationListisvectors()
   ScaleMat mat, rot;
   int iCam, mag, lowestMicro, limlo, limhi, numRanges, range;
   double xvec, yvec, xang, yang, pixel, rough, rotation, calRot;
-
-  BOOL useCalPixel = AfxMessageBox("Do you want to use calibrated pixel sizes where "
-    "available\ninstead of nominal pixel sizes calculated from the magnification?", 
-    MB_YESNO, MB_ICONQUESTION) == IDYES;
 
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
@@ -1454,7 +1458,12 @@ void CMenuTargets::OnCalibrationListisvectors()
 }
 
 // List specimen to stage matrices for all stage calibrations
-void CMenuTargets::OnCalibrationListstagecals() 
+void CMenuTargets::OnCalibrationListstagecals()
+{
+  DoListStageCals();
+}
+
+void CMenuTargets::DoListStageCals()
 {
   CString str;
   int numCam = mWinApp->GetNumActiveCameras();

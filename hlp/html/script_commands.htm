@@ -466,6 +466,11 @@
             status output.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">EchoNoVarSub [text]</TD>
+          <TD>Prints the <b>text</b> verbatim to the log window, or a blank line if there is 
+            no text, without substituting variables.&nbsp; Command added in 4.9, 1/8/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">Pause [text]</TD>
           <TD>Opens message box with optional <b>text</b> plus question of whether to proceed with
             script.&nbsp; Is not suppressed by NoMessageBoxOnError.</TD>
@@ -3900,6 +3905,24 @@
             changes in the same setting can be done; the original value or last kept new 
             value will be restored when the script stops, and the latest new value will be 
             set on resume.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportEnvironVar name</TD>
+          <TD>Reports whether the environment variable given by <b>name</b> exists in <i>reportedValue1</i>
+            and if so, its value in <I>reportedValue2</I>.&nbsp; The name must be a single word
+             without spaces.&nbsp; Command added in 4.9, 1/8/21.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportSettingsFile</TD>
+          <TD>Reports the name of the current settings file and the name of the current script 
+            package file, or "None" if scripts were loaded from settings.&nbsp; Command added in 4.9, 1/8/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ListAllCalibrations</TD>
+          <TD>Lists IS vectors, stage vectors, beam calibrations and focus and tuning calibrations
+            just as could be done from the menus.&nbsp; IS vectors are listed using calibrated
+            pixel sizes.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>

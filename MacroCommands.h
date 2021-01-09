@@ -320,6 +320,9 @@ class CMacCmd : public CMacroProcessor
   int verbose(void);
   int ProgramTimeStamps(void);
   int IsVersionAtLeast(void);
+  int ReportEnvironVar(void);
+  int ReportSettingsFile(void);
+  int ListAllCalibrations(void);
   int Pause(void);
   int OKBox(void);
   int EnterOneNumber(void);
