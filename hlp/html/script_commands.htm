@@ -444,7 +444,7 @@
           <TD class="scriptcommand">Echo [text]</TD>
           <TD>Prints the <b>text</b> to the log window, or a blank line if there is no text.&nbsp; 
             Variables are substituted but arithmetic expressions are not evaluated.&nbsp; 
-            Multiple spaces between words are preserved.</TD>
+            Multiple spaces between words are preserved, as well as extra spaces before the text.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EchoEval [text]</TD>
@@ -467,7 +467,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">EchoNoVarSub [text]</TD>
-          <TD>Prints the <b>text</b> verbatim to the log window, or a blank line if there is 
+          <TD>Prints the <b>text</b> verbatim to the log window including initial extra spaces, 
+            or a blank line if there is 
             no text, without substituting variables.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
         <TR>

@@ -2097,7 +2097,8 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     err = 1;
   }
   if (file) {
-    delete file;
+    if (mess.Find("opening") < 0)
+      delete file;
     file = NULL;
   }
   if (err)
@@ -5338,7 +5339,8 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
 }
 
 // Take some items off the front of a line and return the rest as one string, trimmed
-void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
+void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
+  bool keepIndent)
 {
   CString strItem;
   strCopy = strLine;
@@ -5347,7 +5349,8 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
     if (strCopy.IsEmpty())
       return;
   }
-  strCopy.TrimLeft();
+  if (!keepIndent)
+    strCopy.TrimLeft();
   strCopy.TrimRight(" \t\r\n");
 }
 

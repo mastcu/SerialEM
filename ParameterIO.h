@@ -55,7 +55,7 @@ private:
   CString mDupMessage;
   int mMaxReadInMacros;
 public:
-  void StripItems(CString strLine, int numItems, CString & strCopy);
+  void StripItems(CString strLine, int numItems, CString & strCopy, bool keepIndent = false);
   int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,
     double *itemDbl, float *itemFlt, int maxItems);
   int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,

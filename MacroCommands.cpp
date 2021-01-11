@@ -5611,7 +5611,7 @@ int CMacCmd::Echo(void)
 {
   if (CMD_IS(ECHO))
     SubstituteVariables(&mStrLine, 1, mStrLine);
-  mParamIO->StripItems(mStrLine, 1, cReport);
+  mParamIO->StripItems(mStrLine, 1, cReport, true);
   cReport.Replace("\n", "  ");
   mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
   return 0;
