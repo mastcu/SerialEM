@@ -173,7 +173,8 @@ for line in table:
       break
 
    if line.startswith('//'):
-      outTable.append(line.replace('//', '#'))
+      outTable.append(' ')
+      outTable.append('<B>' + line.replace('//', '#') + '</B>')
       continue
 
    if not line or '{' not in line or line == '{':
@@ -187,12 +188,12 @@ for line in table:
    if '//' in line:
       commInd = line.find('//')
       if commInd >= 0:
-         outTable.append('#' + line[commInd + 2:])
+         outTable.append('<I>#' + line[commInd + 2:] + '</i>')
          
    typ = int(lsplit[1])
    ifWhole = int(lsplit[2])
    if ifWhole:
-      outTable.append('# Removes whole line')
+      outTable.append('<i># Removes whole line</i>')
    if typ < 1 or typ > 3:
       exitError('Second value is out of range in line: ' + line)
 
