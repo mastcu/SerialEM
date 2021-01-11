@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/10/21: Expanded ability to hide dialog elements and made it possible to
+close up empty space in control panels after hiding.
+
 1/8/21: Made various normalizations happen after a mag change on a JEOL if
 appropriate lens change sequences are defined for each relevant type.
 
