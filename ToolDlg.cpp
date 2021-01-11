@@ -39,7 +39,6 @@ CToolDlg::CToolDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mIDD = inIDD;
   mInitialized = false;
   mNonModal = true;
-  mHeightTable = NULL;
 }
 
 
@@ -110,6 +109,8 @@ void CToolDlg::SetOpenClosed(int inState)
     ModifyStyle(WS_CAPTION, 0);
     SetDlgItemText(IDC_BUTFLOATDOCK, "F");
   }
+
+  // Adjust panels after handling the float/dock distinctions
   if (mNumPanels) {
     states[1] = mState & TOOL_OPENCLOSED;
     states[2] = states[1] && (mState & TOOL_FULLOPEN);
@@ -197,7 +198,7 @@ void CToolDlg::HideOrShowOptions(int showHide)
     but->ShowWindow(showHide);
 
   // If there are panels, this hiding is done by adding or removing from list of IDs
-  // to hide for the dialog.  SetOpenClosed does the right thing for each type
+  // to hide for the dialog.  SetOpenClosed does the right thing if panels or not.
   if (showHide == SW_HIDE) {
     if (mNumPanels) {
       mIDsToHide[mNumIDsToHide++] = IDC_BUTMORE;
@@ -211,6 +212,8 @@ void CToolDlg::HideOrShowOptions(int showHide)
   }
 }
 
+// Convenience function to call with all arguments and store pointers so subclass can
+// do the update
 void CToolDlg::SetupPanels(int *idTable, int *leftTable, int *topTable,
   int *heightTable, int sortStart)
 {

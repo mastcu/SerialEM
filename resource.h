@@ -1637,6 +1637,18 @@
 #define IDC_COMBO_SELECTOR              2664
 #define IDC_RHDFFILE                    2665
 #define IDC_TILTAXIS                    2666
+#define IDC_STAT_STATE_NAME             2667
+#define IDC_STAT_VS_OFFSETS             2668
+#define IDC_STAT_VS_SHIFT               2669
+#define IDC_STAT_DEFINE_GROUP           2670
+#define IDC_STAT_LDCP_GO                2671
+#define IDC_STAT_LDCP_LINE1             2672
+#define IDC_STAT_LDCP_LINE2             2673
+#define IDC_STAT_LDCP_LINE3             2674
+#define IDC_STAT_LDCP_LINE4             2675
+#define IDC_STAT_LDCP_LINE5             2676
+#define IDC_STAT_COPY_LD_AREA           2677
+#define IDC_STAT_IM_STATE_SET           2678
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2135,7 +2147,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        253
 #define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2667
+#define _APS_NEXT_CONTROL_VALUE         2679
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
