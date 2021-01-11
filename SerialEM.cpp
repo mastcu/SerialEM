@@ -4230,9 +4230,28 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
       }
     }
   }
+  ManageDialogOptionsHiding();
+
+  // Update control panels with simple hideable ID list and any other non-model dialog
+  mFilterControl.UpdateHiding();
+  mMontageWindow.UpdateHiding();
+  if (mNavHelper->mStateDlg)
+    mNavHelper->mStateDlg->UpdateHiding();
   mMainFrame->RemoveHiddenItemsFromMenus();
   UpdateBufferWindows();
   UpdateWindowSettings();
+}
+
+// Show or hide the options sections in control panels
+void CSerialEMApp::ManageDialogOptionsHiding(void)
+{
+  int ind;
+  for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
+    if (mToolDlgs[ind] != NULL && mToolDlgs[ind]->mInitialized) {
+      mToolDlgs[ind]->HideOrShowOptions(IsIDinHideSet(-30 - ind) ? SW_HIDE : SW_SHOW);
+    }
+  }
+  mMainFrame->SetDialogPositions();
 }
 
 // Given a color index for a tool panel, find its index in the dialog table

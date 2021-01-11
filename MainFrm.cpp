@@ -289,7 +289,9 @@ void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacement
       dlg->SetWindowPlacement(&winPlace);
     }
   }
-  SetDialogPositions();
+  
+  //  This will call back into SetDialogPositions
+  mWinApp->ManageDialogOptionsHiding();
 }
 
 // Set the dialog positions.  Go down from the top, setting the height of
@@ -313,17 +315,26 @@ void CMainFrame::SetDialogPositions()
   }
 
   for (i = 0; i < mNumDialogs; i++) {
-    if (mDialogTable[i].state & TOOL_OPENCLOSED &&
-      !(mDialogTable[i].state & TOOL_FULLOPEN) &&
-      mDialogTable[i].midHeight != 0)
-      height = mDialogTable[i].midHeight;
-    else if (mDialogTable[i].state & TOOL_OPENCLOSED)
-      height = mDialogTable[i].fullHeight;
-    else
-      height = mWinApp->ScaleValueForDPI(DIALOG_CLOSED_HEIGHT);
+
+    // Update the state here in case of a basic mode change changing states
+    // For ones with panels, use the latest height not the selected stored value
+    mDialogTable[i].state = mDialogTable[i].pDialog->GetState();
+    if (mDialogTable[i].pDialog->GetNumPanels()) {
+      height = mDialogTable[i].pDialog->GetSetToHeight();
+    } else {
+      if (mDialogTable[i].state & TOOL_OPENCLOSED &&
+        !(mDialogTable[i].state & TOOL_FULLOPEN) &&
+        mDialogTable[i].midHeight != 0)
+        height = mDialogTable[i].midHeight;
+      else if (mDialogTable[i].state & TOOL_OPENCLOSED)
+        height = mDialogTable[i].fullHeight;
+      else
+        height = mWinApp->ScaleValueForDPI(DIALOG_CLOSED_HEIGHT);
+    }
 
     if (mDialogTable[i].state & TOOL_FLOATDOCK) {
-      height += mWinApp->GetToolTitleHeight();
+      if (!mDialogTable[i].pDialog->GetNumPanels())
+        height += mWinApp->GetToolTitleHeight();
       mDialogTable[i].pDialog->SetWindowPos(NULL, xoff, yoff, mDialogTable[i].width,
                           height, SWP_NOMOVE);
 

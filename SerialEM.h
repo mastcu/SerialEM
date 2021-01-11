@@ -900,8 +900,9 @@ public:
   double ProgramStartTime(void);
   GetMember(BOOL, BasicMode);
   void SetBasicMode(BOOL inVal);
+  void ManageDialogOptionsHiding(void);
   int LookupToolDlgIndex(int colorInd);
-afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
+ afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
 afx_msg void OnShowScopeControlPanel();
 void SetMaxDialogWidth(void);
 void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
