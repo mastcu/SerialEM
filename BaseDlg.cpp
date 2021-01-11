@@ -1,7 +1,6 @@
-// BaseDlg.cpp:          Base class to handle tool tips and help button
+// BaseDlg.cpp:    Base class to handle tool tips, help button, panels, other utilities
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2021 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -33,6 +32,7 @@ CBaseDlg::CBaseDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mNonModal = false;
   mNumIDsToHide = 0;
   mIDToSaveTop = -1;
+  mNumPanels = 0;
 }
 
 
@@ -153,6 +153,34 @@ void CBaseDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerL
   *pResult = 0;
 }
 
+// Draw a box around a button.
+// Non-tool dialogs need a big offset that does NOT need DPI scaling
+void CBaseDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness,
+  COLORREF color, int offset)
+{
+  CRect winRect, clientRect, butRect;
+  int iLeft, iTop, border;
+  thickness = (int)(thickness * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
+  GetWindowRect(&winRect);
+  GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  but->GetWindowRect(&butRect);
+  iLeft = (butRect.left - winRect.left) + offset - thickness;
+  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -
+    (thickness - 1);
+  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1),
+    iTop + butRect.Height() + (thickness + 1));
+  CPen pen;
+  CBrush brush;
+  pen.CreatePen(PS_SOLID, thickness, color);
+
+  // "transparent" brush
+  brush.CreateStockObject(HOLLOW_BRUSH);
+  dc.SelectObject(&pen);
+  dc.SelectObject(&brush);
+  dc.Rectangle(&dcRect);
+}
+
 // If nonModal, capture all the stray mouse events not on a control and yield focus
 void CBaseDlg::OnLButtonDown(UINT nFlags, CPoint point) 
 {
@@ -255,6 +283,8 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
   CRect wndRect, clientRect, idRect;
   CWnd *wnd;
   int iXoffset, iYoffset, index, ii, jj, indEnd, temp;
+  std::set<int> *lineHideIDs = mWinApp->GetLineHideIDs();
+  std::set<int> *basicLineHideIDs = mWinApp->GetBasicLineHideIDs();
 
   GetClientRect(clientRect);
   GetWindowRect(wndRect);
@@ -284,10 +314,12 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
     }
 
     // Order them by increasing top so dropping of elements/lines works
+    // If two are equal, make one that drops a line come first
     indEnd = panelStart[mNumPanels] + numInPanel[mNumPanels];
     for (ii = panelStart[mNumPanels] + sortStart; ii < indEnd - 1; ii++) {
       for (jj = ii + 1; jj < indEnd; jj++) {
-        if (topTable[jj] < topTable[ii]) {
+        if (topTable[jj] < topTable[ii] || ((topTable[jj] == topTable[ii]) &&
+          (lineHideIDs->count(idTable[jj]) || basicLineHideIDs->count(idTable[jj])))) {
           B3DSWAP(topTable[jj], topTable[ii], temp);
           B3DSWAP(leftTable[jj], leftTable[ii], temp);
           B3DSWAP(idTable[jj], idTable[ii], temp);
@@ -307,7 +339,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   CRect rect, winRect;
   int panel, panelTop, index, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
   int topAtLastDraw;
-  CWnd *wnd;
+  CWnd *wnd, *lastWnd;
   HDWP positions;
 
   index = 1;
@@ -356,6 +388,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
         //wnd->ShowWindow(SW_SHOW);
         positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index], 
           topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+        lastWnd = wnd;
       } else
 
         // Or hide
@@ -376,7 +409,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
 
   // Make all those changes occur then resize dialog to end below the last button
   EndDeferWindowPos(positions);
-  wnd->GetWindowRect(rect);
+  lastWnd->GetWindowRect(rect);
   GetWindowRect(winRect);
   mSetToHeight = rect.bottom + 8 - winRect.top;
   SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
@@ -405,10 +438,12 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
     // But if there is already dropping in play from a previous line, add to 
     // cumulative drop distance and reset index to this one
     if ((drop || lineDrop) && firstDropped >= 0) {
-      if (topTable[index] - topTable[firstDropped] > mSameLineCrit && 
-        B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit)
+      if (lineDrop || (topTable[index] - topTable[firstDropped] > mSameLineCrit &&
+        (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) > 
+        mSameLineCrit))) {
         cumulDrop += topTable[index] - topTable[firstDropped];
-      firstDropped = -1;
+        firstDropped = -1;
+      }
     }
 
     // Record index of first dropped one
@@ -417,14 +452,28 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
       firstDropped = index;
       droppingLine = lineDrop;
     }
+    /*PrintfToLog("ID %d ind %d drop %d line %d first %d cumul %d", nID, index, 
+    drop ? 1 : 0, droppingLine ? 1 : 0, firstDropped, cumulDrop);*/
   }
 
   // First one not dropped: add distance back to first one dropped to the cum distance
   if (firstDropped >= 0 && !drop) {
     if (topTable[index] - topTable[firstDropped] > mSameLineCrit &&
-      B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit)
+      (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit))
       cumulDrop += topTable[index] - topTable[firstDropped];
     firstDropped = -1;
     droppingLine = false;
   }
 }
+
+// Hide or show items in the hideable set
+void CBaseDlg::ManageHideableItems(UINT *hideableIDs, int numHideable)
+{
+  CWnd *but;
+  for (int ind = 0; ind < numHideable; ind++) {
+    but = GetDlgItem(hideableIDs[ind]);
+    if (but)
+      but->ShowWindow(mWinApp->IsIDinHideSet(hideableIDs[ind]) ? SW_HIDE : SW_SHOW);
+  }
+}
+

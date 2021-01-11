@@ -86,8 +86,13 @@ public:
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
     int upperLim, int &oldNewVal, CString &str, const char *format);
   void FixButtonFocus(CButton & button);
+  void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness,
+    COLORREF color, int offset);
   void MinMaxFloat(UINT  nID, float &value, float minVal, float maxVal, const char *descrip);
   void MinMaxInt(UINT  nID, int &value, int minVal, int maxVal, const char *descrip);
+  void ManageHideableItems(UINT *hideableIDs, int numHideable);
+  GetMember(int, NumPanels);
+  GetMember(int, SetToHeight);
 };
 
 //{{AFX_INSERT_LOCATION}}
