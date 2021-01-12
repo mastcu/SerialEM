@@ -806,6 +806,8 @@ void CMacroProcessor::Run(int which)
 {
   int mac, ind, tryLevel = 0;
   MacroFunction *func;
+  CString *longMacNames = mWinApp->GetLongMacroNames();
+  CString name;
   if (mMacros[which].IsEmpty())
     return;
 
@@ -876,6 +878,12 @@ void CMacroProcessor::Run(int which)
   mStartClock = GetTickCount();
   mOverwriteOK = false;
   mVerbose = mInitialVerbose ? 1 : 0;
+  name = mMacNames[mCurrentMacro];
+  if (name.IsEmpty())
+    name.Format("Script #%d", mCurrentMacro + 1);
+  SetVariable("SCRIPTNAME", name, VARTYPE_REGULAR, -1, false);
+  if (!longMacNames[mCurrentMacro].IsEmpty())
+    SetVariable("LONGNAME", longMacNames[mCurrentMacro], VARTYPE_REGULAR, -1, false);
   CloseFileForText(-1);
   RunOrResume();
 }
@@ -1460,7 +1468,8 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
   return retFunc;
 }
 
-// Sets a variable of the given name to the value, with the type and index.
+// Sets a variable of the given name to the value, with the type and index.  Pass index
+// of -1 to assign it the current macro index.
 // The variable must not exist if mustBeNew is true; returns true for error and fills
 // in errStr if it is non-null
 bool CMacroProcessor::SetVariable(CString name, CString value, int type, 

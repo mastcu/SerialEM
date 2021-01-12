@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/12/21: Echo in scripts will now preserve indentation. There are now variables
+defined with the script name and long name.
+
 1/10/21: Expanded ability to hide dialog elements and made it possible to
 close up empty space in control panels after hiding.
 

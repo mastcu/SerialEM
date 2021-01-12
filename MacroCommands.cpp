@@ -1200,6 +1200,8 @@ int CMacCmd::DoMacro(void)
     mCurrentMacro = cIndex;
     mCurrentIndex = cIndex2;
     mLastIndex = -1;
+    if (cFunc)
+      SetVariable("FUNCTIONNAME", cFunc->name, VARTYPE_LOCAL, -1, false);
 
     // Create argument variables now that level is raised
     if (cFunc && (cFunc->numNumericArgs || cFunc->ifStringArg)) {

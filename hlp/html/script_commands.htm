@@ -204,7 +204,8 @@
           <TD>Calls the function with the given <b>name</b> and supplies arguments for the function
             to receive.&nbsp; If the name could occur in more than one script, it must be
             qualified with a script number or name, i.e. &#39;5::GoodFunc&#39; or &#39;Func
-            Script::GoodFunc&#39;.</TD>
+            Script::GoodFunc&#39;.&nbsp; The variable <i>functionName</i> is defined with the
+            name.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">If expression</TD>
@@ -413,12 +414,16 @@
         <TR>
           <TD class="scriptcommand">ScriptName text<br />
             MacroName text</TD>
-          <TD>Names the script to the given <b>text</b>, which can include spaces</TD>
+          <TD>Names the script to the given <b>text</b>, which can include spaces.&nbsp; The
+            variable <i>scriptName</i> is defined with either this name, or "Script #n" if no name
+            has been defined, when the script is started running.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LongName text</TD>
           <TD>A longer name to appear in the Run submenu of the Script menu; if this name is
-            not defined, the regular name defined by ScriptName or MacroName appears there.</TD>
+            not defined, the regular name defined by ScriptName or MacroName appears there.&nbsp; The
+            variable <i>longName</i> is defined with this name when a script is started running.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadOnlyUnlessAdmin</TD>
