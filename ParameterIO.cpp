@@ -5351,6 +5351,8 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
   }
   if (!keepIndent)
     strCopy.TrimLeft();
+  else if (strCopy.GetLength() > 0 && strCopy.GetAt(0) == ' ')
+    strCopy = strCopy.Mid(1);
   strCopy.TrimRight(" \t\r\n");
 }
 
