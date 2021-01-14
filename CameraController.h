@@ -558,6 +558,7 @@ public:
   SetMember(int, NextDropFromTiltSum);
   SetMember(int, NextMinTiltGap);
   GetSetMember(BOOL, NoFilterControl);
+  GetSetMember(BOOL, ConsetsShareChannelList);
   void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
   void SetCameraISOffset(int ind, float inX, float inY) { mISXcameraOffset[ind] = inX; mISYcameraOffset[ind] = inY; };
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
@@ -793,6 +794,7 @@ public:
   float mAdjustShiftX, mAdjustShiftY;   // Unbinned pixels to adjust position for STEM
   CArray<ChannelSet, ChannelSet> mChannelSets;
   bool mFoundCombo;
+  BOOL mConsetsShareChannelList;  // Flag that control sets should be kept synchronized
   BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;

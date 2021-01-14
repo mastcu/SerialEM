@@ -1,7 +1,6 @@
 // CameraSetupDlg.cpp:   To set camera exposure parameters and select camera
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2021 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -1158,6 +1157,13 @@ void CCameraSetupDlg::UnloadDialogToConset()
       else if (mCamera->GetMaxChannels(mParam) > 1)
         sel--;
       mCurSet->channelIndex[i] = sel;
+      if (mCamera->GetConsetsShareChannelList()) {
+        for (int set = 0; set < MAX_CONSETS; set++) {
+          if (set != mCurrentSet)
+            mConSets[set + mActiveCameraList[mCurrentCamera] * 
+            MAX_CONSETS].channelIndex[i] = sel;
+        }
+      }
     }
   } else {
     mCurSet->processing = m_iProcessing;

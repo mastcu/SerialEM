@@ -429,6 +429,7 @@ CCameraController::CCameraController()
   mLastShotUsedCDS = -1;
   mNoFilterControl = false;
   mLastJeolDetectorID = -1;
+  mConsetsShareChannelList = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
