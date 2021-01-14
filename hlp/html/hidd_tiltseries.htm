@@ -93,10 +93,6 @@
           unidirectional or bidirectional series, but it cannot be changed after a 
           dose-symmetric series has reached this angle and taken at least one image on the 
           first side. </P>
-    <P>If there is a star after this text box when opening the dialog with the <B>TS 
-      Params</B> button in the Navigator window, it means that the angles you are seeing, 
-      which may apply to multiple tilt series, have been overridden by the 
-      &#39;SetItemSeriesAngles&#39; script command for this Navigator item.</P>
       <P><STRONG>Swap</STRONG></P>
       <P>Use this button to exchange the starting and ending tilt angles in the two text 
         boxes.</P>
@@ -133,10 +129,6 @@
       degrees or within 5 degrees of the <b>Tilt to</b> angle, settings that can be 
       adjusted in the <a href="hidd_tspolicies.htm">Tilt Series Batch 
       Policies dialog box</a>. </P>
-    <P>If there is a star after this text box when opening the dialog with the <B>TS 
-      Params</B> button in the Navigator window, it means that the angle you are 
-      seeing, which may apply to multiple tilt series, has been overridden by the 
-      &#39;SetItemSeriesAngles&#39; script command for this Navigator item.</P>
     <P><b>Return with Walk Up</b></P>
     <P>By default, the program will return to the starting angle of a bidirectional 
       series by tilting back in steps and restoring the stage position and image shift 
@@ -345,17 +337,15 @@
         exposure time during the series. Unless you are in low dose mode, the program 
         will actually do nothing to keep the intensity or exposure time constant, and 
         you are free to adjust it yourself.</P>
-      <P><B>Vary intensity to be x higher at 60 deg (1/cos to 1/y power)</B></P>
-      <P>This option allows you to vary the beam intensity or exposure time so as to 
-        achieve a selected increase from zero to 60 degrees.&nbsp; The increase will be 
-        computed as 1 over the cosine of the tilt angle, raised to an inverse power.&nbsp; 
-        Prior to serialEM 3.9, this increase was specified as powers from 1/1 to 1/5; 
-        now the setting is more flexible and more intuitive.&nbsp; With an increase of 
-        2, corresponding to a power of 1, this option would vary beam intensity or exposure time 
+      <P><B>Vary intensity as 1/cosine of tilt angle to 1/n power</B></P>
+      <P>With a power of 1, this option would vary beam intensity or exposure time 
         proportional to the effective thickness of the sample as it tilts. This would 
         probably do a good job only if the fraction of electrons transmitted through 
-        the specimen and objective aperture is about 0.5 at zero tilt. Both lower and higher 
-        increases than this can be selected.</P>
+        the specimen and objective aperture is about 0.5 at zero tilt. With a higher 
+        power, the variation in specimen exposure will be less; for example, with a 
+        power of two the specimen exposure will vary by the square root of the inverse 
+        cosine and thus change by a factor of 1.41 from 0 to 60&deg;; for a power of 4 the 
+          factor is only 1.19.</P>
       <P><B>Set intensity to keep mean counts of Record images at </B></P>
       <P>Select this option to have the beam or exposure time continually adjusted during 
         the series so that Record images will have the mean value specified in the text 
@@ -459,11 +449,7 @@
           when setting parameters for a batch acquisition.</P>
       <P><B>Defocus target</B></P>
       <P>The target defocus value for autofocusing will appear in this text box and a new 
-        value can be entered.&nbsp; If the label after this text box is '<b>um*</b>' when 
-        opening the dialog with the <B>TS 
-      Params</B> button in the Navigator window, it means that the angle you are seeing, 
-      which may apply to multiple tilt series, has been overridden by the 
-      &#39;SetItemSeriesAngles&#39; script command for this Navigator item.</P>
+        value can be entered.</P>
       <P><B>Beam tilt</B></P>
       <P>The amount of beam tilt used for autofocusing will appear in this text box and a 
         new value can be entered.</P>

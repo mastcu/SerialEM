@@ -1,6 +1,7 @@
-// BaseDlg.cpp:    Base class to handle tool tips, help button, panels, other utilities
+// BaseDlg.cpp:          Base class to handle tool tips and help button
 //
-// Copyright (C) 2003-2021 by the Regents of the University of
+// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
+// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -9,7 +10,6 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include ".\BaseDlg.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,7 +32,6 @@ CBaseDlg::CBaseDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mNonModal = false;
   mNumIDsToHide = 0;
   mIDToSaveTop = -1;
-  mNumPanels = 0;
 }
 
 
@@ -72,11 +71,6 @@ BOOL CBaseDlg::OnInitDialog()
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(mIDD), RT_DIALOG),
                   m_hWnd, mIDD, B3DNINT(1.25 *mWinApp->GetSystemDPI()));
   CDialog::OnInitDialog();
-
-  // At 96 DPI, pixel coordinates are about twice the dialog units
-  // Count the total windows needed for the positioning
-  mSameLineCrit = mWinApp->ScaleValueForDPI(12);
-  mBottomDrawMargin = mWinApp->ScaleValueForDPI(3);
   EnableToolTips(true);
   return TRUE;
 }
@@ -151,34 +145,6 @@ void CBaseDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerL
   str.Format(format, oldNewVal);
   UpdateData(false);
   *pResult = 0;
-}
-
-// Draw a box around a button.
-// Non-tool dialogs need a big offset that does NOT need DPI scaling
-void CBaseDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness,
-  COLORREF color, int offset)
-{
-  CRect winRect, clientRect, butRect;
-  int iLeft, iTop, border;
-  thickness = (int)(thickness * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
-  GetWindowRect(&winRect);
-  GetClientRect(&clientRect);
-  border = (winRect.Width() - clientRect.Width()) / 2;
-  but->GetWindowRect(&butRect);
-  iLeft = (butRect.left - winRect.left) + offset - thickness;
-  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -
-    (thickness - 1);
-  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1),
-    iTop + butRect.Height() + (thickness + 1));
-  CPen pen;
-  CBrush brush;
-  pen.CreatePen(PS_SOLID, thickness, color);
-
-  // "transparent" brush
-  brush.CreateStockObject(HOLLOW_BRUSH);
-  dc.SelectObject(&pen);
-  dc.SelectObject(&brush);
-  dc.Rectangle(&dcRect);
 }
 
 // If nonModal, capture all the stray mouse events not on a control and yield focus
@@ -277,14 +243,12 @@ void CBaseDlg::MinMaxInt(UINT nID, int &value, int minVal, int maxVal,
 // Setup call for the panel tables
 // The first item in the section for panel is recorded as the panelStart so it better be
 // the top item; probably best to end panel section with the bottom item too
-void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable, 
-  int *numInPanel, int *panelStart, int *heightTable, int sortStart)
+void CBaseDlg::SetupPanelTables(int * idTable, int * leftTable, int * topTable, 
+                                int * numInPanel, int * panelStart)
 {
   CRect wndRect, clientRect, idRect;
   CWnd *wnd;
-  int iXoffset, iYoffset, index, ii, jj, indEnd, temp;
-  std::set<int> *lineHideIDs = mWinApp->GetLineHideIDs();
-  std::set<int> *basicLineHideIDs = mWinApp->GetBasicLineHideIDs();
+  int iXoffset, iYoffset, index;
 
   GetClientRect(clientRect);
   GetWindowRect(wndRect);
@@ -305,26 +269,10 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
         wnd->GetWindowRect(idRect);
         leftTable[index] = idRect.left - wndRect.left - iXoffset;
         topTable[index] = idRect.top - wndRect.top - iYoffset;
-        if (heightTable)
-          heightTable[index] = idRect.Height();
         if (numInPanel[mNumPanels] == 1 && wndRect.Height() < 3)
           topTable[index] += 4;
       }
       index++;
-    }
-
-    // Order them by increasing top so dropping of elements/lines works
-    // If two are equal, make one that drops a line come first
-    indEnd = panelStart[mNumPanels] + numInPanel[mNumPanels];
-    for (ii = panelStart[mNumPanels] + sortStart; ii < indEnd - 1; ii++) {
-      for (jj = ii + 1; jj < indEnd; jj++) {
-        if (topTable[jj] < topTable[ii] || ((topTable[jj] == topTable[ii]) &&
-          (lineHideIDs->count(idTable[jj]) || basicLineHideIDs->count(idTable[jj])))) {
-          B3DSWAP(topTable[jj], topTable[ii], temp);
-          B3DSWAP(leftTable[jj], leftTable[ii], temp);
-          B3DSWAP(idTable[jj], idTable[ii], temp);
-        }
-      }
     }
     index++;
     mNumPanels++;
@@ -332,16 +280,16 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
 }
 
 void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
-  int *numInPanel, int *panelStart, int numCameras, int *heightTable)
+                            int *numInPanel, int *panelStart, int numCameras)
 {
-  bool draw, drop, droppingLine;
+  bool draw;
   int curTop = topTable[0];
   CRect rect, winRect;
-  int panel, panelTop, index, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
-  int topAtLastDraw;
-  CWnd *wnd, *lastWnd;
+  int panel, panelTop, index, id;
+  CWnd *wnd;
   HDWP positions;
 
+  // Count the total windows needed for the positioning
   index = 1;
   mSavedTopPos = -1;
   for (panel = 0; panel < mNumPanels; panel++)
@@ -352,128 +300,35 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
 
   for (panel = 0; panel < mNumPanels; panel++) {
     panelTop = topTable[panelStart[panel]];
-    cumulDrop = 0;
-    firstDropped = -1;
-    droppingLine = false;
-    drawnMaxBottom = 0;
-    topAtLastDraw = 0;
     for (index = panelStart[panel];
       index < panelStart[panel] + numInPanel[panel]; index++) {
       wnd = GetDlgItem(idTable[index]);
       draw = true;
-      drop = false;
-
-      // Hide cameras past the number that exist
       for (id = (numCameras > 1 ? numCameras : 0); id < MAX_DLG_CAMERAS; id++)
         if (idTable[index] == IDC_RCAMERA1 + id)
           draw = false;
-
-      // Hide ones that the dialog wants to hide
       for (id = 0; id < mNumIDsToHide; id++)
         if (idTable[index] == mIDsToHide[id])
           draw = false;
-
-      // Drops ones that are in the users list to drop or the dialog has set to drop
-      ManageDropping(topTable, index, idTable[index], topAtLastDraw, cumulDrop,
-        firstDropped, droppingLine, drop);
-
-      // draw
-      if (states[panel] && draw && !drop) {
-        topPos = (curTop - cumulDrop) + topTable[index] - panelTop;
-        if (heightTable)
-          ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
+      if (states[panel] && draw) {
         if (idTable[index] == mIDToSaveTop)
-          mSavedTopPos = topPos;
-        topAtLastDraw = topTable[index];
-        //wnd->ShowWindow(SW_SHOW);
+          mSavedTopPos = curTop + topTable[index] - panelTop;
+        wnd->ShowWindow(SW_SHOW);
         positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index], 
-          topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
-        lastWnd = wnd;
+          curTop + topTable[index] - panelTop, 0, 0, 
+          SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
       } else
-
-        // Or hide
         positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0, 
           SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW);
     }
-
-    // If last one in panel dropped, add to cumulative distance
-    if (firstDropped >= 0 &&
-      B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit)
-      cumulDrop += topTable[panelStart[panel + 1]] - topTable[firstDropped];
-
-    // Set new current top unless panel was closed
     if (states[panel] && panel < mNumPanels - 1)
-      curTop = B3DMAX(drawnMaxBottom, curTop + (topTable[panelStart[panel+1]] - 
-        panelTop) - cumulDrop);
+      curTop += topTable[panelStart[panel+1]] - topTable[panelStart[panel]];
   }
 
   // Make all those changes occur then resize dialog to end below the last button
   EndDeferWindowPos(positions);
-  lastWnd->GetWindowRect(rect);
+  wnd->GetWindowRect(rect);
   GetWindowRect(winRect);
   mSetToHeight = rect.bottom + 8 - winRect.top;
   SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
 }
-
-// For a given dialog item, determine if it is to be dropped and manage the state of
-// cumulative drop, first one dropped in group, whether a line is being dropped
-void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDraw,
-  int &cumulDrop, int &firstDropped, bool &droppingLine, bool &drop)
-{
-  bool lineDrop;
-  int ind;
-
-  // Drop ones that are in the users list to drop or the dialog has set to drop
-  drop = drop || mWinApp->IsIDinHideSet(nID);
-  lineDrop = mWinApp->IsIDinLineHides(nID);
-  for (ind = 0; ind < (int)mIDsToDrop.size() && !drop; ind++)
-    if (nID == mIDsToDrop[ind])
-      drop = true;
-
-  // If one is to be dropped by those tests of within the Y distance to be on the same
-  // line as the first dropped one, then drop it
-  if (drop || lineDrop || (firstDropped >= 0 && droppingLine &&
-    B3DABS(topTable[index] - topTable[firstDropped]) <= mSameLineCrit)) {
-
-    // But if there is already dropping in play from a previous line, add to 
-    // cumulative drop distance and reset index to this one
-    if ((drop || lineDrop) && firstDropped >= 0) {
-      if (lineDrop || (topTable[index] - topTable[firstDropped] > mSameLineCrit &&
-        (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) > 
-        mSameLineCrit))) {
-        cumulDrop += topTable[index] - topTable[firstDropped];
-        firstDropped = -1;
-      }
-    }
-
-    // Record index of first dropped one
-    drop = true;
-    if (firstDropped < 0) {
-      firstDropped = index;
-      droppingLine = lineDrop;
-    }
-    /*PrintfToLog("ID %d ind %d drop %d line %d first %d cumul %d", nID, index, 
-    drop ? 1 : 0, droppingLine ? 1 : 0, firstDropped, cumulDrop);*/
-  }
-
-  // First one not dropped: add distance back to first one dropped to the cum distance
-  if (firstDropped >= 0 && !drop) {
-    if (topTable[index] - topTable[firstDropped] > mSameLineCrit &&
-      (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit))
-      cumulDrop += topTable[index] - topTable[firstDropped];
-    firstDropped = -1;
-    droppingLine = false;
-  }
-}
-
-// Hide or show items in the hideable set
-void CBaseDlg::ManageHideableItems(UINT *hideableIDs, int numHideable)
-{
-  CWnd *but;
-  for (int ind = 0; ind < numHideable; ind++) {
-    but = GetDlgItem(hideableIDs[ind]);
-    if (but)
-      but->ShowWindow(mWinApp->IsIDinHideSet(hideableIDs[ind]) ? SW_HIDE : SW_SHOW);
-  }
-}
-

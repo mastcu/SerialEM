@@ -60,7 +60,7 @@ BEGIN_MESSAGE_MAP(CFocusManager, CCmdTarget)
 	ON_COMMAND(ID_FOCUS_REPORTONEXISTING, OnFocusReportonexisting)
 	ON_UPDATE_COMMAND_UI(ID_FOCUS_REPORTONEXISTING, OnUpdateFocusReportonexisting)
 	ON_COMMAND(ID_FOCUS_SETOFFSET, OnFocusSetoffset)
-  ON_UPDATE_COMMAND_UI(ID_FOCUS_MEASUREDEFOCUS, OnUpdateMeasureDefocus)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_MEASUREDEFOCUS, OnUpdateFocusAutofocus)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_SETTHRESHOLD, OnUpdateNoTasksNoSTEM)
   ON_UPDATE_COMMAND_UI(ID_CALIBRATION_AUTOFOCUS, OnUpdateNoTasks)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_REPORTSHIFTDRIFT, OnUpdateNoTasksNoSTEM)
@@ -238,14 +238,6 @@ void CFocusManager::OnFocusAutofocus()
 void CFocusManager::OnUpdateFocusAutofocus(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && FocusReady() && !mScope->GetMovingStage());   
-}
-
-void CFocusManager::OnUpdateMeasureDefocus(CCmdUI * pCmdUI)
-{
-  bool calibrated;
-  BOOL ready = FocusReady(-1, &calibrated);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && ready && calibrated && 
-    !mScope->GetMovingStage());
 }
 
 void CFocusManager::OnFocusDriftprotection() 
@@ -896,11 +888,11 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
 // Returns true if focus is calibrated the given mag (-1 for current/default) and current
 // probe mode or alpha
-BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
+BOOL CFocusManager::FocusReady(int magInd)
 {
   FocusTable focTmp;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
-  int hasCal, probe, alpha;
+  int probe, alpha;
   if (!mScope)
     return false;
   if (mWinApp->GetSTEMMode())
@@ -918,21 +910,15 @@ BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
     if (magInd < 0)
       magInd = mScope->FastMagIndex();
   }
-  hasCal = GetFocusCal(magInd, mWinApp->GetCurrentCamera(), probe, alpha, focTmp);
-  if (calibrated)
-    *calibrated = hasCal != 0;
-  if (hasCal)
-    return true;
-  return magInd < mScope->GetLowestMModeMagInd() && 
-    magInd > 0 && mScope->GetStandardLMFocus(magInd) > -900.;
+  if (magInd < mScope->GetLowestMModeMagInd())
+    return magInd > 0 && mScope->GetStandardLMFocus(magInd) > -900.;
+  return (GetFocusCal(magInd, mWinApp->GetCurrentCamera(),  probe, alpha, focTmp) != 0);
 }
 
 // Call to start autofocus or measurement of defocus
 void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum) 
 {
   float slope, shiftX, shiftY;
-  FocusTable focTmp;
-  int hasCal;
   CString mess;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   mFocusSetNum = FOCUS_CONSET;
@@ -980,9 +966,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   if (!mWinApp->GetSTEMMode()) { 
 
     // Regular
-    hasCal = GetFocusCal(mFocusMag, mWinApp->GetCurrentCamera(), mScope->GetProbeMode(),
-      mScope->FastAlpha(), focTmp);
-    if (inChange > 0 && !hasCal && mFocusMag < mScope->GetLowestMModeMagInd()) {
+    if (inChange > 0 && mFocusMag < mScope->GetLowestMModeMagInd()) {
       double focus = mScope->GetStandardLMFocus(mFocusMag);
       if (focus > -900.) {
         mScope->SetFocus(focus);
@@ -990,13 +974,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
           focus, MagForCamera(mWinApp->GetCurrentCamera(), mFocusMag));
         mWinApp->AppendToLog(mess, LOG_SWALLOW_IF_CLOSED);
       } else
-        mWinApp->AppendToLog("There is no autofocus calibration in low mag, and no "
-          "standard focus defined; nothing was done", LOG_SWALLOW_IF_CLOSED);
-      return;
-    }
-    if (inChange == 0 && !hasCal) {
-      mWinApp->AppendToLog("Cannot measure defocus; there is no autofocus calibration in"
-        " low mag");
+        mWinApp->AppendToLog("There is no autofocus in low mag, and no standard focus"
+        " defined; nothing was done", LOG_SWALLOW_IF_CLOSED);
       return;
     }
     if (mUseOppositeLDArea && mCamera->OppositeLDAreaNextShot()) {
@@ -1065,8 +1044,6 @@ void CFocusManager::AutoFocusData(float inX, float inY)
   int abort = 0;
   double lastFullDiff, lastDiff, diff, fullDiff, elapsed;
   int waiting = mWinApp->mParticleTasks->GetWaitingForDrift();
-  if (mFocusMag < mScope->GetLowestMModeMagInd())
-    changeLimit *= 5.f;
   if (CurrentDefocusFromShift(inX, inY, mCurrentDefocus, rawDefocus))
     return;
 
@@ -1841,8 +1818,7 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
             for (iDelMag = 0; iDelMag < MAX_MAGS; iDelMag++) {
               for (iDir = -1; iDir <= 1; iDir += 2) {
                 iMag = inMag + iDelMag * iDir;
-                if (iMag < 1 || iMag >= MAX_MAGS || 
-                  !mScope->BothLMorNotLM(inMag, false, iMag, false))
+                if (iMag < 1 || iMag >= MAX_MAGS)
                   continue;
 
                 // On first pass, insist that both image shifts be calibrated

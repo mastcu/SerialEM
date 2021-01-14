@@ -13,7 +13,7 @@
 class CReadFileDlg;
 
 enum {MRC_OPEN_NOERR = 0, MRC_OPEN_CANCEL, MRC_OPEN_ALREADY_OPEN,
-MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC, MRC_OPEN_HDF};
+MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC};
 
 DLL_IM_EX const char *SEMDefaultSysPath(void);
 
@@ -113,11 +113,9 @@ public:
   GetMember(CString, FlybackName);
   GetMember(int, DfltUseMdoc);
   GetMember(int, FrameAdocIndex);
-  GetMember(bool, HDFsupported);
   GetSetMember(CString, CurScriptPackPath);
   GetSetMember(BOOL, ScriptPackBackedUp);
   SetMember(CString, SettingsName);
-  GetSetMember(CString, BasicModeFile);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void FixSettingsForIALimitCal();
@@ -263,8 +261,6 @@ private:
   bool mShowFileDlgOnce;         // Flag to be able to show it once
   bool mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
-  CString mBasicModeFile;        // File with disables/hides for basic mode
-  bool mHDFsupported;            // Flag that HDF files are supported
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -281,7 +277,7 @@ public:
   void MontParamInitFromConSet(MontParam * param, int setNum);
   CString DateTimeForFrameSaving(void);
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
-  int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);
+  int OpenNewReplaceCurrent(CString filename, bool useMdoc);
   CString DateTimeForTitle(void);
   afx_msg void OnFileOpenMdoc();
   afx_msg void OnFileCloseMdoc();
@@ -293,7 +289,6 @@ public:
   void DateTimeComponents(CString & date, CString & time, BOOL numericDate);
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);
-  void SetInitialDirToCurrentDir();
   int UpdateLastMdocFrame(KImage * image);
   void ComposeTitlebarLine(void);
   void CalibrationWasDone(int type);
@@ -307,8 +302,6 @@ afx_msg void OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI);
 int AddTitlesToFrameMdoc(CString &message);
 int DoOpenFrameMdoc(CString & filename);
 void DoCloseFrameMdoc();
-afx_msg void OnSettingsBasicmode();
-afx_msg void OnUpdateSettingsBasicmode(CCmdUI *pCmdUI);
 };
 
 // FILE DIALOG CLASS and associated thread class and data
