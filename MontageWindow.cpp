@@ -20,6 +20,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static UINT sHideableIDs[] = {IDC_BTRIAL};
+
 /////////////////////////////////////////////////////////////////////////////
 // CMontageWindow dialog
 
@@ -229,7 +231,9 @@ BOOL CMontageWindow::OnInitDialog()
   m_editCurrentZ.SetFont(&mFont);
 
   UpdateSettings();
-  
+  ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
+  mInitialized = true;
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -277,6 +281,11 @@ void CMontageWindow::Update()
   m_sbcScanBin.SetRange(mParam->binning, mParam->maxPrescanBin);
   m_sbcScanBin.SetPos(mParam->prescanBinning);
   ManageBinning();
+}
+
+void CMontageWindow::UpdateHiding(void)
+{
+  ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
 }
 
 void CMontageWindow::ManageBinning()

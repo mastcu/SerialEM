@@ -22,6 +22,7 @@
 #define STORE_TYPE_TIFF 2
 #define STORE_TYPE_ADOC 3
 #define STORE_TYPE_JPEG 4
+#define STORE_TYPE_HDF  5
 
 class KImageStore : public KImageBase
 {
@@ -30,7 +31,7 @@ protected:
 	CString  mFilename;
 	CFile *mFile;
 	
-	int mMin, mMax;
+	float mMin, mMax;
   int mStoreType;
 	int mMode;
 	int mPixSize;
@@ -41,6 +42,10 @@ protected:
   int mNumTitles;
   CString mTitles;
   char *mOpenMarkerExt;      // Extension if there is an .openTS file or similar temp file
+  double     mMeanSum;
+  int        mNumWritten;
+  float      mPixelSpacing;
+  float      mUpdateTimePerSect;
 
 public:
 	         KImageStore(CString inFilename);
@@ -60,13 +65,14 @@ public:
   // Methods that need to be defined appropriately in subclasses
   virtual int     AppendImage(KImage *inImage) {return 1;};
 	virtual int     WriteSection(KImage * inImage, int inSect) {return 1;};
-  virtual	void    SetPixelSpacing(float pixel) {};
+  virtual	void    SetPixelSpacing(float pixel);
+  virtual void    SetUpdateTimePerSect(float inVal) { mUpdateTimePerSect = inVal; };
   virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam) {return 0;}; 
   virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ) {return -1;};
   virtual int     getStageCoord(int inSect, double &outX, double &outY) {return -1;};
   virtual KImage  *getRect(void) {return NULL;};
-  virtual int     ReorderPieceZCoords(int *sectOrder) {return -1;};
+  virtual int     ReorderPieceZCoords(int *sectOrder) { return -1; };
   virtual int     setMode(int inMode) {return 0;};
 
   int CheckMontage(MontParam *inParam, int nx, int ny, int nz);
@@ -85,7 +91,7 @@ public:
 	virtual float   getPixel(KCoord &inCoord);
   virtual float   getLastIntTruncation() {return mFracIntTrunc;};
   virtual void    setName(CString inName) {mFilename = inName;};
-  virtual void    minMaxMean(char * idata, int dataSize, float & outMin, float & outMax, 
+  virtual void    minMaxMean(char * idata, float & outMin, float & outMax, 
     double & outMean);
   virtual char    *convertForWriting(KImage *inImage, bool needFlipped, bool &needToReflip,
     bool &needToDelete);
@@ -97,6 +103,16 @@ public:
   virtual int getUnsignOpt() {return mFileOpt.unsignOpt;};
   virtual int getSignToUnsignOpt() {return mFileOpt.signToUnsignOpt;};
   virtual int MarkAsOpenWithFile(const char *extension);
+  virtual int InitializeAdocGlobalItems(bool needMutex, BOOL isMontage, const char *filename);
+  virtual bool CheckNewSectionManageMMM(KImage *image, int inSect, char *idata, 
+    int &nz, float &amin, float &amax, float &amean);
+  virtual int AddExtraValuesToAdoc(KImage *inImage, int inSect, bool needNewSect, bool &gotMutex);
+  virtual int AddTitleToAdoc(const char *inTitle);
+  virtual int CheckAdocForMontage(MontParam *inParam);
+  virtual int GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY, int &outZ);
+  virtual int GetStageCoordFromAdoc(const char *sectName, int inSect, double &outX, double &outY);
+  virtual int ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz);
+  virtual void AddTitleToLabelArray(char *label, int &numTitle, const char *inTitle);
 };
 
 

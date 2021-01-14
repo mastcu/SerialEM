@@ -25,7 +25,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3, 
+static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3, 
   IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6, PANEL_END,
   IDC_STATNAVFIT1, IDC_STATNAVFIT2, IDC_STATNAVFIT3, PANEL_END,
   IDC_SPINMAG, IDC_STATMAGLABEL, IDC_STATMAG,  IDC_STATBINLABEL, IDC_STATBIN,
@@ -48,8 +48,9 @@ static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3
   IDC_STATNMPERSEC, PANEL_END,
   IDOK, IDCANCEL, IDC_BUTHELP, PANEL_END, TABLE_END};
 
-static int topTable[sizeof(idTable) / sizeof(int)];
-static int leftTable[sizeof(idTable) / sizeof(int)];
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 /////////////////////////////////////////////////////////////////////////////
 // CMontageSetupDlg dialog
@@ -293,22 +294,23 @@ BOOL CMontageSetupDlg::OnInitDialog()
   if (mParam.useViewInLowDose)
     mParam.useSearchInLowDose = false;
 
-  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
+  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+    sHeightTable);
   if (mNumCameras > 4) {
     ind = 0;
-    while (idTable[ind] != TABLE_END){
-      i = idTable[ind] - IDC_RCAMERA1;
+    while (sIdTable[ind] != TABLE_END){
+      i = sIdTable[ind] - IDC_RCAMERA1;
       if (i >= 0 && i < MAX_DLG_CAMERAS)
         camPosInds[i] = ind;
       ind++;
     }
-    delta = (leftTable[camPosInds[MAX_DLG_CAMERAS - 1]] - leftTable[camPosInds[1]]) / 
+    delta = (sLeftTable[camPosInds[MAX_DLG_CAMERAS - 1]] - sLeftTable[camPosInds[1]]) / 
       (MAX_DLG_CAMERAS / 2 - 1);
     radio = (CButton *)GetDlgItem(IDC_RCAMERA1 + MAX_DLG_CAMERAS - 1);
     radio->GetClientRect(&butrect);
     needFont = UtilCamRadiosNeedSmallFont(radio);
     for (ind = 0; ind < mNumCameras; ind++) {
-      leftTable[camPosInds[ind]] = leftTable[camPosInds[0]] + (ind / 2) * delta;
+      sLeftTable[camPosInds[ind]] = sLeftTable[camPosInds[0]] + (ind / 2) * delta;
       radio = (CButton *)GetDlgItem(IDC_RCAMERA1 + ind);
       radio->SetWindowPos(NULL, 0, 0, butrect.Width(), butrect.Height(), 
         SWP_NOMOVE | SWP_NOZORDER);
@@ -1243,8 +1245,8 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
 
   if (!reposition)
     return;
-  AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 
-    mNumCameras);
+  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+    mNumCameras, sHeightTable);
 }
 
 // Manage a few things that depend on camera and maybe stage too
