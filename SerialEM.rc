@@ -1070,7 +1070,7 @@ BEGIN
     CONTROL         "Dynamic focusing",IDC_CHECK_DYNFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,127,324,69,10
     LTEXT           "Scan rate 99.99 um/msec  ***",IDC_STAT_SCANRATE,12,312,106,8
     PUSHBUTTON      "Set Exposure for Max Scan Rate",IDC_BUT_MAX_SCAN_RATE,6,322,108,14,NOT WS_TABSTOP
-    CONTROL         "Keep pixel time when binning changes",IDC_KEEP_PIXEL_TIME,
+    CONTROL         "Keep pixel time when sampling changes",IDC_KEEP_PIXEL_TIME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,215,129,10
     LTEXT           "Timing available, extrapolated from one point",IDC_STAT_TIMING_AVAIL,126,314,150,8
     CONTROL         "Dose Fractionation mode",IDC_DOSE_FRAC_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,381,169,10

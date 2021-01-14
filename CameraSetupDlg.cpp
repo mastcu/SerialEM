@@ -780,7 +780,7 @@ void CCameraSetupDlg::ManageBinnedSize()
   mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, left, right, 
     sizeY, mCameraSizeY, mParam->moduloY, top, bottom, 
     binning, mActiveCameraList[mCurrentCamera]);
-  str.Format("Binned size: %d x %d", sizeX, sizeY);
+  str.Format("%sed size: %d x %d", mParam->STEMcamera ? "Sampl" : "Binn", sizeX, sizeY);
   SetDlgItemText(IDC_STATSIZE, str);
   str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
     sizeY * pixel, pixel * 1000.);
@@ -1642,6 +1642,8 @@ void CCameraSetupDlg::ManageCamera()
       }
     }
   }
+  m_statBinning.SetWindowText(mParam->STEMcamera ? "Sampling" : "Binning");
+  SetDlgItemText(IDC_STATEXPTIME, mParam->STEMcamera ? "   Frame time" : "Exposure time");
   showbox = mParam->STEMcamera ? SW_HIDE : SW_SHOW;
   stat = (CStatic *)GetDlgItem(IDC_STATPROC);
   stat->ShowWindow(showbox);
@@ -2382,7 +2384,8 @@ void CCameraSetupDlg::NewChannelSel(int which)
   CComboBox *chgbox = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + which);
   int newsel = chgbox->GetCurSel();
   int numSel = newsel ? 1 : 0;
-  for (int i = 0; newsel && i < mCamera->GetMaxChannels(mParam); i++) {
+  UpdateData(true);
+  for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
     if (i == which)
       continue;
     CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
@@ -2391,7 +2394,7 @@ void CCameraSetupDlg::NewChannelSel(int which)
       numSel++;
 
     // subtract 1 because this loop runs only when there is more than one channel at once
-    if (mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1)) {
+    if (newsel && mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1)) {
       combo->SetCurSel(0);
       numSel--;
     }
@@ -2405,6 +2408,7 @@ bool CCameraSetupDlg::ManageSTEMBinning(int numSel)
 {
   int binInd;
   bool retval = false;
+  double settling;
   for (binInd = 0; binInd < mParam->numBinnings - 1; binInd++) {
     CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1 + binInd);
     bool valid = mParam->binnings[binInd] >= mParam->minMultiChanBinning[numSel - 1];
@@ -2415,6 +2419,12 @@ bool CCameraSetupDlg::ManageSTEMBinning(int numSel)
     }
   }
   if (retval) {
+    if (m_bKeepPixel) {
+      settling = atof((LPCTSTR)m_strSettling);
+      m_eExposure = (float)(settling * (m_eBottom - m_eTop) * (m_eRight - m_eLeft) /
+        (1.e6 * mBinnings[m_iBinning] * mBinnings[m_iBinning]));
+      ManageDrift();
+    }
     ManageExposure();
     ManageBinnedSize();
   }

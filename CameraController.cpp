@@ -1464,7 +1464,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           MB_EXCLAME);
         err = 1;
       }
-      if (!err && mAllParams[i].cameraNumber >= num) {
+      if (!err && mAllParams[i].cameraNumber >= num && 
+        mAllParams[i].pluginName.Find("Jeol") < 0) {
         report.Format("The PluginCameraIndex property for a plugin camera is %d but the "
           "plugin named %s only reports %d cameras", 
           mAllParams[i].cameraNumber, (LPCTSTR)mAllParams[i].pluginName, num);
@@ -7753,6 +7754,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
         if (td->plugFuncs->GetLastErrorString)
           report += ":\n" + CString(td->plugFuncs->GetLastErrorString());
         DeferMessage(td, report);
+      } else {
+        td->DMSizeX = sizeX;
+        td->DMSizeY = sizeY;
       }
     }
 
