@@ -846,7 +846,7 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 // Load the current control set into the dialog
 void CCameraSetupDlg::LoadConsetToDialog()
 {
-  int i, indMin, binning, showProc, lockSet,special;
+  int i, indMin, binning, showProc, lockSet, special, numSel;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   CButton *radio;
@@ -1033,6 +1033,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     
     // Set the combo box selections to unique legal values
     indMin = mCamera->GetMaxChannels(mParam);
+    numSel = 0;
     for (i = 0; i < indMin; i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = mCurSet->channelIndex[i] + (indMin > 1 ? 1 : 0);
@@ -1042,7 +1043,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
         if (mCamera->MutuallyExclusiveChannels(sel, mCurSet->channelIndex[j] + 1))
           sel = 0;
       combo->SetCurSel(sel);
+      if (sel)
+        numSel++;
     }
+    ManageSTEMBinning(numSel);
   }
   
   if (mParam->K2Type || mFalconCanSave || mParam->canTakeFrames)
@@ -2377,16 +2381,44 @@ void CCameraSetupDlg::NewChannelSel(int which)
 {
   CComboBox *chgbox = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + which);
   int newsel = chgbox->GetCurSel();
+  int numSel = newsel ? 1 : 0;
   for (int i = 0; newsel && i < mCamera->GetMaxChannels(mParam); i++) {
     if (i == which)
       continue;
     CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
     int sel = combo->GetCurSel();
+    if (sel)
+      numSel++;
 
     // subtract 1 because this loop runs only when there is more than one channel at once
-    if (mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1))
+    if (mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1)) {
       combo->SetCurSel(0);
+      numSel--;
+    }
   }
+  if (ManageSTEMBinning(numSel))
+    UpdateData(false);
+}
+
+// Disable non-allowed binnings and change binning for multiple channels
+bool CCameraSetupDlg::ManageSTEMBinning(int numSel)
+{
+  int binInd;
+  bool retval = false;
+  for (binInd = 0; binInd < mParam->numBinnings - 1; binInd++) {
+    CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1 + binInd);
+    bool valid = mParam->binnings[binInd] >= mParam->minMultiChanBinning[numSel - 1];
+    radio->EnableWindow(valid);
+    if (!valid && m_iBinning <= binInd) {
+      m_iBinning = binInd + 1;
+      retval = true;
+    }
+  }
+  if (retval) {
+    ManageExposure();
+    ManageBinnedSize();
+  }
+  return retval;
 }
 
 void CCameraSetupDlg::OnmaxScanRate()

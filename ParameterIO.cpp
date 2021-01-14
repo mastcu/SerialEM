@@ -2471,6 +2471,12 @@ int CParameterIO::ReadProperties(CString strFileName)
                 camP->needShotToInsert[itemInt[index]] = true;
               index++;
             }
+          } else if (MatchNoCase("MinMultiChannelBinning")) {
+            index = 1;
+            while (!strItems[index].IsEmpty() && index < MAX_STEM_CHANNELS) {
+              camP->minMultiChanBinning[index] = itemInt[index];
+              index++;
+            }
           } else if (MatchNoCase("NoShutter"))
             camP->noShutter = itemInt[1];
           else if (MatchNoCase("OnlyOneShutter"))

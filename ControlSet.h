@@ -269,6 +269,7 @@ struct CameraParameters {
   float addedFlyback;         // Increment calibrated and added as property
   float flyback;              // Sum for convenience
   BOOL subareaInCorner;       // FEI bug
+  int minMultiChanBinning[MAX_STEM_CHANNELS];   // For JEOL multichannel limitations
 };
 
 struct FrameAliParams {

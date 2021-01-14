@@ -415,6 +415,7 @@ CSerialEMApp::CSerialEMApp()
     for (j = 0; j < MAX_STEM_CHANNELS; j++) {
       mCamParams[i].availableChan[j] = true;
       mCamParams[i].needShotToInsert[j] = false;
+      mCamParams[i].minMultiChanBinning[j] = 0;
     }
     for (k = 0; k < NUMBER_OF_USER_CONSETS; k++) {
       // NEED TO SPLIT OFF NON SIZE_DEPENDENT ITEMS IN PARAMIO AND CALL HERE
