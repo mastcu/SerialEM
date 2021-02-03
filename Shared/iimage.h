@@ -89,9 +89,10 @@ extern "C" {
 #define IIFLAG_TVIPS_DATA      2
 
   /* Flags for calling tiffEERsuperResAndFlags */
-#define IIFLAG_SKIP_EER_DIRS     1
-#define IIFLAG_ADD_TO_EER_SUM    2
-#define IIFLAG_START_END_EER_SUM 4
+#define IIFLAG_SKIP_EER_DIRS      1
+#define IIFLAG_ADD_TO_EER_SUM     2
+#define IIFLAG_START_END_EER_SUM  4
+#define IIFLAG_IGNORE_BAD_EER_END 8
 
 /* END_CODE */
 
