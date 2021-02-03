@@ -19,9 +19,6 @@ enum {TSMACRO_PRE_TRACK1 = 1, TSMACRO_PRE_FOCUS, TSMACRO_PRE_TRACK2, TSMACRO_PRE
 enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
 #define TS_CHECK_DEWARS 1
 #define TS_CHECK_PVP     2
-#define NAV_OVERRIDE_TILT      1
-#define NAV_OVERRIDE_BIDIR     2
-#define NAV_OVERRIDE_DEF_TARG  4
 
 /////////////////////////////////////////////////////////////////////////////
 // CTSController command target
@@ -44,8 +41,7 @@ public:
   int LookupProtectedFiles();
   void SetExtraOutput();
   BOOL AutoAlignAndTest(int bufNum, int smallPad, char *shotName, bool scaling = false);
-  int SetupTiltSeries(int future = 0, int futureLDstate = -1, int ldMagIndex = 0,
-    int navOverrideFlags = 0);
+  int SetupTiltSeries(int future = 0, int futureLDstate = -1, int ldMagIndex = 0);
   BOOL CanBackUp();
   GetSetMember(BOOL, Verbose)
   GetSetMember(BOOL, AutosaveLog)

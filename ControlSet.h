@@ -251,7 +251,6 @@ struct CameraParameters {
   float doseTabConst;
   float specToCamDoseFac;     // Last measured scaling from specimen to camera dose rate
   float addToExposure;        // Constant to add to exposure time 
-  int JeolDetectorID;         // Detector ID to be selected/deselected when switching
   BOOL invertFocusRamp;       // Lazy way out: flag to invert direction of dynamic focus
   int numChannels;
   CString channelName[MAX_STEM_CHANNELS];  // Detector or official camera names for FEI,
@@ -269,7 +268,6 @@ struct CameraParameters {
   float addedFlyback;         // Increment calibrated and added as property
   float flyback;              // Sum for convenience
   BOOL subareaInCorner;       // FEI bug
-  int minMultiChanBinning[MAX_STEM_CHANNELS];   // For JEOL multichannel limitations
 };
 
 struct FrameAliParams {
