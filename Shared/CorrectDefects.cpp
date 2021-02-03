@@ -1881,6 +1881,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
       free(valList);
     }
   }
+  ixmlClear(xmlInd);
   defects.FalconType = 1;
   B3DCLAMP(pad, 0, MAX_AVG_SUPER_RES);
   defects.numAvgSuperRes = pad;
@@ -1933,6 +1934,7 @@ int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int n
   CorDefFindTouchingPixels(defects, nx, ny, 0);
   if (superFac > 1)
     CorDefScaleDefectsForFalcon(&defects, superFac);
+  free(strCopy);
   return 0;
 }
 
