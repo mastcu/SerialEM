@@ -1649,6 +1649,11 @@
 #define IDC_STAT_LDCP_LINE5             2676
 #define IDC_STAT_COPY_LD_AREA           2677
 #define IDC_STAT_IM_STATE_SET           2678
+#define IDC_STAT_EER_SUPER_LABEL        2679
+#define IDC_RSUPER_NONE                 2680
+#define IDC_RSUPER_2X                   2681
+#define IDC_RADIO3                      2682
+#define IDC_RSUPER_4X                   2682
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2147,7 +2152,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        253
 #define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2679
+#define _APS_NEXT_CONTROL_VALUE         2683
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
