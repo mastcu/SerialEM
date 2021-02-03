@@ -281,7 +281,7 @@ BEGIN
             MENUITEM "Astig&matism by BTID",        ID_AUTOFOCUSFOCUS_ASTIGMATI
             MENUITEM "S&etup Astigmatism",          ID_AUTOFOCUSFOCUS_SETUPASTIGMATISM
             MENUITEM "Coma vs. Image Shift",        ID_FOCUSTUNING_COMAVS
-            POPUP "Old Coma-free Alignment"
+            POPUP "Old Coma-Free Alignment"
             BEGIN
                 MENUITEM "BTID &Coma-free Aligment",    ID_AUTOFOCUSFOCUS_COMA
                 MENUITEM "Se&tup BTID Coma-free",       ID_AUTOFOCUSFOCUS_SETUPCOMA
@@ -610,7 +610,7 @@ BEGIN
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
         END
         MENUITEM SEPARATOR
-        POPUP "Options"
+        POPUP "Nav. Options"
         BEGIN
             MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
             MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
