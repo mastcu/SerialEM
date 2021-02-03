@@ -38,6 +38,9 @@ private:
   CArray<StateParams *, StateParams *> *mStateArray;
   CNavHelper *mHelper;
   StateParams *mParam;
+  int mNumInPanel[2];
+  int mPanelStart[2];
+  bool mAdjustingPanels;
 
 public:
   CButton m_butAddCurState;
@@ -74,4 +77,5 @@ public:
   afx_msg void OnButUpdateState();
   CButton m_butUpdate;
   void DisableUpdateButton(void);
+  void UpdateHiding(void);
 };

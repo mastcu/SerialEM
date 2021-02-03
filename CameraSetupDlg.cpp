@@ -1,7 +1,6 @@
 // CameraSetupDlg.cpp:   To set camera exposure parameters and select camera
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2021 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -780,7 +779,7 @@ void CCameraSetupDlg::ManageBinnedSize()
   mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, left, right, 
     sizeY, mCameraSizeY, mParam->moduloY, top, bottom, 
     binning, mActiveCameraList[mCurrentCamera]);
-  str.Format("Binned size: %d x %d", sizeX, sizeY);
+  str.Format("%sed size: %d x %d", mParam->STEMcamera ? "Sampl" : "Binn", sizeX, sizeY);
   SetDlgItemText(IDC_STATSIZE, str);
   str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
     sizeY * pixel, pixel * 1000.);
@@ -846,7 +845,7 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 // Load the current control set into the dialog
 void CCameraSetupDlg::LoadConsetToDialog()
 {
-  int i, indMin, binning, showProc, lockSet,special;
+  int i, indMin, binning, showProc, lockSet, special, numSel;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   CButton *radio;
@@ -1033,6 +1032,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     
     // Set the combo box selections to unique legal values
     indMin = mCamera->GetMaxChannels(mParam);
+    numSel = 0;
     for (i = 0; i < indMin; i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = mCurSet->channelIndex[i] + (indMin > 1 ? 1 : 0);
@@ -1042,7 +1042,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
         if (mCamera->MutuallyExclusiveChannels(sel, mCurSet->channelIndex[j] + 1))
           sel = 0;
       combo->SetCurSel(sel);
+      if (sel)
+        numSel++;
     }
+    ManageSTEMBinning(numSel);
   }
   
   if (mParam->K2Type || mFalconCanSave || mParam->canTakeFrames)
@@ -1083,6 +1086,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
 void CCameraSetupDlg::UnloadDialogToConset()
 {
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
+  int i, j, set, numFound, maxChan;
+  ControlSet *conSet;
   UpdateData(TRUE);
   mCurSet->binning = mBinnings[m_iBinning];
   mCurSet->mode = 1 - m_iContSingle ;
@@ -1146,7 +1151,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (mParam->STEMcamera) {
     mCurSet->boostMag = m_iProcessing;
     mCurSet->magAllShots = m_bRemXrays_MagAll ? 1 : 0;
-    for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
+    maxChan = mCamera->GetMaxChannels(mParam);
+    for (i = 0; i < maxChan; i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = combo->GetCurSel();
       if (sel == CB_ERR)
@@ -1154,6 +1160,31 @@ void CCameraSetupDlg::UnloadDialogToConset()
       else if (mCamera->GetMaxChannels(mParam) > 1)
         sel--;
       mCurSet->channelIndex[i] = sel;
+    }
+    if (mCamera->GetConsetsShareChannelList()) {
+      for (set = 0; set < MAX_CONSETS; set++) {
+        if (set != mCurrentSet) {
+          conSet = &mConSets[set + mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
+
+          // Check each possible channel number for whether it occurs in both sets
+          for (i = 0; i < maxChan; i++) {
+            numFound = 0;
+            for (j = 0; j < maxChan; j++) {
+              if (mCurSet->channelIndex[j] == i)
+                numFound++;
+              if (conSet->channelIndex[j] == i)
+                numFound++;
+            }
+            if (numFound && numFound != 2)
+              break;
+          }
+
+          // If not, synchronize
+          if (numFound && numFound != 2)
+            for (j = 0; j < maxChan; j++)
+              conSet->channelIndex[j] = mCurSet->channelIndex[j];
+        }
+      }
     }
   } else {
     mCurSet->processing = m_iProcessing;
@@ -1638,6 +1669,8 @@ void CCameraSetupDlg::ManageCamera()
       }
     }
   }
+  m_statBinning.SetWindowText(mParam->STEMcamera ? "Sampling" : "Binning");
+  SetDlgItemText(IDC_STATEXPTIME, mParam->STEMcamera ? "   Frame time" : "Exposure time");
   showbox = mParam->STEMcamera ? SW_HIDE : SW_SHOW;
   stat = (CStatic *)GetDlgItem(IDC_STATPROC);
   stat->ShowWindow(showbox);
@@ -2377,16 +2410,52 @@ void CCameraSetupDlg::NewChannelSel(int which)
 {
   CComboBox *chgbox = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + which);
   int newsel = chgbox->GetCurSel();
-  for (int i = 0; newsel && i < mCamera->GetMaxChannels(mParam); i++) {
+  int numSel = newsel ? 1 : 0;
+  UpdateData(true);
+  for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
     if (i == which)
       continue;
     CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
     int sel = combo->GetCurSel();
+    if (sel)
+      numSel++;
 
     // subtract 1 because this loop runs only when there is more than one channel at once
-    if (mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1))
+    if (newsel && mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1)) {
       combo->SetCurSel(0);
+      numSel--;
+    }
   }
+  if (ManageSTEMBinning(numSel))
+    UpdateData(false);
+}
+
+// Disable non-allowed binnings and change binning for multiple channels
+bool CCameraSetupDlg::ManageSTEMBinning(int numSel)
+{
+  int binInd;
+  bool retval = false;
+  double settling;
+  for (binInd = 0; binInd < mParam->numBinnings - 1; binInd++) {
+    CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1 + binInd);
+    bool valid = mParam->binnings[binInd] >= mParam->minMultiChanBinning[numSel - 1];
+    radio->EnableWindow(valid);
+    if (!valid && m_iBinning <= binInd) {
+      m_iBinning = binInd + 1;
+      retval = true;
+    }
+  }
+  if (retval) {
+    if (m_bKeepPixel) {
+      settling = atof((LPCTSTR)m_strSettling);
+      m_eExposure = (float)(settling * (m_eBottom - m_eTop) * (m_eRight - m_eLeft) /
+        (1.e6 * mBinnings[m_iBinning] * mBinnings[m_iBinning]));
+      ManageDrift();
+    }
+    ManageExposure();
+    ManageBinnedSize();
+  }
+  return retval;
 }
 
 void CCameraSetupDlg::OnmaxScanRate()

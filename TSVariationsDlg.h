@@ -60,8 +60,9 @@ public:
   BOOL mK2Selected;
   BOOL mSTEMmode;
   BOOL mDoingTS;
-  int mSeriesPower;
+  int mSeriesPowerInd;
   double mTopAngle;
+  FloatVec *mCosinePowers;
 
   void Update(void);
   void UpdateListString(int index);
