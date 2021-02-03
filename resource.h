@@ -1652,8 +1652,14 @@
 #define IDC_STAT_EER_SUPER_LABEL        2679
 #define IDC_RSUPER_NONE                 2680
 #define IDC_RSUPER_2X                   2681
-#define IDC_RADIO3                      2682
 #define IDC_RSUPER_4X                   2682
+#define IDC_STAT_FRAME_GROUP            2683
+#define IDC_STAT_NUM_CAM_LABEL          2684
+#define IDC_STAT_EXPOSURE               2685
+#define IDC_STAT_SUMMED_FRAME           2686
+#define IDC_STAT_NUM_SUM_LABEL          2687
+#define IDC_STAT_TOTAL_LABEL            2688
+#define IDC_STAT_NUM_SUM2               2689
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2150,9 +2156,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        253
+#define _APS_NEXT_RESOURCE_VALUE        254
 #define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2683
+#define _APS_NEXT_CONTROL_VALUE         2690
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

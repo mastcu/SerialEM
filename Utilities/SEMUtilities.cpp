@@ -5,6 +5,7 @@
 #include "..\SerialEMDoc.h"
 #include "..\Image\KStoreIMOD.h"
 #include "..\EMscope.h"
+#include "..\FalconHelper.h"
 #include "..\CameraController.h"
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
@@ -730,9 +731,10 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
   bool doTrunc = (faParam.truncate && faParam.truncLimit > 0);
   bool needPreprocess = gainNorm || defects || doTrunc;
   int ind, numHoldFull, fullDataSize = sizeof(float);
+  int aliBinning = UtilGetFrameAlignBinning(faParam, nx, ny);
 
   // Get memory for components then evaluate the GPU needs
-  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, faParam.aliBinning, 
+  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, aliBinning, 
     fullPadSize, sumPadSize, alignPadSize);
   gettingFRC = sWinApp->mCamera->GetNumFrameAliLogLines() > 2;
 
@@ -797,7 +799,7 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
     if (gpuFlags) {
       temp = needed;
       needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize, 
-        UtilGetFrameAlignBinning(faParam, nx, ny), gainNorm, defects, doTrunc, 
+        aliBinning, gainNorm, defects, doTrunc, 
         B3DMAX(numHoldFull, 1), gpuUsableMem - needed, 
         0.5f * (1.f - gpuFracMem) * gpuUsableMem, gpuFlags, gpuFlags);
       SEMTrace('a', "GPU mem total %.1f  usable %.1f  need ali/sum %.1f  initial %.1f  "
@@ -829,8 +831,12 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
 int UtilGetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
   int frameSizeY)
 {
-  if (!param.binToTarget || param.targetSize < 100)
-    return param.aliBinning;
+  int superFac = 1;
+  if (!param.binToTarget || param.targetSize < 100) {
+    if (param.multAliBinByEERfac)
+      superFac = sWinApp->mFalconHelper->GetEERsuperFactor(param.EERsuperRes);
+    return param.aliBinning * superFac;
+  }
   return B3DNINT(sqrt((double)frameSizeX * frameSizeY) / param.targetSize);
 }
 

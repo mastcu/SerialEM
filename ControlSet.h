@@ -3,6 +3,7 @@
 #ifndef CONTROLSET_H
 #define CONTROLSET_H
 #include "Shared\CorrectDefects.h"
+typedef std::vector <float> FloatVec;
 
 #define UNPROCESSED 0
 #define DARK_SUBTRACTED 1
@@ -300,7 +301,9 @@ struct FrameAliParams {
   int subsetStart, subsetEnd; // Start and end of range, numbered from 1
   int whereRestriction;       // 1 for only in plugin, 2 for only in IMOD
   int sizeRestriction;        // 1 for only 4K, 2 for only 8K
+  int EERsuperRes;            // 0, 1, or 2 for super-resolution reading EER data
   CString name;               // Name to show
+  bool multAliBinByEERfac;    // RUN-TIME: multiply align bin by EER super-resolution fac
 };
 
 // Elements of matrix: units of X per X input, etc

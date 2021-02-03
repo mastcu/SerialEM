@@ -185,6 +185,7 @@ struct JeolParams;
 #define PLUGCAM_DIVIDE_BY2         1
 #define PLUGCAM_CONTINUOUS         2
 // See SEMCCDDefines.h for bits 17-21
+// These are copied to FeiScope.h
 #define PLUGFEI_MAKE_CAMERA        2
 #define PLUGFEI_MAKE_STAGE         4
 #define PLUGFEI_MAKE_ILLUM         8
@@ -202,6 +203,8 @@ struct JeolParams;
 #define PLUGFEI_WAIT_FOR_FRAMES   1
 #define PLUGFEI_APPLY_PIX2COUNT   2
 #define PLUGFEI_UNBIN_PIX2COUNT   4
+#define PLUGFEI_CALL_EER_MODE     8
+#define PLUGFEI_USE_EER_MODE      0x10   
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);
@@ -242,12 +245,12 @@ typedef bool (*PlugDoingFunc)(void);
 #define TIETZ_DROP_FRAME_MASK   3
 
 // A macro for getting a new array and ending up with null if it fails
-#define NewArray(a,b,c) try { \
-  a = new b[c]; \
+#define NewArray(arr,typ,siz) try { \
+  arr = new typ[siz]; \
 } \
   catch (CMemoryException *e) { \
   e->Delete(); \
-  a = NULL; \
+  arr = NULL; \
   }
 
 #define CLEAR_RESIZE(a,b,c) { a.clear(); \

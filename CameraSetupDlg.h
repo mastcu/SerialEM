@@ -286,6 +286,7 @@ public:
   afx_msg void OnDoseFracMode();
   afx_msg void OnAlignDoseFrac();
   void ManageDoseFrac(void);
+  void ManageFalcon4FrameSpec(void);
   void ComposeWhereAlign(CString &str);
   void ManageSizeAndPositionButtons(BOOL disableAll);
   BOOL m_bSaveFrames;

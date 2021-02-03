@@ -3331,13 +3331,7 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
     13.014f, 16.514f, 21.21f, 25.32f, 28.20f, 29.25f};
   const float K2rates300KV[] = {0.789f, 1.890f, 3.107f, 4.092f, 6.388f, 9.252f, 13.213f,
     18.480f, 25.744f, 39.14f, 56.29f, 72.61f, 79.76f};
-  /*const float K3counts200KV[] = {2.153f, 3.24f, 4.321f, 5.29f, 6.175f, 7.141f,
-    8.194f, 9.1f, 10.144f, 12.03f, 14.540f, 17.340f, 21.608f, 26.200f,
-    29.832f, 34.058f, 41.526f, 49.123f, 57.474f, 72.784f, 86.110f};
-  const float K3rates200KV[] = {1.962f, 3.165f, 4.095f, 5.274f, 5.943f, 6.984f,
-    8.029f, 8.97f, 10.013f, 11.984f, 14.600f, 17.655f, 22.581f, 27.962f,
-    32.744f, 38.213f, 48.847f, 61.181f, 76.710f, 113.502f, 163.196f};*/
-  const float K3counts200KV[] = {2.998f, 3.589f, 4.887f, 6.687f, 9.386f, 11.849f, 14.381f,
+   const float K3counts200KV[] = {2.998f, 3.589f, 4.887f, 6.687f, 9.386f, 11.849f, 14.381f,
     17.529f, 20.673f, 23.612f, 26.410f, 29.450f, 31.929f, 34.500f, 36.979f, 39.313f,
     41.685f, 43.987f, 46.835f, 49.421f, 51.901f, 54.197f, 56.508f, 59.514f, 62.553f,
     64.054f, 68.587f, 70.656f, 72.707f, 74.697f, 76.611f, 78.490f};
@@ -3346,12 +3340,23 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
     56.519f, 60.633f, 65.931f, 70.959f, 75.993f, 80.853f, 85.959f, 92.952f, 100.477f,
     104.378f, 117.021f, 123.277f, 129.833f, 136.559f, 143.420f, 150.570f};
 
-  const float FalconCounts200KV[] = {0.103f, 0.119f, 0.159f, 0.199f, 0.259f, 0.352f,
+  const float Falcon3Counts200KV[] = {0.103f, 0.119f, 0.159f, 0.199f, 0.259f, 0.352f,
     0.418f, 0.502f, 0.575f, 0.663f, 0.734f, 0.818f, 0.875f, 0.94f, 1.007f, 1.075f,
     1.123f, 1.157f, 1.189f, 1.219f, 1.248f};
-  const float FalconRates200KV[] = {0.101f, 0.119f, 0.161f, 0.201f, 0.271f, 0.377f,
+  const float Falcon3Rates200KV[] = {0.101f, 0.119f, 0.161f, 0.201f, 0.271f, 0.377f,
     0.461f, 0.577f, 0.693f, 0.838f, 0.981f, 1.159f, 1.302f, 1.486f, 1.711f, 1.968f,
     2.226f, 2.422f, 2.651f, 2.894f, 3.191f};
+  const float Falcon4Counts300KV[] = {0.308f, 0.628f, 1.06f, 1.6f, 2.139f, 3.2f, 4.216f,
+    5.198f, 6.211f, 6.934f, 7.848f, 8.629f, 9.305f, 10.093f, 0.309f, 0.521f, 0.737f,
+    1.062f, 1.387f, 1.928f, 2.357f, 2.784f, 3.31f, 3.93f, 4.623f, 5.357f,
+    5.868f, 6.229f, 6.597f, 7.099f, 7.872f, 8.635f, 9.335f, 10.093f, 10.904f,
+    11.551f, 12.214f, 12.731f, 13.155f, 13.677f, 14.095f, 14.357f, 14.562f, 14.729f};
+  const float Falcon4Rates300KV[] = {0.308f, 0.643f, 1.104f, 1.7f, 2.321f, 3.616f, 4.961f,
+    6.381f, 7.998f, 9.259f, 11.022f, 12.708f, 14.328f, 16.46f, 0.311f, 0.53f, 0.756f,
+    1.107f, 1.463f, 2.077f, 2.576f, 3.096f, 3.752f, 4.569f, 5.538f, 6.631f,
+    7.434f, 8.03f, 8.66f, 9.565f, 11.071f, 12.714f, 14.403f, 16.463f, 19.035f,
+    21.459f, 24.426f, 27.234f, 30.f, 34.4f, 39.275f, 43.48f, 48.019f, 53.144f};
+
   const float *countsArr, *ratesArr;
   int numVals;
   float doseRate, ratio;
@@ -3376,10 +3381,14 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
         ratesArr = &K2rates200KV[0];
         numVals = sizeof(K2counts200KV) / sizeof(float);
       }
+    } else if (camParam->FEItype == FALCON3_TYPE) {
+      countsArr = &Falcon3Counts200KV[0];
+      ratesArr = &Falcon3Rates200KV[0];
+      numVals = sizeof(Falcon3Counts200KV) / sizeof(float);
     } else {
-      countsArr = &FalconCounts200KV[0];
-      ratesArr = &FalconRates200KV[0];
-      numVals = sizeof(FalconCounts200KV) / sizeof(float);
+      countsArr = &Falcon4Counts300KV[0];
+      ratesArr = &Falcon4Rates300KV[0];
+      numVals = sizeof(Falcon4Counts300KV) / sizeof(float);
     }
     camParam->doseTabCounts.insert(camParam->doseTabCounts.end(), countsArr, 
       countsArr + numVals);

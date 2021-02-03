@@ -63,6 +63,7 @@ LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
 #define FEI_PLUGIN_MESSAGE_BOX     105
 #define FEI_PLUGIN_DOES_FALCON3    106
 #define FEI_PLUGIN_SCALES_DUMB_F3  108
+#define FEI_PLUGIN_CAN_DO_EER      110
 
 struct StageMoveInfo {
   double x;
@@ -760,6 +761,8 @@ private:
   float mStageRelaxation;     // Default distance to relax stage from backlash
   int mDoingStoppableRefill;  // Sum of bits for refill types
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
+  float mFalcon4ReadoutInterval; // Frame interval for Falcon 4 camera
+  int mMinFalcon4CountAlignFrac; // Minimum align fraction for Falcon 4 in counting
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
   std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested

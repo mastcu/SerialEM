@@ -1228,8 +1228,13 @@ BOOL CSerialEMApp::InitInstance()
     mOriginalActiveList[iCam] = mActiveCameraList[iCam];
     if (mCamParams[mActiveCameraList[iCam]].unsignedImages)
       mAny16BitCameras = true;
-    if (mCamParams[mActiveCameraList[iCam]].GIF)
+    if (mCamParams[mActiveCameraList[iCam]].GIF) {
       anyGIF = true;
+
+      // TEMPORARY until Selectris filter control is available
+      if (mCamParams[mActiveCameraList[iCam]].FEItype)
+        mCamera->SetNoFilterControl(true);
+    }
     if (mCamParams[mActiveCameraList[iCam]].DE_camType)	{
       if (deCamCount < MAX_DE_Cams) {
         DE_camNames[deCamCount] = mCamParams[mActiveCameraList[iCam]].name;
@@ -1360,7 +1365,7 @@ BOOL CSerialEMApp::InitInstance()
 
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
-    if (mCamParams[iCam].FEItype == FALCON3_TYPE) {
+    if (IS_FALCON3_OR_4(&mCamParams[iCam])) {
       mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
       mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
     }
@@ -1377,7 +1382,7 @@ BOOL CSerialEMApp::InitInstance()
         if (!cs->useFrameAlign && cs->alignFrames > 0)
           cs->alignFrames = 0;
       }
-      if (mCamParams[iCam].FEItype == FALCON3_TYPE)
+      if (IS_FALCON3_OR_4(&mCamParams[iCam]))
         cs->numSkipBefore = cs->numSkipAfter = 0;
 
       // Transition DE saving flags to new form

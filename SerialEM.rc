@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -811,7 +815,7 @@ BEGIN
     CONTROL         "Invert",IDC_INVERT_CON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,82,43,31,10
     CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,11,67,10
     CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,22,67,10
-    CONTROL         "Tlit axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,80,45,10
+    CONTROL         "Tilt axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,80,45,10
 END
 
 IDD_BUFFERCONTROL DIALOGEX 0, 0, 119, 108
@@ -2655,21 +2659,21 @@ BEGIN
 END
 
 IDD_FALCON_FRAMES DIALOGEX 0, 0, 129, 287
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame Summing Selector"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,266,45,14
     PUSHBUTTON      "Cancel",IDCANCEL,59,266,45,14
-    RTEXT           "Exposure time",IDC_STATIC,26,35,43,8
+    RTEXT           "Exposure time",IDC_STAT_EXPOSURE,26,35,43,8
     EDITTEXT        IDC_EDIT_EXPOSURE,71,32,39,14,ES_AUTOHSCROLL
-    LTEXT           "# of summed frames to save:",IDC_STATIC,9,84,89,8
+    LTEXT           "# of summed frames to save:",IDC_STAT_NUM_SUM_LABEL,9,84,89,8
     RTEXT           "999",IDC_STAT_NUM_FRAMES,96,84,13,8
     CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,111,81,9,14
     RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,18,111,66,8
     RTEXT           "99",IDC_STAT_SKIP_START,84,111,9,8
     CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,95,108,9,14
-    RTEXT           "Total saved in sums:",IDC_STATIC,15,128,62,8
+    RTEXT           "Total saved in sums:",IDC_STAT_TOTAL_LABEL,15,128,62,8
     RTEXT           "9999",IDC_STAT_TOTAL_SAVE,77,128,16,8
     CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,95,125,9,14
     RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,26,145,58,8
@@ -2677,16 +2681,16 @@ BEGIN
     CONTROL         "",IDC_SPIN_SKIP_AFTER,"msctls_updown32",UDS_ARROWKEYS,95,142,9,14
     EDITTEXT        IDC_EDIT_READOUTS,13,178,102,62,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
     PUSHBUTTON      "?",IDC_BUTHELP,112,270,10,10
-    LTEXT           "# camera frames in each summed frame",IDC_STATIC,52,160,62,15
-    LTEXT           "# summed frames",IDC_STATIC,14,160,35,15
+    LTEXT           "# camera frames in each summed frame",IDC_STAT_NUM_CAM_LABEL,52,160,70,15
+    LTEXT           "# summed frames",IDC_STAT_NUM_SUM2,14,160,35,15
     RTEXT           "Camera frame time",IDC_STAT_SUBFRAME_TIME,8,52,61,8
     PUSHBUTTON      "Equalize",IDC_BUT_EQUALIZE,41,243,45,14
     EDITTEXT        IDC_EDIT_SUBFRAME_TIME,71,49,39,14,ES_AUTOHSCROLL
-    GROUPBOX        "Number of camera frames",IDC_STATIC,7,98,116,164
+    GROUPBOX        "Number of camera frames",IDC_STAT_FRAME_GROUP,7,98,116,164
     LTEXT           "This dialog controls how to save variable-sized sums of the basic camera frames",IDC_STAT_EXPLANATION,10,5,109,26
     LTEXT           "min: 0.125",IDC_STAT_MIN_FRAME_TIME,78,64,44,8
     LTEXT           "max: 0.125",IDC_STAT_MAX_FRAME_TIME,77,72,45,8
-    LTEXT           "Summed frame time",IDC_STATIC,13,68,61,8
+    LTEXT           "Summed frame time",IDC_STAT_SUMMED_FRAME,13,68,61,8
 END
 
 IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 230, 369
@@ -2699,7 +2703,7 @@ BEGIN
     CONTROL         "TIFF (LZW compression)",IDC_COMPRESSED_TIFF,"Button",BS_AUTORADIOBUTTON,14,25,87,10
     CONTROL         "TIFF (ZIP compression)",IDC_TIFF_ZIP_COMPRESS,"Button",BS_AUTORADIOBUTTON,14,36,84,10
     GROUPBOX        "File type",IDC_STAT_FILETYPE,7,3,124,46,WS_GROUP
-    CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,52,85,10
+    CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,52,200,10
     CONTROL         "Save mdoc file for each frame stack",IDC_FRAME_STACK_MDOC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,65,120,10
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
@@ -2860,10 +2864,10 @@ BEGIN
     CONTROL         "",IDC_SPIN_BIN_TO,"msctls_updown32",UDS_ARROWKEYS,169,268,9,14
     LTEXT           "pixels",IDC_STAT_ALIBIN_PIX,180,271,18,8
     RTEXT           "1250",IDC_STAT_ALIGN_TARGET,149,271,18,8
-    LTEXT           "Super-resolution sampling of EER data:",IDC_STAT_EER_SUPER_LABEL,8,256,120,8,NOT WS_GROUP
-    CONTROL         "None",IDC_RSUPER_NONE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,128,255,33,10
+    CONTROL         "None",IDC_RSUPER_NONE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,128,255,31,10
     CONTROL         "2x",IDC_RSUPER_2X,"Button",BS_AUTORADIOBUTTON,161,255,21,10
     CONTROL         "4x",IDC_RSUPER_4X,"Button",BS_AUTORADIOBUTTON,183,255,21,10
+    LTEXT           "Super-resolution sampling of EER data:",IDC_STAT_EER_SUPER_LABEL,8,256,120,8
 END
 
 IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 76
@@ -3383,7 +3387,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3881,104 +3887,114 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACROSELECTER AFX_DIALOG_LAYOUT 
+IDD_MACROSELECTER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT 
+IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
+END
+
+IDD_FRAMEALIGN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 
@@ -5462,7 +5478,7 @@ BEGIN
     IDC_ALIGN_DOSE_FRAC     "Align subframes in DigitalMicrograph and return aligned sum to SerialEM"
     IDC_COMBOFILTER         "Select filter to use when aligning subframes"
     IDC_SAVE_FRAMES         "Save each subframe in Dose Fractionation mode from SerialEMCCD plugin"
-    IDC_ONE_FRAME_PER_FILE  "Save each subframe to a separate file instead of in one stack"
+    IDC_ONE_FRAME_PER_FILE  "K2/3: Save each frame to a separate file; Falcon 4: save EER file if possible"
     IDC_SET_SAVE_FOLDER     "Specify the folder where frames will be saved"
     IDC_EDIT_READOUTS       "Enter 2 values on each line, # of sums to save & # of subframes in each sum"
 END

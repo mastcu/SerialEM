@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/30/21: Add support for Falcon 4.
+
 1/27/21: Fixed Extra Division by 2 being enabled for FEI cameras (In 3.8).
 
 1/15/21: Use Trial Size for image/stage shift calibrations will also use the

@@ -1157,6 +1157,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
               faData->binToTarget = itemInt[14] > 0;
               faData->targetSize = itemInt[15];
             }
+            if (itemEmpty[16])
+              faData->EERsuperRes = 0;
+            else
+              faData->EERsuperRes = itemInt[16];
           } else {
             StripItems(strLine, 2, faData->name);
           }
@@ -1883,12 +1887,12 @@ void CParameterIO::WriteSettings(CString strFileName)
         faParam.groupSize, faParam.doSmooth ? 1 : 0, faParam.smoothThresh,
         faParam.shiftLimit);
       mFile->WriteString(oneState);
-      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d\n",
-        i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
+      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d "
+        "%d\n", i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
         faParam.stopIterBelow, faParam.groupRefine ? 1 : 0, faParam.keepPrecision ? 1 : 0,
         faParam.outputFloatSums ? 1 : 0, faParam.alignSubset ? 1 : 0, faParam.subsetStart,
         faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction,
-        faParam.binToTarget ? 1 : 0, faParam.targetSize);
+        faParam.binToTarget ? 1 : 0, faParam.targetSize, faParam.EERsuperRes);
       mFile->WriteString(oneState);
       oneState.Format("FrameAliSetName %d %s\n", i, (LPCTSTR)faParam.name);
       mFile->WriteString(oneState);
@@ -2838,6 +2842,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("LocalFalconFramePath")) {
         StripItems(strLine, 1, message);
         camera->SetLocalFalconFramePath(message);
+      } else if (MatchNoCase("FalconReferenceDir")) {
+        StripItems(strLine, 1, message);
+        camera->SetFalconReferenceDir(message);
 
       } else if (MatchNoCase("DefaultGIFCamera"))
         camera->SetDefaultGIFCamera(itemInt[1]);
@@ -3340,6 +3347,16 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("PluginPath2")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetPluginPath2(message);
+      } else if (MatchNoCase("PluginPath2-32")) {
+#ifndef _WIN64
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetPluginPath2(message);
+#endif
+      } else if (MatchNoCase("PluginPath2-64")) {
+#ifdef _WIN64
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetPluginPath2(message);
+#endif
 
       } else if (MatchNoCase("ExternalTool")) {
         StripItems(strLine, 1, message);

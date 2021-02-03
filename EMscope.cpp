@@ -19,6 +19,7 @@
 #include "BeamAssessor.h"
 #include "CameraController.h"
 #include "TSController.h"
+#include "FalconHelper.h"
 #include "MultiTSTasks.h"
 #include "AutocenSetupDlg.h"
 #include "StageMoveTool.h"
@@ -469,6 +470,8 @@ CEMscope::CEMscope()
   mUseInvertedMagRange = false;
   mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
+  mFalcon4ReadoutInterval = 0.004021f;
+  mMinFalcon4CountAlignFrac = 8;
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;
   mTiltSpeedFactor = 0.;
@@ -1622,6 +1625,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   if (mCheckFreeK2RefCount++ > 30000 / mUpdateInterval) {
     mCheckFreeK2RefCount = 0;
     mWinApp->mCamera->CheckAndFreeK2References(false);
+    mWinApp->mFalconHelper->ManageFalconReference(false, false, "");
   }
 
   // Check if valves should be closed due to message box up
@@ -3636,7 +3640,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
     // Falcon Dose Protector may respond to transient conditions after a mag change,
     // such as a temporary setting of objective strength, so there needs to be a delay
-    if (IS_FALCON2_OR_3(camParam))
+    if (IS_FALCON2_3_4(camParam))
       mShiftManager->SetGeneralTimeOut(mLastNormalization, mFalconPostMagDelay);
     HandleNewMag(inIndex);
   }
@@ -8083,7 +8087,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
 
       // Entries for testing the interface for advanced scripting cameras
-      if (params->FEItype == 10 + FALCON3_TYPE && mSimulationMode) {
+      if ((params->FEItype == 10 + FALCON3_TYPE || params->FEItype == 10 + FALCON4_TYPE) 
+        && mSimulationMode) {
         params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
           PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | 
           (40000 << PLUGFEI_MAX_FRAC_SHIFT));
@@ -8094,9 +8099,11 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
           (40 << PLUGFEI_MAX_FRAC_SHIFT));
         params->FEItype -= 10;
       }
-      params->CamFlags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
+      params->CamFlags = (params->eagleIndex & ~PLUGFEI_INDEX_MASK);
       SEMTrace('E', "index ret %x  flags %x  mind %f  maxd %f", params->eagleIndex, 
         params->CamFlags, minDrift, maxDrift);
+      if (params->CamFlags & PLUGFEI_USES_ADVANCED)
+        mWinApp->mCamera->SetOtherCamerasInTIA(false);
       if (doMessage) {
         mWinApp->AppendToLog(CString("Connected to ") +
           B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, "Advanced", "Standard") +
@@ -8119,9 +8126,19 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->FEItype = FALCON3_TYPE;
       if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
         > 0.05)
-          mWinApp->mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
+        mWinApp->mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
+      if (params->FEItype == FALCON4_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
+        > 0.05)
+        mWinApp->mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
+      if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_CAM_SAVES_EER &&
+        mWinApp->mCamera->GetCanSaveEERformat() < 0)
+        mWinApp->mCamera->SetCanSaveEERformat(1);
+      if (params->FEItype == FALCON4_TYPE)
+        mWinApp->mCamera->SetMinAlignFractionsCounting(mMinFalcon4CountAlignFrac);
       if (params->FEItype == FALCON3_TYPE && params->addToExposure < -1.)
         params->addToExposure = mAddToFalcon3Exposure;
+      if (params->FEItype == FALCON4_TYPE && params->addToExposure < -1.)
+        params->addToExposure = mFalcon4ReadoutInterval / 2.f;
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }
