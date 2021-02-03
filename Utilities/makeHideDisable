@@ -1,0 +1,215 @@
+#!/usr/bin/python -u
+# Script to compose the tables of items that can be hidden/disabled and integrate
+# them into the help page about_hide_disable.htm
+
+progname = 'makeHideDisable'
+prefix = 'ERROR: ' + progname + ' - '
+
+def exitError(mess):
+ sys.stdout.write(mess + '\n')
+ sys.exit(1)
+
+def readTextFile(filename):
+   try:
+      errString = "Opening"
+      textfile = open(filename, 'r')
+      errString = "Reading"
+      lines = textfile.readlines()
+
+   except IOError:
+      errString = errString + ' ' + filename + '  - ' + str(sys.exc_info()[1])
+      exitError(errString)
+
+   textfile.close()
+   for i in range(len(lines)):
+      lines[i] = lines[i].rstrip(' \t\r\n')
+   return lines
+
+def writeTextFile(filename, strings):
+   try:
+      action = 'Opening'
+      comf = open(filename, 'w')
+      action = 'Writing to'
+      for line in strings:
+         comf.write(line + '\r\n')
+      comf.close()
+   except IOError:
+      errString = action + " file: " + filename + "  - " + str(sys.exc_info()[1])
+      exitError(errString)
+
+
+def extractText(item, fromTable):
+   startQuote = item.find('"')
+   if startQuote < 0:
+      return None
+   endQuote = item.find('"', startQuote + 1)
+   if endQuote < 0:
+      return None
+
+   quoted = item[startQuote  + 1:endQuote]
+   tabInd = quoted.find('\\t')
+   if tabInd > 0:
+      quoted = quoted[:tabInd]
+   if fromTable:
+      return quoted
+   return quoted.replace('&&', '|').replace('&', '').replace('|', '&').replace('...', '')
+
+
+resFile = 'resource.h'
+rcFile = 'SerialEM.rc'
+incFile = 'DisableHideTable.h'
+stubFile = 'hlp/html/hide_disable_stub.htm'
+helpFile = 'hlp/html/about_hide_disable.htm'
+tableTag = 'INSERT TABLE LIST HERE'
+menuTag = 'INSERT MENU ID LIST HERE'
+
+# load System Libraries
+import os, sys
+
+indent = ('', '   ', '      ')
+descrip = (' menu', ' submenu', ' sub-submenu')
+
+if os.path.exists(helpFile):
+   rcTime = os.path.getmtime(rcFile)
+   incTime = os.path.getmtime(incFile)
+   resTime = os.path.getmtime(resFile)
+   stubTime = os.path.getmtime(stubFile)
+   helpTime = os.path.getmtime(helpFile)
+   if helpTime > rcTime and helpTime > incTime and helpTime > resTime and \
+      helpTime > stubTime:
+      sys.exit(0)
+
+# Read the files
+resources = readTextFile(resFile)
+menus = readTextFile(rcFile)
+table = readTextFile(incFile)
+stubLines = readTextFile(stubFile)
+
+# Make dictionary from all the IDs
+idDict = {}
+for line in resources:
+   if line.startswith('#define'):
+      lsplit = line.split()
+      if len(lsplit) == 3:
+         idDict[lsplit[1]] = lsplit[2]
+
+# Process the menus in the rc file
+outMenu = []
+level = -2
+needFlush = False
+didBlank = False
+for line in menus:
+   line = line.strip()
+   if line.startswith('IDR_SERIALTYPE'):
+      level += 1
+
+   if level < -1:
+      continue
+
+   if line.startswith('BEGIN'):
+      continue
+
+   if line.startswith('END'):
+      if level and not needFlush:
+         outMenu.append("  ")
+         didBlank = True
+
+      level -= 1
+      needFlush = False
+      continue
+
+   if line.startswith('POPUP'):
+      level += 1
+      name = extractText(line, False)
+      if not name:
+         exitError('Failed to extract POPUP name from line: ' + line)
+
+      if name == 'Tools':
+         break
+
+      if level and (name == 'Edit' or name == 'Run'):
+         needFlush = True
+         continue
+
+      if not didBlank:
+         outMenu.append("  ")
+      title = indent[level] + name + descrip[level]
+      if not level:
+         title = title.upper()
+      outMenu.append(title)
+      didBlank = True
+      continue
+
+   if needFlush:
+      continue
+   
+   if line.startswith('MENUITEM') and 'SEPARATOR' not in line:
+      name = extractText(line, False)
+      if name == None:
+         exitError('Failed to extract item name from line: ' + line)
+      
+      if name == 'Exit' or not name:
+         continue
+      
+      lsplit = line.split()
+      if lsplit[-1] not in idDict:
+         exitError('ID is not listed in resources in line: ' + line)
+
+      outMenu.append(indent[level] + '2 ' + idDict[lsplit[-1]] + ' ' + name)
+      didBlank = False
+
+outTable = []
+inList = False
+typeText = ('1', '2', '1 OR 2')
+for line in table:
+   line = line.strip()
+   if 'static' in line and '[] =' in line:
+      inList = True
+
+   if not inList:
+      continue
+
+   if '};' in line:
+      break
+
+   if line.startswith('//'):
+      outTable.append(' ')
+      outTable.append('<B>' + line.replace('//', '#') + '</B>')
+      continue
+
+   if not line or '{' not in line or line == '{':
+      continue
+
+   name = extractText(line, True)
+   lsplit = line.split(',')
+   if len(lsplit) < 4:
+      exitError('Not enough entries on table line: ' + line)
+
+   if '//' in line:
+      commInd = line.find('//')
+      if commInd >= 0:
+         outTable.append('<I>#' + line[commInd + 2:] + '</i>')
+         
+   typ = int(lsplit[1])
+   ifWhole = int(lsplit[2])
+   if ifWhole:
+      outTable.append('<i># Removes whole line</i>')
+   if typ < 1 or typ > 3:
+      exitError('Second value is out of range in line: ' + line)
+
+   outTable.append(typeText[typ - 1] + ' ' + name)
+
+helpLines = []
+for line in stubLines:
+   if tableTag in line:
+      helpLines += outTable
+   elif menuTag in line:
+      helpLines += outMenu
+   else:
+      helpLines.append(line)
+
+writeTextFile(helpFile, helpLines)
+sys.stdout.write('New hide/disable help file written\n')
+
+sys.exit(0)
+
