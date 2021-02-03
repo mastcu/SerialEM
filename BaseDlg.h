@@ -68,21 +68,31 @@ protected:
   int mSavedTopPos;
   int mIDToSaveTop;
   int mSetToHeight;
+  IntVec mIDsToDrop;
+  int mSameLineCrit;
+  int mBottomDrawMargin;
 public:
   CButton m_butHelp;
   void ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText);
   void ReplaceDlgItemText(int nID, const char * fromText, CString toText);
   void SetupPanelTables(int * idTable, int * leftTable, int * topTable, int * numInPanel,
-    int * panelStart);
+    int * panelStart, int *heightTable = NULL, int sortStart = 0);
   void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
-                                int *numInPanel, int *panelStart, int numCameras);
+    int *numInPanel, int *panelStart, int numCameras, int *heightTable = NULL);
+  void ManageDropping(int *topTable, int index, int nID, int topAtLastDraw, int &cumulDrop, int &firstDropped,
+    bool &droppingLine, bool &drop);
   void EnableDlgItem(int nID, BOOL enable);
   void ShowDlgItem(int nID, bool show);
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
     int upperLim, int &oldNewVal, CString &str, const char *format);
   void FixButtonFocus(CButton & button);
+  void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness,
+    COLORREF color, int offset);
   void MinMaxFloat(UINT  nID, float &value, float minVal, float maxVal, const char *descrip);
   void MinMaxInt(UINT  nID, int &value, int minVal, int maxVal, const char *descrip);
+  void ManageHideableItems(UINT *hideableIDs, int numHideable);
+  GetMember(int, NumPanels);
+  GetMember(int, SetToHeight);
 };
 
 //{{AFX_INSERT_LOCATION}}

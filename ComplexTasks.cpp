@@ -20,6 +20,7 @@
 #include "BeamAssessor.h"
 #include "TSController.h"
 #include "NavigatorDlg.h"
+#include "ProcessImage.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -88,6 +89,8 @@ BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_TASKS_TRIAL_IN_LD_REFINE, OnUpdateTrialInLdRefine)
   ON_COMMAND(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnTasksUseViewInLowdose)
   ON_UPDATE_COMMAND_UI(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnUpdateTasksUseViewInLowdose)
+  ON_COMMAND(ID_TASKS_ROUGHUSESEARCHIFINLM, OnRoughUseSearchIfInLM)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_ROUGHUSESEARCHIFINLM, OnUpdateRoughUseSearchIfInLM)
 END_MESSAGE_MAP()
 
 
@@ -103,6 +106,7 @@ CComplexTasks::CComplexTasks()
   mImBufs = mWinApp->GetImBufs();
   mMagStackInd = 0;
   mVerbose = false;
+  mUseTrialSize = false;
   mTotalDose = 0.;
   mOnAxisDose = 0.;
   mMinLMSlitWidth = 25;
@@ -140,20 +144,15 @@ CComplexTasks::CComplexTasks()
   mFEMaxIncrement = 8.;
   mFETargetShift = 2.;
   mFEMaxIncrementChange = 3.;
-  mFENumFineSteps = 8;
-  mFETargetAngles[0] = 24.;
-  mFETargetAngles[1] = 18.;
-  mFETargetAngles[2] = 11.;
-  mFETargetAngles[3] = 4.;
-  mFETargetAngles[4] = -4.;
-  mFETargetAngles[5] = -11.;
-  mFETargetAngles[6] = -18.;
-  mFETargetAngles[7] = -24.;
+  mMaxFEFineAngle = 24.;
+  mMaxFEFineInterval = 8.;
   mFEIterationLimit = 3;
   mFEMaxFineIS = 2.;
   mLastAxisOffset = -999.;
   mFEUseTrialInLD = false;
   mFEWarnedUseTrial = false;
+  mFEUseSearchIfInLM = false;
+  mFESizeOrFracForMean = 0.;
   mZMicronsPerDialMark = 3.1f;
   mManualHitachiBacklash = 10.;
   mWalkUseViewInLD = false;
@@ -389,6 +388,18 @@ void CComplexTasks::OnUpdateTasksUsetrialinld(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(mRSRAUseTrialInLDMode ? 1 : 0);
 }
 
+void CComplexTasks::OnRoughUseSearchIfInLM()
+{
+  mFEUseSearchIfInLM = !mFEUseSearchIfInLM;
+}
+
+
+void CComplexTasks::OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable();
+  pCmdUI->SetCheck(mFEUseSearchIfInLM ? 1 : 0);
+}
+
 // ComplexTasks will report in on tasks from MultiTSTasks too!
 BOOL CComplexTasks::DoingTasks()
 {
@@ -420,14 +431,16 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
 
   // Set up control set for captures based on trial set
   *conSet = mConSets[baseConset];
-  conSet->left = 0;
-  conSet->right = camParam->sizeX;
-  conSet->top = 0;
-  conSet->bottom = camParam->sizeY;
+  if (!mUseTrialSize) {
+    conSet->left = 0;
+    conSet->right = camParam->sizeX;
+    conSet->top = 0;
+    conSet->bottom = camParam->sizeY;
+  }
   conSet->mode = SINGLE_FRAME;
   conSet->saveFrames = 0;
   conSet->doseFrac = 0;
-  int size = camParam->sizeX < camParam->sizeY ? camParam->sizeX : camParam->sizeY;
+  int size = B3DMIN(conSet->right - conSet->left, conSet->bottom - conSet->top);
 
   // loop until the binned image size reaches the target size
   while (size / conSet->binning > targetSize && !camParam->K2Type) {
@@ -1304,9 +1317,12 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   ControlSet  *conSet = mConSets + TRACK_CONSET;
   double ISX, ISY;
   CString mess;
-  int action;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  int action, loop, numSteps, stepsToTarg[2], ind, middle, dir, lastDir;
+  float firstAngle, curAngle, increm, diffToTarg[2];
   int stackInd = mMagStackInd > 0 ? mMagStackInd - 1 : 0;
   int curMag = mScope->GetMagIndex();
+  bool obeyDelay = true;
 
   if (!mDoingEucentricity) {
 
@@ -1324,6 +1340,89 @@ void CComplexTasks::FindEucentricity(int coarseFine)
       AfxMessageBox(mess, MB_OK | MB_ICONINFORMATION);
     }
 
+    // Set up angles if doing fine
+    if (coarseFine & FIND_EUCENTRICITY_FINE) {
+      mMaxFEFineAngle = B3DABS(mMaxFEFineAngle);
+      mMaxFEFineInterval = B3DABS(mMaxFEFineInterval);
+      if (mMaxFEFineInterval > 2. * mMaxFEFineAngle) {
+        SEMMessageBox("Maximum tilt interval must be no more than half of the maximum "
+          "angle to run fine eucentricity");
+        return;
+      }
+
+      // set up default angles if both parameters have original values
+      if (fabs(mMaxFEFineAngle - 24.) < 0.01 && fabs(mMaxFEFineInterval - 8.) < 0.01) {
+        mFENumFineSteps = 8;
+        mFETargetAngles.resize(8);
+        mFETargetAngles[0] = 24.;
+        mFETargetAngles[1] = 18.;
+        mFETargetAngles[2] = 11.;
+        mFETargetAngles[3] = 4.;
+      } else {
+
+        // To use specified values, try two ways: starting from 0 or passing through 0
+        for (loop = 0; loop < 2; loop++) {
+          firstAngle = (float)(mMaxFEFineInterval * loop / 2.);
+          curAngle = firstAngle;
+          numSteps = 1;
+          for (;;) {
+            increm = B3DMAX(mMaxFEFineInterval * (float)cos(DTOR * curAngle), 
+              mMinWalkInterval);
+            numSteps++;
+            if (curAngle + increm >= mMaxFEFineAngle)
+              break;
+            curAngle += increm;
+          }
+
+          // Keep track of the step that brings it closest to target and the disparity
+          if (mMaxFEFineAngle - curAngle < curAngle + increm - mMaxFEFineAngle) {
+            diffToTarg[loop] = mMaxFEFineAngle - curAngle;
+            stepsToTarg[loop] = numSteps - 1;
+          } else {
+            diffToTarg[loop] = mMaxFEFineAngle - (curAngle + increm);
+            stepsToTarg[loop] = numSteps;
+          }
+        }
+
+        // Select the method that comes closest and get an increment by scaling the
+        // max increment by the discrepancy
+        loop = (fabs(diffToTarg[1]) < fabs(diffToTarg[0])) ? 1 : 0;
+        increm = mMaxFEFineInterval * mMaxFEFineAngle /
+          (mMaxFEFineAngle - diffToTarg[loop]);
+        lastDir = diffToTarg[loop] > 0 ? 1 : -1;
+        mFENumFineSteps = 2 * stepsToTarg[loop] + loop - 1;
+        mFETargetAngles.resize(mFENumFineSteps);
+        middle = (mFENumFineSteps - 1) / 2;
+
+        // Iterate to a stable result: fill in the middle angle and reflect it
+        // Compute each angle, adjust by disparity
+        for (int iter = 0; iter < 10; iter++) {
+          mFETargetAngles[middle] = (float)(increm * loop / 2.);
+          mFETargetAngles[(mFENumFineSteps - 1) - middle] = -mFETargetAngles[middle];
+          for (ind = middle - 1; ind >= 0; ind--)
+            mFETargetAngles[ind] = mFETargetAngles[ind + 1] +
+            B3DMAX(increm * (float)cos(DTOR * mFETargetAngles[ind]), mMinWalkInterval);
+          dir = mMaxFEFineAngle > mFETargetAngles[0] ? 1 : -1;
+
+          // If direction reverses, take half the change in increment
+          if (dir == lastDir)
+            increm *= mMaxFEFineAngle / mFETargetAngles[0];
+          else
+            increm += 0.5f * (mMaxFEFineAngle / mFETargetAngles[0] - 1.f) * increm;
+          lastDir = dir;
+        }
+      }
+
+      // Reflect the angles and resize arrays
+      for (ind = mFENumFineSteps / 2 - 1; ind >= 0; ind--)
+        mFETargetAngles[(mFENumFineSteps - 1) - ind] = -mFETargetAngles[ind];
+      mFEFineAngles.resize(mFENumFineSteps);
+      mFEFineShifts.resize(mFENumFineSteps);
+      mAngleSines.resize(mFENumFineSteps);
+      mAngleCosines.resize(mFENumFineSteps);
+    }
+
+
     // Make a conset for tracking unless another routine did
     if (!mMagStackInd || mConSetModified[mMagStackInd - 1] != TRACK_CONSET)
       MakeTrackingConSet(conSet, targetSize);
@@ -1331,6 +1430,13 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     mFEUsersAngle = 0.;
     if (coarseFine & FIND_EUCENTRICITY_COARSE) {
       LowerMagIfNeeded(mMaxFECoarseMagInd, 0.7f, 0.3f, TRACK_CONSET);
+      if (mFEUseSearchIfInLM && mWinApp->LowDoseMode() &&
+        curMag < mScope->GetLowestMModeMagInd() &&
+        ldp[SEARCH_AREA].magIndex < mScope->GetLowestMModeMagInd()) {
+        mLowMagConSet = SEARCH_CONSET;
+        obeyDelay = mShiftManager->GetPixelSize(
+          mWinApp->GetCurrentCamera(), ldp[SEARCH_AREA].magIndex) < 0.1;
+      }
       action = FE_COARSE_RESET;
       mFECoarseFine &= ~REFINE_EUCENTRICITY_ALIGN;
     } else if (coarseFine & REFINE_EUCENTRICITY_ALIGN) {
@@ -1372,7 +1478,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "FINDING EUCENTRICITY");
   mCamera->SetRequiredRoll(1);
-  mCamera->SetObeyTiltDelay(true);
+  mCamera->SetObeyTiltDelay(obeyDelay);
 
   // If doing fine & align, set up to get first shot
   if (action == FE_FINE_ALIGNSHOT1) {
@@ -1591,6 +1697,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (!mImBufs->GetTiltAngle(angle))
       angle = (float)mFETargetAngles[mFEFineIndex];
     mFEFineAngles[mFEFineIndex] = angle;
+
     if (mFEFineIndex > 0) {
       mShiftManager->AutoAlign(1, 0);
       mImBufs->mImage->getShifts(shiftX, shiftY);
@@ -1608,7 +1715,16 @@ void CComplexTasks::EucentricityNextTask(int param)
     specY = cMat.ypx * ISX + cMat.ypy * ISY;
     mCumMovedX += movedX;
     mFEFineShifts[mFEFineIndex] = (float)specY;
-      
+
+    if (mFESizeOrFracForMean > 0.) {
+      if (mWinApp->mProcessImage->ForeshortenedSubareaMean(0, mFESizeOrFracForMean,
+        mFESizeOrFracForMean, true, delY, &report)) {
+        mWinApp->AppendToLog(report);
+      } else {
+        PrintfToLog("Mean of tilt-foreshortened subarea at %.1f = %.1f", angle, delY);
+      }
+    }
+
     report.Format("Angle = %.2f, shift = %.1f, %.1f pixels, %.3f, %.3f um"
       /*", Cumul, Y = %.3f"/*, %.3f*/", IS = %.3f, %.3f",
       mFEFineAngles[mFEFineIndex], shiftX, shiftY, movedX, movedY,
@@ -1642,7 +1758,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     } else {
 
       // First get old general solution with constant term
-      StatLSFit2(mAngleSines, mAngleCosines, mFEFineShifts,
+      StatLSFit2(&mAngleSines[0], &mAngleCosines[0], &mFEFineShifts[0],
         mFEFineIndex, &delZ, &delY, &intcp);
       yZeroGen = delY + intcp;
       delY = -intcp;
@@ -1672,7 +1788,7 @@ void CComplexTasks::EucentricityNextTask(int param)
           mFEFineShifts[i] = (mFEFineShifts[i] - yZero);
           mAngleCosines[i] = mAngleCosines[i] - 1;
         }
-        StatLSFit2(mAngleSines, mAngleCosines, mFEFineShifts,
+        StatLSFit2(&mAngleSines[0], &mAngleCosines[0], &mFEFineShifts[0],
           mFEFineIndex, &delZact, &delYact, NULL);
         delYact -= yZero;
       } else {

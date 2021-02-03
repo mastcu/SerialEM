@@ -17,7 +17,8 @@ class CAlignFocusWindow : public CToolDlg
 public:
 	void UpdateSettings();
 	void Update();
-	CAlignFocusWindow(CWnd* pParent = NULL);   // standard constructor
+  void UpdateHiding(void);
+  CAlignFocusWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CAlignFocusWindow)
@@ -59,9 +60,6 @@ protected:
 	afx_msg void OnSetTrimFrac();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
-private:
-  bool mInitialized;
 
 public:
   CString m_strDefTarget;

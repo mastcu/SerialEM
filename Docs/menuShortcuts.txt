@@ -143,6 +143,7 @@ C
 E
 D
 F
+G
 H
 I
 K
@@ -154,6 +155,7 @@ P
 R
 S
 T
+U
 V
 W
 
@@ -188,6 +190,7 @@ Z
   N
   P
   S
+  T
 
 Tilt series:
 A
@@ -287,3 +290,4 @@ V
 X
 Y
 S
+L
