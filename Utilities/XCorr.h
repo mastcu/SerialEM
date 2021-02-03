@@ -48,6 +48,7 @@ void DLL_IM_EX ProcShiftInPlace(short int *array, int type, int nx, int ny, int 
                       float fill);
 void DLL_IM_EX ProcRotateFlip(short int *array, int type, int nx, int ny, int operation, int invert,
                     short int *brray, int *nxout, int *nyout);
+void DLL_IM_EX ProcSimpleFlipY(void *array, int rowBytes, int height);
 void DLL_IM_EX ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray, 
 			 short int *brray, int nPadSize, int nFinalSize);
 double DLL_IM_EX ProcFFTMagnitude(float *array, int nx, int ny, int ix, int iy);

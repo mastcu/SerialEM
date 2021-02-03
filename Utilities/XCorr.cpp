@@ -1310,6 +1310,27 @@ void ProcRotateFlip(short int *array, int type, int nx, int ny, int operation,
   rotateFlipImage(array, type, nx, ny, operation, 1, 0, invertCon, brray, nxout, nyout,0);
 }
 
+// Does a simple flip in Y in place in the given array
+void ProcSimpleFlipY(void *array, int rowBytes, int height)
+{
+  int y;
+  int mcol = height / 2;
+  unsigned char *data = (unsigned char *)array;
+  unsigned char *tmpRowData = new unsigned char[rowBytes];
+
+  unsigned char *from, *to;
+  for (y = 0; y < mcol; y++) {
+    from = data + rowBytes * y;
+    to = data + rowBytes * (height - y - 1);
+
+    memcpy(tmpRowData, to, rowBytes);
+    memcpy(to, from, rowBytes);
+    memcpy(from, tmpRowData, rowBytes);
+  }
+  delete tmpRowData;
+
+}
+
 void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray, 
        short int *brray, int nPadSize, int nFinalSize)
 {
