@@ -499,18 +499,14 @@ public:
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
   SetMember(float, NextFrameSkipThresh);
-  void SetNextPartialThresholds(float start, float end)
-  {
-    mNextPartialStartThresh = start; mNextPartialEndThresh = end;
-  };
+  void SetNextPartialThresholds(float start, float end) 
+    { mNextPartialStartThresh = start; mNextPartialEndThresh = end; };
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) { mTaskFrameWaitStart = inVal ? GetTickCount() : -1.; };
   bool GetTaskWaitingForFrame() { return mTaskFrameWaitStart >= 0. || mTaskFrameWaitStart < -1.1; };
-  void AlignContinuousFrames(int inVal, bool average) {
-    mNumContinuousToAlign = inVal;
-    mAverageContinAlign = average; mNumAlignedContinuous = 0;
-  };
+  void AlignContinuousFrames(int inVal, bool average) { mNumContinuousToAlign = inVal; 
+  mAverageContinAlign = average; mNumAlignedContinuous = 0; };
   GetMember(bool, AverageContinAlign);
   SetMember(float, ContinuousDelayFrac);
   GetSetMember(int, PreventUserToggle);
@@ -535,7 +531,7 @@ public:
   SetMember(double, TaskFrameWaitStart);
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
-  int GetDMversion(int ind) { return mDMversion[ind]; };
+  int GetDMversion(int ind) {return mDMversion[ind];};
   GetSetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);
@@ -558,9 +554,6 @@ public:
   SetMember(int, NextDropFromTiltSum);
   SetMember(int, NextMinTiltGap);
   GetSetMember(BOOL, NoFilterControl);
-  GetSetMember(BOOL, ConsetsShareChannelList);
-  void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
-  void SetCameraISOffset(int ind, float inX, float inY) { mISXcameraOffset[ind] = inX; mISYcameraOffset[ind] = inY; };
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
   BOOL GetGpuAvailable(int DMind) {return mGpuMemory[DMind] > 0;};
@@ -794,7 +787,6 @@ public:
   float mAdjustShiftX, mAdjustShiftY;   // Unbinned pixels to adjust position for STEM
   CArray<ChannelSet, ChannelSet> mChannelSets;
   bool mFoundCombo;
-  BOOL mConsetsShareChannelList;  // Flag that control sets should be kept synchronized
   BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;
@@ -960,9 +952,6 @@ public:
   BOOL mAcquireFloatImages;      // Flag to get float image back if camera supports it
   BOOL mWarnIfBeamNotOn;         // Do not warn if valves are closes when taking a picture
   BOOL mNoFilterControl;         // Flag that there is no control of the energy filter
-  int mLastJeolDetectorID;       // ID of last detector selected
-  float mISXcameraOffset[MAX_CAMERAS];
-  float mISYcameraOffset[MAX_CAMERAS];
 
 public:
   void SetNonGatanPostActionTime(void);

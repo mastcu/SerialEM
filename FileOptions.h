@@ -33,7 +33,6 @@ struct  FileOptions {
   int signToUnsignOpt;
   int fileType;
   int compression;
-  int hdfCompression;
   int jpegQuality;
   int TIFFallowed;
   BOOL separateForMont;

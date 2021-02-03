@@ -21,7 +21,6 @@
 #include "parse_params.h"
 #include "b3dutil.h"
 #include "mxmlwrap.h"
-#include "iimage.h"
 
 // Local functions
 static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth, 
@@ -1886,56 +1885,6 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
   defects.numAvgSuperRes = pad;
   return 0;
 }
-
-// Given a TIFF gain reference file, looks for the tag for FEI defects and parses them
-// as a defect list with the given padding on line defects.  Writes a standard defect 
-// file to dumpDefectName if that is non-NULL.  Processes them by flipping if flipY is 
-// true, finding touching pixels, and scaling if superFac > 1.  nx and ny should be
-// the size of the gain reference.  messBuf of size bufLen receives messages on error,
-// with return value 1.  Return value -1 means no tag was found.
-int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int nx, int ny,
-                            bool flipY, int superFac, int feiDefPad,
-                            const char *dumpDefectName, char *messBuf, int  bufLen)
-{
-  int retval;
-  b3dUInt16 count;
-  char *strng, *strCopy;
-  FILE *defFP;
-  std::string sstr;
-  if (tiffGetArray(iiFile, FEI_TIFF_DEFECT_TAG, &count, &strng) <= 0 || !count) 
-    return -1;
-  strCopy = B3DMALLOC(char, count + 1);
-  if (!strCopy) {
-    snprintf(messBuf, bufLen, "Memory error copying defect string from TIFF file");
-    return 1;
-  }
-  strncpy(strCopy, strng, count);
-  strCopy[count] = 0x00;
-  retval = CorDefParseFeiXml(strCopy, defects, feiDefPad);
-  if (retval) {
-    snprintf(messBuf, bufLen, "Parsing defect string from TIFF file (error %d)", retval);
-    free(strCopy);
-    return 1;
-  }
-  if (dumpDefectName) {
-    imodBackupFile(dumpDefectName);
-    defFP = fopen(dumpDefectName, "w");
-    if (!defFP) {
-      snprintf(messBuf, bufLen, "Opening file to write defects to, %s", dumpDefectName);
-      1;
-    }
-    CorDefDefectsToString(defects, sstr, nx, ny);
-    fprintf(defFP, "%s", sstr.c_str());
-    fclose(defFP);
-  }
-  if (flipY)
-    CorDefFlipDefectsInY(&defects, nx, ny, 0);
-  CorDefFindTouchingPixels(defects, nx, ny, 0);
-  if (superFac > 1)
-    CorDefScaleDefectsForFalcon(&defects, superFac);
-  return 0;
-}
-
 
 #define SET_PIXEL(x, y, v) { ix = (x) + ixOffset;   \
     iy = (y) + iyOffset;                          \

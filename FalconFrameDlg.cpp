@@ -10,19 +10,6 @@
 #include "MacroProcessor.h"
 #include "Shared\b3dutil.h"
 
-static int sIdTable[] = {
-  IDOK, IDCANCEL, IDC_STAT_EXPOSURE, IDC_EDIT_EXPOSURE, IDC_STAT_NUM_SUM_LABEL,
-  IDC_STAT_NUM_FRAMES, IDC_SPIN_NUM_FRAMES, IDC_STAT_STARTLABEL, IDC_STAT_SKIP_START,
-  IDC_SPIN_SKIP_START, IDC_STAT_TOTAL_LABEL, IDC_STAT_TOTAL_SAVE, IDC_SPIN_TOTAL_SAVE,
-  IDC_STAT_ENDLABEL, IDC_STAT_SKIP_END, IDC_SPIN_SKIP_AFTER, IDC_EDIT_READOUTS,
-  IDC_BUTHELP, IDC_STAT_NUM_CAM_LABEL, IDC_STAT_NUM_SUM2, IDC_STAT_SUBFRAME_TIME,
-  IDC_BUT_EQUALIZE, IDC_EDIT_SUBFRAME_TIME, IDC_STAT_FRAME_GROUP, IDC_STAT_EXPLANATION,
-  IDC_STAT_MIN_FRAME_TIME, IDC_STAT_MAX_FRAME_TIME, IDC_STAT_SUMMED_FRAME,
-  PANEL_END, TABLE_END};
-
-static int sTopTable[sizeof(sIdTable) / sizeof(int)];
-static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
-static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 // CFalconFrameDlg dialog
 
@@ -85,16 +72,8 @@ END_MESSAGE_MAP()
 // CFalconFrameDlg message handlers
 BOOL CFalconFrameDlg::OnInitDialog()
 {
-  BOOL state = true;
-  int boxWidth, boxHeight, topDiff;
-  CRect OKrect, boxRect;
+  int show = (mK2Type || mCamParams->FEItype == FALCON3_TYPE) ? SW_HIDE : SW_SHOW;
   CBaseDlg::OnInitDialog();
-
-  CButton *OKbut = (CButton *)GetDlgItem(IDOK);
-  CStatic *groupBox = (CStatic *)GetDlgItem(IDC_STAT_FRAME_GROUP);
-
-  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
-    sHeightTable);
   mHelper = mWinApp->mFalconHelper;
   m_sbcNumFrames.SetRange(0, 30000);
   m_sbcNumFrames.SetPos(15000);
@@ -105,33 +84,13 @@ BOOL CFalconFrameDlg::OnInitDialog()
   m_sbcSkipAfter.SetRange(0, 30000);
   m_sbcSkipAfter.SetPos(15000);
   m_editSubframeTime.EnableWindow(mK2Type);
-
-  // Close up dialog by dropping unneeded things
-  if (mK2Type || IS_FALCON3_OR_4(mCamParams)) {
-    mIDsToDrop.push_back(IDC_STAT_STARTLABEL);
-    mIDsToDrop.push_back(IDC_STAT_ENDLABEL);
-    mIDsToDrop.push_back(IDC_STAT_SKIP_END);
-    mIDsToDrop.push_back(IDC_STAT_SKIP_START);
-    mIDsToDrop.push_back(IDC_SPIN_SKIP_START);
-    mIDsToDrop.push_back(IDC_SPIN_SKIP_AFTER);
-  }
-  if (!mK2Type)
-    mIDsToDrop.push_back(IDC_STAT_EXPLANATION);
-
-  // Get positions to allow changing group box size
-  if (OKbut && groupBox) {
-    OKbut->GetWindowRect(OKrect);
-    groupBox->GetWindowRect(boxRect);
-    boxWidth = boxRect.Width();
-    boxHeight = boxRect.Height();
-    topDiff = OKrect.top - boxRect.top;
-  }
-
-  if (mCamParams->FEItype == FALCON4_TYPE) {
-    ReplaceDlgItemText(IDC_STAT_SUBFRAME_TIME, "frame", "7-frame");
-    ReplaceDlgItemText(IDC_STAT_FRAME_GROUP, "frame", "7-frame");
-    ReplaceDlgItemText(IDC_STAT_NUM_CAM_LABEL, "frames", "7-frames");
-  }
+  m_statStartLabel.ShowWindow(show);
+  m_statEndLabel.ShowWindow(show);
+  m_sbcSkipAfter.ShowWindow(show);
+  m_sbcSkipStart.ShowWindow(show);
+  m_statSkipStart.ShowWindow(show);
+  m_statSkipEnd.ShowWindow(show);
+  m_statExplanation.ShowWindow(mK2Type ? SW_SHOW : SW_HIDE);
 
   if (!mSummedFrameList.size()) {
     mSummedFrameList.push_back(1);
@@ -142,17 +101,6 @@ BOOL CFalconFrameDlg::OnInitDialog()
   } else {
     UpdateAllDisplays();
   }
-  AdjustPanels(&state, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
-    0, sHeightTable);
-
-  // Set group box size
-  if (OKbut && groupBox) {
-    OKbut->GetWindowRect(OKrect);
-    groupBox->GetWindowRect(boxRect);
-    groupBox->SetWindowPos(NULL, 0, 0, boxWidth, 
-      boxHeight - (topDiff - (OKrect.top - boxRect.top)), SWP_NOMOVE);
-  }
-
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
 }
@@ -172,7 +120,7 @@ void CFalconFrameDlg::OnKillfocusEditExposure()
 {
   UpdateData(TRUE);
   mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
-    mAligningInFalcon ? AS_FLAG_ALIGN : 0, 1, m_fExposure, m_fSubframeTime);
+    mAligningInFalcon, 1, m_fExposure, m_fSubframeTime);
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
     m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, mAligningInFalcon);
   m_fSubframeTime = .0005f * B3DNINT(2000. * m_fSubframeTime);
@@ -250,7 +198,7 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
         mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams); 
       m_fExposure = realFrame * totSubframes;
       if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
-        mAligningInFalcon ? AS_FLAG_ALIGN : 0, 1, m_fExposure, realFrame))
+        mAligningInFalcon, 1, m_fExposure, realFrame))
           mHelper->DistributeSubframes(mSummedFrameList, 
             B3DNINT(m_fExposure / realFrame), totFrames, mUserFrameFrac, 
             mUserSubframeFrac, mAligningInFalcon);

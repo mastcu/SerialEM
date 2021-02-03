@@ -246,7 +246,6 @@ public:
   afx_msg void OnSelendokChan7();
   afx_msg void OnSelendokChan8();
   void NewChannelSel(int which);
-  bool ManageSTEMBinning(int numSel);
   afx_msg void OnLinesync();
   void ManageTimingAvailable(void);
   CStatic m_statArea;

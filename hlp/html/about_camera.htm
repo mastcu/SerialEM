@@ -512,43 +512,20 @@
       <b><a name="k3problems">Remaining Problems with the K3</a></b></p>
     <p>
       This list will be continually updated and eventually removed as Gatan either 
-        solves the problem or clarifies the situation.&nbsp; (Last update May 28, 
-        2019)</p>
+        solves the problem or clarifies the situation.&nbsp; (Last update January 29, 
+      2021)</p>
     <ol>
-      <li>For GMS 3.30 and 3.31.2162, when the camera configuration is set for rotation by 90 or 270 and flip around 
-        Y, the operation is done incorrectly in DM and the image is rotated 180 degrees 
-        from what it should be.&nbsp; As a result, the summed images returned to 
-        SerialEM from dose-fractionation,&nbsp;frames saved with reoriention, and 
-        continuous mode images will all be turned by 180 degrees.&nbsp; The problem is 
-          gone in 3.31.2336.&nbsp; There is a 
-        workaround in the Dec. 9 version of SerialEM. The procedure is:</li>
-        <ul>
-            <li>First check if the problem is still present in your version by taking an image 
-                without dose-fractionation, then one with dose-fractionation selected (no saving 
-                is needed).&nbsp; If they do not have the same orientation, proceed to change 
-                RotationAndFlip as indicated next.</li>
-        <li>If necessary, upgrade to the 3-7-0beta14 package or higher</li>
-          <li>Set RotationAndFlip to -7 if it 5, or -5 if it is 7.&nbsp; Leave 
-            DMRotationAndFlip at 5 or 7, respectively</li>
-          <li>When a fixed version of DM is installed, you will need to remove the minus sign 
-              from the RotationAndFlip entry, change DMRotationAndFlip to match it, and change 
-              the configuration in DM , if necessary, from 90 to 270 degrees for a 7 or 
-              from 270 to 90 for a 5.</li> 
-        </ul>
       <li>Linear mode images during continuous acquisition have an incorrect offset 
         which would give a misleading dose rate estimate.&nbsp; This is currently 
         adjusted for in SerialEM.&nbsp; If the problem is ever resolved, there will 
         probably be a property setting to prevent the adjustment.</li>
-      <li>It is currently uncertain whether the hardware binning in counting mode will 
-        be permanently constrained to producing normalized data in bytes.&nbsp; This 
+      <li>Hardware binning in counting mode is constrained to producing normalized data in bytes.&nbsp; This 
         could potentially saturate frames taken with the option for hardware binning by 
         2 with long frame times.&nbsp; Also, continuous mode for counting images with a 
         binning selection of 1 or higher uses hardware binning by 2 and can saturate with high dose 
         rates or with longer exposures, and hardware binning 
         by 4 is simply not used for these images because it 
         saturates so easily.</li>
-      <li>The dose rate table used for 300 KV is inaccurate.&nbsp; With GMS 3.31, SerialEM obtains the dose rate directly from DM in 
-        GMS 3.31, eliminating the need for the dose rate tables.</li>
       <li>SerialEM has no control over the alignment of frames by MotionCor2 available 
         in DM as an option, and apparently cannot trigger this alignment or access the 
         result.</li>
