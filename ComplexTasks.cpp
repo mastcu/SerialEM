@@ -460,8 +460,8 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
       exposure = B3DMAX(exposure, mMinTaskExposure);
       tryExp = exposure;
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, 
-        conSet->binning * 2, mCamera->MakeAlignSaveFlags(conSet), 1, exposure,
-        frameTime);
+        conSet->binning * 2, mCamera->MakeAlignSaveFlags(false, conSet->alignFrames > 0,
+          conSet->useFrameAlign), 1, exposure, frameTime);
       if (exposure < 0.9 * mMinTaskExposure || exposure > 1.25 * tryExp || 
         exposure < 0.75 * tryExp)
         break;
@@ -612,15 +612,16 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
     exposure = B3DMAX(exposure, mMinTaskExposure);
     tryExp = exposure;
     mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning, 
-      mCamera->MakeAlignSaveFlags(conSet), 1, exposure, frameTime);
+      mCamera->MakeAlignSaveFlags(false, conSet->alignFrames > 0, conSet->useFrameAlign),
+      1, exposure, frameTime);
 
     // If the constrained exposure comes out too small, try again with a bigger starting
     // value
     if (exposure < 0.8 * tryExp) {
       exposure = 1.3f * tryExp;
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-        mCamera->MakeAlignSaveFlags(false, conSet->alignFrames, conSet->useFrameAlign),
-        1, exposure, frameTime);
+        mCamera->MakeAlignSaveFlags(false, conSet->alignFrames > 0, conSet->useFrameAlign)
+        , 1, exposure, frameTime);
     }
     if (exposure >= 0.9 * mMinTaskExposure && exposure >= 0.8 * tryExp)
       conSet->exposure = exposure;
