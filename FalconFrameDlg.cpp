@@ -134,8 +134,8 @@ BOOL CFalconFrameDlg::OnInitDialog()
   }
 
   if (!mSummedFrameList.size()) {
-    mSummedFrameList.push_back(1);
     mSummedFrameList.push_back(B3DNINT(B3DMAX(1., mExposure / mReadoutInterval)));
+    mSummedFrameList.push_back(1);
     OnButEqualize();
   } else if (!mUserFrameFrac.size() || !mUserSubframeFrac.size()) {
     OnButEqualize();
