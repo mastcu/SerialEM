@@ -82,7 +82,7 @@ public:
   void ManageDropping(int *topTable, int index, int nID, int topAtLastDraw, int &cumulDrop, int &firstDropped,
     bool &droppingLine, bool &drop);
   void EnableDlgItem(int nID, BOOL enable);
-  void ShowDlgItem(int nID, bool show);
+  void ShowDlgItem(int nID, BOOL show);
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
     int upperLim, int &oldNewVal, CString &str, const char *format);
   void FixButtonFocus(CButton & button);

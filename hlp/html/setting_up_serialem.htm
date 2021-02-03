@@ -1394,11 +1394,11 @@
         &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied 
         to the aligned sum to make it match (e.g., 1 or 
         3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
-      <li>The camera property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39; can be set to control the scaling of 
+      <li>The camera property &#39;<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>&#39; can be set to control the scaling of 
         images from the camera.&nbsp; It specifies the power of 2 to divide by, where 
         positive or negative values set a power for dividing linear or counting mode counts, 
         respectively, and scaling by floating point arithmetic is applied to the other 
-        mode to make its counts match for a given exposure.&nbsp; (See&nbsp; '<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>' 
+        mode to make its counts match for a given exposure.&nbsp; (See&nbsp; '<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>' 
         for details).&nbsp; The two ways to scale were implemented in case it was 
         significantly faster to divide by a power of 2 than to scale by a floating point 
         value, but the difference in timing is minor.&nbsp; The default is 4, which will 
@@ -1425,7 +1425,7 @@
       able to take images in linear mode only, with no possibility of frame saving or 
       alignment.&nbsp; SerialEM will scale images by their exposure times and adjust 
       this scaling so that binning is done by averaging.&nbsp; The scaling can be 
-      adjusted by factors of 2 with the property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39;.&nbsp; 
+      adjusted by factors of 2 with the property &#39;<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>&#39;.&nbsp; 
       The property &#39;RelativeGainFactors 1 0.25 0.0625&#39; is needed.</p>
     <p>
       <a name="FalconGPU"><i>To use a GPU for aligning frames in SerialEM with any of these Falcon 

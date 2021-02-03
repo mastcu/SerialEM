@@ -133,7 +133,7 @@ void CBaseDlg::EnableDlgItem(int nID, BOOL enable)
 }
 
 // For showing/hiding dialog item by ID
-void CBaseDlg::ShowDlgItem(int nID, bool show)
+void CBaseDlg::ShowDlgItem(int nID, BOOL show)
 {
   CWnd *but = GetDlgItem(nID);
   if (but)
