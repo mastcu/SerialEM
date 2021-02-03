@@ -29,8 +29,7 @@ public:
 	void OnOK();
 	void UpdateSettings();
 	void Update();
-  void UpdateHiding(void);
-  CFilterControlDlg(CWnd* pParent = NULL);   // standard constructor
+	CFilterControlDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CFilterControlDlg)

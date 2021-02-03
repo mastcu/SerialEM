@@ -16,11 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
-#endif
-
 /* Include this since this include file was split off from here */
 #include "cfsemshare.h"
 
