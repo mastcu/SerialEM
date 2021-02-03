@@ -1,12 +1,14 @@
 This is a record of changes to SerialEM since it was first publicly released.
 
 * marks changes or enhancements noticeable to the user, or items of particular
-significance.
+significance, for the stable release version
 ============================================================================
+1/27/21: Fixed Extra Division by 2 being enabled for FEI cameras (In 3.8).
+
 1/15/21: Use Trial Size for image/stage shift calibrations will also use the
 current Trial subarea offset from center as well (In 3.8).
 
-1/15/21: Revised instructions to say that FrameGPU and new CUDA dll's should
+* 1/15/21: Revised instructions to say that FrameGPU and new CUDA dll's should
 unpack to Shrmemframe, and made the installer move the dll's from Plugins to
 Shrmemframe; this will restore direct GPU access from SEMCCD on some systems.
 (In 3.8).
@@ -35,7 +37,7 @@ ReportSettingsFile and ReportSettingsFile.
 (In 3.8).
 
 12/31/20: SEM_3-8-6
-12/31/20: Fixed when the Multiple Record center shot is taken (after
+* 12/31/20: Fixed when the Multiple Record center shot is taken (after
 vs. before), broken 6/3/20 (In 3.8).
 
 12/30/20: Fixed orientation of drawn circles for multiple Records in a hole to
@@ -77,7 +79,7 @@ current working directory instead of last one accessed by the chooser.
 will run the script just edited; made Ctrl-A and Ctrl-Z work there (In 3.8).
 
 11/26/20: SEM_3-8-5
-11/26/20: Fixed initial exposure time being used at highest tilt angle instead
+* 11/26/20: Fixed initial exposure time being used at highest tilt angle instead
 of zero tilt with cosine intensity changes, broken 8/4/20 (In 3.8).
 
 11/26/20: Added entry to Task-Specialized Options menu for making the program
@@ -199,7 +201,7 @@ fix GPU problems in multiple contexts; SEMCCD still fails to load FrameGPU in
 GMS 3.42, but shrmemframe will load a FrameGPU in the parent plugins directory
 and frame alignment can use the GPU under 3.42 through shared memory (In 3.8).
 
-10/16/20: Fixed lack of delay after image shift at end of first round of IS
+* 10/16/20: Fixed lack of delay after image shift at end of first round of IS
 from Scratch, which caused drift in first image of second round (In 3.8).
 
 10/15/20: Improved detection of lens relaxation completion on JEOL (In 3.8).
@@ -227,7 +229,7 @@ functions for commands.
 10/3/20: Fixed rounding of exposure times when setting up variable frame sums
 for K3 and improved behavior of frame summing setup upon changes (In 3.8).
 
-10/2/20: Fixed NormCondenserInLowDose so it happens after changing to the new
+* 10/2/20: Fixed NormCondenserInLowDose so it happens after changing to the new
 intensity (In 3.8).
 
 10/2/20: Fixed drift report from autofocus when there are fewer than 3 rolling
@@ -239,7 +241,7 @@ buffers (In 3.8).
 9/28/20: Made hole finder use smallest polygon on image instead of largest one
 (In 3.8).
 
-9/28/20: Made a value of for NormCondenserInLowDose normalize minicondenser
+* 9/28/20: Made a value of 2 for NormCondenserInLowDose normalize minicondenser
 and objective lenses also (In 3.8).
 
 9/28/20: Fixed crash on second dose-symmetric series, broken 9-14 (In 3.8).

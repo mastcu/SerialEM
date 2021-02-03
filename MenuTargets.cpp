@@ -1856,7 +1856,7 @@ void CMenuTargets::OnCameraSetExtraDivisionBy2()
 void CMenuTargets::OnUpdateCameraSetExtraDivisionBy2(CCmdUI *pCmdUI)
 {
   CameraParameters *param = mWinApp->GetActiveCamParam();
-  pCmdUI->Enable((param->CamFlags & CAMFLAG_CAN_DIV_MORE) != 0);
+  pCmdUI->Enable(!param->FEItype && (param->CamFlags & CAMFLAG_CAN_DIV_MORE) != 0);
   pCmdUI->SetCheck(mCamera->GetExtraDivideBy2() > 0);
 }
 

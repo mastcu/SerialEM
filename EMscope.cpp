@@ -2327,13 +2327,9 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
       }
       if (fabs(destX) > xyLimit || fabs(destY) > xyLimit) {
         SEMReportCOMError(E, _T(toStr + CString(".\r\n\r\n"
-          "You are very close to the end of the stage range") + 
-          CString(FEIscope ? "\r\n\r\nCheck Tecnai for pole touch and end"
-          " of range messages.\r\n" : "")), &sThreadErrString);
+          "You are very close to the end of the stage range")), &sThreadErrString);
       } else {
-        SEMReportCOMError(E, _T(toStr +
-          CString(FEIscope ? "\r\n\r\nCheck Tecnai for pole touch and end"
-          " of range messages.\r\n" : "")), &sThreadErrString);
+        SEMReportCOMError(E, _T(toStr), &sThreadErrString);
       }
       retval = 1;
     }
