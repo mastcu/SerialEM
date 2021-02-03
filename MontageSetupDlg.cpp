@@ -794,6 +794,8 @@ void CMontageSetupDlg::OnRcamera()
 
   // Finalize camera change and set sizes
   mCurrentCamera = newCam;
+  SetDlgItemText(IDC_STATBINLABEL, mCamParams[newCam].STEMcamera ? "Sampling:" :
+    "Binning:");
   mSizeScaling = newScale;
   mCamSizeX = mCamParams[newCam].sizeX;
   mCamSizeY = mCamParams[newCam].sizeY;

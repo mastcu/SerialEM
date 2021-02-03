@@ -1086,6 +1086,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
 void CCameraSetupDlg::UnloadDialogToConset()
 {
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
+  int i, j, set, numFound, maxChan;
+  ControlSet *conSet;
   UpdateData(TRUE);
   mCurSet->binning = mBinnings[m_iBinning];
   mCurSet->mode = 1 - m_iContSingle ;
@@ -1149,7 +1151,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (mParam->STEMcamera) {
     mCurSet->boostMag = m_iProcessing;
     mCurSet->magAllShots = m_bRemXrays_MagAll ? 1 : 0;
-    for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
+    maxChan = mCamera->GetMaxChannels(mParam);
+    for (i = 0; i < maxChan; i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = combo->GetCurSel();
       if (sel == CB_ERR)
@@ -1157,11 +1160,29 @@ void CCameraSetupDlg::UnloadDialogToConset()
       else if (mCamera->GetMaxChannels(mParam) > 1)
         sel--;
       mCurSet->channelIndex[i] = sel;
-      if (mCamera->GetConsetsShareChannelList()) {
-        for (int set = 0; set < MAX_CONSETS; set++) {
-          if (set != mCurrentSet)
-            mConSets[set + mActiveCameraList[mCurrentCamera] * 
-            MAX_CONSETS].channelIndex[i] = sel;
+    }
+    if (mCamera->GetConsetsShareChannelList()) {
+      for (set = 0; set < MAX_CONSETS; set++) {
+        if (set != mCurrentSet) {
+          conSet = &mConSets[set + mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
+
+          // Check each possible channel number for whether it occurs in both sets
+          for (i = 0; i < maxChan; i++) {
+            numFound = 0;
+            for (j = 0; j < maxChan; j++) {
+              if (mCurSet->channelIndex[j] == i)
+                numFound++;
+              if (conSet->channelIndex[j] == i)
+                numFound++;
+            }
+            if (numFound && numFound != 2)
+              break;
+          }
+
+          // If not, synchronize
+          if (numFound && numFound != 2)
+            for (j = 0; j < maxChan; j++)
+              conSet->channelIndex[j] = mCurSet->channelIndex[j];
         }
       }
     }

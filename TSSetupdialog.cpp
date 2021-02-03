@@ -873,6 +873,7 @@ void CTSSetupDialog::OnRcamera()
   int index = 2 * mSTEMindex + (mLowDoseMode ? 1 : 0);
   mCurrentCamera = mActiveCameraList[m_iCamera];
   CameraParameters *camP = &mCamParams[mCurrentCamera];
+  SetDlgItemText(IDC_STATBINLABEL, camP->STEMcamera ? "Sampling:" : "Binning:");
   mBinning = BinDivisorI(camP) * mBinning / BinDivisorI(&mCamParams[lastCam]);
   B3DCLAMP(mBinning, camP->binnings[0], camP->binnings[camP->numBinnings - 1]);
   mProbeMode = mWinApp->mScope->GetProbeMode();    // Let them change probe mode on fly
