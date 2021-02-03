@@ -9,7 +9,7 @@
 // MacroEditer.h : header file
 //
 
-class CMacroProcessor;
+class CMacCmd;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMacroEditer dialog
@@ -87,7 +87,7 @@ private:
   int m_iLoadLeft;
   int m_iSaveLeft;
   CSerialEMApp *mWinApp;
-  CMacroProcessor * mProcessor;
+  CMacCmd * mProcessor;
   CMacroEditer **mEditer;
   CString *mMyMacro;
   CString *mSaveFile;  // Full path of save file

@@ -21,7 +21,8 @@ public:
 	void ManageBinning();
 	void UpdateSettings();
 	void Update();
-	void OnOK();
+  void UpdateHiding(void);
+  void OnOK();
 	CMontageWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
