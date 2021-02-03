@@ -270,7 +270,7 @@
       exactly; the versions provided in the package are compatible with the full range 
       of GMS versions.&nbsp; Specifically, the 32-bit version built with GMS 2.30 
       works with GMS 2.31 and 2.32; the 64-bit version built with GMS 2.31 works with 
-      GMS 2.32 and GMS 3.</P>
+      GMS 2.32 and GMS 3.0 - 3.2</P>
     <P>Leginon uses the SerialEM plugin for communicating with K2/K3 cameras.&nbsp; 
       However, it is generally compatible with any plugins 
       distributed in SerialEM 3.7 or 3.8, because it does not rely on the newest 
@@ -338,7 +338,7 @@
         <P style="Z-INDEX: 0">
           After you hit a key, it will copy the DM plugin to the Gatan Plugins 
           folder&nbsp;(C:\Program Files\Gatan\DigitalMicrograph\Plugins in GMS 1.x, C:\Program 
-          Files\Gatan\Plugins for GMS 2 32-bit, and C:\ProgramData\Gatan\Plugins for GMS 2 
+          Files\Gatan\Plugins for GMS 2 32-bit, and C:\ProgramData\Gatan\Plugins for GMS 2-3 
           64-bit) and register the DLL's; this should result in 2 or 
           3 message boxes saying that registration succeeded.&nbsp; For GMS 2 or 3, the plugin 
           will be renamed before it is copied to just the generic name for a GMS2 plugin (e.g., 
@@ -3520,11 +3520,18 @@
       there is no reason to get it unless the CUDA 4 version does not work, or you 
       want to do a speed comparison.</li>
       <li>Run the package.&nbsp; Extract the files to
-      C:\ProgramData\Gatan\Plugins for use with a K2/K3, or to C:\Program Files\SerialEM 
+      C:\ProgramData\Gatan\Plugins\Shrmemframe for use with a K2/K3, or to C:\Program Files\SerialEM 
       or other SerialEM install location for DE and Falcon.</li>
       <li>Restart DigitalMicrograph for a K2/K3. </li>
       <li>Restart SerialEM.&nbsp; There should be a message in the log that the 
-        GPU IS available for frame alignment for the relevant camera.</li>
+        GPU IS available for frame alignment for the relevant camera.&nbsp; For GMS 3.42 
+        and above, there may be a message in the DM Output window about failure to 
+        access the GPU directly; if so, this should be followed by a message that the 
+        GPU is accessible through the Shrmemframe program.&nbsp; This is slightly 
+        suboptimal because frames have to be passed through shared memory, but at least 
+        the GPU is then working.&nbsp; The GPU files are now placed in the Shrmemframe 
+        folder instead of the Plugins folder because that arrangement allowed direct GPU 
+        access by the plugin on one system running GMS 3.43.</li>
       <li>To see debug output from frame alignment and get diagnostic information about a failure to connect to 
         the GPU:</li>
         <ul>
@@ -4100,25 +4107,25 @@ Device Settings:
           <td class="style2">
             register-GMS2-32.bat</td>
           <td class="style3">
-            A batch file for copying the plugin and registering both&nbsp;DLL's&nbsp;for 32-bit GMS 2</td>
+            A batch file for copying the plugin and registering both&nbsp;DLL's&nbsp;for 32-bit GMS 2-3</td>
         </tr>
         <tr>
           <td class="style2">
             register-GMS2-64.bat</td>
           <td class="style3">
-            A batch file for copying the plugin and registering two or three&nbsp;DLL's&nbsp;for 64-bit GMS 2</td>
+            A batch file for copying the plugin and registering two or three&nbsp;DLL's&nbsp;for 64-bit GMS 2-3</td>
         </tr>
         <tr>
           <td class="style2">
             b3dregsvr32.exe</td>
           <td class="style3">
-            Program run by the batch file for registering the plugin for 32-bit and 64-bit GMS 2</td>
+            Program run by the batch file for registering the plugin for 32-bit and 64-bit GMS 2-3</td>
         </tr>
         <tr>
           <td class="style2">
             b3dregsvr64.exe</td>
           <td class="style3">
-            Program run by the batch file for registering the plugin for 64-bit GMS 2</td>
+            Program run by the batch file for registering the plugin for 64-bit GMS 2-3</td>
         </tr>
         <tr>
           <td class="style2">

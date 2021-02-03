@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/15/21: Use Trial Size for image/stage shift calibrations will also use the
+current Trial subarea offset from center as well (In 3.8).
+
+1/15/21: Revised instructions to say that FrameGPU and new CUDA dll's should
+unpack to Shrmemframe, and made the installer move the dll's from Plugins to
+Shrmemframe; this will restore direct GPU access from SEMCCD on some systems.
+(In 3.8).
+
 1/5/21: Fixed RunScriptInWatchedDir to work outside the current directory
 (In 3.8).
 

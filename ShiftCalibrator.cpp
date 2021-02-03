@@ -107,7 +107,7 @@ void CShiftCalibrator::Initialize()
 void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
 {
   ScaleMat pr;
-  int i, j, binnedX, binnedY;
+  int i, j, binnedX, binnedY, top, left, bottom, right;
   int targetSize = 512;
   float scaleDown = 1.;
   ControlSet  *conSet = mConSets + ISCAL_CONSET;
@@ -386,17 +386,27 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   mCalBinning = conSet->binning;
 
   // Finish composing the Control Set
-  binnedX = mCalCamSizeX / conSet->binning;
-  binnedY = mCalCamSizeY / conSet->binning;
-  mCamera->CenteredSizes(binnedX, camP->sizeX, camP->moduloX, conSet->left, 
-    conSet->right, binnedY, camP->sizeY, 
-    camP->moduloY, conSet->top, conSet->bottom, conSet->binning);
-  mCalCamSizeX = binnedX * conSet->binning;
-  mCalCamSizeY = binnedY * conSet->binning;
-  conSet->left *= conSet->binning;
-  conSet->right *= conSet->binning;
-  conSet->top *= conSet->binning;
-  conSet->bottom *= conSet->binning;
+  binnedX = mCalCamSizeX / mCalBinning;
+  binnedY = mCalCamSizeY / mCalBinning;
+  top = conSet->top / mCalBinning;
+  left = conSet->left / mCalBinning;
+  bottom = conSet->bottom / mCalBinning;
+  right = conSet->right / mCalBinning;
+  if (mUseTrialSize) {
+    mCamera->AdjustSizes(binnedX, camP->sizeX, camP->moduloX, left,
+      right, binnedY, camP->sizeY,
+      camP->moduloY, top, bottom, mCalBinning);
+  } else {
+    mCamera->CenteredSizes(binnedX, camP->sizeX, camP->moduloX, left,
+      right, binnedY, camP->sizeY,
+      camP->moduloY, top, bottom, mCalBinning);
+  }
+  conSet->left = left * mCalBinning;
+  conSet->right = right * mCalBinning;
+  conSet->top = top * mCalBinning;
+  conSet->bottom = bottom *mCalBinning;
+  mCalCamSizeX = binnedX * mCalBinning;
+  mCalCamSizeY = binnedY * mCalBinning;
   conSet->mode = SINGLE_FRAME;
 
   // Compute the base shifts between each pair of images; divide to allow
