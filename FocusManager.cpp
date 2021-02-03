@@ -487,7 +487,7 @@ void CFocusManager::OnCalibrationSetfocusrange()
 {
   CString info;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  if (IS_FALCON2_OR_3(camParam) && mCalRange > 72 - mFalconCalLimit)
+  if (IS_FALCON2_3_4(camParam) && mCalRange > 72 - mFalconCalLimit)
     info.Format("You might need a range of only %.0f on the Falcon", 72 - mFalconCalLimit);
   if (!KGetOneFloat(info, "Total defocus range to measure shifts over:", mCalRange, 1))
     return;
@@ -497,7 +497,7 @@ void CFocusManager::OnCalibrationSetfocusrange()
   if (!KGetOneInt("Number of levels to smooth over (0 for none):", mSmoothFit))
     return;
   info = "";
-  if (IS_FALCON2_OR_3(camParam) && mCalRange / 2. + mCalOffset > mFalconCalLimit)
+  if (IS_FALCON2_3_4(camParam) && mCalRange / 2. + mCalOffset > mFalconCalLimit)
     info.Format("If starting near focus, you might need an offset of %.0f because of "
     "the dose protector.", mFalconCalLimit - mCalRange / 2.);
   KGetOneFloat(info, "Offset to apply to the focus range (negative for more "
@@ -692,7 +692,7 @@ void CFocusManager::CalFocusStart()
     CalSTEMfocus();
     return;
   }
-  if (IS_FALCON2_OR_3(camParam) && mCalOffset + mCalRange / 2. > mFalconCalLimit) {
+  if (IS_FALCON2_3_4(camParam) && mCalOffset + mCalRange / 2. > mFalconCalLimit) {
     str.Format("With the current defocus range and offset, the calibration\n"
       "may run into the Falcon Dose Protector unless you are currently\n"
       "at ~%.0f microns relative to eucentric focus.  See the help for\n"
