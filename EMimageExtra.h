@@ -8,8 +8,8 @@
 #define INTENSITY_MASK 0x0010
 #define DOSE_MASK      0x0020
 #define EXTRA_NTYPES  6
-#define EXTRA_NO_VALUE -1.e8f
-#define EXTRA_VALUE_TEST -9.e7f
+#define EXTRA_NO_VALUE -1.e8
+#define EXTRA_VALUE_TEST -9.e7
 
 #define MDOC_FLOAT(nam, ini, tst, sym, str) \
   float nam;

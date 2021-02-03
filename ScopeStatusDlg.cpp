@@ -236,11 +236,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
   int *camLenTab = mWinApp->GetCamLenTable();
   BOOL noScope = mWinApp->mScope->GetNoScope();
-  bool changed = inDefocus != mDefocus || inISX != mISX ||
-    inISY != mISY || fabs(inStageX - mStageX) > 0.1 || fabs(inStageY - mStageY) > 0.1 ||
-    fabs(inStageZ - mStageZ) > 0.1 || inSpot != mSpot ||
-    rawIntensity != mRawIntensity || inObjective != mObjective || inVacStatus != mVacStatus ||
-    inAlpha != mBeamAlpha;
   if (!mInitialized)
     return;
 
@@ -279,7 +274,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mCamLength = 0.;
     if (inMag != mMag || mMagInd != inMagInd || STEM != mSTEM || 
       pendingMag != mPendingMag) {
-        changed = true;
         if (STEM) {
           if (inMagInd < mWinApp->mScope->GetLowestSTEMnonLMmag(STEM-1))
             m_statXLM.SetWindowText("SL");
@@ -509,7 +503,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (temNano != (mTEMnanoProbe ? 1 : 0)) {
     mTEMnanoProbe = temNano != 0;
     needDraw = true;
-    changed = true;
   }
   if (needDraw)
     Invalidate();
@@ -528,8 +521,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     }
   }
   mLastDoseTime = curTime;
-  if (changed)
-    mWinApp->SetLastActivityTime(curTime);
 }
 
 void CScopeStatusDlg::OnButfloat() 

@@ -42,7 +42,7 @@ struct TiltSeriesParam {
   float taperAngle;            // Angle above which to taper
   BOOL limitIntensity;         // flag to limit to intensity at start of series
   BOOL limitToCurrent;         // flag to limit to intensity to current value
-  float cosinePower;           // Power for cosine change of intensity
+  int cosinePower;             // Power for cosine change of intensity
   BOOL intensitySetAtZero;     // Flag to change intensity by cosine if starting at tilt
   BOOL refineEucen;            // Refine eucentricity if starting at 0
   BOOL leaveAnchor;            // flag to leave anchor when walk up

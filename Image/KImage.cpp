@@ -8,7 +8,6 @@
 
 #include "stdafx.h"
 #include "KImage.h"
-#include "..\Utilities\XCorr.h"
 #include "..\SerialEM.h"
 
 KImage::KImage()
@@ -215,7 +214,21 @@ void KImage::applyPad()
 
 void KImage::flipY()
 {
-  ProcSimpleFlipY(mData, mHeight, mRowBytes);
+  int y;
+  int mcol = mHeight/2;
+  unsigned char *tmpRowData = new unsigned char[mRowBytes];
+  
+  unsigned char *from, *to;
+  for(y = 0; y < mcol; y++){
+    from = to = mData;
+    from += mRowBytes * y;
+    to   += mRowBytes * (mHeight - y - 1);
+    
+    memcpy(tmpRowData, to, mRowBytes);
+    memcpy(to, from, mRowBytes);
+    memcpy(from, tmpRowData,mRowBytes);
+  }
+  delete tmpRowData;
 }
 
 // Lock and unlock the data: if it is a SAFEARRAY, get access or unaccess it
