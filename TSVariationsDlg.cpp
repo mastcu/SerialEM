@@ -280,7 +280,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right - conSet->left,
     conSet->bottom - conSet->top, conSet->processing, conSet->mode, special);
   mWinApp->mCamera->ConstrainExposureTime(camParam, conSet->doseFrac > 0,
-    conSet->K2ReadMode, conSet->binning, conSet->alignFrames && !conSet->useFrameAlign, 
+    conSet->K2ReadMode, conSet->binning, mWinApp->mCamera->MakeAlignSaveFlags(conSet),
     mWinApp->mCamera->DESumCountForConstraints(camParam, conSet), recExp, frameTime,
     special, conSet->mode);
   if (camParam->K2Type) {
@@ -301,7 +301,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
       baseTime);
     if (AfxMessageBox(mess, MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL)
       return;
-  } else if (IS_FALCON2_OR_3(camParam)) {
+  } else if (IS_FALCON2_3_4(camParam)) {
     baseTime = mWinApp->mCamera->GetFalconReadoutInterval();
   } else if (mWinApp->mDEToolDlg.HasFrameTime(camParam)) {
     fps = camParam->DE_FramesPerSec > 0 ? camParam->DE_FramesPerSec :

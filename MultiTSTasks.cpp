@@ -627,7 +627,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
     deadTime) + deadTime;
   acParams.exposure = B3DMAX(acParams.exposure, minExposure);
   mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-    false, 2, acParams.exposure, conSet->frameTime);
+    0, 2, acParams.exposure, conSet->frameTime);
   roundFac = mCamera->ExposureRoundingFactor(camParam);
   if (roundFac)
     acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac); 
@@ -738,7 +738,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
       acParams.binning = newbin;
       acParams.exposure = (float)(0.001 * B3DNINT(1000. * newexp));
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-        false, 2, acParams.exposure, conSet->frameTime);
+        0, 2, acParams.exposure, conSet->frameTime);
       if (roundFac)
         acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
       acParams.useCentroid = parmP->useCentroid;

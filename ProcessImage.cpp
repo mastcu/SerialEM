@@ -3282,7 +3282,7 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
     return 2;
   doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure * 
     imBuf->mBinning * imBuf->mBinning / (CamHasDoubledBinnings(camParam) ? 4. : 1.)));
-  if ((camParam->K2Type || camParam->FEItype == FALCON3_TYPE) && imBuf->mK2ReadMode > 0)
+  if ((camParam->K2Type || IS_FALCON3_OR_4(camParam)) && imBuf->mK2ReadMode > 0)
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
   if (imBuf->mDoseRatePerUBPix > 0.)
     doseRate = imBuf->mDoseRatePerUBPix;
@@ -3356,7 +3356,7 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
   int numVals;
   float doseRate, ratio;
 
-  if (camera < 0 || !(camParam->K2Type || camParam->FEItype == FALCON3_TYPE))
+  if (camera < 0 || !(camParam->K2Type || IS_FALCON3_OR_4(camParam)))
     return rawRate;
 
   // First time for a camera, in no table read in from properties, assign the default

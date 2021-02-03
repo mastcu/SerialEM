@@ -297,7 +297,7 @@ void CAutocenSetupDlg::OnKillfocusEditExposure()
   float roundFac = mWinApp->mCamera->ExposureRoundingFactor(camParam);
   UpdateData(true);
   if (mWinApp->mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode,
-    conSet->binning, false, 2, m_fExposure, conSet->frameTime)) {
+    conSet->binning, 0, 2, m_fExposure, conSet->frameTime)) {
     if (roundFac)
       m_fExposure = (float)(B3DNINT(m_fExposure * roundFac) / roundFac);
     UpdateData(false);

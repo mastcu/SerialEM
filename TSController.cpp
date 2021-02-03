@@ -3730,7 +3730,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   mCamera->CropTietzSubarea(mCamParams, recSet->right - recSet->left,
     recSet->bottom - recSet->top, recSet->processing, recSet->mode, special);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
-    recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, 
+    recSet->binning, mCamera->MakeAlignSaveFlags(recSet),
     mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, special, 
     recSet->mode);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);

@@ -6544,7 +6544,7 @@ int CMacCmd::SetExposureForMean(void)
       mConSets[cIndex].mode, cIy1);
     mCamera->ConstrainExposureTime(mCamParams, mConSets[cIndex].doseFrac,
       mConSets[cIndex].K2ReadMode, mConSets[cIndex].binning,
-      mConSets[cIndex].alignFrames && !mConSets[cIndex].useFrameAlign, cIx1, cBmean,
+      mCamera->MakeAlignSaveFlags(&mConSets[cIndex]), cIx1, cBmean,
       mConSets[cIndex].frameTime, cIy1, mConSets[cIndex].mode);
     if (fabs(cBmean - mConSets[cIndex].exposure) < 0.00001) {
       PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
@@ -6621,8 +6621,8 @@ int CMacCmd::SetK2ReadMode(void)
 {
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (!mCamParams->K2Type && !mCamParams->OneViewType &&
-    mCamParams->FEItype != FALCON3_TYPE && !mCamParams->DE_camType)
+  if (!mCamParams->K2Type && !mCamParams->OneViewType && !IS_FALCON3_OR_4(mCamParams) &&
+    !mCamParams->DE_camType)
     ABORT_NOLINE("Read mode cannot be set for the current camera type");
   if (mItemInt[2] < 0 || mItemInt[2] > 2)
     ABORT_LINE("Read mode must 0, 1, or 2 in:\n\n");
