@@ -15,6 +15,9 @@ IF "%CD%" == "C:\Program Files\SerialEM" (
 
 set CUDA4DLL=cudart64_41_28.dll
 set CUDA8DLL=cudart64_80.dll
+set CUDA4FFT=cufft64_41_28.dll
+set CUDA8FFT=cufft64_80.dll
+set CUDA8FFTW=cufftw64_80.dll
 
 rem Find out if there is an FEI or JEOL plugin already
 set HASFEIPLUG=1
@@ -82,8 +85,6 @@ COPY /Y libifft-*.dll ..
 COPY /Y libiomp5md.dll ..
 COPY /Y libmmd.dll ..
 COPY /Y libctffind.dll ..
-COPY /Y imodzlib1.dll ..
-COPY /Y hdf5.dll ..
 
 Rem # If neither properties file seen, just copy them
 if %SAWPROPS% EQU 0 (
@@ -377,8 +378,37 @@ CALL %REGISTER%
 
 CD "%packDir%"
 
+set GATANPLUGDIR=C:\ProgramData\Gatan\Plugins
+set SHRMEMDIR=C:\ProgramData\Gatan\Plugins\Shrmemframe
+set INPLUG4=0
+set INPLUG8=0
+set INSHRMEM4=0
+set INSHRMEM8=0
+IF EXIST %GATANPLUGDIR%\FrameGPU.dll IF EXIST %GATANPLUGDIR%\%CUDA4DLL% IF EXIST %GATANPLUGDIR%\%CUDA4FFT% set INPLUG4=1
+IF EXIST %GATANPLUGDIR%\FrameGPU.dll IF EXIST %GATANPLUGDIR%\%CUDA8DLL% IF EXIST %GATANPLUGDIR%\%CUDA8FFT% IF EXIST %GATANPLUGDIR%\%CUDA8FFTW% set INPLUG8=1
+IF EXIST %SHRMEMDIR%\FrameGPU.dll IF EXIST %SHRMEMDIR%\%CUDA4DLL% IF EXIST %SHRMEMDIR%\%CUDA4FFT% set INSHRMEM4=1
+IF EXIST %SHRMEMDIR%\FrameGPU.dll IF EXIST %SHRMEMDIR%\%CUDA8DLL% IF EXIST %SHRMEMDIR%\%CUDA8FFT% IF EXIST %SHRMEMDIR%\%CUDA8FFTW% set INSHRMEM8=1
+
+IF %INPLUG4% == 1 IF %INSHRMEM4% == 0 IF %INSHRMEM8% == 0 (
+   echo.
+   echo Moving CUDA 4 .dlls from %GATANPLUGDIR% into Shrmemframe subfolder
+   MOVE /Y %GATANPLUGDIR%\FrameGPU.dll %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA4DLL% %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA4FFT% %SHRMEMDIR%
+   set INSHRMEM4=1
+)
+IF %INPLUG8% == 1 IF %INSHRMEM8% == 0 IF %INSHRMEM4% == 0 (
+   echo.
+   echo Moving CUDA 8 .dlls from %GATANPLUGDIR% into Shrmemframe subfolder
+   MOVE /Y %GATANPLUGDIR%\FrameGPU.dll %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA8DLL% %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA8FFT% %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA8FFTW% %SHRMEMDIR%
+)
+
 Rem # Update FrameGPU.dll if it is there
-call :UpdateFrameGPU C:\ProgramData\Gatan\Plugins
+call :UpdateFrameGPU %GATANPLUGDIR%
+call :UpdateFrameGPU %SHRMEMDIR%
 call :UpdateFrameGPU ..
 
 Rem # Only 64-bit package will have shrmemframe since it has the right libraries
@@ -392,9 +422,8 @@ IF NOT EXIST shrmemframe.exe (
 )
 
 echo Copying frame alignment components
-set SHRMEMDIR=C:\ProgramData\Gatan\Plugins\Shrmemframe
-IF EXIST %SHRMEMDIR% RMDIR /Q /S %SHRMEMDIR%
-MKDIR %SHRMEMDIR%
+IF NOT EXIST %SHRMEMDIR% MKDIR %SHRMEMDIR%
+IF EXIST %SHRMEMDIR%\Microsoft.VC90.CRT RMDIR /Q /S %SHRMEMDIR%\Microsoft.VC90.CRT
 COPY /Y shrmemframe.exe %SHRMEMDIR%
 COPY /Y libiomp5md.dll %SHRMEMDIR%
 COPY /Y libmmd.dll %SHRMEMDIR%

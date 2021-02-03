@@ -37,7 +37,6 @@ enum {JEOL_MDS_OFF = 0, JEOL_MDS_SEARCH, JEOL_MDS_FOCUS, JEOL_MDS_PHOTOSET};
 
 #define JEOL_HAS_NITROGEN_CLASS (1)
 #define JEOL_HAS_EXTRA_APERTURES  (1 << 1)
-#define JEOL_SEQUENTIAL_RELAX    (1 << 2)
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)
@@ -135,7 +134,6 @@ struct JeolStateData {
   BOOL relaxingLenses;
   unsigned int relaxStartTime;
   unsigned int relaxEndTime;
-  double rampupStartTime;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };
@@ -166,7 +164,6 @@ struct JeolParams {
   int flashFegTimeout;
   int fillNitrogenTimeout;
   int emissionTimeout;
-  int beamRampupTimeout;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };
