@@ -2,11 +2,15 @@
 #include <direct.h>
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
+#include "..\SerialEMDoc.h"
+#include "..\Image\KStoreIMOD.h"
 #include "..\EMscope.h"
+#include "..\FalconHelper.h"
 #include "..\CameraController.h"
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
 #include "..\Shared\autodoc.h"
+#include "..\Shared\iimage.h"
 #include "..\Shared\framealign.h"
 
 
@@ -173,11 +177,19 @@ void UtilThreadCleanup(CWinThread **threadpp)
 }
 
 // Open an existing file and return a KStoreMRC
-KStoreMRC *UtilOpenOldMRCFile(CString filename)
+KImageStore *UtilOpenOldMRCFile(CString filename)
 {
   CFile *file;
   KStoreMRC *storeMRC = NULL;
+  KStoreIMOD *storeHDF = NULL;
 
+  if (sWinApp->mDocWnd->GetHDFsupported() && iiTestIfHDF((char *)(LPCTSTR)filename) == 1){
+    storeHDF = new KStoreIMOD(filename);
+    if (storeHDF && storeHDF->FileOK())
+      return storeHDF;
+    delete storeHDF;
+    return NULL;
+  }
   try {
     file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite);
   }
@@ -196,7 +208,7 @@ KStoreMRC *UtilOpenOldMRCFile(CString filename)
 // Open an existing file and read the first image int the read buffer
 int UtilOpenFileReadImage(CString filename, CString descrip)
 {
-  KStoreMRC *storeMRC = UtilOpenOldMRCFile(filename);
+  KImageStore *storeMRC = UtilOpenOldMRCFile(filename);
   if (!storeMRC) {
     SEMMessageBox("Cannot reopen the file with " + descrip + " image.", MB_EXCLAME);
     return 1;
@@ -419,6 +431,21 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
   if (!filename.IsEmpty())
     filename += CString(sep);
   filename += toAdd;
+}
+
+// Remove zeros from end of a string ending in a floating point number
+void UtilTrimTrailingZeros(CString & str)
+{
+  int length, trim = 0;
+  if (str.Find('.')) {
+    length = str.GetLength();
+    while (str.GetAt(length - trim - 1) == '0')
+      trim++;
+    if (str.GetAt(length - trim - 1) == '.')
+      trim++;
+    if (trim)
+      str = str.Left(length - trim);
+  }
 }
 
 // Creates a directory for frame-saving if it does not already exist, checks if parent
@@ -704,9 +731,10 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
   bool doTrunc = (faParam.truncate && faParam.truncLimit > 0);
   bool needPreprocess = gainNorm || defects || doTrunc;
   int ind, numHoldFull, fullDataSize = sizeof(float);
+  int aliBinning = UtilGetFrameAlignBinning(faParam, nx, ny);
 
   // Get memory for components then evaluate the GPU needs
-  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, faParam.aliBinning, 
+  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, aliBinning, 
     fullPadSize, sumPadSize, alignPadSize);
   gettingFRC = sWinApp->mCamera->GetNumFrameAliLogLines() > 2;
 
@@ -771,7 +799,7 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
     if (gpuFlags) {
       temp = needed;
       needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize, 
-        UtilGetFrameAlignBinning(faParam, nx, ny), gainNorm, defects, doTrunc, 
+        aliBinning, gainNorm, defects, doTrunc, 
         B3DMAX(numHoldFull, 1), gpuUsableMem - needed, 
         0.5f * (1.f - gpuFracMem) * gpuUsableMem, gpuFlags, gpuFlags);
       SEMTrace('a', "GPU mem total %.1f  usable %.1f  need ali/sum %.1f  initial %.1f  "
@@ -803,8 +831,12 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
 int UtilGetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
   int frameSizeY)
 {
-  if (!param.binToTarget || param.targetSize < 100)
-    return param.aliBinning;
+  int superFac = 1;
+  if (!param.binToTarget || param.targetSize < 100) {
+    if (param.multAliBinByEERfac)
+      superFac = sWinApp->mFalconHelper->GetEERsuperFactor(param.EERsuperRes);
+    return param.aliBinning * superFac;
+  }
   return B3DNINT(sqrt((double)frameSizeX * frameSizeY) / param.targetSize);
 }
 
@@ -893,13 +925,51 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
   pMyComboBox->MoveWindow(&rctDropDown); //enable changes
 }
 
-// Modify a menu item given its submenu # and ID
-void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char *newText)
+// Loads macro names in to a combo box, using the long names if present if useLong is
+// true and putting None as first entry if addNone true
+void LoadMacrosIntoDropDown(CComboBox &combo, bool useLong, bool addNone)
 {
-  CMenu *menu;
-  menu = sWinApp->m_pMainWnd->GetMenu()->GetSubMenu(subMenuNum);
-  menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
-  sWinApp->m_pMainWnd->DrawMenuBar();
+  CString str;
+  CString *names = sWinApp->GetMacroNames();
+  CString *longNames = sWinApp->GetLongMacroNames();
+  if (addNone)
+    combo.AddString("None");
+  for (int ind = 0; ind < MAX_MACROS; ind++) {
+    if (useLong && !longNames[ind].IsEmpty())
+      str = longNames[ind];
+    else if (names[ind].IsEmpty())
+      str.Format("# %d", ind + 1);
+    else
+      str = names[ind];
+    combo.AddString((LPCTSTR)str);
+  }
+  SetDropDownHeight(&combo, MAX_MACROS + (addNone ? 1 : 0));
+}
+
+// Modify a menu item given its submenu # and ID
+void UtilModifyMenuItem(const char *popupName, UINT itemID, const char *newText)
+{
+  CMenu *menu, *mainMenu;
+  CString name;
+  mainMenu = sWinApp->m_pMainWnd->GetMenu();
+  for (int ind = 0; ind < (int)mainMenu->GetMenuItemCount(); ind++) {
+    UtilGetMenuString(mainMenu, ind, name, MF_BYPOSITION);
+    if (!name.Compare(popupName)) {
+      menu = mainMenu->GetSubMenu(ind);
+      menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
+      sWinApp->m_pMainWnd->DrawMenuBar();
+      return;
+    }
+  }
+}
+
+// Get a menu string and strip the accelerator
+void UtilGetMenuString(CMenu *menu, int position, CString &name, UINT nFlags)
+{
+  menu->GetMenuString(position, name, nFlags);
+  name.Replace("&&", "|");
+  name.Replace("&", "");
+  name.Replace("|", "&");
 }
 
 bool UtilCamRadiosNeedSmallFont(CButton *radio) 
@@ -1049,4 +1119,30 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
     retStr = retStr.TrimRight('0');
   retStr = retStr.TrimRight('.');
   return retStr + suffix;
+}
+
+// Sleep for specified, processing messages
+BOOL SleepMsg(DWORD dwTime_ms)
+{
+  DWORD dwStart = GetTickCount();
+  DWORD dwElapsed;
+  while ((dwElapsed = GetTickCount() - dwStart) < dwTime_ms) {
+    DWORD dwStatus = MsgWaitForMultipleObjects(0, NULL, FALSE,
+      dwTime_ms - dwElapsed, QS_ALLINPUT);
+
+    if (dwStatus == WAIT_OBJECT_0) {
+      MSG msg;
+      while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+          PostQuitMessage((int)msg.wParam);
+          return FALSE; // abandoned due to WM_QUIT
+        }
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+  }
+
+  return TRUE;
 }

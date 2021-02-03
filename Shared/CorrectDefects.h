@@ -1,6 +1,6 @@
 // Declarations for CorrectDefects.cpp and the CameraDefects structure
 //
-// This file is the same between IMOD and SEMCCD but SerialEM needs its own copy with
+// This file is the same between IMOD and SEMCCD but SerialEM needs a variation with
 // a FloatVec typedef, DLL_IM_EX definition and DLL_IM_EX on CorDefUserToRotFlipCCD
 #ifndef CORRECT_DEFECTS_H
 #define CORRECT_DEFECTS_H
@@ -9,12 +9,17 @@
 typedef std::vector<short int> ShortVec;
 typedef std::vector<unsigned short int> UShortVec;
 typedef std::vector<int> IntVec;
+
+#ifdef _SERIALEM
 typedef std::vector<float> FloatVec;
 #ifdef _WIN32
 #ifndef DLL_IM_EX
 #define DLL_IM_EX  _declspec(dllexport)
 #endif
 #endif
+#endif
+
+typedef struct  ImodImageFileStruct ImodImageFile;
 
 #define MAX_AVG_SUPER_RES 4
 #define MAP_COL_AVG_SUPER 254
@@ -58,8 +63,13 @@ void CorDefFlipDefectsInY(CameraDefects *param, int camSizeX, int camSizeY, int 
 void CorDefMergeDefectLists(CameraDefects &defects, unsigned short *xyPairs, 
                             int numPoints, int camSizeX, int camSizeY, int rotationFlip);
 void CorDefMirrorCoords(int size, int binning, int &start, int &end);
+#ifdef _SERIALEM
 void DLL_IM_EX CorDefUserToRotFlipCCD(int operation, int binning, int &camSizeX, int &camSizeY, int &imSizeX,
                             int &imSizeY, int &top, int &left, int &bottom, int &right);
+#else
+void CorDefUserToRotFlipCCD(int operation, int binning, int &camSizeX, int &camSizeY, int &imSizeX,
+  int &imSizeY, int &top, int &left, int &bottom, int &right);
+#endif
 void CorDefRotFlipCCDtoUser(int operation, int binning, int &camSizeX, int &camSizeY, int &imSizeX,
                             int &imSizeY, int &top, int &left, int &bottom, int &right);
 void CorDefRotateCoordsCW(int binning, int &camSizeX, int &camSizeY, int &imSizeX,
@@ -87,6 +97,9 @@ void CorDefSampleMeanSD(void *array, int type, int nx, int ny, float *mean, floa
 int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects, 
                         int &camSizeX, int &camSizeY);
 int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad);
+int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int nx, int ny,
+                            bool flipY, int superFac, int feiDefPad,
+                            const char *dumpDefectName, char *messBuf, int  bufLen);
 int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &camSizeX,
                        int &camSizeY, int scaleDefects, float setBinning,
                        int &useBinning, const char *binOpt);
