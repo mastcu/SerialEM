@@ -1077,6 +1077,12 @@
           </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>Falcon4CanSaveEER</TD>
+          <TD>Set to 0 if a camera is identified as Falcon 4 (FEIcameraType 5) but Advanced 
+            Scripting does not support saving EER files (TEM server version less than 7.6, 
+            i.e., Titan 3.6, Talos 2.6).</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>
           <TD>Set to 1 or 2 to save metadata into a file opened with
             <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the File 
@@ -1301,7 +1307,9 @@
           <TD>FEIcameraType</TD>
           <TD>1 for an FEI Eagle camera or FEI STEM, 2 for a Falcon 1 or 2 camera, 3 for 
             Ceta 1 or 2 or another 
-            camera with no shuttering capabilities, 4 for Falcon 3, or 5 for Falcon 4.&nbsp; If the type is 
+            camera with no shuttering capabilities, 4 for Falcon 3, or 5 for Falcon 4.&nbsp; 
+            If 5 is used for a Falcon 4 and the TEM server version is less than 7.6, you 
+            must also set the general property 'Falcon4CanSaveEER 0'.&nbsp; If the type is 
             2 and a camera is determined to have electron counting and aligning 
             capabilities, it will be converted to a 4. This entry implies RestrictedSizeType 
             1. It also implies a MinimumExposure of 0.011, unless a different value is 
