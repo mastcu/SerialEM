@@ -89,23 +89,16 @@ struct CamPluginFuncs;
 #define K3_CAM_ROTFLIP_BUG        0x2
 
 // General camera flags: keep DE flags here and PLUGFEI in SerialEM.h from conflicting
-// But these conflict with the max Falcon frames in the high 2 bytes
 #define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)
 #define CAMFLAG_CAN_DIV_MORE      (1 << 17)
 
 #define AMT_VERSION_CAN_NORM     700
 #define TIETZ_VERSION_HAS_GPU    102
 
-#define AS_FLAG_SAVE             0x1
-#define AS_FLAG_ALIGN            0x2
-#define AS_FLAG_SEM_ALIGN        0x4
-#define AS_FLAG_IMOD_ALIGN       0x8
-
-
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE, K3_LINEAR_SET_MODE, K3_COUNTING_SET_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
-enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE, FALCON4_TYPE};
+enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 
 // This is not specific to K2, will give true for DE also
@@ -116,13 +109,10 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
 #define FCAM_CAN_COUNT(a) (a->CamFlags & PLUGFEI_CAM_CAN_COUNT)
 #define FCAM_CAN_ALIGN(a) (a->CamFlags & PLUGFEI_CAM_CAN_ALIGN)
-#define IS_FALCON2_3_4(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE || \
-a->FEItype == FALCON4_TYPE)
-#define IS_FALCON3_OR_4(a) ((a)->FEItype == FALCON3_TYPE || (a)->FEItype == FALCON4_TYPE)
+#define IS_FALCON2_OR_3(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE)
 #define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->CamFlags & PLUGFEI_USES_ADVANCED))
 // This needs to be 108 when that exists
 #define PLUGFEI_ALLOWS_ALIGN_HERE 107
-#define PLUGFEI_CAM_SAVES_EER     110
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -401,7 +391,6 @@ public:
   GetSetMember(float, K3CDSLinearRatio);
   float GetMinK2FrameTime(CameraParameters *param, int binning = 0, int special = 0);
   float GetK2ReadoutInterval(CameraParameters *param, int binning = 0, int special = 0);
-  float GetFalconFractionDivisor(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
   GetSetMember(float, FalconReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
@@ -410,7 +399,6 @@ public:
   BOOL GetFrameSavingEnabled() { return mFrameSavingEnabled || mCanUseFalconConfig > 0; };
   GetSetMember(CString, FalconFrameConfig);
   GetSetMember(CString, LocalFalconFramePath);
-  GetSetMember(CString, FalconReferenceDir);
   GetSetMember(CString, FalconConfigFile);
   GetSetMember(int, CanUseFalconConfig);
   int *GetIgnoreDMList(int index) { return &mIgnoreDMList[index][0]; };
@@ -511,18 +499,14 @@ public:
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
   SetMember(float, NextFrameSkipThresh);
-  void SetNextPartialThresholds(float start, float end)
-  {
-    mNextPartialStartThresh = start; mNextPartialEndThresh = end;
-  };
+  void SetNextPartialThresholds(float start, float end) 
+    { mNextPartialStartThresh = start; mNextPartialEndThresh = end; };
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) { mTaskFrameWaitStart = inVal ? GetTickCount() : -1.; };
   bool GetTaskWaitingForFrame() { return mTaskFrameWaitStart >= 0. || mTaskFrameWaitStart < -1.1; };
-  void AlignContinuousFrames(int inVal, bool average) {
-    mNumContinuousToAlign = inVal;
-    mAverageContinAlign = average; mNumAlignedContinuous = 0;
-  };
+  void AlignContinuousFrames(int inVal, bool average) { mNumContinuousToAlign = inVal; 
+  mAverageContinAlign = average; mNumAlignedContinuous = 0; };
   GetMember(bool, AverageContinAlign);
   SetMember(float, ContinuousDelayFrac);
   GetSetMember(int, PreventUserToggle);
@@ -547,7 +531,7 @@ public:
   SetMember(double, TaskFrameWaitStart);
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
-  int GetDMversion(int ind) { return mDMversion[ind]; };
+  int GetDMversion(int ind) {return mDMversion[ind];};
   GetSetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);
@@ -570,14 +554,6 @@ public:
   SetMember(int, NextDropFromTiltSum);
   SetMember(int, NextMinTiltGap);
   GetSetMember(BOOL, NoFilterControl);
-  GetSetMember(BOOL, ConsetsShareChannelList);
-  SetMember(BOOL, SaveInEERformat);
-  GetSetMember(int, RotFlipInFalcon3ComFile);
-  GetSetMember(BOOL, SubdirsOkInFalcon3Save);
-  BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
-  GetSetMember(int, CanSaveEERformat);
-  void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
-  void SetCameraISOffset(int ind, float inX, float inY) { mISXcameraOffset[ind] = inX; mISYcameraOffset[ind] = inY; };
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
   BOOL GetGpuAvailable(int DMind) {return mGpuMemory[DMind] > 0;};
@@ -811,7 +787,6 @@ public:
   float mAdjustShiftX, mAdjustShiftY;   // Unbinned pixels to adjust position for STEM
   CArray<ChannelSet, ChannelSet> mChannelSets;
   bool mFoundCombo;
-  BOOL mConsetsShareChannelList;  // Flag that control sets should be kept synchronized
   BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;
@@ -829,14 +804,12 @@ public:
   int mAntialiasBinning;       // Flag to use antialiasing in plugin for non SR/dosefrac
   float mOneViewDeltaExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];   // Exposure time increments for OneView
   float mOneViewMinExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];    // Minimum exposure times
-
   int mMaxFalconFrames;         // Maximum number of intermediate Falcon frames
   float mFalconReadoutInterval; // Frame interval for Falcon camera
   BOOL mFrameSavingEnabled;     // Flag that frame-saving is enabled in the FEI dialog
   CString mFalconFrameConfig;   // Name of file for controlling frame-saving
   CString mLocalFalconFramePath; // Place that frames can be written by FEI
   CString mFalconConfigFile;    // Path/Name of FalconConfig.xml
-  CString mLastLocalFramePath;  // For storing the localFramePath to have when align done
   int mCanUseFalconConfig;      // -1 not to, 0 read-only, 1 read/write
   bool mSavingFalconFrames;     // per-shot flag if it is happening
   bool mStartedFalconAlign;     // Flag that DisplayNewImage started alignment and left
@@ -853,14 +826,6 @@ public:
   int mWaitingForStacking;      // Flag that we are waiting for Falcon stacking
   CString mDirForFalconFrames;  // Directory or subfolder to save Falcon frames in
   BOOL mOtherCamerasInTIA;      // Flag that FEI name needs to be checked before acquiring
-  BOOL mSaveInEERformat;        // Flag to save Falcon 4 frames as EER
-  int mCanSaveEERformat;        // Flag that it is possible
-  int mFalcon4RawSumSize;       // Size of initial sums that can go into fractions
-  CString mFalconReferenceDir;  // Gain reference directory for counting gain
-  BOOL mFalconAlignsWithoutSave;  // A flag just in case this is wrong
-  int mRotFlipInFalcon3ComFile; // Value to set in com file if default is wrong
-  BOOL mSubdirsOkInFalcon3Save; // Flag that Advanced scripting will create multiple dirs
-
   bool mSavingPluginFrames;     // Flags for saving or aligning frames from plugin camera
   bool mAligningPluginFrames;
   BOOL mSkipNextReblank;        // Flag to not blank readout in next shot
@@ -987,9 +952,6 @@ public:
   BOOL mAcquireFloatImages;      // Flag to get float image back if camera supports it
   BOOL mWarnIfBeamNotOn;         // Do not warn if valves are closes when taking a picture
   BOOL mNoFilterControl;         // Flag that there is no control of the energy filter
-  int mLastJeolDetectorID;       // ID of last detector selected
-  float mISXcameraOffset[MAX_CAMERAS];
-  float mISYcameraOffset[MAX_CAMERAS];
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1072,12 +1034,9 @@ public:
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode,
-    int binning, int alignSaveFlags, int sumCount, float &exposure, float &frameTime, 
+    int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime, 
     int special = 0, int singleContMode = 0);
-  int MakeAlignSaveFlags(ControlSet *consP);
-  int MakeAlignSaveFlags(BOOL save, BOOL align, int useFrameAli);
   bool ConstrainFrameTime(float &frameTime, CameraParameters *camP, int binning = 0, int special = 0);
-  float FalconAlignFractionTime(CameraParameters *camP);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
   static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase,
@@ -1115,9 +1074,7 @@ int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
 bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
-bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave, int readMode = -1);
-bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);
-bool IsSaveInEERMode(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
+bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave);
 bool CanProcessHere(CameraParameters *param);
 int ReturningFloatImages(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
@@ -1143,7 +1100,7 @@ int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double 
 void ModifyFrameTSShifts(int index, float ISX, float ISY);
 int ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY);
 int ReplaceFrameTSFocusChange(FloatVec &changes);
-int SaveFrameStackMdoc(KImage *image, CString &localFramePath, ControlSet *conSet);
+int SaveFrameStackMdoc(KImage *image);
 FloatVec *GetFrameTSactualAngles() { return &mTD.FrameTSactualAngle; };
 IntVec *GetFrameTSrelStartTime() { return &mTD.FrameTSrelStartTime; };
 IntVec *GetFrameTSrelEndTime() { return &mTD.FrameTSrelEndTime; };
