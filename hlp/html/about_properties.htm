@@ -174,6 +174,16 @@
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>PluginPath2-32</TD>
+          <TD>Sets PluginPath2 with this path only if running 32-bit.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath2-64</TD>
+          <TD>Sets PluginPath2 with this path only if running 64-bit.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>StartupMessage</TD>
           <TD>This entry can be added to provide a message upon program startup. The entry 
             must be all one line but the message can consist of multiple lines, separated by 
@@ -191,6 +201,12 @@
           <TD>WarnIfKVnotAt</TD>
           <TD>Use this entry with a KV value (e.g., 200) to get a warning message box if the 
             program is started with the microscope at a different voltage.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ProgramTitleText</TD>
+          <TD>Text to add to the title bar; it will appear after &#39;SerialEM - &#39; and before 
+            the list of open filenames.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -242,13 +258,32 @@
         </TR>
         <TR VALIGN="top">
           <TD>StartAsAdministrator</TD>
-          <TD>Set to 1 to turn on Administrator mode when starting the program.</TD>
+          <TD>Set to 1 to turn on Administrator mode when starting the program, or -1 to prevent
+            Administrator mode from being turned on, which will prevent calibrations from being saved.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ShiftScriptOnlyInAdmin</TD>
           <TD>Enable the script editor buttons to shift scripts up and down only if 
             Adminstrator mode is on.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DisableOrHideFile</TD>
+          <TD>Full path name of a file listing dialog and menu items to be disabled or 
+            hidden unconditionally during the run of the program.&nbsp; See 
+            <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for 
+            details.&nbsp; Make sure that the user settings files in use have good values 
+            for the items being made inaccessible before adding this entry.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BasicModeDisableHideFile</TD>
+          <TD>Full path name of a file listing dialog and menu items to be disabled or 
+            hidden when <a href="menu_settings.htm#hid_settings_basicmode">
+            Basic Mode</a> is turned on in the Settings menu.&nbsp; This file will 
+            be read instead of looking for and reading SEMbasicModeItems.txt in the system 
+            directory.&nbsp; See <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for details.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -291,6 +326,13 @@
             properties and updates the user interface. The default is 150, raised from
             100 on April 10, 2018. For a JEOL, the update function does not normally access
             the microscope so this should be OK.</TD>
+          <TD>&nbsp;</TD>
+       </TR>
+        <TR VALIGN="top">
+          <TD>UpdateDuringAreaChange</TD>
+          <TD>Set to 1 to let the scope update routine run, update the display, and respond 
+            to changes during a low dose area change.&nbsp; Ths may be fine on FEI scopes, 
+            but is less likely to be so on JEOL scopes.</TD>
           <TD>&nbsp;</TD>
        </TR>
        <TR VALIGN="top">
@@ -959,9 +1001,9 @@
             Falcon camera.&nbsp; The default for Falcon 2 is 0.055771 sec, which works for a camera that reads out at 17.9 
             FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.
             &nbsp; The default for Falcon 3 is 0.02495, but at least one site needed 0.02505.&nbsp; The
-            sign of it not being long enough is that SerialEM or FEI-SEMserver crashes when taking frames
-            with a long exposure time.&nbsp; To determine if it needs to be increased, test with a 150 to 300
-             second exposure.&nbsp; Increase in increments of 0.0005.
+            default for Falcon 4 is &nbsp; As of
+            SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
+            SerialEM or FEI-SEMserver when saving frames.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -997,14 +1039,48 @@
             entered, frames will be written to whatever 
             folder is chosen by the user.&nbsp;&nbsp; A local path should be supplied if 
             users can choose remote directories that FEI software will not write to.&nbsp;
-            <i>For Falcon 2 with new interface or Falcon 3</i>, path to top directory where 
+            <i>For Falcon 2 with new interface or Falcon 3 or 4</i>, path to top directory where 
             frames are written by the FEI software, as seen from the computer running 
             SerialEM.&nbsp; For Falcon 2, this is needed to enable saving command files for 
             aligning in IMOD, and only when SerialEM is not running on the microscope 
-            computer. For Falcon 3, it is needed regardless of where SerialEM is running to 
+            computer. For Falcon 3 or 4, it is needed regardless of where SerialEM is running to 
             enable aligning of frames in SerialEM or IMOD. (If SerialEM is running on the 
-            Falcon 3 storage server, this entry would typically be&nbsp; 
-            &#39;C:\OffloadData\TemScripting\BM-Falcon&#39;</TD>
+            Falcon 3 or 4 storage server, this entry would typically be&nbsp; 
+            &#39;C:\OffloadData\ImagesForProcessing\BM-Falcon&#39;)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconReferenceDir</TD>
+          <TD>For Falcon 4, path to directory on the storage server containing the EER gain reference; 
+            another 'local' path accessible to SerialEM.  This entry is also required to do 
+            frame alignment in SerialEM or IMOD. &nbsp;(If SerialEM is running on the 
+            Falcon 4 storage server, this entry for a Titan would typically be&nbsp; 
+            &#39;C:\OffloadData\TemScripting\BM-Falcon\300kV&#39;)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RotFlipInFalcon3ComFile</TD>
+          <TD>Value for the 'SumRotationAndFlip' option placed in Alignframes command files
+            when saving frames from a Falcon 3 with alignment in IMOD.&nbsp; Originally, Falcon 3
+            frames were saved to MRC files with no metadata that could be used to detect,
+            inversion in Y, so SerialEM uses a value that assumes images also need an inversion.
+            &nbsp; If this gives an incorrect orientation with current FEI software versions, set this 
+            property with the needed value, which should be the same as the camera's 
+            RotationAndFlip property.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SubdirsOkInFalcon3Save</TD>
+          <TD>By default, SerialEM assumes that the storage server for Falcon 3 can save only 
+            to a direct subfolder of the storage location, probably because this the restriction for
+            early versions of FEI software.&nbsp; It is possible that more recent software 
+            versions allow subfolder trees, since they do for Falcon 4.&nbsp; Set this property to
+            1 to test whether this is the case.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Falcon4CanSaveEER</TD>
+          <TD>Set to 0 if a camera is identified as Falcon 4 (FEIcameraType 5) but Advanced 
+            Scripting does not support saving EER files (TEM server version less than 7.6, 
+            i.e., Titan 3.6, Talos 2.6).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>
@@ -1145,7 +1221,10 @@
         <TR VALIGN="top">
           <TD>NoFilterControl</TD>
           <TD>Set to 1 to be able to define a camera as a GIF camera and use EFTEM mode for 
-            it although there is no SerialEM control of the filter itself.</TD>
+            it although there is no SerialEM control of the filter itself.&nbsp; As of SerialEM
+             3.9.0 1/28/21, this property is not needed for a Falcon 4 camera; the program will set
+            it automatically until a version comes along that supports the FEI filter.
+          </TD>
         </TR>
       </TABLE>
       <BR>
@@ -1177,6 +1256,15 @@
             different from the entry given by 'Name'.&nbsp; Follow with 0 and the name.&nbsp; The name 
             must be 'CCD' for Tecnai versions before 4.1, and names like 'BM-Eagle' and 
             'BM-Falcon' thereafter.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolDetectorID</TD>
+          <TD>Use this entry to designate a camera as on-axis or off-axis on a JEOL scope 
+            using IS deflectors for image shift.&nbsp; SerialEM will select the detector in 
+            the JEOL software when the camera is switched to, causing the scope to apply or 
+            remove a stored PLA offset for off-axis cameras.&nbsp; The IDs may be 16 for 
+            on-axis and 17 for off-axis.&nbsp; This is untested; use the SetCameraPLAOffset 
+            script command for scopes using PLA.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>UseSocket</TD>
@@ -1219,12 +1307,14 @@
           <TD>FEIcameraType</TD>
           <TD>1 for an FEI Eagle camera or FEI STEM, 2 for a Falcon 1 or 2 camera, 3 for 
             Ceta 1 or 2 or another 
-            camera with no shuttering capabilities, or 4 for Falcon 3.&nbsp; If the type is 
+            camera with no shuttering capabilities, 4 for Falcon 3, or 5 for Falcon 4.&nbsp; 
+            If 5 is used for a Falcon 4 and the TEM server version is less than 7.6, you 
+            must also set the general property 'Falcon4CanSaveEER 0'.&nbsp; If the type is 
             2 and a camera is determined to have electron counting and aligning 
             capabilities, it will be converted to a 4. This entry implies RestrictedSizeType 
             1. It also implies a MinimumExposure of 0.011, unless a different value is 
-            entered, or unless the new FEI camera interface is available.&nbsp; 12 and 14 
-            can be used to test various features for Falcon 2 or 3 with the new interface 
+            entered, or unless the Advanced scripting camera interface is available.&nbsp; 12, 14 and 15
+            can be used to test various features for Falcon 2-4 with the Advanced scripting interface 
             even when it is not present, if the property 'SimulationMode' is also entered.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1255,7 +1345,14 @@
             images returned to SerialEM and to frames saved from the plugin by default.&nbsp; 
             Even if frames are being saved without rotation and flip, the correct entry is
             needed here to keep DM from applying its own rotation.&nbsp; <i>For a 
-            Falcon camera</i>, the indicated operation is applied to intermediate frames.&nbsp;
+            Falcon camera</i>, the indicated operation is applied to intermediate frames.&nbsp; 
+            In general, it should be set when using frame alignment in SerialEM or IMOD so as to make 
+            the aligned image match unaligned ones.  &nbsp;
+            For <i>Falcon 2</i>, it is applied to frames being saved, so setting it is optional if
+            alignment is not being used.&nbsp; For <i>Falcon 3</i>, it is needed when aligning images.
+            &nbsp; For <i>Falcon 4</i>, saved MRC frames are in the correct orientation but EER frames
+            are in native orientation, so the setting is needed to make images aligned either with no
+            saving selected or while also saving as EER have the right orientation.&nbsp; 
             <i>For a DE camera</i>, the operation is applied after aligning saved frames; it 
             should match the operation being done to images in the DE server. </TD>
         </TR>
@@ -1748,11 +1845,10 @@
             exposure from the camera.&nbsp; For Falcon 3, the default is 0.013, which is needed at least
              through server version 6.15 (corresponding to a x.15 version of 
              the software for the particular model line), and probably always will be needed.
-             Without this value, saving every 
-             frame with an exposure time less than 0.8 sec crashes SerialEM or FEI-SEMserver.&nbsp; The 
+             &nbsp; The 
             test for whether a different value is needed is to see whether a 0.05 sec exposure 
-            gives twice as many counts as a 0.025 sec exposure.  If not, try a value of 0 then 
-            values between 0 and 0.013.</TD>
+            gives twice as many counts as a 0.025 sec exposure for Falcon 3.&nbsp; If not, try a value of 0 then 
+            values between 0 and 0.013.&nbsp; The default for Falcon 4 is half the readout interval (0.02).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PostBlankerDelay</TD>
@@ -2164,7 +2260,7 @@
       </TABLE>
       <BR>
       <P><A NAME="file_option_properties"></A><B>File Options</B></P>
-      <P>These properties determine the default options that are selected when the file 
+      <P>Most of these properties determine the default options that are selected when the file 
         properties dialog box is opened.&nbsp; For two options, the default depends on 
         whether the microscope is in STEM mode or not.</P>
       <TABLE BORDER cols="2">
@@ -2215,7 +2311,7 @@
         <TR VALIGN="top">
           <TD>FileOptionsFileType</TD>
           <TD>0 for MRC file, 1 for a series of numbered TIFF files described in an image 
-            autodoc</TD>
+            autodoc, 2 for HDF file</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FileOptionsSaveMdocFile</TD>
@@ -2228,9 +2324,10 @@
           <TD>MontageAutodocOptions</TD>
           <TD>Set to non-zero to have the file type and metadata autodoc options be set to 
             separate defaults and maintained as separate values for montages during a 
-            program run. Set to 1 to have the metadata option on by default for montages; 2 
+            program run.&nbsp; Set to 1 or 9 to have the metadata option on by default for montages; 2 
             to have the file type be numbered TIFFs for montages, 3 for both of these 
-            settings to be on, or 4 for neither to be on.&nbsp; The default is 1, to give .mdoc 
+            settings to be on, 4 for neither to be on, and 8 or 9 to have the file type be 
+            HDF.&nbsp; The default is 1, to give .mdoc 
             files for montages.</TD>
         </TR>
         <TR VALIGN="top">
@@ -2238,6 +2335,20 @@
           <TD>Set to 1 to enable saving to file in a background thread, or 0 to disable it.&nbsp; 
             This was turned on by default in version 3.4.0 beta, so 0 is needed to disable 
             it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><A NAME="hdf_update_time"></A> HdfUpdateTimePerSection</TD>
+          <TD>Sets the average time per saved section that will be spent updating the header 
+            of HDF files.&nbsp; The program measures the time spent updating&nbsp; after an 
+            image is saved and sets an appropriate interval to the next update when it 
+            exceeds this value.&nbsp; The default is 0.05 sec; set to 0 to disable updating 
+            the header before the file is closed.&nbsp; Update time increases with the 
+            number of sections already saved, and the time will become significant at some 
+            point, depending on the speed of data access.&nbsp; For example, in tests, the 
+            updating time per saved section increased by 0.4 msec/section for an SSD, 0.8 
+            msec/section for an external USB 2 hard drive, and&nbsp; 1.3 msec/section for 
+            saving over a 1 GB network, and 600 msec/section for an old USB 2 memory stick.&nbsp; 
+            Set Debug Output to &#39;y&#39; to see reports of the update time.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -2337,6 +2448,12 @@
           <TD>IntensityToC2Factor</TD>
           <TD>This entry is no longer needed; instead, the factor is measured by a 
             calibration procedure and stored in the Calibrations file</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AddToRawIntensity</TD>
+          <TD>Amount to add to the intensity values coming back from FEI scripting to keep 
+            the internal intensity values in the program in the range of 0 to 1; default is 
+            0.</TD>
         </TR>
         <TR>
           <TD>UseIlluminatedAreaForC2</TD>
@@ -2914,7 +3031,7 @@
         <TR VALIGN="top">
           <TD>StageMontageBacklash</TD>
           <TD>Microns of movement to adjust for backlash when taking a montage with stage 
-            movement, and in some othe situations. Default is 5 microns for FEI, 10 microns
+            movement, and in some other situations. Default is 5 microns for FEI, 10 microns
             for JEOL, and 20 microns for 
             Hitachi.&nbsp; This entry must be positive; a negative entry makes it use the 
             default.</TD>
@@ -2960,7 +3077,7 @@
             negative of the frequency at which the low frequency filter starts rising from 
             0, so it should be negative or 0), radius2 (start of high frequency rolloff); 
             sigma1 (sigma for rise of low frequency filter); sigma2 (sigma for falloff of 
-            high-frequeny filter).&nbsp; All four values must be entered.&nbsp; The default 
+            high-frequency filter).&nbsp; All four values must be entered.&nbsp; The default 
             is -0.01 0.35 0.05 0.05.</TD>
         </TR>
         <TR>
@@ -3061,6 +3178,25 @@
             and starts a new iteration (default 2).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>EucentricityMaxFineAngle</TD>
+          <TD>Maximum angle to go to in the fine eucentricity task (default 24).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineIntervalAtZero</TD>
+          <TD>Tilt increment to use at zero tilt in the fine eucentricity task (default 8).&nbsp; 
+            Tilt increments vary as the cosine of the angle.&nbsp; The minimum increment for 
+            fine eucentricity is controlled by &#39;WalkUpMinInterval&#39;.&nbsp; The increment used 
+            will be somewhat different from the entered value in order to make the tilt steps reach 
+            the highest angle with regularly varying intervals.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineSubareaMeans</TD>
+          <TD>Follow with either a binned size in X and Y or fractions of camera field in X 
+            and Y to compute and print to the log the mean in a subarea of that size during 
+            the fine eucentricity procedure, adjusted for tilt-foreshortening and for the 
+            alignment shift of the image.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>ResetRealignMinField</TD>
           <TD>Minimum camera field of view, in microns, for resetting image shift and 
             realigning, which determines the mag used. Default is 7.</TD>
@@ -3124,6 +3260,13 @@
             enough). This minimum will apply both for tasks and for low magnification 
             tracking in a tilt series. The default is 0.002, but a higher value may be 
             needed if camera shuttering is slow and exposures of this duration give no image</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseTrialSizeForTasks</TD>
+          <TD>Set to 1 to use the area defined in the Trial parameter set instead of a 
+            full-frame image for various tasks that use a common routine for making the 
+            parameter set for tracking shots.&nbsp; The full field size will still be used 
+            to evaluate what magnification provides the minimum field of view.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RefineZLPStepSize</TD>
@@ -3800,7 +3943,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>JeolRelaxationFlags</TD>
-          <TD>Flags for the operations after which the program should wait for lens 
+          <TD>Flags for the operations after which the program should wait for the scope&#39;s lens 
             relaxation to finish on a JEOL: set to the sum of 1 for magnification, 2 for 
             spot size, and 4 for alpha changes.</TD>
         </TR>
@@ -3813,6 +3956,31 @@
           <TD>JeolEndRelaxTimeout</TD>
           <TD>Timeout in milliseconds when waiting to see lens relaxation end after a 
             change.&nbsp; The initial placekeeper default is 10000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolLensRelaxProgram</TD>
+          <TD>A sequence of lens changes to normalize or relax them using free lens control.&nbsp; Using
+             a procedure developed by Mike Strauss, each lens is stepped
+            in a negative direction by half the given amplitude, stepped in a positive direction
+            by the full amplitude, then stepped back to its original value. &nbsp;Each program has
+            a normalization index when determines where it is used in the program.&nbsp; Follow with:<br />
+            Normalization index: 1 for spot, 2 for condenser, 3 for objective, 4 for projector, 
+            5 for a condenser group used for NormalizeAll with flag 1, and 6 for a projector group 
+            used for NormalizeAll with flag 2.<br />
+            Number of steps in the positive direction.<br />
+            Delay after each step (can certainly be 0 if multiple changes are interleaved).<br />
+            Lens number #1: lens numbers for FLC calls are: 0: CL1,  2: CL3,  6: OL Coarse,
+              7: OL Fine,  8: OM,  I0: IL1,  11: IL2,  12: IL3, 13: IL4,  14: PL1,  15 or 16: PL2,
+              19: FL Coarse,  20: FL Fine,  21: FL Ratio.<br />
+            Amplitude #1: size of change in positive direction.  Changes should generally be under 0.05.<br />
+            Follow with up to 5 more lens number and amplitude pairs. <br />
+            On a 3200, a good entry for a condenser normalization that includes IL1 is:<br />
+            2 10 0 0  0.002 2 0.005 10 0.00
+        </TR>
+        <TR VALIGN="top">
+          <TD>RelaxLensesSequentially</TD>
+          <TD>Set to 1 to have a sequence of changes specified with 'JeolLensRelaxProgram'
+             done completely for one lens at a time, instead of interleaving the changes.&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfAlphas</TD>
@@ -4000,7 +4168,12 @@
           <TD>NoScopeControlOnStartup</TD>
           <TD>Set to 1 to keep the Scope Control panel closed on program startup, which 
             works around a bug in JEOL software that stops the beam from turning on when 
-            this panel is open and the state of the beam is being accessed.</TD>
+            this panel is open and the state of the beam switch is being accessed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolBeamRampupTimeout</TD>
+          <TD>Set a time in seconds after turning on the beam during which the state of the 
+            beam switch will not be accessed, to work around th same JEOL bug.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -4201,6 +4374,14 @@
           <TD>SelectJeolDetectorDelay</TD>
           <TD>Delay time between selecting a detector and acquiring an image on the JEOL 
             (default 700 ms).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraSetsShareChannelList</TD>
+          <TD>Set to 1 to force camera parameter sets for STEM to have the same list of 
+            selected detectors.&nbsp; When the selection is changed in the Camera Setup dialog for 
+            one parameter set, it is copied to any other set that does not have the same 
+            detectors selected, possibly in a different order.&nbsp; This is needed if the STEM 
+            system cannot reliably change detectors without intervention.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ShotTimeToInsertDetector</TD>

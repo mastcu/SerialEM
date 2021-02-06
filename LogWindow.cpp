@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
+#include "MacroProcessor.h"
 #include ".\LogWindow.h"
 
 #ifdef _DEBUG
@@ -34,6 +35,10 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mSaveFile = "";
   mLastSavedLength = 0;
   mLastStackname = "";
+  mNumDeferred = 0;
+  mDeferredLines = "";
+  mMaxLinesToDefer = 100;
+  mMaxSecondsToDefer = 2.;
 }
 
 
@@ -59,7 +64,32 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CLogWindow message handlers
 
-void CLogWindow::Append(CString inString, int lineFlags)
+// External call to add text
+void CLogWindow::Append(CString &inString, int lineFlags)
+{
+  bool deferring = mWinApp->mMacroProcessor->DoingMacro() && 
+    mWinApp->mMacroProcessor->GetDeferLogUpdates();
+  bool replacing = (lineFlags & 2) != 0;
+
+  // Flush any deferred lines if it is not happening, if line replacement, or too many
+  // lines or too long has passed
+  if (mNumDeferred > 0 && (!deferring || replacing || mNumDeferred > mMaxLinesToDefer ||
+    SEMTickInterval(mStartedDeferTime) > 1000. * mMaxSecondsToDefer))
+    FlushDeferredLines();
+
+  // Defer by adding to string and line count, save start time
+  if (deferring && !replacing) {
+    if (!mNumDeferred)
+      mStartedDeferTime = GetTickCount();
+    mDeferredLines += inString;
+    mNumDeferred++;
+    return;
+  }
+  DoAppend(inString, lineFlags);
+}
+
+// The real routine for adding text to the log
+void CLogWindow::DoAppend(CString &inString, int lineFlags)
 {
   int oldLen, newLen, lastEnd;
   UpdateData(true);
@@ -85,6 +115,15 @@ void CLogWindow::Append(CString inString, int lineFlags)
     else
       OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite, 
         mAppendedLength, mLastSavedLength);
+  }
+}
+
+void CLogWindow::FlushDeferredLines()
+{
+  if (mNumDeferred > 0 || !mDeferredLines.IsEmpty()) {
+    DoAppend(mDeferredLines, 0);
+    mNumDeferred = 0;
+    mDeferredLines = "";
   }
 }
 
@@ -129,6 +168,7 @@ int CLogWindow::Save()
 
 int CLogWindow::DoSave()
 {
+  FlushDeferredLines();
   UpdateData(true);
   int length = m_strLog.GetLength();
   return (OpenAndWriteFile(CFile::modeCreate | CFile::modeWrite |CFile::shareDenyWrite,
@@ -143,6 +183,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
   int dirInd, extInd, fileNo;
   CString name;
   CFileStatus status;
+  FlushDeferredLines();
   if (mSaveFile.IsEmpty() || (createIfNone && !stackName.IsEmpty() && replace)) {
     if (createIfNone) {
       if (stackName.IsEmpty())

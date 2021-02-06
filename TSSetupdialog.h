@@ -45,6 +45,7 @@ public:
   int mDisableStartOrEnd;
   float mMinDosymStart;
   float mMinDosymEnd;
+  int mNavOverrideFlags;
 
 // Dialog Data
   //{{AFX_DATA(CTSSetupDialog)
@@ -108,6 +109,7 @@ public:
   CStatic m_statbasicInc;
   CStatic m_statAnchorDeg;
   CStatic m_statAnchorBuf;
+  CString m_strCosPower;
   CSpinButtonCtrl m_sbcTrackMag;
   CSpinButtonCtrl m_sbcRecordMag;
   CSpinButtonCtrl m_sbcBin;
@@ -258,7 +260,9 @@ private:
   CFont mBoldFont;
   int *mActiveCameraList;
   int mNumCameras;
-  int mCosPower;
+  int mCosPowerInd;
+  FloatVec mCosMultipliers;
+  FloatVec mCosinePowers;
   int mPanelStart[NUM_TSS_PANELS];
   int mNumInPanel[NUM_TSS_PANELS];
 public:
@@ -348,7 +352,11 @@ CStatic m_statDWdegrees;
 BOOL m_bWaitForDrift;
 CButton m_butSetupDriftWait;
 void ManageDriftWait();
+void ManageCosinePower();
 float m_fIterThresh;
+CStatic m_statStarTilt;
+CStatic m_statStarBidir;
+CStatic m_statTargMicrons;
 };
 
 //{{AFX_INSERT_LOCATION}}

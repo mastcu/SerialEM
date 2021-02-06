@@ -58,6 +58,7 @@ public:
   int mConSetSelected;        // And which parameters set
   int mReadMode;              // And the current read mode in the dialog
   bool mTakingK3Binned;       // Whether current conset and setting would bin K3 frames
+  bool mSavingInEERmode;      // Whether current settings would save in EER mode
 
   BOOL m_bUseGPU;
   CStatic m_statPairwiseNum;
@@ -182,4 +183,6 @@ public:
   int m_iBinByOrTo;
   void ManageAlignBinning(void);
   CStatic m_statAlignBin;
+  int m_iEERsuperRes;
+  afx_msg void OnEERsuperRes();
 };

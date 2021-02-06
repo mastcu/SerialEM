@@ -246,6 +246,7 @@ public:
   afx_msg void OnSelendokChan7();
   afx_msg void OnSelendokChan8();
   void NewChannelSel(int which);
+  bool ManageSTEMBinning(int numSel);
   afx_msg void OnLinesync();
   void ManageTimingAvailable(void);
   CStatic m_statArea;
@@ -285,6 +286,7 @@ public:
   afx_msg void OnDoseFracMode();
   afx_msg void OnAlignDoseFrac();
   void ManageDoseFrac(void);
+  void ManageFalcon4FrameSpec(void);
   void ComposeWhereAlign(CString &str);
   void ManageSizeAndPositionButtons(BOOL disableAll);
   BOOL m_bSaveFrames;

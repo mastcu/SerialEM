@@ -88,7 +88,7 @@ public:
   void CalFocusData(float inX, float inY);
   void AutoFocusStart(int inChange, int useViewInLD = 0, int iterNum = 1);
   void AutoFocusData(float inX, float inY);
-  BOOL FocusReady(int magInd = -1);
+  BOOL FocusReady(int magInd = -1, bool *calibrated = NULL);
   void DetectFocus(int inWhere, int useViewInLD = 0);
   void FocusDone();
   static void TaskFocusDone(int param);
@@ -114,6 +114,7 @@ protected:
   afx_msg void OnCalibrationAutofocus();
   afx_msg void OnFocusAutofocus();
   afx_msg void OnUpdateFocusAutofocus(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateMeasureDefocus(CCmdUI* pCmdUI);
   afx_msg void OnFocusDriftprotection();
   afx_msg void OnUpdateFocusDriftprotection(CCmdUI* pCmdUI);
   afx_msg void OnFocusMeasuredefocus();

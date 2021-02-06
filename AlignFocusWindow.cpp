@@ -28,6 +28,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int sIdTable[] = {IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
+PANEL_END,
+IDC_BUTALIGN, IDC_BUTFOCUS, IDC_BUT_TO_MARKER, IDC_BUTCLEARALIGN,
+IDC_BUTRESETSHIFT, IDC_BUTMORE, IDC_STATMORE, IDC_STATDEFTARGET, PANEL_END,
+IDC_MOUSESTAGE, IDC_BUTSTAGETHRESH, IDC_CENTERONAXIS, IDC_TRIMBORDERS,
+IDC_APPLYISOFFSET, IDC_CORRECT_BACKLASH, IDC_SET_TRIM_FRAC, PANEL_END, TABLE_END};
+
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlignFocusWindow dialog
 
@@ -211,6 +222,8 @@ BOOL CAlignFocusWindow::OnInitDialog()
   CToolDlg::OnInitDialog();
   mInitialized = true;
   UpdateSettings(); 
+  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
+  mInitialized = true;
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -229,6 +242,11 @@ void CAlignFocusWindow::UpdateSettings()
     mWinApp->mFocusManager->GetTargetDefocus());
   UpdateData(false);
   Update();
+}
+
+void CAlignFocusWindow::UpdateHiding(void)
+{
+  SetOpenClosed(GetState());
 }
 
 void CAlignFocusWindow::OnCancelMode() 
