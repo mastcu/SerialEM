@@ -879,6 +879,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
   if (((mWeCanAlignFalcon && !FCAM_CAN_ALIGN(mParam)) || mCanAlignFrames) && 
     !mCurSet->useFrameAlign)
     mCurSet->useFrameAlign = 1;
+  if (!mWeCanAlignFalcon && FCAM_CAN_ALIGN(mParam))
+    mCurSet->useFrameAlign = 0;
   m_fFrameTime = mCurSet->frameTime;
   if (mParam->K2Type || mParam->canTakeFrames || mFEItype == FALCON4_TYPE) {
     mCamera->CropTietzSubarea(mParam, mCurSet->right - mCurSet->left,
