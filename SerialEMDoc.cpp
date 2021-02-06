@@ -395,15 +395,20 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
 }
 
 // Open an old file from menu - user enters filename
-void CSerialEMDoc::OnFileOpenold() 
+void CSerialEMDoc::OnFileOpenold()
+{
+  DoFileOpenold();
+}
+
+int CSerialEMDoc::DoFileOpenold()
 {
   int err;
   CFile *file;
   CString cFilename;
   err = UserOpenOldMrcCFile(&file, cFilename, false);
   if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC && err != MRC_OPEN_HDF)
-    return;
-  OpenOldFile(file, cFilename, err);
+    return err;
+  return OpenOldFile(file, cFilename, err);
 }
 
 // Common route for opening an old file. err is the code from calling OpenOldMrcCFile
@@ -897,7 +902,7 @@ void CSerialEMDoc::OnFileSaveactive()
 
   // Save and restore buffer to save
   int bufOld = mBufferManager->GetBufToSave();
-  mBufferManager->SetBufToSave(-1);
+  mBufferManager->SetBufToSave(USE_ACTIVE_BUF);
   mBufferManager->SaveImageBuffer(store);
   mBufferManager->SetBufToSave(bufOld);
   // Update buffer status window
@@ -980,7 +985,7 @@ void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI)
 // Save active view into another file
 void CSerialEMDoc::OnFileSaveother() 
 {
-  SaveToOtherFile(-1, -1, -1, NULL);
+  SaveToOtherFile(USE_ACTIVE_BUF, -1, -1, NULL);
 }
 
 // Saves a single image in given buffer to a file of the specified type
@@ -993,6 +998,8 @@ int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   if (buffer >= 0)
     imBuf = mWinApp->GetImBufs() + buffer;
+  else if (buffer >= -MAX_FFT_BUFFERS && buffer < 0)
+    imBuf = mWinApp->GetFFTBufs() - 1 - buffer;
   modeSave = mOtherFileOpt.mode;
   typeSave = mOtherFileOpt.fileType;
   compSave = mOtherFileOpt.compression;

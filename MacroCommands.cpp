@@ -607,11 +607,13 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"CloseNavigator", 0, 0, &CMacCmd::CloseNavigator},
   {"OpenNavigator", 0, 0, &CMacCmd::OpenNavigator}, 
   {"OpenChooserInCurrentDir", 0, 0, &CMacCmd::OpenChooserInCurrentDir}, 
-  {"SetCameraPLAOffset", 0, 0, &CMacCmd::SetCameraPLAOffset},/*CAI3.9*/
+  {"SetCameraPLAOffset", 0, 0, &CMacCmd::SetCameraPLAOffset},
   {"EchoNoVarSub", 0, 4, &CMacCmd::Echo}, 
   {"ReportEnvironVar", 1, 0, &CMacCmd::ReportEnvironVar}, 
   {"ReportSettingsFile", 1, 0, &CMacCmd::ReportSettingsFile},
   {"ListAllCalibrations", 0, 0, &CMacCmd::ListAllCalibrations},
+  {"IsFFTWindowOpen", 0, 0, &CMacCmd::IsFFTWindowOpen},
+  {"UserOpenOldFile", 0, 0, &CMacCmd::UserOpenOldFile},/*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -2620,7 +2622,7 @@ int CMacCmd::SaveToOtherFile(void)
       ABORT_LINE("Factor to scale sizes by must be >= 1 or <= 0 in line:\n\n");
   } else {
     cIx0 = 2;
-    if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+    if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
       ABORT_LINE(cReport);
   }
   cIndex2 = -1;
@@ -3083,6 +3085,13 @@ int CMacCmd::OpenOldFile(void)
     cIndex = mWinApp->mDocWnd->OpenOldFile(cCfile, cReport, cIndex);
   if (cIndex != MRC_OPEN_NOERR)
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
+  return 0;
+}
+
+int CMacCmd::UserOpenOldFile(void)
+{
+  if (mWinApp->mDocWnd->DoFileOpenold())
+    SUSPEND_LINE("because existing image file was not opened in line:\n\n");
   return 0;
 }
 
@@ -3625,11 +3634,12 @@ int CMacCmd::SetUserSetting(void)
 // Copy
 int CMacCmd::Copy(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
     ABORT_LINE(cReport);
   if (ConvertBufferLetter(mStrItems[2], -1, false, cIndex2, cReport))
     ABORT_LINE(cReport);
-  if (mBufferManager->CopyImageBuffer(cIndex, cIndex2))
+  cImBuf = ImBufForIndex(cIndex);
+  if (mBufferManager->CopyImBuf(cImBuf, &mImBufs[cIndex2]))
     SUSPEND_LINE("because of buffer copy failure in statement: \n\n");
   return 0;
 }
@@ -5243,10 +5253,11 @@ int CMacCmd::ElectronStats(void)
 // CropImage, CropCenterToSize
 int CMacCmd::CropImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
     ABORT_LINE(cReport);
-  mImBufs[cIndex].mImage->getSize(cSizeX, cSizeY);
-  mImBufs[cIndex].mImage->getShifts(cBacklashX, cBacklashY);
+  cImBuf = ImBufForIndex(cIndex);
+  cImBuf->mImage->getSize(cSizeX, cSizeY);
+  cImBuf->mImage->getShifts(cBacklashX, cBacklashY);
   cTruth = CMD_IS(CROPIMAGE);
   if (cTruth) {
     cIx0 = mItemInt[2];
@@ -5266,7 +5277,7 @@ int CMacCmd::CropImage(void)
     cIx1 = cIx0 + mItemInt[2] - 1;
     cIy1 = cIy0 + mItemInt[3] - 1;
   }
-  cIx0 = mProcessImage->CropImage(&mImBufs[cIndex], cIy0, cIx0, cIy1, cIx1);
+  cIx0 = mProcessImage->CropImage(cImBuf, cIy0, cIx0, cIy1, cIx1);
   if (cIx0) {
     cReport.Format("Error # %d attempting to crop image in buffer %c in statement: \n\n"
       , cIx0, mStrItems[1].GetAt(0));
@@ -5275,7 +5286,7 @@ int CMacCmd::CropImage(void)
 
   // Mark as cropped if centered and unshifted: this allows autoalign to apply image
   // shift on scope
-  mImBufs[cIndex].mCaptured = (cTruth || cBacklashX || cBacklashY) ? BUFFER_PROCESSED :
+  mImBufs->mCaptured = (cTruth || cBacklashX || cBacklashY) ? BUFFER_PROCESSED :
     BUFFER_CROPPED;
   return 0;
 }
@@ -5283,10 +5294,9 @@ int CMacCmd::CropImage(void)
 // ReduceImage
 int CMacCmd::ReduceImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
     ABORT_LINE(cReport);
-  cIx0 = mProcessImage->ReduceImage(&mImBufs[cIndex], mItemFlt[2],
-    &cReport);
+  cIx0 = mProcessImage->ReduceImage(ImBufForIndex(cIndex), mItemFlt[2], &cReport);
   if (cIx0) {
     cReport += " in statement:\n\n";
     ABORT_LINE(cReport);
@@ -5311,10 +5321,10 @@ int CMacCmd::FFT(void)
 // FilterImage
 int CMacCmd::FilterImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) || 
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true) || 
     ConvertBufferLetter(mStrItems[6], 0, false, cIndex2, cReport))
     ABORT_LINE(cReport);
-  if (mProcessImage->FilterImage(&mImBufs[cIndex], cIndex2, mItemFlt[2], mItemFlt[5],
+  if (mProcessImage->FilterImage(ImBufForIndex(cIndex), cIndex2, mItemFlt[2], mItemFlt[5],
     mItemFlt[3], mItemFlt[4]))
     ABORT_LINE("Failed to filter image for line:\n\n");
   return 0;
@@ -5342,10 +5352,10 @@ int CMacCmd::CombineImages(void)
 // ScaleImage
 int CMacCmd::ScaleImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) ||
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true) ||
     ConvertBufferLetter(mStrItems[4], 0, false, cIndex2, cReport))
     ABORT_LINE(cReport);
-  if (mProcessImage->ScaleImage(&mImBufs[cIndex], cIndex2, mItemFlt[2], mItemFlt[3],
+  if (mProcessImage->ScaleImage(ImBufForIndex(cIndex), cIndex2, mItemFlt[2], mItemFlt[3],
     !mItemEmpty[5] && mItemInt[5]))
     ABORT_LINE("Failed to scale image for line:\n\n");
   return 0;
@@ -5416,32 +5426,33 @@ int CMacCmd::CtfFind(void)
 // ImageProperties
 int CMacCmd::ImageProperties(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
+  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport, true))
     ABORT_LINE(cReport);
-  mImBufs[cIndex].mImage->getSize(cSizeX, cSizeY);
+  cImBuf = ImBufForIndex(cIndex);
+  cImBuf->mImage->getSize(cSizeX, cSizeY);
   cDelX = 1000. * mWinApp->mShiftManager->GetPixelSize(&mImBufs[cIndex]);
   mLogRpt.Format("Image size %d by %d, binning %s, exposure %.4f",
-    cSizeX, cSizeY, (LPCTSTR)mImBufs[cIndex].BinningText(),
-    mImBufs[cIndex].mExposure);
+    cSizeX, cSizeY, (LPCTSTR)cImBuf->BinningText(),
+    cImBuf->mExposure);
   if (cDelX) {
     mStrCopy.Format(", pixel size " + mWinApp->PixelFormat((float)cDelX), (float)cDelX);
     mLogRpt += mStrCopy;
   }
-  if (mImBufs[cIndex].mSecNumber < 0) {
+  if (cImBuf->mSecNumber < 0) {
     cDelY = -1;
     mStrCopy = ", read in";
   } else {
-    cDelY = mImBufs[cIndex].mConSetUsed;
-    mStrCopy.Format(", %s parameters", mModeNames[mImBufs[cIndex].mConSetUsed]);
+    cDelY = cImBuf->mConSetUsed;
+    mStrCopy.Format(", %s parameters", mModeNames[cImBuf->mConSetUsed]);
   }
   mLogRpt += mStrCopy;
-  if (mImBufs[cIndex].mMapID) {
-    mStrCopy.Format(", mapID %d", mImBufs[cIndex].mMapID);
+  if (cImBuf->mMapID) {
+    mStrCopy.Format(", mapID %d", cImBuf->mMapID);
     mLogRpt += mStrCopy;
   }
   SetReportedValues(&mStrItems[2], (double)cSizeX, (double)cSizeY,
-    mImBufs[cIndex].mBinning / (double)B3DMAX(1, mImBufs[cIndex].mDivideBinToShow),
-    (double)mImBufs[cIndex].mExposure, cDelX, cDelY);
+    cImBuf->mBinning / (double)B3DMAX(1, cImBuf->mDivideBinToShow),
+    (double)cImBuf->mExposure, cDelX, cDelY);
   return 0;
 }
 
@@ -5665,6 +5676,14 @@ int CMacCmd::IsVersionAtLeast(void)
       cTruth ? "later" : "earlier", mItemInt[1], (LPCTSTR)mStrItems[2]);
   } else if (!cTruth && mCurrentIndex < mMacro->GetLength())
     GetNextLine(mMacro, mCurrentIndex, mStrLine);
+  return 0;
+}
+
+int CMacCmd::IsFFTWindowOpen(void)
+{
+  cIndex = mWinApp->mFFTView ? 1 : 0;
+  mLogRpt.Format("FFT window %s open", cIndex ? "IS" : "is NOT");
+  SetReportedValues(&mStrItems[1], cIndex);
   return 0;
 }
 

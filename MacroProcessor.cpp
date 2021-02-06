@@ -149,6 +149,7 @@ CMacroProcessor::CMacroProcessor()
   mMacNames = mWinApp->GetMacroNames();
   mMagTab = mWinApp->GetMagTable();
   mImBufs = mWinApp->GetImBufs();
+  mFFTBufs = mWinApp->GetFFTBufs();
   mMacros = mWinApp->GetMacros();
   mControl = mWinApp->GetMacControl();
   mMacroEditer = &(mWinApp->mMacroEditer[0]);
@@ -370,20 +371,8 @@ void CMacroProcessor::OnMacroVerbose()
 
 void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
 {
-  CString menuText;
-  CString *longMacNames = mWinApp->GetLongMacroNames();
   pCmdUI->Enable();
   pCmdUI->SetCheck(mInitialVerbose ? 1 : 0);
-  for (int ind = 0; ind < MAX_MACROS; ind++) {
-    if (!longMacNames[ind].IsEmpty())
-      menuText.Format("%d: %s", ind + 1, (LPCTSTR)longMacNames[ind]);
-    else if (mMacNames[ind].IsEmpty())
-      menuText.Format("Run %d", ind + 1);
-    else
-      menuText.Format("%d: %s", ind + 1, (LPCTSTR)mMacNames[ind]);
-    UtilModifyMenuItem("Script", ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
-  }
-
 }
 
 // Read and write many macros
@@ -580,6 +569,17 @@ void CMacroProcessor::OnScriptRunOneCommand()
 
 void CMacroProcessor::OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI)
 {
+  CString menuText;
+  CString *longMacNames = mWinApp->GetLongMacroNames();
+  for (int ind = 0; ind < MAX_MACROS; ind++) {
+    if (!longMacNames[ind].IsEmpty())
+      menuText.Format("%d: %s", ind + 1, (LPCTSTR)longMacNames[ind]);
+    else if (mMacNames[ind].IsEmpty())
+      menuText.Format("Run %d", ind + 1);
+    else
+      menuText.Format("%d: %s", ind + 1, (LPCTSTR)mMacNames[ind]);
+    UtilModifyMenuItem("Script", ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
+  }
   pCmdUI->Enable(!DoingMacro());
 }
 
@@ -3432,9 +3432,9 @@ CmdItem *CMacroProcessor::GetCommandList(int & numCommands)
 // result for an empty and returns false if that is >= 0, true otherwise; checks legality
 // of letter and also of image in buffer if checkImage true; composes message on error
 bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
-                                          bool checkImage, int &bufIndex,
-                                          CString &message)
+  bool checkImage, int &bufIndex, CString &message, bool fftAllowed)
 {
+  EMimageBuffer *imBuf;
   strItem.MakeUpper();
   if (strItem.IsEmpty()) {
     bufIndex = emptyDefault;
@@ -3446,20 +3446,34 @@ bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
     bufIndex = atoi((LPCTSTR)strItem);
     if (!bufIndex) {
       bufIndex = (int)strItem.GetAt(0) - (int)'A';
-      if (bufIndex < 0 || bufIndex >= MAX_BUFFERS || strItem.GetLength() > 1) {
-        message = "Improper buffer letter " + strItem + " in statement: \r\n\r\n";
-        return true;
+      if (strItem.GetLength() == 2 && strItem.GetAt(1) == 'F' && fftAllowed) {
+        if (bufIndex < 0 || bufIndex >= MAX_FFT_BUFFERS) {
+          message = "Improper FFT buffer letter " + strItem + " in statement: \r\n\r\n";
+          return true;
+        }
+        if (!mWinApp->mFFTView) {
+          message = "The FFT window is not open and no buffers are available for "
+            "statement: \r\n\r\n";
+          return true;
+        }
+        bufIndex = -1 - bufIndex;
+      } else {
+        if (bufIndex < 0 || bufIndex >= MAX_BUFFERS || strItem.GetLength() > 1) {
+          message = "Improper buffer letter " + strItem + " in statement: \r\n\r\n";
+          return true;
+        }
       }
     } else {
-      if (bufIndex < 1 || bufIndex > MAX_BUFFERS || strItem.GetLength() > 
+      if (bufIndex < 1 || bufIndex > MAX_BUFFERS || strItem.GetLength() >
         1 + (bufIndex / 10)) {
-          message = "Improper buffer number " + strItem + " in statement: \r\n\r\n";
-          return true;
+        message = "Improper buffer number " + strItem + " in statement: \r\n\r\n";
+        return true;
       }
       bufIndex--;
-   }
+    }
   }
-  if (checkImage && !mImBufs[bufIndex].mImage) {
+  imBuf = ImBufForIndex(bufIndex);
+  if (checkImage && !imBuf->mImage) {
     message = "There is no image in buffer " + strItem + " in statement: \r\n\r\n";
     return true;
   }

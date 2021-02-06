@@ -60,7 +60,8 @@
         &#39;RealignToNavItem 0 0 0.3 2 0&#39;.</P>
     <P>Frequently used non-numeric parameters used in SerialEM scripting are:</P>
     <UL>
-      <LI>buf - A buffer letter</LI>
+      <LI>buf - A single buffer letter or number, where A is numbered one, or two 
+        letters like &#39;AF&#39; for commands that can work on a buffer in the FFT window</LI>
       <LI>file - A file name</LI>
       <LI>ID - A text file identifying string</LI>
       <LI>set - A camera parameter set, given by a single letter or number</LI>
@@ -581,6 +582,11 @@
              The file will need to be removed to avoid finding it again on the next call.
             
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">IsFFTWindowOpen</TD>
+          <TD>Reports whether the FFT window is open; the value can be assigned to a 
+            variable after the command.&nbsp; Command added in 3.9, 2/6/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RunScriptInWatchedDir pattern</TD>
@@ -1266,7 +1272,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">Copy buf1 buf2</TD>
-          <TD>Copies from <b>buf1</b> to <b>buf2</b> (e.g., Copy C A)</TD>
+          <TD>Copies from <b>buf1</b> to <b>buf2</b> (e.g., Copy C A), where <b>buf1</b> can be in the FFT window.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Show buf</TD>
@@ -1274,19 +1280,21 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CropImage buf #X0 #X1 #Y0 #Y1</TD>
-          <TD>Crops out a subarea of the given buffer from <b>#X0</b> to <b>#X1</b> in X and from <b>#Y0</b> to <b>#Y1</b> in
+          <TD>Crops out a subarea of the given buffer, which can be in the FFT window, from 
+            <b>#X0</b> to <b>#X1</b> in X and from <b>#Y0</b> to <b>#Y1</b> in
             Y. Coordinates are numbered from 0 to size - 1 in each dimension and 0 in Y is
             at the top.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CropCenterToSize buf #X #Y</TD>
-          <TD>Crops out a centered subarea of the given buffer of size <b>#X</b> by <b>#Y</b>.</TD>
+          <TD>Crops out a centered subarea of size <b>#X</b> by <b>#Y</b> from the given buffer,
+             which can be in the FFT window.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReduceImage buf #</TD>
           <TD>Reduces the image in the given buffer by the factor <b>#</b>, which must be greater 
-            than 1 but need not be an integer.&nbsp; Antialiased reduction (with a Lanczos 2 
-            filter) is used instead of binning.</TD>
+            than 1 but need not be an integer.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; Antialiased
+             reduction (with a Lanczos 2 filter) is used instead of binning.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FFT buf [#B]</TD>
@@ -1296,7 +1304,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">FilterImage buf sig1 rad1 rad2 sig2 [obuf]</TD>
-          <TD>Applies a filter in Fourier space to the image in the given buffer; the filter is
+          <TD>Applies a filter in Fourier space to the image in the given buffer, which can be in the FFT 
+            window.&nbsp; The filter is
             the product of two separate filters, one controlled by <B>sig1</B> (sigma1) and the other
             by <B>rad2</B> (radius2) and <B>sig2</B> (sigma2).&nbsp; Sigma1 provides low-frequency filtering
             with an inverted Gaussian rising from 0 to 1 with that sigma, and starting at either 0 frequency or 
@@ -1335,9 +1344,10 @@
         <TR>
           <TD class="scriptcommand">ScaleImage buf #S #A [obuf] [#K]</TD>
           <TD>Scales the image in buffer <b>buf</b> by multiplying by <b>#S</b> then adding
-            <b>#A</b>.&nbsp; The output is 
+            <b>#A</b>.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; The output is 
             placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
-            is added specifying a different buffer, which can be <b>buf</b>.&nbsp; The resulting image
+            is added specifying a different buffer, which can be <b>buf</b> unless that is in
+             the FFT window.&nbsp; The resulting image
             is floating point unless the optional <b>#K</b> is non-zero to keep the existing image 
             type.&nbsp; Command added in 3.9, 11/11/20.
           </TD>
@@ -1345,7 +1355,8 @@
         <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>
           <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
-            used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>.
+            used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>, 
+            which can be in the FFT window.
             &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR>
@@ -1609,7 +1620,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SaveToOtherFile buf typ cmp file</TD>
-          <TD>Saves one image in the given buffer <b>buf</b> to the file with the given name and closes 
+          <TD>Saves one image in the given buffer <b>buf</b>, which can be in the FFT window,
+             to the file with the given name and closes 
             the file.&nbsp; <b>typ</b> specifies the type of file and can be MRC, HDF, TIF, TIFF, 
             JPG, JPEG, CUR, 
             or -1 (case insensitive), where CUR or -1 means use the current file type for 
@@ -1664,8 +1676,15 @@
         </TR>
         <TR>
           <TD class="scriptcommand">OpenOldFile file</TD>
-          <TD>Opens an existing MRC or ADOC file with the given name, which can contain
+          <TD>Opens an existing MRC, HDF, or .idoc file with the given name, which can contain
             spaces.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UserOpenOldFile</TD>
+          <TD>Opens a file chooser for a user to open an existing MRC, HDF or .idoc file and opens the file,
+            just like the <a href="menu_file.htm#hidm_file_openold">Open Old</a> item in the File menu. 
+            The script is suspended if the user cancels or pick a file that cannot be 
+            opened.&nbsp; Command added in 3.9, 2/6/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadFile # [buf]</TD>

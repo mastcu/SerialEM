@@ -169,6 +169,7 @@ class CMacCmd : public CMacroProcessor
   int OpenChooserInCurrentDir(void);
   int SetNewFileType(void);
   int OpenOldFile(void);
+  int UserOpenOldFile(void);
   int CloseFile(void);
   int RemoveFile(void);
   int ReportCurrentFilename(void);
@@ -320,6 +321,7 @@ class CMacCmd : public CMacroProcessor
   int verbose(void);
   int ProgramTimeStamps(void);
   int IsVersionAtLeast(void);
+  int IsFFTWindowOpen(void);
   int ReportEnvironVar(void);
   int ReportSettingsFile(void);
   int ListAllCalibrations(void);

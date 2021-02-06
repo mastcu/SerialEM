@@ -203,6 +203,8 @@ EMimageBuffer *EMbufferManager::GetSaveBuffer()
     return mImBufsp;
   if (mBufToSave >= 0)
     return ( mImBufsp + mBufToSave );
+  if (mBufToSave >= -MAX_FFT_BUFFERS)
+    return (mWinApp->GetFFTBufs() - 1 - mBufToSave);
   return (mWinApp->mActiveView->GetActiveImBuf());
 }
 

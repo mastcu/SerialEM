@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/6/21: Added script command to do File - Open Old, made some commands able to
+work on a buffer in the FFT window, and added command to test if that is open.
+
+2/4/21: Fixed losing names in Script-Run menu if Script-Verbose is hidden.
+
 1/30/21: Added support for Falcon 4.
 
 1/27/21: Fixed Extra Division by 2 being enabled for FEI cameras (In 3.8).

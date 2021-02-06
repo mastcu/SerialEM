@@ -14,6 +14,7 @@ class CReadFileDlg;
 
 enum {MRC_OPEN_NOERR = 0, MRC_OPEN_CANCEL, MRC_OPEN_ALREADY_OPEN,
 MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC, MRC_OPEN_HDF};
+#define USE_ACTIVE_BUF -999
 
 DLL_IM_EX const char *SEMDefaultSysPath(void);
 
@@ -309,6 +310,7 @@ int DoOpenFrameMdoc(CString & filename);
 void DoCloseFrameMdoc();
 afx_msg void OnSettingsBasicmode();
 afx_msg void OnUpdateSettingsBasicmode(CCmdUI *pCmdUI);
+int DoFileOpenold();
 };
 
 // FILE DIALOG CLASS and associated thread class and data

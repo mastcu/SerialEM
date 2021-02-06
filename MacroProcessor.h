@@ -180,7 +180,7 @@ enum {CME_SCRIPTEND = 0, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKEY
   CME_SUBTRACTIMAGES, CME_MULTIPLYIMAGES, CME_DIVIDEIMAGES, CME_SCALE_IMAGE,
   CME_CLOSENAVIGATOR, CME_OPENNAVIGATOR, CME_OPENCHOOSERINCURRENTDIR,
   CME_SETCAMERAPLAOFFSET, CME_ECHONOVARSUB, CME_REPORTENVIRONVAR, CME_REPORTSETTINGSFILE,
-  CME_LISTALLCALIBRATIONS
+  CME_LISTALLCALIBRATIONS, CME_ISFFTWINDOWOPEN, CME_USEROPENOLDFILE
 };
 
 struct MacroFunction {
@@ -266,6 +266,7 @@ class CMacroProcessor : public CCmdTarget
   std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
+  EMimageBuffer *ImBufForIndex(int ind) { return (ind >= 0 ? &mImBufs[ind] : &mFFTBufs[-1 - ind]); };
   COneLineScript *mOneLineScript;
 
 protected:
@@ -295,6 +296,7 @@ protected:
   MagTable *mMagTab;
   CString * mModeNames;
   EMimageBuffer *mImBufs;
+  EMimageBuffer *mFFTBufs;
   CEMscope *mScope;
   CShiftManager *mShiftManager;
   CCameraController *mCamera;
@@ -507,7 +509,8 @@ public:
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
   void OpenMacroEditor(int index);
-  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, CString & message);
+  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, 
+    CString & message, bool fftAllowed = false);
   bool CheckCameraBinning(double binDblIn, int &binning, CString &message);
   void SaveControlSet(int index);
   bool CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index, CString &message);
