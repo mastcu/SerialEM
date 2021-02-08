@@ -215,7 +215,7 @@ void KImage::applyPad()
 
 void KImage::flipY()
 {
-  ProcSimpleFlipY(mData, mHeight, mRowBytes);
+  ProcSimpleFlipY(mData, mRowBytes, mHeight);
 }
 
 // Lock and unlock the data: if it is a SAFEARRAY, get access or unaccess it

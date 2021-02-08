@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/21: Fixed saving of non-square images, broken 1/30.
+
 2/6/21: Added script command to do File - Open Old, made some commands able to
 work on a buffer in the FFT window, and added command to test if that is open.
 
