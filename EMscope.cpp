@@ -527,8 +527,10 @@ int CEMscope::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams();
-  if (mNoScope)
+  if (mNoScope) {
+    mMaxTiltAngle = 70.;
     return 0;
+  }
   if (sInitialized) {
     AfxMessageBox(_T("Warning: Call to EMscope::Initialize when"
       " scope is currently initialized"), MB_EXCLAME);
