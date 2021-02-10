@@ -130,6 +130,7 @@ class CMacCmd : public CMacroProcessor
   int RecordAndTiltUp(void);
   int ArePostActionsEnabled(void);
   int TiltDuringRecord(void);
+  int SetDoseAdjustmentFactor(void);
   int TestNextMultiShot(void);
   int MultipleRecords(void);
   int RotateMultiShotPattern(void);
@@ -378,6 +379,7 @@ class CMacCmd : public CMacroProcessor
   int SetContinuous(void);
   int SetProcessing(void);
   int SetFrameTime(void);
+  int ChangeFrameAndExposure(void);
   int SetK2ReadMode(void);
   int SetDoseFracParams(void);
   int SetDECamFrameRate(void);

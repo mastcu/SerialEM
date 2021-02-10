@@ -1157,6 +1157,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mNewSettingValues.clear();
     if (restoreArea)
       RestoreLowDoseParams(-2);
+    mCamera->SetDoseAdjustmentFactor(0.);
   }
 
   // restore camera sets, clear if non-resumable
@@ -3495,7 +3496,7 @@ bool CMacroProcessor::CheckCameraBinning(double binDblIn, int &binning, CString 
 
 // Takes incoming set number or letter in strItem and itemInt, checks its validity, and 
 // puts a set number converted from a letter in itemInt and copy the number to index
-// Returns tre with message on error
+// Returns true with message on error.  Also assigns conset pointer to mCamSet
 bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index,
                                              CString &message)
 {
@@ -3532,8 +3533,10 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
     if (itemInt > NUMBER_OF_USER_CONSETS)
       itemInt = -1;
     index = itemInt;
-    if (itemInt >= 0)
+    if (itemInt >= 0) {
+      mCamSet = &mConSets[index];
       return false;
+    }
   }
   message = "Inappropriate parameter set letter/number in: \n\n";
   return true;

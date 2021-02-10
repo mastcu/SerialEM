@@ -613,7 +613,9 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"ReportSettingsFile", 1, 0, &CMacCmd::ReportSettingsFile},
   {"ListAllCalibrations", 0, 0, &CMacCmd::ListAllCalibrations},
   {"IsFFTWindowOpen", 0, 0, &CMacCmd::IsFFTWindowOpen},
-  {"UserOpenOldFile", 0, 0, &CMacCmd::UserOpenOldFile},/*CAI3.9*/
+  {"UserOpenOldFile", 0, 0, &CMacCmd::UserOpenOldFile},
+  {"ChangeFrameAndExposure", 2, 1, &CMacCmd::SetFrameTime},
+  {"SetDoseAdjustmentFactor", 1, 0, &CMacCmd::SetDoseAdjustmentFactor},/*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -2255,6 +2257,16 @@ int CMacCmd::TiltDuringRecord(void)
   mCamera->InitiateCapture(3);
   mMovedStage = true;
   mTestTiltAngle = true;
+  return 0;
+}
+
+// SetDoseAdjustmentFactor
+int CMacCmd::SetDoseAdjustmentFactor(void)
+{
+  if (mItemFlt[1] < 0.01 || mItemFlt[1] > 50.)
+    ABORT_LINE("Factor must be between 0.01 and 50 for line:\n\n");
+  mCamera->SetDoseAdjustmentFactor(mItemFlt[1]);
+  mNumStatesToRestore++;
   return 0;
 }
 
@@ -6618,7 +6630,7 @@ int CMacCmd::SetProcessing(void)
   return 0;
 }
 
-// SetFrameTime
+// SetFrameTime, ChangeFrameAndExposure
 int CMacCmd::SetFrameTime(void)
 {
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
@@ -6626,12 +6638,24 @@ int CMacCmd::SetFrameTime(void)
   if (!mCamParams->K2Type && !mCamParams->canTakeFrames)
     ABORT_NOLINE("Frame time cannot be set for the current camera type");
   SaveControlSet(cIndex);
-  mConSets[cIndex].frameTime = mItemFlt[2];
-  mCamera->CropTietzSubarea(mCamParams, mConSets[cIndex].right - mConSets[cIndex].left,
-    mConSets[cIndex].bottom - mConSets[cIndex].top, mConSets[cIndex].processing,
-    mConSets[cIndex].mode, cIy1);
-  mCamera->ConstrainFrameTime(mConSets[cIndex].frameTime, mCamParams,
-    mConSets[cIndex].binning, mCamParams->OneViewType ? mConSets[cIndex].K2ReadMode:cIy1);
+  cTruth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
+  if (cTruth) {
+    cIx0 = B3DNINT(mCamSet->exposure / mCamSet->frameTime);
+    mCamSet->frameTime *= mItemFlt[2];
+  } else {
+    mCamSet->frameTime = mItemFlt[2];
+  }
+  mCamera->CropTietzSubarea(mCamParams, mCamSet->right - mCamSet->left,
+    mCamSet->bottom - mCamSet->top, mCamSet->processing,
+    mCamSet->mode, cIy1);
+  mCamera->ConstrainFrameTime(mCamSet->frameTime, mCamParams,
+    mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:cIy1);
+  if (cTruth) {
+    mCamSet->exposure = mCamSet->frameTime * cIx0;
+    SetReportedValues(&mStrItems[3], mCamSet->frameTime, mCamSet->exposure);
+  } else {
+    SetReportedValues(&mStrItems[3], mCamSet->frameTime);
+  }
   return 0;
 }
 

@@ -574,6 +574,7 @@ public:
   SetMember(BOOL, SaveInEERformat);
   GetSetMember(int, RotFlipInFalcon3ComFile);
   GetSetMember(BOOL, SubdirsOkInFalcon3Save);
+  SetMember(float, DoseAdjustmentFactor);
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   GetSetMember(int, CanSaveEERformat);
   void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
@@ -990,6 +991,7 @@ public:
   int mLastJeolDetectorID;       // ID of last detector selected
   float mISXcameraOffset[MAX_CAMERAS];
   float mISYcameraOffset[MAX_CAMERAS];
+  float mDoseAdjustmentFactor;   // Adjustment factor set from scripting
 
 public:
   void SetNonGatanPostActionTime(void);

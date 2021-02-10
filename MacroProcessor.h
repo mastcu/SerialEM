@@ -180,7 +180,8 @@ enum {CME_SCRIPTEND = 0, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKEY
   CME_SUBTRACTIMAGES, CME_MULTIPLYIMAGES, CME_DIVIDEIMAGES, CME_SCALE_IMAGE,
   CME_CLOSENAVIGATOR, CME_OPENNAVIGATOR, CME_OPENCHOOSERINCURRENTDIR,
   CME_SETCAMERAPLAOFFSET, CME_ECHONOVARSUB, CME_REPORTENVIRONVAR, CME_REPORTSETTINGSFILE,
-  CME_LISTALLCALIBRATIONS, CME_ISFFTWINDOWOPEN, CME_USEROPENOLDFILE
+  CME_LISTALLCALIBRATIONS, CME_ISFFTWINDOWOPEN, CME_USEROPENOLDFILE, 
+  CME_CHANGEFRAMEANDEXPOSURE, CME_SETDOSEADJUSTMENTFACTOR
 };
 
 struct MacroFunction {
@@ -449,6 +450,7 @@ protected:
   double mLastAddIdleTime;   // Time of last call to AddIdleTask
   int mMaxCmdToLoopOnIdle;   // Maximum number of commands before returning to event loop
   float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
+  ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);

@@ -435,6 +435,7 @@ CCameraController::CCameraController()
   mNoFilterControl = false;
   mLastJeolDetectorID = -1;
   mConsetsShareChannelList = false;
+  mDoseAdjustmentFactor = 0.;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -3009,7 +3010,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       "image.");
 
   // Set up Falcon saving
-  mTD.FEIacquireFlags = (mParam->FEItype == FALCON4_TYPE ? PLUGFEI_CALL_EER_MODE : 0);
+  mTD.FEIacquireFlags = ((mParam->FEItype == FALCON4_TYPE && mCanSaveEERformat) ? 
+    PLUGFEI_CALL_EER_MODE : 0);
 
   weCanAlignFalcon = CanWeAlignFalcon(mParam, mFrameSavingEnabled, falconHasFrames,
     conSet.K2ReadMode);
@@ -9649,6 +9651,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mLowDoseConSet = lowDoseMode ? conSetUsed + 1 : -conSetUsed;
       extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ,
         SpecimenBeamExposure(curCam, lastConSetp, true));
+      if (mDoseAdjustmentFactor > 0.)
+        extra->m_fDose *= mDoseAdjustmentFactor;
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
       extra->mPriorRecordDose = mPriorRecordDose;
 

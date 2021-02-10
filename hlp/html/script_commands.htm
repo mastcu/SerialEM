@@ -815,7 +815,17 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetFrameTime set #F</TD>
-          <TD>Sets the frame time for a K2/K3 camera for <B>set</B> to the given number <B>#F</B>.</TD>
+          <TD>Sets the frame time in <B>set</B> for a K2/K3 or generic frame-saving  camera
+             to the given number <B>#F</B>.&nbsp; <I>reportedValue1</I> is set to the actual frame time
+            after constraints are applied.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ChangeFrameAndExposure set #F</TD>
+          <TD>Changes the frame time and exposure time in <B>set</B> for a K2/K3  or generic
+             frame-saving camera by the given factor <B>#F</B>, maintaining the same number of 
+            frames.&nbsp; <I>reportedValue1</I> and <I>reportedValue1</I> are set to the actual frame time
+            and exposure time after constraints are applied.&nbsp; Command added in 3.9, 2/9/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDoseFracParams set #D [#S] [#A] [#M] [#C]&nbsp;</TD>
@@ -1259,6 +1269,14 @@
               define an environment variable SEM_USE_TOMMONIKER with the value of 1 on the 
               microscope computer to use an alternate interface.
           </TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">SetDoseAdjustmentFactor</TD>
+          <TD>Sets a factor for adjusting the exposure dose and frame doses stored in an 
+            .mdoc file for an image.&nbsp; Set to 0 to eliminate the adjustment; the 
+            factor will be reset to 0 when the script ends.&nbsp; Command added in 3.9, 
+            2/12/21.</TD>
         </TR>
      </TABLE>
       <BR>
