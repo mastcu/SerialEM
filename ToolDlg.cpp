@@ -1,6 +1,7 @@
-// ToolDlg.cpp:    Base class for common features of control panels, inherits CBaseDlg
+// ToolDlg.cpp:           Base class of control panels handles all common features
 //
-// Copyright (C) 2003-2021 by the Regents of the University of
+// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
+// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -27,7 +28,7 @@ static bool sFirstFloatDlg = true;
 
 
 CToolDlg::CToolDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
-  : CBaseDlg(inIDD, pParent)
+  : CDialog(inIDD, pParent)
 {
   //{{AFX_DATA_INIT(CToolDlg)
     // NOTE: the ClassWizard will add member initialization here
@@ -37,30 +38,39 @@ CToolDlg::CToolDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mBorderColor = RGB(192, 192, 192);
   mIDD = inIDD;
-  mInitialized = false;
-  mNonModal = true;
 }
 
 
 void CToolDlg::DoDataExchange(CDataExchange* pDX)
 {
-  CBaseDlg::DoDataExchange(pDX);
+  CDialog::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CToolDlg)
     // NOTE: the ClassWizard will add DDX and DDV calls here
   //}}AFX_DATA_MAP
 }
 
 
-BEGIN_MESSAGE_MAP(CToolDlg, CBaseDlg)
+BEGIN_MESSAGE_MAP(CToolDlg, CDialog)
   //{{AFX_MSG_MAP(CToolDlg)
   ON_BN_CLICKED(IDC_BUTOPEN, OnButopen)
   ON_BN_CLICKED(IDC_BUTMORE, OnButmore)
+  ON_WM_LBUTTONDOWN()
+  ON_WM_MBUTTONDOWN()
+  ON_WM_RBUTTONDOWN()
+  ON_WM_LBUTTONUP()
+  ON_WM_MBUTTONUP()
+  ON_WM_RBUTTONUP()
+  ON_WM_LBUTTONDBLCLK()
+  ON_WM_MBUTTONDBLCLK()
+  ON_WM_RBUTTONDBLCLK()
+  ON_BN_CLICKED(IDC_BUTHELP, OnHelp)
   ON_BN_CLICKED(IDC_BUTFLOATDOCK, OnButfloat)
   ON_WM_MOVE()
   ON_WM_HELPINFO()
   ON_WM_CLOSE()
   ON_WM_PAINT()
   //}}AFX_MSG_MAP
+  ON_NOTIFY_EX_RANGE( TTN_NEEDTEXT, 0, 0xFFFF, OnToolTipNotify )
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,7 +78,6 @@ END_MESSAGE_MAP()
 // Set state of button and state value
 void CToolDlg::SetOpenClosed(int inState)
 {
-  BOOL states[3] = {true, false, false};
   CRect rcWin;
   CButton *openBut;
   int dockHeight, floatHeight;
@@ -108,14 +117,6 @@ void CToolDlg::SetOpenClosed(int inState)
   } else {
     ModifyStyle(WS_CAPTION, 0);
     SetDlgItemText(IDC_BUTFLOATDOCK, "F");
-  }
-
-  // Adjust panels after handling the float/dock distinctions
-  if (mNumPanels) {
-    states[1] = mState & TOOL_OPENCLOSED;
-    states[2] = states[1] && (mState & TOOL_FULLOPEN);
-    AdjustPanels(states, mIdTable, mLeftTable, mTopTable, mNumInPanel, mPanelStart, 0,
-      mHeightTable);
   }
 }
 
@@ -157,8 +158,7 @@ int CToolDlg::GetMidHeight()
   CRect rect;
   CButton *butOpen = (CButton *)GetDlgItem(IDC_BUTOPEN);
   butOpen->GetWindowRect(&rect);
-  if (!mButFont.m_hObject)
-    mButFont.CreateFont((rect.Height() + 4), 0, 0, 0, FW_BOLD,
+  mButFont.CreateFont((rect.Height() + 4), 0, 0, 0, FW_BOLD,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
@@ -167,8 +167,7 @@ int CToolDlg::GetMidHeight()
   if (!butMore)
     return 0;
   butMore->SetFont(&mButFont);
-  mMidHeight = CurrentButHeight(butMore);
-  return mMidHeight;
+  return CurrentButHeight(butMore);
 }
 
 // Get the mid-height or equivalent value for a different button
@@ -185,50 +184,76 @@ int CToolDlg::CurrentButHeight(CButton *butMore)
   return 2 + butRect.bottom - winRect.top;
 }
 
-// If there is a more/less button, hide or show this and the Options label
-// When hiding, close up the options if open
-void CToolDlg::HideOrShowOptions(int showHide)
+// Capture all the stray mouse events not on a control and yield focus
+void CToolDlg::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-  CWnd *but = GetDlgItem(IDC_BUTMORE);
-  if (!but)
-    return;
-  but->ShowWindow(showHide);
-  but = GetDlgItem(IDC_STATMORE);
-  if (but)
-    but->ShowWindow(showHide);
-
-  // If there are panels, this hiding is done by adding or removing from list of IDs
-  // to hide for the dialog.  SetOpenClosed does the right thing if panels or not.
-  if (showHide == SW_HIDE) {
-    if (mNumPanels) {
-      mIDsToHide[mNumIDsToHide++] = IDC_BUTMORE;
-      mIDsToHide[mNumIDsToHide++] = IDC_STATMORE;
-    }
-    SetOpenClosed(mState & (~TOOL_FULLOPEN));
-  } else if (mNumPanels && mNumIDsToHide > 1 &&
-    mIDsToHide[mNumIDsToHide - 1] == IDC_STATMORE) {
-    mNumIDsToHide -= 2;
-    SetOpenClosed(mState);
-  }
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnLButtonDown(nFlags, point);
 }
 
-// Convenience function to call with all arguments and store pointers so subclass can
-// do the update
-void CToolDlg::SetupPanels(int *idTable, int *leftTable, int *topTable,
-  int *heightTable, int sortStart)
+void CToolDlg::OnMButtonDown(UINT nFlags, CPoint point) 
 {
-  CBaseDlg::SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart,
-    heightTable, sortStart);
-  mIdTable = idTable;
-  mLeftTable = leftTable;
-  mTopTable = topTable;
-  mHeightTable = heightTable;
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnMButtonDown(nFlags, point);
+}
+
+void CToolDlg::OnRButtonDown(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+    
+  CDialog::OnRButtonDown(nFlags, point);
+}
+
+void CToolDlg::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+
+  CDialog::OnLButtonUp(nFlags, point);
+}
+
+void CToolDlg::OnMButtonUp(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+
+  CDialog::OnMButtonUp(nFlags, point);
+}
+
+void CToolDlg::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnRButtonUp(nFlags, point);
+}
+
+void CToolDlg::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnLButtonDblClk(nFlags, point);
+}
+
+void CToolDlg::OnMButtonDblClk(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnMButtonDblClk(nFlags, point);
+}
+
+void CToolDlg::OnRButtonDblClk(UINT nFlags, CPoint point) 
+{
+  mWinApp->RestoreViewFocus();
+  
+  CDialog::OnRButtonDblClk(nFlags, point);
 }
 
 BOOL CToolDlg::OnInitDialog() 
 {
-  
-  CBaseDlg::OnInitDialog();
+  if (!mWinApp->GetDisplayNotTruly120DPI())
+    mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(mIDD), RT_DIALOG),
+                    m_hWnd, mIDD, B3DNINT(1.25 *mWinApp->GetSystemDPI()));
+  CDialog::OnInitDialog();
 
   // Make the font smaller for the title and "more" message
   CStatic *topLine = (CStatic *)GetDlgItem(IDC_STATTOPLINE);
@@ -267,9 +292,34 @@ void CToolDlg::OnCancel()
   // CDialog::OnCancel();
 }
 
+BOOL CToolDlg::OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult )
+{
+    TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
+    int nID;
+    if (pTTT->uFlags & TTF_IDISHWND)
+    {
+        // idFrom is actually the HWND of the tool
+        nID = ::GetDlgCtrlID((HWND)pNMHDR->idFrom);
+        if(nID)
+        {
+            pTTT->lpszText = MAKEINTRESOURCE(nID);
+            pTTT->hinst = AfxGetResourceHandle();
+            return(TRUE);
+        }
+    }
+    return(FALSE);
+}
+
+void CToolDlg::OnHelp() 
+{
+  mWinApp->OnHelp();
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+}
+
 void CToolDlg::OnMove(int x, int y) 
 {
-  CBaseDlg::OnMove(x, y);
+  CDialog::OnMove(x, y);
   
   if (mState & TOOL_FLOATDOCK)
     mWinApp->RestoreViewFocus();  
@@ -294,10 +344,37 @@ void CToolDlg::DrawSideBorders(CPaintDC &dc)
     clientRect.Height(), mBorderColor);
 }
 
-// Draw box with small offset
+// Draw a box around a button.
+// Non-tool dialogs need a big offset that dose NOT need DPI scaling
 void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORREF color)
 {
-  CBaseDlg::DrawButtonOutline(dc, but, thickness, color, -1);
+  DrawButtonOutline(this, dc, but, thickness, color, -1);
+}
+
+void CToolDlg::DrawButtonOutline(CWnd * wnd, CPaintDC & dc, CWnd * but, int thickness, 
+  COLORREF color, int offset)
+{
+  CRect winRect, clientRect, butRect;
+  int iLeft, iTop, border;
+  thickness = (int)(thickness * ((CSerialEMApp *)AfxGetApp())->GetScalingForDPI());
+  wnd->GetWindowRect(&winRect);
+  wnd->GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  but->GetWindowRect(&butRect);
+  iLeft = (butRect.left - winRect.left) + offset - thickness;
+  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -
+    (thickness - 1);
+  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1),
+    iTop + butRect.Height() + (thickness + 1));
+  CPen pen;
+  CBrush brush;
+  pen.CreatePen(PS_SOLID, thickness, color);
+
+  // "transparent" brush
+  brush.CreateStockObject(HOLLOW_BRUSH);
+  dc.SelectObject(&pen);
+  dc.SelectObject(&brush);
+  dc.Rectangle(&dcRect);
 }
 
 void CToolDlg::SetBorderColor(COLORREF inColor)
@@ -305,3 +382,19 @@ void CToolDlg::SetBorderColor(COLORREF inColor)
   mBorderColor = inColor;
 }
 
+// For easy editing of dialog text by window pointer or ID
+void CToolDlg::ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText)
+{
+  CString str;
+  wnd->GetWindowText(str);
+  str.Replace(fromText, (LPCTSTR)toText);
+  wnd->SetWindowText(str);
+}
+
+void CToolDlg::ReplaceDlgItemText(int nID, const char * fromText, CString toText)
+{
+  CString str;
+  GetDlgItemText(nID, str);
+  str.Replace(fromText, (LPCTSTR)toText);
+  SetDlgItemText(nID, str);
+}

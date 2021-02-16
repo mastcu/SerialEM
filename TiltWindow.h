@@ -57,6 +57,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL mInitialized;
 	BOOL mProgramReady;		// Last state of program readiness to allow stage move
 	double mTiltAngle;		// Last tilt angle received
 	BOOL mStageReady;		// Last state of stage readiness
