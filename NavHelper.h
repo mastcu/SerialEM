@@ -105,6 +105,7 @@ public:
   GetSetMember(int, AutoBacklashNewMap);
   GetSetMember(float, AutoBacklashMinField);
   GetSetMember(int, PointLabelDrawThresh);
+  GetSetMember(BOOL, UseLabelInFilenames);
   GetSetMember(int, EnableMultiShot);
   bool MultipleHolesAreSelected() {return (mMultiShotParams.inHoleOrMultiHole & MULTI_HOLES) &&
     ((mMultiShotParams.useCustomHoles && mMultiShotParams.customMagIndex > 0) || 
@@ -260,6 +261,7 @@ private:
   int mAutoBacklashNewMap;           // Whether to do backlash for new maps
   float mAutoBacklashMinField;       // FOV for doing backlash routine
   int mPointLabelDrawThresh;         // Threshold group size for drawing point labels
+  BOOL mUseLabelInFilenames;         // Flag to use the item label when generating names
 
   WINDOWPLACEMENT mRotAlignPlace;
   WINDOWPLACEMENT mMultiShotPlace;
@@ -353,7 +355,7 @@ public:
   int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff = FALSE);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
-  CString NextAutoFilename(CString inStr);
+  CString NextAutoFilename(CString inStr, CString oldLabel = "", CString newLabel = "");
   int NewAcquireFile(int itemNum, int fileType, ScheduledFile *sched);
   int SetFileProperties(int itemNum, int fileType, ScheduledFile *sched, 
     bool fromFilePropButton, bool skipFitDlgs);
@@ -438,6 +440,7 @@ public:
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
+  int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
   int FindMapIDforReadInImage(CString filename, int secNum);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);

@@ -114,7 +114,7 @@ public:
   CStatic m_statHoleDelayFac;
   CEdit m_editHoleDelayFac;
   float m_fHoleDelayFac;
-  void ManagePanels(void);
+  void ManagePanels(bool adjust = false);
   CButton m_butSaveIS;
   CButton m_butEndPattern;
   CButton m_butAbort;
