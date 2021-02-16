@@ -102,6 +102,11 @@
     <P>Global data replicate some of the information that is in an MRC file header.&nbsp; 
       In addition, the titles for an MRC file are stored in section headers of the 
       type &quot;T&quot;.</P>
+    <P>&nbsp;The IMOD library used by SerialEM uses the same internal autodoc 
+      structure to access the metadata in HDF files.&nbsp; It is thus simple to 
+      extract all of these metadata information into a text file in the autodoc 
+      format, with a command like:</P>
+    <P>&nbsp;&nbsp;&nbsp; extracttilts -attr filename.hdf&nbsp; filename.hdf.mdoc&nbsp;</P>
       <TABLE cols="2" BORDER style="Z-INDEX: 0">
         <TBODY>
           <TR VALIGN="top">
@@ -685,7 +690,7 @@
     <TR VALIGN="top">
       <TD>FocusAxisPos</TD>
       <TD class="style10">Float</TD>
-      <TD class="style7">-1.e9</TD>
+      <TD class="style7">-1.e8</TD>
       <TD class="style8">mFocusAxisPos</TD>
       <TD class="style9">Stored position of Focus area on inter-area axis</TD>
     </TR>
@@ -720,6 +725,27 @@
       <TD class="style9">Pairs of X,Y indexes for positions to skip from&nbsp; that 
         array specified in HoleArray.&nbsp; Positions are numbered from 0 at lower-left 
         in stage coordinates&nbsp; </TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>TSstartEndAngles</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">-1.e8,-1.e8</TD>
+      <TD class="style8">mTSstartAngle, mTSendAngle</TD>
+      <TD class="style9">Starting and ending angles of range for&nbsp; tilt series item</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>TSbidirAngle</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">-1.e8</TD>
+      <TD class="style8">mTSbidirAngle</TD>
+      <TD class="style9">Bidirectional starting angle for tilt series item</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>TargetDefocus</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">-1.e8</TD>
+      <TD class="style8">mTargetDefocus</TD>
+      <TD class="style9">Target defocus for Acquire or tilt series item</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapMontage</TD>

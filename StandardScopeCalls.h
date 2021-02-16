@@ -11,7 +11,7 @@
  * See FeiScope PlugSocket.cpp for a checklist on adding a new function for FEI
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 109
+#define FEISCOPE_PLUGIN_VERSION 110
 #define SCALE_POWER_OFFSET  12
 #endif
 
@@ -192,6 +192,8 @@ SCOPE_SAMENAME(FIFgetNext, FIFgetNextFrame);
 SCOPE_SAMENAME(FIFclean, FIFcleanUp);
 SCOPE_SAMENAME(FIFclean2, FIFcleanUp2);
 SCOPE_SAMENAME(ASIsetup, ASIsetupFrames);
+SCOPE_SAMENAME(FindRef, FindNewestMatchingFile);
+SCOPE_SAMENAME(GetFile, ReadAndReturnFile);
 SCOPE_SAMENAME(ASIimage, ASIacquireFromCamera);
 SCOPE_SAMENAME(GetErrStr, ASIgetLastStoragePath);
 SCOPE_SAMENAME(CamOneInt, ASIisCameraInserted);

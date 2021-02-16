@@ -62,6 +62,7 @@ void CParticleTasks::Initialize(void)
 
 /*
  * External call to start the operation with all the parameters
+ * Returns positive for an error or negative of the number of positions being done
  */
 int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
   int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn, 

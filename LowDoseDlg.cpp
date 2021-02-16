@@ -37,6 +37,27 @@ static char THIS_FILE[] = __FILE__;
 static int sMinVSDefocus[2] = {MIN_VIEW_DEFOCUS, MIN_SEARCH_DEFOCUS};
 static int sMaxVSDefocus[2] = {MAX_VIEW_DEFOCUS, MAX_SEARCH_DEFOCUS};
 
+static int sIdTable[] = {IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
+PANEL_END,
+IDC_RDEFINENONE, IDC_RDEFINEFOCUS, IDC_RDEFINETRIAL, IDC_STAT_DEFINE_GROUP,
+IDC_STAT_ADD_SHIFT_BOX, IDC_SET_BEAM_SHIFT, IDC_RESET_BEAM_SHIFT, IDC_STATBEAMSHIFT,
+IDC_STAT_LDCP_LINE5, IDC_STAT_LDCP_LINE3, IDC_STAT_LDCP_LINE1,
+IDC_STAT_LDCP_LINE2, IDC_STAT_LDCP_LINE4, IDC_STATPOSITION, IDC_STATMICRON,
+IDC_RVIEW_OFFSET, IDC_RSEARCH_OFFSET, IDC_STAT_VS_OFFSETS, IDC_EDITPOSITION,
+IDC_STATVIEWDEFLABEL, IDC_STATVIEWDEFOCUS, IDC_SPINVIEWDEFOCUS,
+IDC_STAT_VS_SHIFT, IDC_SET_VIEW_SHIFT, IDC_ZERO_VIEW_SHIFT, IDC_LOWDOSEMODE,
+IDC_STATELECDOSE, IDC_STAT_LDAREA, IDC_STATMAGSPOTC2, IDC_CONTINUOUSUPDATE,
+IDC_STATOVERLAP, IDC_GOTO_VIEW, IDC_GOTO_FOCUS, IDC_GOTO_TRIAL,
+IDC_GOTO_RECORD, IDC_GOTO_SEARCH, IDC_STAT_LDCP_GO, IDC_UNBLANK,
+IDC_STATBLANKED,  IDC_STATMORE, IDC_BUTMORE, PANEL_END,
+IDC_BLANKBEAM, IDC_LDNORMALIZE_BEAM, IDC_TIEFOCUSTRIAL, IDC_COPYTOVIEW, IDC_COPYTOFOCUS,
+IDC_COPYTOTRIAL, IDC_COPYTORECORD, IDC_CENTERUNSHIFTED, IDC_BALANCESHIFTS,
+IDC_STAT_COPY_LD_AREA, IDC_LD_ROTATE_AXIS, IDC_STAT_LD_DEG, IDC_COPYTOSEARCH,
+PANEL_END, TABLE_END};
+
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 /////////////////////////////////////////////////////////////////////////////
 // CLowDoseDlg dialog
@@ -157,6 +178,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_GOTO_TRIAL, m_butGotoTrial);
   DDX_Control(pDX, IDC_GOTO_RECORD, m_butGotoRecord);
   DDX_Control(pDX, IDC_GOTO_SEARCH, m_butGotoSearch);
+  DDX_Radio(pDX, IDC_GOTO_VIEW, m_iGoToArea);
 }
 
 
@@ -427,6 +449,8 @@ void CLowDoseDlg::OnLowdosemode()
   if (m_iDefineArea > 0)
     TurnOffDefine();
   m_iDefineArea = 0;
+  if (!m_bLowDoseMode)
+    DeselectGoToButtons(-1);
   Update();
 
   // If read buffer is in proper relation to # of rolls, then change it to allow
@@ -1161,6 +1185,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
   m_sbcViewDefocus.SetRange(0, 100);
   m_sbcViewDefocus.SetPos(50);
+  DeselectGoToButtons(-1);
 
   // Assume all variables are set into this dialog
 
@@ -1177,6 +1202,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_iDefineArea = 0;
 
   UpdateSettings();
+  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
   mInitialized = true;  
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
@@ -1263,8 +1289,9 @@ void CLowDoseDlg::Update()
     !bCentered && !usePiezo);
   m_butTieFocusTrial.EnableWindow(bEnable && !usePiezo);
 
-  // Turn off define position if doing tasks
-  if (mWinApp->DoingTasks() && m_iDefineArea > 0)
+  // Turn off define position if doing tasks for real
+  if (m_iDefineArea > 0 && mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
+    !mWinApp->GetJustDoingSynchro())
     TurnOffDefine();
 
   // Disable the position and overlap stuff if define area is off
@@ -1300,6 +1327,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   CString str;
   CString C2units = mScope->GetC2Units();
 
+  if (inSetArea != mLastSetArea)
+    DeselectGoToButtons(inSetArea);
   if (inSetArea < 0) {
     if (inSetArea != mLastSetArea) {
       m_strMagSpot = "Undefined";
@@ -1312,7 +1341,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     }
     return;
   }
-  
+
   mag = 0;
   if (ldArea->magIndex) {
     MagTable *magTab = mWinApp->GetMagTable() + ldArea->magIndex;
@@ -2352,4 +2381,15 @@ void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
     mLDParams[toArea] = mLDParams[fromArea];
     mLDParams[toArea].delayFactor = delay;
   }
+}
+
+// Make sure all buttons are unselected except the active area if there is one
+void CLowDoseDlg::DeselectGoToButtons(int area)
+{
+  CButton *but;
+  for (int ind = 0; ind < 5; ind++) {
+    but = (CButton *)GetDlgItem(IDC_GOTO_VIEW + ind);
+    but->SetCheck(area == ind ? BST_CHECKED : BST_UNCHECKED);
+  }
+  m_iGoToArea = area;
 }

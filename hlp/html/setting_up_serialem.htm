@@ -1377,23 +1377,32 @@
         computer.</li>
     </ul>
     <p>
-      <i><a name="Falcon3Details">For a Falcon 3 camera with the advanced scripting 
+      <i><a name="Falcon3Details">For a Falcon 3 or 4 camera with the advanced scripting 
       interface:</a></i></p>
     <ul>
-      <li>If the frame rate is not 40 FPS, 
+      <li>For a <em>Falcon 3</em>, if the frame rate is not 40 FPS, 
         add the general property &#39;FalconReadoutInterval&#39; with the inverse of the 
-        frame rate.</li>
+        frame rate.&nbsp; The default readout interval for <em>Falcon 4</em> is 0.004021 
+        and should be correct, but can be adjusted with this property also.</li>
       <li>The options to do frame alignment in SerialEM or create command files for 
         aligning frames with IMOD will not be available unless SerialEM has direct 
         access to the storage server file system.&nbsp; To enable this option, add the 
         general property &#39;LocalFalconFramePath&#39; with the path to the top directory in 
         which Falcon frames are stored, as seen from the SerialEM computer (which might 
-        be the storage server).</li>
+        be the storage server).&nbsp; For <em>Falcon 4</em>, the property 
+        &#39;FalconReferenceDir&#39; must also be added with the path to the directory on the 
+        storage server to which EER gain references are copied, as seen from the 
+        SerialEM computer.&nbsp; This should be under &#39;OffloadData\ImagesForProcessing&#39;.</li>
+      <li>For a <em>Falcon 3</em>, it may be possible with newer FEI server versions to 
+        save to subdirectory trees under the storage server location, not just to a 
+        single level of subdirectory.&nbsp; Set the general property 
+        &#39;SubdirsOkInFalcon3Save&#39; to 1 to experiment with whether this works.</li>
       <li>If you select to do frame alignment in SerialEM and the aligned sum is not 
         oriented the same as unaligned camera images, add the camera property 
         &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied 
         to the aligned sum to make it match (e.g., 1 or 
-        3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
+        3 for 90 degrees counterclockwise or clockwise).&nbsp; Check the need for this 
+        reorientation by aligning with saving selected.&nbsp; </li>
       <li>The camera property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39; can be set to control the scaling of 
         images from the camera.&nbsp; It specifies the power of 2 to divide by, where 
         positive or negative values set a power for dividing linear or counting mode counts, 
