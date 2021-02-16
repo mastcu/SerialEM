@@ -170,6 +170,9 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
     SetDlgItemText(IDC_ONE_FRAME_PER_FILE, 
       "Save counting frames in EER file instead of MRC file");
     m_bOneFramePerFile = mWinApp->mCamera->GetSaveInEERformat();
+    states[1] = true;
+    if (!mCanSaveFrameStackMdoc)
+      mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
   } else
     mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
