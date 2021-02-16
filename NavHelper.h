@@ -422,6 +422,7 @@ public:
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
   void CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS);
+  void CountHoleAcquires(int startInd, int endInd, int minHoles, int &numCenter, int &numHoles);
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
   int TransformExternalCoords(CMapDrawItem *item, int extType,
@@ -449,7 +450,8 @@ public:
     int &top, int &right, int &bottom);
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
-  bool GetNumHolesFromParam(int &xnum, int &ynum);
+  bool GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal);
+  int GetNumHolesForItem(CMapDrawItem *item, int numDefault);
   void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
   {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
 

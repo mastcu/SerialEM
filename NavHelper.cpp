@@ -2453,17 +2453,37 @@ void CNavHelper::StateCameraCoords(int camIndex, int xFrame, int yFrame, int bin
 
 // Get number of holes defined in multi-shot params, or 0,0 for a custom pattern
 // Return false if custom or not defined (0, 0)
-bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum)
+bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal)
 {
   xnum = 0;
   ynum = 0;
-  if (mMultiShotParams.useCustomHoles && mMultiShotParams.customHoleX.size() > 0)
-    return false;
-  xnum = mMultiShotParams.numHoles[0];
-  ynum = mMultiShotParams.numHoles[1];
-  if (mMultiShotParams.skipCornersOf3x3 && xnum == 3 && ynum == 3)
-    xnum = ynum = -3;
+  if (mMultiShotParams.useCustomHoles && mMultiShotParams.customHoleX.size() > 0) {
+    numTotal = (int)mMultiShotParams.customHoleX.size();
+  } else {
+    xnum = mMultiShotParams.numHoles[0];
+    ynum = mMultiShotParams.numHoles[1];
+    numTotal = xnum * ynum;
+    if (mMultiShotParams.skipCornersOf3x3 && xnum == 3 && ynum == 3) {
+      xnum = ynum = -3;
+      numTotal = 5;
+    }
+  }
+  if (!MultipleHolesAreSelected() || !xnum || !ynum)
+    numTotal = 1;
   return xnum != 0 && ynum != 0;
+}
+
+int CNavHelper::GetNumHolesForItem(CMapDrawItem * item, int numDefault)
+{
+  int numForItem = numDefault;
+  if (item->mNumXholes && item->mNumYholes) {
+    if (item->mNumXholes == -3 && item->mNumYholes == -3)
+      numForItem = 5;
+    else
+      numForItem = item->mNumXholes * item->mNumYholes;
+    numForItem -= item->mNumSkipHoles;
+  }
+  return numForItem;
 }
 
 
@@ -3983,6 +4003,42 @@ void CNavHelper::CountAcquireItems(int startInd, int endInd, int & numAcquire, i
         numAcquire++;
       if (item->mTSparamIndex >= 0)
         numTS++;
+    }
+  }
+}
+
+// Return number of positions and number of holes to be acquired with current or item
+// multishot parameters, excluing ones that would acquire fewer than minHoles.
+void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles, 
+  int &numCenters, int &numHoles)
+{
+  CMapDrawItem *item;
+  int numDefault, numForItem, xt, yt;
+  if (!mNav) {
+    numCenters = -1;
+    numHoles = -1;
+    return;
+  }
+  if (endInd < 0 || endInd >= (int)mItemArray->GetSize())
+    endInd = (int)mItemArray->GetSize() - 1;
+  startInd = B3DMAX(0, startInd);
+  numCenters = 0;
+  numHoles = 0;
+
+  // Get the default from parameters
+  if (mMultiShotDlg)
+    mMultiShotDlg->UpdateAndUseMSparams(false);
+  GetNumHolesFromParam(xt, yt, numDefault);
+
+  // Get value for each item to be acquired in range
+  for (int i = startInd; i <= endInd; i++) {
+    item = mItemArray->GetAt(i);
+    if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire) {
+      numForItem = GetNumHolesForItem(item, numDefault);
+      if (numForItem >= minHoles) {
+        numCenters++;
+        numHoles += numForItem;
+      }
     }
   }
 }

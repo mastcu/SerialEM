@@ -615,7 +615,8 @@ static CmdItem cmdList[] = {{"ScriptEnd", 0, 0, &CMacCmd::ScriptEnd},
   {"IsFFTWindowOpen", 0, 0, &CMacCmd::IsFFTWindowOpen},
   {"UserOpenOldFile", 0, 0, &CMacCmd::UserOpenOldFile},
   {"ChangeFrameAndExposure", 2, 1, &CMacCmd::SetFrameTime},
-  {"SetDoseAdjustmentFactor", 1, 0, &CMacCmd::SetDoseAdjustmentFactor},/*CAI3.9*/
+  {"SetDoseAdjustmentFactor", 1, 0, &CMacCmd::SetDoseAdjustmentFactor},
+  {"ReportNumHoleAcquire", 0, 0, &CMacCmd::ReportNumHoleAcquire},/*CAI3.9*/
   {NULL, 0, 0}
 };
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
@@ -7254,6 +7255,9 @@ int CMacCmd::ReportNavItem(void)
     cIndex = atoi(cNavItem->mLabel);
     cReport.Format("%d", cIndex);
     SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR, -1, false);
+    mNavHelper->GetNumHolesFromParam(cIx0, cIx1, cIndex2);
+    SetVariable("NAVNUMHOLES", cNavItem->mAcquire ? 
+      mNavHelper->GetNumHolesForItem(cNavItem, cIndex2) : 0, VARTYPE_REGULAR, -1, false);
     if (mNavigator->GetAcquiring()) {
       cReport.Format("%d", mNavigator->GetNumAcquired() + (cTruth ? 2 : 1));
       SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR, -1, false);
@@ -7448,6 +7452,22 @@ int CMacCmd::ReportNumNavAcquire(void)
     mLogRpt.Format("Navigator has %d Acquire items, %d Tilt Series items", cIndex, 
       cIndex2);
   SetReportedValues(&mStrItems[1], (double)cIndex, (double)cIndex2);
+  return 0;
+}
+
+// ReportNumHoleAcquire
+int CMacCmd::ReportNumHoleAcquire(void)
+{
+  int minHoles = mItemEmpty[1] ? 1 : B3DMAX(1, mItemInt[1]);
+  int startInd = mItemEmpty[2] ? 0 : (mItemInt[2] - 1);
+  int endInd = mItemEmpty[3] ? -1 : (mItemInt[3] - 1);
+  mNavHelper->CountHoleAcquires(startInd, endInd, minHoles, cIndex, cIndex2);
+  if (cIndex < 0)
+    mLogRpt = "The Navigator is not open; there are no acquire items";
+  else
+    mLogRpt.Format("With a minimum of %d holes, Navigator would acquire %d holes at %d "
+      "items", minHoles, cIndex2, cIndex);
+  SetReportedValues((double)cIndex2, (double)cIndex);
   return 0;
 }
 

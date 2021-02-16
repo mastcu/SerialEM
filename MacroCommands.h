@@ -423,6 +423,7 @@ class CMacCmd : public CMacroProcessor
   int SetMapAcquireState(void);
   int RestoreState(void);
   int ReportNumNavAcquire(void);
+  int ReportNumHoleAcquire(void);
   int ReportNumTableItems(void);
   int SetNavRegistration(void);
   int SaveNavigator(void);

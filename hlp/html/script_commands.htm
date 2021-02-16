@@ -3300,15 +3300,19 @@
             Navigator item, or the item this script is being run on. The index and stage 
             coordinates are placed in <i>reportedValue</i> variables as usual, and the item type 
             is placed in <i>reportedValue5</i>; (0 for point, 1 for polygon, 2 for map). In 
-            addition, variables <i>navLabel</i>, and <i>navNote</i>; are set with the label and note 
-            strings, variables <i>navIndex</i> and <i>navIntLabel</i> are set with integer values
+            addition, these named variables are set:
+            <br> &nbsp; <i>navLabel</i> and <i>navNote</i> are set with the label and note 
+            strings,
+            <br> &nbsp; <i>navIndex</i> and <i>navIntLabel</i> are set with integer values
             of the item index (numbered from 1) and of the label (up to any non-numeric characters), 
-            variable <i>navRegis</i> is set with the item&#39;s registration value, and 
-              variable <i>navColor</i> is set with the item&#39;s color (a value from 0 to 5).
-            If the Navigator is currently acquiring at points, a variable <i>navAcqIndex</i> is
-            set with the number of items already acquired plus 1.&nbsp; Any of
-            these variables can then be used to make filenames, and the latter two can be
-            used in arithmetic and IF statements.</TD>
+            <br> &nbsp; <i>navRegis</i> is set with the item&#39;s registration value,
+             <br> &nbsp; <i>navColor</i> is set with the item&#39;s color (a value from 0 to 5),
+            <br> &nbsp; <i>navNumHoles</i> is set with the number of holes that would be acquired by
+            'MultipleRecords' with current parameters, or 0 if the item is not marked for Acquire.
+            <br> &nbsp; <i>navAcqIndex</i> is
+            set with the number of items already acquired plus 1 If the Navigator is currently 
+            acquiring at items.&nbsp; Any of these variables can then be used to make filenames,
+             and the latter three can be used in arithmetic and IF statements.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportOtherItem #</TD>
@@ -3603,7 +3607,18 @@
         <TR>
           <TD class="scriptcommand">ReportNumNavAcquire</TD>
           <TD>Reports the number of Navigator items marked for Acquire and marked for Tilt Series 
-            as two values; return each as -1 if Navigator is not open.</TD>
+            as two values; returns each as -1 if Navigator is not open.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportNumHoleAcquire [#M] [#S] [#E]</TD>
+          <TD>Reports the total number of hole positions that would be acquired at and the number
+            of Navigator items moved to by acquiring with 'MultipleRecords', based on current Multiple
+             Record parameters and the number of hole positions specified for individual items.&nbsp; If the optional
+            <B>#M</B> is set with a minimum number of holes, the totals will omit any items that have fewer than
+            that number of hole position remaining after excluding some holes in the pattern.&nbsp; If the optional
+            <B>#S</B> and <B>#E</B> are set with starting and ending item numbers in the Navigator table
+             (numbered from 1), totals will include only items within those limits.&nbsp; Each value is returned as
+            -1 if Navigator is not open.&nbsp; Command added in 3.9, 2/14/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportItemAcquire [#]</TD>
