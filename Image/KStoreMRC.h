@@ -48,9 +48,6 @@ class KStoreMRC : public KImageStore
 	Int32      mHeadSize;
 	HeaderMRC *mHead;
 	char       *mExtra;
-	float      mPixelSpacing;
-  double     mMeanSum;
-  int        mNumWritten;
 
 public:
        KStoreMRC(CFile *inFile);

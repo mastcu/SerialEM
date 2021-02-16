@@ -467,6 +467,15 @@
     <ClInclude Include="Image\MdocDefines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MacroCommands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DisableHideTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MacroSelector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -785,6 +794,12 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_multi_combiner.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\about_hide_disable.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hide_disable_stub.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1162,6 +1177,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiCombinerDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MacroCommands.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MacroSelector.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

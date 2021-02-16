@@ -88,11 +88,13 @@ private:
 	CFont mFont;
 public:
   afx_msg void OnScalebar();
+  void ToggleExtraInfo(void);
   BOOL m_bScaleBars;
   BOOL m_bCrosshairs;
   CButton m_butScaleBars;
   CButton m_butCrosshairs;
   afx_msg void OnCrosshairs();
+  void ToggleCrosshairs();
   BOOL m_bAntialias;
   afx_msg void OnAntialias();
   CButton m_butAntialias;
@@ -105,6 +107,8 @@ public:
   CSliderCtrl m_scWhite;
   int mWhiteSlider;
   void ProcessNewBlackWhite(void);
+  BOOL m_bTiltAxis;
+  afx_msg void OnTiltaxis();
 };
 
 //{{AFX_INSERT_LOCATION}}

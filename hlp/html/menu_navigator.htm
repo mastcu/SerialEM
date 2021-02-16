@@ -133,13 +133,17 @@
           <TD>Make a polygon from the current set of corner points.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><b>Options</b></TD>
+          <TD class="style1"><b>Nav. Options</b></TD>
           <TD>The submenu has various options to control autosaving, file type, map loading 
             behavior, and drawing of point labels.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A></TD>
           <TD>Set maximum size of group for which point labels will be drawn.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_useitemlabelsinfilenames">Use Item Labels in Filenames</A></TD>
+          <TD>Use label in name of new file created for an item.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_autosave">Autosave Nav File</A></TD>
@@ -311,6 +315,25 @@
       the selected point is in a group larger than the threshold.&nbsp; Labels will 
       also be drawn for points whose distance from the previous point is greater than 
       40 microns.</P>
+
+      <P><A NAME="hid_options_useitemlabelsinfilenames"></A><B>Use Item Labels in Filenames command (Navigator 
+        - Options submenu)</B></P>
+      <p>Toggle this menu item on to incorporate the item label in the filename created 
+        when a new file is to be started for an item.&nbsp; If there are no filenames 
+        defined for previous items when you select <strong>New file at item</strong> or
+        <strong>Tilt series</strong>, the filename will be initialized to the item's 
+        label plus the appropriate file type extension, and that name will appear in the 
+        file chooser window that comes up for defining the filename. You can add more 
+        text or replace the label as you desire for this file.&nbsp; If there is a 
+        previous filename that is the basis for a new name and it still contains the 
+        label of its respective item, then the current item's label will be substituted 
+        for the previous one.&nbsp; To stop having names based on the label, either turn 
+        off this option or remove the label from the next name that you define.&nbsp; To 
+        start having names based on the label when there is a preceding filename without 
+        its label, press <strong>Set Filename</strong> and insert the current 
+        item's label into the name.</p>
+    <p>This option should be particularly useful for generating names that correspond 
+      between the two axes of dual-axis tilt series.</p>
       <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator - 
         Options submenu)</B></P>
       <P>Toggle this menu item on to have the Navigator items saved to a file 

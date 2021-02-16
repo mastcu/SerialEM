@@ -271,8 +271,8 @@ KStoreMRC::KStoreMRC(CFile *inFile)
     nz = head->nz;
     mMode = head->mode;
     
-    mMin = (int)head->amin;
-    mMax = (int)head->amax;
+    mMin = head->amin;
+    mMax = head->amax;
     mHeadSize += head->next;
     mNumWritten = nz;
     mMeanSum = nz * head->amean;
@@ -377,23 +377,10 @@ int KStoreMRC::AddTitle(const char *inTitle)
     return 1;
   if (mHead->nttl == 10)
     return -1;
-  int len = (int)strlen(inTitle);
-  len = B3DMIN(len, MRC_LABEL_SIZE);
-  memcpy(&mHead->labels[mHead->nttl][0], inTitle, len);
-  
-  // Pad with spaces, not nulls
-  for (; len < 80; len++)
-    mHead->labels[mHead->nttl][len] = 0x20;
-  mHead->nttl++;
+  AddTitleToLabelArray(&mHead->labels[mHead->nttl][0], mHead->nttl, inTitle);
 
   // Add to mdoc
-  if (mAdocIndex >= 0) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-      return 2;
-    retval = AdocAddSection(ADOC_TITLE, inTitle);
-    AdocReleaseMutex();
-  }
-  return retval;
+  return AddTitleToAdoc(inTitle);
 }
 
 const char *KStoreMRC::GetTitle(int index)
@@ -414,6 +401,7 @@ int KStoreMRC::setMode(int inMode)
 
 int KStoreMRC::AppendImage(KImage *inImage)
 {
+  int err;
   if (inImage == NULL) 
     return 1;
    
@@ -438,26 +426,17 @@ int KStoreMRC::AppendImage(KImage *inImage)
     mHead->dx *= mPixelSpacing;
     mHead->dy *= mPixelSpacing;
 
-    if (mAdocIndex >= 0) {
-      if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-        return 14;
-      RELEASE_RETURN_ON_ERR(AdocSetKeyValue(ADOC_GLOBAL, 0, ADOC_SINGLE, 
-        (char *)(LPCTSTR)mFile->GetFileName()), 15);
-      RELEASE_RETURN_ON_ERR(AdocSetTwoIntegers(ADOC_GLOBAL, 0, ADOC_SIZE, mWidth, mHeight)
-        , 15);
-      if ((mFileOpt.typext & MONTAGE_MASK) || mMontCoordsInMdoc) {
-        RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, 1), 15);
-      }
-      RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_MODE, mMode), 15);
-      AdocReleaseMutex();
-    }
+    err = InitializeAdocGlobalItems(true, (mFileOpt.typext & MONTAGE_MASK)
+      || mMontCoordsInMdoc, (char *)(LPCTSTR)mFile->GetFileName());
+    if (err)
+      return err;
 
   }
   mCur.z = mHead->nz;
   
     
   // Write image data to end of file.
-  int err = WriteSection(inImage, mHead->nz);
+  err = WriteSection(inImage, mHead->nz);
   mDepth = mHead->nz;
   return err;
 }
@@ -465,12 +444,8 @@ int KStoreMRC::AppendImage(KImage *inImage)
 // Write a section in the indicated place in the file
 int KStoreMRC::WriteSection (KImage *inImage, int inSect)
 {
-  float fMin, fMax, tMin, tMax, tMean;
-  double theMean;
   char *idata;
-  char sectext[10];
-  int i, j, sectInd;
-  CString mdocName;
+  int i, j;
   bool needToReflip, needToDelete, needNewSect, gotMutex = false;
   int retval = 5;
 
@@ -502,73 +477,12 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
     retval++;       // Error 5 on bigseek, 6 on write
     Write(idata, dataSize);
 
-    // Test for whether need new autodoc section before changing depth; definitely need
-    // one if this section has never been written before
-    needNewSect = inSect >= mDepth;
+    // Test for whether need new autodoc section before changing depth
+    needNewSect = CheckNewSectionManageMMM(inImage, inSect, idata, mHead->nz, 
+      mHead->amin, mHead->amax, mHead->amean);
 
-    // If there is an autodoc, look up the section to find out for sure if it needs one
-    if (!needNewSect && mAdocIndex >= 0 && AdocGetMutexSetCurrent(mAdocIndex) >= 0) {
-      sprintf(sectext, "%d", inSect);
-      sectInd = AdocLookupSection(ADOC_ZVALUE, sectext);
-      if (sectInd < 0) {
-        needNewSect = sectInd == -1;
-      } else {
-
-        // And if there is an existing section, we are overwriting, so recompute the
-        // min/max/meanSum of the rest of the sections so values will be correct after
-        // the overwrite
-        float newMin = 1.e37f, newMax = -1.e37f;
-        double newSum = 0.;
-        int newWritten = AdocGetNumberOfSections(ADOC_ZVALUE);
-        for (i = 0; i < newWritten; i++) {
-          if (i == sectInd)
-            continue;
-          if (AdocGetThreeFloats(ADOC_ZVALUE, i, ADOC_MINMAXMEAN, &tMin, &tMax, &tMean)) {
-
-            // Give up if any error
-            newWritten = 0;
-            break;
-          }
-          newSum += tMean;
-          ACCUM_MIN(newMin, tMin);
-          ACCUM_MAX(newMax, tMax);
-        }
-        if (newWritten > 0) {
-          mNumWritten = newWritten - 1;
-          mMeanSum = newSum;
-          mHead->amin = newMin;
-          mHead->amax = newMax;
-        }
-
-      }
-      AdocReleaseMutex();
-    }
-
-    // Get the min, max, and mean
-    minMaxMean(idata, dataSize, fMin, fMax, theMean);
-    inImage->setMinMaxMean(fMin, fMax, (float)theMean);
-    if (extra) {
-      extra->mMin = fMin;
-      extra->mMax = fMax;
-      extra->mMean = (float)theMean;
-    }
-
-    if (fMin < mHead->amin)
-      mHead->amin = fMin;
-    if (fMax > mHead->amax)
-      mHead->amax = fMax;
-    
-    // Adjust file size for section past the end of current size, and update the depth
-    if (inSect >= mHead->nz) 
-      mHead->nz = inSect + 1;
-    mDepth = mHead->nz;
     mHead->mz = mHead->nz;
     mHead->dz = (float)mHead->nz * mPixelSpacing;
-
-    // adjust mean sum and mean
-    mMeanSum += theMean;
-    mNumWritten++;
-    mHead->amean = (float)(mMeanSum / mNumWritten);
     
     // ReWrite header information.
     retval++;      // Error 7 on head write
@@ -599,47 +513,7 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
       Write(pExtra, theExtSize);
     }
 
-    if (mAdocIndex >= 0) {
-      if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-        throw 14;
-      gotMutex = true;
-
-      // Add a new section if test above indicated it was needed
-      sprintf(sectext, "%d", inSect);
-      if (needNewSect) {
-        sectInd = AdocAddSection(ADOC_ZVALUE, sectext);
-        if (sectInd < 0)
-          throw 15;
-      } else {
-
-        // otherwise try to look up an existing section, and if there is none, insert one
-        // in the right place to keep the sections in order
-        sectInd = AdocLookupSection(ADOC_ZVALUE, sectext);
-        if (sectInd < -1)
-          throw 14;
-        if (sectInd == -1) {
-          sectInd = AdocFindInsertIndex(ADOC_ZVALUE, inSect);
-          if (sectInd < 0)
-            throw 14;
-          if (AdocInsertSection(ADOC_ZVALUE, sectInd, sectext) < 0)
-            throw 15;
-        }
-      }
-
-      // add all the values, and rewrite the adoc or append to it
-      if (KStoreADOC::SetValuesFromExtra(inImage, ADOC_ZVALUE, sectInd))
-        throw 15;
-      mdocName = getAdocName();
-      if (sectInd && needNewSect) {
-        if (AdocAppendSection((char *)(LPCTSTR)mdocName) < 0)
-          throw 16;
-      } else {
-        if (AdocWrite((char *)(LPCTSTR)mdocName) < 0)
-          throw 16;
-      }
-    }
-
-    retval = 0;   // Set error to 0 after last success
+    retval = AddExtraValuesToAdoc(inImage, inSect, needNewSect, gotMutex);
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -813,18 +687,10 @@ float KStoreMRC::getPixel(KCoord &inCoord)
 //   -1 if it is montage and piece list is corrupted
 int KStoreMRC::CheckMontage(MontParam *inParam)
 {
-  int ifmont;
   if (iiMRCcheckPCoord((MrcHeader *)mHead) == 0 && !mMontCoordsInMdoc)
     return 0;
-  if (mMontCoordsInMdoc) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-      return 0;
-    if (AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) || ifmont <= 0)
-      ifmont = 0;
-    AdocReleaseMutex();
-    if (!ifmont)
-      return 0;
-  }
+  if (mMontCoordsInMdoc && !CheckAdocForMontage(inParam)) 
+    return 0;
   return KImageStore::CheckMontage(inParam, mHead->nx, mHead->ny, mHead->nz);  
 }
 
@@ -837,11 +703,8 @@ int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
   int retval = 0;
   int offset = inSect * mHead->nbytext;
   if (mMontCoordsInMdoc) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    if (GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ))
       return -1;
-    if (AdocGetThreeIntegers(ADOC_ZVALUE, inSect, ADOC_PCOORD, &outX, &outY, &outZ))
-      retval = -1;
-    AdocReleaseMutex();
   } else {
     if ((mHead->typext & TILT_MASK) != 0) 
       offset +=   EMimageExtra::Bytes[0];
@@ -864,13 +727,13 @@ int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
 }
 
 // Invert the Z values of montage coordinates for a bidirectional tilt series
+// This takes a a map from current section number to new section number
 int KStoreMRC::ReorderPieceZCoords(int *sectOrder)
 {
   short int sTemp;
-  int ind, pcX, pcY, pcZ, retval = 0;
+  int ind;
   char *edata= (char *)&sTemp;
   char *idata = mExtra + 4;
-  CString mdocName = getAdocName();
   if (!mMontCoordsInMdoc) {
 
     // Extended header is supposed to have montage: make sure the flag is set
@@ -901,31 +764,18 @@ int KStoreMRC::ReorderPieceZCoords(int *sectOrder)
   }
 
   // If there is an autodoc, now loop through it
-  if (mAdocIndex >= 0) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-      return 3;
-    for (ind = 0; ind < mHead->nz; ind++) {
-      RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(ADOC_ZVALUE, ind, ADOC_PCOORD, &pcX, 
-        &pcY, &pcZ), 4);
-      pcZ = sectOrder[pcZ];
-      RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(ADOC_ZVALUE, ind, ADOC_PCOORD, pcX, pcY, 
-        pcZ), 5);
-    }
-    if (AdocWrite((char *)(LPCTSTR)mdocName) < 0)
-      retval = 6;
-    AdocReleaseMutex();
-  }
-  return retval;
+  return ReorderZCoordsInAdoc(ADOC_ZVALUE, sectOrder, mHead->nz);
 }
 
 // Get the stage coordinates for a section
 int KStoreMRC::getStageCoord(int inSect, double &outX, double &outY)
 {
   EMimageExtra extra;
-  if (getExtraData(&extra, inSect))
-    return -1;
-  if (extra.mStageX == EXTRA_NO_VALUE || extra.mStageY == EXTRA_NO_VALUE)
-    return -1;
+  if (getExtraData(&extra, inSect) || extra.mStageX == EXTRA_NO_VALUE ||
+    extra.mStageY == EXTRA_NO_VALUE) {
+    if (!mMontCoordsInMdoc || GetStageCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY))
+      return -1;
+  }
   outX = extra.mStageX;
   outY = extra.mStageY;
   return 0;
@@ -973,13 +823,9 @@ void KStoreMRC::SetPixelSpacing(float pixel)
 {
   if (!mHead)
     return;
-  mPixelSpacing = pixel;
   mHead->dx = (float)mHead->nx * pixel;
   mHead->dy = (float)mHead->ny * pixel;
   mHead->dz = (float)mHead->nz * pixel;
-  if (mAdocIndex < 0 || AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return;
-  AdocSetFloat(ADOC_GLOBAL, 0, ADOC_PIXEL, pixel);
-  AdocReleaseMutex();
+  KImageStore::SetPixelSpacing(pixel);
 }
 

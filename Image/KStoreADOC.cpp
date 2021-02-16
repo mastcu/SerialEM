@@ -149,44 +149,33 @@ int KStoreADOC::WriteAdoc()
 
 int KStoreADOC::AddTitle(const char *inTitle)
 {
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return 1;
-  KImageStore::AddTitle(inTitle);
-  int retval = AdocAddSection(ADOC_TITLE, inTitle);
-  AdocReleaseMutex();
+  int retval = AddTitleToAdoc(inTitle);
+  if (!retval)
+    KImageStore::AddTitle(inTitle);
   return retval;
-}
-void KStoreADOC::SetPixelSpacing(float pixel)
-{
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return;
-  AdocSetFloat(ADOC_GLOBAL, 0, ADOC_PIXEL, pixel);
-  AdocReleaseMutex();
 }
 
 // Append one image to the collection: This must be the first call to write an image
 int KStoreADOC::AppendImage(KImage *inImage)
 {
+  int err;
   if (inImage == NULL) 
     return 1;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return 14;
 
   // If this is a new image initialize size
-  if (!mDepth && !mWidth && !mHeight ){
+  if (!mDepth && !mWidth && !mHeight ) {
     inImage->getSize(mWidth, mHeight);
-    RELEASE_RETURN_ON_ERR(AdocSetTwoIntegers(ADOC_GLOBAL, 0, ADOC_SIZE, mWidth, mHeight),
-      15);
-    if (mFileOpt.isMontage()) {
-      RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, 1), 15);
-    }
-    RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_MODE, mMode), 15);
+    err = InitializeAdocGlobalItems(false, mFileOpt.isMontage(), NULL);
+    if (err)
+      return err;
   }
   mCur.z = mDepth;
   AdocReleaseMutex();
     
   // Write image data to end of file.
-  int err = WriteSection(inImage, mDepth);
+  err = WriteSection(inImage, mDepth);
   if (AdocAcquireMutex()) {
     mDepth = AdocGetNumberOfSections(ADOC_IMAGE);
     AdocReleaseMutex();
@@ -291,47 +280,29 @@ KImage  *KStoreADOC::getRect(void)
 //   -1 if it is montage and piece list is corrupted
 int KStoreADOC::CheckMontage(MontParam *inParam)
 {
-  int ifmont;
   if (!mWidth || !mHeight || !mDepth)
     return 0;
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+  if (!CheckAdocForMontage(inParam))
     return 0;
-  if (AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) || ifmont <= 0)
-    ifmont = 0;
-  else
-    ifmont = KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
-  AdocReleaseMutex();
-  return ifmont;
+  return KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
 }
 
 
 // Get the piece coordinates for a section.  Return 0 if OK, -1 if section bad
 int KStoreADOC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
 {
-  int retval = 0;
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return -1;
-  if (AdocGetThreeIntegers(ADOC_IMAGE, inSect, ADOC_PCOORD, &outX, &outY, &outZ))
-    retval = -1;
-  AdocReleaseMutex();
-  return retval;
+  return GetPCoordFromAdoc(ADOC_IMAGE, inSect, outX, outY, outZ);
 }
 
 // Get the stage coordinates for a section
 int KStoreADOC::getStageCoord(int inSect, double &outX, double &outY)
 {
-  float X, Y;
-  int retval = 0;
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return -1;
-  if (AdocGetTwoFloats(ADOC_IMAGE, inSect, ADOC_STAGE, &X, &Y)) {
-    retval = -1;
-  } else {
-    outX = X;
-    outY = Y;
-  }
-  AdocReleaseMutex();
-  return retval;
+  return GetStageCoordFromAdoc(ADOC_IMAGE, inSect, outX, outY);
+}
+
+int KStoreADOC::ReorderPieceZCoords(int * sectOrder)
+{
+  return ReorderZCoordsInAdoc(ADOC_IMAGE, sectOrder, mDepth);
 }
 
 #define MDOC_FLOAT(nam, ini, tst, sym, str) \
