@@ -363,9 +363,6 @@ static int RandomIntFillFromFloat(float value)
                        a[indRight + xStride] +                          \
                        a[indRight + yStride + xStride])) / 4.f);        \
     a[ind] = (b)e(fill);                                                \
-    ind += yStride;                                                     \
-    indLeft += yStride;                                                 \
-    indRight += yStride;                                                \
   }                                                                     \
   for (i = fullStart; i <= fullEnd; i++, ind += yStride, indLeft += yStride, \
          indRight += yStride) {                                         \
@@ -457,7 +454,8 @@ static void CorrectColumn(void *array, int type, int nx, int ny, int xStride, in
 
   if (num <= 0)
     return;
-  
+
+  // Remove super-resolution in pixels outside the columns perpendicular to the column
   if (superFac > 0) {
     nloop = 0;
     for (i = 0; i < numAvgSuper; i++) {
@@ -796,8 +794,8 @@ static void CorrectJumboPixel(void *array, int type, int nxdim, int nx, int ny, 
   for (i = 0 ; i < 4; i++) {
     for (jy = 0; jy < 4; jy++) {
       for (jx = 0; jx < 4; jx++) {
-        idx[ix] = xpix + jdx[i] + jx;
-        idy[ix++] = ypix + jdy[i] + jy;
+        idx[ix] = jdx[i] + jx;
+        idy[ix++] = jdy[i] + jy;
       }
     }
   }
@@ -940,14 +938,18 @@ void CorDefScaleDefectsForK2(CameraDefects *param, bool scaleDown)
   ScaleDefectsByFactors(param, upFac, downFac, addFac);
 }
 
-// Scale defects for a Falcon up by 2 or 4 AND set the flag that it has been scaled
-// Factor MUST be 2 or 4
+// Scale defects for a Falcon up by 2 or 4, or down for negative factors, AND set the
+// flag that it has been scaled. Factor MUST be -8, -4, -2, 2, or 4
 void CorDefScaleDefectsForFalcon(CameraDefects *param, int factor)
 {
   param->wasScaled = factor / 2;
-  ScaleDefectsByFactors(param, factor, 1, factor - 1);
+  if (factor > 0)
+    ScaleDefectsByFactors(param, factor, 1, factor - 1);
+  else
+    ScaleDefectsByFactors(param, 1, -factor, 0);
 }
 
+// Scaling defects given the up and down factors
 static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac, 
                                   int addFac)
 {
@@ -971,6 +973,7 @@ static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac,
   }
 }
 
+// Scale a row or column specification given the up and down factors
 static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth, 
                                UShortVec &partial, ShortVec &partWidth, UShortVec &startY,
                                UShortVec &endY, int upFac, int downFac, int addFac)
@@ -978,11 +981,11 @@ static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth,
   int i;
   for (i = 0; i < (int)colStart.size(); i++) {
     colStart[i] = colStart[i] * upFac / downFac;
-    colWidth[i] = colWidth[i] * upFac / downFac;
+    colWidth[i] = B3DMAX(1, colWidth[i] * upFac / downFac);
   }
   for (i = 0; i < (int)partial.size(); i++) {
     partial[i] = partial[i] * upFac / downFac;
-    partWidth[i] = partWidth[i] * upFac / downFac;
+    partWidth[i] = B3DMAX(1, partWidth[i] * upFac / downFac);
     startY[i] = startY[i] * upFac / downFac;
     endY[i] = endY[i] * upFac / downFac + addFac;
   }
@@ -1794,14 +1797,19 @@ static void clearDefectList(CameraDefects &defects)
   defects.pixUseMean.clear();
 }
 
+// Given a string from FEI gain reference file, parse it as an XML string and
+// convert the defects into our structure
 int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
 {
-  int xmlInd, num, startInd, err, tagInd, elemInd, numList;
+  int xmlInd, num, startInd, err, tagInd, elemInd, numList, colPad = 0;
   char *rootElement, *value;
   int *valList;
   const char *tags[6] = {"row", "col", "area", "nonmaskingpoint", "point", 
                          "nonmaskingpoint"};
+  colPad = pad / 10;
+  pad = pad % 10;
 
+  // Set up as XML and make sure it is defects
   clearDefectList(defects);
   xmlInd = ixmlLoadString(strng, 0, &rootElement);
   if (xmlInd < 0)
@@ -1813,6 +1821,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
   }
   free(rootElement);
 
+  // Loop on the different types of elements
   for (tagInd = 0; tagInd < 6; tagInd++) {
     err = ixmlFindElements(xmlInd, 0, tags[tagInd], &startInd, &num);
     if (err) {
@@ -1820,6 +1829,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
       return -err;
     }
 
+    // Loop through the matching elements and get each value
     for (elemInd = 0; elemInd < num; elemInd++) {
       err = ixmlGetStringValue(xmlInd, startInd + elemInd, &value);
       if (err || !value) {
@@ -1830,6 +1840,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return -err;
       }
 
+      // Parse the value as a list
       valList = parselist(value, &numList);
       free(value);
       if (!valList) {
@@ -1837,6 +1848,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return 6 - numList;
       }
  
+      // Make sure the number of values is right for the type
       if (((tagInd == 2 || tagInd == 3) && numList != 4) || 
           ((tagInd == 4 || tagInd == 5) && numList != 2)) {
         free(valList);
@@ -1844,16 +1856,17 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return 10;
       }
       
-      err = valList[0];
+      // Allow for padding of columns/rows
+      err = B3DMAX(0, valList[0] - colPad);
       switch (tagInd) {
       case 0:
-        defects.badRowStart.push_back(valList[0]);
-        defects.badRowHeight.push_back(numList);
+        defects.badRowStart.push_back(err);
+        defects.badRowHeight.push_back(numList + colPad + valList[0] - err);
         break;
 
       case 1:
-        defects.badColumnStart.push_back(valList[0]);
-        defects.badColumnWidth.push_back(numList);
+        defects.badColumnStart.push_back(err);
+        defects.badColumnWidth.push_back(numList + colPad + valList[0] - err);
         break;
 
       case 2:
@@ -1891,7 +1904,7 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
 // Given a TIFF gain reference file, looks for the tag for FEI defects and parses them
 // as a defect list with the given padding on line defects.  Writes a standard defect 
 // file to dumpDefectName if that is non-NULL.  Processes them by flipping if flipY is 
-// true, finding touching pixels, and scaling if superFac > 1.  nx and ny should be
+// true, finding touching pixels, and scaling if superFac != 1.  nx and ny should be
 // the size of the gain reference.  messBuf of size bufLen receives messages on error,
 // with return value 1.  Return value -1 means no tag was found.
 int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int nx, int ny,
@@ -1932,7 +1945,7 @@ int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int n
   if (flipY)
     CorDefFlipDefectsInY(&defects, nx, ny, 0);
   CorDefFindTouchingPixels(defects, nx, ny, 0);
-  if (superFac > 1)
+  if (superFac != 1)
     CorDefScaleDefectsForFalcon(&defects, superFac);
   free(strCopy);
   return 0;
@@ -2585,6 +2598,17 @@ int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &ca
     CorDefScaleDefectsForFalcon(&defects, scaling);
     camSizeX *= scaling;
     camSizeY *= scaling;
+  }
+  if (defects.FalconType && (nxFull < camSizeX && nyFull < camSizeY)) {
+    if (defects.wasScaled < 0)
+      return 1;
+    scaling = B3DNINT(camSizeX / nxFull);
+    if (camSizeX * scaling != nxFull || camSizeY * scaling != nyFull || 
+        (scaling != 2 && scaling != 4 && scaling != 8))
+      return 1;
+    CorDefScaleDefectsForFalcon(&defects, -scaling);
+    camSizeX /= scaling;
+    camSizeY /= scaling;
   }
 
   // See if the defects need to be scaled up: a one-time error or action

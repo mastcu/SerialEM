@@ -299,6 +299,7 @@ extern "C" {
   int zoomFiltInterp(float *array, float *bray, int nxa, int nya, int nxb, int nyb,
                      float xc, float yc, float xt, float yt, float dmean);
   double zoomFiltValue(float radius);
+  double zoomRawFiltValue(float radius);
 
   /* linearxforms.f */
   void xfUnit(float *f, float val, int rows);
