@@ -87,6 +87,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
+	BOOL mInitialized;
 	Smoother mCurrentSmoother;
 	// Storage for last values that were sent in
 	double mCurrent;		// screen current in corrected na

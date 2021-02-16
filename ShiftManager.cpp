@@ -312,6 +312,7 @@ bool CShiftManager::ImposeImageShiftOnScope(float delX, float delY, int magInd,
   double delISX, delISY;
   ScaleMat bMat, bInv;
   CString str;
+  bool fail = mScope->FastTiltAngle() > 10.;
   bMat = IStoGivenCamera(magInd, camera);
   if (!bMat.xpx) {
     if (!incremental) {
@@ -952,11 +953,6 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
   XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
   time4 = GetTickCount();
-
-  if (alignLimit > 0) {
-    iPeak = (int)(alignLimit / needBinA) + 2;
-    setPeakFindLimits(-iPeak, iPeak, -iPeak, iPeak, 1);
-  }
 
   XCorrPeakFindWidth(mBrray, nxPad + 2, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], NULL, 
     NULL, numPeaks, mPeakStrengthToEval);

@@ -499,6 +499,15 @@ void CHoleFinderDlg::DialogToParams()
     mParams.thresholds.push_back((float)mThresholds[ind]);
 }
 
+void CHoleFinderDlg::SyncToMasterParams()
+{
+  if (!mIsOpen)
+    return;
+  UpdateData(true);
+  DialogToParams();
+  *mMasterParams = mParams;
+}
+
 // Transfer values from the parameters to the dialog
 void CHoleFinderDlg::ParamsToDialog()
 {

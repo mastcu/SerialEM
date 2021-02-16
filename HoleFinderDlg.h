@@ -162,6 +162,7 @@ private:
   CString ListToString(int type, int num, void *list);
   void InvertVectorInY(FloatVec &vec, int ysize);
 public:
+  void SyncToMasterParams();
   float m_fMaxError;
   afx_msg void OnKillfocusEditMaxError();
   CButton m_butClearData;
