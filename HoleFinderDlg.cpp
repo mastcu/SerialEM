@@ -303,7 +303,7 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYcenters, float, 0);
   CLEAR_RESIZE(mXstages, float, 0);
   CLEAR_RESIZE(mYstages, float, 0);
-  CLEAR_RESIZE(mExcluded, bool, 0);
+  CLEAR_RESIZE(mExcluded, short, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mHelper->mFindHoles->clearAll();
   mWinApp->mMainView->DrawImage();
@@ -1218,16 +1218,21 @@ void CHoleFinderDlg::SetExclusionsAndDraw()
     mParams.blackFracCutoff);
 }
 
-void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, 
+void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff,
   float sdCutoff, float blackCutoff)
 {
   int ind;
+  bool extreme;
+  float middle = (lowerMeanCutoff + lowerMeanCutoff) / 2.f;
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    mExcluded[ind] = mHoleMeans[ind] < lowerMeanCutoff || 
-      mHoleMeans[ind] > upperMeanCutoff || mHoleSDs[ind] > sdCutoff ||
-      mHoleBlackFracs[ind] > blackCutoff;
+    mExcluded[ind] = 0;
+    extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
+    if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle))
+      mExcluded[ind] = -1;
+    if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
+      mExcluded[ind] = 1;
   }
   mWinApp->mMainView->DrawImage();
 }
@@ -1253,7 +1258,7 @@ void CHoleFinderDlg::StopScanning(void)
 
 // External call for drawing routine to find out whether to draw hole positions
 bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
-  std::vector<bool> **exclude, BOOL &incl, BOOL &excl)
+  std::vector<short> **exclude, BOOL &incl, BOOL &excl)
 {
   *x = &mXstages;
   *y = &mYstages;

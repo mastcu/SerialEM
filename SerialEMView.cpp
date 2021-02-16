@@ -450,14 +450,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   FloatVec zeroRadii, zeroRadii2;
   FloatVec *curHoleXYpos, *xHoleCens, *yHoleCens;
   IntVec *curHoleIndex, *pieceOn;
-  std::vector<bool> *holeExcludes;
+  std::vector<short> *holeExcludes;
   CFont *useFont, *useLabelFont;
   CPoint point;
   CString letString, firstLabel, lastLabel, fontName;
   ScaleMat aInv;
   COLORREF bkgColor = RGB(48, 0, 48);
-  COLORREF flashColor = RGB(192, 192, 0);
-  COLORREF includeColor = RGB(255, 0, 160), excludeColor = RGB(0, 100, 255);
+  COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
+  COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
   int scaled5 = DSB_DPI_SCALE(5);
   int scaled10 = DSB_DPI_SCALE(10);
   int scaled140 = DSB_DPI_SCALE(140);
@@ -1000,19 +1000,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
       &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
-    CPen pnExcludePen(PS_SOLID, thick2, excludeColor);
+    CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
+    CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
+    short exclude;
     crossLen = DSB_DPI_SCALE(9);
     for (ix = 0; ix < (int)xHoleCens->size(); ix++) {
       tempX = xHoleCens->at(ix);
       tempY = yHoleCens->at(ix);
-      if ((holeExcludes->at(ix) && !drawExcluded) ||
-        (!holeExcludes->at(ix) && !drawIncluded) ||
+      exclude = holeExcludes->at(ix);
+      if ((exclude && !drawExcluded) || (!exclude && !drawIncluded) ||
         tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
         continue;
       StageToImage(imBuf, tempX, tempY, ptX, ptY, pieceOn->at(ix));
       MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
-      DrawCross(&cdc, holeExcludes->at(ix) ? &pnExcludePen : &pnIncludePen, point,
-        crossLen);
+      DrawCross(&cdc, B3DCHOICE(exclude > 0, &pnHighExclPen,
+        exclude < 0 ? &pnLowExclPen : &pnIncludePen), point, crossLen);
     }
   }
 
@@ -1042,7 +1044,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     useMultiShot = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
       mWinApp->mNavHelper->MultipleHolesAreSelected();
-    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes);
+    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
   bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&

@@ -421,7 +421,7 @@ private:
   IntVec *mHFpieceOn;
   ShortVec *mHFgridXpos;
   ShortVec *mHFgridYpos;
-  std::vector<bool> *mHFexclude;
+  std::vector<short> *mHFexclude;
   bool mAddingFoundHoles;
   bool mDeferAddingToViewer;
 
@@ -583,7 +583,7 @@ public:
   void StageOrImageCoords(CMapDrawItem *item, float &posX, float &posY);
   void GridImageToStage(ScaleMat aInv, float delX, float delY, float posX, float posY, 
     float &stageX, float &stageY);
-  int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<bool> *exclude, FloatVec *xInPiece,
+  int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<short> *exclude, FloatVec *xInPiece,
     FloatVec *yInPiece, IntVec *pieceOn, ShortVec *gridXpos, ShortVec *gridYpos,
     float spacing, float diameter, float angle, int registration, int mapID, float stageZ,
     CMapDrawItem *poly, int layoutType);

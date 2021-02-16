@@ -2826,7 +2826,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
     if (!shiftKey) {
       BackspacePressed();
     } else if (mCurItemHoleXYpos.size() && (mItem = GetSingleSelectedItem()) != NULL &&
-      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes)) {
+      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ind)) {
 
 
       // Get interhole distance and distance to nearest
@@ -5292,7 +5292,7 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
 
 // Add holes found by the HoleFinder using all these passed vectors
 int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
-  std::vector<bool> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
+  std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
   ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float angle,
   int registration, int mapID, float stageZ, CMapDrawItem *poly, int layoutType)
 {
