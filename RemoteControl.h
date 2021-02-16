@@ -19,7 +19,6 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();
-  afx_msg void OnPaint();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -101,6 +100,7 @@ public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
   CString m_strC2Name;
+  bool mInitialized;
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, int &pendingCamLen);
   void CtrlChanged(bool pressed);

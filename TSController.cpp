@@ -536,8 +536,7 @@ BOOL CTSController::CanBackUp()
 // THE MAIN SETUP AND STARTING DIALOG
 
 // Open the dialog, return 1 for error, -1 for cancel
-int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex,
-  int navOverrideFlags)
+int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex) 
 {
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
@@ -571,7 +570,6 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
     tsDialog.mPanelOpen[i] = panelStates[i];
   tsDialog.mPanelOpen[NUM_TSS_PANELS - 1] = 1;
   angle = future ? 0. : mScope->GetTiltAngle();
-  tsDialog.mNavOverrideFlags = navOverrideFlags;
 
   // First time in (since last tilt series), set the camera and mags; try to set
   // the angles intelligently;
@@ -3730,7 +3728,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   mCamera->CropTietzSubarea(mCamParams, recSet->right - recSet->left,
     recSet->bottom - recSet->top, recSet->processing, recSet->mode, special);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
-    recSet->binning, mCamera->MakeAlignSaveFlags(recSet),
+    recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, 
     mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, special, 
     recSet->mode);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
@@ -7069,7 +7067,7 @@ void CTSController::ManageTerminateMenu(void)
   if (mStartedTS && mBidirSeriesPhase == DOSYM_ALTERNATING_PART && 
     (mNeedTilt || mTiltIndex < mNumDoseSymTilts - 1))
     ind = 2;
-  UtilModifyMenuItem("Tilt Series", ID_TILTSERIES_TERMINATE, entries[ind]);
+  UtilModifyMenuItem(7, ID_TILTSERIES_TERMINATE, entries[ind]);
 }
 
 // Looks up the name of an action from string array, return its corresponding action index
