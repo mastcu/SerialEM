@@ -28,8 +28,6 @@ static char THIS_FILE[] = __FILE__;
 #define WIDTH_FORMAT  "%.0f"
 #define LOSS_FORMAT   "%.1f"
 
-static UINT sHideableIDs[] = {IDC_AUTOMAG};
-
 /////////////////////////////////////////////////////////////////////////////
 // CFilterControlDlg dialog
 
@@ -261,12 +259,9 @@ BOOL CFilterControlDlg::OnInitDialog()
     if (mParam->positiveLossOnly)
       m_butOffsetSlit.ShowWindow(SW_SHOW);
   } else
-    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() && 
-      !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? SW_SHOW : SW_HIDE);
+    m_butAutoMag.ShowWindow(mWinApp->mScope->GetCanControlEFTEM() ? SW_SHOW : SW_HIDE);
 
   UpdateSettings(); 
-  ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
-  mInitialized = true;
 
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
@@ -337,16 +332,6 @@ void CFilterControlDlg::UpdateSettings()
     m_strOnOff = "OFF";
   ManageMagShift();
   Update();
-}
-
-void CFilterControlDlg::UpdateHiding(void)
-{
-  if (!mInitialized)
-    return;
-  ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
-  m_butAutoMag.ShowWindow((!mWinApp->mScope->GetHasOmegaFilter() &&
-    mWinApp->mScope->GetCanControlEFTEM() && !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? 
-    SW_SHOW : SW_HIDE);
 }
 
 // Notification  of new mag and of potential change in EFTEM mode

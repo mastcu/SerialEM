@@ -105,7 +105,6 @@ public:
   GetSetMember(int, AutoBacklashNewMap);
   GetSetMember(float, AutoBacklashMinField);
   GetSetMember(int, PointLabelDrawThresh);
-  GetSetMember(BOOL, UseLabelInFilenames);
   GetSetMember(int, EnableMultiShot);
   bool MultipleHolesAreSelected() {return (mMultiShotParams.inHoleOrMultiHole & MULTI_HOLES) &&
     ((mMultiShotParams.useCustomHoles && mMultiShotParams.customMagIndex > 0) || 
@@ -261,7 +260,6 @@ private:
   int mAutoBacklashNewMap;           // Whether to do backlash for new maps
   float mAutoBacklashMinField;       // FOV for doing backlash routine
   int mPointLabelDrawThresh;         // Threshold group size for drawing point labels
-  BOOL mUseLabelInFilenames;         // Flag to use the item label when generating names
 
   WINDOWPLACEMENT mRotAlignPlace;
   WINDOWPLACEMENT mMultiShotPlace;
@@ -355,7 +353,7 @@ public:
   int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff = FALSE);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
-  CString NextAutoFilename(CString inStr, CString oldLabel = "", CString newLabel = "");
+  CString NextAutoFilename(CString inStr);
   int NewAcquireFile(int itemNum, int fileType, ScheduledFile *sched);
   int SetFileProperties(int itemNum, int fileType, ScheduledFile *sched, 
     bool fromFilePropButton, bool skipFitDlgs);
@@ -422,7 +420,6 @@ public:
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
   void CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS);
-  void CountHoleAcquires(int startInd, int endInd, int minHoles, int &numCenter, int &numHoles);
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
   int TransformExternalCoords(CMapDrawItem *item, int extType,
@@ -441,7 +438,6 @@ public:
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
-  int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
   int FindMapIDforReadInImage(CString filename, int secNum);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);
@@ -450,8 +446,7 @@ public:
     int &top, int &right, int &bottom);
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
-  bool GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal);
-  int GetNumHolesForItem(CMapDrawItem *item, int numDefault);
+  bool GetNumHolesFromParam(int &xnum, int &ynum);
   void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
   {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
 

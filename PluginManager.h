@@ -93,8 +93,6 @@ typedef int (*ASIsetup)(int, int, int, int, long *, const char *, const char *, 
   double);
 typedef int (*ASIimage)(void *, int, int, double, int, int, int, long, long, long, int, 
     int, int, int, int, int, double, double);
-typedef const char *(*FindRef)(const char *, int *);
-typedef int (*GetFile)(const char *, void *, int);
 typedef int (*DoFocRamp)(long, long, long, float *, long, double);
 typedef int (*FinishFocRamp)(long, double *, double *, double *, double *);
 typedef int (*ShowMB)(int, const char *, const char *);

@@ -17,7 +17,7 @@ public:
   void ManageEnables();
   void ManageSizeSeparation(bool update);
   void UpdateSettings();
-  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<short> **exclude,
+  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<bool> **exclude,
     BOOL &incl, BOOL &excl);
   bool HaveHolesToDrawOrMakePts();
   void SetExclusionsAndDraw();
@@ -69,7 +69,7 @@ private:
   FloatVec mXstages, mYstages;
   FloatVec mXinPiece, mYinPiece;
   IntVec mPieceOn;
-  std::vector<short> mExcluded;
+  std::vector<bool> mExcluded;
   double mSigmas[MAX_HOLE_TRIALS];
   double mThresholds[MAX_HOLE_TRIALS];
   int mIterations[MAX_HOLE_TRIALS];

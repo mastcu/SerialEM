@@ -320,7 +320,6 @@ BOOL CNavigatorDlg::OnInitDialog()
   mParam = mWinApp->GetNavParams();
   mHelper = mWinApp->mNavHelper;
   mLowDoseDlg = &mWinApp->mLowDoseDlg;
-  mMacroProcessor = mWinApp->mMacroProcessor;
 
   CRect editRect, clientRect;
   GetClientRect(clientRect);
@@ -1838,8 +1837,6 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
 void CNavigatorDlg::UpdateListString(int index)
 {
   CString string;
-  if (mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw())
-    return;
   ItemToListString(index, string);
   if (m_bCollapseGroups)
     index = mItemToList[index];
@@ -2826,7 +2823,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
     if (!shiftKey) {
       BackspacePressed();
     } else if (mCurItemHoleXYpos.size() && (mItem = GetSingleSelectedItem()) != NULL &&
-      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ind)) {
+      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes)) {
 
 
       // Get interhole distance and distance to nearest
@@ -5097,7 +5094,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     FillListBox(false, true);
 
     // See if this is a good division
-    if (numJgroups && !likeLast && !mMacroProcessor->DoingMacro()) {
+    if (numJgroups && !likeLast && !mWinApp->mMacroProcessor->DoingMacro()) {
      Redraw();
      label.Format("There are %d groups with %.1f points per group\n\n"
        "Do you want to keep this set of groups?", numJgroups, 
@@ -5292,7 +5289,7 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
 
 // Add holes found by the HoleFinder using all these passed vectors
 int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
-  std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
+  std::vector<bool> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
   ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float angle,
   int registration, int mapID, float stageZ, CMapDrawItem *poly, int layoutType)
 {
@@ -5967,7 +5964,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         return 1;
       } else {
 
-        if (!(mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
+        if (!(mWinApp->mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
 
           //If it can be saved, and they haven't been asked before, ask about auto save
           if (mDocWnd->GetSaveOnNewMap() < 0) {
@@ -7170,7 +7167,9 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     if (inFilename) {
       mMergeName = *inFilename;
       if (!mergeFile) {
-        SetCurrentNavFile(*inFilename);
+        mNavFilename = *inFilename;
+        UtilSplitPath(mNavFilename, str, str2);
+        SetWindowText("Navigator:  " + str2);
       }
     } else {
       if (GetNavFilename(true, OFN_HIDEREADONLY, mergeFile))
@@ -7339,13 +7338,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "FocusAxisPos",&item->mFocusAxisPos));
         ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "LDAxisAngle", 
           &item->mRotateFocusAxis, &item->mFocusAxisAngle));
-        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "TSstartEndAngles",
-          &item->mTSstartAngle, &item->mTSendAngle));
-        ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "TSbidirAngle",
-          &item->mTSbidirAngle));
-        ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "TargetDefocus",
-          &item->mTargetDefocus));
-        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets",
+        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets", 
           &item->mFocusXoffset, &item->mFocusYoffset));
         ind1 = ind2 = 0;
         ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "HoleArray", &ind1, &ind2));
@@ -7836,7 +7829,9 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
     return 1;
   if (mergeFile)
     return 0;
-  SetCurrentNavFile(mMergeName);
+  mNavFilename = mMergeName;
+  UtilSplitPath(mNavFilename, str, str2);
+  SetWindowText("Navigator:  " + str2);
   return 0;
 }
 
@@ -7965,12 +7960,12 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
           mParam->postMacroIndNonTS) - 1;
       if (loop == 0)
         macnum = mParam->macroIndex - 1;
-      if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum))
+      if (macnum >= 0 && mWinApp->mMacroProcessor->EnsureMacroRunnable(macnum))
         return;
     }
 
     // Set to nonresumable so it will not look like it is paused and we can go on
-    mMacroProcessor->SetNonResumable();
+    mWinApp->mMacroProcessor->SetNonResumable();
   } 
   
   // If there is no file open for regular acquire, make sure one will be opened on 
@@ -8067,7 +8062,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 {
   int err, len, zval, timeOut = 0;
   unsigned char lastChar;
-  CString report, str;
+  CString report;
   CMapDrawItem *item;
   TiltSeriesParam *tsp;
   mMovingStage = false;
@@ -8105,7 +8100,6 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->AppendToLog(report);
 
     item->mAcquire = false;
-    item->mTargetDefocus = EXTRA_NO_VALUE;
     SetChanged(true);
     mNumAcquired++;
     item->mDraw = mParam->acquireType != ACQUIRE_TAKE_MAP;
@@ -8135,9 +8129,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   case ACQ_RUN_MACRO:
     ManageNumDoneAcquired();
-    if (mMacroProcessor->GetLastCompleted()) {
+    if (mWinApp->mMacroProcessor->GetLastCompleted()) {
       item->mAcquire = false;
-      item->mTargetDefocus = EXTRA_NO_VALUE;
       SetChanged(true);
       mNumAcquired++;
       UpdateListString(mAcquireIndex);
@@ -8145,8 +8138,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
         ManageCurrentControls();
 
       // Allow acquisition to go on after failure if the flag is set
-    } else if (mMacroProcessor->GetLastAborted() && 
-      !mMacroProcessor->GetNoMessageBoxOnError()) {
+    } else if (mWinApp->mMacroProcessor->GetLastAborted() && 
+      !mWinApp->mMacroProcessor->GetNoMessageBoxOnError()) {
         mAcquireEnded = 1;
     } else
       mAcquireIndex++;
@@ -8163,7 +8156,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         item->mStageY, mWinApp->mTSController->GetStopStageX(), 
         mWinApp->mTSController->GetStopStageY());
       mWinApp->AppendToLog(report);
-      item->mTargetDefocus = EXTRA_NO_VALUE;
+
     }
     break;
 
@@ -8267,7 +8260,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run a pre-macro
   case ACQ_RUN_PREMACRO:
-    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
+    mWinApp->mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
       mParam->preMacroInd : mParam->preMacroIndNonTS) - 1);
     break;
 
@@ -8276,44 +8269,16 @@ void CNavigatorDlg::AcquireNextTask(int param)
     report.Format("Running script %d at item %s   (%.2f, %.2f)", mParam->macroIndex,
       (LPCTSTR)item->mLabel, item->mStageX, item->mStageY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    mMacroProcessor->Run(mParam->macroIndex - 1);
+    mWinApp->mMacroProcessor->Run(mParam->macroIndex - 1);
     break;
 
   // Start a tilt series: open the file if possible, then go on to get the TS params
   // This should leave things resumable if there is a problem
   case ACQ_START_TS:
     tsp = (TiltSeriesParam *)mTSparamArray.GetAt(item->mTSparamIndex);
-
-    // Check item tilt angles before copying param
-    if (item->mTSstartAngle > EXTRA_VALUE_TEST &&
-      mHelper->CheckTiltSeriesAngles(item->mTSparamIndex, item->mTSstartAngle, 
-        item->mTSendAngle, item->mTSbidirAngle, report)) {
-      str.Format("For item %s, ", (LPCTSTR)item->mLabel);
-      SEMMessageBox(str + report);
-      StopAcquiring();
-      return;
-    }
     mWinApp->mTSController->CopyParamToMaster(tsp, true);
-
-    // If there are item changes, set them in master now, leave stored param alone
-    if (item->mTSstartAngle > EXTRA_VALUE_TEST ||
-      item->mTargetDefocus > EXTRA_VALUE_TEST) {
-      tsp = mWinApp->mTSController->GetTiltSeriesParam();
-      if (item->mTargetDefocus > EXTRA_VALUE_TEST)
-        tsp->targetDefocus = item->mTargetDefocus;
-      if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
-        tsp->startingTilt = item->mTSstartAngle;
-        tsp->endingTilt = item->mTSendAngle;
-        if (tsp->bidirAngle > EXTRA_VALUE_TEST && tsp->doBidirectional)
-          tsp->bidirAngle = item->mTSbidirAngle;
-      }
-      mWinApp->mTSController->SyncParamToOtherModules();
-    }
     mHelper->ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
     item->mTSparamIndex = -1;
-    item->mTSstartAngle = EXTRA_NO_VALUE;
-    item->mTSendAngle = EXTRA_NO_VALUE;
-    item->mTSbidirAngle = EXTRA_NO_VALUE;
     mCurListSel = mCurrentItem = mAcquireIndex;
     UpdateListString(mAcquireIndex);
     ManageCurrentControls();
@@ -8331,7 +8296,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run a post-macro
   case ACQ_RUN_POSTMACRO:
-    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
+    mWinApp->mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
       mParam->postMacroInd : mParam->postMacroIndNonTS) - 1);
     break;
 
@@ -8385,7 +8350,7 @@ int CNavigatorDlg::TaskAcquireBusy()
 
   // If we started a resumable macro or a suspended tilt series,
   // take sleep to preserve CPU and say busy
-  if ((StartedMacro() && !mMacroProcessor->DoingMacro()) || mPausedAcquire ||
+  if ((StartedMacro() && !mWinApp->mMacroProcessor->DoingMacro()) || mPausedAcquire ||
     (mStartedTS && (mWinApp->StartedTiltSeries() && !mWinApp->DoingTiltSeries() ||
     mWinApp->mTSController->GetPostponed()))) {
     Sleep(10);
@@ -8397,7 +8362,7 @@ int CNavigatorDlg::TaskAcquireBusy()
     return -1;
   return (stage > 0 || mWinApp->mMontageController->DoingMontage() || 
     mHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus() ||
-    mCamera->CameraBusy() || mMacroProcessor->DoingMacro() ||
+    mCamera->CameraBusy() || mWinApp->mMacroProcessor->DoingMacro() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries()) ? 1 : 0;
 }
 
@@ -8516,7 +8481,7 @@ BOOL CNavigatorDlg::StartedMacro(void)
 {
   return (GetAcquiring() && (mParam->acquireType == ACQUIRE_RUN_MACRO || 
     mParam->acqRunPremacro || mParam->acqRunPostmacro) && 
-    (mMacroProcessor->DoingMacro() || mMacroProcessor->IsResumable()));
+    (mWinApp->mMacroProcessor->DoingMacro() || mWinApp->mMacroProcessor->IsResumable()));
 }
 
 // Send an email if requested and not sent yet
@@ -8666,8 +8631,6 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset, 
       item->mFocusYoffset, "position for item");
   }
-  if (item->mTargetDefocus > EXTRA_VALUE_TEST && stateOnly)
-    mWinApp->mFocusManager->SetTargetDefocus(item->mTargetDefocus);
   if (stateOnly) {
     UpdateListString(mAcquireIndex);
     return 0;
@@ -8984,8 +8947,7 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
 // This is all that is needed for redraw
 void CNavigatorDlg::Redraw()
 {
-  if (!(mMacroProcessor->DoingMacro() || mMacroProcessor->GetSuspendNavRedraw()))
-    mWinApp->mMainView->DrawImage();
+  mWinApp->mMainView->DrawImage();
 }
 
 // Get the current item into mItem and return true, or return false if no current item
@@ -9712,12 +9674,16 @@ bool CNavigatorDlg::OKtoAdjustBacklash(bool fastStage)
 
 void CNavigatorDlg::AdjustBacklash(int index, bool showC)
 {
- float backlashX, backlashY;
- mWinApp->mMontageController->GetColumnBacklash(backlashX, backlashY);
- if (!OKtoAdjustBacklash(false))
-   return;
- mBacklashItemInd = index >= 0 ? index : mCurrentItem;
- mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, true, showC);
+  CMapDrawItem *item;
+  float backlashX, backlashY;
+  mWinApp->mMontageController->GetColumnBacklash(backlashX, backlashY);
+  if (!OKtoAdjustBacklash(false))
+    return;
+  mBacklashItemInd = index >= 0 ? index : mCurrentItem;
+  item = mItemArray[mBacklashItemInd];
+  if (item->mMapMontage)
+    mBufferManager->CopyImageBuffer(1, 0);
+  mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, true, showC);
 }
 
 // Functions to provide central answer to whether initial stage move can be skipped
@@ -9843,12 +9809,4 @@ void CNavigatorDlg::GetCurrentNavDir(CString &navPath)
     UtilSplitPath(mNavFilename, navPath, str);
   if (!navPath.IsEmpty() && navPath.GetAt(navPath.GetLength() - 1) != '\\')
     navPath += '\\';
-}
-
-void CNavigatorDlg::SetCurrentNavFile(CString & inFile)
-{
-  CString str, str2;
-  mNavFilename = inFile;
-  UtilSplitPath(mNavFilename, str, str2);
-  SetWindowText("Navigator:  " + str2);
 }

@@ -89,10 +89,9 @@ extern "C" {
 #define IIFLAG_TVIPS_DATA      2
 
   /* Flags for calling tiffEERsuperResAndFlags */
-#define IIFLAG_SKIP_EER_DIRS      1
-#define IIFLAG_ADD_TO_EER_SUM     2
-#define IIFLAG_START_END_EER_SUM  4
-#define IIFLAG_IGNORE_BAD_EER_END 8
+#define IIFLAG_SKIP_EER_DIRS     1
+#define IIFLAG_ADD_TO_EER_SUM    2
+#define IIFLAG_START_END_EER_SUM 4
 
 /* END_CODE */
 
@@ -188,7 +187,6 @@ extern "C" {
     int hdfSource;           /* Apparent source of file (IIHDF_ value) */
     int hdfFileID;           /* File ID */
     int zChunkSize;          /* Size of chunk in Z; must be nonzero for a volume */
-    int hdfCompression;      /* Compression level for Zip compression */
 
     /* Callback functions used by different file formats. */
     iiSectionFunc readSection;
@@ -386,7 +384,6 @@ extern "C" {
   void iiLimitedTileSize(int imSize, int *tileSize, int *numTiles, int multipleOf,
                          int limit);
   int iiTestIfHDF(const char *filename);
-  int iiReorderHDFstack(ImodImageFile *inFile, int *sectOrder);
 
   int iiJPEGCheck(ImodImageFile *inFile);
   int jpegOpenNew(ImodImageFile *inFile);

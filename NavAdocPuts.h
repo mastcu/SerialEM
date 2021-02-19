@@ -126,14 +126,6 @@
     ADOC_PUT(TwoIntegers(ADOC_ARG, "FocusOffsets", item->mFocusXoffset, 
       item->mFocusYoffset));
   }
-  if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
-    ADOC_PUT(TwoFloats(ADOC_ARG, "TSstartEndAngles", item->mTSstartAngle,
-      item->mTSendAngle));
-    if (item->mTSbidirAngle > EXTRA_VALUE_TEST)
-      ADOC_PUT(Float(ADOC_ARG, "TSbidirAngle", item->mTSbidirAngle));
-  }
-  if (item->mTargetDefocus > EXTRA_VALUE_TEST)
-    ADOC_PUT(Float(ADOC_ARG, "TargetDefocus", item->mTargetDefocus));
   if (item->mNumXholes && item->mNumYholes) {
     ADOC_PUT(TwoIntegers(ADOC_ARG, "HoleArray", item->mNumXholes, item->mNumYholes));
     if (item->mNumSkipHoles) {
