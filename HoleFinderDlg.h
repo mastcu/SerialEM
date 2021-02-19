@@ -97,6 +97,7 @@ private:
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;
+  CFont mBoldFont;
 
 
 public:

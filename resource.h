@@ -1660,6 +1660,10 @@
 #define IDC_STAT_NUM_SUM_LABEL          2687
 #define IDC_STAT_TOTAL_LABEL            2688
 #define IDC_STAT_NUM_SUM2               2689
+#define IDC_STAT_LOW_MEAN_LABEL         2690
+#define IDC_STAT_UP_MEAN_LABEL          2691
+#define IDC_STAT_SD_LABEL               2692
+#define IDC_STAT_PCT_LABEL              2693
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2158,7 +2162,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        254
 #define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2690
+#define _APS_NEXT_CONTROL_VALUE         2694
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
