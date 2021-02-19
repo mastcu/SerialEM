@@ -299,6 +299,7 @@ extern "C" {
   int zoomFiltInterp(float *array, float *bray, int nxa, int nya, int nxb, int nyb,
                      float xc, float yc, float xt, float yt, float dmean);
   double zoomFiltValue(float radius);
+  double zoomRawFiltValue(float radius);
 
   /* linearxforms.f */
   void xfUnit(float *f, float val, int rows);
@@ -332,6 +333,12 @@ extern "C" {
                       float *slopes, float *intcpt, float *work);
   int polynomialFit(float *x, float *y, int ndata, int order, float *slopes, 
                     float *intcpt, float *work);    
+  int robustPolyFit(float *x, float *y, int ndata, int order, float *slopes,
+                    float *intcpt, float *work, float kfactor, int *numIter, int maxIter,
+                    int maxZeroWgt);
+  int robustPolySmooth(float *x, float *yIn, int ndata, int order, float *yOut, 
+                       int numFit, int minFit, float *work, float kfactor, int maxIter, 
+                       int maxZeroWgt, float *weights);
 
   /* minimize1D.c */
   int minimize1D(float curPosition, float curValue, float initialStep, int numScanSteps,
@@ -429,6 +436,14 @@ extern "C" {
   int rotateFlipImage(void *array, int mode, int nx, int ny, int operation, 
                       int leftHanded, int invertAfter, int invertCon, void *brray,
                       int *nxout, int *nyout, int numThreads);
+  
+  /* autocorrpeaks */
+  int findAutoCorrPeaks(float *array, int nxPad, int nyPad, float *Xpeaks, float *Ypeaks,
+                        float *peak, int numPeaks, int maxScan, float catalFac,
+                        float markedX, float markedY, float *dist1Ptr, float *dist2Ptr, 
+                        float *angle, int num[2], int *nearInd, char *messBuf,
+                        int bufSize);
+
   /* winversion.c */
   int isWindows2000();
   int isWindowsXP();
@@ -443,6 +458,13 @@ extern "C" {
   int readLinesForValues(FILE *fp, int *numToGetP, int valSize, char *line, int maxLine,
                          int flags, const char *types, ...);
 
+  /* projectpixel.c */
+  void maxCornerDistFromCen(float angle, float *dist);
+  void rayLengthAtDistFromCen(float cosAng, float sinAng, float dist, float *length);
+  void rayPixelIntersectingArea(float angle, float cenToCenDist, int rayWidth, 
+                                float delDist, float *area);
+  void makeRayAreaLookupTable(float angle, int rayWidth, int numDists, float delForArea,
+                              int *delRayInd, int *numRaysHit, float *areas);
   
 #ifdef __cplusplus
 }

@@ -31,9 +31,9 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_STAT_GROUP_NEEDS, IDC_SMOOTH_SHIFTS, IDC_STAT_SMOOTH_CRIT, IDC_STAT_SUBSET_PAREN,
   IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL, IDC_FA_EDIT_SUB_START,
   IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_BUTMORE,
-  IDC_STAT_MORE_PARAMS, 
+  IDC_STAT_MORE_PARAMS, IDC_STAT_EER_SUPER_LABEL, IDC_RSUPER_NONE, IDC_RSUPER_2X,
   IDC_SPIN_BIN_TO, IDC_STAT_ALIBIN_PIX, IDC_STAT_ALIBIN, IDC_RALIBIN_BY_FAC, 
-  IDC_RBIN_TO_SIZE, IDC_STAT_ALIGN_TARGET, PANEL_END,
+  IDC_RSUPER_4X, IDC_RBIN_TO_SIZE, IDC_STAT_ALIGN_TARGET, PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
   IDC_EDIT_CUTOFF2, IDC_EDIT_CUTOFF3, IDC_HYBRID_SHIFTS, IDC_EDIT_SIGMA_RATIO,
   IDC_STAT_SIGMA_RATIO, IDC_STAT_STOP_ITER, IDC_EDIT_STOP_ITER, IDC_STAT_OTHER_CUTS,
@@ -66,9 +66,9 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_strSmoothCrit(_T(""))
   , m_bRefineGroups(FALSE)
   , m_strRefineCutoff(_T(""))
-  , m_fStopIter(0)
+  , m_fStopIter(0.01f)
   , m_bHybridShifts(FALSE)
-  , m_fSigmaRatio(0)
+  , m_fSigmaRatio(0.01f)
   , m_strCutoff2(_T(""))
   , m_strCutoff3(_T(""))
   , m_bKeepPrecision(FALSE)
@@ -84,6 +84,7 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_bUseFrameFolder(FALSE)
   , m_strAlignTarget(_T(""))
   , m_iBinByOrTo(0)
+  , m_iEERsuperRes(0)
 {
   mMoreParamsOpen = false;
 }
@@ -183,6 +184,7 @@ void CFrameAlignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPIN_BIN_TO, m_sbcBinTo);
   DDX_Radio(pDX, IDC_RALIBIN_BY_FAC, m_iBinByOrTo);
   DDX_Control(pDX, IDC_STAT_ALIGN_BIN, m_statAlignBin);
+  DDX_Radio(pDX, IDC_RSUPER_NONE, m_iEERsuperRes);
 }
 
 
@@ -223,6 +225,9 @@ BEGIN_MESSAGE_MAP(CFrameAlignDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RALIBIN_BY_FAC, OnAliBinByFac)
   ON_BN_CLICKED(IDC_RBIN_TO_SIZE, OnAliBinByFac)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BIN_TO, OnDeltaposSpinBinTo)
+  ON_BN_CLICKED(IDC_RSUPER_NONE, OnEERsuperRes)
+  ON_BN_CLICKED(IDC_RSUPER_2X, OnEERsuperRes)
+  ON_BN_CLICKED(IDC_RSUPER_4X, OnEERsuperRes)
 END_MESSAGE_MAP()
 
 
@@ -295,11 +300,19 @@ BOOL CFrameAlignDlg::OnInitDialog()
     // paths in a com file or send it elsewhere, so get rid of top section
     if (mCamParams->FEItype == FALCON2_TYPE && FCAM_ADVANCED(mCamParams) &&
       mServerIsRemote && mWinApp->mCamera->GetLocalFalconFramePath().IsEmpty()) {
-        m_iWhereAlign = 1;
-        mShowWhereToAlign = false;
+      m_iWhereAlign = 1;
+      mShowWhereToAlign = false;
     }
   }
   mShowRestrictions = (mShowWhereToAlign || constrainByRes);
+  if (mCamParams->FEItype != FALCON4_TYPE) {
+    mIDsToDrop.push_back(IDC_STAT_EER_SUPER_LABEL);
+    mIDsToDrop.push_back(IDC_RSUPER_NONE);
+    mIDsToDrop.push_back(IDC_RSUPER_2X);
+    mIDsToDrop.push_back(IDC_RSUPER_4X);
+    SetDlgItemText(IDC_RALIBIN_BY_FAC, "By");
+  } else
+    SetDlgItemText(IDC_RALIBIN_BY_FAC, "To");
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)
@@ -423,7 +436,8 @@ void CFrameAlignDlg::ManagePanels(void)
   states[1] = m_iWhereAlign == 0 && mCamParams->K2Type;
   states[2] = states[6] = m_iWhereAlign > 0;
   states[3] = mShowRestrictions && m_iWhereAlign > 0;
-  states[5] = mCamParams->K2Type && m_iWhereAlign > 0;
+  states[5] = (mCamParams->K2Type || mCamParams->FEItype == FALCON4_TYPE) &&
+    m_iWhereAlign > 0;
   states[7] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
@@ -582,6 +596,10 @@ void CFrameAlignDlg::OnEnChangeEditName()
   m_listSetNames.InsertString(mCurParamInd, m_strCurName);
 }
 
+void CFrameAlignDlg::OnEERsuperRes()
+{
+  UpdateData(true);
+}
 
 void CFrameAlignDlg::OnAliBinByFac()
 {
@@ -651,7 +669,7 @@ void CFrameAlignDlg::OnDeltaposSpinPairwiseNum(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CFrameAlignDlg::OnDeltaposSpinAlignBin(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 10, mAlignBin, m_strAlignBin, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 16, mAlignBin, m_strAlignBin, 
     "%d");
 }
 
@@ -817,8 +835,11 @@ void CFrameAlignDlg::ManageSmoothing(void)
 
 void CFrameAlignDlg::ManageTruncation(void)
 {
-  m_editTruncation.EnableWindow(m_bTruncateAbove);
-  m_statCountLabel.EnableWindow(m_bTruncateAbove);
+  bool enable = mCamParams->K2Type || mSavingInEERmode;
+  m_butTruncateAbove.EnableWindow(enable);
+  enable = enable && m_bTruncateAbove;
+  m_editTruncation.EnableWindow(enable);
+  m_statCountLabel.EnableWindow(enable);
 }
 
 bool CFrameAlignDlg::ProcessBlankIsZeroEditBox(CString & editStr, float &cutoff)
@@ -851,6 +872,7 @@ void CFrameAlignDlg::LoadParamToDialog(void)
     return;
   FrameAliParams *param = mParams->GetData() + mCurParamInd;
   m_iAlignStrategy = param->strategy;
+  m_iEERsuperRes = param->EERsuperRes;
   mAlignBin = param->aliBinning;
   m_strAlignBin.Format("%d", mAlignBin);
   m_iBinByOrTo = param->binToTarget ? 1 : 0;
@@ -915,6 +937,7 @@ void CFrameAlignDlg::UnloadDialogToParam(int index)
     return;
   FrameAliParams *param = mParams->GetData() + index;
   param->strategy = m_iAlignStrategy;
+  param->EERsuperRes = m_iEERsuperRes;
   param->aliBinning = mAlignBin;
   param->binToTarget = m_iBinByOrTo > 0;
   param->targetSize = mAlignTargetSize;

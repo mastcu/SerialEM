@@ -58,10 +58,14 @@
         because SerialEM&#39;s plugin or server can read them and send them to SerialEM.&nbsp; 
         Writing a command file for alignment with IMOD is available only if SerialEM has 
         direct access to the file system on the microscope computer.</li>
-      <li>For Falcon 3, FEI software writes the frames as an MRC stack on the storage 
+      <li>For Falcon 3 or 4, FEI software writes the frames on the storage 
         server.&nbsp; This dialog, and alignment with &#39;framealign&#39; by either method, is 
         available only if SerialEM has direct access to the file system on the storage 
-        server.</li>
+        server.&nbsp; Falcon 3 writes frames as MRC, while Falcon 4 allows frames to be 
+        written either as a gain-normalized MRC stack or as an unnormalized TIFF file in 
+        the compressed EER format.&nbsp; In the latter case, SerialEM will use the 
+        latest Falcon EER gain reference when aligning frames itself, or copy this 
+        reference to the directory with the frame stack when aligning in IMOD.</li>
     </ul>
     <p>
       <i>With a DE camera</i> running a server version higher than about 1200, frame 
@@ -69,6 +73,10 @@
       Alignframes in IMOD, provided that SerialEM is running on the DE server.&nbsp; 
       Alignment is done in SerialEM by reading in the frames from disk. In addition, 
       there may be a frame alignment available through the DE server.</p>
+    <p>
+      <em>With a Tietz camera</em> where frame saving and aligning are enabled, frames 
+      are obtained directly from the Tietz software and aligned in SerialEM, or a 
+      command file can be written to align them with Alignframes in IMOD.</p>
     <p>
       &nbsp;</p>
     <p class="style2">
@@ -80,7 +88,7 @@
       modified to list the correct filters.</p>
     <p>
       For Falcon 3, alignment with the FEI software has no parameters but does require 
-      a certain minimum exposure time per frame.</p>
+      a certain minimum exposure time per frame and a minimum number of frames.</p>
     <p>
       For a DE camera with the frame alignment option, again there are no parameters.</p>
     <p>
@@ -243,7 +251,9 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       K2/K3 frames can be taken unnormalized in order to save efficiently in compressed 
       TIFF files.&nbsp; The command file will contain options to apply 
-      gain-normalization and defect correction.</p>
+      gain-normalization and defect correction.&nbsp; Similarly, EER frames from 
+      Falcon 4 are saved unnormalized, and the command file will contain the name of 
+      the gain reference, which incorporates a defect list.</p>
     <p class="style1">
       Global Settings</p>
     <p>
@@ -349,9 +359,15 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p class="style1">
       Basic Alignment Parameters</p>
     <p>
-      The parameters in the upper section are the ones most likely to need setting.</p>
+      The parameters in the upper section are the ones most likely to need setting.&nbsp; 
+      The sections below refer to parameters being expressed in &quot;unbinned&quot; pixels, 
+      which really means the pixels of the frames that are supplied to the framealign 
+      module, before the reduction that it does.&nbsp; For Gatan and DE cameras, these 
+      would be super-resolution pixels when images are taken with super-resolution.&nbsp; 
+      However, for Falcon 4, it means the physical pixels of the chip when EER data 
+      are read as super-resolution.</p>
     <p>
-      <b>Truncate values above n electrons (K2 only)</b></p>
+      <b>Truncate values above n electrons (K2/K3 or Falcon 4 saving EER data only)</b></p>
     <p>
       Select this option and set the number of electron counts to have values above 
       that number replaced by the local mean.&nbsp; This is the number of electrons 
@@ -370,19 +386,34 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       reference is chosen, grouping of frames and testing of multiple filter cutoffs 
       are not available.</p>
     <p>
+      <strong>Super-resolution sampling of EER data&nbsp;&nbsp;&nbsp; (Falcon 4 only)</strong></p>
+    <p>
+      These radio buttons determine the resolution at which data are read in from EER 
+      files for alignment: with no super-resolution, with 2x super-resolution to give 
+      an 8K image, or with 4x super-resolution to give a 16K image.&nbsp; Reading in 
+      with some super-resolution will reduce aliasing which is not currently avoided 
+      when reading in as 4K.&nbsp; The 4x super-resolution will probably require too 
+      much time or memory for aligning in SerialEM but may be useful for aligning in 
+      IMOD.&nbsp; To keep the effect of other parameters invariant when this option 
+      alone is changed, the binning, filter cutoffs, maximum frame shift, and the 
+      criterion for stopping iterative refinement are all scaled by this 
+      super-resolution factor before being sent to &#39;framealign&#39; or placed in a command 
+      file.&nbsp; The value for reduction of the aligned sum placed in a command file 
+      will be 1 for 2x super-resolution or 2 for 4x super-resolution.</p>
+    <p>
       <b>Alignment binning</b></p>
     <p>
       Binning, actually antialiased image reduction, is one of the two most important 
       parameters because it affects processing time as well as the accuracy of the 
       fits.&nbsp; Binning should be set to bring images to a size of 1000 to 1250 
-      pixels; thus 3 or 4 for ~4K images and 6 or 8 for ~8K images.&nbsp; You can 
-      choose to set either a specific binning or a target size to which images should 
-      be binned.</p>
+      pixels for a camera with a ~4K chip, or 1250 to 1500 pixels for a K3 camera; 
+      thus 3 or 4 for ~4K images and 6 or 8 for ~8K images.&nbsp; You can choose to 
+      set either a specific binning or a target size to which images should be binned.</p>
     <p>
       <b>Filter cutoff</b></p>
     <p>
       The filter cutoff is the most important parameter; it is expressed in cycles per 
-      pixel in the unbinned frame so that a value has about the same effect with 
+      pixel in the unbinned frame, so that a value has about the same effect with 
       different binnings.&nbsp; Optimal values are generally in the range of 0.05 to 
       0.07.</p>
     <p>
@@ -428,8 +459,8 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       Select this checkbox to align only a subset of the frames being saved, then fill 
       in the starting and ending frames to align, numbered from 1.&nbsp; The option is 
-      irrelevant when no frames are saved, because in that case a drift settling time 
-      can be set for K2 to discard initial frames after the exposure starts.&nbsp; When 
+      irrelevant when no frames are saved; originally this was because in that case a 
+      drift settling time could be set for K2 or K3 to discard initial frames after the exposure starts.&nbsp; When 
       frames are being aligned in the plugin to DM or in SerialEM, the image shown in SerialEM will be a 
       sum of only the aligned frames.&nbsp; When frames are aligned with IMOD, the 
       command file will contain the <i>-frames</i> option to Alignframes with the 
