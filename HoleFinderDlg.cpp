@@ -157,11 +157,17 @@ END_MESSAGE_MAP()
 // CHoleFinderDlg message handlers
 BOOL CHoleFinderDlg::OnInitDialog()
 {
+  CRect idRect;
   CBaseDlg::OnInitDialog();
   CheckAndSetNav();
   mIsOpen = true;
   mMasterParams = mHelper->GetHoleFinderParams();
   mParams = *mMasterParams;
+  m_statStatusOutput.GetClientRect(&idRect);
+  mBoldFont.CreateFont((idRect.Height()), 0, 0, 0, FW_HEAVY,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+    FF_DONTCARE, "Microsoft Sans Serif");
   m_sliderLowerMean.SetRange(0, 255);
   m_sliderUpperMean.SetRange(0, 255);
   m_sliderSDcutoff.SetRange(0, 255);
@@ -303,7 +309,7 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYcenters, float, 0);
   CLEAR_RESIZE(mXstages, float, 0);
   CLEAR_RESIZE(mYstages, float, 0);
-  CLEAR_RESIZE(mExcluded, bool, 0);
+  CLEAR_RESIZE(mExcluded, short, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mHelper->mFindHoles->clearAll();
   mWinApp->mMainView->DrawImage();
@@ -354,30 +360,40 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
 void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 {
   bool takeNint = true;
+  bool dropping = nSBCode != TB_THUMBTRACK;
+  CWnd *wnd;
   UpdateData(TRUE);
   CSliderCtrl *pSlider = (CSliderCtrl *)pScrollBar;
   if (pSlider == &m_sliderLowerMean) {
     mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMidMean - mMeanMin) / 255. +
       mMeanMin);
     m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
+    wnd = GetDlgItem(IDC_STAT_LOW_MEAN_LABEL);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
   }
   if (pSlider == &m_sliderUpperMean) {
     mParams.upperMeanCutoff = (float)(m_intUpperMean * (mMeanMax - mMidMean) / 255. +
       mMidMean);
     m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
+    wnd = GetDlgItem(IDC_STAT_UP_MEAN_LABEL);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
   }
   if (pSlider == &m_sliderSDcutoff) {
     mParams.SDcutoff = (float)(m_intSDcutoff * (mSDmax - mSDmin) / 255. + mSDmin);
     m_strSDcutoff.Format("%.4g", mParams.SDcutoff);
+    wnd = GetDlgItem(IDC_STAT_SD_LABEL);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
   }
   if (pSlider == &m_sliderBlackPct) {
     mParams.blackFracCutoff = (float)(m_intBlackPct * (mBlackFracMax - mBlackFracMin) /
       255. + mBlackFracMin);
     m_strBlackPct.Format("%.1f", 100. * mParams.blackFracCutoff);
+    wnd = GetDlgItem(IDC_STAT_PCT_LABEL);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
   }
   UpdateData(false);
   SetExclusionsAndDraw();
-  if (nSBCode != TB_THUMBTRACK)
+  if (dropping)
     mWinApp->RestoreViewFocus();
   CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
@@ -1218,16 +1234,21 @@ void CHoleFinderDlg::SetExclusionsAndDraw()
     mParams.blackFracCutoff);
 }
 
-void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, 
+void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff,
   float sdCutoff, float blackCutoff)
 {
   int ind;
+  bool extreme;
+  float middle = (lowerMeanCutoff + lowerMeanCutoff) / 2.f;
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    mExcluded[ind] = mHoleMeans[ind] < lowerMeanCutoff || 
-      mHoleMeans[ind] > upperMeanCutoff || mHoleSDs[ind] > sdCutoff ||
-      mHoleBlackFracs[ind] > blackCutoff;
+    mExcluded[ind] = 0;
+    extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
+    if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle))
+      mExcluded[ind] = -1;
+    if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
+      mExcluded[ind] = 1;
   }
   mWinApp->mMainView->DrawImage();
 }
@@ -1253,7 +1274,7 @@ void CHoleFinderDlg::StopScanning(void)
 
 // External call for drawing routine to find out whether to draw hole positions
 bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
-  std::vector<bool> **exclude, BOOL &incl, BOOL &excl)
+  std::vector<short> **exclude, BOOL &incl, BOOL &excl)
 {
   *x = &mXstages;
   *y = &mYstages;

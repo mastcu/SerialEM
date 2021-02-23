@@ -106,8 +106,8 @@ void COneLineScript::OnPaint()
   CPaintDC dc(this); // device context for painting: IT DOESN'T PAINT UNLESS THIS HAPPENS
   if (!mInitialized || mLineWithFocus < 0 || mLineWithFocus > 4)
     return;
-  CToolDlg::DrawButtonOutline(this, dc,
-    (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, RGB(0, 0, 0), -10);
+  DrawButtonOutline(dc, (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, 
+    RGB(0, 0, 0), -10);
 }
 
 // Run one of them

@@ -423,6 +423,7 @@ void CSerialEMView::DrawImage(void)
   HDC hdc = ::GetDC(m_hWnd); // handle to device context
   DrawToScreenOrBuffer(cdcWin, hdc, rect, 1., 0, false);
   ::ReleaseDC(m_hWnd, hdc);
+  mWinApp->SetLastActivityTime(GetTickCount());
 }
 
 // Main drawing routine to screen or buffer.  Skipextra is one to skip some items plus
@@ -449,14 +450,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   FloatVec zeroRadii, zeroRadii2;
   FloatVec *curHoleXYpos, *xHoleCens, *yHoleCens;
   IntVec *curHoleIndex, *pieceOn;
-  std::vector<bool> *holeExcludes;
+  std::vector<short> *holeExcludes;
   CFont *useFont, *useLabelFont;
   CPoint point;
   CString letString, firstLabel, lastLabel, fontName;
   ScaleMat aInv;
   COLORREF bkgColor = RGB(48, 0, 48);
-  COLORREF flashColor = RGB(192, 192, 0);
-  COLORREF includeColor = RGB(255, 0, 160), excludeColor = RGB(0, 100, 255);
+  COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
+  COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
   int scaled5 = DSB_DPI_SCALE(5);
   int scaled10 = DSB_DPI_SCALE(10);
   int scaled140 = DSB_DPI_SCALE(140);
@@ -783,6 +784,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           letString = CString(" - ") + (mWinApp->GetModeNames())[imBuf->mConSetUsed];
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
+      if (!mFFTWindow && !mStackWindow && scaleCrit > 0 &&
+        mImBufIndex < mWinApp->mBufferManager->GetShiftsOnAcquire()) {
+        cdc.SelectObject(useLabelFont);
+        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), "Rolling");
+      }
 
       // Dose rate output for direct detector and channel name for STEM
       bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()
@@ -852,10 +858,45 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mMainWindow) {
 
     // If this is a view image in low dose, draw record and trial/focus areas as long as
-    // there won't be a 
-    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
-      imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt && !(skipExtra & 1)) {
+    // there won't be one around Nav point
+    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) &&
+      (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
+      imBuf->mLowDoseArea && !(skipExtra & 1);
+    if (bufferOK && !mDrewLDAreasAtNavPt) {
       DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1);
+    }
+
+    // Draw tilt axis if option set or when defining LD area on View
+    if (((bufferOK && mWinApp->mLowDoseDlg.m_iDefineArea > 0) || 
+      (mWinApp->mBufferManager->GetDrawTiltAxis() && 
+      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() || 
+        imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW || 
+        imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN || 
+        imBuf->mCaptured == BUFFER_MONTAGE_CENTER) && !(skipExtra & 1))) &&
+      imBuf->mCamera >= 0 && imBuf->mMagInd > 0) {
+      tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
+      CPoint point = rect.CenterPoint();
+      tempY = 0.;
+      if (imBuf->mMagInd >= mWinApp->mScope->GetLowestMModeMagInd())
+        mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
+      tempY += (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, 
+          imBuf->mMagInd);
+      ptX = (float)cos(DTOR * tempY) * tempX;
+      ptY = -(float)sin(DTOR * tempY) * tempX;
+      CPen pnSolidPen(PS_SOLID, thick1, RGB(255, 255, 0));
+      CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
+
+      // Make our own dashes
+      point.x -= B3DNINT(0.48 * ptX);
+      point.y -= B3DNINT(0.48 * ptY);;
+      for (loop = 0; loop < 10; loop++) {
+        cdc.MoveTo(point);
+        point.x += B3DNINT(0.06 * ptX);
+        point.y += B3DNINT(0.06 * ptY);
+        cdc.LineTo(point);
+        point.x += B3DNINT(0.04 * ptX);
+        point.y += B3DNINT(0.04 * ptY);
+      }
     }
   }
 
@@ -959,19 +1000,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
       &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
-    CPen pnExcludePen(PS_SOLID, thick2, excludeColor);
+    CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
+    CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
+    short exclude;
     crossLen = DSB_DPI_SCALE(9);
     for (ix = 0; ix < (int)xHoleCens->size(); ix++) {
       tempX = xHoleCens->at(ix);
       tempY = yHoleCens->at(ix);
-      if ((holeExcludes->at(ix) && !drawExcluded) ||
-        (!holeExcludes->at(ix) && !drawIncluded) ||
+      exclude = holeExcludes->at(ix);
+      if ((exclude && !drawExcluded) || (!exclude && !drawIncluded) ||
         tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
         continue;
       StageToImage(imBuf, tempX, tempY, ptX, ptY, pieceOn->at(ix));
       MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
-      DrawCross(&cdc, holeExcludes->at(ix) ? &pnExcludePen : &pnIncludePen, point,
-        crossLen);
+      DrawCross(&cdc, B3DCHOICE(exclude > 0, &pnHighExclPen,
+        exclude < 0 ? &pnLowExclPen : &pnIncludePen), point, crossLen);
     }
   }
 
@@ -1001,7 +1044,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     useMultiShot = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
       mWinApp->mNavHelper->MultipleHolesAreSelected();
-    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes);
+    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
   bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
@@ -2321,7 +2364,8 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   // If not a specific action, do continuous update in complex pane
-  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks()) {
+  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks() || 
+    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) {
     EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
     CRect rect;
     GetClientRect(&rect);
@@ -2451,6 +2495,11 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (mWinApp->mNavigator && cChar == 'N' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessNKey();
  
+  } else if (cChar == 'X' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mImageLevel.ToggleExtraInfo();
+  } else if (cChar == 'H' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mImageLevel.ToggleCrosshairs();
+
     // Otherwise use arrow keys to adjust offset
   } else if (nChar >= VK_LEFT && nChar <= VK_DOWN) {
     int iDx = 0;
