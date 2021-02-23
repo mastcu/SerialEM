@@ -35,7 +35,6 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_iStageNotBeam(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
-  mInitialized = false;
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
   mFocusIncrementIndex = 3 * MAX_FOCUS_DECIMALS;
@@ -101,6 +100,7 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_SCREEN_UPDOWN, OnButScreenUpdown)
   ON_BN_CLICKED(IDC_RBEAM_CONTROL, OnBeamControl)
   ON_BN_CLICKED(IDC_RSTAGE_CONTROL, OnBeamControl)
+  ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 
@@ -155,6 +155,13 @@ BOOL CRemoteControl::OnInitDialog()
   return TRUE;
 }
 
+void CRemoteControl::OnPaint()
+{
+  CPaintDC dc(this); // device context for painting
+
+  DrawSideBorders(dc);
+}
+
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
@@ -201,6 +208,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     else
       m_butValves.SetWindowText(inGunOn > 0 ? "Close Valves" : "Open Valves");
     m_butValves.EnableWindow(inGunOn >= 0 && baseEnable);
+    Invalidate();
   }
 
   if (inProbe != mLastProbeMode && FEIscope) {
@@ -222,6 +230,13 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   mLastMagInd = inMagInd;
   mLastCamLenInd = inCamLen;
   mLastSpot = inSpot;
+  if (inGunOn != mLastGunOn) {
+    m_butValves.m_bShowSpecial = inGunOn >= 0;
+    if (inGunOn > 0)
+      m_butValves.mSpecialColor = RGB(96, 255, 96);
+    else
+      m_butValves.mSpecialColor = JEOLscope ? RGB(255, 64, 64) : RGB(255, 255, 0);
+  }
   mLastGunOn = inGunOn;
   mLastIntensity = inIntensity;
   mLastProbeMode = inProbe;

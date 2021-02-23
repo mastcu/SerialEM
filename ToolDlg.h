@@ -7,6 +7,7 @@
 // ToolDlg.h : header file
 //
 #include "setdpi.h"
+#include "BaseDlg.h"
 
 #define TOOL_OPENCLOSED 1
 #define TOOL_FULLOPEN   2
@@ -17,18 +18,15 @@ class CSerialEMApp;
 /////////////////////////////////////////////////////////////////////////////
 // CToolDlg dialog
 
-class CToolDlg : public CDialog
+class CToolDlg : public CBaseDlg
 {
 // Construction
 public:
 	void SetBorderColor(COLORREF inColor);
 	void ToggleState(int inFlag);
-	BOOL OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult );
 	virtual int GetMidHeight();
 	CToolDlg(UINT inIDD, CWnd* pParent = NULL);   // standard constructor
 	void SetOpenClosed(int inState);
-  void ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText);
-  void ReplaceDlgItemText(int nID, const char * fromText, CString toText);
 
 // Dialog Data
 	//{{AFX_DATA(CToolDlg)
@@ -51,18 +49,8 @@ protected:
 	//{{AFX_MSG(CToolDlg)
 	afx_msg void OnButopen();
 	afx_msg void OnButmore();
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonDblClk(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnCancel();
-	afx_msg void OnHelp();
 	afx_msg void OnButfloat();
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnPaint();
@@ -75,16 +63,25 @@ protected:
   UINT mIDD;      // Dialog ID
   CSetDPI mSetDPI;
 	CFont mButFont;		// Needs a member font to stay resident
+  int mPanelStart[3];
+  int mNumInPanel[3];
+  int *mIdTable;
+  int *mLeftTable;
+  int *mTopTable;
+  int *mHeightTable;
 
 private:
 	int mMidHeight;	  // The height when midway open
 	int mState;			// The state flags
 public:
+  bool mInitialized;
   void DrawSideBorders(CPaintDC & dc);
   void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness, COLORREF color);
-  static void DrawButtonOutline(CWnd *wnd, CPaintDC & dc, CWnd * but, int thickness, 
-    COLORREF color, int offset);
   int CurrentButHeight(CButton *butMore);
+  void HideOrShowOptions(int showHide);
+  GetMember(int, State);
+  void SetupPanels(int * idTable, int * leftTable, int * topTable,
+    int *heightTable = NULL, int sortStart = 0);
 };
 
 //{{AFX_INSERT_LOCATION}}

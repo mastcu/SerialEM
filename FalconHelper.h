@@ -33,7 +33,11 @@ public:
   SetMember(CString, LastFrameDir);
   GetMember(long, NumFiles);
   SetMember(int, RotFlipForComFile);
+  SetMember(int, EERsumming);
+  SetMember(int, EERsuperRes);
   GetSetMember(int, GpuForContinuousAli);
+  SetMember(float, LastEERcountScaling);
+  GetMember(CString, FalconRefName);
   void SetContinAliBinning(int val) { mContinuousAliParam.aliBinning = val; }
   int GetContinAliBinning() { return mContinuousAliParam.aliBinning; }
   void SetContinAliPairwise(int val) { mContinuousAliParam.numAllVsAll = val; }
@@ -84,10 +88,26 @@ private:
   int mWaitMaxCount;
   int mWaitInterval;
   std::vector<long> mReadouts;          // Vector of subframes per frame
+  int mEERsumming;                      // Number of frames to sum if reading from EER
+  int mEERsuperRes;                     // Super-resolution to read: 0, 1, or 2
   bool mStackingFrames;                 // Flag that we are stacking frames
   int mUseImage2;                       // Flag to use the second buffer
   std::vector<long> mDeleteList;        // List of frames files to delete
   int mStartedAsyncSave;                // Flag if started asynchronous saving
+  CString mFalconRefName;               // Name of Falcon 4 reference without path
+  int mLastFalconRefCheck;              // Minute time of last check
+  int mLastUseOfFalconRef;              // Minute time when last used
+  CString mLastRefSavedInDir;           // Last directory reference was copied to
+  float *mFalconGainRef;                // Buffer for gain reference
+  CString mLastGainRefRead;             // Name without path of last one read
+  int mSizeOfRawGainRef;                // Size of gain reference as read in
+  int mGainRefSuperRes;                 // Superres of gain reference as stored
+  CameraDefects mFalconDefects;         // Defects from gain reference
+  bool mFoundFalconDefects;             // Flag that defects were found
+  int mGainSizeX, mGainSizeY;           // Size of (expanded) gain reference
+  float mLastEERcountScaling;           // Count scaling used in acquiring in an EER shot
+  float mAlignTruncation;               // truncation - allowed in EER aligning
+
   bool mProcessingPlugin;               // Flag that processing frames from plugin
   float mGpuMemory;                     // Memory of GPU here, or 0 if none
   int mUseGpuForAlign[2];               // Flags for using GPU here and in IMOD
@@ -109,9 +129,9 @@ private:
   MrcHeader mMrcHeader;                 // An MRC header for that file
   int mAlignError;                      // Error code from alignment errors
   int mNumAligned;                      // Number of frames aligned
-  int mTrimXstart, mTrimXend;           // Limits for trimming DE frame sum to subarea
+  int mTrimXstart, mTrimXend;           // Limits for trimming DE/F4 frame sum to subarea
   int mTrimYstart, mTrimYend;
-  bool mTrimDEsum;
+  bool mTrimDEsum;                      // Trim a DE or Falcon 4 sum
   bool mSumNeedsRotFlip;
   bool mDEframeNeedsTrim;
   int mFrameTrimStart, mFrameTrimEnd;
@@ -124,6 +144,8 @@ public:
   int SetupConfigFile(ControlSet &conSet, CString localPath, CString &directory, 
     CString &filename, CString &configFile, BOOL stackingDeferred, 
     CameraParameters *camParams, long &numFrames);
+  int ManageFalconReference(bool saving, bool aligning, CString localFramePath);
+  CString FindEERGainReference();
   int StackFrames(CString localPath, CString &directory, CString &rootname, 
     long divideBy2, int divideBy, float floatScale, int rotateFlip, int aliSumRotFlip, float pixel, BOOL doAsync, 
     bool readLocally, int aliParamInd, long & numStacked, CameraThreadData *camTD);
@@ -143,7 +165,7 @@ public:
   void FinishFrameAlignment(int binning);
   void CleanupAndFinishAlign(bool saving, int async);
   int WriteAlignComFile(CString inputFile, CString comName, int faParamInd, int useGPU,
-    bool ifMdoc, int frameX, int frameY);
+    bool ifMdoc, int frameX, int frameY, int EERsumming);
   float AlignedSubsetExposure(ShortVec & summedFrameList, float frameTime, int subsetStart,
     int subsetEnd, int maxFrames = -1);
   int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 
@@ -152,6 +174,7 @@ public:
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
     int & frameX, int & frameY, bool acquiredSize);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
+  int GetEERsuperFactor(int superRes);
   void InitializePointers(void);
   int ProcessPluginFrames(CString &directory, CString &rootname, ControlSet &conSet, bool save, bool align,
     int aliParamInd, int divideBy2, float pixel, CameraThreadData *camTD);

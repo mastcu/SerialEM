@@ -14,6 +14,7 @@
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include ".\MenuTargets.h"
+#include "MacroSelector.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "MapDrawItem.h"
@@ -475,6 +476,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_OPTIONS_SEARCH, OnOptionsSearchPlusMinus)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_SEARCH, OnUpdateOptionsSearchPlusMinus)
     ON_COMMAND(IDM_MARKER_TO_CENTER, OnMarkerToCenter)
+    ON_COMMAND(ID_OPTIONS_USEITEMLABELSINFILENAMES, OnUseItemLabelsInFilenames)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_USEITEMLABELSINFILENAMES, OnUpdateUseItemLabelsInFilenames)
+    ON_COMMAND(ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY, OnCloseValvesAfterLongInactivity)
+    ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY, OnUpdateCloseValvesAfterLongInactivity)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -814,6 +819,17 @@ void CMenuTargets::OnSetPointLabelThreshold()
     return;
   mNavHelper->SetPointLabelDrawThresh(thresh);
   mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnUseItemLabelsInFilenames()
+{
+  mNavHelper->SetUseLabelInFilenames(!mNavHelper->GetUseLabelInFilenames());
+}
+
+void CMenuTargets::OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(true);
+  pCmdUI->SetCheck(mNavHelper->GetUseLabelInFilenames() ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorShowMultiShot()
@@ -1368,7 +1384,15 @@ void CMenuTargets::OnAutoalign()
 }
 
 // List image shift vectors as lengths and angles on specimen
-void CMenuTargets::OnCalibrationListisvectors() 
+void CMenuTargets::OnCalibrationListisvectors()
+{
+  BOOL useCalPixel = AfxMessageBox("Do you want to use calibrated pixel sizes where "
+    "available\ninstead of nominal pixel sizes calculated from the magnification?",
+    MB_YESNO, MB_ICONQUESTION) == IDYES;
+  DoListISVectors(useCalPixel);
+}
+
+void CMenuTargets::DoListISVectors(BOOL useCalPixel)
 {
   CString str;
   int numCam = mWinApp->GetNumActiveCameras();
@@ -1378,10 +1402,6 @@ void CMenuTargets::OnCalibrationListisvectors()
   ScaleMat mat, rot;
   int iCam, mag, lowestMicro, limlo, limhi, numRanges, range;
   double xvec, yvec, xang, yang, pixel, rough, rotation, calRot;
-
-  BOOL useCalPixel = AfxMessageBox("Do you want to use calibrated pixel sizes where "
-    "available\ninstead of nominal pixel sizes calculated from the magnification?", 
-    MB_YESNO, MB_ICONQUESTION) == IDYES;
 
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
@@ -1439,7 +1459,12 @@ void CMenuTargets::OnCalibrationListisvectors()
 }
 
 // List specimen to stage matrices for all stage calibrations
-void CMenuTargets::OnCalibrationListstagecals() 
+void CMenuTargets::OnCalibrationListstagecals()
+{
+  DoListStageCals();
+}
+
+void CMenuTargets::DoListStageCals()
 {
   CString str;
   int numCam = mWinApp->GetNumActiveCameras();
@@ -2218,9 +2243,16 @@ void CMenuTargets::OnUpdateTiltseriesRunMacro(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnTiltseriesSetMacroToRun()
 {
+  CMacroSelector dlg;
+
+  // The series macro is numbered from 1, 0 means not do one
+  // The dialog is 0 based
   int macNum = mTSController->GetMacroToRun();
-  if (!KGetOneInt("Enter number of script to run:", macNum))
+  dlg.mMacroIndex = B3DMAX(macNum - 1, 0);
+  dlg.m_strEntryText = "Select script to run before step in tilt series";
+  if (dlg.DoModal() == IDCANCEL)
     return;
+  macNum = dlg.mMacroIndex + 1;
   mTSController->SetMacroToRun(macNum);
   macNum = mTSController->GetStepAfterMacro();
   B3DCLAMP(macNum, 1, TSMACRO_PRE_RECORD);
@@ -2703,6 +2735,26 @@ void CMenuTargets::OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mScope->GetSkipBlankingInLowDose() ? 1 : 0);
+}
+
+void CMenuTargets::OnCloseValvesAfterLongInactivity()
+{
+  CString mess;
+  int time = mScope->GetIdleTimeToCloseValves();
+  if (mScope->GetNoColumnValve())
+    mess = "filament should be turned off:";
+  else
+    mess.Format("the %s should be closed:", JEOLscope ? " gun valve" : "column valves");
+  if (!KGetOneInt("Enter 0 to disable this feature",
+    "Number of minutes of inactivity after which " + mess, time))
+    return;
+  mScope->SetIdleTimeToCloseValves(time);
+}
+
+void CMenuTargets::OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mScope->GetIdleTimeToCloseValves() > 0 ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !HitachiScope && !mScope->GetNoScope());
 }
 
 void CMenuTargets::OnWindowStageMoveTool()

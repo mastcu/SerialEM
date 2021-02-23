@@ -77,6 +77,10 @@ void EMstatusWindow::Update()
   int indStat = 1;
   int width, height;
   bool spaceIt;
+  BOOL STEM = false;
+  CameraParameters *camP;
+  if (!mInitialized)
+    return;
   mBufText[0] = (CStatic *)GetDlgItem(IDC_DISPLAYEDBUF);
   mBufText[1] = (CStatic *)GetDlgItem(IDC_OTHERBUF1);
   mBufText[2] = (CStatic *)GetDlgItem(IDC_OTHERBUF2);
@@ -89,6 +93,10 @@ void EMstatusWindow::Update()
 
     // If this is the displayed image, fill top line and the detailed info
     if (whichBuf == indCur) {
+      if (buf->mCamera >= 0) {
+        camP = mWinApp->GetCamParams() + buf->mCamera;
+        STEM = camP->STEMcamera;
+      }
       SetStatusText(0, whichBuf);
       m_sSizeText = "Size:";
       m_sStageText = "Stage:";
@@ -98,8 +106,8 @@ void EMstatusWindow::Update()
 		    width = buf->mImage->getWidth();
 		    height = buf->mImage->getHeight();
 		    spaceIt = width < 10000 && height < 10000;
-        m_sSizeText.Format("Size: %d%sx%s%d  bin %s", width, spaceIt ? " " : "", 
-          spaceIt ? " " : "", height, (LPCTSTR)buf->BinningText());
+        m_sSizeText.Format("Size: %d%sx%s%d  %s %s", width, spaceIt ? " " : "", 
+          spaceIt ? " " : "", height, STEM ? "samp" : "bin", (LPCTSTR)buf->BinningText());
         EMimageExtra *extra = (EMimageExtra *)buf->mImage->GetUserData();
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
@@ -211,6 +219,7 @@ BOOL EMstatusWindow::OnInitDialog()
 
   m_sbcChangeBuf.SetRange(0,100);
   m_sbcChangeBuf.SetPos(50);
+  mInitialized = true;
   Update();
 
   return TRUE;  // return TRUE unless you set the focus to a control

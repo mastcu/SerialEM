@@ -54,6 +54,8 @@ public:
   CameraParameters *mCamParams;
 
 private:
+  int mPanelStart[2];
+  int mNumInPanel[2];
   int mTotalSaved;
   CFalconHelper *mHelper;
   

@@ -17,6 +17,7 @@
 class CMontageSetupDlg;
 struct TiltSeriesParam;
 class CNavAcquireDlg;
+class CMacCmd;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -262,6 +263,7 @@ private:
   NavParams *mParam;
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
+  CMacCmd *mMacroProcessor;
 
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;
@@ -419,7 +421,7 @@ private:
   IntVec *mHFpieceOn;
   ShortVec *mHFgridXpos;
   ShortVec *mHFgridYpos;
-  std::vector<bool> *mHFexclude;
+  std::vector<short> *mHFexclude;
   bool mAddingFoundHoles;
   bool mDeferAddingToViewer;
 
@@ -581,7 +583,7 @@ public:
   void StageOrImageCoords(CMapDrawItem *item, float &posX, float &posY);
   void GridImageToStage(ScaleMat aInv, float delX, float delY, float posX, float posY, 
     float &stageX, float &stageY);
-  int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<bool> *exclude, FloatVec *xInPiece,
+  int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<short> *exclude, FloatVec *xInPiece,
     FloatVec *yInPiece, IntVec *pieceOn, ShortVec *gridXpos, ShortVec *gridYpos,
     float spacing, float diameter, float angle, int registration, int mapID, float stageZ,
     CMapDrawItem *poly, int layoutType);
@@ -623,6 +625,7 @@ CMapDrawItem *FindNextAcquireItem(int &index);
 bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
 float ContourArea(float *ptx, float *pty, int numPoints);
 void GetCurrentNavDir(CString &navPath);
+void SetCurrentNavFile(CString &inFile);
 void ManageListHeader(CString str = "Label");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();
