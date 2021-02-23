@@ -5,71 +5,39 @@
 #include "..\Shared\iimage.h"
 #include "..\Shared\b3dutil.h"
 #include "..\EMimageExtra.h"
-#include "..\Shared\autodoc.h"
-#include "KStoreADOC.h"
 
 // Opens an IMOD type file for reading
 KStoreIMOD::KStoreIMOD(CString filename)
   : KImageStore()
 {
   CommonInit();
-  mIIfile = iiOpen((char *)((LPCTSTR)filename), "rb+");
+  mIIfile = iiOpen((char *)((LPCTSTR)filename), "rb");
   if (!mIIfile)
     return;
   mFilename = filename;
   mMode = mIIfile->mode;
-  mMin = mIIfile->amin;
-  mMax = mIIfile->amax;
+  mMin = (int)mIIfile->amin;
+  mMax = (int)mIIfile->amax;
   mWidth = mIIfile->nx;
   mHeight = mIIfile->ny;
   mDepth = mIIfile->nz;
-  mMeanSum = mIIfile->amean * mDepth;
-  mNumWritten = mDepth;
-  if (mIIfile->file == IIFILE_HDF) {
-    mStoreType = STORE_TYPE_HDF;
-    mAdocIndex = mIIfile->adocIndex;
-  }
 }
 
 // Open a new IMOD type file for writing a TIFF image
-KStoreIMOD::KStoreIMOD(CString inFilename, FileOptions inFileOpt)
+KStoreIMOD::KStoreIMOD(CString inFilename , FileOptions inFileOpt)
   : KImageStore()
 {
-  int fileType = inFileOpt.useMont() ? inFileOpt.montFileType : inFileOpt.fileType;
-  bool isJpeg = fileType == STORE_TYPE_JPEG;
-  bool isHdf = fileType == STORE_TYPE_HDF;
-  char *compEnvVar;
-  int zipLevel = 5, varLevel;
+  bool isJpeg = inFileOpt.fileType == STORE_TYPE_JPEG;
   CommonInit();
   mFileOpt = inFileOpt;
   mFilename = inFilename;
-  if (fileType == STORE_TYPE_ADOC)
-    fileType = STORE_TYPE_TIFF;
-  if (fileType != STORE_TYPE_TIFF && !isJpeg && !isHdf)
+  if (mFileOpt.fileType != STORE_TYPE_TIFF && !isJpeg)
     return;
   if (mFileOpt.compression == COMPRESS_JPEG || isJpeg)
     mFileOpt.mode = MRC_MODE_BYTE;
-  mIIfile = iiOpenNew(inFilename, isHdf ? "rw" : "w",
-    B3DCHOICE(isHdf, IIFILE_HDF, isJpeg ? IIFILE_JPEG : IIFILE_TIFF));
+  mIIfile = iiOpenNew(inFilename, "w", isJpeg ? IIFILE_JPEG : IIFILE_TIFF);
   if (!mIIfile)
     return;
-
-  // Handle HDF, consult environment variable about compression level IF it is selected
-  if (isHdf) {
-    mStoreType = STORE_TYPE_HDF;
-    mAdocIndex = mIIfile->adocIndex;
-    mMontCoordsInMdoc = inFileOpt.montageInMdoc;
-    mIIfile->hdfCompression = 0;
-    if (inFileOpt.hdfCompression == COMPRESS_ZIP) {
-      compEnvVar = getenv("IMOD_HDF_COMPRESSION");
-      if (compEnvVar) {
-        varLevel = atoi(compEnvVar);
-        if (varLevel > 0)
-          zipLevel = varLevel;
-      }
-      mIIfile->hdfCompression = zipLevel;
-    }
-  }
 }
 
 void KStoreIMOD::CommonInit()
@@ -87,11 +55,6 @@ KStoreIMOD::~KStoreIMOD(void)
   Close();
 }
 
-BOOL KStoreIMOD::FileOK()
-{
-  return (mIIfile != NULL);
-}
-
 KImage  *KStoreIMOD::getRect(void)
 {
   KImage *retVal;
@@ -99,7 +62,6 @@ KImage  *KStoreIMOD::getRect(void)
   KImageFloat *theFImage;
   KImageRGB *theCImage;
   char *theData;
-  int i;
   mPixSize = lookupPixSize(mMode);
   int secSize = mWidth * mHeight * mPixSize;
   
@@ -140,57 +102,11 @@ KImage  *KStoreIMOD::getRect(void)
     return NULL;
   }
   retVal->flipY();
-  if (mAdocIndex >= 0) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-      return retVal;
-    KStoreADOC::LoadExtraFromValues(retVal, i, ADOC_ZVALUE, mCur.z);
-    AdocReleaseMutex();
-  }
   return retVal;
-}
-
-int KStoreIMOD::CheckMontage(MontParam * inParam)
-{
-  if (mAdocIndex < 0)
-    return 0;
-  if (!CheckAdocForMontage(inParam))
-    return 0;
-  return KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
-}
-
-int KStoreIMOD::getPcoord(int inSect, int & outX, int & outY, int & outZ)
-{
-  if (mAdocIndex < 0)
-    return -1;
-  return GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ);
-}
-
-int KStoreIMOD::getStageCoord(int inSect, double & outX, double & outY)
-{
-  if (mAdocIndex < 0)
-    return -1;
-  return GetStageCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY);
-}
-
-int KStoreIMOD::ReorderPieceZCoords(int * sectOrder)
-{
-  return ReorderZCoordsInAdoc(ADOC_ZVALUE, sectOrder, mIIfile->nz);
 }
 
 void KStoreIMOD::Close(void)
 {
-  CString str;
-  if (mStoreType == STORE_TYPE_HDF) {
-    if (AdocGetMutexSetCurrent(mAdocIndex) < 0) {
-      SEMMessageBox("Failed to get mutex for writing header of HDF file");
-    } else {
-      if (iiWriteHeader(mIIfile)) {
-        str.Format("Error writing header of HDF file:\n%s", b3dGetError());
-        SEMMessageBox(str);
-      }
-      AdocReleaseMutex();
-    }
-  }
   if (mIIfile)
     iiDelete(mIIfile);
   mIIfile = NULL;
@@ -285,7 +201,7 @@ int KStoreIMOD::getTiffValue(int tag, int type, int tokenNum, double &dvalue,
   return err;
 }
 
-// Write a section to a TIFF or JPEG file
+// Write a section to the TIFF file
 int KStoreIMOD::WriteSection(KImage * inImage)
 {
   char *idata;
@@ -310,11 +226,30 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   } else
     mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
   mPixSize = lookupPixSize(mMode);
+  mIIfile->format = IIFORMAT_LUMINANCE;
   mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;
+  mIIfile->type = IITYPE_UBYTE;
   int dataSize = mWidth * mHeight * mPixSize;
 
-  if (AssignIIfileTypeAndFormat())
+  switch(mMode){
+
+  case MRC_MODE_BYTE:
+    break;
+  case MRC_MODE_SHORT:
+    mIIfile->type = IITYPE_SHORT;
+    break;
+  case MRC_MODE_USHORT:
+    mIIfile->type = IITYPE_USHORT;
+    break;
+  case MRC_MODE_RGB:
+    mIIfile->format = IIFORMAT_RGB;
+    break;
+  case MRC_MODE_FLOAT:
+    mIIfile->type = IITYPE_FLOAT;
+    break;
+  default:
     return 11;
+  }
 
   inImage->Lock();
   idata   = convertForWriting(inImage, false, needToReflip, needToDelete);
@@ -323,14 +258,14 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     return 4;
   }
   if (extra && extra->mPixel > 0)
-    resolution = B3DNINT((isJpeg ? 2.54e8 : 1.e8) / extra->mPixel);
+    resolution = B3DNINT((2.54e8 / extra->mPixel));
   if (isJpeg) {
     mIIfile->mode = mMode;
     if (jpegWriteSection(mIIfile, idata, 1, resolution < 65536 ? resolution : 0,
       mFileOpt.jpegQuality))
       retval = 6;
   } else {
-    minMaxMean(idata, mIIfile->amin, mIIfile->amax, theMean);
+    minMaxMean(idata, dataSize, mIIfile->amin, mIIfile->amax, theMean);
     inImage->setMinMaxMean(mIIfile->amin, mIIfile->amax, (float)theMean);
     if (extra) {
       extra->mMin = mIIfile->amin;
@@ -353,198 +288,3 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   inImage->UnLock();
   return retval;
 }
-
-int KStoreIMOD::AssignIIfileTypeAndFormat()
-{
-  mIIfile->format = IIFORMAT_LUMINANCE;
-  switch (mMode) {
-
-  case MRC_MODE_BYTE:
-    mIIfile->type = IITYPE_UBYTE;
-    break;
-  case MRC_MODE_SHORT:
-    mIIfile->type = IITYPE_SHORT;
-    break;
-  case MRC_MODE_USHORT:
-    mIIfile->type = IITYPE_USHORT;
-    break;
-  case MRC_MODE_RGB:
-    mIIfile->type = IITYPE_UBYTE;
-    mIIfile->format = IIFORMAT_RGB;
-    break;
-  case MRC_MODE_FLOAT:
-    mIIfile->type = IITYPE_FLOAT;
-    break;
-  default:
-    return 11;
-  }
-  return 0;
-}
-
-CString KStoreIMOD::getFilePath()
-{
-  if (mStoreType == STORE_TYPE_HDF && mIIfile)
-    return mIIfile->filename;
-  return KImageStore::getFilePath();
-}
-
-void KStoreIMOD::UpdateHdfMrcHeader()
-{
-  MrcHeader *hdata = (MrcHeader *)mIIfile->header;
-  int nlablSave = hdata->nlabl;
-  iiSimpleFillMrcHeader(mIIfile, (MrcHeader *)mIIfile->header);
-  hdata->nlabl = nlablSave;
-}
-
-int KStoreIMOD::ReorderHdfStackZvalues(int *sectOrder)
-{
-  int err;
-  if (!mIIfile || mStoreType != STORE_TYPE_HDF)
-    return 2;
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
-    return 3;
-  err = iiReorderHDFstack(mIIfile, sectOrder);
-  AdocReleaseMutex();
-  return err;
-}
-
-// Append an image to an HDF file
-int KStoreIMOD::AppendImage(KImage *inImage)
-{
-  int err;
-  if (inImage == NULL)
-    return 1;
-
-  // If this is a new image init everything.
-  if ((mIIfile->nx == 0) && (mIIfile->ny == 0) && (mIIfile->nz == 0)) {
-    inImage->getSize(mWidth, mHeight);
-
-    // If it is RGB or float, fix the mode; otherwise it sets from file opt
-    if (inImage->getType() == kRGB) {
-      mMode = MRC_MODE_RGB;
-    } else if (inImage->getType() == kFLOAT) {
-      mMode = MRC_MODE_FLOAT;
-    } else {
-      mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
-    }
-    mIIfile->mode = mMode;
-    if (AssignIIfileTypeAndFormat())
-      return 11;
-
-    // Should not be needed but just in case...
-    mPixSize = lookupPixSize(mMode);
-    mIIfile->xscale = mIIfile->yscale = mIIfile->zscale = mPixelSpacing;
-    mIIfile->nx = mWidth;
-    mIIfile->ny = mHeight;
-    mIIfile->urx = mWidth - 1;
-    mIIfile->ury = mHeight - 1;
-    UpdateHdfMrcHeader();
-
-    err = InitializeAdocGlobalItems(true, mMontCoordsInMdoc, mIIfile->filename);
-    if (err)
-      return err;
-
-  }
-  mCur.z = mIIfile->nz;
-
-
-  // Write image data to end of file.
-  err = WriteSection(inImage, mIIfile->nz);
-  mDepth = mIIfile->nz;
-  return err;
-}
-
-// Write a section to an HDF file
-int KStoreIMOD::WriteSection(KImage *inImage, int inSect)
-{
-  double wallStart, updateTime;
-  char *idata;
-  int retval = 0;
-  bool needToReflip, needToDelete, needNewSect, gotMutex;
-  if (inImage == NULL)
-    return 1;
-  if (!mIIfile || mIIfile->state != IISTATE_READY)
-    return 2;
-
-  if (mWidth != inImage->getWidth() || mHeight != inImage->getHeight())
-    return 17;
-
-  inImage->Lock();
-
-  idata = convertForWriting(inImage, true, needToReflip, needToDelete);
-  if (!idata) {
-    inImage->UnLock();
-    return 4;
-  }
-
-  if (iiWriteSection(mIIfile, idata, inSect)) {
-    retval = 6;
-  } else {
-    needNewSect = CheckNewSectionManageMMM(inImage, inSect, idata, mIIfile->nz,
-      mIIfile->amin, mIIfile->amax, mIIfile->amean);
-    retval = AddExtraValuesToAdoc(inImage, inSect, needNewSect, gotMutex);
-  }
-  if (!retval) {
-    UpdateHdfMrcHeader();
-
-    // See if header updaing is enabled at all, and if it time to do the next one
-    if (mUpdateTimePerSect > 0) {
-      mUpdateCounter--;
-      if (mUpdateCounter <= 0) {
-        mUpdateCounter = 1000000;
-        wallStart = wallTime();
-        if (iiWriteHeader(mIIfile)) {
-          retval = 7;
-        } else {
-          iiClose(mIIfile);
-          if (iiReopen(mIIfile))
-            retval = 7;
-          else {
-
-            // Set interval to next update based on measured time
-            updateTime = wallTime() - wallStart;
-            mUpdateCounter = 1;
-            if (updateTime >= mUpdateTimePerSect)
-              mUpdateCounter = (int)ceil(updateTime / mUpdateTimePerSect);
-            SEMTrace('y', "HDF header update time %.3f, counter to next %d", updateTime,
-              mUpdateCounter);
-          }
-        }
-      }
-    }
-  }
-
-  if (needToReflip) {
-    inImage->flipY();
-    inImage->setNeedToReflip(false);
-  }
-  if (needToDelete)
-    delete[] idata;
-  inImage->UnLock();
-  if (gotMutex)
-    AdocReleaseMutex();
-  return retval;
-}
-
-int KStoreIMOD::AddTitle(const char *inTitle)
-{
-  MrcHeader *hdata = (MrcHeader *)mIIfile->header;
-  if (KImageStore::AddTitle(inTitle))
-    return 1;
-  if (mStoreType == STORE_TYPE_HDF) {
-    if (hdata->nlabl >= 10)
-      return 1;
-    AddTitleToLabelArray(&hdata->labels[hdata->nlabl][0], hdata->nlabl, inTitle);
-  }
-  return 0;
-}
-
-int KStoreIMOD::setMode(int inMode)
-{
-  if (mDepth > 0)
-    return 1;
-  mMode = inMode;
-  return 0;
-}
-
-

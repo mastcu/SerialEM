@@ -43,6 +43,7 @@ CCameraMacroTools::CCameraMacroTools(CWnd* pParent /*=NULL*/)
   mMacroNumber[2] = 2;
   mDoingTS = false;
   mUserStop = FALSE;
+  mEnabledStop = false;
 }
 
 
@@ -82,9 +83,6 @@ BEGIN_MESSAGE_MAP(CCameraMacroTools, CToolDlg)
   ON_BN_CLICKED(IDC_BUTEND, OnButend)
   ON_BN_CLICKED(IDC_BUTRESUME, OnButresume)
   ON_BN_CLICKED(IDC_BUTMONTAGE, OnButmontage)
-  ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO1, OnMacBut1Draw)
-  ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO2, OnMacBut2Draw)
-  ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO3, OnMacBut3Draw)
   ON_WM_PAINT()
   //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -110,7 +108,6 @@ BOOL CCameraMacroTools::OnInitDialog()
   m_butSetup.SetFont(mLittleFont);
   m_butEnd.SetFont(mLittleFont);
   m_butResume.SetFont(mLittleFont);
-  m_butStop.mSpecialColor = RGB(255, 64, 64);
 
   // Set the names of the camera modes
   CString *modeNames = mWinApp->GetModeNames();
@@ -134,6 +131,8 @@ void CCameraMacroTools::OnPaint()
   CPaintDC dc(this); // device context for painting
 
   DrawSideBorders(dc);
+  if (mEnabledStop)
+    DrawButtonOutline(dc, &m_butStop, 3, RGB(255, 0, 0));
 }
 
 void CCameraMacroTools::OnButmontage() 
@@ -252,7 +251,6 @@ void CCameraMacroTools::DoMacro(int inMacro)
   }
 }
 
-// Handlers for individual buttons
 void CCameraMacroTools::OnButmacro1() 
 {
   if (mDoingTS) {
@@ -294,37 +292,6 @@ void CCameraMacroTools::OnButmacro3()
   } else
     DoMacro(mMacroNumber[2]);
 }
-
-// Handlers for the right click from each button
-void CCameraMacroTools::OnMacBut1Draw(NMHDR *pNotifyStruct, LRESULT *result)
-{
-  HandleMacroRightClick(m_butMacro1, 0, !mDoingTS && !mDoingCalISO);
-}
-
-void CCameraMacroTools::OnMacBut2Draw(NMHDR *pNotifyStruct, LRESULT *result)
-{
-  int navState = GetNavigatorState();
-  HandleMacroRightClick(m_butMacro2, 1, !mDoingTS && !(navState == NAV_SCRIPT_RUNNING || 
-    navState == NAV_SCRIPT_STOPPED || navState == NAV_RUNNING_NO_SCRIPT_TS || 
-    navState == NAV_PAUSED));
-}
-
-void CCameraMacroTools::OnMacBut3Draw(NMHDR *pNotifyStruct, LRESULT *result)
-{
-  HandleMacroRightClick(m_butMacro3, 2, !mDoingTS);
-}
-
-// Common function to open the editor on valid right click
-void CCameraMacroTools::HandleMacroRightClick(CMyButton &but, int index, bool openOK)
-{
-  if (but.m_bRightWasClicked) {
-    but.m_bRightWasClicked = false;
-    if (openOK)
-      mMacProcessor->OpenMacroEditor(mMacroNumber[index]);
-  }
-  mWinApp->mScope->SetRestoreViewFocusCount(1);
-}
-
 
 // The Stop button calls camera and general error stop
 void CCameraMacroTools::OnButstop() 
@@ -463,13 +430,14 @@ void CCameraMacroTools::Update()
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
-  stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
-    !mWinApp->GetJustDoingSynchro()) ||
-    camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
+  stopEnabled = mWinApp->DoingTasks() || camBusy || 
+    mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;
   m_butStop.EnableWindow(stopEnabled);
-  m_butStop.m_bShowSpecial = stopEnabled;
+  if (!BOOL_EQUIV(stopEnabled, mEnabledStop))
+    Invalidate();
+  mEnabledStop = stopEnabled;
   m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && 
     (!camBusy || continuous));
 

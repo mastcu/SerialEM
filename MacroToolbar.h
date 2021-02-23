@@ -1,7 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "BaseDlg.h"
-#include "MyButton.h"
+
 
 // CMacroToolbar dialog
 
@@ -19,7 +19,6 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   virtual void PostNcDestroy();
   afx_msg void OnCancel();
-  afx_msg void OnRunButDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result);
   virtual BOOL OnInitDialog();
   afx_msg void OnMacroRun(UINT nID);
 
@@ -37,5 +36,4 @@ public:
   void Update(void);
   void SetOneMacroLabel(int num);
   void SetLength(int num, int butHeight);
-  CMyButton mRunButtons[MAX_MACROS];
 };
