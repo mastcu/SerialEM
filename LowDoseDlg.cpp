@@ -678,7 +678,10 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   //button->SetButtonStyle(BS_PUSHBUTTON);
   int area = nID - IDC_COPYTOVIEW;
   int from = mScope->GetLowDoseArea();
+  int fromCons = from;
   int toVS = -1, fromVS = -1;
+  if (from == SEARCH_AREA)
+    fromCons = SEARCH_CONSET;
   if (!area || area == SEARCH_AREA)
     toVS = area ? 1 : 0;
   if (!from || from == SEARCH_AREA)
@@ -692,7 +695,7 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
     return;
 
   if (AfxMessageBox("Are you sure you want to copy parameters from the " +  
-    mModeNames[from] + " area to the " + mModeNames[consInd] + " area?",
+    mModeNames[fromCons] + " area to the " + mModeNames[consInd] + " area?",
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 

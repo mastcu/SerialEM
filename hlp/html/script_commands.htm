@@ -356,19 +356,21 @@
         <TR>
           <TD class="scriptcommand">NewArray var #T #E</TD>
           <TD>Creates a new variable with the name <b>var</b>, making it persistent or local if
-               <b>#T</b> is 1 or -1, respectively, and initialize it with an array of <b>#E</b> zeros.</TD>
+               <b>#T</b> is 1 or -1, respectively, or a regular variable if <b>#T</b> is 0.&nbsp; The 
+            array is initialized with <b>#E</b> zeros.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">New2DArray var [#T] [#R #E]</TD>
           <TD>Creates a 2D array variable with the name <b>var</b>, making it persistent or 
-              local if <b>#T</b> is 1 or -1, respectively.&nbsp; If the optional <b>#R</b> and <b>#E</b> are
+              local if <b>#T</b> is 1 or -1, respectively, or a regular variable if <b>#T</b> is 0.&nbsp; If
+             the optional <b>#R</b> and <b>#E</b> are
                given, the array is initialized with <b>#R</b> rows of <b>#E</b> zeros each, where both
                must be positive.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AppendToArray var item</TD>
           <TD>Appends one item or an array or items either to a 1D variable, which may
-               already be an array or not, or to a row of a 2D array, specified with <b>var[row]</b>              , or as a new row of a 2D array, specified without a subscript.&nbsp;
+               already be an array or not, or to a row of a 2D array, specified with <b>var[row]</b>, or as a new row of a 2D array, specified without a subscript.&nbsp;
                As with setting a variable, if there are multiple items on the line not 
               specified as an array, only the first item will be added, whereas if there 
               the multiple items are enclosed in '{ }', all items will be added to the 
