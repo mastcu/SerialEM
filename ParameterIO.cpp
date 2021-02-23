@@ -62,6 +62,9 @@ static char THIS_FILE[]=__FILE__;
 #define MatchNoCase(a) (strItems[0].CompareNoCase(a) == 0)
 #define NAME_IS(a) (strItems[0] == (a))
 
+#include "DisableHideTable.h"
+
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -345,7 +348,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
 
       } else if (NAME_IS("Macro")) {
-        err = ReadOneMacro(itemInt[1], strLine, strItems, 
+        err = ReadOneMacro(itemInt[1], strLine, strItems,
           MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
         if (err > 0) {
           retval = err;
@@ -354,6 +357,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptPackagePath")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mDocWnd->SetCurScriptPackPath(strCopy);
+      } else if (NAME_IS("ScriptToRunAtStart")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetScriptToRunAtStart(strCopy);
+      } else if (NAME_IS("ScriptToRunAtEnd")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetScriptToRunAtEnd(strCopy);
       } else if (NAME_IS("FrameNameData")) {
         camera->SetFrameNameFormat(itemInt[1]);
         camera->SetFrameNumberStart(itemInt[2]);
@@ -423,6 +432,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mMontageController->SetDivFilterSet2By2(itemInt[4] != 0);
       } else if (NAME_IS("TIFFcompression"))
         defFileOpt->compression = itemInt[1];
+      else if (NAME_IS("HDFcompression"))
+        defFileOpt->hdfCompression = itemInt[1];
       else if (MatchNoCase("FileOptionsPctTruncLo"))
         defFileOpt->pctTruncLo = itemFlt[1];
       else if (MatchNoCase("FileOptionsPctTruncHi"))
@@ -700,13 +711,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ToolDialogStates") || NAME_IS("ToolDialogStates2")) {
         index = 0;
         mWinApp->SetAbsoluteDlgIndex(NAME_IS("ToolDialogStates2"));
-        while (!strItems[index + 1].IsEmpty() && index < MAX_DIALOGS) {
+        while (!strItems[index + 1].IsEmpty() && index < MAX_TOOL_DLGS) {
           initialDlgState[index] = atoi((LPCTSTR)strItems[index + 1]);
           index++;
         }
       } else if (NAME_IS("ToolDialogPlacement")) {
         index = itemInt[1];
-        if (index < 0 || index >= MAX_DIALOGS || strItems[5].IsEmpty()) {
+        if (index < 0 || index >= MAX_TOOL_DLGS || strItems[5].IsEmpty()) {
             AfxMessageBox("Error in panel placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
@@ -1147,6 +1158,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
               faData->binToTarget = itemInt[14] > 0;
               faData->targetSize = itemInt[15];
             }
+            if (itemEmpty[16])
+              faData->EERsuperRes = 0;
+            else
+              faData->EERsuperRes = itemInt[16];
           } else {
             StripItems(strLine, 2, faData->name);
           }
@@ -1348,6 +1363,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString("SerialEMSettings\n");
     WriteString("SystemPath", mWinApp->mDocWnd->GetSysPathForSettings());
     WriteString("ScriptPackagePath", mWinApp->mDocWnd->GetCurScriptPackPath());
+    oneState = mWinApp->GetScriptToRunAtStart();
+    if (!oneState.IsEmpty())
+      WriteString("ScriptToRunAtStart", oneState);
+    oneState = mWinApp->GetScriptToRunAtEnd();
+    if (!oneState.IsEmpty())
+      WriteString("ScriptToRunAtEnd", oneState);
 
     // Write any consets that are initialized (right != 0)
     for (int iCam = 0; iCam < MAX_CAMERAS; iCam++) {
@@ -1474,6 +1495,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
     WriteInt("TIFFcompression", fileOpt->compression);
+    WriteInt("HDFcompression", fileOpt->hdfCompression);
     WriteFloat("FileOptionsPctTruncLo", fileOpt->pctTruncLo);
     WriteFloat("FileOptionsPctTruncHi", fileOpt->pctTruncHi);
     oneState.Format("SingleFileOptions %d %d %f %f\n", otherFileOpt->fileType, 
@@ -1625,7 +1647,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(oneState);
 
     // Save states of tool windows, but set montage closed
-    for (i = 0; i < MAX_DIALOGS; i++) {
+    for (i = 0; i < MAX_TOOL_DLGS; i++) {
       j = mWinApp->LookupToolDlgIndex(i);
       int state = j >= 0 ? dlgTable[j].state : 0;
       if (i == MONTAGE_DIALOG_INDEX)
@@ -1869,12 +1891,12 @@ void CParameterIO::WriteSettings(CString strFileName)
         faParam.groupSize, faParam.doSmooth ? 1 : 0, faParam.smoothThresh,
         faParam.shiftLimit);
       mFile->WriteString(oneState);
-      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d\n",
-        i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
+      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d "
+        "%d\n", i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
         faParam.stopIterBelow, faParam.groupRefine ? 1 : 0, faParam.keepPrecision ? 1 : 0,
         faParam.outputFloatSums ? 1 : 0, faParam.alignSubset ? 1 : 0, faParam.subsetStart,
         faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction,
-        faParam.binToTarget ? 1 : 0, faParam.targetSize);
+        faParam.binToTarget ? 1 : 0, faParam.targetSize, faParam.EERsuperRes);
       mFile->WriteString(oneState);
       oneState.Format("FrameAliSetName %d %s\n", i, (LPCTSTR)faParam.name);
       mFile->WriteString(oneState);
@@ -2006,6 +2028,90 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
   }
 }
 
+// Reads a file to hide or disable items containing either defined strings in the
+// table in sDisableHideList or menu item IDs to be hidden
+void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
+  std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
+{
+  CStdioFile *file;
+  int err = 0, type, ind, space;
+  int numInTable = sizeof(sDisableHideList) / sizeof(DisableHideItem);
+  CString strLine, tag, mess = "Error opening";
+  std::string sstr;
+  char *endPtr;
+  try {
+    file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
+    mess = "Error reading from";
+    while (file->ReadString(strLine)) {
+      if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
+        continue;
+
+      // Separate the type from the tag string and convert the type
+      if (ParseString(strLine, &tag, 1, false) == 2) {
+        type = atoi((LPCTSTR)tag);
+        if (type < 1) {
+          AfxMessageBox("Incorrect number for disabling or hiding in line:\n" +
+            strLine + "\n\nin file:  " + filename, MB_EXCLAME);
+        } else {
+          StripItems(strLine, 1, tag);
+
+          // See if the tag starts with a legal number which is assumed to be an ID to
+          // hide if hiding is specified
+          sstr = tag;
+          ind = strtol(sstr.c_str(), &endPtr, 10);
+          if (ind > 0 && ind < 65536  && (*endPtr == 0x00 || *endPtr == ' ') && 
+            type == 2) {
+            IDsToHide->insert(ind);
+          } else {
+
+            // Otherwise look up the string in the list
+            for (ind = 0; ind < numInTable; ind++) {
+              if (!tag.CompareNoCase(sDisableHideList[ind].descrip)) {
+                if (sDisableHideList[ind].disableOrHide & type) {
+
+                  // Store as string, disable, lin ehide, or simple hide
+                  if (sDisableHideList[ind].nID < 1 && sDisableHideList[ind].nID > -10) {
+                    space = tag.ReverseFind(' ');
+                    tag = tag.Left(space);
+                    stringHides->insert(std::string((LPCTSTR)tag));
+                  } else if (type == 1)
+                    IDsToDisable->insert(sDisableHideList[ind].nID);
+                  else if (sDisableHideList[ind].wholeLine)
+                    lineHideIDs->insert(sDisableHideList[ind].nID);
+                  else
+                    IDsToHide->insert(sDisableHideList[ind].nID);
+                } else {
+                  tag.Format("This menu item can only be %s not %s in line:\n",
+                    type == 1 ? "hidden" : "disabled", type > 1 ? "hidden" : "disabled");
+                  AfxMessageBox(tag + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
+                }
+                break;
+              }
+            }
+            if (ind >= numInTable) {
+              AfxMessageBox("Unrecognized description of item to disable or hide in "
+                "line:\n" + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
+            }
+          }
+        }
+      } else
+        AfxMessageBox("Incomplete entry to disable or hide in line:\n"
+          + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
+    }
+    file->Close();
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    err = 1;
+  }
+  if (file) {
+    if (mess.Find("opening") < 0)
+      delete file;
+    file = NULL;
+  }
+  if (err)
+    AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
+}
 
 // Properties are measured outside the program, entered by hand into the
 // text file
@@ -2047,10 +2153,15 @@ int CParameterIO::ReadProperties(CString strFileName)
   CArray<ChannelSet, ChannelSet> *blockSets = scope->GetBlockedChannels();
   CArray<PiezoScaling, PiezoScaling> *piezoScalings = 
     mWinApp->mPiezoControl->GetScalings();
-  CArray<MontLimits, MontLimits> *montLimits = mWinApp->mMontageController->GetMontageLimits();
+  CArray<MontLimits, MontLimits> *montLimits = 
+    mWinApp->mMontageController->GetMontageLimits();
+  CArray<LensRelaxData, LensRelaxData> *relaxData = scope->GetLensRelaxProgs();
   CString *K2FilterNames = camera->GetK2FilterNames();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   RotStretchXform rotXform;
+  LensRelaxData relax;
+  short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
+    pnmAll};
   PiezoScaling pzScale;
   ChannelSet chanSet;
   MontLimits montLim;
@@ -2368,6 +2479,12 @@ int CParameterIO::ReadProperties(CString strFileName)
                 camP->needShotToInsert[itemInt[index]] = true;
               index++;
             }
+          } else if (MatchNoCase("MinMultiChannelBinning")) {
+            index = 1;
+            while (!strItems[index].IsEmpty() && index < MAX_STEM_CHANNELS) {
+              camP->minMultiChanBinning[index] = itemInt[index];
+              index++;
+            }
           } else if (MatchNoCase("NoShutter"))
             camP->noShutter = itemInt[1];
           else if (MatchNoCase("OnlyOneShutter"))
@@ -2464,6 +2581,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->autoGainAtBinning = itemInt[1];
           else if (MatchNoCase("Falcon3ScalingPower"))
             camP->falcon3ScalePower = itemInt[1];
+          else if (MatchNoCase("JeolDetectorID"))
+            camP->JeolDetectorID = itemInt[1];
           else if (MatchNoCase("RotationAndPixel")) {
             magInd = itemInt[1];
             if (magInd < 1 || magInd >= MAX_MAGS) {
@@ -2727,6 +2846,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("LocalFalconFramePath")) {
         StripItems(strLine, 1, message);
         camera->SetLocalFalconFramePath(message);
+      } else if (MatchNoCase("FalconReferenceDir")) {
+        StripItems(strLine, 1, message);
+        camera->SetFalconReferenceDir(message);
 
       } else if (MatchNoCase("DefaultGIFCamera"))
         camera->SetDefaultGIFCamera(itemInt[1]);
@@ -2802,6 +2924,19 @@ int CParameterIO::ReadProperties(CString strFileName)
         }
         camera->SetNumIgnoreDM(ind, index);
 
+      } else if (NAME_IS("DisableOrHideFile")) {
+        StripItems(strLine, 1, message);
+        ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
+          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings());
+
+      } else if (NAME_IS("BasicModeDisableHideFile")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetBasicModeFile(message);
+
+      } else if (NAME_IS("ProgramTitleText")) {
+        StripItems(strLine, 1, message);
+        mWinApp->SetProgramTitleText(message);
+
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_CONSETS || strItems[2].IsEmpty())
@@ -2835,11 +2970,15 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("FileOptionsSignToUnsignOption"))
         defFileOpt->signToUnsignOpt = itemInt[1];
       else if (MatchNoCase("FileOptionsFileType"))
-        defFileOpt->fileType = itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
+        defFileOpt->fileType = B3DCHOICE(itemInt[1] > 1, STORE_TYPE_HDF,
+        itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC);
       else if (MatchNoCase("MontageAutodocOptions")) {
         defFileOpt->separateForMont = itemInt[1] != 0;
         defFileOpt->montUseMdoc = itemInt[1] % 2 != 0;
-        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
+        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC : 
+          STORE_TYPE_MRC;
+        if (itemInt[1] == 8 || itemInt[1] == 9)
+          defFileOpt->montFileType = STORE_TYPE_HDF;
       } else if (MatchNoCase("TotalMemoryLimitMB"))
         mWinApp->SetMemoryLimit((float)(1000000. * itemInt[1]));
       else if (MatchNoCase("NoScopeControlOnStartup"))
@@ -3030,6 +3169,33 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (!strItems[2].IsEmpty())
           index = itemInt[2];
         scope->SetJeolPostMagDelay(itemInt[1], index);
+
+      } else if (MatchNoCase("JeolLensRelaxProgram")) {
+        ind = sizeof(lensNormMap) / sizeof(short);
+        if (itemInt[1] < 1 || itemInt[1] > ind) {
+          message.Format("Index value (%d) must be between 1 and %d for in property "
+            "line:\n", itemInt[1], ind);
+          AfxMessageBox(message + strLine, MB_EXCLAME);
+        } else {
+          relax.normIndex = lensNormMap[itemInt[1] - 1];
+          relax.numLens = 0;
+          relax.numSteps = (short)itemInt[2];
+          relax.delay = itemInt[3];
+          for (ind = 0; ind < MAX_LENS_TO_RELAX; ind++) {
+            if (itemEmpty[2 * ind + 5])
+              break;
+            relax.lensTypes[relax.numLens] = (short)itemInt[2 * ind + 4];
+            relax.amplitudes[relax.numLens++] = itemFlt[2 * ind + 5];
+          }
+          if (!itemEmpty[2 * ind + 5]) {
+            message.Format("More that %d lenses were entered in property line:\n%s\n\n"
+              "Request that developers make the array size larger",
+              MAX_LENS_TO_RELAX, (LPCTSTR)strLine);
+            AfxMessageBox(message);
+          }
+          relaxData->Add(relax);
+        }
+
       } else if (MatchNoCase("ImageDetectorIDs")) {
         index = 1;
         while (!itemEmpty[index])
@@ -3185,6 +3351,16 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("PluginPath2")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetPluginPath2(message);
+      } else if (MatchNoCase("PluginPath2-32")) {
+#ifndef _WIN64
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetPluginPath2(message);
+#endif
+      } else if (MatchNoCase("PluginPath2-64")) {
+#ifdef _WIN64
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetPluginPath2(message);
+#endif
 
       } else if (MatchNoCase("ExternalTool")) {
         StripItems(strLine, 1, message);
@@ -3917,6 +4093,10 @@ int CParameterIO::ReadCalibration(CString strFileName)
           break;
         }
 
+      } else if (NAME_IS("CameraISOffset")) {
+        index = itemInt[1];
+        B3DCLAMP(index, 0, MAX_CAMERAS - 1);
+        mWinApp->mCamera->SetCameraISOffset(index, itemFlt[2], itemFlt[3]);
       } else if (NAME_IS("SpotBeamShifts")) {
         for (index = 0; index < 2; index++) {
           minSpot[index] = itemEmpty[1 + 2 * index] ? 0 : itemInt[1 + 2 * index];
@@ -4133,6 +4313,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
 void CParameterIO::WriteCalibration(CString strFileName)
 {
   int i, j, nCal, nCal2, ind, k, probe, nCalN[4], minSpot[2], maxSpot[2];
+  float offsetX, offsetY;
   int indMicro[2] = {-1, -1}, indNano[2] = {-1, -1};
   CString string;
   int err = 0;
@@ -4439,6 +4620,13 @@ void CParameterIO::WriteCalibration(CString strFileName)
       WriteInt("AlphaBeamShifts", nCal);
       for (i = 0; i < nCal; i++) {
         string.Format("%f %f\n", alphaBeamShifts[2 * i], alphaBeamShifts[2 * i + 1]);
+        mFile->WriteString(string);
+      }
+    }
+    for (i = 0; i < MAX_CAMERAS; i++) {
+      mWinApp->mCamera->GetCameraISOffset(i, offsetX, offsetY);
+      if (offsetX != 0. || offsetY != 0.) {
+        string.Format("CameraISOffset %d %f %f\n", i, offsetX, offsetY);
         mFile->WriteString(string);
       }
     }
@@ -5178,7 +5366,8 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
 }
 
 // Take some items off the front of a line and return the rest as one string, trimmed
-void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
+void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
+  bool keepIndent)
 {
   CString strItem;
   strCopy = strLine;
@@ -5187,7 +5376,10 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
     if (strCopy.IsEmpty())
       return;
   }
-  strCopy.TrimLeft();
+  if (!keepIndent)
+    strCopy.TrimLeft();
+  else if (strCopy.GetLength() > 0 && strCopy.GetAt(0) == ' ')
+    strCopy = strCopy.Mid(1);
   strCopy.TrimRight(" \t\r\n");
 }
 
@@ -5468,6 +5660,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mScope->GetSkipBlankingInLowDose())
     mWinApp->AppendToLog("Special option is set to skip blanking in Low Dose when the "
       "screen is up");
+  if (mWinApp->mScope->GetIdleTimeToCloseValves() > 0)
+    PrintfToLog("Special option is set to turn off beam after %d minutes of inactivity",
+      mWinApp->mScope->GetIdleTimeToCloseValves());
 }
 
 // Outputs a short or float vector in as many lines as it takes

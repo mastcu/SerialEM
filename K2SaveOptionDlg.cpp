@@ -13,8 +13,8 @@
 
 static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF, 
   IDC_TIFF_ZIP_COMPRESS, IDC_STAT_CURSET2, IDC_STAT_CURSET1,
-  IDC_USE_EXTENSION_MRCS, IDC_ONE_FRAME_PER_FILE, PANEL_END,
-  IDC_FRAME_STACK_MDOC, IDC_TSS_LINE2, PANEL_END, 
+  IDC_USE_EXTENSION_MRCS, PANEL_END,
+  IDC_ONE_FRAME_PER_FILE, IDC_FRAME_STACK_MDOC, IDC_TSS_LINE2, PANEL_END,
   IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, 
   IDC_SAVE_TIMES_100, IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, PANEL_END, 
   IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, PANEL_END, 
@@ -60,7 +60,8 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bDatePrefix(FALSE)
   , m_bMultiHolePos(FALSE)
 {
-
+  m_bRootFile = false;
+  m_bSavefileFile = false;
 }
 
 CK2SaveOptionDlg::~CK2SaveOptionDlg()
@@ -165,6 +166,15 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   states[2] = mK2Type;
   states[3] = mCamParams->GatanCam;
   states[5] = !mDEtype;
+  if (mCamParams->FEItype == FALCON4_TYPE && mWinApp->mCamera->GetCanSaveEERformat() > 0) {
+    SetDlgItemText(IDC_ONE_FRAME_PER_FILE, 
+      "Save counting frames in EER file instead of MRC file");
+    m_bOneFramePerFile = mWinApp->mCamera->GetSaveInEERformat();
+    states[1] = true;
+    if (!mCanSaveFrameStackMdoc)
+      mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
+  } else
+    mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
   m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT || 
@@ -187,7 +197,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
   m_bMultiHolePos = (mNameFormat & FRAME_FILE_HOLE_AND_POS) != 0;
   if (!mCanCreateDir && !mDEtype)
-    SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType, 
+    SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType,
     "Subfolder set with \"Set Folder\" must be blank to create folders", 
     "Plugin to DigitalMicrograph must be upgraded to create folders"));
   else if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED)) {

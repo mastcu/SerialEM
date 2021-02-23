@@ -25,6 +25,8 @@
 #include "TSViewRange.h"
 #include "FocusManager.h"
 #include "Utilities\XCorr.h"
+#include "Image\KStoreIMOD.h"
+#include "Shared\b3dutil.h"
 
 enum {TRACK_SHOT_DONE, SCREEN_DROPPED, START_WAITING, DOSE_DONE, TILT_RESTORED, 
   SCREEN_RESTORED, ALIGN_TRACK_SHOT, RESET_SHIFT_DONE};
@@ -625,7 +627,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
     deadTime) + deadTime;
   acParams.exposure = B3DMAX(acParams.exposure, minExposure);
   mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-    false, 2, acParams.exposure, conSet->frameTime);
+    0, 2, acParams.exposure, conSet->frameTime);
   roundFac = mCamera->ExposureRoundingFactor(camParam);
   if (roundFac)
     acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac); 
@@ -736,7 +738,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
       acParams.binning = newbin;
       acParams.exposure = (float)(0.001 * B3DNINT(1000. * newexp));
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-        false, 2, acParams.exposure, conSet->frameTime);
+        0, 2, acParams.exposure, conSet->frameTime);
       if (roundFac)
         acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
       acParams.useCentroid = parmP->useCentroid;
@@ -870,7 +872,8 @@ WINDOWPLACEMENT *CMultiTSTasks::GetAutocenPlacement(void)
 // Trial or we are going to Trial in Low dose
 bool CMultiTSTasks::AutocenTrackingState(int changing)
 {
-  return mWinApp->mAutocenDlg && !mWinApp->DoingTasks() && 
+  return mWinApp->mAutocenDlg && (!mWinApp->DoingTasks() || 
+    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) && 
     ((!mWinApp->LowDoseMode() && mWinApp->mAutocenDlg->m_bSetState) ||
     (mWinApp->LowDoseMode() && 
       (mScope->GetLowDoseArea() == TRIAL_CONSET || changing == ACTRACK_TO_TRIAL)));
@@ -1643,6 +1646,9 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
     mBfcSectOrder[ind] = tiltAngles ? ind : (zmax - 1 - ind);
   if (tiltAngles)
     rsSortIndexedFloats(tiltAngles, &mBfcSectOrder[0], zmax);
+
+  // Both of the cases of immediate reordering require a map to what each section should,
+  // become, while the actual restacking requires a list of order in which to stack
   sectMap.resize(zmax);
   for (ind = 0; ind < zmax; ind++)
     sectMap[mBfcSectOrder[ind]] = ind;
@@ -1651,11 +1657,19 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
     err = mWinApp->mStoreMRC->ReorderPieceZCoords(&sectMap[0]);
     if (err && err < 3)
       mess.Format("An error (code %d) occurred trying to invert the\nZ coordinates in the"
-      " image file header.\nThe state of the file is unknown.\n\n", err);
+        " image file header.\nThe state of the file is unknown.\n\n", err);
     else
       mess.Format("An error (code %d) occurred trying to invert the Z coordinates in the"
-      "\n.mdoc file, although the coordinates in the image file header inverted OK.\n\n",
-      err);
+        "\n.mdoc file, although the coordinates in the image file header inverted OK.\n\n",
+        err);
+  } else if (mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_HDF) {
+    err = ((KStoreIMOD *)(mWinApp->mStoreMRC))->ReorderHdfStackZvalues(&sectMap[0]);
+    if (err)
+      mess = "An error occurred trying to invert the Z coordinates\n of images in the"
+      " HDF stack";
+    if (err == 1)
+      mess = mess + ":\n" + b3dGetError();
+
   } else {
 
     // If it hasn't been set up on a previous call before, start it now
@@ -1684,7 +1698,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
 // Set up the copy operation
 int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 {
-  int err, savedBufToSave = mBufferManager->GetBufToSave();
+  int err, fileType, savedBufToSave = mBufferManager->GetBufToSave();
   CString ext, root, adocName;
   FileOptions *fileOptp;
   if (!mWinApp->mStoreMRC)
@@ -1702,8 +1716,9 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
   UtilSplitExtension(filename, root, ext);
   mBfcNameFirstHalf = root + (mBfcReorderWholeFile ? "-unsorted" : "-half1") + ext;
   mBfcAdocFirstHalf = "";
+  fileType = mWinApp->mStoreMRC->getStoreType();
 
-  if (mWinApp->mStoreMRC->GetAdocIndex() >= 0) {
+  if (mWinApp->mStoreMRC->GetAdocIndex() >= 0 && fileType != STORE_TYPE_HDF) {
     adocName = mWinApp->mStoreMRC->getAdocName();
     UtilSplitExtension(adocName, root, ext);
     mBfcAdocFirstHalf = mBfcNameFirstHalf + ext;
@@ -1744,7 +1759,7 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
     }
 
   } else {
-    if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty())) {
+    if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty(), fileType)){
       delete mBfcStoreFirstHalf;
       return 6;
     }
@@ -1958,7 +1973,7 @@ void CMultiTSTasks::BidirAnchorNextTask(int param)
   TiltSeriesParam *tsParam = mWinApp->mTSController->GetTiltSeriesParam();
   mImBufs->mCaptured = BUFFER_TRACKING;
   int err;
-  KStoreMRC *storeMRC;
+  KImageStore *storeMRC;
   if (param) {
 
     // Align to saved anchor

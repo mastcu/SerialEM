@@ -1,6 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
+#include "MyButton.h"
 
 class EMscope;
 
@@ -19,6 +20,7 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual BOOL OnInitDialog();
+  afx_msg void OnPaint();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -40,7 +42,7 @@ public:
   void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
   int maxIndex, int maxDecimals, CString &str);
   void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd);
-  CButton m_butValves;
+  CMyButton m_butValves;
   afx_msg void OnButValves();
   CButton m_butNanoMicro;
   afx_msg void OnButNanoMicro();
@@ -100,7 +102,6 @@ public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
   CString m_strC2Name;
-  bool mInitialized;
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, int &pendingCamLen);
   void CtrlChanged(bool pressed);

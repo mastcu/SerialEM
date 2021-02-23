@@ -175,12 +175,18 @@
     <p><strong>Black pixel % cutoff</strong></p>
     <p>Use the slider to exclude holes where the pecentage of smoothed pixel values 
       that are negative outliers exceeds the selected value.</p>
-    <p><strong>Show Included holes</strong></p>
+    <p><strong>Show Included</strong></p>
     <p>Use this option to toggle whether the included points (the ones passing all the 
       cutoffs) are displayed.&nbsp; Included points are displayed in magenta.</p>
-    <p><strong>Show Excluded holes</strong></p>
+    <p><strong>Show Excluded</strong></p>
     <p>Use this option to toggle whether the points excluded by any of these cutoffs 
-      are displayed.&nbsp; They are displayed in blue.</p>
+      are displayed.&nbsp; Points below the lower mean cutoff are displayed in light 
+      blue and ones above the upper mean cutoff are in dark blue.&nbsp; Ones excluded 
+      by the SD cutoff or black pixel cutoff are displayed in light or dark blue 
+      depending on which mean cutoff their means are closest to.</p>
+    <p><strong>Toggle Points</strong></p>
+    <p>This button can be pressed to turn off the display of all points temporarily; 
+      the points will be redsiaplyed when the button is released.</p>
     <p><strong>Layout of points</strong></p>
     <p>These radio buttons determine the sequence in which points will be placed in 
       the Navigator table by the following button.&nbsp; They represent the same 

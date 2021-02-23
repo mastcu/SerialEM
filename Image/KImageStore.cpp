@@ -55,6 +55,9 @@ void KImageStore::CommonInit(void)
   mNumTitles = 0;
   mTitles = "";
   mOpenMarkerExt = NULL;
+  mMeanSum = 0.;
+  mNumWritten = 0;
+  mPixelSpacing = 1.;
 }
 
 KImageStore::~KImageStore()
@@ -77,6 +80,15 @@ int KImageStore::AddTitle(const char *inTitle)
   mNumTitles++;
   return 0;
 
+}
+
+void KImageStore::SetPixelSpacing(float pixel)
+{
+  mPixelSpacing = pixel;
+  if (mAdocIndex < 0 || AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    return;
+  AdocSetFloat(ADOC_GLOBAL, 0, ADOC_PIXEL, pixel);
+  AdocReleaseMutex();
 }
 
 int KImageStore::Open(CFile *inFile)
@@ -141,6 +153,254 @@ int KImageStore::MarkAsOpenWithFile(const char *extension)
   return 1;
 }
 
+// Set the global items in an autodoc if one is defined
+int KImageStore::InitializeAdocGlobalItems(bool needMutex, BOOL isMontage, 
+  const char *filename)
+{
+  if (mAdocIndex >= 0) {
+    if (needMutex && AdocGetMutexSetCurrent(mAdocIndex) < 0)
+      return 14;
+    if (mStoreType != STORE_TYPE_ADOC) {
+      RELEASE_RETURN_ON_ERR(AdocSetKeyValue(ADOC_GLOBAL, 0, ADOC_SINGLE, filename), 15);
+    }
+    RELEASE_RETURN_ON_ERR(AdocSetTwoIntegers(ADOC_GLOBAL, 0, ADOC_SIZE, mWidth, mHeight)
+      , 15);
+    if (isMontage) {
+      RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, 1), 15);
+    }
+    RELEASE_RETURN_ON_ERR(AdocSetInteger(ADOC_GLOBAL, 0, ADOC_MODE, mMode), 15);
+    AdocReleaseMutex();
+  }
+  return 0;
+}
+
+// Common functionality for checking whether a new autodoc section is needed, recomputing
+// min/max/mean of remaining from metadata when overwriting, then getting the min/max/mean
+// and managing the passed variables for them
+bool KImageStore::CheckNewSectionManageMMM(KImage *inImage, int inSect, char *idata,
+  int &nz, float &amin, float &amax, float &amean)
+{
+  char sectext[10];
+  int i, sectInd, newWritten;
+  float fMin, fMax, tMin, tMax, tMean;
+  float newMin = 1.e37f, newMax = -1.e37f;
+  double theMean, newSum = 0.;
+  EMimageExtra *extra = inImage->GetUserData();
+
+  // Test for whether need new autodoc section before changing depth; definitely need
+  // one if this section has never been written before
+  bool needNewSect = inSect >= mDepth;
+
+  // If there is an autodoc, look up the section to find out for sure if it needs one
+  if (!needNewSect && mAdocIndex >= 0 && AdocGetMutexSetCurrent(mAdocIndex) >= 0) {
+    sprintf(sectext, "%d", inSect);
+    sectInd = AdocLookupSection(ADOC_ZVALUE, sectext);
+    if (sectInd < 0) {
+      needNewSect = sectInd == -1;
+    } else {
+
+      // And if there is an existing section, we are overwriting, so recompute the
+      // min/max/meanSum of the rest of the sections so values will be correct after
+      // the overwrite
+      newWritten = AdocGetNumberOfSections(ADOC_ZVALUE);
+      for (i = 0; i < newWritten; i++) {
+        if (i == sectInd)
+          continue;
+        if (AdocGetThreeFloats(ADOC_ZVALUE, i, ADOC_MINMAXMEAN, &tMin, &tMax, &tMean)) {
+
+          // Give up if any error
+          newWritten = 0;
+          break;
+        }
+        newSum += tMean;
+        ACCUM_MIN(newMin, tMin);
+        ACCUM_MAX(newMax, tMax);
+      }
+      if (newWritten > 0) {
+        mNumWritten = newWritten - 1;
+        mMeanSum = newSum;
+        amin = newMin;
+        amax = newMax;
+      }
+
+    }
+    AdocReleaseMutex();
+  }
+
+  // Get the min, max, and mean
+  minMaxMean(idata, fMin, fMax, theMean);
+  inImage->setMinMaxMean(fMin, fMax, (float)theMean);
+  if (extra) {
+    extra->mMin = fMin;
+    extra->mMax = fMax;
+    extra->mMean = (float)theMean;
+  }
+
+  ACCUM_MIN(amin, fMin);
+  ACCUM_MAX(amax, fMax);
+  
+  // Adjust file size for section past the end of current size, and update the depth
+  if (inSect >= nz)
+    nz = inSect + 1;
+  mDepth = nz;
+
+  // adjust mean sum and mean
+  mMeanSum += theMean;
+  mNumWritten++;
+  amean = (float)(mMeanSum / mNumWritten);
+
+  return needNewSect;
+}
+
+// Common function for adding a section to autodoc when necessary, keeping sections in
+// order, putting data in the autodoc from extra, and writing the autodoc if not HDF
+int KImageStore::AddExtraValuesToAdoc(KImage *inImage, int inSect, bool needNewSect, 
+  bool &gotMutex)
+{
+  char sectext[10];
+  int sectInd;
+  CString mdocName;
+
+  gotMutex = false;
+  if (mAdocIndex >= 0) {
+    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+      return 14;
+    gotMutex = true;
+
+    // Add a new section if test above indicated it was needed
+    sprintf(sectext, "%d", inSect);
+    if (needNewSect) {
+      sectInd = AdocAddSection(ADOC_ZVALUE, sectext);
+      if (sectInd < 0)
+        return 15;
+    } else {
+
+      // otherwise try to look up an existing section, and if there is none, insert one
+      // in the right place to keep the sections in order
+      sectInd = AdocLookupSection(ADOC_ZVALUE, sectext);
+      if (sectInd < -1)
+        return 14;
+      if (sectInd == -1) {
+        sectInd = AdocFindInsertIndex(ADOC_ZVALUE, inSect);
+        if (sectInd < 0)
+          return 14;
+        if (AdocInsertSection(ADOC_ZVALUE, sectInd, sectext) < 0)
+          return 15;
+      }
+    }
+
+    // add all the values, and rewrite the adoc or append to it
+    if (KStoreADOC::SetValuesFromExtra(inImage, ADOC_ZVALUE, sectInd))
+      return 15;
+    if (mStoreType != STORE_TYPE_HDF) {
+      mdocName = getAdocName();
+      if (sectInd && needNewSect) {
+        if (AdocAppendSection((char *)(LPCTSTR)mdocName) < 0)
+          return 16;
+      } else {
+        if (AdocWrite((char *)(LPCTSTR)mdocName) < 0)
+          return 16;
+      }
+    }
+  }
+  return 0;
+}
+
+// Add a title
+int KImageStore::AddTitleToAdoc(const char * inTitle)
+{
+  int retval = 0;
+  if (mAdocIndex >= 0) {
+    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+      return 2;
+    retval = AdocAddSection(ADOC_TITLE, inTitle);
+    AdocReleaseMutex();
+  }
+  return retval;
+}
+
+int KImageStore::CheckAdocForMontage(MontParam * inParam)
+{
+  int ifmont;
+  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    return 0;
+  if (AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) || ifmont <= 0)
+    ifmont = 0;
+  else
+    ifmont = KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
+  AdocReleaseMutex();
+  return ifmont;
+}
+
+int KImageStore::GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY,
+  int &outZ)
+{
+  int retval = 0;
+  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    return -1;
+  if (AdocGetThreeIntegers(sectName, inSect, ADOC_PCOORD, &outX, &outY, &outZ))
+    retval = -1;
+  AdocReleaseMutex();
+  return retval;
+}
+
+int KImageStore::GetStageCoordFromAdoc(const char *sectName, int inSect, double & outX,
+  double & outY)
+{
+  float X, Y;
+  int retval = 0;
+  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    return -1;
+  if (AdocGetTwoFloats(sectName, inSect, ADOC_STAGE, &X, &Y)) {
+    retval = -1;
+  } else {
+    outX = X;
+    outY = Y;
+  }
+  AdocReleaseMutex();
+  return retval;
+}
+
+// This takes a map from current section number to new section number
+int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz)
+{
+  int ind, pcX, pcY, pcZ, retval = 0;
+  CString mdocName;
+
+  if (mAdocIndex >= 0) {
+    if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+      return 3;
+    for (ind = 0; ind < nz; ind++) {
+      RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(sectName, ind, ADOC_PCOORD, &pcX,
+        &pcY, &pcZ), 4);
+      pcZ = sectOrder[pcZ];
+      RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, ind, ADOC_PCOORD, pcX, pcY,
+        pcZ), 5);
+    }
+    if (mStoreType != STORE_TYPE_HDF) {
+      mdocName = getAdocName();
+      if (AdocWrite((char *)(LPCTSTR)mdocName) < 0)
+        retval = 6;
+    }
+    AdocReleaseMutex();
+  }
+  return retval;
+}
+
+void KImageStore::AddTitleToLabelArray(char *label, int &numTitle, 
+  const char *inTitle)
+{
+  int len = (int)strlen(inTitle);
+  len = B3DMIN(len, MRC_LABEL_SIZE);
+  memcpy(&label[0], inTitle, len);
+
+  // Pad with spaces, not nulls
+  for (; len < 80; len++)
+    label[len] = 0x20;
+  numTitle++;
+
+}
+
 // Compute a simple weighted sum of the filename characters as a good enough checksum
 // for determining if something is the same file
 unsigned int KImageStore::getChecksum()
@@ -202,7 +462,7 @@ int KImageStore::lookupPixSize(int inMode)
 }
 
 // Get the min, max, and mean of the data in a buffer
-void KImageStore::minMaxMean(char * idata, int dataSize, float & fMin, 
+void KImageStore::minMaxMean(char * idata, float & fMin, 
                              float & fMax, double & outMean)
 {
   float fVal, fSum;

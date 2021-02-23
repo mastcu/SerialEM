@@ -282,6 +282,7 @@ BOOL CEMbufferWindow::OnInitDialog()
   m_sbcToFile.SetRange(-1, MAX_STORES);
   m_sbcCopy.SetPos(mBufferManager->GetFifthCopyToBuf());
   SetSpinText(IDC_BCOPYANY, mBufferManager->GetFifthCopyToBuf());
+  mInitialized = true;
 
   // Do everything else the same if external settings change
   UpdateSettings();
@@ -293,6 +294,9 @@ BOOL CEMbufferWindow::OnInitDialog()
 // Set up the various buttons that might be affected by a change of settings
 void CEMbufferWindow::UpdateSettings()
 {
+  if (!mInitialized)
+    return;
+
   // Load variables 
   m_bAlignOnSave = (mBufferManager->GetAlignOnSave() != 0);
   m_bConfirmDestroy = (mBufferManager->GetConfirmBeforeDestroy(3) != 0);
@@ -322,9 +326,11 @@ void CEMbufferWindow::UpdateSaveCopy()
 {
 // If doing tasks, only the copy to new button should be active
   BOOL bEnable, noTasks;
-  int maxStore, curStore, mbint;
-  int spinBuf = m_sbcCopy.GetPos() & 255;
+  int maxStore, curStore, mbint, spinBuf;
   EMimageBuffer *activeBuf = mWinApp->mActiveView->GetActiveImBuf();
+  if (!mInitialized)
+    return;
+  spinBuf = m_sbcCopy.GetPos() & 255;
 
   noTasks = !mWinApp->DoingTasks() || 
     (mWinApp->mShiftCalibrator->CalibratingOffset() && mWinApp->mCamera->CameraReady());
