@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/22/21: Added button to Hole Finder to toggle display of points while button
+is pressed.
+
+2/22/21: Added ability to open script editor windows with a right click on the
+button in the script toolbar or Camera and Script Tools panel.
+
+2/22/21: Replaced colored borders for buttons with colored backgrounds.
+
 2/22/21: Fixed using OneView with drift correction and float images (In 3.8).
 
 2/18/21: Assigned the current stage backlash, if any, to an image shift

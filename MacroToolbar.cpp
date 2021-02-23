@@ -114,7 +114,7 @@ void CMacroToolbar::OnMacroRun(UINT nID)
     mWinApp->mMacroProcessor->ToolbarMacroRun(nID);
 }
 
-// Notification of either a draw event or right-click event: open editor on right-click
+// Notification of a right-click event: open editor on right-click
 void CMacroToolbar::OnRunButDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result)
 {
   int index = nID - ID_MACRO_RUN1;

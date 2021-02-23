@@ -160,8 +160,6 @@ void CRemoteControl::OnPaint()
   CPaintDC dc(this); // device context for painting
 
   DrawSideBorders(dc);
-  //if (mLastGunOn > 0)
-    // DrawButtonOutline(dc, &m_butValves, 3, RGB(0, 255, 0));
 }
 
 // Called from scope update with current values; keeps track of last values seen and

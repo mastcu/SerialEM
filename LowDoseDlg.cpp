@@ -1128,13 +1128,6 @@ void CLowDoseDlg::OnPaint()
   CPaintDC dc(this); // device context for painting
  
   DrawSideBorders(dc);
-  /*int area = mWinApp->mScope->GetLowDoseArea();
-  if (area < 0)
-    return;
-  CWnd *curBut = GetDlgItem(IDC_GOTO_VIEW + area);
-  if (!curBut)
-    return;
-  DrawButtonOutline(dc, curBut, 3, RGB(0, 255, 0));*/
 }
 
 // DIALOG INITALIZATION

@@ -1664,7 +1664,6 @@
 #define IDC_STAT_UP_MEAN_LABEL          2691
 #define IDC_STAT_SD_LABEL               2692
 #define IDC_STAT_PCT_LABEL              2693
-#define IDC_BUTTON1                     2694
 #define IDC_BUT_TOGGLE_HOLES            2694
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
