@@ -10,15 +10,6 @@
 #include "CameraController.h"
 #include "ShiftManager.h"
 
-static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADDNAVSTATE, IDC_BUT_DELSTATE,
-IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_RESTORESTATE, IDC_BUT_FORGETSTATE,
-IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
-IDC_STAT_IM_STATE_SET, IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, PANEL_END,
-IDC_LIST_STATES, PANEL_END, TABLE_END};
-
-static int sTopTable[sizeof(sIdTable) / sizeof(int)];
-static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
-static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 // CStateDlg dialog
 
@@ -71,13 +62,13 @@ BEGIN_MESSAGE_MAP(CStateDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_UPDATE_STATE, OnButUpdateState)
 END_MESSAGE_MAP()
 
+
 // CStateDlg message handlers
 BOOL CStateDlg::OnInitDialog()
 {
   // [LD], camera, mag, spot, C2, exposure, binning, frame
   int fields[11] = {11,8,24,10,18,22,12,29,8,8,8};
   int tabs[11], i;
-  BOOL states[2] = {true, true};
   CRect clientRect, editRect;
   CBaseDlg::OnInitDialog();
   mHelper = mWinApp->mNavHelper;
@@ -97,9 +88,6 @@ BOOL CStateDlg::OnInitDialog()
   m_listViewer.SetTabStops(8, tabs);
   ReplaceDlgItemText(IDC_STAT_TITLELINE,"C2", mWinApp->mScope->GetC2Name());
   FillListBox();
-  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
-    sHeightTable);
-  UpdateHiding();
 
   mInitialized = true;
   //UpdateData(false);
@@ -115,23 +103,16 @@ void CStateDlg::PostNcDestroy()
 
 void CStateDlg::OnSize(UINT nType, int cx, int cy) 
 {
-  CRect rect, clientRect;
+  CRect rect;
 	CDialog::OnSize(nType, cx, cy);
   if (!mInitialized)
     return;
-  if (mAdjustingPanels) {
-    GetClientRect(clientRect);
-    m_listViewer.GetWindowRect(rect);
-    mListBorderY = clientRect.Height() - rect.Height();
-    return;
-  }
   int newX = cx - mListBorderX;
   int newY = cy - mListBorderY;
   if (newX < 10)
     newX = 10;
   if (newY < 10)
     newY = 10;
-
   m_listViewer.SetWindowPos(NULL, 0, 0, newX, newY, SWP_NOZORDER | SWP_NOMOVE);
 
   newX = cx - mNameBorderX;
@@ -490,19 +471,4 @@ void CStateDlg::DisableUpdateButton(void)
 {
   mSetStateIndex = -1;
   m_butUpdate.EnableWindow(false);
-}
-
-void CStateDlg::UpdateHiding(void)
-{
-  CRect rect, clientRect;
-  BOOL states[2] = {true, true};
-  mAdjustingPanels = true;
-  m_listViewer.GetWindowRect(&rect);
-  sHeightTable[sizeof(sIdTable) / sizeof(int) - 3] = rect.Height();
-  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
-    0, sHeightTable);
-  mAdjustingPanels = false;
-  GetClientRect(clientRect);
-  mListBorderY = clientRect.Height() - rect.Height();
-  mWinApp->RestoreViewFocus();
 }

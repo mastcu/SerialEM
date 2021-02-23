@@ -21,7 +21,6 @@
 #include "parse_params.h"
 #include "b3dutil.h"
 #include "mxmlwrap.h"
-#include "iimage.h"
 
 // Local functions
 static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth, 
@@ -363,6 +362,9 @@ static int RandomIntFillFromFloat(float value)
                        a[indRight + xStride] +                          \
                        a[indRight + yStride + xStride])) / 4.f);        \
     a[ind] = (b)e(fill);                                                \
+    ind += yStride;                                                     \
+    indLeft += yStride;                                                 \
+    indRight += yStride;                                                \
   }                                                                     \
   for (i = fullStart; i <= fullEnd; i++, ind += yStride, indLeft += yStride, \
          indRight += yStride) {                                         \
@@ -454,8 +456,7 @@ static void CorrectColumn(void *array, int type, int nx, int ny, int xStride, in
 
   if (num <= 0)
     return;
-
-  // Remove super-resolution in pixels outside the columns perpendicular to the column
+  
   if (superFac > 0) {
     nloop = 0;
     for (i = 0; i < numAvgSuper; i++) {
@@ -794,8 +795,8 @@ static void CorrectJumboPixel(void *array, int type, int nxdim, int nx, int ny, 
   for (i = 0 ; i < 4; i++) {
     for (jy = 0; jy < 4; jy++) {
       for (jx = 0; jx < 4; jx++) {
-        idx[ix] = jdx[i] + jx;
-        idy[ix++] = jdy[i] + jy;
+        idx[ix] = xpix + jdx[i] + jx;
+        idy[ix++] = ypix + jdy[i] + jy;
       }
     }
   }
@@ -938,18 +939,14 @@ void CorDefScaleDefectsForK2(CameraDefects *param, bool scaleDown)
   ScaleDefectsByFactors(param, upFac, downFac, addFac);
 }
 
-// Scale defects for a Falcon up by 2 or 4, or down for negative factors, AND set the
-// flag that it has been scaled. Factor MUST be -8, -4, -2, 2, or 4
+// Scale defects for a Falcon up by 2 or 4 AND set the flag that it has been scaled
+// Factor MUST be 2 or 4
 void CorDefScaleDefectsForFalcon(CameraDefects *param, int factor)
 {
   param->wasScaled = factor / 2;
-  if (factor > 0)
-    ScaleDefectsByFactors(param, factor, 1, factor - 1);
-  else
-    ScaleDefectsByFactors(param, 1, -factor, 0);
+  ScaleDefectsByFactors(param, factor, 1, factor - 1);
 }
 
-// Scaling defects given the up and down factors
 static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac, 
                                   int addFac)
 {
@@ -973,7 +970,6 @@ static void ScaleDefectsByFactors(CameraDefects *param, int upFac, int downFac,
   }
 }
 
-// Scale a row or column specification given the up and down factors
 static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth, 
                                UShortVec &partial, ShortVec &partWidth, UShortVec &startY,
                                UShortVec &endY, int upFac, int downFac, int addFac)
@@ -981,11 +977,11 @@ static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth,
   int i;
   for (i = 0; i < (int)colStart.size(); i++) {
     colStart[i] = colStart[i] * upFac / downFac;
-    colWidth[i] = B3DMAX(1, colWidth[i] * upFac / downFac);
+    colWidth[i] = colWidth[i] * upFac / downFac;
   }
   for (i = 0; i < (int)partial.size(); i++) {
     partial[i] = partial[i] * upFac / downFac;
-    partWidth[i] = B3DMAX(1, partWidth[i] * upFac / downFac);
+    partWidth[i] = partWidth[i] * upFac / downFac;
     startY[i] = startY[i] * upFac / downFac;
     endY[i] = endY[i] * upFac / downFac + addFac;
   }
@@ -1797,19 +1793,14 @@ static void clearDefectList(CameraDefects &defects)
   defects.pixUseMean.clear();
 }
 
-// Given a string from FEI gain reference file, parse it as an XML string and
-// convert the defects into our structure
 int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
 {
-  int xmlInd, num, startInd, err, tagInd, elemInd, numList, colPad = 0;
+  int xmlInd, num, startInd, err, tagInd, elemInd, numList;
   char *rootElement, *value;
   int *valList;
   const char *tags[6] = {"row", "col", "area", "nonmaskingpoint", "point", 
                          "nonmaskingpoint"};
-  colPad = pad / 10;
-  pad = pad % 10;
 
-  // Set up as XML and make sure it is defects
   clearDefectList(defects);
   xmlInd = ixmlLoadString(strng, 0, &rootElement);
   if (xmlInd < 0)
@@ -1821,7 +1812,6 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
   }
   free(rootElement);
 
-  // Loop on the different types of elements
   for (tagInd = 0; tagInd < 6; tagInd++) {
     err = ixmlFindElements(xmlInd, 0, tags[tagInd], &startInd, &num);
     if (err) {
@@ -1829,7 +1819,6 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
       return -err;
     }
 
-    // Loop through the matching elements and get each value
     for (elemInd = 0; elemInd < num; elemInd++) {
       err = ixmlGetStringValue(xmlInd, startInd + elemInd, &value);
       if (err || !value) {
@@ -1840,7 +1829,6 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return -err;
       }
 
-      // Parse the value as a list
       valList = parselist(value, &numList);
       free(value);
       if (!valList) {
@@ -1848,7 +1836,6 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return 6 - numList;
       }
  
-      // Make sure the number of values is right for the type
       if (((tagInd == 2 || tagInd == 3) && numList != 4) || 
           ((tagInd == 4 || tagInd == 5) && numList != 2)) {
         free(valList);
@@ -1856,17 +1843,16 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
         return 10;
       }
       
-      // Allow for padding of columns/rows
-      err = B3DMAX(0, valList[0] - colPad);
+      err = valList[0];
       switch (tagInd) {
       case 0:
-        defects.badRowStart.push_back(err);
-        defects.badRowHeight.push_back(numList + colPad + valList[0] - err);
+        defects.badRowStart.push_back(valList[0]);
+        defects.badRowHeight.push_back(numList);
         break;
 
       case 1:
-        defects.badColumnStart.push_back(err);
-        defects.badColumnWidth.push_back(numList + colPad + valList[0] - err);
+        defects.badColumnStart.push_back(valList[0]);
+        defects.badColumnWidth.push_back(numList);
         break;
 
       case 2:
@@ -1894,63 +1880,11 @@ int CorDefParseFeiXml(const char *strng, CameraDefects &defects, int pad)
       free(valList);
     }
   }
-  ixmlClear(xmlInd);
   defects.FalconType = 1;
   B3DCLAMP(pad, 0, MAX_AVG_SUPER_RES);
   defects.numAvgSuperRes = pad;
   return 0;
 }
-
-// Given a TIFF gain reference file, looks for the tag for FEI defects and parses them
-// as a defect list with the given padding on line defects.  Writes a standard defect 
-// file to dumpDefectName if that is non-NULL.  Processes them by flipping if flipY is 
-// true, finding touching pixels, and scaling if superFac != 1.  nx and ny should be
-// the size of the gain reference.  messBuf of size bufLen receives messages on error,
-// with return value 1.  Return value -1 means no tag was found.
-int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int nx, int ny,
-                            bool flipY, int superFac, int feiDefPad,
-                            const char *dumpDefectName, char *messBuf, int  bufLen)
-{
-  int retval;
-  b3dUInt16 count;
-  char *strng, *strCopy;
-  FILE *defFP;
-  std::string sstr;
-  if (tiffGetArray(iiFile, FEI_TIFF_DEFECT_TAG, &count, &strng) <= 0 || !count) 
-    return -1;
-  strCopy = B3DMALLOC(char, count + 1);
-  if (!strCopy) {
-    snprintf(messBuf, bufLen, "Memory error copying defect string from TIFF file");
-    return 1;
-  }
-  strncpy(strCopy, strng, count);
-  strCopy[count] = 0x00;
-  retval = CorDefParseFeiXml(strCopy, defects, feiDefPad);
-  if (retval) {
-    snprintf(messBuf, bufLen, "Parsing defect string from TIFF file (error %d)", retval);
-    free(strCopy);
-    return 1;
-  }
-  if (dumpDefectName) {
-    imodBackupFile(dumpDefectName);
-    defFP = fopen(dumpDefectName, "w");
-    if (!defFP) {
-      snprintf(messBuf, bufLen, "Opening file to write defects to, %s", dumpDefectName);
-      1;
-    }
-    CorDefDefectsToString(defects, sstr, nx, ny);
-    fprintf(defFP, "%s", sstr.c_str());
-    fclose(defFP);
-  }
-  if (flipY)
-    CorDefFlipDefectsInY(&defects, nx, ny, 0);
-  CorDefFindTouchingPixels(defects, nx, ny, 0);
-  if (superFac != 1)
-    CorDefScaleDefectsForFalcon(&defects, superFac);
-  free(strCopy);
-  return 0;
-}
-
 
 #define SET_PIXEL(x, y, v) { ix = (x) + ixOffset;   \
     iy = (y) + iyOffset;                          \
@@ -2244,6 +2178,30 @@ void CorDefRefineSuperResRef(float *ref, int nx, int ny, int superFac,
   }
 }
 
+
+#define FDCE_LINE_DIFFS(typ, dat, nex, dif, lsm, dsm) \
+  dat = (typ *)array + iy * nx;   \
+  nex = dat + (1 - 2 * idir) * nx;  \
+  for (ix = xStart; ix < xEnd; ix++) {  \
+    dif = nex[ix] - dat[ix];    \
+    lsm += dat[ix];    \
+    dsm += dif;     \
+    diffSumSq += (double)dif * dif;    \
+  }
+
+#define FDCE_COL_SUMS(typ, dat, dif, lsm, dsm) \
+  dat = (typ *)array + iy * nx;  \
+  for (wid = 0; wid < maxWidth; wid++) {   \
+    ind = wid + loop * maxWidth;  \
+    dif = dat[ix + idir] - dat[ix];  \
+    lsm[ind] += dat[ix];   \
+    dsm[ind] += dif;   \
+    xDiffSumSq[ind] += (double)dif * dif;   \
+    ix += idir;  \
+  }
+
+//void  PrintfToLog(char *fmt, ...);
+
 // Find edges of an image that are dark because drift correction was done without filling
 // the area outside and frames that were added in.  analyzeLen is the extent to analyze 
 // along each edge, maxWidth is the width to analyze.  The mean and SD are measured for
@@ -2263,21 +2221,24 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   int yStart = B3DMAX(0, ny / 2 - analyzeLen / 2);
   int xEnd = B3DMIN(nx, xStart + analyzeLen);
   int yEnd = B3DMIN(ny, yStart + analyzeLen);
+  bool isFloat = type == SLICE_MODE_FLOAT;
   unsigned short *usData, *usNext;
   short *sData, *sNext;
-  float maxBelow, ratioMedian, ratioMADN, minAbove;
+  float *fData, *fNext;
+  float maxBelow, ratioMedian, ratioMADN, minAbove, fDiff, fLineSum, fDiffSum;
   float *lineMean, *diffMean, *diffSD, *diffRatio, *temp;
-  int *xLineSums, *xDiffSums;
+  b3dFloat *fxLineSums, *fxDiffSums;
+  b3dInt32 *xLineSums, *xDiffSums;
   double *xDiffSumSq;
 
-  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT)
+  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT && type != SLICE_MODE_FLOAT)
     return 1;
   lineMean = B3DMALLOC(float, 4 * maxWidth);
   diffMean = B3DMALLOC(float, 4 * maxWidth);
   diffSD = B3DMALLOC(float, 4 * maxWidth);
   diffRatio = B3DMALLOC(float, 4 * maxWidth);
-  xLineSums = B3DMALLOC(int, 2 * maxWidth);
-  xDiffSums = B3DMALLOC(int, 2 * maxWidth);
+  xLineSums = B3DMALLOC(b3dInt32, 2 * maxWidth);
+  xDiffSums = B3DMALLOC(b3dInt32, 2 * maxWidth);
   xDiffSumSq = B3DMALLOC(double, 2 * maxWidth);
   if (!lineMean || !diffMean || !diffSD || !xLineSums || !xDiffSums || !xDiffSumSq ||
       !diffRatio) {
@@ -2291,8 +2252,10 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
     return 2;
   }
   temp = (float *)xDiffSumSq;
-  memset(xLineSums, 0, 2 * maxWidth * sizeof(int));
-  memset(xDiffSums, 0, 2 * maxWidth * sizeof(int));
+  fxLineSums = (b3dFloat *)xLineSums;
+  fxDiffSums = (b3dFloat *)xDiffSums;
+  memset(xLineSums, 0, 2 * maxWidth * sizeof(b3dInt32));
+  memset(xDiffSums, 0, 2 * maxWidth * sizeof(b3dInt32));
   memset(xDiffSumSq, 0, 2 * maxWidth * sizeof(double));
 
   // Do lines at Y levels, store their results first in arrays
@@ -2301,29 +2264,22 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
       iy = idir ? ny - 1 - wid : wid;
       lineSum = diffSum = 0;
       diffSumSq = 0.;
-      if (type == SLICE_MODE_SHORT) {
-        sData = (short *)array + iy * nx;
-        sNext = sData + (1 - 2 * idir) * nx;
-        for (ix = xStart; ix < xEnd; ix++) {
-          diff = sNext[ix] - sData[ix];
-          lineSum += sData[ix];
-          diffSum += diff;
-          diffSumSq += (double)diff * diff;
-        }
+      if (isFloat) {
+        fLineSum = fDiffSum = 0.;
+        FDCE_LINE_DIFFS(b3dFloat, fData, fNext, fDiff, fLineSum, fDiffSum);
       } else {
-        usData = (unsigned short *)array + iy * nx;
-        usNext = usData + idir * nx;
-        for (ix = xStart; ix < xEnd; ix++) {
-          diff = usNext[ix] - usData[ix];
-          lineSum += usData[ix];
-          diffSum += diff;
-          diffSumSq += (double)diff * diff;
+        if (type == SLICE_MODE_SHORT) {
+          FDCE_LINE_DIFFS(short, sData, sNext, diff, lineSum, diffSum);
+        } else {
+          FDCE_LINE_DIFFS(unsigned short, usData, usNext, diff, lineSum, diffSum);
         }
+        fDiffSum = (float)diffSum;
+        fLineSum = (float)lineSum;
       }
       ind = idir * maxWidth + wid;
-      sumsToAvgSDdbl((double)diffSum, diffSumSq, 1, xEnd - xStart, &diffMean[ind],
+      sumsToAvgSDdbl(fDiffSum, diffSumSq, 1, xEnd - xStart, &diffMean[ind],
                      &diffSD[ind]);
-      lineMean[ind] = (float)lineSum / (float)(xEnd - xStart);
+      lineMean[ind] = fLineSum / (float)(xEnd - xStart);
       diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
     }
   }
@@ -2332,27 +2288,13 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   for (iy = yStart; iy < yEnd; iy++) {
     for (loop = 0; loop < 2; loop++) {
       idir = 1 - 2 * loop;
-      ix = loop ? nx - 1: 0;
-      if (type == SLICE_MODE_SHORT) {
-        sData = (short *)array + iy * nx;
-        for (wid = 0; wid < maxWidth; wid++) {
-          ind = wid + loop * maxWidth;
-          diff = sData[ix + idir] - sData[ix];
-          xLineSums[ind] += sData[ix];
-          xDiffSums[ind] += diff;
-          xDiffSumSq[ind] += (double)diff * diff;
-          ix += idir;
-        }
+      ix = loop ? nx - 1 : 0;
+      if (isFloat) {
+        FDCE_COL_SUMS(b3dFloat, fData, fDiff, fxLineSums, fxDiffSums);
+      } else if (type == SLICE_MODE_SHORT) {
+        FDCE_COL_SUMS(short, sData, diff, xLineSums, xDiffSums);
       } else {
-        usData = (unsigned short *)array + iy * nx;
-        for (wid = 0; wid < maxWidth; wid++) {
-          ind = wid + loop * maxWidth;
-          diff = usData[ix + idir] - usData[ix];
-          xLineSums[ind] += usData[ix];
-          xDiffSums[ind] += diff;
-          xDiffSumSq[ind] += (double)diff * diff;
-          ix += idir;
-        }
+        FDCE_COL_SUMS(unsigned short, usData, diff, xLineSums, xDiffSums);
       }
     }
   }
@@ -2360,9 +2302,10 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   // Get the mean and SD and ratio for each column
   for (wid = 0; wid < 2 * maxWidth; wid++) {
     ind = wid + 2 * maxWidth;
-    sumsToAvgSDdbl((double)xDiffSums[wid], xDiffSumSq[wid], 1, yEnd - yStart, 
-      &diffMean[ind], &diffSD[ind]);
-    lineMean[ind] = (float)xLineSums[wid] / (float)(yEnd - yStart);
+    sumsToAvgSDdbl(B3DCHOICE(isFloat, fxDiffSums[wid], (double)xDiffSums[wid]),
+      xDiffSumSq[wid], 1, yEnd - yStart, &diffMean[ind], &diffSD[ind]);
+    lineMean[ind] = B3DCHOICE(isFloat, fxLineSums[wid], (float)xLineSums[wid]) / 
+      (float)(yEnd - yStart);
     diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
   }
 
@@ -2378,7 +2321,7 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
     else
       ACCUM_MIN(minAbove, temp[ind]);
   }
-  /* printf("Last ratio deviations below and above threshold = %.2f  %.2f MADNs\n", 
+  /* PrintfToLog("Last ratio deviations below and above threshold = %.2f  %.2f MADNs\r\n",
      maxBelow, minAbove); */
 
   // Find first line, if any, where the deviation exceeds the criterion
@@ -2391,13 +2334,13 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
         break;
       }
     }
-    /* if (indAbove[loop] >= 0) {
-      for (wid = 0; wid <= B3DMIN(maxWidth - 1, indAbove[loop] + 3); wid++) {
-        ind = wid + loop * maxWidth;
-        printf("%d  %2d  %7.1f  %7.1f  %7.1f  %7.2f  %7.2f\n", loop, wid, lineMean[ind],
-               diffMean[ind], diffSD[ind], diffRatio[ind], temp[ind]);
-               }
-               } */
+     /*if (indAbove[loop] >= 0) {
+       for (wid = 0; wid <= B3DMIN(maxWidth - 1, indAbove[loop] + 3); wid++) {
+         ind = wid + loop * maxWidth;
+         PrintfToLog("%d  %2d  %7.1f  %7.1f  %7.1f  %7.2f  %7.2f\r\n", loop, wid, lineMean[ind],
+           diffMean[ind], diffSD[ind], diffRatio[ind], temp[ind]);
+       }
+               }*/
   }
 
   // Just return the limits.  Correction by partial filling is problematic and not as 
@@ -2598,17 +2541,6 @@ int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &ca
     CorDefScaleDefectsForFalcon(&defects, scaling);
     camSizeX *= scaling;
     camSizeY *= scaling;
-  }
-  if (defects.FalconType && (nxFull < camSizeX && nyFull < camSizeY)) {
-    if (defects.wasScaled < 0)
-      return 1;
-    scaling = B3DNINT(camSizeX / nxFull);
-    if (camSizeX * scaling != nxFull || camSizeY * scaling != nyFull || 
-        (scaling != 2 && scaling != 4 && scaling != 8))
-      return 1;
-    CorDefScaleDefectsForFalcon(&defects, -scaling);
-    camSizeX /= scaling;
-    camSizeY /= scaling;
   }
 
   // See if the defects need to be scaled up: a one-time error or action

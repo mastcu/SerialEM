@@ -172,8 +172,6 @@ public:
   BOOL DoingTasks();
   CNavigatorDlg *mNavigator;
   int SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2, int &value);
-  void DoListStageCals();
-  void DoListISVectors(BOOL useCalPixel);
 
 private:
   CSerialEMApp *mWinApp;
@@ -393,10 +391,6 @@ public:
   afx_msg void OnOptionsSearchPlusMinus();
   afx_msg void OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI);
   afx_msg void OnMarkerToCenter();
-  afx_msg void OnUseItemLabelsInFilenames();
-  afx_msg void OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI);
-  afx_msg void OnCloseValvesAfterLongInactivity();
-  afx_msg void OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

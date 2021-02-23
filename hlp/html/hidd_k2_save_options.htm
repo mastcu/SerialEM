@@ -15,7 +15,7 @@
     <p>
       This dialog has two sections.&nbsp; The upper section presents choices about the files produced when the SerialEM plugin 
       to DigitalMicrograph saves subframes for a Dose Fractionation exposure.&nbsp; 
-      Nearly everything in this section appears only for Gatan cameras 
+      Everything except one option in this section appears only for Gatan cameras 
       (mostly just for K2/K3).&nbsp; The lower section, which appears for all cameras 
       that can save frames, allows you to 
       control the name of these files.&nbsp; Except for Direct Electron cameras with 
@@ -23,13 +23,6 @@
       files into different 
       folders automatically.&nbsp; These are global settings that apply to all camera parameter sets in which 
       frames are saved.</p>
-    <p>
-      <b>Save counting frames in EER file instead of MRC file&nbsp;&nbsp; (Falcon 4 
-      only)</b></p>
-    <p>
-      Select this option to have counting mode frames saved in EER format, namely with 
-      a frame saved for every camera readout and every electron event recorded as a 
-      count in a compressed TIFF file.</p>
     <p>
       <b>Save metadata (.mdoc) file for each frame stack</b></p>
     <p>
@@ -40,8 +33,7 @@
       with <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the 
       file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; 
       For a&nbsp; K2/K3, it will also have the gain reference and defect file names if frames are taken 
-      without normalization.&nbsp; The gain reference name will also appear for a 
-      Falcon 4 saving in EER format.&nbsp; Additional entries can be added to the file with 
+      without normalization.&nbsp; Additional entries can be added to the file with 
       the script commands &#39;StartNextFrameStackMdoc&#39; and &#39;AddToNextFrameStackMdoc&#39;, but 
       these commands must be given before acquisition.</p>
     <p>
@@ -211,8 +203,7 @@
       and Falcon cameras, you can 
       select several of these components to use for naming of folders that are created 
       under the specified main directory to hold subsets of the files.&nbsp; However, 
-      for a Falcon 3 camera when the SerialEM property &#39;SubdirsOkInFalcon3Save&#39; is not 
-      set, or Falcon 2 under the new scripting interface, the folder 
+      for a Falcon 3 camera or Falcon 2 under the new scripting interface, the folder 
       options here are not available if you have specified the name of a folder in the <a href="#hidd_camerasetup.htm">Camera Setup dialog</a>.&nbsp; For the 
       K2/K3, if you select to save one frame per file in the first section of this 
       dialog, then all the statements here about the name of the &quot;file&quot; refer to the 

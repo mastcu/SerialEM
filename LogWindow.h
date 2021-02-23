@@ -28,9 +28,7 @@ public:
   SetMember(BOOL, Unsaved);
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
-  void Append(CString &inString, int lineFlags);
-  void DoAppend(CString &inString, int lineFlags);
-  void FlushDeferredLines();
+  void Append(CString inString, int lineFlags);
   CLogWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -70,12 +68,6 @@ private:
   int mAppendedLength;
   CString mLastStackname;
   CString mLastFilePath;
-  CString mDeferredLines;    // String to buffer lines for output
-  int mNumDeferred;          // Number of lines or additions to string
-  double mStartedDeferTime;  // Time when this started being accumulate
-  int mMaxLinesToDefer;      // Maximum number of lines to hold
-  float mMaxSecondsToDefer;  // And maximum time to hold lines
-
 public:
   BOOL SaveFileNotOnStack(CString stackName);
   void CloseLog(void) {OnCancel();};
