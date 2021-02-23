@@ -2,7 +2,6 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "NavHelper.h"
-#include "MyButton.h"
 
 #define MAX_HOLE_TRIALS 16
 class CNavHelper;
@@ -18,7 +17,7 @@ public:
   void ManageEnables();
   void ManageSizeSeparation(bool update);
   void UpdateSettings();
-  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<short> **exclude,
+  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<bool> **exclude,
     BOOL &incl, BOOL &excl);
   bool HaveHolesToDrawOrMakePts();
   void SetExclusionsAndDraw();
@@ -70,7 +69,7 @@ private:
   FloatVec mXstages, mYstages;
   FloatVec mXinPiece, mYinPiece;
   IntVec mPieceOn;
-  std::vector<short> mExcluded;
+  std::vector<bool> mExcluded;
   double mSigmas[MAX_HOLE_TRIALS];
   double mThresholds[MAX_HOLE_TRIALS];
   int mIterations[MAX_HOLE_TRIALS];
@@ -98,7 +97,6 @@ private:
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;
-  CFont *mBoldFont;
 
 
 public:
@@ -174,6 +172,4 @@ public:
   BOOL m_bBracketLast;
   CButton m_butSetSizeSpace;
   afx_msg void OnButSetSizeSpace();
-  CMyButton m_butToggleHoles;
-  afx_msg void OnToggleDraw(NMHDR * pNotifyStruct, LRESULT * result);
 };

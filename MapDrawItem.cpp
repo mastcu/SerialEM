@@ -77,10 +77,6 @@ CMapDrawItem::CMapDrawItem()
   mFocusXoffset = mFocusYoffset = 0;
   mNumSkipHoles = mNumXholes = mNumYholes = 0;
   mSkipHolePos = NULL;
-  mTSstartAngle = EXTRA_NO_VALUE;
-  mTSendAngle = EXTRA_NO_VALUE;
-  mTSbidirAngle = EXTRA_NO_VALUE;
-  mTargetDefocus = EXTRA_NO_VALUE;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
  }

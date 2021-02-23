@@ -22,53 +22,12 @@ CMacroToolbar::~CMacroToolbar()
 void CMacroToolbar::DoDataExchange(CDataExchange* pDX)
 {
 	CBaseDlg::DoDataExchange(pDX);
-  DDX_Control(pDX, ID_MACRO_RUN1, mRunButtons[0]);
-  DDX_Control(pDX, ID_MACRO_RUN2, mRunButtons[1]);
-  DDX_Control(pDX, ID_MACRO_RUN3, mRunButtons[2]);
-  DDX_Control(pDX, ID_MACRO_RUN4, mRunButtons[3]);
-  DDX_Control(pDX, ID_MACRO_RUN5, mRunButtons[4]);
-  DDX_Control(pDX, ID_MACRO_RUN6, mRunButtons[5]);
-  DDX_Control(pDX, ID_MACRO_RUN7, mRunButtons[6]);
-  DDX_Control(pDX, ID_MACRO_RUN8, mRunButtons[7]);
-  DDX_Control(pDX, ID_MACRO_RUN9, mRunButtons[8]);
-  DDX_Control(pDX, ID_MACRO_RUN10, mRunButtons[9]);
-  DDX_Control(pDX, ID_MACRO_RUN11, mRunButtons[10]);
-  DDX_Control(pDX, ID_MACRO_RUN12, mRunButtons[11]);
-  DDX_Control(pDX, ID_MACRO_RUN13, mRunButtons[12]);
-  DDX_Control(pDX, ID_MACRO_RUN14, mRunButtons[13]);
-  DDX_Control(pDX, ID_MACRO_RUN15, mRunButtons[14]);
-  DDX_Control(pDX, ID_MACRO_RUN16, mRunButtons[15]);
-  DDX_Control(pDX, ID_MACRO_RUN17, mRunButtons[16]);
-  DDX_Control(pDX, ID_MACRO_RUN18, mRunButtons[17]);
-  DDX_Control(pDX, ID_MACRO_RUN19, mRunButtons[18]);
-  DDX_Control(pDX, ID_MACRO_RUN20, mRunButtons[19]);
-  DDX_Control(pDX, ID_MACRO_RUN21, mRunButtons[20]);
-  DDX_Control(pDX, ID_MACRO_RUN22, mRunButtons[21]);
-  DDX_Control(pDX, ID_MACRO_RUN23, mRunButtons[22]);
-  DDX_Control(pDX, ID_MACRO_RUN24, mRunButtons[23]);
-  DDX_Control(pDX, ID_MACRO_RUN25, mRunButtons[24]);
-  DDX_Control(pDX, ID_MACRO_RUN26, mRunButtons[25]);
-  DDX_Control(pDX, ID_MACRO_RUN27, mRunButtons[26]);
-  DDX_Control(pDX, ID_MACRO_RUN28, mRunButtons[27]);
-  DDX_Control(pDX, ID_MACRO_RUN29, mRunButtons[28]);
-  DDX_Control(pDX, ID_MACRO_RUN30, mRunButtons[29]);
-  DDX_Control(pDX, ID_MACRO_RUN31, mRunButtons[30]);
-  DDX_Control(pDX, ID_MACRO_RUN32, mRunButtons[31]);
-  DDX_Control(pDX, ID_MACRO_RUN33, mRunButtons[32]);
-  DDX_Control(pDX, ID_MACRO_RUN34, mRunButtons[33]);
-  DDX_Control(pDX, ID_MACRO_RUN35, mRunButtons[34]);
-  DDX_Control(pDX, ID_MACRO_RUN36, mRunButtons[35]);
-  DDX_Control(pDX, ID_MACRO_RUN37, mRunButtons[36]);
-  DDX_Control(pDX, ID_MACRO_RUN38, mRunButtons[37]);
-  DDX_Control(pDX, ID_MACRO_RUN39, mRunButtons[38]);
-  DDX_Control(pDX, ID_MACRO_RUN40, mRunButtons[39]);
 }
 
 
 BEGIN_MESSAGE_MAP(CMacroToolbar, CBaseDlg)
   ON_CONTROL_RANGE(BN_CLICKED, ID_MACRO_RUN1, ID_MACRO_RUN40, OnMacroRun)
   ON_NOTIFY_EX_RANGE( TTN_NEEDTEXT, 0, 0xFFFF, OnToolTipNotify )
-  ON_NOTIFY_RANGE(NM_LDOWN, ID_MACRO_RUN1, ID_MACRO_RUN40, OnRunButDraw)
 END_MESSAGE_MAP()
 
 
@@ -112,17 +71,6 @@ void CMacroToolbar::OnMacroRun(UINT nID)
     mWinApp->mMacroProcessor->OpenMacroEditor(nID - ID_MACRO_RUN1);
   else
     mWinApp->mMacroProcessor->ToolbarMacroRun(nID);
-}
-
-// Notification of a right-click event: open editor on right-click
-void CMacroToolbar::OnRunButDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result)
-{
-  int index = nID - ID_MACRO_RUN1;
-  if (mRunButtons[index].m_bRightWasClicked) {
-    mRunButtons[index].m_bRightWasClicked = false;
-    mWinApp->mMacroProcessor->OpenMacroEditor(index);
-    mWinApp->mScope->SetRestoreViewFocusCount(1);
-  }
 }
 
 void CMacroToolbar::UpdateSettings(void)

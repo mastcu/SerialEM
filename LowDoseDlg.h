@@ -9,8 +9,6 @@
 // LowDoseDlg.h : header file
 //
 
-#include "MyButton.h"
-
 #define SEARCH_AREA 4
 
 /////////////////////////////////////////////////////////////////////////////
@@ -150,6 +148,7 @@ private:
   CShiftManager *mShiftManager;
   CEMscope *mScope;
 	CFont mBigFont;			// Font for bigger things
+	BOOL mInitialized;
 	BOOL mIgnoreIS;
   BOOL mTrulyLowDose;
   BOOL mHideOffState;
@@ -223,18 +222,16 @@ public:
   afx_msg void OnRadioShowOffset();
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
-  void DeselectGoToButtons(int area);
   CButton m_butCopyToSearch;
   afx_msg void OnGotoArea(UINT nID);
-  CMyButton m_butGotoView;
-  CMyButton m_butGotoFocus;
-  CMyButton m_butGotoTrial;
-  CMyButton m_butGotoSearch;
-  CMyButton m_butGotoRecord;
+  CButton m_butGotoView;
+  CButton m_butGotoFocus;
+  CButton m_butGotoTrial;
+  CButton m_butGotoSearch;
+  CButton m_butGotoRecord;
   void SetBeamShiftButton(BOOL state);
   bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
   bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
-  int m_iGoToArea;
 };
 
 //{{AFX_INSERT_LOCATION}}

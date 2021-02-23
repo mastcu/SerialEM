@@ -3,7 +3,6 @@
 #ifndef CONTROLSET_H
 #define CONTROLSET_H
 #include "Shared\CorrectDefects.h"
-typedef std::vector <float> FloatVec;
 
 #define UNPROCESSED 0
 #define DARK_SUBTRACTED 1
@@ -252,7 +251,6 @@ struct CameraParameters {
   float doseTabConst;
   float specToCamDoseFac;     // Last measured scaling from specimen to camera dose rate
   float addToExposure;        // Constant to add to exposure time 
-  int JeolDetectorID;         // Detector ID to be selected/deselected when switching
   BOOL invertFocusRamp;       // Lazy way out: flag to invert direction of dynamic focus
   int numChannels;
   CString channelName[MAX_STEM_CHANNELS];  // Detector or official camera names for FEI,
@@ -270,7 +268,6 @@ struct CameraParameters {
   float addedFlyback;         // Increment calibrated and added as property
   float flyback;              // Sum for convenience
   BOOL subareaInCorner;       // FEI bug
-  int minMultiChanBinning[MAX_STEM_CHANNELS];   // For JEOL multichannel limitations
 };
 
 struct FrameAliParams {
@@ -301,9 +298,7 @@ struct FrameAliParams {
   int subsetStart, subsetEnd; // Start and end of range, numbered from 1
   int whereRestriction;       // 1 for only in plugin, 2 for only in IMOD
   int sizeRestriction;        // 1 for only 4K, 2 for only 8K
-  int EERsuperRes;            // 0, 1, or 2 for super-resolution reading EER data
   CString name;               // Name to show
-  bool multAliBinByEERfac;    // RUN-TIME: multiply align bin by EER super-resolution fac
 };
 
 // Elements of matrix: units of X per X input, etc

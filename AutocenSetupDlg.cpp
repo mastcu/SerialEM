@@ -141,6 +141,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     mCurIntensity = mScope->GetIntensity();
   }
   FetchParams();
+
   m_butAcquire.EnableWindow(mLowDoseMode);
 
   m_sbcSpot.SetRange(0,30000);
@@ -297,7 +298,7 @@ void CAutocenSetupDlg::OnKillfocusEditExposure()
   float roundFac = mWinApp->mCamera->ExposureRoundingFactor(camParam);
   UpdateData(true);
   if (mWinApp->mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode,
-    conSet->binning, 0, 2, m_fExposure, conSet->frameTime)) {
+    conSet->binning, false, 2, m_fExposure, conSet->frameTime)) {
     if (roundFac)
       m_fExposure = (float)(B3DNINT(m_fExposure * roundFac) / roundFac);
     UpdateData(false);
@@ -426,7 +427,7 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool mismatch = false;
-  if (!mMultiTasks->AutocenTrackingState() || mScope->GetChangingLDArea())
+  if (!mMultiTasks->AutocenTrackingState())
     return;
   if (mLowDoseMode) {
     mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize || 

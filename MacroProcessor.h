@@ -13,9 +13,8 @@
 #include <set>
 #include <map>
 #include <string>
-
-class CMapDrawItem;
 class COneLineScript;
+class CMapDrawItem;
 
 #define MAX_LOOP_DEPTH  40
 #define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
@@ -23,30 +22,6 @@ class COneLineScript;
 #define MAX_MACRO_SKIPS  100
 #define MACRO_NO_VALUE  -123456789.
 #define MAX_CUSTOM_INTERVAL 20000 
-#define MAX_MACRO_TOKENS 60
-
-#define LOOP_LIMIT_FOR_TRY -2146000000
-#define LOOP_LIMIT_FOR_IF  -2147000000
-
-enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
-enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP, SKIPTO_CATCH, SKIPTO_ENDTRY};
-enum {TXFILE_READ_ONLY, TXFILE_WRITE_ONLY, TXFILE_MUST_EXIST, TXFILE_MUST_NOT_EXIST,
-  TXFILE_QUERY_ONLY};
-
-#define MAC_SAME_NAME(nam, req, flg, cme) CME_##cme,
-#define MAC_DIFF_NAME(nam, req, flg, fnc, cme) CME_##cme,
-#define MAC_SAME_FUNC(nam, req, flg, fnc, cme) CME_##cme,
-
-// An enum with indexes to true commands, preceded by special operations
-enum {
-#include "MacroMasterList.h"
-};
-
-#undef MAC_SAME_NAME
-#undef MAC_DIFF_NAME
-#undef MAC_SAME_FUNC
-
-#define CME_NOTFOUND -1
 
 struct MacroFunction {
   CString name;
@@ -81,13 +56,10 @@ struct FileForText {
   CString ID;           // Arbitrary ID
 };
 
-typedef int(CMacCmd::*DispEntry)(void);
-
 struct CmdItem {
   const char *mixedCase;
   int minargs;
   int arithAllowed;
-  DispEntry func;
   std::string cmd;
 };
 
@@ -96,9 +68,11 @@ class CMacroProcessor : public CCmdTarget
  public:
   void SetIntensityFactor(int iDir);
   void RunOrResume();
+  void NextCommand();
   void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
+  void TaskDone(int param);
   int TaskBusy();
   void Initialize();
   CMacroProcessor();
@@ -122,16 +96,12 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetMember(int, TryCatchLevel);
-  GetMember(bool, SuspendNavRedraw);
-  GetMember(bool, DeferLogUpdates);
-  GetMember(bool, LoopInOnIdle);
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
   std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
-  EMimageBuffer *ImBufForIndex(int ind) { return (ind >= 0 ? &mImBufs[ind] : &mFFTBufs[-1 - ind]); };
   COneLineScript *mOneLineScript;
 
 protected:
@@ -155,20 +125,17 @@ protected:
 
   DECLARE_MESSAGE_MAP()
 
-protected:
+private:
   MacroControl * mControl;
   CSerialEMApp * mWinApp;
   MagTable *mMagTab;
   CString * mModeNames;
   EMimageBuffer *mImBufs;
-  EMimageBuffer *mFFTBufs;
   CEMscope *mScope;
   CShiftManager *mShiftManager;
   CCameraController *mCamera;
   EMbufferManager *mBufferManager;
   CNavHelper *mNavHelper;
-  CProcessImage *mProcessImage;
-  CParameterIO *mParamIO;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;
   CString mModeCaps[5];
@@ -185,8 +152,6 @@ protected:
   int mReadOnlyStart[MAX_TOT_MACROS];
 
   CString *mMacros;
-  CmdItem *mCmdList;
-  int mNumCommands;
 
   BOOL mDoingMacro;       // Flag for whether running
   int mCurrentMacro;      // Currently running macro
@@ -307,14 +272,6 @@ protected:
   int mNumTempMacros;        // Number of temporary macros assigned from script
   int mNeedClearTempMacro;   // Flag that the current temporary needs to be cleared
   bool mParseQuotes;         // Flag that strings are parsed with quoting 
-  bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
-  bool mDeferLogUpdates;     // Flag for log window to defer its updates and accumulate
-  bool mLoopInOnIdle;        // Flag for OnIdle to keep calling TaskDone
-  int mNumCmdSinceAddIdle;   // Number of commands run with looping in OnIdle
-  double mLastAddIdleTime;   // Time of last call to AddIdleTask
-  int mMaxCmdToLoopOnIdle;   // Maximum number of commands before returning to event loop
-  float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
-  ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -356,7 +313,6 @@ public:
   BOOL MacroRunnable(int index);
   afx_msg void OnUpdateMacroEnd(CCmdUI *pCmdUI);
   int FindCalledMacro(CString strLine, bool scanning);
-  int FindMacroByNameOrTextNum(CString name);
   void InsertDomacro(CString * strItem);
   BOOL WordIsReserved(CString str);
   int CheckIntensityChangeReturn(int err);
@@ -375,8 +331,7 @@ public:
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
   void OpenMacroEditor(int index);
-  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, 
-    CString & message, bool fftAllowed = false);
+  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, CString & message);
   bool CheckCameraBinning(double binDblIn, int &binning, CString &message);
   void SaveControlSet(int index);
   bool CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index, CString &message);
@@ -388,6 +343,7 @@ public:
   void ClearFunctionArray(int index);
   MacroFunction * FindCalledFunction(CString strLine, bool scanning, int &macroNum, int &argInd, int currentMac = -1);
   void ScanMacroIfNeeded(int index, bool scanning);
+  void TrimTrailingZeros(CString & str);
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
@@ -442,13 +398,6 @@ public:
   void UpdateAllForNewScripts(bool oneLinersToo);
   afx_msg void OnScriptSavePackage();
   afx_msg void OnScriptSavePackageAs();
-  afx_msg void OnRunOnProgramStart();
-  afx_msg void OnUpdateRunOnProgramStart(CCmdUI *pCmdUI);
-  afx_msg void OnRunAtProgramEnd();
-  afx_msg void OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI);
-  int SelectScriptAtStartEnd(CString &name, const char *when);
 };
-
-#include "MacroCommands.h"
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

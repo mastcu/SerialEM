@@ -2,7 +2,8 @@
 //                          message handlers for opening, reading and writing
 //                          image files and settings files
 //
-// Copyright (C) 2003-2020 by the Regents of the University of
+// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
+// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -46,8 +47,6 @@
 #include "StateDlg.h"
 #include "DummyDlg.h"
 #include "XFolderDialog\XWinVer.h"
-#include "Shared\\iimage.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -63,7 +62,6 @@ static char THIS_FILE[] = __FILE__;
 #define PROGRAM_LOG "SEMRunLog.txt"
 #define SHORT_TERM_NAME "SEMshortTermCal.txt"
 #define FLYBACK_NAME "SEMflybackTimes.txt"
-#define BASIC_MODE_NAME "SEMbasicModeItems.txt"
 #define MAX_SETTINGS_MRU 4
 
 static char *defaultSysPath = NULL;
@@ -135,8 +133,6 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnUpdateSkipFilePropertiesDlg)
   ON_COMMAND(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnSettingsDiscardOnExit)
   ON_UPDATE_COMMAND_UI(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnUpdateSettingsDiscardOnExit)
-  ON_COMMAND(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnSettingsBasicmode)
-  ON_UPDATE_COMMAND_UI(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnUpdateSettingsBasicmode)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -156,7 +152,6 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.fileType = STORE_TYPE_MRC;
   mDefFileOpt.compression = COMPRESS_NONE;
   mDefFileOpt.jpegQuality = -1;
-  mDefFileOpt.hdfCompression = COMPRESS_NONE;
   mDefFileOpt.useMdoc = false;
   mDefFileOpt.leaveExistingMdoc = false;
   mDfltUseMdoc = -1;
@@ -168,7 +163,6 @@ CSerialEMDoc::CSerialEMDoc()
   mOtherFileOpt.pctTruncHi = 0.5f;
   mOtherFileOpt.fileType = STORE_TYPE_MRC;
   mOtherFileOpt.compression = COMPRESS_NONE;
-  mOtherFileOpt.hdfCompression = COMPRESS_NONE;
   mShowFileDlgOnce = true;
   mSkipFileDlg = true;
   mSTEMfileMode = 1;
@@ -213,7 +207,6 @@ CSerialEMDoc::CSerialEMDoc()
   mNumCalsAskThresh[CAL_DONE_BEAM] = 1;
   mNumCalsAskThresh[CAL_DONE_SPOT] = 1;
   mAbandonSettings = false;
-  mHDFsupported = iiTestIfHDF("Animpossible63873Filename_629384") != -2;
 }
 
 CSerialEMDoc::~CSerialEMDoc()
@@ -316,16 +309,12 @@ void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI)
 }
 
 // Open new file to replace the current one
-int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType)
+int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc)
 {
   if (mCurrentStore < 0)
     return 1;
   CopyMasterFileOpts(&mStoreList[mCurrentStore].fileOpt, COPY_FROM_MASTER);
   mStoreList[mCurrentStore].fileOpt.useMdoc = useMdoc;
-  if (mStoreList[mCurrentStore].fileOpt.isMontage())
-    mStoreList[mCurrentStore].fileOpt.montFileType = fileType;
-  else
-    mStoreList[mCurrentStore].fileOpt.fileType = fileType;
   mWinApp->mStoreMRC = OpenNewFileByName(filename, &mStoreList[mCurrentStore].fileOpt);
   mStoreList[mCurrentStore].store = mWinApp->mStoreMRC;
   if (mWinApp->mStoreMRC)
@@ -341,13 +330,7 @@ int CSerialEMDoc::UserOpenOldMrcCFile(CFile **file, CString &cFilename, bool imo
     "*.mrc; *.st; *.map; *.idoc; *.adoc|All files (*.*)|*.*||";
   static char imodFilter[] = "Image files (*.mrc, *.st, *.map, *.tif*, *.dm3, *.dm4)|"
     "*.mrc; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
-  static char mrcHdfFilter[] = "Image stacks (*.mrc, *.hdf, *.st, *.map, *.idoc, *.adoc)|"
-    "*.mrc; *.hdf; *.st; *.map; *.idoc; *.adoc|All files (*.*)|*.*||";
-  static char imodHdfFilter[] = "Image files (*.mrc, *.hdf, *.st, *.map, *.tif*, *.dm3,"
-    " *.dm4)|*.mrc; *.hdf; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
   char *szFilter = imodOK ? imodFilter : mrcFilter;
-  if (mHDFsupported)
-    szFilter = imodOK ? imodHdfFilter : mrcHdfFilter;
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
   MyFileDialog fileDlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, szFilter);
@@ -384,9 +367,6 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     if (!(KStoreADOC::IsADOC(cFilename)).IsEmpty())
       return MRC_OPEN_ADOC;
 
-    if (mHDFsupported && iiTestIfHDF((char *)(LPCTSTR)cFilename) == 1)
-      return MRC_OPEN_HDF;
-
     if (!imodOK)
       SEMMessageBox("Error: File is not an MRC file.", MB_EXCLAME);
     return MRC_OPEN_NOTMRC;
@@ -395,20 +375,15 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
 }
 
 // Open an old file from menu - user enters filename
-void CSerialEMDoc::OnFileOpenold()
-{
-  DoFileOpenold();
-}
-
-int CSerialEMDoc::DoFileOpenold()
+void CSerialEMDoc::OnFileOpenold() 
 {
   int err;
   CFile *file;
   CString cFilename;
   err = UserOpenOldMrcCFile(&file, cFilename, false);
-  if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC && err != MRC_OPEN_HDF)
-    return err;
-  return OpenOldFile(file, cFilename, err);
+  if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC)
+    return;
+  OpenOldFile(file, cFilename, err);
 }
 
 // Common route for opening an old file. err is the code from calling OpenOldMrcCFile
@@ -420,12 +395,10 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
   LeaveCurrentFile();
-  if (err == MRC_OPEN_NOERR)
+  if (err == MRC_OPEN_NOERR) 
     mWinApp->mStoreMRC = new KStoreMRC(file);
-  else if (err == MRC_OPEN_ADOC)
-    mWinApp->mStoreMRC = new KStoreADOC(cFilename);
   else
-    mWinApp->mStoreMRC = new KStoreIMOD(cFilename);
+    mWinApp->mStoreMRC = new KStoreADOC(cFilename);
   if (mWinApp->mStoreMRC != NULL) {
     if (mWinApp->mStoreMRC->FileOK()) {
       SetFileOptsForSTEM();
@@ -625,8 +598,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
   mFileOpt.typext &= ~MONTAGE_MASK;
   mFileOpt.montageInMdoc = false;
   if ((param->xNframes - 1) * (param->xFrame - param->xOverlap) > 65536 ||
-    (param->yNframes - 1) * (param->yFrame - param->yOverlap) > 65536 ||
-    mFileOpt.fileType == STORE_TYPE_HDF)
+    (param->yNframes - 1) * (param->yFrame - param->yOverlap) > 65536)
     mFileOpt.montageInMdoc = true;
   else
     mFileOpt.typext |= MONTAGE_MASK;
@@ -854,15 +826,14 @@ void CSerialEMDoc::CloseAllStores()
   for (int i = 0; i < mNumStores; i++) {
     if (mStoreList[i].montage)
       delete mStoreList[i].montParam;
-    if (i != mCurrentStore || mWinApp->mStoreMRC)
-      delete mStoreList[i].store;
+    delete mStoreList[i].store;
   }
 }
 
 // Switches between Save single and Save to Other if there is an open file
 void CSerialEMDoc::ManageSaveSingle(void)
 {
-  UtilModifyMenuItem("File", IDM_FILE_SAVEOTHER,
+  UtilModifyMenuItem(0, IDM_FILE_SAVEOTHER,
     mNumStores ? "Sa&ve to Other..." : "Sa&ve Single...");
 }
 
@@ -902,7 +873,7 @@ void CSerialEMDoc::OnFileSaveactive()
 
   // Save and restore buffer to save
   int bufOld = mBufferManager->GetBufToSave();
-  mBufferManager->SetBufToSave(USE_ACTIVE_BUF);
+  mBufferManager->SetBufToSave(-1);
   mBufferManager->SaveImageBuffer(store);
   mBufferManager->SetBufToSave(bufOld);
   // Update buffer status window
@@ -936,7 +907,7 @@ KImageStore *CSerialEMDoc::GetStoreForSaving(int type)
   if (!store)
     return NULL;
   if (store->getStoreType() == STORE_TYPE_MRC || 
-    store->getStoreType() == STORE_TYPE_ADOC || store->getStoreType() == STORE_TYPE_HDF) {
+    store->getStoreType() == STORE_TYPE_ADOC) {
     mWinApp->mStoreMRC = store;
     AddCurrentStore();
   }
@@ -985,7 +956,7 @@ void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI)
 // Save active view into another file
 void CSerialEMDoc::OnFileSaveother() 
 {
-  SaveToOtherFile(USE_ACTIVE_BUF, -1, -1, NULL);
+  SaveToOtherFile(-1, -1, -1, NULL);
 }
 
 // Saves a single image in given buffer to a file of the specified type
@@ -998,8 +969,6 @@ int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   if (buffer >= 0)
     imBuf = mWinApp->GetImBufs() + buffer;
-  else if (buffer >= -MAX_FFT_BUFFERS && buffer < 0)
-    imBuf = mWinApp->GetFFTBufs() - 1 - buffer;
   modeSave = mOtherFileOpt.mode;
   typeSave = mOtherFileOpt.fileType;
   compSave = mOtherFileOpt.compression;
@@ -1308,10 +1277,8 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
     "JPEG files (*.jpg)|*.jpg|All files (*.*)|*.*||";
   static char BASED_CODE adocFilter[] = 
     "Image Autodoc files (*.idoc)|*.idoc|All files (*.*)|*.*||";
-  static char BASED_CODE hdfFilter[] =
-    "HDF image stacks (*.hdf)|*.hdf|All files (*.*)|*.*||";
   char *mrcExceptions[] = {".st", ".map"};
-  char *extensions[] = {".tif", ".idoc", ".mrc", ".jpg", ".hdf"};
+  char *extensions[] = {".tif", ".idoc", ".mrc", ".jpg"};
   char *filter = &szFilter[0];
 
   // If a filename is supplied, do not add an extension to it
@@ -1324,9 +1291,6 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
   } else if (fileType == STORE_TYPE_ADOC) {
     filter = &adocFilter[0];
     ext = extensions[1];
-  } else if (fileType == STORE_TYPE_HDF) {
-    filter = &hdfFilter[0];
-    ext = extensions[4];
   } else if (fileType == STORE_TYPE_JPEG) {
     filter = &jpegFilter[0];
     ext = extensions[3];
@@ -1359,8 +1323,6 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
 {
   MontParam *param = mWinApp->GetMontParam();
   KImageStore *store;
-  int fileType = fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType;
-  CString str = "Error Opening File";
   if (FileAlreadyOpen(cFilename, 
     "A new file was not opened; you need to close the existing one first."))
     return NULL;
@@ -1383,16 +1345,12 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
     
   } else {
     
-    if (fileType == STORE_TYPE_ADOC) {
+    if ((fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType)
+      == STORE_TYPE_ADOC) {
 
       // ADOC series
       KStoreADOC *storeADOC = new KStoreADOC(cFilename, *fileOptp);
       store = (KImageStore *)storeADOC;
-    } else if (fileType == STORE_TYPE_HDF) {
-
-      // HDF file
-      KStoreIMOD *storeHDF = new KStoreIMOD(cFilename, *fileOptp);
-      store = (KImageStore *)storeHDF;
     } else {
 
       // MRC file
@@ -1409,9 +1367,7 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
 
     // Test if OK, etc
     if (store == NULL || !store->FileOK()) {
-      if (fileType == STORE_TYPE_HDF)
-        str += b3dGetError();
-      AfxMessageBox(str, MB_EXCLAME);
+      AfxMessageBox("Error Opening File", MB_EXCLAME);
       mWinApp->RestoreViewFocus();
       if (store)
         delete store;
@@ -1799,11 +1755,6 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   else if (!mSettingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
 
-  // Set up basic mode file name, can be overridden in properties
-  strSys = mSystemPath + "\\" + BASIC_MODE_NAME;
-  if (CFile::GetStatus((LPCTSTR)strSys, status))
-    mBasicModeFile = strSys;
-
   // Read properties; but first set gain reference path to system path
   // Try the current path which may have come from settings file, then try the
   // default path in case it has changed
@@ -1861,12 +1812,6 @@ void CSerialEMDoc::ReadSetPropCalFiles()
     if (mParamIO->ReadFlybackTimes(strSys))
       AfxMessageBox("Error reading flyback time file", MB_EXCLAME);
   }
-
-  // Read basic mode file if non-empty
-  if (!mBasicModeFile.IsEmpty())
-    mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
-      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(), 
-      mWinApp->GetBasicHideStrings());
 
   // Once calibrations are read, need to reset the IS offsets
   mWinApp->mScope->SetApplyISoffset(mWinApp->mScope->GetApplyISoffset());
@@ -2010,7 +1955,7 @@ void CSerialEMDoc::OnSettingsReadagain()
 void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen);
-  UtilModifyMenuItem("Settings", ID_SETTINGS_READAGAIN, "&Reload " + 
+  UtilModifyMenuItem(1, ID_SETTINGS_READAGAIN, "&Reload " + 
     (mSettingsReadable && mSettingsOpen ? mCurrentSettingsPath : "settings"));
 }
 
@@ -2327,18 +2272,6 @@ void CSerialEMDoc::CalibrationWasDone(int type)
   mWinApp->SetCalibrationsNotSaved(true);
 }
 
-// Toggle basic mode
-void CSerialEMDoc::OnSettingsBasicmode()
-{
-  mWinApp->SetBasicMode(!mWinApp->GetBasicMode());
-}
-
-void CSerialEMDoc::OnUpdateSettingsBasicmode(CCmdUI *pCmdUI)
-{
-  pCmdUI->Enable(!mBasicModeFile.IsEmpty());
-  pCmdUI->SetCheck(mWinApp->GetBasicMode() ? 1 : 0);
-}
-
 // Append an entry to the log book file; return 1 if no log book defined, -1 if error
 int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
 {
@@ -2646,14 +2579,6 @@ int CSerialEMDoc::WriteFrameMdoc(void)
   return retval;
 }
 
-static char sInitialDir[_MAX_PATH + 1] = "";
-
-void CSerialEMDoc::SetInitialDirToCurrentDir()
-{
-  _getcwd(sInitialDir, _MAX_PATH + 1);
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 // FILE DIALOG MESS
 
@@ -2684,7 +2609,7 @@ MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
     ofn.lpstrTitle = "Open    -    Push \"Open\" to see files after changing filter";
   }
 #endif
-  mfdTD.lpstrInitialDir = (LPCTSTR)sInitialDir;
+  mfdTD.lpstrInitialDir = (LPCTSTR)emptyString;
 }
 
 MyFileDialog::~MyFileDialog()
@@ -2698,9 +2623,6 @@ MyFileDialog::~MyFileDialog()
 // Function for the DoModal operation
 int MyFileDialog::DoModal()
 {
-  bool changeInitial = mfdTD.lpstrInitialDir == (LPCTSTR)sInitialDir;
-  CString newDir, str;
-  int retval;
 #ifdef USE_SDK_FILEDLG
 #ifdef USE_DUMMYDLG
   CDummyDlg dummy;
@@ -2716,7 +2638,7 @@ int MyFileDialog::DoModal()
   while (!mfdTD.done) {
     Sleep(50);
   }
-  retval = mfdTD.retval;
+  return mfdTD.retval;
 #endif
 
 #else
@@ -2725,21 +2647,15 @@ int MyFileDialog::DoModal()
   char *startDir = _getcwd(NULL, MAX_PATH);
   OPENFILENAME &ofn = mFileDlg->GetOFN();
   ofn.lpstrInitialDir = mfdTD.lpstrInitialDir;
-  retval = (int)mFileDlg->DoModal();
+  int retval = (int)mFileDlg->DoModal();
   mfdTD.pathName = mFileDlg->GetPathName();
   mfdTD.fileName = mFileDlg->GetFileName();
   if (startDir) {
     _chdir(startDir);
     free(startDir);
   }
-#endif
-
-  // keep track of change in directory IF it was not set by caller
-  if (changeInitial && retval == IDOK) {
-    UtilSplitPath(mfdTD.pathName, newDir, str);
-    strncpy(sInitialDir, (LPCTSTR)newDir, _MAX_PATH);
-  }
   return retval;
+#endif
 }
 
 #ifdef USE_SDK_FILEDLG

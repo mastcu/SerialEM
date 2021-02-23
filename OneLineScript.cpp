@@ -101,6 +101,15 @@ void COneLineScript::OnOK()
 {
 }
 
+void COneLineScript::OnPaint()
+{
+  CPaintDC dc(this); // device context for painting: IT DOESN'T PAINT UNLESS THIS HAPPENS
+  if (!mInitialized || mLineWithFocus < 0 || mLineWithFocus > 4)
+    return;
+  CToolDlg::DrawButtonOutline(this, dc,
+    (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1), 2, RGB(0, 0, 0), -10);
+}
+
 // Run one of them
 void COneLineScript::OnRunClicked(UINT nID)
 {
@@ -201,26 +210,20 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
 // Keep track of which line has the focus so outline, Ctrl, Ctrl Z work
 void COneLineScript::OnEnSetfocusEditOneLine(UINT nID)
 {
-  CButton *but;
   if (!mInitialized || mWinApp->GetStartingProgram())
     return;
   mLineWithFocus = nID - IDC_EDIT_ONE_LINE;
   SetDefID(mLineWithFocus + IDC_RUN_ONE_LINE1);
-  but = (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1);
-  but->SetFont(mWinApp->GetBoldFont(GetDlgItem(IDC_STAT_COMPLETIONS)));
-  but->SetButtonStyle(BS_DEFPUSHBUTTON);
+  ((CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1))->SetButtonStyle(
+    BS_DEFPUSHBUTTON);
+  Invalidate();
 }
 
 // When focus lost, set line to -1
 void COneLineScript::OnEnKillfocusEditOneLine(UINT nID)
 {
-  CButton *but;
   if (!mInitialized || mWinApp->GetStartingProgram())
     return;
-  if (mLineWithFocus >= 0) {
-    but = (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1);
-    but->SetFont((GetDlgItem(IDC_STAT_COMPLETIONS))->GetFont());
-  }
   mLineWithFocus = -1;
   SetDefID(45678);
 }

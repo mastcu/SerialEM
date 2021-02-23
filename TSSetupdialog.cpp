@@ -20,7 +20,6 @@
 #include "TSVariationsDlg.h"
 #include "TSDoseSymDlg.h"
 #include "DriftWaitSetupDlg.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -51,8 +50,7 @@ static int idTable[] = {
   IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES, 
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
-  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, IDC_STAT_STAR_TILT, IDC_STAT_STAR_BIDIR,
-  PANEL_END,
+  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, PANEL_END, 
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
   IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL, 
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
@@ -83,8 +81,8 @@ static int idTable[] = {
   IDC_TSS_PLUS6, 0, 0, IDC_TSS_TITLE6, IDC_TSS_LINE6,
   IDC_REFINEEUCEN, IDC_LEAVEANCHOR, IDC_EDITANCHOR, IDC_STATANCHORDEG,IDC_USEAFORREF,
   IDC_USEANCHOR, IDC_STATANCHORBUF, IDC_SPINANCHOR, IDC_CLOSE_VALVES, PANEL_END,
-  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, 
-  IDC_TSWAITFORDRIFT, IDC_BUT_SETUP_DRIFT_WAIT,
+  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, IDC_TSWAITFORDRIFT,
+  IDC_BUT_SETUP_DRIFT_WAIT,
   IDC_REPEATRECORD, IDC_EDITREPEATRECORD, IDC_CONFIRM_LOWDOSE_REPEAT,
   IDC_EDITPREDICTERRORXY, IDC_RTRACKBEFORE, IDC_STAT_DW_DEGREES,
   IDC_RTRACKAFTER, IDC_RTRACKBOTH, IDC_ALIGNTRACKONLY, IDC_PREVIEWBEFOREREF,
@@ -96,7 +94,6 @@ static int idTable[] = {
   IDC_BUTHELP, PANEL_END, TABLE_END};
 
 static int topTable[sizeof(idTable) / sizeof(int)];
-static int heightTable[sizeof(idTable) / sizeof(int)];
 static int leftTable[sizeof(idTable) / sizeof(int)];
 
 
@@ -108,9 +105,9 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_bChangeSettling(FALSE)
   , m_bChangeExposure(FALSE)
   , m_bAutocenInterval(FALSE)
-  , m_iAutocenInterval(1)
+  , m_iAutocenInterval(0)
   , m_bAutocenCrossing(FALSE)
-  , m_fAutocenAngle(1.f)
+  , m_fAutocenAngle(0)
   , m_bConfirmLowDoseRepeat(FALSE)
   , m_strInterset(_T(""))
   , m_bUseDoseSym(FALSE)
@@ -124,7 +121,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_fCheckFocus = 0.0f;
   m_iCounts = 0;
   m_fEndAngle = 0.0f;
-  m_fIncrement = 0.05f;
+  m_fIncrement = 0.0f;
   m_fLimitIS = 0.0f;
   m_fRepeatFocus = 0.0f;
   m_fStartAngle = 0.0f;
@@ -152,7 +149,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_bRampBeam = FALSE;
   m_fTaperAngle = 0.0f;
   m_iTaperCounts = 0;
-  m_fNewTrackDiff = 0.2f;
+  m_fNewTrackDiff = 0.0f;
   m_bAlignTrackOnly = FALSE;
   m_fPredictErrorXY = 0.0f;
   m_fPredictErrorZ = 0.0f;
@@ -181,7 +178,6 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_fBidirAngle = 0.;
   m_strBidirMag = _T("");
   m_strNumEarlyFrames = _T("");
-  m_strCosPower = _T("");
   m_bDoEarlyReturn = FALSE;
   mMaxTiltAngle = ((CSerialEMApp *)AfxGetApp())->mScope->GetMaxTiltAngle();
   if (mMaxTiltAngle < -900.)
@@ -296,7 +292,6 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATPIXEL, m_strPixel);
   DDX_Text(pDX, IDC_STATRECORDMAG, m_strRecordMag);
   DDX_Text(pDX, IDC_STATTOTALTILT, m_strTotalTilt);
-  DDX_Text(pDX, IDC_STATPOWER, m_strCosPower);
   DDX_Check(pDX, IDC_USEANCHOR, m_bUseAnchor);
   DDX_Text(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord);
   DDV_MinMaxFloat(pDX, m_fRepeatRecord, 0.f, 99.f);
@@ -410,10 +405,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_TSWAITFORDRIFT, m_bWaitForDrift);
   DDX_Control(pDX, IDC_BUT_SETUP_DRIFT_WAIT, m_butSetupDriftWait);
   DDX_Text(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh);
-  DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
-  DDX_Control(pDX, IDC_STAT_STAR_TILT, m_statStarTilt);
-  DDX_Control(pDX, IDC_STAT_STAR_BIDIR, m_statStarBidir);
-  DDX_Control(pDX, IDC_STATTARGMICRONS, m_statTargMicrons);
+	DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
 }
 
 
@@ -530,8 +522,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   mPostpone = false;
   mSingleStep = false;
 
-  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart, heightTable, 
-    5);
+  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
 
   // The +/- bold used to work without a member variable, but not for high DPI
   wnd = GetDlgItem(IDC_TSS_PLUS1);
@@ -541,8 +532,12 @@ BOOL CTSSetupDialog::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   wnd = GetDlgItem(IDC_TSS_TITLE1);
-  mTitleFont = mWinApp->GetBoldFont(wnd);
-   for (panel = 0; panel < mNumPanels - 1; panel++) {
+  wnd->GetClientRect(idRect);
+  mTitleFont.CreateFont((idRect.Height()), 0, 0, 0, FW_HEAVY,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+     FF_DONTCARE, "Microsoft Sans Serif");
+  for (panel = 0; panel < mNumPanels - 1; panel++) {
     index = mPanelStart[panel];
     wnd = GetDlgItem(idTable[index]);
     wnd->SetFont(&mBoldFont);
@@ -553,7 +548,7 @@ BOOL CTSSetupDialog::OnInitDialog()
       }
     }
     wnd = GetDlgItem(idTable[index]);
-    wnd->SetFont(mTitleFont);
+    wnd->SetFont(&mTitleFont);
   }
   m_butPrev.SetFont(littleFont);
   m_butNext.SetFont(littleFont);
@@ -569,34 +564,6 @@ BOOL CTSSetupDialog::OnInitDialog()
   }
 
   ManagePanels();
-
-  m_statStarTilt.SetFont(mTitleFont);
-  m_statStarBidir.SetFont(mTitleFont);
-  if (mNavOverrideFlags & NAV_OVERRIDE_TILT)
-    m_statStarTilt.SetWindowText("*");
-  if (mNavOverrideFlags & NAV_OVERRIDE_BIDIR)
-    m_statStarBidir.SetWindowText("*");
-  if (mNavOverrideFlags & NAV_OVERRIDE_DEF_TARG) {
-    m_statTargMicrons.SetFont(mTitleFont);
-    m_statTargMicrons.SetWindowTextA("um*");
-  }
-
-  // Set up cosine powers/multipliers
-  for (index = 5; index > 1; index--) {
-    mCosinePowers.push_back((float)index);
-    mCosMultipliers.push_back((float)pow(2., 1. / index));
-  }
-  for (index = 0; index < 6; index++) {
-    mCosMultipliers.push_back((float)(1.6 + 0.2 * index));
-    mCosinePowers.push_back((float)(log(2.) / log(1.6 + 0.2 * index)));
-  }
-
-  // Find nearest power to incoming value
-  mCosPowerInd = 0;
-  for (index = 1; index < (int)mCosinePowers.size(); index++)
-    if (fabs(mTSParam.cosinePower - mCosinePowers[index]) <
-      fabs(mTSParam.cosinePower - mCosinePowers[mCosPowerInd]))
-      mCosPowerInd = index;
 
   // Load the dialog box with parameters
   m_fStartAngle = mTSParam.startingTilt;
@@ -640,6 +607,10 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_iBeamControl = 0;
   m_sbcCosinePower.SetRange(0, 100);
   m_sbcCosinePower.SetPos(50);
+  mCosPower = mTSParam.cosinePower;
+  m_butIntensityCosine.GetWindowText(str);
+  str.SetAt(str.GetLength() - 1, (TCHAR)('0' + mCosPower));
+  m_butIntensityCosine.SetWindowText(str);
   m_iCounts = mTSParam.meanCounts;
   m_statCurrentCounts.GetWindowText(str);
   str2.Format("%s %d", str, mMeanInBufferA);
@@ -737,7 +708,6 @@ BOOL CTSSetupDialog::OnInitDialog()
   ManageIntersetStatus();
   ManageEarlyReturn();
   ManageDriftWait();
-  ManageCosinePower();
 
   // Set up the camera buttons
   int i = 0;
@@ -869,7 +839,6 @@ void CTSSetupDialog::OnRcamera()
   int index = 2 * mSTEMindex + (mLowDoseMode ? 1 : 0);
   mCurrentCamera = mActiveCameraList[m_iCamera];
   CameraParameters *camP = &mCamParams[mCurrentCamera];
-  SetDlgItemText(IDC_STATBINLABEL, camP->STEMcamera ? "Sampling:" : "Binning:");
   mBinning = BinDivisorI(camP) * mBinning / BinDivisorI(&mCamParams[lastCam]);
   B3DCLAMP(mBinning, camP->binnings[0], camP->binnings[camP->numBinnings - 1]);
   mProbeMode = mWinApp->mScope->GetProbeMode();    // Let them change probe mode on fly
@@ -1017,7 +986,6 @@ void CTSSetupDialog::SetTotalTilts()
   int total, iDir, spotSize;
   double angle = m_fStartAngle;
   float signedInc = m_fIncrement;
-  float cosPower = mCosinePowers[mCosPowerInd];
   double totalDose = 0.;
   double topDose, curDose, intensity, zeroDose;
 
@@ -1038,13 +1006,13 @@ void CTSSetupDialog::SetTotalTilts()
     if (m_iBeamControl == 0)
       totalDose += 1.;
     else if (m_iBeamControl == 1)
-      totalDose += (float)pow(1. / cos(DTOR * angle), 1. / cosPower);
+      totalDose += (float)pow(1. / cos(DTOR * angle), 1. / mCosPower);
     total++;
   }
 
   topDose = totalDose;
   if (m_iBeamControl == 1)
-    topDose = totalDose / pow(1. / cos(DTOR * m_fStartAngle), 1. / cosPower);
+    topDose = totalDose / pow(1. / cos(DTOR * m_fStartAngle), 1. / mCosPower);
   m_strTotalTilt.Format("Total # of tilts: %d", total);
 
   if (mSTEMindex) {
@@ -1065,8 +1033,8 @@ void CTSSetupDialog::SetTotalTilts()
         angle = 0.;
       zeroDose = topDose = curDose;
       if (m_iBeamControl == 1) {
-        zeroDose = curDose * pow(cos(DTOR * angle), 1. / cosPower);
-        topDose = zeroDose * pow(1. / cos(DTOR * m_fStartAngle), 1. / cosPower);
+        zeroDose = curDose * pow(cos(DTOR * angle), 1. / mCosPower);
+        topDose = zeroDose * pow(1. / cos(DTOR * m_fStartAngle), 1. / mCosPower);
       }
       totalDose *= zeroDose;
       m_strTotalDose.Format("Dose: %.2f e/A2 at 0 deg;  %.2f e/A2 at %.0f deg;  "
@@ -1136,8 +1104,6 @@ void CTSSetupDialog::OnButSetChanges()
   dlg.m_bNumFramesFixed = mWinApp->mTSController->GetExpSeriesFixNumFrames();
   dlg.mTopAngle = B3DMAX(fabs(m_fStartAngle), fabs(m_fEndAngle));
   dlg.mSTEMmode = mSTEMindex != 0;
-  dlg.mSeriesPowerInd = mCosPowerInd;
-  dlg.mCosinePowers = &mCosinePowers;
   dlg.DoModal();
   mWinApp->mTSController->SetExpSeriesStep(dlg.m_fSeriesStep);
   mWinApp->mTSController->SetExpSeriesFixNumFrames(dlg.m_bNumFramesFixed);
@@ -1233,15 +1199,18 @@ void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult)
 // Change in cosine power button
 void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult) 
 {
+  CString str;
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   UpdateData(true);
-  int newVal = mCosPowerInd + pNMUpDown->iDelta;
-  if (newVal < 0 || newVal >= (int)mCosinePowers.size()) {
+  int newVal = mCosPower + pNMUpDown->iDelta;
+  if (newVal < 1 || newVal > MAX_COSINE_POWER) {
     *pResult = 1;
     return;
   }
-	mCosPowerInd = newVal;
-  ManageCosinePower();
+	mCosPower = newVal;
+  m_butIntensityCosine.GetWindowText(str);
+  str.SetAt(str.GetLength() - 1, (TCHAR)('0' + mCosPower));
+  m_butIntensityCosine.SetWindowText(str);
 	*pResult = 0;
   SetTotalTilts();
 }
@@ -1643,7 +1612,7 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
   CString star = "*";
   if (fov < mWinApp->mTSController->GetMinFieldBidirAnchor()) {
     m_strBidirFieldSize = star + m_strBidirFieldSize + star;
-    m_statBidirFieldSize.SetFont(mTitleFont);
+    m_statBidirFieldSize.SetFont(&mTitleFont);
   } else
     m_statBidirFieldSize.SetFont(m_statBDMagLabel.GetFont());
   if (fov < mWinApp->mTSController->GetAlarmBidirFieldSize())
@@ -1726,25 +1695,6 @@ void CTSSetupDialog::ManageDriftWait()
   SetDlgItemText(IDC_STAT_DW_DEGREES, str + str2);
 }
 
-void CTSSetupDialog::ManageCosinePower()
-{
-  CString str;
-  int typeVaries[MAX_VARY_TYPES];
-
-  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
-    typeVaries, NULL);
-  str.Format("Vary %s to be %.2f", m_bChangeExposure && (mSTEMindex ||
-    !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE])) ? "exposure" : "intensity", 
-    mCosMultipliers[mCosPowerInd]);
-  UtilTrimTrailingZeros(str);
-  m_butIntensityCosine.SetWindowText(str);
-  str.Format("%.2f", mCosinePowers[mCosPowerInd]);
-  UtilTrimTrailingZeros(str);
-  m_strCosPower.Format("x higher at 60 deg (1/cos to 1/%s power)", (LPCTSTR)str);
-    
-  UpdateData(false);
-}
-
 int CTSSetupDialog::RegularOrEFTEMMag(int magIndex)
 {
   return MagForCamera(&mCamParams[mCurrentCamera], magIndex);
@@ -1801,7 +1751,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.binning =  mBinning;
   mTSParam.trackLowMag = m_bLowMagTrack;
   mTSParam.beamControl =  beamCodes[m_iBeamControl];
-  mTSParam.cosinePower = mCosinePowers[mCosPowerInd];
+  mTSParam.cosinePower = mCosPower;
   mTSParam.meanCounts = m_iCounts;
   mTSParam.limitIntensity = m_bLimitIntensity;
   mTSParam.limitToCurrent = m_bLimitToCurrent;
@@ -1880,13 +1830,12 @@ void CTSSetupDialog::OnSinglestep()
 // Manage the open and closing of panels in the dialog
 void CTSSetupDialog::ManagePanels(void)
 {
-  int panel, curTop = topTable[0], cumulDrop, firstDropped, topPos, drawnMaxBottom;
-  int topAtLastDraw;
+  int panel, curTop = topTable[0];
   CRect rect, winRect;
-  int panelTop, leftTop, index, id, nextTop, buttonHigh, ixOffset = 0;
+  int panelTop, leftTop, index, id, nextTop, buttonHigh, minTop = 0, ixOffset = 0;
   CWnd *wnd;
   HDWP positions;
-  bool draw, twoCol, drop, droppingLine;
+  bool draw, twoCol;
   wnd = GetDlgItem(idTable[0]);
   wnd->GetClientRect(rect);
   buttonHigh = rect.Height();
@@ -1901,12 +1850,17 @@ void CTSSetupDialog::ManagePanels(void)
   // First determine if two columns or one
   twoCol = PanelDisplayType() == 2;
   m_statVertline.ShowWindow(twoCol ? SW_SHOW : SW_HIDE);
+  minTop = topTable[mPanelStart[NUM_LEFT_PANELS]] - topTable[mPanelStart[0]] + 
+    (twoCol ? 0 : 6 * buttonHigh);
 
   for (panel = 0; panel < mNumPanels; panel++) {
+    if (panel == mNumPanels - 1 && curTop < minTop)
+      curTop = minTop;
     panelTop = topTable[mPanelStart[panel]];
     
-    // Draw the first 4 unconditionally
-    for (index = mPanelStart[panel]; index < mPanelStart[panel] +  4; index++) {
+    // Draw the first 4 unconditionally, and 5th (line) also if open
+    for (index = mPanelStart[panel];
+      index < mPanelStart[panel] + (mPanelOpen[panel] ? 5 : 4); index++) {
       id = idTable[index];
       if (id > 0) {
         wnd = GetDlgItem(id);
@@ -1929,64 +1883,27 @@ void CTSSetupDialog::ManagePanels(void)
     }
 
     // Now draw or hide the rest of the widgets
-    cumulDrop = 0;
-    firstDropped = -1;
-    droppingLine = false;
-    drawnMaxBottom = 0;
-    topAtLastDraw = 0;
-    for (index = mPanelStart[panel] + B3DCHOICE(panel < mNumPanels - 1, 5, 4);
+    for (index = mPanelStart[panel] + 5;
       index < mPanelStart[panel] + mNumInPanel[panel]; index++) {
       wnd = GetDlgItem(idTable[index]);
       draw = true;
-      drop = false;
-      for (id = (mNumCameras > 1 ? mNumCameras : 0); id < MAX_DLG_CAMERAS; id++) {
-        if (idTable[index] == IDC_RCAMERA1 + id) {
+      for (id = (mNumCameras > 1 ? mNumCameras : 0); id < MAX_DLG_CAMERAS; id++)
+        if (idTable[index] == IDC_RCAMERA1 + id)
           draw = false;
-          drop = mNumCameras == 1;
-        }
-      }
       if (mFuture > 0 && (idTable[index] == IDC_TSGO || idTable[index] == IDC_SINGLESTEP))
         draw = false;
       if (mSTEMindex && idTable[index] == IDC_CENTER_FROM_TRIAL || 
         !mSTEMindex && idTable[index] == IDC_STAT_INTERSET)
         draw = false;
-
-      // Take care of dropping then draw or not, keeping track of top and maximum bottom
-      // when draw
-      ManageDropping(topTable, index, idTable[index], topAtLastDraw, cumulDrop,
-        firstDropped, droppingLine, drop);
-      if (mPanelOpen[panel] && draw && !drop) {
-        topPos = (curTop - cumulDrop) + topTable[index] - panelTop;
-        ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
-        topAtLastDraw = topTable[index];
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
-          ixOffset, topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
-      } else {
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0,
+      if (mPanelOpen[panel] && draw) {
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] + 
+          ixOffset, curTop + topTable[index] - panelTop, 0, 0, 
+          SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+      } else
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0, 
           SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW);
-      }
     }
-
-    // If last one in panel dropped, add to cumulative distance
-    if (firstDropped >= 0 &&
-      B3DABS(topTable[firstDropped] - topAtLastDraw) > mSameLineCrit)
-      cumulDrop += topTable[mPanelStart[panel + 1]] - topTable[firstDropped];
-
-    // Now draw the bottom line in an open panel except for the last panel
-    if (mPanelOpen[panel] && panel < mNumPanels - 1) {
-      index = mPanelStart[panel] + 4;
-      id = idTable[index];
-      if (id > 0) {
-        wnd = GetDlgItem(id);
-        topPos = (curTop - cumulDrop) + (topTable[index] - panelTop) +
-          (cumulDrop ? mBottomDrawMargin : 0);
-        ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
-          ixOffset, topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
-      }
-      nextTop -= cumulDrop;
-    }
-    curTop = B3DMAX(drawnMaxBottom, nextTop);
+    curTop = nextTop;
     if (twoCol && panel == NUM_LEFT_PANELS - 1) {
       leftTop = curTop;
       curTop = topTable[0];
