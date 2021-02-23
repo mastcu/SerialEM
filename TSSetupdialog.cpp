@@ -541,12 +541,8 @@ BOOL CTSSetupDialog::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   wnd = GetDlgItem(IDC_TSS_TITLE1);
-  wnd->GetClientRect(idRect);
-  mTitleFont.CreateFont((idRect.Height()), 0, 0, 0, FW_HEAVY,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-     FF_DONTCARE, "Microsoft Sans Serif");
-  for (panel = 0; panel < mNumPanels - 1; panel++) {
+  mTitleFont = mWinApp->GetBoldFont(wnd);
+   for (panel = 0; panel < mNumPanels - 1; panel++) {
     index = mPanelStart[panel];
     wnd = GetDlgItem(idTable[index]);
     wnd->SetFont(&mBoldFont);
@@ -557,7 +553,7 @@ BOOL CTSSetupDialog::OnInitDialog()
       }
     }
     wnd = GetDlgItem(idTable[index]);
-    wnd->SetFont(&mTitleFont);
+    wnd->SetFont(mTitleFont);
   }
   m_butPrev.SetFont(littleFont);
   m_butNext.SetFont(littleFont);
@@ -574,14 +570,14 @@ BOOL CTSSetupDialog::OnInitDialog()
 
   ManagePanels();
 
-  m_statStarTilt.SetFont(&mTitleFont);
-  m_statStarBidir.SetFont(&mTitleFont);
+  m_statStarTilt.SetFont(mTitleFont);
+  m_statStarBidir.SetFont(mTitleFont);
   if (mNavOverrideFlags & NAV_OVERRIDE_TILT)
     m_statStarTilt.SetWindowText("*");
   if (mNavOverrideFlags & NAV_OVERRIDE_BIDIR)
     m_statStarBidir.SetWindowText("*");
   if (mNavOverrideFlags & NAV_OVERRIDE_DEF_TARG) {
-    m_statTargMicrons.SetFont(&mTitleFont);
+    m_statTargMicrons.SetFont(mTitleFont);
     m_statTargMicrons.SetWindowTextA("um*");
   }
 
@@ -1647,7 +1643,7 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
   CString star = "*";
   if (fov < mWinApp->mTSController->GetMinFieldBidirAnchor()) {
     m_strBidirFieldSize = star + m_strBidirFieldSize + star;
-    m_statBidirFieldSize.SetFont(&mTitleFont);
+    m_statBidirFieldSize.SetFont(mTitleFont);
   } else
     m_statBidirFieldSize.SetFont(m_statBDMagLabel.GetFont());
   if (fov < mWinApp->mTSController->GetAlarmBidirFieldSize())

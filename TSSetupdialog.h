@@ -256,7 +256,7 @@ private:
   int mAnchorBuf;
   BOOL mChangeRecExposure;   // User's value of this setting
   CFont mLittleFont;
-  CFont mTitleFont;
+  CFont *mTitleFont;
   CFont mBoldFont;
   int *mActiveCameraList;
   int mNumCameras;

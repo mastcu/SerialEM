@@ -829,6 +829,8 @@ private:
   BOOL mShowRemoteControl;      // Flag to show remote control dialog
   CFont mLittleFont;            // Central place to get the right font
   bool mMadeLittleFont;         // Flag that it was made already
+  CFont mBoldFont;              // Central place to get a bold font for standard text
+  bool mMadeBoldFont;         // Flag that it was made already
   bool mHasFEIcamera;           // Flag that there is an FEI camera
   BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
   BOOL mUseRecordForMontage;    // Flag to use Record parameters for Montage
@@ -917,6 +919,7 @@ void MainViewResizing(CRect &winRect, bool FFTwin);
 void OpenOrCloseMacroEditors(void);
 void ClearAllMacros(void);
 CFont * GetLittleFont(CWnd *stat);
+CFont * GetBoldFont(CWnd *stat);
 float GetScalingForDPI();
 int ScaleValueForDPI(double value);
 afx_msg void OnWindowRescuelogwindow();

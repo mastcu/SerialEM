@@ -1942,12 +1942,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
 
   // Make bolder text for antialiasing
   CWnd *wnd = GetDlgItem(IDC_STAT_ANTIALIAS);
-  wnd->GetClientRect(rect);
-  mBoldFont.CreateFont(rect.Height(), 0, 0, 0, FW_BOLD,
-      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-      FF_DONTCARE, "Microsoft Sans Serif");
-  wnd->SetFont(&mBoldFont);
+  wnd->SetFont(mWinApp->GetBoldFont(wnd));
 
   // Set up the camera buttons: but the copy button and label need to be set in ManageCam
   m_statCamera.ShowWindow(mNumCameras > 1 ? SW_SHOW : SW_HIDE);

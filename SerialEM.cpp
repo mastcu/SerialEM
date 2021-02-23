@@ -706,6 +706,7 @@ CSerialEMApp::CSerialEMApp()
   mUseViewForSearch = false;
   mIdleBaseCount = 0;
   mMadeLittleFont = false;
+  mMadeBoldFont = false;
   mAllowCameraInSTEMmode = false;
   mDoseLifetimeHours = 24;
   mBasicMode = false;
@@ -4340,6 +4341,21 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
       FF_DONTCARE, fontName);
   mMadeLittleFont = true;
   return &mLittleFont;
+}
+
+// Similar routine to return a common bold font given the size of static text
+CFont * CSerialEMApp::GetBoldFont(CWnd *stat)
+{
+  CRect rect;
+  if (!mMadeBoldFont && stat) {
+    stat->GetWindowRect(&rect);
+    mBoldFont.CreateFont(rect.Height(), 0, 0, 0, FW_BOLD,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, "Microsoft Sans Serif");
+    mMadeBoldFont = true;
+  }
+  return &mBoldFont;
 }
 
 // Returns the scaling that is being applied for DPI

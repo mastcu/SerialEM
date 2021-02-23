@@ -355,8 +355,6 @@ afx_msg void OnKillfocusDeFrameTime();
   CButton m_butUseCorrDblSamp;
   BOOL m_bUseCorrDblSamp;
   BOOL m_bAlwaysAntialias;
-  CFont mBoldFont;
-  CFont mLittleFont;
   CStatic m_statNormDSDF;
   CButton m_butSetupAlign;
   afx_msg void OnButSetupAlign();
