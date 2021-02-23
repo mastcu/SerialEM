@@ -7,6 +7,8 @@
 // CameraMacroTools.h : header file
 //
 
+#include "MyButton.h"
+
 enum {NO_NAV_RUNNING = 0, NAV_RUNNING_NO_SCRIPT_TS, NAV_PAUSED, NAV_TS_RUNNING,
   NAV_TS_STOPPED, NAV_PRE_TS_RUNNING, NAV_PRE_TS_STOPPED, NAV_SCRIPT_RUNNING,
   NAV_SCRIPT_STOPPED};
@@ -38,10 +40,10 @@ public:
 	CSpinButtonCtrl	m_sbcMacro2;
 	CSpinButtonCtrl	m_sbcMacro1;
 	CStatic	m_statTopline;
-	CButton	m_butStop;
-	CButton	m_butMacro3;
-	CButton	m_butMacro2;
-	CButton	m_butMacro1;
+	CMyButton	m_butStop;
+	CMyButton	m_butMacro3;
+	CMyButton	m_butMacro2;
+	CMyButton	m_butMacro1;
 	CButton	m_butResume;
 	CButton	m_butEnd;
 	CButton	m_butView;
@@ -77,7 +79,10 @@ protected:
 	afx_msg void OnButresume();
 	afx_msg void OnButmontage();
 	afx_msg void OnPaint();
-	//}}AFX_MSG
+  afx_msg void OnMacBut1Draw(NMHDR *pNotifyStruct, LRESULT *result);
+  afx_msg void OnMacBut2Draw(NMHDR *pNotifyStruct, LRESULT *result);
+  afx_msg void OnMacBut3Draw(NMHDR *pNotifyStruct, LRESULT *result);
+  //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
@@ -89,8 +94,8 @@ private:
 	int mMacroNumber[6];
   BOOL mUserStop;     // Flag that user pushed stop
   bool mEnabledSearch;
-  bool mEnabledStop;
 public:
+  void HandleMacroRightClick(CMyButton &but, int index, bool openOK);
   void SetOneMacroLabel(int num, UINT nID);
   void MacroNameChanged(int num);
   void CalibratingISoffset(bool ifCal);

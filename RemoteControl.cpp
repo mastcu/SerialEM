@@ -160,8 +160,8 @@ void CRemoteControl::OnPaint()
   CPaintDC dc(this); // device context for painting
 
   DrawSideBorders(dc);
-  if (mLastGunOn > 0)
-     DrawButtonOutline(dc, &m_butValves, 3, RGB(0, 255, 0));
+  //if (mLastGunOn > 0)
+    // DrawButtonOutline(dc, &m_butValves, 3, RGB(0, 255, 0));
 }
 
 // Called from scope update with current values; keeps track of last values seen and
@@ -232,6 +232,13 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   mLastMagInd = inMagInd;
   mLastCamLenInd = inCamLen;
   mLastSpot = inSpot;
+  if (inGunOn != mLastGunOn) {
+    m_butValves.m_bShowSpecial = inGunOn >= 0;
+    if (inGunOn > 0)
+      m_butValves.mSpecialColor = RGB(96, 255, 96);
+    else
+      m_butValves.mSpecialColor = JEOLscope ? RGB(255, 64, 64) : RGB(255, 255, 0);
+  }
   mLastGunOn = inGunOn;
   mLastIntensity = inIntensity;
   mLastProbeMode = inProbe;

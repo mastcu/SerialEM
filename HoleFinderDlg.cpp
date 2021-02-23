@@ -127,6 +127,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_BRACKET_LAST, m_bBracketLast);
   DDX_Control(pDX, IDC_BUT_SET_SIZE_SPACE, m_butSetSizeSpace);
   DDX_Text(pDX, IDC_STAT_UM_SIZE_SEP, m_strUmSizeSep);
+  DDX_Control(pDX, IDC_BUT_TOGGLE_HOLES, m_butToggleHoles);
 }
 
 
@@ -151,23 +152,20 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_CLEAR_DATA, OnButClearData)
   ON_BN_CLICKED(IDC_BRACKET_LAST, OnBracketLast)
   ON_BN_CLICKED(IDC_BUT_SET_SIZE_SPACE, OnButSetSizeSpace)
+  ON_NOTIFY(NM_LDOWN, IDC_BUT_TOGGLE_HOLES, OnToggleDraw)
 END_MESSAGE_MAP()
 
 
 // CHoleFinderDlg message handlers
 BOOL CHoleFinderDlg::OnInitDialog()
 {
-  CRect idRect;
   CBaseDlg::OnInitDialog();
+  CWnd *wnd = GetDlgItem(IDC_STAT_STATUS_OUTPUT);
   CheckAndSetNav();
   mIsOpen = true;
   mMasterParams = mHelper->GetHoleFinderParams();
   mParams = *mMasterParams;
-  m_statStatusOutput.GetClientRect(&idRect);
-  mBoldFont.CreateFont((idRect.Height()), 0, 0, 0, FW_HEAVY,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-    FF_DONTCARE, "Microsoft Sans Serif");
+  mBoldFont = mWinApp->GetBoldFont(wnd);
   m_sliderLowerMean.SetRange(0, 255);
   m_sliderUpperMean.SetRange(0, 255);
   m_sliderSDcutoff.SetRange(0, 255);
@@ -176,6 +174,7 @@ BOOL CHoleFinderDlg::OnInitDialog()
   m_sliderUpperMean.SetPageSize(4);
   m_sliderSDcutoff.SetPageSize(4);
   m_sliderBlackPct.SetPageSize(4);
+  m_butToggleHoles.m_bNotifyOnDraws = true;
   ParamsToDialog();
   ManageEnables();
   SetDefID(45678);    // Disable OK from being default button
@@ -328,6 +327,18 @@ void CHoleFinderDlg::OnButSetSizeSpace()
   UpdateData(false);
 }
 
+// Respond to notify event from the Toggle button; ignore the right-click
+void CHoleFinderDlg::OnToggleDraw(NMHDR *pNotifyStruct, LRESULT *result)
+{
+  static bool lastState = false;
+  if (!BOOL_EQUIV(lastState, m_butToggleHoles.m_bSelected)) {
+    mWinApp->mMainView->DrawImage();
+    lastState = m_butToggleHoles.m_bSelected;
+    if (!lastState)
+      mWinApp->mScope->SetRestoreViewFocusCount(1);
+  }
+}
+
 // Edit boxes for mean limits: process string, set slider
 void CHoleFinderDlg::OnKillfocusEditLowerMean()
 {
@@ -369,27 +380,27 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
       mMeanMin);
     m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_LOW_MEAN_LABEL);
-    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderUpperMean) {
     mParams.upperMeanCutoff = (float)(m_intUpperMean * (mMeanMax - mMidMean) / 255. +
       mMidMean);
     m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_UP_MEAN_LABEL);
-    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderSDcutoff) {
     mParams.SDcutoff = (float)(m_intSDcutoff * (mSDmax - mSDmin) / 255. + mSDmin);
     m_strSDcutoff.Format("%.4g", mParams.SDcutoff);
     wnd = GetDlgItem(IDC_STAT_SD_LABEL);
-    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderBlackPct) {
     mParams.blackFracCutoff = (float)(m_intBlackPct * (mBlackFracMax - mBlackFracMin) /
       255. + mBlackFracMin);
     m_strBlackPct.Format("%.1f", 100. * mParams.blackFracCutoff);
     wnd = GetDlgItem(IDC_STAT_PCT_LABEL);
-    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : &mBoldFont);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   UpdateData(false);
   SetExclusionsAndDraw();
@@ -622,6 +633,7 @@ void CHoleFinderDlg::ManageEnables()
   m_butBracketLast.EnableWindow(mBestThreshInd >= 0);
   m_butShowExcluded.EnableWindow(mHaveHoles);
   m_butShowIncluded.EnableWindow(mHaveHoles);
+  m_butToggleHoles.EnableWindow(mHaveHoles);
   m_butZigzag.EnableWindow(mHaveHoles);
   m_butFromFocus.EnableWindow(mHaveHoles);
   m_butInGroups.EnableWindow(mHaveHoles && mHelper->GetGridGroupSize() > 0);
@@ -1280,8 +1292,9 @@ bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
   *y = &mYstages;
   *pcOn = &mPieceOn;
   *exclude = &mExcluded;
-  incl = !mIsOpen || m_bShowIncluded;
-  excl = mIsOpen ? m_bShowExcluded : mParams.showExcluded;
+  incl = !mIsOpen || (m_bShowIncluded && !m_butToggleHoles.m_bSelected);
+  excl = mIsOpen ? (m_bShowExcluded && !m_butToggleHoles.m_bSelected) :
+  mParams.showExcluded;
   return HaveHolesToDrawOrMakePts();
 }
 

@@ -480,6 +480,7 @@ CEMscope::CEMscope()
   mIdleTimeToCloseValves = 0;
   mUpdateDuringAreaChange = false;
   mDetectorOffsetX = mDetectorOffsetY = 0.;
+  mRestoreViewFocusCount = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -1098,6 +1099,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
   if (reportTime)
     wallStart = wallTime();
+
+  // If a counter was set to restore focus, decrement and act on it when count expires
+  if (mRestoreViewFocusCount > 0) {
+    mRestoreViewFocusCount--;
+    if (!mRestoreViewFocusCount)
+      mWinApp->RestoreViewFocus();
+  }
 
   if (mNoScope) {
     mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0., 

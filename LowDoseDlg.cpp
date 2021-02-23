@@ -178,7 +178,6 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_GOTO_TRIAL, m_butGotoTrial);
   DDX_Control(pDX, IDC_GOTO_RECORD, m_butGotoRecord);
   DDX_Control(pDX, IDC_GOTO_SEARCH, m_butGotoSearch);
-  DDX_Radio(pDX, IDC_GOTO_VIEW, m_iGoToArea);
 }
 
 
@@ -539,7 +538,11 @@ void CLowDoseDlg::TurnOffDefine()
 void CLowDoseDlg::OnGotoArea(UINT nID)
 {
   int area = nID - IDC_GOTO_VIEW;
-  CButton *button = (CButton *)GetDlgItem(nID);
+  for (int ind = 0; ind < 5; ind++) {
+    CMyButton *button = (CMyButton *)GetDlgItem(ind + IDC_GOTO_VIEW);
+    if (button)
+      button->m_bShowSpecial = area == ind;
+  }
   UpdateData(true);
   SetFocus();
   mWinApp->RestoreViewFocus();
@@ -1125,13 +1128,13 @@ void CLowDoseDlg::OnPaint()
   CPaintDC dc(this); // device context for painting
  
   DrawSideBorders(dc);
-  int area = mWinApp->mScope->GetLowDoseArea();
+  /*int area = mWinApp->mScope->GetLowDoseArea();
   if (area < 0)
     return;
   CWnd *curBut = GetDlgItem(IDC_GOTO_VIEW + area);
   if (!curBut)
     return;
-  DrawButtonOutline(dc, curBut, 3, RGB(0, 255, 0));
+  DrawButtonOutline(dc, curBut, 3, RGB(0, 255, 0));*/
 }
 
 // DIALOG INITALIZATION

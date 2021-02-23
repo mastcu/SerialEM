@@ -1,6 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
+#include "MyButton.h"
 
 class EMscope;
 
@@ -41,7 +42,7 @@ public:
   void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
   int maxIndex, int maxDecimals, CString &str);
   void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd);
-  CButton m_butValves;
+  CMyButton m_butValves;
   afx_msg void OnButValves();
   CButton m_butNanoMicro;
   afx_msg void OnButNanoMicro();

@@ -9,6 +9,8 @@
 // LowDoseDlg.h : header file
 //
 
+#include "MyButton.h"
+
 #define SEARCH_AREA 4
 
 /////////////////////////////////////////////////////////////////////////////
@@ -224,11 +226,11 @@ public:
   void DeselectGoToButtons(int area);
   CButton m_butCopyToSearch;
   afx_msg void OnGotoArea(UINT nID);
-  CButton m_butGotoView;
-  CButton m_butGotoFocus;
-  CButton m_butGotoTrial;
-  CButton m_butGotoSearch;
-  CButton m_butGotoRecord;
+  CMyButton m_butGotoView;
+  CMyButton m_butGotoFocus;
+  CMyButton m_butGotoTrial;
+  CMyButton m_butGotoSearch;
+  CMyButton m_butGotoRecord;
   void SetBeamShiftButton(BOOL state);
   bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
   bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);

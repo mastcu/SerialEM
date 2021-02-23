@@ -362,6 +362,7 @@ public:
   GetSetMember(int, AdjustForISSkipBacklash);
   GetSetMember(float, AddToRawIntensity);
   GetSetMember(BOOL, UpdateDuringAreaChange);
+  SetMember(int, RestoreViewFocusCount);
 
   void SetJeolRelaxationFlags(int inVal);
   int GetJeolRelaxationFlags();
@@ -779,8 +780,9 @@ private:
   int mIdleTimeToCloseValves;  // Minutes of no activity after which to close the valves
   bool mClosedValvesAfterIdle; // Flag that it happened
   BOOL mUpdateDuringAreaChange; // Flag to allow scope updates during LD area change
-  float mDetectorOffsetX;         // PLA offsets potentially for each detector/camera
+  float mDetectorOffsetX;      // PLA offsets potentially for each detector/camera
   float mDetectorOffsetY;
+  int mRestoreViewFocusCount;  // For counter of updates before deferred RestoreViewFocus
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc

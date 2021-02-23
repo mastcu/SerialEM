@@ -2,6 +2,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "NavHelper.h"
+#include "MyButton.h"
 
 #define MAX_HOLE_TRIALS 16
 class CNavHelper;
@@ -97,7 +98,7 @@ private:
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;
-  CFont mBoldFont;
+  CFont *mBoldFont;
 
 
 public:
@@ -173,4 +174,6 @@ public:
   BOOL m_bBracketLast;
   CButton m_butSetSizeSpace;
   afx_msg void OnButSetSizeSpace();
+  CMyButton m_butToggleHoles;
+  afx_msg void OnToggleDraw(NMHDR * pNotifyStruct, LRESULT * result);
 };
