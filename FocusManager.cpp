@@ -938,7 +938,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   mFocusSetNum = FOCUS_CONSET;
   mAutofocusIterNum = iterNum;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode()) {
-    mFocusSetNum = useViewInLD > 0 ? VIEW_CONSET : RECORD_CONSET;
+    mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET : 
+      SEARCH_CONSET, RECORD_CONSET);
     mScope->GotoLowDoseArea(mFocusSetNum);
     if (mUseOppositeLDArea) {
       SEMMessageBox("You can not use opposite low dose areas with the View area",
@@ -1209,8 +1210,9 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   // unless measuring with script argument 1 instead of 2
   if (mFCindex < 0)
     defocus -= (float)mDefocusOffset;
-  if (mFocusSetNum == VIEW_CONSET && !(mDoChangeFocus == -1 && mUseViewInLD == 1))
-    defocus -= mScope->GetLDViewDefocus(VIEW_CONSET);
+  if ((mFocusSetNum == VIEW_CONSET || mFocusSetNum == SEARCH_CONSET) && 
+    !(mDoChangeFocus == -1 && mUseViewInLD > 0 && (mUseViewInLD % 2) == 1))
+    defocus -= mScope->GetLDViewDefocus(mUseViewInLD < 3 ? VIEW_CONSET : SEARCH_CONSET);
 
   // Adjust for image not centered - get specimen Y of center of field
   // The sign of change in measured defocus is opposite to sign when moving
@@ -1240,7 +1242,8 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   CString str;
   mFocusSetNum = FOCUS_CONSET;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode())
-    mFocusSetNum = useViewInLD > 0 ? VIEW_CONSET : RECORD_CONSET;
+    mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET :
+      SEARCH_CONSET, RECORD_CONSET);
   ControlSet  *set = mConSets + mFocusSetNum;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
 
