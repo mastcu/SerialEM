@@ -185,6 +185,7 @@ struct CameraParameters {
   float deadTime;            // Longest exposure time that gives effectively no counts
   float minExposure;         // Minimum allowed exposure
   float postBlankerDelay;    // Delay after operating blanker as shutter or for dark ref
+  float postIntensityTimeout;  // Timeout to set after changing intensity
   CameraDefects defects;     // Structure with all camera defects
   CameraDefects *origDefects;  // Copy of original defects before DM defect list merged
   std::string defectString;  // String conversion of defects for output by plugin

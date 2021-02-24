@@ -4919,6 +4919,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mChangingLDArea = -1;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(SIMPLE_PANE, "CHANGING LD AREA");
+  mWinApp->mLowDoseDlg.DeselectGoToButtons(newArea);
 
   // Use designated params if set by nav helper, otherwise use set area params
   if (!mLdsaParams)
@@ -4944,7 +4945,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
   if (bDebug || lDebug)
-    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea, GetDefocus(), mAutosaveCount);
+    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea, 
+      GetDefocus(), mAutosaveCount);
   if (bDebug && lDebug && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
     GetBeamTilt(curISX, curISY);
@@ -5250,6 +5252,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   mLdsaParams = NULL;
   mChangingLDArea = 0;
+  mWinApp->mLowDoseDlg.SelectGoToButton(newArea);
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   mWinApp->UpdateBufferWindows();
   mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
@@ -5538,9 +5541,19 @@ double CEMscope::FastIntensity()
 BOOL CEMscope::SetIntensity(double inVal, int spot, int probe)
 {
   BOOL result = true;
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
 
   if (!sInitialized)
     return false;
+
+  // Falcon 3 can have a problem with initial blanking after an intensity change, so this
+  // allows a timeout before the next image
+  if (camParam->postIntensityTimeout > 0.) {
+    if (fabs(GetIntensity() - inVal) < 1.e-6)
+      return true;
+    mShiftManager->SetGeneralTimeOut(GetTickCount(), 
+      (int)(1000. * camParam->postIntensityTimeout));
+  }
 
   if (mUseIllumAreaForC2)
     return SetIlluminatedArea(IntensityToIllumArea(inVal, spot, probe));

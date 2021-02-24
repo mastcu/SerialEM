@@ -2541,6 +2541,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->retractDelay = itemFlt[1];
           else if (MatchNoCase("PostBlankerDelay"))
             camP->postBlankerDelay = itemFlt[1];
+          else if (MatchNoCase("PostIntensityTimeout"))
+            camP->postIntensityTimeout = itemFlt[1];
           else if (MatchNoCase("Retractable"))
             camP->retractable = itemInt[1] != 0;
           else if (MatchNoCase("InsertingRetractsCam"))
