@@ -538,11 +538,7 @@ void CLowDoseDlg::TurnOffDefine()
 void CLowDoseDlg::OnGotoArea(UINT nID)
 {
   int area = nID - IDC_GOTO_VIEW;
-  for (int ind = 0; ind < 5; ind++) {
-    CMyButton *button = (CMyButton *)GetDlgItem(ind + IDC_GOTO_VIEW);
-    if (button)
-      button->m_bShowSpecial = area == ind;
-  }
+  DeselectGoToButtons(area);
   UpdateData(true);
   SetFocus();
   mWinApp->RestoreViewFocus();
@@ -2382,13 +2378,23 @@ void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
   }
 }
 
-// Make sure all buttons are unselected except the active area if there is one
+// Make sure all buttons are uncolored except the active area if there is one
 void CLowDoseDlg::DeselectGoToButtons(int area)
 {
-  CButton *but;
+  CMyButton *but;
   for (int ind = 0; ind < 5; ind++) {
-    but = (CButton *)GetDlgItem(IDC_GOTO_VIEW + ind);
-    but->SetCheck(area == ind ? BST_CHECKED : BST_UNCHECKED);
+    but = (CMyButton *)GetDlgItem(IDC_GOTO_VIEW + ind);
+    if (area != ind) {
+      but->m_bShowSpecial = false;
+      but->Invalidate();
+    }
   }
-  m_iGoToArea = area;
+}
+
+// Color the button for the current area (called at end of area-setting)
+void CLowDoseDlg::SelectGoToButton(int area)
+{
+  CMyButton *but = (CMyButton *)GetDlgItem(IDC_GOTO_VIEW + area);
+  but->m_bShowSpecial = true;
+  but->Invalidate();
 }

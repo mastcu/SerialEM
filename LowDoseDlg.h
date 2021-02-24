@@ -224,6 +224,7 @@ public:
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
   void DeselectGoToButtons(int area);
+  void SelectGoToButton(int area);
   CButton m_butCopyToSearch;
   afx_msg void OnGotoArea(UINT nID);
   CMyButton m_butGotoView;
