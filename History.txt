@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/23/21: Added camera property to set delay from setting intensity to starting
+acquisition.
+
 2/22/21: Added options to use Search area to Autofocus script command.
 
 2/22/21: SEM_3-8-7
