@@ -576,6 +576,7 @@ public:
   GetSetMember(double, LastActivityTime);
   GetMember(bool, JustChangingLDarea);
   GetMember(bool, JustDoingSynchro);
+  GetMember(bool, InUpdateWindows);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
   std::set<int>  *GetIDsToDisable() { return &mIDsToDisable; };
@@ -861,6 +862,7 @@ private:
   double mLastActivityTime;     // Tick time of last redisplay or something in idle array
   bool mJustChangingLDarea;     // Flag that "DOingTasks" was true because of LD change
   bool mJustDoingSynchro;       // Flag that "DoingTasks" true because of synchro thread
+  bool mInUpdateWindows;        // Flag that update call is from UpdateBufferWindows
 
 
 public:

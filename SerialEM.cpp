@@ -348,6 +348,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].deadTime = 0.;
     mCamParams[i].minExposure = 0.001f;
     mCamParams[i].postBlankerDelay = 0.;
+    mCamParams[i].postIntensityTimeout = 0.;
     mCamParams[i].defects.wasScaled = 0;
     mCamParams[i].defects.K2Type = 0;
     mCamParams[i].defects.rotationFlip = 0;
@@ -710,6 +711,7 @@ CSerialEMApp::CSerialEMApp()
   mAllowCameraInSTEMmode = false;
   mDoseLifetimeHours = 24;
   mBasicMode = false;
+  mInUpdateWindows = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -2562,6 +2564,7 @@ void CSerialEMApp::ErrorOccurred(int error)
     mNavHelper->mHoleFinderDlg->StopScanning();
   if (mCamera->GetWaitingForStacking())
     mCamera->SetWaitingForStacking(-1);
+  mCamera->StopFrameTSTilting();
   if (mScope->GetDoingLongOperation() && mCameraMacroTools.GetUserStop())
     mScope->StopLongOperation(false);
   if (mAutoTuning->GetDoingCalAstig())
@@ -2946,6 +2949,7 @@ void CSerialEMApp::UpdateBufferWindows()
 {
   if (!mMaxDialogWidth || mDeferBufWinUpdates)
     return;
+  mInUpdateWindows = true;
   mBufferWindow.UpdateSaveCopy();
   mStatusWindow.Update();
   mTiltWindow.UpdateEnables();
@@ -2977,6 +2981,7 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavHelper->mMultiCombinerDlg->UpdateEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
+  mInUpdateWindows = false;
 }
 
 // Central call to update all macro editers

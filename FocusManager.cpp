@@ -932,15 +932,16 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
 {
   float slope, shiftX, shiftY;
   FocusTable focTmp;
-  int hasCal;
+  int hasCal, areaNum;
   CString mess;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
-  mFocusSetNum = FOCUS_CONSET;
+  mFocusSetNum = areaNum = FOCUS_CONSET;
   mAutofocusIterNum = iterNum;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode()) {
     mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET : 
       SEARCH_CONSET, RECORD_CONSET);
-    mScope->GotoLowDoseArea(mFocusSetNum);
+    areaNum = mCamera->ConSetToLDArea(mFocusSetNum);
+    mScope->GotoLowDoseArea(areaNum);
     if (mUseOppositeLDArea) {
       SEMMessageBox("You can not use opposite low dose areas with the View area",
         MB_EXCLAME);
@@ -951,7 +952,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   mDoChangeFocus = inChange;
   SEMTrace('M', "Autofocus Start");
   if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex)
-    mFocusMag = ldParm[mFocusSetNum].magIndex;
+    mFocusMag = ldParm[areaNum].magIndex;
   else
     mFocusMag = mScope->GetMagIndex();
 
@@ -997,6 +998,11 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
     }
     if (inChange == 0 && !hasCal) {
       mWinApp->AppendToLog("Cannot measure defocus; there is no autofocus calibration in"
+        " low mag");
+      return;
+    }
+    if (inChange < 0 && !hasCal) {
+      SEMMessageBox("Cannot measure defocus; there is no autofocus calibration in"
         " low mag");
       return;
     }
@@ -1299,7 +1305,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     (mScope->GetLDBeamTiltShifts() || !mScope->GetHasNoAlpha() || 
     mScope->GetProbeMode() != mFocusProbe || 
     !mWinApp->mLowDoseDlg.SameAsFocusArea(mScope->GetLowDoseArea()))) {
-      mScope->GotoLowDoseArea(mFocusSetNum);
+      mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(mFocusSetNum));
       setLowDose = !mUseOppositeLDArea;
   }
   if (mAutofocusIterNum == 1)
@@ -1817,14 +1823,16 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
   ScaleMat refMat, curMat, refInv, delMat;
   int numCam = mWinApp->GetNumReadInCameras();
   int *activeList = mWinApp->GetActiveCameraList();
+  bool debug = GetDebugOutput('C') && !mWinApp->GetInUpdateWindows();
 
   if (mCamParams[inCam].STEMcamera)
     return 0;
   if ((focInd = LookupFocusCal(inMag, inCam, mTiltDirection, probeMode, inAlpha, false))
     >= 0) {
       focCal = mFocTab[focInd];
-      SEMTrace('C', "Returning direct focus cal for mag %d cam %d a %d", inMag, inCam, 
-        inAlpha);
+      if (debug)
+        PrintfToLog("Returning direct focus cal for mag %d cam %d a %d", inMag, inCam,
+          inAlpha);
       return 1; // calibrated at this mag
   }
 
@@ -1868,7 +1876,8 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
                 refInv = MatInv(refMat);
                 delMat = MatMul(refInv, curMat);
                 TransformFocusCal(&mFocTab[focInd], &focCal, delMat);
-                SEMTrace('C', "Using transformed focus cal on pass %d from mag-cam-a "
+                if (debug)
+                  PrintfToLog("Using transformed focus cal on pass %d from mag-cam-a "
                   "%d-%d-%d to %d-%d-%d", iPass, iMag, iCamTry, mFocTab[focInd].alpha, 
                   inMag, inCam, inAlpha);
                 return iPass + 2;
