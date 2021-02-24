@@ -1789,6 +1789,7 @@ void CCameraController::StopCapture(int ifNow)
   }
   if (ifNow > 0) {
     mHalting = true;
+    mTD.FrameTSstopOnCamReturn = -1;
   }
   
   // DNM: call the DE camera only if it is the current camera	
@@ -3618,7 +3619,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     && (mTD.FrameTStiltToAngle.size() > 0
     || mTD.FrameTSwaitOrInterval.size() > 0) && !mTD.ScanTime && !mTD.DriftISinterval &&
     !mTD.DynFocusInterval && !mTD.FocusStep1 && !mTD.PostMoveStage) {
-      mTD.FrameTSstopOnCamReturn = !(mParam->K2Type && mTD.NumAsyncSumFrames >= 0);
+      mTD.FrameTSstopOnCamReturn = !(mParam->K2Type && mTD.NumAsyncSumFrames >= 0) ?
+        1 : 0;
       mTD.FrameTSinitialDelay += mParam->builtInSettling + mParam->startupDelay;
       mTD.JeolOLtoUm = mScope->GetJeol_OLfine_to_um();
       if (mTD.FrameTStiltToAngle.size() > 0) {
@@ -6163,7 +6165,7 @@ void CCameraController::CleanUpFromTiltSums(void)
 {
   if (mTD.DoingTiltSums) {
     if (mTD.blankerThread) {
-      mTD.FrameTSstopOnCamReturn = true;
+      mTD.FrameTSstopOnCamReturn = 1;
       mTD.imageReturned = true;
       WaitForBlankerThread(&mTD, mTD.blankerTimeout, 
         _T("Thread for frame tilt series did not end soon enough when told to"));
@@ -8366,7 +8368,8 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             intervalSumSq, B3DMAX(1, B3DNINT(1000.*td->FrameTSwaitOrInterval[step])));
 
           // Check whether to quit if flag set
-          if (td->FrameTSstopOnCamReturn && td->imageReturned)
+          if ((td->FrameTSstopOnCamReturn > 0 && td->imageReturned) || 
+            td->FrameTSstopOnCamReturn < 0)
             break;
         }
         SEMTrace('1', "Finished tilt loop %.3f", SEMSecondsSinceStart());

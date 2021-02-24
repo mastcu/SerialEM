@@ -1180,6 +1180,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     "STOPPED NAV SCRIPT" : "");
   if (!mCamera->CameraBusy())
     mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mCamera->StopFrameTSTilting();
   mWinApp->mScopeStatus.SetWatchDose(false);
   mWinApp->mDocWnd->SetDeferWritingFrameMdoc(false);
 }

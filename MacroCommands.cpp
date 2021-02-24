@@ -1675,7 +1675,7 @@ int CMacCmd::ReplaceFrameTSFocus(void)
   else
     cIndex2 = mCamera->ReplaceFrameTSFocusChange(newFocus);
   if (cIndex2)
-    ABORT_LINE("The variable does not have the same number of focus changes as the"
+    ABORT_LINE("The variable does not have the same number of changes as the"
       " original list of changes for line:\n\n");
   return 0;
 }
@@ -3961,12 +3961,12 @@ int CMacCmd::ReportAlignShift(void)
       cBInv = mShiftManager->CameraToIS(cIndex);
       cAMat = mShiftManager->IStoSpecimen(cIndex);
 
-                 // Convert to image shift units, then determine distance on specimen
-                 // implied by each axis of image shift separately
+      // Convert to image shift units, then determine distance on specimen
+      // implied by each axis of image shift separately
       cDelISX = cBInv.xpx * cShiftX + cBInv.xpy * cShiftY;
       cDelISY = cBInv.ypx * cShiftX + cBInv.ypy * cShiftY;
       if (CMD_IS(REPORTISFORBUFFERSHIFT)) {
-        mStrCopy.Format("Buffer shift corresponds to %.3f %.3f-  IS units", -cDelISX,
+        mStrCopy.Format("Buffer shift corresponds to %.3f %.3f IS units", -cDelISX,
           - cDelISY);
         SetReportedValues(&mStrItems[1], -cDelISX, -cDelISY);
       } else {

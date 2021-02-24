@@ -304,7 +304,7 @@ struct CameraThreadData {
   IntVec FrameTSrelStartTime;     // Start and end times unblanked
   IntVec FrameTSrelEndTime;       // exposure period in msec
   float FrameTSframeTime;         // frame time, needed to get to predicted frames
-  bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
+  int FrameTSstopOnCamReturn;     // 1 stop on image return (0 if early return), -1 stop
   BOOL FrameTSdoBacklash;         // Flag to impose backlash on moves opposite to first
   bool DoingTiltSums;             // Flag that tilt sums are or were being done
   long TiltSumIndex;              // Properties of last deferred tilt sum: tilt index
@@ -1163,6 +1163,7 @@ bool CropTietzSubarea(CameraParameters *param, int ubSizeX, int ubSizeY, int pro
   int singleContinMode, int &ySizeOnChip);
 void CleanUpFromTiltSums(void);
 BOOL GetTiltSumProperties(int &index, int &numFrames, float &angle, int &firstFrame, int &lastFrame);
+void StopFrameTSTilting() { mTD.FrameTSstopOnCamReturn = -1; };
 };
 
 
