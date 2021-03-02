@@ -136,5 +136,14 @@ static DisableHideItem sDisableHideList[] =
   {"ImageStateDlg - Scheduled", 2, 0, IDC_BUT_SETSCHEDSTATE},
   {"ImageStateDlg - Restore", 2, 0, IDC_BUT_RESTORESTATE},
   {"ImageStateDlg - Forget", 2, 0, IDC_BUT_FORGETSTATE},
-
+  // Frame File Options Dialog
+  {"FrameFileOpts - Save MRC", 2, 0, IDC_SAVE_MRC},
+  {"FrameFileOpts - Use .mrcs", 2, 0, IDC_USE_EXTENSION_MRCS},
+  {"FrameFileOpts - LZW compressed", 2, 0, IDC_COMPRESSED_TIFF},
+  {"FrameFileOpts - ZIP compressed", 2, 0, IDC_TIFF_ZIP_COMPRESS},
+  {"FrameFileOpts - File type", 2, 0, IDC_STAT_FILETYPE}, // The group box
+  {"FrameFileOpts - One frame/file", 2, 0, IDC_ONE_FRAME_PER_FILE},  // This is Falcon 4 EER mode
+  {"FrameFileOpts - Frame stack mdoc", 2, 0, IDC_FRAME_STACK_MDOC},
+  {"FrameFileOpts - Save unnormalized", 2, 0, IDC_SAVE_UNNORMALIZED},
+  {"FrameFileOpts - No rotation/flip", 2, 0, IDC_SKIP_ROTFLIP},
 };
