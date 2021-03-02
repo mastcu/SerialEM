@@ -2774,11 +2774,16 @@ void CCameraController::ModifyFrameTSShifts(int index, float ISX, float ISY)
 // Replace the whole shift array for trajectory based on predictions
 int CCameraController::ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY)
 {
+  int index = mScope->FastMagIndex();
+  ScaleMat aMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(index)),
+    mShiftManager->CameraToIS(index));
   if (ISX.size() != ISY.size() || ISX.size() != mTD.FrameTSdeltaISX.size())
     return 1;
+
   WaitForSingleObject(mTD.FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
-  mTD.FrameTSdeltaISX = ISX;
-  mTD.FrameTSdeltaISY = ISY;
+  for (index = 0; index < (int)ISX.size(); index++)
+    mShiftManager->ApplyScaleMatrix(aMat, ISX[index], ISY[index], 
+      mTD.FrameTSdeltaISX[index], mTD.FrameTSdeltaISY[index]);
   ReleaseMutex(mTD.FrameTSMutexHandle);
   return 0;
 }
