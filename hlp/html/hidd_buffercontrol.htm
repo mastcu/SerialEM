@@ -52,7 +52,12 @@
       moved to B, the image in B moved to C, and the image in C deleted. (An 
       exception to this occurs when the image in A was acquired in a continuous 
       acquisition.) The up and down arrows will increase and decrease the number of 
-      images rolled through the buffers, respectively.</P>
+      images rolled through the buffers, respectively.&nbsp; Although there are 20 
+      buffers (A to T), rolling is limited to the first 14 (up to N).&nbsp; With one 
+      or two after that used as default autoalignment reference buffers, and the one 
+      after that used by default as the buffer to read images into, there will still 
+      always be at least 3 buffers protected from rolling and other program operations 
+      and available for image storage.</P>
     <P><B>Delete</B></P>
     <P>Use this button to delete the image in the current buffer when the main window 
       is active. Deleting large images will help when the program begins to run out 
@@ -70,7 +75,7 @@
       mode. Thus, changing the number of buffers to roll, or going into or out of low 
       dose mode, will generally change the Read Buffer. However, if you select a 
       different buffer to read into with this control, then these automatic changes 
-      may not occur.</P>
+      may not occur.&nbsp; This selection is free to go to the highest buffer, T.</P>
     <P><B>Protect unsaved Record images</B></P>
     <P>Selecting this option will protect images acquired with the Record parameter set 
       from being deleted if they have not been saved to file. You will have to 

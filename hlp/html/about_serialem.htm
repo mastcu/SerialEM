@@ -33,14 +33,15 @@
       main image display window. Images are kept in a set of buffers, and the main 
       display window can show an image from any one of these buffers. Similarly to 
       3dmod in IMOD, you can riffle through the images with PageUp and PageDn. The buffers are 
-      referred to by letter. Images from the camera are always placed in buffer A, 
+      referred to by letter. There are currently 20 buffers, A through T.&nbsp; Images from the camera are always placed in buffer A, 
       the first buffer. The program is typically set up to roll images through the 
       first three buffers. In other words, when a new image comes in, the existing 
       image in buffer A is moved to buffer B, the image previously in buffer B is 
       moved to buffer C, and the image in buffer C is lost.&nbsp; However, it is often 
       desirable to increase the number of images kept in rolling buffers, which can 
       be done with a spin button in the Options section of the
-      <a href="hidd_buffercontrol.htm">Buffer Control</a> panel. </P>
+      <a href="hidd_buffercontrol.htm">Buffer Control</a> panel.&nbsp; The display 
+      will show &quot;Rolling&quot; in the upper left corner when showing a rolling buffer. </P>
     <P>It is also possible to copy an image to a new, free-standing window, which could 
       be useful if you want to look at two images side by side.</P>
     <P>The main display window will initially occupy the full area inside the program 
@@ -77,7 +78,11 @@
       cross-correlation. This is referred to as autoaligning. The image in buffer A 
       is correlated to a reference image in another buffer. Before doing this 
       correlation, the program will stretch the image taken at a higher tilt angle to 
-      give a better match to the other image.</P>
+      give a better match to the other image.&nbsp; By default, the buffer after the 
+      last rolling buffer is used as the reference for autoaligning.&nbsp; When using 
+      the program&#39;s Low Dose mode, there are two default reference buffers instead: 
+      one for images centered on the area of interest (on-axis) and one for images 
+      taken at a position displaced along the tilt axis (off-axis).</P>
     <P><B><I>Autofocusing:</I></B> SerialEM determines the defocus of the specimen by 
       the standard technique of measuring how much the image moves when the beam is 
       tilted. When the specimen is in the focal plane, its image does not move; and 

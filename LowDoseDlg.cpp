@@ -461,6 +461,7 @@ void CLowDoseDlg::OnLowdosemode()
       mWinApp->mBufferManager->SetBufToReadInto(nRoll + 5 - delBuf);
     else
       mWinApp->mBufferManager->SetShiftsOnAcquire(nRoll - 1);
+    mWinApp->mBufferWindow.UpdateSettings();
   }
   mWinApp->UpdateBufferWindows();
   if (mWinApp->ScopeHasSTEM())
