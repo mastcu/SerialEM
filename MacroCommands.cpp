@@ -370,7 +370,7 @@ int CMacCmd::NextCommand(bool startingOut)
     SetReportedValues(1., mScope->GetMessageBoxReturnValue());
   mShowedScopeBox = false;
 
-  // Check of last command are done, so return for external scripting
+  // Checks of last command are done, so return for external scripting
   if (mRunningScrpLang)
     return 0;
 
@@ -504,6 +504,7 @@ int CMacCmd::NextCommand(bool startingOut)
   return 0;
 }
 
+// Set up pointers and other initializations for a command
 void CMacCmd::InitForNextCommand()
 {
   mReadOtherSleep = 2000;

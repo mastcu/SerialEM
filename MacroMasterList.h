@@ -4,7 +4,8 @@
 // function declarations, and the command table.  In every case, the first entry is the
 // MixedCase command name, and the last entry is the upper case of that.
 //
-// The two numbers are the minimum arguments and whether arithmetic is allowed
+// The two numbers are the minimum arguments and a ste of flags.  The first two bits of
+// the flags affect whether arithmetic is allowed.
 // Arithmetic is allowed for any command with bit 1 set in the second number (1), and for
 // any "Set" command that does not have bit 2 set there (2).  Starting with % lists all
 // explicitly allowed commands.  It is redundant to set bit 1 for Set command
