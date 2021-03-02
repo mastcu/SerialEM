@@ -665,7 +665,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     substr.MakeUpper();
     if (substr == "\r" || substr == "\n")
       break;
-    for (i = 0; i < numCommands; i++)
+    for (i = CME_EXIT; i < numCommands; i++)
       if (cmdList[i].cmd.find(substr) == 0)
         matchList[numMatch++] = i;
 

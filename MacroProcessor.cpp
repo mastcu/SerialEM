@@ -35,6 +35,7 @@
 #include "PiezoAndPPControl.h"
 #include "MacroSelector.h"
 #include "Utilities\KGetOne.h"
+#include "Shared\\b3dutil.h"
 
 
 #ifdef _DEBUG
@@ -70,6 +71,8 @@ static char THIS_FILE[]=__FILE__;
   return 98; \
 }
 
+ScriptLangData CMacroProcessor::mScrpLangData;
+ScriptLangPlugFuncs *CMacroProcessor::mScrpLangFuncs = NULL;
 
 static int sProcessExitStatus;
 static int sProcessErrno;
@@ -196,6 +199,8 @@ CMacroProcessor::CMacroProcessor()
     mReadOnlyStart[i] = -1;
   srand(GetTickCount());
   mProcessThread = NULL;
+  mScrpLangThread = NULL;
+  mScrpLangDoneEvent = NULL;
 }
 
 CMacroProcessor::~CMacroProcessor()
@@ -729,7 +734,7 @@ int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
 // Check for conditions that macro may have started
 int CMacroProcessor::TaskBusy()
 {
-  double diff, dose;
+  double diff, dose, tbusy;
   CString report;
 
   // If accumulating dose: do periodic reports, stop when done
@@ -755,6 +760,18 @@ int CMacroProcessor::TaskBusy()
       mWinApp->mScopeStatus.SetWatchDose(false);
       return 0;
     }
+  }
+
+  // Check if command is ready from external scripting, or if it finished/errored
+  if (mRunningScrpLang && mScrpLangData.waitingForCommand) {
+    if (mScrpLangData.commandReady)
+      return 0;
+    tbusy = UtilThreadBusy(&mScrpLangThread);
+    if (tbusy > 0)
+      return 1;
+    SEMTrace('[', "thread done %d", tbusy);
+    mScrpLangData.threadDone = tbusy ? 1 : -1;
+    return 0;
   }
 
   // If sleeping, take little naps to avoid using lots of CPU
@@ -806,17 +823,42 @@ int CMacroProcessor::TaskBusy()
 void CMacroProcessor::Run(int which)
 {
   int mac, ind, tryLevel = 0;
+  double startTime;
   MacroFunction *func;
   CString *longMacNames = mWinApp->GetLongMacroNames();
   CString name;
   if (mMacros[which].IsEmpty())
     return;
 
-  // Check the macro(s) for commands, number of arguments, etc.
   PrepareForMacroChecking(which);
   mLastAborted = true;
   mLastCompleted = false;
-  if (CheckBlockNesting(which, -1, tryLevel))
+  mRunningScrpLang = false;
+
+  // First check for an external script and get it composed
+  ind = CheckForScriptLanguage(which);
+  if (ind > 0)
+    return;
+  if (ind < 0) {
+    mRunningScrpLang = true;
+    if (mCamera->DoingContinuousAcquire()) {
+      mCamera->StopCapture(0);
+      startTime = GetTickCount();
+      while (SEMTickInterval(startTime) < 10000.) {
+        if (!mCamera->CameraBusy())
+          break;
+        Sleep(100);
+      }
+      if (mCamera->CameraBusy()) {
+        SEMMessageBox("Could not stop continuous camera acquisition; cannot proceed with"
+          " script");
+        return;
+      }
+    }
+  }
+
+  // Check the macro(s) for commands, number of arguments, etc.
+  if (!mRunningScrpLang && CheckBlockNesting(which, -1, tryLevel))
     return;
 
   // Clear out wasCalled flags
@@ -886,6 +928,7 @@ void CMacroProcessor::Run(int which)
   if (!longMacNames[mCurrentMacro].IsEmpty())
     SetVariable("LONGNAME", longMacNames[mCurrentMacro], VARTYPE_REGULAR, -1, false);
   CloseFileForText(-1);
+
   RunOrResume();
 }
 
@@ -929,9 +972,35 @@ void CMacroProcessor::RunOrResume()
   for (ind = 0 ; ind < (int)mSavedSettingNames.size(); ind++)
     mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mNewSettingValues[ind]);
+  mNumCmdSinceAddIdle = mMaxCmdToLoopOnIdle + 1;
+  mScrpLangData.waitingForCommand = 0;
+  mScrpLangData.commandReady = 0;
+  mScrpLangData.threadDone = 0;
+  mScrpLangData.errorOccurred = 0;
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
+
+  // Start the script language thread and set up waiting for command
+  if (mRunningScrpLang) {
+    mWinApp->mMacroProcessor->InitForNextCommand();
+    for (ind = MAX_SCRIPT_LANG_ARGS; ind < MAX_MACRO_TOKENS; ind++) {
+      mItemEmpty[ind] = true;
+      mStrItems[ind] = "";
+      mItemDbl[ind] = 0.;
+      mItemFlt[ind] = 0.;
+      mItemInt[ind] = 0;
+    }
+    mScrpLangData.waitingForCommand = 1;
+    mScrpLangThread = AfxBeginThread(RunScriptLangProc,
+      (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] : mMacroForScrpLang),
+      THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+    mScrpLangThread->m_bAutoDelete = false;
+    mScrpLangThread->ResumeThread();
+    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    return;
+  }
+
   if (mStoppedContSetNum >= 0) {
     mCamera->StopCapture(0);
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
@@ -990,6 +1059,9 @@ void CMacroProcessor::Stop(BOOL ifNow)
       return;
     if (mProcessThread && UtilThreadBusy(&mProcessThread) > 0)
       UtilThreadCleanup(&mProcessThread);
+    // HUH?
+    if (mScrpLangThread && UtilThreadBusy(&mScrpLangThread) > 0)
+      UtilThreadCleanup(&mScrpLangThread);
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
     SuspendMacro();
@@ -1063,6 +1135,18 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   mLoopInOnIdle = false;
   if (!mDoingMacro)
     return;
+  SEMTrace('[', "In abort");
+  // Intercept abort when doing external script, set error flag and set wait for command
+  if (mRunningScrpLang && !mScrpLangData.threadDone) {
+    mScrpLangData.errorOccurred = 1;
+    mScrpLangData.waitingForCommand = 1;
+    mScrpLangData.commandReady = 0;
+    SetEvent(mScrpLangDoneEvent);
+    SEMTrace('[', "signal function done after Abort");
+    mWinApp->AddIdleTask(TASK_MACRO_RUN, 0, 0);
+    return;
+  }
+
   if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
     return;
   if (TestAndStartFuncOnStop())
@@ -1174,6 +1258,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     for (ind = MAX_MACROS + MAX_ONE_LINE_SCRIPTS; ind < MAX_TOT_MACROS; ind++)
       ClearFunctionArray(ind);
   }
+  mRunningScrpLang = false;
+  ResetEvent(mScrpLangDoneEvent);
+  SEMTrace('[', "reset all done ending macro");
+  mMacroForScrpLang = "";
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
@@ -1195,7 +1283,8 @@ void CMacroProcessor::SetIntensityFactor(int iDir)
 }
 
 // Get the next line or multiple lines if they end with backslash
-void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &strLine)
+void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &strLine, 
+  bool commentOK)
 {
   int index, testInd;
   strLine = "";
@@ -1208,7 +1297,7 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
 
       // If none, get rest of string, set index past end
       temp = macro->Mid(currentIndex);
-      if (!temp.TrimLeft().GetLength() || temp.TrimLeft().GetAt(0) != '#')
+      if (!temp.TrimLeft().GetLength() || temp.TrimLeft().GetAt(0) != '#' || commentOK)
         strLine += temp;
       currentIndex = macro->GetLength();
       break;
@@ -1217,7 +1306,7 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
       // Set index past end of line then test for space backslash after skipping a \r
       index++;
       temp = macro->Mid(currentIndex, index - currentIndex);
-      if (temp.TrimLeft().GetLength() && temp.TrimLeft().GetAt(0) == '#') {
+      if (temp.TrimLeft().GetLength() && temp.TrimLeft().GetAt(0) == '#' && !commentOK) {
         currentIndex = index;
         if (index >= macro->GetLength())
           break;
@@ -1249,9 +1338,10 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
 {
   CString newName = "";
   CString longName = "";
-  CString strLine, argName, strItem[MAX_MACRO_TOKENS];
+  CString strLine, prefix, argName, strItem[MAX_MACRO_TOKENS];
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
+  int scriptLang = 0;
   int currentIndex = 0, lastIndex = 0;
   if ((macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS) ||
     (mDoingMacro && mCallLevel > 0))
@@ -1261,20 +1351,26 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   mReadOnlyStart[macroNumber] = -1;
   ClearFunctionArray(macroNumber);
   while (currentIndex < macro->GetLength()) {
-    GetNextLine(macro, currentIndex, strLine);
+    GetNextLine(macro, currentIndex, strLine, true);
+    if (!lastIndex && strLine.Find("#!") == 0)
+      scriptLang = 1;
     if (!strLine.IsEmpty()) {
-      mParamIO->ParseString(strLine, strItem, MAX_MACRO_TOKENS);
-      if ((strItem[0].CompareNoCase("MacroName") == 0 ||
-        strItem[0].CompareNoCase("ScriptName") == 0) && !strItem[1].IsEmpty()) {
-        mParamIO->StripItems(strLine, 1, newName);
-      } else if (strItem[0].CompareNoCase("LongName") == 0 && !strItem[1].IsEmpty()) {
-        mParamIO->StripItems(strLine, 1, longName);
+      mParamIO->ParseString(strLine, strItem, MAX_MACRO_TOKENS, false, scriptLang);
+      if (scriptLang && strItem[0].GetAt(0) == '#')
+        prefix = "#";
+      if ((strItem[0].CompareNoCase(prefix + "MacroName") == 0 ||
+        strItem[0].CompareNoCase(prefix + "ScriptName") == 0) && !strItem[1].IsEmpty()) {
+        mParamIO->StripItems(strLine, 1, newName, false, scriptLang);
+      } else if (strItem[0].CompareNoCase(prefix + "LongName") == 0 &&
+        !strItem[1].IsEmpty()) {
+        mParamIO->StripItems(strLine, 1, longName, false, scriptLang);
 
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
-      } else if (strItem[0].CompareNoCase("ReadOnlyUnlessAdmin") == 0) {
+      } else if (strItem[0].CompareNoCase(prefix + "ReadOnlyUnlessAdmin") == 0) {
         mReadOnlyStart[macroNumber] = lastIndex;
-      } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty()) {
+      } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty() && 
+        !scriptLang) {
         funcP = new MacroFunction;
         funcP->name = strItem[1];
         funcP->numNumericArgs = strItem[2].IsEmpty() ? 0 : atoi((LPCTSTR)strItem[2]);
@@ -1329,7 +1425,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
     ScanMacroIfNeeded(index2, scanning);
     if (strCopy == mMacNames[index2]) {
       if (index >= 0) {
-        AfxMessageBox("Two scripts have a matching name for this call:\n\n" + strLine,
+        SEMMessageBox("Two scripts have a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
         return -1;
       }
@@ -1337,7 +1433,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
     }
   }
   if (index < 0)
-    AfxMessageBox("No script has a matching name for this call:\n\n" + strLine,
+    SEMMessageBox("No script has a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
   return index;
 }
@@ -1761,6 +1857,17 @@ void CMacroProcessor::ClearVariables(int type, int level, int index)
       delete var;
       mVarArray.RemoveAt(ind);
     }
+  }
+  if (type == VARTYPE_REPORT) {
+    mScrpLangData.highestReportInd = -1;
+    if (mRunningScrpLang) {
+      for (ind = 0; ind < 6; ind++) {
+        mScrpLangData.reportedStrs[ind] = "";
+        mScrpLangData.reportedVals[ind] = 0.;
+        mScrpLangData.repValIsString[ind] = false;
+      }
+    }
+
   }
 }
 
@@ -2700,14 +2807,18 @@ void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
   if (index < 1 || index > 6)
     return;
   num.Format("%d", index);
-  if (valStr)
+  if (valStr) {
     str = *valStr;
-  else {
+    mScrpLangData.repValIsString[index - 1] = true;
+  } else {
     str.Format("%f", value);
     UtilTrimTrailingZeros(str);
+    mScrpLangData.reportedVals[index - 1] = value;
   }
-  if (index == 1)
+  if (index == 1 && !mRunningScrpLang)
     ClearVariables(VARTYPE_REPORT);
+  mScrpLangData.reportedStrs[index - 1] = str;
+  ACCUM_MAX(mScrpLangData.highestReportInd, index - 1);
   SetVariable("REPORTEDVALUE" + num, str, VARTYPE_REPORT, index, true);
   SetVariable("REPVAL" + num, str, VARTYPE_REPORT, index, true);
   if (strItems && !strItems[index - 1].IsEmpty())
@@ -3062,7 +3173,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
 
       } else {
 
-        i = CheckLegalCommandAndArgNum(&strItems[0], strLine, macroNum);
+        i = CheckLegalCommandAndArgNum(&strItems[0], cmdIndex, strLine, macroNum);
         if (i == 17)
           return 17;
         if (i)
@@ -3111,26 +3222,22 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
 
 // Check for whether the command is legal and has enough arguments
 // Returns 17 if there are not enough arguments, 1 if not legal command
-int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, CString strLine, 
-  int macroNum)
+int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex,
+  CString strLine, int macroNum)
 {
-  int i = 0;
+  int i = cmdIndex;
   CString errmess;
 
-  // Loop on the commands
-  while (mCmdList[i].cmd.length()) {
-    if (strItems[0] == mCmdList[i].cmd.c_str()) {
-      if (strItems[mCmdList[i].minargs].IsEmpty()) {
-        errmess.Format("The command must be followed by at least %d entries\n"
-          " on this line in script #%d:\n\n", mCmdList[i].minargs, macroNum + 1);
-        SEMMessageBox(errmess + strLine, MB_EXCLAME);
-        return 17;
-      }
-      return 0;
-    }
-    i++;
+  if (cmdIndex == CME_NOTFOUND || (cmdIndex >= 0 && cmdIndex < CME_EXIT))
+    return 1;
+
+  if (strItems[mCmdList[i].minargs].IsEmpty()) {
+    errmess.Format("The command must be followed by at least %d entries\n"
+      " on this line in script #%d:\n\n", mCmdList[i].minargs, macroNum + 1);
+    SEMMessageBox(errmess + strLine, MB_EXCLAME);
+    return 17;
   }
-  return 1;
+  return 0;
 }
 
 // Check a line for balanced parentheses and no empty clauses
@@ -3680,7 +3787,7 @@ int CMacroProcessor::PiecesForMinimumSize(float minMicrons, int camSize,
 // Transfer macro if open and give error if macro is empty (1) or fails (2)
 int CMacroProcessor::EnsureMacroRunnable(int macnum)
 {
-  int tryLevel = 0;
+  int err, tryLevel = 0;
   if (mMacroEditer[macnum])
     mMacroEditer[macnum]->TransferMacro(true);
   if (mMacros[macnum].IsEmpty()) {
@@ -3688,9 +3795,57 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
     return 1;
   } 
   PrepareForMacroChecking(macnum);
-  if (CheckBlockNesting(macnum, -1, tryLevel))
+  err = CheckForScriptLanguage(macnum);
+  mMacroForScrpLang = "";
+  if (err > 0 || (!err && CheckBlockNesting(macnum, -1, tryLevel)))
     return 2;
  return 0;
+}
+
+// Test for whether the script starts with a #! for external script language and then
+// try to get the functions, then look for #include and concatenate all included scripts
+int CMacroProcessor::CheckForScriptLanguage(int macNum)
+{
+  // Test for scripting language
+  int currentInd = 0, includeInd, count;
+  CString name;
+  GetNextLine(&mMacros[macNum], currentInd, name, true);
+  if (name.Find("#!") != 0)
+    return 0;
+   count = name.GetLength();
+  while (count > 1 && (name.GetAt(count - 1) == '\n') || (name.GetAt(count - 1) == '\r'))
+    count--;
+  name = name.Mid(2, count - 2);
+  mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
+  if (!mScrpLangFuncs) {
+    SEMMessageBox("There is no scripting language plugin loaded whose\n"
+      "name matches the one at the start of this script, " + name);
+    return 1;
+  }
+  if (!mScrpLangDoneEvent) {
+    mScrpLangDoneEvent = CreateEventA(NULL, FALSE, FALSE, SCRIPT_EVENT_NAME);
+    if (!mScrpLangDoneEvent) {
+      SEMMessageBox("Cannot run external scripting language, failed to create event"
+        " for communicating with it");
+      return 1;
+    }
+  }
+
+  // Now look for includes and build up the string
+  mMacroForScrpLang = "";
+  for (;;) {
+    GetNextLine(&mMacros[macNum], currentInd, name, true);
+    if (name.Find("#include") != 0)
+      break;
+    includeInd = FindCalledMacro(name.Mid(1), true);
+    if (includeInd < 0)
+      return 1;
+    mMacroForScrpLang += mMacros[includeInd];
+  }
+  if (!mMacroForScrpLang.IsEmpty())
+    mMacroForScrpLang += mMacros[macNum];
+
+  return -1;
 }
 
 // Send an email from a message box error if command defined the text
@@ -3719,6 +3874,14 @@ UINT CMacroProcessor::RunInShellProc(LPVOID pParam)
     return 1;
   }
   return 0;
+}
+
+// Thread procedure for starting a script in external language
+UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
+{
+  mScrpLangData.exitStatus = mScrpLangFuncs->runScript((const char *)pParam);
+  SEMTrace('[', "RunScriptLangProc exit stat %d", mScrpLangData.exitStatus);
+  return mScrpLangData.exitStatus ? 1 : 0;
 }
 
 // Busy function for the task to start the Navigator Acquire
@@ -3982,4 +4145,9 @@ bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stag
     stageY = atof((LPCTSTR)strItems[2]);
   }
   return true;
+}
+
+ScriptLangData *SEMGetScriptLangData() 
+{
+  return &CMacroProcessor::mScrpLangData; 
 }

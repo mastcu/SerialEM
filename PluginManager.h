@@ -170,6 +170,13 @@ struct DEPluginFuncs {
   DEerrString getLastErrorDescription;
 };
 
+typedef int(*RunScriptLang)(const char *);
+
+// Scripting interpreter plugin functions
+struct ScriptLangPlugFuncs {
+  RunScriptLang runScript;
+};
+
 // Information structure for a single plugin function call
 struct PluginCall {
   PluginFunction func;
@@ -188,8 +195,17 @@ struct PluginData {
   CString shortName;
   int flags;
   CArray<PluginCall, PluginCall> calls;
-  CamPluginFuncs camFuncs;
-  PiezoPluginFuncs piezoFuncs;
+  CamPluginFuncs *camFuncs;
+  PiezoPluginFuncs *piezoFuncs;
+  ScriptLangPlugFuncs *scriptLangFuncs;
+  PluginData() {
+    camFuncs = NULL; piezoFuncs = NULL; scriptLangFuncs = NULL;
+  }
+  ~PluginData() {
+    delete camFuncs; 
+    delete piezoFuncs;
+    delete scriptLangFuncs;
+  }
 };
 
 // The plugin manager class
@@ -204,7 +220,7 @@ private:
   CSerialEMApp *mWinApp;
   ScopePluginFuncs mScopeFuncs;
   int mScopePlugIndex;
-  DEPluginFuncs mDEcamFuncs;
+  DEPluginFuncs *mDEcamFuncs;
   int mDEplugIndex;
   int mLastTSplugInd;
   int mLastTScallInd;
@@ -224,9 +240,9 @@ public:
   void CompletedTSCall(void);
   GetMember(bool, AnyTSplugins);
   int GetPiezoPlugins(PiezoPluginFuncs **plugFuncs, CString **names);
-  DEPluginFuncs *GetDEcamFuncs() {return &mDEcamFuncs;};
+  DEPluginFuncs *GetDEcamFuncs() {return mDEcamFuncs;};
+  ScriptLangPlugFuncs *GetScriptLangFuncs(CString name);
   GetMember(int, DEplugIndex);
-
 };
 
 #define THROW_NOFUNC_ERROR throw(_com_error((HRESULT)NOFUNC_FAKE_HRESULT, NULL, true))

@@ -112,15 +112,12 @@ static char THIS_FILE[] = __FILE__;
 #define MAC_SAME_NAME(nam, req, flg, cme) {#nam, req, flg, &CMacCmd::nam},
 #define MAC_DIFF_NAME(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
 #define MAC_SAME_FUNC(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
+#include "DefineScriptMacros.h"
 
 static CmdItem cmdList[] = {
 #include "MacroMasterList.h"
   {NULL, 0, 0}
 };
-#undef MAC_SAME_NAME
-#undef MAC_DIFF_NAME
-#undef MAC_SAME_FUNC
-
 
 // Be sure to add an entry for longHasTime when adding long operation
 const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
@@ -164,36 +161,127 @@ CMacCmd::~CMacCmd()
 // When a task is done, if the macro flag is still set, call next command
 void CMacCmd::TaskDone(int param)
 {
-  if (DoingMacro())
-    NextCommand(false);
-  else
+  int arg, err, cmdInd;
+  bool isEcho;
+  mStrLine = "";
+  if (DoingMacro()) {
+    if (mRunningScrpLang) {
+      if (mScrpLangData.threadDone) {
+
+        // If thread finished, clear flag and abort/terminate for real
+        mRunningScrpLang = false;
+        AbortMacro();
+      } else if (mScrpLangData.waitingForCommand) {
+
+        // If waiting for command, it has arrived -check if in range
+        cmdInd = mScrpLangData.functionCode;
+        if (cmdInd < 0 || cmdInd >= mNumCommands) {
+          PrintfToLog("External script interpreter passed an out-of-bounds function code"
+            " of %d (maximum is %d)", cmdInd, mNumCommands - 1);
+          mScrpLangData.errorOccurred = 1;
+          SetEvent(mScrpLangDoneEvent);
+          SEMTrace('[', "signal out of bounds error");
+          return;
+        }
+        InitForNextCommand();
+        //SEMAcquireScriptLangMutex(1000, "run the operation");
+
+        // Copy over the arguments and compose a line in case of error messages
+        mCmdIndex = mScrpLangData.functionCode;
+        isEcho = CMD_IS(ECHO) || CMD_IS(ECHOREPLACELINE);
+        mStrLine = mCmdList[cmdInd].mixedCase;
+        mStrItems[0] = mStrLine;
+        mStrLine += isEcho ? " " : "(";
+        mLastNonEmptyInd = mScrpLangData.lastNonEmptyInd;
+        for (arg = 1; arg < MAX_SCRIPT_LANG_ARGS; arg++) {
+          if (arg <= mLastNonEmptyInd) {
+
+            // Copy actual arguments
+            mStrItems[arg] = mScrpLangData.strItems[arg];
+            mItemEmpty[arg] = mStrItems[arg].IsEmpty();
+            mItemDbl[arg] = mScrpLangData.itemDbl[arg];
+            if (arg > 1)
+              mStrLine += ", ";
+            mStrLine += mStrItems[arg];
+          } else {
+
+            // Clear out the rest
+            mStrItems[arg] = "";
+            mItemEmpty[arg] = true;
+            mItemDbl[arg] = 0.;
+          }
+          mItemFlt[arg] = (float)mItemDbl[arg];
+          mItemInt[arg] = (int)mItemDbl[arg];
+        }
+        if (!isEcho)
+          mStrLine += ")";
+        if (mVerbose)
+          mWinApp->AppendToLog(mStrLine);
+        mItem1upper = mStrItems[1];
+        mItem1upper.MakeUpper();
+        mScrpLangData.waitingForCommand = 0;
+        ClearVariables(VARTYPE_REPORT);
+
+        // Call the function in the command list
+        err = (this->*cmdList[mCmdIndex].func)();
+        if (err) {
+          mScrpLangData.errorOccurred = err;
+          SetEvent(mScrpLangDoneEvent);
+          SEMTrace('[', "signal function done with err");
+          return;
+        }
+
+        // Output the standard log report variable if set
+        if (!mLogRpt.IsEmpty())
+          mWinApp->AppendToLog(mLogRpt, mLogAction);
+
+        // The action is taken or started: now set up an idle task unless looping is allowed
+        // for this command and not too many loops have happened
+        if (!((cmdList[mCmdIndex].arithAllowed & 4) || mLoopInOnIdle ||
+          cmdList[mCmdIndex].cmd.find("REPORT") == 0) ||
+          mNumCmdSinceAddIdle > mMaxCmdToLoopOnIdle) {
+          mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+          mNumCmdSinceAddIdle = 0;
+        } else {
+
+          // Or let it loop back in to NextCommand
+          mNumCmdSinceAddIdle++;
+          mLoopInOnIdle = true;
+        }
+        return;
+
+
+      } else {
+
+        // Command is done after looping back in: Set up to wait for next and to the part
+        // NextCommand that checks and finalizes from last command
+        mScrpLangData.waitingForCommand = 1;
+        mScrpLangData.commandReady = 0;
+        mScrpLangData.errorOccurred = 0;
+        NextCommand(false);
+
+        // That might have set error
+        // The return values have already been set in the data structure, so ready to go
+        SetEvent(mScrpLangDoneEvent);
+        SEMTrace('[', "signal operations done after loop back in");
+        mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+      }
+
+    } else {
+
+      // Regular scripting here
+      NextCommand(false);
+    }
+  } else
     SuspendMacro();
 }
 
+// Run the next command: start by checking the results of last command
 int CMacCmd::NextCommand(bool startingOut)
 {
 
   bool inComment = false;
-
-  mReadOtherSleep = 2000;
-  mCurrentCam = mWinApp->GetCurrentCamera();
-  mFiltParam = mWinApp->GetFilterParams();
-  mActiveList = mWinApp->GetActiveCameraList();
-  mCamParams = mWinApp->GetCamParams() + mCurrentCam;
-  mMontP = mWinApp->GetMontParam();
-  mLdParam = mWinApp->GetLowDoseParams();
-  mNavigator = mWinApp->mNavigator;
-  mLogRpt = "";
-
-  mSleepTime = 0.;
-  mDoseTarget = 0.;
-  mMovedStage = false;
-  mMovedScreen = false;
-  mExposedFilm = false;
-  mStartedLongOp = false;
-  mMovedAperture = false;
-  mLoadingMap = false;
-  mLoopInOnIdle = false;
+  InitForNextCommand();
 
   if (mMovedPiezo && mWinApp->mPiezoControl->GetLastMovementError()) {
     AbortMacro();
@@ -282,6 +370,10 @@ int CMacCmd::NextCommand(bool startingOut)
     SetReportedValues(1., mScope->GetMessageBoxReturnValue());
   mShowedScopeBox = false;
 
+  // Check of last command are done, so return for external scripting
+  if (mRunningScrpLang)
+    return 0;
+
   // Save the current index
   mLastIndex = mCurrentIndex;
 
@@ -337,7 +429,7 @@ int CMacCmd::NextCommand(bool startingOut)
     EvaluateExpression(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, 0, cIndex, cIndex2);
     for (cI = cIndex + 1; cI <= cIndex2; cI++)
       mStrItems[cI] = "";
-    cIndex = CheckLegalCommandAndArgNum(&mStrItems[0], mStrLine, mCurrentMacro);
+    cIndex = CheckLegalCommandAndArgNum(&mStrItems[0], mCmdIndex, mStrLine,mCurrentMacro);
     if (cIndex) {
       if (cIndex == 1)
         ABORT_LINE("There is no longer a legal command after evaluating arithmetic on "
@@ -412,6 +504,29 @@ int CMacCmd::NextCommand(bool startingOut)
   return 0;
 }
 
+void CMacCmd::InitForNextCommand()
+{
+  mReadOtherSleep = 2000;
+  mCurrentCam = mWinApp->GetCurrentCamera();
+  mFiltParam = mWinApp->GetFilterParams();
+  mActiveList = mWinApp->GetActiveCameraList();
+  mCamParams = mWinApp->GetCamParams() + mCurrentCam;
+  mMontP = mWinApp->GetMontParam();
+  mLdParam = mWinApp->GetLowDoseParams();
+  mNavigator = mWinApp->mNavigator;
+  mLogRpt = "";
+
+  mSleepTime = 0.;
+  mDoseTarget = 0.;
+  mMovedStage = false;
+  mMovedScreen = false;
+  mExposedFilm = false;
+  mStartedLongOp = false;
+  mMovedAperture = false;
+  mLoadingMap = false;
+  mLoopInOnIdle = false;
+}
+
 // ScriptEnd, Exit, Return, EndFunction, Function
 int CMacCmd::ScriptEnd(void)
 {
@@ -440,6 +555,20 @@ int CMacCmd::Repeat(void)
 // Label, Require, KeyBreak, MacroName, ScriptName, LongName, ReadOnlyUnlessAdmin
 int CMacCmd::NoOperation(void)
 {
+  return 0;
+}
+
+// KeyBreak for external scripting
+int CMacCmd::KeyBreak(void)
+{
+  if (mRunningScrpLang) {
+    cIndex = ((mItemEmpty[1] && mKeyPressed == 'B') ||
+      (mStrItems[1].GetLength() == 1 && mItem1upper.GetAt(0) == mKeyPressed)) ? 1 : 0;
+    if (cIndex)
+      mKeyPressed = 0;
+    SetOneReportedValue(cIndex, 1);
+  }
+  mKeyPressed = 0;
   return 0;
 }
 
@@ -795,6 +924,12 @@ int CMacCmd::Test(void)
 // SetVariable, AppendToArray
 int CMacCmd::SetVariableCmd(void)
 {
+  if (mRunningScrpLang) {
+    cIndex = CMD_IS(SETVARIABLE) ? VARTYPE_REGULAR : VARTYPE_PERSIST;
+    if (SetVariable(mItem1upper, mStrItems[2], cIndex, -1, false, &cReport))
+      ABORT_LINE(cReport + " in script line: \n\n");
+    return 0;
+   }
 
   // Do assignment to variable before any non-reserved commands
   cIndex2 = 2;
@@ -850,6 +985,16 @@ int CMacCmd::SetVariableCmd(void)
     if (cTruth)
       cVar->rowsFor2d->Add(newRow);
   }
+  return 0;
+}
+
+// GetVariable
+int CMacCmd::GetVariable(void)
+{
+  cVar = LookupVariable(mStrItems[1], cIx0);
+  if (!cVar)
+    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  SetOneReportedValue(cVar->value, 1);
   return 0;
 }
 
@@ -5164,7 +5309,7 @@ int CMacCmd::EchoEval(void)
 }
 
 // verbose
-int CMacCmd::verbose(void)
+int CMacCmd::Verbose(void)
 {
   mVerbose = mItemInt[1];
   return 0;

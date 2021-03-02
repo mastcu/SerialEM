@@ -16,6 +16,7 @@
 
 class CMapDrawItem;
 class COneLineScript;
+struct ScriptLangPlugFuncs;
 
 #define MAX_LOOP_DEPTH  40
 #define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
@@ -24,9 +25,12 @@ class COneLineScript;
 #define MACRO_NO_VALUE  -123456789.
 #define MAX_CUSTOM_INTERVAL 20000 
 #define MAX_MACRO_TOKENS 60
+#define MAX_SCRIPT_LANG_ARGS  20
 
 #define LOOP_LIMIT_FOR_TRY -2146000000
 #define LOOP_LIMIT_FOR_IF  -2147000000
+
+#define SCRIPT_EVENT_NAME  "SEMScriptLangEvent"
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
 enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP, SKIPTO_CATCH, SKIPTO_ENDTRY};
@@ -36,15 +40,12 @@ enum {TXFILE_READ_ONLY, TXFILE_WRITE_ONLY, TXFILE_MUST_EXIST, TXFILE_MUST_NOT_EX
 #define MAC_SAME_NAME(nam, req, flg, cme) CME_##cme,
 #define MAC_DIFF_NAME(nam, req, flg, fnc, cme) CME_##cme,
 #define MAC_SAME_FUNC(nam, req, flg, fnc, cme) CME_##cme,
+#include "DefineScriptMacros.h"
 
 // An enum with indexes to true commands, preceded by special operations
 enum {
 #include "MacroMasterList.h"
 };
-
-#undef MAC_SAME_NAME
-#undef MAC_DIFF_NAME
-#undef MAC_SAME_FUNC
 
 #define CME_NOTFOUND -1
 
@@ -81,6 +82,25 @@ struct FileForText {
   CString ID;           // Arbitrary ID
 };
 
+// For communicating with a scripting language
+struct ScriptLangData {
+  int functionCode;                        // Command code (index) from plugin
+  CString strItems[MAX_SCRIPT_LANG_ARGS];  // String items from plugin (use from 1)
+  BOOL itemEmpty[MAX_SCRIPT_LANG_ARGS];    // Flag if item empty, from plugin
+  int itemInt[MAX_SCRIPT_LANG_ARGS];       // Integer value by atoi, from plugin
+  double itemDbl[MAX_SCRIPT_LANG_ARGS];    // double value from plugin
+  int lastNonEmptyInd;                     // Index of last non-empty item from plugin
+  CString reportedStrs[6];                 // Reported string values after command
+  double reportedVals[6];                  // Reported double values after command
+  bool repValIsString[6];                  // Flag for whether reported value is string
+  int highestReportInd;                    // Index of highest reported value (from 0)
+  int errorOccurred;                       // Flag that an error occurred in the command
+  int waitingForCommand;                   // Flag that SerialEM is waiting for command
+  int commandReady;                        // Flag set by plugin that command is ready
+  int threadDone;                          // Flag that script run thread has exited
+  int exitStatus;                          // Exit status of script run thread
+};
+
 typedef int(CMacCmd::*DispEntry)(void);
 
 struct CmdItem {
@@ -91,9 +111,11 @@ struct CmdItem {
   std::string cmd;
 };
 
-class CMacroProcessor : public CCmdTarget
+ScriptLangData DLL_IM_EX *SEMGetScriptLangData();
+
+class DLL_IM_EX CMacroProcessor : public CCmdTarget
 {
- public:
+public:
   void SetIntensityFactor(int iDir);
   void RunOrResume();
   void Stop(BOOL ifNow);
@@ -103,15 +125,15 @@ class CMacroProcessor : public CCmdTarget
   void Initialize();
   CMacroProcessor();
   virtual ~CMacroProcessor();
-  BOOL DoingMacro() {return mDoingMacro && mCurrentMacro >= 0;};
+  BOOL DoingMacro() { return mDoingMacro && mCurrentMacro >= 0; };
   BOOL IsResumable();
-  void SetNonResumable() {mCurrentMacro = -1;};
-  void SetMontageError(float inErr) {mLastMontError = inErr;};
+  void SetNonResumable() { mCurrentMacro = -1; };
+  void SetMontageError(float inErr) { mLastMontError = inErr; };
   void SuspendMacro(BOOL abort = false);
   void AbortMacro();
   GetMember(BOOL, LastCompleted)
-  GetMember(BOOL, LastAborted)
-  GetMember(BOOL, OpenDE12Cover);
+    GetMember(BOOL, LastAborted)
+    GetMember(BOOL, OpenDE12Cover);
   GetSetMember(int, NumToolButtons);
   GetSetMember(int, ToolButHeight);
   GetSetMember(int, AutoIndentSize);
@@ -128,11 +150,14 @@ class CMacroProcessor : public CCmdTarget
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
-  std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
-  bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
-  bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
+  std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap; };
+  bool GetAlignWholeTSOnly() { return DoingMacro() && mAlignWholeTSOnly; };
+  bool SkipCheckingFrameAli() { return DoingMacro() && mSkipFrameAliCheck; };
   EMimageBuffer *ImBufForIndex(int ind) { return (ind >= 0 ? &mImBufs[ind] : &mFFTBufs[-1 - ind]); };
   COneLineScript *mOneLineScript;
+  static ScriptLangData mScrpLangData;         // Data structure for external scripting
+  static ScriptLangPlugFuncs *mScrpLangFuncs;  // The functions of a scripting plugin
+  HANDLE mScrpLangDoneEvent;                   // EVent to notify plugin that command done
 
 protected:
 
@@ -187,6 +212,11 @@ protected:
   CString *mMacros;
   CmdItem *mCmdList;
   int mNumCommands;
+  CString mStrItems[MAX_MACRO_TOKENS];
+  BOOL mItemEmpty[MAX_MACRO_TOKENS];
+  int mItemInt[MAX_MACRO_TOKENS];
+  double mItemDbl[MAX_MACRO_TOKENS];
+  float mItemFlt[MAX_MACRO_TOKENS];
 
   BOOL mDoingMacro;       // Flag for whether running
   int mCurrentMacro;      // Currently running macro
@@ -316,8 +346,12 @@ protected:
   float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
   ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
 
+  bool mRunningScrpLang;     // Flag that external interpreter is running the script
+  CString mMacroForScrpLang; // String actually passed with other scripts included
+  CWinThread *mScrpLangThread;
+
 public:
-  void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
+  void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
   int ScanForName(int macroNumber, CString *macro = NULL);
   bool SetVariable(CString name, CString value, int type, int index, bool mustBeNew,
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
@@ -327,18 +361,18 @@ public:
   void ListVariables(int type = -1);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
   int SubstituteVariables(CString * strItems, int maxItems, CString line);
-  int EvaluateExpression(CString * strItems, int maxItems, CString line, int ifArray, 
+  int EvaluateExpression(CString * strItems, int maxItems, CString line, int ifArray,
     int &numItems, int &numOrig);
   int EvaluateArithmeticClause(CString * strItems, int maxItems, CString line, int &numItems);
-  void SetReportedValues(double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE, 
-    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE, 
+  void SetReportedValues(double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE,
+    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE,
     double val5 = MACRO_NO_VALUE, double val6 = MACRO_NO_VALUE);
-  void SetReportedValues(CString *strItems = NULL, double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE, 
-    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE, 
+  void SetReportedValues(CString *strItems = NULL, double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE,
+    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE,
     double val5 = MACRO_NO_VALUE, double val6 = MACRO_NO_VALUE);
   void ToolbarMacroRun(UINT nID);
   WINDOWPLACEMENT * GetToolPlacement(void);
-  WINDOWPLACEMENT * GetEditerPlacement(void) {return &mEditerPlacement[0];};
+  WINDOWPLACEMENT * GetEditerPlacement(void) { return &mEditerPlacement[0]; };
   WINDOWPLACEMENT * GetOneLinePlacement(void);
   void ToolbarClosing(void);
   void OneLineClosing(void);
@@ -348,7 +382,7 @@ public:
   int EvaluateComparison(CString * strItems, int maxItems, CString line, BOOL &truth);
   int EvaluateIfStatement(CString * strItems, int maxItems, CString line, BOOL &truth);
   int EvaluateBooleanClause(CString * strItems, int maxItems, CString line, BOOL &truth);
-  void ReplaceWithResult(double result, CString * strItems, int index, int & numItems, 
+  void ReplaceWithResult(double result, CString * strItems, int index, int & numItems,
     int numDrop);
   void OpenMacroToolbar(void);
   void SetComplexPane(void);
@@ -375,7 +409,7 @@ public:
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
   void OpenMacroEditor(int index);
-  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, 
+  bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex,
     CString & message, bool fftAllowed = false);
   bool CheckCameraBinning(double binDblIn, int &binning, CString &message);
   void SaveControlSet(int index);
@@ -391,14 +425,16 @@ public:
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
+  int CheckForScriptLanguage(int macNum);
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
   int TestTryLevelAndSkip(CString *mess);
   int CheckForArrayAssignment(CString * strItems, int &firstInd);
   void FindValueAtIndex(CString &value, int arrInd, int & beginInd, int & endInd);
-  int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements, 
+  int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements,
     CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
+  static UINT RunScriptLangProc(LPVOID pParam);
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptListPersistentVars();
   afx_msg void OnScriptClearPersistentVars();
@@ -406,7 +442,7 @@ public:
   afx_msg void OnScriptRunOneCommand();
   afx_msg void OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI);
   int StartNavAvqBusy(void);
-  int CheckLegalCommandAndArgNum(CString * strItems, CString strLine, int macroNum);
+  int CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex, CString strLine, int macroNum);
   bool ArithmeticIsAllowed(CString & str);
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
   int AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message);

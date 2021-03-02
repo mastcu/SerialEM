@@ -40,7 +40,7 @@ typedef double (*Func3DblOut)(double *, double *, double *);
 #define MAX_CALL_OUTDBLS 3
 
 #define CAMERA_PROC(a,b) cfuncs->b = (a)GetProcAddress(module, #b)
-#define DECAM_PROC(a,b) mDEcamFuncs.b = (a)GetProcAddress(module, #b) ; if (!mDEcamFuncs.b) i++;
+#define DECAM_PROC(a,b) mDEcamFuncs->b = (a)GetProcAddress(module, #b) ; if (!mDEcamFuncs->b) i++;
 #define SCOPE_PROC(a,b,c) mScopeFuncs.a = (b)GetProcAddress(module, c) ; if (!mScopeFuncs.a) i++; else j++
 #define SCOPE_SAMENAME(a, b) SCOPE_PROC(b, a, #b )
 #define GET_ONE_INT(a) SCOPE_PROC(a, ScopeGetInt, #a )
@@ -62,6 +62,7 @@ CPluginManager::CPluginManager(void)
   mDEplugIndex = -1;
   mLastTiltIndex = -1;
   mAnyTSplugins = false;
+  mDEcamFuncs = NULL;
 }
 
 CPluginManager::~CPluginManager(void)
@@ -194,10 +195,11 @@ int CPluginManager::LoadPlugins(void)
       newPlug->shortName = namep;
       newPlug->flags = flags;
       newPlug->calls.SetSize(0, 4);
-      cfuncs = &newPlug->camFuncs;
 
       // But first get camera plugin functions and make sure it has required functions
       if (flags & PLUGFLAG_CAMERA) {
+        newPlug->camFuncs = new CamPluginFuncs;
+        cfuncs = newPlug->camFuncs;
         CAMERA_PROC(CamNoArg, GetNumberOfCameras);
         CAMERA_PROC(CamOneInt, InitializeInterface);
         CAMERA_PROC(CamOneInt, InitializeCamera);
@@ -249,6 +251,7 @@ int CPluginManager::LoadPlugins(void)
 
       // Get Direct Electron plugin functions, forbid two, require all functions
       if (flags & PLUGFLAG_DECAM) {
+        mDEcamFuncs = new DEPluginFuncs;
         if (mDEplugIndex >= 0) {
           i = 1;
           mess.Format("There is more than one DE camera interface plugin in\r\n%s%s%s\r\n"
@@ -271,7 +274,7 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEgetInt, getIntProperty);
           DECAM_PROC(DEgetString, getProperty);
           DECAM_PROC(DEsetMode, setLiveMode);
-          mDEcamFuncs.getIsInLiveMode = (DEnoArg)GetProcAddress(module, "getIsInLiveMode");
+          mDEcamFuncs->getIsInLiveMode = (DEnoArg)GetProcAddress(module, "getIsInLiveMode");
           DECAM_PROC(DEnoArg, abortAcquisition);
           DECAM_PROC(CamNoArg, getLastErrorCode);
           DECAM_PROC(DEerrString, getLastErrorDescription);
@@ -290,10 +293,25 @@ int CPluginManager::LoadPlugins(void)
           continue;
         }
       }
+
+      // Get script language functions
+      if (flags & PLUGFLAG_SCRIPT_LANG) {
+        newPlug->scriptLangFuncs = new ScriptLangPlugFuncs;
+        newPlug->scriptLangFuncs->runScript = (RunScriptLang)GetProcAddress(module,
+          "RunScript");
+        if (!newPlug->scriptLangFuncs) {
+          mess.Format("Tried to load %s as a script language plugin but could not resolve"
+            " a RunScript function", FindFileData.cFileName);
+          mWinApp->AppendToLog(mess, action);
+          delete newPlug;
+          AfxFreeLibrary(module);
+        }
+      }
       
       // Get piezo plugin functions
       if (flags & PLUGFLAG_PIEZO) {
-        PiezoPluginFuncs *pfuncs = &newPlug->piezoFuncs;
+        newPlug->piezoFuncs = new PiezoPluginFuncs;
+        PiezoPluginFuncs *pfuncs = newPlug->piezoFuncs;
         pfuncs->SelectPiezo = (CamOneInt)GetProcAddress(module, "SelectPiezo");
         pfuncs->GetNumberOfPiezos = (CamNoArg)GetProcAddress(module, "GetNumberOfPiezos");
         pfuncs->GetXYPosition = (PiezoGetTwoDbl)GetProcAddress(module, "GetXYPosition");
@@ -390,15 +408,16 @@ void CPluginManager::ReleasePlugins(void)
   PluginData *plugin;
   for (int plug = 0; plug < mPlugins.GetSize(); plug++) {
     plugin = mPlugins[plug];
-    if (plugin->flags & PLUGFLAG_CAMERA && plugin->camFuncs.UninitializeCameras)
-      plugin->camFuncs.UninitializeCameras();
+    if (plugin->flags & PLUGFLAG_CAMERA && plugin->camFuncs->UninitializeCameras)
+      plugin->camFuncs->UninitializeCameras();
     if (plugin->flags & PLUGFLAG_SCOPE && mScopeFuncs.UninitializeScope)
       mScopeFuncs.UninitializeScope();
-    if (plugin->flags & PLUGFLAG_PIEZO && plugin->piezoFuncs.Uninitialize)
-      plugin->piezoFuncs.Uninitialize();
+    if (plugin->flags & PLUGFLAG_PIEZO && plugin->piezoFuncs->Uninitialize)
+      plugin->piezoFuncs->Uninitialize();
     AfxFreeLibrary(plugin->handle);
     delete plugin;
   }
+  delete mDEcamFuncs;
 }
 
 double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *itemDbl,
@@ -558,7 +577,7 @@ CamPluginFuncs *CPluginManager::GetCameraFuncs(CString name, int &flags)
     plugin = mPlugins[plug];
     flags = plugin->flags;
     if ((plugin->flags & PLUGFLAG_CAMERA) && name == plugin->shortName)
-      return &plugin->camFuncs;
+      return plugin->camFuncs;
   }
   return NULL;
 }
@@ -576,11 +595,28 @@ int CPluginManager::GetPiezoPlugins(PiezoPluginFuncs **plugFuncs, CString **name
           "%d will be available", MAX_PIEZO_PLUGS);
         break;
       }
-      plugFuncs[num] = &plugin->piezoFuncs;
+      plugFuncs[num] = plugin->piezoFuncs;
       names[num++] = &plugin->shortName;
     }
   }
   return num;
+}
+
+// Return the first script language plugin whose name starts with the given name
+ScriptLangPlugFuncs *CPluginManager::GetScriptLangFuncs(CString name)
+{
+  PluginData *plugin;
+  while (name.GetLength() > 0 && name.GetAt(0) == ' ')
+    name = name.Mid(1);
+  for (int plug = 0; plug < mPlugins.GetSize(); plug++) {
+    plugin = mPlugins[plug];
+    if ((plugin->flags & PLUGFLAG_SCRIPT_LANG) && plugin->shortName.Find(name) == 0) {
+      if (plugin->shortName.GetLength() == name.GetLength() || 
+        (plugin->shortName.Mid(name.GetLength())).FindOneOf("-_.,0123456789") == 0)
+        return plugin->scriptLangFuncs;
+    }
+  }
+  return NULL;
 }
 
 // List function prototypes for all functions in all plugins

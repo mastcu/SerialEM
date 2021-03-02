@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/2/22: Made changes to allow scripting to be done with an external script
+interpreter embedded in a plugin.
+
 3/2/22: Changed shifts for ReplaceFrameTSShifts to be in specimen coordinates
 (In 3.8).
 

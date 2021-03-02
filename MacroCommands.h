@@ -8,6 +8,7 @@ class CMacCmd : public CMacroProcessor
   CMacCmd();
   virtual ~CMacCmd();
   int NextCommand(bool startingOut);
+  void InitForNextCommand();
   void TaskDone(int param);
 
  private:
@@ -18,15 +19,10 @@ class CMacCmd : public CMacroProcessor
 
 
   CString mStrLine, mStrCopy, mItem1upper;
-  CString mStrItems[MAX_MACRO_TOKENS];
   CString *mMacro;
 
   // Use this only for output followed by break not return, output at end of switch
   CString mLogRpt;
-  BOOL mItemEmpty[MAX_MACRO_TOKENS];
-  int mItemInt[MAX_MACRO_TOKENS];
-  double mItemDbl[MAX_MACRO_TOKENS];
-  float mItemFlt[MAX_MACRO_TOKENS];
   int mCmdIndex, mLastNonEmptyInd;
   BOOL mKeyBreak;
   int mCurrentCam;
@@ -65,13 +61,12 @@ class CMacCmd : public CMacroProcessor
 #define MAC_SAME_NAME(nam, req, flg, cme) int nam(void);
 #define MAC_DIFF_NAME(nam, req, flg, fnc, cme)  int fnc(void);
 #define MAC_SAME_FUNC(nam, req, flg, fnc, cme) 
+#include "DefineScriptMacros.h"
 
  public:
   // COMMAND FUNCTIONS
 #include "MacroMasterList.h"
  };
-#undef MAC_SAME_NAME
-#undef MAC_DIFF_NAME
-#undef MAC_SAME_FUNC
+
 
 #endif  // MACROCOMMANDS_H
