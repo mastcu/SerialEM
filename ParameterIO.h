@@ -11,7 +11,7 @@
 
 #include "TiltSeriesParam.h"
 
-class CParameterIO  
+class DLL_IM_EX CParameterIO
 {
 public:
 	int StringToEntryList(int type, CString str, int &numVals, 
@@ -20,7 +20,8 @@ public:
 	void WriteShortTermCal(CString strFileName);
 	int ReadShortTermCal(CString strFileName, BOOL ignoreCals);
 	void WritePlacement(const char *string, int open, WINDOWPLACEMENT *place);
-  int ParseString(CString strLine, CString *strItems, int maxItems, bool useQuotes = false);
+  int ParseString(CString strLine, CString *strItems, int maxItems, bool useQuotes = false,
+    int allowComment = 0);
   void WriteCalibration(CString strFile);
   int ReadCalibration(CString strFileName);
   int ReadProperties(CString strFileName);
@@ -31,7 +32,7 @@ public:
   void WriteInt(CString format, int iVal);
   void WriteString(CString format, CString strValue);
   void WriteSettings(CString strFileName);
-  void FindToken(CString &strCopy, CString &strItem, bool useQuotes = false);
+  void FindToken(CString &strCopy, CString &strItem, bool useQuotes = false, bool allowComment = false);
   int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems, 
     bool useQuotes = false);
   int ReadAndParse(CString &strLine, CString *strItems, int maxItems, bool useQuotes = false);
@@ -55,7 +56,8 @@ private:
   CString mDupMessage;
   int mMaxReadInMacros;
 public:
-  void StripItems(CString strLine, int numItems, CString & strCopy, bool keepIndent = false);
+  void StripItems(CString strLine, int numItems, CString & strCopy, bool keepIndent = false, 
+    int allowComment = 0);
   int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,
     double *itemDbl, float *itemFlt, int maxItems);
   int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,

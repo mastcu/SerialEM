@@ -5285,8 +5285,9 @@ int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *item
 }
 
 // Parse a string into separate items in an array of CStrings
+// AllowComment = 1 allows comment in first token, > 1 allows any comment
 int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems, 
-  bool useQuotes)
+  bool useQuotes, int allowComment)
 {
   int i;
 
@@ -5297,7 +5298,7 @@ int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems,
 
   // Get one token after another until the copy is empty
   for (i = 0; i < maxItems; i++) {
-    FindToken(strCopy, strItems[i], useQuotes);
+    FindToken(strCopy, strItems[i], useQuotes, (allowComment && !i) || allowComment > 1);
     if (strCopy.IsEmpty())
       return 0;
   }
@@ -5305,7 +5306,8 @@ int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems,
   return 2; // Error if there are too many items
 }
 
-void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
+void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes,
+  bool allowComment)
 {
   int index, quoteInd, closeInd, spaceInd, tabInd;
   bool stripQuotes = false;
@@ -5318,7 +5320,7 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
     return;
 
   // If we have a comment, done
-  if (strCopy.Find('#') == 0) {
+  if (!allowComment && strCopy.Find('#') == 0) {
     strCopy = "";
     return;
   }
@@ -5368,13 +5370,14 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
 }
 
 // Take some items off the front of a line and return the rest as one string, trimmed
+// AllowComment = 1 allows comment in first token, > 1 allows any comment
 void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
-  bool keepIndent)
+  bool keepIndent, int allowComment)
 {
   CString strItem;
   strCopy = strLine;
   for (int i = 0; i < numItems; i++) {
-    FindToken(strCopy, strItem);
+    FindToken(strCopy, strItem, false, (allowComment && !i) || allowComment > 1);
     if (strCopy.IsEmpty())
       return;
   }
