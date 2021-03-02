@@ -442,8 +442,8 @@
             60 is taken to be milliseconds</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">WaitForMidnight #B #A [#H #M]</TD>
-          <TD>If the current time is between <b>#B</b> minutes before and <b>#A</b> minutes after 
+          <TD class="scriptcommand">WaitForMidnight [#B] [#A] [#H #M]</TD>
+          <TD>If the current time is between <b>#B</b> (default 5) minutes before and <b>#A</b> (default 5) minutes after 
             midnight, or an alternative time specified by the optional entries <b>#H</b> (the hour from 0 to 23) and 
             <b>#M</b> (the minute from 0 to 59), the script will wait until <b>#A</b> minutes after 
             midnight or the given time.</TD>
@@ -460,7 +460,7 @@
             arithmetic expressions.&nbsp; Multiple spaces between words will be lost.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">EchoNoLineEnd [text]</TD>
+          <TD class="scriptcommand">EchoNoLineEnd text</TD>
           <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating 
             arithmetic expressions, without adding a line ending, so more text can be 
             written to the line.&nbsp; Multiple spaces between words will be lost.</TD>
@@ -468,7 +468,7 @@
         <TR>
           <TD class="scriptcommand">EchoReplaceLine [text]</TD>
           <TD>Removes existing text from the log back to the last line ending, if there is 
-            any such text, then prints the given <b>text</b> to the log after substituting 
+            any such text, then prints the optional <b>text</b> to the log after substituting 
             variables and evaluating arithmetic expressions, without adding a line ending.&nbsp; 
             This command can be used repeatedly to update the text on a line, such as with a 
             status output.</TD>
@@ -1588,7 +1588,7 @@
         </TR>
        <TR>
           <TD class="scriptcommand">SetNewFileType #T [#S]</TD>
-          <TD>Sets <b>#T</b> to 0 to open files as MRC, or 1 to open files as a TIFF series described in
+          <TD>Enter <b>#T</b> as 0 to open files as MRC, or 1 to open files as a TIFF series described in
             an image autodoc file. The optional second value <b>#S</b> sets whether to open montaged
             files as MRC or as a TIFF series, but only if the property
             MontageAutodocOptions is set.</TD>
@@ -2039,6 +2039,10 @@
           <TD class="scriptcommand">SetObjFocus #</TD>
           <TD>Calls SetObjFocus on JEOL with the given <b>#</b>, an integer increment, and reports
             change in focus</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetDiffractionFocus #</TD>
+          <TD>Sets diffraction focus to the given <b>#</b></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDefocus</TD>
@@ -2703,7 +2707,7 @@
             for <b>#N</b> to avoid changing microscope image shift.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">LimitNextAutoAlign</TD>
+          <TD class="scriptcommand">LimitNextAutoAlign #</TD>
           <TD>Sets a limit in microns to the amount of shift allowed in the next autoalign.
             If there are no correlation peaks within that limit, no shift will be imposed.
           </TD>
@@ -2904,7 +2908,7 @@
              includes an astigmatism estimate, unless the property 'SkipAstigAdjustmentForIS' is set.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CBAstigComa #T #C [#A] [#L]&nbsp; [#S]</TD>
+          <TD class="scriptcommand">CBAstigComa #T #C #A [#L] [#S]</TD>
           <TD>FOR TESTING: Runs the routine for astigmatism and coma by CTF fitting.&nbsp; Set <b>#T</b> 
             0 for astigmatism, 1 for coma with 5 images, 2 for coma with full array; <b>#C</b> 0/1 to measure/calibrate; <b>#A</b> 0 to apply a 
             measurement, 1 to just measure, 2 to measure from images in the buffers; <b>#L</b> 
@@ -3066,6 +3070,11 @@
           <TD class="scriptcommand">MeasureBeamSize [buf]</TD>
           <TD>Measures the beam diameter by detecting its edges in the image in buffer A, or in 
             the buffer given by the optional <b>buf</b>.&nbsp; The value is reported in microns.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">BacklashAdjust</TD>
+          <TD>Runs the routine to adjust for backlash by taking an image, applying the current montaging
+             backlash, and aligning a new image to the original image.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DriftWaitTask [#R] [unit] [#M] [#I] [#G] [type] [#C] [#E] [#B]</TD>
@@ -3790,19 +3799,19 @@
           <td>Converts from&nbsp;specimen to image shift or projector shift coordinates.</td>
         </TR>
        <TR>
-          <TD class="scriptcommand">SpecimenToCameraMatrix</TD>
+          <TD class="scriptcommand">SpecimenToCameraMatrix #M</TD>
           <td>Converts from specimen&nbsp;to camera&nbsp; coordinates.</td>
         </TR>
         <TR>
-          <TD class="scriptcommand">CameraToSpecimenMatrix</TD>
+          <TD class="scriptcommand">CameraToSpecimenMatrix #M</TD>
           <td>Converts from camera&nbsp;to specimen&nbsp; coordinates.</td>
         </TR>
        <TR>
-          <TD class="scriptcommand">ISToStageMatrix</TD>
+          <TD class="scriptcommand">ISToStageMatrix #M</TD>
           <td>Converts from image shift or projector shift to stage&nbsp; coordinates.</td>
         </TR>
         <TR>
-          <TD class="scriptcommand">StageToISMatrix</TD>
+          <TD class="scriptcommand">StageToISMatrix #M</TD>
           <td>Converts from stage&nbsp; to image shift or projector shift coordinates.</td>
         </TR>
        <TR>

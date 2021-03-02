@@ -70,6 +70,7 @@ static char THIS_FILE[]=__FILE__;
   return 98; \
 }
 
+
 static int sProcessExitStatus;
 static int sProcessErrno;
 
