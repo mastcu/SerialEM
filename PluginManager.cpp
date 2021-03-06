@@ -174,8 +174,8 @@ int CPluginManager::LoadPlugins(void)
         mess.Format("There is more than one scope plugin in\r\n%s%s%s\r\n\r\nThe plugin "
           "%s in %s\r\nwas just loaded in addition to the one shown first in the log\r\n"
           "\r\nDo not run SerialEM.exe in a package folder, only in a SerialEM folder!"
-          "\r\nIf that is not the problem, remove whichever plugin is not appropriate", 
-          (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "", 
+          "\r\nIf that is not the problem, remove whichever plugin is not appropriate",
+          (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "",
           !exePath.IsEmpty() ? (LPCTSTR)exePath : "",
           FindFileData.cFileName, (LPCTSTR)path);
         mWinApp->AppendToLog(mess, action);
@@ -230,12 +230,12 @@ int CPluginManager::LoadPlugins(void)
 
         if (!cfuncs->AcquireImage || !cfuncs->GetNumberOfCameras || !cfuncs->SetExposure ||
           !cfuncs->SetAcquiredArea) {
-            mess.Format("Tried to load %s as a camera plugin but could not resolve some "
-              "required functions", FindFileData.cFileName);
-            mWinApp->AppendToLog(mess, action);
-            delete newPlug;
-            AfxFreeLibrary(module);
-            continue;
+          mess.Format("Tried to load %s as a camera plugin but could not resolve some "
+            "required functions", FindFileData.cFileName);
+          mWinApp->AppendToLog(mess, action);
+          delete newPlug;
+          AfxFreeLibrary(module);
+          continue;
         }
       }
 
@@ -256,7 +256,7 @@ int CPluginManager::LoadPlugins(void)
           i = 1;
           mess.Format("There is more than one DE camera interface plugin in\r\n%s%s%s\r\n"
             "\r\nThe plugin %s in %s will be ignored\r\n",
-            (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "", 
+            (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "",
             !exePath.IsEmpty() ? (LPCTSTR)exePath : "",
             FindFileData.cFileName, (LPCTSTR)path);
         } else {
@@ -281,8 +281,8 @@ int CPluginManager::LoadPlugins(void)
 
           if (i)
             mess.Format("Tried to load %s as a plugin for the DE camera interface but\r\n"
-            "   could not resolve some required functions; this plugin is not up to date",
-            FindFileData.cFileName);
+              "   could not resolve some required functions; this plugin is not up to date",
+              FindFileData.cFileName);
           else
             mDEplugIndex = (int)mPlugins.GetSize();
         }
@@ -297,15 +297,22 @@ int CPluginManager::LoadPlugins(void)
       // Get script language functions
       if (flags & PLUGFLAG_SCRIPT_LANG) {
         newPlug->scriptLangFuncs = new ScriptLangPlugFuncs;
-        newPlug->scriptLangFuncs->runScript = (RunScriptLang)GetProcAddress(module,
+        newPlug->scriptLangFuncs->RunScript = (RunScriptLang)GetProcAddress(module,
           "RunScript");
-        if (!newPlug->scriptLangFuncs) {
-          mess.Format("Tried to load %s as a script language plugin but could not resolve"
-            " a RunScript function", FindFileData.cFileName);
+        newPlug->scriptLangFuncs->Initialize = (CamNoArg)GetProcAddress(module,
+          "Initialize");
+        newPlug->scriptLangFuncs->Uninitialize = (ScopeNoArg)GetProcAddress(module,
+          "Uninitialize");
+        if (!newPlug->scriptLangFuncs->RunScript || (newPlug->scriptLangFuncs->Initialize
+          && newPlug->scriptLangFuncs->Initialize())) {
+          mess.Format("Tried to load %s as a script language plugin but %s", 
+            FindFileData.cFileName, newPlug->scriptLangFuncs->RunScript ? 
+            "its Initialize function gave an error" :
+            "could not resolve a RunScript function");
           mWinApp->AppendToLog(mess, action);
           delete newPlug;
           AfxFreeLibrary(module);
-        }
+        } 
       }
       
       // Get piezo plugin functions
@@ -414,6 +421,8 @@ void CPluginManager::ReleasePlugins(void)
       mScopeFuncs.UninitializeScope();
     if (plugin->flags & PLUGFLAG_PIEZO && plugin->piezoFuncs->Uninitialize)
       plugin->piezoFuncs->Uninitialize();
+    if (plugin->flags & PLUGFLAG_SCRIPT_LANG && plugin->scriptLangFuncs->Uninitialize)
+      plugin->scriptLangFuncs->Uninitialize();
     AfxFreeLibrary(plugin->handle);
     delete plugin;
   }

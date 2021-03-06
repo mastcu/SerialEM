@@ -174,7 +174,9 @@ typedef int(*RunScriptLang)(const char *);
 
 // Scripting interpreter plugin functions
 struct ScriptLangPlugFuncs {
-  RunScriptLang runScript;
+  CamNoArg Initialize;
+  RunScriptLang RunScript;
+  ScopeNoArg Uninitialize;
 };
 
 // Information structure for a single plugin function call

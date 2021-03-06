@@ -3879,7 +3879,7 @@ UINT CMacroProcessor::RunInShellProc(LPVOID pParam)
 // Thread procedure for starting a script in external language
 UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
 {
-  mScrpLangData.exitStatus = mScrpLangFuncs->runScript((const char *)pParam);
+  mScrpLangData.exitStatus = mScrpLangFuncs->RunScript((const char *)pParam);
   SEMTrace('[', "RunScriptLangProc exit stat %d", mScrpLangData.exitStatus);
   return mScrpLangData.exitStatus ? 1 : 0;
 }
