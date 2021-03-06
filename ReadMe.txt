@@ -64,11 +64,12 @@ Both 32 and 64-bit versions of SerialEM can be compiled in VS 2015 with the
 v140 configurations, which use libraries without MKL or FFTW in SerialEMLibs,
 named with "-14".  To run it, copy the file libctffind-VCOMP-14.dll from
 SerialEMLibs or SerialEMLibs/x64 to the executable directory and rename it
-libctffind-VCOMP.dll.
+libctffind-VCOMP.dll.  For a 64-bit version, also copy hdf5-14.dll from
+SerialEMLibs/x64 to the executable directory and rename it hdf5.dll.
 
 
-The rest of this file contains a description of the modules in SerialEM.
-Every .cpp file has a corresponding .h file.
+The rest of this file contains a description of the modules in SerialEM.  This
+is unlikely to be up-to-date.  Every .cpp file has a corresponding .h file.
 
 BASIC PROGRAM MODULES:
 AutoTuning.cpp        Calibrates and does astigmatism and coma corrections
