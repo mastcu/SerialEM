@@ -671,7 +671,7 @@
       encounter a message box that stops acquisition and think it should not, report 
       the exact text of the message so that this call can be changed.</P>
     <P><A NAME="examples"></A><B>Advanced Examples</B></P>
-    <P>This script will save the current magnification and change to 20000x, then move 
+    <P><strong><em>Variables, loops, arithmetic, and a function: </em></strong>&nbsp;This script will save the current magnification and change to 20000x, then move 
       the stage to a 4 by 4 array of positions centered around the current location 
       and autofocus, take a Record, and save it at each position. Then it will 
       restore the mag and the stage position. This is done in a function that is set 
@@ -701,7 +701,7 @@
       MoveStageTo $baseX $baseY<BR>
       SetMag $oldmag<br />
       EndFunction</P>
-    <P>This example will take pictures at a certain time interval, measure the 
+    <P><strong><em>Waiting for drift to be low enough:</em></strong> This example will take pictures at a certain time interval, measure the 
       displacement between each pair of pictures, and do this repeatedly until the 
       displacement falls below a criterion or the limit on the number of iterations 
       is reached. Note that important parameters are defined as variables at the top 
@@ -739,6 +739,28 @@
       &nbsp;&nbsp;&nbsp; endif<BR>
       EndLoop<BR>
       Record</P>
+    <P style="Z-INDEX: 0"><em><strong>Three Choice Box: </strong></em>&nbsp;This example shows how to use the ThreeChoiceBox command.&nbsp; 
+      This is most easily done by using quoted strings as here:</P>
+    <P style="Z-INDEX: 0">ParseQuotedStrings 1<br />
+       header = { &#39;It is critical that you answer a question about what to do at this point.&#39; \<br />
+         &nbsp;&nbsp;
+         &#39;  This way is better than asking several yes-no questions in a row.&#39; }  <br />
+      prompt1 = { &#39;Press &quot;Fiddle&quot; to experiment with the parameters;&#39; \<br />
+       &nbsp;&nbsp;
+       &#39; this could be rewarding but dangerous&#39; }<br />
+      prompt2 = &#39;Press &quot;What to Do?&quot; to find out more about the possibilities&#39;<br />
+      prompt3 = { &#39;Press &quot;Proceed&quot; to continue the operation with current parameters;&#39; \<br />
+       &nbsp;
+       &#39;  this will give familiar results&#39; }<br />
+      buttons = { &#39;Fiddle&#39; &#39;What to Do?&#39;&nbsp; &#39;Proceed&#39; }<br />
+      ThreeChoiceBox header prompt1 prompt2 buttons </P>
+    <P style="Z-INDEX: 0">The other alternative is to to assign each line to a 
+      variable with '@=' and make an array from those variables, but without using 
+      single quote wrappers as above, leading spaces will be lost.&nbsp; For example:</P>
+    <P style="Z-INDEX: 0">p1a @= Press &quot;Fiddle&quot; to experiment with the parameters;<br />
+      p1b @= this could be rewarding but dangerous<br />
+      prompt1 = { $p1a $p2a }
+    </P>
     </basefont>
   </BODY>
 </HTML>

@@ -5464,6 +5464,52 @@ int CMacCmd::EnterString(void)
   return 0;
 }
 
+// ThreeChoiceBox
+int CMacCmd::ThreeChoiceBox(void)
+{
+  Variable *vars[5];
+  CString buttons[3];
+  cTruth = mItemEmpty[5];
+  for (cI = 0; cI < (cTruth ? 4 : 5); cI++) {
+    cReport = mStrItems[cI + 1];
+    cReport.MakeUpper();
+    vars[cI] = LookupVariable(cReport, cIndex2);
+    if (!vars[cI])
+      ABORT_LINE("The variable " + mStrItems[cI + 1] + " is not defined in line:\n\n");
+    if (vars[cI]->rowsFor2d)
+      ABORT_LINE("The variable " + mStrItems[cI + 1] + " is a 2D array which is not "
+        "allowed for line:\n\n");
+  }
+  cReport = "";
+  for (cI = 0; cI < (cTruth ? 3 : 4); cI++) {
+    if (!cReport.IsEmpty())
+      cReport += "\n\n";
+    cReport += vars[cI]->value;
+  }
+
+  cValPtr = &vars[cTruth ? 3 : 4]->value;
+  FindValueAtIndex(*cValPtr, 1, cIx0, cIx1);
+  buttons[0] = cValPtr->Mid(cIx0, cIx1 - cIx0);
+  FindValueAtIndex(*cValPtr, 2, cIx0, cIx1);
+  buttons[1] = cValPtr->Mid(cIx0, cIx1 - cIx0);
+
+  if (!cTruth) {
+    FindValueAtIndex(*cValPtr, 3, cIx0, cIx1);
+    buttons[2] = cValPtr->Mid(cIx0, cIx1 - cIx0);
+  }
+  cI = SEMThreeChoiceBox(cReport, buttons[0], buttons[1], buttons[2],
+    (cTruth ? MB_YESNO : MB_YESNOCANCEL) | MB_ICONQUESTION, 0, false);
+  if (cI == IDYES)
+    cIndex = 1;
+  else if (cI == IDNO)
+    cIndex = 2;
+  else
+    cIndex = 3;
+  SetReportedValues(cIndex);
+  mLogRpt = "\"" + buttons[cIndex - 1] + "\" was chosen";
+  return 0;
+}
+
 // CompareNoCase, CompareStrings
 int CMacCmd::CompareNoCase(void)
 {
