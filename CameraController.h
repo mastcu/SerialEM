@@ -592,6 +592,7 @@ public:
   BOOL Inserting() {return mInserting;};
   BOOL EnsuringDark() {return mEnsuringDark;};
   BOOL Acquiring() {return mAcquiring;};
+  BOOL DoingTiltSums() { return mTD.DoingTiltSums; };
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
                    int &Top, int &Bottom, int binning, int camera = -1);

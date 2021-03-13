@@ -1101,9 +1101,13 @@
             tilt direction after aligning a deferred sum from a frame tilt series to the one 
             at the adjacent previous tilt angle.&nbsp; <b>#I</b> specifies the 
             tilt index obtained from 'ReportTiltSumProperties', and <b>#X</b> and
-            <b>#Y</b> are the image shift values obtained from 
-            'ReportISforBufferShift' after aligning that tilt sum with a command such as 
-            'AlignTo B 1' that aligns without imposing an image shift.</TD>
+            <b>#Y</b> are relative image shift values needed to align this tilt sum with the
+            previous one with a command such as 
+            'AlignTo B 1' that aligns without imposing an image shift.  There are two ways to get
+            these values: 1) Use 'ReportISforBufferShift' then 'ClearAlignment 1' to remove the alignment
+            shifts from the image each time, and use the values from 'ReportISforBufferShift' directly; or
+            2) Keep track of the last IS values from 'ReportISforBufferShift', subtract them each time
+            from the new IS values, and use those differences for <b>#X</b> and <b>#Y</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReplaceFrameTSShifts varX varY</TD>

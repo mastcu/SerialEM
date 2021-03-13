@@ -1252,6 +1252,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   if (mCurrentMacro < 0)
     CloseFileForText(-1);
   mDoingMacro = false;
+  if (mCamera->DoingTiltSums())
+    mCamera->CleanUpFromTiltSums();
   if (mStoppedContSetNum >= 0)
     mCamera->InitiateCapture(mStoppedContSetNum);
   if (abort) {

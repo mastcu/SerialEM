@@ -10411,7 +10411,7 @@ int CCameraController::CheckFilterSettings()
       mNumZLPAlignChanges = MAX_ESHIFT_TIMES;
   }
 
-  if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy) 
+  if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy || mTD.DoingTiltSums) 
     return 1;
   if (CreateCamera(CREATE_FOR_GIF, false))
     return 2;
