@@ -2033,6 +2033,7 @@ int CCameraController::GetDeferredSum(void)
   mTD.DMSizeX = mXdeferredSizeTD;
   mTD.DMSizeY = mYdeferredSizeTD;
   mTD.NumAsyncSumFrames = -1;
+  mTD.ErrorFromSave = 0;
   mTD.GatanReadMode = mReadModeDeferred;
   mBinning = mBinDeferred;
   mTD.Binning = mBinDeferredTD;

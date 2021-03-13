@@ -359,7 +359,7 @@ int CGatanSocket::GetTiltSumProperties(long *index, long *numFrames, double *ang
   long *firstSlice, long *lastSlice, long *dumInt1, double *dumDbl1, double *dumDbl2)
 {
   InitializePacking(sSind, GS_GetTiltSumProperties);
-  mNumLongRecv[sSind] = 3;
+  mNumLongRecv[sSind] = 5;
   mNumDblRecv[sSind] = 3;
   SendAndReceiveArgs(sSind);
   *index = mLongArgs[sSind][1];
