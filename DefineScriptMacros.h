@@ -23,3 +23,7 @@
 #define MAC_SAME_NAME_O1DO1S MAC_SAME_NAME
 #define MAC_SAME_NAME_O1SO1D MAC_SAME_NAME
 #define MAC_SAME_NAME_O5D MAC_SAME_NAME
+#define MAC_SAME_NAME_GEN(a, b, c, d, e) MAC_SAME_NAME(a, b, c, d)
+#define MAC_DIFF_NAME_GEN(a, b, c, d, e, f) MAC_DIFF_NAME(a, b, c, d, e)
+#define MAC_SAME_FUNC_GEN(a, b, c, d, e, f) MAC_SAME_FUNC(a, b, c, d, e)
+

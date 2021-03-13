@@ -482,6 +482,9 @@
     <ClInclude Include="MacroMasterList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DefineScriptMacros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">

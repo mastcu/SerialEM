@@ -1207,6 +1207,7 @@
     <ClInclude Include="AlignFocusWindow.h" />
     <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="CtffindParamDlg.h" />
+    <ClInclude Include="DefineScriptMacros.h" />
     <ClInclude Include="DERefMakerDlg.h" />
     <ClInclude Include="DisableHideTable.h" />
     <ClInclude Include="DriftWaitSetupDlg.h" />

@@ -4,7 +4,7 @@
 // function declarations, and the command table.  In every case, the first entry is the
 // MixedCase command name, and the last entry is the upper case of that.
 //
-// The two numbers are the minimum arguments and a ste of flags.  The first two bits of
+// The two numbers are the minimum arguments and a set of flags.  The first two bits of
 // the flags affect whether arithmetic is allowed.
 // Arithmetic is allowed for any command with bit 1 set in the second number (1), and for
 // any "Set" command that does not have bit 2 set there (2).  Starting with % lists all
@@ -36,6 +36,11 @@
 // O1SO1D  = optional string and optional double
 // 1DO1S   = 1 double and optional string
 // MAC_DIFF_NAME_2SO1S and MAC_DIFF_NAME_O1SO1D are also defined
+//
+// MAC_SAME_NAME_GEN, MAC_DIFF_NAME_GEN, and MAC_DIFF_NAME_GEN are also available to
+// specify functions that do not fit these patterns.  These each end with an extra set
+// of key letters: D or S for double or string, then d or s for optional doubles or 
+// strings.  This allows the plugin functions to be constructed by a script.
 //
 // Real commands that can be included in a script start with Exit - keep that as first!
 //
@@ -625,3 +630,6 @@ MAC_SAME_NAME_1DO5D(MovePiezoZ, 1, 1, MOVEPIEZOZ)
 #undef MAC_SAME_NAME_O1DO1S
 #undef MAC_SAME_NAME_O1SO1D
 #undef MAC_SAME_NAME_O5D
+#undef MAC_SAME_NAME_GEN
+#undef MAC_SAME_FUNC_GEN
+#undef MAC_DIFF_NAME_GEN
