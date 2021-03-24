@@ -13,6 +13,7 @@
 #include ".\MacroEditer.h"
 #include "MacroToolbar.h"
 #include "MacroProcessor.h"
+#include "ParameterIO.h"
 #include "Utilities\KGetOne.h"
 
 #ifdef _DEBUG
@@ -591,15 +592,23 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   unsigned int lenMatch;
   char ch;
   short *matchList;
-  bool matched, atWordEnd, foundText, hasSpace = false;
+  bool matched, atWordEnd, foundText, isPython, hasSpace = false, needsNamespace = false;
+  bool isBlank, afterBlank, isContinued, afterColon, isKeyword  = false;
+  int prevEnd, backStart, backEnd, afterContinue;
   CmdItem *cmdList;
-  CString substr;
+  CString substr, importName, nameSpace;
   const char *first, *other;
   const char *prevKeys[] = {"LOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY", "CATCH"};
   const char *curKeys[] = {"ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION", "CATCH",
     "ENDTRY"};
+  const char *curPythKeys[] = {"EXCEPT", "ELSE:", "ELIF"};
+  char *pythKeywords[] = {"FOR", "IF", "ELSE:", "ELIF", "TRY:", "WHILE", "DEF", "RETURN",
+    "GLOBAL", "BREAK", "CONTINUE", "EXCEPT:", "PASS", "WITH", "FINALLY", "CLASS", 
+    "RAISE"};
   int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
   int numCurKeys = sizeof(curKeys) / sizeof(const char *);
+  int numCurPyth = sizeof(curPythKeys) / sizeof(const char *);
+  int numPythKeywords = sizeof(pythKeywords) / sizeof(const char *);
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
 
   completing = false;
@@ -607,6 +616,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   if (sel2 <= 0)
     return;
   completing = strMacro.GetAt(sel2-1) == '`';
+  isPython = CheckForPythonAndImport(strMacro, importName);
 
   // Set up to delete this character
   numDel = 1;
@@ -618,7 +628,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   atWordEnd = sel2 >= strMacro.GetLength();
   if (!atWordEnd) {
     ch = strMacro.GetAt(sel2);
-    hasSpace = ch == ' ' || ch == '\t';
+    hasSpace = (!isPython && (ch == ' ' || ch == '\t')) || (isPython && ch == '(');
     atWordEnd = hasSpace || ch == '\n' || ch == '\r';
   }
 
@@ -653,21 +663,64 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   numMatch = 0;
   if (strCompletions.Left(6).Compare("Tab or"))
     strCompletions = "";
+
+  // Skip comments
   if (lineStart >= 0 && strMacro.GetAt(lineStart) == '#')
     lineStart = -1;
+
+  // For python, find a namespace component and if it matches serialem name, set the
+  // start after that; if it doesn't, skip it
+  else if (isPython && delStart > lineStart) {
+    needsNamespace = !importName.IsEmpty();
+    substr = strMacro.Mid(lineStart, delStart - lineStart);
+    i = substr.Find(".");
+    if (i > 0) {
+      nameSpace = substr.Left(i);
+      if (nameSpace == importName) {
+        lineStart += i + 1;
+        needsNamespace = false;
+      } else {
+        lineStart = -1;
+      }
+    }
+  }
+
   while (lineStart >=0 && lineStart < delStart) {
 
-    // Extract the string before this point, make upper case, and make a list of matches
+    // Extract the string before this point, make upper case and make a list of matches
     lenMatch = delStart - lineStart;
     if (lenMatch <= 0)
       break;
     substr = strMacro.Mid(lineStart, lenMatch);
-    substr.MakeUpper();
     if (substr == "\r" || substr == "\n")
       break;
-    for (i = CME_EXIT; i < numCommands; i++)
-      if (cmdList[i].cmd.find(substr) == 0)
-        matchList[numMatch++] = i;
+    substr.MakeUpper();
+    if (isPython) {
+
+      // For python, exclude keywords then test if it is allowed command and compare
+      for (i = 0; i < numPythKeywords; i++) {
+        if (strstr(pythKeywords[i], (LPCTSTR)substr) == pythKeywords[i]) {
+          isKeyword = true;
+          break;
+        }
+      }
+
+      if (isKeyword) {
+        numDel = 1;
+        break;
+      }
+
+      for (i = 0; i < numCommands; i++)
+        if (!(cmdList[i].arithAllowed & 8) && cmdList[i].cmd.find(substr) == 0)
+          matchList[numMatch++] = i;
+
+    } else {
+
+      // for regular compare to string
+      for (i = CME_EXIT; i < numCommands; i++)
+        if (cmdList[i].cmd.find(substr) == 0)
+          matchList[numMatch++] = i;
+    }
 
     // If there are no matches, try one less character
     if (!numMatch) {
@@ -709,7 +762,11 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
       substr = CString(cmdList[matchList[0]].mixedCase);
       lenMatch = substr.GetLength() + 1;
       if (!hasSpace)
-        substr += " ";
+        substr += B3DCHOICE(isPython, cmdList[matchList[0]].minargs ? "(" : "()", " ");
+    }
+    if (needsNamespace) {
+      substr = importName + "." + substr;
+      lenMatch += importName.GetLength() + 1;
     }
 
     // So now adjust the deletion to take out the whole command for replacement
@@ -740,6 +797,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
       sel2 += lenMatch;
     }
 
+
     // Indentation: 
     indentSize = winApp->mMacroProcessor->GetAutoIndentSize();
     if (indentSize > 0) {
@@ -751,30 +809,64 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
           break;
       }
       
-      // Find start of previous line with text
-      foundText = false;
-      for (prevStart = lineStart; prevStart > 0; prevStart--) {
-        ch = strMacro.GetAt(prevStart - 1);
-        if (!foundText && !(ch == '\n' || ch == '\r' || ch == ' ' || ch == '\t'))
-          foundText = true;
-        if (foundText && (ch == '\n' || ch == '\r'))
-          break;
-      }
+      // Find start of previous non-continuation line with text
+      // Keep track of number of previous continuation lines, whether previous 
+      // nonblank line ends with a : for python, and whether previous line is blank
+      isBlank = GetPrevLineIndexes(strMacro, lineStart, isPython, prevStart, prevEnd, 
+        isContinued);
+      afterBlank = isBlank;
+      foundText = !isBlank && prevStart >= 0;
+      afterContinue = isContinued ? 1 : 0;
+      afterColon = isPython && foundText && strMacro.GetAt(prevEnd) == ':';
+      if (prevStart > 0) {
+        for (;;) {
+          isBlank = GetPrevLineIndexes(strMacro, prevStart, isPython, backStart, backEnd,
+            isContinued);
 
-      // Get the previous line indent and add if it matches a keyword
+          // Stop if at start already or we have found nonblank line and this not a
+          // continuation line
+          if (backStart < 0 || (foundText && !isContinued))
+            break;
+
+          // Or, if we are after a continuation line and it is not the first one,
+          // keep track of that and stop because we retain the indent
+          if (afterContinue && isContinued) {
+            afterContinue++;
+            break;
+          }
+
+          // Otherwise adopt this as potentially previous line and keep track if found
+          // a non-blank line and if the first non-blank line ended in :
+          prevStart = backStart;
+          prevEnd = backEnd;
+          if (!isBlank) {
+            if (isPython && !foundText && strMacro.GetAt(prevEnd) == ':')
+              afterColon = true;
+            foundText = true;
+          }
+        }
+      }
+       
+      // Get the previous line indent and add if it matches a keyword, or is after a
+      // colon, or if this is the first continuation line
       needIndent = 0;
-      if (foundText && FindIndentAndMatch(strMacro, prevStart, lineStart, prevKeys, 
-        numPrevKeys, needIndent))
+      if (foundText && (FindIndentAndMatch(strMacro, prevStart, lineStart, prevKeys, 
+        (isPython || afterContinue) ? 0 : numPrevKeys, needIndent) || afterColon ||
+        afterContinue == 1))
         needIndent += indentSize;
 
       // Get the current line indent and subtract from needed indent if keyword matches
+      // Also allow toggling if a Python line is after a blank line and is already
+      // at the sam eindent as last line
       sel1 = strMacro.Find('\r', sel2);
       i = strMacro.Find('\n', sel2);
       if (sel1 < 0 && i < 0)
         sel1 = strMacro.GetLength();
       else
         sel1 = B3DMAX(sel1, i);
-      if (FindIndentAndMatch(strMacro, lineStart, sel1, curKeys, numCurKeys, curIndent))
+      if (FindIndentAndMatch(strMacro, lineStart, sel1, isPython ? curPythKeys : curKeys,
+        B3DCHOICE(afterContinue, 0, isPython ? numCurPyth : numCurKeys), curIndent) || 
+        (isPython && curIndent == needIndent && afterBlank && !afterColon))
         needIndent = B3DMAX(0, needIndent - indentSize);
 
       // Adjust by deletion or addition
@@ -790,6 +882,105 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
 
   }
   delete [] matchList;
+}
+
+// Check the start of a script for #!pyth... and importing of serialem
+bool CMacroEditer::CheckForPythonAndImport(CString &strMacro, CString &importName)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int currentInd = 0, length = strMacro.GetLength();
+  CString strLine, strItems[4];
+  bool isPython = false;
+  importName = "";
+  while (currentInd < length) {
+    winApp->mMacroProcessor->GetNextLine(&strMacro, currentInd, strLine, true);
+
+    // Look at first line for a match, if not, return
+    if (!isPython) {
+      strLine.MakeLower();
+      isPython = strLine.Find("#!pyth") == 0;
+      if (!isPython)
+        return false;
+      continue;
+    }
+ 
+    // Skip comments or includes
+    strItems[0] = strLine;
+    strItems[0].TrimLeft();
+    if (strItems[0].Find("#") == 0)
+      continue;
+
+    // Igf non-import line is found, give up
+    if (strLine.Find("import") < 0)
+      return true;
+
+    // No namespace if importing this way
+    if (strLine.Find("from serialem import *") >= 0)
+      return true;
+
+    // If importing serialem, see if an alias
+    if (strLine.Find("import serialem") >= 0) {
+      importName = "serialem";
+      winApp->mParamIO->ParseString(strLine, strItems, 4);
+      if (strItems[2] == "as" && !strItems[3].IsEmpty())
+        importName = strItems[3];
+      return true;
+    }
+  }
+  return isPython;
+}
+
+// Get the starting and ending indexes of the text on line before curStart, set 
+// isContinued if line ends with " \" or "\" if Python, and return true if the line
+// is blank
+bool CMacroEditer::GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython,
+  int &indStart, int &indEnd, bool &isContinued)
+{
+  int ind, numEndings = 0;
+  char ch;
+  bool isBlank = true;
+  indStart = indEnd = -1;
+  isContinued = false;
+  if (!curStart)
+    return false;
+  while (curStart > 0) {
+    ch = strMacro.GetAt(curStart - 1);
+
+    // Look for line endings
+    if (ch == '\r' || ch == '\n') {
+      numEndings++;
+
+      // Blank line
+      if (numEndings > 2 && indEnd < 0) {
+        indStart = curStart;
+        indEnd = curStart - 1;
+        break;
+      }
+
+      // If end already found, this is start
+      if (indEnd >= 0) {
+        indStart = curStart;
+        break;
+      }
+
+      // If not a line ending, record if this is end of line
+    } else if (indEnd < 0) {
+      indEnd = curStart - 1;
+    }
+    curStart--;
+  }
+  if (!curStart)
+    indStart = 0;
+  for (ind = indStart; ind <= indEnd; ind++) {
+    ch = strMacro.GetAt(ind);
+    if (ch != ' ' && ch != '\t') {
+      isBlank = false;
+      break;
+    }
+  }
+  isContinued = indEnd > indStart && strMacro.GetAt(indEnd) == '\\' && (isPython || 
+    strMacro.GetAt(indEnd - 1) == ' ');
+  return isBlank;
 }
 
 // Finds the number of current spaces indenting the line at lineStart and looks for a

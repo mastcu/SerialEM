@@ -232,13 +232,11 @@ void CMacCmd::TaskDone(int param)
         // Call the function in the command list
         err = (this->*cmdList[mCmdIndex].func)();
         if (err) {
-          if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
-            mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC) {
-            mScrpLangData.errorOccurred = err;
-            SetEvent(mScrpLangDoneEvent);
-            SEMTrace('[', "signal function done with err");
-            // DOESN'T THIS NEED TO ADDIDLE?
-          }
+
+          // Abort should have been called before an error return, but just in case, let's
+          // do it now and let it signal done
+          if (!mScrpLangData.errorOccurred)
+            AbortMacro();
           return;
         }
 
