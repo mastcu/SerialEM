@@ -426,7 +426,8 @@ void CImageLevelDlg::OnScalebar()
 
 void CImageLevelDlg::ToggleExtraInfo(void)
 {
-  mWinApp->mBufferManager->SetDrawScaleBar(!mWinApp->mBufferManager->GetDrawScaleBar());
+  mWinApp->mBufferManager->SetDrawScaleBar(mWinApp->mBufferManager->GetDrawScaleBar() ? 
+    0 : 192);
   UpdateSettings();
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
