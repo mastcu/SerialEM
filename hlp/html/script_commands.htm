@@ -527,7 +527,7 @@
             strings to have multiple lines of text for the header or descriptions.&nbsp; Use a line with
             just 'header @=' to make a variable for omitting the header text.&nbsp; The number of the 
             choice (1, 2, or 3) is placed in <i>reportedValue1</i>.&nbsp; See Three Choice Box in 
-            <A HREF="about_scripts#examples">Advanced Examples</A><br>.&nbsp; Command added in 3.9, 3/5/21.</TD>
+            <A HREF="about_scripts#examples">Advanced Examples</A>.&nbsp; Command added in 3.9, 3/5/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ParseQuotedStrings [#]</TD>
@@ -1679,8 +1679,8 @@
             labels and line thicknesses with a value of 1 or more, or 0 or less to use the 
             same scaling as for the image.&nbsp; Set <b>feat</b> non-zero
             to skip feature drawing, with the
-            sum of 1 to skip some features and 2 to skip Navigator
-            items.&nbsp; <b>typ</b> specifies the type of file and can be TIF, TIFF, 
+            sum of 1 to skip some features, 2 to skip Navigator
+            items, and 4 to skip the scale bar.&nbsp; <b>typ</b> specifies the type of file and can be TIF, TIFF, 
             JPG, JPEG, CUR, 
             or -1 (case insensitive), where CUR or -1 means use the current file type selected in the 
             <a href="hidd_screenshot.htm">Image Snapshots dialog</a>.&nbsp; <b>cmp</b> 
@@ -1825,10 +1825,11 @@
                file to appear from an external source.</td>
         </TR>
        <TR>
-          <TD class="scriptcommand">WriteLineToFile ID line</TD>
+          <TD class="scriptcommand">WriteLineToFile ID [line]</TD>
            <td>Writes the remainder of the text on the script line (after variable 
                substitution) to the file with the given <b>ID</b>.&nbsp; The comment character '#' can 
-               be included and text after it will be written.</td>
+               be included and text after it will be written.&nbsp; Omit <b>text</b> to write 
+             a blank line.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">ReadLineToArray ID var</TD>

@@ -427,7 +427,7 @@ void CSerialEMView::DrawImage(void)
 }
 
 // Main drawing routine to screen or buffer.  Skipextra is one to skip some items plus
-// 2 to skip navigator items
+// 2 to skip navigator items plus 4 to skip the scale bar
 bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, 
   float sizeScaling, int skipExtra, bool toBuffer)
 {
@@ -961,7 +961,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Scale bar if window big enough
-  if (scaleCrit > 0 && rect.Width() >= scaleCrit && 
+  if (scaleCrit > 0 && rect.Width() >= scaleCrit && !(skipExtra & 4) &&
     imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && (!imBuf->IsProcessed()
       || imBuf->mCaptured == BUFFER_PROCESSED) && 
     (imBuf->mCaptured != 0 || (!imBuf->mCaptured && imBuf->GetSaveCopyFlag() >= 0)) && 
