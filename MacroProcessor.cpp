@@ -734,7 +734,8 @@ int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
 // Check for conditions that macro may have started
 int CMacroProcessor::TaskBusy()
 {
-  double diff, dose, tbusy;
+  double diff, dose;
+  int tbusy;
   CString report;
 
   // If accumulating dose: do periodic reports, stop when done
@@ -771,6 +772,8 @@ int CMacroProcessor::TaskBusy()
       return 1;
     SEMTrace('[', "thread done %d", tbusy);
     mScrpLangData.threadDone = tbusy ? 1 : -1;
+    if (tbusy && mScrpLangData.gotExceptionText)
+      mWinApp->AppendToLog(mScrpLangData.strItems[0]);
     return 0;
   }
 
@@ -855,6 +858,7 @@ void CMacroProcessor::Run(int which)
         return;
       }
     }
+
   }
 
   // Check the macro(s) for commands, number of arguments, etc.
@@ -977,6 +981,7 @@ void CMacroProcessor::RunOrResume()
   mScrpLangData.commandReady = 0;
   mScrpLangData.threadDone = 0;
   mScrpLangData.errorOccurred = 0;
+  mScrpLangData.exitedFromWrapper = false;
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
@@ -1138,7 +1143,9 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   SEMTrace('[', "In abort");
   // Intercept abort when doing external script, set error flag and set wait for command
   if (mRunningScrpLang && !mScrpLangData.threadDone) {
-    mScrpLangData.errorOccurred = 1;
+    if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT && 
+      mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC)
+      mScrpLangData.errorOccurred = 1;
     mScrpLangData.waitingForCommand = 1;
     mScrpLangData.commandReady = 0;
     SetEvent(mScrpLangDoneEvent);
@@ -1146,6 +1153,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mWinApp->AddIdleTask(TASK_MACRO_RUN, 0, 0);
     return;
   }
+
+  if (mRunningScrpLang && (mScrpLangData.threadDone > 0 ||
+    mScrpLangData.exitedFromWrapper))
+    SEMMessageBox("Error running Python script; see log for information");
 
   if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
     return;
@@ -1290,7 +1301,7 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
 {
   int index, testInd;
   strLine = "";
-  CString temp;
+  CString temp, trimmed;
   for (;;) {
 
     // Find next linefeed
@@ -1299,7 +1310,9 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
 
       // If none, get rest of string, set index past end
       temp = macro->Mid(currentIndex);
-      if (!temp.TrimLeft().GetLength() || temp.TrimLeft().GetAt(0) != '#' || commentOK)
+      trimmed = temp;
+      trimmed.TrimLeft();
+      if (!trimmed.GetLength() || trimmed.GetAt(0) != '#' || commentOK)
         strLine += temp;
       currentIndex = macro->GetLength();
       break;
@@ -1308,7 +1321,9 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
       // Set index past end of line then test for space backslash after skipping a \r
       index++;
       temp = macro->Mid(currentIndex, index - currentIndex);
-      if (temp.TrimLeft().GetLength() && temp.TrimLeft().GetAt(0) == '#' && !commentOK) {
+      trimmed = temp;
+      trimmed.TrimLeft();
+      if (trimmed.GetLength() && trimmed.GetAt(0) == '#' && !commentOK) {
         currentIndex = index;
         if (index >= macro->GetLength())
           break;
@@ -2784,17 +2799,17 @@ void CMacroProcessor::SetReportedValues(double val1, double val2, double val3,
 void CMacroProcessor::SetReportedValues(CString *strItems, double val1, double val2, double val3,
   double val4, double val5, double val6)
 {
-  if (val1 != MACRO_NO_VALUE)
+  if (val1 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val1, 1);
-  if (val2 != MACRO_NO_VALUE)
+  if (val2 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val2, 2);
-  if (val3 != MACRO_NO_VALUE)
+  if (val3 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val3, 3);
-  if (val4 != MACRO_NO_VALUE)
+  if (val4 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val4, 4);
-  if (val5 != MACRO_NO_VALUE)
+  if (val5 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val5, 5);
-  if (val6 != MACRO_NO_VALUE)
+  if (val6 > EXTRA_VALUE_TEST)
     SetOneReportedValue(strItems, val6, 6);
 }
 
@@ -3808,6 +3823,8 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
 // try to get the functions, then look for #include and concatenate all included scripts
 int CMacroProcessor::CheckForScriptLanguage(int macNum)
 {
+  bool isPython;
+
   // Test for scripting language
   int currentInd = 0, includeInd, count;
   CString name;
@@ -3833,8 +3850,15 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
     }
   }
 
-  // Now look for includes and build up the string
+  // Determine if python and start wrapper
   mMacroForScrpLang = "";
+  name.MakeLower();
+  isPython = name.Find("pyth") == 0;
+  if (isPython) 
+    mMacroForScrpLang = "from serialem import SEMexited, SEMerror\r\n"
+    "try:\r\n";
+
+  // Now look for includes and build up the string, indenting for python
   for (;;) {
     GetNextLine(&mMacros[macNum], currentInd, name, true);
     if (name.Find("#include") != 0)
@@ -3842,12 +3866,51 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
     includeInd = FindCalledMacro(name.Mid(1), true);
     if (includeInd < 0)
       return 1;
-    mMacroForScrpLang += mMacros[includeInd];
+    if (isPython)
+      IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, 2);
+    else
+      mMacroForScrpLang += mMacros[includeInd];
   }
-  if (!mMacroForScrpLang.IsEmpty())
+  if (isPython)
+    IndentAndAppendToScript(mMacros[macNum], mMacroForScrpLang, 2);
+  else
     mMacroForScrpLang += mMacros[macNum];
 
+  // Catch exceptions at end
+  if (isPython) {
+    mMacroForScrpLang +=
+      "\r\nexcept SystemExit:\r\n"
+      "  import serialem\r\n"
+      "  serialem.Exit(1)\r\n"
+      "except SEMerror:\r\n"
+      "  pass\r\n"
+      "except SEMexited:\r\n"
+      "  pass\r\n"
+      "except Exception:\r\n"
+      "  import serialem, traceback\r\n"
+      "  line = \"\\r\\nError in Python script:\\r\\n\"\r\n"
+      "  lines = traceback.format_exc().splitlines()\r\n"
+      "  for ind in range(len(lines)):\r\n"
+      "    line += lines[ind] + \"\\r\\n\"\r\n"
+      "  serialem.Exit(-1, line)\r\n";
+
+  }
+  if (GetDebugOutput(']'))
+    mWinApp->AppendToLog(mMacroForScrpLang);
   return -1;
+}
+
+// Copy lines from source to copy, indenting by indent
+void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy, int indent)
+{
+  int ind, currentInd = 0, length = source.GetLength();
+  CString line, indStr;
+  for (ind = 0; ind < indent; ind++)
+    indStr += ' ';
+  while (currentInd < length) {
+    GetNextLine(&source, currentInd, line, true);
+    copy += indStr + line;
+  }
 }
 
 // Send an email from a message box error if command defined the text

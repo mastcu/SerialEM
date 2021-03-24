@@ -109,10 +109,15 @@ static char THIS_FILE[] = __FILE__;
   return 1; \
 }
 
-#define MAC_SAME_NAME(nam, req, flg, cme) {#nam, req, flg, &CMacCmd::nam},
-#define MAC_DIFF_NAME(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
-#define MAC_SAME_FUNC(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
-#include "DefineScriptMacros.h"
+#define MAC_SAME_NAME(nam, req, flg, cme) {#nam, req, flg | 8, &CMacCmd::nam},
+#define MAC_DIFF_NAME(nam, req, flg, fnc, cme)  {#nam, req, flg | 8, &CMacCmd::fnc},
+#define MAC_SAME_FUNC(nam, req, flg, fnc, cme)  {#nam, req, flg | 8, &CMacCmd::fnc},
+#define MAC_SAME_NAME_NOARG(nam, req, flg, cme) {#nam, req, flg, &CMacCmd::nam},
+#define MAC_DIFF_NAME_NOARG(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
+#define MAC_SAME_FUNC_NOARG(nam, req, flg, fnc, cme)  {#nam, req, flg, &CMacCmd::fnc},
+#define MAC_SAME_NAME_ARG(a, b, c, d, e) MAC_SAME_NAME_NOARG(a, b, c, d)
+#define MAC_DIFF_NAME_ARG(a, b, c, d, e, f) MAC_DIFF_NAME_NOARG(a, b, c, d, e)
+#define MAC_SAME_FUNC_ARG(a, b, c, d, e, f) MAC_SAME_FUNC_NOARG(a, b, c, d, e)
 
 static CmdItem cmdList[] = {
 #include "MacroMasterList.h"
@@ -170,6 +175,8 @@ void CMacCmd::TaskDone(int param)
 
         // If thread finished, clear flag and abort/terminate for real
         mRunningScrpLang = false;
+        if (mScrpLangData.threadDone > 0 || mScrpLangData.exitedFromWrapper)
+          SEMMessageBox("Error running Python script; see log for information");
         AbortMacro();
       } else if (mScrpLangData.waitingForCommand) {
 
@@ -225,9 +232,13 @@ void CMacCmd::TaskDone(int param)
         // Call the function in the command list
         err = (this->*cmdList[mCmdIndex].func)();
         if (err) {
-          mScrpLangData.errorOccurred = err;
-          SetEvent(mScrpLangDoneEvent);
-          SEMTrace('[', "signal function done with err");
+          if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
+            mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC) {
+            mScrpLangData.errorOccurred = err;
+            SetEvent(mScrpLangDoneEvent);
+            SEMTrace('[', "signal function done with err");
+            // DOESN'T THIS NEED TO ADDIDLE?
+          }
           return;
         }
 
@@ -532,6 +543,20 @@ void CMacCmd::InitForNextCommand()
 int CMacCmd::ScriptEnd(void)
 {
   if (!mCallLevel || CMD_IS(EXIT) || (CMD_IS(ENDFUNCTION) && mExitAtFuncEnd)) {
+    if (CMD_IS(EXIT)) {
+      if (mRunningScrpLang) {
+        if (!mItemEmpty[1] && mItemInt[1]) {
+          mScrpLangData.errorOccurred = SCRIPT_EXIT_NO_EXC;
+          mScrpLangData.exitedFromWrapper = mItemInt[1] < 0;
+        } else
+          mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
+        if (!mItemEmpty[2])
+          mWinApp->AppendToLog(mStrItems[2]);
+      } else if (!mStrItems[1].IsEmpty()) {
+        SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+        mWinApp->AppendToLog(mStrCopy);
+      }
+    }
     AbortMacro();
     mLastCompleted = !mExitAtFuncEnd;
     if (mLastCompleted && mStartNavAcqAtEnd)
@@ -2595,8 +2620,6 @@ int CMacCmd::WriteLineToFile(void)
   // To allow comments to be written, there is only one required argument in initial
   // check so we need to check here
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-  if (mStrCopy.IsEmpty())
-    ABORT_LINE("You must enter some text after the ID for line:\n\n");
   try {
     cTxFile->csFile->WriteString(mStrCopy + "\n");
   }

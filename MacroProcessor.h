@@ -31,6 +31,8 @@ struct ScriptLangPlugFuncs;
 #define LOOP_LIMIT_FOR_IF  -2147000000
 
 #define SCRIPT_EVENT_NAME  "SEMScriptLangEvent"
+#define SCRIPT_NORMAL_EXIT  -123456
+#define SCRIPT_EXIT_NO_EXC  -654321
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
 enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP, SKIPTO_CATCH, SKIPTO_ENDTRY};
@@ -97,8 +99,12 @@ struct ScriptLangData {
   int errorOccurred;                       // Flag that an error occurred in the command
   int waitingForCommand;                   // Flag that SerialEM is waiting for command
   int commandReady;                        // Flag set by plugin that command is ready
+  bool gotExceptionText;                   // Flag that strItems has exception text
+
+  // Variables used only by SerialEM
   int threadDone;                          // Flag that script run thread has exited
   int exitStatus;                          // Exit status of script run thread
+  bool exitedFromWrapper;                  // Flag that exit was called from exception
 };
 
 typedef int(CMacCmd::*DispEntry)(void);
@@ -364,12 +370,12 @@ public:
   int EvaluateExpression(CString * strItems, int maxItems, CString line, int ifArray,
     int &numItems, int &numOrig);
   int EvaluateArithmeticClause(CString * strItems, int maxItems, CString line, int &numItems);
-  void SetReportedValues(double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE,
-    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE,
-    double val5 = MACRO_NO_VALUE, double val6 = MACRO_NO_VALUE);
-  void SetReportedValues(CString *strItems = NULL, double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE,
-    double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE,
-    double val5 = MACRO_NO_VALUE, double val6 = MACRO_NO_VALUE);
+  void SetReportedValues(double val1 = EXTRA_NO_VALUE, double val2 = EXTRA_NO_VALUE,
+    double val3 = EXTRA_NO_VALUE, double val4 = EXTRA_NO_VALUE,
+    double val5 = EXTRA_NO_VALUE, double val6 = EXTRA_NO_VALUE);
+  void SetReportedValues(CString *strItems = NULL, double val1 = EXTRA_NO_VALUE, double val2 = EXTRA_NO_VALUE,
+    double val3 = EXTRA_NO_VALUE, double val4 = EXTRA_NO_VALUE,
+    double val5 = EXTRA_NO_VALUE, double val6 = EXTRA_NO_VALUE);
   void ToolbarMacroRun(UINT nID);
   WINDOWPLACEMENT * GetToolPlacement(void);
   WINDOWPLACEMENT * GetEditerPlacement(void) { return &mEditerPlacement[0]; };
@@ -426,6 +432,7 @@ public:
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
   int CheckForScriptLanguage(int macNum);
+  void IndentAndAppendToScript(CString &source, CString &copy, int indent);
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
   int TestTryLevelAndSkip(CString *mess);
