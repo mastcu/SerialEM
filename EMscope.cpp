@@ -1251,7 +1251,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
               mLastCamLenIndex += LAD_INDEX_BASE;
           }
           if (sLDcontinuous)
-            PLUGSCOPE_GET(AbsFocus, diffFocus, 1.);
+            diffFocus = GetDiffractionFocus();
         }
         CHECK_TIME(4);
 
