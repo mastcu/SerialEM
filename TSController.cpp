@@ -6787,7 +6787,8 @@ int CTSController::RestoreDoseSymmetricState(int newTiltInd, int restoreInd,
   // Restore items: skip currentTilt, let the one place that needs it do it
   mScope->SetLDCenteredShift(mDosymSavedISX[restoreInd], mDosymSavedISY[restoreInd]);
   mScope->SetUnoffsetDefocus(mDosymDefocuses[restoreInd]);
-  mScope->SetIntensity(mDosymIntensities[restoreInd]);
+  if (!mSTEMindex)
+    mScope->SetIntensity(mDosymIntensities[restoreInd]);
   for (ind = 0; ind < NUM_CHGD_CONSETS; ind++) {
     cset[ind].exposure = mDosymExposures[ind][restoreInd];
     cset[ind].drift = mDosymDriftSettlings[ind][restoreInd];
@@ -6797,7 +6798,7 @@ int CTSController::RestoreDoseSymmetricState(int newTiltInd, int restoreInd,
   SEMTrace('1', "Restored state %d at %.1f for tiltInd %d  def %.3f  IS %.3f %.3f",
     restoreInd, mDosymCurrentTilts[restoreInd], newTiltInd, mDosymDefocuses[restoreInd],
     mDosymSavedISX[restoreInd], mDosymSavedISY[restoreInd]);
-  if (forTiltAngle > -900. && mTSParam.beamControl == BEAM_INVERSE_COSINE) {
+  if (!mSTEMindex && forTiltAngle > -900. && mTSParam.beamControl == BEAM_INVERSE_COSINE){
     delFac = CosineIntensityChangeFac(mDosymCurrentTilts[restoreInd], forTiltAngle);
     if (SetIntensity(delFac, mNextTilt))
       return 1;
@@ -6887,7 +6888,7 @@ int CTSController::ManageDoseSymmetricOnTilt()
       ResizeDosymVectors((int)mDosymDefocuses.size() + 10);
     mDosymDefocuses[dosymInd] = mScope->GetUnoffsetDefocus();
     mScope->GetLDCenteredShift(mDosymSavedISX[dosymInd], mDosymSavedISY[dosymInd]);
-    mDosymIntensities[dosymInd] = mScope->GetIntensity();
+    mDosymIntensities[dosymInd] = mSTEMindex ? 0. : mScope->GetIntensity();
     for (ind = 0; ind < NUM_CHGD_CONSETS; ind++) {
       mDosymExposures[ind][dosymInd] = cset[ind].exposure;
       mDosymDriftSettlings[ind][dosymInd] = cset[ind].drift;
