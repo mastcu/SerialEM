@@ -962,7 +962,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Scale bar if window big enough
   if (scaleCrit > 0 && rect.Width() >= scaleCrit && 
-    imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && !imBuf->IsProcessed() && 
+    imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && (!imBuf->IsProcessed()
+      || imBuf->mCaptured == BUFFER_PROCESSED) && 
     (imBuf->mCaptured != 0 || (!imBuf->mCaptured && imBuf->GetSaveCopyFlag() >= 0)) && 
     imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);

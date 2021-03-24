@@ -48,6 +48,7 @@ hidd_hole_finder                = SerialEM.chm::/html\hidd_hole_finder.htm
 hidd_multi_combiner             = SerialEM.chm::/html\hidd_multi_combiner.htm
 hidd_de_reference         			= SerialEM.chm::/html\hidd_de_reference.htm
 hidd_detooldlg									= SerialEM.chm::/html\hidd_detoolpanel.htm
+hidd_screenshot                 = SerialEM.chm::/html\hidd_screenshot.htm
 menu_file												= SerialEM.chm::/html\menu_file.htm
 menu_settings										= SerialEM.chm::/html\menu_settings.htm
 menu_camera											= SerialEM.chm::/html\menu_camera.htm

@@ -637,7 +637,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
 // Common routine for putting a newly processed image based on the given buffer into 
 // buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
-                                      int nx, int ny, int moreBinning, int capFlag,
+                                      int nx, int ny, double moreBinning, int capFlag,
                                       bool fftWindow, int toBufNum)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
@@ -677,8 +677,8 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   }
 
   // Fix the binning, transfer any extra data, and redisplay
-  toImBuf->mBinning = imBufTmp.mBinning * moreBinning;
-  toImBuf->mPixelSize = imBufTmp.mPixelSize * moreBinning;
+  toImBuf->mBinning = B3DNINT(imBufTmp.mBinning * moreBinning);
+  toImBuf->mPixelSize = imBufTmp.mPixelSize * (float)moreBinning;
   toImBuf->mImage->SetUserData(imBufTmp.mImage->GetUserData());
   imBufTmp.mImage->SetUserData(NULL);
   imBufTmp.DeleteImage();
