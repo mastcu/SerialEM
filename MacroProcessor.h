@@ -97,11 +97,11 @@ struct ScriptLangData {
   bool repValIsString[6];                  // Flag for whether reported value is string
   int highestReportInd;                    // Index of highest reported value (from 0)
   int errorOccurred;                       // Flag that an error occurred in the command
-  int waitingForCommand;                   // Flag that SerialEM is waiting for command
   int commandReady;                        // Flag set by plugin that command is ready
   bool gotExceptionText;                   // Flag that strItems has exception text
 
   // Variables used only by SerialEM
+  int waitingForCommand;                   // Flag that SerialEM is waiting for command
   int threadDone;                          // Flag that script run thread has exited
   int exitStatus;                          // Exit status of script run thread
   bool exitedFromWrapper;                  // Flag that exit was called from exception
