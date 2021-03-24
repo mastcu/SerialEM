@@ -629,6 +629,7 @@ void CMainFrame::RemoveItemsFromOneMenu(CMenu *menu, int level)
 }
 
 // Functions to start and check a timer if an interval is set
+// 3/12/21: This still works!
 #ifdef TASK_TIMER_INTERVAL
 BOOL CMainFrame::NewTask()
 {
@@ -637,7 +638,7 @@ BOOL CMainFrame::NewTask()
   return m_nTimer != 0;
 }
 
-void CMainFrame::OnTimer(UINT nIDEvent) 
+void CMainFrame::OnTimer(UINT_PTR nIDEvent) 
 {
   // Chek the idle tasks, kill timer if there are no more
   if (!mWinApp->CheckIdleTasks()) {

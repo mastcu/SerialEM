@@ -68,7 +68,7 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 #ifdef TASK_TIMER_INTERVAL
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 #endif
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
@@ -76,7 +76,7 @@ private:
 	CFont mFont;
 	int mNumDialogs;
 	DialogTable * mDialogTable;
-	UINT m_nTimer;
+	UINT_PTR m_nTimer;
 	CSerialEMApp *mWinApp;
   int mDialogOffset;
   int mLeftDialogOffset;
