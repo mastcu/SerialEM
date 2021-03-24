@@ -136,6 +136,7 @@ public:
   GetSetMember(int, CheckScopeDisturbances);
   GetSetMember(int, TrackAfterScopeStopTime);
   GetSetMember(int, FocusAfterScopeStopTime);
+  GetMember(CString, LastNoBoxMessage);
 
   double GetCumulativeDose();
 
@@ -561,6 +562,7 @@ private:
   double mScopeEventLastCheck; // Time of last check
   int mTrackAfterScopeStopTime;
   int mFocusAfterScopeStopTime;
+  CString mLastNoBoxMessage;   // Last message logged with no message box on error
 
 public:
 	void CenterBeamWithTrial();

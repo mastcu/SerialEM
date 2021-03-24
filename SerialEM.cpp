@@ -2742,6 +2742,12 @@ int SEMMessageBox(CString message, UINT type, BOOL terminate, int retval)
     (message, type, terminate, retval);
 }
 
+// And for getting the last message where the message box was suppressed
+CString DLL_IM_EX SEMLastNoBoxMessage()
+{
+  return ((CSerialEMApp *)AfxGetApp())->mTSController->GetLastNoBoxMessage();
+}
+
 // And global function for accessing ThreeChoiceBox through TSMessageBox
 int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
   CString cancelText, UINT type, int setDefault, BOOL terminate, int retval)

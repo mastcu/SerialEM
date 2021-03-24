@@ -4934,22 +4934,23 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
-  if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 || 
-    (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() || 
+  mLastNoBoxMessage = "";
+  if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
+    (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() ||
       macProc->GetTryCatchLevel() > 0))) {
-      for (int ind = 0; ind < message.GetLength(); ind++) {
-        if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
-          message.GetAt(ind - 1) != '\n'))) {
-          message.Insert(ind, '\r');
-          ind++;
-        }
+    for (int ind = 0; ind < message.GetLength(); ind++) {
+      if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
+        message.GetAt(ind - 1) != '\n'))) {
+        message.Insert(ind, '\r');
+        ind++;
       }
-      valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() && 
-        macProc->GetTryCatchLevel() > 0) ? "ERROR" : "STOPPING");
-      message = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";    
-    mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+    }
+    valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
+      macProc->GetTryCatchLevel() > 0) ? "ERROR" : "STOPPING");
+    mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
+    mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     return retval;
- }
+  }
 
   // Always give message box if not terminating, if it was a user stop, if currently
   // postponed, or if the user is present before going into the real actions.
@@ -5010,13 +5011,13 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     index++;
   }
   if (terminate || mWinApp->mCamera->GetNoMessageBoxOnError())
-    message = CString("\r\n* * * * * * * * * * * * * * * * * *\r\n"
+    mLastNoBoxMessage = CString("\r\n* * * * * * * * * * * * * * * * * *\r\n"
       "TILT SERIES TERMINATING WITH THIS"
       " MESSAGE:\r\n") + message + CString("\r\n* * * * * * * * * * * * * * * * * *");
   else
-    message = CString("\r\nTILT SERIES CONTINUING WITH THIS ERROR MESSAGE:\r\n") + 
+    mLastNoBoxMessage = CString("\r\nTILT SERIES CONTINUING WITH THIS ERROR MESSAGE:\r\n") +
       message;
-  mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+  mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
   mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
   if (terminate) {
     TerminateOnError();

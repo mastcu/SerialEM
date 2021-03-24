@@ -391,6 +391,7 @@ void DLL_IM_EX SEMSetFunctionCalled(const char *name, const char *descrip = NULL
 void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore);
 LensRelaxData DLL_IM_EX *SEMLookupJeolRelaxData(int normInd);
 double DLL_IM_EX SEMRecentVoltage();
+CString DLL_IM_EX SEMLastNoBoxMessage();
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {
