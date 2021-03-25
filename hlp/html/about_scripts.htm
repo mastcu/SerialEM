@@ -856,7 +856,7 @@
       Parsing errors in the script will also be reported in the log.&nbsp; 'sys.exit' 
       can be used if desired; it will be intercepted and terminate the script without 
       killing SerialEM.</p>
-    <strong><em>Installation options:&nbsp; </em></strong>There must be at least one 
+    <p><strong><em>Installation options:&nbsp; </em></strong>There must be at least one 
     Python installation.&nbsp; A plugin is built against a specific version or 
     Python, and it will load if the numbered python .dll (e.g., 'python36.dll') for 
     that version is located either on the system path or in the directory with 
@@ -864,8 +864,19 @@
     the Python installation itself on the path if one copies the .dll to either 
     somewhere on the path or to the SerialEM directory.&nbsp; Plugin versions past 
     3.4 are build with the Visual Studio 2015 compilers instead of the 2008 
-    compilers and may require the 'v140' libraries to be present in the SerialEM 
+    compilers and may require the 'vc140' libraries to be present in the SerialEM 
     directory.</p>
+      <p>
+      The test distribution of plugins provides two packages:
+    </p>
+    <ul>
+      <li>PythonPlugins-32 with a 32-bit plugins for Python 2.7 and 3.4.&nbsp; Unpack 
+        this and copy whichever one you want to the main SerialEM directory.</li>
+      <li>PythonPlugins-64 with 64-bit plugins for Python 3.4, 3.6, 3.8, and 3.9.&nbsp; 
+        Unpack this and copy whichever one(s) you want to the main SerialEM directory.&nbsp; 
+        For 3.6 and above, copy 'mfc140.dll' and 'Microsoft.VC140.CRT' to the main 
+        SerialEM directory.</li>
+    </ul>
     </basefont>
   </BODY>
 </HTML>
