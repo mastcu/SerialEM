@@ -3831,8 +3831,9 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
   GetNextLine(&mMacros[macNum], currentInd, name, true);
   if (name.Find("#!") != 0)
     return 0;
-   count = name.GetLength();
-  while (count > 1 && (name.GetAt(count - 1) == '\n') || (name.GetAt(count - 1) == '\r'))
+  count = name.GetLength();
+  while (count > 1 && (name.GetAt(count - 1) == '\n' || name.GetAt(count - 1) == '\r' ||
+    name.GetAt(count - 1) == ' '))
     count--;
   name = name.Mid(2, count - 2);
   mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
