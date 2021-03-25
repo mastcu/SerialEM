@@ -87,6 +87,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#flow_control">Flow Control Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#var_array">Variable and Array Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_control">Other Script Operation Control Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#python_only">FUnctions Available Only from Python</A><br>
       <A href="#camera_commands">Camera Commands</A>
       <BR>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#cam_control">Camera Control</A><br>
@@ -141,14 +142,15 @@
        </TR>
         <TR>
           <TD class="scriptcommand">Repeat</TD>
-          <TD>Place at end of script to repeat it</TD>
+          <TD>Place at end of script to repeat it.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Loop # [var]</TD>
           <TD>Loops the given <b>#</b> of times until EndLoop; optionally set <b>var</b> with index.&nbsp; 
               A loop count less than or equal to 0 is allowed and 
             will cause the loop to be skipped.&nbsp; If a script relying on this is liable 
-            to run on earlier versions, it should include the line 'Require zeroloop'.</TD>
+            to run on earlier versions, it should include the line 'Require zeroloop'.&nbsp; 
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DoLoop var #S #E [#I]</TD>
@@ -156,26 +158,26 @@
               The optional <b>#I</b> can be entered to set the increment, which is 1 by default.&nbsp; 
               If the starting index is already past the ending one, the loop will be skipped.&nbsp; 
               Integer values should be entered; non-integer values will be truncated to 
-              integers.</TD>
+              integers.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndLoop</TD>
-          <TD>Marks the end of a loop</TD>
+          <TD>Marks the end of a loop.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DoScript #<br />
             DoMacro #</TD>
-          <TD>Switches to given script <b>#</b></TD>
+          <TD>Switches to given script <b>#</b>./&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CallScript #<br />
             CallMacro #</TD>
-          <TD>Calls other script by <b>#</b> and returns</TD>
+          <TD>Calls other script by <b>#</b> and returns.&nbsp;&nbsp;&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Call text</TD>
           <TD>Calls other script by name. Names are case-sensitive and must match exactly,
-            including spaces</TD>
+            including spaces.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CallStringArray var [#E]</TD>
@@ -186,7 +188,7 @@
               numbered 1 to 5.&nbsp; The optional <b>#E</b> can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; If the script 
               depends on other temporary scripts, they can be loaded first with 
-              'StringArrayToScript'.</TD>
+              'StringArrayToScript'.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Function name [#N] [#S] [args]</TD>
@@ -194,11 +196,11 @@
             optional <b>#N</b> indicates the number of numeric arguments and <b>#S</b> is non-zero to
             indicate that a string argument occurs after the numeric ones.&nbsp; Optional 
             variable names can be provided for the arguments.&nbsp; Functions
-            must be placed at the ends of scripts.</TD>
+            must be placed at the ends of scripts.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndFunction</TD>
-          <TD>Required ending to a function definition.</TD>
+          <TD>Required ending to a function definition.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CallFunction name [args]</TD>
@@ -206,30 +208,32 @@
             to receive.&nbsp; If the name could occur in more than one script, it must be
             qualified with a script number or name, i.e. &#39;5::GoodFunc&#39; or &#39;Func
             Script::GoodFunc&#39;.&nbsp; The variable <i>functionName</i> is defined with the
-            name.</TD>
+            name.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">If expression</TD>
-          <TD>Starts a block that is executed conditionally on the value of 'expression'</TD>
+          <TD>Starts a block that is executed conditionally on the value of 'expression'.&nbsp; 
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Endif</TD>
-          <TD>Ends a block started with 'If'</TD>
+          <TD>Ends a block started with 'If'.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Elseif expression</TD>
           <TD>Inside of an If/Endif block, starts a block that is executed conditionally on
             the value of 'expression' if the expressions in the starting 'If' statement and
-            any preceding 'Elseif' statements were not true.</TD>
+            any preceding 'Elseif' statements were not true.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Else</TD>
           <TD>Inside of an If/Endif block, starts a block that is executed if the expression
-            after the 'If' and any preceding 'Elseif' commands is false</TD>
+            after the 'If' and any preceding 'Elseif' commands is false.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Break</TD>
-          <TD>Stops execution of the innermost Loop containing this statement</TD>
+          <TD>Stops execution of the innermost Loop containing this statement.&nbsp; Not from 
+            Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">KeyBreak [key]</TD>
@@ -240,13 +244,13 @@
         <TR>
           <TD class="scriptcommand">Continue</TD>
           <TD>Skips the rest of the current iteration of the innermost Loop containing this
-            statement</TD>
+            statement.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipTo label</TD>
           <TD>Skips forward to the line starting with the given label, where the label has a
             colon (:) at the end of it and is the only item on the line.&nbsp; The colon is
-            not included in the label in the 'SkipTo' statement.</TD>
+            not included in the label in the 'SkipTo' statement.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Try</TD>
@@ -254,23 +258,23 @@
             line after the following &#39;Catch&#39; statement instead of a message box appearing.&nbsp; 
             See <A HREF="about_scripts.htm#tryCatch">Error Handling and TRY - CATCH - ENDTRY Blocks</A>.
             
-          </TD>
+            &nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Catch</TD>
           <TD>Starts the block of commands that are run only when an error occurs or &#39;Throw&#39; 
-            statement is used inside the 'Try' portion of the block.</TD>
+            statement is used inside the 'Try' portion of the block.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndTry</TD>
-          <TD>Ends the block of commands run upon error.</TD>
+          <TD>Ends the block of commands run upon error.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Throw [text]</TD>
           <TD>Jumps to the 'Catch' section of the 'Try' block containing this statement, 
             adding the optional <b>text</b> to the message given in the log about the jump.
             
-          </TD>
+            &nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">OnStopCallFunc name</TD>
@@ -280,16 +284,23 @@
             or scripts (such calls will be skipped).&nbsp; The function will be called only 
             once, even if there is an error or STOP while it is running.&nbsp; The script 
             will be aborted (not left in a resumable state) when the end of the function is 
-            reached.&nbsp; </TD>
+            reached.&nbsp;&nbsp; Not from Python. </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Return</TD>
           <TD>Without executing to the end of the current script, returns to calling script or
-            ends execution if this is the top-level script</TD>
+            ends execution if this is the top-level script&nbsp; Not from Python.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Exit</TD>
-          <TD>Ends execution unconditionally</TD>
+          <TD class="scriptcommand">Exit [text]</TD>
+          <TD>Ends execution unconditionally and prints the optional <b>text</b> to the log.&nbsp; 
+            From a Python script, there are <i>two</i> optional arguments, and value then a 
+            string.&nbsp; The value should be 0 when exiting from normal code or 1 when exiting from
+            a Python exception.
+            From Python, called as Exit([exc], [text]) where optional <b>exc</b> must be positive 
+            when calling from an exception handler and 0 otherwise, and optional <b>text</b> will
+            be printed to the log.
+          </TD>
         </TR>
        <TR>
          <TD colspan="2"><A name="var_array"></A><B>Variable and Array Commands</B></TD>
@@ -342,7 +353,8 @@
           <TD class="scriptcommand">LocalVar var [var] ...</TD>
           <TD>Creates the listed variables as variables local to the current script or 
             function.&nbsp; They will not be accessible outside this script or function and 
-            will become undefined when returning from the script or function.</TD>
+            will become undefined when returning from the script or function.&nbsp; Not from 
+            Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LocalLoopIndexes</TD>
@@ -351,13 +363,13 @@
               as a loop index or other variable.&nbsp; If this feature is used, this 
               command should 
             be near the start of any script that may be started independently.&nbsp; Once 
-            the feature is invoked, it cannot be turned off.</TD>
+            the feature is invoked, it cannot be turned off.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NewArray var #T #E</TD>
           <TD>Creates a new variable with the name <b>var</b>, making it persistent or local if
                <b>#T</b> is 1 or -1, respectively, or a regular variable if <b>#T</b> is 0.&nbsp; The 
-            array is initialized with <b>#E</b> zeros.</TD>
+            array is initialized with <b>#E</b> zeros.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">New2DArray var [#T] [#R #E]</TD>
@@ -365,7 +377,7 @@
               local if <b>#T</b> is 1 or -1, respectively, or a regular variable if <b>#T</b> is 0.&nbsp; If
              the optional <b>#R</b> and <b>#E</b> are
                given, the array is initialized with <b>#R</b> rows of <b>#E</b> zeros each, where both
-               must be positive.</TD>
+               must be positive.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AppendToArray var item</TD>
@@ -374,14 +386,15 @@
                As with setting a variable, if there are multiple items on the line not 
               specified as an array, only the first item will be added, whereas if there 
               the multiple items are enclosed in '{ }', all items will be added to the 
-              array.</TD>
+              array.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">TruncateArray var #</TD>
           <TD>Truncates the given array variable <b>var</b> to <b>#</b> elements; <b>#</b> must be positive. For a
                1D array,&nbsp; the values is truncated to <b>#</b> elements; for a row of a 2D
                array,&nbsp; specified by var[row], the row of values is truncated; for a 
-              2D array given without a subscript, the number of rows is truncated to <b>#</b>.</TD>
+              2D array given without a subscript, the number of rows is truncated to <b>#</b>.&nbsp; 
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ArrayStatistics var</TD>
@@ -408,7 +421,7 @@
               to 5.&nbsp; A positive value <b>#E</b> can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; A negative value (-1 
               to -20) can be used to replace the script in one of the regular script positions 
-              that are editable and saved to settings.</TD>
+              that are editable and saved to settings.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="other_control"></A><B>Other Script Operation
@@ -419,21 +432,23 @@
             MacroName text</TD>
           <TD>Names the script to the given <b>text</b>, which can include spaces.&nbsp; The
             variable <i>scriptName</i> is defined with either this name, or "Script #n" if no name
-            has been defined, when the script is started running.
-          </TD>
+            has been defined, when the script is started running.&nbsp; Not called as a 
+            function from Python, but can be present as a comment.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LongName text</TD>
           <TD>A longer name to appear in the Run submenu of the Script menu; if this name is
             not defined, the regular name defined by ScriptName or MacroName appears there.&nbsp; The
-            variable <i>longName</i> is defined with this name when a script is started running.</TD>
+            variable <i>longName</i> is defined with this name when a script is started running. 
+            Not called as a function from Python, but can be present as a comment.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadOnlyUnlessAdmin</TD>
           <TD>Prevents changing the script in the script editor from this command to the end
             of the script, unless Administrator mode is 
             turned on in the Calibration menu.&nbsp; Place the command at the beginning of
-            script to make the whole script read-only.</TD>
+            script to make the whole script read-only. Not called as a function from Python, 
+            but can be present as a comment.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Delay # [units]</TD>
@@ -457,7 +472,8 @@
         <TR>
           <TD class="scriptcommand">EchoEval [text]</TD>
           <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating 
-            arithmetic expressions.&nbsp; Multiple spaces between words will be lost.</TD>
+            arithmetic expressions.&nbsp; Multiple spaces between words will be lost.&nbsp; Not 
+            from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EchoNoLineEnd text</TD>
@@ -477,7 +493,7 @@
           <TD class="scriptcommand">EchoNoVarSub [text]</TD>
           <TD>Prints the <b>text</b> verbatim to the log window including initial extra spaces, 
             or a blank line if there is 
-            no text, without substituting variables.&nbsp; Command added in 4.9, 1/8/21.</TD>
+            no text, without substituting variables.&nbsp; Not from Python.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Pause [text]</TD>
@@ -536,7 +552,7 @@
             up at the spaces.&nbsp; Follow with a 0 to turn off such parsing.&nbsp; The best 
             use of this feature would be for making an array of strings in a single 
             statement that encloses the entries with braces.&nbsp; It also allows a string 
-            to be assigned to a variable without using '@='. </TD>
+            to be assigned to a variable without using '@='. &nbsp; Not from Python.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">FlashDisplay [#T] [#D] [rgb]</TD>
@@ -631,7 +647,8 @@
             evaluated in arguments to some commands.&nbsp; 6) Scripting version 201, which 
             means commands can be continued onto multiple lines with backslash.&nbsp; 
               7) Scripting version 202, which means that limited arithmetic can be done in 
-              array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.</TD>
+              array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.&nbsp; 
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsVersionAtLeast #V [#D]</TD>
@@ -659,18 +676,36 @@
             or a single number or variable value and stores whether the test passed (i.e., 
             if the expression is true or if the number is non-zero) internally, as well as 
             storing a 1 for success or 0 for failure in <I>reportedValue1</I> and a variable 
-            <i>TestResult</i></TD>
+            <i>TestResult. &nbsp; </i>Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PauseIfFailed [text]</TD>
           <TD>If the last &#39;Test&#39; command failed, this command opens a message box with the 
             optional text plus the question of whether to proceed with the script, even if 
-            NoMessageBoxOnError is set.</TD>
+            NoMessageBoxOnError is set.&nbsp; Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AbortIfFailed [text]</TD>
           <TD>If the last &#39;Test&#39; command failed, this command opens a message box with the 
-            optional text (unless NoMessageBoxOnError; is set) and aborts the script.</TD>
+            optional text (unless NoMessageBoxOnError; is set) and aborts the script.&nbsp; Not 
+            from Python.</TD>
+        </TR>
+        <TR>
+         <TD colspan="2"><A name ="#python_only"></A><B>Functions Available Only from Python</B></TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetVariable(var, value)</TD>
+          <TD>Sets variable <B>var</B> within SerialEM scripting with <b>value</b>, which 
+            must be a string.  A one-dimensional array variable can be passed by separating 
+            each value with newlines ('\n').</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetPersistentVariable(var, value)</TD>
+          <TD>Like SetVariable, but sets it as a persistent variable.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetVariable(var)</TD>
+          <TD>Returns the value of a variable <b>var</b> as string within a 1-element tuple.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -1291,7 +1326,7 @@
         </TR>
 
         <TR>
-          <TD class="scriptcommand">SetDoseAdjustmentFactor</TD>
+          <TD class="scriptcommand">SetDoseAdjustmentFactor #</TD>
           <TD>Sets a factor for adjusting the exposure dose and frame doses stored in an 
             .mdoc file for an image.&nbsp; Set to 0 to eliminate the adjustment; the 
             factor will be reset to 0 when the script ends.&nbsp; Command added in 3.9, 

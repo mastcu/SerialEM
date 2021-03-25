@@ -153,6 +153,7 @@ public:
   GetMember(bool, SuspendNavRedraw);
   GetMember(bool, DeferLogUpdates);
   GetMember(bool, LoopInOnIdle);
+  GetMember(bool, RunningScrpLang);
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };

@@ -41,10 +41,32 @@
     <P>Another consequence of typing Tab or ` anywhere on the line is that the editor 
       will set the indentation of the current line based on the indentation of the 
       previous line, whether the previous line starts a block (i.e., with If, Else, 
-      Elseif, Loop, or Function), and whether the current line ends such a block.&nbsp; 
-      The amount of additional space in a block can be controlled with the
+      Elseif, Loop, or Function), whether the current line ends such a block, and 
+      whether it is a continuation line.&nbsp; 
+      The amount of additional space in a block or for continuation lines can be controlled with the
       <a href="menu_script.htm#hid_script_setindentsize">Set Indent Size</a> command in 
-      the Scipt menu.</P>
+      the Script menu.</P>
+    <P><strong>Behavior for Python scripts</strong> - If a script starts with 
+      &quot;#!Pyth&quot;, the editor scans the start of the script to see how the serialem 
+      module is imported, stopping at the first line that is neither a comment nor an 
+      import line.&nbsp; This determines what prefix it expects to find before 
+      commands: either no prefix if you import as &#39;from serialem import *&#39;, prefix 
+      &#39;serialem&#39; if you use &#39;import serialem&#39;, or the alias if you import with an 
+      alias, such as &#39;import serialem as sem&#39;.&nbsp; When you type the completion 
+      character, it looks back to the beginning of the word to see if there is already 
+      a namespace prefix.&nbsp; If so, and it does not match the expected prefix, it 
+      will not attempt to complete the word, just manage indentation.&nbsp; If it does 
+      match or is not present, then it will try to complete the word unless it is a 
+      Python keyword, and insert the prefix if appropriate.&nbsp; For example, if you 
+      use &#39;import serialem&#39; and type the completion character after &#39;choo&#39;, it will 
+      insert &#39;serialem.ChooserForNewFile&#39;.</P>
+    <P>Completion works both at the beginning of the line and for a word after an &#39;=&#39;.</P>
+    <P>Indentation will follow the indentation of the previous line, adding a unit of 
+      indentation if that line ends in &#39;:&#39;.&nbsp; However, there is no way for it to 
+      tell when to remove indentation, as there is with regular scripting.&nbsp; One 
+      helpful feature is available if you leave a blank line after the end of a block.&nbsp; 
+      Typing the completion character more that once will make it toggle between the 
+      indentation of the previous line and one less unit of indentation.</P>
     <P>The buttons below the text area perform the following functions:</P>
     <P><B>Run button - </B>will save the script in program memory and run it.&nbsp; 
       Pressing Ctrl-Enter within the editing window will also run the script.</P>

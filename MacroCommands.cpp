@@ -227,7 +227,8 @@ void CMacCmd::TaskDone(int param)
         mItem1upper = mStrItems[1];
         mItem1upper.MakeUpper();
         mScrpLangData.waitingForCommand = 0;
-        ClearVariables(VARTYPE_REPORT);
+        if (mCmdIndex != CME_GETVARIABLE)
+          ClearVariables(VARTYPE_REPORT);
 
         // Call the function in the command list
         err = (this->*cmdList[mCmdIndex].func)();
