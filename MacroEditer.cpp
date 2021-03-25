@@ -637,7 +637,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     saveStart = -1;
     for (lineStart = sel2 - 1; lineStart > 0; lineStart--) {
       ch = strMacro.GetAt(lineStart - 1);
-      if (ch == '\n' || ch == '\r' || (isPython && ch == '='))
+      if (ch == '\n' || ch == '\r')
         break;
 
       // Save the position of the first character after white space
@@ -762,7 +762,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
       substr = CString(cmdList[matchList[0]].mixedCase);
       lenMatch = substr.GetLength() + 1;
       if (!hasSpace)
-        substr += B3DCHOICE(isPython, "()", " ");
+        substr += B3DCHOICE(isPython, cmdList[matchList[0]].minargs ? "(" : "()", " ");
     }
     if (needsNamespace) {
       substr = importName + "." + substr;

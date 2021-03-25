@@ -73,7 +73,7 @@ int CPluginManager::LoadPlugins(void)
 {
   CString path, exePath, plugPath = mWinApp->mDocWnd->GetPluginPath();
   CFileStatus status;
-  CString mess, typeStr, pythonList;
+  CString mess, typeStr;
   WIN32_FIND_DATA FindFileData;
   HANDLE hFind = NULL;
   HMODULE module;
@@ -87,7 +87,7 @@ int CPluginManager::LoadPlugins(void)
   CamPluginFuncs *cfuncs;
   char fullPath[MAX_PATH + 10];
   const char *namep, *actionp;
-  int numFuncs = 0, err = 0, flags, i, j, dirLoop = 0, numPython = 0;
+  int numFuncs = 0, err = 0, flags, i, j, dirLoop = 0;
   double dum1, dum2, dum3, dum4;
   bool twoScopes = false;
   int action = LOG_SWALLOW_IF_CLOSED;
@@ -313,14 +313,6 @@ int CPluginManager::LoadPlugins(void)
           delete newPlug;
           AfxFreeLibrary(module);
         } 
-        mess = newPlug->shortName;
-        mess.MakeUpper();
-        if (mess.Left(4) == "PYTH") {
-          if (numPython)
-            pythonList += ", ";
-          numPython++;
-          pythonList += newPlug->shortName;
-        }
       }
       
       // Get piezo plugin functions
@@ -404,11 +396,6 @@ int CPluginManager::LoadPlugins(void)
   }
   if (twoScopes)
     mScopePlugIndex = -1;
-  if (numPython) {
-    mess.Format("Python scripting available through %s named %s",
-      numPython > 1 ? "plugins" : "a plugin", (LPCTSTR)pythonList);
-    mWinApp->AppendToLog(mess);
-  }
   
   return (int)mPlugins.GetSize();
 }

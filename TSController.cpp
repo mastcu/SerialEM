@@ -4946,8 +4946,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
       }
     }
     valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
-      (macProc->GetTryCatchLevel() > 0 || macProc->GetRunningScrpLang())) ? 
-      "ERROR" : "STOPPING");
+      macProc->GetTryCatchLevel() > 0) ? "ERROR" : "STOPPING");
     mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
     mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     return retval;

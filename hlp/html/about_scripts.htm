@@ -35,7 +35,6 @@
     <A HREF="#functions">Defining and Calling Functions</A><br>
     <A HREF="#tryCatch">Error Handling and TRY - CATCH - ENDTRY Blocks</A><br>
     <A HREF="#examples">Advanced Examples</A><br>
-    <A HREF="#Python">Scripting with Python</A><br>
     </P>
     <P><A NAME="intro"></A><B>Introduction</B></P>
     <P>A script is a sequence of commands that SerialEM can execute. A script can perform 
@@ -43,12 +42,9 @@
       tilting, autofocusing, autoaligning, and saving images. In addition, there are 
       many commands for other actions such as moving the stage or changing 
       magnification or defocus.
-      Most of this document describes how to use SerialEM&#39;s built-in scripting 
-      language.&nbsp; Scripts can also be written in Python if you have a Python 
-      interface plugin to SerialEM and a matching Python installation is on the system 
-      path.</P>
+    </P>
     <P>Scripts were called 'macros' until SerialEM 3.6.&nbsp; You may still see the 
-      term 'macro' used in various places, or in older scripts, or in the source code.</P>
+      term 'macro' used in various places, or in older scripts.</P>
     <P>Scripts can automatically repeat themselves and they can contain internal loops 
       that are executed a specified number of times. One script can call another like 
       a subroutine; when the second script finishes, the next command in the calling 
@@ -765,107 +761,6 @@
       p1b @= this could be rewarding but dangerous<br />
       prompt1 = { $p1a $p2a }
     </P>
-    <P><A NAME="Python"></A><B>Scripting with Python</B></P>
-    <p>
-      <strong><em>Initial lines:</em>&nbsp; </strong>A python script must start with '#!' and at least the first 4 letters of the 
-      internal name of the plugin.&nbsp; This is not the plugin's filename but rather 
-      what the log says it is 'named' when starting up.&nbsp; There can be multiple Python plugins loaded, which should 
-      have version numbers in their names.&nbsp; If you start with '#!Python' it will 
-      use the first loaded version; if you start with, e.g., '#!Python3.6' it will use 
-      only a plugin whose name is 'Python3.6'.</p>
-    <p>
-      The starting lines of the script are scanned for import lines and special 
-      comments; this scanning stops at the first line that is neither an import nor a 
-      comment.&nbsp; In these starting lines you must include these items:</p>
-    <ul>
-      <li>An import of the serialem module.&nbsp; This can be in three forms:
-        <br />&nbsp; import serialem
-        <br />&nbsp; import serialem as sem&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(or other alias of your choice)
-        <br />&nbsp; from serialem import *
-        <br />The recommended programming practice is to use 'import serialem' with a convenient 
-        alias like 'sem', although in a complicated script using other modules it might 
-        be better not to have an alias.&nbsp; The third form should probably be reserved 
-        for quick, private scripting.</li>
-      <li>A script name if desired or needed, entered in a comment:
-        <br />&nbsp; #ScriptName name
-        <br />The older 'MacroName' works as well.&nbsp; One of these entries is needed in a script 
-        to be included in another script.&nbsp; '#LongName' can also be included in these lines
-         to specify a long name for the script.
-      </li>
-      <li>Other scripts to be included at this point in this script, specified by their 
-        names:<br /> #include name
-        <br />If another script would never be run on its own, it need not start with '#!Python'; such 
-        entries are ignored in any included script.
-      </li>
-    </ul>
-      <p>
-        You can of course import any other modules available within the Python 
-        installation; these imports need not be in the initial lines.</p>
-    <p>
-      The same kind of scanning is done by the script editer, see the section on
-      <strong><a href="hidd_macro.htm">Behavior for Python scripts</a>.</strong></p>
-      <p><em><strong>Calling script commands as functions:</strong></em> About 90% of SerialEM's script commands 
-        are accessible from the serialem module by calling them as functions, with the 
-        arguments in the same order as used in SerialEM scripting and shown in the help.&nbsp; 
-        The name must be the mixed case command name shown in the help and provided when 
-        using completion in the script editor.&nbsp; Required arguments come first, followed by optional ones.&nbsp; For example:
-        <br />&nbsp; sem.Autoalign()
-        <br />&nbsp; sem.AlignTo('P')
-        <br />&nbsp; sem.AlignTo('P', 1, 1)
-        <br />&nbsp; sem.CropImage('A', 100, 700, 200, 600)
-        <br />&nbsp; sem.FocusChangeLimits(-10., 5.)
-        <br />&nbsp; (isx, isy) = sem.ReportImageShift()
-        </p>
-    <p>There is type checking in the function calls: string arguments must be strings, 
-      integer arguments must be integers, and floating point arguments must be numeric 
-      (with or without a decimal point).&nbsp; A failure to have the right types will 
-      lead to an exception and a traceback in the SerialEM log.&nbsp; Any argument 
-      that the help indicates must be or can be text needs to be passed as a string.&nbsp; 
-      It should be fairly obvious from the help which arguments are integers: they are 
-      indexes of various kinds, simple 0 or non-zero entries to specify options, or 
-      more elaborate enumerated entries.&nbsp; If in doubt, consult 
-      <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/PythonArgTypes.txt">
-            http://bio3d.colorado.edu/ftp/SerialEM/Scripts/PythonArgTypes.txt</a>.</p>
-    <p>The return value from a script is either None, if it sets no reported values, 
-      or a tuple with all of the reported values that were set.&nbsp; Because the 
-      number of values is somewhat unpredictable, this is a tuple even when there is 
-      only one, and you may need to test how many values are there in some cases.&nbsp; 
-      Numeric values are returned as floating point, other values are returned as 
-      strings.&nbsp; If it is not clear from the help which to expect, test before 
-      using, such as with 'isinstance(val[0], str)'.&nbsp; Reported values are cleared 
-      before the next command, unlike in SerialEM scripts, so if you need to fetch one 
-      after a command, it can only be done with 'GetVariable' immediately after the 
-      command, and this will always return a string.</p>
-    <p>There is one exception to the match between arguments: 'Exit'.&nbsp; From SerialEM, 
-      this takes an optional string which is printed to the log.&nbsp; From Python, 
-      the first argument is an optional integer which should be positive when calling 
-      from an exception, 0 otherwise, and the second argument can be a multi-line text 
-      string.&nbsp; Lines should be separated by '\r\n' to print properly in the log.&nbsp; </p>
-    <p><strong><em>Errors and exceptions:&nbsp;</em></strong> An error within a 
-      SerialEM operation will generate an exception of type 'SEMerror'.&nbsp; The 
-      namespace is optional here because a script wrapper imports this name.&nbsp; You 
-      can catch this exception in a 'try - except' block.&nbsp; The message from the 
-      error should be available If appropriate, you can deal with problem and let the 
-      script continue, but a message box with SerialEM's text will come up as usual 
-      you first call 'NoMessageBoxOnError'.&nbsp; If you do call this, there will be 
-      the same kind of 'SCRIPT ERROR' output to the log as when an error occurs within 
-      a 'Try - Catch' block in SerialEM scriping.</p>
-    <p>You can also catch Python exceptions and handle them.&nbsp; If you do not catch 
-      these or SEMMerror exceptions, they will be caught by the script wrapper and 
-      result in script termination plus a traceback or message in the log.&nbsp; 
-      Parsing errors in the script will also be reported in the log.&nbsp; 'sys.exit' 
-      can be used if desired; it will be intercepted and terminate the script without 
-      killing SerialEM.</p>
-    <strong><em>Installation options:&nbsp; </em></strong>There must be at least one 
-    Python installation.&nbsp; A plugin is built against a specific version or 
-    Python, and it will load if the numbered python .dll (e.g., 'python36.dll') for 
-    that version is located either on the system path or in the directory with 
-    SerialEM.exe (at least for versions past 3.4).&nbsp; It is not necessary to put 
-    the Python installation itself on the path if one copies the .dll to either 
-    somewhere on the path or to the SerialEM directory.&nbsp; Plugin versions past 
-    3.4 are build with the Visual Studio 2015 compilers instead of the 2008 
-    compilers and may require the 'v140' libraries to be present in the SerialEM 
-    directory.</p>
     </basefont>
   </BODY>
 </HTML>

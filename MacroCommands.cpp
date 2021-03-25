@@ -227,8 +227,7 @@ void CMacCmd::TaskDone(int param)
         mItem1upper = mStrItems[1];
         mItem1upper.MakeUpper();
         mScrpLangData.waitingForCommand = 0;
-        if (mCmdIndex != CME_GETVARIABLE)
-          ClearVariables(VARTYPE_REPORT);
+        ClearVariables(VARTYPE_REPORT);
 
         // Call the function in the command list
         err = (this->*cmdList[mCmdIndex].func)();
@@ -4983,6 +4982,26 @@ int CMacCmd::ReduceImage(void)
     cReport += " in statement:\n\n";
     ABORT_LINE(cReport);
   }
+  return 0;
+}
+
+// Rotate90CW
+int CMacCmd::Rotate90CW(void)
+{
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+    ABORT_LINE(cReport);
+  mWinApp->mMainView->SetImBufIndex(cIndex);
+  mProcessImage->RotateImage(FALSE);
+  return 0;
+}
+
+// Rotate90CCW
+int CMacCmd::Rotate90CCW(void)
+{
+  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
+    ABORT_LINE(cReport);
+  mWinApp->mMainView->SetImBufIndex(cIndex);
+  mProcessImage->RotateImage(TRUE);
   return 0;
 }
 

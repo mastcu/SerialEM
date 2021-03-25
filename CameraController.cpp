@@ -3954,8 +3954,6 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
   mSetDeferredSize = false;
-  if (mNextFrameSkipThresh < 0)
-    mNextFrameSkipThresh *= -conSet.frameTime;
   aligning = (mParam->K2Type || frameCapableOneView) && conSet.doseFrac &&
     conSet.alignFrames && (conSet.useFrameAlign == 1 ||
     (conSet.useFrameAlign && conSet.saveFrames && 
@@ -4656,10 +4654,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       alignFlags |= K2_ASYNC_IN_RAM;
     } else
       frameInRAM = 0.;
-
-    // When saving, the grab stack helps it keep up, but it doesn't seem to be needed
-    // when aligning on K3
-    if (mNextAsyncSumFrames >= 0 && (mNextFrameSkipThresh <= 0. ||
+    if (mNextAsyncSumFrames >= 0 && (mNextFrameSkipThresh <= 0. || 
       (mTD.DoingTiltSums && saving))) {
       numGrab = B3DMIN(numFrames, maxInRAM);
       numAsyncSum += 65536. * numGrab;
