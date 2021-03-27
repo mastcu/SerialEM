@@ -604,7 +604,7 @@
             followed by a filename including &#39;*&#39; to match multiple names.&nbsp; If
              just a directory is entered, the program appends a &#39;*&#39;.&nbsp; If a file
              is found, it returns 1 in <I>reportedValue1</I> and the filename in <I>reportedValue2</I>;
-            otherwise it returns 0 in <I>reportedValue1</I>.&nbsp; A file is ignored if a file with the same 
+            otherwise it returns 0 and 'none'.&nbsp; A file is ignored if a file with the same 
             name plus &#39;.lock&#39; is found as well.&nbsp; Thus, if there is a risk that a file
             might not all be present when SerialEM first sees it, the program creating the file
             should create the &#39;.lock&#39; file (which can be empty), then create and finish
@@ -622,7 +622,8 @@
           <TD class="scriptcommand">RunScriptInWatchedDir pattern</TD>
           <TD>Looks for a file matching the given <b>pattern</b>, like &#39;GetFileInWatchedDir&#39;,
             and reads the file, places its contents in an extra script position, removes the file,
-            and runs that script. &nbsp;As for &#39;GetFileInWatchedDir&#39;, a &#39;.lock&#39; 
+            and runs that script. &nbsp;It sets <I>reportedValue1</I> and <I>2</I> just as 
+            for 'GetFileInWatchedDir'. &nbsp;As for &#39;GetFileInWatchedDir&#39;, a &#39;.lock&#39; 
             file can be used to avoid the risk that the file is not complete when SerialEM 
             sees it.</TD>
         </TR>
@@ -696,16 +697,24 @@
         <TR>
           <TD class="scriptcommand">SetVariable(var, value)</TD>
           <TD>Sets variable <B>var</B> within SerialEM scripting with <b>value</b>, which 
-            must be a string.  A one-dimensional array variable can be passed by separating 
-            each value with newlines ('\n').</TD>
+            must be a string.&nbsp; A one-dimensional array variable can be passed by separating 
+            each value with newlines ('\n').&nbsp; Variable names are stored as upper case within
+             SerialEM, so all variable specifications are case-insensitive.</TD>
         </TR>
        <TR>
-          <TD class="scriptcommand">SetPersistentVariable(var, value)</TD>
+          <TD class="scriptcommand">SetPersistentVar(var, value)</TD>
           <TD>Like SetVariable, but sets it as a persistent variable.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetFloatVariable(var, value[, #p])</TD>
+          <TD>Sets variable <B>var</B> within SerialEM scripting with <b>value</b>, which 
+            must be numeric, and sets it as a persistent variable if the optional <b>#p</b> is
+            non-zero.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetVariable(var)</TD>
-          <TD>Returns the value of a variable <b>var</b> as string within a 1-element tuple.</TD>
+          <TD>Returns the value of a variable <b>var</b> as string or floating point value, depending
+             on whether the variable was designated as numeric when it was stored</TD>
         </TR>
       </TABLE>
       <BR>
@@ -1126,8 +1135,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportFrameTiltSum</TD>
-          <TD>Reports: 0 if there is a tilt sum or 1 of there is not, the tilt angle, the tilt 
-            index (numbered from 0), the number of frames in the sum, and the starting and ending frame 
+          <TD>Reports: 0 if there is a tilt sum or 1 of there is not, the tilt angle or 0 if
+             there is no tilt sum, the tilt index (numbered from 0), the number of frames in 
+            the sum, and the starting and ending frame 
             number after getting a deferred tilt sum from a frame tilt series.</TD>
         </TR>
         <TR>
@@ -1454,7 +1464,7 @@
         <TR>
           <TD class="scriptcommand">ReportMeanCounts [buf] [#]</TD>
           <TD>Reports the mean counts of the A buffer, or of the buffer indicated by <b>buf</b>;
-            add a 1 as <b>#</b> to get unbinned counts per second, or add a 2 as <b>#</b> to get
+            add a 1 as <b>#</b> to get unbinned counts per second instead, or add a 2 as <b>#</b> to get
             a report of mean, standard deviation, minimum and maximum.&nbsp; No optional 
             assignment to variables.</TD>
         </TR>
@@ -1817,8 +1827,8 @@
         <TR>
           <TD class="scriptcommand">ReportFrameBaseName</TD>
           <TD>Reports the base name if one is included in frame file names; sets 
-              <I>reportedValue1</I> to 1 if it is included and 0 if not, and if it is included, sets 
-              <I>reportedValue2</I> to the base name.</TD>
+              <I>reportedValue1</I> to 1 if it is included and 0 if not, and sets 
+              <I>reportedValue2</I> to the base name if it is included or 'none' if it is not.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="textfile"></A><B>Text File Commands</B></TD>
@@ -3398,7 +3408,7 @@
           <TD class="scriptcommand">ReportNextNavAcqItem</TD>
           <TD>Reports similarly on the next Navigator item to be acquired.&nbsp; The 
             Navigator must be acquiring.&nbsp; If the last item is being acquired, navIndex 
-            is set to -1.</TD>
+            is set to -1, and <i>reportedValue1</i> and <i>2</i> are set to -1 and 0.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportGroupStatus</TD>
@@ -4041,7 +4051,7 @@
         <TR>
           <TD class="scriptcommand">ReportEnvironVar name</TD>
           <TD>Reports whether the environment variable given by <b>name</b> exists in <i>reportedValue1</i>
-            and if so, its value in <I>reportedValue2</I>.&nbsp; The name must be a single word
+            and its value in <I>reportedValue2</I> if so or 'none' if not.&nbsp; The name must be a single word
              without spaces.&nbsp; Command added in 4.9, 1/8/21.
           </TD>
         </TR>

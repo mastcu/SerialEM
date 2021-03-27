@@ -35,6 +35,9 @@
 // Real commands that can be included in a SerialeEM script start with Exit - keep that
 // as the first such one!
 //
+// New commands must be added at the end or they will break existing Python plugins, 
+// new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
+//
 // The longest command name is now 25 characters but 23 is a more common limit
 
 MAC_SAME_NAME(ScriptEnd, 0, 0, SCRIPTEND)
@@ -591,7 +594,11 @@ MAC_SAME_NAME_NOARG(ReportPiezoXY, 0, 0, REPORTPIEZOXY)
 MAC_SAME_NAME_NOARG(ReportPiezoZ, 0, 0, REPORTPIEZOZ)
 MAC_SAME_NAME_ARG(MovePiezoXY, 2, 1, MOVEPIEZOXY, DDi)
 MAC_SAME_NAME_ARG(MovePiezoZ, 1, 1, MOVEPIEZOZ, Di)
+MAC_SAME_FUNC_ARG(SetFloatVariable, 2, 0, SetVariableCmd, SETFLOATVARIABLE, SDi)
 
+// new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
+//
+// The longest command name is now 25 characters but 23 is a more common limit
 
 //Undefine ALL the macros to ready it for the next use
 #undef MAC_DIFF_NAME

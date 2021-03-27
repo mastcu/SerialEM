@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/26/21: Improvements and changes in behavior for Python support; new plugins
+available.
+
 3/23/21: Python scripting now works, with plugins available.
 
 3/22/21: Fixed dose-symmetric series in STEM mode to stop saving, restoring,

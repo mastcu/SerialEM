@@ -73,6 +73,7 @@ static char THIS_FILE[]=__FILE__;
 
 ScriptLangData CMacroProcessor::mScrpLangData;
 ScriptLangPlugFuncs *CMacroProcessor::mScrpLangFuncs = NULL;
+std::set<int> CMacroProcessor::mPythonOnlyCmdSet;
 
 static int sProcessExitStatus;
 static int sProcessErrno;
@@ -147,6 +148,8 @@ CMacroProcessor::CMacroProcessor()
     , "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
     "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT",
     "TRY", "CATCH", "ENDTRY", "THROW"};
+  int pythonOnlyCmds[] = {CME_SETVARIABLE, CME_SETPERSISTENTVAR, CME_GETVARIABLE,
+  CME_SETFLOATVARIABLE};
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
@@ -164,6 +167,8 @@ CMacroProcessor::CMacroProcessor()
   mReservedWords.insert(tmpOp1, tmpOp1 + sizeof(tmpOp1) / sizeof(std::string));
   mReservedWords.insert(tmpOp2, tmpOp2 + sizeof(tmpOp2) / sizeof(std::string));
   mReservedWords.insert(keywords, keywords + sizeof(keywords) / sizeof(std::string));
+  mPythonOnlyCmdSet.insert(pythonOnlyCmds, pythonOnlyCmds + sizeof(pythonOnlyCmds) / 
+    sizeof(int));
   mMaxCmdToLoopOnIdle = 100;
   mMaxSecToLoopOnIdle = 1.;
   mDoingMacro = false;
@@ -773,7 +778,7 @@ int CMacroProcessor::TaskBusy()
     SEMTrace('[', "thread done %d", tbusy);
     mScrpLangData.threadDone = tbusy ? 1 : -1;
     if (tbusy && mScrpLangData.gotExceptionText)
-      mWinApp->AppendToLog(mScrpLangData.strItems[0]);
+      EnhancedExceptionToLog(mScrpLangData.strItems[0]);
     return 0;
   }
 
@@ -982,6 +987,7 @@ void CMacroProcessor::RunOrResume()
   mScrpLangData.threadDone = 0;
   mScrpLangData.errorOccurred = 0;
   mScrpLangData.exitedFromWrapper = false;
+  mLastPythonErrorLine = -1;
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
@@ -1595,6 +1601,10 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   int *oldNumElemPtr;
   CString *oldValuePtr;
   CString temp;
+  bool isNumeric = type >= VARTYPE_ADD_FOR_NUM;
+  if (isNumeric)
+    type -= VARTYPE_ADD_FOR_NUM;
+
   name.MakeUpper();
   if (name[0] == '$' || value[0] == '$') {
     if (errStr)
@@ -1651,6 +1661,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     var->value = value;
     var->numElements = numElements;
     var->type = type;
+    var->isNumeric = isNumeric;
     var->callLevel = mCallLevel;
     var->index = index;
     var->definingFunc = mCallFunction[mCallLevel];
@@ -1687,6 +1698,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     return true;
   }
 
+  var->isNumeric = false;
   if (leftInd > 0) {
     oldNumElemPtr = &var->numElements;
     oldValuePtr = &var->value;
@@ -1738,6 +1750,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     // Regular assignment to variable value
     var->value = value;
     var->numElements = numElements;
+    var->isNumeric = isNumeric;
   }
 
   // If value is empty, remove a persistent variable
@@ -2821,6 +2834,7 @@ void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
   double value, int index)
 {
   CString num, str;
+  int typeAdd = valStr ? 0 : VARTYPE_ADD_FOR_NUM;
   if (index < 1 || index > 6)
     return;
   num.Format("%d", index);
@@ -2836,10 +2850,10 @@ void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
     ClearVariables(VARTYPE_REPORT);
   mScrpLangData.reportedStrs[index - 1] = str;
   ACCUM_MAX(mScrpLangData.highestReportInd, index - 1);
-  SetVariable("REPORTEDVALUE" + num, str, VARTYPE_REPORT, index, true);
-  SetVariable("REPVAL" + num, str, VARTYPE_REPORT, index, true);
+  SetVariable("REPORTEDVALUE" + num, str, VARTYPE_REPORT + typeAdd, index, true);
+  SetVariable("REPVAL" + num, str, VARTYPE_REPORT + typeAdd, index, true);
   if (strItems && !strItems[index - 1].IsEmpty())
-    SetVariable(strItems[index - 1], str, VARTYPE_REGULAR, -1, false);
+    SetVariable(strItems[index - 1], str, VARTYPE_REGULAR + typeAdd, -1, false);
 }
 
 // Overloads for convenience
@@ -3245,7 +3259,8 @@ int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex
   int i = cmdIndex;
   CString errmess;
 
-  if (cmdIndex == CME_NOTFOUND || (cmdIndex >= 0 && cmdIndex < CME_EXIT))
+  if (cmdIndex == CME_NOTFOUND || (cmdIndex >= 0 && cmdIndex < CME_EXIT) ||
+    mPythonOnlyCmdSet.count(cmdIndex))
     return 1;
 
   if (strItems[mCmdList[i].minargs].IsEmpty()) {
@@ -3824,18 +3839,20 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
 int CMacroProcessor::CheckForScriptLanguage(int macNum)
 {
   bool isPython;
+  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
+  CString indentStr;
 
   // Test for scripting language
-  int currentInd = 0, includeInd, count;
-  CString name;
-  GetNextLine(&mMacros[macNum], currentInd, name, true);
-  if (name.Find("#!") != 0)
+  int currentInd = 0, includeInd, count, length = mMacros[macNum].GetLength();
+  CString name, line;
+  GetNextLine(&mMacros[macNum], currentInd, line, true);
+  if (line.Find("#!") != 0)
     return 0;
-  count = name.GetLength();
-  while (count > 1 && (name.GetAt(count - 1) == '\n' || name.GetAt(count - 1) == '\r' ||
-    name.GetAt(count - 1) == ' '))
+  count = line.GetLength();
+  while (count > 1 && (line.GetAt(count - 1) == '\n' || line.GetAt(count - 1) == '\r' ||
+    line.GetAt(count - 1) == ' '))
     count--;
-  name = name.Mid(2, count - 2);
+  name = line.Mid(2, count - 2);
   mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
   if (!mScrpLangFuncs) {
     SEMMessageBox("There is no scripting language plugin loaded whose\n"
@@ -3853,29 +3870,73 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
 
   // Determine if python and start wrapper
   mMacroForScrpLang = "";
+  mLineInSrcMacro.clear();
+  mIndexOfSrcLine.clear();
+  mMacNumAtScrpLine.clear();
+  mMacStartLineInScrp.clear();
   name.MakeLower();
   isPython = name.Find("pyth") == 0;
-  if (isPython) 
+  if (isPython) {
     mMacroForScrpLang = "from serialem import SEMexited, SEMerror\r\n"
-    "try:\r\n";
+      "from serialem import Echo as SEMecho\r\n"
+      "def print(a1, a2 = None, a3 = None, a4 = None, a5 = None, a6 = None, \r\n"
+      "    a7 = None, a8 = None, a9 = None, a10 = None):\r\n"
+      "  out = ''\r\n"
+      "  for arg in (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10):\r\n"
+      "    if arg != None:\r\n"
+      "      out += str(arg) + ' '\r\n"
+      "  SEMecho(out)\r\n"
+      "try:\r\n";
+    for (ind = 0; ind < 10; ind++) {
+      mLineInSrcMacro.push_back(-1);
+      mIndexOfSrcLine.push_back(-1);
+    }
+    for (ind = 0; ind < 2; ind++)
+      indentStr += ' ';
+  }
 
-  // Now look for includes and build up the string, indenting for python
-  for (;;) {
-    GetNextLine(&mMacros[macNum], currentInd, name, true);
+  // Setup first block of actual script and add the first line
+  mMacNumAtScrpLine.push_back(macNum);
+  mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
+
+  mIndexOfSrcLine.push_back(0);
+  mLineInSrcMacro.push_back(lineNum++);
+  mMacroForScrpLang += indentStr + line;
+
+  // Now build up the string, indenting for python and inserting any #include scripts in
+  // place
+  while (currentInd < length) {
+    mIndexOfSrcLine.push_back(currentInd);
+    mLineInSrcMacro.push_back(lineNum++);
+    GetNextLine(&mMacros[macNum], currentInd, line, true);
+    mMacroForScrpLang += indentStr + line;
+
+    // Keep track of the first non-blank line so that the "maybe" statements can be
+    // added to tracebacks
+    name = line.Trim(" \n\r");
+    if (firstRealLine < 0 && !name.IsEmpty() && name.GetAt(0) != '#')
+      firstRealLine = (int)mLineInSrcMacro.size() - 1;
+
+    if (name.IsEmpty())
+      continue;
     if (name.Find("#include") != 0)
-      break;
+      continue;
     includeInd = FindCalledMacro(name.Mid(1), true);
     if (includeInd < 0)
       return 1;
-    if (isPython)
-      IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, 2);
-    else
-      mMacroForScrpLang += mMacros[includeInd];
+
+    // Finish the previous block, set up new block for include and add it in
+    mFirstRealLineInPart.push_back(firstRealLine);
+    mMacNumAtScrpLine.push_back(includeInd);
+    mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
+    IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, indentStr);
+
+    // Start new block of main script
+    mMacNumAtScrpLine.push_back(macNum);
+    mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
+    firstRealLine = -1;
   }
-  if (isPython)
-    IndentAndAppendToScript(mMacros[macNum], mMacroForScrpLang, 2);
-  else
-    mMacroForScrpLang += mMacros[macNum];
+  mFirstRealLineInPart.push_back(firstRealLine);
 
   // Catch exceptions at end
   if (isPython) {
@@ -3901,17 +3962,112 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
   return -1;
 }
 
-// Copy lines from source to copy, indenting by indent
-void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy, int indent)
+// Copy lines from source to copy, indenting by indentStr and keeping tack of first real
+// line
+void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy, 
+  CString &indentStr)
 {
-  int ind, currentInd = 0, length = source.GetLength();
-  CString line, indStr;
-  for (ind = 0; ind < indent; ind++)
-    indStr += ' ';
+  int currentInd = 0, lineNum = 0, length = source.GetLength();
+  CString line, trim;
+  int firstRealLine = -1;
   while (currentInd < length) {
+    mIndexOfSrcLine.push_back(currentInd);
+    mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&source, currentInd, line, true);
-    copy += indStr + line;
+    copy += indentStr + line;
+    if (firstRealLine < 0) {
+      line.Trim(" \r\n");
+      if (!line.IsEmpty() && line.GetAt(0) != '#')
+        firstRealLine = (int)mLineInSrcMacro.size() - 1;
+    }
   }
+  mFirstRealLineInPart.push_back(firstRealLine);
+}
+
+// Take a Python exception from the plugin and translate the line numbers to be correct,
+// provide script names, and print the line in question if necessary
+void CMacroProcessor::EnhancedExceptionToLog(CString &str)
+{
+  CString line, numStr, name;
+  int indLine, indComma, lineNum, ind, lineInSrc, indInSrc, macNum, indMod;
+  int currentInd = 0, length = str.GetLength();
+
+  // Loop on error message
+  while (currentInd < length) {
+    GetNextLine(&str, currentInd, line);
+    line.TrimRight(" \r\n");
+    indLine = line.Find("line ");
+    if (indLine < 0) {
+      mWinApp->AppendToLog(line);
+      continue;
+    }
+
+    // Syntax errors have no comma and do not need the text line added
+    // Errors withount <string> belong to other modules
+    indComma = line.Find(",", indLine);
+    if (indComma > 0 && line.Find("File \"<string>") < 0) {
+      mWinApp->AppendToLog(line);
+      continue;
+    }
+
+    // Get the line number
+    if (indComma < 0)
+      numStr = line.Mid(indLine + 5);
+    else
+      numStr = line.Mid(indLine + 5, indComma - (indLine + 5));
+    lineNum = atoi((LPCTSTR)numStr) - 1;
+
+    // Print and skip if not legal
+    if (lineNum >= (int)mLineInSrcMacro.size() || lineNum < mMacStartLineInScrp[0]) {
+      mWinApp->AppendToLog(line);
+      continue;
+    }
+
+    // Search the vectors for which script block this occurs in and 
+    for (ind = (int)mMacStartLineInScrp.size() - 1; ind >= 0; ind--) {
+      if (lineNum >= mMacStartLineInScrp[ind]) {
+        lineInSrc = mLineInSrcMacro[lineNum];
+        indInSrc = mIndexOfSrcLine[lineNum];
+        macNum = mMacNumAtScrpLine[ind];
+        name = mMacNames[macNum];
+        if (name.IsEmpty())
+          name.Format("Script #%d", macNum + 1);
+        numStr.Format("line %d, in %s", lineInSrc + 1, (LPCTSTR)name);
+        mLastPythonErrorLine = lineInSrc + 1;
+
+        // If it has function instead of <module>, add it after the script name
+        indMod = line.Find("<module>", indLine);
+        if (indComma > 0 && indMod < 0) {
+          indMod = line.Find("in ", indLine + 6);
+          if (indMod > 0)
+            numStr += " - " + line.Mid(indMod + 3);
+        }
+
+        // Equivocate about errors right before or after an include
+        line = line.Left(indLine) + numStr;
+        if (indComma < 0 && ind > 0 && lineNum == mFirstRealLineInPart[ind]) {
+          if (mMacNumAtScrpLine[ind - 1] == mMacNumAtScrpLine[0])
+            line += "   (or maybe just before #include " + name + ")";
+          else
+            line += "   (or maybe right at the end of " + 
+            mMacNames[mMacNumAtScrpLine[ind - 1]] + ")";
+        }
+        mWinApp->AppendToLog(line);
+
+        // Output line itself
+        if (indComma >= 0) {
+          GetNextLine(&mMacros[macNum], indInSrc, line);
+          line.TrimRight(" \r\n");
+          mWinApp->AppendToLog(line);
+        }
+        break;
+      }
+    }
+  }
+
+  // Try to show error
+  if (mLastPythonErrorLine > 0 && mMacroEditer[macNum]) 
+    mMacroEditer[macNum]->SelectAndShowLine(mLastPythonErrorLine);
 }
 
 // Send an email from a message box error if command defined the text

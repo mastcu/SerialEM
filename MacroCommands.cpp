@@ -550,7 +550,7 @@ int CMacCmd::ScriptEnd(void)
         } else
           mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
         if (!mItemEmpty[2])
-          mWinApp->AppendToLog(mStrItems[2]);
+          EnhancedExceptionToLog(mStrItems[2]);
       } else if (!mStrItems[1].IsEmpty()) {
         SubstituteLineStripItems(mStrLine, 1, mStrCopy);
         mWinApp->AppendToLog(mStrCopy);
@@ -657,7 +657,8 @@ int CMacCmd::Loop(void)
       return 1;
     }
   } else if (!mItemEmpty[cIndex]) {
-    if (SetVariable(mStrItems[cIndex], 1.0, VARTYPE_INDEX, mBlockLevel, true, &cReport))
+    if (SetVariable(mStrItems[cIndex], 1.0, VARTYPE_INDEX + VARTYPE_ADD_FOR_NUM, 
+      mBlockLevel, true, &cReport))
       ABORT_LINE(cReport + " in script line: \n\n");
   }
   return 0;
@@ -869,7 +870,8 @@ int CMacCmd::DoMacro(void)
       for (cIndex = 0; cIndex < cFunc->numNumericArgs; cIndex++) {
         cReport = cFunc->argNames[cIndex];
         if (SetVariable(cFunc->argNames[cIndex], mItemEmpty[cIndex + cIx0] ?
-          0. : mItemDbl[cIndex + cIx0], VARTYPE_LOCAL, -1, false, &cReport)) {
+          0. : mItemDbl[cIndex + cIx0], VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false,
+          &cReport)) {
             cTruth = true;
             break;
         }
@@ -886,7 +888,7 @@ int CMacCmd::DoMacro(void)
         cIndex++)
           if (mItemEmpty[cIndex + cIx0])
             break;
-      SetVariable("NUMCALLARGS", cIndex, VARTYPE_LOCAL, -1, false);
+      SetVariable("NUMCALLARGS", cIndex, VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false);
    }
   }
   return 0;
@@ -942,7 +944,8 @@ int CMacCmd::Test(void)
   else
     EvaluateIfStatement(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, mLastTestResult);
   SetReportedValues(mLastTestResult ? 1. : 0.);
-  SetVariable("TESTRESULT", mLastTestResult ? 1. : 0., VARTYPE_REGULAR, -1, false);
+  SetVariable("TESTRESULT", mLastTestResult ? 1. : 0., 
+    VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
   return 0;
 }
 
@@ -950,7 +953,10 @@ int CMacCmd::Test(void)
 int CMacCmd::SetVariableCmd(void)
 {
   if (mRunningScrpLang) {
-    cIndex = CMD_IS(SETVARIABLE) ? VARTYPE_REGULAR : VARTYPE_PERSIST;
+    cIndex = CMD_IS(SETPERSISTENTVAR) ? VARTYPE_PERSIST : VARTYPE_REGULAR;
+    if (CMD_IS(SETFLOATVARIABLE)) {
+      cIndex = (mItemInt[3] ? VARTYPE_PERSIST : VARTYPE_REGULAR) + VARTYPE_ADD_FOR_NUM;
+    }
     if (SetVariable(mItem1upper, mStrItems[2], cIndex, -1, false, &cReport))
       ABORT_LINE(cReport + " in script line: \n\n");
     return 0;
@@ -1019,7 +1025,12 @@ int CMacCmd::GetVariable(void)
   cVar = LookupVariable(mStrItems[1], cIx0);
   if (!cVar)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-  SetOneReportedValue(cVar->value, 1);
+  if (cVar->isNumeric) {
+    cDelISX = atof(cVar->value);
+    SetOneReportedValue(cDelISX, 1);
+  } else {
+    SetOneReportedValue(cVar->value, 1);
+  }
   return 0;
 }
 
@@ -1222,8 +1233,8 @@ int CMacCmd::LocalVar(void)
     cIndex2 = LocalVarAlreadyDefined(mStrItems[cIndex], mStrLine);
     if (cIndex2 > 0)
       return 1;
-    if (!cIndex2 && SetVariable(mStrItems[cIndex], "0", VARTYPE_LOCAL, mCurrentMacro, true,
-      &cReport))
+    if (!cIndex2 && SetVariable(mStrItems[cIndex], "0", 
+      VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, mCurrentMacro, true, &cReport))
       ABORT_LINE(cReport + " in script line: \n\n");
   }
   return 0;
@@ -1801,7 +1812,7 @@ int CMacCmd::ReportFrameTiltSum(void)
   cTruth = mCamera->GetTiltSumProperties(cIndex, cIndex2, cBacklashX, cIx0, cIx1);
   if (cTruth) {
     mLogRpt = "There are no more tilt sums available";
-    SetReportedValues(&mStrItems[1], 1);
+    SetReportedValues(&mStrItems[1], 1, 0.);
   } else {
     mLogRpt.Format("Tilt sum from %.1f deg, index %d, %d frames from %d to %d",
       cBacklashX, cIndex, cIndex2, cIx0, cIx1);
@@ -2855,6 +2866,7 @@ int CMacCmd::ReportFrameBaseName(void)
   } else {
     mLogRpt = "The base name is not being used in frame file names";
     SetOneReportedValue(&mStrItems[1], 0., 1);
+    SetOneReportedValue(&mStrItems[1], CString("none"), 2);
   }
   return 0;
 }
@@ -2884,7 +2896,8 @@ int CMacCmd::GetFileInWatchedDir(void)
   UtilSplitPath(cReport, direc, fname);
   HANDLE hFind = FindFirstFile((LPCTSTR)cReport, &findFileData);
   if (hFind == INVALID_HANDLE_VALUE) {
-    SetReportedValues(0.);
+    SetOneReportedValue(0., 1);
+    SetOneReportedValue(CString("none"), 2);
     return 0;
   }
   cTruth = false;
@@ -2908,7 +2921,8 @@ int CMacCmd::GetFileInWatchedDir(void)
 
   // Just set report value if no file. give message if there is one
   if (!cTruth) {
-    SetReportedValues(0.);
+    SetOneReportedValue(0., 1);
+    SetOneReportedValue(CString("none"), 2);
   } else {
     cReport = direc + "\\" + cReport;
     SetOneReportedValue(1., 1);
@@ -4272,8 +4286,8 @@ int CMacCmd::ResetClock(void)
 int CMacCmd::ReportMinuteTime(void)
 {
   cIndex = mWinApp->MinuteTimeStamp();
-  if (!mItemEmpty[1] && SetVariable(mStrItems[1], (double)cIndex, VARTYPE_PERSIST, -1,
-    false, &cReport))
+  if (!mItemEmpty[1] && SetVariable(mStrItems[1], (double)cIndex, 
+    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &cReport))
       ABORT_LINE(cReport + "\n(This command assigns to a persistent variable):\n\n");
   mLogRpt.Format("Absolute minute time = %d", cIndex);
   SetReportedValues(cIndex);
@@ -4317,8 +4331,8 @@ int CMacCmd::SetCustomTime(void)
 int CMacCmd::ReportTickTime(void)
 {
   cDelISX = SEMTickInterval(mWinApp->ProgramStartTime()) / 1000.;
-  if (!mItemEmpty[1] && SetVariable(mStrItems[1], cDelISX, VARTYPE_PERSIST, -1,
-    false, &cReport))
+  if (!mItemEmpty[1] && SetVariable(mStrItems[1], cDelISX, 
+    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &cReport))
       ABORT_LINE(cReport + "\n(This command assigns to a persistent variable):\n\n");
   mLogRpt.Format("Tick time from program start = %.3f", cDelISX);
   SetReportedValues(cDelISX);
@@ -5400,8 +5414,7 @@ int CMacCmd::ReportEnvironVar(void)
   else
     mLogRpt.Format("Environment variable %s is not set", (LPCTSTR)mStrItems[1]);
   SetOneReportedValue(&mStrItems[2], envar ? 1. : 0., 1);
-  if (envar)
-    SetOneReportedValue(&mStrItems[2], CString(envar), 2);
+  SetOneReportedValue(&mStrItems[2], CString(envar ? envar :"none"), 2);
   return 0;
 }
 
@@ -5582,7 +5595,7 @@ int CMacCmd::StripEndingDigits(void)
   cReport = cReport.Left(cIndex + 1);
   mItem1upper = mStrItems[2];
   mItem1upper.MakeUpper();
-  if (SetVariable(mItem1upper, cReport, VARTYPE_REGULAR, -1, false))
+  if (SetVariable(mItem1upper, cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false))
     ABORT_LINE("Error setting variable " + mStrItems[2] + " with string " + cReport +
     " in:\n\n");
   SetReportedValues(atoi((LPCTSTR)mStrCopy));
@@ -6959,8 +6972,8 @@ int CMacCmd::ReportNavItem(void)
     cNavItem = mNavigator->FindNextAcquireItem(cIndex);
     if (cIndex < 0) {
       mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
-      SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR, -1, false);
-      SetReportedValues(-1);
+      SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+      SetReportedValues(-1, 0.);
     }
   } else {
     if (mItemInt[1] < 0) {
@@ -6982,20 +6995,24 @@ int CMacCmd::ReportNavItem(void)
     SetReportedValues(cIndex + 1., cNavItem->mStageX, cNavItem->mStageY,
       cNavItem->mStageZ, (double)cNavItem->mType);
     cReport.Format("%d", cIndex + 1);
-    SetVariable("NAVINDEX", cReport, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVINDEX", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     SetVariable("NAVLABEL", cNavItem->mLabel, VARTYPE_REGULAR, -1, false);
     SetVariable("NAVNOTE", cNavItem->mNote, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVCOLOR", cNavItem->mColor, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVREGIS", cNavItem->mRegistration, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVCOLOR", cNavItem->mColor, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
+      false);
+    SetVariable("NAVREGIS", cNavItem->mRegistration, 
+      VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     cIndex = atoi(cNavItem->mLabel);
     cReport.Format("%d", cIndex);
-    SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     mNavHelper->GetNumHolesFromParam(cIx0, cIx1, cIndex2);
     SetVariable("NAVNUMHOLES", cNavItem->mAcquire ? 
-      mNavHelper->GetNumHolesForItem(cNavItem, cIndex2) : 0, VARTYPE_REGULAR, -1, false);
+      mNavHelper->GetNumHolesForItem(cNavItem, cIndex2) : 0, 
+      VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     if (mNavigator->GetAcquiring()) {
       cReport.Format("%d", mNavigator->GetNumAcquired() + (cTruth ? 2 : 1));
-      SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR, -1, false);
+      SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
+        false);
     }
   } else if (!cTruth) {
     if (cNavItem->mType != ITEM_TYPE_MAP)
@@ -7988,7 +8005,7 @@ int CMacCmd::ShowMessageOnScope(void)
     mStartedLongOp = true;
     mShowedScopeBox = true;
   } else {
-    SetReportedValues(0.);
+    SetReportedValues(0., -1);
   }
   return 0;
 }

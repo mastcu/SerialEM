@@ -33,6 +33,7 @@ struct ScriptLangPlugFuncs;
 #define SCRIPT_EVENT_NAME  "SEMScriptLangEvent"
 #define SCRIPT_NORMAL_EXIT  -123456
 #define SCRIPT_EXIT_NO_EXC  -654321
+#define VARTYPE_ADD_FOR_NUM  10
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
 enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP, SKIPTO_CATCH, SKIPTO_ENDTRY};
@@ -71,6 +72,7 @@ struct Variable {
   int type;        // Regular, persistent, index, report, or local
   int callLevel;   // call level at which variable defined
   int index;       // index with loop level for index, or for report, or script #
+  bool isNumeric;  // True if the value was originally numeric
   MacroFunction *definingFunc;   // Function it was defined in
   int numElements;  // Number of elements for a 1D array
   CArray<ArrayRow, ArrayRow> *rowsFor2d;    // Pointer to array of rows for 2D array
@@ -154,6 +156,7 @@ public:
   GetMember(bool, DeferLogUpdates);
   GetMember(bool, LoopInOnIdle);
   GetMember(bool, RunningScrpLang);
+  GetMember(int, LastPythonErrorLine);
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -165,6 +168,7 @@ public:
   static ScriptLangData mScrpLangData;         // Data structure for external scripting
   static ScriptLangPlugFuncs *mScrpLangFuncs;  // The functions of a scripting plugin
   HANDLE mScrpLangDoneEvent;                   // EVent to notify plugin that command done
+  static std::set<int> mPythonOnlyCmdSet;      // Set of commands available only from Python
 
 protected:
 
@@ -356,6 +360,12 @@ protected:
   bool mRunningScrpLang;     // Flag that external interpreter is running the script
   CString mMacroForScrpLang; // String actually passed with other scripts included
   CWinThread *mScrpLangThread;
+  IntVec mLineInSrcMacro;      // Map from line in composite script to line in source
+  IntVec mIndexOfSrcLine;      // And the character index of that line in the source
+  IntVec mMacNumAtScrpLine;    // Macro number for each block of composite script
+  IntVec mMacStartLineInScrp;  // And the starting line of that block in the composite
+  IntVec mFirstRealLineInPart; // Macro line number of first non-blank line in a block
+  int mLastPythonErrorLine;    // Last line number and error happened on
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
@@ -433,7 +443,8 @@ public:
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
   int CheckForScriptLanguage(int macNum);
-  void IndentAndAppendToScript(CString &source, CString &copy, int indent);
+  void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr);
+  void EnhancedExceptionToLog(CString &str);
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
   int TestTryLevelAndSkip(CString *mess);
