@@ -83,9 +83,11 @@ private:
   int m_iCancelLeft;
   int m_iRunLeft;
   int m_iHelpLeft;
-  int m_iLoadOffset;
+  int m_iSaveOffset;
   int m_iLoadLeft;
   int m_iSaveLeft;
+  int m_iSaveAsLeft;
+  int m_iToLineLeft;
   CSerialEMApp *mWinApp;
   CMacCmd * mProcessor;
   CMacroEditer **mEditer;
@@ -107,6 +109,7 @@ public:
   CStatic m_statCompletions;
   CButton m_butFindInMacro;
   afx_msg void OnFindInMacro();
+  void EnsureLineVisible(int line);
   static bool FindIndentAndMatch(CString &strMacro, int lineStart, int limit, const char ** keywords, int numKeys, 
     int & curIndent);
   static void HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
@@ -115,6 +118,9 @@ public:
   static bool GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython, 
     int &indStart, int &indEnd, bool &isContinued);
   void JustCloseWindow(void);
+  afx_msg void OnButToMacroLine();
+  void SelectAndShowLine(int lineFromOne);
+  CButton m_butToMacroLine;
 };
 
 //{{AFX_INSERT_LOCATION}}
