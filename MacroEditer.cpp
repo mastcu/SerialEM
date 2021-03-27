@@ -67,6 +67,7 @@ void CMacroEditer::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_COMPLETIONS, m_strCompletions);
   DDX_Control(pDX, IDC_STAT_COMPLETIONS, m_statCompletions);
   DDX_Control(pDX, IDC_FIND_IN_MACRO, m_butFindInMacro);
+  DDX_Control(pDX, IDC_BUT_TO_MACRO_LINE, m_butToMacroLine);
 }
 
 
@@ -81,9 +82,10 @@ BEGIN_MESSAGE_MAP(CMacroEditer, CBaseDlg)
   ON_BN_CLICKED(IDC_TOPREVMACRO, OnBnClickedToprevmacro)
   ON_BN_CLICKED(IDC_TONEXTMACRO, OnBnClickedTonextmacro)
   ON_EN_CHANGE(IDC_EDITMACRO, OnEnChangeEditmacro)
-  ON_BN_CLICKED(IDC_SHIFT_MACRO_UP, &CMacroEditer::OnShiftMacroUp)
-  ON_BN_CLICKED(IDC_SHIFT_MACRO_DOWN, &CMacroEditer::OnShiftMacroDown)
-  ON_BN_CLICKED(IDC_FIND_IN_MACRO, &CMacroEditer::OnFindInMacro)
+  ON_BN_CLICKED(IDC_SHIFT_MACRO_UP, OnShiftMacroUp)
+  ON_BN_CLICKED(IDC_SHIFT_MACRO_DOWN, OnShiftMacroDown)
+  ON_BN_CLICKED(IDC_FIND_IN_MACRO, OnFindInMacro)
+  ON_BN_CLICKED(IDC_BUT_TO_MACRO_LINE, OnButToMacroLine)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -115,11 +117,15 @@ BOOL CMacroEditer::OnInitDialog()
   m_iHelpLeft = OKRect.left - wndRect.left - iXoffset;
   
   m_butLoad.GetWindowRect(OKRect);
-  m_iLoadOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
-    + iXoffset - editRect.Height();
   m_iLoadLeft = OKRect.left - wndRect.left - iXoffset;
   m_butSave.GetWindowRect(OKRect);
+  m_iSaveOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset - editRect.Height();
   m_iSaveLeft = OKRect.left - wndRect.left - iXoffset;
+  m_butToMacroLine.GetWindowRect(OKRect);
+  m_iToLineLeft = OKRect.left - wndRect.left - iXoffset;
+  m_butSaveAs.GetWindowRect(OKRect);
+  m_iSaveAsLeft = OKRect.left - wndRect.left - iXoffset;
 
   mInitialized = true;
   mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
@@ -162,12 +168,14 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   m_butRun.SetWindowPos(NULL, m_iRunLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butCancel.SetWindowPos(NULL, m_iCancelLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butOK.SetWindowPos(NULL, m_iOKLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  m_butHelp.SetWindowPos(NULL, m_iHelpLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  newY += m_iLoadOffset - m_iOKoffset;
-  m_butFindInMacro.SetWindowPos(NULL, m_iRunLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butLoad.SetWindowPos(NULL, m_iLoadLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+  m_butHelp.SetWindowPos(NULL, m_iHelpLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+  newY += m_iSaveOffset - m_iOKoffset;
+  m_butFindInMacro.SetWindowPos(NULL, m_iRunLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+  m_butToMacroLine.SetWindowPos(NULL, m_iToLineLeft, newY, 0, 0, 
+    SWP_NOZORDER | SWP_NOSIZE);
   m_butSave.SetWindowPos(NULL, m_iSaveLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  m_butSaveAs.SetWindowPos(NULL, m_iOKLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+  m_butSaveAs.SetWindowPos(NULL, m_iSaveAsLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
 }
 
@@ -247,6 +255,8 @@ void CMacroEditer::OnRunmacro()
     return;
   TransferMacro(true);
   mProcessor->Run(m_iMacroNumber);
+  FixButtonFocus(m_butRun);
+  m_editMacro.SetFocus();
 }
 
 void CMacroEditer::OnBnClickedToprevmacro()
@@ -370,9 +380,7 @@ void CMacroEditer::OnLoadmacro()
 // Find a string in the macro
 void CMacroEditer::OnFindInMacro()
 {
-  int sel1, sel2, numLines;
-  CRect editRect;
-  CSize size;
+  int sel1, sel2;
   CString macro, find;
   if (!KGetOneString("Text is not case-sensitive", "Text to find in script:", 
     mLastFindString) || mLastFindString.IsEmpty())
@@ -396,18 +404,46 @@ void CMacroEditer::OnFindInMacro()
   }
   sel2 = sel1 + mLastFindString.GetLength();
   m_editMacro.SetSel(sel1, sel2);
+  
+  EnsureLineVisible(m_editMacro.LineFromChar(sel1));
+}
 
-  // Make sure the line is on the screen
-  sel2 = m_editMacro.LineFromChar(sel1);
-  sel1 = m_editMacro.GetFirstVisibleLine();
+// Make sure the given line is on the screen
+void CMacroEditer::EnsureLineVisible(int sel2)
+{
+  CRect editRect;
+  CSize size;
+  int  numLines, sel1 = m_editMacro.GetFirstVisibleLine();
   CDC* pDC = m_editMacro.GetDC();
-  size = pDC->GetTextExtent(mLastFindString);
+  size = pDC->GetTextExtent("serialem");
   m_editMacro.ReleaseDC(pDC);
   m_editMacro.GetRect(&editRect);
   numLines = editRect.Height() / size.cy;
   if (sel2 < sel1 + 1 || sel2 > sel1 + numLines - 2)
     m_editMacro.LineScroll(sel2 - (sel1 + 1));
   m_editMacro.SetFocus();
+}
+
+// Go to a line in the macro
+void CMacroEditer::OnButToMacroLine()
+{
+  int line;
+  line = B3DMAX(1, mProcessor->GetLastPythonErrorLine());
+  if (!KGetOneInt("Script line number to go to:", line))
+    return;
+  if (line < 1 || line > m_editMacro.GetLineCount()) {
+    AfxMessageBox("Line number out of range");
+    return;
+  }
+  SelectAndShowLine(line);
+}
+
+// External function for going to a line
+void CMacroEditer::SelectAndShowLine(int lineFromOne)
+{
+  int charInd = m_editMacro.LineIndex(lineFromOne - 1);
+  m_editMacro.SetSel(charInd, charInd + 3);
+  EnsureLineVisible(lineFromOne - 1);
 }
 
 // OK button should be disabled if any macro is running, and Run disabled if
@@ -594,6 +630,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   short *matchList;
   bool matched, atWordEnd, foundText, isPython, hasSpace = false, needsNamespace = false;
   bool isBlank, afterBlank, isContinued, afterColon, isKeyword  = false;
+  bool removeIndent = false;
   int prevEnd, backStart, backEnd, afterContinue;
   CmdItem *cmdList;
   CString substr, importName, nameSpace;
@@ -617,6 +654,9 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     return;
   completing = strMacro.GetAt(sel2-1) == '`';
   isPython = CheckForPythonAndImport(strMacro, importName);
+  if (isPython && GetAsyncKeyState(VK_SHIFT) / 2 != 0 &&
+    strMacro.GetAt(sel2 - 1) == '~')
+    completing = removeIndent = true;
 
   // Set up to delete this character
   numDel = 1;
@@ -718,7 +758,8 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
 
       // for regular compare to string
       for (i = CME_EXIT; i < numCommands; i++)
-        if (cmdList[i].cmd.find(substr) == 0)
+        if (cmdList[i].cmd.find(substr) == 0 && 
+          !CMacroProcessor::mPythonOnlyCmdSet.count(i))
           matchList[numMatch++] = i;
     }
 
@@ -868,6 +909,8 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
         B3DCHOICE(afterContinue, 0, isPython ? numCurPyth : numCurKeys), curIndent) || 
         (isPython && curIndent == needIndent && afterBlank && !afterColon))
         needIndent = B3DMAX(0, needIndent - indentSize);
+      if (removeIndent)
+        needIndent = B3DMAX(0, curIndent - indentSize);
 
       // Adjust by deletion or addition
       numDel = curIndent - needIndent;
@@ -907,10 +950,16 @@ bool CMacroEditer::CheckForPythonAndImport(CString &strMacro, CString &importNam
     // Skip comments or includes
     strItems[0] = strLine;
     strItems[0].TrimLeft();
-    if (strItems[0].Find("#") == 0)
-      continue;
+    strItems[0].TrimRight(" \r\n");
+    if (strItems[0].Find("#") == 0 || strItems[0].IsEmpty()) {
+      if (strItems[0].Find("#serialemPrefix") < 0)
+        continue;
+      winApp->mParamIO->ParseString(strLine, strItems, 4, false, true);
+      importName = strItems[1];
+      return true;
+    }
 
-    // Igf non-import line is found, give up
+    // If non-import line is found, give up
     if (strLine.Find("import") < 0)
       return true;
 
