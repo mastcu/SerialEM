@@ -3552,7 +3552,7 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
 
   // Get the filename in original case
   SubstituteVariables(&strLine, 1, strLine);
-  mParamIO->StripItems(strLine, index, strCopy);
+  JustStripItems(strLine, index, strCopy);
   fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
   if (!fullp) {
     SEMMessageBox("The filename cannot be converted to an absolute path in statement:"
@@ -4204,12 +4204,25 @@ void CMacroProcessor::CloseFileForText(int index)
   }
 }
 
-// Convenience function to extract part of entered line after substituting variables
+// Extract part of entered line after substituting variables
+// No longer a convenience!  You must use these instead of StripItems to get the final
+// string argument for external scripting
 void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip, 
   CString &strCopy)
 {
-  SubstituteVariables(&strLine, 1, strLine);
-  mParamIO->StripItems(strLine, numStrip, strCopy);
+  if (!mRunningScrpLang)
+    SubstituteVariables(&strLine, 1, strLine);
+  JustStripItems(strLine, numStrip, strCopy);
+}
+
+// Or just extract part of entered line
+void CMacroProcessor::JustStripItems(CString &strLine, int numStrip, CString &strCopy,
+  bool allowComment)
+{
+  if (mRunningScrpLang)
+    strCopy = mScrpLangData.strItems[mScrpLangData.lastNonEmptyInd];
+  else
+    mParamIO->StripItems(strLine, numStrip, strCopy, allowComment);
 }
 
 // Convert letter after command to LD area # or abort if not legal.  Tests for whether

@@ -877,7 +877,7 @@ int CMacCmd::DoMacro(void)
         }
       }
       if (!cTruth && cFunc->ifStringArg) {
-        mParamIO->StripItems(mStrLine, cIndex + cIx0, mStrCopy);
+        JustStripItems(mStrLine, cIndex + cIx0, mStrCopy);
         cTruth = SetVariable(cFunc->argNames[cIndex], mStrCopy, VARTYPE_LOCAL,
           - 1, false, &cReport);
       }
@@ -2485,7 +2485,7 @@ int CMacCmd::EnterNameOpenFile(void)
 {
   mStrCopy = "Enter name for new file:";
   if (!mStrItems[1].IsEmpty())
-    mParamIO->StripItems(mStrLine, 1, mStrCopy);
+    JustStripItems(mStrLine, 1, mStrCopy);
   if (!KGetOneString(mStrCopy, mEnteredName, 100))
     SUSPEND_NOLINE("because no new file was opened");
   if (mWinApp->mDocWnd->DoOpenNewFile(mEnteredName))
@@ -2737,7 +2737,7 @@ int CMacCmd::UserSetDirectory(void)
 {
   mStrCopy = "Choose a new current working directory:";
   if (!mStrItems[1].IsEmpty())
-    mParamIO->StripItems(mStrLine, 1, mStrCopy);
+    JustStripItems(mStrLine, 1, mStrCopy);
   char *cwd = _getcwd(NULL, _MAX_PATH);
   CXFolderDialog dlg(cwd);
   dlg.SetTitle(mStrCopy);
@@ -4704,7 +4704,7 @@ int CMacCmd::ReportColumnMode(void)
 // ReportLens
 int CMacCmd::ReportLens(void)
 {
-  mParamIO->StripItems(mStrLine, 1, cReport);
+  JustStripItems(mStrLine, 1, cReport);
   if (!mScope->GetLensByName(cReport, cDelX)) {
     AbortMacro();
     return 1;
@@ -5338,9 +5338,9 @@ int CMacCmd::FindPixelSize(void)
 // Echo, EchoNoVarSub
 int CMacCmd::Echo(void)
 {
-  if (CMD_IS(ECHO))
+  if (CMD_IS(ECHO) && !mRunningScrpLang)
     SubstituteVariables(&mStrLine, 1, mStrLine);
-  mParamIO->StripItems(mStrLine, 1, cReport, true);
+  JustStripItems(mStrLine, 1, cReport, true);
   cReport.Replace("\n", "  ");
   mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
   return 0;
@@ -7341,7 +7341,7 @@ int CMacCmd::ChangeItemRegistration(void)
       if (mItemEmpty[2])
         mStrCopy = "";
       else
-        mParamIO->StripItems(mStrLine, 2, mStrCopy);
+        JustStripItems(mStrLine, 2, mStrCopy);
       cNavItem->mNote = mStrCopy;
     } else {
       SubstituteLineStripItems(mStrLine, 2, mStrCopy);

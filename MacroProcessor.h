@@ -485,6 +485,7 @@ public:
   FileForText *LookupFileForText(CString & ID, int checkReadOrWrite, CString &strLine, int &index);
   void CloseFileForText(int index);
   void SubstituteLineStripItems(CString & strLine, int numStrip, CString & strCopy);
+  void JustStripItems(CString & strLine, int numStrip, CString & strCopy, bool allowComment = false);
   int CheckAndConvertLDAreaLetter(CString & item, int needOnOrOff, int & index, CString &strLine);
   void RestoreLowDoseParams(int index);
   bool IsLowDoseAreaSaved(int which);
