@@ -88,6 +88,10 @@ private:
   int m_iSaveLeft;
   int m_iSaveAsLeft;
   int m_iToLineLeft;
+  int m_iFixOffset;
+  int m_iFixLeft;
+  int m_iAddLeft;
+  int m_iRemoveLeft;
   CSerialEMApp *mWinApp;
   CMacCmd * mProcessor;
   CMacroEditer **mEditer;
@@ -121,6 +125,17 @@ public:
   afx_msg void OnButToMacroLine();
   void SelectAndShowLine(int lineFromOne);
   CButton m_butToMacroLine;
+  static CFont mMonoFont;
+  static CFont mDefaultFont;
+  static int mHasMonoFont;
+  CStatic m_statIndent;
+  CButton m_butFixIndent;
+  CButton m_butAddIndent;
+  CButton m_butRemoveIndent;
+  afx_msg void OnButFixIndent();
+  afx_msg void OnButAddIndent();
+  afx_msg void OnButRemoveIndent();
+  int GetLineSelectLimits(int &startInd, int &endInd, int &indentSize);
 };
 
 //{{AFX_INSERT_LOCATION}}

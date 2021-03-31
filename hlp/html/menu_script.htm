@@ -89,16 +89,6 @@
           <TD class="auto-style1">Loads all scripts in a file into their given script numbers.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
-          <TD class="auto-style1">Toggles whether to run a script on program startup and 
-            lets you select script</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style2"><a href="#hid_script_runatprogramend">Run at Program End...</a></TD>
-          <TD class="auto-style1">Toggles whether to run a script on program exit and lets 
-            you select script</TD>
-        </TR>
-        <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_macro_listfunctions">List Functions</a></TD>
           <TD class="auto-style1">Lists all functions defined in scripts.</TD>
         </TR>
@@ -115,9 +105,28 @@
           <TD class="auto-style1">Sets number of spaces for automatic indenting in editor.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_showindentbuttons">Show Indent Buttons</a></TD>
+          <TD class="auto-style1">Toggles whether to show buttons for adjusting indentation 
+            of lines in editor.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_usemonospacedfont">Use Monospaced Font</a></TD>
+          <TD class="auto-style1">Toggles whther to use an equally spaced font in the editor.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
           <TD class="auto-style1">Toggles whether editing windows will be restored on program 
             startup.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
+          <TD class="auto-style1">Toggles whether to run a script on program startup and 
+            lets you select script</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_runatprogramend">Run at Program End...</a></TD>
+          <TD class="auto-style1">Toggles whether to run a script on program exit and lets 
+            you select script</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><A HREF="#hid_macro_verbose">Verbose</A></TD>
@@ -223,6 +232,31 @@
         now in script package files, so this command can be used to read only the scripts from a 
         settings file. However a single script saved from the editing window cannot be 
         read with this command because it does not have these starting and ending lines.</P>
+      <P><A NAME="hid_macro_listfunctions"></A><B>List Functions command (Script menu)</B></P>
+    <P>Use this command to get a list in the log window of all functions defined in 
+      all scripts.&nbsp; The function name will be followed by the number of 
+      arguments and 0 or 1 for whether it takes a string argument.</P>
+    <P><A NAME="hid_script_clearpersistentvars"></A><B>Clear Persistent Vars command (Script menu)</B></P>
+    <P>Use this command to clear all of the persistent variables that have been 
+      defined by previously run scripts.&nbsp; This will make a stopped script 
+      non-resumable.</P>
+    <P><A NAME="hid_script_setindentsize"></A><B>Set Indent Size command (Script menu)</B></P>
+    <p>Use this command to set the number of spaces that the script editor will use 
+      for auto-indenting when Tab or ` (the back-tick character) is typed.&nbsp; This 
+      spacing is added at the first line of a block starting with IF, LOOP, ELSE, or 
+      Function, and taken away when such a block ends.&nbsp; Enter 0 to prevent 
+      auto-indenting.</p>
+    <P><A NAME="hid_script_showindentbuttons"></A><B>Show Indent Buttons command (Script menu)</B></P>
+    <p>Use this command to toggle between showing and hiding the three buttons at the 
+      bottom of the editor window for adjusting indentation in selected lines.&nbsp; 
+      The change will not take effect until you resize or reopen windows.&nbsp; These 
+      buttons were added to help with scripting in Python but could be useful for 
+      regular scripting too.</p>
+    <P><A NAME="hid_script_usemonospacedfont"></A><B>Use Monospaced Font command (Script menu)</B></P>
+    <p>Use this command to toggle between using the regular proportional font and an 
+      equally-spaced font in all editor windows.&nbsp; If it is grayed out, it means 
+      that no monospaced font was available.&nbsp; The program tries to access Lucida 
+      Sans Typewriter, and if that fails it tries to use Courier New.</p>
       <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B>
         <P>Use this command to choose a script to run when the program starts.&nbsp; The 
           menu entry shows up as checked when a script has been chosen.&nbsp; When you 
@@ -239,20 +273,6 @@
           program re-enters its exit routine after the script is run.&nbsp; While the 
           script may do complex operations, the user should be warned if they are going to 
           take more than a few seconds.</P>
-      <P><A NAME="hid_macro_listfunctions"></A><B>List Functions command (Script menu)</B></P>
-    <P>Use this command to get a list in the log window of all functions defined in 
-      all scripts.&nbsp; The function name will be followed by the number of 
-      arguments and 0 or 1 for whether it takes a string argument.</P>
-    <P><A NAME="hid_script_clearpersistentvars"></A><B>Clear Persistent Vars command (Script menu)</B></P>
-    <P>Use this command to clear all of the persistent variables that have been 
-      defined by previously run scripts.&nbsp; This will make a stopped script 
-      non-resumable.</P>
-    <P><A NAME="hid_script_setindentsize"></A><B>Set Indent Size command (Script menu)</B></P>
-    <p>Use this command to set the number of spaces that the script editor will use 
-      for auto-indenting when Tab or ` (the back-tick character) is typed.&nbsp; This 
-      spacing is added at the first line of a block starting with IF, LOOP, ELSE, or 
-      Function, and taken away when such a block ends.&nbsp; Enter 0 to prevent 
-      auto-indenting.</p>
     <P><A NAME="hid_script_openeditorsonstart"></A><B>Open Editors on Start command (Script menu)</B></P>
     <p>Use this command to control whether editor windows are restored to their last 
       state when the program is restarted.&nbsp; In addition, if this option is selected, 

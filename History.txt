@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/31/21: Added ability to use a monospaced font and to adjust
+indentation more easily in script editor.
+
 3/29/21: Fixed commands taking strings from the rest of the line for Python.
 
 3/27/21: Improvements and changes in behavior for Python support; new plugins

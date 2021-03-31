@@ -72,31 +72,49 @@
     <P>A controllable way to remove one unit of indentation at a 
       time on any line is to hold down the Shift key while typing the completion character.&nbsp; 
       This allows you to close a block without a blank line or close more than one 
-      block.</P>
+      block.&nbsp; The 'Indent' buttons at the bottom of the editor should also be 
+      helpful.</P>
     <P>The buttons below the text area perform the following functions:</P>
-    <P><B>Run button - </B>will save the script in program memory and run it.&nbsp; 
+    <P><B>Run - </B>will save the script in program memory and run it.&nbsp; 
       Pressing Ctrl-Enter within the editing window will also run the script.</P>
-    <P><B>Cancel button - </B>will close the window without saving the most recent 
+    <P><B>Cancel - </B>will close the window without saving the most recent 
       changes in program memory.</P>
-    <P><B>OK button - </B>will save the script in program memory and close the window.</P>
-    <P><B>Load button </B>- will allow you to read a script from a file into the current 
+    <P><B>OK - </B>will save the script in program memory and close the window.</P>
+    <P><B>Load </B>- will allow you to read a script from a file into the current 
       script. Once a script has been read from a file, the Save button will save it 
       back to that file.</P>
-    <P><b>Find button -</b> will search for text in the script.&nbsp; An entry box will 
+    <P><b>Find -</b> will search for text in the script.&nbsp; An entry box will 
       open for the text to find.&nbsp; The search is case-insensitive.</P>
     <p>
-      <strong>To Line button -</strong> will allow you to enter a line number to go 
-      to.&nbsp; After an error in a Python script, the default value i nthe entry box 
-      will be line with the error.&nbsp; The cursor will be moved to the specified 
-      line, the window will be scrolled, and the first three characters on the line 
-      will be selected to make it more visible.&nbsp;
+      <strong>To Line -</strong> will allow you to enter a line number to go to.&nbsp; 
+      After an error in a Python script, the default value i nthe entry box will be 
+      line with the error.&nbsp; The cursor will be moved to the specified line, the 
+      window will be scrolled, and the first three characters on the line will be 
+      selected to make it more visible.&nbsp;
     </p>
-    <P><B>Save button </B>- will allow you to save this script to a text file. If you 
+    <P><B>Save </B>- will allow you to save this script to a text file. If you 
       have saved it to a file before, or if you loaded it from a file, it will be 
       saved to the same file. Otherwise you will enter the <A HREF="afx_hidd_filesave.htm">
         Save As dialog box</A> to specify a file</P>
-    <P><B>Save As button</B>- will allow you to save this script to a different file via 
+    <P><B>Save As </B>- will allow you to save this script to a different file via 
       the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A>.</P>
+    <P>The bottom row of buttons are useful for scripting in Python; they can be 
+      hidden with the <a href="menu_script#hid_script_showindentbuttons">Show Indent Buttons</a>
+       command in the script menu.</P>
+    <P><em>Indent</em> - <strong>Fix</strong> - Adjust the indentation of all selected 
+      (highlighted) lines to be the nearest multiple of the indent size.&nbsp; The 
+      program will examine all the selected to see what deviations need to be fixed.&nbsp; 
+      If they all involve changes by 1 space, it will make the changes.&nbsp; If any 
+      of the deviations cannot be resolved because they are half of the indent size, 
+      it will ask whether to cancel the operation so that you can examine the lines 
+      first.&nbsp; If any of them involve more than one space but are not ambiguous 
+      (you would need an indent size over 4 for this to happen), it will ask whether 
+      you want to fix just the ones that are off by one space or to fix all of them.</P>
+    <P><em>Indent</em> - <strong>Increase</strong> - Add one unit of indentation (the 
+      indent size) to all of the selected lines.</P>
+    <P><em>Indent</em> - <strong>Reduce</strong> - Remove one unit of indentation from 
+      all of the selected lines if possible.&nbsp; If any lines are indented by less 
+      than one unit, nothing will be done.</P>
     </basefont>
   </BODY>
 </HTML>

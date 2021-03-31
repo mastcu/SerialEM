@@ -22,6 +22,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+CFont CMacroEditer::mMonoFont;
+CFont CMacroEditer::mDefaultFont;
+int CMacroEditer::mHasMonoFont = -1;
+
 /////////////////////////////////////////////////////////////////////////////
 // CMacroEditer dialog
 
@@ -68,6 +72,10 @@ void CMacroEditer::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_COMPLETIONS, m_statCompletions);
   DDX_Control(pDX, IDC_FIND_IN_MACRO, m_butFindInMacro);
   DDX_Control(pDX, IDC_BUT_TO_MACRO_LINE, m_butToMacroLine);
+  DDX_Control(pDX, IDC_STAT_INDENT, m_statIndent);
+  DDX_Control(pDX, IDC_BUT_FIX_INDENT, m_butFixIndent);
+  DDX_Control(pDX, IDC_BUT_ADD_INDENT, m_butAddIndent);
+  DDX_Control(pDX, IDC_BUT_REMOVE_INDENT, m_butRemoveIndent);
 }
 
 
@@ -86,6 +94,9 @@ BEGIN_MESSAGE_MAP(CMacroEditer, CBaseDlg)
   ON_BN_CLICKED(IDC_SHIFT_MACRO_DOWN, OnShiftMacroDown)
   ON_BN_CLICKED(IDC_FIND_IN_MACRO, OnFindInMacro)
   ON_BN_CLICKED(IDC_BUT_TO_MACRO_LINE, OnButToMacroLine)
+  ON_BN_CLICKED(IDC_BUT_FIX_INDENT, OnButFixIndent)
+  ON_BN_CLICKED(IDC_BUT_ADD_INDENT, OnButAddIndent)
+  ON_BN_CLICKED(IDC_BUT_REMOVE_INDENT, OnButRemoveIndent)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -95,10 +106,36 @@ BOOL CMacroEditer::OnInitDialog()
 {
   WINDOWPLACEMENT *place = mProcessor->GetEditerPlacement() + m_iMacroNumber;
   CBaseDlg::OnInitDialog();
+  CFont *font;
+  LOGFONT logFont;
   
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect, OKRect, clientRect;
   GetClientRect(clientRect);
+
+  if (mHasMonoFont < 0) {
+    font = m_editMacro.GetFont();
+    font->GetLogFont(&logFont);
+    if (!mDefaultFont.CreateFontIndirect(&logFont)) {
+      mHasMonoFont = 0;
+    } else {
+      if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0, logFont.lfWeight,
+        0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+        CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+        FF_DONTCARE, "Lucida Sans Typewriter")) {
+        mHasMonoFont = 1;
+      } else {
+        mHasMonoFont = mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0, logFont.lfWeight,
+          0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+          CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+          FF_DONTCARE, "Courier New") ? 1 : 0;
+      }
+    }
+  }
+  
+  if (mHasMonoFont > 0 && mProcessor->GetUseMonoFont())
+    m_editMacro.SetFont(&mMonoFont);
+
   m_editMacro.GetWindowRect(editRect);
   m_iBorderX = clientRect.Width() - editRect.Width();
   m_iBorderY = clientRect.Height() - editRect.Height();
@@ -127,6 +164,15 @@ BOOL CMacroEditer::OnInitDialog()
   m_butSaveAs.GetWindowRect(OKRect);
   m_iSaveAsLeft = OKRect.left - wndRect.left - iXoffset;
 
+  m_butFixIndent.GetWindowRect(OKRect);
+  m_iFixOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset - editRect.Height();
+  m_iFixLeft = OKRect.left - wndRect.left - iXoffset;
+  m_butAddIndent.GetWindowRect(OKRect);
+  m_iAddLeft = OKRect.left - wndRect.left - iXoffset;
+  m_butRemoveIndent.GetWindowRect(OKRect);
+  m_iRemoveLeft = OKRect.left - wndRect.left - iXoffset;
+
   mInitialized = true;
   mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
   CEdit *editBox = (CEdit *)GetDlgItem(IDC_EDITMACRO);
@@ -148,12 +194,16 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
 {
   CDialog::OnSize(nType, cx, cy);
   CRect rect;
+  bool dropIndents = !mProcessor->GetShowIndentButtons();
+  int showFlag = dropIndents ? SWP_HIDEWINDOW : SWP_SHOWWINDOW;
   
   if (!mInitialized)
     return;
 
   int newX = cx - m_iBorderX;
   int newY = cy - m_iBorderY;
+  if (dropIndents)
+    newY += m_iFixOffset - m_iSaveOffset;
   if (newX < 1)
     newX = 1;
   if (newY < 1)
@@ -176,8 +226,17 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
     SWP_NOZORDER | SWP_NOSIZE);
   m_butSave.SetWindowPos(NULL, m_iSaveLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butSaveAs.SetWindowPos(NULL, m_iSaveAsLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-
+  newY += m_iFixOffset - m_iSaveOffset;
+  m_statIndent.SetWindowPos(NULL, m_iRunLeft, newY + 1, 0, 0, SWP_NOZORDER | SWP_NOSIZE | 
+    showFlag);
+  m_butFixIndent.SetWindowPos(NULL, m_iFixLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE |
+    showFlag);
+  m_butAddIndent.SetWindowPos(NULL, m_iAddLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE |
+    showFlag);
+  m_butRemoveIndent.SetWindowPos(NULL, m_iRemoveLeft, newY, 0, 0, SWP_NOZORDER | 
+    SWP_NOSIZE | showFlag);
 }
+
 
 void CMacroEditer::PostNcDestroy() 
 {
@@ -444,6 +503,190 @@ void CMacroEditer::SelectAndShowLine(int lineFromOne)
   int charInd = m_editMacro.LineIndex(lineFromOne - 1);
   m_editMacro.SetSel(charInd, charInd + 3);
   EnsureLineVisible(lineFromOne - 1);
+}
+
+// Fix the indentation
+void CMacroEditer::OnButFixIndent()
+{
+  int startInd, endInd, ind, size, currentInd, numSpace, fix, line;
+  int numOneSpace = 0, numBig = 0, numAmbig = 0;
+  bool even, fixAll = true;
+  CString strLine, bit;
+  ShortVec fixIndent;
+  if (GetLineSelectLimits(startInd, endInd, size))
+    return;
+
+  // Go through the lines computing how much to fix by and counting types of fixes
+  even = (size % 2) == 0;
+  currentInd = startInd;
+  while (currentInd < endInd) {
+    numSpace = 0;
+    for (ind = currentInd; ind < endInd; ind++) {
+      if (m_strMacro.GetAt(ind) == ' ')
+        numSpace++;
+      else
+        break;
+    }
+    fix = numSpace % size;
+    if (fix == size / 2 && even) {
+      numAmbig++;
+      fixIndent.push_back(0);
+    } else {
+      if (fix > size / 2)
+        fix = size - fix;
+      else
+        fix = -fix;
+      if (B3DABS(fix) == 1)
+        numOneSpace++;
+      else if (fix)
+        numBig++;
+      fixIndent.push_back(fix);
+    }
+    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
+  }
+
+  // Find out what they want to do if there are big ones or ambiguous ones
+  if (numAmbig || numBig) {
+    strLine = "";
+    if (numOneSpace)
+      strLine.Format("%d of %d lines are off by one space", numOneSpace,
+        fixIndent.size());
+    if (numBig) {
+      bit.Format("%d lines are off by more than one space but fixable", numBig);
+      if (!strLine.IsEmpty())
+        strLine += '\n';
+      strLine += bit;
+    }
+    if (numAmbig) {
+      bit.Format("%d lines are off by half the indent size and unfixable", numAmbig);
+      if (strLine.IsEmpty()) {
+        AfxMessageBox(bit, MB_EXCLAME);
+        return;
+      }
+      strLine += '\n' + bit;
+    }
+    if (numOneSpace && numBig) {
+      strLine += "\n\nPress:\n\n\"One Space Only\" to fix just the ones off by one space"
+        "\n\n\"Multiple Spaces\" to fix ones off by multiple spaces also";
+      if (numAmbig)
+        strLine += "\n\n\"Cancel\" to fix nothing and examine the situation.";
+      ind = SEMThreeChoiceBox(strLine, "One Space Only", "Multiple Spaces",
+        numAmbig ? "Cancel" : "", numAmbig ? MB_YESNOCANCEL : MB_YESNO);
+      if (ind == IDCANCEL)
+        return;
+      fixAll = ind == IDNO;
+    } else {
+      if (AfxMessageBox(strLine + "\n\nDo you want to fix whatever can be fixed?",
+        MB_QUESTION) == IDNO)
+        return;
+    }
+  }
+
+  // Proceed with the fixes
+  line = 0;
+  currentInd = startInd;
+  while (currentInd < endInd) {
+    fix = fixIndent[line];
+    if (fixAll || B3DABS(fix) == 1) {
+      if (fix < 0) {
+        m_strMacro.Delete(currentInd, -fix);
+      } else if (fix > 0) {
+        for (ind = 0; ind < fix; ind++)
+          m_strMacro.Insert(currentInd, ' ');
+      }
+      endInd += fix;
+    }
+    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
+    line++;
+  }
+
+  UpdateData(false);
+  m_editMacro.SetSel(startInd, endInd);
+  mProcessor->ScanForName(m_iMacroNumber);
+}
+
+// Add one unit of indentation
+void CMacroEditer::OnButAddIndent()
+{
+  int startInd, endInd, ind, size, currentInd;
+  CString indentStr, strLine;
+  if (GetLineSelectLimits(startInd, endInd, size))
+    return;
+
+  // Make indent string and add to each line
+  for (ind = 0; ind < size; ind++)
+    indentStr += " ";
+  currentInd = startInd;
+  while (currentInd < endInd) {
+    m_strMacro.Insert(currentInd, indentStr);
+    endInd += size;
+    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
+  }
+  UpdateData(false);
+  m_editMacro.SetSel(startInd, endInd);
+  mProcessor->ScanForName(m_iMacroNumber);
+}
+
+// Remove one unit of indentation
+void CMacroEditer::OnButRemoveIndent()
+{
+  int startInd, endInd, ind, size, currentInd;
+  CString indentStr, strLine;
+  if (GetLineSelectLimits(startInd, endInd, size))
+    return;
+
+  // First make sure each line has that much indentation
+  for (ind = 0; ind < size; ind++)
+    indentStr += " ";
+  currentInd = startInd;
+  while (currentInd < endInd) {
+    ind = m_strMacro.Find(indentStr, currentInd);
+    if (ind != currentInd) {
+      AfxMessageBox("Not all lines in the selected region are indented by the indentation"
+        " size");
+      return;
+    }
+    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
+  }
+
+  // Then remove characters
+  currentInd = startInd;
+  while (currentInd < endInd) {
+    m_strMacro.Delete(currentInd, size);
+    endInd -= size;
+    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
+  }
+  UpdateData(false);
+  m_editMacro.SetSel(startInd, endInd);
+  mProcessor->ScanForName(m_iMacroNumber);
+}
+
+// Get string indexes at the start of lines at the beginning and end of selection,
+// return 1 if no selection or indent size not set
+int CMacroEditer::GetLineSelectLimits(int &startInd, int &endInd, int &indentSize)
+{
+  int sel1, sel2, ind, jnd;
+  UpdateData(true);
+  m_editMacro.GetSel(sel1, sel2);
+  indentSize = mWinApp->mMacroProcessor->GetAutoIndentSize();
+  if (sel1 < 0 || sel2 < 0 || !indentSize)
+    return 1;
+  if (sel2 && (m_strMacro.GetAt(sel2 - 1) == '\r' || m_strMacro.GetAt(sel2 - 1) == '\n'))
+    endInd = sel2;
+  else {
+    ind = m_strMacro.Find("\r", sel2);
+    jnd = m_strMacro.Find("\n", sel2);
+    if (ind < 0 && jnd < 0)
+      endInd = m_strMacro.GetLength();
+    else
+      endInd = B3DMAX(ind, jnd) + 1;
+  }
+
+  for (ind = sel1; ind > 0; ind--)
+    if (m_strMacro.GetAt(ind - 1) == '\r' || m_strMacro.GetAt(ind - 1) == '\n')
+      break;
+  startInd = ind;
+  return 0;
 }
 
 // OK button should be disabled if any macro is running, and Run disabled if

@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -445,15 +449,18 @@ BEGIN
         MENUITEM "Load Ne&w Package...",        ID_SCRIPT_LOADNEWPACKAGE
         MENUITEM "Save Pac&kage",               ID_SCRIPT_SAVEPACKAGE
         MENUITEM "Save Package &As...",         ID_SCRIPT_SAVEPACKAGEAS
-        MENUITEM "&Load Many",                  ID_MACRO_READMANY
+        MENUITEM "Load Man&y",                  ID_MACRO_READMANY
+        MENUITEM SEPARATOR
+        MENUITEM "&List Functions",             ID_MACRO_LISTFUNCTIONS
+        MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
+        MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
+        MENUITEM SEPARATOR
+        MENUITEM "Set Indent Si&ze",            ID_SCRIPT_SETINDENTSIZE
+        MENUITEM "Show Indent &Buttons",        ID_SCRIPT_SHOWINDENTBUTTONS
+        MENUITEM "Use Monospaced &Font",        ID_SCRIPT_USEMONOSPACEDFONT
         MENUITEM SEPARATOR
         MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
         MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
-        MENUITEM SEPARATOR
-        MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
-        MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
-        MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
-        MENUITEM "Set Indent Si&ze",            ID_SCRIPT_SETINDENTSIZE
         MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
@@ -1293,7 +1300,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,104,0,10,10,NOT WS_VISIBLE
 END
 
-IDD_MACRO DIALOGEX 0, 0, 132, 176
+IDD_MACRO DIALOGEX 0, 0, 132, 187
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Script"
@@ -1304,8 +1311,8 @@ BEGIN
     EDITTEXT        IDC_EDITMACRO,7,24,118,122,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON      "Run",IDC_RUNMACRO,7,150,32,10
     PUSHBUTTON      "Load",IDC_LOADMACRO,90,150,22,10
-    PUSHBUTTON      "Save",IDC_SAVEMACRO,65,164,23,10
-    PUSHBUTTON      "Save As",IDC_SAVEMACROAS,92,164,33,10
+    PUSHBUTTON      "Save",IDC_SAVEMACRO,65,163,23,10
+    PUSHBUTTON      "Save As",IDC_SAVEMACROAS,92,163,33,10
     PUSHBUTTON      "?",IDC_BUTHELP,115,150,10,10
     PUSHBUTTON      "<-",IDC_TOPREVMACRO,8,2,14,10
     PUSHBUTTON      "->",IDC_TONEXTMACRO,44,2,14,10
@@ -1314,8 +1321,12 @@ BEGIN
     PUSHBUTTON      "Down",IDC_SHIFT_MACRO_DOWN,105,2,20,10
     LTEXT           "Script",IDC_STATIC,84,3,20,8
     LTEXT           "Tab or  `  to complete command",IDC_STAT_COMPLETIONS,7,14,124,8
-    PUSHBUTTON      "Find",IDC_FIND_IN_MACRO,7,164,22,10
-    PUSHBUTTON      "To Line",IDC_BUT_TO_MACRO_LINE,33,164,28,10
+    PUSHBUTTON      "Find",IDC_FIND_IN_MACRO,7,163,22,10
+    PUSHBUTTON      "To Line",IDC_BUT_TO_MACRO_LINE,33,163,28,10
+    LTEXT           "Indent:",IDC_STAT_INDENT,8,177,23,8
+    PUSHBUTTON      "Fix",IDC_BUT_FIX_INDENT,32,176,21,10
+    PUSHBUTTON      "Increase",IDC_BUT_ADD_INDENT,57,176,32,10
+    PUSHBUTTON      "Reduce",IDC_BUT_REMOVE_INDENT,93,176,32,10
 END
 
 IDD_MACROCONTROL DIALOGEX 0, 0, 179, 124
@@ -3385,7 +3396,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3883,114 +3896,114 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACROSELECTER AFX_DIALOG_LAYOUT 
+IDD_MACROSELECTER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT 
+IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FRAMEALIGN AFX_DIALOG_LAYOUT 
+IDD_FRAMEALIGN AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT 
+IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -4296,6 +4309,15 @@ BEGIN
     IDC_ADJUSTFOCUS         "Adjust focus by change in Z height of each frame"
     IDC_EDITZ               "Enter a new current Z value"
     IDC_SHOW_OVERVIEW       "Show buffer B with overview after acquiring montage"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_TOGGLE_HOLES    "Turn off display of the points while the button is pressed"
+    IDC_BUT_TO_MACRO_LINE   "Enter a line number to go to in this script"
+    IDC_BUT_FIX_INDENT      "Adjust indentation of selected lines to nearest multiple of indent size"
+    IDC_BUT_ADD_INDENT      "Add one unit of indentation (the indent size) to selected lines"
+    IDC_BUT_REMOVE_INDENT   "Remove one unit of indentation (the indent size) from selected lines"
 END
 
 STRINGTABLE
@@ -6020,11 +6042,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_BUT_TOGGLE_HOLES    "Turn off display of the points while the button is pressed"
-END
-
-STRINGTABLE
-BEGIN
     ID_WINDOW_RESCUELOGWINDOW 
                             "Bring the log window up in the upper left corner of screen"
     ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
@@ -6037,6 +6054,10 @@ BEGIN
                             "Close valves or turn off filament when program is idle for specified time"
     ID_TASKS_ROUGHUSESEARCHIFINLM 
                             "Use Search in Low Dose for rough eucentricity if scope and Search are in LM"
+    ID_SCRIPT_USEMONOSPACEDFONT 
+                            "Use a non-proportional (evenly spaced) font in Editor"
+    ID_SCRIPT_SHOWINDENTBUTTONS 
+                            "In editor, include buttons fix, increase, or reduce indentation"
 END
 
 #endif    // English (United States) resources

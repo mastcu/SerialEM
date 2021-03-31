@@ -131,6 +131,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONPROGRAMSTART, OnUpdateRunOnProgramStart)
   ON_COMMAND(ID_SCRIPT_RUNATPROGRAMEND, OnRunAtProgramEnd)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNATPROGRAMEND, OnUpdateRunAtProgramEnd)
+  ON_COMMAND(ID_SCRIPT_USEMONOSPACEDFONT, OnUseMonospacedFont)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_USEMONOSPACEDFONT, OnUpdateUseMonospacedFont)
+  ON_COMMAND(ID_SCRIPT_SHOWINDENTBUTTONS, OntShowIndentButtons)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, OnUpdateShowIndentButtons)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -192,6 +196,8 @@ CMacroProcessor::CMacroProcessor()
   mNumToolButtons = 10;
   mToolButHeight = 0;
   mAutoIndentSize = 3;
+  mShowIndentButtons = true;
+  mUseMonoFont = false;
   mRestoreMacroEditors = true;
   mOneLinePlacement.rcNormalPosition.right = 0;
   mMailSubject = "Message from SerialEM script";
@@ -362,6 +368,38 @@ void CMacroProcessor::OnScriptSetIndentSize()
 {
   KGetOneInt("Number of spaces for automatic indentation, or 0 to disable:", 
     mAutoIndentSize);
+}
+
+void CMacroProcessor::OntShowIndentButtons()
+{
+  mShowIndentButtons = !mShowIndentButtons;
+  AfxMessageBox("Resize open script editor(s) to make this change take effect", 
+    MB_ICONINFORMATION | MB_OK);
+}
+
+void CMacroProcessor::OnUpdateShowIndentButtons(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mShowIndentButtons ? 1 : 0);
+}
+
+void CMacroProcessor::OnUseMonospacedFont()
+{
+  SetUseMonoFont(!mUseMonoFont);
+}
+
+void CMacroProcessor::SetUseMonoFont(BOOL inVal)
+{
+  mUseMonoFont = inVal;
+  for (int ind = 0; ind < MAX_MACROS; ind++)
+    if (mMacroEditer[ind])
+      mMacroEditer[ind]->m_editMacro.SetFont(mUseMonoFont ? 
+        &CMacroEditer::mMonoFont : &CMacroEditer::mDefaultFont);
+}
+
+void CMacroProcessor::OnUpdateUseMonospacedFont(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mUseMonoFont > 0 ? 1 : 0);
+  pCmdUI->Enable(mUseMonoFont >= 0);
 }
 
 void CMacroProcessor::OnOpenEditorsOnStart()

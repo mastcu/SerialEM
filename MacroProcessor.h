@@ -145,6 +145,9 @@ public:
   GetSetMember(int, NumToolButtons);
   GetSetMember(int, ToolButHeight);
   GetSetMember(int, AutoIndentSize);
+  GetMember(BOOL, UseMonoFont);
+  void SetUseMonoFont(BOOL inVal);
+  GetSetMember(BOOL, ShowIndentButtons);
   SetMember(int, KeyPressed);
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
@@ -337,6 +340,8 @@ protected:
   int mShowedScopeBox;      // Flag so reply can be assigned to variable
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
   int mAutoIndentSize;         // Number of spaces for autoindent of macro
+  BOOL mUseMonoFont;         // setting to use monospaced font if possible
+  BOOL mShowIndentButtons;   // setting for whether editor shows indent buttons
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
@@ -503,6 +508,10 @@ public:
   afx_msg void OnRunAtProgramEnd();
   afx_msg void OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI);
   int SelectScriptAtStartEnd(CString &name, const char *when);
+  afx_msg void OnUseMonospacedFont();
+  afx_msg void OnUpdateUseMonospacedFont(CCmdUI *pCmdUI);
+  afx_msg void OntShowIndentButtons();
+  afx_msg void OnUpdateShowIndentButtons(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

@@ -1666,6 +1666,10 @@
 #define IDC_STAT_PCT_LABEL              2693
 #define IDC_BUT_TOGGLE_HOLES            2694
 #define IDC_BUT_TO_MACRO_LINE           2695
+#define IDC_STAT_INDENT                 2696
+#define IDC_BUT_FIX_INDENT              2697
+#define IDC_BUT_ADD_INDENT              2698
+#define IDC_BUT_REMOVE_INDENT           2700
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2156,6 +2160,8 @@
 #define ID_OPTIONS_USEITEMLABELSINFILENAMES 33398
 #define ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 33399
 #define ID_TASKS_ROUGHUSESEARCHIFINLM   33400
+#define ID_SCRIPT_USEMONOSPACEDFONT     33401
+#define ID_SCRIPT_SHOWINDENTBUTTONS     33402
 
 // Next default values for new objects
 // 
@@ -2163,8 +2169,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        254
-#define _APS_NEXT_COMMAND_VALUE         33401
-#define _APS_NEXT_CONTROL_VALUE         2696
+#define _APS_NEXT_COMMAND_VALUE         33403
+#define _APS_NEXT_CONTROL_VALUE         2701
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
