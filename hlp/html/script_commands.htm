@@ -1450,7 +1450,9 @@
           <TD class="scriptcommand">ImageProperties [buf]</TD>
           <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
             used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>, 
-            which can be in the FFT window.
+            which can be in the FFT window.&nbsp; It also sets the variable <i>imageTickTime</i>
+            with the time that the image finished being acquired,
+            in seconds since the program started.
             &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR>
@@ -3361,10 +3363,12 @@
             script is being run on.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">UpdateGroupZ</TD>
-          <TD>Assigns current stage Z value to the whole group that the current Navigator
-            item, or item that this script is being run on, belongs to. The item must have a
-            non-zero group ID. If the group would show up on more than one line with
+          <TD class="scriptcommand">UpdateGroupZ [#]</TD>
+          <TD>Assigns current stage Z value to the whole group of either the current Navigator
+            item, the item that this script is being run on, or the next item to be acquired 
+            if the optional [#] is non-zero.&nbsp; The item must have a
+            non-zero group ID.&nbsp; Acquisition must be running to assign to the next 
+            group.&nbsp; If the group would show up on more than one line with
             'Collapse groups' on, items on all lines will be updated, unlike with the
             'Update Z' button.</TD>
         </TR>

@@ -5169,6 +5169,10 @@ int CMacCmd::ImageProperties(void)
   SetReportedValues(&mStrItems[2], (double)cSizeX, (double)cSizeY,
     cImBuf->mBinning / (double)B3DMAX(1, cImBuf->mDivideBinToShow),
     (double)cImBuf->mExposure, cDelX, cDelY);
+  cDelISX = SEMTickInterval(1000. * cImBuf->mTimeStamp, mWinApp->ProgramStartTime()) / 
+    1000.;
+  cReport.Format("%.3f", cDelISX);
+  SetVariable("IMAGETICKTIME", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
   return 0;
 }
 
@@ -6964,7 +6968,7 @@ int CMacCmd::ReportNavItem(void)
   if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {
     cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
     if (cIndex < 0)
-      ABORT_LINE("There is no current Navigator item for line:\n\n.");
+      ABORT_LINE("There is no current Navigator item for line:\n\n");
     cIndex2 = 1;
   } else if (cTruth) {
     if (!mNavigator->GetAcquiring())
@@ -7485,7 +7489,14 @@ int CMacCmd::UpdateItemZ(void)
 {
   ABORT_NONAV;
   cIndex2 = CMD_IS(UPDATEGROUPZ) ? 1 : 0;
-  cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
+  if (!mItemEmpty[1] && mItemInt[1]) {
+    if (!mNavigator->GetAcquiring())
+      ABORT_LINE("The Navigator needs to be acquiring for updating the next group Z in "
+        "line:\n\n");
+    if (!mNavigator->FindNextAcquireItem(cIndex))
+      ABORT_LINE("There is no next Navigator item to be acquired for line:\n\n");
+  } else 
+    cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
   if (cIndex < 0)
     ABORT_NOLINE("There is no current Navigator item.");
   cIndex = mNavigator->DoUpdateZ(cIndex, cIndex2);
