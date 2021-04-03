@@ -190,6 +190,7 @@ BOOL_PROP_TEST("MontageRealignToNearest", mWinApp->mMontageController->, AlignTo
 INT_PROP_TEST("MontageISRealignInterval", mWinApp->mMontageController->, ISrealignInterval)
 BOOL_PROP_TEST("MontageUseTrialInISRealign", mWinApp->mMontageController->, UseTrialSetInISrealign)
 DBL_PROP_TEST("MontageOverlapFraction", mWinApp->mDocWnd->, OverlapFraction)
+FLOAT_PROP_TEST("MontMaxOverlapFraction", mWinApp->mDocWnd->, MaxOverlapFraction)
 BOOL_PROP_TEST("ShootFilmIfMontageDark", mWinApp->mMontageController->, ShootFilmIfDark)
 INT_PROP_TEST("MontageDuplicateRetries", mWinApp->mMontageController->, DuplicateRetryLimit)
 INT_PROP_TEST("MontageDriftRepeatLimit", mWinApp->mMontageController->, DriftRepeatLimit)

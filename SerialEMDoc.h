@@ -69,15 +69,16 @@ public:
   void SaveCalibrations();
 	void SaveShortTermCal();
 	void AppendToProgramLog(BOOL starting);
-  GetSetMember(BOOL, AutoSaveNav)
-  GetSetMember(BOOL, AutoSaveSettings)
-  GetSetMember(BOOL, IgnoreShortTerm)
-  SetMember(int, DefaultMontXpieces)
-  SetMember(int, DefaultMontYpieces)
-  GetSetMember(double, OverlapFraction)
-  GetMember(int, MaxMontagePieces)
-  GetMember(int, MinMontageOverlap)
-  GetMember(float, MaxOverlapFraction)
+  GetSetMember(BOOL, AutoSaveNav);
+  GetSetMember(BOOL, AutoSaveSettings);
+  GetSetMember(BOOL, IgnoreShortTerm);
+  SetMember(int, DefaultMontXpieces);
+  SetMember(int, DefaultMontYpieces);
+  GetSetMember(double, OverlapFraction);
+  GetMember(int, MaxMontagePieces);
+  GetMember(int, MinMontageOverlap);
+  GetMember(float, MaxOverlapFraction);
+  void SetMaxOverlapFraction(float inVal) { B3DCLAMP(inVal, 0.25f, 0.75f); mMaxOverlapFraction = inVal; };
   SetMember(int, STEMfileMode);
   GetSetMember(int, STEMunsignOpt);
   GetSetMember(BOOL, SkipFileDlg);
