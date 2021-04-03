@@ -107,7 +107,7 @@ void EMstatusWindow::Update()
 		    height = buf->mImage->getHeight();
 		    spaceIt = width < 10000 && height < 10000;
         m_sSizeText.Format("Size: %d%sx%s%d  %s %s", width, spaceIt ? " " : "", 
-          spaceIt ? " " : "", height, STEM ? "samp" : "bin", (LPCTSTR)buf->BinningText());
+          spaceIt ? " " : "", height, STEM ? "sam" : "bin", (LPCTSTR)buf->BinningText());
         EMimageExtra *extra = (EMimageExtra *)buf->mImage->GetUserData();
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
