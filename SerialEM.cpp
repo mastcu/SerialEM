@@ -2750,6 +2750,49 @@ CString DLL_IM_EX SEMLastNoBoxMessage()
   return ((CSerialEMApp *)AfxGetApp())->mTSController->GetLastNoBoxMessage();
 }
 
+// Return an image from a specified buffer number, or NULL if the number is out of
+// or there is no image there.  Return the type (an MRC mode) bytes per line and size
+void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBytes, 
+  int &sizeX, int &sizeY)
+{
+  EMimageBuffer *imBufs;
+  if (bufInd < 0 || (!ifFFT && bufInd >= MAX_BUFFERS) ||
+    (ifFFT && bufInd >= MAX_FFT_BUFFERS))
+    return NULL;
+  if (ifFFT)
+    imBufs = ((CSerialEMApp *)AfxGetApp())->GetFFTBufs();
+  else
+    imBufs = ((CSerialEMApp *)AfxGetApp())->GetImBufs();
+  if (!imBufs[bufInd].mImage)
+    return NULL;
+  imType = imBufs[bufInd].mImage->getType();
+  rowBytes = imBufs[bufInd].mImage->getRowBytes();
+  imBufs[bufInd].mImage->getSize(sizeX, sizeY);
+  return imBufs[bufInd].mImage->getRowData(0);
+}
+
+// Check if the image in the given array still exists in one of the buffers with those
+// specifications
+bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int sizeX, 
+  int sizeY, int &bufInd, int &ifFFT)
+{
+  int maxBuf = MAX_BUFFERS;
+  EMimageBuffer *imBufs = ((CSerialEMApp *)AfxGetApp())->GetImBufs();
+  KImage *image;
+  for (ifFFT = 0; ifFFT < 2; ifFFT++) {
+    for (bufInd = 0; bufInd < maxBuf; bufInd++) {
+      image = imBufs[bufInd].mImage;
+      if (image && image->getType() == imType && image->getWidth() == sizeX &&
+        image->getHeight() == sizeY && image->getRowBytes() == rowBytes &&
+        image->getRowData(0) == (char *)array)
+        return true;
+    }
+    maxBuf = MAX_FFT_BUFFERS;
+    imBufs = ((CSerialEMApp *)AfxGetApp())->GetFFTBufs();
+  }
+  return false;
+}
+
 // And global function for accessing ThreeChoiceBox through TSMessageBox
 int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
   CString cancelText, UINT type, int setDefault, BOOL terminate, int retval)

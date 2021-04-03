@@ -134,7 +134,7 @@ BOOL CMacroEditer::OnInitDialog()
           mMonoFont.GetLogFont(&logFont);
 
           // This doesn't work!  It will tell you it got what you asked for and end up
-          // witjh Courier
+          // with Courier
           if (ind < lastFont) {
             if (strstr(logFont.lfFaceName, "Courier")) {
               SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, tryNames[ind]);

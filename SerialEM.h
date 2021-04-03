@@ -392,7 +392,11 @@ void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore);
 LensRelaxData DLL_IM_EX *SEMLookupJeolRelaxData(int normInd);
 double DLL_IM_EX SEMRecentVoltage();
 CString DLL_IM_EX SEMLastNoBoxMessage();
-
+void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBytes, int &sizeX,
+  int &sizeY);
+bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int sizeX, int sizeY,
+  int &bufInd, int &ifFFT);
+  
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {
 public:

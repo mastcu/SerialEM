@@ -719,6 +719,24 @@
           <TD>Returns the value of a variable <b>var</b> as string or floating point value, depending
              on whether the variable was designated as numeric when it was stored</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">bufferImage(buf)</TD>
+          <TD>Constructs an instance of the 'bufferImage' type that has an image pointer and other
+            essential information about the image in buffer <b>buf</b>, which is a non-numeric string 
+            and can specify an FFT buffer.&nbsp; This type instance can provide the
+            image to other classes via the Python 'Buffer Protocol'.&nbsp; The image is read-only and
+            if another class requests a writable image it will generate a SEMError exception.&nbsp; The
+            image may have padding (i.e., not be strictly contiguous) and a request that does not permit
+             striding between lines could generate an exception.&nbsp; Not available below Python 3.4.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">IsImageValid(bufIm)</TD>
+          <TD>Tests whether the bufferImage object <b>bufIm</b> still points to an image of the same type 
+            located in one of the main or FFT buffers. &nbsp;Returns a duple with the current buffer index
+            (numbered from 0) and 1 if it is an FFT buffer, or 'None' if the image cannot be found.
+          </TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A name="camera_commands"></A><B>Camera Commands</B></P>
