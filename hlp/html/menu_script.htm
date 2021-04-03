@@ -256,7 +256,11 @@
     <p>Use this command to toggle between using the regular proportional font and an 
       equally-spaced font in all editor windows.&nbsp; If it is grayed out, it means 
       that no monospaced font was available.&nbsp; The program tries to access Lucida 
-      Sans Typewriter, and if that fails it tries to use Courier New.</p>
+      Console, Consolas, and Lucida Sans Typewriter, and if those fail it tries to use Courier New 
+      with a heavier weight.&nbsp; However, it cannot tell if the system is going to 
+      use a Courier font even though it asked for a better one.&nbsp; If you get a 
+      font you do not like, add the property 'ScriptMonospaceFont' with the exact name 
+      of a monospaced font available on your system, which it will try first..</p>
       <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B>
         <P>Use this command to choose a script to run when the program starts.&nbsp; The 
           menu entry shows up as checked when a script has been chosen.&nbsp; When you 

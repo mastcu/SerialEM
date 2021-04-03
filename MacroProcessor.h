@@ -148,6 +148,7 @@ public:
   GetMember(BOOL, UseMonoFont);
   void SetUseMonoFont(BOOL inVal);
   GetSetMember(BOOL, ShowIndentButtons);
+  GetSetMember(CString, MonoFontName);
   SetMember(int, KeyPressed);
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
@@ -341,6 +342,7 @@ protected:
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
   int mAutoIndentSize;         // Number of spaces for autoindent of macro
   BOOL mUseMonoFont;         // setting to use monospaced font if possible
+  CString mMonoFontName;     // Priority font to use
   BOOL mShowIndentButtons;   // setting for whether editor shows indent buttons
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
