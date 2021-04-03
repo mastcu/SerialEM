@@ -2939,6 +2939,10 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mWinApp->SetProgramTitleText(message);
 
+      } else if (NAME_IS("ScriptMonospaceFont")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mMacroProcessor->SetMonoFontName(message);
+      
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_CONSETS || strItems[2].IsEmpty())

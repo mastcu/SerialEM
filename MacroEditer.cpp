@@ -108,6 +108,10 @@ BOOL CMacroEditer::OnInitDialog()
   CBaseDlg::OnInitDialog();
   CFont *font;
   LOGFONT logFont;
+  CString propFont = mProcessor->GetMonoFontName();
+  const char *tryNames[] = {"Lucida Console", "Consolas", "Lucida Sans Typewriter",
+    "Courier New"};
+  int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
   
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect, OKRect, clientRect;
@@ -116,19 +120,32 @@ BOOL CMacroEditer::OnInitDialog()
   if (mHasMonoFont < 0) {
     font = m_editMacro.GetFont();
     font->GetLogFont(&logFont);
-    if (!mDefaultFont.CreateFontIndirect(&logFont)) {
-      mHasMonoFont = 0;
-    } else {
-      if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0, logFont.lfWeight,
-        0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-        CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-        FF_DONTCARE, "Lucida Sans Typewriter")) {
-        mHasMonoFont = 1;
-      } else {
-        mHasMonoFont = mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0, logFont.lfWeight,
-          0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-          CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-          FF_DONTCARE, "Courier New") ? 1 : 0;
+    height = logFont.lfHeight;
+    mHasMonoFont = 0;
+    if (mDefaultFont.CreateFontIndirect(&logFont)) {
+      for (ind = -1; ind <= lastFont; ind++) {
+        if (ind < 0 && propFont.IsEmpty())
+          continue;
+        if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0,
+          ind < lastFont ? logFont.lfWeight : FW_SEMIBOLD,
+          0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
+          DEFAULT_QUALITY, FIXED_PITCH | (ind < lastFont ? 0 : FF_DONTCARE),
+          ind < 0 ? (LPCTSTR)propFont : tryNames[ind])) {
+          mMonoFont.GetLogFont(&logFont);
+
+          // This doesn't work!  It will tell you it got what you asked for and end up
+          // witjh Courier
+          if (ind < lastFont) {
+            if (strstr(logFont.lfFaceName, "Courier")) {
+              SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, tryNames[ind]);
+              continue;
+            }
+          }
+          mHasMonoFont = 1;
+          SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, 
+            ind < 0 ? (LPCTSTR)propFont : tryNames[ind]);
+          break;
+        }
       }
     }
   }
