@@ -132,6 +132,7 @@ static int sBuildDayStamp;
 static CString sAboutVersion;
 static CString sFunctionCalled = "";
 static bool sIgnoreFunctionCalled = false;
+static DWORD sMainThreadID;
 
 CComModule _Module;
 
@@ -819,6 +820,7 @@ BOOL CSerialEMApp::InitInstance()
     mToolDlgs[mag] = (CToolDlg *)toolDlgs[mag];
 
   AfxEnableControlContainer();
+  sMainThreadID = GetCurrentThreadId();
 
   // Standard initialization
   // If you are not using these features and wish to reduce the size
@@ -2764,7 +2766,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 // Register the name of a function being called in case of a crash
 void SEMSetFunctionCalled(const char *name, const char *descrip)
 {
-  if (sIgnoreFunctionCalled)
+  if (sIgnoreFunctionCalled || sMainThreadID != GetCurrentThreadId())
     return;
   sFunctionCalled = name;
   if (!sFunctionCalled.IsEmpty() && descrip)

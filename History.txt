@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/2/21: Fixed crash at end of STEM montage on systems with more than one
+detector (In 3.8).
+
 3/31/21: Added ability to use a monospaced font and to adjust
 indentation more easily in script editor.
 

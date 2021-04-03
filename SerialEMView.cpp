@@ -815,7 +815,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             cdc.TextOut(mWinApp->ScaleValueForDPI(420), scaled10, camP->name);
           if (bufferOK && camP->STEMcamera && camP->numChannels > 1) {
             EMimageExtra *extra = imBuf->mImage->GetUserData();
-            if (!extra->mChannelName.IsEmpty())
+            if (extra && !extra->mChannelName.IsEmpty())
               cdc.TextOut(scaled140, scaled10, extra->mChannelName);
           }
 
