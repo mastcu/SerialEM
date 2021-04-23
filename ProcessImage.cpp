@@ -641,10 +641,22 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
                                       bool fftWindow, int toBufNum)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
-  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs +toBufNum);
+  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) +toBufNum;
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
+  int ind;
+
+  // If imBuf has no image, switch to the buffer we are going to, then find any image
+  if (!imBuf->mImage)
+    imBuf = toImBuf;
+  if (!imBuf->mImage) {
+    for (ind = 0; ind < B3DCHOICE(fftWindow, MAX_FFT_BUFFERS, MAX_BUFFERS); ind++) {
+      imBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) + ind;
+      if (imBuf->mImage)
+        break;
+    }
+  }
 
   // Make a temporary copy of the imBuf because it may get displaced on the roll
   EMimageBuffer imBufTmp;
@@ -653,8 +665,8 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   // Roll the buffers just like on acquire if going to A
   int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, 
     bufferManager->GetShiftsOnAcquire());
-  if ((!imBuf->GetSaveCopyFlag() && imBuf->mCaptured > 0 && mLiveFFT && imBuf == mImBufs)
-    || toBufNum > 0)
+  if ((!toImBuf->GetSaveCopyFlag() && toImBuf->mCaptured > 0 && mLiveFFT &&
+    toImBuf == mImBufs) || toBufNum > 0)
     nRoll = 0;
   for (int i = nRoll; i > 0 ; i--)
     bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
@@ -679,8 +691,10 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   // Fix the binning, transfer any extra data, and redisplay
   toImBuf->mBinning = B3DNINT(imBufTmp.mBinning * moreBinning);
   toImBuf->mPixelSize = imBufTmp.mPixelSize * (float)moreBinning;
-  toImBuf->mImage->SetUserData(imBufTmp.mImage->GetUserData());
-  imBufTmp.mImage->SetUserData(NULL);
+  if (imBufTmp.mImage) {
+    toImBuf->mImage->SetUserData(imBufTmp.mImage->GetUserData());
+    imBufTmp.mImage->SetUserData(NULL);
+  }
   imBufTmp.DeleteImage();
 
   // Restore user point position and status for a live FFT
