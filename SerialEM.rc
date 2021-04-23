@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -5158,7 +5159,7 @@ BEGIN
     IDC_NA_SKIP_INITIAL_MOVE 
                             "Skip the initial stage move; it is redundant to the moves in Realign to Item"
     IDC_NA_SKIP_Z_MOVES     "Do not move stage in Z during initial move or Realign to Item"
-    IDC_ONLY_IN_PLUGIN      "Use these parameters only when aligning in plugin"
+    IDC_ONLY_IN_PLUGIN      "Use these parameters only when aligning in SerialEM or SEMCCD plugin"
     IDC_ONLY_WITH_IMOD      "Use these parameters only when saving pcm file to align with IMOD"
     IDC_ONLY_NON_SUPER      "Use these parameters only for aligning counting mode (4K) frames"
     IDC_ONLY_SUPERRESOLUTION 
@@ -5493,9 +5494,9 @@ BEGIN
     IDC_RSUPERRES           "Acquire images in Super-Resolution mode"
     IDC_DOSE_FRAC_MODE      "Divide images into subframes with Dose Fractionation "
     IDC_EDIT_FRAME_TIME     "Duration of subframes in seconds"
-    IDC_ALIGN_DOSE_FRAC     "Align subframes in DigitalMicrograph and return aligned sum to SerialEM"
+    IDC_ALIGN_DOSE_FRAC     "Align subframes as indicated in line below"
     IDC_COMBOFILTER         "Select filter to use when aligning subframes"
-    IDC_SAVE_FRAMES         "Save each subframe in Dose Fractionation mode from SerialEMCCD plugin"
+    IDC_SAVE_FRAMES         "Save each subframe of the acquired image"
     IDC_ONE_FRAME_PER_FILE  "K2/3: Save each frame to a separate file; Falcon 4: save EER file if possible"
     IDC_SET_SAVE_FOLDER     "Specify the folder where frames will be saved"
     IDC_EDIT_READOUTS       "Enter 2 values on each line, # of sums to save & # of subframes in each sum"
@@ -5794,7 +5795,7 @@ BEGIN
     IDC_HYBRID_SHIFTS       "Use hybrid shifts when getting shifts with more than one filter"
     IDC_EDIT_SIGMA_RATIO    "Ratio of falloff (sigma2) to cuttoff for high-frequency filters"
     IDC_EDIT_STOP_ITER      "Change in shift below which to stop refinement iterations"
-    IDC_USE_FRAME_ALIGN     "Use frame alignment routine built into SerialEM's plugin to DM"
+    IDC_USE_FRAME_ALIGN     "Use frame alignment routine built into SerialEM or its plugin to DM"
 END
 
 STRINGTABLE
@@ -6083,7 +6084,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
