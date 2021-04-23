@@ -5416,6 +5416,8 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
       (magTab[mMagBefore].rotation[mWinApp->GetCurrentCamera()] + mParam->extraRotation);
     if (mShiftManager->GetInvertStageXAxis())
       mTD.STEMrotation = -mTD.STEMrotation;
+    SEMTrace('s', "Set %d, mag %d, STEM rotation %.1f", inSet, mMagBefore, 
+      mTD.STEMrotation);
     if (conSet.dynamicFocus && mSingleContModeUsed == SINGLE_FRAME && 
       mNeedShotToInsert < 0) {
         if (mParam->FEItype) {
