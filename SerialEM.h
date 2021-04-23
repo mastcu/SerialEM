@@ -312,6 +312,7 @@ class CAutoTuning;
 class CExternalTools;
 class CScreenShotDialog;
 class CMainFrame;
+class CPythonServer;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMApp:
@@ -583,6 +584,8 @@ public:
   GetMember(bool, JustChangingLDarea);
   GetMember(bool, JustDoingSynchro);
   GetMember(bool, InUpdateWindows);
+  GetMember(BOOL, EnableExternalPython);
+  void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
   std::set<int>  *GetIDsToDisable() { return &mIDsToDisable; };
@@ -666,6 +669,7 @@ public:
   CStageMoveTool *mStageMoveTool;
   CAutoTuning *mAutoTuning;
   CExternalTools *mExternalTools;
+  CPythonServer *mPythonServer;
   CString  m_strTitle;
   HitachiParams mHitachiParams;
   CString mStartupMessage;     // Message to display in box or log window on startup
@@ -869,6 +873,7 @@ private:
   bool mJustChangingLDarea;     // Flag that "DOingTasks" was true because of LD change
   bool mJustDoingSynchro;       // Flag that "DoingTasks" true because of synchro thread
   bool mInUpdateWindows;        // Flag that update call is from UpdateBufferWindows
+  BOOL mEnableExternalPython;   // Flag to open socket for external python
 
 
 public:

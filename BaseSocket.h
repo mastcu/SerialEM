@@ -1,13 +1,16 @@
 #pragma once
 #include <winsock.h>
 
-#define MAX_SOCKETS 6
-#define MAX_SOCKET_IDS 8
-#define GATAN_SOCK_ID 0
-#define FEI_SOCK_ID  1
-#define JEOLCAM_SOCK_ID 4
-#define HITACHI_SOCK_ID 6
-#define TIETZ_SOCK_ID   5
+#define MAX_SOCKETS 8
+#define MAX_SOCKET_IDS 10
+#define GATAN_SOCK_ID    0
+#define FEI_SOCK_ID      1
+#define JEOLCAM_SOCK_ID  4
+#define TIETZ_SOCK_ID    5
+#define HITACHI_SOCK_ID  6
+#define RUN_PYTH_SOCK_ID 7
+#define EXT_PYTH_SOCK_ID 8
+// Note that SavvyScan was given 9!
 
 // Macros for adding arguments
 #define LONG_ARG(a, b) mLongArgs[a][mNumLongSend[a]++] = b;
@@ -90,6 +93,7 @@ public:
   static int PackDataToSend(int sockInd);
   static void SetServerIP(int typeID, CString ipString);
   static void SetServerPort(int typeID, int port);
+  static unsigned short GetServerPort(int typeID, unsigned short dfltPort);
   static int LookupTypeID(int typeID);
   void Release() {};   // Needed to keep macros happy
   static void CloseBeforeNextUse(int typeID);

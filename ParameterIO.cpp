@@ -2174,7 +2174,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
     "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
-    "toolarguments"};
+    "toolarguments", "pathtopython"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
@@ -2942,7 +2942,20 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (NAME_IS("ScriptMonospaceFont")) {
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetMonoFontName(message);
+
+      } else if (NAME_IS("PythonModulePath")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mMacroProcessor->SetPyModulePath(message);
       
+      } else if (NAME_IS("PathToPython")) {
+        if (strItems[2].IsEmpty()) {
+          AfxMessageBox("Entry must contain a version number then the path in properties"
+            " file " + strFileName + " : " + strLine, MB_EXCLAME);
+        } else {
+          StripItems(strLine, 2, message);
+          mWinApp->mMacroProcessor->SetPathToPython(strItems[1], message);
+        }
+
       } else if (MatchNoCase("ControlSetName")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_CONSETS || strItems[2].IsEmpty())

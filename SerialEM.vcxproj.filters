@@ -485,6 +485,12 @@
     <ClInclude Include="DefineScriptMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BaseServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PythonServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1195,6 +1201,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MyButton.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseServer.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PythonServer.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

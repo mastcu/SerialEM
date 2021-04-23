@@ -28,12 +28,15 @@
 #include "HoleFinderDlg.h"
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
+#include "ProcessImage.h"
 #include "MacroControlDlg.h"
 #include "NavigatorDlg.h"
 #include "OneLineScript.h"
 #include "Mailer.h"
 #include "PiezoAndPPControl.h"
 #include "MacroSelector.h"
+#include "PythonServer.h"
+#include "BaseSocket.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\\b3dutil.h"
 
@@ -73,6 +76,8 @@ static char THIS_FILE[]=__FILE__;
 
 ScriptLangData CMacroProcessor::mScrpLangData;
 ScriptLangPlugFuncs *CMacroProcessor::mScrpLangFuncs = NULL;
+HANDLE CMacroProcessor::mScrpLangDoneEvent = NULL;
+HANDLE CMacroProcessor::mPyProcessHandle = NULL;
 std::set<int> CMacroProcessor::mPythonOnlyCmdSet;
 
 static int sProcessExitStatus;
@@ -192,6 +197,7 @@ CMacroProcessor::CMacroProcessor()
   mLastCompleted = false;
   mLastAborted = false;
   mEnteredName = "";
+  mScrpLangData.externalControl = 0;
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
   mToolButHeight = 0;
@@ -211,7 +217,11 @@ CMacroProcessor::CMacroProcessor()
   srand(GetTickCount());
   mProcessThread = NULL;
   mScrpLangThread = NULL;
-  mScrpLangDoneEvent = NULL;
+  mScrpLangDoneEvent = CreateEventA(NULL, FALSE, FALSE, SCRIPT_EVENT_NAME);
+  if (!mScrpLangDoneEvent) {
+    AfxMessageBox("Cannot run external scripting language; failed to make event"
+      " for signaling to it");
+  }
 }
 
 CMacroProcessor::~CMacroProcessor()
@@ -220,6 +230,13 @@ CMacroProcessor::~CMacroProcessor()
   ClearVariables(VARTYPE_PERSIST);
   ClearFunctionArray(-1);
   CloseFileForText(-2);
+}
+
+void CMacroProcessor::ShutdownScrpLangScripting()
+{
+  TerminateScrpLangProcess();
+  if (mWinApp->mPythonServer)
+    mWinApp->mPythonServer->ShutdownSocketIfOpen(RUN_PYTH_SOCK_ID);
 }
 
 void CMacroProcessor::Initialize()
@@ -237,6 +254,9 @@ void CMacroProcessor::Initialize()
       if (mCmdList[i].arithAllowed & 1)
         mWinApp->AppendToLog(mCmdList[i].mixedCase);
   }
+  if (mPyModulePath.IsEmpty())
+    mPyModulePath = mWinApp->mPluginManager->GetExePath() + "\\PythonMoules";
+  mPyModulePath.Replace("\\", "/");
 }
 
 // MESSAGE HANDLERS
@@ -808,8 +828,25 @@ int CMacroProcessor::TaskBusy()
 
   // Check if command is ready from external scripting, or if it finished/errored
   if (mRunningScrpLang && mScrpLangData.waitingForCommand) {
+
+    // But first handle inserting an image in a buffer
+    if (CPythonServer::mImArray) {
+      mProcessImage->NewProcessedImage(&mImBufs[CPythonServer::mImBaseBuf],
+        (short *)CPythonServer::mImArray, CPythonServer::mImType, CPythonServer::mImSizeX,
+        CPythonServer::mImSizeY, CPythonServer::mMoreBinning, CPythonServer::mCapFlag,
+        false, CPythonServer::mImToBuf);
+      CPythonServer::mImArray = NULL;
+      SetEvent(mScrpLangDoneEvent);
+      SEMTrace('[', "signal function done after NewProcessedImage");
+    }
+    if (mScrpLangData.externalControl && mScrpLangData.disconnected) {
+      AbortMacro();
+      return 0;
+    }
     if (mScrpLangData.commandReady)
       return 0;
+    if (mScrpLangData.externalControl)
+      return 1;
     tbusy = UtilThreadBusy(&mScrpLangThread);
     if (tbusy > 0)
       return 1;
@@ -865,28 +902,47 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
+// If the program is not busy, set the flag for running an external script and start it
+void CMacroProcessor::CheckAndSetupExternalControl(void)
+{
+  if (mWinApp->DoingTasks() || (mCamera->CameraBusy() && 
+    !mCamera->DoingContinuousAcquire())) {
+    mScrpLangData.externalControl = 0;
+    return;
+  }
+  mScrpLangData.externalControl = 1;
+  Run(0);
+}
+
 // To run a macro: set the current macro with index at start
 void CMacroProcessor::Run(int which)
 {
   int mac, ind, tryLevel = 0;
   double startTime;
+  bool external = mScrpLangData.externalControl > 0;
   MacroFunction *func;
   CString *longMacNames = mWinApp->GetLongMacroNames();
   CString name;
-  if (mMacros[which].IsEmpty())
-    return;
+  mRunningScrpLang = false;
+  mCallLevel = 0;
+  if (!external) {
+    if (mMacros[which].IsEmpty())
+      return;
 
-  PrepareForMacroChecking(which);
+    PrepareForMacroChecking(which);
+
+    // First check for an language script and get it composed
+    ind = CheckForScriptLanguage(which);
+    if (ind > 0)
+      return;
+  } else
+    ind = -1;
   mLastAborted = true;
   mLastCompleted = false;
-  mRunningScrpLang = false;
-
-  // First check for an external script and get it composed
-  ind = CheckForScriptLanguage(which);
-  if (ind > 0)
-    return;
   if (ind < 0) {
-    mRunningScrpLang = true;
+
+    // For language script, make sure camera is stopped then set flag
+    mScrpLangData.disconnected = false;
     if (mCamera->DoingContinuousAcquire()) {
       mCamera->StopCapture(0);
       startTime = GetTickCount();
@@ -898,10 +954,11 @@ void CMacroProcessor::Run(int which)
       if (mCamera->CameraBusy()) {
         SEMMessageBox("Could not stop continuous camera acquisition; cannot proceed with"
           " script");
+        mScrpLangData.externalControl = 0;
         return;
       }
     }
-
+    mRunningScrpLang = true;
   }
 
   // Check the macro(s) for commands, number of arguments, etc.
@@ -968,12 +1025,16 @@ void CMacroProcessor::Run(int which)
   mStartClock = GetTickCount();
   mOverwriteOK = false;
   mVerbose = mInitialVerbose ? 1 : 0;
-  name = mMacNames[mCurrentMacro];
-  if (name.IsEmpty())
-    name.Format("Script #%d", mCurrentMacro + 1);
+  if (external) {
+    name = "External Script";
+  } else {
+    name = mMacNames[mCurrentMacro];
+    if (name.IsEmpty())
+      name.Format("Script #%d", mCurrentMacro + 1);
+    if (!longMacNames[mCurrentMacro].IsEmpty())
+      SetVariable("LONGNAME", longMacNames[mCurrentMacro], VARTYPE_REGULAR, -1, false);
+  }
   SetVariable("SCRIPTNAME", name, VARTYPE_REGULAR, -1, false);
-  if (!longMacNames[mCurrentMacro].IsEmpty())
-    SetVariable("LONGNAME", longMacNames[mCurrentMacro], VARTYPE_REGULAR, -1, false);
   CloseFileForText(-1);
 
   RunOrResume();
@@ -1030,7 +1091,8 @@ void CMacroProcessor::RunOrResume()
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
 
-  // Start the script language thread and set up waiting for command
+  // Start the script language thread unless doing external control,
+  // and set up waiting for command
   if (mRunningScrpLang) {
     mWinApp->mMacroProcessor->InitForNextCommand();
     for (ind = MAX_SCRIPT_LANG_ARGS; ind < MAX_MACRO_TOKENS; ind++) {
@@ -1041,11 +1103,13 @@ void CMacroProcessor::RunOrResume()
       mItemInt[ind] = 0;
     }
     mScrpLangData.waitingForCommand = 1;
-    mScrpLangThread = AfxBeginThread(RunScriptLangProc,
-      (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] : mMacroForScrpLang),
-      THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-    mScrpLangThread->m_bAutoDelete = false;
-    mScrpLangThread->ResumeThread();
+    if (!mScrpLangData.externalControl) {
+      mScrpLangThread = AfxBeginThread(RunScriptLangProc,
+        (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] : mMacroForScrpLang),
+        THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+      mScrpLangThread->m_bAutoDelete = false;
+      mScrpLangThread->ResumeThread();
+    }
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
     return;
   }
@@ -1061,7 +1125,9 @@ void CMacroProcessor::RunOrResume()
 // Set the macro name or message in complex pane
 void CMacroProcessor::SetComplexPane(void)
 {
-  if (mMacNames[mCurrentMacro].IsEmpty())
+  if (mScrpLangData.externalControl)
+    mMacroPaneText.Format("EXTERNAL CONTROL");
+  else if (mMacNames[mCurrentMacro].IsEmpty())
     mMacroPaneText.Format("DOING SCRIPT %d", mCurrentMacro + 1);
   else
     mMacroPaneText.Format("DOING %d: %s", mCurrentMacro + 1, mMacNames[mCurrentMacro]);
@@ -1108,9 +1174,14 @@ void CMacroProcessor::Stop(BOOL ifNow)
       return;
     if (mProcessThread && UtilThreadBusy(&mProcessThread) > 0)
       UtilThreadCleanup(&mProcessThread);
-    // HUH?
-    if (mScrpLangThread && UtilThreadBusy(&mScrpLangThread) > 0)
+
+    // If we are running Python, kill it now
+    if (mScrpLangThread && UtilThreadBusy(&mScrpLangThread) > 0) {
+      mScrpLangThread->SuspendThread();
+      TerminateScrpLangProcess();
       UtilThreadCleanup(&mScrpLangThread);
+
+    }
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
     SuspendMacro();
@@ -1186,16 +1257,27 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     return;
   SEMTrace('[', "In abort");
   // Intercept abort when doing external script, set error flag and set wait for command
-  if (mRunningScrpLang && !mScrpLangData.threadDone) {
-    if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT && 
-      mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC)
-      mScrpLangData.errorOccurred = 1;
-    mScrpLangData.waitingForCommand = 1;
-    mScrpLangData.commandReady = 0;
-    SetEvent(mScrpLangDoneEvent);
-    SEMTrace('[', "signal function done after Abort");
-    mWinApp->AddIdleTask(TASK_MACRO_RUN, 0, 0);
-    return;
+  if (mRunningScrpLang && (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
+    if (mScrpLangData.disconnected) {
+      mScrpLangData.externalControl = 0;
+    } else {
+      if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
+        mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC) {
+        mScrpLangData.errorOccurred = 1;
+        mScrpLangData.highestReportInd = 0;
+        mScrpLangData.reportedStrs[0] = mWinApp->mTSController->GetLastNoBoxMessage();
+        mScrpLangData.repValIsString[0] = true;
+        mScrpLangData.reportedVals[0] = 0.;
+      }
+      mScrpLangData.waitingForCommand = 1;
+      mScrpLangData.commandReady = 0;
+      SetEvent(mScrpLangDoneEvent);
+      SEMTrace('[', "signal function done after Abort");
+      if (!mScrpLangData.externalControl || mScrpLangData.errorOccurred == 1) {
+        mWinApp->AddIdleTask(TASK_MACRO_RUN, 0, 0);
+        return;
+      }
+    }
   }
 
   if (mRunningScrpLang && (mScrpLangData.threadDone > 0 ||
@@ -1319,6 +1401,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   ResetEvent(mScrpLangDoneEvent);
   SEMTrace('[', "reset all done ending macro");
   mMacroForScrpLang = "";
+  mScrpLangData.externalControl = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
@@ -3877,8 +3960,9 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
 int CMacroProcessor::CheckForScriptLanguage(int macNum)
 {
   bool isPython;
-  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
-  CString indentStr;
+  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1, numWrap;
+  float pyVersion = 0.;
+  CString indentStr, modulePath = mPyModulePath;
 
   // Test for scripting language
   int currentInd = 0, includeInd, count, length = mMacros[macNum].GetLength();
@@ -3886,22 +3970,54 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
   GetNextLine(&mMacros[macNum], currentInd, line, true);
   if (line.Find("#!") != 0)
     return 0;
+  if (!mScrpLangDoneEvent) {
+    mWinApp->AppendToLog("Cannot run external scripting language without object"
+      " for communicating with it");
+    return 1;
+  }
+
   count = line.GetLength();
   while (count > 1 && (line.GetAt(count - 1) == '\n' || line.GetAt(count - 1) == '\r' ||
     line.GetAt(count - 1) == ' '))
     count--;
   name = line.Mid(2, count - 2);
-  mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
-  if (!mScrpLangFuncs) {
-    SEMMessageBox("There is no scripting language plugin loaded whose\n"
-      "name matches the one at the start of this script, " + name);
-    return 1;
-  }
-  if (!mScrpLangDoneEvent) {
-    mScrpLangDoneEvent = CreateEventA(NULL, FALSE, FALSE, SCRIPT_EVENT_NAME);
-    if (!mScrpLangDoneEvent) {
-      SEMMessageBox("Cannot run external scripting language, failed to create event"
-        " for communicating with it");
+
+  // determine if Python and either start server or check for plugin functions
+  line = name;
+  line.MakeLower();
+  isPython = line.Find("pyth") == 0;
+  mScrpLangData.strItems[0] = "";
+  if (isPython) {
+    if (mWinApp->mPythonServer->StartServerIfNeeded(RUN_PYTH_SOCK_ID))
+      return 1;
+
+    // If there is a full "python" see if there is one matching the version number given
+    // after it, or take the first entry if there is no version number.
+    if (line.Find("python") == 0) {
+      line = line.Mid(6).Trim();
+      for (ind = 0; ind < (int)mPathsToPython.size(); ind++) {
+        if ((line.IsEmpty() && !ind) || mVersionsOfPython[ind].find((LPCTSTR)line) == 0) {
+          mScrpLangData.strItems[0] = mPathsToPython[ind].c_str();
+          mScrpLangData.strItems[0] += "\\";
+          pyVersion = (float)atof(mVersionsOfPython[ind].c_str());
+          if (pyVersion >= 2.65 && pyVersion <= 3.45)
+            modulePath = mPyModulePath + "/" + mVersionsOfPython[ind].c_str();
+        }
+      }
+
+      // Nothing found is bad if they specified one
+      if (mScrpLangData.strItems[0].IsEmpty() && !line.IsEmpty()) {
+        SEMMessageBox("Could not find a PathToPython entry with a version"
+          " matching " + name);
+        return 1;
+      }
+      mScrpLangData.strItems[0] = "\"" + mScrpLangData.strItems[0] + "python.exe\"";
+    }
+  } else {
+    mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
+    if (!mScrpLangFuncs) {
+      SEMMessageBox("There is no scripting language plugin loaded whose\n"
+        "name matches the one at the start of this script, " + name);
       return 1;
     }
   }
@@ -3912,20 +4028,33 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
   mIndexOfSrcLine.clear();
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
-  name.MakeLower();
-  isPython = name.Find("pyth") == 0;
   if (isPython) {
-    mMacroForScrpLang = "from serialem import SEMexited, SEMerror\r\n"
+    numWrap = 8;
+    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
+    name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
+    mMacroForScrpLang = "import sys\r\n" +
+      name +
+      "from serialem import SEMexited, SEMerror, ConnectToSEM\r\n"
       "from serialem import Echo as SEMecho\r\n"
-      "def print(a1, a2 = None, a3 = None, a4 = None, a5 = None, a6 = None, \r\n"
-      "    a7 = None, a8 = None, a9 = None, a10 = None):\r\n"
-      "  out = ''\r\n"
-      "  for arg in (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10):\r\n"
-      "    if arg != None:\r\n"
-      "      out += str(arg) + ' '\r\n"
-      "  SEMecho(out)\r\n"
+      "from serialem import ScriptIsInitialized as SEMscriptIsInitialized\r\n"
+      "SEMscriptIsInitialized()\r\n" +
+      line;
+    if (pyVersion < 1 || pyVersion > 3.) {
+      mMacroForScrpLang +=
+        "def print(a1, a2 = None, a3 = None, a4 = None, a5 = None, a6 = None, \r\n"
+        "    a7 = None, a8 = None, a9 = None, a10 = None):\r\n"
+        "  out = ''\r\n"
+        "  for arg in (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10):\r\n"
+        "    if isinstance(arg, float):\r\n"
+        "      out += str(round(arg, 6)) + ' '\r\n"
+        "    elif arg != None:\r\n"
+        "      out += str(arg) + ' '\r\n"
+        "  SEMecho(out)\r\n";
+      numWrap += 9;
+    }
+    mMacroForScrpLang +=
       "try:\r\n";
-    for (ind = 0; ind < 10; ind++) {
+    for (ind = 0; ind < numWrap; ind++) {
       mLineInSrcMacro.push_back(-1);
       mIndexOfSrcLine.push_back(-1);
     }
@@ -4030,6 +4159,11 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
   int indLine, indComma, lineNum, ind, lineInSrc, indInSrc, macNum, indMod;
   int currentInd = 0, length = str.GetLength();
 
+  if (length && mScrpLangData.exitStatus < 0) {
+    mWinApp->AppendToLog("Error trying to run Python to execute script:\r\n   " + str);
+    return;
+  }
+
   // Loop on error message
   while (currentInd < length) {
     GetNextLine(&str, currentInd, line);
@@ -4043,7 +4177,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
     // Syntax errors have no comma and do not need the text line added
     // Errors withount <string> belong to other modules
     indComma = line.Find(",", indLine);
-    if (indComma > 0 && line.Find("File \"<string>") < 0) {
+    if (indComma > 0 && line.Find("File \"<stdin>") < 0) {
       mWinApp->AppendToLog(line);
       continue;
     }
@@ -4108,6 +4242,12 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
     mMacroEditer[macNum]->SelectAndShowLine(mLastPythonErrorLine);
 }
 
+void CMacroProcessor::SetPathToPython(CString & version, CString & path)
+{
+  mVersionsOfPython.push_back((LPCTSTR)version);
+  mPathsToPython.push_back((LPCTSTR)path);
+}
+
 // Send an email from a message box error if command defined the text
 void CMacroProcessor::SendEmailIfNeeded(void)
 {
@@ -4139,9 +4279,156 @@ UINT CMacroProcessor::RunInShellProc(LPVOID pParam)
 // Thread procedure for starting a script in external language
 UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
 {
-  mScrpLangData.exitStatus = mScrpLangFuncs->RunScript((const char *)pParam);
+  SECURITY_ATTRIBUTES saAttr;
+  HANDLE hChildStd_IN_Rd = NULL;
+  HANDLE hChildStd_IN_Wr = NULL;
+  HANDLE hChildStd_OUT_Rd = NULL;
+  HANDLE hChildStd_OUT_Wr = NULL;
+  PROCESS_INFORMATION piProcInfo;
+  STARTUPINFO siStartInfo;
+  BOOL bSuccess = FALSE;
+  char *cmdLine = NULL;
+  const char *script = (const char *)pParam;
+  DWORD dwWrite, dwWritten, exitCode, dwRead;
+  const int bufLen = 256;
+  char buffer[bufLen];
+
+  if (mScrpLangData.strItems[0].IsEmpty()) {
+    mScrpLangData.exitStatus = mScrpLangFuncs->RunScript(script);
+  } else {
+    mScrpLangData.exitStatus = -1;
+    mScrpLangData.gotExceptionText = false;
+
+    // This is based heavily on a Microsoft post
+
+    // Set the bInheritHandle flag so pipe handles are inherited.
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
+
+    // Create a pipe for the child process's STDOUT.
+    if (!CreatePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &saAttr, 0)) {
+      mScrpLangData.strItems[0] = "Error creating output pipe for Python process";
+      return 1;
+    }
+
+    // Ensure the read handle to the pipe for STDOUT is not inherited.
+    if (!SetHandleInformation(hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
+      mScrpLangData.strItems[0] = "Error in SetHandleInformation for output pipe of "
+        "Python process";
+      return 1;
+    }
+
+    // Create a pipe for the child process's STDIN.
+    if (!CreatePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &saAttr, 0)) {
+      mScrpLangData.strItems[0] = "Error creating input pipe for Python process";
+      return 1;
+    }
+
+    // Ensure the write handle to the pipe for STDIN is not inherited.
+    if (!SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0)) {
+      mScrpLangData.strItems[0] = "Error in SetHandleInformation for input pipe of "
+        "Python process";
+      return 1;
+    }
+
+    // Set up members of the PROCESS_INFORMATION structure.
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+    // Set up members of the STARTUPINFO structure.
+    // This structure specifies the STDIN and STDOUT handles for redirection.
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+    siStartInfo.cb = sizeof(STARTUPINFO);
+    siStartInfo.hStdError = hChildStd_OUT_Wr;
+    siStartInfo.hStdOutput = hChildStd_OUT_Wr;
+    siStartInfo.hStdInput = hChildStd_IN_Rd;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+    cmdLine = _strdup((LPCTSTR)mScrpLangData.strItems[0]);
+    if (!cmdLine) {
+      mScrpLangData.strItems[0] = "Failed to duplicate the command line for running"
+        " Python";
+      return 1;
+    }
+
+    // Create the child process.
+    bSuccess = CreateProcess(NULL,
+      cmdLine,       // command line
+      NULL,          // process security attributes
+      NULL,          // primary thread security attributes
+      TRUE,          // handles are inherited
+      CREATE_NO_WINDOW,             // creation flags
+      NULL,          // use parent's environment
+      NULL,          // use parent's current directory
+      &siStartInfo,  // STARTUPINFO pointer
+      &piProcInfo);  // receives PROCESS_INFORMATION
+
+                     // If an error occurs, exit the application.
+    if (!bSuccess) {
+      mScrpLangData.strItems[0] = "Error starting Python with this command: ";
+      mScrpLangData.strItems[0] += cmdLine;
+      free(cmdLine);
+      return 1;
+    }
+    mScrpLangData.exitStatus = 0;
+
+    // Close handle to the child process primary thread, keep the other handle
+    CloseHandle(piProcInfo.hThread);
+    mPyProcessHandle = piProcInfo.hProcess;
+
+    // Close handles to the stdin and stdout pipes no longer needed by the child process
+    // If they are not explicitly closed, there is no way to recognize that the child 
+    // process has ended.
+    CloseHandle(hChildStd_OUT_Wr);
+    CloseHandle(hChildStd_IN_Rd);
+
+    dwWrite = (DWORD)strlen(script);
+    bSuccess = WriteFile(hChildStd_IN_Wr, script, dwWrite, &dwWritten, NULL);
+
+    // Close the pipe handle so the child process stops reading.
+    CloseHandle(hChildStd_IN_Wr);
+
+    // Give up if there was an error writing to pipe
+    if (!bSuccess) {
+      TerminateScrpLangProcess();
+      mScrpLangData.strItems[0] = "An error occurred writing the script to the pipe into"
+        " Python";
+      mScrpLangData.exitStatus = -1;
+      return 1;
+    }
+
+    // Read from pipe
+    mScrpLangData.strItems[0] = "";
+    for (;;) {
+      bSuccess = ReadFile(hChildStd_OUT_Rd, buffer, bufLen - 1, &dwRead, NULL);
+      if (!bSuccess || dwRead == 0)
+        break;
+      buffer[dwRead] = 0x00;
+      mScrpLangData.strItems[0] += buffer;
+    }
+
+    // Waiting now may be gratuitous...
+    WaitForSingleObject(mPyProcessHandle, INFINITE);
+
+    // Get the exit status and close handles
+    GetExitCodeProcess(mPyProcessHandle, &exitCode);
+    CloseHandle(mPyProcessHandle);
+    mPyProcessHandle = NULL;
+    mScrpLangData.exitStatus = (int)exitCode;
+    mScrpLangData.gotExceptionText = !mScrpLangData.strItems[0].IsEmpty();
+
+  }
   SEMTrace('[', "RunScriptLangProc exit stat %d", mScrpLangData.exitStatus);
   return mScrpLangData.exitStatus ? 1 : 0;
+}
+
+void CMacroProcessor::TerminateScrpLangProcess(void)
+{
+  if (mPyProcessHandle) {
+    TerminateProcess(mPyProcessHandle, 1);
+    CloseHandle(mPyProcessHandle);
+    mPyProcessHandle = NULL;
+  }
 }
 
 // Busy function for the task to start the Navigator Acquire

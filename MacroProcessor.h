@@ -107,6 +107,8 @@ struct ScriptLangData {
   int threadDone;                          // Flag that script run thread has exited
   int exitStatus;                          // Exit status of script run thread
   bool exitedFromWrapper;                  // Flag that exit was called from exception
+  int externalControl;                     // -1 to request it, 0 if not, 1 if under it
+  bool disconnected;                       // Flag that the socket disconnected
 };
 
 typedef int(CMacCmd::*DispEntry)(void);
@@ -130,9 +132,11 @@ public:
   void Resume();
   void Run(int which);
   int TaskBusy();
+  void CheckAndSetupExternalControl(void);
   void Initialize();
   CMacroProcessor();
   virtual ~CMacroProcessor();
+  void ShutdownScrpLangScripting();
   BOOL DoingMacro() { return mDoingMacro && mCurrentMacro >= 0; };
   BOOL IsResumable();
   void SetNonResumable() { mCurrentMacro = -1; };
@@ -162,6 +166,8 @@ public:
   GetMember(bool, RunningScrpLang);
   GetMember(int, LastPythonErrorLine);
   GetSetMember(BOOL, RestoreMacroEditors);
+  SetMember(CString, PyModulePath);
+  std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
   std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap; };
@@ -171,8 +177,9 @@ public:
   COneLineScript *mOneLineScript;
   static ScriptLangData mScrpLangData;         // Data structure for external scripting
   static ScriptLangPlugFuncs *mScrpLangFuncs;  // The functions of a scripting plugin
-  HANDLE mScrpLangDoneEvent;                   // EVent to notify plugin that command done
+  static HANDLE mScrpLangDoneEvent;            // Event to notify server thread command done
   static std::set<int> mPythonOnlyCmdSet;      // Set of commands available only from Python
+  static HANDLE mPyProcessHandle;              // Process handle so we can kill it
 
 protected:
 
@@ -373,6 +380,9 @@ protected:
   IntVec mMacStartLineInScrp;  // And the starting line of that block in the composite
   IntVec mFirstRealLineInPart; // Macro line number of first non-blank line in a block
   int mLastPythonErrorLine;    // Last line number and error happened on
+  std::vector<std::string> mPathsToPython;
+  std::vector<std::string> mVersionsOfPython;
+  CString mPyModulePath;       // Module path set by property or set as default
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
@@ -452,6 +462,7 @@ public:
   int CheckForScriptLanguage(int macNum);
   void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr);
   void EnhancedExceptionToLog(CString &str);
+  void SetPathToPython(CString &version, CString &path);
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
   int TestTryLevelAndSkip(CString *mess);
@@ -461,6 +472,7 @@ public:
     CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
+  static void TerminateScrpLangProcess(void);
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptListPersistentVars();
   afx_msg void OnScriptClearPersistentVars();

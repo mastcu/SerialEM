@@ -71,7 +71,7 @@ CPluginManager::~CPluginManager(void)
 
 int CPluginManager::LoadPlugins(void)
 {
-  CString path, exePath, plugPath = mWinApp->mDocWnd->GetPluginPath();
+  CString path, plugPath = mWinApp->mDocWnd->GetPluginPath();
   CFileStatus status;
   CString mess, typeStr, pythonList;
   WIN32_FIND_DATA FindFileData;
@@ -87,7 +87,7 @@ int CPluginManager::LoadPlugins(void)
   CamPluginFuncs *cfuncs;
   char fullPath[MAX_PATH + 10];
   const char *namep, *actionp;
-  int numFuncs = 0, err = 0, flags, i, j, dirLoop = 0, numPython = 0;
+  int numFuncs = 0, err = 0, flags, i, j, dirLoop = 0;
   double dum1, dum2, dum3, dum4;
   bool twoScopes = false;
   int action = LOG_SWALLOW_IF_CLOSED;
@@ -110,8 +110,8 @@ int CPluginManager::LoadPlugins(void)
       i = GetModuleFileName(NULL, fullPath, MAX_PATH + 10);
       if (!i || i >= MAX_PATH + 10) 
         continue;
-      UtilSplitPath(CString(fullPath), exePath, mess);
-      path = exePath;
+      UtilSplitPath(CString(fullPath), mExePath, mess);
+      path = mExePath;
       if (path.IsEmpty())
         continue;
       mess = path + "\\*Plugin*.dll";
@@ -139,6 +139,12 @@ int CPluginManager::LoadPlugins(void)
         mWinApp->AppendToLog("Skipping file " + mess, action);
         continue;
       }
+      if (mess.Find("Python") >= 0 && mess.Find("Plugin") > 0) {
+        mWinApp->AppendToLog("Skipping Python plugin that is no longer used " + mess,
+          action);
+        continue;
+      }
+
       module = AfxLoadLibrary((LPCTSTR)(path + "\\" + mess));
       if (!module) {
         lastErr = GetLastError();
@@ -175,8 +181,8 @@ int CPluginManager::LoadPlugins(void)
           "%s in %s\r\nwas just loaded in addition to the one shown first in the log\r\n"
           "\r\nDo not run SerialEM.exe in a package folder, only in a SerialEM folder!"
           "\r\nIf that is not the problem, remove whichever plugin is not appropriate",
-          (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "",
-          !exePath.IsEmpty() ? (LPCTSTR)exePath : "",
+          (LPCTSTR)plugPath, !mExePath.IsEmpty() ? " and/or " : "",
+          !mExePath.IsEmpty() ? (LPCTSTR)mExePath : "",
           FindFileData.cFileName, (LPCTSTR)path);
         mWinApp->AppendToLog(mess, action);
         AfxMessageBox(mess, MB_EXCLAME);
@@ -256,8 +262,8 @@ int CPluginManager::LoadPlugins(void)
           i = 1;
           mess.Format("There is more than one DE camera interface plugin in\r\n%s%s%s\r\n"
             "\r\nThe plugin %s in %s will be ignored\r\n",
-            (LPCTSTR)plugPath, !exePath.IsEmpty() ? " and/or " : "",
-            !exePath.IsEmpty() ? (LPCTSTR)exePath : "",
+            (LPCTSTR)plugPath, !mExePath.IsEmpty() ? " and/or " : "",
+            !mExePath.IsEmpty() ? (LPCTSTR)mExePath : "",
             FindFileData.cFileName, (LPCTSTR)path);
         } else {
 
@@ -313,14 +319,6 @@ int CPluginManager::LoadPlugins(void)
           delete newPlug;
           AfxFreeLibrary(module);
         } 
-        mess = newPlug->shortName;
-        mess.MakeUpper();
-        if (mess.Left(4) == "PYTH") {
-          if (numPython)
-            pythonList += ", ";
-          numPython++;
-          pythonList += newPlug->shortName;
-        }
       }
       
       // Get piezo plugin functions
@@ -404,12 +402,7 @@ int CPluginManager::LoadPlugins(void)
   }
   if (twoScopes)
     mScopePlugIndex = -1;
-  if (numPython) {
-    mess.Format("Python scripting available through %s named %s",
-      numPython > 1 ? "plugins" : "a plugin", (LPCTSTR)pythonList);
-    mWinApp->AppendToLog(mess);
-  }
-  
+   
   return (int)mPlugins.GetSize();
 }
   

@@ -202,6 +202,15 @@ void CBaseSocket::SetServerPort(int typeID, int port)
   mPortByID[ind] = (unsigned short)port;
 }
 
+// Return the port actually assigned
+unsigned short CBaseSocket::GetServerPort(int typeID, unsigned short dfltPort)
+{
+  int ind = LookupTypeID(typeID);
+  if (ind >= 0 && mPortByID[ind] > 0)
+    return mPortByID[ind];
+  return dfltPort;
+}
+
 // Look up whether the server with the given ID is remote
 bool CBaseSocket::ServerIsRemote(int typeID)
 {

@@ -63,6 +63,7 @@
 #include "MultiCombinerDlg.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
+#include "PythonServer.h"
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
 
@@ -794,6 +795,7 @@ CSerialEMApp::~CSerialEMApp()
   delete mPiezoControl;
   delete mAutoTuning;
   delete mExternalTools;
+  delete mPythonServer;
   CBaseSocket::UninitializeWSA();
   delete mPluginManager;
   for (int i = 0; i < mIdleArray.GetSize(); i++)
@@ -980,6 +982,7 @@ BOOL CSerialEMApp::InitInstance()
   mPiezoControl = new CPiezoAndPPControl();
   mAutoTuning = new CAutoTuning();
   mExternalTools = new CExternalTools();
+  mPythonServer = new CPythonServer();
   mMailer = new CMailer();
   mGatanSocket = new CGatanSocket();
   mPluginManager = new CPluginManager();
@@ -1481,6 +1484,13 @@ BOOL CSerialEMApp::InitInstance()
   if (mDocWnd->GetReadScriptPack())
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
       LOG_SWALLOW_IF_CLOSED);
+  std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
+  message = "";
+  for (iCam = 0; iCam < (int)pyVersions->size(); iCam++)
+    message += CString(" ") + (*pyVersions)[iCam].c_str();
+  if (!message.IsEmpty())
+    AppendToLog("Paths are defined for Python version(s) " + message);
+
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)
@@ -1514,10 +1524,24 @@ BOOL CSerialEMApp::InitInstance()
   mStartingProgram = false;
   DoResizeMain();
   SetTitleFile("");
+  if (mEnableExternalPython)
+    SetEnableExternalPython(true);
   iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
   if (iCam >= 0)
     mMacroProcessor->Run(iCam);
   return TRUE;
+}
+
+// Enable or disable 
+void CSerialEMApp::SetEnableExternalPython(BOOL inVal)
+{
+  mEnableExternalPython = inVal;
+  if (mStartingProgram)
+    return;
+  if (inVal)
+    mPythonServer->StartServerIfNeeded(EXT_PYTH_SOCK_ID);
+  else
+    mPythonServer->ShutdownSocketIfOpen(EXT_PYTH_SOCK_ID);
 }
 
 // Multiply sizes and binning and divide pixel sizes from properties by 2 for a camera
@@ -1588,6 +1612,8 @@ int CSerialEMApp::ExitInstance()
   mAppExiting = true;
   if (mPluginManager)
     mPluginManager->ReleasePlugins();
+  if (mMacroProcessor)
+    mMacroProcessor->TerminateScrpLangProcess();
   if (mScope)
     delete mScope;
   if (mCamera)
@@ -2136,6 +2162,11 @@ BOOL CSerialEMApp::CheckIdleTasks()
   if (mIdleArray.GetSize())
     mLastActivityTime = time;
   
+  // Act on request for external control
+  if (mMacroProcessor->mScrpLangData.externalControl < 0) {
+    mMacroProcessor->CheckAndSetupExternalControl();
+  }
+
   // Look through the list of tasks if any
   for (i = 0; i < mIdleArray.GetSize(); i++) {
     // Return TRUE if there is anything on list
@@ -2873,8 +2904,8 @@ void SEMTrace(char key, char *fmt, ...)
 {
   va_list args;
   CString str;
-  if (debugOutput.IsEmpty() || debugOutput == "0" || 
-    (key != '1' && debugOutput.Find(key) < 0))
+  if ((debugOutput.IsEmpty() || debugOutput == "0" || 
+    (key != '1' && debugOutput.Find(key) < 0)) && key != '0')
     return;
   if (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) != WAIT_OBJECT_0)
     return;

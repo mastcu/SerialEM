@@ -228,6 +228,7 @@ private:
   int mLastTScallInd;
   int mLastTiltIndex;
   bool mAnyTSplugins;
+  CString mExePath;
 public:
   int LoadPlugins(void);
   double ExecuteCommand(CString strLine, int *itemInt, double *itemDbl, BOOL *itemEmpty,
@@ -245,6 +246,7 @@ public:
   DEPluginFuncs *GetDEcamFuncs() {return mDEcamFuncs;};
   ScriptLangPlugFuncs *GetScriptLangFuncs(CString name);
   GetMember(int, DEplugIndex);
+  GetMember(CString, ExePath);
 };
 
 #define THROW_NOFUNC_ERROR throw(_com_error((HRESULT)NOFUNC_FAKE_HRESULT, NULL, true))

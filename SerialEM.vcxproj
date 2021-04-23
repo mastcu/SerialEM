@@ -1206,6 +1206,7 @@
   <ItemGroup>
     <ClInclude Include="AlignFocusWindow.h" />
     <ClInclude Include="AutoTuning.h" />
+    <ClInclude Include="BaseServer.h" />
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DefineScriptMacros.h" />
     <ClInclude Include="DERefMakerDlg.h" />
@@ -1226,6 +1227,7 @@
     <ClInclude Include="OneLineScript.h" />
     <ClInclude Include="ParticleTasks.h" />
     <ClInclude Include="PropertyTests.h" />
+    <ClInclude Include="PythonServer.h" />
     <ClInclude Include="RemoteControl.h" />
     <ClInclude Include="ScreenShotDialog.h" />
     <ClInclude Include="SettingsTests.h" />
@@ -2149,6 +2151,7 @@ echo.
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="AutoTuning.cpp" />
+    <ClCompile Include="BaseServer.cpp" />
     <ClCompile Include="CtffindParamDlg.cpp" />
     <ClCompile Include="DERefMakerDlg.cpp" />
     <ClCompile Include="DriftWaitSetupDlg.cpp" />
@@ -2163,6 +2166,7 @@ echo.
     <ClCompile Include="MyButton.cpp" />
     <ClCompile Include="OneLineScript.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />
+    <ClCompile Include="PythonServer.cpp" />
     <ClCompile Include="RemoteControl.cpp" />
     <ClCompile Include="ScreenShotDialog.cpp" />
     <ClCompile Include="Shared\framealign.cpp">
