@@ -159,9 +159,14 @@ BOOL CMacroEditer::OnInitDialog()
 
   GetWindowRect(wndRect);
   int iXoffset = (wndRect.Width() - clientRect.Width()) / 2;
+  int iyAdd = (iXoffset - wndRect.top) - (wndRect.Height() - clientRect.Height()) -
+    editRect.Height();
+  m_iEditLeft = editRect.left - wndRect.left - iXoffset;
+  m_iEditOffset = (editRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset;
+
   m_butOK.GetWindowRect(OKRect);
-  m_iOKoffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
-    + iXoffset - editRect.Height();
+  m_iOKoffset = OKRect.top + iyAdd;
   m_iOKLeft = OKRect.left - wndRect.left - iXoffset;
   m_butCancel.GetWindowRect(OKRect);
   m_iCancelLeft = OKRect.left - wndRect.left - iXoffset;
@@ -173,23 +178,18 @@ BOOL CMacroEditer::OnInitDialog()
   m_butLoad.GetWindowRect(OKRect);
   m_iLoadLeft = OKRect.left - wndRect.left - iXoffset;
   m_butSave.GetWindowRect(OKRect);
-  m_iSaveOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
-    + iXoffset - editRect.Height();
+  m_iSaveOffset = OKRect.top + iyAdd;
   m_iSaveLeft = OKRect.left - wndRect.left - iXoffset;
   m_butToMacroLine.GetWindowRect(OKRect);
   m_iToLineLeft = OKRect.left - wndRect.left - iXoffset;
   m_butSaveAs.GetWindowRect(OKRect);
   m_iSaveAsLeft = OKRect.left - wndRect.left - iXoffset;
 
-  m_butFixIndent.GetWindowRect(OKRect);
-  m_iFixOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
-    + iXoffset - editRect.Height();
-  m_iFixLeft = OKRect.left - wndRect.left - iXoffset;
-  m_butAddIndent.GetWindowRect(OKRect);
-  m_iAddLeft = OKRect.left - wndRect.left - iXoffset;
-  m_butRemoveIndent.GetWindowRect(OKRect);
-  m_iRemoveLeft = OKRect.left - wndRect.left - iXoffset;
-
+  m_statCompletions.GetWindowRect(OKRect);
+  m_iCompOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset;
+  m_iCompLeft = OKRect.left - wndRect.left - iXoffset;
+ 
   mInitialized = true;
   mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
   CEdit *editBox = (CEdit *)GetDlgItem(IDC_EDITMACRO);
@@ -212,7 +212,9 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   CDialog::OnSize(nType, cx, cy);
   CRect rect;
   bool dropIndents = !mProcessor->GetShowIndentButtons();
-  int showFlag = dropIndents ? SWP_HIDEWINDOW : SWP_SHOWWINDOW;
+  //int showFlag = dropIndents ? SWP_HIDEWINDOW : SWP_SHOWWINDOW;
+  int showFlag = dropIndents ? SW_HIDE : SW_SHOW;
+  int dropAdjust = dropIndents ? m_iSaveOffset - m_iOKoffset : 0;
   
   if (!mInitialized)
     return;
@@ -220,18 +222,20 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   int newX = cx - m_iBorderX;
   int newY = cy - m_iBorderY;
   if (dropIndents)
-    newY += m_iFixOffset - m_iSaveOffset;
+    newY += dropAdjust;
   if (newX < 1)
     newX = 1;
   if (newY < 1)
     newY = 1;
-  m_editMacro.SetWindowPos(NULL, 0, 0, newX, newY, SWP_NOZORDER | SWP_NOMOVE);
+  // An offset is not a top....
+  m_editMacro.SetWindowPos(NULL, m_iEditLeft, m_iEditOffset - dropAdjust, newX, newY, 
+    SWP_NOZORDER);
   m_statCompletions.GetWindowRect(rect);
-  m_statCompletions.SetWindowPos(NULL, 0, 0, newX, rect.Height(), 
-    SWP_NOZORDER | SWP_NOMOVE);
+  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset - dropAdjust, newX, 
+    rect.Height(), SWP_NOZORDER);
   m_statCompletions.RedrawWindow();
 
-  newY += m_iOKoffset;
+  newY += m_iOKoffset - dropAdjust;
   m_butRun.SetWindowPos(NULL, m_iRunLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butCancel.SetWindowPos(NULL, m_iCancelLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butOK.SetWindowPos(NULL, m_iOKLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
@@ -243,15 +247,10 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
     SWP_NOZORDER | SWP_NOSIZE);
   m_butSave.SetWindowPos(NULL, m_iSaveLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butSaveAs.SetWindowPos(NULL, m_iSaveAsLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  newY += m_iFixOffset - m_iSaveOffset;
-  m_statIndent.SetWindowPos(NULL, m_iRunLeft, newY + 1, 0, 0, SWP_NOZORDER | SWP_NOSIZE | 
-    showFlag);
-  m_butFixIndent.SetWindowPos(NULL, m_iFixLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE |
-    showFlag);
-  m_butAddIndent.SetWindowPos(NULL, m_iAddLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE |
-    showFlag);
-  m_butRemoveIndent.SetWindowPos(NULL, m_iRemoveLeft, newY, 0, 0, SWP_NOZORDER | 
-    SWP_NOSIZE | showFlag);
+  m_statIndent.ShowWindow(showFlag);
+  m_butFixIndent.ShowWindow(showFlag);
+  m_butAddIndent.ShowWindow(showFlag);
+  m_butRemoveIndent.ShowWindow(showFlag);
 }
 
 
@@ -333,6 +332,7 @@ void CMacroEditer::OnRunmacro()
   mProcessor->Run(m_iMacroNumber);
   FixButtonFocus(m_butRun);
   m_editMacro.SetFocus();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMacroEditer::OnBnClickedToprevmacro()

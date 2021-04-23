@@ -88,10 +88,10 @@ private:
   int m_iSaveLeft;
   int m_iSaveAsLeft;
   int m_iToLineLeft;
-  int m_iFixOffset;
-  int m_iFixLeft;
-  int m_iAddLeft;
-  int m_iRemoveLeft;
+  int m_iEditOffset;
+  int m_iEditLeft;
+  int m_iCompLeft;
+  int m_iCompOffset;
   CSerialEMApp *mWinApp;
   CMacCmd * mProcessor;
   CMacroEditer **mEditer;
