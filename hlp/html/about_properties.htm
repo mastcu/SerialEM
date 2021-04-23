@@ -79,17 +79,14 @@
         <TR VALIGN="top">
           <TD>SerialEMProperties</TD>
           <TD>The file must start with this entry.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeIsFEI</TD>
           <TD>This entry no longer has any effect.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeIsJEOL</TD>
           <TD>This entry no longer has any effect.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>UseTEMScripting</TD>
@@ -98,7 +95,6 @@
             default of 0, the program will first try to create a Tecnai object then try to 
             create a TEMScripting object if that fails. The object changed to TEMScripting 
             in Tecnai version 3.1.1.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -106,31 +102,26 @@
             actions on JEOL and is needed to use an Eagle camera in simulation mode).
               Do not use this with a real camera instead of NoScope, since it also divides
               dark references by 8 and reduces the variation in gain references by 8</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoScope</TD>
           <TD>Set to 1 if there is no microscope, to avoid trying to connect with a scope.&nbsp; 
             If there is an unsupported microscope, this can be set to the KV of the 
             microscope to get rings and a defocus value when clicking on an FFT.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoCameras</TD>
           <TD>Set to 1 if there are no cameras, to avoid trying to connect with any camera 
             in properies.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GainReferencePath</TD>
           <TD>The path to SerialEM's gain references, if it is not the system path.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MRCHeaderTitle</TD>
           <TD>Title to be placed in MRC files; full title is SERIALEM: 'your title' 
             date-time . Your title is limited to 45 characters</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameFileTitle</TD>
@@ -143,7 +134,6 @@
             can be at most 9 lines (or 7 for unnnormalized data).&nbsp; For a TIFF file description 
             entry, these limitations do not apply in the file entry itself, only in the 
             title listing by the IMOD &#39;header&#39; command.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>LogBookPathName</TD>
@@ -155,7 +145,6 @@
             frames for montage or 1x1 for single-frame, camera name, nominal film mag, 
             binning, pixel size in nm, LD for lowdose or ND if not, slit width if filtered 
             or 0 if not, energy loss or 0 if not filtered.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath</TD>
@@ -164,24 +153,20 @@
             overridden by a command-line argument specifying a plugin path.&nbsp; Files 
             ending in -32.dll or -64.dll are skipped by 64-bit and 32-bit versions, 
             respectively.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath2</TD>
           <TD>Additional path from which to load plugins.&nbsp; Loading as described in 
             &#39;PluginPath&#39; is not affected.&nbsp; Files ending in -32.dll or -64.dll are 
             skipped by 64-bit and 32-bit versions, respectively.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath2-32</TD>
           <TD>Sets PluginPath2 with this path only if running 32-bit.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath2-64</TD>
           <TD>Sets PluginPath2 with this path only if running 64-bit.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StartupMessage</TD>
@@ -189,31 +174,51 @@
             must be all one line but the message can consist of multiple lines, separated by 
             \n. The message is printed to the log window if it is reopened, otherwise to a 
             message box.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PrintStartupInfo</TD>
           <TD>Set to 0 to stop program version, build time, and startup time information 
             from being printed in the log window if it is open.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>WarnIfKVnotAt</TD>
           <TD>Use this entry with a KV value (e.g., 200) to get a warning message box if the 
             program is started with the microscope at a different voltage.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ProgramTitleText</TD>
           <TD>Text to add to the title bar; it will appear after &#39;SerialEM - &#39; and before 
             the list of open filenames.</TD>
-          <TD>&nbsp;</TD>
         </TR>
        <TR VALIGN="top">
           <TD>ScriptMonospaceFont</TD>
           <TD>Exact name of monospaced font available on the system that should be tried first
              when using a monospaced font in the script editor.</TD>
-          <TD>&nbsp;</TD>
+        </TR>
+      <TR VALIGN="top">
+          <TD>PythonModulePath</TD>
+          <TD>Path to directory containing the Python 'serialem' module(s).  The default is a
+            directory named PythonModules in the directory containing the SerialEM executable.
+          </TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>PathToPython</TD>
+          <TD>Version number and path to directory of a Python installation containing 'python.exe'.&nbsp; The
+             version number should start with two digits with a period between them.&nbsp; For Python 3.4 or 
+            below (i.e. 2.7), where modules are named 'serialem.pyd' and must be in separate subdirectories,
+            this version string is added to the module path, so it must match the name of the subdirectory,
+             i.e., 3.4-32, 3.4-64, or 2.7 if using the standard package or modules.&nbsp; If you have both 32- and
+            64-bit installations (e.g., for Python 3.5), you should include '-32' and '-64' on these strings
+            so that the '#!Python' entry at the start of a script can be used to pick which one to run.&nbsp; There
+            can be multiple entries of this property, or none if there is just one Python you wish to use and it
+             is on the system path.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EnableExternalPython</TD>
+          <TD>Set to 1 to allow externally run Python scripts to control SerialEM.&nbsp; This property
+            can be set with the 'SetProperty' script command.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ControlSetName # name</TD>
@@ -221,12 +226,10 @@
             (between 0 and 6; 0 to 4 are View to Preview) and the new name. The new name may 
             not be substituted in all dialogs and message boxes and it may not all appear in 
             a dialog if it is much longer than the name that it is replacing.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SearchAreaName</TD>
           <TD>Use this entry to rename the Search area in Low Dose mode.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AssumeDPI</TD>
@@ -234,7 +237,6 @@
               detected one.&nbsp; This enables the program to be scaled independently of the 
               Windows scaling or DPI setting.&nbsp; If you want to scale for 120 DPI, you will also need 
               to set &#39;DisplayIsNot120DPI 0&#39;</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DisplayIsNot120DPI</TD>
@@ -246,7 +248,6 @@
               property to 0 if the display really is 120 DPI (e.g., a laptop screen) and you 
               want the program to scale just as for other DPIs.&nbsp; Setting to 1 will 
               prevent scaling if you enter 120 for the &#39;AssumeDPI&#39;&nbsp; property.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PanelConstants</TD>
@@ -254,25 +255,21 @@
             to add to control panels.&nbsp; The defaults for height and width are 5, and 8 for DPI &lt; 120, 
             0, and 0 for DPI = 120, and 6, and 10 for DPI &gt; 120.  The first value used 
             to be the title bar height but this is now handled properly.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExitOnBadScopeStartup</TD>
           <TD>Set this to 1 to have the program exit if errors occur when connecting to the 
             microscope.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StartAsAdministrator</TD>
           <TD>Set to 1 to turn on Administrator mode when starting the program, or -1 to prevent
             Administrator mode from being turned on, which will prevent calibrations from being saved.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ShiftScriptOnlyInAdmin</TD>
           <TD>Enable the script editor buttons to shift scripts up and down only if 
             Adminstrator mode is on.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DisableOrHideFile</TD>
@@ -281,7 +278,6 @@
             <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for 
             details.&nbsp; Make sure that the user settings files in use have good values 
             for the items being made inaccessible before adding this entry.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BasicModeDisableHideFile</TD>
@@ -290,7 +286,6 @@
             Basic Mode</a> is turned on in the Settings menu.&nbsp; This file will 
             be read instead of looking for and reading SEMbasicModeItems.txt in the system 
             directory.&nbsp; See <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for details.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>IgnoreShortTermCals</TD>
@@ -299,7 +294,6 @@
             setting up the program if there are troubles with image shift calibrations, 
             but it is better to use the menu entry to remove bad calibrations instead,
             since rotation and pixel size measurements are stored in this file too.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MaxStackWindowSizeXY</TD>
@@ -307,7 +301,6 @@
             in a separate window during a tilt series. Enter the maximum size for a square 
             image; rectangular images will be binned to have no more pixels than a square 
             image of this size. The default is 512.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TotalMemoryLimitMB</TD>
@@ -324,7 +317,6 @@
             good value.&nbsp; The default&nbsp; is 75% of system memory for 32-bit versions 
               with less than 2.4 GB and for 64-bit versions; for 32-bit versions with more 
               memory, the default is 1.8 GB on a 32-bit system and 3.7 GB on a 64-bit system.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeUpdateInterval</TD>
@@ -332,20 +324,17 @@
             properties and updates the user interface. The default is 150, raised from
             100 on April 10, 2018. For a JEOL, the update function does not normally access
             the microscope so this should be OK.</TD>
-          <TD>&nbsp;</TD>
        </TR>
         <TR VALIGN="top">
           <TD>UpdateDuringAreaChange</TD>
           <TD>Set to 1 to let the scope update routine run, update the display, and respond 
             to changes during a low dose area change.&nbsp; Ths may be fine on FEI scopes, 
             but is less likely to be so on JEOL scopes.</TD>
-          <TD>&nbsp;</TD>
        </TR>
        <TR VALIGN="top">
           <TD>SkipGainRefWarning</TD>
           <TD>Set to 1 to suppress the warning that the spot was normalized before starting 
             to take a gain reference. This may be appropriate on a Tecnai F30.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FFTCircleRadii
@@ -354,7 +343,6 @@
             FFT. The radius is expressed as fraction of the distance from the center to the 
             edge of the FFT (Nyquist frequency). The default is one circle at 0.33.
           </TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FFTZeroParams</TD>
@@ -363,7 +351,6 @@
             <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.&nbsp; 
             For with 1, 2, or 3 values: the spherical aberration in mm, the number of 
             circles to draw, and the amplitude contrast ratio (defaults 2.5, 5, and 0.07).</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DefaultMaxCtfFitRes</TD>
@@ -371,19 +358,16 @@
             applies until the user enters a different value, at which point the resolution 
             becomes a user setting.&nbsp; The default value is 5 if the voltage on program 
             startup is &gt; 125, otherwise 10.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GridLinesPerMM</TD>
           <TD>Number of lines per mm in the cross-line replica grating being used to 
             calibrate pixel sizes. The default is 2160.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CatalaseAxisLengths</TD>
           <TD>Distances along the short and long axes to assume for catalase crystal when 
             finding pixel size.&nbsp; The defaults are 6.85 and 8.75.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SMTPServer</TD>
@@ -392,13 +376,11 @@
             must be defined and an address to send to must be entered with 'Set Email 
             Address' in the Tilt Series menu. There is a script command, 'SendEmail', that 
             can be used to test this capability.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SMTPPort</TD>
           <TD>Port to use for sending to the SMTP server; a default port will be used if 
             this is not specified</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SendMailFrom</TD>
@@ -409,7 +391,6 @@
             will be added to the sending address, so that it will appear to come from you. 
             The address probably needs to look like a valid address but does not need to be 
             valid.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerIP</TD>
@@ -420,58 +401,54 @@
             &#39;GatanServerIP x.x.x.x&#39;) and ID 1 is assigned to the interface in the 
             FEIScopePlugin that connects with a server on an FEI scope.&nbsp; Thus, use 
             &#39;SocketServer 1 x.x.x.x&#39; to connect with an FEI scope through that server.&nbsp; 
-            ID 4 is assigned to JEOL camera server, 5 is assigned to the Tietz camera remote 
-            server, and 6 is assigned to the Hitachi remote shared memory server.</TD>
-          <TD>&nbsp;</TD>
+            ID 4 is assigned to the JEOL camera server, 5 is assigned to the Tietz camera remote 
+            server, and 6 is assigned to the Hitachi remote shared memory server.&nbsp; ID 7 is
+            assigned to externally run Python, and ID 8 is assigned to Python scripts run from 
+            SerialEM.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerPort</TD>
           <TD>Socket ID and port number for a server whose address is given in a 
             &#39;SocketServerIP&#39; entry.&nbsp; The default ports are 48890 for 
             SerialEMCCD, 48892-48895 for FEI, 48896 for JEOL camera, 48897 for Tietz, 48898 
-            for Hitachi.</TD>
-          <TD>&nbsp;</TD>
+            for Hitachi, 48888 for externally run Python, and 48889 for Python scripts run from
+            SerialEM.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerIPif64</TD>
           <TD>Socket ID and IP address of a server to be used only if running a 64-bit 
             version; be sure to enter the port with SocketServerPortIf64 and not with SocketServerPort.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerPortIf64</TD>
           <TD>Socket ID and port number of a server to be used only if running a 64-bit 
             version.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FEISEMServerIP</TD>
           <TD>IP address of FEI scope, for connecting with FEI-SEMServer.exe on the scope.&nbsp; 
             This has the same effect as 'SocketServerIP 1 x.x.x.x'.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FEISEMServerPort</TD>
           <TD>Port number of the first port for connecting to FEI-SEMServer.exe on an FEI 
             scope.&nbsp; This has the same effect as 'SocketServerPort 1 x.x.x.x'.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BackgroundSocketToFEI </TD>
           <TD>Set to 1 to open a fourth socket connection to an FEI scope for tilting slowly 
             while acquiring data.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SmallFontsBad</TD>
           <TD>Set to 1 if the small fonts, such as in the Camera and Script control panel,
            are strangely pixelated and unreadable.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SingleTecnaiObject</TD>
           <TD>This entry is disabled</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DebugOutput</TD>
@@ -523,13 +500,10 @@
               y for reports when background saving starts and ends<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>
-          <TD>
-            &nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExitWithUnsavedLog</TD>
           <TD>Set to 1 to prevent being asked whether to save log before exiting.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ContinuousSaveLog</TD>
@@ -537,19 +511,16 @@
             program is crashing on startup and a crash log is not being saved; it will ask 
             for a log filename on the first trace output and all log output will go into the 
             file after that.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TestGainFactors</TD>
           <TD>Set to 1 to multiply simulation images by gain factors.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DoseLifetimeInHours</TD>
           <TD>Duration over which dose calibration will be considered valid when starting the 
               program and reading the short-term calibrations file.&nbsp; The default is 24 
               hours.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoExceptionHandler</TD>
@@ -559,13 +530,11 @@
             save the log.&nbsp; Set this to 1 to not set up the unhandled exception handler for 
             this; or -1 to skip the Microsoft error&nbsp; report box that comes up after 
             SerialEM's message box.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExternalTool</TD>
           <TD>Follow with the text of an entry to insert into the Tools menu, which will
            appear when at least one entry has been created.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ToolCommand</TD>
@@ -575,7 +544,6 @@
           asynchronously; i.e., SerialEM will not wait for it to finish. See 
           <a href = menu_tools.htm>The Tools Menu and Running External Commands</a> 
             for a description of the rules governing this command.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ToolArguments</TD>
@@ -583,14 +551,12 @@
           and then with a list of arguments ot include when running the command. &nbsp;See
            <a href = menu_tools.htm>The Tools Menu and Running External Commands</a> for a 
            description of what can be included in this arguments entry.</TD>
-          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AddDPItoSnapshots</TD>
           <TD>Set to 0 to prevent the pixel size from being stored as a resolution in dots 
             per inch&nbsp; in TIFF snapshots, or to a specific value greater than 1 to set 
             that value as the DPI.&nbsp; The default is 1 to store pixel size.</TD>
-          <TD>&nbsp;</TD>
         </TR>
       </TABLE>
       <BR>

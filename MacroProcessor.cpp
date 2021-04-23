@@ -1182,6 +1182,9 @@ void CMacroProcessor::Stop(BOOL ifNow)
       UtilThreadCleanup(&mScrpLangThread);
 
     }
+    if (mRunningScrpLang && mScrpLangData.externalControl)
+      mScrpLangData.disconnected = true;
+      
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
     SuspendMacro();
@@ -1256,6 +1259,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   if (!mDoingMacro)
     return;
   SEMTrace('[', "In abort");
+
   // Intercept abort when doing external script, set error flag and set wait for command
   if (mRunningScrpLang && (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
     if (mScrpLangData.disconnected) {

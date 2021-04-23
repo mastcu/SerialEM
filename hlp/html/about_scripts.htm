@@ -45,7 +45,7 @@
       magnification or defocus.
       Most of this document describes how to use SerialEM&#39;s built-in scripting 
       language.&nbsp; Scripts can also be written in Python if you have a Python 
-      interface plugin to SerialEM and a matching Python installation is on the system 
+      module for SerialEM and a matching Python installation is on the system 
       path.</P>
     <P>Scripts were called 'macros' until SerialEM 3.6.&nbsp; You may still see the 
       term 'macro' used in various places, or in older scripts, or in the source code.</P>
@@ -772,12 +772,11 @@
       scripting are mutually exclusive; you can not call functions from one type in 
       another.</P>
     <p>
-      <strong><em>Initial lines and other special features:</em>&nbsp; </strong>A python script must start with '#!' and at least the first 4 letters of the 
-      internal name of the plugin.&nbsp; This is not the plugin's filename but rather 
-      what the log says it is 'named' when starting up.&nbsp; There can be multiple Python plugins loaded, which should 
-      have version numbers in their names.&nbsp; If you start with '#!Python' it will 
-      use the first loaded version; if you start with, e.g., '#!Python3.6' it will use 
-      only a plugin whose name is 'Python3.6'.&nbsp; Here are other special features 
+      <strong><em>Initial lines and other special features:</em>&nbsp; </strong>A python script must start with '#!Python', 
+      plus an optional version specification if there are multiple installed pythons.&nbsp; &nbsp; If you start with '#!Python' it will 
+      use the first available version entered with a 'PathToPython' property, or just 
+      try to run it as 'python.exe' without a path if you have no property entries. If you start with, e.g., '#!Python3.6', 
+      you must have a 'PathToPython' property for that version.&nbsp; Here are other special features 
       that you need to be aware of:</p>
     <ul>
       <li>The script must import the serialem module in order to call any SerialEM 
@@ -872,6 +871,9 @@
       you first call 'NoMessageBoxOnError'.&nbsp; If you do call this, there will be 
       the same kind of 'SCRIPT ERROR' output to the log as when an error occurs within 
       a 'Try - Catch' block in SerialEM scriping.</p>
+    <p>An error within the serialem module will generate an exception of type 
+      'SEMmoduleError', also imported by this name.&nbsp; You can catch this and try 
+      to interpret the error string if appropriate.</p>
     <p>You can also catch Python exceptions and handle them.&nbsp; If you do not catch 
       these or SEMMerror exceptions, they will be caught by the script wrapper and 
       result in script termination plus a traceback or message in the log.&nbsp; 
@@ -884,33 +886,30 @@
       script is run with the <strong>Run</strong> 
       button; if you run it another way, click on the editor's title bar and the 
       highlighting should show up then.</p>
-    <p>'sys.exit' 
-      can be used if desired instead of serialem.Exit(); it will be intercepted and terminate the script without 
-      killing SerialEM.</p>
+    <p>'sys.exit' can be used if desired instead of serialem.Exit(); it will be 
+      intercepted and terminate the script through Exit().</p>
     <p><strong><em>Installation options:&nbsp; </em></strong>There must be at least 
-      one Python installation.&nbsp; A plugin is built against a specific version of 
-      Python, and it will load if the numbered python .dll (e.g., 'python36.dll') for 
-      that version is located either on the system path or in the directory with 
-      SerialEM.exe (at least for versions past 3.4).&nbsp; It is not necessary to put 
-      the Python installation itself on the path if one copies the .dll to either 
-      somewhere on the path or to the SerialEM directory.&nbsp; Plugin versions past 
-      3.4 are build with the Visual Studio 2015 compilers instead of the 2008 
-      compilers and may require the 'vcruntime140' library to be present in the 
-      SerialEM directory.&nbsp; Python 2.7 has no .dll and the requirements for 
-      getting the plugin to work have not been defined, so the best thing to try is to 
-      put it on the system path.</p>
-      <p>
-      The test distribution of plugins provides two packages:
-    </p>
-    <ul>
-      <li>PythonPlugins-32 with a 32-bit plugins for Python 2.7 and 3.4.&nbsp; Unpack 
-        this and copy whichever one you want to the main SerialEM directory.</li>
-      <li>PythonPlugins-64 with 64-bit plugins for Python 3.4, 3.6, 3.8, and 3.9.&nbsp; 
-        Unpack this and copy whichever one(s) you want to the main SerialEM directory.&nbsp; 
-        For 3.6 and above, copy 'mfc140.dll' to the main 
-        SerialEM directory; you may or may not have to copy vcruntime140.dll to the 
-        SerialEM directory too.</li>
-    </ul>
+      one Python installation, but can be multiple ones.</p>
+    <p>The PythonModules package should be unpacked in the directory with the SerialEM 
+      executable; otherwise the property &#39;PythonModulePath&#39; must be defined with the 
+      path to this directory of modules.&nbsp; This package contains modules for 
+      32-bit Python 2.7, 3.4, and 3.5, and 64-bit Python 3.4, 3.5, 3.6, 3.8, and 3.9.</p>
+    <p>If you have one python on the system path that is 3.5 or higher, you are all 
+      set.&nbsp; If you have multiple Pythons, Python is not on the system path, or 
+      the version is 3.4 or 2.7, you must have one or more &#39;PathToPython&#39; property 
+      entries.&nbsp; These should have the following form (changed for your actual 
+      path to python in each case): <br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-64 C:/Program Files/Python34<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-64 C:/Program Files/Python35<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.6 C:/Program Files/Python36<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.8 C:/Program Files/Python38<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.9 C:/Program Files/Python39<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 2.7 C:/Program Files (x86)/Python27<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-32 C:/Program Files (x86)/Python34<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-32 C:/Program Files (x86)/Python35<br />
+      See the description of PathToPython for more details.&nbsp; 
+      These specifications will allow the modules to be found in the distributed 
+      module directory.</p>
     </basefont>
   </BODY>
 </HTML>

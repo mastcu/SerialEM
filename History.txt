@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/23/21: Changed Python scripting to run Python excecutable with script to
+solve import problems; this also allows external control from a Python
+script.  Added a command to place an image into a buffer.
+
+4/21/21: SEM_3-9-0beta7
+4/21/21: Fixed OpenMP library conflict in SEMMCCD plugin that ruined antialias
+reduction at least in GMS 3.43.
+
 4/16/21: SEM_3-9-0beta6
 4/16/21: Rebuilt JeolCamPlugin, HitachiPlugin, DEcamPlugin for beta package
 with proper libraries.
