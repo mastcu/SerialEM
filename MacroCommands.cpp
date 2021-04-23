@@ -1025,11 +1025,13 @@ int CMacCmd::GetVariable(void)
   cVar = LookupVariable(mStrItems[1], cIx0);
   if (!cVar)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  cReport = cVar->value;
+  ClearVariables(VARTYPE_REPORT);
   if (cVar->isNumeric) {
-    cDelISX = atof(cVar->value);
+    cDelISX = atof(cReport);
     SetOneReportedValue(cDelISX, 1);
   } else {
-    SetOneReportedValue(cVar->value, 1);
+    SetOneReportedValue(cReport, 1);
   }
   return 0;
 }
