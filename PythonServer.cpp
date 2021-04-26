@@ -31,6 +31,7 @@ int CPythonServer::mImBaseBuf;
 int CPythonServer::mMoreBinning;
 int CPythonServer::mCapFlag;
 char *CPythonServer::mImArray = NULL;
+HANDLE CPythonServer::mJobObject = NULL;
 
 static ScriptLangData *sScriptData;
 
@@ -51,7 +52,9 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
 {
   int serverInd = (sockInd == RUN_PYTH_SOCK_ID ? 0 : 1);
   int err = 0;
-  CString mess;
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION jobInfo;
+  CString mess, code;
+
   sScriptData = &mWinApp->mMacroProcessor->mScrpLangData;
   if (!CMacroProcessor::mScrpLangDoneEvent)
     err = 1;
@@ -73,6 +76,38 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     mess.Format("Cannot run %s Python scripts due to error (%d) in starting socket for"
       " communication", serverInd ? "external " : "", err);
     SEMMessageBox(mess);
+  }
+
+  // Create a job object if starting python processes to run scripts
+  if (!err && !serverInd && !mJobObject) {
+    mess = "";
+    mJobObject = CreateJobObject(NULL, NULL);
+    if (!mJobObject)
+      mess.Format("Error creating job object: error code %d", GetLastError);
+
+    // Get the existing process info and set the flag to kill processes when last handle
+    // is closed, which happens when SerialEM dies.
+    if (mess.IsEmpty()) {
+      if (!QueryInformationJobObject(mJobObject, JobObjectExtendedLimitInformation,
+        &jobInfo, sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION), NULL))
+        mess.Format("Error calling QueryInformationJobObject: error code %d", 
+          GetLastError);
+    }
+    if (mess.IsEmpty()) {
+      jobInfo.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+      if (!SetInformationJobObject(mJobObject, JobObjectExtendedLimitInformation,
+        &jobInfo, sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)))
+        mess.Format("Error calling SetInformationJobObject: error code %d", GetLastError);
+    }
+    if (mess.IsEmpty()) {
+      if (!AssignProcessToJobObject(mJobObject, GetCurrentProcess()))
+        mess.Format("Error calling AssignProcessToJobObject: error code %d", 
+          GetLastError);
+    }
+
+    // This is not a fatal error but needs to be reported
+    if (!mess.IsEmpty())
+      mWinApp->AppendToLog(mess);
   }
   return err;
 }

@@ -20,6 +20,7 @@ public:
   static int mMoreBinning;
   static int mCapFlag;
   static char *mImArray;
+  static HANDLE mJobObject;
 
 private:
   static CSerialEMApp *mWinApp;

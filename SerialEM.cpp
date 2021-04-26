@@ -1671,6 +1671,9 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   }
   try {
 
+    // Clean up python process if any
+    winApp->mMacroProcessor->TerminateScrpLangProcess();
+
     // Then try to save the log somewhere
     if (winApp->mLogWindow) {
       winApp->AppendToLog(message);
@@ -1698,6 +1701,7 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   AfxMessageBox(message);
   if (winApp->LowDoseMode())
     winApp->mLowDoseDlg.SetLowDoseMode(false);
+  CBaseSocket::UninitializeWSA();
   first = false;
   return EXCEPTION_EXECUTE_HANDLER;
 }

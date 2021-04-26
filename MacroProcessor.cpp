@@ -1105,7 +1105,8 @@ void CMacroProcessor::RunOrResume()
     mScrpLangData.waitingForCommand = 1;
     if (!mScrpLangData.externalControl) {
       mScrpLangThread = AfxBeginThread(RunScriptLangProc,
-        (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] : mMacroForScrpLang),
+        (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] : 
+          mMacroForScrpLang),
         THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
       mScrpLangThread->m_bAutoDelete = false;
       mScrpLangThread->ResumeThread();
@@ -4080,6 +4081,10 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
     mIndexOfSrcLine.push_back(currentInd);
     mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&mMacros[macNum], currentInd, line, true);
+
+    // Escape the backslashes to prevent them from being interpreted as escape code
+    if (isPython)
+      line.Replace("\\", "\\\\");
     mMacroForScrpLang += indentStr + line;
 
     // Keep track of the first non-blank line so that the "maybe" statements can be
@@ -4100,7 +4105,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
     mFirstRealLineInPart.push_back(firstRealLine);
     mMacNumAtScrpLine.push_back(includeInd);
     mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
-    IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, indentStr);
+    IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, indentStr, isPython);
 
     // Start new block of main script
     mMacNumAtScrpLine.push_back(macNum);
@@ -4133,10 +4138,10 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum)
   return -1;
 }
 
-// Copy lines from source to copy, indenting by indentStr and keeping tack of first real
+// Copy lines from source to copy, indenting by indentStr and keeping track of first real
 // line
 void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy, 
-  CString &indentStr)
+  CString &indentStr, bool isPython)
 {
   int currentInd = 0, lineNum = 0, length = source.GetLength();
   CString line, trim;
@@ -4145,6 +4150,8 @@ void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy,
     mIndexOfSrcLine.push_back(currentInd);
     mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&source, currentInd, line, true);
+    if (isPython)
+      line.Replace("\\", "\\\\");
     copy += indentStr + line;
     if (firstRealLine < 0) {
       line.Trim(" \r\n");
@@ -4385,6 +4392,13 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // process has ended.
     CloseHandle(hChildStd_OUT_Wr);
     CloseHandle(hChildStd_IN_Rd);
+
+    // Assign the process to the job object so that if SerialEM dies, it will be killed
+    if (CPythonServer::mJobObject) {
+      if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle))
+        SEMTrace('0', "Error %d occurred assigning python process to job object", 
+          GetLastError());
+    }
 
     dwWrite = (DWORD)strlen(script);
     bSuccess = WriteFile(hChildStd_IN_Wr, script, dwWrite, &dwWritten, NULL);

@@ -460,7 +460,7 @@ public:
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
   int CheckForScriptLanguage(int macNum);
-  void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr);
+  void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr, bool isPython);
   void EnhancedExceptionToLog(CString &str);
   void SetPathToPython(CString &version, CString &path);
   void SendEmailIfNeeded(void);
