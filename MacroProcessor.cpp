@@ -197,6 +197,8 @@ CMacroProcessor::CMacroProcessor()
   mLastCompleted = false;
   mLastAborted = false;
   mEnteredName = "";
+  mRunningScrpLang = false;
+  mCalledFromScrpLang = false;
   mScrpLangData.externalControl = 0;
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
@@ -924,6 +926,7 @@ void CMacroProcessor::Run(int which)
   CString *longMacNames = mWinApp->GetLongMacroNames();
   CString name;
   mRunningScrpLang = false;
+  mCalledFromScrpLang = false;
   mCallLevel = 0;
   if (!external) {
     if (mMacros[which].IsEmpty())
@@ -1188,7 +1191,7 @@ void CMacroProcessor::Stop(BOOL ifNow)
       
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
-    SuspendMacro();
+    SuspendMacro(mScrpLangData.disconnected);
   } else
     mStopAtEnd = true;
 }
@@ -1262,10 +1265,29 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   SEMTrace('[', "In abort");
 
   // Intercept abort when doing external script, set error flag and set wait for command
-  if (mRunningScrpLang && (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
+  if ((mRunningScrpLang || mCalledFromScrpLang) && 
+    (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
     if (mScrpLangData.disconnected) {
       mScrpLangData.externalControl = 0;
     } else {
+
+      // Clean up from running regular scripts
+      if (mCalledFromScrpLang) {
+        mCalledFromScrpLang = false;
+        mRunningScrpLang = true;
+        mCurrentMacro = 0;
+        mBlockLevel = -1;
+        mBlockDepths[0] = -1;
+        mTryCatchLevel = 0;
+        for (ind = mCallLevel; ind >= 0; ind--)
+          if (mCallFunction[ind])
+            mCallFunction[ind]->wasCalled = false;
+        mCallLevel = 0;
+        mCallFunction[0] = NULL;
+        mOnStopMacroIndex = -1;
+      }
+
+      // Process true error
       if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
         mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC) {
         mScrpLangData.errorOccurred = 1;
@@ -1403,6 +1425,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       ClearFunctionArray(ind);
   }
   mRunningScrpLang = false;
+  mCalledFromScrpLang = false;
   ResetEvent(mScrpLangDoneEvent);
   SEMTrace('[', "reset all done ending macro");
   mMacroForScrpLang = "";
@@ -1560,11 +1583,14 @@ void CMacroProcessor::ClearFunctionArray(int index)
 }
 
 // Find macro called on this line; unload and scan names if scanning is true
-int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
+int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning, CString useName)
 {
   CString strCopy;
   int index, index2;
-  mParamIO->StripItems(strLine, 1, strCopy);
+  if (useName.IsEmpty())
+    mParamIO->StripItems(strLine, 1, strCopy);
+  else
+    strCopy = useName;
 
   // Look for the name
   index = -1;
@@ -3613,6 +3639,10 @@ void CMacroProcessor::LeaveCallLevel(bool popBlocks)
   mCurrentMacro = mCallMacro[mCallLevel];
   mCurrentIndex = mCallIndex[mCallLevel];
   mLastIndex = -1;
+  if (!mCallLevel && mCalledFromScrpLang) {
+    mCalledFromScrpLang = false;
+    mRunningScrpLang = true;
+  }
 }
 
 // Convert a single number to a DOMACRO

@@ -13,6 +13,7 @@
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include ".\MacroProcessor.h"
+#include "MacroEditer.h"
 #include "MenuTargets.h"
 #include "FocusManager.h"
 #include "AutoTuning.h"
@@ -819,14 +820,20 @@ int CMacCmd::DoMacro(void)
     cFunc = NULL;
     if (CMD_IS(CALLFUNCTION)) {
       cFunc = FindCalledFunction(mStrLine, false, cIndex, cIx0);
-      if (!cFunc)
+      if (!cFunc) {
         AbortMacro();
+        return 1;
+      }
       cIndex2 = cFunc->startIndex;
       if (cFunc->wasCalled)
         ABORT_LINE("Trying to call a function already being called in line: \n\n");
       cFunc->wasCalled = true;
     } else if (CMD_IS(CALL)) {
-      cIndex = FindCalledMacro(mStrLine, false);
+      cIndex = FindCalledMacro(mStrLine, false, mRunningScrpLang ? mStrItems[1] : "");
+      if (cIndex < 0) {
+        AbortMacro();
+        return 1;
+      }
     } else if (CMD_IS(CALLSTRINGARRAY)) {
       cIndex = MakeNewTempMacro(mStrItems[1], mStrItems[2], true, mStrLine);
       if (!cIndex)
@@ -849,6 +856,21 @@ int CMacCmd::DoMacro(void)
         ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
       if (cFunc && cFunc->ifStringArg)
         SubstituteVariables(&mStrLine, 1, mStrLine);
+      if (mRunningScrpLang) {
+        cIx0 = 0;
+        if (!CMD_IS(CALLSTRINGARRAY)) {
+          if (mMacroEditer[cIndex])
+            mMacroEditer[cIndex]->TransferMacro(true);
+          PrepareForMacroChecking(cIndex);
+          if (CheckBlockNesting(cIndex, -1, cIx0)) {
+            AbortMacro();
+            return 1;
+          }
+          mCallLevel = 0;
+        }
+        mCalledFromScrpLang = true;
+        mRunningScrpLang = false;
+      }
       mCallIndex[mCallLevel++] = mCurrentIndex;
       mCallMacro[mCallLevel] = cIndex;
       mBlockDepths[mCallLevel] = -1;

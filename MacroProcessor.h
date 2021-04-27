@@ -372,6 +372,7 @@ protected:
   ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
 
   bool mRunningScrpLang;     // Flag that external interpreter is running the script
+  bool mCalledFromScrpLang;  // Flag that regular script called from language script
   CString mMacroForScrpLang; // String actually passed with other scripts included
   CWinThread *mScrpLangThread;
   IntVec mLineInSrcMacro;      // Map from line in composite script to line in source
@@ -423,7 +424,7 @@ public:
   WINDOWPLACEMENT *FindEditerPlacement(int index);
   BOOL MacroRunnable(int index);
   afx_msg void OnUpdateMacroEnd(CCmdUI *pCmdUI);
-  int FindCalledMacro(CString strLine, bool scanning);
+  int FindCalledMacro(CString strLine, bool scanning, CString useName = "");
   int FindMacroByNameOrTextNum(CString name);
   void InsertDomacro(CString * strItem);
   BOOL WordIsReserved(CString str);
