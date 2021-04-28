@@ -576,6 +576,16 @@ int CMacCmd::ScriptEnd(void)
     SetEvent(mScrpLangDoneEvent);
     SEMTrace('[', "signal normal exit on return");
   }
+
+  // Put return values in repVals
+  if (CMD_IS(RETURN) && !mItemEmpty[1]) {
+    ClearVariables(VARTYPE_REPORT);
+    for (cIndex = 1; cIndex <= 6; cIndex++) {
+      if (mItemEmpty[cIndex])
+        break;
+      SetOneReportedValue(mStrItems[cIndex], cIndex);
+    }
+  }
   return 0;
 }
 
@@ -867,39 +877,41 @@ int CMacCmd::DoMacro(void)
         ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
       if (cFunc && cFunc->ifStringArg)
         SubstituteVariables(&mStrLine, 1, mStrLine);
-      if (mRunningScrpLang && mCalledFromSEMmacro) {
-        ABORT_LINE("You cannot run any other script from a Python script called from a "
-          "regular script in line:\n\n");
-      }
-      if ((mRunningScrpLang || mCalledFromScrpLang) &&
-        CheckForScriptLanguage(cIndex, true)) {
-        ABORT_LINE("You cannot run another Python script from a Python script in "
-          "line:\n\n");
-      }
-      if (mRunningScrpLang) {
-        cIx0 = 0;
-        if (!CMD_IS(CALLSTRINGARRAY)) {
-          if (mMacroEditer[cIndex])
-            mMacroEditer[cIndex]->TransferMacro(true);
-          PrepareForMacroChecking(cIndex);
-          if (CheckBlockNesting(cIndex, -1, cIx0)) {
+      if (!cFunc) {
+        if (mRunningScrpLang && mCalledFromSEMmacro) {
+          ABORT_LINE("You cannot run any other script from a Python script called from a "
+            "regular script in line:\n\n");
+        }
+        if ((mRunningScrpLang || mCalledFromScrpLang) &&
+          CheckForScriptLanguage(cIndex, true)) {
+          ABORT_LINE("You cannot run another Python script from a Python script in "
+            "line:\n\n");
+        }
+        if (mRunningScrpLang) {
+          cIx0 = 0;
+          if (!CMD_IS(CALLSTRINGARRAY)) {
+            if (mMacroEditer[cIndex])
+              mMacroEditer[cIndex]->TransferMacro(true);
+            PrepareForMacroChecking(cIndex);
+            if (CheckBlockNesting(cIndex, -1, cIx0)) {
+              AbortMacro();
+              return 1;
+            }
+            mCallLevel = 0;
+          }
+          mCalledFromScrpLang = true;
+          mRunningScrpLang = false;
+        } else {
+          cIx0 = CheckForScriptLanguage(cIndex);
+          if (cIx0 > 0) {
             AbortMacro();
             return 1;
           }
-          mCallLevel = 0;
-        }
-        mCalledFromScrpLang = true;
-        mRunningScrpLang = false;
-      } else {
-        cIx0 = CheckForScriptLanguage(cIndex);
-        if (cIx0 > 0) {
-          AbortMacro();
-          return 1;
-        }
-        if (cIx0 < 0) {
-          mRunningScrpLang = true;
-          mCalledFromSEMmacro = true;
-          StartRunningScrpLang();
+          if (cIx0 < 0) {
+            mRunningScrpLang = true;
+            mCalledFromSEMmacro = true;
+            StartRunningScrpLang();
+          }
         }
       }
       mCallIndex[mCallLevel++] = mCurrentIndex;

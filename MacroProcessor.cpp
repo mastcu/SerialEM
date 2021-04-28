@@ -3104,7 +3104,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
   CString *macro = &mMacros[macroNum];
   int numLabels = 0, numSkips = 0;
   int i, inloop, needVers, index, skipInd, labInd, length, cmdIndex, currentIndex = 0;
-  int currentVersion = 202;
+  int currentVersion = 203;
   CString strLine, strItems[MAX_MACRO_TOKENS], errmess, intCheck;
   const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
   int numFeatures = sizeof(features) / sizeof(char *);

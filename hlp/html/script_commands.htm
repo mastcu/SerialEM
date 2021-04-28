@@ -294,10 +294,15 @@
             reached.&nbsp;&nbsp; <br>Not from Python. </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Return</TD>
+          <TD class="scriptcommand">Return [r1] [r2] [r3] [r4] r[5] [r6]</TD>
           <TD>Without executing to the end of the current script, returns to calling script or
-            ends execution if this is the top-level script&nbsp; <br>Callable from Python with 
-            same functionality.</TD>
+            ends execution if this is the top-level script.&nbsp; As of SerialEM 3.9, 4.28.21, up to 6
+             return values can be placed in <i>reportedValue1</i> to <i>reportValue6</i> with optional
+            arguments <b>r1</b> to <b>r6</b>&nbsp; If any such arguments are included, existing reported 
+            values will be cleared; otherwise they will be preserved.&nbsp; If there is any chance that a script relying on this
+            feature will be run on an earlier version, include the line 'require 203' in the script.
+            <br>Callable from Python with the same functionality, except that existing reported values
+            are always cleared.&nbsp; The returned arguments must all be strings.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Exit [text]</TD>
@@ -658,7 +663,8 @@
             means commands can be continued onto multiple lines with backslash.&nbsp; 
               7) Scripting version 202, which means that limited arithmetic can be done in 
               array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.&nbsp; 
-            <br>Not from Python.</TD>
+            <br>Not from Python.&nbsp; 8) Scripting version 203, in which the 'Return' command can
+             return values from a function or script.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsVersionAtLeast #V [#D]</TD>

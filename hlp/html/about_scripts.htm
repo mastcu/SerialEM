@@ -617,6 +617,11 @@
       global by default: variables defined by the calling script are available 
       within a called function or script, and variables defined within a function or 
       script are retained when it returns.</P>
+    <P>The 'Return' command can be used to return from a function before its end, and 
+      also (as of SerialEM 3.9, 4/28/21) can be used to pass up to 6 return values in 
+      the <em>reportedValue</em> variables.&nbsp; A script relying on this feature 
+      that might be run on an earlier version should include the the command 'require 
+      203'.</P>
     <P>If you list variables to be assigned in function definitions and there is any 
       possibility that the script will be distributed and possibly run on earlier 
       versions of SerialEM, you should include <br />
