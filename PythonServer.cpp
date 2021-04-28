@@ -281,7 +281,7 @@ void CPythonServer::TryToStartExternalControl(void)
   sScriptData->externalControl = -1;
   Sleep(10);
   for (int ind = 0; ind < 500; ind++) {
-    if (sScriptData->externalControl >= 0)
+    if (sScriptData->externalControl >= 0 && sScriptData->waitingForCommand)
       break;
     Sleep(10);
   }
