@@ -2917,7 +2917,10 @@ void SEMTrace(char key, char *fmt, ...)
   if (sNumTraceMsg >= MAX_TRACE_LIST)
     sNumTraceMsg = MAX_TRACE_LIST - 1;
   
-  sTraceMsg[sNumTraceMsg].Format("%.3f: ", SEMSecondsSinceStart());
+  if (key == '0')
+    sTraceMsg[sNumTraceMsg] = "";
+  else
+    sTraceMsg[sNumTraceMsg].Format("%.3f: ", SEMSecondsSinceStart());
   va_start(args, fmt);
   VarArgToCString(str, fmt, args);
   va_end(args);
