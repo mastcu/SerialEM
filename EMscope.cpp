@@ -2147,7 +2147,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   if (!doBacklash)
     mMoveInfo.backAlpha = 0.;
   if (mMoveInfo.doRestoreXY || !doBacklash)
-    mMoveInfo.backX = mMoveInfo.backY = mMoveInfo.backZ;
+    mMoveInfo.backX = mMoveInfo.backY = mMoveInfo.backZ = 0.;
   if (!doRelax)
     mMoveInfo.relaxX = mMoveInfo.relaxY = 0.;
   mMoveInfo.useSpeed = useSpeed && mPlugFuncs->SetStagePositionExtra;
