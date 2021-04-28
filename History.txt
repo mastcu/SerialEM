@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/28/21: Allowed a regular script to be called from a Python script, and a
+Python script to be called from a regular script.
+
 4/27/21: Fixed uninitialized values in stage restore for dose-symmetric series
 (In 3.8).
 

@@ -888,6 +888,26 @@
       highlighting should show up then.</p>
     <p>'sys.exit' can be used if desired instead of serialem.Exit(); it will be 
       intercepted and terminate the script through Exit().</p>
+    <p><em><strong>Calling between script types: </strong></em>&nbsp;It is possible to 
+      call a Python script from a regular SerialEM script and vice versa.&nbsp; These 
+      are the specific rules:</p>
+    <ul>
+      <li>A Python script can call a regular script provided that the Python script was 
+        not itself called from a regular script.&nbsp; The script being called can call 
+        functions and other regular scripts.&nbsp; This script and other ones that it 
+        appears to call will be checked before being run.</li>
+      <li>A regular script can call a Python script provided that the regular script was 
+        not called, directly or indirectly, from a Python script; i.e., the top-level 
+        script was not Python.&nbsp; The script being called cannot call any other 
+        scripts.</li>
+      <li>A Python script cannot call another Python script; only &#39;#include&#39; can be used 
+        to access more than one script.</li>
+      <li>The call to a Python script from a regular script can be contained in a &#39;Try - 
+        Catch&#39; block.&nbsp; Execution errors can be caught this way, but syntax errors 
+        will end the script.</li>
+      <li>The call to a regular script from a Python script can be contained in a &#39;try - 
+        except&#39; block to catch errors as usual.</li>
+    </ul>
     <p><strong><em>Installation options:&nbsp; </em></strong>There must be at least 
       one Python installation, but can be multiple ones.</p>
     <p>The PythonModules package should be unpacked in the directory with the SerialEM 
@@ -898,7 +918,7 @@
       set.&nbsp; If you have multiple Pythons, Python is not on the system path, or 
       the version is 3.4 or 2.7, you must have one or more &#39;PathToPython&#39; property 
       entries.&nbsp; These should have the following form (changed for your actual 
-      path to python in each case): <br />
+      path to the Python in each case): <br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-64 C:/Program Files/Python34<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-64 C:/Program Files/Python35<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.6 C:/Program Files/Python36<br />
@@ -910,6 +930,47 @@
       See the description of PathToPython for more details.&nbsp; 
       These specifications will allow the modules to be found in the distributed 
       module directory.</p>
+    <p>
+      <em><strong>Running scripts in an externally run Python: </strong></em>&nbsp;An 
+      externally run Python script can take control of SerialEM and execute script 
+      commands.&nbsp; This can be done either from an interactive Python window or 
+      from a script run at the command line.</p>
+    <ul>
+      <li>The appropriate serialem module must be on the Python path.&nbsp; This can be 
+        done either by setting the environment variable PYTHONPATH (or adding to it if 
+        it is already set) with the path to the module, or by adding it to the system 
+        path within the script, such as with <br />
+        &nbsp;&nbsp;&nbsp;&nbsp; sys.path.insert(0, 'C:\Program Files\SerialEM\PythonModules')<br />
+      where you would add '2.7', '3.4-32', or '3.4-64' for those versions.</li>
+      <li>The SerialEM property 'EnableExternalPython' must be set non-zero to allow 
+        connections.&nbsp; This property can be set with the 'SetProperty' script 
+        command, so the connections can be enabled or disabled during a session.</li>
+      <li>By default, the module will try to connect to SerialEM on port 48888 in the 
+        local host (IP 127.0.0.1).&nbsp; You can modify this is in two different ways: 
+        by setting environment variables PY_SERIALEM_PORT and/or PY_SERIALEM_IP with a 
+        different port or IP address, respectively; or by calling the module function 
+        ConnectToSEM(port, IP_address) as the first function call to the module.&nbsp; 
+        'Port' is an integer and 'IP_address' is a string.&nbsp; Both arguments are 
+        optional, so you can call it with just the port.&nbsp; Values passed through 
+        this function call will override the environmant variables if any. </li>
+      <li>&nbsp;If you change the port, define it in the SerialEM properties file with 
+        the entry 'SocketServerPort 8' plus the alternative port.&nbsp; Do not use 48889 
+        - it is dedicated for running Python scripts from SerialEM.</li>
+      <li>The first actual function call to SerialEM is considered to start a script, 
+        and it will leave the program waiting for another command, with 'EXTERNAL 
+        CONTROL' in the status bar.&nbsp; The program stays in this state until an Exit 
+        command is received or the external Python exits (i.e., when a script ends or an 
+        interactive Python is closed). The <strong>STOP</strong> button will be enabled 
+        and can be used to regain user control of the program.&nbsp; If this happens, 
+        the next command from Python should be able to re-establish the external 
+        control.&nbsp; If the program is busy when the first command it given, it will 
+        raise a SEMmoduleError exception with text indicating that SerialEM 'is now 
+        busy'.</li>
+      <li>Do not try to run two operations at once.&nbsp; If you are working in multiple 
+        panes of a Jupyter notebook, be sure a command is completed before running one 
+        in another pane.</li>
+    </ul>
+    <p>&nbsp;</p>
     </basefont>
   </BODY>
 </HTML>

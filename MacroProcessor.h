@@ -128,6 +128,7 @@ class DLL_IM_EX CMacroProcessor : public CCmdTarget
 public:
   void SetIntensityFactor(int iDir);
   void RunOrResume();
+  void StartRunningScrpLang(void);
   void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
@@ -373,8 +374,9 @@ protected:
 
   bool mRunningScrpLang;     // Flag that external interpreter is running the script
   bool mCalledFromScrpLang;  // Flag that regular script called from language script
+  bool mCalledFromSEMmacro;  // Flag that language script called from regular one
   CString mMacroForScrpLang; // String actually passed with other scripts included
-  CWinThread *mScrpLangThread;
+  static CWinThread *mScrpLangThread;
   IntVec mLineInSrcMacro;      // Map from line in composite script to line in source
   IntVec mIndexOfSrcLine;      // And the character index of that line in the source
   IntVec mMacNumAtScrpLine;    // Macro number for each block of composite script
@@ -460,7 +462,7 @@ public:
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
-  int CheckForScriptLanguage(int macNum);
+  int CheckForScriptLanguage(int macNum, bool justCheckStart = false);
   void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr, bool isPython);
   void EnhancedExceptionToLog(CString &str);
   void SetPathToPython(CString &version, CString &path);

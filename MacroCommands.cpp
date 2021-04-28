@@ -241,6 +241,8 @@ void CMacCmd::TaskDone(int param)
             AbortMacro();
           return;
         }
+        if (mCmdIndex != CME_EXIT)
+          mScrpLangData.errorOccurred = 0;
 
         // Output the standard log report variable if set
         if (!mLogRpt.IsEmpty())
@@ -556,7 +558,8 @@ int CMacCmd::ScriptEnd(void)
         SubstituteLineStripItems(mStrLine, 1, mStrCopy);
         mWinApp->AppendToLog(mStrCopy);
       }
-    }
+    } else if (mRunningScrpLang || mCalledFromScrpLang)
+      mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
     AbortMacro();
     mLastCompleted = !mExitAtFuncEnd;
     if (mLastCompleted && mStartNavAcqAtEnd)
@@ -566,6 +569,13 @@ int CMacCmd::ScriptEnd(void)
 
   // For a return, pop any loops, clear index variables
   LeaveCallLevel(CMD_IS(RETURN));
+  if (mRunningScrpLang && mCalledFromSEMmacro) {
+    mRunningScrpLang = false;
+    mCalledFromSEMmacro = false;
+    mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
+    SetEvent(mScrpLangDoneEvent);
+    SEMTrace('[', "signal normal exit on return");
+  }
   return 0;
 }
 
@@ -815,6 +825,7 @@ int CMacCmd::DoMacro(void)
   // Skip any of these operations if we are in a termination function
   if (!mExitAtFuncEnd) {
 
+
     // Calling a macro or function: rely on initial error checks, get the number
     cIndex2 = 0;
     cFunc = NULL;
@@ -839,7 +850,7 @@ int CMacCmd::DoMacro(void)
       if (!cIndex)
         return 1;
       cIx0 = 0;
-      if (CheckBlockNesting(cIndex, -1, cIx0)) {
+      if (!CheckForScriptLanguage(cIndex, true) && CheckBlockNesting(cIndex, -1, cIx0)) {
         AbortMacro();
         return 1;
       }
@@ -856,6 +867,15 @@ int CMacCmd::DoMacro(void)
         ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
       if (cFunc && cFunc->ifStringArg)
         SubstituteVariables(&mStrLine, 1, mStrLine);
+      if (mRunningScrpLang && mCalledFromSEMmacro) {
+        ABORT_LINE("You cannot run any other script from a Python script called from a "
+          "regular script in line:\n\n");
+      }
+      if ((mRunningScrpLang || mCalledFromScrpLang) &&
+        CheckForScriptLanguage(cIndex, true)) {
+        ABORT_LINE("You cannot run another Python script from a Python script in "
+          "line:\n\n");
+      }
       if (mRunningScrpLang) {
         cIx0 = 0;
         if (!CMD_IS(CALLSTRINGARRAY)) {
@@ -870,6 +890,17 @@ int CMacCmd::DoMacro(void)
         }
         mCalledFromScrpLang = true;
         mRunningScrpLang = false;
+      } else {
+        cIx0 = CheckForScriptLanguage(cIndex);
+        if (cIx0 > 0) {
+          AbortMacro();
+          return 1;
+        }
+        if (cIx0 < 0) {
+          mRunningScrpLang = true;
+          mCalledFromSEMmacro = true;
+          StartRunningScrpLang();
+        }
       }
       mCallIndex[mCallLevel++] = mCurrentIndex;
       mCallMacro[mCallLevel] = cIndex;

@@ -173,12 +173,16 @@
         <TR>
           <TD class="scriptcommand">CallScript #<br />
             CallMacro #</TD>
-          <TD>Calls other script by <b>#</b> and returns.&nbsp;&nbsp;&nbsp; <br>Not from Python.</TD>
+          <TD>Calls other script by <b>#</b> and returns.&nbsp; A regular SerialEM script 
+            may call a Python script provided that the top-level script was not Python.
+            <br>Callable from Python with the number of a regular SerialEM script.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Call text</TD>
           <TD>Calls other script by name. Names are case-sensitive and must match exactly,
-            including spaces.&nbsp; <br>Not from Python.</TD>
+            including spaces.&nbsp;  A regular SerialEM script may call a Python script provided
+             that the top-level script was not Python. <br>Callable from Python with the name 
+            of a regular SerialEM script.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CallStringArray var [#E]</TD>
@@ -189,7 +193,8 @@
               numbered 1 to 5.&nbsp; The optional <b>#E</b> can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; If the script 
               depends on other temporary scripts, they can be loaded first with 
-              'StringArrayToScript'.&nbsp; <br>Not from Python.</TD>
+              'StringArrayToScript'.&nbsp; <br>Callable from Python if the string array contains a
+             regular SerialEM script and the Python script was not called from a regular script.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Function name [#N] [#S] [args]</TD>
@@ -291,7 +296,8 @@
         <TR>
           <TD class="scriptcommand">Return</TD>
           <TD>Without executing to the end of the current script, returns to calling script or
-            ends execution if this is the top-level script&nbsp; <br>Not from Python.</TD>
+            ends execution if this is the top-level script&nbsp; <br>Callable from Python with 
+            same functionality.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Exit [text]</TD>
@@ -2922,7 +2928,7 @@
           <TD>Sets limits on the absolute focus reached during autofocus runs.&nbsp; Follow
             with a lower and a upper limit as given by ReportAbsoluteFocus, or '0 0' to cancel
             these limits.&nbsp; Autofocus will abort when a limit is exceeded.&nbsp; These 
-            values will override the absolute limits that can be specificed through the 
+            values will override the absolute limits that can be specified through the 
             Focus menu, but a '0 0' will not prevent those limits from being applied.</TD>
         </TR>
         <TR>
