@@ -831,6 +831,7 @@ int CMacCmd::SkipTo(void)
 // DoMacro, DoScript, CallMacro, CallScript, Call, CallFunction, CallStringArray
 int CMacCmd::DoMacro(void)
 {
+  bool fromScrpLang = mRunningScrpLang;
 
   // Skip any of these operations if we are in a termination function
   if (!mExitAtFuncEnd) {
@@ -840,7 +841,9 @@ int CMacCmd::DoMacro(void)
     cIndex2 = 0;
     cFunc = NULL;
     if (CMD_IS(CALLFUNCTION)) {
-      cFunc = FindCalledFunction(mStrLine, false, cIndex, cIx0);
+      cFunc = FindCalledFunction(
+        B3DCHOICE(mRunningScrpLang, "CallFunction " + mStrItems[1], mStrLine), false, 
+        cIndex, cIx0);
       if (!cFunc) {
         AbortMacro();
         return 1;
@@ -877,47 +880,61 @@ int CMacCmd::DoMacro(void)
         ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
       if (cFunc && cFunc->ifStringArg)
         SubstituteVariables(&mStrLine, 1, mStrLine);
-      if (!cFunc) {
-        if (mRunningScrpLang && mCalledFromSEMmacro) {
-          ABORT_LINE("You cannot run any other script from a Python script called from a "
-            "regular script in line:\n\n");
-        }
-        if ((mRunningScrpLang || mCalledFromScrpLang) &&
-          CheckForScriptLanguage(cIndex, true)) {
-          ABORT_LINE("You cannot run another Python script from a Python script in "
-            "line:\n\n");
-        }
-        if (mRunningScrpLang) {
-          cIx0 = 0;
-          if (!CMD_IS(CALLSTRINGARRAY)) {
-            if (mMacroEditer[cIndex])
-              mMacroEditer[cIndex]->TransferMacro(true);
-            PrepareForMacroChecking(cIndex);
-            if (CheckBlockNesting(cIndex, -1, cIx0)) {
-              AbortMacro();
-              return 1;
-            }
-            mCallLevel = 0;
-          }
-          mCalledFromScrpLang = true;
-          mRunningScrpLang = false;
-        } else {
-          cIx0 = CheckForScriptLanguage(cIndex);
-          if (cIx0 > 0) {
+      if (mRunningScrpLang && mCalledFromSEMmacro) {
+        ABORT_LINE("You cannot run any other script from a Python script called from a "
+          "regular script in line:\n\n");
+      }
+      if ((mRunningScrpLang || mCalledFromScrpLang) &&
+        CheckForScriptLanguage(cIndex, true)) {
+        ABORT_LINE("You cannot run another Python script from a Python script in "
+          "line:\n\n");
+      }
+      if (mRunningScrpLang) {
+
+        // Switching from Python to regular
+        cIx0 = 0;
+        if (!CMD_IS(CALLSTRINGARRAY)) {
+          if (mMacroEditer[cIndex])
+            mMacroEditer[cIndex]->TransferMacro(true);
+          PrepareForMacroChecking(cIndex);
+          if (CheckBlockNesting(cIndex, -1, cIx0)) {
             AbortMacro();
             return 1;
           }
-          if (cIx0 < 0) {
-            mRunningScrpLang = true;
-            mCalledFromSEMmacro = true;
-            StartRunningScrpLang();
+
+          // That check rebuilt the function arrays, so need to find it again
+          if (cFunc) {
+            cFunc = FindCalledFunction("CallFunction " + mStrItems[1], false, cIndex,
+              cIx0);
+            if (!cFunc) {
+              AbortMacro();
+              return 1;
+            }
+            cIx0 = 3;
           }
+          mCallLevel = 0;
+        }
+        mCalledFromScrpLang = true;
+        mRunningScrpLang = false;
+      } else if (!cFunc) {
+
+        // Running regular: see if what is being called is Python and switch if so
+        cIx1 = CheckForScriptLanguage(cIndex);
+        if (cIx1 > 0) {
+          AbortMacro();
+          return 1;
+        }
+        if (cIx1 < 0) {
+          mRunningScrpLang = true;
+          mCalledFromSEMmacro = true;
+          StartRunningScrpLang();
         }
       }
       mCallIndex[mCallLevel++] = mCurrentIndex;
       mCallMacro[mCallLevel] = cIndex;
       mBlockDepths[mCallLevel] = -1;
       mCallFunction[mCallLevel] = cFunc;
+
     } else {
       mNumRuns++;
     }
@@ -942,7 +959,10 @@ int CMacCmd::DoMacro(void)
         }
       }
       if (!cTruth && cFunc->ifStringArg) {
-        JustStripItems(mStrLine, cIndex + cIx0, mStrCopy);
+        if (fromScrpLang)
+          mStrCopy = mStrItems[2];
+        else
+          JustStripItems(mStrLine, cIndex + cIx0, mStrCopy);
         cTruth = SetVariable(cFunc->argNames[cIndex], mStrCopy, VARTYPE_LOCAL,
           - 1, false, &cReport);
       }

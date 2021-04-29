@@ -4136,30 +4136,40 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
   if (isPython) {
-    numWrap = 8;
-    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
+    numWrap = 32;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
+    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
     mMacroForScrpLang = "import sys\r\n" +
       name +
       "from serialem import SEMexited, SEMerror, ConnectToSEM\r\n"
       "from serialem import Echo as SEMecho\r\n"
+      "from serialem import Delay as SEMdelay\r\n"
       "from serialem import ScriptIsInitialized as SEMscriptIsInitialized\r\n"
       "SEMscriptIsInitialized()\r\n" +
-      line;
-    if (pyVersion < 1 || pyVersion > 3.) {
-      mMacroForScrpLang +=
-        "def print(a1, a2 = None, a3 = None, a4 = None, a5 = None, a6 = None, \r\n"
-        "    a7 = None, a8 = None, a9 = None, a10 = None):\r\n"
-        "  out = ''\r\n"
-        "  for arg in (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10):\r\n"
-        "    if isinstance(arg, float):\r\n"
-        "      out += str(round(arg, 6)) + ' '\r\n"
-        "    elif arg != None:\r\n"
-        "      out += str(arg) + ' '\r\n"
-        "  SEMecho(out)\r\n";
-      numWrap += 9;
-    }
-    mMacroForScrpLang +=
+      line +
+      "def SEMarrayToFloats(var):\r\n"
+      "  if not isinstance(var, str):\r\n"
+      "    return [float(var)]\r\n"
+      "  ret = []\r\n"
+      "  for item in var.split('\\n'):\r\n"
+      "    ret.append(float(item))\r\n"
+      "  return ret\r\n"
+      "def SEMarrayToInts(var):\r\n"
+      "  ret = []\r\n"
+      "  for item in var.split('\\n'):\r\n"
+      "    ret.append(int(item))\r\n"
+      "  return ret\r\n"
+      "def listToSEMarray(var):\r\n"
+      "  ret = ''\r\n"
+      "  for val in var:\r\n"
+      "    ret += str(val) + '\\n'\r\n"
+      "  return ret[:-1]\r\n"
+      "def SEMprint(*args):\r\n"
+      "  print(*args, flush = True)\r\n"
+      "  SEMdelay(0.01)\r\n"
+      "def SEMflush():\r\n"
+      "  sys.stdout.flush\r\n"
+      "  SEMdelay(0.01)\r\n"
       "try:\r\n";
     for (ind = 0; ind < numWrap; ind++) {
       mLineInSrcMacro.push_back(-1);
@@ -4185,8 +4195,9 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
     GetNextLine(&mMacros[macNum], currentInd, line, true);
 
     // Escape the backslashes to prevent them from being interpreted as escape code
-    if (isPython)
-      line.Replace("\\", "\\\\");
+    // but restore intended escape codes prefixed by |
+    if (isPython && line.Replace("\\", "\\\\") > 0)
+      line.Replace("|\\\\", "\\");
     mMacroForScrpLang += indentStr + line;
 
     // Keep track of the first non-blank line so that the "maybe" statements can be
@@ -4252,8 +4263,8 @@ void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy,
     mIndexOfSrcLine.push_back(currentInd);
     mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&source, currentInd, line, true);
-    if (isPython)
-      line.Replace("\\", "\\\\");
+    if (isPython && line.Replace("\\", "\\\\"))
+      line.Replace("|\\\\", "\\");
     copy += indentStr + line;
     if (firstRealLine < 0) {
       line.Trim(" \r\n");
@@ -4397,6 +4408,8 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
   HANDLE hChildStd_IN_Wr = NULL;
   HANDLE hChildStd_OUT_Rd = NULL;
   HANDLE hChildStd_OUT_Wr = NULL;
+  HANDLE hChildStd_ERR_Rd = NULL;
+  HANDLE hChildStd_ERR_Wr = NULL;
   PROCESS_INFORMATION piProcInfo;
   STARTUPINFO siStartInfo;
   BOOL bSuccess = FALSE;
@@ -4410,7 +4423,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     mScrpLangData.exitStatus = mScrpLangFuncs->RunScript(script);
   } else {
     mScrpLangData.exitStatus = -1;
-    mScrpLangData.gotExceptionText = false;
+    mScrpLangData.gotExceptionText = true;
 
     // This is based heavily on a Microsoft post
 
@@ -4420,30 +4433,18 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     saAttr.lpSecurityDescriptor = NULL;
 
     // Create a pipe for the child process's STDOUT.
-    if (!CreatePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &saAttr, 0)) {
-      mScrpLangData.strItems[0] = "Error creating output pipe for Python process";
+    if (CreateOnePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &saAttr, false, 
+      "stdout output"))
       return 1;
-    }
 
-    // Ensure the read handle to the pipe for STDOUT is not inherited.
-    if (!SetHandleInformation(hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
-      mScrpLangData.strItems[0] = "Error in SetHandleInformation for output pipe of "
-        "Python process";
+    // Create a pipe for the child process's STDERR.
+    if (CreateOnePipe(&hChildStd_ERR_Rd, &hChildStd_ERR_Wr, &saAttr, false, 
+      "stderr output"))
       return 1;
-    }
 
     // Create a pipe for the child process's STDIN.
-    if (!CreatePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &saAttr, 0)) {
-      mScrpLangData.strItems[0] = "Error creating input pipe for Python process";
+    if (CreateOnePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &saAttr, true, "input"))
       return 1;
-    }
-
-    // Ensure the write handle to the pipe for STDIN is not inherited.
-    if (!SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0)) {
-      mScrpLangData.strItems[0] = "Error in SetHandleInformation for input pipe of "
-        "Python process";
-      return 1;
-    }
 
     // Set up members of the PROCESS_INFORMATION structure.
     ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
@@ -4452,7 +4453,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // This structure specifies the STDIN and STDOUT handles for redirection.
     ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
     siStartInfo.cb = sizeof(STARTUPINFO);
-    siStartInfo.hStdError = hChildStd_OUT_Wr;
+    siStartInfo.hStdError = hChildStd_ERR_Wr;
     siStartInfo.hStdOutput = hChildStd_OUT_Wr;
     siStartInfo.hStdInput = hChildStd_IN_Rd;
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
@@ -4493,6 +4494,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // If they are not explicitly closed, there is no way to recognize that the child 
     // process has ended.
     CloseHandle(hChildStd_OUT_Wr);
+    CloseHandle(hChildStd_ERR_Wr);
     CloseHandle(hChildStd_IN_Rd);
 
     // Assign the process to the job object so that if SerialEM dies, it will be killed
@@ -4517,15 +4519,19 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       return 1;
     }
 
-    // Read from pipe
+    // Start thread to read from stdout and send to log
+    AfxBeginThread(StdoutToLogProc, (LPVOID)(&hChildStd_OUT_Rd), THREAD_PRIORITY_NORMAL);
+
+    // Read stderr from pipe
     mScrpLangData.strItems[0] = "";
     for (;;) {
-      bSuccess = ReadFile(hChildStd_OUT_Rd, buffer, bufLen - 1, &dwRead, NULL);
+      bSuccess = ReadFile(hChildStd_ERR_Rd, buffer, bufLen - 1, &dwRead, NULL);
       if (!bSuccess || dwRead == 0)
         break;
       buffer[dwRead] = 0x00;
       mScrpLangData.strItems[0] += buffer;
     }
+    CloseHandle(hChildStd_ERR_Rd);
 
     // Waiting now may be gratuitous...
     WaitForSingleObject(mPyProcessHandle, INFINITE);
@@ -4539,6 +4545,46 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
   }
   SEMTrace('[', "RunScriptLangProc exit stat %d", mScrpLangData.exitStatus);
   return mScrpLangData.exitStatus ? 1 : 0;
+}
+
+// Function for the boilerplate in creating a pipe
+int CMacroProcessor::CreateOnePipe(HANDLE * childRd, HANDLE * childWr, 
+  SECURITY_ATTRIBUTES * saAttr, bool setForWrite, const char *descrip)
+{
+  // Create a pipe for the child process's STDOUT.
+  if (!CreatePipe(childRd, childWr, saAttr, 0)) {
+    mScrpLangData.strItems[0].Format("Error creating %s pipe for Python process", 
+      descrip);
+    return 1;
+  }
+
+  // Ensure the read handle to the pipe for STDOUT is not inherited.
+  if (!SetHandleInformation(setForWrite ? *childWr : *childRd, HANDLE_FLAG_INHERIT, 0)) {
+    mScrpLangData.strItems[0].Format("Error in SetHandleInformation for %s pipe of Python"
+      " process", descrip);
+    return 1;
+  }
+  return 0;
+}
+
+// Thread procedure to pump the standard out into the log
+UINT CMacroProcessor::StdoutToLogProc(LPVOID pParam)
+{
+  const int bufLen = 1024;
+  char buffer[bufLen];
+  BOOL bSuccess;
+  DWORD dwRead;
+  HANDLE *outRd = (HANDLE *)pParam;
+
+  for (;;) {
+    bSuccess = ReadFile(*outRd, buffer, bufLen - 1, &dwRead, NULL);
+    if (!bSuccess || dwRead == 0)
+      break;
+    buffer[dwRead] = 0x00;
+    SEMTrace('0', buffer);
+  }
+  CloseHandle(*outRd);
+  return 0;
 }
 
 // Common call to terminate the process and to let the thread exit before closing handle

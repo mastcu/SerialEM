@@ -774,8 +774,7 @@
     <P><B>Scripting with Python</B></P>
     <P>Scripts can be written in Python as of SerialEM 3.9.0, 3/24/21, and run 
       scripting commands exposed in the module 'serialem'.&nbsp; Python and regular 
-      scripting are mutually exclusive; you can not call functions from one type in 
-      another.</P>
+      scripting can even be used together to some extent.</P>
     <p>
       <strong><em>Initial lines and other special features:</em>&nbsp; </strong>A python script must start with '#!Python', 
       plus an optional version specification if there are multiple installed pythons.&nbsp; &nbsp; If you start with '#!Python' it will 
@@ -817,10 +816,15 @@
         <br />The other scripts should all start with '#!Python' and a '#serialemPrefix' 
         or serialem import line so that the editor 
         behaves correctly, even if they are never run on their own.</li>
-      <li>There is a simple 'print' function defined in the python wrapper to the 
-        script, overriding the 'print' in Python 3.&nbsp; It will take up to 10 
-        arguments, separated by commas, and print them in one line in the log, separated 
-        by spaces.</li>
+      <li>Before sending the script to Python, the backslash character, '\', is replaced 
+        by '\\' so that filenames are preserved and not misinterpreted as containing 
+        escape characters like '\f' and '\x'.&nbsp; In order to include escape 
+        characters like '\n' in your script, you need to prefix them with another 
+        character, '|'.&nbsp; Thus, the line ending to print a multi-line string to the 
+        log would be '|\r|\n'.</li>
+      <li>The script sent to Python consists of some initial lines, your script indented 
+        in a 'try' block, and exception handlers at the end.&nbsp; The additional lines 
+        are referred to as the &quot;script wrapper&quot; below.</li>
     </ul>
       <p>
         You can of course import any other modules available within the Python 
@@ -866,10 +870,48 @@
       this takes an optional string which is printed to the log.&nbsp; From Python, 
       the first argument is an optional integer which should be positive when calling 
       from an exception, 0 otherwise, and the second argument can be a multi-line text 
-      string.&nbsp; Lines should be separated by '\r\n' to print properly in the log.&nbsp; </p>
+      string.&nbsp; Lines should be separated by '|\r|\n' to print properly in the log.&nbsp; </p>
+    <p><strong><em>Printing to the log window: </em></strong>&nbsp;The 'Echo' function 
+      in the module can be used to print a single string to the log window.&nbsp; In 
+      addition, the standard output of the script is read through a pipe and written 
+      to the log as it becomes available.&nbsp; Thus you can use the standard Python 
+      'print()' function (or 'print' command in Python 2.7). However, this output will 
+      be delayed and may come out later than SerialEM's own output to the log unless 
+      the script output is flushed <em>and</em> there is a small delay (~0.01 sec) to 
+      allow threads to act on the output.&nbsp; There are two Python functions defined 
+      in the script wrapper to facilitate this: 1) 'SEMprint'() will call the standard 
+      print function with its arguments plus 'flush = True' (this will not work in 
+      Python 2.7), and it will also call the 'Delay' function in the module.&nbsp; 2) 
+      'SEMflush()' will flush standard output and call 'Delay'.&nbsp; You need not 
+      flush on every call: if you are doing a series of prints where there is no 
+      SerialEM output expected, or if you call into another module that uses 'print', 
+      you can use SEMprint just for the last print, or SEMflush after coming back from 
+      the module.</p>
+    <p><em><strong>Accessing SerialEM script variables:</strong></em>&nbsp; Three 
+      module functions allow variables to be set within the SerialEM script processor: 
+      'SetVariable', 'SetPersistentVar', and 'SetFloatVariable'.&nbsp; The module 
+      function 'GetVariable' will return a variable value, which can be either a 
+      string or a float.&nbsp; A one-dimensional array variable is stored in SerialEM 
+      as a string with values separate by newlines, which would have to written as 
+      '|\n'.&nbsp; There are three useful Python functions defined in the script 
+      wrapper:</p>
+    <ul>
+      <li>SEMarrayToFloats(var): Takes a variable returned by 'GetVariable' with one or 
+        more numeric values and returns a list of float values; thus it should work with 
+        any numeric return from 'GetVariable', not just an array.&nbsp; This will throw 
+        an exception if 'var' is neither a string nor a float or if any of the elements 
+        in a string do not convert to a float.</li>
+      <li>SEMarrayToInts(var): Takes an array variable returned by 'GetVariable' and 
+        returns a list of integer values.&nbsp; This will throw an exception if 'var' is 
+        not a string or if any of the array elements is not an integer, so it is only 
+        useful for array variables where you know that integer values have been stored.</li>
+      <li>listToSEMarray(list): Takes a list of numbers and/or strings and packs them a 
+        single string separated by newlines, which can be supplied as the argument to 
+        one of the 'SetVariable' module functions.</li>
+    </ul>
     <p><strong><em>Errors and exceptions:&nbsp;</em></strong> An error within a 
       SerialEM operation will generate an exception of type 'SEMerror'.&nbsp; The 
-      namespace is optional here because a script wrapper imports this name.&nbsp; You 
+      namespace is optional here because the script wrapper imports this name.&nbsp; You 
       can catch this exception in a 'try - except' block.&nbsp; The message from the 
       error should be available If appropriate, you can deal with problem and let the 
       script continue, but a message box with SerialEM's text will come up as usual 
@@ -897,8 +939,8 @@
       call a Python script from a regular SerialEM script and vice versa.&nbsp; These 
       are the specific rules:</p>
     <ul>
-      <li>A Python script can call a regular script provided that the Python script was 
-        not itself called from a regular script.&nbsp; The script being called can call 
+      <li>A Python script can call a regular script or function provided that the Python script was 
+        not itself called from a regular script.&nbsp; The script or function being called can call 
         functions and other regular scripts.&nbsp; This script and other ones that it 
         appears to call will be checked before being run.</li>
       <li>A regular script can call a Python script provided that the regular script was 

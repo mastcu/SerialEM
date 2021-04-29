@@ -475,6 +475,9 @@ public:
     CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
+  static int CreateOnePipe(HANDLE *childRd, HANDLE *childWr, SECURITY_ATTRIBUTES *saAttr, bool setForWrite,
+    const char *descrip);
+  static UINT StdoutToLogProc(LPVOID pParam);
   static void TerminateScrpLangProcess(void);
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptListPersistentVars();

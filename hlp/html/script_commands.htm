@@ -214,7 +214,13 @@
             to receive.&nbsp; If the name could occur in more than one script, it must be
             qualified with a script number or name, i.e. &#39;5::GoodFunc&#39; or &#39;Func
             Script::GoodFunc&#39;.&nbsp; The variable <i>functionName</i> is defined with the
-            name.&nbsp; <br>Not from Python.</TD>
+            name.&nbsp; <br>Callable from Python with the name of a regular script function as
+             its first, string argument.&nbsp; The order of arguments is changed from what is used in
+            a regular script: the first optional argument is the string argument that the function
+            may allow, and then up to 17 numeric arguments can be passed.&nbsp; If a function takes
+            no string argument, you can just use an empty string.&nbsp; For example:<br />
+            &nbsp; &nbsp; &nbsp; &nbsp; retVals = CallFunction('My Functions::Cycle Defocus', '', 1., 10)
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">If expression</TD>
@@ -713,7 +719,9 @@
           <TD class="scriptcommand">SetVariable(var, value)</TD>
           <TD>Sets variable <B>var</B> within SerialEM scripting with <b>value</b>, which 
             must be a string.&nbsp; A one-dimensional array variable can be passed by separating 
-            each value with newlines ('\n').&nbsp; Variable names are stored as upper case within
+            each value with newlines ('\n', written as '|\n' within SerialEM).&nbsp; The Python wrapper
+             function 'listToSEMarray' can be used to convert a list with numeric and/or string 
+            values to a newline-separated string.&nbsp; Variable names are stored as upper case within
              SerialEM, so all variable specifications are case-insensitive.</TD>
         </TR>
        <TR>
@@ -729,7 +737,9 @@
         <TR>
           <TD class="scriptcommand">GetVariable(var)</TD>
           <TD>Returns the value of a variable <b>var</b> as string or floating point value, depending
-             on whether the variable was designated as numeric when it was stored</TD>
+             on whether the variable was designated as numeric when it was stored&nbsp; The Python wrapper
+             function 'SEMarrayToFloats' can be used to create a list of float values from the return value 
+            if the variable contains either a single numeric value or an array of numeric values</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">bufferImage(buf)</TD>
