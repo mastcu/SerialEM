@@ -478,7 +478,7 @@ void CBaseServer::CloseOnExitOrSelectError(int sockInd, int err)
     mLastWSAerror[sockInd] = WSAGetLastError();
     mStartupError[sockInd] = 7;
     sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
-      "WSA Error %d on select command");
+      "WSA Error %d on select command", mLastWSAerror[sockInd]);
     ErrorToLog(mMessageBuf[sockInd]);
   }
 }

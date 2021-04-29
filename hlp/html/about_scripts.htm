@@ -883,15 +883,15 @@
       'print()' function (or 'print' command in Python 2.7). However, this output will 
       be delayed and may come out later than SerialEM's own output to the log unless 
       the script output is flushed <em>and</em> there is a small delay (~0.01 sec) to 
-      allow threads to act on the output.&nbsp; There are two Python functions defined 
-      in the script wrapper to facilitate this: 1) 'SEMprint'() will call the standard 
-      print function with its arguments plus 'flush = True' (this will not work in 
-      Python 2.7), and it will also call the 'Delay' function in the module.&nbsp; 2) 
-      'SEMflush()' will flush standard output and call 'Delay'.&nbsp; You need not 
-      flush on every call: if you are doing a series of prints where there is no 
-      SerialEM output expected, or if you call into another module that uses 'print', 
-      you can use SEMprint just for the last print, or SEMflush after coming back from 
-      the module.</p>
+      allow threads to act on the output.&nbsp; All of the 'print()' statements in 
+      your script will be converted to 'SEMprint()', a Python functions defined in the 
+      script wrapper that calls the standard print function with its arguments plus 
+      'flush = True' and then calls the 'Delay' function in the module.&nbsp; This 
+      will not help if you call into another module that uses 'print()' or are using 
+      Python 2.7.&nbsp; For those cases, there is also a wrapper function 'SEMflush()' 
+      that will flush standard output and call 'Delay'.&nbsp; You need not flush after 
+      every print; you can flush once just before a command where some SerialEM output 
+      is expected.</p>
     <p><em><strong>Accessing SerialEM script variables:</strong></em>&nbsp; Three 
       module functions allow variables to be set within the SerialEM script processor: 
       'SetVariable', 'SetPersistentVar', and 'SetFloatVariable'.&nbsp; The module 

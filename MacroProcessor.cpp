@@ -4196,8 +4196,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
 
     // Escape the backslashes to prevent them from being interpreted as escape code
     // but restore intended escape codes prefixed by |
-    if (isPython && line.Replace("\\", "\\\\") > 0)
-      line.Replace("|\\\\", "\\");
+    if (isPython)
+      DoReplacementsInPythonLine(line);
     mMacroForScrpLang += indentStr + line;
 
     // Keep track of the first non-blank line so that the "maybe" statements can be
@@ -4263,8 +4263,8 @@ void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy,
     mIndexOfSrcLine.push_back(currentInd);
     mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&source, currentInd, line, true);
-    if (isPython && line.Replace("\\", "\\\\"))
-      line.Replace("|\\\\", "\\");
+    if (isPython)
+      DoReplacementsInPythonLine(line);
     copy += indentStr + line;
     if (firstRealLine < 0) {
       line.Trim(" \r\n");
@@ -4273,6 +4273,24 @@ void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy,
     }
   }
   mFirstRealLineInPart.push_back(firstRealLine);
+}
+
+void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
+{
+  int index = 0;
+
+  // Escape the backslashes to prevent them from being interpreted as escape code
+  // but restore intended escape codes prefixed by |
+  if (line.Replace("\\", "\\\\"))
+    line.Replace("|\\\\", "\\");
+
+  // Be nice and replace print with SEMprint
+  while ((index = line.Find("print(", index)) >= 0) {
+    if (!index || line.GetAt(index - 1) == ' ' || line.GetAt(index - 1) == '\r' ||
+      line.GetAt(index - 1) == '\n')
+      line.Insert(index, "SEM");
+    index += 5;
+  }
 }
 
 // Take a Python exception from the plugin and translate the line numbers to be correct,

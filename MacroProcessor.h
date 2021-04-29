@@ -464,6 +464,7 @@ public:
   int EnsureMacroRunnable(int macnum);
   int CheckForScriptLanguage(int macNum, bool justCheckStart = false);
   void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr, bool isPython);
+  void DoReplacementsInPythonLine(CString &line);
   void EnhancedExceptionToLog(CString &str);
   void SetPathToPython(CString &version, CString &path);
   void SendEmailIfNeeded(void);
