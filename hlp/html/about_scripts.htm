@@ -866,11 +866,16 @@
       after the command.&nbsp; Other variables set by commands such as 'ReportNavItem' 
       can also be obtained with 'GetVariable', which will return a floating point 
       value for values designated as numeric when they were stored.</p>
-    <p>There is one exception to the match between arguments: 'Exit'.&nbsp; From SerialEM, 
+    <p>There are two exceptions to the match between arguments: One is 'Exit'.&nbsp; From SerialEM, 
       this takes an optional string which is printed to the log.&nbsp; From Python, 
       the first argument is an optional integer which should be positive when calling 
       from an exception, 0 otherwise, and the second argument can be a multi-line text 
-      string.&nbsp; Lines should be separated by '|\r|\n' to print properly in the log.&nbsp; </p>
+      string.&nbsp; Lines should be separated by '|\r|\n' to print properly in the log.&nbsp; 
+      The second exception is 'CallFunction', where in regular scripting a function 
+      call takes set of numeric arguments followed by an optional string argument.&nbsp; 
+      From Python, the string argument must come first, followed by the numeric ones.&nbsp; 
+      The string argument is ignored inside SerialEM if the function does not expect 
+      one.</p>
     <p><strong><em>Printing to the log window: </em></strong>&nbsp;The 'Echo' function 
       in the module can be used to print a single string to the log window.&nbsp; In 
       addition, the standard output of the script is read through a pipe and written 
