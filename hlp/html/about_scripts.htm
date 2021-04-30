@@ -882,14 +882,14 @@
       to the log as it becomes available.&nbsp; Thus you can use the standard Python 
       'print()' function (or 'print' command in Python 2.7). However, this output will 
       be delayed and may come out later than SerialEM's own output to the log unless 
-      the script output is flushed <em>and</em> there is a small delay (~0.01 sec) to 
-      allow threads to act on the output.&nbsp; All of the 'print()' statements in 
-      your script will be converted to 'SEMprint()', a Python functions defined in the 
+      the script output is flushed.&nbsp; All of the 'print()' statements in 
+      your script will be converted to 'SEMprint()', a Python function defined in the 
       script wrapper that calls the standard print function with its arguments plus 
-      'flush = True' and then calls the 'Delay' function in the module.&nbsp; This 
-      will not help if you call into another module that uses 'print()' or are using 
-      Python 2.7.&nbsp; For those cases, there is also a wrapper function 'SEMflush()' 
-      that will flush standard output and call 'Delay'.&nbsp; You need not flush after 
+      'flush = True.&nbsp; This will not help if you call into another module that 
+      uses 'print()', do output with 'sys.stdout.write', or&nbsp; or are using Python 
+      2.7.&nbsp; For those cases, the script wrapper defines 'SEMflush = 
+      sys.stdout.flush' 
+      so you can write 'SEMflush() to do the flushing.&nbsp; You need not flush after 
       every print; you can flush once just before a command where some SerialEM output 
       is expected.</p>
     <p><em><strong>Accessing SerialEM script variables:</strong></em>&nbsp; Three 
@@ -905,14 +905,27 @@
         more numeric values and returns a list of float values; thus it should work with 
         any numeric return from 'GetVariable', not just an array.&nbsp; This will throw 
         an exception if 'var' is neither a string nor a float or if any of the elements 
-        in a string do not convert to a float.</li>
+        in a string do not convert to a float.<br />
+        Example: if 'm' has been built in regular scripting by adding a series of mean
+         values 12.3, 13.2, 11.5, 12.7 with 'AppendToArray' use<br />
+        &nbsp; &nbsp; &nbsp; &nbsp; ret = SEMarrayToFloats(sem.GetVariable('m'))<br />
+        and 'means' will be a list [12.3, 13.2, 11.5, 12.7].</li>
       <li>SEMarrayToInts(var): Takes an array variable returned by 'GetVariable' and 
         returns a list of integer values.&nbsp; This will throw an exception if 'var' is 
         not a string or if any of the array elements is not an integer, so it is only 
-        useful for array variables where you know that integer values have been stored.</li>
+        useful for array variables where you know that integer values have been stored.<br />
+        Example: if 'a' is defined with 'a = { 1 2 3 4 }' in a regular script, use<br />
+        &nbsp; &nbsp; &nbsp; &nbsp; ret = SEMarrayToInts(sem.GetVariable('a'))<br />
+        and 'ret' will be a list [1, 2, 3, 4].
+      </li>
       <li>listToSEMarray(list): Takes a list of numbers and/or strings and packs them a 
         single string separated by newlines, which can be supplied as the argument to 
-        one of the 'SetVariable' module functions.</li>
+        one of the 'SetVariable' module functions.<br />
+        Example: if 'names' is a list in Python with [0, 'View', 1, 'Focus', 2, 'Trial'], use<br />
+        &nbsp; &nbsp; &nbsp; &nbsp; SetPersistentVar('names', listToSEMarray(names))<br />
+        to create a 
+        persistent 1-D array in regular scripting with those entries.
+      </li>
     </ul>
     <p><strong><em>Errors and exceptions:&nbsp;</em></strong> An error within a 
       SerialEM operation will generate an exception of type 'SEMerror'.&nbsp; The 

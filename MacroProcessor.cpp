@@ -4136,14 +4136,13 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
   if (isPython) {
-    numWrap = 32;
+    numWrap = 28;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
     line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
     mMacroForScrpLang = "import sys\r\n" +
       name +
       "from serialem import SEMexited, SEMerror, ConnectToSEM\r\n"
       "from serialem import Echo as SEMecho\r\n"
-      "from serialem import Delay as SEMdelay\r\n"
       "from serialem import ScriptIsInitialized as SEMscriptIsInitialized\r\n"
       "SEMscriptIsInitialized()\r\n" +
       line +
@@ -4166,10 +4165,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
       "  return ret[:-1]\r\n"
       "def SEMprint(*args):\r\n"
       "  print(*args, flush = True)\r\n"
-      "  SEMdelay(0.01)\r\n"
-      "def SEMflush():\r\n"
-      "  sys.stdout.flush\r\n"
-      "  SEMdelay(0.01)\r\n"
+      "SEMflush = sys.stdout.flush\r\n"
       "try:\r\n";
     for (ind = 0; ind < numWrap; ind++) {
       mLineInSrcMacro.push_back(-1);

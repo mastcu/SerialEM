@@ -2163,6 +2163,15 @@ BOOL CSerialEMApp::CheckIdleTasks()
     sThreadError = 0;
   }
 
+  // Dump debug output to log window
+  if (debugOutput &&
+    (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) == WAIT_OBJECT_0)) {
+    for (i = 0; i < sNumTraceMsg; i++)
+      AppendToLog(sTraceMsg[i], LOG_OPEN_IF_CLOSED);
+    sNumTraceMsg = 0;
+    ReleaseMutex(traceMutexHandle);
+  }
+
   if (mIdleArray.GetSize())
     mLastActivityTime = time;
   
@@ -2465,15 +2474,6 @@ BOOL CSerialEMApp::CheckIdleTasks()
   }
 
   ManageBlinkingPane(time);
-
-  // Dump debug output to log window
-  if (debugOutput && 
-    (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) == WAIT_OBJECT_0)) {
-    for (i = 0; i < sNumTraceMsg; i++)
-      AppendToLog(sTraceMsg[i], LOG_OPEN_IF_CLOSED);
-    sNumTraceMsg = 0;
-    ReleaseMutex(traceMutexHandle);
-  }
 
   return bRtn;
 }
