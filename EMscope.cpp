@@ -3621,6 +3621,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   mSynchroTD.ifSTEM = ifSTEM;
   mSynchroTD.lowestM = lowestM;
   mSynchroTD.normalize = 1;
+  mSynchroTD.newProbeMode = mProbeMode;
 
   // JEOL STEM dies if mag is changed too soon after last image; 
   if (JEOLscope && ifSTEM && !camParam->pluginName.IsEmpty()) {
