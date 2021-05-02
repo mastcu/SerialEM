@@ -4003,7 +4003,7 @@ BOOL CEMscope::ScanMagnifications()
           lastSMag = curSMag;
         }
       }
-      report.Format("Set LowestMicroSTEMmag %d\r\n  Also note the two indexes where"
+      report.Format("Set:\r\n LowestMicroSTEMmag %d\r\n  Also note the two indexes where"
         " non LM mags start,\r\n  and put both in a LowestSTEMnonLMmag property entry", 
         baseIndex);
       mWinApp->AppendToLog(report);
@@ -4107,12 +4107,12 @@ BOOL CEMscope::ScanMagnifications()
         baseIndex += magInd - 1;
       } else if (STEMmode || mode == numModes - 2) {
         if (STEMmode)
-          report.Format("Set LowestSTEMnonLMmag to %d",  baseIndex + 1);
+          report.Format("Set:\r\n LowestSTEMnonLMmag %d",  baseIndex + 1);
         else if (numModes == 4) 
-          report.Format("Set LowestMModeMagIndex to %d\r\nSet LowestSecondaryMag to %d"
-          "\r\nCameraLengthTable:", firstBase, baseIndex + 1);
+          report.Format("Set:\r\n LowestMModeMagIndex %d\r\nSet:\r\n LowestSecondaryMag"
+          "%d\r\nCameraLengthTable:", firstBase, baseIndex + 1);
         else
-          report.Format("Set LowestMModeMagIndex to %d\r\n\r\nCameraLengthTable:", 
+          report.Format("Set:\r\n LowestMModeMagIndex %d\r\n\r\nCameraLengthTable:", 
             baseIndex + 1);
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       }
