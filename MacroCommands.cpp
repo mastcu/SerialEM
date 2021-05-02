@@ -292,6 +292,8 @@ void CMacCmd::TaskDone(int param)
 // Run the next command: start by checking the results of last command
 int CMacCmd::NextCommand(bool startingOut)
 {
+  CString report;
+  int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY;
 
   bool inComment = false;
   InitForNextCommand();
@@ -323,8 +325,8 @@ int CMacCmd::NextCommand(bool startingOut)
   // Pop control set that was to be restored after shot
   if (mRestoreConsetAfterShot) {
     mRestoreConsetAfterShot = false;
-    cI = mConsetNums.back();
-    mConSets[cI] = mConsetsSaved.back();
+    i = mConsetNums.back();
+    mConSets[i] = mConsetsSaved.back();
     mConsetNums.pop_back();
     mConsetsSaved.pop_back();
   }
@@ -338,9 +340,9 @@ int CMacCmd::NextCommand(bool startingOut)
     return 1;
   }
 
-  cIndex = mTestMontError ? 1 : 0;
-  if (mControl->limitScaleMax && mImBufs[cIndex].mImage && mImBufs[cIndex].mImageScale &&
-    mTestScale && mImBufs[cIndex].mImageScale->GetMaxScale() < mControl->scaleMaxLimit) {
+  index = mTestMontError ? 1 : 0;
+  if (mControl->limitScaleMax && mImBufs[index].mImage && mImBufs[index].mImageScale &&
+    mTestScale && mImBufs[index].mImageScale->GetMaxScale() < mControl->scaleMaxLimit) {
     mWinApp->AppendToLog("Script suspended because image intensity fell below limit "
       "specified\r\n in Script Control dialog ", LOG_MESSAGE_IF_CLOSED);
     SuspendMacro();
@@ -365,16 +367,16 @@ int CMacCmd::NextCommand(bool startingOut)
 
   // Crop image now if that was needed
   if (mCropXafterShot > 0) {
-    mImBufs->mImage->getSize(cSizeX, cSizeY);
-    cIx0 = (cSizeX - mCropXafterShot) / 2;
-    cIy0 = (cSizeY - mCropYafterShot) / 2;
-    cIx1 = cIx0 + mCropXafterShot - 1;
-    cIy1 = cIy0 + mCropYafterShot - 1;
+    mImBufs->mImage->getSize(sizeX, sizeY);
+    ix0 = (sizeX - mCropXafterShot) / 2;
+    iy0 = (sizeY - mCropYafterShot) / 2;
+    ix1 = ix0 + mCropXafterShot - 1;
+    iy1 = iy0 + mCropYafterShot - 1;
     mCropXafterShot = -1;
-    cIx0 = mProcessImage->CropImage(mImBufs, cIy0, cIx0, cIy1, cIx1);
-    if (cIx0) {
-      cReport.Format("Error # %d attempting to crop new image to match buffer", cIx0);
-      ABORT_NOLINE(cReport);
+    ix0 = mProcessImage->CropImage(mImBufs, iy0, ix0, iy1, ix1);
+    if (ix0) {
+      report.Format("Error # %d attempting to crop new image to match buffer", ix0);
+      ABORT_NOLINE(report);
     }
     mImBufs->mCaptured = BUFFER_CROPPED;
   }
@@ -421,7 +423,7 @@ int CMacCmd::NextCommand(bool startingOut)
   InsertDomacro(&mStrItems[0]);
 
   // Substitute variables in parsed items and check for control word substitution
-  cReport = mStrItems[0];
+  report = mStrItems[0];
   if (SubstituteVariables(mStrItems, MAX_MACRO_TOKENS, mStrLine)) {
     AbortMacro();
     return 1;
@@ -429,7 +431,7 @@ int CMacCmd::NextCommand(bool startingOut)
   mStrItems[0].MakeUpper();
   mItem1upper = mStrItems[1];
   mItem1upper.MakeUpper();
-  if (cReport != mStrItems[0] && WordIsReserved(mStrItems[0]))
+  if (report != mStrItems[0] && WordIsReserved(mStrItems[0]))
     ABORT_LINE("You cannot make a command by substituting a\n"
       "variable value that is a control command on line: \n\n");
 
@@ -439,12 +441,12 @@ int CMacCmd::NextCommand(bool startingOut)
   if (mCmdIndex >= 0 && ArithmeticIsAllowed(mStrItems[0])) {
     if (SeparateParentheses(&mStrItems[1], MAX_MACRO_TOKENS - 1))
       ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
-    EvaluateExpression(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, 0, cIndex, cIndex2);
-    for (cI = cIndex + 1; cI <= cIndex2; cI++)
-      mStrItems[cI] = "";
-    cIndex = CheckLegalCommandAndArgNum(&mStrItems[0], mCmdIndex, mStrLine,mCurrentMacro);
-    if (cIndex) {
-      if (cIndex == 1)
+    EvaluateExpression(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, 0, index, index2);
+    for (i = index + 1; i <= index2; i++)
+      mStrItems[i] = "";
+    index = CheckLegalCommandAndArgNum(&mStrItems[0], mCmdIndex, mStrLine,mCurrentMacro);
+    if (index) {
+      if (index == 1)
         ABORT_LINE("There is no longer a legal command after evaluating arithmetic on "
           "this line:\n\n");
       AbortMacro();
@@ -453,16 +455,16 @@ int CMacCmd::NextCommand(bool startingOut)
   }
 
   // Evaluate emptiness, ints and doubles
-  for (cI = 0; cI < MAX_MACRO_TOKENS; cI++) {
-    mItemEmpty[cI] = mStrItems[cI].IsEmpty();
-    mItemInt[cI] = 0;
-    mItemDbl[cI] = 0.;
-    if (!mItemEmpty[cI]) {
-      mItemInt[cI] = atoi((LPCTSTR)mStrItems[cI]);
-      mItemDbl[cI] = atof((LPCTSTR)mStrItems[cI]);
-      mLastNonEmptyInd = cI;
+  for (i = 0; i < MAX_MACRO_TOKENS; i++) {
+    mItemEmpty[i] = mStrItems[i].IsEmpty();
+    mItemInt[i] = 0;
+    mItemDbl[i] = 0.;
+    if (!mItemEmpty[i]) {
+      mItemInt[i] = atoi((LPCTSTR)mStrItems[i]);
+      mItemDbl[i] = atof((LPCTSTR)mStrItems[i]);
+      mLastNonEmptyInd = i;
     }
-    mItemFlt[cI] = (float)mItemDbl[cI];
+    mItemFlt[i] = (float)mItemDbl[i];
   }
   if (mItemEmpty[0]) {
     mCmdIndex = CME_SCRIPTEND;
@@ -544,6 +546,8 @@ void CMacCmd::InitForNextCommand()
 // ScriptEnd, Exit, Return, EndFunction, Function
 int CMacCmd::ScriptEnd(void)
 {
+  int index;
+
   if (!mCallLevel || CMD_IS(EXIT) || (CMD_IS(ENDFUNCTION) && mExitAtFuncEnd)) {
     if (CMD_IS(EXIT)) {
       if (mRunningScrpLang) {
@@ -580,10 +584,10 @@ int CMacCmd::ScriptEnd(void)
   // Put return values in repVals
   if (CMD_IS(RETURN) && !mItemEmpty[1]) {
     ClearVariables(VARTYPE_REPORT);
-    for (cIndex = 1; cIndex <= 6; cIndex++) {
-      if (mItemEmpty[cIndex])
+    for (index = 1; index <= 6; index++) {
+      if (mItemEmpty[index])
         break;
-      SetOneReportedValue(mStrItems[cIndex], cIndex);
+      SetOneReportedValue(mStrItems[index], index);
     }
   }
   return 0;
@@ -607,12 +611,14 @@ int CMacCmd::NoOperation(void)
 // KeyBreak for external scripting
 int CMacCmd::KeyBreak(void)
 {
+  int index;
+
   if (mRunningScrpLang) {
-    cIndex = ((mItemEmpty[1] && mKeyPressed == 'B') ||
+    index = ((mItemEmpty[1] && mKeyPressed == 'B') ||
       (mStrItems[1].GetLength() == 1 && mItem1upper.GetAt(0) == mKeyPressed)) ? 1 : 0;
-    if (cIndex)
+    if (index)
       mKeyPressed = 0;
-    SetOneReportedValue(cIndex, 1);
+    SetOneReportedValue(index, 1);
   }
   mKeyPressed = 0;
   return 0;
@@ -646,6 +652,8 @@ int CMacCmd::EndLoop(void)
 // Loop, DoLoop
 int CMacCmd::Loop(void)
 {
+  CString report;
+  int index;
 
   // Doing a loop: get the count, make sure it is legal, and save the current
   // index as the starting place to go back to
@@ -659,7 +667,7 @@ int CMacCmd::Loop(void)
   if (CMD_IS(LOOP)) {
     mLoopLimit[mBlockLevel] = B3DMAX(0, B3DNINT(mItemDbl[1]));
     mLoopCount[mBlockLevel] = 1;
-    cIndex = 2;
+    index = 2;
   } else {
     mLoopCount[mBlockLevel] = mItemInt[2];
     mLoopLimit[mBlockLevel] = mItemInt[3];
@@ -668,7 +676,7 @@ int CMacCmd::Loop(void)
       if (!mItemInt[4])
         ABORT_LINE("The loop increment is 0 at line:\n\n");
     }
-    cIndex = 1;
+    index = 1;
   }
   mLastIndex = -1;
   if ((mLoopIncrement[mBlockLevel] < 0 ? - 1 : 1) *
@@ -677,10 +685,10 @@ int CMacCmd::Loop(void)
       AbortMacro();
       return 1;
     }
-  } else if (!mItemEmpty[cIndex]) {
-    if (SetVariable(mStrItems[cIndex], 1.0, VARTYPE_INDEX + VARTYPE_ADD_FOR_NUM, 
-      mBlockLevel, true, &cReport))
-      ABORT_LINE(cReport + " in script line: \n\n");
+  } else if (!mItemEmpty[index]) {
+    if (SetVariable(mStrItems[index], 1.0, VARTYPE_INDEX + VARTYPE_ADD_FOR_NUM,
+      mBlockLevel, true, &report))
+      ABORT_LINE(report + " in script line: \n\n");
   }
   return 0;
 }
@@ -688,9 +696,10 @@ int CMacCmd::Loop(void)
 // If, ZeroLoopElseIf
 int CMacCmd::If(void)
 {
+  BOOL truth;
 
   // IF statement: evaluate it, go up one block level with 0 limit
-  if (EvaluateIfStatement(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, cTruth)) {
+  if (EvaluateIfStatement(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, truth)) {
     AbortMacro();
     return 1;
   }
@@ -704,7 +713,7 @@ int CMacCmd::If(void)
   }
 
   // If not true, skip forward; if it is true, mark if as satisfied with a -1
-  if (!cTruth) {
+  if (!truth) {
     if (SkipToBlockEnd(SKIPTO_ELSE_ENDIF, mStrLine) ){
       AbortMacro();
       return 1;
@@ -740,8 +749,9 @@ int CMacCmd::Else(void)
 // Break, Continue, DoKeyBreak
 int CMacCmd::Break(void)
 {
+  int index, index2;
 
-  if (SkipToBlockEnd(SKIPTO_ENDLOOP, mStrLine, &cIndex, &cIndex2)) {
+  if (SkipToBlockEnd(SKIPTO_ENDLOOP, mStrLine, &index, &index2)) {
     AbortMacro();
     return 1;
   }
@@ -752,7 +762,7 @@ int CMacCmd::Break(void)
     mBlockLevel--;
     mBlockDepths[mCallLevel]--;
   }
-  mTryCatchLevel += cIndex2;
+  mTryCatchLevel += index2;
   if (mBlockLevel >= 0 && (CMD_IS(BREAK) || mKeyBreak))
     mLoopCount[mBlockLevel] = mLoopLimit[mBlockLevel];
   if (mKeyBreak) {
@@ -812,18 +822,20 @@ int CMacCmd::Throw(void)
 // SkipTo
 int CMacCmd::SkipTo(void)
 {
-  if (SkipToLabel(mItem1upper, mStrLine, cIndex, cIndex2)) {
+  int index, index2, i;
+
+  if (SkipToLabel(mItem1upper, mStrLine, index, index2)) {
     AbortMacro();
     return 1;
   }
 
   // Pop proper number of ifs and loops from stack
-  for (cI = 0; cI < cIndex && mBlockLevel >= 0; cI++) {
+  for (i = 0; i < index && mBlockLevel >= 0; i++) {
     ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
     mBlockLevel--;
     mBlockDepths[mCallLevel]--;
   }
-  mTryCatchLevel += cIndex2;
+  mTryCatchLevel += index2;
   mLastIndex = -1;
   return 0;
 }
@@ -831,6 +843,10 @@ int CMacCmd::SkipTo(void)
 // DoMacro, DoScript, CallMacro, CallScript, Call, CallFunction, CallStringArray
 int CMacCmd::DoMacro(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1;
+  MacroFunction *func;
   bool fromScrpLang = mRunningScrpLang;
 
   // Skip any of these operations if we are in a termination function
@@ -838,38 +854,38 @@ int CMacCmd::DoMacro(void)
 
 
     // Calling a macro or function: rely on initial error checks, get the number
-    cIndex2 = 0;
-    cFunc = NULL;
+    index2 = 0;
+    func = NULL;
     if (CMD_IS(CALLFUNCTION)) {
-      cFunc = FindCalledFunction(
-        B3DCHOICE(mRunningScrpLang, "CallFunction " + mStrItems[1], mStrLine), false, 
-        cIndex, cIx0);
-      if (!cFunc) {
+      func = FindCalledFunction(
+        B3DCHOICE(mRunningScrpLang, "CallFunction " + mStrItems[1], mStrLine), false,
+        index, ix0);
+      if (!func) {
         AbortMacro();
         return 1;
       }
-      cIndex2 = cFunc->startIndex;
-      if (cFunc->wasCalled)
+      index2 = func->startIndex;
+      if (func->wasCalled)
         ABORT_LINE("Trying to call a function already being called in line: \n\n");
-      cFunc->wasCalled = true;
+      func->wasCalled = true;
     } else if (CMD_IS(CALL)) {
-      cIndex = FindCalledMacro(mStrLine, false, mRunningScrpLang ? mStrItems[1] : "");
-      if (cIndex < 0) {
+      index = FindCalledMacro(mStrLine, false, mRunningScrpLang ? mStrItems[1] : "");
+      if (index < 0) {
         AbortMacro();
         return 1;
       }
     } else if (CMD_IS(CALLSTRINGARRAY)) {
-      cIndex = MakeNewTempMacro(mStrItems[1], mStrItems[2], true, mStrLine);
-      if (!cIndex)
+      index = MakeNewTempMacro(mStrItems[1], mStrItems[2], true, mStrLine);
+      if (!index)
         return 1;
-      cIx0 = 0;
-      if (!CheckForScriptLanguage(cIndex, true) && CheckBlockNesting(cIndex, -1, cIx0)) {
+      ix0 = 0;
+      if (!CheckForScriptLanguage(index, true) && CheckBlockNesting(index, -1, ix0)) {
         AbortMacro();
         return 1;
       }
 
     } else {
-      cIndex = mItemInt[1] - 1;
+      index = mItemInt[1] - 1;
     }
 
     // Save the current index at this level and move up a level
@@ -878,102 +894,102 @@ int CMacCmd::DoMacro(void)
     if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
       if (mCallLevel >= MAX_CALL_DEPTH)
         ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
-      if (cFunc && cFunc->ifStringArg)
+      if (func && func->ifStringArg)
         SubstituteVariables(&mStrLine, 1, mStrLine);
       if (mRunningScrpLang && mCalledFromSEMmacro) {
         ABORT_LINE("You cannot run any other script from a Python script called from a "
           "regular script in line:\n\n");
       }
       if ((mRunningScrpLang || mCalledFromScrpLang) &&
-        CheckForScriptLanguage(cIndex, true)) {
+        CheckForScriptLanguage(index, true)) {
         ABORT_LINE("You cannot run another Python script from a Python script in "
           "line:\n\n");
       }
       if (mRunningScrpLang) {
 
         // Switching from Python to regular
-        cIx0 = 0;
+        ix0 = 0;
         if (!CMD_IS(CALLSTRINGARRAY)) {
-          if (mMacroEditer[cIndex])
-            mMacroEditer[cIndex]->TransferMacro(true);
-          PrepareForMacroChecking(cIndex);
-          if (CheckBlockNesting(cIndex, -1, cIx0)) {
+          if (mMacroEditer[index])
+            mMacroEditer[index]->TransferMacro(true);
+          PrepareForMacroChecking(index);
+          if (CheckBlockNesting(index, -1, ix0)) {
             AbortMacro();
             return 1;
           }
 
           // That check rebuilt the function arrays, so need to find it again
-          if (cFunc) {
-            cFunc = FindCalledFunction("CallFunction " + mStrItems[1], false, cIndex,
-              cIx0);
-            if (!cFunc) {
+          if (func) {
+            func = FindCalledFunction("CallFunction " + mStrItems[1], false, index,
+              ix0);
+            if (!func) {
               AbortMacro();
               return 1;
             }
-            cIx0 = 3;
+            ix0 = 3;
           }
           mCallLevel = 0;
         }
         mCalledFromScrpLang = true;
         mRunningScrpLang = false;
-      } else if (!cFunc) {
+      } else if (!func) {
 
         // Running regular: see if what is being called is Python and switch if so
-        cIx1 = CheckForScriptLanguage(cIndex);
-        if (cIx1 > 0) {
+        ix1 = CheckForScriptLanguage(index);
+        if (ix1 > 0) {
           AbortMacro();
           return 1;
         }
-        if (cIx1 < 0) {
+        if (ix1 < 0) {
           mRunningScrpLang = true;
           mCalledFromSEMmacro = true;
           StartRunningScrpLang();
         }
       }
       mCallIndex[mCallLevel++] = mCurrentIndex;
-      mCallMacro[mCallLevel] = cIndex;
+      mCallMacro[mCallLevel] = index;
       mBlockDepths[mCallLevel] = -1;
-      mCallFunction[mCallLevel] = cFunc;
+      mCallFunction[mCallLevel] = func;
 
     } else {
       mNumRuns++;
     }
 
     // Doing another macro (or this one over), just reset macro # and index
-    mCurrentMacro = cIndex;
-    mCurrentIndex = cIndex2;
+    mCurrentMacro = index;
+    mCurrentIndex = index2;
     mLastIndex = -1;
-    if (cFunc)
-      SetVariable("FUNCTIONNAME", cFunc->name, VARTYPE_LOCAL, -1, false);
+    if (func)
+      SetVariable("FUNCTIONNAME", func->name, VARTYPE_LOCAL, -1, false);
 
     // Create argument variables now that level is raised
-    if (cFunc && (cFunc->numNumericArgs || cFunc->ifStringArg)) {
-      cTruth = false;
-      for (cIndex = 0; cIndex < cFunc->numNumericArgs; cIndex++) {
-        cReport = cFunc->argNames[cIndex];
-        if (SetVariable(cFunc->argNames[cIndex], mItemEmpty[cIndex + cIx0] ?
-          0. : mItemDbl[cIndex + cIx0], VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false,
-          &cReport)) {
-            cTruth = true;
+    if (func && (func->numNumericArgs || func->ifStringArg)) {
+      truth = false;
+      for (index = 0; index < func->numNumericArgs; index++) {
+        report = func->argNames[index];
+        if (SetVariable(func->argNames[index], mItemEmpty[index + ix0] ?
+          0. : mItemDbl[index + ix0], VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false,
+          &report)) {
+            truth = true;
             break;
         }
       }
-      if (!cTruth && cFunc->ifStringArg) {
+      if (!truth && func->ifStringArg) {
         if (fromScrpLang)
           mStrCopy = mStrItems[2];
         else
-          JustStripItems(mStrLine, cIndex + cIx0, mStrCopy);
-        cTruth = SetVariable(cFunc->argNames[cIndex], mStrCopy, VARTYPE_LOCAL,
-          - 1, false, &cReport);
+          JustStripItems(mStrLine, index + ix0, mStrCopy);
+        truth = SetVariable(func->argNames[index], mStrCopy, VARTYPE_LOCAL,
+          - 1, false, &report);
       }
-      if (cTruth)
-        ABORT_LINE("Failed to set argument variables in function call:\r\n" + cReport +
+      if (truth)
+        ABORT_LINE("Failed to set argument variables in function call:\r\n" + report +
         " in line:\n\n")
-      for (cIndex = 0; cIndex < cFunc->numNumericArgs + (cFunc->ifStringArg ? 1 : 0);
-        cIndex++)
-          if (mItemEmpty[cIndex + cIx0])
+      for (index = 0; index < func->numNumericArgs + (func->ifStringArg ? 1 : 0);
+        index++)
+          if (mItemEmpty[index + ix0])
             break;
-      SetVariable("NUMCALLARGS", cIndex, VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false);
+      SetVariable("NUMCALLARGS", index, VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false);
    }
   }
   return 0;
@@ -989,8 +1005,10 @@ int CMacCmd::ParseQuotedStrings(void)
 // StringArrayToScript
 int CMacCmd::StringArrayToScript(void)
 {
-  cIndex = MakeNewTempMacro(mStrItems[1], mStrItems[2], false, mStrLine);
-  if (!cIndex)
+  int index;
+
+  index = MakeNewTempMacro(mStrItems[1], mStrItems[2], false, mStrLine);
+  if (!index)
     return 1;
   return 0;
 }
@@ -998,14 +1016,17 @@ int CMacCmd::StringArrayToScript(void)
 // OnStopCallFunc
 int CMacCmd::OnStopCallFunc(void)
 {
+  int ix0;
+  MacroFunction *func;
+
   if (!mExitAtFuncEnd) {
-    cFunc = FindCalledFunction(mStrLine, false, mOnStopMacroIndex, cIx0);
-    if (!cFunc) {
+    func = FindCalledFunction(mStrLine, false, mOnStopMacroIndex, ix0);
+    if (!func) {
       AbortMacro();
       return 1;
     }
-    mOnStopLineIndex = cFunc->startIndex;
-    if (cFunc->numNumericArgs || cFunc->ifStringArg)
+    mOnStopLineIndex = func->startIndex;
+    if (func->numNumericArgs || func->ifStringArg)
       ABORT_LINE("The function to call takes arguments, which is not allowed here:"
       "\n\n");
   }
@@ -1029,7 +1050,7 @@ int CMacCmd::Test(void)
   else
     EvaluateIfStatement(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, mLastTestResult);
   SetReportedValues(mLastTestResult ? 1. : 0.);
-  SetVariable("TESTRESULT", mLastTestResult ? 1. : 0., 
+  SetVariable("TESTRESULT", mLastTestResult ? 1. : 0.,
     VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
   return 0;
 }
@@ -1037,69 +1058,76 @@ int CMacCmd::Test(void)
 // SetVariable, AppendToArray
 int CMacCmd::SetVariableCmd(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1;
+  Variable *var;
+  CString *valPtr;
+  int *numElemPtr;
+
   if (mRunningScrpLang) {
-    cIndex = CMD_IS(SETPERSISTENTVAR) ? VARTYPE_PERSIST : VARTYPE_REGULAR;
+    index = CMD_IS(SETPERSISTENTVAR) ? VARTYPE_PERSIST : VARTYPE_REGULAR;
     if (CMD_IS(SETFLOATVARIABLE)) {
-      cIndex = (mItemInt[3] ? VARTYPE_PERSIST : VARTYPE_REGULAR) + VARTYPE_ADD_FOR_NUM;
+      index = (mItemInt[3] ? VARTYPE_PERSIST : VARTYPE_REGULAR) + VARTYPE_ADD_FOR_NUM;
     }
-    if (SetVariable(mItem1upper, mStrItems[2], cIndex, -1, false, &cReport))
-      ABORT_LINE(cReport + " in script line: \n\n");
+    if (SetVariable(mItem1upper, mStrItems[2], index, -1, false, &report))
+      ABORT_LINE(report + " in script line: \n\n");
     return 0;
    }
 
   // Do assignment to variable before any non-reserved commands
-  cIndex2 = 2;
-  cIx0 = CheckForArrayAssignment(mStrItems, cIndex2);
-  if (SeparateParentheses(&mStrItems[cIndex2], MAX_MACRO_TOKENS - cIndex2))
+  index2 = 2;
+  ix0 = CheckForArrayAssignment(mStrItems, index2);
+  if (SeparateParentheses(&mStrItems[index2], MAX_MACRO_TOKENS - index2))
     ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
-  if (EvaluateExpression(&mStrItems[cIndex2], MAX_MACRO_TOKENS - cIndex2, mStrLine, cIx0,
-    cIndex, cIx1)) {
+  if (EvaluateExpression(&mStrItems[index2], MAX_MACRO_TOKENS - index2, mStrLine, ix0,
+    index, ix1)) {
       AbortMacro();
       return 1;
   }
 
   // Concatenate array elements separated by \n
-  if (cIx0 > 0) {
-    for (cIx1 = cIndex2 + 1; cIx1 < MAX_MACRO_TOKENS; cIx1++) {
-      if (mStrItems[cIx1].IsEmpty())
+  if (ix0 > 0) {
+    for (ix1 = index2 + 1; ix1 < MAX_MACRO_TOKENS; ix1++) {
+      if (mStrItems[ix1].IsEmpty())
         break;
-      mStrItems[cIndex2] += "\n" + mStrItems[cIx1];
+      mStrItems[index2] += "\n" + mStrItems[ix1];
     }
   }
 
   // Set the variable
   if (CMD_IS(SETVARIABLE)) {
-    cIndex = mStrItems[1] == "=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
-    if (SetVariable(mStrItems[0], mStrItems[cIndex2], cIndex, -1, false, &cReport))
-      ABORT_LINE(cReport + " in script line: \n\n");
+    index = mStrItems[1] == "=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
+    if (SetVariable(mStrItems[0], mStrItems[index2], index, -1, false, &report))
+      ABORT_LINE(report + " in script line: \n\n");
 
   } else {
 
     // Append to array: Split off an index to look it up
     ArrayRow newRow;
 
-    cVar = GetVariableValuePointers(mItem1upper, &cValPtr, &cNumElemPtr, "append to",
-      cReport);
-    if (!cVar)
-      ABORT_LINE(cReport + " for line:\n\n");
-    cTruth = cValPtr == NULL;
-    if (cTruth) {
-      cValPtr = &newRow.value;
-      cNumElemPtr = &newRow.numElements;
+    var = GetVariableValuePointers(mItem1upper, &valPtr, &numElemPtr, "append to",
+      report);
+    if (!var)
+      ABORT_LINE(report + " for line:\n\n");
+    truth = valPtr == NULL;
+    if (truth) {
+      valPtr = &newRow.value;
+      numElemPtr = &newRow.numElements;
     }
 
     // Add the string to the value and compute the number of elements
-    if (!cValPtr->IsEmpty())
-      *cValPtr += "\n";
-    *cValPtr += mStrItems[cIndex2];
-    *cNumElemPtr = 1;
-    cIx0 = -1;
-    while ((cIx0 = cValPtr->Find('\n', cIx0 + 1)) >= 0)
-      *cNumElemPtr += 1;
+    if (!valPtr->IsEmpty())
+      *valPtr += "\n";
+    *valPtr += mStrItems[index2];
+    *numElemPtr = 1;
+    ix0 = -1;
+    while ((ix0 = valPtr->Find('\n', ix0 + 1)) >= 0)
+      *numElemPtr += 1;
 
     // Both 1D array and existing row of 2D array should be done: add new row to 2D
-    if (cTruth)
-      cVar->rowsFor2d->Add(newRow);
+    if (truth)
+      var->rowsFor2d->Add(newRow);
   }
   return 0;
 }
@@ -1107,16 +1135,21 @@ int CMacCmd::SetVariableCmd(void)
 // GetVariable
 int CMacCmd::GetVariable(void)
 {
-  cVar = LookupVariable(mStrItems[1], cIx0);
-  if (!cVar)
+  CString report;
+  double delISX;
+  int ix0;
+  Variable *var;
+
+  var = LookupVariable(mStrItems[1], ix0);
+  if (!var)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-  cReport = cVar->value;
+  report = var->value;
   ClearVariables(VARTYPE_REPORT);
-  if (cVar->isNumeric) {
-    cDelISX = atof(cReport);
-    SetOneReportedValue(cDelISX, 1);
+  if (var->isNumeric) {
+    delISX = atof(report);
+    SetOneReportedValue(delISX, 1);
   } else {
-    SetOneReportedValue(cReport, 1);
+    SetOneReportedValue(report, 1);
   }
   return 0;
 }
@@ -1124,20 +1157,26 @@ int CMacCmd::GetVariable(void)
 // TruncateArray
 int CMacCmd::TruncateArray(void)
 {
-  cIndex = mItemInt[2];
-  if (cIndex < 1)
+  CString report;
+  int index, ix0, ix1;
+  Variable *var;
+  CString *valPtr;
+  int *numElemPtr;
+
+  index = mItemInt[2];
+  if (index < 1)
     ABORT_LINE("The number to truncate to must be at least 1 for line:\n\n");
-  cVar = GetVariableValuePointers(mItem1upper, &cValPtr, &cNumElemPtr, "truncate", 
-    cReport);
-  if (!cVar)
-    ABORT_LINE(cReport + " for line:\n\n");
-  if (!cValPtr) {
-    if (cVar->rowsFor2d->GetSize() > cIndex)
-      cVar->rowsFor2d->SetSize(cIndex);
-  } else if (*cNumElemPtr > cIndex) {
-    FindValueAtIndex(*cValPtr, cIndex, cIx0, cIx1);
-    *cValPtr = cValPtr->Left(cIx1);
-    *cNumElemPtr = cIndex;
+  var = GetVariableValuePointers(mItem1upper, &valPtr, &numElemPtr, "truncate",
+    report);
+  if (!var)
+    ABORT_LINE(report + " for line:\n\n");
+  if (!valPtr) {
+    if (var->rowsFor2d->GetSize() > index)
+      var->rowsFor2d->SetSize(index);
+  } else if (*numElemPtr > index) {
+    FindValueAtIndex(*valPtr, index, ix0, ix1);
+    *valPtr = valPtr->Left(ix1);
+    *numElemPtr = index;
   }
   return 0;
 }
@@ -1145,20 +1184,23 @@ int CMacCmd::TruncateArray(void)
 // ArrayStatistics
 int CMacCmd::ArrayStatistics(void)
 {
-  float *fvalues = FloatArrayFromVariable(mItem1upper, cIndex2, cReport);
+  CString report;
+  int index, index2;
+  float bmin, bmax, bmean, bSD, cpe;
+  float *fvalues = FloatArrayFromVariable(mItem1upper, index2, report);
   if (!fvalues)
-    ABORT_LINE(cReport + " in line\n\n");
-  cBmin = 1.e37f;
-  cBmax = -1.e37f;
-  for (cIndex = 0; cIndex < cIndex2; cIndex++) {
-    ACCUM_MIN(cBmin, fvalues[cIndex]);
-    ACCUM_MAX(cBmax, fvalues[cIndex]);
+    ABORT_LINE(report + " in line\n\n");
+  bmin = 1.e37f;
+  bmax = -1.e37f;
+  for (index = 0; index < index2; index++) {
+    ACCUM_MIN(bmin, fvalues[index]);
+    ACCUM_MAX(bmax, fvalues[index]);
   }
-  avgSD(fvalues, cIndex2, &cBmean, &cBSD, &cCpe);
-  rsFastMedianInPlace(fvalues, cIndex2, &cCpe);
+  avgSD(fvalues, index2, &bmean, &bSD, &cpe);
+  rsFastMedianInPlace(fvalues, index2, &cpe);
   mLogRpt.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
-    cIndex2, cBmin, cBmax, cBmean, cBSD, cCpe);
-  SetReportedValues(&mStrItems[2], cIndex2, cBmin, cBmax, cBmean, cBSD, cCpe);
+    index2, bmin, bmax, bmean, bSD, cpe);
+  SetReportedValues(&mStrItems[2], index2, bmin, bmax, bmean, bSD, cpe);
 
   delete[] fvalues;
   return 0;
@@ -1167,40 +1209,44 @@ int CMacCmd::ArrayStatistics(void)
 // LinearFitToVars
 int CMacCmd::LinearFitToVars(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0;
+  float bmean, bSD, cpe;
   float *xx1, *xx2, *xx3 = NULL;
-  cTruth = !mItemEmpty[3];
-  xx1 = FloatArrayFromVariable(mItem1upper, cIndex, cReport);
+  truth = !mItemEmpty[3];
+  xx1 = FloatArrayFromVariable(mItem1upper, index, report);
   if (!xx1)
-    ABORT_LINE(cReport + " in line\n\n");
-  xx2 = FloatArrayFromVariable(mStrItems[2], cIndex2, cReport);
+    ABORT_LINE(report + " in line\n\n");
+  xx2 = FloatArrayFromVariable(mStrItems[2], index2, report);
   if (!xx2) {
     delete[] xx1;
-    ABORT_LINE(cReport + " in line\n\n");
+    ABORT_LINE(report + " in line\n\n");
   }
-  if (cTruth) {
-    xx3 = FloatArrayFromVariable(mStrItems[3], cIx0, cReport);
+  if (truth) {
+    xx3 = FloatArrayFromVariable(mStrItems[3], ix0, report);
     if (!xx3) {
       delete[] xx1, xx2;
-      ABORT_LINE(cReport + " in line\n\n");
+      ABORT_LINE(report + " in line\n\n");
     }
   }
-  if (cIndex != cIndex2 || (cTruth && cIx0 != cIndex)) {
+  if (index != index2 || (truth && ix0 != index)) {
     delete[] xx1, xx2, xx3;
     ABORT_LINE("Variables do not have the same number of elements in line:\n\n");
   }
-  if (cIndex < 2 || (cTruth && cIndex < 3)) {
+  if (index < 2 || (truth && index < 3)) {
     delete[] xx1, xx2, xx3;
     ABORT_LINE("There are not enough array values for a linear fit in line:\n\n");
   }
-  if (cTruth) {
-    lsFit2(xx1, xx2, xx3, cIndex, &cBmean, &cBSD, &cCpe);
-    mLogRpt.Format("n= %d  a1= %f  a2= %f  c= %f", cIndex, cBmean, cBSD, cCpe);
+  if (truth) {
+    lsFit2(xx1, xx2, xx3, index, &bmean, &bSD, &cpe);
+    mLogRpt.Format("n= %d  a1= %f  a2= %f  c= %f", index, bmean, bSD, cpe);
   } else {
-    lsFit(xx1, xx2, cIndex, &cBmean, &cBSD, &cCpe);
-    mLogRpt.Format("n= %d  slope= %f  intercept= %f  ro= %.4f", cIndex, cBmean, cBSD, 
-      cCpe);
+    lsFit(xx1, xx2, index, &bmean, &bSD, &cpe);
+    mLogRpt.Format("n= %d  slope= %f  intercept= %f  ro= %.4f", index, bmean, bSD,
+      cpe);
   }
-  SetReportedValues(cIndex, cBmean, cBSD, cCpe);
+  SetReportedValues(index, bmean, bSD, cpe);
   delete[] xx1, xx2, xx3;
   return 0;
 }
@@ -1208,10 +1254,13 @@ int CMacCmd::LinearFitToVars(void)
 // SetStringVar
 int CMacCmd::SetStringVar(void)
 {
+  CString report;
+  int index;
+
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-  cIndex = mStrItems[1] == "@=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
-  if (SetVariable(mStrItems[0], mStrCopy, cIndex, -1, false, &cReport))
-    ABORT_LINE(cReport + " in script line: \n\n");
+  index = mStrItems[1] == "@=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
+  if (SetVariable(mStrItems[0], mStrCopy, index, -1, false, &report))
+    ABORT_LINE(report + " in script line: \n\n");
   return 0;
 }
 
@@ -1239,76 +1288,84 @@ int CMacCmd::ClearPersistentVars(void)
 // MakeVarPersistent
 int CMacCmd::MakeVarPersistent(void)
 {
-  cVar = LookupVariable(mStrItems[1], cIx0);
-  if (!cVar)
+  int index, ix0;
+  Variable *var;
+
+  var = LookupVariable(mStrItems[1], ix0);
+  if (!var)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-  cIndex = 1;
+  index = 1;
   if (!mItemEmpty[2] && !mItemInt[2])
-    cIndex = 0;
-  if ((cIndex && cVar->type != VARTYPE_REGULAR) ||
-    (!cIndex && cVar->type != VARTYPE_PERSIST))
+    index = 0;
+  if ((index && var->type != VARTYPE_REGULAR) ||
+    (!index && var->type != VARTYPE_PERSIST))
     ABORT_LINE("The variable " + mStrItems[1] + " must be " +
-      CString(cIndex ? "regular" : "persistent") + " to change its type in line:\n\n");
-  cVar->type = cIndex ? VARTYPE_PERSIST : VARTYPE_REGULAR;
+      CString(index ? "regular" : "persistent") + " to change its type in line:\n\n");
+  var->type = index ? VARTYPE_PERSIST : VARTYPE_REGULAR;
   return 0;
 }
 
 // IsVariableDefined
 int CMacCmd::IsVariableDefined(void)
 {
-  cIndex = B3DCHOICE(LookupVariable(mItem1upper, cIndex2) != NULL, 1, 0);
+  int index, index2;
+
+  index = B3DCHOICE(LookupVariable(mItem1upper, index2) != NULL, 1, 0);
   SubstituteVariables(&mStrLine, 1, mStrLine);
   mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   mLogRpt.Format("Variable %s %s defined", (LPCTSTR)mStrItems[1],
-    B3DCHOICE(cIndex, "IS", "is NOT"));
-  SetReportedValues(&mStrItems[2], cIndex);
+    B3DCHOICE(index, "IS", "is NOT"));
+  SetReportedValues(&mStrItems[2], index);
   return 0;
 }
 
 // NewArray, New2DArray
 int CMacCmd::NewArrayCmd(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1, iy0;
   CArray < ArrayRow, ArrayRow > *rowsFor2d = NULL;
   ArrayRow arrRow;
 
   // Process local vesus persistent property
-  cIx0 = VARTYPE_REGULAR;
+  ix0 = VARTYPE_REGULAR;
   if (mItemInt[2] < 0) {
-    cIx0 = VARTYPE_LOCAL;
+    ix0 = VARTYPE_LOCAL;
     if (LocalVarAlreadyDefined(mStrItems[1], mStrLine) > 0)
       return 1;
   }
   if (mItemInt[2] > 0)
-    cIx0 = VARTYPE_PERSIST;
+    ix0 = VARTYPE_PERSIST;
 
   // Get number of elements: 3 for 1D and 4 for 2D
-  cTruth = CMD_IS(NEW2DARRAY);
-  cIndex = !mItemEmpty[3] ? mItemInt[3] : 0;
-  if (cTruth) {
-    cIndex2 = !mItemEmpty[3] ? mItemInt[3] : 0;
-    cIndex = !mItemEmpty[4] ? mItemInt[4] : 0;
-    if (cIndex > 0 && !cIndex2)
+  truth = CMD_IS(NEW2DARRAY);
+  index = !mItemEmpty[3] ? mItemInt[3] : 0;
+  if (truth) {
+    index2 = !mItemEmpty[3] ? mItemInt[3] : 0;
+    index = !mItemEmpty[4] ? mItemInt[4] : 0;
+    if (index > 0 && !index2)
       ABORT_LINE("The number of elements per row must be 0 because no rows are created"
       " in:\n\n");
   }
-  if (cIndex < 0 || (cTruth && cIndex2 < 0))
+  if (index < 0 || (truth && index2 < 0))
     ABORT_LINE("The number of elements to create must be positive in:\n\n");
   mStrCopy = "";
-  for (cIx1 = 0; cIx1 < cIndex; cIx1++)
-    mStrCopy += cIx1 ? "\n0" : "0";
+  for (ix1 = 0; ix1 < index; ix1++)
+    mStrCopy += ix1 ? "\n0" : "0";
 
   // Create the 2D array rows and add string to the rows
-  if (cTruth) {
+  if (truth) {
     rowsFor2d = new CArray < ArrayRow, ArrayRow > ;
     arrRow.value = mStrCopy;
-    arrRow.numElements = cIndex;
-    for (cIy0 = 0; cIy0 < cIndex2; cIy0++)
+    arrRow.numElements = index;
+    for (iy0 = 0; iy0 < index2; iy0++)
       rowsFor2d->Add(arrRow);
   }
-  if (SetVariable(mItem1upper, cTruth ? "0" : mStrCopy, cIx0, -1, false, &cReport,
+  if (SetVariable(mItem1upper, truth ? "0" : mStrCopy, ix0, -1, false, &report,
     rowsFor2d)) {
     delete rowsFor2d;
-    ABORT_LINE(cReport + " in script line: \n\n");
+    ABORT_LINE(report + " in script line: \n\n");
   }
   return 0;
 }
@@ -1316,13 +1373,16 @@ int CMacCmd::NewArrayCmd(void)
 // LocalVar
 int CMacCmd::LocalVar(void)
 {
-  for (cIndex = 1; cIndex < MAX_MACRO_TOKENS && !mItemEmpty[cIndex]; cIndex++) {
-    cIndex2 = LocalVarAlreadyDefined(mStrItems[cIndex], mStrLine);
-    if (cIndex2 > 0)
+  CString report;
+  int index, index2;
+
+  for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {
+    index2 = LocalVarAlreadyDefined(mStrItems[index], mStrLine);
+    if (index2 > 0)
       return 1;
-    if (!cIndex2 && SetVariable(mStrItems[cIndex], "0", 
-      VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, mCurrentMacro, true, &cReport))
-      ABORT_LINE(cReport + " in script line: \n\n");
+    if (!index2 && SetVariable(mStrItems[index], "0",
+      VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, mCurrentMacro, true, &report))
+      ABORT_LINE(report + " in script line: \n\n");
   }
   return 0;
 }
@@ -1341,27 +1401,31 @@ int CMacCmd::LocalLoopIndexes(void)
 // Plugin
 int CMacCmd::Plugin(void)
 {
+  CString report;
+  double delISX, delISY, delX, delY;
+  int index, index2;
+
   SubstituteVariables(&mStrLine, 1, mStrLine);
-  cDelX = mWinApp->mPluginManager->ExecuteCommand(mStrLine, mItemInt, mItemDbl, 
-    mItemEmpty, cReport, cDelY, cDelISX, cDelISY, cIndex2, cIndex);
-  if (cIndex) {
+  delX = mWinApp->mPluginManager->ExecuteCommand(mStrLine, mItemInt, mItemDbl,
+    mItemEmpty, report, delY, delISX, delISY, index2, index);
+  if (index) {
     AbortMacro();
     return 1;
   }
   mStrCopy = "";
-  if (cIndex2 == 3) {
-    SetReportedValues(cDelX, cDelY, cDelISX, cDelISY);
-    mStrCopy.Format(" and it returned %6g, %6g, %6g", cDelY, cDelISX, cDelISY);
-  } else if (cIndex == 2) {
-    SetReportedValues(cDelX, cDelY, cDelISX);
-    mStrCopy.Format(" and it returned %6g, %6g", cDelY, cDelISX);
-  } else if (cIndex == 1) {
-    SetReportedValues(cDelX, cDelY);
-    mStrCopy.Format(" and it returned %6g", cDelY);
+  if (index2 == 3) {
+    SetReportedValues(delX, delY, delISX, delISY);
+    mStrCopy.Format(" and it returned %6g, %6g, %6g", delY, delISX, delISY);
+  } else if (index == 2) {
+    SetReportedValues(delX, delY, delISX);
+    mStrCopy.Format(" and it returned %6g, %6g", delY, delISX);
+  } else if (index == 1) {
+    SetReportedValues(delX, delY);
+    mStrCopy.Format(" and it returned %6g", delY);
   } else
-    SetReportedValues(cDelX);
-  cReport += mStrCopy;
-  mWinApp->AppendToLog(cReport, mLogAction);
+    SetReportedValues(delX);
+  report += mStrCopy;
+  mWinApp->AppendToLog(report, mLogAction);
   return 0;
 }
 
@@ -1375,26 +1439,29 @@ int CMacCmd::ListPluginCalls(void)
 // FlashDisplay
 int CMacCmd::FlashDisplay(void)
 {
-  cDelX = 0.3;
-  cIndex2 = 4;
-  cI = RGB(192, 192, 0);
+  double delX;
+  int index, index2, i, ix0;
+
+  delX = 0.3;
+  index2 = 4;
+  i = RGB(192, 192, 0);
   if (mItemInt[1] > 0)
-    cIndex2 = mItemInt[1];
+    index2 = mItemInt[1];
   if (!mItemEmpty[2] && mItemDbl[2] >= 0.001)
-    cDelX = mItemDbl[2];
+    delX = mItemDbl[2];
   if (!mItemEmpty[3] && mStrItems[3].GetLength() == 6)
-    if (sscanf(mStrItems[3], "%x", &cIx0) == 1)
-      cI = ((cIx0 & 0xFF0000) >> 16) | (cIx0 & 0x00FF00) | ((cIx0 & 0x0000FF) << 16);
-  if (cDelX * cIndex2 > 3)
+    if (sscanf(mStrItems[3], "%x", &ix0) == 1)
+      i = ((ix0 & 0xFF0000) >> 16) | (ix0 & 0x00FF00) | ((ix0 & 0x0000FF) << 16);
+  if (delX * index2 > 3)
     ABORT_LINE("Flashing duration is too long in line:\r\n\r\n");
-  for (cIndex = 0; cIndex < cIndex2; cIndex++) {
+  for (index = 0; index < index2; index++) {
     mWinApp->mMainView->SetFlashNextDisplay(true);
-    mWinApp->mMainView->SetFlashColor(cI);
+    mWinApp->mMainView->SetFlashColor(i);
     mWinApp->mMainView->DrawImage();
-    Sleep(B3DNINT(1000. *cDelX));
+    Sleep(B3DNINT(1000. *delX));
     mWinApp->mMainView->DrawImage();
-    if (cIndex < cIndex2 - 1)
-      Sleep(B3DNINT(1000. *cDelX));
+    if (index < index2 - 1)
+      Sleep(B3DNINT(1000. *delX));
   }
   return 0;
 }
@@ -1402,12 +1469,13 @@ int CMacCmd::FlashDisplay(void)
 // TiltUp, U
 int CMacCmd::TiltUp(void)
 {
+  double delISX, delISY;
 
   // For tilting, if stage is ready, do the action; otherwise back up the index
   if (mScope->StageBusy() <= 0) {
     SetIntensityFactor(1);
-    SetupStageRestoreAfterTilt(&mStrItems[1], cDelISX, cDelISY);
-    mScope->TiltUp(cDelISX, cDelISY);
+    SetupStageRestoreAfterTilt(&mStrItems[1], delISX, delISY);
+    mScope->TiltUp(delISX, delISY);
     mMovedStage = true;
     mTestTiltAngle = true;
   } else
@@ -1418,10 +1486,12 @@ int CMacCmd::TiltUp(void)
 // TiltDown, D
 int CMacCmd::TiltDown(void)
 {
+  double delISX, delISY;
+
   if (mScope->StageBusy() <= 0) {
     SetIntensityFactor(-1);
-    SetupStageRestoreAfterTilt(&mStrItems[1], cDelISX, cDelISY);
-    mScope->TiltDown(cDelISX, cDelISY);
+    SetupStageRestoreAfterTilt(&mStrItems[1], delISX, delISY);
+    mScope->TiltDown(delISX, delISY);
     mMovedStage = true;
     mTestTiltAngle = true;
   } else
@@ -1432,17 +1502,19 @@ int CMacCmd::TiltDown(void)
 // TiltTo, TiltBy
 int CMacCmd::TiltTo(void)
 {
+  CString report;
+  double delISX, delISY;
   double angle = mItemFlt[1];
   if (CMD_IS(TILTBY))
     angle += mScope->GetTiltAngle();
   if (fabs(angle) > mScope->GetMaxTiltAngle() + 0.05) {
-    cReport.Format("Attempt to tilt too high in script, to %.1f degrees, in line:\n\n",
+    report.Format("Attempt to tilt too high in script, to %.1f degrees, in line:\n\n",
       angle);
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
   if (mScope->StageBusy() <= 0) {
-    SetupStageRestoreAfterTilt(&mStrItems[2], cDelISX, cDelISY);
-    mScope->TiltTo(angle, cDelISX, cDelISY);
+    SetupStageRestoreAfterTilt(&mStrItems[2], delISX, delISY);
+    mScope->TiltTo(angle, delISX, delISY);
     mMovedStage = true;
     mTestTiltAngle = true;
   }
@@ -1524,28 +1596,33 @@ int CMacCmd::Search(void)
 // Montage, M, PreCookMontage
 int CMacCmd::Montage(void)
 {
-  cTruth = CMD_IS(PRECOOKMONTAGE);
-  cIndex = MONT_NOT_TRIAL;
-  if (cTruth)
-    cIndex = MONT_TRIAL_PRECOOK;
+  BOOL truth;
+  int index;
+
+  truth = CMD_IS(PRECOOKMONTAGE);
+  index = MONT_NOT_TRIAL;
+  if (truth)
+    index = MONT_TRIAL_PRECOOK;
   else if (mItemInt[1] != 0)
-    cIndex = MONT_TRIAL_IMAGE;
+    index = MONT_TRIAL_IMAGE;
   if (!mWinApp->Montaging())
     ABORT_NOLINE("The script contains a montage statement and \n"
       "montaging is not activated");
-  if (mWinApp->mMontageController->StartMontage(cIndex, false,
-    (float)(cTruth ? mItemDbl[1] : 0.), (cTruth && !mItemEmpty[2]) ? mItemInt[2] : 0,
-    cTruth && mItemInt[3] != 0,
-    (cTruth && !mItemEmpty[4]) ? mItemFlt[4] : 0.f))
+  if (mWinApp->mMontageController->StartMontage(index, false,
+    (float)(truth ? mItemDbl[1] : 0.), (truth && !mItemEmpty[2]) ? mItemInt[2] : 0,
+    truth && mItemInt[3] != 0,
+    (truth && !mItemEmpty[4]) ? mItemFlt[4] : 0.f))
     AbortMacro();
-  mTestMontError = !cTruth;
-  mTestScale = !cTruth;
+  mTestMontError = !truth;
+  mTestScale = !truth;
   return 0;
 }
 
 // OppositeTrial, OppositeFocus, OppositeAutoFocus
 int CMacCmd::OppositeTrial(void)
 {
+  int index;
+
   if (!mWinApp->LowDoseMode())
     ABORT_LINE("Low dose mode needs to be on to use opposite area in statement: \n\n");
   if (CMD_IS(OPPOSITEAUTOFOCUS) && !mWinApp->mFocusManager->FocusReady())
@@ -1556,8 +1633,8 @@ int CMacCmd::OppositeTrial(void)
   mTestScale = true;
   if (CMD_IS(OPPOSITEAUTOFOCUS)) {
     mWinApp->mFocusManager->SetUseOppositeLDArea(true);
-    cIndex = mItemEmpty[1] ? 1 : mItemInt[1];
-    mWinApp->mFocusManager->AutoFocusStart(cIndex);
+    index = mItemEmpty[1] ? 1 : mItemInt[1];
+    mWinApp->mFocusManager->AutoFocusStart(index);
   } else if (CMD_IS(OPPOSITETRIAL))
     mCamera->InitiateCapture(2);
   else
@@ -1568,76 +1645,82 @@ int CMacCmd::OppositeTrial(void)
 // AcquireToMatchBuffer
 int CMacCmd::AcquireToMatchBuffer(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cIndex2 = mImBufs[cIndex].mConSetUsed;
-  cBinning = mImBufs[cIndex].mBinning;
-  if (cIndex2 < 0 || cBinning <= 0)
+  CString report;
+  double v1;
+  int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY, binning;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  index2 = mImBufs[index].mConSetUsed;
+  binning = mImBufs[index].mBinning;
+  if (index2 < 0 || binning <= 0)
     ABORT_LINE("Either the parameter set or the binning is not specified in the buffer"
       " for:\n\n");
-  if (mImBufs[cIndex].mCamera != mCurrentCam)
+  if (mImBufs[index].mCamera != mCurrentCam)
     ABORT_LINE("Current camera is no longer the same as was used to acquire the image "
       "for:\n\n");
-  if (cIndex2 == MONTAGE_CONSET)
-    cIndex2 = RECORD_CONSET;
-  if (cIndex2 == TRACK_CONSET)
-    cIndex2 = TRIAL_CONSET;
-  mImBufs[cIndex].mImage->getSize(mCropXafterShot, mCropYafterShot);
-  cSizeX = mCropXafterShot;
-  cSizeY = mCropYafterShot;
-  cV1 = 1.05;
+  if (index2 == MONTAGE_CONSET)
+    index2 = RECORD_CONSET;
+  if (index2 == TRACK_CONSET)
+    index2 = TRIAL_CONSET;
+  mImBufs[index].mImage->getSize(mCropXafterShot, mCropYafterShot);
+  sizeX = mCropXafterShot;
+  sizeY = mCropYafterShot;
+  v1 = 1.05;
 
   // Get the parameters to achieve a size that is big enough
   for (;;) {
-    mCamera->CenteredSizes(cSizeX, mCamParams->sizeX, mCamParams->moduloX, cIx0, cIx1,
-      cSizeY, mCamParams->sizeY, mCamParams->moduloY, cIy0, cIy1, cBinning);
-    if (cSizeX >= mCamParams->sizeX / cBinning && cSizeY >= mCamParams->sizeY / cBinning)
+    mCamera->CenteredSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1,
+      sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, binning);
+    if (sizeX >= mCamParams->sizeX / binning && sizeY >= mCamParams->sizeY / binning)
       break;
-    if (cSizeX >= mCropXafterShot && cSizeY >= mCropYafterShot)
+    if (sizeX >= mCropXafterShot && sizeY >= mCropYafterShot)
       break;
-    if (cSizeX < mCropXafterShot)
-      cSizeX = B3DMIN((int)(cV1 * mCropXafterShot), mCamParams->sizeX / cBinning);
-    if (cSizeY < mCropYafterShot)
-      cSizeY = B3DMIN((int)(cV1 * mCropYafterShot), mCamParams->sizeY / cBinning);
-    cV1 *= 1.05;
+    if (sizeX < mCropXafterShot)
+      sizeX = B3DMIN((int)(v1 * mCropXafterShot), mCamParams->sizeX / binning);
+    if (sizeY < mCropYafterShot)
+      sizeY = B3DMIN((int)(v1 * mCropYafterShot), mCamParams->sizeY / binning);
+    v1 *= 1.05;
   }
 
   // Save the control set on top of stack and make modifications
-  mConsetsSaved.push_back(mConSets[cIndex2]);
-  mConsetNums.push_back(cIndex2);
+  mConsetsSaved.push_back(mConSets[index2]);
+  mConsetNums.push_back(index2);
   mRestoreConsetAfterShot = true;
-  mConSets[cIndex2].binning = cBinning;
-  mConSets[cIndex2].left = cIx0 * cBinning;
-  mConSets[cIndex2].right = cIx1 * cBinning;
-  mConSets[cIndex2].top = cIy0 * cBinning;
-  mConSets[cIndex2].bottom = cIy1 * cBinning;
-  mConSets[cIndex2].exposure = mImBufs[cIndex].mExposure;
-  mConSets[cIndex2].K2ReadMode = mImBufs[cIndex].mK2ReadMode;
-  mConSets[cIndex2].mode = SINGLE_FRAME;
-  mConSets[cIndex2].alignFrames = 0;
-  mConSets[cIndex2].saveFrames = 0;
+  mConSets[index2].binning = binning;
+  mConSets[index2].left = ix0 * binning;
+  mConSets[index2].right = ix1 * binning;
+  mConSets[index2].top = iy0 * binning;
+  mConSets[index2].bottom = iy1 * binning;
+  mConSets[index2].exposure = mImBufs[index].mExposure;
+  mConSets[index2].K2ReadMode = mImBufs[index].mK2ReadMode;
+  mConSets[index2].mode = SINGLE_FRAME;
+  mConSets[index2].alignFrames = 0;
+  mConSets[index2].saveFrames = 0;
 
   // Cancel crop if it isn't needed
-  if (cSizeX == mCropXafterShot && cSizeY == mCropYafterShot)
+  if (sizeX == mCropXafterShot && sizeY == mCropYafterShot)
     mCropXafterShot = -1;
-  mCamera->InitiateCapture(cIndex2);
+  mCamera->InitiateCapture(index2);
   return 0;
 }
 
 // StepFocusNextShot
 int CMacCmd::StepFocusNextShot(void)
 {
-  cDelX = 0.;
-  cDelY = 0.;
+  double delX, delY;
+
+  delX = 0.;
+  delY = 0.;
   if (!mItemEmpty[4]) {
-    cDelX = mItemDbl[3];
-    cDelY = mItemDbl[4];
+    delX = mItemDbl[3];
+    delY = mItemDbl[4];
   }
-  if (mItemDbl[1] <= 0. || cDelX < 0. || (cDelX > 0. && cDelX < mItemDbl[1]) ||
-    (!cDelX && !mItemEmpty[3]))
+  if (mItemDbl[1] <= 0. || delX < 0. || (delX > 0. && delX < mItemDbl[1]) ||
+    (!delX && !mItemEmpty[3]))
     ABORT_LINE("Negative time, times out of order, or odd number of values in "
     "statement: \n\n");
-  mCamera->QueueFocusSteps(mItemFlt[1], mItemDbl[2], (float)cDelX, cDelY);
+  mCamera->QueueFocusSteps(mItemFlt[1], mItemDbl[2], (float)delX, delY);
   return 0;
 }
 
@@ -1662,10 +1745,12 @@ int CMacCmd::DeferStackingNextShot(void)
 // EarlyReturnNextShot
 int CMacCmd::EarlyReturnNextShot(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex < 0)
-    cIndex = 65535;
-  if (mCamera->SetNextAsyncSumFrames(cIndex, mItemInt[2] > 0)) {
+  int index;
+
+  index = mItemInt[1];
+  if (index < 0)
+    index = 65535;
+  if (mCamera->SetNextAsyncSumFrames(index, mItemInt[2] > 0)) {
     AbortMacro();
     return 1;
   }
@@ -1685,14 +1770,16 @@ int CMacCmd::GetDeferredSum(void)
 // FrameThresholdNextShot
 int CMacCmd::FrameThresholdNextShot(void)
 {
+  float backlashX, backlashY;
+
   mCamera->SetNextFrameSkipThresh(mItemFlt[1]);
   if (!mItemEmpty[2]) {
-    cBacklashX = mItemFlt[2];
-    cBacklashY = mItemEmpty[3] ? cBacklashX : mItemFlt[3];
-    if (cBacklashX >= 1. || cBacklashX < 0. || cBacklashY >= 1. || cBacklashY < 0)
+    backlashX = mItemFlt[2];
+    backlashY = mItemEmpty[3] ? backlashX : mItemFlt[3];
+    if (backlashX >= 1. || backlashX < 0. || backlashY >= 1. || backlashY < 0)
       ABORT_LINE("Partial frame thresholds for Alignframes must be >= 0 and < 1 for "
         "line:\n\n");
-    mCamera->SetNextPartialThresholds(cBacklashX, cBacklashY);
+    mCamera->SetNextPartialThresholds(backlashX, backlashY);
   }
   if (!mItemEmpty[4]) {
     if (mItemDbl[4] < 0 || mItemDbl[4] >= 1.)
@@ -1705,124 +1792,130 @@ int CMacCmd::FrameThresholdNextShot(void)
 // QueueFrameTiltSeries, FrameSeriesFromVar
 int CMacCmd::QueueFrameTiltSeries(void)
 {
+  CString report;
+  ScaleMat aMat;
+  double delISX, delX, delY;
+  int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
+  Variable *var;
+  CString *valPtr;
   FloatVec openTime, tiltToAngle, waitOrInterval, focusChange, deltaISX, deltaISY;
 
   // Get matrix for image shift conversion
-  cIndex = mWinApp->LowDoseMode() ? mLdParam[RECORD_CONSET].magIndex :
+  index = mWinApp->LowDoseMode() ? mLdParam[RECORD_CONSET].magIndex :
     mScope->GetMagIndex();
-  cAMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(cIndex)),
-    mShiftManager->CameraToIS(cIndex));
+  aMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(index)),
+    mShiftManager->CameraToIS(index));
 
   // Set up series based on specifications
   if (CMD_IS(QUEUEFRAMETILTSERIES)) {
-    cDelISX = mItemEmpty[4] ? 0. : mItemDbl[4];
-    for (cIndex = 0; cIndex < mItemInt[3]; cIndex++) {
-      tiltToAngle.push_back((float)(mItemDbl[1] + mItemDbl[2] * cIndex));
+    delISX = mItemEmpty[4] ? 0. : mItemDbl[4];
+    for (index = 0; index < mItemInt[3]; index++) {
+      tiltToAngle.push_back((float)(mItemDbl[1] + mItemDbl[2] * index));
       if (!mItemEmpty[5])
         openTime.push_back(mItemFlt[5]);
       if (!mItemEmpty[6])
         waitOrInterval.push_back(mItemFlt[6]);
       if (!mItemEmpty[7])
-        focusChange.push_back((float)(mItemDbl[7] *cIndex));
+        focusChange.push_back((float)(mItemDbl[7] *index));
       if (!mItemEmpty[9]) {
-        deltaISX.push_back((float)((mItemDbl[8] *cAMat.xpx + mItemDbl[9] * cAMat.xpy) *
-          cIndex));
-        deltaISY.push_back((float)((mItemDbl[8] *cAMat.ypx + mItemDbl[9] * cAMat.ypy) *
-          cIndex));
+        deltaISX.push_back((float)((mItemDbl[8] *aMat.xpx + mItemDbl[9] * aMat.xpy) *
+          index));
+        deltaISY.push_back((float)((mItemDbl[8] *aMat.ypx + mItemDbl[9] * aMat.ypy) *
+          index));
       }
     }
 
   } else {
 
     // Or pull the values out of the big variable array: figure out how many per step
-    cDelISX = mItemEmpty[3] ? 0. : mItemDbl[3];
-    cVar = LookupVariable(mItem1upper, cIndex2);
-    if (!cVar)
+    delISX = mItemEmpty[3] ? 0. : mItemDbl[3];
+    var = LookupVariable(mItem1upper, index2);
+    if (!var)
       ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-    cSizeX = 0;
+    sizeX = 0;
     if (mItemInt[2] > 31 || mItemInt[2] < 1)
       ABORT_LINE("The entry with flags must be between 1 and 31 in line:\n\n");
     if (mItemInt[2] & 1)
-      cSizeX++;
+      sizeX++;
     if (mItemInt[2] & 2)
-      cSizeX++;
+      sizeX++;
     if (mItemInt[2] & 4)
-      cSizeX++;
+      sizeX++;
     if (mItemInt[2] & 8)
-      cSizeX++;
+      sizeX++;
     if (mItemInt[2] & 16)
-      cSizeX += 2;
-    if (cVar->rowsFor2d) {
-      cSizeY = (int)cVar->rowsFor2d->GetSize();
-      for (cIx0 = 0; cIx0 < cSizeY; cIx0++) {
-        ArrayRow& tempRow = cVar->rowsFor2d->ElementAt(cIx0);
-        if (tempRow.numElements < cSizeX) {
-          cReport.Format("Row %d or the 2D array %s has only %d elements, not the %d"
-            " required", cIx0, mItem1upper, tempRow.numElements, cSizeX);
-          ABORT_NOLINE(cReport);
+      sizeX += 2;
+    if (var->rowsFor2d) {
+      sizeY = (int)var->rowsFor2d->GetSize();
+      for (ix0 = 0; ix0 < sizeY; ix0++) {
+        ArrayRow& tempRow = var->rowsFor2d->ElementAt(ix0);
+        if (tempRow.numElements < sizeX) {
+          report.Format("Row %d or the 2D array %s has only %d elements, not the %d"
+            " required", ix0, mItem1upper, tempRow.numElements, sizeX);
+          ABORT_NOLINE(report);
         }
       }
     } else {
-      cSizeY = cVar->numElements / cSizeX;
-      cValPtr = &cVar->value;
-      if (cVar->numElements % cSizeX) {
-        cReport.Format("Variable %s has %d elements, not divisible by the\n"
+      sizeY = var->numElements / sizeX;
+      valPtr = &var->value;
+      if (var->numElements % sizeX) {
+        report.Format("Variable %s has %d elements, not divisible by the\n"
           "%d values per step implied by the flags entry of %d", mStrItems[1],
-          cVar->numElements, cSizeX, mItemInt[2]);
-        ABORT_NOLINE(cReport);
+          var->numElements, sizeX, mItemInt[2]);
+        ABORT_NOLINE(report);
       }
     }
 
     // Load the vectors
-    cIy0 = 1;
-    for (cIx0 = 0; cIx0 < cSizeY; cIx0++) {
-      if (cVar->rowsFor2d) {
-        ArrayRow& tempRow = cVar->rowsFor2d->ElementAt(cIx0);
-        cValPtr = &tempRow.value;
-        cIy0 = 1;
+    iy0 = 1;
+    for (ix0 = 0; ix0 < sizeY; ix0++) {
+      if (var->rowsFor2d) {
+        ArrayRow& tempRow = var->rowsFor2d->ElementAt(ix0);
+        valPtr = &tempRow.value;
+        iy0 = 1;
       }
       if (mItemInt[2] & 1) {
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        tiltToAngle.push_back((float)atof((LPCTSTR)cReport));
-        cIy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        tiltToAngle.push_back((float)atof((LPCTSTR)report));
+        iy0++;
       }
       if (mItemInt[2] & 2) {
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        openTime.push_back((float)atof((LPCTSTR)cReport));
-        cIy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        openTime.push_back((float)atof((LPCTSTR)report));
+        iy0++;
       }
       if (mItemInt[2] & 4) {
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        waitOrInterval.push_back((float)atof((LPCTSTR)cReport));
-        cIy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        waitOrInterval.push_back((float)atof((LPCTSTR)report));
+        iy0++;
       }
       if (mItemInt[2] & 8) {
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        focusChange.push_back((float)atof((LPCTSTR)cReport));
-        cIy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        focusChange.push_back((float)atof((LPCTSTR)report));
+        iy0++;
       }
       if (mItemInt[2] & 16) {
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        cDelX = atof((LPCTSTR)cReport);
-        cIy0++;
-        FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-        cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-        cDelY = atof((LPCTSTR)cReport);
-        deltaISX.push_back((float)(cDelX *cAMat.xpx + cDelY * cAMat.xpy));
-        deltaISY.push_back((float)(cDelX *cAMat.ypx + cDelY * cAMat.ypy));
-        cIy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        delX = atof((LPCTSTR)report);
+        iy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        delY = atof((LPCTSTR)report);
+        deltaISX.push_back((float)(delX *aMat.xpx + delY * aMat.xpy));
+        deltaISY.push_back((float)(delX *aMat.ypx + delY * aMat.ypy));
+        iy0++;
       }
     }
   }
 
   // Queue it: This does all the error checking
   if (mCamera->QueueTiltSeries(openTime, tiltToAngle, waitOrInterval, focusChange,
-    deltaISX, deltaISY, (float)cDelISX)) {
+    deltaISX, deltaISY, (float)delISX)) {
       AbortMacro();
       return 1;
   }
@@ -1832,14 +1925,17 @@ int CMacCmd::QueueFrameTiltSeries(void)
 // SetFrameSeriesParams
 int CMacCmd::SetFrameSeriesParams(void)
 {
-  cTruth = mItemInt[1] != 0;
-  cBacklashX = 0.;
+  BOOL truth;
+  float backlashX;
+
+  truth = mItemInt[1] != 0;
+  backlashX = 0.;
   if (!mItemEmpty[2])
-    cBacklashX = mItemFlt[2];
+    backlashX = mItemFlt[2];
   if (!mItemEmpty[3] && mItemEmpty[4] ||
     !BOOL_EQUIV(fabs(mItemDbl[3]) > 9000., fabs(mItemDbl[4]) > 9000.))
     ABORT_LINE("A Y position to restore must be entered when X is on line:\n\n");
-  if (mCamera->SetFrameTSparams(cTruth, cBacklashX,
+  if (mCamera->SetFrameTSparams(truth, backlashX,
     (mItemEmpty[3] || fabs(mItemDbl[3]) > 9000.) ? EXTRA_NO_VALUE : mItemDbl[3],
     (mItemEmpty[4] || fabs(mItemDbl[4]) > 9000.) ? EXTRA_NO_VALUE : mItemDbl[4]))
     ABORT_LINE("The FEI scope plugin version is not new enough to support variable"
@@ -1862,6 +1958,8 @@ int CMacCmd::SetFrameSeriesParams(void)
 // WriteFrameSeriesAngles
 int CMacCmd::WriteFrameSeriesAngles(void)
 {
+  CString report;
+  int index;
   FloatVec *angles = mCamera->GetFrameTSactualAngles();
   IntVec *startTime = mCamera->GetFrameTSrelStartTime();
   IntVec *endTime = mCamera->GetFrameTSrelEndTime();
@@ -1875,14 +1973,14 @@ int CMacCmd::WriteFrameSeriesAngles(void)
     csFile = new CStdioFile(mStrCopy, CFile::modeCreate | CFile::modeWrite |
       CFile::shareDenyWrite);
     message = "Writing angles to file ";
-    for (cIndex = 0; cIndex < (int)angles->size(); cIndex++) {
-      cReport.Format("%7.2f", angles->at(cIndex));
-      if (cIndex < (int)startTime->size())
-        mStrCopy.Format(" %5d %5d\n", B3DNINT(0.001 * startTime->at(cIndex) / frame),
-          B3DNINT(0.001 *endTime->at(cIndex) / frame));
+    for (index = 0; index < (int)angles->size(); index++) {
+      report.Format("%7.2f", angles->at(index));
+      if (index < (int)startTime->size())
+        mStrCopy.Format(" %5d %5d\n", B3DNINT(0.001 * startTime->at(index) / frame),
+          B3DNINT(0.001 *endTime->at(index) / frame));
       else
         mStrCopy = "\n";
-      csFile->WriteString((LPCTSTR)cReport + mStrCopy);
+      csFile->WriteString((LPCTSTR)report + mStrCopy);
     }
   }
   catch (CFileException * perr) {
@@ -1896,14 +1994,18 @@ int CMacCmd::WriteFrameSeriesAngles(void)
 // ReportFrameTiltSum
 int CMacCmd::ReportFrameTiltSum(void)
 {
-  cTruth = mCamera->GetTiltSumProperties(cIndex, cIndex2, cBacklashX, cIx0, cIx1);
-  if (cTruth) {
+  BOOL truth;
+  int index, index2, ix0, ix1;
+  float backlashX;
+
+  truth = mCamera->GetTiltSumProperties(index, index2, backlashX, ix0, ix1);
+  if (truth) {
     mLogRpt = "There are no more tilt sums available";
     SetReportedValues(&mStrItems[1], 1, 0.);
   } else {
     mLogRpt.Format("Tilt sum from %.1f deg, index %d, %d frames from %d to %d",
-      cBacklashX, cIndex, cIndex2, cIx0, cIx1);
-    SetReportedValues(&mStrItems[1], 0, cBacklashX, cIndex, cIndex2, cIx0, cIx1);
+      backlashX, index, index2, ix0, ix1);
+    SetReportedValues(&mStrItems[1], 0, backlashX, index, index2, ix0, ix1);
   }
   return 0;
 }
@@ -1918,31 +2020,36 @@ int CMacCmd::ModifyFrameTSShifts(void)
 // ReplaceFrameTSFocus, ReplaceFrameTSShifts
 int CMacCmd::ReplaceFrameTSFocus(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix1, iy0, iy1;
+  Variable *var;
+  CString *valPtr;
   FloatVec newFocus, newSecond, *newVec = &newFocus;
-  cTruth = CMD_IS(REPLACEFRAMETSSHIFTS);
-  for (cIndex = 1; cIndex < (cTruth ? 3 : 2); cIndex++) {
-    mStrCopy = mStrItems[cIndex];
+  truth = CMD_IS(REPLACEFRAMETSSHIFTS);
+  for (index = 1; index < (truth ? 3 : 2); index++) {
+    mStrCopy = mStrItems[index];
     mStrCopy.MakeUpper();
-    cVar = LookupVariable(mStrCopy, cIndex2);
-    if (!cVar)
-      ABORT_LINE("The variable " + mStrItems[cIndex] + " is not defined in line:\n\n");
-    if (cVar->rowsFor2d)
-      ABORT_LINE("The variable " + mStrItems[cIndex] + " should not be a 2D array for "
+    var = LookupVariable(mStrCopy, index2);
+    if (!var)
+      ABORT_LINE("The variable " + mStrItems[index] + " is not defined in line:\n\n");
+    if (var->rowsFor2d)
+      ABORT_LINE("The variable " + mStrItems[index] + " should not be a 2D array for "
         "line:\n\n");
-    cValPtr = &cVar->value;
-    for (cIy0 = 0; cIy0 < cVar->numElements; cIy0++) {
-      FindValueAtIndex(*cValPtr, cIy0, cIx1, cIy1);
-      cReport = cValPtr->Mid(cIx1, cIy1 - cIx1);
-      newVec->push_back((float)atof((LPCTSTR)cReport));
+    valPtr = &var->value;
+    for (iy0 = 0; iy0 < var->numElements; iy0++) {
+      FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+      report = valPtr->Mid(ix1, iy1 - ix1);
+      newVec->push_back((float)atof((LPCTSTR)report));
     }
-    if (cTruth)
+    if (truth)
       newVec = &newSecond;
   }
-  if (cTruth)
-    cIndex2 = mCamera->ReplaceFrameTSShifts(newFocus, newSecond);
+  if (truth)
+    index2 = mCamera->ReplaceFrameTSShifts(newFocus, newSecond);
   else
-    cIndex2 = mCamera->ReplaceFrameTSFocusChange(newFocus);
-  if (cIndex2)
+    index2 = mCamera->ReplaceFrameTSFocusChange(newFocus);
+  if (index2)
     ABORT_LINE("The variable does not have the same number of changes as the"
       " original list of changes for line:\n\n");
   return 0;
@@ -1963,21 +2070,27 @@ int CMacCmd::RetractCamera(void)
 // RecordAndTiltUp, RecordAndTiltDown, RecordAndTiltTo
 int CMacCmd::RecordAndTiltUp(void)
 {
+  BOOL truth;
+  bool doBack;
+  double delISX;
+  int index;
+  float backlashX;
+
   if (!mCamera->PostActionsOK(&mConSets[RECORD_CONSET]))
     ABORT_LINE("Post-exposure actions are not allowed for the current camera"
       " for line:\n\n");
   double increment = mScope->GetIncrement();
-  cDoBack = false;
-  cDelISX = mScope->GetTiltAngle();
-  cIndex = 1;
+  doBack = false;
+  delISX = mScope->GetTiltAngle();
+  index = 1;
   if (CMD_IS(RECORDANDTILTTO)) {
-    cIndex = 3;
-    increment = mItemDbl[1] - cDelISX;
+    index = 3;
+    increment = mItemDbl[1] - delISX;
     if (!mItemEmpty[2] && mItemDbl[2]) {
-      cDoBack = true;
-      cBacklashX = (float)fabs(mItemDbl[2]);
+      doBack = true;
+      backlashX = (float)fabs(mItemDbl[2]);
       if (increment < 0)
-        cBacklashX = -cBacklashX;
+        backlashX = -backlashX;
     }
   }
   int delay = mShiftManager->GetAdjustedTiltDelay(increment);
@@ -1990,10 +2103,10 @@ int CMacCmd::RecordAndTiltUp(void)
 
   StageMoveInfo smiRAT;
   smiRAT.axisBits = axisA;
-  smiRAT.alpha = cDelISX + increment;
-  smiRAT.backAlpha = cBacklashX;
-  cTruth = SetupStageRestoreAfterTilt(&mStrItems[cIndex], smiRAT.x, smiRAT.y);
-  mCamera->QueueStageMove(smiRAT, delay, cDoBack, cTruth);
+  smiRAT.alpha = delISX + increment;
+  smiRAT.backAlpha = backlashX;
+  truth = SetupStageRestoreAfterTilt(&mStrItems[index], smiRAT.x, smiRAT.y);
+  mCamera->QueueStageMove(smiRAT, delay, doBack, truth);
   mCamera->InitiateCapture(RECORD_CONSET);
   mTestScale = true;
   mMovedStage = true;
@@ -2004,25 +2117,30 @@ int CMacCmd::RecordAndTiltUp(void)
 // ArePostActionsEnabled
 int CMacCmd::ArePostActionsEnabled(void)
 {
-  cTruth = mWinApp->ActPostExposure();
-  cDoShift = mCamera->PostActionsOK(&mConSets[RECORD_CONSET]);
+  BOOL truth, doShift;
+
+  truth = mWinApp->ActPostExposure();
+  doShift = mCamera->PostActionsOK(&mConSets[RECORD_CONSET]);
   mLogRpt.Format("Post-exposure actions %s allowed %sfor this camera%s",
-    cTruth ? "ARE" : "are NOT", cDoShift ? "in general " : "",
-    cDoShift ? " but ARE for Records currently" : "");
-  SetReportedValues(&mStrItems[1], cTruth ? 1. : 0., cDoShift ? 1 : 0.);
+    truth ? "ARE" : "are NOT", doShift ? "in general " : "",
+    doShift ? " but ARE for Records currently" : "");
+  SetReportedValues(&mStrItems[1], truth ? 1. : 0., doShift ? 1 : 0.);
   return 0;
 }
 
 // TiltDuringRecord
 int CMacCmd::TiltDuringRecord(void)
 {
-  cDelX = mItemEmpty[3] ? 0. : mItemDbl[3];
-  if (mCamera->QueueTiltDuringShot(mItemDbl[1], mItemInt[2], cDelX)) {
-    cReport.Format("Moving the stage with variable speed requires\n"
+  CString report;
+  double delX;
+
+  delX = mItemEmpty[3] ? 0. : mItemDbl[3];
+  if (mCamera->QueueTiltDuringShot(mItemDbl[1], mItemInt[2], delX)) {
+    report.Format("Moving the stage with variable speed requires\n"
       "FEI plugin version %d (and same for server, if relevant)\n"
       "You only have version %d and this line cannot be used:\n\n",
       FEI_PLUGIN_STAGE_SPEED, mScope->GetPluginVersion());
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
   mCamera->InitiateCapture(3);
   mMovedStage = true;
@@ -2052,53 +2170,58 @@ int CMacCmd::TestNextMultiShot(void)
 // MultipleRecords
 int CMacCmd::MultipleRecords(void)
 {
+  BOOL truth;
+  int index, index2, ix0, ix1, iy1;
+
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
-  cIndex = (mItemEmpty[6] || mItemInt[6] < -8) ? msParams->doEarlyReturn : mItemInt[6];
+  index = (mItemEmpty[6] || mItemInt[6] < -8) ? msParams->doEarlyReturn : mItemInt[6];
   if (!mCamParams->K2Type)
-    cIndex = 0;
-  cIndex2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
+    index = 0;
+  index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
   if (!mItemEmpty[9] && mItemInt[9] > -9) {
-    cIndex2 = mItemInt[9];
-    if (cIndex2 < 1 || cIndex2 > 11)
+    index2 = mItemInt[9];
+    if (index2 < 1 || index2 > 11)
       ABORT_LINE("The ninth entry for doing within holes or\n"
         "in multiple holes must be between 1 and 11 in line:\n\n");
   }
-  cTruth = (cIndex == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
-  cIx0 = msParams->doSecondRing ? 1 : 0;
+  truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
+  ix0 = msParams->doSecondRing ? 1 : 0;
   if (!mItemEmpty[10] && mItemInt[10] > -9)
-    cIx0 = mItemInt[10] ? 1 : 0;
-  cIx1 = 0;
-  if (cIx0)
-    cIx1 = (mItemEmpty[11] || mItemInt[11] < -8) ? msParams->numShots[1] : mItemInt[11];
-  cIy1 = mWinApp->mParticleTasks->StartMultiShot(
+    ix0 = mItemInt[10] ? 1 : 0;
+  ix1 = 0;
+  if (ix0)
+    ix1 = (mItemEmpty[11] || mItemInt[11] < -8) ? msParams->numShots[1] : mItemInt[11];
+  iy1 = mWinApp->mParticleTasks->StartMultiShot(
     (mItemEmpty[1] || mItemInt[1] < -8) ? msParams->numShots[0] : mItemInt[1],
     (mItemEmpty[2] || mItemInt[2] < -8) ? msParams->doCenter : mItemInt[2],
-    (mItemEmpty[3] || mItemDbl[3] < -8.) ? msParams->spokeRad[0] : mItemFlt[3], cIx1,
+    (mItemEmpty[3] || mItemDbl[3] < -8.) ? msParams->spokeRad[0] : mItemFlt[3], ix1,
     (mItemEmpty[12] || mItemDbl[12] < -8.) ? msParams->spokeRad[1] : mItemFlt[12],
     (mItemEmpty[4] || mItemDbl[4] < -8.) ? msParams->extraDelay : mItemFlt[4],
-    (mItemEmpty[5] || mItemInt[5] < -8) ? cTruth : mItemInt[5] != 0, cIndex,
+    (mItemEmpty[5] || mItemInt[5] < -8) ? truth : mItemInt[5] != 0, index,
     (mItemEmpty[7] || mItemInt[7] < -8) ? msParams->numEarlyFrames : mItemInt[7],
     (mItemEmpty[8] || mItemInt[8] < -8) ? msParams->adjustBeamTilt : mItemInt[8] != 0,
-    cIndex2);
-  if (cIy1 > 0) {
+    index2);
+  if (iy1 > 0) {
     AbortMacro();
     return 1;
   }
-  SetReportedValues(-cIy1);
+  SetReportedValues(-iy1);
   return 0;
 }
 
 // RotateMultiShotPattern
 int CMacCmd::RotateMultiShotPattern(void)
 {
+  int index;
+
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
-  cIndex = mNavHelper->RotateMultiShotVectors(mNavHelper->GetMultiShotParams(),
+  index = mNavHelper->RotateMultiShotVectors(mNavHelper->GetMultiShotParams(),
     mItemFlt[1], mItemInt[2] != 0);
-  if (cIndex)
-    ABORT_LINE(cIndex > 1 ? "No image shift to specimen transformation available "
+  if (index)
+    ABORT_LINE(index > 1 ? "No image shift to specimen transformation available "
       "for line:\n\n" : "Selected pattern is not defined for line:/n/n");
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
@@ -2108,27 +2231,32 @@ int CMacCmd::RotateMultiShotPattern(void)
 // AutoAlign, A, AlignTo, ConicalAlignTo
 int CMacCmd::AutoAlign(void)
 {
-  cIndex = 0;
+  CString report;
+  BOOL truth, doShift;
+  double delX;
+  int index, index2;
+
+  index = 0;
   if (CMD_IS(ALIGNTO)  || CMD_IS(CONICALALIGNTO)) {
-    if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-      ABORT_LINE(cReport);
+    if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+      ABORT_LINE(report);
   }
-  cDelX = 0;
-  cTruth = false;
-  cDoShift = true;
+  delX = 0;
+  truth = false;
+  doShift = true;
   if (CMD_IS(CONICALALIGNTO)) {
-    cDelX = mItemDbl[2];
-    cTruth = mItemInt[3] != 0;
+    delX = mItemDbl[2];
+    truth = mItemInt[3] != 0;
   }
   if (CMD_IS(ALIGNTO) && mItemInt[2])
-    cDoShift = false;
+    doShift = false;
   mDisableAlignTrim = CMD_IS(ALIGNTO) && mItemInt[3];
-  cIndex2 = mShiftManager->AutoAlign(cIndex, 0, cDoShift, cTruth, NULL, 0., 0., 
-    (float)cDelX);
+  index2 = mShiftManager->AutoAlign(index, 0, doShift, truth, NULL, 0., 0.,
+    (float)delX);
   mDisableAlignTrim = false;
-  if (cIndex2 > 0)
+  if (index2 > 0)
     SUSPEND_NOLINE("because of failure to autoalign");
-  SetReportedValues(cIndex2);
+  SetReportedValues(index2);
   return 0;
 }
 
@@ -2142,34 +2270,40 @@ int CMacCmd::LimitNextAutoAlign(void)
 // AlignWithRotation
 int CMacCmd::AlignWithRotation(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  int index;
+  float bmin, shiftX, shiftY;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
   if (mItemDbl[3] < 0.2 || mItemDbl[3] > 50.)
     ABORT_LINE("The angle range to search must be between 0.2 and 50 degrees in:\n\n");
-  if (mNavHelper->AlignWithRotation(cIndex, mItemFlt[2], mItemFlt[3], cBmin,
-    cShiftX, cShiftY))
+  if (mNavHelper->AlignWithRotation(index, mItemFlt[2], mItemFlt[3], bmin,
+    shiftX, shiftY))
     ABORT_LINE("Failure to autoalign in:\n\n");
-  SetReportedValues(&mStrItems[4], cBmin, cShiftX, cShiftY);
+  SetReportedValues(&mStrItems[4], bmin, shiftX, shiftY);
   return 0;
 }
 
 // AutoFocus, G
 int CMacCmd::AutoFocus(void)
 {
-  cIndex = 1;
+  int index;
+
+  index = 1;
   if (!mItemEmpty[1])
-    cIndex = mItemInt[1];
-  if (cIndex > -2 && !mWinApp->mFocusManager->FocusReady())
+    index = mItemInt[1];
+  if (index > -2 && !mWinApp->mFocusManager->FocusReady())
     SUSPEND_NOLINE("because autofocus not calibrated");
   if (mMinDeltaFocus != 0. || mMaxDeltaFocus != 0.)
     mWinApp->mFocusManager->NextFocusChangeLimits(mMinDeltaFocus, mMaxDeltaFocus);
   if (mMinAbsFocus != 0. || mMaxAbsFocus != 0.)
     mWinApp->mFocusManager->NextFocusAbsoluteLimits(mMinAbsFocus, mMaxAbsFocus);
-  if (cIndex < -1)
+  if (index < -1)
     mWinApp->mFocusManager->DetectFocus(FOCUS_REPORT,
     !mItemEmpty[2] ? mItemInt[2] : 0);
   else
-    mWinApp->mFocusManager->AutoFocusStart(cIndex,
+    mWinApp->mFocusManager->AutoFocusStart(index,
     !mItemEmpty[2] ? mItemInt[2] : 0);
   mTestScale = true;
   return 0;
@@ -2209,10 +2343,12 @@ int CMacCmd::CorrectAstigmatism(void)
 // CorrectComa
 int CMacCmd::CorrectComa(void)
 {
-  cIndex = COMA_INITIAL_ITERS;
+  int index;
+
+  index = COMA_INITIAL_ITERS;
   if (mItemInt[1])
-    cIndex = mItemInt[1] > 0 ? COMA_ADD_ONE_ITER : COMA_JUST_MEASURE;
-  if (mWinApp->mAutoTuning->ComaFreeAlignment(false, cIndex))
+    index = mItemInt[1] > 0 ? COMA_ADD_ONE_ITER : COMA_JUST_MEASURE;
+  if (mWinApp->mAutoTuning->ComaFreeAlignment(false, index))
     AbortMacro();
   return 0;
 }
@@ -2220,13 +2356,15 @@ int CMacCmd::CorrectComa(void)
 // ZemlinTableau
 int CMacCmd::ZemlinTableau(void)
 {
-  cIndex = 340;
-  cIndex2 = 170;
+  int index, index2;
+
+  index = 340;
+  index2 = 170;
   if (mItemInt[2] > 10)
-    cIndex = mItemInt[2];
+    index = mItemInt[2];
   if (mItemInt[3] > 0)
-    cIndex2 = mItemInt[3];
-  mWinApp->mAutoTuning->MakeZemlinTableau(mItemFlt[1], cIndex, cIndex2);
+    index2 = mItemInt[3];
+  mWinApp->mAutoTuning->MakeZemlinTableau(mItemFlt[1], index, index2);
   return 0;
 }
 
@@ -2245,16 +2383,19 @@ int CMacCmd::CBAstigComa(void)
 // FixAstigmatismByCTF, FixComaByCTF
 int CMacCmd::FixAstigmatismByCTF(void)
 {
-  cIndex = 0;
+  BOOL truth;
+  int index;
+
+  index = 0;
   if (CMD_IS(FIXCOMABYCTF)) {
-     cIndex = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1;
+     index = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1;
     if (!mItemEmpty[3])
-      cIndex = mItemInt[3] > 0 ? 2 : 1;
-    cTruth = mItemInt[4] > 0;
+      index = mItemInt[3] > 0 ? 2 : 1;
+    truth = mItemInt[4] > 0;
   } else
-    cTruth = mItemInt[3] > 0;
-  if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(cIndex, false,
-    (mItemInt[1] > 0) ? 1 : 0, mItemInt[2] > 0, cTruth)){
+    truth = mItemInt[3] > 0;
+  if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(index, false,
+    (mItemInt[1] > 0) ? 1 : 0, mItemInt[2] > 0, truth)){
     AbortMacro();
     return 1;
   }
@@ -2264,20 +2405,24 @@ int CMacCmd::FixAstigmatismByCTF(void)
 // ReportStigmatorNeeded
 int CMacCmd::ReportStigmatorNeeded(void)
 {
-  mWinApp->mAutoTuning->GetLastAstigNeeded(cBacklashX, cBacklashY);
-  mLogRpt.Format("Last measured stigmator change needed: %.4f  %.4f", cBacklashX,
-    cBacklashY);
-  SetReportedValues(&mStrItems[1], cBacklashX, cBacklashY);
+  float backlashX, backlashY;
+
+  mWinApp->mAutoTuning->GetLastAstigNeeded(backlashX, backlashY);
+  mLogRpt.Format("Last measured stigmator change needed: %.4f  %.4f", backlashX,
+    backlashY);
+  SetReportedValues(&mStrItems[1], backlashX, backlashY);
   return 0;
 }
 
 // ReportComaTiltNeeded
 int CMacCmd::ReportComaTiltNeeded(void)
 {
-  mWinApp->mAutoTuning->GetLastBeamTiltNeeded(cBacklashX, cBacklashY);
-  mLogRpt.Format("Last measured beam tilt change needed: %.2f  %.2f", cBacklashX,
-    cBacklashY);
-  SetReportedValues(&mStrItems[1], cBacklashX, cBacklashY);
+  float backlashX, backlashY;
+
+  mWinApp->mAutoTuning->GetLastBeamTiltNeeded(backlashX, backlashY);
+  mLogRpt.Format("Last measured beam tilt change needed: %.2f  %.2f", backlashX,
+    backlashY);
+  SetReportedValues(&mStrItems[1], backlashX, backlashY);
   return 0;
 }
 
@@ -2297,33 +2442,36 @@ int CMacCmd::ReportComaVsISmatrix(void)
 // Save, S
 int CMacCmd::Save(void)
 {
-  cIndex2 = -1;
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cI, cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  int index2, i;
+
+  index2 = -1;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, i, report))
+    ABORT_LINE(report);
   if (!mItemEmpty[2]) {
-    cIndex2 = mItemInt[2] - 1;
-    if (cIndex2 < 0 || cIndex2 >= mWinApp->mDocWnd->GetNumStores())
+    index2 = mItemInt[2] - 1;
+    if (index2 < 0 || index2 >= mWinApp->mDocWnd->GetNumStores())
       ABORT_LINE("File # to save to is beyond range of open file numbers in "
         "statement: \n\n");
   }
 
-  cReport = cI == 0 ? "A" : mStrItems[1];
-  if (cIndex2 < 0 && (mWinApp->Montaging() ||
-    !mBufferManager->IsBufferSavable(mImBufs + cI)))
-    SUSPEND_NOLINE("because buffer " + cReport + " is not savable to current file");
+  report = i == 0 ? "A" : mStrItems[1];
+  if (index2 < 0 && (mWinApp->Montaging() ||
+    !mBufferManager->IsBufferSavable(mImBufs + i)))
+    SUSPEND_NOLINE("because buffer " + report + " is not savable to current file");
   if (mItemEmpty[1])
     mWinApp->mDocWnd->SaveRegularBuffer();
-  else if (mWinApp->mDocWnd->SaveBufferToFile(cI, cIndex2))
+  else if (mWinApp->mDocWnd->SaveBufferToFile(i, index2))
     SUSPEND_LINE("because of error saving to file in statement: \n\n");
-  EMimageExtra *extra = (EMimageExtra * )mImBufs[cI].mImage->GetUserData();
+  EMimageExtra *extra = (EMimageExtra * )mImBufs[i].mImage->GetUserData();
   if (extra) {
-    if (cIndex2 < 0)
-      cReport.Format("Saved Z =%4d, %6.2f degrees", mImBufs[cI].mSecNumber,
+    if (index2 < 0)
+      report.Format("Saved Z =%4d, %6.2f degrees", mImBufs[i].mSecNumber,
         extra->m_fTilt);
     else
-      cReport.Format("Saved Z =%4d, %6.2f degrees to file #%d", mImBufs[cI].mSecNumber,
-        extra->m_fTilt, cIndex2 + 1);
-    mWinApp->AppendToLog(cReport, LOG_SWALLOW_IF_CLOSED);
+      report.Format("Saved Z =%4d, %6.2f degrees to file #%d", mImBufs[i].mSecNumber,
+        extra->m_fTilt, index2 + 1);
+    mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
   }
   return 0;
 }
@@ -2331,22 +2479,25 @@ int CMacCmd::Save(void)
 // ReadFile
 int CMacCmd::ReadFile(void)
 {
-  cIndex = mItemInt[1];
-  cIy0 = mBufferManager->GetBufToReadInto();
+  CString report;
+  int index, index2, ix0, iy0;
+
+  index = mItemInt[1];
+  iy0 = mBufferManager->GetBufToReadInto();
   if (!mWinApp->mStoreMRC)
     SUSPEND_NOLINE("on ReadFile because there is no open file");
-  if (ConvertBufferLetter(mStrItems[2], cIy0, false, cIx0, cReport))
-    ABORT_LINE(cReport);
-  mBufferManager->SetBufToReadInto(cIx0);
+  if (ConvertBufferLetter(mStrItems[2], iy0, false, ix0, report))
+    ABORT_LINE(report);
+  mBufferManager->SetBufToReadInto(ix0);
   if (mWinApp->Montaging())
-    cIndex2 = mWinApp->mMontageController->ReadMontage(cIndex, NULL, NULL, false, true);
+    index2 = mWinApp->mMontageController->ReadMontage(index, NULL, NULL, false, true);
   else {
-    cIndex2 = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, cIndex);
-    if (!cIndex2)
+    index2 = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, index);
+    if (!index2)
       mWinApp->DrawReadInImage();
   }
-  mBufferManager->SetBufToReadInto(cIy0);
-  if (cIndex2)
+  mBufferManager->SetBufToReadInto(iy0);
+  if (index2)
     ABORT_NOLINE("Script stopped because of error reading from file");
   return 0;
 }
@@ -2354,30 +2505,33 @@ int CMacCmd::ReadFile(void)
 // ReadOtherFile
 int CMacCmd::ReadOtherFile(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex < 0)
+  CString report;
+  int index, index2, ix0, ix1, iy0;
+
+  index = mItemInt[1];
+  if (index < 0)
     ABORT_LINE("Section to read is negative in line:\n\n");
-  cIy0 = mBufferManager->GetBufToReadInto();
+  iy0 = mBufferManager->GetBufToReadInto();
   if (mItemInt[2] < 0)
-    cIx0 = cIy0;
-  else if (ConvertBufferLetter(mStrItems[2], -1, false, cIx0, cReport))
-    ABORT_LINE(cReport);
-  if (CheckConvertFilename(mStrItems, mStrLine, 3, cReport))
+    ix0 = iy0;
+  else if (ConvertBufferLetter(mStrItems[2], -1, false, ix0, report))
+    ABORT_LINE(report);
+  if (CheckConvertFilename(mStrItems, mStrLine, 3, report))
     return 1;
-  for (cIx1 = 0; cIx1 <= mRetryReadOther; cIx1++) {
-    mBufferManager->SetOtherFile(cReport);
-    mBufferManager->SetBufToReadInto(cIx0);
-    mBufferManager->SetNextSecToRead(cIndex);
-    cIndex2 = mBufferManager->RereadOtherFile(mStrCopy);
-    if (!cIndex2) {
+  for (ix1 = 0; ix1 <= mRetryReadOther; ix1++) {
+    mBufferManager->SetOtherFile(report);
+    mBufferManager->SetBufToReadInto(ix0);
+    mBufferManager->SetNextSecToRead(index);
+    index2 = mBufferManager->RereadOtherFile(mStrCopy);
+    if (!index2) {
       mWinApp->DrawReadInImage();
       break;
     }
-    if (cIx1 < mRetryReadOther)
+    if (ix1 < mRetryReadOther)
       Sleep(mReadOtherSleep);
   }
-  mBufferManager->SetBufToReadInto(cIy0);
-  if (cIndex2)
+  mBufferManager->SetBufToReadInto(iy0);
+  if (index2)
     ABORT_NOLINE("Script stopped because of error reading from other file:\n" +
     mStrCopy);
   return 0;
@@ -2393,67 +2547,70 @@ int CMacCmd::RetryReadOtherFile(void)
 // SaveToOtherFile, SnapshotToFile
 int CMacCmd::SaveToOtherFile(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1, iy1;
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
-  cTruth = CMD_IS(SNAPSHOTTOFILE);
-  if (cTruth) {
-    cIx0 = 4;
+  truth = CMD_IS(SNAPSHOTTOFILE);
+  if (truth) {
+    ix0 = 4;
     if (mItemDbl[1] > 0. && mItemDbl[1] < 1.)
       ABORT_LINE("Factor to zoom by must be >= 1 or <= 0 in line:\n\n");
     if (mItemDbl[2] > 0. && mItemDbl[2] < 1.)
       ABORT_LINE("Factor to scale sizes by must be >= 1 or <= 0 in line:\n\n");
   } else {
-    cIx0 = 2;
-    if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
-      ABORT_LINE(cReport);
+    ix0 = 2;
+    if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true))
+      ABORT_LINE(report);
   }
-  cIndex2 = -1;
-  if (mStrItems[cIx0] == "MRC")
-    cIndex2 = STORE_TYPE_MRC;
-  else if (mStrItems[cIx0] == "HDF")
-    cIndex2 = STORE_TYPE_HDF;
-  else if (mStrItems[cIx0] == "TIF" || mStrItems[2] == "TIFF")
-    cIndex2 = STORE_TYPE_TIFF;
-  else if (mStrItems[cIx0] == "JPG" || mStrItems[2] == "JPEG")
-    cIndex2 = STORE_TYPE_JPEG;
-  else if (mStrItems[cIx0] != "CUR" && mStrItems[2] != "-1")
+  index2 = -1;
+  if (mStrItems[ix0] == "MRC")
+    index2 = STORE_TYPE_MRC;
+  else if (mStrItems[ix0] == "HDF")
+    index2 = STORE_TYPE_HDF;
+  else if (mStrItems[ix0] == "TIF" || mStrItems[2] == "TIFF")
+    index2 = STORE_TYPE_TIFF;
+  else if (mStrItems[ix0] == "JPG" || mStrItems[2] == "JPEG")
+    index2 = STORE_TYPE_JPEG;
+  else if (mStrItems[ix0] != "CUR" && mStrItems[2] != "-1")
     ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
       "\n\n");
-  if (cTruth && (cIndex2 == STORE_TYPE_MRC || cIndex2 == STORE_TYPE_HDF))
+  if (truth && (index2 == STORE_TYPE_MRC || index2 == STORE_TYPE_HDF))
     ABORT_LINE("A snapshot cannot be saved to an MRC or HDF file in line:\n\n");
-  cIx1 = -1;
-  if (mStrItems[cIx0 + 1] == "NONE")
-    cIx1 = COMPRESS_NONE;
-  else if (mStrItems[cIx0 + 1] == "LZW")
-    cIx1 = COMPRESS_LZW;
-  else if (mStrItems[cIx0 + 1] == "ZIP")
-    cIx1 = COMPRESS_ZIP;
-  else if (mStrItems[cIx0 + 1] == "JPG" || mStrItems[cIx0 + 1] == "JPEG")
-    cIx1 = COMPRESS_JPEG;
-  else if (mStrItems[cIx0 + 1] != "CUR" && mStrItems[cIx0 + 1] != "-1")
+  ix1 = -1;
+  if (mStrItems[ix0 + 1] == "NONE")
+    ix1 = COMPRESS_NONE;
+  else if (mStrItems[ix0 + 1] == "LZW")
+    ix1 = COMPRESS_LZW;
+  else if (mStrItems[ix0 + 1] == "ZIP")
+    ix1 = COMPRESS_ZIP;
+  else if (mStrItems[ix0 + 1] == "JPG" || mStrItems[ix0 + 1] == "JPEG")
+    ix1 = COMPRESS_JPEG;
+  else if (mStrItems[ix0 + 1] != "CUR" && mStrItems[ix0 + 1] != "-1")
     ABORT_LINE("Third entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:"
       "\n\n");
-  if (CheckConvertFilename(mStrItems, mStrLine, cIx0 + 2, cReport))
+  if (CheckConvertFilename(mStrItems, mStrLine, ix0 + 2, report))
     return 1;
-  if (cTruth) {
-    if (cIndex2 < 0)
-      cIndex2 = snapParams->fileType ? STORE_TYPE_JPEG : STORE_TYPE_TIFF;
-    if (cIx1 < 0) {
+  if (truth) {
+    if (index2 < 0)
+      index2 = snapParams->fileType ? STORE_TYPE_JPEG : STORE_TYPE_TIFF;
+    if (ix1 < 0) {
       B3DCLAMP(snapParams->compression, 0, 3);
-      cIx1 = compressions[snapParams->compression];
+      ix1 = compressions[snapParams->compression];
     }
-    cIy1 = mWinApp->mActiveView->TakeSnapshot(mItemFlt[1], mItemFlt[2],
-      mItemInt[3], cIndex2, cIx1, snapParams->jpegQuality, cReport);
-    if (CScreenShotDialog::GetSnapshotError(cIy1, cReport)) {
-      ABORT_LINE("Error taking snapshot, " + cReport + " for line:\n\n");
+    iy1 = mWinApp->mActiveView->TakeSnapshot(mItemFlt[1], mItemFlt[2],
+      mItemInt[3], index2, ix1, snapParams->jpegQuality, report);
+    if (CScreenShotDialog::GetSnapshotError(iy1, report)) {
+      ABORT_LINE("Error taking snapshot, " + report + " for line:\n\n");
     }
   } else {
-    cIy1 = mWinApp->mDocWnd->SaveToOtherFile(cIndex, cIndex2, cIx1, &cReport);
-    if (cIy1 == 1)
+    iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
+    if (iy1 == 1)
       return 1;
-    if (cIy1) {
-      cReport.Format("Error %s file for line:\n\n", cIy1 == 2 ? "opening" : "saving to");
-      ABORT_LINE(cReport);
+    if (iy1) {
+      report.Format("Error %s file for line:\n\n", iy1 == 2 ? "opening" : "saving to");
+      ABORT_LINE(report);
     }
   }
   return 0;
@@ -2462,39 +2619,43 @@ int CMacCmd::SaveToOtherFile(void)
 // OpenNewFile, OpenNewMontage, OpenFrameSumFile
 int CMacCmd::OpenNewFile(void)
 {
-  cIndex = 1;
+  CString report;
+  int index, index2, ix0, iy0;
+  CFileStatus status;
+
+  index = 1;
   if (CMD_IS(OPENNEWMONTAGE)) {
-    cIndex = 3;
-    cIx0 = mItemInt[1];
-    if (!cIx0)
-      cIx0 = mMontP->xNframes;
-    cIy0 = mItemInt[2];
-    if (!cIy0)
-      cIy0 = mMontP->yNframes;
-    if (cIx0 < 1 || cIy0 < 1)
+    index = 3;
+    ix0 = mItemInt[1];
+    if (!ix0)
+      ix0 = mMontP->xNframes;
+    iy0 = mItemInt[2];
+    if (!iy0)
+      iy0 = mMontP->yNframes;
+    if (ix0 < 1 || iy0 < 1)
       ABORT_LINE("Number of montages pieces is missing or not positive"
         " in statement:\n\n");
   }
   if (CMD_IS(OPENFRAMESUMFILE)) {
-    SubstituteLineStripItems(mStrLine, cIndex, mStrCopy);
-    cReport = mCamera->GetFrameFilename() + mStrCopy;
-    mWinApp->AppendToLog("Opening file: " + cReport, LOG_SWALLOW_IF_CLOSED);
-  } else if (CheckConvertFilename(mStrItems, mStrLine, cIndex, cReport))
+    SubstituteLineStripItems(mStrLine, index, mStrCopy);
+    report = mCamera->GetFrameFilename() + mStrCopy;
+    mWinApp->AppendToLog("Opening file: " + report, LOG_SWALLOW_IF_CLOSED);
+  } else if (CheckConvertFilename(mStrItems, mStrLine, index, report))
     return 1;
 
   // Check if file already exists
-  if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)cReport, cStatus))
-    SUSPEND_NOLINE("opening new file because " + cReport + " already exists");
+  if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)report, status))
+    SUSPEND_NOLINE("opening new file because " + report + " already exists");
 
-  if (cIndex == 1)
-    cIndex2 = mWinApp->mDocWnd->DoOpenNewFile(cReport);
+  if (index == 1)
+    index2 = mWinApp->mDocWnd->DoOpenNewFile(report);
   else {
     mWinApp->mDocWnd->LeaveCurrentFile();
-    mMontP->xNframes = cIx0;
-    mMontP->yNframes = cIy0;
-    cIndex2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, cIx0, cIy0, cReport);
+    mMontP->xNframes = ix0;
+    mMontP->yNframes = iy0;
+    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
   }
-  if (cIndex2)
+  if (index2)
     SUSPEND_LINE("because of error opening new file in statement:\n\n");
   mWinApp->mBufferWindow.UpdateSaveCopy();
   return 0;
@@ -2503,19 +2664,23 @@ int CMacCmd::OpenNewFile(void)
 // SetupWaffleMontage
 int CMacCmd::SetupWaffleMontage(void)
 {
+  CString report;
+  int index2, ix0, iy0, sizeX, sizeY;
+  float backlashX;
+
   if (mItemInt[1] < 2)
     ABORT_LINE("Minimum number of blocks in waffle grating must be at least 2 in:\n\n");
-  cBacklashX = (float)(0.462 * mItemInt[1]);
-  cSizeX = mConSets[RECORD_CONSET].right - mConSets[RECORD_CONSET].left;
-  cSizeY = mConSets[RECORD_CONSET].bottom - mConSets[RECORD_CONSET].top;
-  cIx0 = PiecesForMinimumSize(cBacklashX, cSizeX, 0.1f);
-  cIy0 = PiecesForMinimumSize(cBacklashX, cSizeY, 0.1f);
-  if (cIx0 < 2 && cIy0 < 2) {
+  backlashX = (float)(0.462 * mItemInt[1]);
+  sizeX = mConSets[RECORD_CONSET].right - mConSets[RECORD_CONSET].left;
+  sizeY = mConSets[RECORD_CONSET].bottom - mConSets[RECORD_CONSET].top;
+  ix0 = PiecesForMinimumSize(backlashX, sizeX, 0.1f);
+  iy0 = PiecesForMinimumSize(backlashX, sizeY, 0.1f);
+  if (ix0 < 2 && iy0 < 2) {
     mWinApp->AppendToLog("No montage is needed to measure pixel size at this "
       "magnification");
     SetReportedValues(0.);
   } else {
-    if (mWinApp->Montaging() && mMontP->xNframes == cIx0 && mMontP->yNframes == cIy0) {
+    if (mWinApp->Montaging() && mMontP->xNframes == ix0 && mMontP->yNframes == iy0) {
       mMontP->magIndex = mScope->GetMagIndex();
       mWinApp->AppendToLog("Existing montage can be used to measure pixel size at "
         "this magnification");
@@ -2526,22 +2691,22 @@ int CMacCmd::SetupWaffleMontage(void)
         mWinApp->mDocWnd->DoCloseFile();
 
                  // Follow same procedure as above for opening montage file
-      if (CheckConvertFilename(mStrItems, mStrLine, 2, cReport))
+      if (CheckConvertFilename(mStrItems, mStrLine, 2, report))
         return 1;
       mWinApp->mDocWnd->LeaveCurrentFile();
-      mMontP->xNframes = cIx0;
-      mMontP->yNframes = cIy0;
+      mMontP->xNframes = ix0;
+      mMontP->yNframes = iy0;
       mMontP->binning = mConSets[RECORD_CONSET].binning;
-      mMontP->xFrame = cSizeX / mMontP->binning;
-      mMontP->yFrame = cSizeY / mMontP->binning;
+      mMontP->xFrame = sizeX / mMontP->binning;
+      mMontP->yFrame = sizeY / mMontP->binning;
       mMontP->xOverlap = mMontP->xFrame / 10;
       mMontP->yOverlap = mMontP->yFrame / 10;
-      cIndex2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, cIx0, cIy0, cReport);
+      index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
       mWinApp->mBufferWindow.UpdateSaveCopy();
-      if (cIndex2)
+      if (index2)
         ABORT_NOLINE("Error trying to open new montage the right size for current"
         " magnification");
-      PrintfToLog("Opened file %s for %d x %d montage", (LPCTSTR)cReport, cIx0, cIy0);
+      PrintfToLog("Opened file %s for %d x %d montage", (LPCTSTR)report, ix0, iy0);
     }
     mMontP->warnedMagChange = true;
     mMontP->overviewBinning = 1;
@@ -2555,15 +2720,17 @@ int CMacCmd::SetupWaffleMontage(void)
 // ReportNumMontagePieces
 int CMacCmd::ReportNumMontagePieces(void)
 {
+  int index;
+
   if (mWinApp->Montaging()) {
-    cIndex = mMontP->xNframes * mMontP->yNframes -
+    index = mMontP->xNframes * mMontP->yNframes -
       (mMontP->ignoreSkipList ? 0 : mMontP->numToSkip);
-    mLogRpt.Format("%d pieces will be acquired in the current montage", cIndex);
+    mLogRpt.Format("%d pieces will be acquired in the current montage", index);
   } else {
-    cIndex = 1;
+    index = 1;
     mLogRpt = "Montaging is not used for the current file";
   }
-  SetReportedValues(&mStrItems[1], cIndex);
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
@@ -2583,14 +2750,17 @@ int CMacCmd::EnterNameOpenFile(void)
 // ChooserForNewFile
 int CMacCmd::ChooserForNewFile(void)
 {
-  cIndex = (mItemInt[1] != 0) ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
+  CString report;
+  int index;
+
+  index = (mItemInt[1] != 0) ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
   if (mWinApp->mDocWnd->FilenameForSaveFile(mItemInt[1], NULL, mStrCopy)) {
     AbortMacro();
     return 1;
   }
-  cReport = mStrItems[2];
-  cReport.MakeUpper();
-  if (SetVariable(cReport, mStrCopy, VARTYPE_REGULAR, -1, false))
+  report = mStrItems[2];
+  report.MakeUpper();
+  if (SetVariable(report, mStrCopy, VARTYPE_REGULAR, -1, false))
     ABORT_NOLINE("Error setting variable " + mStrItems[2] + " with filename " + mStrCopy);
   mOverwriteOK = true;
   return 0;
@@ -2599,12 +2769,16 @@ int CMacCmd::ChooserForNewFile(void)
 // ReadTextFile, Read2DTextFile, ReadStringsFromFile
 int CMacCmd::ReadTextFile(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2;
+
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   CString newVar;
   CStdioFile *csFile = NULL;
   CArray < ArrayRow, ArrayRow > *rowsFor2d = NULL;
   ArrayRow arrRow;
-  cTruth = CMD_IS(READ2DTEXTFILE);
+  truth = CMD_IS(READ2DTEXTFILE);
   try {
     csFile = new CStdioFile(mStrCopy, CFile::modeRead | CFile::shareDenyWrite);
   }
@@ -2612,42 +2786,42 @@ int CMacCmd::ReadTextFile(void)
     perr->Delete();
     ABORT_NOLINE("Error opening file " + mStrCopy);
   }
-  if (cTruth)
+  if (truth)
     rowsFor2d = new CArray < ArrayRow, ArrayRow > ;
-  while ((cIndex = mParamIO->ReadAndParse(csFile, cReport, mStrItems,
+  while ((index = mParamIO->ReadAndParse(csFile, report, mStrItems,
     MAX_MACRO_TOKENS)) == 0) {
-    if (cTruth)
+    if (truth)
       newVar = "";
     if (CMD_IS(READSTRINGSFROMFILE)) {
       if (newVar.GetLength())
         newVar += '\n';
-      newVar += cReport;
+      newVar += report;
     } else {
-      for (cIndex2 = 0; cIndex2 < MAX_MACRO_TOKENS; cIndex2++) {
-        if (mStrItems[cIndex2].IsEmpty())
+      for (index2 = 0; index2 < MAX_MACRO_TOKENS; index2++) {
+        if (mStrItems[index2].IsEmpty())
           break;
         if (newVar.GetLength())
           newVar += '\n';
-        newVar += mStrItems[cIndex2];
+        newVar += mStrItems[index2];
       }
     }
-    if (cTruth && cIndex2 > 0) {
+    if (truth && index2 > 0) {
       arrRow.value = newVar;
-      arrRow.numElements = cIndex2;
+      arrRow.numElements = index2;
       rowsFor2d->Add(arrRow);
     }
   }
   delete csFile;
-  if (cIndex > 0) {
+  if (index > 0) {
     delete rowsFor2d;
     ABORT_NOLINE("Error reading text from file " + mStrCopy);
   }
 
-  if (SetVariable(mItem1upper, cTruth ? "0" : newVar, VARTYPE_REGULAR, -1, false, 
-    &cReport, rowsFor2d)) {
+  if (SetVariable(mItem1upper, truth ? "0" : newVar, VARTYPE_REGULAR, -1, false,
+    &report, rowsFor2d)) {
     delete rowsFor2d;
     ABORT_NOLINE("Error setting an array variable with text from file " + mStrCopy +
-      ":\n" + cReport);
+      ":\n" + report);
   }
   return 0;
 }
@@ -2655,70 +2829,78 @@ int CMacCmd::ReadTextFile(void)
 // OpenTextFile
 int CMacCmd::OpenTextFile(void)
 {
+  CString report;
+  BOOL truth;
+  int index;
+  CFileStatus status;
+  FileForText *txFile;
   UINT openFlags = CFile::typeText;
-  if (LookupFileForText(mItem1upper, TXFILE_MUST_NOT_EXIST, mStrLine, cIndex))
+  if (LookupFileForText(mItem1upper, TXFILE_MUST_NOT_EXIST, mStrLine, index))
     return 1;
-  cReport = mStrItems[2].MakeUpper();
-  if (cReport.GetLength() > 1 || CString("RTWAO").Find(cReport) < 0)
+  report = mStrItems[2].MakeUpper();
+  if (report.GetLength() > 1 || CString("RTWAO").Find(report) < 0)
     ABORT_LINE("The second entry must be R, T, W, A, or O in line\n\n:");
   SubstituteLineStripItems(mStrLine, 4, mStrCopy);
 
   // Set up flags and read/write from mode entry
-  if (cReport == "R" || cReport == "T") {
+  if (report == "R" || report == "T") {
     openFlags |= CFile::shareDenyNone | CFile::modeRead;
-    cTruth = true;
+    truth = true;
   } else {
-    cTruth = false;
+    truth = false;
     openFlags |= CFile::shareDenyWrite;
-    if (cReport == "A") {
+    if (report == "A") {
       openFlags |= CFile::modeReadWrite;
     } else {
       openFlags |= CFile::modeWrite | CFile::modeCreate;
-      if (cReport == "W" && !mOverwriteOK && CFile::GetStatus((LPCTSTR)mStrCopy, cStatus))
+      if (report == "W" && !mOverwriteOK && CFile::GetStatus((LPCTSTR)mStrCopy, status))
         ABORT_LINE("File already exists and you entered W instead of O for line:\n\n");
     }
   }
 
   // Create new entry and try to open file; allowing  failure with 'T'
-  cTxFile = new FileForText;
-  cTxFile->readOnly = cTruth;
-  cTxFile->ID = mItem1upper;
-  cTxFile->persistent = mItemInt[3] != 0;
-  cTxFile->csFile = NULL;
+  txFile = new FileForText;
+  txFile->readOnly = truth;
+  txFile->ID = mItem1upper;
+  txFile->persistent = mItemInt[3] != 0;
+  txFile->csFile = NULL;
   try {
-    cTxFile->csFile = new CStdioFile(mStrCopy, openFlags);
-    if (cReport == "A")
-      cTxFile->csFile->SeekToEnd();
+    txFile->csFile = new CStdioFile(mStrCopy, openFlags);
+    if (report == "A")
+      txFile->csFile->SeekToEnd();
   }
   catch (CFileException * perr) {
     perr->Delete();
-    delete cTxFile->csFile;
-    delete cTxFile;
-    if (cReport != "T")
+    delete txFile->csFile;
+    delete txFile;
+    if (report != "T")
       ABORT_NOLINE("Error opening file " + mStrCopy);
-    cTxFile = NULL;
+    txFile = NULL;
   }
 
   // Add to array if success; set value for 'T'
-  if (cTxFile)
-    mTextFileArray.Add(cTxFile);
-  if (cReport == "T")
-    SetReportedValues(cTxFile ? 1 : 0);
+  if (txFile)
+    mTextFileArray.Add(txFile);
+  if (report == "T")
+    SetReportedValues(txFile ? 1 : 0);
   return 0;
 }
 
 // WriteLineToFile
 int CMacCmd::WriteLineToFile(void)
 {
-  cTxFile = LookupFileForText(mItem1upper, TXFILE_WRITE_ONLY, mStrLine, cIndex);
-  if (!cTxFile)
+  int index;
+  FileForText *txFile;
+
+  txFile = LookupFileForText(mItem1upper, TXFILE_WRITE_ONLY, mStrLine, index);
+  if (!txFile)
     return 1;
 
   // To allow comments to be written, there is only one required argument in initial
   // check so we need to check here
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   try {
-    cTxFile->csFile->WriteString(mStrCopy + "\n");
+    txFile->csFile->WriteString(mStrCopy + "\n");
   }
   catch (CFileException * perr) {
     perr->Delete();
@@ -2730,91 +2912,105 @@ int CMacCmd::WriteLineToFile(void)
 // ReadLineToArray, ReadLineToString
 int CMacCmd::ReadLineToArray(void)
 {
-  cTxFile = LookupFileForText(mItem1upper, TXFILE_READ_ONLY, mStrLine, cIndex);
-  if (!cTxFile)
+  CString report;
+  BOOL truth;
+  int index, index2;
+  FileForText *txFile;
+
+  txFile = LookupFileForText(mItem1upper, TXFILE_READ_ONLY, mStrLine, index);
+  if (!txFile)
     return 1;
   mStrLine = mStrItems[2];
-  cTruth = CMD_IS(READLINETOARRAY);
+  truth = CMD_IS(READLINETOARRAY);
 
   // Skip blank lines, skip comment lines if reading into array
   for (;;) {
-    cIndex = mParamIO->ReadAndParse(cTxFile->csFile, cReport, mStrItems,
+    index = mParamIO->ReadAndParse(txFile->csFile, report, mStrItems,
       MAX_MACRO_TOKENS, mParseQuotes);
-    if (cIndex || !mStrItems[0].IsEmpty() || (!cTruth && !cReport.IsEmpty()))
+    if (index || !mStrItems[0].IsEmpty() || (!truth && !report.IsEmpty()))
       break;
   }
 
   // Check error conditions
-  if (cIndex > 0)
+  if (index > 0)
     ABORT_LINE("Error reading from file for line:\n\n");
-  if (cIndex) {
-    mWinApp->AppendToLog("End of file reached for file with ID " + cTxFile->ID,
+  if (index) {
+    mWinApp->AppendToLog("End of file reached for file with ID " + txFile->ID,
       mLogAction);
   } else {
 
     // For array, concatenate items into report; otherwise report is all set
-    if (cTruth) {
-      cReport = "";
-      for (cIndex2 = 0; cIndex2 < MAX_MACRO_TOKENS; cIndex2++) {
-        if (mStrItems[cIndex2].IsEmpty())
+    if (truth) {
+      report = "";
+      for (index2 = 0; index2 < MAX_MACRO_TOKENS; index2++) {
+        if (mStrItems[index2].IsEmpty())
           break;
-        if (cReport.GetLength())
-          cReport += '\n';
-        cReport += mStrItems[cIndex2];
+        if (report.GetLength())
+          report += '\n';
+        report += mStrItems[index2];
       }
     }
-    if (SetVariable(mStrLine, cReport, VARTYPE_REGULAR, -1, false, &mStrCopy))
+    if (SetVariable(mStrLine, report, VARTYPE_REGULAR, -1, false, &mStrCopy))
       ABORT_NOLINE("Error setting a variable with line from file:\n" + mStrCopy);
   }
-  SetReportedValues(cIndex ? 0 : 1);
+  SetReportedValues(index ? 0 : 1);
   return 0;
 }
 
 // CloseTextFile
 int CMacCmd::CloseTextFile(void)
 {
-  if (!LookupFileForText(mItem1upper, TXFILE_MUST_EXIST, mStrLine, cIndex))
+  int index;
+
+  if (!LookupFileForText(mItem1upper, TXFILE_MUST_EXIST, mStrLine, index))
     return 1;
-  CloseFileForText(cIndex);
+  CloseFileForText(index);
   return 0;
 }
 
 // FlushTextFile
 int CMacCmd::FlushTextFile(void)
 {
-  cTxFile = LookupFileForText(mItem1upper, TXFILE_MUST_EXIST, mStrLine, cIndex);
-  if (!cTxFile)
+  int index;
+  FileForText *txFile;
+
+  txFile = LookupFileForText(mItem1upper, TXFILE_MUST_EXIST, mStrLine, index);
+  if (!txFile)
     return 1;
-  cTxFile->csFile->Flush();
+  txFile->csFile->Flush();
   return 0;
 }
 
 // IsTextFileOpen
 int CMacCmd::IsTextFileOpen(void)
 {
-  cTxFile = LookupFileForText(mItem1upper, TXFILE_QUERY_ONLY, mStrLine, cIndex);
-  cTruth = false;
-  if (!cTxFile && !mItemEmpty[2]) {
+  BOOL truth;
+  int index;
+  FileForText *txFile;
+
+  txFile = LookupFileForText(mItem1upper, TXFILE_QUERY_ONLY, mStrLine, index);
+  truth = false;
+  if (!txFile && !mItemEmpty[2]) {
 
     // Check the file name if the it doesn't match ID
     char fullBuf[_MAX_PATH];
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     if (GetFullPathName((LPCTSTR)mStrCopy, _MAX_PATH, fullBuf, NULL) > 0) {
-      for (cIndex = 0; cIndex < mTextFileArray.GetSize(); cIndex++) {
-        cTxFile = mTextFileArray.GetAt(cIndex);
-        if (!(cTxFile->csFile->GetFilePath()).CompareNoCase(fullBuf)) {
-          cTruth = true;
+      for (index = 0; index < mTextFileArray.GetSize(); index++) {
+        txFile = mTextFileArray.GetAt(index);
+        if (!(txFile->csFile->GetFilePath()).CompareNoCase(fullBuf)) {
+          truth = true;
           break;
         }
       }
     }
-    mLogRpt.Format("Text file with name %s %s open", (LPCTSTR)mStrCopy, cTruth ? "IS" :
+    mLogRpt.Format("Text file with name %s %s open", (LPCTSTR)mStrCopy, truth ? "IS" :
       "is NOT");
-    SetReportedValues(cTruth ? 1 : 0);
+    SetReportedValues(truth ? 1 : 0);
   } else {
     mLogRpt.Format("Text file with identifier %s %s open", (LPCTSTR)mItem1upper,
-      cTxFile ? "IS" : "is NOT");
-    SetReportedValues(cTxFile ? 1 : 0);
+      txFile ? "IS" : "is NOT");
+    SetReportedValues(txFile ? 1 : 0);
   }
   return 0;
 }
@@ -2858,12 +3054,16 @@ int CMacCmd::SetNewFileType(void)
 // OpenOldFile
 int CMacCmd::OpenOldFile(void)
 {
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+  CString report;
+  CFile *cfile;
+  int index;
+
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  cIndex = mWinApp->mDocWnd->OpenOldMrcCFile(&cCfile, cReport, false);
-  if (cIndex == MRC_OPEN_NOERR || cIndex == MRC_OPEN_ADOC)
-    cIndex = mWinApp->mDocWnd->OpenOldFile(cCfile, cReport, cIndex);
-  if (cIndex != MRC_OPEN_NOERR)
+  index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
+  if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC)
+    index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index);
+  if (index != MRC_OPEN_NOERR)
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
   return 0;
 }
@@ -2889,14 +3089,16 @@ int CMacCmd::CloseFile(void)
 // RemoveFile
 int CMacCmd::RemoveFile(void)
 {
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+  CString report;
+
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
   try {
-    CFile::Remove(cReport);
+    CFile::Remove(report);
   }
   catch (CFileException * pEx) {
     pEx->Delete();
-    PrintfToLog("WARNING: File %s cannot be removed", (LPCTSTR)cReport);
+    PrintfToLog("WARNING: File %s cannot be removed", (LPCTSTR)report);
   }
   return 0;
 }
@@ -2904,38 +3106,41 @@ int CMacCmd::RemoveFile(void)
 // ReportCurrentFilename, ReportLastFrameFile, ReportNavFile
 int CMacCmd::ReportCurrentFilename(void)
 {
-  cTruth = !CMD_IS(REPORTLASTFRAMEFILE);
+  CString report;
+  BOOL truth;
+
+  truth = !CMD_IS(REPORTLASTFRAMEFILE);
   if (CMD_IS(REPORTCURRENTFILENAME)) {
     if (!mWinApp->mStoreMRC)
       SUSPEND_LINE("because there is no file open currently for statement:\n\n");
-    cReport = mWinApp->mStoreMRC->getFilePath();
+    report = mWinApp->mStoreMRC->getFilePath();
     mStrCopy = "Current open image file is: ";
   }
-  else if (cTruth) {
+  else if (truth) {
     ABORT_NONAV;
-    cReport = mWinApp->mNavigator->GetCurrentNavFile();
-    if (cReport.IsEmpty())
+    report = mWinApp->mNavigator->GetCurrentNavFile();
+    if (report.IsEmpty())
       ABORT_LINE("There is no Navigator file open for:\n\n");
     mStrCopy = "Current open Navigator file is: ";
   }
   else {
-    cReport = mCamera->GetPathForFrames();
-    if (cReport.IsEmpty())
+    report = mCamera->GetPathForFrames();
+    if (report.IsEmpty())
       ABORT_LINE("There is no last frame file name available for:\n\n");
     mStrCopy = "Last frame file is: ";
   }
-  mWinApp->AppendToLog(mStrCopy + cReport, mLogAction);
-  CString root = cReport;
+  mWinApp->AppendToLog(mStrCopy + report, mLogAction);
+  CString root = report;
   CString ext;
-  if (mItemInt[1] && cTruth)
-    UtilSplitExtension(cReport, root, ext);
-  SetOneReportedValue(!cTruth ? &mStrItems[1] : NULL, root, 1);
+  if (mItemInt[1] && truth)
+    UtilSplitExtension(report, root, ext);
+  SetOneReportedValue(!truth ? &mStrItems[1] : NULL, root, 1);
 
   if (!ext.IsEmpty())
     SetOneReportedValue(ext, 2);
-  if (mItemInt[1] && cTruth) {
-    UtilSplitPath(root, cReport, ext);
-    SetOneReportedValue(cReport, 3);
+  if (mItemInt[1] && truth) {
+    UtilSplitPath(root, report, ext);
+    SetOneReportedValue(report, 3);
     SetOneReportedValue(ext, 4);
   }
   return 0;
@@ -2944,9 +3149,11 @@ int CMacCmd::ReportCurrentFilename(void)
 // ReportFrameBaseName
 int CMacCmd::ReportFrameBaseName(void)
 {
+  int index;
+
   mStrCopy = mCamera->GetFrameBaseName();
-  cIndex = mCamera->GetFrameNameFormat();
-  if ((cIndex & FRAME_FILE_ROOT) && !mStrCopy.IsEmpty()) {
+  index = mCamera->GetFrameNameFormat();
+  if ((index & FRAME_FILE_ROOT) && !mStrCopy.IsEmpty()) {
     mLogRpt = "The frame base name is " + mStrCopy;
     SetOneReportedValue(&mStrItems[1], 1., 1);
     SetOneReportedValue(&mStrItems[1], mStrCopy, 2);
@@ -2961,6 +3168,10 @@ int CMacCmd::ReportFrameBaseName(void)
 // GetFileInWatchedDir, RunScriptInWatchedDir
 int CMacCmd::GetFileInWatchedDir(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2;
+  CFileStatus status;
   WIN32_FIND_DATA findFileData;
   CStdioFile *sFile = NULL;
   CString direc, fname;
@@ -2971,94 +3182,94 @@ int CMacCmd::GetFileInWatchedDir(void)
       ABORT_LINE("When running a script from a file, you cannot run another one in"
         " line:\n\n");
   }
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
 
   // If the string has no wild card and it is a directory, add *
-  if (cReport.Find('*') < 0) {
-    cTruth = CFile::GetStatus((LPCTSTR)cReport, cStatus);
-    if (cTruth && (cStatus.m_attribute & CFile::directory))
-      cReport += "\\*";
+  if (report.Find('*') < 0) {
+    truth = CFile::GetStatus((LPCTSTR)report, status);
+    if (truth && (status.m_attribute & CFile::directory))
+      report += "\\*";
   }
-  UtilSplitPath(cReport, direc, fname);
-  HANDLE hFind = FindFirstFile((LPCTSTR)cReport, &findFileData);
+  UtilSplitPath(report, direc, fname);
+  HANDLE hFind = FindFirstFile((LPCTSTR)report, &findFileData);
   if (hFind == INVALID_HANDLE_VALUE) {
     SetOneReportedValue(0., 1);
     SetOneReportedValue(CString("none"), 2);
     return 0;
   }
-  cTruth = false;
+  truth = false;
   do {
-    cReport = findFileData.cFileName;
+    report = findFileData.cFileName;
 
     // If found a file, look for lock file and wait until goes away, or give up and
     // go on to next file if any
-    for (cIndex = 0; cIndex < 10; cIndex++) {
-      if (!CFile::GetStatus((LPCTSTR)(cReport + ".lock"), cStatus)) {
-        cTruth = true;
+    for (index = 0; index < 10; index++) {
+      if (!CFile::GetStatus((LPCTSTR)(report + ".lock"), status)) {
+        truth = true;
         break;
       }
       Sleep(20);
     }
-    if (cTruth)
+    if (truth)
       break;
 
   } while (FindNextFile(hFind, &findFileData) == 0);
   FindClose(hFind);
 
   // Just set report value if no file. give message if there is one
-  if (!cTruth) {
+  if (!truth) {
     SetOneReportedValue(0., 1);
     SetOneReportedValue(CString("none"), 2);
   } else {
-    cReport = direc + "\\" + cReport;
+    report = direc + "\\" + report;
     SetOneReportedValue(1., 1);
-    SetOneReportedValue(cReport, 2);
-    mLogRpt = "Found file " + cReport;
+    SetOneReportedValue(report, 2);
+    mLogRpt = "Found file " + report;
   }
 
   if (CMD_IS(GETFILEINWATCHEDDIR))
     return 0;
 
   // Run a script: read it in
-  cIndex2 = 0;
-  cIndex = MAX_MACROS + MAX_ONE_LINE_SCRIPTS + mNumTempMacros++;
+  index2 = 0;
+  index = MAX_MACROS + MAX_ONE_LINE_SCRIPTS + mNumTempMacros++;
   try {
     mStrCopy = "opening file";
-    sFile = new CStdioFile(cReport, CFile::modeRead | CFile::shareDenyWrite);
+    sFile = new CStdioFile(report, CFile::modeRead | CFile::shareDenyWrite);
     mStrCopy = "reading file";
-    mMacros[cIndex] = "";
+    mMacros[index] = "";
     while (sFile->ReadString(mItem1upper)) {
-      if (!mMacros[cIndex].IsEmpty())
-        mMacros[cIndex] += "\r\n";
-      mMacros[cIndex] += mItem1upper;
+      if (!mMacros[index].IsEmpty())
+        mMacros[index] += "\r\n";
+      mMacros[index] += mItem1upper;
     }
   }
   catch (CFileException * perr) {
     perr->Delete();
-    cIndex2 = 1;
+    index2 = 1;
   }
   delete sFile;
 
   // Delete the file
   try {
-    CFile::Remove(cReport);
+    CFile::Remove(report);
   }
   catch (CFileException * pEx) {
     pEx->Delete();
     mStrCopy = "removing";
-    cIndex2 = 0;
+    index2 = 0;
   }
-  if (cIndex2)
-    ABORT_LINE("Error " + mStrCopy + " " + cReport + " for line:\n\n");
-  if (mMacros[cIndex].IsEmpty()) {
+  if (index2)
+    ABORT_LINE("Error " + mStrCopy + " " + report + " for line:\n\n");
+  if (mMacros[index].IsEmpty()) {
     mLogRpt += ", which is empty (nothing to run)";
     return 0;
   }
 
   // Set it up like callScript
   mCallIndex[mCallLevel++] = mCurrentIndex;
-  mCurrentMacro = cIndex;
+  mCurrentMacro = index;
   mCallMacro[mCallLevel] = mCurrentMacro;
   mBlockDepths[mCallLevel] = -1;
   mCallFunction[mCallLevel] = NULL;
@@ -3078,6 +3289,8 @@ int CMacCmd::AllowFileOverwrite(void)
 // SetDirectory, MakeDirectory
 int CMacCmd::SetDirectory(void)
 {
+  CFileStatus status;
+
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (mStrCopy.IsEmpty())
     ABORT_LINE("Missing directory name in statement:\n\n");
@@ -3085,7 +3298,7 @@ int CMacCmd::SetDirectory(void)
     if (_chdir((LPCTSTR)mStrCopy))
       SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy);
   } else {
-    if (CFile::GetStatus((LPCTSTR)mStrCopy, cStatus)) {
+    if (CFile::GetStatus((LPCTSTR)mStrCopy, status)) {
       mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists");
     } else {
       if (!_mkdir((LPCTSTR)mStrCopy))
@@ -3113,11 +3326,15 @@ int CMacCmd::ReportDirectory(void)
 // DoesFileExist
 int CMacCmd::DoesFileExist(void)
 {
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+  CString report;
+  int index;
+  CFileStatus status;
+
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  cIndex = CFile::GetStatus((LPCTSTR)cReport, cStatus) ? 1 : 0;
-  mLogRpt.Format("File %s DOES%s exist", cReport, cIndex ? "" : " NOT");
-  SetReportedValues(cIndex);
+  index = CFile::GetStatus((LPCTSTR)report, status) ? 1 : 0;
+  mLogRpt.Format("File %s DOES%s exist", report, index ? "" : " NOT");
+  SetReportedValues(index);
   return 0;
 }
 
@@ -3136,48 +3353,54 @@ int CMacCmd::MakeDateTimeDir(void)
 // SwitchToFile
 int CMacCmd::SwitchToFile(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex < 1 || cIndex > mWinApp->mDocWnd->GetNumStores())
+  int index;
+
+  index = mItemInt[1];
+  if (index < 1 || index > mWinApp->mDocWnd->GetNumStores())
     ABORT_LINE("Number of file to switch to is absent or out of range in statement:"
       " \n\n");
-  mWinApp->mDocWnd->SetCurrentStore(cIndex - 1);
+  mWinApp->mDocWnd->SetCurrentStore(index - 1);
   return 0;
 }
 
 // ReportFileNumber
 int CMacCmd::ReportFileNumber(void)
 {
-  cIndex = mWinApp->mDocWnd->GetCurrentStore();
-  if (cIndex >= 0) {
-    cIndex++;
-    mLogRpt.Format("Current open file number is %d", cIndex);
+  int index;
+
+  index = mWinApp->mDocWnd->GetCurrentStore();
+  if (index >= 0) {
+    index++;
+    mLogRpt.Format("Current open file number is %d", index);
   } else
     mLogRpt = "There is no file open currently";
-  SetReportedValues(&mStrItems[1], cIndex);
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
 // AddToAutodoc, WriteAutodoc
 int CMacCmd::AddToAutodoc(void)
 {
+  int index, index2;
+
   if (!mWinApp->mStoreMRC)
     ABORT_LINE("There is no open image file for: \n\n");
   if (mBufferManager->CheckAsyncSaving())
     ABORT_NOLINE("There was an error writing to file.\n"
     "Not adding to the autodoc because it would go into the wrong section");
-  cIndex = mWinApp->mStoreMRC->GetAdocIndex();
-  cIndex2 = mWinApp->mStoreMRC->getDepth();
-  if (cIndex < 0)
+  index = mWinApp->mStoreMRC->GetAdocIndex();
+  index2 = mWinApp->mStoreMRC->getDepth();
+  if (index < 0)
     ABORT_LINE("There is no .mdoc file for the current image file for: \n\n");
-  if (AdocGetMutexSetCurrent(cIndex) < 0)
+  if (AdocGetMutexSetCurrent(index) < 0)
     ABORT_LINE("Error making autodoc be the current one for: \n\n");
   if (CMD_IS(ADDTOAUTODOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     if (AdocSetKeyValue(
-      cIndex2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
+      index2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
       ADOC_IMAGE, ADOC_ZVALUE) : ADOC_GLOBAL,
-      cIndex2 ? cIndex2 - 1 : 0, (LPCTSTR)mStrItems[1], (LPCTSTR)mStrCopy)) {
+      index2 ? index2 - 1 : 0, (LPCTSTR)mStrItems[1], (LPCTSTR)mStrCopy)) {
         AdocReleaseMutex();
         ABORT_LINE("Error adding string to autodoc file for: \n\n");
     }
@@ -3192,6 +3415,7 @@ int CMacCmd::AddToAutodoc(void)
 // AddToFrameMdoc, WriteFrameMdoc
 int CMacCmd::AddToFrameMdoc(void)
 {
+  int index;
   const char * frameMsg[] = { "There is no autodoc for frames open in:\n\n",
     "Error selecting frame .mdoc as current autodoc in:\n\n",
     "There is no current section to add to in frame .mdoc for:\n\n",
@@ -3200,22 +3424,24 @@ int CMacCmd::AddToFrameMdoc(void)
   if (CMD_IS(ADDTOFRAMEMDOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
-    cIndex = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
+    index = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
   }
   else {
-    cIndex = mWinApp->mDocWnd->WriteFrameMdoc();
+    index = mWinApp->mDocWnd->WriteFrameMdoc();
   }
-  if (cIndex > 0)
-    ABORT_LINE(CString(frameMsg[cIndex - 1]));
+  if (index > 0)
+    ABORT_LINE(CString(frameMsg[index - 1]));
   return 0;
 }
 
 // ReportFrameMdocOpen
 int CMacCmd::ReportFrameMdocOpen(void)
 {
-  cIndex = mWinApp->mDocWnd->GetFrameAdocIndex() >= 0 ? 1 : 0;
-  SetReportedValues(&mStrItems[1], cIndex);
-  mLogRpt.Format("Autodoc for frames %s open", cIndex ? "IS" : "is NOT");
+  int index;
+
+  index = mWinApp->mDocWnd->GetFrameAdocIndex() >= 0 ? 1 : 0;
+  SetReportedValues(&mStrItems[1], index);
+  mLogRpt.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
   return 0;
 }
 
@@ -3229,12 +3455,14 @@ int CMacCmd::DeferWritingFrameMdoc(void)
 // OpenFrameMdoc
 int CMacCmd::OpenFrameMdoc(void)
 {
+  CString report;
+
   SubstituteVariables(&mStrLine, 1, mStrLine);
   if (mWinApp->mDocWnd->GetFrameAdocIndex() >= 0)
     ABORT_LINE("The frame mdoc file is already open for line:\n\n");
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, cReport))
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  if (mWinApp->mDocWnd->DoOpenFrameMdoc(cReport))
+  if (mWinApp->mDocWnd->DoOpenFrameMdoc(report))
     SUSPEND_LINE("because of error opening frame mdoc file in statement:\n\n")
   return 0;
 }
@@ -3251,32 +3479,37 @@ int CMacCmd::CloseFrameMdoc(void)
 // AddToNextFrameStackMdoc, StartNextFrameStackMdoc
 int CMacCmd::AddToNextFrameStackMdoc(void)
 {
-  cDoBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
+  CString report;
+  bool doBack;
+
+  doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
-  if (mCamera->AddToNextFrameStackMdoc(mStrItems[1], mStrCopy, cDoBack, &cReport))
-    ABORT_LINE(cReport + " in:\n\n");
+  if (mCamera->AddToNextFrameStackMdoc(mStrItems[1], mStrCopy, doBack, &report))
+    ABORT_LINE(report + " in:\n\n");
   return 0;
 }
 
 // AlignWholeTSOnly
 int CMacCmd::AlignWholeTSOnly(void)
 {
-  cIndex  = (mItemEmpty[1] || mItemInt[1] != 0) ? 1 : 0;
+  int index;
+
+  index  = (mItemEmpty[1] || mItemInt[1] != 0) ? 1 : 0;
   if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], RECORD_CONSET, mCamParams, false)
-    && (mConSets[RECORD_CONSET].alignFrames || !cIndex) &&
+    && (mConSets[RECORD_CONSET].alignFrames || !index) &&
     mConSets[RECORD_CONSET].useFrameAlign > 1 && mCamera->GetAlignWholeSeriesInIMOD()) {
-      if (cIndex && !mWinApp->mStoreMRC)
+      if (index && !mWinApp->mStoreMRC)
         ABORT_LINE("There must be an output file before this command can be used:\n\n");
-      if (cIndex && mWinApp->mStoreMRC->GetAdocIndex() < 0)
+      if (index && mWinApp->mStoreMRC->GetAdocIndex() < 0)
         ABORT_NOLINE("The output file was not opened with an associated .mdoc\r\n"
           "file, which is required to align whole tilt series in IMOD");
       SaveControlSet(RECORD_CONSET);
-      mConSets[RECORD_CONSET].alignFrames = 1 - cIndex;
-      mAlignWholeTSOnly = cIndex > 0;
+      mConSets[RECORD_CONSET].alignFrames = 1 - index;
+      mAlignWholeTSOnly = index > 0;
   } else
-    cIndex = 0;
-  SetReportedValues(cIndex);
+    index = 0;
+  SetReportedValues(index);
   return 0;
 }
 
@@ -3295,12 +3528,15 @@ int CMacCmd::WriteComForTSAlign(void)
 // SaveLogOpenNew, CloseLogOpenNew
 int CMacCmd::SaveLogOpenNew(void)
 {
-  cTruth = CMD_IS(CLOSELOGOPENNEW);
+  CString report;
+  BOOL truth;
+
+  truth = CMD_IS(CLOSELOGOPENNEW);
   if (mWinApp->mLogWindow) {
-    cReport = mWinApp->mLogWindow->GetSaveFile();
-    if (!cReport.IsEmpty())
+    report = mWinApp->mLogWindow->GetSaveFile();
+    if (!report.IsEmpty())
       mWinApp->mLogWindow->DoSave();
-    else if ((!cTruth || mItemEmpty[1] || !mItemInt[1]) &&
+    else if ((!truth || mItemEmpty[1] || !mItemInt[1]) &&
       mWinApp->mLogWindow->AskIfSave("closing and opening it again?")) {
       AbortMacro();
       return 1;
@@ -3309,9 +3545,9 @@ int CMacCmd::SaveLogOpenNew(void)
       mWinApp->mLogWindow->CloseLog();
   }
   mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
-  if (!mItemEmpty[1] && !cTruth) {
-    SubstituteLineStripItems(mStrLine, 1, cReport);
-    mWinApp->mLogWindow->UpdateSaveFile(true, cReport);
+  if (!mItemEmpty[1] && !truth) {
+    SubstituteLineStripItems(mStrLine, 1, report);
+    mWinApp->mLogWindow->UpdateSaveFile(true, report);
   }
   return 0;
 }
@@ -3319,17 +3555,19 @@ int CMacCmd::SaveLogOpenNew(void)
 // SaveLog
 int CMacCmd::SaveLog(void)
 {
+  CString report;
+
   if (!mWinApp->mLogWindow)
     ABORT_LINE("The log window must already be open for line:\n\n");
   if (mItemEmpty[2]) {
-    cReport = mWinApp->mLogWindow->GetSaveFile();
-    if (!cReport.IsEmpty())
+    report = mWinApp->mLogWindow->GetSaveFile();
+    if (!report.IsEmpty())
       mWinApp->mLogWindow->DoSave();
     else
       mWinApp->OnFileSavelog();
   } else {
-    SubstituteLineStripItems(mStrLine, 2, cReport);
-    mWinApp->mLogWindow->UpdateSaveFile(true, cReport, true, mItemInt[1] != 0);
+    SubstituteLineStripItems(mStrLine, 2, report);
+    mWinApp->mLogWindow->UpdateSaveFile(true, report, true, mItemInt[1] != 0);
     mWinApp->mLogWindow->DoSave();
   }
   return 0;
@@ -3366,50 +3604,57 @@ int CMacCmd::SetProperty(void)
 // ReportUserSetting, ReportProperty
 int CMacCmd::ReportUserSetting(void)
 {
-  cTruth = CMD_IS(REPORTPROPERTY);
-  mStrCopy = cTruth ? "property" : "user setting";
-  if ((!cTruth && mParamIO->MacroGetSetting(mStrItems[1], cDelX)) ||
-    (cTruth && mParamIO->MacroGetProperty(mStrItems[1], cDelX)))
+  BOOL truth;
+  double delX;
+
+  truth = CMD_IS(REPORTPROPERTY);
+  mStrCopy = truth ? "property" : "user setting";
+  if ((!truth && mParamIO->MacroGetSetting(mStrItems[1], delX)) ||
+    (truth && mParamIO->MacroGetProperty(mStrItems[1], delX)))
     ABORT_LINE(mStrItems[1] + " is not a recognized " + mStrCopy + " or cannot be "
     "accessed by script command in:\n\n");
-  SetReportedValues(&mStrItems[2], cDelX);
-  mLogRpt.Format("Value of %s %s is %g", (LPCTSTR)mStrCopy, (LPCTSTR)mStrItems[1], cDelX);
+  SetReportedValues(&mStrItems[2], delX);
+  mLogRpt.Format("Value of %s %s is %g", (LPCTSTR)mStrCopy, (LPCTSTR)mStrItems[1], delX);
   return 0;
 }
 
 // SetUserSetting
 int CMacCmd::SetUserSetting(void)
 {
-  if (mParamIO->MacroGetSetting(mStrItems[1], cDelX) ||
+  BOOL truth;
+  double delX;
+  int index;
+
+  if (mParamIO->MacroGetSetting(mStrItems[1], delX) ||
     mParamIO->MacroSetSetting(mStrItems[1], mItemDbl[2]))
       ABORT_LINE(mStrItems[1] + " is not a recognized setting or cannot be set by "
       "script command in:\n\n");
   mWinApp->UpdateWindowSettings();
 
   // See if property already saved
-  cTruth = false;
-  for (cIndex = 0; cIndex < (int)mSavedSettingNames.size(); cIndex++) {
-    if (mStrItems[1].CompareNoCase(mSavedSettingNames[cIndex].c_str()) == 0) {
-      cTruth = true;
+  truth = false;
+  for (index = 0; index < (int)mSavedSettingNames.size(); index++) {
+    if (mStrItems[1].CompareNoCase(mSavedSettingNames[index].c_str()) == 0) {
+      truth = true;
       break;
     }
   }
 
   // If old value should be saved, either replace existing new value or push old and new
   if (mItemEmpty[3] || !mItemInt[3]) {
-    if (cTruth) {
-      mNewSettingValues[cIndex] = mItemDbl[2];
+    if (truth) {
+      mNewSettingValues[index] = mItemDbl[2];
     } else {
       mSavedSettingNames.push_back(std::string((LPCTSTR)mStrItems[1]));
-      mSavedSettingValues.push_back(cDelX);
+      mSavedSettingValues.push_back(delX);
       mNewSettingValues.push_back(mItemDbl[2]);
     }
-  } else if (cTruth) {
+  } else if (truth) {
 
     // Otherwise get rid of a saved value if new value being kept
-    mSavedSettingNames.erase(mSavedSettingNames.begin() + cIndex);
-    mSavedSettingValues.erase(mSavedSettingValues.begin() + cIndex);
-    mNewSettingValues.erase(mNewSettingValues.begin() + cIndex);
+    mSavedSettingNames.erase(mSavedSettingNames.begin() + index);
+    mSavedSettingValues.erase(mSavedSettingValues.begin() + index);
+    mNewSettingValues.erase(mNewSettingValues.begin() + index);
   }
   return 0;
 }
@@ -3417,12 +3662,16 @@ int CMacCmd::SetUserSetting(void)
 // Copy
 int CMacCmd::Copy(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
-    ABORT_LINE(cReport);
-  if (ConvertBufferLetter(mStrItems[2], -1, false, cIndex2, cReport))
-    ABORT_LINE(cReport);
-  cImBuf = ImBufForIndex(cIndex);
-  if (mBufferManager->CopyImBuf(cImBuf, &mImBufs[cIndex2]))
+  CString report;
+  EMimageBuffer *imBuf;
+  int index, index2;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true))
+    ABORT_LINE(report);
+  if (ConvertBufferLetter(mStrItems[2], -1, false, index2, report))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  if (mBufferManager->CopyImBuf(imBuf, &mImBufs[index2]))
     SUSPEND_LINE("because of buffer copy failure in statement: \n\n");
   return 0;
 }
@@ -3430,9 +3679,12 @@ int CMacCmd::Copy(void)
 // Show
 int CMacCmd::Show(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  mWinApp->SetCurrentBuffer(cIndex);
+  CString report;
+  int index;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  mWinApp->SetCurrentBuffer(index);
   return 0;
 }
 
@@ -3464,19 +3716,21 @@ int CMacCmd::SetStandardFocus(void)
 // SetEucentricFocus
 int CMacCmd::SetEucentricFocus(void)
 {
+  double delX;
+  int index;
   double *focTab = mScope->GetLMFocusTable();
-  cIndex = mScope->GetMagIndex();
-  if (cIndex <= 0 || mWinApp->GetSTEMMode())
+  index = mScope->GetMagIndex();
+  if (index <= 0 || mWinApp->GetSTEMMode())
     ABORT_NOLINE("You cannot set eucentric focus in diffraction or STEM mode");
-  cDelX = focTab[cIndex * 2 + mScope->GetProbeMode()];
-  if (cDelX < -900.)
-    cDelX = mScope->GetStandardLMFocus(cIndex);
-  if (cDelX < -900.)
+  delX = focTab[index * 2 + mScope->GetProbeMode()];
+  if (delX < -900.)
+    delX = mScope->GetStandardLMFocus(index);
+  if (delX < -900.)
     ABORT_NOLINE("There is no standard/eucentric focus defined for the current mag"
       " range");
-  mScope->SetFocus(cDelX);
-  if (focTab[cIndex * 2 + mScope->GetProbeMode()] < -900. && !JEOLscope &&
-    cIndex >= mScope->GetLowestMModeMagInd())
+  mScope->SetFocus(delX);
+  if (focTab[index * 2 + mScope->GetProbeMode()] < -900. && !JEOLscope &&
+    index >= mScope->GetLowestMModeMagInd())
     mWinApp->AppendToLog("WARNING: Setting eucentric focus using a calibrated "
       "standard focus\r\n   from the nearest mag, not the current mag");
   return 0;
@@ -3493,10 +3747,12 @@ int CMacCmd::CalEucentricFocus(void)
 // IncTargetDefocus
 int CMacCmd::IncTargetDefocus(void)
 {
+  double delX;
+
   if (fabs(mItemDbl[1]) > 100.)
     ABORT_LINE("Change in target defocus too large in statement: \n\n");
-  cDelX = mWinApp->mFocusManager->GetTargetDefocus();
-  mWinApp->mFocusManager->SetTargetDefocus((float)(cDelX + mItemDbl[1]));
+  delX = mWinApp->mFocusManager->GetTargetDefocus();
+  mWinApp->mFocusManager->SetTargetDefocus((float)(delX + mItemDbl[1]));
   mWinApp->mAlignFocusWindow.UpdateSettings();
   return 0;
 }
@@ -3514,10 +3770,12 @@ int CMacCmd::SetTargetDefocus(void)
 // ReportAutofocusOffset
 int CMacCmd::ReportAutofocusOffset(void)
 {
-  cDelX = mWinApp->mFocusManager->GetDefocusOffset();
-  mStrCopy.Format("Autofocus offset is: %.2f um", cDelX);
+  double delX;
+
+  delX = mWinApp->mFocusManager->GetDefocusOffset();
+  mStrCopy.Format("Autofocus offset is: %.2f um", delX);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
@@ -3537,12 +3795,16 @@ int CMacCmd::SetAutofocusOffset(void)
 // SetObjFocus
 int CMacCmd::SetObjFocus(void)
 {
-  cIndex = mItemInt[1];
-  cDelX = mScope->GetDefocus();
-  mScope->SetObjFocus(cIndex);
-  cDelY = mScope->GetDefocus();
-  cReport.Format("Defocus before = %.4f   after = %.4f", cDelX, cDelY);
-  mWinApp->AppendToLog(cReport, LOG_SWALLOW_IF_CLOSED);
+  CString report;
+  double delX, delY;
+  int index;
+
+  index = mItemInt[1];
+  delX = mScope->GetDefocus();
+  mScope->SetObjFocus(index);
+  delY = mScope->GetDefocus();
+  report.Format("Defocus before = %.4f   after = %.4f", delX, delY);
+  mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
   return 0;
 }
 
@@ -3565,14 +3827,16 @@ int CMacCmd::ResetDefocus(void)
 // SetMag
 int CMacCmd::SetMag(void)
 {
-  cIndex = B3DNINT(mItemDbl[1]);
+  int index, i;
+
+  index = B3DNINT(mItemDbl[1]);
   if (!mItemEmpty[2] && mWinApp->GetSTEMMode()) {
     mScope->SetSTEMMagnification(mItemDbl[1]);
   } else {
-    cI = FindIndexForMagValue(cIndex, -1, -2);
-    if (!cI)
+    i = FindIndexForMagValue(index, -1, -2);
+    if (!i)
       ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
-    mScope->SetMagIndex(cI);
+    mScope->SetMagIndex(i);
     UpdateLDAreaIfSaved();
   }
   return 0;
@@ -3581,15 +3845,18 @@ int CMacCmd::SetMag(void)
 // SetMagIndex
 int CMacCmd::SetMagIndex(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex <= 0 || cIndex >= MAX_MAGS)
+  double delX;
+  int index;
+
+  index = mItemInt[1];
+  if (index <= 0 || index >= MAX_MAGS)
     ABORT_LINE("Invalid magnification index in:\n\n");
-  cDelX = mCamParams->GIF ? mMagTab[cIndex].EFTEMmag : mMagTab[cIndex].mag;
+  delX = mCamParams->GIF ? mMagTab[index].EFTEMmag : mMagTab[index].mag;
   if (mCamParams->STEMcamera)
-    cDelX =  mMagTab[cIndex].STEMmag;
-  if (!cDelX)
+    delX =  mMagTab[index].STEMmag;
+  if (!delX)
     ABORT_LINE("There is a zero in the magnification table at the index given in:\n\n");
-  mScope->SetMagIndex(cIndex);
+  mScope->SetMagIndex(index);
   UpdateLDAreaIfSaved();
   return 0;
 }
@@ -3597,21 +3864,24 @@ int CMacCmd::SetMagIndex(void)
 // ChangeMag, IncMagIfFoundPixel
 int CMacCmd::ChangeMag(void)
 {
-  cIndex = mScope->GetMagIndex();
-  if (!cIndex)
+  BOOL truth;
+  int index, index2, ix0, iy0;
+
+  index = mScope->GetMagIndex();
+  if (!index)
     SUSPEND_NOLINE("because you cannot use ChangeMag in diffraction mode");
-  cIy0 = mCurrentCam;
-  cIx0 = B3DNINT(mItemDbl[1]);
+  iy0 = mCurrentCam;
+  ix0 = B3DNINT(mItemDbl[1]);
   if (!CMD_IS(CHANGEMAG)) {
-    cIx0 = mItemDbl[1] < 0 ? - 1 : 1;
-    cTruth = mProcessImage->GetFoundPixelSize(cIy0, cIndex) > 0.;
-    SetReportedValues(cTruth ? 1. : 0.);
+    ix0 = mItemDbl[1] < 0 ? - 1 : 1;
+    truth = mProcessImage->GetFoundPixelSize(iy0, index) > 0.;
+    SetReportedValues(truth ? 1. : 0.);
   }
-  if (CMD_IS(CHANGEMAG) || cTruth) {
-    cIndex2 = mWinApp->FindNextMagForCamera(cIy0, cIndex, cIx0);
-    if (cIndex2 < 0)
+  if (CMD_IS(CHANGEMAG) || truth) {
+    index2 = mWinApp->FindNextMagForCamera(iy0, index, ix0);
+    if (index2 < 0)
       ABORT_LINE("Improper mag change in statement: \n\n");
-    mScope->SetMagIndex(cIndex2);
+    mScope->SetMagIndex(index2);
   }
   UpdateLDAreaIfSaved();
   return 0;
@@ -3620,42 +3890,44 @@ int CMacCmd::ChangeMag(void)
 // ChangeMagAndIntensity, SetMagAndIntensity
 int CMacCmd::ChangeMagAndIntensity(void)
 {
+  double delISX, delISY, delX, delY;
+  int index, index2, i;
 
   // Get starting and ending mag
-  cIndex = mScope->GetMagIndex();
-  if (!cIndex || mScope->GetSTEMmode())
+  index = mScope->GetMagIndex();
+  if (!index || mScope->GetSTEMmode())
     SUSPEND_NOLINE("because you cannot use Change/SetMagAndIntensity in diffraction"
     " or STEM mode");
   if (CMD_IS(CHANGEMAGANDINTENSITY)) {
-    cIndex2 = mWinApp->FindNextMagForCamera(mCurrentCam, cIndex,
+    index2 = mWinApp->FindNextMagForCamera(mCurrentCam, index,
       B3DNINT(mItemDbl[1]));
-    if (mItemEmpty[1] || cIndex2 < 1)
+    if (mItemEmpty[1] || index2 < 1)
       ABORT_LINE("Improper mag change in statement: \n\n");
   } else {
-    cI = B3DNINT(mItemDbl[1]);
-    cIndex2 = FindIndexForMagValue(cI, -1, -2);
-    if (!cIndex2)
+    i = B3DNINT(mItemDbl[1]);
+    index2 = FindIndexForMagValue(i, -1, -2);
+    if (!index2)
       ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
   }
 
   // Get the intensity and change in intensity
-  cDelISX = mScope->GetIntensity();
-  cDelISX = mScope->GetC2Percent(mScope->FastSpotSize(), cDelISX);
-  cI = mCurrentCam;
-  cDelISY = pow((double)mShiftManager->GetPixelSize(cI, cIndex) /
-    mShiftManager->GetPixelSize(cI, cIndex2), 2.);
-  cI = mWinApp->mBeamAssessor->AssessBeamChange(cDelISY, cDelX, cDelY, -1);
-  if (CheckIntensityChangeReturn(cI))
+  delISX = mScope->GetIntensity();
+  delISX = mScope->GetC2Percent(mScope->FastSpotSize(), delISX);
+  i = mCurrentCam;
+  delISY = pow((double)mShiftManager->GetPixelSize(i, index) /
+    mShiftManager->GetPixelSize(i, index2), 2.);
+  i = mWinApp->mBeamAssessor->AssessBeamChange(delISY, delX, delY, -1);
+  if (CheckIntensityChangeReturn(i))
     return 1;
 
   // Change the mag then the intensity
-  mScope->SetMagIndex(cIndex2);
-  if (!cI)
-    mScope->DelayedSetIntensity(cDelX, GetTickCount());
+  mScope->SetMagIndex(index2);
+  if (!i)
+    mScope->DelayedSetIntensity(delX, GetTickCount());
   mStrCopy.Format("%s before mag change %.3f%s, remaining factor of change "
-    "needed %.3f", mScope->GetC2Name(), cDelISX, mScope->GetC2Units(), cDelY);
+    "needed %.3f", mScope->GetC2Name(), delISX, mScope->GetC2Units(), delY);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(cDelISX, cDelY);
+  SetReportedValues(delISX, delY);
   UpdateLDAreaIfSaved();
   return 0;
 }
@@ -3663,10 +3935,12 @@ int CMacCmd::ChangeMagAndIntensity(void)
 // SetCamLenIndex
 int CMacCmd::SetCamLenIndex(void)
 {
-  cIndex = B3DNINT(mItemDbl[1]);
-  if (mItemEmpty[1] || cIndex < 1)
+  int index;
+
+  index = B3DNINT(mItemDbl[1]);
+  if (mItemEmpty[1] || index < 1)
     ABORT_LINE("Improper camera length index in statement: \n\n");
-  if (!mScope->SetCamLenIndex(cIndex))
+  if (!mScope->SetCamLenIndex(index))
     ABORT_LINE("Error setting camera length index in statement: \n\n");
   UpdateLDAreaIfSaved();
   return 0;
@@ -3675,11 +3949,13 @@ int CMacCmd::SetCamLenIndex(void)
 // SetSpotSize
 int CMacCmd::SetSpotSize(void)
 {
-  cIndex = B3DNINT(mItemDbl[1]);
-  if (mItemEmpty[1] || cIndex < mScope->GetMinSpotSize() ||
-    cIndex > mScope->GetNumSpotSizes())
+  int index;
+
+  index = B3DNINT(mItemDbl[1]);
+  if (mItemEmpty[1] || index < mScope->GetMinSpotSize() ||
+    index > mScope->GetNumSpotSizes())
     ABORT_LINE("Improper spot size in statement: \n\n");
-  if (!mScope->SetSpotSize(cIndex)) {
+  if (!mScope->SetSpotSize(index)) {
     AbortMacro();
     return 1;
   }
@@ -3690,13 +3966,15 @@ int CMacCmd::SetSpotSize(void)
 // SetProbeMode
 int CMacCmd::SetProbeMode(void)
 {
+  int index;
+
   if (mItem1upper.Find("MICRO") == 0 || mItem1upper == "1")
-    cIndex = 1;
+    index = 1;
   else if (mItem1upper.Find("NANO") == 0 || mItem1upper == "0")
-    cIndex = 0;
+    index = 0;
   else
     ABORT_LINE("Probe mode must be 0, 1, nano, or micro in statement: \n\n");
-  if (!mScope->SetProbeMode(cIndex)) {
+  if (!mScope->SetProbeMode(index)) {
     AbortMacro();
     return 1;
   }
@@ -3707,17 +3985,19 @@ int CMacCmd::SetProbeMode(void)
 // Delay
 int CMacCmd::Delay(void)
 {
-  cDelISX = mItemDbl[1];
+  double delISX;
+
+  delISX = mItemDbl[1];
   if (!mStrItems[2].CompareNoCase("MSEC"))
-    mSleepTime = cDelISX;
+    mSleepTime = delISX;
   else if (!mStrItems[2].CompareNoCase("SEC"))
-    mSleepTime = 1000. * cDelISX;
+    mSleepTime = 1000. * delISX;
   else if (!mStrItems[2].CompareNoCase("MIN"))
-    mSleepTime = 60000. * cDelISX;
-  else if (cDelISX > 60)
-    mSleepTime = cDelISX;
+    mSleepTime = 60000. * delISX;
+  else if (delISX > 60)
+    mSleepTime = delISX;
   else
-    mSleepTime = 1000. * cDelISX;
+    mSleepTime = 1000. * delISX;
   mSleepStart = GetTickCount();
   if (mSleepTime > 3000)
     mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR DELAY");
@@ -3727,35 +4007,38 @@ int CMacCmd::Delay(void)
 // WaitForMidnight
 int CMacCmd::WaitForMidnight(void)
 {
+  CString report;
+  double delISX, delISY, delX, delY;
+  int ix0, ix1;
   // Get the times before and after the target time and the alternative target
-  cDelX = cDelY = 5.;
+  delX = delY = 5.;
   if (!mItemEmpty[1])
-    cDelX = mItemDbl[1];
+    delX = mItemDbl[1];
   if (!mItemEmpty[2])
-    cDelY = mItemDbl[2];
-  cIx0 = 24;
-  cIx1 = 0;
+    delY = mItemDbl[2];
+  ix0 = 24;
+  ix1 = 0;
   if (!mItemEmpty[3] && !mItemEmpty[4]) {
-    cIx0 = mItemInt[3];
-    cIx1 = mItemInt[4];
+    ix0 = mItemInt[3];
+    ix1 = mItemInt[4];
   }
 
   // Compute minutes into the day and the interval from now to the target
   CTime time = CTime::GetCurrentTime();
-  cDelISX = time.GetHour() * 60 + time.GetMinute() + time.GetSecond() / 60.;
-  cDelISY = cIx0 * 60 + cIx1 - cDelISX;
+  delISX = time.GetHour() * 60 + time.GetMinute() + time.GetSecond() / 60.;
+  delISY = ix0 * 60 + ix1 - delISX;
 
   // If wthin the window at all, set up the sleep
-  if (cDelISY + cDelY > 0 && cDelISY < cDelX) {
-    mSleepTime = 60000. * (cDelISY + cDelY);
+  if (delISY + delY > 0 && delISY < delX) {
+    mSleepTime = 60000. * (delISY + delY);
     mSleepStart = GetTickCount();
-    cReport.Format("Sleeping until %.1f minutes after ", cDelY);
+    report.Format("Sleeping until %.1f minutes after ", delY);
     mStrCopy = "midnight";
     if (!mItemEmpty[4])
-      mStrCopy.Format("%02d:%02d", cIx0, cIx1);
-    mWinApp->AppendToLog(cReport + mStrCopy, mLogAction);
+      mStrCopy.Format("%02d:%02d", ix0, ix1);
+    mWinApp->AppendToLog(report + mStrCopy, mLogAction);
     mStrCopy.MakeUpper();
-    cReport.Format(" + %.0f", cDelY);
+    report.Format(" + %.0f", delY);
     mWinApp->SetStatusText(SIMPLE_PANE, "WAIT TO " + mStrCopy);
   }
   return 0;
@@ -3795,52 +4078,65 @@ int CMacCmd::ScreenDown(void)
 // ReportScreen
 int CMacCmd::ReportScreen(void)
 {
-  cIndex = mScope->GetScreenPos() == spDown ? 1 : 0;
-  mLogRpt.Format("Screen is %s", cIndex ? "DOWN" : "UP");
-  SetReportedValues(&mStrItems[1], cIndex);
+  int index;
+
+  index = mScope->GetScreenPos() == spDown ? 1 : 0;
+  mLogRpt.Format("Screen is %s", index ? "DOWN" : "UP");
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
 // ReportScreenCurrent
 int CMacCmd::ReportScreenCurrent(void)
 {
-  cDelX = mScope->GetScreenCurrent();
-  mLogRpt.Format("Screen current is %.3f nA", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetScreenCurrent();
+  mLogRpt.Format("Screen current is %.3f nA", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ImageShiftByPixels
 int CMacCmd::ImageShiftByPixels(void)
 {
-  cBInv = mShiftManager->CameraToIS(mScope->GetMagIndex());
-  cIx1 = BinDivisorI(mCamParams);
-  cIndex = B3DNINT(mItemDbl[1] * cIx1);
-  cIndex2 = B3DNINT(mItemDbl[2] * cIx1);
+  CString report;
+  ScaleMat bInv;
+  double delISX, delISY;
+  int index, index2, ix1;
 
-  cDelISX = cBInv.xpx * cIndex + cBInv.xpy * cIndex2;
-  cDelISY = cBInv.ypx * cIndex + cBInv.ypy * cIndex2;
-  if (AdjustBTApplyISSetDelay(cDelISX, cDelISY, mItemInt[4],
-    !mItemEmpty[3], mItemDbl[3], cReport))
-    ABORT_LINE(cReport);
+  bInv = mShiftManager->CameraToIS(mScope->GetMagIndex());
+  ix1 = BinDivisorI(mCamParams);
+  index = B3DNINT(mItemDbl[1] * ix1);
+  index2 = B3DNINT(mItemDbl[2] * ix1);
+
+  delISX = bInv.xpx * index + bInv.xpy * index2;
+  delISY = bInv.ypx * index + bInv.ypy * index2;
+  if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
+    !mItemEmpty[3], mItemDbl[3], report))
+    ABORT_LINE(report);
   return 0;
 }
 
 // ImageShiftByUnits
 int CMacCmd::ImageShiftByUnits(void)
 {
-  cDelISX = mItemDbl[1];
-  cDelISY = mItemDbl[2];
-  if (AdjustBTApplyISSetDelay(cDelISX, cDelISY, mItemInt[4],
-    !mItemEmpty[3], mItemDbl[3], cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  ScaleMat aMat;
+  double delISX, delISY, delX, delY, specDist;
+
+  delISX = mItemDbl[1];
+  delISY = mItemDbl[2];
+  if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
+    !mItemEmpty[3], mItemDbl[3], report))
+    ABORT_LINE(report);
 
   // Report distance on specimen
-  cAMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
-  cDelX = cAMat.xpx * cDelISX + cAMat.xpy * cDelISY;
-  cDelY = cAMat.ypx * cDelISX + cAMat.ypy * cDelISY;
-  cSpecDist = 1000. * sqrt(cDelX * cDelX + cDelY * cDelY);
-  mStrCopy.Format("%.1f nm shifted on specimen", cSpecDist);
+  aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
+  delX = aMat.xpx * delISX + aMat.xpy * delISY;
+  delY = aMat.ypx * delISX + aMat.ypy * delISY;
+  specDist = 1000. * sqrt(delX * delX + delY * delY);
+  mStrCopy.Format("%.1f nm shifted on specimen", specDist);
   mWinApp->AppendToLog(mStrCopy, LOG_OPEN_IF_CLOSED);
   return 0;
 }
@@ -3848,38 +4144,50 @@ int CMacCmd::ImageShiftByUnits(void)
 // ImageShiftByMicrons
 int CMacCmd::ImageShiftByMicrons(void)
 {
-  cDelX = mItemDbl[1];
-  cDelY = mItemDbl[2];
-  cAMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
-  cBInv = mShiftManager->MatInv(cAMat);
-  cDelISX = cBInv.xpx * cDelX + cBInv.xpy * cDelY;
-  cDelISY = cBInv.ypx * cDelX + cBInv.ypy * cDelY;
-  if (AdjustBTApplyISSetDelay(cDelISX, cDelISY, mItemInt[4],
-    !mItemEmpty[3], mItemDbl[3], cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  ScaleMat aMat, bInv;
+  double delISX, delISY, delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
+  bInv = mShiftManager->MatInv(aMat);
+  delISX = bInv.xpx * delX + bInv.xpy * delY;
+  delISY = bInv.ypx * delX + bInv.ypy * delY;
+  if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
+    !mItemEmpty[3], mItemDbl[3], report))
+    ABORT_LINE(report);
   return 0;
 }
 
 // ImageShiftByStageDiff
 int CMacCmd::ImageShiftByStageDiff(void)
 {
-  mShiftManager->GetStageTiltFactors(cBacklashX, cBacklashY);
-  cIndex = mScope->GetMagIndex();
-  cAMat = mShiftManager->StageToCamera(mCurrentCam, cIndex);
-  cBInv = MatMul(cAMat, mShiftManager->CameraToIS(cIndex));
-  mShiftManager->ApplyScaleMatrix(cBInv, mItemFlt[1] * cBacklashX,
-    mItemFlt[2] *cBacklashY, cDelISX, cDelISY);
-  if (AdjustBTApplyISSetDelay(cDelISX, cDelISY, mItemInt[4],
-    !mItemEmpty[3], mItemDbl[3], cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  ScaleMat aMat, bInv;
+  double delISX, delISY;
+  int index;
+  float backlashX, backlashY;
+
+  mShiftManager->GetStageTiltFactors(backlashX, backlashY);
+  index = mScope->GetMagIndex();
+  aMat = mShiftManager->StageToCamera(mCurrentCam, index);
+  bInv = MatMul(aMat, mShiftManager->CameraToIS(index));
+  mShiftManager->ApplyScaleMatrix(bInv, mItemFlt[1] * backlashX,
+    mItemFlt[2] *backlashY, delISX, delISY);
+  if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
+    !mItemEmpty[3], mItemDbl[3], report))
+    ABORT_LINE(report);
   return 0;
 }
 
 // ImageShiftToLastMultiHole
 int CMacCmd::ImageShiftToLastMultiHole(void)
 {
-  mWinApp->mParticleTasks->GetLastHoleImageShift(cBacklashX, cBacklashY);
-  mScope->IncImageShift(cBacklashX, cBacklashY);
+  float backlashX, backlashY;
+
+  mWinApp->mParticleTasks->GetLastHoleImageShift(backlashX, backlashY);
+  mScope->IncImageShift(backlashX, backlashY);
   return 0;
 }
 
@@ -3900,21 +4208,25 @@ int CMacCmd::ShiftCalSkipLensNorm(void)
 // CalibrateImageShift
 int CMacCmd::CalibrateImageShift(void)
 {
-  cIndex = 0;
+  int index;
+
+  index = 0;
   if (mItemInt[1])
-    cIndex = -1;
-  mWinApp->mShiftCalibrator->CalibrateIS(cIndex, false, true);
+    index = -1;
+  mWinApp->mShiftCalibrator->CalibrateIS(index, false, true);
   return 0;
 }
 
 // ReportFocusDrift
 int CMacCmd::ReportFocusDrift(void)
 {
-  if (mWinApp->mFocusManager->GetLastDrift(cDelX, cDelY))
+  double delX, delY;
+
+  if (mWinApp->mFocusManager->GetLastDrift(delX, delY))
     ABORT_LINE("No drift available from last autofocus for statement: \n\n");
-  mStrCopy.Format("Last drift in autofocus: %.3f %.3f nm/sec", cDelX, cDelY);
+  mStrCopy.Format("Last drift in autofocus: %.3f %.3f nm/sec", delX, delY);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
@@ -3928,49 +4240,58 @@ int CMacCmd::TestSTEMshift(void)
 // QuickFlyback
 int CMacCmd::QuickFlyback(void)
 {
-  cIndex = CString("VFTRP").Find(mStrItems[1].Left(1));
-  if (cIndex < 0)
+  int index;
+
+  index = CString("VFTRP").Find(mStrItems[1].Left(1));
+  if (index < 0)
     ABORT_NOLINE("QuickFlyback must be followed by one of V, F, T, R, or P");
   if (!(mCamParams->STEMcamera && mCamParams->FEItype))
     ABORT_NOLINE("QuickFlyback can be run only if the current camera is an FEI STEM"
     " camera")
-  mWinApp->mCalibTiming->CalibrateTiming(cIndex, mItemFlt[2], false);
+  mWinApp->mCalibTiming->CalibrateTiming(index, mItemFlt[2], false);
   return 0;
 }
 
 // ReportAutoFocus
 int CMacCmd::ReportAutoFocus(void)
 {
-  cDelX = mWinApp->mFocusManager->GetCurrentDefocus();
-  cIndex = mWinApp->mFocusManager->GetLastFailed() ? - 1 : 0;
-  cIndex2 = mWinApp->mFocusManager->GetLastAborted();
-  if (cIndex2)
-    cIndex = cIndex2;
-  if (cIndex)
-    mStrCopy.Format("Last autofocus FAILED with error type %d", cIndex);
+  double delX;
+  int index, index2;
+
+  delX = mWinApp->mFocusManager->GetCurrentDefocus();
+  index = mWinApp->mFocusManager->GetLastFailed() ? - 1 : 0;
+  index2 = mWinApp->mFocusManager->GetLastAborted();
+  if (index2)
+    index = index2;
+  if (index)
+    mStrCopy.Format("Last autofocus FAILED with error type %d", index);
   else
-    mStrCopy.Format("Last defocus in autofocus: %.2f um", cDelX);
+    mStrCopy.Format("Last defocus in autofocus: %.2f um", delX);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX, (double)cIndex);
+  SetReportedValues(&mStrItems[1], delX, (double)index);
   return 0;
 }
 
 // ReportTargetDefocus
 int CMacCmd::ReportTargetDefocus(void)
 {
-  cDelX = mWinApp->mFocusManager->GetTargetDefocus();
-  mStrCopy.Format("Target defocus is: %.2f um", cDelX);
+  double delX;
+
+  delX = mWinApp->mFocusManager->GetTargetDefocus();
+  mStrCopy.Format("Target defocus is: %.2f um", delX);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // SetBeamShift
 int CMacCmd::SetBeamShift(void)
 {
-  cDelX = mItemDbl[1];
-  cDelY = mItemDbl[2];
-  if (!mScope->SetBeamShift(cDelX, cDelY)) {
+  double delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  if (!mScope->SetBeamShift(delX, delY)) {
     AbortMacro();
     return 1;
   }
@@ -4009,43 +4330,51 @@ int CMacCmd::SetBeamTilt(void)
 // ReportBeamShift
 int CMacCmd::ReportBeamShift(void)
 {
-  if (!mScope->GetBeamShift(cDelX, cDelY)) {
+  double delX, delY;
+
+  if (!mScope->GetBeamShift(delX, delY)) {
     AbortMacro();
     return 1;
   }
-  mStrCopy.Format("Beam shift %.3f %.3f (putative microns)", cDelX, cDelY);
+  mStrCopy.Format("Beam shift %.3f %.3f (putative microns)", delX, delY);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
 // ReportBeamTilt
 int CMacCmd::ReportBeamTilt(void)
 {
-  if (!mScope->GetBeamTilt(cDelX, cDelY)) {
+  double delX, delY;
+
+  if (!mScope->GetBeamTilt(delX, delY)) {
     AbortMacro();
     return 1;
   }
-  mStrCopy.Format("Beam tilt %.3f %.3f", cDelX, cDelY);
+  mStrCopy.Format("Beam tilt %.3f %.3f", delX, delY);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
 // SetImageShift
 int CMacCmd::SetImageShift(void)
 {
-  cDelX = mItemDbl[1];
-  cDelY = mItemDbl[2];
-  cTruth = mItemInt[4];
-  if (cTruth)
-    mScope->GetLDCenteredShift(cDelISX, cDelISY);
-  if (!mScope->SetLDCenteredShift(cDelX, cDelY)) {
+  CString report;
+  BOOL truth;
+  double delISX, delISY, delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  truth = mItemInt[4];
+  if (truth)
+    mScope->GetLDCenteredShift(delISX, delISY);
+  if (!mScope->SetLDCenteredShift(delX, delY)) {
     AbortMacro();
     return 1;
   }
-  if (AdjustBeamTiltIfSelected(cDelX - cDelISX, cDelY - cDelISY, cTruth, cReport))
-    ABORT_LINE(cReport);
+  if (AdjustBeamTiltIfSelected(delX - delISX, delY - delISY, truth, report))
+    ABORT_LINE(report);
   if (!mItemEmpty[3] && mItemDbl[3] > 0)
     mShiftManager->SetISTimeOut(mItemFlt[3] *mShiftManager->GetLastISDelay());
   return 0;
@@ -4054,52 +4383,62 @@ int CMacCmd::SetImageShift(void)
 // AdjustBeamTiltforIS
 int CMacCmd::AdjustBeamTiltforIS(void)
 {
+  CString report;
+  double delISX, delISY;
+
   if (!mItemEmpty[1] && mItemEmpty[2])
     ABORT_LINE("There must be either no entries or X and Y IS entries for line:\n\n");
   if (!mItemEmpty[2]) {
-    cDelISX = mItemDbl[1];
-    cDelISY = mItemDbl[2];
+    delISX = mItemDbl[1];
+    delISY = mItemDbl[2];
   } else
-    mScope->GetLDCenteredShift(cDelISX, cDelISY);
-  if (AdjustBeamTiltIfSelected(cDelISX, cDelISY, true, cReport))
-    ABORT_LINE(cReport);
+    mScope->GetLDCenteredShift(delISX, delISY);
+  if (AdjustBeamTiltIfSelected(delISX, delISY, true, report))
+    ABORT_LINE(report);
   return 0;
 }
 
 // ReportImageShift
 int CMacCmd::ReportImageShift(void)
 {
-  if (!mScope->GetLDCenteredShift(cDelX, cDelY)) {
+  CString report;
+  ScaleMat aMat, bInv;
+  double delISX, delISY, delX, delY, h1, stageX, stageY;
+  int index, mag;
+
+  if (!mScope->GetLDCenteredShift(delX, delY)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Image shift %.3f %.3f IS units", cDelX, cDelY);
-  cMag = mScope->GetMagIndex();
-  cAMat = mShiftManager->IStoCamera(cMag);
-  cDelISX = cDelISY = cStageX = cStageY = 0.;
-  if (cAMat.xpx) {
-    cIndex = BinDivisorI(mCamParams);
-    cDelISX = -(cDelX * cAMat.xpx + cDelY * cAMat.xpy) / cIndex;
-    cDelISY = -(cDelX * cAMat.ypx + cDelY * cAMat.ypy) / cIndex;
-    cH1 = cos(DTOR * mScope->GetTiltAngle());
-    cBInv = MatMul(cAMat,
-      MatInv(mShiftManager->StageToCamera(mCurrentCam, cMag)));
-    cStageX = (cBInv.xpx * cDelX + cBInv.xpy * cDelY) / (HitachiScope ? cH1 : 1.);
-    cStageY = (cBInv.ypx * cDelX + cBInv.ypy * cDelY) / (HitachiScope ? 1. : cH1);
-    cReport.Format("   %.1f %.1f unbinned pixels; need stage %.3f %.3f if reset", cDelISX,
-                  cDelISY, cStageX, cStageY);
-    mLogRpt += cReport;
+  mLogRpt.Format("Image shift %.3f %.3f IS units", delX, delY);
+  mag = mScope->GetMagIndex();
+  aMat = mShiftManager->IStoCamera(mag);
+  delISX = delISY = stageX = stageY = 0.;
+  if (aMat.xpx) {
+    index = BinDivisorI(mCamParams);
+    delISX = -(delX * aMat.xpx + delY * aMat.xpy) / index;
+    delISY = -(delX * aMat.ypx + delY * aMat.ypy) / index;
+    h1 = cos(DTOR * mScope->GetTiltAngle());
+    bInv = MatMul(aMat,
+      MatInv(mShiftManager->StageToCamera(mCurrentCam, mag)));
+    stageX = (bInv.xpx * delX + bInv.xpy * delY) / (HitachiScope ? h1 : 1.);
+    stageY = (bInv.ypx * delX + bInv.ypy * delY) / (HitachiScope ? 1. : h1);
+    report.Format("   %.1f %.1f unbinned pixels; need stage %.3f %.3f if reset", delISX,
+                  delISY, stageX, stageY);
+    mLogRpt += report;
   }
-  SetReportedValues(&mStrItems[1], cDelX, cDelY, cDelISX, cDelISY, cStageX, cStageY);
+  SetReportedValues(&mStrItems[1], delX, delY, delISX, delISY, stageX, stageY);
   return 0;
 }
 
 // SetObjectiveStigmator
 int CMacCmd::SetObjectiveStigmator(void)
 {
-  cDelX = mItemDbl[1];
-  cDelY = mItemDbl[2];
-  if (!mScope->SetObjectiveStigmator(cDelX, cDelY)) {
+  double delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  if (!mScope->SetObjectiveStigmator(delX, delY)) {
     AbortMacro();
     return 1;
   }
@@ -4109,38 +4448,40 @@ int CMacCmd::SetObjectiveStigmator(void)
 // ReportXLensDeflector, SetXLensDeflector, ReportXLensFocus, SetXLensFocus
 int CMacCmd::ReportXLensDeflector(void)
 {
+  double delX, delY;
+  int index;
   const char * defNames[] = {"Shift", "Tilt", "Stigmator"};
   switch (mCmdIndex) {
   case CME_REPORTXLENSDEFLECTOR:
-    cIndex = mScope->GetXLensDeflector(mItemInt[1], cDelX, cDelY);
-    if (!cIndex) {
-      mLogRpt.Format("X Lens %s is %f %f", defNames[mItemInt[1] - 1], cDelX, cDelY);
-      SetReportedValues(&mStrItems[1], cDelX, cDelY);
+    index = mScope->GetXLensDeflector(mItemInt[1], delX, delY);
+    if (!index) {
+      mLogRpt.Format("X Lens %s is %f %f", defNames[mItemInt[1] - 1], delX, delY);
+      SetReportedValues(&mStrItems[1], delX, delY);
     }
     break;
   case CME_SETXLENSDEFLECTOR:
-    cIndex = mScope->SetXLensDeflector(mItemInt[1], mItemDbl[2], mItemDbl[3]);
+    index = mScope->SetXLensDeflector(mItemInt[1], mItemDbl[2], mItemDbl[3]);
     break;
   case CME_REPORTXLENSFOCUS:
-    cIndex = mScope->GetXLensFocus(cDelX);
-    if (!cIndex) {
-      mLogRpt.Format("X Lens focus is %f", cDelX);
-      SetReportedValues(&mStrItems[1], cDelX);
+    index = mScope->GetXLensFocus(delX);
+    if (!index) {
+      mLogRpt.Format("X Lens focus is %f", delX);
+      SetReportedValues(&mStrItems[1], delX);
     }
     break;
   case CME_SETXLENSFOCUS:
-    cIndex = mScope->SetXLensFocus(mItemDbl[1]);
+    index = mScope->SetXLensFocus(mItemDbl[1]);
     break;
   }
-  if (cIndex == 1) {
+  if (index == 1) {
     ABORT_LINE("Scope is not initialized for:\n\n");
-  } else if (cIndex == 2) {
+  } else if (index == 2) {
     ABORT_LINE("Plugin is missing needed function for:\n\n");
-  } else if (cIndex == 3) {
+  } else if (index == 3) {
     ABORT_LINE("Deflector number must be between 1 and 3 in:\n\n");
-  } else if (cIndex == 5) {
+  } else if (index == 5) {
     ABORT_LINE("There is no connection to adatl COM object for:\n\n");
-  } else if (cIndex > 5) {
+  } else if (index > 5) {
     ABORT_LINE("X Mode is not available for:\n\n");
   }
   return 0;
@@ -4149,16 +4490,19 @@ int CMacCmd::ReportXLensDeflector(void)
 // ReportSpecimenShift
 int CMacCmd::ReportSpecimenShift(void)
 {
-  if (!mScope->GetLDCenteredShift(cDelISX, cDelISY)) {
+  ScaleMat aMat;
+  double delISX, delISY, delX, delY;
+
+  if (!mScope->GetLDCenteredShift(delISX, delISY)) {
     AbortMacro();
     return 1;
   }
-  cAMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
-  if (cAMat.xpx) {
-    cDelX = cAMat.xpx * cDelISX + cAMat.xpy * cDelISY;
-    cDelY = cAMat.ypx * cDelISX + cAMat.ypy * cDelISY;
-    mLogRpt.Format("Image shift is %.3f  %.3f in specimen coordinates",  cDelX, cDelY);
-    SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
+  if (aMat.xpx) {
+    delX = aMat.xpx * delISX + aMat.xpy * delISY;
+    delY = aMat.ypx * delISX + aMat.ypy * delISY;
+    mLogRpt.Format("Image shift is %.3f  %.3f in specimen coordinates",  delX, delY);
+    SetReportedValues(&mStrItems[1], delX, delY);
   } else {
     mWinApp->AppendToLog("There is no calibration for converting image shift to "
       "specimen coordinates", mLogAction);
@@ -4169,12 +4513,14 @@ int CMacCmd::ReportSpecimenShift(void)
 // ReportObjectiveStigmator
 int CMacCmd::ReportObjectiveStigmator(void)
 {
-  if (!mScope->GetObjectiveStigmator(cDelX, cDelY)) {
+  double delX, delY;
+
+  if (!mScope->GetObjectiveStigmator(delX, delY)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Objective stigmator is %.5f %.5f", cDelX, cDelY);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  mLogRpt.Format("Objective stigmator is %.5f %.5f", delX, delY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
@@ -4202,51 +4548,55 @@ int CMacCmd::ErrorsToLog(void)
 // ReportAlignShift, ReportShiftDiffFrom, ReportISforBufferShift
 int CMacCmd::ReportAlignShift(void)
 {
-  cDelISY = 0.;
+  ScaleMat aMat, bInv;
+  double delISX, delISY, delX, delY, h1, v1;
+  int index, index2;
+  float shiftX, shiftY;
+
+  delISY = 0.;
   if (CMD_IS(REPORTSHIFTDIFFFROM)) {
-    cDelISY = mItemDbl[1];
-    if (mItemEmpty[1] || cDelISY <= 0)
+    delISY = mItemDbl[1];
+    if (mItemEmpty[1] || delISY <= 0)
       ABORT_LINE("Improper or missing comparison value in statement: \n\n");
   }
   if (mImBufs->mImage) {
-    float cShiftX, cShiftY;
-    mImBufs->mImage->getShifts(cShiftX, cShiftY);
-    cShiftX *= mImBufs->mBinning;
-    cShiftY *= -mImBufs->mBinning;
-    mAccumShiftX += cShiftX;
-    mAccumShiftY += cShiftY;
-    cIndex = mScope->GetMagIndex();
-    cIndex2 = BinDivisorI(mCamParams);
-    if (cDelISY) {
-      cDelX = mShiftManager->GetPixelSize(mCurrentCam, cIndex);
-      cDelY = cDelX * sqrt(cShiftX * cShiftX + cShiftY * cShiftY);
-      cDelISX = 100. * (cDelY / cDelISY - 1.);
-      mAccumDiff += (float)(cDelY - cDelISY);
-      cDelISY = cDelX * sqrt(mAccumShiftX * mAccumShiftX + mAccumShiftY * mAccumShiftY);
+    mImBufs->mImage->getShifts(shiftX, shiftY);
+    shiftX *= mImBufs->mBinning;
+    shiftY *= -mImBufs->mBinning;
+    mAccumShiftX += shiftX;
+    mAccumShiftY += shiftY;
+    index = mScope->GetMagIndex();
+    index2 = BinDivisorI(mCamParams);
+    if (delISY) {
+      delX = mShiftManager->GetPixelSize(mCurrentCam, index);
+      delY = delX * sqrt(shiftX * shiftX + shiftY * shiftY);
+      delISX = 100. * (delY / delISY - 1.);
+      mAccumDiff += (float)(delY - delISY);
+      delISY = delX * sqrt(mAccumShiftX * mAccumShiftX + mAccumShiftY * mAccumShiftY);
       mStrCopy.Format("%6.1f %% diff, cumulative diff %6.2f  um, total distance %.1f",
-        cDelISX, mAccumDiff, cDelISY);
-      SetReportedValues(&mStrItems[2], cDelISX, mAccumDiff, cDelISY);
+        delISX, mAccumDiff, delISY);
+      SetReportedValues(&mStrItems[2], delISX, mAccumDiff, delISY);
     } else {
-      cBInv = mShiftManager->CameraToIS(cIndex);
-      cAMat = mShiftManager->IStoSpecimen(cIndex);
+      bInv = mShiftManager->CameraToIS(index);
+      aMat = mShiftManager->IStoSpecimen(index);
 
       // Convert to image shift units, then determine distance on specimen
       // implied by each axis of image shift separately
-      cDelISX = cBInv.xpx * cShiftX + cBInv.xpy * cShiftY;
-      cDelISY = cBInv.ypx * cShiftX + cBInv.ypy * cShiftY;
+      delISX = bInv.xpx * shiftX + bInv.xpy * shiftY;
+      delISY = bInv.ypx * shiftX + bInv.ypy * shiftY;
       if (CMD_IS(REPORTISFORBUFFERSHIFT)) {
-        mStrCopy.Format("Buffer shift corresponds to %.3f %.3f IS units", -cDelISX,
-          - cDelISY);
-        SetReportedValues(&mStrItems[1], -cDelISX, -cDelISY);
+        mStrCopy.Format("Buffer shift corresponds to %.3f %.3f IS units", -delISX,
+          - delISY);
+        SetReportedValues(&mStrItems[1], -delISX, -delISY);
       } else {
-        cH1 = 1000. * (cDelISX * cAMat.xpx + cDelISY * cAMat.xpy);
-        cV1 = 1000. * (cDelISX * cAMat.ypx + cDelISY * cAMat.ypy);
-        cDelX = 1000. * sqrt(pow(cDelISX * cAMat.xpx, 2) + pow(cDelISX * cAMat.ypx, 2));
-        cDelY = 1000. * sqrt(pow(cDelISY * cAMat.xpy, 2) + pow(cDelISY * cAMat.ypy, 2));
+        h1 = 1000. * (delISX * aMat.xpx + delISY * aMat.xpy);
+        v1 = 1000. * (delISX * aMat.ypx + delISY * aMat.ypy);
+        delX = 1000. * sqrt(pow(delISX * aMat.xpx, 2) + pow(delISX * aMat.ypx, 2));
+        delY = 1000. * sqrt(pow(delISY * aMat.xpy, 2) + pow(delISY * aMat.ypy, 2));
         mStrCopy.Format("%6.1f %6.1f unbinned pixels; %6.1f %6.1f nm along two shift "
           "axes; %6.1f %6.1f nm on specimen axes",
-          cShiftX / cIndex2, cShiftY / cIndex2, cDelX, cDelY, cH1, cV1);
-        SetReportedValues(&mStrItems[1], cShiftX, cShiftY, cDelX, cDelY, cH1, cV1);
+          shiftX / index2, shiftY / index2, delX, delY, h1, v1);
+        SetReportedValues(&mStrItems[1], shiftX, shiftY, delX, delY, h1, v1);
       }
     }
     mWinApp->AppendToLog(mStrCopy, mLogAction);
@@ -4257,9 +4607,11 @@ int CMacCmd::ReportAlignShift(void)
 // ReportAccumShift
 int CMacCmd::ReportAccumShift(void)
 {
-  cIndex2 = BinDivisorI(mCamParams);
-  mLogRpt.Format("%8.1f %8.1f cumulative pixels", mAccumShiftX / cIndex2,
-    mAccumShiftY / cIndex2);
+  int index2;
+
+  index2 = BinDivisorI(mCamParams);
+  mLogRpt.Format("%8.1f %8.1f cumulative pixels", mAccumShiftX / index2,
+    mAccumShiftY / index2);
   SetReportedValues(&mStrItems[1], mAccumShiftX, mAccumShiftY);
   return 0;
 }
@@ -4276,10 +4628,12 @@ int CMacCmd::ResetAccumShift(void)
 // ReportAlignTrimming
 int CMacCmd::ReportAlignTrimming(void)
 {
-  mShiftManager->GetLastAlignTrims(cIx0, cIx1, cIy0, cIy1);
+  int ix0, ix1, iy0, iy1;
+
+  mShiftManager->GetLastAlignTrims(ix0, ix1, iy0, iy1);
   mLogRpt.Format("Total border trimmed in last autoalign in X & Y for A: %d %d   "
-    "Reference: %d %d", cIx0, cIx1, cIy0, cIy1);
-  SetReportedValues(&mStrItems[1], cIx0, cIx1, cIy0, cIy1);
+    "Reference: %d %d", ix0, ix1, iy0, iy1);
+  SetReportedValues(&mStrItems[1], ix0, ix1, iy0, iy1);
   return 0;
 }
 
@@ -4289,76 +4643,83 @@ int CMacCmd::ReportAlignTrimming(void)
 // StageToSpecimenMatrix, SpecimenToStageMatrix
 int CMacCmd::CameraToISMatrix(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex <= 0)
-    cIndex = mScope->GetMagIndex();
-  if (!cIndex)
+  CString report;
+  BOOL truth;
+  ScaleMat aMat, bInv;
+  int index;
+
+  index = mItemInt[1];
+  if (index <= 0)
+    index = mScope->GetMagIndex();
+  if (!index)
     ABORT_LINE("There are no scale matrices for diffraction mode for line:\n\n");
-  if (cIndex >= MAX_MAGS)
+  if (index >= MAX_MAGS)
     ABORT_LINE("The mag index is out of range in line:\n\n");
-  cTruth = false;
+  truth = false;
   switch (mCmdIndex) {
 
   case CME_CAMERATOISMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_ISTOCAMERAMATRIX:
-    cAMat = mShiftManager->IStoGivenCamera(cIndex, mCurrentCam);
+    aMat = mShiftManager->IStoGivenCamera(index, mCurrentCam);
     break;
   case CME_CAMERATOSTAGEMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_STAGETOCAMERAMATRIX:
-    cAMat = mShiftManager->StageToCamera(mCurrentCam, cIndex);
+    aMat = mShiftManager->StageToCamera(mCurrentCam, index);
     break;
 
   case CME_SPECIMENTOCAMERAMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_CAMERATOSPECIMENMATRIX:
-    cAMat = mShiftManager->CameraToSpecimen(cIndex);
+    aMat = mShiftManager->CameraToSpecimen(index);
     break;
 
   case CME_SPECIMENTOISMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_ISTOSPECIMENMATRIX:
-    cAMat = cAMat = mShiftManager->IStoSpecimen(cIndex, mCurrentCam);
+    aMat = aMat = mShiftManager->IStoSpecimen(index, mCurrentCam);
     break;
   case CME_STAGETOISMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_ISTOSTAGEMATRIX:
-    cAMat = mShiftManager->StageToCamera(mCurrentCam, cIndex);
-    if (cAMat.xpx) {
-      cBInv = mShiftManager->StageToCamera(mCurrentCam, cIndex);
-      if (cBInv.xpx)
-        cAMat = MatMul(cAMat, MatInv(cBInv));
+    aMat = mShiftManager->StageToCamera(mCurrentCam, index);
+    if (aMat.xpx) {
+      bInv = mShiftManager->StageToCamera(mCurrentCam, index);
+      if (bInv.xpx)
+        aMat = MatMul(aMat, MatInv(bInv));
       else
-        cAMat.xpx = 0.;
+        aMat.xpx = 0.;
     }
     break;
   case CME_STAGETOSPECIMENMATRIX:
-    cTruth = true;
+    truth = true;
   case CME_SPECIMENTOSTAGEMATRIX:
-    cAMat = mShiftManager->SpecimenToStage(1., 1.);
+    aMat = mShiftManager->SpecimenToStage(1., 1.);
     break;
   }
-  if (cTruth && cAMat.xpx)
-    cAMat = MatInv(cAMat);
-  cReport = cmdList[mCmdIndex].mixedCase;
-  cReport.Replace("To", " to ");
-  cReport.Replace("Matrix", " matrix");
-  if (cAMat.xpx)
-    mLogRpt.Format("%s at mag index %d is %.5g  %.5g  %.5g  %.5g", (LPCTSTR)cReport,
-      cIndex, cAMat.xpx, cAMat.xpy, cAMat.ypx, cAMat.ypy);
+  if (truth && aMat.xpx)
+    aMat = MatInv(aMat);
+  report = cmdList[mCmdIndex].mixedCase;
+  report.Replace("To", " to ");
+  report.Replace("Matrix", " matrix");
+  if (aMat.xpx)
+    mLogRpt.Format("%s at mag index %d is %.5g  %.5g  %.5g  %.5g", (LPCTSTR)report,
+      index, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
   else
-    mLogRpt.Format("%s is not available for mag index %d", (LPCTSTR)cReport, cIndex);
-  SetReportedValues(&mStrItems[2], cAMat.xpx, cAMat.xpy, cAMat.ypx, cAMat.ypy);
+    mLogRpt.Format("%s is not available for mag index %d", (LPCTSTR)report, index);
+  SetReportedValues(&mStrItems[2], aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
   return 0;
 }
 
 // ReportClock
 int CMacCmd::ReportClock(void)
 {
-  cDelX = 0.001 * GetTickCount() - 0.001 * mStartClock;
-  mLogRpt.Format("%.2f seconds elapsed time", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = 0.001 * GetTickCount() - 0.001 * mStartClock;
+  mLogRpt.Format("%.2f seconds elapsed time", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
@@ -4372,44 +4733,48 @@ int CMacCmd::ResetClock(void)
 // ReportMinuteTime
 int CMacCmd::ReportMinuteTime(void)
 {
-  cIndex = mWinApp->MinuteTimeStamp();
-  if (!mItemEmpty[1] && SetVariable(mStrItems[1], (double)cIndex, 
-    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &cReport))
-      ABORT_LINE(cReport + "\n(This command assigns to a persistent variable):\n\n");
-  mLogRpt.Format("Absolute minute time = %d", cIndex);
-  SetReportedValues(cIndex);
+  CString report;
+  int index;
+
+  index = mWinApp->MinuteTimeStamp();
+  if (!mItemEmpty[1] && SetVariable(mStrItems[1], (double)index,
+    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &report))
+      ABORT_LINE(report + "\n(This command assigns to a persistent variable):\n\n");
+  mLogRpt.Format("Absolute minute time = %d", index);
+  SetReportedValues(index);
   return 0;
 }
 
 // SetCustomTime, ReportCustomInterval
 int CMacCmd::SetCustomTime(void)
 {
+  int index, index2;
   std::string sstr = (LPCTSTR)mItem1upper;
   std::map < std::string, int > ::iterator custIter;
-  cIndex = mWinApp->MinuteTimeStamp();
+  index = mWinApp->MinuteTimeStamp();
   if (!mItemEmpty[2])
-    cIndex = mItemInt[2];
-  cIndex2 = (int)mCustomTimeMap.count(sstr);
-  if (cIndex2)
+    index = mItemInt[2];
+  index2 = (int)mCustomTimeMap.count(sstr);
+  if (index2)
     custIter = mCustomTimeMap.find(sstr);
   if (CMD_IS(SETCUSTOMTIME)) {
 
     // Insert does not replace a value!  You have to get the iterator and assign it
-    if (cIndex2)
-      custIter->second = cIndex;
+    if (index2)
+      custIter->second = index;
     else
-      mCustomTimeMap.insert(std::pair < std::string, int > (sstr, cIndex));
+      mCustomTimeMap.insert(std::pair < std::string, int > (sstr, index));
     mWinApp->mDocWnd->SetShortTermNotSaved();
   } else {
-    if (cIndex2) {
-      cIndex -= custIter->second;
-      mLogRpt.Format("%d minutes elapsed since custom time %s set", cIndex,
+    if (index2) {
+      index -= custIter->second;
+      mLogRpt.Format("%d minutes elapsed since custom time %s set", index,
          (LPCTSTR)mStrItems[1]);
     } else {
-      cIndex = 2 * MAX_CUSTOM_INTERVAL;
+      index = 2 * MAX_CUSTOM_INTERVAL;
       mLogRpt = "Custom time " + mStrItems[1] + " has not been set";
     }
-    SetReportedValues(cIndex);
+    SetReportedValues(index);
   }
   return 0;
 }
@@ -4417,134 +4782,146 @@ int CMacCmd::SetCustomTime(void)
 // ReportTickTime
 int CMacCmd::ReportTickTime(void)
 {
-  cDelISX = SEMTickInterval(mWinApp->ProgramStartTime()) / 1000.;
-  if (!mItemEmpty[1] && SetVariable(mStrItems[1], cDelISX, 
-    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &cReport))
-      ABORT_LINE(cReport + "\n(This command assigns to a persistent variable):\n\n");
-  mLogRpt.Format("Tick time from program start = %.3f", cDelISX);
-  SetReportedValues(cDelISX);
+  CString report;
+  double delISX;
+
+  delISX = SEMTickInterval(mWinApp->ProgramStartTime()) / 1000.;
+  if (!mItemEmpty[1] && SetVariable(mStrItems[1], delISX,
+    VARTYPE_PERSIST + VARTYPE_ADD_FOR_NUM, -1, false, &report))
+      ABORT_LINE(report + "\n(This command assigns to a persistent variable):\n\n");
+  mLogRpt.Format("Tick time from program start = %.3f", delISX);
+  SetReportedValues(delISX);
   return 0;
 }
 
 // ElapsedTickTime
 int CMacCmd::ElapsedTickTime(void)
 {
-  cDelISY = SEMTickInterval(mWinApp->ProgramStartTime());
-  cDelISX = SEMTickInterval(cDelISY, mItemDbl[1] * 1000.) / 1000.;
-  mLogRpt.Format("Elapsed tick time = %.3f", cDelISX);
-  SetReportedValues(&mStrItems[2], cDelISX);
+  double delISX, delISY;
+
+  delISY = SEMTickInterval(mWinApp->ProgramStartTime());
+  delISX = SEMTickInterval(delISY, mItemDbl[1] * 1000.) / 1000.;
+  mLogRpt.Format("Elapsed tick time = %.3f", delISX);
+  SetReportedValues(&mStrItems[2], delISX);
   return 0;
 }
 
 // ReportDateTime
 int CMacCmd::ReportDateTime(void)
 {
+  int index, index2;
   CTime ctDateTime = CTime::GetCurrentTime();
-  cIndex = 10000 * ctDateTime.GetYear() + 100 * ctDateTime.GetMonth() +
+  index = 10000 * ctDateTime.GetYear() + 100 * ctDateTime.GetMonth() +
     ctDateTime.GetDay();
-  cIndex2 = 100 * ctDateTime.GetHour() + ctDateTime.GetMinute();
-  mLogRpt.Format("%d  %04d", cIndex, cIndex2);
-  SetReportedValues(&mStrItems[1], cIndex, cIndex2);
+  index2 = 100 * ctDateTime.GetHour() + ctDateTime.GetMinute();
+  mLogRpt.Format("%d  %04d", index, index2);
+  SetReportedValues(&mStrItems[1], index, index2);
   return 0;
 }
 
-// MoveStage, MoveStageTo, MoveStageWithSpeed, TestRelaxingStage, StageShiftByPixels, 
+// MoveStage, MoveStageTo, MoveStageWithSpeed, TestRelaxingStage, StageShiftByPixels,
 // StageToLastMultiHole
 int CMacCmd::MoveStage(void)
 {
-    cSmi.z = 0.;
-    cSmi.alpha = 0.;
-    cSmi.axisBits = 0;
-    cSmi.useSpeed = false;
-    cSmi.backX = cSmi.backY = cSmi.relaxX = cSmi.relaxY = 0.;
-    cTruth = CMD_IS(TESTRELAXINGSTAGE);
+  BOOL truth;
+  ScaleMat aMat, bInv;
+  double h1, stageX, stageY, stageZ;
+  float backlashX, backlashY;
+  StageMoveInfo smi;
+
+    smi.z = 0.;
+    smi.alpha = 0.;
+    smi.axisBits = 0;
+    smi.useSpeed = false;
+    smi.backX = smi.backY = smi.relaxX = smi.relaxY = 0.;
+    truth = CMD_IS(TESTRELAXINGSTAGE);
 
     // If stage not ready, back up and try again, otherwise do action
     if (mScope->StageBusy() > 0)
       mLastIndex = mCurrentIndex;
     else {
       if (CMD_IS(STAGESHIFTBYPIXELS)) {
-        cH1 = DTOR * mScope->GetTiltAngle();
-        cAMat = mShiftManager->StageToCamera(mCurrentCam,
+        h1 = DTOR * mScope->GetTiltAngle();
+        aMat = mShiftManager->StageToCamera(mCurrentCam,
           mScope->GetMagIndex());
-        if (!cAMat.xpx)
+        if (!aMat.xpx)
           ABORT_LINE("There is no stage to camera calibration available for line:\n\n");
-        cBInv = MatInv(cAMat);
-        cStageX = cBInv.xpx * mItemDbl[1] + cBInv.xpy * mItemDbl[2];
-        cStageY = (cBInv.ypx * mItemDbl[1] + cBInv.ypy * mItemDbl[2]) / cos(cH1);
-        cStageZ = 0.;
+        bInv = MatInv(aMat);
+        stageX = bInv.xpx * mItemDbl[1] + bInv.xpy * mItemDbl[2];
+        stageY = (bInv.ypx * mItemDbl[1] + bInv.ypy * mItemDbl[2]) / cos(h1);
+        stageZ = 0.;
       } else if (CMD_IS(STAGETOLASTMULTIHOLE)) {
-        mWinApp->mParticleTasks->GetLastHoleStagePos(cStageX, cStageY);
-        if (cStageX < EXTRA_VALUE_TEST)
+        mWinApp->mParticleTasks->GetLastHoleStagePos(stageX, stageY);
+        if (stageX < EXTRA_VALUE_TEST)
           ABORT_LINE("The multiple Record routine has not been run for line:\n\n");
-        cStageZ = 0.;
+        stageZ = 0.;
       } else {
 
         if (mItemEmpty[2])
           ABORT_LINE("Stage movement command does not have at least 2 numbers: \n\n");
-        cStageX = mItemDbl[1];
-        cStageY = mItemDbl[2];
+        stageX = mItemDbl[1];
+        stageY = mItemDbl[2];
         if (CMD_IS(MOVESTAGEWITHSPEED)) {
-          cStageZ = 0.;
-          cSmi.useSpeed = true;
-          cSmi.speed = mItemDbl[3];
-          if (cSmi.speed <= 0.)
+          stageZ = 0.;
+          smi.useSpeed = true;
+          smi.speed = mItemDbl[3];
+          if (smi.speed <= 0.)
             ABORT_LINE("Speed entry must be positive in line:/n/n");
         } else {
-          cStageZ = (mItemEmpty[3] || cTruth) ? 0. : mItemDbl[3];
+          stageZ = (mItemEmpty[3] || truth) ? 0. : mItemDbl[3];
         }
       }
       if (CMD_IS(MOVESTAGE) || CMD_IS(STAGESHIFTBYPIXELS) || CMD_IS(MOVESTAGEWITHSPEED)
-        || cTruth) {
-        if (!mScope->GetStagePosition(cSmi.x, cSmi.y, cSmi.z))
+        || truth) {
+        if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
           SUSPEND_NOLINE("because of failure to get stage position");
           //CString report;
         //report.Format("Start at %.2f %.2f %.2f", smi.x, smi.y, smi.z);
         //mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
 
         // For each of X, Y, Z, set axis bit if nonzero;
-        cSmi.x += cStageX;
-        if (cStageX != 0.)
-          cSmi.axisBits |= axisX;
-        cSmi.y += cStageY;
-        if (cStageY != 0.)
-          cSmi.axisBits |= axisY;
-        cSmi.z += cStageZ;
-        if (cStageZ != 0.)
-          cSmi.axisBits |= axisZ;
-        if (cTruth) {
-          cBacklashX = mItemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
+        smi.x += stageX;
+        if (stageX != 0.)
+          smi.axisBits |= axisX;
+        smi.y += stageY;
+        if (stageY != 0.)
+          smi.axisBits |= axisY;
+        smi.z += stageZ;
+        if (stageZ != 0.)
+          smi.axisBits |= axisZ;
+        if (truth) {
+          backlashX = mItemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
             mItemFlt[3];
-        cBacklashY = mItemEmpty[4] ? mScope->GetStageRelaxation() : mItemFlt[4];
-        if (cBacklashY <= 0)
-          cBacklashY = 0.025f;
+        backlashY = mItemEmpty[4] ? mScope->GetStageRelaxation() : mItemFlt[4];
+        if (backlashY <= 0)
+          backlashY = 0.025f;
 
         // Set relaxation in the direction of backlash
-        if (cStageX) {
-          cSmi.backX = (cStageX > 0. ? cBacklashX : -cBacklashX);
-          cSmi.relaxX = (cSmi.backX > 0. ? cBacklashY : -cBacklashY);
+        if (stageX) {
+          smi.backX = (stageX > 0. ? backlashX : -backlashX);
+          smi.relaxX = (smi.backX > 0. ? backlashY : -backlashY);
         }
-        if (cStageY) {
-          cSmi.backY = (cStageY > 0. ? cBacklashX : -cBacklashX);
-          cSmi.relaxY = (cSmi.backY > 0. ? cBacklashY : -cBacklashY);
+        if (stageY) {
+          smi.backY = (stageY > 0. ? backlashX : -backlashX);
+          smi.relaxY = (smi.backY > 0. ? backlashY : -backlashY);
         }
         }
       } else {
 
         // Absolute move: set to values; set Z axis bit if entered
-        cSmi.x = cStageX;
-        cSmi.y = cStageY;
-        cSmi.z = cStageZ;
+        smi.x = stageX;
+        smi.y = stageY;
+        smi.z = stageZ;
 
-        cSmi.axisBits |= (axisX | axisY);
+        smi.axisBits |= (axisX | axisY);
         if (!mItemEmpty[3] && !CMD_IS(STAGETOLASTMULTIHOLE))
-          cSmi.axisBits |= axisZ;
+          smi.axisBits |= axisZ;
       }
 
       // Start the movement
-      if (cSmi.axisBits) {
-        if (!mScope->MoveStage(cSmi, cTruth && cBacklashX != 0., cSmi.useSpeed, false,
-          cTruth))
+      if (smi.axisBits) {
+        if (!mScope->MoveStage(smi, truth && backlashX != 0., smi.useSpeed, false,
+          truth))
           SUSPEND_NOLINE("because of failure to start stage movement");
         mMovedStage = true;
       }
@@ -4555,19 +4932,23 @@ int CMacCmd::MoveStage(void)
 // RelaxStage
 int CMacCmd::RelaxStage(void)
 {
-  cDelX = mItemEmpty[1] ? mScope->GetStageRelaxation() : mItemDbl[1];
-  if (!mScope->GetStagePosition(cSmi.x, cSmi.y, cSmi.z))
+  double delX;
+  float backlashX, backlashY;
+  StageMoveInfo smi;
+
+  delX = mItemEmpty[1] ? mScope->GetStageRelaxation() : mItemDbl[1];
+  if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
     SUSPEND_NOLINE("because of failure to get stage position");
-  if (mScope->GetValidXYbacklash(cSmi.x, cSmi.y, cBacklashX, cBacklashY)) {
+  if (mScope->GetValidXYbacklash(smi.x, smi.y, backlashX, backlashY)) {
     mScope->CopyBacklashValid();
 
     // Move in direction of the backlash, which is opposite to direction of stage move
-    cSmi.x += (cBacklashX > 0. ? cDelX : -cDelX);
-    cSmi.y += (cBacklashY > 0. ? cDelX : -cDelX);
-    cSmi.z = 0.;
-    cSmi.alpha = 0.;
-    cSmi.axisBits = axisXY;
-    mScope->MoveStage(cSmi);
+    smi.x += (backlashX > 0. ? delX : -delX);
+    smi.y += (backlashY > 0. ? delX : -delX);
+    smi.z = 0.;
+    smi.alpha = 0.;
+    smi.axisBits = axisXY;
+    mScope->MoveStage(smi);
       mMovedStage = true;
   } else {
     mWinApp->AppendToLog("Stage is not in known backlash state so RelaxStage cannot "
@@ -4579,20 +4960,23 @@ int CMacCmd::RelaxStage(void)
 // BackgroundTilt
 int CMacCmd::BackgroundTilt(void)
 {
+  double delX;
+  StageMoveInfo smi;
+
   if (mScope->StageBusy() > 0)
     mLastIndex = mCurrentIndex;
   else {
-    cSmi.alpha = mItemDbl[1];
-    cDelX = 1.;
-    cSmi.useSpeed = false;
+    smi.alpha = mItemDbl[1];
+    delX = 1.;
+    smi.useSpeed = false;
     if (!mItemEmpty[2]) {
-      cSmi.speed = mItemDbl[2];
-      if (cSmi.speed <= 0.)
+      smi.speed = mItemDbl[2];
+      if (smi.speed <= 0.)
         ABORT_LINE("Speed entry must be positive in line:/n/n");
-      cSmi.useSpeed = true;
+      smi.useSpeed = true;
     }
-    cSmi.axisBits = axisA;
-    if (!mScope->MoveStage(cSmi, false, cSmi.useSpeed, true)) {
+    smi.axisBits = axisA;
+    if (!mScope->MoveStage(smi, false, smi.useSpeed, true)) {
       AbortMacro();
       return 1;
     }
@@ -4603,175 +4987,211 @@ int CMacCmd::BackgroundTilt(void)
 // ReportStageXYZ
 int CMacCmd::ReportStageXYZ(void)
 {
-  mScope->GetStagePosition(cStageX, cStageY, cStageZ);
-  mLogRpt.Format("Stage %.2f %.2f %.2f", cStageX, cStageY, cStageZ);
-  SetReportedValues(&mStrItems[1], cStageX, cStageY, cStageZ);
+  double stageX, stageY, stageZ;
+
+  mScope->GetStagePosition(stageX, stageY, stageZ);
+  mLogRpt.Format("Stage %.2f %.2f %.2f", stageX, stageY, stageZ);
+  SetReportedValues(&mStrItems[1], stageX, stageY, stageZ);
   return 0;
 }
 
 // ReportTiltAngle
 int CMacCmd::ReportTiltAngle(void)
 {
-  cDelX = mScope->GetTiltAngle();
-  mLogRpt.Format("%.2f degrees", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetTiltAngle();
+  mLogRpt.Format("%.2f degrees", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportStageBusy
 int CMacCmd::ReportStageBusy(void)
 {
-  cIndex = mScope->StageBusy();
-  mLogRpt.Format("Stage is %s", cIndex > 0 ? "BUSY" : "NOT busy");
-  SetReportedValues(&mStrItems[1], cIndex > 0 ? 1 : 0);
+  int index;
+
+  index = mScope->StageBusy();
+  mLogRpt.Format("Stage is %s", index > 0 ? "BUSY" : "NOT busy");
+  SetReportedValues(&mStrItems[1], index > 0 ? 1 : 0);
   return 0;
 }
 
 // ReportStageBAxis
 int CMacCmd::ReportStageBAxis(void)
 {
-  cDelX = mScope->GetStageBAxis();
-  mLogRpt.Format("B axis = %.2f degrees", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetStageBAxis();
+  mLogRpt.Format("B axis = %.2f degrees", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportMag
 int CMacCmd::ReportMag(void)
 {
-  cIndex2 = mScope->GetMagIndex();
+  int index, index2;
+
+  index2 = mScope->GetMagIndex();
 
   // This is not right if the screen is down and FEI is not in EFTEM
-  cIndex = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), cIndex2, mScope->GetSTEMmode());
-  mLogRpt.Format("Mag is %d%s", cIndex,
-    cIndex2 < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
-  SetReportedValues(&mStrItems[1], (double)cIndex,
-    cIndex2 < mScope->GetLowestNonLMmag() ? 1. : 0.);
+  index = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), index2, mScope->GetSTEMmode());
+  mLogRpt.Format("Mag is %d%s", index,
+    index2 < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
+  SetReportedValues(&mStrItems[1], (double)index,
+    index2 < mScope->GetLowestNonLMmag() ? 1. : 0.);
   return 0;
 }
 
 // ReportMagIndex
 int CMacCmd::ReportMagIndex(void)
 {
-  cIndex = mScope->GetMagIndex();
-  mLogRpt.Format("Mag index is %d%s", cIndex,
-    cIndex < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
-  SetReportedValues(&mStrItems[1], (double)cIndex,
-    cIndex < mScope->GetLowestNonLMmag() ? 1. : 0.);
+  int index;
+
+  index = mScope->GetMagIndex();
+  mLogRpt.Format("Mag index is %d%s", index,
+    index < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
+  SetReportedValues(&mStrItems[1], (double)index,
+    index < mScope->GetLowestNonLMmag() ? 1. : 0.);
   return 0;
 }
 
 // ReportCameraLength
 int CMacCmd::ReportCameraLength(void)
 {
-  cDelX = 0;
+  double delX;
+
+  delX = 0;
   if (!mScope->GetMagIndex())
-    cDelX = mScope->GetLastCameraLength();
-  mLogRpt.Format("%s %g%s", cDelX ? "Camera length is " : "Not in diffraction mode - (",
-    cDelX, cDelX ? " m" : ")");
-  SetReportedValues(&mStrItems[1],  cDelX);
+    delX = mScope->GetLastCameraLength();
+  mLogRpt.Format("%s %g%s", delX ? "Camera length is " : "Not in diffraction mode - (",
+    delX, delX ? " m" : ")");
+  SetReportedValues(&mStrItems[1],  delX);
   return 0;
 }
 
 // ReportDefocus
 int CMacCmd::ReportDefocus(void)
 {
-  cDelX = mScope->GetDefocus();
-  mLogRpt.Format("Defocus = %.3f um", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetDefocus();
+  mLogRpt.Format("Defocus = %.3f um", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportFocus, ReportAbsoluteFocus
 int CMacCmd::ReportFocus(void)
 {
-  cDelX = mScope->GetFocus();
-  mLogRpt.Format("Absolute focus = %.5f", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetFocus();
+  mLogRpt.Format("Absolute focus = %.5f", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportPercentC2
 int CMacCmd::ReportPercentC2(void)
 {
-  cDelY = mScope->GetIntensity();
-  cDelX = mScope->GetC2Percent(mScope->FastSpotSize(), cDelY);
-  mLogRpt.Format("%s = %.3f%s  -  %.5f", mScope->GetC2Name(), cDelX, mScope->GetC2Units(),
-    cDelY);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+  double delX, delY;
+
+  delY = mScope->GetIntensity();
+  delX = mScope->GetC2Percent(mScope->FastSpotSize(), delY);
+  mLogRpt.Format("%s = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(),
+    delY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
 // ReportCrossoverPercentC2
 int CMacCmd::ReportCrossoverPercentC2(void)
 {
-  cIndex = mScope->GetSpotSize();
-  cDelY = mScope->GetCrossover(cIndex); // probe mode not required, uses current mode
-  cDelX = mScope->GetC2Percent(cIndex, cDelY);
+  double delX, delY;
+  int index;
+
+  index = mScope->GetSpotSize();
+  delY = mScope->GetCrossover(index); // probe mode not required, uses current mode
+  delX = mScope->GetC2Percent(index, delY);
   mLogRpt.Format("Crossover %s at current conditions = %.3f%s  -  %.5f",
-    mScope->GetC2Name(), cDelX, mScope->GetC2Units(), cDelY);
-  SetReportedValues(&mStrItems[1], cDelX, cDelY);
+    mScope->GetC2Name(), delX, mScope->GetC2Units(), delY);
+  SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }
 
 // ReportIlluminatedArea
 int CMacCmd::ReportIlluminatedArea(void)
 {
-  cDelX = mScope->GetIlluminatedArea();
-  mLogRpt.Format("IlluminatedArea %f", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetIlluminatedArea();
+  mLogRpt.Format("IlluminatedArea %f", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportImageDistanceOffset
 int CMacCmd::ReportImageDistanceOffset(void)
 {
-  cDelX = mScope->GetImageDistanceOffset();
-  mLogRpt.Format("Image distance offset %f", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  double delX;
+
+  delX = mScope->GetImageDistanceOffset();
+  mLogRpt.Format("Image distance offset %f", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
 // ReportAlpha
 int CMacCmd::ReportAlpha(void)
 {
-  cIndex = mScope->GetAlpha() + 1;
-  mLogRpt.Format("Alpha = %d", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  int index;
+
+  index = mScope->GetAlpha() + 1;
+  mLogRpt.Format("Alpha = %d", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // ReportSpotSize
 int CMacCmd::ReportSpotSize(void)
 {
-  cIndex = mScope->GetSpotSize();
-  mLogRpt.Format("Spot size is %d", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  int index;
+
+  index = mScope->GetSpotSize();
+  mLogRpt.Format("Spot size is %d", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // ReportProbeMode
 int CMacCmd::ReportProbeMode(void)
 {
-  cIndex = mScope->ReadProbeMode();
-  mLogRpt.Format("Probe mode is %s", cIndex ? "microprobe" : "nanoprobe");
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  int index;
+
+  index = mScope->ReadProbeMode();
+  mLogRpt.Format("Probe mode is %s", index ? "microprobe" : "nanoprobe");
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // ReportEnergyFilter
 int CMacCmd::ReportEnergyFilter(void)
 {
+  BOOL truth;
+  double delX;
+
   if (!mWinApp->ScopeHasFilter())
     ABORT_NOLINE("You cannot use ReportEnergyFilter; there is no filter");
   if (mScope->GetHasOmegaFilter())
-    mScope->updateEFTEMSpectroscopy(cTruth);
+    mScope->updateEFTEMSpectroscopy(truth);
   else if (mCamera->CheckFilterSettings())
     ABORT_NOLINE("An error occurred checking filter settings");
-  cDelX = mFiltParam->zeroLoss ? 0. : mFiltParam->energyLoss;
+  delX = mFiltParam->zeroLoss ? 0. : mFiltParam->energyLoss;
   mLogRpt.Format("Filter slit width %.1f, energy loss %.1f, slit %s",
-    mFiltParam->slitWidth, cDelX, mFiltParam->slitIn ? "IN" : "OUT");
-  SetReportedValues(&mStrItems[1], mFiltParam->slitWidth, cDelX,
+    mFiltParam->slitWidth, delX, mFiltParam->slitIn ? "IN" : "OUT");
+  SetReportedValues(&mStrItems[1], mFiltParam->slitWidth, delX,
     mFiltParam->slitIn ? 1. : 0.);
   return 0;
 }
@@ -4779,37 +5199,44 @@ int CMacCmd::ReportEnergyFilter(void)
 // ReportColumnMode
 int CMacCmd::ReportColumnMode(void)
 {
-  if (!mScope->GetColumnMode(cIndex, cIndex2)) {
+  int index, index2;
+
+  if (!mScope->GetColumnMode(index, index2)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Column mode %d (%X), submode %d (%X)", cIndex, cIndex, cIndex2,cIndex2);
-  SetReportedValues(&mStrItems[1], (double)cIndex, (double)cIndex2);
+  mLogRpt.Format("Column mode %d (%X), submode %d (%X)", index, index, index2,index2);
+  SetReportedValues(&mStrItems[1], (double)index, (double)index2);
   return 0;
 }
 
 // ReportLens
 int CMacCmd::ReportLens(void)
 {
-  JustStripItems(mStrLine, 1, cReport);
-  if (!mScope->GetLensByName(cReport, cDelX)) {
+  CString report;
+  double delX;
+
+  JustStripItems(mStrLine, 1, report);
+  if (!mScope->GetLensByName(report, delX)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Lens %s = %f", (LPCTSTR)cReport, cDelX);
-  SetReportedValues(cDelX);
+  mLogRpt.Format("Lens %s = %f", (LPCTSTR)report, delX);
+  SetReportedValues(delX);
   return 0;
 }
 
 // ReportCoil
 int CMacCmd::ReportCoil(void)
 {
-  if (!mScope->GetDeflectorByName(mStrItems[1], cDelX, cDelY)) {
+  double delX, delY;
+
+  if (!mScope->GetDeflectorByName(mStrItems[1], delX, delY)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Coil %s = %f  %f", (LPCTSTR)mStrItems[1], cDelX, cDelY);
-  SetReportedValues(&mStrItems[2], cDelX, cDelY);
+  mLogRpt.Format("Coil %s = %f  %f", (LPCTSTR)mStrItems[1], delX, delY);
+  SetReportedValues(&mStrItems[2], delX, delY);
   return 0;
 }
 
@@ -4832,10 +5259,13 @@ int CMacCmd::SetLensWithFLC(void)
 // ReportLensFLCStatus
 int CMacCmd::ReportLensFLCStatus(void)
 {
-  if (!mScope->GetLensFLCStatus(mItemInt[1], cIndex, cDelX))
+  double delX;
+  int index;
+
+  if (!mScope->GetLensFLCStatus(mItemInt[1], index, delX))
     ABORT_LINE("Error trying to run:\n\n");
-  mLogRpt.Format("Lens %d, FLC %s  value  %f", mItemInt[1], cIndex ? "ON" : "OFF", cDelX);
-  SetReportedValues(&mStrItems[2], cIndex, cDelX);
+  mLogRpt.Format("Lens %d, FLC %s  value  %f", mItemInt[1], index ? "ON" : "OFF", delX);
+  SetReportedValues(&mStrItems[2], index, delX);
   return 0;
 }
 
@@ -4852,37 +5282,42 @@ int CMacCmd::SetJeolSTEMflags(void)
 // SetCameraPLAOffset
 int CMacCmd::SetCameraPLAOffset(void)
 {
+  double delISX, delISY;
+  float shiftX, shiftY, floatX, floatY;
+
   if (!mImBufs[0].mImage || !mImBufs[1].mImage)
     ABORT_NOLINE("There must be images in both buffers A and B to refine detector "
       "offset");
   if (!mScope->GetUsePLforIS() || !JEOLscope)
     ABORT_NOLINE("SetCameraPLAOffset can be used only on a JEOL scope using"
       " PLA for image shift");
-  mScope->GetImageShift(cDelISX, cDelISY);
-  mScope->GetDetectorOffsets(cFloatX, cFloatY);
-  cShiftX = cFloatX + (float)(cDelISX - mImBufs[1].mISX);
-  cShiftY = cFloatY + (float)(cDelISY - mImBufs[1].mISY);
-  PrintfToLog("Camera offset changed from %.3f  %.3f to %.3f %.3f", cFloatX, cFloatY, 
-    cShiftX, cShiftY);
-  mCamera->SetCameraISOffset(mWinApp->GetCurrentCamera(), cShiftX, cShiftY);
-  mScope->SetDetectorOffsets(cShiftX, cShiftY);
-  mScope->SetImageShift(cDelISX, cDelISY);
+  mScope->GetImageShift(delISX, delISY);
+  mScope->GetDetectorOffsets(floatX, floatY);
+  shiftX = floatX + (float)(delISX - mImBufs[1].mISX);
+  shiftY = floatY + (float)(delISY - mImBufs[1].mISY);
+  PrintfToLog("Camera offset changed from %.3f  %.3f to %.3f %.3f", floatX, floatY,
+    shiftX, shiftY);
+  mCamera->SetCameraISOffset(mWinApp->GetCurrentCamera(), shiftX, shiftY);
+  mScope->SetDetectorOffsets(shiftX, shiftY);
+  mScope->SetImageShift(delISX, delISY);
   return 0;
 }
 
 // RemoveAperture, ReInsertAperture
 int CMacCmd::RemoveAperture(void)
 {
-  cIndex = mItemInt[1];
+  int index, index2;
+
+  index = mItemInt[1];
   if (mStrItems[1] == "CL")
-    cIndex = 1;
+    index = 1;
   if (mStrItems[1] == "OL")
-    cIndex = 2;
+    index = 2;
   if (CMD_IS(REINSERTAPERTURE))
-    cIndex2 = mScope->ReInsertAperture(cIndex);
+    index2 = mScope->ReInsertAperture(index);
   else
-    cIndex2 = mScope->RemoveAperture(cIndex);
-  if (cIndex2)
+    index2 = mScope->RemoveAperture(index);
+  if (index2)
     ABORT_LINE("Script aborted due to error starting aperture movement in:\n\n");
   mMovedAperture = true;
   return 0;
@@ -4900,37 +5335,46 @@ int CMacCmd::PhasePlateToNextPos(void)
 // ReportPhasePlatePos
 int CMacCmd::ReportPhasePlatePos(void)
 {
-  cIndex = mScope->GetCurrentPhasePlatePos();
-  if (cIndex < 0)
+  int index;
+
+  index = mScope->GetCurrentPhasePlatePos();
+  if (index < 0)
     ABORT_LINE("Script aborted due to error in:\n\n");
-  mLogRpt.Format("Current phase plate position is %d", cIndex + 1);
-  SetReportedValues(&mStrItems[1], cIndex + 1.);
+  mLogRpt.Format("Current phase plate position is %d", index + 1);
+  SetReportedValues(&mStrItems[1], index + 1.);
   return 0;
 }
 
 // ReportMeanCounts
 int CMacCmd::ReportMeanCounts(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cImBuf = &mImBufs[cIndex];
+  CString report;
+  EMimageBuffer *imBuf;
+  KImage *image;
+  double delX;
+  int index, sizeX, sizeY;
+  float bmin, bmax, bmean, bSD;
+
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  imBuf = &mImBufs[index];
   if (mItemEmpty[2] || mItemInt[2] < 2) {
-    cDelX = mProcessImage->WholeImageMean(cImBuf);
-    if (mStrItems[2] == "1" && cImBuf->mBinning && cImBuf->mExposure > 0.) {
-      cDelX /= cImBuf->mBinning * cImBuf->mBinning * cImBuf->mExposure *
-        mWinApp->GetGainFactor(cImBuf->mCamera, cImBuf->mBinning);
-      mLogRpt.Format("Mean of buffer %s = %.2f unbinned counts/sec", mStrItems[1], cDelX);
+    delX = mProcessImage->WholeImageMean(imBuf);
+    if (mStrItems[2] == "1" && imBuf->mBinning && imBuf->mExposure > 0.) {
+      delX /= imBuf->mBinning * imBuf->mBinning * imBuf->mExposure *
+        mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
+      mLogRpt.Format("Mean of buffer %s = %.2f unbinned counts/sec", mStrItems[1], delX);
     } else
-      mLogRpt.Format("Mean of buffer %s = %.1f", mStrItems[1], cDelX);
-    SetReportedValues(cDelX);
+      mLogRpt.Format("Mean of buffer %s = %.1f", mStrItems[1], delX);
+    SetReportedValues(delX);
   } else {
-    cImage = mImBufs[cIndex].mImage;
-    cImage->getSize(cSizeX, cSizeY);
-    ProcMinMaxMeanSD(cImage->getData(), cImage->getType(), cSizeX, cSizeY, 0,
-      cSizeX - 1, 0, cSizeY - 1, &cBmean, &cBmin, &cBmax, &cBSD);
+    image = mImBufs[index].mImage;
+    image->getSize(sizeX, sizeY);
+    ProcMinMaxMeanSD(image->getData(), image->getType(), sizeX, sizeY, 0,
+      sizeX - 1, 0, sizeY - 1, &bmean, &bmin, &bmax, &bSD);
     mLogRpt.Format("Buffer %s: mean = %.1f  sd = %.2f  min = %.1f  max = %.1f",
-      mStrItems[1], cBmean, cBSD, cBmin, cBmax);
-    SetReportedValues(cBmean, cBSD, cBmin, cBmax);
+      mStrItems[1], bmean, bSD, bmin, bmax);
+    SetReportedValues(bmean, bSD, bmin, bmax);
   }
   return 0;
 }
@@ -4938,138 +5382,158 @@ int CMacCmd::ReportMeanCounts(void)
 // ReportFileZsize
 int CMacCmd::ReportFileZsize(void)
 {
+  int index;
+
   if (!mWinApp->mStoreMRC)
     SUSPEND_LINE("because there is no open image file to report for line: \n\n");
   if (mBufferManager->CheckAsyncSaving())
     SUSPEND_NOLINE("because of file write error");
-  cIndex = mWinApp->mStoreMRC->getDepth();
-  mLogRpt.Format("Z size of file = %d", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  index = mWinApp->mStoreMRC->getDepth();
+  mLogRpt.Format("Z size of file = %d", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // SubareaMean
 int CMacCmd::SubareaMean(void)
 {
-  cIx0 = mItemInt[1];
-  cIx1 = mItemInt[2];
-  cIy0 = mItemInt[3];
-  cIy1 = mItemInt[4];
+  double delX;
+  int ix0, ix1, iy0, iy1, sizeX, sizeY;
+
+  ix0 = mItemInt[1];
+  ix1 = mItemInt[2];
+  iy0 = mItemInt[3];
+  iy1 = mItemInt[4];
   if (mImBufs->mImage)
-    mImBufs->mImage->getSize(cSizeX, cSizeY);
-  if (!mImBufs->mImage || mItemEmpty[4] || cIx0 < 0 || cIx1 >= cSizeX || cIx1 < cIx0
-    || cIy0 < 0 || cIy1 >= cSizeY || cIy1 < cIy0)
+    mImBufs->mImage->getSize(sizeX, sizeY);
+  if (!mImBufs->mImage || mItemEmpty[4] || ix0 < 0 || ix1 >= sizeX || ix1 < ix0
+    || iy0 < 0 || iy1 >= sizeY || iy1 < iy0)
       ABORT_LINE("Not enough coordinates, coordinates out of bounds, or no image "
         "in A in statement: \n\n");
-  cDelX = ProcImageMean(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
-    cSizeX, cSizeY, cIx0, cIx1, cIy0, cIy1);
-  mLogRpt.Format("Mean of subarea (%d, %d) to (%d, %d) = %.2f", cIx0, cIy0, cIx1, cIy1,
-    cDelX);
-  SetReportedValues(&mStrItems[5], cDelX);
+  delX = ProcImageMean(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
+    sizeX, sizeY, ix0, ix1, iy0, iy1);
+  mLogRpt.Format("Mean of subarea (%d, %d) to (%d, %d) = %.2f", ix0, iy0, ix1, iy1,
+    delX);
+  SetReportedValues(&mStrItems[5], delX);
   return 0;
 }
 
 // CircularSubareaMean
 int CMacCmd::CircularSubareaMean(void)
 {
-  cIx0 = mItemInt[1];
-  cIy0 = mItemInt[2];
-  cI = mItemInt[3];
+  double delX;
+  int i, ix0, iy0, sizeX, sizeY;
+
+  ix0 = mItemInt[1];
+  iy0 = mItemInt[2];
+  i = mItemInt[3];
   if (mImBufs->mImage)
-    mImBufs->mImage->getSize(cSizeX, cSizeY);
-  if (!mImBufs->mImage || mItemEmpty[3] || cIx0 - cI < 0 || cIy0 - cI < 0 ||
-    cIx0 + cI >= cSizeX || cIy0 + cI >= cSizeY)
+    mImBufs->mImage->getSize(sizeX, sizeY);
+  if (!mImBufs->mImage || mItemEmpty[3] || ix0 - i < 0 || iy0 - i < 0 ||
+    ix0 + i >= sizeX || iy0 + i >= sizeY)
     ABORT_LINE("Not enough coordinates, coordinates out of bounds, or no image "
       "in A in statement: \n\n");
-  cDelX = ProcImageMeanCircle(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
-    cSizeX, cSizeY, cIx0, cIy0, cI);
-  mLogRpt.Format("Mean of subarea with radius %d centered around (%d, %d) = %.2f", cI,
-    cIx0, cIy0, cDelX);
-  SetReportedValues(&mStrItems[4], cDelX);
+  delX = ProcImageMeanCircle(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
+    sizeX, sizeY, ix0, iy0, i);
+  mLogRpt.Format("Mean of subarea with radius %d centered around (%d, %d) = %.2f", i,
+    ix0, iy0, delX);
+  SetReportedValues(&mStrItems[4], delX);
   return 0;
 }
 
 // ElectronStats, RawElectronStats
 int CMacCmd::ElectronStats(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cDelX = mImBufs[cIndex].mBinning;
-  if (mImBufs[cIndex].mCamera < 0 || !cDelX || !mImBufs[cIndex].mExposure)
+  CString report;
+  KImage *image;
+  double delX;
+  int index, sizeX, sizeY;
+  float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX;
+
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  delX = mImBufs[index].mBinning;
+  if (mImBufs[index].mCamera < 0 || !delX || !mImBufs[index].mExposure)
     ABORT_LINE("Image buffer does not have enough information for dose statistics in:"
     "\r\n\r\n");
-  cCpe = mProcessImage->CountsPerElectronForImBuf(&mImBufs[cIndex]);
-  if (!cCpe)
+  cpe = mProcessImage->CountsPerElectronForImBuf(&mImBufs[index]);
+  if (!cpe)
     ABORT_LINE("Camera does not have a CountsPerElectron property for:\r\n\r\n");
-  cImage = mImBufs[cIndex].mImage;
-  cImage->getSize(cSizeX, cSizeY);
-  ProcMinMaxMeanSD(cImage->getData(), cImage->getType(), cSizeX, cSizeY, 0,
-    cSizeX - 1, 0, cSizeY - 1, &cBmean, &cBmin, &cBmax, &cBSD);
-  mCamParams = mWinApp->GetCamParams() + mImBufs[cIndex].mCamera;
+  image = mImBufs[index].mImage;
+  image->getSize(sizeX, sizeY);
+  ProcMinMaxMeanSD(image->getData(), image->getType(), sizeX, sizeY, 0,
+    sizeX - 1, 0, sizeY - 1, &bmean, &bmin, &bmax, &bSD);
+  mCamParams = mWinApp->GetCamParams() + mImBufs[index].mCamera;
   if (CamHasDoubledBinnings(mCamParams))
-    cDelX /= 2;
-  cBmin /= cCpe;
-  cBmax /= cCpe;
-  cBmean /= cCpe;
-  cBSD /= cCpe;
-  cBacklashX = (float)(cBmean / (mImBufs[cIndex].mExposure * cDelX * cDelX));
-  cBacklashY = cBacklashX;
+    delX /= 2;
+  bmin /= cpe;
+  bmax /= cpe;
+  bmean /= cpe;
+  bSD /= cpe;
+  backlashX = (float)(bmean / (mImBufs[index].mExposure * delX * delX));
+  backlashY = backlashX;
   if (CMD_IS(ELECTRONSTATS)) {
-    if (mImBufs[cIndex].mK2ReadMode > 0)
-      cBacklashY = mProcessImage->LinearizedDoseRate(mImBufs[cIndex].mCamera,
-        cBacklashX);
-    if (mImBufs[cIndex].mDoseRatePerUBPix > 0.) {
-      SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", 
-        cBacklashY, mImBufs[cIndex].mDoseRatePerUBPix);
-      cBacklashY = mImBufs[cIndex].mDoseRatePerUBPix;
+    if (mImBufs[index].mK2ReadMode > 0)
+      backlashY = mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera,
+        backlashX);
+    if (mImBufs[index].mDoseRatePerUBPix > 0.) {
+      SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f",
+        backlashY, mImBufs[index].mDoseRatePerUBPix);
+      backlashY = mImBufs[index].mDoseRatePerUBPix;
     }
   }
-  cShiftX = cBacklashY / cBacklashX;
+  shiftX = backlashY / backlashX;
   mLogRpt.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
-    "dose rate = %.3f e/unbinned pixel/sec", cBmin * cShiftX, cBmax * cShiftX,
-    cBmean *cShiftX, cBSD * cShiftX, cBacklashY);
-  SetReportedValues(&mStrItems[2], cBmin * cShiftX, cBmax * cShiftX, cBmean * cShiftX,
-    cBSD *cShiftX, cBacklashY);
+    "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX,
+    bmean *shiftX, bSD * shiftX, backlashY);
+  SetReportedValues(&mStrItems[2], bmin * shiftX, bmax * shiftX, bmean * shiftX,
+    bSD *shiftX, backlashY);
   return 0;
 }
 
 // CropImage, CropCenterToSize
 int CMacCmd::CropImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
-    ABORT_LINE(cReport);
-  cImBuf = ImBufForIndex(cIndex);
-  cImBuf->mImage->getSize(cSizeX, cSizeY);
-  cImBuf->mImage->getShifts(cBacklashX, cBacklashY);
-  cTruth = CMD_IS(CROPIMAGE);
-  if (cTruth) {
-    cIx0 = mItemInt[2];
-    cIx1 = mItemInt[3];
-    cIy0 = mItemInt[4];
-    cIy1 = mItemInt[5];
+  CString report;
+  BOOL truth;
+  EMimageBuffer *imBuf;
+  int index, ix0, ix1, iy0, iy1, sizeX, sizeY;
+  float backlashX, backlashY;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  imBuf->mImage->getSize(sizeX, sizeY);
+  imBuf->mImage->getShifts(backlashX, backlashY);
+  truth = CMD_IS(CROPIMAGE);
+  if (truth) {
+    ix0 = mItemInt[2];
+    ix1 = mItemInt[3];
+    iy0 = mItemInt[4];
+    iy1 = mItemInt[5];
 
     // Test for whether centered:if not, it needs to be marked as processed
-    cTruth = B3DABS(cIx0 + cIx1 + 1 - cSizeX) > 1 || B3DABS(cIy0 + cIy1 + 1 - cSizeY) > 1;
+    truth = B3DABS(ix0 + ix1 + 1 - sizeX) > 1 || B3DABS(iy0 + iy1 + 1 - sizeY) > 1;
   } else {
-    if (mItemInt[2] > cSizeX || mItemInt[3] > cSizeY)
+    if (mItemInt[2] > sizeX || mItemInt[3] > sizeY)
       ABORT_LINE("Image is already smaller than size requested in:\n\n");
     if (mItemInt[2] <= 0 || mItemInt[3] <= 0)
       ABORT_LINE("Size to crop to must be positive in:\n\n");
-    cIx0 = (cSizeX - mItemInt[2]) / 2;
-    cIy0 = (cSizeY - mItemInt[3]) / 2;
-    cIx1 = cIx0 + mItemInt[2] - 1;
-    cIy1 = cIy0 + mItemInt[3] - 1;
+    ix0 = (sizeX - mItemInt[2]) / 2;
+    iy0 = (sizeY - mItemInt[3]) / 2;
+    ix1 = ix0 + mItemInt[2] - 1;
+    iy1 = iy0 + mItemInt[3] - 1;
   }
-  cIx0 = mProcessImage->CropImage(cImBuf, cIy0, cIx0, cIy1, cIx1);
-  if (cIx0) {
-    cReport.Format("Error # %d attempting to crop image in buffer %c in statement: \n\n"
-      , cIx0, mStrItems[1].GetAt(0));
-    ABORT_LINE(cReport);
+  ix0 = mProcessImage->CropImage(imBuf, iy0, ix0, iy1, ix1);
+  if (ix0) {
+    report.Format("Error # %d attempting to crop image in buffer %c in statement: \n\n"
+      , ix0, mStrItems[1].GetAt(0));
+    ABORT_LINE(report);
   }
 
   // Mark as cropped if centered and unshifted: this allows autoalign to apply image
   // shift on scope
-  mImBufs->mCaptured = (cTruth || cBacklashX || cBacklashY) ? BUFFER_PROCESSED :
+  mImBufs->mCaptured = (truth || backlashX || backlashY) ? BUFFER_PROCESSED :
     BUFFER_CROPPED;
   return 0;
 }
@@ -5077,12 +5541,15 @@ int CMacCmd::CropImage(void)
 // ReduceImage
 int CMacCmd::ReduceImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true))
-    ABORT_LINE(cReport);
-  cIx0 = mProcessImage->ReduceImage(ImBufForIndex(cIndex), mItemFlt[2], &cReport);
-  if (cIx0) {
-    cReport += " in statement:\n\n";
-    ABORT_LINE(cReport);
+  CString report;
+  int index, ix0;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true))
+    ABORT_LINE(report);
+  ix0 = mProcessImage->ReduceImage(ImBufForIndex(index), mItemFlt[2], &report);
+  if (ix0) {
+    report += " in statement:\n\n";
+    ABORT_LINE(report);
   }
   return 0;
 }
@@ -5090,9 +5557,12 @@ int CMacCmd::ReduceImage(void)
 // Rotate90CW
 int CMacCmd::Rotate90CW(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  mWinApp->mMainView->SetImBufIndex(cIndex);
+  CString report;
+  int index;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  mWinApp->mMainView->SetImBufIndex(index);
   mProcessImage->RotateImage(FALSE);
   return 0;
 }
@@ -5100,9 +5570,12 @@ int CMacCmd::Rotate90CW(void)
 // Rotate90CCW
 int CMacCmd::Rotate90CCW(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  mWinApp->mMainView->SetImBufIndex(cIndex);
+  CString report;
+  int index;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  mWinApp->mMainView->SetImBufIndex(index);
   mProcessImage->RotateImage(TRUE);
   return 0;
 }
@@ -5110,24 +5583,30 @@ int CMacCmd::Rotate90CCW(void)
 // FFT
 int CMacCmd::FFT(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cIndex2 = 1;
+  CString report;
+  int index, index2;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  index2 = 1;
   if (!mItemEmpty[2])
-    cIndex2 = mItemInt[2];
-  if (cIndex2 < 1 || cIndex2 > 8)
+    index2 = mItemInt[2];
+  if (index2 < 1 || index2 > 8)
     ABORT_LINE("Binning must be between 1 and 8 in line:\n\n");
-  mProcessImage->GetFFT(&mImBufs[cIndex], cIndex2, BUFFER_FFT);
+  mProcessImage->GetFFT(&mImBufs[index], index2, BUFFER_FFT);
   return 0;
 }
 
 // FilterImage
 int CMacCmd::FilterImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true) || 
-    ConvertBufferLetter(mStrItems[6], 0, false, cIndex2, cReport))
-    ABORT_LINE(cReport);
-  if (mProcessImage->FilterImage(ImBufForIndex(cIndex), cIndex2, mItemFlt[2], mItemFlt[5],
+  CString report;
+  int index, index2;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true) ||
+    ConvertBufferLetter(mStrItems[6], 0, false, index2, report))
+    ABORT_LINE(report);
+  if (mProcessImage->FilterImage(ImBufForIndex(index), index2, mItemFlt[2], mItemFlt[5],
     mItemFlt[3], mItemFlt[4]))
     ABORT_LINE("Failed to filter image for line:\n\n");
   return 0;
@@ -5136,18 +5615,21 @@ int CMacCmd::FilterImage(void)
 // AddImages, SubtractImages, MultiplyImages, DivideImages
 int CMacCmd::CombineImages(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport) ||
-    ConvertBufferLetter(mStrItems[2], -1, true, cIndex2, cReport) ||
-    ConvertBufferLetter(mStrItems[3], 0, false, cIx1, cReport))
-    ABORT_LINE(cReport);
-  cIx0 = PROC_ADD_IMAGES;
+  CString report;
+  int index, index2, ix0, ix1;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report) ||
+    ConvertBufferLetter(mStrItems[2], -1, true, index2, report) ||
+    ConvertBufferLetter(mStrItems[3], 0, false, ix1, report))
+    ABORT_LINE(report);
+  ix0 = PROC_ADD_IMAGES;
   if (CMD_IS(SUBTRACTIMAGES))
-    cIx0 = PROC_SUBTRACT_IMAGES;
+    ix0 = PROC_SUBTRACT_IMAGES;
   if (CMD_IS(MULTIPLYIMAGES))
-    cIx0 = PROC_MULTIPLY_IMAGES;
+    ix0 = PROC_MULTIPLY_IMAGES;
   if (CMD_IS(DIVIDEIMAGES))
-    cIx0 = PROC_DIVIDE_IMAGES;
-  if (mProcessImage->CombineImages(cIndex, cIndex2, cIx1, cIx0))
+    ix0 = PROC_DIVIDE_IMAGES;
+  if (mProcessImage->CombineImages(index, index2, ix1, ix0))
     ABORT_LINE("Failed to combine images for line:\n\n");
   return 0;
 }
@@ -5155,10 +5637,13 @@ int CMacCmd::CombineImages(void)
 // ScaleImage
 int CMacCmd::ScaleImage(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport, true) ||
-    ConvertBufferLetter(mStrItems[4], 0, false, cIndex2, cReport))
-    ABORT_LINE(cReport);
-  if (mProcessImage->ScaleImage(ImBufForIndex(cIndex), cIndex2, mItemFlt[2], mItemFlt[3],
+  CString report;
+  int index, index2;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true) ||
+    ConvertBufferLetter(mStrItems[4], 0, false, index2, report))
+    ABORT_LINE(report);
+  if (mProcessImage->ScaleImage(ImBufForIndex(index), index2, mItemFlt[2], mItemFlt[3],
     !mItemEmpty[5] && mItemInt[5]))
     ABORT_LINE("Failed to scale image for line:\n\n");
   return 0;
@@ -5167,18 +5652,22 @@ int CMacCmd::ScaleImage(void)
 // CtfFind
 int CMacCmd::CtfFind(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-    ABORT_LINE(cReport);
+  CString report;
+  double delX, delY;
+  int index;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
   CtffindParams param;
   float resultsArray[7];
-  if (mProcessImage->InitializeCtffindParams(&mImBufs[cIndex], param))
+  if (mProcessImage->InitializeCtffindParams(&mImBufs[index], param))
     ABORT_LINE("Error initializing Ctffind parameters for line:\n\n");
   if (mItemDbl[2] > 0. || mItemDbl[3] > 0. || mItemDbl[2] < -100 || mItemDbl[3] < -100)
     ABORT_LINE("Minimum and maximum defocus must be negative and in microns");
   if (mItemDbl[2] < mItemDbl[3]) {
-    cDelX = mItemDbl[2];
+    delX = mItemDbl[2];
     mItemDbl[2] = mItemDbl[3];
-    mItemDbl[3] = cDelX;
+    mItemDbl[3] = delX;
   }
   param.minimum_defocus = -(float)(10000. * mItemDbl[2]);
   param.maximum_defocus = -(float)(10000. * mItemDbl[3]);
@@ -5192,20 +5681,20 @@ int CMacCmd::CtfFind(void)
   // Phase entries.  Convert all from degrees to radians.  The assumed phase shift is
   // in radians and was being converted to degrees and passed that way (12/20/18)
   if (!mItemEmpty[6]) {
-    cDelX = mItemDbl[6] * DTOR;
-    if (cDelX == 0)
-      cDelX = mProcessImage->GetPlatePhase();
+    delX = mItemDbl[6] * DTOR;
+    if (delX == 0)
+      delX = mProcessImage->GetPlatePhase();
     param.minimum_additional_phase_shift = param.maximum_additional_phase_shift =
-      (float)(cDelX);
+      (float)(delX);
     param.find_additional_phase_shift = true;
     if (!mItemEmpty[7] && (mItemDbl[6] != 0 || mItemDbl[7] != 0)) {
-      cDelY = mItemDbl[7] * DTOR;
-      if (cDelY < cDelX)
+      delY = mItemDbl[7] * DTOR;
+      if (delY < delX)
         ABORT_LINE("The maximum phase shift is less than the minimum in line:\n\n");
-      if (cDelY - cDelX > 125 * DTOR)
+      if (delY - delX > 125 * DTOR)
         ABORT_LINE("The range of phase shift to search is more than 125 degrees in "
         "line:\n\n");
-      param.maximum_additional_phase_shift = (float)cDelY;
+      param.maximum_additional_phase_shift = (float)delY;
     }
     if (!mItemEmpty[8] && mItemDbl[8])
       param.additional_phase_shift_search_step = (float)(mItemDbl[8] * DTOR);
@@ -5218,7 +5707,7 @@ int CMacCmd::CtfFind(void)
   mProcessImage->SetCtffindParamsForDefocus(param,
     0.8 *mItemDbl[2] + 0.2 * mItemDbl[3], true);
   param.compute_extra_stats = true;
-  if (mProcessImage->RunCtffind(&mImBufs[cIndex], param, resultsArray))
+  if (mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray))
     ABORT_LINE("Ctffind fitting returned an error for line:\n\n");
   SetReportedValues(-(resultsArray[0] + resultsArray[1]) / 20000.,
     (resultsArray[0] - resultsArray[1]) / 10000., resultsArray[2],
@@ -5229,191 +5718,214 @@ int CMacCmd::CtfFind(void)
 // ImageProperties
 int CMacCmd::ImageProperties(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport, true))
-    ABORT_LINE(cReport);
-  cImBuf = ImBufForIndex(cIndex);
-  cImBuf->mImage->getSize(cSizeX, cSizeY);
-  cDelX = 1000. * mWinApp->mShiftManager->GetPixelSize(&mImBufs[cIndex]);
+  CString report;
+  EMimageBuffer *imBuf;
+  double delISX, delX, delY;
+  int index, sizeX, sizeY;
+
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report, true))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  imBuf->mImage->getSize(sizeX, sizeY);
+  delX = 1000. * mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
   mLogRpt.Format("Image size %d by %d, binning %s, exposure %.4f",
-    cSizeX, cSizeY, (LPCTSTR)cImBuf->BinningText(),
-    cImBuf->mExposure);
-  if (cDelX) {
-    mStrCopy.Format(", pixel size " + mWinApp->PixelFormat((float)cDelX), (float)cDelX);
+    sizeX, sizeY, (LPCTSTR)imBuf->BinningText(),
+    imBuf->mExposure);
+  if (delX) {
+    mStrCopy.Format(", pixel size " + mWinApp->PixelFormat((float)delX), (float)delX);
     mLogRpt += mStrCopy;
   }
-  if (cImBuf->mSecNumber < 0) {
-    cDelY = -1;
+  if (imBuf->mSecNumber < 0) {
+    delY = -1;
     mStrCopy = ", read in";
   } else {
-    cDelY = cImBuf->mConSetUsed;
-    mStrCopy.Format(", %s parameters", mModeNames[cImBuf->mConSetUsed]);
+    delY = imBuf->mConSetUsed;
+    mStrCopy.Format(", %s parameters", mModeNames[imBuf->mConSetUsed]);
   }
   mLogRpt += mStrCopy;
-  if (cImBuf->mMapID) {
-    mStrCopy.Format(", mapID %d", cImBuf->mMapID);
+  if (imBuf->mMapID) {
+    mStrCopy.Format(", mapID %d", imBuf->mMapID);
     mLogRpt += mStrCopy;
   }
-  SetReportedValues(&mStrItems[2], (double)cSizeX, (double)cSizeY,
-    cImBuf->mBinning / (double)B3DMAX(1, cImBuf->mDivideBinToShow),
-    (double)cImBuf->mExposure, cDelX, cDelY);
-  cDelISX = SEMTickInterval(1000. * cImBuf->mTimeStamp, mWinApp->ProgramStartTime()) / 
+  SetReportedValues(&mStrItems[2], (double)sizeX, (double)sizeY,
+    imBuf->mBinning / (double)B3DMAX(1, imBuf->mDivideBinToShow),
+    (double)imBuf->mExposure, delX, delY);
+  delISX = SEMTickInterval(1000. * imBuf->mTimeStamp, mWinApp->ProgramStartTime()) /
     1000.;
-  cReport.Format("%.3f", cDelISX);
-  SetVariable("IMAGETICKTIME", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+  report.Format("%.3f", delISX);
+  SetVariable("IMAGETICKTIME", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
   return 0;
 }
 
 // ImageLowDoseSet
 int CMacCmd::ImageLowDoseSet(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cIndex2 = mImBufs[cIndex].mConSetUsed;
+  CString report;
+  double delX;
+  int index, index2, mag;
 
-  if (cIndex2 == MONTAGE_CONSET)
-    cIndex2 = RECORD_CONSET;
-  if (mImBufs[cIndex].mLowDoseArea && cIndex2 >= 0) {
-    mLogRpt = "Image is from " + mModeNames[cIndex2] + " in Low Dose";
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  index2 = mImBufs[index].mConSetUsed;
+
+  if (index2 == MONTAGE_CONSET)
+    index2 = RECORD_CONSET;
+  if (mImBufs[index].mLowDoseArea && index2 >= 0) {
+    mLogRpt = "Image is from " + mModeNames[index2] + " in Low Dose";
   } else {
-    if (cIndex2 == TRACK_CONSET) {
+    if (index2 == TRACK_CONSET) {
 
       // Try to match View vs R by mag first
-      cMag = mImBufs[cIndex].mMagInd;
-      if (mLdParam[VIEW_CONSET].magIndex == cMag) {
-        cIndex2 = VIEW_CONSET;
-      } else if (mLdParam[RECORD_CONSET].magIndex == cMag) {
+      mag = mImBufs[index].mMagInd;
+      if (mLdParam[VIEW_CONSET].magIndex == mag) {
+        index2 = VIEW_CONSET;
+      } else if (mLdParam[RECORD_CONSET].magIndex == mag) {
 
         // Then decide between preview and record based on exposure
-        cDelX = mImBufs[cIndex].mExposure;
-        if (fabs(cDelX - mConSets[RECORD_CONSET].exposure) <
-          fabs(cDelX - mConSets[PREVIEW_CONSET].exposure))
-          cIndex2 = RECORD_CONSET;
+        delX = mImBufs[index].mExposure;
+        if (fabs(delX - mConSets[RECORD_CONSET].exposure) <
+          fabs(delX - mConSets[PREVIEW_CONSET].exposure))
+          index2 = RECORD_CONSET;
         else
-          cIndex2 = PREVIEW_CONSET;
+          index2 = PREVIEW_CONSET;
       }
-      mLogRpt = "Image matches one from " + mModeNames[cIndex2] + " in Low Dose";
-    } else if (cIndex2 >= 0) {
-      mLogRpt = "Image is from " + mModeNames[cIndex2] + " parameters, not in Low Dose";
+      mLogRpt = "Image matches one from " + mModeNames[index2] + " in Low Dose";
+    } else if (index2 >= 0) {
+      mLogRpt = "Image is from " + mModeNames[index2] + " parameters, not in Low Dose";
     }
   }
-  if (cIndex2 > SEARCH_CONSET || cIndex2 < 0) {
-    cIndex2 = -1;
+  if (index2 > SEARCH_CONSET || index2 < 0) {
+    index2 = -1;
     mLogRpt = "Image properties do not match any Low Dose area well enough";
   }
-  SetReportedValues(&mStrItems[2], (double)cIndex2,
-    mImBufs[cIndex].mLowDoseArea ? 1. : 0.);
+  SetReportedValues(&mStrItems[2], (double)index2,
+    mImBufs[index].mLowDoseArea ? 1. : 0.);
   return 0;
 }
 
 // MeasureBeamSize
 int CMacCmd::MeasureBeamSize(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cIx0 = mProcessImage->FindBeamCenter(&mImBufs[cIndex], cBacklashX, cBacklashY,
-    cCpe, cBmin, cBmax, cBmean, cBSD, cIndex2, cIx1, cShiftX, cShiftY, cFitErr);
-  if (cIx0)
+  CString report;
+  int index, index2, ix0, ix1;
+  float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY, fitErr;
+
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  ix0 = mProcessImage->FindBeamCenter(&mImBufs[index], backlashX, backlashY,
+    cpe, bmin, bmax, bmean, bSD, index2, ix1, shiftX, shiftY, fitErr);
+  if (ix0)
     ABORT_LINE("No beam edges were detected in image for line:\n\n");
-  cBmean = mWinApp->mShiftManager->GetPixelSize(&mImBufs[cIndex]);
-  if (!cBmean)
+  bmean = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
+  if (!bmean)
     ABORT_LINE("No pixel size is available for the image for line:\n\n");
-  cCpe *= 2.f * cIndex2 * cBmean;
+  cpe *= 2.f * index2 * bmean;
   mLogRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error %.3f"
-    , cCpe, cIx1, cFitErr);
-  SetReportedValues(cCpe, cIx1, cFitErr);
+    , cpe, ix1, fitErr);
+  SetReportedValues(cpe, ix1, fitErr);
   return 0;
 }
 
 // QuadrantMeans
 int CMacCmd::QuadrantMeans(void)
 {
-  cDelY = 0.1;
-  cDelX = 0.1;
-  cIndex = 2;
+  CString report;
+  KImage *image;
+  double delX, delY, h1, v1, v2, h2, h3, v3, v4, h4;
+  int index, ix0, ix1, iy0, iy1, sizeX, sizeY;
+
+  delY = 0.1;
+  delX = 0.1;
+  index = 2;
   if (!mItemEmpty[1])
-    cIndex = mItemInt[1];
+    index = mItemInt[1];
   if (!mItemEmpty[2])
-    cDelX = mItemDbl[2];
+    delX = mItemDbl[2];
   if (!mItemEmpty[3])
-    cDelY = mItemDbl[3];
-  cImage = mImBufs->mImage;
-  if (cImage)
-    cImage->getSize(cSizeX, cSizeY);
-  if (!cImage || cIndex > B3DMIN(cSizeX, cSizeY) / 4 || cIndex < 0 || cDelX <= 0.
-    || cDelY < 0. || cDelX > 0.5 || cDelY > 0.4)
+    delY = mItemDbl[3];
+  image = mImBufs->mImage;
+  if (image)
+    image->getSize(sizeX, sizeY);
+  if (!image || index > B3DMIN(sizeX, sizeY) / 4 || index < 0 || delX <= 0.
+    || delY < 0. || delX > 0.5 || delY > 0.4)
       ABORT_LINE("Parameter out of bounds for image, or no image in A in statement:"
       "\n\n");
-  cIx0 = B3DMAX((int)(cDelY * cSizeX / 2), 1);   // Trim length in X
-  cIy0 = B3DMAX((int)(cDelY * cSizeY / 2), 1);   // Trim length in Y
-  cIx1 = B3DMAX((int)(cDelX * cSizeX / 2), 1);   // Width in X
-  cIy1 = B3DMAX((int)(cDelX * cSizeY / 2), 1);   // Width in Y
-  cH4 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 + cIndex, cSizeX - 1 - cIx0, cSizeY / 2 + cIndex, 
-    cSizeY / 2 + cIndex + cIy1 - 1);
-  cV4 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 + cIndex, cSizeX / 2 + cIndex + cIx1 - 1, cSizeY / 2 + cIndex, 
-    cSizeY - 1 - cIy0);
-  cV3 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 - cIndex - cIx1, cSizeX / 2 - cIndex - 1, cSizeY / 2 + cIndex, 
-    cSizeY - 1 - cIy0);
-  cH3 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cIx0, cSizeX / 2 - cIndex - 1, cSizeY / 2 + cIndex, cSizeY / 2 + cIndex + cIy1 - 1);
-  cH2 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cIx0, cSizeX / 2 - cIndex - 1, cSizeY / 2 - cIndex - cIy1, cSizeY / 2 - cIndex - 1);
-  cV2 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 - cIndex - cIx1, cSizeX / 2 - cIndex - 1, cIy0, cSizeY / 2 - cIndex - 1);
-  cV1 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 + cIndex, cSizeX / 2 + cIndex + cIx1 - 1, cIy0, cSizeY / 2 - cIndex - 1);
-  cH1 = ProcImageMean(cImage->getData(), cImage->getType(), cSizeX, cSizeY,
-    cSizeX / 2 + cIndex, cSizeX - 1 - cIx0, cSizeY / 2 - cIndex - cIy1, 
-    cSizeY / 2 - cIndex - 1);
-  cReport.Format("h1, v1, v2, h2, h3, v3, v4, h4:  %.2f   %.2f   %.2f   %.2f   %.2f   "
-    "%.2f   %.2f   %.2f", cH1, cV1, cV2, cH2, cH3, cV3, cV4, cH4);
-  mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
+  ix0 = B3DMAX((int)(delY * sizeX / 2), 1);   // Trim length in X
+  iy0 = B3DMAX((int)(delY * sizeY / 2), 1);   // Trim length in Y
+  ix1 = B3DMAX((int)(delX * sizeX / 2), 1);   // Width in X
+  iy1 = B3DMAX((int)(delX * sizeY / 2), 1);   // Width in Y
+  h4 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 + index, sizeX - 1 - ix0, sizeY / 2 + index,
+    sizeY / 2 + index + iy1 - 1);
+  v4 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 + index, sizeX / 2 + index + ix1 - 1, sizeY / 2 + index,
+    sizeY - 1 - iy0);
+  v3 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 - index - ix1, sizeX / 2 - index - 1, sizeY / 2 + index,
+    sizeY - 1 - iy0);
+  h3 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    ix0, sizeX / 2 - index - 1, sizeY / 2 + index, sizeY / 2 + index + iy1 - 1);
+  h2 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    ix0, sizeX / 2 - index - 1, sizeY / 2 - index - iy1, sizeY / 2 - index - 1);
+  v2 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 - index - ix1, sizeX / 2 - index - 1, iy0, sizeY / 2 - index - 1);
+  v1 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 + index, sizeX / 2 + index + ix1 - 1, iy0, sizeY / 2 - index - 1);
+  h1 = ProcImageMean(image->getData(), image->getType(), sizeX, sizeY,
+    sizeX / 2 + index, sizeX - 1 - ix0, sizeY / 2 - index - iy1,
+    sizeY / 2 - index - 1);
+  report.Format("h1, v1, v2, h2, h3, v3, v4, h4:  %.2f   %.2f   %.2f   %.2f   %.2f   "
+    "%.2f   %.2f   %.2f", h1, v1, v2, h2, h3, v3, v4, h4);
+  mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   return 0;
 }
 
 // CheckForBadStripe
 int CMacCmd::CheckForBadStripe(void)
 {
-  if (ConvertBufferLetter(mStrItems[1], 0, true, cIndex, cReport))
-    ABORT_LINE(cReport);
-  cIx0 = mItemInt[2];
+  CString report;
+  int index, index2, ix0, ix1;
+
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  ix0 = mItemInt[2];
   if (mItemEmpty[2]) {
-    if (mImBufs[cIndex].mCamera < 0)
+    if (mImBufs[index].mCamera < 0)
       ABORT_LINE("The image has no camera defined and requires an entry for horizontal"
         " versus vertical analysis in:\n\n");
-    cIx0 = (mWinApp->GetCamParams() + mImBufs[cIndex].mCamera)->rotationFlip % 2;
+    ix0 = (mWinApp->GetCamParams() + mImBufs[index].mCamera)->rotationFlip % 2;
   }
-  cIndex2 = mProcessImage->CheckForBadStripe(&mImBufs[cIndex], cIx0, cIx1);
-  if (!cIndex2)
+  index2 = mProcessImage->CheckForBadStripe(&mImBufs[index], ix0, ix1);
+  if (!index2)
     mLogRpt = "No bad stripes detected";
   else
     mLogRpt.Format("Bad stripes detected with %d sharp transitions; %d near expected"
-      " boundaries", cIndex2, cIx1);
-  SetReportedValues(cIndex2, cIx1);
+      " boundaries", index2, ix1);
+  SetReportedValues(index2, ix1);
   return 0;
 }
 
 // CircleFromPoints
 int CMacCmd::CircleFromPoints(void)
 {
+  CString report;
+  double h1, v1, v2, h2, h3, v3;
   float radius, xcen, ycen;
   if (mItemEmpty[6])
     ABORT_LINE("Need three sets of X, Y coordinates on line:\n" + mStrLine);
-  cH1 = mItemDbl[1];
-  cV1 = mItemDbl[2];
-  cH2 = mItemDbl[3];
-  cV2 = mItemDbl[4];
-  cH3 = mItemDbl[5];
-  cV3 = mItemDbl[6];
-  if (circleThrough3Pts((float)cH1, (float)cV1, (float)cH2, (float)cV2, (float)cH3,
-    (float)cV3, &radius, &xcen, &ycen)) {
+  h1 = mItemDbl[1];
+  v1 = mItemDbl[2];
+  h2 = mItemDbl[3];
+  v2 = mItemDbl[4];
+  h3 = mItemDbl[5];
+  v3 = mItemDbl[6];
+  if (circleThrough3Pts((float)h1, (float)v1, (float)h2, (float)v2, (float)h3,
+    (float)v3, &radius, &xcen, &ycen)) {
       mWinApp->AppendToLog("The three points are too close to being on a straight line"
         , LOG_OPEN_IF_CLOSED);
   } else {
-    cReport.Format("Circle center = %.2f  %.2f  radius = %.2f", xcen, ycen, radius);
-    mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
+    report.Format("Circle center = %.2f  %.2f  radius = %.2f", xcen, ycen, radius);
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     SetReportedValues(&mStrItems[7], xcen, ycen, radius);
   }
   return 0;
@@ -5429,30 +5941,35 @@ int CMacCmd::FindPixelSize(void)
 // Echo, EchoNoVarSub
 int CMacCmd::Echo(void)
 {
+  CString report;
+
   if (CMD_IS(ECHO) && !mRunningScrpLang)
     SubstituteVariables(&mStrLine, 1, mStrLine);
-  JustStripItems(mStrLine, 1, cReport, true);
-  cReport.Replace("\n", "  ");
-  mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
+  JustStripItems(mStrLine, 1, report, true);
+  report.Replace("\n", "  ");
+  mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   return 0;
 }
 
 // EchoEval, EchoReplaceLine, EchoNoLineEnd
 int CMacCmd::EchoEval(void)
 {
-  cReport = "";
-  for (cIndex = 1; cIndex < MAX_MACRO_TOKENS && !mItemEmpty[cIndex]; cIndex++) {
-    if (cIndex > 1)
-      cReport += " ";
-    cReport += mStrItems[cIndex];
+  CString report;
+  int index, index2;
+
+  report = "";
+  for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {
+    if (index > 1)
+      report += " ";
+    report += mStrItems[index];
   }
-  cReport.Replace("\n", "  ");
-  cIndex2 = 0;
+  report.Replace("\n", "  ");
+  index2 = 0;
   if (CMD_IS(ECHOREPLACELINE))
-    cIndex2 = 3;
+    index2 = 3;
   else if (CMD_IS(ECHONOLINEEND))
-    cIndex2 = 1;
-  mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED, cIndex2);
+    index2 = 1;
+  mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED, index2);
   return 0;
 }
 
@@ -5473,24 +5990,29 @@ int CMacCmd::ProgramTimeStamps(void)
 // IsVersionAtLeast, SkipIfVersionLessThan
 int CMacCmd::IsVersionAtLeast(void)
 {
-  cIndex2 = mItemEmpty[2] ? 0 : mItemInt[2];
-  cIx0 = mWinApp->GetIntegerVersion();
-  cIx1 = mWinApp->GetBuildDayStamp();
-  cTruth = mItemInt[1] <= cIx0 && cIndex2 <= cIx1;
+  BOOL truth;
+  int index2, ix0, ix1;
+
+  index2 = mItemEmpty[2] ? 0 : mItemInt[2];
+  ix0 = mWinApp->GetIntegerVersion();
+  ix1 = mWinApp->GetBuildDayStamp();
+  truth = mItemInt[1] <= ix0 && index2 <= ix1;
   if (CMD_IS(ISVERSIONATLEAST)) {
-    SetReportedValues(cTruth ? 1. : 0.);
-    mLogRpt.Format("Program version is %d date %d, %s than %d %s", cIx0, cIx1,
-      cTruth ? "later" : "earlier", mItemInt[1], (LPCTSTR)mStrItems[2]);
-  } else if (!cTruth && mCurrentIndex < mMacro->GetLength())
+    SetReportedValues(truth ? 1. : 0.);
+    mLogRpt.Format("Program version is %d date %d, %s than %d %s", ix0, ix1,
+      truth ? "later" : "earlier", mItemInt[1], (LPCTSTR)mStrItems[2]);
+  } else if (!truth && mCurrentIndex < mMacro->GetLength())
     GetNextLine(mMacro, mCurrentIndex, mStrLine);
   return 0;
 }
 
 int CMacCmd::IsFFTWindowOpen(void)
 {
-  cIndex = mWinApp->mFFTView ? 1 : 0;
-  mLogRpt.Format("FFT window %s open", cIndex ? "IS" : "is NOT");
-  SetReportedValues(&mStrItems[1], cIndex);
+  int index;
+
+  index = mWinApp->mFFTView ? 1 : 0;
+  mLogRpt.Format("FFT window %s open", index ? "IS" : "is NOT");
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
@@ -5512,15 +6034,17 @@ int CMacCmd::ReportEnvironVar(void)
 // ReportSettingsFile
 int CMacCmd::ReportSettingsFile(void)
 {
-  cReport = mWinApp->mDocWnd->GetCurrentSettingsPath();
-  mWinApp->AppendToLog("Current settings file: " + cReport);
-  SetOneReportedValue(&mStrItems[1], cReport, 1);
-  cReport = "None";
+  CString report;
+
+  report = mWinApp->mDocWnd->GetCurrentSettingsPath();
+  mWinApp->AppendToLog("Current settings file: " + report);
+  SetOneReportedValue(&mStrItems[1], report, 1);
+  report = "None";
   if (mWinApp->mDocWnd->GetReadScriptPack()) {
-    cReport = mWinApp->mDocWnd->GetCurScriptPackPath();
-    mWinApp->AppendToLog("Current script package: " + cReport);
+    report = mWinApp->mDocWnd->GetCurScriptPackPath();
+    mWinApp->AppendToLog("Current script package: " + report);
   }
-  SetOneReportedValue(&mStrItems[1], cReport, 2);
+  SetOneReportedValue(&mStrItems[1], report, 2);
   return 0;
 }
 
@@ -5539,23 +6063,27 @@ int CMacCmd::ListAllCalibrations(void)
 // Pause, YesNoBox, PauseIfFailed, AbortIfFailed
 int CMacCmd::Pause(void)
 {
-  cDoPause = CMD_IS(PAUSEIFFAILED);
-  cDoAbort = CMD_IS(ABORTIFFAILED);
-  if (!(cDoPause || cDoAbort) || !mLastTestResult) {
-    SubstituteLineStripItems(mStrLine, 1, cReport);
-    if (cDoPause || cDoAbort)
-      mWinApp->AppendToLog(cReport);
-    cDoPause = cDoPause || CMD_IS(PAUSE);
-    if (cDoPause) {
-      cReport += "\n\nDo you want to proceed with the script?";
-      cIndex = AfxMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
+  CString report;
+  BOOL doPause, doAbort;
+  int index;
+
+  doPause = CMD_IS(PAUSEIFFAILED);
+  doAbort = CMD_IS(ABORTIFFAILED);
+  if (!(doPause || doAbort) || !mLastTestResult) {
+    SubstituteLineStripItems(mStrLine, 1, report);
+    if (doPause || doAbort)
+      mWinApp->AppendToLog(report);
+    doPause = doPause || CMD_IS(PAUSE);
+    if (doPause) {
+      report += "\n\nDo you want to proceed with the script?";
+      index = AfxMessageBox(report, doAbort ? MB_EXCLAME : MB_QUESTION);
     } else
-      cIndex = SEMMessageBox(cReport, cDoAbort ? MB_EXCLAME : MB_QUESTION);
-    if ((cDoPause && cIndex == IDNO) || cDoAbort) {
-      SuspendMacro(cDoAbort);
+      index = SEMMessageBox(report, doAbort ? MB_EXCLAME : MB_QUESTION);
+    if ((doPause && index == IDNO) || doAbort) {
+      SuspendMacro(doAbort);
       return 1;
     } else
-      SetReportedValues(cIndex == IDYES ? 1. : 0.);
+      SetReportedValues(index == IDYES ? 1. : 0.);
   }
   return 0;
 }
@@ -5563,131 +6091,150 @@ int CMacCmd::Pause(void)
 // OKBox
 int CMacCmd::OKBox(void)
 {
-  SubstituteLineStripItems(mStrLine, 1, cReport);
-  AfxMessageBox(cReport, MB_OK | MB_ICONINFORMATION);
+  CString report;
+
+  SubstituteLineStripItems(mStrLine, 1, report);
+  AfxMessageBox(report, MB_OK | MB_ICONINFORMATION);
   return 0;
 }
 
 // EnterOneNumber, EnterDefaultedNumber
 int CMacCmd::EnterOneNumber(void)
 {
-  cBacklashX = 0.;
-  cIndex = 1;
-  cIndex2 = 3;
+  BOOL truth;
+  int index, index2, ix0;
+  float backlashX;
+
+  backlashX = 0.;
+  index = 1;
+  index2 = 3;
   if (CMD_IS(ENTERDEFAULTEDNUMBER)) {
 
     // Here, enter the value and the number of digits, or < 0 to get an integer entry
-    cBacklashX = mItemFlt[1];
-    cIndex = 3;
-    cIndex2 = mItemInt[2];
-    if (cIndex2 < 0)
-      cIx0 = mItemInt[1];
+    backlashX = mItemFlt[1];
+    index = 3;
+    index2 = mItemInt[2];
+    if (index2 < 0)
+      ix0 = mItemInt[1];
   }
-  SubstituteLineStripItems(mStrLine, cIndex, mStrCopy);
-  if (cIndex2 >= 0) {
-    cTruth = KGetOneFloat(mStrCopy, cBacklashX, cIndex2);
+  SubstituteLineStripItems(mStrLine, index, mStrCopy);
+  if (index2 >= 0) {
+    truth = KGetOneFloat(mStrCopy, backlashX, index2);
   } else {
-    cTruth = KGetOneInt(mStrCopy, cIx0);
-    cBacklashX = (float)cIx0;
+    truth = KGetOneInt(mStrCopy, ix0);
+    backlashX = (float)ix0;
   }
-  if (!cTruth)
+  if (!truth)
     SUSPEND_NOLINE("because no number was entered");
-  mLogRpt.Format("%s: user entered  %g", (LPCTSTR)mStrCopy, cBacklashX);
-  SetReportedValues(cBacklashX);
+  mLogRpt.Format("%s: user entered  %g", (LPCTSTR)mStrCopy, backlashX);
+  SetReportedValues(backlashX);
   return 0;
 }
 
 // EnterString
 int CMacCmd::EnterString(void)
 {
+  CString report;
+
   mStrCopy = "Enter a text string:";
-  cReport = "";
+  report = "";
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-  if (!KGetOneString(mStrCopy, cReport))
+  if (!KGetOneString(mStrCopy, report))
     SUSPEND_NOLINE("because no string was entered");
-  if (SetVariable(mItem1upper, cReport, VARTYPE_REGULAR, -1, false))
-    ABORT_NOLINE("Error setting variable " + mStrItems[1] + " with string " + cReport);
+  if (SetVariable(mItem1upper, report, VARTYPE_REGULAR, -1, false))
+    ABORT_NOLINE("Error setting variable " + mStrItems[1] + " with string " + report);
   return 0;
 }
 
 // ThreeChoiceBox
 int CMacCmd::ThreeChoiceBox(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, i, ix0, ix1;
+  CString *valPtr;
   Variable *vars[5];
   CString buttons[3];
-  cTruth = mItemEmpty[5];
-  for (cI = 0; cI < (cTruth ? 4 : 5); cI++) {
-    cReport = mStrItems[cI + 1];
-    cReport.MakeUpper();
-    vars[cI] = LookupVariable(cReport, cIndex2);
-    if (!vars[cI])
-      ABORT_LINE("The variable " + mStrItems[cI + 1] + " is not defined in line:\n\n");
-    if (vars[cI]->rowsFor2d)
-      ABORT_LINE("The variable " + mStrItems[cI + 1] + " is a 2D array which is not "
+  truth = mItemEmpty[5];
+  for (i = 0; i < (truth ? 4 : 5); i++) {
+    report = mStrItems[i + 1];
+    report.MakeUpper();
+    vars[i] = LookupVariable(report, index2);
+    if (!vars[i])
+      ABORT_LINE("The variable " + mStrItems[i + 1] + " is not defined in line:\n\n");
+    if (vars[i]->rowsFor2d)
+      ABORT_LINE("The variable " + mStrItems[i + 1] + " is a 2D array which is not "
         "allowed for line:\n\n");
   }
-  cReport = "";
-  for (cI = 0; cI < (cTruth ? 3 : 4); cI++) {
-    if (!cReport.IsEmpty())
-      cReport += "\n\n";
-    cReport += vars[cI]->value;
+  report = "";
+  for (i = 0; i < (truth ? 3 : 4); i++) {
+    if (!report.IsEmpty())
+      report += "\n\n";
+    report += vars[i]->value;
   }
 
-  cValPtr = &vars[cTruth ? 3 : 4]->value;
-  FindValueAtIndex(*cValPtr, 1, cIx0, cIx1);
-  buttons[0] = cValPtr->Mid(cIx0, cIx1 - cIx0);
-  FindValueAtIndex(*cValPtr, 2, cIx0, cIx1);
-  buttons[1] = cValPtr->Mid(cIx0, cIx1 - cIx0);
+  valPtr = &vars[truth ? 3 : 4]->value;
+  FindValueAtIndex(*valPtr, 1, ix0, ix1);
+  buttons[0] = valPtr->Mid(ix0, ix1 - ix0);
+  FindValueAtIndex(*valPtr, 2, ix0, ix1);
+  buttons[1] = valPtr->Mid(ix0, ix1 - ix0);
 
-  if (!cTruth) {
-    FindValueAtIndex(*cValPtr, 3, cIx0, cIx1);
-    buttons[2] = cValPtr->Mid(cIx0, cIx1 - cIx0);
+  if (!truth) {
+    FindValueAtIndex(*valPtr, 3, ix0, ix1);
+    buttons[2] = valPtr->Mid(ix0, ix1 - ix0);
   }
-  cI = SEMThreeChoiceBox(cReport, buttons[0], buttons[1], buttons[2],
-    (cTruth ? MB_YESNO : MB_YESNOCANCEL) | MB_ICONQUESTION, 0, false);
-  if (cI == IDYES)
-    cIndex = 1;
-  else if (cI == IDNO)
-    cIndex = 2;
+  i = SEMThreeChoiceBox(report, buttons[0], buttons[1], buttons[2],
+    (truth ? MB_YESNO : MB_YESNOCANCEL) | MB_ICONQUESTION, 0, false);
+  if (i == IDYES)
+    index = 1;
+  else if (i == IDNO)
+    index = 2;
   else
-    cIndex = 3;
-  SetReportedValues(cIndex);
-  mLogRpt = "\"" + buttons[cIndex - 1] + "\" was chosen";
+    index = 3;
+  SetReportedValues(index);
+  mLogRpt = "\"" + buttons[index - 1] + "\" was chosen";
   return 0;
 }
 
 // CompareNoCase, CompareStrings
 int CMacCmd::CompareNoCase(void)
 {
-  cVar = LookupVariable(mItem1upper, cIndex2);
-  if (!cVar)
+  int index, index2;
+  Variable *var;
+
+  var = LookupVariable(mItem1upper, index2);
+  if (!var)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   if (CMD_IS(COMPARESTRINGS))
-    cIndex = cVar->value.Compare(mStrCopy);
+    index = var->value.Compare(mStrCopy);
   else
-    cIndex = cVar->value.CompareNoCase(mStrCopy);
-  mLogRpt.Format("The strings %s equal", cIndex ? "are NOT" : "ARE");
-  SetReportedValues(cIndex);
+    index = var->value.CompareNoCase(mStrCopy);
+  mLogRpt.Format("The strings %s equal", index ? "are NOT" : "ARE");
+  SetReportedValues(index);
   return 0;
 }
 
 // StripEndingDigits
 int CMacCmd::StripEndingDigits(void)
 {
-  cVar = LookupVariable(mItem1upper, cIndex2);
-  if (!cVar)
+  CString report;
+  int index, index2;
+  Variable *var;
+
+  var = LookupVariable(mItem1upper, index2);
+  if (!var)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
-  cReport = cVar->value;
-  for (cIndex = cReport.GetLength() - 1; cIndex > 0; cIndex--)
-    if ((int)cReport.GetAt(cIndex) < '0' || (int)cReport.GetAt(cIndex) > '9')
+  report = var->value;
+  for (index = report.GetLength() - 1; index > 0; index--)
+    if ((int)report.GetAt(index) < '0' || (int)report.GetAt(index) > '9')
       break;
-  mStrCopy = cReport.Right(cReport.GetLength() - (cIndex + 1));
-  cReport = cReport.Left(cIndex + 1);
+  mStrCopy = report.Right(report.GetLength() - (index + 1));
+  report = report.Left(index + 1);
   mItem1upper = mStrItems[2];
   mItem1upper.MakeUpper();
-  if (SetVariable(mItem1upper, cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false))
-    ABORT_LINE("Error setting variable " + mStrItems[2] + " with string " + cReport +
+  if (SetVariable(mItem1upper, report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false))
+    ABORT_LINE("Error setting variable " + mStrItems[2] + " with string " + report +
     " in:\n\n");
   SetReportedValues(atoi((LPCTSTR)mStrCopy));
   return 0;
@@ -5703,14 +6250,16 @@ int CMacCmd::MailSubject(void)
 // SendEmail, ErrorBoxSendEmail
 int CMacCmd::SendEmail(void)
 {
-  SubstituteLineStripItems(mStrLine, 1, cReport);
+  CString report;
+
+  SubstituteLineStripItems(mStrLine, 1, report);
   if (CMD_IS(SENDEMAIL)) {
-    mWinApp->mMailer->SendMail(mMailSubject, cReport);
+    mWinApp->mMailer->SendMail(mMailSubject, report);
   } else {
     if (!mWinApp->mMailer->GetInitialized() || mWinApp->mMailer->GetSendTo().IsEmpty())
       ABORT_LINE("Mail server not initialized or email address not defined; cannot "
       "do:\n");
-    mEmailOnError = cReport;
+    mEmailOnError = report;
   }
   return 0;
 }
@@ -5718,24 +6267,30 @@ int CMacCmd::SendEmail(void)
 // ClearAlignment
 int CMacCmd::ClearAlignment(void)
 {
-  cDoShift = (mItemEmpty[1] || !mItemInt[1]) && !mScope->GetNoScope();
-  mShiftManager->SetAlignShifts(0., 0., false, mImBufs, cDoShift);
+  BOOL doShift;
+
+  doShift = (mItemEmpty[1] || !mItemInt[1]) && !mScope->GetNoScope();
+  mShiftManager->SetAlignShifts(0., 0., false, mImBufs, doShift);
   return 0;
 }
 
 // ResetImageShift
 int CMacCmd::ResetImageShift(void)
 {
-  cTruth = mShiftManager->GetBacklashMouseAndISR();
-  cBacklashX = 0.;
+  BOOL truth;
+  int index;
+  float backlashX;
+
+  truth = mShiftManager->GetBacklashMouseAndISR();
+  backlashX = 0.;
   if (mItemInt[1] > 0) {
     mShiftManager->SetBacklashMouseAndISR(true);
     if (mItemInt[1] > 1)
-      cBacklashX = mItemEmpty[2] ? mScope->GetStageRelaxation() : mItemFlt[2];
+      backlashX = mItemEmpty[2] ? mScope->GetStageRelaxation() : mItemFlt[2];
   }
-  cIndex = mShiftManager->ResetImageShift(true, false, 10000, cBacklashX);
-  mShiftManager->SetBacklashMouseAndISR(cTruth);
-  if (cIndex) {
+  index = mShiftManager->ResetImageShift(true, false, 10000, backlashX);
+  mShiftManager->SetBacklashMouseAndISR(truth);
+  if (index) {
     mCurrentIndex = mLastIndex;
     SuspendMacro();
     return 1;
@@ -5746,14 +6301,17 @@ int CMacCmd::ResetImageShift(void)
 // ResetShiftIfAbove
 int CMacCmd::ResetShiftIfAbove(void)
 {
+  ScaleMat aMat;
+  double delISX, delISY, delX, delY, specDist;
+
   if (mItemEmpty[1])
     ABORT_LINE("ResetShiftIfAbove must be followed by a number in: \n\n");
-  mScope->GetLDCenteredShift(cDelISX, cDelISY);
-  cAMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
-  cDelX = cAMat.xpx * cDelISX + cAMat.xpy * cDelISY;
-  cDelY = cAMat.ypx * cDelISX + cAMat.ypy * cDelISY;
-  cSpecDist = sqrt(cDelX * cDelX + cDelY * cDelY);
-  if (cSpecDist > mItemDbl[1])
+  mScope->GetLDCenteredShift(delISX, delISY);
+  aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
+  delX = aMat.xpx * delISX + aMat.xpy * delISY;
+  delY = aMat.ypx * delISX + aMat.ypy * delISY;
+  specDist = sqrt(delX * delX + delY * delY);
+  if (specDist > mItemDbl[1])
     mWinApp->mComplexTasks->ResetShiftRealign();
   return 0;
 }
@@ -5761,28 +6319,33 @@ int CMacCmd::ResetShiftIfAbove(void)
 // Eucentricity
 int CMacCmd::Eucentricity(void)
 {
-  cIndex = FIND_EUCENTRICITY_FINE;
+  CString report;
+  int index;
+
+  index = FIND_EUCENTRICITY_FINE;
   if (!mItemEmpty[1])
-    cIndex = mItemInt[1];
-  if ((cIndex & (FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE)) == 0) {
-    cReport.Format("Error in script: value on Eucentricity statement \r\n"
+    index = mItemInt[1];
+  if ((index & (FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE)) == 0) {
+    report.Format("Error in script: value on Eucentricity statement \r\n"
       "should be %d for coarse, %d for fine, or %d for both",
       FIND_EUCENTRICITY_COARSE, FIND_EUCENTRICITY_FINE,
       FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE);
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
-  mWinApp->mComplexTasks->FindEucentricity(cIndex);
+  mWinApp->mComplexTasks->FindEucentricity(index);
   return 0;
 }
 
 // ReportLastAxisOffset
 int CMacCmd::ReportLastAxisOffset(void)
 {
-  cDelX = mWinApp->mComplexTasks->GetLastAxisOffset();
-  if (cDelX < -900)
+  double delX;
+
+  delX = mWinApp->mComplexTasks->GetLastAxisOffset();
+  if (delX < -900)
     ABORT_NOLINE("There is no last axis offset; fine eucentricity has not been run");
-  mLogRpt.Format("Lateral axis offset in last run of Fine Eucentricity was %.2f", cDelX);
-  SetReportedValues(&mStrItems[1], cDelX);
+  mLogRpt.Format("Lateral axis offset in last run of Fine Eucentricity was %.2f", delX);
+  SetReportedValues(&mStrItems[1], delX);
   return 0;
 }
 
@@ -5798,29 +6361,33 @@ int CMacCmd::SetTiltAxisOffset(void)
 // WalkUpTo
 int CMacCmd::WalkUpTo(void)
 {
+  double delISX;
+
   if (mItemEmpty[1])
     ABORT_LINE("WalkUpTo must be followed by a target angle in: \n\n");
-  cDelISX = mItemDbl[1];
-  if (cDelISX < -80. || cDelISX > 80.)
+  delISX = mItemDbl[1];
+  if (delISX < -80. || delISX > 80.)
     ABORT_LINE("Target angle is too high in: \n\n");
-  mWinApp->mComplexTasks->WalkUp((float)cDelISX, -1, 0);
+  mWinApp->mComplexTasks->WalkUp((float)delISX, -1, 0);
   return 0;
 }
 
 // ReverseTilt
 int CMacCmd::ReverseTilt(void)
 {
-  cIndex = (mScope->GetReversalTilt() > mScope->GetTiltAngle()) ? 1 : -1;
+  int index;
+
+  index = (mScope->GetReversalTilt() > mScope->GetTiltAngle()) ? 1 : -1;
   if (!mItemEmpty[1]) {
-    cIndex = mItemInt[1];
-    if (cIndex > 0)
-      cIndex = 1;
-    else if (cIndex < 0)
-      cIndex = -1;
+    index = mItemInt[1];
+    if (index > 0)
+      index = 1;
+    else if (index < 0)
+      index = -1;
     else
       ABORT_NOLINE("Error in script: ReverseTilt should not be followed by 0");
   }
-  mWinApp->mComplexTasks->ReverseTilt(cIndex);
+  mWinApp->mComplexTasks->ReverseTilt(index);
   return 0;
 }
 
@@ -5893,29 +6460,37 @@ int CMacCmd::GetWaitTaskDrift(void)
 // BacklashAdjust
 int CMacCmd::BacklashAdjust(void)
 {
-  mWinApp->mMontageController->GetColumnBacklash(cBacklashX, cBacklashY);
-  mWinApp->mComplexTasks->BacklashAdjustStagePos(cBacklashX, cBacklashY, false, false);
+  float backlashX, backlashY;
+
+  mWinApp->mMontageController->GetColumnBacklash(backlashX, backlashY);
+  mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, false, false);
   return 0;
 }
 
 // CenterBeamFromImage
 int CMacCmd::CenterBeamFromImage(void)
 {
-  cTruth = mItemInt[1] != 0;
-  cDelISX = !mItemEmpty[2] ? mItemDbl[2] : 0.;
-  cIndex = mProcessImage->CenterBeamFromActiveImage(0., 0., cTruth, cDelISX);
-  if (cIndex > 0 && cIndex <= 3)
+  BOOL truth;
+  double delISX;
+  int index;
+
+  truth = mItemInt[1] != 0;
+  delISX = !mItemEmpty[2] ? mItemDbl[2] : 0.;
+  index = mProcessImage->CenterBeamFromActiveImage(0., 0., truth, delISX);
+  if (index > 0 && index <= 3)
     ABORT_LINE("Script aborted centering beam because of no image,\n"
     "unusable image type, or failure to get memory");
-  SetReportedValues(cIndex);
+  SetReportedValues(index);
   return 0;
 }
 
 // AutoCenterBeam
 int CMacCmd::AutoCenterBeam(void)
 {
-  cDelISX = mItemEmpty[1] ? 0. : mItemDbl[1];
-  if (mWinApp->mMultiTSTasks->AutocenterBeam((float)cDelISX)) {
+  double delISX;
+
+  delISX = mItemEmpty[1] ? 0. : mItemDbl[1];
+  if (mWinApp->mMultiTSTasks->AutocenterBeam((float)delISX)) {
     AbortMacro();
     return 1;
   }
@@ -5935,7 +6510,10 @@ int CMacCmd::CookSpecimen(void)
 // SetIntensityByLastTilt, SetIntensityForMean, ChangeIntensityBy
 int CMacCmd::SetIntensityByLastTilt(void)
 {
-  cIndex2 = mWinApp->LowDoseMode() ? 3 : -1;
+  double delISX;
+  int index, index2;
+
+  index2 = mWinApp->LowDoseMode() ? 3 : -1;
   if (CMD_IS(SETINTENSITYFORMEAN)) {
     if (!mImBufs->mImage || mImBufs->IsProcessed() ||
       (mWinApp->LowDoseMode() &&
@@ -5944,17 +6522,17 @@ int CMacCmd::SetIntensityByLastTilt(void)
         " is no image or a processed image in Buffer A\n"
         "(or, if in Low Dose mode, because the image in\n"
         " Buffer A is not from the Record area)");
-    cDelISX = mItemDbl[1] /
+    delISX = mItemDbl[1] /
       mProcessImage->EquivalentRecordMean(0);
   } else if (CMD_IS(SETINTENSITYBYLASTTILT)) {
-    cDelISX = mIntensityFactor;
+    delISX = mIntensityFactor;
   } else {
-    cDelISX = mItemDbl[1];
-    cIndex2 = mScope->GetLowDoseArea();
+    delISX = mItemDbl[1];
+    index2 = mScope->GetLowDoseArea();
   }
 
-  cIndex = mWinApp->mBeamAssessor->ChangeBeamStrength(cDelISX, cIndex2);
-  if (CheckIntensityChangeReturn(cIndex))
+  index = mWinApp->mBeamAssessor->ChangeBeamStrength(delISX, index2);
+  if (CheckIntensityChangeReturn(index))
     return 1;
   UpdateLDAreaIfSaved();
   return 0;
@@ -5963,16 +6541,18 @@ int CMacCmd::SetIntensityByLastTilt(void)
 // SetDoseRate
 int CMacCmd::SetDoseRate(void)
 {
+  int index;
+
   if (mItemDbl[1] <= 0)
     ABORT_LINE("Dose rate must be positive for line:\n\n");
   if (!mImBufs->mImage)
     ABORT_LINE("There must be an image in buffer A for line:\n\n");
-  cIndex = mProcessImage->DoSetIntensity(true, mItemFlt[1]);
-  if (cIndex < 0) {
+  index = mProcessImage->DoSetIntensity(true, mItemFlt[1]);
+  if (index < 0) {
     AbortMacro();
     return 1;
   }
-  if (CheckIntensityChangeReturn(cIndex))
+  if (CheckIntensityChangeReturn(index))
     return 1;
   UpdateLDAreaIfSaved();
   return 0;
@@ -5981,28 +6561,30 @@ int CMacCmd::SetDoseRate(void)
 // SetPercentC2, IncPercentC2
 int CMacCmd::SetPercentC2(void)
 {
+  double delISX, delISY;
+  int index;
 
   // The entered number is always in terms of % C2 or illuminated area, so for
   // incremental, first comparable value and add to get the absolute to set
-  cDelISX = mItemDbl[1];
+  delISX = mItemDbl[1];
   if (mItemEmpty[1])
     ABORT_LINE("Script aborted because no C2 percent was entered in:\n\n");
-  cIndex = mScope->FastSpotSize();
+  index = mScope->FastSpotSize();
   if (CMD_IS(INCPERCENTC2))
-    cDelISX += mScope->GetC2Percent(cIndex, mScope->GetIntensity());
+    delISX += mScope->GetC2Percent(index, mScope->GetIntensity());
 
   // Then convert to an intensity as appropriate for scope
   if (mScope->GetUseIllumAreaForC2()) {
-    cDelISY = mScope->IllumAreaToIntensity(cDelISX / 100.);
+    delISY = mScope->IllumAreaToIntensity(delISX / 100.);
   } else {
-    cDelISY = (0.01 * cDelISX - mScope->GetC2SpotOffset(cIndex)) /
+    delISY = (0.01 * delISX - mScope->GetC2SpotOffset(index)) /
       mScope->GetC2IntensityFactor();
   }
-  mScope->SetIntensity(cDelISY);
-  cDelISY = mScope->FastIntensity();
-  cDelISX = mScope->GetC2Percent(cIndex, cDelISY);
-  mLogRpt.Format("Intensity set to %.3f%s  -  %.5f", cDelISX, mScope->GetC2Units(),
-    cDelISY);
+  mScope->SetIntensity(delISY);
+  delISY = mScope->FastIntensity();
+  delISX = mScope->GetC2Percent(index, delISY);
+  mLogRpt.Format("Intensity set to %.3f%s  -  %.5f", delISX, mScope->GetC2Units(),
+    delISY);
   UpdateLDAreaIfSaved();
   return 0;
 }
@@ -6042,9 +6624,11 @@ int CMacCmd::SetAlpha(void)
 // ReportJeolGIF
 int CMacCmd::ReportJeolGIF(void)
 {
-  cIndex = mScope->GetJeolGIF();
-  mLogRpt.Format("JEOL GIF MODE return value %d", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  int index;
+
+  index = mScope->GetJeolGIF();
+  mLogRpt.Format("JEOL GIF MODE return value %d", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
@@ -6061,13 +6645,15 @@ int CMacCmd::SetJeolGIF(void)
 // NormalizeLenses
 int CMacCmd::NormalizeLenses(void)
 {
+  int index;
+
   if (mItemInt[1] & 1)
-    cIndex = mScope->NormalizeProjector();
+    index = mScope->NormalizeProjector();
   if (mItemInt[1] & 2)
-    cIndex = mScope->NormalizeObjective();
+    index = mScope->NormalizeObjective();
   if (mItemInt[1] & 4)
-    cIndex = mScope->NormalizeCondenser();
-  if (!cIndex)
+    index = mScope->NormalizeCondenser();
+  if (!index)
     AbortMacro();
   return 0;
 }
@@ -6075,12 +6661,14 @@ int CMacCmd::NormalizeLenses(void)
 // NormalizeAllLenses
 int CMacCmd::NormalizeAllLenses(void)
 {
-  cIndex = 0;
+  int index;
+
+  index = 0;
   if (!mItemEmpty[1])
-    cIndex = mItemInt[1];
-  if (cIndex < 0 || cIndex > 3)
+    index = mItemInt[1];
+  if (index < 0 || index > 3)
     ABORT_LINE("Lens group specifier must be between 0 and 3 in: \n\n");
-  if (!mScope->NormalizeAll(cIndex))
+  if (!mScope->NormalizeAll(index))
     AbortMacro();
   return 0;
 }
@@ -6088,28 +6676,32 @@ int CMacCmd::NormalizeAllLenses(void)
 // ReportSlotStatus
 int CMacCmd::ReportSlotStatus(void)
 {
-  if (!mScope->CassetteSlotStatus(mItemInt[1], cIndex)) {
+  int index;
+
+  if (!mScope->CassetteSlotStatus(mItemInt[1], index)) {
     AbortMacro();
     return 1;
   }
-  if (cIndex < -1)
+  if (index < -1)
     mLogRpt.Format("Requesting status of slot %d gives an error", mItemInt[1]);
   else
-    mLogRpt.Format("Slot %d %s", mItemInt[1], cIndex < 0 ? "has unknown status" :
-    (cIndex ? "is occupied" : "is empty"));
-  SetReportedValues(&mStrItems[2], (double)cIndex);
+    mLogRpt.Format("Slot %d %s", mItemInt[1], index < 0 ? "has unknown status" :
+    (index ? "is occupied" : "is empty"));
+  SetReportedValues(&mStrItems[2], (double)index);
   return 0;
 }
 
 // LoadCartridge, UnloadCartridge
 int CMacCmd::LoadCartridge(void)
 {
+  int index;
+
   if (CMD_IS(LOADCARTRIDGE))
-    cIndex = mScope->LoadCartridge(mItemInt[1]);
+    index = mScope->LoadCartridge(mItemInt[1]);
   else
-    cIndex = mScope->UnloadCartridge();
-  if (cIndex)
-    ABORT_LINE(cIndex == 1 ? "The thread is already busy for a long operation in:\n\n" :
+    index = mScope->UnloadCartridge();
+  if (index)
+    ABORT_LINE(index == 1 ? "The thread is already busy for a long operation in:\n\n" :
     "There was an error trying to run a long operation with:\n\n");
   mStartedLongOp = true;
   return 0;
@@ -6118,84 +6710,98 @@ int CMacCmd::LoadCartridge(void)
 // RefrigerantLevel
 int CMacCmd::RefrigerantLevel(void)
 {
+  double delX;
+
   if (mItemInt[1] < 1 || mItemInt[1] > 3)
     ABORT_LINE("Dewar number must be between 1 and 3 in: \n\n");
-  if (!mScope->GetRefrigerantLevel(mItemInt[1], cDelX)) {
+  if (!mScope->GetRefrigerantLevel(mItemInt[1], delX)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Refrigerant level in dewar %d is %.3f", mItemInt[1], cDelX);
-  SetReportedValues(&mStrItems[2], cDelX);
+  mLogRpt.Format("Refrigerant level in dewar %d is %.3f", mItemInt[1], delX);
+  SetReportedValues(&mStrItems[2], delX);
   return 0;
 }
 
 // DewarsRemainingTime
 int CMacCmd::DewarsRemainingTime(void)
 {
-  if (!mScope->GetDewarsRemainingTime(cIndex)) {
+  int index;
+
+  if (!mScope->GetDewarsRemainingTime(index)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Remaining time to fill dewars is %d", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  mLogRpt.Format("Remaining time to fill dewars is %d", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // AreDewarsFilling
 int CMacCmd::AreDewarsFilling(void)
 {
-  if (!mScope->AreDewarsFilling(cIndex)) {
+  int index;
+
+  if (!mScope->AreDewarsFilling(index)) {
     AbortMacro();
     return 1;
   }
   if (FEIscope)
-    mLogRpt.Format("Dewars %s busy filling", cIndex ? "ARE" : "are NOT");
+    mLogRpt.Format("Dewars %s busy filling", index ? "ARE" : "are NOT");
   else {
     char *dewarTxt[4] = {"No tanks are", "Stage tank is", "Transfer tank is",
       "Stage and transfer tanks are"};
-    B3DCLAMP(cIndex, 0, 3);
-    mLogRpt.Format("%s being refilled", dewarTxt[cIndex]);
+    B3DCLAMP(index, 0, 3);
+    mLogRpt.Format("%s being refilled", dewarTxt[index]);
   }
-  SetReportedValues(&mStrItems[1], cIndex);
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
 // ReportVacuumGauge
 int CMacCmd::ReportVacuumGauge(void)
 {
-  if (!mScope->GetGaugePressure((LPCTSTR)mStrItems[1], cIndex, cDelISX)) {
-    if (JEOLscope && cIndex < -1 && cIndex > -4) {
-      cReport.Format("Name must be \"Pir\" or \"Pen\" followed by number between 0 and "
+  CString report;
+  double delISX;
+  int index;
+
+  if (!mScope->GetGaugePressure((LPCTSTR)mStrItems[1], index, delISX)) {
+    if (JEOLscope && index < -1 && index > -4) {
+      report.Format("Name must be \"Pir\" or \"Pen\" followed by number between 0 and "
         "9 in line:\n\n");
-      ABORT_LINE(cReport);
+      ABORT_LINE(report);
     }
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Gauge %s status is %d, pressure is %f", (LPCTSTR)mStrItems[1], cIndex,
-    cDelISX);
-  SetReportedValues(&mStrItems[2], cIndex, cDelISX);
+  mLogRpt.Format("Gauge %s status is %d, pressure is %f", (LPCTSTR)mStrItems[1], index,
+    delISX);
+  SetReportedValues(&mStrItems[2], index, delISX);
   return 0;
 }
 
 // ReportHighVoltage
 int CMacCmd::ReportHighVoltage(void)
 {
-  cDelISX = mScope->GetHTValue();
-  mLogRpt.Format("High voltage is %.1f kV", cDelISX);
-  SetReportedValues(&mStrItems[1], cDelISX);
+  double delISX;
+
+  delISX = mScope->GetHTValue();
+  mLogRpt.Format("High voltage is %.1f kV", delISX);
+  SetReportedValues(&mStrItems[1], delISX);
   return 0;
 }
 
 // SetSlitWidth
 int CMacCmd::SetSlitWidth(void)
 {
+  double delISX;
+
   if (mItemEmpty[1])
     ABORT_LINE("SetSlitWidth must be followed by a number in: \n\n");
-  cDelISX = mItemDbl[1];
-  if (cDelISX < mFiltParam->minWidth || cDelISX > mFiltParam->maxWidth)
+  delISX = mItemDbl[1];
+  if (delISX < mFiltParam->minWidth || delISX > mFiltParam->maxWidth)
     ABORT_LINE("This is not a legal slit width in: \n\n");
-  mFiltParam->slitWidth = (float)cDelISX;
+  mFiltParam->slitWidth = (float)delISX;
   mWinApp->mFilterControl.UpdateSettings();
   mCamera->SetupFilter();
   UpdateLDAreaIfSaved();
@@ -6205,18 +6811,21 @@ int CMacCmd::SetSlitWidth(void)
 // SetEnergyLoss, ChangeEnergyLoss
 int CMacCmd::SetEnergyLoss(void)
 {
+  CString report;
+  double delISX, delISY;
+
   if (mItemEmpty[1])
     ABORT_LINE(mStrItems[0] + " must be followed by a number in: \n\n");
-  cDelISX = mItemDbl[1];
+  delISX = mItemDbl[1];
   if (CMD_IS(CHANGEENERGYLOSS))
-    cDelISX += mFiltParam->energyLoss;
-  if (mWinApp->mFilterControl.LossOutOfRange(cDelISX, cDelISY)) {
-    cReport.Format("The energy loss requested in:\n\n%s\n\nrequires a net %s of %.1f"
+    delISX += mFiltParam->energyLoss;
+  if (mWinApp->mFilterControl.LossOutOfRange(delISX, delISY)) {
+    report.Format("The energy loss requested in:\n\n%s\n\nrequires a net %s of %.1f"
       "with the current adjustments.\nThis net value is beyond the allowed range.",
-      (LPCTSTR)mStrLine, mScope->GetHasOmegaFilter() ? "shift" : "offset", cDelISY);
-    ABORT_LINE(cReport);
+      (LPCTSTR)mStrLine, mScope->GetHasOmegaFilter() ? "shift" : "offset", delISY);
+    ABORT_LINE(report);
   }
-  mFiltParam->energyLoss = (float)cDelISX;
+  mFiltParam->energyLoss = (float)delISX;
   mFiltParam->zeroLoss = false;
   mWinApp->mFilterControl.UpdateSettings();
   mCamera->SetupFilter();
@@ -6227,10 +6836,12 @@ int CMacCmd::SetEnergyLoss(void)
 // SetSlitIn
 int CMacCmd::SetSlitIn(void)
 {
-  cIndex = 1;
+  int index;
+
+  index = 1;
   if (!mItemEmpty[1])
-    cIndex = mItemInt[1];
-  mFiltParam->slitIn = cIndex != 0;
+    index = mItemInt[1];
+  mFiltParam->slitIn = index != 0;
   mWinApp->mFilterControl.UpdateSettings();
   mCamera->SetupFilter();
   UpdateLDAreaIfSaved();
@@ -6240,11 +6851,13 @@ int CMacCmd::SetSlitIn(void)
 // RefineZLP
 int CMacCmd::RefineZLP(void)
 {
+  CString report;
+
   if (mItemEmpty[1] || SEMTickInterval(1000. * mFiltParam->alignZLPTimeStamp) >
       60000. *mItemDbl[1]) {
     CTime ctdt = CTime::GetCurrentTime();
-    cReport.Format("%02d:%02d:%02d", ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
-    mWinApp->AppendToLog(cReport, LOG_OPEN_IF_CLOSED);
+    report.Format("%02d:%02d:%02d", ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     mWinApp->mFilterTasks->RefineZLP(false);
   }
   return 0;
@@ -6253,178 +6866,194 @@ int CMacCmd::RefineZLP(void)
 // SelectCamera
 int CMacCmd::SelectCamera(void)
 {
-  cIndex = mItemInt[1];
-  if (cIndex < 1 || cIndex > mWinApp->GetNumActiveCameras())
+  int index;
+
+  index = mItemInt[1];
+  if (index < 1 || index > mWinApp->GetNumActiveCameras())
     ABORT_LINE("Camera number out of range in: \n\n");
   RestoreCameraSet(-1, true);
-  mWinApp->SetActiveCameraNumber(cIndex - 1);
+  mWinApp->SetActiveCameraNumber(index - 1);
   return 0;
 }
 
 // SetExposure
 int CMacCmd::SetExposure(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  double delX, delY;
+  int index;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  cDelX = mItemDbl[2];
-  cDelY = mItemEmpty[3] ? 0. : mItemDbl[3];
-  if (mItemEmpty[2] || cDelX <= 0. || cDelY < 0.)
+  delX = mItemDbl[2];
+  delY = mItemEmpty[3] ? 0. : mItemDbl[3];
+  if (mItemEmpty[2] || delX <= 0. || delY < 0.)
     ABORT_LINE("Incorrect entry for setting exposure: \n\n");
-  SaveControlSet(cIndex);
-  mConSets[cIndex].exposure = (float)cDelX;
+  SaveControlSet(index);
+  mConSets[index].exposure = (float)delX;
   if (!mItemEmpty[3])
-    mConSets[cIndex].drift = (float)cDelY;
+    mConSets[index].drift = (float)delY;
   return 0;
 }
 
 // SetBinning
 int CMacCmd::SetBinning(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index, index2;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (CheckCameraBinning(mItemDbl[2], cIndex2, mStrCopy))
+  if (CheckCameraBinning(mItemDbl[2], index2, mStrCopy))
     ABORT_LINE(mStrCopy);
-  SaveControlSet(cIndex);
-  mConSets[cIndex].binning = cIndex2;
+  SaveControlSet(index);
+  mConSets[index].binning = index2;
   return 0;
 }
 
 // SetCameraArea
 int CMacCmd::SetCameraArea(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  CString report;
+  int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  cReport = mStrItems[2];
-  cReport.MakeUpper();
-  if (cReport == "F" || cReport == "H" || cReport == "Q" ||
-    cReport == "WH" || cReport == "WQ") {
-    if (cReport == "F" || cReport == "WH") {
-      cIx0 = 0;
-      cIx1 = mCamParams->sizeX;
-    } else if (cReport == "Q") {
-      cIx0 = 3 * mCamParams->sizeX / 8;
-      cIx1 = 5 * mCamParams->sizeX / 8;
+  report = mStrItems[2];
+  report.MakeUpper();
+  if (report == "F" || report == "H" || report == "Q" ||
+    report == "WH" || report == "WQ") {
+    if (report == "F" || report == "WH") {
+      ix0 = 0;
+      ix1 = mCamParams->sizeX;
+    } else if (report == "Q") {
+      ix0 = 3 * mCamParams->sizeX / 8;
+      ix1 = 5 * mCamParams->sizeX / 8;
     } else {
-      cIx0 = mCamParams->sizeX / 4;
-      cIx1 = 3 * mCamParams->sizeX / 4;
+      ix0 = mCamParams->sizeX / 4;
+      ix1 = 3 * mCamParams->sizeX / 4;
     }
-    if (cReport == "F") {
-      cIy0 = 0;
-      cIy1 = mCamParams->sizeY;
-    } else if (cReport == "H" || cReport == "WH") {
-      cIy0 = mCamParams->sizeY / 4;
-      cIy1 = 3 * mCamParams->sizeY / 4;
+    if (report == "F") {
+      iy0 = 0;
+      iy1 = mCamParams->sizeY;
+    } else if (report == "H" || report == "WH") {
+      iy0 = mCamParams->sizeY / 4;
+      iy1 = 3 * mCamParams->sizeY / 4;
     } else {
-      cIy0 = 3 * mCamParams->sizeY / 8;
-      cIy1 = 5 * mCamParams->sizeY / 8;
+      iy0 = 3 * mCamParams->sizeY / 8;
+      iy1 = 5 * mCamParams->sizeY / 8;
     }
   } else {
     if (mItemEmpty[5])
       ABORT_LINE("Not enough coordinates for setting camera area: \n\n");
-    cIndex2 = BinDivisorI(mCamParams);
-    cIx0 = B3DMAX(0, B3DMIN(mCamParams->sizeX - 4, cIndex2 * mItemInt[2]));
-    cIx1 = B3DMAX(cIx0 + 1, B3DMIN(mCamParams->sizeX, cIndex2 * mItemInt[3]));
-    cIy0 = B3DMAX(0, B3DMIN(mCamParams->sizeY - 4, cIndex2 * mItemInt[4]));
-    cIy1 = B3DMAX(cIy0 + 1, B3DMIN(mCamParams->sizeY, cIndex2 * mItemInt[5]));
+    index2 = BinDivisorI(mCamParams);
+    ix0 = B3DMAX(0, B3DMIN(mCamParams->sizeX - 4, index2 * mItemInt[2]));
+    ix1 = B3DMAX(ix0 + 1, B3DMIN(mCamParams->sizeX, index2 * mItemInt[3]));
+    iy0 = B3DMAX(0, B3DMIN(mCamParams->sizeY - 4, index2 * mItemInt[4]));
+    iy1 = B3DMAX(iy0 + 1, B3DMIN(mCamParams->sizeY, index2 * mItemInt[5]));
   }
-  cIndex2 = mConSets[cIndex].binning;
-  cIy0 /= cIndex2;
-  cIy1 /= cIndex2;
-  cIx0 /= cIndex2;
-  cIx1 /= cIndex2;
-  cSizeX = cIx1 - cIx0;
-  cSizeY = cIy1 - cIy0;
-  mCamera->AdjustSizes(cSizeX, mCamParams->sizeX, mCamParams->moduloX, cIx0, cIx1, cSizeY,
-    mCamParams->sizeY, mCamParams->moduloY, cIy0, cIy1, cIndex2);
-  SaveControlSet(cIndex);
-  mConSets[cIndex].left = cIx0 * cIndex2;
-  mConSets[cIndex].right = cIx1 * cIndex2;
-  mConSets[cIndex].top = cIy0 * cIndex2;
-  mConSets[cIndex].bottom = cIy1 * cIndex2;
+  index2 = mConSets[index].binning;
+  iy0 /= index2;
+  iy1 /= index2;
+  ix0 /= index2;
+  ix1 /= index2;
+  sizeX = ix1 - ix0;
+  sizeY = iy1 - iy0;
+  mCamera->AdjustSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1, sizeY,
+    mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2);
+  SaveControlSet(index);
+  mConSets[index].left = ix0 * index2;
+  mConSets[index].right = ix1 * index2;
+  mConSets[index].top = iy0 * index2;
+  mConSets[index].bottom = iy1 * index2;
   return 0;
 }
 
 // SetCenteredSize
 int CMacCmd::SetCenteredSize(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (CheckCameraBinning(mItemDbl[2], cIndex2, mStrCopy))
+  if (CheckCameraBinning(mItemDbl[2], index2, mStrCopy))
     ABORT_LINE(mStrCopy);
-  cSizeX = mItemInt[3];
-  cSizeY = mItemInt[4];
-  if (cSizeX < 4 || cSizeX * cIndex2 > mCamParams->sizeX || cSizeY < 4 ||
-    cSizeY *cIndex2 > mCamParams->sizeY)
+  sizeX = mItemInt[3];
+  sizeY = mItemInt[4];
+  if (sizeX < 4 || sizeX * index2 > mCamParams->sizeX || sizeY < 4 ||
+    sizeY *index2 > mCamParams->sizeY)
     ABORT_LINE("Image size is out of range for current camera at given binning in:"
     " \n\n");
-  SaveControlSet(cIndex);
-  mConSets[cIndex].binning = cIndex2;
-  mCamera->CenteredSizes(cSizeX, mCamParams->sizeX, mCamParams->moduloX, cIx0, cIx1,
-    cSizeY, mCamParams->sizeY, mCamParams->moduloY, cIy0, cIy1, cIndex2);
-  mConSets[cIndex].left = cIx0 * cIndex2;
-  mConSets[cIndex].right = cIx1 * cIndex2;
-  mConSets[cIndex].top = cIy0 * cIndex2;
-  mConSets[cIndex].bottom = cIy1 * cIndex2;
+  SaveControlSet(index);
+  mConSets[index].binning = index2;
+  mCamera->CenteredSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1,
+    sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2);
+  mConSets[index].left = ix0 * index2;
+  mConSets[index].right = ix1 * index2;
+  mConSets[index].top = iy0 * index2;
+  mConSets[index].bottom = iy1 * index2;
   return 0;
 }
 
 // SetExposureForMean
 int CMacCmd::SetExposureForMean(void)
 {
-  cIndex = RECORD_CONSET;
+  double delISX, delISY;
+  int index, index2, ix1, iy1;
+  float bmin, bmean;
+
+  index = RECORD_CONSET;
   if (!mImBufs->mImage || mImBufs->IsProcessed() ||
-    (mWinApp->LowDoseMode() && mCamera->ConSetToLDArea(mImBufs->mConSetUsed) != cIndex))
+    (mWinApp->LowDoseMode() && mCamera->ConSetToLDArea(mImBufs->mConSetUsed) != index))
     ABORT_LINE("Script aborted setting exposure time because\n"
     " there is no image or a processed image in Buffer A\n"
     "(or, if in Low Dose mode, because the image in\n"
     " Buffer A is not from the Record area) for line:\n\n");
   if (mItemDbl[1] <= 0)
     ABORT_LINE("Exposure time must be positive for line:\n\n");
-  cDelISX = mItemDbl[1] / mProcessImage->EquivalentRecordMean(0);
-  cDelISY = cDelISX * B3DMAX(0.001, mConSets[cIndex].exposure - mCamParams->deadTime) +
+  delISX = mItemDbl[1] / mProcessImage->EquivalentRecordMean(0);
+  delISY = delISX * B3DMAX(0.001, mConSets[index].exposure - mCamParams->deadTime) +
     mCamParams->deadTime;
   if (mItemInt[2]) {
 
     // Adjusting frame time to keep constant number of frames
-    if (!mCamParams->K2Type || !mConSets[cIndex].doseFrac)
+    if (!mCamParams->K2Type || !mConSets[index].doseFrac)
       ABORT_LINE("Frame time can be adjusted only for K2/K3 camera"
       " with dose fractionation mode on in line:\n\n");
-    cIndex2 = B3DNINT(mConSets[cIndex].exposure /
-      B3DMAX(0.001, mConSets[cIndex].frameTime));
-    cBmin = (float)(cDelISY / cIndex2);
-    mCamera->ConstrainFrameTime(cBmin, mCamParams);
-    if (fabs(cBmin - mConSets[cIndex].frameTime) < 0.0001) {
+    index2 = B3DNINT(mConSets[index].exposure /
+      B3DMAX(0.001, mConSets[index].frameTime));
+    bmin = (float)(delISY / index2);
+    mCamera->ConstrainFrameTime(bmin, mCamParams);
+    if (fabs(bmin - mConSets[index].frameTime) < 0.0001) {
       PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
-        "too small a change in frame time", (LPCTSTR)mStrItems[1], cDelISX);
-      cBmean = 0.;
+        "too small a change in frame time", (LPCTSTR)mStrItems[1], delISX);
+      bmean = 0.;
     } else {
-      SaveControlSet(cIndex);
-      mConSets[cIndex].frameTime = cBmin;
-      cBmean = cIndex2 * cBmin;
+      SaveControlSet(index);
+      mConSets[index].frameTime = bmin;
+      bmean = index2 * bmin;
       PrintfToLog("In SetExposureForMean %s, frame time changed to %.4f, exposure time"
-        " changed to %.4f", (LPCTSTR)mStrItems[1], mConSets[cIndex].frameTime,
-        cBmean);
+        " changed to %.4f", (LPCTSTR)mStrItems[1], mConSets[index].frameTime,
+        bmean);
     }
   } else {
 
     // Just adjusting exposure time
-    cBmean = (float)cDelISY;
-    cIx1 = mCamera->DESumCountForConstraints(mCamParams, &mConSets[cIndex]);
-    mCamera->CropTietzSubarea(mCamParams, mConSets[cIndex].right - mConSets[cIndex].left,
-      mConSets[cIndex].bottom - mConSets[cIndex].top, mConSets[cIndex].processing,
-      mConSets[cIndex].mode, cIy1);
-    mCamera->ConstrainExposureTime(mCamParams, mConSets[cIndex].doseFrac,
-      mConSets[cIndex].K2ReadMode, mConSets[cIndex].binning,
-      mCamera->MakeAlignSaveFlags(&mConSets[cIndex]), cIx1, cBmean,
-      mConSets[cIndex].frameTime, cIy1, mConSets[cIndex].mode);
-    if (fabs(cBmean - mConSets[cIndex].exposure) < 0.00001) {
+    bmean = (float)delISY;
+    ix1 = mCamera->DESumCountForConstraints(mCamParams, &mConSets[index]);
+    mCamera->CropTietzSubarea(mCamParams, mConSets[index].right - mConSets[index].left,
+      mConSets[index].bottom - mConSets[index].top, mConSets[index].processing,
+      mConSets[index].mode, iy1);
+    mCamera->ConstrainExposureTime(mCamParams, mConSets[index].doseFrac,
+      mConSets[index].K2ReadMode, mConSets[index].binning,
+      mCamera->MakeAlignSaveFlags(&mConSets[index]), ix1, bmean,
+      mConSets[index].frameTime, iy1, mConSets[index].mode);
+    if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
       PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
-        "too small a change in exposure time", (LPCTSTR)mStrItems[1], cDelISX);
-      cBmean = 0.;
+        "too small a change in exposure time", (LPCTSTR)mStrItems[1], delISX);
+      bmean = 0.;
     } else {
-      SaveControlSet(cIndex);
-      cBmean = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, 
-        &mConSets[cIndex], cBmean);
+      SaveControlSet(index);
+      bmean = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams,
+        &mConSets[index], bmean);
       /* This is good for seeing how the distribute frames function works
       report.Format("Summed frame list:");
       for (index2 = 0; index2 < mConSets[index].summedFrameList.size(); index2++) {
@@ -6433,17 +7062,17 @@ int CMacCmd::SetExposureForMean(void)
       }
       mWinApp->AppendToLog(report); */
       PrintfToLog("In SetExposureForMean %s, exposure time changed to %.4f",
-        (LPCTSTR)mStrItems[1], cBmean);
+        (LPCTSTR)mStrItems[1], bmean);
     }
   }
 
   // Commit the new exposure and report if change is not good
-  if (cBmean) {
+  if (bmean) {
     float diffThresh = 0.05f;
-    mConSets[cIndex].exposure = cBmean;
-    if (fabs(cBmean - cDelISY) / cDelISY > diffThresh)
+    mConSets[index].exposure = bmean;
+    if (fabs(bmean - delISY) / delISY > diffThresh)
       PrintfToLog("WARNING: Desired exposure time (%.3f) differs from actual one "
-      "(%.3f) by more than %d%%", cDelISY, cBmean, B3DNINT(100. * diffThresh));
+      "(%.3f) by more than %d%%", delISY, bmean, B3DNINT(100. * diffThresh));
   }
   return 0;
 }
@@ -6451,47 +7080,54 @@ int CMacCmd::SetExposureForMean(void)
 // SetContinuous
 int CMacCmd::SetContinuous(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  SaveControlSet(cIndex);
-  mConSets[cIndex].mode = mItemInt[2] ? CONTINUOUS : SINGLE_FRAME;
+  SaveControlSet(index);
+  mConSets[index].mode = mItemInt[2] ? CONTINUOUS : SINGLE_FRAME;
   return 0;
 }
 
 // SetProcessing
 int CMacCmd::SetProcessing(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (mItemInt[2] < 0 || mItemInt[2] > 2)
     ABORT_LINE("Processing must 0, 1, or 2 in:\n\n");
-  SaveControlSet(cIndex);
-  mConSets[cIndex].processing = mItemInt[2];
+  SaveControlSet(index);
+  mConSets[index].processing = mItemInt[2];
   return 0;
 }
 
 // SetFrameTime, ChangeFrameAndExposure
 int CMacCmd::SetFrameTime(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  BOOL truth;
+  int index, ix0, iy1;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (!mCamParams->K2Type && !mCamParams->canTakeFrames)
     ABORT_NOLINE("Frame time cannot be set for the current camera type");
-  SaveControlSet(cIndex);
-  cTruth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
-  if (cTruth) {
-    cIx0 = B3DNINT(mCamSet->exposure / mCamSet->frameTime);
+  SaveControlSet(index);
+  truth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
+  if (truth) {
+    ix0 = B3DNINT(mCamSet->exposure / mCamSet->frameTime);
     mCamSet->frameTime *= mItemFlt[2];
   } else {
     mCamSet->frameTime = mItemFlt[2];
   }
   mCamera->CropTietzSubarea(mCamParams, mCamSet->right - mCamSet->left,
     mCamSet->bottom - mCamSet->top, mCamSet->processing,
-    mCamSet->mode, cIy1);
+    mCamSet->mode, iy1);
   mCamera->ConstrainFrameTime(mCamSet->frameTime, mCamParams,
-    mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:cIy1);
-  if (cTruth) {
-    mCamSet->exposure = mCamSet->frameTime * cIx0;
+    mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:iy1);
+  if (truth) {
+    mCamSet->exposure = mCamSet->frameTime * ix0;
     SetReportedValues(&mStrItems[3], mCamSet->frameTime, mCamSet->exposure);
   } else {
     SetReportedValues(&mStrItems[3], mCamSet->frameTime);
@@ -6502,71 +7138,80 @@ int CMacCmd::SetFrameTime(void)
 // SetK2ReadMode
 int CMacCmd::SetK2ReadMode(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (!mCamParams->K2Type && !mCamParams->OneViewType && !IS_FALCON3_OR_4(mCamParams) &&
     !mCamParams->DE_camType)
     ABORT_NOLINE("Read mode cannot be set for the current camera type");
   if (mItemInt[2] < 0 || mItemInt[2] > 2)
     ABORT_LINE("Read mode must 0, 1, or 2 in:\n\n");
-  SaveControlSet(cIndex);
-  mConSets[cIndex].K2ReadMode = mItemInt[2];
+  SaveControlSet(index);
+  mConSets[index].K2ReadMode = mItemInt[2];
   return 0;
 }
 
 // SetDoseFracParams
 int CMacCmd::SetDoseFracParams(void)
 {
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  int index;
+
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (!mItemEmpty[5] && (mItemInt[5] < 0 || mItemInt[5] > 2))
     ABORT_LINE("Alignment method (the fourth number) must be 0, 1, or 2 in:\n\n");
-  SaveControlSet(cIndex);
-  mConSets[cIndex].doseFrac = mItemInt[2] ? 1 : 0;
+  SaveControlSet(index);
+  mConSets[index].doseFrac = mItemInt[2] ? 1 : 0;
   if (!mItemEmpty[3])
-    mConSets[cIndex].saveFrames = mItemInt[3] ? 1 : 0;
+    mConSets[index].saveFrames = mItemInt[3] ? 1 : 0;
   if (!mItemEmpty[4])
-    mConSets[cIndex].alignFrames = mItemInt[4] ? 1 : 0;
+    mConSets[index].alignFrames = mItemInt[4] ? 1 : 0;
   if (!mItemEmpty[5])
-    mConSets[cIndex].useFrameAlign = mItemInt[5];
+    mConSets[index].useFrameAlign = mItemInt[5];
   if (!mItemEmpty[6])
-    mConSets[cIndex].sumK2Frames = mItemInt[6] ? 1 : 0;
+    mConSets[index].sumK2Frames = mItemInt[6] ? 1 : 0;
   return 0;
 }
 
 // SetDECamFrameRate
 int CMacCmd::SetDECamFrameRate(void)
 {
+  CString report;
+  double delISX;
+
   if (!(mCamParams->DE_camType && mCamParams->DE_FramesPerSec > 0))
     ABORT_LINE("The current camera must be a DE camera with adjustable frame rate for"
       " line:\n\n");
-  cDelISX = mItemDbl[1];
-  if (cDelISX < mCamParams->DE_MaxFrameRate + 1.)
-    cDelISX = B3DMIN(cDelISX, mCamParams->DE_MaxFrameRate);
-  if (cDelISX <= 0. || cDelISX > mCamParams->DE_MaxFrameRate) {
-    cReport.Format("The new frame rate must be greater than zero\n"
+  delISX = mItemDbl[1];
+  if (delISX < mCamParams->DE_MaxFrameRate + 1.)
+    delISX = B3DMIN(delISX, mCamParams->DE_MaxFrameRate);
+  if (delISX <= 0. || delISX > mCamParams->DE_MaxFrameRate) {
+    report.Format("The new frame rate must be greater than zero\n"
       "and less than %.2f FPS for line:\n\n", mCamParams->DE_MaxFrameRate);
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
   if (mDEframeRateToRestore < 0) {
     mNumStatesToRestore++;
     mDEframeRateToRestore = mCamParams->DE_FramesPerSec;
     mDEcamIndToRestore = mCurrentCam;
   }
-  mCamParams->DE_FramesPerSec = (float)cDelISX;
+  mCamParams->DE_FramesPerSec = (float)delISX;
   mWinApp->mDEToolDlg.UpdateSettings();
   SetReportedValues(mDEframeRateToRestore);
   mLogRpt.Format("Changed frame rate of DE camera from %.2f to %.2f",
-    mDEframeRateToRestore, cDelISX);
+    mDEframeRateToRestore, delISX);
   return 0;
 }
 
 // UseContinuousFrames
 int CMacCmd::UseContinuousFrames(void)
 {
-  cTruth = mItemInt[1] != 0;
-  if ((mUsingContinuous ? 1 : 0) != (cTruth ? 1 : 0))
-    mCamera->ChangePreventToggle(cTruth ? 1 : -1);
+  BOOL truth;
+
+  truth = mItemInt[1] != 0;
+  if ((mUsingContinuous ? 1 : 0) != (truth ? 1 : 0))
+    mCamera->ChangePreventToggle(truth ? 1 : -1);
   mUsingContinuous = mItemInt[1] != 0;
   return 0;
 }
@@ -6581,12 +7226,14 @@ int CMacCmd::StopContinuous(void)
 // ReportContinuous
 int CMacCmd::ReportContinuous(void)
 {
-  cIndex = mCamera->DoingContinuousAcquire();
-  if (cIndex)
-    mLogRpt.Format("Continuous acquire is running with set %d", cIndex - 1);
+  int index;
+
+  index = mCamera->DoingContinuousAcquire();
+  if (index)
+    mLogRpt.Format("Continuous acquire is running with set %d", index - 1);
   else
     mLogRpt = "Continuous acquire is not running";
-  SetReportedValues(&mStrItems[1], cIndex - 1.);
+  SetReportedValues(&mStrItems[1], index - 1.);
   return 0;
 }
 
@@ -6621,44 +7268,48 @@ int CMacCmd::SetLiveSettleFraction(void)
 // SetSTEMDetectors
 int CMacCmd::SetSTEMDetectors(void)
 {
+  int index, index2, ix0, iy0, sizeX;
+
   if (!mCamParams->STEMcamera)
     ABORT_LINE("The current camera is not a STEM camera in: \n\n");
-  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex, mStrCopy))
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  cSizeX = mCamera->GetMaxChannels(mCamParams);
-  if (mItemEmpty[cSizeX + 1])
+  sizeX = mCamera->GetMaxChannels(mCamParams);
+  if (mItemEmpty[sizeX + 1])
     ABORT_LINE("There must be a detector number for each channel in: \n\n");
-  cIndex2 = 0;
-  for (cIx0 = 2; cIx0 < cSizeX + 2; cIx0++) {
-    if (mItemInt[cIx0] < -1 || mItemInt[cIx0] >= mCamParams->numChannels)
+  index2 = 0;
+  for (ix0 = 2; ix0 < sizeX + 2; ix0++) {
+    if (mItemInt[ix0] < -1 || mItemInt[ix0] >= mCamParams->numChannels)
       ABORT_LINE("Detector number out of range in: \n\n");
-    for (cIy0 = cIx0 + 1; cIy0 < cSizeX + 2; cIy0++) {
-      if (mItemInt[cIx0] == mItemInt[cIy0] && mItemInt[cIx0] != -1)
+    for (iy0 = ix0 + 1; iy0 < sizeX + 2; iy0++) {
+      if (mItemInt[ix0] == mItemInt[iy0] && mItemInt[ix0] != -1)
         ABORT_LINE("Duplicate detector number in: \n\n");
     }
-    if (mItemInt[cIx0] >= 0)
-      cIndex2++;
+    if (mItemInt[ix0] >= 0)
+      index2++;
   }
-  if (!cIndex2)
+  if (!index2)
     ABORT_LINE("There must be at least one detector listed in: \n\n");
-  SaveControlSet(cIndex);
-  for (cIx0 = 0; cIx0 < cSizeX; cIx0++)
-    mConSets[cIndex].channelIndex[cIx0] = mItemInt[cIx0 + 2];
+  SaveControlSet(index);
+  for (ix0 = 0; ix0 < sizeX; ix0++)
+    mConSets[index].channelIndex[ix0] = mItemInt[ix0 + 2];
   return 0;
 }
 
 // RestoreCameraSetCmd
 int CMacCmd::RestoreCameraSetCmd(void)
 {
-  cIndex = -1;
-  if (!mItemEmpty[1] && CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex,
+  int index;
+
+  index = -1;
+  if (!mItemEmpty[1] && CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index,
     mStrCopy))
       ABORT_LINE(mStrCopy);
-  if (RestoreCameraSet(cIndex, true))
+  if (RestoreCameraSet(index, true))
     ABORT_NOLINE("No camera parameters were changed; there is nothing to restore");
-  if (cIndex == RECORD_CONSET && mAlignWholeTSOnly) {
-    SaveControlSet(cIndex);
-    mConSets[cIndex].alignFrames = 0;
+  if (index == RECORD_CONSET && mAlignWholeTSOnly) {
+    SaveControlSet(index);
+    mConSets[index].alignFrames = 0;
   }
   return 0;
 }
@@ -6666,17 +7317,18 @@ int CMacCmd::RestoreCameraSetCmd(void)
 // KeepCameraSetChanges
 int CMacCmd::KeepCameraSetChanges(void)
 {
+  int index, ix0;
   ControlSet *masterSets = mWinApp->GetCamConSets() +
     MAX_CONSETS *mCurrentCam;
-  cIndex = -1;
-  if (!mItemEmpty[1] && CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], cIndex,
+  index = -1;
+  if (!mItemEmpty[1] && CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index,
     mStrCopy))
     ABORT_LINE(mStrCopy);
-  for (cIx0 = (int)mConsetNums.size() - 1; cIx0 >= 0; cIx0--) {
-    if (mConsetNums[cIx0] == cIndex || cIndex < 0) {
-      masterSets[mConsetNums[cIx0]] = mConSets[mConsetNums[cIx0]];
-      mConsetsSaved.erase(mConsetsSaved.begin() + cIx0);
-      mConsetNums.erase(mConsetNums.begin() + cIx0);
+  for (ix0 = (int)mConsetNums.size() - 1; ix0 >= 0; ix0--) {
+    if (mConsetNums[ix0] == index || index < 0) {
+      masterSets[mConsetNums[ix0]] = mConSets[mConsetNums[ix0]];
+      mConsetsSaved.erase(mConsetsSaved.begin() + ix0);
+      mConsetNums.erase(mConsetNums.begin() + ix0);
     }
   }
   return 0;
@@ -6685,16 +7337,18 @@ int CMacCmd::KeepCameraSetChanges(void)
 // ReportK2FileParams
 int CMacCmd::ReportK2FileParams(void)
 {
-  cIndex = mCamera->GetK2SaveAsTiff();
-  cIndex2 = mCamera->GetSaveRawPacked();
-  cIx0 = mCamera->GetUse4BitMrcMode();
-  cIx1 = mCamera->GetSaveTimes100();
-  cIy0 = mCamera->GetSkipK2FrameRotFlip();
-  cIy1 = mCamera->GetOneK2FramePerFile();
+  int index, index2, ix0, ix1, iy0, iy1;
+
+  index = mCamera->GetK2SaveAsTiff();
+  index2 = mCamera->GetSaveRawPacked();
+  ix0 = mCamera->GetUse4BitMrcMode();
+  ix1 = mCamera->GetSaveTimes100();
+  iy0 = mCamera->GetSkipK2FrameRotFlip();
+  iy1 = mCamera->GetOneK2FramePerFile();
   mLogRpt.Format("File type %s  raw packed %d  4-bit mode %d  x100 %d  Skip rot %d  "
-    "file/frame %d", cIndex > 1 ? "TIFF ZIP" : (cIndex ? "MRC" : "TIFF LZW"), cIndex2,
-    cIx0, cIx1, cIy0, cIy1);
-  SetReportedValues(&mStrItems[1], cIndex, cIndex2, cIx0, cIx1, cIy0, cIy1);
+    "file/frame %d", index > 1 ? "TIFF ZIP" : (index ? "MRC" : "TIFF LZW"), index2,
+    ix0, ix1, iy0, iy1);
+  SetReportedValues(&mStrItems[1], index, index2, ix0, ix1, iy0, iy1);
   return 0;
 }
 
@@ -6722,26 +7376,28 @@ int CMacCmd::SetK2FileParams(void)
 // ReportFrameAliParams, SetFrameAliParams, ReportFrameAli2, SetFrameAli2
 int CMacCmd::ReportFrameAliParams(void)
 {
+  double delX;
+  int index, index2, ix1;
   CArray < FrameAliParams, FrameAliParams > *faParamArr = mCamera->GetFrameAliParams();
   FrameAliParams *faParam;
   BOOL *useGPUArr = mCamera->GetUseGPUforK2Align();
-  cIndex = mConSets[RECORD_CONSET].faParamSetInd;
-  if (cIndex < 0 || cIndex >= (int)faParamArr->GetSize())
+  index = mConSets[RECORD_CONSET].faParamSetInd;
+  if (index < 0 || index >= (int)faParamArr->GetSize())
     ABORT_LINE("The frame alignment parameter set index for Record is out of range "
       "for:\n\n");
-  faParam = faParamArr->GetData() + cIndex;
-  cIx1 = mCamParams->useSocket ? 1 : 0;
+  faParam = faParamArr->GetData() + index;
+  ix1 = mCamParams->useSocket ? 1 : 0;
   if (CMD_IS(REPORTFRAMEALIPARAMS)) {
-    cIndex = (faParam->doRefine ? 1 : -1) * faParam->refineIter;
-    cIndex2 = (faParam->useGroups ? 1 : -1) * faParam->groupSize;
+    index = (faParam->doRefine ? 1 : -1) * faParam->refineIter;
+    index2 = (faParam->useGroups ? 1 : -1) * faParam->groupSize;
     mLogRpt.Format("Frame alignment for Record has %s %d, keep precision %d"
       ", strategy %d, all-vs-all %d, refine %d, group %d",
       faParam->binToTarget ? "target" : "binning",
       faParam->binToTarget ? faParam->targetSize : faParam->aliBinning,
       faParam->keepPrecision, faParam->strategy,
-      faParam->numAllVsAll, cIndex, cIndex2);
+      faParam->numAllVsAll, index, index2);
     SetReportedValues(&mStrItems[1], faParam->aliBinning, faParam->keepPrecision,
-      faParam->strategy, faParam->numAllVsAll, cIndex, cIndex2);
+      faParam->strategy, faParam->numAllVsAll, index, index2);
 
   } else if (CMD_IS(SETFRAMEALIPARAMS)) {
     if (mItemInt[1] < 1 || (mItemInt[1] > 16 && mItemInt[1] < 100))
@@ -6769,15 +7425,15 @@ int CMacCmd::ReportFrameAliParams(void)
     }
 
   } else if (CMD_IS(REPORTFRAMEALI2)) {                 // ReportFrameAli2
-    cDelX = (faParam->truncate ? 1 : -1) * faParam->truncLimit;
+    delX = (faParam->truncate ? 1 : -1) * faParam->truncLimit;
     mLogRpt.Format("Frame alignment for Record has GPU %d, truncation %.2f, hybrid %d,"
-      " filters %.4f %.4f %.4f", useGPUArr[cIx1], cDelX, faParam->hybridShifts,
+      " filters %.4f %.4f %.4f", useGPUArr[ix1], delX, faParam->hybridShifts,
       faParam->rad2Filt1, faParam->rad2Filt2, faParam->rad2Filt3);
-    SetReportedValues(&mStrItems[1], useGPUArr[0], cDelX, faParam->hybridShifts,
+    SetReportedValues(&mStrItems[1], useGPUArr[0], delX, faParam->hybridShifts,
       faParam->rad2Filt1, faParam->rad2Filt2, faParam->rad2Filt3);
 
   } else {                                              // SetFrameAli2
-    useGPUArr[cIx1] = mItemInt[1] > 0;
+    useGPUArr[ix1] = mItemInt[1] > 0;
     if (!mItemEmpty[2]) {
       faParam->truncate = mItemDbl[2] > 0;
       faParam->truncLimit = (float)B3DABS(mItemDbl[2]);
@@ -6796,6 +7452,8 @@ int CMacCmd::ReportFrameAliParams(void)
 // SetFolderForFrames
 int CMacCmd::SetFolderForFrames(void)
 {
+  int index;
+
   if (!(mCamera->IsDirectDetector(mCamParams) ||
     (mCamParams->canTakeFrames & FRAMES_CAN_BE_SAVED)))
     ABORT_LINE("Cannot save frames from the current camera for line:\n\n");
@@ -6804,12 +7462,12 @@ int CMacCmd::SetFolderForFrames(void)
     if (mStrCopy.FindOneOf("/\\") >= 0)
       ABORT_LINE("Only a single folder can be entered for this camera type in:\n\n");
   } else {
-    cIndex = mStrCopy.GetAt(0);
-    if (!(((cIndex == ' / ' || cIndex == '\\') &&
+    index = mStrCopy.GetAt(0);
+    if (!(((index == ' / ' || index == '\\') &&
       (mStrCopy.GetAt(1) == ' / ' || mStrCopy.GetAt(1) == '\\')) ||
-      ((mStrCopy.GetAt(2) == ' / ' || mStrCopy.GetAt(2) == '\\') && 
+      ((mStrCopy.GetAt(2) == ' / ' || mStrCopy.GetAt(2) == '\\') &&
         mStrCopy.GetAt(1) == ':'
-        && ((cIndex >= 'A' && cIndex <= 'Z') || (cIndex >= 'a' && cIndex <= 'z')))))
+        && ((index >= 'A' && index <= 'Z') || (index >= 'a' && index <= 'z')))))
       ABORT_LINE("A complete absolute path must be entered in:\n\n");
   }
   if (mCamParams->K2Type)
@@ -6826,17 +7484,21 @@ int CMacCmd::SetFolderForFrames(void)
 // SkipFrameAliParamCheck
 int CMacCmd::SkipFrameAliParamCheck(void)
 {
-  cIndex = mItemEmpty[1] ? 1 : mItemInt[1];
-  mSkipFrameAliCheck = cIndex > 0;
+  int index;
+
+  index = mItemEmpty[1] ? 1 : mItemInt[1];
+  mSkipFrameAliCheck = index > 0;
   return 0;
 }
 
 // ReportK3CDSmode
 int CMacCmd::ReportK3CDSmode(void)
 {
-  cIndex = mCamera->GetUseK3CorrDblSamp() ? 1 : 0;
-  mLogRpt.Format("CDS mode is %s", cIndex ? "ON" : "OFF");
-  SetReportedValues(&mStrItems[1], cIndex);
+  int index;
+
+  index = mCamera->GetUseK3CorrDblSamp() ? 1 : 0;
+  mLogRpt.Format("CDS mode is %s", index ? "ON" : "OFF");
+  SetReportedValues(&mStrItems[1], index);
   return 0;
 }
 
@@ -6860,13 +7522,16 @@ int CMacCmd::SetK3CDSmode(void)
 // ReportCountScaling
 int CMacCmd::ReportCountScaling(void)
 {
-  cIndex = mCamera->GetDivideBy2();
-  cDelX = mCamera->GetCountScaling(mCamParams);
+  double delX;
+  int index;
+
+  index = mCamera->GetDivideBy2();
+  delX = mCamera->GetCountScaling(mCamParams);
   if (mCamParams->K2Type == K3_TYPE)
-    cDelX = mCamParams->countsPerElectron;
-  SetReportedValues(&mStrItems[1], cIndex, cDelX);
-  mLogRpt.Format("Division by 2 is %s; count scaling is %.3f", cIndex ? "ON" : "OFF",
-    cDelX);
+    delX = mCamParams->countsPerElectron;
+  SetReportedValues(&mStrItems[1], index, delX);
+  mLogRpt.Format("Division by 2 is %s; count scaling is %.3f", index ? "ON" : "OFF",
+    delX);
   return 0;
 }
 
@@ -6880,46 +7545,53 @@ int CMacCmd::SetDivideBy2(void)
 // ReportNumFramesSaved
 int CMacCmd::ReportNumFramesSaved(void)
 {
-  cIndex = mCamera->GetNumFramesSaved();
-  SetReportedValues(&mStrItems[1], cIndex);
-  mLogRpt.Format("Number of frames saved was %d", cIndex);
+  int index;
+
+  index = mCamera->GetNumFramesSaved();
+  SetReportedValues(&mStrItems[1], index);
+  mLogRpt.Format("Number of frames saved was %d", index);
   return 0;
 }
 
 // CameraProperties
 int CMacCmd::CameraProperties(void)
 {
+  double delX;
+  int index, index2, ix1, iy1;
+
   if (!mItemEmpty[1]) {
     if (mItemInt[1] < 1 || mItemInt[1] > mWinApp->GetActiveCamListSize())
       ABORT_LINE("Active camera number is out of range in:\n\n")
     mCamParams = mWinApp->GetCamParams() + mActiveList[mItemInt[1] - 1];
   }
-  cIx1 = BinDivisorI(mCamParams);
-  cIndex = mCamParams->sizeX / cIx1;
-  cIndex2 = mCamParams->sizeY / cIx1;
+  ix1 = BinDivisorI(mCamParams);
+  index = mCamParams->sizeX / ix1;
+  index2 = mCamParams->sizeY / ix1;
   if (mItemEmpty[2])
-    cIy1 = mScope->GetMagIndex();
+    iy1 = mScope->GetMagIndex();
   else
-    cIy1 = mItemInt[2];
-  cDelX = 1000. * cIx1 * mShiftManager->GetPixelSize(
-    mItemEmpty[1] ? mCurrentCam : mActiveList[mItemInt[1] - 1], cIy1);
+    iy1 = mItemInt[2];
+  delX = 1000. * ix1 * mShiftManager->GetPixelSize(
+    mItemEmpty[1] ? mCurrentCam : mActiveList[mItemInt[1] - 1], iy1);
   mLogRpt.Format("%s: size %d x %d    rotation/flip %d   pixel on chip %.1f   "
     "unbinned pixel %.3f nm at %dx",
-    (LPCSTR)mCamParams->name, cIndex, cIndex2, mCamParams->rotationFlip,
-    mCamParams->pixelMicrons *cIx1, cDelX, MagForCamera(mCamParams, cIy1));
-  SetReportedValues((double)cIndex, (double)cIndex2,
-    (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * cIx1, cDelX);
+    (LPCSTR)mCamParams->name, index, index2, mCamParams->rotationFlip,
+    mCamParams->pixelMicrons *ix1, delX, MagForCamera(mCamParams, iy1));
+  SetReportedValues((double)index, (double)index2,
+    (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX);
   return 0;
 }
 
 // ReportColumnOrGunValve
 int CMacCmd::ReportColumnOrGunValve(void)
 {
-  cIndex = mScope->GetColumnValvesOpen();
-  if (cIndex == -2)
+  int index;
+
+  index = mScope->GetColumnValvesOpen();
+  if (index == -2)
     ABORT_NOLINE("An error occurred getting the state of the column/gun valve");
-  SetReportedValues(&mStrItems[1], cIndex);
-  mLogRpt.Format("Column/gun valve state is %d", cIndex);
+  SetReportedValues(&mStrItems[1], index);
+  mLogRpt.Format("Column/gun valve state is %d", index);
   return 0;
 }
 
@@ -6937,11 +7609,13 @@ int CMacCmd::SetColumnOrGunValve(void)
 // ReportFilamentCurrent
 int CMacCmd::ReportFilamentCurrent(void)
 {
-  cDelISX = mScope->GetFilamentCurrent();
-  if (cDelISX < 0)
+  double delISX;
+
+  delISX = mScope->GetFilamentCurrent();
+  if (delISX < 0)
     ABORT_NOLINE("An error occurred getting the filament current");
-  SetReportedValues(&mStrItems[1], cDelISX);
-  mLogRpt.Format("Filament current is %.5g", cDelISX);
+  SetReportedValues(&mStrItems[1], delISX);
+  mLogRpt.Format("Filament current is %.5g", delISX);
   return 0;
 }
 
@@ -6956,34 +7630,39 @@ int CMacCmd::SetFilamentCurrent(void)
 // IsPVPRunning
 int CMacCmd::IsPVPRunning(void)
 {
-  if (!mScope->IsPVPRunning(cTruth))
+  BOOL truth;
+
+  if (!mScope->IsPVPRunning(truth))
     ABORT_NOLINE("An error occurred determining whether the PVP is running");
-  mLogRpt.Format("The PVP %s running", cTruth ? "IS" : "is NOT");
-  SetReportedValues(&mStrItems[1], cTruth ? 1. : 0.);
+  mLogRpt.Format("The PVP %s running", truth ? "IS" : "is NOT");
+  SetReportedValues(&mStrItems[1], truth ? 1. : 0.);
   return 0;
 }
 
 // SetBeamBlank
 int CMacCmd::SetBeamBlank(void)
 {
+  int index;
+
   if (mItemEmpty[1])
     ABORT_LINE("Entry requires a number for setting blank on or off: \n\n");
-  cIndex = mItemInt[1];
-  mScope->BlankBeam(cIndex != 0);
+  index = mItemInt[1];
+  mScope->BlankBeam(index != 0);
   return 0;
 }
 
 // MoveToNavItem
 int CMacCmd::MoveToNavItem(void)
 {
+  int index;
   ABORT_NONAV;
-  cIndex = -1;
+  index = -1;
   if (!mItemEmpty[1]) {
-    cIndex = mItemInt[1] - 1;
-    if (cIndex < 0)
+    index = mItemInt[1] - 1;
+    if (index < 0)
       ABORT_LINE("The Navigator item index must be positive: \n\n");
   }
-  if (mNavigator->MoveToItem(cIndex))
+  if (mNavigator->MoveToItem(index))
     ABORT_NOLINE("Error moving to Navigator item");
   mMovedStage = true;
   return 0;
@@ -6992,30 +7671,34 @@ int CMacCmd::MoveToNavItem(void)
 // RealignToNavItem, RealignToOtherItem
 int CMacCmd::RealignToNavItem(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1, iy0;
+  float bmax;
   ABORT_NONAV;
-  cTruth = CMD_IS(REALIGNTOOTHERITEM);
-  cIndex2 = cTruth ? 2 : 1;
-  cIndex = mItemInt[1] - 1;
-  cBmax = 0.;
-  cIx1 = cIx0 = 0;
-  if (!mItemEmpty[cIndex2 + 2]) {
-    if (mItemEmpty[cIndex2 + 4])
+  truth = CMD_IS(REALIGNTOOTHERITEM);
+  index2 = truth ? 2 : 1;
+  index = mItemInt[1] - 1;
+  bmax = 0.;
+  ix1 = ix0 = 0;
+  if (!mItemEmpty[index2 + 2]) {
+    if (mItemEmpty[index2 + 4])
       ABORT_LINE("Entry requires three values for controlling image shift reset in:"
       "\n\n");
-    cBmax = mItemFlt[cIndex2 + 2];
-    cIx0 = mItemInt[cIndex2 + 3];
-    cIx1 = mItemInt[cIndex2 + 4];
+    bmax = mItemFlt[index2 + 2];
+    ix0 = mItemInt[index2 + 3];
+    ix1 = mItemInt[index2 + 4];
   }
-  if (!mItemEmpty[cIndex2 + 1])
-    mNavHelper->SetContinuousRealign(mItemInt[cIndex2 + 1]);
-  if (cTruth)
-    cIy0 = mNavigator->RealignToOtherItem(cIndex, mItemInt[cIndex2] != 0, cBmax, cIx0, 
-      cIx1);
+  if (!mItemEmpty[index2 + 1])
+    mNavHelper->SetContinuousRealign(mItemInt[index2 + 1]);
+  if (truth)
+    iy0 = mNavigator->RealignToOtherItem(index, mItemInt[index2] != 0, bmax, ix0,
+      ix1);
   else
-    cIy0 = mNavigator->RealignToCurrentItem(mItemInt[cIndex2] != 0, cBmax, cIx0, cIx1);
-  if (cIy0) {
-    cReport.Format("Script halted due to failure %d in Realign to Item routine", cIy0);
-    ABORT_NOLINE(cReport);
+    iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, bmax, ix0, ix1);
+  if (iy0) {
+    report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
+    ABORT_NOLINE(report);
     mNavHelper->SetContinuousRealign(0);
   }
   return 0;
@@ -7024,16 +7707,20 @@ int CMacCmd::RealignToNavItem(void)
 // RealignToMapDrawnOn
 int CMacCmd::RealignToMapDrawnOn(void)
 {
-  cNavItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
-  if (!cNavItem)
+  CString report;
+  int ix0;
+  CMapDrawItem *navItem;
+
+  navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  if (!navItem)
     return 1;
-  if (!cNavItem->mDrawnOnMapID)
+  if (!navItem->mDrawnOnMapID)
     ABORT_LINE("The specified item has no ID for being drawn on a map in line:\n\n");
-  cIx0 = mNavHelper->RealignToDrawnOnMap(cNavItem, mItemInt[2] != 0);
-  if (cIx0) {
-    cReport.Format("Script halted due to failure %d in Realign to Item for line:\n\n",
-      cIx0);
-    ABORT_LINE(cReport);
+  ix0 = mNavHelper->RealignToDrawnOnMap(navItem, mItemInt[2] != 0);
+  if (ix0) {
+    report.Format("Script halted due to failure %d in Realign to Item for line:\n\n",
+      ix0);
+    ABORT_LINE(report);
   }
   return 0;
 }
@@ -7041,77 +7728,82 @@ int CMacCmd::RealignToMapDrawnOn(void)
 // GetRealignToItemError
 int CMacCmd::GetRealignToItemError(void)
 {
+  float backlashX, backlashY, bmin, bmax;
   ABORT_NONAV;
-  mNavHelper->GetLastStageError(cBacklashX, cBacklashY, cBmin, cBmax);
-  SetReportedValues(&mStrItems[1], cBacklashX, cBacklashY, cBmin, cBmax);
+  mNavHelper->GetLastStageError(backlashX, backlashY, bmin, bmax);
+  SetReportedValues(&mStrItems[1], backlashX, backlashY, bmin, bmax);
   return 0;
 }
 
 // ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap
 int CMacCmd::ReportNavItem(void)
 {
+  CString report;
+  BOOL truth;
+  int index, index2, ix0, ix1;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cTruth = CMD_IS(REPORTNEXTNAVACQITEM);
+  truth = CMD_IS(REPORTNEXTNAVACQITEM);
   if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {
-    cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-    if (cIndex < 0)
+    index = mNavigator->GetCurrentOrAcquireItem(navItem);
+    if (index < 0)
       ABORT_LINE("There is no current Navigator item for line:\n\n");
-    cIndex2 = 1;
-  } else if (cTruth) {
+    index2 = 1;
+  } else if (truth) {
     if (!mNavigator->GetAcquiring())
       ABORT_LINE("The Navigator must be acquiring for line:\n\n");
-    cNavItem = mNavigator->FindNextAcquireItem(cIndex);
-    if (cIndex < 0) {
+    navItem = mNavigator->FindNextAcquireItem(index);
+    if (index < 0) {
       mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
       SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
       SetReportedValues(-1, 0.);
     }
   } else {
     if (mItemInt[1] < 0) {
-      cIndex = mNavigator->GetNumNavItems() + mItemInt[1];
+      index = mNavigator->GetNumNavItems() + mItemInt[1];
     } else
-      cIndex = mItemInt[1] - 1;
-    cNavItem = mNavigator->GetOtherNavItem(cIndex);
-    if (!cNavItem)
+      index = mItemInt[1] - 1;
+    navItem = mNavigator->GetOtherNavItem(index);
+    if (!navItem)
       ABORT_LINE("Index is out of range in statement:\n\n");
-    cIndex2 = 2;
+    index2 = 2;
   }
 
-  if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (cTruth && cIndex >= 0)) {
+  if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (truth && index >= 0)) {
     mLogRpt.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s",
-      cTruth ? "Next i" : "I", cIndex + 1, cNavItem->mStageX, cNavItem->mStageY,
-      cNavItem->mStageZ, (LPCTSTR)cNavItem->mLabel);
-    if (!cNavItem->mNote.IsEmpty())
-      mLogRpt += "\r\n    Note: " + cNavItem->mNote;
-    SetReportedValues(cIndex + 1., cNavItem->mStageX, cNavItem->mStageY,
-      cNavItem->mStageZ, (double)cNavItem->mType);
-    cReport.Format("%d", cIndex + 1);
-    SetVariable("NAVINDEX", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
-    SetVariable("NAVLABEL", cNavItem->mLabel, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVNOTE", cNavItem->mNote, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVCOLOR", cNavItem->mColor, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
+      truth ? "Next i" : "I", index + 1, navItem->mStageX, navItem->mStageY,
+      navItem->mStageZ, (LPCTSTR)navItem->mLabel);
+    if (!navItem->mNote.IsEmpty())
+      mLogRpt += "\r\n    Note: " + navItem->mNote;
+    SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY,
+      navItem->mStageZ, (double)navItem->mType);
+    report.Format("%d", index + 1);
+    SetVariable("NAVINDEX", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+    SetVariable("NAVLABEL", navItem->mLabel, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVNOTE", navItem->mNote, VARTYPE_REGULAR, -1, false);
+    SetVariable("NAVCOLOR", navItem->mColor, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1,
       false);
-    SetVariable("NAVREGIS", cNavItem->mRegistration, 
+    SetVariable("NAVREGIS", navItem->mRegistration,
       VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
-    cIndex = atoi(cNavItem->mLabel);
-    cReport.Format("%d", cIndex);
-    SetVariable("NAVINTLABEL", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
-    mNavHelper->GetNumHolesFromParam(cIx0, cIx1, cIndex2);
-    SetVariable("NAVNUMHOLES", cNavItem->mAcquire ? 
-      mNavHelper->GetNumHolesForItem(cNavItem, cIndex2) : 0, 
+    index = atoi(navItem->mLabel);
+    report.Format("%d", index);
+    SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+    mNavHelper->GetNumHolesFromParam(ix0, ix1, index2);
+    SetVariable("NAVNUMHOLES", navItem->mAcquire ?
+      mNavHelper->GetNumHolesForItem(navItem, index2) : 0,
       VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     if (mNavigator->GetAcquiring()) {
-      cReport.Format("%d", mNavigator->GetNumAcquired() + (cTruth ? 2 : 1));
-      SetVariable("NAVACQINDEX", cReport, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
+      report.Format("%d", mNavigator->GetNumAcquired() + (truth ? 2 : 1));
+      SetVariable("NAVACQINDEX", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1,
         false);
     }
-  } else if (!cTruth) {
-    if (cNavItem->mType != ITEM_TYPE_MAP)
+  } else if (!truth) {
+    if (navItem->mType != ITEM_TYPE_MAP)
       ABORT_LINE("The Navigator item is not a map for line:\n\n");
-    if (ConvertBufferLetter(mStrItems[cIndex2], mBufferManager->GetBufToReadInto(),
-      false, cIx0, cReport))
-      ABORT_LINE(cReport);
-    mNavigator->DoLoadMap(false, cNavItem, cIx0);
+    if (ConvertBufferLetter(mStrItems[index2], mBufferManager->GetBufToReadInto(),
+      false, ix0, report))
+      ABORT_LINE(report);
+    mNavigator->DoLoadMap(false, navItem, ix0);
     mLoadingMap = true;
   }
   return 0;
@@ -7120,36 +7812,43 @@ int CMacCmd::ReportNavItem(void)
 // ReportItemAcquire
 int CMacCmd::ReportItemAcquire(void)
 {
-  cIndex = mItemEmpty[1] ? 0 : mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemEmpty[1] ? 0 : mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
- mLogRpt.Format("Navigator item %d has Acquire %s", cIndex + 1,
-    (cNavItem->mAcquire == 0) ? "disabled" : "enabled");
-  SetReportedValues(cNavItem->mAcquire);
+ mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
+    (navItem->mAcquire == 0) ? "disabled" : "enabled");
+  SetReportedValues(navItem->mAcquire);
   return 0;
 }
 
 // SetItemAcquire
 int CMacCmd::SetItemAcquire(void)
 {
-  cIndex = mItemEmpty[1] ? 0 : mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  BOOL truth;
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemEmpty[1] ? 0 : mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  if (mNavigator->GetAcquiring() && cIndex >= mNavigator->GetAcquireIndex() &&
-    cIndex <= mNavigator->GetEndingAcquireIndex())
+  if (mNavigator->GetAcquiring() && index >= mNavigator->GetAcquireIndex() &&
+    index <= mNavigator->GetEndingAcquireIndex())
     ABORT_NOLINE("When the Navigator is acquiring, you cannot set an\n"
       "item to Acquire within the range still being acquired");
-  cTruth = (mItemEmpty[2] || (mItemInt[2] != 0));
-  if (cTruth && cNavItem->mTSparamIndex >= 0)
+  truth = (mItemEmpty[2] || (mItemInt[2] != 0));
+  if (truth && navItem->mTSparamIndex >= 0)
     ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
       "line:\n\n")
-  cNavItem->mAcquire = cTruth;
-  mNavigator->UpdateListString(cIndex);
+  navItem->mAcquire = truth;
+  mNavigator->UpdateListString(index);
   mNavigator->Redraw();
-  mLogRpt.Format("Navigator item %d Acquire set to %s", cIndex + 1,
-    cTruth ? "enabled" : "disabled");
+  mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
+    truth ? "enabled" : "disabled");
   mNavigator->SetChanged(true);
   mLoopInOnIdle = !mNavigator->GetAcquiring();
   return 0;
@@ -7158,87 +7857,100 @@ int CMacCmd::SetItemAcquire(void)
 // NavIndexWithLabel, NavIndexWithNote
 int CMacCmd::NavIndexWithLabel(void)
 {
+  BOOL truth;
+  int index;
   ABORT_NONAV;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  cTruth = CMD_IS(NAVINDEXWITHNOTE);
-  mNavigator->FindItemWithString(mStrCopy, cTruth);
-  cIndex = mNavigator->GetFoundItem() + 1;
-  if (cIndex > 0)
-    mLogRpt.Format("Item with %s %s has index %d", cTruth ? "note" : "label",
-      (LPCTSTR)mStrCopy, cIndex);
+  truth = CMD_IS(NAVINDEXWITHNOTE);
+  mNavigator->FindItemWithString(mStrCopy, truth);
+  index = mNavigator->GetFoundItem() + 1;
+  if (index > 0)
+    mLogRpt.Format("Item with %s %s has index %d", truth ? "note" : "label",
+      (LPCTSTR)mStrCopy, index);
   else
-    mLogRpt.Format("No item has %s %s", cTruth ? "note" : "label", (LPCTSTR)mStrCopy);
-  SetReportedValues(cIndex);
+    mLogRpt.Format("No item has %s %s", truth ? "note" : "label", (LPCTSTR)mStrCopy);
+  SetReportedValues(index);
   return 0;
 }
 
 // NavIndexItemDrawnOn
 int CMacCmd::NavIndexItemDrawnOn(void)
 {
-  cIndex = mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  int index, index2;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  cIndex2 = 0;
-  if (!cNavItem->mDrawnOnMapID) {
+  index2 = 0;
+  if (!navItem->mDrawnOnMapID) {
     mLogRpt.Format("Navigator item %d does not have an ID for being drawn on a map",
-      cIndex + 1);
+      index + 1);
   } else {
-    cNavItem = mNavigator->FindItemWithMapID(cNavItem->mDrawnOnMapID, true);
-    if (!cNavItem) {
+    navItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID, true);
+    if (!navItem) {
       mLogRpt.Format("The map that navigator item %d was drawn on is no longer in the "
-        "table", cIndex + 1);
+        "table", index + 1);
     } else {
-      cIndex2 = mNavigator->GetFoundItem() + 1;
-      mLogRpt.Format("Navigator item %d was drawn on map item %d", cIndex + 1, cIndex2);
+      index2 = mNavigator->GetFoundItem() + 1;
+      mLogRpt.Format("Navigator item %d was drawn on map item %d", index + 1, index2);
     }
   }
-  SetReportedValues(cIndex2);
+  SetReportedValues(index2);
   return 0;
 }
 
 // NavItemFileToOpen
 int CMacCmd::NavItemFileToOpen(void)
 {
-  cIndex = mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  CString report;
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  cReport = cNavItem->mFileToOpen;
-  if (cReport.IsEmpty()) {
-    mLogRpt.Format("No file is set to be opened for Navigator item %d", cIndex + 1);
-    cReport = "0";
+  report = navItem->mFileToOpen;
+  if (report.IsEmpty()) {
+    mLogRpt.Format("No file is set to be opened for Navigator item %d", index + 1);
+    report = "0";
   } else {
-    mLogRpt.Format("File to open at Navigator item %d is: %s", cIndex + 1,
-      (LPCTSTR)cReport);
+    mLogRpt.Format("File to open at Navigator item %d is: %s", index + 1,
+      (LPCTSTR)report);
   }
-  SetOneReportedValue(cReport, 1);
+  SetOneReportedValue(report, 1);
   return 0;
 }
 
 // SetNavItemUserValue, ReportItemUserValue
 int CMacCmd::SetNavItemUserValue(void)
 {
-  cIndex = mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  CString report;
+  int index, index2;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  cIndex2 = mItemInt[2];
-  if (cIndex2 < 1 || cIndex2 > MAX_NAV_USER_VALUES) {
-    cReport.Format("The user value number must be between 1 and %d in line:\n\n",
+  index2 = mItemInt[2];
+  if (index2 < 1 || index2 > MAX_NAV_USER_VALUES) {
+    report.Format("The user value number must be between 1 and %d in line:\n\n",
       MAX_NAV_USER_VALUES);
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
   if (CMD_IS(SETNAVITEMUSERVALUE)) {
     SubstituteLineStripItems(mStrLine, 3, mStrCopy);
-    mNavHelper->SetUserValue(cNavItem, cIndex2, mStrCopy);
+    mNavHelper->SetUserValue(navItem, index2, mStrCopy);
     mNavigator->SetChanged(true);
   } else {
-    if (mNavHelper->GetUserValue(cNavItem, cIndex2, mStrCopy)) {
-      mLogRpt.Format("Navigator item %d has no user value # %d", cIndex + 1, cIndex2);
+    if (mNavHelper->GetUserValue(navItem, index2, mStrCopy)) {
+      mLogRpt.Format("Navigator item %d has no user value # %d", index + 1, index2);
       mStrCopy = "none";
     } else {
-      mLogRpt.Format("User value # %d for Navigator item %d is %s", cIndex2, cIndex + 1,
+      mLogRpt.Format("User value # %d for Navigator item %d is %s", index2, index + 1,
         (LPCTSTR)mStrCopy);
     }
     SetOneReportedValue(mStrCopy, 1);
@@ -7249,15 +7961,17 @@ int CMacCmd::SetNavItemUserValue(void)
 // SetMapAcquireState
 int CMacCmd::SetMapAcquireState(void)
 {
+  CString report;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cNavItem = mNavigator->GetOtherNavItem(mItemInt[1] - 1);
-  if (!cNavItem)
+  navItem = mNavigator->GetOtherNavItem(mItemInt[1] - 1);
+  if (!navItem)
     ABORT_LINE("Index is out of range in statement:\n\n");
-  if (cNavItem->mType != ITEM_TYPE_MAP) {
-    cReport.Format("Navigator item %d is not a map for line:\n\n", mItemInt[1]);
-    ABORT_LINE(cReport);
+  if (navItem->mType != ITEM_TYPE_MAP) {
+    report.Format("Navigator item %d is not a map for line:\n\n", mItemInt[1]);
+    ABORT_LINE(report);
   }
-  if (mNavHelper->SetToMapImagingState(cNavItem, true))
+  if (mNavHelper->SetToMapImagingState(navItem, true))
     ABORT_LINE("Failed to set map imaging state for line:\n\n");
   return 0;
 }
@@ -7265,14 +7979,17 @@ int CMacCmd::SetMapAcquireState(void)
 // RestoreState
 int CMacCmd::RestoreState(void)
 {
-  cIndex = mNavHelper->GetTypeOfSavedState();
-  if (cIndex == STATE_NONE) {
-    cReport.Format("Cannot Restore State: no state has been saved");
+  CString report;
+  int index;
+
+  index = mNavHelper->GetTypeOfSavedState();
+  if (index == STATE_NONE) {
+    report.Format("Cannot Restore State: no state has been saved");
     if (mItemInt[1])
-      ABORT_LINE(cReport);
-    mWinApp->AppendToLog(cReport, mLogAction);
+      ABORT_LINE(report);
+    mWinApp->AppendToLog(report, mLogAction);
   } else {
-    if (cIndex == STATE_MAP_ACQUIRE)
+    if (index == STATE_MAP_ACQUIRE)
       mNavHelper->RestoreFromMapState();
     else {
       mNavHelper->RestoreSavedState();
@@ -7288,39 +8005,43 @@ int CMacCmd::RestoreState(void)
 // ReportNumNavAcquire
 int CMacCmd::ReportNumNavAcquire(void)
 {
-  mNavHelper->CountAcquireItems(0, -1, cIndex, cIndex2);
-  if (cIndex < 0)
+  int index, index2;
+
+  mNavHelper->CountAcquireItems(0, -1, index, index2);
+  if (index < 0)
     mLogRpt = "The Navigator is not open; there are no acquire items";
   else
-    mLogRpt.Format("Navigator has %d Acquire items, %d Tilt Series items", cIndex, 
-      cIndex2);
-  SetReportedValues(&mStrItems[1], (double)cIndex, (double)cIndex2);
+    mLogRpt.Format("Navigator has %d Acquire items, %d Tilt Series items", index,
+      index2);
+  SetReportedValues(&mStrItems[1], (double)index, (double)index2);
   return 0;
 }
 
 // ReportNumHoleAcquire
 int CMacCmd::ReportNumHoleAcquire(void)
 {
+  int index, index2;
   int minHoles = mItemEmpty[1] ? 1 : B3DMAX(1, mItemInt[1]);
   int startInd = mItemEmpty[2] ? 0 : (mItemInt[2] - 1);
   int endInd = mItemEmpty[3] ? -1 : (mItemInt[3] - 1);
-  mNavHelper->CountHoleAcquires(startInd, endInd, minHoles, cIndex, cIndex2);
-  if (cIndex < 0)
+  mNavHelper->CountHoleAcquires(startInd, endInd, minHoles, index, index2);
+  if (index < 0)
     mLogRpt = "The Navigator is not open; there are no acquire items";
   else
     mLogRpt.Format("With a minimum of %d holes, Navigator would acquire %d holes at %d "
-      "items", minHoles, cIndex2, cIndex);
-  SetReportedValues((double)cIndex2, (double)cIndex);
+      "items", minHoles, index2, index);
+  SetReportedValues((double)index2, (double)index);
   return 0;
 }
 
 // ReportNumTableItems
 int CMacCmd::ReportNumTableItems(void)
 {
+  int index;
   ABORT_NONAV;
-  cIndex = mNavigator->GetNumberOfItems();
-  mLogRpt.Format("Navigator table has %d items", cIndex);
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  index = mNavigator->GetNumberOfItems();
+  mLogRpt.Format("Navigator table has %d items", index);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
@@ -7350,31 +8071,36 @@ int CMacCmd::SaveNavigator(void)
 // ReportIfNavOpen
 int CMacCmd::ReportIfNavOpen(void)
 {
-  cIndex = 0;
+  int index;
+
+  index = 0;
   mLogRpt = "Navigator is NOT open";
   if (mWinApp->mNavigator) {
-    cIndex = 1;
+    index = 1;
     mLogRpt = "Navigator IS open";
     if (mWinApp->mNavigator->GetCurrentNavFile()) {
       mLogRpt += "; file is defined";
-      cIndex = 2;
+      index = 2;
     }
   }
-  SetReportedValues(&mStrItems[1], (double)cIndex);
+  SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
 
 // ReadNavFile, MergeNavFile
 int CMacCmd::ReadNavFile(void)
 {
-  cTruth = CMD_IS(MERGENAVFILE);
-  if (cTruth) {
+  BOOL truth;
+  CFileStatus status;
+
+  truth = CMD_IS(MERGENAVFILE);
+  if (truth) {
     ABORT_NONAV;
   } else  {
     mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   }
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  if (!CFile::GetStatus((LPCTSTR)mStrCopy, cStatus))
+  if (!CFile::GetStatus((LPCTSTR)mStrCopy, status))
     ABORT_LINE("The file " + mStrCopy + " does not exist in line:\n\n");
   if (mWinApp->mNavigator->LoadNavFile(false, CMD_IS(MERGENAVFILE), &mStrCopy))
     ABORT_LINE("Script stopped due to error processing Navigator file for line:\n\n");
@@ -7406,44 +8132,47 @@ int CMacCmd::OpenNavigator(void)
 // ChangeItemRegistration, ChangeItemColor, ChangeItemLabel, ChangeItemNote
 int CMacCmd::ChangeItemRegistration(void)
 {
+  CString report;
+  int index, index2;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cIndex = mItemInt[1];
-  cIndex2 = mItemInt[2];
-  cNavItem = mNavigator->GetOtherNavItem(cIndex - 1);
-  cReport.Format("The Navigator item index, %d, is out of range in:\n\n", cIndex);
-  if (!cNavItem)
-    ABORT_LINE(cReport);
+  index = mItemInt[1];
+  index2 = mItemInt[2];
+  navItem = mNavigator->GetOtherNavItem(index - 1);
+  report.Format("The Navigator item index, %d, is out of range in:\n\n", index);
+  if (!navItem)
+    ABORT_LINE(report);
   if (CMD_IS(CHANGEITEMREGISTRATION)) {
-    cReport.Format("The Navigator item with index %d is a registration point in:\n\n",
-      cIndex);
-    if (cNavItem->mRegPoint)
-      ABORT_LINE(cReport);
-    if (mNavigator->ChangeItemRegistration(cIndex - 1, cIndex2, cReport))
-      ABORT_LINE(cReport + " in line:\n\n");
+    report.Format("The Navigator item with index %d is a registration point in:\n\n",
+      index);
+    if (navItem->mRegPoint)
+      ABORT_LINE(report);
+    if (mNavigator->ChangeItemRegistration(index - 1, index2, report))
+      ABORT_LINE(report + " in line:\n\n");
   } else {
     if (CMD_IS(CHANGEITEMCOLOR)) {
-      cReport.Format("The Navigator item color must be between 0 and %d in:\n\n",
+      report.Format("The Navigator item color must be between 0 and %d in:\n\n",
         NUM_ITEM_COLORS - 1);
-      if (cIndex2 < 0 || cIndex2 >= NUM_ITEM_COLORS)
-        ABORT_LINE(cReport);
-      cNavItem->mColor = cIndex2;
+      if (index2 < 0 || index2 >= NUM_ITEM_COLORS)
+        ABORT_LINE(report);
+      navItem->mColor = index2;
     } else if (CMD_IS(CHANGEITEMNOTE)) {
       SubstituteVariables(&mStrLine, 1, mStrLine);
       if (mItemEmpty[2])
         mStrCopy = "";
       else
         JustStripItems(mStrLine, 2, mStrCopy);
-      cNavItem->mNote = mStrCopy;
+      navItem->mNote = mStrCopy;
     } else {
       SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-      cReport.Format("The Navigator label size must be no more than %d characters "
+      report.Format("The Navigator label size must be no more than %d characters "
         "in:\n\n", MAX_LABEL_SIZE);
       if (mStrCopy.GetLength() > MAX_LABEL_SIZE)
-        ABORT_LINE(cReport);
-      cNavItem->mLabel = mStrCopy;
+        ABORT_LINE(report);
+      navItem->mLabel = mStrCopy;
     }
     mNavigator->SetChanged(true);
-    mNavigator->UpdateListString(cIndex - 1);
+    mNavigator->UpdateListString(index - 1);
     mNavigator->Redraw();
   }
   return 0;
@@ -7452,17 +8181,20 @@ int CMacCmd::ChangeItemRegistration(void)
 // SetItemTargetDefocus
 int CMacCmd::SetItemTargetDefocus(void)
 {
-  cIndex = mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  if (!cNavItem->mAcquire && cNavItem->mTSparamIndex < 0)
+  if (!navItem->mAcquire && navItem->mTSparamIndex < 0)
     ABORT_LINE("Specified Navigator item is not marked for acquisition in line:\n\n");
   if (mItemFlt[2] < -20 || mItemFlt[2] > 0)
     ABORT_LINE("Target defocus must be between 0 and -20 in line:\n\n:");
-  cNavItem->mTargetDefocus = mItemFlt[2];
+  navItem->mTargetDefocus = mItemFlt[2];
   mNavigator->SetChanged(true);
-  mLogRpt.Format("For Navigator item %d, target defocus set to %.2f", cIndex + 1,
+  mLogRpt.Format("For Navigator item %d, target defocus set to %.2f", index + 1,
     mItemFlt[2]);
   return 0;
 }
@@ -7470,24 +8202,28 @@ int CMacCmd::SetItemTargetDefocus(void)
 // SetItemSeriesAngles
 int CMacCmd::SetItemSeriesAngles(void)
 {
-  cIndex = mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  CString report;
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  if (cNavItem->mTSparamIndex < 0)
+  if (navItem->mTSparamIndex < 0)
     ABORT_LINE("The specified Navigator item is not marked for a tilt series"
       " in line:\n\n");
-  if (mNavHelper->CheckTiltSeriesAngles(cNavItem->mTSparamIndex, mItemFlt[2], mItemFlt[3],
-    mItemEmpty[4] ? EXTRA_NO_VALUE : mItemFlt[4], cReport))
-    ABORT_LINE(cReport + "in line:\n\n");
-  cNavItem->mTSstartAngle = mItemFlt[2];
-  cNavItem->mTSendAngle = mItemFlt[3];
+  if (mNavHelper->CheckTiltSeriesAngles(navItem->mTSparamIndex, mItemFlt[2], mItemFlt[3],
+    mItemEmpty[4] ? EXTRA_NO_VALUE : mItemFlt[4], report))
+    ABORT_LINE(report + "in line:\n\n");
+  navItem->mTSstartAngle = mItemFlt[2];
+  navItem->mTSendAngle = mItemFlt[3];
   mLogRpt.Format("For Navigator item %d, tilt series range set to %.1f to %.1f",
-    cIndex + 1, mItemFlt[2], mItemFlt[3]);
+    index + 1, mItemFlt[2], mItemFlt[3]);
   if (!mItemEmpty[4]) {
-    cNavItem->mTSbidirAngle = mItemFlt[4];
-    cReport.Format(", start %.1f", mItemFlt[4]);
-    mLogRpt += cReport;
+    navItem->mTSbidirAngle = mItemFlt[4];
+    report.Format(", start %.1f", mItemFlt[4]);
+    mLogRpt += report;
   }
   mNavigator->SetChanged(true);
   return 0;
@@ -7507,16 +8243,18 @@ int CMacCmd::SkipAcquiringNavItem(void)
 // SkipAcquiringGroup
 int CMacCmd::SkipAcquiringGroup(void)
 {
+  int index, index2;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
   if (!mNavigator->GetAcquiring())
     ABORT_NOLINE("The navigator must be acquiring to set a group ID to skip");
   if (mItemEmpty[1]) {
-    cIndex2 = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-    cIndex = cNavItem->mGroupID;
+    index2 = mNavigator->GetCurrentOrAcquireItem(navItem);
+    index = navItem->mGroupID;
   } else {
-    cIndex = mItemInt[1];
+    index = mItemInt[1];
   }
-  mNavigator->SetGroupIDtoSkip(cIndex);
+  mNavigator->SetGroupIDtoSkip(index);
   return 0;
 }
 
@@ -7574,22 +8312,24 @@ int CMacCmd::ItemForSuperCoord(void)
 // UpdateItemZ, UpdateGroupZ
 int CMacCmd::UpdateItemZ(void)
 {
+  int index, index2;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cIndex2 = CMD_IS(UPDATEGROUPZ) ? 1 : 0;
+  index2 = CMD_IS(UPDATEGROUPZ) ? 1 : 0;
   if (!mItemEmpty[1] && mItemInt[1]) {
     if (!mNavigator->GetAcquiring())
       ABORT_LINE("The Navigator needs to be acquiring for updating the next group Z in "
         "line:\n\n");
-    if (!mNavigator->FindNextAcquireItem(cIndex))
+    if (!mNavigator->FindNextAcquireItem(index))
       ABORT_LINE("There is no next Navigator item to be acquired for line:\n\n");
-  } else 
-    cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-  if (cIndex < 0)
+  } else
+    index = mNavigator->GetCurrentOrAcquireItem(navItem);
+  if (index < 0)
     ABORT_NOLINE("There is no current Navigator item.");
-  cIndex = mNavigator->DoUpdateZ(cIndex, cIndex2);
-  if (cIndex == 3)
+  index = mNavigator->DoUpdateZ(index, index2);
+  if (index == 3)
     ABORT_LINE("Current Navigator item is not in a group for statement:\n\n");
-  if (cIndex)
+  if (index)
     ABORT_LINE("Error updating Z of Navigator item in statement:\n\n");
   mNavigator->SetChanged(true);
   return 0;
@@ -7598,51 +8338,59 @@ int CMacCmd::UpdateItemZ(void)
 // ReportGroupStatus
 int CMacCmd::ReportGroupStatus(void)
 {
+  CString report;
+  int index, index2, ix0, ix1;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-  if (cIndex < 0)
+  index = mNavigator->GetCurrentOrAcquireItem(navItem);
+  if (index < 0)
     ABORT_NOLINE("There is no current Navigator item.");
-  cIndex2 = cNavItem->mGroupID;
-  cIndex = -1;
-  cIx0 = mNavigator->CountItemsInGroup(cIndex2, cReport, mStrCopy, cIx1);
+  index2 = navItem->mGroupID;
+  index = -1;
+  ix0 = mNavigator->CountItemsInGroup(index2, report, mStrCopy, ix1);
   if (mNavigator->GetAcquiring()) {
-    cIndex = 0;
-    if (cIndex2)
-      cIndex = mNavigator->GetFirstInGroup() ? 1 : 2;
+    index = 0;
+    if (index2)
+      index = mNavigator->GetFirstInGroup() ? 1 : 2;
   }
   mLogRpt.Format("Group acquire status %d, group ID %d, # in group %d, %d set to acquire"
-    , cIndex, cIndex2, cIx0, cIx1);
-  SetReportedValues(&mStrItems[1], (double)cIndex, (double)cIndex2, (double)cIx0,
-    (double)cIx1);
+    , index, index2, ix0, ix1);
+  SetReportedValues(&mStrItems[1], (double)index, (double)index2, (double)ix0,
+    (double)ix1);
   return 0;
 }
 
 // ReportItemImageCoords
 int CMacCmd::ReportItemImageCoords(void)
 {
-  cIndex = mItemEmpty[1] ? 0 : mItemInt[1];
-  cNavItem = CurrentOrIndexedNavItem(cIndex, mStrLine);
-  if (!cNavItem)
+  CString report;
+  int index, index2, sizeX, sizeY;
+  float floatX, floatY;
+  CMapDrawItem *navItem;
+
+  index = mItemEmpty[1] ? 0 : mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
     return 1;
-  if (ConvertBufferLetter(mStrItems[2], 0, true, cIndex2, cReport))
-    ABORT_LINE(cReport);
-  if (mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[cIndex2], true)) {
-    mWinApp->mMainView->GetItemImageCoords(&mImBufs[cIndex2], cNavItem, cFloatX,
-      cFloatY);
-    mImBufs[cIndex2].mImage->getSize(cSizeX, cSizeY);
-    if (cFloatX >= 0 && cFloatY >= 0 && cFloatX <= (cSizeX - 1) &&
-      cFloatY <= (cSizeY - 1)) {
-      SetReportedValues(cFloatX, cFloatY, 1);
+  if (ConvertBufferLetter(mStrItems[2], 0, true, index2, report))
+    ABORT_LINE(report);
+  if (mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[index2], true)) {
+    mWinApp->mMainView->GetItemImageCoords(&mImBufs[index2], navItem, floatX,
+      floatY);
+    mImBufs[index2].mImage->getSize(sizeX, sizeY);
+    if (floatX >= 0 && floatY >= 0 && floatX <= (sizeX - 1) &&
+      floatY <= (sizeY - 1)) {
+      SetReportedValues(floatX, floatY, 1);
       mLogRpt.Format("Navigator item %d has image coordinates %.2f, %.2f on %c",
-        cIndex + 1, cFloatX, cFloatY, cIndex2 + 65);
+        index + 1, floatX, floatY, index2 + 65);
     } else {
-      SetReportedValues(cFloatX, cFloatY, 0);
-      mLogRpt.Format("Navigator item %d is outside of %c", cIndex + 1, cIndex2 + 65);
+      SetReportedValues(floatX, floatY, 0);
+      mLogRpt.Format("Navigator item %d is outside of %c", index + 1, index2 + 65);
     }
   } else {
     SetReportedValues(0.0, 0.0, -1);
-    mLogRpt.Format("Navigator item %d could not be transformed to %c", cIndex + 1,
-      cIndex2 + 65);
+    mLogRpt.Format("Navigator item %d could not be transformed to %c", index + 1,
+      index2 + 65);
   }
   return 0;
 }
@@ -7650,16 +8398,17 @@ int CMacCmd::ReportItemImageCoords(void)
 // NewMap
 int CMacCmd::NewMap(void)
 {
+  int index;
   ABORT_NONAV;
   mNavigator->SetSkipBacklashType(1);
-  cIndex = 0;
+  index = 0;
   if (!mItemEmpty[1]) {
-    cIndex = mItemInt[1];
+    index = mItemInt[1];
     if (mItemEmpty[2])
       ABORT_LINE("There must be text for the Navigator note after the number in:\n\n");
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   }
-  if (mNavigator->NewMap(false, cIndex, mItemEmpty[1] ? NULL : &mStrCopy)) {
+  if (mNavigator->NewMap(false, index, mItemEmpty[1] ? NULL : &mStrCopy)) {
     mCurrentIndex = mLastIndex;
     SuspendMacro();
     return 1;
@@ -7695,35 +8444,39 @@ int CMacCmd::ShiftItemsByAlignment(void)
 // ShiftItemsByCurrentDiff
 int CMacCmd::ShiftItemsByCurrentDiff(void)
 {
+  double delISX, delISY, stageX, stageY, stageZ, specDist;
+  int index, index2;
+  float shiftX, shiftY;
+  CMapDrawItem *navItem;
   ABORT_NONAV;
-  cIndex = mNavigator->GetCurrentOrAcquireItem(cNavItem);
-  if (cIndex < 0)
+  index = mNavigator->GetCurrentOrAcquireItem(navItem);
+  if (index < 0)
     ABORT_NOLINE("There is no current Navigator item.");
-  mScope->GetStagePosition(cStageX, cStageY, cStageZ);
-  cShiftX = (float)cStageX;
-  cShiftY = (float)cStageY;
-  mScope->GetImageShift(cDelISX, cDelISY);
-  cIndex2 = mScope->GetLowDoseArea();
-  if (mWinApp->LowDoseMode() && (cIndex2 == VIEW_CONSET || cIndex2 == SEARCH_AREA)) {
-    mWinApp->mLowDoseDlg.GetNetViewShift(cStageX, cStageY, cIndex2);
-    cDelISX -= cStageX;
-    cDelISY -= cStageY;
+  mScope->GetStagePosition(stageX, stageY, stageZ);
+  shiftX = (float)stageX;
+  shiftY = (float)stageY;
+  mScope->GetImageShift(delISX, delISY);
+  index2 = mScope->GetLowDoseArea();
+  if (mWinApp->LowDoseMode() && (index2 == VIEW_CONSET || index2 == SEARCH_AREA)) {
+    mWinApp->mLowDoseDlg.GetNetViewShift(stageX, stageY, index2);
+    delISX -= stageX;
+    delISY -= stageY;
   }
   mNavigator->ConvertIStoStageIncrement(mScope->FastMagIndex(),
-      mCurrentCam, cDelISX, cDelISY, (float)mScope->FastTiltAngle(),
-      cShiftX, cShiftY);
-  cShiftX -= cNavItem->mStageX;
-  cShiftY -= cNavItem->mStageY;
-  cSpecDist = sqrt(cShiftX * cShiftX + cShiftY * cShiftY);
-  if (cSpecDist <= mItemDbl[1]) {
-    mNavigator->ShiftItemsAtRegistration(cShiftX, cShiftY,
-      cNavItem->mRegistration);
+      mCurrentCam, delISX, delISY, (float)mScope->FastTiltAngle(),
+      shiftX, shiftY);
+  shiftX -= navItem->mStageX;
+  shiftY -= navItem->mStageY;
+  specDist = sqrt(shiftX * shiftX + shiftY * shiftY);
+  if (specDist <= mItemDbl[1]) {
+    mNavigator->ShiftItemsAtRegistration(shiftX, shiftY,
+      navItem->mRegistration);
     PrintfToLog("Items at registration %d shifted by %.2f, %.2f",
-      cNavItem->mRegistration, cShiftX, cShiftY);
+      navItem->mRegistration, shiftX, shiftY);
     mNavigator->SetChanged(true);
   } else {
     PrintfToLog("Current stage position is too far from item position (%.2f microns);"
-      "nothing was shifted", cSpecDist);
+      "nothing was shifted", specDist);
   }
   return 0;
 }
@@ -7731,20 +8484,22 @@ int CMacCmd::ShiftItemsByCurrentDiff(void)
 // ShiftItemsByMicrons
 int CMacCmd::ShiftItemsByMicrons(void)
 {
+  CString report;
+  int index, index2;
   ABORT_NONAV;
   if (fabs(mItemDbl[1]) > 100. || fabs(mItemDbl[2]) > 100.)
     ABORT_LINE("You cannot shift items by more than 100 microns in:\n\n");
-  cIndex = mNavigator->GetCurrentRegistration();
+  index = mNavigator->GetCurrentRegistration();
   if (!mItemEmpty[3]) {
-    cIndex = mItemInt[3];
-    cReport.Format("Registration number %d is out of range in:\n\n", cIndex);
-    if (cIndex <= 0 || cIndex > MAX_CURRENT_REG)
-      ABORT_LINE(cReport);
+    index = mItemInt[3];
+    report.Format("Registration number %d is out of range in:\n\n", index);
+    if (index <= 0 || index > MAX_CURRENT_REG)
+      ABORT_LINE(report);
   }
-  cIndex2 = mNavigator->ShiftItemsAtRegistration(mItemFlt[1], mItemFlt[2],
-    cIndex);
-  mLogRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", cIndex2, 
-    cIndex, mItemDbl[1], mItemDbl[2]);
+  index2 = mNavigator->ShiftItemsAtRegistration(mItemFlt[1], mItemFlt[2],
+    index);
+  mLogRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", index2,
+    index, mItemDbl[1], mItemDbl[2]);
   mNavigator->SetChanged(true);
   return 0;
 }
@@ -7752,38 +8507,42 @@ int CMacCmd::ShiftItemsByMicrons(void)
 // AlignAndTransformItems
 int CMacCmd::AlignAndTransformItems(void)
 {
-  cIndex2 = mNavHelper->BufferForRotAlign(cIndex);
-  if (cIndex != mNavigator->GetCurrentRegistration()) {
-    cReport.Format("Image in buffer %c is at registration %d, not the current Navigator"
-      " registration, %d, for line:\n\n", 'A' + cIndex2, cIndex,
+  CString report;
+  int index, index2, ix0;
+  float backlashX;
+
+  index2 = mNavHelper->BufferForRotAlign(index);
+  if (index != mNavigator->GetCurrentRegistration()) {
+    report.Format("Image in buffer %c is at registration %d, not the current Navigator"
+      " registration, %d, for line:\n\n", 'A' + index2, index,
       mNavigator->GetCurrentRegistration());
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
-  cIx0 = CNavRotAlignDlg::CheckAndSetupReference();
-  if (cIx0 < 0)
+  ix0 = CNavRotAlignDlg::CheckAndSetupReference();
+  if (ix0 < 0)
     ABORT_LINE("Cannot find a Navigator item corresponding to the image in the Read"
       " buffer for line:\n\n");
-  if (cIx0 == cIndex)
+  if (ix0 == index)
     ABORT_LINE("The image in the Read buffer is at the current Navigator"
       " registration for line:\n\n");
   if (fabs(mItemDbl[2]) < 0.2 || fabs(mItemDbl[2]) > 50.)
     ABORT_LINE("Angular range to search must be between 0.2 and 50 degrees for "
       "line:\n\n");
   CNavRotAlignDlg::PrepareToUseImage();
-  if (CNavRotAlignDlg::AlignToMap(mItemFlt[1], mItemFlt[2], cBacklashX)) {
+  if (CNavRotAlignDlg::AlignToMap(mItemFlt[1], mItemFlt[2], backlashX)) {
     AbortMacro();
     return 1;
   }
-  if (!mItemEmpty[3] && fabs(cBacklashX - mItemDbl[1]) > mItemDbl[3]) {
+  if (!mItemEmpty[3] && fabs(backlashX - mItemDbl[1]) > mItemDbl[3]) {
     mLogRpt.Format("The rotation found by alignment, %.1f degrees, is farther from\r\n"
-      " the center angle than the specified limit, nothing was transformed", cBacklashX);
+      " the center angle than the specified limit, nothing was transformed", backlashX);
   } else {
-    cIndex = CNavRotAlignDlg::TransformItemsFromAlignment();
+    index = CNavRotAlignDlg::TransformItemsFromAlignment();
     mLogRpt.Format("%d items transformed after alignment with rotation of %.1f degrees",
-      cIndex, cBacklashX);
+      index, backlashX);
     mNavigator->SetChanged(true);
   }
-  SetReportedValues(cBacklashX);
+  SetReportedValues(backlashX);
   return 0;
 }
 
@@ -7809,14 +8568,17 @@ int CMacCmd::SkipPiecesOutsideItem(void)
 // FindHoles
 int CMacCmd::FindHoles(void)
 {
+  CString report;
+  EMimageBuffer *imBuf;
+  int index;
   ABORT_NONAV;
-  cImBuf = mWinApp->mMainView->GetActiveImBuf();
+  imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!mItemEmpty[1]) {
-    if (ConvertBufferLetter(mStrItems[1], -1, true, cIndex, cReport))
-      ABORT_LINE(cReport);
-    cImBuf = &mImBufs[cIndex];
+    if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    imBuf = &mImBufs[index];
   }
-  if (mNavHelper->mHoleFinderDlg->DoFindHoles(cImBuf)) {
+  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf)) {
     AbortMacro();
     return 1;
   }
@@ -7826,20 +8588,21 @@ int CMacCmd::FindHoles(void)
 // MakeNavPointsAtHoles
 int CMacCmd::MakeNavPointsAtHoles(void)
 {
+  int index;
   ABORT_NONAV;
-  cIndex = mItemEmpty[1] || mItemInt[1] < 0 ? - 1 : mItemInt[1];
-  if (cIndex > 2)
+  index = mItemEmpty[1] || mItemInt[1] < 0 ? - 1 : mItemInt[1];
+  if (index > 2)
     ABORT_LINE("The layout type must be less than 3 for line:\n\n");
-  cIndex = mNavHelper->mHoleFinderDlg->DoMakeNavPoints(cIndex,
+  index = mNavHelper->mHoleFinderDlg->DoMakeNavPoints(index,
     (float)((mItemEmpty[2] || mItemDbl[2] < -900000) ? EXTRA_NO_VALUE : mItemDbl[2]),
     (float)((mItemEmpty[3] || mItemDbl[3] < -900000) ? EXTRA_NO_VALUE : mItemDbl[3]),
     (float)((mItemEmpty[4] || mItemDbl[4] < 0.) ? - 1. : mItemDbl[4]) / 100.f,
     (float)((mItemEmpty[5] || mItemDbl[5] < 0.) ? - 1. : mItemDbl[5]) / 100.f);
-  if (cIndex < 0) {
+  if (index < 0) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Hole finder made %d Navigator points", cIndex);
+  mLogRpt.Format("Hole finder made %d Navigator points", index);
   return 0;
 }
 
@@ -7853,12 +8616,13 @@ int CMacCmd::ClearHoleFinder(void)
 // CombineHolesToMulti
 int CMacCmd::CombineHolesToMulti(void)
 {
+  int index;
   ABORT_NONAV;
   B3DCLAMP(mItemInt[1], 0, 2);
-  cIndex = mNavHelper->mCombineHoles->CombineItems(mItemInt[1]);
-  if (cIndex)
+  index = mNavHelper->mCombineHoles->CombineItems(mItemInt[1]);
+  if (index)
     ABORT_NOLINE("Error trying to combine hole for multiple Records:\n" +
-      CString(mNavHelper->mCombineHoles->GetErrorMessage(cIndex)));
+      CString(mNavHelper->mCombineHoles->GetErrorMessage(index)));
   return 0;
 }
 
@@ -7882,6 +8646,9 @@ int CMacCmd::SetHelperParams(void)
 // SetMontageParams
 int CMacCmd::SetMontageParams(void)
 {
+  CString report;
+  int index;
+
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
   if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
@@ -7914,9 +8681,9 @@ int CMacCmd::SetMontageParams(void)
   if (!mItemEmpty[6] && mItemInt[6] >= 0)
     mMontP->skipCorrelations = mItemInt[6] != 0;
   if (!mItemEmpty[7] && mItemDbl[7] >= 0.5) {
-    if (CheckCameraBinning(mItemDbl[7], cIndex, cReport))
-      ABORT_LINE(cReport);
-    mMontP->binning = cIndex;
+    if (CheckCameraBinning(mItemDbl[7], index, report))
+      ABORT_LINE(report);
+    mMontP->binning = index;
   }
   mWinApp->mMontageWindow.UpdateSettings();
   return 0;
@@ -7925,26 +8692,31 @@ int CMacCmd::SetMontageParams(void)
 // ManualFilmExposure
 int CMacCmd::ManualFilmExposure(void)
 {
-  cDelX = mItemDbl[1];
-  mScope->SetManualExposure(cDelX);
+  double delX;
+
+  delX = mItemDbl[1];
+  mScope->SetManualExposure(delX);
   return 0;
 }
 
 // ExposeFilm, SpecialExposeFilm
 int CMacCmd::ExposeFilm(void)
 {
-  cDelX = 0.;
-  cDelY = 0.;
-  cIndex = 0;
+  double delX, delY;
+  int index;
+
+  delX = 0.;
+  delY = 0.;
+  index = 0;
   if (CMD_IS(SPECIALEXPOSEFILM)) {
-    cDelX = mItemDbl[1];
-    if (!mItemEmpty[2]) cDelY = mItemDbl[2];
-    if (cDelX < 0. || cDelY < 0. || mItemEmpty[1])
+    delX = mItemDbl[1];
+    if (!mItemEmpty[2]) delY = mItemDbl[2];
+    if (delX < 0. || delY < 0. || mItemEmpty[1])
       ABORT_LINE("There must be one or two non-negative values in statement:\n\n");
     if (!mItemEmpty[3])
-      cIndex = mItemInt[3];
+      index = mItemInt[3];
   }
-  if (!mScope->TakeFilmExposure(CMD_IS(SPECIALEXPOSEFILM), cDelX, cDelY, cIndex != 0)) {
+  if (!mScope->TakeFilmExposure(CMD_IS(SPECIALEXPOSEFILM), delX, delY, index != 0)) {
     mCurrentIndex = mLastIndex;
     SuspendMacro();
     return 1;
@@ -7956,9 +8728,11 @@ int CMacCmd::ExposeFilm(void)
 // GoToLowDoseArea
 int CMacCmd::GoToLowDoseArea(void)
 {
-  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, cIndex, mStrLine))
+  int index;
+
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, index, mStrLine))
     return 1;
-  mScope->GotoLowDoseArea(cIndex);
+  mScope->GotoLowDoseArea(index);
   return 0;
 }
 
@@ -7974,44 +8748,49 @@ int CMacCmd::SetLDContinuousUpdate(void)
 // SetLowDoseMode
 int CMacCmd::SetLowDoseMode(void)
 {
-  cIndex = mWinApp->LowDoseMode() ? 1 : 0;
-  if (cIndex != (mItemInt[1] ? 1 : 0))
+  int index;
+
+  index = mWinApp->LowDoseMode() ? 1 : 0;
+  if (index != (mItemInt[1] ? 1 : 0))
     mWinApp->mLowDoseDlg.SetLowDoseMode(mItemInt[1] != 0);
-  SetReportedValues(&mStrItems[2], (double)cIndex);
+  SetReportedValues(&mStrItems[2], (double)index);
   return 0;
 }
 
 // SetAxisPosition, ReportAxisPosition
 int CMacCmd::SetAxisPosition(void)
 {
-  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, cIndex, mStrLine))
+  double delX, delY;
+  int index, index2, ix0, iy0;
+
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, index, mStrLine))
     return 1;
-  if ((cIndex + 1) / 2 != 1)
+  if ((index + 1) / 2 != 1)
     ABORT_LINE("This command must be followed by F or T:\n\n");
   if (CMD_IS(REPORTAXISPOSITION)) {
-    cDelX = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(mLdParam[cIndex].magIndex,
-      mLdParam[cIndex].ISX, mLdParam[cIndex].ISY);
-    cIx0 = ((mConSets[cIndex].right + mConSets[cIndex].left) / 2 - mCamParams->sizeX / 2) 
+    delX = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(mLdParam[index].magIndex,
+      mLdParam[index].ISX, mLdParam[index].ISY);
+    ix0 = ((mConSets[index].right + mConSets[index].left) / 2 - mCamParams->sizeX / 2)
       / BinDivisorI(mCamParams);
-    cIy0 = ((mConSets[cIndex].bottom + mConSets[cIndex].top) / 2 - mCamParams->sizeY / 2)
+    iy0 = ((mConSets[index].bottom + mConSets[index].top) / 2 - mCamParams->sizeY / 2)
       / BinDivisorI(mCamParams);
-    cIndex2 = mWinApp->mLowDoseDlg.m_bRotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
+    index2 = mWinApp->mLowDoseDlg.m_bRotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
     mLogRpt.Format("%s axis position %.2f microns, %d degrees; camera offset %d, %d "
-      "unbinned pixels", mModeNames[cIndex], cDelX, cIndex2, cIx0, cIy0);
-    SetReportedValues(&mStrItems[2], cDelX, (double)cIndex2, (double)cIx0, (double)cIy0);
+      "unbinned pixels", mModeNames[index], delX, index2, ix0, iy0);
+    SetReportedValues(&mStrItems[2], delX, (double)index2, (double)ix0, (double)iy0);
 
   } else {
-    cIndex2 = 0;
+    index2 = 0;
     if (fabs(mItemDbl[2]) > 19.)
       ABORT_LINE("The axis distance is too large in:\n\n");
     if (!mItemEmpty[3])
-      cIndex2 = B3DNINT(UtilGoodAngle(mItemDbl[3]));
-    cIx0 = (mScope->GetLowDoseArea() + 1) / 2;
-    if (cIx0 == 1)
-      mScope->GetLDCenteredShift(cDelX, cDelY);
-    mWinApp->mLowDoseDlg.NewAxisPosition(cIndex, mItemDbl[2], cIndex2, !mItemEmpty[3]);
-    if (cIx0 == 1)
-      mScope->SetLDCenteredShift(cDelX, cDelY);
+      index2 = B3DNINT(UtilGoodAngle(mItemDbl[3]));
+    ix0 = (mScope->GetLowDoseArea() + 1) / 2;
+    if (ix0 == 1)
+      mScope->GetLDCenteredShift(delX, delY);
+    mWinApp->mLowDoseDlg.NewAxisPosition(index, mItemDbl[2], index2, !mItemEmpty[3]);
+    if (ix0 == 1)
+      mScope->SetLDCenteredShift(delX, delY);
   }
   return 0;
 }
@@ -8019,38 +8798,43 @@ int CMacCmd::SetAxisPosition(void)
 // ReportLowDose
 int CMacCmd::ReportLowDose(void)
 {
+  int index, index2;
   char *modeLets = "VFTRS";
-  cIndex = mWinApp->LowDoseMode() ? 1 : 0;
-  cIndex2 = mScope->GetLowDoseArea();
-  mLogRpt.Format("Low Dose is %s%s%c", cIndex ? "ON" : "OFF",
-    cIndex && cIndex2 >= 0 ? " in " : "", 
-    cIndex && cIndex2 >= 0 ? modeLets[cIndex2] : ' ');
-  SetReportedValues(&mStrItems[1], (double)cIndex, (double)cIndex2);
+  index = mWinApp->LowDoseMode() ? 1 : 0;
+  index2 = mScope->GetLowDoseArea();
+  mLogRpt.Format("Low Dose is %s%s%c", index ? "ON" : "OFF",
+    index && index2 >= 0 ? " in " : "",
+    index && index2 >= 0 ? modeLets[index2] : ' ');
+  SetReportedValues(&mStrItems[1], (double)index, (double)index2);
   return 0;
 }
 
 // CurrentSettingsToLDArea
 int CMacCmd::CurrentSettingsToLDArea(void)
 {
-  if (CheckAndConvertLDAreaLetter(mStrItems[1], -1, cIndex, mStrLine))
+  int index;
+
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], -1, index, mStrLine))
     return 1;
-  mWinApp->InitializeOneLDParam(mLdParam[cIndex]);
+  mWinApp->InitializeOneLDParam(mLdParam[index]);
   mWinApp->mLowDoseDlg.SetLowDoseMode(true);
-  mScope->GotoLowDoseArea(cIndex);
+  mScope->GotoLowDoseArea(index);
   return 0;
 }
 
 // UpdateLowDoseParams
 int CMacCmd::UpdateLowDoseParams(void)
 {
+  int index;
+
   if (mWinApp->mTSController->DoingTiltSeries())
     ABORT_NOLINE("You cannot use ChangeLowDoseParams during a tilt series");
-  if (CheckAndConvertLDAreaLetter(mStrItems[1], 0, cIndex, mStrLine))
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 0, index, mStrLine))
     return 1;
-  if (!mKeepOrRestoreArea[cIndex]) {
-    mLDParamsSaved.push_back(mLdParam[cIndex]);
-    mLDareasSaved.push_back(cIndex);
-    mKeepOrRestoreArea[cIndex] = (mItemEmpty[2] || !mItemInt[2]) ? 1 : -1;
+  if (!mKeepOrRestoreArea[index]) {
+    mLDParamsSaved.push_back(mLdParam[index]);
+    mLDareasSaved.push_back(index);
+    mKeepOrRestoreArea[index] = (mItemEmpty[2] || !mItemInt[2]) ? 1 : -1;
     UpdateLDAreaIfSaved();
   }
   return 0;
@@ -8059,24 +8843,28 @@ int CMacCmd::UpdateLowDoseParams(void)
 // RestoreLowDoseParamsCmd
 int CMacCmd::RestoreLowDoseParamsCmd(void)
 {
-  if (CheckAndConvertLDAreaLetter(mStrItems[1], 0, cIndex, mStrLine))
+  int index;
+
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 0, index, mStrLine))
     return 1;
-  RestoreLowDoseParams(cIndex);
+  RestoreLowDoseParams(index);
   return 0;
 }
 
 // SetLDAddedBeamButton
 int CMacCmd::SetLDAddedBeamButton(void)
 {
-  cTruth = mItemEmpty[1] || mItemInt[1];
+  BOOL truth;
+
+  truth = mItemEmpty[1] || mItemInt[1];
   if (!mWinApp->LowDoseMode() || mScope->GetLowDoseArea() < 0)
     ABORT_LINE("You must be in Low Dose mode and in a defined area for line:\n\n");
   if (mLDSetAddedBeamRestore < 0) {
     mLDSetAddedBeamRestore = mWinApp->mLowDoseDlg.m_bSetBeamShift ? 1 : 0;
     mNumStatesToRestore++;
   }
-  mWinApp->mLowDoseDlg.SetBeamShiftButton(cTruth);
-  if ((cTruth ? 1 : 0) == mLDSetAddedBeamRestore) {
+  mWinApp->mLowDoseDlg.SetBeamShiftButton(truth);
+  if ((truth ? 1 : 0) == mLDSetAddedBeamRestore) {
     mLDSetAddedBeamRestore = -1;
     mNumStatesToRestore--;
   }
@@ -8086,20 +8874,23 @@ int CMacCmd::SetLDAddedBeamButton(void)
 // ShowMessageOnScope
 int CMacCmd::ShowMessageOnScope(void)
 {
+  CString report;
+  int index, iy1;
+
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (!FEIscope)
     ABORT_LINE("This command can be run only on an FEI scope");
   if (mScope->GetPluginVersion() < FEI_PLUGIN_MESSAGE_BOX) {
-    cReport.Format("You need to upgrade the FEI plugin and/or server\n"
+    report.Format("You need to upgrade the FEI plugin and/or server\n"
       "to at least version %d get a message box in:\n\n", FEI_PLUGIN_MESSAGE_BOX);
-    ABORT_LINE(cReport);
+    ABORT_LINE(report);
   }
   mScope->SetMessageBoxArgs(mBoxOnScopeType, mStrCopy, mBoxOnScopeText);
-  cIy1 = LONG_OP_MESSAGE_BOX;
-  cIndex = mScope->StartLongOperation(&cIy1, &mBoxOnScopeInterval, 1);
-  if (cIndex > 0)
+  iy1 = LONG_OP_MESSAGE_BOX;
+  index = mScope->StartLongOperation(&iy1, &mBoxOnScopeInterval, 1);
+  if (index > 0)
     ABORT_LINE("The thread is already busy for a long operation so cannot run:\n\n");
-  if (!cIndex) {
+  if (!index) {
     mStartedLongOp = true;
     mShowedScopeBox = true;
   } else {
@@ -8123,80 +8914,88 @@ int CMacCmd::SetupScopeMessage(void)
 // UpdateHWDarkRef
 int CMacCmd::UpdateHWDarkRef(void)
 {
-  cIndex = mCamera->UpdateK2HWDarkRef(mItemFlt[1]);
-  if (cIndex == 1)
+  int index;
+
+  index = mCamera->UpdateK2HWDarkRef(mItemFlt[1]);
+  if (index == 1)
     ABORT_LINE("The thread is already busy for this operation:\n\n")
-  mStartedLongOp = !cIndex;
+  mStartedLongOp = !index;
   return 0;
 }
 
 // LongOperation
 int CMacCmd::LongOperation(void)
 {
-  cIx1 = 0;
-  cIy1 = 1;
+  CString report;
+  int index, index2, ix1, iy1;
+  float backlashX;
+
+  ix1 = 0;
+  iy1 = 1;
   int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   int operations[MAX_LONG_OPERATIONS + 1];
   float intervals[MAX_LONG_OPERATIONS + 1];
-  for (cIndex = 1; cIndex < MAX_MACRO_TOKENS && !mItemEmpty[cIndex]; cIndex++) {
-    for (cIndex2 = 0; cIndex2 < MAX_LONG_OPERATIONS; cIndex2++) {
-      if (!mStrItems[cIndex].Left(2).CompareNoCase(CString(mLongKeys[cIndex2]))) {
-        if (mLongHasTime[cIndex2] && mItemDbl[cIndex + 1] < -1.5) {
-          cBacklashX = mItemFlt[cIndex + 1];
-          mScope->StartLongOperation(&cIndex2, &cBacklashX, 1);
-          SetOneReportedValue(cBacklashX, cIy1++);
-          cReport.Format("Time since last long operation %s is %.2f hours",
-            (LPCTSTR)mStrItems[cIndex], cBacklashX);
-          mWinApp->AppendToLog(cReport, mLogAction);
-          cIndex++;
+  for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {
+    for (index2 = 0; index2 < MAX_LONG_OPERATIONS; index2++) {
+      if (!mStrItems[index].Left(2).CompareNoCase(CString(mLongKeys[index2]))) {
+        if (mLongHasTime[index2] && mItemDbl[index + 1] < -1.5) {
+          backlashX = mItemFlt[index + 1];
+          mScope->StartLongOperation(&index2, &backlashX, 1);
+          SetOneReportedValue(backlashX, iy1++);
+          report.Format("Time since last long operation %s is %.2f hours",
+            (LPCTSTR)mStrItems[index], backlashX);
+          mWinApp->AppendToLog(report, mLogAction);
+          index++;
           break;
         }
-        if (used[cIndex2])
+        if (used[index2])
           ABORT_LINE("The same operation is specified twice in:\n\n");
-        used[cIndex2]++;
-        operations[cIx1] = cIndex2;
-        if (cIndex2 == LONG_OP_HW_DARK_REF &&
-          !mCamera->CanDoK2HardwareDarkRef(mCamParams, cReport))
-          ABORT_LINE(cReport + " in line:\n\n");
-        if (mLongHasTime[cIndex2]) {
-          if (cIndex == MAX_MACRO_TOKENS - 1 || mItemEmpty[cIndex + 1])
+        used[index2]++;
+        operations[ix1] = index2;
+        if (index2 == LONG_OP_HW_DARK_REF &&
+          !mCamera->CanDoK2HardwareDarkRef(mCamParams, report))
+          ABORT_LINE(report + " in line:\n\n");
+        if (mLongHasTime[index2]) {
+          if (index == MAX_MACRO_TOKENS - 1 || mItemEmpty[index + 1])
             ABORT_LINE("The last operation must be followed by an interval in hours "
               "in:\n\n");
-          cReport = mStrItems[cIndex + 1];
-          if (cReport.MakeLower() != mStrItems[cIndex + 1]) {
-            cReport.Format("%s must be followed by an interval in hours in:\n\n",
-              (LPCTSTR)mStrItems[cIndex]);
-            ABORT_LINE(cReport);
+          report = mStrItems[index + 1];
+          if (report.MakeLower() != mStrItems[index + 1]) {
+            report.Format("%s must be followed by an interval in hours in:\n\n",
+              (LPCTSTR)mStrItems[index]);
+            ABORT_LINE(report);
           }
-          cIndex++;
-          intervals[cIx1++] = mItemFlt[cIndex];
+          index++;
+          intervals[ix1++] = mItemFlt[index];
         }
         else
-          intervals[cIx1++] = 0.;
+          intervals[ix1++] = 0.;
         break;
       }
     }
-    if (cIndex2 == MAX_LONG_OPERATIONS) {
-      cReport.Format("%s is not an allowed entry for a long operation in:\n\n",
-        (LPCTSTR)mStrItems[cIndex]);
-      ABORT_LINE(cReport);
+    if (index2 == MAX_LONG_OPERATIONS) {
+      report.Format("%s is not an allowed entry for a long operation in:\n\n",
+        (LPCTSTR)mStrItems[index]);
+      ABORT_LINE(report);
     }
   }
-  cIndex = mScope->StartLongOperation(operations, intervals, cIx1);
-  if (cIndex > 0)
-    ABORT_LINE(cIndex == 1 ? "The thread is already busy for a long operation in:\n\n" :
+  index = mScope->StartLongOperation(operations, intervals, ix1);
+  if (index > 0)
+    ABORT_LINE(index == 1 ? "The thread is already busy for a long operation in:\n\n" :
       "A long scope operation can be done only on an FEI scope for:\n\n");
-  mStartedLongOp = !cIndex;
+  mStartedLongOp = !index;
   return 0;
 }
 
 // NewDEserverDarkRef
 int CMacCmd::NewDEserverDarkRef(void)
 {
+  CString report;
+
   if (mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(mItemInt[1], mItemFlt[2],
-    cReport))
+    report))
     ABORT_NOLINE(CString("Cannot make a new dark reference in DE server with "
-    "NewDEserverDarkRef:\n") + cReport);
+    "NewDEserverDarkRef:\n") + report);
   return 0;
 }
 
@@ -8221,10 +9020,12 @@ int CMacCmd::NextProcessArgs(void)
 // CreateProcess
 int CMacCmd::CreateProcess(void)
 {
+  int index;
+
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  cIndex = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs);
+  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs);
   mNextProcessArgs = "";
-  if (cIndex)
+  if (index)
     ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
   return 0;
 }
@@ -8239,11 +9040,13 @@ int CMacCmd::ExternalToolArgPlace(void)
 // RunExternalTool
 int CMacCmd::RunExternalTool(void)
 {
+  int index;
+
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  cIndex = mWinApp->mExternalTools->RunToolCommand(mStrCopy, mNextProcessArgs,
+  index = mWinApp->mExternalTools->RunToolCommand(mStrCopy, mNextProcessArgs,
     mRunToolArgPlacement);
   mNextProcessArgs = "";
-  if (cIndex)
+  if (index)
     ABORT_LINE("Script aborted due to failure to run command for line:\n\n");
   return 0;
 }
@@ -8273,14 +9076,17 @@ int CMacCmd::RestoreFocus(void)
 // SaveBeamTilt
 int CMacCmd::SaveBeamTilt(void)
 {
-  cIndex = mScope->GetProbeMode();
-  if (mBeamTiltXtoRestore[cIndex] > EXTRA_VALUE_TEST) {
-    cReport = "There is a second SaveBeamTilt without a RestoreBeamTilt";
+  CString report;
+  int index;
+
+  index = mScope->GetProbeMode();
+  if (mBeamTiltXtoRestore[index] > EXTRA_VALUE_TEST) {
+    report = "There is a second SaveBeamTilt without a RestoreBeamTilt";
     if (FEIscope)
-      cReport += " for " + CString(cIndex ? "micro" : "nano") + "probe mode";
-    ABORT_NOLINE(cReport);
+      report += " for " + CString(index ? "micro" : "nano") + "probe mode";
+    ABORT_NOLINE(report);
   }
-  mScope->GetBeamTilt(mBeamTiltXtoRestore[cIndex], mBeamTiltYtoRestore[cIndex]);
+  mScope->GetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
   mNumStatesToRestore++;
   return 0;
 }
@@ -8288,17 +9094,20 @@ int CMacCmd::SaveBeamTilt(void)
 // RestoreBeamTilt
 int CMacCmd::RestoreBeamTilt(void)
 {
-  cIndex = mScope->GetProbeMode();
-  if (mBeamTiltXtoRestore[cIndex] < EXTRA_VALUE_TEST) {
-    cReport = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
+  CString report;
+  int index;
+
+  index = mScope->GetProbeMode();
+  if (mBeamTiltXtoRestore[index] < EXTRA_VALUE_TEST) {
+    report = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
       "restored already";
     if (FEIscope)
-      cReport += " for " + CString(cIndex ? "micro" : "nano") + "probe mode";
-    ABORT_NOLINE(cReport);
+      report += " for " + CString(index ? "micro" : "nano") + "probe mode";
+    ABORT_NOLINE(report);
   }
-  mScope->SetBeamTilt(mBeamTiltXtoRestore[cIndex], mBeamTiltYtoRestore[cIndex]);
+  mScope->SetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
   mNumStatesToRestore--;
-  mBeamTiltXtoRestore[cIndex] = mBeamTiltYtoRestore[cIndex] = EXTRA_NO_VALUE;
+  mBeamTiltXtoRestore[index] = mBeamTiltYtoRestore[index] = EXTRA_NO_VALUE;
   mCompensatedBTforIS = false;
   return 0;
 }
@@ -8318,31 +9127,35 @@ int CMacCmd::SelectPiezo(void)
 // ReportPiezoXY
 int CMacCmd::ReportPiezoXY(void)
 {
+  double delISX, delISY;
+
   if (mWinApp->mPiezoControl->GetNumPlugins()) {
-    if (mWinApp->mPiezoControl->GetXYPosition(cDelISX, cDelISY)) {
+    if (mWinApp->mPiezoControl->GetXYPosition(delISX, delISY)) {
       AbortMacro();
       return 1;
     }
   } else {
-    if (!mScope->GetPiezoXYPosition(cDelISX, cDelISY)) {
+    if (!mScope->GetPiezoXYPosition(delISX, delISY)) {
       AbortMacro();
       return 1;
     }
   }
-  mLogRpt.Format("Piezo X/Y position is %6g, %6g", cDelISX, cDelISY);
-  SetReportedValues(&mStrItems[1], cDelISX, cDelISY);
+  mLogRpt.Format("Piezo X/Y position is %6g, %6g", delISX, delISY);
+  SetReportedValues(&mStrItems[1], delISX, delISY);
   return 0;
 }
 
 // ReportPiezoZ
 int CMacCmd::ReportPiezoZ(void)
 {
-  if (mWinApp->mPiezoControl->GetZPosition(cDelISX)) {
+  double delISX;
+
+  if (mWinApp->mPiezoControl->GetZPosition(delISX)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Piezo Z or only position is %6g", cDelISX);
-  SetReportedValues(&mStrItems[1], cDelISX);
+  mLogRpt.Format("Piezo Z or only position is %6g", delISX);
+  SetReportedValues(&mStrItems[1], delISX);
   return 0;
 }
 

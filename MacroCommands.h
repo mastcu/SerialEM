@@ -34,30 +34,6 @@ class CMacCmd : public CMacroProcessor
   LowDoseParams *mLdParam;
   CNavigatorDlg *mNavigator;
 
-  // "Convenience" member variables that can be replaced with local variables in functions
-  CString cReport;
-  BOOL cTruth, cDoShift, cDoPause, cDoAbort;
-  bool cDoBack;
-  ScaleMat cAMat, cBInv;
-  EMimageBuffer *cImBuf;
-  KImage *cImage;
-  CFile *cCfile;
-  double cDelISX, cDelISY, cDelX, cDelY, cH1, cV1, cV2, cH2, cH3, cV3, cV4, cH4;
-  double cStageX, cStageY, cStageZ, cSpecDist;
-  float cFloatX, cFloatY;
-  int cIndex, cIndex2, cI, cIx0, cIx1, cIy0, cIy1, cSizeX, cSizeY, cMag;
-  int cBinning;
-  float cBacklashX, cBacklashY, cBmin, cBmax, cBmean, cBSD, cCpe, cShiftX, cShiftY;
-  float cFitErr;
-  CMapDrawItem *cNavItem;
-  MacroFunction *cFunc;
-  Variable *cVar;
-  CString *cValPtr;
-  int *cNumElemPtr;
-  CFileStatus cStatus;
-  FileForText *cTxFile;
-  StageMoveInfo cSmi;
-
 #define MAC_SAME_NAME(nam, req, flg, cme) int nam(void);
 #define MAC_DIFF_NAME(nam, req, flg, fnc, cme)  int fnc(void);
 #define MAC_SAME_FUNC(nam, req, flg, fnc, cme) 
