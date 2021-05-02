@@ -923,10 +923,12 @@
         one of the 'SetVariable' module functions.<br />
         Example: if 'names' is a list in Python with [0, 'View', 1, 'Focus', 2, 'Trial'], use<br />
         &nbsp; &nbsp; &nbsp; &nbsp; SetPersistentVar('names', listToSEMarray(names))<br />
-        to create a 
-        persistent 1-D array in regular scripting with those entries.
+        to create a persistent 1-D array in regular scripting with those entries.
       </li>
     </ul>
+    <p>
+      If you have an array of strings instead of numbers, split the string returned by 
+      'GetVariable' on newlines:&nbsp; strArr = ret.split('|\n')</p>
     <p><strong><em>Errors and exceptions:&nbsp;</em></strong> An error within a 
       SerialEM operation will generate an exception of type 'SEMerror'.&nbsp; The 
       namespace is optional here because the script wrapper imports this name.&nbsp; You 
@@ -979,22 +981,48 @@
       executable; otherwise the property &#39;PythonModulePath&#39; must be defined with the 
       path to this directory of modules.&nbsp; This package contains modules for 
       32-bit Python 2.7, 3.4, and 3.5, and 64-bit Python 3.4, 3.5, 3.6, 3.8, and 3.9.</p>
-    <p>If you have one python on the system path that is 3.5 or higher, you are all 
+    <p>If you have one Python on the system path that is 3.5 or higher, you are all 
       set.&nbsp; If you have multiple Pythons, Python is not on the system path, or 
       the version is 3.4 or 2.7, you must have one or more &#39;PathToPython&#39; property 
       entries.&nbsp; These should have the following form (changed for your actual 
       path to the Python in each case): <br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-64 C:/Program Files/Python34<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-64 C:/Program Files/Python35<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.6 C:/Program Files/Python36<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.8 C:/Program Files/Python38<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.9 C:/Program Files/Python39<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 2.7 C:/Program Files (x86)/Python27<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-32 C:/Program Files (x86)/Python34<br />
-&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-32 C:/Program Files (x86)/Python35<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-64 C:\Program Files\Python34<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-64 C:\Program Files\Python35<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.6 C:\Program Files\Python36<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.8 C:\Program Files\Python38<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.9 C:\Program Files\Python39<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 2.7 C:\Program Files (x86)\Python27<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-32 C:\Program Files (x86)\Python34<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-32 C:\Program Files (x86)\Python35<br />
       See the description of PathToPython for more details.&nbsp; 
       These specifications will allow the modules to be found in the distributed 
       module directory.</p>
+    <p>Some Python packages are available on the IMOD/SerialEM web site:</p>
+      <ul>
+      <li> 32-bit <a href = "http://bio3d.colorado.edu/imod/windows/python-2.7.18.msi">Python 2.7</a> 
+      <li> 32-bit <a href = "http://bio3d.colorado.edu/imod/windows/python-3.4.4.msi">Python 3.4</a> 
+      <li> 64-bit <a href = "http://bio3d.colorado.edu/imod/windows/python-3.4.3.amd64.msi">Python 3.4</a> 
+      <li> 64-bit <a href = "http://bio3d.colorado.edu/imod/windows/python-3.8.8-amd64.exe">Python 3.8</a> 
+      </ul>
+      <p>
+       For older Python, click on the downloaded Python file to install it; it installs without
+       using 'Run as Administrator'. For Python 3.8, right click on the file and
+       select 'Run as Administrator'.&nbsp; Python does not need to install in the
+    default location that it offers; you can put it in locations like the ones above (e.g.,
+    set the install location to 'C:\Program Files\Python34').&nbsp; 
+      Check the option to add Python to the PATH if one is present, and you
+    might as well let it disable the path length limit if that is
+    offered.&nbsp; If you
+    customize the installation to leave out unneeded components (e.g.,
+    Documentation, tcl/tk, and the test suite), be sure to keep pip if that
+    is listed.
+      </p>
+        <P>
+      To use pip and install packages into the Python installation's 'site-packages', you will need to open
+           a command prompt window as administrator.&nbsp; If you put Python on the path, you can 
+          just use the command 'pip'; otherwise you can run it from the Python Scripts directory, e.g., give
+          the command 'C:\Program Files\Python34\Scripts\pip'.
+        </p>
     <p>
       <em><strong>Running scripts in an externally run Python: </strong></em>&nbsp;An 
       externally run Python script can take control of SerialEM and execute script 
