@@ -4103,7 +4103,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
     if (line.Find("python") == 0) {
       line = line.Mid(6).Trim();
       for (ind = 0; ind < (int)mPathsToPython.size(); ind++) {
-        if ((line.IsEmpty() && !ind) || mVersionsOfPython[ind].find((LPCTSTR)line) == 0) {
+        if ((line.IsEmpty() && !ind) || (!line.IsEmpty() && 
+          mVersionsOfPython[ind].find((LPCTSTR)line) == 0)) {
           mScrpLangData.strItems[0] = mPathsToPython[ind].c_str();
           mScrpLangData.strItems[0] += "\\";
           pyVersion = (float)atof(mVersionsOfPython[ind].c_str());
@@ -4136,7 +4137,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
   if (isPython) {
-    numWrap = 28;
+    numWrap = 26;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
     line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
     mMacroForScrpLang = "import sys\r\n" +
@@ -4162,10 +4163,14 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
       "  ret = ''\r\n"
       "  for val in var:\r\n"
       "    ret += str(val) + '\\n'\r\n"
-      "  return ret[:-1]\r\n"
-      "def SEMprint(*args):\r\n"
-      "  print(*args, flush = True)\r\n"
-      "SEMflush = sys.stdout.flush\r\n"
+      "  return ret[:-1]\r\n";
+    if (pyVersion < 1 || pyVersion > 3.) {
+      mMacroForScrpLang += "def SEMprint(*args):\r\n"
+        "  print(*args, flush = True)\r\n"
+        "SEMflush = sys.stdout.flush\r\n";
+      numWrap += 2;
+    }
+    mMacroForScrpLang +=
       "try:\r\n";
     for (ind = 0; ind < numWrap; ind++) {
       mLineInSrcMacro.push_back(-1);
