@@ -1005,6 +1005,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
     short exclude;
     crossLen = DSB_DPI_SCALE(9);
+    iy = (int)pieceOn->size();
     for (ix = 0; ix < (int)xHoleCens->size(); ix++) {
       tempX = xHoleCens->at(ix);
       tempY = yHoleCens->at(ix);
@@ -1012,7 +1013,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if ((exclude && !drawExcluded) || (!exclude && !drawIncluded) ||
         tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
         continue;
-      StageToImage(imBuf, tempX, tempY, ptX, ptY, pieceOn->at(ix));
+      StageToImage(imBuf, tempX, tempY, ptX, ptY, iy ? pieceOn->at(ix) : -1);
       MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
       DrawCross(&cdc, B3DCHOICE(exclude > 0, &pnHighExclPen,
         exclude < 0 ? &pnLowExclPen : &pnIncludePen), point, crossLen);

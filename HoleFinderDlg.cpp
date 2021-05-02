@@ -750,8 +750,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mHelper->GetHFscanVectors(&widths, &increments, &numCircles);
   mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
   mWinApp->mScope->GetStagePosition(tstageX, tstageY, mZstage);
-  if (mWinApp->mProcessImage->GetTestCtfPixelSize())
-    mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * imBuf->mBinning;
+  //if (mWinApp->mProcessImage->GetTestCtfPixelSize())
+  //mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * imBuf->mBinning;
   if (!mPixelSize) {
     SEMMessageBox("No pixel size is assigned to this image; it is needed for finding "
       "holes", MB_EXCLAME);
