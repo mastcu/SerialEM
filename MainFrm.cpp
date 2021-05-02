@@ -416,6 +416,14 @@ void CMainFrame::DoClose(bool afterScript)
       }
     }
 
+    if (mWinApp->DoingTasks()) {
+      if (AfxMessageBox("The program is doing an operation\nDo you really want to "
+        "stop it and exit?", MB_QUESTION) != IDYES) {
+        mClosingProgram = false;
+        return;
+      }
+      mWinApp->ErrorOccurred(0);
+    }
 
     if (mWinApp->mNavigator)
       mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
@@ -463,6 +471,7 @@ void CMainFrame::DoClose(bool afterScript)
       return;
     }
   }
+
 
   mWinApp->SetAppExiting(true);
   mWinApp->mCamera->CheckAndFreeK2References(true);
