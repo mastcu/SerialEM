@@ -168,6 +168,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
+  CFileStatus status;
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -1251,6 +1252,16 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     if (!recognized && !ReadMacrosFromFile(strLine, message,
       MAX_MACROS + MAX_ONE_LINE_SCRIPTS))
       mWinApp->mDocWnd->SetReadScriptPack(true);
+
+    // But if there was no script pack defined in settings, we need to stick with macros
+    // in there if any but save an existing file
+    if (recognized && CFile::GetStatus((LPCTSTR)strLine, status)) {
+      message = strLine;
+      message.Replace("-scripts.txt", "-scripts-saved.txt");
+      if (CopyFile((LPCTSTR)strLine, (LPCTSTR)message, true))
+        AfxMessageBox("Existing copy of " + strLine + "\r\nwas saved as " + message + 
+          "\r\nto keep it from being overwritten by scripts from the settings file");
+    }
   }
 
   mWinApp->mMacroProcessor->TransferOneLiners(false);

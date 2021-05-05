@@ -1026,7 +1026,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
-  bool highlight, draw;
+  bool highlight, draw, doInHole;
   CMapDrawItem *item, *polygon;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
@@ -1034,19 +1034,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int numFullSpecHoles, numSpecHoles, lastSpecialXholes = 0, lastSpecialYholes = 0;
   FloatVec specialFullISX, specialFullISY, delISX, delISY;
   IntVec fullHoleIndex, holeIndex;
-  BOOL useMultiShot = ((mWinApp->mNavHelper->GetEnableMultiShot() & 1) && 
-    navigator->m_bShowAcquireArea) || mWinApp->mNavHelper->mMultiShotDlg;
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   if (!navigator->GetAcquiring())
     item = navigator->GetSingleSelectedItem(&currentIndex);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
+  bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
+  BOOL useMultiShot = ((mWinApp->mNavHelper->GetEnableMultiShot() & 1) &&
+    navigator->m_bShowAcquireArea) || mWinApp->mNavHelper->mMultiShotDlg;
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
-    useMultiShot = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
-      mWinApp->mNavHelper->MultipleHolesAreSelected();
-    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
+    doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
+    useMultiShot = doInHole || doMultiHole;
+    if (doMultiHole)
+      mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
   bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
@@ -1132,8 +1134,6 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // Draw multi-shot pattern
       if (iDraw < 0 && useMultiShot) {
         float holeXoffset = 0, holeYoffset = 0;
-        bool doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
-        bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] + 
           (msParams->doSecondRing ? msParams->numShots[1] : 0) , 0);
@@ -1247,7 +1247,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       (showMultiOnAll && 
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)) || 
-        (showCurPtAcquire && highlight))) {
+        (showCurPtAcquire && highlight && doMultiHole))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
@@ -1257,8 +1257,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // If this point has special hole pattern and does not match the default from the
         // params, need to get specific list of holes for it
         numSpecHoles = 0;
-        useXholes = item->mNumXholes ? item->mNumXholes : msNumXholes;
-        useYholes = item->mNumYholes ? item->mNumYholes : msNumYholes;
+        useXholes = (doMultiHole && item->mNumXholes) ? item->mNumXholes : 
+          msNumXholes;
+        useYholes = (doMultiHole && item->mNumYholes) ? item->mNumYholes : 
+          msNumYholes;
         if (useXholes && useYholes && (useXholes != msNumXholes ||
           useYholes != msNumYholes || item->mNumSkipHoles || highlight)) {
 
@@ -1297,7 +1299,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               curHoleXYpos->push_back(item->mStageX + holeItem.mPtX[hole]);
               curHoleXYpos->push_back(item->mStageY + holeItem.mPtY[hole]);
             }
-            if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE)
+            if (doInHole)
               DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
                 ptY, delPtX, delPtY, NULL, NULL);
             else

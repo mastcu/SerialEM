@@ -2973,7 +2973,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   // Show something on the current point if multi draw is on or show acquire is on and
   // there is no user point (turns off draw on the acquire box)
   showCurPtAcquire = !imBuf->mHasUserPt && mItem && (showMulti || (m_bShowAcquireArea &&
-    mItem->mAcquire && mItem->mNumPoints == 1));
+    mItem->mAcquire && mItem->mNumPoints == 1 && mItem->mDraw));
   showLDareas = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0) && m_bEditFocus &&
     mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
 
@@ -3113,7 +3113,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         box->mRegistration = mCurrentRegistration;
         box->mType = ITEM_TYPE_POLYGON;
         box->mColor = POINT_ACQUIRE_COLOR;
-        box->mDraw = !showCurPtAcquire;
+        box->mDraw = (mItem->mDraw || imBuf->mHasUserPt);
       }
   }
   return &mItemArray;
