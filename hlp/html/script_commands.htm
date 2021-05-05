@@ -171,11 +171,21 @@
           <TD>Switches to given script <b>#</b>./&nbsp; <br>Not from Python.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CallScript #<br />
-            CallMacro #</TD>
-          <TD>Calls other script by <b>#</b> and returns.&nbsp; A regular SerialEM script 
-            may call a Python script provided that the top-level script was not Python.
-            <br>Callable from Python with the number of a regular SerialEM script.</TD>
+          <TD class="scriptcommand">CallScript # [arg1 arg2 ...]<br />
+            CallMacro # [arg1 arg2 ...]</TD>
+          <TD>Calls other script by <b>#</b> and returns.&nbsp; The <b>#</b> can be -1 to use the script 
+            number found by a previous 'FindScriptByName'.&nbsp; A regular SerialEM script 
+            may call a Python script provided that the top-level script was not Python.&nbsp; 
+            When doing so, optional arguments can be added and will be placed into a list of
+            strings named 'SEMargStrings' in the Python script.
+            <br>Callable from Python with the number of a regular SerialEM script, but with no optional arguments.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindScriptByName text</TD>
+          <TD>Finds the number of the script whose name is <b>text</b> and stores its number internally
+            so that it can be used in a following 'CallScript -1'. &nbsp;Names are case-sensitive
+             and  must match exactly, including spaces.<br />
+            Not from Python.&nbsp; Command added in 3.8.0, 5/4/21</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Call text</TD>
@@ -221,6 +231,19 @@
             no string argument, you can just use an empty string.&nbsp; For example:<br />
             &nbsp; &nbsp; &nbsp; &nbsp; retVals = CallFunction('My Functions::Cycle Defocus', '', 1., 10)
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">PythonScript [arg1 arg2 ...]</TD>
+          <TD>Allows a Python script to be embedded in a regular script and run at that point. &nbsp;
+            Optional arguments can be added and will be placed into a list of strings named 
+            'SEMargStrings' in the Python script. &nbsp;This is equivalent to having the Python 
+            text by itself in a different script and calling it with 'CallScript'. <br />
+            Not from Python.&nbsp; Command added in 3.8.0, 5/4/21</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EndPythonScript</TD>
+          <TD>This line must occur at the end of an embedded Python script started with 'PythonScript'.&nbsp;<br />
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">If expression</TD>
@@ -313,14 +336,14 @@
         <TR>
           <TD class="scriptcommand">Exit [text]</TD>
           <TD>Ends execution unconditionally and prints the optional <b>text</b> to the log.&nbsp; 
-            From a Python script, there are <i>two</i> optional arguments, and value then a 
-            string.&nbsp; The value should be 0 when exiting from normal code or 1 when exiting from
-            a Python exception.
-            From Python, called as Exit([exc], [text]) where optional <b>exc</b> must be positive 
-            when calling from an exception handler and 0 otherwise, and optional <b>text</b> will
-            be printed to the log.
             <br />
-            Callable from Python</TD>
+            Callable from Python: From a Python script, there are <i>two</i> optional arguments, an integer then a 
+            string; i.e., it is called as Exit([exc], [text]).&nbsp; In a script run from 
+            SerialEM, <b>exc</b> should be 0 when exiting from normal code or positive when exiting from
+            a Python exception; the default is 0.&nbsp; In a script run from an externally started Python, 
+            the default is 1 to keep the script from raising a SEMexited exception.&nbsp; You can call 
+            with a 0 if you want to catch this exception.
+            </TD>
         </TR>
        <TR>
          <TD colspan="2"><A name="var_array"></A><B>Variable and Array Commands</B></TD>

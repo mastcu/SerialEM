@@ -956,7 +956,7 @@ void CMacroProcessor::Run(int which)
     PrepareForMacroChecking(which);
 
     // First check for an language script and get it composed
-    ind = CheckForScriptLanguage(which);
+    ind = CheckForScriptLanguage(which, false);
     if (ind > 0)
       return;
   } else
@@ -1004,6 +1004,7 @@ void CMacroProcessor::Run(int which)
   mCallFunction[0] = NULL;
   mCurrentIndex = 0;
   mLastIndex = -1;
+  mScriptNumFound = -1;
   mOnStopMacroIndex = -1;
   mExitAtFuncEnd = false;
   mLoopIndsAreLocal = false;
@@ -3099,11 +3100,13 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
   short skipSubBlocks[MAX_MACRO_SKIPS][MAX_LOOP_DEPTH + 1];
   int blockLevel = startLevel;
   bool stringAssign, isIF, isELSE, isELSEIF, isTRY, inFunc = false, inComment = false;
+  bool useFound;
   MacroFunction *func;
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
   int numLabels = 0, numSkips = 0;
   int i, inloop, needVers, index, skipInd, labInd, length, cmdIndex, currentIndex = 0;
+  int lastInd, newCurrentInd, startLine, lastFoundScript = -1;
   int currentVersion = 203;
   CString strLine, strItems[MAX_MACRO_TOKENS], errmess, intCheck;
   const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
@@ -3231,76 +3234,109 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
       isELSE = CMD_IS(ELSE);
       isELSEIF = CMD_IS(ELSEIF);
       isTRY = CMD_IS(TRY);
-      if (CMD_IS(REPEAT))
+      if (CMD_IS(REPEAT)) {
         break;
 
-      // Check macro call if it has an argument - leave to general command check if not
-      else if ((CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT) || CMD_IS(CALLMACRO) || 
-        CMD_IS(CALLSCRIPT) || CMD_IS(CALL) || CMD_IS(CALLFUNCTION)) && 
+        // Check macro call if it has an argument - leave to general command check if not
+      } else if ((CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT) || CMD_IS(CALLMACRO) ||
+        CMD_IS(CALLSCRIPT) || CMD_IS(CALL) || CMD_IS(CALLFUNCTION)) &&
         !strItems[1].IsEmpty()) {
-          func = NULL;
+        func = NULL;
+        useFound = false;
+        if (strItems[1].GetAt(0) == '$')
+          FAIL_CHECK_LINE("The script number or script or function name cannot be a"
+            " variable,");
+        if ((CMD_IS(CALLMACRO) || CMD_IS(CALLSCRIPT)) && strItems[1] == "-1") {
+          if (lastFoundScript <= 0)
+            FAIL_CHECK_LINE("Calling with a script number of -1 must be preceded by"
+              " FindScriptByName,");
+          useFound = true;
+        }
+        if (CMD_IS(CALL)) {
+          index = FindCalledMacro(strLine, true);
+          if (index < 0)
+            return 12;
+        } else if (CMD_IS(CALLFUNCTION)) {
+          func = FindCalledFunction(strLine, true, index, i, macroNum);
+          if (!func)
+            return 12;
+        } else {
+          index = useFound ? lastFoundScript : atoi(strItems[1]) - 1;
 
-          if (strItems[1].GetAt(0) == '$')
-            FAIL_CHECK_LINE("The script number or name cannot be a variable,");
-          if (CMD_IS(CALL)) {
-            index = FindCalledMacro(strLine, true);
-            if (index < 0)
-              return 12;
-          } else if (CMD_IS(CALLFUNCTION)) {
-            func = FindCalledFunction(strLine, true, index, i, macroNum);
-            if (!func)
-              return 12;
-          } else {
-            index = atoi(strItems[1]) - 1;
+          // If this is an unchecked macro, better unload the macro if editor open
+          if (index >= 0 && index < MAX_MACROS && !mAlreadyChecked[index] &&
+            mMacroEditer[index])
+            mMacroEditer[index]->TransferMacro(true);
 
-            // If this is an unchecked macro, better unload the macro if editor open
-            if (index >= 0 && index < MAX_MACROS && !mAlreadyChecked[index] &&
-              mMacroEditer[index])
-              mMacroEditer[index]->TransferMacro(true);
+          if (index < 0 || index >= MAX_MACROS || mMacros[index].IsEmpty())
+            FAIL_CHECK_LINE("Trying to do illegal script number or empty script,");
+        }
 
-            if (index < 0 || index >= MAX_MACROS || mMacros[index].IsEmpty())
-              FAIL_CHECK_LINE("Trying to do illegal script number or empty script,");
-          }
-
-          // For calling a macro, check that it is not too deep and that it's not circular
-          // There is no good way to check circular function calls, so this relies on 
-          // run-time testing
-          if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
-            mCallLevel++;
-            if (mCallLevel >= MAX_CALL_DEPTH)
-              FAIL_CHECK_LINE("Too many nested script calls");
-            if (!CMD_IS(CALLFUNCTION)) {
-              for (i = 0; i < mCallLevel; i++) {
-                if (mCallMacro[i] == index && mCallFunction[i] == func)
-                  FAIL_CHECK_LINE("Trying to call a script that is already calling a "
+        // For calling a macro, check that it is not too deep and that it's not circular
+        // There is no good way to check circular function calls, so this relies on 
+        // run-time testing
+        if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
+          mCallLevel++;
+          if (mCallLevel >= MAX_CALL_DEPTH)
+            FAIL_CHECK_LINE("Too many nested script calls");
+          if (!CMD_IS(CALLFUNCTION)) {
+            for (i = 0; i < mCallLevel; i++) {
+              if (mCallMacro[i] == index && mCallFunction[i] == func)
+                FAIL_CHECK_LINE("Trying to call a script that is already calling a "
                   "script");
-              }
             }
-
-            mCallMacro[mCallLevel] = index;
-            mCallFunction[mCallLevel] = func;
           }
 
-          // Now call this function reentrantly to check macro, unless it is a DoMacro
-          // and already checked
-          if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT) || CMD_IS(CALLFUNCTION)) ||
-            !mAlreadyChecked[index]) {
-            mAlreadyChecked[index] = true;
-            i = CheckForScriptLanguage(index, true);
-            if (i) {
-              if (i > 0)
-                FAIL_CHECK_LINE("You cannot run any Python scripts");
-              if (mCalledFromScrpLang)
-                FAIL_CHECK_LINE("You cannot call a Python script from a regular script"
-                  " called by a Python script");
-            } else if (CheckBlockNesting(index, blockLevel, tryLevel))
-              return 14;
-          }
+          mCallMacro[mCallLevel] = index;
+          mCallFunction[mCallLevel] = func;
+        }
 
-          // Skip out if doing macro; otherwise pop stack again
-          if (CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))
-            break;
-          mCallLevel--;
+        // Now call this function reentrantly to check macro, unless it is a DoMacro
+        // and already checked
+        if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT) || CMD_IS(CALLFUNCTION)) ||
+          !mAlreadyChecked[index]) {
+          mAlreadyChecked[index] = true;
+          i = CheckForScriptLanguage(index, true);
+          if (i) {
+            if (i > 0)
+              FAIL_CHECK_LINE("You cannot run any Python scripts");
+            if (mCalledFromScrpLang)
+              FAIL_CHECK_LINE("You cannot call a Python script from a regular script"
+                " called by a Python script");
+          } else if (CheckBlockNesting(index, blockLevel, tryLevel))
+            return 14;
+        }
+
+        // Skip out if doing macro; otherwise pop stack again
+        if (CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))
+          break;
+        mCallLevel--;
+
+        // Check finding a script and record the found number
+      } else if (CMD_IS(FINDSCRIPTBYNAME)) {
+          index = FindCalledMacro(strLine, true);
+          if (index < 0)
+            return 12;
+          lastFoundScript = index + 1;
+
+      // Check embedded python
+      } else if (CMD_IS(PYTHONSCRIPT)) {
+        if (mCalledFromScrpLang)
+          FAIL_CHECK_LINE("You cannot run Python embedded in a regular script"
+            " called by a Python script");
+
+        if (!IsEmbeddedPythonOK(macroNum, currentIndex, lastInd, newCurrentInd))
+          FAIL_CHECK_NOLINE("PythonScript line with no matching EndPythonScript line");
+        startLine = CountLinesToCurIndex(macroNum, currentIndex);
+        i = CheckForScriptLanguage(macroNum, true, 0, currentIndex, lastInd, startLine);
+        if (!i)
+          FAIL_CHECK_NOLINE("PythonScript line not followed by a #!Python line");
+        if (i > 0)
+          FAIL_CHECK_NOLINE("Cannot use PythonScript: you cannot run any Python scripts");
+        currentIndex = newCurrentInd;
+
+      } else if (CMD_IS(ENDPYTHONSCRIPT)) {
+        FAIL_CHECK_NOLINE("EndPythonScript line with no preceding PythonScript line");
 
       // Examine loops
       } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) || 
@@ -4052,7 +4088,7 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
     return 1;
   } 
   PrepareForMacroChecking(macnum);
-  err = CheckForScriptLanguage(macnum);
+  err = CheckForScriptLanguage(macnum, false);
   mMacroForScrpLang = "";
   if (err > 0 || (!err && CheckBlockNesting(macnum, -1, tryLevel)))
     return 2;
@@ -4061,17 +4097,29 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
 
 // Test for whether the script starts with a #! for external script language and then
 // try to get the functions, then look for #include and concatenate all included scripts
-int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
+int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int argInd,
+  int currentInd, int lastInd, int startLine)
 {
   bool isPython;
-  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1, numWrap;
+  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
   float pyVersion = 0.;
   CString indentStr, modulePath = mPyModulePath;
 
   // Test for scripting language
-  int currentInd = 0, includeInd, count, length = mMacros[macNum].GetLength();
+  int includeInd, count;
   CString name, line;
-  GetNextLine(&mMacros[macNum], currentInd, line, true);
+  if (lastInd < 0)
+    lastInd = mMacros[macNum].GetLength();
+  while (currentInd < lastInd) {
+    GetNextLine(&mMacros[macNum], currentInd, line, true);
+    if (line.Find("#!") == 0)
+      break;
+    name = line;
+    name.Replace("#", "");
+    name = name.Trim();
+    if (!name.IsEmpty())
+      break;
+  }
   if (line.Find("#!") != 0)
     return 0;
   if (!mScrpLangDoneEvent) {
@@ -4137,7 +4185,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
   if (isPython) {
-    numWrap = 26;
+    startLine += 27;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
     line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
     mMacroForScrpLang = "import sys\r\n" +
@@ -4163,16 +4211,27 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
       "  ret = ''\r\n"
       "  for val in var:\r\n"
       "    ret += str(val) + '\\n'\r\n"
-      "  return ret[:-1]\r\n";
+      "  return ret[:-1]\r\n"
+      "SEMargStrings = [";
+    if (argInd > 0) {
+      for (ind = argInd; ind < MAX_MACRO_TOKENS; ind++) {
+        if (mItemEmpty[ind])
+          break;
+        if (ind > argInd)
+          mMacroForScrpLang += ", ";
+        mMacroForScrpLang += "\"\"\"" + mStrItems[ind] + "\"\"\"";
+      }
+    }
+    mMacroForScrpLang += "]\r\n";
     if (pyVersion < 1 || pyVersion > 3.) {
       mMacroForScrpLang += "def SEMprint(*args):\r\n"
         "  print(*args, flush = True)\r\n"
         "SEMflush = sys.stdout.flush\r\n";
-      numWrap += 2;
+      startLine += 2;
     }
     mMacroForScrpLang +=
       "try:\r\n";
-    for (ind = 0; ind < numWrap; ind++) {
+    for (ind = 0; ind < startLine; ind++) {
       mLineInSrcMacro.push_back(-1);
       mIndexOfSrcLine.push_back(-1);
     }
@@ -4190,7 +4249,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart)
 
   // Now build up the string, indenting for python and inserting any #include scripts in
   // place
-  while (currentInd < length) {
+  while (currentInd < lastInd) {
     mIndexOfSrcLine.push_back(currentInd);
     mLineInSrcMacro.push_back(lineNum++);
     GetNextLine(&mMacros[macNum], currentInd, line, true);
@@ -4292,6 +4351,36 @@ void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
       line.Insert(index, "SEM");
     index += 5;
   }
+}
+
+// Test whether an embedded script can be run by looking for the End line, and return the index of that line
+// plus the index past that line
+bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd, int &newCurrentInd)
+{
+  CString line, strItems[2];
+  int cmdIndex, length = mMacros[macNum].GetLength();
+  lastInd = newCurrentInd = currentInd;
+  while (newCurrentInd < length) {
+    GetNextLine(&mMacros[macNum], newCurrentInd, line);
+    mParamIO->ParseString(line, &strItems[0], 2);
+    strItems[0].MakeUpper();
+    cmdIndex = LookupCommandIndex(strItems[0]);
+    if (cmdIndex == CME_ENDPYTHONSCRIPT)
+      return true;
+    lastInd = newCurrentInd;
+  }
+  return false;
+}
+
+// Return the number of lines through the current index 
+int CMacroProcessor::CountLinesToCurIndex(int macNum, int curIndex)
+{
+  int currentInd = 0, lineNum = 0;
+  while (currentInd >= 0 && currentInd < curIndex) {
+    currentInd = mMacros[macNum].Find("\r\n", currentInd) + 1;
+    lineNum++;
+  }
+  return lineNum;
 }
 
 // Take a Python exception from the plugin and translate the line numbers to be correct,

@@ -483,7 +483,7 @@
       parentheses; the latter is a good idea for clarity in this situation.&nbsp; The 
       spaces around parentheses are optional, as just described, but there must be 
       space between operators and values.&nbsp; An example of such a command is:<br />
-&nbsp;&nbsp;&nbsp; SetImageShift ($baseX + $deltaX) ($baseY + $deltaY)<P>
+&nbsp;&nbsp;&nbsp; SetImageShift ($baseX + $deltaX) ($baseY + $deltaY)<br />
       Virtually all commands starting with 'Set' allow arithmetic expressions.&nbsp; 
       All other commands allowing them are listed in
       <A HREF="script_commands.htm#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A>.<br>
@@ -777,7 +777,9 @@
       scripting can even be used together to some extent.</P>
     <p>
       <strong><em>Initial lines and other special features:</em>&nbsp; </strong>A python script must start with '#!Python', 
-      plus an optional version specification if there are multiple installed pythons.&nbsp; &nbsp; If you start with '#!Python' it will 
+      plus an optional version specification if there are multiple installed pythons.&nbsp; 
+      You can include lines that are blank or consist of just '#' and/or space before 
+      the '#!Python' line.&nbsp; &nbsp; If you start with '#!Python' it will 
       use the first available version entered with a 'PathToPython' property, or just 
       try to run it as 'python.exe' without a path if you have no property entries. If you start with, e.g., '#!Python3.6', 
       you must have a 'PathToPython' property for that version.&nbsp; Here are other special features 
@@ -942,11 +944,9 @@
       'SEMmoduleError', also imported by this name.&nbsp; You can catch this and try 
       to interpret the error string if appropriate.</p>
     <p>You can also catch Python exceptions and handle them.&nbsp; If you do not catch 
-      these or SEMMerror exceptions, they will be caught by the script wrapper and 
+      these or the SEMerror or SEMmoduleError exceptions, they will be caught by the script wrapper and 
       result in script termination plus a traceback or message in the log.&nbsp; 
-      Parsing errors in the script will also be reported in the log, although the very 
-      first parsing error message after starting the program is currently getting 
-      lost.&nbsp; Just run the script again if there is no useful error message.&nbsp; 
+      Parsing errors in the script will also be reported in the log.&nbsp; 
       If the script with an error is open in an editor window, the program will 
       attempt to show the line there just as when using the <strong>To Line</strong> 
       button.&nbsp; The highlighting of the start of the line will not work if the 
@@ -955,7 +955,7 @@
       highlighting should show up then.</p>
     <p>'sys.exit' can be used if desired instead of serialem.Exit(); it will be 
       intercepted and terminate the script through Exit().</p>
-    <p><em><strong>Calling between script types: </strong></em>&nbsp;It is possible to 
+    <p><em><strong>Calls between script types and embedded python scripts: </strong></em>&nbsp;It is possible to 
       call a Python script from a regular SerialEM script and vice versa.&nbsp; These 
       are the specific rules:</p>
     <ul>
@@ -966,7 +966,12 @@
       <li>A regular script can call a Python script provided that the regular script was 
         not called, directly or indirectly, from a Python script; i.e., the top-level 
         script was not Python.&nbsp; The script being called cannot call any other 
-        scripts.</li>
+        scripts.&nbsp; If 'CallScript' or 'CallMacro' is used with the script number, 
+        this number can be followed by arguments that will be available in the Python 
+        script as a list of strings named SEMargStrings.&nbsp; This list will always be 
+        defined, but may be empty.&nbsp; Although arguments cannot be passed when using 
+        'Call' and the script name, you can still use a name by first looking up the 
+        script name with 'FindScriptByName' then using 'CallScript -1'.</li>
       <li>A Python script cannot call another Python script; only &#39;#include&#39; can be used 
         to access more than one script.</li>
       <li>The call to a Python script from a regular script can be contained in a &#39;Try - 
@@ -975,6 +980,38 @@
       <li>The call to a regular script from a Python script can be contained in a &#39;try - 
         except&#39; block to catch errors as usual.</li>
     </ul>
+    <p>
+      Additionally, it is possible to embed a block of Python code within a regular 
+      script, starting with the line 'PythonScript' and ending with 'EndPythonScript'.&nbsp; 
+      The 'PythonScript' line can contain optional arguments that will be available in 
+      the list of strings 'SEMargStrings', just as for 'CallScript'.&nbsp; This 
+      mechanism is particularly useful if you want to have a single script with 
+      numerous Python functions available from regular scripting.&nbsp; If you have 
+      such a script, e.g., 'PyFuncs', you can do this is in a regular script:<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PythonScript  3 $ISX $ISY<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #!Python<br />
+&nbsp;&nbsp;&nbsp;&nbsp; import serialem<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #include PyFuncs<br />
+&nbsp;&nbsp;&nbsp;&nbsp; functionInPyFuncs(args)<br />
+&nbsp;&nbsp;&nbsp;&nbsp; EndPythonScript</p>
+<P>      You could also make a regular script with wrapper functions to simplify the 
+      calling of a function needed from multiple places:<br />
+&nbsp;&nbsp;&nbsp;&nbsp; ScriptName PyWrappers<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #<br />
+&nbsp;&nbsp;&nbsp;&nbsp; Function functionInPyFuncs 3 0<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PythonScript  $argVal1 $argVal2 $argVal3<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #!Python<br />
+&nbsp;&nbsp;&nbsp;&nbsp; import serialem<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #include PyFuncs<br />
+&nbsp;&nbsp;&nbsp;&nbsp; functionInPyFuncs(args)<br />
+&nbsp;&nbsp;&nbsp;&nbsp; EndPythonScript<br />
+&nbsp;&nbsp;&nbsp;&nbsp; #<br />
+&nbsp;&nbsp;&nbsp;&nbsp; EndFunction</p>
+<p>  and from a regular script you would just need<br />
+&nbsp;&nbsp;&nbsp;&nbsp; CallFunction PyWrapper::functionInPyArgs 3 $ISX $ISY
+  </p>
     <p><strong><em>Installation options:&nbsp; </em></strong>There must be at least 
       one Python installation, but can be multiple ones.</p>
     <p>The PythonModules package should be unpacked in the directory with the SerialEM 
@@ -1058,11 +1095,35 @@
         the next command from Python should be able to re-establish the external 
         control.&nbsp; If the program is busy when the first command it given, it will 
         raise a SEMmoduleError exception with text indicating that SerialEM 'is now 
-        busy'.</li>
+        busy'.&nbsp; If you call Exit with no arguments or with a 1, it will not raise a 
+        SEMexited exception; call with a 0 to have this exception be raised, such as if 
+        you want to catch it from multiple places.</li>
       <li>Do not try to run two operations at once.&nbsp; If you are working in multiple 
         panes of a Jupyter notebook, be sure a command is completed before running one 
         in another pane.</li>
     </ul>
+    <p>
+      For connecting from a Windows machine, you can use the modules in the 
+      PythonModules package.&nbsp; The module will also build and work on Linux and 
+      Mac OS.&nbsp; The source code is in a mercurial repository at
+      <a href="http://bio3d.colorado.edu/PythonModule">http://bio3d.colorado.edu/PythonModule</a>
+      which you can clone with
+      </P>
+      <p>
+      &nbsp;&nbsp;&nbsp;&nbsp; hg clone http://bio3d.colorado.edu/PythonModule 
+        </P>
+      <p>
+      The module is built by running the desired Python 
+      with this command:
+    </p>
+    <p>
+      &nbsp;&nbsp;&nbsp;&nbsp; python setup.py build</p>
+    <p>
+      and the module is left in a 'lib...' subdirectory of 'build'.&nbsp; The module 
+      needs to be rebuilt to access any new commands added to 'MacroMasterList.h'; you can
+      update it with 'hg pull -u'.&nbsp; 
+      Depending on demand, a system may be set up to provide updated modules 
+      automatically for some set of Python versions on Linux and Mac.</p>
     <p>&nbsp;</p>
     </basefont>
   </BODY>

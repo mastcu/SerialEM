@@ -386,6 +386,7 @@ protected:
   std::vector<std::string> mPathsToPython;
   std::vector<std::string> mVersionsOfPython;
   CString mPyModulePath;       // Module path set by property or set as default
+  int mScriptNumFound;         // Last script number (0-based) for FindScriptByName
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
@@ -462,9 +463,12 @@ public:
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);
   afx_msg void OnMacroListFunctions();
   int EnsureMacroRunnable(int macnum);
-  int CheckForScriptLanguage(int macNum, bool justCheckStart = false);
+  int CheckForScriptLanguage(int macNum, bool justCheckStart, int argInd = 0, int currentInd = 0, int lastInd = -1,
+    int startLine = 0);
   void IndentAndAppendToScript(CString &source, CString &copy, CString &indentStr, bool isPython);
   void DoReplacementsInPythonLine(CString &line);
+  bool IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd, int &newCurrentInd);
+  int CountLinesToCurIndex(int macNum, int curIndex);
   void EnhancedExceptionToLog(CString &str);
   void SetPathToPython(CString &version, CString &path);
   void SendEmailIfNeeded(void);

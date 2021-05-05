@@ -885,7 +885,16 @@ int CMacCmd::DoMacro(void)
       }
 
     } else {
-      index = mItemInt[1] - 1;
+      if ((CMD_IS(CALLMACRO) || CMD_IS(CALLSCRIPT)) && mItemInt[1] == -1) {
+        if (mScriptNumFound < 0)
+          ABORT_LINE("No script number was previously found with FindScriptByName for "
+            "line:\n\n");
+        index = mScriptNumFound;
+      } else {
+        index = mItemInt[1] - 1;
+        if (index < 0 || index >= MAX_MACROS)
+          ABORT_LINE("Illegal script number in line:\n\n")
+      }
     }
 
     // Save the current index at this level and move up a level
@@ -935,7 +944,8 @@ int CMacCmd::DoMacro(void)
       } else if (!func) {
 
         // Running regular: see if what is being called is Python and switch if so
-        ix1 = CheckForScriptLanguage(index);
+        ix1 = CheckForScriptLanguage(index, false, 
+          (CMD_IS(CALLMACRO) || CMD_IS(CALLSCRIPT)) ? 2 : 0);
         if (ix1 > 0) {
           AbortMacro();
           return 1;
@@ -991,6 +1001,49 @@ int CMacCmd::DoMacro(void)
             break;
       SetVariable("NUMCALLARGS", index, VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false);
    }
+  }
+  return 0;
+}
+
+// PythonScript
+int CMacCmd::PythonScript(void)
+{
+  int startLine, err, lastInd = 0, currentInd = mCurrentIndex;
+  if (mCalledFromScrpLang)
+    ABORT_NOLINE("You cannot run the Python after a PythonScript line\r\n"
+      "  from regular scripting called from a Python script");
+  if (!IsEmbeddedPythonOK(mCurrentMacro, mCurrentIndex, lastInd, currentInd))
+    ABORT_NOLINE("PythonScript line with no matching EndPythonScript line");
+
+  startLine = CountLinesToCurIndex(mCurrentMacro, mCurrentIndex);
+
+  err = CheckForScriptLanguage(mCurrentMacro, false, 1, mCurrentIndex, lastInd, 
+    startLine);
+  if (err > 0) {
+    AbortMacro();
+  }
+  if (!err)
+    ABORT_NOLINE("Did not find #!Python after a PythonScript line");
+
+  // Set flags, raise the call level, set up to come back after the End line, start it
+  mRunningScrpLang = true;
+  mCalledFromSEMmacro = true;
+  mCallIndex[mCallLevel++] = currentInd;
+  mCallMacro[mCallLevel] = mCurrentMacro;
+  mBlockDepths[mCallLevel] = -1;
+  mCallFunction[mCallLevel] = NULL;
+  mLastIndex = -1;
+  StartRunningScrpLang();
+  return 0;
+}
+
+// FindScriptByName
+int CMacCmd::FindScriptByName(void)
+{
+  mScriptNumFound = FindCalledMacro(mStrLine, false);
+  if (mScriptNumFound < 0) {
+    AbortMacro();
+    return 1;
   }
   return 0;
 }
