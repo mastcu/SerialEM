@@ -1064,6 +1064,10 @@ BOOL CSerialEMApp::InitInstance()
       if (dropCameras.Find(message) < 0) 
         mActiveCameraList[iSet++] = mActiveCameraList[iAct];
     }
+    if (!iSet) {
+      AfxMessageBox("You cannot remove all of the active cameras with /NoCam");
+      return false;
+    }
     mActiveCamListSize = iSet;
   }
 

@@ -471,7 +471,8 @@
       <li>&#39;/DUMMY&#39;, which makes the program 
       start up without any camera or microscope connection and allows this instance of 
       the program to run at the same time as a connected instance of SerialEM.&nbsp; 
-      </li>
+        There must still be properties for at least one camera in the properties file, 
+        and an ActiveCameraList with at least one camera in it.</li>
       <li>&#39;/Settings=&#39;, followed by the name of a settings file in the &#39;Start in&#39; folder 
         of the shortcut, will make the program try to load that file instead of 
         SerialEMsettings.txt.&nbsp; <em>No spaces are allowed in this file name or 
@@ -484,7 +485,7 @@
         drop camera 2 or cameras 1 and 3.&nbsp; There must be no space between &#39;/NoCam&#39; 
         and the numbers.&nbsp; This entry allows a shortcut to be used when a camera is 
         temporarily unavailable or to prevent some users from accessing particular 
-        cameras.</li>
+        cameras.&nbsp; You cannot remove all active cameras from the list.</li>
       <li>&#39;/PlugDir=&#39;, followed by the full path to an alternative directory to be 
         searched for plugins.&nbsp; Double qoutes must be used around the path if it 
         contains spaces; otherwise quotes are optional. Without such an argument, the 
