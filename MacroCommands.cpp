@@ -7680,6 +7680,25 @@ int CMacCmd::SetFilamentCurrent(void)
   return 0;
 }
 
+// ReportFEGEmissionState
+int CMacCmd::ReportFEGEmissionState(void)
+{
+  int state;
+  if (!mScope->GetEmissionState(state))
+    ABORT_NOLINE("An error occurred getting the emission state");
+  SetReportedValues(&mStrItems[1], state);
+  mLogRpt.Format("FEG emission is %s",state ? "ON" : "OFF");
+  return 0;
+}
+
+// SetFEGEmissionState
+int CMacCmd::SetFEGEmissionState(void)
+{
+  if (!mScope->SetEmissionState(mItemInt[1]))
+    ABORT_NOLINE("An error occurred setting the emission state");
+  return 0;
+}
+
 // IsPVPRunning
 int CMacCmd::IsPVPRunning(void)
 {
@@ -8131,7 +8150,7 @@ int CMacCmd::ReportIfNavOpen(void)
   if (mWinApp->mNavigator) {
     index = 1;
     mLogRpt = "Navigator IS open";
-    if (mWinApp->mNavigator->GetCurrentNavFile()) {
+    if (!mWinApp->mNavigator->GetCurrentNavFile().IsEmpty()) {
       mLogRpt += "; file is defined";
       index = 2;
     }

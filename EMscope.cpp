@@ -3433,6 +3433,39 @@ BOOL CEMscope::SetFilamentCurrent(double current)
   return success;
 }
 
+// Emission state: read/write on JEOL, read-only on FEI ASI
+BOOL CEMscope::GetEmissionState(int & state)
+{
+  BOOL success = true;
+  state = -1;
+  if (!sInitialized || !mPlugFuncs->GetEmissionState)
+    return false;
+  ScopeMutexAcquire("GetEmissionState", true);
+  try {
+    state = mPlugFuncs->GetEmissionState();
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting FEG emission state "));
+  }
+  ScopeMutexRelease("GetEmissionState");
+  return success;
+}
+
+BOOL CEMscope::SetEmissionState(int state)
+{
+  BOOL success = true;
+  if (!sInitialized || !mPlugFuncs->SetEmissionState)
+    return false;
+  ScopeMutexAcquire("SetEmissionState", true);
+  try {
+    mPlugFuncs->SetEmissionState(state);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting FEG emission state "));
+  }
+  ScopeMutexRelease("SetEmissionState");
+  return success;
+}
 
 // MAGNIFICATION AND PROJECTOR NORMALIZATION
 

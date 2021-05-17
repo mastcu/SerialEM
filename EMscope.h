@@ -448,6 +448,8 @@ public:
   double GetScreenCurrent();
   double GetFilamentCurrent();
   BOOL SetFilamentCurrent(double current);
+  BOOL GetEmissionState(int &state);
+  BOOL SetEmissionState(int state);
   GetSetMember(float, FilamentCurrentScale);
   GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);

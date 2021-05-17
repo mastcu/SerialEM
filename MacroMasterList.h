@@ -598,6 +598,8 @@ MAC_SAME_FUNC_ARG(SetFloatVariable, 2, 0, SetVariableCmd, SETFLOATVARIABLE, SDi)
 MAC_SAME_NAME(PythonScript, 0, 0, PYTHONSCRIPT)
 MAC_SAME_FUNC(EndPythonScript, 1, 4, NoOperation, ENDPYTHONSCRIPT)
 MAC_SAME_NAME(FindScriptByName, 1, 4, FINDSCRIPTBYNAME)
+MAC_SAME_NAME_NOARG(ReportFEGEmissionState, 0, 4, REPORTFEGEMISSIONSTATE)
+MAC_SAME_NAME_ARG(SetFEGEmissionState, 1, 4, SETFEGEMISSIONSTATE, I)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //
