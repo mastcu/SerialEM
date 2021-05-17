@@ -9628,7 +9628,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mDividedBy2 = mDivBy2ForExtra;
       extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
       if (mParam->STEMcamera)
-        extra->mChannelName = mParam->channelName[mTD.ChannelIndex[chan]];
+        extra->mChannelName = mParam->channelName[mTD.ChanIndOrig[chan]];
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
           ix = mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem);
           extra->mNavLabel = navItem->mLabel;
@@ -12175,6 +12175,8 @@ void CCameraController::OutOfSTEMUpdate(void)
     mFEIdetectorInserted[i] = false;
 }
 
+// Makes a list of the number of simultaneous parameters in the Record set up to the
+// limit given in maxSimul, and also returns the total number available
 void CCameraController::CountSimultaneousChannels(CameraParameters *camParams, 
                                                   int *simultaneous, int maxSimul, 
                                                   int & numSimul, int & numAvail)

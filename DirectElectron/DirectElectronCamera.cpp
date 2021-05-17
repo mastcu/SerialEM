@@ -190,7 +190,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastUseHardwareBin = -1;
   mLastUseHardwareROI = -1;
   mLastAutoRepeatRef = -1;
-  mElecCountsScaled = 1.;
+  mElecCountsScaled = 1;
 }
 
 
@@ -532,7 +532,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     }
 
     if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
-      getFloatProperty(psCountsPerElec, mElecCountsScaled);
+      getIntProperty(psCountsPerElec, mElecCountsScaled);
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
     // or can be created
@@ -1021,6 +1021,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       int val, maxVal = divideBy2 ? 32767 : 65535;
       if (mLastNormCounting && mElecCountsScaled > 0)
         scale /= mElecCountsScaled;
+      SEMTrace('D', "mcs %f mlastnorm %d melecsc %d  scale %f", mCountScaling,
+        mLastNormCounting ? 1 : 0, mElecCountsScaled, scale);
       for (int i = 0; i < imageSizeX * imageSizeY; i++) {
         val = (int)(scale * (float)image4k[i] + 0.5f);
         B3DCLAMP(val, 0, maxVal);

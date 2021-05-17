@@ -300,7 +300,7 @@ private:
   BOOL mTrustLastSettings;              // Whether to trust all those values in server
 
   float mCountScaling;                  // Scaling for counting mode
-  float mElecCountsScaled;              // Factor by which counts are scaled when received
+  int mElecCountsScaled;              // Factor by which counts are scaled when received
   int mReadoutDelay;                    // Milliseconds of readout delay set
   bool mNormAllInServer;                // Whether to normalize all images in server
   CString mSoftwareVersion;             // String for server version

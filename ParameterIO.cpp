@@ -2248,6 +2248,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           AfxMessageBox(message, MB_EXCLAME);
         }
       }
+      if (MatchNoCase("EndIfVersionBelow")) {
+        if (mWinApp->GetIntegerVersion() < itemInt[1])
+          break;
+      }
 
       if (MatchNoCase("CameraProperties")) {
         int iset = itemInt[1];
