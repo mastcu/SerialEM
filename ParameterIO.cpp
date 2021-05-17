@@ -2251,9 +2251,8 @@ int CParameterIO::ReadProperties(CString strFileName)
       if (MatchNoCase("EndIfVersionBelow")) {
         if (mWinApp->GetIntegerVersion() < itemInt[1])
           break;
-      }
 
-      if (MatchNoCase("CameraProperties")) {
+      } else if (MatchNoCase("CameraProperties")) {
         int iset = itemInt[1];
         if (iset >= MAX_CAMERAS) {
           message.Format("Index in \"CameraProperties %d\" is out of range", iset);
