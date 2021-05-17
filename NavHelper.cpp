@@ -2241,6 +2241,7 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
                                 ScaleMat rMat)
 {
   int width, height, sizeX, sizeY, tmpS, type;
+  EMimageExtra *extra;
   void *array;
 
   sizeX = (int)fabs(sizingMat.xpx * sizingWidth + sizingMat.xpy * sizingHeight);
@@ -2273,6 +2274,8 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
   imBuf->mImage->UnLock();
 
   // This buffer could be anywhere, so let's do all the replacement steps here
+  extra = imBuf->mImage->GetUserData();
+  imBuf->mImage->SetUserData(NULL);
   imBuf->DeleteImage();
   if (type == kUBYTE)
     imBuf->mImage = new KImage;
@@ -2283,6 +2286,8 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
     imBuf->mImage->setType(type);
   }
   imBuf->mImage->useData((char *)array, sizeX, sizeY);
+  if (extra)
+    imBuf->mImage->SetUserData(extra);
   imBuf->SetImageChanged(1);
   return 0;
 }

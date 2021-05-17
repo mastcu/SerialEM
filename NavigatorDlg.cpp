@@ -3619,6 +3619,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   if (!montDlg) {
     AdjustAndMoveStage(item->mStageX, item->mStageY, 0., axisXY);
     mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
+    mWinApp->UpdateBufferWindows();
   }
   return 0;
 } 

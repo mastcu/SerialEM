@@ -699,8 +699,8 @@ void CMacroProcessor::OpenOrJustCloseOneLiners(bool reopen)
 // Central place to determine if a macro is theoretically runnable
 BOOL CMacroProcessor::MacroRunnable(int index)
 {
-  return !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
-    !(mWinApp->mNavigator && mWinApp->mNavigator->StartedMacro()) &&
+  return !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && !mScope->StageBusy()
+    && !(mWinApp->mNavigator && mWinApp->mNavigator->StartedMacro()) &&
     !(mWinApp->mNavigator && mWinApp->mNavigator->GetPausedAcquire()) &&
     !mWinApp->NavigatorStartedTS() && (index >= MAX_MACROS || !mMacros[index].IsEmpty() || 
     mMacroEditer[index]);

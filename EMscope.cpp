@@ -2217,6 +2217,8 @@ void CEMscope::TaskStageDone(int param)
   winApp->mScope->SetMovingStage(false);
   winApp->mScope->SetBkgdMovingStage(false);
   winApp->mCameraMacroTools.Update();
+  winApp->UpdateAllEditers();
+  winApp->UpdateMacroButtons();
   winApp->mMontageWindow.Update();
   winApp->mTiltWindow.UpdateEnables();
   winApp->mAlignFocusWindow.Update();
