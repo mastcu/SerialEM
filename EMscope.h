@@ -466,6 +466,7 @@ public:
   int StageBusy(int ignoreOrTrustState = 0);
   BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false,
     BOOL inBackground = false, BOOL doRelax = false, BOOL doRestore = false);
+  void UpdateWindowsForStage();
   void TiltTo(double inVal, double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);
   void TiltDown(double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);
   void TiltUp(double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);

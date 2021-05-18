@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
+#include "EMscope.h"
 #include ".\MacroEditer.h"
 #include "MacroToolbar.h"
 #include "MacroProcessor.h"
@@ -712,7 +713,8 @@ void CMacroEditer::UpdateButtons()
 {
   BOOL inactive = !mProcessor->DoingMacro();
   m_butOK.EnableWindow(inactive);
-  m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries());
+  m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
+    !mWinApp->mScope->GetMovingStage());
   m_editMacro.EnableWindow(inactive);
   m_butLoad.EnableWindow(inactive);
   m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0);

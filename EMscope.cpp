@@ -2189,12 +2189,19 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mStageThread->ResumeThread();
   mMovingStage = true;
   mBkgdMovingStage = inBackground;
+  UpdateWindowsForStage();
+  mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
+  return true;
+}
+
+void CEMscope::UpdateWindowsForStage()
+{
   mWinApp->mCameraMacroTools.Update();
+  mWinApp->UpdateAllEditers();
+  mWinApp->UpdateMacroButtons();
   mWinApp->mMontageWindow.Update();
   mWinApp->mTiltWindow.UpdateEnables();
   mWinApp->mAlignFocusWindow.Update();
-  mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
-  return true;
 }
 
 int CEMscope::TaskStageBusy()
@@ -2216,12 +2223,7 @@ void CEMscope::TaskStageDone(int param)
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   winApp->mScope->SetMovingStage(false);
   winApp->mScope->SetBkgdMovingStage(false);
-  winApp->mCameraMacroTools.Update();
-  winApp->UpdateAllEditers();
-  winApp->UpdateMacroButtons();
-  winApp->mMontageWindow.Update();
-  winApp->mTiltWindow.UpdateEnables();
-  winApp->mAlignFocusWindow.Update();
+  winApp->mScope->UpdateWindowsForStage();
 }
 
 int CEMscope::StageBusy(int ignoreOrTrustState)
