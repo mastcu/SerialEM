@@ -438,6 +438,8 @@ public:
   BOOL SetBeamTilt(double shiftX, double shiftY);
   BOOL IncBeamTilt(double shiftX, double shiftY);
   BOOL ChangeBeamTilt(double shiftX, double shiftY, BOOL bInc);
+  BOOL GetImageBeamTilt(double &shiftX, double &shiftY);
+  BOOL SetImageBeamTilt(double shiftX, double shiftY);
   BOOL GetDarkFieldTilt(int &mode, double &tiltX, double &tiltY);
   BOOL SetDarkFieldTilt(int mode, double tiltX, double tiltY);
   BOOL GetDiffractionShift(double &shiftX, double &shiftY);

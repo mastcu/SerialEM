@@ -4410,6 +4410,36 @@ int CMacCmd::ReportBeamTilt(void)
   return 0;
 }
 
+// SetImageBeamTilt
+int CMacCmd::SetImageBeamTilt(void)
+{
+  if (!FEIscope)
+    ABORT_LINE("Image-beam tilt is available only on FEI scopes for line:\n\n");
+  if (!mScope->SetImageBeamTilt(mItemDbl[1], mItemDbl[2])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+
+}
+
+// ReportImageBeamTilt
+int CMacCmd::ReportImageBeamTilt(void)
+{
+  double delX, delY;
+  if (!FEIscope)
+    ABORT_LINE("Image-beam tilt is available only on FEI scopes for line:\n\n");
+
+  if (!mScope->GetImageBeamTilt(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  mStrCopy.Format("Image-beam tilt %.3f %.3f", delX, delY);
+  mWinApp->AppendToLog(mStrCopy, mLogAction);
+  SetReportedValues(&mStrItems[1], delX, delY);
+  return 0;
+}
+
 // SetImageShift
 int CMacCmd::SetImageShift(void)
 {

@@ -2973,6 +2973,44 @@ BOOL CEMscope::ChangeBeamTilt(double tiltX, double tiltY, BOOL bInc)
   return success;
 }
 
+BOOL CEMscope::GetImageBeamTilt(double & tiltX, double & tiltY)
+{
+  BOOL success = true;
+
+  if (!sInitialized || !mPlugFuncs->GetImageBeamTilt)
+    return false;
+
+  ScopeMutexAcquire("GetImageBeamTilt", true);
+
+  try {
+    mPlugFuncs->GetImageBeamTilt(&tiltX, &tiltY);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting Image-Beam Tilt "));
+    success = false;
+  }
+  ScopeMutexRelease("GetImageBeamTilt");
+  return success;
+}
+
+BOOL CEMscope::SetImageBeamTilt(double tiltX, double tiltY)
+{
+  BOOL success = true;
+  if (!sInitialized || !mPlugFuncs->SetImageBeamTilt)
+    return false;
+  ScopeMutexAcquire("SetImageBeamTilt", true);
+
+  try {
+    mPlugFuncs->SetImageBeamTilt(tiltX, tiltY);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting Image-Beam Tilt "));
+    success = false;
+  }
+  ScopeMutexRelease("SetImageBeamTilt");
+  return success;
+}
+
 // Get the dark field mode and tilt, if mode is non-zero, return 0,0 tilt if mode 0
 BOOL CEMscope::GetDarkFieldTilt(int &mode, double &tiltX, double &tiltY)
 {
