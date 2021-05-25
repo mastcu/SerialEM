@@ -2425,6 +2425,18 @@
           <TD>Reports the beam tilt in milliradians for FEI, % of full-scale value for JEOL</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetImageBeamTilt #X #Y</TD>
+          <TD>Sets the image-beam tilt on an FEI scope to the given values in 
+            milliradians.&nbsp; The FEI scripting documentation cautions against using both this
+            kind of beam tilt and the dark field tilt.&nbsp; Command added in 3.8, 5/23/21.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportImageBeamTilt</TD>
+          <TD>Reports the image beam tilt in milliradians on an FEI scope.&nbsp; Command 
+            added in 3.8, 5/23/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetProbeMode #|mode</TD>
           <TD>Sets the mode to microprobe or nanoprobe on an FEI scope.&nbsp; Follow with 0 
             or 'nano' for nanoprobe, or 1 or 'micro' for microprobe.</TD>

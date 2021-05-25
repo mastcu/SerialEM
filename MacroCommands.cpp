@@ -1365,7 +1365,8 @@ int CMacCmd::IsVariableDefined(void)
 
   index = B3DCHOICE(LookupVariable(mItem1upper, index2) != NULL, 1, 0);
   SubstituteVariables(&mStrLine, 1, mStrLine);
-  mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+  if (!mRunningScrpLang)
+    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   mLogRpt.Format("Variable %s %s defined", (LPCTSTR)mStrItems[1],
     B3DCHOICE(index, "IS", "is NOT"));
   SetReportedValues(&mStrItems[2], index);
@@ -3449,7 +3450,8 @@ int CMacCmd::AddToAutodoc(void)
     ABORT_LINE("Error making autodoc be the current one for: \n\n");
   if (CMD_IS(ADDTOAUTODOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+    if (!mRunningScrpLang)
+      mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     if (AdocSetKeyValue(
       index2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
       ADOC_IMAGE, ADOC_ZVALUE) : ADOC_GLOBAL,
@@ -3476,7 +3478,8 @@ int CMacCmd::AddToFrameMdoc(void)
     "Error writing to frame .mdoc in:\n\n" };
   if (CMD_IS(ADDTOFRAMEMDOC)) {
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+    if (!mRunningScrpLang)
+      mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
     index = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
   }
   else {
@@ -3537,7 +3540,8 @@ int CMacCmd::AddToNextFrameStackMdoc(void)
 
   doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-  mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
+  if (!mRunningScrpLang)
+    mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
   if (mCamera->AddToNextFrameStackMdoc(mStrItems[1], mStrCopy, doBack, &report))
     ABORT_LINE(report + " in:\n\n");
   return 0;

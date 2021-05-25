@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/24/21: Fixed autodoc/mdoc functions and IsVariableDefined when run from
+Python.
+
 5/24/21: Added plugin and scope functions and scripts commands for accessing
 image-beam tilt on an FEI scope.
 
