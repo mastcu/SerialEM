@@ -858,6 +858,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         stateP->readModeSrch = itemEmpty[29] ? -1 : itemInt[29];
         stateP->readModeMont = itemEmpty[30] ? -1 : itemInt[30];
         stateP->focusAxisPos = EXTRA_NO_VALUE;
+        stateP->beamAlpha = itemEmpty[31] ? -999 : itemInt[31];
 
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
@@ -1746,7 +1747,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
       oneState.Format("StateParameters %d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d\n", stateP->lowDose, 
+        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d\n", stateP->lowDose, 
         stateP->camIndex, stateP->magIndex, 
         stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
         stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame, 
@@ -1755,7 +1756,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         stateP->saveFrames, stateP->processing, stateP->alignFrames, 
         stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView, 
         stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev, 
-        stateP->readModeSrch, stateP->readModeMont);
+        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha);
         mFile->WriteString(oneState);
         if (!stateP->name.IsEmpty()) {
           oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
@@ -2563,7 +2564,13 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->insertingRetracts = itemInt[1];
           else if (MatchNoCase("GIF"))
             camP->GIF = itemInt[1] != 0;
-          else if (MatchNoCase("HasTVCamera"))
+          else if (MatchNoCase("FEIFilterType")) {
+            if (itemInt[1] > 0) {
+              camP->filterIsFEI = itemInt[1];
+              camP->GIF = true;
+              mWinApp->mScope->SetAdvancedScriptVersion(ASI_FILTER_FEG_LOAD_TEMP);
+            }
+          } else if (MatchNoCase("HasTVCamera"))
             camP->hasTVCamera = itemInt[1] != 0;
           else if (MatchNoCase("InsertTVToUnblank"))
             camP->useTVToUnblank = itemInt[1];
@@ -4899,6 +4906,10 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         }
         mWinApp->mDocWnd->SetShortTermNotSaved();
 
+      } else if (NAME_IS("LastFeiZLPshift")) {
+        if (filtP->usedOldAlign)
+          filtP->lastFeiZLPshift = itemDbl[1];
+
       } else if (NAME_IS("ImageShiftMatrix") || NAME_IS("StageCalibration")) {
         inTime = itemInt[1];
         index = itemInt[2];
@@ -4998,6 +5009,10 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
       oneState.Format("FilterAlignment %f %f %d %f %d %d %s\n", filtP->refineZLPOffset,
         filtP->alignedSlitWidth, filtP->alignedMagInd, filtP->alignZLPTimeStamp,
         filtP->cumulNonRunTime, mWinApp->MinuteTimeStamp(), getenv("USERNAME"));
+      mFile->WriteString(oneState);
+    }
+    if (filtP->lastFeiZLPshift > EXTRA_VALUE_TEST) {
+      oneState.Format("LastFeiZLPshift %f", filtP->lastFeiZLPshift);
       mFile->WriteString(oneState);
     }
 

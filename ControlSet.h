@@ -163,7 +163,8 @@ struct CameraParameters {
   CString superResRefForK2;
   BOOL GIF;                // Flag that EFTEM needs to be run, etc
   BOOL hasTVCamera;        // Has a TV camera that needs to be retracted
-  int useTVToUnblank;      // TV needs to be put in to keep from blanking other cameras 
+  int useTVToUnblank;      // TV needs to be put in to keep from blanking other cameras
+  int filterIsFEI;         // Flag that filter is an FEI (Selectris)
   BOOL checkTemperature;   // Check whether temperature is stable before first acquire
   BOOL sideMount;          // No need to raise screen for side mount camera
   int canTakeFrames;       // Flag that camera can take frames for save or align
@@ -345,6 +346,7 @@ struct StateParams {
   int spotSize;            // spot size
   double intensity;        // beam intensity value
   int probeMode;           // Probe mode for FEI
+  int beamAlpha;           // Alpha value for JEOL
   BOOL slitIn;             // Flag that slit is supposed to be in
   float energyLoss;        // Energy loss value, sent to spectrum offset
   float slitWidth;         // slit width
@@ -393,6 +395,7 @@ struct FilterParams {
   float magShifts[MAX_MAGS];  // Table of shifts
   float refineZLPOffset;   // Offset to apply from refine ZLP
   double alignZLPTimeStamp; // Time (ticks/1000) at which ZLP aligned or refined
+  double lastFeiZLPshift;   // Zero loss peak adjustment from FEI interface
   BOOL adjustForSlitWidth;    // Flag to adjust for slit width changes
   BOOL positiveLossOnly;    // Flag that filter has only positive energy shifts
   float minLoss, maxLoss;     // Minimum and maximum allowed energy loss

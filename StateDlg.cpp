@@ -75,7 +75,7 @@ END_MESSAGE_MAP()
 BOOL CStateDlg::OnInitDialog()
 {
   // [LD], camera, mag, spot, C2, exposure, binning, frame
-  int fields[11] = {11,8,24,10,18,22,12,29,8,8,8};
+  int fields[11] = {11,8,24,18,18,22,12,29,8,8,8};
   int tabs[11], i;
   BOOL states[2] = {true, true};
   CRect clientRect, editRect;
@@ -407,7 +407,7 @@ void CStateDlg::StateToListString(int index, CString &string)
   int mag, active, spot, probe;
   int *activeList = mWinApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
-  CString lds = state->lowDose ? "SL" : "ST";
+  CString prbal, lds = state->lowDose ? "SL" : "ST";
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
   mag = MagForCamera(camp, magInd);
@@ -418,11 +418,16 @@ void CStateDlg::StateToListString(int index, CString &string)
     probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
     percentC2 = mWinApp->mScope->GetC2Percent(spot, intensity);
     lds = state->lowDose ? "LD" : "";
+    if (FEIscope)
+      prbal = probe ? "uP" : "nP";
+    else if (!mWinApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
+      prbal.Format("a%d", state->beamAlpha + 1);
   }
 
-  string.Format("%s\t%d\t%d\t%d\t%.1f\t%.3f\t%s\t%.1fx%.1f\t%s", (LPCTSTR)lds, active,
-    mag, spot, percentC2, state->exposure, mWinApp->BinningText(state->binning, camp), 
-    state->xFrame / 1000., state->yFrame / 1000., (LPCTSTR)state->name);
+  string.Format("%s\t%d\t%d\t%d%s\t%.1f\t%.3f\t%s\t%.1fx%.1f\t%s", (LPCTSTR)lds, active,
+    mag, spot, (LPCTSTR)prbal, percentC2, state->exposure, 
+    mWinApp->BinningText(state->binning, camp), state->xFrame / 1000., 
+    state->yFrame / 1000., (LPCTSTR)state->name);
 }
 
 // Update the string of an item in the box
