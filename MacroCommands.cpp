@@ -7764,6 +7764,33 @@ int CMacCmd::SetFEGEmissionState(void)
   return 0;
 }
 
+// IsFEGFlashingAdvised
+int CMacCmd::IsFEGFlashingAdvised(void)
+{
+  int answer;
+  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+    ABORT_NOLINE("The version of advanced scripting has not been identified as high enough"
+      " to support FEG flashing");
+  if (!mScope->GetIsFlashingAdvised(mItemInt[1], answer)) {
+    AbortMacro();
+    return 1;
+  }
+  mLogRpt.Format("%s FEG flashing %s advised", mItemInt[1] ? "High-T" : "Low-T", 
+    answer ? "IS" : "is NOT");
+  SetReportedValues(&mStrItems[2], answer);
+  return 0;
+}
+
+// NextFEGFlashHighTemp
+int CMacCmd::NextFEGFlashHighTemp(void)
+{
+  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+    ABORT_NOLINE("The version of advanced scripting has not been identified as high enough"
+      " to support FEG flashing");
+  mScope->SetDoNextFEGFlashHigh(mItemEmpty[1] || mItemInt[1]);
+  return 0;
+}
+
 // IsPVPRunning
 int CMacCmd::IsPVPRunning(void)
 {

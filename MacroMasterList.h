@@ -605,10 +605,13 @@ MAC_SAME_NAME_NOARG(ReportImageBeamTilt, 0, 0, REPORTIMAGEBEAMTILT)
 MAC_SAME_NAME_NOARG(ListCalibrations, 0, 4, LISTCALIBRATIONS)
 MAC_SAME_NAME_NOARG(ReportCurrentBuffer, 0, 0, REPORTCURRENTBUFFER)
 MAC_SAME_FUNC_ARG(ChangeItemDraw, 1, 4, ChangeItemRegistration, CHANGEITEMDRAW, Ii)
+MAC_SAME_NAME_ARG(IsFEGFlashingAdvised, 1, 4, ISFEGFLASHINGADVISED, I)
+MAC_SAME_NAME_ARG(NextFEGFlashHighTemp, 0, 4, NEXTFEGFLASHHIGHTEMP, i)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //
 // The longest command name is now 25 characters but 23 is a more common limit
+// # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
 
 //Undefine ALL the macros to ready it for the next use
 #undef MAC_DIFF_NAME

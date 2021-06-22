@@ -1410,6 +1410,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mDeferLogUpdates = false;
     mWinApp->mLogWindow->FlushDeferredLines();
   }
+  mScope->SetDoNextFEGFlashHigh(false);
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
   if (abort || mNumStatesToRestore > 0 || restoreArea) {
