@@ -2835,6 +2835,11 @@
             It will wait up to 15 seconds.</TD>
         </TR>
         <TR>
+          <TD>HasSimpleOriginSystem</TD>
+          <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system.&nbsp; Calls to 
+            check dewar status and refill dewars will access this system.</TD>
+        </TR>
+        <TR>
           <TD>LowDoseChangeAtZeroIS</TD>
           <TD>Set to 1 to have the Low Dose area switching routine zero out image shift 
             before changing areas and restore the previous shift afterwards.</TD>
@@ -3493,7 +3498,8 @@
          <TR VALIGN="top">
           <TD>TSWaitAfterScopeFilling</TD>
           <TD>Extra wait time in seconds after the end of dewar filling when the setting of 
-            'TSCheckScopeDisturbances' causes a wait before taking a Record.&nbsp; The default is 0.</TD>
+            'TSCheckScopeDisturbances' causes a wait before taking a Record.&nbsp; The default 
+            is 600 (10 minutes) for JEOL and 0 for FEI.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TSLowMagFieldFrac</TD>

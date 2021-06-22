@@ -2786,21 +2786,28 @@
           <TD class="scriptcommand">AreDewarsFilling</TD>
           <TD>Reports whether any of the dewars in a temperature control system on an FEI 
             scope are busy
-            filling (<i>reportedValue1</i> is set to 0 or 1).
+            filling, or whether a SimpleOrigin system is busy filling (<i>reportedValue1</i> is set to 0 or 1).
             &nbsp; Also reports if tanks are being refilled on a JEOL if the interface 
             exists for determining that (<i>reportedValue1</i> is set to 1 for stage tank plus 2 
             for transfer tank).&nbsp; Value can be assigned to a variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DewarsRemainingTime</TD>
-          <TD>Reports the time remaining for until next automatic dewar filling on an FEI 
-            scope, or -1 if
-            none is scheduled.&nbsp; Value can be assigned to a variable at end of command.</TD>
+          <TD>Reports the time remaining until next automatic dewar filling on an FEI 
+            scope or -1 if none is scheduled.&nbsp; Alternatively, with a SimpleOrigin filling system, 
+            reports the seconds left until the next filling or -1 if there are no remaining 
+            refills.&nbsp; Value can be assigned to a variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RefrigerantLevel #</TD>
-          <TD>Reports the refrigerant level of the Dewar given by <b>#</b> on an FEI scope: 1 for autoloader, 2 for
+          <TD>Reports the refrigerant level of the dewar given by <b>#</b> on an FEI scope: 1 for autoloader, 2 for
             column, 3 for liquid helium. &nbsp; Value can be assigned to a variable at end of command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SimpleOriginStatus</TD>
+          <TD>Reports the number of remaining refills, the minutes until the next refill (or a negative value 
+            if there are no refills left) and whether filling is underway for a SimpleOrigin
+             system.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 3.9, 6/16/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsPVPRunning</TD>
@@ -2821,7 +2828,7 @@
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
           <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
-            refrigerant on FEI ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'), 
+            refrigerant on FEI or with a SimpleOrigin system ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'), 
             Unload cartridge ('Un'), Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS') or Refill Transfer 
             tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL or FEI.&nbsp; Operations are identified by the first two

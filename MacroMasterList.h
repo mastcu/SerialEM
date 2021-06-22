@@ -607,6 +607,7 @@ MAC_SAME_NAME_NOARG(ReportCurrentBuffer, 0, 0, REPORTCURRENTBUFFER)
 MAC_SAME_FUNC_ARG(ChangeItemDraw, 1, 4, ChangeItemRegistration, CHANGEITEMDRAW, Ii)
 MAC_SAME_NAME_ARG(IsFEGFlashingAdvised, 1, 4, ISFEGFLASHINGADVISED, I)
 MAC_SAME_NAME_ARG(NextFEGFlashHighTemp, 0, 4, NEXTFEGFLASHHIGHTEMP, i)
+MAC_SAME_NAME_NOARG(SimpleOriginStatus, 0, 4, SIMPLEORIGINSTATUS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //

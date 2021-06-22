@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include <atlbase.h>
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include ".\EMscope.h"
@@ -105,6 +106,9 @@ static int sCartridgeToLoad = -1;
 static bool sGettingValuesFast = false;    // Keep track of whether getting values fast
 static bool sLastGettingFast = false;
 static int sRestoreStageXYdelay;
+static int sSimpOrigStartTimeout = 15;
+static int sSimpOrigEndTimeout = 300;
+static int sStopSimpleOriginFill = 0;     // Flag to stop it
 static JeolStateData *sJeolSD;
 
 
@@ -143,6 +147,10 @@ static int spFEItoJeol[] = {0, spUnknownJeol, spUpJeol, spDownJeol};
 }
 
 #define ALL_INSTRUMENT_LENSES 99
+
+#define SIMPLE_ORIGIN_PARENT HKEY_CURRENT_USER
+#define SIMPLE_ORIGIN_KEY "SOFTWARE\\SimpleOrigin"
+
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -482,6 +490,7 @@ CEMscope::CEMscope()
   mDetectorOffsetX = mDetectorOffsetY = 0.;
   mRestoreViewFocusCount = 0;
   mDoNextFEGFlashHigh = false;
+  mHasSimpleOrigin = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -6355,11 +6364,13 @@ bool CEMscope::AreDewarsFilling(int &busy)
   double level;
   BOOL bBusy;
   bool bRet = true;
-  if (HitachiScope || (JEOLscope && !mPlugFuncs->GetNitrogenStatus))
+  if (HitachiScope || (JEOLscope && !mPlugFuncs->GetNitrogenStatus && !mHasSimpleOrigin))
     return false;
   ScopeMutexAcquire("AreDewarsFilling", true);
   try {
-    if (FEIscope) {
+    if (mHasSimpleOrigin) {
+      bRet = GetSimpleOriginStatus(ibusy2, time, busy);
+    } else if (FEIscope) {
       bRet = GetTemperatureInfo(0, bBusy, time, 0, level);
       busy = bBusy ? 1 : 0;
     } else {
@@ -6383,7 +6394,15 @@ bool CEMscope::AreDewarsFilling(int &busy)
 bool CEMscope::GetDewarsRemainingTime(int &time)
 {
   BOOL busy;
+  bool bRet;
+  int ibusy, remaining;
   double level;
+  if (mHasSimpleOrigin) {
+    bRet = GetSimpleOriginStatus(remaining, time, ibusy);
+    if (!remaining)
+      time = -1;
+    return bRet;
+  }
   return GetTemperatureInfo(1, busy, time, 0, level);
 }
 
@@ -6393,6 +6412,106 @@ bool CEMscope::GetRefrigerantLevel(int which, double &level)
   BOOL busy;
   int time;
   return GetTemperatureInfo(2, busy, time, which, level);
+}
+
+// Read the registry to access information on SimpleOrigin system
+bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill, int &active)
+{
+  CRegKey key;
+  LONG nResult;
+  DWORD value;
+  CString mess, act;
+  if (!mHasSimpleOrigin) {
+    SEMMessageBox("The property for a SimpleOrigin system is not set");
+    return false;
+  }
+
+  act = "opening registry key";
+  nResult = key.Open(SIMPLE_ORIGIN_PARENT, _T(SIMPLE_ORIGIN_KEY));
+  if (nResult == ERROR_SUCCESS) {
+    act = "getting NUMBER_OF_REMAINING_REFILLS";
+    nResult = key.QueryDWORDValue("NUMBER_OF_REMAINING_REFILLS", value);
+    numRefills = value;
+  }
+  if (nResult == ERROR_SUCCESS) {
+    act = "getting TIME_TO_NEXT_REFILL_SEC";
+    nResult = key.QueryDWORDValue("TIME_TO_NEXT_REFILL_SEC", value);
+    secToNextRefill = value;
+  }
+  if (nResult == ERROR_SUCCESS) {
+    act = "getting SYSTEM_STATUS";
+    nResult = key.QueryDWORDValue("SYSTEM_STATUS", value);
+    active = value;
+  }
+
+  if (nResult != ERROR_SUCCESS) {
+    mess.Format("Error %d %s for SimpleOrigin system", nResult, (LPCTSTR)act);
+    SEMMessageBox(mess);
+    return false;
+  }
+
+  return true;
+}
+
+int CEMscope::RefillSimpleOrigin(CString &errString)
+{
+  CRegKey key;
+  DWORD value;
+  LONG nResult;
+  int loop = 1;
+  double startTicks;
+  nResult = key.Open(SIMPLE_ORIGIN_PARENT, _T(SIMPLE_ORIGIN_KEY));
+  if (nResult != ERROR_SUCCESS) {
+    errString.Format("Error %d opening registry key for SimpleOrigin", nResult);
+    return 1;
+  }
+  nResult = key.QueryDWORDValue("SYSTEM_STATUS", value);
+  if (nResult != ERROR_SUCCESS) {
+    errString.Format("Error %d accessing SYSTEM_STATUS for SimpleOrigin", nResult);
+    return 1;
+  }
+
+  // If not already filling, start it
+  if (!value) {
+    errString = "There are no refills remaining in the SimpleOrigin system";
+    if (key.QueryDWORDValue("NUMBER_OF_REMAINING_REFILLS", value) == ERROR_SUCCESS &&
+      !value)
+      return 2;
+
+    key.SetDWORDValue("SOFTWARE_STOP", 0);
+    nResult = key.SetDWORDValue("SOFTWARE_START", 1);
+    if (nResult != ERROR_SUCCESS) {
+      errString.Format("Error %d setting SOFTWARE_START for SimpleOrigin", nResult);
+      return 1;
+    }
+    loop = 0;
+  }
+
+  // Wait to see it active (if it wasn't) and Wait to see it inactive
+  for (;loop < 2; loop++) {
+    startTicks = GetTickCount();
+    for (;;) {
+      if (sStopSimpleOriginFill > 0) {
+        key.SetDWORDValue("SOFTWARE_STOP", 1);
+        key.SetDWORDValue("SOFTWARE_START", 0);
+        sStopSimpleOriginFill = -1;
+        return 0;
+      }
+      if (key.QueryDWORDValue("SYSTEM_STATUS", value) == ERROR_SUCCESS &&
+        BOOL_EQUIV(loop > 0, value == 0))
+        break;
+      if (SEMTickInterval(startTicks) < 1000. *
+        (loop ? sSimpOrigEndTimeout : sSimpOrigStartTimeout))
+        Sleep(100);
+      else {
+        errString = loop ? "Timeout waiting for SimpleOrigin filling to end" :
+          "Timeout waiting for SimpleOrigin status to show that filling started";
+        return 3 + loop;
+      }
+    }
+  }
+  key.SetDWORDValue("SOFTWARE_START", 0);
+  return 0;
 }
 
 // Common function to reduce boilerplate
@@ -8612,7 +8731,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   float sinceLast;
   bool needHWDR = false, startedThread = false;
   int now = mWinApp->MinuteTimeStamp();
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 1, 1, 1, 1, 0, 1, 1, 2, 2, 0};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0};
   mDoingStoppableRefill = 0;
 
   // Loop through the operations, test if it is time to do each and add to list to do
@@ -8641,6 +8760,12 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           mDoingStoppableRefill |= 1;
         if (longOp == LONG_OP_FILL_TRANSFER)
           mDoingStoppableRefill |= 2;
+        if (longOp == LONG_OP_REFILL) {
+          if (!FEIscope && !mHasSimpleOrigin)
+            return 2;
+          if (mHasSimpleOrigin)
+            mDoingStoppableRefill = 4;
+        }
     }
     if (sinceLast < -1.5) {
       hoursSinceLast[ind] = (float)(now - mLastLongOpTimes[longOp]) / 60.f;
@@ -8671,7 +8796,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mLongOpData[thread].numOperations = numScopeOps;
       mLongOpData[thread].JeolSD = &mJeolSD;
       mLongOpData[thread].plugFuncs = mPlugFuncs;
-      mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0);
+      mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0) |
+        (mHasSimpleOrigin ? LONGOP_SIMPLE_ORIGIN : 0);
       mDoNextFEGFlashHigh = false;
       mLongOpThreads[thread] = AfxBeginThread(LongOperationProc, &mLongOpData[thread],
         THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
@@ -8727,7 +8853,11 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         }
         // Refill refrigerant
         if (longOp == LONG_OP_REFILL) {
-          lod->plugFuncs->ForceRefill();
+          sStopSimpleOriginFill = 0;
+          if (lod->flags & LONGOP_SIMPLE_ORIGIN)
+            retval = RefillSimpleOrigin(lod->errString);
+          else 
+            lod->plugFuncs->ForceRefill();
         }
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
@@ -8776,7 +8906,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             true);
           retval = 1;
         } else
-          lod->finished[ind] = true;
+          lod->finished[ind] = longOp != LONG_OP_REFILL || retval == 0;
       }
 
       // Save an error in the error string and retval but continue in loop
@@ -8884,6 +9014,14 @@ int CEMscope::StopLongOperation(bool exiting, int index)
       mPlugFuncs->RefillNitrogen(1, 0);
     if (mDoingStoppableRefill & 2)
       mPlugFuncs->RefillNitrogen(2, 0);
+    if (mDoingStoppableRefill & 4) {
+      sStopSimpleOriginFill = 1;
+      for (ok = 0; ok < 50; ok++) {
+        if (sStopSimpleOriginFill < 0)
+          break;
+        Sleep(50);
+      }
+    }
     SEMMessageBox("If nitrogen was filling, it has now been stopped");
     return 0;
   }

@@ -123,6 +123,7 @@ FLOAT_PROP_TEST("StageRelaxation", scope->, StageRelaxation)
 BOOL_PROP_TEST("SkipAdvancedScripting", scope->, SkipAdvancedScripting)
 BOOL_PROP_TEST("UpdateDuringAreaChange", scope->, UpdateDuringAreaChange)
 BOOL_PROP_TEST("AdvancedScriptingVersion", scope->, AdvancedScriptVersion)
+BOOL_PROP_TEST("HasSimpleOriginSystem", scope->, HasSimpleOrigin)
 #endif
 #ifdef PROP_TEST_SECT2
 INT_PROP_TEST("ContinuousAlignBinning", mWinApp->mFalconHelper->, ContinAliBinning)

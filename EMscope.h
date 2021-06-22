@@ -96,7 +96,8 @@ struct StageThreadData {
   StageMoveInfo *info;
 };
 
-#define LONGOP_FLASH_HIGH  1
+#define LONGOP_FLASH_HIGH    1
+#define LONGOP_SIMPLE_ORIGIN 2
 
 struct LongThreadData {
   int operations[MAX_LONG_OPERATIONS];
@@ -465,6 +466,7 @@ public:
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
+  GetSetMember(BOOL, HasSimpleOrigin);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
   void GetDetectorOffsets(float &outX, float &outY) { outX = mDetectorOffsetX; outY = mDetectorOffsetY; };
@@ -797,6 +799,7 @@ private:
   float mDetectorOffsetY;
   int mRestoreViewFocusCount;  // For counter of updates before deferred RestoreViewFocus
   bool mDoNextFEGFlashHigh;    // Flag to do a high flash on next call
+  BOOL mHasSimpleOrigin;        // Flag to use calls to Simle Origin for refilling
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -887,6 +890,8 @@ public:
   bool AreDewarsFilling(int & busy);
   bool GetDewarsRemainingTime(int & time);
   bool GetRefrigerantLevel(int which, double & level);
+  bool GetSimpleOriginStatus(int &numRefills, int &secToNextRefill, int &active);
+  static int RefillSimpleOrigin(CString &errString);
   bool GetObjectiveStigmator(double & stigX, double & stigY);
   bool SetObjectiveStigmator(double stigX, double stigY);
   int GetXLensDeflector(int which, double &outX, double &outY);

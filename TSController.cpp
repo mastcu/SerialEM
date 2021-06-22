@@ -436,7 +436,7 @@ CTSController::CTSController()
   mCheckScopeDisturbances = -1;
   mTrackAfterScopeStopTime = 5;
   mFocusAfterScopeStopTime = 120;
-  mWaitAfterScopeFilling = 0;
+  mWaitAfterScopeFilling = -1;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
   FillActOrder(actions, sizeof(actions) / sizeof(int));
@@ -470,6 +470,8 @@ void CTSController::Initialize()
     mRestoreStageXYonTilt = FEIscope ? 1 : 0;
   if (mCheckScopeDisturbances < 0)
     mCheckScopeDisturbances = FEIscope ? TS_CHECK_PVP : 0;
+  if (mWaitAfterScopeFilling < 0)
+    mWaitAfterScopeFilling = JEOLscope ? 600 : 0;
 }
 
 // Clear out all the flags for individual actions

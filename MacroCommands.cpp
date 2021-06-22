@@ -6863,7 +6863,9 @@ int CMacCmd::AreDewarsFilling(void)
     AbortMacro();
     return 1;
   }
-  if (FEIscope)
+  if (mScope->GetHasSimpleOrigin()) {
+    mLogRpt.Format("SimpleOrigin system %s busy filling", index ? "IS" : "is NOT");
+  } else if (FEIscope)
     mLogRpt.Format("Dewars %s busy filling", index ? "ARE" : "are NOT");
   else {
     char *dewarTxt[4] = {"No tanks are", "Stage tank is", "Transfer tank is",
@@ -6872,6 +6874,20 @@ int CMacCmd::AreDewarsFilling(void)
     mLogRpt.Format("%s being refilled", dewarTxt[index]);
   }
   SetReportedValues(&mStrItems[1], index);
+  return 0;
+}
+
+// SimpleOriginStatus
+int CMacCmd::SimpleOriginStatus(void)
+{
+  int numLeft, secToNext, active;
+  if (!mScope->GetSimpleOriginStatus(numLeft, secToNext, active)) {
+    AbortMacro();
+    return 1;
+  }
+  mLogRpt.Format("SimpleOrigin has %d refills, %.1f minutes to next fill, %s filling",
+    numLeft, secToNext / 60., active ? "IS" : "is NOT");
+  SetReportedValues(&mStrItems[1], numLeft, secToNext / 60., active);
   return 0;
 }
 
