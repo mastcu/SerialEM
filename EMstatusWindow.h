@@ -20,6 +20,7 @@ class EMstatusWindow : public CToolDlg
 public:
 	void Update();
 	EMstatusWindow(CWnd* pParent = NULL);   // standard constructor
+  GetSetMember(BOOL, ShowDefocus);
 
 // Dialog Data
 	//{{AFX_DATA(EMstatusWindow)
@@ -55,6 +56,7 @@ private:
 	EMbufferManager * mBufferManager;
 	CString *mModeNames;
 	CStatic *mBufText[MAX_STATUS];
+  BOOL mShowDefocus;
 };
 
 //{{AFX_INSERT_LOCATION}}

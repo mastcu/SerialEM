@@ -34,6 +34,7 @@ EMstatusWindow::EMstatusWindow(CWnd* pParent /*=NULL*/)
   m_sStageText = _T("");
   m_sTiltText = _T("");
   m_strDefocus = _T("");
+  mShowDefocus = true;
   //}}AFX_DATA_INIT
 }
 
@@ -101,19 +102,32 @@ void EMstatusWindow::Update()
       m_sSizeText = "Size:";
       m_sStageText = "Stage:";
       m_sTiltText = "Tilt:";
-      m_strDefocus = "MagIdx:";
+      m_strDefocus = mShowDefocus ? "Def:" : "Mag:";
       if (buf->mImage) {
 		    width = buf->mImage->getWidth();
 		    height = buf->mImage->getHeight();
 		    spaceIt = width < 10000 && height < 10000;
         m_sSizeText.Format("Size: %d%sx%s%d  %s %s", width, spaceIt ? " " : "", 
           spaceIt ? " " : "", height, STEM ? "sam" : "bin", (LPCTSTR)buf->BinningText());
+        if (!mShowDefocus && buf->mMagInd)
+          m_strDefocus.Format("MagInd: %d", buf->mMagInd);
         EMimageExtra *extra = (EMimageExtra *)buf->mImage->GetUserData();
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
-          m_sTiltText.Format("Tilt: %.2f", extra->m_fTilt);
-          m_strDefocus.Format("MagIdx: %d", buf->mMagInd);
-
+            m_sTiltText.Format("Tilt: %.2f", extra->m_fTilt);
+          if (mShowDefocus) {
+            if (extra->mDefocus > EXTRA_VALUE_TEST)
+              m_strDefocus.Format("Def: %.2f", extra->mDefocus);
+          } else {
+            if (extra->m_iMag > 0) {
+              if (extra->m_iMag >= 100000000)
+                m_strDefocus.Format("%dMx", extra->m_iMag / 1000000);
+              else if (extra->m_iMag >= 100000)
+                m_strDefocus.Format("%dKx", extra->m_iMag / 1000);
+              else
+                m_strDefocus.Format("%dx", extra->m_iMag);
+            }
+          }
           if (buf->mConSetUsed == MONTAGE_CONSET && 
             (buf->mCaptured > 0 || buf->mCaptured == BUFFER_MONTAGE_PRESCAN) && 
             !mWinApp->mShiftCalibrator->CalibratingIS()) {

@@ -3761,14 +3761,13 @@ int CMacCmd::Show(void)
 // ReportCurrentBuffer
 int CMacCmd::ReportCurrentBuffer(void)
 {
-  int index;
-  BOOL isImage;
+  int index, isImage;
   CString letString;
   EMimageBuffer *imBuf;
 
   index = mWinApp->mMainView->GetImBufIndex();
   imBuf = ImBufForIndex(index);
-  isImage = (imBuf->mImage != NULL);
+  isImage = (imBuf->mImage != NULL) ? 1 : 0 ;
   char letter = 'A' + index;
   letString = letter;
   SetOneReportedValue(letString, 1);

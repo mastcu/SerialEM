@@ -35,7 +35,7 @@
 // Real commands that can be included in a SerialeEM script start with Exit - keep that
 // as the first such one!
 //
-// New commands must be added at the end or they will break existing Python plugins, 
+// New commands must be added at the end or they will break existing Python modules, 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //
 // The longest command name is now 25 characters but 23 is a more common limit
@@ -233,14 +233,12 @@ MAC_SAME_FUNC_ARG(CloseLogOpenNew, 0, 4, SaveLogOpenNew, CLOSELOGOPENNEW, i)
 MAC_SAME_NAME_ARG(SaveLog, 0, 4, SAVELOG, is)
 MAC_SAME_NAME_ARG(DeferLogUpdates, 0, 4, DEFERLOGUPDATES, i)
 MAC_SAME_NAME_NOARG(SaveCalibrations, 0, 4, SAVECALIBRATIONS)
-MAC_SAME_NAME_NOARG(ListCalibrations, 0, 4, LISTCALIBRATIONS)
 MAC_SAME_NAME_ARG(SetProperty, 2, 4, SETPROPERTY, SI)
 MAC_SAME_NAME_ARG(ReportUserSetting, 1, 0, REPORTUSERSETTING, S)
 MAC_SAME_FUNC_ARG(ReportProperty, 1, 0, ReportUserSetting, REPORTPROPERTY, S)
 MAC_SAME_NAME_ARG(SetUserSetting, 2, 4, SETUSERSETTING, SDi)
 MAC_SAME_NAME_ARG(Copy, 2, 0, COPY, SS)
 MAC_SAME_NAME_ARG(Show, 1, 0, SHOW, S)
-MAC_SAME_NAME_NOARG(ReportCurrentBuffer, 0, 0, REPORTCURRENTBUFFER)
 MAC_SAME_NAME_ARG(ChangeFocus, 1, 1, CHANGEFOCUS, D)
 MAC_SAME_NAME_ARG(SetDefocus, 1, 0, SETDEFOCUS, D)
 MAC_SAME_NAME_ARG(SetStandardFocus, 1, 4, SETSTANDARDFOCUS, D)
@@ -534,7 +532,6 @@ MAC_SAME_NAME_NOARG(CloseNavigator, 0, 0, CLOSENAVIGATOR)
 MAC_SAME_NAME_ARG(OpenNavigator, 0, 0, OPENNAVIGATOR, s)
 MAC_SAME_NAME_ARG(ChangeItemRegistration, 2, 5, CHANGEITEMREGISTRATION, II)
 MAC_SAME_FUNC_ARG(ChangeItemColor, 2, 4, ChangeItemRegistration, CHANGEITEMCOLOR, II)
-MAC_SAME_FUNC_ARG(ChangeItemDraw, 1, 4, ChangeItemRegistration, CHANGEITEMDRAW, Ii)
 MAC_SAME_FUNC_ARG(ChangeItemLabel, 2, 4, ChangeItemRegistration, CHANGEITEMLABEL, IS)
 MAC_SAME_FUNC_ARG(ChangeItemNote, 1, 4, ChangeItemRegistration, CHANGEITEMNOTE, Is)
 MAC_SAME_NAME_ARG(SetItemTargetDefocus, 2, 4, SETITEMTARGETDEFOCUS, ID)
@@ -605,6 +602,9 @@ MAC_SAME_NAME_NOARG(ReportFEGEmissionState, 0, 4, REPORTFEGEMISSIONSTATE)
 MAC_SAME_NAME_ARG(SetFEGEmissionState, 1, 4, SETFEGEMISSIONSTATE, I)
 MAC_SAME_NAME_ARG(SetImageBeamTilt, 2, 0, SETIMAGEBEAMTILT, DD)
 MAC_SAME_NAME_NOARG(ReportImageBeamTilt, 0, 0, REPORTIMAGEBEAMTILT)
+MAC_SAME_NAME_NOARG(ListCalibrations, 0, 4, LISTCALIBRATIONS)
+MAC_SAME_NAME_NOARG(ReportCurrentBuffer, 0, 0, REPORTCURRENTBUFFER)
+MAC_SAME_FUNC_ARG(ChangeItemDraw, 1, 4, ChangeItemRegistration, CHANGEITEMDRAW, Ii)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //

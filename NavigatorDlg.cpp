@@ -1706,7 +1706,7 @@ void CNavigatorDlg::ProcessNKey(void)
 
   if (!allOn) {
     if (!KGetOneInt("Enter 1 for file at all acquire items, or -1 for file only at "
-      "polygons", "Interval between items at which set up new files:", 
+      "polygons", "Interval between items at which to set up new files:", 
       mMinNewFileInterval))
       return;
   }
