@@ -5564,9 +5564,9 @@ void CParameterIO::WriteDouble(CString format, double dVal)
 
 
 // Convert an entry list to a single string.  Type = 1 for a set of doubles, 
-// 2 for int,double, 3 for int.  precision is # of decimal places
+// 2 for int,double, 3 for int, 4 for short.  precision is # of decimal places
 CString CParameterIO::EntryListToString(int type, int precision, int numVals, int *iVals, 
-                                        double *dVals)
+                                        double *dVals, short *sVals)
 {
   char format[10];
   CString str = "";
@@ -5581,9 +5581,11 @@ CString CParameterIO::EntryListToString(int type, int precision, int numVals, in
       str2.Format(format, dVals[i]);
     } else if (type == 2) {
       str2.Format(format, iVals[i], dVals[i]);
+    } else if (type == 4) {
+      str2.Format("%d", sVals[i]);
     } else
       str2.Format("%d", iVals[i]);
-    if (type < 3)
+  if (type < 3)
       str2.TrimRight('0');
     if (i)
       str += " ";
@@ -5596,7 +5598,7 @@ CString CParameterIO::EntryListToString(int type, int precision, int numVals, in
 // only, 2 for int,double, 3 for int.  Returns 2 for too many entries, 1 for format error
 // such as too few values in entry, -1 for format warning (possibly extra values)
 int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iVals, 
-  double *dVals, int maxVals, bool splitCommas)
+  double *dVals, int maxVals, bool splitCommas, short *sVals)
 {
   int err, ind, ind2;
   int twocomma = 0;
@@ -5611,7 +5613,7 @@ int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iV
     if (strItems[i].IsEmpty())
       break;
     ind = strItems[i].Find(',');
-    if (type % 2) {
+    if (type != 2) {
       if (ind == 0) {
         err = 1;
         break;
@@ -5620,6 +5622,8 @@ int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iV
         twocomma = -1;
       if (type == 1)
         dVals[numVals++] = atof((LPCTSTR)strItems[i]);
+      else if (type == 4)
+        sVals[numVals++] = (short)atoi((LPCTSTR)strItems[i]);
       else
         iVals[numVals++] = atoi((LPCTSTR)strItems[i]);
     } else {
