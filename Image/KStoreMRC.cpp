@@ -162,7 +162,7 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
   mFileOpt = inFileOpt;
 
   // Figure out amount of extra header needed
-  mHead->typext = inFileOpt.typext;
+  mHead->typext = (Int16)inFileOpt.typext;
   mHead->nbytext = 0;
   for (int i=0; i <  EXTRA_NTYPES; i++) {
     if ((( 1  << i) & mHead->typext) != 0)

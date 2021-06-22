@@ -74,6 +74,7 @@ struct MontParam {
   float fullMontStageX;
   float fullMontStageY;
   int refCount;             // Reference count for multiple use
+  int navID;                   // ID for avoiding duplication when merging nav files
 };
 
 // Structure to keep track of offsets applied in making montage overview

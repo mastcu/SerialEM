@@ -23,7 +23,7 @@ class KImageStore;
 // Remember to initialize new values in GainRefMaker if necessary
 struct  FileOptions {
   int mode;
-  short typext;
+  int typext;
   int maxSec;
   BOOL useMdoc;
   BOOL montageInMdoc;
@@ -41,6 +41,7 @@ struct  FileOptions {
   BOOL leaveExistingMdoc;
   int montFileType;
   int refCount;
+  int navID;
   BOOL useMont(void) {return separateForMont && ((typext & MONTAGE_MASK) || montageInMdoc);};
   BOOL isMontage(void) {return (typext & MONTAGE_MASK) || montageInMdoc;};
 };
