@@ -1238,6 +1238,7 @@
     <ClInclude Include="Shared\holefinder.h" />
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
+    <ClInclude Include="ShiftToMarkerDlg.h" />
     <ClInclude Include="ThreeChoiceBox.h" />
     <ClInclude Include="TSDoseSymDlg.h" />
     <ClInclude Include="Utilities\AskOneDlg.h" />
@@ -2235,6 +2236,7 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ShiftToMarkerDlg.cpp" />
     <ClCompile Include="ThreeChoiceBox.cpp" />
     <ClCompile Include="TSDoseSymDlg.cpp" />
     <ClCompile Include="Utilities\AskOneDlg.cpp">

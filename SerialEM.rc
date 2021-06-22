@@ -628,9 +628,11 @@ BEGIN
         MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
         MENUITEM "&Undo Transformation",        ID_NAVIGATOR_UNDOTRANSFORMATION
         MENUITEM "C&hange Registration",        ID_NAVIGATOR_CHANGEREGISTRATION
+        MENUITEM "Align &with Rotation...",     ID_NAVIGATOR_ALIGN_TO_MAP
+        MENUITEM SEPARATOR
         MENUITEM "&Shift to Marker",            ID_NAVIGATOR_SHIFTTOMARKER
         MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
-        MENUITEM "Align &with Rotation...",     ID_NAVIGATOR_ALIGN_TO_MAP
+        MENUITEM "Apply Sa&ved Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
         MENUITEM SEPARATOR
         MENUITEM "&New Map from Image",         ID_NEW_MAP
         MENUITEM "Import Map...",               ID_NAVIGATOR_IMPORTMAP
@@ -3351,6 +3353,32 @@ BEGIN
     COMBOBOX        IDC_COMBO_SELECTOR,70,31,100,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
+IDD_SHIFT_TO_MARKER DIALOGEX 0, 0, 269, 176
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shift To Marker"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    CTEXT           "The shift between the current item and the marker point is 1, 1 microns",IDC_STAT_MARKER_SHIFT,9,16,238,8
+    CTEXT           "Selected non-imported items at registration 2 will be shifted by that amount",IDC_STAT_WHAT_SHIFTS,13,29,243,8
+    CONTROL         "All items at the current registration",IDC_RAPPLY_ALL_AT_REG,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,14,54,123,10
+    CONTROL         "All maps at 23000x and items marked on them",IDC_RAPPLY_ALL_MAPS_AT_MAG,
+                    "Button",BS_AUTORADIOBUTTON,14,65,193,10
+    CONTROL         "Only maps at 23000x and marked items that have not been shifted before",IDC_RAPPLY_IN_COHORT,
+                    "Button",BS_AUTORADIOBUTTON,14,76,246,10
+    GROUPBOX        "Which items to shift",IDC_STATIC,7,44,255,55,WS_GROUP
+    CONTROL         "Do not save shift for reuse",IDC_RNO_SAVING,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,113,99,10
+    CONTROL         "Save shift to apply again from 4700x to 23000x or other higher mag",IDC_RSAVE_NEW_SHIFT,
+                    "Button",BS_AUTORADIOBUTTON,16,124,225,10
+    CONTROL         "Add to saved shift from 4700x to 20000x (non-matching higher mag)",IDC_RADD_TO_SAVED,
+                    "Button",BS_AUTORADIOBUTTON,16,135,228,10
+    GROUPBOX        "Saving shifts for reuse",IDC_STATIC,7,103,255,46,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,47,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,147,155,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,234,156,10,10
+    LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,26,86,141,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3842,6 +3870,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 65
     END
+
+    IDD_SHIFT_TO_MARKER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 169
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -4002,6 +4038,11 @@ BEGIN
 END
 
 IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -6058,6 +6099,8 @@ BEGIN
                             "Use a non-proportional (evenly spaced) font in Editor"
     ID_SCRIPT_SHOWINDENTBUTTONS 
                             "In editor, include buttons fix, increase, or reduce indentation"
+    ID_NAVIGATOR_APPLYSAVEDSHIFT 
+                            "Shift maps and marked items at one mag by a shift saved for that mag"
 END
 
 #endif    // English (United States) resources

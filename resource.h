@@ -79,6 +79,7 @@
 #define IDD_HOLE_FINDER                 233
 #define IDD_MULTI_COMBINER              234
 #define IDD_MACROSELECTER               249
+#define IDD_SHIFT_TO_MARKER             254
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1670,6 +1671,16 @@
 #define IDC_BUT_FIX_INDENT              2697
 #define IDC_BUT_ADD_INDENT              2698
 #define IDC_BUT_REMOVE_INDENT           2700
+#define IDC_STAT_MARKER_SHIFT           2701
+#define IDC_STAT_WHAT_SHIFTS            2702
+#define IDC_RAPPLY_ALL_AT_REG           2703
+#define IDC_RAPPLY_ALL_MAPS_AT_MAG      2704
+#define IDC_RAPPLY_IN_COHORT            2705
+#define IDC_RNO_SAVING                  2706
+#define IDC_RSAVE_NEW_SHIFT             2707
+#define IDC_RADD_TO_SAVED               2708
+#define IDC_STAT                        2709
+#define IDC_STAT_MAP_MARKED             2709
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2162,15 +2173,16 @@
 #define ID_TASKS_ROUGHUSESEARCHIFINLM   33400
 #define ID_SCRIPT_USEMONOSPACEDFONT     33401
 #define ID_SCRIPT_SHOWINDENTBUTTONS     33402
+#define ID_NAVIGATOR_APPLYSAVEDSHIFT    33403
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        254
-#define _APS_NEXT_COMMAND_VALUE         33403
-#define _APS_NEXT_CONTROL_VALUE         2701
+#define _APS_NEXT_RESOURCE_VALUE        256
+#define _APS_NEXT_COMMAND_VALUE         33404
+#define _APS_NEXT_CONTROL_VALUE         2710
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
