@@ -2363,8 +2363,10 @@ void CProcessImage::OnListRelativeRotations()
               alternate = diff + mAddedRotation[vecInd] - 90.f;
             else
               alternate = diff + mAddedRotation[vecInd] + 90.f;
-            mess.Format("RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d", mag, 
-              UtilGoodAngle(diff + mAddedRotation[vecInd]), 
+            mess.Format("# Verify ambiguous relative rotation between mags "
+              "# %d and # %d and edit line below\r\n"
+              "RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d", 
+              (mag - 1), mag, mag, UtilGoodAngle(diff + mAddedRotation[vecInd]), 
               UtilGoodAngle(alternate), mPixelSizes[vecInd], xmag);
           } 
         } else {

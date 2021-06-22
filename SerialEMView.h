@@ -76,6 +76,7 @@ public:
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
   double GetZoom() {return mZoom; };
+  int GetImBufIndex() {return mImBufIndex; };
   void SetImBufIndex(int inImBufIndex) {mImBufIndex = inImBufIndex; };
   void SetImBufs(EMimageBuffer *inImBufs, int inNumber) {mImBufs = inImBufs; mImBufNumber = inNumber;};
   void CloseFrame();

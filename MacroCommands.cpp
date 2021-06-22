@@ -3650,6 +3650,19 @@ int CMacCmd::SaveCalibrations(void)
   return 0;
 }
 
+// List Calibrations
+int CMacCmd::ListCalibrations(void)
+{
+  mWinApp->mMenuTargets.DoListISVectors(true);
+  mWinApp->mMenuTargets.DoListISVectors(false);
+  mWinApp->mMenuTargets.DoListStageCals();
+  mWinApp->mFocusManager->OnAutofocusListCalibrations();
+  mWinApp->mShiftManager->ListBeamShiftCals();
+  mWinApp->mBeamAssessor->ListIntensityCalibrations();
+  mWinApp->mBeamAssessor->ListSpotCalibrations();
+  return 0;
+}
+
 // SetProperty
 int CMacCmd::SetProperty(void)
 {
@@ -3742,6 +3755,25 @@ int CMacCmd::Show(void)
   if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
     ABORT_LINE(report);
   mWinApp->SetCurrentBuffer(index);
+  return 0;
+}
+
+// ReportCurrentBuffer
+int CMacCmd::ReportCurrentBuffer(void)
+{
+  int index;
+  BOOL isImage;
+  CString letString;
+  EMimageBuffer *imBuf;
+
+  index = mWinApp->mMainView->GetImBufIndex();
+  imBuf = ImBufForIndex(index);
+  isImage = (imBuf->mImage != NULL);
+  char letter = 'A' + index;
+  letString = letter;
+  SetOneReportedValue(letString, 1);
+  SetOneReportedValue(isImage, 2);
+  mLogRpt.Format("Current buffer is %s and%s empty", letString, isImage ? " not" : "");
   return 0;
 }
 
@@ -8235,7 +8267,7 @@ int CMacCmd::OpenNavigator(void)
   return 0;
 }
 
-// ChangeItemRegistration, ChangeItemColor, ChangeItemLabel, ChangeItemNote
+// ChangeItemRegistration, ChangeItemColor, ChangeItemDraw, ChangeItemLabel, ChangeItemNote
 int CMacCmd::ChangeItemRegistration(void)
 {
   CString report;
@@ -8262,6 +8294,12 @@ int CMacCmd::ChangeItemRegistration(void)
       if (index2 < 0 || index2 >= NUM_ITEM_COLORS)
         ABORT_LINE(report);
       navItem->mColor = index2;
+    }
+    else if (CMD_IS(CHANGEITEMDRAW)) {
+      if (mItemEmpty[2])
+        navItem->mDraw = !navItem->mDraw;
+      else
+        navItem->mDraw = index2;
     } else if (CMD_IS(CHANGEITEMNOTE)) {
       SubstituteVariables(&mStrLine, 1, mStrLine);
       if (mItemEmpty[2])

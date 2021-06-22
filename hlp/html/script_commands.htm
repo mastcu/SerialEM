@@ -1439,6 +1439,12 @@
           <TD>Displays the given buffer (e.g., Show C)</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportCurrentBuffer</TD>
+          <TD>Returns the letter of the buffer currently open in the main window in <i>reportedValue1</i>
+          and 0 or 1 in <i>reportedValue2</i> indicating if the buffer contains an image or not. FFT windows
+          or image windows other than the main window are ignored. Command added in 3.9, 7/8/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CropImage buf #X0 #X1 #Y0 #Y1</TD>
           <TD>Crops out a subarea of the given buffer, which can be in the FFT window, from 
             <b>#X0</b> to <b>#X1</b> in X and from <b>#Y0</b> to <b>#Y1</b> in
@@ -1728,6 +1734,12 @@
           <TD>Saves the calibrations to a file. The name of the calibrations file is printed in the
               log window; execution of this command requires Administrator mode to be enabled in the
               Calibrations menu.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ListCalibrations</TD>
+          <TD>Print tables with image shift, stage shift, focus, astigmatism via CTF, beam shift, beam
+          intensity and spot intensity calibrations to the log window for diagnostic purposes.
+          Command added in 3.9, 7/8/21.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
@@ -3549,6 +3561,12 @@
           <TD>Changes the color index of the Navigator item with table index <b>#I</b> to <b>#C</b>, which 
             must be between 0 and 5. (0 = red; 1 = green; 2 = blue; 3 = yellow; 4 = magenta;
             5 = no realign)</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ChangeItemDraw #I [#D]</TD>
+          <TD>Changes if the Navigator item with table index <b>#I</b> is drawn or not. If no <b>#D</b> is 
+            specified, the option is toggled, if <b>#D</b> is 0, drawing is disabled, any other numeric values
+            for <b>#D</b> enable drawing. Command added in 3.9, 7/8/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeItemLabel #I text</TD>

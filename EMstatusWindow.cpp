@@ -101,7 +101,7 @@ void EMstatusWindow::Update()
       m_sSizeText = "Size:";
       m_sStageText = "Stage:";
       m_sTiltText = "Tilt:";
-      m_strDefocus = "Def:";
+      m_strDefocus = "MagIdx:";
       if (buf->mImage) {
 		    width = buf->mImage->getWidth();
 		    height = buf->mImage->getHeight();
@@ -112,7 +112,7 @@ void EMstatusWindow::Update()
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
           m_sTiltText.Format("Tilt: %.2f", extra->m_fTilt);
-          m_strDefocus.Format("Def: %.2f", buf->mDefocus);
+          m_strDefocus.Format("MagIdx: %d", buf->mMagInd);
 
           if (buf->mConSetUsed == MONTAGE_CONSET && 
             (buf->mCaptured > 0 || buf->mCaptured == BUFFER_MONTAGE_PRESCAN) && 
