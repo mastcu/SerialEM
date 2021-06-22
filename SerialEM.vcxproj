@@ -1223,6 +1223,7 @@
     <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
     <ClInclude Include="MyButton.h" />
+    <ClInclude Include="NavAdocParams.h" />
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="OneLineScript.h" />
     <ClInclude Include="ParticleTasks.h" />

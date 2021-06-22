@@ -17,6 +17,7 @@
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "EMscope.h"
+#include "ParameterIO.h"
 #include "ProcessImage.h"
 #include "FocusManager.h"
 #include "ComplexTasks.h"
@@ -42,9 +43,7 @@
 #include "TSController.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
-#include "Shared\cfsemshare.h"
 #include "Shared\autodoc.h"
-#include "Shared\b3dutil.h"
 #include "Image\KStoreIMOD.h"
 #include "Image\KStoreADOC.h"
 
@@ -1242,6 +1241,7 @@ void CNavigatorDlg::OnCheckTiltSeries()
   } else if (mItem->mTSparamIndex >= 0 && !m_bTiltSeries) {
     mHelper->EndAcquireOrNewFile(mItem);
   }
+  SetChanged(true);
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
@@ -1259,6 +1259,7 @@ void CNavigatorDlg::OnCheckFileatitem()
   } else if (mItem->mFilePropIndex >= 0 && !m_bFileAtItem) {
     mHelper->EndAcquireOrNewFile(mItem);
   }
+  SetChanged(true);
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
@@ -1303,8 +1304,10 @@ void CNavigatorDlg::OnButFileprops()
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   sched = mHelper->GetFileTypeAndSchedule(mItem, fileType);
-  if (fileType >= 0)
+  if (fileType >= 0) {
     mHelper->SetFileProperties(mCurrentItem, fileType, sched, true, false);
+    SetChanged(true);
+  }
   mWinApp->RestoreViewFocus();
 }
 
@@ -1356,6 +1359,7 @@ void CNavigatorDlg::OnButTsparams()
   if (!SetCurrentItem() || mItem->mTSparamIndex < 0)
     return;
   mHelper->SetTSParams(mCurrentItem);
+  SetChanged(true);
   mWinApp->RestoreViewFocus();
 }
 
@@ -1369,8 +1373,10 @@ void CNavigatorDlg::OnButFilename()
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   sched = mHelper->GetFileTypeAndSchedule(mItem, fileType);
-  if (fileType >= 0)
+  if (fileType >= 0) {
     mHelper->SetOrChangeFilename(mCurrentItem, fileType, sched);
+    SetChanged(true);
+  }
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
 }
@@ -6995,7 +7001,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   mWinApp->RestoreViewFocus();
   CString str, sub, filename;
   IntVec skipIndex;
-  int adocInd, adocErr, ind, sectInd;
+  int adocInd, adocErr, ind, sectInd, outInd, ind2;
+  float varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
   FILE *fp;
   if (autosave)
     filename = mParam->autosaveFile;
@@ -7032,6 +7039,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       adocErr++;
     if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "LastSavedAs", (LPCTSTR)filename))
       adocErr++;
+
+    // Save all the members in the include file
     for (ind = 0; ind < mItemArray.GetSize(); ind++) {
       CMapDrawItem *item = mItemArray[ind];
       sectInd = AdocAddSection("Item", item->mLabel);
@@ -7041,6 +7050,62 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #include "NavAdocPuts.h"
       }
     }
+
+#define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0)); 
+#define INT_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b));
+#define FLOAT_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, b));
+#define DOUBLE_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, (float)b));
+
+    // Save tilt series parameters
+#undef ADOC_ARG
+#define ADOC_ARG "TSParam",sectInd
+#define SET_TEST_SECT3
+#define NAV_OTHER_TS_PARAMS
+    for (ind = 0; ind < mTSparamArray.GetSize(); ind++) {
+      TiltSeriesParam *tsParam = mTSparamArray[ind];
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("TSParam", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef SET_TEST_SECT3
+#undef NAV_OTHER_TS_PARAMS
+
+    // Save montage parameters
+#undef ADOC_ARG
+#define ADOC_ARG "MontParam",sectInd
+#define NAV_MONT_PARAMS
+    for (ind = 0; ind < mMontParArray.GetSize(); ind++) {
+      MontParam *montParam = mMontParArray[ind];
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("MontParam", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef NAV_MONT_PARAMS
+
+
+#undef ADOC_ARG
+#define ADOC_ARG "FileOptions",sectInd
+#define NAV_FILE_OPTS
+    for (ind = 0; ind < mFileOptArray.GetSize(); ind++) {
+      FileOptions *fileOpt = mFileOptArray[ind];
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("FileOptions", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef NAV_FILE_OPTS
+
     if (adocErr) {
       str.Format("%d errors occurred setting Navigator data into autodoc structure before"
         " writing it as XML", adocErr);
@@ -7075,11 +7140,63 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #include "NavAdocPuts.h"
       }
     }
+
+#define SET_TEST_SECT3
+#define NAV_OTHER_TS_PARAMS
+    for (ind = 0; ind < mTSparamArray.GetSize(); ind++) {
+      TiltSeriesParam *tsParam = mTSparamArray[ind];
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "TSParam", str);
+      if (sectInd) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef SET_TEST_SECT3
+#undef NAV_OTHER_TS_PARAMS
+
+#define NAV_MONT_PARAMS
+    for (ind = 0; ind < mMontParArray.GetSize(); ind++) {
+      MontParam *montParam = mMontParArray[ind];
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "MontParam", str);
+      if (sectInd) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef NAV_MONT_PARAMS
+
+#define NAV_FILE_OPTS
+    for (ind = 0; ind < mFileOptArray.GetSize(); ind++) {
+      FileOptions *fileOpt = mFileOptArray[ind];
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "FileOptions", str);
+      if (sectInd) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef NAV_FILE_OPTS
+
     if (adocErr) {
       str.Format("%d errors occurred writing Navigator data into file", adocErr);
       AfxMessageBox(str, MB_EXCLAME);
     }
     fclose(fp);
+#undef ADOC_PUT
+#undef ADOC_ARG
+
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+#undef DOUBLE_SETT_ASSIGN
 
   }
   mChanged = false;
@@ -7108,11 +7225,47 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   if (!retval)  \
     a = index != 0;
 
+// Macros for readin parameter sets to other sections
+#define INT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &b));
+
+#define BOOL_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &index)); \
+       ADOC_BOOL_ASSIGN(b);
+
+#define FLOAT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &b));
+
+#define DOUBLE_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &xx)); \
+       if (retval) \
+         b = xx;
+
+#define SKIP_ADOC_PUTS
+
+#define ADOC_STR_TO_LIST(a)   \
+  if (!retval && adocStr) {  \
+    str2 = adocStr;  \
+    free(adocStr);  \
+    retval = a; \
+    if (retval > 0) \
+      numAdocErr++;  \
+  }
+
+#define FIND_DUP_OR_ADD(arr, parm, parm2, nwind) \
+  ind2 = arr.GetSize();  \
+  for (index = 0; index < ind2; index++) { \
+    parm2 = arr[index];    \
+    if (parm2->navID == parm->navID)  \
+      ind2 = index;   \
+  }   \
+  if (ind2 == arr.GetSize()) \
+    arr.Add(parm);  \
+  else   \
+    delete parm;   \
+  nwind.push_back(ind2);
+
 
 // Loading a file
 int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename) 
 {
-  CString str, str2, navRoot, lastSavedRoot, name = "";
+  CString str, str2, navRoot, ext, extra, root, lastSavedRoot, name = "";
   CStdioFile *cFile = NULL;
   CFileStatus status;
   int retval, externalErr, returnVal = 0;
@@ -7132,18 +7285,22 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     "a montage map file having no mdoc file",
     "an error accessing the mdoc file by its autodoc index", "", "", "", ""};
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
-  float xx, yy, fvals[4];
-  int numExternal, externalType;
+  float xx, yy, fvals[4], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  int numExternal, externalType, numParams, curNum, numDig, maxNum;
   int holeSkips[2000];
   std::set<std::string> filesNotFound;
   std::set<std::string>::iterator fileIter;
   std::map<std::string, std::string> filesFoundMap;
   std::map<std::string, std::string>::iterator mapIter;
   std::string stdstr, stdstr2;
+  IntVec newTSparamInds, newMontParamInds, newFileOptInds;
   const char *externalKeys[4] = {"CoordsInMap", "CoordsInAliMont", "CoordsInAliMontVS",
     "CoordsInPiece"};
   char *adocStr;
-  CMapDrawItem *item, *prev;
+  TiltSeriesParam *tsParam, *tsp2;
+  FileOptions *fileOpt, *fileo2;
+  MontParam *montParam, *montp2;
+  CMapDrawItem *item, *prev, *testItem;
   int originalSize = (int)mItemArray.GetSize();
   bool resetAcquireEnd = mAcquireIndex >= 0 && originalSize - 1 <= mEndingAcquireIndex;
   int version = 100;
@@ -7183,7 +7340,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 
   try {
     // Open the file for reading and verify first line; get optional version
-    cFile = new CStdioFile(name, CFile::modeRead |CFile::shareDenyWrite);
+    cFile = new CStdioFile(name, CFile::modeRead | CFile::shareDenyWrite);
     retval = cFile->ReadString(str);
     if (retval && (str.Left(11) == "AdocVersion") || (str.Left(5) == "<?xml")) {
 
@@ -7196,7 +7353,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         return 1;
       }
       adocIndex = AdocRead((LPCTSTR)name);
-      if (adocIndex< 0) {
+      if (adocIndex < 0) {
         SEMMessageBox("An error occurred reading in the Navigator file as an autodoc",
           MB_EXCLAME);
         AdocReleaseMutex();
@@ -7218,6 +7375,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       }
       version = B3DNINT(100. * xx);
 
+
     } else {
 
       // Or set up to process the old type of file
@@ -7231,7 +7389,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           cFile->Close();
           delete cFile;
           return 1;
-        } 
+        }
         retval = cFile->ReadString(str);
       }
       if (!retval || str.Left(5) != "Label") {
@@ -7241,7 +7399,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         delete cFile;
         return 1;
       }
-      
+
       // ADD AN ENTRY HERE WHEN YOU ADD MAP ITEMS
       if (version > 100)
         mapSkip += 2;
@@ -7274,6 +7432,131 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     }
     mHelper->SetExtDrawnOnID(0);
     addIndex = mergeFile ? (int)mItemArray.GetSize() : 0;
+
+    // Read in the params and file options first
+    if (adocIndex >= 0) {
+
+      // Tilt series params from macros in include file
+#define SET_TEST_SECT3
+#define NAV_OTHER_TS_PARAMS
+#define SECT_NAME "TSParam"
+      numParams = AdocGetNumberOfSections("TSParam");
+      for (ind1 = 0; ind1 < numParams; ind1++) {
+        tsParam = new TiltSeriesParam;
+#include "NavAdocParams.h"
+
+        // Other tilt series items: three ints, extra recs
+        ADOC_REQUIRED(AdocGetThreeIntegers("TSParam", ind1, "MagIndex",
+          &tsParam->magIndex[0], &tsParam->magIndex[1], &tsParam->magIndex[2]));
+        ADOC_REQUIRED(AdocGetThreeIntegers("TSParam", ind1, "LowMagIndex",
+          &tsParam->lowMagIndex[0], &tsParam->lowMagIndex[1], &tsParam->lowMagIndex[2]));
+        ADOC_REQUIRED(AdocGetThreeIntegers("TSParam", ind1, "BidirAnchMagIndReg",
+          &tsParam->bidirAnchorMagInd[0], &tsParam->bidirAnchorMagInd[2],
+          &tsParam->bidirAnchorMagInd[4]));
+        ADOC_REQUIRED(AdocGetThreeIntegers("TSParam", ind1, "BidirAnchMagIndLD",
+          &tsParam->bidirAnchorMagInd[1], &tsParam->bidirAnchorMagInd[3],
+          &tsParam->bidirAnchorMagInd[5]));
+        if (tsParam->numExtraExposures) {
+          ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraExposures", &adocStr));
+          ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(1, str2,
+            tsParam->numExtraExposures, NULL, tsParam->extraExposures, MAX_EXTRA_RECORDS));
+        }
+        if (tsParam->numExtraFocus) {
+          ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraFocuses", &adocStr));
+          ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(1, str2,
+            tsParam->numExtraFocus, NULL, tsParam->extraFocus, MAX_EXTRA_RECORDS));
+        }
+        if (tsParam->numExtraFilter) {
+          ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraLosses", &adocStr));
+          ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(1, str2,
+            tsParam->numExtraFilter, NULL, tsParam->extraLosses, MAX_EXTRA_RECORDS));
+          ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraSlits", &adocStr));
+          ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(3, str2,
+            tsParam->numExtraFilter, tsParam->extraSlits, NULL, MAX_EXTRA_RECORDS));
+        }
+        if (tsParam->numExtraChannels) {
+          ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraChannels", &adocStr));
+          ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(3, str2,
+            tsParam->numExtraChannels, tsParam->extraChannels, NULL, MAX_STEM_CHANNELS));
+        }
+
+        // Varying items
+        if (tsParam->numVaryItems) {
+          numToGet = tsParam->numVaryItems * NUM_VARY_ELEMENTS;
+          ADOC_REQUIRED(AdocGetFloatArray("TSParam", ind1, "VaryArray", varyVals, &numToGet,
+            MAX_VARY_TYPES * NUM_VARY_ELEMENTS));
+          if (!retval) {
+            i = 0;
+            for (ind2 = 0; ind2 < tsParam->numVaryItems; ind2++) {
+              tsParam->varyArray[ind2].angle = varyVals[i++];
+              tsParam->varyArray[ind2].plusMinus = varyVals[i++] != 0.;
+              tsParam->varyArray[ind2].linear = varyVals[i++] != 0.;
+              tsParam->varyArray[ind2].type = (short)varyVals[i++];
+              tsParam->varyArray[ind2].value = varyVals[i++];
+            }
+          }
+        }
+
+        // Find if this param already exists (for a merge) and delete it if so, or add it
+        FIND_DUP_OR_ADD(mTSparamArray, tsParam, tsp2, newTSparamInds);
+      }
+#undef SET_TEST_SECT3
+#undef NAV_OTHER_TS_PARAMS
+#undef SECT_NAME
+
+      // Montage params
+#define NAV_MONT_PARAMS
+#define SECT_NAME "MontParam"
+      numParams = AdocGetNumberOfSections("MontParam");
+      for (ind1 = 0; ind1 < numParams; ind1++) {
+        montParam = new MontParam;
+#include "NavAdocParams.h"
+        if (montParam->numToSkip > 0) {
+          montParam->skipPieceX.resize(montParam->numToSkip);
+          numToGet = montParam->numToSkip;
+          if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceX", holeSkips, &numToGet,
+            2000)) {
+            numAdocErr++;
+          } else {
+            for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
+              montParam->skipPieceX[ind2] = (short)holeSkips[ind2];
+          }
+
+          montParam->skipPieceY.resize(montParam->numToSkip);
+          if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceY", holeSkips, &numToGet,
+            2000)) {
+            numAdocErr++;
+          } else {
+            for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
+              montParam->skipPieceY[ind2] = (short)holeSkips[ind2];
+          }
+        }
+
+        FIND_DUP_OR_ADD(mMontParArray, montParam, montp2, newMontParamInds);
+      }
+#undef NAV_MONT_PARAMS
+#undef SECT_NAME
+
+      // File options
+#define NAV_FILE_OPTS
+#define SECT_NAME "FileOptions"
+      numParams = AdocGetNumberOfSections("FileOptions");
+      for (ind1 = 0; ind1 < numParams; ind1++) {
+        fileOpt = new FileOptions;
+#include "NavAdocParams.h"
+        FIND_DUP_OR_ADD(mFileOptArray, fileOpt, fileo2, newFileOptInds);
+      }
+#undef NAV_FILE_OPTS
+#undef SECT_NAME
+
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+#undef DOUBLE_SETT_ASSIGN
+#undef SKIP_ADOC_PUTS
+#undef ADOC_STR_TO_LIST
+#undef FIND_DUP_OR_ADD
+    }
 
     // Loop on entries in either case
     for (;;) {
@@ -7369,6 +7652,54 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             free(adocStr);
           }
         }
+        ADOC_OPTIONAL(AdocGetString("Item", sectInd, "FileToOpen", &adocStr));
+        ADOC_STR_ASSIGN(item->mFileToOpen);
+
+        // Adjust name to be unique
+        if (!retval && (mHelper->NameToOpenUsed(item->mFileToOpen) || 
+            mDocWnd->StoreIndexFromName(item->mFileToOpen) >= 0)) {
+          root = mHelper->DecomposeNumberedName(item->mFileToOpen, ext, curNum, numDig,
+            extra);
+          str = root;
+          str.MakeUpper();
+          maxNum = curNum;
+
+          // Find highest existing number matching the root name
+          for (ind1 = 0; ind1 < mItemArray.GetSize(); ind1++) {
+            testItem = mItemArray[ind1];
+            mHelper->CheckForSameRootAndNumber(str, ext, extra, testItem->mFileToOpen,
+              maxNum, numDig);
+          }
+          for (ind1 = 0; ind1 < mDocWnd->GetNumStores(); ind1++) {
+            str2 = (mDocWnd->GetStoreMRC(ind1))->getName();
+            mHelper->CheckForSameRootAndNumber(str, ext, extra, str2, maxNum, numDig);
+          }
+
+          // Construct new name
+          if (numDig) {
+            str2.Format("%%0%dd", numDig);
+            str.Format((LPCTSTR)str2, maxNum + 1);
+            item->mFileToOpen = root + str + extra + ext;
+          } else {
+            item->mFileToOpen = root + "2" + ext;
+          }
+        }
+
+        // Read in parameter indexes and map them to new values
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "TSparamIndex",
+          &item->mTSparamIndex));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontParamIndex",
+          &item->mMontParamIndex));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FilePropIndex",
+          &item->mFilePropIndex));
+        if (item->mTSparamIndex >= 0 && item->mTSparamIndex < (int)newTSparamInds.size())
+          item->mTSparamIndex = newTSparamInds[item->mTSparamIndex];
+        if (item->mMontParamIndex >= 0 && item->mMontParamIndex < 
+          (int)newMontParamInds.size())
+          item->mMontParamIndex = newMontParamInds[item->mMontParamIndex];
+        if (item->mFilePropIndex >= 0 && item->mFilePropIndex < 
+          (int)newFileOptInds.size())
+          item->mFilePropIndex = newFileOptInds[item->mFilePropIndex];
 
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
@@ -7812,7 +8143,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     MakeListMappings();
   FillListBox(false, mergeFile);
   Redraw();
-  mChanged = false;
+  mChanged = mergeFile;
   if (resetAcquireEnd) {
     mEndingAcquireIndex = (int)mItemArray.GetSize() - 1;
     mHelper->CountAcquireItems(originalSize, mEndingAcquireIndex, numSect, numToGet);

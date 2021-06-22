@@ -110,8 +110,16 @@
         of parameters for the record area), and Record parameters such as exposure 
         time. In Low Dose mode, the axis position of the Focus area and an offset from 
         center of a subarea selected in the Focus camera parameters is also stored.&nbsp; This capability is obviously useful if you want a different state for 
-        some tilt series, or a different Focus area in Low Dose mode; it can also be used for the first tilt series to guarantee 
-        that a particular state is set then.</LI></UL>
+        some tilt series, or a different Focus subarea in Low Dose mode; it can also be used for the first tilt series to guarantee 
+        that a particular state is set then.&nbsp; However, it need not be used to set 
+        different axis positions for Focus, because this is saved separately as part of 
+        the Navigator item.</LI>
+      <LI>
+        <em>Saving to Navigator file. </em>&nbsp;As of SerialEM 3.9, 6/14/21, the arrays 
+        of tilt series parameters, montage parameters, and file options are saved to the 
+        Navigator file.&nbsp; Thus it is possible to exit SerialEM, restart, and reload 
+        a Navigator file with all of these settings.&nbsp; However, imaging states are 
+        not saved.</LI></UL>
     <P><B><I>Stopping and intervening:</I></B> When running tilt series from the 
       Navigator, it is still possible to intervene manually, but the situation is 
       somewhat complex because of the two layers of control involved. There are three 

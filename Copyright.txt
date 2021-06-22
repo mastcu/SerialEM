@@ -30,14 +30,14 @@ redistributed under the terms of this license.  A copy of this license is in
 the file GPL.txt.  This source can be found at
 http://bio3d.colorado.edu/SerialEM/SerialEMCCD
 
-The camera and microscope plugins to SerialEM distributed with the program are
-not open source.  The University of Colorado reserves the exclusive rights of
-preparing derivative works of these plugins to SerialEM, and distributing
-copies for sale, lease or lending.  Users may reproduce the full software
-package including plugins to SerialEM for use within their own institution, as
-long as the copyright notice and other notices are preserved.  The plugins to
-SerialEM may not be distributed for profit, either in original form or in
-derivative works.
+The microscope plugins and other camera plugins to SerialEM distributed with
+the program are not open source.  The University of Colorado reserves the
+exclusive rights of preparing derivative works of these plugins to SerialEM,
+and distributing copies for sale, lease or lending.  Users may reproduce the
+full software package including plugins to SerialEM for use within their own
+institution, as long as the copyright notice and other notices are preserved.
+The plugins to SerialEM may not be distributed for profit, either in original
+form or in derivative works.
 
 THIS PLUGIN SOFTWARE IS PROVIDED WITH NO WARRANTY, EXPRESS OR IMPLIED,
 INCLUDING, WITHOUT LIMITATION, WARRANTY OF MERCHANTABILITY AND WARRANTY OF
@@ -59,6 +59,10 @@ library from IMOD, adapted from the ctffind program of Alexis Rohou and
 Nikolaus Grigorieff, which is Copyright (c) 2018, Howard Hughes Medical
 Institute, and is covered by the Janelia Research Campus Software License
 1.2.
+
+SerialEM uses HDF5 libraries which are Copyright 1998-2006 by the Board of
+Trustees of the University of Illinois and Copyright 2006-2014 by The HDF
+Group and covered by the license in HDF5.txt.
 
 SerialEM uses Intel Math Kernel Library FFT routines under a purchased
 license.

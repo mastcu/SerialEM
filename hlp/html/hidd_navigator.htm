@@ -151,7 +151,15 @@
       <P><B>Note</B></P>
       <P>This text box allows you enter an arbitrarily long note about the current item.</P>
       <P><b><i><A NAME="nav_acquire_controls"></A>Acquisition Controls<B><FONT size="3"></FONT></B></i></b></P>
-      <P><B><A NAME="navac_acquire"></A>Acquire</B></P>
+      <P>The controls in this section allow items to be marked for particular kinds of 
+        acquisition, including tilt series and montaging, both of which involve numerous 
+        parameters that can be changed from one item to another.&nbsp; As of SerialEM 
+        3.9, 6/16/21, all of the tilt series and montaging parameters, names of files to 
+        be opened for individual items, and options associated with those files are 
+        saved to the Navigator file and will be restored when a file is reloaded.&nbsp; 
+        However, imaging states are not saved, nor is information about files to be 
+        opened at groups.</P>
+    <P><B>Acquire</B></P>
       <P>Use this check box to mark an item as a position to be acquired automatically. 
         After marking such items, you can use the <A HREF="menu_navigator.htm#hidc_navigator_acquire">
           Acquire at Items command</A> to open the <A HREF="hidd_navacquire.htm">Navigator 
@@ -471,14 +479,11 @@
           file or the &#39;SelectCamera&#39; script command.&nbsp; The Low Dose magnification 
           settings need not match between the offline and real settings, but the boxes 
           draw for the areas will not be the right size unless Focus and Record 
-          magnifications match.&nbsp; If you are doing tilt series, you can set items as 
-          either Tilt Series or Acquire to enable saving and editing focus.&nbsp; The Tilt 
-          Series designation will be lost, but an Acquire will be retained and needs to be 
-          turned off in order to set an item as Tilt Series in the real session.&nbsp; <em>
-          If you set such items as Acquire, you must turn off the Acquire before saving 
+          magnifications match.&nbsp; If you are doing tilt series, you should set items as 
+          Tilt Series to enable saving and editing focus.&nbsp; <em>
+          If you set such items as Acquire instead, you must turn off the Acquire before saving 
           from the offline instance, because the focus positions will be lost if you turn 
-          off Acquire in the real session</em>.&nbsp; If you are not doing tilt series, 
-          then there is no problem and you can leave the items set as Acquire.</p>
+          off Acquire in the real session in order to trun on Tilt Series</em>.</p>
       <P><i><A NAME="nav_action_buttons"></A><B><FONT size="3">Action Buttons</FONT></B></i></P>
       <P><B>Add Stage Pos</B></P>
       <P>Use this button to add the current stage position as a point item. Note that the 

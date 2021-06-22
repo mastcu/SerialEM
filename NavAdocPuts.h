@@ -150,6 +150,15 @@
       ADOC_PUT(KeyValue(ADOC_ARG, (LPCTSTR)keyStr, (LPCTSTR)valStr));
     }
   }
+  if (item->mTSparamIndex >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "TSparamIndex", item->mTSparamIndex));
+  if (item->mMontParamIndex >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "MontParamIndex", item->mMontParamIndex));
+  if (item->mFilePropIndex >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "FilePropIndex", item->mFilePropIndex));
+  if (!item->mFileToOpen.IsEmpty())
+    ADOC_PUT(KeyValue(ADOC_ARG, "FileToOpen", (LPCTSTR)item->mFileToOpen));
+
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));
 }

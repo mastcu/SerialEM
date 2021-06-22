@@ -356,6 +356,10 @@ public:
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
   CString NextAutoFilename(CString inStr, CString oldLabel = "", CString newLabel = "");
+  CString DecomposeNumberedName(CString inStr, CString &ext, int &curnum, int &numdig, 
+    CString &extra);
+  void CheckForSameRootAndNumber(CString &root, CString &ext,
+    CString &extra, CString name, int &maxNum, int &numDig);
   int NewAcquireFile(int itemNum, int fileType, ScheduledFile *sched);
   int SetFileProperties(int itemNum, int fileType, ScheduledFile *sched, 
     bool fromFilePropButton, bool skipFitDlgs);

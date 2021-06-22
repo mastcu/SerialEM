@@ -2513,13 +2513,36 @@ int CNavHelper::GetNumHolesForItem(CMapDrawItem *item, int numDefault)
 // If there are no digits, a "2" is added before the extension or at the end of the name
 CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString newLabel)
 {
-  int dirInd, extInd, digInd, curnum, numdig, numroot;
-  CString str, format, ext = "";
+  int curnum, numdig;
+  CString str, format, extra, ext = "";
   if (mUseLabelInFilenames && !oldLabel.IsEmpty() && oldLabel != newLabel &&
     inStr.Find(oldLabel) >= 0) {
     inStr.Replace(oldLabel, newLabel);
     return inStr;
   }
+  inStr = DecomposeNumberedName(inStr, ext, curnum, numdig, extra);
+  if (numdig) {
+    format.Format("%%0%dd", numdig);
+    str.Format((LPCTSTR)format, curnum + 1);
+    str = inStr + str + extra + ext;
+  } else {
+    str = inStr + "2" + ext;
+  }
+  return str;
+}
+
+// Splits a name into an unnumbered root, a number if any, an optional character between 
+// the number and extension, and the extension including its dot, if any.  Also returns
+// the number of digits, or 0 if there is no number.
+CString CNavHelper::DecomposeNumberedName(CString inStr, CString &ext, int &curnum, 
+  int &numdig, CString &extra)
+{
+  int dirInd, extInd, numroot, digInd;
+  CString str;
+  ext = "";
+  extra = "";
+  curnum = 0;
+  numdig = 0;
   dirInd = inStr.ReverseFind('\\');
   extInd = inStr.ReverseFind('.');
   if (extInd > dirInd && extInd > 0) {
@@ -2530,24 +2553,38 @@ CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString ne
   str = str.MakeReverse();
   digInd = str.FindOneOf("0123456789");
   if (digInd == 0 || digInd == 1) {
-    if (digInd == 1)
+    if (digInd == 1) {
+      extra = str.Left(1);
       str = str.Right(str.GetLength() - 1);
+    }
     str = str.SpanIncluding("0123456789");
     str = str.MakeReverse();
     curnum = atoi((LPCTSTR)str);
     numdig = str.GetLength();
-    format.Format("%%0%dd", numdig);
-    str.Format((LPCTSTR)format, curnum + 1);
     numroot = inStr.GetLength() - numdig - digInd;
-    if (numroot) 
-      str = inStr.Left(numroot) + str;
-    if (digInd == 1)
-      str += inStr.GetAt(inStr.GetLength() - 1);
-    str += ext;
+    if (numroot)
+      str = inStr.Left(numroot);
+    return str;
   } else {
-    str = inStr + "2" + ext;
+    return inStr;
   }
-  return str;
+}
+
+// Checks a given filename for whether its unnumbered root, extension, and extra character
+// match the given ones
+void CNavHelper::CheckForSameRootAndNumber(CString &root, CString &ext, 
+  CString &extra, CString name, int &maxNum, int &numDig)
+{
+  CString ext2, extra2;
+  int num2, numDig2;
+  name.MakeUpper();
+  if (!name.IsEmpty() && name.Find(root) == 0) {
+    DecomposeNumberedName(name, ext2, num2, numDig2, extra2);
+    if (!ext2.CompareNoCase(ext) && !extra2.CompareNoCase(extra) && num2 > maxNum) {
+      maxNum = num2;
+      ACCUM_MAX(numDig, numDig2);
+    }
+  }
 }
 
 // Check whether the name is already used in the lists of ones to open
@@ -2778,6 +2815,7 @@ int CNavHelper::SetTSParams(int itemNum)
     mWinApp->mTSController->CopyMasterToParam(tsp, false);
     mTSparamArray->Add(tsp);
     tsp->refCount = 0;
+    tsp->navID = mNav->MakeUniqueID();
  
     // For this item and all following ones with the same original index, assign to the
     // new index and adjust the reference counts
@@ -2875,6 +2913,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
         *newMontp = montDlg.mParam;
         mMontParArray->Add(newMontp);
         newMontp->refCount = 0;
+        newMontp->navID = mNav->MakeUniqueID();
         if (prevIndex >= 0 && sharedInd >= 0)
           NoLongerInheritMessage(itemNum, sharedInd, "montage parameters");
         for (i = itemNum; i < mItemArray->GetSize(); i++) {
@@ -2974,6 +3013,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   // For a new file option, add it to the array and dereference this item and any 
   // following ones that shared it from the old options and point them to the new one
   if (madeNewOpt) {
+    newFileOpt->navID = mNav->MakeUniqueID();
     mFileOptArray->Add(newFileOpt);
     gotThisSched = false;
     for (i = itemNum; i < mItemArray->GetSize(); i++) {

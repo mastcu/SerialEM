@@ -748,6 +748,34 @@
       <TD class="style9">Target defocus for Acquire or tilt series item</TD>
     </TR>
     <TR VALIGN="top">
+      <TD>FileToOpen</TD>
+      <TD class="style10">String</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">mFileToOpen</TD>
+      <TD class="style9">Name of file to open for Acquire or tilt series item</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>TSParamIndex</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mTSParamIndex</TD>
+      <TD class="style9">Index of into parameter array for tilt series</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MontParamIndex</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mMontParamIndex</TD>
+      <TD class="style9">Index into array of parameters for montages to open</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>FilePropIndex</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mFilePropIndex</TD>
+      <TD class="style9">Index into array of file options for file to open</TD>
+    </TR>
+    <TR VALIGN="top">
       <TD>MapMontage</TD>
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
@@ -1008,6 +1036,18 @@
       <TD class="style7">none</TD>
       <TD class="style8">mUserValueMap</TD>
       <TD class="style9">Arbitrary value set by script; N is # (currently1-8)</TD>
+    </TR>
+       <TR VALIGN="top">
+      <TD colspan = "5"><B>TSParam</B>   - a section containing tilt series parameters.&nbsp; See 
+        TiltSeriesParam.h in the source code for a description of each item.</TD>
+    </TR>
+       <TR VALIGN="top">
+      <TD colspan = "5"><B>MontParam</B>   - a section containg montage parameters.&nbsp; See 
+        MontageParam.h in the source code for a description of each item.</TD>
+    </TR>
+       <TR VALIGN="top">
+      <TD colspan = "5"><B>FileOptions</B>   - a section containing properties for opening a file.&nbsp; See 
+        FileOptions.h in the source code in case this has descriptions.</TD>
     </TR>
 </TBODY></TABLE>
     </P>
