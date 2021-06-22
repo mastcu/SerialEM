@@ -100,7 +100,9 @@
           <TD>AdvancedScriptingVersion</TD>
           <TD>Set to 4 to indicate that the version of Advanced Scripting supports CFEG flashing and has
             autoloader and temperature control classes.&nbsp; The property is set to 4 automatically if
-            there is a camera with 'FEIFilterType 1' set.
+            there is a camera with 'FEIFilterType 1' set.&nbsp; Do not set this property unless you have
+            a server version of at least 7.8 (Titan 3.8, Talos 2.8) or it will crash SerialEM or FEI-SEMserver
+            when a function is called that does not exist is the current version.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -1906,7 +1908,10 @@
           <TD>FEIFilterType</TD>
           <TD>Set to 1 to indicate that this camera is on a Selectris filter and that the version of 
             Advanced Scripting supports it.&nbsp; With this property set, the program will set 
-            'AdvancedScriptingVersion' to 4 if it is not explicitly set higher by a property setting.
+            'AdvancedScriptingVersion' to 4 if it is not explicitly set higher by a property 
+            setting..&nbsp; Do not set this property unless you have
+            a server version of at least 7.8 (Titan 3.8, Talos 2.8) or it will crash SerialEM or FEI-SEMserver
+            when a function is called that does not exist is the current version.
           </TD>
         </TR>
         <TR VALIGN="top">

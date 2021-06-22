@@ -10366,7 +10366,9 @@ int CCameraController::SetupFilter(BOOL acquiring)
     double curWidth, curLoss, delOffset;
     int slitIsIn;
     try {
+      SEMSetFunctionCalled("GetFilterState", " in advanced scripting");
       mTD.scopePlugFuncs->GetFilterState(&slitIsIn, &curWidth, &curLoss);
+      SEMSetFunctionCalled("", "");
       if (filtParam->slitIn ? 1 : 0 != slitIsIn ? 1 : 0) {
         mTD.scopePlugFuncs->SetSlitIn(filtParam->slitIn ? 1 : 0);
         Sleep((DWORD)mGIFslitInOutDelay);
@@ -10475,7 +10477,9 @@ int CCameraController::CheckFilterSettings()
   // Check if the ZLP was aligned in the FEI interface
   if (camParam->filterIsFEI) {
     try {
+      SEMSetFunctionCalled("GetZeroLossPeakShift", " in advanced scripting");
       eShift = mTD.scopePlugFuncs->GetZeroLossPeakShift();
+      SEMSetFunctionCalled("", "");
       if (fabs(eShift - filtParam->lastFeiZLPshift) > 0.0005) {
         filtParam->lastFeiZLPshift = (float)eShift;
         mWinApp->mFilterControl.AdjustForZLPAlign();
