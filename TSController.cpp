@@ -4229,8 +4229,10 @@ int CTSController::CheckForScopeDisturbances(void)
 
   } else if (mScopeEventStartTime >= 0) {
     if (mWaitAfterScopeFilling > 0 && (mCheckScopeDisturbances & TS_CHECK_DEWARS) &&
-      mScopeEventDoneTime < 0)
+      mScopeEventDoneTime < 0) {
       mScopeEventDoneTime = GetTickCount();
+      mWinApp->SetStatusText(SIMPLE_PANE, "WAIT AFTER REFILL");
+    }
     if (mScopeEventDoneTime >= 0) {
       if (SEMTickInterval(mScopeEventDoneTime) < 1000 * mWaitAfterScopeFilling) {
         mActIndex = mActOrder[RECHECK_SCOPE_EVENTS] - 1;
