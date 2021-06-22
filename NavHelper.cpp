@@ -1787,7 +1787,8 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
     param->intensity = mScope->GetIntensity();
     param->spotSize = mScope->GetSpotSize();
     param->probeMode = mScope->ReadProbeMode();
-  
+    param->beamAlpha = mScope->GetAlpha();
+
     // Store filter parameters unconditionally here; they will be set conditionally
     param->slitIn = filtParam->slitIn;
     param->slitWidth = filtParam->slitWidth;
@@ -1868,6 +1869,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
   if (item->mMapSpotSize)
     param->spotSize = item->mMapSpotSize;
   param->probeMode = item->mMapProbeMode;
+  param->beamAlpha = item->mMapAlpha;
   if (item->mMapCamera >= 0)
     param->camIndex = item->mMapCamera;
   param->slitWidth = 0.;
@@ -1916,7 +1918,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
 void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
                                    BOOL hideLDoff)
 {
-  int i;
+  int i, alpha;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   CameraParameters *camP = &mCamParams[param->camIndex];
   int *activeList = mWinApp->GetActiveCameraList();
@@ -1960,6 +1962,12 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
     mScope->SetMagIndex(param->magIndex);
     if (param->probeMode >= 0)
       mScope->SetProbeMode(param->probeMode, true);
+
+    if (param->beamAlpha >= 0) {
+      alpha = mScope->GetAlpha();
+      if (alpha >= 0)
+        mScope->ChangeAlphaAndBeam(alpha, param->beamAlpha);
+    }
 
     // Set the spot size before intensity to make sure the intensity is legal for this
     // spot size on a FEI, and maybe to handle spot-size dependent changes elsewhere
