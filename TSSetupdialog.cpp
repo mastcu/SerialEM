@@ -20,7 +20,6 @@
 #include "TSVariationsDlg.h"
 #include "TSDoseSymDlg.h"
 #include "DriftWaitSetupDlg.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -509,7 +508,7 @@ END_MESSAGE_MAP()
 
 BOOL CTSSetupDialog::OnInitDialog() 
 {
-  CRect idRect;
+  CRect idRect, goRect;
   CWnd *wnd;
   int index, panel, j;
   CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATSTARTAT));
@@ -566,6 +565,12 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butAverageDark.GetClientRect(&idRect);
     m_butAverageDark.SetWindowPos(NULL, 0, 0, (idRect.Width() * 4) / 5, idRect.Height(),
       SWP_NOMOVE);
+  }
+
+  if (mFuture > 0) {
+    m_butGo.GetWindowRect(&goRect);
+    m_butGo.SetWindowTextA("Set Up Extra Output");
+    m_butGo.SetWindowPos(NULL, 0, 0, 2 * goRect.Width(), goRect.Height(), SWP_NOMOVE);
   }
 
   ManagePanels();
@@ -828,15 +833,18 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butUseAnchor.EnableWindow(false);
     m_butManualTrack.EnableWindow(false);
     m_butCloseValves.EnableWindow(false);
-    if (mFuture > 0)
+    if (mFuture > 0) {
       m_butPostpone.SetWindowText("OK");
+      m_butPostpone.SetButtonStyle(BS_DEFPUSHBUTTON);
+      m_butPostpone.SetFocus();
+    }
 
     // But we shouldn't turn off user's favorite settings, disable them in controller
     m_bManualTrack = false;
   }
   UpdateData(false);
 
-  return TRUE;  // return TRUE unless you set the focus to a control
+  return mFuture <= 0;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
@@ -1775,7 +1783,17 @@ int CTSSetupDialog::MagIndWithClosestFieldSize(int oldCam, int oldMag, int newCa
 }
 
 // Unload all the parameters back to the structure
-void CTSSetupDialog::OnOK() 
+void CTSSetupDialog::OnOK()
+{
+  if (mFuture) {
+    FixButtonStyle(IDC_TSGO);
+    mWinApp->mTSController->SetExtraOutput();
+  } else {
+    DoOK();
+  }
+}
+
+void CTSSetupDialog::DoOK()
 {
   UpdateData(true);
   ConstrainBidirAngle(true, false);
@@ -1868,13 +1886,13 @@ void CTSSetupDialog::OnOK()
 void CTSSetupDialog::OnPostpone() 
 {
   mPostpone = true;
-  OnOK();
+  DoOK();
 }
 
 void CTSSetupDialog::OnSinglestep() 
 {
   mSingleStep = true;
-  OnOK();
+  DoOK();
 }
 
 // Manage the open and closing of panels in the dialog
@@ -1945,7 +1963,7 @@ void CTSSetupDialog::ManagePanels(void)
           drop = mNumCameras == 1;
         }
       }
-      if (mFuture > 0 && (idTable[index] == IDC_TSGO || idTable[index] == IDC_SINGLESTEP))
+      if (mFuture > 0 && idTable[index] == IDC_SINGLESTEP)
         draw = false;
       if (mSTEMindex && idTable[index] == IDC_CENTER_FROM_TRIAL || 
         !mSTEMindex && idTable[index] == IDC_STAT_INTERSET)

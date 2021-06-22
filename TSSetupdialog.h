@@ -273,6 +273,7 @@ public:
   BOOL m_bCenterBeam;
   int mPanelOpen[NUM_TSS_PANELS];
   void ManagePanels(void);
+  void DoOK();
   afx_msg void OnOpenClose(UINT nID);
   afx_msg void OnNextPanel(UINT nID);
   afx_msg void OnPrevPanel(UINT nID);
