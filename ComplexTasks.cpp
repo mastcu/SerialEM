@@ -913,6 +913,11 @@ BOOL CComplexTasks::WalkUp(float targetAngle, int anchorBuf, float anchorAngle)
   int maxSteps = (int)(fabs(targetAngle - mWalkStartAngle) / mMinWalkInterval + 2.);
   mWalkMagInd = FindMaxMagInd(mMinWalkField, -2);
   mWalkDidResetShift = false;
+  if (fabs(targetAngle) > mScope->GetMaxTiltAngle()) {
+    SEMMessageBox("The target angle for the walkup is higher than the maximum allowed "
+      "tilt angle");
+    return false;
+  }
  
   // Don't do it if too close to target
   if (fabs(targetAngle - mWalkStartAngle) < 0.5 * mMinWalkInterval) {

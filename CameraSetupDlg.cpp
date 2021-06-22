@@ -2759,7 +2759,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     (IS_SUPERRES(mParam, m_iK2Mode) && !mParam->superResRefForK2.IsEmpty()));
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
   m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && 
-    (mParam->K2Type || mWeCanAlignFalcon || mCanAlignFrames)) ? SW_SHOW : SW_HIDE);
+    (mParam->K2Type || mWeCanAlignFalcon || FCAM_CAN_ALIGN(mParam) || mCanAlignFrames)) ?
+    SW_SHOW : SW_HIDE);
   ComposeWhereAlign(str);
   SetDlgItemText(IDC_STAT_WHERE_ALIGN, (LPCTSTR)str);
   // This is vestigial from when save enabled align with UFA = 2
