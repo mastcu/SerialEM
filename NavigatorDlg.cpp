@@ -7090,7 +7090,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_MONT_PARAMS
 
-
+    // Save file options  
 #undef ADOC_ARG
 #define ADOC_ARG "FileOptions",sectInd
 #define NAV_FILE_OPTS
@@ -7130,6 +7130,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
     adocErr += AdocWriteKeyValue(fp, "AdocVersion", NAV_FILE_VERSION);
     adocErr += AdocWriteKeyValue(fp, "LastSavedAs", (LPCTSTR)filename);
+
+    // Regular members
     for (ind = 0; ind < mItemArray.GetSize(); ind++) {
       CMapDrawItem *item = mItemArray[ind];
       fprintf(fp, "\n");
@@ -7141,6 +7143,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       }
     }
 
+    // Tilt series params
 #define SET_TEST_SECT3
 #define NAV_OTHER_TS_PARAMS
     for (ind = 0; ind < mTSparamArray.GetSize(); ind++) {
@@ -7157,6 +7160,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #undef SET_TEST_SECT3
 #undef NAV_OTHER_TS_PARAMS
 
+    // Montage params
 #define NAV_MONT_PARAMS
     for (ind = 0; ind < mMontParArray.GetSize(); ind++) {
       MontParam *montParam = mMontParArray[ind];
@@ -7171,6 +7175,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_MONT_PARAMS
 
+    // File options
 #define NAV_FILE_OPTS
     for (ind = 0; ind < mFileOptArray.GetSize(); ind++) {
       FileOptions *fileOpt = mFileOptArray[ind];
@@ -7225,7 +7230,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   if (!retval)  \
     a = index != 0;
 
-// Macros for readin parameter sets to other sections
+// Macros for reading parameter sets to other sections
 #define INT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &b));
 
 #define BOOL_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &index)); \

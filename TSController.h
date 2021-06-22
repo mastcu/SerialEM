@@ -136,6 +136,7 @@ public:
   GetSetMember(int, CheckScopeDisturbances);
   GetSetMember(int, TrackAfterScopeStopTime);
   GetSetMember(int, FocusAfterScopeStopTime);
+  GetSetMember(int, WaitAfterScopeFilling);
   GetMember(CString, LastNoBoxMessage);
 
   double GetCumulativeDose();
@@ -560,8 +561,10 @@ private:
   int mCheckScopeDisturbances; // Flags to check if scope has started an operation
   double mScopeEventStartTime; // Time when a disturbing event first detected
   double mScopeEventLastCheck; // Time of last check
+  double mScopeEventDoneTime;   // Time when it ended
   int mTrackAfterScopeStopTime;
   int mFocusAfterScopeStopTime;
+  int mWaitAfterScopeFilling; // Seconds of extra delay after ned of filling
   CString mLastNoBoxMessage;   // Last message logged with no message box on error
 
 public:

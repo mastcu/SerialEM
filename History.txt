@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/15/21: Added a property to set a wait time after the end of dewar filling
+when 'TSCheckScopeDisturbances' causes it to wait before a Record.
+
 6/15/21: Saved tilt series, montaging, and file opening parameters to the
 Navigator file.
 

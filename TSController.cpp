@@ -436,6 +436,7 @@ CTSController::CTSController()
   mCheckScopeDisturbances = -1;
   mTrackAfterScopeStopTime = 5;
   mFocusAfterScopeStopTime = 120;
+  mWaitAfterScopeFilling = 0;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
   FillActOrder(actions, sizeof(actions) / sizeof(int));
@@ -1516,6 +1517,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mDidTrackBefore = false;
   mFocusForDriftWasOK = false;
   mScopeEventStartTime = -1.;
+  mScopeEventDoneTime = -1.;
   mTerminationStarted = false;
   mTermOnErrorCalled = false;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
@@ -4226,6 +4228,18 @@ int CTSController::CheckForScopeDisturbances(void)
     return 1;
 
   } else if (mScopeEventStartTime >= 0) {
+    if (mWaitAfterScopeFilling > 0 && (mCheckScopeDisturbances & TS_CHECK_DEWARS) &&
+      mScopeEventDoneTime < 0)
+      mScopeEventDoneTime = GetTickCount();
+    if (mScopeEventDoneTime >= 0) {
+      if (SEMTickInterval(mScopeEventDoneTime) < 1000 * mWaitAfterScopeFilling) {
+        mActIndex = mActOrder[RECHECK_SCOPE_EVENTS] - 1;
+        mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+        return 1;
+      } else {
+        mScopeEventDoneTime = -1.;
+      }
+    }
     mScopeEventStartTime = -1;
     mWinApp->SetStatusText(SIMPLE_PANE, "");
     //lastDone = mTiltIndex;
