@@ -1679,7 +1679,6 @@
 #define IDC_RNO_SAVING                  2706
 #define IDC_RSAVE_NEW_SHIFT             2707
 #define IDC_RADD_TO_SAVED               2708
-#define IDC_STAT                        2709
 #define IDC_STAT_MAP_MARKED             2709
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772

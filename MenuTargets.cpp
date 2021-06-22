@@ -480,6 +480,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_USEITEMLABELSINFILENAMES, OnUpdateUseItemLabelsInFilenames)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY, OnCloseValvesAfterLongInactivity)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY, OnUpdateCloseValvesAfterLongInactivity)
+    ON_COMMAND(ID_NAVIGATOR_APPLYSAVEDSHIFT, OnNavigatorApplySavedShift)
+    ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_APPLYSAVEDSHIFT, OnUpdateNavigatorApplySavedShift)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1046,6 +1048,16 @@ void CMenuTargets::OnUpdateNavigatorUndolastshift(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->GetAcquiring() &&
     !DoingTasks() && mNavigator->GetMarkerShiftReg());
+}
+
+void CMenuTargets::OnNavigatorApplySavedShift()
+{
+  mNavHelper->ApplyBaseMarkerShift();
+}
+
+void CMenuTargets::OnUpdateNavigatorApplySavedShift(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mNavHelper->OKtoApplyBaseMarkerShift());
 }
 
 void CMenuTargets::OnNavigatorSetgridlimits()

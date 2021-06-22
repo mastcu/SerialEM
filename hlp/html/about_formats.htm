@@ -802,7 +802,8 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapMagInd</TD>
-      <TD class="style9">Magnification index</TD>
+      <TD class="style9">Magnification index of map, or of non-map image a point or 
+        polygon was drawn on </TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapCamera</TD>
@@ -1036,6 +1037,38 @@
       <TD class="style7">none</TD>
       <TD class="style8">mUserValueMap</TD>
       <TD class="style9">Arbitrary value set by script; N is # (currently1-8)</TD>
+    </TR>
+       <TR VALIGN="top">
+      <TD colspan = "5"><B>BaseMarkerShift</B>   - a section containing a stored shift from Shift to Marker 
+        (names are from BaseMarkerShift structure).
+        </TR>
+    <TR VALIGN="top">
+      <TD>FromMag</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">&nbsp;</TD>
+      <TD class="style8">fromMagInd</TD>
+      <TD class="style9">Mag index of map item was marked on</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ToMag</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">&nbsp;</TD>
+      <TD class="style8">toMagInd</TD>
+      <TD class="style9">Mag index of image with marker point</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ShiftX</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">&nbsp;</TD>
+      <TD class="style8">shiftX</TD>
+      <TD class="style9">X component of shift in microns</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ShiftY</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">&nbsp;</TD>
+      <TD class="style8">shiftY</TD>
+      <TD class="style9">Y component of shift in microns</TD>
     </TR>
        <TR VALIGN="top">
       <TD colspan = "5"><B>TSParam</B>   - a section containing tilt series parameters.&nbsp; See 

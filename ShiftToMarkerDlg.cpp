@@ -1,5 +1,11 @@
-// ShiftToMarkerDlg.cpp : implementation file
+// ShiftToMarkerDlg.cpp : choose what items to shift and whether to save shifts
 //
+// Copyright (C) 2021 by  the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
+//
+//////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "SerialEM.h"
@@ -47,6 +53,8 @@ BOOL CShiftToMarkerDlg::OnInitDialog()
   CString str;
   int magLow, magHigh, camera = mWinApp->GetCurrentCamera();
   CBaseDlg::OnInitDialog();
+
+  // Set up text of which to apply buttons depending on whether a mag is defined
   if (mFromMag) {
     magLow = MagForCamera(camera, mFromMag);
     str.Format("All maps at %dx and items marked on them", magLow);
@@ -60,11 +68,15 @@ BOOL CShiftToMarkerDlg::OnInitDialog()
       "All maps at one magnification: insufficient information available");
     SetDlgItemText(IDC_RAPPLY_IN_COHORT, mMapWasShifted ? "Only items shifted together"
       " at one magnification: insufficient information available" : "Only items at one "
-      "magnification not previously shifted: insufficient information available");
+      "magnification not previously shifted:");
+    SetDlgItemText(IDC_STAT_MAP_MARKED, " insufficient information available");
     EnableDlgItem(IDC_RAPPLY_ALL_MAPS_AT_MAG, false);
     EnableDlgItem(IDC_RAPPLY_IN_COHORT, false);
+    EnableDlgItem(IDC_STAT_MAP_MARKED, false);
   }
-  m_statMapMarked.ShowWindow(mMapWasShifted && mFromMag ? SW_SHOW : SW_HIDE);
+  m_statMapMarked.ShowWindow(mMapWasShifted || !mFromMag ? SW_SHOW : SW_HIDE);
+
+  // And choices for saving depend on having both mags
   if (mFromMag && mToMag) {
     magHigh = MagForCamera(camera, mToMag);
     str.Format("Save shift to apply again from %dx to %dx or other second mag", magLow, 

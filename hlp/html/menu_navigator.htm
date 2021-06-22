@@ -183,19 +183,23 @@
           <TD class="style1"><A HREF="#hid_navigator_changeregistration">Change Registration</A></TD>
           <TD>Change registration of current item.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_shifttomarker">Shift to Marker</A></TD>
-          <TD>Shift items by distance from current item to marker point.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
-          <TD>Undo the last shift to marker point.</TD>
-        </TR>
-        <TR VALIGN="top">
+       <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_navigator_align_to_map">Align with Rotation</A></TD>
           <TD>Align image to map taken before rotating specimen.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_shifttomarker">Shift to Marker</A></TD>
+          <TD>Open dialog to shift items by distance from current item to marker point.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_applysavedshift">Apply Saved Shift</A></TD>
+          <TD>Apply a saved shift to marker point to unshifted items.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
+          <TD>Undo the last shift to marker point or use of a saved shift.</TD>
+        </TR>
+         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_new_map">New Map from Image</A></TD>
           <TD>Make a new map from the current image.</TD>
         </TR>
@@ -709,29 +713,6 @@
         point number, and in fact the command cannot be applied to registration points. 
         If you need to change the registration of a registration point, turn off its 
         the 'Registration point' button before changing the registration.</P>
-      <P><A NAME="hid_navigator_shifttomarker"></A><B>Shift to Marker command (Navigator 
-          menu)</B></P>
-      <P>This command provides a simple method of shifting items without having to make 
-        registration points. One way to use it is to add a single point at a 
-        recognizable feature on an existing map. Then take a new image, click on the 
-        feature with the left mouse button, and select this command. You will be told what 
-        the shift is and asked to confirm the shift. All items at the registration of 
-        the image that was clicked on (typically the current registration) will be 
-        shifted by the same amount. Another way to use this command is to run the <A HREF="#hid_navigator_aligntoitem">
-          Realign to Item command </A>on a map or an item located in a map. When the 
-        procedure is done, take an image, click in the center of it, and select this 
-        command. Items will be shifted by the error in stage position found in the 
-        procedure. Finally, the command can be used to shift registration points to fit 
-        imported items. Suppose you import a map, work out registration points, 
-        transform the map, and then import another map that is shifted in position. 
-        Then select one of the registration points, click on the corresponding point on 
-        the new imported map, and select this command. The registration points will be 
-        shifted but the map will not, so the points should appear at the right place in 
-        this map. This map can then be transformed into registration with EM maps.</P>
-      <P><A NAME="hid_navigator_undolastshift"></A><B>Undo Last Shift command (Navigator 
-          menu)</B></P>
-      <P>Use this command to undo the shift imposed by the 'Shift to Marker' command. It 
-        is disabled if the 'Transform Points' command is used.</P>
       <P><A NAME="hid_navigator_align_to_map"></A><B>Align with Rotation command (Navigator 
           menu)</B></P>
       <P>This command opens the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog box</A>
@@ -744,7 +725,47 @@
         montage center in A, at a different registration from that of the 
         map. Thus, after rotating the specimen, increase the current registration in 
         the Navigator, then take an image at the same magnification as the map.</P>
-      <P><A NAME="hid_new_map"></A><B>New Map from Image command (Navigator menu)</B></P>
+       <P><A NAME="hid_navigator_shifttomarker"></A><B>Shift to Marker command (Navigator 
+          menu)</B></P>
+      <P>This command provides a potentially simple method of shifting items without having to make 
+        registration points. One way to use it is to add a single point at a 
+        recognizable feature on an existing map. Then take a new image, click on the 
+        feature with the left mouse button, and select this command. The <A href="hidd_shift_to_marker.htm">Shift to Marker</A>
+        dialog will open with information about the shift and some choices for applying to
+        a subset of items and for saving the shift for reuse. If you press OK, all items
+         at the registration of 
+        the image that was clicked on (typically the current registration) will be 
+        shifted by the same amount. (See the <A href="hidd_shift_to_marker.htm">dialog help</A> for explanations
+        of the options there.)  Another way to use this command is to run the <A HREF="#hid_navigator_aligntoitem">
+          Realign to Item command </A>on a map or an item located in a map. When the 
+        procedure is done, take an image, click in the center of it, and select this 
+        command. Items will be shifted by the error in stage position found in the 
+        procedure. Finally, the command can be used to shift registration points to fit 
+        imported items. Suppose you import a map, work out registration points, 
+        transform the map, and then import another map that is shifted in position. 
+        Then select one of the registration points, click on the corresponding point on 
+        the new imported map, and select this command. The registration points will be 
+        shifted but the map will not, so the points should appear at the right place in 
+        this map. This map can then be transformed into registration with EM maps.</P>
+       <P><A NAME="hid_navigator_applysavedshift"></A><B>Apply Saved Shift command (Navigator 
+          menu)</B></P>
+      <p>Use this command to shift a set of items at a particular magnification for which a shift
+        was saved in the <A href="hidd_shift_to_marker.htm">Shift to Marker</A>
+        dialog.  Specifically, if a shift was saved for a magnification, maps taken at 
+        that magnification that have not been shifted with the Shift to Marker procedure can be shifted, as
+        well as any points or polygons marked on them.  First, you will be asked to confirm or specify the
+        magnification of the stored shift to use.  If there has been more than one shift saved for that
+        magnification, you will next need to specify which one to used, identified by the magnification
+        of the image on which the marker point was placed.  Finally, you be asked to confirm the 
+        specific amount of shift to apply.  See the <A href="hidd_shift_to_marker.htm">Shift to Marker</A>
+        dialog help for some scenarios in which this is useful.
+      </p>
+       <P><A NAME="hid_navigator_undolastshift"></A><B>Undo Last Shift command (Navigator 
+          menu)</B></P>
+      <P>Use this command to undo the shift imposed by the 'Shift to Marker' or 
+        'Apply Saved Shift' commands. It 
+        is disabled if the 'Transform Points' command is used.</P>
+     <P><A NAME="hid_new_map"></A><B>New Map from Image command (Navigator menu)</B></P>
       <P>Use this command to define the current image as a map. It performs the same 
         operation as the New Map button in the Navigator dialog; see the
         <a href="hidd_navigator.htm#navab_newmap">help for New Map</a> for a full 

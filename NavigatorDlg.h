@@ -321,6 +321,11 @@ private:
   ScaleMat mPolyToCamMat;   // Matrix used to get from polygon to camera coordinates
   int mMarkerShiftReg;      // Registration at which shift to marker occurred, for undo
   float mMarkerShiftX, mMarkerShiftY;  // Shift that was applied
+  int mMarkerShiftType;     // Type of shift, > 0 if not all at reg
+  int mMarkerShiftMagInd;   // Mag index
+  int mMarkerShiftCohortID; // ID
+  int mMarkerShiftApplyTo;  // Saved dialog selection for which ones to apply to
+  int mMarkerShiftSaveType; // And whether/how to save shifts
   int mAcquireEnded;        // Flag that End Nav or Pause was pressed when running macro
   KImageStore *mLoadStoreMRC; // Variables to save state for asynchronous loading of map
   BOOL mReadingOther;
@@ -446,7 +451,10 @@ public:
   void GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ);
   void ShiftToMarker(void);
   void UndoShiftToMarker(void);
-  int ShiftItemsAtRegistration(float shiftX, float shiftY, int registration);
+  int ShiftItemsAtRegistration(float shiftX, float shiftY, int registration, int saveOrRestore = 0);
+  int ShiftCohortOfItems(float shiftX, float shiftY, int registration, int magInd, int cohortID, 
+    bool useAll, bool wasShifted, int saveOrRestore);
+  void ShiftItemAndPoints(float shiftX, float shiftY, CMapDrawItem *item, int itemInd, int &numShift);
   void FinishLoadMap(void);
   void LoadMapCleanup(void);
   CButton m_butRealign;

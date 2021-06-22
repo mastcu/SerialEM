@@ -42,6 +42,7 @@ CMapDrawItem::CMapDrawItem()
   mStageX = mStageY = mStageZ = 0.;
   mRawStageX = mRawStageY = NO_RAW_STAGE;
   mMapTiltAngle = NO_RAW_STAGE;
+  mMapMagInd = 0;
   mMapID = 0;
   mGroupID = 0;
   mPolygonID = 0;

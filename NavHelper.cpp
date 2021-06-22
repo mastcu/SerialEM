@@ -34,6 +34,7 @@
 #include "MultiCombinerDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
+#include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
 
 enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE, 
@@ -2499,6 +2500,174 @@ int CNavHelper::GetNumHolesForItem(CMapDrawItem *item, int numDefault)
     numForItem -= item->mNumSkipHoles;
   }
   return numForItem;
+}
+
+/////////////////////////////////////////////////////
+////    MARKER SHIFT FUNCTIONS
+/////////////////////////////////////////////////////
+
+// Clear out the saved shifts before saving any new ones for a new operation
+void CNavHelper::ClearSavedMapMarkerShifts()
+{
+  mSavedMaShMapIDs.clear();
+  mSavedMaShCohortIDs.clear();
+  mSavedMaShXshift.clear();
+  mSavedMaShXshift.clear();
+}
+
+// Save existing cohort ID and marker shifts for a map and apply new ones
+void CNavHelper::SaveMapMarkerShiftToLists(CMapDrawItem * item, int cohortID, 
+  float newXshift, float newYshift)
+{
+  if (item->mType != ITEM_TYPE_MAP)
+    return;
+  mSavedMaShMapIDs.push_back(item->mMapID);
+  mSavedMaShCohortIDs.push_back(item->mShiftCohortID);
+  mSavedMaShXshift.push_back(item->mMarkerShiftX);
+  mSavedMaShYshift.push_back(item->mMarkerShiftY);
+  item->mShiftCohortID = cohortID;
+  item->mMarkerShiftX = newXshift;
+  item->mMarkerShiftY = newYshift;
+}
+
+// Find the saved marker shift for an item and restore it
+void CNavHelper::RestoreMapMarkerShift(CMapDrawItem * item)
+{
+  int ind;
+  if (item->mType != ITEM_TYPE_MAP)
+    return;
+  for (ind = 0; ind < (int)mSavedMaShMapIDs.size(); ind++) {
+    if (mSavedMaShMapIDs[ind] == item->mMapID) {
+      item->mShiftCohortID = mSavedMaShCohortIDs[ind];
+      item->mMarkerShiftX = mSavedMaShXshift[ind];
+      item->mMarkerShiftY = mSavedMaShYshift[ind];
+      break;
+    }
+  }
+}
+
+// Find the base marker shift that matches the fromMag and is nearest to toMag
+BaseMarkerShift *CNavHelper::FindNearestBaseShift(int fromMag, int toMag)
+{
+  int ind, magDist, minDist = 1000, minInd = -1;
+  if (!fromMag || !toMag)
+    return NULL;
+  for (ind = 0; ind < (int)mMarkerShiftArray.GetSize(); ind++) {
+    if (mMarkerShiftArray[ind].fromMagInd == fromMag) {
+      magDist = B3DABS(mMarkerShiftArray[ind].toMagInd - toMag);
+      if (magDist < minDist) {
+        minInd = ind;
+        minDist = magDist;
+      }
+    }
+  }
+  if (minInd < 0)
+    return NULL;
+  return &mMarkerShiftArray[minInd];
+}
+
+// Test if it is possible to apply store marker shift: there must be at least on marker 
+// shift for which an unshifted map at the fromMag exists
+bool CNavHelper::OKtoApplyBaseMarkerShift()
+{
+  int shInd, itInd, reg;
+  CMapDrawItem *item;
+  if (!mNav)
+    return false;
+  reg = mNav->GetCurrentRegistration();
+  for (shInd = 0; shInd < (int)mMarkerShiftArray.GetSize(); shInd++) {
+    for (itInd = 0; itInd < (int)mItemArray->GetSize(); itInd++) {
+      item = mItemArray->GetAt(itInd);
+      if (item->mType == ITEM_TYPE_MAP && item->mRegistration == reg &&
+        item->mMapMagInd == mMarkerShiftArray[shInd].fromMagInd && 
+        (!item->mShiftCohortID || item->mMarkerShiftX < EXTRA_VALUE_TEST))
+        return true;
+    }
+  }
+  return false;
+}
+
+// Apply a base marker shift: determine parameters and query user in order to call
+// shift routine in Nav
+void CNavHelper::ApplyBaseMarkerShift()
+{
+  int ind, magVal, magInd, nearMag = -20, itemMag = 0, curMag = mScope->GetMagIndex();
+  int camera = mWinApp->GetCurrentCamera();
+  int useInd, toMag;
+  IntVec shiftInds, shiftToMags;
+  CString matchText1, matchText, str;
+  bool itemMatch = false;
+  CMapDrawItem *item = mNav->GetCurrentItem();
+
+  // Set up a default mag based either on the mag of the current item if it is a map,
+  // or the mag nearest to the current mag
+  if (item && item->mType == ITEM_TYPE_MAP)
+    itemMag = item->mMapMagInd;
+  for (ind = 0; ind < (int)mMarkerShiftArray.GetSize(); ind++) {
+    if (mMarkerShiftArray[ind].fromMagInd == itemMag)
+      itemMatch = true;
+    if (B3DABS(nearMag - mMarkerShiftArray[ind].fromMagInd) >
+      B3DABS(curMag - mMarkerShiftArray[ind].fromMagInd))
+      nearMag = mMarkerShiftArray[ind].fromMagInd;
+  }
+
+  // Find out a mag from the user and get index for it
+  magVal = MagForCamera(camera, itemMatch ? itemMag : nearMag);
+  if (!KGetOneInt("Shifts will be applied to unshifted maps and items marked on them.",
+    "Magnification of maps to apply stored shift to:", magVal))
+    return;
+  magInd = FindIndexForMagValue(magVal, camera);
+  magVal = MagForCamera(camera, magInd);
+
+  // See how many shifts match that
+  for (ind = 0; ind < (int)mMarkerShiftArray.GetSize(); ind++) {
+    if (mMarkerShiftArray[ind].fromMagInd == magInd) {
+      shiftInds.push_back(ind);
+      shiftToMags.push_back(MagForCamera(camera, mMarkerShiftArray[ind].toMagInd));
+    }
+  }
+  
+  // If none, bail out
+  if (!shiftInds.size()) {
+    str.Format("There are no stored shifts at magnification %dx", magVal);
+    AfxMessageBox(str, MB_EXCLAME);
+    return;
+  }
+
+  // If multiple, get the one to use, looping to get a useful answer if needed
+  useInd = shiftInds.size() > 1 ? -1 : shiftInds[0];
+  while (useInd < 0) {
+    matchText = "";
+    matchText1.Format("Values have been saved for Shift to Marker from a point "
+      "at %dx to images at", magVal);
+    for (ind = 0; ind < (int)shiftInds.size(); ind++) {
+      if (ind && (int)shiftInds.size() > 2)
+        matchText += ", ";
+      if (ind == (int)shiftInds.size() - 1)
+        matchText += " and";
+      str.Format(" %dx", shiftToMags[ind]);
+      matchText += str;
+    }
+    matchText += ".  Enter the image magnification of the one to use:";
+    toMag = shiftToMags[0];
+    if (!KGetOneInt(matchText1, matchText, toMag))
+      return;
+    for (ind = 0; ind < (int)shiftInds.size(); ind++)
+      if (shiftToMags[ind] == toMag)
+        useInd = ind;
+  }
+
+  // Final info to user and confirmation
+  str.Format("A shift of %.2f, %.2f will be applied to all maps at\n %dx that have not "
+    "been shifted before, and items marked on them.\n\nDo you want to proceed?",
+    mMarkerShiftArray[useInd].shiftX, mMarkerShiftArray[useInd].shiftY, magVal);
+  if (AfxMessageBox(str, MB_QUESTION) == IDNO)
+    return;
+
+  // Do the shift; it saves parameters for undo
+  mNav->ShiftCohortOfItems(mMarkerShiftArray[useInd].shiftX,
+    mMarkerShiftArray[useInd].shiftY, mNav->GetCurrentRegistration(), magInd, 
+    mNav->MakeUniqueID(), false, false, 1);
 }
 
 

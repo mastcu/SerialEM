@@ -26,17 +26,23 @@
 #define MAP_ACQUIRE_COLOR   7
 #define HIGHLIGHT_COLOR     8
 
-class CMapDrawItem  
+class CMapDrawItem
 {
 public:
-	COLORREF GetColor(bool highlight);
-	void DeletePoint(int index);
-	void AppendPoint(float inX, float inY);
-	void AddPoint(float inX, float inY, int index);
+  COLORREF GetColor(bool highlight);
+  void DeletePoint(int index);
+  void AppendPoint(float inX, float inY);
+  void AddPoint(float inX, float inY, int index);
   CMapDrawItem();
   CMapDrawItem(CMapDrawItem *item);
   virtual ~CMapDrawItem();
   CMapDrawItem *Duplicate();
+  bool IsMap() { return mType == ITEM_TYPE_MAP; };
+  bool IsPoint() { return mType == ITEM_TYPE_POINT; };
+  bool IsPolygon() { return mType == ITEM_TYPE_POLYGON; };
+  bool IsNotMap() { return mType != ITEM_TYPE_MAP; };
+  bool IsNotPoint() { return mType != ITEM_TYPE_POINT; };
+  bool IsNotPolygon() { return mType != ITEM_TYPE_POLYGON; };
 
   // Maintain Duplicate code when adding members that are allocated or shouldn't be copied
   int mNumPoints;         // Number of points

@@ -383,6 +383,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_navrotalign.htm">Align with Rotation dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Shift to Marker dialog">
+			<param name="Local" value="html/hidd_shift_to_marker.htm">
+			</OBJECT>
+			<A HREF="html/hidd_shift_to_marker.htm">Shift to Marker dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Imaging State dialog">
 			<param name="Local" value="html/hidd_statedlg.htm">
 			</OBJECT>

@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -626,9 +630,9 @@ BEGIN
         MENUITEM "C&hange Registration",        ID_NAVIGATOR_CHANGEREGISTRATION
         MENUITEM "Align &with Rotation...",     ID_NAVIGATOR_ALIGN_TO_MAP
         MENUITEM SEPARATOR
-        MENUITEM "&Shift to Marker",            ID_NAVIGATOR_SHIFTTOMARKER
-        MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
+        MENUITEM "&Shift to Marker...",         ID_NAVIGATOR_SHIFTTOMARKER
         MENUITEM "Apply Sa&ved Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
+        MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
         MENUITEM SEPARATOR
         MENUITEM "&New Map from Image",         ID_NEW_MAP
         MENUITEM "Import Map...",               ID_NAVIGATOR_IMPORTMAP
@@ -3356,8 +3360,8 @@ FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CTEXT           "The shift between the current item and the marker point is -9.99, -9.99 microns",IDC_STAT_MARKER_SHIFT,7,10,238,8
     CTEXT           "Selected non-imported items at registration 2 will be shifted by that amount",IDC_STAT_WHAT_SHIFTS,7,21,238,8
-    CONTROL         "All items at the current registration",IDC_RAPPLY_ALL_AT_REG,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,43,123,10
+    CONTROL         "All items at the registration of the image with marker point",IDC_RAPPLY_ALL_AT_REG,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,43,141,10
     CONTROL         "All maps at 23000x and items marked on them",IDC_RAPPLY_ALL_MAPS_AT_MAG,
                     "Button",BS_AUTORADIOBUTTON,13,54,193,10
     CONTROL         "Only maps at 23000x and marked items that have not been shifted before",IDC_RAPPLY_IN_COHORT,
@@ -3368,7 +3372,7 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON,16,113,225,10
     CONTROL         "Add to saved shift from 4700x to 20000x (non-matching higher mag)",IDC_RADD_TO_SAVED,
                     "Button",BS_AUTORADIOBUTTON,16,124,228,10
-    GROUPBOX        "Saving shifts for reuse",IDC_STATIC,7,92,238,46,WS_GROUP
+    GROUPBOX        "Saving shift for reuse",IDC_STATIC,7,92,238,46,WS_GROUP
     DEFPUSHBUTTON   "OK",IDOK,47,144,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,147,144,50,14
     PUSHBUTTON      "?",IDC_BUTHELP,235,148,10,10
@@ -3420,7 +3424,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3926,119 +3932,119 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACROSELECTER AFX_DIALOG_LAYOUT 
+IDD_MACROSELECTER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT 
+IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FRAMEALIGN AFX_DIALOG_LAYOUT 
+IDD_FRAMEALIGN AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT 
+IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT 
+IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -6095,6 +6101,17 @@ BEGIN
                             "In editor, include buttons fix, increase, or reduce indentation"
     ID_NAVIGATOR_APPLYSAVEDSHIFT 
                             "Shift maps and marked items at one mag by a shift saved for that mag"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RAPPLY_ALL_AT_REG   "Shift all items at same registration as image with marker point"
+    IDC_RAPPLY_ALL_MAPS_AT_MAG
+                            "Shift maps at indicated mag and any items drawn on them"
+    IDC_RAPPLY_IN_COHORT    "Shift a group of maps and items drawn on them"
+    IDC_RNO_SAVING          "The shift will be unavailable to apply again"
+    IDC_RSAVE_NEW_SHIFT     "Save this shift, replacing an existing one at this pair of mags"
+    IDC_RADD_TO_SAVED       "Adjust a saved shift by the new shift"
 END
 
 #endif    // English (United States) resources

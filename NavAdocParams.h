@@ -250,3 +250,10 @@ INT_SETT_ASSIGN("MontFileType", fileOpt->montFileType)
 INT_SETT_ASSIGN("RefCount", fileOpt->refCount)
 INT_SETT_ASSIGN("NavID", fileOpt->navID)
 #endif
+
+#ifdef BASE_MARKER_SHIFTS
+INT_SETT_ASSIGN("FromMag", baseShift.fromMagInd)
+INT_SETT_ASSIGN("ToMag", baseShift.toMagInd)
+FLOAT_SETT_ASSIGN("ShiftX", baseShift.shiftX)
+FLOAT_SETT_ASSIGN("ShiftY", baseShift.shiftY)
+#endif

@@ -34,6 +34,7 @@
 #include "MultiShotDlg.h"
 #include "MultiCombinerDlg.h"
 #include "HoleFinderDlg.h"
+#include "ShiftToMarkerDlg.h"
 #include "MapDrawItem.h"
 #include "Mailer.h"
 #include "LogWindow.h"
@@ -172,6 +173,8 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLastGridInSpacing = 0.;
   mAddingFoundHoles = false;
   mDeferAddingToViewer = false;
+  mMarkerShiftApplyTo = 0;
+  mMarkerShiftSaveType = 0;
 }
 
 
@@ -1981,26 +1984,90 @@ void CNavigatorDlg::ShiftItemPoints(CMapDrawItem *item, float delX, float delY)
 }
 
 // Shift non-imported items at a registration
-int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg)
+int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg, 
+  int saveOrRestore)
 {
-  int i, numShift = 0;
+  int i, numShift = 0, cohortID;
   CMapDrawItem *item;
+  if (saveOrRestore > 0) {
+    mHelper->ClearSavedMapMarkerShifts();
+    cohortID = MakeUniqueID();
+  }
   for (i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
     if (item->mRegistration == reg && item->mImported != 1) {
-      item->mStageX += shiftX;
-      item->mStageY += shiftY;
-      ShiftItemPoints(item, shiftX, shiftY);
-      SetChanged(true);
-      UpdateListString(i);
-      numShift++;
+      if (saveOrRestore > 0)
+        mHelper->SaveMapMarkerShiftToLists(item, cohortID, 0., 0.);
+      else if (saveOrRestore < 0)
+        mHelper->RestoreMapMarkerShift(item);
+      ShiftItemAndPoints(shiftX, shiftY, item, i, numShift);
     }
   }
+  if (numShift)
+    SetChanged(true);
   Update();
   Redraw();
   return numShift;
 }
 
+// Shift a subset of items matching the mag index and either the cohort ID or the fact
+// that they are not shifts.  Select maps and points/polygons marked on them
+int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg, 
+  int magInd, int cohortID, bool useAll, bool wasShifted, int saveOrRestore)
+{
+  int i, numShift = 0;
+  CMapDrawItem *item;
+  std::set<int> shiftedMapIDs;
+
+  // If saving, both clear out the saved shifts and set all the parameters for undo
+  if (saveOrRestore > 0) {
+    mHelper->ClearSavedMapMarkerShifts();
+    mMarkerShiftReg = reg;
+    mMarkerShiftX = shiftX;
+    mMarkerShiftY = shiftY;
+    mMarkerShiftType = useAll ? 1 : 2;
+    mMarkerShiftMagInd = magInd;
+    mMarkerShiftCohortID = cohortID;
+  }
+
+  // Loop on items and find maps that qualify, add to set
+  for (i = 0; i < mItemArray.GetSize(); i++) {
+    item = mItemArray[i];
+    if (item->mRegistration == reg && item->mImported != 1 && item->mMapMagInd == magInd &&
+      (useAll || (wasShifted && item->mShiftCohortID == cohortID) || (!wasShifted &&
+      (!item->mShiftCohortID || item->mMarkerShiftX < EXTRA_VALUE_TEST)))) {
+      if (saveOrRestore > 0)
+        mHelper->SaveMapMarkerShiftToLists(item, cohortID, shiftX, shiftY);
+      else if (saveOrRestore < 0)
+        mHelper->RestoreMapMarkerShift(item);
+      shiftedMapIDs.insert(item->mMapID);
+      ShiftItemAndPoints(shiftX, shiftY, item, i, numShift);
+    }
+  }
+
+  // Loop again and find non-map items with drawnOnID in the set
+  for (i = 0; i < mItemArray.GetSize(); i++) {
+    item = mItemArray[i];
+    if (item->mRegistration == reg && item->mType != ITEM_TYPE_MAP && item->mDrawnOnMapID
+      && shiftedMapIDs.count(item->mDrawnOnMapID)) {
+      ShiftItemAndPoints(shiftX, shiftY, item, i, numShift);
+    }
+  }
+  if (numShift)
+    SetChanged(true);
+  return numShift;
+}
+
+// Shift one item's position and points by given amount
+void CNavigatorDlg::ShiftItemAndPoints(float shiftX, float shiftY, CMapDrawItem *item,
+  int itemInd, int &numShift)
+{
+  item->mStageX += shiftX;
+  item->mStageY += shiftY;
+  ShiftItemPoints(item, shiftX, shiftY);
+  UpdateListString(itemInd);
+  numShift++;
+}
 
 // Shift all items at the current registration by distance from current item to marker
 void CNavigatorDlg::ShiftToMarker(void)
@@ -2008,9 +2075,14 @@ void CNavigatorDlg::ShiftToMarker(void)
   float delX, delY, ptX, ptY;
   float shiftX, shiftY;
   int registration;
+  CMapDrawItem *map = NULL;
   CString mess;
   ScaleMat aMat;
- 	EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  BaseMarkerShift *baseShift;
+  BaseMarkerShift newBase;
+  EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  CShiftToMarkerDlg dlg;
+  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
   if (!SetCurrentItem())
     return;
 
@@ -2030,14 +2102,59 @@ void CNavigatorDlg::ShiftToMarker(void)
   MarkerStagePosition(imBuf, aMat, delX, delY, ptX, ptY);
   shiftX = ptX - mItem->mStageX;
   shiftY = ptY - mItem->mStageY;
-  mess.Format("The shift between the current item and\nthe marker point"
-    " is %.2f, %.2f microns\n\nAre you sure you want to shift all %sitems at\n"
-    "registration %d by that amount?", shiftX, shiftY, 
+
+  dlg.mToMag = imBuf->mMagInd;
+  dlg.mFromMag = 0;
+  dlg.mBaseToMag = 0;
+  dlg.mMapWasShifted = false;
+  dlg.m_iApplyToWhich = mMarkerShiftApplyTo;
+  dlg.m_iSaveType = mMarkerShiftSaveType;
+  if (mItem->mDrawnOnMapID) {
+    map = FindItemWithMapID(mItem->mDrawnOnMapID);
+    if (map) {
+      dlg.mFromMag = map->mMapMagInd;
+      dlg.mMapWasShifted = map->mShiftCohortID && map->mMarkerShiftX > EXTRA_VALUE_TEST;
+    }
+  } else
+    dlg.mFromMag = mItem->mMapMagInd;
+  baseShift = mHelper->FindNearestBaseShift(dlg.mFromMag, dlg.mToMag);
+  if (baseShift)
+   dlg.mBaseToMag = baseShift->toMagInd;
+
+  dlg.m_strMarkerShift.Format("The shift between the current item and the marker point"
+    " is %.2f, %.2f microns", shiftX, shiftY);
+  dlg.m_strWhatShifts.Format("All selected %sitems at "
+    "registration %d will be shifted by that amount",  
     (RegistrationUseType(registration) == NAVREG_IMPORT ? "non-imported " : ""), 
     registration);
-  if (AfxMessageBox(mess, MB_YESNO | MB_ICONQUESTION) != IDYES)
+  if (dlg.DoModal() == IDCANCEL)
     return;
-  ShiftItemsAtRegistration(shiftX, shiftY, registration);
+  mMarkerShiftApplyTo = dlg.m_iApplyToWhich;
+  mMarkerShiftSaveType = dlg.m_iSaveType;
+  if (!dlg.m_iApplyToWhich || !dlg.mFromMag || !dlg.mToMag) {
+    ShiftItemsAtRegistration(shiftX, shiftY, registration, 1);
+    mMarkerShiftType = 0;
+  } else {
+    mMarkerShiftCohortID = (map && map->mShiftCohortID) ? map->mShiftCohortID :
+      MakeUniqueID();
+    ShiftCohortOfItems(shiftX, shiftY, registration, dlg.mFromMag, mMarkerShiftCohortID,
+      dlg.m_iApplyToWhich == 1, dlg.mMapWasShifted, 1);
+    if (baseShift && dlg.m_iSaveType == 2) {
+      baseShift->shiftX += shiftX;
+      baseShift->shiftY += shiftY;
+    } else if (dlg.m_iSaveType == 1 || (!baseShift && dlg.m_iSaveType > 0)) {
+      if (baseShift && dlg.mBaseToMag == dlg.mToMag) {
+        baseShift->shiftX = shiftX;
+        baseShift->shiftY = shiftY;
+      } else {
+        newBase.fromMagInd = dlg.mFromMag;
+        newBase.toMagInd = dlg.mToMag;
+        newBase.shiftX = shiftX;
+        newBase.shiftY = shiftY;
+        shiftArray->Add(newBase);
+      }
+    }
+  }
   mMarkerShiftReg = registration;
   mMarkerShiftX = shiftX;
   mMarkerShiftY = shiftY;
@@ -2046,7 +2163,12 @@ void CNavigatorDlg::ShiftToMarker(void)
 // Undo last shift to marker and zero out the shift registration
 void CNavigatorDlg::UndoShiftToMarker(void)
 {
-  ShiftItemsAtRegistration(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg);
+  if (!mMarkerShiftType) {
+    ShiftItemsAtRegistration(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg, -1);
+  } else {
+    ShiftCohortOfItems(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg, 
+      mMarkerShiftMagInd, mMarkerShiftCohortID, false, true, -1);
+  }
   mMarkerShiftReg = 0;
 }
 
@@ -2918,6 +3040,8 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
     item->mStageZ = mapItem->mStageZ;
   else if (imBuf->GetStageZ(stageZ))
     item->mStageZ = stageZ;
+  if (!item->mDrawnOnMapID)
+    item->mMapMagInd = imBuf->mMagInd;
   TransferBacklash(imBuf, item);
   item->AppendPoint(stageX, stageY);
   return item;
@@ -4282,6 +4406,8 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
   item->mType = ITEM_TYPE_POLYGON;
   item->mColor = DEFAULT_POLY_COLOR;
   item->mDrawnOnMapID = imBuf->mMapID;
+  if (!item->mDrawnOnMapID)
+    item->mMapMagInd = imBuf->mMagInd;
   TransferBacklash(imBuf, item);
   for (int i = 0; i <= numPts; i++) {
     theta = i * DTOR * 360 / numPts;
@@ -4319,6 +4445,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     return;
   registration = mItem->mRegistration;
   drawnOnID = mItem->mDrawnOnMapID;
+  if (!drawnOnID)
+    drawnOnID = -mItem->mMapMagInd;
   groupExtent = mHelper->GetDivideIntoGroups() ? mHelper->GetGridGroupSize() : 0.f;
   poly = NULL;
   stageZ = mItem->mStageZ;
@@ -5162,7 +5290,10 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
   item->mRegistration = registration;
   item->mOriginalReg = registration;
   item->mAcquire = acquire;
-  item->mDrawnOnMapID = drawnOnID;
+  if (drawnOnID < 0)
+    item->mMapMagInd = -drawnOnID;
+  else
+    item->mDrawnOnMapID = drawnOnID;
   item->mPieceDrawnOn = mPieceGridPointOn;
   item->mXinPiece = mGridPtXinPiece;
   item->mYinPiece = mGridPtYinPiece;
@@ -5298,6 +5429,8 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
 }
 
 // Add holes found by the HoleFinder using all these passed vectors
+// The map ID should be the negative of the mag index if there was no map ID, this
+// will make it save the mag in mMapMagInd
 int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
   std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
   ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float angle,
@@ -7003,6 +7136,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   IntVec skipIndex;
   int adocInd, adocErr, ind, sectInd, outInd, ind2;
   float varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  BaseMarkerShift baseShift;
+  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
   FILE *fp;
   if (autosave)
     filename = mParam->autosaveFile;
@@ -7106,6 +7241,22 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_FILE_OPTS
 
+    // Save base marker shifts
+#undef ADOC_ARG
+#define ADOC_ARG "BaseMarkerShift",sectInd
+#define BASE_MARKER_SHIFTS
+    for (ind = 0; ind < shiftArray->GetSize(); ind++) {
+      baseShift = shiftArray->GetAt(ind);
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("BaseMarkerShift", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef BASE_MARKER_SHIFTS
+
     if (adocErr) {
       str.Format("%d errors occurred setting Navigator data into autodoc structure before"
         " writing it as XML", adocErr);
@@ -7190,6 +7341,21 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_FILE_OPTS
 
+    // Save base marker shifts
+#define BASE_MARKER_SHIFTS
+    for (ind = 0; ind < shiftArray->GetSize(); ind++) {
+      baseShift = shiftArray->GetAt(ind);
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "BaseMarkerShift", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocParams.h"
+      }
+    }
+#undef BASE_MARKER_SHIFTS
+
     if (adocErr) {
       str.Format("%d errors occurred writing Navigator data into file", adocErr);
       AfxMessageBox(str, MB_EXCLAME);
@@ -7254,13 +7420,13 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   }
 
 #define FIND_DUP_OR_ADD(arr, parm, parm2, nwind) \
-  ind2 = arr.GetSize();  \
+  ind2 = (int)arr.GetSize();  \
   for (index = 0; index < ind2; index++) { \
     parm2 = arr[index];    \
     if (parm2->navID == parm->navID)  \
       ind2 = index;   \
   }   \
-  if (ind2 == arr.GetSize()) \
+  if (ind2 == (int)arr.GetSize()) \
     arr.Add(parm);  \
   else   \
     delete parm;   \
@@ -7293,6 +7459,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   float xx, yy, fvals[4], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
   int numExternal, externalType, numParams, curNum, numDig, maxNum;
   int holeSkips[2000];
+  BaseMarkerShift baseShift;
+  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
   std::set<std::string> filesNotFound;
   std::set<std::string>::iterator fileIter;
   std::map<std::string, std::string> filesFoundMap;
@@ -7380,7 +7548,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       }
       version = B3DNINT(100. * xx);
 
-
     } else {
 
       // Or set up to process the old type of file
@@ -7434,6 +7601,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       mSetOfIDs.clear();
       mNewItemNum = 1;
       mDualMapID = -1;
+      mHelper->ClearSavedMapMarkerShifts();
+      shiftArray->RemoveAll();
     }
     mHelper->SetExtDrawnOnID(0);
     addIndex = mergeFile ? (int)mItemArray.GetSize() : 0;
@@ -7554,6 +7723,17 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 #undef NAV_FILE_OPTS
 #undef SECT_NAME
 
+      // Base marker shifts
+#define BASE_MARKER_SHIFTS
+#define SECT_NAME "BaseMarkerShift"
+      numParams = AdocGetNumberOfSections("BaseMarkerShift");
+      for (ind1 = 0; ind1 < numParams && !mergeFile; ind1++) {
+#include "NavAdocParams.h"
+        shiftArray->Add(baseShift);
+      }
+#undef BASE_MARKER_SHIFTS
+#undef SECT_NAME
+
 #undef INT_SETT_ASSIGN
 #undef BOOL_SETT_ASSIGN
 #undef FLOAT_SETT_ASSIGN
@@ -7649,6 +7829,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             item->mSkipHolePos[ind1] = holeSkips[ind1];
           item->mNumSkipHoles = numToGet / 2;
         }
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "MarkerShift",
+          &item->mMarkerShiftX, &item->mMarkerShiftY));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID", 
+          &item->mShiftCohortID));
         for (ind1 = 1; ind1 <= MAX_NAV_USER_VALUES; ind1++) {
           str.Format("UserValue%d", ind1);
           retval = AdocGetString("Item", sectInd, (LPCTSTR)str, &adocStr);
@@ -8078,6 +8262,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             mSetOfIDs.insert(item->mMapID);
           if (item->mGroupID)
             mSetOfIDs.insert(item->mGroupID);
+          if (item->mShiftCohortID)
+            mSetOfIDs.insert(item->mShiftCohortID);
         }
       } else {
 

@@ -780,11 +780,15 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mFullYsize = image->getHeight();
 
   mNavItem = mNav->FindItemWithMapID(imBuf->mMapID);
+
+  // Get map ID to assign as drawn on ID when holes are made, or negative of mag index if
+  // it is non-map buffer
   mMapID = 0;
   if (mNavItem) {
     mZstage = mNavItem->mStageZ;
     mMapID = mNavItem->mMapID;
-  }
+  } else if (imBuf->mMagInd > 0)
+    mMapID = -imBuf->mMagInd;
 
   // Montaging: check preconditions first
   if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {

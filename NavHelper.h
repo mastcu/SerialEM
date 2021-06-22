@@ -78,10 +78,10 @@ struct HoleFinderParams
 
 struct BaseMarkerShift
 {
-  float shiftX;
+  float shiftX;           // Shift that was applied
   float shiftY;
-  int fromMagInd;
-  int toMagInd;
+  int fromMagInd;         // Mag of Nav item or map it was marked on
+  int toMagInd;           // Mag of image with marker point
 };
 
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
@@ -340,6 +340,10 @@ private:
   int mMHCcombineType;           // MultiHoleCombine way to pick points (COMBINE_...)
   BOOL mMHCenableMultiDisplay;   // Option to show multi-shot on all before combining pts
   BOOL mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
+  IntVec mSavedMaShMapIDs;       // Saved map marker shift information: map ID
+  IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value
+  FloatVec mSavedMaShXshift;     // The existing marker shift if any
+  FloatVec mSavedMaShYshift;
 
 
 public:
@@ -466,6 +470,13 @@ public:
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
   bool GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal);
   int GetNumHolesForItem(CMapDrawItem *item, int numDefault);
+  void ClearSavedMapMarkerShifts();
+  void SaveMapMarkerShiftToLists(CMapDrawItem *item, int cohortID, float newXshift,
+    float newYshift);
+  void RestoreMapMarkerShift(CMapDrawItem *item);
+  BaseMarkerShift *FindNearestBaseShift(int fromMag, int toMag);
+  bool OKtoApplyBaseMarkerShift();
+  void ApplyBaseMarkerShift();
   void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
   {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
 

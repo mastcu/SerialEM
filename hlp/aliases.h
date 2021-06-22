@@ -416,6 +416,7 @@ hid_navigator_undotransformation = SerialEM.chm::/html\menu_navigator.htm#hid_na
 hid_navigator_changeregistration = SerialEM.chm::/html\menu_navigator.htm#hid_navigator_changeregistration
 hid_navigator_shifttomarker			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_shifttomarker
 hid_navigator_undolastshift			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_undolastshift
+hid_navigator_applysavedshift   = SerialEM.chm::/html\menu_navigator.htm#hid_navigator_applysavedshift
 hid_navigator_align_to_map			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_align_to_map
 hid_new_map									  	= SerialEM.chm::/html\menu_navigator.htm#hid_new_map
 hid_navigator_importmap					= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_importmap
