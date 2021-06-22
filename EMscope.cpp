@@ -106,7 +106,6 @@ static int sCartridgeToLoad = -1;
 static bool sGettingValuesFast = false;    // Keep track of whether getting values fast
 static bool sLastGettingFast = false;
 static int sRestoreStageXYdelay;
-static int sSimpOrigStartTimeout = 15;
 static int sSimpOrigEndTimeout = 300;
 static int sStopSimpleOriginFill = 0;     // Flag to stop it
 static JeolStateData *sJeolSD;
@@ -149,7 +148,8 @@ static int spFEItoJeol[] = {0, spUnknownJeol, spUpJeol, spDownJeol};
 #define ALL_INSTRUMENT_LENSES 99
 
 #define SIMPLE_ORIGIN_PARENT HKEY_CURRENT_USER
-#define SIMPLE_ORIGIN_KEY "SOFTWARE\\SimpleOrigin"
+#define SIMPLE_ORIGIN_KEY "SimpleOrigin"
+static bool SimpleOriginStatus(CRegKey &key, int &numRefills, int &secToNextRefill, int &active, CString &mess);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -6369,7 +6369,8 @@ bool CEMscope::AreDewarsFilling(int &busy)
   ScopeMutexAcquire("AreDewarsFilling", true);
   try {
     if (mHasSimpleOrigin) {
-      bRet = GetSimpleOriginStatus(ibusy2, time, busy);
+      bRet = GetSimpleOriginStatus(ibusy2, time, ibusy);
+      busy = time == 0 && ibusy > 0;
     } else if (FEIscope) {
       bRet = GetTemperatureInfo(0, bBusy, time, 0, level);
       busy = bBusy ? 1 : 0;
@@ -6418,14 +6419,25 @@ bool CEMscope::GetRefrigerantLevel(int which, double &level)
 bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill, int &active)
 {
   CRegKey key;
-  LONG nResult;
-  DWORD value;
-  CString mess, act;
+  CString mess;
   if (!mHasSimpleOrigin) {
     SEMMessageBox("The property for a SimpleOrigin system is not set");
     return false;
   }
+  if (!SimpleOriginStatus(key, numRefills, secToNextRefill, active, mess)) {
+    SEMMessageBox(mess);
+    return false;
+  }
 
+  return true;
+}
+
+static bool SimpleOriginStatus(CRegKey &key, int & numRefills, int & secToNextRefill, 
+  int & active, CString &mess)
+{
+  LONG nResult;
+  DWORD value;
+  CString act;
   act = "opening registry key";
   nResult = key.Open(SIMPLE_ORIGIN_PARENT, _T(SIMPLE_ORIGIN_KEY));
   if (nResult == ERROR_SUCCESS) {
@@ -6443,10 +6455,8 @@ bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill, in
     nResult = key.QueryDWORDValue("SYSTEM_STATUS", value);
     active = value;
   }
-
   if (nResult != ERROR_SUCCESS) {
     mess.Format("Error %d %s for SimpleOrigin system", nResult, (LPCTSTR)act);
-    SEMMessageBox(mess);
     return false;
   }
 
@@ -6459,56 +6469,49 @@ int CEMscope::RefillSimpleOrigin(CString &errString)
   CRegKey key;
   DWORD value;
   LONG nResult;
-  int loop = 1;
+  int remaining, secToNext, active;
   double startTicks;
-  nResult = key.Open(SIMPLE_ORIGIN_PARENT, _T(SIMPLE_ORIGIN_KEY));
-  if (nResult != ERROR_SUCCESS) {
-    errString.Format("Error %d opening registry key for SimpleOrigin", nResult);
-    return 1;
-  }
-  nResult = key.QueryDWORDValue("SYSTEM_STATUS", value);
-  if (nResult != ERROR_SUCCESS) {
-    errString.Format("Error %d accessing SYSTEM_STATUS for SimpleOrigin", nResult);
-    return 1;
-  }
 
-  // If not already filling, start it
-  if (!value) {
+  if (!SimpleOriginStatus(key, remaining, secToNext, active, errString))
+    return 1;
+
+  if (!active) {
+    errString = "The SimpleOrigin system is not available/active";
+    return 1;
+  }
+  if (!remaining) {
     errString = "There are no refills remaining in the SimpleOrigin system";
-    if (key.QueryDWORDValue("NUMBER_OF_REMAINING_REFILLS", value) == ERROR_SUCCESS &&
-      !value)
-      return 2;
+    return 1;
+  }
 
+  if (secToNext) {
+
+    // If not already filling, start it
     key.SetDWORDValue("SOFTWARE_STOP", 0);
     nResult = key.SetDWORDValue("SOFTWARE_START", 1);
     if (nResult != ERROR_SUCCESS) {
       errString.Format("Error %d setting SOFTWARE_START for SimpleOrigin", nResult);
       return 1;
     }
-    loop = 0;
   }
 
-  // Wait to see it active (if it wasn't) and Wait to see it inactive
-  for (;loop < 2; loop++) {
-    startTicks = GetTickCount();
-    for (;;) {
-      if (sStopSimpleOriginFill > 0) {
-        key.SetDWORDValue("SOFTWARE_STOP", 1);
-        key.SetDWORDValue("SOFTWARE_START", 0);
-        sStopSimpleOriginFill = -1;
-        return 0;
-      }
-      if (key.QueryDWORDValue("SYSTEM_STATUS", value) == ERROR_SUCCESS &&
-        BOOL_EQUIV(loop > 0, value == 0))
-        break;
-      if (SEMTickInterval(startTicks) < 1000. *
-        (loop ? sSimpOrigEndTimeout : sSimpOrigStartTimeout))
-        Sleep(100);
-      else {
-        errString = loop ? "Timeout waiting for SimpleOrigin filling to end" :
-          "Timeout waiting for SimpleOrigin status to show that filling started";
-        return 3 + loop;
-      }
+  // Wait to see it 
+  startTicks = GetTickCount();
+  for (;;) {
+    if (sStopSimpleOriginFill > 0) {
+      key.SetDWORDValue("SOFTWARE_STOP", 1);
+      key.SetDWORDValue("SOFTWARE_START", 0);
+      sStopSimpleOriginFill = -1;
+      return 0;
+    }
+    if (key.QueryDWORDValue("NUMBER_OF_REMAINING_REFILLS", value) == ERROR_SUCCESS &&
+      (int)value < remaining)
+      break;
+    if (SEMTickInterval(startTicks) < 1000. * sSimpOrigEndTimeout)
+      Sleep(100);
+    else {
+      errString = "Timeout waiting for SimpleOrigin filling to end";
+      return 3;
     }
   }
   key.SetDWORDValue("SOFTWARE_START", 0);
@@ -8732,7 +8735,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   float sinceLast;
   bool needHWDR = false, startedThread = false;
   int now = mWinApp->MinuteTimeStamp();
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0};
+  // Change second one back to 0 to enable simpleorigin
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 1, 1, 1, 1, 0, 1, 1, 2, 2, 0};
   mDoingStoppableRefill = 0;
 
   // Loop through the operations, test if it is time to do each and add to list to do
