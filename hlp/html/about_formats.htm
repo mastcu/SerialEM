@@ -66,7 +66,7 @@
         <a href="#navigator">Navigator Files</a><br>
         <a href="#importing">Importing Externally Defined Navigator
           Items</a><br>
-        <a href="#calfile">Calibration File Entries</a><br>
+        <a href="#calfile">Settings and Calibration File Entries</a><br>
         <a href="#otherNotes">Other Notes</a><br>
       </p>
     <P><a name="metadata"></a><b>Image Metadata Files</b></P>
@@ -1068,11 +1068,14 @@
       either because it lacked a required entry or because there was an error (such as 
       too few values on a line) reading data from the autodoc.</p>
     <p>
-      <a name="calfile"></a><b>Calibration File Entries</b></p>
+      <a name="calfile"></a><b>Settings and Calibration File Entries</b></p>
     <p>
-      This section is for lengthy entries to the calibration file that sometimes need to 
+      This section is for lengthy entries to the 
+      settings or calibration file that sometimes need to 
       be interpreted.&nbsp; Entries will be added upon need or request.&nbsp; All 
       alpha values are numbered from 0, not 1.</p>
+    <p>
+      <strong><em>Settings file entries:</em></strong></p>
     <p>
         <em>LowDoseParameters</em>: 
       <br />
@@ -1082,7 +1085,7 @@
 &nbsp;&nbsp; spot size<br />
 &nbsp;&nbsp; intensity<br />
 &nbsp;&nbsp; axis offset in microns<br />
-&nbsp;&nbsp; 0-2 for regular/GIF/STEM or 0 for state<br />
+&nbsp;&nbsp; 0-2 for regular/EFTEM/STEM or 0 for state<br />
 &nbsp;&nbsp; filter slit in<br />
 &nbsp;&nbsp; filter slit width<br />
 &nbsp;&nbsp; energy loss<br />
@@ -1094,7 +1097,30 @@
 &nbsp;&nbsp; probe mode<br />
 &nbsp;&nbsp; dark field mode flag<br />
 &nbsp;&nbsp; dark field tilt X &amp; Y</p>
+      <p>
+          <em>AutocenterParams:</em></p>
     <p>
+          &nbsp;&nbsp;
+          camera<br>
+      &nbsp;
+      mag index<br>
+      &nbsp;
+      spot size<br>&nbsp; intensity<br>
+          &nbsp;
+          binning<br>&nbsp; exposure<br>
+      &nbsp; 1 to
+      use centroid<br>
+          &nbsp;
+          probe mode<br>
+      &nbsp; 1 to
+      shift beam for centering<br>
+      &nbsp;
+      beam shift in microns<br>
+          &nbsp;
+          added X beam shift<br>
+      &nbsp;
+      added Y beam shift<p>
+          <em><strong>Calibration file entries:</strong></em><p>
         <em>StandardLMFocus</em>: This entry contains the recorded standard focus in LM or
          the eucentric focus is nonLM.<br />
 &nbsp;&nbsp; Magnification index<br />
@@ -1154,29 +1180,6 @@
 &nbsp;&nbsp; <br />
       </p>
       <p>
-          AutocenterParams:</p>
-    <p>
-          &nbsp;&nbsp;
-          camera<br>
-      &nbsp;
-      mag index<br>
-      &nbsp;
-      spot size<br>&nbsp; intensity<br>
-          &nbsp;
-          binning<br>&nbsp; exposure<br>
-      &nbsp; 1 to
-      use centroid<br>
-          &nbsp;
-          probe mode<br>
-      &nbsp; 1 to
-      shift beam for centering<br>
-      &nbsp;
-      beam shift in microns<br>
-          &nbsp;
-          added X beam shift<br>
-      &nbsp;
-      added Y beam shift<p>
-          &nbsp;<p>
           <em>Stage Calibration and 2x2 transformation matrices </em></p>
       <p>
           The stage calibration consists of 4 matrix terms, and like all such 
@@ -1241,7 +1244,7 @@
           mag with an assigned rotation by adding the difference between the 
           MagnificationTable rotation of the mag in question and that of the nearby mag.</p>
       <p>The situation is even more complicated when there is more than one camera at the 
-          same level, i.e., more than one nonGIF camera or more than one GIF camera, and 
+          same level, i.e., more than one non-energy filter camera or more than one energy filter camera, and 
           one lacks a calibrated absolute angle.&nbsp; The program will use image shift 
           calibrations if possible to get an absolute angle from another camera.&nbsp; All 
           of the assignments described here are listed when the program is started with 
