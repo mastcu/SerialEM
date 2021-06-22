@@ -27,8 +27,8 @@
       selected. If you select a different camera, that one will become the current 
       camera when you press OK in this dialog, but not if you press Cancel.</P>
     <P><B>Match pixel size and/or intensity when changing camera</B></P>
-    <P>These buttons will appear if you have two or more CCD cameras that are not on a 
-      GIF. If you select pixel matching, the program will change magnification if 
+    <P>These buttons will appear if you have two or more cameras that are not on an 
+      energy filter. If you select pixel matching, the program will change magnification if 
       necessary so that the pixel size matches as well as possible when you change 
       from one camera to another. If you select intensity matching, then beam 
       intensity will be adjusted so that the electrons per pixel per second will be 
@@ -531,7 +531,9 @@
       or 4 processor, or to write a command file for aligning 
       with the Alignframes program in IMOD.&nbsp; Press the <b>
       Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
-      Parameters dialog</a> and choose the method and parameters for aligning. When 
+      Parameters dialog</a> and choose the method and parameters for aligning. (For a Falcon 3 or 4, if SerialEM does not have direct access to the storage 
+      server, only alignment by the Falcon processor is possible, and the <strong>Set 
+      Up</strong> button will not appear.) When 
       frame alignment is selected, an indicator below this checkbox will show which 
       method is selected: &#39;Align in Falcon Processor&#39;, &#39;Align in SerialEM&#39;, and either &#39;Align in IMOD&#39; 
       or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the 
@@ -539,9 +541,6 @@
       Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
       alignment is turned off or the option to align with IMOD is no longer selected, 
       the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
-    <P>For a Falcon 3 or 4, if SerialEM does not have direct access to the storage 
-      server, only alignment by the Falcon processor is possible, and the <strong>Set 
-      Up</strong> button will not appear.</P>
     <P><b>Save Frames</b></P>
     <P>Check this box to save frames for images takes with this parameter set.&nbsp; 
       The number of summed frames to be saved will appear in a text line.</P>

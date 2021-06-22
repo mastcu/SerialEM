@@ -111,6 +111,12 @@ GET_ONE_DBL(GetXLensFocus) LINE_END
 SET_ONE_DBL(SetXLensFocus) LINE_END
 GET_ONE_BOOL(GetXLensMode) LINE_END
 SET_ONE_BOOL(SetXLensMode) LINE_END
+GET_ONE_INT(ASIgetVersion) LINE_END
+SET_ONE_INT(ASIsetVersion) LINE_END
+GET_ONE_DBL(GetZeroLossPeakShift) LINE_END
+SET_ONE_DBL(SetEnergyShift) LINE_END
+SET_ONE_DBL(SetSlitWidth) LINE_END
+SET_ONE_INT(SetSlitIn) LINE_END
 
 #undef GET_ONE_INT
 #undef GET_ONE_BOOL
@@ -158,10 +164,8 @@ SCOPE_SAMENAME(ScopeSetInt, SetToNeutral);
 SCOPE_SAMENAME(ScopeSetInt, UseMagInNextSetISXY);
 SCOPE_SAMENAME(ScopeGetInt, GetAlpha);
 SCOPE_SAMENAME(ScopeSetInt, SetAlpha);
-SCOPE_SAMENAME(ScopeSetDbl, SetEnergyShift);
-SCOPE_SAMENAME(ScopeSetDbl, SetSlitWidth);
-SCOPE_SAMENAME(ScopeSetInt, SetSlitIn);
 SCOPE_SAMENAME(ScopeSetInt, EnableEnergyShift);
+SCOPE_SAMENAME(ScopeGetIntTwoDbl, GetFilterState);
 SCOPE_SAMENAME(ScopeSetInt, StartUpdates);
 SCOPE_SAMENAME(ScopeGetThreeDbl, GetFilterRanges);
 SCOPE_SAMENAME(ScopeSetTwoInt, SetFreeLensControl);
@@ -172,6 +176,7 @@ SCOPE_SAMENAME(ScopeSetDbl, SetFilamentCurrent);
 SCOPE_SAMENAME(ScopeGetInt, GetEmissionState);
 SCOPE_SAMENAME(CamOneInt, SetEmissionState);
 SCOPE_SAMENAME(CamOneInt, FlashFEG);
+SCOPE_SAMENAME(ScopeGetSetInt, GetFlashingAdvised);
 SCOPE_SAMENAME(CamOneInt, GetNitrogenStatus);
 SCOPE_SAMENAME(CamTwoInt, RefillNitrogen);
 SCOPE_SAMENAME(CamOneInt, GetApertureSize);
@@ -206,5 +211,6 @@ SCOPE_SAMENAME(CamNoArg, FocusRamperInitialize);
 SCOPE_SAMENAME(DoFocRamp, DoFocusRamp);
 SCOPE_SAMENAME(FinishFocRamp, FinishFocusRamp);
 SCOPE_SAMENAME(ShowMB, ShowMessageBox);
+
 #undef SCOPE_SAMENAME
 #endif                                 

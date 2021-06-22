@@ -2392,12 +2392,12 @@ BEGIN
     PUSHBUTTON      "Delete",IDC_BUT_DELSTATE,4,17,27,10
     PUSHBUTTON      "Imaging",IDC_BUT_SETIMSTATE,34,31,32,10
     PUSHBUTTON      "Map Acquire",IDC_BUT_SETMAPSTATE,69,31,44,10
-    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,4,44,72,10
-    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,82,44,72,10
+    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,4,44,67,10
+    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,74,44,67,10
     LTEXT           "Name:",IDC_STAT_STATE_NAME,66,17,21,8
     EDITTEXT        IDC_EDIT_STATENAME,86,16,68,12,ES_AUTOHSCROLL
-    LTEXT           "Cam  Mag  Sp   C2    Exp  Bin  Frame   Name",IDC_STAT_TITLELINE,7,59,134,8
-    PUSHBUTTON      "?",IDC_BUTHELP,144,57,10,10
+    LTEXT           "Cam  Mag     Sp      C2      Exp    Bin  Frame  Name",IDC_STAT_TITLELINE,7,59,147,8
+    PUSHBUTTON      "?",IDC_BUTHELP,144,44,10,10
     PUSHBUTTON      "Scheduled",IDC_BUT_SETSCHEDSTATE,116,31,38,10
     LTEXT           "Set state:",IDC_STAT_IM_STATE_SET,3,31,30,8
     PUSHBUTTON      "Update",IDC_BUT_UPDATE_STATE,35,17,27,10
@@ -4553,7 +4553,7 @@ BEGIN
     IDC_SPINLOSS            "Change the energy loss by 1 eV"
     IDC_AUTOCAMERA          "Automatically switch cameras and EFTEM mode together"
     IDC_MATCHINTENSITY      "Change intensity so that electrons/pixel/sec will match between  cameras"
-    IDC_MATCHPIXEL          "Change mag as needed to match pixel size between upper and GIF cameras"
+    IDC_MATCHPIXEL          "Change mag as needed to match pixel size between upper and filter cameras"
 END
 
 STRINGTABLE

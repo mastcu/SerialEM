@@ -47,7 +47,7 @@ static char THIS_FILE[]=__FILE__;
 // Scope plugin version that is good enough if there are no FEI cameras, and if there 
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 105
-#define FEISCOPE_CAM_VERSION   110
+#define FEISCOPE_CAM_VERSION   111
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -481,6 +481,8 @@ CEMscope::CEMscope()
   mUpdateDuringAreaChange = false;
   mDetectorOffsetX = mDetectorOffsetY = 0.;
   mRestoreViewFocusCount = 0;
+  mDoNextFEGFlashHigh = false;
+  mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -769,6 +771,17 @@ int CEMscope::Initialize()
   catch (_com_error E) {
     if (needVers == FEISCOPE_CAM_VERSION)
       SEMReportCOMError(E, "setting whether to skip advanced scripting ");
+  }
+  try {
+    if (mPlugFuncs->ASIsetVersion) {
+      if (mAdvancedScriptVersion > 0)
+        mPlugFuncs->ASIsetVersion(mAdvancedScriptVersion);
+      else
+        mAdvancedScriptVersion = mPlugFuncs->ASIgetVersion();
+    }
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, "accessing the advanced scripting version ");
   }
 
   // Now set up a lot of things for TEMCON JEOL scope
@@ -6234,6 +6247,25 @@ BOOL CEMscope::IsPVPRunning(BOOL & state)
   return result;
 }
 
+// Find out if flashing of a given type is advised
+BOOL CEMscope::GetIsFlashingAdvised(int high, int &answer)
+{
+  BOOL result = true;
+  if (!sInitialized || !FEIscope || !mPlugFuncs->GetFlashingAdvised || 
+    mAdvancedScriptVersion < ASI_FILTER_FEG_LOAD_TEMP)
+    return false;
+  ScopeMutexAcquire("GetIsFlashingAdvised", true);
+  try {
+    answer = mPlugFuncs->GetFlashingAdvised(high);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("determining if FEG flashing is advised "));
+    result = false;
+  }
+  ScopeMutexRelease("GetIsFlashingAdvised");
+  return result;
+}
+
 // Get the accelerating voltage in KV
 double CEMscope::GetHTValue()
 {
@@ -8580,7 +8612,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   float sinceLast;
   bool needHWDR = false, startedThread = false;
   int now = mWinApp->MinuteTimeStamp();
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 1, 1, 1, 1, 0, 1, 1, 2, 2, 2};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 1, 1, 1, 1, 0, 1, 1, 2, 2, 0};
   mDoingStoppableRefill = 0;
 
   // Loop through the operations, test if it is time to do each and add to list to do
@@ -8639,6 +8671,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mLongOpData[thread].numOperations = numScopeOps;
       mLongOpData[thread].JeolSD = &mJeolSD;
       mLongOpData[thread].plugFuncs = mPlugFuncs;
+      mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0);
+      mDoNextFEGFlashHigh = false;
       mLongOpThreads[thread] = AfxBeginThread(LongOperationProc, &mLongOpData[thread],
         THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
     } else {
@@ -8665,6 +8699,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 {
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
+  CString descrip;
   int retval = 0, longOp, ind, error;
   bool fillTransfer;
 
@@ -8726,14 +8761,20 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         }
 
         if (longOp == LONG_OP_FLASH_FEG) {
-          error = lod->plugFuncs->FlashFEG(1);
+          error = lod->plugFuncs->FlashFEG((lod->flags & LONGOP_FLASH_HIGH) ? 1 : 0);
         }
 
         if (error) {
-          hr = 0x80000000 | error;
-          SEMTestHResult(hr,  _T(longOpDescription[longOp]), &lod->errString, &error, 
+          hr = 0x80000000 | (B3DABS(error));
+          descrip = longOpDescription[longOp];
+          if (lod->plugFuncs->GetLastErrorString) {
+            descrip += ": ";
+            descrip += lod->plugFuncs->GetLastErrorString();
+          }
+
+          SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, 
             true);
-          error = 1;
+          retval = 1;
         } else
           lod->finished[ind] = true;
       }

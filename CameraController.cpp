@@ -1315,7 +1315,9 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
                                              int numOrig)
 {
   int i, ind, err, bin, base, power;
-  bool needsConfig = false, oldFalcon2, anyOldFalcon2 = false;
+  bool needsConfig = false, oldFalcon2, anyOldFalcon2 = false, anyGIF = false;
+  double maxLoss, minWidth, maxWidth;
+  FilterParams *filtParam = mWinApp->GetFilterParams();
 
   // Check that all listed cameras are accessible (???)
   numFEIlisted = 0;
@@ -1355,6 +1357,14 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
         anyOldFalcon2 = true;
       numFEIlisted++;
       mAllParams[i].flyback = mAllParams[i].basicFlyback + mAllParams[i].addedFlyback;
+      if (mAllParams[i].GIF && mAllParams[i].filterIsFEI) {
+        if (mScope->GetPluginVersion() < PLUGFEI_FILT_FLASH_LOAD)
+          AfxMessageBox("The FEI camera named " + mAllParams[i].name + " is specified\n"
+            "as being on an FEI filter but the FEI scope plugin version does not support"
+            " this", MB_EXCLAME);
+        else
+          anyGIF = true;
+      }
     }
   }
 
@@ -1395,6 +1405,25 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
         mAllParams[i].autoGainAtBinning = 0;
       }
     }
+  }
+  if (anyGIF) {
+    if (!mTD.scopePlugFuncs)
+      mTD.scopePlugFuncs = mScope->GetPlugFuncs();
+    try {
+      if (filtParam->lastFeiZLPshift < EXTRA_VALUE_TEST) {
+        filtParam->lastFeiZLPshift = (float)mTD.scopePlugFuncs->GetZeroLossPeakShift();
+      }
+      mTD.scopePlugFuncs->GetFilterRanges(&maxLoss, &minWidth, &maxWidth);
+      filtParam->maxLoss = (float)maxLoss;
+      filtParam->minWidth = (float)minWidth;
+      filtParam->maxWidth = (float)maxWidth;
+      filtParam->adjustForSlitWidth = false;
+    }
+    catch (_com_error E) {
+        SEMReportCOMError(E, "Getting initial value of ZLP shift in FEI interface ");
+      }
+    mFilterUpdateID = ::SetTimer(NULL, 1, 2000, FilterUpdateProc);
+
   }
 }
 
@@ -1451,125 +1480,129 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
-  int ind, i, err, num, idum, numGain, flags;
+  int ind, i, err, num, idum, numGain, flags, ifSTEM;
   double minPixel, rotInc, ddum;
   CString report;
 
   numPlugListed = 0;
-  for (ind = 0; ind < numOrig; ind++) {
-    err = 0;
-    i = originalList[ind];
-    if (!mAllParams[i].pluginName.IsEmpty()) {
-      mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs
+  for (ifSTEM = 1; ifSTEM >= 0; ifSTEM--) {
+    for (ind = 0; ind < numOrig; ind++) {
+      err = 0;
+      i = originalList[ind];
+      if (!BOOL_EQUIV(mAllParams[i].STEMcamera, ifSTEM))
+        continue;
+      if (!mAllParams[i].pluginName.IsEmpty()) {
+        mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs
         (mAllParams[i].pluginName, flags);
-      if (!mPlugFuncs[i]) {
-        AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName + 
-          " did not load so that camera will be unavailable", MB_EXCLAME);
-        err = 1;
-      } else {
-        num = mPlugFuncs[i]->GetNumberOfCameras();
-        if (num <= 0) {
-          AfxMessageBox("Error getting number of cameras from the camera plugin "
-            "named " + mAllParams[i].pluginName, MB_EXCLAME);
+        if (!mPlugFuncs[i]) {
+          AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
+            " did not load so that camera will be unavailable", MB_EXCLAME);
+          err = 1;
+        } else {
+          num = mPlugFuncs[i]->GetNumberOfCameras();
+          if (num <= 0) {
+            AfxMessageBox("Error getting number of cameras from the camera plugin "
+              "named " + mAllParams[i].pluginName, MB_EXCLAME);
+            err = 1;
+          }
+        }
+        if (!err && num > 1 && !mPlugFuncs[i]->SelectCamera) {
+          AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
+            "reported more than one camera but has no CameraSelect function",
+            MB_EXCLAME);
           err = 1;
         }
-      }
-      if (!err && num > 1 && !mPlugFuncs[i]->SelectCamera) {
-        AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
-          "reported more than one camera but has no CameraSelect function", 
-          MB_EXCLAME);
-        err = 1;
-      }
-      if (!err && mAllParams[i].cameraNumber >= num && 
-        mAllParams[i].pluginName.Find("Jeol") < 0) {
-        report.Format("The PluginCameraIndex property for a plugin camera is %d but the "
-          "plugin named %s only reports %d cameras", 
-          mAllParams[i].cameraNumber, (LPCTSTR)mAllParams[i].pluginName, num);
-        AfxMessageBox(report, MB_EXCLAME);
-        err = 1;
-      }
+        if (!err && mAllParams[i].cameraNumber >= num &&
+          mAllParams[i].pluginName.Find("Jeol") < 0) {
+          report.Format("The PluginCameraIndex property for a plugin camera is %d but the"
+            " plugin named %s only reports %d cameras",
+            mAllParams[i].cameraNumber, (LPCTSTR)mAllParams[i].pluginName, num);
+          AfxMessageBox(report, MB_EXCLAME);
+          err = 1;
+        }
 
-      // Test for shutter call if there is a second label and only one shutter not set
-      if (!err && !mAllParams[i].onlyOneShutter && 
-        !mAllParams[i].shutterLabel2.IsEmpty() && !mPlugFuncs[i]->SelectShutter) {
+        // Test for shutter call if there is a second label and only one shutter not set
+        if (!err && !mAllParams[i].onlyOneShutter &&
+          !mAllParams[i].shutterLabel2.IsEmpty() && !mPlugFuncs[i]->SelectShutter) {
           AfxMessageBox("The properties for a plugin camera had a second shutter label "
-            "but the plugin named " + mAllParams[i].pluginName + 
+            "but the plugin named " + mAllParams[i].pluginName +
             "has no CameraShutter function", MB_EXCLAME);
           err = 1;
-      }
+        }
 
-      // Test for insertion functions if retractable
-      if (!err && mAllParams[i].retractable && (!mPlugFuncs[i]->IsCameraInserted ||
-        !mPlugFuncs[i]->SetCameraInsertion)) {
+        // Test for insertion functions if retractable
+        if (!err && mAllParams[i].retractable && (!mPlugFuncs[i]->IsCameraInserted ||
+          !mPlugFuncs[i]->SetCameraInsertion)) {
           AfxMessageBox("The \"Retractable\" property is set for a plugin camera but "
-            "the plugin named " + mAllParams[i].pluginName + 
+            "the plugin named " + mAllParams[i].pluginName +
             " has no insertion functions", MB_EXCLAME);
           err = 1;
-      }
-      if (!err && mAllParams[i].rotationFlip && !mPlugFuncs[i]->SetRotationFlip) {
-        AfxMessageBox("The \"RotationAndFlip\" property is set for a plugin camera "
-          "but the plugin named " + mAllParams[i].pluginName + 
-          " has no SetRotationFlip function", MB_EXCLAME);
-        err = 1;
-      }
-      mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
-
-      // Send a gain index if that function exists and there is a non-negative value
-      // Clamp it to the given range if the the plugin supplies a limit 
-      if (!err && mPlugFuncs[i]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
-        if (mPlugFuncs[i]->GetNumberOfGains) {
-          numGain = mPlugFuncs[i]->GetNumberOfGains();
-          if (numGain > 0)
-            B3DCLAMP(mAllParams[i].TietzGainIndex, 0, numGain);
-        } 
-        if (mPlugFuncs[i]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
-          AfxMessageBox("An error occurred sending the value of TietzGainIndex to the"
-            " plugin camera " + mAllParams[i].pluginName);
         }
-      }
+        if (!err && mAllParams[i].rotationFlip && !mPlugFuncs[i]->SetRotationFlip) {
+          AfxMessageBox("The \"RotationAndFlip\" property is set for a plugin camera "
+            "but the plugin named " + mAllParams[i].pluginName +
+            " has no SetRotationFlip function", MB_EXCLAME);
+          err = 1;
+        }
+        mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
 
-      if (!err && mAllParams[i].canTakeFrames &&
-        !(mPlugFuncs[i]->SetupFrameAcquire && mPlugFuncs[i]->GetNextFrame)) {
-        AfxMessageBox("The \"CanTakeFrames\" property is set for a plugin camera "
-          "but the plugin named " + mAllParams[i].pluginName +
-          " is missing one of the required functions", MB_EXCLAME);
-        mAllParams[i].canTakeFrames = 0;
-      }
-      if (!err && mAllParams[i].canTakeFrames & FRAMES_CAN_BE_ALIGNED)
-        mFalconHelper->Initialize(-2);
+        // Send a gain index if that function exists and there is a non-negative value
+        // Clamp it to the given range if the the plugin supplies a limit 
+        if (!err && mPlugFuncs[i]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
+          if (mPlugFuncs[i]->GetNumberOfGains) {
+            numGain = mPlugFuncs[i]->GetNumberOfGains();
+            if (numGain > 0)
+              B3DCLAMP(mAllParams[i].TietzGainIndex, 0, numGain);
+          }
+          if (mPlugFuncs[i]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
+            AfxMessageBox("An error occurred sending the value of TietzGainIndex to the"
+              " plugin camera " + mAllParams[i].pluginName);
+          }
+        }
+
+        if (!err && mAllParams[i].canTakeFrames &&
+          !(mPlugFuncs[i]->SetupFrameAcquire && mPlugFuncs[i]->GetNextFrame)) {
+          AfxMessageBox("The \"CanTakeFrames\" property is set for a plugin camera "
+            "but the plugin named " + mAllParams[i].pluginName +
+            " is missing one of the required functions", MB_EXCLAME);
+          mAllParams[i].canTakeFrames = 0;
+        }
+        if (!err && mAllParams[i].canTakeFrames & FRAMES_CAN_BE_ALIGNED)
+          mFalconHelper->Initialize(-2);
 
 
-      // For a STEM camera, send the camera number plus the number of additional channels
-      num = mAllParams[i].cameraNumber;
-      if (mAllParams[i].STEMcamera) 
-        num += mAllParams[i].numChannels - 1;
-      if (!err && mPlugFuncs[i]->InitializeCamera && 
-        mPlugFuncs[i]->InitializeCamera(num) != 0) {
-          report.Format("Failed to initialize camera %d %sin the plugin named %s", 
+        // For a STEM camera, send the camera number plus number of additional channels
+        num = mAllParams[i].cameraNumber;
+        if (mAllParams[i].STEMcamera)
+          num += mAllParams[i].numChannels - 1;
+        if (!err && mPlugFuncs[i]->InitializeCamera &&
+          mPlugFuncs[i]->InitializeCamera(num) != 0) {
+          report.Format("Failed to initialize camera %d %sin the plugin named %s",
             mAllParams[i].cameraNumber, mAllParams[i].STEMcamera ? "(STEM) " : "",
             (LPCTSTR)mAllParams[i].pluginName);
           AfxMessageBox(report, MB_EXCLAME);
           err = 1;
-      }
-      if (!err && mPlugFuncs[i]->SetRotationFlip)
-        mPlugFuncs[i]->SetRotationFlip(mAllParams[i].cameraNumber, 
-        mAllParams[i].rotationFlip);
-      if (!err && mPlugFuncs[i]->SetSizeOfCamera)
-        mPlugFuncs[i]->SetSizeOfCamera(mAllParams[i].cameraNumber, mAllParams[i].sizeX, 
-          mAllParams[i].sizeY);
+        }
+        if (!err && mPlugFuncs[i]->SetRotationFlip)
+          mPlugFuncs[i]->SetRotationFlip(mAllParams[i].cameraNumber,
+            mAllParams[i].rotationFlip);
+        if (!err && mPlugFuncs[i]->SetSizeOfCamera)
+          mPlugFuncs[i]->SetSizeOfCamera(mAllParams[i].cameraNumber, mAllParams[i].sizeX,
+            mAllParams[i].sizeY);
 
-      // Send the STEM interface our desired size too so it doesn't have to rely on the
-      // previous call being first
-      if (!err && mAllParams[i].STEMcamera && mPlugFuncs[i]->GetSTEMProperties) {
-        mPlugFuncs[i]->GetSTEMProperties(mAllParams[i].sizeX, mAllParams[i].sizeY,
-          &minPixel, &mAllParams[i].maxPixelTime, &mAllParams[i].pixelTimeIncrement, 
-          &rotInc, &ddum, &mAllParams[i].maxIntegration, &idum);
-        if (minPixel > 0)
-          mAllParams[i].minPixelTime = (float)minPixel;
+        // Send the STEM interface our desired size too so it doesn't have to rely on the
+        // previous call being first
+        if (!err && mAllParams[i].STEMcamera && mPlugFuncs[i]->GetSTEMProperties) {
+          mPlugFuncs[i]->GetSTEMProperties(mAllParams[i].sizeX, mAllParams[i].sizeY,
+            &minPixel, &mAllParams[i].maxPixelTime, &mAllParams[i].pixelTimeIncrement,
+            &rotInc, &ddum, &mAllParams[i].maxIntegration, &idum);
+          if (minPixel > 0)
+            mAllParams[i].minPixelTime = (float)minPixel;
+        }
+        mAllParams[i].failedToInitialize = err != 0;
+        if (!err)
+          numPlugListed++;
       }
-      mAllParams[i].failedToInitialize = err != 0;
-      if (!err)
-        numPlugListed++;
     }
   }
   mPlugInitialized = numPlugListed > 0;
@@ -10244,6 +10277,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
   CString offsetFunc = mNoSpectrumOffset ? "EnergyShift" : "SpectrumOffset";
   int retval;
   static float offsetWarned = -100.0;
+  CameraParameters *camParam = &mAllParams[mActiveList[filtParam->firstGIFCamera]];
 
   // Delays for setting offset; Cut the delay if not acquiring
   float delayBase1 = acquiring ? mGIFoffsetDelayBase1 : 1.f;
@@ -10324,6 +10358,35 @@ int CCameraController::SetupFilter(BOOL acquiring)
       retval = -1;
     }
     mScope->ScopeMutexRelease("SetupFilter");
+    return retval;
+  }
+
+  // For Selectris filter
+  if (camParam->filterIsFEI) {
+    double curWidth, curLoss, delOffset;
+    int slitIsIn;
+    try {
+      mTD.scopePlugFuncs->GetFilterState(&slitIsIn, &curWidth, &curLoss);
+      if (filtParam->slitIn ? 1 : 0 != slitIsIn ? 1 : 0) {
+        mTD.scopePlugFuncs->SetSlitIn(filtParam->slitIn ? 1 : 0);
+        Sleep((DWORD)mGIFslitInOutDelay);
+      }
+      if (filtParam->slitIn && fabs(filtParam->slitWidth - curWidth) > 0.04)
+        mTD.scopePlugFuncs->SetSlitWidth(filtParam->slitWidth);
+      delOffset = fabs(loss - curLoss);
+      if (delOffset > 0.009) {
+        mTD.scopePlugFuncs->SetEnergyShift(loss);
+        if (delOffset < mGIFoffsetDelayCrit)
+          Sleep((DWORD)(delayBase1 + delOffset * delaySlope1));
+        else
+          Sleep((DWORD)(delayBase2 + delOffset * delaySlope2));
+      }
+      retval = 0;
+    }
+    catch (_com_error E) {
+      SEMReportCOMError(E, _T("setting filter parameters "));
+      retval = -1;
+    }
     return retval;
   }
  
@@ -10408,6 +10471,21 @@ int CCameraController::CheckFilterSettings()
   BOOL timingOut = curTime < mBackToImagingTime + 7000;
   if (mNoFilterControl)
     return 0;
+
+  // Check if the ZLP was aligned in the FEI interface
+  if (camParam->filterIsFEI) {
+    try {
+      eShift = mTD.scopePlugFuncs->GetZeroLossPeakShift();
+      if (fabs(eShift - filtParam->lastFeiZLPshift) > 0.0005) {
+        filtParam->lastFeiZLPshift = (float)eShift;
+        mWinApp->mFilterControl.AdjustForZLPAlign();
+      }
+    }
+    catch (_com_error E) {
+      return 3;
+    }
+    return 0;
+  }
 
   // Initialize the energy shift time table
   if (mShiftTimeIndex < 0) {

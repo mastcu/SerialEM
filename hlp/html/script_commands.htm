@@ -2807,13 +2807,24 @@
           <TD>Reports whether the PVP is running on an FEI scope.&nbsp; Value can be assigned 
           to a variable at end of command.</TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">IsFEGFlashingAdvised #</TD>
+          <TD>Reports whether flashing of a cold FEG is advisable on an FEI scope, where <b>#</b> should be 0 for
+            a low-temperature flash and non-zero for a high-temperature flash.&nbsp; Value can be assigned 
+          to a variable at end of command&nbsp; Command added in 3.9, 6/12/21.</TD>
+        </TR>
+          <TD class="scriptcommand">NextFEGFlashHighTemp [#]</TD>
+          <TD>Sets the next FEG flashing done with 'LongOperation FF' on an FEI scope to be high-temperature,
+            unless the option <b>#</b> is 0.&nbsp; A call for a high-temperature flash will fail unless it is 
+            advisable, so test with' IsFEGFlashingAdvised 1' first.&nbsp; Command added in 3.9, 6/12/21.</TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
           <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
             refrigerant on FEI ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'), 
             Unload cartridge ('Un'), Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS') or Refill Transfer 
-            tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL.&nbsp; Operations are identified by the first two
+            tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL or FEI.&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;
             0, the operation is done only if the time since the last such operation is

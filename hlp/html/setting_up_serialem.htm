@@ -197,9 +197,9 @@
         <BR>
         <A href="#setup_stretches">Stage and Imaging Stretch</A>
         <BR>
-        <A href="#setup_gifcal">GIF Calibrations</A>
+        <A href="#setup_gifcal">Energy Filter Calibrations</A>
         <BR>
-        <A href="#setup_gifprop">GIF Properties</A>
+        <A href="#setup_gifprop">Energy Filter Properties</A>
         <BR>
         <A href="#STEM_setup">Setting Up STEM</A>
         <BR>
@@ -546,7 +546,7 @@
           in the general camera parameter section, and the parameters for each camera.
         <LI>
           If you did not get an initial Properties file appropriate for your voltage and 
-          configuration (GIF versus nonGIF), you need to check and set up the 
+          configuration, you need to check and set up the 
           magnification table (<A href="#setup_magtable">Checking the Magnification Table</A>
           ).
         <LI>
@@ -562,8 +562,8 @@
           Calibrate autofocus (<A href="#setup_focuscal">Focus Calibration</A>
           ).
         <LI>
-          If you have a GIF, calibrate magnification-dependent energy shifts ( <A href="#setup_gifcal">
-            GIF Calibrations</A>
+          If you have an energy filter, calibrate magnification-dependent energy shifts ( <A href="#setup_gifcal">
+            Energy Filter Calibrations</A>
           ).
         <LI>
           Perform the tasks in <A href="#setup_final">Final Tasks</A> .</LI></OL>
@@ -1459,7 +1459,9 @@
         C:\Program Files\SerialEM instead, but this is no longer necessary and could 
         fail on some computers.&nbsp; If there is already a copy of this file there, 
         remove it.)&nbsp; If SerialEM is running on the JEOL PC, this is all that is 
-        needed, in addition to an appropriate set of camera properties.&nbsp; 
+        needed, in addition to an appropriate set of camera properties.&nbsp; In this situation,
+        the first time that you start SerialEM on Windows 7 or above, you need to run it as 
+        Administrator to guarantee that various JEOL DLLs can be copied to the SerialEM directory.
         <br />
         If 
         SerialEM is running on a separate PC, it can still access these cameras by 
@@ -1473,7 +1475,10 @@
         on the JEOL PC. You also need to add the properties (with the appropriate port 
         number)<br />
 &nbsp;&nbsp;&nbsp; SocketServerIP 4 ip_address_of_JEOL_PC<br />
-&nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p>
+&nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p><br />
+      On Windows 7 or above, the first time that you start this server, you need to run it 
+      as Administrator to guarantee that various JEOL DLLs can be copied to the folder where
+      the server is located.
        <p>
         <a name="RemoteTietz"><i>For accessing a Tietz camera remotely</i></a>, 
         copy the file Tietz-SEMServer.exe to the Tietz camera computer.&nbsp; Put it in 
@@ -1612,7 +1617,7 @@
         properties file if it is not already there. The first line added to the 
         properties file should be 'CameraLengthTable nn', where 'nn' is the number of 
         lines of camera lengths that follow.</P>
-      <P>If you have a GIF, repeat these steps with EFTEM mode on.</P>
+      <P>If you have a post-column energy filter, repeat these steps with EFTEM mode on.</P>
     <P>For a JEOL, it is very important to calibrate the neutral values of image or 
       projector shift (whichever is being used in your setup), so that the program can 
       maintain the actual image shift correctly between magnifications.&nbsp; Simply 
@@ -1712,8 +1717,8 @@
         top of the properties file. If you have more than one camera, repeat the 
         procedure with the other camera.</P>
       <P>You should rerun the camera timing procedure and adjust your properties entries 
-        if there is a computer upgrade, a major software upgrade, or the addition of a 
-        GIF. The timing may also depend on whether images are gain-normalized in DM or 
+        if there is a computer upgrade, a major software upgrade, or the addition of an 
+        energy filter. The timing may also depend on whether images are gain-normalized in DM or 
         in SerialEM, so rerun the procedure if you change the GainNormalizeInSerialEM 
         property.</P>
     <P>&nbsp;</P>
@@ -2418,7 +2423,7 @@
         It can give reliable results, but only if these conditions are satisfied: 1) you 
         do not have an older compustage with large cyclical errors that require 
         traversing more than 40 microns; 2) the grid has a good supply of latex spheres; 
-        3) the calibrations are not being done on a GIF with substantial distortions; 
+        3) the calibrations are not being done on an energy filter with substantial distortions; 
         and 4) you are familiar enough with the procedure so that you can tell when it 
         is giving bad results.&nbsp; It is particularly challenging and quite likely a 
         waste of time to do the procedure with a calibration grid lacking latex spheres. 
@@ -2820,8 +2825,8 @@
           Repeat steps 7 to 12 with each other pair of images, changing the numbering of 
           the temp files if you wish to preserve those results.</LI></OL>
       <P><A name="setup_gifcal"></A></P>
-    <P><B>GIF Calibrations (Priority 1)</B></P>
-      <P>Before even trying to calibrate mags for your GIF, you may need to improve the 
+    <P><B>Energy Filter Calibrations (Priority 1)</B></P>
+      <P>Before even trying to calibrate mags for your energy filter camera, you may need to improve the 
         EFTEM alignments that were supplied by FEI so that the field of view does not 
         shift too much when you change mags. This is a tedious and difficult procedure 
         but is worth figuring out how to do it well.</P>
@@ -2833,21 +2838,20 @@
         will be able to use autofocus to focus when you switch between mags. Then follow 
         the procedure above for getting the image shift calibrations and grating 
         pictures.</P>
-      <P>In addition, you will need to calibrate the magnification-dependent energy 
-        shifts. Not only does this provide more convenient use of the GIF, but it is 
+      <P>In addition, you may need to calibrate the magnification-dependent energy 
+        shifts; i.e., this calibration may be
         needed so that various procedures can switch to lower mag when the slit is in 
         and not lose the zero loss peak. Follow the procedures described in <A href="menu_calibration.htm#hid_calibration_magenergyshifts">
-          Mag Energy Shifts</A>. It is best to select 'DM film shutter with beam 
-        blanking' to get consistent pictures, unless you are sure beam blanking is 
-        working right in your configuration.</P>
+          Mag Energy Shifts</A>.</P>
       <P>&nbsp;</P>
-    <P><A name="setup_gifprop"></A><B>GIF Properties (For the Sake of Completeness)</B></P>
-      <P>There are several properties for the GIF (see <A href="about_properties.htm#gif_properties">
-          GIF properties</A>.) The most important to check is the 
+    <P><A name="setup_gifprop"></A><B>Energy Filter Properties (For the Sake of Completeness)</B></P>
+      <P>There are several properties for energy filters (see <A href="about_properties.htm#gif_properties">
+          Energy Filter properties</A>.)  For a GIF, the most important to check is the 
         BiggestGIFApertureNumber, which is used to make sure that there is no aperture 
         in the way when images are taken. In addition, there are properties to specify 
         delays when inserting or retracting the slit or changing energy offsets. These 
-        timings may be OK, but here are some notes on how they were obtained.
+        timings may be OK, but here are some notes on how they were obtained for a GIF.  All of 
+        the relevant properties can be set with the script command 'SetProperty'.
       </P>
       <P>For testing the adequacy of the delay on removing the slit:
       </P>
@@ -2860,37 +2864,37 @@
           automatically.) The point is that you want to be able to take a picture at zero 
           loss with a 5 ev slit and get very little beam through.
         <LI>
-          Enter low dose mode. Set up view and record/preview to take pictures at this mag 
+          Enter low dose mode. Set up View and Record/Preview to take pictures at this mag 
           with the same intensity, and set the intensity and exposure time of view and 
-          preview to give thousands of counts. Use 'DM film shutter with beam blanking' to 
-          get consistent exposures.
+          preview to give thousands of counts. Make sure the shuttering being used gives consistent exposures.
         <LI>
-          Set up record with 5 ev slit in, 0 loss
+          Set up Record with 5 ev slit in, 0 loss
         <LI>
-          Setup up view with slit out
+          Setup up View with slit out
         <LI>
-          Hit preview to condition, then view to test, then Ctrl I for image mean.
+          Hit Preview to condition, then View to test, then Ctrl I for image mean.
         <LI>
-          With the right delay, view will always come out right. If the delay is too 
+          With the right delay, View will always come out right. If the delay is too 
           short, the image mean will occasionally fall short.</LI></OL>
       <P>For testing the delay upon energy shift:</P>
       <OL>
         <LI>
-          Set up record/preview and view in Low dose so that both are at the same mag and 
+          Set up Record/Preview and View in Low dose so that both are at the same mag and 
           have the slit in.
         <LI>
-          Get the ZLP aligned and set up record/preview and view for 10 ev slit, slit in.
+          Get the ZLP aligned and set up Record/Preview and View for 10 ev slit, slit in.
         <LI>
-          Make sure View gives good consistent pictures, and set the loss in preview to 
+          Make sure View gives good consistent pictures, and set the loss in Preview to 
           the desired differential.
         <LI>
-          Hit preview to condition, then View to test and Ctrl I for image mean.
+          Hit Preview to condition, then View to test and Ctrl I for image mean.
         <LI>
           Test this for energy shifts like 10, 20, 40, 80, 120, 160, 200.
         <LI>
           If there are problems, you may need to test more, or just increase the delays. 
           Filter offset delay is specified by two linear equations, each having a base 
-          delay and an additional delay per ev of offset.
+          delay and an additional delay per ev of offset.  The units for the relevant properties are
+          60th of a second for a GIF and 1 msec for other filters.
         </LI>
       </OL>
       <P>&nbsp;</P>

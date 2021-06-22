@@ -10,11 +10,12 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="about_gif"></A><B><FONT size="3">Energy Filtering</FONT></B></P>
-      <P>SerialEM allows convenient use of an energy filter (GIF or omega filter) and efficient tilt 
-        series acquisition with filtering. For FEI scopes, it relies on the EFTEM software being 
-        installed.&nbsp; On JEOL scopes, it works with an omega filter or with a 
-        post-column GIF, where it recognizes the GIF mode and may be able to control it. 
-        It provides a number of additional features when used with a GIF.</P>
+      <P>SerialEM allows convenient use of an energy filter (post-column or omega 
+        filter) and efficient tilt series acquisition with filtering. For FEI scopes, it 
+        relies on the EFTEM software being installed.&nbsp; On JEOL scopes, it works 
+        with an omega filter or with a post-column GIF, where it recognizes the GIF mode 
+        and may be able to control it. It provides a number of additional features when 
+        used with a post-column filter.</P>
       <UL>
         <LI>
           Automatic switching between regular lens mode and EFTEM 
@@ -23,31 +24,32 @@
           constricted beam of EFTEM lens mode on the screen, you just toggle this 
           automatic switching off.</LI>
         <LI>
-          Automatic switching between upper camera and GIF camera.</LI>
+          Automatic switching between upper camera and 
+          EF camera.</LI>
         <LI>
           Automatic changing of magnification to provide the least change between the 
-          pixel sizes on the upper camera and on the GIF camera.</LI>
+          pixel sizes on the upper camera and on the EF camera.</LI>
         <LI>
           Automatic intensity adjustment so that the electrons per pixel per second will 
-          be the same on the GIF camera as on the upper camera.</LI>
+          be the same on the EF camera as on the upper camera.</LI>
         <LI>
           Integration with low dose mode so that different filter settings can be used 
           for pictures of the different low dose areas.</LI></UL>
       <P>Even without SerialEM, there are numerous ways to control filter settings: the 
         EFTEM panel in the FEI Microscope User Interface (MUI), the Autofilter palette in 
         DigitalMicrograph, and the Filter Control program in GMS 1 or its equivalent 
-        dialog in DM in GMS 2. SerialEM tries to be 
+        dialog in DM in GMS 2-3. SerialEM tries to be 
         a good citizen among this crowd and respond to changes made in other 
         interfaces. The recommendation from FEI was (and may still be) that the filter be controlled only through 
         the MUI. This is probably sound advice for 
         any actions that cannot be done through SerialEM. Specifically, this includes 
-        aligning the zero loss peak (ZLP), tuning the GIF, and performing spectroscopy.</P>
-      <P>It is important to distinguish between SerialEM's EFTEM mode and the  
+        aligning the zero loss peak (ZLP), tuning the EF, and performing spectroscopy.</PIt is important to distinguish between SerialEM's EFTEM mode and the  
         EFTEM or GIF lens mode. When EFTEM mode is on in SerialEM, there are many 
-        implications, but the and FEI scope may not actually be in EFTEM lens mode unless the 
-        screen is raised.&nbsp; The same would occur on a JEOL scope if SerialEM can 
+        implications, but the FEI scope may not actually be in EFTEM lens mode unless the 
+        screen is raised (if the option mentioned above is turned on).&nbsp; The same would occur on a JEOL scope 
+        with GIF if SerialEM can 
         control the GIF mode.</P>
-      <P>The biggest problem in using the GIF for tilt series is that there may be an 
+      <P>The biggest problem in using the EF for tilt series is that there may be an 
         energy shift when changing to lower magnifications for various alignment tasks. 
         If the slit is in, the zero loss peak may shift out of the energy range of the 
         slit, and the task will fail. One solution would be to remove the slit when 
@@ -56,9 +58,9 @@
         solution in SerialEM is to calibrate the energy shifts and apply these 
         automatically when changing magnifications, so that the slit can be left in and 
         will still be centered at the lower magnification. The program will also apply 
-        energy offsets to accommodate changes in slit width. These capabilities allow 
+        energy offsets to accommodate changes in slit width on older GIFs. These capabilities allow 
         you to explore different magnifications and slit widths without having to align 
-        the ZLP repeatedly.</P>
+        the ZLP repeatedly. repeatedly.</P>
       <P>SerialEM implements the three standard imaging modes: unfiltered (with the slit 
         out), filtered to record only zero-loss electrons, and filtered to record 
         electrons with a specific range of energy losses. Once filtering is selected, 
@@ -76,7 +78,7 @@
         moved off of the left edge of the ZLP. Thus, once a thick specimen is in, the 
         refine ZLP procedure may be more reliable than the Align ZLP procedure run from 
         elsewhere.</P>
-      <P><B>Steps for Using the GIF on an FEI Scope</B></P>
+      <P><B>Steps for Using a GIF on an FEI Scope</B></P>
       <OL>
         <LI>
         Be sure to start Filter Control (for GMS 1), then DigitalMicrograph, then SerialEM after 

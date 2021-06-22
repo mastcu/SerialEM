@@ -49,7 +49,7 @@
         <BR>
         <A HREF="#general_camera_properties">General camera control properties</A>
         <BR>
-        <A HREF="#gif_properties">GIF properties</A>
+        <A HREF="#gif_properties">Energy Filter properties</A>
         <BR>
         <A HREF="#per_camera_properties">Properties for one camera</A>
         <BR>
@@ -95,6 +95,13 @@
             default of 0, the program will first try to create a Tecnai object then try to 
             create a TEMScripting object if that fails. The object changed to TEMScripting 
             in Tecnai version 3.1.1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AdvancedScriptingVersion</TD>
+          <TD>Set to 4 to indicate that the version of Advanced Scripting supports CFEG flashing and has
+            autoloader and temperature control classes.&nbsp; The property is set to 4 automatically if
+            there is a camera with 'FEIFilterType 1' set.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -636,8 +643,8 @@
           <TD>InitialCurrentCamera</TD>
           <TD>The index on the CameraProperties line of the camera that should initially be 
             set as the current camera. Without this entry, the program will start with the 
-            first camera in the active camera list, or the first nonGIF camera if that is a 
-            GIF camera.</TD>
+            first camera in the active camera list, or the first non-energy filter camera if that is an 
+            energy filter camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AssumeCameraForDummy</TD>
@@ -659,7 +666,7 @@
           <TD>DefaultGIFCamera</TD>
           <TD>The position in the ActiveCameraList (numbered from 0) of the camera that 
             should be selected when entering EFTEM mode.&nbsp; If this is not set, the first 
-            GIF camera in the list will be used.</TD>
+            energy filter camera in the list will be used.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DefaultRegularCamera</TD>
@@ -761,7 +768,7 @@
           <TD>RetractCameraOnEnteringEFTEM</TD>
           <TD>1 to have an upper camera retract and the beam blanked during the retraction 
             when EFTEM mode is turned on. This is necessary only if there is a pressure 
-            switch overriding the GIF's blanking of the beam, because there is a delay 
+            switch overriding a GIF's blanking of the beam, because there is a delay 
             between the time when the upper camera unblanks the beam and the time when the 
             pressure switch allows the GIF to blank it again.</TD>
         </TR>
@@ -1128,29 +1135,30 @@
         </TR>
         <TR VALIGN="top">
           <TD>FilterPixelMatchingFactor</TD>
-          <TD>Factor by which to multiply the actual, calibrated pixel size on the GIF 
-            camera when matching pixel size upon a mag change. This can be used to match 
-            field of view instead of pixel size for two cameras with different CCD sizes; 
-            e.g. one would use a value of 2 with a 1K 794 before the GIF and a 2K 795 GIF 
+          <TD>Factor by which to multiply the actual, calibrated pixel size on the energy filter 
+            (EF) camera when matching pixel size upon a mag change. This can be used to match 
+            field of view instead of pixel size for two cameras with different physical chip sizes; 
+            e.g. one would use a value of 2 with a 1K 794 before the EF and a 2K 795 GIF 
             camera. It can also be used to compensate for a difference in the binning 
             definitions of the two cameras with similar CCD size; e.g., use a value of 0.5 
-            if there is 4K, 15-micron pixel camera before the GIF and a 2K, 30-micron pixel 
-            GIF camera.</TD>
+            if there is 4K, 15-micron pixel camera before the EF and a 2K, 30-micron pixel 
+            EF camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FilterSlitInOutDelay</TD>
-          <TD>Delay time in DM ticks (60th of second) with a GIF, or in msec with an omega 
-            filter, when inserting or retracting slit.&nbsp; Default is 18.</TD>
+          <TD>Delay time in DM ticks (60th of second) with a GIF, or in msec with an omega or FEI
+            filter, when inserting or retracting slit.&nbsp; Default is 18; for this and other filter delays,
+            the default is not scaled to be used as msec so default delays are 16 times longer for GIFs.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">FilterOffsetDelayCriterion</TD>
           <TD class="style1">For filter offset changes less or more than the criterion, delay time in ticks 
             is computed as change * slope1 + base1 or change * slope2 + base2, respectively.&nbsp; 
-            Default is 40.</TD>
+            Default is 40 eV.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FilterOffsetDelayBase1</TD>
-          <TD>Base delay (in ticks for GIF, msec for Omega filter) for offsets less than the criterion. 
+          <TD>Base delay (in ticks for GIF, msec for Omega or FEI filter) for offsets less than the criterion. 
             Default is 10.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1160,7 +1168,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>FilterOffsetDelayBase2</TD>
-          <TD>Base delay (in ticks for GIF, msec for Omega filter)) for offsets greater than the criterion.&nbsp; 
+          <TD>Base delay (in ticks for GIF, msec for Omega or FEI filter)) for offsets greater than the criterion.&nbsp; 
             Default is 30.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1206,10 +1214,9 @@
         </TR>
         <TR VALIGN="top">
           <TD>NoFilterControl</TD>
-          <TD>Set to 1 to be able to define a camera as a GIF camera and use EFTEM mode for 
+          <TD>Set to 1 to be able to define a camera as an energy filter camera with the property 'GIF 1' and use EFTEM mode for 
             it although there is no SerialEM control of the filter itself.&nbsp; As of SerialEM
-             3.9.0 1/28/21, this property is not needed for a Falcon 4 camera; the program will set
-            it automatically until a version comes along that supports the FEI filter.
+             3.9.0 1/28/21, this property is not needed for a Falcon 4 camera with 'GIF 1' set since it is set automatically.
           </TD>
         </TR>
       </TABLE>
@@ -1886,7 +1893,7 @@
         <TR VALIGN="top">
           <TD>PixelMatchFactor</TD>
           <TD>This factor controls the optional magnification change to match pixel size 
-            when switching between non-GIF cameras. For example, set to 2 to have unbinned 
+            when switching between non-energy filter cameras. For example, set to 2 to have unbinned 
             pixels in another camera matched to binned pixels when switching to this camera. 
             The value need not be an integer.
           </TD>
@@ -1894,6 +1901,13 @@
         <TR VALIGN="top">
           <TD>GIF</TD>
           <TD>Set to 1 to indicate that this is a GIF camera</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FEIFilterType</TD>
+          <TD>Set to 1 to indicate that this camera is on a Selectris filter and that the version of 
+            Advanced Scripting supports it.&nbsp; With this property set, the program will set 
+            'AdvancedScriptingVersion' to 4 if it is not explicitly set higher by a property setting.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>Order</TD>
@@ -1905,7 +1919,6 @@
           <TD>HasTVCamera</TD>
           <TD>Set to 1 to indicate that this GIF has a TV camera.</TD>
         </TR>
-        <TR VALIGN="top">
           <TD>InsertTVToUnblank</TD>
           <TD>Set to 1 to indicate that the TV camera must be inserted to keep this camera 
             from blanking an upper camera. This setting is needed with a GIF unless you have 
@@ -2416,7 +2429,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>LowestGIFModeMagIndex</TD>
-          <TD>Index of lowest magnification that should be used for tasks with the GIF 
+          <TD>Index of lowest magnification that should be used for tasks with the energy filter 
             camera. The default is to use the LowestMModeMagIndex.</TD>
         </TR>
         <TR VALIGN="top">
@@ -2698,7 +2711,7 @@
             The first three entries can be obtained by selecting List Mags in the 
             Calibration menu. The screen mag must be added by hand. On a JEOL or Hitachi, the third 
             entry can be omitted unless there is a GIF, in which case a 0 should be entered. 
-            If there is a GIF, each line should have three more entries:<BR>
+            If there is a energy filter, each line should have three more entries:<BR>
             &nbsp;&nbsp;&nbsp; Mag with screen up&nbsp;&nbsp;&nbsp; Rotation angle&nbsp;&nbsp;&nbsp; Mag with screen down<BR>
             Again, the third entry can be omitted on a JEOL.&nbsp; For Hitachi, this table 
             must be constructed by hand, listing each mag in low mag, then HC mode, then HR 
@@ -4455,8 +4468,8 @@
         <TR VALIGN="top">
           <TD>RetractCameraOnEnteringSTEM</TD>
           <TD>Set this to 1 and LowerScreenForSTEM &lt;= 0 to have cameras retracted with the 
-            beam blanked when STEM mode is entered.&nbsp; This can be used to protect a pre-GIF 
-            CCD camera if the microscope unblanks the beam in STEM mode with the screen up 
+            beam blanked when STEM mode is entered.&nbsp; This can be used to protect a pre-filter 
+            camera if the microscope unblanks the beam in STEM mode with the screen up 
             (e.g., for accessing detectors under the screen).</TD>
         </TR>
         <TR VALIGN="top">

@@ -331,6 +331,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].insertingRetracts = -1;
     mCamParams[i].name.Format("Default Camera %d", i + 1);
     mCamParams[i].GIF = FALSE;
+    mCamParams[i].filterIsFEI = 0;
     mCamParams[i].hasTVCamera = FALSE;
     mCamParams[i].useTVToUnblank = 0;
     mCamParams[i].checkTemperature = false;
@@ -501,6 +502,7 @@ CSerialEMApp::CSerialEMApp()
   mFilterParams.binFactor = 1.;
   mFilterParams.alignedMagInd = 0;
   mFilterParams.alignedSlitWidth = 0.;
+  mFilterParams.lastFeiZLPshift = EXTRA_NO_VALUE;
   mFilterParams.doMagShifts = true;
   mFilterParams.currentMagShift = 0.;
   mFilterParams.alignZLPTimeStamp = 0.;
@@ -814,6 +816,7 @@ BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
   bool anyFrameSavers = false;
+  CameraParameters *camP;
   CString message, dropCameras, settingsFile;
   void *toolDlgs[] = {&mStatusWindow, &mBufferWindow, &mImageLevel, &mScopeStatus,
   &mRemoteControl, &mTiltWindow, &mCameraMacroTools, &mAlignFocusWindow, &mLowDoseDlg,
@@ -1238,18 +1241,19 @@ BOOL CSerialEMApp::InitInstance()
 
   for (iCam = 0; iCam < mActiveCamListSize; iCam++) {
     mOriginalActiveList[iCam] = mActiveCameraList[iCam];
-    if (mCamParams[mActiveCameraList[iCam]].unsignedImages)
+    camP = &mCamParams[mActiveCameraList[iCam]];
+    if (camP->unsignedImages)
       mAny16BitCameras = true;
-    if (mCamParams[mActiveCameraList[iCam]].GIF) {
+    if (camP->GIF) {
       anyGIF = true;
 
-      // TEMPORARY until Selectris filter control is available
-      if (mCamParams[mActiveCameraList[iCam]].FEItype)
-        mCamera->SetNoFilterControl(true);
+      // GIF without filterIsFEI indicates no Selectris filter control is available
+      if (camP->FEItype)
+        mCamera->SetNoFilterControl(!camP->filterIsFEI);
     }
-    if (mCamParams[mActiveCameraList[iCam]].DE_camType)	{
+    if (camP->DE_camType)	{
       if (deCamCount < MAX_DE_Cams) {
-        DE_camNames[deCamCount] = mCamParams[mActiveCameraList[iCam]].name;
+        DE_camNames[deCamCount] = camP->name;
         deCamCount++;
       }
     }

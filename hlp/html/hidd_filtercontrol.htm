@@ -10,11 +10,11 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="hidd_filtercontrol"></A><B><FONT size="3">Filter Control Panel</FONT></B></P>
-      <P>This panel contains options for controlling the Gatan Imaging Filter (GIF) and 
-        the magnification and intensity settings of the scope when operating the GIF. 
-        On the JEOL with omega filter, the options related to lens modes, camera 
-        selection, pixel size, and intensity are not needed and will not appear. The 
-        energy shift on the JEOL is referred to as spectrum offset here.</P>
+      <P>This panel contains options for controlling the Gatan Imaging Filter (GIF), an FEI Selectris 
+        filter, or JEOL omega filter, and 
+        the magnification and intensity settings of the scope when operating the energy filter. 
+        On the JEOL with omega filter, the option related to camera 
+        selection, pixel size, and intensity are not needed and will not appear.</P>
       <P><B>EFTEM Mode (FEI or JEOL with GIF only)</B></P>
       <P>The button will toggle EFTEM mode on and off on an FEI scope. When EFTEM mode is turned on and 
         the screen is up, the microscope will be placed in one of the EFTEM 
@@ -76,25 +76,25 @@
         will be placed into spectroscopy mode with the slit in, allowing you to center 
         the slit on the energy-shifted peak. After you make this adjustment, press OK. 
         You should then be able to run the Refine ZLP routine to get the ZLP aligned as 
-        well as it would be on a GIF.</P>
+        well as it would be on a post-column filter.</P>
       <P><B>TEM mode with screen down (FEI scope, or JEOL with control of GIF only)</B></P>
       <P>This button determines whether you see an image at normal magnification in TEM 
         mode or in 
         the EFTEM reduced magnification when the screen is down. The normal 
-        magnification provided by this option is almost always preferable on a phosphor 
-        screen.&nbsp; However, if 
+        magnification provided by this option is almost always preferable when directly viewing a phosphor 
+        screen.&nbsp; If 
         you want to check the size or centering of the beam directly in EFTEM mode, or align the 
         crossover correction at lower magnification, you would turn this option off.&nbsp; 
         When there is a magnified display of the screen, e.g., on a FluCam, the option 
-        has less value; it does allow you to see what is in the field of view at a given 
+        has much less value; it does allow you to see what is in the field of view at a given 
         magnification.&nbsp; </P>
       <P><B>Filter (slit in)</B></P>
       <P>Select this option to insert the slit and acquire energy-filtered images. The 
         check box will also reflect the current state of the slit when other programs 
         modify it. When the slit is inserted, the specified energy loss (either zero or 
         the amount in the 'Loss' text box), plus the mag-dependent energy shift, if 
-        any, is used to set the filter's spectrum offset. If the slit is not inserted, 
-        then spectrum offset is maintained at zero.</P>
+        any, is used to set the filter's energy shift. If the slit is not inserted, 
+        then energy shift is maintained at zero.</P>
       <P><B>Slit width</B></P>
       <P>Enter a width in electron volts into the text box, or use the spin buttons to 
         increase or decrease the width by 5 eV. The slit is set to this width 
@@ -125,12 +125,12 @@
         sessions of the program, so you should be able to exit and restart without 
         needing to realign the ZLP.</P>
       <P><B>Net offset readout</B></P>
-      <P>This text shows the spectrum offset currently being applied. It should be zero 
+      <P>This text shows the energy shift currently being applied. It should be zero 
         when the slit is not inserted, and the sum of your selected energy loss and the 
         adjustments being applied when the slit is inserted. It should match the value 
-        for spectrum offset in an FEI scope EFTEM panel and is intended to reduce 
+        for spectrum offset or energy shift in an FEI scope EFTEM panel and is intended to reduce 
         confusion when you see a non-zero number over there.</P>
-    <P><b>Clear Adjustment (GIF only)</b></P>
+    <P><b>Clear Adjustment (post-column filter only)</b></P>
     <P>Set the underlying energy shift adjustment to zero and make this effective at 
       the current magnification and slit width, just as when the program detects that 
       the zero loss peak was aligned by DigitalMicrograph.&nbsp; This button is useful 
@@ -138,14 +138,14 @@
       inappropriate adjustment value from a previous run.&nbsp; If necessary, return 
       to the magnification and slit width at which the ZLP was aligned before pressing 
       the button.</P>
-      <P><B>Match pixel size (GIF only)</B></P>
+      <P><B>Match pixel size (post-column filter only)</B></P>
       <P>Select this option to have the program adjust the magnification to minimize the 
         change in pixel size when switching between EFTEM and regular magnifications. 
         If the option is not selected, you can get some rather large changes in 
         magnification because the EFTEM and regular lens programs do not match up very 
         well. This feature is not active in low dose mode, where magnifications are 
         defined as part of each exposure area.</P>
-      <P><B>Match intensity (GIF only)</B></P>
+      <P><B>Match intensity (post-column filter only)</B></P>
       <P>Select this option to have the program change beam intensity when switching 
         between regular and EFTEM magnifications, so as to maintain a constant electron 
         flux per camera pixel. With this option active, you can set the beam to give a 
@@ -155,12 +155,12 @@
         disabled in low dose mode because intensities are defined as part of each 
         exposure area.</P>
       <P><B>Do mag-dependent energy shifts</B></P>
-      <P>If this option is selected, the program will adjust spectrum offset to keep the 
+      <P>If this option is selected, the program will adjust energy shift to keep the 
         slit centered on a desired energy loss when magnification or slit width is 
         changed. In order for this to work correctly, mag-dependent energy shifts need 
         to be calibrated and SerialEM needs to be aware of when the ZLP is aligned.</P>
-      <P><B>Switch cameras automatically (GIF only)</B></P>
-      <P>With this option selected, the program will automatically select the GIF or 
+      <P><B>Switch cameras automatically (post-column filter only)</B></P>
+      <P>With this option selected, the program will automatically select the energy filter or 
         upper camera when EFTEM mode is turned on or off, and it turns EFTEM mode on or 
         off depending on which camera is selected. To protect the upper camera from the 
         intense beam in EFTEM mode, this option is enabled only in Administrator mode.</P>

@@ -65,6 +65,8 @@ LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
 #define FEI_PLUGIN_SCALES_DUMB_F3  108
 #define FEI_PLUGIN_CAN_DO_EER      110
 
+#define ASI_FILTER_FEG_LOAD_TEMP     4
+
 struct StageMoveInfo {
   double x;
   double y;
@@ -94,10 +96,13 @@ struct StageThreadData {
   StageMoveInfo *info;
 };
 
+#define LONGOP_FLASH_HIGH  1
+
 struct LongThreadData {
   int operations[MAX_LONG_OPERATIONS];
   bool finished[MAX_LONG_OPERATIONS];
   int numOperations;
+  int flags;
   JeolStateData *JeolSD;
   ScopePluginFuncs *plugFuncs;
   CString errString;
@@ -363,6 +368,9 @@ public:
   GetSetMember(float, AddToRawIntensity);
   GetSetMember(BOOL, UpdateDuringAreaChange);
   SetMember(int, RestoreViewFocusCount);
+  SetMember(bool, DoNextFEGFlashHigh);
+  GetMember(int, AdvancedScriptVersion);
+  void SetAdvancedScriptVersion(int inVal) { mAdvancedScriptVersion = B3DMAX(mAdvancedScriptVersion, inVal); };
 
   void SetJeolRelaxationFlags(int inVal);
   int GetJeolRelaxationFlags();
@@ -788,6 +796,8 @@ private:
   float mDetectorOffsetX;      // PLA offsets potentially for each detector/camera
   float mDetectorOffsetY;
   int mRestoreViewFocusCount;  // For counter of updates before deferred RestoreViewFocus
+  bool mDoNextFEGFlashHigh;    // Flag to do a high flash on next call
+  int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -885,6 +895,7 @@ public:
   int SetXLensFocus(double inX);
   bool GetTemperatureInfo(int type, BOOL & busy, int & time, int which, double & level);
   BOOL IsPVPRunning(BOOL & state);
+  BOOL GetIsFlashingAdvised(int high, int &answer);
   int GetApertureSize(int kind);
   bool SetApertureSize(int kind, int size);
   bool SetAperturePosition(int kind, float posX, float posY);

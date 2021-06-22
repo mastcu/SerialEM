@@ -95,7 +95,7 @@
         </TR>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_eftemisoffset">EFTEM IS Offset</A></TD>
-          <TD>Calibrate the offset between regular and GIF cameras at one mag.</TD>
+          <TD>Calibrate the offset between regular and energy filter cameras at one mag.</TD>
         </TR>
         <TR>
           <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;<A href="#hid_calibration_set_is_delay_factor">Set IS 
@@ -437,7 +437,7 @@
         one grid square of the replica grating, there is a good chance that it will be 
         off by 10%.&nbsp; On a JEOL, where the cycle length is probably not relevant and 
         a correlation over only 20-25 microns may be accurate enough, the replica 
-        grating can be used, unless calibrating with a camera on a GIF (see the
+        grating can be used, unless calibrating with a camera on an energy filter (see the
         <a href="#hid_calibration_whole_image_corr">Whole Image Corr command</a>).&nbsp; 
         Also, the replica grating could be used on an FEI scope at a mag low enough so 
         that there are several grid squares in the field, provided that there is enough 
@@ -657,7 +657,7 @@
         for tomography, so that there will not be large amounts of 'hidden' image shift 
         there. If you calibrated only below that magnification, you can specify the top 
         of the range that was calibrated and achieve the same result.</P>
-      <P>If you have both a preGIF and a GIF camera, the setting of a reference is more 
+      <P>If you have both a pre-energy filter and an energy filter camera, the setting of a reference is more 
         complicated. Once an offset between the two cameras has been defined, only one 
         camera can have a magnification with an offset of zero, so you will be asked to 
         specify which camera this is to be.</P>
@@ -675,9 +675,9 @@
       <P><A name="hid_calibration_eftemisoffset"></A><B>EFTEM IS Offset command 
         (Calibration - Image &amp; Stage Shift sub-menu)</B></P>
       <P>Use this command to calibrate the image shift offset needed to align images 
-        from a preGIF and GIF camera. If you have such cameras, the recommended initial 
-        procedure would be to calibrate the image shift offsets on the preGIF camera, 
-        then run this command, then calibrate the offsets on the GIF camera. However, 
+        from a pre-energy filter and energy filter (EF) camera. If you have such cameras, the recommended initial 
+        procedure would be to calibrate the image shift offsets on the regular camera, 
+        then run this command, then calibrate the offsets on the EF camera. However, 
         they are independent procedures and you can run them in any order, and rerun one 
         without having to rerun the others.</P>
       <P>This command gathers information from images that you have already collected, 
@@ -685,7 +685,7 @@
         ask if you done it. Here is the procedure:</P>
       <OL>
         <LI>
-          Go to a magnification not in LM mode on the preGIF camera and center a feature. 
+          Go to a magnification not in LM mode on the pre-EF camera and center a feature. 
           If you use mouse shifting to center the feature, take a final image that has no 
           mouse shifting.
         <LI>

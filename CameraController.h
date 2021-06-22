@@ -123,6 +123,7 @@ a->FEItype == FALCON4_TYPE)
 // This needs to be 108 when that exists
 #define PLUGFEI_ALLOWS_ALIGN_HERE 107
 #define PLUGFEI_CAM_SAVES_EER     110
+#define PLUGFEI_FILT_FLASH_LOAD   111
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
