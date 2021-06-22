@@ -28,7 +28,6 @@
 #include "EMmontageController.h"
 #include "AutoTuning.h"
 #include "Utilities\STEMfocus.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE

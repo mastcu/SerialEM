@@ -12,7 +12,6 @@
 #include "TSController.h"
 #include "EMbufferManager.h"
 #include "CameraController.h"
-#include "Shared\b3dutil.h"
 
 
 // CTSDoseSymDlg dialog

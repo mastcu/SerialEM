@@ -8,7 +8,6 @@
 #include "FalconHelper.h"
 #include "CameraController.h"
 #include "MacroProcessor.h"
-#include "Shared\b3dutil.h"
 
 static int sIdTable[] = {
   IDOK, IDCANCEL, IDC_STAT_EXPOSURE, IDC_EDIT_EXPOSURE, IDC_STAT_NUM_SUM_LABEL,

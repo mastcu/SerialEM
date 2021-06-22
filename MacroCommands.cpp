@@ -50,7 +50,6 @@
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
-#include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
 #include "XFolderDialog\XFolderDialog.h"

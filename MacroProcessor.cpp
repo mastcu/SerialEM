@@ -38,7 +38,6 @@
 #include "PythonServer.h"
 #include "BaseSocket.h"
 #include "Utilities\KGetOne.h"
-#include "Shared\\b3dutil.h"
 
 
 #ifdef _DEBUG

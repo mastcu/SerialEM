@@ -23,7 +23,6 @@
 #include "ProcessImage.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
-#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
