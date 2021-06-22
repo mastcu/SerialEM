@@ -76,6 +76,14 @@ struct HoleFinderParams
   int layoutType;         // How to order nav points
 };
 
+struct BaseMarkerShift
+{
+  float shiftX;
+  float shiftY;
+  int fromMagInd;
+  int toMagInd;
+};
+
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
 
 class CNavHelper
@@ -151,6 +159,7 @@ public:
 
   CStateDlg *mStateDlg;
   CArray<StateParams *, StateParams *> *GetStateArray () {return &mStateArray;};
+  CArray<BaseMarkerShift, BaseMarkerShift> *GetMarkerShiftArray() { return &mMarkerShiftArray; };
   CNavRotAlignDlg *mRotAlignDlg;
   CMultiShotDlg *mMultiShotDlg;
   CHoleFinderDlg *mHoleFinderDlg;
@@ -179,6 +188,7 @@ private:
   CCameraController *mCamera;
   WINDOWPLACEMENT mStatePlacement;
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
+  CArray<BaseMarkerShift, BaseMarkerShift> mMarkerShiftArray;
   MultiShotParams mMultiShotParams;
   int mEnableMultiShot;
   HoleFinderParams mHoleFinderParams;

@@ -144,6 +144,10 @@
         2 * item->mNumSkipHoles));
     }
   }
+  if (item->mMarkerShiftX > EXTRA_VALUE_TEST) {
+    ADOC_PUT(TwoFloats(ADOC_ARG, "MarkerShift", item->mMarkerShiftX, mMarkerShiftY));
+    ADOC_PUT(Integer(ADOC_ARG, "ShiftCohortID", item->mShiftCohortID));
+  }
   for (jnd = 1; jnd <= MAX_NAV_USER_VALUES; jnd++) {
     if (!mHelper->GetUserValue(item, jnd, valStr)) {
       keyStr.Format("UserValue%d", jnd);

@@ -6453,6 +6453,7 @@ bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill, in
   return true;
 }
 
+// Function called from long op thread to start the refill and wait until done
 int CEMscope::RefillSimpleOrigin(CString &errString)
 {
   CRegKey key;

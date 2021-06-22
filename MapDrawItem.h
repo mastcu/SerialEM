@@ -133,6 +133,8 @@ public:
   float mTSendAngle;
   float mTSbidirAngle;    // And bidirectional start angle
   float mTargetDefocus;   // Target defocus to set when acquiring this item
+  float mMarkerShiftX, mMarkerShiftY;   // Shift applied to map in shift to marker
+  int mShiftCohortID;     // Identifier of maps shifted together
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to
   std::map<int, std::string> mUserValueMap;
   int mFilePropIndex;     // Indexes into arrays of file properties and other params
