@@ -313,6 +313,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_driftwaitsetup.htm">Wait for Drift Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Eucentricity by Focus Setup dialog">
+			<param name="Local" value="html/hidd_z_by_g_setup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Phase Plate Conditioning Setup dialog">
 			<param name="Local" value="html/hidd_vpp_expose_setup.htm">
 			</OBJECT>

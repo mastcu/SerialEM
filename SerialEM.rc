@@ -3422,7 +3422,7 @@ BEGIN
     PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,106,132,52,12
     LTEXT           "Calibrate with:",IDC_STATIC,6,133,42,8
     GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,10,148,142,53
-    CONTROL         "Use View area in Low Dose Mode",IDC_CHECK_USE_VIEW_IN_LD,
+    CONTROL         "Use View area in Low Dose mode",IDC_CHECK_USE_VIEW_IN_LD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,158,117,10
     LTEXT           "Maximum total change in Z:",IDC_STATIC,29,171,81,8
     EDITTEXT        IDC_EDIT_MAX_CHANGE,112,169,25,12,ES_AUTOHSCROLL
