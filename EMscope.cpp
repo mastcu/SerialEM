@@ -27,6 +27,8 @@
 #include "RemoteControl.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "ParticleTasks.h"
+#include "ZbyGSetupDlg.h"
 #include "BaseSocket.h"
 #include <assert.h>
 #include "Shared\b3dutil.h"
@@ -424,9 +426,13 @@ CEMscope::CEMscope()
   mAdjustForISSkipBacklash = -1;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
+  mZbacklashValid = false;
   mStageAtLastPos = false;
+  mStageAtLastZPos = false;
   mBacklashValidAtStart = false;
+  mZBacklashValidAtStart = false;
   mMinMoveForBacklash = 0.;
+  mMinZMoveForBacklash = 0.;
   mStageRelaxation = 0.025f;
   mMovingStage = false;
   mBkgdMovingStage = false;
@@ -1727,6 +1733,7 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
 
   // 12/15/04: just use internal blanked flag instead of getting from scope
   GetValidXYbacklash(stageX, stageY, backX, backY);
+  GetValidZbacklash(stageZ, backY);
   mWinApp->mTiltWindow.TiltUpdate(sTiltAngle, bReady);
   mWinApp->mLowDoseDlg.BlankingUpdate(sBeamBlanked);
   if (mWinApp->ScopeHasSTEM())
@@ -2177,7 +2184,9 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mMoveInfo.inBackground = inBackground;
   mRequestedStageX = (float)info.x;
   mRequestedStageY = (float)info.y;
+  mRequestedStageZ = (float)info.z;
   mStageAtLastPos = false;
+  mStageAtLastZPos = false;
   sRestoreStageXYdelay = mRestoreStageXYdelay;
 
   if (info.axisBits & axisA) {
@@ -2267,6 +2276,7 @@ int CEMscope::StageBusy(int ignoreOrTrustState)
         mShiftManager->SetStageDelayToUse(mShiftManager->GetStageMovedDelay());
       }
       SetValidXYbacklash(&mMoveInfo);
+      SetValidZbacklash(&mMoveInfo);
       if (!sThreadErrString.IsEmpty())
         SEMMessageBox(sThreadErrString);
     }
@@ -2428,12 +2438,16 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     if (fromBlanker && (info->axisBits & (axisX | axisY)))
       SEMTrace('S', "BlankerProc stage move to %.2f %.2f", xpos, ypos);
     if (info->doRelax || info->doBacklash || info->doRestoreXY)
-      SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, 
-      (axisBitsUse & axisA) ? alpha : xpos, ypos);
+      if (axisBitsUse & (axisA | axisZ))
+        SEMTrace('n', "Step %d, %s move to %.3f", step + 1, 
+        (axisBitsUse & axisA) ? "A" : "Z", (axisBitsUse & axisA) ? alpha : zpos);
+      else
+        SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, xpos, ypos);
      
     // destX, destY are used to decide on "stage near end of range" message upon error
     // They are supposed to be in meters; leave at 0 to disable 
-    if ((info->useSpeed || (info->axisBits & axisB)) && info->plugFuncs->SetStagePositionExtra) {
+    if ((info->useSpeed || (info->axisBits & axisB)) && 
+      info->plugFuncs->SetStagePositionExtra) {
       beta = (info->axisBits & axisB) ? info->beta : 0.;
       if (info->useSpeed) {
         try {
@@ -5356,6 +5370,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   mWinApp->UpdateBufferWindows();
   mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
+  if (mWinApp->mParticleTasks->mZbyGsetupDlg && 
+    !BOOL_EQUIV(oldArea == VIEW_CONSET, newArea == VIEW_CONSET))
+    mWinApp->mParticleTasks->mZbyGsetupDlg->OnButUpdateState();
+
 }
 
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift
@@ -8656,18 +8674,24 @@ void CEMscope::SetValidXYbacklash(StageMoveInfo *info)
   bool old = mXYbacklashValid;
   bool didBacklash = info->doBacklash && (info->axisBits & axisXY) && 
     (info->backX || info->backY);
+
+  // tests below result in retaining X/Y backlash state for a Z-only move 
+  bool zOnly = (info->axisBits & ~axisZ) == 0;
   double movedFromPosX = info->x - mPosForBacklashX;
   double movedFromPosY = info->y - mPosForBacklashY;
-  bool kept = mBacklashValidAtStart && ((movedFromPosX * mLastBacklashX <= 0. &&
-    movedFromPosY * mLastBacklashY <= 0.) || (fabs(movedFromPosX) < mBacklashTolerance &&
-    fabs(movedFromPosY) < mBacklashTolerance));
+  bool kept = (zOnly && old) || (mBacklashValidAtStart && 
+    ((movedFromPosX * mLastBacklashX <= 0. && movedFromPosY * mLastBacklashY <= 0.) || 
+    (fabs(movedFromPosX) < mBacklashTolerance &&
+      fabs(movedFromPosY) < mBacklashTolerance)));
   bool established = mMinMoveForBacklash > 0. && 
     fabs(info->x - mStartForMinMoveX) >= mMinMoveForBacklash &&
     fabs(info->y - mStartForMinMoveY) >= mMinMoveForBacklash;
   mXYbacklashValid = didBacklash || kept || established;
-  mPosForBacklashX = info->x;
-  mPosForBacklashY = info->y;
-  mStageAtLastPos = true;
+  if (!zOnly) {
+    mPosForBacklashX = info->x;
+    mPosForBacklashY = info->y;
+    mStageAtLastPos = true;
+  }
   mBacklashValidAtStart = false;
   if (!mXYbacklashValid) {
     if (old)
@@ -8687,6 +8711,41 @@ void CEMscope::SetValidXYbacklash(StageMoveInfo *info)
   } else
     SEMTrace('n', "Backlash state retained by this stage move");
   mMinMoveForBacklash = 0.;
+}
+
+// Do similar operation for Z, allowing an X/Y move only to retain the Z backlash state
+void CEMscope::SetValidZbacklash(StageMoveInfo * info)
+{
+  bool old = mZbacklashValid;
+  bool didBacklash = info->doBacklash && (info->axisBits & axisZ) && info->backZ;
+  bool xyOnly = (info->axisBits & ~(axisX | axisY)) == 0;
+  double movedFromPosZ = info->z - mPosForBacklashZ;
+  bool kept = (xyOnly && old) || (mZBacklashValidAtStart && 
+    (movedFromPosZ * mLastBacklashZ <= 0 || fabs(movedFromPosZ) < mBacklashTolerance));
+  bool established = mMinZMoveForBacklash > 0. &&
+    fabs(info->z - mStartForMinMoveZ) >= mMinZMoveForBacklash;
+  mZbacklashValid = didBacklash || kept || established;
+  if (!xyOnly) {
+    mPosForBacklashZ = info->z;
+    mStageAtLastZPos = true;
+  }
+  mZBacklashValidAtStart = false;
+  if (!mZbacklashValid) {
+    if (old)
+      SEMTrace('n', "This stage move invalidated Z backlash data");
+    mMinZMoveForBacklash = 0.;
+    return;
+  }
+  if (didBacklash) {
+    mLastBacklashZ = (float)info->backZ;
+    SEMTrace('n', "Backlash data recorded for this Z stage move, pos %.3f  bl %.1f",
+     mPosForBacklashZ, mLastBacklashZ);
+  } else if (established) {
+    mLastBacklashZ = (info->z > mStartForMinMoveZ ? -1.f : 1.f) * mMinZMoveForBacklash;
+    SEMTrace('n', "Z Backlash state established by this stage move");
+  } else
+    SEMTrace('n', "Z Backlash state retained by this stage move");
+  mMinZMoveForBacklash = 0.;
 }
 
 // Return true and return backlash values if backlash is still valid for given position
@@ -8709,6 +8768,24 @@ bool CEMscope::GetValidXYbacklash(double stageX, double stageY, float &backX,
   return true;
 }
 
+// Return true and return backlash values if Z backlash is still valid for given Z
+bool CEMscope::GetValidZbacklash(double stageZ, float & backZ)
+{
+  bool atSamePos = fabs(stageZ - mPosForBacklashZ) < mBacklashTolerance;
+  backZ = 0;
+  mStageAtLastZPos = mStageAtLastZPos && atSamePos;
+  if (!mZbacklashValid)
+    return false;
+  mZbacklashValid = atSamePos;
+  if (!mZbacklashValid) {
+    SEMTrace('n', "Z backlash data has become invalid, the stage has moved (%.2f to %.2f)"
+      , mPosForBacklashZ, stageZ);
+    return false;
+  }
+  backZ = mLastBacklashZ;
+  return true;
+}
+
 // Return true if stage is still at given position within tolerance and if the request
 // matches the last requested move
 bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX, 
@@ -8718,6 +8795,13 @@ bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX,
     fabs(stageY - mPosForBacklashY) < mBacklashTolerance &&
     fabs((double)(requestedX - mRequestedStageX)) < 1.e-5 && 
     fabs((double)(requestedY - mRequestedStageY)) < 1.e-5;
+}
+
+// Same for Z
+bool CEMscope::StageIsAtSameZPos(double stageZ, float requestedZ)
+{
+  return mStageAtLastZPos && fabs(stageZ - mPosForBacklashZ) < mBacklashTolerance &&
+    fabs((double)(requestedZ - mRequestedStageZ)) < 1.e-5;
 }
 
 // Descriptions of the long-running operations

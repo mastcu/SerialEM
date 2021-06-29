@@ -402,7 +402,8 @@ public:
   {outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];};
   void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax)
   {mMinSpotWithBeamShift[secondary] = inMin, mMaxSpotWithBeamShift[secondary] = inMax;};
-  void CopyBacklashValid() {mBacklashValidAtStart = mXYbacklashValid;};
+  void CopyBacklashValid() { mBacklashValidAtStart = mXYbacklashValid; }; 
+  void CopyZBacklashValid() { mZBacklashValidAtStart = mZbacklashValid; };
   void NextLDAreaOpposite() {mNextLDpolarity = -1;};
   BOOL NormalizeProjector();
   BOOL NormalizeObjective();
@@ -708,18 +709,26 @@ private:
   BOOL mUsePLforIS;           // Flag to use PL when initialize scope
   BOOL mUseCLA2forSTEM;       // Flag to use CLA2 for JEOL STEM
   bool mXYbacklashValid;      // Flag that backlash values are still valid for a position
+  bool mZbacklashValid;       // Flag that Z backlash values still valid for a position
   float mLastBacklashX;       // Last backlash values
   float mLastBacklashY;
+  float mLastBacklashZ;
   double mPosForBacklashX;    // And position at which backlash was recorded
   double mPosForBacklashY;
+  double mPosForBacklashZ;
   float mBacklashTolerance;   // Maximum change in position for considering position valid
   float mRequestedStageX;     // Position requested in last MoveStage call
   float mRequestedStageY;
+  float mRequestedStageZ;
   bool mStageAtLastPos;       // Flag that stage is still at last position
+  bool mStageAtLastZPos;      // Flag that stage is still at last Z position
   bool mBacklashValidAtStart; // Flag that backlash was valid before stage move
+  bool mZBacklashValidAtStart; // Flag that Z backlash was valid before stage move
   float mMinMoveForBacklash;  // One-shot threshold for the next move to set a backlash
+  float mMinZMoveForBacklash; // One-shot threshold for the next move to set a backlash
   double mStartForMinMoveX;   // Starting position for a move to be evaluated
   double mStartForMinMoveY;   // for setting backlash
+  double mStartForMinMoveZ;   // Starting position for Z
   BOOL mMovingStage;          // Flag that we started a stage move
   BOOL mBkgdMovingStage;      // Flag that stage move was started on background channel
   float mTiltSpeedFactor;     // If set, use as speed factor for tilt when none supplied
@@ -881,8 +890,11 @@ public:
   int UnloadCartridge(void);
   static ScopePluginFuncs *GetPlugFuncs() {return mPlugFuncs;};
   void SetValidXYbacklash(StageMoveInfo * info);
+  void SetValidZbacklash(StageMoveInfo * info);
   bool GetValidXYbacklash(double stageX, double stageY, float & backX, float & backY);
+  bool GetValidZbacklash(double stageZ, float & backZ);
   bool StageIsAtSamePos(double stageX, double stageY, float requestedX, float requestedY);
+  bool StageIsAtSameZPos(double stageZ, float requestedZ);
   double IllumAreaToIntensity(double illum, int spot = -1, int probe = -1);
   double IntensityToIllumArea(double intensity, int spot = -1, int probe = -1);
   bool GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit, float &highLimit);
@@ -936,6 +948,8 @@ public:
   void RemoteControlChanged(BOOL newState);
   void SetBacklashFromNextMove(double startX, double startY, float minMove) {
     mStartForMinMoveX = startX; mStartForMinMoveY = startY; mMinMoveForBacklash = minMove;};
+  void SetZBacklashFromNextMove(double startZ, float minMove) {
+    mStartForMinMoveZ = startZ; mMinZMoveForBacklash = minMove;};
   bool BlankTransientIfNeeded(const char *routine);
   void UnblankAfterTransient(bool needUnblank, const char *routine);
   BOOL SetFreeLensControl(int lens, int arg);
