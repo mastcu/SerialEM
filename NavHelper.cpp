@@ -3660,8 +3660,10 @@ StateParams *CNavHelper::ExistingStateParam(int index, bool navAcquire)
 
 void CNavHelper::OpenStateDialog(void)
 {
-  if (mStateDlg)
+  if (mStateDlg) {
+    mStateDlg->BringWindowToTop();
     return;
+  }
   mStateDlg = new CStateDlg();
   mStateDlg->Create(IDD_STATEDLG);
   if (mStatePlacement.rcNormalPosition.right > 0)
@@ -3675,7 +3677,6 @@ WINDOWPLACEMENT *CNavHelper::GetStatePlacement(void)
   if (mStateDlg)
     mStateDlg->GetWindowPlacement(&mStatePlacement);
   return &mStatePlacement;
-  return NULL;
 }
 
 // Update the dialogs we are responsible for
