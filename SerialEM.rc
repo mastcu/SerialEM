@@ -3379,6 +3379,16 @@ BEGIN
     LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,25,75,141,8
 END
 
+IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 310, 176
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Dialog"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,199,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,253,155,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3878,6 +3888,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 158
     END
+
+    IDD_Z_BY_G_SETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 169
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -4043,6 +4061,11 @@ BEGIN
 END
 
 IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_Z_BY_G_SETUP AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -4359,6 +4382,7 @@ BEGIN
     IDC_BUT_FIX_INDENT      "Adjust indentation of selected lines to nearest multiple of indent size"
     IDC_BUT_ADD_INDENT      "Add one unit of indentation (the indent size) to selected lines"
     IDC_BUT_REMOVE_INDENT   "Remove one unit of indentation (the indent size) from selected lines"
+    IDC_RAPPLY_ALL_AT_REG   "Shift all items at same registration as image with marker point"
 END
 
 STRINGTABLE
@@ -6105,8 +6129,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_RAPPLY_ALL_AT_REG   "Shift all items at same registration as image with marker point"
-    IDC_RAPPLY_ALL_MAPS_AT_MAG
+    IDC_RAPPLY_ALL_MAPS_AT_MAG 
                             "Shift maps at indicated mag and any items drawn on them"
     IDC_RAPPLY_IN_COHORT    "Shift a group of maps and items drawn on them"
     IDC_RNO_SAVING          "The shift will be unavailable to apply again"
