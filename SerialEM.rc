@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -462,20 +466,27 @@ BEGIN
     END
     POPUP "&Tasks"
     BEGIN
+        POPUP "&Eucentricity"
+        BEGIN
+            MENUITEM "&Rough Eucentricity",         ID_EUCENTRICITY_COARSE
+            MENUITEM "&Fine Eucentricity",          ID_EUCENTRICITY_FINE
+            MENUITEM "&Both Rough and Fine",        ID_EUCENTRICITY_BOTH
+            MENUITEM "Refine && Re&align",          ID_TASKS_FINEREALIGN
+            MENUITEM SEPARATOR
+            MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
+            MENUITEM "Use Trial in &LD Refine",     ID_TASKS_TRIAL_IN_LD_REFINE
+            MENUITEM "Rough Use &Search if in LM",  ID_TASKS_ROUGHUSESEARCHIFINLM
+            MENUITEM SEPARATOR
+            MENUITEM "&Eucentricity by Focus",      ID_EUCENTRICITY_EUCENTRICITYBYFOCUS
+            MENUITEM "&Calibrate Focus Targets...", ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS
+        END
+        MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
         MENUITEM "M&ove beam\tShift+M",         ID_PROCESS_MOVEBEAM
         MENUITEM "&Center Beam\tShift+C",       ID_TASKS_CENTERBEAM
         MENUITEM "Autocenter &Beam\tShift+E",   ID_TASKS_AUTOCENTERBEAM
         MENUITEM "Set&up Autocenter...",        ID_TASKS_SETUPAUTOCENTER
-        MENUITEM SEPARATOR
-        MENUITEM "&Eucentric - Rough",          ID_EUCENTRICITY_COARSE
-        MENUITEM "Eucentric - &Fine",           ID_EUCENTRICITY_FINE
-        MENUITEM "Eucentric - Bot&h",           ID_EUCENTRICITY_BOTH
-        MENUITEM "Refine && Re&align",          ID_TASKS_FINEREALIGN
-        MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
-        MENUITEM "Use Trial in LD Refine",      ID_TASKS_TRIAL_IN_LD_REFINE
-        MENUITEM "Rough Use Search if in LM",   ID_TASKS_ROUGHUSESEARCHIFINLM
         MENUITEM SEPARATOR
         MENUITEM "&Walk Up",                    ID_TASKS_WALKUP
         MENUITEM "Wal&kup && Anchor",           ID_TASKS_WALKUPANCHOR
@@ -3375,55 +3386,57 @@ BEGIN
     LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,25,75,141,8
 END
 
-IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 205
+IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 220
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Eucentricity by Focus Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,27,190,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,89,190,50,12
-    LTEXT           "Current State",IDC_STATIC,47,6,39,8
-    LTEXT           "Calibrated State",IDC_STATIC,99,6,49,8
-    LTEXT           "Magnification",IDC_STATIC,6,16,41,8
-    LTEXT           "Intensity",IDC_STATIC,6,26,25,8
-    LTEXT           "Spot size",IDC_STATIC,6,36,29,8
-    LTEXT           "Probe mode",IDC_STAT_PROBE_LABEL,6,46,39,8
-    LTEXT           "Camera",IDC_STATIC,6,56,25,8
-    CTEXT           "36000",IDC_STAT_CUR_MAG,49,16,35,8
-    CTEXT           "No cal, nearest at 72000",IDC_STAT_CAL_MAG,84,16,79,8
-    CTEXT           "63.25% C2",IDC_STAT_CUR_C2,49,26,35,8
-    CTEXT           "63.25% C2",IDC_STAT_CAL_C2,106,26,35,8
-    CTEXT           "11",IDC_STAT_CUR_SPOT,49,36,35,8
-    CTEXT           "11",IDC_STAT_CAL_SPOT,106,36,35,8
-    CTEXT           "nP",IDC_STAT_CUR_PROBE,49,46,35,8
-    CTEXT           "nP",IDC_STAT_CAL_PROBE,106,45,35,8
-    CTEXT           "TVIPS XF416",IDC_STAT_CUR_CAM,46,56,41,8
-    CTEXT           "TVIPS XF416",IDC_STAT_CAL_CAM,103,56,41,8
-    PUSHBUTTON      "Update State",IDC_BUT_UPDATE_STATE,41,76,50,12
-    PUSHBUTTON      "Current Settings",IDC_BUT_USE_TO_CAL,50,121,52,12
+    DEFPUSHBUTTON   "OK",IDOK,27,205,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,89,205,50,12
+    LTEXT           "Current State",IDC_STATIC,47,16,39,8
+    LTEXT           "Calibrated State",IDC_STATIC,99,16,49,8
+    LTEXT           "Magnification",IDC_STATIC,6,26,41,8
+    LTEXT           "Intensity",IDC_STATIC,6,36,25,8
+    LTEXT           "Spot size",IDC_STATIC,6,46,29,8
+    LTEXT           "Probe mode",IDC_STAT_PROBE_LABEL,6,56,41,8
+    CTEXT           "36000",IDC_STAT_CUR_MAG,49,26,35,8
+    CTEXT           "No cal, nearest at 72000",IDC_STAT_CAL_MAG,84,26,79,8
+    CTEXT           "63.25% C2",IDC_STAT_CUR_C2,46,36,41,8
+    CTEXT           "63.25% C2",IDC_STAT_CAL_C2,103,36,41,8
+    CTEXT           "11",IDC_STAT_CUR_SPOT,49,46,35,8
+    CTEXT           "11",IDC_STAT_CAL_SPOT,106,46,35,8
+    CTEXT           "nP",IDC_STAT_CUR_PROBE,49,56,35,8
+    CTEXT           "nP",IDC_STAT_CAL_PROBE,106,55,35,8
+    CTEXT           "TVIPS XF416",IDC_STAT_CUR_CAM,3,6,160,8
+    PUSHBUTTON      "Update State",IDC_ZBG_UPDATE_STATE,41,86,50,12
+    PUSHBUTTON      "Current Settings",IDC_BUT_USE_TO_CAL,50,132,52,12
     LTEXT           "Focus offset",IDC_STATIC,6,66,37,8
     CTEXT           "-50 um",IDC_STAT_CAL_FOCUS_OFFSET,106,66,35,8
-    EDITTEXT        IDC_EDIT_FOCUS_OFFSET,102,90,25,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_FOCUS_OFFSET,102,101,25,12,ES_AUTOHSCROLL
     CTEXT           "-50 um",IDC_STAT_CUR_FOCUS_OFFSET,49,66,35,8
     CONTROL         "Calibrate with focus offset of:",IDC_CHECK_USE_OFFSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,91,95,10
-    LTEXT           "um",IDC_STATIC,129,92,10,8
-    LTEXT           "Beam tilt for measurement:",IDC_STATIC,6,107,80,8
-    EDITTEXT        IDC_EDIT_BEAM_TILT,87,105,25,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,106,121,52,12
-    LTEXT           "Calibrate with:",IDC_STATIC,6,122,42,8
-    GROUPBOX        "Settings for running eucentricity by focus",IDC_STATIC,10,136,142,50
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,102,95,10
+    LTEXT           "um",IDC_STATIC,129,103,10,8
+    EDITTEXT        IDC_EDIT_BEAM_TILT,102,116,25,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,106,132,52,12
+    LTEXT           "Calibrate with:",IDC_STATIC,6,133,42,8
+    GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,10,148,142,53
     CONTROL         "Use View area in Low Dose Mode",IDC_CHECK_USE_VIEW_IN_LD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,146,117,10
-    LTEXT           "Maximum total change in Z:",IDC_STATIC,29,158,81,8
-    EDITTEXT        IDC_EDIT_MAX_CHANGE,112,156,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,158,10,8
-    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,14,172,97,8
-    EDITTEXT        IDC_EDIT_ITER_THRESH,112,170,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,172,10,8
-    PUSHBUTTON      "?",IDC_BUTHELP,153,191,10,10
-    PUSHBUTTON      "Get Current",IDC_BUT_GET_CUR_TILT,117,105,40,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,158,117,10
+    LTEXT           "Maximum total change in Z:",IDC_STATIC,29,171,81,8
+    EDITTEXT        IDC_EDIT_MAX_CHANGE,112,169,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,138,171,10,8
+    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,14,186,97,8
+    EDITTEXT        IDC_EDIT_ITER_THRESH,112,184,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,138,186,10,8
+    PUSHBUTTON      "?",IDC_BUTHELP,153,205,10,10
+    CONTROL         "Calibrate with beam tilt of: ",IDC_CHECK_CAL_WITH_BT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,117,95,10
+    LTEXT           "% of range",IDC_STAT_MRAD_LABEL,129,118,32,8
+    LTEXT           "AF Beam tilt",IDC_STATIC,6,76,40,8
+    CTEXT           "1.6 mrad",IDC_STAT_CUR_BEAM_TILT,49,76,35,8
+    CTEXT           "1.6 mrad",IDC_STAT_CAL_BEAM_TILT,106,76,35,8
 END
 
 
@@ -3471,7 +3484,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3929,7 +3944,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 163
         TOPMARGIN, 3
-        BOTTOMMARGIN, 202
+        BOTTOMMARGIN, 217
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3985,124 +4000,124 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACROSELECTER AFX_DIALOG_LAYOUT 
+IDD_MACROSELECTER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT 
+IDD_FILEPROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FRAMEALIGN AFX_DIALOG_LAYOUT 
+IDD_FRAMEALIGN AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT 
+IDD_FALCON_FRAMES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT 
+IDD_SHIFT_TO_MARKER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_Z_BY_G_SETUP AFX_DIALOG_LAYOUT 
+IDD_Z_BY_G_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -6160,6 +6175,10 @@ BEGIN
                             "In editor, include buttons fix, increase, or reduce indentation"
     ID_NAVIGATOR_APPLYSAVEDSHIFT 
                             "Shift maps and marked items at one mag by a shift saved for that mag"
+    ID_EUCENTRICITY_EUCENTRICITYBYFOCUS 
+                            "Adjust Z by measuring defocus at a calibrated absolute focus"
+    ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS 
+                            "Calibrate defocus and set parameters for Eucentricy by Focus"
 END
 
 STRINGTABLE
@@ -6170,6 +6189,24 @@ BEGIN
     IDC_RNO_SAVING          "The shift will be unavailable to apply again"
     IDC_RSAVE_NEW_SHIFT     "Save this shift, replacing an existing one at this pair of mags"
     IDC_RADD_TO_SAVED       "Adjust a saved shift by the new shift"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_USE_TO_CAL      "Run a calibration with the current scope and parameter settings"
+    IDC_EDIT_FOCUS_OFFSET   "Focus offset to use - replaces View offset and autofocus offset in View"
+    IDC_CHECK_USE_OFFSET    "Enable using the specified defocus offset for calibrating and running"
+    IDC_EDIT_BEAM_TILT      "Beam tilt to use in calibrating and running operation at these conditions"
+    IDC_BUT_USE_TO_RECAL    "Rerun the calibration with the scope settings used before"
+    IDC_CHECK_USE_VIEW_IN_LD "In Low Dose, use View for Eucentricity by Focus"
+    IDC_EDIT_MAX_CHANGE     "If total change in Z height would exceed this, the procedure aborts"
+    IDC_ZBG_UPDATE_STATE    "Update dialog for changes in microscope or parameter settings"
+    IDC_CHECK_CAL_WITH_BT   "Enable using the specified beam tilt for calibrating and running"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_ITER_THRESH    "Stop when difference between target and measured defocus is less than this"
 END
 
 #endif    // English (United States) resources

@@ -37,6 +37,7 @@
 #include "CookerSetupDlg.h"
 #include "MultiShotDlg.h"
 #include "MultiTSTasks.h"
+#include "ParticleTasks.h"
 #include "DriftWaitSetupDlg.h"
 #include "NavBacklashDlg.h"
 #include "ExternalTools.h"
@@ -482,6 +483,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY, OnUpdateCloseValvesAfterLongInactivity)
     ON_COMMAND(ID_NAVIGATOR_APPLYSAVEDSHIFT, OnNavigatorApplySavedShift)
     ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_APPLYSAVEDSHIFT, OnUpdateNavigatorApplySavedShift)
+    ON_COMMAND(ID_EUCENTRICITY_EUCENTRICITYBYFOCUS, OnEucentricityByFocus)
+    ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_EUCENTRICITYBYFOCUS, OnUpdateEucentricityByFocus)
+    ON_COMMAND(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnSetupEucentricityByFocus)
+    ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnUpdateNoTasksNoSTEM)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3072,4 +3077,25 @@ void CMenuTargets::OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI)
 void CMenuTargets::OnMarkerToCenter()
 {
   mShiftManager->AlignmentShiftToMarker(false);
+}
+
+
+void CMenuTargets::OnEucentricityByFocus()
+{
+  mWinApp->mParticleTasks->EucentricityFromFocus(
+    mWinApp->mParticleTasks->GetZbyGUseViewInLD());
+}
+
+
+void CMenuTargets::OnUpdateEucentricityByFocus(CCmdUI *pCmdUI)
+{
+  int index, area, paramInd, nearest, error;
+  pCmdUI->Enable(mWinApp->mParticleTasks->GetZbyGCalAndCheck(-1, index, area, paramInd,
+    nearest, error) != NULL);
+}
+
+
+void CMenuTargets::OnSetupEucentricityByFocus()
+{
+  mWinApp->mParticleTasks->OpenZbyGDialog();
 }

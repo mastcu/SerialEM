@@ -57,7 +57,7 @@ public:
   ~CFocusManager();
   BOOL GetTripleMode() {return mTripleMode;};
   SetMember(BOOL, TripleMode)
-  GetSetMember(double, BeamTilt)
+  GetSetMember(float, BeamTilt)
   void SetNextTiltOffset(double inX, double inY) {mNextXtiltOffset = inX, mNextYtiltOffset = inY;};
   GetMember(float, TargetDefocus)
   GetSetMember(float, DefocusOffset)
@@ -194,7 +194,7 @@ private:
   int mTiltDirection;        // Tilt direction, 45-degree increments, 0 = X
   float mFracTiltX, mFracTiltY;    // Fraction of each coil to use
   double mBaseTiltX, mBaseTiltY;   // Existing tilts
-  double mBeamTilt;
+  float mBeamTilt;
   double mNextXtiltOffset;   // Offset from center of beam tilt on next run
   double mNextYtiltOffset;
   int mPostTiltDelay;        // Delay after tilting, in milliseconds

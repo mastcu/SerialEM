@@ -2357,7 +2357,7 @@ int CMacCmd::AutoFocus(void)
     !mItemEmpty[2] ? mItemInt[2] : 0);
   else
     mWinApp->mFocusManager->AutoFocusStart(index,
-    !mItemEmpty[2] ? mItemInt[2] : 0);
+      !mItemEmpty[2] ? mItemInt[2] : 0);
   mTestScale = true;
   return 0;
 }
@@ -6442,6 +6442,13 @@ int CMacCmd::Eucentricity(void)
   index = FIND_EUCENTRICITY_FINE;
   if (!mItemEmpty[1])
     index = mItemInt[1];
+  if (index < 0) {
+    if (mWinApp->mParticleTasks->EucentricityFromFocus(mItemEmpty[2] ?-1 : mItemInt[2])) {
+      AbortMacro();
+      return 1;
+    }
+    return 0;
+  }
   if ((index & (FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE)) == 0) {
     report.Format("Error in script: value on Eucentricity statement \r\n"
       "should be %d for coarse, %d for fine, or %d for both",
@@ -7977,7 +7984,7 @@ int CMacCmd::ReportNavItem(void)
         false);
     }
   } else if (!truth) {
-    if (navItem->mType != ITEM_TYPE_MAP)
+    if (navItem->IsNotMap())
       ABORT_LINE("The Navigator item is not a map for line:\n\n");
     if (ConvertBufferLetter(mStrItems[index2], mBufferManager->GetBufToReadInto(),
       false, ix0, report))
@@ -8146,7 +8153,7 @@ int CMacCmd::SetMapAcquireState(void)
   navItem = mNavigator->GetOtherNavItem(mItemInt[1] - 1);
   if (!navItem)
     ABORT_LINE("Index is out of range in statement:\n\n");
-  if (navItem->mType != ITEM_TYPE_MAP) {
+  if (navItem->IsNotMap()) {
     report.Format("Navigator item %d is not a map for line:\n\n", mItemInt[1]);
     ABORT_LINE(report);
   }

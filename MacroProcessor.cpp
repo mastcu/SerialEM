@@ -914,7 +914,7 @@ int CMacroProcessor::TaskBusy()
     (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
-    mWinApp->mParticleTasks->DoingMultiShot() || 
+    mWinApp->mParticleTasks->DoingMultiShot() || mWinApp->mParticleTasks->DoingZbyG() ||
     mWinApp->mParticleTasks->GetWaitingForDrift() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||

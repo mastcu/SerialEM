@@ -72,7 +72,7 @@ FLOAT_SETT_GETSET("TargetDefocus", mWinApp->mFocusManager->, TargetDefocus)
 FLOAT_SETT_GETSET("AutofocusOffset", mWinApp->mFocusManager->, DefocusOffset)
 FLOAT_SETT_GETSET("RefocusThreshold", mWinApp->mFocusManager->, RefocusThreshold)
 FLOAT_SETT_GETSET("AbortThreshold", mWinApp->mFocusManager->, AbortThreshold)
-DOUBLE_SETT_GETSET("AutofocusBeamTilt", mWinApp->mFocusManager->, BeamTilt)
+FLOAT_SETT_GETSET("AutofocusBeamTilt", mWinApp->mFocusManager->, BeamTilt)
 INT_SETT_GETSET("BeamTiltDirection", mWinApp->mFocusManager->, TiltDirection)
 INT_SETT_GETSET("MinDDDfocusBinning", mWinApp->mFocusManager->, DDDminBinning)
 BOOL_SETT_GETSET("DriftProtection", mWinApp->mFocusManager->, TripleMode)
@@ -111,6 +111,9 @@ INT_SETT_GETSET("ScriptIndentSize", mWinApp->mMacroProcessor->, AutoIndentSize)
 BOOL_SETT_GETSET("ScriptUseMonoFont", mWinApp->mMacroProcessor->, UseMonoFont)
 BOOL_SETT_GETSET("ShowIndentButtons", mWinApp->mMacroProcessor->, ShowIndentButtons)
 BOOL_SETT_GETSET("RestoreMacroEditors", mWinApp->mMacroProcessor->, RestoreMacroEditors)
+INT_SETT_GETSET("ZbyGMaxTotalChange", mWinApp->mParticleTasks->, ZBGMaxTotalChange)
+FLOAT_SETT_GETSET("ZbyGIterThreshold", mWinApp->mParticleTasks->, ZBGIterThreshold)
+BOOL_SETT_GETSET("ZbyGUseViewInLD", mWinApp->mParticleTasks->, ZbyGUseViewInLD)
 
 #endif
 #ifdef SET_TEST_SECT2

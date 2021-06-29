@@ -399,6 +399,9 @@ public:
   afx_msg void OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI);
   afx_msg void OnNavigatorApplySavedShift();
   afx_msg void OnUpdateNavigatorApplySavedShift(CCmdUI *pCmdUI);
+  afx_msg void OnEucentricityByFocus();
+  afx_msg void OnUpdateEucentricityByFocus(CCmdUI *pCmdUI);
+  afx_msg void OnSetupEucentricityByFocus();
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -21,6 +21,7 @@
 #include "ShiftManager.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
+#include "ZbyGSetupDlg.h"
 
 
 CParticleTasks::CParticleTasks(void)
@@ -42,6 +43,19 @@ CParticleTasks::CParticleTasks(void)
   mWDDfltParams.binning = 4;
   mMSLastHoleStageX = EXTRA_NO_VALUE;
   mMSLastHoleISX = mMSLastHoleISY = 0.;
+  mZBGIterationNum = -1;
+  mZBGMaxIterations = 5;
+  mZBGIterThreshold = 0.5f;
+  mZbyGUseViewInLD = false;
+  mZBGMaxTotalChange = 100;
+  mZBGMaxErrorFactor = 1.67f;
+  mZBGMinErrorFactor = 0.4f;
+  mZBGMinMoveForErrFac = 2.;
+  mZbyGsetupDlg = NULL;
+  mZBGCalWithEnteredOffset = false;
+  mZBGCalUseBeamTilt = false;
+  mZBGFocusScalings.push_back(50.);
+  mZBGFocusScalings.push_back(0.7f);
 }
 
 
@@ -58,6 +72,8 @@ void CParticleTasks::Initialize(void)
   mShiftManager = mWinApp->mShiftManager;
   mFocusManager = mWinApp->mFocusManager;
   mMSParams = mWinApp->mNavHelper->GetMultiShotParams();
+  mZBGCalOffsetToUse = mFocusManager->GetDefocusOffset();
+  mZBGCalBeamTiltToUse = mFocusManager->GetBeamTilt();
 }
 
 /*
@@ -959,7 +975,7 @@ int CParticleTasks::WaitForDriftBusy(void)
     mWDUpdateStatus = false;
   }
   return (mWaitingForDrift && (mWinApp->mCamera->CameraBusy() ||
-    (mWDParm.measureType == WFD_WITHIN_AUTOFOC && mFocusManager->DoingFocus())));
+    (mWDParm.measureType == WFD_WITHIN_AUTOFOC && mFocusManager->DoingFocus()))) ? 1 : 0;
 }
 
 // Cleanup call on error/timeout
@@ -1008,7 +1024,7 @@ CString CParticleTasks::FormatDrift(float drift)
   return str;
 }
 
-// Set required mean and change limits if appropriate hten start autofocus
+// Set required mean and change limits if appropriate then start autofocus
 void CParticleTasks::StartAutofocus()
 {
   if (mWDRequiredMean > EXTRA_VALUE_TEST)
@@ -1016,4 +1032,385 @@ void CParticleTasks::StartAutofocus()
   if (mWDFocusChangeLimit > 0.)
     mFocusManager->NextFocusChangeLimits(-mWDFocusChangeLimit, mWDFocusChangeLimit);
   mFocusManager->AutoFocusStart(1);
+}
+
+///////////////////////////////////////////////////////////////////////
+//  EUCENTRICITY FROM FOCUS
+
+// Start the operation with flag whether to use view in low dose
+int CParticleTasks::EucentricityFromFocus(int useVinLD)
+{
+  double stageX, stageY, stageZ;
+  float backZ;
+  StageMoveInfo smi;
+  int index, error, paramInd, nearest, area = -1;
+  double *focTab = mScope->GetLMFocusTable();
+  ZbyGParams *zbgParams;
+  BOOL lowDose = mWinApp->LowDoseMode();
+
+  // Get the parameters
+  if (mZbyGsetupDlg)
+    mZbyGsetupDlg->UnloadControlParams();
+  zbgParams = GetZbyGCalAndCheck(useVinLD, index, area, paramInd, nearest, error);
+  if (!zbgParams) {
+    if (error == 1) {
+      SEMMessageBox("Eucentricity by focus cannot be run from diffraction or STEM mode");
+    } else if (error == 2) {
+      SEMMessageBox(CString("There is no calibration for eucentricity by focus "
+        "for the current magnification and camera ") +
+        (lowDose ? "and specified Low Dose area" : "outside of Low Dose"));
+    } else {
+      SEMMessageBox(CString("There is no calibration for eucentricity by focus "
+        "for the current spot size and ") + (FEIscope ? "probe mode" : "alpha"));
+    }
+    return 1;
+  }
+
+  // Take care of many state-saving and setting details, then go to the standard focus
+  PrepareAutofocusForZbyG(*zbgParams, true);
+  mScope->SetFocus(zbgParams->standardFocus);
+  mZBGTargetDefocus = zbgParams->targetDefocus;
+
+  // Initialize flags
+  mZBGIterationNum = 0;
+  mZBGFinalMove = false;
+  mZBGTotalChange = 0.;
+  mZBGErrorMess = "";
+  mZBGMeasuringFocus = 0;
+  mWinApp->UpdateBufferWindows();
+
+  // Find out status of Z backlash and start with a backlash move if necessary, or focus
+  mScope->GetStagePosition(stageX, stageY, stageZ);
+  if (mScope->GetValidZbacklash(stageZ, backZ) &&
+    (backZ * mComplexTasks->GetFEBacklashZ() > 0.)) {
+    mZBGMeasuringFocus = 1;
+    mFocusManager->AutoFocusStart(-1, mZBGUsingView ? 1 : 0);
+  } else {
+    smi.z = stageZ;
+    smi.backZ = mComplexTasks->GetFEBacklashZ();
+    smi.axisBits = axisZ;
+    mScope->MoveStage(smi, true);
+  }
+  mWinApp->AddIdleTask(TASK_Z_BY_G, 0, mZBGMeasuringFocus ? 0 :
+    B3DNINT(mComplexTasks->GetStageTimeoutFactor() * 30000));
+  mWinApp->SetStatusText(MEDIUM_PANE, "EUCENTRICITY BY FOCUS");
+  return 0;
+}
+
+// Next operation in Z by G or calibration
+void CParticleTasks::ZbyGNextTask(int param)
+{
+  double stageX, stageY, stageZ;
+  float delZ, errFac, scaleDir, thresh;
+  StageMoveInfo smi;
+  CString str;
+  bool doBacklash;
+  int ind, scaleInd = -1;
+  if (mZBGIterationNum < 0)
+    return;
+  if (mZBGMeasuringFocus) {
+    if (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted()) {
+      mZBGErrorMess = "The focus measurement failed when doing Eucentricity by Focus";
+    } else {
+
+      // For calibrating, add to sum, save the parameters when done
+      if (mZBGMeasuringFocus > 1) {
+        mZBGCalParam.targetDefocus += mFocusManager->GetCurrentDefocus() /
+          mZBGNumCalIterations;
+        mZBGIterationNum++;
+        if (mZBGIterationNum >= mZBGNumCalIterations) {
+          if (mZBGIndexOfCal < 0)
+            mZbyGcalArray.Add(mZBGCalParam);
+          else
+            mZbyGcalArray[mZBGIndexOfCal] = mZBGCalParam;
+          StopZbyG();
+          if (mZbyGsetupDlg)
+            mZbyGsetupDlg->OnButUpdateState();
+          return;
+        }
+
+        // Or start another iteration
+        mFocusManager->AutoFocusStart(-1, mZBGCalParam.lowDoseArea == VIEW_CONSET ?1 : 0);
+        mWinApp->AddIdleTask(TASK_Z_BY_G, 0, 0);
+        return;
+
+      } else {
+
+        // Doing Z by G: If focus was measured, get value and determine a scaling
+        delZ = -(mFocusManager->GetCurrentDefocus() - mZBGTargetDefocus);
+        scaleDir = delZ > 0 ? -1.f : 1.f;
+        for (ind = 0; ind < (int)mZBGFocusScalings.size() - 1; ind += 2) {
+          thresh = mZBGFocusScalings[ind];
+          if (scaleDir * thresh > 0. && scaleDir * (-delZ - thresh) > 0. && 
+            (scaleInd < 0 || scaleDir * (thresh - mZBGFocusScalings[scaleInd]) > 0.)) {
+            scaleInd = ind;
+          }
+        }
+        if (scaleInd >= 0)
+          delZ *= mZBGFocusScalings[scaleInd + 1];
+
+        // compute an error factor
+        if (mZBGIterationNum)
+          errFac = 1.f - delZ / mZBGLastChange;
+        mZBGMeasuringFocus = false;
+
+        // Check for various failures and compose message
+        if (fabs(mZBGTotalChange + delZ) > mZBGMaxTotalChange) {
+          mZBGErrorMess.Format("Error in Eucentricity by Focus: the last implied Z change"
+            "\r\nof %.1f um made the total change be over the limit of %d um",
+            delZ, mZBGMaxTotalChange);
+        } else if (mZBGIterationNum > 0 && fabs(delZ) > mZBGIterThreshold &&
+          fabs(mZBGLastChange) > mZBGMinMoveForErrFac &&
+          (errFac > mZBGMaxErrorFactor || errFac < mZBGMinErrorFactor)) {
+          mZBGErrorMess.Format("Error in Eucentricity by Focus: the last implied Z change"
+            "\r\nof %.1f um was too inconsistent with the previous change of %.1f um", 
+            delZ, mZBGLastChange);
+        }
+      }
+    }
+
+    // If error, set up move back to starting position, stop now if no moves done
+    if (!mZBGErrorMess.IsEmpty()) {
+      delZ = -mZBGTotalChange;
+      if (!mZBGIterationNum || mZBGMeasuringFocus > 1) {
+        SEMMessageBox(mZBGErrorMess);
+        StopZbyG();
+        return;
+      }
+    }
+
+    // set up the move with or without backlash
+    mZBGLastChange = delZ;
+    mScope->GetStagePosition(stageX, stageY, stageZ);
+    smi.z = stageZ + delZ;
+    mZBGTotalChange += delZ;
+    smi.backZ = mComplexTasks->GetFEBacklashZ();
+    smi.axisBits = axisZ;
+    doBacklash = delZ * smi.backZ > 0.;
+    if (!doBacklash)
+      mScope->CopyZBacklashValid();
+    SEMTrace('n', "Moving from %.2f to %.2f (delta %.2f) with%s backlash", stageZ, smi.z,
+      delZ, doBacklash ? "" : "out");
+    mScope->MoveStage(smi, doBacklash);
+
+    // Bump iteration number and set flag if it is the last move
+    mZBGIterationNum++;
+    mZBGFinalMove = !mZBGErrorMess.IsEmpty() || fabs(delZ) < mZBGIterThreshold ||
+      mZBGIterationNum >= mZBGMaxIterations;
+  } else {
+
+    // After last move, output error or summary message
+    if (mZBGFinalMove) {
+      if (!mZBGErrorMess.IsEmpty()) {
+        SEMMessageBox(mZBGErrorMess + "\r\nThe original Z has been restored");
+      } else
+        PrintfToLog("Eucentricity by focus: total Z change %.2f in %d iterations",
+          mZBGTotalChange, mZBGIterationNum);
+      StopZbyG();
+      return;
+    }
+
+    // Or start measuring defocus
+    mZBGMeasuringFocus = true;
+    mFocusManager->AutoFocusStart(-1, mZBGUsingView ? 1 : 0);
+  }
+  mWinApp->AddIdleTask(TASK_Z_BY_G, 0, mZBGMeasuringFocus ? 0 :
+    B3DNINT(mComplexTasks->GetStageTimeoutFactor() * 30000));
+}
+
+// Stop or finish the Z by G operation: restore original focus and other state
+void CParticleTasks::StopZbyG()
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  if (mZBGIterationNum < 0)
+    return;
+  mZBGIterationNum = -1;
+  mScope->SetDefocus(mZBGInitialFocus);
+  if (mZBGInitialIntensity > -900)
+    mScope->SetIntensity(mZBGInitialIntensity);
+  if (mZBGLowDoseAreaSaved >= 0)
+    ldp[mZBGLowDoseAreaSaved] = mZBGSavedLDparam;
+  mFocusManager->SetBeamTilt(mZBGSavedBeamTilt);
+  mFocusManager->SetDefocusOffset(mZBGSavedOffset);
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+}
+
+// Z by G busy function
+int CParticleTasks::ZbyGBusy()
+{
+  if (mZBGMeasuringFocus)
+    return mFocusManager->DoingFocus() ? 1 : 0;
+  else
+    return mScope->StageBusy();
+}
+
+// Z by G cleanup function
+void CParticleTasks::ZbyGCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Time out doing eucentricity by measuring focus"));
+  StopWaitForDrift();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Open the setup/calibration dialog
+void CParticleTasks::OpenZbyGDialog()
+{
+  if (mZbyGsetupDlg) {
+    mZbyGsetupDlg->BringWindowToTop();
+    return;
+  }
+  mZbyGsetupDlg = new CZbyGSetupDlg();
+  mZbyGsetupDlg->m_bUseOffset = mZBGCalWithEnteredOffset;
+  mZbyGsetupDlg->m_fFocusOffset = mZBGCalOffsetToUse;
+  mZbyGsetupDlg->m_bCalWithBT = mZBGCalUseBeamTilt;
+  mZbyGsetupDlg->m_fBeamTilt = mZBGCalBeamTiltToUse;
+  mZbyGsetupDlg->Create(IDD_Z_BY_G_SETUP);
+  mWinApp->SetPlacementFixSize(mZbyGsetupDlg, &mZbyGPlacement);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CParticleTasks::GetZbyGPlacement(void)
+{
+  if (mZbyGsetupDlg)
+    mZbyGsetupDlg->GetWindowPlacement(&mZbyGPlacement);
+  return &mZbyGPlacement;
+}
+
+// Retrieve some cal parameters when closing
+void CParticleTasks::ZbyGSetupClosing()
+{
+  GetZbyGPlacement();
+  mZBGCalWithEnteredOffset = mZbyGsetupDlg->m_bUseOffset;
+  mZBGCalOffsetToUse = mZbyGsetupDlg->m_fFocusOffset;
+  mZBGCalUseBeamTilt = mZbyGsetupDlg->m_bCalWithBT;
+  mZBGCalBeamTiltToUse = mZbyGsetupDlg->m_fBeamTilt;
+  mZbyGsetupDlg = NULL;
+}
+
+// Look for a Z by G calibration that matches the mag, low dose area, and camera, return
+// Null if none, return index of calibration if find it, mag index of nearest mag if not
+ZbyGParams *CParticleTasks::FindZbyGCalForMagAndArea(int magInd, int ldArea, int camera, 
+  int &paramInd, int &nearest)
+{
+  int ind;
+  nearest = -1;
+  paramInd = -1;
+  for (ind = 0; ind < (int)mZbyGcalArray.GetSize(); ind++) {
+    if (ldArea == mZbyGcalArray[ind].lowDoseArea && mZbyGcalArray[ind].camera == camera) {
+      if (magInd == mZbyGcalArray[ind].magIndex) {
+        paramInd = ind;
+        return &mZbyGcalArray[ind];
+      }
+      if (nearest < 0 || B3DABS(magInd - mZbyGcalArray[ind].magIndex) <
+        B3DABS(magInd - nearest))
+        nearest = mZbyGcalArray[ind].magIndex;
+    }
+  }
+  return NULL;
+}
+
+// Look for a Z by G calibration that matches the low dose area to be used, mag and camera
+// plus require a match to probe/alpha and spot if not in low dose, and return an error
+// code along with a NULL for error
+ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, 
+  int &paramInd, int &nearest, int &error)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  ZbyGParams *zbgParams;
+  ldArea = -1;
+  mZBGUsingView = false;
+  if (mWinApp->LowDoseMode()) {
+    if (useVinLD < 0)
+      mZBGUsingView = mZbyGUseViewInLD;
+    else 
+      mZBGUsingView = useVinLD > 0;
+    ldArea = useVinLD ? VIEW_CONSET : FOCUS_CONSET;
+    magInd = ldp[ldArea].magIndex;
+  } else
+    magInd = mScope->GetMagIndex();
+
+  error = 1;
+  if (magInd <= 0 || mWinApp->GetSTEMMode())
+    return NULL;
+
+  zbgParams = FindZbyGCalForMagAndArea(magInd, ldArea, mWinApp->GetCurrentCamera(), 
+    paramInd, nearest);
+  error = 2;
+  if (!zbgParams)
+    return NULL;
+
+  error = 3;
+  if (!mWinApp->LowDoseMode() && (zbgParams->spotSize != mScope->FastSpotSize() ||
+    (FEIscope && zbgParams->probeOrAlpha != mScope->GetProbeMode()) || (JEOLscope &&
+      !mScope->GetHasNoAlpha() && zbgParams->probeOrAlpha != mScope->FastAlpha())))
+    return NULL;
+ 
+  error = 0;
+  return zbgParams;
+}
+
+// Start a Z hy Z calibration with the given number of iterations, calInd is index if
+// using a calibration or -1 if using current conditions
+void CParticleTasks::DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations)
+{
+  mZBGCalParam = param;
+  mZBGIndexOfCal = calInd;
+  mZBGNumCalIterations = iterations;
+  PrepareAutofocusForZbyG(param, calInd >= 0);
+
+  mZBGCalParam.standardFocus = mScope->GetFocus();
+  mZBGIterationNum = 0;
+  mZBGMeasuringFocus = 2;
+  mZBGCalParam.targetDefocus = 0.;
+  mFocusManager->AutoFocusStart(-1, param.lowDoseArea == VIEW_CONSET ? 1 : 0);
+  mWinApp->AddIdleTask(TASK_Z_BY_G, 0, 0);
+}
+
+// Do common items to get prepared for running autofocus operation for either a Z by
+// G calibration or the operation itself
+void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD)
+{
+  LowDoseParams *ldp;
+  mZBGInitialIntensity = -999.;
+  mZBGSavedLDparam.magIndex = 0;
+  mZBGLowDoseAreaSaved = -1;
+  if (param.lowDoseArea >= 0) {
+
+    // If flag is set (i.e., if using a calibration), save the low dose params for the
+    // area and set the values in the Z by G param into that
+    if (saveAndSetLD) {
+      mZBGLowDoseAreaSaved = param.lowDoseArea;
+      ldp = mWinApp->GetLowDoseParams() + param.lowDoseArea;
+      mZBGSavedLDparam = *ldp;
+      ldp->intensity = param.intensity;
+      ldp->spotSize = param.spotSize;
+      if (JEOLscope && !mScope->GetHasNoAlpha())
+        ldp->beamAlpha = (float)param.probeOrAlpha;
+      else if (FEIscope)
+        ldp->probeMode = param.probeOrAlpha;
+    }
+
+    // Go to area so initial focus is correct
+    mScope->GotoLowDoseArea(param.lowDoseArea);
+  } else {
+
+    // For non LD, just set the intensity
+    mZBGInitialIntensity = mScope->GetIntensity();
+    mScope->SetIntensity(param.intensity);
+  }
+
+  mZBGInitialFocus = mScope->GetDefocus();
+
+  // Take off the View defocus; the offset takes care of what is needed
+  if (param.lowDoseArea == VIEW_CONSET) {
+    mScope->IncDefocus(-mScope->GetLDViewDefocus());
+  }
+
+  // Save and set up needed beam tilt and defocus offset
+  mZBGSavedBeamTilt = mFocusManager->GetBeamTilt();
+  mZBGSavedOffset = mFocusManager->GetDefocusOffset();
+  mFocusManager->SetBeamTilt(param.beamTilt);
+  mFocusManager->SetDefocusOffset(param.focusOffset);
 }

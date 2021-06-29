@@ -1,7 +1,7 @@
 To make a non-modal or other dialog:
 Add Resource - Dialog
 Change the IDD and the title of the dialog
-Make the style be Tool Window
+Set Tool Window to True
 Right click it, Add Class
 Change base to CDialog
 Remove DECLARE_DYNAMIC from header and IMPLEMENT_DYNAMIC from .cpp
@@ -19,6 +19,9 @@ The latter is needed if there is any edit box
 
 Also add a CloseWindow() as public if it is necessary to close the window externally
 It can call OnOK, OnCancel, or DestroyWindow as needed.
+
+In nonmodal, add to construction:
+  mNonModal = true;
 
 ---------------------
 BOOL CHoleFinder::OnInitDialog()
@@ -67,3 +70,5 @@ Commit changes and push for editing at 120 DPI
 NOn-modal dialogs have a problem with double validation of edit fields and you
 need to use BaseDlg MinMaxInt and MinMaxFloat functions with the ID of the
 field and a descriptor text.
+  MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
+    "Beam shift for centering");

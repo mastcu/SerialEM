@@ -1702,8 +1702,12 @@
 #define IDC_BUT_USE_TO_RECAL            2728
 #define IDC_CHECK_USE_VIEW_IN_LD        2729
 #define IDC_EDIT_MAX_CHANGE             2730
-#define IDC_BUTTON3                     2732
+#define IDC_ZBG_UPDATE_STATE            2731
 #define IDC_BUT_GET_CUR_TILT            2732
+#define IDC_CHECK_CAL_WITH_BT           2733
+#define IDC_STAT_MRAD_LABEL             2734
+#define IDC_STAT_CUR_BEAM_TILT          2735
+#define IDC_STAT_CAL_BEAM_TILT          2736
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2197,6 +2201,9 @@
 #define ID_SCRIPT_USEMONOSPACEDFONT     33401
 #define ID_SCRIPT_SHOWINDENTBUTTONS     33402
 #define ID_NAVIGATOR_APPLYSAVEDSHIFT    33403
+#define ID_TASKS_EUCENTRICITY           33404
+#define ID_EUCENTRICITY_EUCENTRICITYBYFOCUS 33405
+#define ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS 33406
 
 // Next default values for new objects
 // 
@@ -2204,8 +2211,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        258
-#define _APS_NEXT_COMMAND_VALUE         33404
-#define _APS_NEXT_CONTROL_VALUE         2733
+#define _APS_NEXT_COMMAND_VALUE         33407
+#define _APS_NEXT_CONTROL_VALUE         2736
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

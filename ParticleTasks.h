@@ -1,6 +1,8 @@
 #pragma once
 #include "NavHelper.h"
 
+class CZbyGSetupDlg;
+
 enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_WITHIN_AUTOFOC };
 enum { DW_FAILED_TOO_LONG = 1, DW_FAILED_AUTOALIGN, DW_FAILED_AUTOFOCUS,
   DW_FAILED_TOO_DIM, DW_FAILED_NO_INFO, DW_EXTERNAL_STOP };
@@ -18,6 +20,19 @@ struct DriftWaitParams {
   BOOL changeIS;                // Flag to apply image shift in each alignment
 };
 
+struct ZbyGParams {
+  int lowDoseArea;          // Area (V or F) or -1 if not low dose
+  int magIndex;             // Magnification
+  double intensity;         // C2/IA value
+  int spotSize;             // Spot size
+  int probeOrAlpha;         // Probe mode or alpha
+  int camera;               // Camera number
+  float focusOffset;        // Consolidated offset for running 
+  float beamTilt;           // Beam tilt for autofocus measure
+  float targetDefocus;      // Measured defocus in cal/target for running
+  double standardFocus;     // Absolute focus value
+};
+
 class CParticleTasks
 {
 public:
@@ -26,9 +41,18 @@ public:
   bool DoingMultiShot() { return mMSCurIndex > -2; };
   void SetBaseBeamTilt(double inX, double inY) { mBaseBeamTiltX = inX; mBaseBeamTiltY = inY; };
   void SetBaseAstig(double inX, double inY) { mBaseAstigX = inX; mBaseAstigY = inY; };
-  void GetLastHoleStagePos(double &stageX, double &stageY) { stageX = mMSLastHoleStageX;
-  stageY = mMSLastHoleStageY; };
-  void GetLastHoleImageShift(float &ISX, float &ISY) {ISX = mMSLastHoleISX; ISY = mMSLastHoleISY; };
+  void GetLastHoleStagePos(double &stageX, double &stageY) {
+    stageX = mMSLastHoleStageX;
+    stageY = mMSLastHoleStageY;
+  };
+  void GetLastHoleImageShift(float &ISX, float &ISY) { ISX = mMSLastHoleISX; ISY = mMSLastHoleISY; };
+  CZbyGSetupDlg *mZbyGsetupDlg;
+  CArray<ZbyGParams> *GetZbyGcalArray() { return &mZbyGcalArray; };
+  GetSetMember(float, ZBGIterThreshold);
+  GetSetMember(int, ZBGMaxTotalChange);
+  GetSetMember(BOOL, ZbyGUseViewInLD);
+  GetMember(int, ZBGMeasuringFocus);
+  FloatVec *GetZBGFocusScalings() {return &mZBGFocusScalings ; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -90,7 +114,39 @@ private:
   float mWDRequiredMean;           // Required mean for focus or trial shots
   float mWDFocusChangeLimit;       // Change limit to apply in autofocusing
   int mWDLastIterations;           // Iterations in last run
-  
+
+  int mZBGMaxIterations;           // Maximum iterations for doing Z by G
+  int mZBGMaxTotalChange;          // Maximum total accumulated change
+  float mZBGMaxErrorFactor;        // Maximum implied error in previous move
+  float mZBGMinErrorFactor;        // Minimum implied error in previous move
+  float mZBGMinMoveForErrFac;      // Minimum previous move for evaluating factor
+  int mZBGIterationNum;            // Counter and flag that it is running
+  float mZBGIterThreshold;         // Threshold move for stoppig the iterations
+  BOOL mZbyGUseViewInLD;           // Setting in dialog for using View in Low Dose
+  double mZBGInitialFocus;         // For saving and restoring focus
+  float mZBGTargetDefocus;         // Measured defocus to reach
+  double mZBGInitialIntensity;     // For saving and restoring intensity out of low dose
+  BOOL mZBGUsingView;              // Flag that View is being used
+  int mZBGMeasuringFocus;          // Flag that it is running autofocus, 2 for calibrating
+  float mZBGTotalChange;           // Total Z change so far
+  float mZBGLastChange;            // Change on last iteration
+  bool mZBGFinalMove;              // Flag that it us taking the final move
+  CString mZBGErrorMess;           // Error message if there is a an error or bad focus
+  WINDOWPLACEMENT mZbyGPlacement;
+  CArray<ZbyGParams> mZbyGcalArray;  // Array of calibrations
+  BOOL mZBGCalWithEnteredOffset;   // Keep track of "Cal with focus offset" state in dialog
+  float mZBGCalOffsetToUse;        // And value of offset
+  BOOL mZBGCalUseBeamTilt;         // Keep track of "Cal with beam tilt" state in dialog
+  float mZBGCalBeamTiltToUse;      // And value of beam tilt
+  ZbyGParams mZBGCalParam;         // Param saved at start of calibration
+  int mZBGIndexOfCal;              // Its index if it is an existing one
+  int mZBGNumCalIterations;        // Number of iterations to do for cal
+  float mZBGSavedOffset;           // Saved offset and beam tilts for autofocus
+  float mZBGSavedBeamTilt;
+  int mZBGLowDoseAreaSaved;         // Flag that low dose area is saved
+  LowDoseParams mZBGSavedLDparam;   // Saved parameters for low dose area
+  FloatVec mZBGFocusScalings;       // List of measured focus values and scaling factor
+
 public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, int numSecondRing, float spokeRad2, float extraDelay,
@@ -103,12 +159,12 @@ public:
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
     int camera, int numXholes, int numYholes, float tiltAngle);
-  void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex, 
+  void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
     unsigned char *skipIndex, int numSkip, int &numHoles);
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);
-  int WaitForDrift(DriftWaitParams &param, bool useImageInA, 
+  int WaitForDrift(DriftWaitParams &param, bool useImageInA,
     float requiredMean = 0., float changeLimit = 0.);
   void WaitForDriftNextTask(int param);
   void StopWaitForDrift(void);
@@ -121,8 +177,23 @@ public:
   GetMember(double, WDInitialStartTime);
   void DriftWaitFailed(int type, CString reason);
   CString FormatDrift(float drift);
-  DriftWaitParams *GetDriftWaitParams() {return &mWDDfltParams;};
+  DriftWaitParams *GetDriftWaitParams() { return &mWDDfltParams; };
+  float GetDriftInterval() { return mWDParm.interval; };
   void StartAutofocus();
-  float GetDriftInterval() {return mWDParm.interval;};
+  bool DoingZbyG() { return mZBGIterationNum >= 0; };
+  int EucentricityFromFocus(int useVinLD);
+  void ZbyGNextTask(int param);
+  void StopZbyG();
+  int ZbyGBusy();
+  void ZbyGCleanup(int error);
+  void OpenZbyGDialog();
+  WINDOWPLACEMENT * GetZbyGPlacement(void);
+  void ZbyGSetupClosing();
+  ZbyGParams *FindZbyGCalForMagAndArea(int magInd, int ldArea, int camera, int &paramInd,
+    int &nearest);
+  ZbyGParams *GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, int &paramInd, 
+    int &nearest, int &error);
+  void DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations);
+  void PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD);
 };
 

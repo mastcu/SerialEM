@@ -169,6 +169,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
+  CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
+  ZbyGParams zbgParam;
+  zbgArray->RemoveAll();
   CFileStatus status;
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
@@ -645,7 +648,18 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : itemFlt[11];
         acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : itemFlt[12];
         mWinApp->mMultiTSTasks->AddAutocenParams(acParmP);
-
+      } else if (NAME_IS("ZbyGParams")) {
+        zbgParam.lowDoseArea = itemInt[1];
+        zbgParam.magIndex = itemInt[2];
+        zbgParam.intensity = itemDbl[3];
+        zbgParam.spotSize = itemInt[4];
+        zbgParam.probeOrAlpha = itemInt[5];
+        zbgParam.camera = itemInt[6];
+        zbgParam.focusOffset = itemFlt[7];
+        zbgParam.beamTilt = itemFlt[8];
+        zbgParam.targetDefocus = itemFlt[9];
+        zbgParam.standardFocus = itemDbl[10];
+        zbgArray->Add(zbgParam);
       } else if (NAME_IS("RangeFinderParams")) {
         index = B3DMIN(1, B3DMAX(0, itemInt[1]));
         tsrParams[index].eucentricity = itemInt[2] != 0;
@@ -786,6 +800,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mMultiTSTasks->GetAutocenPlacement();
           else if (NAME_IS("VppCondPlacement"))
             place = mWinApp->mMultiTSTasks->GetConditionPlacement();
+          else if (NAME_IS("ZbyGSetupPlacement"))
+            place = mWinApp->mParticleTasks->GetZbyGPlacement();
           else if (NAME_IS("SnapshotPlacement"))
             place = mWinApp->GetScreenShotPlacement();
           else if (NAME_IS("StatePlacement")) {
@@ -1333,6 +1349,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *multiShotPlace = mWinApp->mNavHelper->GetMultiShotPlacement(true);
   WINDOWPLACEMENT *autocenPlace = mWinApp->mMultiTSTasks->GetAutocenPlacement();
   WINDOWPLACEMENT *vppPlace = mWinApp->mMultiTSTasks->GetConditionPlacement();
+  WINDOWPLACEMENT *zbgPlace = mWinApp->mParticleTasks->GetZbyGPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -1340,6 +1357,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   CookParams *cookParams = mWinApp->GetCookParams();
   CArray<AutocenParams *, AutocenParams *> *autocenArray = 
     mWinApp->mMultiTSTasks->GetAutocenParams();
+  CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
+  ZbyGParams zbgParam;
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
   AutocenParams *acParams, *acParmP;
@@ -1627,6 +1646,14 @@ void CParameterIO::WriteSettings(CString strFileName)
         }
       }
     }
+    for (i = 0; i < zbgArray->GetSize(); i++) {
+      zbgParam = zbgArray->GetAt(i);
+      oneState.Format("ZbyGParams %d %d %f %d %d %d %f %f %f %f -999\n",
+        zbgParam.lowDoseArea, zbgParam.magIndex, zbgParam.intensity, zbgParam.spotSize,
+        zbgParam.probeOrAlpha, zbgParam.camera, zbgParam.focusOffset, zbgParam.beamTilt,
+        zbgParam.targetDefocus, zbgParam.standardFocus);
+      mFile->WriteString(oneState);
+    }
     if (comaVsIS->magInd >= 0) {
       oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
         comaVsIS->magInd, comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, 
@@ -1727,6 +1754,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("CtffindPlacement", 0, ctffindPlace);
     WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("VppCondPlacement", 0, vppPlace);
+    WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
     WritePlacement("HoleFinderPlacement", 0, mWinApp->mNavHelper->GetHoleFinderPlacement());
     WritePlacement("MultiCombinerPlacement", 0, 
@@ -2173,6 +2201,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   RotStretchXform rotXform;
   LensRelaxData relax;
+  FloatVec *vec;
   short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
     pnmAll};
   PiezoScaling pzScale;
@@ -3159,8 +3188,15 @@ int CParameterIO::ReadProperties(CString strFileName)
         mWinApp->mAutoTuning->SetMaxComaBeamTilt(itemFlt[1]);
         if (!itemEmpty[2])
           mWinApp->mAutoTuning->SetCalComaFocus(itemFlt[2]);
-      }
-      else if (MatchNoCase("MontageInitialPieces")) {
+      } else if (MatchNoCase("ZbyGFocusScalings")) {
+        vec = mWinApp->mParticleTasks->GetZBGFocusScalings();
+        vec->clear();
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (itemEmpty[index])
+            break;
+          vec->push_back(itemFlt[index]);
+        }
+      } else if (MatchNoCase("MontageInitialPieces")) {
         mWinApp->mDocWnd->SetDefaultMontXpieces(itemInt[1]);
         if (itemInt[2] > 0)
           mWinApp->mDocWnd->SetDefaultMontYpieces(itemInt[2]);

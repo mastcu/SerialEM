@@ -23,6 +23,8 @@
 #include "NavigatorDlg.h"
 #include "MultiTSTasks.h"
 #include "PiezoAndPPControl.h"
+#include "ParticleTasks.h"
+#include "ZbyGSetupDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -464,6 +466,8 @@ void CLowDoseDlg::OnLowdosemode()
     mWinApp->mBufferWindow.UpdateSettings();
   }
   mWinApp->UpdateBufferWindows();
+  if (mWinApp->mParticleTasks->mZbyGsetupDlg)
+    mWinApp->mParticleTasks->mZbyGsetupDlg->OnButUpdateState();
   if (mWinApp->ScopeHasSTEM())
     mWinApp->mSTEMcontrol.UpdateEnables();
   if (!m_bLowDoseMode)

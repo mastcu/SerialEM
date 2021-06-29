@@ -1046,6 +1046,9 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   }
   if (mDoChangeFocus > 0)
     mWinApp->SetStatusText(MEDIUM_PANE, "AUTOFOCUSING");
+  else if (mWinApp->mParticleTasks->DoingZbyG())
+    mWinApp->SetStatusText(MEDIUM_PANE, mWinApp->mParticleTasks->GetZBGMeasuringFocus() 
+      > 1 ? "Calibrating EUCEN BY FOCUS" : "EUCENTRICITY BY FOCUS");
   else
     mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING DEFOCUS");
   if (mWinApp->GetSTEMMode()) {
@@ -1177,7 +1180,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
     } else {
       mWinApp->AppendToLog(report + changeText + driftText, LOG_SWALLOW_IF_CLOSED);
     }
-  } else if (!mDoChangeFocus) {
+  } else if (!mDoChangeFocus && !mWinApp->mLogWindow) {
     report.Format("The current defocus is computed to be %6.2f microns", 
       mCurrentDefocus);
     mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);

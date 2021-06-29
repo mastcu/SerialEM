@@ -49,6 +49,7 @@
 #include "CalibCameraTiming.h"
 #include "MultiTSTasks.h"
 #include "ParticleTasks.h"
+#include "ZbyGSetupDlg.h"
 #include "TSViewRange.h"
 #include "ReadFileDlg.h"
 #include "Mailer.h"
@@ -2218,6 +2219,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiTSTasks->VppConditionBusy();
     else if (idc->source == TASK_EUCENTRICITY)
       busy = mComplexTasks->EucentricityBusy();
+    else if (idc->source == TASK_Z_BY_G)
+      busy = mParticleTasks->ZbyGBusy();
     else if (idc->source == TASK_FOCUS_VS_Z)
       busy = mFocusManager->FocusVsZBusy();
     else if (idc->source == TASK_DUAL_MAP)
@@ -2287,6 +2290,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->ReverseTiltNextTask(idc->param);
         else if (idc->source == TASK_EUCENTRICITY)
           mComplexTasks->EucentricityNextTask(idc->param);
+        else if (idc->source == TASK_Z_BY_G)
+          mParticleTasks->ZbyGNextTask(idc->param);
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMNextTask(idc->param);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2406,6 +2411,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->ReverseTiltCleanup(busy);
         else if (idc->source == TASK_EUCENTRICITY)
           mComplexTasks->EucentricityCleanup(busy);
+        else if (idc->source == TASK_Z_BY_G)
+          mParticleTasks->ZbyGCleanup(busy);
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMCleanup(busy);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2548,6 +2555,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mComplexTasks->StopReverseTilt();
   if (mComplexTasks->DoingEucentricity())
     mComplexTasks->StopEucentricity();
+  if (mParticleTasks->DoingZbyG())
+    mParticleTasks->StopZbyG();
   if (mComplexTasks->DoingTiltAfterMove())
     mComplexTasks->StopTiltAfterMove();
   if (mComplexTasks->DoingBacklashAdjust())
@@ -3076,6 +3085,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavHelper->mHoleFinderDlg->ManageEnables();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->UpdateEnables();
+  if (mParticleTasks->mZbyGsetupDlg)
+    mParticleTasks->mZbyGsetupDlg->UpdateEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
   mInUpdateWindows = false;
@@ -3124,6 +3135,8 @@ void CSerialEMApp::UpdateWindowSettings()
     mNavHelper->mHoleFinderDlg->UpdateSettings();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->UpdateSettings();
+  if (mParticleTasks->mZbyGsetupDlg)
+    mParticleTasks->mZbyGsetupDlg->UpdateSettings();
 }
 
 
@@ -3146,7 +3159,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mGainRefMaker->AcquiringGainRef() ||
     mDistortionTasks->DoingStagePairs() ||
     mCalibTiming->Calibrating() ||
-    mCalibTiming->DoingDeadTime() ||
+    mCalibTiming->DoingDeadTime() || mParticleTasks->DoingZbyG() ||
     mParticleTasks->DoingMultiShot() || mParticleTasks->GetWaitingForDrift() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||

@@ -162,14 +162,21 @@ Y
 Z
 
 Tasks:
-A
+  Eucentricity:
+  A
+  B
+  C
+  E
+  F
+  L
+  R
+  S
+  T
 B
 C
 D
 E
-F
 G
-H
 I
 K
 L
@@ -179,7 +186,6 @@ O
 P
 R
 S
-T
 U
 V
 W
