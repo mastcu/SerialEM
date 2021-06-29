@@ -259,7 +259,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   borderMax = 0.;
   for (mapInd = 0; mapInd < mItemArray->GetSize(); mapInd++) {
     item = mItemArray->GetAt(mapInd);
-    if (item->mType != ITEM_TYPE_MAP || item->mRegistration != inItem->mRegistration ||
+    if (item->IsNotMap() || item->mRegistration != inItem->mRegistration ||
       item->mImported || item->mColor == NO_REALIGN_COLOR)
       continue;
 
@@ -280,7 +280,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
     // Accumulate the net stage shift needed to work at this mag relative to the final one
     firstDelX = firstDelY = 0.;
     alignedMap = 0;
-    differentMap = inItem->mType == ITEM_TYPE_MAP && inItem->mMapID != item->mMapID;
+    differentMap = inItem->IsMap() && inItem->mMapID != item->mMapID;
     incHighX = incHighY = incLowX = incLowY = 0.;
     if (differentMap || ((restoreState || mWinApp->LowDoseMode()) && 
       !(mWinApp->LowDoseMode() && 
@@ -315,7 +315,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
     // And if there is a recorded error when aligning to this map, set flag
     // Also subtract from target to get back to the original stage position that was
     // aligned to in map and presumably marked.
-    if (inItem->mType == ITEM_TYPE_MAP && inItem->mRealignedID == item->mMapID && 
+    if (inItem->IsMap() && inItem->mRealignedID == item->mMapID && 
       inItem->mRealignReg == item->mRegistration) {
       targetX -= inItem->mRealignErrX;
       targetY -= inItem->mRealignErrY;
@@ -631,7 +631,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   item = mItemArray->GetAt(mRIitemInd);
   mSecondRoundID = 0;
-  if (inItem->mType == ITEM_TYPE_MAP && item->mMapID != inItem->mMapID && 
+  if (inItem->IsMap() && item->mMapID != inItem->mMapID && 
     inItem->mColor != NO_REALIGN_COLOR)
     mSecondRoundID = inItem->mMapID;
   else if (mRIdrawnTargetItem)
@@ -1677,7 +1677,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL 
   KImageStore *imageStore;
   MontParam *masterMont = mWinApp->GetMontParam();
 
-  if (item->mType != ITEM_TYPE_MAP || item->mImported)
+  if (item->IsNotMap() || item->mImported)
     return 1;
   mMapMontP = NULL;
   SaveCurrentState(STATE_MAP_ACQUIRE, false);
@@ -2519,7 +2519,7 @@ void CNavHelper::ClearSavedMapMarkerShifts()
 void CNavHelper::SaveMapMarkerShiftToLists(CMapDrawItem * item, int cohortID, 
   float newXshift, float newYshift)
 {
-  if (item->mType != ITEM_TYPE_MAP)
+  if (item->IsNotMap())
     return;
   mSavedMaShMapIDs.push_back(item->mMapID);
   mSavedMaShCohortIDs.push_back(item->mShiftCohortID);
@@ -2534,7 +2534,7 @@ void CNavHelper::SaveMapMarkerShiftToLists(CMapDrawItem * item, int cohortID,
 void CNavHelper::RestoreMapMarkerShift(CMapDrawItem * item)
 {
   int ind;
-  if (item->mType != ITEM_TYPE_MAP)
+  if (item->IsNotMap())
     return;
   for (ind = 0; ind < (int)mSavedMaShMapIDs.size(); ind++) {
     if (mSavedMaShMapIDs[ind] == item->mMapID) {
@@ -2578,7 +2578,7 @@ bool CNavHelper::OKtoApplyBaseMarkerShift()
   for (shInd = 0; shInd < (int)mMarkerShiftArray.GetSize(); shInd++) {
     for (itInd = 0; itInd < (int)mItemArray->GetSize(); itInd++) {
       item = mItemArray->GetAt(itInd);
-      if (item->mType == ITEM_TYPE_MAP && item->mRegistration == reg &&
+      if (item->IsMap() && item->mRegistration == reg &&
         item->mMapMagInd == mMarkerShiftArray[shInd].fromMagInd && 
         (!item->mShiftCohortID || item->mMarkerShiftX < EXTRA_VALUE_TEST))
         return true;
@@ -2601,7 +2601,7 @@ void CNavHelper::ApplyBaseMarkerShift()
 
   // Set up a default mag based either on the mag of the current item if it is a map,
   // or the mag nearest to the current mag
-  if (item && item->mType == ITEM_TYPE_MAP)
+  if (item && item->IsMap())
     itemMag = item->mMapMagInd;
   for (ind = 0; ind < (int)mMarkerShiftArray.GetSize(); ind++) {
     if (mMarkerShiftArray[ind].fromMagInd == itemMag)
@@ -2838,7 +2838,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
         autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         if (item2->mMontParamIndex >= 0) {
           montp = mMontParArray->GetAt(item2->mMontParamIndex);
-          breakForFit = montp->wasFitToPolygon && item->mType == ITEM_TYPE_POLYGON;
+          breakForFit = montp->wasFitToPolygon && item->IsPolygon();
         }
         *propIndexp = item2->mFilePropIndex;
         *montIndexp = item2->mMontParamIndex;
@@ -3034,7 +3034,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   typeDlg.m_iSingleMont = mLastTypeWasMont ? 1 : 0;
   if (*propIndexp >= 0)
     typeDlg.m_iSingleMont = prevIndex >= 0 ? 1 : 0;
-  typeDlg.mPolyFitOK = item->mType == ITEM_TYPE_POLYGON && listType == NAVFILE_ITEM;
+  typeDlg.mPolyFitOK = item->IsPolygon() && listType == NAVFILE_ITEM;
   typeDlg.m_bFitPoly = mLastMontFitToPoly;
   typeDlg.m_bSkipDlgs = mSkipMontFitDlgs;
   if (prevIndex >= 0 && typeDlg.mPolyFitOK)
@@ -4275,7 +4275,7 @@ bool CNavHelper::AnyMontageMapsInNavTable()
     return false;
   for (int ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
     item = mItemArray->GetAt(ind);
-    if (item->mType == ITEM_TYPE_MAP && item->mMapMontage)
+    if (item->IsMap() && item->mMapMontage)
       return true;
   }
   return false;
@@ -4295,7 +4295,7 @@ int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum)
   while (filename.Replace("\\\\", "\\")) {};
   for (int ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
     item = mItemArray->GetAt(ind);
-    if (item->mType == ITEM_TYPE_MAP && secNum == item->mMapSection) {
+    if (item->IsMap() && secNum == item->mMapSection) {
       str = item->mMapFile;
       while (str.Replace("\\\\", "\\")) {};
       if (str == filename)

@@ -897,7 +897,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 
       // For polygon at same registration
       // transform points to image and count how many are on the image
-      if (item->mType == ITEM_TYPE_POLYGON && item->mRegistration == mRegistration) {
+      if (item->IsPolygon() && item->mRegistration == mRegistration) {
         numOnIm = 0;
         xBoundTemp.resize(item->mNumPoints);
         yBoundTemp.resize(item->mNumPoints);

@@ -181,7 +181,7 @@ void CStateDlg::Update(void)
   if (navOpen) {
     item = mWinApp->mNavigator->GetCurrentItem();
     if (item) {
-      mapItem = item->mType == ITEM_TYPE_MAP;
+      mapItem = item->IsMap();
       if (item->mStateIndex >= 0) {
         schedItem = true;
       } else if ((j = mWinApp->mNavigator->GroupScheduledIndex(item->mGroupID)) >= 0) {
@@ -268,7 +268,7 @@ void CStateDlg::OnButAddNavState()
   if (!mWinApp->mNavigator)
     return;
   CMapDrawItem *item = mWinApp->mNavigator->GetCurrentItem();
-  if (!item || item->mType != ITEM_TYPE_MAP)
+  if (!item || item->IsNotMap())
     return;
   StateParams *state = mHelper->NewStateParam(false);
   if (!state)
@@ -335,7 +335,7 @@ void CStateDlg::OnButSetMapState()
   if (!mWinApp->mNavigator)
     return;
   CMapDrawItem *item = mWinApp->mNavigator->GetCurrentItem();
-  if (!item || item->mType != ITEM_TYPE_MAP)
+  if (!item || item->IsNotMap())
     return;
   mHelper->SetToMapImagingState(item, true);
 }

@@ -170,14 +170,14 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   } else if (boundType == COMBINE_IN_POLYGON) {
 
     // OR inside polygon
-    if (curItem->mType != ITEM_TYPE_POLYGON)
+    if (curItem->IsNotPolygon())
       return ERR_NOT_POLYGON;
 
     registration = curItem->mRegistration;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
       if (item->mAcquire && item->mRegistration == registration) {
-        if (item->mType == ITEM_TYPE_POINT && InsideContour(curItem->mPtX, curItem->mPtY,
+        if (item->IsPoint() && InsideContour(curItem->mPtX, curItem->mPtY,
           curItem->mNumPoints, item->mStageX, item->mStageY)) {
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
@@ -188,12 +188,12 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   } else {
 
     // Get group members
-    if (curItem->mType != ITEM_TYPE_POINT || !curItem->mGroupID)
+    if (curItem->IsNotPoint() || !curItem->mGroupID)
       return ERR_NO_GROUP;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
       if (item->mAcquire) {
-        if (item->mType == ITEM_TYPE_POINT && item->mGroupID == curItem->mGroupID) {
+        if (item->IsPoint() && item->mGroupID == curItem->mGroupID) {
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);

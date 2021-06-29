@@ -668,7 +668,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           }
         }
       }
-      if (!navItem || navItem->mType != ITEM_TYPE_POLYGON) {
+      if (!navItem || navItem->IsNotPolygon()) {
         SEMMessageBox(CString("The Navigator item to skip pieces outside of ") +
           (!navItem ? "has a number out of range" : "is not a polygon"));
         return 1;

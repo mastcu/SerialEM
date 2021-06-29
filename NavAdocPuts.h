@@ -49,7 +49,7 @@
     ADOC_PUT(Integer(ADOC_ARG, "PieceOn", item->mPieceDrawnOn));
   if (item->mXinPiece >= 0. && item->mYinPiece >= 0.)
     ADOC_PUT(TwoFloats(ADOC_ARG, "XYinPc", item->mXinPiece, item->mYinPiece));
-  if (item->mType == ITEM_TYPE_MAP) {
+  if (item->IsMap()) {
     ADOC_PUT(KeyValue(ADOC_ARG, "MapFile",  (LPCTSTR)item->mMapFile));
     ADOC_PUT(Integer(ADOC_ARG, "MapID", item->mMapID));
     ADOC_PUT(Integer(ADOC_ARG, "FitToPolygonID", item->mFitToPolygonID));

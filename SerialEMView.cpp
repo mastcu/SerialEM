@@ -1071,7 +1071,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       numPoints = B3DMIN(5, item->mNumPoints);
     } else {
       item = itemArray->GetAt(iDraw);
-      thick = item->mType == ITEM_TYPE_POINT ? 3 : 2;
+      thick = item->IsPoint() ? 3 : 2;
       highlight = selectedItems->count(iDraw) > 0;
       thick = highlight ? thick : 1;
       numPoints = item->mNumPoints;
@@ -1082,7 +1082,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
       continue;
     SetStageErrIfRealignedOnMap(imBuf, item);
-    crossLen = DSB_DPI_SCALE(item->mType == ITEM_TYPE_POINT ? 9 : 5);
+    crossLen = DSB_DPI_SCALE(item->IsPoint() ? 9 : 5);
     CPen pnSolidPen(PS_SOLID, thick, item->GetColor(highlight));
 
     // Single point
@@ -1111,7 +1111,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // For a map, find the adjust that applies to the center, turn off adjustment for
       // the corner points, and adjust them all by the center adjustment to get a square
-      if (item->mType == ITEM_TYPE_MAP || (iDraw < 0 && !useMultiShot))
+      if (item->IsMap() || (iDraw < 0 && !useMultiShot))
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
       // Draw lines if there is more than one point
@@ -1119,7 +1119,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (!(iDraw < 0 && useMultiShot))
         DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
         NULL);
-      if (item->mType == ITEM_TYPE_MAP && item->mFitToPolygonID && item->mMapSection > 0){
+      if (item->IsMap() && item->mFitToPolygonID && item->mMapSection > 0){
         polygon = mWinApp->mNavigator->FindItemWithMapID(item->mFitToPolygonID, false);
         if (polygon && polygon->mDraw > 0) {
           CPen pnDashPen(PS_DASHDOT, 1, polygon->GetColor(false));
@@ -1328,7 +1328,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // The rule is to draw first and last in a group and up to 5 around the current
       // point if the group is above the threshold size
       draw = true;
-      if (groupThresh > 0 && item->mType == ITEM_TYPE_POINT && (iDraw < currentIndex - 2
+      if (groupThresh > 0 && item->IsPoint() && (iDraw < currentIndex - 2
         || iDraw > currentIndex + 2 || item->mGroupID != currentGroup) && 
         item->mGroupID > 0) {
         if (item->mGroupID == lastGroupID) {

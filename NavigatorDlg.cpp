@@ -446,7 +446,7 @@ void CNavigatorDlg::ManageCurrentControls()
     m_bDrawOne = mItem->mDraw;
     m_bCorner = mItem->mCorner;
     m_bRotate = mItem->mRotOnLoad;
-    m_bDualMap = mItem->mType == ITEM_TYPE_MAP && mItem->mMapID == mDualMapID;
+    m_bDualMap = mItem->IsMap() && mItem->mMapID == mDualMapID;
     m_bRegPoint = mItem->mRegPoint > 0;
     if (m_bRegPoint)
       SetRegPtNum(mItem->mRegPoint);
@@ -507,14 +507,14 @@ void CNavigatorDlg::ManageCurrentControls()
     }
 
   }
-  regOK = exists && (mItem->mType == ITEM_TYPE_POINT || mItem->mType == ITEM_TYPE_MAP);
+  regOK = exists && (mItem->IsPoint() || mItem->IsMap());
   m_butRegPoint.EnableWindow(regOK);
   m_sbcRegPtNum.EnableWindow(regOK);
   m_statRegPtNum.EnableWindow(regOK);
-  m_butCorner.EnableWindow(exists && mItem->mType == ITEM_TYPE_POINT);
-  m_butRotate.EnableWindow(exists && mItem->mType == ITEM_TYPE_MAP);
+  m_butCorner.EnableWindow(exists && mItem->IsPoint());
+  m_butRotate.EnableWindow(exists && mItem->IsMap());
   m_checkDualMap.EnableWindow(exists && (m_bDualMap || 
-    (mItem->mType == ITEM_TYPE_MAP && !mItem->mImported)));
+    (mItem->IsMap() && !mItem->mImported)));
   m_editPtNote.EnableWindow(exists && mAcquireIndex < 0);
   m_editPtLabel.EnableWindow(exists && mAcquireIndex < 0);
   m_butDrawOne.EnableWindow(enableDraw);
@@ -611,7 +611,7 @@ void CNavigatorDlg::Update()
     !(mAddingPoints || mAddingPoly || mLoadingMap) && noTasks);
   m_butDrawPts.EnableWindow(!(mAddingPoly || mMovingItem || mLoadingMap) && noTasks);
   m_butDrawPoly.EnableWindow(!(mAddingPoints || mMovingItem || mLoadingMap) && noTasks);
-  //m_butUpdatePos.EnableWindow(curExists && mItem->mType != ITEM_TYPE_MAP && noDrawing &&
+  //m_butUpdatePos.EnableWindow(curExists && mItem->IsNotMap() && noDrawing &&
   //  mAcquireIndex < 0);
   m_butUpdateZ.EnableWindow((curExists || grpExists) && noTasks && noDrawing);
   m_butGotoPoint.EnableWindow(stageMoveOK && !recordingHoles);
@@ -625,7 +625,7 @@ void CNavigatorDlg::Update()
   else
     item = FindMontMapDrawnOn(GetSingleSelectedItem());
   m_butLoadMap.EnableWindow((curExists || item) && noTasks && noDrawing && 
-    !mCamera->CameraBusy() && (mItem->mType == ITEM_TYPE_MAP || item != NULL));
+    !mCamera->CameraBusy() && (mItem->IsMap() || item != NULL));
   m_butLoadMap.SetWindowText(item ? "Load Piece" : "Load Map");
 
   m_butNewMap.EnableWindow(noDrawing && noTasks && mWinApp->mStoreMRC != NULL);
@@ -757,8 +757,8 @@ BOOL CNavigatorDlg::OKtoAddGrid(bool likeLast)
   // No imports are allowed; only polygons or points with group ID
   if (mItem->mImported)
     return false;
-  points = mItem->mType == ITEM_TYPE_POINT && mItem->mGroupID;
-  polyMap = mItem->mType == ITEM_TYPE_POLYGON || mItem->mType == ITEM_TYPE_MAP;
+  points = mItem->IsPoint() && mItem->mGroupID;
+  polyMap = mItem->IsPolygon() || mItem->IsMap();
   if (likeLast)
     return ((points && !mLastGridPatternPoly) || (polyMap && mLastGridPatternPoly > 0));
   if (!points)
@@ -783,7 +783,7 @@ int CNavigatorDlg::OKtoAverageCrops(void)
   int numacq;
   if (!SetCurrentItem(true))
     return false;
-  if (mItem->mImported || mItem->mType != ITEM_TYPE_POINT || !mItem->mGroupID)
+  if (mItem->mImported || mItem->IsNotPoint() || !mItem->mGroupID)
     return false;
   if (CountItemsInGroup(mItem->mGroupID, label, lastlab, numacq) > 1)
     return mItem->mGroupID;
@@ -856,7 +856,7 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
   SetChanged(true);
 
   // If it is a map look for buffers with this map loaded and change their registration
-  if (item->mType == ITEM_TYPE_MAP)
+  if (item->IsMap())
     mHelper->ChangeAllBufferRegistrations(item->mMapID, regOld, newReg);
   Redraw();
   return 0;
@@ -1204,7 +1204,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
   int start = 0, end = (int)mItemArray.GetSize() - 1;
   if (!SetCurrentItem(true)) 
     return;
-  if (mItem->mType == ITEM_TYPE_POLYGON || !mItem->mGroupID || mItem->mTSparamIndex >= 0)
+  if (mItem->IsPolygon() || !mItem->mGroupID || mItem->mTSparamIndex >= 0)
     return;
   acquire = !mItem->mAcquire;
   if (collapsedGroup)
@@ -1212,7 +1212,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
 
   for (int i = start; i <= end; i++) {
     item = mItemArray[i];
-    if (item->mType != ITEM_TYPE_POLYGON && item->mGroupID == mItem->mGroupID && 
+    if (item->IsNotPolygon() && item->mGroupID == mItem->mGroupID && 
       mItem->mTSparamIndex < 0) {
       if (acquire) {
         if (!item->mAcquire)
@@ -1520,7 +1520,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
 void CNavigatorDlg::OnDblclkListviewer() 
 {
   if (!SetCurrentItem() || mWinApp->DoingTasks() || mAddingPoints || mAddingPoly || 
-    mMovingItem || !(mItem->mType == ITEM_TYPE_MAP || FindMontMapDrawnOn(mItem)) || 
+    mMovingItem || !(mItem->IsMap() || FindMontMapDrawnOn(mItem)) || 
     mCamera->CameraBusy())
     return;
   OnLoadMap();
@@ -1544,7 +1544,7 @@ void CNavigatorDlg::MoveListSelection(int direction)
 
 void CNavigatorDlg::ProcessCKey(void)
 {
-  if (mWinApp->DoingTasks() || !SetCurrentItem() || mItem->mType != ITEM_TYPE_POINT)
+  if (mWinApp->DoingTasks() || !SetCurrentItem() || mItem->IsNotPoint())
     return;
   mItem->mCorner = !mItem->mCorner;
   UpdateListString(mCurrentItem);
@@ -1608,7 +1608,7 @@ void CNavigatorDlg::ProcessDKey(void)
   // Count points in range
   for (ind = start; ind <= end; ind++) {
     item = mItemArray[ind];
-    if (item->mType == ITEM_TYPE_POINT)
+    if (item->IsPoint())
       num++;
   }
 
@@ -1621,7 +1621,7 @@ void CNavigatorDlg::ProcessDKey(void)
   }
   for (ind = end; ind >= start; ind--) {
     item = mItemArray[ind];
-    if (item->mType == ITEM_TYPE_POINT) {
+    if (item->IsPoint()) {
       mCurrentItem = ind;
       mCurListSel = ind;
       m_listViewer.SetCurSel(mCurListSel);
@@ -1675,13 +1675,13 @@ void CNavigatorDlg::ProcessTKey(void)
 bool CNavigatorDlg::AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd)
 {
   CMapDrawItem *check, *item = mItemArray[itemInd];
-  if (!item->mAtSamePosID || item->mType != ITEM_TYPE_MAP)
+  if (!item->mAtSamePosID || item->IsNotMap())
     return false;
   for (int ind = startInd; ind <= endInd; ind++) {
     if (ind == itemInd)
       continue;
     check = mItemArray[ind];
-    if (item->mAtSamePosID == check->mAtSamePosID && check->mType == ITEM_TYPE_MAP &&
+    if (item->mAtSamePosID == check->mAtSamePosID && check->IsMap() &&
       item->mMapMagInd < check->mMapMagInd)
       return true;
   }
@@ -1729,7 +1729,7 @@ void CNavigatorDlg::ProcessNKey(void)
     item = mItemArray[ind];
     if (item->mAcquire && item->mFilePropIndex < 0) {
       numOff++;
-      if (numOff >= interval || item->mType == ITEM_TYPE_POLYGON) {
+      if (numOff >= interval || item->IsPolygon()) {
         if (mHelper->NewAcquireFile(ind, NAVFILE_ITEM, NULL))
           break;
         UpdateListString(ind);
@@ -1813,7 +1813,7 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
     }
 
   } else {
-    if (item->mType == ITEM_TYPE_MAP && item->mMapID == mDualMapID) 
+    if (item->IsMap() && item->mMapID == mDualMapID) 
       type = ITEM_TYPE_MAP + 2;
     string = item->mLabel + "\t" + CString(item->mDraw ? colorNames[item->mColor] : "Off")
       + "\t" + FormatCoordinate(item->mStageX, 7) + FormatCoordinate(item->mStageY, 7) +
@@ -1962,7 +1962,7 @@ void CNavigatorDlg::OnAddStagePos()
   mWinApp->RestoreViewFocus();
 	if (!SetCurrentItem())
     return;
-  if (mItem->mType == ITEM_TYPE_MAP)
+  if (mItem->IsMap())
     return;
   origX = mItem->mStageX;
   origY = mItem->mStageY;
@@ -2048,7 +2048,7 @@ int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg,
   // Loop again and find non-map items with drawnOnID in the set
   for (i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
-    if (item->mRegistration == reg && item->mType != ITEM_TYPE_MAP && item->mDrawnOnMapID
+    if (item->mRegistration == reg && item->IsNotMap() && item->mDrawnOnMapID
       && shiftedMapIDs.count(item->mDrawnOnMapID)) {
       ShiftItemAndPoints(shiftX, shiftY, item, i, numShift);
     }
@@ -2546,7 +2546,7 @@ void CNavigatorDlg::OnDeleteitem()
   // actual current item and make sure (again) that it is a point
   if (m_bEditMode && mRemoveItemOnly && !mAddingPoints) {
     mItem = GetSingleSelectedItem(&delIndex);
-    if (!mItem || mItem->mType != ITEM_TYPE_POINT)
+    if (!mItem || mItem->IsNotPoint())
       return;
     if (m_bCollapseGroups) {
       GetCollapsedGroupLimits(mCurListSel, start, end);
@@ -2560,7 +2560,7 @@ void CNavigatorDlg::OnDeleteitem()
     DeleteGroup(true);
     return;
   }
-  if (mItem->mType == ITEM_TYPE_MAP && !mItem->mImported && 
+  if (mItem->IsMap() && !mItem->mImported && 
     AfxMessageBox("This item is a map image\n\n"
     "It includes critical information about the file\n and coordinate scaling that "
     "would be very hard to recreate.\n\n Are you sure you want to delete the item?",
@@ -2571,7 +2571,7 @@ void CNavigatorDlg::OnDeleteitem()
     mItem->mAcquire = false;
     mHelper->EndAcquireOrNewFile(mItem);
   }
-  if (mItem->mType == ITEM_TYPE_MAP && mItem->mMapID == mDualMapID)
+  if (mItem->IsMap() && mItem->mMapID == mDualMapID)
     mDualMapID = -1;
 
   // If removing a point while adding and groups are collapsed, set item to last entry in
@@ -2681,7 +2681,7 @@ void CNavigatorDlg::OnMoveItem()
   if (!mMovingItem) {
     if (!SetCurrentItem())
       return;
-    if (mItem->mType == ITEM_TYPE_MAP) {
+    if (mItem->IsMap()) {
       mess = "This item is a map.  Are you sure you want to change its position?";
       if (RawStageIsRevisable(false))
         mess += "\n\nIf you move to the exact center of the current image, the map will\n"
@@ -2736,7 +2736,7 @@ bool CNavigatorDlg::MovingMapItem(void)
 {
   if (!mMovingItem || !SetCurrentItem())
     return false;
-  return mItem->mType == ITEM_TYPE_MAP && RawStageIsRevisable(true);
+  return mItem->IsMap() && RawStageIsRevisable(true);
 }
 
 // Respond to a mouse point from the user
@@ -2792,7 +2792,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       return false;
     if (mItem->mRegistration != imBuf->mRegistration)
       return false;
-    if (movingOne && mItem->mType != ITEM_TYPE_POINT)
+    if (movingOne && mItem->IsNotPoint())
       return false;
     ShiftItemPoints(mItem, stageX - mItem->mStageX, stageY - mItem->mStageY);
     mItem->mStageX = stageX;
@@ -2806,14 +2806,14 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
         mItem->mStageZ = item->mStageZ;
       }
     }
-    if (mItem->mType == ITEM_TYPE_POINT) {
+    if (mItem->IsPoint()) {
       mItem->mPieceDrawnOn = pieceIndex;
       mItem->mXinPiece = xInPiece;
       mItem->mYinPiece = yInPiece;
     }
     UpdateListString(mCurrentItem);
     SetChanged(true);
-    mRawStageIsMovable = mItem->mType == ITEM_TYPE_MAP && nearCenter && 
+    mRawStageIsMovable = mItem->IsMap() && nearCenter && 
       RawStageIsRevisable(false);
   
     // Adding points or the first point of a polygon
@@ -2825,7 +2825,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       return false;
     imBuf->mRegistration = mCurrentRegistration; */
     if (addingOne) {
-      if (!SetCurrentItem(true) || mItem->mType != ITEM_TYPE_POINT || !mItem->mGroupID)
+      if (!SetCurrentItem(true) || mItem->IsNotPoint() || !mItem->mGroupID)
         return false;
       acquire = mItem->mAcquire;
       groupID = mItem->mGroupID;
@@ -2880,7 +2880,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
 
     // If there is one item selected and it is a map, clear out selection list
     if (m_bEditMode && ctrlKey && mSelectedItems.size() == 1 && SetCurrentItem() &&
-      mItem->mType == ITEM_TYPE_MAP)
+      mItem->IsMap())
         mSelectedItems.clear();
 
     // Loop on items; skip ones that should not be visible or are outside region
@@ -2888,7 +2888,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       item = mItemArray.GetAt(ind);
       if (item->mRegistration != imBuf->mRegistration && !m_bDrawAllReg)
         continue;
-      if (!item->mDraw || item->mType == ITEM_TYPE_MAP)
+      if (!item->mDraw || item->IsMap())
         continue;
       if (!(InsideContour(selXlimit, selYlimit, 4, item->mStageX, item->mStageY) ||
         InsideContour(selXwindow, selYwindow, 4, item->mStageX, item->mStageY)))
@@ -3006,7 +3006,7 @@ bool CNavigatorDlg::GetHolePositionVectors(FloatVec **xypos, IntVec **index)
   *index = &mCurItemHoleIndex;
   if (!m_bEditMode || !item)
     return false;
-  return item->mType == ITEM_TYPE_POINT && item->mNumPoints == 1 &&
+  return item->IsPoint() && item->mNumPoints == 1 &&
     mSelectedItems.size() <= 1;
 }
 
@@ -3056,7 +3056,7 @@ BOOL CNavigatorDlg::BackspacePressed()
       return false;
     if (m_bEditMode && !mAddingPoints) {
       item = GetSingleSelectedItem();
-      if (!item || item->mType != ITEM_TYPE_POINT)
+      if (!item || item->IsNotPoint())
         return false;
     }
     mRemoveItemOnly = true;
@@ -3513,7 +3513,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
     return 1;
-  if (mItem->mType != ITEM_TYPE_POLYGON)	
+  if (mItem->IsNotPolygon())	
     return 1;
   itmp = new CMapDrawItem;
   for (int i = 0; i < mItem->mNumPoints; i++)
@@ -4455,7 +4455,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
   // See if the map the points were drawn on is still loaded and is montage; if so
   // set up to get image coordinates
-  if (mItem->mType == ITEM_TYPE_POINT) {
+  if (mItem->IsPoint()) {
 
     mDrawnOnMontBufInd = FindBufferWithMontMap(drawnOnID);
     if (mDrawnOnMontBufInd >= 0) {
@@ -4613,7 +4613,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
             searchPoly[j] = NULL;
             for (i = 0; i < mItemArray.GetSize(); i++) {
               item = mItemArray[i];
-              if ((item->mType == ITEM_TYPE_POLYGON || item->mType == ITEM_TYPE_MAP) &&
+              if ((item->IsPolygon() || item->IsMap()) &&
                 item->mRegistration == registration && InsideContour(item->mPtX,
                   item->mPtY, item->mNumPoints, j ? xcen : xcorner, j ? ycen : ycorner)) {
                 itemArea = ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
@@ -4681,7 +4681,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           for (i = 0; i < mItemArray.GetSize(); i++) {
             item = mItemArray[i];
             if (item->mLabel == label) {
-              if (item->mType != ITEM_TYPE_POLYGON && item->mType != ITEM_TYPE_MAP) {
+              if (item->IsNotPolygon() && item->IsNotMap()) {
                 AfxMessageBox("This item is not a polygon or map", MB_EXCLAME);
                 mLastGridPatternPoly = -1;
                 return;
@@ -4820,7 +4820,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   }
 
   // Save flag as valid last grid
-  mLastGridPatternPoly = mItem->mType == ITEM_TYPE_POINT ? 0 : 1;
+  mLastGridPatternPoly = mItem->IsPoint() ? 0 : 1;
 
   // Now for polygon, find the extent and make generous limits for start and end
   if (poly) {
@@ -5859,7 +5859,7 @@ void CNavigatorDlg::TransformOneItem(CMapDrawItem * item, ScaleMat aM, float * d
   // Premultiply by the inverse of the transformation because that would
   // bring points back to the old coordinates, which can then be multiplied
   // by the map transformation to display at the right places
-  if (item->mType == ITEM_TYPE_MAP) {
+  if (item->IsMap()) {
     item->mMapScaleMat = MatMul(MatInv(aM), item->mMapScaleMat);
 
     // Also look for buffers with this map loaded and change their registration
@@ -6714,7 +6714,7 @@ void CNavigatorDlg::OnLoadMap()
     if (!mItem)
       return;
   }
-  if (mItem->mType == ITEM_TYPE_POINT) {
+  if (mItem->IsPoint()) {
     mHelper->LoadPieceContainingPoint(mItem, mFoundItem);
     AddFocusAreaPoint(false);
   } else
@@ -7890,7 +7890,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           (int)newFileOptInds.size())
           item->mFilePropIndex = newFileOptInds[item->mFilePropIndex];
 
-        if (item->mType == ITEM_TYPE_MAP) {
+        if (item->IsMap()) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
           if (!retval) 
@@ -7998,7 +7998,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           numToGet = numPoints;
           ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsY", &item->mPtY[0], 
             &numToGet, numPoints));
-        } else if (numExternal && item->mType == ITEM_TYPE_POINT) {
+        } else if (numExternal && item->IsPoint()) {
           item->AppendPoint(item->mStageX, item->mStageY);
         } else {
           numLackRequired++;
@@ -8070,7 +8070,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           item->mPieceDrawnOn = atoi(NextTabField(str, index)) - 1;
           NextTabField(str, index);
         }
-        if (item->mType == ITEM_TYPE_MAP) {
+        if (item->IsMap()) {
           item->mMapFile = NextTabField(str, index);
           trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
           item->mTrimmedName = item->mMapFile.Right(trimCount);
@@ -8179,7 +8179,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       if (numAdocErr + numLackRequired + externalErr == 0) {
 
         // Check that map file is there and corect name
-        if (item->mType == ITEM_TYPE_MAP && !item->mTrimmedName.IsEmpty()) {
+        if (item->IsMap() && !item->mTrimmedName.IsEmpty()) {
 
           // First see if it is in the map of found files, if so just assign name
           stdstr = (LPCTSTR)item->mMapFile;
@@ -9075,7 +9075,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
 
     // Skip maps and remove the mark if acquiring map, but not if doing macro???
     // But what if they want a different mag map?  This should go 
-    /*if (item->mType == ITEM_TYPE_MAP && mParam->acquireType == ACQUIRE_TAKE_MAP) {
+    /*if (item->IsMap() && mParam->acquireType == ACQUIRE_TAKE_MAP) {
     item->mAcquire = false;
     UpdateListString(i);
     continue;
@@ -9603,7 +9603,7 @@ CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
     return NULL;
   for (mFoundItem = 0; mFoundItem < mItemArray.GetSize(); mFoundItem++) {
     item = mItemArray[mFoundItem];
-    if ((item->mType == ITEM_TYPE_MAP || !requireMap) && 
+    if ((item->IsMap() || !requireMap) && 
       ((!matchGroup && item->mMapID == mapID) || (matchGroup && item->mGroupID == mapID)))
       return item;
   }
@@ -9631,7 +9631,7 @@ CMapDrawItem * CNavigatorDlg::FindItemWithString(CString & string, BOOL ifNote)
 CMapDrawItem *CNavigatorDlg::FindMontMapDrawnOn(CMapDrawItem *item)
 {
  CMapDrawItem *mapItem;
- if (!item || item->mType != ITEM_TYPE_POINT || item->mDrawnOnMapID <= 0)
+ if (!item || item->IsNotPoint() || item->mDrawnOnMapID <= 0)
     return NULL;
  mapItem = FindItemWithMapID(item->mDrawnOnMapID);
  if (!mapItem || !mapItem->mMapMontage)
@@ -9946,7 +9946,7 @@ BOOL CNavigatorDlg::SupermontLabel(CMapDrawItem * item, int & startNum, int & ix
 {
   int len = item->mLabel.GetLength();
   int index2, index = item->mLabel.Find('-');
-  if (index <= 0 || index == len - 1 || item->mType != ITEM_TYPE_POLYGON)
+  if (index <= 0 || index == len - 1 || item->IsNotPolygon())
     return false;
   index2 = item->mLabel.Find('-', index + 1);
   if (index2 <= index || index2 == len - 1 || item->mLabel.Find('-', index2 + 1) >= 0)
@@ -10272,13 +10272,13 @@ int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX,
 {
   int ind, num = 0;
   CMapDrawItem *item;
-  if (!SetCurrentItem(true) || mItem->mType != ITEM_TYPE_POINT)
+  if (!SetCurrentItem(true) || mItem->IsNotPoint())
     return 0;
   if (defocusOffset)
     *defocusOffset = mItem->mDefocusOffset;
   for (ind = 0; ind < mItemArray.GetSize(); ind++) {
     item = mItemArray[ind];
-    if (item->mGroupID == mItem->mGroupID && item->mType == ITEM_TYPE_POINT) {
+    if (item->mGroupID == mItem->mGroupID && item->IsPoint()) {
       num++;
       if (maxPoints > 0 && num > maxPoints)
         return num;
