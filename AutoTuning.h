@@ -107,7 +107,7 @@ private:
   int mMagIndex;          // Mag of the operation
   ScaleMat mCamToSpec;    // Matrix for converting pixels to nm
   ComaVsISCalib mComaVsIScal;
-  double mSavedBeamTilt;  // Starting values of beam til, defocus, astigmatism
+  float mSavedBeamTilt;  // Starting values of beam til, defocus, astigmatism
   double mSavedDefocus;
   double mSavedAstigX;
   double mSavedAstigY;

@@ -54,7 +54,7 @@ struct TiltSeriesParam {
   BOOL refIsInA;               // flag that buffer A has a reference
   int anchorBuffer;            // Buffer number of anchor
   float ISlimit;               // Limit for image shift
-  double beamTilt;             // specified beam tilt
+  float beamTilt;             // specified beam tilt
   float targetDefocus;         // Target for autofocus
   float autofocusOffset;       // Offset for doing autofocus
   float refocusThreshold;      // Threshold for iterating inside autofocus run

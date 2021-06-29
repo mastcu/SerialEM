@@ -636,7 +636,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
       StopComaFree();
       return;
     }
-    mFocusManager->SetBeamTilt(mMaxComaBeamTilt / 4.);
+    mFocusManager->SetBeamTilt(mMaxComaBeamTilt / 4.f);
     mFocusManager->SetTiltDirection(0);
     if (!mCalibrateComa) {
       mess = "MEASURING COMA";
