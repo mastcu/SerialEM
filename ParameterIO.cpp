@@ -149,7 +149,6 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CookParams *cookParams = mWinApp->GetCookParams();
   AutocenParams acParams;
   AutocenParams *acParmP;
-  mWinApp->mMultiTSTasks->ClearAutocenParams();
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
   BOOL recognized, recognized15, recognized2, frameListOK;

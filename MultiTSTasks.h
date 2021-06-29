@@ -21,7 +21,6 @@ class CMultiTSTasks
 public:
   CMultiTSTasks(void);
   ~CMultiTSTasks(void);
-  void ClearAutocenParams();
 
 private:
   CSerialEMApp * mWinApp;

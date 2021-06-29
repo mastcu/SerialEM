@@ -99,11 +99,6 @@ CMultiTSTasks::CMultiTSTasks(void)
 
 CMultiTSTasks::~CMultiTSTasks(void)
 {
-  ClearAutocenParams();
-}
-
-void CMultiTSTasks::ClearAutocenParams()
-{
   AutocenParams *parmP;
   for (int index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];

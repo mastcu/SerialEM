@@ -1682,6 +1682,28 @@
 #define IDC_RSAVE_NEW_SHIFT             2707
 #define IDC_RADD_TO_SAVED               2708
 #define IDC_STAT_MAP_MARKED             2709
+#define IDC_STAT_PROBE_LABEL            2710
+#define IDC_STAT_CUR_MAG                2711
+#define IDC_STAT_CAL_MAG                2712
+#define IDC_STAT_CUR_C2                 2713
+#define IDC_STAT_CAL_C2                 2714
+#define IDC_STAT_CUR_SPOT               2715
+#define IDC_STAT_CAL_SPOT               2716
+#define IDC_STAT_CUR_PROBE              2717
+#define IDC_STAT_CAL_PROBE              2718
+#define IDC_STAT_CUR_CAM                2719
+#define IDC_STAT_CAL_CAM                2720
+#define IDC_BUT_USE_TO_CAL              2722
+#define IDC_STAT_CAL_FOCUS_OFFSET       2723
+#define IDC_EDIT_FOCUS_OFFSET           2724
+#define IDC_STAT_CUR_FOCUS_OFFSET       2725
+#define IDC_CHECK_USE_OFFSET            2726
+#define IDC_EDIT_BEAM_TILT              2727
+#define IDC_BUT_USE_TO_RECAL            2728
+#define IDC_CHECK_USE_VIEW_IN_LD        2729
+#define IDC_EDIT_MAX_CHANGE             2730
+#define IDC_BUTTON3                     2732
+#define IDC_BUT_GET_CUR_TILT            2732
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2183,7 +2205,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        258
 #define _APS_NEXT_COMMAND_VALUE         33404
-#define _APS_NEXT_CONTROL_VALUE         2710
+#define _APS_NEXT_CONTROL_VALUE         2733
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
