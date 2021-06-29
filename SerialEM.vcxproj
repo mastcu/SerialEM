@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1326,6 +1326,7 @@
     <ClInclude Include="ProcessImage.h" />
     <ClInclude Include="ReadFileDlg.h" />
     <ClInclude Include="RefPolicyDlg.h" />
+    <ClInclude Include="ZbyGSetupDlg.h" />
     <CustomBuild Include="Resource.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating map file for help compiler...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">Generating map file for help compiler...</Message>
@@ -4235,6 +4236,7 @@ echo.
     <ClCompile Include="XFolderDialog\XFolderDialog.cpp" />
     <ClCompile Include="XFolderDialog\XHistoryCombo.cpp" />
     <ClCompile Include="XFolderDialog\XWinVer.cpp" />
+    <ClCompile Include="ZbyGSetupDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SerialEM.rc" />

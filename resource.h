@@ -80,6 +80,8 @@
 #define IDD_MULTI_COMBINER              234
 #define IDD_MACROSELECTER               249
 #define IDD_SHIFT_TO_MARKER             254
+#define IDD_DIALOG1                     256
+#define IDD_Z_BY_G_SETUP                256
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2179,7 +2181,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        256
+#define _APS_NEXT_RESOURCE_VALUE        258
 #define _APS_NEXT_COMMAND_VALUE         33404
 #define _APS_NEXT_CONTROL_VALUE         2710
 #define _APS_NEXT_SYMED_VALUE           104
