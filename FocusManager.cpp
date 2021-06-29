@@ -359,7 +359,7 @@ void CFocusManager::OnFocusReportonexisting()
     B3DCLAMP(numpic, 3, MAX_BUFFERS - 3);
     if (!mSFnormalizedSlope[mScope->GetProbeMode()])
       KGetOneFloat("Normalized slope to use:", mBackupSlope, 2);
-    mDoChangeFocus = false;
+    mDoChangeFocus = 0;
     mNumRotavs = 0;
     mSFtask = STEM_FOCUS_COARSE1;
     mCalDelta = 1.;
@@ -1158,7 +1158,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
       }
       if (!abort && mNumFullChangeIters >= fullChangeIterLimit) {
         abort = FOCUS_ABORT_TOO_MANY_ITERS;
-        addon = "too may iterations have been run";
+        addon = "too many iterations have been run";
       }
       mWinApp->AppendToLog(report + (abort ? "" : changeText) + driftText, 
         LOG_SWALLOW_IF_CLOSED);
@@ -2401,7 +2401,7 @@ void CFocusManager::STEMfocusShot(int param)
     else if (mSFbestImBuf && mSFmaxPowerInd != mNumRotavs - 1)
       str += "    (Best focused image copied to A)";
     mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
-    if (mDoChangeFocus)
+    if (mDoChangeFocus > 0)
       mSFbaseFocus += bestFocus;
     if (mSFbestImBuf && mSFmaxPowerInd != mNumRotavs - 1) {
       for (i = mBufferManager->GetShiftsOnAcquire(); i > 0 ; i--)

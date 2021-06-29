@@ -187,7 +187,7 @@ private:
   bool mLastWasOpposite;    // Flag set when a large focus change crosses zero
   BOOL mNormalizeViaView;   // Flag to normalize through View area in low dose
   int mViewNormDelay;       // Msec delay abetween View and Focus areas
-  BOOL mDoChangeFocus;
+  int mDoChangeFocus;
   float mMaxPeakDistanceRatio;  // Max ratio between distance from target rejecting 0 peak
   float mRefocusThreshold;   // Focus change at which to reiterate
   float mAbortThreshold;     // Focus change at which to apply abort logic when iterating
