@@ -37,7 +37,7 @@
     <p> &nbsp;To make the defocus measurements as reproducible as possible, the 
       illumination conditions are stored (intensity, spot size, and probe mode or 
       alpha) as well as the defocus offset and beam tilt used in the measurement.&nbsp; 
-      The top line of the dialog shows the current camera and which of the three Low 
+      The line of the dialog below the two 'CALIBRATE with' buttons shows the current camera and which of the three Low 
       Dose states applies.&nbsp; Below that is a summary of the relevant conditions.&nbsp; 
       On the left are the current values from the microscope and program.&nbsp; On the 
       right, if there is a stored calibration matching the magnification, camera, and 
@@ -67,6 +67,22 @@
     <p>
       <strong><em>Controls Relevant to the Calibration:</em></strong></p>
     <p>
+      CALIBRATE with <strong>Current Settings</strong></p>
+    <p>
+      Press this button to run a calibration with the current settings, possibly 
+      overridden by entries below for focus offset and beam tilt.&nbsp; The calibration will 
+      simply measure defocus 3 times and store the average result.&nbsp; If there is 
+      an existing calibration shown, it will be replaced by the new one; otherwise, a 
+      new calibration is stored.</p>
+    <p>
+      CALIBRATE with <strong>Stored Settings</strong></p>
+    <p> This button is enabled if there is a calibration shown for the current 
+      conditions, except that it will be disabled when not in Low Dose mode if the 
+      spot size or probe mode or alpha do not match the current conditions.&nbsp; 
+      Press it to run with the stored settings, possibly overridden by entries for 
+      focus offset and beam tilt.&nbsp; The calibrations will replace the existing 
+      one.</p>
+    <p>
       <strong>Calibrate with focus offset of</strong></p>
     <p>
       Turn on the check box and enter an alternative value for the focus offset to use 
@@ -79,22 +95,6 @@
       Turn on this check box and enter an alternative value for the beam tilt to apply 
       when measuring defocus.&nbsp; You may well want a higher value for focusing with 
       View, to yield larger displacements that can be measured more accurately.</p>
-    <p>
-      Calibrate with <strong>Current Settings</strong></p>
-    <p>
-      Press this button to run a calibration with the current settings, possibly 
-      overridden by entries for focus offset and beam tilt.&nbsp; The calibration will 
-      simply measure defocus 3 times and store the average result.&nbsp; If there is 
-      an existing calibration shown, it will be replaced by the new one; otherwise, a 
-      new calibration is stored.</p>
-    <p>
-      Calibrate with <strong>Stored Settings</strong></p>
-    <p> This button is enabled if there is a calibration shown for the current 
-      conditions, except that it will be disabled when not in Low Dose mode if the 
-      spot size or probe mode or alpha do not match the current conditions.&nbsp; 
-      Press it to run with the stored settings, possibly overridden by entries for 
-      focus offset and beam tilt.&nbsp; The calibrations will replace the existing 
-      one.</p>
     <p> <strong><em>Controls Relevant when Running Eucentricity by Focus:</em></strong></p>
     <p> <strong>Use View area in Low Dose mode</strong></p>
     <p> The checkbox controls whether the Eucentricity by Focus routine will measure 

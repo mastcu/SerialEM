@@ -3386,57 +3386,58 @@ BEGIN
     LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,25,75,141,8
 END
 
-IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 220
+IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 230
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Eucentricity by Focus Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,27,205,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,89,205,50,12
-    LTEXT           "Current State",IDC_STATIC,47,16,39,8
-    LTEXT           "Calibrated State",IDC_STATIC,99,16,49,8
-    LTEXT           "Magnification",IDC_STATIC,6,26,41,8
-    LTEXT           "Intensity",IDC_STATIC,6,36,25,8
-    LTEXT           "Spot size",IDC_STATIC,6,46,29,8
-    LTEXT           "Probe mode",IDC_STAT_PROBE_LABEL,6,56,41,8
-    CTEXT           "36000",IDC_STAT_CUR_MAG,49,26,35,8
-    CTEXT           "No cal, nearest at 72000",IDC_STAT_CAL_MAG,84,26,79,8
-    CTEXT           "63.25% C2",IDC_STAT_CUR_C2,46,36,41,8
-    CTEXT           "63.25% C2",IDC_STAT_CAL_C2,103,36,41,8
-    CTEXT           "11",IDC_STAT_CUR_SPOT,49,46,35,8
-    CTEXT           "11",IDC_STAT_CAL_SPOT,106,46,35,8
-    CTEXT           "nP",IDC_STAT_CUR_PROBE,49,56,35,8
-    CTEXT           "nP",IDC_STAT_CAL_PROBE,106,55,35,8
-    CTEXT           "TVIPS XF416",IDC_STAT_CUR_CAM,3,6,160,8
-    PUSHBUTTON      "Update State",IDC_ZBG_UPDATE_STATE,41,86,50,12
-    PUSHBUTTON      "Current Settings",IDC_BUT_USE_TO_CAL,50,132,52,12
-    LTEXT           "Focus offset",IDC_STATIC,6,66,37,8
-    CTEXT           "-50 um",IDC_STAT_CAL_FOCUS_OFFSET,106,66,35,8
-    EDITTEXT        IDC_EDIT_FOCUS_OFFSET,102,101,25,12,ES_AUTOHSCROLL
-    CTEXT           "-50 um",IDC_STAT_CUR_FOCUS_OFFSET,49,66,35,8
+    DEFPUSHBUTTON   "OK",IDOK,27,215,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,89,215,50,12
+    LTEXT           "Current State",IDC_STATIC,47,40,39,8
+    LTEXT           "Calibrated State",IDC_STATIC,99,40,49,8
+    LTEXT           "Magnification",IDC_STATIC,6,50,41,8
+    LTEXT           "Intensity",IDC_STATIC,6,60,25,8
+    LTEXT           "Spot size",IDC_STATIC,6,70,29,8
+    LTEXT           "Probe mode",IDC_STAT_PROBE_LABEL,6,80,41,8
+    CTEXT           "36000",IDC_STAT_CUR_MAG,49,50,35,8
+    CTEXT           "No cal, nearest at 72000",IDC_STAT_CAL_MAG,84,50,79,8
+    CTEXT           "63.25% C2",IDC_STAT_CUR_C2,46,60,41,8
+    CTEXT           "63.25% C2",IDC_STAT_CAL_C2,103,60,41,8
+    CTEXT           "11",IDC_STAT_CUR_SPOT,49,70,35,8
+    CTEXT           "11",IDC_STAT_CAL_SPOT,106,70,35,8
+    CTEXT           "nP",IDC_STAT_CUR_PROBE,49,80,35,8
+    CTEXT           "nP",IDC_STAT_CAL_PROBE,106,79,35,8
+    CTEXT           "TVIPS XF416",IDC_STAT_CUR_CAM,3,30,160,8
+    PUSHBUTTON      "Update State",IDC_ZBG_UPDATE_STATE,41,110,50,12
+    PUSHBUTTON      "Current Settings",IDC_BUT_USE_TO_CAL,58,16,51,12
+    LTEXT           "Focus offset",IDC_STATIC,6,90,37,8
+    CTEXT           "-50 um",IDC_STAT_CAL_FOCUS_OFFSET,106,90,35,8
+    EDITTEXT        IDC_EDIT_FOCUS_OFFSET,102,125,25,12,ES_AUTOHSCROLL
+    CTEXT           "-50 um",IDC_STAT_CUR_FOCUS_OFFSET,49,90,35,8
     CONTROL         "Calibrate with focus offset of:",IDC_CHECK_USE_OFFSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,102,95,10
-    LTEXT           "um",IDC_STATIC,129,103,10,8
-    EDITTEXT        IDC_EDIT_BEAM_TILT,102,116,25,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,106,132,52,12
-    LTEXT           "Calibrate with:",IDC_STATIC,6,133,42,8
-    GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,10,148,142,53
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,126,95,10
+    LTEXT           "um",IDC_STATIC,129,127,10,8
+    EDITTEXT        IDC_EDIT_BEAM_TILT,102,140,25,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,112,16,51,12
+    LTEXT           "CALIBRATE with:",IDC_STATIC,3,18,54,8
+    GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,10,158,142,53
     CONTROL         "Use View area in Low Dose mode",IDC_CHECK_USE_VIEW_IN_LD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,158,117,10
-    LTEXT           "Maximum total change in Z:",IDC_STATIC,29,171,81,8
-    EDITTEXT        IDC_EDIT_MAX_CHANGE,112,169,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,171,10,8
-    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,14,186,97,8
-    EDITTEXT        IDC_EDIT_ITER_THRESH,112,184,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,186,10,8
-    PUSHBUTTON      "?",IDC_BUTHELP,153,205,10,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,168,117,10
+    LTEXT           "Maximum total change in Z:",IDC_STATIC,29,181,81,8
+    EDITTEXT        IDC_EDIT_MAX_CHANGE,112,179,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,138,181,10,8
+    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,14,196,97,8
+    EDITTEXT        IDC_EDIT_ITER_THRESH,112,194,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,138,196,10,8
+    PUSHBUTTON      "?",IDC_BUTHELP,153,215,10,10
     CONTROL         "Calibrate with beam tilt of: ",IDC_CHECK_CAL_WITH_BT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,117,95,10
-    LTEXT           "% of range",IDC_STAT_MRAD_LABEL,129,118,32,8
-    LTEXT           "AF Beam tilt",IDC_STATIC,6,76,40,8
-    CTEXT           "1.6 mrad",IDC_STAT_CUR_BEAM_TILT,49,76,35,8
-    CTEXT           "1.6 mrad",IDC_STAT_CAL_BEAM_TILT,106,76,35,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,141,95,10
+    LTEXT           "% of range",IDC_STAT_MRAD_LABEL,129,142,32,8
+    LTEXT           "AF Beam tilt",IDC_STATIC,6,100,40,8
+    CTEXT           "1.6 mrad",IDC_STAT_CUR_BEAM_TILT,49,100,35,8
+    CTEXT           "1.6 mrad",IDC_STAT_CAL_BEAM_TILT,106,100,35,8
+    LTEXT           "Specimen must already be at eucentric height",IDC_STATIC,11,5,144,8
 END
 
 
@@ -3944,7 +3945,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 163
         TOPMARGIN, 3
-        BOTTOMMARGIN, 217
+        BOTTOMMARGIN, 227
     END
 END
 #endif    // APSTUDIO_INVOKED
