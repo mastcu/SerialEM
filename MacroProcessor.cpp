@@ -1305,7 +1305,6 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
 
 ///////////////////////////////////////////////////////
 
-
 void CMacroProcessor::AbortMacro()
 {
   SuspendMacro(true);
