@@ -2346,8 +2346,7 @@ void CProcessImage::OnListRelativeRotations()
   float diff, alternate;
   int mag, cam, lastInd, vecInd, xmag;
   for (cam = 0; cam < MAX_CAMERAS; cam++) {
-    camMess.Format("\r\nFor camera # %d:\r\np (mag * pixel size) is expected to be similar "
-      "at all magnifications, re-check pixel size calibrations of outliers", cam);
+    camMess.Format("\r\nFor camera # %d:\r\n", cam);
     lastInd = -1;
     for (mag = 1; mag < MAX_MAGS; mag++) {
       vecInd = LookupFoundPixelSize(cam, mag);
@@ -2386,6 +2385,9 @@ void CProcessImage::OnListRelativeRotations()
   }
   if (mess.IsEmpty())
     AfxMessageBox("No relative rotations are available", MB_OK | MB_ICONINFORMATION);
+  else
+    mWinApp->AppendToLog("\r\n\"p\" (mag * pixel size) is expected to be similar "
+      "at all magnifications, re-check pixel size calibrations of outliers");
 }
 
 // Add to the rotation for one pixel size (is this worth it?)
