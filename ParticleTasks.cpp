@@ -54,7 +54,7 @@ CParticleTasks::CParticleTasks(void)
   mZbyGsetupDlg = NULL;
   mZBGCalWithEnteredOffset = false;
   mZBGCalUseBeamTilt = false;
-  mZBGFocusScalings.push_back(50.);
+  mZBGFocusScalings.push_back(100.);
   mZBGFocusScalings.push_back(0.7f);
 }
 

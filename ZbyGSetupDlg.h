@@ -68,6 +68,7 @@ public:
   void UpdateCalStateForMag();
   void UpdateSettings();
   void UpdateEnables();
+  bool FocusCalExistsForParams(ZbyGParams *params);
   CButton m_butUpdateState;
   afx_msg void OnCheckUseViewInLd();
   afx_msg void OnKillfocusEditBox();

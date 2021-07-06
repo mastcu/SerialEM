@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/30/21: Made Script stop after an error doing arithmetic expression (In 3.8).
+
+6/29/21: Added routine to set eucentricity by measuring defocus.
+
 6/22/21: Added ability to use "Shift to Marker" on mag-specific subsets of
 items and to save shifts for reuse on newly acquired maps.
 
