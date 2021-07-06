@@ -125,7 +125,6 @@ BOOL CZbyGSetupDlg::OnInitDialog()
   GetCurrentState();
   UpdateCalStateForMag();
   UpdateSettings();
-  UpdateEnables();
   m_editBeamTilt.EnableWindow(m_bCalWithBT);
   m_editFocusOffset.EnableWindow(m_bUseOffset);
 
@@ -291,7 +290,6 @@ void CZbyGSetupDlg::GetCurrentState()
 
   mCurParams.lowDoseArea = area;
   STATE_TO_DIALOG(Cur, mCurParams.);
-  m_butUseToCal.EnableWindow(FocusCalExistsForParams(&mCurParams));
   UpdateData(false);
 }
 
@@ -319,8 +317,7 @@ void CZbyGSetupDlg::UpdateCalStateForMag()
 
   // Record whether the calibrated conditions can actually be run and enable button
   mRecalEnabled = mCalParams != NULL && (mWinApp->LowDoseMode() || (mCalParams->spotSize
-    == mCurParams.spotSize && mCalParams->probeOrAlpha == mCurParams.probeOrAlpha)) &&
-    FocusCalExistsForParams(mCalParams);
+    == mCurParams.spotSize && mCalParams->probeOrAlpha == mCurParams.probeOrAlpha));
   m_butUseToRecal.EnableWindow(mRecalEnabled && !mWinApp->DoingTasks());
   UpdateData(false);
 }
@@ -339,14 +336,6 @@ void CZbyGSetupDlg::UpdateEnables()
 {
   bool enable = !(mWinApp->DoingTasks() || mWinApp->mCamera->CameraBusy());
   m_butUseToRecal.EnableWindow(mRecalEnabled && enable);
-  m_butUseToCal.EnableWindow(enable && FocusCalExistsForParams(&mCurParams));
+  m_butUseToCal.EnableWindow(enable);
   m_butUpdateState.EnableWindow(enable);
-}
-
-bool CZbyGSetupDlg::FocusCalExistsForParams(ZbyGParams *params)
-{
-  FocusTable focTmp;
-  return (mWinApp->mFocusManager->GetFocusCal(params->magIndex, params->camera,
-    FEIscope ? params->probeOrAlpha : mScope->GetProbeMode(), params->probeOrAlpha,
-    focTmp) != 0);
 }

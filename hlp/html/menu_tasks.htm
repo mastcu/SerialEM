@@ -9,9 +9,6 @@
       {
         width: 193px;
       }
-      .auto-style1 {
-        width: 204px;
-      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -20,281 +17,177 @@
       <P>The Tasks menu offers the following commands:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD class="auto-style1"><strong>Eucentricity</strong></TD>
-          <TD>Routines for making the stage eucentric and related operations</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_coarse">Rough Eucentricity</A></TD>
-          <TD>Finds eucentric point using coarse search only.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_fine">Fine Eucentricity</A></TD>
-          <TD>Refines eucentricity with pictures at a series of tilts.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_both">Both Rough and Fine</A></TD>
-          <TD>Finds eucentric point with coarse search then refines it.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_finerealign">Refine &amp; Realign</A></TD>
-          <TD>Refines eucentricity and realigns to original position.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_settiltaxisoffset">Set Tilt Axis Offset</A></TD>
-          <TD>Set offset to center image shift on tilt axis</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_trial_in_ld_refine">Use Trial in LD Refine</A></TD>
-          <TD>Use Trial area in Low Dose mode for Refine Eucentricity</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_roughusesearchifinlm">Rough Use Search if in LM</A></TD>
-          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A></TD>
-          <TD>Finds eucentricity by setting an absolute focus value and adjusting Z to match calibrated measured defocus.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_setupeucentricitybyfocus">Calibrate Focus Targets</A></TD>
-          <TD>Open dialog to calibrate defocus and set parameters for Eucentricity by Focus.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_process_setintensity">Set Intensity</A></TD>
+          <TD class="style1"><A HREF="#hid_process_setintensity">Set Intensity</A></TD>
           <TD>Sets beam intensity based on current image mean.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><a href="#hid_tasks_set_dose_rate">Set Dose Rate</a></TD>
+          <TD class="style1"><a href="#hid_tasks_set_dose_rate">Set Dose Rate</a></TD>
           <TD>Set beam intensity for a desired dose rate in electrons/unbinned pixel/sec</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_process_movebeam">Move Beam</A></TD>
+          <TD class="style1"><A HREF="#hid_process_movebeam">Move Beam</A></TD>
           <TD>Moves beam based on center marked by display point.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_centerbeam">Center Beam</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_centerbeam">Center Beam</A></TD>
           <TD>Analyzes image for beam edges and tries to center beam.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_autocenterbeam">Autocenter Beam</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_autocenterbeam">Autocenter Beam</A></TD>
           <TD>Takes an image with condensed beam and uses it to center beam</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setupautocenter">Setup Autocenter</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_setupautocenter">Setup Autocenter</A></TD>
           <TD>Opens dialog to set up beam for autocentering</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_walkup">Walk Up</A></TD>
+          <TD class="style1"><A HREF="#hid_eucentricity_coarse">Eucentric - Rough</A></TD>
+          <TD>Finds eucentric point using coarse search only.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_eucentricity_fine">Eucentric - Fine</A></TD>
+          <TD>Refines eucentricity with pictures at a series of tilts.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_eucentricity_both">Eucentric - Both</A></TD>
+          <TD>Finds eucentric point with coarse search then refines it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_finerealign">Refine &amp; Realign</A></TD>
+          <TD>Refines eucentricity and realign to original position.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_settiltaxisoffset">Set Tilt Axis Offset</A></TD>
+          <TD>Set offset to center image shift on tilt axis</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_trial_in_ld_refine">Use Trial in LD Refine</A></TD>
+          <TD>Use Trial area in Low Dose mode for Refine Eucentricity</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_walkup">Walk Up</A></TD>
           <TD>Goes to high tilt in steps, tracking current position.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_walkupanchor">Walk Up &amp; Anchor</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_walkupanchor">Walk Up &amp; Anchor</A></TD>
           <TD>Goes to high tilt in steps, leaving an image at intermediate tilt.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_use_view_in_lowdose">Use View in LD</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_use_view_in_lowdose">Use View in LD</A></TD>
           <TD>Use View area in Low Dose mode for Walkup operation.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setincrements">Set Increments</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_setincrements">Set Increments</A></TD>
           <TD>Set minimum and maximum tilt increment for Walkup</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setupcooker">Setup Cooker</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_setupcooker">Setup Cooker</A></TD>
           <TD>Opens dialog to set conditions for pre-exposing specimen prior to tilt series</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_cookspecimen">Cook Specimen</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_cookspecimen">Cook Specimen</A></TD>
           <TD>Pre-exposes specimen for desired dose or time</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_assessanglerange">Assess Angle Range</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_assessanglerange">Assess Angle Range</A></TD>
           <TD>Opens dialog to acquire small series of images at high tilt</TD>
         </TR>
           <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_assess_interset_shifts">Assess Interset 
+          <TD class="style1"><A HREF="#hid_tasks_assess_interset_shifts">Assess Interset 
             Shifts</A></TD>
           <TD>Measure shifts between Record and other acquisition types in STEM mode</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts</A></TD>
           <TD>Adjust the shift for the image in A relative to Record or disable use of 
             interset shifts</TD>
         </TR>
       <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_reset_realign">Reset IS &amp; Realign</A></TD>
+          <TD class="style1"><A HREF="#hid_reset_realign">Reset IS &amp; Realign</A></TD>
           <TD>Resets Image Shift and realigns image position.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setiterationlimit">Set Iteration Limit</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_setiterationlimit">Set Iteration Limit</A></TD>
           <TD>Set minimum Image Shift for reiterating Reset &amp; Realign</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD Refine</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD Refine</A></TD>
           <TD>Use Trial area in Low Dose mode for Reset &amp; Realign</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setupvppconditioning">Setup VPP Conditioning</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_roughusesearchifinlm">Rough Use Search if in LM</A></TD>
+          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM</TD>
+        </TR>              
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setupvppconditioning">Setup VPP Conditioning</A></TD>
           <TD>Opens dialog to set up conditioning of a phase plate and optionally run 
             conditioning</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_setupwaitfordrift">Setup Wait for Drift</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_setupwaitfordrift">Setup Wait for Drift</A></TD>
           <TD>Opens dialog to set up waiting for drift to settle</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_reverse_tilt">Reverse Tilt</A></TD>
+          <TD class="style1"><A HREF="#hid_reverse_tilt">Reverse Tilt</A></TD>
           <TD>Reverses tilt direction and realigns image position.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_verbose">Verbose</A></TD>
+          <TD class="style1"><A HREF="#hid_tasks_verbose">Verbose</A></TD>
           <TD>Outputs progress and results of tasks to Log Window.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><b>Specialized Options</b></TD>
+          <TD class="style1"><b>Specialized Options</b></TD>
           <TD>Specialized and experimental options for tasks, tilt series, Navigator, or Low 
             Dose</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift 
+          <TD class="style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift 
             in TS</a>&nbsp;</TD>
           <TD>Skip beam shift when autoaligning with image shift in tilt series</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_special_piezo_for_ld_axis_shift">Piezo for LD 
+          <TD class="style1">&nbsp; <a href="#hid_special_piezo_for_ld_axis_shift">Piezo for LD 
             Axis Shift</a>&nbsp;</TD>
           <TD>Use piezo-driven stage movement for on-axis shift between Low Dose areas</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
+          <TD class="style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
             Disable Dark Trim in Align</a></TD>
           <TD>Disable automatic trimming of dark borders in Autoalign in some cases</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_allowcontinuousintasks">Allow 
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_allowcontinuousintasks">Allow 
             Continuous in TS</a>&nbsp;</TD>
           <TD>Permit continuous mode acquisitions to be started during tilt series</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize 
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize 
             Via View for Autofocus</a>&nbsp;</TD>
           <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; 
+          <TD class="style1">&nbsp; 
             <a href="#hid_specialoptions_adjustfocusonprobemodechange">Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
           <TD>Maintain constant focus difference when switching between microprobe and 
             nanoprobe</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizealllens">Normalize 
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_normalizealllens">Normalize 
             All on Mag Change</a></TD>
           <TD>Specify whether to normalize all lenses when changing mag within LM, or on all 
             mag changes</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
+          <TD class="style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
           <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
+          <TD class="style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
           <TD>Close valves or turn off filament after a specified period of inactivity</TD>
         </TR>
       </TABLE>
       <BR>
-       <P><A NAME="hid_eucentricity_coarse"></A><B>Rough Eucentricity command (Tasks - Eucentricity submenu)</B></P>
-      <P>This command can be used to adjust the Z height to the eucentric point when the 
-        Z height might be off by more than 5-10 microns, which can often be the case 
-        when the specimen rod has just been inserted. This procedure will find 
-        eucentricity to within about 0.5 micron. This is good enough for tuning the 
-        microscope but not as accurate as the adjustment provided by the Eucentric - 
-        Fine command, which should be run before starting a tilt series.</P>
-      <P>This procedure does not make any attempt to keep the starting specimen location 
-        in the field of view.</P>
-      <P>The rough eucentricity procedure first switches to a low magnification (or, in 
-        low dose mode, it uses the parameters of the View area). It takes pictures to 
-        determine how far the specimen moves laterally upon tilting, starting with a 
-        very small tilt increment and working up to a total increment of 8 degrees. It 
-        may adjust the Z height more than once before finishing.</P>
-      <P><A NAME="hid_eucentricity_fine"></A><B>Fine Eucentricity command (Tasks - Eucentricity submenu)</B></P>
-      <P>This command can be used to adjust the Z height to the eucentric point when it 
-        is already within 5-10 microns. It is thus a suitable procedure to use if you 
-        have moved to a new location on the specimen grid since the last time 
-        eucentricity was adjusted. It is recommended that you run this command before 
-        starting a tilt series.</P>
-      <P>This procedure does not make any attempt to keep the starting specimen location 
-        in the field of view. It can be run when not at zero tilt, and the program will 
-        return the stage to your pre-existing tilt at the end.</P>
-      <P>The fine eucentricity procedure first switches to a low magnification (or, in 
-        low dose mode, it uses the parameters of the View area). It then takes pictures 
-        at a set of tilts between -24 and +24 degrees. From the image displacements 
-        during this series, it can compute both the distance in Z from the eucentric 
-        point and the lateral displacement of the tilt axis from the optical axis. If 
-        image displacements become too large, the program will adjust Z height then 
-        repeat the procedure from the beginning.</P>
-    <P>For specialized uses it may be desirable to change the maximum angle or tilt 
-      increment.&nbsp; These parameters can be changed with the properties 
-      'EucentricityMaxFineAngle' and 'EucentricityFineIntervalAtZero'.</P>
-      <P><A NAME="hid_eucentricity_both"></A><B>Both Rough and Fine command (Tasks - Eucentricity submenu)</B></P>
-      <P>Use this command to run the rough eucentricity procedure followed immediately by 
-        the fine eucentricity procedure. This sequence does make any attempt to keep 
-        the starting specimen location in the field of view.</P>
-      <P><A NAME="hid_tasks_finerealign"></A><B>Refine &amp; Realign command (Tasks - Eucentricity submenu)</B></P>
-      <P>Use this command to run the fine eucentricity procedure while retaining an item 
-        of interest centered in the field of view. The program will first take a 
-        low-magnification reference picture, then do the fine eucentricity procedure, 
-        then take another picture at the original tilt angle and use that to restore 
-        the alignment. In low dose mode, the reference picture will be taken of the 
-        View area. It is not necessary to be at zero tilt to run this command.</P>
-      <P><A NAME="hid_tasks_settiltaxisoffset"></A><B>Set Tilt Axis Offset command (Tasks 
-          - Eucentricity submenu)</B></P>
-      <P>Use this command to set the offset of the tilt axis from the optical axis, which 
-        is used to keep image shift centered on the optical axis. If the tilt axis is 
-        more than a micron from the optic axis, it is desirable to set this offset to 
-        minimize specimen movements in Y and Z during tilting. The offset should be set 
-        as a system-wide property. However, if this property setting is not adequate, 
-        or if the offset varies significantly from place to place, this command can be 
-        used to set the offset. It is placed in this menu because the lateral offset 
-        from the Refine Eucentricity procedure indicates how much the offset should be 
-        changed. When the command is selected, a dialog box comes up informing you of 
-        the current tilt axis offset, and the total offset implied by the lateral 
-        displacement reported in the last run of 
-        Refine Eucentricity, if any. The default value in the box is the implied total 
-        offset (or just the current offset, if Refine Eucentricity has not been run.) A 
-        tilt axis offset has an effect only if you have selected 'Center image shift on 
-        tilt axis' in the Image Alignment and Focus control panel.</P>
-      <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks 
-          - Eucentricity submenu)</B></P>
-      <P>Use this command to select whether the Trial area rather than the View area will 
-        be used for the tilted images that are taken when refining eucentricity. The 
-        View area will still be used for the initial and final tracking images when the 
-        Refine and Realign procedure is used, and for the rough eucentricity procedure 
-        when both rough and fine procedures are run together. Using the Trial area will 
-        save a little dose but will reduce the range of Z heights over which the 
-        procedure can run reliably. Also, if the specimen is not relatively flat along 
-        the tilt axis, the Trial area rather than the Record area will be brought to 
-        the eucentric height.</P>
-     <P><A NAME="hid_tasks_roughusesearchifinlm"></A><B>Rough Use Search if in LM command (Tasks - Eucentricity submenu)</B></P>
-      <P>Toggle this entry to switch between using the View area for the rough 
-        eucentricity procedure in Low Dose mode and using the Search area, if it is 
-        defined as being in low magnification <em>and</em> if the microscope is already 
-        in low magnification.&nbsp; Running this procedure in LM may be accurate enough 
-        for some purposes, so this option allows it to be run with the Search area 
-        without losing the time involved in leaving low magnification just for this 
-        purpose.</P>
-      <P><A NAME="hid_eucentricity_eucentricitybyfocus"></A><B>Eucentricity by Focus command (Tasks - Eucentricity submenu)</B></P>
-    <P>Use this command to set the Z height to the eucentric point with a procedure 
-      that sets an absolute focus value then measures the defocus and adjusts Z until 
-      the measured defocus matches the appropriate value.&nbsp; Both the absolute 
-      focus and the measured defocus are recorded with a calibration procedure run 
-      from the <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a> 
-      opened by the next menu item.&nbsp; Defocus can be measured with either Focus or 
-      View images in Low Dose mode, with a desired amount of defocus offset.</P>
-      <P><A NAME="hid_eucentricity_setupeucentricitybyfocus"></A><B>Calibrate Focus Targets command (Tasks - Eucentricity submenu)</B></P>
-    <P>Use this command to open the <a href="hidd_z_by_g_setup.htm">Eucentricity by 
-      Focus Setup dialog</a> and calibrate the focus targets for the Eucentricity 
-      by Focus command as well as set a few parameters controlling how it operates.</P>
-     <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
+      <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
       <P>Use this command to change the beam intensity so as to achieve a desired mean 
         level in images taken with Record parameters. When you select this command, the 
         program first computes the zero-tilt mean (mean of the tilt-foreshortened area) 
@@ -360,6 +253,78 @@
       <P>Use this command to open the <A HREF="hidd_autocensetup.htm">Beam Autocenter Setup 
           dialog box</A> and set the beam intensity that will be used for 
         autocentering.</P>
+      <P><A NAME="hid_eucentricity_coarse"></A><B>Eucentric - Rough command (Tasks menu)</B></P>
+      <P>This command can be used to adjust the Z height to the eucentric point when the 
+        Z height might be off by more than 5-10 microns, which can often be the case 
+        when the specimen rod has just been inserted. This procedure will find 
+        eucentricity to within about 0.5 micron. This is good enough for tuning the 
+        microscope but not as accurate as the adjustment provided by the Eucentric - 
+        Fine command, which should be run before starting a tilt series.</P>
+      <P>This procedure does not make any attempt to keep the starting specimen location 
+        in the field of view.</P>
+      <P>The rough eucentricity procedure first switches to a low magnification (or, in 
+        low dose mode, it uses the parameters of the View area). It takes pictures to 
+        determine how far the specimen moves laterally upon tilting, starting with a 
+        very small tilt increment and working up to a total increment of 8 degrees. It 
+        may adjust the Z height more than once before finishing.</P>
+      <P><A NAME="hid_eucentricity_fine"></A><B>Eucentric - Fine command (Tasks menu)</B></P>
+      <P>This command can be used to adjust the Z height to the eucentric point when it 
+        is already within 5-10 microns. It is thus a suitable procedure to use if you 
+        have moved to a new location on the specimen grid since the last time 
+        eucentricity was adjusted. It is recommended that you run this command before 
+        starting a tilt series.</P>
+      <P>This procedure does not make any attempt to keep the starting specimen location 
+        in the field of view. It can be run when not at zero tilt, and the program will 
+        return the stage to your pre-existing tilt at the end.</P>
+      <P>The fine eucentricity procedure first switches to a low magnification (or, in 
+        low dose mode, it uses the parameters of the View area). It then takes pictures 
+        at a set of tilts between -24 and +24 degrees. From the image displacements 
+        during this series, it can compute both the distance in Z from the eucentric 
+        point and the lateral displacement of the tilt axis from the optical axis. If 
+        image displacements become too large, the program will adjust Z height then 
+        repeat the procedure from the beginning.</P>
+    <P>For specialized uses it may be desirable to change the maximum angle or tilt 
+      increment.&nbsp; These parameters can be changed with the properties 
+      'EucentricityMaxFineAngle' and 'EucentricityFineIntervalAtZero'.</P>
+      <P><A NAME="hid_eucentricity_both"></A><B>Eucentric - Both command (Tasks menu)</B></P>
+      <P>Use this command to run the rough eucentricity procedure followed immediately by 
+        the fine eucentricity procedure. This sequence does make any attempt to keep 
+        the starting specimen location in the field of view.</P>
+      <P><A NAME="hid_tasks_finerealign"></A><B>Refine &amp; Realign command (Tasks menu)</B></P>
+      <P>Use this command to run the fine eucentricity procedure while retaining an item 
+        of interest centered in the field of view. The program will first take a 
+        low-magnification reference picture, then do the fine eucentricity procedure, 
+        then take another picture at the original tilt angle and use that to restore 
+        the alignment. In low dose mode, the reference picture will be taken of the 
+        View area. It is not necessary to be at zero tilt to run this command.</P>
+      <P><A NAME="hid_tasks_settiltaxisoffset"></A><B>Set Tilt Axis Offset command (Tasks 
+          menu)</B></P>
+      <P>Use this command to set the offset of the tilt axis from the optical axis, which 
+        is used to keep image shift centered on the optical axis. If the tilt axis is 
+        more than a micron from the optic axis, it is desirable to set this offset to 
+        minimize specimen movements in Y and Z during tilting. The offset should be set 
+        as a system-wide property. However, if this property setting is not adequate, 
+        or if the offset varies significantly from place to place, this command can be 
+        used to set the offset. It is placed in this menu because the lateral offset 
+        from the Refine Eucentricity procedure indicates how much the offset should be 
+        changed. When the command is selected, a dialog box comes up informing you of 
+        the current tilt axis offset, and the total offset implied by the lateral 
+        displacement reported in the last run of 
+        Refine Eucentricity, if any. The default value in the box is the implied total 
+        offset (or just the current offset, if Refine Eucentricity has not been run.) A 
+        tilt axis offset has an effect only if you have selected 'Center image shift on 
+        tilt axis' in the Image Alignment and Focus control panel.</P>
+      <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks 
+          menu)</B></P>
+      <P>Use this command to select whether the Trial area rather than the View area will 
+        be used for the tilted images that are taken when refining eucentricity. The 
+        View area will still be used for the initial and final tracking images when the 
+        Refine and Realign procedure is used, and for the rough eucentricity procedure 
+        when both rough and fine procedures are run together. Using the Trial area will 
+        save a little dose but will reduce the range of Z heights over which the 
+        procedure can run reliably. Also, if the specimen is not relatively flat along 
+        the tilt axis, the Trial area rather than the Record area will be brought to 
+        the eucentric height.</P>
       <P><A NAME="hid_tasks_walkup"></A><B>Walk Up command (Tasks menu)</B></P>
       <P>Use this command to go from one tilt angle to another while retaining an item of 
         interest centered in the field of view. Typically this would be used to go from 
@@ -469,6 +434,14 @@
         small (~1 micron), if the field of view of the trial area is fairly large (2 
         microns), and if your stage is adjusted so that stage movements are reliable at 
         high tilt for the holder being used.</P>
+     <P><A NAME="hid_tasks_roughusesearchifinlm"></A><B>Rough Use Search if in LM command (Tasks menu)</B></P>
+      <P>Toggle this entry to switch between using the View area for the rough 
+        eucentricity procedure in Low Dose mode and using the Search area, if it is 
+        defined as being in low magnification <em>and</em> if the microscope is already 
+        in low magnification.&nbsp; Running this procedure in LM may be accurate enough 
+        for some purposes, so this option allows it to be run with the Search area 
+        without losing the time involved in leaving low magnification just for this 
+        purpose.</P>
       <P><A NAME="hid_tasks_setupvppconditioning"></A><B>Setup VPP Conditioning command (Tasks menu)</B></P>
       <P>Use this command to open the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup 
           dialog box</A> and set parameters for conditioning a Volta phase plate. The dialog allows one to

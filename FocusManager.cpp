@@ -948,8 +948,6 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
     }
   }
   ControlSet *conSet = &mConSets[mFocusSetNum];
-  mLastFailed = true;
-  mLastAborted = 0;
   mDoChangeFocus = inChange;
   SEMTrace('M', "Autofocus Start");
   if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex)

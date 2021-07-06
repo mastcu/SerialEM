@@ -2346,7 +2346,8 @@ void CProcessImage::OnListRelativeRotations()
   float diff, alternate;
   int mag, cam, lastInd, vecInd, xmag;
   for (cam = 0; cam < MAX_CAMERAS; cam++) {
-    camMess.Format("\r\nFor camera # %d:", cam);
+    camMess.Format("\r\nFor camera # %d:\r\np (mag * pixel size) is expected to be similar "
+      "at all magnifications, re-check pixel size calibrations of outliers", cam);
     lastInd = -1;
     for (mag = 1; mag < MAX_MAGS; mag++) {
       vecInd = LookupFoundPixelSize(cam, mag);
@@ -2355,9 +2356,9 @@ void CProcessImage::OnListRelativeRotations()
         if (lastInd >= 0) {
           diff = mGridRotations[vecInd] - mGridRotations[lastInd];
           if (diff < 45 && diff > -45) {
-            mess.Format("RotationAndPixel %2d %7.2f  999 %7.4g   # %d", mag, 
+            mess.Format("RotationAndPixel %2d %7.2f  999 %7.4g   # %d, p=%.0f", mag, 
               UtilGoodAngle(diff + mAddedRotation[vecInd]), 
-              mPixelSizes[vecInd], xmag);
+              mPixelSizes[vecInd], xmag, xmag * mPixelSizes[vecInd]);
           } else {
             if (diff > 45)
               alternate = diff + mAddedRotation[vecInd] - 90.f;
@@ -2365,13 +2366,14 @@ void CProcessImage::OnListRelativeRotations()
               alternate = diff + mAddedRotation[vecInd] + 90.f;
             mess.Format("# Verify ambiguous relative rotation between mags "
               "# %d and # %d and edit line below\r\n"
-              "RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d", 
+              "RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d, p=%.0f", 
               (mag - 1), mag, mag, UtilGoodAngle(diff + mAddedRotation[vecInd]), 
-              UtilGoodAngle(alternate), mPixelSizes[vecInd], xmag);
+              UtilGoodAngle(alternate), mPixelSizes[vecInd], xmag,
+              xmag * mPixelSizes[vecInd]);
           } 
         } else {
-          mess.Format("RotationAndPixel %2d   999    999 %7.4g   # %d", mag, 
-            mPixelSizes[vecInd], xmag);
+          mess.Format("RotationAndPixel %2d   999    999 %7.4g   # %d, p=%.0f", mag, 
+            mPixelSizes[vecInd], xmag, xmag * mPixelSizes[vecInd]);
         }
         if (!camMess.IsEmpty()) {
           mWinApp->AppendToLog(camMess);
