@@ -347,6 +347,6 @@ bool CZbyGSetupDlg::FocusCalExistsForParams(ZbyGParams *params)
 {
   FocusTable focTmp;
   return (mWinApp->mFocusManager->GetFocusCal(params->magIndex, params->camera,
-    FEIscope ? params->probeOrAlpha : mScope->GetProbeMode(), params->probeOrAlpha,
-    focTmp) != 0);
+    FEIscope ? params->probeOrAlpha : mScope->GetProbeMode(),
+    mHasAlpha ? params->probeOrAlpha : -999, focTmp) != 0);
 }
