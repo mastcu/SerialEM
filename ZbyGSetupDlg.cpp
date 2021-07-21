@@ -69,7 +69,7 @@ void CZbyGSetupDlg::DoDataExchange(CDataExchange* pDX)
     "Focus offset to use in calibration");
   DDX_Control(pDX, IDC_EDIT_FOCUS_OFFSET, m_editFocusOffset);
   DDX_Text(pDX, IDC_EDIT_BEAM_TILT, m_fBeamTilt);
-  MinMaxFloat(IDC_EDIT_BEAM_TILT, m_fBeamTilt, 0.1f, 25.f,
+  MinMaxFloat(IDC_EDIT_BEAM_TILT, m_fBeamTilt, 0.09f, 25.f,
     "Beam tilt for measuring defocus");
   DDX_Control(pDX, IDC_BUT_USE_TO_CAL, m_butUseToCal);
   DDX_Control(pDX, IDC_BUT_USE_TO_RECAL, m_butUseToRecal);

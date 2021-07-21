@@ -1326,7 +1326,7 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
       mZBGUsingView = mZbyGUseViewInLD;
     else 
       mZBGUsingView = useVinLD > 0;
-    ldArea = useVinLD ? VIEW_CONSET : FOCUS_CONSET;
+    ldArea = mZBGUsingView ? VIEW_CONSET : FOCUS_CONSET;
     magInd = ldp[ldArea].magIndex;
   } else
     magInd = mScope->GetMagIndex();
