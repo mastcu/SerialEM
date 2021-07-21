@@ -1161,7 +1161,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
           &mGpuMemory[DMind]));
         SEMTrace('1', "GPU %s available for %s%s%s aligning", available ? "IS" :
           "IS NOT", anyK2 ? "K2/K3" : "", anyK2 && anyAligning ? " and " : "", 
-          anyAligning ? "OneView/Rio" : 0);
+          anyAligning ? "OneView/Rio" : "");
       }
 
     }
