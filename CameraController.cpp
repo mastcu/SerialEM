@@ -868,7 +868,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
   int i, ind, div, sel, nlist, needVers = SEMCCD_VERSION_OK_NO_K2;
   long num, allnum, doFlip, available;
   int gatanSelectList[2 * MAX_IGNORE_GATAN];
-  bool anyK2 = false, gotDefectList;
+  bool anyK2 = false, anyAligning = false, gotDefectList;
 
   if (DMind == AMT_IND) {
     hr = CoCreateInstance(__uuidof(AMTCamInterface), 0, CLSCTX_INPROC_SERVER,
@@ -1145,6 +1145,8 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
               if (param->K2Type)
                 anyK2 = true;
+              if (param->canTakeFrames & 2)
+                anyAligning = true;
             }
             num++;
         }
@@ -1154,12 +1156,13 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
         }
       }
 
-      if (anyK2 && mPluginVersion[DMind] >= PLUGIN_CAN_ALIGN_FRAMES) {
+      if ((anyK2 || anyAligning) && mPluginVersion[DMind] >= PLUGIN_CAN_ALIGN_FRAMES) {
         CallDMIndGatan(DMind, mGatanCamera, IsGpuAvailable(0, &available, 
           &mGpuMemory[DMind]));
-        SEMTrace('1', "GPU %s available for K2/K3 aligning", available ? "IS" : "IS NOT");
+        SEMTrace('1', "GPU %s available for %s%s%s aligning", available ? "IS" :
+          "IS NOT", anyK2 ? "K2/K3" : "", anyK2 && anyAligning ? " and " : "", 
+          anyAligning ? "OneView/Rio" : 0);
       }
-
 
     }
     catch (_com_error E) {
