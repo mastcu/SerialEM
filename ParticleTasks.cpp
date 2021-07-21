@@ -1250,7 +1250,7 @@ void CParticleTasks::ZbyGCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
     SEMMessageBox(_T("Time out doing eucentricity by measuring focus"));
-  StopWaitForDrift();
+  StopZbyG();
   mWinApp->ErrorOccurred(error);
 }
 
