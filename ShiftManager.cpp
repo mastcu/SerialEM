@@ -955,10 +955,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
   if (alignLimit > 0) {
     iPeak = (int)(alignLimit / needBinA) + 2;
-    setPeakFindLimits(-iPeak, iPeak, -iPeak, iPeak, 1);
+    setPeakFindLimits(-iPeak - baseXshift, iPeak - baseXshift, -iPeak - baseYshift,
+      iPeak - baseYshift, 1);
   }
 
-  XCorrPeakFindWidth(mBrray, nxPad + 2, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], NULL, 
+  XCorrPeakFindWidth(mBrray, nxPad + 2, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], NULL,
     NULL, numPeaks, mPeakStrengthToEval);
   numRealPeaks = 0;
 
@@ -1017,8 +1018,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
     for (int iy = 1; iy >= 0; iy--) {
       for (int ix = 1; ix >= 0 ; ix--) {
-        if (alignLimit > 0. && sqrt(xPeak[ix] * xPeak[ix] + yPeak[iy] * yPeak[iy]) * 
-          needBinA > alignLimit)
+        if (alignLimit > 0. && sqrt(pow(xPeak[ix] + baseXshift, 2) +
+          pow(yPeak[iy] + baseYshift, 2)) * needBinA > alignLimit)
           continue;
         CCChere = CCCoefficientTwoPads(mCrray, mArray,nxPad + 2, nxPad, nyPad,
           xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2 + 2, (nyPad - nyUseC) / 2 + 2, 
