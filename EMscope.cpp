@@ -490,6 +490,7 @@ CEMscope::CEMscope()
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;
   mTiltSpeedFactor = 0.;
+  mStageXYSpeedFactor = 0.;
   mRestoreStageXYdelay = 100;
   mIdleTimeToCloseValves = 0;
   mUpdateDuringAreaChange = false;
@@ -2157,9 +2158,10 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
 
-  if (mTiltSpeedFactor > 0. && info.axisBits == axisA && !useSpeed) {
+  if (((mTiltSpeedFactor > 0. && info.axisBits == axisA) || (mStageXYSpeedFactor > 0 && 
+    (info.axisBits & axisXY) != 0 && !(info.axisBits & ~axisXY))) && !useSpeed) {
     useSpeed = true;
-    info.speed = mTiltSpeedFactor;
+    info.speed = B3DCHOICE(info.axisBits == axisA, mTiltSpeedFactor, mStageXYSpeedFactor);
   }
   
   if (((info.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {

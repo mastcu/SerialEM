@@ -363,6 +363,7 @@ public:
   GetSetMember(BOOL, ChangeAreaAtZeroIS);
   GetSetMember(int, HitachiDoesBSforIS);
   GetSetMember(float, TiltSpeedFactor);
+  GetSetMember(float, StageXYSpeedFactor);
   GetSetMember(int, RestoreStageXYdelay);
   GetSetMember(BOOL, JeolHasBrightnessZoom);
   GetSetMember(int, AdjustForISSkipBacklash);
@@ -732,6 +733,7 @@ private:
   BOOL mMovingStage;          // Flag that we started a stage move
   BOOL mBkgdMovingStage;      // Flag that stage move was started on background channel
   float mTiltSpeedFactor;     // If set, use as speed factor for tilt when none supplied
+  float mStageXYSpeedFactor;  // If set, use as factor for X/Y move when none supplied
   float mIllumAreaLowLimit;   // Limits for illuminated area
   float mIllumAreaHighLimit;
   float mIllumAreaLowMapTo;   // Values that lower and upper limits map to
