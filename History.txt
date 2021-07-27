@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/22/21: SEM_3-8-10
 7/18/21: Made it test if GPU is available when frame alignment is being used
 with a Rio or Oneview (IN 3.8).
 
@@ -43,6 +44,9 @@ Python.
 
 5/24/21: Added plugin and scope functions and scripts commands for accessing
 image-beam tilt on an FEI scope.
+
+5/19/21: Asking for walkup to an angle higher than the maximum will generate
+an error (In 3.8).
 
 5/18/21: Fixed disabling of script toolbar when stage is moved after setting up
 a Navigator montage (In 3.8).
