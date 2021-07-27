@@ -2856,8 +2856,8 @@ void CShiftManager::ListBeamShiftCals()
     specToIS = MatInv(IStoSpecimen(useMag));
     if (specToIS.xpx) {
       prod = MatMul(specToIS, mIStoBS[ind]);
-      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %15d", prod.xpx, prod.xpy, prod.ypx, prod.ypy,
-        MagForCamera(iCam, useMag));
+      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %15d", prod.xpx, prod.xpy, prod.ypx, 
+        prod.ypy, mMagTab[useMag].mag);
     } else {
       str2.Format(" No image shift to specimen matrix available  %15d",
         MagForCamera(iCam, useMag));

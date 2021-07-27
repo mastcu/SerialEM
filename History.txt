@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/22/21: Fixed 7 new properties being case sensitive.
+
+7/22/21: Added StageXYSpeedFactor property to set speed for X/Y moves.
+
 7/22/21: SEM_3-8-10
 7/18/21: Made it test if GPU is available when frame alignment is being used
 with a Rio or Oneview (IN 3.8).

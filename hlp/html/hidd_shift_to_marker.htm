@@ -29,12 +29,13 @@
       be able to use the procedure conveniently at multiple magnifications or when 
       maps to be shifted do not all exist at once.</p>
     <p>The first set of choices are whether to apply the measured shift to all maps at 
-      the registration of the image with the marker point, or to ones only at one magnification.&nbsp; 
-      The latter approach is useful when you want to shift the coordinates of 
-      medium-magnification maps so that high magnification targets come out centered, 
-      without shifting an already-corrected low-magnification map.&nbsp; This is 
-      important if you need to pick more positions on the low-magnification map.&nbsp; 
-      Whenever shifts are applied to Navigator items just at one magnification,&nbsp;&nbsp; 
+      the registration of the image with the marker point, or to ones only at one 
+      magnification.&nbsp; The latter approach is useful when you want to shift the 
+      coordinates of medium-magnification maps so that high magnification targets come 
+      out centered, without shifting an already-corrected low-magnification map.&nbsp; 
+      This is important if you need to pick more positions on the low-magnification 
+      map.&nbsp; Whenever shifts are applied to Navigator items just at one 
+      magnification, 
       the program keeps track of which maps are shifted by assigning them a common 
       &quot;shift cohort&quot; ID, and it also shifts points and polygons that have been drawn 
       on those maps.</p>
@@ -56,12 +57,21 @@
     <p>The third option will appear as:<br />
       
       <em>Only maps at Yx and marked items that have not been shifted 
-      before</em> if the map that the current item was marked has not been shifted previously, or as:<br />
+      before</em> if the map that the current item was marked on has not been shifted previously, or as:<br />
       <em>Only maps at Yx and marked items that were shifted along with the map that the current item was marked on</em> if that map has been shifted. 
-      The first variant is useful if you are applying the shift routine from scratch 
+      </p>
+    <p>The first variant is useful if you are applying the shift routine from scratch 
       to a newly acquired set of maps.&nbsp; The second variant is useful if you use 
       the Apply Saved Shift command for an initial shift of new maps, then use Shift 
-      to Marker to refine that shift.</p>
+      to Marker to refine that shift.&nbsp; In either case, maps will be shifted 
+      regardless of whether there are any points marked on them.&nbsp; The process of 
+      including items to shift involves three levels of association:</p>
+    <ol>
+      <li>For current item =&gt; include map it was marked on </li>
+      <li>For marked map =&gt; include collection of maps shifted at same time or similarly 
+        not shifted </li>
+      <li>For each map in collection =&gt; include every point marked on the map. </li>
+    </ol>
     <p><strong>Saving shifts for reuse</strong></p>
     <p>&nbsp;<em>Do not save shift for reuse</em>: existing saved shifts, if any, will 
       not be affected.</p>
