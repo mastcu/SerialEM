@@ -2977,28 +2977,28 @@ int CParameterIO::ReadProperties(CString strFileName)
         }
         camera->SetNumIgnoreDM(ind, index);
 
-      } else if (NAME_IS("DisableOrHideFile")) {
+      } else if (MatchNoCase("DisableOrHideFile")) {
         StripItems(strLine, 1, message);
         ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
           mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings());
 
-      } else if (NAME_IS("BasicModeDisableHideFile")) {
+      } else if (MatchNoCase("BasicModeDisableHideFile")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetBasicModeFile(message);
 
-      } else if (NAME_IS("ProgramTitleText")) {
+      } else if (MatchNoCase("ProgramTitleText")) {
         StripItems(strLine, 1, message);
         mWinApp->SetProgramTitleText(message);
 
-      } else if (NAME_IS("ScriptMonospaceFont")) {
+      } else if (MatchNoCase("ScriptMonospaceFont")) {
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetMonoFontName(message);
 
-      } else if (NAME_IS("PythonModulePath")) {
+      } else if (MatchNoCase("PythonModulePath")) {
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetPyModulePath(message);
       
-      } else if (NAME_IS("PathToPython")) {
+      } else if (MatchNoCase("PathToPython")) {
         if (strItems[2].IsEmpty()) {
           AfxMessageBox("Entry must contain a version number then the path in properties"
             " file " + strFileName + " : " + strLine, MB_EXCLAME);
