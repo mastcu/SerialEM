@@ -18,6 +18,8 @@ struct DriftWaitParams {
   float exposure;               // Trial exposure
   int binning;                  // Trial binning, user-displayed value
   BOOL changeIS;                // Flag to apply image shift in each alignment
+  BOOL usePriorAutofocus;       // Flag to skip if just prior autofocus is below threshold
+  float priorAutofocusRate;     // Threshold drift rate for previous autofocus
 };
 
 struct ZbyGParams {
@@ -52,7 +54,9 @@ public:
   GetSetMember(int, ZBGMaxTotalChange);
   GetSetMember(BOOL, ZbyGUseViewInLD);
   GetMember(int, ZBGMeasuringFocus);
-  FloatVec *GetZBGFocusScalings() {return &mZBGFocusScalings ; };
+  GetMember(bool, DVDoingDewarVac);
+  GetMember(bool, ATLastFailed);
+  FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -62,14 +66,16 @@ private:
   CComplexTasks *mComplexTasks;
   CShiftManager *mShiftManager;
   CFocusManager *mFocusManager;
+  CNavHelper *mNavHelper;
   ControlSet *mRecConSet;
   int mMSNumPeripheral;           // Number of shots around the center, total
   int mMSNumInRing[2];            // Number in each ring
   int mMSDoCenter;                // -1 to do center before, 1 to do it after
-  int mMSIfEarlyReturn;           // 1 to do early return on last shot, 2 always
+  int mMSIfEarlyReturn;           // 1 early return last shot, 2 always, 3 all but first
   int mMSEarlyRetFrames;          // Number of frames in early return
   float mMSExtraDelay;            // Extra delay after image shift
   BOOL mMSSaveRecord;             // Save each image to file
+  bool mMSImageReturned;          // Flag that image should be returned to save
   BOOL mActPostExposure;          // Post-actions enabled
   BOOL mMSAdjustBeamTilt;
   bool mMSAdjustAstig;
@@ -99,6 +105,7 @@ private:
   float mMSDefocusTanFac;          // Tangent of tilt angle times defocus factor if adjust
   ScaleMat mIStoSpec;              // Transform for adjusting defocus
   double mMSBaseDefocus;           // Defocus at center
+  bool mMSLastFailed;              // Flag if last one did not run to completion
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -147,6 +154,25 @@ private:
   LowDoseParams mZBGSavedLDparam;   // Saved parameters for low dose area
   FloatVec mZBGFocusScalings;       // List of measured focus values and scaling factor
 
+  int mATIterationNum;              // Current iteration number in resetting shift
+  NavAlignParams mATParams;         // Parameters
+  bool mATResettingShift;           // Flag that it is resetting shift
+  int mATSavedShiftsOnAcq;          // Saved value for rolling buffers
+  bool mATFinishing;                // Flag that it is in the last round of reset
+  bool mATLastFailed;               // Failure flag
+
+  DewarVacParams mDVParams;         // Params for operation
+  bool mDVAlreadyFilling;           // Flag that it is now/already filling
+  bool mDVStartedRefill;            // Flag that we started a refill
+  bool mDVStartedCycle;             // Flag that we started a buffer cycle
+  int mDVWaitForFilling;            // 
+  float mDVWaitAfterFilled;         // Amount to wait after the filling
+  bool mDVNeedVacRuns;              // Flag that it will need to do call for buffer cycles
+  bool mDVNeedPVPCheck;             // Flag that it needs to check PVP
+  double mDVStartTime;              // Starting time for a wait
+  bool mDVDoingDewarVac;            // Flag routine is working
+  BOOL mDVWaitForPVP;               // Flag to test for PVP in busy
+
 public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, int numSecondRing, float spokeRad2, float extraDelay,
@@ -191,9 +217,20 @@ public:
   void ZbyGSetupClosing();
   ZbyGParams *FindZbyGCalForMagAndArea(int magInd, int ldArea, int camera, int &paramInd,
     int &nearest);
-  ZbyGParams *GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, int &paramInd, 
+  ZbyGParams *GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, int &paramInd,
     int &nearest, int &error);
   void DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations);
   void PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD);
+  int AlignToTemplate(NavAlignParams &aliParams);
+  bool DoingTemplateAlign() { return mATIterationNum >= 0; };
+  void TemplateAlignNextTask(int param);
+  void StopTemplateAlign();
+  int TemplateAlignBusy();
+  void TemplateAlignCleanup(int error);
+  int ManageDewarsVacuum(DewarVacParams &params, int skipOrDoChecks);
+  void SetupRefillLongOp(int *longOps, float *hoursArr, int &numLongOps, float hourVal);
+  void DewarsVacNextTask(int param);
+  void StopDewarsVac();
+  int DewarsVacBusy();
+  void DewarsVacCleanup(int error);
 };
-

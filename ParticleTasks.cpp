@@ -41,6 +41,8 @@ CParticleTasks::CParticleTasks(void)
   mWDDfltParams.setTrialParams = false;
   mWDDfltParams.exposure = 0.2f;
   mWDDfltParams.binning = 4;
+  mWDDfltParams.usePriorAutofocus = false;
+  mWDDfltParams.priorAutofocusRate = 0.5f;
   mMSLastHoleStageX = EXTRA_NO_VALUE;
   mMSLastHoleISX = mMSLastHoleISY = 0.;
   mZBGIterationNum = -1;
@@ -56,6 +58,8 @@ CParticleTasks::CParticleTasks(void)
   mZBGCalUseBeamTilt = false;
   mZBGFocusScalings.push_back(100.);
   mZBGFocusScalings.push_back(0.7f);
+  mATIterationNum = -1;
+  mDVDoingDewarVac = false;
 }
 
 
@@ -71,6 +75,7 @@ void CParticleTasks::Initialize(void)
   mComplexTasks = mWinApp->mComplexTasks;
   mShiftManager = mWinApp->mShiftManager;
   mFocusManager = mWinApp->mFocusManager;
+  mNavHelper = mWinApp->mNavHelper;
   mMSParams = mWinApp->mNavHelper->GetMultiShotParams();
   mZBGCalOffsetToUse = mFocusManager->GetDefocusOffset();
   mZBGCalBeamTiltToUse = mFocusManager->GetBeamTilt();
@@ -168,7 +173,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
       return 1;
   }
-  if (mMSIfEarlyReturn && earlyRetFrames <= 0 && mMSSaveRecord) {
+  if (mMSIfEarlyReturn == 2 && earlyRetFrames == 0 && mMSSaveRecord) {
     SEMMessageBox("You cannot save Record images from multiple\n"
       "shots when doing an early return with 0 frames");
     return 1;
@@ -359,6 +364,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSLastHoleStageY += delISY / yTiltFac;
   mMSLastHoleISX = mMSHoleISX[mMSNumHoles - 1];
   mMSLastHoleISY = mMSHoleISY[mMSNumHoles - 1];
+  mMSLastFailed = true;
 
   ind = StartOneShotOfMulti();
   if (ind)
@@ -377,7 +383,8 @@ void CParticleTasks::MultiShotNextTask(int param)
 
   // Save Record
   mRecConSet->alignFrames = mSavedAlignFlag;
-  if (mMSSaveRecord && mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
+  if (mMSSaveRecord && mMSImageReturned &&
+    mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
     StopMultiShot();
     return;
   }
@@ -387,6 +394,7 @@ void CParticleTasks::MultiShotNextTask(int param)
     mMSCurIndex = nextShot;
     mMSHoleIndex = nextHole;
   } else {
+    mMSLastFailed = false;
     StopMultiShot();
     return;
   }
@@ -575,26 +583,28 @@ int CParticleTasks::StartOneShotOfMulti(void)
   bool earlyRet = (mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
       mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)));
-  if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 : 
+  if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
     mMSEarlyRetFrames, false)) {
     StopMultiShot();
     return 1;
   }
   if (earlyRet && mRecConSet->alignFrames && mRecConSet->useFrameAlign == 1)
     mRecConSet->alignFrames = 0;
+  mMSImageReturned = false;
   if (mMSTestRun & MULTI_TEST_COMA) {
     mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, true, false);
   } else if (mMSTestRun && mWinApp->Montaging()) {
     mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
   } else {
     mCamera->InitiateCapture(RECORD_CONSET);
+    mMSImageReturned = !earlyRet || mMSEarlyRetFrames != 0;
   }
 
   // Return if error in starting capture
   if (mMSCurIndex < -1)
     return 0;
   mWinApp->AddIdleTask(TASK_MULTI_SHOT, 0, 0);
-  str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole + 
+  str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole +
     mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), numInHole * mMSNumHoles);
   mWinApp->SetStatusText(MEDIUM_PANE, str);
   return 0;
@@ -774,16 +784,42 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
 ///////////////////////////////////////////////////////////////////////
 // WAITING FOR DRIFT
 
-// The routine to start it with given parameters
+// The routine to start it with given parameters.  Returns 0 if it starts routine, -1
+// if it just goes on because of prior autofocus, there are no error (1) returns yet
 int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA, 
   float requiredMean, float changeLimit)
 {
   ControlSet *conSets = mWinApp->GetConSets();
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  CString str;
   int binInd, realBin, delay, shotType = FOCUS_CONSET;
   UINT tickTime, genTimeOut;
+  DWORD lastAcquireTime = mCamera->GetLastAcquireStartTime();
+  int maxSecSinceAF = 10;
+  double driftX, driftY, stz;
+  float imStageX, imStageY, tol;
 
   mWDParm = param;
+
+  // First check if the last autofocus was good enough
+  if (param.measureType != WFD_USE_TRIAL && param.usePriorAutofocus &&
+    mFocusManager->GetLastDriftImageTime() == lastAcquireTime &&
+    SEMTickInterval(lastAcquireTime) < 1000 * maxSecSinceAF) {
+    mScope->GetStagePosition(driftX, driftY, stz);
+    tol = mScope->GetBacklashTolerance();
+    if (mImBufs->GetStagePosition(imStageX, imStageY) && fabs(imStageX - driftX) < tol &&
+      fabs(imStageY - driftY) < tol) {
+      mFocusManager->GetLastDrift(driftX, driftY);
+      mWDLastDriftRate = (float)sqrt(driftX * driftX + driftY * driftY);
+      if (mWDLastDriftRate < param.priorAutofocusRate) {
+        str.Format("Skipping wait for drift because drift from last autofocus was %s",
+          (LPCTSTR)FormatDrift(mWDLastDriftRate));
+        mWDLastFailed = 0;
+        mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
+        return -1;
+      }
+    }
+  }
 
   // Set trial parameters
   if (param.measureType == WFD_USE_TRIAL) {
@@ -816,7 +852,7 @@ int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA,
 
   // Use time when last acquire actually started, or figure out when shot will start
   if (useImageInA) {
-    mWDInitialStartTime = mWDLastStartTime = mCamera->GetLastAcquireStartTime();
+    mWDInitialStartTime = mWDLastStartTime = lastAcquireTime;
   } else {
     if (mWinApp->LowDoseMode())
       mScope->GotoLowDoseArea(param.measureType == WFD_USE_TRIAL ? 
@@ -1413,4 +1449,420 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
   mZBGSavedOffset = mFocusManager->GetDefocusOffset();
   mFocusManager->SetBeamTilt(param.beamTilt);
   mFocusManager->SetDefocusOffset(param.focusOffset);
+}
+
+///////////////////////////////////////////////////////////////////////
+// ALIGN TO TEMPLATE
+//
+// Start the task
+int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
+{
+  CMapDrawItem *map;
+  EMimageBuffer *imBuf = &mImBufs[aliParams.loadAndKeepBuf];
+  mATParams = aliParams;
+
+  // Find map and check it
+  map = mWinApp->mNavigator->FindItemWithString(mATParams.templateLabel, false, true);
+  if (!map) {
+    SEMMessageBox("Cannot find the template map in Navigator table for aligning to "
+      "template");
+    return 1;
+  }
+  if (!map->IsMap()) {
+    SEMMessageBox("The Navigator item designated as the template to align, with label " +
+      mATParams.templateLabel + ", is not a map");
+    return 1;
+  }
+  if (map->mMapMontage) {
+    SEMMessageBox("The Navigator item designated as the template to align, with label " +
+      mATParams.templateLabel + ", ia a montage map");
+    return 1;
+  }
+
+  // See if it is in the buffer and load if not.  Load gives messages on error
+  if (!imBuf->mImage || imBuf->mMapID != map->mMapID) {
+    if (mWinApp->mNavigator->DoLoadMap(true, map, mATParams.loadAndKeepBuf))
+      return 1;
+  }
+
+    if (mNavHelper->SetToMapImagingState(map, false, TRUE)) {
+      mNavHelper->RestoreFromMapState();
+      return 1;
+    }
+  if (!mNavHelper->GetRIstayingInLD())
+    mNavHelper->SetMapOffsetsIfAny(map);
+
+  mATResettingShift = false;
+  mATIterationNum = 0;
+  mATLastFailed = false;
+  mMagIndex = mScope->GetMagIndex();
+  mATSavedShiftsOnAcq = mWinApp->mBufferManager->GetShiftsOnAcquire();
+  mWinApp->mBufferManager->SetShiftsOnAcquire(B3DMAX(1, mATSavedShiftsOnAcq));
+  mCamera->SetCancelNextContinuous(true);
+  mWinApp->mCamera->InitiateCapture(
+    mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : RECORD_CONSET);
+
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "ALIGNING TO TEMPLATE");
+  mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
+
+  return 0;
+}
+
+// Next operation in align to template
+void CParticleTasks::TemplateAlignNextTask(int param)
+{
+  int alignErr;
+  double ISX, ISY, radialUM, stz;
+  float backlashX, backlashY, shiftX, shiftY;
+  ScaleMat mat;
+  if (mATIterationNum < 0)
+    return;
+  if (mATResettingShift) {
+
+    // Image shift was reset: stop if leaving at zero and IS was below threshold or this
+    // was the last iteration
+    mATResettingShift = false;
+    mATIterationNum++;
+    if (mATParams.leaveISatZero &&
+      (mATFinishing || mATIterationNum >= mATParams.maxNumResetIS)) {
+      if (mATFinishing)
+        PrintfToLog("Align to Template finished after %d IS resets with IS left at zero",
+          mATIterationNum);
+      else
+        PrintfToLog("Align to Template stopped at limit of %d iterations, with IS left"
+          " at 0", mATIterationNum);
+      StopTemplateAlign();
+      return;
+    }
+
+    // Otherwise new image for align
+    mWinApp->mCamera->InitiateCapture(
+      mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : RECORD_CONSET);
+
+
+  } else {
+
+    // Got an image, align it
+    mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
+    alignErr = mWinApp->mShiftManager->AutoAlign(mATIterationNum ?
+      1 : mATParams.loadAndKeepBuf, 1, 1, false, NULL, 0., 0., 0., 0., 0., NULL, NULL,
+      GetDebugOutput('1'));
+    if (alignErr) {
+      SEMMessageBox(alignErr < 0 ? "Template autoalignment failed to find a peak within"
+        " the distance limit" : "Template autoalignment had a memory or other error");
+      mATLastFailed = true;
+      StopTemplateAlign();
+      return;
+    }
+
+    // Assess shift for iterating or final message
+    mScope->GetLDCenteredShift(ISX, ISY);
+    if (!mATIterationNum) {
+      mat = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex));
+      if (mat.xpx) {
+        mImBufs->mImage->getShifts(shiftX, shiftY);
+        shiftX *= mImBufs->mBinning;
+        shiftY *= -mImBufs->mBinning;
+        mShiftManager->ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
+        PrintfToLog("Shift in Align to Template is %.2f, %.2f microns",
+          backlashX, backlashY);
+      }
+    }
+    radialUM = (float)mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mMagIndex);
+
+    // Done if iteration limit reached
+    if (mATIterationNum >= mATParams.maxNumResetIS) {
+      if (mATParams.maxNumResetIS > 0)
+        PrintfToLog("Align to Template stopped at limit of %d iterations, with residual "
+          "IS of %.2f um", mATIterationNum, radialUM);
+      else
+        PrintfToLog("Align to Template finished with residual IS of %.2f um", radialUM);
+      StopTemplateAlign();
+      return;
+    }
+
+    // Otherwise assess shift, start a reset if above limit, or on final round if below
+    // and leaving IS at zero
+    mATFinishing = radialUM < mATParams.resetISthresh;
+    if (mATFinishing && !mATParams.leaveISatZero) {
+      PrintfToLog("Align to Template finished after %d IS resets with residual IS of "
+        "%.2f, below threshold", mATIterationNum, radialUM);
+      StopTemplateAlign();
+      return;
+    }
+    SEMTrace('1', "Resetting shift of  %.2f um, iteration %d", radialUM,
+      mATIterationNum);
+    mScope->GetStagePosition(ISX, ISY, stz);
+    mWinApp->mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(ISX, ISY,
+      backlashX, backlashY), false);
+    mATResettingShift = true;
+  }
+  mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
+}
+
+// Stop - restore state
+void CParticleTasks::StopTemplateAlign()
+{
+  if (mATIterationNum < 0)
+    return;
+  mATIterationNum = -1;
+  mWinApp->mBufferManager->SetShiftsOnAcquire(mATSavedShiftsOnAcq);
+  mNavHelper->RestoreMapOffsets();
+  mNavHelper->RestoreFromMapState();
+
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+}
+
+int CParticleTasks::TemplateAlignBusy()
+{
+  if (mATResettingShift)
+    return mWinApp->mShiftManager->ResettingIS() ? 1 : 0;
+  return mCamera->TaskCameraBusy();
+}
+
+void CParticleTasks::TemplateAlignCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Time out aligning to template"));
+  StopTemplateAlign();
+  mWinApp->ErrorOccurred(error);
+}
+
+///////////////////////////////////////////////////////////////////////
+//  MANAGE DEWARS AND VACUUM
+//
+// Start the process
+int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChecks)
+{
+  int longOps[5];
+  float hours[5];
+  int err = 0, busy, secToStart, numLongOps = 0;
+  int capabilities = mScope->GetDewarVacCapabilities();
+  bool canGetTimeToFill = (FEIscope && (capabilities & 2)) ||
+    mScope->GetHasSimpleOrigin();
+  bool doChecks = skipOrDoChecks >= 0;
+  bool doNonChecks = skipOrDoChecks <= 0;
+  mDVAlreadyFilling = false;
+  mDVWaitForFilling = 0;
+  mDVWaitAfterFilled = 0.;
+  mDVStartedRefill = false;
+  mDVStartedCycle = false;
+  mDVParams = params;
+  if ((capabilities & 2) == 0 && !mScope->GetHasSimpleOrigin()) {
+    mDVParams.checkDewars = false;
+    mDVParams.refillDewars = false;
+  }
+
+  // Just handle nitrogen checking/filling here and leave other operations to next task
+  // Check if dewars are already filling if it is either set to check or possibly
+  // going to start it
+  if (((doNonChecks && mDVParams.refillDewars) || (doChecks && mDVParams.checkDewars)) &&
+    mScope->AreDewarsFilling(busy) && busy) {
+    mDVAlreadyFilling = true;
+
+    // If not already filling and we can get time to next filling, do so
+  } else if (((doNonChecks && mDVParams.refillDewars) || doChecks) && 
+    mDVParams.checkDewars && canGetTimeToFill) {
+    if (mScope->GetDewarsRemainingTime(secToStart)) {
+
+      // If it is within the pause interval, just set up to wait for it to start
+      if (secToStart <= params.pauseBeforeMin * 60.) {
+        mDVWaitForFilling = secToStart;
+        mDVStartTime = GetTickCount();
+
+        // Or if it is within interval where we should trigger it, go ahead and set up
+        // for immediate start
+      } else if (params.startRefill && secToStart <= params.startIntervalMin * 60.) {
+        SetupRefillLongOp(longOps, hours, numLongOps, 0.);
+      }
+
+    }
+  }
+
+  // If none of that resulted in waiting or starting, set up to do long operation if it
+  // is time for it.
+  if ((doNonChecks && mDVParams.refillDewars) && !mDVAlreadyFilling && !mDVWaitForFilling &&
+    !numLongOps) {
+    SetupRefillLongOp(longOps, hours, numLongOps, params.dewarTimeHours);
+  }
+
+  // Set flags if buffer cycle operations should be done
+  mDVNeedVacRuns = doNonChecks && FEIscope && (params.runBufferCycle ||
+    (params.runAutoloaderCycle && (capabilities & 1)));
+  mDVNeedPVPCheck = doChecks && FEIscope && params.checkPVP;
+  mDVDoingDewarVac = true;
+
+  // Start long operation or not
+  if (numLongOps) {
+    err = mScope->StartLongOperation(longOps, hours, numLongOps);
+    if (err > 0) {
+      SEMMessageBox("Could not start a long operation for filling nitrogen;\n" +
+        CString(err == 1 ? "The thread for long operations is already running" :
+          "inappropriate parameters were sent to the long operation routine"));
+      mDVDoingDewarVac = false;
+      return 1;
+    }
+    mDVStartedRefill = !err;
+  }
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "MANAGING SCOPE");
+
+  // Set up to go through busy if waiting or long op, or just go to next task now
+  if (mDVAlreadyFilling || mDVWaitForFilling || mDVStartedRefill) {
+    if (!mDVStartedRefill)
+      mWinApp->SetStatusText(SIMPLE_PANE, mDVAlreadyFilling ? "WAIT UNTIL FILLED" :
+        "WAIT for FILL START");
+    if (mDVAlreadyFilling) {
+
+      // If it fills on its own, record the time that it was found to be filling
+      numLongOps = 0;
+      SetupRefillLongOp(longOps, hours, numLongOps, -1.);
+      mScope->StartLongOperation(longOps, hours, numLongOps);
+    }
+    mWinApp->AddIdleTask(TASK_DEWARS_VACUUM, 0, 2000 * mDVWaitForFilling);
+  } else {
+    DewarsVacNextTask(0);
+  }
+  return 0;
+}
+
+// Set the operation entries for a refill appropriate for the scope type with the given 
+// value for the hours entry
+void CParticleTasks::SetupRefillLongOp(int *longOps, float *hours, int &numLongOps,
+  float hourVal)
+{
+  if (JEOLscope && mScope->GetJeolHasNitrogenClass()) {
+    longOps[numLongOps] = LONG_OP_FILL_STAGE;
+    hours[numLongOps++] = hourVal;
+    longOps[numLongOps] = LONG_OP_FILL_TRANSFER;
+    hours[numLongOps++] = hourVal;
+  } else if ((FEIscope && (mScope->GetDewarVacCapabilities() & 2)) ||
+    mScope->GetHasSimpleOrigin()) {
+    longOps[numLongOps] = LONG_OP_REFILL;
+    hours[numLongOps++] = hourVal;
+  }
+}
+
+// Do next task in the series
+void CParticleTasks::DewarsVacNextTask(int param)
+{
+  int longOps[5];
+  float hours[5];
+  int err, numLongOps = 0;
+  BOOL state;
+  if (!mDVDoingDewarVac)
+    return;
+
+  mDVWaitAfterFilled = 0.;
+
+  // After waiting to start filling, set that it is filling
+  if (mDVWaitForFilling) {
+    mDVWaitForFilling = 0;
+    mDVAlreadyFilling = true;
+    SetupRefillLongOp(longOps, hours, numLongOps, -1.);
+    mScope->StartLongOperation(longOps, hours, numLongOps);
+    mWinApp->SetStatusText(SIMPLE_PANE, "WAIT UNTIL FILLED");
+  } else if (mDVAlreadyFilling || mDVStartedRefill) {
+
+    // If filling was doneby testing, or the long operation finished, set up for post-wait
+    mDVAlreadyFilling = false;
+    mDVStartedRefill = false;
+    mDVWaitAfterFilled = mDVParams.postFillWaitMin;
+    mDVStartTime = GetTickCount();
+    mWinApp->SetStatusText(SIMPLE_PANE, "WAIT AFTER FILL");
+  }
+
+  // Put this idle task on if there is a something to do (0 wait = nothing to do)
+  if (mDVAlreadyFilling || mDVWaitAfterFilled) {
+    mWinApp->AddIdleTask(TASK_DEWARS_VACUUM, 0, 0);
+    return;
+  }
+
+  // If buffer cycles done or PVP done, clear those flags
+  mDVStartedCycle = false;
+  mDVWaitForPVP = false;
+
+  // Now check the buffer cycles with a long op call, clear their flag
+  if (mDVNeedVacRuns && mDVParams.runBufferCycle) {
+    longOps[numLongOps] = LONG_OP_BUFFER;
+    hours[numLongOps++] = (float)(mDVParams.bufferTimeMin / 60.);
+  }
+  if (mDVNeedVacRuns && mDVParams.runAutoloaderCycle &&
+    (mScope->GetDewarVacCapabilities() & 1)) {
+    longOps[numLongOps] = LONG_OP_LOAD_CYCLE;
+    hours[numLongOps++] = (float)(mDVParams.autoloaderTimeMin / 60.);
+  }
+  mDVNeedVacRuns = false;
+
+
+  // Start long operation if needed
+  if (numLongOps) {
+    err = mScope->StartLongOperation(longOps, hours, numLongOps);
+    if (err > 0) {
+      SEMMessageBox("Could not start a long operation for doing buffer cycle;\n" +
+        CString(err == 1 ? "The thread for long operations is already running" :
+          "inappropriate parameters were sent to the long operation routine"));
+      StopDewarsVac();
+      return;
+    }
+    mDVStartedCycle = !err;
+  }
+
+  // Check for PVP if not doing any buffer cycles
+  if (!mDVStartedCycle && mDVNeedPVPCheck && mScope->IsPVPRunning(state)) {
+    mDVWaitForPVP = state;
+    mDVNeedPVPCheck = false;
+    mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR PVP");
+  }
+
+  // Start task if anything to do, or stop
+  if (mDVStartedCycle || mDVWaitForPVP)
+    mWinApp->AddIdleTask(TASK_DEWARS_VACUUM, 0, 0);
+  else
+    StopDewarsVac();
+}
+
+// A simple stop function
+void CParticleTasks::StopDewarsVac()
+{
+  mDVDoingDewarVac = false;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+}
+
+// Testing for busy in the various cases
+int CParticleTasks::DewarsVacBusy()
+{
+  int busy;
+  BOOL state;
+
+  // Long operation for refill or buffer cycle
+  if (mDVStartedRefill || mDVStartedCycle)
+    return mScope->LongOperationBusy();
+
+  // Testing for filling to start or end
+  if (mDVWaitForFilling || mDVAlreadyFilling) {
+    if (mScope->AreDewarsFilling(busy))
+      return ((mDVWaitForFilling && !busy) || (mDVAlreadyFilling && busy)) ? 1 : 0;
+    return -1;
+  }
+
+  // Waiting a time after fill
+  if (mDVWaitAfterFilled)
+    return SEMTickInterval(mDVStartTime) < 60000. * mDVWaitAfterFilled ? 1 : 0;
+
+  // Waiting for PVP to stop
+  if (mDVWaitForPVP) {
+    if (mScope->IsPVPRunning(state))
+      return state ? 1 : 0;
+    return -1;
+  }
+  return 0;
+}
+
+void CParticleTasks::DewarsVacCleanup(int error)
+{
 }
