@@ -119,7 +119,7 @@ reduction at least in GMS 3.43.
 4/16/21: Rebuilt JeolCamPlugin, HitachiPlugin, DEcamPlugin for beta package
 with proper libraries.
 
-4/16/21: Probably fixed problem with acquiring frames in GMS 3.43 (in 3.8).
+4/16/21: Fixed problem with acquiring frames in GMS 3.43 (in 3.8).
 
 4/3/21: Added Python image type that can give access to an image in a buffer,
 but found that numpy and scipy currently hang or crash SerialEM when
