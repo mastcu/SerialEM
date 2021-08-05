@@ -440,7 +440,11 @@ int CMacCmd::NextCommand(bool startingOut)
   if (mCmdIndex >= 0 && ArithmeticIsAllowed(mStrItems[0])) {
     if (SeparateParentheses(&mStrItems[1], MAX_MACRO_TOKENS - 1))
       ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
-    EvaluateExpression(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, 0, index, index2);
+    if (EvaluateExpression(&mStrItems[1], MAX_MACRO_TOKENS - 1, mStrLine, 0, index, 
+      index2)) {
+      AbortMacro();
+      return 1;
+    }
     for (i = index + 1; i <= index2; i++)
       mStrItems[i] = "";
     index = CheckLegalCommandAndArgNum(&mStrItems[0], mCmdIndex, mStrLine,mCurrentMacro);
@@ -2223,15 +2227,15 @@ int CMacCmd::TestNextMultiShot(void)
 // MultipleRecords
 int CMacCmd::MultipleRecords(void)
 {
-  BOOL truth;
-  int index, index2, ix0, ix1, iy1;
+  BOOL doSave;
+  int doEarly, index2, ix0, ix1, iy1, numEarly;
 
-  if (mNavHelper->mMultiShotDlg)
-    mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
+  mNavHelper->UpdateMultishotIfOpen();
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
-  index = (mItemEmpty[6] || mItemInt[6] < -8) ? msParams->doEarlyReturn : mItemInt[6];
+  doEarly = (mItemEmpty[6] || mItemInt[6] < -8) ? msParams->doEarlyReturn : mItemInt[6];
+  numEarly = (mItemEmpty[7] || mItemInt[7] < -8) ? msParams->numEarlyFrames : mItemInt[7];
   if (!mCamParams->K2Type)
-    index = 0;
+    doEarly = 0;
   index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
   if (!mItemEmpty[9] && mItemInt[9] > -9) {
     index2 = mItemInt[9];
@@ -2239,7 +2243,7 @@ int CMacCmd::MultipleRecords(void)
       ABORT_LINE("The ninth entry for doing within holes or\n"
         "in multiple holes must be between 1 and 11 in line:\n\n");
   }
-  truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
+  doSave = (doEarly != 2 || numEarly != 0) ? msParams->saveRecord : false;
   ix0 = msParams->doSecondRing ? 1 : 0;
   if (!mItemEmpty[10] && mItemInt[10] > -9)
     ix0 = mItemInt[10] ? 1 : 0;
@@ -2252,8 +2256,7 @@ int CMacCmd::MultipleRecords(void)
     (mItemEmpty[3] || mItemDbl[3] < -8.) ? msParams->spokeRad[0] : mItemFlt[3], ix1,
     (mItemEmpty[12] || mItemDbl[12] < -8.) ? msParams->spokeRad[1] : mItemFlt[12],
     (mItemEmpty[4] || mItemDbl[4] < -8.) ? msParams->extraDelay : mItemFlt[4],
-    (mItemEmpty[5] || mItemInt[5] < -8) ? truth : mItemInt[5] != 0, index,
-    (mItemEmpty[7] || mItemInt[7] < -8) ? msParams->numEarlyFrames : mItemInt[7],
+    (mItemEmpty[5] || mItemInt[5] < -8) ? doSave : mItemInt[5] != 0, doEarly, numEarly,
     (mItemEmpty[8] || mItemInt[8] < -8) ? msParams->adjustBeamTilt : mItemInt[8] != 0,
     index2);
   if (iy1 > 0) {
@@ -2269,8 +2272,7 @@ int CMacCmd::RotateMultiShotPattern(void)
 {
   int index;
 
-  if (mNavHelper->mMultiShotDlg)
-    mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
+  mNavHelper->UpdateMultishotIfOpen();
   index = mNavHelper->RotateMultiShotVectors(mNavHelper->GetMultiShotParams(),
     mItemFlt[1], mItemInt[2] != 0);
   if (index)
@@ -5049,24 +5051,12 @@ int CMacCmd::MoveStage(void)
 // RelaxStage
 int CMacCmd::RelaxStage(void)
 {
-  double delX;
-  float backlashX, backlashY;
-  StageMoveInfo smi;
-
-  delX = mItemEmpty[1] ? mScope->GetStageRelaxation() : mItemDbl[1];
-  if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
+  double delX = mItemEmpty[1] ? mScope->GetStageRelaxation() : mItemDbl[1];
+  int err = DoStageRelaxation(delX);
+  if (err < 0)
     SUSPEND_NOLINE("because of failure to get stage position");
-  if (mScope->GetValidXYbacklash(smi.x, smi.y, backlashX, backlashY)) {
-    mScope->CopyBacklashValid();
-
-    // Move in direction of the backlash, which is opposite to direction of stage move
-    smi.x += (backlashX > 0. ? delX : -delX);
-    smi.y += (backlashY > 0. ? delX : -delX);
-    smi.z = 0.;
-    smi.alpha = 0.;
-    smi.axisBits = axisXY;
-    mScope->MoveStage(smi);
-      mMovedStage = true;
+  if (!err) {
+    mMovedStage = true;
   } else {
     mWinApp->AppendToLog("Stage is not in known backlash state so RelaxStage cannot "
       "be done", mLogAction);
@@ -6857,7 +6847,7 @@ int CMacCmd::DewarsRemainingTime(void)
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Remaining time to fill dewars is %d", index);
+  mLogRpt.Format("Remaining time until dewars start filling is %d sec", index);
   SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
@@ -6896,6 +6886,16 @@ int CMacCmd::SimpleOriginStatus(void)
   mLogRpt.Format("SimpleOrigin has %d refills, %.1f minutes to next fill, %s filling",
     numLeft, secToNext / 60., active ? "IS" : "is NOT");
   SetReportedValues(&mStrItems[1], numLeft, secToNext / 60., active);
+  return 0;
+}
+
+// ManageDewarsAndPumps
+int CMacCmd::ManageDewarsAndPumps(void)
+{
+  int checks = mItemEmpty[1] ? 0 : mItemInt[1];
+  DewarVacParams *param = mScope->GetDewarVacParams();
+  if (mWinApp->mParticleTasks->ManageDewarsVacuum(*param, checks))
+    ABORT_LINE("Script halted due to failure to start a long operation for line:\n\n");
   return 0;
 }
 
@@ -7855,11 +7855,31 @@ int CMacCmd::MoveToNavItem(void)
   return 0;
 }
 
+// AlignToTemplate
+int CMacCmd::AlignToTemplate(void)
+{
+  NavAlignParams params = *(mNavHelper->GetNavAlignParams());
+  ABORT_NONAV
+  if (!mItemEmpty[1] && mItemFlt[1] >= 0.)
+    params.maxAlignShift = mItemFlt[1];
+  if (!mItemEmpty[2] && mItemFlt[2] >= 0.)
+    params.resetISthresh = mItemFlt[2];
+  if (!mItemEmpty[3] && mItemInt[3] >= 0)
+    params.maxNumResetIS = mItemInt[3];
+  if (!mItemEmpty[4] && mItemInt[4] >= 0)
+    params.leaveISatZero = mItemInt[4] != 0;
+  if (!mItemEmpty[5])
+    JustStripItems(mStrLine, 5, params.templateLabel);
+  if (mWinApp->mParticleTasks->AlignToTemplate(params))
+    ABORT_NOLINE("Script halted due to failure in Align to Template routine");
+  return 0;
+}
+
 // RealignToNavItem, RealignToOtherItem
 int CMacCmd::RealignToNavItem(void)
 {
   CString report;
-  BOOL truth;
+  BOOL truth, justMove = false;
   int index, index2, ix0, ix1, iy0;
   float bmax;
   ABORT_NONAV;
@@ -7875,18 +7895,20 @@ int CMacCmd::RealignToNavItem(void)
     bmax = mItemFlt[index2 + 2];
     ix0 = mItemInt[index2 + 3];
     ix1 = mItemInt[index2 + 4];
+    justMove = !mItemEmpty[index2 + 5] && mItemInt[index2 + 5] != 0;
   }
   if (!mItemEmpty[index2 + 1])
     mNavHelper->SetContinuousRealign(mItemInt[index2 + 1]);
   if (truth)
     iy0 = mNavigator->RealignToOtherItem(index, mItemInt[index2] != 0, bmax, ix0,
-      ix1);
+      ix1, justMove);
   else
-    iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, bmax, ix0, ix1);
+    iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, bmax, ix0, ix1,
+      justMove);
+  mNavHelper->SetContinuousRealign(0);
   if (iy0) {
     report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
     ABORT_NOLINE(report);
-    mNavHelper->SetContinuousRealign(0);
   }
   return 0;
 }

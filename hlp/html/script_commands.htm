@@ -2853,6 +2853,15 @@
             IgnoreShortTermCals must not be set.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ManageDewarsAndPumps [#]</TD>
+          <TD>Runs the scope management routine configured in the 
+            <a href="hidd_manage_dewars.htm">Dewar and Vacuum Management</a> dialog. &nbsp;For 
+            the optional [#], enter -1 to skip the checks that would be most useful immediately before
+            acquisition and 1 to do just those checks. &nbsp;For example, the command could be run 
+            early in the acquisition cycle with a -1 and again just before acquisition with a 1.
+          </TD>
+        </TR>
+        <TR>
           <TD colspan="2"><A name="piezo_commands"></A><B>Piezo Drive Commands</B></TD>
         </TR>
         <TR>
@@ -3798,6 +3807,18 @@
           <TD class="scriptcommand">ForceCenterRealign</TD>
           <TD>Makes Realign to Item align to the map center instead of skipping the first
             round because it was aligned to recently.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AlignToTemplate [S] [R] [M] [L] [label]</TD>
+          <TD>Runs the Align to Template routine using the parameters set in the 
+            <a href="hidd_navrealign.htm">Navigator Align Setup</a> dialog, which can be modified
+             by optional entries: <b>#S</b> with the maximum shift in the alignment in microns,
+             <b>#R</b> with a threshold value in microns for resetting IS, moving the stage, 
+            and realigning, <b>#M</b> with the maximum number of times to reset IS or 0 not to,
+             <b>#L with 1 to leave IS at 0 (skip last realign) or 0 not to</b>,
+             and <b>label</b> as the label of the Navigator item to use as a template.&nbsp; For any of the
+            numbers, enter -1 to use the value from the dialog.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ShiftItemsByAlignment</TD>
