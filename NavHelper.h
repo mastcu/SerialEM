@@ -37,7 +37,7 @@ struct MultiShotParams
   BOOL doSecondRing;     // Do a second ring of shots
   int doCenter;          // Center shot: -1 before, 0 none, 1 after
   float extraDelay;      // Additional delay after image shift
-  int doEarlyReturn;     // 1 for early return on last, 2 for all
+  int doEarlyReturn;     // 1 for early return on last, 2 for all, 3 for full sum on first
   int numEarlyFrames;    // Number of frames in early return
   BOOL saveRecord;       // Whether to save Record shot
   BOOL adjustBeamTilt;   // Whether to adjust beam tilt if possible
@@ -84,6 +84,63 @@ struct BaseMarkerShift
   int toMagInd;           // Mag of image with marker point
 };
 
+// BEWARE.  Nav Actions are the "other tasks" in user terminology
+
+// Add new default definition flags to "navActions[index].flags |=" in ParameterIO.cpp
+#define NAA_FLAG_HAS_SETUP    (1 << 0)
+#define NAA_FLAG_ALWAYS_HIDE  (1 << 1)
+#define NAA_FLAG_RUN_IT       (1 << 2)
+#define NAA_FLAG_HIDE_IT      (1 << 3)
+#define NAA_FLAG_AFTER_ITEM   (1 << 4)
+#define NAA_FLAG_OTHER_SITE   (1 << 5)
+#define NAA_FLAG_MATCH_NOTE   (1 << 6)
+#define NAA_FLAG_ONLY_BEFORE  (1 << 7)
+#define NAA_FLAG_EVERYN_ONLY  (1 << 8)
+#define NAA_FLAG_ANY_SITE_OK  (1 << 9)
+#define NAA_FLAG_HERE_ONLY    (1 << 10)
+
+#define NAA_MAX_ACTIONS    19
+#define DOING_ACTION(a) ((mAcqActions[a].flags & NAA_FLAG_RUN_IT) ? 1 : 0)
+#define SET_ACTION(p, a, s) setOrClearFlags(&p[a].flags, NAA_FLAG_RUN_IT, (s) ? 1 : 0);
+
+enum {NAA_EVERY_N_ITEMS = 0, NAA_GROUP_START, NAA_GROUP_END, NAA_AFTER_TIME, 
+  NAA_IF_SEPARATED};
+
+enum {
+  NAACT_ROUGH_EUCEN, NAACT_CEN_BEAM, NAACT_REALIGN_ITEM, NAACT_COOK_SPEC,
+  NAACT_FINE_EUCEN, NAACT_EUCEN_BY_FOCUS, NAACT_AUTOFOCUS, NAACT_COMA_FREE,
+  NAACT_ASTIGMATISM, NAACT_CONDITION_VPP, NAACT_HW_DARK_REF, NAACT_WAIT_DRIFT,
+  NAACT_ALIGN_TEMPLATE, NAACT_REFINE_ZLP, NAACT_RUN_PREMACRO, NAACT_RUN_POSTMACRO,
+  NAACT_FLASH_FEG, NAACT_CHECK_DEWARS, // Add navActions here
+  ACQ_FIND_SETUP_NEXT, ACQ_OPEN_FILE, ACQ_ACQUIRE, ACQ_DO_MULTISHOT, ACQ_RUN_MACRO,
+  ACQ_START_TS, ACQ_MOVE_TO_AREA, ACQ_BACKLASH, ACQ_MOVE_ELSEWHERE, ACQ_RELAX_STAGE,
+  ACQ_MAX_STEPS // End with this
+};
+
+// Structure for an acquisition action (task)
+struct NavAcqAction {
+  CString name;           // Label for check box
+  unsigned int flags;     // Flags for hiding, has setup button
+  int timingType;         // Type of timing to use
+  int everyNitems;        // Do every N items, 1, 2, etc
+  int minutes;            // Minutes between doing it
+  float distance;         // Minimum distance between places where it is done
+  CString labelOrNote;    // Text to match at start
+  int timeLastDone;       // Minute time stamp
+  float lastDoneAtX;      // Location where done
+  float lastDoneAtY;
+};
+
+// Structure for template align and realign to item params
+struct NavAlignParams {
+  CString templateLabel;     // Label for template map
+  int loadAndKeepBuf;        // Buffer to save it in
+  float maxAlignShift;       //  Maximum alignments shift
+  int maxNumResetIS;         // Maximum number of reset shifts: can be negative to retain
+  float resetISthresh;       // Threshold IS for resetting
+  BOOL leaveISatZero;        // Flag to leave IS at zero
+};
+
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
 
 class CNavHelper
@@ -92,7 +149,7 @@ public:
   CNavHelper(void);
   ~CNavHelper(void);
   int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit,
-    int maxNumResetAlign, int leaveZeroIS);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
   GetMember(int, Realigning)
   GetSetMember(float, RImaximumIS)
@@ -120,6 +177,7 @@ public:
     (!mMultiShotParams.useCustomHoles && mMultiShotParams.holeMagIndex > 0));};
   MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
   HoleFinderParams *GetHoleFinderParams() { return &mHoleFinderParams; };
+  NavAlignParams *GetNavAlignParams() {return &mNavAlignParams;};
   GetSetMember(float, DistWeightThresh);
   GetSetMember(float, RImaxLMfield);
   GetSetMember(int, RIskipCenTimeCrit);
@@ -154,6 +212,13 @@ public:
   GetSetMember(BOOL, MHCenableMultiDisplay);
   GetSetMember(int, MHCcombineType);
   GetSetMember(BOOL, SkipAstigAdjustment);
+  GetSetMember(int, CurAcqParamIndex);
+  GetMember(int, NumAcqActions);
+  GetMember(int, RIconSetNum);
+  GetMember(bool, RIstayingInLD);
+  int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
+  int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
+  NavAcqAction *GetAcqActions(int which) {return &mAllAcqActions[which][0] ; };
 
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
@@ -192,6 +257,9 @@ private:
   MultiShotParams mMultiShotParams;
   int mEnableMultiShot;
   HoleFinderParams mHoleFinderParams;
+  NavAcqAction mAllAcqActions[2][NAA_MAX_ACTIONS];
+  NavAcqAction *mAcqActions;
+  NavAlignParams mNavAlignParams;
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
   int mSecondRoundID;           // Map ID of map itself for 2nd round alignment
@@ -277,6 +345,7 @@ private:
   WINDOWPLACEMENT mMultiShotPlace;
   WINDOWPLACEMENT mMultiCombinerPlace;
   WINDOWPLACEMENT mHoleFinderPlace;
+  WINDOWPLACEMENT mAcquireDlgPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -292,6 +361,7 @@ private:
   float mRIcalShiftY;
   int mRIconSetNum;
   bool mRIstayingInLD;
+  bool mRIdidSaveState;
   float mRIresetISCritForAlign; // Criterion for doing a reset shift - realign operation
   int mRIresetISmaxNumAlign;    // Maximum times to do rest shift - realign
   int mRIresetISleaveZero;      // Whether to leave IS at zero
@@ -305,6 +375,7 @@ private:
   int mContinuousRealign;       // Flag to use continuous mode; > 1 to leave it running
   int mRIContinuousMode;        // Copy of flag for this run of realign
   float mRITiltTolerance;       // Maximum tilt difference for not tilting before realign
+  bool mRIJustMoving;           // Flag just to do stage move when skip center
   float mGridGroupSize;         // Radius in microns for adding points in groups
   BOOL mDivideIntoGroups;       // Flag for whether to do it
   bool mEditReminderPrinted;     // Flag that reminder printed when edit mode turned on
@@ -344,6 +415,10 @@ private:
   IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value
   FloatVec mSavedMaShXshift;     // The existing marker shift if any
   FloatVec mSavedMaShYshift;
+  int mNumAcqActions;
+  static int mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1];    // A modifiable default order
+  int mAcqActCurrentOrder[2][NAA_MAX_ACTIONS];    // Current order
+  int mCurAcqParamIndex;         // Current acquire param set
 
 
 public:
@@ -363,6 +438,8 @@ public:
     float &localErrY);
   int GetLastErrorTarget(float & targetX, float & targetY);
   void NavOpeningOrClosing(bool open);
+  void InitAcqActionFlags(bool opening);
+  void UpdateSettings();
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);
   void RestoreSavedState(void);
@@ -406,6 +483,9 @@ public:
   void DualMapCleanup(int error);
   void StopDualMap(void);
   int AssessAcquireProblems(int startInd, int endInd);
+  BOOL IsMultishotSaving(bool *allZeroER = NULL);
+  int FindNearestItemMatchingText(float stageX, float stageY, CString &text, bool matchNote);
+  BOOL GetNoMessageBoxOnError();
   void ListFilesToOpen(void);
   bool NameToOpenUsed(CString name);
   int AlignWithRotation(int buffer, float centerAngle, float angleRange,
@@ -450,12 +530,15 @@ public:
   void StartResetISorFinish(int magInd);
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
+  void UpdateMultishotIfOpen(bool draw = true);
   int RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);
   WINDOWPLACEMENT *GetMultiCombinerPlacement();
-  void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
+  WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
+  void UpdateAcquireDlgForFileChanges();
+  void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);

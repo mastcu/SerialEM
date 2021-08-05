@@ -1,8 +1,7 @@
 // NavHelper.cpp : Helper class for Navigator for task-oriented routines
 //
 //
-// Copyright (C) 2007 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2007 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -18,6 +17,7 @@
 #include "EMbufferManager.h"
 #include "ShiftManager.h"
 #include "NavigatorDlg.h"
+#include "NavAcquireDlg.h"
 #include "MapDrawItem.h"
 #include "NavFileTypeDlg.h"
 #include "NavRotAlignDlg.h"
@@ -36,14 +36,64 @@
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
+#include "Shared\b3dutil.h"
 
 enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE, 
 TASK_SECOND_SHOT, TASK_FINAL_SHOT, TASK_RESET_IS, TASK_RESET_SHOT};
 
+// Default order for task list (actions) in acquire
+int CNavHelper::mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1] = {
+  NAACT_CHECK_DEWARS,
+  NAACT_FLASH_FEG,
+  NAACT_COMA_FREE,
+  NAACT_ASTIGMATISM,
+  NAACT_CONDITION_VPP,
+  NAACT_HW_DARK_REF,
+  NAACT_REFINE_ZLP,
+  NAACT_ROUGH_EUCEN,
+  NAACT_EUCEN_BY_FOCUS,
+  NAACT_CEN_BEAM,
+  NAACT_REALIGN_ITEM,
+  NAACT_COOK_SPEC,
+  NAACT_FINE_EUCEN,
+  NAACT_ALIGN_TEMPLATE,
+  NAACT_AUTOFOCUS, 
+  NAACT_WAIT_DRIFT,
+  NAACT_RUN_PREMACRO, 
+  NAACT_RUN_POSTMACRO, -1};
+
+#define BEFORE_SETUP_EVERYN (NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY)
+
 CNavHelper::CNavHelper(void)
 {
+  int i;
   SEMBuildTime(__DATE__, __TIME__);
-	mWinApp = (CSerialEMApp *)AfxGetApp();
+
+  // Define local array here and copy to real arrays
+  NavAcqAction actions[NAA_MAX_ACTIONS] = {
+    {"Rough Eucentricity", 0, 0, 1, 15, 40.},
+    {"Autocenter Beam", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Realign to Item", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP | NAA_FLAG_HERE_ONLY,
+    0, 1, 15, 40.},
+    {"Cook Specimen", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Fine Eucentricity", 0, 0, 1, 15, 40.},
+    {"Eucentricity by Focus", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Autofocus", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Coma-free Alignment", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Correct Astigmatism", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Condition Phase Plate", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Update Dark Reference", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
+    {"Wait for Drift", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
+    {"Align to Template", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
+    {"Refine ZLP", 0, 0, 1, 15, 40.},
+    {"Run Script before Action", NAA_FLAG_ONLY_BEFORE, 0, 1, 15, 40.},
+    {"Run Script after Action", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_AFTER_ITEM, 0, 1, 15,40.},
+    {"Flash FEG", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
+    {"Manage Dewars/Vacuum", NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY |
+    NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.}
+  };
+
+  mWinApp = (CSerialEMApp *)AfxGetApp();
   mDocWnd = mWinApp->mDocWnd;
 	mMagTab = mWinApp->GetMagTable();
 	mCamParams = mWinApp->GetCamParams();
@@ -54,6 +104,16 @@ CNavHelper::CNavHelper(void)
   mFindHoles = new HoleFinder();
   mCombineHoles = new CMultiHoleCombiner();
   mHoleFinderDlg = new CHoleFinderDlg();
+
+  // Copy the default acquire action structures
+  for (mNumAcqActions = 0; mNumAcqActions < NAA_MAX_ACTIONS; mNumAcqActions++) {
+    if (mAcqActDefaultOrder[mNumAcqActions] < 0)
+      break;
+    mAcqActCurrentOrder[0][mNumAcqActions] = mAcqActCurrentOrder[1][mNumAcqActions] = 
+      mAcqActDefaultOrder[mNumAcqActions];
+    mAllAcqActions[0][mNumAcqActions] = actions[mNumAcqActions];
+    mAllAcqActions[1][mNumAcqActions] = actions[mNumAcqActions];
+  }
   mRealigning = 0;
   mAcquiringDual = false;
   mMaxMarginNeeded = 10.;
@@ -73,7 +133,7 @@ CNavHelper::CNavHelper(void)
   mTypeOfSavedState = STATE_NONE;
   mLastTypeWasMont = false;
   mLastMontFitToPoly = false;
-  for (int i = 0; i < 4; i++) {
+  for (i = 0; i < 4; i++) {
     mGridLimits[i] = 0.;
     mTestParams[i] = 0.;
   }
@@ -140,6 +200,11 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.tiltOfCustomHoles = -999.;
   mMultiShotParams.holeFinderAngle = -999.;
   mSkipAstigAdjustment = false;
+  mNavAlignParams.maxAlignShift = 1.;
+  mNavAlignParams.resetISthresh = 0.2f;
+  mNavAlignParams.maxNumResetIS = 0;
+  mNavAlignParams.leaveISatZero = false;
+  mNavAlignParams.loadAndKeepBuf = 'S' - 'A';
   float thresholds[] = {2.4f, 3.6f, 4.8f};
   mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
     &thresholds[0], &thresholds[3]);
@@ -178,6 +243,7 @@ CNavHelper::CNavHelper(void)
   mHFusePieceEdgeDistFrac = 0.25f;
   mHFaddOverlapFrac = 0.75f;
 
+  mRIdidSaveState = false;
   mMHCcombineType = COMBINE_ON_IMAGE;
   mMHCenableMultiDisplay = false;
   mEditReminderPrinted = false;
@@ -187,6 +253,7 @@ CNavHelper::CNavHelper(void)
   mNav = NULL;
   mExtDrawnOnID = 0;
   mDoingMultipleFiles = false;
+  mCurAcqParamIndex = 0;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -213,6 +280,7 @@ void CNavHelper::Initialize(void)
 {
   mScope = mWinApp->mScope;
   mCamera = mWinApp->mCamera;
+  InitAcqActionFlags(false);
 }
 
 // Initialization when navigator is opened
@@ -226,8 +294,73 @@ void CNavHelper::NavOpeningOrClosing(bool open)
     mMontParArray = mNav->GetMontParArray();
     mGroupFiles = mNav->GetScheduledFiles();
     mAcqStateArray = mNav->GetAcqStateArray();
+    InitAcqActionFlags(true);
+    mNav->SetCurAcqParmActions(mCurAcqParamIndex);
   } else
     mNav = NULL;
+}
+
+// Make sure bad flags haven't come in from settings and hide irrelevant actions
+void CNavHelper::InitAcqActionFlags(bool opening)
+{
+  int i;
+  bool setFlag;
+  NavAcqAction *actions;
+  bool canHWDR = mWinApp->GetHasK2OrK3Camera() || mWinApp->GetDEcamCount() > 0;
+  mAcqActions = &mAllAcqActions[mCurAcqParamIndex][0];
+  for (i = 0; i < 2; i++) {
+    actions = &mAllAcqActions[i][0];
+    if (opening) {
+      setOrClearFlags(&actions[NAACT_HW_DARK_REF].flags, NAA_FLAG_ALWAYS_HIDE,
+        canHWDR ? 0 : 1);
+      if (!canHWDR)
+        setOrClearFlags(&actions[NAACT_HW_DARK_REF].flags, NAA_FLAG_RUN_IT, 0);
+      setOrClearFlags(&actions[NAACT_HW_DARK_REF].flags, NAA_FLAG_HAS_SETUP,
+        mWinApp->GetDEcamCount() > 0 ? 1 : 0);
+    } else {
+      if (!FEIscope)
+        actions[NAACT_CHECK_DEWARS].name = "Manage Nitrogen";
+
+      // Manage Refine ZLP
+      setOrClearFlags(&actions[NAACT_REFINE_ZLP].flags, NAA_FLAG_ALWAYS_HIDE,
+        mWinApp->ScopeHasFilter() ? 0 : 1);
+      if (!mWinApp->ScopeHasFilter())
+        setOrClearFlags(&actions[NAACT_REFINE_ZLP].flags, NAA_FLAG_RUN_IT, 0);
+
+      // Manage Flash FEG
+      setFlag = !((FEIscope && mScope->GetAdvancedScriptVersion() >=
+        ASI_FILTER_FEG_LOAD_TEMP) || (JEOLscope && mScope->GetJeolHasNitrogenClass())) ||
+        mScope->GetScopeCanFlashFEG() <= 0;
+      setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_ALWAYS_HIDE,
+        setFlag ? 1 : 0);
+      if (setFlag)
+        setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_RUN_IT, 0);
+
+      // Manage Check dewars
+      setFlag = !(FEIscope || (JEOLscope && mScope->GetJeolHasNitrogenClass()) ||
+        mScope->GetHasSimpleOrigin());
+      setOrClearFlags(&actions[NAACT_CHECK_DEWARS].flags, NAA_FLAG_ALWAYS_HIDE,
+        setFlag ? 1 : 0);
+      if (setFlag)
+        setOrClearFlags(&actions[NAACT_CHECK_DEWARS].flags, NAA_FLAG_RUN_IT, 0);
+
+      // Manage Condition VPP
+      setFlag = mScope->GetScopeHasPhasePlate() <= 0;
+      setOrClearFlags(&actions[NAACT_CONDITION_VPP].flags, NAA_FLAG_ALWAYS_HIDE,
+        setFlag ? 1 : 0);
+      if (setFlag)
+        setOrClearFlags(&actions[NAACT_CONDITION_VPP].flags, NAA_FLAG_RUN_IT, 0);
+    }
+  }
+}
+
+void CNavHelper::UpdateSettings()
+{
+  InitAcqActionFlags(false);
+  if (mNav) {
+    InitAcqActionFlags(true);
+    mNav->SetCurAcqParmActions(mCurAcqParamIndex);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -599,7 +732,7 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
   if (!mapItem)
     return item->mDrawnOnMapID ? 9 : 8;
   mRIdrawnTargetItem = item;
-  err = RealignToItem(mapItem, restoreState, 0., 0, 0);
+  err = RealignToItem(mapItem, restoreState, 0., 0, 0, false);
   if (err)
     mRIdrawnTargetItem = NULL;
   return err;
@@ -607,7 +740,7 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
 
 // Realign to the coordinates in the given item by correlating with maps,
 int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS)
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
 {
   int i, ix, iy, ind, axes, action; 
   CMapDrawItem *item;
@@ -615,7 +748,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   float useWidth, useHeight, montErrX, montErrY, itemBackX, itemBackY;
   MontParam *montP;
   ScaleMat aMat;
-  NavParams *navParams = mWinApp->GetNavParams();
+  NavAcqParams *navParams = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
   CenterSkipData cenSkip;
   float finalX, finalY, stageX, stageY, firstDelX, firstDelY, mapAngle, angle;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
@@ -735,7 +868,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
 
   // Save state if desired; which will only work by forgetting prior state
+  mRIdidSaveState = false;
   if (restoreState) {
+    mRIdidSaveState = true;
     mTypeOfSavedState = STATE_NONE;
     SaveCurrentState(STATE_MAP_ACQUIRE, false);
   }
@@ -770,6 +905,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   if (mRImapID != item->mMapID)
     mCenterSkipArray.RemoveAll();
   mCenSkipIndex = -1;
+  mRIJustMoving = false;
   for (ind = 0; ind < mCenterSkipArray.GetSize(); ind++) {
     if (mRIfirstStageX == mCenterSkipArray[ind].firstStageX && 
       mRIfirstStageY == mCenterSkipArray[ind].firstStageY && 
@@ -778,12 +914,18 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
         mCenSkipIndex = ind;
         if (mWinApp->MinuteTimeStamp() - mCenterSkipArray[ind].timeStamp <=
           mRIskipCenTimeCrit) {
-            firstDelX = mCenterSkipArray[ind].baseDelX + mRItargetX + mRItargMontErrX;
-            firstDelY = mCenterSkipArray[ind].baseDelY + mRItargetY + mRItargMontErrY;
-            action = TASK_SECOND_MOVE;
+          firstDelX = mCenterSkipArray[ind].baseDelX + mRItargetX + mRItargMontErrX;
+          firstDelY = mCenterSkipArray[ind].baseDelY + mRItargetY + mRItargMontErrY;
+          action = TASK_SECOND_MOVE;
+          if (justMoveIfSkipCen && !mSecondRoundID) {
+            mRIJustMoving = true;
+            mWinApp->AppendToLog("Just moving to target after skipping first"
+              " round alignment to center");
+          } else {
             if (LoadForAlignAtTarget(item))
               return 7;
             mWinApp->AppendToLog("Skipping first round alignment to center of map frame");
+          }
         }
         break;
     }
@@ -801,9 +943,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     mCenSkipIndex = (int)mCenterSkipArray.GetSize() - 1;
   }
 
-  // Go to Z position of item unless this is after doing rough eucentricity in acquire
+  // Go to Z position of item unless this is after doing eucentricity in acquire
   axes = axisXY;
-  if (!(mNav->GetAcquiring() && (navParams->acqRoughEucen || navParams->acqSkipZmoves)))
+  if (!(mNav->GetAcquiring() && (mNav->GetDidEucentricity() || navParams->skipZmoves)))
     axes |= axisZ;
 
   // Go to map tilt angle or 0 if current angle differs by more than tolerance
@@ -859,6 +1001,10 @@ void CNavHelper::RealignNextTask(int param)
   CString report;
   if (!mRealigning)
     return;
+  if (mRIJustMoving) {
+    StopRealigning();
+    return;
+  }
   if (item->mMapMontage)
     pieceDone.resize(mMapMontP->xNframes * mMapMontP->yNframes);
   itemCenX = item->mStageX + mPreviousErrX;
@@ -903,7 +1049,7 @@ void CNavHelper::RealignNextTask(int param)
 
                 // Align without shifting image
                 mShiftManager->AutoAlign(1, -1, false, false, &peakVal, 0., 0., 0., 0., 
-                  0., &CCC, &overlap, true, &pcShiftX, &pcShiftY);
+                  0., &CCC, &overlap, GetDebugOutput('1'), &pcShiftX, &pcShiftY);
                 pieceDone[ind] = true;
 
                 // Compute the change in position that this correlation implies and
@@ -993,7 +1139,8 @@ void CNavHelper::RealignNextTask(int param)
         if (mRItryScaling)
           AlignWithScaling(shiftX, shiftY, scaling);
         if (!scaling) {
-          mShiftManager->AutoAlign(1, -1, false, false, &peakVal);
+          mShiftManager->AutoAlign(1, -1, false, false, &peakVal,  0., 0., 0., 0., 0., 
+            NULL, NULL, GetDebugOutput('1'));
           mImBufs->mImage->getShifts(shiftX, shiftY);
         }
         stageX = itemCenX;
@@ -1100,7 +1247,7 @@ void CNavHelper::RealignNextTask(int param)
       imagePixelSize = (float)mImBufs->mBinning *
         mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd);
       mShiftManager->AutoAlign(1, -1, true, false, &peakVal, mExpectedXshift, 
-        mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, true, NULL, NULL, 
+        mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL, 
         mRIweightSigma / imagePixelSize);
       mImBufs[1].mImage->setShifts(-mExpectedXshift, -mExpectedYshift);
       mImBufs[1].SetImageChanged(1);
@@ -1144,7 +1291,8 @@ void CNavHelper::RealignNextTask(int param)
       return;
 
     case TASK_FINAL_SHOT:
-      mShiftManager->AutoAlign(1, 0);
+      mShiftManager->AutoAlign(1, 0, 1, false, NULL, 0., 0., 0., 0., 0., NULL, NULL,
+        GetDebugOutput('1'));
       mImBufs->mImage->getShifts(shiftX, shiftY);
       SEMTrace('1', "Realigned to map item itself with image shift of %.1f %.1f pixels",
         shiftX, shiftY);
@@ -1206,7 +1354,7 @@ void CNavHelper::RealignNextTask(int param)
 // in either case, or else finish up
 void CNavHelper::StartResetISorFinish(int magInd)
 {
-  double delISX, delISY;
+  double delISX, delISY, stz;
   float backlashX, backlashY;
   mScope->GetLDCenteredShift(delISX, delISY);
   delISX = mShiftManager->RadialShiftOnSpecimen(delISX, delISY, magInd);
@@ -1215,6 +1363,7 @@ void CNavHelper::StartResetISorFinish(int magInd)
   if (mRIresetISneedsAlign || mRIresetISleaveZero > 0) {
     SEMTrace('1', "Starting Reset IS%s, IS dist = %.2f", 
       mRIresetISneedsAlign ? " and realign" : "", delISX);
+    mScope->GetStagePosition(delISX, delISY, stz);
     mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(delISX, delISY, backlashX,
       backlashY), false);
     mWinApp->AddIdleTask(TaskRealignBusy, TASK_NAV_REALIGN, TASK_RESET_IS, 0);
@@ -1295,6 +1444,8 @@ void CNavHelper::StopRealigning(void)
   if (!mRealigning)
     return;
 
+  mRealigning = 0;
+
   // Close file if not part of open sets
   if (mCurStoreInd < 0 && mMapStore)
     delete mMapStore;
@@ -1302,7 +1453,11 @@ void CNavHelper::StopRealigning(void)
   // Restore state if saved
   RestoreLowDoseConset();
   RestoreMapOffsets();
-  RestoreSavedState();
+  if (mRIdidSaveState)
+    RestoreSavedState();
+  else if (!mRIstayingInLD && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0)
+    mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+  mRIdidSaveState = false;
   mCamera->ChangePreventToggle(-1);
   if (mRIContinuousMode == 1)
     mCamera->StopCapture(0);
@@ -1311,7 +1466,6 @@ void CNavHelper::StopRealigning(void)
  
   mCamera->SetRequiredRoll(0);
   mWinApp->SetStatusText(MEDIUM_PANE, "");
-  mRealigning = 0;
   mRIdrawnTargetItem = NULL;
   mWinApp->UpdateBufferWindows();
 }
@@ -3878,11 +4032,12 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
-  NavParams *navParam = mWinApp->GetNavParams();
+  NavAcqParams *navParam = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
   int lastBin[MAX_CAMERAS];
-  int cam, bin, i, j, k, stateCam, numBroke, numGroups, curGroup, fileOptInd;
+  int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd;
   bool seen;
-  int *seenGroups = new int[mItemArray->GetSize()];
+  BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && IsMultishotSaving();
+  int *seenGroups;
 
   camMismatch = 0;
   binMismatch = 0;
@@ -3890,6 +4045,33 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   for (i = 0; i < MAX_CAMERAS; i++)
     lastBin[i] = -1;
 
+  // Check the user actions
+  for (ind = 0; ind < mNumAcqActions; ind++) {
+    if (DOING_ACTION(ind) && (mAcqActions[ind].flags &NAA_FLAG_OTHER_SITE)) {
+      if (mAcqActions[ind].labelOrNote.IsEmpty()) {
+        SEMMessageBox("There is no text for the " +
+          CString((mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
+          " for doing " + mAcqActions[ind].name + " at the nearest matching item");
+        return 1;
+      }
+      if (FindNearestItemMatchingText(0., 0., mAcqActions[ind].labelOrNote,
+        (mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) != 0) < 0) {
+        SEMMessageBox("There is no item whose " +
+          CString((mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
+          " starts with " + mAcqActions[ind].labelOrNote + " for doing " +
+          mAcqActions[ind].name + " at the nearest matching item");
+        return 1;
+      }
+    }
+  }
+  if (FEIscope && DOING_ACTION(NAACT_FLASH_FEG) &&
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP) {
+    SEMMessageBox("The version of advanced scripting has not been identified as high "
+      "enough to support FEG flashing", MB_EXCLAME);
+    return 1;
+  }
+
+  seenGroups = new int[mItemArray->GetSize()];
   for (i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration() && 
@@ -3912,8 +4094,9 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
             "labels from %s to %s is already open."
             "\n(file # %d, %s)\n\nYou should set a different name for the file to open,"
             "\nor close the file (in which case it will be overwritten)", (LPCTSTR)label,
-            (LPCTSTR)mess2, k + 1, item->mFileToOpen);
+            (LPCTSTR)mess2, k + 1, sched->filename);
           AfxMessageBox(mess, MB_EXCLAME);
+          delete[] seenGroups;
           return 1;
         }
 
@@ -3936,6 +4119,17 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
           fileOptInd = sched->filePropIndex;
           stateInd = sched->stateIndex;
           seenGroups[numGroups++] = curGroup;
+          if (savingMulti && montParInd >= 0) {
+            mNav->CountItemsInGroup(sched->groupID, label, mess2, j);
+            mess.Format("The file set to be opened for the group with"
+              " labels from %s to %s is set up for montaging.\n\n"
+              "This will not work when taking Multiple Records.\n"
+              "You must set all files to open to be single-frame.",
+              (LPCTSTR)label, (LPCTSTR)mess2);
+            AfxMessageBox(mess, MB_EXCLAME);
+            delete[] seenGroups;
+            return 1;
+          }
         }
       }
 
@@ -3948,6 +4142,15 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
             "\nor close the file (in which case it will be overwritten)", i + 1, 
             item->mLabel, k + 1, item->mFileToOpen);
           AfxMessageBox(mess, MB_EXCLAME);
+          delete[] seenGroups;
+          return 1;
+        }
+        if (item->mMontParamIndex >= 0 && savingMulti) {
+          mess.Format("The file set to be opened for item # %d, label %s is set up for"
+            " montaging.\n\n" "This will not work when taking Multiple Records.\n"
+            "You must set all files to open to be single-frame.", i + 1, item->mLabel);
+          AfxMessageBox(mess, MB_EXCLAME);
+          delete[] seenGroups;
           return 1;
         }
       }
@@ -3957,9 +4160,9 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
         curGroup = 0;
 
       // Check that realign to map can work if requested now that file indices are known
-      if (navParam->acqRealign) {
+      if (DOING_ACTION(NAACT_REALIGN_ITEM)) {
         mNav->SetNextFileIndices(fileOptInd, montParInd);
-        err = FindMapForRealigning(item, navParam->acqRestoreOnRealign || 
+        err = FindMapForRealigning(item, navParam->restoreOnRealign || 
           navParam->acquireType != ACQUIRE_RUN_MACRO);
         if (err == 4)
           numNoMap++;
@@ -4058,6 +4261,55 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       return 1;
   }
   return 0;
+}
+
+// Test if multishot would save with current params and set allZero if it is because
+// it is set for all empty early returns 
+BOOL CNavHelper::IsMultishotSaving(bool *allZeroER)
+{
+  if (allZeroER)
+    *allZeroER = false;
+  UpdateMultishotIfOpen(false);
+  if (mWinApp->GetHasK2OrK3Camera() && mMultiShotParams.doEarlyReturn == 2 &&
+    !mMultiShotParams.numEarlyFrames) {
+    if (allZeroER)
+      *allZeroER = true;
+    return false;
+  }
+  return mMultiShotParams.saveRecord;
+}
+
+// Find the item whose note or label starts with the given text
+int CNavHelper::FindNearestItemMatchingText(float stageX, float stageY, CString &text,
+  bool matchNote)
+{
+  int ind, nearPosInd = -1;
+  double dist, minDist = 1.e30;
+  CMapDrawItem *item;
+  CString *strPtr;
+  for (ind = 0; ind < mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    strPtr = matchNote ? &item->mNote : &item->mLabel;
+    if (strPtr->Find(text) == 0) {
+      dist = sqrt(pow(stageX - item->mStageX, 2.f) +
+        pow(stageY - item->mStageY, 2.f));
+      if (dist < minDist) {
+        nearPosInd = ind;
+        minDist = dist;
+      }
+    }
+  }
+  return nearPosInd;
+}
+
+// Return whether we are acquiring with no MB on error set
+BOOL CNavHelper::GetNoMessageBoxOnError()
+{
+  NavAcqParams *params;
+  if (!mNav || !mNav->GetAcquiring())
+    return false;
+  params = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
+  return params->noMBoxOnError;
 }
 
 // List files, tilt series, montages, and states
@@ -4551,6 +4803,13 @@ WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
   return &mMultiShotPlace;
 }
 
+// Convenience function so others don't need to test
+void CNavHelper::UpdateMultishotIfOpen(bool draw)
+{
+  if (mMultiShotDlg)
+    mMultiShotDlg->UpdateAndUseMSparams(draw);
+}
+
 // Rotate either the regular or custom pattern in the given parameters by the given angle
 int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom)
 {
@@ -4627,6 +4886,23 @@ WINDOWPLACEMENT *CNavHelper::GetMultiCombinerPlacement()
     mMultiCombinerDlg->GetWindowPlacement(&mMultiCombinerPlace);
   }
   return &mMultiCombinerPlace;
+}
+
+WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)
+{
+  if (fromDlg && mNav && mNav->mNavAcquireDlg) {
+    mNav->mNavAcquireDlg->GetWindowPlacement(&mAcquireDlgPlace);
+  }
+  return &mAcquireDlgPlace;
+}
+
+// This is called on file changes to update the acquire dialog
+void CNavHelper::UpdateAcquireDlgForFileChanges()
+{
+  if (mNav && mNav->mNavAcquireDlg) {
+    mNav->EvaluateAcquiresForDlg(mNav->mNavAcquireDlg);
+    mNav->mNavAcquireDlg->ManageOutputFile();
+  }
 }
 
 // Loads a piece or synthesizes piece containing the given item
