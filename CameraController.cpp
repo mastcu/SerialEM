@@ -3304,9 +3304,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Set up so that an error message in the post-action script, which is not issued until 
   // final cleanup, will not result in a message box if script or TS is set to avoid them
   mNoMessageBoxOnError = 0;
-  if (mWinApp->mMacroProcessor->DoingMacro() && 
+  if (mWinApp->mNavHelper->GetNoMessageBoxOnError() ||
+    (mWinApp->mMacroProcessor->DoingMacro() && 
     (mWinApp->mMacroProcessor->GetTryCatchLevel() > 0 ||
-    mWinApp->mMacroProcessor->GetNoMessageBoxOnError()))
+    mWinApp->mMacroProcessor->GetNoMessageBoxOnError())))
     mNoMessageBoxOnError = -1;
   if (mWinApp->DoingTiltSeries() && mWinApp->mTSController->GetTerminateOnError())
     mNoMessageBoxOnError = 1;
@@ -9715,6 +9716,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mExposure = (float)mExposure;
       extra->mBinning = (float)mBinning / BinDivisorF(mParam);
       extra->mCamera = curCam;
+      extra->mUncroppedX = -mTD.DMSizeX;
+      extra->mUncroppedY = -mTD.DMSizeY;
       if (mParam->K2Type || (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam)) ||
         (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)))
         extra->mReadMode = lastConSetp->K2ReadMode;

@@ -4955,7 +4955,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   mLastNoBoxMessage = "";
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
     (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() ||
-      macProc->GetTryCatchLevel() > 0))) {
+      macProc->GetTryCatchLevel() > 0)) ||mWinApp->mNavHelper->GetNoMessageBoxOnError()) {
     for (int ind = 0; ind < message.GetLength(); ind++) {
       if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
         message.GetAt(ind - 1) != '\n'))) {
@@ -4963,9 +4963,12 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         ind++;
       }
     }
-    valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
-      (macProc->GetTryCatchLevel() > 0 || macProc->GetRunningScrpLang())) ? 
-      "ERROR" : "STOPPING");
+    if (macProc->DoingMacro() || !mWinApp->mNavHelper->GetNoMessageBoxOnError())
+      valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
+      (macProc->GetTryCatchLevel() > 0 || macProc->GetRunningScrpLang())) ?
+        "ERROR" : "STOPPING");
+    else
+      valve = "\r\nERROR DURING NAVIGATOR ACQUIRE WITH THIS MESSAGE:\r\n";
     mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
     mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     return retval;
@@ -7032,7 +7035,8 @@ void CTSController::SyncOtherModulesToParam(void)
 void CTSController::SyncParamToOtherModules(void)
 {
   mFocusManager->SetBeamTilt(mTSParam.beamTilt);
-  mFocusManager->SetTargetDefocus((float)mTSParam.targetDefocus);
+  if (mWinApp->mNavigator && mWinApp->mNavigator->GetFocusCycleCounter() < 0)
+    mFocusManager->SetTargetDefocus((float)mTSParam.targetDefocus);
   mFocusManager->SetDefocusOffset(mTSParam.autofocusOffset);
   mFocusManager->SetRefocusThreshold(mTSParam.refocusThreshold);
   mFocusManager->SetUseEucenAbsLimits(mTSParam.applyAbsFocusLimits);
