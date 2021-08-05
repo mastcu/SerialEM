@@ -115,7 +115,7 @@ void CAlignFocusWindow::OnButalign()
 void CAlignFocusWindow::OnButToMarker()
 {
   mWinApp->RestoreViewFocus();
-  if (!mWinApp->DoingTasks())
+  if (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen())
     mWinApp->mShiftManager->AlignmentShiftToMarker(GetAsyncKeyState(VK_SHIFT) / 2 != 0);
 }
 
@@ -136,7 +136,8 @@ void CAlignFocusWindow::OnButresetshift()
 void CAlignFocusWindow::OnButfocus() 
 {
   mWinApp->RestoreViewFocus();
-  if (!mWinApp->DoingTasks() && mWinApp->mFocusManager->FocusReady())
+  if ((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() ) && 
+    mWinApp->mFocusManager->FocusReady())
     mWinApp->mFocusManager->AutoFocusStart(1);
 }
 
