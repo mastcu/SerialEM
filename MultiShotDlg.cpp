@@ -18,6 +18,7 @@
 #include "ShiftCalibrator.h"
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
+#include "NavAcquireDlg.h"
 
 static int idTable[] = {IDC_CHECK_DO_SHOTS_IN_HOLE, PANEL_END,
 IDC_SPIN_NUM_SHOTS, IDC_RNO_CENTER, IDC_RCENTER_AFTER, IDC_RCENTER_BEFORE, 
@@ -696,6 +697,8 @@ void CMultiShotDlg::OnRnoEarly()
 {
   UpdateData(true);
   ManageEnables();
+  if (mWinApp->mNavigator->mNavAcquireDlg)
+    mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
 // Early return frames: manage 
@@ -703,6 +706,8 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 {
   UpdateData(true);
   ManageEnables();
+  if (mWinApp->mNavigator->mNavAcquireDlg)
+    mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
 // Omit corners of 3 by 3 pattern
@@ -716,6 +721,8 @@ void CMultiShotDlg::OnOmit3x3Corners()
 void CMultiShotDlg::OnSaveRecord()
 {
   UpdateAndUseMSparams();
+  if (mWinApp->mNavigator->mNavAcquireDlg)
+    mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
 void CMultiShotDlg::OnAdjustBeamTilt()
@@ -765,7 +772,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog);
   m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
   m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
-  m_butSaveRecord.EnableWindow(m_iEarlyReturn == 0 || m_iEarlyFrames != 0);
+  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0);
   m_statCenterUm.EnableWindow(m_bDoShotsInHoles);
   m_statCenterDist.EnableWindow(m_bDoShotsInHoles);
   m_statCenterGroup.EnableWindow(m_bDoShotsInHoles);
