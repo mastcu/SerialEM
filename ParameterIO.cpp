@@ -2195,8 +2195,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
       navParams->astigByBTID = itemInt[14] != 0;
       navParams->adjustBTforIS = itemInt[15] != 0;
       navParams->relaxStage = itemInt[16] != 0;
-      navParams->hybridRealign = itemInt[16] != 0;
-      navParams->hideUnselectedOpts = itemInt[17] != 0;
+      navParams->hybridRealign = itemInt[17] != 0;
+      navParams->hideUnselectedOpts = itemInt[18] != 0;
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
