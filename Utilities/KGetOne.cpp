@@ -1,8 +1,7 @@
 // KGetOne.cpp:           Has routines for getting one integer, float, or string
 //                          using AskOneDlg
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,12 +10,15 @@
 #include "..\SerialEM.h"
 #include "AskOneDlg.h"
 #include "KGetOne.h"
+#include "..\RadioChoiceDlg.h"
 
+// Gets an integer with no info line; return true for OK
 BOOL KGetOneInt(CString inText, int &iVal)
 {
   return KGetOneInt("", inText, iVal);
 }
 
+// Gets an integer with an info line; return true for OK
 BOOL KGetOneInt(CString infoText, CString inText, int &iVal)
 {
   CAskOneDlg askDlg;
@@ -32,11 +34,13 @@ BOOL KGetOneInt(CString infoText, CString inText, int &iVal)
   return false;
 }
 
+// Gets a float with no info line; return true for OK
 BOOL KGetOneFloat(CString inText, float &fVal, int inDecimals)
 {
   return KGetOneFloat("", inText, fVal, inDecimals);
 }
 
+// Gets a float with an info line; return true for OK
 BOOL KGetOneFloat(CString infoText, CString inText, float &fVal, int inDecimals)
 {
   char format[6];
@@ -54,13 +58,15 @@ BOOL KGetOneFloat(CString infoText, CString inText, float &fVal, int inDecimals)
   return false;
 }
 
-BOOL KGetOneString(CString inText, CString &inEditString, int extraWidth, 
+// Gets a string with no info line; return true for OK
+BOOL KGetOneString(CString inText, CString &inEditString, int extraWidth,
                    CString browserTitle)
 {
   return KGetOneString("", inText, inEditString, extraWidth, browserTitle);
 }
 
-BOOL KGetOneString(CString infoText, CString inText, CString &inEditString, 
+// Gets a string with an info line; return true for OK
+BOOL KGetOneString(CString infoText, CString inText, CString &inEditString,
                    int extraWidth, CString browserTitle)
 {
   CAskOneDlg askDlg;
@@ -74,4 +80,23 @@ BOOL KGetOneString(CString infoText, CString inText, CString &inEditString,
     return true;
   }
   return false;
+}
+
+// Presents two or three radio buttons, returns true for OK
+BOOL KGetOneChoice(CString infoText1, CString infoText2, int &iVal, CString choice1,
+  CString choice2, CString choice3)
+{
+  CRadioChoiceDlg dlg;
+  dlg.mInfoLine1 = infoText1;
+  dlg.mInfoLine2 = infoText2;
+  dlg.mChoiceOne = choice1;
+  dlg.mChoiceTwo = choice2;
+  dlg.mChoiceThree = choice3;
+  dlg.m_iChoice = iVal;
+  if (dlg.DoModal() == IDOK) {
+    iVal = dlg.m_iChoice;
+    return true;
+  }
+  return false;
+  return 0;
 }
