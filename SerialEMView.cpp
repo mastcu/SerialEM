@@ -968,7 +968,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);
 
-  if (!itemArray || (skipExtra & 2)) {
+  // Various tests for skipping navigator display
+  if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy) && ix > 0)) {
     if (itemArray)
       delete mAcquireBox;
     return true;
@@ -2571,9 +2572,10 @@ void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
   CView::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
-void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView) 
+void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView, 
+  CView* pDeactiveView) 
 {
-  if (bActivate) {
+  if (bActivate && !mWinApp->mMainFrame->GetClosingProgram()) {
     // Yes it can inform the App that it is in charge; also set scale
     mWinApp->SetActiveView(this);
     NewImageScale();
