@@ -71,12 +71,28 @@ protected:
   IntVec mIDsToDrop;
   int mSameLineCrit;
   int mBottomDrawMargin;
+  int mSecondColPanel;
+  std::set<int> mIDsToIgnoreBot;
+  std::set<int> mIDsToReplaceHeight;
+  IntVec mAddItemIDs;              // Complete list of the items to move/add, grouped
+  ShortVec mAddUnitStartInds;      // Starting index in that list of each group (unit)
+  int mNumUnitsToAdd;              // Number of different units to add
+  IntVec mAddUnitAfterIDs;         // ID to add each unit after - mutable
+  ShortVec mTopDiffToAddItems;     // Spacing at which to draw items
+  ShortVec mPostAddTopDiffs;       // Spacing to next item after a unit
+  ShortVec mAddItemsLeftPos;       // Left positions
+  std::set<int> mAddAfterIDSet;
+  int mIDtoBaseOnSavedTop;         // ID of one item whose height depends on seved top pos
+  int mBaseForSavedTop;            // Base to add to the top pos to get the height to set
+
 public:
   CButton m_butHelp;
   void ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText);
   void ReplaceDlgItemText(int nID, const char * fromText, CString toText);
   void SetupPanelTables(int * idTable, int * leftTable, int * topTable, int * numInPanel,
     int * panelStart, int *heightTable = NULL, int sortStart = 0);
+  void SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, int *numInPanel, int *panelStart);
+  int FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelStart);
   void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
     int *numInPanel, int *panelStart, int numCameras, int *heightTable = NULL);
   void ManageDropping(int *topTable, int index, int nID, int topAtLastDraw, int &cumulDrop, int &firstDropped,

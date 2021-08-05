@@ -7,6 +7,7 @@
 //
 
 #include "stdafx.h"
+#include <algorithm>
 #include "SerialEM.h"
 #include ".\BaseDlg.h"
 #include "Shared\b3dutil.h"
@@ -32,7 +33,10 @@ CBaseDlg::CBaseDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mNonModal = false;
   mNumIDsToHide = 0;
   mIDToSaveTop = -1;
+  mSecondColPanel = -1;
   mNumPanels = 0;
+  mNumUnitsToAdd = 0;
+  mIDtoBaseOnSavedTop = 0;
 }
 
 
@@ -331,16 +335,111 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
   }
 }
 
+// Analyze list of "units" of IDs to add after certain other IDs and find other sizes
+// needed to addthem properly
+void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, 
+  int *numInPanel, int *panelStart)
+{
+  int ii, jj, unit, temp, index, diff, unitTop, prevTop, left, back;
+
+  // Convenience variables for looping and testing
+  mNumUnitsToAdd = (int)mAddUnitStartInds.size();
+  mAddUnitStartInds.push_back((short)mAddItemIDs.size());
+
+  mIDsToDrop.insert(mIDsToDrop.end(), mAddItemIDs.begin(), mAddItemIDs.end());
+
+  // Loop on the units
+  for (unit = 0; unit < mNumUnitsToAdd; unit++) {
+
+    // Sort the unit
+    for (ii = mAddUnitStartInds[unit]; ii < mAddUnitStartInds[unit + 1] - 1; ii++) {
+      for (jj = ii + 1; jj < mAddUnitStartInds[unit + 1]; jj++) {
+        if (FindIDinTable(mAddItemIDs[jj], idTable, numInPanel, panelStart) <
+          FindIDinTable(mAddItemIDs[ii], idTable, numInPanel, panelStart))
+          B3DSWAP(mAddItemIDs[ii], mAddItemIDs[jj], temp);
+      }
+    }
+
+    // Find the last item before the unit not in add list
+    index = FindIDinTable(mAddItemIDs[mAddUnitStartInds[unit]], idTable, numInPanel,
+      panelStart);
+    back = 0;
+    prevTop = -1;
+    while (index - back > 0 && idTable[index - (back + 1)] != PANEL_END) {
+      if (std::find(mAddItemIDs.begin(), mAddItemIDs.end(), idTable[index - (back + 1)])
+        == mAddItemIDs.end())
+        break;
+      back++;
+    }
+
+
+    if (index - back == 0 || idTable[index - (back + 1)] == PANEL_END) {
+      mWinApp->AppendToLog("PROGRAM ERROR: unit to add starts at beginning of panel");
+    } else {
+      prevTop = topTable[index -(back + 1)];
+      unitTop = topTable[index];
+    }
+    for (ii = mAddUnitStartInds[unit]; ii < mAddUnitStartInds[unit + 1]; ii++) {
+      diff = 0;
+      left = 0;
+      if (prevTop >= 0) {
+        index = FindIDinTable(mAddItemIDs[ii], idTable, numInPanel, panelStart);
+        diff = topTable[index] - prevTop;
+        left = leftTable[index];
+      }
+      mTopDiffToAddItems.push_back(diff);
+      mAddItemsLeftPos.push_back(left);
+    }
+
+    // And get the next item after the unit not in add list
+    index = FindIDinTable(mAddItemIDs[mAddUnitStartInds[unit + 1] - 1], idTable, 
+      numInPanel, panelStart);
+    diff = 0;
+    back = 0;
+    while (index + back != 0 && index + back + 1 <
+      panelStart[mNumPanels - 1] + numInPanel[mNumPanels - 1]) {
+      if (std::find(mAddItemIDs.begin(), mAddItemIDs.end(), idTable[index + (back + 1)])
+        == mAddItemIDs.end())
+        break;
+      back++;
+    }
+
+    if (index + back == 0 || index + back + 1 >= panelStart[mNumPanels - 1] + 
+      numInPanel[mNumPanels - 1])
+      mWinApp->AppendToLog("PROGRAM ERROR: unit to add ends at end of table");
+    else if (prevTop >= 0)
+      diff = topTable[index + back + 1] - unitTop;
+    mPostAddTopDiffs.push_back(diff);
+  }
+}
+
+// Look up the given ID in the table
+int CBaseDlg::FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelStart)
+{
+  int panel, index;
+  for (panel = 0; panel < mNumPanels; panel++) {
+    for (index = panelStart[panel];
+      index < panelStart[panel] + numInPanel[panel]; index++) {
+      if (idTable[index] == ID)
+        return index;
+    }
+  }
+  PrintfToLog("PROGRAM ERROR: cannot find %d in idTable", ID);
+  return 0;
+}
+
+// Rebuild the dialog given the panel states and other information stored in members
 void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
   int *numInPanel, int *panelStart, int numCameras, int *heightTable)
 {
   bool draw, drop, droppingLine;
   int curTop = topTable[0];
-  CRect rect, winRect;
+  CRect rect, winRect, tempRect;
   int panel, panelTop, index, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
-  int topAtLastDraw;
+  int topAtLastDraw, topAtFirstColEnd, unitInd, addInd, topDiff, lastDiff, thisID;
   CWnd *wnd, *lastWnd;
   HDWP positions;
+  std::set<int> specialDrops;
 
   index = 1;
   mSavedTopPos = -1;
@@ -350,46 +449,104 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   if (!positions)
     return;
 
+  // Set up set of items to drop from list of added items
+  for (unitInd = 0; unitInd < mNumUnitsToAdd; unitInd++) {
+    if (mAddUnitAfterIDs[unitInd] > 0) {
+      for (addInd = mAddUnitStartInds[unitInd];
+        addInd < mAddUnitStartInds[unitInd + 1]; addInd++)
+        specialDrops.insert(mAddItemIDs[addInd]);
+    }
+  }
+
+  // Loop on panels
   for (panel = 0; panel < mNumPanels; panel++) {
     panelTop = topTable[panelStart[panel]];
+    if (panel == mSecondColPanel) {
+      topAtFirstColEnd = curTop;
+      curTop = panelTop;
+    } else if (mSecondColPanel > 0 && panel == mNumPanels - 1) {
+      ACCUM_MAX(curTop, topAtFirstColEnd);
+    }
     cumulDrop = 0;
     firstDropped = -1;
     droppingLine = false;
     drawnMaxBottom = 0;
     topAtLastDraw = 0;
+
+    // Loop on items in panel
     for (index = panelStart[panel];
       index < panelStart[panel] + numInPanel[panel]; index++) {
-      wnd = GetDlgItem(idTable[index]);
+      thisID = idTable[index];
+      wnd = GetDlgItem(thisID);
       draw = true;
       drop = false;
 
       // Hide cameras past the number that exist
       for (id = (numCameras > 1 ? numCameras : 0); id < MAX_DLG_CAMERAS; id++)
-        if (idTable[index] == IDC_RCAMERA1 + id)
+        if (thisID == IDC_RCAMERA1 + id)
           draw = false;
 
       // Hide ones that the dialog wants to hide
       for (id = 0; id < mNumIDsToHide; id++)
-        if (idTable[index] == mIDsToHide[id])
+        if (thisID == mIDsToHide[id])
           draw = false;
 
       // Drops ones that are in the users list to drop or the dialog has set to drop
-      ManageDropping(topTable, index, idTable[index], topAtLastDraw, cumulDrop,
+      ManageDropping(topTable, index, thisID, topAtLastDraw, cumulDrop,
         firstDropped, droppingLine, drop);
 
       // draw
       if (states[panel] && draw && !drop) {
         topPos = (curTop - cumulDrop) + topTable[index] - panelTop;
-        if (heightTable)
+
+        // Keep track of bottom drawn, but ignore items in this set: this can contain
+        // a group box to be resized, and troublesome items that have aberrant heights
+        // the first time the resource is loaded (?!), i.e. on the first open only
+        if (heightTable && !mIDsToIgnoreBot.count(thisID)) {
+          if (mIDsToReplaceHeight.count(thisID)) {
+            wnd->GetClientRect(tempRect);
+            heightTable[index] = tempRect.Height();
+          }
           ACCUM_MAX(drawnMaxBottom, topPos + heightTable[index] + mBottomDrawMargin);
-        if (idTable[index] == mIDToSaveTop)
+        }
+        if (thisID == mIDToSaveTop)
           mSavedTopPos = topPos;
         topAtLastDraw = topTable[index];
         //wnd->ShowWindow(SW_SHOW);
         positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index], 
           topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+        //CString name;
+        //wnd->GetWindowText(name);
+        //PrintfToLog("Put %d  %s  at %d %d", thisID, name, leftTable[index], topPos);
         lastWnd = wnd;
-      } else
+        //To find items with bad heights on first opening:
+        /*CRect tempRect;
+        wnd->GetClientRect(tempRect);
+        if (heightTable && tempRect.Height() < heightTable[index])
+          PrintfToLog("ID %d  table %d  now %d", thisID, heightTable[index], 
+          tempRect.Height());*/
+        if (mNumUnitsToAdd > 0 && mAddAfterIDSet.count(thisID) > 0) {
+          topDiff = 0;
+          for (unitInd = 0; unitInd < mNumUnitsToAdd; unitInd++) {
+            if (thisID == mAddUnitAfterIDs[unitInd]) {
+              for (addInd = mAddUnitStartInds[unitInd];
+                addInd < mAddUnitStartInds[unitInd + 1]; addInd++) {
+                wnd = GetDlgItem(mAddItemIDs[addInd]);
+                lastDiff = mTopDiffToAddItems[addInd];
+                positions = DeferWindowPos(positions, wnd->m_hWnd, NULL,
+                  mAddItemsLeftPos[addInd],topPos + topDiff + lastDiff, 0, 0,
+                SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+                //wnd->GetWindowText(name);
+                //PrintfToLog("Added %d  %s  at %d %d", mAddItemIDs[addInd], name, mAddItemsLeftPos[addInd], topPos + topDiff + lastDiff);
+              }
+              topDiff += lastDiff;
+
+              lastWnd = wnd;
+              cumulDrop -= mPostAddTopDiffs[unitInd];
+            }
+          }
+        }
+      } else if (specialDrops.count(thisID) == 0)
 
         // Or hide
         positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0, 
@@ -402,9 +559,22 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
       cumulDrop += topTable[panelStart[panel + 1]] - topTable[firstDropped];
 
     // Set new current top unless panel was closed
-    if (states[panel] && panel < mNumPanels - 1)
-      curTop = B3DMAX(drawnMaxBottom, curTop + (topTable[panelStart[panel+1]] - 
-        panelTop) - cumulDrop);
+    if (states[panel] && panel < mNumPanels - 1) {
+      if (mSecondColPanel < 0)
+        curTop = B3DMAX(drawnMaxBottom, curTop + (topTable[panelStart[panel + 1]] -
+          panelTop) - cumulDrop);
+      else
+        curTop = drawnMaxBottom + mBottomDrawMargin;
+    }
+  }
+
+  // Handle the ONE group box that we got information about
+  if (mIDtoBaseOnSavedTop > 0) {
+    index = FindIDinTable(mIDtoBaseOnSavedTop, idTable, numInPanel, panelStart);
+    wnd = GetDlgItem(mIDtoBaseOnSavedTop);
+    wnd->GetWindowRect(rect);
+    positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, rect.Width(), 
+      mBaseForSavedTop + mSavedTopPos, SWP_NOZORDER | SWP_NOMOVE | SWP_SHOWWINDOW);
   }
 
   // Make all those changes occur then resize dialog to end below the last button
