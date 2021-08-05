@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/4/21: Fixed gain and defect correction when aligning Falcon 4 frames; fixed
+copying of gain reference to frame folder when saving Falcon 4 frames.
+
 7/27/21: SEM_3-8-11
 7/26/21: Fixed limiting of autoalign distance when there is non-centered
 trimming of one or both images (In 3.8).
@@ -119,7 +122,7 @@ reduction at least in GMS 3.43.
 4/16/21: Rebuilt JeolCamPlugin, HitachiPlugin, DEcamPlugin for beta package
 with proper libraries.
 
-4/16/21: Probably fixed problem with acquiring frames in GMS 3.43 (in 3.8).
+4/16/21: Fixed problem with acquiring frames in GMS 3.43 (in 3.8).
 
 4/3/21: Added Python image type that can give access to an image in a buffer,
 but found that numpy and scipy currently hang or crash SerialEM when

@@ -2781,8 +2781,8 @@ void CMenuTargets::OnNormalizeAllLensesOnMag()
 {
   int value = mScope->GetNormAllOnMagChange();
   if (KGetOneInt("This entry controls whether all lenses are normalized on a mag change",
-    "Enter 0 to do so only when going between LM and nonLM, 1 to do so when staying in "
-    "LM, or 2 to do so always", value))
+    "Enter 0 for only when going between LM and nonLM, 1 for when staying in "
+    "LM, or 2 for always", value))
     mScope->SetNormAllOnMagChange(value);
 }
 

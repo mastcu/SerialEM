@@ -2732,7 +2732,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_butSetupAlign.EnableWindow(m_bDoseFracMode && m_bAlignDoseFrac);
   enable = m_bDoseFracMode && (m_bSaveFrames || (mWeCanAlignFalcon && m_bAlignDoseFrac &&
     mCurSet->useFrameAlign > 1));
-  m_butSetSaveFolder.EnableWindow(enable); 
+  m_butSetSaveFolder.EnableWindow(enable || (mParam->FEItype == FALCON4_TYPE && 
+    mWeCanAlignFalcon && m_bAlignDoseFrac && mCurSet->useFrameAlign == 1));
   m_butFileOptions.EnableWindow(enable);
   m_statSaveSummary.ShowWindow((m_bSaveFrames && m_bDoseFracMode && 
     (mParam->K2Type || mFalconCanSave || mCanSaveFrames)) ? SW_SHOW : SW_HIDE);

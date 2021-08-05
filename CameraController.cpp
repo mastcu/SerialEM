@@ -9122,7 +9122,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           if (mParam->FEItype == FALCON4_TYPE &&
             (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)) {
             needRefCopy = (lastConSetp->alignFrames && lastConSetp->useFrameAlign > 1) ||
-              (mLastConSet == RECORD_CONSET &&
+              mSavingFalconFrames || (mLastConSet == RECORD_CONSET &&
               (mWinApp->mTSController->GetFrameAlignInIMOD() ||
                 mWinApp->mMacroProcessor->GetAlignWholeTSOnly()));
             if (needRefCopy)

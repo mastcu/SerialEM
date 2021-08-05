@@ -788,6 +788,7 @@ void CFalconHelper::StackNextTask(int param)
   int useNxGain = mNx, useNyGain = mNy;
   float *useGainArr = NULL;
   bool saving = !mJustAlignNotSave && !mDoingAdvancedFrames;
+  bool hasDefects;
   int rotateForSave = saving ? mRotateFlip : 0;
   int skipAlign = 0;
   mStackError = 0;
@@ -905,7 +906,7 @@ void CFalconHelper::StackNextTask(int param)
 
   if (mProcessingPlugin && mNeedNormHere)
     mCamera->ProcessImageOrFrame(outPtr, mImage->getType(), mProcessing, mRemoveXrays, 1);
-
+  
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
     if (mEERsumming > 0) {
@@ -914,16 +915,16 @@ void CFalconHelper::StackNextTask(int param)
         useDefects = &mFalconDefects;
       useNxGain = mGainSizeX;
       useNyGain = mGainSizeY;
-
     } else if (mGainp) {
       useGainArr = (float *)mGainp->Array;
       useNxGain = mGainp->SizeX;
       useNyGain = mGainp->SizeY;
       useDefects = &camParam->defects;
     }
+    hasDefects = AreDefectsNonEmpty(useDefects);
     ind = mFrameAli->nextFrame(outPtr,mEERsumming > 0 ? MRC_MODE_BYTE : mImage->getMode(),
       useGainArr, useNxGain, useNyGain, mDarkp ? mDarkp->Array : NULL, mAlignTruncation,
-      useDefects, 0, 0, 1, 0., 0.);
+      useDefects, hasDefects ? useNxGain : 0, hasDefects ? useNyGain : 0, 1, 0., 0.);
     if (ind) {
       SEMTrace('1', "Error %d calling framealign nextFrame on frame %d", ind,
         mFileInd + 1);
@@ -1905,4 +1906,13 @@ int CFalconHelper::GetEERsuperFactor(int superRes)
   int superFactors[] = {1, 2, 4};
   B3DCLAMP(superRes, 0, 2);
   return superFactors[superRes];
+}
+
+// Returns true if the defects are non-NULL and have any bad items or nonzero "usable's"
+bool CFalconHelper::AreDefectsNonEmpty(CameraDefects *defects)
+{
+  return (defects && (defects->usableBottom || defects->usableTop || defects->usableLeft 
+    || defects->usableRight || defects->badColumnStart.size() || 
+    defects->badRowStart.size() || defects->badPixelX.size() || 
+    defects->partialBadCol.size() || defects->partialBadRow.size()));
 }

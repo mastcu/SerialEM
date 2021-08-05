@@ -1390,7 +1390,8 @@
         access to the storage server file system.&nbsp; To enable this option, add the 
         general property &#39;LocalFalconFramePath&#39; with the path to the top directory in 
         which Falcon frames are stored, as seen from the SerialEM computer (which might 
-        be the storage server).&nbsp; For <em>Falcon 4</em>, the property 
+        be the storage server).&nbsp; Do not include the subdirectory of that in which you
+         might want to save frames.&nbsp; For <em>Falcon 4</em>, the property 
         &#39;FalconReferenceDir&#39; must also be added with the path to the directory on the 
         storage server to which EER gain references are copied, as seen from the 
         SerialEM computer.&nbsp; This should be under &#39;OffloadData\ImagesForProcessing&#39;.</li>
@@ -3523,20 +3524,19 @@
       &nbsp;</P>
     <P><A name="using_gpu"></A><B>Setting Up to Use a GPU for Frame Alignment</B></P>
     <P>Frame alignment can happen in two places: in the SerialEMCCD plugin to 
-      DigitalMicrograph for K2/K3 cameras, and in SerialEM itself for Falcon and DE 
+      DigitalMicrograph for K2/K3 and OneView/Rio cameras, and in SerialEM itself for Falcon, DE, and Tietz
       cameras.&nbsp; The GPU of an NVIDIA card can be used if the module FrameGPU.dll 
       and the matching CUDA libraries are found in the right place: in the same folder 
       as the SerialEMCCD plugin or the SerialEM executable, respectively.&nbsp; To enable 
       GPU use:</P>
     <ol>
       <li>Get FrameGPU-CUDA4.exe or FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp; 
-      The CUDA 8 version is much bigger and has not shown any speed advantage, so 
-      there is no reason to get it unless the CUDA 4 version does not work, or you 
-      want to do a speed comparison.</li>
+      The CUDA 8 version is much bigger and has not shown any speed advantage, but less likely to  
+        have problems with newer CUDA drivers.</li>
       <li>Run the package.&nbsp; Extract the files to
-      C:\ProgramData\Gatan\Plugins\Shrmemframe for use with a K2/K3, or to C:\Program Files\SerialEM 
-      or other SerialEM install location for DE and Falcon.</li>
-      <li>Restart DigitalMicrograph for a K2/K3. </li>
+      C:\ProgramData\Gatan\Plugins\Shrmemframe for use with a Gatan camera, or to C:\Program Files\SerialEM 
+      or other SerialEM install location for DE, Falcon, and Tietz.</li>
+      <li>Restart DigitalMicrograph for a Gatan camera. </li>
       <li>Restart SerialEM.&nbsp; There should be a message in the log that the 
         GPU IS available for frame alignment for the relevant camera.&nbsp; For GMS 3.42 
         and above, there may be a message in the DM Output window about failure to 
@@ -3544,18 +3544,18 @@
         GPU is accessible through the Shrmemframe program.&nbsp; This is slightly 
         suboptimal because frames have to be passed through shared memory, but at least 
         the GPU is then working.&nbsp; The GPU files are now placed in the Shrmemframe 
-        folder instead of the Plugins folder because that arrangement allowed direct GPU 
-        access by the plugin on one system running GMS 3.43.</li>
+        folder instead of the Plugins folder; that arrangement also allows direct GPU 
+        access by the plugin if that still works.</li>
       <li>To see debug output from frame alignment and get diagnostic information about a failure to connect to 
         the GPU:</li>
         <ul>
-        <li>For K2/K3, add or set the property &#39;StartCameraInDebugMode 1&#39;.&nbsp; Close 
+        <li>For a Gatan camera, add or set the property &#39;StartCameraInDebugMode 1&#39;.&nbsp; Close 
           SerialEM and DM. Restart 
           DM then SerialEM.&nbsp; There will be several lines from the framealign module in the DM 
           Output window as it looks for GPUs.&nbsp; To get timing output from the plugin 
           during alignment, however, you need to set the environment variable 
           SERIALEMCCD_DEBUG to 10.</li>
-        <li>For Falcon or DE, set the property DebugOutput to 'E' or 'D', respectively, 
+        <li>For Falcon, DE, and Tietz, set the property DebugOutput to 'E', 'D', or 'T', respectively, 
           and restart SerialEM. The initial lines from framealign will appear in the 
           SerialEM log.&nbsp; Timing output will also go into the log.</li>
         </ul>
