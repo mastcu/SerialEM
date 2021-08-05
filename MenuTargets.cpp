@@ -40,6 +40,8 @@
 #include "ParticleTasks.h"
 #include "DriftWaitSetupDlg.h"
 #include "NavBacklashDlg.h"
+#include "NavRealignDlg.h"
+#include "ManageDewarsDlg.h"
 #include "ExternalTools.h"
 #include "Mailer.h"
 #include "PluginManager.h"
@@ -487,6 +489,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_EUCENTRICITYBYFOCUS, OnUpdateEucentricityByFocus)
     ON_COMMAND(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnSetupEucentricityByFocus)
     ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnUpdateNoTasksNoSTEM)
+    ON_COMMAND(ID_NAVIGATOR_SETUPALIGN, OnNavigatorSetupAlign)
+    ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_SETUPALIGN, OnUpdateNoTasks)
+    ON_COMMAND(ID_TASKS_SETUPSCOPEMANAGEMENT, OnSetupScopeManagement)
+    ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPSCOPEMANAGEMENT, OnUpdateSetupScopeManagement)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -704,14 +710,16 @@ void CMenuTargets::OnMontageListFilesToOpen()
 
 void CMenuTargets::OnNavigatorAcquire() 
 {
-  mNavigator->AcquireAreas(true);	
+  mNavigator->AcquireAreas(true, false);	
 }
 
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 
 {
+  int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && (mNavigator->AcquireOK(false)
-    || mNavigator->AcquireOK(true)) && !mNavigator->GetAcquiring() &&
-    !mNavigator->StartedMacro() && !DoingTasks() && 
+    || mNavigator->AcquireOK(true)) && (!mNavigator->GetAcquiring() || 
+      navState == NAV_PAUSED) && !mNavigator->StartedMacro() && 
+      (!DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
     !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy());	
 }
 
@@ -1018,7 +1026,7 @@ void CMenuTargets::OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAligntoitem()
 {
-  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0);
+  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, false);
 }
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
@@ -1195,6 +1203,12 @@ void CMenuTargets::OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
   pCmdUI->SetCheck(mNavHelper->GetPlusMinusRIScaling());
+}
+
+void CMenuTargets::OnNavigatorSetupAlign()
+{
+  CNavRealignDlg dlg;
+  dlg.DoModal();
 }
 
 // DISTORTION
@@ -2633,7 +2647,6 @@ void CMenuTargets::OnUpdateTasksReviseCancel(CCmdUI *pCmdUI)
     mWinApp->mShiftCalibrator->GetISStimeStampLast());
 }
 
-
 void CMenuTargets::OnTasksSetupWaitForDrift()
 {
   CDriftWaitSetupDlg dlg;
@@ -2650,6 +2663,36 @@ void CMenuTargets::OnTasksSetupVppConditioning()
 void CMenuTargets::OnUpdateTasksSetupVppConditioning(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->mVPPConditionSetup && !mWinApp->DoingTasks());
+}
+
+void CMenuTargets::OnEucentricityByFocus()
+{
+  mWinApp->mParticleTasks->EucentricityFromFocus(
+    mWinApp->mParticleTasks->GetZbyGUseViewInLD());
+}
+
+void CMenuTargets::OnUpdateEucentricityByFocus(CCmdUI *pCmdUI)
+{
+  int index, area, paramInd, nearest, error;
+  pCmdUI->Enable(mWinApp->mParticleTasks->GetZbyGCalAndCheck(-1, index, area, paramInd,
+    nearest, error) != NULL);
+}
+
+void CMenuTargets::OnSetupEucentricityByFocus()
+{
+  mWinApp->mParticleTasks->OpenZbyGDialog();
+}
+
+void CMenuTargets::OnSetupScopeManagement()
+{
+  CManageDewarsDlg dlg;
+  dlg.DoModal();
+}
+
+void CMenuTargets::OnUpdateSetupScopeManagement(CCmdUI * pCmdUI)
+{
+  pCmdUI->Enable(FEIscope || mScope->GetHasSimpleOrigin() ||
+    (JEOLscope && mScope->GetJeolHasNitrogenClass()));
 }
 
 void CMenuTargets::OnSpecialSkipBeamShiftInTs()
@@ -3077,25 +3120,4 @@ void CMenuTargets::OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI)
 void CMenuTargets::OnMarkerToCenter()
 {
   mShiftManager->AlignmentShiftToMarker(false);
-}
-
-
-void CMenuTargets::OnEucentricityByFocus()
-{
-  mWinApp->mParticleTasks->EucentricityFromFocus(
-    mWinApp->mParticleTasks->GetZbyGUseViewInLD());
-}
-
-
-void CMenuTargets::OnUpdateEucentricityByFocus(CCmdUI *pCmdUI)
-{
-  int index, area, paramInd, nearest, error;
-  pCmdUI->Enable(mWinApp->mParticleTasks->GetZbyGCalAndCheck(-1, index, area, paramInd,
-    nearest, error) != NULL);
-}
-
-
-void CMenuTargets::OnSetupEucentricityByFocus()
-{
-  mWinApp->mParticleTasks->OpenZbyGDialog();
 }
