@@ -109,8 +109,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
     return ERR_NO_NAV;
 
   // Make sure a regular multi-hole is defined
-  if (mHelper->mMultiShotDlg)
-    mHelper->mMultiShotDlg->UpdateAndUseMSparams();
+  mHelper->UpdateMultishotIfOpen();
   if (!(msParams->inHoleOrMultiHole & MULTI_HOLES))
     return ERR_HOLES_NOT_ON;
   if (msParams->holeMagIndex <= 0)
