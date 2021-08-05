@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/4/21: Expanded the set of tasks that Navigator Acquire at Items can run,
+provided flexibility in where and when they run, added multiple Records as
+another primary acquisition action, revamped the Acquire at Items dialog and
+made it nonmodal so other setup dialogs can be opened and checked from it, and
+added various other options that should allow SPA acquisition to be done
+without scripts.
+
+8/4/21: Added routine for managing nitrogen filling and vacuum pump events and
+a dialog for setting parameters.
+
+8/4/21: Added routine for aligning to a template image, which is saved as a
+map and has to look like a cropped image.
+
 8/4/21: SEM_3-9-0beta9
 8/4/21: Fixed gain and defect correction when aligning Falcon 4 frames; fixed
 copying of gain reference to frame folder when saving Falcon 4 frames.
