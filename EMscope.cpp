@@ -498,6 +498,22 @@ CEMscope::CEMscope()
   mRestoreViewFocusCount = 0;
   mDoNextFEGFlashHigh = false;
   mHasSimpleOrigin = false;
+  mDewarVacCapabilities = -1;
+  mScopeCanFlashFEG = -1;
+  mScopeHasPhasePlate = -1;
+  mDewarVacParams.checkPVP = true;
+  mDewarVacParams.runBufferCycle = false;
+  mDewarVacParams.bufferTimeMin = 60;
+  mDewarVacParams.runAutoloaderCycle = false;
+  mDewarVacParams.autoloaderTimeMin = 60;
+  mDewarVacParams.refillDewars = false;
+  mDewarVacParams.dewarTimeHours = 4.;
+  mDewarVacParams.checkDewars = false;
+  mDewarVacParams.pauseBeforeMin = 1.;
+  mDewarVacParams.startRefill = false;
+  mDewarVacParams.startIntervalMin = 15.;
+  mDewarVacParams.postFillWaitMin = 5.;
+  mDewarVacParams.doChecksBeforeTask = true;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -627,6 +643,10 @@ int CEMscope::Initialize()
         mNumLADCamLens = mUseIllumAreaForC2 ? 22 : 21;
       if (mAdjustForISSkipBacklash < 0)
         mAdjustForISSkipBacklash = 0;
+      if (mDewarVacCapabilities < 0)
+        mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
+      if (mScopeHasPhasePlate < 0)
+        mScopeHasPhasePlate = 1;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -711,6 +731,12 @@ int CEMscope::Initialize()
           break;
         mCheckedNeutralIS.push_back(0);
       }
+      if (mDewarVacCapabilities < 0)
+        mDewarVacCapabilities = mJeolHasNitrogenClass ? 2 : 0;
+      if (mScopeHasPhasePlate < 0)
+        mScopeHasPhasePlate = mJeolHasNitrogenClass ? 1 : 0;
+      if (mScopeCanFlashFEG < 0)
+        mScopeCanFlashFEG = mJeolHasNitrogenClass ? 1 : 0;
 
     } else {
 
@@ -742,6 +768,9 @@ int CEMscope::Initialize()
           if (mNumShiftBoundaries < MAX_MAGS - 1 && mMagTab[ind].mag)
             mShiftBoundaries[mNumShiftBoundaries++] = ind;
       }
+      mDewarVacCapabilities = 0;
+      mScopeHasPhasePlate = 0;
+      mScopeCanFlashFEG = 0;
     }
 
     // More general initialization
@@ -795,6 +824,8 @@ int CEMscope::Initialize()
       else
         mAdvancedScriptVersion = mPlugFuncs->ASIgetVersion();
     }
+    if (mScopeCanFlashFEG < 0)
+      mScopeCanFlashFEG = mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, "accessing the advanced scripting version ");
@@ -6245,7 +6276,6 @@ BOOL CEMscope::SetColumnValvesOpen(BOOL state, bool crashing)
   if (!sInitialized)
     return false;
   ScopeMutexAcquire("SetBeamValve", true);
-
   try {
     mPlugFuncs->SetGunValve(VAR_BOOL(state));
   }
@@ -8903,7 +8933,10 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
     startedThread = true;
   }
   if (startedThread) {
-    mWinApp->SetStatusText(MEDIUM_PANE, "DOING LONG OPERATION");
+    if (mWinApp->mParticleTasks->GetDVDoingDewarVac())
+      mWinApp->SetStatusText(SIMPLE_PANE, "LONG OPERATION");
+    else
+      mWinApp->SetStatusText(MEDIUM_PANE, "DOING LONG OPERATION");
     mWinApp->UpdateBufferWindows();
     mWinApp->AddIdleTask(TASK_LONG_OPERATION, 0, 0);
     return 0;
@@ -9088,7 +9121,8 @@ int CEMscope::LongOperationBusy(int index)
     }
 
     mDoingLongOperation = false;
-    mWinApp->SetStatusText(MEDIUM_PANE, "");
+    mWinApp->SetStatusText(mWinApp->mParticleTasks->GetDVDoingDewarVac() ? 
+      SIMPLE_PANE : MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();
   }
   return retval;

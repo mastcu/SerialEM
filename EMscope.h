@@ -203,47 +203,47 @@ public:
   GetSetMember(BOOL, LDBeamTiltShifts);
   GetSetMember(int, LDBeamNormDelay);
   bool DoingSynchroThread(void) { return mSynchronousThread != NULL; };
-  float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) {return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus;};
-  void SetLDViewDefocus(float inVal, int area = VIEW_CONSET) {if (area) mSearchDefocus = inVal; else mLDViewDefocus = inVal;};
+  float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) { return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus; };
+  void SetLDViewDefocus(float inVal, int area = VIEW_CONSET) { if (area) mSearchDefocus = inVal; else mLDViewDefocus = inVal; };
   GetSetMember(float, SearchDefocus)
-  GetSetMember(BOOL, ShiftToTiltAxis)
-  GetSetMember(BOOL, NoScope)
-  GetMember(BOOL, ApplyISoffset)
-  void SetApplyISoffset(BOOL inVal);
+    GetSetMember(BOOL, ShiftToTiltAxis)
+    GetSetMember(BOOL, NoScope)
+    GetMember(BOOL, ApplyISoffset)
+    void SetApplyISoffset(BOOL inVal);
   void GetTiltAxisIS(double &ISX, double&ISY);
   GetSetMember(float, TiltAxisOffset)
-  void SetStageLimit(int index, float inVal) {mStageLimit[index] = inVal;};
-  float GetStageLimit(int index) {return mStageLimit[index];};
+    void SetStageLimit(int index, float inVal) { mStageLimit[index] = inVal; };
+  float GetStageLimit(int index) { return mStageLimit[index]; };
   BOOL NormalizeCondenser();
-  void SetJeolPostMagDelay(int inVal, int inStage) {mJeolPostMagDelay = inVal; mPostMagStageDelay = inStage;};
+  void SetJeolPostMagDelay(int inVal, int inStage) { mJeolPostMagDelay = inVal; mPostMagStageDelay = inStage; };
   GetMember(int, JeolPostMagDelay);
   GetSetMember(int, JeolExternalMagDelay);
   GetSetMember(int, JeolMagEventWait);
   GetSetMember(int, JeolSTEMPreMagDelay);
   GetSetMember(int, NumSpotSizes)
-  GetSetMember(int, MinSpotSize);
+    GetSetMember(int, MinSpotSize);
   GetSetMember(int, NumAlphas);
   GetMember(int, NumShiftBoundaries)
-  int *GetShiftBoundaries() {return &mShiftBoundaries[0];};
+    int *GetShiftBoundaries() { return &mShiftBoundaries[0]; };
   BOOL ScanMagnifications();
   float GetC2IntensityFactor(int probe = -1);
-  void SetC2IntensityFactor(int probe, float inVal) {mC2IntensityFactor[probe] = inVal;};
+  void SetC2IntensityFactor(int probe, float inVal) { mC2IntensityFactor[probe] = inVal; };
   float GetC2SpotOffset(int spotSize, int probe = -1);
-  void SetC2SpotOffset(int spot, int probe, float inVal) {mC2SpotOffset[spot][probe] = inVal;};
+  void SetC2SpotOffset(int spot, int probe, float inVal) { mC2SpotOffset[spot][probe] = inVal; };
   double GetC2Percent(int spot, double intensity, int probe = -1);
   double GetCrossover(int spotSize, int probe = -1);
-  void SetCrossover(int spot, int probe, double inVal) {mCrossovers[spot][probe] = inVal;};
+  void SetCrossover(int spot, int probe, double inVal) { mCrossovers[spot][probe] = inVal; };
   GetSetMember(int, LowestMModeMagInd)
-  GetSetMember(int, LowestMicroSTEMmag)
-  int GetLowestSTEMnonLMmag(int i) {return mLowestSTEMnonLMmag[i];};
-  void SetLowestSTEMnonLMmag(int i, int val) {mLowestSTEMnonLMmag[i] = val;};
+    GetSetMember(int, LowestMicroSTEMmag)
+    int GetLowestSTEMnonLMmag(int i) { return mLowestSTEMnonLMmag[i]; };
+  void SetLowestSTEMnonLMmag(int i, int val) { mLowestSTEMnonLMmag[i] = val; };
   GetSetMember(int, LowestGIFModeMag)
-  GetSetMember(BOOL, Jeol1230)
-  void HandleNewMag(int inMag);
+    GetSetMember(BOOL, Jeol1230)
+    void HandleNewMag(int inMag);
   BOOL SetEFTEM(BOOL inState);
   BOOL GetEFTEM();
   BOOL SetProbeMode(int micro, BOOL fromLowDose = false);
-  CArray<ChannelSet, ChannelSet> *GetBlockedChannels() {return &mBlockedChannels;};
+  CArray<ChannelSet, ChannelSet> *GetBlockedChannels() { return &mBlockedChannels; };
   CArray<LensRelaxData, LensRelaxData> *GetLensRelaxProgs() { return &mLensRelaxProgs; };
 
   static void TaskScreenError(int error);
@@ -260,7 +260,7 @@ public:
   GetMember(int, LowDoseDownArea);
   void GotoLowDoseArea(int inArea);
   void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY);
-  int GetLowDoseArea() {return mLowDoseSetArea;};
+  int GetLowDoseArea() { return mLowDoseSetArea; };
   void KillUpdateTimer();
   double GetReversalTilt();
   int GetSpotSize();
@@ -279,14 +279,16 @@ public:
   BOOL SetIntensityZoom(BOOL inVal);
   BOOL GetIntensityZoom();
   GetSetMember(float, SmallScreenFactor)
-  GetSetMember(float, ScreenCurrentFactor)
-  GetSetMember(double, StandardLMFocus)
-  double GetStandardLMFocus(int magInd, int probe = -1);
-  double *GetLMFocusTable() {return &mLMFocusTable[0][0];};
+    GetSetMember(float, ScreenCurrentFactor)
+    GetSetMember(double, StandardLMFocus)
+    double GetStandardLMFocus(int magInd, int probe = -1);
+  double *GetLMFocusTable() { return &mLMFocusTable[0][0]; };
   void SetFocusToStandardIfLM(int magInd);
   GetSetMember(float, WarnIfKVnotAt)
-  void GetLastISChange(double &delX, double &delY)
-    {delX = mLastISdelX; delY = mLastISdelY;};
+    void GetLastISChange(double &delX, double &delY)
+  {
+    delX = mLastISdelX; delY = mLastISdelY;
+  };
   GetSetMember(DWORD, LastNormalization);
   SetMember(DWORD, LastStageTime);
   SetMember(DWORD, LastTiltTime);
@@ -294,16 +296,16 @@ public:
   DWORD GetLastTiltTime();
   DWORD GetLastStageTime();
   GetMember(double, LastTiltChange)
-  GetSetMember(float, MaxTiltAngle);
+    GetSetMember(float, MaxTiltAngle);
   GetMember(BOOL, MagChanged)
-  GetSetMember(int, MainDetectorID)
-  GetSetMember(int, PairedDetectorID)
-  GetSetMember(int, HasNoAlpha)
-  GetSetMember(BOOL, UseIllumAreaForC2)
-  GetMember(int, ProbeMode)
-  SetMember(int, DiffractOrSTEMwait)
-  SetMember(int, ProbeChangeWait)
-  GetSetMember(int, InsertDetectorDelay);
+    GetSetMember(int, MainDetectorID)
+    GetSetMember(int, PairedDetectorID)
+    GetSetMember(int, HasNoAlpha)
+    GetSetMember(BOOL, UseIllumAreaForC2)
+    GetMember(int, ProbeMode)
+    SetMember(int, DiffractOrSTEMwait)
+    SetMember(int, ProbeChangeWait)
+    GetSetMember(int, InsertDetectorDelay);
   GetSetMember(int, SelectDetectorDelay);
   SetMember(BOOL, UsePLforIS);
   GetSetMember(BOOL, UseCLA2forSTEM);
@@ -385,12 +387,12 @@ public:
   static void SetJeolSecondaryModeInd(int inVal);
   static int GetJeolSecondaryModeInd();
   static int SetSecondaryModeForMag(int index);
-  void SetIllumAreaLimits(float val1, float val2) {mIllumAreaLowLimit = val1; mIllumAreaHighLimit = val2;};
-  void GetIllumAreaLimits(float &val1, float &val2) {val1 = mIllumAreaLowLimit; val2 = mIllumAreaHighLimit;};
-  void GetIllumAreaMapTo(float &val1, float &val2) {val1 = mIllumAreaLowMapTo; val2 = mIllumAreaHighMapTo;};
-  double *GetSpotBeamShifts(){return &mSpotBeamShifts[0][0][0];};
-  float *GetAlphaBeamShifts(){return &mAlphaBeamShifts[0][0];};
-  float *GetAlphaBeamTilts(){return &mAlphaBeamTilts[0][0];};
+  void SetIllumAreaLimits(float val1, float val2) { mIllumAreaLowLimit = val1; mIllumAreaHighLimit = val2; };
+  void GetIllumAreaLimits(float &val1, float &val2) { val1 = mIllumAreaLowLimit; val2 = mIllumAreaHighLimit; };
+  void GetIllumAreaMapTo(float &val1, float &val2) { val1 = mIllumAreaLowMapTo; val2 = mIllumAreaHighMapTo; };
+  double *GetSpotBeamShifts() { return &mSpotBeamShifts[0][0][0]; };
+  float *GetAlphaBeamShifts() { return &mAlphaBeamShifts[0][0]; };
+  float *GetAlphaBeamTilts() { return &mAlphaBeamTilts[0][0]; };
   float *GetCalLowIllumAreaLim() { return &mCalLowIllumAreaLim[0][0]; };
   float *GetCalHighIllumAreaLim() { return &mCalHighIllumAreaLim[0][0]; };
   GetSetMember(int, NumAlphaBeamShifts);
@@ -400,12 +402,16 @@ public:
   GetSetMember(int, NormAllOnMagChange);
   GetSetMember(int, IdleTimeToCloseValves);
   void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax)
-  {outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];};
+  {
+    outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];
+  };
   void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax)
-  {mMinSpotWithBeamShift[secondary] = inMin, mMaxSpotWithBeamShift[secondary] = inMax;};
-  void CopyBacklashValid() { mBacklashValidAtStart = mXYbacklashValid; }; 
+  {
+    mMinSpotWithBeamShift[secondary] = inMin, mMaxSpotWithBeamShift[secondary] = inMax;
+  };
+  void CopyBacklashValid() { mBacklashValidAtStart = mXYbacklashValid; };
   void CopyZBacklashValid() { mZBacklashValidAtStart = mZbacklashValid; };
-  void NextLDAreaOpposite() {mNextLDpolarity = -1;};
+  void NextLDAreaOpposite() { mNextLDpolarity = -1; };
   BOOL NormalizeProjector();
   BOOL NormalizeObjective();
   void BlankBeam(BOOL inVal, const char *fromWhere = NULL);
@@ -415,7 +421,7 @@ public:
   void SetCameraAcquiring(BOOL inVal, float waitTime = 0.);
   GetMember(BOOL, CameraAcquiring);
   void SetShutterlessCamera(int inVal);
-  BOOL GetBlankSet() {return mBeamBlankSet;};
+  BOOL GetBlankSet() { return mBeamBlankSet; };
   BOOL GetBeamBlanked();
   void ScreenCleanup();
   BOOL SetDefocus(double inVal, BOOL incremental = false);
@@ -469,6 +475,10 @@ public:
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
   GetSetMember(BOOL, HasSimpleOrigin);
+  GetSetMember(int, DewarVacCapabilities);
+  GetSetMember(int, ScopeCanFlashFEG);
+  GetSetMember(int, ScopeHasPhasePlate);
+  DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
   void GetDetectorOffsets(float &outX, float &outY) { outX = mDetectorOffsetX; outY = mDetectorOffsetY; };
@@ -607,6 +617,7 @@ private:
   LongThreadData mLongOpData[MAX_LONG_THREADS];
   CWinThread *mSynchronousThread;
   SynchroThreadData mSynchroTD;
+  DewarVacParams mDewarVacParams;
   int mLastLongOpTimes[MAX_LONG_OPERATIONS];
   UINT_PTR mUpdateID;         // ID of timer for updates
   float mIncrement;           // Tilt increment
@@ -810,7 +821,10 @@ private:
   float mDetectorOffsetY;
   int mRestoreViewFocusCount;  // For counter of updates before deferred RestoreViewFocus
   bool mDoNextFEGFlashHigh;    // Flag to do a high flash on next call
-  BOOL mHasSimpleOrigin;        // Flag to use calls to Simle Origin for refilling
+  BOOL mHasSimpleOrigin;       // Flag to use calls to Simple Origin for refilling
+  int mDewarVacCapabilities;   // Flags: 1 for autoloader, 2 for temperature control
+  int mScopeCanFlashFEG;       // 1 if it can flash cold FEG, 0 not
+  int mScopeHasPhasePlate;     // 1 if there is a phase plate, 0 not
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
