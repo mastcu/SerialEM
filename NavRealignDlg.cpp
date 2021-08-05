@@ -20,7 +20,7 @@
 static int sIdTable[] = {IDC_STAT_TEMPLATE_TITLE, IDC_STAT_TEMP_LABEL, IDC_EDIT_MAP_LABEL,
 IDC_STAT_NOT_EXIST, IDC_STAT_BUFFER_ROLLS, IDC_MAKE_TEMPLATE_MAP, IDC_STAT_LOAD_KEEP,
 IDC_STAT_SELECTED_BUF, IDC_SPIN_TEMPLATE_BUF, IDC_EDIT_MAX_SHIFT, IDC_STAT_ALIGN_LIMIT,
-IDC_STAT_MAXALI_UM, IDC_STAT_LINE, PANEL_END,
+IDC_STAT_MAXALI_UM, IDC_STAT_LINE, IDC_STAT_WHY_A_NO_GOOD, PANEL_END,
 IDC_STAT_RESET_IS_TITLE, IDC_CHECK_RESET_IS, IDC_STAT_PARAMS_SHARED, IDC_STAT_ONLY_ONCE,
 IDC_EDIT_RESET_IS, IDC_STAT_RESET_UM, IDC_STAT_REPEAT_RESET, IDC_STAT_RESET_TIMES,
 IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, PANEL_END,
@@ -260,8 +260,10 @@ void CNavRealignDlg::ManageMap()
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
   int uncroppedX, uncroppedY;
+  CString str = "The image in A ";
   CMapDrawItem *map;
-  bool exists = true, notMap = false, isMont = false;
+  bool exists = true, notMap = false, isMont = false, badBin, isMap, noMeta;
+  bool notCropped;
   if (!m_strMapLabel.IsEmpty()) {
     map = mWinApp->mNavigator->FindItemWithString(m_strMapLabel, false, true);
     exists = map && map->IsMap() && !map->mMapMontage;
@@ -274,8 +276,27 @@ void CNavRealignDlg::ManageMap()
       "No item exists with that label"));
   ShowDlgItem(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf <
     mWinApp->mBufferManager->GetShiftsOnAcquire());
-  m_butMakeMap.EnableWindow(!imBuf->mMapID && imBuf->GetUncroppedSize(uncroppedX,
-    uncroppedY) && uncroppedX > 0 && imBuf->mImage && imBuf->mImage->GetUserData());
+  exists = true;
+  if (imBuf->mImage) {
+    badBin = imBuf->mOverviewBin > 1;
+    isMap = imBuf->mMapID != 0;
+    noMeta = !imBuf->mImage->GetUserData();
+    notCropped = !(imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0);
+    exists = !(isMap || notCropped || noMeta || badBin);
+  }
+  ShowDlgItem(IDC_STAT_WHY_A_NO_GOOD, !exists);
+  if (!exists) {
+    if (isMap)
+      str += "is already a map";
+    else if (noMeta)
+      str += "has insufficient metadata";
+    else if (notCropped)
+      str += "is not cropped";
+    else
+      str += "was cropped from a binned montage overview";
+    SetDlgItemText(IDC_STAT_WHY_A_NO_GOOD, str);
+  }
+  m_butMakeMap.EnableWindow(exists && imBuf->mImage);
 }
 
 // Set enables in reset IS section
