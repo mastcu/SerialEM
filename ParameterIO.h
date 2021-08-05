@@ -11,6 +11,8 @@
 
 #include "TiltSeriesParam.h"
 
+struct NavAcqAction;
+
 class DLL_IM_EX CParameterIO
 {
 public:
@@ -74,7 +76,11 @@ public:
   void WriteAllMacros(int numWrite);
   int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros);
   void WriteMacrosToFile(CString filename, int maxMacros);
-  void ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide, 
+  int ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &unrecognized);
+  void WriteNavAcqParams(int which, NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, bool skipNum);
+  int ReadAcqParamsFromFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
+  void WriteAcqParamsToFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
+  void ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide,
     std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides);
   void ReportSpecialOptions(void);
   void OutputVector(const char * key, int size, ShortVec * shorts, FloatVec* floats);

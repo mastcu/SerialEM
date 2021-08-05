@@ -2850,6 +2850,35 @@
           <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system.&nbsp; Calls to 
             check dewar status and refill dewars will access this system.</TD>
         </TR>
+       <TR>
+          <TD>DewarVacCapabilities</TD>
+          <TD>This property determines what operations are supported by the scope management routine
+            configured in the <a href="hidd_manage_dewars.htm">Dewar and Vacuum 
+             Management</a> dialog.  It is the sum of two flags: 1 if there is an autoloader on an
+             FEI scope plus two if there nitrogen filling systems accessible by scripting commands.
+            For an FEI scope, the default is 3 for a Krios, 0 otherwise; for a JEOL scope the default
+            is 2 if the JeolHasNitrogenClass property is set.
+          </TD>
+        </TR>
+       <TR>
+          <TD>ScopeHasPhasePlate</TD>
+          <TD>This property determines whether the 'Condition Phase Plate' task appears in the Navigator
+            <A HREF="hidd_navacquire.htm">Acquire at Items 
+          dialog</A>.</TD>  If necessary, set to 1 if the microscope has a phase plate and a version of scripting that supports
+            moving it.&nbsp; It is defaulted to 1 for FEI scopes and for JEOL scopes that have the JeolHasNitrogenClass
+             property set.  Set to 0 to omit the task from the dialog when there is no phase 
+         plate or no support for moving it.
+        </TR>
+       <TR>
+          <TD>ScopeCanFlashFEG</TD>
+          <TD>This property determines whether the 'Flash FEG' task appears in the Navigator
+            <A HREF="hidd_navacquire.htm">Acquire at Items 
+          dialog</A>. If necessary, set to 1 if the microscope has a cold FEG and a version of scripting that supports
+            flashing it.&nbsp; The default is 1 for an FEI scope identified as having advanced
+             scripting version 4, and 1 for a JEOL scope that has the JeolHasNitrogenClass
+             property set.  Set to 0 in these cases to omit the task from the dialog.
+          </TD>
+        </TR>
         <TR>
           <TD>LowDoseChangeAtZeroIS</TD>
           <TD>Set to 1 to have the Low Dose area switching routine zero out image shift 

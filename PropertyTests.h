@@ -124,6 +124,10 @@ BOOL_PROP_TEST("SkipAdvancedScripting", scope->, SkipAdvancedScripting)
 BOOL_PROP_TEST("UpdateDuringAreaChange", scope->, UpdateDuringAreaChange)
 BOOL_PROP_TEST("AdvancedScriptingVersion", scope->, AdvancedScriptVersion)
 BOOL_PROP_TEST("HasSimpleOriginSystem", scope->, HasSimpleOrigin)
+INT_PROP_TEST("DewarVacCapabilities", scope->, DewarVacCapabilities)
+INT_PROP_TEST("ScopeCanFlashFEG", scope->, ScopeCanFlashFEG)
+INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
+
 #endif
 #ifdef PROP_TEST_SECT2
 INT_PROP_TEST("ContinuousAlignBinning", mWinApp->mFalconHelper->, ContinAliBinning)

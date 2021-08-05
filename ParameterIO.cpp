@@ -146,13 +146,14 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   WINDOWPLACEMENT *place;
   RECT *dlgPlacements = mWinApp->GetDlgPlacements();
   NavParams *navParams = mWinApp->GetNavParams();
+  NavAcqParams *naqParams;
   CookParams *cookParams = mWinApp->GetCookParams();
   AutocenParams acParams;
   AutocenParams *acParmP;
   mWinApp->mMultiTSTasks->ClearAutocenParams();
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
-  BOOL recognized, recognized15, recognized2, frameListOK;
+  BOOL recognized, recognized15, recognized2, recognized25, frameListOK;
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
@@ -171,6 +172,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
   ZbyGParams zbgParam;
+  NavAcqAction *navActions;
+  NavAlignParams *navAliParm = mWinApp->mNavHelper->GetNavAlignParams();
+  DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
   zbgArray->RemoveAll();
   CFileStatus status;
   int faLastFileIndex = -1, faLastArrayIndex = -1;
@@ -207,6 +211,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           recognized = true;
           recognized15 = true;
           recognized2 = true;
+          recognized25 = true;
           if (NAME_IS("SystemPath")) {
 
         // There could be multiple words - have to assume 
@@ -554,38 +559,77 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         dwParams->exposure = itemFlt[8];
         dwParams->binning = itemInt[9];
         dwParams->changeIS = itemInt[10] != 0;
+        if (!itemEmpty[11]) {
+          dwParams->usePriorAutofocus = itemInt[11] != 0;
+          dwParams->priorAutofocusRate = itemFlt[12];
+        }
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
-        navParams->acqAutofocus = itemInt[1] != 0;
-        navParams->acqFineEucen = itemInt[2] != 0;
-        navParams->acqRealign = itemInt[3] != 0;
-        navParams->acqRestoreOnRealign = itemInt[4] != 0;
-        navParams->acqRoughEucen = itemInt[5] != 0;
-        navParams->nonTSacquireType = itemInt[6];
-        navParams->macroIndex = itemInt[7];
-        if (!strItems[8].IsEmpty())
-          navParams->acqCloseValves = itemInt[8] != 0;
-        if (!strItems[9].IsEmpty())
-          navParams->acqSendEmail = itemInt[9] != 0;
-        if (!strItems[10].IsEmpty())
-          navParams->acqFocusOnceInGroup = itemInt[10] != 0;
-        if (!strItems[11].IsEmpty()) {
-          navParams->preMacroInd = itemInt[11];
-          navParams->acqRunPremacro = itemInt[12] != 0;
-          navParams->preMacroIndNonTS = itemInt[13];
-          navParams->acqRunPremacroNonTS = itemInt[14] != 0;
-          navParams->acqSendEmailNonTS = itemInt[15] != 0;
+
+        // For backward compatibility: set options into new structures as needed
+        for (index = 0; index < 2; index++) {
+          navActions = mWinApp->mNavHelper->GetAcqActions(index);
+          naqParams = mWinApp->GetNavAcqParams(index);
+          SET_ACTION(navActions, NAACT_AUTOFOCUS, itemInt[1]);
+          SET_ACTION(navActions, NAACT_FINE_EUCEN, itemInt[2]);
+          SET_ACTION(navActions, NAACT_REALIGN_ITEM, itemInt[3]);
+          naqParams->restoreOnRealign = itemInt[4] != 0;
+          SET_ACTION(navActions, NAACT_ROUGH_EUCEN, itemInt[5]);
+          naqParams->nonTSacquireType = itemInt[6];
+          naqParams->macroIndex = itemInt[7];
+          if (!strItems[8].IsEmpty())
+            naqParams->closeValves = itemInt[8] != 0;
+          if (!strItems[9].IsEmpty())
+            naqParams->sendEmail = itemInt[9] != 0;
+          if (!strItems[11].IsEmpty()) {
+            naqParams->preMacroInd = itemInt[11];
+            naqParams->runPremacro = itemInt[12] != 0;
+            naqParams->preMacroIndNonTS = itemInt[13];
+            naqParams->runPremacroNonTS = itemInt[14] != 0;
+            naqParams->sendEmailNonTS = itemInt[15] != 0;
+          }
+          if (!strItems[16].IsEmpty()) {
+            naqParams->skipInitialMove = itemInt[16] != 0;
+            naqParams->skipZmoves = itemInt[17] != 0;
+          }
+          if (!strItems[18].IsEmpty()) {
+            naqParams->postMacroInd = itemInt[18];
+            naqParams->runPostmacro = itemInt[19] != 0;
+            naqParams->postMacroIndNonTS = itemInt[20];
+            naqParams->runPostmacroNonTS = itemInt[21] != 0;
+          }
         }
-        if (!strItems[16].IsEmpty()) {
-          navParams->acqSkipInitialMove = itemInt[16] != 0;
-          navParams->acqSkipZmoves = itemInt[17] != 0;
-        }
-        if (!strItems[18].IsEmpty()) {
-          navParams->postMacroInd = itemInt[18];
-          navParams->acqRunPostmacro = itemInt[19] != 0;
-          navParams->postMacroIndNonTS = itemInt[20];
-          navParams->acqRunPostmacroNonTS = itemInt[21] != 0;
-        }
+
+      } else if (NAME_IS("NavAcquireParams")) {
+        index = itemInt[1];
+        B3DCLAMP(index, 0, 1);
+        ReadNavAcqParams(mWinApp->GetNavAcqParams(index), 
+          mWinApp->mNavHelper->GetAcqActions(index), 
+          mWinApp->mNavHelper->GetAcqActCurrentOrder(index), unrecognized);
+
+      } else if (NAME_IS("NavAlignParams")) {
+        navAliParm->loadAndKeepBuf = itemInt[1];
+        navAliParm->maxAlignShift = itemFlt[2];
+        navAliParm->maxNumResetIS = itemInt[3];
+        navAliParm->resetISthresh = itemFlt[4];
+        navAliParm->leaveISatZero = itemInt[5] != 0;
+      } else if (NAME_IS("NavAliMapLabel")) {
+        StripItems(strLine, 1, navAliParm->templateLabel);
+
+      } else if (NAME_IS("DewarVacParams")) {
+        dewar->checkPVP = itemInt[1] != 0;
+        dewar->runBufferCycle = itemInt[2] != 0;
+        dewar->bufferTimeMin = itemInt[3];
+        dewar->runAutoloaderCycle = itemInt[4] != 0;
+        dewar->autoloaderTimeMin = itemInt[5];
+        dewar->refillDewars = itemInt[6] != 0;
+        dewar->dewarTimeHours = itemFlt[7];
+        dewar->checkDewars = itemInt[8] != 0;
+        dewar->pauseBeforeMin = itemFlt[9];
+        dewar->startRefill = itemInt[10] != 0;
+        dewar->startIntervalMin = itemFlt[11];
+        dewar->postFillWaitMin = itemFlt[12];
+        dewar->doChecksBeforeTask = itemInt[13] != 0;
 
       } else if (NAME_IS("SingleFileOptions")) {
 
@@ -754,8 +798,18 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mMacroProcessor->SetNumToolButtons(itemInt[1]);
         if (!itemEmpty[2])
           mWinApp->mMacroProcessor->SetToolButHeight(itemInt[2]);
+      }
+      else
+        recognized2 = false;
 
-      } else if (NAME_IS("WindowPlacement")) {
+      if (recognized || recognized2) {
+        recognized = true;
+      }
+#define SET_TEST_SECT25
+#include "SettingsTests.h"
+#undef SET_TEST_SECT25
+
+      else if (NAME_IS("WindowPlacement")) {
         mWinApp->GetWindowPlacement(&winPlace);
         winPlace.showCmd = itemInt[1];
         if (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
@@ -794,6 +848,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mNavHelper->GetHoleFinderPlacement();
           else if (NAME_IS("MultiCombinerPlacement"))
             place = mWinApp->mNavHelper->GetMultiCombinerPlacement();
+          else if (NAME_IS("NavAcqPlacement"))
+            place = mWinApp->mNavHelper->GetAcquireDlgPlacement(false);
           else if (NAME_IS("CtffindPlacement"))
             place = mWinApp->mProcessImage->GetCtffindPlacement();
           else if (NAME_IS("AutocenPlacement"))
@@ -1006,9 +1062,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("MaxMacros")) {
         mMaxReadInMacros = itemInt[1];
       } else
-        recognized2 = false;
+        recognized25 = false;
 
-      if (recognized || recognized2) {
+      if (recognized || recognized25) {
         recognized = true;
       }
 #define SET_TEST_SECT3
@@ -1350,6 +1406,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *autocenPlace = mWinApp->mMultiTSTasks->GetAutocenPlacement();
   WINDOWPLACEMENT *vppPlace = mWinApp->mMultiTSTasks->GetConditionPlacement();
   WINDOWPLACEMENT *zbgPlace = mWinApp->mParticleTasks->GetZbyGPlacement();
+  WINDOWPLACEMENT *navAcqPlace = mWinApp->mNavHelper->GetAcquireDlgPlacement(true);
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -1377,6 +1434,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
+  NavAlignParams *navAliParm = mWinApp->mNavHelper->GetNavAlignParams();
+  DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -1389,8 +1448,8 @@ void CParameterIO::WriteSettings(CString strFileName)
 
   try {
     // Open the file for writing, 
-    mFile = new CStdioFile(strFileName, CFile::modeCreate | 
-      CFile::modeWrite |CFile::shareDenyWrite);
+    mFile = new CStdioFile(strFileName, CFile::modeCreate |
+      CFile::modeWrite | CFile::shareDenyWrite);
 
     mFile->WriteString("SerialEMSettings\n");
     WriteString("SystemPath", mWinApp->mDocWnd->GetSysPathForSettings());
@@ -1475,8 +1534,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
 
     oneState.Format("FrameNameData %d %d %d %d %d\n", camera->GetFrameNameFormat(),
-        camera->GetFrameNumberStart(), camera->GetLastFrameNumberStart(),
-        camera->GetLastUsedFrameNumber(), camera->GetDigitsForNumberedFrame());
+      camera->GetFrameNumberStart(), camera->GetLastFrameNumberStart(),
+      camera->GetLastUsedFrameNumber(), camera->GetDigitsForNumberedFrame());
     mFile->WriteString(oneState);
     macCopy = camera->GetDirForK2Frames();
     if (!macCopy.IsEmpty()) {
@@ -1520,9 +1579,9 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("MontageNoDriftCorr %d %d\n", montParam->noDriftCorr ? 1 : 0,
       montParam->noHQDriftCorr ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("MontageFilterOptions %d %d %d %d\n", 
-      mWinApp->mMontageController->GetUseFilterSet2() ? 1 : 0, 
-      mWinApp->mMontageController->GetUseSet2InLD() ? 1 : 0, 
+    oneState.Format("MontageFilterOptions %d %d %d %d\n",
+      mWinApp->mMontageController->GetUseFilterSet2() ? 1 : 0,
+      mWinApp->mMontageController->GetUseSet2InLD() ? 1 : 0,
       mWinApp->mMontageController->GetDivFilterSet1By2() ? 1 : 0,
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
@@ -1530,13 +1589,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     WriteInt("HDFcompression", fileOpt->hdfCompression);
     WriteFloat("FileOptionsPctTruncLo", fileOpt->pctTruncLo);
     WriteFloat("FileOptionsPctTruncHi", fileOpt->pctTruncHi);
-    oneState.Format("SingleFileOptions %d %d %f %f\n", otherFileOpt->fileType, 
+    oneState.Format("SingleFileOptions %d %d %f %f\n", otherFileOpt->fileType,
       otherFileOpt->compression, otherFileOpt->pctTruncLo, otherFileOpt->pctTruncHi);
     mFile->WriteString(oneState);
-    oneState.Format("AutofocusEucenAbsParams %f %f %f %f %d %d\n", 
+    oneState.Format("AutofocusEucenAbsParams %f %f %f %f %d %d\n",
       focusMan->GetEucenMinAbsFocus(), focusMan->GetEucenMaxAbsFocus(),
       focusMan->GetEucenMinDefocus(), focusMan->GetEucenMaxDefocus(),
-      focusMan->GetUseEucenAbsLimits() ? 1 : 0, focusMan->GetTestOffsetEucenAbs() ? 1 :0);
+      focusMan->GetUseEucenAbsLimits() ? 1 : 0, focusMan->GetTestOffsetEucenAbs() ? 1 : 0);
     mFile->WriteString(oneState);
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
@@ -1551,36 +1610,36 @@ void CParameterIO::WriteSettings(CString strFileName)
 #include "SettingsTests.h"
 #undef SET_TEST_SECT3
 
-    oneState.Format("AutoBacklashNewMap %d %f\n", 
-      mWinApp->mNavHelper->GetAutoBacklashNewMap(), 
+    oneState.Format("AutoBacklashNewMap %d %f\n",
+      mWinApp->mNavHelper->GetAutoBacklashNewMap(),
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
     oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
       "%d %d %d %d %d %d %d %f %f %f %f\n", msParams->beamDiam, msParams->spokeRad[0],
       msParams->numShots[0], msParams->doCenter, msParams->doEarlyReturn,
       msParams->numEarlyFrames, msParams->saveRecord ? 1 : 0, msParams->extraDelay,
-      msParams->useIllumArea ? 1 : 0, msParams->adjustBeamTilt ? 1 : 0, 
-      msParams->inHoleOrMultiHole, msParams->useCustomHoles ? 1 : 0, 
+      msParams->useIllumArea ? 1 : 0, msParams->adjustBeamTilt ? 1 : 0,
+      msParams->inHoleOrMultiHole, msParams->useCustomHoles ? 1 : 0,
       msParams->holeDelayFactor, msParams->holeISXspacing[0], msParams->holeISYspacing[0],
       msParams->holeISXspacing[1], msParams->holeISYspacing[1],
-      msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex, 
-      msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0, 
-      msParams->doSecondRing ? 1: 0, msParams->numShots[1], msParams->spokeRad[1],
+      msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex,
+      msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0,
+      msParams->doSecondRing ? 1 : 0, msParams->numShots[1], msParams->spokeRad[1],
       msParams->tiltOfHoleArray, msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
-      OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL, 
+      OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL,
         &msParams->customHoleX);
-      OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL, 
+      OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL,
         &msParams->customHoleY);
     }
     oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d\n", hfParams->spacing,
       hfParams->diameter, hfParams->useBoundary ? 1 : 0, hfParams->lowerMeanCutoff,
       hfParams->upperMeanCutoff, hfParams->SDcutoff, hfParams->blackFracCutoff,
-      hfParams->showExcluded ? 1 : 0, hfParams->layoutType, hfParams->bracketLast ? 1 :0);
+      hfParams->showExcluded ? 1 : 0, hfParams->layoutType, hfParams->bracketLast ? 1 : 0);
     mFile->WriteString(oneState);
     if (hfParams->sigmas.size())
-      OutputVector("HoleFiltSigmas", (int)hfParams->sigmas.size(), NULL, 
+      OutputVector("HoleFiltSigmas", (int)hfParams->sigmas.size(), NULL,
         &hfParams->sigmas);
     if (hfParams->thresholds.size())
       OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
@@ -1588,26 +1647,33 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("HoleCombinerParams %d %d\n", mWinApp->mNavHelper->GetMHCcombineType(),
       mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d\n", dwParams->measureType,
-      dwParams->driftRate, dwParams->useAngstroms, dwParams->interval,
-      dwParams->maxWaitTime, dwParams->failureAction, dwParams->setTrialParams,
-      dwParams->exposure, dwParams->binning, dwParams->changeIS);
+    oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n", 
+      dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0, 
+      dwParams->interval, dwParams->maxWaitTime, dwParams->failureAction,
+      dwParams->setTrialParams ? 1 : 0, dwParams->exposure, dwParams->binning, 
+      dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0, 
+      dwParams->priorAutofocusRate);
     mFile->WriteString(oneState);
-    oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d %d %d %d\n", navParams->acqAutofocus ? 1 : 0, 
-      navParams->acqFineEucen ? 1 : 0,
-      navParams->acqRealign ? 1 : 0, navParams->acqRestoreOnRealign ? 1 : 0,
-      navParams->acqRoughEucen ? 1 : 0, navParams->nonTSacquireType, 
-      navParams->macroIndex, navParams->acqCloseValves ? 1 : 0, 
-      navParams->acqSendEmail ? 1 : 0, navParams->acqFocusOnceInGroup ? 1 : 0,
-      navParams->preMacroInd, navParams->acqRunPremacro ? 1 : 0, 
-      navParams->preMacroIndNonTS, navParams->acqRunPremacroNonTS ? 1 : 0, 
-      navParams->acqSendEmailNonTS ? 1 : 0, navParams->acqSkipInitialMove ? 1 : 0,
-      navParams->acqSkipZmoves ? 1 : 0, navParams->postMacroInd, 
-      navParams->acqRunPostmacro ? 1 : 0, navParams->postMacroIndNonTS, 
-      navParams->acqRunPostmacroNonTS ? 1 : 0);
+
+    for (i = 0; i < 2; i++)
+      WriteNavAcqParams(i, mWinApp->GetNavAcqParams(i),
+      mWinApp->mNavHelper->GetAcqActions(i),
+      mWinApp->mNavHelper->GetAcqActCurrentOrder(i), false);
+    oneState.Format("NavAlignParams %d %f %d %f %d\n", navAliParm->loadAndKeepBuf,
+      navAliParm->maxAlignShift, navAliParm->maxNumResetIS, navAliParm->resetISthresh,
+      navAliParm->leaveISatZero ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f -999 -999\n", 
+    mFile->WriteString("NavAliMapLabel " + navAliParm->templateLabel + "\n");
+
+    oneState.Format("DewarVacParams %d %d %d %d %d %d %f %d %f %d %f %f %d\n",
+      dewar->checkPVP ? 1 : 0, dewar->runBufferCycle ? 1 : 0,
+      dewar->bufferTimeMin, dewar->runAutoloaderCycle ? 1 : 0, dewar->autoloaderTimeMin,
+      dewar->refillDewars ? 1 : 0, dewar->dewarTimeHours, dewar->checkDewars ? 1 : 0,
+      dewar->pauseBeforeMin, dewar->startRefill ? 1 : 0, dewar->startIntervalMin,
+      dewar->postFillWaitMin, dewar->doChecksBeforeTask ? 1 : 0);
+    mFile->WriteString(oneState);
+
+    oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f -999 -999\n",
       cookParams->magIndex, cookParams->spotSize, cookParams->intensity, 
       cookParams->targetDose, cookParams->timeInstead ? 1 : 0, cookParams->minutes,
       cookParams->trackImage ? 1 : 0, 
@@ -1755,6 +1821,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
+    WritePlacement("NavAcqPlacement", 0, navAcqPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
     WritePlacement("HoleFinderPlacement", 0, mWinApp->mNavHelper->GetHoleFinderPlacement());
     WritePlacement("MultiCombinerPlacement", 0, 
@@ -2063,6 +2130,201 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
     CString message = "Error writing scripts to file " + filename;
     AfxMessageBox(message, MB_EXCLAME);
   } 
+  if (mFile) {
+    delete mFile;
+    mFile = NULL;
+  }
+}
+
+#define HARD_CODED_FLAGS (NAA_FLAG_HAS_SETUP | NAA_FLAG_ALWAYS_HIDE | \
+NAA_FLAG_ONLY_BEFORE | NAA_FLAG_EVERYN_ONLY | NAA_FLAG_ANY_SITE_OK)
+
+// Reads navigator acquire params from the current file, settings or other file
+int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navActions, 
+  int *actOrder, CString &unrecognized)
+{
+  int err, index;
+  CString strLine;
+  CString strItems[MAX_TOKENS];
+  BOOL itemEmpty[MAX_TOKENS];
+  int itemInt[MAX_TOKENS];
+  double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
+  while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+    itemFlt, MAX_TOKENS)) == 0) {
+    if (NAME_IS("NavAcquireParams"))
+      continue;
+    if (NAME_IS("EndNavAcquireParams"))
+      break;
+    if (NAME_IS("AcquireParams1")) {
+      SET_ACTION(navActions, NAACT_AUTOFOCUS, itemInt[1]);
+      SET_ACTION(navActions, NAACT_FINE_EUCEN, itemInt[2]);
+      SET_ACTION(navActions, NAACT_REALIGN_ITEM, itemInt[3]);
+      navParams->restoreOnRealign = itemInt[4] != 0;
+      SET_ACTION(navActions, NAACT_ROUGH_EUCEN, itemInt[5]);
+      navParams->nonTSacquireType = itemInt[6];
+      navParams->macroIndex = itemInt[7];
+      navParams->closeValves = itemInt[8] != 0;
+      navParams->sendEmail = itemInt[9] != 0;
+      navParams->preMacroInd = itemInt[10];
+      navParams->runPremacro = itemInt[11] != 0;
+      navParams->preMacroIndNonTS = itemInt[12];
+      navParams->runPremacroNonTS = itemInt[13] != 0;
+      navParams->sendEmailNonTS = itemInt[14] != 0;
+      navParams->skipInitialMove = itemInt[15] != 0;
+      navParams->skipZmoves = itemInt[16] != 0;
+      navParams->postMacroInd = itemInt[17];
+      navParams->runPostmacro = itemInt[18] != 0;
+      navParams->postMacroIndNonTS = itemInt[19];
+      navParams->runPostmacroNonTS = itemInt[20] != 0;
+
+    } else if (NAME_IS("AcquireParams2")) {
+      navParams->cycleDefocus = itemInt[1] != 0;
+      navParams->cycleDefFrom = itemFlt[2];
+      navParams->cycleDefTo = itemFlt[3];
+      navParams->cycleSteps = itemInt[4];
+      navParams->earlyReturn = itemInt[5] != 0;
+      navParams->numEarlyFrames = itemInt[6];;
+      navParams->noMBoxOnError = itemInt[7] != 0;
+      navParams->skipSaving = itemInt[8] != 0;
+      navParams->hideUnusedActs = itemInt[9] != 0;
+      navParams->acqDlgSelectedPos = itemInt[10];
+      navParams->focusChangeLimit = itemFlt[11];
+      navParams->DEdarkRefOperatingMode = itemInt[12];
+      navParams->highFlashIfOK = itemInt[13];
+      navParams->astigByBTID = itemInt[14] != 0;
+      navParams->adjustBTforIS = itemInt[15] != 0;
+      navParams->relaxStage = itemInt[16] != 0;
+      navParams->hybridRealign = itemInt[16] != 0;
+      navParams->hideUnselectedOpts = itemInt[17] != 0;
+    } else if (strItems[0].Find("NavAcqAction") == 0) {
+      index = atoi((LPCTSTR)strItems[0].Mid(12));
+      if (index >= 0 && index < NAA_MAX_ACTIONS) {
+        navActions[index].flags = (navActions[index].flags & HARD_CODED_FLAGS) | 
+          (itemInt[1] & ~HARD_CODED_FLAGS);
+        navActions[index].timingType = itemInt[2];
+        navActions[index].everyNitems = itemInt[3];
+        navActions[index].minutes = itemInt[4];
+        navActions[index].distance = itemFlt[5];
+        StripItems(strLine, 6, navActions[index].labelOrNote);
+      }
+
+    } else if (NAME_IS("ActionOrder")) {
+      for (index = 0; index < NAA_MAX_ACTIONS; index++) {
+        if (itemEmpty[index + 1])
+          break;
+        actOrder[index] = itemInt[index + 1];
+      }
+    } else {
+      unrecognized += strLine + "\n";
+    }
+  }
+  return err;
+}
+
+// Writes navigator acquire params to the current file, settings or other file
+void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
+  NavAcqAction *mAcqActions, int *actOrder, bool skipNum)
+{
+  int i;
+  CString oneState, orderLine;
+
+  // Leave off number for a free-standing file, it is misleading and would mess up the
+  //  check for the word at start
+  if (skipNum)
+    mFile->WriteString("NavAcquireParams\n");
+  else
+    WriteInt("NavAcquireParams", which);
+  oneState.Format("AcquireParams1 %d %d %d %d %d %d %d %d %d %d %d %d %d"
+    " %d %d %d %d %d %d %d\n", DOING_ACTION(NAACT_AUTOFOCUS),
+    DOING_ACTION(NAACT_FINE_EUCEN),
+    DOING_ACTION(NAACT_REALIGN_ITEM), navParams->restoreOnRealign ? 1 : 0,
+    DOING_ACTION(NAACT_ROUGH_EUCEN), navParams->nonTSacquireType,
+    navParams->macroIndex, navParams->closeValves ? 1 : 0,
+    navParams->sendEmail ? 1 : 0, 
+    navParams->preMacroInd, navParams->runPremacro ? 1 : 0,
+    navParams->preMacroIndNonTS, navParams->runPremacroNonTS ? 1 : 0,
+    navParams->sendEmailNonTS ? 1 : 0, navParams->skipInitialMove ? 1 : 0,
+    navParams->skipZmoves ? 1 : 0, navParams->postMacroInd,
+    navParams->runPostmacro ? 1 : 0, navParams->postMacroIndNonTS,
+    navParams->runPostmacroNonTS ? 1 : 0);
+  mFile->WriteString(oneState);
+  oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d\n"
+    , navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    navParams->cycleDefTo, navParams->cycleSteps,
+    navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
+    navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
+    navParams->hideUnusedActs ? 1 : 0, navParams->acqDlgSelectedPos,
+    navParams->focusChangeLimit, navParams->DEdarkRefOperatingMode,
+    navParams->highFlashIfOK, navParams->astigByBTID ? 1 : 0,
+    navParams->adjustBTforIS ? 1 : 0, navParams->relaxStage ? 1 : 0,
+    navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0);
+  mFile->WriteString(oneState);
+
+  orderLine = "ActionOrder";
+  for (i = 0; i < mWinApp->mNavHelper->GetNumAcqActions(); i++) {
+    oneState.Format(" %d", actOrder[i]);
+    orderLine += oneState;
+    oneState.Format("NavAcqAction%d %d %d %d %d %f %s\n", i, mAcqActions[i].flags,
+      mAcqActions[i].timingType, mAcqActions[i].everyNitems, mAcqActions[i].minutes,
+      mAcqActions[i].distance, (LPCTSTR)mAcqActions[i].labelOrNote);
+    mFile->WriteString(oneState);
+  }
+  orderLine += "\n";
+  mFile->WriteString(orderLine);
+  mFile->WriteString("EndNavAcquireParams\n");
+
+}
+
+// read acquire params from the given file
+int CParameterIO::ReadAcqParamsFromFile(NavAcqParams *navParams, 
+  NavAcqAction *acqActions, int *actOrder, CString & filename)
+{
+  CString strLine, strItems[2];
+  int err, retval = 0;
+  try {
+    // Open the file for reading, verify that it is a param file
+    mFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
+
+    err = ReadAndParse(strLine, strItems, 2);
+    if (err)
+      retval = 1;
+    else if (CheckForByteOrderMark(strItems[0], "NavAcquireParams", filename,
+      "Navigator acquisition parameters")) {
+      retval = 1;
+    }
+    if (!retval)
+      retval = ReadNavAcqParams(navParams, acqActions, actOrder, strLine);
+
+    mFile->Close();
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    retval = 1;
+  }
+  if (mFile) {
+    delete mFile;
+    mFile = NULL;
+  }
+
+  return retval;
+}
+
+// Write acquire params to the given file
+void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams, 
+  NavAcqAction *acqActions, int *actOrder, CString & filename)
+{
+  try {
+    // Open the file for writing, 
+    mFile = new CStdioFile(filename, CFile::modeCreate |
+      CFile::modeWrite | CFile::shareDenyWrite);
+    WriteNavAcqParams(0, navParams, acqActions, actOrder, true);
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    CString message = "Error writing Navigator acquisition parameters to file " +filename;
+    AfxMessageBox(message, MB_EXCLAME);
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
