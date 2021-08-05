@@ -303,6 +303,7 @@ int CSerialEMDoc::DoOpenNewFile(CString filename)
   RestoreFileOptsFromSTEM();
   if (mWinApp->mStoreMRC) {
     AddCurrentStore();
+    mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
     return 0;
   } else {
     RestoreCurrentFile();
@@ -312,7 +313,8 @@ int CSerialEMDoc::DoOpenNewFile(CString filename)
 
 void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mNumStores < MAX_STORES);
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen ()) &&
+    mNumStores < MAX_STORES);
 }
 
 // Open new file to replace the current one
@@ -589,11 +591,13 @@ void CSerialEMDoc::OnFileNewmontage()
 {
   GetMontageParamsAndFile(false);
   mBufferWindow->UpdateSaveCopy();
+  mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
 
 void CSerialEMDoc::OnUpdateFileNewmontage(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mNumStores < MAX_STORES);
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
+    mNumStores < MAX_STORES);
 }
 
 // Main routine for getting montage parameters and opening a new file.
@@ -840,11 +844,13 @@ void CSerialEMDoc::DoCloseFile()
   } else
     mWinApp->SetTitleFile("");
   mWinApp->UpdateBufferWindows();
+  mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
 
 void CSerialEMDoc::OnUpdateFileClose(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mMacroProcessor->DoingMacro() &&
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+    !mWinApp->mMacroProcessor->DoingMacro() &&
     mWinApp->mStoreMRC != NULL && mStoreList[mCurrentStore].protectNum < 0);  
 }
 

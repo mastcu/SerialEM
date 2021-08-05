@@ -12,6 +12,7 @@
 #include "SerialEM.h"
 #include "EMbufferManager.h"
 #include ".\EMbufferWindow.h"
+#include "NavHelper.h"
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include "ShiftCalibrator.h"
@@ -235,12 +236,14 @@ void CEMbufferWindow::OnDeltaposSpinread(NMHDR* pNMHDR, LRESULT* pResult)
 // The spin button for file to write to
 void CEMbufferWindow::OnDeltaposSpintofile(NMHDR* pNMHDR, LRESULT* pResult) 
 {
+  CNavigatorDlg *nav = mWinApp->mNavigator;
   mWinApp->RestoreViewFocus();
   int newVal;
   if (NewSpinnerValue(pNMHDR, pResult, mWinApp->mDocWnd->GetCurrentStore(),
     0, mWinApp->mDocWnd->GetNumStores() - 1, newVal))
     return;
   mWinApp->mDocWnd->SetCurrentStore(newVal);
+  mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 	*pResult = 0;
 }
 
