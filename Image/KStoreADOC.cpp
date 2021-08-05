@@ -9,6 +9,7 @@
 #define MDOC_FLOAT(nam, ini, tst, sym, str) const char *sym = str;
 #define MDOC_INTEGER(nam, ini, sym, str) const char *sym = str;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) const char *sym = str;
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) const char *sym = str;
 #define MDOC_STRING(nam, sym, str) const char *sym = str;
 
 namespace AdocDefs {
@@ -18,6 +19,7 @@ namespace AdocDefs {
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS
 
 // Opens an existing ADOC type file
 KStoreADOC::KStoreADOC(CString filename)
@@ -311,6 +313,8 @@ int KStoreADOC::ReorderPieceZCoords(int * sectOrder)
   if (extra->nam > ini && AdocSetInteger(sectName, index, sym, extra->nam)) return 1;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
   if (extra->nam1 > tst && AdocSetTwoFloats(sectName, index, sym, extra->nam1, extra->nam2)) return 1;
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) \
+  if (extra->nam1 != ini && AdocSetTwoIntegers(sectName, index, sym, extra->nam1, extra->nam2)) return 1;
 #define MDOC_STRING(nam, sym, str) \
   if (!extra->nam.IsEmpty() && AdocSetKeyValue(sectName, index, sym, (LPCTSTR)extra->nam)) return 1;
 
@@ -346,6 +350,7 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS
 
 // Get values from the Adoc and populate an extra structure, creating one if needed
 // typext is returned with the masks for the values gotten
@@ -373,6 +378,8 @@ int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName
   AdocGetInteger(sectName, index, sym, &extra->nam);
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
   AdocGetTwoFloats(sectName, index, sym, &extra->nam1, &extra->nam2);
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) \
+  AdocGetTwoIntegers(sectName, index, sym, &extra->nam1, &extra->nam2);
 #define MDOC_STRING(nam, sym, str) \
   if (AdocGetString(sectName, index, sym, &frameDir) == 0) { \
     extra->nam = frameDir;    \
@@ -407,3 +414,4 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS

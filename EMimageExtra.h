@@ -17,6 +17,8 @@
   int nam;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
   float nam1, nam2;
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) \
+  int nam1, nam2;
 #define MDOC_STRING(nam, sym, str) \
   CString nam;
 
@@ -51,5 +53,6 @@ public:
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS
 
 #endif

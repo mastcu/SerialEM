@@ -5,6 +5,7 @@
 #define MDOC_FLOAT(nam, ini, tst, sym, str) extern const char *sym;
 #define MDOC_INTEGER(nam, ini, sym, str) extern const char *sym;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) extern const char *sym;
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) extern const char *sym;
 #define MDOC_STRING(nam, sym, str) extern const char *sym;
 
 namespace AdocDefs {
@@ -14,6 +15,7 @@ namespace AdocDefs {
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS
 
 using namespace AdocDefs;
 

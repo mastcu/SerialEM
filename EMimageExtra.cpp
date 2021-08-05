@@ -8,6 +8,8 @@
   nam = ini;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
   nam1 = nam2 = ini;
+#define MDOC_TWO_INTS(nam1, nam2, ini, sym, str) \
+  nam1 = nam2 = ini;
 #define MDOC_STRING(nam, sym, str) \
   nam = "";
 
@@ -34,6 +36,7 @@ EMimageExtra::EMimageExtra()
 #undef MDOC_TWO_FLOATS
 #undef MDOC_STRING
 #undef MDOC_INTEGER
+#undef MDOC_TWO_INTS
 
 // Convert a float to two shorts: the number is converted to an integer between
 // 327600 and 3276000 and an exponent as a power of 10;
