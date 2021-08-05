@@ -413,7 +413,8 @@ struct TiffField {
 };
 
 // Navigator parameters to remain resident in winApp
-struct NavParams {
+// Acquisition parameters
+struct NavAcqParams {
   int acquireType;         // Type of current acquisition on areas
   int nonTSacquireType;    // User's latest value for a non-TS acquire type
   int macroIndex;          // Macro index numbered from 1
@@ -421,23 +422,38 @@ struct NavParams {
   int postMacroInd;         // Post-macro index also from 1
   int preMacroIndNonTS;    // Pre-macro index for non tilt series actions
   int postMacroIndNonTS;    // Post-macro index for non tilt series actions
-  BOOL acqRoughEucen;       // Flags for initial actions on acquire
-  BOOL acqCookSpec;
-  BOOL acqFineEucen;
-  BOOL acqCenterBeam;
-  BOOL acqAutofocus;
-  BOOL acqRealign;
-  BOOL acqRunPremacro;
-  BOOL acqRunPostmacro;
-  BOOL acqRunPremacroNonTS;
-  BOOL acqRunPostmacroNonTS;
-  BOOL acqSkipInitialMove;
-  BOOL acqSkipZmoves;
-  BOOL acqRestoreOnRealign;
-  BOOL acqCloseValves;
-  BOOL acqSendEmail;
-  BOOL acqSendEmailNonTS;
-  BOOL acqFocusOnceInGroup;
+  BOOL runPremacro;         // Run script before TS
+  BOOL runPostmacro;        // run script after TS
+  BOOL runPremacroNonTS;    // Run script before nonTS
+  BOOL runPostmacroNonTS;   // run script after nonTS
+  BOOL skipInitialMove;     // Skip final move now
+  BOOL skipZmoves;          // Skip Z moves
+  BOOL restoreOnRealign;    // Restore state after realign, scripts
+  BOOL closeValves;         // Close valves at end
+  BOOL sendEmail;           // send email at end for TS
+  BOOL sendEmailNonTS;      // Send email at end for nonTS
+  BOOL cycleDefocus;        // Flag to cycle defocus
+  float cycleDefFrom;       // Starting value
+  float cycleDefTo;         // Ending value
+  int cycleSteps;           // Steps WITHIN cycle from start to end
+  BOOL earlyReturn;         // do early return
+  int numEarlyFrames;       // Number of frames, -1 for all
+  BOOL noMBoxOnError;       // No message box, keep going on errors
+  BOOL skipSaving;          // Skip saving to file
+  BOOL hideUnusedActs;      // Hide unused tasks
+  int acqDlgSelectedPos;    // Currently selected task for editing
+  float focusChangeLimit;   // Limit on focus change
+  int DEdarkRefOperatingMode;  // Linear or counting
+  BOOL highFlashIfOK;       // Flag that a high flash is OK to do
+  BOOL astigByBTID;         // Use autofocus type BTID for astigmatism
+  BOOL adjustBTforIS;       // Adjust BT and astig to compensate IS
+  BOOL relaxStage;          // Relax stage from backlashed position
+  BOOL hybridRealign;       // Just move to target in realign if skipping first round
+  BOOL hideUnselectedOpts;  // Hide options not checked
+};
+
+// Other Nav parameters
+struct NavParams {
   BOOL warnedOnSkipMove;
   CString stockFile;
   int numImportXforms;
@@ -561,6 +577,24 @@ struct ScreenShotParams {
   int jpegQuality;
   int skipOverlays;
   CString lastFilePath;
+};
+
+// Parameters for managing dewars and vacuum events
+struct DewarVacParams
+{
+  BOOL checkPVP;             // Check if PVP is running
+  BOOL runBufferCycle;       // Run buffer cycle at interval
+  int bufferTimeMin;         // Interval to run at
+  BOOL runAutoloaderCycle;   // Run autoloader buffer cycle at interval
+  int autoloaderTimeMin;     // Interval to run at
+  BOOL refillDewars;         // Refill at interval
+  float dewarTimeHours;      // Time between refills
+  BOOL checkDewars;          // Check status of dewar filling
+  float pauseBeforeMin;      // Pause time before filling
+  BOOL startRefill;          // Start a refill if remaining time is low enough
+  float startIntervalMin;    // Start a refill if within this time
+  float postFillWaitMin;     // Wait time after filling
+  BOOL doChecksBeforeTask;   // Separate when the checks are done from when filling is
 };
 
 #endif
