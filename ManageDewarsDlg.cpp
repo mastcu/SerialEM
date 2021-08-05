@@ -109,7 +109,7 @@ BOOL CManageDewarsDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   DewarVacParams *param = mWinApp->mScope->GetDewarVacParams();
   BOOL states[6] = {true, true, true,true, true, true};
-  int capabilities = mWinApp->mScope->GetScopeCapabilities();
+  int capabilities = mWinApp->mScope->GetDewarVacCapabilities();
   BOOL simpleOrig = mWinApp->mScope->GetHasSimpleOrigin();
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
