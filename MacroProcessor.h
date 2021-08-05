@@ -494,6 +494,7 @@ public:
   int CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex, CString strLine, int macroNum);
   bool ArithmeticIsAllowed(CString & str);
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
+  bool AdjustBeamTiltAndAstig(double delISX, double delISY, double &BTX, double &BTY, double &astigX, double &astigY);
   int AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message);
   afx_msg void OnOpenEditorsOnStart();
   afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
@@ -522,6 +523,7 @@ public:
   void UpdateLDAreaIfSaved();
   int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);
   bool SetupStageRestoreAfterTilt(CString * strItems, double &stageX, double &stageY);
+  int DoStageRelaxation(double delx);
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
   float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
   afx_msg void OnScriptLoadNewPackage();

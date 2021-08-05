@@ -914,8 +914,7 @@ int CMacroProcessor::TaskBusy()
     (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
-    mWinApp->mParticleTasks->DoingMultiShot() || mWinApp->mParticleTasks->DoingZbyG() ||
-    mWinApp->mParticleTasks->GetWaitingForDrift() ||
+    mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() || 
@@ -3948,7 +3947,7 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
 int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust,
   CString &message)
 {
-  double delBTX, delBTY, transISX, transISY, astigX, astigY, BTX, BTY;
+  double astigX, astigY, BTX, BTY;
   int probe = mScope->GetProbeMode();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   if (!doAdjust)
@@ -3958,32 +3957,45 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
       "in:\n\n";
     return 1;
   }
-  mScope->GetBeamTilt(BTX, BTY);
-  if (mBeamTiltXtoRestore[probe] < EXTRA_VALUE_TEST) {
-    mBeamTiltXtoRestore[probe] = BTX;
-    mBeamTiltYtoRestore[probe] = BTY;
-    mNumStatesToRestore++;
-  }
-  mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY, 
-    comaVsIS->magInd, transISX, transISY);
-  delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
-  delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY, 
-    mScope->GetAdjustForISSkipBacklash() <= 0);
-  mCompensatedBTforIS = true;
-  if (comaVsIS->astigMat.xpx && !mNavHelper->GetSkipAstigAdjustment()) {
-    mScope->GetObjectiveStigmator(astigX, astigY);
+  if (AdjustBeamTiltAndAstig(delISX, delISY, BTX, BTY, astigX, astigY)) {
     if (mAstigXtoRestore[probe] < EXTRA_VALUE_TEST) {
       mAstigXtoRestore[probe] = astigX;
       mAstigYtoRestore[probe] = astigY;
       mNumStatesToRestore++;
     }
+  }
+  if (mBeamTiltXtoRestore[probe] < EXTRA_VALUE_TEST) {
+    mBeamTiltXtoRestore[probe] = BTX;
+    mBeamTiltYtoRestore[probe] = BTY;
+    mNumStatesToRestore++;
+  }
+  mCompensatedBTforIS = true;
+  return 0;
+}
+
+// Actually do the adjustment, returning starting BT and astig and true if did astig also
+bool CMacroProcessor::AdjustBeamTiltAndAstig(double delISX, double delISY, double &BTX,
+  double &BTY, double &astigX, double &astigY)
+{
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  double delBTX, delBTY, transISX, transISY;
+  mScope->GetBeamTilt(BTX, BTY);
+  mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY,
+    comaVsIS->magInd, transISX, transISY);
+  delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+  delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY,
+    mScope->GetAdjustForISSkipBacklash() <= 0);
+  mCompensatedBTforIS = true;
+  if (comaVsIS->astigMat.xpx && !mNavHelper->GetSkipAstigAdjustment()) {
+    mScope->GetObjectiveStigmator(astigX, astigY);
     delBTX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
     delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
-    mWinApp->mAutoTuning->BacklashedStigmator(astigX + delBTX, astigY + delBTY, 
+    mWinApp->mAutoTuning->BacklashedStigmator(astigX + delBTX, astigY + delBTY,
       mScope->GetAdjustForISSkipBacklash() <= 0);
+    return true;
   }
-  return 0;
+  return false;
 }
 
 int CMacroProcessor::AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust,
@@ -4717,7 +4729,7 @@ int CMacroProcessor::StartNavAvqBusy(void)
   if (DoingMacro())
     return 1;
   if (mLastCompleted && mWinApp->mNavigator) 
-    mWinApp->mNavigator->AcquireAreas(false);
+    mWinApp->mNavigator->AcquireAreas(false, false);
   return 0;
 }
 
@@ -4985,6 +4997,29 @@ bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stag
     stageY = atof((LPCTSTR)strItems[2]);
   }
   return true;
+}
+
+// DO stage relaxation if backlash is valid.  Returns 1 for failure to get stage 
+// position, 0 if a move was started, -1 if backlash not valid
+int CMacroProcessor::DoStageRelaxation(double delX)
+{
+  float backlashX, backlashY;
+  StageMoveInfo smi;
+  if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
+    return 1;
+  if (mScope->GetValidXYbacklash(smi.x, smi.y, backlashX, backlashY)) {
+    mScope->CopyBacklashValid();
+
+    // Move in direction of the backlash, which is opposite to direction of stage move
+    smi.x += (backlashX > 0. ? delX : -delX);
+    smi.y += (backlashY > 0. ? delX : -delX);
+    smi.z = 0.;
+    smi.alpha = 0.;
+    smi.axisBits = axisXY;
+    mScope->MoveStage(smi);
+    return 0;
+  }
+  return -1;
 }
 
 ScriptLangData *SEMGetScriptLangData() 
