@@ -175,7 +175,6 @@ public:
     int & frameX, int & frameY, bool acquiredSize);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
   int GetEERsuperFactor(int superRes);
-  bool AreDefectsNonEmpty(CameraDefects *defects);
   void InitializePointers(void);
   int ProcessPluginFrames(CString &directory, CString &rootname, ControlSet &conSet, bool save, bool align,
     int aliParamInd, int divideBy2, float pixel, CameraThreadData *camTD);
