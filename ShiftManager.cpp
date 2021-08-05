@@ -377,7 +377,8 @@ void CShiftManager::EndMouseShifting(int index)
 void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 {
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
-  if (!imBuf->mHasUserPt || !imBuf->mImage || mWinApp->DoingTasks())
+  if (!imBuf->mHasUserPt || !imBuf->mImage || (mWinApp->DoingTasks() && 
+    !mWinApp->GetJustNavAcquireOpen()))
     return;
   mMouseEnding = true;
   mShiftPressed = forceStage;
@@ -775,7 +776,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   if (!(tmplCorr || mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mWinApp->mMacroProcessor->DoingMacro() && 
     mWinApp->mMacroProcessor->GetDisableAlignTrim()))) {
-      if (mWinApp->mNavHelper->GetRealigning() == 1)
+      if (mWinApp->mNavHelper->GetRealigning() == 1 ||
+        mWinApp->mParticleTasks->DoingTemplateAlign())
         doTrim = !disableItemTrim;
       else if (mWinApp->mComplexTasks->InLowerMag())
         doTrim = !disableTaskTrim;
@@ -854,9 +856,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
           report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d", 
           nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop, 
           nxTrimC, nxTrimCright, nyTrimC, nyTrimCtop);
-        if (!scaling && trimOutput && 
-          (!(mWinApp->mNavHelper->GetRealigning() || 
-            mWinApp->mParticleTasks->DoingTemplateAlign()) || GetDebugOutput('1')))
+        if (!scaling && trimOutput)
           mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     }
   }
