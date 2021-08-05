@@ -277,6 +277,18 @@ bool EMimageBuffer::GetIntensity(double & intensity)
   return true;
 }
 
+bool EMimageBuffer::GetUncroppedSize(int & uncroppedX, int & uncroppedY)
+{
+  if (!mImage)
+    return false;
+  EMimageExtra *extra = mImage->GetUserData();
+  if (!extra || !extra->mUncroppedX)
+    return false;
+  uncroppedX = extra->mUncroppedX;
+  uncroppedY = extra->mUncroppedY;
+  return true;
+}
+
 BOOL EMimageBuffer::IsMontageOverview()
 {
   return mCaptured == BUFFER_MONTAGE_OVERVIEW ||

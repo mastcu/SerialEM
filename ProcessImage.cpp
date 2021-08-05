@@ -733,6 +733,7 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   float cenCrit = 3.f;
   bool centered;
   void *data;
+  EMimageExtra *extra;
   KImage *image = imBuf->mImage;
   if (!image)
     return 1;
@@ -769,6 +770,11 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   NewProcessedImage(imBuf, newsl->data.s, image->getType(), right + 1 - left,
     bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED);
   free(newsl);
+  extra = mImBufs->mImage->GetUserData();
+  if (extra->mUncroppedX < 0)
+    extra->mUncroppedX = -extra->mUncroppedX;
+  if (extra->mUncroppedY < 0)
+    extra->mUncroppedY = -extra->mUncroppedY;
 
   return 0;
 }

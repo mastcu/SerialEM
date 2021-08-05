@@ -261,6 +261,8 @@ BOOL EMbufferManager::DoesBufferExist (int inWhich)
 
 int EMbufferManager::CheckSaveConditions(KImageStore *inStoreMRC, EMimageBuffer *toBuf)
 {
+  int uncroppedX, uncroppedY;
+  bool cropped = toBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0;
   if (CheckAsyncSaving())
     return 1;
   if (inStoreMRC == NULL) { 
@@ -282,7 +284,7 @@ int EMbufferManager::CheckSaveConditions(KImageStore *inStoreMRC, EMimageBuffer 
         "Are you sure you want to save it?", MB_YESNO | MB_ICONQUESTION) == IDNO)
         return -1;
   }
-  if (toBuf->GetSaveCopyFlag() == 0 && (toBuf->mCaptured < 0)) {
+  if (toBuf->GetSaveCopyFlag() == 0 && (toBuf->mCaptured < 0) && !cropped) {
     if(AfxMessageBox("This image has been processed.\r\r"
       "Are you sure you want to save it?", MB_YESNO | MB_ICONQUESTION) == IDNO)
       return -1;
