@@ -1656,6 +1656,7 @@ void CFocusManager::FocusDone()
     strTemp.Format("\r\nThe average drift between shots was %6.1f, %6.1f %s pixels, "
       "%.2f nm/sec", xDrift / divForK2, yDrift / divForK2, strBin, mLastNmPerSec);
     report += strTemp;
+    mLastDriftImageTime = mCamera->GetLastAcquireStartTime();
   }
 
   // Temporary report

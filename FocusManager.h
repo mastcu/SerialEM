@@ -43,6 +43,7 @@ public:
   GetMember(int, LastAborted);
   SetMember(float, RequiredBWMean);
   GetMember(float, LastAutofocusDiff);
+  GetMember(DWORD, LastDriftImageTime);
   void FocusTasksFinished();
   void ModifyAllCalibrations(ScaleMat delMat, int iCam, int direction = -1);
   void TransformFocusCal(FocusTable *inCal, FocusTable *outCal, ScaleMat delMat);
@@ -219,9 +220,10 @@ private:
   int mDDDminBinning;        // Minimum total binning/scaling for direct detector images
   float mLastDriftX, mLastDriftY;   // Drift estimates in last focus
   float mLastNmPerSec;       // Drift usefully scaled
-  BOOL mDriftStored;        // Flag that drift was stored
-  BOOL mUseOppositeLDArea;  // Flag to use opposite area on next focus
-  float mNextMinDeltaFocus; // Defocus change and absolute focus limits on next autofocus
+  BOOL mDriftStored;         // Flag that drift was stored
+  DWORD mLastDriftImageTime; // CameraController time of last image when drift stored
+  BOOL mUseOppositeLDArea;   // Flag to use opposite area on next focus
+  float mNextMinDeltaFocus;  // Defocus change and absolute focus limits on next autofocus
   float mNextMaxDeltaFocus;
   double mNextMinAbsFocus;
   double mNextMaxAbsFocus;
