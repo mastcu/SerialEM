@@ -21,6 +21,7 @@
 #include "TSController.h"
 #include "NavigatorDlg.h"
 #include "ProcessImage.h"
+#include "ParticleTasks.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 
@@ -399,14 +400,18 @@ void CComplexTasks::OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mFEUseSearchIfInLM ? 1 : 0);
 }
 
-// ComplexTasks will report in on tasks from MultiTSTasks too!
+// ComplexTasks will report in on tasks from MultiTSTasks and ParticleTasks too!
+// But DewarsVac is excluded because it is not an imaging task
 BOOL CComplexTasks::DoingTasks()
 {
+  CMultiTSTasks *tsTasks = mWinApp->mMultiTSTasks;
+  CParticleTasks *particle = mWinApp->mParticleTasks;
   return mDoingRSRA || mReversingTilt || mWalkIndex >= 0 || mDoingEucentricity || 
-    mDoingTASM || mDoingBASP || mWinApp->mMultiTSTasks->GetAutoCentering() || 
-    mWinApp->mMultiTSTasks->GetCooking() || mWinApp->mMultiTSTasks->GetAssessingRange()
-    || mWinApp->mMultiTSTasks->DoingAnchorImage() || 
-    mWinApp->mMultiTSTasks->GetConditioningVPP();
+    mDoingTASM || mDoingBASP || tsTasks->GetAutoCentering() || tsTasks->GetCooking() || 
+    tsTasks->GetAssessingRange() || tsTasks->DoingAnchorImage() || 
+    tsTasks->GetConditioningVPP() || particle->DoingZbyG() ||
+    particle->DoingTemplateAlign() || particle->DoingMultiShot() || 
+    particle->GetWaitingForDrift();
 }
 
 // Strangely enough, nothing in this collection is a complex enough task...
