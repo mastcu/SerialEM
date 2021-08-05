@@ -26,6 +26,7 @@
 #include "TSController.h"
 #include "EMbufferManager.h"
 #include "ComplexTasks.h"
+#include "ParticleTasks.h"
 #include "MultiTSTasks.h"
 #include "NavHelper.h"
 #include "BeamAssessor.h"
@@ -853,7 +854,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
           report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d", 
           nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop, 
           nxTrimC, nxTrimCright, nyTrimC, nyTrimCtop);
-        if (!scaling && trimOutput)
+        if (!scaling && trimOutput && 
+          (!(mWinApp->mNavHelper->GetRealigning() || 
+            mWinApp->mParticleTasks->DoingTemplateAlign()) || GetDebugOutput('1')))
           mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     }
   }
@@ -1130,7 +1133,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     Xpeaks[indMaxPeak] *= needBinA;
     Ypeaks[indMaxPeak] *= needBinA;
   }
-  
+
   SEMTrace('T', "%d to bin, %d to stretch, %d to pad, %d to correlate\r\n"
     "%d to find %d peaks and get CCCs",
     time1 - startTime, time2 - time1, time3 - time2, time4 - time3,
@@ -1320,7 +1323,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   // Wait used to be 2000; it said not to wait long since this is not supposed to be 
   // called unless stage is ready, but that doesn't work from macros.  Default is 5000
   if (mScope->WaitForStageReady(waitTime)) {
-    AfxMessageBox(_T("Reset shift aborted - stage not ready"));
+    SEMMessageBox(_T("Reset shift aborted - stage not ready"));
     return 1;
   }
 
@@ -1394,7 +1397,9 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   mScope->GetStagePosition(smi.x, smi.y, smi.z);
   SEMTrace('i', "Stage at %.2f, %.2f  moving to %.2f %.2f", smi.x, smi.y, 
     smi.x + delX, smi.y + delY);
-  setBacklash = bDoBacklash && mBacklashMouseAndISR && fabs(angle / DTOR) < 10.;
+  setBacklash = bDoBacklash && (mBacklashMouseAndISR || 
+    mWinApp->mNavHelper->GetRealigning() || mWinApp->mParticleTasks->DoingTemplateAlign())
+    && fabs(angle / DTOR) < 10.;
   smi.relaxX = smi.relaxY = 0.;
   MaintainOrImposeBacklash(&smi, delX, delY, setBacklash);
 
