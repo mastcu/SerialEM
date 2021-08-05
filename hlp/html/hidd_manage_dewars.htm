@@ -41,12 +41,12 @@
     <p>Select this option to run the autoloader buffer cycle periodically, and fill in 
       the text box with the number of minutes between runs (an integer).&nbsp; Whether 
       this option appears is governed by the first bit (1) of the property 
-      'ScopeCapabilities', which is on by default for a Krios but must be explicitly 
+      'DewarVacCapabilities', which is on by default for a Krios but must be explicitly 
       provided for other scopes with autoloaders.</p>
     <p><em><strong>Nitrogen Management</strong></em></p>
     <p>The bottom section of the dialog appears if there is any way to control or 
       monitor an automatic nitrogen filling system.&nbsp; For FEI scopes, this is 
-      determined by the second bit (2) of the 'ScopeCapabilities' property, which 
+      determined by the second bit (2) of the 'DewarVacCapabilities' property, which 
       again is on by default for Krios.&nbsp; For JEOL scopes, it is determined by the 
       'JeolHasNitrogenClass' property, and both the transfer tank and the stage tank 
       are treated together.&nbsp; For either type of scope, the section will also 
@@ -81,7 +81,7 @@
     <p>Enter the interval in minutes to wait after the filling done (a floating point 
       value).&nbsp; This wait will occur both when filling is discovered to be ongoing 
       and when it is started by the program.</p>
-    <p><strong>Do checks just before primary task in Acquire at Items</strong></p>
+    <p><strong>Do checks just before primary action in Acquire at Items</strong></p>
     <p>This option appears at the bottom of the dialog regardless of whether there is 
       one section or two.&nbsp; It allows the Navigator to run the management routine 
       twice during the acquisition cycle.&nbsp; It can be run first, to minimize the 

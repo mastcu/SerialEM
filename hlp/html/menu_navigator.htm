@@ -253,6 +253,10 @@
           <TD>Use correlation to map(s) to center on the current item.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_navigator_setupalign">Setup Align/Realign</a></TD>
+          <TD>Open dialog to set parameters for Align to Template and Realign to Item routines</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><a href="#hid_navigator_force_center_align">Force Center Align</a></TD>
           <TD>Make Realign to Item align to center of map even if it has recently aligned to 
             it.</TD>
@@ -889,7 +893,8 @@
         at item&#39; has been set for the first item to be acquired. If montaging is 
         to be used, this means that the montaging must be set up already. Be sure to 
         have magnification, intensity, and exposure times set before starting the 
-        acquisition, unless an imaging state has been set for the first item. This command opens the <A HREF="hidd_navacquire.htm">Navigator Acquire 
+        acquisition, unless an imaging state has been set for the first item. This command opens the 
+        <A HREF="hidd_navacquire.htm">Acquire at Items 
           dialog box</A>, which allows various options to be set.</P>
       <P><A NAME="hid_navigator_endacquire"></A><B>End Acquire command (Navigator menu)</B></P>
       <P>After starting an 'Acquire at Items', use this command to stop the Navigator 
@@ -969,6 +974,14 @@
       the feature being aligned to should appear centered at the restored 
       magnification. In situation 3, the feature will be centered at the magnification 
       of the map item being aligned to.</P>
+      <P><A NAME="#hid_navigator_setupalign"></A><B>Setup Align/Realign 
+        (Navigator menu)</B> &nbsp;</P>
+      <p>Use this command to open the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
+        dialog and set parameters and set up a template for the Align to Template command.&nbsp; 
+        Some options for resetting image shift after such an alignment can also be set; 
+        these parameters are also used when Navigator Acquire at Items runs the Realign 
+        to Item routine. 
+      </p>
       <P><A NAME="#hid_navigator_force_center_align"></A><B>Force Center Align 
         (Navigator menu)</B> &nbsp;</P>
     <P>This command makes the Realign to Item routine forget previous information 

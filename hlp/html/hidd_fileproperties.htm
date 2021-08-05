@@ -127,6 +127,28 @@
       command like:</P>
     <P>&nbsp;&nbsp;&nbsp;&nbsp; extracttilts -attr filename.hdf&nbsp; 
       filename.hdf.mdoc&nbsp;&nbsp;</P>
+    <P><B>Save images to:</B></P>
+    <P>Select whether to save data in an MRC file, an HDF file, a TIFF or JPEG&nbsp; file holding a single image 
+      (not always available), or a series of TIFF files listed in an autodoc file, as 
+      explained above. When you select the latter option, the file chooser for 
+      specifying the file will attach the extension '.idoc' if you type in a root 
+      name without an extension. Thus, the autodoc will be named rootname.idoc, and 
+      the TIFF files will be named rootnameNNNN.tif, where 'NNNN' is a 4-digit number 
+      starting with 0000.&nbsp; Your selection here will be saved in the settings file 
+      when saving a single image with the <a href="menu_file.htm#hidm_file_saveother">
+      Save Single/Save to Other</a> command in the File menu.</P>
+    <P><B>Type of compression in TIFF or HDF file:</B></P>
+    <P>Select whether TIFF files will be saved with no compression, the type of 
+      compression used in Zip and PNG files, LZW (Lempel-Ziv-Welch) compression, or 
+      JPEG compression, or select whether HDF files are saved with ZIP compression. ZIP and LZW are both loss-less compression methods that may not save much space.&nbsp; 
+      JPEG compression does lose a small amount of information but can save much more 
+      space. Your 
+      selection here will be saved in your settings file, and separate values are 
+      maintained for saving a single image with the
+      <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
+      command versus other situations.&nbsp; In contrast, the default values 
+      for most other options in this dialog are controlled by entries in the 
+      SerialEMproperties.txt file.&nbsp; </P>
     <P><B>Save non-float data as:</B></P>
     <P>Allows integer data to be saved as bytes or 16-bit integers. If there is a 
       16-bit camera and values are not being divided by 2, or if there are any buffers 
@@ -187,35 +209,14 @@
       image file and extension '.mdoc', as described above. When a montage file is 
       opened and the range of coordinates is too large to store in the extended 
       header, a '.mdoc' file is created automatically.</P>
-    <P><B>Save images to:</B></P>
-    <P>Select whether to save data in an MRC file, an HDF file, a TIFF or JPEG&nbsp; file holding a single image 
-      (not always available), or a series of TIFF files listed in an autodoc file, as 
-      explained above. When you select the latter option, the file chooser for 
-      specifying the file will attach the extension '.idoc' if you type in a root 
-      name without an extension. Thus, the autodoc will be named rootname.idoc, and 
-      the TIFF files will be named rootnameNNNN.tif, where 'NNNN' is a 4-digit number 
-      starting with 0000.&nbsp; Your selection here will be saved in the settings file 
-      when saving a single image with the <a href="menu_file.htm#hidm_file_saveother">
-      Save Single/Save to Other</a> command in the File menu.</P>
-    <P><B>Type of compression in TIFF or HDF file:</B></P>
-    <P>Select whether TIFF files will be saved with no compression, the type of 
-      compression used in Zip and PNG files, LZW (Lempel-Ziv-Welch) compression, or 
-      JPEG compression, or select whether HDF files are saved with ZIP compression. ZIP and LZW are both loss-less compression methods that may not save much space.&nbsp; 
-      JPEG compression does lose a small amount of information but can save much more 
-      space. Your 
-      selection here will be saved in your settings file, and separate values are 
-      maintained for saving a single image with the
-      <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
-      command versus other situations.&nbsp; In contrast, the default values 
-      for most other options in this dialog are controlled by entries in the 
-      SerialEMproperties.txt file.&nbsp; </P>
     <P><b>Skip this dialog (turn skipping off in the File menu):</b></P>
     <P>Select this option to avoid seeing this dialog every time you open a new file.&nbsp; 
       Instead, existing values will be used.&nbsp; With this option selected, the 
       dialog will open once per session of the program.&nbsp; When you want to see 
       this dialog again, you can turn off Skip File Properties Dlg in the File menu.</P>
     <P><B>Cancel:</B></P>
-    <P>Cancel file setup (and montaging, if setting that up).</P>
+    <P>Cancel file setup (and whatever else is being set up, when this dialog is one 
+      in a sequence, such as when montaging).</P>
     </basefont>
   </BODY>
 </HTML>

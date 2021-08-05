@@ -66,7 +66,7 @@
           Enter the time interval between the two images being correlated to measure drift 
           in the text box.</p>
       <p>
-          &nbsp;When autofocusing, a delay will be imposed between the 
+          When autofocusing, a delay will be imposed between the 
           images of the autofocus run to make the time between the first and third images 
           as long as this interval.&nbsp;&nbsp; This makes the defocus measurement more 
           vulnerable to a decay in the drift rate within the autofocus run because some of 
@@ -95,6 +95,15 @@
           <strong>Maximum time to wait</strong></p>
       <p>
           Enter the maximum total time to wait for the drift to reach the target rate.</p>
+    <p>
+          <strong>Skip if immediately previous autofocus had drift below X</strong></p>
+    <p>
+          This option allows the routine to test whether an autofocus just prior to 
+          running the drift waiting a drift rate low enough so that further testing can be 
+          skipped.&nbsp; Because the drift measurement from this autofocus is inherently 
+          less accurate if it is made over a smaller time interval than is specified here, 
+          it is usually advisable to use a smaller drift value here than the final drift 
+          rate that you want to reach.</p>
       <p>
           <strong>Generate error if target drift rate is not reached</strong></p>
       <p>
