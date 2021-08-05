@@ -210,7 +210,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
   mStartupError[sockInd] = 0;
 
   sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
-    "Listening for connections on socket %d  port %d", mHListener[sockInd], 
+    "Listening for connections on socket %d  port %d", (int)mHListener[sockInd], 
     (int)mPort[sockInd]);
   DebugToLog(mMessageBuf[sockInd]);
   
@@ -278,7 +278,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
         if (!FinishGettingBuffer(sockInd, numBytes, numExpected)) {
           if (GetDebugVal() > 1) {
             sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
-              "Got %d bytes via recv on socket %d", numExpected, mHClient[sockInd]);
+              "Got %d bytes via recv on socket %d", numExpected, (int)mHClient[sockInd]);
             DebugToLog(mMessageBuf[sockInd]);
           }
           mProcessingCommand = true;
@@ -313,7 +313,7 @@ void CBaseServer::CloseClient(int sockInd)
   if (mHClient[sockInd] == INVALID_SOCKET)
     return;
   sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
-    "Closing connection to client via socket %d", mHClient[sockInd]);
+    "Closing connection to client via socket %d", (int)mHClient[sockInd]);
   if (!mCloseForExit[sockInd])
     EitherToLog("", mMessageBuf[sockInd]);
   closesocket(mHClient[sockInd]);
@@ -424,7 +424,7 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
   int numToSend, numSent;
   if (GetDebugVal() > 1) {
     sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "In SendBuffer, socket %d, "
-      "sending %d bytes",  mHClient[sockInd], numBytes);
+      "sending %d bytes", (int)mHClient[sockInd], numBytes);
     DebugToLog(mMessageBuf[sockInd]);
   }
   while (numTotalSent < numBytes) {
@@ -433,7 +433,7 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
       numToSend = mChunkSize;
     if (GetDebugVal() > 1) {
       sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Going to send %d bytes to "
-      "socket %d", numToSend, mHClient[sockInd]);
+      "socket %d", numToSend, (int)mHClient[sockInd]);
       DebugToLog(mMessageBuf[sockInd]);
     }
     numSent = send(mHClient[sockInd], &buffer[numTotalSent], numToSend, 0);
