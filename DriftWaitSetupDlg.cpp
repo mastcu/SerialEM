@@ -13,11 +13,12 @@ static int idTable[] = {IDC_RWD_TRIAL, IDC_RWD_FOCUS, IDC_RWD_WITHIN_AF,IDC_STAT
   IDC_CHECK_SET_TRIAL, IDC_EDIT_TRIAL_EXP, IDC_STAT_EXP_SEC, IDC_STAT_TRIAL_BINNING,
   IDC_SPIN_TRIAL_BIN, IDC_STAT_TARGET, IDC_EDIT_DRIFT_RATE, IDC_STAT_RATE_UNITS,
   IDC_STAT_MAX_WAIT, IDC_EDIT_MAX_WAIT, IDC_STAT_SEC2, IDC_CHECK_THROW_ERROR,
-  IDC_STAT_TRIAL_EXP, IDC_CHECK_CHANGE_IS, PANEL_END,
+  IDC_STAT_TRIAL_EXP, IDC_CHECK_CHANGE_IS, IDC_CHECK_USE_PRIOR_AUTOFOCUS,
+  IDC_STAT_PRIOR_BELOW, IDC_EDIT_PRIOR_THRESH, IDC_STAT_PRIOR_NM, PANEL_END,
   IDC_STAT_ANGLE_BOX, IDC_LINE1, IDC_RANY_ANGLE, IDC_RRUN_BELOW, IDC_RRUN_ABOVE,
   IDC_EDIT_RUN_BELOW, IDC_STAT_DEG1, IDC_STAT_DEG2, IDC_EDIT_RUN_ABOVE,
   IDC_STAT_DOSYM_BOX, IDC_CHECK_AT_REVERSALS, IDC_CHECK_IGNORE_ANGLES, PANEL_END,
-  IDC_BUTHELP, IDOK, IDCANCEL, PANEL_END, TABLE_END};
+  IDC_STAT_SPACER, IDC_BUTHELP, IDOK, IDCANCEL, PANEL_END, TABLE_END};
 
 static int topTable[sizeof(idTable) / sizeof(int)];
 static int leftTable[sizeof(idTable) / sizeof(int)];
@@ -40,6 +41,9 @@ CDriftWaitSetupDlg::CDriftWaitSetupDlg(CWnd* pParent /*=NULL*/)
   , m_iAngleChoice(0)
   , m_fRunAbove(2.f)
   , m_fRunBelow(2.f)
+  , m_bUsePriorAutofocus(FALSE)
+  , m_fPriorThresh(1.f)
+  , m_strPriorUnits(_T(""))
 {
   mTSparam = NULL;
 }
@@ -82,6 +86,12 @@ void CDriftWaitSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxFloat(pDX, m_fRunAbove, 1.f, 90.f);
   DDX_Text(pDX, IDC_EDIT_RUN_BELOW, m_fRunBelow);
   DDV_MinMaxFloat(pDX, m_fRunBelow, 1.f, 90.f);
+  DDX_Control(pDX, IDC_CHECK_USE_PRIOR_AUTOFOCUS, m_butUsePriorFocus);
+  DDX_Check(pDX, IDC_CHECK_USE_PRIOR_AUTOFOCUS, m_bUsePriorAutofocus);
+  DDX_Control(pDX, IDC_EDIT_PRIOR_THRESH, m_editPriorThresh);
+  DDX_Text(pDX, IDC_EDIT_PRIOR_THRESH, m_fPriorThresh);
+  DDV_MinMaxFloat(pDX, m_fPriorThresh, .01f, 1000.);
+  DDX_Text(pDX, IDC_STAT_PRIOR_NM, m_strPriorUnits);
 }
 
 
@@ -95,6 +105,7 @@ BEGIN_MESSAGE_MAP(CDriftWaitSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RANY_ANGLE, OnRadioAngle)
   ON_BN_CLICKED(IDC_RRUN_ABOVE, OnRadioAngle)
   ON_BN_CLICKED(IDC_RRUN_BELOW, OnRadioAngle)
+  ON_BN_CLICKED(IDC_CHECK_USE_PRIOR_AUTOFOCUS, OnUsePriorAutofocus)
 END_MESSAGE_MAP()
 
 
@@ -118,7 +129,7 @@ BOOL CDriftWaitSetupDlg::OnInitDialog()
     cset->K2ReadMode, mBinIndex, realBin);
   mBinIndex = B3DMAX(mBinIndex, mBinDivisor - 1);
   m_strTrialBinning.Format("Binning %d", realBin / mBinDivisor);
-  m_strRateUnits = params->useAngstroms ? "Angstroms/sec" : "nm/sec";
+  m_strRateUnits = m_strPriorUnits =  params->useAngstroms ? "Angstroms/sec" : "nm/sec";
 
   m_iMeasureType = params->measureType - (int)WFD_USE_TRIAL;
   m_bSetTrial = params->setTrialParams;
@@ -129,6 +140,8 @@ BOOL CDriftWaitSetupDlg::OnInitDialog()
   m_bUseAngstroms = params->useAngstroms;
   m_fDriftRate = params->driftRate * (params->useAngstroms ? 10.f : 1.f);
   m_bChangeIS = params->changeIS;
+  m_bUsePriorAutofocus = params->usePriorAutofocus;
+  m_fPriorThresh = params->priorAutofocusRate  * (params->useAngstroms ? 10.f : 1.f);
   if (mTSparam) {
     if (mTSparam->onlyWaitDriftAboveBelow)
       m_iAngleChoice = mTSparam->onlyWaitDriftAboveBelow > 0 ? 1 : 2;
@@ -158,6 +171,8 @@ void CDriftWaitSetupDlg::OnOK()
   params->failureAction = m_bThrowError ? 1 : 0;
   params->changeIS = m_bChangeIS;
   params->useAngstroms = m_bUseAngstroms;
+  params->usePriorAutofocus = m_bUsePriorAutofocus;
+  params->priorAutofocusRate = m_fPriorThresh / (m_bUseAngstroms ? 10.f : 1.f);
   if (mTSparam) {
     mTSparam->onlyWaitDriftAboveBelow = (m_iAngleChoice > 1 ? -1 : m_iAngleChoice);
     mTSparam->waitDriftAboveAngle = m_fRunAbove;
@@ -171,6 +186,7 @@ void CDriftWaitSetupDlg::OnOK()
 void CDriftWaitSetupDlg::OnMeasureType()
 {
   UpdateData(true);
+  ManageTrialEntries();
 }
 
 void CDriftWaitSetupDlg::OnCheckSetTrial()
@@ -193,8 +209,9 @@ void CDriftWaitSetupDlg::OnCheckUseAngstroms()
 {
   BOOL oldUse = m_bUseAngstroms;
   UpdateData(true);
-  m_strRateUnits = m_bUseAngstroms ? "Angstroms/sec" : "nm/sec";
+  m_strRateUnits = m_strPriorUnits = m_bUseAngstroms ? "Angstroms/sec" : "nm/sec";
   m_fDriftRate = m_fDriftRate * (m_bUseAngstroms ? 10.f : 1.f) / (oldUse ? 10.f : 1.f);
+  m_fPriorThresh *= (m_bUseAngstroms ? 10.f : 1.f) / (oldUse ? 10.f : 1.f);
   UpdateData(false);
 }
 
@@ -207,9 +224,18 @@ void CDriftWaitSetupDlg::OnRadioAngle()
 
 void CDriftWaitSetupDlg::ManageTrialEntries()
 {
-  m_statTrialExp.EnableWindow(m_bSetTrial);
-  m_statExpSec.EnableWindow(m_bSetTrial);
-  m_statTrialBinning.EnableWindow(m_bSetTrial);
-  m_editTrialExp.EnableWindow(m_bSetTrial);
-  m_sbcTrialBin.EnableWindow(m_bSetTrial);
+  m_butSetTrial.EnableWindow(!m_iMeasureType);
+  m_statTrialExp.EnableWindow(m_bSetTrial && !m_iMeasureType);
+  m_statExpSec.EnableWindow(m_bSetTrial && !m_iMeasureType);
+  m_statTrialBinning.EnableWindow(m_bSetTrial && !m_iMeasureType);
+  m_editTrialExp.EnableWindow(m_bSetTrial && !m_iMeasureType);
+  m_sbcTrialBin.EnableWindow(m_bSetTrial && !m_iMeasureType);
+  m_editPriorThresh.EnableWindow(m_bUsePriorAutofocus);
+}
+
+
+void CDriftWaitSetupDlg::OnUsePriorAutofocus()
+{
+  UpdateData(true);
+  ManageTrialEntries();
 }

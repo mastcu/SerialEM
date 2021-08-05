@@ -67,4 +67,10 @@ public:
   float m_fRunAbove;
   float m_fRunBelow;
   afx_msg void OnRadioAngle();
+  CButton m_butUsePriorFocus;
+  BOOL m_bUsePriorAutofocus;
+  afx_msg void OnUsePriorAutofocus();
+  CEdit m_editPriorThresh;
+  float m_fPriorThresh;
+  CString m_strPriorUnits;
 };
