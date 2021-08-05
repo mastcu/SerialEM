@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <title>Navigator Align Setup Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_navrealign"></a><span class="style1">Navigator Align Setup
+        Dialog</span></p>
+    <p> This dialog allows parameters to be set for the Align to Template task, which 
+      can be run either from a script command or from the Navigator during the Acquire 
+      at Items procedure.&nbsp; A subset of these parameters govern whether image 
+      shift is reset after an alignment and are also used for the Realign to Item 
+      operation when it is run from Acquire at Items.</p>
+    <p> A template is an image of some generic feature, like a hole in the carbon 
+      film, to which other images can be aligned.&nbsp; Aligning to a template 
+      requires specifying two things: where the image is, and how to acquire an image 
+      for aligning to it.&nbsp; Both pieces of information are provided by specifying 
+      a Navigator map image to use as the template.&nbsp; Typically a template will be 
+      a small image, and the image to be aligned would be much larger.&nbsp; To allow 
+      for this, a template map can be created with a special feature: the Navigator 
+      values for the map size indicate the size of the image to acquire rather than 
+      the size of the image itself.&nbsp; This is possible within SerialEM by cropping 
+      the template from a larger image.&nbsp; The program keeps track of the original 
+      size of the image, or montage piece, from which an image is cropped, and assigns 
+      this to the map size values when the image is made into a map.&nbsp; This 
+      original, uncropped size is also stored in an &#39;.mdoc&#39; metadata file along with 
+      the other information about the acquisition conditions, so it is possible to 
+      reopen a file (even one from another session), reread the image, and make it a 
+      template map.</p>
+    <p> If you want to align to the template with images smaller than the typical 
+      full-field ones, you can acquire an image of whatever size you prefer and crop 
+      the template from that.&nbsp; However, this should not be necessary if you 
+      specify an appropriate maximum distance for the alignment shift.</p>
+    <p> <strong><em>Parameters for Aligning to a Template</em></strong></p>
+    <p> <strong>Label of Navigator map with template</strong></p>
+    <p> The map to use is found by its label.&nbsp; Enter either the label of an 
+      existing map, or the label you want to assign if you are going to make a map 
+      from a cropped image in buffer A.&nbsp; The label should be unique.&nbsp; The 
+      line below will indicate whether the item does not yet exist, whether an item 
+      withat label is not a map, or whether it is a montage map, which is not allowed.&nbsp; 
+      The tests for whether the label exists are case-insensitive.</p>
+    <p> <strong>Make Map from Image in A</strong></p>
+    <p> This button is enabled if there is a cropped image in buffer A that has not 
+      been made a map yet (has no map ID value).&nbsp; Press this button to make it a 
+      map.&nbsp; If it is not saved to file yet, the browser for specifying a file 
+      name will open.&nbsp; The program will make a map and close the file if it 
+      opened one.&nbsp; Then a dialog will open with a text box for setting the label 
+      of the map.&nbsp; If you already had an entry in the <strong>Label</strong> text 
+      box above and there was not already an item with that label, it will offer that 
+      label.&nbsp; Otherwise it will offer the automatically assigned label, which you 
+      are free to change, as long as what you enter is not the label of an existing 
+      item.</p>
+    <p> <strong>Maximum alignment shift</strong></p>
+    <p> Enter the maximum shift in microns that will be allowed in the alignment to 
+      the template.&nbsp; This should be less than half the distance between adjacent 
+      features, to prevent the program from aligning on a feature farther from center 
+      than the likely target.</p>
+    <p> <strong><em>Parameters for Handling Image Shift after Alignment</em></strong></p>
+    <p> Both Align to Template and Realign to Item have the ability to finish by 
+      resetting image shift if it is above a threshold, moving the stage to 
+      compensate, and restoring the alignment with a new image.&nbsp; As the verbose 
+      lines in this section of the dialog indicate, the settings specified here are 
+      applied for both procedures: when running Align to Template from Acquire at 
+      Points, as defaults when running the AlignToTemplate script command, and when 
+      running Realign to Item from Acquire at points.</p>
+    <p> <strong>Reset image shift and realign if &gt; D microns</strong></p>
+    <p> Check the option to enable restting of image shift, and fill in the text box 
+      with a threshold in microns above which it will be reset after aligning to the 
+      template.&nbsp; The realignment is done by aligning a new image to the 
+      previously acquired image, not to the template.</p>
+    <p> <strong>Reset IS up to N times</strong></p>
+    <p> Set the spinner to the maximum number of image shift resets to do.&nbsp; If 
+      image shift is still above the threshold after one reset shift and realign, the 
+      program will do another iteration, up to this limit.</p>
+    <p> <strong>Leave IS at 0 (skip last realign)</strong></p>
+    <p> Select this option to leave image shift at zero and thus leave a little 
+      misalignment in the image.&nbsp; This is accomplished by doing a final image 
+      shift reset when the image shift is below threshold (which might occur right 
+      after alignment to the template), and not realigning with another image.&nbsp; 
+      This final reset counts towards the maximum.&nbsp; If the maximum is 1, it will 
+      simply reset the image shift after aligning to the template, and not acquire 
+      another image.</p>
+  </body>
+</html>

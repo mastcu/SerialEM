@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <title>Dewar and Vacuum Management Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_shift_to_marker"></a><span class="style1">Dewar and Vacuum Management
+        Dialog</span></p>
+    <p> This dialog allows management of the various events that can occur 
+      periodically on the microscope and interfere with stable imaging during 
+      acquisition: the running of vacuum pumps and the filling of nitrogen dewars.&nbsp; 
+      In some cases, the program can only check whether an event has started and then 
+      wait for it to finish; in others it can initiate an event periodically.&nbsp; It 
+      is used to set parameters only; the selected operations are performed when the 
+      scope management routine is run either from the 'DewarsAndPumps' script command 
+      or by an action during Navigator acquisition.&nbsp; That routine can be run 
+      frequently (i.e., on every acquisition item) because the actual times between 
+      operations are all governed by the intervals set here.&nbsp; The operations are 
+      run through the same mechanism as when run by the 'LongOperation' script 
+      command, so timing is based on the same times when each operation was last run 
+      that are kept track of when running through script and stored in the short-term 
+      calibrations file between program sessions. </p>
+    <p> <em><strong>Vacuum Management</strong></em></p>
+    <p>The top section of the dialog currently appears only for FEI scopes.</p>
+    <p><strong>Check for PVP running and wait until done</strong></p>
+    <p>Select this option to have the program check whether the PVP is running and 
+      pause acquisition until it has stopped.</p>
+    <p><strong>Run buffer cycle every N minutes</strong></p>
+    <p>Select this option to run the regular buffer cycle periodically, and fill in 
+      the text box with the number of minutes between runs (an integer).</p>
+    <p><strong>Run autoloader buffer cycle every N minutes</strong></p>
+    <p>Select this option to run the autoloader buffer cycle periodically, and fill in 
+      the text box with the number of minutes between runs (an integer).&nbsp; Whether 
+      this option appears is governed by the first bit (1) of the property 
+      'ScopeCapabilities', which is on by default for a Krios but must be explicitly 
+      provided for other scopes with autoloaders.</p>
+    <p><em><strong>Nitrogen Management</strong></em></p>
+    <p>The bottom section of the dialog appears if there is any way to control or 
+      monitor an automatic nitrogen filling system.&nbsp; For FEI scopes, this is 
+      determined by the second bit (2) of the 'ScopeCapabilities' property, which 
+      again is on by default for Krios.&nbsp; For JEOL scopes, it is determined by the 
+      'JeolHasNitrogenClass' property, and both the transfer tank and the stage tank 
+      are treated together.&nbsp; For either type of scope, the section will also 
+      appear if the 'HasSimpleOrigin' property is set, and commands to the Simple 
+      Origin filling system will be used.</p>
+    <p><strong>Refill nitrogen every N hours</strong></p>
+    <p>Select this option to refill dewars periodically and fill in the text box with 
+      the interval between filling in hours (a floating point entry is allowed).&nbsp; 
+      When the management routine is run with this option selected, the program will 
+      first check whether filling has already started.</p>
+    <p><strong>Check for ongoing filling and wait until done</strong></p>
+    <p>Select this option to check for whether filling has started and wait until it 
+      is done. Even if filling is specified to be done at an interval, it would be 
+      advisable to check this option too if there is some chance that it might occur 
+      spontaneously.</p>
+    <p><strong>Pause if time to next refill is below N minutes</strong></p>
+    <p>This line and the next one appear if SerialEM can determine the time until the 
+      system plans to start a filling - with FEI and Simple Origin but not with JEOL.&nbsp; 
+      When the program checks for ongoing filling, it also checks the time interval 
+      until the next filling.&nbsp; If that interval is below the time entered on this 
+      line (a floating point value), the program will pause and wait for it to start.</p>
+    <p><strong>Start the refill if time to next refill is below N minutes</strong></p>
+    <p>If this option is selected, the program will start the filling immediately&nbsp;when 
+      the 
+      interval to the next filling is longer than the time on the previous line but below the time entered 
+      here (also a floating point value).&nbsp; This option is provided particularly 
+      for tilt series, where it allows you to minimize wasted time while avoiding 
+      pauses or disturbances during the acquisition.&nbsp; When using it, a small 
+      entry like 0.5 would be appropriate for the entry above, and the time here would 
+      be set longer than the expected acquisition time.</p>
+    <p><strong>Time to wait after filling is done</strong></p>
+    <p>Enter the interval in minutes to wait after the filling done (a floating point 
+      value).&nbsp; This wait will occur both when filling is discovered to be ongoing 
+      and when it is started by the program.</p>
+    <p><strong>Do checks just before primary task in Acquire at Items</strong></p>
+    <p>This option appears at the bottom of the dialog regardless of whether there is 
+      one section or two.&nbsp; It allows the Navigator to run the management routine 
+      twice during the acquisition cycle.&nbsp; It can be run first, to minimize the 
+      chance that a long operation occurs between the initial preparations (e.g., 
+      alignment and focusing) and the actual acquisition. Then the Navigator will run 
+      it again, just prior to acquisition, doing just the checks for ongoing 
+      operations.&nbsp; The same thing can be accomplished when running from script by 
+      running &#39;ScopeManagement -1&#39; early on and &#39;ScopeManagement 1&#39; just before 
+      acquiring.</p>
+
+  </body>
+</html>

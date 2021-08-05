@@ -388,6 +388,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_navrotalign.htm">Align with Rotation dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Navigator Align Setup dialog">
+			<param name="Local" value="html/hidd_navrealign.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navrealign.htm">Navigator Align Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Shift to Marker dialog">
 			<param name="Local" value="html/hidd_shift_to_marker.htm">
 			</OBJECT>
@@ -432,6 +437,11 @@
 			<param name="Local" value="html/hidd_multi_combiner.htm">
 			</OBJECT>
 			<A HREF="html/hidd_multi_combiner.htm">Multiple Hole Combiner dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Dewar and Vacuum Management dialog">
+			<param name="Local" value="html/hidd_manage_dewars.htm">
+			</OBJECT>
+			<A HREF="html/hidd_manage_dewars.htm">Dewar and Vacuum Management dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Stage Move Tool">
 			<param name="Local" value="html/hidd_stagemovetool.htm">
