@@ -2390,6 +2390,8 @@ void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
 void CLowDoseDlg::DeselectGoToButtons(int area)
 {
   CMyButton *but;
+  if (!mTrulyLowDose)
+    area = -1;
   for (int ind = 0; ind < 5; ind++) {
     but = (CMyButton *)GetDlgItem(IDC_GOTO_VIEW + ind);
     if (area != ind) {
@@ -2402,6 +2404,8 @@ void CLowDoseDlg::DeselectGoToButtons(int area)
 // Color the button for the current area (called at end of area-setting)
 void CLowDoseDlg::SelectGoToButton(int area)
 {
+  if (!mTrulyLowDose)
+    return;
   CMyButton *but = (CMyButton *)GetDlgItem(IDC_GOTO_VIEW + area);
   but->m_bShowSpecial = true;
   but->Invalidate();
