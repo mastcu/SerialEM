@@ -85,7 +85,8 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_GAIN_REF, TASK_ALIGN_DE_FRAMES, TASK_START_NAV_ACQ, TASK_CTF_BASED, 
   TASK_CAL_COMA_VS_IS, TASK_REMOTE_CTRL, TASK_MOVE_APERTURE, TASK_WAIT_FOR_DRIFT,
   TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
-  TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G
+  TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
+  TASK_DEWARS_VACUUM
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -529,6 +530,7 @@ public:
     SetMember(BOOL, ProcessHere)
     SetMember(BOOL, ReopenMacroToolbar)
     NavParams *GetNavParams() { return &mNavParams; };
+  NavAcqParams *GetNavAcqParams(int which) { return &mNavAcqParams[which]; };
   CookParams *GetCookParams() { return &mCookParams; };
   SetMember(BOOL, DeferBufWinUpdates)
     GetSetMember(BOOL, ContinuousSaveLog)
@@ -585,8 +587,11 @@ public:
   GetSetMember(double, LastActivityTime);
   GetMember(bool, JustChangingLDarea);
   GetMember(bool, JustDoingSynchro);
+  GetMember(bool, JustNavAcquireOpen);
   GetMember(bool, InUpdateWindows);
   GetMember(BOOL, EnableExternalPython);
+  GetMember(bool, HasK2OrK3Camera);
+  GetMember(int, DEcamCount);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -725,6 +730,7 @@ private:
   LowDoseParams mLowDoseParams[MAX_LOWDOSE_SETS];
   LowDoseParams mCamLowDoseParams[3][MAX_LOWDOSE_SETS];
   NavParams mNavParams;
+  NavAcqParams mNavAcqParams[2];
   CookParams mCookParams;
   RangeFinderParams mTSRangeParams[2];
   CString mMacroName[MAX_TOT_MACROS];
@@ -874,9 +880,11 @@ private:
   double mLastActivityTime;     // Tick time of last redisplay or something in idle array
   bool mJustChangingLDarea;     // Flag that "DOingTasks" was true because of LD change
   bool mJustDoingSynchro;       // Flag that "DoingTasks" true because of synchro thread
+  bool mJustNavAcquireOpen;     // Flag that "DoingTasks" true because of nav acquire
   bool mInUpdateWindows;        // Flag that update call is from UpdateBufferWindows
   BOOL mEnableExternalPython;   // Flag to open socket for external python
-
+  bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
+  int mDEcamCount;              // Number of DE cameras
 
 public:
   void UpdateAllEditers(void);

@@ -42,6 +42,7 @@
 #include "DistortionTasks.h"
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
+#include "NavAcquireDlg.h"
 #include "NavHelper.h"
 #include "NavRotAlignDlg.h"
 #include "MultiShotDlg.h"
@@ -566,29 +567,39 @@ CSerialEMApp::CSerialEMApp()
   mMacControl.montErrorLimit = 1.0;
 
   InitializeLDParams();
-  mNavParams.macroIndex = 1;
-  mNavParams.preMacroInd = 1;
-  mNavParams.preMacroIndNonTS = 1;
-  mNavParams.postMacroInd = 1;
-  mNavParams.postMacroIndNonTS = 1;
-  mNavParams.nonTSacquireType = 0;
-  mNavParams.acqRealign = false;
-  mNavParams.acqRoughEucen = false;
-  mNavParams.acqFineEucen = false;
-  mNavParams.acqAutofocus = false;
-  mNavParams.acqCookSpec = false;
-  mNavParams.acqCenterBeam = false;
-  mNavParams.acqRunPremacro = false;
-  mNavParams.acqRunPremacroNonTS = false;
-  mNavParams.acqRunPostmacro = false;
-  mNavParams.acqRunPostmacroNonTS = false;
-  mNavParams.acqSkipInitialMove = false;
-  mNavParams.acqSkipZmoves = false;
-  mNavParams.acqRestoreOnRealign = true;
-  mNavParams.acqSendEmail = false;
-  mNavParams.acqSendEmailNonTS = false;
-  mNavParams.acqFocusOnceInGroup = false;
-  mNavParams.acqCloseValves = false;
+  for (i = 0; i < 2; i++) {
+    mNavAcqParams[i].macroIndex = 1;
+    mNavAcqParams[i].preMacroInd = 1;
+    mNavAcqParams[i].preMacroIndNonTS = 1;
+    mNavAcqParams[i].postMacroInd = 1;
+    mNavAcqParams[i].postMacroIndNonTS = 1;
+    mNavAcqParams[i].nonTSacquireType = 0;
+    mNavAcqParams[i].runPremacro = false;
+    mNavAcqParams[i].runPremacroNonTS = false;
+    mNavAcqParams[i].runPostmacro = false;
+    mNavAcqParams[i].runPostmacroNonTS = false;
+    mNavAcqParams[i].skipInitialMove = false;
+    mNavAcqParams[i].skipZmoves = false;
+    mNavAcqParams[i].restoreOnRealign = true;
+    mNavAcqParams[i].sendEmail = false;
+    mNavAcqParams[i].sendEmailNonTS = false;
+    mNavAcqParams[i].cycleDefocus = false;
+    mNavAcqParams[i].cycleDefFrom = -2.;
+    mNavAcqParams[i].cycleDefTo = -1.;
+    mNavAcqParams[i].cycleSteps = 10;
+    mNavAcqParams[i].earlyReturn = false;
+    mNavAcqParams[i].numEarlyFrames = 0;
+    mNavAcqParams[i].noMBoxOnError = false;
+    mNavAcqParams[i].closeValves = false;
+    mNavAcqParams[i].hideUnusedActs = false;
+    mNavAcqParams[i].acqDlgSelectedPos = 0;
+    mNavAcqParams[i].highFlashIfOK = true;
+    mNavAcqParams[i].DEdarkRefOperatingMode = 0;
+    mNavAcqParams[i].astigByBTID = false;
+    mNavAcqParams[i].adjustBTforIS = false;
+    mNavAcqParams[i].relaxStage = false;
+  }
+
   mNavParams.warnedOnSkipMove = false;
   mNavParams.stockFile = "";
   mNavParams.autosaveFile = "";
@@ -704,6 +715,7 @@ CSerialEMApp::CSerialEMApp()
   mPlugImagingTask = false;
   mAnyDirectDetectors = false;
   mAnySuperResMode = false;
+  mHasK2OrK3Camera = false;
   mFrameAlignMoreOpen = false;
   mShowRemoteControl = true;
   mHasFEIcamera = false;
@@ -1235,7 +1247,7 @@ BOOL CSerialEMApp::InitInstance()
   // Check for 16-bit cameras and for GIF
   BOOL anyGIF = false;
 
-  int deCamCount = 0;
+  mDEcamCount = 0;
   //Max 3 cameras for DE
   int MAX_DE_Cams = 3;
   CString DE_camNames[] = {"","",""};
@@ -1253,9 +1265,9 @@ BOOL CSerialEMApp::InitInstance()
         mCamera->SetNoFilterControl(!camP->filterIsFEI);
     }
     if (camP->DE_camType)	{
-      if (deCamCount < MAX_DE_Cams) {
-        DE_camNames[deCamCount] = camP->name;
-        deCamCount++;
+      if (mDEcamCount < MAX_DE_Cams) {
+        DE_camNames[mDEcamCount] = camP->name;
+        mDEcamCount++;
       }
     }
   }
@@ -1310,10 +1322,10 @@ BOOL CSerialEMApp::InitInstance()
   CREATE_IF_SHOWING(!IsIDinHideSet(-19), 9);
   CREATE_IF_SHOWING(mScopeHasSTEM && !IsIDinHideSet(-20), 10);
   CREATE_IF_SHOWING(mScopeHasFilter && !IsIDinHideSet(-21), 11);
-  CREATE_IF_SHOWING(deCamCount > 0 && !IsIDinHideSet(-22), 12);
+  CREATE_IF_SHOWING(mDEcamCount > 0 && !IsIDinHideSet(-22), 12);
 
-  if (deCamCount > 0)
-	  mDEToolDlg.setUpDialogNames(DE_camNames,deCamCount);
+  if (mDEcamCount > 0)
+	  mDEToolDlg.setUpDialogNames(DE_camNames,mDEcamCount);
 
   pMainFrame->InitializeDialogTable(mDialogTable, initialDlgState, mNumToolDlg, 
     dlgBorderColors, mDlgColorIndex, mDlgPlacements);
@@ -1389,6 +1401,8 @@ BOOL CSerialEMApp::InitInstance()
     if (mCamParams[iCam].K2Type || (mCamParams[iCam].DE_camType && 
       (mCamParams[iCam].CamFlags & DE_CAM_CAN_COUNT)))
       mAnySuperResMode = true;
+    if (mCamParams[iCam].K2Type)
+      mHasK2OrK3Camera = true;
 
     // For Falcon 2 or DE that can't align, if align is ON without using framealign, 
     // turn it off
@@ -2221,6 +2235,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mComplexTasks->EucentricityBusy();
     else if (idc->source == TASK_Z_BY_G)
       busy = mParticleTasks->ZbyGBusy();
+    else if (idc->source == TASK_TEMPLATE_ALIGN)
+      busy = mParticleTasks->TemplateAlignBusy();
+    else if (idc->source == TASK_DEWARS_VACUUM)
+      busy = mParticleTasks->DewarsVacBusy();
     else if (idc->source == TASK_FOCUS_VS_Z)
       busy = mFocusManager->FocusVsZBusy();
     else if (idc->source == TASK_DUAL_MAP)
@@ -2292,6 +2310,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->EucentricityNextTask(idc->param);
         else if (idc->source == TASK_Z_BY_G)
           mParticleTasks->ZbyGNextTask(idc->param);
+        else if (idc->source == TASK_TEMPLATE_ALIGN)
+          mParticleTasks->TemplateAlignNextTask(idc->param);
+        else if (idc->source == TASK_DEWARS_VACUUM)
+          mParticleTasks->DewarsVacNextTask(idc->param);
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMNextTask(idc->param);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2413,6 +2435,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->EucentricityCleanup(busy);
         else if (idc->source == TASK_Z_BY_G)
           mParticleTasks->ZbyGCleanup(busy);
+        else if (idc->source == TASK_TEMPLATE_ALIGN)
+          mParticleTasks->TemplateAlignCleanup(busy);
+        else if (idc->source == TASK_DEWARS_VACUUM)
+          mParticleTasks->DewarsVacCleanup(busy);
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMCleanup(busy);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2557,6 +2583,10 @@ void CSerialEMApp::ErrorOccurred(int error)
     mComplexTasks->StopEucentricity();
   if (mParticleTasks->DoingZbyG())
     mParticleTasks->StopZbyG();
+  if (mParticleTasks->DoingTemplateAlign())
+    mParticleTasks->StopTemplateAlign();
+  if (mParticleTasks->GetDVDoingDewarVac())
+    mParticleTasks->StopDewarsVac();
   if (mComplexTasks->DoingTiltAfterMove())
     mComplexTasks->StopTiltAfterMove();
   if (mComplexTasks->DoingBacklashAdjust())
@@ -3131,6 +3161,7 @@ void CSerialEMApp::UpdateWindowSettings()
     mAutocenDlg->UpdateSettings();
   if (mScreenShotDialog)
     mScreenShotDialog->UpdateSettings();
+  mNavHelper->UpdateSettings();
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->UpdateSettings();
   if (mNavHelper->mMultiCombinerDlg)
@@ -3150,7 +3181,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mMontageController->DoingMontage() ||
     mFocusManager->DoingFocus() || mFocusManager->DoingSTEMfocus() ||
     mFocusManager->DoingSTEMfocusVsZ() ||
-    mComplexTasks->DoingTasks() ||   // Reports on MultiTSTasks too
+    mComplexTasks->DoingTasks() ||   // Reports on MultiTSTasks too, and ParticleTasks
     mBeamAssessor->CalibratingIntensity() ||
     mBeamAssessor->CalibratingBeamShift() ||
     mBeamAssessor->CalibratingSpotIntensity() ||
@@ -3159,8 +3190,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mGainRefMaker->AcquiringGainRef() ||
     mDistortionTasks->DoingStagePairs() ||
     mCalibTiming->Calibrating() ||
-    mCalibTiming->DoingDeadTime() || mParticleTasks->DoingZbyG() ||
-    mParticleTasks->DoingMultiShot() || mParticleTasks->GetWaitingForDrift() ||
+    mCalibTiming->DoingDeadTime() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() ||
@@ -3173,7 +3203,7 @@ BOOL CSerialEMApp::DoingTasks()
 {
   bool trulyBusy = DoingImagingTasks()|| 
     mMacroProcessor->DoingMacro() ||
-    mShiftManager->ResettingIS() ||
+    mShiftManager->ResettingIS() || mParticleTasks->GetDVDoingDewarVac() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
     (mNavigator && mNavigator->GetLoadingMap()) ||
@@ -3182,7 +3212,8 @@ BOOL CSerialEMApp::DoingTasks()
     (mPlugDoingFunc && mPlugDoingFunc());
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
   mJustDoingSynchro = !trulyBusy && mScope->DoingSynchroThread();
-  return trulyBusy || mJustChangingLDarea || mJustDoingSynchro;
+  mJustNavAcquireOpen = !trulyBusy && mNavigator && mNavigator->mNavAcquireDlg;
+  return trulyBusy || mJustChangingLDarea || mJustDoingSynchro || mJustNavAcquireOpen;
 }
 
 // Register a stop function of form "void stopFunc(int error)" to be called by 
@@ -3217,8 +3248,8 @@ bool CSerialEMApp::DoingRegisteredPlugCall(void)
 
 BOOL CSerialEMApp::UserAcquireOK(void)
 {
-  return (!DoingTasks() || mShiftCalibrator->CalibratingOffset()) && 
-    (!mScope->GetMovingStage() || mScope->GetBkgdMovingStage());
+  return (!DoingTasks() || mJustNavAcquireOpen || mShiftCalibrator->CalibratingOffset())
+    && (!mScope->GetMovingStage() || mScope->GetBkgdMovingStage());
 }
 
 
@@ -3665,6 +3696,8 @@ void CSerialEMApp::LogClosing()
 void CSerialEMApp::NavigatorClosing()
 {
   mNavigator->GetWindowPlacement(&mNavPlacement);
+  if (mNavigator->mNavAcquireDlg)
+    mNavigator->mNavAcquireDlg->CloseWindow();
   mNavigator = NULL;
   mMenuTargets.mNavigator = NULL;
   mNavHelper->NavOpeningOrClosing(false);
