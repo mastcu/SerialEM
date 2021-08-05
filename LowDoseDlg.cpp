@@ -1248,9 +1248,11 @@ void CLowDoseDlg::Update()
 
   // Enable unblank button if blanked and no tasks, and camera not busy
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks();
-  m_butUnblank.EnableWindow(!mWinApp->DoingTasks() && !camBusy && 
+  BOOL justNavAcq = mWinApp->GetJustNavAcquireOpen();
+  BOOL enableIfNavAcq = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq);
+  m_butUnblank.EnableWindow((!mWinApp->DoingTasks() ||justNavAcq) && !camBusy && 
     !mScope->GetJeol1230());
-  m_butZeroViewShift.EnableWindow(!STEMmode && bEnable && !camBusy &&
+  m_butZeroViewShift.EnableWindow(!STEMmode && enableIfNavAcq && !camBusy &&
     (mViewShiftX[m_iOffsetShown] != 0. || mViewShiftY[m_iOffsetShown] != 0.));
 
   // Disable copy buttons on same conditions, require an active area
@@ -1260,14 +1262,14 @@ void CLowDoseDlg::Update()
   m_butCopyToTrial.EnableWindow(bEnable);
   m_butCopyToRecord.EnableWindow(bEnable);
   m_butCopyToSearch.EnableWindow(bEnable);
-  m_butSetBeamShift.EnableWindow(!STEMmode && bEnable && 
+  m_butSetBeamShift.EnableWindow(!STEMmode && enableIfNavAcq &&
     mScope->GetLowDoseArea() != RECORD_CONSET);
-  m_butResetBeamShift.EnableWindow(!STEMmode && bEnable && !camBusy);
+  m_butResetBeamShift.EnableWindow(!STEMmode && enableIfNavAcq && !camBusy);
 
-  m_butSetViewShift.EnableWindow(!STEMmode && bEnable && OKtoSetViewShift());
+  m_butSetViewShift.EnableWindow(!STEMmode && enableIfNavAcq && OKtoSetViewShift());
   bEnable = !STEMmode && ldShown->magIndex > 0;
-  m_sbcViewDefocus.EnableWindow(bEnable && !mWinApp->DoingTasks() && !camBusy);
-  m_statViewDefocus.EnableWindow(bEnable);
+  m_sbcViewDefocus.EnableWindow(enableIfNavAcq && !mWinApp->DoingTasks() && !camBusy);
+  m_statViewDefocus.EnableWindow(enableIfNavAcq);
 
   // Make mag-spot line visible if mode on
   m_statMagSpot.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
@@ -1278,11 +1280,12 @@ void CLowDoseDlg::Update()
   // Disable low dose, if tasks or TS; montaging compatibility no longer checked here
   // Disable continuous update, tying focus/trial and shifting center if tasks
   bEnable = !mWinApp->DoingTasks();
+  enableIfNavAcq = (bEnable || justNavAcq);
   m_butLowDoseMode.EnableWindow(bEnable && !mWinApp->DoingComplexTasks() &&
     !mScope->GetJeol1230() && !mWinApp->mAutocenDlg &&
     (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()));
-  m_butContinuousUpdate.EnableWindow(bEnable);
-  m_butNormalizeBeam.EnableWindow(!STEMmode && bEnable);
+  m_butContinuousUpdate.EnableWindow(enableIfNavAcq);
+  m_butNormalizeBeam.EnableWindow(!STEMmode && enableIfNavAcq);
   m_butBalanceShifts.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined && 
     bCentered && !usePiezo);
   m_butCenterUnshifted.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined && 
@@ -1304,7 +1307,7 @@ void CLowDoseDlg::Update()
   m_statDegrees.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
 
   // Disable go to buttons if busy
-  bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && !camBusy;
+  bEnable = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq) && !camBusy;
   m_butGotoSearch.EnableWindow(bEnable);
   m_butGotoView.EnableWindow(bEnable);
   m_butGotoFocus.EnableWindow(bEnable);

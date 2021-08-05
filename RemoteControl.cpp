@@ -172,7 +172,8 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   CString str;
   BOOL doingOffset = mWinApp->mShiftCalibrator && 
     mWinApp->mShiftCalibrator->CalibratingOffset();
-  bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
+  bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
+    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
@@ -265,7 +266,8 @@ void CRemoteControl::UpdateEnables(void)
   BOOL doingOffset = mWinApp->mShiftCalibrator &&
     mWinApp->mShiftCalibrator->CalibratingOffset();
   BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
-  bool enable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
+  bool enable = !((mWinApp->DoingTasks() && !doingOffset && 
+    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !continuous));
   m_sbcIntensity.EnableWindow(enable);
   m_sbcSpot.EnableWindow(enable);

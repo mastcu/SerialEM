@@ -260,6 +260,7 @@ void CAlignFocusWindow::Update()
   BOOL bEnable;
   BOOL legacyLD = false;
   BOOL bTasks = mWinApp->DoingTasks();
+  BOOL justNavAcq = mWinApp->GetJustNavAcquireOpen();
   CString alignText = "Align to ";
   char letter;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
@@ -279,16 +280,16 @@ void CAlignFocusWindow::Update()
   // Autoalign enabled if images in both buffers
   bEnable = imBufs[0].mImage && 
     imBufs[mWinApp->mBufferManager->AutoalignBufferIndex()].mImage;
-  m_butAlign.EnableWindow(bEnable && !bTasks);
+  m_butAlign.EnableWindow(bEnable && (!bTasks || justNavAcq));
 
-  m_butToMarker.EnableWindow(imBufs[0].mImage && !bTasks);
+  m_butToMarker.EnableWindow(imBufs[0].mImage && (!bTasks || justNavAcq));
 
   UpdateAutofocus(-1);
   m_statDefTarget.EnableWindow(!mWinApp->GetSTEMMode());
 
   // Clear align requires an active image
   imBufs = mWinApp->mMainView->GetActiveImBuf();
-  m_butClearAlign.EnableWindow(imBufs->mImage && !bTasks);
+  m_butClearAlign.EnableWindow(imBufs->mImage && (!bTasks || justNavAcq));
 
   // Reset shift shouldn't be done if camera busy or tilt series in action
   bEnable = !bTasks && !mWinApp->StartedTiltSeries();
@@ -327,6 +328,7 @@ void CAlignFocusWindow::UpdateAutofocus(int magInd)
 {
   // Autofocus requires focus ready
   m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) && 
-    !mWinApp->DoingTasks() && (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
+    (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+    (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }
 

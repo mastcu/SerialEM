@@ -337,7 +337,8 @@ void CZbyGSetupDlg::UpdateSettings()
 // General call for enabling
 void CZbyGSetupDlg::UpdateEnables()
 {
-  bool enable = !(mWinApp->DoingTasks() || mWinApp->mCamera->CameraBusy());
+  bool enable = !((mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) || 
+    mWinApp->mCamera->CameraBusy());
   m_butUseToRecal.EnableWindow(mRecalEnabled && enable);
   m_butUseToCal.EnableWindow(enable && FocusCalExistsForParams(&mCurParams));
   m_butUpdateState.EnableWindow(enable);

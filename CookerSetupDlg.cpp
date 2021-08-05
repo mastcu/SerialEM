@@ -39,6 +39,7 @@ CCookerSetupDlg::CCookerSetupDlg(CWnd* pParent /*=NULL*/)
 {
   mScope = mWinApp->mScope;
   mCookP = mWinApp->GetCookParams();
+  mDisableGo = false;
 }
 
 CCookerSetupDlg::~CCookerSetupDlg()
@@ -295,7 +296,7 @@ void CCookerSetupDlg::UpdateDoseTime(void)
     m_strTotalTime = "--x--";
   }
   m_strDoseTime = m_iTimeInstead ? "Total dose:" : "Total time:";
-  m_butGoCook.EnableWindow(dose > 0. || m_iTimeInstead);
+  m_butGoCook.EnableWindow((dose > 0. || m_iTimeInstead) && !mDisableGo);
   UpdateData(false);
 }
 

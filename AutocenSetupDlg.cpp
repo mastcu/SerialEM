@@ -608,7 +608,8 @@ BOOL CAutocenSetupDlg::UpdateIfExposureChanged(void)
 void CAutocenSetupDlg::UpdateEnables()
 {
   CButton *button;
-  mEnableAll = !mWinApp->DoingTasks() && !(mWinApp->mCamera->GetInitialized() && 
+  mEnableAll = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen())&& 
+    !(mWinApp->mCamera->GetInitialized() && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire());
   bool canAcquire = mEnableAll && (m_bSetState || mLowDoseMode);
   button = (CButton *)GetDlgItem(IDOK);

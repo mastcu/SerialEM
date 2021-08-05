@@ -637,7 +637,7 @@ void CHoleFinderDlg::ManageEnables()
   m_butZigzag.EnableWindow(mHaveHoles);
   m_butFromFocus.EnableWindow(mHaveHoles);
   m_butInGroups.EnableWindow(mHaveHoles && mHelper->GetGridGroupSize() > 0);
-  m_butMakeNavPts.EnableWindow(HaveHolesToDrawOrMakePts());
+  m_butMakeNavPts.EnableWindow(HaveHolesToDrawOrMakePts() && !mNav->mNavAcquireDlg);
   UpdateData(false);
 }
 

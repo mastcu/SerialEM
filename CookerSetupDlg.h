@@ -46,6 +46,7 @@ public:
   BOOL m_bTrackState;
   BOOL m_bAlignCooked;
   BOOL m_bGoCook;
+  bool mDisableGo;
   CSpinButtonCtrl m_sbcDose;
   int m_iDose;
   int m_iTimeInstead;

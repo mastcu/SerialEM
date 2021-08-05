@@ -416,7 +416,7 @@ void CMainFrame::DoClose(bool afterScript)
       }
     }
 
-    if (mWinApp->DoingTasks()) {
+    if (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) {
       if (AfxMessageBox("The program is doing an operation\nDo you really want to "
         "stop it and exit?", MB_QUESTION) != IDYES) {
         mClosingProgram = false;

@@ -420,7 +420,8 @@ void CCameraMacroTools::Update()
     camBusy = mWinApp->mCamera->CameraBusy();
     continuous = mWinApp->mCamera->DoingContinuousAcquire();
   }
-  BOOL idle = !mWinApp->DoingTasks() && !(mNav && mNav->StartedMacro());
+  BOOL idle = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+    !(mNav && mNav->StartedMacro());
   BOOL shotOK = mWinApp->UserAcquireOK();
   BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
   BOOL tsResumable = mWinApp->mTSController->IsResumable();
@@ -464,14 +465,14 @@ void CCameraMacroTools::Update()
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
   stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
-    !mWinApp->GetJustDoingSynchro()) ||
+    !mWinApp->GetJustDoingSynchro() && !mWinApp->GetJustNavAcquireOpen()) ||
     camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;
   m_butStop.EnableWindow(stopEnabled);
   m_butStop.m_bShowSpecial = stopEnabled;
-  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && 
-    (!camBusy || continuous));
+  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() || 
+    mDoingCalISO) && (!camBusy || continuous));
 
   // Set the End button
   if (mMacProcessor->DoingMacro() || mWinApp->DoingTiltSeries())
@@ -556,7 +557,8 @@ int CCameraMacroTools::GetNavigatorState(void)
 {
   mNav = mWinApp->mNavigator;
   BOOL idle = !mWinApp->DoingTasks();
-  NavParams *param = mWinApp->GetNavParams();
+  NavAcqParams *param = mWinApp->GetNavAcqParams(
+    mWinApp->mNavHelper->GetCurAcqParamIndex());
   if (!mNav || !mNav->GetAcquiring())
     return NO_NAV_RUNNING;
   if (mNav->GetPausedAcquire())

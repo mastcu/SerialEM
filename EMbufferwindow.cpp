@@ -325,7 +325,7 @@ void CEMbufferWindow::UpdateSettings()
 void CEMbufferWindow::UpdateSaveCopy()
 {
 // If doing tasks, only the copy to new button should be active
-  BOOL bEnable, noTasks;
+  BOOL bEnable, noTasks, justNavAvq = mWinApp->GetJustNavAcquireOpen();
   int maxStore, curStore, mbint, spinBuf;
   EMimageBuffer *activeBuf = mWinApp->mActiveView->GetActiveImBuf();
   if (!mInitialized)
@@ -334,7 +334,7 @@ void CEMbufferWindow::UpdateSaveCopy()
 
   noTasks = !mWinApp->DoingTasks() || 
     (mWinApp->mShiftCalibrator->CalibratingOffset() && mWinApp->mCamera->CameraReady());
-  bEnable = noTasks && activeBuf != NULL && activeBuf->mImage != NULL;
+  bEnable = (noTasks || justNavAvq) && activeBuf != NULL && activeBuf->mImage != NULL;
   m_butCopyA.EnableWindow(bEnable && mImBufs != activeBuf && !protectBuffer[0]);
   m_butCopyB.EnableWindow(bEnable && mImBufs + 1 != activeBuf && !protectBuffer[1]);
   m_butCopyC.EnableWindow(bEnable && mImBufs + 2 != activeBuf && !protectBuffer[2]);
@@ -368,7 +368,7 @@ void CEMbufferWindow::UpdateSaveCopy()
   if (curStore < 0)
     curStore = 0;
   m_strToFile.Format("To file %d", curStore + 1);
-  m_sbcToFile.EnableWindow(maxStore > 0 && noTasks);
+  m_sbcToFile.EnableWindow(maxStore > 0 && (noTasks || justNavAvq));
   m_sbcToFile.SetPos(curStore);
 
   // Update the memory usage
