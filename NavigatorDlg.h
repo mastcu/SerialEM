@@ -13,11 +13,13 @@
 #include <afxtempl.h>
 #include <vector>
 #include <set>
+#include "NavHelper.h"
 
 class CMontageSetupDlg;
 struct TiltSeriesParam;
 class CNavAcquireDlg;
 class CMacCmd;
+struct NavAcqAction;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -27,7 +29,7 @@ class CMacCmd;
 #define MAX_NAV_USER_VALUES 8
 
 enum NavAcquireTypes {ACQUIRE_TAKE_MAP = 0, ACQUIRE_IMAGE_ONLY, ACQUIRE_RUN_MACRO,
-  ACQUIRE_DO_TS};
+  ACQUIRE_DO_TS, ACQUIRE_MULTISHOT};
 enum NavRegTypes {NAVREG_UNUSED, NAVREG_REGULAR, NAVREG_IMPORT};
 enum NavNewFileTypes {NAVFILE_ITEM = 0, NAVFILE_GROUP, NAVFILE_TS};
 enum NavArrayTypes {NAVARRAY_FILEOPT, NAVARRAY_MONTPARAM, NAVARRAY_TSPARAM, 
@@ -63,6 +65,7 @@ class CNavigatorDlg : public CBaseDlg
 {
 // Construction
 public:
+  CNavAcquireDlg *mNavAcquireDlg;
   BOOL FittingMontage() {return mMontItem != NULL;};
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
     BOOL forceStage);
@@ -73,13 +76,18 @@ public:
     float angle, float &stageX, float &stageY);
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
-	int GotoNextAcquireArea();
+	int FindAndSetupNextAcquireArea();
+  int GotoCurrentAcquireArea();
 	void StopAcquiring(BOOL testMacro = false);
+  void SetItemSuccessfullyAcquired(CMapDrawItem *item);
+  void RestoreBeamTiltIfSaved();
 	void AcquireCleanup(int error);
 	int TaskAcquireBusy();
 	void AcquireNextTask(int param);
-	void AcquireAreas(bool fromMenu);
-	BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
+  void AcquireAreas(bool fromMenu, bool dlgClosing);
+  void ManageAcquireDlgCleanup(bool fromMenu, bool dlgClosing);
+  void AcquireDlgClosing();
+  BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
   int NewMap(bool unsuitableOK = false, int addOrReplaceNote = 0, CString *newNote = NULL);
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
@@ -110,7 +118,7 @@ public:
 	void ShiftItemPoints(CMapDrawItem *item, float delX, float delY);
 	void Redraw();
 	void Update();
-	int MoveStage(int axisBits);
+	int MoveStage(int axisBits, bool justCheck = false);
 	void SetCurrentStagePos(int index);
 	CMapDrawItem *MakeNewItem(int groupID);
 	void OnListItemDrag(int oldIndex, int newIndex);
@@ -158,11 +166,14 @@ public:
   GetMember(int, MagIndForHoles);
   GetMember(int, CameraForHoles);
   GetMember(int, EndingAcquireIndex);
+  GetMember(int, FocusCycleCounter);
+  GetMember(bool, DidEucentricity);
+  void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
 
 
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};
-  void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
+  int ResumeFromPause();
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};
   std::set<int> *GetSelectedItems() {return &mSelectedItems;};
@@ -261,6 +272,7 @@ private:
   EMbufferManager *mBufferManager;
   CNavHelper *mHelper;
   NavParams *mParam;
+  NavAcqParams *mAcqParm;
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
   CMacCmd *mMacroProcessor;
@@ -278,6 +290,7 @@ private:
   CArray<TiltSeriesParam *, TiltSeriesParam *> mTSparamArray;
   CArray<MontParam *, MontParam *> mMontParArray;
   CArray<StateParams *, StateParams *> mAcqStateArray;
+  NavAcqAction *mAcqActions;
   std::vector<int> mListToItem;
   std::vector<int> mItemToList;
   std::set<int> mSetOfIDs;
@@ -304,14 +317,24 @@ private:
   BOOL mNavBackedUp;        // Flag for managing whether to create a .bak
   int mSuperNumX, mSuperNumY;  // Number of super frames in X and Y
   int mSuperOverlap;           // Pixels of overlap
-  int mAcqActions[12];        // List of actions to do
-  int mNumAcqActions;         // Number of actions
-  int mAcqActionIndex;        // Current action index
+  short mAcqSteps[ACQ_MAX_STEPS * 2];        // List of actions to do
+  int mNumAcqSteps;         // Number of actions
+  int mAcqStepIndex;        // Current action index
   int mNumAcquired;          // Number actually acquired
+  int mAcquireCounter;       // Cumulative number used for items at intervals
+  float mSavedTargetDefocus; // Stored value of target 
+  int mFocusCycleCounter;    // Counter for keeping track of focus steps
+  bool mDoingEarlyReturn;    // Flag that early return is to be set
+  bool mSkippingSave;        // Flag that save is to be skipped
   BOOL mStartedTS;           // Flag that started a tilt series
   bool mPausedAcquire;       // Flag that acquire is paused
   bool mResumedFromPause;    // Flag set when resume happens
+  int mMontCurrentAtPause;   // -1 no current file, 0 for single, 1 for montage at pause
   bool mRealignedInAcquire;  // Flag if realign to item done during acquire
+  double mSavedBeamTiltX;    // Values to restore when compensating for beam tilt
+  double mSavedBeamTiltY;
+  double mSavedAstigX;       // And astigmatism
+  double mSavedAstigY;
 
   int mFrameLimitX, mFrameLimitY;         // Frame limits for montage setup
   CMapDrawItem *mMontItem;  // Item used
@@ -429,6 +452,10 @@ private:
   std::vector<short> *mHFexclude;
   bool mAddingFoundHoles;
   bool mDeferAddingToViewer;
+  int mStepIndForDewarCheck;   // The step at which to do dewar check just before acquire
+  bool mDidEucentricity;       // Flag that eucentricity was done one of 3 ways
+  bool mWillDoTemplateAlign;   // Flag this will be done, so realign to item can do hybrid
+  int mRetValFromMultishot;    // Return value has negative of number being gotten
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -447,7 +474,7 @@ public:
   int AccessMapFile(CMapDrawItem * item, KImageStore *&storeMRC, int & curStore, MontParam *&montP, 
     float & useWidth, float & useHeight, bool readWrite = false);
   int RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
   void GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ);
   void ShiftToMarker(void);
   void UndoShiftToMarker(void);
@@ -461,9 +488,9 @@ public:
   afx_msg void OnRealigntoitem();
   int GetCurrentOrAcquireItem(CMapDrawItem *&item);
   int RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
   int RealignToAnItem(CMapDrawItem * item, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
   CMapDrawItem * GetOtherNavItem(int index);
   BOOL mMovingStage;
   BOOL StartedMacro(void);
@@ -607,7 +634,7 @@ public:
     float &yy);
   bool BoxedPointOutsidePolygon(CMapDrawItem *poly, float xx, float yy, float spacing);
   void CloseFileOpenedByAcquire(void);
-  CMapDrawItem *FindItemWithString(CString & string, BOOL ifNote);
+  CMapDrawItem *FindItemWithString(CString & string, BOOL ifNote, bool caseSensitive = false);
   void MouseDoubleClick(int button);
   void ProcessDKey(void);
   void ProcessTKey(void);
@@ -619,10 +646,10 @@ public:
   int SetCurrentRegistration(int newReg);
   int MakeUniqueID(void);
   void EvaluateAcquiresForDlg(CNavAcquireDlg *dlg);
-  int OKtoSkipStageMove(NavParams * param);
-  int OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook, BOOL fineEucen, 
-    BOOL focus, int acqType);
+  int OKtoSkipStageMove(NavAcqParams *param);
+  int OKtoSkipStageMove(NavAcqAction *actions, int acqType);
   void EndAcquireWithMessage(void);
+  void SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep);
   int GetCurrentGroupSizeAndPoints(int maxPoints, float * stageX, float * stageY, 
     float *defocusOffset);
 void MoveStageOrDoImageShift(int axisBits);

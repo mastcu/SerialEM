@@ -35,6 +35,9 @@
 #include "MultiCombinerDlg.h"
 #include "HoleFinderDlg.h"
 #include "ShiftToMarkerDlg.h"
+#include "FilterTasks.h"
+#include "GainRefMaker.h"
+#include "AutoTuning.h"
 #include "MapDrawItem.h"
 #include "Mailer.h"
 #include "LogWindow.h"
@@ -47,6 +50,7 @@
 #include "Shared\autodoc.h"
 #include "Image\KStoreIMOD.h"
 #include "Image\KStoreADOC.h"
+#include "Shared\b3dutil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -58,9 +62,6 @@ static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI"};
 static char *typeString[] = {"Pt", "Poly", "Map", "Imp", "Anc"};
 
 #define MAX_REGPT_NUM 99
-enum NavTasks {ACQ_ROUGH_EUCEN, ACQ_REALIGN, ACQ_COOK_SPEC, ACQ_FINE_EUCEN, 
-  ACQ_CENTER_BEAM, ACQ_AUTOFOCUS, ACQ_OPEN_FILE, ACQ_ACQUIRE, ACQ_RUN_MACRO, 
-  ACQ_START_TS, ACQ_MOVE_TO_NEXT, ACQ_BACKLASH, ACQ_RUN_PREMACRO, ACQ_RUN_POSTMACRO};
 #define NAV_FILE_VERSION "2.00"
 #define VERSION_TIMES_100 200
 
@@ -140,6 +141,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mChanged = false;
   mAcquireIndex = -1;
   mPausedAcquire = false;
+  mResumedFromPause = false;
   mNavBackedUp = false;
   mSuperNumX = 0;
   mSuperNumY = 0;
@@ -175,6 +177,10 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mDeferAddingToViewer = false;
   mMarkerShiftApplyTo = 0;
   mMarkerShiftSaveType = 0;
+  mFocusCycleCounter = -1;
+  mSavedBeamTiltX = EXTRA_NO_VALUE;
+  mSavedAstigX = EXTRA_NO_VALUE;
+  mNavAcquireDlg = NULL;
 }
 
 
@@ -507,10 +513,11 @@ void CNavigatorDlg::ManageCurrentControls()
     }
 
   }
-  regOK = exists && (mItem->IsPoint() || mItem->IsMap());
+  regOK = exists && (mItem->IsPoint() || mItem->IsMap()) && !mNavAcquireDlg;
   m_butRegPoint.EnableWindow(regOK);
   m_sbcRegPtNum.EnableWindow(regOK);
   m_statRegPtNum.EnableWindow(regOK);
+  exists = exists && !mNavAcquireDlg;
   m_butCorner.EnableWindow(exists && mItem->IsPoint());
   m_butRotate.EnableWindow(exists && mItem->IsMap());
   m_checkDualMap.EnableWindow(exists && (m_bDualMap || 
@@ -532,6 +539,7 @@ void CNavigatorDlg::Update()
   double timePerItem, sinceLastDone, remaining, montLeft = -1.;
   EMimageBuffer *imBuf = &mImBufs[mWinApp->Montaging() ? 1 : 0];
   BOOL noTasks = !mWinApp->DoingTasks() && mAcquireIndex < 0;
+  BOOL justAcqOpen = mWinApp->DoingTasks() && mWinApp->GetJustNavAcquireOpen();
   BOOL curExists = SetCurrentItem();
   BOOL noDrawing = !(mAddingPoints || mAddingPoly || mMovingItem || mLoadingMap);
   BOOL stageMoveOK = curExists && noTasks && noDrawing && 
@@ -624,14 +632,15 @@ void CNavigatorDlg::Update()
     item = FindMontMapDrawnOn(mItem);
   else
     item = FindMontMapDrawnOn(GetSingleSelectedItem());
-  m_butLoadMap.EnableWindow((curExists || item) && noTasks && noDrawing && 
-    !mCamera->CameraBusy() && (mItem->IsMap() || item != NULL));
+  m_butLoadMap.EnableWindow((curExists || item) && (noTasks || justAcqOpen) && noDrawing
+    && !mCamera->CameraBusy() && (mItem->IsMap() || item != NULL));
   m_butLoadMap.SetWindowText(item ? "Load Piece" : "Load Map");
 
   m_butNewMap.EnableWindow(noDrawing && noTasks && mWinApp->mStoreMRC != NULL);
   m_butDualMap.EnableWindow(noDrawing && noTasks && mDualMapID >= 0);
   m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing && 
-    mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks());
+    mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks() &&
+    !mNavAcquireDlg);
   m_butRealign.EnableWindow(curExists && noDrawing && mAcquireIndex < 0 && noTasks &&
     !mCamera->CameraBusy());
   m_listViewer.EnableWindow(!mAddingPoints && !mLoadingMap && mAcquireIndex < 0);
@@ -639,8 +648,8 @@ void CNavigatorDlg::Update()
 
   if (curExists || grpExists)
     index = GroupScheduledIndex(mItem->mGroupID);
-  m_butAcquire.EnableWindow((fileOK && mItem->mTSparamIndex < 0) || 
-    (grpExists && noTasks && !numTS));
+  m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) || 
+    (grpExists && noTasks && !numTS)));
   m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire);
   m_butFileAtItem.EnableWindow(fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0 &&
     index < 0);
@@ -659,6 +668,8 @@ void CNavigatorDlg::Update()
   m_sbcCurrentReg.EnableWindow(noTasks);
   m_butCollapse.EnableWindow(mAcquireIndex < 0);
   mHelper->UpdateStateDlg();
+  if (mNavAcquireDlg)
+    mNavAcquireDlg->ExternalUpdate();
   UpdateAddMarker();
 }
 
@@ -865,30 +876,32 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 // Invokes the realign routine for the current item, or for the item being acquired
 // if a macro is being run at acquire points
 int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS)
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
 {
   if (GetCurrentOrAcquireItem(mItem) < 0)
     return 1;
-  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS);
+  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
+    justMoveIfSkipCen);
 }
 
 // Or, aligns to another item by index
 int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS)
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
 {
   if (!GetOtherNavItem(index)) {
     SEMMessageBox("The Navigator item index is out of range", MB_EXCLAME);
     return 1;
   }
-  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS);
+  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
+    justMoveIfSkipCen);
 }
 
 // The actual routine for calling the helper and giving error messages
 int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS)
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
 {
   int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
-    leaveZeroIS);
+    leaveZeroIS, justMoveIfSkipCen);
   if (err && err < 4) 
     SEMMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
   if (err == 4 || err == 5) 
@@ -916,7 +929,7 @@ int CNavigatorDlg::MoveToItem(int index, bool skipZ)
 void CNavigatorDlg::OnRealigntoitem()
 {
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true, 0., 0, 0);
+  RealignToCurrentItem(true, 0., 0, 0, false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1519,9 +1532,9 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
 // Load a map if it is double clicked and conditions are right
 void CNavigatorDlg::OnDblclkListviewer() 
 {
-  if (!SetCurrentItem() || mWinApp->DoingTasks() || mAddingPoints || mAddingPoly || 
-    mMovingItem || !(mItem->IsMap() || FindMontMapDrawnOn(mItem)) || 
-    mCamera->CameraBusy())
+  if (!SetCurrentItem() || (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
+    mAddingPoints || mAddingPoly || mMovingItem || !(mItem->IsMap() || 
+      FindMontMapDrawnOn(mItem)) || mCamera->CameraBusy())
     return;
   OnLoadMap();
 }
@@ -2373,7 +2386,7 @@ void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, fl
 }
 
 // Common routine to move stage to current item, with wait until it is ready
-int CNavigatorDlg::MoveStage(int axisBits)
+int CNavigatorDlg::MoveStage(int axisBits, bool justCheck)
 {
   float backX, backY, montErrX, montErrY;
 
@@ -2387,7 +2400,7 @@ int CNavigatorDlg::MoveStage(int axisBits)
           MB_EXCLAME);
     return -1;
   }
-  if (!axisBits)
+  if (!axisBits || justCheck)
     return 0;
 
   // Make sure it is ready
@@ -5995,9 +6008,10 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   EMimageBuffer *imBuf, *readBuf;
   EMimageExtra *imExtra;
   float stageX, stageY, imX, imY, delX, delY, stageErrX, stageErrY, localErrX, localErrY;
-  BOOL hasStage;
+  BOOL hasStage, cropped = false;
   CMapDrawItem *item, *item2;
   int trimCount, i, setNum, sizeX, sizeY, area, montSect = -1;
+  int uncroppedX, uncroppedY;
   float slitIn;
   ScaleMat aInv;
   CString report;
@@ -6017,6 +6031,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   }
   imBuf = &mImBufs[(mWinApp->Montaging() && 
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ? 1 : 0];
+  cropped = imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0 &&
+    uncroppedY > 0;
   if (imBuf->mMapID) {
     if (SEMMessageBox("This image already has a map ID identifying it as a map.\n\n"
       "Are you sure you want to create another map from this image?",
@@ -6024,7 +6040,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       return 2;
   }
 
-  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && imBuf->mCaptured > 0;
+  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && (imBuf->mCaptured > 0 || cropped);
   singleBufReadIn = !imBuf->mCaptured && imBuf->mSecNumber >= 0;
   if ((mWinApp->Montaging() || singleBufSaved || singleBufReadIn) && 
     imBuf->mCurStoreChecksum != mWinApp->mStoreMRC->getChecksum()) {
@@ -6055,7 +6071,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       return 1;
     }
     hasStage = imBuf->GetStagePosition(stageX, stageY);
-    if (!hasStage) {
+    if (!hasStage && !cropped) {
       if (unsuitableOK)
         return -1;
       if (SEMMessageBox("This image was read in from the file.\n"
@@ -6074,7 +6090,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
     // Regular images
     imBuf = mImBufs;
-    if (!imBuf->mImage || imBuf->mCaptured < 0) {
+    if (!imBuf->mImage || (imBuf->mCaptured < 0 && !cropped)) {
       if (unsuitableOK)
         return -1;
       SEMMessageBox("Buffer A does not contain an image that can be saved as a\n"
@@ -6094,7 +6110,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           "magnification are the same as when the image was taken.\n\n"
           "Are you sure you want to create a map from this image?", 
           hasStage ? "" : "stage position, ");
-        if (SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
+        if (!cropped && SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
           return 2;
       } else if (!mBufferManager->IsBufferSavable(imBuf)) {
         
@@ -6137,11 +6153,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
   // Now check that the image isn't a map reduced to bytes
   if (imBuf->mImage->getType() == kUBYTE && mWinApp->mStoreMRC->getMode() != 
-    MRC_MODE_BYTE) {
+    MRC_MODE_BYTE && !cropped) {
       SEMMessageBox("It seems that the image being displayed has been converted to\n"
         "bytes, so its scaling will not be correct when read in as a map.\n"
-        "To fix this, turn off \"Convert Maps to Bytes\" in the Navigator menu,\n"
-        "load this map item, and make a new map again.\n"
+        "To fix this, turn off \"Convert Maps to Bytes\" in the Navigator\n"
+        " menu, load this map item, and make a new map again.\n"
         "Then you should be able to turn on conversion to bytes again.", MB_EXCLAME);
   }
 
@@ -6149,7 +6165,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   item = MakeNewItem(0);
   SetCurrentStagePos(mCurrentItem);
   item->mType = ITEM_TYPE_MAP;
-  item->mColor = DEFAULT_MAP_COLOR;
+  item->mColor = cropped ? NO_REALIGN_COLOR : DEFAULT_MAP_COLOR;
   item->mRawStageX = (float)mLastScopeStageX;
   item->mRawStageY = (float)mLastScopeStageY;
 
@@ -6175,8 +6191,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   item->mTrimmedName = item->mMapFile.Right(trimCount);
   ComputeStageToImage(imBuf, item->mStageX, item->mStageY, hasStage, item->mMapScaleMat,
     delX, delY);
-  item->mMapWidth = imBuf->mImage->getWidth();
-  item->mMapHeight = imBuf->mImage->getHeight();
+  item->mMapWidth = cropped ? uncroppedX : imBuf->mImage->getWidth();
+  item->mMapHeight = cropped ? uncroppedY : imBuf->mImage->getHeight();
   item->mMapSection = imBuf->mSecNumber;
   item->mNote.Format("Sec %d - %s", item->mMapSection, item->mTrimmedName);
   if (newNote) {
@@ -6348,7 +6364,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     item->mMapMinScale /= 2.f;
     item->mMapMaxScale /= 2.f;
   }
-  if (mHelper->GetConvertMaps())
+  if (mHelper->GetConvertMaps() && !cropped)
     imBuf->ConvertToByte(0., 0.);
 
   // Make bounding box
@@ -6740,10 +6756,10 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   err = AccessMapFile(mItem, mLoadStoreMRC, mCurStore, montP, mUseWidth, mUseHeight);
   if (err) {
     if (err == 1) 
-      AfxMessageBox("The map file was not found (or just could not be opened) either\n"
+      SEMMessageBox("The map file was not found (or just could not be opened) either\n"
         "under its original full path name or in the current directory.", MB_EXCLAME);
     else
-      AfxMessageBox("The map file was found but no longer\nappears to be "
+      SEMMessageBox("The map file was found but no longer\nappears to be "
         "a valid MRC file or montage file.", MB_EXCLAME);
     return 1;
   }
@@ -6773,7 +6789,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
       false, synchronous);
 
   if (err && err != READ_MONTAGE_OK) {
-    AfxMessageBox("Error reading image from file.", MB_EXCLAME);
+    SEMMessageBox("Error reading image from file.", MB_EXCLAME);
     LoadMapCleanup();
     return 1;
   }
@@ -6791,8 +6807,9 @@ void CNavigatorDlg::FinishLoadMap(void)
   MontParam *masterMont = mWinApp->GetMontParam();
   CameraParameters *camP = &mCamParams[B3DMAX(0, mLoadItem->mMapCamera)];
   EMimageExtra *extra1;
+  int uncroppedX, uncroppedY;
   float stageX, stageY, angle;
-  bool noStage, noTilt;
+  bool noStage, noTilt, cropped;
 
   LoadMapCleanup();
   if (mLoadItem->mMapMontage && mWinApp->mMontageController->GetLastFailed()) {
@@ -6841,7 +6858,9 @@ void CNavigatorDlg::FinishLoadMap(void)
     imBuf->mEffectiveBin = B3DMIN(camP->sizeX / mUseWidth, camP->sizeY / mUseHeight);
 
   // Convert single frame map to bytes now if flag set
-  if (mHelper->GetConvertMaps() && !mLoadItem->mMapMontage && 
+  cropped = mImBufs[mBufToLoadInto].GetUncroppedSize(uncroppedX, uncroppedY) &&
+    uncroppedX > 0;
+  if (mHelper->GetConvertMaps() && !cropped && !mLoadItem->mMapMontage && 
     mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale)
     mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale, mLoadItem->mMapMaxScale);
   
@@ -8338,7 +8357,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   if (resetAcquireEnd) {
     mEndingAcquireIndex = (int)mItemArray.GetSize() - 1;
     mHelper->CountAcquireItems(originalSize, mEndingAcquireIndex, numSect, numToGet);
-    mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? numToGet : numSect);
+    mInitialNumAcquire += (mAcqParm->acquireType == ACQUIRE_DO_TS ? numToGet : numSect);
   }
   return returnVal;
 }
@@ -8401,107 +8420,159 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // ACQUIRING SEQUENCE OF MARKED AREAS AND MAKING MAPS / RUNNING MACRO / DOING TILT SERIES
 
 // Initiate Acquisition
-void CNavigatorDlg::AcquireAreas(bool fromMenu)
+void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 {
-  int loop, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
+  int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
   int groupID = -1;
   BOOL rangeErr = false;
   BOOL runPremacro, runPostmacro;
+  bool takingMap, takingImage, doingMultishot;
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
-  CNavAcquireDlg dlg;
-  if (fromMenu)
-    mWinApp->RestoreViewFocus();
-
-  // If postponed, set subset from postponed values; otherwise initialize to no subset
-  dlg.mNumArrayItems = (int)mItemArray.GetSize();
-  if (mAcqDlgPostponed) {
-    dlg.m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg.mNumArrayItems);
-    dlg.m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg.mNumArrayItems);
-    dlg.m_bDoSubset = mPostposedDoSubset;
-  } else {
-    dlg.m_iSubsetStart = 1;
-    dlg.m_iSubsetEnd = dlg.mNumArrayItems;
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  CNavAcquireDlg *dlg;
+  if (!dlgClosing && mNavAcquireDlg) {
+    if (fromMenu)
+      mNavAcquireDlg->BringWindowToTop();
+    else
+      SEMMessageBox("You cannot start Navigator acquisition with the acquire dialog "
+        "open");
+    return;
   }
-  dlg.mLastNonTStype = mParam->nonTSacquireType;
-  EvaluateAcquiresForDlg(&dlg);
 
+  if (!dlgClosing) {
+    mNavAcquireDlg = new CNavAcquireDlg();
+    dlg = mNavAcquireDlg;
 
-  // Run the dialog
-  if (fromMenu) {
-    dlg.m_iAcquireType = mParam->nonTSacquireType;
-    if (dlg.mAnyTSpoints)
-      dlg.m_iAcquireType = ACQUIRE_DO_TS;
-    if (dlg.DoModal() != IDOK || (!dlg.mAnyAcquirePoints && !dlg.mAnyTSpoints))
-      return;
-
-    if (dlg.m_iAcquireType != ACQUIRE_DO_TS)
-      mParam->nonTSacquireType = dlg.m_iAcquireType;
-    mParam->acquireType = dlg.m_iAcquireType;
-
-    // Postponing: save subset parameters
-    mAcqDlgPostponed = dlg.mPostponed;
+    // If postponed, set subset from postponed values; otherwise initialize to no subset
+    dlg->mNumArrayItems = (int)mItemArray.GetSize();
     if (mAcqDlgPostponed) {
-      mPostponedSubsetStart = dlg.m_iSubsetStart;
-      mPostponedSubsetEnd = dlg.m_iSubsetEnd;
-      mPostposedDoSubset = dlg.m_bDoSubset;
+      dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
+      dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
+      dlg->m_bDoSubset = mPostposedDoSubset;
+    } else {
+      dlg->m_iSubsetStart = 1;
+      dlg->m_iSubsetEnd = dlg->mNumArrayItems;
+    }
+    dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
+    EvaluateAcquiresForDlg(dlg);
+
+
+    // Run the dialog
+    if (fromMenu) {
+      dlg->m_iAcquireType = mAcqParm->nonTSacquireType;
+      if (dlg->mAnyTSpoints)
+        dlg->m_iAcquireType = ACQUIRE_DO_TS;
+      mNavAcquireDlg->Create(IDD_NAVACQUIRE);
+      mWinApp->SetPlacementFixSize(mNavAcquireDlg, 
+        mHelper->GetAcquireDlgPlacement(false));
+      mWinApp->RestoreViewFocus();
+      ManageCurrentControls();
+      mWinApp->UpdateBufferWindows();
+      return;
+    } else if ((mAcqParm->acquireType == ACQUIRE_DO_TS && !dlg->mAnyTSpoints) ||
+      (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints)) {
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
     }
-  } else if ((mParam->acquireType == ACQUIRE_DO_TS && !dlg.mAnyTSpoints) ||
-    (mParam->acquireType != ACQUIRE_DO_TS && !dlg.mAnyAcquirePoints)) {
+
+  } else {
+
+    // When dialog closing, process results
+    dlg = mNavAcquireDlg;
+    if (dlg->mPostponed < 0 || (!dlg->mAnyAcquirePoints && !dlg->mAnyTSpoints)) {
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
+    }
+
+    if (dlg->m_iAcquireType != ACQUIRE_DO_TS)
+      mAcqParm->nonTSacquireType = dlg->m_iAcquireType;
+    mAcqParm->acquireType = dlg->m_iAcquireType;
+
+    // Postponing: save subset parameters
+    mAcqDlgPostponed = dlg->mPostponed > 0;
+    if (mAcqDlgPostponed) {
+      mPostponedSubsetStart = dlg->m_iSubsetStart;
+      mPostponedSubsetEnd = dlg->m_iSubsetEnd;
+      mPostposedDoSubset = dlg->m_bDoSubset;
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+      return;
+    }
   }
  
-  runPremacro = mParam->acqRunPremacro;
-  if (mParam->acquireType != ACQUIRE_DO_TS)
-    runPremacro = mParam->acqRunPremacroNonTS;
-  runPostmacro = mParam->acqRunPostmacro;
-  if (mParam->acquireType != ACQUIRE_DO_TS)
-    runPostmacro = mParam->acqRunPostmacroNonTS;
+  runPremacro = mAcqParm->runPremacro;
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS)
+    runPremacro = mAcqParm->runPremacroNonTS;
+  runPostmacro = mAcqParm->runPostmacro;
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS)
+    runPostmacro = mAcqParm->runPostmacroNonTS;
+  setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
+  setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
 
-  if (mParam->acqSkipInitialMove && OKtoSkipStageMove(mParam) < 0) {
+  if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0) {
     loop = IDYES;
     if (mParam->warnedOnSkipMove)
-      mWinApp->AppendToLog("WARNING: Skipping initial stage move; relying on your script"
-      " to move stage or run Realign to Item");
+      mWinApp->AppendToLog("WARNING: Skipping stage move when possible; relying on your"
+        " script to move stage or run Realign to Item");
     else 
-      loop = AfxMessageBox("WARNING: You have selected to skip the initial stage move to "
-      "each item.  Your script must either run Realign to Item or do the stage move "
-      "explicitly.\n\nAre you sure you want to proceed?", MB_QUESTION);
+      loop = AfxMessageBox("WARNING: You have selected to skip the stage move to "
+      "item when possible.  Your script must either run Realign to Item or do the stage "
+        "move explicitly.\n\nAre you sure you want to proceed?", MB_QUESTION);
     mParam->warnedOnSkipMove = true;
-    if (loop !=IDYES)
+    if (loop != IDYES) {
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
+    }
   }
-  mSkipStageMoveInAcquire = mParam->acqSkipInitialMove;
+  mSkipStageMoveInAcquire = mAcqParm->skipInitialMove;
 
   // Set up for macro, or check file if images
-  if (mParam->acquireType == ACQUIRE_RUN_MACRO || runPremacro || runPostmacro) {
-    loopStart = mParam->acquireType == ACQUIRE_RUN_MACRO ? 0 : 1;
+  if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO || runPremacro || runPostmacro) {
+    loopStart = mAcqParm->acquireType == ACQUIRE_RUN_MACRO ? 0 : 1;
     loopEnd = (runPremacro || runPostmacro) ? 3 : 1;
     for (loop = loopStart; loop < loopEnd; loop++) {
       macnum = -1;
       if (loop == 1 && runPremacro)
-        macnum = (mParam->acquireType == ACQUIRE_DO_TS ? mParam->preMacroInd : 
-          mParam->preMacroIndNonTS) - 1;
+        macnum = (mAcqParm->acquireType == ACQUIRE_DO_TS ? mAcqParm->preMacroInd : 
+          mAcqParm->preMacroIndNonTS) - 1;
       if (loop == 2 && runPostmacro)
-        macnum = (mParam->acquireType == ACQUIRE_DO_TS ? mParam->postMacroInd : 
-          mParam->postMacroIndNonTS) - 1;
+        macnum = (mAcqParm->acquireType == ACQUIRE_DO_TS ? mAcqParm->postMacroInd : 
+          mAcqParm->postMacroIndNonTS) - 1;
       if (loop == 0)
-        macnum = mParam->macroIndex - 1;
-      if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum))
+        macnum = mAcqParm->macroIndex - 1;
+      if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum)) {
+        ManageAcquireDlgCleanup(fromMenu, dlgClosing);
         return;
+      }
     }
 
     // Set to nonresumable so it will not look like it is paused and we can go on
     mMacroProcessor->SetNonResumable();
   } 
   
+  // Set convenience flag for early return and check conditions
+  takingMap = mAcqParm->acquireType == ACQUIRE_TAKE_MAP;
+  takingImage = mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY;
+  doingMultishot = mAcqParm->acquireType == ACQUIRE_MULTISHOT;
+  mDoingEarlyReturn = (takingMap || takingImage) && camParams->K2Type &&
+    !mWinApp->Montaging() && mAcqParm->earlyReturn;
+  if (takingMap && mDoingEarlyReturn && !mAcqParm->numEarlyFrames) {
+    AfxMessageBox("You must have a non-zero value for the number\n"
+      "of early return frames when acquiring maps", MB_EXCLAME);
+    ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+    return;
+  }
+
   // If there is no file open for regular acquire, make sure one will be opened on 
   // first item
-  if (!mWinApp->mStoreMRC && (mParam->acquireType == ACQUIRE_TAKE_MAP || 
-    mParam->acquireType == ACQUIRE_IMAGE_ONLY) && dlg.mNumAcqBeforeFile) {
-      AfxMessageBox("There is no open image file and\n"
-        "no file set to open on first acquire item.", MB_EXCLAME);
+  mSkippingSave = (mDoingEarlyReturn && !mAcqParm->numEarlyFrames) ||
+    mAcqParm->skipSaving;
+  if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave && 
+    (takingMap || takingImage)) || ((!mWinApp->mStoreMRC || mWinApp->Montaging()) &&
+        doingMultishot && mHelper->IsMultishotSaving()))) {
+      AfxMessageBox("There is no open " + CString(doingMultishot ? "single-frame " : "")
+        + "image file and\nno file set to open on first acquire item.", MB_EXCLAME);
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
   }
 
@@ -8509,48 +8580,34 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   // in camera between state and parameters, or for changes in binning
   // Set acquire on first so the map finding assumes the correct low dose area
   mAcquireIndex = 0;
-  mEndingAcquireIndex = dlg.mNumArrayItems - 1;
-  if (dlg.m_bDoSubset) {
-    mAcquireIndex = B3DMAX(0, dlg.m_iSubsetStart - 1);
-    mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg.m_iSubsetEnd - 1);
+  mEndingAcquireIndex = dlg->mNumArrayItems - 1;
+  if (dlg->m_bDoSubset) {
+    mAcquireIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
+    mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
   }
   if (mHelper->AssessAcquireProblems(mAcquireIndex, mEndingAcquireIndex)) {
     mAcquireIndex = -1;
+    ManageAcquireDlgCleanup(fromMenu, dlgClosing);
     return;
   }
   mStartingAcquireIndex = mAcquireIndex;
 
-  // Set up action list
-  mNumAcqActions = 1;
-  mAcqActions[0] = ACQ_MOVE_TO_NEXT;
-  if (mParam->acqRoughEucen)
-    mAcqActions[mNumAcqActions++] = ACQ_ROUGH_EUCEN;
-  if (mParam->acqCenterBeam)
-    mAcqActions[mNumAcqActions++] = ACQ_CENTER_BEAM;
-  if (mParam->acqRealign)
-    mAcqActions[mNumAcqActions++] = ACQ_REALIGN;
-  if (mParam->acqCookSpec)
-    mAcqActions[mNumAcqActions++] = ACQ_COOK_SPEC;
-  if (mParam->acqFineEucen)
-    mAcqActions[mNumAcqActions++] = ACQ_FINE_EUCEN;
-  if (mParam->acqAutofocus)
-    mAcqActions[mNumAcqActions++] = ACQ_AUTOFOCUS;
-  if (runPremacro)
-    mAcqActions[mNumAcqActions++] = ACQ_RUN_PREMACRO;
-  mAcqActions[mNumAcqActions++] = ACQ_OPEN_FILE;
-  if (mParam->acquireType == ACQUIRE_RUN_MACRO)
-    mAcqActions[mNumAcqActions++] = ACQ_RUN_MACRO;
-  else if (mParam->acquireType == ACQUIRE_DO_TS)
-    mAcqActions[mNumAcqActions++] = ACQ_START_TS;
-  else
-    mAcqActions[mNumAcqActions++] = ACQ_ACQUIRE;
-  if (mParam->acquireType == ACQUIRE_TAKE_MAP)
-    mAcqActions[mNumAcqActions++] = ACQ_BACKLASH;
-  if (runPostmacro)
-    mAcqActions[mNumAcqActions++] = ACQ_RUN_POSTMACRO;
-  mAcqActions[mNumAcqActions++] = ACQ_MOVE_TO_NEXT;
-  mAcqActionIndex = 0;
+  // done with dialog
+  ManageAcquireDlgCleanup(fromMenu, dlgClosing);
 
+  // Initialize the action run-time data
+  mAcquireCounter = 0;
+  for (ind = 0; ind < mHelper->GetNumAcqActions(); ind++) {
+    mAcqActions[ind].lastDoneAtX = -10000.;
+    mAcqActions[ind].lastDoneAtY = -10000.;
+    mAcqActions[ind].timeLastDone = -1;
+  }
+  if (mAcqParm->cycleDefocus)
+    mFocusCycleCounter = 0;
+
+  mAcqStepIndex = -1;
+
+  mSavedTargetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
   mNumAcquired = 0;
   mAcquireEnded = 0;
   mPausedAcquire = false;
@@ -8562,20 +8619,25 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   mSelectedItems.clear();
   mSaveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
-  if (GotoNextAcquireArea()) {
+  if (FindAndSetupNextAcquireArea()) {
     mAcquireIndex = -1;
+    mFocusCycleCounter = -1;
     SetCollapsing(mSaveCollapsed);
     return;
   }
 
   mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, loop, loopEnd);
-  mInitialNumAcquire = mParam->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
+  mInitialNumAcquire = mAcqParm->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
   mElapsedAcqTime = 0.;
   mLastAcqDoneTime = GetTickCount();
   mNumDoneAcq = 0;
   mLastMontLeft = -1.;
+  if (!mScope->FastColumnValvesOpen()) {
+    mWinApp->AppendToLog("Opening valves for acquisition!");
+    mScope->SetColumnValvesOpen(true, false);
+  }
 
-  if (mParam->acquireType != ACQUIRE_RUN_MACRO) {
+  if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO) {
     mSaveAlignOnSave = mBufferManager->GetAlignOnSave();
     mSaveProtectRecord = mBufferManager->GetConfirmBeforeDestroy(3);
     mBufferManager->SetAlignOnSave(false);
@@ -8583,151 +8645,428 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
     mWinApp->SetStatusText(COMPLEX_PANE, "ACQUIRING AREAS");
   }
   mWinApp->UpdateBufferWindows();
+  AcquireNextTask(0);
+}
+
+// Function for cleaning up from either dialog closing or working with temporary dialog
+void CNavigatorDlg::ManageAcquireDlgCleanup(bool fromMenu, bool dlgClosing)
+{
+  if (!fromMenu && !dlgClosing)
+    delete mNavAcquireDlg;
+  mNavAcquireDlg = NULL;
+  if (dlgClosing) {
+    mWinApp->UpdateBufferWindows();
+    ManageCurrentControls();
+  }
 }
 
 // Perform next task in acquisition sequence
 void CNavigatorDlg::AcquireNextTask(int param)
 {
-  int err, len, zval, timeOut = 0;
+  int err, len, zval, act, ind, next, after, timeOut = 0, elsewhereInd = -100;
+  int stopErr = 0;
   unsigned char lastChar;
   CString report, str;
-  CMapDrawItem *item;
+  bool skippingGroup;
+  float hours, target;
+  double ISX, ISY;
+  BOOL runIt, vppNearestSave;
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  CMapDrawItem *item, *nextItem;
   TiltSeriesParam *tsp;
+  MultiShotParams *msParams = mHelper->GetMultiShotParams();
+  DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
+  VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  NavAlignParams *aliParams = mHelper->GetNavAlignParams();
+  DewarVacParams *dvParams = mScope->GetDewarVacParams();
   mMovingStage = false;
   mStartedTS = false;
+  int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetCurAcqParamIndex());
+  const char *stepNames[ACQ_MAX_STEPS] = {"", "", "", "", "", "", "", "", "", "", "", "",
+    "", "", "", "", "", "Setup next item", "Open file if needed", "Acquire image/montage",
+    "Do multishot", "Run script", "Tilt series", "Move to item", "Manage backlash",
+    "Move to other item", "Relax stage"};
 
   if (mAcquireIndex < 0)
     return;
   item = mItemArray[mAcquireIndex];
 
-  // PROCESS THE PRECEDING ACTION
-  switch (mAcqActions[mAcqActionIndex]) {
-  case ACQ_ACQUIRE:
-    ManageNumDoneAcquired();
-    if (!mWinApp->Montaging()) {
-      if (!mBufferManager->IsBufferSavable(mImBufs)) {
-        StopAcquiring();
-        SEMMessageBox("This image cannot be saved to the currently open file.\n\n"
-          "Switch to a different file");
-        return;
-      }
-      if (mBufferManager->CheckAsyncSaving())
-        return;
+  if (mAcqStepIndex < 0) {
 
-      zval = mWinApp->mStoreMRC->getDepth();
-      if (mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
-        StopAcquiring();
-        return;
+    // SET UP THE SEQUENCE
+    mNumAcqSteps = 0;
+    mStepIndForDewarCheck = -1;
+    mDidEucentricity = false;
+    mWillDoTemplateAlign = false;
+    for (after = 0; after < 2; after++) {
+
+      // Do final things before primary action, at start of second loop
+      if (after) {
+
+        // Check for adding a stage relaxation after last move unless currently elsewhere
+        if (mAcqParm->relaxStage && elsewhereInd == -1) {
+          for (ind = mNumAcqSteps - 1; ind >= 0; ind--) {
+            if (mAcqSteps[ind] == ACQ_MOVE_TO_AREA ||
+              mAcqSteps[ind] == NAACT_REALIGN_ITEM || 
+              (mAcqSteps[ind] == NAACT_ALIGN_TEMPLATE && aliParams->maxNumResetIS > 0)) {
+              for (next = mNumAcqSteps - 1; next > ind; next--)
+                mAcqSteps[next + 1] = mAcqSteps[next];
+              mNumAcqSteps++;
+              mAcqSteps[ind + 1] = ACQ_RELAX_STAGE;
+              break;
+            }
+          }
+        }
+
+        // Add another dewar/PVP check if it is being done, it was not just added, 
+        // flag is set to do checks before task and one of the checks is selected
+        // Record the index where it should just check
+        if (DOING_ACTION(NAACT_CHECK_DEWARS) && (!mNumAcqSteps ||
+          mAcqSteps[mNumAcqSteps - 1] != NAACT_CHECK_DEWARS) && 
+          dvParams->doChecksBeforeTask && (dvParams->checkDewars || dvParams->checkPVP)) {
+          mStepIndForDewarCheck = mNumAcqSteps;
+          mAcqSteps[mNumAcqSteps++] = NAACT_CHECK_DEWARS;
+        }
+
+        // Move stage if it is elsewhere, unless skipping is selected and the primary task
+        // is a script.  Not calling OKtoSkipStageMove with its current simple form
+        if (elsewhereInd != -1 && !(mAcqParm->skipInitialMove && 
+          mAcqParm->acquireType == ACQUIRE_RUN_MACRO)) {
+          mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
+          elsewhereInd = -1;
+          if (mAcqParm->relaxStage)
+            mAcqSteps[mNumAcqSteps++] = ACQ_RELAX_STAGE;
+        }
+
+        //Open file if needed and run the primary task
+        mAcqSteps[mNumAcqSteps++] = ACQ_OPEN_FILE;
+        if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO)
+          mAcqSteps[mNumAcqSteps++] = ACQ_RUN_MACRO;
+        else if (mAcqParm->acquireType == ACQUIRE_DO_TS)
+          mAcqSteps[mNumAcqSteps++] = ACQ_START_TS;
+        else if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
+          mAcqSteps[mNumAcqSteps++] = ACQ_DO_MULTISHOT;
+        else
+          mAcqSteps[mNumAcqSteps++] = ACQ_ACQUIRE;
+        if (mAcqParm->acquireType == ACQUIRE_TAKE_MAP)
+          mAcqSteps[mNumAcqSteps++] = ACQ_BACKLASH;
+
       }
-    } else {
-      zval = mWinApp->mMontageWindow.m_iCurrentZ - 1;
+
+      // Loop on the actions, selecting the ones to run before the first time, after the 
+      // second time
+      for (ind = 0; ind < mHelper->GetNumAcqActions(); ind++) {
+        act = actOrder[ind];
+        if (!BOOL_EQUIV((mAcqActions[act].flags & NAA_FLAG_AFTER_ITEM) != 0, after > 0) ||
+          !DOING_ACTION(act))
+          continue;
+        runIt = false;
+
+        // See if it is to be run for this item
+        switch (mAcqActions[act].timingType) {
+
+        case NAA_EVERY_N_ITEMS:
+          runIt = mAcqActions[act].everyNitems < 2 ||
+            mAcquireCounter % mAcqActions[act].everyNitems == 0;
+          break;
+
+        case NAA_GROUP_START:
+          runIt = mFirstInGroup;
+          break;
+
+        case NAA_GROUP_END:
+          nextItem = NULL;
+          for (next = mAcquireIndex + 1; next <= mEndingAcquireIndex; next++) {
+            nextItem = mItemArray[next];
+            if (IsItemToBeAcquired(nextItem, skippingGroup))
+              break;
+          }
+          runIt = nextItem && nextItem->mGroupID != item->mGroupID;
+          break;
+
+        case NAA_AFTER_TIME:
+
+          // Hardware dark reference times are kept track of by the system
+          if (act == NAACT_HW_DARK_REF || (JEOLscope && act == NAACT_FLASH_FEG)) {
+            runIt = true;
+
+            // Everything else, the time is kept track of here
+          } else if (mAcqActions[act].timeLastDone < 0 || mWinApp->MinuteTimeStamp() -
+            mAcqActions[act].timeLastDone >= mAcqActions[act].minutes) {
+            runIt = true;
+            mAcqActions[act].timeLastDone = mWinApp->MinuteTimeStamp();
+          }
+
+        case NAA_IF_SEPARATED:
+          if (sqrt(pow(item->mStageX - mAcqActions[act].lastDoneAtX, 2.f) +
+            pow(item->mStageY - mAcqActions[act].lastDoneAtY, 2.f)) >=
+            mAcqActions[act].distance) {
+            runIt = true;
+            mAcqActions[act].lastDoneAtX = item->mStageX;
+            mAcqActions[act].lastDoneAtY = item->mStageY;
+          }
+          break;
+
+        }
+
+        // If running it, now see if it is done elsewhere and if it is not already there,
+        // move there; if not to be done elsewhere and still elsewhere, go to area
+        if (runIt) {
+
+          // Any site OK, do not change location
+          if (mAcqActions[act].flags & NAA_FLAG_ANY_SITE_OK) {
+
+            // Realign to item DOES change to position
+          } else if (act == NAACT_REALIGN_ITEM) {
+            elsewhereInd = -1;
+
+            // Other site, check if same and set it up if not
+          } else if (mAcqActions[act].flags & NAA_FLAG_OTHER_SITE) {
+            next = mHelper->FindNearestItemMatchingText(item->mStageX, item->mStageY,
+              mAcqActions[act].labelOrNote,
+              (mAcqActions[act].flags & NAA_FLAG_MATCH_NOTE) != 0);
+            if (next != elsewhereInd) {
+              mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_ELSEWHERE;
+              elsewhereInd = next;
+            }
+
+            // But if doing VPP, no other site specified here, but vpp params have a
+            // different site, mark it as elsewhere, non-matching, and it will do the move
+          } else if (act == NAACT_CONDITION_VPP && vppParams->useNearestNav) {
+            elsewhereInd = 99;
+
+            // If skipping selected and this is the ONLY macro being run, have to trust
+            // them and say it is now moved to position
+          } else if (act == NAACT_RUN_PREMACRO && mAcqParm->acquireType != ACQ_RUN_MACRO
+            && mAcqParm->skipInitialMove) {
+            elsewhereInd = -1;
+
+            // Otherwise move to area if necessary 
+          } else if (elsewhereInd != -1 && act != NAACT_REALIGN_ITEM) {
+            mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
+            elsewhereInd = -1;
+          }
+          if (act == NAACT_ALIGN_TEMPLATE)
+            mWillDoTemplateAlign = true;
+          mAcqSteps[mNumAcqSteps++] = act;
+        }
+      }
+
+      // At the very end, find next item if any
+      if (after)
+        mAcqSteps[mNumAcqSteps++] = ACQ_FIND_SETUP_NEXT;
     }
-    report.Format("%s acquired at item # %d with label %s saved at Z = %d", 
-      mParam->acquireType == ACQUIRE_TAKE_MAP ? "Map" : "Image", mAcquireIndex + 1, 
-      (LPCTSTR)item->mLabel, zval);
-    mWinApp->AppendToLog(report);
 
-    item->mAcquire = false;
-    item->mTargetDefocus = EXTRA_NO_VALUE;
-    SetChanged(true);
-    mNumAcquired++;
-    item->mDraw = mParam->acquireType != ACQUIRE_TAKE_MAP;
-    UpdateListString(mAcquireIndex);
-    if (mAcquireIndex == mCurrentItem)
-      ManageCurrentControls();
-    if (mParam->acquireType != ACQUIRE_TAKE_MAP)
+    if (GetDebugOutput('n')) {
+      for (ind = 0; ind < mNumAcqSteps; ind++) {
+        mWinApp->AppendToLog(mAcqSteps[ind] < mHelper->GetNumAcqActions() ?
+          mAcqActions[mAcqSteps[ind]].name : stepNames[ind]);
+      }
+    }
+
+    // Handle defocus target cycling
+    if (mAcqParm->cycleDefocus) {
+      target = (float)(mAcqParm->cycleDefFrom + (mAcqParm->cycleDefTo - 
+        mAcqParm->cycleDefFrom) * mFocusCycleCounter / mAcqParm->cycleSteps);
+      mWinApp->mFocusManager->SetTargetDefocus(target);
+      mFocusCycleCounter = (mFocusCycleCounter + 1) % (mAcqParm->cycleSteps + 1);
+      PrintfToLog("Target defocus set to %.2f um", target);
+    }
+
+  } else {
+
+    // PROCESS THE PRECEDING ACTION
+    switch (mAcqSteps[mAcqStepIndex]) {
+
+      // After acquisition
+    case ACQ_ACQUIRE:
+      ManageNumDoneAcquired();
+      RestoreBeamTiltIfSaved();
+      if (!mSkippingSave) {
+        if (mWinApp->Montaging()) {
+          zval = mWinApp->mMontageWindow.m_iCurrentZ - 1;
+        } else {
+          if (!mBufferManager->IsBufferSavable(mImBufs)) {
+            StopAcquiring();
+            SEMMessageBox("This image cannot be saved to the currently open file.\n\n"
+              "Switch to a different file");
+            return;
+          }
+          if (mBufferManager->CheckAsyncSaving())
+            return;
+
+          zval = mWinApp->mStoreMRC->getDepth();
+          if (mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
+            StopAcquiring();
+            return;
+          }
+        }
+      }
+      report.Format("%s acquired at item # %d with label %s",
+        mAcqParm->acquireType == ACQUIRE_TAKE_MAP ? "Map" : "Image", mAcquireIndex + 1,
+        (LPCTSTR)item->mLabel);
+      if (!mSkippingSave) {
+        str.Format(" saved at Z = %d", zval);
+        report += str;
+      }
+      if (mAcqParm->acquireType != ACQUIRE_TAKE_MAP)
+        report += "\r\n----------------------------------------------------------------";
+      mWinApp->AppendToLog(report);
+
+      item->mDraw = mAcqParm->acquireType != ACQUIRE_TAKE_MAP;
+      SetItemSuccessfullyAcquired(item);
+      if (mAcqParm->acquireType != ACQUIRE_TAKE_MAP)
+        break;
+
+      mSkipBacklashType = 2;
+      if (NewMap()) {
+        StopAcquiring();
+        return;
+      }
+      SetCurrentItem();
+      mItem->mLabel = item->mLabel;
+      len = item->mLabel.GetLength();
+      lastChar = item->mLabel[len - 1];
+      if (len > 1 && item->mLabel[len - 2] == '-' && lastChar >= 'A' && lastChar < 'Z')
+        mItem->mLabel.SetAt(len - 1, lastChar + 1);
+      else
+        mItem->mLabel += "-A";
+      mItem->mNote = mItem->mNote + " - " + item->mNote;
+      m_strLabel = mItem->mLabel;
+      UpdateListString(mCurrentItem);
       break;
 
-    mSkipBacklashType = 2;
-    if (NewMap()) {
-      StopAcquiring();
-      return;
-    }
-    SetCurrentItem();
-    mItem->mLabel = item->mLabel;
-    len = item->mLabel.GetLength();
-    lastChar = item->mLabel[len - 1];
-    if (len > 1 && item->mLabel[len - 2] == '-' && lastChar >= 'A' && lastChar < 'Z')
-      mItem->mLabel.SetAt(len - 1, lastChar + 1);
-    else
-      mItem->mLabel += "-A";
-    mItem->mNote = mItem->mNote + " - " + item->mNote;
-    m_strLabel = mItem->mLabel;
-    UpdateListString(mCurrentItem);
-    break;
-
-  case ACQ_RUN_MACRO:
-    ManageNumDoneAcquired();
-    if (mMacroProcessor->GetLastCompleted()) {
-      item->mAcquire = false;
-      item->mTargetDefocus = EXTRA_NO_VALUE;
-      SetChanged(true);
-      mNumAcquired++;
-      UpdateListString(mAcquireIndex);
-      if (mAcquireIndex == mCurrentItem)
-        ManageCurrentControls();
-
-      // Allow acquisition to go on after failure if the flag is set
-    } else if (mMacroProcessor->GetLastAborted() && 
-      !mMacroProcessor->GetNoMessageBoxOnError()) {
-        mAcquireEnded = 1;
-    } else
-      mAcquireIndex++;
-    break;
-
-  case ACQ_START_TS:
-    ManageNumDoneAcquired();
-
-    // Count any success for now
-    if (mWinApp->mTSController->GetLastSucceeded()) {
-      mNumAcquired++;
-      report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, %.2f,"
-        " TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, item->mStageX, 
-        item->mStageY, mWinApp->mTSController->GetStopStageX(), 
-        mWinApp->mTSController->GetStopStageY());
-      mWinApp->AppendToLog(report);
-      item->mTargetDefocus = EXTRA_NO_VALUE;
-    }
-    break;
-
-    // After pre-macro, if it set the skip flag, skip through to move
-    // step; increase acquire index because it is still marked as acquire
-    // The help says failure does not matter... not sure if this is a good idea
-  case ACQ_RUN_PREMACRO:
-    if (mSkipAcquiringItem) {
+      // After a script
+    case ACQ_RUN_MACRO:
       ManageNumDoneAcquired();
-      mAcqActionIndex = mNumAcqActions - 2;
-      PrintfToLog("Skipping item # %d with label %s due to failure in pre-macro", 
-        mAcquireIndex + 1, (LPCTSTR)item->mLabel);
-      mAcquireIndex++;
-    }
-    break;
+      if (mMacroProcessor->GetLastCompleted()) {
+        SetItemSuccessfullyAcquired(item);
 
-  case ACQ_MOVE_TO_NEXT:
-    if (mResumedFromPause) {
-      mAcqActionIndex--;
-      mLastAcqDoneTime = GetTickCount();
-    }
-    mResumedFromPause = false;
-    break;
+        // Allow acquisition to go on after failure if the flag is set
+      } else if (mMacroProcessor->GetLastAborted() &&
+        !mMacroProcessor->GetNoMessageBoxOnError()) {
+        mAcquireEnded = 1;
+      } else
+        mAcquireIndex++;
+      break;
 
-  default:
-    break;
+      // After a tilt series
+    case ACQ_START_TS:
+      ManageNumDoneAcquired();
+
+      // Count any success for now
+      if (mWinApp->mTSController->GetLastSucceeded()) {
+        mNumAcquired++;
+        report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, %.2f,"
+          " TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, item->mStageX,
+          item->mStageY, mWinApp->mTSController->GetStopStageX(),
+          mWinApp->mTSController->GetStopStageY());
+        mWinApp->AppendToLog(report);
+        item->mTargetDefocus = EXTRA_NO_VALUE;
+      }
+      break;
+
+      // After a multishot
+    case ACQ_DO_MULTISHOT:
+      ManageNumDoneAcquired();
+      err = mWinApp->mParticleTasks->GetWDLastFailed();
+      if (!err || !mRetValFromMultishot)
+        SetItemSuccessfullyAcquired(item);
+      if (mRetValFromMultishot) {
+        PrintfToLog("%d Multiple Records at item # %d with label %s %s\r\n"
+          "----------------------------------------------------------------------------",
+          -mRetValFromMultishot, mAcquireIndex + 1, (LPCTSTR)item->mLabel,
+          err ? " FAILED before completion" :
+          "successfully completed");
+
+        // Stop or go on after error just like macro
+        if (err && !mAcqParm->noMBoxOnError) {
+          mAcquireEnded = 1;
+        } else
+          mAcquireIndex++;
+      }
+      break;
+
+      // After pre-macro, if it set the skip flag, skip through to move
+      // step; increase acquire index because it is still marked as acquire
+      // The help says failure does not matter... not sure if this is a good idea
+    case NAACT_RUN_PREMACRO:
+      if (mSkipAcquiringItem) {
+        SkipToNextItemInAcquire(item, "in pre-script");
+      }
+      break;
+
+      // This is the next step when resuming from a pause; back up and set it up again
+    case ACQ_FIND_SETUP_NEXT:
+      if (mResumedFromPause) {
+        mAcqStepIndex--;
+        mLastAcqDoneTime = GetTickCount();
+        if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO)
+          mWinApp->SetStatusText(COMPLEX_PANE, "ACQUIRING AREAS");
+      }
+      mResumedFromPause = false;
+      break;
+
+      // Handle failed autofocus by ending or skipping to next item, an abort will not end
+    case NAACT_AUTOFOCUS:
+      if (mWinApp->mFocusManager->GetLastFailed() && !mAcqParm->noMBoxOnError) {
+        mAcquireEnded = 1;
+      } else if (mWinApp->mFocusManager->GetLastFailed() ||
+        mWinApp->mFocusManager->GetLastAborted()) {
+        SkipToNextItemInAcquire(item, "in autofocus");
+      }
+      break;
+
+      // Handle other failures similarly
+    case NAACT_ALIGN_TEMPLATE:
+      if (mWinApp->mParticleTasks->GetATLastFailed()) {
+        SkipToNextItemInAcquire(item, "aligning to template");
+      }
+      break;
+
+    case NAACT_WAIT_DRIFT:
+      err = mWinApp->mParticleTasks->GetWDLastFailed();
+      if (err && err != DW_EXTERNAL_STOP)
+        SkipToNextItemInAcquire(item, "waiting for drift");
+      break;
+
+      // Record that eucentricity was done
+    case NAACT_EUCEN_BY_FOCUS:
+    case NAACT_ROUGH_EUCEN:
+    case NAACT_FINE_EUCEN:
+      mDidEucentricity = true;
+      break;
+
+    default:
+      break;
+    }
   }
 
   // NOW DO THE NEXT ACTION
   mSkipAcquiringItem = false;
-  switch (mAcqActions[++mAcqActionIndex]) {
+  switch (mAcqSteps[++mAcqStepIndex]) {
 
-  case ACQ_ROUGH_EUCEN:
+    // Rough eucentricity
+  case NAACT_ROUGH_EUCEN:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mWinApp->mComplexTasks->FindEucentricity(FIND_EUCENTRICITY_COARSE);
     break;
 
-  // Run the realign routine; restore state for image or map or if flag set
-  case ACQ_REALIGN:
+    // Run the realign routine; restore state based on flag for macro, otherwise restore
+    // only when outside low dose
+  case NAACT_REALIGN_ITEM:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
-    err = mHelper->RealignToItem(item, mParam->acqRestoreOnRealign ||
-      mParam->acquireType != ACQUIRE_RUN_MACRO, 0., 0, 0);
+    err = mHelper->RealignToItem(item, 
+      B3DCHOICE(mAcqParm->acquireType == ACQUIRE_RUN_MACRO, mAcqParm->restoreOnRealign,
+        !mWinApp->LowDoseMode()),
+      mWillDoTemplateAlign ? 0.f : aliParams->resetISthresh, 
+      mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS, 
+      mWillDoTemplateAlign ? false : aliParams->leaveISatZero, 
+      mAcqParm->hybridRealign && mWillDoTemplateAlign && 
+      mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS && 
+      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
       if (err < 4)
@@ -8742,74 +9081,225 @@ void CNavigatorDlg::AcquireNextTask(int param)
     }
     break;
 
-  case ACQ_COOK_SPEC:
-    if (mWinApp->mMultiTSTasks->StartCooker()) {
-      StopAcquiring();
-      return;
-    }
+    // Align to template
+  case NAACT_ALIGN_TEMPLATE:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    mRealignedInAcquire = true;
+    stopErr = mWinApp->mParticleTasks->AlignToTemplate(*aliParams);
     break;
 
-  case ACQ_FINE_EUCEN:
+  // Cook specimen
+  case NAACT_COOK_SPEC:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    stopErr = mWinApp->mMultiTSTasks->StartCooker();
+    break;
+
+    // Fine eucentricity
+  case NAACT_FINE_EUCEN:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mWinApp->mComplexTasks->FindEucentricity(
-      FIND_EUCENTRICITY_FINE | (mParam->acqRealign ? REFINE_EUCENTRICITY_ALIGN : 0));
+      FIND_EUCENTRICITY_FINE | (mRealignedInAcquire ? REFINE_EUCENTRICITY_ALIGN : 0));
     break;
 
-  case ACQ_CENTER_BEAM:
-    if (mWinApp->mMultiTSTasks->AutocenterBeam()) {
-      StopAcquiring();
-      return;
-    }
+    // Eucentricity by focus
+  case NAACT_EUCEN_BY_FOCUS:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    stopErr = mWinApp->mParticleTasks->EucentricityFromFocus(-1);
     break;
 
-  case ACQ_AUTOFOCUS:
-    if (mParam->acqFocusOnceInGroup && item->mGroupID >= 0 && !mFirstInGroup)
-      break;
+    // Center beam
+  case NAACT_CEN_BEAM:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    stopErr = mWinApp->mMultiTSTasks->AutocenterBeam();
+    break;
+
+    // Autofocus
+  case NAACT_AUTOFOCUS:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    if (mAcqParm->focusChangeLimit > 0.)
+      mWinApp->mFocusManager->NextFocusChangeLimits(-mAcqParm->focusChangeLimit, 
+        mAcqParm->focusChangeLimit);
     mWinApp->mFocusManager->AutoFocusStart(1);
     break;
 
+    // Coma-free alignment
+  case NAACT_COMA_FREE:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    stopErr = mWinApp->mAutoTuning->CtfBasedAstigmatismComa(
+      mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, false,
+      mAcqParm->noMBoxOnError);
+    break;
+
+    // Astigmatism correction
+  case NAACT_ASTIGMATISM:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    if (mAcqParm->astigByBTID)
+      stopErr = mWinApp->mAutoTuning->FixAstigmatism(true);
+    else
+      stopErr = mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, false,
+        mAcqParm->noMBoxOnError);
+    break;
+
+    // Conditioning a phase plate
+  case NAACT_CONDITION_VPP:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    vppNearestSave = vppParams->useNearestNav;
+    if (mAcqActions[NAACT_CONDITION_VPP].flags & NAA_FLAG_OTHER_SITE)
+      vppParams->useNearestNav = false;
+    stopErr = mWinApp->mMultiTSTasks->ConditionPhasePlate(true);
+    vppParams->useNearestNav = vppNearestSave;
+    break;
+
+    // Dark ref from DE or K2/3
+  case NAACT_HW_DARK_REF:
+    hours = (float)(mAcqActions[NAACT_HW_DARK_REF].minutes / 60.);
+    if (camParams->DE_camType) {
+      stopErr = mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(
+        mAcqParm->DEdarkRefOperatingMode, hours, report);
+      if (stopErr)
+        SEMMessageBox("Cannot make a new dark reference in DE server:\n" + report);
+      else
+        SEMTrace('n', "%saking DE dark reference",
+          mWinApp->mGainRefMaker->AcquiringGainRef() ? "M" : "NOT m");
+    } else if (camParams->K2Type) {
+      err = mCamera->UpdateK2HWDarkRef(hours);
+      if (err == 1) {
+        SEMMessageBox("The thread for updating a dark reference is already busy");
+        StopAcquiring();
+        return;
+      }
+      SEMTrace('n', "%spdating HW dark reference", err ? "NOT u" : "U");
+    }
+    break;
+
+    // Wait for drift
+  case NAACT_WAIT_DRIFT:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    err = mWinApp->mParticleTasks->WaitForDrift(*dwParam, false, 0.,
+      mAcqParm->focusChangeLimit);
+    stopErr = B3DMAX(0, err);
+    break;
+
+    // Refine the ZLP
+  case NAACT_REFINE_ZLP:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    stopErr = mWinApp->mFilterTasks->RefineZLP(false) ? 0 : 1;
+    break;
+
+    // Flash FEG
+  case NAACT_FLASH_FEG:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    ind = 0;
+    if (FEIscope) {
+
+      // For FEIscope, check for high flash if allowed, then for low; set to do now
+      if (mAcqParm->highFlashIfOK) {
+        if (!mScope->GetIsFlashingAdvised(1, ind)) {
+          StopAcquiring();
+          return;
+        }
+        if (ind)
+          mScope->SetDoNextFEGFlashHigh(true);
+      }
+      if (!ind && mScope->GetIsFlashingAdvised(1, ind)) {
+        StopAcquiring();
+        return;
+      }
+      if (!ind)
+        break;
+      hours = 0.;
+    } else {
+
+      // For JEOL, it should be an interval for just doing it
+      hours = (float)(mAcqActions[NAACT_FLASH_FEG].minutes / 60.);
+    }
+    ind = LONG_OP_FLASH_FEG;
+    if (mScope->StartLongOperation(&ind, &hours, 1) > 0) {
+      SEMMessageBox("Cannot flash FEG; the thread for long scope operations is busy");
+      StopAcquiring();
+      return;
+    }
+    break;
+
+    // Check vacuum and nitrogen status
+  case NAACT_CHECK_DEWARS:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    next = 0;
+    if (mStepIndForDewarCheck >= 0)
+      next = (mAcqStepIndex == mStepIndForDewarCheck) ? 1 : -1;
+    stopErr = mWinApp->mParticleTasks->ManageDewarsVacuum(*dvParams, next);
+    break;
+
+    // Relax the stage
+  case ACQ_RELAX_STAGE:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    err = mMacroProcessor->DoStageRelaxation(mScope->GetStageRelaxation());
+    SEMTrace('1', "Relaxed stage err %d", err);
+    if (err < 0)
+      mWinApp->AppendToLog("Stage is not in known backlash state so relaxation cannot "
+        "be done");
+    if (err > 0) {
+      SEMMessageBox("Failed to get stage position for relaxing stage");
+      StopAcquiring();
+      return;
+    }
+    mMovingStage = true;
+    break;
+
+    // Open file if needed
   case ACQ_OPEN_FILE:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     if (OpenFileIfNeeded(item, false)) {
       StopAcquiring();
       return;
     }
     break;
 
-  // Take a picture or montage
+    // Take a picture or montage
   case ACQ_ACQUIRE:
-    if (mWinApp->Montaging()) {
-      if (mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false)) {
-        StopAcquiring();
-        return;
-      }
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    if (mAcqParm->adjustBTforIS && comaVsIS->magInd > 0) {
+      mScope->GetImageShift(ISX, ISY);
+      mWinApp->mMacroProcessor->AdjustBeamTiltAndAstig(ISX, ISY, mSavedBeamTiltX, 
+        mSavedBeamTiltY, mSavedAstigX,  mSavedAstigY);
+    }
+    if (mWinApp->Montaging() && !mSkippingSave) {
+      stopErr = mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
     } else {
       timeOut = 300000;
       mCamera->SetCancelNextContinuous(true);
+      if (mDoingEarlyReturn && mCamera->SetNextAsyncSumFrames(
+        mAcqParm->numEarlyFrames < 0 ? 65535 : mAcqParm->numEarlyFrames, false)) {
+        StopAcquiring();
+        return;
+      }
       mCamera->InitiateCapture(RECORD_CONSET);
     }
     break;
 
-  // Run a pre-macro
-  case ACQ_RUN_PREMACRO:
-    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
-      mParam->preMacroInd : mParam->preMacroIndNonTS) - 1);
+    // Run a pre-macro
+  case NAACT_RUN_PREMACRO:
+    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ?
+      mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1);
     break;
 
- // Run a macro
+    // Run a macro
   case ACQ_RUN_MACRO:
-    report.Format("Running script %d at item %s   (%.2f, %.2f)", mParam->macroIndex,
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    report.Format("Running script %d at item %s   (%.2f, %.2f)", mAcqParm->macroIndex,
       (LPCTSTR)item->mLabel, item->mStageX, item->mStageY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    mMacroProcessor->Run(mParam->macroIndex - 1);
+    mMacroProcessor->Run(mAcqParm->macroIndex - 1);
     break;
 
-  // Start a tilt series: open the file if possible, then go on to get the TS params
-  // This should leave things resumable if there is a problem
+    // Start a tilt series: open the file if possible, then go on to get the TS params
+    // This should leave things resumable if there is a problem
   case ACQ_START_TS:
     tsp = (TiltSeriesParam *)mTSparamArray.GetAt(item->mTSparamIndex);
 
     // Check item tilt angles before copying param
     if (item->mTSstartAngle > EXTRA_VALUE_TEST &&
-      mHelper->CheckTiltSeriesAngles(item->mTSparamIndex, item->mTSstartAngle, 
+      mHelper->CheckTiltSeriesAngles(item->mTSparamIndex, item->mTSstartAngle,
         item->mTSendAngle, item->mTSbidirAngle, report)) {
       str.Format("For item %s, ", (LPCTSTR)item->mLabel);
       SEMMessageBox(str + report);
@@ -8852,26 +9342,44 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->UpdateBufferWindows();
     break;
 
+    // Do Multishot
+  case ACQ_DO_MULTISHOT:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    mRetValFromMultishot = mWinApp->mParticleTasks->StartMultiShot(msParams->numShots[0],
+      msParams->doCenter, msParams->spokeRad[0],
+      msParams->doSecondRing ? msParams->numShots[1] : 0, msParams->spokeRad[1],
+      msParams->extraDelay, 
+      (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0) ?
+      msParams->saveRecord : false, msParams->doEarlyReturn, msParams->numEarlyFrames,
+      msParams->adjustBeamTilt, msParams->inHoleOrMultiHole);
+    stopErr = B3DMAX(mRetValFromMultishot, 0);
+    break;
+
   // Run a post-macro
-  case ACQ_RUN_POSTMACRO:
-    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
-      mParam->postMacroInd : mParam->postMacroIndNonTS) - 1);
+  case NAACT_RUN_POSTMACRO:
+    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ? 
+      mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1);
     break;
 
     // Adjust for backlash if needed
   case ACQ_BACKLASH:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     AdjustBacklash(-1, true);
     break;
 
-  // Go to next area if there is one
-  case ACQ_MOVE_TO_NEXT:
+  // Set up for next area if there is one
+  case ACQ_FIND_SETUP_NEXT:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     if (mResetAcquireIndex)
       mAcquireIndex = mStartingAcquireIndex;
     mResetAcquireIndex = false;
-    if (mAcquireEnded || (err = GotoNextAcquireArea()) != 0) {
+    if (mAcquireEnded || (err = FindAndSetupNextAcquireArea()) != 0) {
       if (mAcquireEnded < 0) {
         mAcquireEnded = 0;
         mPausedAcquire = true;
+        mMontCurrentAtPause = -1;
+        if (mWinApp->mStoreMRC)
+          mMontCurrentAtPause = mWinApp->Montaging() ? 1 : 0;
         mWinApp->UpdateBufferWindows();
         mWinApp->SetStatusText(COMPLEX_PANE, "PAUSED NAV ACQUIRE");
         mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
@@ -8879,12 +9387,76 @@ void CNavigatorDlg::AcquireNextTask(int param)
       }
       EndAcquireWithMessage();
     }
-    mAcqActionIndex = 0;
+    mAcqStepIndex = -1;
+    break;
+
+    // Move to the area
+  case ACQ_MOVE_TO_AREA:
+
+    // This adds an idle task....
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    if (GotoCurrentAcquireArea()) {
+      StopAcquiring();
+    }
+    return;
+
+  case ACQ_MOVE_ELSEWHERE:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    act = mAcqSteps[mAcqStepIndex + 1];
+    next = mHelper->FindNearestItemMatchingText(item->mStageX, item->mStageY,
+      mAcqActions[act].labelOrNote,
+      (mAcqActions[act].flags & NAA_FLAG_MATCH_NOTE) != 0);
+    if (MoveToItem(next)) {
+      StopAcquiring();
+      return;
+    }
+    mMovingStage = true;
+    break;
+  }
+
+  if (stopErr) {
+    StopAcquiring();
     return;
   }
+
   if (mAcquireIndex >= 0)
     m_listViewer.SetTopIndex(B3DMAX(0, mAcquireIndex - 2));
   mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+}
+
+// This is called when the dialog is closing, it will either reenter the AcquireAreas 
+// routine or change the flags for resuming from pause
+void CNavigatorDlg::AcquireDlgClosing()
+{
+  int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
+  mHelper->GetAcquireDlgPlacement(true);
+  SetCurAcqParmActions(mHelper->GetCurAcqParamIndex());
+  if (navState == NAV_PAUSED) {
+    mMacroProcessor->SetNonResumable();
+    mNavAcquireDlg = NULL;
+
+    // There is an idle task that will start the next task
+    ResumeFromPause();
+    mWinApp->SetStatusText(COMPLEX_PANE, "");
+  } else
+    AcquireAreas(false, true);
+}
+
+// Resuming from pause: test for a change in the output file type, change flags
+int CNavigatorDlg::ResumeFromPause()
+{
+  CString str;
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS && mMontCurrentAtPause >= 0 &&
+    mWinApp->mStoreMRC && !BOOL_EQUIV(mWinApp->Montaging(), mMontCurrentAtPause > 0)) {
+    str.Format("The current file was a %s file when you paused and is now a %s file\n\n"
+      "Are you sure you want to resume?", mMontCurrentAtPause ? "montage" : "single-frame"
+      , mMontCurrentAtPause ? "single-frame" : "montage");
+    if (AfxMessageBox(str, MB_QUESTION) == IDNO)
+      return 1;
+  }
+  mResumedFromPause = true;
+  mPausedAcquire = false;
+  return 0;
 }
 
 // Message box on normal stopping or ending from paused state
@@ -8894,9 +9466,10 @@ void CNavigatorDlg::EndAcquireWithMessage(void)
   StopAcquiring();
   mWinApp->SetStatusText(COMPLEX_PANE, "");
   if (mNumAcquired) {
-    report.Format("%s at %d areas", mParam->acquireType == ACQUIRE_DO_TS ? 
-      "Tilt series acquired" : (mParam->acquireType == ACQUIRE_RUN_MACRO ?
-      "Script run to completion" : "Images acquired"), mNumAcquired);
+    report.Format("%s at %d areas", mAcqParm->acquireType == ACQUIRE_DO_TS ? 
+      "Tilt series acquired" : (mAcqParm->acquireType == ACQUIRE_RUN_MACRO ?
+      "Script run to completion" : (mAcqParm->acquireType == ACQUIRE_MULTISHOT ? 
+        "Multiple Records acquired" : "Images acquired")), mNumAcquired);
     AfxMessageBox(report, MB_EXCLAME);
   }
 }
@@ -8921,13 +9494,16 @@ int CNavigatorDlg::TaskAcquireBusy()
   return (stage > 0 || mWinApp->mMontageController->DoingMontage() || 
     mHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus() ||
     mCamera->CameraBusy() || mMacroProcessor->DoingMacro() ||
-    mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries()) ? 1 : 0;
+    mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries() ||
+    mWinApp->mAutoTuning->DoingAutoTune() || mScope->GetDoingLongOperation() || 
+    mWinApp->mGainRefMaker->AcquiringGainRef() || mWinApp->mFilterTasks->RefiningZLP() ||
+    mWinApp->mParticleTasks->GetDVDoingDewarVac()) ? 1 : 0;
 }
 
 void CNavigatorDlg::AcquireCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
-    SEMMessageBox(B3DCHOICE(mParam->acquireType != ACQUIRE_RUN_MACRO, 
+    SEMMessageBox(B3DCHOICE(mAcqParm->acquireType != ACQUIRE_RUN_MACRO, 
     _T("Time out acquiring images"), _T("Time out running script")));
 
   // Should this be called?  ErrorOccurred will call it too
@@ -8945,22 +9521,61 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   if (!mWinApp->mCameraMacroTools.GetUserStop()) {
     SendEmailIfNeeded();
   }
+  RestoreBeamTiltIfSaved();
   CloseFileOpenedByAcquire();
   mAcquireIndex = -1;
+  mFocusCycleCounter = -1;
+  mWinApp->mFocusManager->SetTargetDefocus(mSavedTargetDefocus);
   mPausedAcquire = false;
   ManageListHeader();
   SetCollapsing(mSaveCollapsed);
   mWinApp->UpdateBufferWindows();
-  if (mParam->acqCloseValves && !HitachiScope && !mScope->SetColumnValvesOpen(false))
+  if (mAcqParm->closeValves && !HitachiScope && !mScope->SetColumnValvesOpen(false))
     AfxMessageBox("An error occurred closing the gun valve at the end of acquisitions.",
          MB_EXCLAME);
-  if (mParam->acquireType == ACQUIRE_RUN_MACRO)
+  if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO)
     return;
   mBufferManager->SetAlignOnSave(mSaveAlignOnSave);
   mBufferManager->SetConfirmBeforeDestroy(3, mSaveProtectRecord);
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
 
+// Do common actions whenthe acquire step is done
+void CNavigatorDlg::SetItemSuccessfullyAcquired(CMapDrawItem * item)
+{
+  item->mAcquire = false;
+  item->mTargetDefocus = EXTRA_NO_VALUE;
+  SetChanged(true);
+  mNumAcquired++;
+  UpdateListString(mAcquireIndex);
+  if (mAcquireIndex == mCurrentItem)
+    ManageCurrentControls();
+}
+
+// Set up step position so it will go to next item after failure
+void CNavigatorDlg::SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep)
+{
+  ManageNumDoneAcquired();
+  mAcqStepIndex = mNumAcqSteps - 2;
+  PrintfToLog("Skipping item # %d with label %s due to failure %s",
+    mAcquireIndex + 1, (LPCTSTR)item->mLabel, failedStep);
+  mAcquireIndex++;
+}
+
+// Restoring beam tilt and astig after acquire
+void CNavigatorDlg::RestoreBeamTiltIfSaved()
+{
+  if (mSavedBeamTiltX < EXTRA_VALUE_TEST)
+    return;
+  mWinApp->mAutoTuning->BacklashedBeamTilt(mSavedBeamTiltX, mSavedBeamTiltY,
+    mScope->GetAdjustForISSkipBacklash() <= 0);
+  mSavedBeamTiltX = EXTRA_NO_VALUE;
+  if (mSavedAstigX < EXTRA_VALUE_TEST)
+    return;
+  mWinApp->mAutoTuning->BacklashedStigmator(mSavedAstigX, mSavedAstigY, 
+    mScope->GetAdjustForISSkipBacklash() <= 0);
+  mSavedAstigX = EXTRA_NO_VALUE;
+}
 
 // Count items before file opening, # of files to open and type, and whether there are
 // any acquire or TS points in range specified in dialog parameters if doing a subset
@@ -9019,6 +9634,7 @@ void CNavigatorDlg::ManageNumDoneAcquired(void)
 {
   double now = GetTickCount();
   mNumDoneAcq++;
+  mAcquireCounter++;
   mElapsedAcqTime += SEMTickInterval(now, mLastAcqDoneTime);
   mLastAcqDoneTime = now;
 }
@@ -9026,7 +9642,7 @@ void CNavigatorDlg::ManageNumDoneAcquired(void)
 void CNavigatorDlg::SetAcquireEnded(int state)
 {
   mAcquireEnded = state;
-  if (mParam->acquireType != ACQUIRE_RUN_MACRO && mParam->acquireType != ACQUIRE_DO_TS)
+  if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO && mAcqParm->acquireType != ACQUIRE_DO_TS)
     mWinApp->SetStatusText(COMPLEX_PANE, state > 0 ? "ENDING NAV ACQUIRE" : 
     "PAUSING NAV ACQUIRE");
   else
@@ -9037,8 +9653,8 @@ void CNavigatorDlg::SetAcquireEnded(int state)
 // Test for whether we started a macro and it is either running or resumable
 BOOL CNavigatorDlg::StartedMacro(void)
 {
-  return (GetAcquiring() && (mParam->acquireType == ACQUIRE_RUN_MACRO || 
-    mParam->acqRunPremacro || mParam->acqRunPostmacro) && 
+  return (GetAcquiring() && (mAcqParm->acquireType == ACQUIRE_RUN_MACRO || 
+    mAcqParm->runPremacro || mAcqParm->runPostmacro) && 
     (mMacroProcessor->DoingMacro() || mMacroProcessor->IsResumable()));
 }
 
@@ -9046,8 +9662,9 @@ BOOL CNavigatorDlg::StartedMacro(void)
 void CNavigatorDlg::SendEmailIfNeeded(void)
 {
   CString mess;
-  if (!((mParam->acquireType == ACQUIRE_DO_TS && mParam->acqSendEmail) ||
-    (mParam->acquireType != ACQUIRE_DO_TS && mParam->acqSendEmailNonTS)) || mEmailWasSent)
+  if (!((mAcqParm->acquireType == ACQUIRE_DO_TS && mAcqParm->sendEmail) ||
+    (mAcqParm->acquireType != ACQUIRE_DO_TS && mAcqParm->sendEmailNonTS)) ||
+    mEmailWasSent)
     return;
   mess.Format("Your Navigator Acquire at Items operation %s %d areas",
     mAcquireEnded ? "successfully acquired from" : "stopped with an error "
@@ -9056,8 +9673,9 @@ void CNavigatorDlg::SendEmailIfNeeded(void)
   mEmailWasSent = true;
 }
 
-// Find the next area marked as an acquire in this registration and go to it
-int CNavigatorDlg::GotoNextAcquireArea()
+// Find the next area marked as an acquire in this registration and handle some aspects
+// of doing a new area
+int CNavigatorDlg::FindAndSetupNextAcquireArea()
 {
   int ind, err, axisBits = axisXY | axisZ;
   bool skippedGroup = false, skippingGroup, acquire;
@@ -9073,28 +9691,12 @@ int CNavigatorDlg::GotoNextAcquireArea()
     if (!acquire)
       continue;
 
-    // Skip maps and remove the mark if acquiring map, but not if doing macro???
-    // But what if they want a different mag map?  This should go 
-    /*if (item->IsMap() && mParam->acquireType == ACQUIRE_TAKE_MAP) {
-    item->mAcquire = false;
-    UpdateListString(i);
-    continue;
-    } */
     SEMTrace('M', "Navigator Stage Start");
 
     // Set the current item for the stage move!
     mItem = item;
 
-    // It is OK to skip stage move on various conditions, but if center beam is 
-    // selected, do not do it on first item
-    if (mSkipStageMoveInAcquire && OKtoSkipStageMove(mParam) && 
-      (!mParam->acqCenterBeam || mNumAcquired))
-      axisBits = 0;
-    else if (mParam->acqSkipZmoves)
-      axisBits = axisXY;
-    err = MoveStage(axisBits);
-    if (err > 0)
-      return 1;
+    err = MoveStage(axisBits, true);
     if (err < 0) {
       item->mAcquire = false;
       UpdateListString(ind);
@@ -9112,7 +9714,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
       return err;
 
     // Update the log file for tilt series with autosave policy
-    if (mParam->acquireType == ACQUIRE_DO_TS && 
+    if (mAcqParm->acquireType == ACQUIRE_DO_TS && 
       mWinApp->mTSController->GetAutoSavePolicy()) {
         if (mWinApp->mLogWindow && 
           mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
@@ -9129,12 +9731,26 @@ int CNavigatorDlg::GotoNextAcquireArea()
     mLastGroupID = item->mGroupID;
 
     UpdateListString(ind);
-    mMovingStage = axisBits != 0;
-    mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
     return 0;
   }
   mAcquireEnded = 1;
   return -1;
+}
+
+// Actually do the move if called for
+int CNavigatorDlg::GotoCurrentAcquireArea()
+{
+  int err, axisBits = axisXY | axisZ;
+  mItem = mItemArray[mAcquireIndex];
+
+  if (mAcqParm->skipZmoves)
+    axisBits = axisXY;
+  err = MoveStage(axisBits);
+  if (err > 0)
+    return 1;
+  mMovingStage = axisBits != 0;
+  mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
+  return 0;
 }
 
 // Open file and set state if called for for this item
@@ -9306,7 +9922,7 @@ int CNavigatorDlg::TargetLDAreaForRealign(void)
   MontParam *montP = mWinApp->GetMontParam();
   if (area == TRIAL_CONSET || area == FOCUS_CONSET)
     area = RECORD_CONSET;
-  if (mAcquireIndex < 0 || mParam->acquireType == ACQUIRE_RUN_MACRO)
+  if (mAcquireIndex < 0 || mAcqParm->acquireType == ACQUIRE_RUN_MACRO)
     return area;
   area = RECORD_CONSET;
   if (mNextFileOptInd >= 0) {
@@ -9359,7 +9975,7 @@ int CNavigatorDlg::SetCurrentRegistration(int newReg)
       numTS);
     item = mItemArray[mAcquireIndex];
     delta = item->mAcquire ? 1 : 0;
-    mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? 
+    mInitialNumAcquire += (mAcqParm->acquireType == ACQUIRE_DO_TS ? 
       numTS + delta - oldNumTS: numNonTS + delta - oldNonTS);
   }
   return 0;
@@ -9584,8 +10200,8 @@ bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
 {
   skippingGroup = false;
   if (item->mRegistration == mCurrentRegistration && 
-    ((item->mAcquire && mParam->acquireType != ACQUIRE_DO_TS) || 
-    (item->mTSparamIndex >= 0 && mParam->acquireType == ACQUIRE_DO_TS))) {
+    ((item->mAcquire && mAcqParm->acquireType != ACQUIRE_DO_TS) || 
+    (item->mTSparamIndex >= 0 && mAcqParm->acquireType == ACQUIRE_DO_TS))) {
       if (item->mGroupID && item->mGroupID == mGroupIDtoSkip)
         skippingGroup = true;
       else
@@ -9612,15 +10228,18 @@ CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
 }
 
 // Return item whose label or note matchs the given string, case insensitive
-CMapDrawItem * CNavigatorDlg::FindItemWithString(CString & string, BOOL ifNote)
+CMapDrawItem * CNavigatorDlg::FindItemWithString(CString & string, BOOL ifNote, 
+  bool caseSensitive)
 {
   CMapDrawItem *item;
   if (string.IsEmpty())
     return NULL;
   for (mFoundItem = 0; mFoundItem < mItemArray.GetSize(); mFoundItem++) {
     item = mItemArray[mFoundItem];
-    if ((!ifNote && !string.CompareNoCase(item->mLabel)) ||
-      (ifNote && !string.CompareNoCase(item->mNote)))
+    if ((!caseSensitive && ((!ifNote && !string.CompareNoCase(item->mLabel)) ||
+      (ifNote && !string.CompareNoCase(item->mNote)))) ||
+      (caseSensitive && ((!ifNote && !string.Compare(item->mLabel)) ||
+      (ifNote && !string.Compare(item->mNote)))))
       return item;
   }
   mFoundItem = -1;
@@ -9713,8 +10332,8 @@ void CNavigatorDlg::MontErrForItem(CMapDrawItem *inItem, float &montErrX, float 
   // Get stage then montage coordinate relative to center of the montage
   delX = inItem->mStageX - item->mStageX;
   delY = inItem->mStageY - item->mStageY;
-  mHelper->InterpMontStageOffset(imageStore, montP, aMat, pieceSavedAt, delX, delY, montErrX,
-    montErrY);
+  mHelper->InterpMontStageOffset(imageStore, montP, aMat, pieceSavedAt, delX, delY, 
+    montErrX, montErrY);
 
   // Finish up with the file if it was not open before
   if (curStore < 0) {
@@ -10248,19 +10867,16 @@ void CNavigatorDlg::AdjustBacklash(int index, bool showC)
 }
 
 // Functions to provide central answer to whether initial stage move can be skipped
-int CNavigatorDlg::OKtoSkipStageMove(NavParams *param)
+int CNavigatorDlg::OKtoSkipStageMove(NavAcqParams *param)
 {
-  return OKtoSkipStageMove(param->acqRoughEucen, param->acqRealign, param->acqCookSpec, 
-    param->acqFineEucen, param->acqAutofocus, param->acquireType);
+  return OKtoSkipStageMove(mAcqActions, param->acquireType);
 }
 
-int CNavigatorDlg::OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook,
-  BOOL fineEucen, BOOL focus, int acqType)
+int CNavigatorDlg::OKtoSkipStageMove(NavAcqAction *actions, int acqType)
 {
-  if (!roughEucen && realign)
+  if ((actions[NAACT_RUN_PREMACRO].flags & NAA_FLAG_RUN_IT) != 0 || 
+    acqType == ACQUIRE_RUN_MACRO)
     return 1;
-  if (!roughEucen && !cook && !fineEucen && !focus && acqType == ACQUIRE_RUN_MACRO)
-    return -1;
   return 0;
 }
 
