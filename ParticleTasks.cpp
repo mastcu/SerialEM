@@ -1852,7 +1852,7 @@ int CParticleTasks::DewarsVacBusy()
 
   // Waiting a time after fill
   if (mDVWaitAfterFilled)
-    return SEMTickInterval(mDVStartTime) < 60000. * mDVWaitAfterFilled ? 1 : 0;
+    return (SEMTickInterval(mDVStartTime) < 60000. * mDVWaitAfterFilled) ? 1 : 0;
 
   // Waiting for PVP to stop
   if (mDVWaitForPVP) {

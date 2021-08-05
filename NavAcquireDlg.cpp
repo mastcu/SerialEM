@@ -1158,8 +1158,9 @@ int CNavAcquireDlg::CheckNearestItemText()
   if (!m_bRunAtOther || !m_strGotoItem.IsEmpty() || 
     !(mActions[mCurActSelected].flags & NAA_FLAG_RUN_IT))
     return 0;
-  AfxMessageBox("You must fill in the starting text for the " + CString(m_iGotoLabelNote ?
-    "note" : "label") + "\nor turn off \"Run at nearest item\"", MB_EXCLAME);
+  AfxMessageBox("You must fill in the starting text for the " + 
+    CString(m_iGotoLabelNote ? "note" : "label") + 
+    "\nor turn off \"Run at nearest item\"", MB_EXCLAME);
   return 1;
 }
 
