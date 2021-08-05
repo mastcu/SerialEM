@@ -2453,16 +2453,19 @@ void CTSController::NextAction(int param)
       bwIndex = 0;
       if (mLowDoseMode)
         bwIndex = (dwParams.measureType == WFD_USE_TRIAL) ? TRIAL_CONSET : FOCUS_CONSET;
-      if (mWinApp->mParticleTasks->WaitForDrift(dwParams,
-        dwParams.measureType == WFD_USE_TRIAL && mDidTrackBefore, 
-        mSTEMindex ? 0.f : (mBWMeanPerSec[bwIndex] * mBadShotCrit), 
-        mTSParam.limitDefocusChange ? mTSParam.defocusChangeLimit : 0.f)) {
+      error = mWinApp->mParticleTasks->WaitForDrift(dwParams,
+        dwParams.measureType == WFD_USE_TRIAL && mDidTrackBefore,
+        mSTEMindex ? 0.f : (mBWMeanPerSec[bwIndex] * mBadShotCrit),
+        mTSParam.limitDefocusChange ? mTSParam.defocusChangeLimit : 0.f);
+      if (error > 0) {
         ErrorStop();
         return;
       }
-      mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
-      mWaitingForDrift = true;
-      return;
+      if (!error) {
+        mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+        mWaitingForDrift = true;
+        return;
+      }
 
     // AUTOFOCUS IF NEEDED    
     } else if (NextActionIs(mActIndex, AUTOFOCUS, 1) || 
