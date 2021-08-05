@@ -144,6 +144,7 @@ FLOAT_SETT_GETSET("GridGroupSize", mWinApp->mNavHelper->, GridGroupSize)
 BOOL_SETT_GETSET("DivideGridIntoGroups", mWinApp->mNavHelper->, DivideIntoGroups)
 BOOL_SETT_GETSET("RIuseCurrentLDparams", mWinApp->mNavHelper->, RIuseCurrentLDparams)
 BOOL_SETT_GETSET("SkipMontFitDlgs", mWinApp->mNavHelper->, SkipMontFitDlgs)
+INT_SETT_GETSET("CurAcqParamIndex", mWinApp->mNavHelper->, CurAcqParamIndex)
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
 INT_SETT_GETSET("ExtraDivideBy2", camera->, ExtraDivideBy2)
 BOOL_SETT_GETSET("AcquireFloatImages", camera->, AcquireFloatImages)
@@ -154,6 +155,8 @@ BOOL_SETT_GETSET("IgnoreHigherGainRefs", mWinApp->mGainRefMaker->, IgnoreHigherR
 BOOL_SETT_GETSET("UseOlderBinned2Ref", mWinApp->mGainRefMaker->, UseOlderBinned2)
 INT_SETT_GETSET("DMgainRefAskPolicy", mWinApp->mGainRefMaker->, DMrefAskPolicy)
 BOOL_SETT_GETSET("GainRefCalibrateDose", mWinApp->mGainRefMaker->, CalibrateDose)
+#endif
+#ifdef SET_TEST_SECT25
 BOOL_SETT_ASSIGN("LowDoseBlankWhenDown", mWinApp->mLowDoseDlg.m_bBlankWhenDown)
 BOOL_SETT_ASSIGN("LowDoseNormalizeBeam", mWinApp->mLowDoseDlg.m_bNormalizeBeam)
 FLOAT_SETT_GETSET("LowDoseViewDefocus", mWinApp->mScope->, LDViewDefocus)
