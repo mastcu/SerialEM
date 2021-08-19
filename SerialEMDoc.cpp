@@ -1047,7 +1047,10 @@ int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   mBufferManager->SetCopyOnSave(0);
   mWinApp->SetSavingOther(true);
 
-  err = mBufferManager->SaveImageBuffer(store);
+  mWinApp->SetStatusText(SIMPLE_PANE, "SAVING IMAGE...");
+  SleepMsg(10);
+  err = mBufferManager->SaveImageBuffer(store, true);
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
   delete store;
   mWinApp->SetSavingOther(false);
   mBufferManager->SetBufToSave(bufOld);
