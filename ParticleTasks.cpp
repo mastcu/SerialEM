@@ -1159,6 +1159,9 @@ void CParticleTasks::ZbyGNextTask(int param)
             mZbyGcalArray.Add(mZBGCalParam);
           else
             mZbyGcalArray[mZBGIndexOfCal] = mZBGCalParam;
+          PrintfToLog("Eucentricity by focus calibration done: measured defocus = %.2f"
+            " at absolute focus %.6f", mZBGCalParam.targetDefocus, 
+            mZBGCalParam.standardFocus);
           StopZbyG();
           if (mZbyGsetupDlg)
             mZbyGsetupDlg->OnButUpdateState();
