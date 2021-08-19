@@ -93,6 +93,10 @@ extern "C" {
 #define IIFLAG_ADD_TO_EER_SUM     2
 #define IIFLAG_START_END_EER_SUM  4
 #define IIFLAG_IGNORE_BAD_EER_END 8
+#define IIFLAG_ANTIALIAS_EER      16
+#define IIFLAG_EER_USE_LANCZOS    32
+#define EER_AA_SCALING_BIT_SHIFT  6
+#define EER_AA_SCALING_MASK       7  
 
 /* END_CODE */
 
@@ -167,6 +171,8 @@ extern "C" {
     int  tiffCompression;    /* Compression type in tiff file */
     int  readEERasSuperRes;  /* Super-resolution factor when reading EER file */
     int  numFramesInEERfile; /* Actual number of frames in file when autogrouping */
+    int  antialiasEERfilter; /* Filter type for antialiasing while reading */
+    int  EERkernelScale;     /* Scale factor when reading EER as antialiased shorts */
     int  tileSizeX;          /* Tile size in X, or 0 if no tiles */
     int  tileSizeY;          /* Tile size in Y if tiles, strip size if not */
     int  lastWrittenZ;       /* Last Z written, needed if sequential writing only */
@@ -357,7 +363,9 @@ extern "C" {
   void tiffDelete(ImodImageFile *inFile);
   void tiffSetMapping(int value);
   void tiffSetEERreadProperties(int superRes, int autogroup, int flags);
+  void tiffGainReferenceForEER(float *ref);
   int tiffGetMaxEERsuperRes();
+  int tiffGetMinEERsuperRes();
   void tiffAddDescription(const char *text);
   int tiffNumReadThreads(int nx, int ny, int compression, int maxThreads);
   int tiffParallelRead(ImodImageFile **fileCopies, int maxThreads, int llx, int urx,
