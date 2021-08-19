@@ -1243,6 +1243,7 @@ void CLowDoseDlg::Update()
   BOOL STEMmode = mWinApp->GetSTEMMode();
   BOOL camBusy = mWinApp->mCamera->CameraBusy();
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
+  BOOL stageBusy = mScope->StageBusy() > 0;
   LowDoseParams *ldShown = &mLDParams[m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET];
   ManageDefines(mScope->GetLowDoseArea());
 
@@ -1282,7 +1283,7 @@ void CLowDoseDlg::Update()
   bEnable = !mWinApp->DoingTasks();
   enableIfNavAcq = (bEnable || justNavAcq);
   m_butLowDoseMode.EnableWindow(bEnable && !mWinApp->DoingComplexTasks() &&
-    !mScope->GetJeol1230() && !mWinApp->mAutocenDlg &&
+    !mScope->GetJeol1230() && !mWinApp->mAutocenDlg && !stageBusy && 
     (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()));
   m_butContinuousUpdate.EnableWindow(enableIfNavAcq);
   m_butNormalizeBeam.EnableWindow(!STEMmode && enableIfNavAcq);
@@ -1307,7 +1308,8 @@ void CLowDoseDlg::Update()
   m_statDegrees.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
 
   // Disable go to buttons if busy
-  bEnable = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq) && !camBusy;
+  bEnable = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq) && !camBusy && 
+    !stageBusy;
   m_butGotoSearch.EnableWindow(bEnable);
   m_butGotoView.EnableWindow(bEnable);
   m_butGotoFocus.EnableWindow(bEnable);
@@ -1457,7 +1459,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 // Allow changes during a tilt series
 void CLowDoseDlg::ManageDefines(int area)
 {
-  BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && area != SEARCH_AREA;
+  BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && area != SEARCH_AREA  &&
+    mScope->StageBusy() <= 0;
   m_butDefineNone.EnableWindow(bEnable);
   m_butDefineTrial.EnableWindow(bEnable);
   m_butDefineFocus.EnableWindow(bEnable);

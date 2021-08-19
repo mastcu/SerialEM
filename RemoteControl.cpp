@@ -175,6 +175,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
     !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
+  bool stageBusy = mScope->StageBusy() > 0;
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
     if (inMagInd) {
@@ -184,12 +185,14 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
       m_sbcMag.SetPos(inCamLen);
       SetDlgItemText(IDC_STAT_MAG, "CamL");
     }
-    m_sbcMag.EnableWindow((inMagInd > 0 || inCamLen > 0) && baseEnable && !doingOffset);
+    m_sbcMag.EnableWindow((inMagInd > 0 || inCamLen > 0) && baseEnable && !doingOffset
+      && !stageBusy);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
     m_butNanoMicro.EnableWindow((mWinApp->GetSTEMMode() || 
       inMagInd >= mScope->GetLowestMModeMagInd() || 
-      (!inMagInd && inCamLen < LAD_INDEX_BASE)) && baseEnable);
-    m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
+      (!inMagInd && inCamLen < LAD_INDEX_BASE)) && baseEnable && !stageBusy);
+    m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable && 
+      !stageBusy);
   }
 
   if (inSpot != mLastSpot) {
@@ -266,15 +269,16 @@ void CRemoteControl::UpdateEnables(void)
   BOOL doingOffset = mWinApp->mShiftCalibrator &&
     mWinApp->mShiftCalibrator->CalibratingOffset();
   BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
+  bool stageBusy = mScope->StageBusy() > 0;
   bool enable = !((mWinApp->DoingTasks() && !doingOffset && 
     !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !continuous));
   m_sbcIntensity.EnableWindow(enable);
-  m_sbcSpot.EnableWindow(enable);
+  m_sbcSpot.EnableWindow(enable && !stageBusy);
   m_sbcFocus.EnableWindow(enable);
-  m_butScreenUpDown.EnableWindow(enable && !continuous);
-  m_sbcBeamShift.EnableWindow(enable);
-  m_sbcBeamLeftRight.EnableWindow(enable);
+  m_butScreenUpDown.EnableWindow(enable && !continuous && !stageBusy);
+  m_sbcBeamShift.EnableWindow(enable && !stageBusy);
+  m_sbcBeamLeftRight.EnableWindow(enable && !stageBusy);
 
   if (enable) {
     mLastSpot = -1;

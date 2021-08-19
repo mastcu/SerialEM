@@ -2266,6 +2266,9 @@ void CEMscope::UpdateWindowsForStage()
   mWinApp->mMontageWindow.Update();
   mWinApp->mTiltWindow.UpdateEnables();
   mWinApp->mAlignFocusWindow.Update();
+  mWinApp->mLowDoseDlg.Update();
+  if (mWinApp->GetShowRemoteControl())
+    mWinApp->mRemoteControl.UpdateEnables();
 }
 
 int CEMscope::TaskStageBusy()
