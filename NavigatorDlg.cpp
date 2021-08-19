@@ -2385,6 +2385,18 @@ void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, fl
   stageY = aInv.ypx * (ptX - delX) + aInv.ypy * (ptY - delY);
 }
 
+// Overload that handles getting transform too
+BOOL CNavigatorDlg::MarkerStagePosition(EMimageBuffer *imBuf, float &stageX, 
+  float &stageY)
+{
+  float delX, delY;
+  ScaleMat aMat;
+  if (!BufferStageToImage(imBuf, aMat, delX, delY))
+    return false;
+  MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY);
+  return true;
+}
+
 // Common routine to move stage to current item, with wait until it is ready
 int CNavigatorDlg::MoveStage(int axisBits, bool justCheck)
 {

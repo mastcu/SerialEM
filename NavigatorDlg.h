@@ -599,6 +599,7 @@ public:
   void MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, float delY, 
     float & stageX, float & stageY, int useLineEnd = 0, int *pcInd = NULL,
     float *xInPiece = NULL, float *yInPiece = NULL);
+  BOOL MarkerStagePosition(EMimageBuffer * imBuf, float & stageX, float & stageY);
   BOOL m_bShowAcquireArea;
   CButton m_butAddMarker;
   afx_msg void OnAddMarker();

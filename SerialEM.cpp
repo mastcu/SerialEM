@@ -3042,13 +3042,13 @@ BOOL CSerialEMApp::SetWindowPlacement(WINDOWPLACEMENT *winPlace)
   return m_pMainWnd->SetWindowPlacement(winPlace);
 }
 
-void CSerialEMApp::SetStatusText(int iPane, CString strText)
+void CSerialEMApp::SetStatusText(int iPane, CString strText, bool skipBlink)
 {
   mMainFrame->SetStatusText(iPane, strText);
   if (iPane != SIMPLE_PANE)
     return;
-  mBlinkText = strText;
-  if (strText.IsEmpty())
+  mBlinkText = skipBlink ? "" : strText;
+  if (mBlinkText.IsEmpty())
     return;
   mBlinkOn = true;
   mNextBlinkTime = GetTickCount() + BLINK_TIME_ON;

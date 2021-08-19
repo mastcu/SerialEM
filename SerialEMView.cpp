@@ -1984,6 +1984,13 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           imX = (int)imBuf->mUserPtX;
           imY = (int)imBuf->mUserPtY;
           ShowImageValue(imBuf->mImage, imX, imY, MEDIUM_PANE);
+          if (mWinApp->mNavigator) {
+            if (mWinApp->mNavigator->MarkerStagePosition(imBuf, shiftX, shiftY)) {
+              lenstr.Format("%.2f, %.2f um", shiftX, shiftY);
+              mWinApp->SetStatusText(SIMPLE_PANE, lenstr, true);
+            }
+
+          }
         }
         if (mWinApp->mNavigator)
           mWinApp->mNavigator->UpdateAddMarker();
