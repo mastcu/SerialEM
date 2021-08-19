@@ -2944,6 +2944,11 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("DMGainReferenceName")) {
             StripItems(strLine, 1, camP->DMRefName);
 
+          } else if (MatchNoCase("FalconLocalFramePath")) {
+            StripItems(strLine, 1, camP->falconFramePath);
+          } else if (MatchNoCase("FalconGainRefDir")) {
+            StripItems(strLine, 1, camP->falconRefDir);
+
           } else if (MatchNoCase("UsableArea")) {
             if (!strItems[1].IsEmpty())
               camP->defects.usableTop = itemInt[1];

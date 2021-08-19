@@ -146,6 +146,8 @@ struct CameraParameters {
   float gainFactor[MAX_BINNINGS];   // Relative gain factors for each binning
   int autoGainAtBinning;   // Binning at which to start automatic gain factors
   int falcon3ScalePower;   // Power for Falcon 3 scaling
+  CString falconRefDir;    // Reference directory for this camera
+  CString falconFramePath; // Local Frame path for this camera
   float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
   float linearOffset;      // Amount to subtract before scaling (K3)
   float K3CDSLinearRatio;  // ratio of counts with CDS on to off

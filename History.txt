@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/19/21: Added camera properties for Falcon frame path and reference directory
+so that it will work with multiple Falcons.
+
+8/19/21: Fixed problems with HDF saving, and with reopening HDF montages.
+
+8/19/21: Added checks for illegal characters in entered names for frame files
+and folders.
+
 8/18/21: Prevented problem with mismatched sizes in shift calibrations when
 using trial area (In 3.8).
 

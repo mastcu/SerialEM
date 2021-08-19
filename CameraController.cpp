@@ -1407,6 +1407,12 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
         mAllParams[i].retractable = false;
         mAllParams[i].autoGainAtBinning = 0;
       }
+
+      // Assign global reference dir and frame path if the camera properties one is empty
+      if (IS_FALCON2_3_4((&mAllParams[i])) && mAllParams[i].falconRefDir.IsEmpty())
+        mAllParams[i].falconRefDir = mFalconReferenceDir;
+      if (IS_FALCON2_3_4((&mAllParams[i])) && mAllParams[i].falconFramePath.IsEmpty())
+        mAllParams[i].falconFramePath = mLocalFalconFramePath;
     }
   }
   if (anyGIF) {
@@ -1710,6 +1716,12 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     mParam->eagleIndex = -1;
 
   FixDirForFalconFrames(mParam);
+
+  // Switch to this camera's frame path and reference dir
+  if (IS_FALCON2_3_4(mParam)) {
+    mLocalFalconFramePath = mParam->falconFramePath;
+    mFalconReferenceDir = mParam->falconRefDir;
+  }
 
   // Manage blanking of AMT camera
   if (!mAMTactive && mParam->AMTtype)
@@ -10291,8 +10303,9 @@ int CCameraController::SetupFilter(BOOL acquiring)
   float delaySlope1 = acquiring ? mGIFoffsetDelaySlope1 : 0.f;
   float delaySlope2 = acquiring ? mGIFoffsetDelaySlope2 : 0.f;
 
-  // Loss must be inverted if driving energy shift instead of spectrum offset
-  double loss = mWinApp->mFilterControl.LossToApply() * (mNoSpectrumOffset ? -1. : 1.);
+  // Loss must be inverted if driving energy shift instead of spectrum offset for GIF
+  double loss = mWinApp->mFilterControl.LossToApply() * 
+    ((mNoSpectrumOffset && !camParam->filterIsFEI) ? -1. : 1.);
   
   mIgnoreFilterDiffs = false;
   if (mSimulationMode || mNoFilterControl)
@@ -10381,6 +10394,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
       }
       if (filtParam->slitIn && fabs(filtParam->slitWidth - curWidth) > 0.04)
         mTD.scopePlugFuncs->SetSlitWidth(filtParam->slitWidth);
+      //loss = -mWinApp->mFilterControl.LossToApply();
       delOffset = fabs(loss - curLoss);
       if (delOffset > 0.009) {
         mTD.scopePlugFuncs->SetEnergyShift(loss);
