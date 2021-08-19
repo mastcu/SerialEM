@@ -121,6 +121,7 @@ class EMmontageController
   BOOL mNeedToFillMini;           // Flag that mini should be filled with first mean
   BOOL mNeedToFillCenter;         // Flag that center should be filled
   float mMiniFillVal;             // Fill value from mean of first piece
+  int mPcIndForFillVal;           // Piece index at which to get mean when deferred tiling
   int mReadSavedZ;                // Saved Z value to reset after read
   MontParam mTrialParam;
   double mBaseISX, mBaseISY;      // Base image shifts

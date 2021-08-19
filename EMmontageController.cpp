@@ -353,7 +353,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int ind, icx1, icx2, icy1, icy2, first, last, j, iDir, notSkipping;
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
-  double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY;
+  double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY, dist, minDist;
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
   float acqExposure, trialExposure, minContExp;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
@@ -1450,6 +1450,21 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     firstUndone > 0 || mMiniFrameX + (mParam->xNframes - 1) * mMiniDeltaX < mMiniSizeX);
   mNeedToFillCenter = mNumToSkip > 0;
   mMiniFillVal = 0;
+  mPcIndForFillVal = -1;
+  if (mMiniBorderY && !mReadingMontage && !mUsingAnchor) {
+    for (ix = 1; ix <= mParam->xNframes; ix++) {
+      delISX = (mParam->xNframes + 1) / 2. - ix;
+      for (iy = 1; iy <= mParam->yNframes; iy++) {
+        delISY = (mParam->yNframes + 1) / 2. - iy;
+        dist = delISX * delISX + delISY * delISY;
+        i = PieceIndexFromXY(ix, iy);
+        if ((mPcIndForFillVal < 0 || dist < minDist) && i >= 0) {
+          minDist = dist;
+          mPcIndForFillVal = i;
+        }
+      }
+    }
+  }
 
   // Fill center in case no pieces occur and there is no mini
   if (mNumToSkip && !preCooking)
@@ -2310,7 +2325,7 @@ void EMmontageController::SavePiece()
     bool needSample = image->getRowBytes() % 2 && type != kUBYTE;
 
     // First time in, get mean of this image and fill the whole array
-    if (mNeedToFillMini) {
+    if (mNeedToFillMini && (mPcIndForFillVal < 0 || mPcIndForFillVal == mPieceIndex)) {
       mMiniFillVal = ProcImageMean(data, type, mParam->xFrame, mParam->yFrame, 0,
         mParam->xFrame - 1, 0, mParam->yFrame - 1);
       if (!mMiniBorderY) {

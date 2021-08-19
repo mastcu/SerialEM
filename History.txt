@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/17/21: Put stage coordinates of marker point in status bar when Navigator
+is open.
+
+8/17/21: Prevented some inappropriate operations when the stage is busy.
+
+8/17/21: Put SAVING IMAGE in status bar in case it takes a long time.
+
+8/17/21: Took the fill value used for missing montage pieces from a piece near
+center instead of the first piece when possible so it would be gray not black.
+
 8/17/21: Prevented DM from crashing and got proper error return when the
 output file for frame saving cannot be opened (In 3.8).
 
