@@ -47,6 +47,7 @@ public:
 	int SaveBufferToFile(int bufNum, int fileNum, int inSect = -1);
 	int StoreIndexFromName(CString name);
 	void RestoreCurrentFile();
+  void NewPointerForCurrentStore(KImageStore *inStore);
 	bool FileAlreadyOpen(CString filename, CString message);
 	void CloseAllStores();
   GetMember(int, NumStores)

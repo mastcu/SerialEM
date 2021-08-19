@@ -830,6 +830,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   mExternalControl = (external || mWinApp->NavigatorStartedTS()) ? 1 : 0;
   mTerminateOnError = mExternalControl ? mAutoTerminatePolicy : 0;
   mAlreadyTerminated = false;
+  mOriginalTermOnError = 0;
   mLastSucceeded = 0;
   mTiltedToZero = false;
   if (!mStartedTS) {
@@ -4500,6 +4501,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
       return 1;
     }
     mDoingDosymFileReorder = (error == 0 ? 1 : 0);
+    if ((error == 1 || error == 12) && mTermFromMenu)
+      return -1;
   }
 
    UtilSplitExtension(mEndCtlFilePath, xyzName, str);
@@ -4561,6 +4564,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   mStartedTS = false;
   ManageTerminateMenu();
   mTermFromMenu = false;
+  if (!mOriginalTermOnError)
+    mOriginalTermOnError = mTerminateOnError;
   mTerminateOnError = 0;
   mBufferManager->SetShiftsOnAcquire(mSaveShiftsOnAcquire);
   mBufferManager->SetBufToReadInto(mSaveBufToReadInto);
@@ -4846,7 +4851,8 @@ void CTSController::Terminate()
     }
   }
   mTermFromMenu = true;
-  EndControl(true, mReorderDoseSymFile);
+  if (EndControl(true, mReorderDoseSymFile) < 0)
+    return;
   if (answer == IDYES)
     mDocWnd->DoCloseFile();
   mWinApp->DetachStackView();
@@ -4907,12 +4913,14 @@ void CTSController::TerminateOnError(void)
   mTermOnErrorCalled = true;
   if (StartGettingDeferredSum(DEFSUM_TERM_ERROR) == 1)
     return;
+  if (!mOriginalTermOnError)
+    mOriginalTermOnError = mTerminateOnError;
   mTerminateOnError = 0;
   mPostponed = false;
   mInStartup = false;
   mWinApp->mCameraMacroTools.DoingTiltSeries(false);
   mTermOnErrorCalled = false;
-  if (mStartedTS && EndControl(true, mReorderDoseSymFile)) {
+  if (mStartedTS && !mTerminationStarted && EndControl(true, mReorderDoseSymFile)) {
     mNeedFinalTermTasks = true;
     return;
   }
@@ -4931,7 +4939,8 @@ void CTSController::DoFinalTerminationTasks()
 
   // Navigator tests this flag to know when tilt is done
   mTiltedToZero = true;
-  mDocWnd->DoCloseFile();
+  if (!mClosedDoseSymFile)
+    mDocWnd->DoCloseFile();
   if (mWinApp->mStackView)
     mWinApp->mStackView->CloseFrame();
 }
@@ -4982,8 +4991,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   // Send an email if the user seems not to be around, we are not postponed, and
   // it is clearly in the tilt series somewhere
   // If we are not in tilt series but in navigator acquire, let it send email
-  if (((!mTerminateOnError || mPostponed) && !mWinApp->mCamera->GetNoMessageBoxOnError())
-    || mUserStop || mUserPresent) {
+  if ((((!mTerminateOnError && !mOriginalTermOnError) || mPostponed) && 
+    !mWinApp->mCamera->GetNoMessageBoxOnError()) || mUserStop || mUserPresent) {
     if (mInInitialChecks || mStartedTS || mDoingTS) {
       if (!(mUserStop || mPostponed || mUserPresent))
         SendEmailIfNeeded(false);

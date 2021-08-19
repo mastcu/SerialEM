@@ -285,24 +285,40 @@ void UtilRemoveFile(CString filename)
   }
 }
 
-// Rename a file, removing an existing copy first, with stock or supplied error message
-int UtilRenameFile(CString fromName, CString toName, const char *message)
+// Rename a file, removing an existing copy first, with stock or supplied error message,
+// and option to return instead of popping up error.  If the message is non-empty it will
+// be substituted for the stock.  If returnMess is true and message is non-NULL it will
+// return it.  It also tries up to 5 times in case there is a temporary lock on file
+int UtilRenameFile(CString fromName, CString toName, CString *message, bool returnMess)
 {
   CFileStatus status;
   CString mess;
-  try {
-    if (CFile::GetStatus((LPCTSTR)toName, status))
-      CFile::Remove(toName);
-    CFile::Rename(fromName, toName);
-  }
-  catch (CFileException *err) {
-    err->Delete();
-    if (message)
-      mess = message;
-    else
-      mess = "Error attempting to rename " + fromName + " to " + toName;
-    SEMMessageBox(mess, MB_EXCLAME);
-    return 1;
+  int numRetry = 5;
+  for (int retry = 0; retry < numRetry; retry++) {
+    try {
+      if (CFile::GetStatus((LPCTSTR)toName, status))
+        CFile::Remove(toName);
+      CFile::Rename(fromName, toName);
+      break;
+    }
+    catch (CFileException *err) {
+      err->Delete();
+      if (retry < numRetry - 1) {
+        PrintfToLog("Retry %d", retry);
+        Sleep(500);
+      } else {
+        if (message && !message->IsEmpty()) {
+          mess = *message;
+        } else {
+          mess = "Error attempting to rename " + fromName + " to " + toName;
+        }
+        if (returnMess && message)
+          *message = mess;
+        else
+          SEMMessageBox(mess, MB_EXCLAME);
+        return 1;
+      }
+    }
   }
   return 0;
 }

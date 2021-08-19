@@ -1417,7 +1417,7 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
     if (store == NULL || !store->FileOK()) {
       if (fileType == STORE_TYPE_HDF)
         str += b3dGetError();
-      AfxMessageBox(str, MB_EXCLAME);
+      SEMMessageBox(str, MB_EXCLAME);
       mWinApp->RestoreViewFocus();
       if (store)
         delete store;
@@ -1590,6 +1590,13 @@ BOOL CSerialEMDoc::StoreIsMontage(int which)
 void CSerialEMDoc::RestoreCurrentFile()
 {
   SwitchToFile(mCurrentStore);
+}
+
+// When MultiTSTasks has to reopen the file after a failure to rename, renew the pointer
+void CSerialEMDoc::NewPointerForCurrentStore(KImageStore * inStore)
+{
+  if (mCurrentStore >= 0)
+    mStoreList[mCurrentStore].store = inStore;
 }
 
 // Protect this file from being closed and also create a ...openTS file

@@ -2695,6 +2695,7 @@ void EMmontageController::SavePiece()
       mImBufs[1].mCamera = B3DCHOICE(mReadingMontage && bufCam >= 0,
         bufCam, mWinApp->GetCurrentCamera());
       mImBufs[1].mEffectiveBin = mMiniEffectiveBin;
+      mImBufs[1].mDivideBinToShow = mImBufs->mDivideBinToShow;
       if (mReadingMontage && bufCam >= 0)
         mImBufs[1].mEffectiveBin = B3DMAX((float)mCamParams[bufCam].sizeX / mMiniSizeX, 
           (float)mCamParams[bufCam].sizeY / mMiniSizeY);

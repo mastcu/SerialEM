@@ -729,6 +729,7 @@ void CGainRefMaker::BeamTooWeak()
 void CGainRefMaker::StopAcquiringRef()
 {
   CFileStatus status;
+  CString mess = "Error attempting to restore backup file or previous reference";
   if (!mPreparingGainRef && !mStartingServerFrames)
     return;
   mFrameCount = 0;
@@ -742,8 +743,7 @@ void CGainRefMaker::StopAcquiringRef()
       delete mStoreMRC;
     mStoreMRC = NULL;
     if (mBackedUp) {
-      UtilRenameFile(mBackupName, mFileName, 
-        "Error attempting to restore backup file or previous reference");
+      UtilRenameFile(mBackupName, mFileName, &mess);
       mBackedUp = false;
     }
     mConSet->saveFrames = 0;

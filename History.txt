@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/17/21: Prevented DM from crashing and got proper error return when the
+output file for frame saving cannot be opened (In 3.8).
+
+8/17/21: Prevented program crashes and message boxes during batch acquisition
+when the file to be reordered for bidirectional or dose-symmetric series
+cannot be renamed (i.e., when open elsewhere) (In 3.8).
+
 8/4/21: Expanded the set of tasks that Navigator Acquire at Items can run,
 provided flexibility in where and when they run, added multiple Records as
 another primary acquisition action, revamped the Acquire at Items dialog and

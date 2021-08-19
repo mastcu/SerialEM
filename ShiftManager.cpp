@@ -3084,13 +3084,24 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
 
 }
 
-    
+static void CheckTimeout(UINT value, const char * descrip)
+{
+  float crit = 300000.;
+
+  // This gives interval from current time to value
+  double interval = SEMTickInterval(value);
+  if (interval < -crit)
+    PrintfToLog("WARNING (please report): Timeout for %s is too long (%.2f sec, timeout"
+      " %u, ticks %u)", descrip, -0.001 * interval, value, GetTickCount());
+}
+
 // Set the time out time to be present time plus the delay, but do not make
 // it smaller than a current value.  If it is later than the current value, mark that it
 // came from a true IS timeout
 void CShiftManager::SetISTimeOut(float inDelay)
 {
   UINT newTime = AddIntervalToTickTime(GetTickCount(), (int)(1000. * inDelay)) ;
+  CheckTimeout(newTime, "IS Timeout");
   if (SEMTickInterval(newTime, mISTimeOut) > 0.) {
     mISTimeOut = newTime;
     mLastTimeoutWasIS = true;
@@ -3100,6 +3111,7 @@ void CShiftManager::SetISTimeOut(float inDelay)
 // Store a requested timeout time in the IS timeout variable but mark it as not an IS
 void CShiftManager::SetGeneralTimeOut(UINT inTime)
 {
+  CheckTimeout(inTime, "general timeout");
   if (SEMTickInterval(mISTimeOut, inTime) < 0)
     mISTimeOut = inTime;
   mLastTimeoutWasIS = false;
@@ -3107,6 +3119,7 @@ void CShiftManager::SetGeneralTimeOut(UINT inTime)
 
 void CShiftManager::SetGeneralTimeOut(UINT inTicks, int interval)
 {
+  CheckTimeout(inTicks, "general timeout before adding interval");
   SetGeneralTimeOut(AddIntervalToTickTime(inTicks, interval));
 }
 
@@ -3134,21 +3147,26 @@ UINT CShiftManager::GetGeneralTimeOut(int whichSet)
   if (mLowMagNormDelay > 0 && mScope->GetLastNormMagIndex() > 0 && 
     mScope->GetLastNormMagIndex() < mScope->GetLowestNonLMmag(camP))
     normDelay = mLowMagNormDelay;
-  if (whichSet != TRACK_CONSET && 
-    (whichSet > 2 || mWinApp->mFocusManager->DoingFocus()))
-    tiltTimeOut = AddIntervalToTickTime(mScope->GetLastTiltTime(), 
+  if (whichSet != TRACK_CONSET &&
+    (whichSet > 2 || mWinApp->mFocusManager->DoingFocus())) {
+    tiltTimeOut = AddIntervalToTickTime(mScope->GetLastTiltTime(),
       GetAdjustedTiltDelay(mScope->GetLastTiltChange()));
-  else
+    CheckTimeout(tiltTimeOut, "Tilt timeout with adjusted tilt delay");
+  } else {
     tiltTimeOut = AddIntervalToTickTime(mScope->GetLastTiltTime(), mMinTiltDelay);
+    CheckTimeout(tiltTimeOut, "Tilt timeout with min tilt delay");
+  }
 
   // Compute a timeout since last normalization and take max
   UINT normTimeOut = AddIntervalToTickTime(mScope->GetLastNormalization(), normDelay);
+  CheckTimeout(normTimeOut, "normalization delay");
   if (SEMTickInterval(normTimeOut, tiltTimeOut) < 0)
     normTimeOut = tiltTimeOut;
 
   // Compute a timeout since the last stage move and take max, based on a delay time that
   // Was reset to default at end of stage move and possibly changed by routine after that
   tiltTimeOut = AddIntervalToTickTime(mScope->GetLastStageTime(), mStageDelayToUse);
+  CheckTimeout(tiltTimeOut, "Stage move timeout");
   if (SEMTickInterval(normTimeOut, tiltTimeOut) < 0)
     normTimeOut = tiltTimeOut;
 
@@ -3157,7 +3175,6 @@ UINT CShiftManager::GetGeneralTimeOut(int whichSet)
     mLastTimeoutWasIS = false;
   return (SEMTickInterval(normTimeOut, mISTimeOut) > 0 ? normTimeOut : mISTimeOut);
 }
-
 
 void CShiftManager::ResetAllTimeouts()
 {

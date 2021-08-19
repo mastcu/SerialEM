@@ -136,6 +136,7 @@ public:
   GetSetMember(int, CheckScopeDisturbances);
   GetSetMember(int, TrackAfterScopeStopTime);
   GetSetMember(int, FocusAfterScopeStopTime);
+  SetMember(bool, ClosedDoseSymFile);
   GetSetMember(int, WaitAfterScopeFilling);
   GetMember(CString, LastNoBoxMessage);
 
@@ -346,6 +347,7 @@ private:
   BOOL mStartupStop;          // Set to do single-loop stop at end of startup
   int mExternalControl;       // Flag that series was started under external control
   int mTerminateOnError;      // Flag to terminate instead of giving message box on error
+  int mOriginalTermOnError;   // Original value it had when set to 0 in terminating
   BOOL mTermAtLoopEnd;        // Flag to terminate on loop end when stopping
   BOOL mAlreadyTerminated;    // Flag to prevent double termination after error
   BOOL mReachedEndAngle;      // Flag that we are stopping because it is at end angle

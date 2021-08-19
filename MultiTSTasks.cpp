@@ -1682,7 +1682,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
       err = SetupBidirFileCopy(zmax);
     if (err) {
       mess.Format("An error (code %d) occurred trying to initialize the\ncopying of the"
-        " file to a new one with inverted Z values.\n\n", err);
+        " file to a new one with reordered Z values.\n\n", err);
       if (err > 10)
         mess += "The file is probably open in another program;\n"
         " try closing any other program accessing the file";
@@ -1690,7 +1690,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
       err = StartBidirFileCopy(synchronous);
       if (err > 0)
         mess.Format("An error (code %d) occurred trying to start or resume copying\n"
-        "the file to a new one with inverted Z values.\n\n", err);
+        "the file to a new one with reordered Z values.\n\n", err);
     }
   }
   if (err > 0 && err < 11)
@@ -1740,6 +1740,7 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 
   delete mWinApp->mStoreMRC;
   mWinApp->mStoreMRC = NULL;
+  mWinApp->mTSController->SetClosedDoseSymFile(true);
   if (UtilRenameFile(filename, mBfcNameFirstHalf)) {
     if (!adocName.IsEmpty())
       UtilRenameFile(mBfcAdocFirstHalf, adocName);
@@ -1747,6 +1748,8 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
     if (!mWinApp->mStoreMRC) {
       mWinApp->mDocWnd->DoCloseFile();
       return 4;
+    } else {
+      mWinApp->mDocWnd->NewPointerForCurrentStore(mWinApp->mStoreMRC);
     }
     return 12;
   }
@@ -1773,6 +1776,7 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
   mBfcNumToCopy = zmax;
   mBfcCopyIndex = 0;
   mBfcSortedStore->MarkAsOpenWithFile(OPEN_TS_EXT);
+  mWinApp->mTSController->SetClosedDoseSymFile(false);
 
   // Now we need to read first image into the read buffer and save it out
   err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf, mBfcSectOrder[0]);

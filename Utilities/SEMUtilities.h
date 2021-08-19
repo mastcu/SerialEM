@@ -21,7 +21,7 @@ int UtilOpenFileReadImage(CString filename, CString descrip);
 int UtilSaveSingleImage(CString filename, CString descrip, bool useMdoc);
 int UtilCheckDiskFreeSpace(float needed, const char *operation);
 void UtilRemoveFile(CString filename);
-int UtilRenameFile(CString fromName, CString toName, const char *message = NULL);
+int UtilRenameFile(CString fromName, CString toName, CString *message = NULL, bool returnMess = false);
 void UtilSplitExtension(CString filename, CString &root, CString &ext);
 void UtilSplitPath(CString fullPath, CString &directory, CString &filename);
 int UtilRelativePath(std::string fromDir, std::string toDir, std::string &relPath);
