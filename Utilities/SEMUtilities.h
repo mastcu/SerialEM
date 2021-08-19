@@ -29,6 +29,7 @@ int UtilStandardizePath(std::string &dir);
 int UtilRelativePath(CString fromDir, CString toDir, CString &relPath);
 int UtilStandardizePath(CString &dir);
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
+char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descrip);
 void DLL_IM_EX UtilTrimTrailingZeros(CString &str);
 int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug);
 void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &start, 

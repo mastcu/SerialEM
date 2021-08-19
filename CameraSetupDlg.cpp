@@ -2950,13 +2950,15 @@ void CCameraSetupDlg::OnSetSaveFolder()
 {
   CString str = mCamera->GetDirForK2Frames();
   CString title = "SELECT folder for saving frames (typing name may not work)";
-  BOOL subdirsOK = mCamera->GetSubdirsOkInFalcon3Save() || 
+  BOOL subdirsOK = mCamera->GetSubdirsOkInFalcon3Save() ||
     mParam->FEItype == FALCON4_TYPE;
   if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
     if (KGetOneString("Enter folder on Gatan server for saving frames:", str, 250,
-      mCamera->GetNoK2SaveFolderBrowse() ? "" : 
-      "SELECT (do not type in) folder accessible on Gatan server for saving frames"))
-      mCamera->SetDirForK2Frames(str);
+      mCamera->GetNoK2SaveFolderBrowse() ? "" :
+      "SELECT (do not type in) folder accessible on Gatan server for saving frames")) {
+      if (!UtilCheckIllegalChars(str, 2, "The folder name"))
+        mCamera->SetDirForK2Frames(str);
+    }
     FixButtonFocus(m_butSetSaveFolder);
     return;
   }
@@ -2967,10 +2969,12 @@ void CCameraSetupDlg::OnSetSaveFolder()
       if (KGetOneString("Frames can be saved in the Falcon storage location or a new or"
         " existing subfolder " + CString(subdirsOK ? "tree" : "of it"),
         "Enter name of subfolder to save frames in, or leave blank for none", str)) {
+        if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
           if (subdirsOK || str.FindOneOf("/\\") < 0)
             mCamera->SetDirForFalconFrames(str);
           else
             AfxMessageBox("You can enter only a single folder name without \\ or /");
+        }
       }
       FixButtonFocus(m_butSetSaveFolder);
       return;
@@ -3001,10 +3005,12 @@ void CCameraSetupDlg::OnDESetSaveFolder()
   if (KGetOneString("Here, you can specify a single subfolder under this camera's "
     "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
     "or leave blank for none", str)) {
-       if (str.FindOneOf("/\\") < 0)
-         mCamera->SetDirForDEFrames(str);
-       else
-         AfxMessageBox("You can enter only a single folder name without \\ or /");
+    if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
+      if (str.FindOneOf("/\\") < 0)
+        mCamera->SetDirForDEFrames(str);
+      else
+        AfxMessageBox("You can enter only a single folder name without \\ or /");
+    }
   }
   FixButtonFocus(m_butDESetSaveFolder);
 }

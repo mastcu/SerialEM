@@ -448,6 +448,30 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
   filename += toAdd;
 }
 
+// Check for illegal characters in Windows filenames, possibly allowing slash (1) and a
+// colon after a drive letter (2)
+char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descrip)
+{
+  char bad = 0;
+  int ind = filename.FindOneOf("?*\"<>|");
+  if (ind >= 0) {
+    bad = filename.GetAt(ind);
+  } else {
+    ind = filename.Find(":", slashOrDriveOK > 1 ? 2 : 0);
+    if (ind >= 0 || filename.GetAt(0) == ':')
+      bad = ':';
+    else if (slashOrDriveOK)
+      return 0;
+    ind = filename.FindOneOf("/\\");
+    if (ind >= 0)
+      bad = filename.GetAt(ind);
+  }
+  if (bad && !descrip.IsEmpty())
+    AfxMessageBox(descrip + " contains the character " + CString(bad) +
+      ", which is not allowed in filenames", MB_EXCLAME);
+  return bad;
+}
+
 // Remove zeros from end of a string ending in a floating point number
 void UtilTrimTrailingZeros(CString & str)
 {

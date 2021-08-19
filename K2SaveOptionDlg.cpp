@@ -240,6 +240,9 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
 void CK2SaveOptionDlg::OnOK()
 {
   UpdateData(true);
+  if ((m_bRootFolder || m_bRootFile) &&
+    UtilCheckIllegalChars(m_strBasename, 0, "The base name"))
+    return;
   if (!m_bNumber)
     m_bHourMinSec = true;
   mNameFormat = (m_bRootFolder ? FRAME_FOLDER_ROOT : 0) |
