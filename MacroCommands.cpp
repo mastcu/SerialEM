@@ -6161,6 +6161,7 @@ int CMacCmd::ListAllCalibrations(void)
   mWinApp->mMenuTargets.DoListISVectors(true);
   mWinApp->mMenuTargets.DoListISVectors(false);
   mWinApp->mMenuTargets.DoListStageCals();
+  mWinApp->mFocusManager->OnAutofocusListCalibrations();
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
