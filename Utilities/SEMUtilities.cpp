@@ -304,7 +304,6 @@ int UtilRenameFile(CString fromName, CString toName, CString *message, bool retu
     catch (CFileException *err) {
       err->Delete();
       if (retry < numRetry - 1) {
-        PrintfToLog("Retry %d", retry);
         Sleep(500);
       } else {
         if (message && !message->IsEmpty()) {
