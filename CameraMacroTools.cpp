@@ -518,7 +518,7 @@ void CCameraMacroTools::Update()
   if (!mDoingTS)
     m_butEnd.EnableWindow((mMacProcessor->DoingMacro() && 
       !mMacProcessor->GetRunningScrpLang()) || mDoingCalISO || 
-      (mEnabledSearch && idle) || (navState != NO_NAV_RUNNING && 
+      (mEnabledSearch && shotOK) || (navState != NO_NAV_RUNNING && 
       navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) || 
       mWinApp->mMultiTSTasks->GetAssessingRange());
 
