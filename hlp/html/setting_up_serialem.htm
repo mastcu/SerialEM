@@ -2904,7 +2904,10 @@
       either the <b>STEM Camera Properties</b> section of 
       <A HREF="about_properties.htm#per_camera_properties">Properties for one camera</A>
       or in <A HREF="about_properties.htm#stem_properties">STEM properties</A>.&nbsp; 
-      See those sections for full details on the properties that are mentioned below.</P>
+      See those sections for full details on the properties that are mentioned below.&nbsp; 
+      The exception to this is for JEOL STEM: &#39;CameraPluginIndex&#39; is described in the
+      <strong>Plugin Camera Properties</strong> section and must be set to 1 in the 
+      camera properties.</P>
     <P><b><i>Detector Property Entries</i></b>. The CameraProperties section for the 
       STEM camera should list all of the detectors whose access can be controlled by 
       the program.&nbsp; There should be a ChannelName entry for each detector; this 
@@ -2952,6 +2955,11 @@
       the blocking detector (listed first) to be retracted when any one of the other 
       detectors is selected.&nbsp; Retraction is not done automatically just because 
       some detectors are mutually exclusive, because this might not be needed.</P>
+        <P>For JEOL STEM, there should be a &#39;ChannelName&#39; entry for each detector, with 
+          whatever name is desired, but the entries must be in the same order that they 
+          are listed by the plugin or server upon initialization with debugging turned on 
+          (have DebugOutput set to &#39;J&#39;).&nbsp; Detectors are controlled by the STEM 
+          interface so the other properties mentioned above are not needed.</P>
 <P><i><b>Screen and Camera Management Properties.</b></i> Because of the diversity 
   of STEM setups, there are a host of confusing properties to control the behavior 
   of the screen and CCD cameras, which may be selected by preference or by 
@@ -3007,6 +3015,25 @@
       convenient.&nbsp; For example, if you have no use for 8K images, you could leave 
       out binning 1, or you could set the camera size properties to 4096 instead of 
       8192.</P>
+        <P><em><strong>Sizes and binnings in multichannel JEOL STEM</strong></em>.&nbsp; 
+          The JEOL multichannel interface (on the F200 at least) can acquire 4096x4096 
+          images from one detector, 3072x3072 from two, and 1024x1024 from 3 or 4 
+          detectors simultaneously.&nbsp; The &#39;MinMultiChannelBinning&#39; property informs 
+          the program of these restrictions and the camera setup dialog can limit binning 
+          selections accordingly.&nbsp; If you are satisfied with taking no more than 
+          2048x2048 from two detectors, you can make the following entries:</P>
+        <P>&nbsp;&nbsp;&nbsp;&nbsp; CameraSizeX 4096 <br />
+          &nbsp;&nbsp;&nbsp; CameraSizeY 4096 <br />
+          &nbsp;&nbsp;&nbsp; MinMultiChannelBinning 2 4 4<br />
+          &nbsp;&nbsp;&nbsp; Binnings 1 2 4 8 16 32<br />
+        </P>
+        <P>However, it is possible to access the full 3072x3072 capability by defining the 
+          camera as 3 times larger with a minimum binning of 3:</P>
+        <P>&nbsp;&nbsp;&nbsp;&nbsp; CameraSizeX 12288 <br />
+          &nbsp;&nbsp;&nbsp; CameraSizeY 12288 <br />
+          &nbsp;&nbsp;&nbsp; MinMultiChannelBinning 4 12 12<br />
+          &nbsp;&nbsp;&nbsp; Binnings 3 4 6&nbsp; 8 12 16 24 32 48</P>
+        <P>where you might not want all of those binning values.</P>
     <P><b><i>Camera Timing. </i></b>Run the <A href="menu_calibration.htm#hid_calibration_cameratiming">
       Camera Timing</A> command in the Calibration menu, accepting the default 
       parameters for exposure, binning, and number of test images.&nbsp; At the end, 

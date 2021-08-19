@@ -2144,6 +2144,12 @@
             know.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>MinMultiChannelBinning</TD>
+          <TD>For a multichannel JEOL STEM interface, follow with a list of the binnings to 
+            which the acquisition must be restricted for 2, 3, and 4 detectors.&nbsp; For 
+            F200, if the CameraSize entries are 4096, this entry would be '2 4 4'.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD><b>Plugin Camera Properties</b></TD>
           <TD>&nbsp;</TD>
         </TR>
@@ -2155,7 +2161,9 @@
         <TR VALIGN="top">
           <TD>PluginCameraIndex</TD>
           <TD>The index by which this camera is selected, if the plugin supports more than 
-            one camera.</TD>
+            one camera.&nbsp; <I>For a JEOL camera or STEM</I>, the index for a camera must be 0 and the 
+            index for STEM must be 1.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ShutterLabel1</TD>
