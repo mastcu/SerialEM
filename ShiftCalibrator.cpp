@@ -393,6 +393,8 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   bottom = conSet->bottom / mCalBinning;
   right = conSet->right / mCalBinning;
   if (mUseTrialSize) {
+    binnedX = right - left;
+    binnedY = bottom - top;
     mCamera->AdjustSizes(binnedX, camP->sizeX, camP->moduloX, left,
       right, binnedY, camP->sizeY,
       camP->moduloY, top, bottom, mCalBinning);
