@@ -8230,17 +8230,17 @@ int CMacCmd::ReportNumNavAcquire(void)
 // ReportNumHoleAcquire
 int CMacCmd::ReportNumHoleAcquire(void)
 {
-  int index, index2;
+  int index, numHoles, numRec;
   int minHoles = mItemEmpty[1] ? 1 : B3DMAX(1, mItemInt[1]);
   int startInd = mItemEmpty[2] ? 0 : (mItemInt[2] - 1);
   int endInd = mItemEmpty[3] ? -1 : (mItemInt[3] - 1);
-  mNavHelper->CountHoleAcquires(startInd, endInd, minHoles, index, index2);
+  mNavHelper->CountHoleAcquires(startInd, endInd, minHoles, index, numHoles, numRec);
   if (index < 0)
     mLogRpt = "The Navigator is not open; there are no acquire items";
   else
     mLogRpt.Format("With a minimum of %d holes, Navigator would acquire %d holes at %d "
-      "items", minHoles, index2, index);
-  SetReportedValues((double)index2, (double)index);
+      "items (%d Records)", minHoles, numHoles, index, numRec);
+  SetReportedValues((double)numHoles, (double)index, (double)numRec);
   return 0;
 }
 

@@ -520,7 +520,7 @@ public:
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
   void CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS);
-  void CountHoleAcquires(int startInd, int endInd, int minHoles, int &numCenter, int &numHoles);
+  void CountHoleAcquires(int startInd, int endInd, int minHoles, int &numCenter, int &numHoles, int &numRecs);
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
   int TransformExternalCoords(CMapDrawItem *item, int extType,

@@ -4485,9 +4485,9 @@ void CNavHelper::CountAcquireItems(int startInd, int endInd, int & numAcquire, i
 }
 
 // Return number of positions and number of holes to be acquired with current or item
-// multishot parameters, excluing ones that would acquire fewer than minHoles.
+// multishot parameters, excluding ones that would acquire fewer than minHoles.
 void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles, 
-  int &numCenters, int &numHoles)
+  int &numCenters, int &numHoles, int &numRecs)
 {
   CMapDrawItem *item;
   int numDefault, numForItem, xt, yt;
@@ -4518,6 +4518,11 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
       }
     }
   }
+  xt = 1;
+  if (mMultiShotParams.inHoleOrMultiHole & 1)
+    xt = (mMultiShotParams.doCenter ? 1 : 0) + mMultiShotParams.numShots[0] + 
+    (mMultiShotParams.doSecondRing ? mMultiShotParams.numShots[1] : 0);
+  numRecs = numHoles * xt;
 }
 
 // Return true if there are any montage maps 
