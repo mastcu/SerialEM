@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/23/21: Fixed termination of external script from remote machine (Linux?).
+
 8/23/21: Changed multi-hole combiner to use image positions for a montage
 whenever possible (i.e., if points were drawn on a loaded map), which fixes
 problem of bad center positions when there are big piece offsets.

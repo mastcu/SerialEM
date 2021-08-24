@@ -449,11 +449,14 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
 // Close the connection upon error; report it unless it is clearly a SerialEM disconnect
 void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *message)
 {
-  if (retval == SOCKET_ERROR) {
+  if (retval == SOCKET_ERROR || !retval) {
     mLastWSAerror[sockInd] = WSAGetLastError();
     sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "WSA Error %d on call to %s", 
       mLastWSAerror[sockInd], message);
-    if (mLastWSAerror[sockInd] == WSAECONNRESET) {
+
+    // Connections from remote machine (or at least from Linux) close gracefully and
+    // give 0 return value and 0 error
+    if (mLastWSAerror[sockInd] == WSAECONNRESET || (!retval && !mLastWSAerror[sockInd])) {
       DebugToLog(mMessageBuf[sockInd]);
       CMacroProcessor::mScrpLangData.disconnected = true;
     } else
