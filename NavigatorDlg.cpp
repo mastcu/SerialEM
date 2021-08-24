@@ -3268,7 +3268,9 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         box->mRegistration = mCurrentRegistration;
         box->mType = ITEM_TYPE_POLYGON;
         box->mColor = POINT_ACQUIRE_COLOR;
-        box->mDraw = (mItem->mDraw || imBuf->mHasUserPt);
+        box->mDraw = ((mItem && mItem->mDraw) || imBuf->mHasUserPt);
+        if (mItem)
+          box->mPieceDrawnOn = mItem->mPieceDrawnOn;
       }
   }
   return &mItemArray;

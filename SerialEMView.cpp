@@ -1374,9 +1374,9 @@ void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawIte
   float &delPtX, float &delPtY)
 {
   float ptX, ptY;
-  StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY);
+  StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY, item->mPieceDrawnOn);
   mAdjustPt = -1;
-  StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
+  StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, item->mPieceDrawnOn);
   delPtX -= ptX;
   delPtY -= ptY;
 }
