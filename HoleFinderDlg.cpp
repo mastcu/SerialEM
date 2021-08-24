@@ -1215,7 +1215,11 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   for (ind = 0; ind < numPoints; ind++) {
     ptX = mXcenters[ind];
     ptY = mYcenters[ind];
-    mNav->AdjustMontImagePos(imBuf, ptX, ptY);
+
+    // It turns out that the pieceOn values from above are not quite right or consistent
+    // with what is needed for proper display, so replace them
+    mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
+      &mYinPiece[ind]);
     mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }

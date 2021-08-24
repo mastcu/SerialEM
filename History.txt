@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/23/21: Fixed hole finder assigning points to wrong montage piece and some
+other potential problems (In 3.8).
+
 8/19/21: Added camera properties for Falcon frame path and reference directory
 so that it will work with multiple Falcons.
 

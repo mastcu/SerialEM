@@ -24,7 +24,7 @@
 #define DISTANCE(a, b) sqrt((a) * (a) + (b) * (b))
 
 #define SIDES_ANGLE_ERROR(len1, len2, ang) \
-  (float)(len1 * len1 + len2 * len2 - 2.* len1 * len2 * cos(ang * RADIANS_PER_DEGREE));
+  (float)B3DMAX(0, (len1 * len1 + len2 * len2 - 2.* len1 * len2 * cos(ang * RADIANS_PER_DEGREE)));
 
 #define RETURN_IF_ERR(a) err = (a); if (err) return err;
 
@@ -1563,7 +1563,7 @@ void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sob
   }
 
   sobelMin = 0.;
-  sobelMax = -1.e37;
+  sobelMax = -1.e37f;
   for (ind = 0; ind < numThreads; ind++) {
     ACCUM_MIN(sobelMin, threadMin[ind]);
     ACCUM_MAX(sobelMax, threadMax[ind]);
@@ -2145,6 +2145,8 @@ int HoleFinder::analyzeNeighbors
   }
 
   numConn = (int)connAngles.size();
+  if (numConn == 1)
+    minGroupSize = 2;
   if (reuseGeomBin == 0) {
 
     // Make a collapsed histogram for finding the angle between 0 and 90
@@ -2189,7 +2191,7 @@ int HoleFinder::analyzeNeighbors
       }
       if (numBelow > 0)
         mPeakAngBelow += diffBelow / numBelow;
-      if (numBelow > 0)
+      if (numAbove > 0)
         mPeakAngAbove += diffAbove / numAbove;
       else
         mPeakAngAbove = mPeakAngBelow + 90.f;
@@ -2224,7 +2226,6 @@ int HoleFinder::analyzeNeighbors
       if (!lenAbove.size())
         mAvgLenAbove = mAvgLenBelow;
       
-
       if (!loop) {
         /*for (jnd = 0; jnd < lenBelow.size(); jnd++)
           printf("%.2f\n", lenBelow[jnd]);
@@ -2370,8 +2371,10 @@ int HoleFinder::analyzeNeighbors
           //printf("Assign %d,%d to %d\n", ptGridX[ptTo], ptGridY[ptTo], ptTo);
       
           for (jnd = 0; jnd < (int)ptConnLists[ptTo].size(); jnd++) {
-            connQueue.push(ptConnLists[ptTo][jnd]);
-            //printf("add conn %d\n", ptConnLists[ptTo][jnd]);
+            if (ptConnLists[ptTo][jnd] != con) {
+              connQueue.push(ptConnLists[ptTo][jnd]);
+              //printf("add conn %d\n", ptConnLists[ptTo][jnd]);
+            }
           }
           numInGroup++;
         }
@@ -3034,7 +3037,7 @@ void HoleFinder::assignGridPositions
 
 /*
  * Convert the average lengths and angles found from a call to analyzeNeighbors just to
-// find spacing into two vectors with the amount of movement dX,
+ * find spacing into two vectors with the amount of movement dX,
  * dY per step in gridX or gridY.  X corresponds to the vector "above" and Y to the
  * vector "below" rotated by 180
  */
