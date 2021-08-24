@@ -196,6 +196,7 @@ CMacroProcessor::CMacroProcessor()
   mMakingDualMap = false;
   mLastCompleted = false;
   mLastAborted = false;
+  mSuspendNavRedraw = false;
   mEnteredName = "";
   mRunningScrpLang = false;
   mCalledFromScrpLang = false;
