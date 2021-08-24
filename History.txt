@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/23/21: Changed multi-hole combiner to use image positions for a montage
+whenever possible (i.e., if points were drawn on a loaded map), which fixes
+problem of bad center positions when there are big piece offsets.
+
 8/23/21: Fixed hole finder assigning points to wrong montage piece and some
 other potential problems (In 3.8).
 

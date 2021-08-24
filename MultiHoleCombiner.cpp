@@ -68,7 +68,6 @@ int CMultiHoleCombiner::CombineItems(int boundType)
 {
   CMapDrawItem *item, *curItem;
   CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
-  EMimageBuffer *imBuf;
   KImage *image;
   FloatVec xCenters, yCenters, peakVals, xCenAlt, yCenAlt, peakAlt, xMissing, yMissing;
   IntVec navInds, altInds, boxAssigns, ixSkip, iySkip;
@@ -83,7 +82,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   float avgAngle, spacing;
   double hx, hy;
   float nearIntCrit = 0.33f;
-  int ind, nx, ny, numPoints, ix, iy, groupID;
+  int ind, nx, ny, numPoints, ix, iy, groupID, drawnOnID = -1;
   int rowStart, colStart, num, minFullNum = 10000000;
   float fDTOR = (float)DTOR;
   float fullSd, fullBestSd, ptX, ptY;
@@ -96,6 +95,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm;
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
+  mUseImageCoords = false;
 
   // Check for Nav
   mHelper = mWinApp->mNavHelper;
@@ -143,25 +143,25 @@ int CMultiHoleCombiner::CombineItems(int boundType)
 
   // Find points that are on image
   if (boundType == COMBINE_ON_IMAGE) {
-    imBuf = mWinApp->mActiveView->GetActiveImBuf();
-    image = imBuf->mImage;
+    mImBuf = mWinApp->mActiveView->GetActiveImBuf();
+    image = mImBuf->mImage;
     if (!image)
       return ERR_NO_IMAGE;
-    item = mNav->FindItemWithMapID(imBuf->mMapID, true);
+    item = mNav->FindItemWithMapID(mImBuf->mMapID, true);
     if (item)
       registration = item->mRegistration;
     image->getSize(nx, ny);
-    itemArray = mWinApp->mMainView->GetMapItemsForImageCoords(imBuf, true);
+    itemArray = mWinApp->mMainView->GetMapItemsForImageCoords(mImBuf, true);
     if (!itemArray)
       return ERR_NO_NAV;
+    drawnOnID = 0;
+    mUseImageCoords = item && item->mMapMontage;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
       if (item->mAcquire && item->mRegistration == registration) {
-        mWinApp->mMainView->GetItemImageCoords(imBuf, item, ptX, ptY);
+        mWinApp->mMainView->GetItemImageCoords(mImBuf, item, ptX, ptY);
         if (ptX >= 0. && ptX <= nx && ptY >= 0. && ptY <= ny) {
-          xCenters.push_back(item->mStageX);
-          yCenters.push_back(item->mStageY);
-          navInds.push_back(ind);
+          AddItemToCenters(xCenters, yCenters, navInds, item, ind, drawnOnID);
         }
       }
     }
@@ -178,9 +178,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       if (item->mAcquire && item->mRegistration == registration) {
         if (item->IsPoint() && InsideContour(curItem->mPtX, curItem->mPtY,
           curItem->mNumPoints, item->mStageX, item->mStageY)) {
-          xCenters.push_back(item->mStageX);
-          yCenters.push_back(item->mStageY);
-          navInds.push_back(ind);
+          AddItemToCenters(xCenters, yCenters, navInds, item, ind, drawnOnID);
         }
       }
     }
@@ -193,9 +191,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       item = itemArray->GetAt(ind);
       if (item->mAcquire) {
         if (item->IsPoint() && item->mGroupID == curItem->mGroupID) {
-          xCenters.push_back(item->mStageX);
-          yCenters.push_back(item->mStageY);
-          navInds.push_back(ind);
+          AddItemToCenters(xCenters, yCenters, navInds, item, ind, drawnOnID);
         }
       }
     }
@@ -206,12 +202,27 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   if (numPoints < 4)
     return ERR_TOO_FEW_POINTS;
 
-  // Just get average angle and length from the analysis, then get grid positions
-  mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt, 
+  // Try to find a buffer with the map if there is a common drawn on ID for poly/group
+  if (drawnOnID > 0) {
+    ind = mNav->FindBufferWithMontMap(drawnOnID);
+    if (ind >= 0) {
+      mImBuf = mWinApp->GetImBufs() + ind;
+      itemArray = mWinApp->mMainView->GetMapItemsForImageCoords(mImBuf, true);
+      mUseImageCoords = itemArray != NULL;
+    }
+  }
+
+  if (mUseImageCoords && !mNav->BufferStageToImage(mImBuf, mBSTImat, mBSTIdelX,
+    mBSTIdelY))
+    mUseImageCoords = false;
+
+  // Just get average angle and length from the analysis using stage positions
+  // When using image positions, this is still needed for the sanity check, detection
+  // or transposition, and the transform for skipped points
+  mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
     peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
   mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
     spacing);
-  mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);
 
   // Get a matrix that would transform from relative hole positions in unit vector stage
   // space to relative hole positions in unit vector image shift space
@@ -253,13 +264,34 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   /*PrintfToLog(
     " Matrix to xform relative hole positions from stage to IS space: %.3f %.3f %.3f "
     "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n stage to IS:  %f  %f  %f  %f\r\n"
-    "holeMat: %.3f %.3f %.3f %.3f", 
+    "holeMat: %.3f %.3f %.3f %.3f",
     prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
     gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
     st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
     holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);*/
 
-  // If the xpx term is 0, this means thare is a 90 degree rotation involved
+  // If they were drawn on a loaded montage map, now replace the
+  // centers with image coordinates
+  if (mUseImageCoords) {
+    mBSTImat = MatInv(mBSTImat);
+    for (ind = 0; ind < numPoints; ind++) {
+      item = itemArray->GetAt(navInds[ind]);
+      mWinApp->mMainView->GetItemImageCoords(mImBuf, item, ptX, ptY, item->mPieceDrawnOn);
+      xCenters[ind] = ptX;
+      yCenters[ind] = ptY;
+    }
+
+    // Get average angle and length again with image positions
+    mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
+      peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
+    mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
+      spacing);
+  }
+
+  // Now get grid positions
+  mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);
+
+ // If the xpx term is 0, this means thare is a 90 degree rotation involved
   // In this case, the number of holes in stage coordinates is transposed from
   // the specified geometry.  Holes will be analyzed in stage coordinates, but the hole
   // geometry has to be back in image shift space when making Nav items
@@ -465,8 +497,10 @@ int CMultiHoleCombiner::CombineItems(int boundType)
                 item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
                 boxDx = (float)(boxXcen - bx);
                 boxDy = (float)(boxYcen - by);
-                stageX += item->mStageX + boxDx * gridMat.xpx + boxDy * gridMat.xpy;
-                stageY += item->mStageY + boxDx * gridMat.ypx + boxDy * gridMat.ypy;
+                stageX += xCenters[mGrid[iy][ix]] + boxDx * gridMat.xpx + 
+                  boxDy * gridMat.xpy;
+                stageY += yCenters[mGrid[iy][ix]] + boxDx * gridMat.ypx +
+                  boxDy * gridMat.ypy;
                 /*PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %.1f %.1f  stage X"
                   " Y %.3f %.1f", navInds[mGrid[iy][ix]], ix, iy, (LPCTSTR)item->mLabel,
                   ind, boxDx, boxDy, item->mStageX + boxDx * gridMat.xpx + boxDy * 
@@ -570,8 +604,10 @@ int CMultiHoleCombiner::CombineItems(int boundType)
               boxAssigns[mGrid[iy][ix]] = ind;
               numInBox++;
               item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
-              stageX += item->mStageX - (float)(bx * gridMat.xpx + by * gridMat.xpy);
-              stageY += item->mStageY - (float)(bx * gridMat.ypx + by * gridMat.ypy);
+              stageX += xCenters[mGrid[iy][ix]] - 
+                (float)(bx * gridMat.xpx + by * gridMat.xpy);
+              stageY += yCenters[mGrid[iy][ix]] - 
+                (float)(bx * gridMat.ypx + by * gridMat.ypy);
               if (groupID < 0 || bx + by == 0)
                 groupID = item->mGroupID;
             } else {
@@ -616,6 +652,20 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   free(mapVals);
   free(mGrid);
   return 0;
+}
+
+// Add one point to initial vectors or center positions, keep track if drawnOnID is the
+// same for all points
+void CMultiHoleCombiner::AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters, 
+  IntVec &navInds, CMapDrawItem *item, int ind, int &drawnOnID)
+{
+  xCenters.push_back(item->mStageX);
+  yCenters.push_back(item->mStageY);
+  navInds.push_back(ind);
+  if (drawnOnID < 0)
+    drawnOnID = item->mDrawnOnMapID;
+  else if (drawnOnID != item->mDrawnOnMapID)
+    drawnOnID = 0;
 }
 
 /*
@@ -856,13 +906,22 @@ void CMultiHoleCombiner::AddMultiItemToArray(
 {
   CMapDrawItem *newItem, *item;
   int ix;
-  float skipXrot, skipYrot;
+  float skipXrot, skipYrot, tempX;
   float backXcen = mTransposeSize ? boxYcen : boxXcen;
   float backYcen = mTransposeSize ? boxXcen : boxYcen;
 
   // Set the stage position and # of holes and put in the skip list
   item = itemArray->GetAt(baseInd);
   newItem = item->Duplicate();
+
+  // But first convert image to stage after adjusting for montage offsets
+  if (mUseImageCoords) {
+    mNav->AdjustMontImagePos(mImBuf, stageX, stageY, &newItem->mPieceDrawnOn, 
+      &newItem->mXinPiece, &newItem->mYinPiece);
+    tempX = mBSTImat.xpx * (stageX - mBSTIdelX) + mBSTImat.xpy * (stageY - mBSTIdelY);
+    stageY = mBSTImat.ypx * (stageX - mBSTIdelX) + mBSTImat.ypy * (stageY - mBSTIdelY);
+    stageX = tempX;
+  }
   newItem->mStageX = stageX;
   newItem->mStageY = stageY;
   newItem->mGroupID = groupID;

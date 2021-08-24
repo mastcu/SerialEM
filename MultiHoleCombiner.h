@@ -24,6 +24,8 @@ public:
   ~CMultiHoleCombiner(void);
 
   int CombineItems(int boundType);
+  void AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters, IntVec &navInds,
+    CMapDrawItem *item, int ind, int &drawnOnID);
   bool OKtoUndoCombine(void);
   void UndoCombination(void);
   bool IsItemInUndoList(int mapID);
@@ -34,6 +36,10 @@ private:
   CSerialEMApp *mWinApp;
   CNavigatorDlg *mNav;
   HoleFinder *mFindHoles;
+  EMimageBuffer *mImBuf;          // The associate image buffer if one can be found
+  bool mUseImageCoords;           // Flag that analysis is being done with image coord
+  ScaleMat mBSTImat;              // Matrix for image to stage
+  float mBSTIdelX, mBSTIdelY;     // Delta value from stage to image
   int mNxGrid, mNyGrid;           // Size of grid points seem to fall on
   int mNumXholes, mNumYholes;     // Number of holes in current pattern
   int **mGrid;                    // Line pointers to grid array
