@@ -4272,9 +4272,9 @@ BOOL CEMscope::ScanMagnifications()
     SEMReportCOMError(E, _T("scanning magnifications "));
     retval = false;
   }
+  ScopeMutexRelease("ScanMagnifications");
   if (startingMag > 0)
     SetMagIndex(startingMag);
-  ScopeMutexRelease("ScanMagnifications");
   sScanningMags = false;
   mJeolParams.scanningMags = false;
   return retval;
