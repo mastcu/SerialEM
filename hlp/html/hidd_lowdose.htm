@@ -3,300 +3,300 @@
   <HEAD>
     <TITLE>Low Dose Control Panel</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_lowdose"></A><B><FONT size="3">Low Dose Control Panel</FONT></B></P>
     <P><B>Low Dose Mode</B></P>
-    <P>This check box turns low dose mode on or off. When low dose is turned on, the 
-      current area is undefined unless the screen is down. When low dose is turned 
+    <P>This check box turns low dose mode on or off. When low dose is turned on, the
+      current area is undefined unless the screen is down. When low dose is turned
       off, the program returns to the Record area.</P>
     <P><B>Electron dose of current area</B></P>
-    <P>If electron dose is calibrated, the dose will appear for the current area in the 
-      upper right corner of the Low Dose panel. This dose will be updated 
-      continuously when the 'Continuous update' option is selected and will also we 
+    <P>If electron dose is calibrated, the dose will appear for the current area in the
+      upper right corner of the Low Dose panel. This dose will be updated
+      continuously when the 'Continuous update' option is selected and will also we
       changed when the exposure time changes for the current area.</P>
     <P><B>Mag &amp; beam settings of current area</B></P>
-    <P>The line will show the name of the current area and its magnification, spot 
-      size, and brightness setting as given by a condenser lens strength or illuminated area. The 
-      line is shown in black when the 'Continuous update' option is selected, to 
-      signify that the values can be readily changed. Otherwise the line will be 
+    <P>The line will show the name of the current area and its magnification, spot
+      size, and brightness setting as given by a condenser lens strength or illuminated area. The
+      line is shown in black when the 'Continuous update' option is selected, to
+      signify that the values can be readily changed. Otherwise the line will be
       grayed out and be hard to read.</P>
     <P><B>Continuous update (see tooltip)</B></P>
-    <P>When this option is selected, any change of magnification, spot size, 
-      brightness, diffraction focus in diffraction mode, energy filter settings, probe mode on an FEI scope, or alpha on a JEOL 
-      scope will immediately change the parameters of 
-      the current area. Otherwise, such changes will be lost when a new image is 
+    <P>When this option is selected, any change of magnification, spot size,
+      brightness, diffraction focus in diffraction mode, energy filter settings, probe mode on a Thermo/FEI scope, or alpha on a JEOL
+      scope will immediately change the parameters of
+      the current area. Otherwise, such changes will be lost when a new image is
       acquired from the given area, except for intensity changes made with
         <a href="menu_tasks.htm#hid_process_setintensity">Set Intensity</a> or
-        <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks 
-        menu.&nbsp;  
-      Beam shift, beam tilt, focus settings in imaging mode, and image shift displacements for a 
-      particular area are <b>NOT</b> recorded when this option is on, but can be 
+        <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks
+        menu.&nbsp;
+      Beam shift, beam tilt, focus settings in imaging mode, and image shift displacements for a
+      particular area are <b>NOT</b> recorded when this option is on, but can be
       introduced by other options in this panel. </P>
     <P><B>Define position of area</B></P>
-    <P>Select Focus or Trial to adjust the position of these areas relative to the 
-      Record area. (If 'Keep Focus and Trial identical' is selected, it does not 
-      matter which area is selected here.) With one of these options selected, 
-      SerialEM will try to display a marker point on the image in buffer A showing 
-      the center of the area being defined. On a View image, it will also draw boxes 
-      representing the Record area and the area being defined, as well as a circle 
-      circumscribing the area being defined. You can adjust the position of the area 
+    <P>Select Focus or Trial to adjust the position of these areas relative to the
+      Record area. (If 'Keep Focus and Trial identical' is selected, it does not
+      matter which area is selected here.) With one of these options selected,
+      SerialEM will try to display a marker point on the image in buffer A showing
+      the center of the area being defined. On a View image, it will also draw boxes
+      representing the Record area and the area being defined, as well as a circle
+      circumscribing the area being defined. You can adjust the position of the area
       in 4 ways:
     </P>
     <OL>
       <LI>
-        by clicking with the left mouse button in a View image or in an image from the 
-        area being defined.&nbsp; A View image can be in any buffer or even read in from a 
+        by clicking with the left mouse button in a View image or in an image from the
+        area being defined.&nbsp; A View image can be in any buffer or even read in from a
           file; an image of the area being defined must be in buffer A;
       </LI>
       <LI>
-        by entering a positive or negative distance in the 'Position on tilt axis' text 
+        by entering a positive or negative distance in the 'Position on tilt axis' text
         box;
       </LI>
       <LI>
-        by shifting an image of the area being defined with the right mouse button 
+        by shifting an image of the area being defined with the right mouse button
         (although shifting a Record or View will still change image shift as usual);</LI>
       <LI>
-        and even by adjusting image shift through microscope controls when the screen 
+        and even by adjusting image shift through microscope controls when the screen
         is down.</LI>
       </OL>
-      <P>When you click in a View image, the behavior depends on whether the axis between 
-          areas is free to rotate away from the tilt axis, with the 'Rotate interarea 
-          axis' option. If that option is off, the marked position will be projected onto the 
-          tilt axis and that projection will define 
-          the distance of the area along the axis.&nbsp; If the option is on, the marked 
-          position will be used as is, changing both the angle of the axis and the 
-          location on the axis.&nbsp; When you click in an image of the area being 
-          defined, the axis rotation is not changed, and the clicked point is projected 
+      <P>When you click in a View image, the behavior depends on whether the axis between
+          areas is free to rotate away from the tilt axis, with the 'Rotate interarea
+          axis' option. If that option is off, the marked position will be projected onto the
+          tilt axis and that projection will define
+          the distance of the area along the axis.&nbsp; If the option is on, the marked
+          position will be used as is, changing both the angle of the axis and the
+          location on the axis.&nbsp; When you click in an image of the area being
+          defined, the axis rotation is not changed, and the clicked point is projected
           onto the interarea axis.</P>
-      <P>You should select 'None' after adjusting the area to avoid inadvertent changes, 
-      and to restore the expected behavior when shifting an image with the right 
-      mouse button. Note that shifting the area being defined would change its offset 
+      <P>You should select 'None' after adjusting the area to avoid inadvertent changes,
+      and to restore the expected behavior when shifting an image with the right
+      mouse button. Note that shifting the area being defined would change its offset
       until defining is turned off.</P>
     <P><B>Position on Tilt Axis</B></P>
-    <P>When the position of the Focus or Trial area is being defined, this text box 
-      will show the center-to-center separation between that area and the Record 
+    <P>When the position of the Focus or Trial area is being defined, this text box
+      will show the center-to-center separation between that area and the Record
       area. You can enter a number to set this distance as desired.</P>
     <P><B>Area separation</B></P>
-    <P>When the position of an area is being defined, this line shows the minimum 
-      separation between that area and the Record area. This separation is the 
-      distance between the edge of a circle drawn just around the outside of the area 
-      being defined, as defined by its camera parameters, and the edge of the Record 
-      area as defined by its camera parameters. If 'Keep Focus and Trial identical' 
+    <P>When the position of an area is being defined, this line shows the minimum
+      separation between that area and the Record area. This separation is the
+      distance between the edge of a circle drawn just around the outside of the area
+      being defined, as defined by its camera parameters, and the edge of the Record
+      area as defined by its camera parameters. If 'Keep Focus and Trial identical'
       is selected, the larger of the two areas will be used for this computation.</P>
     <P><a name="addedBeamShift"></a><b>Go to area buttons</b></P>
-    <P>These buttons allow you to go to a particular area without taking an image.&nbsp; 
+    <P>These buttons allow you to go to a particular area without taking an image.&nbsp;
       The button for the current area is outlined in green.</P>
     <P><B>Additional beam shift (and possibly tilt)</B></a></P>
-    <P>The controls in this box allow you to impose an independent beam shift for each 
-      area relative to Record. You can use this to correct for imperfections in beam centering between 
-      the different areas, such as due to mag changes or inadequacy in the coupling 
-      between beam shift and image shift. You can also use it to shift the beam in 
-      the Trial and Focus areas farther away from the Record area than it would be if 
-      it were centered. To set beam shift for an area, 
-      first be sure that the beam is centered in the Record area, then go to the 
-      area of interest, turn on the 'Set' checkbox, move the beam to the desired 
-      position and turn off 'Set'. At this point, if beam shift is calibrated, the 
-      value of the shift will appear next to the 'Reset' button. This shift is in 
-      microns and in specimen coordinates, where X is along the tilt axis. Press the 
+    <P>The controls in this box allow you to impose an independent beam shift for each
+      area relative to Record. You can use this to correct for imperfections in beam centering between
+      the different areas, such as due to mag changes or inadequacy in the coupling
+      between beam shift and image shift. You can also use it to shift the beam in
+      the Trial and Focus areas farther away from the Record area than it would be if
+      it were centered. To set beam shift for an area,
+      first be sure that the beam is centered in the Record area, then go to the
+      area of interest, turn on the 'Set' checkbox, move the beam to the desired
+      position and turn off 'Set'. At this point, if beam shift is calibrated, the
+      value of the shift will appear next to the 'Reset' button. This shift is in
+      microns and in specimen coordinates, where X is along the tilt axis. Press the
       'Reset' button to return the shift of the current area to zero.&nbsp; </P>
-    <P>If the 
-      title line of this group box is <b>Additional beam shift (and tilt)</b>, a change in beam 
-      tilt is also recorded at the same time as a change in beam shift, and it is 
-      applied when changing between areas.&nbsp; (This feature is enabled by setting 
-      the property &#39;LowDoseBeamTiltShifts&#39; in the properties file; as of SerialEM 
-      3.4, it is no longer restricted to Trial and Focus areas). On FEI scopes, the 
-      beam tilt recorded in this case would be adjusted by the Rotation Center 
+    <P>If the
+      title line of this group box is <b>Additional beam shift (and tilt)</b>, a change in beam
+      tilt is also recorded at the same time as a change in beam shift, and it is
+      applied when changing between areas.&nbsp; (This feature is enabled by setting
+      the property &#39;LowDoseBeamTiltShifts&#39; in the properties file; as of SerialEM
+      3.4, it is no longer restricted to Trial and Focus areas). On Thermo/FEI scopes, the
+      beam tilt recorded in this case would be adjusted by the Rotation Center
       alignment.&nbsp; The &#39;Reset&#39; button will return these beam tilts to 0.</P>
-    <P>For FEI scopes, Dark Field beam tilt provides a better way to adjust beam tilt 
-      for the Trial and Focus areas; it is available as of SerialEM&nbsp; 3.6 and the group box title will be <b>Additional beam shift (and DF tilt)</b> 
-      unless the &#39;LowDoseBeamTiltShifts&#39; property is set.&nbsp; In this case, an 
-      absolute setting is stored, not a difference between starting and ending values, 
-      so the only the dark field state when &#39;Set&#39; is turned off matters.&nbsp; This 
-      value is not reset when the &#39;Reset&#39; button is pressed (should it be?), so to 
-      clear it out, just turn Dark Field off and turn &#39;Set&#39; on then off.&nbsp; This 
-      feature may be useful for allowing larger image shift with a small objective 
+    <P>For Thermo/FEI scopes, Dark Field beam tilt provides a better way to adjust beam tilt
+      for the Trial and Focus areas; it is available as of SerialEM&nbsp; 3.6 and the group box title will be <b>Additional beam shift (and DF tilt)</b>
+      unless the &#39;LowDoseBeamTiltShifts&#39; property is set.&nbsp; In this case, an
+      absolute setting is stored, not a difference between starting and ending values,
+      so the only the dark field state when &#39;Set&#39; is turned off matters.&nbsp; This
+      value is not reset when the &#39;Reset&#39; button is pressed (should it be?), so to
+      clear it out, just turn Dark Field off and turn &#39;Set&#39; on then off.&nbsp; This
+      feature may be useful for allowing larger image shift with a small objective
       aperture on 300 KV Tecnais and Polaras.</P>
-    <P>Beam shifts and tilts could be set for the Record area prior to SerialEM 3.6 
-      and can no longer be, to avoid inadvertently setting undesired values for Record 
-      and reduce confusion.&nbsp; Existing values from a previous version will be used 
+    <P>Beam shifts and tilts could be set for the Record area prior to SerialEM 3.6
+      and can no longer be, to avoid inadvertently setting undesired values for Record
+      and reduce confusion.&nbsp; Existing values from a previous version will be used
       until they are cleared out with &#39;Reset&#39;.</P>
     <P><B>Defocus offset for View or Search</B></P>
-    <P>You can use this control to set an additional underfocus for the View or Search area, 
-      depending on which radio button is selected. 
-      Focus will be changed by this amount when going to the View or Search area 
-      (e.g., by taking an image) and then will be restored when going to another area. For 
-      example, if you have a focus target of -4 microns, set the offset to -8 to get 
-      View images taken at -12 microns defocus.&nbsp; Be sure to align the View or 
-      Search images 
+    <P>You can use this control to set an additional underfocus for the View or Search area,
+      depending on which radio button is selected.
+      Focus will be changed by this amount when going to the View or Search area
+      (e.g., by taking an image) and then will be restored when going to another area. For
+      example, if you have a focus target of -4 microns, set the offset to -8 to get
+      View images taken at -12 microns defocus.&nbsp; Be sure to align the View or
+      Search images
       with the offset feature described next if you use very large defocus values.</P>
-    <P>The defocus offset is applied after going to the magnification of the area; 
-      thus it will be incremental to a focus change imposed by the microscope during 
-      the magnification change.&nbsp; In particular, when going between nonLM and LM, 
-      the microscope may restore the last defocus seen in the new magnification range, 
+    <P>The defocus offset is applied after going to the magnification of the area;
+      thus it will be incremental to a focus change imposed by the microscope during
+      the magnification change.&nbsp; In particular, when going between nonLM and LM,
+      the microscope may restore the last defocus seen in the new magnification range,
       and the offset is then applied to that.</P>
       <P>Defocus offsets are disabled in diffraction mode.&nbsp; An absolute diffraction focus value is recorded as part of the area settings, and can be modified when continuous update is turned on.&nbsp; This absolute value is restored whenever going back to an area in diffraction mode.</P>
     <P><a name="viewShiftOffset"></a><B>Shift offset for View or Search</B></a></P>
     <P>If image features shift when going between the View or Search and Record areas, the <B>Set</B>
-      button allows you to correct for this shift. The are two methods for setting the 
-      shift offset: 1) applying a shift with the mouse button to bring the image in 
-      buffer A into alignment with a reference image; 2) placing the green marker 
-      point at corresponding locations in the images in buffers A and B.&nbsp;&nbsp; 
-      Method 1 is more direct and potentially more accurate, but may be more 
-      difficult.&nbsp; Method 2 is simple but depends on the accuracy of image shift 
-      calibrations and may also depend on the accuracy of rotation angle and pixel 
-      size calibrations.&nbsp; The Set button is enabled whenever there is a shift in 
-      the A buffer for an image of the type 
-      selected with the <b>View</b> or <b>Search</b> radio buttons, or whenever there 
-      are marker points on images of appropriate types in buffers A and B. However, the <B>Set</B> 
-      button should be pressed only if the shift in A brings the image into alignment with a Record or Preview image, 
-      or if the makrers are indeed on corresponding points. 
+      button allows you to correct for this shift. The are two methods for setting the
+      shift offset: 1) applying a shift with the mouse button to bring the image in
+      buffer A into alignment with a reference image; 2) placing the green marker
+      point at corresponding locations in the images in buffers A and B.&nbsp;&nbsp;
+      Method 1 is more direct and potentially more accurate, but may be more
+      difficult.&nbsp; Method 2 is simple but depends on the accuracy of image shift
+      calibrations and may also depend on the accuracy of rotation angle and pixel
+      size calibrations.&nbsp; The Set button is enabled whenever there is a shift in
+      the A buffer for an image of the type
+      selected with the <b>View</b> or <b>Search</b> radio buttons, or whenever there
+      are marker points on images of appropriate types in buffers A and B. However, the <B>Set</B>
+      button should be pressed only if the shift in A brings the image into alignment with a Record or Preview image,
+      or if the makrers are indeed on corresponding points.
       </P>
     <P><b><i>1) Setting shift offset with an alignment shift:</i></b> The procedure for setting a shift for View is:</P>
     <OL>
       <LI>
-        In the Image Alignment &amp; Focus panel, turn off 'Move stage for big mouse 
-        shifts' if it is on.&nbsp; (This step is optional if you are making a small 
-        adjustment to an existing alignment, or if you shift the image in multiple steps 
+        In the Image Alignment &amp; Focus panel, turn off 'Move stage for big mouse
+        shifts' if it is on.&nbsp; (This step is optional if you are making a small
+        adjustment to an existing alignment, or if you shift the image in multiple steps
         each too small to trigger a stage move.)</LI>
       <LI>
-        Take a Record or Preview image and use the right mouse button to center a 
-        feature that will be recognizable in the View image. Take another image to 
+        Take a Record or Preview image and use the right mouse button to center a
+        feature that will be recognizable in the View image. Take another image to
         verify that it is centered.</LI>
       <LI>
-        Take a View image. Use the right mouse button to center the feature.&nbsp; 
+        Take a View image. Use the right mouse button to center the feature.&nbsp;
         Do not take another image.</LI>
       <LI>
-        Press <B>Set</B>. The shift will be recorded as a correction, and the program 
-        will take a new View image, unless you skipped step 1 and your mouse shift 
-        triggered a stage move.&nbsp; (In that case, the offset is correctly recorded, 
-        but you will receive a message that you need to reset image shift and start with 
+        Press <B>Set</B>. The shift will be recorded as a correction, and the program
+        will take a new View image, unless you skipped step 1 and your mouse shift
+        triggered a stage move.&nbsp; (In that case, the offset is correctly recorded,
+        but you will receive a message that you need to reset image shift and start with
         a new Record image in order to check the offset.)</LI>
       <LI>
-        If the new View image is not centered (such as if you are using a large defocus 
-        offset or the image shift calibration is not good), center the feature and press         <b>Set</b> again. The new shift will be added to the existing one.&nbsp; Repeat 
+        If the new View image is not centered (such as if you are using a large defocus
+        offset or the image shift calibration is not good), center the feature and press         <b>Set</b> again. The new shift will be added to the existing one.&nbsp; Repeat
         if necessary.</LI>
       <LI>
         Turn 'Move stage for big mouse shifts' back on if desired.</LI></OL>
-    <P>The procedure is the same for setting the offset for Search, although here you 
-      may want to use a View image instead of Record or Preview as your reference.&nbsp; 
+    <P>The procedure is the same for setting the offset for Search, although here you
+      may want to use a View image instead of Record or Preview as your reference.&nbsp;
       If so, be sure to align View with Record first.</P>
-    <P><b><i>2) Setting shift offset with corresponding marker points:</i></b> The 
-      images from a reference area and from the area whose offset is being set can be 
-      taken in either order.&nbsp; To minimize the effect of inaccuracies in the 
-      calibrations, try to pick the points near the center of the images, especially 
+    <P><b><i>2) Setting shift offset with corresponding marker points:</i></b> The
+      images from a reference area and from the area whose offset is being set can be
+      taken in either order.&nbsp; To minimize the effect of inaccuracies in the
+      calibrations, try to pick the points near the center of the images, especially
       for the reference image at higher magnification. </P>
     <ul>
-      <li>To set an offset for View, you can have a View in A and a Record or Preview in 
+      <li>To set an offset for View, you can have a View in A and a Record or Preview in
         B; or you can have the View in B and the Record or Preview in A.</li>
-      <li>To set an offset for Search, you can have a Search in A and a Record, Preview, 
+      <li>To set an offset for Search, you can have a Search in A and a Record, Preview,
         or View in B; or you can have the Search in B and the reference image in A.</li>
-      <li>If you use a View as a reference image for setting the Search, set the View 
+      <li>If you use a View as a reference image for setting the Search, set the View
         offset first.</li>
-      <li>Alignment shifts in the image buffer are not allowed with this procedure.&nbsp; 
-        The <b>Set</b> button will be enabled even if there are such shifts, but 
+      <li>Alignment shifts in the image buffer are not allowed with this procedure.&nbsp;
+        The <b>Set</b> button will be enabled even if there are such shifts, but
         pressing it will bring up a message telling you to clear the shifts with the <b>
-        Clear Alignment</b> button in the Image Alignment &amp; Focus control panel.&nbsp; 
-        If the situation is ambiguous and the image in A could be used to set the offset 
+        Clear Alignment</b> button in the Image Alignment &amp; Focus control panel.&nbsp;
+        If the situation is ambiguous and the image in A could be used to set the offset
         by method 1, then the message will give you that choice.</li>
     </ul>
     <p>
-      <b><i>General points:</i></b> Once an image has been used for setting the 
+      <b><i>General points:</i></b> Once an image has been used for setting the
       offset, it cannot be used again; you need to acquire new images.</p>
-    <P>If for some reason this shift offset becomes inappropriate, you can set it to 
-      zero with the <B>Zero</B> button.&nbsp; However, do not zero out the shifts 
+    <P>If for some reason this shift offset becomes inappropriate, you can set it to
+      zero with the <B>Zero</B> button.&nbsp; However, do not zero out the shifts
       after taking images for setting the shift and before setting the shift with them</P>
-    <P>If the image shift offsets between magnifications are calibrated, this 
-      adjustment will work together with that calibration. You can set this 
-      adjustment with the option to 'Adjust image shift between mags' either on or 
-      off. Once you have set an adjustment, it should work equally well if you turn 
+    <P>If the image shift offsets between magnifications are calibrated, this
+      adjustment will work together with that calibration. You can set this
+      adjustment with the option to 'Adjust image shift between mags' either on or
+      off. Once you have set an adjustment, it should work equally well if you turn
       'Adjust image shift between mags' on or off.</P>
     <P><B>Blank/Unblank button and blanked indicator</B></P>
-    <P>The beam is kept blanked in Low Dose mode when the screen is up.&nbsp; When the 
-      beam is blanked, this button is labeled &#39;Unblank&#39; and can be used to unblank the beam until the next image 
-      acquisition, which will restore blanking when it is done. (Other actions may 
-      also turn the blanking back on.)&nbsp; When the beam is not blanked, the button 
-      is labeled &#39;Blank&#39; and can be used to blank the beam.&nbsp; The principal use of this button is to unblank 
-      the beam before aligning an energy filter. To the right of the button, the text 
-      'Blanked' will appear whenever the beam is blanked, even transiently during 
+    <P>The beam is kept blanked in Low Dose mode when the screen is up.&nbsp; When the
+      beam is blanked, this button is labeled &#39;Unblank&#39; and can be used to unblank the beam until the next image
+      acquisition, which will restore blanking when it is done. (Other actions may
+      also turn the blanking back on.)&nbsp; When the beam is not blanked, the button
+      is labeled &#39;Blank&#39; and can be used to blank the beam.&nbsp; The principal use of this button is to unblank
+      the beam before aligning an energy filter. To the right of the button, the text
+      'Blanked' will appear whenever the beam is blanked, even transiently during
       exposures when not in low dose mode.
     </P>
     <P><B>BLANK BEAM when screen downn</B></P>
-    <P>This option will prevent specimen exposure while the screen is down. Ctrl-B is a hot key 
+    <P>This option will prevent specimen exposure while the screen is down. Ctrl-B is a hot key
       for toggling this setting.</P>
     <P><B>Normalize beam through View / Normalize condenser lenses</B></P>
-    <P>This option will appear in one of two forms depending on whether there is an 
+    <P>This option will appear in one of two forms depending on whether there is an
       entry for NormCondenserInLowDose in SerialEMproperties.txt.&nbsp; </P>
-    <P>When the option 
-      is <B>Normalize beam through View</B> 
-      and is selected, changes in intensity and spot size when going 
-      between some areas will be normalized by passing through the View area intensity and 
-      spot size. This initial change will not be done will be done when going to the 
-      Search area or going between areas with identical beam settings.&nbsp; This normalization is intended to compensate for the lens hysteresis 
-      that makes the beam position depend on the recent history of intensity changes, 
-      a pronounced effect on 300 KeV JEOL scopes. With the option on, the beam 
-      position in the Record area, for example, should be the same regardless of 
-      whether the program has just come from the View area or has been going back and 
-      forth between the Record and Trial/Focus areas. If different areas still have 
-      different beam positions, use the option for setting 'Additional beam shift' 
-      for some areas. It may be necessary to set the property LowDoseBeamNormDelay to 
+    <P>When the option
+      is <B>Normalize beam through View</B>
+      and is selected, changes in intensity and spot size when going
+      between some areas will be normalized by passing through the View area intensity and
+      spot size. This initial change will not be done will be done when going to the
+      Search area or going between areas with identical beam settings.&nbsp; This normalization is intended to compensate for the lens hysteresis
+      that makes the beam position depend on the recent history of intensity changes,
+      a pronounced effect on 300 KeV JEOL scopes. With the option on, the beam
+      position in the Record area, for example, should be the same regardless of
+      whether the program has just come from the View area or has been going back and
+      forth between the Record and Trial/Focus areas. If different areas still have
+      different beam positions, use the option for setting 'Additional beam shift'
+      for some areas. It may be necessary to set the property LowDoseBeamNormDelay to
       a higher value for maximum effect.</P>
-    <P>When the option is <strong>Normalize Condenser Lenses</strong> and is selected, 
-      the microscope routine for normalizing condenser lenses will be called when 
-      changing areas, except when going to View or Search, or when going between areas 
-      with identical beam settings.&nbsp; Again, the property LowDoseBeamNormDelay may 
+    <P>When the option is <strong>Normalize Condenser Lenses</strong> and is selected,
+      the microscope routine for normalizing condenser lenses will be called when
+      changing areas, except when going to View or Search, or when going between areas
+      with identical beam settings.&nbsp; Again, the property LowDoseBeamNormDelay may
       need to be set to a higher value for the best result.</P>
-    <P>Note that the value of NormCondenserInLowDose can be changed with the 
+    <P>Note that the value of NormCondenserInLowDose can be changed with the
       SetProperty script command, but the label here will not change.</P>
     <P><B>Keep Focus and Trial identical</B></P>
-    <P>When this option is selected, the parameters of the Focus and Trial areas will 
-      be kept the same in all respects. It is desirable for these areas to be in the 
-      same location because of the large settling time that would be required after 
-      moving the beam from one side of the Record area to the other, and because of 
-      the limited space inside the objective aperture on the 300 KV Tecnai or Polara. You might 
-      want different brightness settings, in which case you would have this option 
-      selected while positioning the areas, then unselected to adjust the brightness 
+    <P>When this option is selected, the parameters of the Focus and Trial areas will
+      be kept the same in all respects. It is desirable for these areas to be in the
+      same location because of the large settling time that would be required after
+      moving the beam from one side of the Record area to the other, and because of
+      the limited space inside the objective aperture on the 300 KV Tecnai or Polara. You might
+      want different brightness settings, in which case you would have this option
+      selected while positioning the areas, then unselected to adjust the brightness
       of one.</P>
     <P><B>Copy current area settings to V - F - T - R - S</B></P>
-    <P>These buttons will generally copy all properties except the axis position from the 
-      current area to one of the 5 areas: View, Focus, Trial, Record, or Search.&nbsp; 
-      When copying between View and Search, the defocus and shift offsets are copied 
-      as well.&nbsp; When copying to Record, the beam shift and tilt offsets will be 
-      set to zero rather than copied, since Record is supposed to be the reference for 
-      these offsets.&nbsp; Copy would 
-      be useful mostly when initially setting up the areas. Because they are easily 
-      mistaken for the &#39;Go to area&#39; buttons, a message box will appear asking you to 
+    <P>These buttons will generally copy all properties except the axis position from the
+      current area to one of the 5 areas: View, Focus, Trial, Record, or Search.&nbsp;
+      When copying between View and Search, the defocus and shift offsets are copied
+      as well.&nbsp; When copying to Record, the beam shift and tilt offsets will be
+      set to zero rather than copied, since Record is supposed to be the reference for
+      these offsets.&nbsp; Copy would
+      be useful mostly when initially setting up the areas. Because they are easily
+      mistaken for the &#39;Go to area&#39; buttons, a message box will appear asking you to
       confirm the copy.</P>
     <P><B>Center Unshifted</B></P>
-    <P>When you push this button, the View and Record areas will be set to have no 
-      image shift relative to the center of the viewing area. and the Focus and Trial 
-      areas will be displaced by the full amount of their image shifts from the 
-      center of the viewing area In other words, when the overall image shift (as 
-      reported in the Scope Status panel) is reset to zero, the Record area will be 
-      at a true image shift of zero. When this button or the 'Balance Shift' button 
-      is pressed, the image shift reading in the Scope Status panel will change to 
-      reflect the change in the center of image shift coordinates, but the same area 
+    <P>When you push this button, the View and Record areas will be set to have no
+      image shift relative to the center of the viewing area. and the Focus and Trial
+      areas will be displaced by the full amount of their image shifts from the
+      center of the viewing area In other words, when the overall image shift (as
+      reported in the Scope Status panel) is reset to zero, the Record area will be
+      at a true image shift of zero. When this button or the 'Balance Shift' button
+      is pressed, the image shift reading in the Scope Status panel will change to
+      reflect the change in the center of image shift coordinates, but the same area
       will appear if a new picture is taken.
     </P>
     <P><B>Balance Shifts</B></P>
-    <P>When you push this button, the image shift of the Focus and Trial areas will be 
-      divided between those areas and the Record area. The Record will be displaced 
-      to one side of the center of the viewing area, and the Focus and trial areas to 
-      the other side (assuming they are on the same side). This means that when image 
-      shift is reset to zero, there will actually be substantial image shift when 
+    <P>When you push this button, the image shift of the Focus and Trial areas will be
+      divided between those areas and the Record area. The Record will be displaced
+      to one side of the center of the viewing area, and the Focus and trial areas to
+      the other side (assuming they are on the same side). This means that when image
+      shift is reset to zero, there will actually be substantial image shift when
       viewing the Record area.</P>
     <P><B>Rotate inter-area axis</B></P>
-    <P>Select this option to rotate the axis between the View/Record areas and the 
-      Trial/Focus areas away from the tilt axis. Enter the angle of rotation in the 
-      text box (CCW positive). All of the features described above for defining the 
-      location of the Trial/Focus areas work the same, except that the location is 
-      forced to be along this rotated axis instead of along the tilt axis. Although 
-      this feature was added to assist with acquisition from multiple locations on an 
-      untilted specimen, autofocusing on a tilted specimen should work correctly 
-      because it is compensated for the difference in Z height between the focus area 
+    <P>Select this option to rotate the axis between the View/Record areas and the
+      Trial/Focus areas away from the tilt axis. Enter the angle of rotation in the
+      text box (CCW positive). All of the features described above for defining the
+      location of the Trial/Focus areas work the same, except that the location is
+      forced to be along this rotated axis instead of along the tilt axis. Although
+      this feature was added to assist with acquisition from multiple locations on an
+      untilted specimen, autofocusing on a tilted specimen should work correctly
+      because it is compensated for the difference in Z height between the focus area
       and the tilt axis.</P>
     </basefont>
   </BODY>

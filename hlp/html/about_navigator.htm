@@ -3,17 +3,17 @@
   <HEAD>
     <TITLE>Using the Navigator</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="about_navigator"></A><B><FONT size="3">Using the Navigator</FONT></B></P>
-    <P>The Navigator window and its associated menu entries provide the capability to 
-      save stage positions and return to them, to make and save maps of areas of 
-      interest, mark positions on these maps and go to the marked positions, 
-      accurately return to positions on maps, and transform positions after moving 
-      the grid in the specimen holder. This section explains some of the concepts 
+    <P>The Navigator window and its associated menu entries provide the capability to
+      save stage positions and return to them, to make and save maps of areas of
+      interest, mark positions on these maps and go to the marked positions,
+      accurately return to positions on maps, and transform positions after moving
+      the grid in the specimen holder. This section explains some of the concepts
       involved in using the Navigator.</P>
     <A HREF = "#nav_items">Navigator Items</A><BR>
     <A HREF = "#maps">Maps</A><BR>
@@ -27,339 +27,339 @@
     <A HREF = "#memory">Memory Considerations</A><BR>
 
     <P><A NAME="nav_items"></A><B>Navigator Items</B></P>
-    <P>The Navigator maintains a list of items which are 
-      shown in a box. It considers items to be of three types: points, polygons, and 
-      maps. A point is a single location, which will be displayed with a colored 
-      cross on images that contain the point. A polygon is set of connected points 
-      enclosing a region, which will be displayed as a set of lines forming a closed 
-      contour. A map is an image that has been saved to a file; the Navigator keeps 
-      track of where the image was saved as well as the stage position of the image 
-      and the conditions under which the image was acquired. The location of a map is 
-      displayed as a rectangle on other images. The Navigator makes it easy to reload 
-      a selected map image, regardless of whether all of your maps are in one file or 
-      separate files, and of whether the files are open or not. Maps can be either 
+    <P>The Navigator maintains a list of items which are
+      shown in a box. It considers items to be of three types: points, polygons, and
+      maps. A point is a single location, which will be displayed with a colored
+      cross on images that contain the point. A polygon is set of connected points
+      enclosing a region, which will be displayed as a set of lines forming a closed
+      contour. A map is an image that has been saved to a file; the Navigator keeps
+      track of where the image was saved as well as the stage position of the image
+      and the conditions under which the image was acquired. The location of a map is
+      displayed as a rectangle on other images. The Navigator makes it easy to reload
+      a selected map image, regardless of whether all of your maps are in one file or
+      separate files, and of whether the files are open or not. Maps can be either
       single frame or montaged images.</P>
-    <P>Points can be added in two different ways. You can move the stage to a specific 
-      location and then press a button ('Add Stage Pos') to add the location as a 
-      point. Alternatively, once you have taken a low-mag image at a known stage 
-      location, you can press a button ('Add Points') to start adding points, then 
-      click the left mouse button at a series of locations in the image. Each 
-      location becomes a new point item with a separate stage position deduced from 
-      its location in the image. A polygon can be generated in a similar fashion, by 
+    <P>Points can be added in two different ways. You can move the stage to a specific
+      location and then press a button ('Add Stage Pos') to add the location as a
+      point. Alternatively, once you have taken a low-mag image at a known stage
+      location, you can press a button ('Add Points') to start adding points, then
+      click the left mouse button at a series of locations in the image. Each
+      location becomes a new point item with a separate stage position deduced from
+      its location in the image. A polygon can be generated in a similar fashion, by
       pressing 'Add Polygon' and clicking points on an image.</P>
     <P><A NAME="maps"></A><B>Maps</B></P>
-    <P>A map can be created from an acquired image simply by pushing a button after saving it to a file, 
-      or even before saving it if the image is compatible with the current open file. A montaged 
-      image can be made into a map as long as the montage overview is still in buffer 
-      B. There is also a feature for automatically acquiring a series of maps at 
-      selected points. Again, these maps can be either single frame images or 
-      montages. They will all be saved into a single file that must be set up before 
+    <P>A map can be created from an acquired image simply by pushing a button after saving it to a file,
+      or even before saving it if the image is compatible with the current open file. A montaged
+      image can be made into a map as long as the montage overview is still in buffer
+      B. There is also a feature for automatically acquiring a series of maps at
+      selected points. Again, these maps can be either single frame images or
+      montages. They will all be saved into a single file that must be set up before
       starting the automatic acquisition.</P>
-    <P>The large-area images used for maps are usually generated by taking montages 
-      with stage movements between the frames. The Navigator menu provides three ways 
-      to define the area that will be acquired in a montage. One option is simply to 
-      define an area that will capture the entire grid ('Setup Full Montage'). 
-      Another option is to move the stage to a series of points at the corners of the 
-      region of interest, such as the corners of the first and last sections of a 
-      ribbon. When each of these points is marked as a 'corner' point, the 'Setup 
-      Corner Montage' menu entry will set up a montage to encompass all of the area 
-      bounded by these points. The third option is to draw a polygon; the 'Setup 
-      Polygon Montage' menu entry will set up a montage to capture the area 
-      delineated by the polygon. When you select one of these options, the Montage 
-      Setup dialog will open in a special mode in which it will adjust the number of 
-      frames to fit the selected area whenever you change the magnification or the 
-      overlap between adjacent montage frames. Note that in all of these cases, a 
-      full rectangular array of frames need not be acquired; the program will omit 
-      pieces that fall outside of the defined area.&nbsp; After a montage has been set 
-      up to acquire inside a polygon, it can be used for acquiring the same shape of 
-      area in multiple locations without drawing a polygon at those locations, as long 
+    <P>The large-area images used for maps are usually generated by taking montages
+      with stage movements between the frames. The Navigator menu provides three ways
+      to define the area that will be acquired in a montage. One option is simply to
+      define an area that will capture the entire grid ('Setup Full Montage').
+      Another option is to move the stage to a series of points at the corners of the
+      region of interest, such as the corners of the first and last sections of a
+      ribbon. When each of these points is marked as a 'corner' point, the 'Setup
+      Corner Montage' menu entry will set up a montage to encompass all of the area
+      bounded by these points. The third option is to draw a polygon; the 'Setup
+      Polygon Montage' menu entry will set up a montage to capture the area
+      delineated by the polygon. When you select one of these options, the Montage
+      Setup dialog will open in a special mode in which it will adjust the number of
+      frames to fit the selected area whenever you change the magnification or the
+      overlap between adjacent montage frames. Note that in all of these cases, a
+      full rectangular array of frames need not be acquired; the program will omit
+      pieces that fall outside of the defined area.&nbsp; After a montage has been set
+      up to acquire inside a polygon, it can be used for acquiring the same shape of
+      area in multiple locations without drawing a polygon at those locations, as long
       as they are acquired as additional sections in the same file.</P>
     <P><A NAME="groups"></A><B>Groups of Items</B></P>
-    <P>When points are added in a single operation, they are 
-      defined as belonging to a group. A group is created when you add a series of 
-      points by clicking in an image, add a grid of points with a menu command, or 
-      define a set of positions for 'supermontaging' (acquiring a set of overlapping 
-      montages). The dialog box has an option for collapsing the listing of group 
-      items into a single line summarizing those items; this can help when there are 
+    <P>When points are added in a single operation, they are
+      defined as belonging to a group. A group is created when you add a series of
+      points by clicking in an image, add a grid of points with a menu command, or
+      define a set of positions for 'supermontaging' (acquiring a set of overlapping
+      montages). The dialog box has an option for collapsing the listing of group
+      items into a single line summarizing those items; this can help when there are
       many points in a group. Several commands operate on all the items in a group.</P>
     <P><A NAME="realign"></A><B>Returning to a Position Reliably</B></P>
-    <P>The Navigator incorporates several features to help you get to a desired 
-      location despite the imperfections of the microscope. Image misalignments 
-      between the magnifications can become quite large at very low magnification. 
-      These misalignments limit the ability to mark a feature in an image at one 
-      magnification and go to that feature at a much higher magnification. If the 
-      image shifts needed to compensate for the misalignments have been calibrated, 
-      you can choose to have these image shifts applied so that features stay centered 
-      when you change magnification. Even if you do not turn on this option, the 
-      Navigator will use these image shifts to adjust stage positions appropriately 
-      for the particular magnification. With these adjustments, if you mark a feature 
-      in an image taken at, say 200x, and then go to that position while at a 
-      magnification like 3000x, you should be able to find the feature in an image 
-      taken at that magnification. In contrast, if you go to the position while still 
-      at 200x, the stage will be moved to the appropriate position for centering the 
-      feature at 200x, and it may not appear at the higher magnification. Note also 
-      that these adjustments are of limited accuracy and will generally not be adequate for keeping a feature in the 
+    <P>The Navigator incorporates several features to help you get to a desired
+      location despite the imperfections of the microscope. Image misalignments
+      between the magnifications can become quite large at very low magnification.
+      These misalignments limit the ability to mark a feature in an image at one
+      magnification and go to that feature at a much higher magnification. If the
+      image shifts needed to compensate for the misalignments have been calibrated,
+      you can choose to have these image shifts applied so that features stay centered
+      when you change magnification. Even if you do not turn on this option, the
+      Navigator will use these image shifts to adjust stage positions appropriately
+      for the particular magnification. With these adjustments, if you mark a feature
+      in an image taken at, say 200x, and then go to that position while at a
+      magnification like 3000x, you should be able to find the feature in an image
+      taken at that magnification. In contrast, if you go to the position while still
+      at 200x, the stage will be moved to the appropriate position for centering the
+      feature at 200x, and it may not appear at the higher magnification. Note also
+      that these adjustments are of limited accuracy and will generally not be adequate for keeping a feature in the
       field of view across a 100-fold range of magnification.
     </P>
-    <P>A second problem with returning to a marked position is that the actual stage 
-      position at which a feature is centered may change by a few microns over time, 
-      possibly due to drift, shrinkage, or accumulation of errors from extensive 
-      stage movements. There are two features that help deal with this problem. One 
-      is the ability to shift the stage positions of all of the items by the same 
-      amount. This can be done by adding a point at a defined feature in an existing 
-      map, then taking a current image that shows the feature and clicking on the 
-      feature there. The 'Shift to Marker' menu entry is then used to shift the 
-      points. After this, you should be able to click on any point in that map and go 
-      to the point, without the error that was just eliminated by the shift. However, 
+    <P>A second problem with returning to a marked position is that the actual stage
+      position at which a feature is centered may change by a few microns over time,
+      possibly due to drift, shrinkage, or accumulation of errors from extensive
+      stage movements. There are two features that help deal with this problem. One
+      is the ability to shift the stage positions of all of the items by the same
+      amount. This can be done by adding a point at a defined feature in an existing
+      map, then taking a current image that shows the feature and clicking on the
+      feature there. The 'Shift to Marker' menu entry is then used to shift the
+      points. After this, you should be able to click on any point in that map and go
+      to the point, without the error that was just eliminated by the shift. However,
       a different shift correction may be needed for distant points.
     </P>
-    <P>The second feature that helps in returning to a marked position is a routine for 
-      'realigning' to a position by correlation with an existing map taken in regular 
-      mag mode. In order to return reliably to a position, it must be located in a 
-      map that is at least as big as the maximum possible stage error, and preferably 
-      twice as large. Thus, points to be realigned to should probably be located in a 
-      map at least 10 microns in extent. They can be near the edge of such a map, 
-      since it is the overall size of the map and not the distance of the point from 
-      the edge that matters. Do not expect reliable realignment to a point in a map 
+    <P>The second feature that helps in returning to a marked position is a routine for
+      'realigning' to a position by correlation with an existing map taken in regular
+      mag mode. In order to return reliably to a position, it must be located in a
+      map that is at least as big as the maximum possible stage error, and preferably
+      twice as large. Thus, points to be realigned to should probably be located in a
+      map at least 10 microns in extent. They can be near the edge of such a map,
+      since it is the overall size of the map and not the distance of the point from
+      the edge that matters. Do not expect reliable realignment to a point in a map
       that is only 2 microns in extent.</P>
-    <P>If you wish to realign precisely to a high-magnification image, such as for 
-      doing a tilt series, then you will need two maps: the medium-mag map for 
-      reliably returning to the vicinity of the point, and a high-mag image stored as 
-      a map. Three approaches to doing this are described next, along with their 
-      abilities to deal with the three problems that limit the reliability of realign 
-      routine.&nbsp; These problems are referred to as: &quot;intrinsic error in returning 
-      to the position&quot;, which was described above; &quot;mags not well-aligned&quot;, which 
-      means that there is a misalignment between the medium and high mags and that 
-      there is either no image shift offset calibration or an inaccurate one; and 
-      &quot;backlash&quot;, which refers to the extent that the stage does not return to the 
-      same position when it is approached from a different direction from the original 
-      one.&nbsp; Note that if you take the medium-mag map in Low Dose mode with View 
-      images (single frame or montage), it is possible to correct a misalignment 
+    <P>If you wish to realign precisely to a high-magnification image, such as for
+      doing a tilt series, then you will need two maps: the medium-mag map for
+      reliably returning to the vicinity of the point, and a high-mag image stored as
+      a map. Three approaches to doing this are described next, along with their
+      abilities to deal with the three problems that limit the reliability of realign
+      routine.&nbsp; These problems are referred to as: &quot;intrinsic error in returning
+      to the position&quot;, which was described above; &quot;mags not well-aligned&quot;, which
+      means that there is a misalignment between the medium and high mags and that
+      there is either no image shift offset calibration or an inaccurate one; and
+      &quot;backlash&quot;, which refers to the extent that the stage does not return to the
+      same position when it is approached from a different direction from the original
+      one.&nbsp; Note that if you take the medium-mag map in Low Dose mode with View
+      images (single frame or montage), it is possible to correct a misalignment
       between the mags with a View shift offset (see <b>Shift offset for View</b> in
       <a href="hidd_lowdose.htm">Low Dose</a>).&nbsp; </P>
     <ol>
-      <li><i><b>Anchor maps.</b></i>&nbsp; The simplest method is just to take two 
-      map images at every desired location, the high-mag image and one at, say, 3000x. 
-      The latter map is referred to as an 'anchor map'. You can store these in the 
-      same file or different files. After you have stored one map at the medium mag, 
-      you can mark this as a map to be used as a template for making more anchor maps. 
-      Thereafter, you can create a new anchor map with a single button press.&nbsp; The 
+      <li><i><b>Anchor maps.</b></i>&nbsp; The simplest method is just to take two
+      map images at every desired location, the high-mag image and one at, say, 3000x.
+      The latter map is referred to as an 'anchor map'. You can store these in the
+      same file or different files. After you have stored one map at the medium mag,
+      you can mark this as a map to be used as a template for making more anchor maps.
+      Thereafter, you can create a new anchor map with a single button press.&nbsp; The
         specific steps to follow are:<br />
-&nbsp;&nbsp; a) Find the first desired location.&nbsp; Acquire and save a high-mag image 
+&nbsp;&nbsp; a) Find the first desired location.&nbsp; Acquire and save a high-mag image
         and make it a map with the <b>New Map</b> button.<br />
-&nbsp;&nbsp; b) Go to the medium mag suitable for realigning, acquire and save an image, 
+&nbsp;&nbsp; b) Go to the medium mag suitable for realigning, acquire and save an image,
         and make it a map.<br />
 &nbsp;&nbsp; c) Turn on the <b>For anchor state</b> checkbox.<br />
-&nbsp;&nbsp; d) Find the next desired location.&nbsp; At the high mag, take an image, 
-        shift with the right mouse button to show the desired area, and take a new 
-        image.&nbsp; Press the <b>Anchor Map</b> button.&nbsp; The current image will be 
+&nbsp;&nbsp; d) Find the next desired location.&nbsp; At the high mag, take an image,
+        shift with the right mouse button to show the desired area, and take a new
+        image.&nbsp; Press the <b>Anchor Map</b> button.&nbsp; The current image will be
         saved as a map and the program will acquire and save the anchor map too.<br />
 &nbsp;&nbsp; e) Repeat step (d) at&nbsp; other locations.<br />
-        This method works well even if the mags are not well-aligned, and backlash will 
-        not contribute to errors in returning to the position if you allow the program 
-        to adjust for backlash when it takes the anchor map (or use a montage for the 
-        anchor map).&nbsp; The method is most suitable when you do not already have a 
+        This method works well even if the mags are not well-aligned, and backlash will
+        not contribute to errors in returning to the position if you allow the program
+        to adjust for backlash when it takes the anchor map (or use a montage for the
+        anchor map).&nbsp; The method is most suitable when you do not already have a
         medium-mag map.</li>
-      <li><b><i>Mark points and use Acquire at Items to get high-mag maps.</i></b>&nbsp; 
-        This approach takes advantage of an existing montaged map covering a 
-      larger area. Add one or more points on one or more medium-mag maps and select 
-        &#39;Acquire&#39; for each one.&nbsp; Run the 'Acquire at Items' menu item to acquire 
-        at map at each point and specify 'Realign to item' as an initial action.&nbsp; 
-        This method will give robust return to this position and realignment to the 
-        high-mag map, but it is suitable only if the mags are well enough aligned so 
+      <li><b><i>Mark points and use Acquire at Items to get high-mag maps.</i></b>&nbsp;
+        This approach takes advantage of an existing montaged map covering a
+      larger area. Add one or more points on one or more medium-mag maps and select
+        &#39;Acquire&#39; for each one.&nbsp; Run the 'Acquire at Items' menu item to acquire
+        at map at each point and specify 'Realign to item' as an initial action.&nbsp;
+        This method will give robust return to this position and realignment to the
+        high-mag map, but it is suitable only if the mags are well enough aligned so
         that the desired area is adequately centered in the high-mag map.</li>
-      <li>&nbsp;<b><i>Move to positions marked in medium-mag maps, adjust positions and 
-        take maps at high mag.</i></b>&nbsp; In its simplest form, namely by clicking in 
-        the map, using <b>Go To Marker</b>, then moving around at high mag to center the 
-        area of interest, this method is vulnerable both in the initial repositioning to 
-        the medium-mag map and in the alignment to the high-mag map.&nbsp; The initial 
-        repositioning is impaired to the extent there are already errors in returning to 
-        the medium-mag map position, which could be the case if numerous maps were taken 
-        before marking points on this one.&nbsp; The alignment to the high-mag map could 
-        fail if the mags are misaligned by more than 1/3 of the extent of the high-mag 
+      <li>&nbsp;<b><i>Move to positions marked in medium-mag maps, adjust positions and
+        take maps at high mag.</i></b>&nbsp; In its simplest form, namely by clicking in
+        the map, using <b>Go To Marker</b>, then moving around at high mag to center the
+        area of interest, this method is vulnerable both in the initial repositioning to
+        the medium-mag map and in the alignment to the high-mag map.&nbsp; The initial
+        repositioning is impaired to the extent there are already errors in returning to
+        the medium-mag map position, which could be the case if numerous maps were taken
+        before marking points on this one.&nbsp; The alignment to the high-mag map could
+        fail if the mags are misaligned by more than 1/3 of the extent of the high-mag
         map.&nbsp; There are two ways to make this approach more reliable:<br />
-&nbsp;&nbsp; a) Acquire a single image anchor map for each high-mag map: i.e., use 
-        method 1 above.&nbsp; This eliminates the effects of pre-existing positioning 
+&nbsp;&nbsp; a) Acquire a single image anchor map for each high-mag map: i.e., use
+        method 1 above.&nbsp; This eliminates the effects of pre-existing positioning
         errors and of misaligned mags.<br />
 &nbsp;&nbsp; b) Add a point instead of just clicking at the desired location.&nbsp; <i>
-        Be sure to be at the higher mag</i>, and press <b>Realign to Item</b>. Then 
-        center on the desired location <i>using image shift only, not stage shift</i>.&nbsp; 
-        Take an image and make it a map.&nbsp; The errors found in realigning to the 
-        nearby point will be recorded for this map and taken into account when 
-        realigning again; backlash will also not be a problem.&nbsp; Realignment to the 
+        Be sure to be at the higher mag</i>, and press <b>Realign to Item</b>. Then
+        center on the desired location <i>using image shift only, not stage shift</i>.&nbsp;
+        Take an image and make it a map.&nbsp; The errors found in realigning to the
+        nearby point will be recorded for this map and taken into account when
+        realigning again; backlash will also not be a problem.&nbsp; Realignment to the
         high-mag map could still fail if the mags are misaligned too much.</li>
     </ol>
     <p>
-      The lessons from above are that methods relying an existing montaged map work 
-      best if the mags are well aligned, either intrinsically or with an accurate 
-      image offset calibration, and that using an Anchor map should give the most 
+      The lessons from above are that methods relying an existing montaged map work
+      best if the mags are well aligned, either intrinsically or with an accurate
+      image offset calibration, and that using an Anchor map should give the most
       reliable repositioning.</p>
-    <P>On FEI microscopes with older Compustages, if a medium-magnification montaged map is taken with stage 
-      movement, there are some advantages in taking the montage with the option to 
-      &#39;Realign with image shift&#39; (available when the option &#39;Use settings for 
-      high-quality stage montage&#39; is selected).&nbsp; If your Compustage has periodic, systematic 
-      errors in movement, stage montages with piece sizes around 5-10 
-      microns may require overlaps of 20-25% to achieve sufficient overlap.&nbsp; 
-      Using &#39;Realign with image shift&#39; will allow the montage to be taken with an 
-      overlap of only 10%, provided that there are sufficient image features present 
-      for the realignment to work.&nbsp; The more important advantage for mapping 
-      is that when the Navigator moves to a point marked on a map acquired this way, 
-      it can adjust by the errors in stage position found during montaging.&nbsp;&nbsp; 
-      The &#39;Realign to item&#39; routine also takes account of the stage errors 
-      appropriately.&nbsp; Taking montages with image shift realignment is 
+    <P>On Thermo/FEI microscopes with older Compustages, if a medium-magnification montaged map is taken with stage
+      movement, there are some advantages in taking the montage with the option to
+      &#39;Realign with image shift&#39; (available when the option &#39;Use settings for
+      high-quality stage montage&#39; is selected).&nbsp; If your Compustage has periodic, systematic
+      errors in movement, stage montages with piece sizes around 5-10
+      microns may require overlaps of 20-25% to achieve sufficient overlap.&nbsp;
+      Using &#39;Realign with image shift&#39; will allow the montage to be taken with an
+      overlap of only 10%, provided that there are sufficient image features present
+      for the realignment to work.&nbsp; The more important advantage for mapping
+      is that when the Navigator moves to a point marked on a map acquired this way,
+      it can adjust by the errors in stage position found during montaging.&nbsp;&nbsp;
+      The &#39;Realign to item&#39; routine also takes account of the stage errors
+      appropriately.&nbsp; Taking montages with image shift realignment is
       particularly recommended for maps to be used for setting up supermontages. </P>
     <P><A NAME="states"></A><B>Imaging States</B></P>
-    <P>The Imaging State dialog allows you to store and 
-      set the microscope state and Record acquisition parameters, thus making it 
-      easier to acquire images at different magnifications. Since this is 
-      particularly helpful when making the different kinds of Navigator maps, the 
-      dialog will generally open along with the Navigator. The dialog also allows you 
+    <P>The Imaging State dialog allows you to store and
+      set the microscope state and Record acquisition parameters, thus making it
+      easier to acquire images at different magnifications. Since this is
+      particularly helpful when making the different kinds of Navigator maps, the
+      dialog will generally open along with the Navigator. The dialog also allows you
       to set a state for acquiring another map into the same file as an existing map.</P>
     <P><A NAME="registrations"></A><B>Registrations</B></P>
-    <P>The final concept that needs explaining is 
-      'registration'. A registration is essentially one position of the grid in the 
-      specimen holder, or one relationship between positions on the grid and stage 
-      coordinates. Every item in the Navigator's list, as well as every image that 
-      you take, is associated with a registration. When you first start using the 
-      Navigator, all of the items that you add to the list are assumed to be at the 
-      first registration. If you disturb the grid in the holder (or even if you 
-      remove and replace the holder), you have changed the correspondence between 
-      positions on the grid and stage coordinates. You should then indicate to 
-      Navigator that the registration has changed by increasing the current 
-      registration number. At this point, items from previous registrations will no 
-      longer appear on newly acquired images (unless you select an option to make 
-      them appear) because they would not be in the right place. To get them into the 
-      right place and make them useful again, you need to transform them to the new 
+    <P>The final concept that needs explaining is
+      'registration'. A registration is essentially one position of the grid in the
+      specimen holder, or one relationship between positions on the grid and stage
+      coordinates. Every item in the Navigator's list, as well as every image that
+      you take, is associated with a registration. When you first start using the
+      Navigator, all of the items that you add to the list are assumed to be at the
+      first registration. If you disturb the grid in the holder (or even if you
+      remove and replace the holder), you have changed the correspondence between
+      positions on the grid and stage coordinates. You should then indicate to
+      Navigator that the registration has changed by increasing the current
+      registration number. At this point, items from previous registrations will no
+      longer appear on newly acquired images (unless you select an option to make
+      them appear) because they would not be in the right place. To get them into the
+      right place and make them useful again, you need to transform them to the new
       registration.</P>
-    <P>To transform items to a new registration, you must first define some of the 
-      Navigator points at the first registration as registration points. You do this 
-      by selecting the 'Registration point' checkbox and, if necessary, specifying a 
-      point number as well for each of the relevant points. (Registration point 
-      numbers will increment automatically.) After you have gone to a new 
-      registration, you then move the stage to the same positions, add a new 
-      Navigator point at each, and identify each point as a registration point with 
-      the same number as in the first registration. Once you have identified a set of 
-      corresponding points in this way, select a menu entry to transform the items 
-      from the first registration to the new one. The program will find a 
-      transformation whose complexity depends on the number of registration points 
-      available. Just a shift will be found with 1 point, a rotation and shift with 2 
-      points, rotation, scaling, and shift with 3 or 4 points, or a full linear 
-      transformation including stretching with 5 points. All items except the 
-      registration points will then be transformed and associated with the new 
-      registration. (The registration points are left behind to allow the data to be 
-      transformed back if necessary.) If you just need to adjust by a shift after 
-      removing and replacing the holder or after moving the stage around a lot, you 
-      can use just one registration point, or use the 'Shift to Marker' approach 
+    <P>To transform items to a new registration, you must first define some of the
+      Navigator points at the first registration as registration points. You do this
+      by selecting the 'Registration point' checkbox and, if necessary, specifying a
+      point number as well for each of the relevant points. (Registration point
+      numbers will increment automatically.) After you have gone to a new
+      registration, you then move the stage to the same positions, add a new
+      Navigator point at each, and identify each point as a registration point with
+      the same number as in the first registration. Once you have identified a set of
+      corresponding points in this way, select a menu entry to transform the items
+      from the first registration to the new one. The program will find a
+      transformation whose complexity depends on the number of registration points
+      available. Just a shift will be found with 1 point, a rotation and shift with 2
+      points, rotation, scaling, and shift with 3 or 4 points, or a full linear
+      transformation including stretching with 5 points. All items except the
+      registration points will then be transformed and associated with the new
+      registration. (The registration points are left behind to allow the data to be
+      transformed back if necessary.) If you just need to adjust by a shift after
+      removing and replacing the holder or after moving the stage around a lot, you
+      can use just one registration point, or use the 'Shift to Marker' approach
       described above.</P>
     <P><A NAME="mapping_steps"></A><B>A Step-by-Step  Procedure for Mapping</B></P>
-    <P>A suggested procedure for 
+    <P>A suggested procedure for
       using the Navigator for mapping would be:</P>
     <OL>
       <LI>
-        Go to a magnification that can be used to map the area of interest in a 
-        reasonable number of large pixels, on the order of 10K x 10K (e.g., 10 by 10 
+        Go to a magnification that can be used to map the area of interest in a
+        reasonable number of large pixels, on the order of 10K x 10K (e.g., 10 by 10
         pieces, each 1K x 1K). This might be as low as 160x.</LI>
       <LI>
-        Move the stage to the corners of the area of interest and add the stage 
-        position as a point at each corner. Define each point as a corner point, then 
-        select 'Setup Corner Montage'. Alternatively, especially for cryomicroscopy, 
+        Move the stage to the corners of the area of interest and add the stage
+        position as a point at each corner. Define each point as a corner point, then
+        select 'Setup Corner Montage'. Alternatively, especially for cryomicroscopy,
         select 'Setup Full Montage'.</LI>
       <LI>
         Acquire the montage and designate it as a map.</LI>
       <LI>
-        On the montage overview, add a point at each location of interest (e.g., 
-        corresponding location on serial sections, or grid squares with ice of the 
-        right thickness.) Select 'Acquire' for each point to set it up for automatic 
+        On the montage overview, add a point at each location of interest (e.g.,
+        corresponding location on serial sections, or grid squares with ice of the
+        right thickness.) Select 'Acquire' for each point to set it up for automatic
         acquisition.</LI>
       <LI>
-        At one of the locations of interest, draw a polygon around the area desired for 
-        a medium-mag map. Go to an intermediate mag (like 3000x) so that a map of this 
-        area will be a reasonable number of pixels. Select 'Setup Polygon Montage' to 
+        At one of the locations of interest, draw a polygon around the area desired for
+        a medium-mag map. Go to an intermediate mag (like 3000x) so that a map of this
+        area will be a reasonable number of pixels. Select 'Setup Polygon Montage' to
         define a montage area.</LI>
       <LI>
         Acquire a montage to check the area.</LI>
       <LI>
-        If necessary, shift the registration. Add a point on an identifiable feature on 
-        the low-mag map. Mark the same position on the new image with the left mouse 
+        If necessary, shift the registration. Add a point on an identifiable feature on
+        the low-mag map. Mark the same position on the new image with the left mouse
         button. Select 'Shift to Marker'.</LI>
       <LI>
-        Select 'Acquire Areas' to acquire all of the areas automatically. Go do 
+        Select 'Acquire Areas' to acquire all of the areas automatically. Go do
         something else; these maps may take about 5 minutes each.</LI>
       <LI>
-        When you load an individual map after it has been acquired, you can simply 
-        click in the map then press 'Go To Marker' to move the stage to the selected 
-        location. For more accurate positioning, go to the mag at which you want to 
-        view a feature, add a point item on the map, and use 'Realign to Item'. You 
+        When you load an individual map after it has been acquired, you can simply
+        click in the map then press 'Go To Marker' to move the stage to the selected
+        location. For more accurate positioning, go to the mag at which you want to
+        view a feature, add a point item on the map, and use 'Realign to Item'. You
         could then acquire a tilt series at high mag.</LI>
       <LI>
-        You do not need to close the montage file, but be sure to open a new file 
+        You do not need to close the montage file, but be sure to open a new file
         before trying to start a tilt series.</LI></OL>
-    <P><A NAME="rotation"></A>It is also possible to capture a series of intermediate 
-      mag maps or montages into a separate file for each.&nbsp; The procedure would be 
+    <P><A NAME="rotation"></A>It is also possible to capture a series of intermediate
+      mag maps or montages into a separate file for each.&nbsp; The procedure would be
       slightly different for steps 4 and 5:</P>
-    <P>&nbsp;&nbsp;&nbsp; 4. At one of the locations of interest, draw a polygon 
-      around the area desired for a medium-mag map and select &#39;Acquire&#39;. Go to the 
-      intermediate mag and select &#39;New file at item&#39;.&nbsp; In the little dialog that 
+    <P>&nbsp;&nbsp;&nbsp; 4. At one of the locations of interest, draw a polygon
+      around the area desired for a medium-mag map and select &#39;Acquire&#39;. Go to the
+      intermediate mag and select &#39;New file at item&#39;.&nbsp; In the little dialog that
       comes up, select to make a montage and fit it to the polygon.<br />
-&nbsp;&nbsp; 5. Mark all of the other desired locations with a series of points.&nbsp; 
-      For each one, turn on &#39;Acquire&#39;, then select &#39;New file at item&#39;.&nbsp; Each new 
+&nbsp;&nbsp; 5. Mark all of the other desired locations with a series of points.&nbsp;
+      For each one, turn on &#39;Acquire&#39;, then select &#39;New file at item&#39;.&nbsp; Each new
       file will inherit the properties of the polygon montage.</P>
-    <P>If you need to have a different polygon at each location, such as when 
-      capturing from a curving ribbon of sections, then this will require a different 
-      montage file for each location.&nbsp; At each location, draw a polygon, select 
-      &#39;Acquire&#39;&nbsp; then &#39;New file at item&#39;, and then go through the sequence for 
+    <P>If you need to have a different polygon at each location, such as when
+      capturing from a curving ribbon of sections, then this will require a different
+      montage file for each location.&nbsp; At each location, draw a polygon, select
+      &#39;Acquire&#39;&nbsp; then &#39;New file at item&#39;, and then go through the sequence for
       fitting a polygon to the montage.</P>
     <P><B>Finding Points after Grid Rotation</B></P>
-    <P>If you want to find 
-      corresponding points after rotating a grid by 90 degrees, you could use the 
+    <P>If you want to find
+      corresponding points after rotating a grid by 90 degrees, you could use the
       following procedure:</P>
     <OL>
       <LI>
-        Move the stage to five or six well-defined points (e.g., the corners of a 
-        section of interest), add the stage position as a Navigator point, and make 
+        Move the stage to five or six well-defined points (e.g., the corners of a
+        section of interest), add the stage position as a Navigator point, and make
         each one a registration point.</LI>
       <LI>
-        Add a point or map(s) at each location of interest (i.e., each place where a 
+        Add a point or map(s) at each location of interest (i.e., each place where a
         tilt series is taken.)</LI>
       <LI>
         Rotate the grid.</LI>
       <LI>
         Increase the current registration number to 2.</LI>
       <LI>
-        Find the five or six registration points and add each one as a registration 
-        point in registration 2, making sure that the registration point numbers 
+        Find the five or six registration points and add each one as a registration
+        point in registration 2, making sure that the registration point numbers
         correspond to the first registration.</LI>
       <LI>
         Select 'Transform Items' in the Navigator menu.</LI>
       <LI>
-        Select one of the points of interest in the Navigator list box and press 'Go To 
-        XY'. You should be close to the desired point. Errors of 5-10 microns are 
-        likely if you localized the registration points in low mag mode; but the error 
+        Select one of the points of interest in the Navigator list box and press 'Go To
+        XY'. You should be close to the desired point. Errors of 5-10 microns are
+        likely if you localized the registration points in low mag mode; but the error
         should be much less if you localized them at higher mag.</LI>
       <LI>
-        If you saved medium-mag maps at any locations, you can use 'Realign to Item' to 
-        return to and align to those locations. The program will rotate the map image 
-        in order to align to it. You will probably need larger maps, 15-20 &micro;m in 
+        If you saved medium-mag maps at any locations, you can use 'Realign to Item' to
+        return to and align to those locations. The program will rotate the map image
+        in order to align to it. You will probably need larger maps, 15-20 &micro;m in
         extent, to realign reliably after a rotation.</LI></OL>
-    <P>This procedure is tedious because of the need for so many registration points. 
-      The number of points can be reduced to 3 or even 2 if the stretch in the stage 
-      coordinate system has been calibrated. It is calibrated simply using a 
-      transformation obtained from 6-8 registration points as just described, as long 
+    <P>This procedure is tedious because of the need for so many registration points.
+      The number of points can be reduced to 3 or even 2 if the stretch in the stage
+      coordinate system has been calibrated. It is calibrated simply using a
+      transformation obtained from 6-8 registration points as just described, as long
       as the points fit with moderately low error (see <A HREF="menu_calibration.htm#hid_calibration_stagestretch">
         Stage Stretch</A>).</P>
-    <P>If you use the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog</A> to 
-      align to points after rotation, you could use the following procedure to get a 
-      preliminary transformation with that dialog and replace it with one based on 
+    <P>If you use the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog</A> to
+      align to points after rotation, you could use the following procedure to get a
+      preliminary transformation with that dialog and replace it with one based on
       registration points:</P>
     <OL>
       <LI>
-        Make sure that you have medium mag maps at least 15-20 &micro;m in extent at two or 
-        more locations separated by more than half of the extent of the area being 
+        Make sure that you have medium mag maps at least 15-20 &micro;m in extent at two or
+        more locations separated by more than half of the extent of the area being
         studied.
       </LI>
       <LI>
-        Rotate the grid. If you have a rotating holder and can watch the rotation, do 
-        the rotation at one of the places with a map if that will help you find it 
+        Rotate the grid. If you have a rotating holder and can watch the rotation, do
+        the rotation at one of the places with a map if that will help you find it
         again.</LI>
       <LI>
         Increase the current registration to 2.</LI>
@@ -368,10 +368,10 @@
       <LI>
         Load the map.</LI>
       <LI>
-        Open the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog</A> , set 
+        Open the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog</A> , set
         the angle to rotate the image by, and press <B>Align to Map</B>.</LI>
       <LI>
-        Toggle between the aligned image and map ('Home' and 'Delete' keys) to check 
+        Toggle between the aligned image and map ('Home' and 'Delete' keys) to check
         the alignment.</LI>
       <LI>
         If the alignment is good, press <B>Apply Image Shift on Scope</B> and <B>Transform</B>.</LI>
@@ -380,21 +380,21 @@
       <LI>
         Select another appropriate map, load the map, and press <B>Realign to Item</B>.</LI>
       <LI>
-        Take an image and verify that it is centered on the middle of the map. Press <B>Add 
+        Take an image and verify that it is centered on the middle of the map. Press <B>Add
           Stage Pos.</B></LI>
       <LI>
         You could repeat the last two steps at another position.</LI>
       <LI>
         In the Navigator menu, select 'Undo Transformation'.</LI>
       <LI>
-        Make each of the maps that you aligned to and each of the added positions in 
-        the new registration be registration points with corresponding registration 
+        Make each of the maps that you aligned to and each of the added positions in
+        the new registration be registration points with corresponding registration
         numbers.</LI>
       <LI>
         Run 'Transform Items' in the Navigator menu.</LI>
       <LI>
-        If the realignment fails in step 10, run 'Undo Transformation' and reload the 
-        map. Then try to find the location. Align to it and add a stage position as in 
+        If the realignment fails in step 10, run 'Undo Transformation' and reload the
+        map. Then try to find the location. Align to it and add a stage position as in
         steps 6 to 9. Now you have a second point to use for a transformation.</LI></OL>
     <P><A NAME="overviewAlign"></A><B>A Counter-intuitive Point about Misaligned Montage Frames</B></P>
     <P>SerialEM will sometimes fail to align all of the montage frames in the
@@ -413,58 +413,58 @@
     accuracy of both moving to marked positions and using the Realign to
       Item routine at them should not depend on whether a map is well-aligned.
     Two actions do require a well-aligned map: adding a grid of points over a
-    set of holes, and setting up an array of supermontage positions. 
+    set of holes, and setting up an array of supermontage positions.
     </P>
     <P><A NAME="memory"></A><B>Memory Considerations</B></P>
-    <P>Large maps are memory intensive. If you keep 
-      many of them around by copying them to other buffers, you can easily run out of 
-      memory and start using swap file space. You should generally use binning to make 
-      them more information-dense, but the amount of binning depends on the kind of 
-      camera, the size of pixels in the detector, and the voltage.&nbsp; The most 
-      binning is needed for CCD cameras at 200 and 300 KV, which should generally be 
-      binned to ~1Kx1K for the most space-efficient images.&nbsp; At lower voltages, 
-      cameras have much better resolution and maps could be taken unbinned, although 
-      binning by 2 will still provide images with more information per pixel.&nbsp; 
-      The same is true for direct detectors at higher voltages.&nbsp; A direct detector camera in 
-      counting mode is a special case; it has good information content in unbinned 
-      images but the dose rate needs to be kept in the appropriate range for counting 
-      mode.&nbsp; Thus, you could take map images unbinned with relatively long 
-      exposures, or use binning by 2 with shorter exposures.&nbsp; In any case, 
-      binning must be considered in conjunction with the magnification being used.&nbsp; 
-      For mapping, a particular resolution or pixel size is needed to achieve the 
-      desired level of detail. If you double the binning you need to increase the 
-      magnification to compensate.&nbsp; If you are constrained to stay above a 
-      certain magnification, that in turn may dictate the binning needed to prevent 
+    <P>Large maps are memory intensive. If you keep
+      many of them around by copying them to other buffers, you can easily run out of
+      memory and start using swap file space. You should generally use binning to make
+      them more information-dense, but the amount of binning depends on the kind of
+      camera, the size of pixels in the detector, and the voltage.&nbsp; The most
+      binning is needed for CCD cameras at 200 and 300 KV, which should generally be
+      binned to ~1Kx1K for the most space-efficient images.&nbsp; At lower voltages,
+      cameras have much better resolution and maps could be taken unbinned, although
+      binning by 2 will still provide images with more information per pixel.&nbsp;
+      The same is true for direct detectors at higher voltages.&nbsp; A direct detector camera in
+      counting mode is a special case; it has good information content in unbinned
+      images but the dose rate needs to be kept in the appropriate range for counting
+      mode.&nbsp; Thus, you could take map images unbinned with relatively long
+      exposures, or use binning by 2 with shorter exposures.&nbsp; In any case,
+      binning must be considered in conjunction with the magnification being used.&nbsp;
+      For mapping, a particular resolution or pixel size is needed to achieve the
+      desired level of detail. If you double the binning you need to increase the
+      magnification to compensate.&nbsp; If you are constrained to stay above a
+      certain magnification, that in turn may dictate the binning needed to prevent
       huge maps.</P>
-    <P>The memory use of maps is minimized by 
-      an option (in the Navigator menu) to convert maps to bytes, which is on by 
-      default. With this conversion, a map will typically occupy as many bytes as 
-      pixels (e.g., a 10K by 10K image will require 100 MB). Without the conversion, 
-      a map will take 3 times as much memory because the image is stored as 2-byte 
-      integers and an additional byte array of the same size is needed for display. 
-      You might need to turn off the option if the byte conversion is truncating the 
-      intensities inappropriately so that you cannot see light or dark details. If 
-      this occurs, turn off the conversion, read in the map, and type new values in 
-      the White or Black text boxes of the Image Display control panel to keep the 
+    <P>The memory use of maps is minimized by
+      an option (in the Navigator menu) to convert maps to bytes, which is on by
+      default. With this conversion, a map will typically occupy as many bytes as
+      pixels (e.g., a 10K by 10K image will require 100 MB). Without the conversion,
+      a map will take 3 times as much memory because the image is stored as 2-byte
+      integers and an additional byte array of the same size is needed for display.
+      You might need to turn off the option if the byte conversion is truncating the
+      intensities inappropriately so that you cannot see light or dark details. If
+      this occurs, turn off the conversion, read in the map, and type new values in
+      the White or Black text boxes of the Image Display control panel to keep the
       desired intensities from being truncated. Be sure to turn the option back on.</P>
-    <P>Even when conversion to bytes is on, the acquisition of a new map will take 3 
-      times as much memory as the number of pixels, because the scaling to bytes 
-      cannot be known until the whole montage is acquired. As soon as the montage is 
-      designated as a map, however, it will be converted to bytes and the extra 
-      memory will be available again. If the program cannot get memory for the 
-      initial overview image when acquiring a montage, it will increase the binning 
-      of this image to reduce the memory requirement. After you make such an image a 
-      map, you can then reload it to see it at full resolution, since this will 
+    <P>Even when conversion to bytes is on, the acquisition of a new map will take 3
+      times as much memory as the number of pixels, because the scaling to bytes
+      cannot be known until the whole montage is acquired. As soon as the montage is
+      designated as a map, however, it will be converted to bytes and the extra
+      memory will be available again. If the program cannot get memory for the
+      initial overview image when acquiring a montage, it will increase the binning
+      of this image to reduce the memory requirement. After you make such an image a
+      map, you can then reload it to see it at full resolution, since this will
       require less memory.</P>
-    <P>If performance starts to suffer, use the Task Manager to assess the memory and 
-      swap file usage. Also notice the memory usage indicator in the Buffer Control 
-      Panel. To recover the memory occupied by a map in a higher buffer, make the 
-      image be the current one and use the Delete button in that control panel. If 
-      you are going to use the Navigator extensively, get as much memory as possible 
-      for the computer and make sure the swap file space is large (1 GB). Because the 
-      behavior of the computer is usually atrocious when significant swapping occurs, 
-      it is probably preferable to set the TotalMemoryLimitMB property to prevent the 
-      program from requesting large amounts of memory for montage overviews when 
+    <P>If performance starts to suffer, use the Task Manager to assess the memory and
+      swap file usage. Also notice the memory usage indicator in the Buffer Control
+      Panel. To recover the memory occupied by a map in a higher buffer, make the
+      image be the current one and use the Delete button in that control panel. If
+      you are going to use the Navigator extensively, get as much memory as possible
+      for the computer and make sure the swap file space is large (1 GB). Because the
+      behavior of the computer is usually atrocious when significant swapping occurs,
+      it is probably preferable to set the TotalMemoryLimitMB property to prevent the
+      program from requesting large amounts of memory for montage overviews when
       memory use is near the limit (See <A HREF="about_properties.htm#general_properties">
         General entries</A> ).</P>
     </basefont>

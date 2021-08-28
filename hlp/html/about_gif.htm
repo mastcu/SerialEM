@@ -10,85 +10,85 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="about_gif"></A><B><FONT size="3">Energy Filtering</FONT></B></P>
-      <P>SerialEM allows convenient use of an energy filter (post-column or omega 
-        filter) and efficient tilt series acquisition with filtering. For FEI scopes, it 
-        relies on the EFTEM software being installed.&nbsp; On JEOL scopes, it works 
-        with an omega filter or with a post-column GIF, where it recognizes the GIF mode 
-        and may be able to control it. It provides a number of additional features when 
+      <P>SerialEM allows convenient use of an energy filter (post-column or omega
+        filter) and efficient tilt series acquisition with filtering. For Thermo/FEI scopes, it
+        relies on the EFTEM software being installed.&nbsp; On JEOL scopes, it works
+        with an omega filter or with a post-column GIF, where it recognizes the GIF mode
+        and may be able to control it. It provides a number of additional features when
         used with a post-column filter.</P>
       <UL>
         <LI>
-          Automatic switching between regular lens mode and EFTEM 
-          or GIF lens mode when the 
-          screen is raised or lowered. For the occasions when you need to see the 
-          constricted beam of EFTEM lens mode on the screen, you just toggle this 
+          Automatic switching between regular lens mode and EFTEM
+          or GIF lens mode when the
+          screen is raised or lowered. For the occasions when you need to see the
+          constricted beam of EFTEM lens mode on the screen, you just toggle this
           automatic switching off.</LI>
         <LI>
-          Automatic switching between upper camera and 
+          Automatic switching between upper camera and
           EF camera.</LI>
         <LI>
-          Automatic changing of magnification to provide the least change between the 
+          Automatic changing of magnification to provide the least change between the
           pixel sizes on the upper camera and on the EF camera.</LI>
         <LI>
-          Automatic intensity adjustment so that the electrons per pixel per second will 
+          Automatic intensity adjustment so that the electrons per pixel per second will
           be the same on the EF camera as on the upper camera.</LI>
         <LI>
-          Integration with low dose mode so that different filter settings can be used 
+          Integration with low dose mode so that different filter settings can be used
           for pictures of the different low dose areas.</LI></UL>
-      <P>Even without SerialEM, there are numerous ways to control filter settings: the 
-        EFTEM panel in the FEI Microscope User Interface (MUI), the Autofilter palette in 
-        DigitalMicrograph, and the Filter Control program in GMS 1 or its equivalent 
-        dialog in DM in GMS 2-3. SerialEM tries to be 
-        a good citizen among this crowd and respond to changes made in other 
-        interfaces. The recommendation from FEI was (and may still be) that the filter be controlled only through 
-        the MUI. This is probably sound advice for 
-        any actions that cannot be done through SerialEM. Specifically, this includes 
-        aligning the zero loss peak (ZLP), tuning the EF, and performing spectroscopy.</PIt is important to distinguish between SerialEM's EFTEM mode and the  
-        EFTEM or GIF lens mode. When EFTEM mode is on in SerialEM, there are many 
-        implications, but the FEI scope may not actually be in EFTEM lens mode unless the 
-        screen is raised (if the option mentioned above is turned on).&nbsp; The same would occur on a JEOL scope 
-        with GIF if SerialEM can 
+      <P>Even without SerialEM, there are numerous ways to control filter settings: the
+        EFTEM panel in the Thermo/FEI Microscope User Interface (MUI), the Autofilter palette in
+        DigitalMicrograph, and the Filter Control program in GMS 1 or its equivalent
+        dialog in DM in GMS 2-3. SerialEM tries to be
+        a good citizen among this crowd and respond to changes made in other
+        interfaces. The recommendation from Thermo/FEI was (and may still be) that the filter be controlled only through
+        the MUI. This is probably sound advice for
+        any actions that cannot be done through SerialEM. Specifically, this includes
+        aligning the zero loss peak (ZLP), tuning the EF, and performing spectroscopy.</PIt is important to distinguish between SerialEM's EFTEM mode and the
+        EFTEM or GIF lens mode. When EFTEM mode is on in SerialEM, there are many
+        implications, but the Thermo/FEI scope may not actually be in EFTEM lens mode unless the
+        screen is raised (if the option mentioned above is turned on).&nbsp; The same would occur on a JEOL scope
+        with GIF if SerialEM can
         control the GIF mode.</P>
-      <P>The biggest problem in using the EF for tilt series is that there may be an 
-        energy shift when changing to lower magnifications for various alignment tasks. 
-        If the slit is in, the zero loss peak may shift out of the energy range of the 
-        slit, and the task will fail. One solution would be to remove the slit when 
-        going to lower magnification, but this would cause an unpredictable and 
-        potentially large increase in intensity that could saturate the camera. The 
-        solution in SerialEM is to calibrate the energy shifts and apply these 
-        automatically when changing magnifications, so that the slit can be left in and 
-        will still be centered at the lower magnification. The program will also apply 
-        energy offsets to accommodate changes in slit width on older GIFs. These capabilities allow 
-        you to explore different magnifications and slit widths without having to align 
+      <P>The biggest problem in using the EF for tilt series is that there may be an
+        energy shift when changing to lower magnifications for various alignment tasks.
+        If the slit is in, the zero loss peak may shift out of the energy range of the
+        slit, and the task will fail. One solution would be to remove the slit when
+        going to lower magnification, but this would cause an unpredictable and
+        potentially large increase in intensity that could saturate the camera. The
+        solution in SerialEM is to calibrate the energy shifts and apply these
+        automatically when changing magnifications, so that the slit can be left in and
+        will still be centered at the lower magnification. The program will also apply
+        energy offsets to accommodate changes in slit width on older GIFs. These capabilities allow
+        you to explore different magnifications and slit widths without having to align
         the ZLP repeatedly. repeatedly.</P>
-      <P>SerialEM implements the three standard imaging modes: unfiltered (with the slit 
-        out), filtered to record only zero-loss electrons, and filtered to record 
-        electrons with a specific range of energy losses. Once filtering is selected, 
-        it is possible to switch between zero-loss and a specific energy loss simply by 
-        toggling the 'Zero loss' checkbox; however, if you want a different slit width 
+      <P>SerialEM implements the three standard imaging modes: unfiltered (with the slit
+        out), filtered to record only zero-loss electrons, and filtered to record
+        electrons with a specific range of energy losses. Once filtering is selected,
+        it is possible to switch between zero-loss and a specific energy loss simply by
+        toggling the 'Zero loss' checkbox; however, if you want a different slit width
         in the two cases you need to adjust it each time you switch between them. See <A HREF="hidd_filtercontrol.htm">
           Filter Control panel</A> for more details.</P>
-      <P>The Filter Control Panel in SerialEM includes a button to refine the alignment 
-        of the ZLP. The procedure is referred to as a refinement because it will work 
-        only if the ZLP is already close to aligned, say within 10 eV. The Align ZLP 
-        function available in other interfaces must be used for initial alignment, 
-        because it is capable of finding the ZLP from many eV away. However, the refine 
-        ZLP procedure will align the ZLP even when it is a very small fraction of the 
-        total electrons, because it concentrates on the drop in signal as the slit is 
-        moved off of the left edge of the ZLP. Thus, once a thick specimen is in, the 
-        refine ZLP procedure may be more reliable than the Align ZLP procedure run from 
+      <P>The Filter Control Panel in SerialEM includes a button to refine the alignment
+        of the ZLP. The procedure is referred to as a refinement because it will work
+        only if the ZLP is already close to aligned, say within 10 eV. The Align ZLP
+        function available in other interfaces must be used for initial alignment,
+        because it is capable of finding the ZLP from many eV away. However, the refine
+        ZLP procedure will align the ZLP even when it is a very small fraction of the
+        total electrons, because it concentrates on the drop in signal as the slit is
+        moved off of the left edge of the ZLP. Thus, once a thick specimen is in, the
+        refine ZLP procedure may be more reliable than the Align ZLP procedure run from
         elsewhere.</P>
-      <P><B>Steps for Using a GIF on an FEI Scope</B></P>
+      <P><B>Steps for Using a GIF on a Thermo/FEI Scope</B></P>
       <OL>
         <LI>
-        Be sure to start Filter Control (for GMS 1), then DigitalMicrograph, then SerialEM after 
-        DigitalMicrograph reports Dynamic cameras registered in its Results window. 
+        Be sure to start Filter Control (for GMS 1), then DigitalMicrograph, then SerialEM after
+        DigitalMicrograph reports Dynamic cameras registered in its Results window.
         <LI>
-        Go to a mid-range magnification like 20,500 with the screen down. Adjust the 
-        beam to a spot size and screen current that will get you through the tuning 
-        procedure without having to adjust intensity. (Specific values vary widely; if 
-        you have to turn the beam down in the First Order isochromaticity adjustment, 
-        put the screen down when you get through the tuning and note the current for 
+        Go to a mid-range magnification like 20,500 with the screen down. Adjust the
+        beam to a spot size and screen current that will get you through the tuning
+        procedure without having to adjust intensity. (Specific values vary widely; if
+        you have to turn the beam down in the First Order isochromaticity adjustment,
+        put the screen down when you get through the tuning and note the current for
         the next time.)
         <LI>
           Activate EFTEM mode in the <A HREF="hidd_filtercontrol.htm">Filter Control panel</A>
@@ -96,36 +96,36 @@
         <LI>
         Set the slit width to 10 to 20 ev; 20 seems preferable.
         <LI>
-        Press 'Align ZLP' on the FEI EFTEM panel.
+        Press 'Align ZLP' on the Thermo/FEI EFTEM panel.
         <LI>
-       Press 'Tune GIF' on the FEI EFTEM panel.
+       Press 'Tune GIF' on the Thermo/FEI EFTEM panel.
         <LI>
-        Switch to the magnification that you will be using for final image acquisition. 
-        Lower the screen and adjust the beam to fill the screen with enough intensity 
+        Switch to the magnification that you will be using for final image acquisition.
+        Lower the screen and adjust the beam to fill the screen with enough intensity
         for a good gain reference (5 - 10 na?).
          <LI>
         Raise the screen and take a gain reference.
         <LI>
-          Now you should assess the adequacy of the calibration of mag-dependent energy 
-          shifts (unless you will be working in low dose mode and having the slit out for 
+          Now you should assess the adequacy of the calibration of mag-dependent energy
+          shifts (unless you will be working in low dose mode and having the slit out for
           pictures of the View area). To do this:</LI></OL>
       <UL>
         <LI>
-        Set Trial parameters for a fast picture with moderately high counts, e.g. 256 x 
+        Set Trial parameters for a fast picture with moderately high counts, e.g. 256 x
         256, center half area, 0.05 - 0.1 second exposre.
         <LI>
         Turn on intensity zoom.
         <LI>
         Set slit to 15 ev.
         <LI>
-        Go to a low mag like 5600. Take pictures with the slit in and the slit out and 
+        Go to a low mag like 5600. Take pictures with the slit in and the slit out and
         measure the mean counts (Ctrl-I).
         <LI>
         Repeat for other low mags that may be used in tasks (e.g. 4500 and 3000).
         <LI>
-          If you see some serious beam loss or dark spots on the edges with the slit in, 
+          If you see some serious beam loss or dark spots on the edges with the slit in,
           you need to calibrate the mag-dependent shifts, as described in <A HREF="menu_calibration.htm#hid_calibration_magenergyshifts">
-            Mag Energy Shifts</A> . Enter the highest mag that you will use and accept 
+            Mag Energy Shifts</A> . Enter the highest mag that you will use and accept
           the defaults for the other parameters.</LI></UL>
     </basefont>
   </BODY>

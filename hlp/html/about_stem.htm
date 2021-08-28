@@ -10,41 +10,41 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="about_stem"></A><B><FONT size="3">STEM Mode</FONT></B></P>
-      <P>SerialEM supports STEM imaging on FEI microscopes through either an FEI STEM 
-        unit or a Gatan DigiScan unit, and on JEOL microscopes through a DigiScan 
-        unit, or through the native single-channel JEOL interface (such as for the 1400).&nbsp; The following features 
-        are noteworthy, and the links are to help sections with more explanation and 
+      <P>SerialEM supports STEM imaging on Thermo/FEI microscopes through either a Thermo/FEI STEM
+        unit or a Gatan DigiScan unit, and on JEOL microscopes through a DigiScan
+        unit, or through the native single-channel JEOL interface (such as for the 1400).&nbsp; The following features
+        are noteworthy, and the links are to help sections with more explanation and
         detail:</P>
     <ul>
-      <li>Basic aspects of behavior in STEM mode, such as beam blanking and image 
+      <li>Basic aspects of behavior in STEM mode, such as beam blanking and image
         contrast reversal, are governed by options in the <A HREF="hidd_stemcontrol.htm">STEM Control panel</A>.</li>
-      <li>Detectors can be selected for acquisition, and multiple detectors can be 
-        acquired from simultaneously to the extent possible.&nbsp; The 
-        <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A> allows control of image 
-        acquisition and the selection of detectors, as described in the section 
+      <li>Detectors can be selected for acquisition, and multiple detectors can be
+        acquired from simultaneously to the extent possible.&nbsp; The
+        <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A> allows control of image
+        acquisition and the selection of detectors, as described in the section
         <A HREF="hidd_camerasetup.htm#STEMcontrols">Controls in STEM Mode.</A></li>
-      <li>Focus can be changed dynamically while scanning to keep a tilted specimen in 
-        focus.&nbsp; With FEI STEM, accurate dynamic focusing requires calibrating the 
-        timing of the scan for the particular acquisition conditions, as described in 
+      <li>Focus can be changed dynamically while scanning to keep a tilted specimen in
+        focus.&nbsp; With Thermo/FEI STEM, accurate dynamic focusing requires calibrating the
+        timing of the scan for the particular acquisition conditions, as described in
         <A href="menu_calibration.htm#hid_calibration_quick_flyback_time">
     Quick Flyback Time</A>.</li>
-      <li>On an FEI, both nanoprobe and microprobe mode are recognized and can be 
+      <li>On a Thermo/FEI, both nanoprobe and microprobe mode are recognized and can be
         calibrated separately for effective use.</li>
-      <li>Tilt series can be acquired in STEM mode; aspects that are different from TEM 
+      <li>Tilt series can be acquired in STEM mode; aspects that are different from TEM
         mode are described in <A HREF="hidd_tiltseries.htm#tss_stem">Tilt Series in STEM Mode</A>.</li>
-      <li>Images from more than one detector can be saved during a tilt series with the 
+      <li>Images from more than one detector can be saved during a tilt series with the
         aid of the <A HREF="hidd_tsextrafile.htm">Tilt Series Extra Output dialog</A>.
       </li>
-      <li>To deal with problems caused by tracking and focusing images not being 
-        centered on Record images, the shifts between these image types can be 
+      <li>To deal with problems caused by tracking and focusing images not being
+        centered on Record images, the shifts between these image types can be
         calibrated quickly and then applied during a tilt series (see
         <a href="menu_tasks.htm#hid_tasks_assess_interset_shifts">Assess Interset Shifts</a>).</li>
-      <li>Low Dose mode can be used in STEM mode, either to reduce specimen exposure or 
+      <li>Low Dose mode can be used in STEM mode, either to reduce specimen exposure or
         to provide versatile control over magnifications for tracking and focusing.</li>
       <li>Montaging can be done and the Navigator can be used in STEM mode.</li>
     </ul>
     <p>
-      Some features do not work in STEM mode: beam autocentering, specimen cooking, 
+      Some features do not work in STEM mode: beam autocentering, specimen cooking,
       assessing angular ranges, and checking autofocus.</p>
     <p>
       The configuration and calibration of SerialEM for STEM mode is described in
@@ -52,48 +52,48 @@
     <p>
       <b>Autofocusing</b></p>
     <p>
-      Autofocusing is done by analyzing the power spectra of a series of Focus images.&nbsp; 
-      It proceeds in two phases.&nbsp; In the first phase, the program does a simple 
-      analysis of the total power over a certain spatial frequency range, after 
-      subtracting a background power level.&nbsp; It changes focus in whatever 
-      direction increases power over that at the current defocus, and moves in 
-      relatively coarse steps until it reaches a focus where power falls off again.&nbsp; 
-      It then takes images at finer focus steps so that there are at least two images 
-      on each side of the image with the best focus.&nbsp; These five images allow the 
-      second phase of analysis, in which it derives a measure of beam size for each of 
-      the 4 adjacent images by comparing the shape of its power spectrum with that of 
-      the best focused image.&nbsp; This measure varies linearly with distance from 
-      focus, so it is possible to fit a pair of lines to the measured sizes and take 
-      focus as the intersection between the two lines.&nbsp; Because of this 
-      interpolation method, it is not necessary to search for and take an image at 
+      Autofocusing is done by analyzing the power spectra of a series of Focus images.&nbsp;
+      It proceeds in two phases.&nbsp; In the first phase, the program does a simple
+      analysis of the total power over a certain spatial frequency range, after
+      subtracting a background power level.&nbsp; It changes focus in whatever
+      direction increases power over that at the current defocus, and moves in
+      relatively coarse steps until it reaches a focus where power falls off again.&nbsp;
+      It then takes images at finer focus steps so that there are at least two images
+      on each side of the image with the best focus.&nbsp; These five images allow the
+      second phase of analysis, in which it derives a measure of beam size for each of
+      the 4 adjacent images by comparing the shape of its power spectrum with that of
+      the best focused image.&nbsp; This measure varies linearly with distance from
+      focus, so it is possible to fit a pair of lines to the measured sizes and take
+      focus as the intersection between the two lines.&nbsp; Because of this
+      interpolation method, it is not necessary to search for and take an image at
       exact focus.</p>
     <p>
-      This method requires that there be enough features in the Focus images to give 
-      reliable power spectra for the analysis.&nbsp; The situation is more challenging 
-      than for autofocusing in TEM, where a few high-contrast particles on a 
-      featureless background can give an adequate cross-correlation for determining 
-      beam-tilt-induced image shift.&nbsp; It is definitely necessary to pay attention 
-      to whether the focus area has enough image detail, and it may be necessary to 
-      use larger images (center half instead of center quarter for FEI STEM, or with 
-      the magnification increased by 2 instead of 4 for DigiScan).&nbsp;&nbsp;&nbsp; 
-      Another limitation of the analysis is that the total power measure becomes 
-      insensitive for very blurred images, beyond ~5 microns of defocus.&nbsp; The 
-      first phase of the search may thus fail to find a peak in the power within a 
-      reasonable number of steps.&nbsp; When this occurs during tasks, tilt series, or 
-      scripts, the program stops with an error message.&nbsp; When it occurs after 
-      autofocus was started manually, you are given the choice of whether to stop 
-      (without modifying defocus) or to continue searching from the last defocus 
+      This method requires that there be enough features in the Focus images to give
+      reliable power spectra for the analysis.&nbsp; The situation is more challenging
+      than for autofocusing in TEM, where a few high-contrast particles on a
+      featureless background can give an adequate cross-correlation for determining
+      beam-tilt-induced image shift.&nbsp; It is definitely necessary to pay attention
+      to whether the focus area has enough image detail, and it may be necessary to
+      use larger images (center half instead of center quarter for Thermo/FEI STEM, or with
+      the magnification increased by 2 instead of 4 for DigiScan).&nbsp;&nbsp;&nbsp;
+      Another limitation of the analysis is that the total power measure becomes
+      insensitive for very blurred images, beyond ~5 microns of defocus.&nbsp; The
+      first phase of the search may thus fail to find a peak in the power within a
+      reasonable number of steps.&nbsp; When this occurs during tasks, tilt series, or
+      scripts, the program stops with an error message.&nbsp; When it occurs after
+      autofocus was started manually, you are given the choice of whether to stop
+      (without modifying defocus) or to continue searching from the last defocus
       tested.</p>
     </basefont>
     <p>
       <b>Acknowledgements</b></p>
     <p>
-      The development of these STEM capabilities was partially supported by 
-      contributions from owners of JEOL microscopes at the University of Texas, Dallas 
-      and the Naval Research Laboratory in Washington, D.C., and owners of an FEI 
-      microscope at the Weizmann Institute of Science in Rehovot, Israel.&nbsp; 
-      Assistance and access to STEM-equipped microscopes was provided by Chen Xu at 
-      Brandeis University, David Morgan at the University of Indiana, and Tomas Molina 
+      The development of these STEM capabilities was partially supported by
+      contributions from owners of JEOL microscopes at the University of Texas, Dallas
+      and the Naval Research Laboratory in Washington, D.C., and owners of a Thermo/FEI
+      microscope at the Weizmann Institute of Science in Rehovot, Israel.&nbsp;
+      Assistance and access to STEM-equipped microscopes was provided by Chen Xu at
+      Brandeis University, David Morgan at the University of Indiana, and Tomas Molina
       at the National Center for Microscopy and Imaging Research.</p>
   </BODY>
 </HTML>

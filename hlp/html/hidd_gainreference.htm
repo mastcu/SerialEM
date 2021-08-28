@@ -3,80 +3,80 @@
   <HEAD>
     <TITLE>Gain Reference Dialog</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_gainreference"></A><B><FONT size="3">Gain Reference Dialog</FONT></B></P>
-    <P>This dialog box allows you to acquire a gain reference for the current camera. 
+    <P>This dialog box allows you to acquire a gain reference for the current camera.
       References are needed for older Tietz cameras, DE cameras with an older server version, Falcon 3,
-      EMSIS, and DECTRIS cameras, and 
-      are optional for other 
+      EMSIS, and DECTRIS cameras, and
+      are optional for other
       cameras (except K2/K3 and OneView/Rio, where they cannot be taken). With a Gatan camera,
-      this reference is separate from the gain reference that 
-      DigitalMicrograph maintains, and once a reference has been obtained through 
-      SerialEM, SerialEM will use this reference instead of DigitalMicrograph's 
+      this reference is separate from the gain reference that
+      DigitalMicrograph maintains, and once a reference has been obtained through
+      SerialEM, SerialEM will use this reference instead of DigitalMicrograph's
       reference. There are two advantages to using a SerialEM gain reference:</P>
-    <P>1)If SerialEM's capability for removing X-rays from dark references is 
-      configured, the gain reference will be protected from the effects of X-rays in 
+    <P>1)If SerialEM's capability for removing X-rays from dark references is
+      configured, the gain reference will be protected from the effects of X-rays in
       its dark reference (which produce hot pixels in the gain reference.)</P>
-    <P>2)If you have a 4K camera with a slow readout and only need to use it as a 2K 
-      camera (e.g., fiber optic camera at 300 KV), SerialEM allows you take just a 
-      gain reference binned by 2, which is much faster than taking a reference in 
+    <P>2)If you have a 4K camera with a slow readout and only need to use it as a 2K
+      camera (e.g., fiber optic camera at 300 KV), SerialEM allows you take just a
+      gain reference binned by 2, which is much faster than taking a reference in
       DigitalMicrograph.</P>
-    <P>Normalization is always done in DM for images from a K2/K3 camera because of the 
-      complexity of the processing there.&nbsp; For a OneView or Rio camera, drift correction 
-      can be done only with normalization within DM, so there seems to be no point in 
-      having a separate reference within SerialEM for images where drift correction is 
+    <P>Normalization is always done in DM for images from a K2/K3 camera because of the
+      complexity of the processing there.&nbsp; For a OneView or Rio camera, drift correction
+      can be done only with normalization within DM, so there seems to be no point in
+      having a separate reference within SerialEM for images where drift correction is
       not needed.</P>
-    <P>To acquire a gain reference, you want to have a fairly bright, uniform beam with 
-      no specimen. The beam should be spread larger than the field of the camera, and 
-      will be more uniform if it is spread as large as the whole viewing screen. A 
-      dimmer beam may be appropriate for binnigs higher than 2. Check the following 
+    <P>To acquire a gain reference, you want to have a fairly bright, uniform beam with
+      no specimen. The beam should be spread larger than the field of the camera, and
+      will be more uniform if it is spread as large as the whole viewing screen. A
+      dimmer beam may be appropriate for binnigs higher than 2. Check the following
       parameters and press YES to proceed.</P>
     <P><B>Target number of counts</B></P>
-    <P>SerialEM will find the exposure time that will give this number of counts in 
-      each image that it takes. Enter a value in the text box or use the spin buttons 
-      to change the value by 500 . A high value (e.g. 8000) is generally appropriate 
-      for a sensitive camera, even if you are going to take low-dose images. However, 
-      if the camera is less sensitive, it may be necessary to make the target about 
-      the same as the number of counts expected in a typical image with normal 
+    <P>SerialEM will find the exposure time that will give this number of counts in
+      each image that it takes. Enter a value in the text box or use the spin buttons
+      to change the value by 500 . A high value (e.g. 8000) is generally appropriate
+      for a sensitive camera, even if you are going to take low-dose images. However,
+      if the camera is less sensitive, it may be necessary to make the target about
+      the same as the number of counts expected in a typical image with normal
       exposure.</P>
     <P><B>Number of frames to average</B></P>
-    <P>Use this entry to set the number of images to acquire and average. Five to ten 
-      frames will usually give good results; the higher number may be needed to 
+    <P>Use this entry to set the number of images to acquire and average. Five to ten
+      frames will usually give good results; the higher number may be needed to
       average out X-rays more.</P>
     <P><B>Reference Binning</B></P>
-    <P>Select 1 to make an unbinned gain reference, which can be used to normalize 
-      images with any binning but could take a long time to acquire; or 2 to make a 
-      gain reference binned by 2. The latter can be used only to normalize images 
-      with even binnings. The text on this radio button will say whether an image 
-      with odd binning will be normalized with an older unbinned reference from 
-      SerialEM or with a reference from DigitalMicrograph. If your properties file 
-      contains an entry for 'ExtraGainReferences', you will also see choices for up 
-      to four higher binnings. Note that the target number of counts will change by a 
-      factor of 4 when you switch between unbinned and binned gain references, but 
+    <P>Select 1 to make an unbinned gain reference, which can be used to normalize
+      images with any binning but could take a long time to acquire; or 2 to make a
+      gain reference binned by 2. The latter can be used only to normalize images
+      with even binnings. The text on this radio button will say whether an image
+      with odd binning will be normalized with an older unbinned reference from
+      SerialEM or with a reference from DigitalMicrograph. If your properties file
+      contains an entry for 'ExtraGainReferences', you will also see choices for up
+      to four higher binnings. Note that the target number of counts will change by a
+      factor of 4 when you switch between unbinned and binned gain references, but
       the target does not change when switching between different binned references.</P>
     <P><B>Average dark reference</B></P>
-    <P>Select this option to have the dark reference used for the gain reference images 
-      averaged by the number of times indicated in the text box. This averaging will 
-      reduce the effects of X-rays in the dark reference if you do not have X-ray 
-      removal set up or if it is not working well with the particular kind of X-ray 
+    <P>Select this option to have the dark reference used for the gain reference images
+      averaged by the number of times indicated in the text box. This averaging will
+      reduce the effects of X-rays in the dark reference if you do not have X-ray
+      removal set up or if it is not working well with the particular kind of X-ray
       signals produced in the camera.</P>
     <P><B>Calibrate dose with last image</B></P>
-    <P>If this option is selected, then for an unbinned or binned by 2 reference, the 
-      program will use the last reference image to calibrate electron dose for the 
-      current spot size (see <A HREF="menu_calibration.htm#hid_calibration_electrondose">Electron 
-        Dose Calibration</A> ). On an FEI scope, the spot size will be normalized 
-      after you press the Yes button, in order for this to be as accurate as 
-      possible. This may change the beam position and brightness, so there will then 
-      be a message box reminding you to check the size and centering of the beam. On 
-      some scopes, this is not necessary, and there is a property that can be set to 
-      suppress the message. Otherwise, if the message is too annoying and you really 
+    <P>If this option is selected, then for an unbinned or binned by 2 reference, the
+      program will use the last reference image to calibrate electron dose for the
+      current spot size (see <A HREF="menu_calibration.htm#hid_calibration_electrondose">Electron
+        Dose Calibration</A> ). On a Thermo/FEI scope, the spot size will be normalized
+      after you press the Yes button, in order for this to be as accurate as
+      possible. This may change the beam position and brightness, so there will then
+      be a message box reminding you to check the size and centering of the beam. On
+      some scopes, this is not necessary, and there is a property that can be set to
+      suppress the message. Otherwise, if the message is too annoying and you really
       do not care about dose, then deselect this option.</P>
     <P><b>Autosave raw frames</b></P>
-    <P>This option is available for Direct Electron cameras; when selected, raw frames 
+    <P>This option is available for Direct Electron cameras; when selected, raw frames
       will be&nbsp; saved by the server for each gain reference image that is taken. </P>
     </basefont>
   </BODY>

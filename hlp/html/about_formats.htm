@@ -70,41 +70,41 @@
         <a href="#otherNotes">Other Notes</a><br>
       </p>
     <P><a name="metadata"></a><b>Image Metadata Files</b></P>
-      <P>SerialEM stores metadata about images in text files in the IMOD &quot;autodoc&quot; format.&nbsp; 
-        This format consists of keyword-value pairs organized into blocks called 
-        sections.&nbsp; These sections can be of different types with different kinds of 
-        data in them, although SerialEM&#39;s files use essentially only one kind of 
+      <P>SerialEM stores metadata about images in text files in the IMOD &quot;autodoc&quot; format.&nbsp;
+        This format consists of keyword-value pairs organized into blocks called
+        sections.&nbsp; These sections can be of different types with different kinds of
+        data in them, although SerialEM&#39;s files use essentially only one kind of
         section.&nbsp; A section begins with a bracketed key-value pair:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [sectionType = name]<br />
-        where the section &quot;name&quot; or value will typically be unique but is not required 
-        to be so by the IMOD autodoc reader.&nbsp; Lines below a section header of the 
+        where the section &quot;name&quot; or value will typically be unique but is not required
+        to be so by the IMOD autodoc reader.&nbsp; Lines below a section header of the
         form<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; key = value<br />
-        provide data associated with that section.&nbsp; In addition, key-value pairs 
-        can occur at the beginning of the file, before any section header, and these are 
+        provide data associated with that section.&nbsp; In addition, key-value pairs
+        can occur at the beginning of the file, before any section header, and these are
         referred to as global values.</P>
-    <P>Although all values are stored as text strings in the autodoc file, software 
-      that expects information of a particular kind will often convert these strings 
-      to or from one or more floating point or integer values.&nbsp; The autodoc 
-      module in the IMOD library libcfshr contains functions for storing or retrieving 
-      one, two, three, or many floating point or integer values in specified sections 
-      of the file.&nbsp; The autodoc format was chosen for SerialEM because of the 
-      ready availability of this library, the convenience of using such functions, and 
+    <P>Although all values are stored as text strings in the autodoc file, software
+      that expects information of a particular kind will often convert these strings
+      to or from one or more floating point or integer values.&nbsp; The autodoc
+      module in the IMOD library libcfshr contains functions for storing or retrieving
+      one, two, three, or many floating point or integer values in specified sections
+      of the file.&nbsp; The autodoc format was chosen for SerialEM because of the
+      ready availability of this library, the convenience of using such functions, and
       compatibility with the autodoc-reading capability in IMOD.</P>
     <P>There are two kinds of image-associated autodoc files produced by SerialEM: </P>
-    <P>1) The &quot;.mdoc&quot; file provides data about an MRC file and has the same name as 
-      the image file, with the additional extension &quot;.mdoc&quot;.&nbsp; In these files, the 
-      section type is &quot;ZValue&quot; and the name for each section is the Z value of the 
+    <P>1) The &quot;.mdoc&quot; file provides data about an MRC file and has the same name as
+      the image file, with the additional extension &quot;.mdoc&quot;.&nbsp; In these files, the
+      section type is &quot;ZValue&quot; and the name for each section is the Z value of the
       image in the file, numbered from 0.</P>
-    <P>2) The &quot;.idoc&quot; file provides information that allows a series of single-image 
-      TIFF files to be treated interchangeably with MRC files.&nbsp; The section type 
+    <P>2) The &quot;.idoc&quot; file provides information that allows a series of single-image
+      TIFF files to be treated interchangeably with MRC files.&nbsp; The section type
       here is &quot;Image&quot; and the name for each section is the name of the TIFF file.</P>
-    <P>Global data replicate some of the information that is in an MRC file header.&nbsp; 
-      In addition, the titles for an MRC file are stored in section headers of the 
+    <P>Global data replicate some of the information that is in an MRC file header.&nbsp;
+      In addition, the titles for an MRC file are stored in section headers of the
       type &quot;T&quot;.</P>
-    <P>&nbsp;The IMOD library used by SerialEM uses the same internal autodoc 
-      structure to access the metadata in HDF files.&nbsp; It is thus simple to 
-      extract all of these metadata information into a text file in the autodoc 
+    <P>&nbsp;The IMOD library used by SerialEM uses the same internal autodoc
+      structure to access the metadata in HDF files.&nbsp; It is thus simple to
+      extract all of these metadata information into a text file in the autodoc
       format, with a command like:</P>
     <P>&nbsp;&nbsp;&nbsp; extracttilts -attr filename.hdf&nbsp; filename.hdf.mdoc&nbsp;</P>
       <TABLE cols="2" BORDER style="Z-INDEX: 0">
@@ -134,7 +134,7 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PixelSpacing</TD>
-            <TD class="style5">Pixel spacing in Angstroms that would be in MRC header (or in 
+            <TD class="style5">Pixel spacing in Angstroms that would be in MRC header (or in
               1/Angstroms for diffraction images)</TD>
           </TR>
           <TR VALIGN="top">
@@ -146,7 +146,7 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PieceCoordinates</TD>
-            <TD class="style5">Pixel coordinates in X and Y and section Z value for montage 
+            <TD class="style5">Pixel coordinates in X and Y and section Z value for montage
               piece</TD>
           </TR>
           <TR VALIGN="top">
@@ -179,7 +179,7 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PixelSpacing</TD>
-            <TD class="style5">Pixel spacing in Angstroms for individual image (or in 
+            <TD class="style5">Pixel spacing in Angstroms for individual image (or in
               1/Angstroms for diffraction image)</TD>
           </TR>
           <TR VALIGN="top">
@@ -232,8 +232,8 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">LowDoseConSet</TD>
-            <TD class="style5">Control set index plus 1 if image taken in Low Dose, or negative 
-                of index if not in Low Dose (index 0-6 for View, Focus, Trial, Record, Preview, 
+            <TD class="style5">Control set index plus 1 if image taken in Low Dose, or negative
+                of index if not in Low Dose (index 0-6 for View, Focus, Trial, Record, Preview,
                 Search, Mont-map; 7 for tracking, 8 for montage)</TD>
           </TR>
           <TR VALIGN="top">
@@ -242,13 +242,13 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PriorRecordDose</TD>
-            <TD class="style5">For an image in a tilt series taken in Low Dose mode, the 
-              cumulative dose in the Record area prior to this image, including Record and 
+            <TD class="style5">For an image in a tilt series taken in Low Dose mode, the
+              cumulative dose in the Record area prior to this image, including Record and
               Preview images and View images taken in tasks</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">XedgeDxy</TD>
-            <TD class="style5">Edge displacement in X and Y for montage piece to the right of 
+            <TD class="style5">Edge displacement in X and Y for montage piece to the right of
               this piece</TD>
           </TR>
           <TR VALIGN="top">
@@ -257,28 +257,28 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">XedgeDxyVS</TD>
-            <TD class="style5">Edge displacement for piece to right, computed with very sloppy 
+            <TD class="style5">Edge displacement for piece to right, computed with very sloppy
               option</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">YedgeDxyVS</TD>
-            <TD class="style5">Edge displacement for piece above, computed with very sloppy 
+            <TD class="style5">Edge displacement for piece above, computed with very sloppy
               option</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">StageOffsets</TD>
-            <TD class="style5">When aligning montage pieces with image shift, this is the 
-              effective stage position (actual position plus the stage equivalent to the image 
+            <TD class="style5">When aligning montage pieces with image shift, this is the
+              effective stage position (actual position plus the stage equivalent to the image
               shift adjustment) minus the nominal stage position of the piece.</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">AlignedPieceCoords</TD>
-            <TD class="style5">Piece coordinates adjusted by the solved shifts for each piece 
+            <TD class="style5">Piece coordinates adjusted by the solved shifts for each piece
               when pieces are aligned in overview with &#39;Very sloppy&#39; option off.</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">AlignedPieceCoordsVS</TD>
-            <TD class="style5">Piece coordinates adjusted by the solved shifts for each piece 
+            <TD class="style5">Piece coordinates adjusted by the solved shifts for each piece
               when pieces are aligned in overview with &#39;Very sloppy&#39; option on.</TD>
           </TR>
           <TR VALIGN="top">
@@ -291,8 +291,8 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">FrameDosesAndNumbers</TD>
-            <TD class="style5">Dose per frame in electrons per square Angstrom followed by 
-              number of frames at that dose; variable-sized frame sums will have multiple 
+            <TD class="style5">Dose per frame in electrons per square Angstrom followed by
+              number of frames at that dose; variable-sized frame sums will have multiple
               pairs of such values</TD>
           </TR>
            <TR VALIGN="top">
@@ -301,12 +301,12 @@
           </TR>
            <TR VALIGN="top">
             <TD class="style1">NavigatorLabel</TD>
-            <TD class="style5">Label of Navigator item, added if Acquire at Items is being run 
+            <TD class="style5">Label of Navigator item, added if Acquire at Items is being run
               and a tilt series is not</TD>
           </TR>
            <TR VALIGN="top">
             <TD class="style13">FilterSlitAndLoss</TD>
-            <TD class="style14">Energy filter slit width and energy loss if slit is in, 0 0 
+            <TD class="style14">Energy filter slit width and energy loss if slit is in, 0 0
               otherwise</TD>
           </TR>
            <TR VALIGN="top">
@@ -315,15 +315,15 @@
           </TR>
            <TR VALIGN="top">
             <TD class="style1">MultishotHoleAndPosition</TD>
-            <TD class="style5">Hole identifier and position within hole when 
-                taking multiple record images; peripheral positions are numbered from 1 and the 
-                center is numbered 0.&nbsp; For a regular pattern, hole identifiers are a 
+            <TD class="style5">Hole identifier and position within hole when
+                taking multiple record images; peripheral positions are numbered from 1 and the
+                center is numbered 0.&nbsp; For a regular pattern, hole identifiers are a
               pair of numbers relative to the center of the pattern; for a custom pattern,
                they are simply numbers starting at 1.</TD>
           </TR>
            <TR VALIGN="top">
             <TD class="style1">CameraPixelSize</TD>
-            <TD class="style5">For diffraction image, the size of the image pixel on the 
+            <TD class="style5">For diffraction image, the size of the image pixel on the
               camera in microns, namely the physical chip pixel size times the binning.</TD>
           </TR>
            <TR VALIGN="top">
@@ -355,7 +355,7 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">DE12-ProtectionCoverMode</TD>
-            <TD class="style5">Whether protection cover is kept open or open and closed for 
+            <TD class="style5">Whether protection cover is kept open or open and closed for
               this shot</TD>
           </TR>
           <TR VALIGN="top">
@@ -459,42 +459,42 @@
     <p>
         &nbsp;</p>
     <p>
-      If an &quot;.idoc&quot; file is being constructed for a set of TIFF files, the essential 
-      elements are the &quot;DataMode&quot;, &quot;ImageSize&quot;, and &quot;ImageSeries&quot; entries, as well as 
-      a section header for each image.&nbsp; The global &quot;PixelSpacing&quot; may be helpful 
-      in some contexts.&nbsp; For a montage, the &quot;Montage&quot; entry must be present with 
-      the value 1, and there must be a &quot;PieceCoordinates&quot; entry in each section.&nbsp; 
-      The X and Y values must fall on a regularly spaced grid, so that the coordinates 
-      can be analyzed to deduce the spacing and overlap between pieces unambiguously.&nbsp; 
-      Not all pieces in a rectangle need to be present, and there need not be pieces 
-      at 0.&nbsp; Pixel coordinates are in a right-handed system despite the 
+      If an &quot;.idoc&quot; file is being constructed for a set of TIFF files, the essential
+      elements are the &quot;DataMode&quot;, &quot;ImageSize&quot;, and &quot;ImageSeries&quot; entries, as well as
+      a section header for each image.&nbsp; The global &quot;PixelSpacing&quot; may be helpful
+      in some contexts.&nbsp; For a montage, the &quot;Montage&quot; entry must be present with
+      the value 1, and there must be a &quot;PieceCoordinates&quot; entry in each section.&nbsp;
+      The X and Y values must fall on a regularly spaced grid, so that the coordinates
+      can be analyzed to deduce the spacing and overlap between pieces unambiguously.&nbsp;
+      Not all pieces in a rectangle need to be present, and there need not be pieces
+      at 0.&nbsp; Pixel coordinates are in a right-handed system despite the
       ubiquitous inversion of images in Y.</p>
     <p>
-      If the alignment between montage pieces is known, this information can be placed 
-      in both the XedgeDxy/YedgeDxy and the XedgeDxyVS/YedgeDxyVS entries, so that the 
-      alignment can be used by SerialEM regardless of whether the Very Sloppy option 
-      is checked.&nbsp; The entries are the amount that an &quot;upper&quot; piece, i.e., one to 
-      the right (for X) or above (for Y), is displaced from being aligned in the 
-      overlap zone.&nbsp; This is the negative of the amount that the upper piece 
-      needs to be shifted to align the two pieces in the overlap zone.&nbsp; The program uses 
-      the IMOD library routine findPieceShifts to solve for the best shifts to be 
-      applied to each piece to bring all of them into best alignment.&nbsp; There is a 
-      fixed (but easily raised) limit to the size of montage for which this solution will be found, based 
+      If the alignment between montage pieces is known, this information can be placed
+      in both the XedgeDxy/YedgeDxy and the XedgeDxyVS/YedgeDxyVS entries, so that the
+      alignment can be used by SerialEM regardless of whether the Very Sloppy option
+      is checked.&nbsp; The entries are the amount that an &quot;upper&quot; piece, i.e., one to
+      the right (for X) or above (for Y), is displaced from being aligned in the
+      overlap zone.&nbsp; This is the negative of the amount that the upper piece
+      needs to be shifted to align the two pieces in the overlap zone.&nbsp; The program uses
+      the IMOD library routine findPieceShifts to solve for the best shifts to be
+      applied to each piece to bring all of them into best alignment.&nbsp; There is a
+      fixed (but easily raised) limit to the size of montage for which this solution will be found, based
       on the nominal number of pieces in X and Y rather than the actual number.
     </p>
     <p>
       <a name="navigator"></a><b>Navigator Files</b></p>
     <p>
-      In SerialEM 3.6, the Navigator output was switched from one tab-delimited line 
-      per item to an autodoc format, with an option to output as XML instead.&nbsp; 
-      XML or autodoc files can be read back in, as well as the tab-delimited files 
+      In SerialEM 3.6, the Navigator output was switched from one tab-delimited line
+      per item to an autodoc format, with an option to output as XML instead.&nbsp;
+      XML or autodoc files can be read back in, as well as the tab-delimited files
       from earlier versions.&nbsp; There are two lines of global data,<br />
 &nbsp; AdocVersion = x.xx<br />
 &nbsp; LastSavedAs = x\y.nav<br />
-      where the second is the full absolute path and name of the file as it was last 
-      saved.&nbsp; Then every item is in a section of type 'Item' and with its label string as the 
-      value.&nbsp; The following table lists all of the keys that can occur in a 
-      section, the kind of value that is expected, and whether it is required, or if 
+      where the second is the full absolute path and name of the file as it was last
+      saved.&nbsp; Then every item is in a section of type 'Item' and with its label string as the
+      value.&nbsp; The following table lists all of the keys that can occur in a
+      section, the kind of value that is expected, and whether it is required, or if
       it is not required, what default value is set.</p>
 
     <P>
@@ -603,7 +603,7 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">0</TD>
       <TD class="style8">mRegisteredToID</TD>
-      <TD class="style9">For an imported map, ID of map that it was registered to for 
+      <TD class="style9">For an imported map, ID of map that it was registered to for
         transforming</TD>
     </TR>
     <TR VALIGN="top">
@@ -660,8 +660,8 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">-1</TD>
       <TD class="style8">mPieceDrawnOn</TD>
-      <TD class="style9">Index of montage piece item was drawn on (piece_#_in_X * 
-        #_of_pieces_in_Y + piece_#_in_Y), or index of nearest piece if item is on a 
+      <TD class="style9">Index of montage piece item was drawn on (piece_#_in_X *
+        #_of_pieces_in_Y + piece_#_in_Y), or index of nearest piece if item is on a
         missing piece, in which case XYinPc will not be written to file.</TD>
     </TR>
     <TR VALIGN="top">
@@ -669,7 +669,7 @@
       <TD class="style10">Two Floats</TD>
       <TD class="style7">-1,-1</TD>
       <TD class="style8">mX/YinPiece</TD>
-      <TD class="style9">X,Y coordinates in the montage piece, in right-handed pixels of 
+      <TD class="style9">X,Y coordinates in the montage piece, in right-handed pixels of
         stored montage</TD>
     </TR>
     <TR VALIGN="top">
@@ -699,7 +699,7 @@
       <TD class="style10">Two integers</TD>
       <TD class="style7">0,0</TD>
       <TD class="style8">mRotateFocusAxis, mFocusAxisAngle</TD>
-      <TD class="style9">First value: 1 to rotate inter-area axis from tilt axis, 0 not 
+      <TD class="style9">First value: 1 to rotate inter-area axis from tilt axis, 0 not
           to; second value: angle of rotation</TD>
     </TR>
     <TR VALIGN="top">
@@ -707,7 +707,7 @@
       <TD class="style10">Two Floats</TD>
       <TD class="style7">0,0</TD>
       <TD class="style8">mFocusX/Yoffset</TD>
-      <TD class="style9">Offset of focus subarea in X and Y in unbinned pixels (Y 
+      <TD class="style9">Offset of focus subarea in X and Y in unbinned pixels (Y
           inverted)</TD>
     </TR>
     <TR VALIGN="top">
@@ -722,8 +722,8 @@
       <TD class="style10">List of integers</TD>
       <TD class="style7">none</TD>
       <TD class="style8">mSkipHolePos</TD>
-      <TD class="style9">Pairs of X,Y indexes for positions to skip from&nbsp; that 
-        array specified in HoleArray.&nbsp; Positions are numbered from 0 at lower-left 
+      <TD class="style9">Pairs of X,Y indexes for positions to skip from&nbsp; that
+        array specified in HoleArray.&nbsp; Positions are numbered from 0 at lower-left
         in stage coordinates&nbsp; </TD>
     </TR>
     <TR VALIGN="top">
@@ -794,7 +794,7 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapBinning</TD>
-      <TD class="style9">Binning at which map was taken, or of initial overview map image 
+      <TD class="style9">Binning at which map was taken, or of initial overview map image
         for montage</TD>
     </TR>
     <TR VALIGN="top">
@@ -802,7 +802,7 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapMagInd</TD>
-      <TD class="style9">Magnification index of map, or of non-map image a point or 
+      <TD class="style9">Magnification index of map, or of non-map image a point or
         polygon was drawn on </TD>
     </TR>
     <TR VALIGN="top">
@@ -817,8 +817,8 @@
       <TD class="style10">Four Floats</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapScaleMat</TD>
-      <TD class="style9">Stage to pixel scale matrix for drawing, based on pixels of 
-        initial map image.&nbsp; For montage, needs to be adjusted by ratio of currently 
+      <TD class="style9">Stage to pixel scale matrix for drawing, based on pixels of
+        initial map image.&nbsp; For montage, needs to be adjusted by ratio of currently
         loaded map width/height to initial map width/height</TD>
     </TR>
     <TR VALIGN="top">
@@ -1039,7 +1039,7 @@
       <TD class="style9">Arbitrary value set by script; N is # (currently1-8)</TD>
     </TR>
        <TR VALIGN="top">
-      <TD colspan = "5"><B>BaseMarkerShift</B>   - a section containing a stored shift from Shift to Marker 
+      <TD colspan = "5"><B>BaseMarkerShift</B>   - a section containing a stored shift from Shift to Marker
         (names are from BaseMarkerShift structure).
         </TR>
     <TR VALIGN="top">
@@ -1071,88 +1071,88 @@
       <TD class="style9">Y component of shift in microns</TD>
     </TR>
        <TR VALIGN="top">
-      <TD colspan = "5"><B>TSParam</B>   - a section containing tilt series parameters.&nbsp; See 
+      <TD colspan = "5"><B>TSParam</B>   - a section containing tilt series parameters.&nbsp; See
         TiltSeriesParam.h in the source code for a description of each item.</TD>
     </TR>
        <TR VALIGN="top">
-      <TD colspan = "5"><B>MontParam</B>   - a section containg montage parameters.&nbsp; See 
+      <TD colspan = "5"><B>MontParam</B>   - a section containg montage parameters.&nbsp; See
         MontageParam.h in the source code for a description of each item.</TD>
     </TR>
        <TR VALIGN="top">
-      <TD colspan = "5"><B>FileOptions</B>   - a section containing properties for opening a file.&nbsp; See 
+      <TD colspan = "5"><B>FileOptions</B>   - a section containing properties for opening a file.&nbsp; See
         FileOptions.h in the source code in case this has descriptions.</TD>
     </TR>
 </TBODY></TABLE>
     </P>
     <P><a name="importing"></a><b>Importing Externally Defined Navigator Items</b></P>
-    <P>It is possible to add items to a Navigator file whose positions are specified 
-      by image coordinates in a map and have SerialEM do the conversion to stage 
-      coordinates.&nbsp; Instead of the StageXYZ entry, the item can have one of these 
+    <P>It is possible to add items to a Navigator file whose positions are specified
+      by image coordinates in a map and have SerialEM do the conversion to stage
+      coordinates.&nbsp; Instead of the StageXYZ entry, the item can have one of these
       entries:</P>
     <ul>
-      <li>CoordsInMap - Pixel coordinate in the map image, which can be either a 
-        single-frame image or a montage with pieces at their regularly space, nominal 
+      <li>CoordsInMap - Pixel coordinate in the map image, which can be either a
+        single-frame image or a montage with pieces at their regularly space, nominal
         piece coordinates.</li>
-      <li>CoordsInAliMont - Pixel coordinates in a montage map where the pieces are 
-        aligned without the Very Sloppy option, i.e., placed at the coordinates 
+      <li>CoordsInAliMont - Pixel coordinates in a montage map where the pieces are
+        aligned without the Very Sloppy option, i.e., placed at the coordinates
         specified by AlignedPieceCoords in the .mdoc file. </li>
-      <li>CoordsInAliMontVS - Pixel coordinates in a montage map where the pieces are 
-        aligned with the Very Sloppy option, i.e., placed at the coordinates specified 
+      <li>CoordsInAliMontVS - Pixel coordinates in a montage map where the pieces are
+        aligned with the Very Sloppy option, i.e., placed at the coordinates specified
         by AlignedPieceCoordsVS.</li>
-      <li>CoordsInPiece - Pixels coordinates within one piece of a montage, which must 
-        be specified with a PieceOn entry.&nbsp; Pieces are numbered from 0 by their 
-        positions in a complete array; i.e., piece index = piece_#_in_X * 
+      <li>CoordsInPiece - Pixels coordinates within one piece of a montage, which must
+        be specified with a PieceOn entry.&nbsp; Pieces are numbered from 0 by their
+        positions in a complete array; i.e., piece index = piece_#_in_X *
         #_of_pieces_in_Y + piece_#_in_Y, all numbered from 0.</li>
     </ul>
     <P>The following points apply to externally defined items:</P>
     <ul>
       <li>Only one of the four entries or StageXYZ may be entered for an item.</li>
-      <li>Each entry takes 3 numbers, the third being a stage Z coordinate, which will 
+      <li>Each entry takes 3 numbers, the third being a stage Z coordinate, which will
         be used without modification.</li>
-      <li>Items must have a DrawnID entry specifying a map that appears before the 
-        external item in the Navigator file, or is already in the Navigator table 
+      <li>Items must have a DrawnID entry specifying a map that appears before the
+        external item in the Navigator file, or is already in the Navigator table
         merging in a file containing only externally defined items.</li>
       <li>Pixel coordinates are right handed, with 0,0 at the lower left of the map.</li>
-      <li>Montage overview images are always displayed with the size in X rounded up to 
+      <li>Montage overview images are always displayed with the size in X rounded up to
         a multiple of 4.</li>
-      <li>With CoordsInAliMont or CoordsInAliMontVS, the map file must have an mdoc file 
+      <li>With CoordsInAliMont or CoordsInAliMontVS, the map file must have an mdoc file
         with AlignedPieceCoords or AlignedPieceCoordsVS entries, respectively.</li>
       <li>Either points or polygons may be entered externally.</li>
-      <li>Coordinates of the points, given by PtsX and PtsY, must also be pixel 
-        coordinates and will be converted in the same way as the main item stage 
+      <li>Coordinates of the points, given by PtsX and PtsY, must also be pixel
+        coordinates and will be converted in the same way as the main item stage
         position is.</li>
-      <li>Point coordinates in PtsX and PtsZ are optional for a point item having a 
-        NumPts entry of 0; if missing, they will be made identical to the main stage 
+      <li>Point coordinates in PtsX and PtsZ are optional for a point item having a
+        NumPts entry of 0; if missing, they will be made identical to the main stage
         coordinates.</li>
-      <li>In addition to the entries mentioned already, every item must have a Color, 
+      <li>In addition to the entries mentioned already, every item must have a Color,
         Regis, and Type entry.</li>
-      <li>If an externally defined item does not have a MapID, a unique ID will be 
-        assigned.&nbsp; If you do assign IDs, it is important to make sure that they 
-        will not duplicate those of map items.&nbsp; The easiest way to do this is to 
+      <li>If an externally defined item does not have a MapID, a unique ID will be
+        assigned.&nbsp; If you do assign IDs, it is important to make sure that they
+        will not duplicate those of map items.&nbsp; The easiest way to do this is to
         assign IDs under 100000, since the program now generates IDs of &gt;= 100000.</li>
       <li>Group IDs will not be assigned if they are missing.</li>
     </ul>
     <p>
-      Detailed error reporting is available for items that have been read in 
-      successfully from the Navigator file.&nbsp; A summary of the types of errors 
-      when processing the items is given in the log, and if Debug Output is set to 
-      &#39;n&#39;, then the type of error will be reported for each item, identified by its 
-      label.&nbsp; However, there is no detail when the item is initially rejected 
-      either because it lacked a required entry or because there was an error (such as 
+      Detailed error reporting is available for items that have been read in
+      successfully from the Navigator file.&nbsp; A summary of the types of errors
+      when processing the items is given in the log, and if Debug Output is set to
+      &#39;n&#39;, then the type of error will be reported for each item, identified by its
+      label.&nbsp; However, there is no detail when the item is initially rejected
+      either because it lacked a required entry or because there was an error (such as
       too few values on a line) reading data from the autodoc.</p>
     <p>
       <a name="calfile"></a><b>Settings and Calibration File Entries</b></p>
     <p>
-      This section is for lengthy entries to the 
-      settings or calibration file that sometimes need to 
-      be interpreted.&nbsp; Entries will be added upon need or request.&nbsp; All 
+      This section is for lengthy entries to the
+      settings or calibration file that sometimes need to
+      be interpreted.&nbsp; Entries will be added upon need or request.&nbsp; All
       alpha values are numbered from 0, not 1.</p>
     <p>
       <strong><em>Settings file entries:</em></strong></p>
     <p>
-        <em>LowDoseParameters</em>: 
+        <em>LowDoseParameters</em>:
       <br />
-&nbsp;&nbsp; low dose set number 0 to 4 for V F T R S, or negative of state number 
+&nbsp;&nbsp; low dose set number 0 to 4 for V F T R S, or negative of state number
       (numbered from 1)<br />
 &nbsp;&nbsp; mag index or negative of camera length index<br />
 &nbsp;&nbsp; spot size<br />
@@ -1200,7 +1200,7 @@
 &nbsp;&nbsp; Focus value in microprobe, -999 if none<br />
 &nbsp;&nbsp; Focus value in nanoprobe, -999 if none<br />
 &nbsp;&nbsp; Magnification<br />
-      Focus values are either absolute values between 0 and 1, or on JEOL, a large 
+      Focus values are either absolute values between 0 and 1, or on JEOL, a large
       value that encodes coarse and fine focus components</p>
     <p>
         <em>FocusCalibration</em>:<br />
@@ -1216,10 +1216,10 @@
 &nbsp;&nbsp; alpha<br />
 &nbsp;&nbsp; magnification</p>
       <p>
-          <em>SpotIntensities:</em>&nbsp; There may be two tables if either nanoprobe or 
-          microprobe has two calibrations, one below crossover and 
-          one above crossover.&nbsp; However, a table can have one condition done below 
-          crossover and the other above.&nbsp; It all gets sorted out into separate tables 
+          <em>SpotIntensities:</em>&nbsp; There may be two tables if either nanoprobe or
+          microprobe has two calibrations, one below crossover and
+          one above crossover.&nbsp; However, a table can have one condition done below
+          crossover and the other above.&nbsp; It all gets sorted out into separate tables
           internally.&nbsp; Each row contains:<br />
 &nbsp;&nbsp; Spot size<br />
 &nbsp;&nbsp; Microprobe intensity ratio, intensity at which acquired, and crossover intensity<br />
@@ -1236,7 +1236,7 @@
 &nbsp;&nbsp; Y change in beam shift per Y change in image shift<br />
 &nbsp;&nbsp; alpha<br />
 &nbsp;&nbsp; probe mode<br />
-&nbsp;&nbsp; 1 to retain the calibration when a new one is done in the same mag range and 
+&nbsp;&nbsp; 1 to retain the calibration when a new one is done in the same mag range and
           beam conditions, 0 not to<br />
 &nbsp;&nbsp; magnification</p>
     </p>
@@ -1255,16 +1255,16 @@
       <p>
           <em>Stage Calibration and 2x2 transformation matrices </em></p>
       <p>
-          The stage calibration consists of 4 matrix terms, and like all such 
-          2x2 transformation matrices, 
+          The stage calibration consists of 4 matrix terms, and like all such
+          2x2 transformation matrices,
           they are expressed as a change in output X value per change in X input value (xpx),
            change in X per change in Y (xpy), change in Y per change in X (ypyx), and change
            in Y per change in Y (ypy).&nbsp; They are written to file in this order.
-          &nbsp; In this case the input value is the change in stage position in microns, 
-          and the output value is the negative of the amount that the image shifts in 
-          unbinned pixels, or the position of the new centered coordinate in the image 
+          &nbsp; In this case the input value is the change in stage position in microns,
+          and the output value is the negative of the amount that the image shifts in
+          unbinned pixels, or the position of the new centered coordinate in the image
           relative to the original center.&nbsp; This negative value is unfortunate in that
-           it inverts the typical stage coordinate system relative to the underlying 
+           it inverts the typical stage coordinate system relative to the underlying
           &quot;specimen&quot; coordinate system that has its X along the tilt axis.</p>
       <p>
           The StageCalibration line has<br />
@@ -1285,45 +1285,45 @@
 &nbsp;&nbsp; Magnification</p>
       <a name="otherNotes"></a><p><strong>Other Notes</strong></p>
       <p><em>Image Rotation</em></p>
-      <p>The 'specimen' coordinate system is a right-handed system with its X axis along 
-          the positive tilt axis.&nbsp; (Looking toward the origin along the positive tilt 
-          axis, a positive tilt rotates the stage counterclockwise).&nbsp; Image rotation 
-          is defined as the amount that the camera image has rotated CCW from the image at 
-          the specimen plane, i.e., the angle (CCW positive) from the positive X axis of 
+      <p>The 'specimen' coordinate system is a right-handed system with its X axis along
+          the positive tilt axis.&nbsp; (Looking toward the origin along the positive tilt
+          axis, a positive tilt rotates the stage counterclockwise).&nbsp; Image rotation
+          is defined as the amount that the camera image has rotated CCW from the image at
+          the specimen plane, i.e., the angle (CCW positive) from the positive X axis of
           the image to the positive tilt axis in the image.</p>
-      <p>If there is only one camera and there is no RotationAndPixel line with a 
-          calibrated absolute rotation, the rotation at one magnification is estimated 
-          from a fallback value, the sum of that mag's rotation value in the 
-          MagnificationTable, the GlobalExtraRotation, and the ExtraRotation for that 
-          camera.&nbsp; If there are relative rotations in the table, the fallback is assigned 
-          to one mag as the absolute rotation, and this allows a rotation to be derived 
-          for the others.&nbsp; This is an ambiguous situation because there is no way to know 
+      <p>If there is only one camera and there is no RotationAndPixel line with a
+          calibrated absolute rotation, the rotation at one magnification is estimated
+          from a fallback value, the sum of that mag's rotation value in the
+          MagnificationTable, the GlobalExtraRotation, and the ExtraRotation for that
+          camera.&nbsp; If there are relative rotations in the table, the fallback is assigned
+          to one mag as the absolute rotation, and this allows a rotation to be derived
+          for the others.&nbsp; This is an ambiguous situation because there is no way to know
           just which mag that fallback angle should apply to.&nbsp;</p>
-      <p>Once there is a calibrated absolute angle, the MagnificationTable rotation, 
-          GlobalExtraRotation, and ExtraRotation become irrelevant for all the mags that 
-          are listed in the RotationAndPixel table and linked by relative rotations to a 
-          mag with an absolute rotation.&nbsp; The relative rotation for a mag equals the 
-          rotation angle of that mag minus the rotation of the next lower mag; this 
-          relationship allows a rotation angle to be propagated outward from the mag with 
-          the calibrated absolute angle. If any of these mags have an image shift 
-          calibration, other mags in the same mag range that have an image shift 
-          calibration can also be assigned a rotation by assuming that image shift is 
-          invariant at the specimen within that mag range.&nbsp; On an FEI scope, the mag 
-          ranges are LM and nonLM; on a JEOL using image shift deflections there are other 
-          boundaries across which rotation cannot be transferred; on a JEOL scope using 
-          PLA, rotation cannot be transferred at all. The MagnificationTable rotations 
-          retain a fallback role for other mags that have not been assigned a rotation by 
-          one of these mechanisms; the rotation for such a mag is derived from the nearest 
-          mag with an assigned rotation by adding the difference between the 
+      <p>Once there is a calibrated absolute angle, the MagnificationTable rotation,
+          GlobalExtraRotation, and ExtraRotation become irrelevant for all the mags that
+          are listed in the RotationAndPixel table and linked by relative rotations to a
+          mag with an absolute rotation.&nbsp; The relative rotation for a mag equals the
+          rotation angle of that mag minus the rotation of the next lower mag; this
+          relationship allows a rotation angle to be propagated outward from the mag with
+          the calibrated absolute angle. If any of these mags have an image shift
+          calibration, other mags in the same mag range that have an image shift
+          calibration can also be assigned a rotation by assuming that image shift is
+          invariant at the specimen within that mag range.&nbsp; On a Thermo/FEI scope, the mag
+          ranges are LM and nonLM; on a JEOL using image shift deflections there are other
+          boundaries across which rotation cannot be transferred; on a JEOL scope using
+          PLA, rotation cannot be transferred at all. The MagnificationTable rotations
+          retain a fallback role for other mags that have not been assigned a rotation by
+          one of these mechanisms; the rotation for such a mag is derived from the nearest
+          mag with an assigned rotation by adding the difference between the
           MagnificationTable rotation of the mag in question and that of the nearby mag.</p>
-      <p>The situation is even more complicated when there is more than one camera at the 
-          same level, i.e., more than one non-energy filter camera or more than one energy filter camera, and 
-          one lacks a calibrated absolute angle.&nbsp; The program will use image shift 
-          calibrations if possible to get an absolute angle from another camera.&nbsp; All 
-          of the assignments described here are listed when the program is started with 
+      <p>The situation is even more complicated when there is more than one camera at the
+          same level, i.e., more than one non-energy filter camera or more than one energy filter camera, and
+          one lacks a calibrated absolute angle.&nbsp; The program will use image shift
+          calibrations if possible to get an absolute angle from another camera.&nbsp; All
+          of the assignments described here are listed when the program is started with
           DebugOutput set to 'c'.&nbsp; See also ShiftManager::PropagateRotations().&nbsp; </p>
-      <p>The image rotation value is intimately related to the stage calibration.&nbsp; 
-          For an FEI scope or JEOL scope without omega filter, an image rotation of 0 produces
+      <p>The image rotation value is intimately related to the stage calibration.&nbsp;
+          For a Thermo/FEI scope or JEOL scope without omega filter, an image rotation of 0 produces
            this pattern of image movement</p>
       <pre>  ^  image movement for positive Y stage move
   |
@@ -1333,10 +1333,10 @@
   --------->   image movement for positive X stage move
 </pre>
           The image rotation angle is the amount by which the axes of image movement are
-       rotated counterclockwise relative to this pattern.&nbsp; 
-      The image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx, 
-      -xpx) (from the X axis rotation) or atan2(-ypy, -xpy) - 90 ( from the Y axis 
-      rotation); the program averages these two estimates when it reports the rotation 
+       rotated counterclockwise relative to this pattern.&nbsp;
+      The image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx,
+      -xpx) (from the X axis rotation) or atan2(-ypy, -xpy) - 90 ( from the Y axis
+      rotation); the program averages these two estimates when it reports the rotation
       angle with a stage calibration.&nbsp; For a JEOL with omega filter, the pattern is this:
 <pre>           ^  image movement for positive Y stage move
            |
@@ -1345,10 +1345,10 @@
            |
   <---------   image movement for positive X stage move
 </pre>
-      The X axis is inverted and this requires the property InvertStageXAxis to be 
-      set.&nbsp; In this case the image rotation is estimated from atan2(ypx, xpx) and 
-      atan2(-ypy, -xpy) - 90.&nbsp; These estimates are simply reported and never used 
-      directly by the program; they must be placed into the RotationAndPixel&nbsp; 
+      The X axis is inverted and this requires the property InvertStageXAxis to be
+      set.&nbsp; In this case the image rotation is estimated from atan2(ypx, xpx) and
+      atan2(-ypy, -xpy) - 90.&nbsp; These estimates are simply reported and never used
+      directly by the program; they must be placed into the RotationAndPixel&nbsp;
       lines to have any effect.</p>
   </BODY>
 </HTML>

@@ -10,159 +10,159 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="hidd_filtercontrol"></A><B><FONT size="3">Filter Control Panel</FONT></B></P>
-      <P>This panel contains options for controlling the Gatan Imaging Filter (GIF), an FEI Selectris 
-        filter, or JEOL omega filter, and 
-        the magnification and intensity settings of the scope when operating the energy filter. 
-        On the JEOL with omega filter, the option related to camera 
+      <P>This panel contains options for controlling the Gatan Imaging Filter (GIF), a Thermo/FEI Selectris
+        filter, or JEOL omega filter, and
+        the magnification and intensity settings of the scope when operating the energy filter.
+        On the JEOL with omega filter, the option related to camera
         selection, pixel size, and intensity are not needed and will not appear.</P>
-      <P><B>EFTEM Mode (FEI or JEOL with GIF only)</B></P>
-      <P>The button will toggle EFTEM mode on and off on an FEI scope. When EFTEM mode is turned on and 
-        the screen is up, the microscope will be placed in one of the EFTEM 
-        magnifications. If the screen is down, the microscope will stay at a regular 
+      <P><B>EFTEM Mode (Thermo/FEI or JEOL with GIF only)</B></P>
+      <P>The button will toggle EFTEM mode on and off on a Thermo/FEI scope. When EFTEM mode is turned on and
+        the screen is up, the microscope will be placed in one of the EFTEM
+        magnifications. If the screen is down, the microscope will stay at a regular
         magnification if the 'Regular mag with screen down' option is selected.</P>
-    <P>For a JEOL with a GIF, the state of the button will reflect whether the program 
-      detects that the scope is in GIF mode.&nbsp; Beyond that, its behavior depends 
-      on whether SerialEM can directly detect and control GIF mode on the JEOL, which 
-      was a new capability in SerialEM 3.6.&nbsp; If it can control GIF mode, the button will be 
-      enabled; if it can only detect but not control GIF mode, the button will remain 
-      disabled.&nbsp; If it cannot directly detect GIF mode, then it cannot determine 
-      the state 
-      when in low magnification mode, so this button is enabled in LM mode.&nbsp; In 
-      that situation, it is up to the user to toggle this button if GIF mode is 
+    <P>For a JEOL with a GIF, the state of the button will reflect whether the program
+      detects that the scope is in GIF mode.&nbsp; Beyond that, its behavior depends
+      on whether SerialEM can directly detect and control GIF mode on the JEOL, which
+      was a new capability in SerialEM 3.6.&nbsp; If it can control GIF mode, the button will be
+      enabled; if it can only detect but not control GIF mode, the button will remain
+      disabled.&nbsp; If it cannot directly detect GIF mode, then it cannot determine
+      the state
+      when in low magnification mode, so this button is enabled in LM mode.&nbsp; In
+      that situation, it is up to the user to toggle this button if GIF mode is
       switched on or off in LM mode.</P>
       <P><B>Refine ZLP</B></P>
-      <P>This button will start a procedure for refining the alignment of the zero-loss 
-        peak (ZLP). The procedure will use a slit of 20 eV, start at the current 
-        alignment, and take pictures at progressively lower energies in 2 eV steps 
-        until the edge of the slit is moved past the ZLP. It will generally work only 
-        if the ZLP is already roughly aligned (within about 15 eV). If it fails to 
-        detect the peak, it will try additional iterations with the starting position 
-        shifted left or right by the slit width (except in Low Dose mode, where it 
-        gives up right away to conserve dose). Pictures are taken with the Trial 
-        parameters in normal mode or with the Preview parameters in Low Dose mode, 
-        except that the routine will try to lower the exposure by a factor of 10 and 
-        double the binning. A small existing energy loss setting in the filter 
-        parameters will be taken as a starting position for the procedure and set to 
-        zero at the end. This will occur automatically if the loss is less than half of 
-        the slit width setting in this panel; if the loss is more than half but still 
-        less than the slit width setting, the routine will ask whether you want to take 
-        the loss as a starting pointing. The slit must be in for the loss to be treated 
-        in this way. In Low Dose mode, the routine will look first at the properties of 
-        the current area, if it has the slit in, then examine the properties of the 
+      <P>This button will start a procedure for refining the alignment of the zero-loss
+        peak (ZLP). The procedure will use a slit of 20 eV, start at the current
+        alignment, and take pictures at progressively lower energies in 2 eV steps
+        until the edge of the slit is moved past the ZLP. It will generally work only
+        if the ZLP is already roughly aligned (within about 15 eV). If it fails to
+        detect the peak, it will try additional iterations with the starting position
+        shifted left or right by the slit width (except in Low Dose mode, where it
+        gives up right away to conserve dose). Pictures are taken with the Trial
+        parameters in normal mode or with the Preview parameters in Low Dose mode,
+        except that the routine will try to lower the exposure by a factor of 10 and
+        double the binning. A small existing energy loss setting in the filter
+        parameters will be taken as a starting position for the procedure and set to
+        zero at the end. This will occur automatically if the loss is less than half of
+        the slit width setting in this panel; if the loss is more than half but still
+        less than the slit width setting, the routine will ask whether you want to take
+        the loss as a starting pointing. The slit must be in for the loss to be treated
+        in this way. In Low Dose mode, the routine will look first at the properties of
+        the current area, if it has the slit in, then examine the properties of the
         Record area.</P>
-    <P>If the procedure fails to detect the ZLP, you may need to set or adjust the 
+    <P>If the procedure fails to detect the ZLP, you may need to set or adjust the
       property RefineZLPMaxMeanRatio.&nbsp; Run
-        <a href="menu_calibration.htm#hid_calibration_setdebugoutput">Set Debug Output</a> 
-        in the Calibration menu and enter &#39;F&#39; to see output 
-      from the procedure (or turn on Administrator mode in SerialEM 3.7.3 or earlier).&nbsp; 
-        The second column shows the mean counts and the third column 
-      shows the difference in mean counts from the previous step, referred to as the 
-      delta.&nbsp; The procedure finds the ZLP when the mean falls below the biggest 
-      mean value by the RefineZLPMaxMeanRatio, which is 0.02 by default, <i>and</i> 
-      the delta falls below the biggest delta value by 0.1.&nbsp; However, these two 
-      criteria are allowed to trade off against each other, so if the delta falls by 
-      much more than 0.1, the mean does not need to fall by as much as the criterion 
-      mean ratio. Because of this, you will not need to raise RefineZLPMaxMeanRatio to 
-      exceed the minimum ratio of mean to biggest mean that you see in the output.&nbsp; 
+        <a href="menu_calibration.htm#hid_calibration_setdebugoutput">Set Debug Output</a>
+        in the Calibration menu and enter &#39;F&#39; to see output
+      from the procedure (or turn on Administrator mode in SerialEM 3.7.3 or earlier).&nbsp;
+        The second column shows the mean counts and the third column
+      shows the difference in mean counts from the previous step, referred to as the
+      delta.&nbsp; The procedure finds the ZLP when the mean falls below the biggest
+      mean value by the RefineZLPMaxMeanRatio, which is 0.02 by default, <i>and</i>
+      the delta falls below the biggest delta value by 0.1.&nbsp; However, these two
+      criteria are allowed to trade off against each other, so if the delta falls by
+      much more than 0.1, the mean does not need to fall by as much as the criterion
+      mean ratio. Because of this, you will not need to raise RefineZLPMaxMeanRatio to
+      exceed the minimum ratio of mean to biggest mean that you see in the output.&nbsp;
       Try raising the ratio by 0.02-0.03; repeat if necessary.</P>
       <P><B>Adjust Slit Offset (JEOL with no negative energy shift)</B></P>
-      <P>If the filter allows only positive energy shifts, then several program features 
-        will not work unless the slit is centered with an energy loss sufficiently far 
-        from zero. These include the procedure for refining the ZLP, the ability to 
-        apply magnification-dependent changes in the energy shift, and the procedure 
-        for calibrating the mag-dependent shifts. This button will facilitate adjusting 
-        the slit position so that it is centered on the ZLP with a positive energy 
-        offset. After you press it, enter the desired offset and press OK. The filter 
-        will be placed into spectroscopy mode with the slit in, allowing you to center 
-        the slit on the energy-shifted peak. After you make this adjustment, press OK. 
-        You should then be able to run the Refine ZLP routine to get the ZLP aligned as 
+      <P>If the filter allows only positive energy shifts, then several program features
+        will not work unless the slit is centered with an energy loss sufficiently far
+        from zero. These include the procedure for refining the ZLP, the ability to
+        apply magnification-dependent changes in the energy shift, and the procedure
+        for calibrating the mag-dependent shifts. This button will facilitate adjusting
+        the slit position so that it is centered on the ZLP with a positive energy
+        offset. After you press it, enter the desired offset and press OK. The filter
+        will be placed into spectroscopy mode with the slit in, allowing you to center
+        the slit on the energy-shifted peak. After you make this adjustment, press OK.
+        You should then be able to run the Refine ZLP routine to get the ZLP aligned as
         well as it would be on a post-column filter.</P>
-      <P><B>TEM mode with screen down (FEI scope, or JEOL with control of GIF only)</B></P>
-      <P>This button determines whether you see an image at normal magnification in TEM 
-        mode or in 
-        the EFTEM reduced magnification when the screen is down. The normal 
-        magnification provided by this option is almost always preferable when directly viewing a phosphor 
-        screen.&nbsp; If 
-        you want to check the size or centering of the beam directly in EFTEM mode, or align the 
-        crossover correction at lower magnification, you would turn this option off.&nbsp; 
-        When there is a magnified display of the screen, e.g., on a FluCam, the option 
-        has much less value; it does allow you to see what is in the field of view at a given 
+      <P><B>TEM mode with screen down (Thermo/FEI scope, or JEOL with control of GIF only)</B></P>
+      <P>This button determines whether you see an image at normal magnification in TEM
+        mode or in
+        the EFTEM reduced magnification when the screen is down. The normal
+        magnification provided by this option is almost always preferable when directly viewing a phosphor
+        screen.&nbsp; If
+        you want to check the size or centering of the beam directly in EFTEM mode, or align the
+        crossover correction at lower magnification, you would turn this option off.&nbsp;
+        When there is a magnified display of the screen, e.g., on a FluCam, the option
+        has much less value; it does allow you to see what is in the field of view at a given
         magnification.&nbsp; </P>
       <P><B>Filter (slit in)</B></P>
-      <P>Select this option to insert the slit and acquire energy-filtered images. The 
-        check box will also reflect the current state of the slit when other programs 
-        modify it. When the slit is inserted, the specified energy loss (either zero or 
-        the amount in the 'Loss' text box), plus the mag-dependent energy shift, if 
-        any, is used to set the filter's energy shift. If the slit is not inserted, 
+      <P>Select this option to insert the slit and acquire energy-filtered images. The
+        check box will also reflect the current state of the slit when other programs
+        modify it. When the slit is inserted, the specified energy loss (either zero or
+        the amount in the 'Loss' text box), plus the mag-dependent energy shift, if
+        any, is used to set the filter's energy shift. If the slit is not inserted,
         then energy shift is maintained at zero.</P>
       <P><B>Slit width</B></P>
-      <P>Enter a width in electron volts into the text box, or use the spin buttons to 
-        increase or decrease the width by 5 eV. The slit is set to this width 
+      <P>Enter a width in electron volts into the text box, or use the spin buttons to
+        increase or decrease the width by 5 eV. The slit is set to this width
         regardless of whether it is inserted or not.</P>
       <P><B>Zero loss</B></P>
-      <P>Once filtered imaging is selected, you can filter at either zero loss or a 
-        specific energy loss. This check box allows you switch easily between the two. 
-        With the box checked, images will be taken of the zero loss peak. With the box 
-        unchecked, images will be taken at the energy loss specified in the 'Loss' text 
+      <P>Once filtered imaging is selected, you can filter at either zero loss or a
+        specific energy loss. This check box allows you switch easily between the two.
+        With the box checked, images will be taken of the zero loss peak. With the box
+        unchecked, images will be taken at the energy loss specified in the 'Loss' text
         box.</P>
       <P><B>Loss</B></P>
-      <P>For filtered imaging, enter an energy loss in electron volts into the text box, 
+      <P>For filtered imaging, enter an energy loss in electron volts into the text box,
         or use the spin buttons to increase or decrease the loss by 1 eV.
       </P>
       <P><B>Adjustment readout</B></P>
-      <P>This text shows the energy shift that will be applied to compensate for 
-          ZLP alignment changes and also for magnification and slit width changes if the 'Do mag-dependent 
-        energy shifts' option is selected. The value is set to zero when SerialEM 
-        detects that you have aligned the zero loss peak through 
-        DigitalMicrograph or the FEI interface, it changes by the 
-        calibrated amount of mag-dependent energy shift when you change magnification, 
-        it changes by half of any change in slit width that you make if the slit does not 
-          open around its center, and it changes by 
-        the amount determined by the Refine ZLP procedure. When &#39;Do mag-dependent energy 
-          shifts&#39; is not selected, only the latter changes should affect it.&nbsp; On a JEOL, the adjustment 
-        will include the offset imposed to keep energy shifts positive. The factors 
-        determining the adjustment value will be retained for up to 1 hour between 
-        sessions of the program, so you should be able to exit and restart without 
+      <P>This text shows the energy shift that will be applied to compensate for
+          ZLP alignment changes and also for magnification and slit width changes if the 'Do mag-dependent
+        energy shifts' option is selected. The value is set to zero when SerialEM
+        detects that you have aligned the zero loss peak through
+        DigitalMicrograph or the Thermo/FEI interface, it changes by the
+        calibrated amount of mag-dependent energy shift when you change magnification,
+        it changes by half of any change in slit width that you make if the slit does not
+          open around its center, and it changes by
+        the amount determined by the Refine ZLP procedure. When &#39;Do mag-dependent energy
+          shifts&#39; is not selected, only the latter changes should affect it.&nbsp; On a JEOL, the adjustment
+        will include the offset imposed to keep energy shifts positive. The factors
+        determining the adjustment value will be retained for up to 1 hour between
+        sessions of the program, so you should be able to exit and restart without
         needing to realign the ZLP.</P>
       <P><B>Net offset readout</B></P>
-      <P>This text shows the energy shift currently being applied. It should be zero 
-        when the slit is not inserted, and the sum of your selected energy loss and the 
-        adjustments being applied when the slit is inserted. It should match the value 
-        for spectrum offset or energy shift in an FEI scope EFTEM panel and is intended to reduce 
+      <P>This text shows the energy shift currently being applied. It should be zero
+        when the slit is not inserted, and the sum of your selected energy loss and the
+        adjustments being applied when the slit is inserted. It should match the value
+        for spectrum offset or energy shift in a Thermo/FEI scope EFTEM panel and is intended to reduce
         confusion when you see a non-zero number over there.</P>
     <P><b>Clear Adjustment (post-column filter only)</b></P>
-    <P>Set the underlying energy shift adjustment to zero and make this effective at 
-      the current magnification and slit width, just as when the program detects that 
-      the zero loss peak was aligned by DigitalMicrograph.&nbsp; This button is useful 
-      if you align the ZLP before starting SerialEM, and then SerialEM uses an 
-      inappropriate adjustment value from a previous run.&nbsp; If necessary, return 
-      to the magnification and slit width at which the ZLP was aligned before pressing 
+    <P>Set the underlying energy shift adjustment to zero and make this effective at
+      the current magnification and slit width, just as when the program detects that
+      the zero loss peak was aligned by DigitalMicrograph.&nbsp; This button is useful
+      if you align the ZLP before starting SerialEM, and then SerialEM uses an
+      inappropriate adjustment value from a previous run.&nbsp; If necessary, return
+      to the magnification and slit width at which the ZLP was aligned before pressing
       the button.</P>
       <P><B>Match pixel size (post-column filter only)</B></P>
-      <P>Select this option to have the program adjust the magnification to minimize the 
-        change in pixel size when switching between EFTEM and regular magnifications. 
-        If the option is not selected, you can get some rather large changes in 
-        magnification because the EFTEM and regular lens programs do not match up very 
-        well. This feature is not active in low dose mode, where magnifications are 
+      <P>Select this option to have the program adjust the magnification to minimize the
+        change in pixel size when switching between EFTEM and regular magnifications.
+        If the option is not selected, you can get some rather large changes in
+        magnification because the EFTEM and regular lens programs do not match up very
+        well. This feature is not active in low dose mode, where magnifications are
         defined as part of each exposure area.</P>
       <P><B>Match intensity (post-column filter only)</B></P>
-      <P>Select this option to have the program change beam intensity when switching 
-        between regular and EFTEM magnifications, so as to maintain a constant electron 
-        flux per camera pixel. With this option active, you can set the beam to give a 
-        particular screen current with the screen down, and get a predictable exposure 
-        level when you raise the screen. This option and 'Match pixel size' can be 
-        selected independently, and will operate independently. This feature is 
-        disabled in low dose mode because intensities are defined as part of each 
+      <P>Select this option to have the program change beam intensity when switching
+        between regular and EFTEM magnifications, so as to maintain a constant electron
+        flux per camera pixel. With this option active, you can set the beam to give a
+        particular screen current with the screen down, and get a predictable exposure
+        level when you raise the screen. This option and 'Match pixel size' can be
+        selected independently, and will operate independently. This feature is
+        disabled in low dose mode because intensities are defined as part of each
         exposure area.</P>
       <P><B>Do mag-dependent energy shifts</B></P>
-      <P>If this option is selected, the program will adjust energy shift to keep the 
-        slit centered on a desired energy loss when magnification or slit width is 
-        changed. In order for this to work correctly, mag-dependent energy shifts need 
+      <P>If this option is selected, the program will adjust energy shift to keep the
+        slit centered on a desired energy loss when magnification or slit width is
+        changed. In order for this to work correctly, mag-dependent energy shifts need
         to be calibrated and SerialEM needs to be aware of when the ZLP is aligned.</P>
       <P><B>Switch cameras automatically (post-column filter only)</B></P>
-      <P>With this option selected, the program will automatically select the energy filter or 
-        upper camera when EFTEM mode is turned on or off, and it turns EFTEM mode on or 
-        off depending on which camera is selected. To protect the upper camera from the 
+      <P>With this option selected, the program will automatically select the energy filter or
+        upper camera when EFTEM mode is turned on or off, and it turns EFTEM mode on or
+        off depending on which camera is selected. To protect the upper camera from the
         intense beam in EFTEM mode, this option is enabled only in Administrator mode.</P>
     </basefont>
   </BODY>

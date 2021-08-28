@@ -3,7 +3,7 @@
   <HEAD>
     <TITLE>Navigator Acquire Dialog</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -21,480 +21,480 @@
 </p>
     <P><a NAME="intro"></a>
       <em><strong>Introduction</strong></em></P>
-    <P><em>Actions and Tasks</em> - This dialog opens when the 'Navigator-Acquire at Items' menu item is selected 
-      and lets you control what operations are done at a series of Navigator items 
-      marked as 'Acquire' or 'Tilt Series'. These operations are of two kinds: the 
-      &quot;Primary Action&quot; performed to acquire images, and &quot;other tasks&quot;, optional steps 
-      to prepare for that acquisition.&nbsp; For items marked as 'Acquire', the 
-      primary actions available are to take and save an image, take an image and save 
-      it as a map, acquire with the Multiple Records procedure, or run a script at each point. If there are only items marked as 
-      'Acquire', the Tilt Series option is unavailable; if there are only items 
-      marked as 'Tilt Series', the other actions are unavailable. If there are both 
-      kinds of items marked, the dialog will open with the Tilt series option 
-      selected but the other options available; however, the selected action will be 
-      taken only on the appropriate kind of item ('Acquire' or 'Tilt Series') and 
+    <P><em>Actions and Tasks</em> - This dialog opens when the 'Navigator-Acquire at Items' menu item is selected
+      and lets you control what operations are done at a series of Navigator items
+      marked as 'Acquire' or 'Tilt Series'. These operations are of two kinds: the
+      &quot;Primary Action&quot; performed to acquire images, and &quot;other tasks&quot;, optional steps
+      to prepare for that acquisition.&nbsp; For items marked as 'Acquire', the
+      primary actions available are to take and save an image, take an image and save
+      it as a map, acquire with the Multiple Records procedure, or run a script at each point. If there are only items marked as
+      'Acquire', the Tilt Series option is unavailable; if there are only items
+      marked as 'Tilt Series', the other actions are unavailable. If there are both
+      kinds of items marked, the dialog will open with the Tilt series option
+      selected but the other options available; however, the selected action will be
+      taken only on the appropriate kind of item ('Acquire' or 'Tilt Series') and
       items of the other kind will be skipped.
     </P>
-    <P><em>A unique non-modal dialog</em> - This dialog is non-modal, like various others that can stay open indefinitely, 
-      but unlike them, most operations are disabled because the program is considered 
-      to be busy doing a task when this dialog is open.&nbsp; This restriction is 
-      primarily to avoid changes in the Navigator data while the program is poised to 
-      start acquisition.&nbsp; Selected operations like taking images, loading a map, 
-      and opening, closing, and switching files are allowed; 
+    <P><em>A unique non-modal dialog</em> - This dialog is non-modal, like various others that can stay open indefinitely,
+      but unlike them, most operations are disabled because the program is considered
+      to be busy doing a task when this dialog is open.&nbsp; This restriction is
+      primarily to avoid changes in the Navigator data while the program is poised to
+      start acquisition.&nbsp; Selected operations like taking images, loading a map,
+      and opening, closing, and switching files are allowed;
       more may be allowed upon request.</P>
-    <P><em>Operation control after starting</em> - Control of the tilt series or script acquisition after it is started is complex 
-      because it involves two levels of activity: the Navigator acquisition and the 
-      operation being run.&nbsp; Buttons in the Camera and Script control panel will 
-      be modified and enabled to allow control at both of these levels.&nbsp; The 
-      effect of these buttons is described for each action in the <b>Primary Action</b> 
+    <P><em>Operation control after starting</em> - Control of the tilt series or script acquisition after it is started is complex
+      because it involves two levels of activity: the Navigator acquisition and the
+      operation being run.&nbsp; Buttons in the Camera and Script control panel will
+      be modified and enabled to allow control at both of these levels.&nbsp; The
+      effect of these buttons is described for each action in the <b>Primary Action</b>
       section below.</P>
-    <P><em>Acquisition parameter sets</em> - Because the acquisition of maps for target selection typically requires fewer 
-      operations and simpler parameter settings than actual data collection, the 
-      dialog allows you to maintain two sets of parameters.&nbsp; You can switch 
-      between them at any time with the <strong>Mapping</strong> and <strong>Final 
-      Data</strong> buttons at the top.&nbsp; The dialog works with a local copy of 
-      both sets, so <strong>Cancel</strong> will discard changes in both sets of 
-      parameters. All parameters are saved in your settings file.&nbsp; If you want to 
-      access more sets of parameters easily, without having to keep them in separate 
-      settings files, you can use the <strong>Save Parameters to File</strong> button 
-      at the bottom to save just the parameters in the currently selected set to a 
-      file, or <strong>Read in Parameters</strong> to load saved parameters into the 
+    <P><em>Acquisition parameter sets</em> - Because the acquisition of maps for target selection typically requires fewer
+      operations and simpler parameter settings than actual data collection, the
+      dialog allows you to maintain two sets of parameters.&nbsp; You can switch
+      between them at any time with the <strong>Mapping</strong> and <strong>Final
+      Data</strong> buttons at the top.&nbsp; The dialog works with a local copy of
+      both sets, so <strong>Cancel</strong> will discard changes in both sets of
+      parameters. All parameters are saved in your settings file.&nbsp; If you want to
+      access more sets of parameters easily, without having to keep them in separate
+      settings files, you can use the <strong>Save Parameters to File</strong> button
+      at the bottom to save just the parameters in the currently selected set to a
+      file, or <strong>Read in Parameters</strong> to load saved parameters into the
       currently selected set.</P>
-    <P><em>Ordering of tasks - </em>This dialog allows the order of the associated 
-      tasks to be changed as desired, with some restrictions, including the ability to 
-      run tasks after the primary action.&nbsp; The order that they are listed in the 
+    <P><em>Ordering of tasks - </em>This dialog allows the order of the associated
+      tasks to be changed as desired, with some restrictions, including the ability to
+      run tasks after the primary action.&nbsp; The order that they are listed in the
       column on the right, from top to bottom, is the order in which they will be run.</P>
-    <P><em>Intelligent stage movement</em> - The program moves the stage only when 
-      necessary.&nbsp; The primary action has to be done at the location of the item 
-      being acquired, but some other tasks can be done elsewhere, such as on the 
-      carbon film or in an area allowed to have higher doses.&nbsp; If you set up one 
-      or more tasks to be done at another location, the program will move to that 
-      location for those tasks and will move to the current item&#39;s location for most 
-      other tasks and for the primary action.&nbsp; The exceptions are Manage 
-      Dewars/Vacuum, Flash FEG, and Update Dark Reference, which will be done wherever 
-      the stage is currently, and Realign to Item, which does one or more stage moves 
-      itself.&nbsp; It is most efficient if tasks done elsewhere are all done at the 
-      same location and are grouped together, before tasks that need to be done at the 
+    <P><em>Intelligent stage movement</em> - The program moves the stage only when
+      necessary.&nbsp; The primary action has to be done at the location of the item
+      being acquired, but some other tasks can be done elsewhere, such as on the
+      carbon film or in an area allowed to have higher doses.&nbsp; If you set up one
+      or more tasks to be done at another location, the program will move to that
+      location for those tasks and will move to the current item&#39;s location for most
+      other tasks and for the primary action.&nbsp; The exceptions are Manage
+      Dewars/Vacuum, Flash FEG, and Update Dark Reference, which will be done wherever
+      the stage is currently, and Realign to Item, which does one or more stage moves
+      itself.&nbsp; It is most efficient if tasks done elsewhere are all done at the
+      same location and are grouped together, before tasks that need to be done at the
       current item.</P>
-    <P><em>Simplify the dialog</em> - The dialog has three features that allow you to 
-      simplify it and focus on selected settings.&nbsp; Unselected options on the left 
-      can be hidden; tasks not selected for running can be hidden; and the group box 
-      with controls for when and where a selected task will run can be closed up by 
-      &#39;unselecting&#39; the selected task.&nbsp; These features should be especially 
+    <P><em>Simplify the dialog</em> - The dialog has three features that allow you to
+      simplify it and focus on selected settings.&nbsp; Unselected options on the left
+      can be hidden; tasks not selected for running can be hidden; and the group box
+      with controls for when and where a selected task will run can be closed up by
+      &#39;unselecting&#39; the selected task.&nbsp; These features should be especially
       useful for mapping where parameter choices may be much simpler.</P>
     <P><A NAME="primaryAction"></A>&nbsp;</P>
     <P><B><em>Primary Action</em></B></P>
-    <P><B>Acquire map image </B>- The image file must already be opened before starting 
-      the operation, unless a new file is set to be opened when the first item is 
-      acquired. As each area is acquired, it will be added as a map item with a label 
-      based on the label of the point being acquired (e.g., 12-A for point 12). The 
-      original point will no longer be marked for acquisition and it will no longer 
-      be drawn, to reduce clutter. Once the acquisition is finished, you could delete 
+    <P><B>Acquire map image </B>- The image file must already be opened before starting
+      the operation, unless a new file is set to be opened when the first item is
+      acquired. As each area is acquired, it will be added as a map item with a label
+      based on the label of the point being acquired (e.g., 12-A for point 12). The
+      original point will no longer be marked for acquisition and it will no longer
+      be drawn, to reduce clutter. Once the acquisition is finished, you could delete
       the original points.</P>
-    <P><B>Just acquire and save image</B> - Again, the image file must be open before 
-      starting unless a file is set to be opened on the first item. This option is 
-      useful if you do not need to make maps of your acquired images, as well as for 
-      high quality data acquisition.&nbsp; For both 
-      this option and the previous one, buttons in the Camera and Script control panel 
-      allow you to stop the acquisition immediately (&#39;STOP&#39;), end it after the current 
-      item is complete (&#39;End Nav&#39;), or pause the acquisition after the current item is 
-      complete to allow some intervention (&#39;PauseN&#39;).&nbsp; Once acquisition is 
-      paused, it can be resumed on the next item with &#39;ResumeN&#39; or ended immediately 
+    <P><B>Just acquire and save image</B> - Again, the image file must be open before
+      starting unless a file is set to be opened on the first item. This option is
+      useful if you do not need to make maps of your acquired images, as well as for
+      high quality data acquisition.&nbsp; For both
+      this option and the previous one, buttons in the Camera and Script control panel
+      allow you to stop the acquisition immediately (&#39;STOP&#39;), end it after the current
+      item is complete (&#39;End Nav&#39;), or pause the acquisition after the current item is
+      complete to allow some intervention (&#39;PauseN&#39;).&nbsp; Once acquisition is
+      paused, it can be resumed on the next item with &#39;ResumeN&#39; or ended immediately
       with &#39;End Nav&#39;.</P>
     <P><strong>Acquire multiple Records</strong> - The parameters set in the
-      <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> are applied 
-      in this acquisition routine and take precedence over some similar parameters 
-      here, which are disabled.&nbsp; Specifically, the choice of whether to save 
-      images in that dialog governs saving, not the option to skip saving here, and 
-      the setting there for adjusting beam tllt and astigmatism for image shift 
-      determines whether that is done.&nbsp; If saving is being done, the file must be 
+      <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> are applied
+      in this acquisition routine and take precedence over some similar parameters
+      here, which are disabled.&nbsp; Specifically, the choice of whether to save
+      images in that dialog governs saving, not the option to skip saving here, and
+      the setting there for adjusting beam tllt and astigmatism for image shift
+      determines whether that is done.&nbsp; If saving is being done, the file must be
       opened already or a file must be set to open on the first item.</P>
-    <P><B>Acquire tilt series</B> - All parameters and file properties should already 
-      be set up when you go to start the series.&nbsp; Once a tilt series is started, 
-      the regular tilt series control buttons in the Camera and Script control panel 
-      function just as they do for tilt series started manually to allow stopping, 
-      resuming, and stepping through the series.&nbsp; However, there is also an &#39;End 
-      Nav&#39; button to stop Navigator acquisition after the current series is completed.&nbsp; 
-      When the tilt series is stopped, an &#39;End TS&#39; button can be used to end the tilt 
-      series and go on to the next.&nbsp; Press &#39;EndNav&#39; before &#39;End TS&#39; to terminate 
+    <P><B>Acquire tilt series</B> - All parameters and file properties should already
+      be set up when you go to start the series.&nbsp; Once a tilt series is started,
+      the regular tilt series control buttons in the Camera and Script control panel
+      function just as they do for tilt series started manually to allow stopping,
+      resuming, and stepping through the series.&nbsp; However, there is also an &#39;End
+      Nav&#39; button to stop Navigator acquisition after the current series is completed.&nbsp;
+      When the tilt series is stopped, an &#39;End TS&#39; button can be used to end the tilt
+      series and go on to the next.&nbsp; Press &#39;EndNav&#39; before &#39;End TS&#39; to terminate
       all acquisition.</P>
-    <P><B>Run script</B> - Select the script to run by its number or name. When the script completes, 
-      the Navigator will go on to the next item. If it 
-      stops with an error that cannot be resumed from, the Navigator acquisition will 
-      also stop, unless the script includes the command &#39;NoMessageBoxOnError&#39;, in 
-      which case the Navigator will go on to the next item.&nbsp; If there is an error that can be resumed from, or if you stop 
-      the script with 'End Loop' or 'STOP' and it is then resumable, then the Navigator 
-      will not go on to the next item and the status bar will show 'STOPPED NAV 
-      SCRIPT'. At this point you can do several things: 1) Resume the script with 
-      &#39;ResumeS&#39;; 2) abandon 
-      this script and go on to the next item by using 'End Script'; 3) terminate the 
-      acquisition after this item is completed or abandoned by pressing &#39;End Nav&#39; or by selecting 'End Acquire' in the Navigator menu; 
-      or 4) end the acquisition immediately by pressing &#39;End All&#39;, which avoids having 
-      to remember to press &#39;End Nav&#39; before &#39;End Script&#39;.&nbsp; The Camera and Script 
-      control panel will also include a button &#39;PauseN&#39; for pausing acquisition after 
-      the current item is completed.&nbsp; Once paused, acquisition can be resumed 
+    <P><B>Run script</B> - Select the script to run by its number or name. When the script completes,
+      the Navigator will go on to the next item. If it
+      stops with an error that cannot be resumed from, the Navigator acquisition will
+      also stop, unless the script includes the command &#39;NoMessageBoxOnError&#39;, in
+      which case the Navigator will go on to the next item.&nbsp; If there is an error that can be resumed from, or if you stop
+      the script with 'End Loop' or 'STOP' and it is then resumable, then the Navigator
+      will not go on to the next item and the status bar will show 'STOPPED NAV
+      SCRIPT'. At this point you can do several things: 1) Resume the script with
+      &#39;ResumeS&#39;; 2) abandon
+      this script and go on to the next item by using 'End Script'; 3) terminate the
+      acquisition after this item is completed or abandoned by pressing &#39;End Nav&#39; or by selecting 'End Acquire' in the Navigator menu;
+      or 4) end the acquisition immediately by pressing &#39;End All&#39;, which avoids having
+      to remember to press &#39;End Nav&#39; before &#39;End Script&#39;.&nbsp; The Camera and Script
+      control panel will also include a button &#39;PauseN&#39; for pausing acquisition after
+      the current item is completed.&nbsp; Once paused, acquisition can be resumed
       with the &#39;ResumeN&#39; button or ended immediately with &#39;End Nav&#39;.</P>
     <P><A NAME="primaryOptions"></A></P>
     <P><b><em>Primary Action-Related Options</em></b></P>
     <P><strong>Cycle defocus target from X to Y um in N steps</strong></P>
-    <P>Select this option to change the defocus target systematically for each item, 
+    <P>Select this option to change the defocus target systematically for each item,
       cycling repeatedly from the value in the <strong>from</strong> box to the
-      <strong>to</strong> box in the number of steps selected with the spinner.&nbsp; 
-      The number of different targets is the number of the steps plus one; e.g., if it 
-      is set to cycle from -2 to -1 micron in 5 steps, it will set the target to -2.0, 
-      -1.8, -1.6, -1.4, -1.2, and -1.0.&nbsp; Underfocus is negative as usual.&nbsp; 
-      This target applies to all autofocusing done, either with the Autofocus task in 
-      the task list, when running tilt series, when waiting for drift with autofocus 
-      runs, or when running a script.&nbsp; Hence the option is enabled in all those 
+      <strong>to</strong> box in the number of steps selected with the spinner.&nbsp;
+      The number of different targets is the number of the steps plus one; e.g., if it
+      is set to cycle from -2 to -1 micron in 5 steps, it will set the target to -2.0,
+      -1.8, -1.6, -1.4, -1.2, and -1.0.&nbsp; Underfocus is negative as usual.&nbsp;
+      This target applies to all autofocusing done, either with the Autofocus task in
+      the task list, when running tilt series, when waiting for drift with autofocus
+      runs, or when running a script.&nbsp; Hence the option is enabled in all those
       cases.</P>
     <P><strong>Adjust beam tilt &amp; astig for image shift</strong></P>
-    <P>This option is enabled when you are saving images or maps, if you have calibrated the beam tilt needed for 
+    <P>This option is enabled when you are saving images or maps, if you have calibrated the beam tilt needed for
       coma-free alignment as a function of image shift with
-      <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
-      in the Calibration - Focus &amp; Tuning submenu. The program wiil adjust beam tilt, 
-      and astigmatism if that is calibrated too, for any image shift present just 
-      before taking the Record image.&nbsp; If you are taking multiple Records, the 
+      <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
+      in the Calibration - Focus &amp; Tuning submenu. The program wiil adjust beam tilt,
+      and astigmatism if that is calibrated too, for any image shift present just
+      before taking the Record image.&nbsp; If you are taking multiple Records, the
       option is disabled because the corresponding setting in the
-      <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> applies 
+      <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> applies
       instead, and that routine adjusts for the starting image shift.</P>
     <P><strong>Do early return with sum of N frames</strong></P>
-    <P>This option appears if there is a K2 or K3 camera and allows the program to 
-      resume some operations as soon as possible after starting a frame-saving 
-      acquisition.&nbsp; The SerialEMCCD plugin will return control to SerialEM before 
-      the saving is finished, and return either an image with the given number of 
-      frames if a positive number is entered in the text box, no image if 0 is 
+    <P>This option appears if there is a K2 or K3 camera and allows the program to
+      resume some operations as soon as possible after starting a frame-saving
+      acquisition.&nbsp; The SerialEMCCD plugin will return control to SerialEM before
+      the saving is finished, and return either an image with the given number of
+      frames if a positive number is entered in the text box, no image if 0 is
       entered, or a sum of all the frames if -1 is entered. </P>
     <P><strong>Skip saving to file</strong></P>
-    <P>This option is enabled when just acquiring images and allows you to skip saving 
+    <P>This option is enabled when just acquiring images and allows you to skip saving
       to a file, which might be desired when saving frames.</P>
     <P><A NAME="taskOptions"></A>&nbsp;</P>
     <P><b><em>Options for Other Tasks</em></b></P>
     <P><b>Do hybrid Realign to Item/Align to Template</b></P>
-    <P>This option is enabled when you have set the Align to Template task to run on 
-      every item and also set Realign to Item to run on at least some of the items.&nbsp; 
-      When the Realign to Item routine is run, it will test whether it can skip the 
-      first round of alignment to the center of the map or of a map frame and rely on 
-      a recent alignment to that position.&nbsp; If not, it will proceed with its full 
-      operation.&nbsp; If it can skip the first round, it will compute the position of 
-      the item based on the stored results of the first round, move to that location, 
-      and end without taking or aligning any images.&nbsp; This should largely 
-      compensate for accumulated errors in positioning and make the position be close 
+    <P>This option is enabled when you have set the Align to Template task to run on
+      every item and also set Realign to Item to run on at least some of the items.&nbsp;
+      When the Realign to Item routine is run, it will test whether it can skip the
+      first round of alignment to the center of the map or of a map frame and rely on
+      a recent alignment to that position.&nbsp; If not, it will proceed with its full
+      operation.&nbsp; If it can skip the first round, it will compute the position of
+      the item based on the stored results of the first round, move to that location,
+      and end without taking or aligning any images.&nbsp; This should largely
+      compensate for accumulated errors in positioning and make the position be close
       enough so that alignment to the template can work reliably.&nbsp; This approach
-      <em>will not work</em> if the spacing between target features is too small and 
-      the stage movement is sloppy even with backlash or has periodic variability in 
-      its positioning (i.e., older Tecnai compustages).&nbsp; However, for typical 
-      center-to-center spacing between holes in a carbon film, the hybrid approach may 
+      <em>will not work</em> if the spacing between target features is too small and
+      the stage movement is sloppy even with backlash or has periodic variability in
+      its positioning (i.e., older Tecnai compustages).&nbsp; However, for typical
+      center-to-center spacing between holes in a carbon film, the hybrid approach may
       well worlk with such stages.</P>
     <P><b>Relax stage after final movement</b></P>
-    <P>Select this option to move the stage by a small amount opposite to the 
-      direction of the last movement, provided that the stage is in a known backlash 
-      state.&nbsp; This operation has been found to reduce stage drift in some 
-      microscopes but could be counterproductive elsewhere.&nbsp; You should use it 
-      only if it has been verified that drift does indeed settle faster, using the 
+    <P>Select this option to move the stage by a small amount opposite to the
+      direction of the last movement, provided that the stage is in a known backlash
+      state.&nbsp; This operation has been found to reduce stage drift in some
+      microscopes but could be counterproductive elsewhere.&nbsp; You should use it
+      only if it has been verified that drift does indeed settle faster, using the
       &#39;TestRelaxingStage&#39; script command.</P>
     <P><b>Skip Z moves in initial move and Realign</b></P>
-    <P>Select this option to leave the Z height unchanged in the stage move to 
-      the item&#39;s location, and in Realign to Item if it is run.&nbsp; Otherwise, the Z height 
-      will be set to the Z value of the item in the initial move, and to the Z value 
-      of the first map used for aligning in Realign to Item unless one of the three 
-      eucentricity routines was run prior to the these stage moves.&nbsp; This option 
-      would be useful if the Z heights of the items are not correct and eucentricity 
-      is run on only a subset of points, provided that Z height is approximately the 
+    <P>Select this option to leave the Z height unchanged in the stage move to
+      the item&#39;s location, and in Realign to Item if it is run.&nbsp; Otherwise, the Z height
+      will be set to the Z value of the item in the initial move, and to the Z value
+      of the first map used for aligning in Realign to Item unless one of the three
+      eucentricity routines was run prior to the these stage moves.&nbsp; This option
+      would be useful if the Z heights of the items are not correct and eucentricity
+      is run on only a subset of points, provided that Z height is approximately the
       same from one point to another between runs of a eucentricity routine.</P>
     <P><b>Skip stage move to item if possible</b></P>
-    <P>Select this option to suppress a stage move to the area prior to the primary 
-      action, if one still seems necessary (i.e., if no task was done that required 
-      being at the area already).&nbsp; This option is enabled only when a script is 
-      run before or as the primary action, cases in which the program is willing to 
-      rely on one script or the other having moved to the area, either with an 
+    <P>Select this option to suppress a stage move to the area prior to the primary
+      action, if one still seems necessary (i.e., if no task was done that required
+      being at the area already).&nbsp; This option is enabled only when a script is
+      run before or as the primary action, cases in which the program is willing to
+      rely on one script or the other having moved to the area, either with an
       explicit stage move or with Realign to Item.&nbsp; </P>
     <P><B>Restore scope state after aligning to item</B></P>
-    <P>This option is enabled when you select 'Realign to item' as an initial task and 
-      are running a script as the primary action. If it is checked in that case, then the current magnification and beam 
-      settings will be restored after running 'Realign to item'. Generally, this is 
-      appropriate outside of Low Dose mode and not in Low Dose mode, since each image 
-      acquisition sets the state for a Low Dose area.&nbsp; However, outside of Low 
-      Dose, if you are realigning to a high-magnification map embedded in 
-      a medium magnification map, then you could turn off this option if the beam and 
-      magnification were already carefully adjusted before acquiring the 
-      high-magnification map. That way, you would not have to readjust these settings 
-      before starting the acquisition, and you would be protected against the scope 
+    <P>This option is enabled when you select 'Realign to item' as an initial task and
+      are running a script as the primary action. If it is checked in that case, then the current magnification and beam
+      settings will be restored after running 'Realign to item'. Generally, this is
+      appropriate outside of Low Dose mode and not in Low Dose mode, since each image
+      acquisition sets the state for a Low Dose area.&nbsp; However, outside of Low
+      Dose, if you are realigning to a high-magnification map embedded in
+      a medium magnification map, then you could turn off this option if the beam and
+      magnification were already carefully adjusted before acquiring the
+      high-magnification map. That way, you would not have to readjust these settings
+      before starting the acquisition, and you would be protected against the scope
       being in an undesirable state before starting a particular realign operation.</P>
-    <P>When the primary action is not running a script, the checkbox is disabled and 
-      its setting is irrelevant: the scope state will be restored outside of Low Dose 
-      mode and <em>not</em> be restored in Low Dose mode, thus minimizing unnecessary 
+    <P>When the primary action is not running a script, the checkbox is disabled and
+      its setting is irrelevant: the scope state will be restored outside of Low Dose
+      mode and <em>not</em> be restored in Low Dose mode, thus minimizing unnecessary
       changes between areas.</P>
     <P><A NAME="generalOptions"></A>&nbsp;</P>
     <P><em><strong>General Options</strong></em></P>
     <P><b>Do subset from index</b></P>
-    <P>Select this option to acquire from a subset of items.&nbsp; Enter the item 
-      index at which to start and end in the two text boxes.&nbsp; If there are no 
-      items within the subset marked for acquisition and compatible with the selected 
-      primary task, it will switch the primary task between tilt series and a non-tilt 
-      series selection.&nbsp; When a subset is done, only the information stored for 
-      items in that subset is accessed during that run.&nbsp; Specifically, files set to be opened and states to be set on 
-      items before the subset will not be available.&nbsp; Thus, if file-opening 
-      through the Navigator is needed, it must be done on the first item of the 
-      subset.&nbsp; If tilt series are being done and a state needs to be set, it 
+    <P>Select this option to acquire from a subset of items.&nbsp; Enter the item
+      index at which to start and end in the two text boxes.&nbsp; If there are no
+      items within the subset marked for acquisition and compatible with the selected
+      primary task, it will switch the primary task between tilt series and a non-tilt
+      series selection.&nbsp; When a subset is done, only the information stored for
+      items in that subset is accessed during that run.&nbsp; Specifically, files set to be opened and states to be set on
+      items before the subset will not be available.&nbsp; Thus, if file-opening
+      through the Navigator is needed, it must be done on the first item of the
+      subset.&nbsp; If tilt series are being done and a state needs to be set, it
       should be done on the first item as well.</P>
-    <P>The subset selection is reset after every run.&nbsp; However, if you close this 
-      dialog with <b>Postpone</b>, the subset setting is saved.&nbsp; It will reappear 
-      when you reopen the dialog and will apply if the acquisition is started from a 
+    <P>The subset selection is reset after every run.&nbsp; However, if you close this
+      dialog with <b>Postpone</b>, the subset setting is saved.&nbsp; It will reappear
+      when you reopen the dialog and will apply if the acquisition is started from a
       script command.</P>
     <P><b>No message box when errors occur</b></P>
-    <P>Selecting this option has two effects: message boxes that would block 
-      unattended operation are converted to messages in the log, and the underlying 
-      failures are either ignored or cause the program to skip the current item and 
-      move on to the next.&nbsp; Without the option set, a message box will pop up and 
+    <P>Selecting this option has two effects: message boxes that would block
+      unattended operation are converted to messages in the log, and the underlying
+      failures are either ignored or cause the program to skip the current item and
+      move on to the next.&nbsp; Without the option set, a message box will pop up and
       the acquisition will be stopped.</P>
     <P><B>Close column/gun valves at end</B></P>
-    <P>If this option is available, you can set it to have the column or gun valve 
-      closed at the end of the set of acquisitions. On a JEOL without a FEG, this 
+    <P>If this option is available, you can set it to have the column or gun valve
+      closed at the end of the set of acquisitions. On a JEOL without a FEG, this
       option can be used to turn the filament off instead.
     </P>
     <P><B>Send email at end</B></P>
-    <P>If this option is enabled, you can select it to have an email sent to the 
-      address entered with <A HREF="menu_tilt_series.htm#hid_tiltseries_setaddress">Set 
-        Email Address</A> in the Tilt Series menu when the acquisition finishes. An 
-      email will be sent if the acquisition stops with an error, but not if you stop 
-      it yourself. For this option to be enabled, an SMTP server and address to mail 
-      from must be specified in the SerialEM properties file.&nbsp; The program keeps 
-      track of this option setting separately for tilt series and other kinds of 
+    <P>If this option is enabled, you can select it to have an email sent to the
+      address entered with <A HREF="menu_tilt_series.htm#hid_tiltseries_setaddress">Set
+        Email Address</A> in the Tilt Series menu when the acquisition finishes. An
+      email will be sent if the acquisition stops with an error, but not if you stop
+      it yourself. For this option to be enabled, an SMTP server and address to mail
+      from must be specified in the SerialEM properties file.&nbsp; The program keeps
+      track of this option setting separately for tilt series and other kinds of
       primary tasks.</P>
     <P><strong>Hide unselected options</strong></P>
-    <P>This option allows you to simplify the left side of the dialog by hiding all 
-      options that are not checked.&nbsp; However, if you uncheck an option when 
-      hiding is turned on, it will stay visible to make it easier for you to turn it 
-      back on.&nbsp; Toggle the option off and back on to hide any newly unselected 
+    <P>This option allows you to simplify the left side of the dialog by hiding all
+      options that are not checked.&nbsp; However, if you uncheck an option when
+      hiding is turned on, it will stay visible to make it easier for you to turn it
+      back on.&nbsp; Toggle the option off and back on to hide any newly unselected
       options.</P>
     <P><A NAME="taskList"></A></P>
     <P><strong><em>Tasks Before and After Primary Action</em></strong></P>
-    <P>This section has a series of lines corresponding to optional steps that can be run 
-      on some or all items. Their order from top to bottom corresponds to the order in 
-      which they will be run, with a line &#39;Primary Action Runs Here&#39; showing where 
+    <P>This section has a series of lines corresponding to optional steps that can be run
+      on some or all items. Their order from top to bottom corresponds to the order in
+      which they will be run, with a line &#39;Primary Action Runs Here&#39; showing where
       that occurs in the sequence.&nbsp; Each line has 4 elements:</P>
     <P><em>The checkbox</em> at the left selects whether the task is run.</P>
-    <P><em>The button with the task name</em> selects the task as the one whose 
-      parameters are shown in the &#39;General controls for task&#39; group box below.&nbsp; 
-      It is possible to close up this group box by pressing the selected button again, 
+    <P><em>The button with the task name</em> selects the task as the one whose
+      parameters are shown in the &#39;General controls for task&#39; group box below.&nbsp;
+      It is possible to close up this group box by pressing the selected button again,
       so that no button is selected.&nbsp; </P>
-    <P><em>A text string</em> to the right of the button summarizes when the task is 
+    <P><em>A text string</em> to the right of the button summarizes when the task is
       set to be run.</P>
-    <P><em>A </em><strong><em>Setup</em></strong><em> button</em> is also present for 
-      most tasks.&nbsp; For some, this button will open the same setup dialog that can 
-      be opened from a menu entry in the Tasks or Navigator menu.&nbsp; For others, it 
-      will either invoke a parameter setting sequence available from another menu 
+    <P><em>A </em><strong><em>Setup</em></strong><em> button</em> is also present for
+      most tasks.&nbsp; For some, this button will open the same setup dialog that can
+      be opened from a menu entry in the Tasks or Navigator menu.&nbsp; For others, it
+      will either invoke a parameter setting sequence available from another menu
       item, or bring up a small dialog with a parameter choice.</P>
     <P>The tasks will now be described in their default order:</P>
-    <P><strong>Manage Dewars/Vacuum</strong> (or<strong> Manage Nitrogen</strong> on 
-      JEOL) - This task can be used to pause acquisition when a disturbing event 
-      occurs on the microscope, or to initiate such an event periodically.&nbsp; The 
-      events are the running of vacuum pumps on FEI scopes, and the filling of 
-      nitrogen dewar(s) filling on various scopes.&nbsp; The <strong>Setup</strong> 
-      button opens the <a href="hidd_manage_dewars.htm">Dewar and Vacuum Management</a> 
-      dialog.&nbsp; The timing for running operations is all controlled by the 
+    <P><strong>Manage Dewars/Vacuum</strong> (or<strong> Manage Nitrogen</strong> on
+      JEOL) - This task can be used to pause acquisition when a disturbing event
+      occurs on the microscope, or to initiate such an event periodically.&nbsp; The
+      events are the running of vacuum pumps on Thermo/FEI scopes, and the filling of
+      nitrogen dewar(s) filling on various scopes.&nbsp; The <strong>Setup</strong>
+      button opens the <a href="hidd_manage_dewars.htm">Dewar and Vacuum Management</a>
+      dialog.&nbsp; The timing for running operations is all controlled by the
       management procedure itself, so this task should be run on every item.</P>
-    <P><strong>Flash FEG -</strong> This task can be used to flash a cold FEG.&nbsp; 
-      For FEI scopes, the scripting interface can tell whether flashing is advised, 
-      and it is reasonable to flash only when advised.&nbsp; Thus, the task can be run 
-      frequently, even on every item.&nbsp; There is a <strong>Setup</strong> button 
-      to pop up a dialog for you to choose whether to do high-temperature flashes if 
-      those are advised, or only low-temperature flashes when they are advised.&nbsp; 
-      For JEOL scopes, there is no <strong>Setup</strong> button, and the task will 
-      flash the FEG unconditionally when it is run, so it is important to specify an 
+    <P><strong>Flash FEG -</strong> This task can be used to flash a cold FEG.&nbsp;
+      For Thermo/FEI scopes, the scripting interface can tell whether flashing is advised,
+      and it is reasonable to flash only when advised.&nbsp; Thus, the task can be run
+      frequently, even on every item.&nbsp; There is a <strong>Setup</strong> button
+      to pop up a dialog for you to choose whether to do high-temperature flashes if
+      those are advised, or only low-temperature flashes when they are advised.&nbsp;
+      For JEOL scopes, there is no <strong>Setup</strong> button, and the task will
+      flash the FEG unconditionally when it is run, so it is important to specify an
       appropriate interval at which it should be flashed.</P>
-    <P><strong>Coma-free Alignment - </strong>This task will run the coma-free 
-      alignment routine that uses CTF fitting.&nbsp; The <strong>Setup</strong> button 
-      will run the Focus menu <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A> 
-      command then the <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A> 
+    <P><strong>Coma-free Alignment - </strong>This task will run the coma-free
+      alignment routine that uses CTF fitting.&nbsp; The <strong>Setup</strong> button
+      will run the Focus menu <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A>
+      command then the <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A>
       command; you can cancel out at any point in the long series of entry boxes.</P>
-    <P><strong>Astigmatism -</strong> This task will run one of the two astigmatism 
-      routines.&nbsp; The <strong>Setup</strong> button will first pop up a dialog for 
-      you to choose whether to use fitting to the CTF or analysis of beam-tilted image 
-      displacements (BTID).&nbsp; For CTF fitting, it then runs the Focus menu <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A> 
-      command.&nbsp; For the BTID method, it with run the Focus menu <a href="#hid_focus_setastigbeamtilt">Set BTID Astig Beam Tilt</a> 
-      command.&nbsp; Yes, all these coma and astigmatism parameters should be on a 
+    <P><strong>Astigmatism -</strong> This task will run one of the two astigmatism
+      routines.&nbsp; The <strong>Setup</strong> button will first pop up a dialog for
+      you to choose whether to use fitting to the CTF or analysis of beam-tilted image
+      displacements (BTID).&nbsp; For CTF fitting, it then runs the Focus menu <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A>
+      command.&nbsp; For the BTID method, it with run the Focus menu <a href="#hid_focus_setastigbeamtilt">Set BTID Astig Beam Tilt</a>
+      command.&nbsp; Yes, all these coma and astigmatism parameters should be on a
       single dialog...</P>
-    <P><strong>Condition Phase Plate -</strong> This task will run the phase plate 
+    <P><strong>Condition Phase Plate -</strong> This task will run the phase plate
       conditioning routine after moving the phase plate to a new area.&nbsp; The
-      <strong>Setup</strong> 
-      button opens the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup</A> 
-      dialog box, but the button to start the routine from that dialog is disabled.&nbsp; 
-      If the <strong>Run at nearest item with label or note </strong>option in the 
-      General Controls section is set for this task, it will be run at the indicated 
-      item, regardless of the setting for where to run it in the Setup dialog.&nbsp; 
-      However, if that option is not checked here, it will be run at the place 
+      <strong>Setup</strong>
+      button opens the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup</A>
+      dialog box, but the button to start the routine from that dialog is disabled.&nbsp;
+      If the <strong>Run at nearest item with label or note </strong>option in the
+      General Controls section is set for this task, it will be run at the indicated
+      item, regardless of the setting for where to run it in the Setup dialog.&nbsp;
+      However, if that option is not checked here, it will be run at the place
       indicated in the Setup dialog.</P>
-    <P><strong>Update Dark Reference -</strong> This task will acquire a new dark 
-      reference for a DE camera or update the hardware dark reference for a K2/K3 
-      camera.&nbsp;&nbsp; Set the time interval for doing so in the <strong>General 
-      controls</strong> group box.&nbsp; For a DE camera, there is a <strong>Setup</strong> 
-      button which will bring up a dialog asking whether to make a reference for 
+    <P><strong>Update Dark Reference -</strong> This task will acquire a new dark
+      reference for a DE camera or update the hardware dark reference for a K2/K3
+      camera.&nbsp;&nbsp; Set the time interval for doing so in the <strong>General
+      controls</strong> group box.&nbsp; For a DE camera, there is a <strong>Setup</strong>
+      button which will bring up a dialog asking whether to make a reference for
       linear or counting mode.</P>
-    <P><strong>Refine ZLP -</strong> This task runs the Refine ZLP routine started by 
+    <P><strong>Refine ZLP -</strong> This task runs the Refine ZLP routine started by
       the button in the <a href="hidd_filtercontrol.htm">Filter Control panel</a>.</P>
-    <P><B>Rough Eucentricity - </B>Either the Rough Eucentricity or the Eucentricity 
-      by Focus task should be selected if it 
-      is necessary that the specimen be eucentric and if the Z height might be off by 
-      more than 10 microns. Neither one retains alignment to a specimen position so 
-      they should be run prior to 'Realign to Item' or 'Align toTemplate'.&nbsp; When 
-      you change the selected parameter set or close this dialog with <strong>GO</strong> 
-      or <strong>Postpone</strong>, the program will check whether operations are not 
-      in this order and ask you to confirm that you want to proceed if so.&nbsp; The 
+    <P><B>Rough Eucentricity - </B>Either the Rough Eucentricity or the Eucentricity
+      by Focus task should be selected if it
+      is necessary that the specimen be eucentric and if the Z height might be off by
+      more than 10 microns. Neither one retains alignment to a specimen position so
+      they should be run prior to 'Realign to Item' or 'Align toTemplate'.&nbsp; When
+      you change the selected parameter set or close this dialog with <strong>GO</strong>
+      or <strong>Postpone</strong>, the program will check whether operations are not
+      in this order and ask you to confirm that you want to proceed if so.&nbsp; The
       Rough Eucentricity task uses tilting to set Z to the eucentric point.</P>
-    <P><strong>Eucentricity by Focus -</strong> This task will set the Z height to 
-      either the eucentric point or to another chosen height relative to eucentricity 
-      by setting a standard focus value then adjusting Z height so that measured 
-      defocus matches the value measured previously for that standard focus value.&nbsp; 
-      This routine should be faster than Rough Eucentricity and may be more accurate, 
-      but it requires a calibration done in the <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a>, 
+    <P><strong>Eucentricity by Focus -</strong> This task will set the Z height to
+      either the eucentric point or to another chosen height relative to eucentricity
+      by setting a standard focus value then adjusting Z height so that measured
+      defocus matches the value measured previously for that standard focus value.&nbsp;
+      This routine should be faster than Rough Eucentricity and may be more accurate,
+      but it requires a calibration done in the <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a>,
       which the <strong>Setup</strong> button opens.</P>
-    <P><B>Autocenter Beam</B> - This task will condense the beam and take a picture to 
-      determine how to recenter it. Beam autocentering must already be set up for the 
-      current magnification in the <A HREF="hidd_autocensetup.htm">Beam Autocentering 
+    <P><B>Autocenter Beam</B> - This task will condense the beam and take a picture to
+      determine how to recenter it. Beam autocentering must already be set up for the
+      current magnification in the <A HREF="hidd_autocensetup.htm">Beam Autocentering
         Setup dialog box</A>.
     </P>
-    <P><B>Realign to Item - </B>This task will realign to a selected specimen feature, 
-      but requires that the item be located within a sufficiently large 
+    <P><B>Realign to Item - </B>This task will realign to a selected specimen feature,
+      but requires that the item be located within a sufficiently large
       medium-magnification map, as described in <A HREF="menu_navigator.htm#hid_navigator_aligntoitem">
-        Realign to Item</A>.&nbsp; If 
-      eucentricity has <i>not</i> been set yet 
-      during the acquire sequence, then the realign operation will be done at the Z 
-      height of the item being aligned to.&nbsp; However, if eucentricity <em>has</em> being run, then 
-      the Z height found during that operation is retained for the realign operation.&nbsp; 
-      Thus, a new map acquired at this position will have the right Z height.&nbsp; 
-      There will be some error in realigning to the map because of the Z height 
-      difference.&nbsp; This error will be recorded for the new map and taken into 
+        Realign to Item</A>.&nbsp; If
+      eucentricity has <i>not</i> been set yet
+      during the acquire sequence, then the realign operation will be done at the Z
+      height of the item being aligned to.&nbsp; However, if eucentricity <em>has</em> being run, then
+      the Z height found during that operation is retained for the realign operation.&nbsp;
+      Thus, a new map acquired at this position will have the right Z height.&nbsp;
+      There will be some error in realigning to the map because of the Z height
+      difference.&nbsp; This error will be recorded for the new map and taken into
       account when realigning to this pair of maps in the future.&nbsp; The <strong>
       Setup</strong> button opens the lower part of the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
-        dialog, where there are options for resetting image shift after the alignment 
+        dialog, where there are options for resetting image shift after the alignment
       operation.</P>
-    <P><B>Cook specimen</B> - This task will stabilize the specimen by pre-exposing it 
-      for a certain amount of time or to achieve a certain dose. The parameters for 
-      this operation must already be set up in the <A HREF="hidd_cooksetup.htm">Specimen 
-        Cooking Setup dialog box</A>.&nbsp; This operation maintains alignment to the 
+    <P><B>Cook specimen</B> - This task will stabilize the specimen by pre-exposing it
+      for a certain amount of time or to achieve a certain dose. The parameters for
+      this operation must already be set up in the <A HREF="hidd_cooksetup.htm">Specimen
+        Cooking Setup dialog box</A>.&nbsp; This operation maintains alignment to the
       specimen position.</P>
-    <P><B>Fine Eucentricity -</B> This task can be selected if eucentricity needs to be 
-      found with the highest accuracy, but the Z height should be within 10 microns 
-      of eucentric before running this task. If either 'Realign to Item' or 'Align to 
-      Template' has also been run for this items, 
+    <P><B>Fine Eucentricity -</B> This task can be selected if eucentricity needs to be
+      found with the highest accuracy, but the Z height should be within 10 microns
+      of eucentric before running this task. If either 'Realign to Item' or 'Align to
+      Template' has also been run for this items,
       the task is run in a way that maintains alignment to the specimen position (the <A HREF="menu_tasks.htm#hid_tasks_finerealign">
         Refine &amp; Realign command</A>).</P>
-    <P><strong>Align to Template -</strong> This task will align to a map containing a 
-      template image, such as a cropped image of one hole in the carbon film.&nbsp; 
+    <P><strong>Align to Template -</strong> This task will align to a map containing a
+      template image, such as a cropped image of one hole in the carbon film.&nbsp;
       The <strong>Setup</strong> button opens the full <a href="hidd_navrealign.htm">Navigator Align Setup</a>
-        dialog, where the label of the template map and the maximum shift for the 
-      alignment can be set.&nbsp; Image shift can also be reset after this alignment.&nbsp; 
-      If both Realign to Item and this task are being run and image shift is being 
-      reset, it will be reset only after the Align to Template.&nbsp; If you are 
-      primarily relying on Align to Template for positioning, consider selecting the 
-      option for the hybrid Realign to Item/Align to Template approach explained 
+        dialog, where the label of the template map and the maximum shift for the
+      alignment can be set.&nbsp; Image shift can also be reset after this alignment.&nbsp;
+      If both Realign to Item and this task are being run and image shift is being
+      reset, it will be reset only after the Align to Template.&nbsp; If you are
+      primarily relying on Align to Template for positioning, consider selecting the
+      option for the hybrid Realign to Item/Align to Template approach explained
       above.&nbsp; If the routine does not find a shitf within the limit and the
-      <strong>No message box on error</strong> option is selected, the Navigator will 
+      <strong>No message box on error</strong> option is selected, the Navigator will
       skip this item and go on to the next.</P>
-    <P><B>Autofocus -</B> Select this option to run the autofocus routine prior to the 
-      main action.&nbsp; The <strong>Setup</strong> button opens an popup box for you 
-      to enter the maximum change in focus to be allowed.&nbsp; When that maximum is 
-      exceeded, or if the autofocus aborts due to inconsistent changes, the Navigator 
+    <P><B>Autofocus -</B> Select this option to run the autofocus routine prior to the
+      main action.&nbsp; The <strong>Setup</strong> button opens an popup box for you
+      to enter the maximum change in focus to be allowed.&nbsp; When that maximum is
+      exceeded, or if the autofocus aborts due to inconsistent changes, the Navigator
       will skip this item and go on to the next.</P>
-    <P><strong>Wait for Drift -</strong> This task will wait for drift to settle to a 
-      desired level, using parameters set in the <A HREF="hidd_driftwaitsetup.htm">Wait for Drift Setup</A> dialog.&nbsp; 
-      If the operation fails and the <strong>No message box on error</strong> option 
+    <P><strong>Wait for Drift -</strong> This task will wait for drift to settle to a
+      desired level, using parameters set in the <A HREF="hidd_driftwaitsetup.htm">Wait for Drift Setup</A> dialog.&nbsp;
+      If the operation fails and the <strong>No message box on error</strong> option
       is selected, the Navigator will skip this item and go on to the next.</P>
-    <P><B>Run Script</B><strong> Before -</strong> This task is available for all kinds 
-      of 
-      primary actions.&nbsp; When the primary action is tilt series acquisition, the script 
-      should be used for quick operations such as opening secondary files; if extended 
-      tasks are performed, the script is responsible for maintaining alignment to the 
-      specimen position. Even if the script is stopped or fails to complete 
-      successfully, the program will go on to the primary action, unless the script runs 
-      the command &#39;SkipAcquiringNavItem&#39;.&nbsp; If you stop the script with 
-      &#39;End Loop' or 'STOP&#39; in the Camera and Script control panel, you can then resume 
-      it with &#39;ResumeS&#39;, or you can end the script and go on to the primary 
-      action with 
-      &#39;End Script&#39;. The program 
-      keeps track of this script choice separately for tilt series and other primary 
+    <P><B>Run Script</B><strong> Before -</strong> This task is available for all kinds
+      of
+      primary actions.&nbsp; When the primary action is tilt series acquisition, the script
+      should be used for quick operations such as opening secondary files; if extended
+      tasks are performed, the script is responsible for maintaining alignment to the
+      specimen position. Even if the script is stopped or fails to complete
+      successfully, the program will go on to the primary action, unless the script runs
+      the command &#39;SkipAcquiringNavItem&#39;.&nbsp; If you stop the script with
+      &#39;End Loop' or 'STOP&#39; in the Camera and Script control panel, you can then resume
+      it with &#39;ResumeS&#39;, or you can end the script and go on to the primary
+      action with
+      &#39;End Script&#39;. The program
+      keeps track of this script choice separately for tilt series and other primary
       actions.</P>
-    <P><B>Run Script After </B>- This task can be run after all kinds 
-      of 
-      primary actions.&nbsp; If you stop the script with 
-      &#39;End Loop' or 'STOP&#39; in the Camera and Script control panel, you can then resume 
-      it with &#39;ResumeS&#39;, or you can end the script and go on to the next item with 
-      &#39;End Script&#39;. The program 
-      keeps track of this script choice separately for tilt series and other primary 
+    <P><B>Run Script After </B>- This task can be run after all kinds
+      of
+      primary actions.&nbsp; If you stop the script with
+      &#39;End Loop' or 'STOP&#39; in the Camera and Script control panel, you can then resume
+      it with &#39;ResumeS&#39;, or you can end the script and go on to the next item with
+      &#39;End Script&#39;. The program
+      keeps track of this script choice separately for tilt series and other primary
       actions.</P>
     <P><A NAME="taskControls"></A></P>
     <P><em><strong>General controls for selected task:</strong></em></P>
     <P><strong>How often to run task </strong>- radio button group</P>
-    <P>These radio buttons provide several different ways to run a task periodically 
-      instead of at every item, the choice depends partly on how your points are 
+    <P>These radio buttons provide several different ways to run a task periodically
+      instead of at every item, the choice depends partly on how your points are
       divided into groups, e.g., one group versus multiple groups per grid square.</P>
-    <P><strong>Every N items - </strong>Select this and set the number to 1 to run the 
+    <P><strong>Every N items - </strong>Select this and set the number to 1 to run the
       task for every item, 2 for every other item, 10 for every tenth item, etc.</P>
-    <P><strong>Only at start of group -</strong> Select this to run the task on the 
+    <P><strong>Only at start of group -</strong> Select this to run the task on the
       first item in a group.</P>
-    <P><strong>Only at end of group -</strong> Select this to run the task on the last 
+    <P><strong>Only at end of group -</strong> Select this to run the task on the last
       item in a group.</P>
-    <P><strong>Every N minutes -</strong> Select this and specify a number of minutes 
+    <P><strong>Every N minutes -</strong> Select this and specify a number of minutes
       (an integer) to run the task at intervals of that many minutes.</P>
-    <P><strong>When moved &gt; X um -</strong> Select this and specify a distance in 
-      microns to run the task whenever the distance since the last place where it was 
-      run exceeds the given distance.&nbsp; This might be useful for a eucentricity 
+    <P><strong>When moved &gt; X um -</strong> Select this and specify a distance in
+      microns to run the task whenever the distance since the last place where it was
+      run exceeds the given distance.&nbsp; This might be useful for a eucentricity
       task.</P>
     <P><strong>Position in sequence </strong>- button group</P>
-    <P><strong>Move Up -</strong> Press this button to move the task up one step in 
-      the ordering.&nbsp; It is not possible to move a task from after to before the 
+    <P><strong>Move Up -</strong> Press this button to move the task up one step in
+      the ordering.&nbsp; It is not possible to move a task from after to before the
       primary action with this button; that can only be done by turning off the
       <strong>Run after Primary Action</strong> checkbox.</P>
-    <P><strong>Move Down -</strong> Press this button to move the task down one step 
+    <P><strong>Move Down -</strong> Press this button to move the task down one step
       in the ordering.</P>
     <P>&nbsp;</P>
     <P><strong>Run after Primary Action</strong></P>
-    <P>Select this option to run the task after the primary action instead of before.&nbsp; 
-      It is disabled for tasks where doing so makes no sense.&nbsp; The line for the 
-      task will leap from one side of the Primary Action line to the other when this 
+    <P>Select this option to run the task after the primary action instead of before.&nbsp;
+      It is disabled for tasks where doing so makes no sense.&nbsp; The line for the
+      task will leap from one side of the Primary Action line to the other when this
       option is toggled.</P>
     <P><strong>Run at nearest item with label or note starting with</strong></P>
-    <P>Select this option to run the task at a location different from that of the 
-      item for which it is being run.&nbsp; The location is that of a different 
-      Navigator item.&nbsp; Select whether to specify that other item by the note or 
-      label, and enter some text with which the note or label must start.&nbsp; The 
-      text matching is case-sensitive. There can be many such items, in which case 
-      the program will find and go to the nearest one.&nbsp; This capability is good 
-      for dose-intensive operations or ones that need to be done on the carbon film.&nbsp; 
-      For maximum efficiency, all such tasks should be done prior to ones that need to 
-      be done at the target location, and they should be done at the same location. 
+    <P>Select this option to run the task at a location different from that of the
+      item for which it is being run.&nbsp; The location is that of a different
+      Navigator item.&nbsp; Select whether to specify that other item by the note or
+      label, and enter some text with which the note or label must start.&nbsp; The
+      text matching is case-sensitive. There can be many such items, in which case
+      the program will find and go to the nearest one.&nbsp; This capability is good
+      for dose-intensive operations or ones that need to be done on the carbon film.&nbsp;
+      For maximum efficiency, all such tasks should be done prior to ones that need to
+      be done at the target location, and they should be done at the same location.
       This option to run elsewhere is disabled for tasks where it makes no sense.</P>
     <P><A NAME="listControls"></A></P>
     <P><em><strong>Other Task List Controls</strong></em></P>
     <P><strong>Hide unused tasks</strong></P>
-    <P>Select this option to hide the tasks that are not selected for running, to 
-      simplify the dialog and make it more evident what will be run.&nbsp;&nbsp;&nbsp; 
-      When it is turned off, all tasks will be shown again.&nbsp; When you turn off a 
-      task, it will not be hidden immediately so that it is easy to turn on again, but 
+    <P>Select this option to hide the tasks that are not selected for running, to
+      simplify the dialog and make it more evident what will be run.&nbsp;&nbsp;&nbsp;
+      When it is turned off, all tasks will be shown again.&nbsp; When you turn off a
+      task, it will not be hidden immediately so that it is easy to turn on again, but
       it will disappear if this option is toggled off and on again.</P>
     <P><strong>Restore Default Order</strong></P>
-    <P>Press this button to set the order of the task list back to the default order 
+    <P>Press this button to set the order of the task list back to the default order
       defined in the program.</P>
     <P><A NAME="bottomButtons"></A></P>
     <P><em><strong>Bottom Action Buttons</strong></em></P>
     <P><strong>Save Parameters to File</strong></P>
-    <P>Press this button to save the currently selected set of parameters to a text 
-      file; set the name of the file in the chooser that opens.&nbsp; The parameters 
-      saved consist of all those adjusted on the dialog itself plus a few others set 
+    <P>Press this button to save the currently selected set of parameters to a text
+      file; set the name of the file in the chooser that opens.&nbsp; The parameters
+      saved consist of all those adjusted on the dialog itself plus a few others set
       by small popup dialogs that open only from one of the task Setup buttons. </P>
     <P><strong>Read in Parameters</strong></P>
-    <P>Press this button to read saved parameters in to replace the currenly selected 
-      set of parameters.&nbsp; If you load an undesired set of parameters, you can 
+    <P>Press this button to read saved parameters in to replace the currenly selected
+      set of parameters.&nbsp; If you load an undesired set of parameters, you can
       still use <strong>Cancel</strong> to return to the previous parameters.</P>
     <P><b>GO - Postpone - Cancel</b></P>
-    <P><b>GO</b> starts the acquisition with the selected parameters in the currently 
-      selected set.&nbsp; This button will be labeled Resume if the Navigator was 
+    <P><b>GO</b> starts the acquisition with the selected parameters in the currently
+      selected set.&nbsp; This button will be labeled Resume if the Navigator was
       paused during acquisition.&nbsp; <b>
-      Postpone</b> closes the dialog but saves the parameters, which is useful if you 
-      need to open a file, or if 
-      acquisition is started subsequently with the StartNavAcquireAtEnd script 
-      command.&nbsp; <b>Cancel</b> closes the dialog and discards any changes in 
+      Postpone</b> closes the dialog but saves the parameters, which is useful if you
+      need to open a file, or if
+      acquisition is started subsequently with the StartNavAcquireAtEnd script
+      command.&nbsp; <b>Cancel</b> closes the dialog and discards any changes in
       parameters.</P>
     </basefont>
   </BODY>

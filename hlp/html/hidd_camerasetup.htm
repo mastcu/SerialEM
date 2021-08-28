@@ -3,749 +3,749 @@
   <HEAD>
     <TITLE>Camera Setup Dialog</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_camerasetup"></A><B><FONT size="3">Camera Setup Dialog</FONT></B></P>
-    <P>This dialog box allows you to specify exposure parameters for image 
-      acquisition. The controls for CCD/CMOS cameras are described first.&nbsp; Options 
+    <P>This dialog box allows you to specify exposure parameters for image
+      acquisition. The controls for CCD/CMOS cameras are described first.&nbsp; Options
       specific to the Gatan K2 Summit and K3 cameras are described in <A HREF="#K2controls">
-      Controls for Gatan K2 and K3 Cameras</A>, ones for Direct Electron direct detector 
-      cameras in <a href="#DEcontrols">Controls for Direct Electron Cameras</a>, and 
-      ones for Falcon cameras in <a href="#FalconControls">Controls for FEI Falcon 
-      Cameras</a>. The simpler set of options for other cameras that can take frames are described in 
-      <A href="#FrameControls">Controls for Other Cameras that Can Take Frames 
-      (OneView, Rio, Tietz XF416/Fn16)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing 
+      Controls for Gatan K2 and K3 Cameras</A>, ones for Direct Electron direct detector
+      cameras in <a href="#DEcontrols">Controls for Direct Electron Cameras</a>, and
+      ones for Falcon cameras in <a href="#FalconControls">Controls for Thermo/FEI Falcon
+      Cameras</a>. The simpler set of options for other cameras that can take frames are described in
+      <A href="#FrameControls">Controls for Other Cameras that Can Take Frames
+      (OneView, Rio, Tietz XF416/Fn16)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing
       controls, are described in
       <A HREF="#STEMcontrols">Controls in STEM Mode.</A>
     </P>
     <P><B>Camera radio buttons</B></P>
-    <P>If you have multiple cameras, each available camera will be listed here. Each 
-      camera has an independent set of parameters. The current camera will be the one 
-      selected. If you select a different camera, that one will become the current 
+    <P>If you have multiple cameras, each available camera will be listed here. Each
+      camera has an independent set of parameters. The current camera will be the one
+      selected. If you select a different camera, that one will become the current
       camera when you press OK in this dialog, but not if you press Cancel.</P>
     <P><B>Match pixel size and/or intensity when changing camera</B></P>
-    <P>These buttons will appear if you have two or more cameras that are not on an 
-      energy filter. If you select pixel matching, the program will change magnification if 
-      necessary so that the pixel size matches as well as possible when you change 
-      from one camera to another. If you select intensity matching, then beam 
-      intensity will be adjusted so that the electrons per pixel per second will be 
-      the same after switchin between cameras. The pixel matching can be controlled by 
-      setting a property 'PixelMatchFactor' for one or more cameras; for example, 
-      setting this factor to 2 for one camera will make it match binned pixels for 
-      that camera with unbinned pixels for the other camera. This factor also adjusts 
+    <P>These buttons will appear if you have two or more cameras that are not on an
+      energy filter. If you select pixel matching, the program will change magnification if
+      necessary so that the pixel size matches as well as possible when you change
+      from one camera to another. If you select intensity matching, then beam
+      intensity will be adjusted so that the electrons per pixel per second will be
+      the same after switchin between cameras. The pixel matching can be controlled by
+      setting a property 'PixelMatchFactor' for one or more cameras; for example,
+      setting this factor to 2 for one camera will make it match binned pixels for
+      that camera with unbinned pixels for the other camera. This factor also adjusts
       the effective pixel size for intensity matching as well.</P>
     <P><B>Parameter set radio buttons</B></P>
-    <P>There are five independent parameter sets for taking pictures. Use these 
-      buttons to select a set and view and adjust its parameters. Whenever you change 
-      from one set to another, the parameters are stored for the set that you are 
+    <P>There are five independent parameter sets for taking pictures. Use these
+      buttons to select a set and view and adjust its parameters. Whenever you change
+      from one set to another, the parameters are stored for the set that you are
       leaving.</P>
     <P><B>Copy from other camera or from View</B></P>
-    <P>This button is available if there are multiple cameras, or if there are 
-      separate Search camera parameters. In the latter case, when Search is the 
-      selected parameter set, press the button to copy the View parameters for the 
-      current camera to Search.&nbsp; Otherwise, press the button to copy 
-      parameters for the current parameter set from the camera listed on the button. 
-      Acquisition area will be scaled appropriately if the two cameras are different 
+    <P>This button is available if there are multiple cameras, or if there are
+      separate Search camera parameters. In the latter case, when Search is the
+      selected parameter set, press the button to copy the View parameters for the
+      current camera to Search.&nbsp; Otherwise, press the button to copy
+      parameters for the current parameter set from the camera listed on the button.
+      Acquisition area will be scaled appropriately if the two cameras are different
       sizes.</P>
     <P><B>Acquisition</B></P>
-    <P>These buttons determine whether a single image will be acquired or whether 
-      acquisition will repeat automatically. Continuous acquisition is relatively slow 
-      in SerialEM for some cameras, but for newer Gatan cameras it accesses continuous 
-      camera modes and is fast. If you start a continuous acquisition, you can stop it 
-      by pressing the space bar or Esc up pushing the STOP button, and you can restart 
-      it by pressing the space bar again.&nbsp; Most automated operations (i.e., tasks 
-      and tilt series) will use single-image mode even when taking an image with a parameter set in which 
-      you selected continuous mode.&nbsp; Thus, you should be able to use those 
-      operations without having to turn off continuous mode in any of your parameter 
+    <P>These buttons determine whether a single image will be acquired or whether
+      acquisition will repeat automatically. Continuous acquisition is relatively slow
+      in SerialEM for some cameras, but for newer Gatan cameras it accesses continuous
+      camera modes and is fast. If you start a continuous acquisition, you can stop it
+      by pressing the space bar or Esc up pushing the STOP button, and you can restart
+      it by pressing the space bar again.&nbsp; Most automated operations (i.e., tasks
+      and tilt series) will use single-image mode even when taking an image with a parameter set in which
+      you selected continuous mode.&nbsp; Thus, you should be able to use those
+      operations without having to turn off continuous mode in any of your parameter
       sets.</P>
     <P><B>Processing</B></P>
-    <P>These buttons determine whether you will acquire an unprocessed, raw image from 
-      the camera, an image with the dark reference subtracted, or a gain-normalized 
-      image. An image is gain-normalized by subtracting a dark reference then 
-      multiplying 
+    <P>These buttons determine whether you will acquire an unprocessed, raw image from
+      the camera, an image with the dark reference subtracted, or a gain-normalized
+      image. An image is gain-normalized by subtracting a dark reference then
+      multiplying
       by the gain reference.</P>
     <P><B>Remove X-rays</B></P>
-    <P>This checkbox will activate removal of X-rays from an image taken with this 
-      parameter set. It will appear only if the ShowRemoveXRaysBox property is set for 
-      the particular camera, or if one of your parameter sets already has the option 
-      checked. Use this option only if necessary to prevent bad tracking due to large 
-      X-rays, since the X-ray removal in SerialEM is not as effective or reliable as 
-      the removal with Ccderaser in IMOD. The parameters controlling the X ray removal 
+    <P>This checkbox will activate removal of X-rays from an image taken with this
+      parameter set. It will appear only if the ShowRemoveXRaysBox property is set for
+      the particular camera, or if one of your parameter sets already has the option
+      checked. Use this option only if necessary to prevent bad tracking due to large
+      X-rays, since the X-ray removal in SerialEM is not as effective or reliable as
+      the removal with Ccderaser in IMOD. The parameters controlling the X ray removal
       are adjusted through the <A HREF="menu_process.htm#hid_process_setimagecriteria">
         Set Image Criteria command</A> in the Processing menu.</P>
     <P><b>Correct Drift</b></P>
-    <P>This checkbox is present for a OneView or Rio camera and turns on the real-time drift 
-      correction by that camera.&nbsp; Note that if this option is on and the image 
-      does not have enough features for alignment, the intensity of the image may be 
+    <P>This checkbox is present for a OneView or Rio camera and turns on the real-time drift
+      correction by that camera.&nbsp; Note that if this option is on and the image
+      does not have enough features for alignment, the intensity of the image may be
       much less than expected.</P>
       <P><strong>Diffraction mode</strong></P>
-      <P>This checkbox is present for a OneView or Rio camera and will make images be 
+      <P>This checkbox is present for a OneView or Rio camera and will make images be
           acquired in the camera's Diffraction mode instead of Imaging mode.</P>
     <P><B>Binning</B></P>
-    <P>These radio buttons present the options for binning an image directly as it is 
+    <P>These radio buttons present the options for binning an image directly as it is
       read out of the CCD camera.</P>
     <P><B>Exposure time</B></P>
-    <P>This text box allows you to enter the exposure time in seconds. Unlike in DM, 
+    <P>This text box allows you to enter the exposure time in seconds. Unlike in DM,
       exposure time will not change when you change binning.</P>
     <P><B>Drift settling</B></P>
-    <P>This text box allows you to enter the amount of time that the specimen will be 
-      exposed to the beam before the picture begins being recorded on the CCD camera. 
-      This will minimize the effects of image drift when the beam first hits the 
-      specimen.&nbsp; For a OneView camera, drift settling is achieved by throwing 
-      away initial camera frames and it thus works with one shutter connected.&nbsp; 
-      However, if there are two shutters connected, the settling works only when the 
-      &#39;Film shutter&#39; option described next is selected, so the box is disabled and the 
-      settling value there will have no effect if the &#39;Beam shutter&#39; option is 
+    <P>This text box allows you to enter the amount of time that the specimen will be
+      exposed to the beam before the picture begins being recorded on the CCD camera.
+      This will minimize the effects of image drift when the beam first hits the
+      specimen.&nbsp; For a OneView camera, drift settling is achieved by throwing
+      away initial camera frames and it thus works with one shutter connected.&nbsp;
+      However, if there are two shutters connected, the settling works only when the
+      &#39;Film shutter&#39; option described next is selected, so the box is disabled and the
+      settling value there will have no effect if the &#39;Beam shutter&#39; option is
       selected.</P>
     <P><B>Shutter mode</B></P>
-    <P>These radio buttons allow a choice of how shutters will be operated to expose 
-      the specimen and camera. The first two options correspond to the two shuttering 
+    <P>These radio buttons allow a choice of how shutters will be operated to expose
+      the specimen and camera. The first two options correspond to the two shuttering
       modes available in DM when there are two shutters:</P>
     <OL>
       <LI>
-        Beam blanking only uses the shutter above the specimen; the beam is on the 
+        Beam blanking only uses the shutter above the specimen; the beam is on the
         specimen only during the exposure time, unless drift settling is non-zero.</LI>
       <LI>
-        Film shutter with beam blanking uses a combination of shutters below and above 
-        the specimen. If drift settling is zero, the specimen is exposed for a fixed 
-        amount before image acquisition for a CCD camera, while the CCD is cleared. The 'Minimum time if 
-        not 0.0' listed below the drift settling box is based on this clearing time. 
-        Unfortunately, the specimen is also exposed throughout the readout of the 
+        Film shutter with beam blanking uses a combination of shutters below and above
+        the specimen. If drift settling is zero, the specimen is exposed for a fixed
+        amount before image acquisition for a CCD camera, while the CCD is cleared. The 'Minimum time if
+        not 0.0' listed below the drift settling box is based on this clearing time.
+        Unfortunately, the specimen is also exposed throughout the readout of the
         camera.</LI>
       <LI>
-        Dual shuttering for minimum exposure is accomplished by SerialEM using the beam 
-        blanker above the specimen to eliminate the unwanted exposure in DM's film 
-        shutter option. (This blanker is separate from the beam shutter that DM uses.) 
-        SerialEM can thus provide a full range of drift settling times, both longer and 
-        shorter than the clearing time, without the undesirable effects that occur with 
-        drift settling through DM. Exposure is also eliminated during camera readout. 
-        When drift settling is zero, SerialEM simply uses DM's beam shutter mode. As 
-        long as this shuttering mode is working reliably, there is no reason not to have 
+        Dual shuttering for minimum exposure is accomplished by SerialEM using the beam
+        blanker above the specimen to eliminate the unwanted exposure in DM's film
+        shutter option. (This blanker is separate from the beam shutter that DM uses.)
+        SerialEM can thus provide a full range of drift settling times, both longer and
+        shorter than the clearing time, without the undesirable effects that occur with
+        drift settling through DM. Exposure is also eliminated during camera readout.
+        When drift settling is zero, SerialEM simply uses DM's beam shutter mode. As
+        long as this shuttering mode is working reliably, there is no reason not to have
         it selected for all parameter sets.</LI></OL>
-    <P>For a Tietz camera, only two shutter modes are shown. In the first mode, the 
-      specimen will be exposed only during the drift settling time, if this is 
-      possible, plus the exposure time. In the second mode, the beam will be left on 
+    <P>For a Tietz camera, only two shutter modes are shown. In the first mode, the
+      specimen will be exposed only during the drift settling time, if this is
+      possible, plus the exposure time. In the second mode, the beam will be left on
       the specimen continuously.</P>
     <P><B>Force new dark reference next time only</B></P>
-    <P>If this option is selected, SerialEM will take a new dark reference itself, or 
-      force DM to take a new dark reference, the next time a picture is taken with 
-      this parameter set, and then the option will be cleared.&nbsp; There is no 
+    <P>If this option is selected, SerialEM will take a new dark reference itself, or
+      force DM to take a new dark reference, the next time a picture is taken with
+      this parameter set, and then the option will be cleared.&nbsp; There is no
       control over dark references with a K2/K3 or OneView camera.</P>
     <P><B>Take new dark reference each time</B></P>
-    <P>If this option is selected, SerialEM will take a new dark reference itself, or 
-      force DM to take a new dark reference, each time a picture is taken with this 
-      parameter set, which should be unnecessary unless DM's drift settling is used in 
+    <P>If this option is selected, SerialEM will take a new dark reference itself, or
+      force DM to take a new dark reference, each time a picture is taken with this
+      parameter set, which should be unnecessary unless DM's drift settling is used in
       an older version of DM.</P>
     <P><B>Average dark reference</B></P>
-    <P>If this option is selected, then the dark reference will be averaged the number 
-      of times indicated in the text box. Averaging can be helpful for low-exposure 
-      images if the camera readout is particularly noisy. This selection, like 
-      everything else on the dialog, is specific to the camera and parameter set. 
-      Checking this box does not affect when a dark reference is taken; if you change 
-      the setting, use 'Force new dark reference next time' to get a new dark 
-      reference. When an averaged dark reference is taken, the status bar will display 
-      'Dark Ref #n' instead of 'Getting Dark Reference. If you press 'Stop' before the 
-      dark reference is finished, a dark reference will be saved based on the average 
+    <P>If this option is selected, then the dark reference will be averaged the number
+      of times indicated in the text box. Averaging can be helpful for low-exposure
+      images if the camera readout is particularly noisy. This selection, like
+      everything else on the dialog, is specific to the camera and parameter set.
+      Checking this box does not affect when a dark reference is taken; if you change
+      the setting, use 'Force new dark reference next time' to get a new dark
+      reference. When an averaged dark reference is taken, the status bar will display
+      'Dark Ref #n' instead of 'Getting Dark Reference. If you press 'Stop' before the
+      dark reference is finished, a dark reference will be saved based on the average
       of the references already obtained, and will be used on the next acquisition.</P>
     <P><B>Top - Left - Bottom - Right</B></P>
-    <P>These text boxes display and allow you to change the coordinates of the area to 
-      be acquired. As in DM, Y coordinates start with zero at the top. Unlike in DM, 
-      coordinates are always expressed in terms of the full, unbinned size of the CCD 
+    <P>These text boxes display and allow you to change the coordinates of the area to
+      be acquired. As in DM, Y coordinates start with zero at the top. Unlike in DM,
+      coordinates are always expressed in terms of the full, unbinned size of the CCD
       camera.</P>
     <P><B>Up-down and Left-right Spin Buttons and Recenter Button</B></P>
-    <P>The two pairs of spin buttons allow you to shift the capture area in any 
-      desired direction without changing its size. The Recenter button will undo these 
+    <P>The two pairs of spin buttons allow you to shift the capture area in any
+      desired direction without changing its size. The Recenter button will undo these
       shifts and center the area on the camera.</P>
     <P><B>Swap X &amp; Y</B></P>
-    <P>This button will transpose the X and Y coordinates to the extent possible. Even 
-      on a square camera, the X and Y sizes may not exchange exactly because of 
+    <P>This button will transpose the X and Y coordinates to the extent possible. Even
+      on a square camera, the X and Y sizes may not exchange exactly because of
       different constraints on sizes in the two directions.</P>
     <P><B>Quarter - Half - Full - Wide Quarter - Wide Half</B></P>
-    <P>These buttons provide the most convenient way to select the area of the camera 
-      to be acquired. The quarter and half buttons refer to linear dimensions. The 
-      wide quarter is one quarter of the height and one-half of the width of the 
-      camera, while the wide half is one half the height and the full width of the 
-      camera. These options are provided because camera readout time is dominated by 
-      the number of rows being read out, and a rectangle gives more pixels of data per 
+    <P>These buttons provide the most convenient way to select the area of the camera
+      to be acquired. The quarter and half buttons refer to linear dimensions. The
+      wide quarter is one quarter of the height and one-half of the width of the
+      camera, while the wide half is one half the height and the full width of the
+      camera. These options are provided because camera readout time is dominated by
+      the number of rows being read out, and a rectangle gives more pixels of data per
       unit time than a square.</P>
     <P><B>10% Less - 10% More - A Bit Less or Square</B></P>
-    <P>These buttons provide a convenient way to adjust the area being acquired to 
-      sizes other than the stock ones provided by the buttons above. Again, the 
-      changes are in linear dimensions, not areas. Because of rounding, the '10% Less' 
-      button will not exactly undo the change made by the '10% More' button, and vice 
+    <P>These buttons provide a convenient way to adjust the area being acquired to
+      sizes other than the stock ones provided by the buttons above. Again, the
+      changes are in linear dimensions, not areas. Because of rounding, the '10% Less'
+      button will not exactly undo the change made by the '10% More' button, and vice
       versa. To get back to a regular size, just push one of the upper buttons.</P>
-    <P>The 'A Bit Less' button was useful for creating parameter sets with a slightly 
-      different sizes so that they would have independent dark references in DM. For 
-      older versions of DM, if you had two parameter sets with the same image size and 
-      binning but different exposures, DM would take a new dark reference every time 
-      you switched from one to the other. Making one set 'a bit less' in size would 
-      prevent this. However, as of at least DM version 3.8, DM would keep only one 
-      reference per binning regardless of size, making this trick ineffective. For a 
-      camera that is not within 10% of being square, this button is converted to 
-      'Square', which will make a square area by trimming the current size in its long 
+    <P>The 'A Bit Less' button was useful for creating parameter sets with a slightly
+      different sizes so that they would have independent dark references in DM. For
+      older versions of DM, if you had two parameter sets with the same image size and
+      binning but different exposures, DM would take a new dark reference every time
+      you switched from one to the other. Making one set 'a bit less' in size would
+      prevent this. However, as of at least DM version 3.8, DM would keep only one
+      reference per binning regardless of size, making this trick ineffective. For a
+      camera that is not within 10% of being square, this button is converted to
+      'Square', which will make a square area by trimming the current size in its long
       dimension to match the short dimension.</P>
     <P><B>Dose readout and Update Dose button</B></P>
-    <P>If electron dose is calibrated for the current spot size and intensity, the 
-      estimated dose will be shown for the given exposure. This readout is refreshed 
-      whenever you change parameter sets or when you press the <b>Update Dose</b> button, so 
-      you can change brightness and use this button to see the effect of the change.&nbsp; 
-      For a direct detector camera, there is also a line expressing the dose rate as electrons per 
-      unbinned pixel per second, which is the value that affects camera performance.&nbsp; 
-      Initially, this will be a dose rate incident on the specimen; but once an image is taken with 
+    <P>If electron dose is calibrated for the current spot size and intensity, the
+      estimated dose will be shown for the given exposure. This readout is refreshed
+      whenever you change parameter sets or when you press the <b>Update Dose</b> button, so
+      you can change brightness and use this button to see the effect of the change.&nbsp;
+      For a direct detector camera, there is also a line expressing the dose rate as electrons per
+      unbinned pixel per second, which is the value that affects camera performance.&nbsp;
+      Initially, this will be a dose rate incident on the specimen; but once an image is taken with
       the camera, the program estimates the dose rate at the camera based on the apparent attenuation
       in the dose rate from specimen to camera in the last image that was taken.
       </P>
     <P><B>OK - Acquire - Cancel</B></P>
-    <P>When you press the <b>OK</b> button, any changes in the current parameter set will be 
-      saved; if you press <b>Cancel</b>, such changes will be discarded. Note that changes 
-      are saved for a parameter set whenever you switch to another set. If you press 
-      <b>Acquire</b>, the dialog will go away, an image of the current type will be taken, 
-      the <A HREF="menu_process.htm#hid_process_minmaxmean">Min/Max/Mean command</A> 
-      of the Process menu will be run, and the dialog will reappear.&nbsp; If you have 
-      hidden the Search parameters with the <a href="#hid_camera_useviewforsearch">Use View for Search</a> 
-      option in the Camera menu, then in Low Dose mode this button will be labeled 
-      either <b>Acquire Search </b>or <b>Acquire View </b>when the View parameters are 
-      being shown, depending on whether Low Dose is currently in the Search area or a 
+    <P>When you press the <b>OK</b> button, any changes in the current parameter set will be
+      saved; if you press <b>Cancel</b>, such changes will be discarded. Note that changes
+      are saved for a parameter set whenever you switch to another set. If you press
+      <b>Acquire</b>, the dialog will go away, an image of the current type will be taken,
+      the <A HREF="menu_process.htm#hid_process_minmaxmean">Min/Max/Mean command</A>
+      of the Process menu will be run, and the dialog will reappear.&nbsp; If you have
+      hidden the Search parameters with the <a href="#hid_camera_useviewforsearch">Use View for Search</a>
+      option in the Camera menu, then in Low Dose mode this button will be labeled
+      either <b>Acquire Search </b>or <b>Acquire View </b>when the View parameters are
+      being shown, depending on whether Low Dose is currently in the Search area or a
       different area.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="K2controls"></A><B><FONT size="3">Controls for Gatan K2 and K3 Cameras</FONT></B></i></P>
-    <P>When a K2 camera is selected, the bottom section of this dialog provides 
-      options for accessing the special features of this camera.&nbsp; Some general 
-      features of the camera images and of SerialEM&#39;s interface to this camera are 
+    <P>When a K2 camera is selected, the bottom section of this dialog provides
+      options for accessing the special features of this camera.&nbsp; Some general
+      features of the camera images and of SerialEM&#39;s interface to this camera are
       explained in <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
        Especially the Gatan K2/K3</A>.  The most salient points are these:</P>
     <ul>
-      <li>Binning values are relative to the physical pixels of the camera (3838 x 3710 
-        for K2; 5760 x 4092 for K3).&nbsp; An image in 
-        K2 super-resolution mode or in K3 counting mode (which is intrinsically 
+      <li>Binning values are relative to the physical pixels of the camera (3838 x 3710
+        for K2; 5760 x 4092 for K3).&nbsp; An image in
+        K2 super-resolution mode or in K3 counting mode (which is intrinsically
         super-resolution) is referred to as having binning 0.5. </li>
-      <li>SerialEM or its plugin to DM can apply anti-aliased image reduction to an unbinned 
-        image received from DM to produce an image with the binning that you select.&nbsp; 
-        This method is used automatically for binned images in super-resolution or 
+      <li>SerialEM or its plugin to DM can apply anti-aliased image reduction to an unbinned
+        image received from DM to produce an image with the binning that you select.&nbsp;
+        This method is used automatically for binned images in super-resolution or
         dose-fractionation mode, and it may be applied to all binned images if the option
         <A HREF="menu_camera.htm#hid_specialsettings_alwaysantialiask2">
-            Always Antialias K2/K3</A> is turned on in the Camera - Special Settings 
-        submenu.&nbsp; To the left of the <B>Set Folder</B> button is a bold 
+            Always Antialias K2/K3</A> is turned on in the Camera - Special Settings
+        submenu.&nbsp; To the left of the <B>Set Folder</B> button is a bold
         indicator for whether binning or anti-aliasing is being used.</li>
-      <li>The dose rate estimate shown here is usually the dose rate on the camera,&nbsp; 
-        which is useful for anticipating whether 
-        electron counting can be used effectively.&nbsp; Initially (or at other times 
-        when the label indicates so) it may be the dose rate incident on the specimen, estimated from the current beam settings.&nbsp; 
-        After an image is taken, the program can estimate dose rate at the camera from 
-        the dose rate of an acquired image and any change in beam settings that has 
+      <li>The dose rate estimate shown here is usually the dose rate on the camera,&nbsp;
+        which is useful for anticipating whether
+        electron counting can be used effectively.&nbsp; Initially (or at other times
+        when the label indicates so) it may be the dose rate incident on the specimen, estimated from the current beam settings.&nbsp;
+        After an image is taken, the program can estimate dose rate at the camera from
+        the dose rate of an acquired image and any change in beam settings that has
         occurred since that image was taken.</li>
-      <li>In Dose Fractionation mode, the image is constrained to be full-sized and 
+      <li>In Dose Fractionation mode, the image is constrained to be full-sized and
         subarea options are disabled.</li>
-      <li>There are several constraints on exposure time, drift settling, or frame time 
-        that are enforced whenever you change one of these entries, so it is best to tab 
-        out of a field after changing it, to see whether it gets changed to something 
-        unexpected. 
-      <li>When electron counting, there is no distinction between unprocessed and 
-        dark-subtracted data and these are referred to as unnormalized.&nbsp; 
-        Unnormalized data can be saved in less space and gain-normalized later.&nbsp; 
-        When saving such frames, the frame sum returned to SerialEM will be 
+      <li>There are several constraints on exposure time, drift settling, or frame time
+        that are enforced whenever you change one of these entries, so it is best to tab
+        out of a field after changing it, to see whether it gets changed to something
+        unexpected.
+      <li>When electron counting, there is no distinction between unprocessed and
+        dark-subtracted data and these are referred to as unnormalized.&nbsp;
+        Unnormalized data can be saved in less space and gain-normalized later.&nbsp;
+        When saving such frames, the frame sum returned to SerialEM will be
         gain-normalized even though normalization is not selected.</ul>
     <P><b>Linear - Counting - Super-resolution Mode</b></P>
-    <P>These radio buttons allow one to select one of the basic camera modes.&nbsp; 
-      For K2, the image size and binning selection are preserved when switching into 
-      super-resolution mode, or when switching out of it if the binning is above 0.5.&nbsp; 
-      For K3, the same applies when switching in or out of counting mode, or when 
+    <P>These radio buttons allow one to select one of the basic camera modes.&nbsp;
+      For K2, the image size and binning selection are preserved when switching into
+      super-resolution mode, or when switching out of it if the binning is above 0.5.&nbsp;
+      For K3, the same applies when switching in or out of counting mode, or when
       turning on &#39;Bin normalized counting frames by 2&#39;.</P>
     <P><b>Use correlated double sampling (CDS) (K3 only)</b></P>
-    <P>With a K3 camera, use this checkbox to turn on correlated double sampling for all 
-        kinds of images.&nbsp; CDS will reduce noise and improve the DQE but cuts the 
-        basic readout rate of the K3 in half, to 750 FPS, requiring half the dose rate 
-        for optimal imaging.&nbsp; Frame times will be constrained to a multiple of this 
-        longer readout time, so exposure or frame times may change.&nbsp; You will be 
-        warned to check other parameter sets for changes in these times.&nbsp; This 
+    <P>With a K3 camera, use this checkbox to turn on correlated double sampling for all
+        kinds of images.&nbsp; CDS will reduce noise and improve the DQE but cuts the
+        basic readout rate of the K3 in half, to 750 FPS, requiring half the dose rate
+        for optimal imaging.&nbsp; Frame times will be constrained to a multiple of this
+        longer readout time, so exposure or frame times may change.&nbsp; You will be
+        warned to check other parameter sets for changes in these times.&nbsp; This
         checkbox appears only if the version of GMS and the SEMCCD plugin support CDS.</P>
     <P><b>Bin counting frames by 2 in hardware (K3 only)</b></P>
-    <P>With a K3 camera, use this checkbox to acquire frames for saving or 
-      aligning with fast hardware binning by 2 into a size that corresponds to the 
-      physical pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp; 
-      This mode of operation is equivalent to counting mode on the K2 and will 
-      introduce some aliasing of high frequency information, but it saves both time 
-      processing the frames and space occupied by saved frames.&nbsp; However, the 
-      binning is done into bytes which can saturate if images are normalized and there are more than 7 electrons 
+    <P>With a K3 camera, use this checkbox to acquire frames for saving or
+      aligning with fast hardware binning by 2 into a size that corresponds to the
+      physical pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp;
+      This mode of operation is equivalent to counting mode on the K2 and will
+      introduce some aliasing of high frequency information, but it saves both time
+      processing the frames and space occupied by saved frames.&nbsp; However, the
+      binning is done into bytes which can saturate if images are normalized and there are more than 7 electrons
       in a physical pixel. </P>
-    <P>If acquired frames are being saved, they will still be saved as bytes.&nbsp; 
-      However, if you sum normalized frames for saving with the option &#39;Save variable frame 
-      sums&#39;, they will be saved as integers, like K2 normalized counting mode frames.&nbsp; 
-      Summed raw frames will still be saved as bytes, which should be safe, but if the 
-      option to pack binned by 2 data into 4 bits is on, summed frames may easily 
+    <P>If acquired frames are being saved, they will still be saved as bytes.&nbsp;
+      However, if you sum normalized frames for saving with the option &#39;Save variable frame
+      sums&#39;, they will be saved as integers, like K2 normalized counting mode frames.&nbsp;
+      Summed raw frames will still be saved as bytes, which should be safe, but if the
+      option to pack binned by 2 data into 4 bits is on, summed frames may easily
       saturate.</P>
-    <P>When unnormalized frames are saved, a gain reference for use with binned data 
-      is produced and saved; its name starts with &#39;CountRef&#39; instead of &#39;SuperRef&#39; (as 
+    <P>When unnormalized frames are saved, a gain reference for use with binned data
+      is produced and saved; its name starts with &#39;CountRef&#39; instead of &#39;SuperRef&#39; (as
       for a K2) but it has the extension &#39;.mrc&#39; instead of &#39;.dm4&#39;.</P>
     <P><b>Dose Fractionation Mode</b></P>
-    <P>Use this checkbox to select Dose Fractionation mode, which enables a number of 
+    <P>Use this checkbox to select Dose Fractionation mode, which enables a number of
       other options.</P>
     <P><b>Frame Time</b></P>
-    <P>Enter the exposure time of each frame of the exposure in Dose Fractionation 
-      mode.&nbsp; The frame time is constrained to a minimum of 0.025 second for K2 or 
+    <P>Enter the exposure time of each frame of the exposure in Dose Fractionation
+      mode.&nbsp; The frame time is constrained to a minimum of 0.025 second for K2 or
       0.013 second for K3.</P>
     <P><b>Align Frames</b></P>
-    <P>Select this checkbox to have frames aligned in one of two ways (in DM, or by the 
-      SerialEM plugin to DM), or to have the plugin write a command file for aligning 
+    <P>Select this checkbox to have frames aligned in one of two ways (in DM, or by the
+      SerialEM plugin to DM), or to have the plugin write a command file for aligning
       with the Alignframes program in IMOD.&nbsp; Press the <b>
-      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
-      Parameters dialog</a> and choose the method and parameters for aligning. When 
-      frame alignment is selected, an indicator below this checkbox will show which 
-      method is selected: &#39;Align in DM&#39;, &#39;Align in Plugin&#39;, and either &#39;Align in IMOD&#39; 
-      or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the 
-      latter two cases, frame saving will be activated automatically; the &#39;Save 
-      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
-      alignment is turned off or the option to align with IMOD is no longer selected, 
+      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment
+      Parameters dialog</a> and choose the method and parameters for aligning. When
+      frame alignment is selected, an indicator below this checkbox will show which
+      method is selected: &#39;Align in DM&#39;, &#39;Align in Plugin&#39;, and either &#39;Align in IMOD&#39;
+      or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the
+      latter two cases, frame saving will be activated automatically; the &#39;Save
+      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame
+      alignment is turned off or the option to align with IMOD is no longer selected,
       the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
     <P><b>Save Frames</b></P>
-    <P>Select this checkbox to have SerialEM's plugin to DM save each frame to 
+    <P>Select this checkbox to have SerialEM's plugin to DM save each frame to
       disk.&nbsp; See above.</P>
     <P><b>Set File Options</b></P>
-    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a> and make choices for whether to save frames 
-      in MRC or compressed TIFF format, whether to save frames in a stack or in 
-      separate files, whether to acquire frames without software gain normalization 
-      regardless of the processing option selected here, and whether to pack data acquired without 
-      normalization into half the space.&nbsp; The dialog also allows 
-      you to control the names of these files and to put subsets of them into 
-      different folders automatically.&nbsp; The choices set in the dialog are summarized in 
-      a line just above this button when saving is turned on. That line also shows the 
+    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a> and make choices for whether to save frames
+      in MRC or compressed TIFF format, whether to save frames in a stack or in
+      separate files, whether to acquire frames without software gain normalization
+      regardless of the processing option selected here, and whether to pack data acquired without
+      normalization into half the space.&nbsp; The dialog also allows
+      you to control the names of these files and to put subsets of them into
+      different folders automatically.&nbsp; The choices set in the dialog are summarized in
+      a line just above this button when saving is turned on. That line also shows the
       number of frames to be saved and whether they will be raw or normalized.&nbsp; </P>
     <P><b>Set Folder</b></P>
-    <P>Press this button to select the directory where subframes will be saved as a 
-      stack, or where a container directory will be created for saving subframes in 
-      single files.&nbsp; If the SerialEM is running on the K2/K3 computer, a directory 
-      browser will open.&nbsp; Otherwise, a small dialog will appear with a text box in which 
-      any directory name may be typed, even one not accessible to the computer running 
-      SerialEM.&nbsp; A full directory path should be entered.&nbsp; The dialog may also have a 'Browse' button that will open the directory 
-      browser.&nbsp; This browser is able to select only a valid existing directory in 
-      file systems accessible from the local computer, but it allows you to create a 
-      directory.&nbsp; Using this browser would be valid in two cases: when a drive 
-      like X: on the K2/K3 computer is locally mounted under the same drive letter, or 
-      when both the local computer and the K2/K3 computer have a directory mounted on 
-      a third computer with the same name.&nbsp; The plugin is able to create a directory, but only if its 
-      parent already exists.&nbsp; This means that if you do not specify the use of 
-      folder names in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, you can specify a folder here that does not exist, as long 
-      as its parent directory exists. However, if you do select options for automatic 
-      folder creation in that dialog, the directory you select here does need to exist before image acquisition. 
-      In this situation,&nbsp;if you enter into the text box a 
-      new directory that is accessible only from a separate computer hosting the K2/K3, 
+    <P>Press this button to select the directory where subframes will be saved as a
+      stack, or where a container directory will be created for saving subframes in
+      single files.&nbsp; If the SerialEM is running on the K2/K3 computer, a directory
+      browser will open.&nbsp; Otherwise, a small dialog will appear with a text box in which
+      any directory name may be typed, even one not accessible to the computer running
+      SerialEM.&nbsp; A full directory path should be entered.&nbsp; The dialog may also have a 'Browse' button that will open the directory
+      browser.&nbsp; This browser is able to select only a valid existing directory in
+      file systems accessible from the local computer, but it allows you to create a
+      directory.&nbsp; Using this browser would be valid in two cases: when a drive
+      like X: on the K2/K3 computer is locally mounted under the same drive letter, or
+      when both the local computer and the K2/K3 computer have a directory mounted on
+      a third computer with the same name.&nbsp; The plugin is able to create a directory, but only if its
+      parent already exists.&nbsp; This means that if you do not specify the use of
+      folder names in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, you can specify a folder here that does not exist, as long
+      as its parent directory exists. However, if you do select options for automatic
+      folder creation in that dialog, the directory you select here does need to exist before image acquisition.
+      In this situation,&nbsp;if you enter into the text box a
+      new directory that is accessible only from a separate computer hosting the K2/K3,
       be sure to create this directory before trying to acquire.</P>
     <P><b>Save variable frame sums</b></P>
-    <P>Select this option to save sums of camera frames of variable size, e.g., single 
-      camera frames 
-      at the beginning of the exposure, then pairs of camera frames, then larger sums at the 
+    <P>Select this option to save sums of camera frames of variable size, e.g., single
+      camera frames
+      at the beginning of the exposure, then pairs of camera frames, then larger sums at the
       end.&nbsp; The first time that you turn this option on, the
-      <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a> will open to 
-      allow you to specify the variable summing of frames.&nbsp; Thereafter, this 
+      <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a> will open to
+      allow you to specify the variable summing of frames.&nbsp; Thereafter, this
       dialog can be opened with the <b>Set Up</b> button.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="DEcontrols"></A><B><FONT size="3">Controls for Direct Electron Cameras</FONT></B></i></P>
-    <P>When a Direct Electron direct detector or its survey sensor is selected, a 
-      section at the bottom opens up to allow control of what frames are saved by the 
-      Direct Electron server.&nbsp; The DE camera reads out frames at a rate given by 
-      the frames per second setting, and can save either single camera frames or sums 
-      of frames.&nbsp; When electron counting is used, the exposure per camera frame 
-      must be low and saved frames would almost always be sums.&nbsp; The summing is 
-      controlled by entering either a summed frame time or the number of camera frames 
-      to sum.&nbsp; This summed frame time is relevant when either the saving or 
-      aligning of frames is selected, and the exposure time will be constrained to be 
-      a multiple of the summed frame time.&nbsp; Otherwise, it can be any multiple of 
+    <P>When a Direct Electron direct detector or its survey sensor is selected, a
+      section at the bottom opens up to allow control of what frames are saved by the
+      Direct Electron server.&nbsp; The DE camera reads out frames at a rate given by
+      the frames per second setting, and can save either single camera frames or sums
+      of frames.&nbsp; When electron counting is used, the exposure per camera frame
+      must be low and saved frames would almost always be sums.&nbsp; The summing is
+      controlled by entering either a summed frame time or the number of camera frames
+      to sum.&nbsp; This summed frame time is relevant when either the saving or
+      aligning of frames is selected, and the exposure time will be constrained to be
+      a multiple of the summed frame time.&nbsp; Otherwise, it can be any multiple of
       the camera frame time.</P>
-    <P>Various options described below will not appear under some circumstances.&nbsp; 
-      If electron counting is not available, the selection of operating mode is 
-      hidden, and the frames per second is set only in the Direct Electron control 
-      panel instead of here.&nbsp; Aligning of frames within SerialEM is available if 
-      SerialEM is running on the DE server and if the server version is at least 1200 
-      or so.&nbsp; This is because with such a server version, frames will be saved 
-      with dark-subtraction and gain-normalization, making it straightforward for 
-      SerialEM to read in the frames and align then.&nbsp; Before that version, saved 
-      frames are unprocessed and require dark-subtraction and gain normalization to be 
+    <P>Various options described below will not appear under some circumstances.&nbsp;
+      If electron counting is not available, the selection of operating mode is
+      hidden, and the frames per second is set only in the Direct Electron control
+      panel instead of here.&nbsp; Aligning of frames within SerialEM is available if
+      SerialEM is running on the DE server and if the server version is at least 1200
+      or so.&nbsp; This is because with such a server version, frames will be saved
+      with dark-subtraction and gain-normalization, making it straightforward for
+      SerialEM to read in the frames and align then.&nbsp; Before that version, saved
+      frames are unprocessed and require dark-subtraction and gain normalization to be
       useful.</P>
-    <P>Frames will still be saved to disk when aligning is selected and saving is not, 
+    <P>Frames will still be saved to disk when aligning is selected and saving is not,
       but they will be deleted after alignment.</P>
-    <P>In addition to the options in the frame control panel described below, one or 
-      two options will appear above the Exposure time setting if the camera supports 
+    <P>In addition to the options in the frame control panel described below, one or
+      two options will appear above the Exposure time setting if the camera supports
       them:</P>
     <ol>
-      <li><b>Use hardware binning</b>:&nbsp; If the camera supports hardware binning and 
-        a binning greater than 1 is selected, this option allows you to use this 
-        feature.&nbsp; The hardware binning is only by 2, so if a binning higher than 2 
+      <li><b>Use hardware binning</b>:&nbsp; If the camera supports hardware binning and
+        a binning greater than 1 is selected, this option allows you to use this
+        feature.&nbsp; The hardware binning is only by 2, so if a binning higher than 2
         is selected, the remaining binning is done in software.</li>
-      <li><b>Use hardware ROI</b>: This option appears if the camera supports readout of 
+      <li><b>Use hardware ROI</b>: This option appears if the camera supports readout of
         a subarea or region of interest (ROI).</li>
     </ol>
     <P><b>Operating mode - Linear, Counting, Super-Resolution</b></P>
-    <P>When electron counting is available, these radio button appear to allow the 
-      selection of linear (integrating) mode, electron counting mode, and a 
-      super-resolution mode where frames are saved with twice the native size in X and 
-      Y.&nbsp; Super-resolution mode is available only when saving or aligning frames.&nbsp; 
-      In this mode, the server returns a summed image only at native resolution to 
-      SerialEM, and if the saved frames are aligned in SerialEM, the aligned sum will 
+    <P>When electron counting is available, these radio button appear to allow the
+      selection of linear (integrating) mode, electron counting mode, and a
+      super-resolution mode where frames are saved with twice the native size in X and
+      Y.&nbsp; Super-resolution mode is available only when saving or aligning frames.&nbsp;
+      In this mode, the server returns a summed image only at native resolution to
+      SerialEM, and if the saved frames are aligned in SerialEM, the aligned sum will
       be Fourier-cropped to the selected binning.</P>
     <P><b>Frames per sec</b></P>
-    <P>The frames per second can be seen and entered here.&nbsp; 
-      When electron counting is available, the program maintains two separate settings, one for linear mode and one for 
-      counting mode, and switches between them automatically when you change modes.&nbsp; 
-      There is not a separate frames per second value for each camera parameter set; 
+    <P>The frames per second can be seen and entered here.&nbsp;
+      When electron counting is available, the program maintains two separate settings, one for linear mode and one for
+      counting mode, and switches between them automatically when you change modes.&nbsp;
+      There is not a separate frames per second value for each camera parameter set;
       they all share these two values.</P>
     <P><b>Save frames</b></P>
     <P>Turn on this checkbox to save frames permanently.</P>
     <P><b>Summed Frame Time </b>and<b> Frames in Sum</b></P>
-    <P>The number of camera frames that are summed into one saved frame can be 
-      controlled by entering either the summed frame time or the number of frames to 
-      sum.&nbsp; The other entry will be modified accordingly.&nbsp; The summed frame 
-      time will be adjusted to the nearest multiple of the camera frame time.&nbsp; 
-      The amount of summing is kept track of separately for linear and counting modes, 
+    <P>The number of camera frames that are summed into one saved frame can be
+      controlled by entering either the summed frame time or the number of frames to
+      sum.&nbsp; The other entry will be modified accordingly.&nbsp; The summed frame
+      time will be adjusted to the nearest multiple of the camera frame time.&nbsp;
+      The amount of summing is kept track of separately for linear and counting modes,
       as well as separately for each camera parameter set.</P>
     <P><b>Align frames</b></P>
-    <P>Turn on this checkbox to align frames somewhere.&nbsp; The box appears if 
-      frames can be aligned either within the DE server or within SerialEM.&nbsp; In 
-      the latter case, either the frames can be aligned within SerialEM, with the 
-      aligned sum displayed at the end; or a command file can be written for running 
-      Alignframes in IMOD.&nbsp; When aligning in IMOD is selected, frames will be 
+    <P>Turn on this checkbox to align frames somewhere.&nbsp; The box appears if
+      frames can be aligned either within the DE server or within SerialEM.&nbsp; In
+      the latter case, either the frames can be aligned within SerialEM, with the
+      aligned sum displayed at the end; or a command file can be written for running
+      Alignframes in IMOD.&nbsp; When aligning in IMOD is selected, frames will be
       saved permanently even if you did not turn on the <b>Save frames</b> checkbox.</P>
     <P><b>Set Up</b></P>
-    <P>When frames can be aligned within SerialEM, this button allows you to open the <a href="hidd_framealign.htm">Frame Alignment 
-      Parameters dialog</a> and choose the location and parameters for aligning. A 
-      line below this button will summarize the current selection of alignment 
+    <P>When frames can be aligned within SerialEM, this button allows you to open the <a href="hidd_framealign.htm">Frame Alignment
+      Parameters dialog</a> and choose the location and parameters for aligning. A
+      line below this button will summarize the current selection of alignment
       parameters.</P>
     <P><b>Set File Suffix/Options</b></P>
-    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, which allows you to add a suffix to the frame filenames based 
-      on your selection of components, such as SerialEM output filename or tilt angle.&nbsp; 
-      If you have a server version that allows control over the location of saved 
-      frames, and if the property DEAutosaveFolder is set, the dialog will also 
+    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, which allows you to add a suffix to the frame filenames based
+      on your selection of components, such as SerialEM output filename or tilt angle.&nbsp;
+      If you have a server version that allows control over the location of saved
+      frames, and if the property DEAutosaveFolder is set, the dialog will also
       contain options for placing frames in subfolders with selected names.</P>
     <P><b>Set Folder</b></P>
-    <P>Press this button to enter the name of a single subfolder for saving your 
-      frames, under the one defined by the DEAutosaveFolder property.&nbsp; If you 
-      choose folder options as well in the <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, the automatically named folders will be made under this 
+    <P>Press this button to enter the name of a single subfolder for saving your
+      frames, under the one defined by the DEAutosaveFolder property.&nbsp; If you
+      choose folder options as well in the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, the automatically named folders will be made under this
       chosen folder.</P>
     <P><b>Save single/raw frames also</b></P>
-    <P>When saving summed frames in linear mode, this option is enabled and allows 
-      you to save single frames as well.&nbsp; In electron counting mode, the option 
+    <P>When saving summed frames in linear mode, this option is enabled and allows
+      you to save single frames as well.&nbsp; In electron counting mode, the option
       is always enabled and allows the raw frames used for counting to be saved.</P>
     <P><b>Save final image</b></P>
     <P>&nbsp;Select this option to have the server save the final summed image.</P>
     <P>&nbsp;</P>
-    <P><i><A NAME="FalconControls"></A><B><FONT size="3">Controls for FEI Falcon Cameras</FONT></B></i></P>
-    <P>Some aspects of these controls differ for different versions of the Falcon 
-      camera and the software interface to them.&nbsp; Originally, Falcon 2 was 
-      controlled through the standard microscope scripting interface; this will be 
-      referred to as &#39;Falcon 2, old interface&#39;.&nbsp; A new, advanced scripting 
-      interface was developed to allow control of the Falcon 3 camera, and this 
-      interface can be used with FEI software under Windows 7 to control the Falcon 2; 
+    <P><i><A NAME="FalconControls"></A><B><FONT size="3">Controls for Thermo/FEI Falcon Cameras</FONT></B></i></P>
+    <P>Some aspects of these controls differ for different versions of the Falcon
+      camera and the software interface to them.&nbsp; Originally, Falcon 2 was
+      controlled through the standard microscope scripting interface; this will be
+      referred to as &#39;Falcon 2, old interface&#39;.&nbsp; A new, advanced scripting
+      interface was developed to allow control of the Falcon 3 camera, and this
+      interface can be used with Thermo/FEI software under Windows 7 to control the Falcon 2;
       this will be referred to as &#39;Falcon 2, new interface&#39;.</P>
-    <P>Under the old interface, when a Falcon 2 camera is selected and the SerialEM 
-      property file contains an entry for the configuration file that FEI uses to 
-      specify intermediate frame-saving from the camera, a section at the bottom opens 
-      to allow control of frame-saving.&nbsp; With frame-saving selected, the FEI 
-      software writes the intermediate frames to a location specified in that file.&nbsp; 
-      SerialEM reads those files, converts them to a single MRC stack and/or aligns 
-      the frames, and deletes the original frame files.&nbsp; Although the number of 
-      frames that could be saved was originally quite limited, it is possible to 
-      use script commands to take multiple exposures whose frames are stacked into a 
+    <P>Under the old interface, when a Falcon 2 camera is selected and the SerialEM
+      property file contains an entry for the configuration file that Thermo/FEI uses to
+      specify intermediate frame-saving from the camera, a section at the bottom opens
+      to allow control of frame-saving.&nbsp; With frame-saving selected, the Thermo/FEI
+      software writes the intermediate frames to a location specified in that file.&nbsp;
+      SerialEM reads those files, converts them to a single MRC stack and/or aligns
+      the frames, and deletes the original frame files.&nbsp; Although the number of
+      frames that could be saved was originally quite limited, it is possible to
+      use script commands to take multiple exposures whose frames are stacked into a
       single MRC file.</P>
-    <P>Under the new interface, frames are saved by FEI software into an MRC stack 
-      under a fixed location.&nbsp; If aligning of frames is selected to occur in 
-      SerialEM, the frames are read in by its microscope plugin or server, passed to 
-      SerialEM, and aligned there.&nbsp; If only aligning is selected without saving, 
-      SerialEM then deletes the frame stack.&nbsp; Some options will not be available 
-      if SerialEM does not have direct access to the frame storage location, however.&nbsp; 
-      See the help for the <a href="hidd_framealign.htm">Frame Alignment 
+    <P>Under the new interface, frames are saved by Thermo/FEI software into an MRC stack
+      under a fixed location.&nbsp; If aligning of frames is selected to occur in
+      SerialEM, the frames are read in by its microscope plugin or server, passed to
+      SerialEM, and aligned there.&nbsp; If only aligning is selected without saving,
+      SerialEM then deletes the frame stack.&nbsp; Some options will not be available
+      if SerialEM does not have direct access to the frame storage location, however.&nbsp;
+      See the help for the <a href="hidd_framealign.htm">Frame Alignment
       Parameters dialog</a> for details.</P>
-    <P><b>Intermediate frame-saving is ON in FEI dialog (old Falcon 2 only)</b></P>
-    <P>For Falcon 2, old interface, frame-saving is enabled by a separate dialog that SerialEM cannot communicate 
-      with; however, there is another Falcon configuration file that SerialEM can 
-      check to determine whether it is enabled, and on some systems, modifying this 
+    <P><b>Intermediate frame-saving is ON in Thermo/FEI dialog (old Falcon 2 only)</b></P>
+    <P>For Falcon 2, old interface, frame-saving is enabled by a separate dialog that SerialEM cannot communicate
+      with; however, there is another Falcon configuration file that SerialEM can
+      check to determine whether it is enabled, and on some systems, modifying this
       file will enable it. There are thus 3 cases:</P>
     <ol>
-      <li>SerialEM does not succeed in getting the camera mode from this file: A check box 
-        appears here with this label; it must be turned on when the frame-saving is enabled in 
-      the FEI dialog, and turned off when it is disabled there.&nbsp;</li>
-      <li>SerialEM can track whether frame-saving is enabled but not enable/disable it: 
-        A text line appears here to indicate whether the frame-saving is ON or OFF, but 
-        it must be controlled from the FEI dialog.</li>
-      <li>SerialEM can enable or disable frame-saving by changing the Falcon 
-        configuration file: no text appears here.&nbsp; The program will enable or 
-        disable frame-saving as needed for each individual shot, and restore the state 
-        selected in the FEI dialog after each shot if necessary.</li>
+      <li>SerialEM does not succeed in getting the camera mode from this file: A check box
+        appears here with this label; it must be turned on when the frame-saving is enabled in
+      the Thermo/FEI dialog, and turned off when it is disabled there.&nbsp;</li>
+      <li>SerialEM can track whether frame-saving is enabled but not enable/disable it:
+        A text line appears here to indicate whether the frame-saving is ON or OFF, but
+        it must be controlled from the Thermo/FEI dialog.</li>
+      <li>SerialEM can enable or disable frame-saving by changing the Falcon
+        configuration file: no text appears here.&nbsp; The program will enable or
+        disable frame-saving as needed for each individual shot, and restore the state
+        selected in the Thermo/FEI dialog after each shot if necessary.</li>
     </ol>
     <p>
-      None of the other options in this section are enabled unless SerialEM thinks 
-      that frame saving is either enabled or can be enabled when needed.&nbsp; Once 
-      frame-saving is enabled in scenario 1 or 2 above, the intermediate frame 
-      configuration file will be managed for every image acquisition, either to 
-      specify what frames to save or to prevent the saving of any frames.&nbsp; In 
-      scenario 3, either the Falcon configuration file or the intermediate frame file, 
-      or both, are always managed on every acquisition. Also, when the frame-saving is 
-      enabled, images will be gain-normalized 
-      in FEI software instead of in SerialEM, since problems have been seen in images 
+      None of the other options in this section are enabled unless SerialEM thinks
+      that frame saving is either enabled or can be enabled when needed.&nbsp; Once
+      frame-saving is enabled in scenario 1 or 2 above, the intermediate frame
+      configuration file will be managed for every image acquisition, either to
+      specify what frames to save or to prevent the saving of any frames.&nbsp; In
+      scenario 3, either the Falcon configuration file or the intermediate frame file,
+      or both, are always managed on every acquisition. Also, when the frame-saving is
+      enabled, images will be gain-normalized
+      in Thermo/FEI software instead of in SerialEM, since problems have been seen in images
       gain-normalized in SerialEM when frame-saving is enabled.</p>
     <p>
       <b>Linear or Counting Mode (Falcon 3 and 4 only)</b></p>
     <p>
-      Use these radio buttons to select whether images are acquired from a Falcon 3 
-      or 4 in 
-      linear (normal) mode or in electron counting mode.&nbsp; If frame alignment is 
-      being done with the Falcon 3 processor, switching to counting mode may change the 
+      Use these radio buttons to select whether images are acquired from a Falcon 3
+      or 4 in
+      linear (normal) mode or in electron counting mode.&nbsp; If frame alignment is
+      being done with the Falcon 3 processor, switching to counting mode may change the
       exposure time to satisfy the minimum requirements for counting mode.</p>
     <P><b>Set Up Frames to Save (or Align)</b></P>
-    <P>Press this button to open the <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a>, 
-      which allows you to set how many summed (intermediate) frames are to be created 
-      from an exposure, as well as whether to skip some portion of camera frames at 
-      the beginning or end of the exposure for Falcon 2.&nbsp; This dialog will open automatically 
-      when frame-saving or aligning is selected for a parameter set that has no 
-      previous information about how to compose frames.&nbsp; Once this information is set up, it 
-      may not be necessary to access this dialog often.&nbsp; When exposure time is 
-      changed, the program will adjust the number of camera frames summed into each frame 
+    <P>Press this button to open the <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a>,
+      which allows you to set how many summed (intermediate) frames are to be created
+      from an exposure, as well as whether to skip some portion of camera frames at
+      the beginning or end of the exposure for Falcon 2.&nbsp; This dialog will open automatically
+      when frame-saving or aligning is selected for a parameter set that has no
+      previous information about how to compose frames.&nbsp; Once this information is set up, it
+      may not be necessary to access this dialog often.&nbsp; When exposure time is
+      changed, the program will adjust the number of camera frames summed into each frame
       so as to maintain the same number of frames saved, if possible.</P>
-    <P>When aligning frames from a Falcon 3 in the Falcon processor, the frames 
-      operated on are constrained to be either single camera frames or multiples of 6 frames.&nbsp; Thus, switching to this alignment will cause the frames sums to be reorganized 
-      to meet these constraints; they will not be changed back when switching away 
-      from this alignment.&nbsp; With a Falcon 4, when either aligning frames in the 
-      Falcon processor or saving frames in an MRC file, the basic unit is not the 
-      single 0.004 msec frame but sums of 7 frames.&nbsp; This dialog reflects that by 
+    <P>When aligning frames from a Falcon 3 in the Falcon processor, the frames
+      operated on are constrained to be either single camera frames or multiples of 6 frames.&nbsp; Thus, switching to this alignment will cause the frames sums to be reorganized
+      to meet these constraints; they will not be changed back when switching away
+      from this alignment.&nbsp; With a Falcon 4, when either aligning frames in the
+      Falcon processor or saving frames in an MRC file, the basic unit is not the
+      single 0.004 msec frame but sums of 7 frames.&nbsp; This dialog reflects that by
       referring to &#39;7-frames&#39; in various labels.&nbsp; </P>
-    <P>As of SerialEM 3.9 (1/28/21), this button is not enabled when just aligning in 
-      the Falcon processor without saving frames; the temporary saving of frames in 
+    <P>As of SerialEM 3.9 (1/28/21), this button is not enabled when just aligning in
+      the Falcon processor without saving frames; the temporary saving of frames in
       this case in earlier versions was due to a misunderstanding.</P>
     <P><b>Frame Time&nbsp;&nbsp;&nbsp;&nbsp; (Falcon 4 when saving EER files)</b></P>
-    <P>With a Falcon 4, a text box for a frame time to be used when aligning in 
-      SerialEM or with Alignframes in IMOD will appear instead of the <strong>Set Up Frames to Save</strong> 
-      button whenever frames would not be saved in an MRC file.&nbsp; Namely, it will 
-      appear when counting mode is selected and either saving into EER files is 
-      selected or saving is not selected at all, because in the latter case SerialEM 
-      is free to use a temporary EER file instead of an MRC for the frames to be 
-      aligned.&nbsp; The frame time is constrained to be a multiple of the readout 
-      time, and each frame being aligned will be the sum of that number of images in 
+    <P>With a Falcon 4, a text box for a frame time to be used when aligning in
+      SerialEM or with Alignframes in IMOD will appear instead of the <strong>Set Up Frames to Save</strong>
+      button whenever frames would not be saved in an MRC file.&nbsp; Namely, it will
+      appear when counting mode is selected and either saving into EER files is
+      selected or saving is not selected at all, because in the latter case SerialEM
+      is free to use a temporary EER file instead of an MRC for the frames to be
+      aligned.&nbsp; The frame time is constrained to be a multiple of the readout
+      time, and each frame being aligned will be the sum of that number of images in
       the EER file.</P>
     <P><b>Align Frames</b></P>
-    <P>Select this checkbox to have summed frames aligned in SerialEM, or by the Falcon 3 
-      or 4 processor, or to write a command file for aligning 
+    <P>Select this checkbox to have summed frames aligned in SerialEM, or by the Falcon 3
+      or 4 processor, or to write a command file for aligning
       with the Alignframes program in IMOD.&nbsp; Press the <b>
-      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
-      Parameters dialog</a> and choose the method and parameters for aligning. (For a Falcon 3 or 4, if SerialEM does not have direct access to the storage 
-      server, only alignment by the Falcon processor is possible, and the <strong>Set 
-      Up</strong> button will not appear.) When 
-      frame alignment is selected, an indicator below this checkbox will show which 
-      method is selected: &#39;Align in Falcon Processor&#39;, &#39;Align in SerialEM&#39;, and either &#39;Align in IMOD&#39; 
-      or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the 
-      latter two cases, frame saving will be activated automatically; the &#39;Save 
-      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
-      alignment is turned off or the option to align with IMOD is no longer selected, 
+      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment
+      Parameters dialog</a> and choose the method and parameters for aligning. (For a Falcon 3 or 4, if SerialEM does not have direct access to the storage
+      server, only alignment by the Falcon processor is possible, and the <strong>Set
+      Up</strong> button will not appear.) When
+      frame alignment is selected, an indicator below this checkbox will show which
+      method is selected: &#39;Align in Falcon Processor&#39;, &#39;Align in SerialEM&#39;, and either &#39;Align in IMOD&#39;
+      or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the
+      latter two cases, frame saving will be activated automatically; the &#39;Save
+      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame
+      alignment is turned off or the option to align with IMOD is no longer selected,
       the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
     <P><b>Save Frames</b></P>
-    <P>Check this box to save frames for images takes with this parameter set.&nbsp; 
+    <P>Check this box to save frames for images takes with this parameter set.&nbsp;
       The number of summed frames to be saved will appear in a text line.</P>
     <P><b>Set File Options</b></P>
-    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, which allows you to control the names of the files in which 
-      frames are stacked and to put subsets of them into different folders 
+    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, which allows you to control the names of the files in which
+      frames are stacked and to put subsets of them into different folders
       automatically.</P>
     <P><b>Set Folder</b></P>
-    <P>For Falcon 2, old interface, press this button to open a directory chooser that allows you to specify where the 
-      stacked frames should be saved by SerialEM.&nbsp; The frame files written by FEI 
-      software will go to this folder by default, but a property can be set to have 
-      them written to a standard location that is accessible to the FEI software.&nbsp; 
-      You can create a new directory in this chooser.&nbsp; If the directory specified 
-      here no longer exists when it is needed, SerialEM will create it, but only if 
+    <P>For Falcon 2, old interface, press this button to open a directory chooser that allows you to specify where the
+      stacked frames should be saved by SerialEM.&nbsp; The frame files written by Thermo/FEI
+      software will go to this folder by default, but a property can be set to have
+      them written to a standard location that is accessible to the Thermo/FEI software.&nbsp;
+      You can create a new directory in this chooser.&nbsp; If the directory specified
+      here no longer exists when it is needed, SerialEM will create it, but only if
       its parent directory already exists.</P>
-    <P>Under the new interface, the frame stack can be put into a subdirectory 
-      under the defined storage location.&nbsp; Thus, the button opens a simple text entry box that allows you to 
-      enter the name of the folder, which will be created by the storage server if 
-      necessary.&nbsp; A single folder name is always allowed, and deeper levels of 
-      folders are allowed if the information line in the dialog ends with 'subfolder 
-      tree'.&nbsp; The latter is the case for Falcon 4, and may be the case for Falcon 
+    <P>Under the new interface, the frame stack can be put into a subdirectory
+      under the defined storage location.&nbsp; Thus, the button opens a simple text entry box that allows you to
+      enter the name of the folder, which will be created by the storage server if
+      necessary.&nbsp; A single folder name is always allowed, and deeper levels of
+      folders are allowed if the information line in the dialog ends with 'subfolder
+      tree'.&nbsp; The latter is the case for Falcon 4, and may be the case for Falcon
       3 if the property 'SubdirsOkInFalcon3Save' is set.</P>
-    <P>&nbsp; When only one level is allowed, you can specify a folder 
-      either here or in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, but not both.&nbsp; If you enter one here, the options to 
+    <P>&nbsp; When only one level is allowed, you can specify a folder
+      either here or in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, but not both.&nbsp; If you enter one here, the options to
       name subfolders will not be available in the other dialog.</P>
     <P>&nbsp;</P>
-    <P><i><A NAME="FrameControls"></A><B><FONT size="3">Controls for Other Cameras that Can Take Frames 
+    <P><i><A NAME="FrameControls"></A><B><FONT size="3">Controls for Other Cameras that Can Take Frames
       (OneView, Rio, and Tietz XF416/Fn16)</FONT></B></i></P>
-    <P>For a camera capable of taking frames, controls in this section will appear 
-      based on an entry in SerialEMproperties.txt: either ones related to saving 
+    <P>For a camera capable of taking frames, controls in this section will appear
+      based on an entry in SerialEMproperties.txt: either ones related to saving
       frames, or ones related to aligning frames, or both.</P>
     <P><b>Frame Time</b></P>
-    <P>The frame time entry is enabled, and becomes relevant, when either saving or 
-      aligning of the frames is selected.&nbsp; Enter the exposure time of each frame of the exposure.&nbsp; The frame time is constrained to 
+    <P>The frame time entry is enabled, and becomes relevant, when either saving or
+      aligning of the frames is selected.&nbsp; Enter the exposure time of each frame of the exposure.&nbsp; The frame time is constrained to
       be a multiple of the basic frame rate of the camera.  This depends on binning for OneView/Rio cameras, or on the size being acquired in Y on the sensor for Tietz cameras.</P>
     <P><b>Align Frames</b></P>
-    <P>Select this checkbox to have frames aligned with the Framealign module or to 
-      have a command file written for aligning 
-      with the Alignframes program in IMOD.&nbsp; For Gatan cameras, the alignment is 
-      done with SerialEM&#39;s plugin to DigitalMicrograph; otherwise it is done within 
+    <P>Select this checkbox to have frames aligned with the Framealign module or to
+      have a command file written for aligning
+      with the Alignframes program in IMOD.&nbsp; For Gatan cameras, the alignment is
+      done with SerialEM&#39;s plugin to DigitalMicrograph; otherwise it is done within
       SerialEM. Press the <b>
-      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
-      Parameters dialog</a> and choose the method and parameters for aligning. When 
-      frame alignment is selected, an indicator below this checkbox will show which 
-      method is selected: &#39;Align in Plugin&#39; or &#39;Align in SerialEM&#39; for 
-      immediate alignment, otherwise either &#39;Align in IMOD&#39; 
-      or &#39;TS only in IMOD&#39; .&nbsp; In the 
-      latter two cases, frame saving will be activated automatically; the &#39;Save 
-      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
-      alignment is turned off or the option to align with IMOD is no longer selected, 
+      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment
+      Parameters dialog</a> and choose the method and parameters for aligning. When
+      frame alignment is selected, an indicator below this checkbox will show which
+      method is selected: &#39;Align in Plugin&#39; or &#39;Align in SerialEM&#39; for
+      immediate alignment, otherwise either &#39;Align in IMOD&#39;
+      or &#39;TS only in IMOD&#39; .&nbsp; In the
+      latter two cases, frame saving will be activated automatically; the &#39;Save
+      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame
+      alignment is turned off or the option to align with IMOD is no longer selected,
       the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
     <P><b>Save Frames</b></P>
-    <P>Select this checkbox to have the frames saved to a file.&nbsp; Frames will be 
+    <P>Select this checkbox to have the frames saved to a file.&nbsp; Frames will be
       saved as short integers, even if the Camera menu option
-      <a href="menu_camera.htm#hid_camera_returnfloatimage">Return Float Images</a> is 
-      selected.&nbsp; They will generally be saved with whatever division by 2 is 
-      specified in the Camera menu, so that their counts match those of the summed 
+      <a href="menu_camera.htm#hid_camera_returnfloatimage">Return Float Images</a> is
+      selected.&nbsp; They will generally be saved with whatever division by 2 is
+      specified in the Camera menu, so that their counts match those of the summed
       images.</P>
     <P><b>Set File Options</b></P>
-    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, which allows you to control the names of these files and to 
-      put subsets of them into different folders automatically.&nbsp; For Gatan 
-      cameras, you can also choose whether to save frames 
-      in MRC or compressed TIFF format, whether to save frames in a stack or in 
-      separate files, and whether to save frames without rotating or flipping them to 
-      the orientation shown in SerialEM.&nbsp; (The latter option can save some time 
-      when there is a 90 or 270 degree rotation).&nbsp; The choices set in the dialog are summarized in 
-      a line just above this button when saving is turned on. That line also shows the 
+    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, which allows you to control the names of these files and to
+      put subsets of them into different folders automatically.&nbsp; For Gatan
+      cameras, you can also choose whether to save frames
+      in MRC or compressed TIFF format, whether to save frames in a stack or in
+      separate files, and whether to save frames without rotating or flipping them to
+      the orientation shown in SerialEM.&nbsp; (The latter option can save some time
+      when there is a 90 or 270 degree rotation).&nbsp; The choices set in the dialog are summarized in
+      a line just above this button when saving is turned on. That line also shows the
       number of frames to be saved and whether they will be raw or normalized.&nbsp; </P>
     <P><b>Set Folder</b></P>
-    <P>Press this button to select the directory where subframes will be saved as a 
-      stack, or where a container directory will be created for saving subframes in 
-      single files for a Gatan camera.&nbsp; For a Gatan camera running on the camera computer, 
-      or for other cameras, a directory 
-      browser will open.&nbsp; This browser is able to select only a valid existing 
-      directory in file systems accessible from the local computer, but it allows you 
-      to create a directory.&nbsp; For a Gatan camera not running on the camera 
-      computer, a small dialog will appear with a text box in which 
-      any directory name may be typed, even one not accessible to the computer running 
-      SerialEM.&nbsp; The plugin is able to create a directory, but only if its 
-      parent already exists.&nbsp; This means that if you do not specify the use of 
-      folder names in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
-      Options dialog</a>, you can specify a folder here that does not exist, as long 
-      as its parent directory exists. However, if you do select options for automatic 
-      folder creation in that dialog, the directory you select here does need to exist before image acquisition. 
-      In this situation,&nbsp;if you enter into the text box a 
-      new directory that is accessible only from a separate camera computer, 
+    <P>Press this button to select the directory where subframes will be saved as a
+      stack, or where a container directory will be created for saving subframes in
+      single files for a Gatan camera.&nbsp; For a Gatan camera running on the camera computer,
+      or for other cameras, a directory
+      browser will open.&nbsp; This browser is able to select only a valid existing
+      directory in file systems accessible from the local computer, but it allows you
+      to create a directory.&nbsp; For a Gatan camera not running on the camera
+      computer, a small dialog will appear with a text box in which
+      any directory name may be typed, even one not accessible to the computer running
+      SerialEM.&nbsp; The plugin is able to create a directory, but only if its
+      parent already exists.&nbsp; This means that if you do not specify the use of
+      folder names in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a>, you can specify a folder here that does not exist, as long
+      as its parent directory exists. However, if you do select options for automatic
+      folder creation in that dialog, the directory you select here does need to exist before image acquisition.
+      In this situation,&nbsp;if you enter into the text box a
+      new directory that is accessible only from a separate camera computer,
       be sure to create this directory before trying to acquire.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="STEMcontrols"></A><B><FONT size="3">Controls in STEM Mode</FONT></B></i></P>
 
     <p>
-      In STEM mode, there are some new controls, while other controls are omitted or 
-      disabled.&nbsp; The Processing and Shutter Mode radio buttons, and items related 
-      to dark references and dose are omitted.&nbsp; Positioning controls are 
-      disabled.&nbsp; Only the <b>Quarter</b>, <b>Half</b>, and <b>Full</b> area size 
-      buttons are shown, and they are disabled for DigiScan.&nbsp; Other new controls, 
+      In STEM mode, there are some new controls, while other controls are omitted or
+      disabled.&nbsp; The Processing and Shutter Mode radio buttons, and items related
+      to dark references and dose are omitted.&nbsp; Positioning controls are
+      disabled.&nbsp; Only the <b>Quarter</b>, <b>Half</b>, and <b>Full</b> area size
+      buttons are shown, and they are disabled for DigiScan.&nbsp; Other new controls,
       or ones with changed meaning, are as follows:</p>
     <p>
       <b>Continuous Acquisition</b></p>
     <p>
-      With DigiScan, selecting <b>Continuous</b> acquisition starts a continuous scan, 
-      which SerialEM periodically reads.&nbsp; Although DigiScan stops the scan 
-      whenever the image is being read out, this mode still presents an advantage 
-      because SerialEM can process an image (e.g., for Live FFT) during the next scan.&nbsp; 
-      For FEI STEM, <b>Continuous</b> just acquires single frames one after another, 
+      With DigiScan, selecting <b>Continuous</b> acquisition starts a continuous scan,
+      which SerialEM periodically reads.&nbsp; Although DigiScan stops the scan
+      whenever the image is being read out, this mode still presents an advantage
+      because SerialEM can process an image (e.g., for Live FFT) during the next scan.&nbsp;
+      For Thermo/FEI STEM, <b>Continuous</b> just acquires single frames one after another,
       the same as for a CCD camera.</p>
     <p>
       <b>Sampling</b></p>
     <p>
-      In STEM, the usual 'binning' parameter is referred to here as &#39;sampling&#39;; it decreases the number of pixels acquired on each line and the 
-      number of lines of data.&nbsp; If total exposure time is kept the same, the 
-      pixel dwell time is increased by the square of the change in sampling, so there 
-      is an increase in signal-to-noise ratio comparable to that achieved by binning 
+      In STEM, the usual 'binning' parameter is referred to here as &#39;sampling&#39;; it decreases the number of pixels acquired on each line and the
+      number of lines of data.&nbsp; If total exposure time is kept the same, the
+      pixel dwell time is increased by the square of the change in sampling, so there
+      is an increase in signal-to-noise ratio comparable to that achieved by binning
       on a CCD camera.</p>
     <p>
       <b>Mag for Autofocusing</b></p>
     <p>
-      These control appear for the Focus parameter set with DigiScan and allow one to 
-      change the magnification used for autofocusing.&nbsp; The primary purpose for 
-      this is to compensate for the inability to acquire subareas with DigiScan; thus 
-      one can choose to increase magnification by 2, 3, or 4 times.&nbsp; In addition, 
-      one can reduce magnification by a factor of 2; this would be useful, and more 
-      convenient than using Low Dose mode, if autofocusing needs a larger field of 
-      view to work reliably while tracking does not.&nbsp; In any case, the nearest 
-      available magnification is chosen for the Focus pictures.&nbsp; To see what the 
+      These control appear for the Focus parameter set with DigiScan and allow one to
+      change the magnification used for autofocusing.&nbsp; The primary purpose for
+      this is to compensate for the inability to acquire subareas with DigiScan; thus
+      one can choose to increase magnification by 2, 3, or 4 times.&nbsp; In addition,
+      one can reduce magnification by a factor of 2; this would be useful, and more
+      convenient than using Low Dose mode, if autofocusing needs a larger field of
+      view to work reliably while tracking does not.&nbsp; In any case, the nearest
+      available magnification is chosen for the Focus pictures.&nbsp; To see what the
       Focus pictures look like, check <b>Do for all Focus shots.</b></p>
     <p>
       <b>Frame time and Pixel time</b></p>
     <p>
-      The duration of the exposure can be controlled by entering a number in either 
-      the <b>Frame time</b> text box (in seconds) or the <b>Pixel time</b> text box 
-      (in microseconds).&nbsp; Entering a number in either box will change the value 
-      in the other box.&nbsp; There is only one underlying value that controls the 
-      acquisition, the pixel dwell time.&nbsp; The exposure time is defined as the 
-      product of the time per pixel and the number of pixels; the actual acquisition 
-      time will be greater because of time spent between lines of the scan.&nbsp; When 
-      a new exposure time is entered, it may be modified slightly because of 
-      constraints on the pixel time, or more extensively if <b>Line Sync</b> is 
+      The duration of the exposure can be controlled by entering a number in either
+      the <b>Frame time</b> text box (in seconds) or the <b>Pixel time</b> text box
+      (in microseconds).&nbsp; Entering a number in either box will change the value
+      in the other box.&nbsp; There is only one underlying value that controls the
+      acquisition, the pixel dwell time.&nbsp; The exposure time is defined as the
+      product of the time per pixel and the number of pixels; the actual acquisition
+      time will be greater because of time spent between lines of the scan.&nbsp; When
+      a new exposure time is entered, it may be modified slightly because of
+      constraints on the pixel time, or more extensively if <b>Line Sync</b> is
       checked with DigiScan.</p>
     <p>
       <b>Keep pixel time when binning changes</b></p>
     <p>
-      Ordinarily, the exposure time is kept the same when binning changes, and thus 
-      the pixel time changes.&nbsp; Use this option to keep the pixel time the same 
+      Ordinarily, the exposure time is kept the same when binning changes, and thus
+      the pixel time changes.&nbsp; Use this option to keep the pixel time the same
       and change exposure instead.</p>
     <p>
       <b>Scan rate and Set Exposure for Max Scan Rate</b></p>
     <p>
-      The line labeled 'Scan rate' shows the speed at which the beam moves during the 
-      STEM scan, in microns per millisecond.&nbsp; Because of limitations on beam 
-      deflection, images are either shifted or distorted when the scan rate is above a 
-      certain level (roughly 0.5 micron/msec).&nbsp; As scan rate increases, at first 
-      an image will just be shifted, then it will appear stretched, then it may have 
-      serious curved distortions at the side of the image where the scan starts, 
-      especially on an FEI scope.&nbsp; The camera property 'MaximumScanRate' can be 
-      used to define both a maximum limit on scan rate, and a lower 'advisable' limit 
-      that it may be preferable not to exceed.&nbsp; If this property is defined, then 
-      the scan rate output shows three stars when the rate is above the maximum limit, 
+      The line labeled 'Scan rate' shows the speed at which the beam moves during the
+      STEM scan, in microns per millisecond.&nbsp; Because of limitations on beam
+      deflection, images are either shifted or distorted when the scan rate is above a
+      certain level (roughly 0.5 micron/msec).&nbsp; As scan rate increases, at first
+      an image will just be shifted, then it will appear stretched, then it may have
+      serious curved distortions at the side of the image where the scan starts,
+      especially on a Thermo/FEI scope.&nbsp; The camera property 'MaximumScanRate' can be
+      used to define both a maximum limit on scan rate, and a lower 'advisable' limit
+      that it may be preferable not to exceed.&nbsp; If this property is defined, then
+      the scan rate output shows three stars when the rate is above the maximum limit,
       and one star when it is between the advisable and maximum limit.&nbsp; Also, the
-      <b>Set Exposure for Max Scan Rate</b> button will be enabled and can be used to 
-      set the exposure time so that the maximum limit is not exceeded.&nbsp; Another 
-      consequence of having this property defined is that tasks such as eucentricity 
-      will use an exposure time that is long enough to avoid exceeding the maximum 
+      <b>Set Exposure for Max Scan Rate</b> button will be enabled and can be used to
+      set the exposure time so that the maximum limit is not exceeded.&nbsp; Another
+      consequence of having this property defined is that tasks such as eucentricity
+      will use an exposure time that is long enough to avoid exceeding the maximum
       scan rate.</p>
     <p>
       <b>Dynamic focusing</b></p>
     <p>
-      Use this option to have defocus change progressively during image acquisition in 
-      order to keep a tilted specimen in focus.&nbsp; The option is enabled as long as 
-      the exposure time is long enough to allow at least five focus steps during the 
-      acquisition.&nbsp; Steps are taken every 40 msec on FEI scopes or 80 msec on 
+      Use this option to have defocus change progressively during image acquisition in
+      order to keep a tilted specimen in focus.&nbsp; The option is enabled as long as
+      the exposure time is long enough to allow at least five focus steps during the
+      acquisition.&nbsp; Steps are taken every 40 msec on Thermo/FEI scopes or 80 msec on
       JEOL scopes, unless set differently by the property 'DynamicFocusInterval'.</p>
     <p>
-      For FEI STEM, a line will appear above this checkbox showing what kind of timing 
-      information is available for the current acquisition parameters.&nbsp; An 
-      accurate estimate of flyback time is important for having the focus change at 
-      the right rate during the scan.&nbsp;&nbsp; The status line may show that a 
-      measured flyback time is available, which is very good; that it is being 
-      interpolated between measured times, which may be very good or bad depending on 
-      exposure time; that it is being extrapolated from measured times, which is more 
+      For Thermo/FEI STEM, a line will appear above this checkbox showing what kind of timing
+      information is available for the current acquisition parameters.&nbsp; An
+      accurate estimate of flyback time is important for having the focus change at
+      the right rate during the scan.&nbsp;&nbsp; The status line may show that a
+      measured flyback time is available, which is very good; that it is being
+      interpolated between measured times, which may be very good or bad depending on
+      exposure time; that it is being extrapolated from measured times, which is more
       likely to be problematic; or that it is unavailable, which is bad.</p>
     <p>
       <b>Line Sync</b></p>
     <p>
-      Use this option with DigiScan to synchronize the start of each scan line with 
-      the cycles of the electrical supply.&nbsp; This can radically increase exposure 
+      Use this option with DigiScan to synchronize the start of each scan line with
+      the cycles of the electrical supply.&nbsp; This can radically increase exposure
       time.</p>
     <p>
       <b>Channels to acquire:</b></p>
     <p>
-      If you have more than one STEM detector, the detector(s) to use are selected in 
-      one or more combo boxes.&nbsp; If you can acquire only one channel at a time, 
-      then there is just one combo box showing the available detectors.&nbsp; If you 
-      can acquire multiple channels simultaneously, then there will be one combo box 
-      per possible simultaneous channel.&nbsp; Any detector can be selected in any 
-      combo box.&nbsp; The order of selection determines the order in which images 
-      appear in SerialEM buffers; namely, the first channel will be in buffer A, the 
-      second in buffer B, etc.&nbsp; For FEI STEM, only the detectors selected in the 
-      microscope user interface when the dialog is opened are available.&nbsp; 
-      Unavailable detectors will be marked as 'NA' in the combo boxes.&nbsp; Such 
-      detectors can be left as the choice for particular channels; the program will 
-      simply skip them when acquiring an image, as long as there is at least one 
+      If you have more than one STEM detector, the detector(s) to use are selected in
+      one or more combo boxes.&nbsp; If you can acquire only one channel at a time,
+      then there is just one combo box showing the available detectors.&nbsp; If you
+      can acquire multiple channels simultaneously, then there will be one combo box
+      per possible simultaneous channel.&nbsp; Any detector can be selected in any
+      combo box.&nbsp; The order of selection determines the order in which images
+      appear in SerialEM buffers; namely, the first channel will be in buffer A, the
+      second in buffer B, etc.&nbsp; For Thermo/FEI STEM, only the detectors selected in the
+      microscope user interface when the dialog is opened are available.&nbsp;
+      Unavailable detectors will be marked as 'NA' in the combo boxes.&nbsp; Such
+      detectors can be left as the choice for particular channels; the program will
+      simply skip them when acquiring an image, as long as there is at least one
       available detector to acquire from.</p>
       </basefont>
   </BODY>
