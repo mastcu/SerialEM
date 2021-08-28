@@ -39,9 +39,8 @@ IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISIT
 IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
 IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
 IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, 
-IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_STAT_OPT_LINE1, IDC_STAT_OPT_LINE2,
-IDC_STAT_OPT_LINE3, IDC_STAT_OPT_LINE4, IDC_STAT_OPT_LINE5, IDC_STAT_OPT_LINE6,
-IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, PANEL_END,
+IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, 
+IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_STAT_SPACER3, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
@@ -269,11 +268,10 @@ END_MESSAGE_MAP()
 BOOL CNavAcquireDlg::OnInitDialog()
 {
   CWnd *wnd, *stat;
-  CRect actRect, selRect, rect;
+  CRect rect;
   CBaseDlg::OnInitDialog();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
-  int actGroupRefHeight, actGroupWidth, leftGroupTopDiff, index;
   mNumActions = mWinApp->mNavHelper->GetNumAcqActions();
   mSecondColPanel = 1;
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
@@ -290,23 +288,25 @@ BOOL CNavAcquireDlg::OnInitDialog()
   mAddUnitStartInds.push_back(0);
   mAddUnitStartInds.push_back(2);
   mAddUnitStartInds.push_back(5);
-  SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart);
 
-  // Set up to adjust group box
+  // Set up to adjust group boxes
   // It cannot be drawn after the big redraw without obscuring tooltips, so set up for
   // baseDlg to add it to the big redraw
-  m_statActionGroup.GetWindowRect(actRect);
-  m_statSpacer.GetWindowRect(selRect);
-  actGroupRefHeight = actRect.Height();
-  actGroupWidth = actRect.Width();
-  leftGroupTopDiff = selRect.top - selRect.Height() - actRect.top;
-  mIDToSaveTop = IDC_STAT_SPACER;
-  mIDtoBaseOnSavedTop = IDC_STAT_ACTION_GROUP;
-  index = FindIDinTable(IDC_STAT_ACTION_GROUP, idTable, mNumInPanel, &mPanelStart[0]);
-  mBaseForSavedTop = actGroupRefHeight - (leftGroupTopDiff + 
-    sTopTable[index > 0 ? index : mPanelStart[0]]);
+  mIDsToAdjustHeight.push_back(IDC_STAT_ACTION_GROUP);
+  mIDsForNextTop.push_back(IDC_STAT_SPACER);
+  mIDsToAdjustHeight.push_back(IDC_STAT_TASK_OPTIONS);
+  mIDsToAdjustHeight.push_back(IDC_STAT_ACTION_OPTIONS);
+  mIDsToAdjustHeight.push_back(IDC_STAT_GEN_OPTIONS);
+  mIDsForNextTop.push_back(IDC_STAT_ACTION_OPTIONS);
+  mIDsForNextTop.push_back(IDC_STAT_GEN_OPTIONS);
+  mIDsForNextTop.push_back(IDC_STAT_SPACER3);
 
-  // Add IDs for first opening height glitches!
+  wnd = GetDlgItem(IDC_STAT_SAVING_FATE);
+  wnd->GetWindowRect(rect);
+  SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+    -3 * rect.Height() / 4);
+
+    // Add IDs for first opening height glitches!
   // Not all these are currently needed
   mIDsToIgnoreBot.insert(IDC_NA_EARLY_RETURN);
   mIDsToReplaceHeight.insert(IDC_NA_SENDEMAIL);
@@ -316,11 +316,12 @@ BOOL CNavAcquireDlg::OnInitDialog()
   mIDsToIgnoreBot.insert(IDC_RNAVACQ_WHEN_MOVED);
   mIDsToIgnoreBot.insert(IDC_NA_RUN_AFTER_TASK);  // 2862
   mIDsToIgnoreBot.insert(IDC_SPIN_EVERY_N);       // 2876
+  mIDsToIgnoreBot.insert(IDC_NA_EARLY_RETURN);    // 2861
   mIDsToIgnoreBot.insert(IDC_CHECK_NAVACQ_RUN4);
   mIDsToIgnoreBot.insert(IDC_RACQUISITION);       // 2941
-  mIDsToIgnoreBot.insert(IDC_STAT_CYCLE_UM);
+  mIDsToIgnoreBot.insert(IDC_STAT_CYCLE_UM);      // 2859
   mIDsToIgnoreBot.insert(IDC_STAT_FRAMES);
-  mIDsToIgnoreBot.insert(IDC_STAT_SUBSET_TO);
+  mIDsToIgnoreBot.insert(IDC_STAT_SUBSET_TO);      // 2317
   mIDsToIgnoreBot.insert(IDC_RNAVACQ_EVERY_N);     // 2874
   mIDsToReplaceHeight.insert(IDC_EDIT_GOTO_ITEM);  // 2848
 

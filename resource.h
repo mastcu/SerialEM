@@ -1920,12 +1920,7 @@
 #define IDC_NA_READ_PARAMS              2942
 #define IDC_NA_SAVE_PARAMS              2943
 #define IDC_STAT_SPACER2                2944
-#define IDC_STAT_OPT_LINE1              2945
-#define IDC_STAT_OPT_LINE2              2946
-#define IDC_STAT_OPT_LINE3              2947
-#define IDC_STAT_OPT_LINE4              2948
-#define IDC_STAT_OPT_LINE5              2949
-#define IDC_STAT_OPT_LINE6              2950
+#define IDC_STAT_SPACER3                2945
 #define IDC_NA_HIDE_OPTIONS             2951
 #define IDC_STAT_PARAMS_SHARED          2952
 #define IDC_STAT_ONLY_ONCE              2953

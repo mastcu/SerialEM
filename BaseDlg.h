@@ -82,8 +82,10 @@ protected:
   ShortVec mPostAddTopDiffs;       // Spacing to next item after a unit
   ShortVec mAddItemsLeftPos;       // Left positions
   std::set<int> mAddAfterIDSet;
-  int mIDtoBaseOnSavedTop;         // ID of one item whose height depends on seved top pos
-  int mBaseForSavedTop;            // Base to add to the top pos to get the height to set
+  IntVec mIDsToAdjustHeight;       // Group boxes to resize
+  IntVec mIDsForNextTop;           // Next item below group box
+  std::set<int> mNextTopSet;       // Set of both of these
+  ShortVec mAdjustmentToTopDiff;   // Left and top of group box, top of next item
 
 public:
   CButton m_butHelp;
@@ -91,7 +93,8 @@ public:
   void ReplaceDlgItemText(int nID, const char * fromText, CString toText);
   void SetupPanelTables(int * idTable, int * leftTable, int * topTable, int * numInPanel,
     int * panelStart, int *heightTable = NULL, int sortStart = 0);
-  void SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, int *numInPanel, int *panelStart);
+  void SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, int *numInPanel,
+    int *panelStart, int groupAdjust);
   int FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelStart);
   void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
     int *numInPanel, int *panelStart, int numCameras, int *heightTable = NULL);

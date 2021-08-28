@@ -36,7 +36,6 @@ CBaseDlg::CBaseDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
   mSecondColPanel = -1;
   mNumPanels = 0;
   mNumUnitsToAdd = 0;
-  mIDtoBaseOnSavedTop = 0;
 }
 
 
@@ -338,9 +337,12 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
 // Analyze list of "units" of IDs to add after certain other IDs and find other sizes
 // needed to addthem properly
 void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, 
-  int *numInPanel, int *panelStart)
+  int *numInPanel, int *panelStart, int groupAdjust)
 {
   int ii, jj, unit, temp, index, diff, unitTop, prevTop, left, back;
+  int groupRefHeight, groupTopDiff;
+  CWnd *wnd1, *wnd2;
+  CRect actRect, selRect;
 
   // Convenience variables for looping and testing
   mNumUnitsToAdd = (int)mAddUnitStartInds.size();
@@ -411,6 +413,26 @@ void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable,
       diff = topTable[index + back + 1] - unitTop;
     mPostAddTopDiffs.push_back(diff);
   }
+
+  // Now set up group box adjustments
+  for (ii = 0; ii < (int)mIDsToAdjustHeight.size(); ii++) {
+    wnd1 = GetDlgItem(mIDsToAdjustHeight[ii]);
+    wnd2 = GetDlgItem(mIDsForNextTop[ii]);
+    if (wnd1 && wnd2) {
+      wnd1->GetWindowRect(actRect);
+      wnd2->GetWindowRect(selRect);
+      groupRefHeight = actRect.Height();
+      groupTopDiff = selRect.top - actRect.top;
+      mAdjustmentToTopDiff.push_back(groupAdjust + groupTopDiff - groupRefHeight);
+      mNextTopSet.insert(mIDsToAdjustHeight[ii]);
+      mNextTopSet.insert(mIDsForNextTop[ii]);
+    } else {
+      mIDsToAdjustHeight[ii] = 0;
+      mIDsForNextTop[ii] = 0;
+      mAdjustmentToTopDiff.push_back(0);
+    }
+    mIDsToIgnoreBot.insert(mIDsToAdjustHeight[ii]);
+  }
 }
 
 // Look up the given ID in the table
@@ -432,17 +454,19 @@ int CBaseDlg::FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelSta
 void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
   int *numInPanel, int *panelStart, int numCameras, int *heightTable)
 {
-  bool draw, drop, droppingLine;
+  bool draw, drop, droppingLine, doingAtEnd;
   int curTop = topTable[0];
   CRect rect, winRect, tempRect;
-  int panel, panelTop, index, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
+  int panel, panelTop, index, jj, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
   int topAtLastDraw, topAtFirstColEnd, unitInd, addInd, topDiff, lastDiff, thisID;
   CWnd *wnd, *lastWnd;
   HDWP positions;
   std::set<int> specialDrops;
+  ShortVec savedNextTop;
 
   index = 1;
   mSavedTopPos = -1;
+  savedNextTop.resize(3 * mIDsForNextTop.size(), -1);
   for (panel = 0; panel < mNumPanels; panel++)
     index += numInPanel[panel];
   positions = BeginDeferWindowPos(index);
@@ -511,10 +535,23 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
         }
         if (thisID == mIDToSaveTop)
           mSavedTopPos = topPos;
+        doingAtEnd = false;
+        if (mNextTopSet.count(thisID)) {
+          for (jj = 0; jj < (int)mIDsForNextTop.size(); jj++) {
+            if (mIDsForNextTop[jj] == thisID)
+              savedNextTop[3 * jj + 2] = topPos;
+            if (mIDsToAdjustHeight[jj] == thisID) {
+              savedNextTop[3 * jj] = leftTable[index];
+              savedNextTop[3 * jj + 1] = topPos;
+              doingAtEnd = true;
+            }
+          }
+        }
         topAtLastDraw = topTable[index];
         //wnd->ShowWindow(SW_SHOW);
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index], 
-          topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+        if (!doingAtEnd)
+          positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
+            topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
         //CString name;
         //wnd->GetWindowText(name);
         //PrintfToLog("Put %d  %s  at %d %d", thisID, name, leftTable[index], topPos);
@@ -568,13 +605,17 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
     }
   }
 
-  // Handle the ONE group box that we got information about
-  if (mIDtoBaseOnSavedTop > 0) {
-    index = FindIDinTable(mIDtoBaseOnSavedTop, idTable, numInPanel, panelStart);
-    wnd = GetDlgItem(mIDtoBaseOnSavedTop);
-    wnd->GetWindowRect(rect);
-    positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, rect.Width(), 
-      mBaseForSavedTop + mSavedTopPos, SWP_NOZORDER | SWP_NOMOVE | SWP_SHOWWINDOW);
+  // Handle the group boxes that we got information about
+  // Need to issue a single window pos for them, hence skipped positioning above
+  for (jj = 0; jj < (int)mIDsToAdjustHeight.size(); jj++) {
+    if (mIDsToAdjustHeight[jj] > 0 && savedNextTop[3 * jj] >= 0) {
+      topPos = savedNextTop[3 * jj + 1];
+      wnd = GetDlgItem(mIDsToAdjustHeight[jj]);
+      wnd->GetWindowRect(rect);
+      positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, savedNextTop[3 * jj], 
+        topPos, rect.Width(), mAdjustmentToTopDiff[jj] + savedNextTop[3 * jj + 2] - topPos
+        , SWP_NOZORDER | SWP_SHOWWINDOW);
+    }
   }
 
   // Make all those changes occur then resize dialog to end below the last button
