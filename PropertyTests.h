@@ -136,6 +136,7 @@ FLOAT_PROP_TEST("ContinuousAlignFilter", mWinApp->mFalconHelper->, ContinAliFilt
 INT_PROP_TEST("UseGPUforContinuousAlign", mWinApp->mFalconHelper->, GpuForContinuousAli)
 INT_PROP_TEST("UseIlluminatedAreaForC2", scope->, UseIllumAreaForC2)
 INT_PROP_TEST("LowestMModeMagIndex", scope->, LowestMModeMagInd)
+INT_PROP_TEST("LowestEFTEMNonLMIndex", scope->, LowestEFTEMNonLMind)
 INT_PROP_TEST("LowestSecondaryModeMag", scope->, LowestSecondaryMag)
 INT_PROP_TEST("HighestLMindexToScan", scope->, HighestLMindexToScan)
 INT_PROP_TEST("LowestGIFModeMagIndex", scope->, LowestGIFModeMag)

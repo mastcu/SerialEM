@@ -233,9 +233,11 @@ public:
   double GetC2Percent(int spot, double intensity, int probe = -1);
   double GetCrossover(int spotSize, int probe = -1);
   void SetCrossover(int spot, int probe, double inVal) { mCrossovers[spot][probe] = inVal; };
-  GetSetMember(int, LowestMModeMagInd)
-    GetSetMember(int, LowestMicroSTEMmag)
-    int GetLowestSTEMnonLMmag(int i) { return mLowestSTEMnonLMmag[i]; };
+  SetMember(int, LowestMModeMagInd);
+  int GetLowestMModeMagInd(BOOL EFTEM = mLastEFTEMmode) {return EFTEM ? mLowestEFTEMNonLMind : mLowestMModeMagInd ; };
+  GetSetMember(int, LowestEFTEMNonLMind);
+  GetSetMember(int, LowestMicroSTEMmag);
+  int GetLowestSTEMnonLMmag(int i) { return mLowestSTEMnonLMmag[i]; };
   void SetLowestSTEMnonLMmag(int i, int val) { mLowestSTEMnonLMmag[i] = val; };
   GetSetMember(int, LowestGIFModeMag)
     GetSetMember(BOOL, Jeol1230)
@@ -549,6 +551,7 @@ private:
   static double mPreviousISX;  // IS before the last one seen in update
   static double mPreviousISY;
   int mLastCamLenIndex;        // Last value of camera length index
+  static BOOL mLastEFTEMmode;  // Last value of EFTEM mode from update
   static char *mFEIInstrumentName;
   int mUseTEMScripting;
   int mLastRegularMag;        // Keep track of last regular and EFTEM mags
@@ -642,6 +645,7 @@ private:
   int mNonGIFfromMatchMag;    // Mag last changed from non nonGIF pixel matching
   int mNonGIFtoMatchMag;      // Mag last changed to
   int mLowestMModeMagInd;     // Index of the lowest mag before low mag mode
+  int mLowestEFTEMNonLMind;   // Lowest "M-mode" mag ind for EFTEM mode
   int mLowestGIFModeMag;      // Index to lowest mag that should be used in GIF mode
   int mLowestSTEMnonLMmag[2]; // Index to lowest non LM mag in STEM mode
   int mLowestMicroSTEMmag;    // Index to start of microprobe mags

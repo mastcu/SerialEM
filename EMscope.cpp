@@ -164,6 +164,7 @@ char * CEMscope::mScopeMutexLenderStr;
 DWORD  CEMscope::mScopeMutexOwnerId;
 int    CEMscope::mScopeMutexOwnerCount;
 int    CEMscope::mLastMagIndex;
+int    CEMscope::mLastEFTEMmode;
 BOOL   CEMscope::mMagChanged;
 int    CEMscope::mInternalPrevMag;
 double CEMscope::mInternalMagTime = 0;
@@ -244,6 +245,7 @@ CEMscope::CEMscope()
   mFiltParam->adjustForSlitWidth = true;      // Need to adjust on GIF
   mFiltParam->positiveLossOnly = false;
   mLowestMModeMagInd = 17;
+  mLowestEFTEMNonLMind = -1;
   mLowestSecondaryMag = 0;
   mHighestLMindexToScan = -1;
   mSecondaryMode = 0;
@@ -779,6 +781,8 @@ int CEMscope::Initialize()
       mWinApp->mTSController->GetMaxTiltError());
     if (mMaxTiltAngle < -100.)
       mMaxTiltAngle = mUseIllumAreaForC2 ? 69.9f : 79.9f;
+    if (mLowestEFTEMNonLMind < 0)
+      mLowestEFTEMNonLMind = mLowestMModeMagInd;
 
     // Add a boundary for secondary mag range
     if (mLowestSecondaryMag && !mUsePLforIS && !HitachiScope) {
@@ -1315,7 +1319,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         }
         CHECK_TIME(4);
 
-        if (FEIscope && magIndex < mLowestMModeMagInd && 
+        if (FEIscope && magIndex < GetLowestMModeMagInd() && 
           (magIndex > 0 || subMode == psmLAD))
           probe = 1;
         if (returnedProbe != mReturnedProbeMode) {
@@ -1622,6 +1626,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     // Determine EFTEM mode and check spectroscopy on JEOL
     updateEFTEMSpectroscopy(EFTEM);
+    mLastEFTEMmode = EFTEM;
 
     if (mWinApp->GetShowRemoteControl()) {
       if (JEOLscope)
@@ -3725,7 +3730,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
   // First see if need to save the current IS and then whether to restore it
   ifSTEM = GetSTEMmode();
-  lowestM = ifSTEM ? mLowestSTEMnonLMmag[mProbeMode] : mLowestMModeMagInd;
+  lowestM = ifSTEM ? mLowestSTEMnonLMmag[mProbeMode] : GetLowestMModeMagInd();
 
   // There is no way to set the projection submode (which is psmLAD in STEM low mag and 
   // psmD in nonLM) so we cannot go between LM and nonLM
@@ -3882,7 +3887,8 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
         // Hitachi needs to poll and make sure associated changes are done
         if (HitachiScope) {
           startTime = GetTickCount();
-          ISchanged = inIndex >= sytd->lowestMModeMagInd && inIndex < sytd->lowestSecondaryMag;
+          ISchanged = inIndex >= sytd->lowestMModeMagInd && 
+            inIndex < sytd->lowestSecondaryMag;
           while (1) {
             if (SEMTickInterval(startTime) > sytd->HitachiMagFocusDelay ||
               (focusChanged && SEMTickInterval(startTime) > sytd->HitachiMagISDelay)) {
@@ -4325,7 +4331,7 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
   if (!sInitialized)
     return false;
   
-  int magInd, currentIndex = GetCamLenIndex();
+  int magInd, lowestM, currentIndex = GetCamLenIndex();
   if (currentIndex == inIndex)
     return true;
   ScopeMutexAcquire("SetCamLenIndex", true);
@@ -4347,13 +4353,14 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
       // If in imaging mode, get mag index and see if it's the right mode
       if (!currentIndex) {
         PLUGSCOPE_GET(MagnificationIndex, magInd, 1);
+        lowestM = GetLowestMModeMagInd();
 
         // Go to a mag in the right range if necessary then go to diffraction
         // 7/25/19: diffraction shift may be bad if you come from M, come from SA instead
-        if (magInd < mLowestMModeMagInd && inIndex < LAD_INDEX_BASE) {
-          PLUGSCOPE_SET(MagnificationIndex, mLowestMModeMagInd + 5);
-        } else if (magInd >= mLowestMModeMagInd && inIndex > LAD_INDEX_BASE) {
-          PLUGSCOPE_SET(MagnificationIndex, mLowestMModeMagInd - 1);
+        if (magInd < lowestM && inIndex < LAD_INDEX_BASE) {
+          PLUGSCOPE_SET(MagnificationIndex, lowestM + 5);
+        } else if (magInd >= lowestM && inIndex > LAD_INDEX_BASE) {
+          PLUGSCOPE_SET(MagnificationIndex, lowestM - 1);
         }
         if (mPlugFuncs->SetImagingMode)
           mPlugFuncs->SetImagingMode(pmDiffraction);
@@ -4394,7 +4401,7 @@ void CEMscope::CalibrateNeutralIS(int calType)
   mCalNeutralType = calType;
   mNeutralIndex = 0;
   if (!HitachiScope && mJeolSD.JeolEFTEM > 0) {
-    startMag = mLowestMModeMagInd;
+    startMag = GetLowestMModeMagInd();
     mNeutralIndex = 1;
   }
   mCalNeutralStartMag = GetMagIndex();
@@ -4893,13 +4900,14 @@ BOOL CEMscope::SetDiffractionFocus(double inVal)
 double CEMscope::GetStandardLMFocus(int magInd, int probe)
 {
   int i, dist, distmin = 1000, nearInd = -1;
-  double focus = magInd >= mLowestMModeMagInd ? -999 : mStandardLMFocus;
+  int lowestM = GetLowestMModeMagInd();
+  double focus = magInd >= lowestM ? -999 : mStandardLMFocus;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
   if (probe < 0 || probe > 1)
     probe = mProbeMode;
   for (i = 1; i < MAX_MAGS; i++) {
     if (mLMFocusTable[i][probe] > -900. &&
-      (magInd >= mLowestMModeMagInd ? 1 : 0) == (i >= mLowestMModeMagInd ? 1 : 0)) {
+      (magInd >= lowestM ? 1 : 0) == (i >= lowestM ? 1 : 0)) {
       dist = i >= magInd ? i - magInd : magInd - i;
       if (dist < distmin) {
         distmin = dist;
@@ -4919,7 +4927,7 @@ double CEMscope::GetStandardLMFocus(int magInd, int probe)
 // Set the focus the the standard LM focus if this is LM and standard focus exists
 void CEMscope::SetFocusToStandardIfLM(int magInd)
 {
-  if (mWinApp->GetSTEMMode() || magInd >= mLowestMModeMagInd)
+  if (mWinApp->GetSTEMMode() || magInd >= GetLowestMModeMagInd())
     return;
   double focus = GetStandardLMFocus(magInd);
   if (focus > -900.)
@@ -5063,6 +5071,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
   int oldArea = mLowDoseSetArea;
+  int lowestM = GetLowestMModeMagInd();
   if (!sInitialized || mChangingLDArea || sClippingIS)
     return;
 
@@ -5079,17 +5088,17 @@ void CEMscope::GotoLowDoseArea(int newArea)
     curMagInd = GetMagIndex();
 
   // Get some useful flags about what is changing and what to do
-  leavingLowMag = !STEMmode && ldArea->magIndex >= mLowestMModeMagInd &&
-    ((oldArea >= 0 && mLdsaParams->magIndex && mLdsaParams->magIndex < mLowestMModeMagInd)
-      || (oldArea < 0 && curMagInd < mLowestMModeMagInd));
+  leavingLowMag = !STEMmode && ldArea->magIndex >= lowestM &&
+    ((oldArea >= 0 && mLdsaParams->magIndex && mLdsaParams->magIndex < lowestM)
+      || (oldArea < 0 && curMagInd < lowestM));
   splitBeamShift = !STEMmode && ((oldArea >= 0 && leavingLowMag) ||
-    ((oldArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
-      ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
+    ((oldArea < 0 || mLdsaParams->magIndex >= lowestM) &&
+      ldArea->magIndex && ldArea->magIndex < lowestM));
   changingAtZeroIS = !STEMmode &&  mChangeAreaAtZeroIS &&
     oldArea >= 0 && mLdsaParams->magIndex !=  ldArea->magIndex;
-  enteringLowMag = !STEMmode && ((oldArea < 0 && curMagInd >= mLowestMModeMagInd) ||
-    (oldArea >= 0 && mLdsaParams->magIndex >= mLowestMModeMagInd)) && ldArea->magIndex &&
-    ldArea->magIndex < mLowestMModeMagInd;
+  enteringLowMag = !STEMmode && ((oldArea < 0 && curMagInd >= lowestM) ||
+    (oldArea >= 0 && mLdsaParams->magIndex >= lowestM)) && ldArea->magIndex &&
+    ldArea->magIndex < lowestM;
   deferJEOLspot = !mJeol1230 && JEOLscope && (leavingLowMag || enteringLowMag);
 
   if (GetDebugOutput('L'))
@@ -6973,7 +6982,8 @@ int CEMscope::ReadProbeMode(void)
     try {
       if (!mLastMagIndex)
         PLUGSCOPE_GET(SubMode, subMode, 1);
-      if (mLastMagIndex < mLowestMModeMagInd && (mLastMagIndex > 0 || subMode == psmLAD) &&
+      if (mLastMagIndex < GetLowestMModeMagInd() && 
+        (mLastMagIndex > 0 || subMode == psmLAD) &&
         (!mWinApp->ScopeHasSTEM() || !mPlugFuncs->GetSTEMMode())) {
         mProbeMode = retval = 1;
       } else {
@@ -8229,8 +8239,8 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
 
 BOOL CEMscope::BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2) 
 {
-  int lowest1 = mLowestMModeMagInd;
-  int lowest2 = mLowestMModeMagInd;
+  int lowest1 = GetLowestMModeMagInd();
+  int lowest2 = lowest1;
   if (stem1)
     lowest1 = mLowestSTEMnonLMmag[(FEIscope && mag1 >= mLowestMicroSTEMmag) ? 1 : 0];
   if (stem2)
@@ -8255,7 +8265,7 @@ int CEMscope::GetLowestNonLMmag(int index)
     return mLowestSTEMnonLMmag[mProbeMode];
   if (mLowestSecondaryMag && mSecondaryMode)
     return mLowestSecondaryMag;
-  return mLowestMModeMagInd;
+  return GetLowestMModeMagInd();
 }
 
 int CEMscope::GetLowestNonLMmag(CameraParameters *camParam)
@@ -9192,7 +9202,7 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   mSynchroTD.newIndex = newIndex;
   mSynchroTD.curIndex = curIndex;
   mSynchroTD.normAllOnMagChange = mNormAllOnMagChange;
-  mSynchroTD.lowestMModeMagInd = mLowestMModeMagInd;
+  mSynchroTD.lowestMModeMagInd = GetLowestMModeMagInd();
   mSynchroTD.lowestSecondaryMag = mLowestSecondaryMag;
   mSynchroTD.lowestMicroSTEMmag = mLowestMicroSTEMmag;
   mSynchroTD.HitachiMagFocusDelay = mHitachiMagFocusDelay;
