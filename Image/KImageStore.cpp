@@ -325,7 +325,7 @@ int KImageStore::CheckAdocForMontage(MontParam * inParam)
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return 0;
   if ((AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) && 
-    AdocGetInteger(ADOC_GLOBAL, 0, "IMOD."ADOC_ISMONT, &ifmont)) || ifmont <= 0)
+    AdocGetInteger(ADOC_GLOBAL, 0, "IMOD." ADOC_ISMONT, &ifmont)) || ifmont <= 0)
     ifmont = 0;
   else
     ifmont = KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
