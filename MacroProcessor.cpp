@@ -4354,6 +4354,13 @@ void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
 
   // Escape the backslashes to prevent them from being interpreted as escape code
   // but restore intended escape codes prefixed by |
+  // For convenience, preserve clear cases of \n and \r\n
+  if (line.Find("\\n") >= 0) {
+    line.Replace("'\\n'", "'|\\n'");
+    line.Replace("'\\r\\n'", "'|\\r|\\n'");
+    line.Replace("\"\\n\"", "\"|\\n\"");
+    line.Replace("\"\\r\\n\"", "\"|\\r|\\n\"");
+  }
   if (line.Replace("\\", "\\\\"))
     line.Replace("|\\\\", "\\");
 
