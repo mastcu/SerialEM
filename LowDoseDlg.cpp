@@ -1243,7 +1243,7 @@ void CLowDoseDlg::Update()
   BOOL STEMmode = mWinApp->GetSTEMMode();
   BOOL camBusy = mWinApp->mCamera->CameraBusy();
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
-  BOOL stageBusy = mScope->StageBusy() > 0;
+  BOOL stageBusy = mScope->StageBusy() > 0 && !mWinApp->GetDummyInstance();
   LowDoseParams *ldShown = &mLDParams[m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET];
   ManageDefines(mScope->GetLowDoseArea());
 
@@ -1460,7 +1460,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 void CLowDoseDlg::ManageDefines(int area)
 {
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && area != SEARCH_AREA  &&
-    mScope->StageBusy() <= 0;
+    (mScope->StageBusy() <= 0 || mWinApp->GetDummyInstance());
   m_butDefineNone.EnableWindow(bEnable);
   m_butDefineTrial.EnableWindow(bEnable);
   m_butDefineFocus.EnableWindow(bEnable);
