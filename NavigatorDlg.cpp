@@ -51,6 +51,7 @@
 #include "Image\KStoreIMOD.h"
 #include "Image\KStoreADOC.h"
 #include "Shared\b3dutil.h"
+#include "Shared\iimage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -7003,12 +7004,20 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
       } else {
         fullpath = file->GetFilePath();
         delete file;
-        fullpath = KStoreADOC::IsADOC(fullpath);
-        if (fullpath.IsEmpty())
-          return 2;
+        str = KStoreADOC::IsADOC(fullpath);
+        if (!str.IsEmpty()) {
 
         // Removed async saving check put in for 3.5, before adoc mutex was added
-        storeMRC = new KStoreADOC(fullpath);
+          storeMRC = new KStoreADOC(fullpath);
+        } else {
+          if (!mWinApp->mDocWnd->GetHDFsupported() || !iiTestIfHDF((char *)(LPCTSTR)fullpath))
+            return 2;
+          storeMRC = new KStoreIMOD(fullpath);
+          if (!storeMRC->FileOK()) {
+            delete storeMRC;
+            return 2;
+          }
+        }
       }
 
       // Get montage params or return error if no good.  Copy master set to fill in all
@@ -8661,6 +8670,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mInitialNumAcquire = mAcqParm->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
   mElapsedAcqTime = 0.;
   mLastAcqDoneTime = GetTickCount();
+  mLastAcquireTicks = mLastAcqDoneTime;
   mNumDoneAcq = 0;
   mLastMontLeft = -1.;
   if (!mScope->FastColumnValvesOpen()) {
@@ -8700,11 +8710,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
   CString report, str;
   bool skippingGroup;
   float hours, target;
-  double ISX, ISY;
+  double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   CMapDrawItem *item, *nextItem;
   TiltSeriesParam *tsp;
+  FilterParams *filtParam = mWinApp->GetFilterParams();
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
@@ -8818,8 +8829,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
         case NAA_AFTER_TIME:
 
-          // Hardware dark reference times are kept track of by the system
+          // Hardware dark reference and FEG flashing times are kept track of by system
           if (act == NAACT_HW_DARK_REF || (JEOLscope && act == NAACT_FLASH_FEG)) {
+            runIt = true;
+
+            // Refine ZLP has its own time stamp
+          } else if (act == NAACT_REFINE_ZLP && 
+            SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
+            mAcqActions[act].minutes) {
             runIt = true;
 
             // Everything else, the time is kept track of here
@@ -8941,6 +8958,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
         str.Format(" saved at Z = %d", zval);
         report += str;
       }
+      ticks = GetTickCount();
+      str.Format("  (in %.1f sec)", 0.001 * SEMTickInterval(ticks, mLastAcquireTicks));
+      report += str;
+      mLastAcquireTicks = ticks;
       if (mAcqParm->acquireType != ACQUIRE_TAKE_MAP)
         report += "\r\n----------------------------------------------------------------";
       mWinApp->AppendToLog(report);
@@ -9005,11 +9026,13 @@ void CNavigatorDlg::AcquireNextTask(int param)
       if (!err || !mRetValFromMultishot)
         SetItemSuccessfullyAcquired(item);
       if (mRetValFromMultishot) {
-        PrintfToLog("%d Multiple Records at item # %d with label %s %s\r\n"
-          "----------------------------------------------------------------------------",
+        ticks = GetTickCount();
+        PrintfToLog("%d Multiple Records at item # %d with label %s %s   (in %.1f sec)"
+          "\r\n-------------------------------------------------------------------------",
           -mRetValFromMultishot, mAcquireIndex + 1, (LPCTSTR)item->mLabel,
           err ? " FAILED before completion" :
-          "successfully completed");
+          "successfully completed", 0.001 * SEMTickInterval(ticks, mLastAcquireTicks));
+        mLastAcquireTicks = ticks;
 
         // Stop or go on after error just like macro
         if (err && !mAcqParm->noMBoxOnError) {
@@ -9089,9 +9112,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   case NAACT_REALIGN_ITEM:
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
-    err = mHelper->RealignToItem(item, 
-      B3DCHOICE(mAcqParm->acquireType == ACQUIRE_RUN_MACRO, mAcqParm->restoreOnRealign,
-        !mWinApp->LowDoseMode()),
+    err = mHelper->RealignToItem(item, !mWinApp->LowDoseMode(),
       mWillDoTemplateAlign ? 0.f : aliParams->resetISthresh, 
       mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS, 
       mWillDoTemplateAlign ? false : aliParams->leaveISatZero, 

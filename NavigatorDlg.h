@@ -414,7 +414,8 @@ private:
   float mIncX1, mIncX2, mIncY1, mIncY2;
   bool mSwapAxesAddingPoints;  // Make first axis the inner loop for away from focus
   bool mLastSelectWasCurrent;  // Flag that last mouse up was on current point
-  double mLastAcqDoneTime;  // Time when last acquire item finished
+  double mLastAcquireTicks;  // Time of last acquisition, for reporting interval
+  double mLastAcqDoneTime;  // Time when last acquire item finished the full cycle
   double mElapsedAcqTime;   // Cumulative elapsed time since start of acquire
   int mNumDoneAcq;          // Number of acquire points done (including failures)
   int mInitialNumAcquire;   // Initial number to be acquired
