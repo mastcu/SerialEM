@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/30/21: Fixed ordering of points with "Away from focus" option when making
+Navigator points in hole finder, and when using "Add Grid of Points" with
+Focus area axis rotated by +/-90 (In 3.8).
+
 8/28/21: Added property to specify that EFTEM mode has different lowest nonLM
 mag index.
 

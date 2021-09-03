@@ -91,6 +91,7 @@ private:
   float mBestRadius, mTrueSpacing, mIntensityRad, mErrorMax;
   KImageStore *mImageStore;
   int mCurStore, mBufInd;
+  ScaleMat mImToStage;
   int mSigInd, mThreshInd, mBestSigInd, mBestThreshInd;
   MontParam mMontParam;
   CMapDrawItem *mNavItem;

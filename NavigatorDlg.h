@@ -412,6 +412,7 @@ private:
   float mLast5ptOffsetY;
   float mCenX, mCenY;       // Variables for getting from index to grid image position
   float mIncX1, mIncX2, mIncY1, mIncY2;
+  bool mSwapAxesAddingPoints;  // Make first axis the inner loop for away from focus
   bool mLastSelectWasCurrent;  // Flag that last mouse up was on current point
   double mLastAcqDoneTime;  // Time when last acquire item finished
   double mElapsedAcqTime;   // Cumulative elapsed time since start of acquire
@@ -621,7 +622,7 @@ public:
     float &stageX, float &stageY);
   int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<short> *exclude, FloatVec *xInPiece,
     FloatVec *yInPiece, IntVec *pieceOn, ShortVec *gridXpos, ShortVec *gridYpos,
-    float spacing, float diameter, float angle, int registration, int mapID, float stageZ,
+    float spacing, float diameter, float incStageX1, float incStageY1, float incStageX2, float incStageY2, int registration, int mapID, float stageZ,
     CMapDrawItem *poly, int layoutType);
   int FindBufferWithMontMap(int mapID);
   CButton m_butEditMode;

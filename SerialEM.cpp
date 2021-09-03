@@ -1037,6 +1037,7 @@ BOOL CSerialEMApp::InitInstance()
         mSTEMMode = true;
     }
     mInitialCurrentCamera = mAssumeCamForDummy;
+    CopyCameraToCurrentLDP();
   }
   if (mSystemDPI != 120)
     mDisplayNotTruly120DPI = false;

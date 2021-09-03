@@ -24,7 +24,7 @@
 
 // Globals
 ScaleMat MatMul(ScaleMat aa, ScaleMat bb);
-ScaleMat MatInv(ScaleMat aa);
+ScaleMat MatInv(ScaleMat aa, bool yInverted = false);
 
 // Structure for keeping transforms that align rotated images, for deriving stretch
 struct RotStretchXform {

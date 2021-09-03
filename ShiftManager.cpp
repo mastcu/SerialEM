@@ -2919,18 +2919,20 @@ ScaleMat MatMul(ScaleMat aa, ScaleMat bb)
   return cc;
 }
 
-// Inverts a matrix
-ScaleMat MatInv(ScaleMat aa)
+// Inverts a matrix, with optional parameter to do it for a matrix that operates between
+// left-handed and right-handed coordinates
+ScaleMat MatInv(ScaleMat aa, bool yInverted)
 {
   ScaleMat inv;
-  float det = aa.xpx * aa.ypy - aa.xpy * aa.ypx;
+  float ySign = yInverted ? -1.f : 1.f;
+  float det = ySign * (aa.xpx * aa.ypy - aa.xpy * aa.ypx);
   inv.xpx = 0.;
   if (!aa.xpx)
     return inv;
-  inv.xpx = aa.ypy / det;
+  inv.xpx = aa.ypy * ySign / det;
   inv.xpy = -aa.xpy / det;
   inv.ypx = -aa.ypx / det;
-  inv.ypy = aa.xpx / det;
+  inv.ypy = ySign * aa.xpx / det;
   return inv;
 }
 

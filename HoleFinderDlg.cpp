@@ -359,8 +359,8 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
   mWinApp->RestoreViewFocus();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
-  m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMeanMin) /
-    (mMidMean - mMeanMin));
+  m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMidMean) /
+    (mMeanMax - mMidMean));
   B3DCLAMP(m_intUpperMean, 0, 255);
   UpdateData(false);
   SetExclusionsAndDraw();
@@ -448,6 +448,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   ShortVec gridX, gridY;
   int ind, numAdded = 0;
   float avgLen = -1., avgAngle = -999.;
+  float incStageX1, incStageY1, incStageX2, incStageY2;
   if (CheckAndSetNav("making Navigator points from hole positions"))
     return -1;
   if (!HaveHolesToDrawOrMakePts()) {
@@ -485,12 +486,21 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     poly = mNav->FindItemWithMapID(mBoundPolyID, false);
 
   // Get the grid positions and pass it all on
+  // Note that the image positions here are Y-inverted, so a positive angle is in the
+  // lower right of image, and 90 plus that is in lower left
+  // Thus compute the stage vectors of the grid axes here and pass that in too
   mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
+  mWinApp->mShiftManager->ApplyScaleMatrix(mImToStage, 
+    avgLen * (float)cos(avgAngle * DTOR),
+    avgLen * (float)sin(avgAngle * DTOR), incStageX1, incStageY1);
+  mWinApp->mShiftManager->ApplyScaleMatrix(mImToStage, 
+    avgLen * (float)cos(DTOR *(avgAngle + 90.)),
+    avgLen * (float)sin(DTOR * (avgAngle + 90.)), incStageX2, incStageY2);
   mAddedGroupID = mNav->AddFoundHoles(&mXstages, &mYstages, &mExcluded,
     &mXinPiece, &mYinPiece, &mPieceOn, &gridX, &gridY, avgLen * mPixelSize,
-    2.f * mBestRadius * mReduction * mPixelSize, avgAngle, mRegistration, mMapID,
-    (float)mZstage, poly, layoutType);
+    2.f * mBestRadius * mReduction * mPixelSize, incStageX1, incStageY1, incStageX2,
+    incStageY2, mRegistration, mMapID, (float)mZstage, poly, layoutType);
   if (mAddedGroupID) {
     mNav->FindItemWithMapID(mAddedGroupID, false, true);
     mIndexOfGroupItem = mNav->GetFoundItem();
@@ -612,8 +622,8 @@ void CHoleFinderDlg::ManageEnables()
   m_butSetSizeSpace.EnableWindow(mLastHoleSize > 0.);
   if (mHaveHoles) {
     m_strMinLowerMean.Format("%.4g", mMeanMin);
-    m_strMaxLowerMean.Format("%.4g", (mMeanMin + mMeanMax / 2.));
-    m_strMinUpperMean.Format("%.4g", (mMeanMin + mMeanMax / 2.));
+    m_strMaxLowerMean.Format("%.4g", mMidMean);
+    m_strMinUpperMean.Format("%.4g", mMidMean);
     m_strMaxUpperMean.Format("%.4g", mMeanMax);
     m_strMinSDcutoff.Format("%.4g", mSDmin);
     m_strMaxSDcutoff.Format("%.4g", mSDmax);
@@ -767,6 +777,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       "to convert positions to stage coordinates.", MB_EXCLAME);
     return 1;
   }
+
+  // This is a matrix between right-handed stage coordinates and inverted image coords
+  // So invert it with argument for that, so it can still be used with inverted coords
+  mImToStage = MatInv(aMat, true);
 
   if (mParams.spacing < mParams.diameter + 0.5f) {
     SEMMessageBox("The hole spacing is a center-to-center distance and must be at "

@@ -4922,18 +4922,29 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
   if (groupExtent <= 0.) {
     startnum = mNewItemNum;
     num = 1;
-    for (j = jstart; jdir * (j - jend) <= 0; j += jdir) {
-      for (k = kstart; dir * (k - kend) <= 0; k += dir) {
-        AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, drawnOnID,  
-          stageZ, spacing, delX, delY, acquire, aInv);
-      }
 
-      // For zigzag, invert the k direction for next iteration
-      if (!awayFromFocus) {
-        dir = -dir;
-        k = kstart;
-        kstart = kend;
-        kend = k;
+    // Exchange loop order when going away from focus and swapping axes
+    if (awayFromFocus && mSwapAxesAddingPoints) {
+      for (k = kstart; dir * (k - kend) <= 0; k += dir)
+        for (j = jstart; jdir * (j - jend) <= 0; j += jdir)
+          AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, drawnOnID,
+            stageZ, spacing, delX, delY, acquire, aInv);
+    } else {
+
+      // Or do loops in regular order
+      for (j = jstart; jdir * (j - jend) <= 0; j += jdir) {
+        for (k = kstart; dir * (k - kend) <= 0; k += dir) {
+          AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, drawnOnID,
+            stageZ, spacing, delX, delY, acquire, aInv);
+        }
+
+        // For zigzag, invert the k direction for next iteration
+        if (!awayFromFocus) {
+          dir = -dir;
+          k = kstart;
+          kstart = kend;
+          kend = k;
+        }
       }
     }
     mNewItemNum++;
@@ -5369,7 +5380,7 @@ void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1,
   float incStageX2, float incStageY2, int &jstart, int &jend, int &jdir, int &kstart, 
   int &kend, int &dir)
 {
-  double specX, specY, stageX, stageY;
+  double specX, specY, stageX, stageY, dot1, dot2;
   ScaleMat cInv = MatInv(mShiftManager->SpecimenToStage(1., 1.));
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   double axis = ldParm[FOCUS_CONSET].axisPosition - ldParm[RECORD_CONSET].axisPosition;
@@ -5386,14 +5397,20 @@ void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1,
   stageY = cInv.ypx * specX + cInv.ypy * specY;
 
   // If dot product of this vector with the increments is negative, invert a direction
-  if (stageX * incStageX1 + stageY * incStageY1 < 0) {
+  dot1 = stageX * incStageX1 + stageY * incStageY1;
+  if (dot1 < 0) {
     B3DSWAP(jstart, jend, jdir);
     jdir = -1;
   }
-  if (stageX * incStageX2 + stageY * incStageY2 < 0) {
+  dot2 = stageX * incStageX2 + stageY * incStageY2;
+  if (dot2 < 0) {
     B3DSWAP(kstart, kend, dir);
     dir = -1;
   }
+
+  // And if the dot product of the first direction is bigger, change the loop order to
+  // go in that direction on the inner loop
+  mSwapAxesAddingPoints = jdir * dot1 > dir * dot2;
 }
 
 // Compute stage position of one item in grid, or get position of a found hole at that 
@@ -5460,7 +5477,8 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
 // will make it save the mag in mMapMagInd
 int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
   std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
-  ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float angle,
+  ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float incStageX1,
+  float incStageY1, float incStageX2, float incStageY2,
   int registration, int mapID, float stageZ, CMapDrawItem *poly, int layoutType)
 {
   float xcen = 0., ycen = 0., groupExtent = 0.;
@@ -5486,9 +5504,8 @@ int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
   jend = *std::max_element(gridXpos->begin(), gridXpos->end());
   kend = *std::max_element(gridYpos->begin(), gridYpos->end());
   if (layoutType == 1)
-    SetupForAwayFromFocus(spacing * (float)cos(DTOR * angle),
-      spacing * (float)sin(DTOR * angle), spacing * (float)cos(DTOR * (angle + 90.)),
-      spacing * (float)sin(DTOR * (angle + 90.)), jstart, jend, jdir, kstart, kend, dir);
+    SetupForAwayFromFocus(incStageX1, incStageY1, incStageX2,
+    incStageY2, jstart, jend, jdir, kstart, kend, dir);
 
   // This returns the first group ID added, which is used to determine if original points
   // should still be displayed

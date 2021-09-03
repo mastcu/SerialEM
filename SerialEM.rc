@@ -1743,7 +1743,7 @@ BEGIN
     PUSHBUTTON      "R",IDC_COPYTORECORD,73,199,14,8
     PUSHBUTTON      "Center Unshifted",IDC_CENTERUNSHIFTED,3,211,54,10
     PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,62,211,54,10
-    LTEXT           "Position on tilt axis:",IDC_STATPOSITION,3,60,57,8
+    LTEXT           "Position on tilt axis:",IDC_STATPOSITION,3,60,59,8
     EDITTEXT        IDC_EDITPOSITION,63,58,25,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um",IDC_STATMICRON,91,60,10,8
     LTEXT           "Maximum area separation:  -90.23 um",IDC_STATOVERLAP,3,70,114,8
