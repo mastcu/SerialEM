@@ -163,10 +163,12 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
        "shots");
     return 1;
   }
-  if (multiInHole  && (numPeripheral < 2 || numPeripheral > 12)) {
-      SEMMessageBox("To do multiple shots in a hole, the number of shots\n"
-        "around the center must be between 2 and 12");
-      return 1;
+  if (multiInHole  && (numPeripheral < 2 || numPeripheral > MAX_PERIPHERAL_SHOTS ||
+    numSecondRing == 1 || numSecondRing > MAX_PERIPHERAL_SHOTS)) {
+    str.Format("To do multiple shots in a hole, the number of shots\n"
+        "in one ring around the center must be between 2 and %s", MAX_PERIPHERAL_SHOTS);
+    SEMMessageBox(str);
+    return 1;
   }
   if (multiHoles && !((mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
     mMSParams->holeMagIndex > 0)) {

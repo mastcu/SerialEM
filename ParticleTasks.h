@@ -1,6 +1,8 @@
 #pragma once
 #include "NavHelper.h"
 
+#define MAX_PERIPHERAL_SHOTS 18
+
 class CZbyGSetupDlg;
 
 enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_WITHIN_AUTOFOC };

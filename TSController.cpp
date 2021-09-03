@@ -1578,7 +1578,7 @@ void CTSController::NextAction(int param)
         return;
       if (mNeedFinalTermTasks)
         DoFinalTerminationTasks();
-    } else {
+    } else if (mActIndex == mActOrder[BIDIR_FINISH_INVERT]) {
       mKeepActIndexSame = true;
     }
   }

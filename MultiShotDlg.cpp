@@ -359,8 +359,8 @@ void CMultiShotDlg::OnDoShotsInHole()
 // Number of shots spinner
 void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots[0], 
-    m_strNumShots, "%d");
+  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS, 
+    mActiveParams->numShots[0], m_strNumShots, "%d");
   UpdateAndUseMSparams();
 }
 
@@ -389,8 +389,8 @@ void CMultiShotDlg::OnDoSecondRing()
 // Spinner for second ring
 void CMultiShotDlg::OnDeltaposSpinRing2Num(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots[1],
-    m_strNum2Shots, "%d");
+  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS, 
+    mActiveParams->numShots[1], m_strNum2Shots, "%d");
   UpdateAndUseMSparams();
 }
 
