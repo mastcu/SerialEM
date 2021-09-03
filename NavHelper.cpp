@@ -4064,6 +4064,19 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       }
     }
   }
+  if (DOING_ACTION(NAACT_ALIGN_TEMPLATE)) {
+    item = mNav->FindItemWithString(mNavAlignParams.templateLabel, false, true);
+    if (!item)
+      mess = "Cannot find the template map in Navigator table for aligning to template";
+    else if (item->IsNotMap())
+      mess = "The item matching the label for aligning to template is not a map";
+    else if (item->mMapMontage)
+      mess = "The item matching the label for aligning to template is a montage";
+    if (!mess.IsEmpty()) {
+      SEMMessageBox(mess);
+      return 1;
+    }
+  }
   if (FEIscope && DOING_ACTION(NAACT_FLASH_FEG) &&
     mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP) {
     SEMMessageBox("The version of advanced scripting has not been identified as high "
