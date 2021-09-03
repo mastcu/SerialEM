@@ -202,28 +202,13 @@
       is run on only a subset of points, provided that Z height is approximately the
       same from one point to another between runs of a eucentricity routine.</P>
     <P><b>Skip stage move to item if possible</b></P>
-    <P>Select this option to suppress a stage move to the area prior to the primary
-      action, if one still seems necessary (i.e., if no task was done that required
-      being at the area already).&nbsp; This option is enabled only when a script is
-      run before or as the primary action, cases in which the program is willing to
+    <P>This option is disabled and its setting has no effect except when a script is 
+      run before or as the primary action.&nbsp; Select this option to suppress a 
+      stage move to the area prior to the primary action, if one still seems necessary 
+      (i.e., if no task was done that required being at the area already).&nbsp; In 
+      the cases where the option is enabled, the program is willing to
       rely on one script or the other having moved to the area, either with an
       explicit stage move or with Realign to Item.&nbsp; </P>
-    <P><B>Restore scope state after aligning to item</B></P>
-    <P>This option is enabled when you select 'Realign to item' as an initial task and
-      are running a script as the primary action. If it is checked in that case, then the current magnification and beam
-      settings will be restored after running 'Realign to item'. Generally, this is
-      appropriate outside of Low Dose mode and not in Low Dose mode, since each image
-      acquisition sets the state for a Low Dose area.&nbsp; However, outside of Low
-      Dose, if you are realigning to a high-magnification map embedded in
-      a medium magnification map, then you could turn off this option if the beam and
-      magnification were already carefully adjusted before acquiring the
-      high-magnification map. That way, you would not have to readjust these settings
-      before starting the acquisition, and you would be protected against the scope
-      being in an undesirable state before starting a particular realign operation.</P>
-    <P>When the primary action is not running a script, the checkbox is disabled and
-      its setting is irrelevant: the scope state will be restored outside of Low Dose
-      mode and <em>not</em> be restored in Low Dose mode, thus minimizing unnecessary
-      changes between areas.</P>
     <P><A NAME="generalOptions"></A>&nbsp;</P>
     <P><em><strong>General Options</strong></em></P>
     <P><b>Do subset from index</b></P>
@@ -292,7 +277,9 @@
       events are the running of vacuum pumps on Thermo/FEI scopes, and the filling of
       nitrogen dewar(s) filling on various scopes.&nbsp; The <strong>Setup</strong>
       button opens the <a href="hidd_manage_dewars.htm">Dewar and Vacuum Management</a>
-      dialog.&nbsp; The timing for running operations is all controlled by the
+      dialog.&nbsp; (In order for the nitrogen filling options to appear in that 
+      dialog on non-Krios Thermo/FEI scopes, the property entry &#39;DewarVacCapabilities&#39; 
+      is needed).&nbsp; The timing for running operations is all controlled by the
       management procedure itself, so this task should be run on every item.</P>
     <P><strong>Flash FEG -</strong> This task can be used to flash a cold FEG.&nbsp;
       For Thermo/FEI scopes, the scripting interface can tell whether flashing is advised,
@@ -360,7 +347,8 @@
         Realign to Item</A>.&nbsp; If
       eucentricity has <i>not</i> been set yet
       during the acquire sequence, then the realign operation will be done at the Z
-      height of the item being aligned to.&nbsp; However, if eucentricity <em>has</em> being run, then
+      height of the item being aligned to.&nbsp; However, if eucentricity <em>has</em> 
+      been run, then
       the Z height found during that operation is retained for the realign operation.&nbsp;
       Thus, a new map acquired at this position will have the right Z height.&nbsp;
       There will be some error in realigning to the map because of the Z height
@@ -368,7 +356,11 @@
       account when realigning to this pair of maps in the future.&nbsp; The <strong>
       Setup</strong> button opens the lower part of the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
         dialog, where there are options for resetting image shift after the alignment
-      operation.</P>
+      operation.&nbsp; This task will restore microscope state afterwards when not in 
+      Low Dose mode, but not when in Low Dose mode.&nbsp; There used to be an option 
+      to control whether state was restored when the primary action was a script, but 
+      it was eliminated because this default behavior seems appropriate.&nbsp; If for 
+      some reason it is not, incorporate the Relaign To Item into the script instead.</P>
     <P><B>Cook specimen</B> - This task will stabilize the specimen by pre-exposing it
       for a certain amount of time or to achieve a certain dose. The parameters for
       this operation must already be set up in the <A HREF="hidd_cooksetup.htm">Specimen

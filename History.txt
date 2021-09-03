@@ -3,6 +3,25 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/3/21: Prevented pushing STOP during mag and other such changes.
+
+9/3/21: Added script command ImageMetadataToVar.
+
+9/3/21: Made Echo preserve \r\n line endings in a string and print multiple
+lines.  Also made it possible to pass \n and \r\n to a Python script without
+the '|' prefix if they are immediately surrounded by quotes.
+
+9/3/21: Fixed ability to load map from HDF file that is not open.
+
+9/3/21: Made the timing for Refine ZLP in Navigator acquire be based on the
+global time since last ZLP.
+
+9/3/21: Eliminated the "Restore state after Realign to Item" option from
+Acquire at Items dialog.
+
+9/3/21: Added check for template existence at start of Navigator acquire with
+Align to Template selected.
+
 9/1/21: Fixed repeated looping on inverting the first half of a bidirectional
 series when backgrounding saving is not enabled (In 3.8).
 

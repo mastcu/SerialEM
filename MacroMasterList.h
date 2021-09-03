@@ -610,6 +610,7 @@ MAC_SAME_NAME_ARG(NextFEGFlashHighTemp, 0, 4, NEXTFEGFLASHHIGHTEMP, i)
 MAC_SAME_NAME_NOARG(SimpleOriginStatus, 0, 4, SIMPLEORIGINSTATUS)
 MAC_SAME_NAME_ARG(AlignToTemplate, 0, 0, ALIGNTOTEMPLATE, ddiis)
 MAC_SAME_NAME_ARG(ManageDewarsAndPumps, 0, 0, MANAGEDEWARSANDPUMPS, i)
+MAC_SAME_NAME_ARG(ImageMetadataToVar, 2, 4, IMAGEMETADATATOVAR, SS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //

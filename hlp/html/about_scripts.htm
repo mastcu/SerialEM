@@ -818,12 +818,6 @@
         <br />The other scripts should all start with '#!Python' and a '#serialemPrefix' 
         or serialem import line so that the editor 
         behaves correctly, even if they are never run on their own.</li>
-      <li>Before sending the script to Python, the backslash character, '\', is replaced 
-        by '\\' so that filenames are preserved and not misinterpreted as containing 
-        escape characters like '\f' and '\x'.&nbsp; In order to include escape 
-        characters like '\n' in your script, you need to prefix them with another 
-        character, '|'.&nbsp; Thus, the line ending to print a multi-line string to the 
-        log would be '|\r|\n'.</li>
       <li>The script sent to Python consists of some initial lines, your script indented 
         in a 'try' block, and exception handlers at the end.&nbsp; The additional lines 
         are referred to as the &quot;script wrapper&quot; below.</li>
@@ -831,6 +825,24 @@
       <p>
         You can of course import any other modules available within the Python 
         installation; these imports can be anywhere in the script.</p>
+    <p>
+        <strong><em>Backslashes and escape characters:</em></strong> Before sending the script to Python, the backslash character, '\', is replaced 
+        by '\\' so that filenames are preserved and not misinterpreted as containing 
+        escape characters like '\f' and '\x'.&nbsp; In order to include escape 
+        characters like '\n' in your script, you need to prefix them with another 
+        character, '|'.&nbsp; Thus, the line ending to print a multi-line string to the 
+        log would be '|\r|\n'.&nbsp; For convenience, the prefix character is <em>not</em> 
+        needed for these strings consisting solely of the line endings surrounded by 
+        quotes:
+      <br />&nbsp; '\n'
+      <br />&nbsp; "\n"
+      <br />&nbsp; '\r\n'
+      <br />&nbsp; "\r\n"
+      <br />Thus, it is possible to split a SerialEM array variable on its separator with
+        <BR />&nbsp; var.split('\n')
+      <br />or assign the line ending to a Python variable with
+      <br />&nbsp; eol = '\r\n'
+      </p>
     <p>
       <em><strong>Calling script commands as functions:</strong></em> About 90% of SerialEM's script commands 
         are accessible from the serialem module by calling them as functions, with the 
@@ -878,17 +890,17 @@
       From Python, the string argument must come first, followed by the numeric ones.&nbsp; 
       The string argument is ignored inside SerialEM if the function does not expect 
       one.</p>
-    <p><strong><em>Printing to the log window: </em></strong>&nbsp;The 'Echo' function 
-      in the module can be used to print a single string to the log window.&nbsp; In 
+    <p><strong><em>Printing to the log window: </em></strong>&nbsp;The 'Echo' function in 
+      the module can be used to print a single string to the log window.&nbsp; In 
       addition, the standard output of the script is read through a pipe and written 
       to the log as it becomes available.&nbsp; Thus you can use the standard Python 
       'print()' function (or 'print' command in Python 2.7). However, this output will 
       be delayed and may come out later than SerialEM's own output to the log unless 
-      the script output is flushed.&nbsp; All of the 'print()' statements in 
-      your script will be converted to 'SEMprint()', a Python function defined in the 
+      the script output is flushed.&nbsp; All of the 'print()' statements in your 
+      script will be converted to 'SEMprint()', a Python function defined in the 
       script wrapper that calls the standard print function with its arguments plus 
       'flush = True.&nbsp; This will not help if you call into another module that 
-      uses 'print()', do output with 'sys.stdout.write', or&nbsp; or are using Python 
+      uses 'print()', do output with 'sys.stdout.write', or are using Python 
       2.7.&nbsp; For those cases, the script wrapper defines 'SEMflush = 
       sys.stdout.flush' 
       so you can write 'SEMflush() to do the flushing.&nbsp; You need not flush after 
@@ -1106,11 +1118,11 @@
       For connecting from a Windows machine, you can use the modules in the 
       PythonModules package.&nbsp; The module will also build and work on Linux and 
       Mac OS.&nbsp; The source code is in a mercurial repository at
-      <a href="http://bio3d.colorado.edu/PythonModule">http://bio3d.colorado.edu/PythonModule</a>
+      <a href="http://bio3d.colorado.edu/SerialEM/PythonModule">http://bio3d.colorado.edu/SerialEM/PythonModule</a>
       which you can clone with
       </P>
       <p>
-      &nbsp;&nbsp;&nbsp;&nbsp; hg clone http://bio3d.colorado.edu/PythonModule 
+      &nbsp;&nbsp;&nbsp;&nbsp; hg clone http://bio3d.colorado.edu/SerialEM/PythonModule 
         </P>
       <p>
       The module is built by running the desired Python 

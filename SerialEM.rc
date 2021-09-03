@@ -2212,17 +2212,15 @@ BEGIN
     GROUPBOX        "Primary Action",IDC_STAT_PRIMARY_GROUP,3,19,160,71,WS_GROUP
     DEFPUSHBUTTON   "GO",IDOK,207,384,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,322,384,36,14
-    CONTROL         "Restore scope state after aligning to item",IDC_NA_RESTORE_STATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,256,136,10
     PUSHBUTTON      "?",IDC_BUTHELP,377,387,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,307,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,68,14
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,295,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,305,68,14
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,172,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,182,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,282,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,281,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,282,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,281,26,12,ES_AUTOHSCROLL
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,270,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,84,269,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,112,270,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,269,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,244,136,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
@@ -2249,9 +2247,9 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,145,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,144,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,146,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,331,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,319,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,295,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,283,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,368,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,336,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,335,10,8,NOT WS_GROUP
@@ -2270,8 +2268,8 @@ BEGIN
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,220,119,10
     GROUPBOX        "Primary Action-related options",IDC_STAT_TASK_OPTIONS,3,93,160,100
-    GROUPBOX        "Options for other tasks",IDC_STAT_ACTION_OPTIONS,3,197,160,72
-    GROUPBOX        "General options",IDC_STAT_GEN_OPTIONS,3,272,160,73
+    GROUPBOX        "Options for other tasks",IDC_STAT_ACTION_OPTIONS,3,197,160,60
+    GROUPBOX        "General options",IDC_STAT_GEN_OPTIONS,3,260,160,73
     CONTROL         "Mapping",IDC_RMAPPING,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,52,3,46,14
     CONTROL         "Final Data",IDC_RACQUISITION,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,3,53,14
     LTEXT           "Parameters for:",IDC_STAT_PARAM_FOR,4,5,46,10
@@ -2287,7 +2285,7 @@ BEGIN
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,274,105,73,WS_GROUP
     GROUPBOX        "Currently selected task controls",IDC_STAT_SELECTED_GROUP,170,265,217,99
     GROUPBOX        "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,170,5,217,255
-    LTEXT           "",IDC_STAT_SPACER3,157,348,8,2
+    LTEXT           "",IDC_STAT_SPACER3,157,336,8,2
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134

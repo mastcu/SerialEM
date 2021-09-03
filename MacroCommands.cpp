@@ -1427,6 +1427,44 @@ int CMacCmd::NewArrayCmd(void)
   return 0;
 }
 
+// ImageMetadataToVar
+int CMacCmd::ImageMetadataToVar(void)
+{
+  EMimageBuffer *imBuf;
+  int index, adocInd, sectInd;
+  char *sectName = "ImageMetadata";
+  char buffer[20000];
+  CString report, bufStr;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report, true))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  if (!AdocAcquireMutex())
+    ABORT_LINE("Error getting mutex to autodoc structures for line:\n\n");
+  adocInd = AdocNew();
+  if (adocInd < 0)
+    report = "Error getting new autodoc structure";
+  else {
+    sprintf_s(buffer, 20000, "%d", index < 0 ? index : index + 1);
+    sectInd = AdocAddSection(sectName, buffer);
+    if (sectInd < 0)
+      report = "Error adding section to autodoc";
+  }
+  if (report.IsEmpty() && KStoreADOC::SetValuesFromExtra(imBuf->mImage, sectName, 0))
+    report = "Error putting metadata into autodoc structure";
+  if (report.IsEmpty() && AdocPrintToString(buffer, 20000, 1)) {
+    report = "Error converting autodoc to string";
+  } else {
+    bufStr = buffer;
+    mStrItems[2].MakeUpper();
+    SetVariable(mStrItems[2], bufStr.Trim(" \r\n"), VARTYPE_REGULAR, 0, false, &report);
+  }
+  AdocClear(adocInd);
+  AdocReleaseMutex();
+  if (!report.IsEmpty())
+    ABORT_LINE(report + " for line:\n\n");
+  return 0;
+}
+
 // LocalVar
 int CMacCmd::LocalVar(void)
 {
@@ -6053,7 +6091,13 @@ int CMacCmd::Echo(void)
   if (CMD_IS(ECHO) && !mRunningScrpLang)
     SubstituteVariables(&mStrLine, 1, mStrLine);
   JustStripItems(mStrLine, 1, report, true);
-  report.Replace("\n", "  ");
+
+  // Preserve line ending, convert array separators to spaces
+  if (report.Find("\n") >= 0) {
+    report.Replace("\r\n", "\r|#n");
+    report.Replace("\n", "  ");
+    report.Replace("\r|#n", "\r\n");
+  }
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   return 0;
 }

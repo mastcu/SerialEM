@@ -769,7 +769,8 @@
           <TD>Constructs an instance of the 'bufferImage' type that has an image pointer and other
             essential information about the image in buffer <b>buf</b>, which is a
             non-numeric string and can specify an FFT buffer.&nbsp; This type instance can
-            provide the image to other classes via the Python &#39;Buffer Protocol&#39;.&nbsp; The
+            provide the image to other classes via the Python &#39;Buffer Protocol&#39;.&nbsp; To convert to
+            a numpy array, use 'numpy.asarray()'; numpy.frombuffer() requires extra steps to set the shape and data size.&nbsp; The
             image may have padding (i.e., not be strictly contiguous) and a request that does not permit
              striding between lines could generate an exception.&nbsp; Not available below Python 3.4.
           </TD>
@@ -1463,7 +1464,6 @@
              reduction (with a Lanczos 2 filter) is used instead of binning.</TD>
         </TR>
         <TR>
-        <TR>
           <TD class="scriptcommand">Rotate90CW buf</TD>
           <TD>Rotates the image in the given buffer by 90 degrees clockwise. The result is placed into buffer A.</TD>
         </TR>
@@ -1499,7 +1499,7 @@
             placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
             is added specifying a different buffer, which can be <b>buf1</b> or <b>buf2</b>.&nbsp; Command
             added in 3.9, 11/11/20.
-          </TD></TD>
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SubtractImages buf1 buf2 [obuf]</TD>
@@ -1535,6 +1535,15 @@
             with the time that the image finished being acquired,
             in seconds since the program started.
             &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageMetadataToVar buf var</TD>
+          <TD>For the image in buffer <b>buf</b>, saves the metadata text that would be output 
+            to an '.mdoc' file into the variable <b>var</b>, which will contain an array of 
+            strings.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; The section header in the 
+            first line will be '[ImageMetadata = #]', where '#' is the buffer number (positive
+             for a regular buffer and negative for an FFT buffer).&nbsp; Command added in 4.0, 9/3/21.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageLowDoseSet [buf]</TD>
