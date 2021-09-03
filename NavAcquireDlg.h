@@ -53,8 +53,6 @@ public:
   NavAcqParams *mParam;
   NavAcqParams *mMasterParam;
   NavAcqParams mAllCurParam[2];
-  CButton m_butRestoreState;
-  BOOL m_bRestoreState;
   int mPostponed;
   int mMacroNum;
   int mPremacNum;

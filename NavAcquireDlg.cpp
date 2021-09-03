@@ -32,7 +32,7 @@
 static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_JUSTACQUIRE,
 IDC_NA_RUNMACRO, IDC_NA_ACQUIRE_TS, IDC_NA_DO_MULTISHOT, IDC_EDIT_SUBSET_END,
 IDC_EDIT_SUBSET_START,  IDC_EDIT_CYCLE_TO, IDC_EDIT_CYCLE_FROM, IDC_EDIT_EARLY_FRAMES,
-IDC_NA_RESTORE_STATE, IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING,
+IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING,
 IDC_STAT_SAVING_FATE, IDC_STAT_FILE_SAVING_INTO, IDC_NA_DO_SUBSET, IDC_STAT_TASK_OPTIONS,
 IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_OPTIONS,
 IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISITION,
@@ -91,7 +91,6 @@ static int sHeightTable[sizeof(idTable) / sizeof(int)];
 CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CNavAcquireDlg::IDD, pParent)
   , m_iAcquireType(0)
-  , m_bRestoreState(FALSE)
   , m_bCloseValves(FALSE)
   , m_bSendEmail(FALSE)
   , m_strSavingFate(_T(""))
@@ -136,8 +135,6 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
   DDX_Radio(pDX, IDC_NA_ACQUIREMAP, m_iAcquireType);
-  DDX_Control(pDX, IDC_NA_RESTORE_STATE, m_butRestoreState);
-  DDX_Check(pDX, IDC_NA_RESTORE_STATE, m_bRestoreState);
   DDX_Control(pDX, IDC_NA_CLOSE_VALVES, m_butCloseValves);
   DDX_Check(pDX, IDC_NA_CLOSE_VALVES, m_bCloseValves);
   DDX_Control(pDX, IDC_NA_SENDEMAIL, m_butSendEmail);
@@ -269,9 +266,13 @@ BOOL CNavAcquireDlg::OnInitDialog()
 {
   CWnd *wnd, *stat;
   CRect rect;
+  CFont *boldFont;
   CBaseDlg::OnInitDialog();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
+  int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS, 
+    IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP, 
+    IDC_STAT_SELECTED_GROUP};
   mNumActions = mWinApp->mNavHelper->GetNumAcqActions();
   mSecondColPanel = 1;
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
@@ -305,6 +306,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   wnd->GetWindowRect(rect);
   SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
     -3 * rect.Height() / 4);
+  boldFont = mWinApp->GetBoldFont(wnd);
 
     // Add IDs for first opening height glitches!
   // Not all these are currently needed
@@ -347,6 +349,12 @@ BOOL CNavAcquireDlg::OnInitDialog()
     wnd = GetDlgItem(IDC_RACQUISITION);
     if (wnd)
       wnd->SetFont(&mBoldFont);
+  }
+
+  for (ind = 0; ind < 6; ind++) {
+    wnd = GetDlgItem(groupIDsToBold[ind]);
+    if (wnd)
+      wnd->SetFont(boldFont);
   }
 
   // Set up spinners and combo boxes
@@ -595,7 +603,6 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->skipInitialMove = m_bSkipInitialMove;
   mParam->skipZmoves = m_bSkipZmoves;
   mParam->skipSaving = m_bSkipSaving;
-  mParam->restoreOnRealign = m_bRestoreState;
   mParam->closeValves = m_bCloseValves;
   mParam->sendEmail = m_bSendEmail;
   mParam->adjustBTforIS = m_bAdjustBTforIS;
@@ -616,7 +623,6 @@ void CNavAcquireDlg::LoadParamsToDialog()
   mMacroNum = mParam->macroIndex;
   m_bSkipInitialMove = mParam->skipInitialMove;
   m_bSkipZmoves = mParam->skipZmoves;
-  m_bRestoreState = mParam->restoreOnRealign;
   m_bCloseValves = mParam->closeValves;
   m_fCycleFrom = mParam->cycleDefFrom;
   m_fCycleTo = mParam->cycleDefTo;
@@ -790,8 +796,6 @@ void CNavAcquireDlg::ManageEnables(void)
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
   m_butJustAcquire.EnableWindow(mAnyAcquirePoints);
   m_butRunMacro.EnableWindow(mAnyAcquirePoints);
-  m_butRestoreState.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM) && 
-    m_iAcquireType == ACQUIRE_RUN_MACRO);
   m_butSkipInitialMove.EnableWindow(mWinApp->mNavigator->OKtoSkipStageMove(mActions, 
     m_iAcquireType) != 0);
   EnableDlgItem(IDC_NA_CYCLE_DEFOCUS, cycleOK);
@@ -950,8 +954,6 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_NA_SKIP_Z_MOVES);
     if (!m_bSkipInitialMove)
       mIDsToDrop.push_back(IDC_NA_SKIP_INITIAL_MOVE);
-    if (!m_bRestoreState)
-      mIDsToDrop.push_back(IDC_NA_RESTORE_STATE);
     if (!m_bDoSubset) {
       mIDsToDrop.push_back(IDC_NA_DO_SUBSET);
       mIDsToDrop.push_back(IDC_STAT_SUBSET_TO);
