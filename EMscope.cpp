@@ -2259,7 +2259,8 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mMovingStage = true;
   mBkgdMovingStage = inBackground;
   UpdateWindowsForStage();
-  mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
+  if (!mWinApp->GetAppExiting())
+    mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
   return true;
 }
 

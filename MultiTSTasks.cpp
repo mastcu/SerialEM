@@ -109,6 +109,7 @@ void CMultiTSTasks::ClearAutocenParams()
     parmP = mAcParamArray[index];
     delete parmP;
   }
+  mAcParamArray.SetSize(0);
 }
 
 // Set module pointers

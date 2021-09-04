@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/4/21: Fixed corruption of autocentering parameters and crashes after
+reloading or loading new settings (In 3.8).
+
 9/4/21: Fixed Navigator acquire resuming when leave dialog with Postpone.
 
 9/4/21: Made Align to Template not restore state when in Low Dose mode.
@@ -27,9 +30,9 @@ Acquire at Items dialog.
 Align to Template selected.
 
 9/1/21: Fixed repeated looping on inverting the first half of a bidirectional
-series when backgrounding saving is not enabled (In 3.8).
+series when background saving is not enabled (In 3.8).
 
-9/1/21: Fixed test for number of peripherals shots in multishot procedure to
+9/1/21: Fixed test for number of peripheral shots in multishot procedure to
 have same limit as in dialog and added test of second ring number (In 3.8).
 
 8/30/21: SEM_3-8-12
