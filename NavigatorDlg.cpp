@@ -9483,7 +9483,7 @@ void CNavigatorDlg::AcquireDlgClosing()
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   mHelper->GetAcquireDlgPlacement(true);
   SetCurAcqParmActions(mHelper->GetCurAcqParamIndex());
-  if (navState == NAV_PAUSED) {
+  if (navState == NAV_PAUSED && mNavAcquireDlg->mPostponed == 0) {
     mMacroProcessor->SetNonResumable();
     mNavAcquireDlg = NULL;
 
