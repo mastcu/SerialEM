@@ -1464,6 +1464,8 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
 {
   CMapDrawItem *map;
   EMimageBuffer *imBuf = &mImBufs[aliParams.loadAndKeepBuf];
+  MontParam montParm;
+  ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   mATParams = aliParams;
 
   // Find map and check it
@@ -1490,10 +1492,13 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
       return 1;
   }
 
-    if (mNavHelper->SetToMapImagingState(map, false, TRUE)) {
-      mNavHelper->RestoreFromMapState();
-      return 1;
-    }
+  mATDidSaveState = !mWinApp->LowDoseMode();
+  if (mATDidSaveState) {
+    mNavHelper->SetTypeOfSavedState(STATE_NONE);
+    mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, false);
+  }
+  mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, mATDidSaveState || 
+    !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0));
   if (!mNavHelper->GetRIstayingInLD())
     mNavHelper->SetMapOffsetsIfAny(map);
 
@@ -1505,8 +1510,9 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
   mWinApp->mBufferManager->SetShiftsOnAcquire(B3DMAX(1, mATSavedShiftsOnAcq));
   mCamera->SetCancelNextContinuous(true);
   mWinApp->mCamera->InitiateCapture(
-    mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : RECORD_CONSET);
+    mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : TRACK_CONSET);
 
+  mCamera->SetRequiredRoll(1);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "ALIGNING TO TEMPLATE");
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
@@ -1543,7 +1549,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
 
     // Otherwise new image for align
     mWinApp->mCamera->InitiateCapture(
-      mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : RECORD_CONSET);
+      mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : TRACK_CONSET);
 
 
   } else {
@@ -1613,9 +1619,15 @@ void CParticleTasks::StopTemplateAlign()
     return;
   mATIterationNum = -1;
   mWinApp->mBufferManager->SetShiftsOnAcquire(mATSavedShiftsOnAcq);
+  mNavHelper->RestoreLowDoseConset();
   mNavHelper->RestoreMapOffsets();
-  mNavHelper->RestoreFromMapState();
+  if (mATDidSaveState)
+    mNavHelper->RestoreFromMapState();
+  else if (!mNavHelper->GetRIstayingInLD() && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0)
+    mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+  mATDidSaveState = false;
 
+  mCamera->SetRequiredRoll(0);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
 }

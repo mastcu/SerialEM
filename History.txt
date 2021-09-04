@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/4/21: Fixed Navigator acquire resuming when leave dialog with Postpone.
+
+9/4/21: Made Align to Template not restore state when in Low Dose mode.
+
 9/3/21: Prevented pushing STOP during mag and other such changes.
 
 9/3/21: Added script command ImageMetadataToVar.

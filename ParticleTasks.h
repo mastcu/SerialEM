@@ -162,6 +162,7 @@ private:
   int mATSavedShiftsOnAcq;          // Saved value for rolling buffers
   bool mATFinishing;                // Flag that it is in the last round of reset
   bool mATLastFailed;               // Failure flag
+  BOOL mATDidSaveState;             // Flag that starting state was saved
 
   DewarVacParams mDVParams;         // Params for operation
   bool mDVAlreadyFilling;           // Flag that it is now/already filling
