@@ -8834,9 +8834,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
             runIt = true;
 
             // Refine ZLP has its own time stamp
-          } else if (act == NAACT_REFINE_ZLP && 
-            SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
-            mAcqActions[act].minutes) {
+          } else if (act == NAACT_REFINE_ZLP) { 
+            if (SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
+              mAcqActions[act].minutes)
             runIt = true;
 
             // Everything else, the time is kept track of here
