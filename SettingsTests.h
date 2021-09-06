@@ -1,3 +1,4 @@
+// When you split a section be sure to change ParameterIO in all 4 places!
 #ifdef SETTINGS_MODULES
   CCameraController *camera = mWinApp->mCamera;
   MontParam *montParam = mWinApp->GetMontParam();

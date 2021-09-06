@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/5/21: Fixed 27 settings not being saved, broken 8/4/21.
+
 9/5/21: Made the timing for Refine ZLP in Navigator acquire be based on the
 global time since last ZLP.
 

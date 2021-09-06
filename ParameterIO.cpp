@@ -1606,6 +1606,9 @@ void CParameterIO::WriteSettings(CString strFileName)
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
+#define SET_TEST_SECT25
+#include "SettingsTests.h"
+#undef SET_TEST_SECT25
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
 #undef SET_TEST_SECT3
@@ -6354,7 +6357,7 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
 #define SETTINGS_MODULES
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
-  bool recognized = true, recognized15 = true, recognized2 = true;
+  bool recognized = true, recognized15 = true, recognized2 = true, recognized25 = true;
   if (false) {
   }
 #define SET_TEST_SECT1
@@ -6381,6 +6384,16 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
     recognized2 = false;
       
   if (recognized || recognized2) {
+    recognized = true;
+  }
+#define SET_TEST_SECT25
+#include "SettingsTests.h"
+#undef SET_TEST_SECT25
+  else
+    recognized25 = false;
+
+  if (recognized || recognized25) {
+    recognized = true;
   }
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
@@ -6431,7 +6444,7 @@ int CParameterIO::MacroSetSetting(CString name, double value)
   double valCopy = value;
   B3DCLAMP(valCopy, -2.147e9, 2.147e9);
   ival = B3DNINT(valCopy);
-  bool recognized = true, recognized15 = true, recognized2 = true;
+  bool recognized = true, recognized15 = true, recognized2 = true, recognized25 = true;
   if (false) {
   }
 #define SET_TEST_SECT1
@@ -6458,6 +6471,16 @@ int CParameterIO::MacroSetSetting(CString name, double value)
     recognized2 = false;
 
   if (recognized || recognized2) {
+    recognized = true;
+  }
+#define SET_TEST_SECT25
+#include "SettingsTests.h"
+#undef SET_TEST_SECT25
+  else
+    recognized25 = false;
+
+  if (recognized || recognized25) {
+    recognized = true;
   }
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
