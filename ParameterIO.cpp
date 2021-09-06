@@ -153,6 +153,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   mWinApp->mMultiTSTasks->ClearAutocenParams();
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
+
+  // When you split a section, you need to add "recognized" code here and in the two macro
+  // get/set functions, and add another include in WriteSettings
   BOOL recognized, recognized15, recognized2, recognized25, frameListOK;
   LowDoseParams *ldp;
   StateParams *stateP;

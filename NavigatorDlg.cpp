@@ -8834,8 +8834,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
             runIt = true;
 
             // Refine ZLP has its own time stamp
-          } else if (act == NAACT_REFINE_ZLP) { 
-            if (SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
+          } else if (act == NAACT_REFINE_ZLP) {
+            if (mWinApp->GetEFTEMMode() && 
+              SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
               mAcqActions[act].minutes)
             runIt = true;
 
@@ -8845,6 +8846,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
             runIt = true;
             mAcqActions[act].timeLastDone = mWinApp->MinuteTimeStamp();
           }
+          break;
 
         case NAA_IF_SEPARATED:
           if (sqrt(pow(item->mStageX - mAcqActions[act].lastDoneAtX, 2.f) +
