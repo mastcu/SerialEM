@@ -126,6 +126,7 @@ public:
   GetSetMember(float, StepForBidirReturn);
   GetSetMember(float, SpeedForOneStepReturn);
   GetSetMember(int, RestoreStageXYonTilt);
+  GetMember(bool, DoingDoseSymmetric);
   GetSetMember(BOOL, ReorderDoseSymFile);
   GetSetMember(int, DoingDosymFileReorder);
   GetSetMember(int, DosymFitPastReversals);
@@ -142,7 +143,7 @@ public:
 
   double GetCumulativeDose();
 
-  bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
+  bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional; };
 
   void BestPredFit(float *x1fit, float *x2fit, float *yfit, int &nFit, int &nDrop,
            int minFit, int minQuadratic, float &slope, float &slope2, float &intcp,

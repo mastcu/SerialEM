@@ -3,12 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/7/21: Made header title line show "dosym" instead of "bidir" for
+dose-symmetric series (In 3.8).
+
 9/5/21: Fixed 27 settings not being saved, broken 8/4/21.
 
 9/5/21: Made the timing for Refine ZLP in Navigator acquire be based on the
 global time since last ZLP and stopped tests for periodic tasks from falling
 through into test for whether far enough from last position.
 
+9/4/21: SEM_3-8-13
 9/4/21: Fixed corruption of autocentering parameters and crashes after
 reloading or loading new settings (In 3.8).
 

@@ -345,7 +345,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     str.Format("    Tilt axis angle = %.1f, binning = %s  spot = %d  camera = %d", 
       axisRot, toBuf->BinningText(), spot, cam);
     if (mWinApp->mTSController->GetBidirStartAngle(bidirAngle)) {
-      bidir.Format(" bidir = %.1f", bidirAngle);
+      bidir.Format(" %s = %.1f", mWinApp->mTSController->GetDoingDoseSymmetric() ?
+        "dosym" : "bidir", bidirAngle);
       str += bidir;
     }
     inStore->AddTitle((LPCTSTR)str);
