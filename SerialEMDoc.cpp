@@ -2174,7 +2174,7 @@ void CSerialEMDoc::PreSettingsRead()
 {
   // If low dose is on, go to view area to avoid confusing shifts
   mTrueLDArea = mWinApp->mScope->GetLowDoseArea();
-  if (mWinApp->LowDoseMode())
+  if (mWinApp->LowDoseMode() && mTrueLDArea >= 0)
     mWinApp->mScope->GotoLowDoseArea(0);
 }
 
@@ -2189,7 +2189,7 @@ void CSerialEMDoc::PostSettingsRead()
   // Copy low dose params, restore low dose area, copy camera params and update windows
   FixSettingsForIALimitCal();
   mWinApp->CopyCameraToCurrentLDP();
-  if (mWinApp->LowDoseMode())
+  if (mWinApp->LowDoseMode() && mTrueLDArea >= 0)
     mWinApp->mScope->GotoLowDoseArea(mTrueLDArea);
   mWinApp->CopyConSets(mWinApp->GetCurrentCamera());
 

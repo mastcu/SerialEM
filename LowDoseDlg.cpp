@@ -2407,7 +2407,7 @@ void CLowDoseDlg::DeselectGoToButtons(int area)
 // Color the button for the current area (called at end of area-setting)
 void CLowDoseDlg::SelectGoToButton(int area)
 {
-  if (!mTrulyLowDose)
+  if (!mTrulyLowDose || area < 0)
     return;
   CMyButton *but = (CMyButton *)GetDlgItem(IDC_GOTO_VIEW + area);
   but->m_bShowSpecial = true;
