@@ -5809,7 +5809,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           mNumAverageDark = conSet.numAverage;
       }
 
-    } else if (mParam->GatanCam && !mParam->K2Type) {
+    } else if (mParam->GatanCam && !mParam->K2Type && !mParam->OneViewType) {
 
       // If processing in DM, need to analyze whether to force a new dark ref
       // Search for a matching dark ref in our list
