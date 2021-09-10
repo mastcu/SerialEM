@@ -367,7 +367,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     inStore->getMode() == MRC_MODE_FLOAT)) {
     str.Format("Error trying to save %sfloat image in %sfloat file",
       inStore->getMode() == MRC_MODE_FLOAT ? "non-" : "",
-      inStore->getMode() == MRC_MODE_FLOAT ? "" : "-non");
+      inStore->getMode() == MRC_MODE_FLOAT ? "" : "non-");
     SEMMessageBox(str);
     return 1;
   }

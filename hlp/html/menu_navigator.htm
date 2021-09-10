@@ -660,7 +660,10 @@
             circles will represent the area covered by the beam, assuming the beam size
             specified there.&nbsp;   The pattern will be drawn around the marker point if one is present;
             otherwise it will be drawn around the current item, if it is marked for acquisition,
-            or around multiple selected items.&nbsp; If Edit mode is not on, use
+            or around multiple selected items.&nbsp; However, it will not be drawn if the 
+            current item is set to acquire an incomplete pattern (i.e., in which some 
+            positions are being skipped), so that it is clear which positions will be 
+            acquired for that item.&nbsp; If Edit mode is not on, use 
             Shift-Left-click to turn off the marker and see the pattern around the current
             point.&nbsp; If Edit mode is on and there are multiple hole positions in a
             regular (non-custom) pattern, then Shift-double-Left-click near one of the
