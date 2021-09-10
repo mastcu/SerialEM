@@ -216,17 +216,31 @@ int CMultiHoleCombiner::CombineItems(int boundType)
     mBSTIdelY))
     mUseImageCoords = false;
 
-  // Just get average angle and length from the analysis using stage positions
-  // When using image positions, this is still needed for the sanity check, detection
-  // or transposition, and the transform for skipped points
+  // If they were drawn on a loaded montage map, now replace the
+  // centers with image coordinates
+  if (mUseImageCoords) {
+    for (ind = 0; ind < numPoints; ind++) {
+      item = itemArray->GetAt(navInds[ind]);
+      mWinApp->mMainView->GetItemImageCoords(mImBuf, item, ptX, ptY, item->mPieceDrawnOn);
+      xCenters[ind] = ptX;
+      yCenters[ind] = ptY;
+    }
+
+    // We need the image to stage matrix later, so invert
+    // We need image to IS transform to replace stage to IS
+    mBSTImat = MatInv(mBSTImat);
+    st2is = MatMul(mBSTImat, st2is);
+  }
+
+  // Get average angle and length with whichever positions
   mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
     peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
   mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
-    spacing);
+      spacing);
 
   // Get a matrix that would transform from relative hole positions in unit vector stage
   // space to relative hole positions in unit vector image shift space
-  // gridMat takes unit vectors in stage hole space to stage positions
+  // gridMat takes unit vectors in stage or image hole space to stage or image positions
   // st2is takes those positions to image shift positions
   // Transfer the hole vectors from where they were defined to the mag in question
   // Compute a transformation from IS space hole number to IS and take its inverse
@@ -252,41 +266,24 @@ int CMultiHoleCombiner::CombineItems(int boundType)
     fabs(mSkipXform.ypy - prodMat.ypy) > nearIntCrit ||
     fabs(mSkipXform.xpx * mSkipXform.ypx + mSkipXform.xpy * mSkipXform.ypy) > 0.001) {
     PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
-      " Matrix to xform relative hole positions from stage to IS space: %.3f %.3f %.3f "
-      "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n stage to IS:  %f  %f  %f  %f\r\n"
+      " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
+      "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
       "holeMat: %.3f %.3f %.3f %.3f", sMessages[ERR_BAD_UNIT_XFORM - 1],
+      mUseImageCoords ? "image" : "stage",
       prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
       gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
-      st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+      mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
       holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
     return ERR_BAD_UNIT_XFORM;
   }
   /*PrintfToLog(
-    " Matrix to xform relative hole positions from stage to IS space: %.3f %.3f %.3f "
-    "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n stage to IS:  %f  %f  %f  %f\r\n"
-    "holeMat: %.3f %.3f %.3f %.3f",
+    " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
+    "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
+    "holeMat: %.3f %.3f %.3f %.3f", mUseImageCoords ? "image" : "stage",
     prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
     gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
-    st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+    mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
     holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);*/
-
-  // If they were drawn on a loaded montage map, now replace the
-  // centers with image coordinates
-  if (mUseImageCoords) {
-    mBSTImat = MatInv(mBSTImat);
-    for (ind = 0; ind < numPoints; ind++) {
-      item = itemArray->GetAt(navInds[ind]);
-      mWinApp->mMainView->GetItemImageCoords(mImBuf, item, ptX, ptY, item->mPieceDrawnOn);
-      xCenters[ind] = ptX;
-      yCenters[ind] = ptY;
-    }
-
-    // Get average angle and length again with image positions
-    mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
-      peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
-    mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
-      spacing);
-  }
 
   // Now get grid positions
   mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);

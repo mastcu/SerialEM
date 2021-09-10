@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/10/21: Fixed rotations of multishot patterns produced by the combiner when
+working with montage-based image coordinates, broken 8/23.
+
 9/9/21: SEM_3-8-14
 9/9/21: Stopped displaying full multishot pattern on the current point if some
 positions are being skipped for it (In 3.8).
