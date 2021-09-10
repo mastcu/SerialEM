@@ -4489,7 +4489,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
 
     // Base Z is not allowed for these files, so leave it out
     error = mMultiTSTasks->InvertFileInZ(mTiltIndex, mTiltAngles, mFrameAlignInIMOD);
-    if ((error < 1 || error > 3) && error != 11)
+    if (error > 3 && error != 11)
       mClosedDoseSymFile = true;
 
     // Set a task for synchronous copy with VERY generous timeout
