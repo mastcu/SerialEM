@@ -774,10 +774,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   // Or finally the option governs it
   doTrim = false;
   if (!(tmplCorr || mWinApp->mShiftCalibrator->CalibratingIS() ||
+    mWinApp->mParticleTasks->DoingTemplateAlign() == 1 ||
     (mWinApp->mMacroProcessor->DoingMacro() && 
     mWinApp->mMacroProcessor->GetDisableAlignTrim()))) {
       if (mWinApp->mNavHelper->GetRealigning() == 1 ||
-        mWinApp->mParticleTasks->DoingTemplateAlign())
+        mWinApp->mParticleTasks->DoingTemplateAlign() > 1)
         doTrim = !disableItemTrim;
       else if (mWinApp->mComplexTasks->InLowerMag())
         doTrim = !disableTaskTrim;
