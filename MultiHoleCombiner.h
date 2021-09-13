@@ -23,7 +23,7 @@ public:
   CMultiHoleCombiner(void);
   ~CMultiHoleCombiner(void);
 
-  int CombineItems(int boundType);
+  int CombineItems(int boundType, BOOL turnOffOutside);
   void AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters, IntVec &navInds,
     CMapDrawItem *item, int ind, int &drawnOnID);
   bool OKtoUndoCombine(void);
@@ -47,6 +47,8 @@ private:
   IntVec mIDsForUndo;             // IDs of the multi-shot items added
   IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
   std::set<int> mSetOfUndoIDs;    // A set so they can be looked up easily
+  std::set<int> mGroupIDsInPoly;  // The group ID's of items in polygon
+  std::set<int> mIDsOutsidePoly;  // IDs of ones turned off
   ScaleMat mSkipXform;            // Transform to get from stage to IS space skip list
   bool mTransposeSize;            // Flag to transpose sizes from stage to IS space
 

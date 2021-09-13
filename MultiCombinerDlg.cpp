@@ -15,6 +15,7 @@
 CMultiCombinerDlg::CMultiCombinerDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(IDD_MULTI_COMBINER, pParent)
   , m_bDisplayMultiShot(FALSE)
+  , m_bTurnOffOutside(FALSE)
 {
   mNonModal = true;
 }
@@ -30,6 +31,8 @@ void CMultiCombinerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_UNDO_COMBINE, m_butUndoCombine);
   DDX_Radio(pDX, IDC_RON_IMAGE, m_iCombineType);
   DDX_Control(pDX, IDC_BUT_COMBINE_PTS, m_butCombinePts);
+  DDX_Control(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_butTurnOffOutside);
+  DDX_Check(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_bTurnOffOutside);
 }
 
 
@@ -40,6 +43,7 @@ BEGIN_MESSAGE_MAP(CMultiCombinerDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_UNDO_COMBINE, OnUndoCombine)
   ON_BN_CLICKED(IDC_CHECK_DISPLAY_MULTI, OnCheckDisplayMulti)
   ON_BN_CLICKED(IDC_BUT_COMBINE_PTS, OnCombinePoints)
+  ON_BN_CLICKED(IDC_CHECK_REMOVE_OUTSIDE, OnTurnOffOutside)
 END_MESSAGE_MAP()
 
 
@@ -50,7 +54,6 @@ BOOL CMultiCombinerDlg::OnInitDialog()
   mHelper = mWinApp->mNavHelper;
   mCombiner = mHelper->mCombineHoles;
   UpdateSettings();
-  UpdateEnables();
   SetDefID(45678);    // Disable OK from being default button for non-modal
   return TRUE;
 }
@@ -79,6 +82,7 @@ void CMultiCombinerDlg::OnCombineType()
 {
   UpdateData(true);
   mHelper->SetMHCcombineType(m_iCombineType);
+  UpdateEnables();
   mWinApp->RestoreViewFocus();
 }
 
@@ -95,6 +99,13 @@ void CMultiCombinerDlg::OnUndoCombine()
 }
 
 
+void CMultiCombinerDlg::OnTurnOffOutside()
+{
+  UpdateData(true);
+  mHelper->SetMHCturnOffOutsidePoly(m_bTurnOffOutside);
+  mWinApp->RestoreViewFocus();
+}
+
 void CMultiCombinerDlg::OnCheckDisplayMulti()
 {
   UpdateData(true);
@@ -106,7 +117,7 @@ void CMultiCombinerDlg::OnCheckDisplayMulti()
 
 void CMultiCombinerDlg::OnCombinePoints()
 {
-  int error = mCombiner->CombineItems(m_iCombineType);
+  int error = mCombiner->CombineItems(m_iCombineType, m_bTurnOffOutside);
   if (error)
     AfxMessageBox("Error trying to combine hole for multiple Records:\n" +
       CString(mWinApp->mNavHelper->mCombineHoles->GetErrorMessage(error)), MB_EXCLAME);
@@ -119,6 +130,8 @@ void CMultiCombinerDlg::UpdateSettings()
   m_iCombineType = mHelper->GetMHCcombineType();
   B3DCLAMP(m_iCombineType, 0, 2);
   m_bDisplayMultiShot = mHelper->GetMHCenableMultiDisplay();
+  m_bTurnOffOutside = mHelper->GetMHCturnOffOutsidePoly();
+  UpdateEnables();
   UpdateData(false);
 }
 
@@ -126,6 +139,6 @@ void CMultiCombinerDlg::UpdateEnables()
 {
   BOOL busy = mWinApp->DoingTasks();
   m_butCombinePts.EnableWindow(!busy);
+  m_butTurnOffOutside.EnableWindow(m_iCombineType == COMBINE_IN_POLYGON);
   m_butUndoCombine.EnableWindow(!busy && mCombiner->OKtoUndoCombine());
 }
-

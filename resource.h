@@ -1930,6 +1930,7 @@
 #define IDC_EDIT_PRIOR_THRESH           2957
 #define IDC_STAT_PRIOR_NM               2958
 #define IDC_STAT_WHY_A_NO_GOOD          2959
+#define IDC_CHECK_REMOVE_OUTSIDE        2960
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2436,7 +2437,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        265
 #define _APS_NEXT_COMMAND_VALUE         33409
-#define _APS_NEXT_CONTROL_VALUE         2960
+#define _APS_NEXT_CONTROL_VALUE         2961
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

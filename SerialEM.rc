@@ -3463,7 +3463,7 @@ BEGIN
     PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,212,44,12
 END
 
-IDD_MULTI_COMBINER DIALOGEX 0, 0, 122, 76
+IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 90
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Multiple Hole Combiner"
@@ -3472,12 +3472,14 @@ BEGIN
     CONTROL         "On image in current buffer",IDC_RON_IMAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,13,91,10
     CONTROL         "Inside current polygon",IDC_RIN_POLYGON,"Button",BS_AUTORADIOBUTTON,8,23,82,10
     CONTROL         "In same group as current point",IDC_RSAME_GROUP,"Button",BS_AUTORADIOBUTTON,8,33,105,10
-    GROUPBOX        "Combine points marked as Acquire",IDC_STATIC,4,3,114,42,WS_GROUP
-    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,48,54,12
-    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,66,48,34,12
-    PUSHBUTTON      "?",IDC_BUTHELP,107,49,11,10
+    GROUPBOX        "Combine points marked as Acquire",IDC_STATIC,4,3,117,42,WS_GROUP
+    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,60,54,12
+    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,67,60,34,12
+    PUSHBUTTON      "?",IDC_BUTHELP,110,61,11,10
     CONTROL         "Display multi-shot before combine",IDC_CHECK_DISPLAY_MULTI,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,62,113,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,76,113,10
+    CONTROL         "Turn off group items outside polygon",IDC_CHECK_REMOVE_OUTSIDE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,47,117,10
 END
 
 IDD_MACROSELECTER DIALOGEX 0, 0, 241, 72
@@ -4144,9 +4146,9 @@ BEGIN
     IDD_MULTI_COMBINER, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 118
+        RIGHTMARGIN, 121
         TOPMARGIN, 3
-        BOTTOMMARGIN, 72
+        BOTTOMMARGIN, 86
     END
 
     IDD_MACROSELECTER, DIALOG
@@ -5095,6 +5097,8 @@ BEGIN
     IDC_BUT_COMBINE_PTS     "Combine selected points into multi-shot items"
     IDC_BUT_UNDO_COMBINE    "Remove last set of multi-shot items and restore individual points"
     IDC_CHECK_DISPLAY_MULTI "Do not suppress the display of multi-shot pattern on all individual points"
+    IDC_CHECK_REMOVE_OUTSIDE
+                            "Set points in same groups as ones inside polygon not to display or acquire"
     IDC_CHECK_SECOND_RING   "Take a second ring of peripheral shots (can be inner or outer ring)"
     IDC_SPIN_RING2_NUM      "Set number of shots to take in second ring"
     IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"

@@ -246,6 +246,7 @@ CNavHelper::CNavHelper(void)
   mRIdidSaveState = false;
   mMHCcombineType = COMBINE_ON_IMAGE;
   mMHCenableMultiDisplay = false;
+  mMHCturnOffOutsidePoly = true;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;

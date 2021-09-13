@@ -41,4 +41,7 @@ public:
   int m_iCombineType;
   afx_msg void OnCombinePoints();
   CButton m_butCombinePts;
+  CButton m_butTurnOffOutside;
+  BOOL m_bTurnOffOutside;
+  afx_msg void OnTurnOffOutside();
 };

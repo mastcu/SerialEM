@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/12/21: Added option to multi-hole combiner to turn off and not acquire
+points outside a polygon when selecting points inside.
+
+9/12/21: Prevented trimming in autoalignment to the template in Align to
+Template.
+
 9/10/21: Fixed rotations of multishot patterns produced by the combiner when
 working with montage-based image coordinates, broken 8/23.
 

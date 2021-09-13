@@ -64,7 +64,7 @@ const char *CMultiHoleCombiner::GetErrorMessage(int error)
 /*
  * Main call to combine items, picked by the specified boundary type
  */
-int CMultiHoleCombiner::CombineItems(int boundType)
+int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 {
   CMapDrawItem *item, *curItem;
   CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
@@ -96,6 +96,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
   mUseImageCoords = false;
+  mGroupIDsInPoly.clear();
 
   // Check for Nav
   mHelper = mWinApp->mNavHelper;
@@ -319,6 +320,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   mIDsForUndo.clear();
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
+  mIDsOutsidePoly.clear();
 
   if (!crossPattern) {
 
@@ -642,6 +644,21 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   // Remove from Nav array in reverse order, do not delete, they are in the saved array
   for (ind = num - 1; ind >= 0; ind--)
     itemArray->RemoveAt(navInds[ind]);
+
+  // Now that single points are gone, find other items in same groups that were 
+  // outside the polygon
+  if (boundType == COMBINE_IN_POLYGON && turnOffOutside) {
+    for (ind = 0; ind < itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      if (mGroupIDsInPoly.count(item->mGroupID) && item->IsPoint() && item->mAcquire &&
+        mSetOfUndoIDs.count(item->mMapID) == 0) {
+        item->mAcquire = false;
+        item->mDraw = false;
+        mIDsOutsidePoly.insert(item->mMapID);
+      }
+    }
+  }
+
   mNav->FinishMultipleDeletion();
   for (ind = 0; ind < (int)mIndexesForUndo.size(); ind++)
     mIndexesForUndo[ind] -= (int)navInds.size();
@@ -663,6 +680,8 @@ void CMultiHoleCombiner::AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters
     drawnOnID = item->mDrawnOnMapID;
   else if (drawnOnID != item->mDrawnOnMapID)
     drawnOnID = 0;
+  if (item->mGroupID)
+    mGroupIDsInPoly.insert(item->mGroupID);
 }
 
 /*
@@ -697,7 +716,8 @@ bool CMultiHoleCombiner::OKtoUndoCombine(void)
 }
 
 /*
-* External call to undo it: remove the multi shot ones by ID and restore the saved items and remove the 
+* External call to undo it: remove the multi shot ones by ID and restore the saved items
+* and remove the undo info
 */
 void CMultiHoleCombiner::UndoCombination(void)
 {
@@ -716,9 +736,18 @@ void CMultiHoleCombiner::UndoCombination(void)
 
   itemArray->Append(mSavedItems);
   mSavedItems.RemoveAll();
+
+  for (jnd = 0; jnd < itemArray->GetSize(); jnd++) {
+    item = itemArray->GetAt(jnd);
+    if (mIDsOutsidePoly.count(item->mMapID)) {
+      item->mDraw = true;
+      item->mAcquire = true;
+    }
+  }
   mIDsForUndo.clear();
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
+  mIDsOutsidePoly.clear();
   mNav->FinishMultipleDeletion();
 }
 

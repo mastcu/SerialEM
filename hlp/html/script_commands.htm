@@ -3750,14 +3750,16 @@
             </TD>
         </TR>
       <TR>
-          <TD class="scriptcommand">CombineHolesToMulti #S</TD>
+          <TD class="scriptcommand">CombineHolesToMulti #S [#O]</TD>
           <TD>Combines a set of Navigator points marked for acquisition into a subset suitable for
             acquisition of a rectangular array with 'MultipleRecords', using the parameters set in the
             <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A>.
             See the &nbsp; <A HREF="hidd_multi_combiner.htm">Multiple Hole Combiner dialog</A>
             for details and restrictions.&nbsp; Neither of those two dialogs need to be open, but the Navigator must be.
             &nbsp; Set <b>#S</b> to 0 to select points on the currently displayed image, 1 to select points
-            within the current polygon, or 2 to select points in the same group as the current point.
+            within the current polygon, or 2 to select points in the same group as the current point.&nbsp; Set 
+            the optional <b>#O</b> to 1 to turn off points outside a polygon in the same groups as the ones combined,
+            or 0 not to, overriding the selection in the dialog.
             </TD>
         </TR>
         <TR>

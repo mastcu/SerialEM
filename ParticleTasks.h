@@ -225,7 +225,7 @@ public:
   void DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations);
   void PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD);
   int AlignToTemplate(NavAlignParams &aliParams);
-  bool DoingTemplateAlign() { return mATIterationNum >= 0; };
+  int DoingTemplateAlign() { return mATIterationNum >= 0 ? mATIterationNum + 1 : 0; };
   void TemplateAlignNextTask(int param);
   void StopTemplateAlign();
   int TemplateAlignBusy();

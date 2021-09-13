@@ -8879,7 +8879,8 @@ int CMacCmd::CombineHolesToMulti(void)
   int index;
   ABORT_NONAV;
   B3DCLAMP(mItemInt[1], 0, 2);
-  index = mNavHelper->mCombineHoles->CombineItems(mItemInt[1]);
+  index = mNavHelper->mCombineHoles->CombineItems(mItemInt[1],
+    mItemEmpty[2] ? mNavHelper->GetMHCturnOffOutsidePoly() : mItemInt[2] != 0);
   if (index)
     ABORT_NOLINE("Error trying to combine hole for multiple Records:\n" +
       CString(mNavHelper->mCombineHoles->GetErrorMessage(index)));

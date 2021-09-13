@@ -211,6 +211,7 @@ public:
   GetSetMember(float, HFaddOverlapFrac);
   GetSetMember(BOOL, MHCenableMultiDisplay);
   GetSetMember(int, MHCcombineType);
+  GetSetMember(BOOL, MHCturnOffOutsidePoly);
   GetSetMember(BOOL, SkipAstigAdjustment);
   GetSetMember(int, CurAcqParamIndex);
   GetMember(int, NumAcqActions);
@@ -410,6 +411,7 @@ private:
   IntVec mHFnumCircles;
   int mMHCcombineType;           // MultiHoleCombine way to pick points (COMBINE_...)
   BOOL mMHCenableMultiDisplay;   // Option to show multi-shot on all before combining pts
+  BOOL mMHCturnOffOutsidePoly;    // Option to remove points outside if using polygon 
   BOOL mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
   IntVec mSavedMaShMapIDs;       // Saved map marker shift information: map ID
   IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value
