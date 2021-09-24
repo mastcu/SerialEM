@@ -253,7 +253,7 @@
       For K2, the image size and binning selection are preserved when switching into
       super-resolution mode, or when switching out of it if the binning is above 0.5.&nbsp;
       For K3, the same applies when switching in or out of counting mode, or when
-      turning on &#39;Bin normalized counting frames by 2&#39;.</P>
+      turning on &#39;Bin counting frames by 2 in hardware&#39;.</P>
     <P><b>Use correlated double sampling (CDS) (K3 only)</b></P>
     <P>With a K3 camera, use this checkbox to turn on correlated double sampling for all
         kinds of images.&nbsp; CDS will reduce noise and improve the DQE but cuts the
@@ -263,15 +263,19 @@
         warned to check other parameter sets for changes in these times.&nbsp; This
         checkbox appears only if the version of GMS and the SEMCCD plugin support CDS.</P>
     <P><b>Bin counting frames by 2 in hardware (K3 only)</b></P>
-    <P>With a K3 camera, use this checkbox to acquire frames for saving or
-      aligning with fast hardware binning by 2 into a size that corresponds to the
+    <P>With a K3 camera, counting mode frames are saved as super-resolution by default.&nbsp; Use this checkbox to acquire 
+      frames binned by 2 instead for saving or aligning; the binning is done quickly 
+      in hardware and produces a frame size corresponding to the 
       physical pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp;
       This mode of operation is equivalent to counting mode on the K2 and will
       introduce some aliasing of high frequency information, but it saves both time
       processing the frames and space occupied by saved frames.&nbsp; However, the
       binning is done into bytes which can saturate if images are normalized and there are more than 7 electrons
-      in a physical pixel. </P>
-    <P>If acquired frames are being saved, they will still be saved as bytes.&nbsp;
+      in a physical pixel.&nbsp; Another alternative for saving frames of this size is 
+      with the option &#39;Reduce normalized super-resolution frames by 2 with 
+      antialiasing&#39; in the <a href="hidd_k2_save_options.htm">Frame File 
+      Options dialog</a>, which will avoid the aliasing but cost some processing time.</P>
+    <P>If frames acquired with hardware binning are being saved, they will still be saved as bytes.&nbsp; 
       However, if you sum normalized frames for saving with the option &#39;Save variable frame
       sums&#39;, they will be saved as integers, like K2 normalized counting mode frames.&nbsp;
       Summed raw frames will still be saved as bytes, which should be safe, but if the
