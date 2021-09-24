@@ -16,7 +16,7 @@
 	* Variables in the description of command start with lower case (including reportedValue) and are printed
 	 in <i></i> w/o quotation marks
 
-	* Strings and numbers that are to be entered literally are put into single qoutes
+	* Strings and numbers that are to be entered literally are put into single quotes
 
 -->
 
@@ -2458,6 +2458,15 @@
             added in 3.9, 5/23/21.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetDiffractionShift #X #Y</TD>
+          <TD>Sets the diffraction shift to the given values.&nbsp; Command
+            added in 4.0, 9/24/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportDiffractionShift</TD>
+          <TD>Reports the diffraction shift.&nbsp; Command added in 4.0, 9/24/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetProbeMode #|mode</TD>
           <TD>Sets the mode to microprobe or nanoprobe on a Thermo/FEI scope.&nbsp; Follow with 0
             or 'nano' for nanoprobe, or 1 or 'micro' for microprobe.</TD>
@@ -3768,6 +3777,11 @@
              operation (through script command or dialog) and restores the individual points
              to the Navigator table.&nbsp; All of the multi-shot points must still exist.
              </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportHoleFinderParams</TD>
+          <TD>Reports the diameter and center-to-center spacing in microns currently being 
+            used for hole finding.&nbsp; Command added in 4.0, 9/24/21.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>

@@ -4514,6 +4514,29 @@ int CMacCmd::ReportImageBeamTilt(void)
   return 0;
 }
 
+// ReportDiffractionShift
+int CMacCmd::ReportDiffractionShift(void)
+{
+  double delX, delY;
+  if (!mScope->GetDiffractionShift(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  mLogRpt.Format("Diffraction shift is %.3f %.3f", delX, delY);
+  SetReportedValues(&mStrItems[1], delX, delY);
+  return 0;
+}
+
+// SetDiffractionShift
+int CMacCmd::SetDiffractionShift(void)
+{
+  if (!mScope->SetDiffractionShift(mItemDbl[1], mItemDbl[2])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // SetImageShift
 int CMacCmd::SetImageShift(void)
 {
@@ -8842,6 +8865,17 @@ int CMacCmd::FindHoles(void)
     AbortMacro();
     return 1;
   }
+  return 0;
+}
+
+// ReportHoleFinderParams
+int CMacCmd::ReportHoleFinderParams(void)
+{
+  HoleFinderParams *hfp;
+  mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+  hfp = mNavHelper->GetHoleFinderParams();
+  mLogRpt.Format("Hole size is %.2f and spacing is %.2f", hfp->diameter, hfp->spacing);
+  SetReportedValues(&mStrItems[1], hfp->diameter, hfp->spacing);
   return 0;
 }
 
