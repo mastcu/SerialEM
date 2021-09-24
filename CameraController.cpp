@@ -8178,9 +8178,11 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         if (td->UnblankTime > td->MinBlankTime) {
           CEMscope::SetBlankingFlag(true);
           td->scopePlugFuncs->SetBeamBlank(*vTrue);
+          SEMTrace('B', "BlankerProc set beam blank ON");
           ::Sleep(td->UnblankTime - td->MinBlankTime);
           td->scopePlugFuncs->SetBeamBlank(*vFalse);
           CEMscope::SetBlankingFlag(false);
+          SEMTrace('B', "BlankerProc set beam blank OFF");
         } else
 
           // If it is too short, skip blanking and just sleep
@@ -8467,6 +8469,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         td->scopePlugFuncs->SetBeamBlank(*vTrue);
 
         CEMscope::SetBlankingFlag(true);
+        SEMTrace('B', "BlankerProc set beam blank ON");
 
         // Or wait the post-action time or until image returned
       } else if (td->PostActionTime && !(td->DriftISinterval || td->DynFocusInterval ||
