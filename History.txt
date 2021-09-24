@@ -3,8 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/24/21: Fixed crash if start to exit during a dose-symmetric series and
+choose to reorder file instead (In 3.8).
+
 9/24/21: Added option to the Focus by Eucentricity dialog to use a View
 subarea for the focus measurements.
+
+9/22/21: SEM_3-8-15
+9/22/21: Fixed crash using hole finder on non-montage (broken 8/23) (In 3.8).
 
 9/21/21: Allowed relative focus to be set with objective minilens in LM on
 JEOL, so scope control, focus calibration, and autofocusing can work in LM.
