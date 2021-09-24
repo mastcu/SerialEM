@@ -69,6 +69,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mImageAsyncFailed = false;
   mNextSecToRead = NO_SUPPLIED_SECTION;
   mHdfUpdateTimePerSect = 0.05f;
+  AdocRetryWriteOpens(5);
 }
 
 EMbufferManager::~EMbufferManager()
