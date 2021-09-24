@@ -3380,13 +3380,19 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
   const float Falcon3Rates200KV[] = {0.101f, 0.119f, 0.161f, 0.201f, 0.271f, 0.377f,
     0.461f, 0.577f, 0.693f, 0.838f, 0.981f, 1.159f, 1.302f, 1.486f, 1.711f, 1.968f,
     2.226f, 2.422f, 2.651f, 2.894f, 3.191f};
-  const float Falcon4Counts300KV[] = {0.308f, 0.628f, 1.06f, 1.6f, 2.139f, 3.2f, 4.216f,
-    5.198f, 6.211f, 6.934f, 7.848f, 8.629f, 9.305f, 10.093f, 0.309f, 0.521f, 0.737f,
+  const float Falcon4Counts200KV[] = {0.493f, 0.964f, 1.421f, 1.863f, 2.291f, 2.706f,
+    3.108f, 3.499f, 3.878f, 4.246f, 4.599f, 4.943f, 5.277f, 5.599f, 5.911f, 6.214f,
+    6.792f, 7.331f, 7.836f, 8.313f, 8.757f, 9.175f, 9.611f, 9.95f, 10.274f, 10.594f,
+    10.894f, 11.309f, 11.8f, 12.229f, 12.691f, 12.937f, 13.143f};
+  const float Falcon4Rates200KV[] = {0.495f, 0.993f, 1.494f, 1.993f, 2.496f, 2.998f,
+    3.500f, 4.011f, 4.517f, 5.032f, 5.539f, 6.053f, 6.571f, 7.090f, 7.607f, 8.128f,
+    9.176f, 10.236f, 11.308f, 12.393f, 13.490f, 14.605f, 15.885f, 16.953f, 18.069f,
+    19.265f, 20.489f, 22.391f, 25.064f, 27.945f, 31.989f, 34.777f, 37.706f};
+  const float Falcon4Counts300KV[] = {0.309f, 0.521f, 0.737f,
     1.062f, 1.387f, 1.928f, 2.357f, 2.784f, 3.31f, 3.93f, 4.623f, 5.357f,
     5.868f, 6.229f, 6.597f, 7.099f, 7.872f, 8.635f, 9.335f, 10.093f, 10.904f,
     11.551f, 12.214f, 12.731f, 13.155f, 13.677f, 14.095f, 14.357f, 14.562f, 14.729f};
-  const float Falcon4Rates300KV[] = {0.308f, 0.643f, 1.104f, 1.7f, 2.321f, 3.616f, 4.961f,
-    6.381f, 7.998f, 9.259f, 11.022f, 12.708f, 14.328f, 16.46f, 0.311f, 0.53f, 0.756f,
+  const float Falcon4Rates300KV[] = {0.311f, 0.53f, 0.756f,
     1.107f, 1.463f, 2.077f, 2.576f, 3.096f, 3.752f, 4.569f, 5.538f, 6.631f,
     7.434f, 8.03f, 8.66f, 9.565f, 11.071f, 12.714f, 14.403f, 16.463f, 19.035f,
     21.459f, 24.426f, 27.234f, 30.f, 34.4f, 39.275f, 43.48f, 48.019f, 53.144f};
@@ -3420,9 +3426,15 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
       ratesArr = &Falcon3Rates200KV[0];
       numVals = sizeof(Falcon3Counts200KV) / sizeof(float);
     } else {
-      countsArr = &Falcon4Counts300KV[0];
-      ratesArr = &Falcon4Rates300KV[0];
-      numVals = sizeof(Falcon4Counts300KV) / sizeof(float);
+      if (mScope->GetHTValue() > 250) {
+        countsArr = &Falcon4Counts300KV[0];
+        ratesArr = &Falcon4Rates300KV[0];
+        numVals = sizeof(Falcon4Counts300KV) / sizeof(float);
+      } else {
+        countsArr = &Falcon4Counts200KV[0];
+        ratesArr = &Falcon4Rates200KV[0];
+        numVals = sizeof(Falcon4Counts200KV) / sizeof(float);
+      }
     }
     camParam->doseTabCounts.insert(camParam->doseTabCounts.end(), countsArr, 
       countsArr + numVals);
