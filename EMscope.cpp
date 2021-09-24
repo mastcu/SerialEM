@@ -4951,7 +4951,7 @@ void CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
   int blankBefore = NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0;
   mCameraAcquiring = inVal;
   if (blankBefore != (NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0) ||
-    inVal && sBeamBlanked) {
+    (inVal && sBeamBlanked && B3DABS(mShutterlessCamera) < 2)) {
       BlankBeam(!inVal, "SetCameraAcquiring");
       if (waitTime >= 0.001)
         Sleep(B3DNINT(1000. * waitTime));
