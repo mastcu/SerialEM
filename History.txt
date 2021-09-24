@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/24/21: Added option to the Focus by Eucentricity dialog to use a View
+subarea for the focus measurements.
+
+9/21/21: Allowed relative focus to be set with objective minilens in LM on
+JEOL, so scope control, focus calibration, and autofocusing can work in LM.
+
+9/21/21: Stopped brief unblanking before exposure with NoShutter 2.
+
+9/16/21: Retry opening an mdoc file for writing to try to dodge file locks
+from automated copying operations.
+
+9/16/21: Added dose rate table for Falcon 4 at 200 kV.
+
 9/12/21: Added option to multi-hole combiner to turn off and not acquire
 points outside a polygon when selecting points inside.
 

@@ -33,6 +33,7 @@ int AdocSetCurrent(int index);
 void AdocClear(int index);
 void AdocDone();
 int AdocWrite(const char *filename);
+void AdocRetryWriteOpens(int num);
 int AdocPrintToString(char *string, int stringSize, int writeAll);
 int AdocAppendSection(const char *filename);
 int AdocOrderWriteByValue(const char *typeName);

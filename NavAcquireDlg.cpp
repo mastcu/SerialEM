@@ -32,7 +32,7 @@
 static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_JUSTACQUIRE,
 IDC_NA_RUNMACRO, IDC_NA_ACQUIRE_TS, IDC_NA_DO_MULTISHOT, IDC_EDIT_SUBSET_END,
 IDC_EDIT_SUBSET_START,  IDC_EDIT_CYCLE_TO, IDC_EDIT_CYCLE_FROM, IDC_EDIT_EARLY_FRAMES,
-IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING,
+IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING, IDC_STAT_SPACER4,
 IDC_STAT_SAVING_FATE, IDC_STAT_FILE_SAVING_INTO, IDC_NA_DO_SUBSET, IDC_STAT_TASK_OPTIONS,
 IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_OPTIONS,
 IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISITION,
@@ -295,6 +295,8 @@ BOOL CNavAcquireDlg::OnInitDialog()
   // baseDlg to add it to the big redraw
   mIDsToAdjustHeight.push_back(IDC_STAT_ACTION_GROUP);
   mIDsForNextTop.push_back(IDC_STAT_SPACER);
+  mIDsToAdjustHeight.push_back(IDC_STAT_PRIMARY_GROUP);
+  mIDsForNextTop.push_back(IDC_STAT_SPACER4);
   mIDsToAdjustHeight.push_back(IDC_STAT_TASK_OPTIONS);
   mIDsToAdjustHeight.push_back(IDC_STAT_ACTION_OPTIONS);
   mIDsToAdjustHeight.push_back(IDC_STAT_GEN_OPTIONS);
@@ -966,6 +968,21 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_NA_CLOSE_VALVES);
     if (!m_bSendEmail)
       mIDsToDrop.push_back(IDC_NA_SENDEMAIL);
+    if (m_iAcquireType != ACQUIRE_TAKE_MAP)
+      mIDsToDrop.push_back(IDC_NA_ACQUIREMAP);
+    if (m_iAcquireType != ACQUIRE_IMAGE_ONLY)
+      mIDsToDrop.push_back(IDC_NA_JUSTACQUIRE);
+    if (m_iAcquireType != ACQUIRE_MULTISHOT) {
+      mIDsToDrop.push_back(IDC_NA_DO_MULTISHOT);
+      mIDsToDrop.push_back(IDC_NA_SETUP_MULTISHOT);
+    }
+    if (m_iAcquireType != ACQUIRE_DO_TS)
+      mIDsToDrop.push_back(IDC_NA_ACQUIRE_TS);
+    if (m_iAcquireType != ACQUIRE_RUN_MACRO) {
+      mIDsToDrop.push_back(IDC_NA_RUNMACRO);
+      mIDsToDrop.push_back(IDC_COMBO_MACRO);
+    }
+
   }
 
   // Reform the window and set the group box
