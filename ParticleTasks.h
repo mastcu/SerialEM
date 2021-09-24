@@ -55,6 +55,7 @@ public:
   GetSetMember(float, ZBGIterThreshold);
   GetSetMember(int, ZBGMaxTotalChange);
   GetSetMember(BOOL, ZbyGUseViewInLD);
+  GetSetMember(int, ZbyGViewSubarea);
   GetMember(int, ZBGMeasuringFocus);
   GetMember(bool, DVDoingDewarVac);
   GetMember(bool, ATLastFailed);
@@ -132,6 +133,7 @@ private:
   int mZBGIterationNum;            // Counter and flag that it is running
   float mZBGIterThreshold;         // Threshold move for stoppig the iterations
   BOOL mZbyGUseViewInLD;           // Setting in dialog for using View in Low Dose
+  int mZbyGViewSubarea;            // 0 for current area,1/4, 3/8, 1/2
   double mZBGInitialFocus;         // For saving and restoring focus
   float mZBGTargetDefocus;         // Measured defocus to reach
   double mZBGInitialIntensity;     // For saving and restoring intensity out of low dose
@@ -154,6 +156,8 @@ private:
   float mZBGSavedBeamTilt;
   int mZBGLowDoseAreaSaved;         // Flag that low dose area is saved
   LowDoseParams mZBGSavedLDparam;   // Saved parameters for low dose area
+  int mZBGSavedTop, mZBGSavedLeft;  // Saved coordinates from view conset
+  int mZBGSavedBottom, mZBGSavedRight;
   FloatVec mZBGFocusScalings;       // List of measured focus values and scaling factor
 
   int mATIterationNum;              // Current iteration number in resetting shift

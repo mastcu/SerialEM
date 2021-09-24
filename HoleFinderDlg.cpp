@@ -1198,7 +1198,6 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
   // OUTPUT summary line and skip if nothing
   numPoints = (int)mXcenters.size();
-  mExcluded.resize(numPoints, false);
   *mMasterParams = mParams;
   StopScanning();
   if (!numPoints) {
@@ -1233,9 +1232,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
     // It turns out that the pieceOn values from above are not quite right or consistent
     // with what is needed for proper display, so replace them
-    if (mMontage)
-      mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
-        &mYinPiece[ind]);
+    mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
+      &mYinPiece[ind]);
     mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
@@ -1255,6 +1253,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mParams.SDcutoff = mSDmax;
   if (mParams.blackFracCutoff  < EXTRA_VALUE_TEST)
     mParams.blackFracCutoff = mBlackFracMax;
+  mExcluded.resize(numPoints);
   m_bShowIncluded = true;
   ParamsToDialog();
   ManageEnables();

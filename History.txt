@@ -3,12 +3,6 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-9/24/21: Fixed crash if start to exit during a dose-symmetric series and
-choose to reorder file instead (In 3.8).
-
-9/22/21: SEM_3-8-15
-9/22/21: Fixed crash using hole finder on non-montage (broken 8/23) (In 3.8).
-
 9/12/21: Added option to multi-hole combiner to turn off and not acquire
 points outside a polygon when selecting points inside.
 

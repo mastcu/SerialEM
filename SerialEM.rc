@@ -2202,29 +2202,29 @@ BEGIN
     CONTROL         "note starting with",IDC_RGOTO_NOTE,"Button",BS_AUTORADIOBUTTON,287,350,61,10
     CONTROL         "Run at nearest item with ",IDC_NA_RUN_AT_OTHER,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,174,350,82,10
     COMBOBOX        IDC_COMBO_MACRO,55,76,93,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Setup",IDC_NA_SETUP_MULTISHOT,97,52,28,12
+    PUSHBUTTON      "Setup",IDC_NA_SETUP_MULTISHOT,97,53,28,10
     CONTROL         "Acquire map image or montage",IDC_NA_ACQUIREMAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,29,107,10
     CONTROL         "Just acquire and save image or montage",IDC_NA_JUSTACQUIRE,
                     "Button",BS_AUTORADIOBUTTON,9,41,134,10
     CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,9,77,44,10
     CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,9,65,66,10
     CONTROL         "Acquire multiple Records",IDC_NA_DO_MULTISHOT,"Button",BS_AUTORADIOBUTTON,9,53,87,10
-    GROUPBOX        "Primary Action",IDC_STAT_PRIMARY_GROUP,3,19,160,71,WS_GROUP
+    GROUPBOX        "Primary Action",IDC_STAT_PRIMARY_GROUP,3,19,160,73,WS_GROUP
     DEFPUSHBUTTON   "GO",IDOK,207,384,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,322,384,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,377,387,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,295,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,305,68,14
-    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,172,149,8
-    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,182,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,270,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,269,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,270,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,269,26,12,ES_AUTOHSCROLL
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,297,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,307,68,14
+    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,174,149,8
+    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,184,149,8
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,272,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,84,271,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,112,272,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,271,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,244,136,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,246,136,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,232,132,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,234,132,10
     PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,265,384,36,14
     EDITTEXT        IDC_EDIT_EVERY_N,220,285,24,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_EVERY_N,"msctls_updown32",UDS_ARROWKEYS,244,284,12,14
@@ -2237,46 +2237,46 @@ BEGIN
     GROUPBOX        "Position in sequence",IDC_STAT_ORDER_GROUP,305,274,70,44
     EDITTEXT        IDC_EDIT_GOTO_ITEM,349,349,34,12,ES_AUTOHSCROLL
     CONTROL         "Cycle defocus target in autofocus, drift wait && TS",IDC_NA_CYCLE_DEFOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,103,153,10
-    EDITTEXT        IDC_EDIT_CYCLE_FROM,34,115,24,12,ES_AUTOHSCROLL
-    LTEXT           "steps",IDC_STAT_CYCLE_STEPS,139,116,18,8
-    LTEXT           "to",IDC_STAT_CYCLE_TO,61,116,8,10
-    EDITTEXT        IDC_EDIT_CYCLE_TO,70,115,24,12,ES_AUTOHSCROLL
-    LTEXT           "um in 99",IDC_STAT_CYCLE_UM,99,116,25,8
-    CONTROL         "",IDC_SPIN_CYCLE_DEF,"msctls_updown32",UDS_ARROWKEYS,126,113,12,14
-    CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,145,90,10
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,144,24,12,ES_AUTOHSCROLL
-    LTEXT           "frames",IDC_STAT_FRAMES,124,146,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,319,89,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,105,153,10
+    EDITTEXT        IDC_EDIT_CYCLE_FROM,34,117,24,12,ES_AUTOHSCROLL
+    LTEXT           "steps",IDC_STAT_CYCLE_STEPS,139,118,18,8
+    LTEXT           "to",IDC_STAT_CYCLE_TO,61,118,8,10
+    EDITTEXT        IDC_EDIT_CYCLE_TO,70,117,24,12,ES_AUTOHSCROLL
+    LTEXT           "um in 99",IDC_STAT_CYCLE_UM,99,118,25,8
+    CONTROL         "",IDC_SPIN_CYCLE_DEF,"msctls_updown32",UDS_ARROWKEYS,126,115,12,14
+    CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,147,90,10
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,146,24,12,ES_AUTOHSCROLL
+    LTEXT           "frames",IDC_STAT_FRAMES,124,148,22,8
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,321,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,283,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,285,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,368,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,336,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,335,10,8,NOT WS_GROUP
     LTEXT           "Script to run:",IDC_STAT_PREMACRO,192,29,41,8
-    CONTROL         "Skip saving to file",IDC_NA_SKIP_SAVING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,157,70,10
+    CONTROL         "Skip saving to file",IDC_NA_SKIP_SAVING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,159,70,10
     LTEXT           "Script to run:",IDC_STAT_POSTMACRO,192,54,41,8
     CONTROL         "",IDC_NA_TASK_LINE1,"Static",SS_BLACKFRAME,191,82,52,2
     CONTROL         "",IDC_NA_TASK_LINE2,"Static",SS_BLACKFRAME,327,82,52,2
     LTEXT           "Primary Action Runs Here",IDC_STAT_PRIMARY_LINE,247,79,78,8
     CONTROL         "Hide unused tasks",IDC_NA_HIDE_UNUSED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,174,369,74,10
-    LTEXT           "",IDC_STAT_SPACER,162,265,8,2
+    LTEXT           "",IDC_STAT_SPACER,162,267,8,2
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,131,139,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,133,139,10
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,208,149,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,210,149,10
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,220,119,10
-    GROUPBOX        "Primary Action-related options",IDC_STAT_TASK_OPTIONS,3,93,160,100
-    GROUPBOX        "Options for other tasks",IDC_STAT_ACTION_OPTIONS,3,197,160,60
-    GROUPBOX        "General options",IDC_STAT_GEN_OPTIONS,3,260,160,73
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,222,119,10
+    GROUPBOX        "Primary Action-related options",IDC_STAT_TASK_OPTIONS,3,95,160,100
+    GROUPBOX        "Options for other tasks",IDC_STAT_ACTION_OPTIONS,3,199,160,61
+    GROUPBOX        "General options",IDC_STAT_GEN_OPTIONS,3,262,160,73
     CONTROL         "Mapping",IDC_RMAPPING,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,52,3,46,14
     CONTROL         "Final Data",IDC_RACQUISITION,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,3,53,14
     LTEXT           "Parameters for:",IDC_STAT_PARAM_FOR,4,5,46,10
     PUSHBUTTON      "Read in Parameters",IDC_NA_READ_PARAMS,94,384,78,14
     PUSHBUTTON      "Save Parameters to File",IDC_NA_SAVE_PARAMS,8,384,78,14
     LTEXT           "",IDC_STAT_SPACER2,189,392,8,8
-    LTEXT           "From",IDC_STAT_CYCLE_FROM,15,116,17,10
+    LTEXT           "From",IDC_STAT_CYCLE_FROM,15,118,17,10
     CONTROL         "Every",IDC_RNAVACQ_EVERY_N,"Button",BS_AUTORADIOBUTTON | WS_GROUP,188,285,30,10
     CONTROL         "Only at start of group",IDC_RNAVACQ_GROUP_START,"Button",BS_AUTORADIOBUTTON,188,298,77,10
     CONTROL         "Only at end of group",IDC_RNAVACQ_GROUP_END,"Button",BS_AUTORADIOBUTTON,188,309,76,10
@@ -2285,7 +2285,8 @@ BEGIN
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,274,105,73,WS_GROUP
     GROUPBOX        "Currently selected task controls",IDC_STAT_SELECTED_GROUP,170,265,217,99
     GROUPBOX        "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,170,5,217,255
-    LTEXT           "",IDC_STAT_SPACER3,157,336,8,2
+    LTEXT           "",IDC_STAT_SPACER3,157,338,8,2
+    LTEXT           "",IDC_STAT_SPACER4,162,96,8,2
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -3520,14 +3521,19 @@ BEGIN
     LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,25,75,141,8
 END
 
-IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 230
+IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 243
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Eucentricity by Focus Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,27,215,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,89,215,50,12
+    CONTROL         "Current area",IDC_RCURRENTAREA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,30,180,48,10
+    CONTROL         "1/4",IDC_RQUARTER,"Button",BS_AUTORADIOBUTTON,81,180,20,10
+    CONTROL         "3/8",IDC_R3EIGHTHS,"Button",BS_AUTORADIOBUTTON,104,180,20,10
+    CONTROL         "1/2 field",IDC_RHALFFIELD,"Button",BS_AUTORADIOBUTTON,127,180,33,10
+    LTEXT           "Use:",IDC_STAT_USE_SUBAREA,13,181,14,8
+    DEFPUSHBUTTON   "OK",IDOK,27,229,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,89,229,50,12
     LTEXT           "Current State",IDC_STATIC,47,40,39,8
     LTEXT           "Calibrated State",IDC_STATIC,99,40,49,8
     LTEXT           "Magnification",IDC_STATIC,6,50,41,8
@@ -3555,16 +3561,16 @@ BEGIN
     EDITTEXT        IDC_EDIT_BEAM_TILT,102,140,25,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Stored Settings",IDC_BUT_USE_TO_RECAL,112,16,51,12
     LTEXT           "CALIBRATE with:",IDC_STATIC,3,18,54,8
-    GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,10,158,142,53
+    GROUPBOX        "Settings for running Eucentricity by Focus",IDC_STATIC,3,158,160,67
     CONTROL         "Use View area in Low Dose mode",IDC_CHECK_USE_VIEW_IN_LD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,168,117,10
-    LTEXT           "Maximum total change in Z:",IDC_STATIC,29,181,81,8
-    EDITTEXT        IDC_EDIT_MAX_CHANGE,112,179,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,181,10,8
-    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,14,196,97,8
-    EDITTEXT        IDC_EDIT_ITER_THRESH,112,194,25,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,138,196,10,8
-    PUSHBUTTON      "?",IDC_BUTHELP,153,215,10,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,117,10
+    LTEXT           "Maximum total change in Z:",IDC_STATIC,10,195,81,8
+    EDITTEXT        IDC_EDIT_MAX_CHANGE,93,193,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,119,195,10,8
+    LTEXT           "Threshold Z change for iterating:",IDC_STATIC,10,210,97,8
+    EDITTEXT        IDC_EDIT_ITER_THRESH,108,208,25,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,134,210,10,8
+    PUSHBUTTON      "?",IDC_BUTHELP,153,229,10,10
     CONTROL         "Calibrate with beam tilt of: ",IDC_CHECK_CAL_WITH_BT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,141,95,10
     LTEXT           "% of range",IDC_STAT_MRAD_LABEL,129,142,32,8
@@ -4172,7 +4178,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 163
         TOPMARGIN, 3
-        BOTTOMMARGIN, 227
+        BOTTOMMARGIN, 240
     END
 
     IDD_RADIO_CHOICE, DIALOG
@@ -5097,11 +5103,15 @@ BEGIN
     IDC_BUT_COMBINE_PTS     "Combine selected points into multi-shot items"
     IDC_BUT_UNDO_COMBINE    "Remove last set of multi-shot items and restore individual points"
     IDC_CHECK_DISPLAY_MULTI "Do not suppress the display of multi-shot pattern on all individual points"
-    IDC_CHECK_REMOVE_OUTSIDE
-                            "Set points in same groups as ones inside polygon not to display or acquire"
     IDC_CHECK_SECOND_RING   "Take a second ring of peripheral shots (can be inner or outer ring)"
     IDC_SPIN_RING2_NUM      "Set number of shots to take in second ring"
     IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_REMOVE_OUTSIDE 
+                            "Set points in same groups as ones inside polygon not to display or acquire"
 END
 
 STRINGTABLE
@@ -6477,6 +6487,11 @@ BEGIN
     IDC_EDIT_MAX_CHANGE     "If total change in Z height would exceed this, the procedure aborts"
     IDC_ZBG_UPDATE_STATE    "Update dialog for changes in microscope or parameter settings"
     IDC_CHECK_CAL_WITH_BT   "Enable using the specified beam tilt for calibrating and running"
+    IDC_RCURRENTAREA        "Use the currently selected camera area for the View images"
+    IDC_RQUARTER            "Use one-quarter of the camera field for View images"
+    IDC_R3EIGHTHS           "Use three-eighths of the camera field for View images"
+    IDC_RHALFFIELD          "Use half of the camera field for View images"
+
 END
 
 STRINGTABLE

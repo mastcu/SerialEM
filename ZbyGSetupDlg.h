@@ -79,4 +79,6 @@ public:
   afx_msg void OnCheckCalWithBt();
   CString m_strCurBeamTilt;
   CString m_strCalBeamTilt;
+  int m_iViewSubarea;
+  afx_msg void OnRadioViewSubset();
 };

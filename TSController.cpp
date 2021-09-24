@@ -4876,7 +4876,6 @@ BOOL CTSController::TerminateOnExit()
       EndControl(true, true);
       mBufferManager->SetSaveAsynchronously(saveAsync);
       mDocWnd->DoCloseFile();
-      mClosedDoseSymFile = true;
       return true;
     }
     unordered = true;

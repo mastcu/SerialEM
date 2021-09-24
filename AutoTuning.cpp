@@ -1736,11 +1736,11 @@ int CAutoTuning::SetupCtfAcquireParams(bool fromCheck)
   if (!KGetOneInt("1 to take full-field images or 0 to use current Record subarea",
     full))
     return 1;
-  mCtfUseFullField = full != 0;
   if (!KGetOneFloat("Smallest defocus allowed for correcting astigmatism (must be at"
     " least -0.4)", mMinCtfBasedDefocus, 2))
     return 1;
   B3DCLAMP(mMinCtfBasedDefocus, -10.f, -0.4f);
+  mCtfUseFullField = full != 0;
   return 0;
 }
 

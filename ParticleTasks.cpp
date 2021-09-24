@@ -49,6 +49,7 @@ CParticleTasks::CParticleTasks(void)
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
   mZbyGUseViewInLD = false;
+  mZbyGViewSubarea = 0;
   mZBGMaxTotalChange = 100;
   mZBGMaxErrorFactor = 1.67f;
   mZBGMinErrorFactor = 0.4f;
@@ -58,6 +59,7 @@ CParticleTasks::CParticleTasks(void)
   mZBGCalUseBeamTilt = false;
   mZBGFocusScalings.push_back(100.);
   mZBGFocusScalings.push_back(0.7f);
+  mZBGSavedTop = -1;
   mATIterationNum = -1;
   mDVDoingDewarVac = false;
 }
@@ -1263,6 +1265,7 @@ void CParticleTasks::ZbyGNextTask(int param)
 void CParticleTasks::StopZbyG()
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  ControlSet *conSet = mWinApp->GetConSets() + VIEW_CONSET;
   if (mZBGIterationNum < 0)
     return;
   mZBGIterationNum = -1;
@@ -1273,6 +1276,13 @@ void CParticleTasks::StopZbyG()
     ldp[mZBGLowDoseAreaSaved] = mZBGSavedLDparam;
   mFocusManager->SetBeamTilt(mZBGSavedBeamTilt);
   mFocusManager->SetDefocusOffset(mZBGSavedOffset);
+  if (mZBGSavedTop >= 0) {
+    conSet->top = mZBGSavedTop;
+    conSet->left = mZBGSavedLeft;
+    conSet->bottom = mZBGSavedBottom;
+    conSet->right = mZBGSavedRight;
+  }
+  mZBGSavedTop = -1;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
 }
@@ -1414,6 +1424,9 @@ void CParticleTasks::DoZbyGCalibration(ZbyGParams &param, int calInd, int iterat
 void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD)
 {
   LowDoseParams *ldp;
+  ControlSet *conSet = mWinApp->GetConSets() + VIEW_CONSET;
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  int sizeX, sizeY, left, top, bottom, right;
   mZBGInitialIntensity = -999.;
   mZBGSavedLDparam.magIndex = 0;
   mZBGLowDoseAreaSaved = -1;
@@ -1435,6 +1448,29 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
 
     // Go to area so initial focus is correct
     mScope->GotoLowDoseArea(param.lowDoseArea);
+
+    if (param.lowDoseArea == VIEW_CONSET && mZbyGViewSubarea > 0) {
+      mZBGSavedTop = conSet->top;
+      mZBGSavedLeft = conSet->left;
+      mZBGSavedBottom = conSet->bottom;
+      mZBGSavedRight = conSet->right;
+      if (mZbyGViewSubarea == 1) {
+        sizeX = (camParam->sizeX / 4) / conSet->binning;
+        sizeY = (camParam->sizeY / 4) / conSet->binning;
+      } else if (mZbyGViewSubarea == 2) {
+        sizeX = ((3 * camParam->sizeX) / 8) / conSet->binning;
+        sizeY = ((3 * camParam->sizeY) / 8) / conSet->binning;
+      } else {
+        sizeX = (camParam->sizeX / 2) / conSet->binning;
+        sizeY = (camParam->sizeY / 2) / conSet->binning;
+      }
+      mCamera->CenteredSizes(sizeX, camParam->sizeX, camParam->moduloX, left, right,
+        sizeY, camParam->sizeY, camParam->moduloY, top, bottom, conSet->binning);
+      conSet->top = conSet->binning * top;
+      conSet->left = conSet->binning * left;
+      conSet->bottom= conSet->binning * bottom;
+      conSet->right = conSet->binning * right;
+    }
   } else {
 
     // For non LD, just set the intensity

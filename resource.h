@@ -1869,6 +1869,7 @@
 #define IDC_STAT_ACTION_OPTIONS         2890
 #define IDC_STAT_GEN_OPTIONS            2891
 #define IDC_STAT_TEMPLATE_TITLE         2892
+#define IDC_STAT_SPACER4                2892
 #define IDC_STAT_TEMP_LABEL             2893
 #define IDC_EDIT_MAP_LABEL              2894
 #define IDC_STAT_NOT_EXIST              2895
@@ -1931,6 +1932,11 @@
 #define IDC_STAT_PRIOR_NM               2958
 #define IDC_STAT_WHY_A_NO_GOOD          2959
 #define IDC_CHECK_REMOVE_OUTSIDE        2960
+#define IDC_RCURRENTAREA                2961
+#define IDC_RQUARTER                    2962
+#define IDC_R3EIGHTHS                   2963
+#define IDC_RHALFFIELD                  2964
+#define IDC_STAT_USE_SUBAREA            2965
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2437,7 +2443,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        265
 #define _APS_NEXT_COMMAND_VALUE         33409
-#define _APS_NEXT_CONTROL_VALUE         2961
+#define _APS_NEXT_CONTROL_VALUE         2966
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

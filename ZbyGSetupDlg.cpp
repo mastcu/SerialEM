@@ -41,6 +41,7 @@ CZbyGSetupDlg::CZbyGSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bCalWithBT(FALSE)
   , m_strCurBeamTilt(_T(""))
   , m_strCalBeamTilt(_T(""))
+  , m_iViewSubarea(0)
 {
   mNonModal = true;
   mCalParams = NULL;
@@ -87,6 +88,7 @@ void CZbyGSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_CAL_WITH_BT, m_bCalWithBT);
   DDX_Text(pDX, IDC_STAT_CUR_BEAM_TILT, m_strCurBeamTilt);
   DDX_Text(pDX, IDC_STAT_CAL_BEAM_TILT, m_strCalBeamTilt);
+  DDX_Radio(pDX, IDC_RCURRENTAREA, m_iViewSubarea);
 }
 
 
@@ -101,6 +103,7 @@ BEGIN_MESSAGE_MAP(CZbyGSetupDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_ITER_THRESH, OnKillfocusEditBox)
   ON_EN_KILLFOCUS(IDC_EDIT_BEAM_TILT, OnKillfocusEditBox)
   ON_BN_CLICKED(IDC_CHECK_CAL_WITH_BT, OnCheckCalWithBt)
+  ON_BN_CLICKED(IDC_RCURRENTAREA, OnRadioViewSubset)
 END_MESSAGE_MAP()
 
 
@@ -166,6 +169,7 @@ void CZbyGSetupDlg::UnloadControlParams()
   mParticleTasks->SetZBGMaxTotalChange(m_iMaxChange);
   mParticleTasks->SetZBGIterThreshold(m_fIterThresh);
   mParticleTasks->SetZbyGUseViewInLD(m_bUseViewInLD);
+  mParticleTasks->SetZbyGViewSubarea(m_iViewSubarea);
 }
 
 // Update scope and program state into dialog
@@ -194,6 +198,13 @@ void CZbyGSetupDlg::OnCheckUseOffset()
 }
 
 void CZbyGSetupDlg::OnCheckUseViewInLd()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+  UpdateEnables();
+}
+
+void CZbyGSetupDlg::OnRadioViewSubset()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
@@ -331,17 +342,25 @@ void CZbyGSetupDlg::UpdateSettings()
   m_iMaxChange = mParticleTasks->GetZBGMaxTotalChange();
   m_fIterThresh = mParticleTasks->GetZBGIterThreshold();
   m_bUseViewInLD = mParticleTasks->GetZbyGUseViewInLD();
+  m_iViewSubarea = mParticleTasks->GetZbyGViewSubarea();
   UpdateData(false);
 }
 
 // General call for enabling
 void CZbyGSetupDlg::UpdateEnables()
 {
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
   bool enable = !((mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) || 
     mWinApp->mCamera->CameraBusy());
   m_butUseToRecal.EnableWindow(mRecalEnabled && enable);
   m_butUseToCal.EnableWindow(enable && FocusCalExistsForParams(&mCurParams));
   m_butUpdateState.EnableWindow(enable);
+  enable = m_bUseViewInLD && !camP->subareasBad;
+  EnableDlgItem(IDC_STAT_USE_SUBAREA, enable);
+  EnableDlgItem(IDC_RCURRENTAREA, enable);
+  EnableDlgItem(IDC_RQUARTER, enable);
+  EnableDlgItem(IDC_R3EIGHTHS, enable && camP->moduloX >= 0);
+  EnableDlgItem(IDC_RHALFFIELD, enable);
 }
 
 bool CZbyGSetupDlg::FocusCalExistsForParams(ZbyGParams *params)
