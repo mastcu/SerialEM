@@ -742,7 +742,7 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
 void CLowDoseDlg::OnUnblank() 
 {
   mWinApp->RestoreViewFocus();
-  mScope->BlankBeam(!mLastBlanked);
+  mScope->BlankBeam(!mLastBlanked, "low dose dialog");
   BlankingUpdate(!mLastBlanked);
 }
 
