@@ -2554,6 +2554,10 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (mWinApp->GetIntegerVersion() < itemInt[1])
           break;
 
+      } else if (strItems[0].Find("/*") == 0) {
+        while (strLine.Find("*/") < 0 && 
+          (err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {}
+
       } else if (MatchNoCase("CameraProperties")) {
         int iset = itemInt[1];
         if (iset >= MAX_CAMERAS) {
@@ -4167,6 +4171,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
           focTable.slopeY = itemFlt[4];
           focTable.beamTilt = itemDbl[5];
           focTable.calibrated = 0;
+          focTable.shiftX.resize(nCal);
+          focTable.shiftY.resize(nCal);
+          focTable.defocus.resize(nCal);
         }
 
         for (i = 0; i < nCal; i++) {
