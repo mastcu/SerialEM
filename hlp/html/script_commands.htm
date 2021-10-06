@@ -894,14 +894,18 @@
           <TD colspan="2"><A name="params"></A><B>Parameter Commands</B></TD>
         </TR>
          <TR>
-          <TD colspan="2">The following &#39;Set...&#39; commands change values in one of the camera parameter
-            sets.&nbsp; The <B>set</B> entry can be specified as either V,
+          <TD colspan="2">The commands in this section report or change values in one of the camera parameter
+            sets for the current camera.&nbsp; The <B>set</B> entries can be specified as either V,
             F, T, R, P, S, M or 0, 1, 2, 3,
             4, 5, 6 for View, Focus, Trial,
-            Record, Preview, Search, and Mont-Map, respectively.&nbsp; Parameters will be restored whenever the
+            Record, Preview, Search, and Mont-Map, respectively.&nbsp; Changed parameters will be restored whenever the
             script ends or stops or when a different camera is selected.&nbsp; However, if
             the script is suspended, any changed parameters will be set again when the script
             resumes.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportExposure set</TD>
+          <TD>Reports the exposure time and drift settling for <b>set</b>.&nbsp; Command added in 4.0, 9/28/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetExposure set #E [#D]</TD>
@@ -909,8 +913,16 @@
             drift settling will be unchanged.&nbsp;</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportBinning set</TD>
+          <TD>Reports the binning for <b>set</b>.&nbsp; Command added in 4.0, 9/28/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetBinning set #B</TD>
           <TD>Sets binning for <B>set</B> to <B>#B</B>.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCameraSetArea set</TD>
+          <TD>Reports the (binned) image size in X and Y that would be acquired by <b>set</b>, plus the unbinned left, right, top and bottom coordinates as they are shown in the Camera Setup dialog.&nbsp; Command added in 4.0, 9/28/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetCameraArea set #L #R #T #B<br />
@@ -944,6 +956,10 @@
             unprocessed, 1 for dark-subtracted, or 2 for gain-normalized.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportReadMode set</TD>
+          <TD>Reports the read mode for <b>set</b>: 0 for linear, 1 for counting, 2 for super-resolution.&nbsp; Command added in 4.0, 9/28/21.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetK2ReadMode set #M&nbsp;</TD>
           <TD>Sets the processing mode for <B>set</B> to the given value.&nbsp; For a K2
           or DE camera, <b>#M</b> should be
@@ -963,6 +979,11 @@
              frame-saving camera by the given factor <B>#F</B>, maintaining the same number of
             frames.&nbsp; <I>reportedValue1</I> and <I>reportedValue1</I> are set to the actual frame time
             and exposure time after constraints are applied.&nbsp; Command added in 3.9, 2/9/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCurrentPixelSize set</TD>
+          <TD>Reports the pixel size for images that would be acquired by <b>set</b> (i.e., with 
+            its binning) at the current magnification.&nbsp; Command added in 4.0, 9/28/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDoseFracParams set #D [#S] [#A] [#M] [#C]&nbsp;</TD>

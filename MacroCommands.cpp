@@ -7085,6 +7085,74 @@ int CMacCmd::SelectCamera(void)
   return 0;
 }
 
+// ReportExposure
+int CMacCmd::ReportExposure(void)
+{
+  int index;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  mLogRpt.Format("%s exposure is %.3f, drift settling %.3f", mModeNames[index], 
+    mConSets[index].exposure, mConSets[index].drift);
+  SetReportedValues(&mStrItems[2], mConSets[index].exposure, mConSets[index].drift);
+  return 0;
+}
+
+// ReportBinning
+int CMacCmd::ReportBinning(void)
+{
+  int index;
+  float value;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  value = (float)mConSets[index].binning / BinDivisorF(mCamParams);
+  mLogRpt.Format("%s binning is %g", mModeNames[index], value);
+  SetReportedValues(&mStrItems[2], value);
+  return 0;
+}
+
+// ReportReadMode
+int CMacCmd::ReportReadMode(void)
+{
+  int index;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  mLogRpt.Format("%s read mode is %d", mModeNames[index], mConSets[index].K2ReadMode);
+  SetReportedValues(&mStrItems[2], mConSets[index].K2ReadMode);
+  return 0;
+}
+
+// ReportCameraSetArea
+int CMacCmd::ReportCameraSetArea(void)
+{
+  int index, left, right, bottom, top, sizeX, sizeY, div = BinDivisorI(mCamParams);
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  left = mConSets[index].left;
+  right = mConSets[index].right;
+  top = mConSets[index].top;
+  bottom = mConSets[index].bottom;
+  mCamera->AcquiredSize(&mConSets[index], mCurrentCam, sizeX, sizeY);
+  mLogRpt.Format("%s is %d x %d binned pixels (unbinned l %d r %d, t %d b %d)",
+    mModeNames[index], sizeX, sizeY, left / div, right / div, top /div, bottom / div);
+  SetReportedValues(&mStrItems[2], sizeX, sizeY, left / div, right / div, top / div, 
+    bottom / div);
+  return 0;
+}
+
+// ReportCurrentPixelSize
+int CMacCmd::ReportCurrentPixelSize(void)
+{
+  int index;
+  float value;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  value = mShiftManager->GetPixelSize(mCurrentCam, mScope->FastMagIndex()) *
+    (float)mConSets[index].binning * 1000.f;
+  mLogRpt.Format("%s pixel size is %.4g nm", mModeNames[index], value);
+  SetReportedValues(&mStrItems[2], value);
+  return 0;
+}
+
 // SetExposure
 int CMacCmd::SetExposure(void)
 {
