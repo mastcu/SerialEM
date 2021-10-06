@@ -63,6 +63,7 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_MOUSEMOVE()
   ON_WM_MOUSEWHEEL()
   ON_WM_KEYDOWN()
+  ON_WM_SYSKEYDOWN()
   ON_WM_KEYUP()
   ON_WM_RBUTTONDOWN()
   ON_WM_LBUTTONUP()
@@ -2568,6 +2569,16 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   }
 
   CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+// Catch Alt keys and Alt itself: pass it on for anything but Alt or if nothing is running
+void CSerialEMView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+  char cChar = char(nChar);
+  SEMTrace('k', "SysKey code %u, char %c", nChar, cChar);
+  if (nChar != VK_MENU || 
+    (!mWinApp->DoingTasks() && !(mWinApp->mCamera && mWinApp->mCamera->CameraBusy())))
+    CView::OnSysKeyDown(nChar, nRepCnt, nFlags);
 }
 
 void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
