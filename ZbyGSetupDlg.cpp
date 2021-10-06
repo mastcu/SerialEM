@@ -235,6 +235,11 @@ void CZbyGSetupDlg::StartCalibration(int which)
   if (!mRecalEnabled && which)
     return;
 
+  if (mScope->GetTiltAngle() > 5.) {
+    AfxMessageBox("This calibration cannot be run with the stage tilted above 5 degrees");
+    return;
+  }
+
   // Make a copy of parameters to pass and fill in beam tilt and offset as specified
   ZbyGParams copy = (which && mCalParams) ? *mCalParams : mCurParams;
   copy.beamTilt = m_fBeamTilt;
