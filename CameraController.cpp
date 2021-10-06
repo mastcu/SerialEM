@@ -7514,8 +7514,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CameraThreadData *td = (CameraThreadData *)pParam;
   CameraThreadData pdTD;
-  bool startBlanker = td->PostActionTime || td->UnblankTime || td->FocusStep1 || 
-    td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
+  bool startBlanker = td->PostActionTime || td->UnblankTime || td->ReblankTime ||
+    td->FocusStep1 || td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
     td->FrameTSwaitOrInterval.size();
   int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0;
   CString report, str;
