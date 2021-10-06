@@ -48,6 +48,7 @@ CParticleTasks::CParticleTasks(void)
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
+  mZBGSkipLastThresh = 0.075f;
   mZbyGUseViewInLD = false;
   mZbyGViewSubarea = 0;
   mZBGMaxTotalChange = 100;
@@ -57,8 +58,6 @@ CParticleTasks::CParticleTasks(void)
   mZbyGsetupDlg = NULL;
   mZBGCalWithEnteredOffset = false;
   mZBGCalUseBeamTilt = false;
-  mZBGFocusScalings.push_back(100.);
-  mZBGFocusScalings.push_back(0.7f);
   mZBGSavedTop = -1;
   mATIterationNum = -1;
   mDVDoingDewarVac = false;
@@ -1110,6 +1109,7 @@ int CParticleTasks::EucentricityFromFocus(int useVinLD)
   PrepareAutofocusForZbyG(*zbgParams, true);
   mScope->SetFocus(zbgParams->standardFocus);
   mZBGTargetDefocus = zbgParams->targetDefocus;
+  mZBGFocusOffset = zbgParams->focusOffset;
 
   // Initialize flags
   mZBGIterationNum = 0;
@@ -1141,11 +1141,12 @@ int CParticleTasks::EucentricityFromFocus(int useVinLD)
 void CParticleTasks::ZbyGNextTask(int param)
 {
   double stageX, stageY, stageZ;
-  float delZ, errFac, scaleDir, thresh;
+  float delZ, errFac, scaleDir, scaling, temp, zeroScale, prevFocus, prevScale;
+  float oldThresh = 100., oldScale = 0.7f;
   StageMoveInfo smi;
   CString str;
   bool doBacklash;
-  int ind, scaleInd = -1;
+  int ind, jnd, numScalings = (int)mZBGFocusScalings.size();
   if (mZBGIterationNum < 0)
     return;
   if (mZBGMeasuringFocus) {
@@ -1173,7 +1174,7 @@ void CParticleTasks::ZbyGNextTask(int param)
         }
 
         // Or start another iteration
-        mFocusManager->AutoFocusStart(-1, mZBGCalParam.lowDoseArea == VIEW_CONSET ?1 : 0);
+        mFocusManager->AutoFocusStart(-1, mZBGUsingView ? 1 : 0);
         mWinApp->AddIdleTask(TASK_Z_BY_G, 0, 0);
         return;
 
@@ -1181,16 +1182,63 @@ void CParticleTasks::ZbyGNextTask(int param)
 
         // Doing Z by G: If focus was measured, get value and determine a scaling
         delZ = -(mFocusManager->GetCurrentDefocus() - mZBGTargetDefocus);
-        scaleDir = delZ > 0 ? -1.f : 1.f;
-        for (ind = 0; ind < (int)mZBGFocusScalings.size() - 1; ind += 2) {
-          thresh = mZBGFocusScalings[ind];
-          if (scaleDir * thresh > 0. && scaleDir * (-delZ - thresh) > 0. && 
-            (scaleInd < 0 || scaleDir * (thresh - mZBGFocusScalings[scaleInd]) > 0.)) {
-            scaleInd = ind;
+        scaling = 1.;
+        if (numScalings > 0) {
+
+          // First work with calibrated scalings: make sure they are in order
+          for (ind = 0; ind < numScalings - 2; ind += 2) {
+            for (jnd = ind + 2; jnd < numScalings; jnd += 2) {
+              if (mZBGFocusScalings[jnd] > mZBGFocusScalings[ind]) {
+                B3DSWAP(mZBGFocusScalings[jnd], mZBGFocusScalings[ind], temp);
+                B3DSWAP(mZBGFocusScalings[jnd + 1], mZBGFocusScalings[ind + 1], temp);
+              }
+            }
           }
+
+          // Set up a virtual 1 at 0 if there is no measurement close to set
+          zeroScale = 1.;
+          if (fabs(mZBGFocusScalings[0]) < 10.)
+            zeroScale = mZBGFocusScalings[1];
+          prevFocus = 0.;
+          prevScale = zeroScale;
+          //offset = B3DMIN(0.f, mZBGCalParam.focusOffset);
+
+          // Find index where the offset is between the last focus value and this one,
+          // or just break out on last one
+          for (ind = 0; ind < numScalings; ind += 2) {
+            if ((mZBGFocusOffset <= prevFocus && mZBGFocusOffset > mZBGFocusScalings[ind])
+              || ind == numScalings - 2)
+              break;
+            prevFocus = mZBGFocusScalings[ind];
+            prevScale = mZBGFocusScalings[ind + 1];
+          }
+
+          // Interpolate
+          scaling = (prevScale + (mZBGFocusOffset - prevFocus) *
+            (mZBGFocusScalings[ind + 1] - prevScale) /
+            (mZBGFocusScalings[ind] - prevFocus)) / zeroScale;
+          SEMTrace('1', "Interpolated scaling from reciprocity cal %f", scaling);
+
+
+        } else {
+
+          // If no calibrations, scale by factor from autofocus curve: the ratio of the 
+          // slope where the focus was measured to slope at 0
+          if (mFocusManager->GetRatioOfCalSlopes() > 0)
+            scaling = mFocusManager->GetRatioOfCalSlopes();
+          SEMTrace('1', "Scaling from AF curve %f", scaling);
         }
-        if (scaleInd >= 0)
-          delZ *= mZBGFocusScalings[scaleInd + 1];
+
+        // Apply original scaling hack if above default threshold and measurement was past
+        // end of curve by a lot (no extended calibration)
+        scaleDir = delZ > 0 ? -1.f : 1.f;
+        if (fabs(mFocusManager->GetDistPastEndOfCal()) > 0.5 * oldThresh &&
+          scaleDir * oldThresh > 0. && scaleDir * (-delZ - oldThresh) > 0.) {
+          scaling *= oldScale;
+          SEMTrace('1', "Change scale to %f for being past AF calibration", scaling);
+        }
+        
+        delZ *= scaling;
 
         // compute an error factor
         if (mZBGIterationNum)
@@ -1222,6 +1270,14 @@ void CParticleTasks::ZbyGNextTask(int param)
       }
     }
 
+    // Skip another stage move if we are close enough
+    if (fabs(delZ) < mZBGSkipLastThresh) {
+      PrintfToLog("Eucentricity by focus: skipping last move of %.2f; total Z change %.2f"
+        " in %d iterations", delZ, mZBGTotalChange, mZBGIterationNum + 1);
+      StopZbyG();
+      return;
+    }
+
     // set up the move with or without backlash
     mZBGLastChange = delZ;
     mScope->GetStagePosition(stageX, stageY, stageZ);
@@ -1232,7 +1288,7 @@ void CParticleTasks::ZbyGNextTask(int param)
     doBacklash = delZ * smi.backZ > 0.;
     if (!doBacklash)
       mScope->CopyZBacklashValid();
-    SEMTrace('n', "Moving from %.2f to %.2f (delta %.2f) with%s backlash", stageZ, smi.z,
+    SEMTrace('1', "Moving from %.2f to %.2f (delta %.2f) with%s backlash", stageZ, smi.z,
       delZ, doBacklash ? "" : "out");
     mScope->MoveStage(smi, doBacklash);
 
@@ -1276,6 +1332,8 @@ void CParticleTasks::StopZbyG()
     ldp[mZBGLowDoseAreaSaved] = mZBGSavedLDparam;
   mFocusManager->SetBeamTilt(mZBGSavedBeamTilt);
   mFocusManager->SetDefocusOffset(mZBGSavedOffset);
+  if (mZBGUsingView)
+    mScope->SetLDViewDefocus(mZBGSavedViewDefocus);
   if (mZBGSavedTop >= 0) {
     conSet->top = mZBGSavedTop;
     conSet->left = mZBGSavedLeft;
@@ -1410,6 +1468,7 @@ void CParticleTasks::DoZbyGCalibration(ZbyGParams &param, int calInd, int iterat
   mZBGIndexOfCal = calInd;
   mZBGNumCalIterations = iterations;
   PrepareAutofocusForZbyG(param, calInd >= 0);
+  mZBGUsingView = param.lowDoseArea == VIEW_CONSET;
 
   mZBGCalParam.standardFocus = mScope->GetFocus();
   mZBGIterationNum = 0;
@@ -1430,6 +1489,20 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
   mZBGInitialIntensity = -999.;
   mZBGSavedLDparam.magIndex = 0;
   mZBGLowDoseAreaSaved = -1;
+
+  // Save and set up needed beam tilt and defocus offset
+  mZBGSavedBeamTilt = mFocusManager->GetBeamTilt();
+  mFocusManager->SetBeamTilt(param.beamTilt);
+  mZBGSavedOffset = mFocusManager->GetDefocusOffset();
+
+  // For View area, make the offset value be the view defocus 
+  // zero the offset for all cases; it will applied below on one-time basis
+  if (param.lowDoseArea == VIEW_CONSET) {
+    mZBGSavedViewDefocus = mScope->GetLDViewDefocus();
+    mScope->SetLDViewDefocus(param.focusOffset);
+  }
+  mFocusManager->SetDefocusOffset(0.);
+
   if (param.lowDoseArea >= 0) {
 
     // If flag is set (i.e., if using a calibration), save the low dose params for the
@@ -1478,18 +1551,10 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
     mScope->SetIntensity(param.intensity);
   }
 
+  // Save the focus to restore and then do the defocus offset here
   mZBGInitialFocus = mScope->GetDefocus();
-
-  // Take off the View defocus; the offset takes care of what is needed
-  if (param.lowDoseArea == VIEW_CONSET) {
-    mScope->IncDefocus(-mScope->GetLDViewDefocus());
-  }
-
-  // Save and set up needed beam tilt and defocus offset
-  mZBGSavedBeamTilt = mFocusManager->GetBeamTilt();
-  mZBGSavedOffset = mFocusManager->GetDefocusOffset();
-  mFocusManager->SetBeamTilt(param.beamTilt);
-  mFocusManager->SetDefocusOffset(param.focusOffset);
+  if (param.lowDoseArea != VIEW_CONSET)
+    mScope->IncDefocus(param.focusOffset);
 }
 
 ///////////////////////////////////////////////////////////////////////

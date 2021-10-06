@@ -3,6 +3,28 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/6/21: Changed Eucentrity by Focus to estimate scaling between defocus and Z
+at different defocus offsets from the slope of an extended autofocus
+calibration and provided a new script to measure the scaling directly if
+necessary; CHANGED MEANING OF ZbyGFocusScalings PROPERTY COMPLETELY.
+ 
+10/6/21: Added commands to do an autofocus calibration over a wider range with
+measurements at a sparse interval outside the normal range; increased
+limit on number of points in a focus calibration.
+
+10/6/21: Allowed /*  */ to enclose multiline comments in properties file.
+
+10/6/21: Prevented Alt alone from hanging program when doing operations.
+
+10/6/21: Start blanker thread when there is reblanking without unblanking.
+
+10/6/21: Stored modified pixel size and rotation from high-focus adjustment in
+MontSection of mdoc.
+
+10/6/21: Fixed defocus offset getting off when settings with a different
+offset are loaded while in View/Search, or when changing with SetUserSetting.
+
+9/29/21: SEM_4-0-0beta1
 9/28/21: Added script commands for reporting some settings in a camera
 parameter set.
 

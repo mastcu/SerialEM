@@ -190,6 +190,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#absRotAngle">Absolute rotation angle</a>
         <BR>
         <A href="#setup_scopecal">Other Microscope Calibrations</A>
+        <br />
+        <A href="#z_by_g_setup">Extended Autofocus and Non-reciprocity Calibration 
+      for Using Eucentricity by Focus</A>
         <BR>
         <A href="#setup_xray">Setting Up X Ray Removal from Dark References</A>
         <BR>
@@ -1816,7 +1819,7 @@
           by 2 reference. In this case, you need an entry like 'BinningOffset 4 2 999 0'.
           The '999' tells the program not to make a reference for binning 4 from the
           binned by 2 reference.</LI></OL>
-      <li>Binning offsets are also needed for Gatan 4-port readout cameras but these
+      <p>Binning offsets are also needed for Gatan 4-port readout cameras but these
         offsets are predictable and the program will set them up automatically.
     <P>&nbsp;</P>
       <P><A name="setup_standard_focus"></A><B>Assessing Standard Focus for Low Mag Mode
@@ -1858,12 +1861,19 @@
       <p>
         &nbsp;</p>
      <P><A name="setup_focuscal"></A><B>Focus Calibration (Priority 1)</B></P>
-      <P>Focus only needs to be calibrated at one magnification as long as there are
-        image shift calibrations available to transfer the focus calibration accurately
+      <P>In principle, focus only needs to be calibrated at one magnification as long as there are
+        image shift and/or other calibrations available to transfer the focus calibration accurately
         to other mags. Typically, this calibration should be at a mag in the range where
         data will be acquired.&nbsp; However, when using the procedures below for
         calibrating image shift and pixel size, it may also be helpful to have a focus
-        calibration at the mag where these calibrations will be started. Set up the
+        calibration at the mag where these calibrations will be started. In addition, to 
+        use the&nbsp; <A HREF="menu_tasks.htm#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A> 
+        routine over a wide range of conditions,&nbsp;you may need to have an 'extended' 
+        focus calibration instead of the regular one at the highest magnification, or an 
+        extended calibration at a lower magnification to be used when focusing with the 
+        View area in Low Dose mode.&nbsp; See <A href="#z_by_g_setup">Extended Autofocus and Non-reciprocity Calibration 
+      for Using Eucentricity by Focus</A> below for details.</P>
+      <P>Set up the
         Focus parameter set to give moderately good, quick pictures with a binning of at
         least 2. For a camera where smaller images come out significantly faster, wide quarter and center half are two possibilities; if you have a smaller
         format camera, use a center
@@ -2543,7 +2553,121 @@
         Note that if you have this option selected and you measure the offset with the
         eucentricity routine, you need to ADD the measured offset to whatever value is
         already present.</P>
-    <P>&nbsp;</P>
+    <P>
+      &nbsp;</P>
+    <P><A name="z_by_g_setup"></A>
+      <strong>Extended Autofocus and Non-reciprocity Calibration 
+      for Using Eucentricity by Focus (Priority 2)</strong></P>
+    <p> <em><strong>The need for an extended autofocus calibration:</strong></em> If the Eucentricity by Focus routine 
+      is going to be used to find 
+      eucentricity from a large distance away in Z, or with very large 
+      defocus offsets, an autofocus 
+      calibration over a wide range will be needed at least for efficient operation of 
+      the routine and possibly even for the routine to work at all, because the 
+      autofocus calibration becomes quite nonlinear over large focus ranges.&nbsp; Such a 
+      calibration can be prepared with the <A href="#menu_calibration.htm#hid_calibration_autofocus">Extended Autofocus</A> 
+      command in the Calibration - Focus &amp; Tuning menu after setting the limits with the <A href="menu_calibration.htm#hid_focustuning_setextendedrange">Set Extended Range</A> 
+      command.&nbsp; The needed range depends on both the range of Z changes to be 
+      handled and the range of defocus offsets when measuring defocus.&nbsp; Here are 
+      some recommendations for the different possibilities:</p>
+      <ul>
+        <li>Measuring defocus in Eucentricity by Focus with Focus images (i.e., at higher 
+          magnification): Assuming that the autofocus offset will not be large, the 
+          autofocus calibration should encompass the biggest Z changes that might be 
+          encountered when using Focus.&nbsp; If the routine is not going to be used 
+          except for periodic refinements of the eucentricity, with Z changes less than 30 
+          microns, then the default calibration is adequate.&nbsp; Otherwise, the 
+          autofocus calibration might need to extend to about +/-100 microns.&nbsp; The 
+          recommendation is to make one or more extended calibrations that would be 
+          accessed at the relevant magnifications.&nbsp; If the recommendation not to have 
+          many autofocus calibrations is followed, then this might be just the one 
+          calibration at the highest magnification.</li>
+        <li>Measuring defocus with View in Low Dose mode using a small to moderate defocus 
+          offset: The needed range is dominated by the highest Z change that might be 
+          encountered but the defocus offset could require a larger underfocus range.&nbsp; 
+          To cover defocus offsets up to -50 microns, the recommendation is to have an 
+          extended autofocus calibration at the most likely View magnification from about -150 to +100 
+          microns.&nbsp; You do not need calibrations at multiple magnifications as long 
+          as the calibrated magnification is the closest one to other ones that may be 
+          needed for View.</li>
+        <li>Measuring defocus with View using a large defocus offset:&nbsp; The recommendation 
+          is not to do this if it can be avoided, and to use an offset of not more than 
+          -50 microns even when using much larger offsets for 
+          mapping and other operations.&nbsp; This is based on the expectation that the defocus measurement will 
+          work with much smaller offsets than are needed for seeing details and getting 
+          reliable alignment of pieces in a montage overview.&nbsp; However, if 
+          some cases do require a high offset, or if you want to protect users from 
+          failing to set a more modest offset in the Eucentricity by Focus calibration, 
+          then you would need to cover the range of defocus offsets that might be used for 
+          measuring defocus.&nbsp; For example, to cover offsets up to -300 microns and Z 
+          changes of ~100 microns, the recommendation is to have the autofocus calibration 
+          used at the View magnification extend from -400 to +100 microns.</li>
+      </ul>
+    <p> <em><strong>Calibrating non-reciprocity for better predictability and 
+      convergence:</strong></em>&nbsp; This calibration may be helpful if the routine 
+      does not converge well when using a large defocus offset.&nbsp; Near the eucentric height and for small 
+      defocuses, a change in Z height is equivalent to the same change in defocus; 
+      this relationship is called reciprocity.&nbsp; Reciprocity breaks down badly at 
+      high defocus offsets. On a Thermo/FEI Tecnai, the factor relating defocus to Z 
+      change was found to be approximately the same as the ratio of the slope of the 
+      autofocus curve at a given defocus offset to its slope at zero defocus. The 
+      Eucentricity by Focus routine will thus try to determine this slope ratio and 
+      use it to scale the Z change that is needed to compensate for a measured 
+      defocus.&nbsp; Doing so requires an extended autofocus calibration.&nbsp; It is 
+      not known whether this approximation holds generally or is specific to this kind 
+      of microscope.&nbsp; If you find that the eucentricity routine requires more 
+      than about 4 iterations and does not get within ~10 microns on the first 
+      iteration, then you may need to calibrate the non-reciprocity directly.&nbsp; 
+      You can do so with the following script and then insert the final line of output 
+      with &quot;ZbyGFocusScalings&quot; into the properties file:</p>
+    <pre>
+# Measures non-reciprocity between defocus measurements
+# and Z changes at a series of View offsets
+# Adjust Z offset list to stay within range of the extended focus
+# calibration
+# Make sure the beam and specimen will give good focus
+# measurements at the highest offset
+offsetArr = { 0 -50 -100 -150 -200 -250 -300 }
+zRange = 50
+backlash = 3
+
+SuppressReports
+SetLowDoseMode 1
+ReportUserSetting LowDoseViewDefocus offsetOrig
+startZ = -1 * ( $zRange / 2. + $backlash)
+MoveStage 0 0 $startZ
+MoveStage 0 0 $backlash
+
+loop $#offsetArr ind
+   SetUserSetting LowDoseViewDefocus $offsetArr[$ind]
+   Autofocus -1 1
+   ReportAutoFocus
+   if $ind == 1
+      lowerArr = $repVal1
+   Else
+      lowerArr = { $lowerArr $repVal1 }
+   Endif
+EndLoop
+
+MoveStage 0 0 $zRange
+Loop $#offsetArr ind
+   SetUserSetting LowDoseViewDefocus $offsetArr[$ind]
+   Autofocus -1 1
+   ReportAutoFocus
+   factor = ROUND (  $zRange / ( $repVal1 - $lowerArr[$ind] )  3)
+   if $ind == 1
+      calArr = { $offsetArr[$ind] $factor }
+   Else
+      calArr = { $calArr $offsetArr[$ind] $factor }
+   Endif
+EndLoop
+echo Add property:
+echo ZbyGFocusScalings  $calArr
+
+MoveStage 0 0 -$zRange / 2.
+
+</pre>
+
       <P><A name="setup_xray"></A><B>Setting Up X Ray Removal from Dark References
         (Priority 2)</B></P>
       <P>The main task here is to determine the hot pixels and hot columns in the CCD so

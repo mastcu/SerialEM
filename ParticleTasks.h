@@ -131,11 +131,13 @@ private:
   float mZBGMinErrorFactor;        // Minimum implied error in previous move
   float mZBGMinMoveForErrFac;      // Minimum previous move for evaluating factor
   int mZBGIterationNum;            // Counter and flag that it is running
-  float mZBGIterThreshold;         // Threshold move for stoppig the iterations
+  float mZBGIterThreshold;         // Threshold move for stopping the iterations
+  float mZBGSkipLastThresh;        // Threshold delta Z for skipping the last move
   BOOL mZbyGUseViewInLD;           // Setting in dialog for using View in Low Dose
   int mZbyGViewSubarea;            // 0 for current area,1/4, 3/8, 1/2
   double mZBGInitialFocus;         // For saving and restoring focus
   float mZBGTargetDefocus;         // Measured defocus to reach
+  float mZBGFocusOffset;           // Offset set from the param being used
   double mZBGInitialIntensity;     // For saving and restoring intensity out of low dose
   BOOL mZBGUsingView;              // Flag that View is being used
   int mZBGMeasuringFocus;          // Flag that it is running autofocus, 2 for calibrating
@@ -158,6 +160,7 @@ private:
   LowDoseParams mZBGSavedLDparam;   // Saved parameters for low dose area
   int mZBGSavedTop, mZBGSavedLeft;  // Saved coordinates from view conset
   int mZBGSavedBottom, mZBGSavedRight;
+  float mZBGSavedViewDefocus;       // Saved View offset
   FloatVec mZBGFocusScalings;       // List of measured focus values and scaling factor
 
   int mATIterationNum;              // Current iteration number in resetting shift

@@ -28,13 +28,20 @@
       to make it more reliable.&nbsp; Before the calibration, the stage is moved in Z 
       to establish backlash from below if necessary. The Eucentricity by Focus routine 
       itself does all Z moves with the same direction of backlash.</p>
-    <p> &nbsp;The relation between defocus at eucentricity and absolute focus is 
+    <p> With an appropriate calibration, the Eucentricity by Focus routine can find 
+      eucentricity from a large distance away in Z, and can also do so with very large 
+      defocus offsets.&nbsp; However, in either of these cases, an autofocus 
+      calibration over a wide range will be needed.&nbsp; See
+        <A href="setting_up_serialem.htm#z_by_g_setup">Extended Autofocus and Non-reciprocity Calibration 
+      for Using Eucentricity by Focus</A> for details.</p>
+    <p> The relation between defocus at eucentricity and absolute focus is 
       magnification dependent, so separate calibrations are stored for different 
       magnifications.&nbsp; At a given magnification, there can also be separate 
       calibrations for different cameras, and for three different states: Low Dose 
       Focus, Low Dose View, and not in Low Dose mode.&nbsp; These calibrations are 
-      stored in the settings file, not in the calibrations file.</p>
-    <p> &nbsp;To make the defocus measurements as reproducible as possible, the 
+      stored in the settings file, not in the calibrations file, because they may need 
+      to be redone frequently (e.g., for each session).</p>
+    <p> To make the defocus measurements as reproducible as possible, the 
       illumination conditions are stored (intensity, spot size, and probe mode or 
       alpha) as well as the defocus offset and beam tilt used in the measurement.&nbsp; 
       The line of the dialog below the two 'CALIBRATE with' buttons shows the current camera and which of the three Low 
@@ -55,14 +62,16 @@
       <li>In Low Dose mode, the stored spot size and probe mode or alpha can also be 
         different from the current values, but (at least for now) these values must 
         match in order to run the procedure.</li>
-      <li>In View mode, the current 'Focus offset' shown is the sum of the View focus 
-        offset and the defocus offset used in defocus measurement.&nbsp; The calibrated 
+      <li>In View mode, the current 'Focus offset' shown is the sum of the View defocus 
+        offset and the autofocus offset used in defocus measurement.&nbsp; The calibrated 
         value is the net offset that will be used.</li>
+      <li>During both the calibration and the eucentricity routine, the log will show 
+        the defocus determined directly from the image displacements at the net defocus 
+        offset, not the defocus that would be obtained without that offset.</li>
       <li>The <strong>Update State</strong> button should be used to refresh the current 
         values if you change some settings.&nbsp; The program will automatically update 
         the dialog when the Low Dose state is changed, but not otherwise.&nbsp; It will, 
         however, update the settings first before running a calibration.</li>
-      <li>You </li>
     </ul>
     <p>
       <strong><em>Controls Relevant to the Calibration:</em></strong></p>
@@ -87,7 +96,10 @@
     <p>
       Turn on the check box and enter an alternative value for the focus offset to use 
       in a calibration.&nbsp; For measuring with View, this offset overrides both the 
-      View focus offset and the autofocus focus offset.</p>
+      View defocus offset and the autofocus focus offset.&nbsp; <em>This setting is 
+      very important when using View: it is recommended that you not use a defocus 
+      offset bigger than -50 if possible, to avoid the need for an autofocus 
+      calibration extending to very high underfocus values.</em></p>
     <p>
       <strong>Calibrate with beam tilt of </strong>
     </p>
@@ -121,61 +133,6 @@
       value is 0.5 microns; a smaller value might be appropriate if stage moves are 
       quite accurate, whereas a larger value might be needed if they are relatively 
       inaccurate.</p>
-    <p> <em><strong>Calibrating Nonlinearity for Better Predictability and 
-      Convergence:</strong></em></p>
-    <p> The dependence of measured defocus on Z height is highly nonlinear at large 
-      distances from eucentricity.&nbsp; You can ignore this effect if you are only 
-      going to use Eucentricity by Focus over short distances, as a replacement for 
-      Fine Eucentricity, but if you are going to use it over distances up to 100 
-      microns, it will work better with some compensation.&nbsp; On a Tecnai F30, these values were found:</p>
-    <pre>
-     Z     Defocus
-   -110     -75
-   -100     -70
-    100     157
-    110     180
-</pre>
-    <p>At underfocus, i.e., from large negative Z, the first iteration will not move the stage nearly enough, 
-      but later iterations will be much more effective.&nbsp; At overfocus, from large 
-      positive Z, the first iteration is in danger of moving the stage much too far; 
-      this will work out after two more iterations, but would require a large entry 
-      for the maximum allowed Z change.&nbsp; To reduce these effects, the program 
-      allows a property entry, ZbgGFocusScalings, with a set of values indicating how 
-      to scale a measured defocus into a Z change when defocus is more extreme than a 
-      given amount.&nbsp; The default value of this property is '100 0.7', which 
-      applies a scaling of 0.7 to any measured focus above 100, and should prevent the 
-      worst effects at positive Z for scopes with the same kind of behavior as the 
-      F30.&nbsp; An entry of '-70 1.3 100 0.72 150 0.64' would boost measurements 
-      below -70 microns by 1.3, reduce ones between 100 and 150 microns by 0.72 
-      between 100 and 150 microns, and reduce ones above 150 microns by 0.64 . Below 
-      is a script that can assess the dependence at a range of Z heights. You can 
-      change the collection of Z values to fit your situation.&nbsp; It is best to do 
-      this outside of Low Dose mode, at a moderate magnification, and with full-field 
-      Focus images.&nbsp; be sure that the beam is big enough over the whole Z range 
-      and watch the autofocusing to make sure that the image displacements do not 
-      become too large. If the pairs of values, defocus and scaling, appear 
-      reasonable, insert the final line of output into the properties file.</p>
-
-
-<pre>
-delZarr = { -120 -100 -80 -50 50 80 100 120 }
-numZ = $#delZarr
-ReportStageXYZ sx sy sz
-loop $numZ ind
-   delZ = $delZarr[$ind]
-   MoveStageTo $sx $sy $sz + $delZ
-   Autofocus -1 0
-   ReportAutofocus def
-  defInt = ROUND ( $def 0 )
-  scale =  ROUND ( $delZ / $def 2 )
-  if $ind > 0
-     scaleArr = { $scaleArr $defInt $scale }
-  Else
-     scaleArr = { $defInt $scale }
-  Endif 
-EndLoop 
-echo ZbyGFocusScalings $scaleArr
-</pre>
 
   </body>
 </html>

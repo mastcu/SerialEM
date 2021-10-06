@@ -35,9 +35,9 @@
       <P>Many parameters can be set in SerialEM through the properties file. They all
         have default values in the program, and in most cases the values in the
         properties file are the defaults. A property is entered by having a line with a
-        keyword followed by one or more values. As of SerialEM 2.6.0, the keywords are
-        case-insensitive, but they are most readable when shown in the MixedCase form
-        that used to be required. Values can be separated by any number of spaces or
+        keyword followed by one or more values. The keywords are
+        case-insensitive, but they are most readable when shown in the MixedCase form 
+        used here. Values can be separated by any number of spaces or
         tabs.</P>
     <P>The properties file can have comments starting with #.&nbsp; Any line starting
       with # will be ignored.&nbsp; A property containing numeric entries can have a
@@ -45,6 +45,10 @@
       string entry (for example, any string that might have spaces, like a path entry
       or camera or detector name) cannot have a comment on the same
       line because it will be considered part of the entry.</b></P>
+    <P>The file can also have multiline comments starting with '/*' and ending on a line
+      containing '*/'.&nbsp; The '/*' <b>must</b> be at the start of the line, whereas the
+      '*/' can be anywhere on the ending line.&nbsp; This makes it easy to comment out 
+      a section of entries.</P>
       <P><A HREF="#general_properties">General entries</A>
         <BR>
         <A HREF="#general_camera_properties">General camera control properties</A>
@@ -3286,11 +3290,11 @@
         </TR>
         <TR VALIGN="top">
           <TD>ZbyGFocusScalings</TD>
-          <TD>Follow with pairs of values, a defocus threshold and a scaling factor, indicating how to
-             scale a more extreme measured defocus than the threshold for the next Z change in the
-            EucentricityByFocus procedure.&nbsp; See the last section in
-            <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a></TD> for
-          details.
+          <TD>Follow with pairs of values, a defocus offset and a scaling factor, indicating how to
+             scale an defocus value measured with the given offset into an equivalent Z height change&nbsp;
+            See
+        <A href="setting_up_serialem.htm#z_by_g_setup">Extended Autofocus and Non-reciprocity Calibration 
+      for Using Eucentricity by Focus</A> for a script to obtain these values.
         </TR>
         <TR VALIGN="top">
           <TD>ResetRealignMinField</TD>
