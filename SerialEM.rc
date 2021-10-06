@@ -3631,7 +3631,7 @@ BEGIN
     CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,59,156,8
 END
 
-IDD_MANAGE_DEWARS DIALOGEX 0, 0, 199, 211
+IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dewar and Vacuum Management"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3662,11 +3662,11 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,126,130,10
     EDITTEXT        IDC_EDIT_START_IF_BELOW,141,124,24,14,ES_AUTOHSCROLL
     LTEXT           "minutes",IDC_STAT_START_BELOW_MIN,167,127,26,8
-    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,143,100,8
+    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,144,100,8
     EDITTEXT        IDC_EDIT_WAIT_AFTER,112,141,24,14,ES_AUTOHSCROLL
     LTEXT           "minutes",IDC_STAT_AFTER_MIN,138,144,26,8
-    CONTROL         "Do checks just before primary action in Acquire at Items",IDC_DO_CHECKS_JUST_BEFORE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,157,171,10
+    CONTROL         "Repeat checks just before primary action in Acquire at Items",IDC_DO_CHECKS_JUST_BEFORE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,157,187,10
     PUSHBUTTON      "?",IDC_BUTHELP,183,191,10,11
     LTEXT           "",IDC_STAT_SPACER,10,198,8,8
     CTEXT           "Operations occur only when management is run from script or by Acquire at Items",IDC_STAT_WHEN_OCCURS,23,170,153,15
@@ -4200,9 +4200,9 @@ BEGIN
     IDD_MANAGE_DEWARS, DIALOG
     BEGIN
         LEFTMARGIN, 9
-        RIGHTMARGIN, 192
+        RIGHTMARGIN, 197
         TOPMARGIN, 7
-        BOTTOMMARGIN, 204
+        BOTTOMMARGIN, 205
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -5112,6 +5112,10 @@ STRINGTABLE
 BEGIN
     IDC_CHECK_REMOVE_OUTSIDE 
                             "Set points in same groups as ones inside polygon not to display or acquire"
+    IDC_RCURRENTAREA        "Use the currently selected camera area for the View images"
+    IDC_RQUARTER            "Use one-quarter of the camera field for View images"
+    IDC_R3EIGHTHS           "Use three-eighths of the camera field for View images"
+    IDC_RHALFFIELD          "Use half of the camera field for View images"
 END
 
 STRINGTABLE
@@ -6487,11 +6491,6 @@ BEGIN
     IDC_EDIT_MAX_CHANGE     "If total change in Z height would exceed this, the procedure aborts"
     IDC_ZBG_UPDATE_STATE    "Update dialog for changes in microscope or parameter settings"
     IDC_CHECK_CAL_WITH_BT   "Enable using the specified beam tilt for calibrating and running"
-    IDC_RCURRENTAREA        "Use the currently selected camera area for the View images"
-    IDC_RQUARTER            "Use one-quarter of the camera field for View images"
-    IDC_R3EIGHTHS           "Use three-eighths of the camera field for View images"
-    IDC_RHALFFIELD          "Use half of the camera field for View images"
-
 END
 
 STRINGTABLE
