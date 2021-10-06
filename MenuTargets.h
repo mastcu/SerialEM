@@ -403,6 +403,7 @@ public:
   afx_msg void OnUpdateEucentricityByFocus(CCmdUI *pCmdUI);
   afx_msg void OnSetupEucentricityByFocus();
   afx_msg void OnNavigatorSetupAlign();
+  afx_msg void OnUpdateNavigatorSetupAlign(CCmdUI *pCmdUI);
   afx_msg void OnSetupScopeManagement();
   afx_msg void OnUpdateSetupScopeManagement(CCmdUI *pCmdUI);
 };

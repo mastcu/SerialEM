@@ -490,7 +490,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnSetupEucentricityByFocus)
     ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS, OnUpdateNoTasksNoSTEM)
     ON_COMMAND(ID_NAVIGATOR_SETUPALIGN, OnNavigatorSetupAlign)
-    ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_SETUPALIGN, OnUpdateNoTasks)
+    ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_SETUPALIGN, OnUpdateNavigatorSetupAlign)
     ON_COMMAND(ID_TASKS_SETUPSCOPEMANAGEMENT, OnSetupScopeManagement)
     ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPSCOPEMANAGEMENT, OnUpdateSetupScopeManagement)
     END_MESSAGE_MAP()
@@ -1209,6 +1209,11 @@ void CMenuTargets::OnNavigatorSetupAlign()
 {
   CNavRealignDlg dlg;
   dlg.DoModal();
+}
+
+void CMenuTargets::OnUpdateNavigatorSetupAlign(CCmdUI * pCmdUI)
+{
+  pCmdUI->Enable(mWinApp->mNavigator && !DoingTasks());
 }
 
 // DISTORTION
