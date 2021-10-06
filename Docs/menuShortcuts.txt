@@ -78,8 +78,10 @@ Calibration:
   G
   L
   M
+  N
   S
   T
+  X
   Z
   Beam & Spot
   A

@@ -38,6 +38,10 @@ static char THIS_FILE[]=__FILE__;
 enum {STEM_FOCUS_CAL, STEM_FOCUS_COARSE1, STEM_FOCUS_COARSE2, STEM_FOCUS_FINE1,
 STEM_FOCUS_FINE2};
 
+#define MAX_CAL_FOCUS_LEVELS 49
+#define MAX_CAL_SPARSE_LEVELS 30
+
+
 BEGIN_MESSAGE_MAP(CFocusManager, CCmdTarget)
   //{{AFX_MSG_MAP(CFocusManager)
   ON_COMMAND(ID_CALIBRATION_AUTOFOCUS, OnCalibrationAutofocus)
@@ -91,6 +95,10 @@ BEGIN_MESSAGE_MAP(CFocusManager, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_USEABSOLUTERANGE, OnUpdateFocusUseAbsoluteLimits)
   ON_COMMAND(ID_FOCUS_TESTWHENUSINGOFFSET, OnLimitOffsetDefocus)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_TESTWHENUSINGOFFSET, OnUpdateLimitOffsetDefocus)
+  ON_COMMAND(ID_FOCUSTUNING_EXTENDEDAUTOFOCUS, OnExtendedAutofocus)
+  ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_EXTENDEDAUTOFOCUS, OnUpdateNoTasksNoSTEM)
+  ON_COMMAND(ID_FOCUSTUNING_SETEXTENDEDRANGE, OnSetExtendedRange)
+  ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_SETEXTENDEDRANGE, OnUpdateNoTasksNoSTEM)
 END_MESSAGE_MAP()
 
 
@@ -122,6 +130,10 @@ CFocusManager::CFocusManager()
   mCalRange = 72.;
   mCalOffset = 0.;
   mFalconCalLimit = 18.;
+  mSparseLowFocus = -300.;
+  mSparseHighFocus = 100.;
+  mSparseDelta = 20.;
+  mSparseBTFactor = 0.5;
   mFracTiltX = 1.;
   mFracTiltY = 0.;
   mTiltDirection = 0;
@@ -226,10 +238,15 @@ void CFocusManager::OnUpdateNoTasksNoSTEM(CCmdUI* pCmdUI)
 
 void CFocusManager::OnCalibrationAutofocus() 
 {
-  CalFocusStart();
+  CalFocusStart(false);
 }
 
-void CFocusManager::OnFocusAutofocus() 
+void CFocusManager::OnExtendedAutofocus()
+{
+  CalFocusStart(true);
+}
+
+void CFocusManager::OnFocusAutofocus()
 {
   AutoFocusStart(1);
 }
@@ -479,7 +496,8 @@ void CFocusManager::OnFocusSetthreshold()
 
 void CFocusManager::OnFocusSetoffset() 
 {
-  KGetOneFloat("Amount to change focus before taking autofocus pictures:", mDefocusOffset, 2);
+  KGetOneFloat("Amount to change focus before taking autofocus pictures:", mDefocusOffset,
+    2);
 }
 
 void CFocusManager::OnCalibrationSetfocusrange() 
@@ -487,12 +505,12 @@ void CFocusManager::OnCalibrationSetfocusrange()
   CString info;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   if (IS_FALCON2_3_4(camParam) && mCalRange > 72 - mFalconCalLimit)
-    info.Format("You might need a range of only %.0f on the Falcon", 72 - mFalconCalLimit);
+    info.Format("You might need a range of only %.0f on the Falcon", 72 -mFalconCalLimit);
   if (!KGetOneFloat(info, "Total defocus range to measure shifts over:", mCalRange, 1))
     return;
   if (!KGetOneInt("Number of focus levels to test:", mNumCalLevels))
     return;
-  mNumCalLevels = B3DMIN(mNumCalLevels, MAX_CAL_FOCUS_LEVELS);
+  B3DCLAMP(mNumCalLevels, 2, MAX_CAL_FOCUS_LEVELS);
   if (!KGetOneInt("Number of levels to smooth over (0 for none):", mSmoothFit))
     return;
   info = "";
@@ -501,6 +519,23 @@ void CFocusManager::OnCalibrationSetfocusrange()
     "the dose protector.", mFalconCalLimit - mCalRange / 2.);
   KGetOneFloat(info, "Offset to apply to the focus range (negative for more "
     "underfocused):", mCalOffset, 1);
+}
+
+void CFocusManager::OnSetExtendedRange()
+{
+  if (!KGetOneFloat("Enter a negative value for underfocus",
+    "Lowest defocus to measure below focus, in microns:", mSparseLowFocus, 0))
+    return;
+  if (!KGetOneFloat("Enter a positive value for overfocus",
+    "Highest defocus to measure above focus, in microns:", mSparseHighFocus, 0))
+    return;
+  if (!KGetOneFloat("Defocus interval for extended regions (at least 6 microns):",
+    mSparseDelta, 0))
+    return;
+  mSparseDelta = B3DMAX(6.f, mSparseDelta);
+  KGetOneFloat("Factor by which to change the beam tilt in extended regions:",
+    mSparseBTFactor, 2);
+  B3DCLAMP(mSparseBTFactor, 0.1f, 1.f);
 }
 
 void CFocusManager::OnFocusSetTiltDirection()
@@ -526,7 +561,8 @@ void CFocusManager::OnFocusMovecenter()
   ScaleMat aInv = mShiftManager->CameraToSpecimen(imBuf->mMagInd);
   if (!aInv.xpx)
     return;
-  SEMTrace('1', "Camera to Specimen %f  %f  %f  %f", aInv.xpx, aInv.xpy, aInv.ypx, aInv.ypy);
+  SEMTrace('1', "Camera to Specimen %f  %f  %f  %f", aInv.xpx, aInv.xpy, aInv.ypx, 
+    aInv.ypy);
   imBuf->mImage->getSize(nx, ny);
   imBuf->mImage->getShifts(shiftX, shiftY);
   
@@ -576,14 +612,16 @@ void CFocusManager::OnAutofocusListCalibrations()
   AstigCalib astig;
   ComaCalib coma;
   CString str, str2;
-  mWinApp->AppendToLog("\r\nFocus calibrations:\r\nCamera        Mag  Index  Direction");
+  mWinApp->AppendToLog("\r\nFocus calibrations:\r\n"
+    "Camera    Mag  Index  Direction Range");
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
       for (ind = 0; ind < (int)mFocTab.GetSize(); ind++) {
         if (mFocTab[ind].camera == iCam && mFocTab[ind].magInd == iMag) {
-          str.Format("%s   %d   %d   %d     %s", (LPCTSTR)camP[iCam].name,
+          str.Format("%s   %d      %d      %d      %.0f to %.0f     %s", (LPCTSTR)camP[iCam].name,
             MagForCamera(iCam, iMag), iMag, mFocTab[ind].direction, 
+            mFocTab[ind].defocus[0], mFocTab[ind].defocus[mFocTab[ind].numPoints - 1],
             mFocTab[ind].probeMode ? "" : "nanoprobe");
           if (!mScope->GetHasNoAlpha() || mFocTab[ind].alpha >= 0) {
             str2.Format("  alpha %d", mFocTab[ind].alpha + 1);
@@ -680,9 +718,11 @@ void CFocusManager::OnUpdateNormalizeViaView(CCmdUI* pCmdUI)
 // FOCUS CALIBRATION AND AUTOFOCUS
   
 // Entry for starting a focus calibration
-void CFocusManager::CalFocusStart()
+void CFocusManager::CalFocusStart(bool doSparse)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
+  double sparseTemp, rangeBelow, rangeAbove;
+  int ind;
   mFocusMag = mScope->GetMagIndex();
   mFocusProbe = mScope->ReadProbeMode();
   mFocusAlpha = mScope->GetAlpha();
@@ -701,15 +741,54 @@ void CFocusManager::CalFocusStart()
       return;
   }
 
-  if (AfxMessageBox(
-    "Focus detection takes many pictures with the " +  mModeNames[1] + " parameter set.\r"
-    "Before proceeding, make sure that this parameter set takes\r"
-    "fairly good pictures and that you are already well focused.\r\r"
-    "Do you want to proceed?", MB_YESNO | MB_ICONQUESTION) == IDNO)
+  str = "";
+  if (doSparse)
+    str.Format("Also make sure that images can be taken for this\n"
+      "extended calibration from %.0f to %.0f defocus\n\n", mSparseLowFocus,
+      mSparseHighFocus);
+  str = "Focus detection takes many pictures with the " + mModeNames[1] +
+    " parameter set.\n"
+    "Before proceeding, make sure that this parameter set takes\n"
+    "fairly good pictures and that you are already well focused.\n\n" + str;
+  if (AfxMessageBox(str + "Do you want to proceed?", MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
   mFCindex = 0;
+  mNumSparseBelow = mNumSparseAbove = 0;
   mCalDelta = mCalRange / (mNumCalLevels - 1);
   mCalDefocus = mCalOffset - mCalRange / 2.;
+  mCalSavedBeamTilt = mBeamTilt;
+
+  // For extended cal, find number of points to do in the two extended regions
+  if (doSparse) {
+    rangeBelow = mCalDefocus - mSparseLowFocus;
+    if (rangeBelow > 0) {
+      mNumSparseBelow = (int)ceil((rangeBelow) / mSparseDelta);
+      B3DCLAMP(mNumSparseBelow, 1, MAX_CAL_SPARSE_LEVELS);
+    }
+    rangeAbove = mSparseHighFocus - (mCalDefocus + mCalRange);
+    if (rangeAbove > 0) {
+      mNumSparseAbove = (int)ceil((rangeAbove) / mSparseDelta);
+      B3DCLAMP(mNumSparseAbove, 1, MAX_CAL_SPARSE_LEVELS);
+    }
+  }
+  mTotalCalLevels = mNumCalLevels + mNumSparseBelow + mNumSparseAbove;
+  mNewCal.shiftX.resize(mTotalCalLevels);
+  mNewCal.shiftY.resize(mTotalCalLevels);
+  mNewCal.defocus.resize(0);
+  if (mNumSparseBelow > 0) {
+    sparseTemp = rangeBelow / mNumSparseBelow;
+    mBeamTilt *= mSparseBTFactor;
+    for (ind = 0; ind < mNumSparseBelow; ind++)
+      mNewCal.defocus.push_back((float)(mSparseLowFocus + ind * sparseTemp));
+  }
+  for (ind = 0; ind < mNumCalLevels; ind++)
+    mNewCal.defocus.push_back((float)(mCalDefocus + ind * mCalDelta));
+  if (mNumSparseAbove > 0) {
+    sparseTemp = rangeAbove / mNumSparseAbove;
+    for (ind = 1; ind <= mNumSparseAbove; ind++)
+      mNewCal.defocus.push_back((float)(mCalDefocus + mCalRange + ind * sparseTemp));
+  }
+  mCalDefocus = mNewCal.defocus[0];
   mScope->IncDefocus(mCalDefocus);
   mScope->NormalizeProjector();
   mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING AUTOFOCUS");
@@ -720,8 +799,8 @@ void CFocusManager::CalFocusStart()
 void CFocusManager::CalFocusData(float inX, float inY)
 {
   float slopeX, slopeY, intcpX, intcpY, oldSlopeX, oldSlopeY;
-  int i, iCen, iFitStr, focInd, numBad;
-  double cenAng, oneAng;
+  int i, iCen, iFitStr, focInd, numBad, belowInd = mNumSparseBelow;
+  double cenAng, oneAng, normScale = 1;
   float fitSlope, fitIntcp;
   CString report;
   CString source = "measured directly";
@@ -738,18 +817,31 @@ void CFocusManager::CalFocusData(float inX, float inY)
       source = "derived from uncalibrated image shifts";
   }
 
-  mNewCal.defocus[mFCindex] = (float)mCalDefocus;
-  mNewCal.shiftX[mFCindex] = (float)(inX / mBeamTilt);
-  mNewCal.shiftY[mFCindex] = (float)(inY / mBeamTilt);
-  double diffX = inX - mBeamTilt * mNewCal.shiftX[B3DMAX(mFCindex - 1, 0)];
-  double diffY = inY - mBeamTilt * mNewCal.shiftY[B3DMAX(mFCindex - 1, 0)];
+  mNewCal.shiftX[mFCindex] = inX / mBeamTilt;
+  mNewCal.shiftY[mFCindex] = inY / mBeamTilt;
+  if (mFCindex) {
+    normScale = (mCalDelta / (mCalDefocus - mNewCal.defocus[mFCindex - 1])) * 
+      (mCalSavedBeamTilt / mBeamTilt);
+  } else {
+    mWinApp->AppendToLog("Differences in extended region are adjusted for interval and"
+      " beam tilt to make them comparable", LOG_SWALLOW_IF_CLOSED);
+  }
+  double diffX = normScale * (inX - mBeamTilt * mNewCal.shiftX[B3DMAX(mFCindex - 1, 0)]);
+  double diffY = normScale * (inY - mBeamTilt * mNewCal.shiftY[B3DMAX(mFCindex - 1, 0)]);
   report.Format("%7.2f %7.2f %7.2f %11.2f %6.2f", mCalDefocus, inX, inY, diffX, diffY);
+
 
   mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
   mFCindex++;
-  if (mFCindex < mNumCalLevels) {
-    mCalDefocus += mCalDelta;
-    mScope->IncDefocus(mCalDelta);
+  if (mFCindex < mTotalCalLevels) {
+    mScope->IncDefocus(mNewCal.defocus[mFCindex] - mCalDefocus);
+    mCalDefocus = mNewCal.defocus[mFCindex];
+
+    // Restore beam tilt if leaving sparse region, or scale it down if entering one
+    if (mFCindex == mNumSparseBelow)
+      mBeamTilt = mCalSavedBeamTilt;
+    else if (mFCindex == mNumSparseBelow + mNumCalLevels)
+      mBeamTilt *= mSparseBTFactor;
     DetectFocus(FOCUS_CALIBRATE);
     return;
   }
@@ -757,8 +849,9 @@ void CFocusManager::CalFocusData(float inX, float inY)
   mFCindex = -1;
   mScope->IncDefocus(-mCalDefocus);
   mCalDefocus = 0.;
+  mBeamTilt = mCalSavedBeamTilt;
 
-  iCen = mNumCalLevels / 2;
+  iCen = belowInd + mNumCalLevels / 2;
   numBad = 0;
   cenAng = atan2((double)(mNewCal.shiftY[iCen + 1] - mNewCal.shiftY[iCen]), 
     (double)(mNewCal.shiftX[iCen + 1] - mNewCal.shiftX[iCen])) / DTOR;
@@ -766,7 +859,8 @@ void CFocusManager::CalFocusData(float inX, float inY)
     oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]), 
       (double)(mNewCal.shiftX[i + 1] - mNewCal.shiftX[i])) / DTOR;
     oneAng = UtilGoodAngle(oneAng - cenAng);
-    if (fabs(oneAng) > 40.) {
+    if (fabs(oneAng) > 70. || (i >= belowInd && i < belowInd + mNumCalLevels
+      && fabs(oneAng) > 40.)) {
       oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]), 
         (double)(mNewCal.shiftX[i + 1] - mNewCal.shiftX[i])) / DTOR;
       report.Format("Curve slope is %.0f deg at point %d vs. %.0f deg at center",
@@ -784,12 +878,14 @@ void CFocusManager::CalFocusData(float inX, float inY)
     return;
   }
 
-  StatLSFit(mNewCal.defocus, mNewCal.shiftX, mNumCalLevels, slopeX, intcpX);
-  StatLSFit(mNewCal.defocus, mNewCal.shiftY, mNumCalLevels, slopeY, intcpY);
+  StatLSFit(&mNewCal.defocus[belowInd], &mNewCal.shiftX[belowInd], mNumCalLevels, slopeX,
+    intcpX);
+  StatLSFit(&mNewCal.defocus[belowInd], &mNewCal.shiftY[belowInd], mNumCalLevels, slopeY,
+    intcpY);
   mNewCal.slopeX = slopeX;
   mNewCal.slopeY = slopeY;
   mNewCal.beamTilt = mBeamTilt;
-  mNewCal.numPoints = mNumCalLevels;
+  mNewCal.numPoints = mTotalCalLevels;
   mNewCal.calibrated = 1;
   mNewCal.direction = mTiltDirection;
   mNewCal.magInd = mFocusMag;
@@ -813,12 +909,12 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
   // If smoothing, do fits on mNewCal data, replace in focTab
   if (mSmoothFit > 2 && mSmoothFit < mNumCalLevels - 1) {
-    for (iCen = 0; iCen < mNumCalLevels; iCen++) {
+    for (iCen = belowInd; iCen < belowInd + mNumCalLevels; iCen++) {
       iFitStr = iCen - mSmoothFit / 2;
-      if (iFitStr < 0)
-        iFitStr = 0;
-      if (iFitStr + mSmoothFit > mNumCalLevels)
-        iFitStr = mNumCalLevels - mSmoothFit;
+      if (iFitStr < belowInd)
+        iFitStr = belowInd;
+      if (iFitStr + mSmoothFit > belowInd + mNumCalLevels)
+        iFitStr = belowInd + mNumCalLevels - mSmoothFit;
       StatLSFit(&mNewCal.defocus[iFitStr], &mNewCal.shiftX[iFitStr], mSmoothFit,
         fitSlope, fitIntcp);
       mFocTab[focInd].shiftX[iCen] = mNewCal.defocus[iCen] * fitSlope + fitIntcp;
@@ -840,7 +936,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
   // and distance from origin at that point; adjust the relative
   // defocus values to make that give zero
   float zeroDefocus = DefocusFromCal(&mFocTab[focInd], 0., 0., originDist);
-  for (i = 0; i < mNumCalLevels; i++)
+  for (i = 0; i < mTotalCalLevels; i++)
     mFocTab[focInd].defocus[i] -= zeroDefocus;
 
   float newZero = DefocusFromCal(&mFocTab[focInd], 0., 0., originDist);
@@ -950,6 +1046,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   ControlSet *conSet = &mConSets[mFocusSetNum];
   mLastFailed = true;
   mLastAborted = 0;
+  mRatioOfCalSlopes = 0.;
+  mDistPastEndOfCal = 0.;
   mDoChangeFocus = inChange;
   SEMTrace('M', "Autofocus Start");
   if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex)
@@ -1697,8 +1795,10 @@ void CFocusManager::StopFocusing()
     StopSTEMfocus();
     return;
   }
-  if (mFCindex >= 0)
+  if (mFCindex >= 0) {
     mScope->IncDefocus(-mCalDefocus);
+    mBeamTilt = mCalSavedBeamTilt;
+  }
   mFCindex = -1;
   mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
   mFocusIndex = -1;
@@ -1943,7 +2043,7 @@ void CFocusManager::ModifyAllCalibrations(ScaleMat delMat, int iCam, int directi
 float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY, 
                   float &minDist)
 {
-  float slopeX, slopeY, minDefocus, defocus, df1, df2;
+  float slopeX, slopeY, minDefocus, defocus, df1, df2, minSlope, zeroSlope = 0.;
   double lineDist, delX, delY;
   int i, iDir;
 
@@ -1958,7 +2058,7 @@ float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY,
     // Compute defocus value of closest approach to extended line
     slopeX = (focCal->shiftX[i + 1] - focCal->shiftX[i]) / (df2 - df1);
     slopeY = (focCal->shiftY[i + 1] - focCal->shiftY[i]) / (df2 - df1);
-    defocus = df1 + (slopeX * (inX - focCal->shiftX[i]) + 
+    defocus = df1 + (slopeX * (inX - focCal->shiftX[i]) +
       slopeY * (inY - focCal->shiftY[i])) /
       (slopeX * slopeX + slopeY * slopeY);
 
@@ -1977,16 +2077,28 @@ float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY,
     if (lineDist < minDist) {
       minDist = (float)lineDist;
       minDefocus = defocus;
-    }
-  }
 
+      // Keep track of slope here and around 0 and distance past end of cal for Z by G
+      minSlope = sqrtf(slopeX * slopeX + slopeY * slopeY);
+      mDistPastEndOfCal = 0.;
+      if (!i && iDir * defocus < iDir * df1)
+        mDistPastEndOfCal = iDir * (df1 - defocus);
+      if (i == focCal->numPoints - 2 && iDir * defocus > iDir * df2)
+        mDistPastEndOfCal = iDir * (defocus - df2);
+    }
+    if ((df1 < 0. && df2 >= 0.) || (df2 < 0 && df1 >= 0.))
+      zeroSlope = sqrtf(slopeX * slopeX + slopeY * slopeY);
+  }
+  if (zeroSlope > 0)
+    mRatioOfCalSlopes = minSlope / zeroSlope;
   return minDefocus;
 }
 
 // Checks for whether the primary peak is at 0,0 and if so, tests whether the second peak
 // is closer to target defocus and and strong enough relative to main peak.
 // binning can be negative for second beam tilted shot.  Returns index of peak to use
-int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal, int binning)
+int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal, 
+  int binning)
 {
   // Amount by which 0 peak must be closer to target than second peak
   float peakRatioLimit = 0.2f;   // Limit to how much smaller the second peak can be
@@ -2024,8 +2136,8 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal, 
   if (ratio < peakRatioLimit)
     ratio = peakRatioLimit;
   if (peakVal[1] > ratio * peakVal[0]) {
-    report.Format("Using peak at %.1f,%.1f, rejecting %.2f times higher "
-      "peak at %.1f,%.1f", xPeak[1], yPeak[1], peakVal[0] / peakVal[1], xPeak[0], yPeak[0]);
+    report.Format("Using peak at %.1f,%.1f, rejecting %.2f times higher peak at "
+      "%.1f,%.1f", xPeak[1], yPeak[1], peakVal[0] / peakVal[1], xPeak[0], yPeak[0]);
     mWinApp->AppendToLog(report, mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
     return 1;
   }

@@ -14,7 +14,6 @@
 
 #define MAX_CAMERAS  6
 #define MAX_DLG_CAMERAS  6
-#define MAX_CAL_FOCUS_LEVELS 31
 #define MAX_MAGS 120      // F20 STEM requires 95, TItan 100, Titan Halo STEM 112
 #define NUM_TSS_PANELS 8
 #define HITACHI_LENS_MAX 0x3FFC00

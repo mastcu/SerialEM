@@ -44,6 +44,8 @@ public:
   SetMember(float, RequiredBWMean);
   GetMember(float, LastAutofocusDiff);
   GetMember(DWORD, LastDriftImageTime);
+  GetMember(float, RatioOfCalSlopes);
+  GetMember(float, DistPastEndOfCal);
   void FocusTasksFinished();
   void ModifyAllCalibrations(ScaleMat delMat, int iCam, int direction = -1);
   void TransformFocusCal(FocusTable *inCal, FocusTable *outCal, ScaleMat delMat);
@@ -84,7 +86,7 @@ public:
   float GetSTEMdefocusToDelZ(int spotSize, int probeMode = -1, double absFocus = -1.);
   CArray<STEMFocusZTable, STEMFocusZTable> *GetSFfocusZtables() {return &mSFfocusZtables;};
   BOOL DoingFocus() {return (mFocusIndex >= 0 || mNumRotavs >= 0);};
-  void CalFocusStart();
+  void CalFocusStart(bool doSparse);
   BOOL DoingSTEMfocusVsZ() {return mSFVZindex > -3;};
   void CalFocusData(float inX, float inY);
   void AutoFocusStart(int inChange, int useViewInLD = 0, int iterNum = 1);
@@ -176,6 +178,13 @@ private:
   float mCalRange;          // Total range over which to calibrate
   float mCalOffset;         // Offset from current focus
   float mFalconCalLimit;    // Limit to assume for Falcon
+  float mSparseLowFocus;    // Underfocus end of sparse curve
+  float mSparseHighFocus;   // Overfocus end of sparse curve
+  float mSparseDelta;       // Interval in sparse region
+  float mSparseBTFactor;    // Factor to reduce beam tilt by for sparse region
+  int mNumSparseBelow;      // Number to do in underfocus sparse region
+  int mNumSparseAbove;      // Number to do in overfocus sparse region
+  int mTotalCalLevels;      // Real number of calibration levels
   double mCalDelta;         // amount to change defocus for each trial
   double mCalDefocus;       // Relative defocus during calibration
   float mTargetDefocus;     // Value to set defocus at after autofocus
@@ -186,6 +195,8 @@ private:
   int mAutofocusIterNum;    // Iteration number of autofocus
   float mLastAutofocusDiff; // Change appplied in last autofocus
   bool mLastWasOpposite;    // Flag set when a large focus change crosses zero
+  float mRatioOfCalSlopes;  // Last ratio of slope at defocus point to slope at zero
+  float mDistPastEndOfCal;  // Distance of last defocus past end of cal
   BOOL mNormalizeViaView;   // Flag to normalize through View area in low dose
   int mViewNormDelay;       // Msec delay abetween View and Focus areas
   int mDoChangeFocus;
@@ -196,6 +207,7 @@ private:
   float mFracTiltX, mFracTiltY;    // Fraction of each coil to use
   double mBaseTiltX, mBaseTiltY;   // Existing tilts
   float mBeamTilt;
+  float mCalSavedBeamTilt;
   double mNextXtiltOffset;   // Offset from center of beam tilt on next run
   double mNextYtiltOffset;
   int mPostTiltDelay;        // Delay after tilting, in milliseconds
@@ -334,6 +346,8 @@ afx_msg void OnFocusSetAbsoluteLimits();
 float EstimatedBeamTiltScaling(void);
 afx_msg void OnUpdateLimitOffsetDefocus(CCmdUI *pCmdUI);
 afx_msg void OnLimitOffsetDefocus();
+afx_msg void OnExtendedAutofocus();
+afx_msg void OnSetExtendedRange();
 };
 
 #endif // !defined(AFX_FOCUSMANAGER_H__CA46C954_8EBF_4D29_95A1_2386A5EF747E__INCLUDED_)

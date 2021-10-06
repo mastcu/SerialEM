@@ -272,6 +272,8 @@ BEGIN
         BEGIN
             MENUITEM "&Autofocus",                  ID_CALIBRATION_AUTOFOCUS
             MENUITEM "Set &Focus Range",            ID_CALIBRATION_SETFOCUSRANGE
+            MENUITEM "E&xtended Autofocus",         ID_FOCUSTUNING_EXTENDEDAUTOFOCUS
+            MENUITEM "Set Exte&nded Range",         ID_FOCUSTUNING_SETEXTENDEDRANGE
             MENUITEM SEPARATOR
             MENUITEM "&Standard Focus",             ID_CALIBRATION_STANDARDLMFOCUS
             MENUITEM "STEM Focus Vs. &Z",           ID_CALIBRATION_STEMFOCUSVSZ
@@ -6502,6 +6504,10 @@ STRINGTABLE
 BEGIN
     ID_TASKS_SETUPSCOPEMANAGEMENT 
                             "Set parameters for managing nitrogen and vacuum"
+    ID_FOCUSTUNING_EXTENDEDAUTOFOCUS 
+                            "Do regular defocus values plus sparse ones over a wider range"
+    ID_FOCUSTUNING_SETEXTENDEDRANGE 
+                            "Set limits and interval for defocus in extended range"
 END
 
 STRINGTABLE

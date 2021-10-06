@@ -151,6 +151,14 @@
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_setfocusrange">Set Focus Range</A></TD>
           <TD>Set defocus range and number of steps for focus calibration.</TD>
         </TR>
+       <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_autofocus">Extended Autofocus</A></TD>
+          <TD>Calibrate autofocusing over an wide range with sparse measurements outside regular range.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_focustuning_setextendedrange">Set Extended Range</A></TD>
+          <TD>Set defocus range and step interval for extended focus calibration.</TD>
+        </TR>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_standardlmfocus">Standard Focus</A></TD>
           <TD>Set the current defocus as a standard defocus for this magnification.</TD>
@@ -890,9 +898,10 @@
         be set under the Focus menu). The beam tilt during autofocusing does not need
         to match the beam tilt used for calibration.</P>
       <P>Note that if image shift is calibrated at the various magnifications of
-        interest, there is no need to have an autofocus calibration at more than one
-        magnification. It is better to have one high quality focus calibration over a
-        large focus range rather than poorer calibrations at several magnifications.</P>
+        interest on a Thermo/FEI scopes, or if a JEOL scope has good RotationAndPixel 
+        properties plus image shift calibrations, there is no need to have an autofocus calibration at more than one
+        or two magnifications. It is better to have a few high quality focus calibration over a
+        large focus range rather than poorer calibrations at many magnifications.</P>
     <P>As of SerialEM 3.9, 10/11/20, a calibration done in low magnification will be
       used when autofocusing in LM, instead of automatically going to a standard
       focus.&nbsp; You will probably want to calibrate over a much larger range of
@@ -928,13 +937,70 @@
           Offset to apply to the whole range to be tested (negative for underfocus).</LI>
     </OL>
       <p>
-        For Falcon cameras, the standard range generally runs into problems with the
-        Falcon Dose Protector, usually just at the overfocus levels.&nbsp; The easiest
-        solution is to offset the range with the fourth entry.&nbsp; However, there is
-        no reason to measure at higher underfocus than normally, so the range should be
-        restricted as well as offset.&nbsp; The program will suggest values for the
+        For Falcon cameras, the standard range generally runs into problems 
+        with the Falcon Dose Protector, usually just at the overfocus levels.&nbsp; The 
+        easiest solution is to offset the range with the fourth entry.&nbsp; However, 
+        unless there is a reason to measure at higher underfocus than normally, the range 
+        should be
+        restricted as well as the offset.&nbsp; The program will suggest values for the
         first and fourth entries that will restrict the range on the overfocus side
         only.</p>
+      <P><A name=""></A><B>Extended Autofocus command
+        (Calibration - Focus &amp; Tuning sub-menu)</B></P>
+      <p>This command will calibrate autofocus over a wider range of defocuses, doing 
+        the same defocus steps within the range used for the regular calibration, but 
+        calibrating at a sparser interval outside that range and with smaller beam tilt 
+        to avoid excessively large image displacements.&nbsp; The calibration is 
+        particularly useful when autofocusing with the View area in Low Dose mode using 
+        a sizeable View defocus offset or when using the View area for doing 
+        the <A HREF="menu_tasks.htm#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A> 
+        task even without a large offset.&nbsp; It would also allow one to take a 
+        calibration at higher magnification with much finer spacing than the default 
+        near focus, but the same or larger range than usual.&nbsp; The full range and interval outside the regular range are set with 
+        the next command and have defaults of -300 to 100 microns at a 20 micron 
+        spacing.&nbsp; The command should be run outside of Low Dose mode, with the 
+        magnification set at the desired level (e.g., the typical View area magnification 
+        in Low Dose mode).&nbsp; You need to make sure that the program can take usable 
+        Focus images at the low and high end of the defocus range.&nbsp; The actual 
+        interval in the extended range will be somewhat less than the specified interval 
+        in order to fill each end of the range with equally spaced measurements.</p>
+    <p>To prevent image displacements from becoming too large to measure at the most 
+      extreme defocuses, use full-field images as well as a smaller beam tilt in the 
+      extended region.&nbsp; If calibrating a range of about +/-100 microns at higher 
+      magnification, you may need to reduce the beam tilt by more than the default 
+      amount.&nbsp; This is less likely to be needed when doing a calibration over a 
+      wider range to be used in View, because the field of view is much larger.</p>
+     <P><A name="hid_focustuning_setextendedrange"></A><B>Set Extended Range command (Calibration
+          - Focus &amp; Tuning sub-menu)</B></P>
+      <p>This command lets you set the lower and upper defocus limits, the 
+        approximate defocus interval, and the reduction in beam tilt to use in the <A href="#hid_calibration_autofocus">Extended Autofocus</A>
+         calibration outside the regular range.&nbsp; Four entry boxes will appear for 
+        the four parameters.&nbsp; The lower, underfocus limit should be a negative 
+        value.&nbsp; It should be set to the lower of two values:</p>
+    <ol>
+      <li>The most negative View defocus offset that might be used for autofocusing in 
+        general, and</li>
+      <li>The most negative View defocus offset that might be used in the
+        <A HREF="menu_tasks.htm#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A> 
+        task, minus the biggest Z changes that would typically occur when using this 
+        calibration in that task. </li>
+    </ol>
+      <p>
+        Thus, the default value of -300 would cover both general autofocusing with an 
+        offset of -300, and autofocusing in the eucentricity task with an offset of -200 
+        and Z changes up to about 100.&nbsp; Note that it is recommended that the 
+        eucentricity task not be done with such high defocus values if a less negative 
+        one can be used reliably.</p>
+    <p>
+      The upper, overfocus limit should be positive and set to cover the range of Z 
+      changes that might need to be found in the
+        <A HREF="menu_tasks.htm#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A> 
+      task if there is no sizeable defocus offset.&nbsp; The default value of 100 
+      should be adequate.</p>
+    <p>
+      The interval has a default of 20 and the program will insist that it be at least 
+      6 microns, the default for the regular range.&nbsp; The beam tilt reduction has 
+      a default of 0.5 and is constrained to between 0.1 and 1.</p>
       <P><A name="hid_calibration_standardlmfocus"></A><B>Standard Focus command
           (Calibration - Focus &amp; Tuning sub-menu)</B></P>
       <P>This command will store a standard or absolute focus value that can be

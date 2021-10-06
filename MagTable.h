@@ -36,9 +36,9 @@ struct FocusTable {
   int direction;
   int probeMode;
   int alpha;
-  float defocus[MAX_CAL_FOCUS_LEVELS];
-  float shiftX[MAX_CAL_FOCUS_LEVELS];   // per mrad of beam tilt
-  float shiftY[MAX_CAL_FOCUS_LEVELS];
+  FloatVec defocus;
+  FloatVec shiftX;   // per mrad of beam tilt
+  FloatVec shiftY;
 };
 
 struct RelRotations {
