@@ -78,7 +78,7 @@ CNavHelper::CNavHelper(void)
     {"Cook Specimen", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Fine Eucentricity", 0, 0, 1, 15, 40.},
     {"Eucentricity by Focus", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
-    {"Autofocus", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
+    {"Autofocus", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Coma-free Alignment", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Correct Astigmatism", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Condition Phase Plate", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
