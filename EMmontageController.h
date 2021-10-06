@@ -272,6 +272,8 @@ class EMmontageController
   BOOL mUseSet2InLD;
   bool mNeedBoxSetup;
   bool mRedoCorrOnRead;
+  float mAdjustmentScale;         // Scale and rotation adjustment from high-focus mag cal
+  float mAdjustmentRotation;
   float mDefocusForCal;
   bool mExpectingFloats;          // Flag that images should be floats
   BOOL mUseContinuousMode;        // Flag to use camera continuous acquisition

@@ -354,6 +354,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY, dist, minDist;
+  double nearC2dist[2];
+  int nearC2Ind[2];
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
   float acqExposure, trialExposure, minContExp;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
@@ -609,6 +611,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           mSkipIndex[mNumToSkip++] = ix *mParam->yNframes + iy;
   }
 
+  mAdjustmentScale = 0.;
   if (!mReadingMontage) {
 
     // Initialize the skip list unless it is being ignored
@@ -620,16 +623,21 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // Get transformation matrix
     if (mParam->moveStage) {
 
-      // Stage move case - adjust Y by cosine of tilt angle
+      // Stage move case - adjust Y by cosine of tilt angle and adjust for defocus
+      ix = mScope->FastSpotSize();
+      iy = mScope->GetProbeMode();
+      delISX = mScope->FastIntensity();
       bMat = mShiftManager->FocusAdjustedStageToCamera(mWinApp->GetCurrentCamera(),
-        mParam->magIndex, mScope->FastSpotSize(), mScope->GetProbeMode(),
-        mScope->FastIntensity(), mDefocusForCal);
+        mParam->magIndex, ix, iy, delISX, mDefocusForCal);
       if (bMat.xpx == 0.) {
         SEMMessageBox("There is no measured or derived"
           " stage shift \ncalibration available at this magnification.\n\n"
           "You must calibrate stage shift to take this montage");
         return 1;
       }
+      if (!mShiftManager->GetDefocusMagAndRot(ix, iy, delISX, mDefocusForCal, 
+        mAdjustmentScale, mAdjustmentRotation, cornX, nearC2dist, nearC2Ind, icx1))
+        mAdjustmentScale = 0.;
 
       mBinv = mShiftManager->MatInv(bMat);
       mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
@@ -4547,7 +4555,6 @@ int EMmontageController::MapParamsToAutodoc(void)
     return 2;
   }
 
-  // SetValue returns 1 for error, all the Adoc sets return -1
   errSum = KStoreADOC::SetValuesFromExtra(mImBufs[1].mImage, ADOC_MONT_SECT, index);
   AdocDeleteKeyValue(ADOC_MONT_SECT, index, ADOC_PCOORD);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_SIZE,
@@ -4591,6 +4598,15 @@ int EMmontageController::MapParamsToAutodoc(void)
     mParam->fitToPolygonID);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_FRAMES, mParam->xNframes,
     mParam->yNframes);
+  if (mAdjustmentScale) {
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_ADJ_PIXEL,
+     10000. * mImBufs[0].mPixelSize * mAdjustmentScale);
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_ADJ_ROTATION,
+      (mImBufs[1].mImage->GetUserData())->mAxisAngle + mAdjustmentRotation);
+  }
+
+  // SetValue returns 1 for error, all the Adoc sets return -1
+
   if (mWinApp->mStoreMRC->getStoreType() != STORE_TYPE_HDF && 
     AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0)
     errSum -= 1000;
