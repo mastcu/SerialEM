@@ -133,10 +133,10 @@
 			</OBJECT>
 			<A HREF="html/menu_focus.htm">Focus/Tune menu</A><BR>
 		<LI><OBJECT type="text/sitemap">
-			<param name="Name" value="Macro menu">
+			<param name="Name" value="Script menu">
 			<param name="Local" value="html/menu_script.htm">
 			</OBJECT>
-			<A HREF="html/menu_script.htm">Macro menu</A><BR>
+			<A HREF="html/menu_script.htm">Script menu</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Tasks menu">
 			<param name="Local" value="html/menu_tasks.htm">
@@ -208,10 +208,10 @@
 			</OBJECT>
 			<A HREF="html/hidd_tiltcontrol.htm">Tilt Control panel</A><BR>
 		<LI><OBJECT type="text/sitemap">
-			<param name="Name" value="Camera &amp; Macro Control panel">
+			<param name="Name" value="Camera &amp; Script Control panel">
 			<param name="Local" value="html/hidd_camera_macro.htm">
 			</OBJECT>
-			<A HREF="html/hidd_camera_macro.htm">Camera &amp; Macro Control panel</A><BR>
+			<A HREF="html/hidd_camera_macro.htm">Camera &amp; Script Control panel</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Image Alignment &amp; Focus panel">
 			<param name="Local" value="html/hidd_alignfocus.htm">
@@ -413,15 +413,15 @@
 			</OBJECT>
 			<A HREF="html/hidd_screenshot.htm">Image Snapshot dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
-			<param name="Name" value="Macro Control dialog">
+			<param name="Name" value="Script Control dialog">
 			<param name="Local" value="html/hidd_macrocontrol.htm">
 			</OBJECT>
-			<A HREF="html/hidd_macrocontrol.htm">Macro Control dialog</A><BR>
+			<A HREF="html/hidd_macrocontrol.htm">Script Control dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
-			<param name="Name" value="Macro Editing window">
+			<param name="Name" value="Script Editing window">
 			<param name="Local" value="html/hidd_macro.htm">
 			</OBJECT>
-			<A HREF="html/hidd_macro.htm">Macro Editing window</A><BR>
+			<A HREF="html/hidd_macro.htm">Script Editing window</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Multiple Record Setup dialog">
 			<param name="Local" value="html/hidd_multi_shot_setup.htm">
