@@ -5284,9 +5284,11 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // If going to view or search area, set defocus offset incrementally
   if (!STEMmode && mLDViewDefocus && !fromView && toView && ldArea->magIndex > 0) {
     IncDefocus((double)mLDViewDefocus);
+    mCurDefocusOffset = mLDViewDefocus;
   }
   if (!STEMmode && mSearchDefocus && !fromSearch && toSearch && ldArea->magIndex > 0) {
     IncDefocus((double)mSearchDefocus);
+    mCurDefocusOffset = mSearchDefocus;
   }
 
   // If in EFTEM mode, synchronize to the filter parameters
@@ -7538,7 +7540,22 @@ void CEMscope::SetJeolPiezoRounding(float inVal)
   sJEOLpiezoRounding = inVal;
 }
 float CEMscope::GetJeolStageRounding() {return sJEOLstageRounding;};
-float CEMscope::GetJeolPiezoRounding() {return sJEOLpiezoRounding;};
+float CEMscope::GetJeolPiezoRounding() {return sJEOLpiezoRounding;}
+
+// Central place to change the offset and make sure that scope defocus is changed in 
+// tandem and maintain the currently set offset value
+void CEMscope::SetLDViewDefocus(float inVal, int area)
+{
+  if (area) 
+    mSearchDefocus = inVal; 
+  else 
+    mLDViewDefocus = inVal;
+  if (mWinApp->mLowDoseDlg.GetTrulyLowDose() && mLowDoseSetArea == area &&
+    fabs(mCurDefocusOffset - inVal) > 1.e-3) {
+    IncDefocus(inVal - mCurDefocusOffset);
+    mCurDefocusOffset = inVal;
+  }
+}
 
 void CEMscope::SetBlankingFlag(BOOL state)
 {

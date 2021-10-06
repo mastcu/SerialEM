@@ -818,9 +818,7 @@ void CLowDoseDlg::OnDeltaposSpinviewdefocus(NMHDR *pNMHDR, LRESULT *pResult)
   if (newval < sMinVSDefocus[m_iOffsetShown] || newval> sMaxVSDefocus[m_iOffsetShown])
     return;
 
-  // If in area now, change defocus by the change
-  if (mScope->GetLowDoseArea() == (m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET))
-    mScope->IncDefocus((double)(newval - curVal));
+  // If in area now, this will change defocus by the change
   mScope->SetLDViewDefocus((float)newval, m_iOffsetShown);
   m_strViewDefocus.Format("%d", newval);
   UpdateData(false);
@@ -1212,6 +1210,7 @@ BOOL CLowDoseDlg::OnInitDialog()
 void CLowDoseDlg::UpdateSettings()
 {
   float defocus= mScope->GetLDViewDefocus(m_iOffsetShown);
+  int area = mScope->GetLowDoseArea();
 
   mScope->SetBlankWhenDown(m_bBlankWhenDown);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
@@ -1220,12 +1219,12 @@ void CLowDoseDlg::UpdateSettings()
     mScope->SetLDViewDefocus(defocus, m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
   }
   m_strViewDefocus.Format("%d", B3DNINT(defocus));
-
+  
   // Synchronize dialog to state
   UpdateData(false);
 
   // If tie focus-trial set and one of them is now displayed, equalize them
-  int area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
+  area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
   if ((area + 1) / 2 != 1)
     area = 2;
   SyncFocusAndTrial(area);

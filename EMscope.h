@@ -204,7 +204,7 @@ public:
   GetSetMember(int, LDBeamNormDelay);
   bool DoingSynchroThread(void) { return mSynchronousThread != NULL; };
   float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) { return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus; };
-  void SetLDViewDefocus(float inVal, int area = VIEW_CONSET) { if (area) mSearchDefocus = inVal; else mLDViewDefocus = inVal; };
+  void SetLDViewDefocus(float inVal, int area = VIEW_CONSET);
   GetSetMember(float, SearchDefocus)
     GetSetMember(BOOL, ShiftToTiltAxis)
     GetSetMember(BOOL, NoScope)
@@ -376,6 +376,7 @@ public:
   SetMember(int, RestoreViewFocusCount);
   SetMember(bool, DoNextFEGFlashHigh);
   GetMember(int, AdvancedScriptVersion);
+  GetSetMember(float, CurDefocusOffset);
   void SetAdvancedScriptVersion(int inVal) { mAdvancedScriptVersion = B3DMAX(mAdvancedScriptVersion, inVal); };
 
   void SetJeolRelaxationFlags(int inVal);
@@ -683,6 +684,7 @@ private:
   int mLDBeamNormDelay;       // Sleep time after going to view intensity
   float mLDViewDefocus;       // Defocus offset going to View in low dose
   float mSearchDefocus;       // Defocus offset going to Search in low dose
+  float mCurDefocusOffset;    // Value of offset set for the current area if S or V
   LowDoseParams *mLdsaParams; // Parameters of the current set low dose area
   BOOL mChangeAreaAtZeroIS;     
   int mJeolForceMDSmode;      // +1 to turn on MDS mode to avoid IS resets, -1 to turn off
