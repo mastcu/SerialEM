@@ -1100,9 +1100,13 @@ void CMacroProcessor::RunOrResume()
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
       mConSets[mConsetNums[ind]] = mChangedConsets[ind];
-  for (ind = 0 ; ind < (int)mSavedSettingNames.size(); ind++)
-    mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
-      mNewSettingValues[ind]);
+  if (mSavedSettingNames.size()) {
+    for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
+      mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()),
+        mNewSettingValues[ind]);
+    mWinApp->UpdateWindowSettings();
+  }
+
   mNumCmdSinceAddIdle = mMaxCmdToLoopOnIdle + 1;
   mScrpLangData.waitingForCommand = 0;
   mScrpLangData.commandReady = 0;
