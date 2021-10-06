@@ -3852,14 +3852,20 @@ int CMacCmd::SetEucentricFocus(void)
   delX = focTab[index * 2 + mScope->GetProbeMode()];
   if (delX < -900.)
     delX = mScope->GetStandardLMFocus(index);
-  if (delX < -900.)
-    ABORT_NOLINE("There is no standard/eucentric focus defined for the current mag"
-      " range");
-  mScope->SetFocus(delX);
-  if (focTab[index * 2 + mScope->GetProbeMode()] < -900. && !JEOLscope &&
-    index >= mScope->GetLowestMModeMagInd())
-    mWinApp->AppendToLog("WARNING: Setting eucentric focus using a calibrated "
-      "standard focus\r\n   from the nearest mag, not the current mag");
+  if (delX < -900.) {
+    mLogRpt = "There is no standard/eucentric focus defined for the current mag range";
+    if (mItemEmpty[1] || !mItemInt[1])
+      ABORT_NOLINE(mLogRpt);
+    index = -1;
+  } else {
+    mScope->SetFocus(delX);
+    if (focTab[index * 2 + mScope->GetProbeMode()] < -900. && !JEOLscope &&
+      index >= mScope->GetLowestMModeMagInd())
+      mWinApp->AppendToLog("WARNING: Setting eucentric focus using a calibrated "
+        "standard focus\r\n   from the nearest mag, not the current mag");
+    index = 0;
+  }
+  SetReportedValues(index);
   return 0;
 }
 

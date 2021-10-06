@@ -2250,13 +2250,14 @@
           <TD>Same as &#39;ReportAbsoluteFocus&#39;, which is a better description of the operation</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetEucentricFocus</TD>
+          <TD class="scriptcommand">SetEucentricFocus [#]</TD>
           <TD>If in low mag, sets to the standard focus for the current mag or nearest LM
             mag if one has been set; otherwise on Thermo/FEI it assumes standard focus is 0 and on
             JEOL it stops with an error.&nbsp; If not in LM, sets to the standard focus for
-            the nearest nonLM mag if one has been set or stops with an an error if none were
-            set.&nbsp; On Thermo/FEI scopes, it issues a warning if it is using a calibrated value
-            from a different mag.</TD>
+            the nearest nonLM mag if one has been set.&nbsp; It stops with an an error if none were
+            set unless the optional <b>#</b> is non-zero, in which case it suppresses the error and 
+            sets <i>reportedValue1</i> to -1 instead of 0.&nbsp; On Thermo/FEI scopes, it issues a 
+            warning if it is using a calibrated value from a different mag.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CalEucentricFocus</TD>
