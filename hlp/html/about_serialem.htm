@@ -64,8 +64,10 @@
     <P><B><I>File storage:</I></B> When images are saved to a file, successive images 
       are typically stacked into a single file in the MRC format. The pixel size is 
       set in the header, and tilt angle and other information can be stored in the 
-      extended header area. The file header is maintained after every image is 
-      stored, so that the file will be readable if something goes wrong.</P>
+      extended header area or in a separate metadata file. The file header is maintained after every image is 
+      stored, so that the file will be readable if something goes wrong.&nbsp; 
+      Typically, a file is left open in the program so that multiple images can be 
+      saved or read back.&nbsp; There can be up to 8 open image files.</P>
     <P><B><I>Image alignment:</I></B> Alignment of images is a key component of data 
       collection. SerialEM provides a linkage between the shifting of an image in a 
       window, which is referred to as an alignment shift, and the physical 
