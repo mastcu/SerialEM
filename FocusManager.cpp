@@ -504,7 +504,8 @@ void CFocusManager::OnCalibrationSetfocusrange()
 {
   CString info;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  if (IS_FALCON2_3_4(camParam) && mCalRange > 72 - mFalconCalLimit)
+  bool falcon23 = camParam->FEItype == FALCON2_TYPE || camParam->FEItype == FALCON3_TYPE;
+  if (falcon23 && mCalRange > 72 - mFalconCalLimit)
     info.Format("You might need a range of only %.0f on the Falcon", 72 -mFalconCalLimit);
   if (!KGetOneFloat(info, "Total defocus range to measure shifts over:", mCalRange, 1))
     return;
@@ -514,7 +515,7 @@ void CFocusManager::OnCalibrationSetfocusrange()
   if (!KGetOneInt("Number of levels to smooth over (0 for none):", mSmoothFit))
     return;
   info = "";
-  if (IS_FALCON2_3_4(camParam) && mCalRange / 2. + mCalOffset > mFalconCalLimit)
+  if (falcon23 && mCalRange / 2. + mCalOffset > mFalconCalLimit)
     info.Format("If starting near focus, you might need an offset of %.0f because of "
     "the dose protector.", mFalconCalLimit - mCalRange / 2.);
   KGetOneFloat(info, "Offset to apply to the focus range (negative for more "
@@ -731,7 +732,8 @@ void CFocusManager::CalFocusStart(bool doSparse)
     CalSTEMfocus();
     return;
   }
-  if (IS_FALCON2_3_4(camParam) && mCalOffset + mCalRange / 2. > mFalconCalLimit) {
+  if ((camParam->FEItype == FALCON2_TYPE || camParam->FEItype == FALCON3_TYPE) && 
+    mCalOffset + mCalRange / 2. > mFalconCalLimit) {
     str.Format("With the current defocus range and offset, the calibration\n"
       "may run into the Falcon Dose Protector unless you are currently\n"
       "at ~%.0f microns relative to eucentric focus.  See the help for\n"
@@ -2004,7 +2006,7 @@ int CFocusManager::LookupFocusCal(int magInd, int camera, int direction, int pro
     if (mFocTab[ind].magInd == magInd && mFocTab[ind].camera == camera &&
       mFocTab[ind].direction == direction && mFocTab[ind].probeMode == probeMode &&
       ((!matchNoAlpha && (alpha < 0 || alpha == mFocTab[ind].alpha)) || 
-      (matchNoAlpha &&  mFocTab[ind].alpha < 0)))
+      (matchNoAlpha &&  mFocTab[ind].alpha < 0) || mScope->GetHasNoAlpha()))
       return ind;
   }
   return -1;
