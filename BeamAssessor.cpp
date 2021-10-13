@@ -342,7 +342,7 @@ void CBeamAssessor::CalIntensityImage(int param)
       } else {
         mCountingK2 = false;
       }
-      report.Format("Dose rate is %.1f e/ubpix/sec; using %s mode for the calibration",
+      report.Format("Dose rate is %.1f e/physpix/sec; using %s mode for the calibration",
         doseRate, mCountingK2 ? "counting" : "linear");
       mWinApp->AppendToLog(report);
     }
@@ -374,7 +374,7 @@ void CBeamAssessor::CalIntensityImage(int param)
     if (mCamParam->K2Type || mFavorMagChanges) {
       extraDelta = 1.;
       if (mCamParam->countsPerElectron > 0. ) {
-        SEMTrace('c', "Raw counts %.1f, counts and electrons per unbinned pixel / sec ="
+        SEMTrace('c', "Raw counts %.1f, counts and electrons per physical pixel / sec ="
           " %.1f  %.3f", meanCounts, 4 * testCurrent, 
           4. * testCurrent / mCamParam->countsPerElectron);
         if (4. * testCurrent / mCamParam->countsPerElectron > 100.)
@@ -1498,7 +1498,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
         mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, probe), 
         mScope->GetC2Units());
       if (mCamera->IsDirectDetector(camParam)) {
-        addon.Format("\r\n    %.2f electrons/unbinned pixel/sec", doseRate);
+        addon.Format("\r\n    %.2f electrons/physical pixel/sec", doseRate);
         message += addon;
       }
       mWinApp->AppendToLog(message, 

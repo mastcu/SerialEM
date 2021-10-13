@@ -1324,7 +1324,7 @@
         <TR VALIGN="top">
           <TD>DEcameraType</TD>
           <TD>0 for a non-Direct Electron camera, 1 for a 4K LC1100, 2 for a DE12, DE16, DE20, or DE64, 3 for a
-            DE12/16/20/64 Survey camera, or 4 for a DE_LC1100.&nbsp; This entry implies RestrictedSizeType 3 for
+            DE12/16/20/64 Survey camera, 4 for a DE_LC1100, or 5 for an Apollo camera.&nbsp; This entry implies RestrictedSizeType 3 for
             the LC1100 only.</TD>
         </TR>
         <TR VALIGN="top">
@@ -2006,8 +2006,8 @@
           <TD>Start of an alternative table for linearizing the counts in K2/K3 or Falcon 3 electron
             counting images so that dose rate reports are correct.&nbsp; Follow with the
             number of lines to follow, and an optional scaling.&nbsp; Each following line
-            should have a raw mean number of counts per unbinned pixel per second, then the
-            corrected dose rate in electrons/unbinned pixel/sec. The raw mean counts will be
+            should have a raw mean number of counts per physical pixel per second, then the
+            corrected dose rate in electrons/physical pixel/sec. The raw mean counts will be
             divided by the scaling (1 by default), so if the mean counts are obtained from
             SerialEM, the scaling entered on the first line should be the scaling that was
             applied to the raw electron counts from DM.&nbsp; The default tables for K2 in SerialEM
@@ -2024,7 +2024,7 @@
             counts for linear mode must be measured in SerialEM because it returns
             integrated rather than averaged counts.&nbsp; The default is 8.<br />
             <i>For K3:</i> Ratio needed to make linear and counting mode images give the
-            same dose rate (electrons per unbinned pixel per second) for images at the same
+            same dose rate (electrons per physical pixel per second) for images at the same
             exposure.&nbsp; The default is 350.</TD>
         </TR>
         <TR VALIGN="top">
@@ -2884,8 +2884,13 @@
         </TR>
         <TR>
           <TD>HasSimpleOriginSystem</TD>
-          <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system.&nbsp; Calls to
-            check dewar status and refill dewars will access this system.</TD>
+          <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system of the first generation, or 2 if there
+            is a NextGen system.&nbsp; Calls to
+            check dewar status and refill dewars will access this system.&nbsp; For proper function, a first
+             generation system must be running a version of the SimpleOrigin software from August 2021 or 
+            later, with the changes added for it to work at University of Texas Medical Branch (UTMB).&nbsp; With
+             a NextGen system, SerialEM must be run as Administrator.
+          </TD>
         </TR>
        <TR>
           <TD>DewarVacCapabilities</TD>

@@ -1937,6 +1937,8 @@
 #define IDC_R3EIGHTHS                   2963
 #define IDC_RHALFFIELD                  2964
 #define IDC_STAT_USE_SUBAREA            2965
+#define IDC_BUT_SAVE_CLOSE              2966
+#define IDC_STAT_PRESS_RUN              2967
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2443,9 +2445,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        265
+#define _APS_NEXT_RESOURCE_VALUE        267
 #define _APS_NEXT_COMMAND_VALUE         33411
-#define _APS_NEXT_CONTROL_VALUE         2966
+#define _APS_NEXT_CONTROL_VALUE         2968
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

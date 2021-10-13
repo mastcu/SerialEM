@@ -804,7 +804,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
-                letString.Format("%.2f e/ubpix/s at camera", boost);
+                letString.Format("%.2f e/physpix/s at camera", boost);
                 cdc.TextOut(scaled140, scaled10, letString);
               } else if (mWinApp->mScope->GetNoScope() && imBuf->mMagInd > 0) {
                 letString.Format("%.3f e/sq A at camera", boost / 

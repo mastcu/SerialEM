@@ -2776,12 +2776,12 @@ MoveStage 0 0 -$zRange / 2.
     <p>
       Here is a procedure for determining the counts per electron and for setting the
       ScalingForK2Counts so that linear and counting mode counts match at 7.5
-      electrons/unbinned pixel/sec, the middle of the useful range for counting mode.
+      electrons/physical pixel/sec, the middle of the useful range for counting mode.
     </p>
     <ol>
       <li>Add the general property ScalingForK2Counts and temporarily set it to 40.&nbsp; Restart SerialEM.</li>
       <li>Select the K2 and set up for a 1 second counting mode exposure.</li>
-      <li>Adjust the beam to get a dose rate readout of 7.5 electrons/unbinned pixel/sec.
+      <li>Adjust the beam to get a dose rate readout of 7.5 electrons/physical pixel/sec.
       </li>
       <li>Take 3-5 images and measure their means with &#39;Crtl-I&#39;.</li>
       <li>Switch to linear mode, take 3-5 images, and measure their means.</li>
@@ -2790,9 +2790,9 @@ MoveStage 0 0 -$zRange / 2.
       <li>Set CountsPerElectron in the K2 CameraProperties section to this value times
         0.950 for 200 KV or times 0.813 for 300 KV.&nbsp; These values were obtained by
         interpolating from the dose rate scaling factors measured in DM and incorporated
-        into the tables in SerialEM; specifically between 0.8264 at 6.388 e/ubpix/sec
-        and 0.8104 at 7.699 e/ubpix/sec for 300 KV, or between 0.9654 at 6.583
-        e/ubpix/sec and 0.9465 at 7.682 e/ubpix/sec for 200 KV.</li>
+        into the tables in SerialEM; specifically between 0.8264 at 6.388 e/physpix/sec
+        and 0.8104 at 7.699 e/physpix/sec for 300 KV, or between 0.9654 at 6.583
+        e/physpix/sec and 0.9465 at 7.682 e/physpix/sec for 200 KV.</li>
     </ol>
     <p>
       This is at least the third version of these instructions.&nbsp; If you have
@@ -2810,7 +2810,7 @@ MoveStage 0 0 -$zRange / 2.
       <li>Add the property LinearToCountingRatio to the K3 properties section if it is
         not already there, and temporarily set it to 300.&nbsp; Restart SerialEM.</li>
       <li>Select the K3 and set up for a 1 second counting mode exposure.</li>
-      <li>Adjust the beam to get a dose rate readout of about 30 electrons/unbinned pixel/sec.
+      <li>Adjust the beam to get a dose rate readout of about 30 electrons/physical pixel/sec.
       </li>
       <li>Take an image and get the statistics and dose rate output with &#39;Crtl-I&#39;.</li>
       <li>Switch to linear mode, take an image, and get the statistics.</li>
@@ -2825,7 +2825,7 @@ MoveStage 0 0 -$zRange / 2.
           <ol>
               <li>Check if the property K3CDSLinearRatio is present in the K3 properties section;
                   if so set it to 1.5 and restart SerialEM.</li>
-              <li>Adjust the beam to get a dose rate readout of about 30 electrons/unbinned pixel/sec.</li>
+              <li>Adjust the beam to get a dose rate readout of about 30 electrons/physical pixel/sec.</li>
               <li>With CDS off, set exposure to 0.04 sec and take an image, then get the image
                   mean with 'Ctrl-I'.</li>
               <li>Set exposure to 0.16 sec, take an image, and get the mean.</li>
@@ -2853,7 +2853,7 @@ MoveStage 0 0 -$zRange / 2.
       <li>Turn on Divide By 2 in the Camera menu so that linear mode measurements will
         not be biased by truncation at 0.</li>
       <li>Set Record parameters for unbinned, 2 second exposure, no frame saving.</li>
-      <li>Set the beam intensity to give ~0.5 electrons/unbinned pixel/sec.&nbsp; It is
+      <li>Set the beam intensity to give ~0.5 electrons/physical pixel/sec.&nbsp; It is
         not necessary to set this to a very low value, where loss of counting efficiency
         is minimal, because the mean counts for counting mode will be linearized to
         account for this loss by a table built into SerialEM.</li>

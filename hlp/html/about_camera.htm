@@ -159,7 +159,7 @@
       of SerialEM rely on there being a fixed relationship between beam intensity and 
       image counts, the plugin scales electron counts up by a factor close to the 
       number of counts per electron in linear mode, so that all modes produce 
-        approximately the same number of counts per unbinned pixel for a given exposure 
+        approximately the same number of counts per physical pixel for a given exposure 
         time and beam intensity.</p>
     <p>
       In contrast, the K3 in electron counting mode produces 32 counts per detected 
@@ -169,12 +169,12 @@
     <p>
       <b>Dose rate for effective electron counting.</b>&nbsp; Electron counting is effective only over a limited range of dose rates.&nbsp; 
       For the K2, 
-        it is best to keep the dose rate between 2 and 10 electrons per unbinned pixel 
-        per second; at some point (roughly around 20 e/ubpixel/sec) counting becomes 
+        it is best to keep the dose rate between 2 and 10 electrons per physical pixel 
+        per second; at some point (roughly around 20 e/physical pixel/sec) counting becomes 
         less efficient than integrating in linear mode.&nbsp; The K3 has 3.75 times 
       faster readout rate, which means all these dose rates would be that much higher, 
-      so the best operating range would be ~7 to 40 e/ubpixel/sec.&nbsp; There is a dose rate 
-      readout of the actual mean e/ubpixel/sec in an image at the upper left of the 
+      so the best operating range would be ~7 to 40 e/physical pixel/sec.&nbsp; There is a dose rate 
+      readout of the actual mean e/physical pixel/sec in an image at the upper left of the 
       display window, plus you can use Min/Max/Mean in the 
         Process menu to obtain the dose rate.&nbsp; There is 
         also a dose rate estimate in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>, 
@@ -182,8 +182,8 @@
       beam intensity since the last acquired image. </p>
     <p>
       For the K2, the number of electron counts 
-      produced per true electron drops by a factor of ~0.97 at 5 e/ubpixel/sec, ~0.94 at 7.5 e/ubpixel/sec, ~0.87 at 
-        10 e/ubpixel/sec, and ~0.6 at 20 e/ubpixel/sec.&nbsp; Unfortunately, even at 
+      produced per true electron drops by a factor of ~0.97 at 5 e/physical pixel/sec, ~0.94 at 7.5 e/physical pixel/sec, ~0.87 at 
+        10 e/physical pixel/sec, and ~0.6 at 20 e/physical pixel/sec.&nbsp; Unfortunately, even at 
       low dose rates, the conversion efficiency is apparently only 0.87 counts per 
       true electron (Li et al., 2013).&nbsp; Similar values apply for the K3 at the 
       correspondingly higher dose rates.&nbsp; As of SerialEM 3.6, the dose rate outputs 
@@ -315,7 +315,7 @@
       floating point output, or rounding to the nearest integer for integer output.&nbsp; 
       DQE was computed as the square of the ratio of the output SNR to the input SNR.&nbsp; 
       The loss in DQE from rounding to integers depends on the number of electrons per 
-      saved pixel (not per unbinned pixel for super-resolution mode):<p>
+      saved pixel (not per physical pixel for super-resolution mode):<p>
       &nbsp;&nbsp; Electrons per pixel&nbsp;&nbsp;&nbsp; Loss in DQE<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
       0.0005<br />
@@ -498,8 +498,8 @@
         thus hold up to 7 electrons.</li>
       <li>The readout rate of the K3 is 3.75 times higher than the K2 and it can thus 
         count electrons arriving at dose rates per pixel that are higher by this amount.&nbsp; 
-        The optimal dose rate is around 30 electrons per unbinned pixel per second 
-        instead of 8.&nbsp; (Sensor pixels are still referred to as unbinned pixels.)</li>
+        The optimal dose rate is around 30 electrons per physical pixel per second 
+        instead of 8.&nbsp; (Sensor pixels are referred to as physical pixels.)</li>
       <li>Linear mode is even less useful for the K3 than for the K2 because of this 
         higher dose rate range for electron counting.&nbsp; It may still be useful for 
         continuous mode.&nbsp; It consists of very high counts in DM; these get scaled 

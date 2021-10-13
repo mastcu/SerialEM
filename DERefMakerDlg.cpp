@@ -111,11 +111,9 @@ BOOL CDERefMakerDlg::OnInitDialog()
     EnableDlgItem(IDC_RGAIN_REF, false);
     m_butUseRecHardwareROI.EnableWindow(false);
     EnableDlgItem(IDC_USE_HARDWARE_BIN, false);
-    //ShowDlgItem(IDOK, false);
     SetDlgItemText(IDC_STAT_GAIN_ADVICE, "These are settings for making a dark reference "
       "with the current Record parameters.   Changing FPS here will change FPS for the "
       "current Record mode.");
-    //ShowDlgItem(IDC_STAT_PRESS_RUN, false);
   }
   m_spinNumRepeats.SetRange(0, 10000);
   m_spinNumRepeats.SetPos(5000);

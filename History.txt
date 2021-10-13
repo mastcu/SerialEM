@@ -3,6 +3,25 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/12/21: Made offset in autofocus calibration not apply for Falcon 4.
+
+1/12/21: Fixed frequent accesses of stage status on JEOL with no events.
+
+10/12/21: Added ability to start a SimpleOrigin refill (requires latest
+software), theoretically supported the NextGen version, and added script
+command to turn system on or off.
+
+10/12/21: Changed terminology for dose rate from "unbinned pixel" to "physical
+pixel".
+
+10/12/21: Added a camera type for DE Apollo camera and changed dialogs as
+needed for this type.
+
+10/12/21: Made DE reference maker able to take a reference for the current
+Record parameters, changed script command for DE dark reference to allow this
+and Navigator Acquire at Items to use it; and made Setup button in Acquire at
+Items open the server reference dialog.
+
 10/6/21: Changed Eucentrity by Focus to estimate scaling between defocus and Z
 at different defocus offsets from the slope of an extended autofocus
 calibration and provided a new script to measure the scaling directly if
