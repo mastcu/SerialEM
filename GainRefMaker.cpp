@@ -318,7 +318,7 @@ void CGainRefMaker::AcquireGainRef()
 
 // Alternate pathway for making a reference in the DE server:
 // Open a separate dialog
-void CGainRefMaker::MakeRefInDEserver(void)
+void CGainRefMaker::MakeRefInDEserver(bool setupRecDark)
 {
   CDERefMakerDlg dlg;
   int ind;
@@ -328,6 +328,7 @@ void CGainRefMaker::MakeRefInDEserver(void)
   dlg.m_iReferenceType = mDElastReferenceType;
   dlg.m_bUseHardwareBin = mDEuseHardwareBin > 0;
   dlg.m_bUseRecHardwareROI = mDEuseHardwareROI > 0;
+  dlg.mSetupDarkForRec = setupRecDark;
 
   for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
     dlg.mExposureList[ind] = mDEexposureTimes[ind];
@@ -338,15 +339,20 @@ void CGainRefMaker::MakeRefInDEserver(void)
     return;
 
   // Get parameters back
-  mDElastProcessType = dlg.m_iProcessingType;
-  mDElastReferenceType = dlg.m_iReferenceType;
-  mDEuseHardwareBin = dlg.m_bUseHardwareBin ? 1 : 0;
-  mDEuseHardwareROI = dlg.m_bUseRecHardwareROI ? 1 : 0;
   for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
     mDEexposureTimes[ind] = dlg.mExposureList[ind];
     mDEnumRepeats[ind] = dlg.mRepeatList[ind];
   }
-  StartDEserverRef(mDElastProcessType, mDElastReferenceType);
+  if (!setupRecDark) {
+    mDElastProcessType = dlg.m_iProcessingType;
+    mDElastReferenceType = dlg.m_iReferenceType;
+    mDEuseHardwareBin = dlg.m_bUseHardwareBin ? 1 : 0;
+    mDEuseHardwareROI = dlg.m_bUseRecHardwareROI ? 1 : 0;
+  }
+
+  // It seems fine to run it from Nav Acquire Setup
+  if (!dlg.mSaveAndClose)
+    StartDEserverRef(mDElastProcessType, mDElastReferenceType);
 }
 
 // Actually start the reference operation in the DE server
@@ -355,12 +361,26 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   int ind;
   int readModes[4] = {LINEAR_MODE, COUNTING_MODE, COUNTING_MODE, SUPERRES_MODE};
   CString str;
+  bool useRecParams = processType < 0;
   mConSet = mWinApp->GetConSets() + TRACK_CONSET;
   ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   mCamera = mWinApp->mCamera;
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
   mParam = mWinApp->GetCamParams() + mCurrentCamera;  
   bool useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && mDEuseHardwareBin;
+  bool useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && mDEuseHardwareROI;
+
+  if (useRecParams) {
+    if (referenceType > 0) {
+      SEMMessageBox("Program error: StartDEserverRef called with -1 and 1");
+      return;
+    }
+    useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->boostMag && 
+      recSet->binning > 1;
+    useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->magAllShots;
+    processType = B3DMIN(1, recSet->K2ReadMode);
+  }
+
   B3DCLAMP(processType, 0, 3);
   mDEcurProcessType = processType;
   mDEcurReferenceType = referenceType;
@@ -386,7 +406,7 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   mConSet->shuttering = USE_BEAM_BLANK;
 
   // Set up for hardware RO or full frame image
-  if ((mParam->CamFlags & DE_HAS_HARDWARE_ROI) && mDEuseHardwareROI && 
+  if ((mParam->CamFlags & DE_HAS_HARDWARE_ROI) && useHardwareROI &&
     (recSet->left > 0 || recSet->right < mParam->sizeX || recSet->top > 0 ||
     recSet->bottom < mParam->sizeY)) {
     mConSet->left = recSet->left;
@@ -425,13 +445,14 @@ int CGainRefMaker::MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast,
     message = "The current camera is not a DE camera";
     return 1;
   }
-  if (processType < 0 || processType > 1) {
-    message = "The processing type must be 0 for linear or 1 for counting";
+  if (processType < -1 || processType > 1) {
+    message = "The processing type must be 0 for linear, 1 for counting, or -1 to use the"
+      " current Record mode";
     return 1;
   }
-  if (processType && !(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+  if (processType > 0 && !(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
     message = "This camera does not support electron counting so the processing type "
-      "must be 0";
+      "must be 0 or -1";
     return 1;
   }
   if (hoursSinceLast < 0.) {

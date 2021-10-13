@@ -16,6 +16,7 @@
 #include "ParticleTasks.h"
 #include "AutoTuning.h"
 #include "MultiTSTasks.h"
+#include "GainRefMaker.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 
@@ -1387,8 +1388,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     // Hardware dark reference
   case NAACT_HW_DARK_REF:
     if (mWinApp->GetDEcamCount() > 0) {
-      KGetOneChoice("For which operating mode", "do you want to take the dark reference?",
-        mParam->DEdarkRefOperatingMode, "Linear", "Counting");
+      mWinApp->mGainRefMaker->MakeRefInDEserver(true);
     }
     break;
   

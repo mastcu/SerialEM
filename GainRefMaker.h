@@ -139,7 +139,7 @@ private:
 public:
   void UpdateDMReferenceTimes(void);
   bool IsDMReferenceNew(int camNum);
-  void MakeRefInDEserver(void);
+  void MakeRefInDEserver(bool setupRecDark);
   void StartDEserverRef(int processType, int referenceType);
   int MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast, CString &message);
 };

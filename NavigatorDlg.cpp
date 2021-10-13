@@ -9209,8 +9209,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   case NAACT_HW_DARK_REF:
     hours = (float)(mAcqActions[NAACT_HW_DARK_REF].minutes / 60.);
     if (camParams->DE_camType) {
-      stopErr = mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(
-        mAcqParm->DEdarkRefOperatingMode, hours, report);
+      stopErr = mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(-1, hours, report);
       if (stopErr)
         SEMMessageBox("Cannot make a new dark reference in DE server:\n" + report);
       else

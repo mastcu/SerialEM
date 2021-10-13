@@ -47,6 +47,9 @@ public:
   BOOL m_bUseRecHardwareROI;
   CButton m_butUseRecHardwareROI;
   bool mEnableROI;
+  bool mSetupDarkForRec;
+  bool mSaveAndClose;
   afx_msg void OnHardwareChange();
   CString m_strRecArea;
+  afx_msg void OnButSaveClose();
 };

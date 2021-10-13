@@ -1244,7 +1244,7 @@ void CMenuTargets::OnAcquiregainref()
 {
   CameraParameters *params = mWinApp->GetActiveCamParam();
   if (params->DE_camType && !mCamera->CanProcessHere(params))
-    mWinApp->mGainRefMaker->MakeRefInDEserver();
+    mWinApp->mGainRefMaker->MakeRefInDEserver(false);
   else
     mWinApp->mGainRefMaker->AcquireGainRef();
 }

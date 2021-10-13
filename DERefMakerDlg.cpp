@@ -28,7 +28,8 @@ CDERefMakerDlg::CDERefMakerDlg(CWnd* pParent /*=NULL*/)
   , m_bUseRecHardwareROI(FALSE)
   , m_strRecArea(_T(""))
 {
-
+  mSetupDarkForRec = false;
+  mSaveAndClose = false;
 }
 
 CDERefMakerDlg::~CDERefMakerDlg()
@@ -67,6 +68,7 @@ BEGIN_MESSAGE_MAP(CDERefMakerDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_REF_FPS, OnKillfocusEditRefFps)
   ON_BN_CLICKED(IDC_USE_HARDWARE_BIN, OnHardwareChange)
   ON_BN_CLICKED(IDC_USE_REC_HARDWARE_ROI, OnHardwareChange)
+  ON_BN_CLICKED(IDC_BUT_SAVE_CLOSE, OnButSaveClose)
 END_MESSAGE_MAP()
 
 
@@ -95,6 +97,26 @@ BOOL CDERefMakerDlg::OnInitDialog()
     ShowDlgItem(IDC_STAT_PROC_TYPE, false);
     m_iProcessingType = 0;
   }
+  if (mCamParams->CamFlags & DE_APOLLO_CAMERA) {
+    ShowDlgItem(IDC_RLINEAR_REF, false);
+    ShowDlgItem(IDC_RSUPER_RES_REF, false);
+    B3DCLAMP(m_iProcessingType, 1, 2);
+  }
+  if (mSetupDarkForRec) {
+    m_iProcessingType = B3DMIN(1, mRecSet->K2ReadMode);
+    m_iReferenceType = 0;
+    m_bUseHardwareBin = mRecSet->boostMag && mRecSet->binning > 1;
+    m_bUseRecHardwareROI = mRecSet->magAllShots;
+    EnableDlgItem(m_iProcessingType ? IDC_RLINEAR_REF : IDC_RPRE_COUNTING, false);
+    EnableDlgItem(IDC_RGAIN_REF, false);
+    m_butUseRecHardwareROI.EnableWindow(false);
+    EnableDlgItem(IDC_USE_HARDWARE_BIN, false);
+    //ShowDlgItem(IDOK, false);
+    SetDlgItemText(IDC_STAT_GAIN_ADVICE, "These are settings for making a dark reference "
+      "with the current Record parameters.   Changing FPS here will change FPS for the "
+      "current Record mode.");
+    //ShowDlgItem(IDC_STAT_PRESS_RUN, false);
+  }
   m_spinNumRepeats.SetRange(0, 10000);
   m_spinNumRepeats.SetPos(5000);
   LoadListItemsToDialog();
@@ -119,6 +141,8 @@ void CDERefMakerDlg::LoadListItemsToDialog(void)
   if (m_iProcessingType && mCamParams->DE_CountingFPS <= 0)
     mCamParams->DE_CountingFPS = mCamParams->DE_FramesPerSec;
   m_fRefFPS = m_iProcessingType ?mCamParams->DE_CountingFPS : mCamParams->DE_FramesPerSec;
+  EnableDlgItem(IDC_RPOST_COUNTING, !mSetupDarkForRec && m_iReferenceType > 0);
+  EnableDlgItem(IDC_RSUPER_RES_REF, !mSetupDarkForRec && m_iReferenceType > 0);
   UpdateData(false);
 }
 
@@ -133,6 +157,12 @@ void CDERefMakerDlg::OnOK()
   else
     mCamParams->DE_FramesPerSec = m_fRefFPS;
   CBaseDlg::OnOK();
+}
+
+void CDERefMakerDlg::OnButSaveClose()
+{
+  mSaveAndClose = true;
+  OnOK();
 }
 
 // Not needed...

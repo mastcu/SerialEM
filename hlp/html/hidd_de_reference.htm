@@ -28,6 +28,14 @@
       different options to facilitate acquisitions when different FPS&#39;s are used for 
       the two modes, but there is no need to take both kinds if the two modes have the 
       same FPS.</p>
+    <p>When run from a Setup button in the Navigator <A HREF="hidd_navacquire.htm">Acquire at Items
+          dialog box</A>, the dialog is opened in a restricted mode where you can see 
+      and change the settings for acquiring a dark reference with the current Record 
+      parameters.&nbsp; Specifically, it will be set for a dark reference with the 
+      current Record operating mode and Record settings for using hardware binning and 
+      a hardware ROI rather than for the options selected when this dialog was last 
+      run, and the latter selections will not be changed after closing the dialog from 
+      this mode.</p>
     <p><b>Type of Processing: Linear - Pre-counting - Post-counting</b></p>
     <p>When electron counting is available, this set of radio buttons in included to 
       allow you to make all of the needed references.&nbsp; Select <b>Linear</b> to 
@@ -74,7 +82,22 @@
       acquisitions; the status bar will show the number done.&nbsp; If you press <b>
       Cancel</b>, parameter changes will be discarded.</p>
     <p>
-      &nbsp;</p>
+      <strong>RUN</strong></p>
+    <p>
+      Press this button to start the 
+      acquisition of the reference.</p>
+    <p>
+      <strong>Save &amp; Close</strong></p>
+    <p>
+      Press this button to close the dialog without acquiring a reference, but saving 
+      all parameter changes that have been made.</p>
+    <p>
+      <strong>Cancel</strong></p>
+    <p>
+      Press this button to close the dialog without saving parameter changes, with one 
+      exception.&nbsp; If you change the FPS and switch between linear and counting 
+      modes, the new FPS value is stored as the FPS for that mode when you leave the 
+      mode.</p>
 
 </body>
 </html>

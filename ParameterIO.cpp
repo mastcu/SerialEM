@@ -2669,9 +2669,13 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->AMTtype = itemInt[1];
           else if (MatchNoCase("DECameraType")) {
 
-            // Direct Electron camera is centered only except DE-12
+            // Old Direct Electron LC_1100 camera is centered only
             camP->DE_camType = itemInt[1];
             camP->centeredOnly = itemInt[1] >= 2 ? 0 : 1;
+            if (camP->DE_camType == DE_TYPE_APOLLO) {
+              camP->CamFlags |= DE_APOLLO_CAMERA;
+              camP->DE_camType = DE_12;
+            }
           } else if (MatchNoCase("DEImageRotation"))
             camP->DE_ImageRot = itemInt[1];
           else if (MatchNoCase("DEImageInvertXAxis"))

@@ -865,6 +865,9 @@ void CCameraSetupDlg::LoadConsetToDialog()
     radio->EnableWindow(mBinningEnabled);
   }
 
+  if (mDE_Type && (mParam->CamFlags & DE_APOLLO_CAMERA))
+    mCurSet->K2ReadMode = COUNTING_MODE;
+
   // Fix exposure and frame times in control set before loading
   mCamera->ConstrainExposureTime(mParam, mCurSet);
   m_eLeft = mCurSet->left / mCoordScaling;
@@ -1600,7 +1603,7 @@ void CCameraSetupDlg::ManageCamera()
     mDEweCanAlign = (mParam->CamFlags & DE_WE_CAN_ALIGN) != 0;
     if (!mParam->DE_AutosaveDir.IsEmpty())
       ReplaceWindowText(&m_butNameSuffix, "Suffix", "Options");
-    if (!(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+    if (!(mParam->CamFlags & DE_CAM_CAN_COUNT) || (mParam->CamFlags & DE_APOLLO_CAMERA)) {
       ShowDlgItem(IDC_RDE_LINEAR, false);
       ShowDlgItem(IDC_RDE_COUNTING, false);
       ShowDlgItem(IDC_RDE_SUPERRES, false);
@@ -1762,14 +1765,15 @@ void CCameraSetupDlg::ManageDarkRefs(void)
 void CCameraSetupDlg::ManageK2Processing(void)
 {
   CWnd *wnd = GetDlgItem(IDC_RUNPROCESSED);
-  if (!mParam->K2Type)
-    return;
-  if (m_iK2Mode && !m_iProcessing) {
+  int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
+  if (mParam->K2Type && m_iK2Mode && !m_iProcessing) {
     m_iProcessing = 1;
     UpdateData(false);
   }
-  wnd->ShowWindow(m_iK2Mode ? SW_HIDE : SW_SHOW);
-  SetDlgItemText(IDC_RDARKSUBTRACT, m_iK2Mode ? "Unnormalized" : "Dark Subtracted");
+  if (mParam->K2Type || (mDE_Type && (mParam->CamFlags & DE_APOLLO_CAMERA))) {
+    wnd->ShowWindow(*modeP ? SW_HIDE : SW_SHOW);
+    SetDlgItemText(IDC_RDARKSUBTRACT, *modeP ? "Unnormalized" : "Dark Subtracted");
+  }
 }
 
 // Take care of size and position controls for camera or K2 mode

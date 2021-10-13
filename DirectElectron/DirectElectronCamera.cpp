@@ -676,7 +676,7 @@ void DirectElectronCamera::setCameraName(CString camName)
 void DirectElectronCamera::FinishCameraSelection(bool initialCall, CameraParameters *camP)
 {
   if (CurrentIsDE12()) {
-    if (camP->CamFlags & DE_HAS_READOUT_DELAY)
+    if ((camP->CamFlags & DE_HAS_READOUT_DELAY) && !(camP->CamFlags & DE_APOLLO_CAMERA))
       getIntProperty(psReadoutDelay, mReadoutDelay);
     else 
       mReadoutDelay = -1;
@@ -1944,7 +1944,9 @@ void DirectElectronCamera::SetAndTraceErrorString(CString str)
 int DirectElectronCamera::SetFramesPerSecond(double value)
 {
   bool ret1 = true, ret2 = true;
-  CameraParameters *camP = mCamParams + (mInitializingIndex >= 0 ? mInitializingIndex : mCurCamIndex);
+  CameraParameters *camP = mCamParams + 
+    (mInitializingIndex >= 0 ? mInitializingIndex : mCurCamIndex);
+  bool apollo = (camP->CamFlags & DE_APOLLO_CAMERA) != 0;
   SEMTrace('D', "cam index %d  flags %x", mCurCamIndex, camP->CamFlags);
   int readoutDelay = (int)floor(1000. / value);
   CSingleLock slock(&m_mutex);
@@ -1957,10 +1959,13 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
           camP->DE_FramesPerSec = (float)value;
       }
       if (CurrentIsDE12()) {
-        if (camP->CamFlags & DE_HAS_READOUT_DELAY) {
+        if ((camP->CamFlags & DE_HAS_READOUT_DELAY) && !apollo) {
           ret2 = justSetIntProperty(psReadoutDelay, readoutDelay);
         } else {
-          ret2 = justSetIntProperty("Ignore Number of Frames", 1);
+          if (!apollo)
+            ret2 = justSetIntProperty("Ignore Number of Frames", 1);
+          else
+            ret2 = 1;
           readoutDelay = -1;
         }
         if (ret1 && ret2) {
