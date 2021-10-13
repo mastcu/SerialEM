@@ -175,7 +175,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
     !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
-  bool stageBusy = mScope->StageBusy() > 0;
+  bool stageBusy = mScope->StageBusy(-2) > 0;
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
     if (inMagInd) {
@@ -269,7 +269,7 @@ void CRemoteControl::UpdateEnables(void)
   BOOL doingOffset = mWinApp->mShiftCalibrator &&
     mWinApp->mShiftCalibrator->CalibratingOffset();
   BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
-  bool stageBusy = mScope->StageBusy() > 0;
+  bool stageBusy = mScope->StageBusy(-2) > 0;
   bool enable = !((mWinApp->DoingTasks() && !doingOffset && 
     !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !continuous));
