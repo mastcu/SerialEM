@@ -9,6 +9,9 @@
       {
         width: 207px;
       }
+      .auto-style1 {
+        width: 213px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -17,190 +20,192 @@
       <P>The Camera menu offers the following commands:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_parameters">Parameters</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_parameters">Parameters</A></TD>
           <TD>Opens dialog box to set parameters for image acquisition.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_acquiregainref">Prepare Gain Ref</A></TD>
-          <TD>Opens dialog box to acquire a gain reference in SerialEM.</TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_acquiregainref">Prepare Gain 
+            Ref/Acquire Ref in Server</A></TD>
+          <TD>Opens dialog box to acquire a gain reference in SerialEM, or references in the 
+            DE server.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_gainrefpolicy">Gain Ref Policy</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_gainrefpolicy">Gain Ref Policy</A></TD>
           <TD>Opens dialog box to set policies governing multiple gain references.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_camera_search">Search</a></TD>
+          <TD class="auto-style1"><a href="#hid_camera_search">Search</a></TD>
           <TD>Acquires image with Search parameter set (or View if using for Search).</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_view">View</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_view">View</A></TD>
           <TD>Acquires image with View parameter set.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_focus">Focus</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_focus">Focus</A></TD>
           <TD>Acquires image with Focus parameter set.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_trial">Trial</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_trial">Trial</A></TD>
           <TD>Acquires image with Trial parameter set.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_record">Record</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_record">Record</A></TD>
           <TD>Acquires image with Record parameter set.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_preview">Preview</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_preview">Preview</A></TD>
           <TD>Acquires image with Preview parameter set.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_montage">Montage</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_montage">Montage</A></TD>
           <TD>Starts montage acquisition to file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_montagetrial">Prescan</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_montagetrial">Prescan</A></TD>
           <TD>Acquires binned-down montage without saving.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><b>Correlation Filter</A></b></TD>
+          <TD class="auto-style1"><b>Correlation Filter</A></b></TD>
           <TD>A submenu with settings to manipulate the filters used when correlating 
             montage overlap zones.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; 
             <a href="#hid_correlationfilter_usefilterset2">Use Filter Set 2</a></TD>
           <TD>Use the second set of filter parameters instead of the primary one.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; 
             <a href="#hid_correlationfilter_useset2inlowdose">Use Set 2 in Low Dose</a></TD>
           <TD>Use the second set of filter parameters for montages taken in Low Dose mode.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset1by2">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset1by2">
             Divide Filter Set 1 by 2</a>&nbsp;</TD>
           <TD>Divide each frequency of first set of filter parameters by 2.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset2by2">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset2by2">
             Divide Filter Set 2 by 2</a>&nbsp;</TD>
           <TD>Divide each frequency of second set of filter parameters by 2.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; 
             <a href="#hid_correlationfilter_testset1values">Test Values for Set 1</a></TD>
           <TD>Set values of first set of filter parameters for temporary use.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; 
             <a href="#hid_correlationfilter_testset2values">Test Values for Set 2</a></TD>
           <TD>Set values of second set of filter parameters for temporary use.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; 
             <a href="#hid_correlationfilter_redocorrwhenread">Redo Corr when Read</a></TD>
           <TD>Recompute correlations when reading a montage instead of using values from 
             .mdoc file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_setcountlimit">Set Minimum Counts</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_setcountlimit">Set Minimum Counts</A></TD>
           <TD>Set the minimum required mean counts for a montage frame.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_stopacquire">Stop Acquire</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_stopacquire">Stop Acquire</A></TD>
           <TD>Stops image acquisition.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_camera_useviewforsearch">Use View for Search</a></TD>
+          <TD class="auto-style1"><a href="#hid_camera_useviewforsearch">Use View for Search</a></TD>
           <TD>Use View camera parameters for Search images instead of separate Search camera 
             parameters.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_camera_userecordformontage">No Mont. Map Params</a></TD>
+          <TD class="auto-style1"><a href="#hid_camera_userecordformontage">No Mont. Map Params</a></TD>
           <TD>Do not show or offer separate parameters for Montage mapping.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_showgainref">Show Gain Ref</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_showgainref">Show Gain Ref</A></TD>
           <TD>Shows the gain reference last used to normalize an image.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_showdarkref">Show Dark Ref</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_showdarkref">Show Dark Ref</A></TD>
           <TD>Shows the dark reference last used.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_postactions">Post-actions</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_postactions">Post-actions</A></TD>
           <TD>Allows actions like tilt and image shift right after exposure.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_normalizehere">Normalize Here</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_normalizehere">Normalize Here</A></TD>
           <TD>Toggles gain normalization within SerialEM on and off.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_divideby2">Divide 16-bit by 2</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_divideby2">Divide 16-bit by 2</A></TD>
           <TD>Divides data from 16-bit camera by 2 to give signed 15-bit data.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_setextradivisionby2">Set Extra Divisions</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_setextradivisionby2">Set Extra Divisions</A></TD>
           <TD>Allows additional division of camera data by a power of 2.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_returnfloatimage">Return Float Images</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_returnfloatimage">Return Float Images</A></TD>
           <TD>Acquire images in floating point form instead of 16-bit integers.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_interpolate_dark_refs">Interpolate Dark Refs</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_interpolate_dark_refs">Interpolate Dark Refs</A></TD>
           <TD>Interpolate between dark references at different exposures instead of taking 
             one to match each exposure time.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_camera_setframealignlines">Set Frame Align Lines</a></TD>
+          <TD class="auto-style1"><a href="#hid_camera_setframealignlines">Set Frame Align Lines</a></TD>
           <TD>Set amount of detail (# of lines of output) in log from K2/K3 frame alignment.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><b>Special Settings</b></TD>
+          <TD class="auto-style1"><b>Special Settings</b></TD>
           <TD>A submenu with settings for test or specialized purposes.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_nonormofdsdosefrac">No Norm of 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_nonormofdsdosefrac">No Norm of 
             DS Dose Frac</A></TD>
           <TD>Turn off normalization of unnormalized K2/K3 dose-fractionated images.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_specialsettings_alwaysantialiask2">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_specialsettings_alwaysantialiask2">
             Always Antialias K2/K3</A></TD>
           <TD>Use antialiased reduction instead of binning for all K2/K3 returned images.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_settiming">Set Timing</A></TD>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_settiming">Set Timing</A></TD>
           <TD>Set timing parameters for dual-shuttering mode.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_set_quality">Set 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_set_quality">Set 
             Quality</a></TD>
           <TD>Set quality value for continuous mode images.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_setscanning">Set 
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_setscanning">Set 
             Scanning</a></TD>
           <TD>Set parameters for scanning with a slit beam.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setdriftinterval">Set Drift Interval</A></TD>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setdriftinterval">Set Drift Interval</A></TD>
           <TD>Set interval for image shift changes when doing drift correction.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setcorrections">Set Corrections</A></TD>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setcorrections">Set Corrections</A></TD>
           <TD>Set basic image corrections performed in DigitalMicrograph.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_screendown">Screen Down</A></TD>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_screendown">Screen Down</A></TD>
           <TD>Leaves screen down during image acquisition.</TD>
         </TR>
          <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_simulation">Simulation</A></TD>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_simulation">Simulation</A></TD>
           <TD>Gets simulated images rather than acquiring from camera.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_debugmode">Debug Mode</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_camera_debugmode">Debug Mode</A></TD>
           <TD>Outputs debugging information to Log Window and Digital Micrograph Results 
             window.</TD>
         </TR>
@@ -211,10 +216,15 @@
         and set parameters like exposure time, field of view and binning for the 5 
         different exposure modes.</P>
       <P>Shortcut Key:CTRL+P</P>
-      <P><A NAME="hid_camera_acquiregainref"></A><B>Prepare Gain Ref command (Camera menu)</B></P>
-      <P>Use this command to open the <A HREF="hidd_gainreference.htm">Gain Reference dialog 
+      <P><A NAME="hid_camera_acquiregainref"></A><B>Prepare Gain Ref or Acquire Ref in 
+        Server command (Camera menu)</B></P>
+      <P>When this command is labeled <strong>Prepare Gain Ref</strong>, it will open the <A HREF="hidd_gainreference.htm">Gain Reference dialog 
           box</A> and acquire a gain reference that will be used for gain 
-        normalization within SerialEM.</P>
+        normalization within SerialEM.&nbsp; For DE cameras with a new enough server 
+        version, it is labeled <strong>Acquire Ref in Server</strong> and will open the
+        <a href="hidd_de_reference.htm">Direct Electron Server Reference Maker dialog</a>, 
+        which lets you make gain or dark references that will be used by the DE server 
+        itself.</P>
       <P><A NAME="hid_camera_gainrefpolicy"></A><B>Gain Ref Policy command (Camera menu)</B></P>
       <P>Use this command to open the <A HREF="hidd_refpolicy.htm">Gain Reference Policy 
           dialog box</A> and set options controlling which gain reference is used for 
