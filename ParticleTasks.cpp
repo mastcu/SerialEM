@@ -1197,8 +1197,6 @@ void CParticleTasks::ZbyGNextTask(int param)
 
           // Set up a virtual 1 at 0 if there is no measurement close to set
           zeroScale = 1.;
-          if (fabs(mZBGFocusScalings[0]) < 10.)
-            zeroScale = mZBGFocusScalings[1];
           prevFocus = 0.;
           prevScale = zeroScale;
           //offset = B3DMIN(0.f, mZBGCalParam.focusOffset);
@@ -1441,7 +1439,7 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
     magInd = mScope->GetMagIndex();
 
   error = 1;
-  if (magInd <= 0 || mWinApp->GetSTEMMode())
+  if (magInd <= 0)// || mWinApp->GetSTEMMode())  // For Jaap to try
     return NULL;
 
   zbgParams = FindZbyGCalForMagAndArea(magInd, ldArea, mWinApp->GetCurrentCamera(), 
