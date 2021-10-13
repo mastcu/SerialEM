@@ -5658,7 +5658,7 @@ int CMacCmd::ElectronStats(void)
   }
   shiftX = backlashY / backlashX;
   mLogRpt.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
-    "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX,
+    "dose rate = %.3f e/physical pixel/sec", bmin * shiftX, bmax * shiftX,
     bmean *shiftX, bSD * shiftX, backlashY);
   SetReportedValues(&mStrItems[2], bmin * shiftX, bmax * shiftX, bmean * shiftX,
     bSD *shiftX, backlashY);
@@ -6921,7 +6921,14 @@ int CMacCmd::DewarsRemainingTime(void)
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("Remaining time until dewars start filling is %d sec", index);
+  if (index < 0) {
+    if (mScope->GetHasSimpleOrigin())
+      mLogRpt = index == -1 ? "There are no refills left" :
+      "the SimpleOrigin system is not active";
+    else
+      mLogRpt = "No dewar refilling is scheduled";
+  } else
+    mLogRpt.Format("Remaining time until dewars start filling is %d sec", index);
   SetReportedValues(&mStrItems[1], (double)index);
   return 0;
 }
@@ -6952,14 +6959,24 @@ int CMacCmd::AreDewarsFilling(void)
 // SimpleOriginStatus
 int CMacCmd::SimpleOriginStatus(void)
 {
-  int numLeft, secToNext, active;
-  if (!mScope->GetSimpleOriginStatus(numLeft, secToNext, active)) {
+  int numLeft, secToNext, active, filling;
+  float sensor;
+  if (!mScope->GetSimpleOriginStatus(numLeft, secToNext, filling, active, &sensor)) {
     AbortMacro();
     return 1;
   }
-  mLogRpt.Format("SimpleOrigin has %d refills, %.1f minutes to next fill, %s filling",
-    numLeft, secToNext / 60., active ? "IS" : "is NOT");
-  SetReportedValues(&mStrItems[1], numLeft, secToNext / 60., active);
+  mLogRpt.Format("SimpleOrigin has %d refills, %.1f minutes to next fill, %s filling, "
+    "%s active, sensor %.1f C", numLeft, secToNext / 60., filling ? "IS" : "is NOT", 
+    active ? "IS" : "is NOT", sensor);
+  SetReportedValues(&mStrItems[1], numLeft, secToNext / 60., filling, active);
+  return 0;
+}
+
+// SetSimpleOriginActive
+int CMacCmd::SetSimpleOriginActive(void)
+{
+  if (!mScope->SetSimpleOriginActive(mItemInt[1], mStrCopy))
+    ABORT_NOLINE(mStrCopy);
   return 0;
 }
 

@@ -619,6 +619,7 @@ MAC_SAME_NAME_ARG(ReportBinning, 1, 4, REPORTBINNING, S)
 MAC_SAME_NAME_ARG(ReportReadMode, 1, 4, REPORTREADMODE, S)
 MAC_SAME_NAME_ARG(ReportCameraSetArea, 1, 4, REPORTCAMERASETAREA, S)
 MAC_SAME_NAME_ARG(ReportCurrentPixelSize, 1, 4, REPORTCURRENTPIXELSIZE, S)
+MAC_SAME_NAME_ARG(SetSimpleOriginActive, 1, 4, SETSIMPLEORIGINACTIVE, I)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //

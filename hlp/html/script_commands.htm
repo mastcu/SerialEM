@@ -1339,9 +1339,10 @@
           <TD class="scriptcommand">NewDEserverDarkRef #P #H</TD>
           <TD>Acquires a dark reference in the DE server if the known interval since the
             last reference for processing mode <b>#P</b> is longer than <b>#H</b> in hours. <b>#P</b> must be 0
-            for linear mode or 1 for counting mode.&nbsp; Parameters for the reference are
+            for linear mode, 1 for counting mode, or -1 for the mode selected in the current Record parameters.&nbsp; Parameters for the reference are
             those specified in the <a href="hidd_de_reference.htm">Direct Electron Server
-            Reference Maker Dialog</a> for the given mode.&nbsp; If <b>#H</b> is 0, the reference
+            Reference Maker Dialog</a> for the given mode, except that with -1, the hardware binning and ROI will be
+            those in the Current Record parameters.&nbsp; If <b>#H</b> is 0, the reference
             is done unconditionally; if <b>#H</b> is negative (-1), the command simply records the
             current time as the time of the last reference.</TD>
         </TR>
@@ -2427,7 +2428,7 @@
         <TR>
           <TD class="scriptcommand">SetDoseRate #</TD>
           <TD>Changes the beam intensity to set the dose rate at the camera to the given value
-            in electrons per unbinned pixel per second beam intensity, based on the image in
+            in electrons per physical pixel per second beam intensity, based on the image in
             buffer A.  This command is the same as running
             <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks
             menu. In low dose mode it changes the intensity of the current area.
@@ -2835,8 +2836,8 @@
           <TD class="scriptcommand">DewarsRemainingTime</TD>
           <TD>Reports the time remaining until next automatic dewar filling on a Thermo/FEI
             scope or -1 if none is scheduled.&nbsp; Alternatively, with a SimpleOrigin filling system,
-            reports the seconds left until the next filling or -1 if there are no remaining
-            refills.&nbsp; Value can be assigned to a variable at end of command.</TD>
+            reports the seconds left until the next filling, -1 if there are no remaining
+            refills, or -2 if the system is not active.&nbsp; Value can be assigned to a variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RefrigerantLevel #</TD>
@@ -2846,8 +2847,13 @@
         <TR>
           <TD class="scriptcommand">SimpleOriginStatus</TD>
           <TD>Reports the number of remaining refills, the minutes until the next refill (or a negative value
-            if there are no refills left) and whether filling is underway for a SimpleOrigin
-             system.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 3.9, 6/16/21.</TD>
+            if there are no refills left), whether filling is underway, whether the system is active, and the sensor temperature
+            for a SimpleOrigin system.&nbsp; Values can be assigned to variables at end of 
+            command.&nbsp; Command added in 3.9, 6/16/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetSimpleOriginActive #</TD>
+          <TD>Turns the Simple Origin system off if <b>#</b> is zero or on if it is non-zero.&nbsp; Command added in 4.0, 10/8/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsPVPRunning</TD>
