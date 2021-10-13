@@ -477,7 +477,8 @@ public:
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
-  GetSetMember(BOOL, HasSimpleOrigin);
+  GetMember(int, HasSimpleOrigin);
+  void SetHasSimpleOrigin(int inVal);
   GetSetMember(int, DewarVacCapabilities);
   GetSetMember(int, ScopeCanFlashFEG);
   GetSetMember(int, ScopeHasPhasePlate);
@@ -924,8 +925,9 @@ public:
   bool AreDewarsFilling(int & busy);
   bool GetDewarsRemainingTime(int & time);
   bool GetRefrigerantLevel(int which, double & level);
-  bool GetSimpleOriginStatus(int &numRefills, int &secToNextRefill, int &active);
+  bool GetSimpleOriginStatus(int &numRefills, int &secToNextRefill, int &filling, int &active, float *sensor = NULL);
   static int RefillSimpleOrigin(CString &errString);
+  bool SetSimpleOriginActive(int active, CString &errString);
   bool GetObjectiveStigmator(double & stigX, double & stigY);
   bool SetObjectiveStigmator(double stigX, double stigY);
   int GetXLensDeflector(int which, double &outX, double &outY);
