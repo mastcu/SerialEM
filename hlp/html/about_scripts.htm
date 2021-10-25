@@ -944,14 +944,15 @@
       If you have an array of strings instead of numbers, split the string returned by 
       'GetVariable' on newlines:&nbsp; strArr = ret.split('|\n')</p>
     <p><strong><em>Errors and exceptions:&nbsp;</em></strong> An error within a 
-      SerialEM operation will generate an exception of type 'SEMerror'.&nbsp; The 
-      namespace is optional here because the script wrapper imports this name.&nbsp; You 
-      can catch this exception in a 'try - except' block.&nbsp; The message from the 
-      error should be available If appropriate, you can deal with problem and let the 
+      SerialEM operation will generate an exception of type &#39;SEMerror&#39;.&nbsp; The 
+      namespace is optional here because the script wrapper imports this name.&nbsp; 
+      You can catch this exception in a &#39;try - except&#39; block.&nbsp; The message from 
+      the error should be available if you use &#39;except SEMerror as err&#39; and convert 
+      with &#39;str(err)&#39;. If appropriate, you can deal with the problem and let the 
       script continue, but a message box with SerialEM's text will come up as usual 
-      you first call 'NoMessageBoxOnError'.&nbsp; If you do call this, there will be 
+      unless you first call 'NoMessageBoxOnError'.&nbsp; If you do call this, there will be 
       the same kind of 'SCRIPT ERROR' output to the log as when an error occurs within 
-      a 'Try - Catch' block in SerialEM scriping.</p>
+      a 'Try - Catch' block in SerialEM scripting.</p>
     <p>An error within the serialem module will generate an exception of type 
       'SEMmoduleError', also imported by this name.&nbsp; You can catch this and try 
       to interpret the error string if appropriate.</p>

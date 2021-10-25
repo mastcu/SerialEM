@@ -1781,7 +1781,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
     // If not already filling and we can get time to next filling, do so
   } else if (((doNonChecks && mDVParams.refillDewars) || doChecks) && 
     mDVParams.checkDewars && canGetTimeToFill) {
-    if (mScope->GetDewarsRemainingTime(secToStart)) {
+    if (mScope->GetDewarsRemainingTime(0, secToStart)) {
 
       // If it is within the pause interval, just set up to wait for it to start
       if (secToStart <= params.pauseBeforeMin * 60.) {

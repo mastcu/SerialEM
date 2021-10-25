@@ -3506,7 +3506,7 @@ BEGIN
     CTEXT           "The shift between the current item and the marker point is -9.99, -9.99 microns",IDC_STAT_MARKER_SHIFT,7,10,238,8
     CTEXT           "Selected non-imported items at registration 2 will be shifted by that amount",IDC_STAT_WHAT_SHIFTS,7,21,238,8
     CONTROL         "All items at the registration of the image with marker point",IDC_RAPPLY_ALL_AT_REG,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,43,141,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,43,204,10
     CONTROL         "All maps at 23000x and items marked on them",IDC_RAPPLY_ALL_MAPS_AT_MAG,
                     "Button",BS_AUTORADIOBUTTON,13,54,193,10
     CONTROL         "Only maps at 23000x and marked items that have not been shifted before",IDC_RAPPLY_IN_COHORT,

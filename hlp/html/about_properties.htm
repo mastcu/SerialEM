@@ -2884,12 +2884,10 @@
         </TR>
         <TR>
           <TD>HasSimpleOriginSystem</TD>
-          <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system of the first generation, or 2 if there
-            is a NextGen system.&nbsp; Calls to
+          <TD>Set to 1 if there is a SimpleOrigin nitrogen filling system.&nbsp; Calls to
             check dewar status and refill dewars will access this system.&nbsp; For proper function, a first
              generation system must be running a version of the SimpleOrigin software from August 2021 or 
-            later, with the changes added for it to work at University of Texas Medical Branch (UTMB).&nbsp; With
-             a NextGen system, SerialEM must be run as Administrator.
+            later, with the changes added for it to work at University of Texas Medical Branch (UTMB).
           </TD>
         </TR>
        <TR>
@@ -4036,7 +4034,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>JeolHasNitrogenClass</TD>
-          <TD>Set to 1 to enable use of calls for testing and starting nitrogen refill.</TD>
+          <TD>Set to 1 to enable use of calls for testing and starting nitrogen refill and flashing a cold FEG, or
+            2 to enable use of calls for getting the nitrogen level and using the autoloader.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolFlashFegTimeout</TD>

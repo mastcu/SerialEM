@@ -931,7 +931,8 @@
             either 4 numbers <b>#L #R #T #B</b> for the unbinned left, right, top, and bottom coordinates (the
             same kind of numbers as in the camera setup dialog) or with <b>area</b> set to 'F', 'H', 'Q', 'WH' or 'WQ'
             for full, half, quarter, wide half, or wide quarter.&nbsp; Values will be adjusted
-            for a legal area.&nbsp; </TD>
+            for a legal area.&nbsp; <i>Python:</i> The second argument, <b>#L</b>, is defined as a string argument, 
+            so a number must be quoted, or a numeric variable must be converted to string.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetCenteredSize set #B #X #Y</TD>
@@ -2834,15 +2835,15 @@
         </TR>
         <TR>
           <TD class="scriptcommand">DewarsRemainingTime</TD>
-          <TD>Reports the time remaining until next automatic dewar filling on a Thermo/FEI
-            scope or -1 if none is scheduled.&nbsp; Alternatively, with a SimpleOrigin filling system,
+          <TD>Reports the time in seconds remaining until next automatic dewar filling on a Thermo/FEI
+            scope or -1 if none is scheduled.&nbsp; On a JEOL with the JeolHasNitrogenClass property set to 2, reports the minimum of the time remaining until either the stage or transfer tank is filled.&nbsp; Alternatively, with a SimpleOrigin filling system,
             reports the seconds left until the next filling, -1 if there are no remaining
             refills, or -2 if the system is not active.&nbsp; Value can be assigned to a variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RefrigerantLevel #</TD>
-          <TD>Reports the refrigerant level of the dewar given by <b>#</b> on a Thermo/FEI scope: 1 for autoloader, 2 for
-            column, 3 for liquid helium. &nbsp; Value can be assigned to a variable at end of command.</TD>
+          <TD>Reports the refrigerant level of the dewar given by <b>#</b>.&nbsp; On a Thermo/FEI scope, <b>#</b> can be 1 for autoloader, 2 for
+            column, or 3 for liquid helium; on a JEOL scope with a recent enough version of TemExt.dll and with the JeolHasNitrogenClass property set to 2, the fraction of full is reported and <b>#</b> can be 1 for stage tank, 2 for transfer tank, or 0 for the minimum of the two. &nbsp; Value can be assigned to a variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SimpleOriginStatus</TD>
@@ -2874,7 +2875,7 @@
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
           <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
-            refrigerant on Thermo/FEI ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'),
+            refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'),
             Unload cartridge ('Un'), Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS') or Refill Transfer
             tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL or Thermo/FEI.&nbsp; Operations are identified by the first two
@@ -2947,7 +2948,7 @@
           <TD colspan="2"><A name="autoalign"></A><B>Autoalign-Related Commands</B></TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">A or Autoalign</TD>
+          <TD class="scriptcommand">A or AutoAlign</TD>
           <TD>Aligns buffer A to autoalign buffer.&nbsp; The script is suspended if there is an
             error such as memory allocation or mismatched binnings, but if a maximum shift limit has
             been set with 'LimitNextAutoAlign' and there are no eligible peaks with that distance,
@@ -2958,7 +2959,7 @@
           <TD class="scriptcommand">AlignTo buf [#N] [#T]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
             avoid changing microscope image shift, and 1 for <b>#T</b> to prevent trimming of
-            dark borders.&nbsp; Behaves like 'Autoalign' on errors.</TD>
+            dark borders.&nbsp; Behaves like 'AutoAlign' on errors.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearAlignment [#N]</TD>
@@ -2983,7 +2984,7 @@
           <TD class="scriptcommand">ConicalAlignTo buf #R [#S]</TD>
           <TD>Aligns buffer A to the given buffer <b>buf</b> assuming a specimen rotation given by
             <b>#R</b>. Optionally, enter 1 for <b>#S</b> to show the cross-correlation.
-            &nbsp; Behaves like 'Autoalign' on errors.
+            &nbsp; Behaves like 'AutoAlign' on errors.
           </TD>
         </TR>
         <TR>
@@ -3026,7 +3027,7 @@
           <TD colspan="2"><A name="autofocus"></A><B>Autofocus/Autotuning-Related Commands</B></TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">G or Autofocus [#M] [#A]</TD>
+          <TD class="scriptcommand">G or AutoFocus [#M] [#A]</TD>
           <TD>Runs the Autofocus routine; set <b>#M</b> to -2 to measure shift and drift, -1 to just measure defocus without changing,
             or 1 for normal autofocus that changes focus to target; set optional <b>#A</b> to 1
             or 2 to focus with the View area in Low Dose mode, 3 or 4 to focus with the Search area,
@@ -3575,7 +3576,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNavItem</TD>
-          <TD>Reports the index, stage X, Y, Z, label, and note string for the current
+          <TD>Reports in the log the index, stage X, Y, Z, label, and note string for the current
             Navigator item, or the item this script is being run on. The index and stage
             coordinates are placed in <i>reportedValue</i> variables as usual, and the item type
             is placed in <i>reportedValue5</i>; (0 for point, 1 for polygon, 2 for map). In
