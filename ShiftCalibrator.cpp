@@ -677,6 +677,18 @@ void CShiftCalibrator::ShiftDone()
       "The implied Specimen to Stage matrix is %8.4f  %8.4f  %8.4f  %8.4f\r\n",
       mCurrentCamera, magVal, mat->xpx, mat->xpy, mat->ypx, mat->ypy, matRange, diff,
       oldMat.xpx, oldMat.xpy, oldMat.ypx, oldMat.ypy);
+    mWinApp->AppendToLog(report,
+      mFromMacro ? LOG_OPEN_IF_CLOSED : LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
+    StopCalibrating();
+    if (MatrixIsAsymmetric(mat, stageSymCrit)) {
+      report.Format("This matrix is not very close to symmetric and is likely\n"
+        "to be wrong.  Do you want to forget about this calibration?\n\n"
+        "(Perhaps try again with Whole Image Correlations turned %s.",
+        mWholeCorrForStageCal ? "OFF" : "ON");
+      if (AfxMessageBox(report, MB_QUESTION) == IDYES)
+        return;
+    }
+    report = "";
     if (fabs(UtilGoodAngle(ytheta - xtheta)) < 90) {
       rotmess.Format("The implied rotation angle is %8.1f degrees", angle);
       diff = mMagTab[mCalIndex].rotation[mCurrentCamera];
@@ -702,19 +714,9 @@ void CShiftCalibrator::ShiftDone()
       AfxMessageBox(rotmess, MB_EXCLAME);
     }
     report += rotmess;
-
-    mWinApp->AppendToLog(report, 
+    mWinApp->AppendToLog(report,
       mFromMacro ? LOG_OPEN_IF_CLOSED : LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
 
-    StopCalibrating();
-    if (MatrixIsAsymmetric(mat, stageSymCrit)) {
-        report.Format("This matrix is not very close to symmetric and is likely\n"
-          "to be wrong.  Do you want to forget about this calibration?\n\n"
-          "(Perhaps try again with Whole Image Correlations turned %s.",
-          mWholeCorrForStageCal ? "OFF" : "ON");
-        if (AfxMessageBox(report, MB_QUESTION) == IDYES)
-          return;
-    }
 
     mMagTab[mCalIndex].matStage[mCurrentCamera] = workMat;
     mMagTab[mCalIndex].stageCalFocus[mCurrentCamera] = mScope->GetFocus();
