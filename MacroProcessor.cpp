@@ -1228,6 +1228,11 @@ void CMacroProcessor::Stop(BOOL ifNow)
   if (ifNow) {
     if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
       return;
+    if (!mWinApp->mCameraMacroTools.GetUserStop() && mRunningScrpLang &&
+      mNoMessageBoxOnError) {
+      SuspendMacro(mScrpLangData.disconnected);
+      return;
+    }
     if (TestAndStartFuncOnStop())
       return;
     if (mProcessThread && UtilThreadBusy(&mProcessThread) > 0)

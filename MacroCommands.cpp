@@ -177,6 +177,8 @@ void CMacCmd::TaskDone(int param)
         mRunningScrpLang = false;
         if (mScrpLangData.threadDone > 0 || mScrpLangData.exitedFromWrapper)
           SEMMessageBox("Error running Python script; see log for information");
+        if (mScrpLangData.threadDone < 0)
+          mLastCompleted = true;
         AbortMacro();
       } else if (mScrpLangData.waitingForCommand) {
 
@@ -6901,8 +6903,10 @@ int CMacCmd::RefrigerantLevel(void)
 {
   double delX;
 
-  if (mItemInt[1] < 1 || mItemInt[1] > 3)
+  if (FEIscope && (mItemInt[1] < 1 || mItemInt[1] > 3))
     ABORT_LINE("Dewar number must be between 1 and 3 in: \n\n");
+  if (JEOLscope && (mItemInt[1] < 0 || mItemInt[1] > 2))
+    ABORT_LINE("Dewar number must be between 0 and 2 in: \n\n");
   if (!mScope->GetRefrigerantLevel(mItemInt[1], delX)) {
     AbortMacro();
     return 1;
@@ -6917,7 +6921,7 @@ int CMacCmd::DewarsRemainingTime(void)
 {
   int index;
 
-  if (!mScope->GetDewarsRemainingTime(index)) {
+  if (!mScope->GetDewarsRemainingTime(0, index)) {
     AbortMacro();
     return 1;
   }
