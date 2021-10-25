@@ -203,6 +203,7 @@ public:
   int SetAlignInServer(int alignFrames);
   void SetImageExtraData(EMimageExtra *extra, float nameTimeout, bool allowNamePrediction,
     bool &nameValid);
+  GetMember(bool, _DE_CONNECTED);
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);

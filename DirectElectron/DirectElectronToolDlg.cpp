@@ -51,7 +51,7 @@ void DirectElectronToolDlg::KillUpdateTimer()
 // when called from the update proc
 void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 {
-  if (!mDECamera)
+  if (!mDECamera || !mDECamera->Get_DE_CONNECTED())
     return;
   if (mWinApp->mPluginManager->GetDEplugIndex() < 0)
     return;
