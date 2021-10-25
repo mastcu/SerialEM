@@ -310,9 +310,10 @@ bool CShiftManager::ImposeImageShiftOnScope(float delX, float delY, int magInd,
                                             int camera, BOOL incremental, 
                                             BOOL mouseShifting)
 {
-  double delISX, delISY;
+  double delISX, delISY, bufISX, bufISY;
   ScaleMat bMat, bInv;
   CString str;
+  int curMag;
   bMat = IStoGivenCamera(magInd, camera);
   if (!bMat.xpx) {
     if (!incremental) {
@@ -323,8 +324,10 @@ bool CShiftManager::ImposeImageShiftOnScope(float delX, float delY, int magInd,
   } else {
 
     bInv = MatInv(bMat);
-    delISX = -(bInv.xpx * delX + bInv.xpy * delY);
-    delISY = -(bInv.ypx * delX + bInv.ypy * delY);
+    bufISX = -(bInv.xpx * delX + bInv.xpy * delY);
+    bufISY = -(bInv.ypx * delX + bInv.ypy * delY);
+    curMag = mScope->FastMagIndex();
+    TransferGeneralIS(magInd, bufISX, bufISY, curMag, delISX, delISY);
     if (!ImageShiftIsOK(delISX, delISY, true)) {
       // for now, give a message unless this is being done by mouse
       if (!incremental) {
