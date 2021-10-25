@@ -1619,8 +1619,8 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
   if (!mRawData)
     return ERR_NOT_INIT;
 
-  // Anticipate what block side the peak finder will use, set default limits
-  blockSize = (int)(minSpacing / sqrt(2.));
+  // Anticipate what block size the peak finder will use, set default limits
+  blockSize = B3DMAX(1, (int)(minSpacing / sqrt(2.)));
   minXpeakFind = 1;
   maxXpeakFind = mXpadSize - 2;
   minYpeakFind = 1;
@@ -2051,20 +2051,19 @@ int HoleFinder::analyzeNeighbors
   std::queue<int> connQueue;
   int ind, jnd, numBelow, numAbove, numPoints = (int)xCenVec.size();
   int minGridX, minGridY, maxGridX, maxGridY, numInGroup, numConn, num, bin, maxInBin;
-  float maxSpaceSq, dx, dy, distSq, spacing, diffBelow, diffAbove, angle;
-  float coarseAngle, avgLenAbove, avgLenBelow, minDist;
-  float saveLenBelow, saveLenAbove, saveAngBelow, saveAngAbove;
+  float maxSpaceSq, dx, dy, distSq, spacing, angle;
+  float coarseAngle, avgLenAbove, avgLenBelow, minDist, altAngAbove, altAngBelow;
+  float saveLenBelow, saveLenAbove, saveAngBelow, saveAngAbove, avgLen;
   float sd, sem, errBelow, errAbove, error;
   int ptFrom, ptTo, sign, setGridVal, ix, iy, jx, jy, jxCen, jyCen, jxStart, jyStart;
   int jyEnd, jxEnd, bestXcen, bestYcen, offset, bestOffset, bestNum, con;
-  int gridXdim, gridYdim, numFit, loop, connPt1, connPt2;
-  float angForAlt, lenForAlt, altLen, errAlt, bestError;
+  int gridXdim, gridYdim, numFit, connPt1, connPt2, numAltBelow, numAltAbove;
+  float angForAlt, lenForAlt, altLen, errAlt, bestError, altLenBelow, altLenAbove;
   float aFit, bFit, cFit, xPred, yPred, predErr;
   bool doFit, testAlt = altInds.size() > 0;
   bool justFindSpacing = maxSpacing <= 0.;
-  float maxConnError = maxError * 1.8f;
-  float maxAngDiff = 10., maxCoarseDiff = 12.5f;
   int coarseHist[10] = {0,0,0,0,0,0,0,0,0,0};
+  float maxConnError = maxError * 1.8f;
   int minGroupSize = 3;
   int fitLen = 5;
   const int maxFit = 100, maxCol = 6;
@@ -2168,83 +2167,38 @@ int HoleFinder::analyzeNeighbors
     }
 
     // Do a simple mean of angles within some distance of this peak or the one 90 degrees 
-    // away, iterating to work from and angle more refined than that initial bin estimate 
+    // away, iterating to work from an angle more refined than that initial bin estimate 
     mPeakAngAbove = coarseAngle;
     mPeakAngBelow = coarseAngle - 90.f;
-    for (loop = 0; loop < 2; loop++) {
-      numBelow = 0;
-      numAbove = 0;
-      diffBelow = 0.;
-      diffAbove = 0.;
-      for (ind = 0; ind < numConn; ind++) {
-        angle = goodAngle(connReducedAng[ind] - coarseAngle);
-        if (fabs(angle) < maxCoarseDiff) {
-          numAbove++;
-          diffAbove += angle;
-        } else {
-          angle = goodAngle(connReducedAng[ind] - mPeakAngBelow);
-          if (fabs(angle) < maxCoarseDiff) {
-            numBelow++;
-            diffBelow += angle;
-          }
-        }
-      }
-      if (numBelow > 0)
-        mPeakAngBelow += diffBelow / numBelow;
-      if (numAbove > 0)
-        mPeakAngAbove += diffAbove / numAbove;
-      else
-        mPeakAngAbove = mPeakAngBelow + 90.f;
-      if (!numBelow)
-        mPeakAngBelow = mPeakAngAbove - 90.f;
+    refineAnglesGetLengths(connReducedAng, connLengths, mPeakAngBelow, mPeakAngAbove,
+      mAvgLenBelow, mAvgLenAbove, numBelow, numAbove);
+
+    // Do the same thing for the angle 45 degrees away
+    if (mPeakAngAbove >= 45.f) {
+      altAngAbove = mPeakAngAbove - 45.f;
+      altAngBelow = mPeakAngBelow - 45.f;
+    } else {
+      altAngAbove = mPeakAngAbove + 45.f;
+      altAngBelow = mPeakAngBelow + 45.f;
     }
-      
-    // Get separate median for the two directions
-    // Refine the angle first by 
-    for (loop = 0; loop < 2; loop++) {
-      for (ind = 0; ind < numConn; ind++) {
-        angle = goodAngle(connReducedAng[ind] - mPeakAngBelow);
-        if (fabs(angle) < maxAngDiff) {
-          lenBelow.push_back(loop ? connLengths[ind] : angle);
-        } else {
-          angle = goodAngle(connReducedAng[ind] - mPeakAngAbove);
-          if (fabs(angle) < maxAngDiff) 
-            lenAbove.push_back(loop ? connLengths[ind] : angle);
-        }
-      }
-  
-      if (lenAbove.size() > 3)
-        rsFastMedianInPlace(&lenAbove[0], (int)lenAbove.size(), &mAvgLenAbove);
-      else if (lenAbove.size())
-        avgSD(&lenAbove[0], (int)lenAbove.size(), &mAvgLenAbove, &sd, &sem);
-      if (lenBelow.size() > 3)
-        rsFastMedianInPlace(&lenBelow[0], (int)lenBelow.size(), &mAvgLenBelow);
-      else if (lenBelow.size())
-        avgSD(&lenBelow[0], (int)lenBelow.size(), &mAvgLenBelow, &sd, &sem);
-      else
-        mAvgLenBelow = mAvgLenAbove;
-      if (!lenAbove.size())
-        mAvgLenAbove = mAvgLenBelow;
-      
-      if (!loop) {
-        /*for (jnd = 0; jnd < lenBelow.size(); jnd++)
-          printf("%.2f\n", lenBelow[jnd]);
-          for (jnd = 0; jnd < lenAbove.size(); jnd++)
-          printf("%.2f\n", lenAbove[jnd]); */
-        mPeakAngBelow = goodAngle(mPeakAngBelow + mAvgLenBelow);
-        mPeakAngAbove = goodAngle(mPeakAngAbove + mAvgLenAbove);
-        lenAbove.clear();
-        lenBelow.clear();
-      }
+    refineAnglesGetLengths(connReducedAng, connLengths, altAngBelow, altAngAbove,
+      altLenBelow, altLenAbove, numAltBelow, numAltAbove);
+
+    // An ad hoc test for when the 45-degree peak, if any, is the one to use: it has more
+    // points and is not much farther away, or it has enough points and is closer by
+    // roughly sqrt(2)
+    avgLen = 0.5f * (mAvgLenBelow + mAvgLenAbove);
+    altLen = 0.5f * (altLenBelow + altLenAbove);
+    if ((numAltBelow + numAltAbove > 1.05 * (numBelow + numAbove) &&
+      altLen < 1.05 * avgLen) ||
+      (numAltBelow + numAltAbove > 0.5 * (numBelow + numAbove) &&
+        fabs(altLen - avgLen / 1.414) < 0.1 * altLen)) {
+      mAvgLenBelow = altLenBelow;
+      mAvgLenAbove = altLenAbove;
+      mPeakAngBelow = altAngBelow;
+      mPeakAngAbove = altAngAbove;
     }
-    if (mPeakAngBelow > mPeakAngAbove) {
-      B3DSWAP(mPeakAngBelow, mPeakAngAbove, sem);
-      B3DSWAP(mAvgLenBelow, mAvgLenAbove, sem);
-    }
-    if (mVerbose) {
-      PRINT4(mPeakAngBelow, mAvgLenBelow, mPeakAngAbove, mAvgLenAbove);
-      PRINT1(maxConnError);
-    }
+
     avgLenBelow = mAvgLenBelow;
     avgLenAbove = mAvgLenAbove;
   } else {
@@ -2545,6 +2499,95 @@ int HoleFinder::analyzeNeighbors
   yCenVec.resize(jnd);
   peakVals.resize(jnd);
   return 0;
+}
+
+// working from the peak angle in the coarse histogram, find the number, angle between,
+// and length of connectors near that angle or 90 degrees away
+void HoleFinder::refineAnglesGetLengths(FloatVec &connReducedAng, FloatVec &connLengths,
+  float &peakAngBelow, float &peakAngAbove, float &avgLenBelow, float &avgLenAbove,
+  int &numBelow, int &numAbove)
+{
+  int loop, ind, numConn = (int)connReducedAng.size();
+  float angle, diffBelow, diffAbove, sd, sem;
+  float maxAngDiff = 10., maxCoarseDiff = 12.5f;
+  FloatVec lenBelow, lenAbove;
+
+  for (loop = 0; loop < 2; loop++) {
+    numBelow = 0;
+    numAbove = 0;
+    diffBelow = 0.;
+    diffAbove = 0.;
+    for (ind = 0; ind < numConn; ind++) {
+      angle = goodAngle(connReducedAng[ind] - peakAngAbove);
+      if (fabs(angle) < maxCoarseDiff) {
+        numAbove++;
+        diffAbove += angle;
+      } else {
+        angle = goodAngle(connReducedAng[ind] - peakAngBelow);
+        if (fabs(angle) < maxCoarseDiff) {
+          numBelow++;
+          diffBelow += angle;
+        }
+      }
+    }
+    if (numBelow > 0)
+      peakAngBelow += diffBelow / numBelow;
+    if (numAbove > 0)
+      peakAngAbove += diffAbove / numAbove;
+    else
+      peakAngAbove = peakAngBelow + 90.f;
+    if (!numBelow)
+      peakAngBelow = peakAngAbove - 90.f;
+  }
+
+  // Get separate median for the two directions
+ // Refine the angle first by 
+  for (loop = 0; loop < 2; loop++) {
+    for (ind = 0; ind < numConn; ind++) {
+      angle = goodAngle(connReducedAng[ind] - peakAngBelow);
+      if (fabs(angle) < maxAngDiff) {
+        lenBelow.push_back(loop ? connLengths[ind] : angle);
+      } else {
+        angle = goodAngle(connReducedAng[ind] - peakAngAbove);
+        if (fabs(angle) < maxAngDiff)
+          lenAbove.push_back(loop ? connLengths[ind] : angle);
+      }
+    }
+
+    if (lenAbove.size() > 3)
+      rsFastMedianInPlace(&lenAbove[0], (int)lenAbove.size(), &avgLenAbove);
+    else if (lenAbove.size())
+      avgSD(&lenAbove[0], (int)lenAbove.size(), &avgLenAbove, &sd, &sem);
+    if (lenBelow.size() > 3)
+      rsFastMedianInPlace(&lenBelow[0], (int)lenBelow.size(), &avgLenBelow);
+    else if (lenBelow.size())
+      avgSD(&lenBelow[0], (int)lenBelow.size(), &avgLenBelow, &sd, &sem);
+    else
+      avgLenBelow = avgLenAbove;
+    if (!lenAbove.size())
+      avgLenAbove = avgLenBelow;
+
+    if (!loop) {
+      /*for (jnd = 0; jnd < lenBelow.size(); jnd++)
+      printf("%.2f\n", lenBelow[jnd]);
+      for (jnd = 0; jnd < lenAbove.size(); jnd++)
+      printf("%.2f\n", lenAbove[jnd]); */
+      peakAngBelow = goodAngle(peakAngBelow + avgLenBelow);
+      peakAngAbove = goodAngle(peakAngAbove + avgLenAbove);
+      lenAbove.clear();
+      lenBelow.clear();
+    }
+  }
+  numBelow = (int)lenBelow.size();
+  numAbove = (int)lenAbove.size();
+  if (peakAngBelow > peakAngAbove) {
+    B3DSWAP(peakAngBelow, peakAngAbove, sem);
+    B3DSWAP(avgLenBelow, avgLenAbove, sem);
+    B3DSWAP(numBelow, numAbove, ind);
+  }
+  if (mVerbose) {
+    //PRINT4(peakAngBelow, avgLenBelow, peakAngAbove, avgLenAbove);
+  }
 }
 
 /*

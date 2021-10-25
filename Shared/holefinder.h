@@ -53,6 +53,9 @@ class HoleFinder {
                        FloatVec &peakAlt,float maxSpacing, float maxError,
                        int reuseGeomBin, 
                        float &trueSpacing, FloatVec &xMissing, FloatVec &yMissing);
+  void refineAnglesGetLengths(FloatVec &connReducedAng, FloatVec &connLengths, 
+    float &peakAngBelow, float &peakAngAbove, float &avgLenBelow, float &avgLenAbove, 
+    int &numBelow, int &numAbove);
   int templateAndAnalyze(float midRadius, bool retain, bool &madeAverage, bool &usedRaw,
                          FloatVec &xBoundary, FloatVec &yBoundary,
                          FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
