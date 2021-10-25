@@ -99,6 +99,7 @@ typedef int (*GetFile)(const char *, void *, int);
 typedef int (*DoFocRamp)(long, long, long, float *, long, double);
 typedef int (*FinishFocRamp)(long, double *, double *, double *, double *);
 typedef int (*ShowMB)(int, const char *, const char *);
+typedef const char *(*CartridgeInfo)(int, int *, int *, int *, int *, int *);
 
 #define GET_ONE_INT(a) ScopeGetInt a
 #define GET_ONE_BOOL(a) ScopeGetBool a

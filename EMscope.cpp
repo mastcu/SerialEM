@@ -110,7 +110,6 @@ static int sRestoreStageXYdelay;
 static int sSimpOrigEndTimeout = 300;
 static int sSimpOrigStartTimeout = 15;
 static int sSimpleOriginIndex = -1;
-static const char *sRefillingKeys[2] = {"IS_SYSTEM_REFILLING", "SYSTEM_REFILLING"};
 
 static JeolStateData *sJeolSD;
 
@@ -6458,13 +6457,16 @@ bool CEMscope::AreDewarsFilling(int &busy)
   return bRet;
 }
 
-// Remaining time - units?
-bool CEMscope::GetDewarsRemainingTime(int &time)
+// Remaining time - seconds
+bool CEMscope::GetDewarsRemainingTime(int which, int &time)
 {
   BOOL busy;
   bool bRet;
   int ibusy, remaining, active;
   double level;
+  if (JEOLscope && mJeolHasNitrogenClass > 1 && mPlugFuncs->GetNitrogenInfo) {
+    return GetNitrogenInfo(which, time, level);
+  }
   if (mHasSimpleOrigin) {
     bRet = GetSimpleOriginStatus(remaining, time, ibusy, active);
     if (!remaining)
@@ -6481,7 +6483,22 @@ bool CEMscope::GetRefrigerantLevel(int which, double &level)
 {
   BOOL busy;
   int time;
+  if (JEOLscope && mJeolHasNitrogenClass > 1 && mPlugFuncs->GetNitrogenInfo) {
+    return GetNitrogenInfo(which, time, level);
+  } 
   return GetTemperatureInfo(2, busy, time, which, level);
+}
+
+bool CEMscope::GetNitrogenInfo(int which, int & time, double & level)
+{
+  try {
+    mPlugFuncs->GetNitrogenInfo(which, &time, &level);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting Nitrogen information "));
+    return false;
+  }
+  return true;
 }
 
 // Read the registry to access information on SimpleOrigin system
@@ -6516,12 +6533,9 @@ static bool SimpleOriginStatus(CRegKey &key, int &numRefills, int &secToNextRefi
   const int bufSize = 32;
   char buffer[bufSize];
   ULONG pnChars = bufSize;
-  HKEY parents[2] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
-  const char *topKeys[2] = {"SimpleOrigin",
-    "SYSTEM\\CurrentControlSet\\Services\\SimpleOriginModbusService"};
   const char *keys[] = {"NUMBER_OF_REMAINING_REFILLS", "TIME_TO_NEXT_REFILL_SEC",
-    sRefillingKeys[sSimpleOriginIndex], "SYSTEM_STATUS", "SENSOR_TEMPERATURE"};
-  nResult = key.Open(parents[sSimpleOriginIndex], _T(topKeys[sSimpleOriginIndex]));
+    "IS_SYSTEM_REFILLING", "SYSTEM_STATUS", "SENSOR_TEMPERATURE"};
+  nResult = key.Open(HKEY_CURRENT_USER, _T("SimpleOrigin"));
   if (nResult == ERROR_SUCCESS) {
     nResult = key.QueryDWORDValue(keys[++ind], value);
     numRefills = value;
@@ -6589,7 +6603,7 @@ int CEMscope::RefillSimpleOrigin(CString &errString)
   // Wait to see it start
   startTicks = GetTickCount();
   for (;;) {
-    if (key.QueryDWORDValue(sRefillingKeys[sSimpleOriginIndex], value) == ERROR_SUCCESS &&
+    if (key.QueryDWORDValue("IS_SYSTEM_REFILLING", value) == ERROR_SUCCESS &&
       value)
       break;
     if (SEMTickInterval(startTicks) < 1000. * sSimpOrigStartTimeout)
@@ -6603,7 +6617,7 @@ int CEMscope::RefillSimpleOrigin(CString &errString)
   // Wait to see it stop
   startTicks = GetTickCount();
   for (;;) {
-    if (key.QueryDWORDValue(sRefillingKeys[sSimpleOriginIndex], value) == ERROR_SUCCESS &&
+    if (key.QueryDWORDValue("IS_SYSTEM_REFILLING", value) == ERROR_SUCCESS &&
       !value)
       break;
     if (SEMTickInterval(startTicks) < 1000. * sSimpOrigEndTimeout)
@@ -9249,6 +9263,7 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   const char *routine)
 {
   int retval;
+  double startTime;
   const char *statusText[] = {"CHANGING MAG", "CHANGING SPOT", "CHANGING PROBE",
     "CHANGING ALPHA", "NORMALIZING"};
   if (mSynchronousThread)
@@ -9273,8 +9288,14 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   mSynchroTD.HitachiSpotBeamWait = mHitachiSpotBeamWait;
   mSynchroTD.HitachiSpotStepDelay = mHitachiSpotStepDelay;
 
+  startTime = GetTickCount();
+  while (StageBusy() && SEMTickInterval(startTime) < 10000) {
+    mWinApp->ManageBlinkingPane(GetTickCount());
+    SleepMsg(100);
+  }
+
   // Start the thread
-  double startTime = wallTime();
+  startTime = wallTime();
   int startCount = mAutosaveCount;
   mSynchronousThread = AfxBeginThread(SynchronousProc, &mSynchroTD,
     THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);

@@ -355,7 +355,7 @@ public:
   GetSetMember(BOOL, UseInvertedMagRange);
   GetMember(double, InternalMagTime);
   GetMember(double, UpdateSawMagTime);
-  GetSetMember(BOOL, JeolHasNitrogenClass);
+  GetSetMember(int, JeolHasNitrogenClass);
   GetSetMember(BOOL, JeolHasExtraApertures);
   GetSetMember(BOOL, SequentialLensRelax);
   GetSetMember(int, JeolFlashFegTimeout);
@@ -790,7 +790,7 @@ private:
   int mLastNormMagIndex;      // Mag of last normalization
   int mPostFocusChgDelay;     // Delay after changing focus
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
-  BOOL mJeolHasNitrogenClass; // Flag to create the nitrogen class
+  int mJeolHasNitrogenClass; // Flag to create the nitrogen class
   BOOL mJeolHasExtraApertures; // Flag to use Ex aperture calls
   BOOL mSequentialLensRelax;  // Flag to do lens relaxation sequentially not interleaved
   int mJeolRefillTimeout;     // Timeout for refilling
@@ -923,8 +923,9 @@ public:
   bool GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit, float &highLimit);
   double IntensityAfterApertureChange(double intensity, int oldAper, int newAper, int spot = -1, int probe = -1);
   bool AreDewarsFilling(int & busy);
-  bool GetDewarsRemainingTime(int & time);
+  bool GetDewarsRemainingTime(int which, int & time);
   bool GetRefrigerantLevel(int which, double & level);
+  bool GetNitrogenInfo(int which, int &time, double &level);
   bool GetSimpleOriginStatus(int &numRefills, int &secToNextRefill, int &filling, int &active, float *sensor = NULL);
   static int RefillSimpleOrigin(CString &errString);
   bool SetSimpleOriginActive(int active, CString &errString);
