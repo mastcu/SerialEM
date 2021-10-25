@@ -4034,6 +4034,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
   NavAcqParams *navParam = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
+  mAcqActions = mAllAcqActions[mCurAcqParamIndex];
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd;
   bool seen;
