@@ -1771,8 +1771,8 @@ void CCameraSetupDlg::ManageK2Processing(void)
     UpdateData(false);
   }
   if (mParam->K2Type || (mDE_Type && (mParam->CamFlags & DE_APOLLO_CAMERA))) {
-    wnd->ShowWindow(*modeP ? SW_HIDE : SW_SHOW);
-    SetDlgItemText(IDC_RDARKSUBTRACT, *modeP ? "Unnormalized" : "Dark Subtracted");
+    wnd->ShowWindow((*modeP) ? SW_HIDE : SW_SHOW);
+    SetDlgItemText(IDC_RDARKSUBTRACT, (*modeP) ? "Unnormalized" : "Dark Subtracted");
   }
 }
 
