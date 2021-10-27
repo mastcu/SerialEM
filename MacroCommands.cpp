@@ -412,7 +412,7 @@ int CMacCmd::NextCommand(bool startingOut)
       ABORT_LINE("Too many items on line in script: \n\n");
     if (mStrItems[0].Find("/*") == 0) {
       mStrItems[0] = "";
-      inComment = true;
+      inComment = mStrLine.Find("*/") < 0;
       continue;
     }
     if (mVerbose > 0)

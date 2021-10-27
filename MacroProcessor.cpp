@@ -3141,7 +3141,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
     if (mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS))
       FAIL_CHECK_LINE("Too many items on line");
     if (strItems[0].Find("/*") == 0) {
-      inComment = true;
+      inComment = strLine.Find("*/") < 0;
       continue;
     }
 
