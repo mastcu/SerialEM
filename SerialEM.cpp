@@ -4368,6 +4368,8 @@ double CSerialEMApp::ProgramStartTime(void)
 void CSerialEMApp::SetBasicMode(BOOL inVal)
 {
   int ind;
+  if (mBasicMode == inVal)
+    return;
   mBasicMode = inVal;
   if (mStartingProgram)
     return;
