@@ -325,6 +325,8 @@ protected:
   double mAstigXtoRestore[2];   // Saved stigamtor values to restore for two probe
   double mAstigYtoRestore[2];   // modes
   int mK3CDSmodeToRestore;  // -1 or value of mode to restore at end
+  int mSavedFrameNameFormat;   // set >=0 if this and name need to be restored
+  CString mSavedFrameBaseName;
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped

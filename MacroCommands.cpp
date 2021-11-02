@@ -49,6 +49,7 @@
 #include "PiezoAndPPControl.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
+#include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 #include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
@@ -3248,15 +3249,35 @@ int CMacCmd::ReportFrameBaseName(void)
 
   mStrCopy = mCamera->GetFrameBaseName();
   index = mCamera->GetFrameNameFormat();
-  if ((index & FRAME_FILE_ROOT) && !mStrCopy.IsEmpty()) {
-    mLogRpt = "The frame base name is " + mStrCopy;
-    SetOneReportedValue(&mStrItems[1], 1., 1);
-    SetOneReportedValue(&mStrItems[1], mStrCopy, 2);
-  } else {
-    mLogRpt = "The base name is not being used in frame file names";
-    SetOneReportedValue(&mStrItems[1], 0., 1);
-    SetOneReportedValue(&mStrItems[1], CString("none"), 2);
+  mLogRpt.Format("The frame base name %s used in frame names, %s used in folder "
+    "names, and is %s", (index & FRAME_FILE_ROOT) ? "IS" : "IS NOT",
+    (index & FRAME_FOLDER_ROOT) ? "IS" : "IS NOT",
+    mStrCopy.IsEmpty() ? "not defined" : (LPCTSTR)mStrCopy);
+  if (mStrCopy.IsEmpty())
+    mStrCopy = "none";
+  SetOneReportedValue(&mStrItems[1], (index & FRAME_FILE_ROOT) ? 1. : 0., 1);
+  SetOneReportedValue(&mStrItems[1], mStrCopy, 2);
+  SetOneReportedValue(&mStrItems[1], (index & FRAME_FOLDER_ROOT) ? 1. : 0., 3);
+  return 0;
+}
+
+// SetFrameBaseName
+int CMacCmd::SetFrameBaseName(void)
+{
+  unsigned int format = (unsigned int)mCamera->GetFrameNameFormat();;
+
+  if (!mItemInt[1]) {
+    mSavedFrameBaseName = mCamera->GetFrameBaseName();
+    mSavedFrameNameFormat = format;
+    mNumStatesToRestore++;
   }
+  if (mItemInt[2] >= 0)
+    setOrClearFlags(&format, FRAME_FILE_ROOT, mItemInt[2]);
+  if (mItemInt[3] >= 0)
+    setOrClearFlags(&format, FRAME_FOLDER_ROOT, mItemInt[3]);
+  mCamera->SetFrameNameFormat(format);
+  mParamIO->StripItems(mStrLine, 4, mStrCopy);
+  mCamera->SetFrameBaseName(mStrCopy);
   return 0;
 }
 
@@ -6110,7 +6131,28 @@ int CMacCmd::CircleFromPoints(void)
 // FindPixelSize
 int CMacCmd::FindPixelSize(void)
 {
-  mProcessImage->FindPixelSize(0., 0., 0., 0.);
+  float dist = 0., vectors[4];
+  mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
+  return 0;
+}
+
+// AutoCorrPeakVectors
+int CMacCmd::AutoCorrPeakVectors(void)
+{
+  float vectors[4], spacing = mItemFlt[2];
+  int bufInd, flags = FIND_PIX_NO_WAFFLE;
+  CString report;
+  if (ConvertBufferLetter(mStrItems[1], -1, true, bufInd, report))
+    ABORT_LINE(report);
+  if (!mItemEmpty[3] && mItemInt[3])
+    flags |= FIND_PIX_NO_TRIM;
+  if (!mItemEmpty[4] && mItemInt[4])
+    flags |= FIND_PIX_NO_DISPLAY;
+  if (mProcessImage->FindPixelSize(0., 0., 0., 0., bufInd, flags, spacing, vectors))
+    return 1;
+  mLogRpt.Format("Average spacing is %.1f pixels, vectors %.1f, %.1f and %.1f, %.1f",
+    spacing, vectors[0], vectors[1], vectors[2], vectors[3]);
+  SetReportedValues(spacing, vectors[0], vectors[1], vectors[2], vectors[3]);
   return 0;
 }
 

@@ -1086,6 +1086,7 @@ void CMacroProcessor::RunOrResume()
   mDEcamIndToRestore = -1;
   mLDSetAddedBeamRestore = -1;
   mK3CDSmodeToRestore = -1;
+  mSavedFrameNameFormat = -1;
   mRestoreConsetAfterShot = false;
   mSuspendNavRedraw = false;
   mDeferLogUpdates = false;
@@ -1470,6 +1471,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
         mWinApp->mLowDoseDlg.SetBeamShiftButton(mLDSetAddedBeamRestore > 0);
       if (mK3CDSmodeToRestore >= 0)
         mCamera->SetUseK3CorrDblSamp(mK3CDSmodeToRestore > 0);
+      if (mSavedFrameNameFormat >= 0) {
+        mCamera->SetFrameBaseName(mSavedFrameBaseName);
+        mCamera->SetFrameNameFormat(mSavedFrameNameFormat);
+      }
     }
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();

@@ -1950,9 +1950,17 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportFrameBaseName</TD>
-          <TD>Reports the base name if one is included in frame file names; sets
-              <I>reportedValue1</I> to 1 if it is included and 0 if not, and sets
-              <I>reportedValue2</I> to the base name if it is included or 'none' if it is not.</TD>
+          <TD>Reports the base name if one is defined and whether it is used in frame or folder names; sets
+              <I>reportedValue1</I> to 1 if it is included in frame names and 0 if not, sets
+              <I>reportedValue2</I> to the base name if it is defined or 'none' if it is not, and sets <I>reportedValue3</I> to 1 if it is included in folder names and 0 if not.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetFrameBaseName #K #F #D name</TD>
+          <TD>Sets the base name with <B>name</B>and sets whether to use it in frame or directory names.&nbsp; Set 
+            <b>#K</b> to 1 to keep these settings after the script ends; otherwise they will be restored.&nbsp;
+              Set <b>#F</b> to 1 to use the name in frame file names, 0 not to, or -1 to leave the current 
+            settings unchanged.&nbsp; Set <b>#D</b> to 1 to use it in directory names, 0 not to, or -1 to leave
+             the setting as is.&nbsp; Command added in 4.0, 11/30/21.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="textfile"></A><B>Text File Commands</B></TD>
@@ -3439,6 +3447,18 @@
         <TR>
           <TD class="scriptcommand">FindPixelSize</TD>
           <TD>Runs the routine to find the pixel size in an image of a cross-line grating.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AutoCorrPeakVectors buf #S [#T] [#D]</TD>
+          <TD>Analyzes the autocorrelation of the image in buffer <B>buf</B> with the pixel size
+             routine and reports the average spacing between periodic features and the X and Y components
+            of the vectors along the first then second axis.&nbsp; These values are in pixels of the image,
+            not unbinned pixels.&nbsp; The entry <b>#T</b> should 
+            contain the expected spacing, which can be a rough value because it used only to determine
+            the amount of image binning and does not affect the search for peaks.&nbsp; The optional <b>#T</b>
+            can be set non-zero skip trimming of dark borders, and <b>#D</b> can be set non-zero to skip
+             displaying the autocorrelation.&nbsp; Command added in 4.0, 11/1/21.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">QuickFlyback set #E</TD>

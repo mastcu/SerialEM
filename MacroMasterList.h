@@ -620,6 +620,8 @@ MAC_SAME_NAME_ARG(ReportReadMode, 1, 4, REPORTREADMODE, S)
 MAC_SAME_NAME_ARG(ReportCameraSetArea, 1, 4, REPORTCAMERASETAREA, S)
 MAC_SAME_NAME_ARG(ReportCurrentPixelSize, 1, 4, REPORTCURRENTPIXELSIZE, S)
 MAC_SAME_NAME_ARG(SetSimpleOriginActive, 1, 4, SETSIMPLEORIGINACTIVE, I)
+MAC_SAME_NAME_ARG(SetFrameBaseName, 4, 4, SETFRAMEBASENAME, IIIS)
+MAC_SAME_NAME_ARG(AutoCorrPeakVectors, 2, 4, AUTOCORRPEAKVECTORS, SDii)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 //

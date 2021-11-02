@@ -1939,6 +1939,10 @@
 #define IDC_STAT_USE_SUBAREA            2965
 #define IDC_BUT_SAVE_CLOSE              2966
 #define IDC_STAT_PRESS_RUN              2967
+#define IDC_STAT_WHICH_CONSET           2968
+#define IDC_RMAP_WITH_REC               2969
+#define IDC_RMAP_WITH_VIEW              2970
+#define IDC_RMAP_WITH_SEARCH            2971
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2447,7 +2451,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        267
 #define _APS_NEXT_COMMAND_VALUE         33411
-#define _APS_NEXT_CONTROL_VALUE         2968
+#define _APS_NEXT_CONTROL_VALUE         2970
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
