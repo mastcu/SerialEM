@@ -589,6 +589,7 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].cycleSteps = 10;
     mNavAcqParams[i].earlyReturn = false;
     mNavAcqParams[i].numEarlyFrames = 0;
+    mNavAcqParams[i].mapWithViewSearch = 0;
     mNavAcqParams[i].noMBoxOnError = false;
     mNavAcqParams[i].closeValves = false;
     mNavAcqParams[i].hideUnusedActs = false;

@@ -452,6 +452,7 @@ struct NavAcqParams {
   BOOL relaxStage;          // Relax stage from backlashed position
   BOOL hybridRealign;       // Just move to target in realign if skipping first round
   BOOL hideUnselectedOpts;  // Hide options not checked
+  int mapWithViewSearch;    // Take single images with different areas
 };
 
 // Other Nav parameters

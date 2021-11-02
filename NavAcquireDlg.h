@@ -180,4 +180,6 @@ public:
   afx_msg void OnHideUnselectedOptions();
   CButton m_butOKGO;
   CStatic m_statSpacer;
+  int m_iMapWithViewSearch;
+  afx_msg void OnMapWithRecViewSearch();
 };

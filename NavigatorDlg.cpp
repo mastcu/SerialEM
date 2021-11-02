@@ -6446,7 +6446,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     item->mMapBinning;
   delY = (float)sqrt(delX * item->mMapWidth * delX * item->mMapHeight);
   if (item->mBacklashX == 0. && mHelper->GetAutoBacklashNewMap() > mSkipBacklashType && 
-    delY >= mHelper->GetAutoBacklashMinField()) {
+    delY >= mHelper->GetAutoBacklashMinField() && 
+    item->mMapMagInd >= mScope->GetLowestMModeMagInd()) {
       i = 1;
       if (mHelper->GetAutoBacklashNewMap() == 1) {
         if (SEMMessageBox("Do you want to run the routine to adjust the\nstage position"
@@ -9327,7 +9328,11 @@ void CNavigatorDlg::AcquireNextTask(int param)
         StopAcquiring();
         return;
       }
-      mCamera->InitiateCapture(RECORD_CONSET);
+      ind = RECORD_CONSET;
+      if (mWinApp->LowDoseMode() && mAcqParm->acquireType == ACQUIRE_TAKE_MAP &&
+        mAcqParm->mapWithViewSearch)
+        ind = mAcqParm->mapWithViewSearch > 1 ? SEARCH_CONSET : VIEW_CONSET;
+      mCamera->InitiateCapture(ind);
     }
     break;
 

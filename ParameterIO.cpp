@@ -2206,6 +2206,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
       navParams->relaxStage = itemInt[16] != 0;
       navParams->hybridRealign = itemInt[17] != 0;
       navParams->hideUnselectedOpts = itemInt[18] != 0;
+      if (!itemEmpty[19])
+        navParams->mapWithViewSearch = itemInt[19];
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
@@ -2258,8 +2260,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runPostmacro ? 1 : 0, navParams->postMacroIndNonTS,
     navParams->runPostmacroNonTS ? 1 : 0);
   mFile->WriteString(oneState);
-  oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d\n"
-    , navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+  oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
+    "%d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
@@ -2267,7 +2269,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->focusChangeLimit, navParams->DEdarkRefOperatingMode,
     navParams->highFlashIfOK, navParams->astigByBTID ? 1 : 0,
     navParams->adjustBTforIS ? 1 : 0, navParams->relaxStage ? 1 : 0,
-    navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0);
+    navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
+    navParams->mapWithViewSearch);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";

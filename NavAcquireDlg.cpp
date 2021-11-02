@@ -34,6 +34,7 @@ static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_JUSTAC
 IDC_NA_RUNMACRO, IDC_NA_ACQUIRE_TS, IDC_NA_DO_MULTISHOT, IDC_EDIT_SUBSET_END,
 IDC_EDIT_SUBSET_START,  IDC_EDIT_CYCLE_TO, IDC_EDIT_CYCLE_FROM, IDC_EDIT_EARLY_FRAMES,
 IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING, IDC_STAT_SPACER4,
+IDC_STAT_WHICH_CONSET, IDC_RMAP_WITH_REC, IDC_RMAP_WITH_VIEW, IDC_RMAP_WITH_SEARCH,
 IDC_STAT_SAVING_FATE, IDC_STAT_FILE_SAVING_INTO, IDC_NA_DO_SUBSET, IDC_STAT_TASK_OPTIONS,
 IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_OPTIONS,
 IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISITION,
@@ -123,6 +124,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bHybridRealign(FALSE)
   , m_bRelaxStage(FALSE)
   , m_bHideUnselectedOpts(FALSE)
+  , m_iMapWithViewSearch(0)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -209,6 +211,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_NA_HIDE_OPTIONS, m_bHideUnselectedOpts);
   DDX_Control(pDX, IDOK, m_butOKGO);
   DDX_Control(pDX, IDC_STAT_SPACER, m_statSpacer);
+  DDX_Radio(pDX, IDC_RMAP_WITH_REC, m_iMapWithViewSearch);
 }
 
 
@@ -260,6 +263,9 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_SAVE_PARAMS, OnSaveParams)
   ON_BN_CLICKED(IDC_NA_READ_PARAMS, OnReadParams)
   ON_BN_CLICKED(IDC_NA_HIDE_OPTIONS, OnHideUnselectedOptions)
+  ON_BN_CLICKED(IDC_RMAP_WITH_REC, OnMapWithRecViewSearch)
+  ON_BN_CLICKED(IDC_RMAP_WITH_VIEW, OnMapWithRecViewSearch)
+  ON_BN_CLICKED(IDC_RMAP_WITH_SEARCH, OnMapWithRecViewSearch)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -615,6 +621,7 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->hybridRealign = m_bHybridRealign;
   mParam->hideUnselectedOpts = m_bHideUnselectedOpts;
   mParam->acquireType = m_iAcquireType;
+  mParam->mapWithViewSearch = m_iMapWithViewSearch;
   UnloadTSdependentFromDlg(m_iAcquireType);
 }
 
@@ -639,6 +646,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bRelaxStage = mParam->relaxStage;
   m_bHybridRealign = mParam->hybridRealign;
   m_bHideUnselectedOpts = mParam->hideUnselectedOpts;
+  m_iMapWithViewSearch = mParam->mapWithViewSearch;
   // m_iAcquireType is handled by caller
   LoadTSdependentToDlg();
 }
@@ -792,6 +800,7 @@ void CNavAcquireDlg::ManageEnables(void)
     DOING_ACTION(NAACT_RUN_POSTMACRO) || DOING_ACTION(NAACT_RUN_PREMACRO) ||
     DOING_ACTION(NAACT_AUTOFOCUS) || 
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC);
+  bool consetOK = mWinApp->LowDoseMode() && m_iAcquireType == ACQUIRE_TAKE_MAP;
   m_butSetupMultishot.EnableWindow(m_iAcquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset);
   m_editSubsetEnd.EnableWindow(m_bDoSubset);
@@ -816,6 +825,10 @@ void CNavAcquireDlg::ManageEnables(void)
     DOING_ACTION(NAACT_ALIGN_TEMPLATE) &&
     mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
     mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1);
+  EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK);
+  EnableDlgItem(IDC_RMAP_WITH_REC, consetOK);
+  EnableDlgItem(IDC_RMAP_WITH_VIEW, consetOK);
+  EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK);
   ManageOutputFile();
 }
 
@@ -1453,4 +1466,9 @@ void CNavAcquireDlg::OnHideUnselectedOptions()
 {
   UpdateData(true);
   BuildActionSection();
+}
+
+void CNavAcquireDlg::OnMapWithRecViewSearch()
+{
+  UpdateData(true);
 }
