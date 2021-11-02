@@ -7439,6 +7439,9 @@ void CCameraController::StartAcquire()
   // the blanker thread
   if (mParam->noShutter == 2 && mTD.UnblankTime <= mTD.MinBlankTime)
     mScope->BlankBeam(false, "For NoShutter 2");
+  if (mParam->noShutter == 1 && mTD.UnblankTime && !mTD.ReblankTime && 
+    mWinApp->mCalibTiming->Calibrating())
+      mTD.MinBlankTime = 0;
   if (mBlankNextShot)
     mScope->BlankBeam(true, "For BlankNextShot");
 
@@ -10219,6 +10222,8 @@ void CCameraController::ErrorCleanup(int error)
   if (error || (mRepFlag < 0 && !mTD.DoingTiltSums) || mHalting || mPending >= 0 ||
     (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))
     mScope->SetCameraAcquiring(false);
+  if (mParam->noShutter && !mTD.ReblankTime && mWinApp->mCalibTiming->Calibrating())
+    mScope->BlankBeam(true, "ErrorCleanup for NoShutter 2 timing");
   if (mParam->FEItype && mTD.eagleIndex < 0)
     mParam->eagleIndex = mTD.eagleIndex;
   if (mRestoreFalconConfig) {
