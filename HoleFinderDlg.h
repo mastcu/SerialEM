@@ -99,6 +99,8 @@ private:
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;
+  bool mFindingFromDialog;
+  bool mSkipAutoCor;
   CFont *mBoldFont;
 
 

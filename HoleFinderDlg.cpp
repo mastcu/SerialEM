@@ -64,6 +64,8 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   mBestThreshInd = -1;
   mLastHoleSize = 0.;
   mLastHoleSpacing = 0.;
+  mFindingFromDialog = false;
+  mSkipAutoCor = false;
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -695,7 +697,9 @@ static char *formatSigma(float sigma)
 // The main attraction: find the holes
 void CHoleFinderDlg::OnButFindHoles()
 {
+  mFindingFromDialog = true;
   DoFindHoles(mWinApp->mMainView->GetActiveImBuf());
+  mFindingFromDialog = false;
 }
 
 int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
@@ -711,6 +715,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav;
   int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
   float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY;
+  float autocorSpacing, vectors[4], autocorCrit = 0.14f;
   double tstageX, tstageY;
   ScaleMat rMat, rInv, aMat;
   MontParam *montP = &mMontParam;
@@ -718,7 +723,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   float tooSmallCrit = 0.8f;
   float minFracPtsOnImage = 0.74f;
   BOOL convertSave, loadUnbinSave;
-  CString noMontReason, boundLabel;
+  CString noMontReason, boundLabel, mess;
 
   if (CheckAndSetNav("finding holes"))
     return 1;
@@ -786,6 +791,32 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     SEMMessageBox("The hole spacing is a center-to-center distance and must be at "
       "least 0.5 micron bigger than the hole size");
     return 1;
+  }
+
+  autocorSpacing = mParams.spacing;
+  if (mFindingFromDialog && !mSkipAutoCor && image->getWidth() / mParams.spacing >= 4. &&
+    image->getHeight() / mParams.spacing >= 4.) {
+    if (!mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0., mBufInd,
+      FIND_PIX_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET, autocorSpacing,
+      vectors)) {
+      autocorSpacing *= mPixelSize;
+      delX = fabs(mParams.spacing - autocorSpacing) / mParams.spacing;
+      if (delX > autocorCrit) {
+        mess.Format("Autocorrelation peak analysis indicates that the spacing\n"
+          "between hole centers is %.2f microns, %.0f%% from the entered value\n\n"
+          "You may need to measure hole spacing and size directly in this\n"
+          "image (use Shift - Left mouse button to draw lines)"
+          "\n\nPress:\n\"Stop & Check\" to check the size and spacing,"
+          "\n\n\"Go On\" to proceed with your entered values,"
+          "\n\n\"Skip Analysis\" to proceed and skip this peak analysis in the future",
+          autocorSpacing, 100. * delX);
+        ind = SEMThreeChoiceBox(mess, "Stop & Check", "Go On", "Skip Analysis",
+          MB_YESNOCANCEL);
+        if (ind == IDYES)
+          return 1;
+        mSkipAutoCor = ind == IDCANCEL;
+      }
+    }
   }
 
   // Get some sizes, get a nav item regardless of montage so it can be used as drawn on

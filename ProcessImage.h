@@ -8,6 +8,10 @@
 //
 
 #define MAX_FFT_CIRCLES 8
+#define FIND_PIX_NO_TRIM    0x1
+#define FIND_PIX_NO_DISPLAY 0x2
+#define FIND_PIX_NO_WAFFLE  0x4
+#define FIND_PIX_NO_TARGET  0x8
 
 struct CtffindParams;
 class CCtffindParamDlg;
@@ -60,6 +64,7 @@ public:
   GetSetMember(float, GridLinesPerMM)
   SetMember(float, ShortCatalaseNM);
   SetMember(float, LongCatalaseNM);
+  GetSetMember(BOOL, CatalaseForPixel);
   float *GetFFTCircleRadii() {return &mFFTCircleRadii[0];};
   GetSetMember(CString, OverlayChannels);
   GetSetMember(int, PixelTimeStamp);
@@ -199,7 +204,8 @@ public:
                                         float &corMin, float &corMax);
   void FindPeakSeries(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks,
     float & delX, float & delY, int & indFar, int & numSeries, int &indNear, float &variation);
-  void FindPixelSize(float markedX, float markedY, float minScale, float maxScale);
+  int FindPixelSize(float markedX, float markedY, float minScale, float maxScale, int bufInd, 
+    int findFlags, float &spacing, float vectors[4]);
   afx_msg void OnProcessPixelsizefrommarker();
   afx_msg void OnUpdateProcessPixelsizefrommarker(CCmdUI *pCmdUI);
   int ClosestRightSidePeak(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks, float delX, float delY);

@@ -17,7 +17,9 @@ extern "C" {
 
 #ifdef F77FUNCAP
 #define icalc_angles ICALC_ANGLES
+#define metro METRO
 #else
+#define metro metro_
 #ifdef G77__HACK
 #define icalc_angles icalc_angles__
 #else
@@ -150,6 +152,8 @@ extern "C" {
                        int ny, int nxtap, int nytap);
   double sliceEdgeMean(float *array, int nxdim, int ixlo, int ixhi, int iylo,
                        int iyhi);
+  double sliceEdgeMedian(float *array, int nxdim, int ixlo, int ixhi, int iylo,
+                         int iyhi, int meanOfSides);
   void sliceSplitFill(float *array, int nxbox, int nybox, float *brray,
                       int nxdim, int nx, int ny, int iffill, float fillin);
   void sliceSmoothOutPad(void *array, int type, int nxbox, int nybox, 
@@ -278,6 +282,12 @@ extern "C" {
   int gaussj(float *a, int n, int np, float *b, int m, int mp);
   int gaussjDet(float *a, int n, int np, float *b, int m, int mp, float *determ);
 
+  /* metro.c */
+  typedef void (*MetroFunct)(int *, float *, float *, float *);
+  void metroSearch(int n, float *X, MetroFunct funct, float *f, float *G, 
+                   float stepInitial, float epsilon, int limitIn, int *ier, float *H,
+                   int *numIter, float rmsScale);
+
   /* find_piece_shifts.c */
   int findPieceShifts
   (int *ivarpc, int nvar, int *indvar, int *ixpclist, int *iypclist, 
@@ -287,7 +297,15 @@ extern "C" {
    float robustCrit, float critMaxMove, float critMoveDiff, int maxIter,
    int numAvgForTest, int intervalForTest, int *numIter, float *wErrMean, 
    float *wErrMax);
-
+  int findpieceshifts
+  (int *ivarpc, int *nvar, int *indvar, int *ixpclist, int *iypclist, 
+   float *dxedge, float *dyedge, int *idir, int *pieceLower, int *pieceUpper, 
+   int *ifskipEdge, int *edgeStep, float *dxyvar, int *varStep, int *edgeLower,
+   int *edgeUpper, int *pcStep, int *work, int *fort, int *leaveInd, 
+   int *skipCrit, float *robustCrit, float *critMaxMove, float *critMoveDiff,
+   int *maxIter, int *numAvgForTest, int *intervalForTest, int *numIter,
+   float *wErrMean, float *wErrMax);
+  
   /* zoomdown.c */
   int selectZoomFilter(int type, double zoom, int *outWidth);
   int selectZoomFilterXY(int type, double xzoom, double yzoom, int *outWidthX, 
@@ -311,6 +329,7 @@ extern "C" {
   void anglesToMatrix(float *angles, float *matrix, int rows);
   int matrixToAngles(float *matrix, double *x, double *y, double *z, int rows);
   void icalc_angles(float *angles, float *matrix);
+  void invertMatrix(float *m1, float *m2);
 
   /* piecefuncs.c */
   int checkPieceList(int *pclist, int stride, int npclist, int redfac, int nframe,
@@ -439,10 +458,10 @@ extern "C" {
   
   /* autocorrpeaks */
   int findAutoCorrPeaks(float *array, int nxPad, int nyPad, float *Xpeaks, float *Ypeaks,
-                        float *peak, int numPeaks, int maxScan, float catalFac,
-                        float markedX, float markedY, float *dist1Ptr, float *dist2Ptr, 
-                        float *angle, int num[2], int *nearInd, char *messBuf,
-                        int bufSize);
+                        float *peak, int numPeaks, int maxScan, float catalFac, 
+                        int noWaffle, float markedX, float markedY, float *dist1Ptr,
+                        float *dist2Ptr, float *angle, float vectors[4], int num[2],
+                        int *nearInd, char *messBuf, int bufSize);
 
   /* winversion.c */
   int isWindows2000();
@@ -457,6 +476,11 @@ extern "C" {
 #define RLFV_SEPARATE_LINES  1
   int readLinesForValues(FILE *fp, int *numToGetP, int valSize, char *line, int maxLine,
                          int flags, const char *types, ...);
+  void exitFromValueReadError(int err, const char *descrip);
+
+  /* gettiltangles.c */
+  void getTiltAngles(int *numViews, float *tilt, int limTilt);
+  void readTiltFile(int *numViews, char *filename, float *tilt, int limTilt);
 
   /* projectpixel.c */
   void maxCornerDistFromCen(float angle, float *dist);

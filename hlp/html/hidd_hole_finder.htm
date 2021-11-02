@@ -59,7 +59,14 @@
     </ol>
     <p>
       The hole-finding operation is done on the current active image in the main 
-      buffer display.&nbsp; After finding holes, the image data in the holes is 
+      buffer display.&nbsp; Before starting, the program analyzes the autocorrelation 
+      of the image to get an independent check on the entered value for periodicity 
+      and puts up a message box with 3 choices: to stop and measure the hole-to-hole 
+      spacing directly, to go with the entered values, or to go on and skip this 
+      analysis in the future.&nbsp; The autocorrelation analysis is not infallible so 
+      you may need to go on.</p>
+    <p>
+      After finding holes, the image data in the holes is 
       analyzed in 3 ways: the mean intensity is computed; pixels are smoothed by 
       averaging 3x3 blocks of pixels and the standard deviation (SD) of smoothed 
       values is computed; and the percentage of pixels that would be considered dark 

@@ -2027,7 +2027,8 @@ void CProcessImage::OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI)
 
 void CProcessImage::OnProcessFindpixelsize()
 {
-  FindPixelSize(0., 0., 0., 0.);
+  float vectors[4], dist = 0.;
+  FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
 }
 
 void CProcessImage::OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI)
@@ -2041,6 +2042,7 @@ void CProcessImage::OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI)
 void CProcessImage::OnProcessPixelsizefrommarker()
 {
   float minScale = 0, maxScale = 0; 
+  float vectors[4], dist = 0.;
   KImage *image = mImBufs->mImage;
   float markedX = mImBufs->mUserPtX - (float)image->getWidth() / 2.f - 0.5f;
   float markedY = mImBufs->mUserPtY - (float)image->getHeight() / 2.f - 0.5f;
@@ -2049,7 +2051,7 @@ void CProcessImage::OnProcessPixelsizefrommarker()
     maxScale = mImBufs->mImageScale->GetMaxScale();
   }
   mWinApp->mBufferManager->CopyImageBuffer(1, 0);
-  FindPixelSize(markedX, markedY, minScale, maxScale);
+  FindPixelSize(markedX, markedY, minScale, maxScale, 0, 0, dist, vectors);
 }
 
 void CProcessImage::OnUpdateProcessPixelsizefrommarker(CCmdUI *pCmdUI)
@@ -2091,8 +2093,9 @@ void CProcessImage::OnMeshForGridBars()
 #define MAX_MESS_BUF 200
 
 // Find a pixel size either de novo or from point marked in autocorrelation
-void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale, 
-                                  float maxScale)
+// Pass in spacing non-zero to override catalase, grid mesh, and grid lines/mm
+int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale, 
+  float maxScale, int bufInd, int findFlags, float &spacing, float *vectors)
 {
   void *data;
   float *array;
@@ -2112,7 +2115,7 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   float perpMedCrit = 0.2f;
   int targetMinBlocks[MAX_AUTO_TARGET] = {170, 125, 12, 8, 5, 3, 0};
   int autoTargetSizes[MAX_AUTO_TARGET] = {2048, 1536, 1024, 768, 512, 384, 256};
-  double gridNM = 1000000 / mGridLinesPerMM;
+  double gridNM = B3DCHOICE(spacing != 0, 1000. / spacing, 1000000. / mGridLinesPerMM);
   float delta, corMin, corMax, tryX;
   int trimX, trimY, nxPad, nyPad, ix1, iy1, nxTaper, nyTaper, ind1, ind2, numDiv;
   double dist, pixel;
@@ -2120,7 +2123,11 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   double pixel1, pixel2;
   CString report, str;
   int num[2];
-  KImage *image = mImBufs->mImage;
+  KImage *image = mImBufs[bufInd].mImage;
+  if (!image) {
+    SEMMessageBox("There is no image in buffer passed to FindPixelSize routine");
+    return 1;
+  }
   int nx = image->getWidth();
   int ny = image->getHeight();
   int camera = mImBufs->mCamera;
@@ -2129,17 +2136,22 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   int imType = image->getType();
   int needBin = 1;
   int targetSize = mPixelTargetSize;
-  float catalFac = mCatalaseForPixel ? 2.f * mLongCatalaseNM / mShortCatalaseNM : 1.f;
+  float catalFac = (!spacing && mCatalaseForPixel) ? 
+    2.f * mLongCatalaseNM / mShortCatalaseNM : 1.f;
   CameraParameters *param = mWinApp->GetCamParams();
   MagTable *magTab = mWinApp->GetMagTable();
   int binningShown = mImBufs->mBinning / mImBufs->mDivideBinToShow;
   image->Lock();
   data = image->getData();
-  bool doCatalase = mCatalaseForPixel && mGridMeshSize <= 0;
+  bool doCatalase = (!spacing && mCatalaseForPixel) && mGridMeshSize <= 0;
+  float effectiveBin = mImBufs[bufInd].mEffectiveBin;
+  int bufBin = mImBufs[bufInd].mBinning;
+  bool isMontOverview = mImBufs[bufInd].IsMontageOverview() && effectiveBin > 0.;
   int magInd = mImBufs->mMagInd;
   char messBuf[MAX_MESS_BUF];
+  bool printTarget = !(findFlags & FIND_PIX_NO_TARGET);
 
-  if (mGridMeshSize > 0)
+  if (!spacing && mGridMeshSize > 0)
     gridNM = 2.54e7 / mGridMeshSize;
 
   // Handle automatic target selection
@@ -2147,24 +2159,28 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
     pixel = mShiftManager->GetPixelSize(mImBufs);
     if (mGridMeshSize > 0) {
       targetSize = 512;
-      PrintfToLog("Setting target binned size to 512;\r\n   there is no automatic target"
-        " size selection when using grid bars");
+      if (printTarget)
+        PrintfToLog("Setting target binned size to 512;\r\n   there is no automatic "
+          "target size selection when using grid bars");
     } else if (doCatalase) {
       targetSize = 1024;
-      PrintfToLog("Setting target binned size to 1024;\r\n  there is no automatic target"
-        " size selection when using catalase");
+      if (printTarget)
+        PrintfToLog("Setting target binned size to 1024;\r\n  there is no automatic "
+          "target size selection when using catalase");
     } else if (pixel <= 0.) {
       targetSize = 512;
-      PrintfToLog("Setting target binned size to 512;\r\n   the read-in image lacks "
-        "information needed for automatic target size selection");
+      if (printTarget)
+        PrintfToLog("Setting target binned size to 512;\r\n   the read-in image lacks "
+          "information needed for automatic target size selection");
     } else {
       numDiv = (int)(pixel * B3DMIN(nx, ny) / (0.001 * gridNM));
       for (ind1 = 0; ind1 < MAX_AUTO_TARGET; ind1++)
         if (numDiv >= targetMinBlocks[ind1])
           break;
       targetSize = autoTargetSizes[ind1];
-      PrintfToLog("Setting target binned size to %d because image is expected to have %d"
-        " repeats", targetSize, numDiv);
+      if (printTarget)
+        PrintfToLog("Setting target binned size to %d because image is expected to have "
+          "%d repeats", targetSize, numDiv);
     }
   }
 
@@ -2175,8 +2191,8 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
     NewArray(temp, short int, (nx / needBin) * (ny / needBin) * 
       (imType == kFLOAT ? 2 : 1));
     if (!temp) {
-      AfxMessageBox("Failed to get memory for binned image", MB_EXCLAME);
-      return;
+      SEMMessageBox("Failed to get memory for binned image", MB_EXCLAME);
+      return 1;
     }
     XCorrBinByN(data, imType, nx, ny, needBin, temp);
     nx /= needBin;
@@ -2191,8 +2207,10 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   testSize = (int)(testFrac * size);
   delTrim = testSize / 2;
   minTrim = (int)(trimFrac * size);
-  ProcTrimCircle(data, imType, nx, ny, cenFrac, testSize, delTrim, minTrim, 
-    minTrim, passRatio, true, trimX, trimY, ix1, iy1);
+  trimX = trimY = minTrim;
+  if (!(findFlags & FIND_PIX_NO_TRIM))
+    ProcTrimCircle(data, imType, nx, ny, cenFrac, testSize, delTrim, minTrim,
+      minTrim, passRatio, true, trimX, trimY, ix1, iy1);
   ix1 = nx - trimX - 1;
   iy1 = ny - trimY - 1;
 
@@ -2201,8 +2219,8 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   nyPad = XCorrNiceFrame(2 * (iy1 + 1 - trimY), 2, 19);
   NewArray(array, float, (nxPad + 2) * nyPad);
   if (!array) {
-    AfxMessageBox("Failed to get memory for autocorrelation array", MB_EXCLAME);
-    return;
+    SEMMessageBox("Failed to get memory for autocorrelation array", MB_EXCLAME);
+    return 1;
   }
 
   // Get tapering and pad the data
@@ -2219,11 +2237,12 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   XCorrCrossCorr(array, array, nxPad, nyPad, delta, CTF);
 
   ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], numPeaks,
-    doCatalase ? 16 : 64, catalFac, markedX, markedY, &dist1, &dist2, &angle, num, &ind1,
-    &messBuf[0], MAX_MESS_BUF);
+    doCatalase ? 16 : 64, catalFac, findFlags & FIND_PIX_NO_WAFFLE, markedX, markedY, 
+    &dist1, &dist2, &angle, vectors, num, &ind1, &messBuf[0], MAX_MESS_BUF);
 
   // Now take care of display regardless, display point
-  if (!CorrelationToBufferA(array, nxPad, nyPad, 1, corMin, corMax)) {
+  if (!(findFlags & FIND_PIX_NO_DISPLAY) &&
+    !CorrelationToBufferA(array, nxPad, nyPad, 1, corMin, corMax)) {
     if (ind2 >= 0) {
       delta = 32000.f * (peak[1] - corMin) / (corMax - corMin);
       delta = delta + B3DMIN(0.1f * (32000.f - delta), 0.2f * delta);
@@ -2237,13 +2256,15 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
       mImBufs->mUserPtX = nxPad / 2 + Xpeaks[ind1] + 0.5f;
       mImBufs->mUserPtY = nyPad / 2 + Ypeaks[ind1] + 0.5f;
       mImBufs->mHasUserPt = true;
+      mImBufs->mHasUserLine = false;
+      mImBufs->mDrawUserBox = false;
 
       // For some reason, the display gives boxes the same size if I don't adjust binning
-      if (mImBufs[1].IsMontageOverview() && mImBufs[1].mEffectiveBin > 0.) {
+      if (isMontOverview) {
         mImBufs->mCaptured = BUFFER_AUTOCOR_OVERVIEW;
-        mImBufs->mEffectiveBin *= needBin;
+        mImBufs->mEffectiveBin =(float)(effectiveBin * needBin);
       }
-      mImBufs->mBinning *= needBin;
+      mImBufs->mBinning = bufBin * needBin;
     }
     mWinApp->SetCurrentBuffer(0);
   }
@@ -2251,11 +2272,16 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   if (ind2) {
     SEMMessageBox(messBuf);
-    return;
+    return 1;
   }
 
   dist1 *= needBin;
   dist2 *= needBin;
+  for (ind1 = 0; ind1 < 4; ind1++)
+    vectors[ind1] *= needBin;
+  spacing = (dist1 + dist2) / 2.f;
+  if (findFlags & FIND_PIX_NO_WAFFLE)
+    return 0;
 
   if (doCatalase) {
     pixel1 = mShortCatalaseNM / dist1;
@@ -2343,6 +2369,7 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
       mWinApp->mDocWnd->SetShortTermNotSaved();
     }
   }
+  return 0;
 }
 
 // Output the relative rotations between mags with pixel size measurements
