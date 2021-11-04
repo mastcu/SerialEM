@@ -553,6 +553,7 @@ int HoleFinder::templateAndAnalyze
   FloatVec *ycenPtr[2] = {&yCenFCedge, &yCenFCraw};
   FloatVec *peakPtr[2] = {&peakFCedge, &peakFCraw};
   bool enoughLeft;
+  float firstAngBelow, firstAngAbove, firstLenBelow, firstLenAbove;
 
   mWallStart = wallTime();
   usedRaw = false;
@@ -586,7 +587,12 @@ int HoleFinder::templateAndAnalyze
   err = analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenFCraw, yCenFCraw,
                          peakFCraw, maxSpacing, mMaxError, 0, trueSpacing, xMissing,
                          yMissing);
+  firstAngBelow = mPeakAngBelow;
+  firstAngAbove = mPeakAngAbove;
+  firstLenBelow = mAvgLenBelow;
+  firstLenAbove = mAvgLenAbove;
   mWallConj += wallTime() - mWallStart;
+
   //dumpPoints("edgeana.txt", xCenters, yCenters, peakVals);
 
   // Now make a template from the raw image if there are enough for that, or just use
@@ -632,7 +638,8 @@ int HoleFinder::templateAndAnalyze
       yCenFCraw = yCenRawCorr;
       peakFCraw = peakRawCorr;
       //dumpPoints("raworig.txt", xCenRawCorr, yCenRawCorr, peakRawCorr);
-      err = analyzeNeighbors(xCenRawCorr, yCenRawCorr, peakRawCorr, altInds, xCenFCraw, 
+      if (xCenRawCorr.size() > 0)
+        err = analyzeNeighbors(xCenRawCorr, yCenRawCorr, peakRawCorr, altInds, xCenFCraw,
                              yCenFCraw, peakFCraw, maxSpacing,
                              mMaxError, 0, trueSpaceRaw, xMissRawCorr, yMissRawCorr);
       if (err)
@@ -663,8 +670,13 @@ int HoleFinder::templateAndAnalyze
         peakVals = peakRawCorr;
         xMissing = xMissRawCorr;
         yMissing = yMissRawCorr;
-        trueSpaceRaw = trueSpaceRaw;
+        trueSpacing = trueSpaceRaw;
         usedRaw = true;
+      } else {
+        mPeakAngBelow = firstAngBelow;
+        mPeakAngAbove = firstAngAbove;
+        mAvgLenBelow = firstLenBelow;
+        mAvgLenAbove = firstLenAbove;
       }
     } else {
 
@@ -675,8 +687,6 @@ int HoleFinder::templateAndAnalyze
                                      *peakPtr[1 - domInd], maxSpacing, mMaxError, 0, 
                                      trueSpacing, xMissing, yMissing));
       //dumpPoints("mergeana.txt", *xcenPtr[domInd], *ycenPtr[domInd], *peakPtr[domInd]);
-      if (err)
-        return err;
       //printf("Analyzed merged, got %d\n", xcenPtr[domInd]->size());
       xCenters = *xcenPtr[domInd];
       yCenters = *ycenPtr[domInd];
