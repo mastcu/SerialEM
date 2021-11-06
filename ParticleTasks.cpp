@@ -1328,7 +1328,7 @@ void CParticleTasks::StopZbyG()
     mScope->SetIntensity(mZBGInitialIntensity);
   if (mZBGLowDoseAreaSaved >= 0)
     ldp[mZBGLowDoseAreaSaved] = mZBGSavedLDparam;
-  mFocusManager->SetBeamTilt(mZBGSavedBeamTilt);
+  mFocusManager->SetBeamTilt(mZBGSavedBeamTilt, "from StopZbyG");
   mFocusManager->SetDefocusOffset(mZBGSavedOffset);
   if (mZBGUsingView)
     mScope->SetLDViewDefocus(mZBGSavedViewDefocus);
@@ -1490,7 +1490,7 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
 
   // Save and set up needed beam tilt and defocus offset
   mZBGSavedBeamTilt = mFocusManager->GetBeamTilt();
-  mFocusManager->SetBeamTilt(param.beamTilt);
+  mFocusManager->SetBeamTilt(param.beamTilt, "from PrepareAutofocusForZbyG");
   mZBGSavedOffset = mFocusManager->GetDefocusOffset();
 
   // For View area, make the offset value be the view defocus 

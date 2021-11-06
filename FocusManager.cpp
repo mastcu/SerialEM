@@ -209,6 +209,16 @@ CFocusManager::~CFocusManager()
 
 }
 
+void CFocusManager::SetBeamTilt(float inVal, const char * from)
+{
+  if (fabs(inVal) < 0.02)
+    PrintfToLog("WARNING: Autofocus beam tilt being set to %.2f in call %s\r\n"
+      "   leaving value at %.2f.  Please report this.", inVal, 
+      from ? from : "from unidentified source", mBeamTilt);
+  else
+    mBeamTilt = inVal;
+}
+
 
 void CFocusManager::Initialize()
 {
@@ -447,7 +457,7 @@ void CFocusManager::OnFocusSetbeamtilt()
     return;
   if (oldVal < 0.)
     oldVal *= -1.;
-  SetBeamTilt(oldVal);
+  SetBeamTilt(oldVal, "from menu");
 }
 
 void CFocusManager::OnFocusResetdefocus() 
@@ -841,7 +851,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
     // Restore beam tilt if leaving sparse region, or scale it down if entering one
     if (mFCindex == mNumSparseBelow)
-      mBeamTilt = mCalSavedBeamTilt;
+      SetBeamTilt(mCalSavedBeamTilt, "from CalFocusData");
     else if (mFCindex == mNumSparseBelow + mNumCalLevels)
       mBeamTilt *= mSparseBTFactor;
     DetectFocus(FOCUS_CALIBRATE);
@@ -851,7 +861,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
   mFCindex = -1;
   mScope->IncDefocus(-mCalDefocus);
   mCalDefocus = 0.;
-  mBeamTilt = mCalSavedBeamTilt;
+  SetBeamTilt(mCalSavedBeamTilt, "from CalFocusData");
 
   iCen = belowInd + mNumCalLevels / 2;
   numBad = 0;
@@ -1091,6 +1101,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
         mScope->SetFocus(focus);
         mess.Format("Setting to standard focus (%f) since this is low mag (%dx)",
           focus, MagForCamera(mWinApp->GetCurrentCamera(), mFocusMag));
+        mLastFailed = false;
         mWinApp->AppendToLog(mess, LOG_SWALLOW_IF_CLOSED);
       } else
         mWinApp->AppendToLog("There is no autofocus calibration in low mag, and no "
@@ -1799,7 +1810,7 @@ void CFocusManager::StopFocusing()
   }
   if (mFCindex >= 0) {
     mScope->IncDefocus(-mCalDefocus);
-    mBeamTilt = mCalSavedBeamTilt;
+    SetBeamTilt(mCalSavedBeamTilt, "from StopFocusing");
   }
   mFCindex = -1;
   mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);

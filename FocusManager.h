@@ -59,8 +59,9 @@ public:
   CFocusManager();
   ~CFocusManager();
   BOOL GetTripleMode() {return mTripleMode;};
-  SetMember(BOOL, TripleMode)
-  GetSetMember(float, BeamTilt)
+  SetMember(BOOL, TripleMode);
+  GetMember(float, BeamTilt);
+  void SetBeamTilt(float inVal, const char *from = NULL);
   void SetNextTiltOffset(double inX, double inY) {mNextXtiltOffset = inX, mNextYtiltOffset = inY;};
   GetMember(float, TargetDefocus)
   GetSetMember(float, DefocusOffset)

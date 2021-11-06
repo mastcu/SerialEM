@@ -193,7 +193,7 @@ void CAutoTuning::AstigCalNextTask(int param)
       mWinApp->ErrorOccurred(1);
       return;
     }
-    mFocusManager->SetBeamTilt(mAstigBeamTilt);
+    mFocusManager->SetBeamTilt(mAstigBeamTilt, "from AstigCalNextTask");
     mOperationInd = 0;
     mWinApp->SetStatusText(MEDIUM_PANE, "VARYING DEFOCUS");
   } else if (!mDirectionInd) {
@@ -287,7 +287,7 @@ void CAutoTuning::FixAstigNextTask(int param)
         mWinApp->ErrorOccurred(1);
         return;
       }
-      mFocusManager->SetBeamTilt(mAstigBeamTilt);
+      mFocusManager->SetBeamTilt(mAstigBeamTilt, "from FixAstigNextTask");
       mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING ASTIGMATISM");
     }
     mOperationInd++;
@@ -636,7 +636,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
       StopComaFree();
       return;
     }
-    mFocusManager->SetBeamTilt(mMaxComaBeamTilt / 4.f);
+    mFocusManager->SetBeamTilt(mMaxComaBeamTilt / 4.f, "from ComaFreeNextTask");
     mFocusManager->SetTiltDirection(0);
     if (!mCalibrateComa) {
       mess = "MEASURING COMA";
@@ -803,7 +803,7 @@ void CAutoTuning::GeneralSetup(void)
 void CAutoTuning::CommonStop(void)
 {
   mScope->SetDefocus(mSavedDefocus);
-  mFocusManager->SetBeamTilt(mSavedBeamTilt);
+  mFocusManager->SetBeamTilt(mSavedBeamTilt, "from autotuning CommonStop");
   mFocusManager->SetTiltDirection(mSavedTiltDir);
   mFocusManager->SetPostTiltDelay(mSavedPostTiltDelay);
   mWinApp->UpdateBufferWindows();

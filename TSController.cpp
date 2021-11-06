@@ -7047,7 +7047,7 @@ void CTSController::SyncOtherModulesToParam(void)
 // Take parameters in param and place back in other interfaces
 void CTSController::SyncParamToOtherModules(void)
 {
-  mFocusManager->SetBeamTilt(mTSParam.beamTilt);
+  mFocusManager->SetBeamTilt(mTSParam.beamTilt, "from TSController param sync");
   if (mWinApp->mNavigator && mWinApp->mNavigator->GetFocusCycleCounter() < 0)
     mFocusManager->SetTargetDefocus((float)mTSParam.targetDefocus);
   mFocusManager->SetDefocusOffset(mTSParam.autofocusOffset);
