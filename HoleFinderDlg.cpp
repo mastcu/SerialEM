@@ -810,7 +810,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
           "\n\n\"Go On\" to proceed with your entered values,"
           "\n\n\"Skip Analysis\" to proceed and skip this peak analysis in the future",
           autocorSpacing, 100. * delX);
-        ind = SEMThreeChoiceBox(mess, "Stop & Check", "Go On", "Skip Analysis",
+        ind = SEMThreeChoiceBox(mess, "Stop && Check", "Go On", "Skip Analysis",
           MB_YESNOCANCEL);
         if (ind == IDYES)
           return 1;

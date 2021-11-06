@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/6/21: Added a possible delay after image shift to FrameSeriesFromVar.
+
+11/6/21: Made ReportLastFrameFile report directory and filename separately.
+
+11/6/21: Made the mouse wheen scroll Navigator table if it is the last item
+clicked on, without giving the dialog focus.
+
 11/3/21: Fixed problem with holefinder assigning points to grid after
 correlation with raw average gives no usable points.
 
