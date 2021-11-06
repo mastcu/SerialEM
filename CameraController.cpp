@@ -2696,7 +2696,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
 // shot with frame-saving
 int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, 
   FloatVec &waitOrInterval, FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY,
-  float initialDelay)
+  float initialDelay, float postISdelay)
 {
   CString mess;
   float focusLim = 10., ISlim = 10., tiltLim = 91., openLim = 20., waitLim = 20.;
@@ -2794,6 +2794,7 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   mTD.FrameTSfocusChange = focusChange;
   mTD.FrameTSdeltaISX = deltaISX;
   mTD.FrameTSdeltaISY = deltaISY;
+  mTD.FrameTSpostISdelay = postISdelay;
   return 0;
 }
 
@@ -8380,8 +8381,12 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           }
 
           // Do image shift and focus
-          if (doISinTS && applyBefore)
+          if (doISinTS && applyBefore) {
             td->scopePlugFuncs->SetImageShift(baseISX + delISX, baseISY + delISY);
+            if (!stepTilts && td->FrameTSpostISdelay > 0 && shutterTS &&
+              td->FrameTSopenTime[step] > 0)
+              ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSpostISdelay)));
+          }
           if (doFocusInTS && applyBefore)
             ChangeDynFocus(td, focusBase, focusChange, fineBase, coarseBase, last_coarse);
 

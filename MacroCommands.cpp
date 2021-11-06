@@ -1893,6 +1893,7 @@ int CMacCmd::QueueFrameTiltSeries(void)
   CString report;
   ScaleMat aMat;
   double delISX, delX, delY;
+  float postISdelay = 0.;
   int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
   Variable *var;
   CString *valPtr;
@@ -1927,6 +1928,7 @@ int CMacCmd::QueueFrameTiltSeries(void)
 
     // Or pull the values out of the big variable array: figure out how many per step
     delISX = mItemEmpty[3] ? 0. : mItemDbl[3];
+    postISdelay = mItemEmpty[4] ? 0.f : mItemFlt[4];
     var = LookupVariable(mItem1upper, index2);
     if (!var)
       ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
@@ -2013,7 +2015,7 @@ int CMacCmd::QueueFrameTiltSeries(void)
 
   // Queue it: This does all the error checking
   if (mCamera->QueueTiltSeries(openTime, tiltToAngle, waitOrInterval, focusChange,
-    deltaISX, deltaISY, (float)delISX)) {
+    deltaISX, deltaISY, (float)delISX, postISdelay)) {
       AbortMacro();
       return 1;
   }
@@ -3238,6 +3240,11 @@ int CMacCmd::ReportCurrentFilename(void)
     UtilSplitPath(root, report, ext);
     SetOneReportedValue(report, 3);
     SetOneReportedValue(ext, 4);
+  }
+  if (!truth) {
+    UtilSplitPath(root, report, ext);
+    SetOneReportedValue(&mStrItems[1], report, 2);
+    SetOneReportedValue(&mStrItems[1], ext, 3);
   }
   return 0;
 }

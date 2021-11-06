@@ -1191,7 +1191,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FrameSeriesFromVar var #F [#D]</TD>
+          <TD class="scriptcommand">FrameSeriesFromVar var #F [#D] [#P]</TD>
           <TD>Sets up a tilt series with all steps specified in the given array variable var,
             which should contain 1 to 6 values per step of the series, with the values for
             one step followed by those for the next step, etc.&nbsp; <b>#F</b> is the sum of 1 if
@@ -1206,7 +1206,9 @@
             possible value in the array, wait times or intervals, is a delay between the end of the tilt and the 
             opening of the shutter, if any.&nbsp; If there are no tilt angles because
             continuous tilt is being used, then this item sets the total interval between
-            steps of the series.&nbsp; <b>#D</b> is an optional initial delay before the first
+            steps of the series.&nbsp; In this continuous tilt case, and when there are shutter times, the
+            optional <b>#P</b> sets a post-image shift delay before opening the shutter.&nbsp; <b>#D</b> is
+             an optional initial delay before the first
             step.&nbsp; All times are in seconds.&nbsp; If there are discrete tilts, a frame
              stack mdoc file with tilt angle and dose information is written.</TD>
         </TR>
