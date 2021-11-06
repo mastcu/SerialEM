@@ -786,7 +786,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
       if (!mFFTWindow && !mStackWindow && scaleCrit > 0 &&
-        mImBufIndex < mWinApp->mBufferManager->GetShiftsOnAcquire()) {
+        mImBufIndex <= mWinApp->mBufferManager->GetShiftsOnAcquire()) {
         cdc.SelectObject(useLabelFont);
         cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), "Rolling");
       }
@@ -1903,6 +1903,7 @@ void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point)
   m_iPrevMY = point.y;
   mMouseDownTime = GetTickCount();  // Get start time and set flag
   mDrawingLine = false;   // that it may not be a or line draw
+  mWinApp->SetNavTableHadFocus(false);
   CView::OnLButtonDown(nFlags, point);
 }
 
@@ -2205,6 +2206,7 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
         }
       }
   }
+  mWinApp->SetNavTableHadFocus(false);
 
   CView::OnMButtonDown(nFlags, point);
 }
@@ -2232,7 +2234,8 @@ void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point)
       mMouseShifting = true;
     }
   }
-  
+  mWinApp->SetNavTableHadFocus(false);
+
   CView::OnRButtonDown(nFlags, point);
 }
 
@@ -2416,6 +2419,14 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
       step = -1;
     }
 
+    // Intercept if nav table was last clicked and scroll it instead
+    if (mWinApp->mNavigator && mWinApp->GetNavTableHadFocus()) {
+      int top = mWinApp->mNavigator->m_listViewer.GetTopIndex();
+      mWinApp->mNavigator->m_listViewer.SetTopIndex(top - numClicks);
+      mWheelDeltaPending = 0;
+      return true;
+    }
+    
     // Leave the difference pending and skip if at end of range
     mWheelDeltaPending -= numClicks * WHEEL_DELTA;
     if ((mZoom <= zoomvals[0] && step * deltaSign < 0) || 
@@ -2423,7 +2434,7 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
       mWheelDeltaPending = 0;
       return true;
     }
-
+ 
     // Determine next step and previous one and make a zoom change that will give full
     // step in given number of clicks
     stepZoom = b3dStepPixelZoom(mZoom, step * deltaSign);
