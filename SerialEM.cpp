@@ -730,6 +730,7 @@ CSerialEMApp::CSerialEMApp()
   mDoseLifetimeHours = 24;
   mBasicMode = false;
   mInUpdateWindows = false;
+  mNavTableHadFocus = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -1922,10 +1923,11 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
   return needStatic;
 }
 
-void CSerialEMApp::RestoreViewFocus()
+void CSerialEMApp::RestoreViewFocus(bool fromNavTable)
 {
   if (mActiveView)
     mActiveView->SetFocus();
+  mNavTableHadFocus = fromNavTable;
 }
 
 // Retain a pointer to the active view, and the first time, store

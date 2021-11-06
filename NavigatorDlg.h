@@ -254,8 +254,9 @@ protected:
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnSelendokCombocolor();
 	afx_msg void OnCheckAcquire();
-	afx_msg void OnDblclkListviewer();
-	afx_msg void OnGotoMarker();
+  afx_msg void OnDblclkListviewer();
+  afx_msg void OnSetFocusListviewer();
+  afx_msg void OnGotoMarker();
 	afx_msg void OnDrawNone();
   afx_msg void OnCheckrotate();
 	//}}AFX_MSG

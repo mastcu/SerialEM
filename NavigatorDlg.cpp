@@ -280,8 +280,9 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
 	ON_WM_MOVE()
 	ON_CBN_SELENDOK(IDC_COMBOCOLOR, OnSelendokCombocolor)
 	ON_BN_CLICKED(IDC_CHECK_ACQUIRE, OnCheckAcquire)
-	ON_LBN_DBLCLK(IDC_LISTVIEWER, OnDblclkListviewer)
-	ON_BN_CLICKED(IDC_GOTO_MARKER, OnGotoMarker)
+  ON_LBN_DBLCLK(IDC_LISTVIEWER, OnDblclkListviewer)
+  ON_LBN_SETFOCUS(IDC_LISTVIEWER, OnSetFocusListviewer)
+  ON_BN_CLICKED(IDC_GOTO_MARKER, OnGotoMarker)
 	ON_BN_CLICKED(IDC_DRAW_NONE, OnDrawNone)
 	ON_BN_CLICKED(IDC_DRAW_ALL_REG, OnDrawNone)
   ON_BN_CLICKED(IDC_CHECKROTATE, OnCheckrotate)
@@ -1461,7 +1462,7 @@ void CNavigatorDlg::OnSelchangeListviewer()
     IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
     ManageCurrentControls();
   }
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreViewFocus(true);
   AddFocusAreaPoint(true);
 }
 
@@ -1472,7 +1473,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   int moveInc, toInd, fromInd, i, num;
   int sel = m_listViewer.GetCurSel();
   CMapDrawItem *item = mItemArray.GetAt(oldIndex);
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreViewFocus(true);
   if (!m_bCollapseGroups) {
     mItemArray.RemoveAt(oldIndex);
     mItemArray.InsertAt(newIndex, item);
@@ -1534,10 +1535,16 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
 void CNavigatorDlg::OnDblclkListviewer() 
 {
   if (!SetCurrentItem() || (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
-    mAddingPoints || mAddingPoly || mMovingItem || !(mItem->IsMap() || 
+    mAddingPoints || mAddingPoly || mMovingItem || !(mItem->IsMap() ||
       FindMontMapDrawnOn(mItem)) || mCamera->CameraBusy())
     return;
   OnLoadMap();
+  mWinApp->SetNavTableHadFocus(true);
+}
+
+void CNavigatorDlg::OnSetFocusListviewer()
+{
+  mWinApp->SetNavTableHadFocus(true);
 }
 
 // Let arrow keys move the selection up and down
@@ -6778,7 +6785,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   MontParam *montP = &mntp;
   MontParam *masterMont = mWinApp->GetMontParam();
 
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreViewFocus(mWinApp->GetNavTableHadFocus());
   if (item)
     mItem = item;
   else if (!SetCurrentItem())

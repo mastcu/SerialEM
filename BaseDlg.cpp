@@ -207,7 +207,7 @@ void CBaseDlg::OnLButtonUp(UINT nFlags, CPoint point)
 {
   CDialog::OnLButtonUp(nFlags, point);
   if (mNonModal)
-    mWinApp->RestoreViewFocus();
+    mWinApp->RestoreViewFocus(mWinApp->GetNavTableHadFocus());
 }
 void CBaseDlg::OnMButtonUp(UINT nFlags, CPoint point) 
 {
