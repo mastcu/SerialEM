@@ -129,7 +129,8 @@ END_MESSAGE_MAP()
 void CGainRefMaker::AcquireGainRef() 
 {
   int fracField, tsizeX, tsizeY;
-  int i, arrSize, numOdd = 0, numUsableOdd = 0;
+  int i, numOdd = 0, numUsableOdd = 0;
+  size_t arrSize;
   FileOptions fileOpt;
   CFileStatus status;
 
@@ -248,7 +249,7 @@ void CGainRefMaker::AcquireGainRef()
 
   mModuloSaveX = mParam->moduloX;
   mModuloSaveY = mParam->moduloY;
-  arrSize = mParam->sizeX * mParam->sizeY / 
+  arrSize = (size_t)mParam->sizeX * mParam->sizeY / 
     (mParam->gainRefBinning * mParam->gainRefBinning);
   NewArray(mArray,float,arrSize);
   if (!mArray) {
@@ -693,7 +694,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   // Try to convert the data, and put data in storage places
   usdata = NULL;
   if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam))
-    NewArray(usdata,unsigned short,nx * ny);
+    NewArray2(usdata,unsigned short,nx, ny);
   if (ProcConvertGainRef(mArray, usdata, nx * ny, mCamera->GetScaledGainRefMax(),
     mCamera->GetMinGainRefBits(), &mGainRefBits[mCurrentCamera][mRefBinInd])) {
     if (usdata)
@@ -827,7 +828,8 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
   KStoreMRC *storeMRC;
   CFile *file;
   KImageFloat *image;
-  int i, nx, ny, moreBin, binnedSize, scaleBits, modulo;
+  int i, nx, ny, moreBin, scaleBits, modulo;
+  size_t binnedSize;
   int nxBinned, nyBinned;
   unsigned short int *usdata;
   short int *sdata;
@@ -987,7 +989,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     usdata = NULL;
     if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) && 
       !needFloat)
-      NewArray(usdata, unsigned short int, nx * ny);
+      NewArray2(usdata, unsigned short int, nx, ny);
     if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 
       &mGainRefBits[mCurrentCamera][needInd])) {
@@ -1033,8 +1035,8 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     GetBinningOffsets(mParam, needBin, binning, xOffset, yOffset);
 
   // get an array to bin into
-  binnedSize = nxBinned * nyBinned;
-  NewArray(sdata,short int,binnedSize *(byteSize / 2));
+  binnedSize = (size_t)nxBinned * nyBinned;
+  NewArray(sdata,short int,binnedSize * (byteSize / 2));
   if (!sdata) {
     AfxMessageBox("Failed to get memory for binned gain reference", MB_EXCLAME);
     return errval;
@@ -1055,7 +1057,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     usdata = NULL;
     if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam))
       NewArray(usdata,unsigned short int,binnedSize);
-    if (ProcConvertGainRef((float *)sdata, usdata, binnedSize, 
+    if (ProcConvertGainRef((float *)sdata, usdata, (int)binnedSize, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), &scaleBits)) {
 
       // Failure: delete int array and return floats

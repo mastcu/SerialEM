@@ -256,8 +256,8 @@ void CProcessImage::GetFFT(EMimageBuffer *imBuf, int binning, int capFlag)
   int nPadSize = XCorrNiceFrame(nFinalSize, 2, 19);
 
   // Get memory for the real FFT and for the scaled int image
-  NewArray(fftarray, float, nPadSize * (nPadSize + 2));
-  NewArray(brray, short int, nFinalSize * nFinalSize * bigBrray);
+  NewArray2(fftarray, float, nPadSize, (nPadSize + 2));
+  NewArray2(brray, short int, nFinalSize, nFinalSize * bigBrray);
   if (!fftarray || !brray) {
     SEMMessageBox("Failed to get memory for doing FFT", MB_EXCLAME);
     if (fftarray)
@@ -429,12 +429,12 @@ void CProcessImage::RotateImage(BOOL bLeft)
   int nxout, nyout;*/
   DWORD start = GetTickCount();
   if (type == kRGB) {
-    NewArray(ubray, unsigned char, 3 * nx * ny);
+    NewArray2(ubray, unsigned char, 3 * nx, ny);
     brray = (short int *)ubray;
   } else if (type != kFLOAT) {
-    NewArray(brray, short int, nx * ny);
+    NewArray2(brray, short int, nx, ny);
   } else {
-    NewArray(frray, float, nx * ny);
+    NewArray2(frray, float, nx, ny);
     brray = (short int *)frray;
   }
   if (!brray) {
@@ -476,7 +476,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   nxpad = XCorrNiceFrame((int)((1. + padFrac) * nx), 2, 19);
   nypad = XCorrNiceFrame((int)((1. + padFrac) * ny), 2, 19);
   nxdim = nxpad + 2;
-  NewArray(brray, float, nxdim * nypad);
+  NewArray2(brray, float, nxdim, nypad);
   if (!brray) {
     SEMMessageBox("Failed to get memory for filtering image");
     return 1;
@@ -519,7 +519,7 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
   // Get float array for result
   image1->Lock();
   image2->Lock();
-  NewArray(outArray, float, nx * ny);
+  NewArray2(outArray, float, nx, ny);
   if (outArray) {
 
     //Either assign this as the input array if 1 already float, or copy 1 into the array
@@ -534,7 +534,7 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
     if (type2 == kFLOAT) {
       inArray2 = (float *)image2->getData();
     } else {
-      NewArray(inArray2, float, nx * ny);
+      NewArray2(inArray2, float, nx, ny);
       if (inArray2)
         sliceTaperOutPad(image2->getData(), type2, nx, ny, inArray2, nx, nx, ny, 1, 0.);
       else
@@ -611,7 +611,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
     newType = type;
   }
   image->getSize(nx, ny);
-  NewArray(array, unsigned char, nx * ny * dataSize * numChan);
+  NewArray2(array, unsigned char, nx, ny * dataSize * numChan);
   if (!array) {
     SEMMessageBox("Failed to get memory for scaling image");
     return 1;
@@ -840,7 +840,7 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
 
   // Get array and line pointers
   if (!retval) {
-    NewArray(filtImage, char, newX * newY * dataSize * numChan);
+    NewArray2(filtImage, char, newX, newY * dataSize * numChan);
     linePtrs = makeLinePointers(data, nx, ny, dataSize * numChan);
     if (!filtImage || !linePtrs) {
       retval = 4;
@@ -885,7 +885,7 @@ int CProcessImage::CorrelationToBufferA(float *array, int nxpad, int nypad, int 
   corMin = 1.e30f;
   corMax = -1.e30f;
   float corVal;
-  NewArray(crray, short int, nxpad * nypad);
+  NewArray2(crray, short int, nxpad, nypad);
   if (!crray) {
     AfxMessageBox(_T("Error getting buffer to copy correlation into."), MB_EXCLAME);
     return 1;
@@ -1455,7 +1455,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   // Bin data into new array if necessary
   image->Lock();
   if (binning > 1) {
-    NewArray(data, short int, (type == kFLOAT ? 2 : 1) *(sizeX * sizeY ) / 
+    NewArray(data, short int, (type == kFLOAT ? 2 : 1) *((size_t)sizeX * sizeY ) / 
       (binning * binning));
     if (!data)
       return 3;
@@ -1755,7 +1755,7 @@ void CProcessImage::FixXRaysInBuffer(BOOL doImage)
   KImage *image = imBuf->mImage;
   int nx = image->getWidth();
   int ny = image->getHeight();
-  NewArray(brray, short int, nx * ny);
+  NewArray2(brray, short int, nx, ny);
   float critFac = param->unsignedImages && mCamera->GetDivideBy2() ? 2.f : 1.f;
   if (!brray) {
     AfxMessageBox("Failed to get memory for corrected image", MB_EXCLAME);
@@ -2188,7 +2188,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   while (B3DMAX(nx, ny) > targetSize * needBin)
     needBin++;
   if (needBin > 1) {
-    NewArray(temp, short int, (nx / needBin) * (ny / needBin) * 
+    NewArray2(temp, short int, (nx / needBin), (ny / needBin) * 
       (imType == kFLOAT ? 2 : 1));
     if (!temp) {
       SEMMessageBox("Failed to get memory for binned image", MB_EXCLAME);
@@ -2217,7 +2217,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   // Get padded size and array
   nxPad = XCorrNiceFrame(2 * (ix1 + 1 - trimX), 2, 19);
   nyPad = XCorrNiceFrame(2 * (iy1 + 1 - trimY), 2, 19);
-  NewArray(array, float, (nxPad + 2) * nyPad);
+  NewArray2(array, float, (nxPad + 2), nyPad);
   if (!array) {
     SEMMessageBox("Failed to get memory for autocorrelation array", MB_EXCLAME);
     return 1;
@@ -2522,7 +2522,7 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
     return false;
   }
 
-  NewArray(array, unsigned char, 3 * xsize * ysize);
+  NewArray2(array, unsigned char, 3 * xsize, ysize);
   if (!array) {
     AfxMessageBox("Failed to get memory for overlaying the images", MB_EXCLAME);
     return false;
@@ -2600,7 +2600,8 @@ void CProcessImage::OnProcessMakecoloroverlay()
 void CProcessImage::OnProcessCropAverage()
 {
   int boxXsize, boxYsize, top, left, nx, ny, nxPad, nyPad, nxTaper, nyTaper, numAvg, mode;
-  int groupID, ind, i, loop, pad, boxDim, csize, dsize, corrDim, xpeakLimit, ypeakLimit;
+  int groupID, ind, i, loop, pad, csize, dsize, xpeakLimit, ypeakLimit;
+  size_t boxDim, corrDim;
   CNavigatorDlg *nav = mWinApp->mNavigator;
   float taperFrac = 0.1f;
   float padFrac = 0.1f;
@@ -2690,8 +2691,8 @@ void CProcessImage::OnProcessCropAverage()
   nyPad = XCorrNiceFrame(boxYsize + 2 * pad, 2, 19);
   nxTaper = B3DMAX(4, (int)(taperFrac * boxXsize));
   nyTaper = B3DMAX(4, (int)(taperFrac * boxYsize));
-  boxDim = boxXsize * boxYsize;
-  corrDim = (nxPad + 2) * nyPad;
+  boxDim = (size_t)boxXsize * boxYsize;
+  corrDim = ((size_t)nxPad + 2) * nyPad;
   NewArray(sumArray, float, boxDim);
   NewArray(tmpArray, float, boxDim);
   NewArray(finalArray, short, boxDim);
@@ -3275,7 +3276,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
 
   // Get the scaled spectrum; just flip image first and restore at end to make it match
   // IMOD and ctffind expectations
-  NewArray(spectrum, float, useBox * (useBox + 2));
+  NewArray2(spectrum, float, useBox, (useBox + 2));
   if (!spectrum)
     return 1;
   image->Lock();

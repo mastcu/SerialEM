@@ -1552,7 +1552,7 @@ void CFocusManager::FocusDone()
     if (needBin > 1) {
       imA->Lock();
       data = imA->getData();
-      NewArray(temp, short int, (nxframe * nyframe) / needBin);
+      NewArray(temp, short int, ((size_t)nxframe * nyframe) / needBin);
       if (!temp) {
         SEMMessageBox(_T("Error getting buffer for binning - focus aborted"));
         StopFocusing();
@@ -1590,14 +1590,14 @@ void CFocusManager::FocusDone()
   if (!mImBufs[bufnum].GetTiltAngle(tilt))
     tilt = (float)mScope->GetTiltAngle();
   doStretch = (mFocusIndex == 1) && (tilt > 5. || tilt < -5.) && ifCalibrated;
-  NewArray(mFocusBuf[mFocusIndex], float, nypad * (nxpad + 2));
+  NewArray2(mFocusBuf[mFocusIndex], float, nypad, (nxpad + 2));
   if (mFocusIndex < 2)
-    NewArray(mFocusBuf[mFocusIndex + 3], float, nypad * (nxpad + 2));
+    NewArray2(mFocusBuf[mFocusIndex + 3], float, nypad, (nxpad + 2));
   if (doStretch) {
     if (type == kUBYTE) {
-      NewArray(stretchData, unsigned char, nxframe * nyframe);
+      NewArray2(stretchData, unsigned char, nxframe, nyframe);
     } else {
-      NewArray(stretchData, short int, nxframe * nyframe);
+      NewArray2(stretchData, short int, nxframe, nyframe);
     }
   }
 
@@ -2234,7 +2234,7 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
     iy0, iy1);
 
   // Get memory for the real FFT
-  NewArray(fftarray, float, nypad * (nxpad + 2));
+  NewArray2(fftarray, float, nypad, (nxpad + 2));
   NewArray(ninRing, int, mRFTnumPoints);
   if (!fftarray || !ninRing) {
    SEMMessageBox("Failed to get memory for doing rotationally averaged FFT", MB_EXCLAME);

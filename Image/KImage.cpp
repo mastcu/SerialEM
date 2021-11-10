@@ -52,7 +52,7 @@ KImage::KImage(int inWidth, int inHeight)
     return;
   }
   
-  NewArray(mData, unsigned char, (size_t)mRowWidth * inHeight);
+  NewArray2(mData, unsigned char, mRowWidth, inHeight);
   if (mData == NULL){
     mRowWidth = mRowBytes = mWidth = 0;
     mHeight = 0;
@@ -288,7 +288,7 @@ KImageShort::KImageShort(int inWidth, int inHeight)
     return;
   }
 
-  NewArray(mDataShort, short, (size_t)mRowWidth * inHeight);
+  NewArray2(mDataShort, short, mRowWidth, inHeight);
 
   mData = (unsigned char *)mDataShort;
   mRowBytes = mRowWidth * sizeof(short);
@@ -393,7 +393,7 @@ KImageFloat::KImageFloat(int inWidth, int inHeight)
     mWidth = mHeight = mRowBytes = mRowWidth = 0;
     return;
   }
-  NewArray(mDataFloat, float, (size_t)mRowWidth * inHeight);
+  NewArray2(mDataFloat, float, mRowWidth, inHeight);
 
   mData = (unsigned char *)mDataFloat;
   mRowBytes = mRowWidth * sizeof(float);
@@ -459,7 +459,7 @@ KImageRGB::KImageRGB(int inWidth, int inHeight)
     return;
   }
   mRowBytes = mRowWidth * 3;
-  NewArray(mData, unsigned char, (size_t)mRowBytes * inHeight);
+  NewArray2(mData, unsigned char, mRowBytes, inHeight);
 
   if (mData == NULL){
     mRowWidth = mRowBytes = mWidth = 0; 

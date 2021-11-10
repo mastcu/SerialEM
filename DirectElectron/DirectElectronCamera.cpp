@@ -837,10 +837,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         mLiveTD.inSizeY = inSizeY;
         mLiveTD.quitLiveMode = false;
         mLiveTD.returnedImage[0] =  mLiveTD.returnedImage[1] = false;
-        NewArray(mLiveTD.buffers[0], unsigned short, imageSizeX * imageSizeY);
-        NewArray(mLiveTD.buffers[1], unsigned short, imageSizeX * imageSizeY);
+        NewArray2(mLiveTD.buffers[0], unsigned short, imageSizeX, imageSizeY);
+        NewArray2(mLiveTD.buffers[1], unsigned short, imageSizeX, imageSizeY);
         if (operation)
-          NewArray(mLiveTD.rotBuf, unsigned short, imageSizeX * imageSizeY);
+          NewArray2(mLiveTD.rotBuf, unsigned short, imageSizeX, imageSizeY);
         if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)){
           CleanupLiveMode(&mLiveTD);
           SEMTrace('D', "Failed to get memory for live mode buffers");  
@@ -948,7 +948,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
 
     unsigned short *useBuf = image4k;
     if (operation) {
-      NewArray(useBuf, unsigned short, imageSizeX * imageSizeY);
+      NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
       if (!useBuf) {
         SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
         return 1;

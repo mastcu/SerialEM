@@ -540,11 +540,11 @@ KImage *KStoreMRC::getRect(void)
   int width =  mWidth;
   int height = mHeight;
   char *theData;
-  Int32 secSize = width * height * mPixSize;
+  size_t secSize = (size_t)width * height * mPixSize;
   
   if (mCur.z < 0 || mCur.z >= mDepth || mFile == NULL)
     return NULL; 
-  Int32 offset  = secSize * mCur.z;
+  //Int32 offset  = secSize * mCur.z;
   
   if ((mMode < 0 || mMode > 2) && mMode != MRC_MODE_USHORT && mMode != MRC_MODE_RGB)
     return NULL;
@@ -553,7 +553,7 @@ KImage *KStoreMRC::getRect(void)
     return NULL;
 
   try{  
-    BigSeek(mHeadSize, secSize, mCur.z, CFile::begin);
+    BigSeek(mHeadSize, width, height * mPixSize * mCur.z, CFile::begin);
     KImage *retVal;
     KImageShort *theSImage;
     KImageFloat *theFImage;
@@ -582,7 +582,7 @@ KImage *KStoreMRC::getRect(void)
         break;
     }
     
-    Read( theData , secSize);
+    Read( theData , (DWORD)secSize);
     retVal->flipY();
 
     if (mHead->next || mAdocIndex >= 0) {
@@ -800,14 +800,14 @@ void KStoreMRC::BigSeek(int base, int size1, int size2, UINT flag)
 
 // Read and Write routines may not be needed but CFile could get unhappy if the position
 // is outside its 32 bit bounds
-void KStoreMRC::Write(void *buf, int count)
+void KStoreMRC::Write(void *buf, DWORD count)
 {
   DWORD nWritten;
   if (!WriteFile((HANDLE)mFile->m_hFile, buf, count, &nWritten, NULL))
 		CFileException::ThrowOsError((LONG)::GetLastError());
 }
 
-void KStoreMRC::Read(void *buf, int count)
+void KStoreMRC::Read(void *buf, DWORD count)
 {
   DWORD nRead;
   if (!ReadFile((HANDLE)mFile->m_hFile, buf, count, &nRead, NULL))

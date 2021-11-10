@@ -916,8 +916,8 @@ void CAutoTuning::ZemlinNextTask(int param)
     mPanelSize = 2 * (mPanelSize / 2);
     mCropPix = mSpecSize - mPanelSize;
     mTableauSize = 3 * mPanelSize;
-    NewArray(mMontTableau, short, mTableauSize * mTableauSize);
-    NewArray(mSpectrum, short, mSpecSize * mSpecSize);
+    NewArray2(mMontTableau, short, mTableauSize, mTableauSize);
+    NewArray2(mSpectrum, short, mSpecSize, mSpecSize);
     if (!mMontTableau || !mSpectrum) {
       SEMMessageBox("Failed to get memory for assembling Zemlin tableau");
       StopZemlin();

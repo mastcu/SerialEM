@@ -593,7 +593,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   mDataC = (void *)mImC->getData();
   
   if (needBinA > 1) {
-    NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * heightA * widthA /
+    NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * (size_t)heightA * widthA /
       (needBinA * needBinA));
     if (MemoryError(tempA == NULL))
       return 1;
@@ -610,7 +610,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   }
   
   if (needBinC > 1) {
-    NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * heightC * widthC /
+    NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * (size_t)heightC * widthC /
       (needBinC * needBinC));
     if (MemoryError(tempC == NULL)) {
       return 1;
@@ -677,11 +677,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   if (scaling > 1. || (stretch > 1.0 && !conical) || (rotation != 0. && !scaling)) {
     // If > 1, stretch A, delete the binned data if it was created
     if (typeA == kUBYTE) {
-      NewArray(tempA, unsigned char, heightA * widthA);
+      NewArray2(tempA, unsigned char, heightA, widthA);
     } else if (typeA == kRGB) {
-      NewArray(tempA, unsigned char, 3 * heightA * widthA);
+      NewArray2(tempA, unsigned char, 3 * heightA, widthA);
     } else {
-      NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * heightA * widthA);
+      NewArray2(tempA, short int, (typeA == kFLOAT ? 2 : 1) * heightA, widthA);
     }
     if (MemoryError(tempA == NULL)) {
       return 1;
@@ -713,11 +713,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   } else if (swapStretch) {
     // Otherwise, need to invert value, set flag, stretch C, and delete if binned
     if (typeC == kUBYTE) {
-      NewArray(tempC, unsigned char, heightC * widthC);
+      NewArray2(tempC, unsigned char, heightC, widthC);
     } else if (typeC == kRGB) {
-      NewArray(tempC, unsigned char, 3 * heightC * widthC);
+      NewArray2(tempC, unsigned char, 3 * heightC, widthC);
     } else {
-      NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * heightC * widthC);
+      NewArray2(tempC, short int, (typeC == kFLOAT ? 2 : 1) * heightC, widthC);
     }
     if (MemoryError(tempC == NULL)) {
       return 1;
@@ -926,9 +926,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     for (int jj = 0; jj < 8193; jj++)
       mCTFa[jj] = (float)sqrt((double)mCTFa[jj]);
   
-  NewArray(mArray, float, nyPad * (nxPad + 2));
-  NewArray(mBrray, float, nyPad * (nxPad + 2));
-  NewArray(mCrray, float, nyPad * (nxPad + 2));
+  NewArray2(mArray, float, nyPad, (nxPad + 2));
+  NewArray2(mBrray, float, nyPad, (nxPad + 2));
+  NewArray2(mCrray, float, nyPad, (nxPad + 2));
   if (MemoryError(mArray == NULL || mBrray == NULL || mCrray == NULL)) {
     return 1;
   }

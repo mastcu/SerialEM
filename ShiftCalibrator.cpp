@@ -1703,7 +1703,7 @@ void CShiftCalibrator::InterSetShiftNextTask(int param)
         fyzoom = scale * ny;
         nxzoom = 2 * (int)(fxzoom / 2.);
         nyzoom = 2 * (int)(fyzoom / 2.);
-        NewArray(zoomData, short int, nxzoom * nyzoom);
+        NewArray2(zoomData, short int, nxzoom, nyzoom);
         if (!zoomData)
           errMess = "Failed to get array for zooming down focus image";
         if (errMess.IsEmpty() && selectZoomFilter(3, scale, &filtType))

@@ -1318,7 +1318,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Allocate center piece and bail out if that fails
   if (!preCooking) {
-    NewArray(mCenterData, short int, mParam->xFrame * mParam->yFrame * 
+    NewArray2(mCenterData, short int, mParam->xFrame, mParam->yFrame * 
       (mExpectingFloats ? 2 : 1));
     if (!mCenterData) {
       SEMMessageBox("Cannot get memory for composing center piece");
@@ -1411,10 +1411,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // Try to get the memory
     if (tryForMemory) {
       if (mConvertMini) {
-        NewArray(mMiniByte, unsigned char, mMiniArrayX * mMiniArrayY);
+        NewArray2(mMiniByte, unsigned char, mMiniArrayX, mMiniArrayY);
         mMiniData = (short int *) mMiniByte;
       } else
-        NewArray(mMiniData, short int, mMiniArrayX * mMiniArrayY * 
+        NewArray2(mMiniData, short int, mMiniArrayX, mMiniArrayY * 
         (mExpectingFloats ? 2 : 1));
     }
     mMiniUshort = (unsigned short *)mMiniData;
@@ -4260,7 +4260,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
   NewArray(edgeLower, int, 2 * mNumPieces);
   NewArray(edgeUpper, int, 2 * mNumPieces);
   NewArray(work, int, 21 * nvar + 1);
-  if (ixpclist && iypclist && dxedge && dyedge && pieceLower && pieceUpper && 
+  if (ixpclist && iypclist && dxedge && dyedge && pieceLower && pieceUpper &&
     edgeLower && edgeUpper && work && ifSkipEdge && indvar && ivarpc) {
 
     // Fill the arrays

@@ -101,7 +101,7 @@ KImage  *KStoreIMOD::getRect(void)
   char *theData;
   int i;
   mPixSize = lookupPixSize(mMode);
-  int secSize = mWidth * mHeight * mPixSize;
+  size_t secSize = (size_t)mWidth * mHeight * mPixSize;
   
   if (mCur.z < 0 || mCur.z >= mDepth || mIIfile == NULL)
     return NULL; 

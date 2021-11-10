@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/8/21: Fixed possibility of failed memory allocations due to integer
+overflow for arrays > 2 Gpixels, except for images sent to Python.
+
 11/6/21: Added a possible delay after image shift to FrameSeriesFromVar.
 
 11/6/21: Made ReportLastFrameFile report directory and filename separately.

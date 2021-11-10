@@ -54,8 +54,8 @@ public:
        KStoreMRC(CString inFilename, FileOptions inFileOpt);
 	virtual ~KStoreMRC();
 	void Seek(int offset, UINT flag);
-	void Read(void *buf, int count);
-	void Write(void *buf, int count);
+	void Read(void *buf, DWORD count);
+	void Write(void *buf, DWORD count);
 	void SetPixelSpacing(float pixel);
 	static BOOL IsMRC(CFile *inFile);
   const char *GetTitle(int index);

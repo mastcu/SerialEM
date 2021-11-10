@@ -999,8 +999,8 @@ public:
 
 public:
   void SetNonGatanPostActionTime(void);
-  static int GetArrayForImage(CameraThreadData * td, long &arrsize, int index = 0);
-  static int GetArrayForReference(CameraThreadData * td, DarkRef * ref, long &arrSize, CString strGainDark);
+  static int GetArrayForImage(CameraThreadData * td, size_t &arrsize, int index = 0);
+  static int GetArrayForReference(CameraThreadData * td, DarkRef * ref, size_t &arrSize, CString strGainDark);
   static int CopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array,
     int sizeX, int sizeY, int imageType, int divideBy2);
   static int GetSizeCopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array,

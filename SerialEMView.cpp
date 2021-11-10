@@ -322,7 +322,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
     return 4;
 
   // Get buffer to copy into 
-  NewArray(buffer, char, bm.bmWidthBytes * memBMY);
+  NewArray2(buffer, char, bm.bmWidthBytes, memBMY);
   if (!buffer)
     return 2;
 

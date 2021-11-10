@@ -2518,7 +2518,8 @@ void CCameraController::ShowReference(int type)
   int maxUse = 0;
   DarkRef *ref;
   DarkRef *lastRef = NULL;
-  int i, size, binning;
+  int i, binning;
+  size_t size;
   float factor;
   float *fdata;
   unsigned short *usdata;
@@ -2559,7 +2560,7 @@ void CCameraController::ShowReference(int type)
   }
 
   // Get an array and copy data; take gain ref times 1000
-  size = mTD.DMSizeX * mTD.DMSizeY;
+  size = (size_t)mTD.DMSizeX * mTD.DMSizeY;
   if (type == DARK_REFERENCE && byteSize != 4) {
     NewArray(mTD.Array[0], short int, size);
     mTD.ImageType = kSHORT;
@@ -6763,7 +6764,8 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
   char CamCommand[2048];
   int camPlace = 0;
   CamCommand[0] = 0x00;
-  long arrSize, height, width;
+  long longSize, height, width;
+  size_t arrSize;
   CameraThreadData *td = (CameraThreadData *)pParam;
   int sizeX, sizeY, numDum, flagsSave, retval = 0;
   int callSizeX = td->CallSizeX, callSizeY = td->CallSizeY;
@@ -6793,6 +6795,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
           
           // Need to get a reference.  First get an array if needed
           retval = GetArrayForReference(td, ref, arrSize, strGainDark);
+          longSize = (long)arrSize;
           
           if (!retval) {
             try {
@@ -6814,12 +6817,12 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
                   }
                 }
                 CallDMCamera(pGatan, td->amtCam, GetDarkReference((short *)ref->Array, 
-                  &arrSize, &width, &height, ref->Exposure, binning, td->Top, 
+                  &longSize, &width, &height, ref->Exposure, binning, td->Top, 
                   td->Left, td->Bottom, td->Right, td->ShutterMode, td->DMsettling,
                   td->DivideBy2, td->Corrections));
               } else {
                 CallDMCamera(pGatan, td->amtCam, GetGainReference((float *)ref->Array, 
-                  &arrSize, &width, &height, binning));
+                  &longSize, &width, &height, binning));
               }
               
               if (width != ref->SizeX || height != ref->SizeY) {
@@ -7003,7 +7006,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
       flagsSave = td->PluginAcquireFlags;
       if (td->NeedFrameDarkRef)
         td->PluginAcquireFlags &= ~PLUGCAM_RETURN_FLOAT;
-      AcquirePluginImage(td, &ref->Array, arrSize, 
+      AcquirePluginImage(td, &ref->Array, (int)arrSize, 
         td->TietzType ? TIETZ_GET_DARK_REF : UNPROCESSED, 0., false, sizeX,
         sizeY, retval, numDum);
       td->PluginAcquireFlags = flagsSave;
@@ -7174,7 +7177,8 @@ void CCameraController::StartAcquire()
   DWORD sleepIncrement = 100;
   DWORD sleepBite;
   DWORD retrySleep = 2000;
-  int busy, arrSize, i, half;
+  int busy, i, half;
+  size_t arrSize;
   double delISX, delISY, delX, delY;
   ScaleMat aMat;
   DarkRef *ref;
@@ -7209,7 +7213,7 @@ void CCameraController::StartAcquire()
     // Try to convert a gain reference
     if (mTD.GainToGet && mScaledGainRefMax && !ReturningFloatImages(mParam)) {
       ref = mTD.GainToGet;
-      arrSize = ref->SizeX * ref->SizeY;
+      arrSize = (size_t)ref->SizeX * ref->SizeY;
 
       // Try to convert to a scaled integer gain ref.  First correct
       // defects to prevent high values in bad areas there from
@@ -7217,7 +7221,7 @@ void CCameraController::StartAcquire()
       NewArray(usdata,unsigned short, arrSize);
       CorDefCorrectDefects(&mParam->defects, ref->Array, kFLOAT, ref->Binning,
           0, 0, ref->SizeY, ref->SizeX);
-      if (ProcConvertGainRef((float *)ref->Array, usdata, arrSize,
+      if (ProcConvertGainRef((float *)ref->Array, usdata, (int)arrSize,
         mScaledGainRefMax, mMinGainRefBits, &ref->GainRefBits)) {
         if (usdata)
           delete [] usdata;
@@ -7511,7 +7515,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 {
   char CamCommand[2048];
   int camPlace = 0;
-  long arrSize, ldum1;
+  long ldum1, longSize;
+  size_t arrSize;
   double ddum1, ddum2;
   HRESULT hr;
   bool imageOK = false, askedForContinuous = false, rampStarted = false;
@@ -7544,9 +7549,10 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       // Get a deferred sum
       arrSize = td->DMSizeX * td->DMSizeY;
       retval = GetArrayForImage(td, arrSize);
+      longSize = (long)arrSize;
       if (!retval) {
         try {
-          CallGatanCamera(pGatan, ReturnDeferredSum(td->Array[0], &arrSize,
+          CallGatanCamera(pGatan, ReturnDeferredSum(td->Array[0], &longSize,
                 &td->DMSizeX, &td->DMSizeY));
           imageOK = true;
           if (td->SaveFrames && td->GetDeferredSum < 2) {
@@ -7673,7 +7679,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               SEMTrace('s', "Start AcquireImage");
               chan = 0;
               td->BlankerWaitForSignal = false;
-              CallGatanCamera(pGatan, AcquireDSImage(td->Array[0], &arrSize, &td->DMSizeX, 
+              CallGatanCamera(pGatan, AcquireDSImage(td->Array[0], &longSize, &td->DMSizeX, 
                 &td->DMSizeY, td->STEMrotation, td->PixelTime, td->LineSyncAndFlags, 
                 td->ContinuousSTEM, td->NumChannels, td->ChannelIndex, td->DivideBy2));
               numCopied = 1;
@@ -7682,7 +7688,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                 retval = GetArrayForImage(td, arrSize, chan);
                 if (retval)
                   break;
-                CallGatanCamera(pGatan, ReturnDSChannel(td->Array[chan], &arrSize, 
+                CallGatanCamera(pGatan, ReturnDSChannel(td->Array[chan], &longSize, 
                   &td->DMSizeX, &td->DMSizeY, td->ChannelIndex[chan], td->DivideBy2));
                 numCopied++;
               }
@@ -7757,7 +7763,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               //SEMTrace('1', "Calling GetAcquireImage with divideby2 %d", td->DivideBy2);
               askedForContinuous = (td->ProcessingPlus & CONTINUOUS_USE_THREAD) != 0;
               td->BlankerWaitForSignal = false;
-              CallDMCamera(pGatan, td->amtCam, GetAcquiredImage(td->Array[0], &arrSize, 
+              CallDMCamera(pGatan, td->amtCam, GetAcquiredImage(td->Array[0], &longSize, 
                 &td->DMSizeX, &td->DMSizeY, td->ProcessingPlus, td->Exposure, td->Binning, 
                 td->Top, td->Left, td->Bottom, td->Right, td->ShutterMode,
                 td->DMsettling, shutterDMticks, td->DivideBy2, td->Corrections));
@@ -7946,7 +7952,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           td->PluginFrameFlags, 0);
       }
       if (!retval)
-        AcquirePluginImage(td, (void **)td->Array, arrSize, td->ProcessingPlus,
+        AcquirePluginImage(td, (void **)td->Array, (int)arrSize, td->ProcessingPlus,
           td->DMsettling, startBlanker, sizeX, sizeY, retval, numCopied);
       if (retval) {
         report.Format("Error %d setting parameters or getting image from plugin"
@@ -9317,7 +9323,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           // Need to make the image the same size as a regular full-sized acquire
           axoff = (float)(B3DMAX(0, mTD.DMSizeX - mDMsizeX * mBinning / mTD.Binning) /2.);
           ayoff = (float)(B3DMAX(0, mTD.DMSizeY - mDMsizeY * mBinning / mTD.Binning) /2.);
-          NewArray(parray, short int, mDMsizeX * mDMsizeY);
+          NewArray2(parray, short int, mDMsizeX, mDMsizeY);
           B3DCLAMP(mZoomFilterType, 0, 5);
           err = selectZoomFilter(mZoomFilterType, filtScale, &i);
           if (!err && parray && linePtrs) {
@@ -10945,9 +10951,10 @@ void CCameraController::SetNonGatanPostActionTime(void)
   }
 }
 
-int CCameraController::GetArrayForImage(CameraThreadData * td, long & arrSize, int index)
+int CCameraController::GetArrayForImage(CameraThreadData * td, size_t & arrSize, int index)
 {
-  arrSize = (td->DMSizeX + 4) * (td->DMSizeY + 4) * (td->ImageType == kFLOAT ? 2 : 1);
+  arrSize = ((size_t)td->DMSizeX + 4) * (td->DMSizeY + 4) * 
+    (td->ImageType == kFLOAT ? 2 : 1);
   NewArray(td->Array[index], short int, arrSize);
   if (!td->Array[index]) {
     DeferMessage(td, "Failed to get memory for image!");
@@ -10957,10 +10964,10 @@ int CCameraController::GetArrayForImage(CameraThreadData * td, long & arrSize, i
 }
 
 int CCameraController::GetArrayForReference(CameraThreadData *td, DarkRef *ref, 
-                                            long &arrSize, CString strGainDark)
+                                            size_t &arrSize, CString strGainDark)
 {
   char *arrtmp;
-  arrSize = (ref->SizeX + 4) * (ref->SizeY + 4);
+  arrSize = ((size_t)ref->SizeX + 4) * (ref->SizeY + 4);
   if (!ref->Array) {
     NewArray(arrtmp, char, arrSize * ref->ByteSize);
     ref->Array = (void *)arrtmp;
@@ -11186,7 +11193,8 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
   if (JEOLscope)
     return 0;
   CString message;
-  long chan, arrSize, numAlloc, retval = 0, numAdded = 0, numCopied = 0;
+  long chan, numAlloc, retval = 0, numAdded = 0, numCopied = 0;
+  size_t arrSize;
   DWORD ticks = GetTickCount();
   const char *chanNames[MAX_STEM_CHANNELS];
   SEMTrace('E', "Entering AcquireFEIchannels");
@@ -11818,7 +11826,7 @@ int CCameraController::RotateAndReplaceArray(int chan, int operation, int invert
 {
   short int *parray;
   int nxout, nyout;
-  NewArray(parray, short int, mTD.DMSizeX * mTD.DMSizeY * 
+  NewArray2(parray, short int, mTD.DMSizeX, mTD.DMSizeY * 
     (mTD.ImageType == MRC_MODE_FLOAT ? 2 : 1));
   if (!parray) {
 

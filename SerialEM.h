@@ -254,6 +254,14 @@ typedef bool (*PlugDoingFunc)(void);
   arr = NULL; \
   }
 
+#define NewArray2(arr,typ,siz1, siz2) try { \
+  arr = new typ[(size_t)(siz1) * (size_t)(siz2)]; \
+} \
+  catch (CMemoryException *e) { \
+  e->Delete(); \
+  arr = NULL; \
+  }
+
 #define CLEAR_RESIZE(a,b,c) { a.clear(); \
   a.swap(std::vector<b>(a)); \
   a.resize(c); }

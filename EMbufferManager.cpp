@@ -993,7 +993,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   // Get array for binned data or copy, and bin or copy data into it
   newWidth = width / binning;
   newHeight = height / binning;
-  NewArray(array, short int, newWidth * newHeight * (type == kFLOAT ? 2 : 1));
+  NewArray2(array, short int, newWidth, newHeight * (type == kFLOAT ? 2 : 1));
   if (!array)
     return 2;
   image->Lock();
@@ -1114,8 +1114,8 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int 
 {
   KImage *image = buf->mImage;
   char *data;
-  int numBytes = image->getRowBytes() * image->getHeight();
-  mAsyncTimeout = 10000 + numBytes / 1000;
+  size_t numBytes = (size_t)image->getRowBytes() * image->getHeight();
+  mAsyncTimeout = (int)(10000 + numBytes / 1000);
 
   // Duplicate the data first, that is a possible failure point
   NewArray(data, char, numBytes);

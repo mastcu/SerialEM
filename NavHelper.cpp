@@ -2420,11 +2420,11 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
   // Get the array for the rotation
   type = imBuf->mImage->getType();
   if (type == kUBYTE) {
-    NewArray(array, unsigned char, sizeX * sizeY);
+    NewArray2(array, unsigned char, sizeX, sizeY);
   } else if (type == kRGB) {
-    NewArray(array, unsigned char, 3 * sizeX * sizeY);
+    NewArray2(array, unsigned char, 3 * sizeX, sizeY);
   } else {
-    NewArray(array, short int, sizeX * sizeY);
+    NewArray2(array, short int, sizeX, sizeY);
   }
   if (!array)
     return 2;

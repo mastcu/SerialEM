@@ -568,7 +568,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
   unsigned char *bdata;
   int i, j, jstart, jend, jdir, numTrunc = 0;
   int theVal;
-  int dataSize = mWidth * mHeight * mPixSize;
+  size_t dataSize = (size_t)mWidth * mHeight * mPixSize;
   
   int theType = inImage->getType();
   char *idata   = (char *)inImage->getData();

@@ -290,7 +290,8 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
   int keepRefLimit = 10;
   int checkRefInterval = 5;
   int now = mWinApp->MinuteTimeStamp();
-  int err, superFac, newSize;
+  int err, superFac;
+  size_t newSize;
   bool needCopy = false;
   char messBuf[256];
   refDir = mCamera->GetFalconReferenceDir();
@@ -382,8 +383,8 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
   }
 
   // Check that buffer is big enough
-  newSize = superFac * superFac * iiFile->nx * iiFile->ny;
-  if (!err && (!mFalconGainRef || newSize > mGainSizeX * mGainSizeY)) {
+  newSize = (size_t)(superFac * superFac * iiFile->nx) * iiFile->ny;
+  if (!err && (!mFalconGainRef || newSize > (size_t)mGainSizeX * mGainSizeY)) {
     delete[] mFalconGainRef;
     NewArray(mFalconGainRef, float, newSize);
     if (!mFalconGainRef) {
@@ -813,7 +814,7 @@ void CFalconHelper::StackNextTask(int param)
     mNx = mHeadNums[0];
     mNy = mHeadNums[1];
     if (rotateForSave)
-      NewArray(mRotData, short, mNx * mNy);
+      NewArray2(mRotData, short, mNx, mNy);
     if (mEERsumming > 0) {
       mImage = (KImageShort *)(new KImage(mNx, mNy));
     } else {
@@ -1389,7 +1390,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
 
   // Get array for reading in and set up the alignment
   mrc_getdcsize(mMrcHeader.mode, &dsize, &csize);
-  NewArray(mRotData, short, (mNx * mNy * dsize) / 2 + 10);
+  NewArray(mRotData, short, ((size_t)mNx * mNy * dsize) / 2 + 10);
   if (!mRotData) {
     SEMMessageBox("Error allocating array for reading in frames to align");
     iiFClose(mFrameFP);

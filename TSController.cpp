@@ -4826,7 +4826,7 @@ void CTSController::Terminate()
           int type = image->getType();
           image->Lock();
           for (i = 0; i < 2; i++) {
-            NewArray(brray, short int, nx * ny);
+            NewArray2(brray, short int, nx, ny);
             if (!brray) {
               AfxMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
               break;
