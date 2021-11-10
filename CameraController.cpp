@@ -2518,8 +2518,8 @@ void CCameraController::ShowReference(int type)
   int maxUse = 0;
   DarkRef *ref;
   DarkRef *lastRef = NULL;
-  int i, binning;
-  size_t size;
+  int binning, j;
+  size_t size, i;
   float factor;
   float *fdata;
   unsigned short *usdata;
@@ -2529,8 +2529,8 @@ void CCameraController::ShowReference(int type)
   if (type == GAIN_REFERENCE || type == DARK_REFERENCE) {
 
     // Find the reference
-    for (i = 0; i < mRefArray.GetSize(); i++) {
-      ref = mRefArray[i];
+    for (j = 0; j < mRefArray.GetSize(); j++) {
+      ref = mRefArray[j];
       if (ref->GainDark == type && ref->UseCount > maxUse) {
         maxUse = ref->UseCount;
         lastRef = ref;
@@ -7177,8 +7177,8 @@ void CCameraController::StartAcquire()
   DWORD sleepIncrement = 100;
   DWORD sleepBite;
   DWORD retrySleep = 2000;
-  int busy, i, half;
-  size_t arrSize;
+  int busy, half;
+  size_t arrSize, i;
   double delISX, delISY, delX, delY;
   ScaleMat aMat;
   DarkRef *ref;
@@ -7257,7 +7257,7 @@ void CCameraController::StartAcquire()
 
       // Divide "dark reference" to make it smaller in simulation mode
       if (mScope->GetSimulationMode() && ref->ByteSize == 2) {
-        for (i = 0; i < ref->SizeX * ref->SizeY; i++)
+        for (i = 0; i < (size_t)ref->SizeX * ref->SizeY; i++)
           *sdata++ /= 8;
         sdata = (short *)ref->Array;
       }
