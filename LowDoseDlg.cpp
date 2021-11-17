@@ -1458,7 +1458,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 // Allow changes during a tilt series
 void CLowDoseDlg::ManageDefines(int area)
 {
-  BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && area != SEARCH_AREA  &&
+  BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() &&
     (mScope->StageBusy(-2) <= 0 || mWinApp->GetDummyInstance());
   m_butDefineNone.EnableWindow(bEnable);
   m_butDefineTrial.EnableWindow(bEnable);
