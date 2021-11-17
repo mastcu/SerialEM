@@ -66,6 +66,8 @@ CShiftCalibrator::CShiftCalibrator(void)
   mISStimeStampLast = -1.;
   mSkipLensNormNextIScal = false;
   mGaveFocusMagMessage = false;
+  mCalToggleInterval = 250;
+  mNumCalToggles = 10;
 }
 
 CShiftCalibrator::~CShiftCalibrator(void)
@@ -584,9 +586,9 @@ void CShiftCalibrator::ShiftDone()
     if (mCalStage) {
       imA->setShifts(-mTotalShiftX[mShiftIndex - 1], mTotalShiftY[mShiftIndex - 1]);
       mImBufs[1].SetImageChanged(1);
-      for (j = 0; j < 10; j++) {
+      for (j = 0; j < mNumCalToggles; j++) {
         if (j)
-          Sleep(250);
+          Sleep(B3DMAX(1, mCalToggleInterval));
         mWinApp->SetCurrentBuffer((j + 1) % 2);
       }
     }

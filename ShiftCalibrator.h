@@ -27,6 +27,8 @@ public:
   GetSetMember(BOOL, UseTrialBinning)
   GetMember(double, ISStimeStampLast);
   SetMember(bool, SkipLensNormNextIScal);
+  GetSetMember(int, CalToggleInterval);
+  GetSetMember(int, NumCalToggles);
   BOOL CalibratingIS() {return mShiftIndex >= 0;};
   void Initialize();
   void CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro);
@@ -112,6 +114,8 @@ private:
   int mISSbinningLast;
   bool mSkipLensNormNextIScal; // Flag to skip lens normalization on next IS cal
   bool mGaveFocusMagMessage;
+  int mCalToggleInterval;      // MSec interval between toggling images
+  int mNumCalToggles;          // Number of times to toggle
 
 public:
 	void SetFirstCameras();
