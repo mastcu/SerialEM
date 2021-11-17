@@ -1517,6 +1517,15 @@ BOOL CSerialEMApp::InitInstance()
   if (!message.IsEmpty())
     AppendToLog("Paths are defined for Python version(s) " + message);
 
+  message = mDocWnd->GetTitle();
+  for (iAct = 0; iAct < message.GetLength(); iAct++) {
+    if ((unsigned char)message.GetAt(iAct) > 127) {
+      AppendToLog("WARNING: MrcHeaderTitle properties has special (non-ASCII) characters;"
+        "\r\n  this may cause problems in other software");
+      break;
+    }
+  }
+
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)

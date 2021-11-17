@@ -130,7 +130,7 @@ void CGainRefMaker::AcquireGainRef()
 {
   int fracField, tsizeX, tsizeY;
   int i, numOdd = 0, numUsableOdd = 0;
-  size_t arrSize;
+  size_t j, arrSize;
   FileOptions fileOpt;
   CFileStatus status;
 
@@ -256,8 +256,8 @@ void CGainRefMaker::AcquireGainRef()
     AfxMessageBox("Failed to get memory for gain reference", MB_EXCLAME);
     return;
   }
-  for (i = 0; i < arrSize; i++)
-    mArray[i] = 0.;
+  for (j = 0; j < arrSize; j++)
+    mArray[j] = 0.;
 
   // Rename file now to flush out errors
   mFileName = ComposeRefName(mParam->gainRefBinning);

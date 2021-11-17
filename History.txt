@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/16/21: Fixed loss of autofocus beam tilt when loading tilt series
+parameters back from Navigator file.
+
+11/16/21: Added warning to log if there are unicode or other special
+characters in the MrcHeaderTitle property.
+
+11/16/21: Prevented crash if trying to resume tilt series after the file
+inversion of bidirectional series fails and leaves file closed.
+
+11/16/21: Added scriptable properties to control image toggling during stage
+calibration.
+
+11/16/21: Enabled buttons for defining Trial/Focus areas in Search mode.
+
+11/16/21: Fixed some problems with using OpenNewMontage when no montage was
+opened before.
+
 11/8/21: Fixed possibility of failed memory allocations due to integer
 overflow for arrays > 2 Gpixels, except for images sent to Python.
 

@@ -136,7 +136,12 @@
         <TR VALIGN="top">
           <TD>MRCHeaderTitle</TD>
           <TD>Title to be placed in MRC files; full title is SERIALEM: 'your title'
-            date-time . Your title is limited to 45 characters</TD>
+            date-time.&nbsp; Your title is limited to 45 characters.&nbsp; The program will print a
+             warning in the log on startup if unicode or other non-standard ASCII characters
+             are placed in this title.&nbsp;Such characters may cause problems in software
+             reading file headers.&nbsp; IMOD seems to work with Unicode, but single-byte characters
+            in the extended character set will cause problems before IMOD 4.11.12 or 4.12.16.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameFileTitle</TD>
@@ -2726,6 +2731,16 @@
             value lower than a cycle length will keep the calibration from being done over a
             full cycle on that axis. The default is 140 microns, which limits the extent to
             2 cycles in X and 3 cycles in Y with the default cycle lengths.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageCalToggleInterval</TD>
+          <TD>Interval between toggling images during stage calibration.&nbsp; The default 
+            is 250 msec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageCalNumToggles</TD>
+          <TD>Number of times to toggle images during stage calibration.&nbsp; The default 
+            is 10.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">SamePositionTolerance</TD>
