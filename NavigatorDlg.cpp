@@ -7473,7 +7473,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #define FLOAT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &b));
 
 #define DOUBLE_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &xx)); \
-       if (retval) \
+       if (!retval) \
          b = xx;
 
 #define SKIP_ADOC_PUTS
@@ -7701,7 +7701,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         if (tsParam->numExtraExposures) {
           ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraExposures", &adocStr));
           ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(1, str2,
-            tsParam->numExtraExposures, NULL, tsParam->extraExposures, MAX_EXTRA_RECORDS));
+            tsParam->numExtraExposures, NULL, tsParam->extraExposures,MAX_EXTRA_RECORDS));
         }
         if (tsParam->numExtraFocus) {
           ADOC_REQUIRED(AdocGetString("TSParam", ind1, "ExtraFocuses", &adocStr));
@@ -7725,8 +7725,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         // Varying items
         if (tsParam->numVaryItems) {
           numToGet = tsParam->numVaryItems * NUM_VARY_ELEMENTS;
-          ADOC_REQUIRED(AdocGetFloatArray("TSParam", ind1, "VaryArray", varyVals, &numToGet,
-            MAX_VARY_TYPES * NUM_VARY_ELEMENTS));
+          ADOC_REQUIRED(AdocGetFloatArray("TSParam", ind1, "VaryArray", varyVals, 
+            &numToGet, MAX_TS_VARIES * NUM_VARY_ELEMENTS));
           if (!retval) {
             i = 0;
             for (ind2 = 0; ind2 < tsParam->numVaryItems; ind2++) {
@@ -8718,7 +8718,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   unsigned char lastChar;
   CString report, str;
   bool skippingGroup;
-  float hours, target;
+  float hours, target, oldTarget;
   double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
@@ -8928,9 +8928,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mAcqParm->cycleDefocus) {
       target = (float)(mAcqParm->cycleDefFrom + (mAcqParm->cycleDefTo - 
         mAcqParm->cycleDefFrom) * mFocusCycleCounter / mAcqParm->cycleSteps);
+      oldTarget = mWinApp->mFocusManager->GetTargetDefocus();
       mWinApp->mFocusManager->SetTargetDefocus(target);
+      mScope->IncDefocus(target - oldTarget);
       mFocusCycleCounter = (mFocusCycleCounter + 1) % (mAcqParm->cycleSteps + 1);
-      PrintfToLog("Target defocus set to %.2f um", target);
+      PrintfToLog("Target defocus set to %.2f um and scope defocus changed by %.2f", 
+        target, target - oldTarget);
     }
 
   } else {
@@ -9393,6 +9396,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     item->mTSstartAngle = EXTRA_NO_VALUE;
     item->mTSendAngle = EXTRA_NO_VALUE;
     item->mTSbidirAngle = EXTRA_NO_VALUE;
+    SetChanged(true);
     mCurListSel = mCurrentItem = mAcquireIndex;
     UpdateListString(mAcquireIndex);
     ManageCurrentControls();
