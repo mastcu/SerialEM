@@ -1356,6 +1356,13 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   // Get current value of this setting and use FOR RECORDS ONLY
   mActPostExposure = mWinApp->ActPostExposure(&mConSets[RECORD_CONSET]);
   
+  if (!mWinApp->mStoreMRC) {
+    TSMessageBox("There is no output file open because of recent problems.\n\nYou should "
+      "be able to open a new file or perhaps even reopen the old file, and then resume");
+    mPostponed = !mAlreadyTerminated;
+    return 1;
+  }
+
   // Check record parameters versus file
   mCamera->AcquiredSize(csp, camera, sizeX, sizeY);
   mBigRecord = (mCamParams->sizeX > 2048 || mCamParams->sizeY > 2048) && 
