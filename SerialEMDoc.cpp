@@ -706,11 +706,14 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum)
   int curCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + curCam;
   ControlSet *cs = mWinApp->GetConSets() + setNum;
+  int top, left, bottom, right;
   param->binning = cs->binning;
   if (CamHasDoubledBinnings(camParam) && cs->binning == 1)
     param->binning = 2;
   param->xFrame = (cs->right - cs->left) / param->binning;
   param->yFrame = (cs->bottom - cs->top) / param->binning;
+  mWinApp->mCamera->CenteredSizes(param->xFrame, camParam->sizeX, camParam->moduloX, left,
+    right,param->yFrame, camParam->sizeY, camParam->moduloY, top, bottom, param->binning);
   int maxSize = param->xFrame > param->yFrame ? param->xFrame : param->yFrame;
   param->xOverlap = (int)floor(mOverlapFraction * maxSize + 0.5);
   param->xOverlap += param->xOverlap % 2;
