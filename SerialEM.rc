@@ -294,11 +294,11 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Beam && Spot"
         BEGIN
+            MENUITEM "&Illuminated Area Limits",    ID_BEAMSPOT_ILLUMINATEDAREALIMITS
             MENUITEM "Beam &Crossover",             ID_CALIBRATION_BEAMCROSSOVER
             MENUITEM "&Beam Intensity",             ID_CALIBRATION_BEAMINTENSITY
             MENUITEM "&Spot Intensity",             ID_CALIBRATION_SPOTINTENSITY
             MENUITEM "Set C&2 Factor",              ID_CALIBRATION_C2FACTOR
-            MENUITEM "&Illuminated Area Limits",    ID_BEAMSPOT_ILLUMINATEDAREALIMITS
             MENUITEM SEPARATOR
             MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
             MENUITEM "&Refine Beam Shift",          ID_BEAMSPOT_REFINEBEAMSHIFT
