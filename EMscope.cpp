@@ -3043,6 +3043,7 @@ BOOL CEMscope::ChangeBeamTilt(double tiltX, double tiltY, BOOL bInc)
       tiltY += plugY;
     }
     mPlugFuncs->SetBeamTilt(tiltX, tiltY);
+    SEMTrace('b', "SetBeamTilt %.3f %.3f", tiltX, tiltY);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting Beam Tilt "));
