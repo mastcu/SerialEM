@@ -2751,7 +2751,8 @@ int CMacCmd::OpenNewFile(void)
     mWinApp->mDocWnd->LeaveCurrentFile();
     mMontP->xNframes = ix0;
     mMontP->yNframes = iy0;
-    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
+    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(mMontP->xFrame > 0, ix0, iy0,
+      report);
   }
   if (index2)
     SUSPEND_LINE("because of error opening new file in statement:\n\n");
@@ -9097,22 +9098,22 @@ int CMacCmd::SetMontageParams(void)
         " in line:\n\n");
   if (mItemInt[1] >= 0)
     mMontP->moveStage = mItemInt[1] > 0;
-  if (mItemInt[4] > 0) {
+  if (!mItemEmpty[4] && mItemInt[4] > 0) {
     if (mItemInt[4] < mMontP->xOverlap * 2)
       ABORT_LINE("The X frame size is less than twice the overlap in statement:\n\n");
     mMontP->xFrame = mItemInt[4];
   }
-  if (mItemInt[5] > 0) {
+  if (!mItemEmpty[5] && mItemInt[5] > 0) {
     if (mItemInt[5] < mMontP->yOverlap * 2)
       ABORT_LINE("The Y frame size is less than twice the overlap in statement:\n\n");
     mMontP->yFrame = mItemInt[5];
   }
-  if (mItemInt[2] > 0) {
+  if (!mItemEmpty[2] && mItemInt[2] > 0) {
     if (mItemInt[2] > mMontP->xFrame / 2)
       ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
     mMontP->xOverlap = mItemInt[2];
   }
-  if (mItemInt[3] > 0) {
+  if (!mItemEmpty[3] && mItemInt[3] > 0) {
     if (mItemInt[3] > mMontP->yFrame / 2)
       ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
     mMontP->yOverlap = mItemInt[3];

@@ -780,6 +780,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   // Find any sections that are already in the file
   if (!mTrialMontage) {
     already = ListMontagePieces(mReadStoreMRC, mParam, mParam->zCurrent, mPieceSavedAt);
+    if (already < 0) {
+      SEMMessageBox("Bad parameters passed to ListMontagePieces; see log");
+      return 1;
+    }
 
     // For reading in, add missing frames to skip list
     if (mReadingMontage) {

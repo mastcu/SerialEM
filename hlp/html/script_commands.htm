@@ -1806,8 +1806,8 @@
             will be taken from the last montage that was open. The file properties and
             montage setup dialogs will be bypassed, and some properties like overlap and
             whether to do a stage montage will be taken from the last montage that was
-            open.  If no montage has been opened through the dialogs, some parameter settings with&nbsp;
-              SetMontageParams will work, some will crash the program.</TD>
+            open.  If no montage has been open before, the montage will use full-sized frames 
+            ith the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B]</TD>
