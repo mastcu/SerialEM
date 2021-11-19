@@ -1720,7 +1720,7 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 
   // Compose the filename for the first half
   UtilSplitExtension(filename, root, ext);
-  mBfcNameFirstHalf = root + (mBfcReorderWholeFile ? "-unsorted" : "-half1") + ext;
+  mBfcNameFirstHalf = filename + (mBfcReorderWholeFile ? "-unsorted" : "-half1");
   mBfcAdocFirstHalf = "";
   fileType = mWinApp->mStoreMRC->getStoreType();
 
