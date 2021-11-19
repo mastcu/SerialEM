@@ -2262,7 +2262,7 @@ BEGIN
     CONTROL         "",IDC_NA_TASK_LINE2,"Static",SS_BLACKFRAME,327,82,52,2
     LTEXT           "Primary Action Runs Here",IDC_STAT_PRIMARY_LINE,247,79,78,8
     CONTROL         "Hide unused tasks",IDC_NA_HIDE_UNUSED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,174,369,74,10
-    LTEXT           "",IDC_STAT_SPACER,162,289,8,2
+    LTEXT           "",IDC_STAT_SPACER,162,266,8,2
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,133,139,10
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
@@ -5133,6 +5133,9 @@ BEGIN
     IDC_RQUARTER            "Use one-quarter of the camera field for View images"
     IDC_R3EIGHTHS           "Use three-eighths of the camera field for View images"
     IDC_RHALFFIELD          "Use half of the camera field for View images"
+    IDC_RMAP_WITH_REC       "Take single-image maps with Record as usual"
+    IDC_RMAP_WITH_VIEW      "Take single-image maps with View area instead of Record"
+    IDC_RMAP_WITH_SEARCH    "Take single-image maps with Search area instead of Record"
 END
 
 STRINGTABLE
@@ -6620,9 +6623,6 @@ BEGIN
     IDC_SPIN_CYCLE_DEF      "# of steps to take from starting to ending value; cycle has # + 1 values"
     IDC_NA_EARLY_RETURN     "Return as soon as possible from starting acquisition for a K2 or K3 camera"
     IDC_NA_RUN_AFTER_TASK   "Run this task after the primary action instead of before"
-    IDC_RMAP_WITH_REC       "Take single-image maps with Record as usual"
-    IDC_RMAP_WITH_VIEW      "Take single-image maps with View area instead of Record"
-    IDC_RMAP_WITH_SEARCH    "Take single-image maps with Search area instead of Record"
 END
 
 STRINGTABLE

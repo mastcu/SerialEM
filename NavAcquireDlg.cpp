@@ -1096,9 +1096,9 @@ void CNavAcquireDlg::ManageTimingEnables()
   m_editAfterMinutes.EnableWindow(act->timingType == NAA_AFTER_TIME && notOnlyEveryN);
   m_editWhenMoved.EnableWindow(act->timingType == NAA_IF_SEPARATED && notOnlyEveryN);
   m_editGotoItem.EnableWindow(notOnlyEveryN && !anywhere);
-  m_butMoveUp.EnableWindow(m_iSelectedPos > 0 && m_iSelectedPos != mFirstPosAfterTask);
+  m_butMoveUp.EnableWindow(m_iSelectedPos > 0);// && m_iSelectedPos != mFirstPosAfterTask);
   m_butMoveDown.EnableWindow(m_iSelectedPos < mNumShownActs - 1 && 
-    m_iSelectedPos != mFirstPosAfterTask - 1);
+    !(m_iSelectedPos == mFirstPosAfterTask - 1 && (act->flags & NAA_FLAG_ONLY_BEFORE)));
   EnableDlgItem(IDC_RNAVACQ_EVERY_N, runIt);
   EnableDlgItem(IDC_RNAVACQ_GROUP_START, notOnlyEveryN);
   EnableDlgItem(IDC_RNAVACQ_GROUP_END, notOnlyEveryN);
@@ -1242,8 +1242,13 @@ void CNavAcquireDlg::MoveAction(int dir)
   int temp;
   if (m_iSelectedPos + dir < 0 || m_iSelectedPos + dir >= mNumShownActs)
     return;
-  B3DSWAP(mCurrentOrder[mUnhiddenPosMap[m_iSelectedPos]],
-    mCurrentOrder[mUnhiddenPosMap[m_iSelectedPos + dir]], temp);
+  if (m_iSelectedPos == mFirstPosAfterTask && dir < 0)
+    setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_AFTER_ITEM, 0);
+  else if (m_iSelectedPos == mFirstPosAfterTask - 1 && dir > 0)
+    setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_AFTER_ITEM, 1);
+  else
+    B3DSWAP(mCurrentOrder[mUnhiddenPosMap[m_iSelectedPos]],
+      mCurrentOrder[mUnhiddenPosMap[m_iSelectedPos + dir]], temp);
   m_iSelectedPos += dir;
   BuildActionSection();
 }
