@@ -7539,6 +7539,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     "CoordsInPiece"};
   char *adocStr;
   TiltSeriesParam *tsParam, *tsp2;
+  TiltSeriesParam *tsMasterParam = mWinApp->mTSController->GetTiltSeriesParam();
   FileOptions *fileOpt, *fileo2;
   MontParam *montParam, *montp2;
   CMapDrawItem *item, *prev, *testItem;
@@ -7685,6 +7686,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       numParams = AdocGetNumberOfSections("TSParam");
       for (ind1 = 0; ind1 < numParams; ind1++) {
         tsParam = new TiltSeriesParam;
+        *tsParam = *tsMasterParam;
 #include "NavAdocParams.h"
 
         // Other tilt series items: three ints, extra recs
