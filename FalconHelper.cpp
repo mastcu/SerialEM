@@ -284,7 +284,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
 int CFalconHelper::ManageFalconReference(bool saving, bool aligning, 
   CString localFrameFolder)
 {
-  CString str, refName, refDir;
+  CString str, refName, refDir, mess;
   CFileStatus status;
   ImodImageFile *iiFile;
   int keepRefLimit = 10;
@@ -341,9 +341,9 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
     // Make the copy if necessary
     if (needCopy) {
       if (!CopyFile((LPCTSTR)refName, (LPCTSTR)str, false)) {
-        SEMMessageBox("Failed to copy gain reference from " + refDir + " to " + 
-          localFrameFolder);
-        return -1;
+        mess.Format("Failed to copy gain reference from %s to %s  (error %d)",
+          (LPCTSTR)refDir, (LPCTSTR)localFrameFolder, GetLastError());
+        SEMMessageBox(mess);
       }
 
       mLastRefSavedInDir = localFrameFolder;

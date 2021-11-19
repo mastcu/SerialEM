@@ -143,6 +143,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_SENDEMAIL, m_butSendEmail);
   DDX_Check(pDX, IDC_NA_SENDEMAIL, m_bSendEmail);
   DDX_Control(pDX, IDC_NA_ACQUIRE_TS, m_butAcquireTS);
+  DDX_Control(pDX, IDC_NA_DO_MULTISHOT, m_butDoMultishot);
   DDX_Control(pDX, IDC_NA_RUNMACRO, m_butRunMacro);
   DDX_Control(pDX, IDC_NA_ACQUIREMAP, m_butAcquireMap);
   DDX_Control(pDX, IDC_NA_JUSTACQUIRE, m_butJustAcquire);
@@ -552,8 +553,10 @@ void CNavAcquireDlg::OnReadParams()
   if (mWinApp->mDocWnd->GetTextFileName(true, false, cPathname, &filename))
     return;
   mWinApp->mParamIO->ReadAcqParamsFromFile(mParam, mActions, mCurrentOrder, cPathname);
-  if (!mAnyTSpoints)
+  if (!mAnyTSpoints && mAnyAcquirePoints)
     m_iAcquireType = mParam->nonTSacquireType;
+  if (mAnyTSpoints && !mAnyAcquirePoints)
+    m_iAcquireType = ACQUIRE_DO_TS;
   LoadParamsToDialog();
   ManageEnables();
   ManageOutputFile();
@@ -647,6 +650,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bHybridRealign = mParam->hybridRealign;
   m_bHideUnselectedOpts = mParam->hideUnselectedOpts;
   m_iMapWithViewSearch = mParam->mapWithViewSearch;
+  mLastNonTStype = mParam->nonTSacquireType;
   // m_iAcquireType is handled by caller
   LoadTSdependentToDlg();
 }
@@ -667,6 +671,10 @@ void CNavAcquireDlg::OnRadioCurParamSet()
   mCurrentOrder = &mAllOrders[m_iCurParamSet][0];
   LoadParamsToDialog();
   m_iAcquireType = mParam->acquireType;
+  if (!mAnyTSpoints && mAnyAcquirePoints)
+    m_iAcquireType = mParam->nonTSacquireType;
+  if (mAnyTSpoints && !mAnyAcquirePoints)
+    m_iAcquireType = ACQUIRE_DO_TS;
   ManageEnables();
   ManageOutputFile();
   BuildActionSection();
@@ -807,6 +815,7 @@ void CNavAcquireDlg::ManageEnables(void)
   m_butAcquireTS.EnableWindow(mAnyTSpoints);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
   m_butJustAcquire.EnableWindow(mAnyAcquirePoints);
+  m_butDoMultishot.EnableWindow(mAnyAcquirePoints);
   m_butRunMacro.EnableWindow(mAnyAcquirePoints);
   m_butSkipInitialMove.EnableWindow(mWinApp->mNavigator->OKtoSkipStageMove(mActions, 
     m_iAcquireType) != 0);

@@ -67,6 +67,7 @@ public:
   void ManageMacro(void);
   CButton m_butCloseValves;
   CButton m_butAcquireTS;
+  CButton m_butDoMultishot;
   BOOL m_bCloseValves;
   CButton m_butSendEmail;
   BOOL m_bSendEmail;
