@@ -220,8 +220,8 @@ void CProcessImage::OnProcessMinmaxmean()
   if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector(camP) &&  
     !DoseRateFromMean(imBuf, mean, pixel)) {
       sd = (float)(mean / (imBuf->mBinning * imBuf->mBinning * extra->mExposure / 
-        ((CamHasDoubledBinnings(camP) || (camP->CamFlags & DE_APOLLO_CAMERA)) ?
-          4. : 1.)));
+        ((CamHasDoubledBinnings(camP) || 
+        (camP->DE_camType && (camP->CamFlags & DE_APOLLO_CAMERA))) ? 4. : 1.)));
       rep2.Format("\r\n    %.3f electrons (%.2f counts) per physical pixel per second", 
         pixel, sd);
       report += rep2;
@@ -2600,8 +2600,8 @@ void CProcessImage::OnProcessMakecoloroverlay()
 void CProcessImage::OnProcessCropAverage()
 {
   int boxXsize, boxYsize, top, left, nx, ny, nxPad, nyPad, nxTaper, nyTaper, numAvg, mode;
-  int groupID, ind, i, loop, pad, csize, dsize, xpeakLimit, ypeakLimit;
-  size_t boxDim, corrDim;
+  int groupID, ind, loop, pad, csize, dsize, xpeakLimit, ypeakLimit;
+  size_t boxDim, corrDim, i;
   CNavigatorDlg *nav = mWinApp->mNavigator;
   float taperFrac = 0.1f;
   float padFrac = 0.1f;
@@ -2672,7 +2672,7 @@ void CProcessImage::OnProcessCropAverage()
       boxSlice = sliceBox(&bufSlice, left, top, left + boxXsize, top + boxYsize);
     }
     if (!boxSlice || sliceFloat(boxSlice)) {
-      for (i = 0; i < ind; i++)
+      for (i = 0; i < (unsigned int)ind; i++)
         sliceFree(boxSlices[i]);
       for (i = 0; i < (int)xformSlices.size(); i++)
         sliceFree(xformSlices[i]);
@@ -3345,7 +3345,7 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
     return 2;
   doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure * 
     imBuf->mBinning * imBuf->mBinning / ((CamHasDoubledBinnings(camParam) || 
-    (camParam->CamFlags & DE_APOLLO_CAMERA)) ? 4. : 1.)));
+    (camParam->DE_camType && (camParam->CamFlags & DE_APOLLO_CAMERA))) ? 4. : 1.)));
   if ((camParam->K2Type || IS_FALCON3_OR_4(camParam)) && imBuf->mK2ReadMode > 0)
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
   if (imBuf->mDoseRatePerUBPix > 0.)
