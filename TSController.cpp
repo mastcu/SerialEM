@@ -7055,7 +7055,7 @@ void CTSController::SyncOtherModulesToParam(void)
 void CTSController::SyncParamToOtherModules(void)
 {
   mFocusManager->SetBeamTilt(mTSParam.beamTilt, "from TSController param sync");
-  if (mWinApp->mNavigator && mWinApp->mNavigator->GetFocusCycleCounter() < 0)
+  if (!mWinApp->mNavigator || mWinApp->mNavigator->GetFocusCycleCounter() < 0)
     mFocusManager->SetTargetDefocus((float)mTSParam.targetDefocus);
   mFocusManager->SetDefocusOffset(mTSParam.autofocusOffset);
   mFocusManager->SetRefocusThreshold(mTSParam.refocusThreshold);
