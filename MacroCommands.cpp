@@ -3720,19 +3720,6 @@ int CMacCmd::SaveCalibrations(void)
   return 0;
 }
 
-// List Calibrations
-int CMacCmd::ListCalibrations(void)
-{
-  mWinApp->mMenuTargets.DoListISVectors(true);
-  mWinApp->mMenuTargets.DoListISVectors(false);
-  mWinApp->mMenuTargets.DoListStageCals();
-  mWinApp->mFocusManager->OnAutofocusListCalibrations();
-  mWinApp->mShiftManager->ListBeamShiftCals();
-  mWinApp->mBeamAssessor->ListIntensityCalibrations();
-  mWinApp->mBeamAssessor->ListSpotCalibrations();
-  return 0;
-}
-
 // SetProperty
 int CMacCmd::SetProperty(void)
 {
@@ -4662,6 +4649,20 @@ int CMacCmd::SetObjectiveStigmator(void)
   return 0;
 }
 
+// SetCondenserStigmator
+int CMacCmd::SetCondenserStigmator(void)
+{
+  double delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  if (!mScope->SetCondenserStigmator(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportXLensDeflector, SetXLensDeflector, ReportXLensFocus, SetXLensFocus
 int CMacCmd::ReportXLensDeflector(void)
 {
@@ -4737,6 +4738,20 @@ int CMacCmd::ReportObjectiveStigmator(void)
     return 1;
   }
   mLogRpt.Format("Objective stigmator is %.5f %.5f", delX, delY);
+  SetReportedValues(&mStrItems[1], delX, delY);
+  return 0;
+}
+
+// ReportCondenserStigmator
+int CMacCmd::ReportCondenserStigmator(void)
+{
+  double delX, delY;
+
+  if (!mScope->GetCondenserStigmator(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  mLogRpt.Format("Condenser stigmator is %.5f %.5f", delX, delY);
   SetReportedValues(&mStrItems[1], delX, delY);
   return 0;
 }

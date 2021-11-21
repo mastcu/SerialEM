@@ -425,6 +425,7 @@ public:
   void KillUpdateTimer();
   double EasyRunScript(CString command, int selectCamera, int DMindex);
   int CheckFilterSettings();
+  void SetFilterSkipping();
   void ReleaseCamera(int createFor);
   BOOL CreateCamera(int createFor, bool popupError = true);
   void ShowReference(int type);
@@ -996,6 +997,8 @@ public:
   float mISXcameraOffset[MAX_CAMERAS];
   float mISYcameraOffset[MAX_CAMERAS];
   float mDoseAdjustmentFactor;   // Adjustment factor set from scripting
+  int mNumFiltCheckFailures;     // Number of times filter check has failed in a row
+  int mSkipFiltCheckCount;       // Counter for skipping the filter check
 
 public:
   void SetNonGatanPostActionTime(void);

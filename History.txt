@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/21/21: Fixed image acquisition from Gatan camera, broken 11/8.
+
+11/21/21: When DM dies and there is a filter, the filter update will not only
+retry every 5 seconds, since the more frequent retries were hanging SerialEM
+with a socket connection.
+
+11/21/21: Added condenser stigmator script commands.
+
 11/18/21: Fixed Falcon dose rate output being off by 4, broken 10/12.
 
 11/18/21: Changed name of temporary file during inverting/reordering of tilt

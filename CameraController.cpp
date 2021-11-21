@@ -436,6 +436,8 @@ CCameraController::CCameraController()
   mLastJeolDetectorID = -1;
   mConsetsShareChannelList = false;
   mDoseAdjustmentFactor = 0.;
+  mNumFiltCheckFailures = 0;
+  mSkipFiltCheckCount = 0;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -7673,6 +7675,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           // For STEM, get one array, acquire the images, then get additional arrays
           // and the stored images.
           retval = GetArrayForImage(td, arrSize);
+          longSize = (long)arrSize;
           if (!retval) {
             try {
               DWORD startSTEM = GetTickCount();
@@ -7739,6 +7742,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               CallGatanCamera(pGatan, QueueScript(camPlace / 4 + 1, (long *)CamCommand));
             }
             retval = GetArrayForImage(td, arrSize);
+            longSize = (long)arrSize;
             if (!retval) {
               td->ErrorFromSave = 0;
               if (td->NeedsReadMode) {
@@ -10515,6 +10519,11 @@ int CCameraController::CheckFilterSettings()
   if (mNoFilterControl)
     return 0;
 
+  if (mNumFiltCheckFailures > 0 && mSkipFiltCheckCount > 0) {
+    mSkipFiltCheckCount--;
+    return 0;
+  }
+
   // Check if the ZLP was aligned in the FEI interface
   if (camParam->filterIsFEI) {
     try {
@@ -10527,8 +10536,10 @@ int CCameraController::CheckFilterSettings()
       }
     }
     catch (_com_error E) {
+      SetFilterSkipping();
       return 3;
     }
+    mNumFiltCheckFailures = 0;
     return 0;
   }
 
@@ -10541,10 +10552,12 @@ int CCameraController::CheckFilterSettings()
       mNumZLPAlignChanges = MAX_ESHIFT_TIMES;
   }
 
-  if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy || mTD.DoingTiltSums) 
+  if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy || mTD.DoingTiltSums)
     return 1;
-  if (CreateCamera(CREATE_FOR_GIF, false))
+  if (CreateCamera(CREATE_FOR_GIF, false)) {
+    SetFilterSkipping();
     return 2;
+  }
   try {
     if (mDebugMode) {
       MainCallDMIndCamera(sGIFisSocket, SetDebugMode(false));
@@ -10612,6 +10625,7 @@ int CCameraController::CheckFilterSettings()
       camParam->useTVToUnblank = 1;
   }
   catch (_com_error E) {
+    SetFilterSkipping();
     retval = 3;
   }
   if (changed && !timingOut) {
@@ -10635,8 +10649,21 @@ int CCameraController::CheckFilterSettings()
   if (mWasSpectroscopy && imageMode)
     mBackToImagingTime = curTime;
   mWasSpectroscopy = !imageMode;
-  
+
+  if (!retval)
+    mNumFiltCheckFailures = 0;
   return retval;
+}
+
+// If there is a failure checking the filter, increment the count of consecutive failures
+// and make it skip 1, 2, or 10 times between updates
+void CCameraController::SetFilterSkipping()
+{
+  mNumFiltCheckFailures++;
+  mSkipFiltCheckCount = mNumFiltCheckFailures >= 3 ? 10 : mNumFiltCheckFailures;
+  if (mNumFiltCheckFailures == 3)
+    mWinApp->AppendToLog("WARNING: Checking the energy filter has failed 3 times in a "
+      "row;   it will be tried only every 5 seconds until it succeeds");
 }
 
 // This is meant to be called from inside a try block
