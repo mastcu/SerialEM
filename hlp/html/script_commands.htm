@@ -1770,10 +1770,10 @@
               Calibrations menu.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ListCalibrations</TD>
+          <TD class="scriptcommand">ListAllCalibrations</TD>
           <TD>Print tables with image shift, stage shift, focus, astigmatism via CTF, beam shift, beam
           intensity and spot intensity calibrations to the log window for diagnostic purposes.
-          Command added in 3.9, 7/8/21.</TD>
+          &nbsp; Command added in 3.9, 1/8/21.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
@@ -2587,6 +2587,14 @@
         <TR>
           <TD class="scriptcommand">ReportObjectiveStigmator</TD>
           <TD>Reports the X and Y values of the objective stigmator, between -1 and 1</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetCondenserStigmator #X #Y</TD>
+          <TD>Sets the condenser lens stigmator to the given values (between -1 and 1)</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCondenserStigmator</TD>
+          <TD>Reports the X and Y values of the condenser stigmator, between -1 and 1</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetBeamBlank #</TD>
@@ -4304,12 +4312,6 @@
           <TD class="scriptcommand">ReportSettingsFile</TD>
           <TD>Reports the name of the current settings file and the name of the current script
             package file, or "None" if scripts were loaded from settings.&nbsp; Command added in 4.9, 1/8/21.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ListAllCalibrations</TD>
-          <TD>Lists IS vectors, stage vectors, beam calibrations and focus and tuning calibrations
-            just as could be done from the menus.&nbsp; IS vectors are listed using calibrated
-            pixel sizes.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>

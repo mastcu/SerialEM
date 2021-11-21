@@ -78,6 +78,8 @@ GET_ONE_DBL(GetImageDistanceOffset) LINE_END
 SET_ONE_DBL(SetImageDistanceOffset) LINE_END
 GET_TWO_DBL(GetObjectiveStigmator) LINE_END
 SET_TWO_DBL(SetObjectiveStigmator) LINE_END
+GET_TWO_DBL(GetCondenserStigmator) LINE_END
+SET_TWO_DBL(SetCondenserStigmator) LINE_END
 SET_ONE_BOOL(SetAutoNormEnabled) LINE_END
 GET_ONE_INT(GetSubMode) LINE_END
 GET_ONE_INT(GetDarkFieldMode) LINE_END

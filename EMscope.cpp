@@ -3204,7 +3204,7 @@ bool CEMscope::GetObjectiveStigmator(double & stigX, double & stigY)
     return false;
 
   ScopeMutexAcquire("GetObjectiveStigmator", true);
-  
+
   try {
     mPlugFuncs->GetObjectiveStigmator(&stigX, &stigY);
   }
@@ -3224,7 +3224,7 @@ bool CEMscope::SetObjectiveStigmator(double stigX, double stigY)
     return false;
 
   ScopeMutexAcquire("SetObjectiveStigmator", true);
-  
+
   try {
     mPlugFuncs->SetObjectiveStigmator(stigX, stigY);
   }
@@ -3233,6 +3233,46 @@ bool CEMscope::SetObjectiveStigmator(double stigX, double stigY)
     success = false;
   }
   ScopeMutexRelease("SetObjectiveStigmator");
+  return success;
+}
+
+// Get the condenser stigmator, range -1 to 1
+bool CEMscope::GetCondenserStigmator(double & stigX, double & stigY)
+{
+  bool success = true;
+  if (!sInitialized)
+    return false;
+
+  ScopeMutexAcquire("GetCondenserStigmator", true);
+
+  try {
+    mPlugFuncs->GetCondenserStigmator(&stigX, &stigY);
+  }
+  catch (_com_error E) {
+    success = false;
+    SEMReportCOMError(E, _T("getting Condenser Stigmator "));
+  }
+  ScopeMutexRelease("GetCondenserStigmator");
+  return success;
+}
+
+// Set the condenser stigmator
+bool CEMscope::SetCondenserStigmator(double stigX, double stigY)
+{
+  bool success = true;
+  if (!sInitialized)
+    return false;
+
+  ScopeMutexAcquire("SetCondenserStigmator", true);
+
+  try {
+    mPlugFuncs->SetCondenserStigmator(stigX, stigY);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting Condenser Stigmator "));
+    success = false;
+  }
+  ScopeMutexRelease("SetCondenserStigmator");
   return success;
 }
 
