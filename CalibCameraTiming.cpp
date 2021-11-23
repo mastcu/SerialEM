@@ -249,10 +249,6 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mLowerRefRatio = -1.;
   mBlankMean = 0.;
 
-  // Run no shutter camera as no shutter 1; the negative delays will be imposed in the
-  // blanker
-  if (!mCamParam->STEMcamera && mCamParam->noShutter == 2)
-    mCamParam->noShutter = 1;
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CAL_CAM_TIMING, 0, 0); 
   mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING CAMERA TIMING");
@@ -347,6 +343,11 @@ void CCalibCameraTiming::CalTimeNextTask()
 
       // Some cameras just need the one param to force initial blanking
       mCamParam->extraBeamTime = -1.;
+
+      // Run no shutter camera as no shutter 1; the negative delays will be imposed in the
+      // blanker
+      if (!mCamParam->STEMcamera && mCamParam->noShutter == 2)
+        mCamParam->noShutter = 1;
     } else {
 
       // Gatan: back off on built in settling but keep it as big as minimum drift

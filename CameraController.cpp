@@ -10237,7 +10237,7 @@ void CCameraController::ErrorCleanup(int error)
   if (error || (mRepFlag < 0 && !mTD.DoingTiltSums) || mHalting || mPending >= 0 ||
     (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))
     mScope->SetCameraAcquiring(false);
-  if (mParam->noShutter && !mTD.ReblankTime && mWinApp->mCalibTiming->Calibrating())
+  if (mParam->noShutter == 1 && !mTD.ReblankTime && mWinApp->mCalibTiming->Calibrating())
     mScope->BlankBeam(true, "ErrorCleanup for NoShutter 2 timing");
   if (mParam->FEItype && mTD.eagleIndex < 0)
     mParam->eagleIndex = mTD.eagleIndex;
