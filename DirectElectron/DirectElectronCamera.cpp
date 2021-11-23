@@ -2045,6 +2045,7 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
   bool allowNamePrediction, bool &nameConfirmed)
 {
   CString str;
+  std::string valStr;
   double startTime = GetTickCount();
   BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
   BOOL saveCount = saveSums && mLastElectronCounting > 0;
@@ -2074,18 +2075,32 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
       mLastSaveDir) + "\\" + str;
     mPathAndDatasetName = str;
 
-    // Attach the standard suffix and extensions
-    if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
-      if ((!saveCount && mNormAllInServer) || 
-        (saveCount && mServerVersion >= DE_NO_COUNTING_PREFIX))
-        str += "_movie";
-      else if (!saveCount)
-        str += saveSums ? "_SumImages" : "_RawImages";
-      else if (mLastSuperResolution > 0)
-        str += "_super_movie";
-      else
-        str += "_counting_movie";
-      str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
+    // Try to use new property and fall back to what it is maybe supposed to be
+    if (mServerVersion >= DE_RETURNS_FRAME_PATH) {
+      if (mDeServer->getProperty(mLastElectronCounting > 0 ?
+        "Autosave Counted Movie Frames File Path" :
+        "Autosave Integrated Movie Frames File Path", &valStr) && valStr.length() > 0) {
+        str = valStr.c_str();
+      } else {
+        str += mLastElectronCounting > 0 ? "_counted_frames.mrc" : 
+          "_integrated_frames.mrc";
+      }
+
+    } else {
+
+      // Or attach the standard suffix and extensions to older names
+      if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
+        if ((!saveCount && mNormAllInServer) ||
+          (saveCount && mServerVersion >= DE_NO_COUNTING_PREFIX))
+          str += "_movie";
+        else if (!saveCount)
+          str += saveSums ? "_SumImages" : "_RawImages";
+        else if (mLastSuperResolution > 0)
+          str += "_super_movie";
+        else
+          str += "_counting_movie";
+        str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
+      }
     }
     extra->mSubFramePath = str;
 
