@@ -30,7 +30,7 @@
 // BEWARE: primary action radio buttons are now out of order, in SerialEM.rc or if
 // reordering with Ctrl-D, need map, Just Acquire, run script, tilt series, multishot
 
-static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_JUSTACQUIRE,
+static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_SAVE_AS_MAP,
 IDC_NA_RUNMACRO, IDC_NA_ACQUIRE_TS, IDC_NA_DO_MULTISHOT, IDC_EDIT_SUBSET_END,
 IDC_EDIT_SUBSET_START,  IDC_EDIT_CYCLE_TO, IDC_EDIT_CYCLE_FROM, IDC_EDIT_EARLY_FRAMES,
 IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING, IDC_STAT_SPACER4,
@@ -41,7 +41,7 @@ IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISIT
 IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
 IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
 IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, 
-IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, 
+IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE,
 IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_STAT_SPACER3, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
@@ -92,7 +92,7 @@ static int sHeightTable[sizeof(idTable) / sizeof(int)];
 
 CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CNavAcquireDlg::IDD, pParent)
-  , m_iAcquireType(0)
+  , m_iAcquireChoice(0)
   , m_bCloseValves(FALSE)
   , m_bSendEmail(FALSE)
   , m_strSavingFate(_T(""))
@@ -125,6 +125,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bRelaxStage(FALSE)
   , m_bHideUnselectedOpts(FALSE)
   , m_iMapWithViewSearch(0)
+  , m_bSaveAsMap(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -137,7 +138,7 @@ CNavAcquireDlg::~CNavAcquireDlg()
 void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
-  DDX_Radio(pDX, IDC_NA_ACQUIREMAP, m_iAcquireType);
+  DDX_Radio(pDX, IDC_NA_ACQUIREMAP, m_iAcquireChoice);
   DDX_Control(pDX, IDC_NA_CLOSE_VALVES, m_butCloseValves);
   DDX_Check(pDX, IDC_NA_CLOSE_VALVES, m_bCloseValves);
   DDX_Control(pDX, IDC_NA_SENDEMAIL, m_butSendEmail);
@@ -146,7 +147,6 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_DO_MULTISHOT, m_butDoMultishot);
   DDX_Control(pDX, IDC_NA_RUNMACRO, m_butRunMacro);
   DDX_Control(pDX, IDC_NA_ACQUIREMAP, m_butAcquireMap);
-  DDX_Control(pDX, IDC_NA_JUSTACQUIRE, m_butJustAcquire);
   DDX_Control(pDX, IDC_COMBO_PREMACRO, m_comboPremacro);
   DDX_Control(pDX, IDC_COMBO_POSTMACRO, m_comboPostmacro);
   DDX_Control(pDX, IDC_COMBO_MACRO, m_comboMacro);
@@ -213,6 +213,8 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDOK, m_butOKGO);
   DDX_Control(pDX, IDC_STAT_SPACER, m_statSpacer);
   DDX_Radio(pDX, IDC_RMAP_WITH_REC, m_iMapWithViewSearch);
+  DDX_Control(pDX, IDC_NA_SAVE_AS_MAP, m_butSaveAsMap);
+  DDX_Check(pDX, IDC_NA_SAVE_AS_MAP, m_bSaveAsMap);
 }
 
 
@@ -267,6 +269,7 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RMAP_WITH_REC, OnMapWithRecViewSearch)
   ON_BN_CLICKED(IDC_RMAP_WITH_VIEW, OnMapWithRecViewSearch)
   ON_BN_CLICKED(IDC_RMAP_WITH_SEARCH, OnMapWithRecViewSearch)
+  ON_BN_CLICKED(IDC_NA_SAVE_AS_MAP, OnSaveAsMap)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -426,7 +429,7 @@ void CNavAcquireDlg::OnOK()
     mPostponed = 0;
     return;
   }
-  if (m_iAcquireType == ACQUIRE_TAKE_MAP && m_bEarlyReturn && !m_iEarlyFrames &&
+  if (OptionsToAcquireType() == ACQUIRE_TAKE_MAP && m_bEarlyReturn && !m_iEarlyFrames &&
     mWinApp->GetHasK2OrK3Camera()) {
     AfxMessageBox("You must have a non-zero value for the number\n"
       "of early return frames when acquiring maps", MB_EXCLAME);
@@ -554,9 +557,9 @@ void CNavAcquireDlg::OnReadParams()
     return;
   mWinApp->mParamIO->ReadAcqParamsFromFile(mParam, mActions, mCurrentOrder, cPathname);
   if (!mAnyTSpoints && mAnyAcquirePoints)
-    m_iAcquireType = mParam->nonTSacquireType;
+    AcquireTypeToOptions(mParam->nonTSacquireType);
   if (mAnyTSpoints && !mAnyAcquirePoints)
-    m_iAcquireType = ACQUIRE_DO_TS;
+    AcquireTypeToOptions(ACQUIRE_DO_TS);
   LoadParamsToDialog();
   ManageEnables();
   ManageOutputFile();
@@ -584,7 +587,7 @@ void CNavAcquireDlg::UnloadTSdependentFromDlg(int acquireType)
 // Load items into dialog that are stored separately for TS and nonTS
 void CNavAcquireDlg::LoadTSdependentToDlg(void)
 {
-  if (m_iAcquireType == ACQUIRE_DO_TS) {
+  if (OptionsToAcquireType() == ACQUIRE_DO_TS) {
     mPremacNum = mParam->preMacroInd;
     mPostmacNum = mParam->postMacroInd;
     SET_ACTION(mActions, NAACT_RUN_PREMACRO, mParam->runPremacro);
@@ -623,9 +626,12 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->relaxStage = m_bRelaxStage;
   mParam->hybridRealign = m_bHybridRealign;
   mParam->hideUnselectedOpts = m_bHideUnselectedOpts;
-  mParam->acquireType = m_iAcquireType;
+  mParam->acquireType = OptionsToAcquireType();
+  if (mParam->acquireType != ACQUIRE_DO_TS)
+    mParam->nonTSacquireType = mParam->acquireType;
+  mParam->saveAsMapChoice = m_bSaveAsMap;
   mParam->mapWithViewSearch = m_iMapWithViewSearch;
-  UnloadTSdependentFromDlg(m_iAcquireType);
+  UnloadTSdependentFromDlg(OptionsToAcquireType());
 }
 
 // Get parameters from current set into dialog
@@ -651,7 +657,9 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bHideUnselectedOpts = mParam->hideUnselectedOpts;
   m_iMapWithViewSearch = mParam->mapWithViewSearch;
   mLastNonTStype = mParam->nonTSacquireType;
-  // m_iAcquireType is handled by caller
+  // m_iAcquireChoice is handled by caller
+  if (m_iAcquireChoice)
+    m_bSaveAsMap = mParam->saveAsMapChoice;
   LoadTSdependentToDlg();
 }
 
@@ -670,11 +678,11 @@ void CNavAcquireDlg::OnRadioCurParamSet()
   mActions = &mAllActions[m_iCurParamSet][0];
   mCurrentOrder = &mAllOrders[m_iCurParamSet][0];
   LoadParamsToDialog();
-  m_iAcquireType = mParam->acquireType;
+  AcquireTypeToOptions(mParam->acquireType);
   if (!mAnyTSpoints && mAnyAcquirePoints)
-    m_iAcquireType = mParam->nonTSacquireType;
+    AcquireTypeToOptions(mParam->nonTSacquireType);
   if (mAnyTSpoints && !mAnyAcquirePoints)
-    m_iAcquireType = ACQUIRE_DO_TS;
+    AcquireTypeToOptions(ACQUIRE_DO_TS);
   ManageEnables();
   ManageOutputFile();
   BuildActionSection();
@@ -683,7 +691,7 @@ void CNavAcquireDlg::OnRadioCurParamSet()
 // Change in primary task
 void CNavAcquireDlg::OnNaAcquiremap()
 {
-  int oldAcquire = m_iAcquireType;
+  int oldAcquire = OptionsToAcquireType();
   UpdateData(true);
   UnloadTSdependentFromDlg(oldAcquire);
   LoadTSdependentToDlg();
@@ -692,13 +700,34 @@ void CNavAcquireDlg::OnNaAcquiremap()
   ManageOutputFile();
 }
 
+// Checkbox to make a map
+void CNavAcquireDlg::OnSaveAsMap()
+{
+  UpdateData(true);
+  ManageEnables();
+  ManageOutputFile();
+}
+
+// Functions to get back and forth between 4 radios & checkbox and 5 defined actions
+void CNavAcquireDlg::AcquireTypeToOptions(int acqType)
+{
+  m_iAcquireChoice = acqType > 0 ? acqType - 1 : 0;
+  if (acqType < 2)
+    m_bSaveAsMap = !acqType;
+}
+
+int CNavAcquireDlg::OptionsToAcquireType()
+{
+  return B3DCHOICE(m_iAcquireChoice > 0, m_iAcquireChoice + 1, m_bSaveAsMap ? 0 : 1);
+}
+
 // Macro management and selections
 void CNavAcquireDlg::ManageMacro(void)
 {
   m_comboPremacro.SetCurSel(mPremacNum - 1);
   m_comboPostmacro.SetCurSel(mPostmacNum - 1);
   m_comboMacro.SetCurSel(mMacroNum - 1);
-  m_comboMacro.EnableWindow(m_iAcquireType == ACQUIRE_RUN_MACRO);
+  m_comboMacro.EnableWindow(OptionsToAcquireType() == ACQUIRE_RUN_MACRO);
   m_comboPremacro.EnableWindow(DOING_ACTION(NAACT_RUN_PREMACRO));
   m_comboPostmacro.EnableWindow(DOING_ACTION(NAACT_RUN_POSTMACRO));
   EnableDlgItem(IDC_STAT_PREMACRO, DOING_ACTION(NAACT_RUN_PREMACRO));
@@ -755,10 +784,11 @@ void CNavAcquireDlg::ManageOutputFile(void)
 {
   CString dir;
   bool allZeroER;
+  int acquireType = OptionsToAcquireType();
   m_strFileSavingInto = "";
   m_strSavingFate = "";
   BOOL multiSaving = false;
-  if (m_iAcquireType == ACQUIRE_MULTISHOT) {
+  if (acquireType == ACQUIRE_MULTISHOT) {
     multiSaving = mWinApp->mNavHelper->IsMultishotSaving(&allZeroER);
     if (!multiSaving && allZeroER)
       m_strSavingFate = "NO SAVING: All 0-frame early returns in multishot";
@@ -766,11 +796,11 @@ void CNavAcquireDlg::ManageOutputFile(void)
       m_strSavingFate = "NO SAVING: \"Save Record\" not on in multishot";
   }
   if (mWinApp->GetHasK2OrK3Camera() && m_bEarlyReturn && !m_iEarlyFrames &&
-    m_iAcquireType == ACQUIRE_IMAGE_ONLY) {
+    acquireType == ACQUIRE_IMAGE_ONLY) {
     m_strSavingFate = "NO SAVING: \"Early return\" with 0 frames selected";
-  } else if (m_bSkipSaving && m_iAcquireType == ACQUIRE_IMAGE_ONLY) {
+  } else if (m_bSkipSaving && acquireType == ACQUIRE_IMAGE_ONLY) {
     m_strSavingFate = "NO SAVING: \"Skip saving\" option selected";
-  } else if (m_iAcquireType == ACQUIRE_TAKE_MAP || m_iAcquireType == ACQUIRE_IMAGE_ONLY ||
+  } else if (acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY ||
     multiSaving) {
     if (mNumAcqBeforeFile && mOutputFile.IsEmpty()) {
       m_strSavingFate = "No output file is open for first acquire item!";
@@ -789,7 +819,7 @@ void CNavAcquireDlg::ManageOutputFile(void)
       UtilSplitPath(mOutputFile, dir, m_strFileSavingInto);
     }
   } else if (m_bSkipInitialMove && mWinApp->mNavigator->OKtoSkipStageMove(mActions,
-    m_iAcquireType) != 0) {
+    acquireType) != 0) {
       m_strFileSavingInto = "Relying on script to run Realign or move stage";
   }
   if (!mAnyAcquirePoints && !mAnyTSpoints) {
@@ -801,24 +831,26 @@ void CNavAcquireDlg::ManageOutputFile(void)
 // Take care of all the state-dependent enabling except the timing section
 void CNavAcquireDlg::ManageEnables(void)
 {
-  bool imageOrMap = m_iAcquireType == ACQUIRE_IMAGE_ONLY || 
-    m_iAcquireType == ACQUIRE_TAKE_MAP;
+  int acquireType = OptionsToAcquireType();
+  bool imageOrMap = acquireType == ACQUIRE_IMAGE_ONLY ||
+    acquireType == ACQUIRE_TAKE_MAP;
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
-  bool cycleOK = m_iAcquireType == ACQUIRE_DO_TS || m_iAcquireType == ACQUIRE_RUN_MACRO ||
+  bool cycleOK = acquireType == ACQUIRE_DO_TS || acquireType == ACQUIRE_RUN_MACRO ||
     DOING_ACTION(NAACT_RUN_POSTMACRO) || DOING_ACTION(NAACT_RUN_PREMACRO) ||
     DOING_ACTION(NAACT_AUTOFOCUS) || 
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC);
-  bool consetOK = mWinApp->LowDoseMode() && m_iAcquireType == ACQUIRE_TAKE_MAP;
-  m_butSetupMultishot.EnableWindow(m_iAcquireType == ACQUIRE_MULTISHOT);
+  bool consetOK = mWinApp->LowDoseMode() && 
+    (acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY);
+  m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset);
   m_editSubsetEnd.EnableWindow(m_bDoSubset);
   m_butAcquireTS.EnableWindow(mAnyTSpoints);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
-  m_butJustAcquire.EnableWindow(mAnyAcquirePoints);
+  m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice);
   m_butDoMultishot.EnableWindow(mAnyAcquirePoints);
   m_butRunMacro.EnableWindow(mAnyAcquirePoints);
   m_butSkipInitialMove.EnableWindow(mWinApp->mNavigator->OKtoSkipStageMove(mActions, 
-    m_iAcquireType) != 0);
+    acquireType) != 0);
   EnableDlgItem(IDC_NA_CYCLE_DEFOCUS, cycleOK);
   m_editCycleFrom.EnableWindow(m_bCycleDefocus && cycleOK);
   m_editCycleTo.EnableWindow(m_bCycleDefocus && cycleOK);
@@ -829,7 +861,7 @@ void CNavAcquireDlg::ManageEnables(void)
   m_butEarlyReturn.EnableWindow(imageOrMap);
   EnableDlgItem(IDC_STAT_FRAMES, imageOrMap);
   m_butAdjustBtforIS.EnableWindow(imageOrMap && mOKtoAdjustBT);
-  m_butSkipSaving.EnableWindow(m_iAcquireType == ACQUIRE_IMAGE_ONLY);
+  m_butSkipSaving.EnableWindow(acquireType == ACQUIRE_IMAGE_ONLY);
   m_butHybridRealign.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM) && 
     DOING_ACTION(NAACT_ALIGN_TEMPLATE) &&
     mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
@@ -856,12 +888,13 @@ void CNavAcquireDlg::ExternalUpdate()
 // if appropriate
 void CNavAcquireDlg::ManageForSubset(void)
 {
+  int acquireType = OptionsToAcquireType();
   mWinApp->mNavigator->EvaluateAcquiresForDlg(this);
-  if (m_iAcquireType == ACQUIRE_DO_TS && !mAnyTSpoints && mAnyAcquirePoints)
-    m_iAcquireType = mLastNonTStype;
-  if (m_iAcquireType != ACQUIRE_DO_TS && mAnyTSpoints && !mAnyAcquirePoints) {
-    mLastNonTStype = m_iAcquireType;
-    m_iAcquireType = ACQUIRE_DO_TS;
+  if (acquireType == ACQUIRE_DO_TS && !mAnyTSpoints && mAnyAcquirePoints)
+    acquireType = mLastNonTStype;
+  if (acquireType != ACQUIRE_DO_TS && mAnyTSpoints && !mAnyAcquirePoints) {
+    mLastNonTStype = acquireType;
+    acquireType = ACQUIRE_DO_TS;
   }
   ManageEnables();
   ManageOutputFile();
@@ -876,6 +909,7 @@ void CNavAcquireDlg::BuildActionSection(void)
   CRect actRect;
   bool runIt;
   BOOL states[5] = {true, true, true, true, true};
+  int acquireType = OptionsToAcquireType();
   Invalidate();
 
   // Leave out the hidden ones and configure the rest; loop on before then after task
@@ -991,17 +1025,17 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_NA_CLOSE_VALVES);
     if (!m_bSendEmail)
       mIDsToDrop.push_back(IDC_NA_SENDEMAIL);
-    if (m_iAcquireType != ACQUIRE_TAKE_MAP)
+    if (m_iAcquireChoice > 0)
       mIDsToDrop.push_back(IDC_NA_ACQUIREMAP);
-    if (m_iAcquireType != ACQUIRE_IMAGE_ONLY)
-      mIDsToDrop.push_back(IDC_NA_JUSTACQUIRE);
-    if (m_iAcquireType != ACQUIRE_MULTISHOT) {
+    if (m_iAcquireChoice > 0 || !m_bSaveAsMap)
+      mIDsToDrop.push_back(IDC_NA_SAVE_AS_MAP);
+    if (acquireType != ACQUIRE_MULTISHOT) {
       mIDsToDrop.push_back(IDC_NA_DO_MULTISHOT);
       mIDsToDrop.push_back(IDC_NA_SETUP_MULTISHOT);
     }
-    if (m_iAcquireType != ACQUIRE_DO_TS)
+    if (acquireType != ACQUIRE_DO_TS)
       mIDsToDrop.push_back(IDC_NA_ACQUIRE_TS);
-    if (m_iAcquireType != ACQUIRE_RUN_MACRO) {
+    if (acquireType != ACQUIRE_RUN_MACRO) {
       mIDsToDrop.push_back(IDC_NA_RUNMACRO);
       mIDsToDrop.push_back(IDC_COMBO_MACRO);
     }

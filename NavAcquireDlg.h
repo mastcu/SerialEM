@@ -49,7 +49,7 @@ private:
 
 public:
   int CheckActionOrder(int *order);
-  int m_iAcquireType;
+  int m_iAcquireChoice;
   NavAcqParams *mParam;
   NavAcqParams *mMasterParam;
   NavAcqParams mAllCurParam[2];
@@ -75,7 +75,6 @@ public:
   BOOL mAnyTSpoints;
   CButton m_butAcquireMap;
   CButton m_butRunMacro;
-  CButton m_butJustAcquire;
   void LoadTSdependentToDlg(void);
   void UnloadDialogToCurParams();
   void LoadParamsToDialog();
@@ -183,4 +182,9 @@ public:
   CStatic m_statSpacer;
   int m_iMapWithViewSearch;
   afx_msg void OnMapWithRecViewSearch();
+  CButton m_butSaveAsMap;
+  BOOL m_bSaveAsMap;
+  afx_msg void OnSaveAsMap();
+  void AcquireTypeToOptions(int acqType);
+  int OptionsToAcquireType();
 };

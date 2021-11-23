@@ -26,8 +26,8 @@
       marked as 'Acquire' or 'Tilt Series'. These operations are of two kinds: the
       &quot;Primary Action&quot; performed to acquire images, and &quot;other tasks&quot;, optional steps
       to prepare for that acquisition.&nbsp; For items marked as 'Acquire', the
-      primary actions available are to take and save an image, take an image and save
-      it as a map, acquire with the Multiple Records procedure, or run a script at each point. If there are only items marked as
+      primary actions available are to take and save an image, optionally making it a 
+      Navigator map; acquire with the Multiple Records procedure; or run a script at each point. If there are only items marked as
       'Acquire', the Tilt Series option is unavailable; if there are only items
       marked as 'Tilt Series', the other actions are unavailable. If there are both
       kinds of items marked, the dialog will open with the Tilt series option
@@ -84,23 +84,27 @@
       useful for mapping where parameter choices may be much simpler.</P>
     <P><A NAME="primaryAction"></A>&nbsp;</P>
     <P><B><em>Primary Action</em></B></P>
-    <P><B>Acquire map image </B>- The image file must already be opened before starting
+    <P><B>Acquire and save image or montage </B>- When this option is selected, turn 
+      on the <strong>Make Navigator map</strong> checkbox to make a map from each image or montage. </P>
+    <ul>
+      <li><em>When making a map</em>, the image file must already be opened before starting
       the operation, unless a new file is set to be opened when the first item is
       acquired. As each area is acquired, it will be added as a map item with a label
       based on the label of the point being acquired (e.g., 12-A for point 12). The
       original point will no longer be marked for acquisition and it will no longer
       be drawn, to reduce clutter. Once the acquisition is finished, you could delete
-      the original points.</P>
-    <P><B>Just acquire and save image</B> - Again, the image file must be open before
-      starting unless a file is set to be opened on the first item. This option is
-      useful if you do not need to make maps of your acquired images, as well as for
-      high quality data acquisition.&nbsp; For both
-      this option and the previous one, buttons in the Camera and Script control panel
+      the original points.&nbsp; </li>
+      <li><em>When not making a map</em>, such as for high quality data acquisition, the image file must 
+        again be open before
+      starting unless either a file is set to be opened on the first item, or the option
+        <strong>Skip saving to file</strong> is selected below. </li>
+      <li><em>In either case</em>, buttons in the Camera and Script control panel
       allow you to stop the acquisition immediately (&#39;STOP&#39;), end it after the current
       item is complete (&#39;End Nav&#39;), or pause the acquisition after the current item is
       complete to allow some intervention (&#39;PauseN&#39;).&nbsp; Once acquisition is
       paused, it can be resumed on the next item with &#39;ResumeN&#39; or ended immediately
-      with &#39;End Nav&#39;.</P>
+      with &#39;End Nav&#39;.</li>
+    </ul>
     <P><strong>Acquire multiple Records</strong> - The parameters set in the
       <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> are applied
       in this acquisition routine and take precedence over some similar parameters
@@ -164,11 +168,11 @@
       the saving is finished, and return either an image with the given number of
       frames if a positive number is entered in the text box, no image if 0 is
       entered, or a sum of all the frames if -1 is entered. </P>
-    <P><strong>Acquire non-montage maps in Low Dose with</strong></P>
-    <P>This set of radio buttons lets you make single-image maps in Low Dose mode with 
+    <P><strong>Acquire non-montage images in Low Dose with</strong></P>
+    <P>This set of radio buttons lets you take single images in Low Dose mode with 
       either the View or Search area, instead of just the Record area, just as you can 
       when montaging.&nbsp; They are enabled and have an effect only when the primary 
-      action is to acquire maps.</P>
+      action is to acquire images, and when not montaging.</P>
     <P><strong>Skip saving to file</strong></P>
     <P>This option is enabled when just acquiring images and allows you to skip saving
       to a file, which might be desired when saving frames.</P>

@@ -8511,9 +8511,9 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 
     // Run the dialog
     if (fromMenu) {
-      dlg->m_iAcquireType = mAcqParm->nonTSacquireType;
+      dlg->AcquireTypeToOptions(mAcqParm->nonTSacquireType);
       if (dlg->mAnyTSpoints)
-        dlg->m_iAcquireType = ACQUIRE_DO_TS;
+        dlg->AcquireTypeToOptions(ACQUIRE_DO_TS);
       mNavAcquireDlg->Create(IDD_NAVACQUIRE);
       mWinApp->SetPlacementFixSize(mNavAcquireDlg, 
         mHelper->GetAcquireDlgPlacement(false));
@@ -8536,9 +8536,9 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
       return;
     }
 
-    if (dlg->m_iAcquireType != ACQUIRE_DO_TS)
-      mAcqParm->nonTSacquireType = dlg->m_iAcquireType;
-    mAcqParm->acquireType = dlg->m_iAcquireType;
+    if (dlg->OptionsToAcquireType() != ACQUIRE_DO_TS)
+      mAcqParm->nonTSacquireType = dlg->OptionsToAcquireType();
+    mAcqParm->acquireType = dlg->OptionsToAcquireType();
 
     // Postponing: save subset parameters
     mAcqDlgPostponed = dlg->mPostponed > 0;
@@ -9341,8 +9341,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
         return;
       }
       ind = RECORD_CONSET;
-      if (mWinApp->LowDoseMode() && mAcqParm->acquireType == ACQUIRE_TAKE_MAP &&
-        mAcqParm->mapWithViewSearch)
+      if (mWinApp->LowDoseMode() && (mAcqParm->acquireType == ACQUIRE_TAKE_MAP || 
+        mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY) &&  mAcqParm->mapWithViewSearch)
         ind = mAcqParm->mapWithViewSearch > 1 ? SEARCH_CONSET : VIEW_CONSET;
       mCamera->InitiateCapture(ind);
     }

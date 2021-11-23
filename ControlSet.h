@@ -453,6 +453,7 @@ struct NavAcqParams {
   BOOL hybridRealign;       // Just move to target in realign if skipping first round
   BOOL hideUnselectedOpts;  // Hide options not checked
   int mapWithViewSearch;    // Take single images with different areas
+  BOOL saveAsMapChoice;     // Flag that option to save images/montages as maps is checked
 };
 
 // Other Nav parameters
