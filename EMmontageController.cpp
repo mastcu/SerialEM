@@ -357,7 +357,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   double nearC2dist[2];
   int nearC2Ind[2];
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
-  float acqExposure, trialExposure, minContExp;
+  float acqExposure, trialExposure, minContExp, polyRealignErrX, polyRealignErrY;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
   int already, borderTry, setNum, useSetNum;
   ScaleMat bMat, aInv;
@@ -660,13 +660,16 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
     // If skipping outside a Nav item, get the item
     if (mParam->skipOutsidePoly && mWinApp->mNavigator) {
-
+      polyRealignErrX = 0.;
+      polyRealignErrY = 0.;
       // Get specific item if there is an index, otherwise get current or acquire item
       // and if it has a polygon ID, get the polygon by that ID
       if (mParam->insideNavItem >= 0)
         navItem = mWinApp->mNavigator->GetOtherNavItem(mParam->insideNavItem);
       else if (mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem) >= 0) {
         if (navItem->mPolygonID) {
+          polyRealignErrX = navItem->mRealignErrX;
+          polyRealignErrY = navItem->mRealignErrY;
           navItem = mWinApp->mNavigator->FindItemWithMapID(navItem->mPolygonID, false);
           if (!navItem) {
             SEMMessageBox("The Navigator item to skip pieces outside of cannot"
@@ -724,9 +727,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
 
       // If skipping outside a Nav item, compute adjusted stage position of center
+      // Subtract the realign error; that should be equivalent to adding the error to the
+      // polygon coordinates
       if (mParam->skipOutsidePoly && mWinApp->mNavigator && mNumPieces > 1) {
-        stageX = mBaseStageX;
-        stageY = mBaseStageY;
+        stageX = mBaseStageX - polyRealignErrX;
+        stageY = mBaseStageY - polyRealignErrY;
         if (mParam->moveStage) {
           stageX += delISX;
           delISX = ISX;
