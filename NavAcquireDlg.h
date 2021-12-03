@@ -179,7 +179,6 @@ public:
   BOOL m_bHideUnselectedOpts;
   afx_msg void OnHideUnselectedOptions();
   CButton m_butOKGO;
-  CStatic m_statSpacer;
   int m_iMapWithViewSearch;
   afx_msg void OnMapWithRecViewSearch();
   CButton m_butSaveAsMap;

@@ -2203,30 +2203,30 @@ BEGIN
     CONTROL         "label",IDC_RGOTO_LABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,257,350,28,10
     CONTROL         "note starting with",IDC_RGOTO_NOTE,"Button",BS_AUTORADIOBUTTON,287,350,61,10
     CONTROL         "Run at nearest item with ",IDC_NA_RUN_AT_OTHER,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,174,350,82,10
-    COMBOBOX        IDC_COMBO_MACRO,55,76,93,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Setup",IDC_NA_SETUP_MULTISHOT,97,53,28,10
-    CONTROL         "Make Navigator map",IDC_NA_SAVE_AS_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,39,82,10
+    COMBOBOX        IDC_COMBO_MACRO,55,90,93,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Setup",IDC_NA_SETUP_MULTISHOT,97,67,28,10
+    CONTROL         "Make Navigator map",IDC_NA_SAVE_AS_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,42,82,10
     CONTROL         "Acquire and save image or montage",IDC_NA_ACQUIREMAP,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,9,29,126,10
-    CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,9,77,44,10
-    CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,9,65,66,10
-    CONTROL         "Acquire multiple Records",IDC_NA_DO_MULTISHOT,"Button",BS_AUTORADIOBUTTON,9,53,87,10
-    GROUPBOX        "Primary Action",IDC_STAT_PRIMARY_GROUP,2,19,160,72,WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,9,32,126,10
+    CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,9,91,44,10
+    CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,9,79,66,10
+    CONTROL         "Acquire multiple Records",IDC_NA_DO_MULTISHOT,"Button",BS_AUTORADIOBUTTON,9,67,87,10
+    LTEXT           "Primary Action",IDC_STAT_PRIMARY_GROUP,4,22,56,8
     DEFPUSHBUTTON   "GO",IDOK,207,384,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,322,384,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,377,387,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,320,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,68,14
-    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,197,149,8
-    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,207,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,295,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,294,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,295,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,294,26,12,ES_AUTOHSCROLL
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,328,68,14
+    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,198,149,8
+    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,208,149,8
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,293,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,84,292,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,112,293,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,292,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,269,136,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,136,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,257,132,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,255,132,10
     PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,265,384,36,14
     EDITTEXT        IDC_EDIT_EVERY_N,220,285,24,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_EVERY_N,"msctls_updown32",UDS_ARROWKEYS,244,284,12,14
@@ -2239,60 +2239,64 @@ BEGIN
     GROUPBOX        "Position in sequence",IDC_STAT_ORDER_GROUP,305,274,70,44
     EDITTEXT        IDC_EDIT_GOTO_ITEM,349,349,34,12,ES_AUTOHSCROLL
     CONTROL         "Cycle defocus target in autofocus, drift wait && TS",IDC_NA_CYCLE_DEFOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,106,153,10
-    EDITTEXT        IDC_EDIT_CYCLE_FROM,34,118,24,12,ES_AUTOHSCROLL
-    LTEXT           "steps",IDC_STAT_CYCLE_STEPS,139,119,18,8
-    LTEXT           "to",IDC_STAT_CYCLE_TO,61,119,8,10
-    EDITTEXT        IDC_EDIT_CYCLE_TO,70,118,24,12,ES_AUTOHSCROLL
-    LTEXT           "um in 99",IDC_STAT_CYCLE_UM,99,119,25,8
-    CONTROL         "",IDC_SPIN_CYCLE_DEF,"msctls_updown32",UDS_ARROWKEYS,126,116,12,14
-    CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,148,90,10
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,147,24,12,ES_AUTOHSCROLL
-    LTEXT           "frames",IDC_STAT_FRAMES,124,149,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,344,89,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,118,153,10
+    EDITTEXT        IDC_EDIT_CYCLE_FROM,34,130,24,12,ES_AUTOHSCROLL
+    LTEXT           "steps",IDC_STAT_CYCLE_STEPS,139,131,18,8
+    LTEXT           "to",IDC_STAT_CYCLE_TO,61,131,8,10
+    EDITTEXT        IDC_EDIT_CYCLE_TO,70,130,24,12,ES_AUTOHSCROLL
+    LTEXT           "um in 99",IDC_STAT_CYCLE_UM,99,131,25,8
+    CONTROL         "",IDC_SPIN_CYCLE_DEF,"msctls_updown32",UDS_ARROWKEYS,126,128,12,14
+    CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
+    LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,308,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,306,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,368,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,336,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,335,10,8,NOT WS_GROUP
     LTEXT           "Script to run:",IDC_STAT_PREMACRO,192,29,41,8
-    CONTROL         "Skip saving to file",IDC_NA_SKIP_SAVING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,186,70,10
+    CONTROL         "Skip saving to file",IDC_NA_SKIP_SAVING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,54,70,10
     LTEXT           "Script to run:",IDC_STAT_POSTMACRO,192,54,41,8
-    CONTROL         "",IDC_NA_TASK_LINE1,"Static",SS_BLACKFRAME,191,82,52,2
-    CONTROL         "",IDC_NA_TASK_LINE2,"Static",SS_BLACKFRAME,327,82,52,2
-    LTEXT           "Primary Action Runs Here",IDC_STAT_PRIMARY_LINE,247,79,78,8
+    CONTROL         "",IDC_NA_TASK_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,191,82,49,2
+    CONTROL         "",IDC_NA_TASK_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,330,82,49,2
+    CTEXT           "Primary Action inserts here",IDC_STAT_PRIMARY_LINE,241,79,88,8
     CONTROL         "Hide unused tasks",IDC_NA_HIDE_UNUSED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,174,369,74,10
-    LTEXT           "",IDC_STAT_SPACER,162,266,8,8
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,134,139,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,146,139,10
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,233,149,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,231,149,10
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,245,119,10
-    GROUPBOX        "Primary Action-related options",IDC_STAT_TASK_OPTIONS,2,96,160,122
-    GROUPBOX        "Options for other tasks",IDC_STAT_ACTION_OPTIONS,2,222,160,61
-    GROUPBOX        "General options",IDC_STAT_GEN_OPTIONS,2,285,160,73
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,243,119,10
     CONTROL         "Mapping",IDC_RMAPPING,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,52,3,46,14
     CONTROL         "Final Data",IDC_RACQUISITION,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,3,53,14
     LTEXT           "Parameters for:",IDC_STAT_PARAM_FOR,4,5,46,10
     PUSHBUTTON      "Read in Parameters",IDC_NA_READ_PARAMS,94,384,78,14
     PUSHBUTTON      "Save Parameters to File",IDC_NA_SAVE_PARAMS,8,384,78,14
     LTEXT           "",IDC_STAT_SPACER2,189,392,8,8
-    LTEXT           "From",IDC_STAT_CYCLE_FROM,15,119,17,10
+    LTEXT           "From",IDC_STAT_CYCLE_FROM,15,131,17,10
     CONTROL         "Every",IDC_RNAVACQ_EVERY_N,"Button",BS_AUTORADIOBUTTON | WS_GROUP,188,285,30,10
     CONTROL         "Only at start of group",IDC_RNAVACQ_GROUP_START,"Button",BS_AUTORADIOBUTTON,188,298,77,10
     CONTROL         "Only at end of group",IDC_RNAVACQ_GROUP_END,"Button",BS_AUTORADIOBUTTON,188,309,76,10
     CONTROL         "Every",IDC_RNAVACQ_AFTER_MINUTES,"Button",BS_AUTORADIOBUTTON,188,321,30,10
     CONTROL         "When moved >",IDC_RNAVACQ_WHEN_MOVED,"Button",BS_AUTORADIOBUTTON,188,334,58,10
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,274,105,73,WS_GROUP
-    GROUPBOX        "Currently selected task controls",IDC_STAT_SELECTED_GROUP,170,265,217,99
-    GROUPBOX        "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,170,5,217,255
-    LTEXT           "",IDC_STAT_SPACER3,157,361,8,8
-    LTEXT           "",IDC_STAT_SPACER4,162,96,8,8
-    CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,171,39,10
-    CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,171,31,10
-    CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,171,38,10
-    GROUPBOX        "Acquire non-montage images in Low Dose with",IDC_STAT_WHICH_CONSET,8,161,150,23,WS_GROUP
+    LTEXT           "",IDC_STAT_SPACER3,157,349,8,8
+    CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,183,39,10
+    CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,183,31,10
+    CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,183,38,10
+    GROUPBOX        "Acquire non-montage images in Low Dose with",IDC_STAT_WHICH_CONSET,8,173,150,23,WS_GROUP
+    LTEXT           "Task-related options",IDC_STAT_ACTION_OPTIONS,4,221,72,8
+    LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,283,62,8
+    LTEXT           "Primary Action-related options",IDC_STAT_TASK_OPTIONS,4,108,101,8
+    LTEXT           "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,171,5,120,8
+    LTEXT           "Currently selected task controls",IDC_STAT_SELECTED_GROUP,171,264,156,8
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,3,20,158,1
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,3,106,158,1
+    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,3,219,158,1
+    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,281,158,1
+    CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,170,262,217,1
+    CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,170,365,217,1
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -5136,6 +5140,7 @@ BEGIN
     IDC_RMAP_WITH_REC       "Take single-image maps with Record as usual"
     IDC_RMAP_WITH_VIEW      "Take single-image maps with View area instead of Record"
     IDC_RMAP_WITH_SEARCH    "Take single-image maps with Search area instead of Record"
+    IDC_NA_SAVE_AS_MAP      "Make a Navigator map with the image acquired at each location"
 END
 
 STRINGTABLE
@@ -5491,7 +5496,6 @@ BEGIN
     IDC_NA_FINE_EUCEN       "Run fine eucentricity task (with realign if after realign to item)"
     IDC_NA_AUTOFOCUS        "Autofocus as last task before primary action"
     IDC_NA_ACQUIREMAP       "Acquire an image or montage at each location"
-    IDC_NA_SAVE_AS_MAP      "Make a Navigator map with the image acquired at each location"
     IDC_NA_RUNMACRO         "Run the script at each location"
     IDC_SPIN_NAV_MACNUM     "Select the script number to run"
     IDC_NA_RESTORE_STATE    "Restore microscope to current state after realigning to item"
