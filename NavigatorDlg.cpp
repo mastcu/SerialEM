@@ -6815,19 +6815,19 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
     masterMont->overviewBinning = 1;
 
   if (mHelper->GetConvertMaps()) {
-    masterMont->byteMinScale = mItem->mMapMinScale;
-    masterMont->byteMaxScale = mItem->mMapMaxScale;
+    masterMont->byteMinScale = mLoadItem->mMapMinScale;
+    masterMont->byteMaxScale = mLoadItem->mMapMaxScale;
   }
 
   // Read in the appropriate way for the file
   mLoadingMap = true;
   mBufToLoadInto = bufToReadInto >= 0 ? bufToReadInto :mBufferManager->GetBufToReadInto();
-  if (mItem->mMapMontage && !mReadingOther)
-    err = mWinApp->mMontageController->ReadMontage(mItem->mMapSection, NULL, NULL, false,
-      synchronous, bufToReadInto);
+  if (mLoadItem->mMapMontage && !mReadingOther)
+    err = mWinApp->mMontageController->ReadMontage(mLoadItem->mMapSection, NULL, NULL, 
+      false, synchronous, bufToReadInto);
   else
-    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mItem->mMapSection, bufToReadInto,
-      false, synchronous);
+    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mLoadItem->mMapSection, 
+      bufToReadInto, false, synchronous);
 
   if (err && err != READ_MONTAGE_OK) {
     SEMMessageBox("Error reading image from file.", MB_EXCLAME);
