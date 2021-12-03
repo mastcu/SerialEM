@@ -1467,10 +1467,10 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
 
   if (imBuf->mCamera >= 0 && imBuf->mConSetUsed >= 0 && camParam->OneViewType &&
     allConSets[imBuf->mConSetUsed + imBuf->mCamera * MAX_CONSETS].correctDrift) {
-    if (AfxMessageBox("It appears that this image was taken with drift correction "
+    AfxMessageBox("It appears that this image was taken with drift correction "
       "turned on.\n\nBlank images with drift correction can lose frames and give"
-      " a bad dose estimate.\n\nDo you want to go take another image without this"
-      " setting?", MB_QUESTION) == IDYES)
+      " a bad dose estimate.\n\nYou need to take another image without this"
+      " setting", MB_EXCLAME);
       return;
   }
 
