@@ -3,9 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/2/21: When acquiring montages at the points of a polygon supermontage and
+skipping pieces outside the polygon, the error from Realign to Item will be
+added to the polygon coordinates to give more accurate skipping.
+
+12/2/21: Fixed Navigator Acquire to take montage instead of single image when
+making a montage map and the disabled skip saving option is on, and also not
+to do backlash adjustment after making a montage map.
+
 11/27/21: Fixed loading map from non-current open file with hole finder open
 (In 3.8).
 
+11/24/21:  SEM_4-0-0beta2
 11/23/21: Changes to support frame filename changes in DE server 2.5.
 
 11/23/21: More changes for camera timing calibration with NoShutter = 2.

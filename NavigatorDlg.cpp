@@ -9330,7 +9330,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mWinApp->mMacroProcessor->AdjustBeamTiltAndAstig(ISX, ISY, mSavedBeamTiltX, 
         mSavedBeamTiltY, mSavedAstigX,  mSavedAstigY);
     }
-    if (mWinApp->Montaging() && !mSkippingSave) {
+    if (mWinApp->Montaging() && 
+      !(mSkippingSave && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY)) {
       stopErr = mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
     } else {
       timeOut = 300000;
@@ -9435,8 +9436,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // Adjust for backlash if needed
   case ACQ_BACKLASH:
-    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    AdjustBacklash(-1, true);
+    if (!mWinApp->Montaging()) {
+      SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+      AdjustBacklash(-1, true);
+    }
     break;
 
   // Set up for next area if there is one
