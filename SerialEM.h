@@ -199,6 +199,8 @@ struct JeolParams;
 #define PLUGFEI_CAN_DOSE_FRAC     0x200
 #define PLUGFEI_CAM_CAN_COUNT     0x400
 #define PLUGFEI_CAM_CAN_ALIGN     0x800
+#define PLUGFEI_CAM_CONTIN_SAVE   0x1000
+#define PLUGFEI_NO_RECORD_LIMIT   1000000000
 #define PLUGFEI_INDEX_MASK        0xFF
 #define PLUGFEI_MAX_FRAC_SHIFT    16
 #define PLUGFEI_WAIT_FOR_FRAMES   1
@@ -267,6 +269,7 @@ typedef bool (*PlugDoingFunc)(void);
   a.resize(c); }
 
 #define IS_SET_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_CONSET)
+#define IS_AREA_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_AREA)
 
 #define B3DMIN(a,b) ((a) < (b) ? (a) : (b))
 #define B3DMAX(a,b) ((a) > (b) ? (a) : (b))
@@ -425,8 +428,9 @@ public:
   void NavigatorClosing();
   BOOL CalibrationsNotSaved() { return mCalNotSaved; };
   void SetCalibrationsNotSaved(BOOL inVal) { mCalNotSaved = inVal; };
-  GetMember(BOOL, Any16BitCameras)
-    void CopyCameraToCurrentLDP();
+  GetMember(BOOL, Any16BitCameras);
+  void CopyCameraToCurrentLDP();
+  LowDoseParams *GetLDParamsForCamera(int camNUm);
   void CopyCurrentToCameraLDP();
   BOOL CheckIdleTasks();
   FilterParams *GetFilterParams() { return &mFilterParams; };

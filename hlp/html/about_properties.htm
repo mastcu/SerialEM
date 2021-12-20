@@ -1004,10 +1004,14 @@
             Falcon camera.&nbsp; The default for Falcon 2 is 0.055771 sec, which works for a camera that reads out at 17.9
             FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.
             &nbsp; The default for Falcon 3 is 0.02495, but at least one site needed 0.02505.&nbsp; The
-            default for Falcon 4 is &nbsp; As of
+            default for Falcon 4 is 0.004021.&nbsp; As of
             SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
             SerialEM or FEI-SEMserver when saving frames.
           </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Ceta2ReadoutInterval</TD>
+          <TD>Value to which frame times are constrained for a Ceta 2 camera; the default is 0.025.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MaxFalconFrames</TD>
@@ -1042,16 +1046,16 @@
             entered, frames will be written to whatever
             folder is chosen by the user.&nbsp;&nbsp; A local path should be supplied if
             users can choose remote directories that Thermo/FEI software will not write to.&nbsp;
-            <i>For Falcon 2 with new interface or Falcon 3 or 4</i>, path to top directory where
+            <i>For Falcon 2 with new interface or Falcon 3 or 4 or Ceta 2</i>, path to top directory where
             frames are written by the Thermo/FEI software, as seen from the computer running
             SerialEM.&nbsp; For Falcon 2, this is needed to enable saving command files for
             aligning in IMOD, and only when SerialEM is not running on the microscope
-            computer. For Falcon 3 or 4, it is needed regardless of where SerialEM is running to
+            computer. For Falcon 3 or 4 or Ceta 2, it is needed regardless of where SerialEM is running to
             enable aligning of frames in SerialEM or IMOD. (If SerialEM is running on the
             Falcon 3 or 4 storage server, this entry would typically be&nbsp;
             &#39;C:\OffloadData\TemScripting\BM-Falcon&#39;).&nbsp; If there is more than
-            one Falcon camera, the camera property 'FalconLocalFramePath' needs to be used instead
-            for at least one of the cameras.
+            one Falcon or Ceta 2 camera, the camera property 'FalconLocalFramePath' needs to be used instead
+            for all but one of the cameras.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -1495,7 +1499,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>FalconLocalFramePath</TD>
-          <TD>For Falcon 3 or 4, path to top directory where
+          <TD>For Falcon 3 or 4 or Ceta 2, path to top directory where
             frames are written by the Thermo/FEI software, as seen from the computer running
             SerialEM.&nbsp; If this property is omitted, the path is taken from the general property
             'LocalFalconFramePath'; see that property for details.&nbsp;</TD>
@@ -2074,11 +2078,15 @@
           <TD>CanTakeFrames</TD>
           <TD>If taking frames from a particular camera is supported, set to 1 to enable
               saving frames, 2 to enable aligning frames, or 3 to enable both saving and
-            aligning.&nbsp; For a OneView or Rio camera, saving and aligning are done through
+            aligning.&nbsp; However, for a Ceta camera with the speed enhancement option 
+            (referred to elsewhere as Ceta 2), set to non-zero to enable frame-saving; whether 
+            frame aligning is enabled depends on whether the path to frames is defined with the
+            LocalFalconFramePath general property or FalconLocalFramePath camera property is 
+            defined. &nbsp; For a OneView or Rio camera, saving and aligning are done through
              the SEMCCD plugin just as for a K2 or K3 camera.&nbsp;  For other cameras, saving and
             aligning are done within SerialEM.&nbsp; This is the same frame
               alignment that SerialEM provides for direct detectors, which is suitable for
-              low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilties are
+              low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilities are
               turned on by default for a particular camera, enter 0 to have them not appear in
               the Camera Setup dialog.  The default is 3 for Tietz XF416 and 0 otherwise.
           </TD>
