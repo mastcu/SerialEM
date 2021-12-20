@@ -33,7 +33,7 @@ private:
   int mListBorderX, mListBorderY;
   int mNameBorderX;
   int mNameHeight;
-  int mSetStateIndex;
+  int mSetStateIndex[MAX_LOWDOSE_SETS + 1];
   BOOL mInitialized;
   CArray<StateParams *, StateParams *> *mStateArray;
   CNavHelper *mHelper;
@@ -41,6 +41,8 @@ private:
   int mNumInPanel[2];
   int mPanelStart[2];
   bool mAdjustingPanels;
+  bool mWarnedSharedParams;
+  int mCamOfSetState;
 
 public:
   CButton m_butAddCurState;
@@ -72,10 +74,16 @@ public:
   void AddNewStateToList(void);
   void ManageName(void);
   void UpdateSettings(void);
+  int CurrentMatchesSetState();
   afx_msg void OnButSetSchedState();
   void StateToListString(int index, CString &string);
+  void StateToListString(StateParams *state, CString &string, const char *sep);
   afx_msg void OnButUpdateState();
   CButton m_butUpdate;
   void DisableUpdateButton(void);
   void UpdateHiding(void);
+  CString m_strDefocus;
+  CButton m_butSaveDefocus;
+  afx_msg void OnButSaveDefocus();
+  CString m_strPriorSummary;
 };

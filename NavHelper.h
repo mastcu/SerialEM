@@ -251,6 +251,7 @@ private:
   CArray<MontParam *, MontParam *> *mMontParArray;
   CArray<StateParams *, StateParams *> *mAcqStateArray;
   CArray<StateParams *, StateParams *> mStateArray;
+  CArray<StateParams, StateParams> mSavedStates;
   CCameraController *mCamera;
   WINDOWPLACEMENT mStatePlacement;
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
@@ -261,6 +262,7 @@ private:
   NavAcqAction mAllAcqActions[2][NAA_MAX_ACTIONS];
   NavAcqAction *mAcqActions;
   NavAlignParams mNavAlignParams;
+  StateParams mPriorState;
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
   int mSecondRoundID;           // Map ID of map itself for 2nd round alignment
@@ -304,7 +306,6 @@ private:
   BOOL mRIuseCurrentLDparams;   // Flag to use current low dose parameters in realign
   int mTypeOfSavedState;        // Type of saved state: 1 imaging, 2 map acquire
   int mSavedLowDoseArea;        // Low dose area when saved state
-  StateParams mSavedState;      // State that was saved
   float mMaxMarginNeeded;       // Maximum center to edge distance for preferring a map
   float mMinMarginWanted;
   float mMinMarginNeeded;       // Minimum center to edge distance for doing realign
@@ -425,7 +426,7 @@ private:
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
-    int baseNum, BOOL hideLDoff);
+    int baseNum, int hideLDoff);
   void StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX, float delY,
     int ix, int iy, float &stageX, float & stageY, float &montErrX, float &montErrY);
   void RealignNextTask(int param);
@@ -445,7 +446,7 @@ public:
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);
   void RestoreSavedState(void);
-  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff = FALSE);
+  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff = 0);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
   CString NextAutoFilename(CString inStr, CString oldLabel = "", CString newLabel = "");
@@ -466,13 +467,18 @@ public:
   ScheduledFile * GetFileTypeAndSchedule(CMapDrawItem * item, int & fileType);
   void DeleteArrays(void);
   int FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState);
-  void StoreCurrentStateInParam(StateParams * param, BOOL lowdose,
-    bool saveLDfocusPos);
+  void StoreCurrentStateInParam(StateParams * param, int lowdose,
+    bool saveLDfocusPos, int camNum, int saveTargOffs);
   void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-    BOOL hideLDoff = FALSE);
-  void SaveCurrentState(int type, bool saveLDfocusPos);
+    int hideLDoff = 0);
+  void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
+  void SaveCurrentState(int type, bool saveLDfocusPos, int camNum, int saveTargOffs);
+  void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs);
+  int AreaFromStateLowDoseValue(int lowDose, int *setNum);
+  void ForgetSavedState(void);
+  bool GetSavedPriorState(StateParams &state);
   StateParams* NewStateParam(bool navAcquire);
   StateParams * ExistingStateParam(int index, bool navAcquire);
   void OpenStateDialog(void);

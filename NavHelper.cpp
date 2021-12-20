@@ -15,6 +15,7 @@
 #include "EMmontageController.h"
 #include "EMscope.h"
 #include "EMbufferManager.h"
+#include "FocusManager.h"
 #include "ShiftManager.h"
 #include "NavigatorDlg.h"
 #include "NavAcquireDlg.h"
@@ -873,13 +874,13 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   if (restoreState) {
     mRIdidSaveState = true;
     mTypeOfSavedState = STATE_NONE;
-    SaveCurrentState(STATE_MAP_ACQUIRE, false);
+    SaveCurrentState(STATE_MAP_ACQUIRE, false, item->mMapCamera, 0);
   }
 
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
   PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 
-    restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0));
+    (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0);
   if (mRIstayingInLD)
     mRIContinuousMode = 0;   // To avoid this, need to set/restore mode in LD conset
   if (mRIContinuousMode) {
@@ -1509,7 +1510,7 @@ void CNavHelper::StartSecondRound(void)
 
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   RestoreLowDoseConset();
-  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, TRUE);
+  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 1);
   if (mRIstayingInLD)
     RestoreMapOffsets();
   else
@@ -1556,7 +1557,7 @@ void CNavHelper::StartRealignCapture(bool useContinuous, int nextTask)
 
 // Set scope and filter parameters and set up a control set imaging a map area
 void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param, 
-                                     ControlSet *conSet, int baseNum, BOOL hideLDoff) 
+                                     ControlSet *conSet, int baseNum, int hideLDoff) 
 {
   ControlSet *conSets = mWinApp->GetConSets();
   int  binning, xFrame, yFrame, area, top, left, bottom, right;
@@ -1808,21 +1809,59 @@ void CNavHelper::RestoreMapOffsets()
 // Restore state if it was saved
 void CNavHelper::RestoreSavedState(void)
 {
-  ControlSet *masterSets = mWinApp->GetCamConSets();
-  ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
+  int area, destCam, ind, setNum, curCam = mWinApp->GetCurrentCamera();
+  ControlSet *conSets;
+  LowDoseParams *ldp;
+  LowDoseParams ldsaParams;
   if (mTypeOfSavedState == STATE_NONE)
     return;
-  SetStateFromParam(&mSavedState, conSet, RECORD_CONSET);
-  if (mSavedState.lowDose && mSavedLowDoseArea >= 0)
-    mScope->GotoLowDoseArea(mSavedLowDoseArea);
-  SEMTrace('I', "RestoreSavedState restored intensity to %.5f", mSavedState.lowDose ?
-    mSavedState.ldParams.intensity : mSavedState.intensity);
-  masterSets[mSavedState.camIndex * MAX_CONSETS + RECORD_CONSET] = *conSet;
-  mTypeOfSavedState = STATE_NONE;
+  for (ind = (int)mSavedStates.GetSize() - 1; ind >= 0; ind--) {
+    area = AreaFromStateLowDoseValue(mSavedStates[ind].lowDose, &setNum);
+    destCam = mSavedStates[ind].camForParams < 0 ?
+      mSavedStates[ind].camIndex : mSavedStates[ind].camForParams;
+    if (ind) {
+
+      // For added LD states:  Restore the LD Params for THIS camera
+      // First set the existing params if those are master and in this area
+      ldp = mWinApp->GetLDParamsForCamera(destCam);
+      if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == area && 
+        ldp == mWinApp->GetLowDoseParams()) {
+        ldsaParams = ldp[area];
+        mScope->SetLdsaParams(&ldsaParams);
+        mScope->GotoLowDoseArea(area);
+      }
+      ldp[area] = mSavedStates[ind].ldParams;
+      if (mSavedStates[ind].ldDefocusOffset > -9990.) {
+        mScope->SetLDViewDefocus(mSavedStates[ind].ldDefocusOffset, area);
+        mWinApp->mLowDoseDlg.UpdateSettings();
+      }
+
+      // Restore the consets for current cam or master sets; the routine will copy to
+      // master if it is current cam
+      if (destCam == mWinApp->GetCurrentCamera())
+        conSets = mWinApp->GetConSets();
+      else
+        conSets = mWinApp->GetCamConSets() + destCam * MAX_CONSETS;
+      SetConsetsFromParam(&mSavedStates[ind], conSets + setNum, setNum);
+    } else {
+
+      // For the original state: it will switch to the camera before the restore
+      if (destCam == mSavedStates[ind].camIndex)
+        conSets = mWinApp->GetConSets();
+      else
+        conSets = mWinApp->GetCamConSets() + destCam * MAX_CONSETS;
+      SetStateFromParam(&mSavedStates[0], conSets + setNum, setNum);
+      if (mSavedStates[0].lowDose && mSavedLowDoseArea >= 0)
+        mScope->GotoLowDoseArea(mSavedLowDoseArea);
+    }
+  }
+  SEMTrace('I', "RestoreSavedState restored intensity to %.5f", mSavedStates[0].lowDose ?
+    mSavedStates[0].ldParams.intensity : mSavedStates[0].intensity);
+  ForgetSavedState();
 }
 
 // Set the scope and camera parameter state to that used to acquire a map item
-int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff)
+int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff)
 {
   int camera, curStore, err, retval = 0;
   float width, height;
@@ -1835,7 +1874,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL 
   if (item->IsNotMap() || item->mImported)
     return 1;
   mMapMontP = NULL;
-  SaveCurrentState(STATE_MAP_ACQUIRE, false);
+  SaveCurrentState(STATE_MAP_ACQUIRE, false, item->mMapCamera, 0);
   mMapStateItemID = item->mMapID;
   mSavedStoreName = "";
   mNewStoreName = "";
@@ -1926,18 +1965,47 @@ int CNavHelper::RestoreFromMapState(void)
   return 0;
 }
 
-// Store the current scope state or the Record low dose params into the state param
-void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose, 
-  bool saveLDfocusPos)
+// Store the current scope state or a set of low dose params into the state param
+// 0 for non-lowdose, 1 for current state, or < 0 for specific state
+void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose, 
+  bool saveLDfocusPos, int camNum, int saveTargOffs)
 {
-  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  LowDoseParams *ldp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
-  ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
-  CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  param->lowDose = lowdose ? 1 : 0;
+  ControlSet *conSets;
+  double shiftX, shiftY;
+  int curCam = mWinApp->GetCurrentCamera();
+  int ldInd = RECORD_CONSET;
+  if (camNum < 0)
+    camNum = curCam;
+  if (lowdose < 0) {
+    ldInd = -1 - lowdose;
+  } else if (lowdose > 0) {
+    if (mScope->GetLowDoseArea() >= 0)
+      ldInd = mScope->GetLowDoseArea();
+    lowdose = -1 - ldInd;
+  }
+
+  // Get the right LD params for the camera, and the right consets too
+  ldp = mWinApp->GetLDParamsForCamera(camNum) + ldInd;
+  if (ldInd == SEARCH_AREA)
+    ldInd = mWinApp->GetUseViewForSearch() ? VIEW_CONSET : SEARCH_CONSET;
+
+  // Should it do this or just access the master?  Map state accesses the master
+  if (camNum == curCam)
+    conSets = mWinApp->GetConSets();
+  else
+    conSets = mWinApp->GetCamConSets() + camNum * MAX_CONSETS;
+  param->camForParams = camNum;
+  param->lowDose = lowdose;
   if (lowdose) {
     param->ldParams = *ldp;
     param->probeMode = ldp->probeMode;
+    if (IS_AREA_VIEW_OR_SEARCH(ldInd)) {
+      mWinApp->mLowDoseDlg.GetFullViewShift(shiftX, shiftY, ldInd);
+      param->ldShiftOffsetX = (float)shiftX;
+      param->ldShiftOffsetY = (float)shiftY;
+    }
   } else {
     param->magIndex = mScope->GetMagIndex();
     param->intensity = mScope->GetIntensity();
@@ -1951,35 +2019,41 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
     param->energyLoss = filtParam->energyLoss;
     param->zeroLoss = filtParam->zeroLoss;
   }
-  param->camIndex = mWinApp->GetCurrentCamera();
-  param->binning = conSet->binning;
-  param->exposure = conSet->exposure;
-  param->drift = conSet->drift;
-  param->shuttering = conSet->shuttering;
-  param->K2ReadMode = conSet->K2ReadMode;
-  param->singleContMode = conSet->mode;
-  param->saveFrames = conSet->saveFrames;
-  param->doseFrac = conSet->doseFrac;
-  param->frameTime = conSet->frameTime;
-  param->processing = conSet->processing;
-  param->alignFrames = conSet->alignFrames;
-  param->useFrameAlign = conSet->useFrameAlign;
-  param->faParamSetInd = conSet->faParamSetInd;
 
-  param->xFrame = (conSet->right - conSet->left) / param->binning;
-  param->yFrame = (conSet->bottom - conSet->top) / param->binning;
+  // Save either the defocus target or the LD defocus offset - the caller knows what kind
+  // of state has this in it
+  if (saveTargOffs < 0)
+    param->targetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
+  if (saveTargOffs > 0 && lowdose)
+    param->ldDefocusOffset = mScope->GetLDViewDefocus(saveTargOffs - 1);
+  param->camIndex = mWinApp->GetCurrentCamera();
+  param->binning = conSets[ldInd].binning;
+  param->exposure = conSets[ldInd].exposure;
+  param->drift = conSets[ldInd].drift;
+  param->shuttering = conSets[ldInd].shuttering;
+  param->K2ReadMode = conSets[ldInd].K2ReadMode;
+  param->singleContMode = conSets[ldInd].mode;
+  param->saveFrames = conSets[ldInd].saveFrames;
+  param->doseFrac = conSets[ldInd].doseFrac;
+  param->frameTime = conSets[ldInd].frameTime;
+  param->processing = conSets[ldInd].processing;
+  param->alignFrames = conSets[ldInd].alignFrames;
+  param->useFrameAlign = conSets[ldInd].useFrameAlign;
+  param->faParamSetInd = conSets[ldInd].faParamSetInd;
+
+  param->xFrame = (conSets[ldInd].right - conSets[ldInd].left) / param->binning;
+  param->yFrame = (conSets[ldInd].bottom - conSets[ldInd].top) / param->binning;
 
   SaveLDFocusPosition(lowdose && saveLDfocusPos, param->focusAxisPos, param->rotateAxis,
     param->axisRotation, param->focusXoffset, param->focusYoffset, true);
-  conSet = mWinApp->GetConSets();
-  param->readModeView = lowdose ? -1 : conSet[VIEW_CONSET].K2ReadMode;
-  param->readModeFocus = lowdose ? -1 : conSet[FOCUS_CONSET].K2ReadMode;
-  param->readModeTrial = lowdose ? -1 : conSet[TRIAL_CONSET].K2ReadMode;
-  param->readModePrev = lowdose ? -1 : conSet[PREVIEW_CONSET].K2ReadMode;
+  param->readModeView = lowdose ? -1 : conSets[VIEW_CONSET].K2ReadMode;
+  param->readModeFocus = lowdose ? -1 : conSets[FOCUS_CONSET].K2ReadMode;
+  param->readModeTrial = lowdose ? -1 : conSets[TRIAL_CONSET].K2ReadMode;
+  param->readModePrev = lowdose ? -1 : conSets[PREVIEW_CONSET].K2ReadMode;
   param->readModeSrch = (lowdose || mWinApp->GetUseViewForSearch()) ? -1 : 
-    conSet[SEARCH_CONSET].K2ReadMode;
+    conSets[SEARCH_CONSET].K2ReadMode;
   param->readModeMont = (lowdose || mWinApp->GetUseRecordForMontage()) ? -1 : 
-    conSet[MONT_USER_CONSET].K2ReadMode;
+    conSets[MONT_USER_CONSET].K2ReadMode;
 }
 
 // Save the low dose focus area for the current camera in the given parameters
@@ -2018,7 +2092,8 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
   ControlSet *conSet;
 
   // Start by filling with the current state in case some map items are not there
-  StoreCurrentStateInParam(param, false, false);
+  StoreCurrentStateInParam(param, 0, false, 
+    item->mMapLowDoseConSet < 0 ? 0 : -1 - item->mMapLowDoseConSet, 0);
   param->magIndex = item->mMapMagInd;
   if (item->mMapIntensity)
     param->intensity = item->mMapIntensity;
@@ -2055,6 +2130,8 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
       param->yFrame = montP->yFrame;
       param->binning = item->mMontBinning ? item->mMontBinning : montP->binning;
     } else {
+      if (baseNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
+        baseNum = VIEW_CONSET;
 
       // If no param is entered, take current frame size, adjust for binning 
       // Use the indicated conset from camera sets as the base for this info
@@ -2072,32 +2149,33 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
 
 // Set scope state and control set state from the given state param
 void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-                                   BOOL hideLDoff)
+                                   int hideLDoff)
 {
-  int i, alpha;
+  int i, alpha, ldArea;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   CameraParameters *camP = &mCamParams[param->camIndex];
   int *activeList = mWinApp->GetActiveCameraList();
-  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   LowDoseParams ldsaParams;
   bool gotoArea = false;
-  ControlSet *workSets = mWinApp->GetConSets();
-  ControlSet *camSets = mWinApp->GetCamConSets();
-  ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
 
   // Set camera first in case there is an automatic mag change and EFTEM change
   for (i = 0; i < mWinApp->GetNumActiveCameras(); i++) {
     if (activeList[i] == param->camIndex) {
-      mWinApp->SetActiveCameraNumber(i);
+      if (param->camIndex != mWinApp->GetCurrentCamera())
+        mWinApp->SetActiveCameraNumber(i);
       break;
     }
   }
 
   if (param->lowDose) {
+    ldArea = AreaFromStateLowDoseValue(param->lowDose, NULL);
+    ldp = mWinApp->GetLDParamsForCamera(
+      param->camForParams < 0 ? param->camIndex : param->camForParams) + ldArea;
 
-    // If it is already in low dose and in record, need to save the params and tell it
+    // If it is already in low dose and in this area, need to save the params and tell it
     // to use those as current params; then need to go to area after changing params
-    if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == RECORD_CONSET) {
+    if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == ldArea) {
       ldsaParams = *ldp;
       mScope->SetLdsaParams(&ldsaParams);
       gotoArea = true;
@@ -2107,14 +2185,24 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
         ldp->magIndex, ldp->ISX, ldp->ISY);
     param->ldParams.axisPosition = ldp->axisPosition;
     *ldp = param->ldParams;
-    mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
+    if (IS_AREA_VIEW_OR_SEARCH(ldArea)) {
+      if (param->ldShiftOffsetX > -9990.) {
+        i = ldArea == SEARCH_AREA ? 1 : 0;
+        mWinApp->mLowDoseDlg.mViewShiftX[i] = param->ldShiftOffsetX;
+        mWinApp->mLowDoseDlg.mViewShiftY[i] = param->ldShiftOffsetY;
+      }
+      mWinApp->mLowDoseDlg.ConvertAxisPosition(false);
+      mWinApp->mLowDoseDlg.ConvertAxisPosition(true);
+    } else
+      mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
       ldp->ISY);
     if (gotoArea)
-      mScope->GotoLowDoseArea(RECORD_CONSET);
+      mScope->GotoLowDoseArea(ldArea);
     else
       mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+
   } else {
-    mWinApp->mLowDoseDlg.SetLowDoseMode(false, hideLDoff);
+    mWinApp->mLowDoseDlg.SetLowDoseMode(false, hideLDoff > 0);
     mScope->SetMagIndex(param->magIndex);
     if (param->probeMode >= 0)
       mScope->SetProbeMode(param->probeMode, true);
@@ -2144,12 +2232,43 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       }
     }
   }
+  if (param->targetDefocus > -9990.) {
+    mScope->IncDefocus(param->targetDefocus -
+      mWinApp->mFocusManager->GetTargetDefocus());
+    mWinApp->mFocusManager->SetTargetDefocus(param->targetDefocus);
+    mWinApp->mAlignFocusWindow.UpdateSettings();
+  }
+  if (param->ldDefocusOffset > -9990.) {
+    mScope->SetLDViewDefocus(param->ldDefocusOffset, ldArea);
+    mWinApp->mLowDoseDlg.UpdateSettings();
+  }
+  SetConsetsFromParam(param, conSet, baseNum);
+}
+
+// Set control sets as appropriate for the given param, modifying the passed one
+void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum)
+{
+  int i, curCam = mWinApp->GetCurrentCamera();
+  CameraParameters *camP = &mCamParams[param->camIndex];
+  ControlSet *workSets;
+  ControlSet *camSets = mWinApp->GetCamConSets();
+  int destCam = param->camForParams < 0 ? param->camIndex : param->camForParams;
+
+  // Set the working sets to either the current ones or ones in the master.  The caller
+  // was responsible for passing in conSet as current or master depending on whether 
+  // the camera was the current one
+  if (destCam == curCam)
+    workSets = mWinApp->GetConSets();
+  else
+    workSets = camSets + destCam * MAX_CONSETS;
 
   // Copy control set in case need to fill in missing stuff (camera switch
   // copied the camera conset in)
-  *conSet = *(mWinApp->GetConSets() + baseNum);
+  if (baseNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
+    baseNum = VIEW_CONSET;
+  *conSet = *(workSets + baseNum);
 
-  StateCameraCoords(param->camIndex, param->xFrame, param->yFrame, param->binning, 
+  StateCameraCoords(destCam, param->xFrame, param->yFrame, param->binning,
     conSet->left, conSet->right, conSet->top, conSet->bottom);
   conSet->binning = param->binning;
   conSet->mode = param->singleContMode;
@@ -2192,9 +2311,10 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
   if (param->readModeMont >= 0 && !mWinApp->GetUseRecordForMontage())
     workSets[MONT_USER_CONSET].K2ReadMode = param->readModeMont;
 
-  // Copy back to the camera sets
-  for (i = 0; i < MAX_CONSETS; i++)
-    camSets[param->camIndex * MAX_CONSETS + i] = workSets[i];
+  // Copy back to the camera sets IF this is the current camera
+  if (destCam == curCam)
+    for (i = 0; i < MAX_CONSETS; i++)
+      camSets[destCam * MAX_CONSETS + i] = workSets[i];
 }
 
 // Set the low dose axis position and Focus area offset from given parameters
@@ -2207,7 +2327,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
   CameraParameters *camP = &mCamParams[camIndex];
   int oldRotation = mWinApp->mLowDoseDlg.m_bRotateAxis ?
     mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
-  bool changed = ldp->axisPosition != axisPos || oldRotation != axisRotation;
+  bool changed = fabs(ldp->axisPosition - axisPos) > 1.e-3 || oldRotation != axisRotation;
   bool needConversions = mWinApp->LowDoseMode() && ldp->magIndex;
   bool subChanged;
   if (oldRotation != axisRotation && needConversions)
@@ -2236,15 +2356,78 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
 }
 
 // Save the current state if it is not already saved
-void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos)
+void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos, int camNum,
+  int saveTargOffs)
 {
+  StateParams state;
   if (mTypeOfSavedState != STATE_NONE)
     return;
   mTypeOfSavedState = type;
-  StoreCurrentStateInParam(&mSavedState, mWinApp->LowDoseMode(), saveLDfocusPos);
+  StoreCurrentStateInParam(&mPriorState, mWinApp->LowDoseMode() ? 1 : 0, false, 
+    mWinApp->GetCurrentCamera(), 0);
+  StoreCurrentStateInParam(&state, mWinApp->LowDoseMode() ? 1 : 0, saveLDfocusPos, 
+    camNum, saveTargOffs);
   SEMTrace('I', "SaveCurrentState saved intensity %.5f", mWinApp->LowDoseMode() ? 
-    mSavedState.ldParams.intensity : mSavedState.intensity);
+    state.ldParams.intensity : state.intensity);
+  mSavedStates.Add(state);
   mSavedLowDoseArea = mScope->GetLowDoseArea();
+}
+
+// Adds additional stated to the array of saved states for other area - the point is
+// to save the state that can be modified
+void CNavHelper::SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs)
+{
+  int savedArea, ind;
+  StateParams state;
+  LowDoseParams *param = mWinApp->GetLowDoseParams() + area;
+  if (mTypeOfSavedState == STATE_NONE || area < 0)
+    return;
+  for (ind = 0; ind < mSavedStates.GetSize(); ind++) {
+    state = mSavedStates.GetAt(ind);
+    savedArea = AreaFromStateLowDoseValue(state.lowDose, NULL);
+    if (savedArea == area)
+      return;
+  }
+
+  StoreCurrentStateInParam(&state, -1 - area, false, camNum, saveTargOffs ? area + 1 : 0);
+  mSavedStates.Add(state);
+}
+
+// Return the low dose area (-1 for none) and optionally the control set number from the 
+// lowDose value in a state
+int CNavHelper::AreaFromStateLowDoseValue(int lowDose, int *setNum)
+{
+  int area = -1;
+  if (lowDose) {
+    area = RECORD_CONSET;
+    if (lowDose < 0)
+      area = -1 - lowDose;
+  }
+  if (setNum) {
+    if (area >= 0)
+      *setNum = area;
+    else
+      *setNum = RECORD_CONSET;
+    if (area == SEARCH_AREA)
+      *setNum = SEARCH_CONSET;
+  }
+  return area;
+}
+
+// Set type of state saved to None and clear out the array of saved states
+void CNavHelper::ForgetSavedState(void)
+{
+  mTypeOfSavedState = STATE_NONE;
+  mSavedStates.RemoveAll();
+}
+
+// Returns a copy of the first saved state if any and true, or returns false if none
+bool CNavHelper::GetSavedPriorState(StateParams &state)
+{
+  if (!mSavedStates.GetSize())
+    return false;
+  state = mPriorState;
+  return true;
 }
 
 // If stayed in Low Dose for a map imaging instead of switching to a map state, restore
@@ -3783,18 +3966,11 @@ void CNavHelper::DeleteArrays(void)
   mAcqStateArray->RemoveAll();
 }
 
+// Make a new state param and add it to states here, or in navigator
 StateParams *CNavHelper::NewStateParam(bool navAcquire)
 {
   StateParams *param = new StateParams;
 
-  // Zero out items in case it is a low dose set
-  param->energyLoss = param->slitWidth = 0.;
-  param->intensity = 0.;
-  param->magIndex = param->spotSize = 0;
-  param->probeMode = -1;
-  param->slitIn = param->zeroLoss = false;
-  param->ldParams.delayFactor = 0.9f;
-  param->singleContMode = SINGLE_FRAME;
   if (navAcquire)
     mAcqStateArray->Add(param);
   else
@@ -3802,6 +3978,7 @@ StateParams *CNavHelper::NewStateParam(bool navAcquire)
   return param;
 }
 
+// Return a state param by index from either states here or in navigator
 StateParams *CNavHelper::ExistingStateParam(int index, bool navAcquire)
 {
   if (index < 0 || (navAcquire && index >= mAcqStateArray->GetSize()) ||
@@ -3923,7 +4100,7 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
   }
 
   // Go to imaging state, apply any defocus offset
-  if (SetToMapImagingState(item, true, TRUE)) {
+  if (SetToMapImagingState(item, true, 1)) {
     RestoreFromMapState();
     return 3;
   }

@@ -1095,7 +1095,8 @@ void CMenuTargets::OnNavigatorSetacquirestate()
   CMapDrawItem *item;
   if (mNavigator->GetCurrentOrAcquireItem(item) < 0)
     return;
-  mNavHelper->SetToMapImagingState(item, true);
+  mNavHelper->SetToMapImagingState(item, true, 
+    (mWinApp->LowDoseMode() && item->mMapLowDoseConSet >= 0) ? -1 : 0);
 }
 
 void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)

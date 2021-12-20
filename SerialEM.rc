@@ -1093,7 +1093,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,215,129,10
     LTEXT           "Timing available, extrapolated from one point",IDC_STAT_TIMING_AVAIL,126,314,150,8
     CONTROL         "Dose Fractionation mode",IDC_DOSE_FRAC_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,381,169,10
-    LTEXT           "Frame time",IDC_STAT_FRAME_TIME,88,395,35,8
+    LTEXT           "Frame time",IDC_STAT_FRAME_TIME,88,395,37,8
     EDITTEXT        IDC_EDIT_FRAME_TIME,126,391,31,14,ES_AUTOHSCROLL
     LTEXT           "sec",IDC_STAT_FRAME_SEC,159,394,12,8
     CONTROL         "Align frames",IDC_ALIGN_DOSE_FRAC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,408,50,10
@@ -1104,7 +1104,7 @@ BEGIN
     CONTROL         "Save final image",IDC_DE_SAVE_FINAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,192,511,66,10
     EDITTEXT        IDC_EDIT_DE_SUM_COUNT,145,482,19,14,ES_AUTOHSCROLL
     LTEXT           "13 frames will be saved",IDC_STAT_NUM_DE_RAW,177,456,97,8
-    CONTROL         "Save frames",IDC_SAVE_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,213,381,54,10
+    CONTROL         "Save frames",IDC_SAVE_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,213,381,63,10
     PUSHBUTTON      "Set File Options",IDC_BUT_FILE_OPTIONS,217,402,55,14
     RTEXT           "999 to TIF-LZW stack, packed",IDC_STAT_SAVE_SUMMARY,171,392,108,8
     LTEXT           "Integration",IDC_STATINTEGRATION,22,164,32,8
@@ -2526,27 +2526,30 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,56,152,10
 END
 
-IDD_STATEDLG DIALOGEX 0, 0, 157, 115
+IDD_STATEDLG DIALOGEX 0, 0, 164, 155
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Imaging States"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LISTBOX         IDC_LIST_STATES,3,69,151,42,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,4,3,72,10
-    PUSHBUTTON      "Add Nav Item State",IDC_BUT_ADDNAVSTATE,82,3,72,10
-    PUSHBUTTON      "Delete",IDC_BUT_DELSTATE,4,17,27,10
-    PUSHBUTTON      "Imaging",IDC_BUT_SETIMSTATE,34,31,32,10
-    PUSHBUTTON      "Map Acquire",IDC_BUT_SETMAPSTATE,69,31,44,10
-    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,4,44,67,10
-    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,74,44,67,10
-    LTEXT           "Name:",IDC_STAT_STATE_NAME,66,17,21,8
-    EDITTEXT        IDC_EDIT_STATENAME,86,16,68,12,ES_AUTOHSCROLL
-    LTEXT           "Cam  Mag     Sp      C2      Exp    Bin  Frame  Name",IDC_STAT_TITLELINE,7,59,147,8
-    PUSHBUTTON      "?",IDC_BUTHELP,144,44,10,10
-    PUSHBUTTON      "Scheduled",IDC_BUT_SETSCHEDSTATE,116,31,38,10
-    LTEXT           "Set state:",IDC_STAT_IM_STATE_SET,3,31,30,8
-    PUSHBUTTON      "Update",IDC_BUT_UPDATE_STATE,35,17,27,10
+    LISTBOX         IDC_LIST_STATES,3,108,158,46,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,3,5,72,10
+    PUSHBUTTON      "Add Map Acquire State to Table",IDC_BUT_ADDNAVSTATE,26,62,100,10
+    PUSHBUTTON      "Delete It",IDC_BUT_DELSTATE,123,18,38,10
+    PUSHBUTTON      "Go to Selected State",IDC_BUT_SETIMSTATE,3,18,72,10
+    PUSHBUTTON      "Go to Map Acquire State",IDC_BUT_SETMAPSTATE,5,50,79,10
+    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,3,77,70,10
+    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,77,77,70,10
+    LTEXT           "Name:",IDC_STAT_STATE_NAME,78,5,21,8
+    EDITTEXT        IDC_EDIT_STATENAME,98,4,63,12,ES_AUTOHSCROLL
+    LTEXT           "LD Cam  Mag     Sp    Int      Exp    Bin  Frame  Name",IDC_STAT_TITLELINE,3,99,151,8
+    PUSHBUTTON      "?",IDC_BUTHELP,149,77,10,10
+    PUSHBUTTON      "Go to Scheduled State",IDC_BUT_SETSCHEDSTATE,88,50,71,10
+    PUSHBUTTON      "Update It",IDC_BUT_UPDATE_STATE,80,18,38,10
+    GROUPBOX        "Operations with current Navigator item",IDC_STAT_NAV_GROUP,3,41,158,33
+    LTEXT           "Defocus offset: None saved",IDC_STAT_DEFOCUS,6,31,84,8
+    PUSHBUTTON      "Save Current Value",IDC_BUT_SAVE_DEFOCUS,93,30,66,10
+    LTEXT           "Prior: Rec.  1  39000  5nP   50.23     1.5   1     4kx4k",IDC_STAT_PRIOR_SUMMARY,4,89,142,8
 END
 
 IDD_NAVROTALIGN DIALOGEX 0, 0, 166, 65
@@ -3991,9 +3994,9 @@ BEGIN
     IDD_STATEDLG, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 154
+        RIGHTMARGIN, 161
         TOPMARGIN, 3
-        BOTTOMMARGIN, 111
+        BOTTOMMARGIN, 150
     END
 
     IDD_NAVROTALIGN, DIALOG
@@ -5669,6 +5672,7 @@ BEGIN
     IDC_CHECK_AUTO_NEW_LOG  "Start new log based on stack name for each batch tilt series"
     IDC_BUT_CLOSE_KEEP      "Close this box but keep the image stack"
     IDC_BUT_SETSCHEDSTATE   "Set to state scheduled to be used when current Navigator item is acquired"
+    IDC_BUT_SAVE_DEFOCUS    "Save the target defocus in the selected state"
 END
 
 STRINGTABLE

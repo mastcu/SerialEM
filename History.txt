@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/19/21: Upgraded state dialog and state saving so that Record, View, and
+Search states can all be saved and set, including focus offsets, and so that
+target defocus can be saved outside of Low Dose mode.
+
+12/19/21: Prevented several scenarios for getting stuck with a View/Search
+defocus offset in other modes.
+
+12/19/21: Added support in SerialEM for saving and aligning frames from
+Ceta 2 camera (plugin not finished).
+
+12/14/21: Fixed defocus offset spinner for Search changing actual defocus when
+in Search.
+
 12/9/21: Fixed problem reconnecting to Tietz-SEMserver (In 3.8).
 
 12/2/21: When acquiring montages at the points of a polygon supermontage and

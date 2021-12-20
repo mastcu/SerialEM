@@ -9,15 +9,22 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_statedlg"></A><B><FONT size="3">Imaging State Dialog</FONT></B></P>
-    <P>This dialog allows you to store and return to a set of microscope settings and
-      Record parameters. It distinguishes between two kinds of states:</P>
-    <P><B><I>Imaging states:</I></B> An imaging state consists of the state of the
-      microscope together with the parameters used to acquire a Record image.
-      Specifically, the state includes the magnification, spot size, intensity, probe
-      mode for a Thermo/FEI scope, and energy filter settings if any (slit in/out, slit
-      width, energy loss, whether to do zero loss). The state also includes whether
-      Low Dose mode is on; in fact, if it is, then the stored state consists of all of
-      the settings of the Record area. The acquisition parameters include the camera,
+    <P>This dialog allows you to store and return to a set of microscope settings and 
+      imaging parameters. It distinguishes between three kinds of states:</P>
+    <P><B><I>Imaging states:</I></B> An imaging state consists of the state of the 
+      microscope together with the parameters used to acquire an image.&nbsp; Outside 
+      of Low Dose mode, such a state always stores Record parameters; whereas in Low 
+      Dose mode, states can be stored separately for Record, View, and Search.&nbsp; A 
+      state always includes the magnification, spot size, intensity, probe mode for a 
+      Thermo/FEI scope or alpha for a JEOL, and energy filter settings if any (slit 
+      in/out, slit width, energy loss, whether to do zero loss). The stored state for 
+      a Low Dose area consists of all of the settings of the respective area; a Search 
+      or View area state also includes the added beam shift and beam tilt values, and 
+      the Search or View shift and 
+      defocus offsets.&nbsp; The latter makes it convenient to save states for 
+      different defocus offsets, which would typically require different shift 
+      offsets.</P>
+    <P>The acquisition parameters stored with a state include the camera,
       binning, exposure time, frame size, drift settling, and type of shuttering and
       processing, as well as whether subframes are being stored from a direct
       detector.&nbsp; For a direct detector camera, parameters also include the
@@ -31,59 +38,102 @@
     <P><B><I>Map Acquire states:</I> </B>A map acquire state consists of all the
       parameters needed to acquire more maps of the same kind as a given Navigator
       map. This state includes both an imaging state and the file where maps are to
-      be saved, which can be a montage. Since maps are not acquired in low dose mode,
-      the imaging state must be in regular mode.</P>
-    <P>The dialog shows a table of imaging states that are saved with your settings.
-      The essential properties of the state are summarized in the table: 'LD' if it
-      is a Low Dose state, camera number, magnification, spot size plus probe mode for
-      a Thermo/FEI scope or alpha for a JEOL with alpha, intensity as a
-      percent C2/C3 value or illuminated area value, exposure time, binning, and frame size in 1000's (e.g.,
-      2048 x 1536 shows up as 2.0x1.5). Clicking a line in the table selects the
-      current line in the table, and double clicking actually sets the state.</P>
+      be saved, which can be a montage.&nbsp; The state for a map taken in Low Dose 
+      mode will be either Record, View, or Search.</P>
+    <P><em><strong>Scheduled states:</strong></em> These states can be stored with the
+      <strong>Imaging State</strong> 
+      button in the Navigator dialog for an acquisition item where a file is set to be 
+      opened (including for a tilt series).&nbsp; Outside of Low Dose mode, the state 
+      saved is Record as usual.&nbsp; In Low Dose mode, it is Record if a single-frame 
+      file is to be opened, but can be Record, View, or Search if a montage is to be 
+      opened, depending on how the montage is set to be acquired.</P>
+    <P><strong><em>The table:</em></strong> The dialog shows a table of imaging states that are saved with your settings.
+      The essential properties of the state are summarized in the table: 
+      <br />&nbsp;&nbsp;&nbsp; LD:  'Rec.', 'Vie.', or 'Sea.' for a Low Dose Record, 
+      View, or Search state, 'Non' otherwise
+      <br />&nbsp;&nbsp;&nbsp; Cam: The camera number, based on their order in any dialogs and numbered from 1
+      <br />&nbsp;&nbsp;&nbsp; Mag: The magnification
+      <br />&nbsp;&nbsp;&nbsp; Spot: The spot size, plus 'uP' or 'nP' for probe mode on 
+      Thermo/FEI scopes or 'a#' for alpha on a JEOL<br />&nbsp;&nbsp;&nbsp; Int: Intensity: Percent C2 or C3 or illuminated area
+      <br />&nbsp;&nbsp;&nbsp; Exp: Exposure time in seconds
+      <br />&nbsp;&nbsp;&nbsp; Bin: Binning
+      <br />&nbsp;&nbsp;&nbsp; Frame: The frame size in 1000's (e.g.,
+      2048 x 1536 shows up as 2.0x1.5)
+      <br />&nbsp;&nbsp;&nbsp; Name: The name entered in the text box
+      <br />Clicking a line in the table selects the
+      current line in the table, and double clicking actually sets the state if 
+      possible.</P>
+    <P><em><strong>Controls</strong></em></P>
     <P><B>Add Current State</B></P>
-    <P>This buttons adds the current microscope and Record parameters as a new imaging
+    <P>This buttons adds the current microscope and imaging parameters as a new imaging
       state in the table.</P>
-    <P><B>Add Nav Item State</B></P>
-    <P>This button adds the imaging state used to acquire the current Navigator item as
-      a new line in the table. This is not a map acquire state, so the file where the
-      map was saved is irrelevant. This button can be used to convert the 'Stock
-      states' that could be saved in a Navigator file in previous versions of
-      SerialEM. Open the stock state file in the Navigator, select each item in turn
-      in the Navigator and press this button to add its state to the table.</P>
-    <P><B>Delete</B></P>
-    <P>This button deletes the current line of the table.</P>
-    <P><B>Update</B></P>
-    <P>If an imaging state has been set from the currently selected line of the table,
-      this button is enabled and allows you to update that state with the current
-      microscope and Record parameters.</P>
     <P><B>Name</B></P>
     <P>You can enter a name for the current state in the table with this text box.</P>
-    <P><B>(Set) Imaging</B></P>
-    <P>This button will change the microscope and Record settings to the imaging state
+    <P><B>Go to Selected State</B></P>
+    <P>This button will change the microscope and acquisition settings to the imaging state
       on the current line of the table. It is equivalent to double clicking on a line
-      of the table. If the selected state is a low-dose state, then the parameters of
-      the Low Dose Record area will be replaced by the parameters of the stored
-      state. After setting one imaging state, you can still use this button to set a
-      different state, without first returning to the pre-existing imaging state.</P>
-    <P><B>(Set) Map Acquire</B></P>
+      of the table. If the selected state is a Low-Dose state, then the parameters of
+      one Low Dose area will be replaced by the parameters of the stored
+      state, but the program may not go to that area if it is in another one. The 
+      pre-existing state is summarized on a line starting with 'Prior' in the same 
+      format as the table.&nbsp; </P>
+    <ul>
+      <li>After setting one imaging state, you can still use this button to set a
+      different state, without first returning to the pre-existing imaging state.&nbsp; 
+        The previously set state does not replace the original pre-existing state.
+      </li>
+      <li>Outside of Low Dose mode, setting a different state will completely replace 
+        the previously set state.</li>
+      <li>In Low Dose mode, the state can be set for each of the three areas 
+        independently, so you can set the state for Record, View, and Search in 
+        succession without restoring or replacing any of those.&nbsp; However, if you go 
+        to another state for the same are, it will replace the previously set state for 
+        that area.</li>
+    </ul>
+    <P><B>Update It</B></P>
+    <P>If an imaging state has been set from the currently selected line of the table,
+      this button is enabled and allows you to update that state with the current
+      microscope and imaging parameters.</P>
+    <P><B>Delete It</B></P>
+    <P>This button deletes the current line of the table.</P>
+    <P><strong>Target Defocus or Defocus Offset</strong></P>
+    <P>This line has a different function in and out of Low Dose mode.&nbsp; Outside 
+      of Low Dose mode, it shows the value of the target defocus for autofocusing if 
+      it has been saved in the state, or 'None saved' if it has not.&nbsp; The <strong>
+      Save Current Value</strong> button can be used to save a value in the state.&nbsp; 
+      Saving target defocus is optional because it is a recent addition and saving it 
+      by default would not be desired in some scenarios.&nbsp; In Low Dose mode, the 
+      line shows the defocus offset for a View or Search state.</P>
+    <P><B>Go to Map Acquire State</B></P>
     <P>This button is enabled if the Navigator is open and the current item there is a
-      map. It will change the microscope and Record parameters to the state used to
+      map. It will change the microscope and imaging parameters to the state used to
       acquire that map, and make the file where that map is stored be the current
       file (opening it if necessary). Once you have set a map acquire state, you can
-      only return from it, not set a different map acquire or imaging state.</P>
-    <P><B>(Set) Scheduled</B></P>
+      only return from it, not set a different map acquire or imaging state.&nbsp; 
+      When the map was taken in Low Dose mode, switching to its state may or may not 
+      stay in Low Dose mode, depending on whether the given Low Dose area parameters 
+      have changed too much from their values when the map was acquired.</P>
+    <P><B>Go to Scheduled State</B></P>
     <P>This button is enabled if the current Navigator item is marked for acquisition
       and there is a stored imaging state or Low Dose Focus area position scheduled to be set when that item is ready
       to be acquired. Press this button to revisit and check the stored state or Focus
         position. If you
       need to change some properties of a scheduled state, you can make the change
-      then press the Imaging State button in the Navigator to update the state that
+      then press the <strong>Imaging State</strong> button in the Navigator to update the state that
       will be set.</P>
+    <P><B>Add Map Acquire State to Table</B></P>
+    <P>This button adds the imaging state used to acquire the current Navigator item 
+      as a new line in the table. This is not a full map acquire state, so the file 
+      where the map was saved is irrelevant. This button is of limited usefulness in 
+      Low Dose mode because the area-specific information is not preserved and the 
+      result is a non-Low Dose state that sets Record parameters only. </P>
     <P><B>Restore Prior State</B></P>
     <P>The button restores all settings to what they were before a state was set by any
       of the above means. If the imaging state was set two or more times in
       succession, the system is returned to the condition it was in before state was
-      set the first time, not to the state just before the last one. If you are
+      set the first time, not to the state just before the last one. If you set the 
+      imaging state for more than one Low Dose area, they will all be restored to 
+      their prior states.&nbsp; If you are
       leaving a map acquire state, the file that was current prior to entering that
       state will be made current again, and the file associated with that map state
       will be closed again if it was opened

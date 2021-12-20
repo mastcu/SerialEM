@@ -340,7 +340,23 @@ struct LowDoseParams {
   double dfTiltX, dfTiltY;      // Absolute dark field tilt for F/T
 };
 
+// State parameters and an initializer
 struct StateParams {
+  StateParams() {
+    // Zero out items in case it is a low dose set
+    energyLoss = slitWidth = 0.;
+    intensity = 0.;
+    magIndex = spotSize = 0;
+    probeMode = -1;
+    slitIn = zeroLoss = false;
+    ldParams.delayFactor = 0.9f;
+    singleContMode = SINGLE_FRAME;
+    beamAlpha = -999;
+    targetDefocus = -9999.f;
+    ldDefocusOffset = -9999.f;
+    ldShiftOffsetX = -9999.f;
+    camForParams = -1;
+  }
   LowDoseParams ldParams;  // Low dose Record parameters if this is a low dose state
   int lowDose;            // Flag that it is a low dose state
   int camIndex;            // Camera index
@@ -375,7 +391,12 @@ struct StateParams {
   int axisRotation;        // Amount of rotation, or 0 if not rotated
   // Camera modes for other parameter sets when not a low dose state
   int readModeView, readModeFocus, readModeTrial, readModePrev, readModeSrch,readModeMont;
+  float targetDefocus;     // Defocus target or view/search defocus offset; -9999 if none
+  float ldDefocusOffset;
+  float ldShiftOffsetX;    // View or search shift offset, -9999 if none
+  float ldShiftOffsetY;
   CString name;
+  int camForParams;        // Runtime: Camera index to which parameters should be restored
 };
 
 struct FilterParams {

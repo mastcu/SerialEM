@@ -1316,7 +1316,9 @@ void CNavigatorDlg::OnCheckFileatgroup()
 void CNavigatorDlg::OnButFileprops()
 {
   ScheduledFile *sched;
-  int fileType;
+  MontParam *montp;
+  StateParams *state;
+  int fileType, montInd, stateInd, lowdose;
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 && 
     GroupScheduledIndex(mItem->mGroupID) < 0))
@@ -1326,6 +1328,22 @@ void CNavigatorDlg::OnButFileprops()
     mHelper->SetFileProperties(mCurrentItem, fileType, sched, true, false);
     SetChanged(true);
   }
+  if (mWinApp->LowDoseMode()) {
+    stateInd = sched ? sched->stateIndex : mItem->mStateIndex;
+    montInd = sched ? sched->montParamIndex : mItem->mMontParamIndex;
+    if (stateInd >= 0 && montInd >= 0) {
+      state = mHelper->ExistingStateParam(stateInd, true);
+      if (state) {
+        lowdose = -1 - RECORD_CONSET;
+        montp = mMontParArray.GetAt(montInd);
+        if (montp->useViewInLowDose)
+          lowdose = -1 - VIEW_CONSET;
+        else if (montp->useSearchInLowDose)
+          lowdose = -1 - SEARCH_AREA;
+        mHelper->StoreCurrentStateInParam(state, lowdose, true, montp->cameraIndex, 0);
+      }
+    }
+  }
   mWinApp->RestoreViewFocus();
 }
 
@@ -1334,17 +1352,22 @@ void CNavigatorDlg::OnButState()
 {
   ScheduledFile *sched;
   CString str;
+  MontParam *montp;
   StateParams *state = NULL;
-  int fileType;
+  int fileType, montInd, lowdose = mWinApp->LowDoseMode() ? -1 - RECORD_CONSET : 0;
+  int camNum = -1;
   int *indexp;
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 && 
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   indexp = &mItem->mStateIndex;
+  montInd = mItem->mMontParamIndex;
   sched = mHelper->GetFileTypeAndSchedule(mItem, fileType);
-  if (sched) 
+  if (sched) {
     indexp = &sched->stateIndex;
+    montInd = sched->montParamIndex;
+  }
   if (mItem->mFilePropIndex < 0 && !sched)
     return;
   if (*indexp >= 0) {
@@ -1361,8 +1384,18 @@ void CNavigatorDlg::OnButState()
   } else
     str.Format("Updated the stored imaging state for item # %d, label %s",
       mCurrentItem + 1, (LPCTSTR)mItem->mLabel);
+
+  // Save the proper low dose state if it is set to open a montage
+  if (montInd >= 0 && lowdose) {
+    montp = mMontParArray.GetAt(montInd);
+    if (montp->useViewInLowDose)
+      lowdose = -1 - VIEW_CONSET;
+    else if (montp->useSearchInLowDose)
+      lowdose = -1 - SEARCH_AREA;
+    camNum = montp->cameraIndex;
+  }
   mWinApp->AppendToLog(str);
-  mHelper->StoreCurrentStateInParam(state, mWinApp->LowDoseMode(), true);
+  mHelper->StoreCurrentStateInParam(state, lowdose, true, camNum, 0);
   if (sched)
     UpdateGroupStrings(mItem->mGroupID);
   else

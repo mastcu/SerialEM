@@ -905,7 +905,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (NAME_IS("StateParameters")) {
         stateP = mWinApp->mNavHelper->NewStateParam(false);
-        stateP->lowDose = -itemInt[1];
+        stateP->lowDose = itemInt[1];;
+        if (stateP->lowDose)    // Add 100 until low dose params found
+          stateP->lowDose += 100;    
         stateP->camIndex = itemInt[2];
         stateP->magIndex = itemInt[3];
         stateP->spotSize = itemInt[4];
@@ -937,7 +939,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         stateP->readModeMont = itemEmpty[30] ? -1 : itemInt[30];
         stateP->focusAxisPos = EXTRA_NO_VALUE;
         stateP->beamAlpha = itemEmpty[31] ? -999 : itemInt[31];
-
+        stateP->targetDefocus = itemEmpty[32] ? -9999.f : itemFlt[32];
+        stateP->ldDefocusOffset = itemEmpty[33] ? -9999.f : itemFlt[33];
+        if (!itemEmpty[35]) {
+          stateP->ldShiftOffsetX = itemFlt[34];
+          stateP->ldShiftOffsetY = itemFlt[35];
+        }
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
         if (index < 0 || index >= stateArray->GetSize()) {
@@ -966,7 +973,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             ldp = &mLowDoseParams[GIF * MAX_LOWDOSE_SETS + index];
           } else {
             ldp = &stateP->ldParams;
-            stateP->lowDose = 1;
+            stateP->lowDose -= 100;    // Restore to proper value
           }
           if (mag < 0) {
             ldp->magIndex = 0;
@@ -1292,7 +1299,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   err = 0;
   for (index = (int)stateArray->GetSize() - 1; index >= 0; index--) {
     stateP = stateArray->GetAt(index);
-    if (stateP->lowDose < 0) {
+    if (stateP->lowDose > 90) {
       stateArray->RemoveAt(index);
       err++;
       delete stateP;
@@ -1852,8 +1859,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
       oneState.Format("StateParameters %d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d\n", stateP->lowDose, 
-        stateP->camIndex, stateP->magIndex, 
+        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f\n",
+        stateP->lowDose, stateP->camIndex, stateP->magIndex, 
         stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
         stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame, 
         stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
@@ -1861,7 +1868,9 @@ void CParameterIO::WriteSettings(CString strFileName)
         stateP->saveFrames, stateP->processing, stateP->alignFrames, 
         stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView, 
         stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev, 
-        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha);
+        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha, 
+        stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX, 
+        stateP->ldShiftOffsetY);
         mFile->WriteString(oneState);
         if (!stateP->name.IsEmpty()) {
           oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
