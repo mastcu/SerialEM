@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/9/21: Fixed problem reconnecting to Tietz-SEMserver (In 3.8).
+
 12/2/21: When acquiring montages at the points of a polygon supermontage and
 skipping pieces outside the polygon, the error from Realign to Item will be
 added to the polygon coordinates to give more accurate skipping.
