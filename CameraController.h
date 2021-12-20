@@ -117,6 +117,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
 #define FCAM_CAN_COUNT(a) (a->CamFlags & PLUGFEI_CAM_CAN_COUNT)
 #define FCAM_CAN_ALIGN(a) (a->CamFlags & PLUGFEI_CAM_CAN_ALIGN)
+#define FCAM_CONTIN_SAVE(a) ((a)->FEItype == OTHER_FEI_TYPE && (a->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
 #define IS_FALCON2_3_4(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE || \
 a->FEItype == FALCON4_TYPE)
 #define IS_FALCON3_OR_4(a) ((a)->FEItype == FALCON3_TYPE || (a)->FEItype == FALCON4_TYPE)
@@ -125,6 +126,7 @@ a->FEItype == FALCON4_TYPE)
 #define PLUGFEI_ALLOWS_ALIGN_HERE 107
 #define PLUGFEI_CAM_SAVES_EER     110
 #define PLUGFEI_FILT_FLASH_LOAD   111
+#define PLUGFEI_CONTINUOUS_SAVE   111    // TODO SET TO 112
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -407,6 +409,7 @@ public:
   float GetFalconFractionDivisor(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
   GetSetMember(float, FalconReadoutInterval);
+  GetSetMember(float, Ceta2ReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
   int GetMaxFalconFrames(CameraParameters *params);
   SetMember(BOOL, FrameSavingEnabled);
@@ -838,6 +841,7 @@ public:
 
   int mMaxFalconFrames;         // Maximum number of intermediate Falcon frames
   float mFalconReadoutInterval; // Frame interval for Falcon camera
+  float mCeta2ReadoutInterval;  // Frame interval for Ceta2 camera
   BOOL mFrameSavingEnabled;     // Flag that frame-saving is enabled in the FEI dialog
   CString mFalconFrameConfig;   // Name of file for controlling frame-saving
   CString mLocalFalconFramePath; // Place that frames can be written by FEI

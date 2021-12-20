@@ -874,8 +874,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_eRight = mCurSet->right / mCoordScaling;
   m_eTop = mCurSet->top / mCoordScaling;
   m_eBottom = mCurSet->bottom / mCoordScaling;
-  m_bDoseFracMode = B3DCHOICE(mParam->K2Type, mCurSet->doseFrac > 0, 
-    mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam)&&IS_FALCON2_3_4(mParam)));
+  m_bDoseFracMode = B3DCHOICE(mParam->K2Type, mCurSet->doseFrac > 0,
+    mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam) && IS_FALCON2_3_4(mParam)));
   if (mParam->canTakeFrames)
     m_bDoseFracMode = (mCanAlignFrames && mCurSet->alignFrames) || 
     (mCanSaveFrames && mCurSet->saveFrames);
@@ -1397,7 +1397,8 @@ void CCameraSetupDlg::ManageCamera()
   CString title = "Camera Parameters   --   " + mParam->name;
   mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave); 
   states[0] = mNumCameras > 1;
-  states[2] = !mParam->STEMcamera && !IS_FALCON2_3_4(mParam);  // Shutter and other sizes
+  states[2] = !mParam->STEMcamera && 
+    !(IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam));   // Shutter and other sizes
   states[4] = !mParam->STEMcamera;    // Dose
   states[5] = mParam->STEMcamera;
   states[6] = mParam->K2Type || mFalconCanSave || mParam->canTakeFrames;
@@ -1540,7 +1541,8 @@ void CCameraSetupDlg::ManageCamera()
     win = GetDlgItem(hideForFalcon[i]);
     win->ShowWindow(mParam->K2Type ? SW_SHOW : SW_HIDE);
   }
-  m_butSetupFalconFrames.ShowWindow(mFalconCanSave ? SW_SHOW : SW_HIDE);
+  m_butSetupFalconFrames.ShowWindow((mFalconCanSave && !FCAM_CONTIN_SAVE(mParam)) ?
+    SW_SHOW : SW_HIDE);
   canConfig = mFalconCanSave ? mCamera->GetCanUseFalconConfig() : -1;
   if (mFalconCanSave && FCAM_ADVANCED(mParam)) {
     canConfig = -2;
@@ -1689,7 +1691,7 @@ void CCameraSetupDlg::ManageCamera()
   SetDlgItemText(IDC_DRIFTTEXT2, mParam->STEMcamera ? "usec" : "sec");
   if (mParam->STEMcamera)
     areaHeight = mParam->moduloX >= 0 ? mAreaTwoRowHeight : mAreaSTEMHeight;
-  else if (IS_FALCON2_3_4(mParam))
+  else if (IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam))
     areaHeight = mAreaSTEMHeight;
   m_statArea.SetWindowPos(NULL, 0, 0, mAreaWidth, areaHeight, SWP_NOMOVE);
   m_statProcessing.SetWindowPos(NULL, 0, 0, mProcWidth, 
@@ -2311,7 +2313,9 @@ void CCameraSetupDlg::ManageDose()
     mCamera->MakeAlignSaveFlags(m_bSaveFrames, mCurSet->alignFrames, 
       mCurSet->useFrameAlign),
     m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime, special, 1 - m_iContSingle);
-  m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
+  if (mParam->DE_camType)
+    m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * 
+    (m_bDEsaveMaster ? 1 : m_iSumCount));
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
@@ -2849,7 +2853,11 @@ void CCameraSetupDlg::OnSaveFrames()
 // Make sure there is a good summed frame list when save or align is turned on
 void CCameraSetupDlg::CheckFalconFrameSumList(void)
 {
-  if (mFalconCanSave && (m_bSaveFrames || m_bAlignDoseFrac) && 
+  if (mFalconCanSave && FCAM_CONTIN_SAVE(mParam)) {
+    m_bDoseFracMode = m_bSaveFrames || m_bAlignDoseFrac;
+    ManageExposure();
+    UpdateData(false);
+  } else if (mFalconCanSave && (m_bSaveFrames || m_bAlignDoseFrac) &&
     !mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
     mCurSet->useFrameAlign, m_iK2Mode)) {
     if (!mSummedFrameList.size())
@@ -2905,7 +2913,8 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_iStartNumber = mCamera->GetFrameNumberStart();
   optDlg.mCanCreateDir = IS_BASIC_FALCON2(mParam) || (mParam->FEItype &&
     (mCamera->GetDirForFalconFrames()).IsEmpty() || (mParam->FEItype == FALCON4_TYPE || 
-    (mParam->FEItype == FALCON3_TYPE && mCamera->GetSubdirsOkInFalcon3Save()))) ||
+    (mParam->FEItype == FALCON3_TYPE && mCamera->GetSubdirsOkInFalcon3Save()) ||
+    FCAM_CONTIN_SAVE(mParam))) ||
     (mParam->GatanCam && mCamera->CAN_PLUGIN_DO(CREATES_DIRECTORY, mParam)) ||
     (mParam->DE_camType && !mParam->DE_AutosaveDir.IsEmpty()) ||
     (!mParam->GatanCam && mParam->canTakeFrames);
@@ -2954,8 +2963,9 @@ void CCameraSetupDlg::OnSetSaveFolder()
 {
   CString str = mCamera->GetDirForK2Frames();
   CString title = "SELECT folder for saving frames (typing name may not work)";
+  bool continSave = FCAM_CONTIN_SAVE(mParam);
   BOOL subdirsOK = mCamera->GetSubdirsOkInFalcon3Save() ||
-    mParam->FEItype == FALCON4_TYPE;
+    mParam->FEItype == FALCON4_TYPE || continSave;
   if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
     if (KGetOneString("Enter folder on Gatan server for saving frames:", str, 250,
       mCamera->GetNoK2SaveFolderBrowse() ? "" :
@@ -2968,15 +2978,19 @@ void CCameraSetupDlg::OnSetSaveFolder()
   }
   if (mFEItype) {
     mCamera->FixDirForFalconFrames(mParam);
-    str = mCamera->GetDirForFalconFrames();
+    str = continSave ? mParam->dirForFrameSaving : mCamera->GetDirForFalconFrames();
     if (FCAM_ADVANCED(mParam)) {
-      if (KGetOneString("Frames can be saved in the Falcon storage location or a new or"
-        " existing subfolder " + CString(subdirsOK ? "tree" : "of it"),
+      if (KGetOneString("Frames can be saved in the" +
+        CString(continSave ? "Ceta" : "Falcon") + " storage location or a new"
+        " or existing subfolder " + CString(subdirsOK ? "tree" : "of it"),
         "Enter name of subfolder to save frames in, or leave blank for none", str)) {
         if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
-          if (subdirsOK || str.FindOneOf("/\\") < 0)
-            mCamera->SetDirForFalconFrames(str);
-          else
+          if (subdirsOK || str.FindOneOf("/\\") < 0) {
+            if (continSave)
+              mParam->dirForFrameSaving = str;
+            else
+              mCamera->SetDirForFalconFrames(str);
+          } else
             AfxMessageBox("You can enter only a single folder name without \\ or /");
         }
       }
@@ -2984,7 +2998,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
       return;
     }
   }
-  if (mParam->canTakeFrames)
+  if (mParam->canTakeFrames && !continSave)
     str = mParam->dirForFrameSaving;
   if (str.IsEmpty())
     str = "C:\\";

@@ -228,7 +228,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
 
   // Build the list of readouts
   mReadouts.clear();
-  if (eerMode) {
+  if (eerMode || FCAM_CONTIN_SAVE(camParams)) {
     mReadouts.push_back(1);
   } else {
     mReadouts.clear();
@@ -248,8 +248,8 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
       //ind = stackingDeferred ? 1 : 0;
     if (mPlugFuncs->ASIsetupFrames(camParams->eagleIndex, ind, temp, conSet.numSkipBefore,
       readPtr, (LPCTSTR)directory, (LPCTSTR)filename, 0, 0.)) {
-      str.Format("Error setting up for frame saving from Falcon:\n%s",
-        mPlugFuncs->GetLastErrorString());
+      str.Format("Error setting up for frame saving from %s:\n%s", 
+        FCAM_CONTIN_SAVE(camParams) ? "Ceta" : "Falcon",mPlugFuncs->GetLastErrorString());
       SEMMessageBox(str);
       return 1;
     }
