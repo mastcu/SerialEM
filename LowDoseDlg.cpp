@@ -634,14 +634,21 @@ void CLowDoseDlg::OnContinuousupdate()
 {
   double intensity = 0.;
   bool manage = false;
+  int lowestM, area = mScope->GetLowDoseArea();
   UpdateData(true); 
   mWinApp->RestoreViewFocus();  
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
+  if (IS_AREA_VIEW_OR_SEARCH(area) && !mWinApp->GetSTEMMode()) {
+    lowestM = mScope->GetLowestMModeMagInd();
+    if (!BOOL_EQUIV(mLDParams[area].magIndex < lowestM, mScope->GetMagIndex() < lowestM)
+      || mLDParams[area].probeMode != mScope->GetProbeMode())
+      mScope->GotoLowDoseArea(area);
+  }
 
   // If the autocenter setup dialog is open and we are in Trial, the intensity is the
   // autocen one when turning on continuous, so reassert the Trial one first; but when
   // turning it off, reassert the centering if screen is down
-  if (mWinApp->mAutocenDlg && mScope->GetLowDoseArea() == TRIAL_CONSET) {
+  if (mWinApp->mAutocenDlg && area == TRIAL_CONSET) {
     if (m_bContinuousUpdate) {
       intensity = mLDParams[TRIAL_CONSET].intensity;
     } else if (mWinApp->mMultiTSTasks->AutocenMatchingIntensity()) {
@@ -663,9 +670,8 @@ void CLowDoseDlg::SetContinuousUpdate(BOOL state)
   if ((state ? 1 : 0) == (m_bContinuousUpdate ? 1 : 0))
     return;
   m_bContinuousUpdate = state;
-  m_statMagSpot.EnableWindow(m_bContinuousUpdate);
-  mScope->SetLDContinuousUpdate(m_bContinuousUpdate);
-  UpdateData(false);  
+  UpdateData(false);
+  OnContinuousupdate();
 }
 
 
@@ -1487,10 +1493,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // If continuous update and no tasks, update the text if anything has changed, and
   // modify the current set mode unconditionally
   // Disable changes in spectroscopy mode
-  if (m_bContinuousUpdate && !mScope->GetChangingLDArea()  && !mScope->GetClippingIS() &&
-    (!mWinApp->DoingTasks() || (mWinApp->mMacroProcessor->DoingMacro() && 
-      mWinApp->mMacroProcessor->IsLowDoseAreaSaved(inSetArea))) && inSetArea >= 0 &&
-    !(JEOLscope && mScope->GetHasOmegaFilter() && mScope->mJeolSD.spectroscopy)) {
+  if (DoingContinuousUpdate(inSetArea)) {
     ldArea = &mLDParams[inSetArea];
     TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,
       ldArea->ISX, ldArea->ISY);
@@ -1582,6 +1585,14 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   mLastISY = ISY;
   mLastMagIndex = magIndex;
   mIgnoreIS = false;
+}
+
+bool CLowDoseDlg::DoingContinuousUpdate(int inSetArea)
+{
+  return (m_bContinuousUpdate && !mScope->GetChangingLDArea() && !mScope->GetClippingIS() &&
+    (!mWinApp->DoingTasks() || (mWinApp->mMacroProcessor->DoingMacro() &&
+      mWinApp->mMacroProcessor->IsLowDoseAreaSaved(inSetArea))) && inSetArea >= 0 &&
+    !(JEOLscope && mScope->GetHasOmegaFilter() && mScope->mJeolSD.spectroscopy));
 }
 
 // Routine update about blanking status regardless of low dose mode

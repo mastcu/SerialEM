@@ -60,6 +60,7 @@ public:
 	void ScopeUpdate(int magIndex, int spotSize, double intensity, double ISX, double ISY,
     BOOL screenDown, int inSetArea, int camLenIndex, double focus, float alpha,
     int probeMode);
+  bool DoingContinuousUpdate(int inSetArea);
 	CLowDoseDlg(CWnd* pParent = NULL);   // standard constructor
   GetSetMember(int, AxisPiezoPlugNum);
   GetSetMember(int, AxisPiezoNum);
