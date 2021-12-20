@@ -1665,10 +1665,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>UsableArea</TD>
-          <TD>Specifies the coordinates of the usable area on the CCD, in Digital Micrograph
-            coordinates numbered from 0. Follow the keyword with the top, left, bottom, and
-            right coordinates of the last good column or row on the chip. This is needed if
-            gain normalization is being done in SerialEM.</TD>
+          <TD>Specifies the coordinates of the usable area on the CCD, in physical pixel
+            coordinates numbered from 0 at the top left, and for an image in the same orientation as is 
+            displayed in SerialEM. Follow the keyword with the top, left, bottom, and 
+            right coordinates of the last good column or row in the image. This entry is needed if 
+            gain normalization is being done in SerialEM, or if there are defects at the edge
+            of an unnormalized K2 or K3 image that need to be corrected.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>UsableAtMag</TD>
@@ -1692,10 +1694,14 @@
         <TR VALIGN="top">
           <TD>BadColumns</TD>
           <TD>Specify a list of bad columns that will be replaced in all processed images
-            (gain normalized or dark subtracted). List the columns in increasing order using coordinates numbered from 0. This
+            (gain normalized or dark subtracted). List the columns in increasing order using 
+            coordinates numbered from 0 at the left.  In this and the next 4 entries, the coordinates 
+            need to be in physical pixels in an image at the 
+            same orientation as would be displayed in SerialEM. This 
               and the following 4 'Bad' entries are needed to handle defects from Gatan and
               other cameras if gain normalization is being
-            done in SerialEM.&nbsp; Defect correction will also be done for DE cameras
+            done in SerialEM, or if unnormalized frames are being saved from a K2 or K3 
+            camera.&nbsp; Defect correction will also be done for DE cameras 
               regardless of whether normalization is done in SerialEM.&nbsp; It will be done
               for K2 or K3 images if any of these entries exist.&nbsp; For a K2, the
               correction will use the full list of defects obtained by merging the defects
@@ -1704,7 +1710,8 @@
         <TR VALIGN="top">
           <TD>BadRows</TD>
           <TD>Specify a list of bad rows that will be replaced in all processed images.&nbsp;
-            List the rows in increasing order using coordinates numbered from 0 at the top.&nbsp;
+            List the rows in increasing order using physical pixel coordinates numbered from 0 at
+             the top in an image with the same orientation as is displayed in SerialEM.&nbsp; 
               See notes under 'BadColumns'.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1725,7 +1732,7 @@
         <TR VALIGN="top">
           <TD>BadPixels</TD>
           <TD>Specify a list of single pixels needing correction.&nbsp; Each pixel is
-            specified by an X and a Y coordinate numbered from 0 at the top left.&nbsp;
+            specified by an X and a Y physical pixel coordinate numbered from 0 at the top left.&nbsp; 
             Multiple pixels (up to 19) can be entered on one line, and an unlimited number of
             pixels can be entered on multiple lines.&nbsp; See notes under 'BadColumns'.</TD>
         </TR>
