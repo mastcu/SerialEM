@@ -954,8 +954,11 @@ public:
   BOOL RunSynchronousThread(int action, int newIndex, int curIndex, const char *routine);
   static UINT SynchronousProc(LPVOID pParam);
   static BOOL SetMagKernel(SynchroThreadData *sytd);
+  BOOL SetMagOrAdjustLDArea(int inIndex);
+  bool AdjustLDAreaForItem(int which, int inItem);
   static BOOL SetSpotKernel(SynchroThreadData *sytd);
   static BOOL SetProbeKernel(SynchroThreadData *sytd);
+  BOOL SetProbeOrAdjustLDArea(int inProbe);
   static BOOL SetAlphaKernel(SynchroThreadData *sytd);
   static BOOL NormalizeKernel(SynchroThreadData *sytd);
   int StartLongOperation(int *operations, float *hoursSinceLast, int numOps);

@@ -3994,6 +3994,51 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
   return true;
 }
 
+// Set mag index directly or via the current low dose area
+BOOL CEMscope::SetMagOrAdjustLDArea(int inIndex)
+{
+  if (AdjustLDAreaForItem(0, inIndex))
+    return true;
+  return SetMagIndex(inIndex);
+}
+
+// Set a parameter (mag or probe mode) by changing low dose area and going to the area if
+// continuous mode is on and crossing LM boundary or changing probe mode for View or 
+// Search, returning true. Otherwise return false.  Allows defocus offset to be managed
+bool CEMscope::AdjustLDAreaForItem(int which, int inItem)
+{
+  LowDoseParams *ldp;
+  LowDoseParams ldpOld;
+  int lowestM;
+  bool retval = false;
+  if (mLowDoseMode && IS_AREA_VIEW_OR_SEARCH(mLowDoseSetArea)
+    && !mWinApp->GetSTEMMode() &&
+    mWinApp->mLowDoseDlg.DoingContinuousUpdate(mLowDoseSetArea)) {
+    ldp = mWinApp->GetLowDoseParams() + mLowDoseSetArea;
+    if (!which) {
+      lowestM = GetLowestMModeMagInd();
+      if (!BOOL_EQUIV(ldp->magIndex < lowestM, inItem < lowestM)) {
+        ldpOld = *ldp;
+        mWinApp->mLowDoseDlg.TransferISonAxis(ldp->magIndex, ldp->ISX, ldp->ISY, inItem,
+          ldp->ISX, ldp->ISY);
+        ldp->magIndex = inItem;
+        retval = true;
+      }
+    } else {
+      if (ldp->probeMode != inItem) {
+        ldpOld = *ldp;
+        ldp->probeMode = inItem;
+        retval = true;
+      }
+    }
+    if (retval) {
+      SetLdsaParams(&ldpOld);
+      GotoLowDoseArea(mLowDoseSetArea);
+    }
+  }
+  return retval;
+}
+
 bool CEMscope::SetSTEMMagnification(double magVal)
 {
   bool success = true;
@@ -5109,6 +5154,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool toSearch = newArea == SEARCH_AREA;
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
+  bool toViewOK, fromViewOK, toSearchOK, fromSearchOK, removeAddDefocus;
   bool splitBeamShift, leavingLowMag, enteringLowMag, deferJEOLspot, manage = false;
   bool probeDone = true, changingAtZeroIS, sameIntensity, needCondenserNorm = false;
   BOOL bDebug = GetDebugOutput('b');
@@ -5142,7 +5188,13 @@ void CEMscope::GotoLowDoseArea(int newArea)
   enteringLowMag = !STEMmode && ((oldArea < 0 && curMagInd >= lowestM) ||
     (oldArea >= 0 && mLdsaParams->magIndex >= lowestM)) && ldArea->magIndex &&
     ldArea->magIndex < lowestM;
+  removeAddDefocus = leavingLowMag || enteringLowMag || 
+    (ldArea->probeMode >= 0 && ldArea->probeMode != mProbeMode);
   deferJEOLspot = !mJeol1230 && JEOLscope && (leavingLowMag || enteringLowMag);
+  toViewOK = toView && ldArea->magIndex > 0;
+  toSearchOK = toSearch && ldArea->magIndex > 0;
+  fromViewOK = fromView && mLdsaParams->magIndex > 0;
+  fromSearchOK = fromSearch && mLdsaParams->magIndex > 0;
 
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
@@ -5219,22 +5271,24 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // needed for the given IS offset
   if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) ||
     (!fromFocTrial && toFocTrial && mLdsaParams->magIndex) || 
-    (fromSearch && mLdsaParams->magIndex) || toSearch))
+    fromSearchOK || toSearch))
     ISdone = oldArea >= 0 && (fromFocTrial || fromSearch || 
     (!ldArea->magIndex && ldArea->camLenIndex));
   else
     ISdone = oldArea >= 0 && (((ldArea->magIndex || ldArea->camLenIndex) &&
     ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) || 
-      (fromSearch && mLdsaParams->magIndex)) ||
+      fromSearchOK) ||
     (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha &&
     mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
     DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY);
 
   // If leaving view or search area, set defocus back first
-  if (!STEMmode && mLDViewDefocus && fromView && !toView && mLdsaParams->magIndex > 0)
+  if (!STEMmode && mLDViewDefocus && fromViewOK && 
+    (!toView || (toViewOK && removeAddDefocus)))
       IncDefocus(-(double)mLDViewDefocus);
-  if (!STEMmode && mSearchDefocus && fromSearch && !toSearch && mLdsaParams->magIndex > 0)
+  if (!STEMmode && mSearchDefocus && fromSearchOK && 
+    (!toSearch || (toSearchOK && removeAddDefocus)))
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
@@ -5324,11 +5378,13 @@ void CEMscope::GotoLowDoseArea(int newArea)
     ldArea->beamAlpha = (float)curAlpha;
 
   // If going to view or search area, set defocus offset incrementally
-  if (!STEMmode && mLDViewDefocus && !fromView && toView && ldArea->magIndex > 0) {
+  if (!STEMmode && mLDViewDefocus && toViewOK && 
+    (!fromView || (fromViewOK  && removeAddDefocus))) {
     IncDefocus((double)mLDViewDefocus);
     mCurDefocusOffset = mLDViewDefocus;
   }
-  if (!STEMmode && mSearchDefocus && !fromSearch && toSearch && ldArea->magIndex > 0) {
+  if (!STEMmode && mSearchDefocus && toSearchOK && 
+    (!fromSearch || (fromSearchOK && removeAddDefocus))) {
     IncDefocus((double)mSearchDefocus);
     mCurDefocusOffset = mSearchDefocus;
   }
@@ -5498,7 +5554,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
     posChgY = delISY;
 
     // Get position again, taking off the view/search offset for JEOL
-    if (JEOLscope && (inArea == VIEW_CONSET || inArea == SEARCH_AREA)) {
+    if (JEOLscope && IS_AREA_VIEW_OR_SEARCH(inArea)) {
       mWinApp->mLowDoseDlg.GetEitherViewShift(vsXshift, vsYshift, inArea);
       mShiftManager->TransferGeneralIS(ldParams[inArea].magIndex,
         mNextLDpolarity * (useISX - vsXshift), mNextLDpolarity * (useISY - vsYshift),
@@ -5520,7 +5576,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
     // And get the change for JEOL with view/search offset excluded
     if (JEOLscope) { 
       vsXshift = vsYshift = 0.;
-      if (mLowDoseSetArea == VIEW_CONSET || mLowDoseSetArea == SEARCH_AREA)
+      if (IS_AREA_VIEW_OR_SEARCH(mLowDoseSetArea))
         mWinApp->mLowDoseDlg.GetEitherViewShift(vsXshift, vsYshift, mLowDoseSetArea);
       mShiftManager->TransferGeneralIS(mLdsaParams->magIndex,
         mLastLDpolarity * (mLdsaParams->ISX - vsXshift),
@@ -5634,7 +5690,7 @@ void CEMscope::PositionChangingPartOfIS(double curISX, double curISY,
   mShiftToTiltAxis = mShiftToTiltAxis;
   if (mLowDoseMode) {
     area = mChangingLDArea > 0 ? mLDChangeCurArea : mLowDoseSetArea;
-    if (area == VIEW_CONSET || area == SEARCH_AREA) {
+    if (IS_AREA_VIEW_OR_SEARCH(area)) {
       mWinApp->mLowDoseDlg.GetEitherViewShift(vsXtmp, vsYtmp, area);
       mShiftManager->TransferGeneralIS(ldParams[area].magIndex, vsXtmp, vsYtmp,
         mLastMagIndex, vsXshift, vsYshift);
@@ -7085,6 +7141,14 @@ BOOL CEMscope::SetProbeKernel(SynchroThreadData *sytd)
   return true;
 }
 
+// set probe mode directly or by changing low dose parameters
+BOOL CEMscope::SetProbeOrAdjustLDArea(int inProbe)
+{
+  if (AdjustLDAreaForItem(1, inProbe))
+    return true;
+  return SetProbeMode(inProbe);
+}
+
 // Get microprobe/nanoprobe on FEI or return the default value for TEM/STEM on other scope
 int CEMscope::ReadProbeMode(void)
 {
@@ -7661,7 +7725,8 @@ void CEMscope::SetLDViewDefocus(float inVal, int area)
     mSearchDefocus = inVal; 
   else 
     mLDViewDefocus = inVal;
-  if (mWinApp->mLowDoseDlg.GetTrulyLowDose() && mLowDoseSetArea == area &&
+  if (mWinApp->mLowDoseDlg.GetTrulyLowDose() && 
+    mLowDoseSetArea == (area ? SEARCH_AREA : VIEW_CONSET) &&
     fabs(mCurDefocusOffset - inVal) > 1.e-3) {
     IncDefocus(inVal - mCurDefocusOffset);
     mCurDefocusOffset = inVal;
@@ -8588,6 +8653,12 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->addToExposure = mAddToFalcon3Exposure;
       if (params->FEItype == FALCON4_TYPE && params->addToExposure < -1.)
         params->addToExposure = mFalcon4ReadoutInterval / 2.f;
+      if (params->canTakeFrames) {
+        if (params->FEItype == OTHER_FEI_TYPE &&mPluginVersion >= PLUGFEI_CONTINUOUS_SAVE)
+          params->CamFlags |= PLUGFEI_CAM_CONTIN_SAVE;
+        else
+          params->canTakeFrames = 0;
+      }
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }

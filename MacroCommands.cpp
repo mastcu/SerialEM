@@ -3987,7 +3987,7 @@ int CMacCmd::SetMag(void)
     i = FindIndexForMagValue(index, -1, -2);
     if (!i)
       ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
-    mScope->SetMagIndex(i);
+    mScope->SetMagOrAdjustLDArea(i);
     UpdateLDAreaIfSaved();
   }
   return 0;
@@ -4007,7 +4007,7 @@ int CMacCmd::SetMagIndex(void)
     delX =  mMagTab[index].STEMmag;
   if (!delX)
     ABORT_LINE("There is a zero in the magnification table at the index given in:\n\n");
-  mScope->SetMagIndex(index);
+  mScope->SetMagOrAdjustLDArea(index);
   UpdateLDAreaIfSaved();
   return 0;
 }
@@ -4032,7 +4032,7 @@ int CMacCmd::ChangeMag(void)
     index2 = mWinApp->FindNextMagForCamera(iy0, index, ix0);
     if (index2 < 0)
       ABORT_LINE("Improper mag change in statement: \n\n");
-    mScope->SetMagIndex(index2);
+    mScope->SetMagOrAdjustLDArea(index2);
   }
   UpdateLDAreaIfSaved();
   return 0;
@@ -4072,7 +4072,7 @@ int CMacCmd::ChangeMagAndIntensity(void)
     return 1;
 
   // Change the mag then the intensity
-  mScope->SetMagIndex(index2);
+  mScope->SetMagOrAdjustLDArea(index2);
   if (!i)
     mScope->DelayedSetIntensity(delX, GetTickCount());
   mStrCopy.Format("%s before mag change %.3f%s, remaining factor of change "
@@ -4125,7 +4125,7 @@ int CMacCmd::SetProbeMode(void)
     index = 0;
   else
     ABORT_LINE("Probe mode must be 0, 1, nano, or micro in statement: \n\n");
-  if (!mScope->SetProbeMode(index)) {
+  if (!mScope->SetProbeOrAdjustLDArea(index)) {
     AbortMacro();
     return 1;
   }
@@ -8408,7 +8408,8 @@ int CMacCmd::SetMapAcquireState(void)
     report.Format("Navigator item %d is not a map for line:\n\n", mItemInt[1]);
     ABORT_LINE(report);
   }
-  if (mNavHelper->SetToMapImagingState(navItem, true))
+  if (mNavHelper->SetToMapImagingState(navItem, true, 
+    (mWinApp->LowDoseMode() && navItem->mMapLowDoseConSet >= 0) ? -1 : 0))
     ABORT_LINE("Failed to set map imaging state for line:\n\n");
   return 0;
 }

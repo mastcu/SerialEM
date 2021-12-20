@@ -3923,8 +3923,8 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
         mLowDoseDlg.TurnOffDefine();
       ldArea = mScope->GetLowDoseArea();
       if (ldArea >= 0) {
-        mScope->GotoLowDoseArea(ldArea);
-        mScope->SetLdsaParams(&mCamLowDoseParams[mEFTEMMode ? 1 : 0][ldArea]);
+        mScope->GotoLowDoseArea(RECORD_CONSET);
+        mScope->SetLdsaParams(&mCamLowDoseParams[mEFTEMMode ? 1 : 0][RECORD_CONSET]);
       }
       // 1/18/12 No longer call ChangeAllShifts!
     }
@@ -3936,12 +3936,20 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
     if (mEFTEMMode)
       mFilterParams.slitIn = false;
 
+    // Switch EFTEM lens mode if needed
+    needed = mEFTEMMode && (!mScope->GetCanControlEFTEM() ||
+      (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag));
+    mScope->SetEFTEM(needed);
+
     // Restore low dose params, go to the area officially
     if (!toSTEM) {
       CopyCameraToCurrentLDP();
       if (LowDoseMode()) {
-        if (ldArea >= 0)
+        if (ldArea >= 0) {
+          if (ldArea != RECORD_CONSET)
+            mScope->GotoLowDoseArea(RECORD_CONSET);
           mScope->GotoLowDoseArea(ldArea);
+        }
         mLowDoseDlg.UpdateSettings();
       }
 
@@ -3952,10 +3960,6 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
     }
   }
 
-  // Switch EFTEM lens mode if needed
-  needed = mEFTEMMode && (!mScope->GetCanControlEFTEM() ||
-    (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag));
-  mScope->SetEFTEM(needed);
   mFilterControl.UpdateSettings();
   mSettingEFTEM = false;
 }
@@ -4099,6 +4103,21 @@ void CSerialEMApp::CopyCameraToCurrentLDP()
     mLowDoseParams[i] = mCamLowDoseParams[src][i];
   if (LowDoseMode())
     mLowDoseDlg.ConvertAxisPosition(true);
+}
+
+// Return the low dose params for the given camera based on the current camera selection
+// Namely either the master set or the camera-specific set
+LowDoseParams *CSerialEMApp::GetLDParamsForCamera(int camNum)
+{
+  int camInd, cur = mEFTEMMode ? 1 : 0;
+  if (mSTEMMode)
+    cur = 2;
+  camInd = mCamParams[camNum].GIF ? 1 : 0;
+  if (mCamParams[camNum].STEMcamera)
+    camInd = 2;
+  if (camInd == cur)
+    return mLowDoseParams;
+  return &mCamLowDoseParams[camInd][0];
 }
 
 // Provide a message if filter alignment is being used from old session

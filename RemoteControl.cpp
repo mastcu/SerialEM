@@ -326,7 +326,7 @@ void CRemoteControl::OnButNanoMicro()
   int state = mScope->ReadProbeMode();
   SetFocus();
   mWinApp->RestoreViewFocus();
-  mScope->SetProbeMode(state ? 0 : 1);
+  mScope->SetProbeOrAdjustLDArea(state ? 0 : 1);
 }
 
 // Intensity zoom equivalent
@@ -450,7 +450,7 @@ void CRemoteControl::SetMagOrSpot(void)
           mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
         err = mWinApp->mBeamAssessor->AssessBeamChange(delta, newInt, outFac, -1);
       }
-      mScope->SetMagIndex(mNewMagIndex);
+      mScope->SetMagOrAdjustLDArea(mNewMagIndex);
       if (m_bMagIntensity && !err)
         mScope->DelayedSetIntensity(newInt, GetTickCount());
       mWinApp->mAlignFocusWindow.UpdateAutofocus(mNewMagIndex);
