@@ -223,6 +223,7 @@ public:
   bool justSetIntProperty(const char * propName, int value);
   CString ErrorTrace(char *fmt, ...);
   void SetSoftwareAndServerVersion(std::string & propValue);
+  bool IsApolloCamera();
   bool CheckMapForValidState(int checksum, std::map<int, int> &map, int minuteNow);
   void AddValidStateToMap(int checksum, std::map<int, int> &map, int minuteNow);
   bool IsReferenceValid(int checksum, std::map<int, int> &map, int minuteNow, 

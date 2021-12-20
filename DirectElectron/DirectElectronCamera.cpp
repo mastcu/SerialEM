@@ -604,6 +604,13 @@ void DirectElectronCamera::SetSoftwareAndServerVersion(std::string &propValue)
     mWinApp->mDEToolDlg.SwitchSaveOptToMRC();
 }
 
+bool DirectElectronCamera::IsApolloCamera()
+{
+  CameraParameters *camP = mCamParams +
+    (mInitializingIndex >= 0 ? mInitializingIndex : mCurCamIndex);
+  return (camP->CamFlags & DE_APOLLO_CAMERA) != 0;
+}
+
 ////////////////
 // 2/15/17: removed unused setTotalFrames, getPreviousDataSetName, getNextDataSetName
 ///////////////
@@ -1216,8 +1223,8 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
           return 1;
         mLastElectronCounting = readMode > 0 ? 1 : 0;
     }
-    if ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
-      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) {
+    if (!IsApolloCamera() && ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
+      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings)) {
         if (!setStringWithError(DE_PROP_COUNTING" - Super Resolution", 
           superRes ? psEnable : psDisable))
             return 1;
@@ -1741,7 +1748,8 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
     }
   }
 
-  if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings)) {
+  if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings) && 
+    !IsApolloCamera()) {
     if (!setStringWithError(DE_PROP_COUNTING" - Apply Post-Counting Gain", 
       normCount ? psEnable : psDisable))
         return 1;
