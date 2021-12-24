@@ -496,7 +496,7 @@ public:
     CameraParameters *GetActiveCamParam(int index = -1);
   void UpdateStatusWindow();
   void DialogChangedState(CToolDlg *inDialog, int inState);
-  void RestoreViewFocus(bool fromNavTable = false);
+  void RestoreViewFocus();
   int GetNewViewProperties(CSerialEMView *inView, int &iBordLeft, int &iBordTop, int &iBordRight,
     int &iBordBottom, EMimageBuffer *&imBufs, int &iImBufNumber, int &iImBufIndex);
   void SetImBufIndex(int inIndex, bool fftBuf = false);
@@ -603,7 +603,7 @@ public:
   GetMember(BOOL, EnableExternalPython);
   GetMember(bool, HasK2OrK3Camera);
   GetMember(int, DEcamCount);
-  GetSetMember(bool, NavTableHadFocus);
+  GetSetMember(int, NavOrLogHadFocus);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -897,7 +897,7 @@ private:
   BOOL mEnableExternalPython;   // Flag to open socket for external python
   bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
   int mDEcamCount;              // Number of DE cameras
-  bool mNavTableHadFocus;       // Flag that RestoreViewFocus called from nav table click
+  int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
 
 public:
   void UpdateAllEditers(void);

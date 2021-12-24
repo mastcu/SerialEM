@@ -555,6 +555,7 @@ void CMenuTargets::OnTasksNavigator()
   if (!param->autosaveFile.IsEmpty())
     mNavigator->LoadNavFile(true, false);
   mWinApp->RestoreViewFocus();
+  mWinApp->SetNavOrLogHadFocus(1);
 }
 
 // External call to get the Navigator open

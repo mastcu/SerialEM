@@ -59,6 +59,7 @@ public:
   GetMember(int, ZBGMeasuringFocus);
   GetMember(bool, DVDoingDewarVac);
   GetMember(bool, ATLastFailed);
+  GetMember(bool, MSLastFailed);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
 
 private:

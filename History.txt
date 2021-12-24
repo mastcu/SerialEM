@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/24/21: Made Acquire at Items make to the position with backlash instead of
+doing the backlash routine afterwards when making a single-frame map.
+
+12/24/21: Made scroll wheel zoom image only when over the image window and
+scroll either the log or the Navigator table when it is over those windows.
+
+12/24/21: Fixed saving of maps when (disabled) skipping of save is checked and
+erroneous report of multishot failed during Acquire at Items.
+
 12/23/21: When the main image window is resized, the image zooms are adjusted
 by the change in size instead of the zoom of the current buffer being reset to
 fit the image in the window; this prevents reset when un-minimizing the

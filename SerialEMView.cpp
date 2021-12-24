@@ -24,6 +24,7 @@
 #include "ProcessImage.h"
 #include "MapDrawItem.h"
 #include "NavigatorDlg.h"
+#include "LogWindow.h"
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
@@ -1905,7 +1906,6 @@ void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point)
   m_iPrevMY = point.y;
   mMouseDownTime = GetTickCount();  // Get start time and set flag
   mDrawingLine = false;   // that it may not be a or line draw
-  mWinApp->SetNavTableHadFocus(false);
   CView::OnLButtonDown(nFlags, point);
 }
 
@@ -2208,7 +2208,6 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
         }
       }
   }
-  mWinApp->SetNavTableHadFocus(false);
 
   CView::OnMButtonDown(nFlags, point);
 }
@@ -2236,7 +2235,6 @@ void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point)
       mMouseShifting = true;
     }
   }
-  mWinApp->SetNavTableHadFocus(false);
 
   CView::OnRButtonDown(nFlags, point);
 }
@@ -2406,6 +2404,8 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
   int clicksPerZoom = 3, deltaSign = -1;
   double stepZoom, lastStep;
   int numClicks, step = 1;
+  BOOL inWin, inLog = false, inNav = false;
+  CRect rect;
   if (nFlags & MK_CONTROL)
     return false;
 
@@ -2421,15 +2421,39 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
       step = -1;
     }
 
-    // Intercept if nav table was last clicked and scroll it instead
-    if (mWinApp->mNavigator && mWinApp->GetNavTableHadFocus()) {
-      int top = mWinApp->mNavigator->m_listViewer.GetTopIndex();
-      mWinApp->mNavigator->m_listViewer.SetTopIndex(top - numClicks);
-      mWheelDeltaPending = 0;
-      return true;
+    // Determine if in the image window, nav, or log window
+    GetWindowRect(rect);
+    inWin = rect.PtInRect(pt);
+    if (!inWin) {
+      if (mWinApp->mNavigator) {
+        mWinApp->mNavigator->GetWindowRect(rect);
+        inNav = rect.PtInRect(pt);
+      }
+      if (mWinApp->mLogWindow) {
+        mWinApp->mLogWindow->GetWindowRect(rect);
+        inLog = rect.PtInRect(pt);
+      }
+
+      // If not in window and in nav and either not in log or nav was last clicked, do nav
+      if (inNav && (!inLog || mWinApp->GetNavOrLogHadFocus() > 0)) {
+        int top = mWinApp->mNavigator->m_listViewer.GetTopIndex();
+        mWinApp->mNavigator->m_listViewer.SetTopIndex(top - numClicks);
+        mWheelDeltaPending = 0;
+        return true;
+      }
+
+      // If not in window and in log and not in nav or log has focus last, do log
+      if (inLog && (!inNav || mWinApp->GetNavOrLogHadFocus() < 0)) {
+        mWinApp->mLogWindow->m_editWindow.LineScroll(-numClicks);
+        mWheelDeltaPending = 0;
+        return true;
+      }
+
+      // Otherwise do nothing if not in window
+      return false;
     }
-    
-    // Leave the difference pending and skip if at end of range
+
+     // Leave the difference pending and skip if at end of range
     mWheelDeltaPending -= numClicks * WHEEL_DELTA;
     if ((mZoom <= zoomvals[0] && step * deltaSign < 0) || 
       (mZoom >= zoomvals[MAXZOOMI] && step * deltaSign > 0)) {

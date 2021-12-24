@@ -58,6 +58,7 @@ BEGIN_MESSAGE_MAP(CLogWindow, CBaseDlg)
   ON_WM_SIZE()
   ON_WM_CLOSE()
 	ON_WM_MOVE()
+  ON_WM_ACTIVATE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -379,6 +380,13 @@ void CLogWindow::OnMove(int x, int y)
 	CBaseDlg::OnMove(x, y);
   if (mInitialized)
     mWinApp->RestoreViewFocus();
+}
+
+void CLogWindow::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
+{
+  CBaseDlg::OnActivate(nState, pWndOther, bMinimized);
+  if (nState != WA_INACTIVE)
+    mWinApp->SetNavOrLogHadFocus(-1);
 }
 
 BOOL CLogWindow::OnInitDialog() 

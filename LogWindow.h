@@ -58,6 +58,8 @@ protected:
   afx_msg void OnSize(UINT nType, int cx, int cy);
   virtual BOOL OnInitDialog();
 	afx_msg void OnMove(int x, int y);
+  afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+
 	//}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 private:
