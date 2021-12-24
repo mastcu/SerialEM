@@ -49,12 +49,14 @@
       opened, depending on how the montage is set to be acquired.</P>
     <P><strong><em>The table:</em></strong> The dialog shows a table of imaging states that are saved with your settings.
       The essential properties of the state are summarized in the table: 
-      <br />&nbsp;&nbsp;&nbsp; LD:  'Rec.', 'Vie.', or 'Sea.' for a Low Dose Record, 
-      View, or Search state, 'Non' otherwise
+      <br />&nbsp;&nbsp;&nbsp; LD:  'R', 'V', or 'S' for a Low Dose Record, 
+      View, or Search state, &#39; - ' otherwise
       <br />&nbsp;&nbsp;&nbsp; Cam: The camera number, based on their order in any dialogs and numbered from 1
       <br />&nbsp;&nbsp;&nbsp; Mag: The magnification
       <br />&nbsp;&nbsp;&nbsp; Spot: The spot size, plus 'uP' or 'nP' for probe mode on 
       Thermo/FEI scopes or 'a#' for alpha on a JEOL<br />&nbsp;&nbsp;&nbsp; Int: Intensity: Percent C2 or C3 or illuminated area
+      <br />&nbsp;&nbsp;&nbsp; Def: Either the defocus offset for a View or Search state, or the target defocus
+      if saved for a non-Low Dose state
       <br />&nbsp;&nbsp;&nbsp; Exp: Exposure time in seconds
       <br />&nbsp;&nbsp;&nbsp; Bin: Binning
       <br />&nbsp;&nbsp;&nbsp; Frame: The frame size in 1000's (e.g.,
@@ -96,14 +98,10 @@
       microscope and imaging parameters.</P>
     <P><B>Delete It</B></P>
     <P>This button deletes the current line of the table.</P>
-    <P><strong>Target Defocus or Defocus Offset</strong></P>
-    <P>This line has a different function in and out of Low Dose mode.&nbsp; Outside 
-      of Low Dose mode, it shows the value of the target defocus for autofocusing if 
-      it has been saved in the state, or 'None saved' if it has not.&nbsp; The <strong>
-      Save Current Value</strong> button can be used to save a value in the state.&nbsp; 
-      Saving target defocus is optional because it is a recent addition and saving it 
-      by default would not be desired in some scenarios.&nbsp; In Low Dose mode, the 
-      line shows the defocus offset for a View or Search state.</P>
+    <P><strong>Save Target Defocus</strong></P>
+    <P>This button allows you to save the value of the target defocus for autofocusing 
+      in a non-Low Dose state.&nbsp; Saving target defocus is optional because it is a 
+      recent addition and saving it by default would not be desired in some scenarios.&nbsp; </P>
     <P><B>Go to Map Acquire State</B></P>
     <P>This button is enabled if the Navigator is open and the current item there is a
       map. It will change the microscope and imaging parameters to the state used to

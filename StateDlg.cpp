@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include ".\StateDlg.h"
+#include "Shared\b3dutil.h"
 #include "NavHelper.h"
 #include "EMscope.h"
 #include "FocusManager.h"
@@ -14,7 +15,7 @@
 static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADDNAVSTATE, IDC_BUT_DELSTATE,
 IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_RESTORESTATE, IDC_BUT_FORGETSTATE,
 IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
-IDC_STAT_DEFOCUS, IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP 
+IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP 
 ,IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, PANEL_END,
 IDC_LIST_STATES, PANEL_END, TABLE_END};
 
@@ -27,7 +28,6 @@ static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CStateDlg::IDD, pParent)
   , m_strName(_T(""))
-  , m_strDefocus(_T(""))
   , m_strPriorSummary(_T(""))
 {
   mCurrentItem = -1;
@@ -57,7 +57,6 @@ void CStateDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_FORGETSTATE, m_butForget);
   DDX_Control(pDX, IDC_BUT_SETSCHEDSTATE, m_butSetSchedState);
   DDX_Control(pDX, IDC_BUT_UPDATE_STATE, m_butUpdate);
-  DDX_Text(pDX, IDC_STAT_DEFOCUS, m_strDefocus);
   DDX_Control(pDX, IDC_BUT_SAVE_DEFOCUS, m_butSaveDefocus);
   DDX_Text(pDX, IDC_STAT_PRIOR_SUMMARY, m_strPriorSummary);
 }
@@ -84,9 +83,9 @@ END_MESSAGE_MAP()
 // CStateDlg message handlers
 BOOL CStateDlg::OnInitDialog()
 {
-  // [LD], camera, mag, spot, C2, exposure, binning, frame
-  int fields[11] = {16,8,24,18,18,22,12,29,8,8,8};
-  int tabs[11], i;
+  // [LD], camera, mag, spot, C2, defocus, exposure, binning, frame, name
+  int fields[12] = {9,8,18,18,17,16,17,12,22,5,8,8};
+  int tabs[12], i;
   BOOL states[2] = {true, true};
   CRect clientRect, editRect;
   CBaseDlg::OnInitDialog();
@@ -102,11 +101,11 @@ BOOL CStateDlg::OnInitDialog()
   mListBorderY = clientRect.Height() - editRect.Height();
 
   tabs[0] = fields[0];
-  for (i = 1; i < 11; i++)
+  for (i = 1; i < 12; i++)
     tabs[i] = tabs[i - 1] + fields[i]; 
   for (i = 0; i <= MAX_LOWDOSE_SETS; i++)
     mSetStateIndex[i] = -1;
-  m_listViewer.SetTabStops(8, tabs);
+  m_listViewer.SetTabStops(11, tabs);
   ReplaceDlgItemText(IDC_STAT_TITLELINE,"C2", mWinApp->mScope->GetC2Name());
   FillListBox();
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
@@ -234,7 +233,7 @@ void CStateDlg::Update(void)
     
   if (mHelper->GetSavedPriorState(state)) {
     state.name = "";
-    StateToListString(&state, summary, "  ");
+    StateToListString(&state, summary, "  ", -1);
   } else {
     summary = "None";
   }
@@ -244,27 +243,7 @@ void CStateDlg::Update(void)
     m_strPriorSummary = summary;
   }
 
-  m_butSaveDefocus.EnableWindow(noTasks && noComplex && imOK);
-  m_butSaveDefocus.ShowWindow((ldArea == -2 && paramArea < 0) ? SW_SHOW : SW_HIDE);
-  if (imOK && mParam->lowDose) {
-    if (IS_AREA_VIEW_OR_SEARCH(paramArea)) {
-      if (mParam->ldDefocusOffset > -9990.)
-        summary.Format("Defocus offset: %d saved", B3DNINT(mParam->ldDefocusOffset));
-      else
-        summary = "Defocus offset: None saved";
-    } else
-      summary = "Defocus offset: None";
-  } else {
-    if (imOK && mParam->targetDefocus > -9990.)
-      summary.Format("Target defocus: %.1f saved", mParam->targetDefocus);
-    else
-      summary = "Target defocus: None saved";
-  }
-  EnableDlgItem(IDC_STAT_DEFOCUS, imOK);
-  if (summary != m_strDefocus) {
-    m_strDefocus = summary;
-    doUpdate = true;
-  }
+  m_butSaveDefocus.EnableWindow(noTasks && noComplex && imOK && paramArea < 0);
 
   if (doUpdate)
     UpdateData(false);
@@ -277,6 +256,7 @@ void CStateDlg::UpdateSettings(void)
   Update();
 }
 
+// See if the current item matches any of the states that have been set
 int CStateDlg::CurrentMatchesSetState()
 {
   for (int ind = 0; ind <= MAX_LOWDOSE_SETS; ind++)
@@ -304,7 +284,6 @@ void CStateDlg::OnSelchangeListStates()
     mCurrentItem = -1;
   ManageName();
   Update();
- //m_butUpdate.EnableWindow(CurrentMatchesSetState() >= 0);
 }
 
 // Double click is the same as set imaging state
@@ -398,7 +377,7 @@ void CStateDlg::OnButSetImState()
   ControlSet *conSet = mWinApp->GetConSets();
   CString *names = mWinApp->GetModeNames();
   int type = mHelper->GetTypeOfSavedState();
-  int area, setNum, saveTarg = 0;
+  int area, setNum, indSave, saveTarg = 0;
   if (!SetCurrentParam())
     return;
   if (mWinApp->LookupActiveCamera(mParam->camIndex) < 0)
@@ -431,10 +410,13 @@ void CStateDlg::OnButSetImState()
   mHelper->SaveCurrentState(STATE_IMAGING, false, mParam->camIndex, saveTarg);
   mHelper->SaveLowDoseAreaForState(area, mParam->camIndex, saveTarg > 0);
   mHelper->SetStateFromParam(mParam, conSet, setNum);
+  indSave = mSetStateIndex[area + 1];
   mSetStateIndex[area + 1] = mCurrentItem;
+  UpdateListString(mCurrentItem);
+  if (indSave >= 0)
+    UpdateListString(indSave);
   if (mCamOfSetState < 0)
     mCamOfSetState = mParam->camIndex;
-  //m_butUpdate.EnableWindow(true);
   Update();
 }
 
@@ -503,8 +485,6 @@ void CStateDlg::OnButSaveDefocus()
   area = mHelper->AreaFromStateLowDoseValue(mParam->lowDose, NULL);
   if (area < 0)
     mParam->targetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
-  //else if (area == VIEW_CONSET || area == SEARCH_AREA)
-    //mParam->ldDefocusOffset = mWinApp->mScope->GetLDViewDefocus(area);
   Update();
 }
 
@@ -536,22 +516,40 @@ void CStateDlg::OnButForgetState()
 void CStateDlg::StateToListString(int index, CString &string)
 {
   StateParams *state = mStateArray->GetAt(index);
-  StateToListString(state, string, "\t");
+  StateToListString(state, string, "\t", index);
 }
 
-void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep)
+void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep, 
+  int index)
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
   int mag, active, spot, probe, ldArea;
   int *activeList = mWinApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
   CString *names = mWinApp->GetModeNames();
-  CString prbal, lds = state->lowDose ? "SL" : "ST";
+  CString prbal, magstr, defstr, lds = state->lowDose ? "SL" : "ST";
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
+  bool selected = false;
+  defstr = "  " + CString((char)0x97);
   mag = MagForCamera(camp, magInd);
   active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
   spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
+  if (mag >= 1000000) {
+    if (mag % 1000000)
+      magstr.Format("%.1fM", mag / 1000000.);
+    else
+      magstr.Format("%dM", mag / 1000000);
+
+  } else if (mag >= 1000) {
+    if (mag % 1000)
+      magstr.Format("%.1fK", mag / 1000.);
+    else
+      magstr.Format("%dK", mag / 1000);
+
+  } else {
+      magstr.Format("%d", mag);
+  }
   if (!camp->STEMcamera) {
     intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
     probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
@@ -560,19 +558,25 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
       ldArea = B3DCHOICE(state->lowDose > 0, RECORD_CONSET, -1 - state->lowDose);
       if (ldArea == SEARCH_AREA)
         ldArea = SEARCH_CONSET;
-      lds = names[ldArea].Left(3) + ".";
+      lds = names[ldArea].Left(1);
     } else
-      lds = "Non";
+      lds = (char)0x97;
     if (FEIscope)
       prbal = probe ? "uP" : "nP";
     else if (!mWinApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
       prbal.Format("a%d", state->beamAlpha + 1);
+    if (state->lowDose && state->ldDefocusOffset > -9990.)
+      defstr.Format("%d", B3DNINT(state->ldDefocusOffset));
+    if (!state->lowDose && state->targetDefocus > -9990.)
+      defstr.Format("%.1f", state->targetDefocus);
   }
+  selected = index >= 0 && numberInList(index, mSetStateIndex, MAX_LOWDOSE_SETS + 1, 0);
 
-  string.Format("%s%s%d%s%d%s%d%s%s%.1f%s%.3f%s%s%s%.1fx%.1f%s%s", (LPCTSTR)lds, sep, 
-    active, sep, mag, sep, spot, (LPCTSTR)prbal, sep, percentC2, sep, 
-    state->exposure, sep, mWinApp->BinningText(state->binning, camp), sep, 
-    state->xFrame / 1000., state->yFrame / 1000., sep, (LPCTSTR)state->name);
+  string.Format("%s%s%d%s%s%s%d%s%s%.1f%s%s%s%.2f%s%s%s%.1fx%.1f%s%c%s%s", (LPCTSTR)lds, sep, 
+    active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, percentC2, sep, 
+    (LPCTSTR)defstr, sep, state->exposure, sep, mWinApp->BinningText(state->binning, camp)
+    , sep, state->xFrame / 1000., state->yFrame / 1000., sep, selected ? (char)0x87 : ' ', 
+    sep, (LPCTSTR)state->name);
 }
 
 
@@ -639,8 +643,13 @@ void CStateDlg::ManageName(void)
 
 void CStateDlg::DisableUpdateButton(void)
 {
-  for (int ind = 0; ind <= MAX_LOWDOSE_SETS; ind++)
+  int indSave;
+  for (int ind = 0; ind <= MAX_LOWDOSE_SETS; ind++) {
+    indSave = mSetStateIndex[ind];
     mSetStateIndex[ind] = -1;
+    if (indSave >= 0)
+      UpdateListString(indSave);
+  }
   m_butUpdate.EnableWindow(false);
 }
 

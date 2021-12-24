@@ -77,12 +77,11 @@ public:
   int CurrentMatchesSetState();
   afx_msg void OnButSetSchedState();
   void StateToListString(int index, CString &string);
-  void StateToListString(StateParams *state, CString &string, const char *sep);
+  void StateToListString(StateParams *state, CString &string, const char *sep, int index);
   afx_msg void OnButUpdateState();
   CButton m_butUpdate;
   void DisableUpdateButton(void);
   void UpdateHiding(void);
-  CString m_strDefocus;
   CButton m_butSaveDefocus;
   afx_msg void OnButSaveDefocus();
   CString m_strPriorSummary;

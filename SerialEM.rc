@@ -2526,30 +2526,29 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,56,152,10
 END
 
-IDD_STATEDLG DIALOGEX 0, 0, 164, 155
+IDD_STATEDLG DIALOGEX 0, 0, 164, 157
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Imaging States"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LISTBOX         IDC_LIST_STATES,3,108,158,46,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST_STATES,3,109,158,46,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,3,5,72,10
-    PUSHBUTTON      "Add Map Acquire State to Table",IDC_BUT_ADDNAVSTATE,26,62,100,10
+    PUSHBUTTON      "Add Map Acquire State to Table",IDC_BUT_ADDNAVSTATE,26,63,100,10
     PUSHBUTTON      "Delete It",IDC_BUT_DELSTATE,123,18,38,10
     PUSHBUTTON      "Go to Selected State",IDC_BUT_SETIMSTATE,3,18,72,10
-    PUSHBUTTON      "Go to Map Acquire State",IDC_BUT_SETMAPSTATE,5,50,79,10
-    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,3,77,70,10
-    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,77,77,70,10
+    PUSHBUTTON      "Go to Map Acquire State",IDC_BUT_SETMAPSTATE,5,51,79,10
+    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,3,78,70,10
+    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,77,78,70,10
     LTEXT           "Name:",IDC_STAT_STATE_NAME,78,5,21,8
     EDITTEXT        IDC_EDIT_STATENAME,98,4,63,12,ES_AUTOHSCROLL
-    LTEXT           "LD Cam  Mag     Sp    Int      Exp    Bin  Frame  Name",IDC_STAT_TITLELINE,3,99,151,8
-    PUSHBUTTON      "?",IDC_BUTHELP,149,77,10,10
-    PUSHBUTTON      "Go to Scheduled State",IDC_BUT_SETSCHEDSTATE,88,50,71,10
+    LTEXT           "LD Cam Mag Sp    Int     Def    Exp   Bin  Frame  Name",IDC_STAT_TITLELINE,3,100,158,8
+    PUSHBUTTON      "?",IDC_BUTHELP,149,78,10,10
+    PUSHBUTTON      "Go to Scheduled State",IDC_BUT_SETSCHEDSTATE,88,51,71,10
     PUSHBUTTON      "Update It",IDC_BUT_UPDATE_STATE,80,18,38,10
-    GROUPBOX        "Operations with current Navigator item",IDC_STAT_NAV_GROUP,3,41,158,33
-    LTEXT           "Defocus offset: None saved",IDC_STAT_DEFOCUS,6,31,84,8
-    PUSHBUTTON      "Save Current Value",IDC_BUT_SAVE_DEFOCUS,93,30,66,10
-    LTEXT           "Prior: Rec.  1  39000  5nP   50.23     1.5   1     4kx4k",IDC_STAT_PRIOR_SUMMARY,4,89,142,8
+    GROUPBOX        "Operations with current Navigator item",IDC_STAT_NAV_GROUP,3,42,158,33
+    PUSHBUTTON      "Save Target Defocus",IDC_BUT_SAVE_DEFOCUS,44,30,76,10
+    LTEXT           "Prior: Rec.  1  39000  5nP   50.23     1.5   1     4kx4k",IDC_STAT_PRIOR_SUMMARY,4,90,142,8
 END
 
 IDD_NAVROTALIGN DIALOGEX 0, 0, 166, 65
@@ -3996,7 +3995,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 161
         TOPMARGIN, 3
-        BOTTOMMARGIN, 150
+        BOTTOMMARGIN, 152
     END
 
     IDD_NAVROTALIGN, DIALOG
@@ -5144,6 +5143,7 @@ BEGIN
     IDC_RMAP_WITH_VIEW      "Take single-image maps with View area instead of Record"
     IDC_RMAP_WITH_SEARCH    "Take single-image maps with Search area instead of Record"
     IDC_NA_SAVE_AS_MAP      "Make a Navigator map with the image acquired at each location"
+    IDC_BUT_SAVE_DEFOCUS    "Save the target defocus in the selected state"
 END
 
 STRINGTABLE
@@ -5672,7 +5672,6 @@ BEGIN
     IDC_CHECK_AUTO_NEW_LOG  "Start new log based on stack name for each batch tilt series"
     IDC_BUT_CLOSE_KEEP      "Close this box but keep the image stack"
     IDC_BUT_SETSCHEDSTATE   "Set to state scheduled to be used when current Navigator item is acquired"
-    IDC_BUT_SAVE_DEFOCUS    "Save the target defocus in the selected state"
 END
 
 STRINGTABLE
