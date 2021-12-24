@@ -132,6 +132,8 @@ private:
   CFont *mScaledFont;            // Font when drawing with scaled snapshot
   CFont *mScaledLabelFont;       // Label font when drawing with scaled snapshot
   int mBasisSizeX, mBasisSizeY;  // Camera sizes when effective zoom first computed
+  int mLastWinSizeX;             // Size at which effective zoom and zoom were set
+  int mLastWinSizeY;
   ScaleMat mAmat;                // Stage to image matrix
   float mDelX, mDelY;            // Offsets in stage to camera transform
   ScaleMat mRmat, mRinv;         // Rotation matrices for adjust montage positions

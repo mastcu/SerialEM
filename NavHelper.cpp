@@ -1421,6 +1421,7 @@ int CNavHelper::LoadForAlignAtTarget(CMapDrawItem *item)
   if (mUseMontCenter)
     mWinApp->mMontageController->AdjustShiftInCenter(mMapMontP, mExpectedXshift,
     mExpectedYshift);
+  mWinApp->SetCurrentBuffer(0);
   return 0;
 }
 

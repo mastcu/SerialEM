@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/23/21: When the main image window is resized, the image zooms are adjusted
+by the change in size instead of the zoom of the current buffer being reset to
+fit the image in the window; this prevents reset when un-minimizing the
+program too (In 3.8).
+
+12/23/21: Fixed image read in for Realign to Item being displayed at the wrong
+zoom (In 3.8).
+
 12/19/21: Upgraded state dialog and state saving so that Record, View, and
 Search states can all be saved and set, including focus offsets, and so that
 target defocus can be saved outside of Low Dose mode.

@@ -116,6 +116,8 @@ CSerialEMView::CSerialEMView()
   mZoomAroundPoint = false;
   mFlashNextDisplay = false;
   mWheelDeltaPending = 0;
+  mLastWinSizeX = 0;
+  mLastWinSizeY = 0;
 }
 
 CSerialEMView::~CSerialEMView()
@@ -2655,7 +2657,6 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
     useWidth = fullWidth - useWidth;
   }
 
-  mFirstDraw = true;
   mResizingToFit = true;
   childFrame->SetWindowPos(NULL, useLeft, rect.top + iBordTop, useWidth, 
       rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
@@ -2667,9 +2668,25 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
 void CSerialEMView::OnSize(UINT nType, int cx, int cy) 
 {
   CRect rect;
+  float xRatio, yRatio;
   CView::OnSize(nType, cx, cy);
   if (mFFTWindow)
     mFFTresizeCount++;
+
+  // Adjust zoom instead resizing to fit
+  if (mLastWinSizeX > 0 && cx > 0 && cy > 0 && mMainWindow) {
+    xRatio = (float)cx / mLastWinSizeX;
+    yRatio = (float)cy / mLastWinSizeY;
+    if ((xRatio >= 1. ? xRatio : 1. / xRatio) < (yRatio >= 1. ? yRatio : 1. / yRatio))
+      xRatio = yRatio;
+    mZoom *= xRatio;
+    mEffectiveZoom *= xRatio;
+    mLastWinSizeX = cx;
+    mLastWinSizeY = cy;
+    for (int ind = 0; ind < MAX_BUFFERS; ind++)
+      mImBufs[ind].mZoom *= xRatio;
+  }
+  
   if (!mResizingToFit && (mMainWindow || mFFTWindow) && 
     !(mFFTWindow && SEMTickInterval(mCreateTime) < 1000. && mFFTresizeCount < 3)) {
     GetWindowRect(&rect);
@@ -2763,6 +2780,8 @@ void CSerialEMView::FindEffectiveZoom()
   // Save basis sizes used for this computation
   mBasisSizeX = camParam[curCam].sizeX;
   mBasisSizeY = camParam[curCam].sizeY;
+  mLastWinSizeX = rect.Width();
+  mLastWinSizeY = rect.Height();
 
   // Get the binning if there is an image
   if (mImBufs[mImBufIndex].mImage && GetBufferBinning() > 0.)

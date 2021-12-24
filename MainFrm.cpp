@@ -541,7 +541,8 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
   CMDIFrameWnd::OnSize(nType, cx, cy);
   if (mClosingProgram)
     return;
-  mWinApp->DoResizeMain();
+  if (cx > 0 && cy > 0)
+    mWinApp->DoResizeMain();
   mWinApp->RestoreViewFocus();    
 }
 
