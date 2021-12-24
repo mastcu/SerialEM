@@ -258,26 +258,27 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
-	//{{AFX_MSG_MAP(CNavigatorDlg)
-	ON_BN_CLICKED(IDC_ADD_STAGE_POS, OnAddStagePos)
-	ON_BN_CLICKED(IDC_CHECK_REGPOINT, OnCheckRegpoint)
-	ON_BN_CLICKED(IDC_CHECKCORNER, OnCheckcorner)
-	ON_BN_CLICKED(IDC_DELETEITEM, OnDeleteitem)
-	ON_BN_CLICKED(IDC_DRAW_POINTS, OnDrawPoints)
-	ON_BN_CLICKED(IDC_DRAW_POLYGON, OnDrawPolygon)
-	ON_BN_CLICKED(IDC_GOTO_POINT, OnGotoPoint)
-	ON_LBN_SELCHANGE(IDC_LISTVIEWER, OnSelchangeListviewer)
-	ON_BN_CLICKED(IDC_LOAD_MAP, OnLoadMap)
-	ON_BN_CLICKED(IDC_MOVE_ITEM, OnMoveItem)
-	ON_BN_CLICKED(IDC_NEW_MAP, OnNewMap)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_REGPT_NUM, OnDeltaposSpinRegptNum)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SPINCURRENT_REG, OnDeltaposSpincurrentReg)
-	ON_EN_CHANGE(IDC_EDIT_PTLABEL, OnChangeEditPtlabel)
-	ON_EN_CHANGE(IDC_EDIT_PTNOTE, OnChangeEditPtnote)
-	ON_WM_SIZE()
-	ON_BN_CLICKED(IDC_DRAW_ONE, OnDrawOne)
-	ON_BN_CLICKED(IDC_GOTO_XY, OnGotoXy)
-	ON_WM_MOVE()
+  //{{AFX_MSG_MAP(CNavigatorDlg)
+  ON_BN_CLICKED(IDC_ADD_STAGE_POS, OnAddStagePos)
+  ON_BN_CLICKED(IDC_CHECK_REGPOINT, OnCheckRegpoint)
+  ON_BN_CLICKED(IDC_CHECKCORNER, OnCheckcorner)
+  ON_BN_CLICKED(IDC_DELETEITEM, OnDeleteitem)
+  ON_BN_CLICKED(IDC_DRAW_POINTS, OnDrawPoints)
+  ON_BN_CLICKED(IDC_DRAW_POLYGON, OnDrawPolygon)
+  ON_BN_CLICKED(IDC_GOTO_POINT, OnGotoPoint)
+  ON_LBN_SELCHANGE(IDC_LISTVIEWER, OnSelchangeListviewer)
+  ON_BN_CLICKED(IDC_LOAD_MAP, OnLoadMap)
+  ON_BN_CLICKED(IDC_MOVE_ITEM, OnMoveItem)
+  ON_BN_CLICKED(IDC_NEW_MAP, OnNewMap)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_REGPT_NUM, OnDeltaposSpinRegptNum)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPINCURRENT_REG, OnDeltaposSpincurrentReg)
+  ON_EN_CHANGE(IDC_EDIT_PTLABEL, OnChangeEditPtlabel)
+  ON_EN_CHANGE(IDC_EDIT_PTNOTE, OnChangeEditPtnote)
+  ON_WM_SIZE()
+  ON_BN_CLICKED(IDC_DRAW_ONE, OnDrawOne)
+  ON_BN_CLICKED(IDC_GOTO_XY, OnGotoXy)
+  ON_WM_MOVE()
+  ON_WM_ACTIVATE()
 	ON_CBN_SELENDOK(IDC_COMBOCOLOR, OnSelendokCombocolor)
 	ON_BN_CLICKED(IDC_CHECK_ACQUIRE, OnCheckAcquire)
   ON_LBN_DBLCLK(IDC_LISTVIEWER, OnDblclkListviewer)
@@ -369,7 +370,7 @@ BOOL CNavigatorDlg::OnInitDialog()
 void CNavigatorDlg::OnSize(UINT nType, int cx, int cy) 
 {
   CRect rect;
-	CDialog::OnSize(nType, cx, cy);
+	CBaseDlg::OnSize(nType, cx, cy);
   if (!mInitialized)
     return;
 
@@ -424,9 +425,16 @@ void CNavigatorDlg::OnOK()
 	
 void CNavigatorDlg::OnMove(int x, int y) 
 {
-	CDialog::OnMove(x, y);
+	CBaseDlg::OnMove(x, y);
   if (mInitialized)
     mWinApp->RestoreViewFocus();
+}
+
+void CNavigatorDlg::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
+{
+  CBaseDlg::OnActivate(nState, pWndOther, bMinimized);
+  if (nState != WA_INACTIVE)
+    mWinApp->SetNavOrLogHadFocus(1);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -1495,7 +1503,7 @@ void CNavigatorDlg::OnSelchangeListviewer()
     IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
     ManageCurrentControls();
   }
-  mWinApp->RestoreViewFocus(true);
+  mWinApp->RestoreViewFocus();
   AddFocusAreaPoint(true);
 }
 
@@ -1506,7 +1514,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   int moveInc, toInd, fromInd, i, num;
   int sel = m_listViewer.GetCurSel();
   CMapDrawItem *item = mItemArray.GetAt(oldIndex);
-  mWinApp->RestoreViewFocus(true);
+  mWinApp->RestoreViewFocus();
   if (!m_bCollapseGroups) {
     mItemArray.RemoveAt(oldIndex);
     mItemArray.InsertAt(newIndex, item);
@@ -1572,12 +1580,10 @@ void CNavigatorDlg::OnDblclkListviewer()
       FindMontMapDrawnOn(mItem)) || mCamera->CameraBusy())
     return;
   OnLoadMap();
-  mWinApp->SetNavTableHadFocus(true);
 }
 
 void CNavigatorDlg::OnSetFocusListviewer()
 {
-  mWinApp->SetNavTableHadFocus(true);
 }
 
 // Let arrow keys move the selection up and down
@@ -6818,7 +6824,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   MontParam *montP = &mntp;
   MontParam *masterMont = mWinApp->GetMontParam();
 
-  mWinApp->RestoreViewFocus(mWinApp->GetNavTableHadFocus());
+  mWinApp->RestoreViewFocus();
   if (item)
     mItem = item;
   else if (!SetCurrentItem())
@@ -8835,8 +8841,6 @@ void CNavigatorDlg::AcquireNextTask(int param)
           mAcqSteps[mNumAcqSteps++] = ACQ_DO_MULTISHOT;
         else
           mAcqSteps[mNumAcqSteps++] = ACQ_ACQUIRE;
-        if (mAcqParm->acquireType == ACQUIRE_TAKE_MAP)
-          mAcqSteps[mNumAcqSteps++] = ACQ_BACKLASH;
 
       }
 
@@ -8980,7 +8984,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     case ACQ_ACQUIRE:
       ManageNumDoneAcquired();
       RestoreBeamTiltIfSaved();
-      if (!mSkippingSave) {
+      if (!mSkippingSave || mAcqParm->acquireType == ACQUIRE_TAKE_MAP) {
         if (mWinApp->Montaging()) {
           zval = mWinApp->mMontageWindow.m_iCurrentZ - 1;
         } else {
@@ -9003,7 +9007,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       report.Format("%s acquired at item # %d with label %s",
         mAcqParm->acquireType == ACQUIRE_TAKE_MAP ? "Map" : "Image", mAcquireIndex + 1,
         (LPCTSTR)item->mLabel);
-      if (!mSkippingSave) {
+      if (!mSkippingSave || mAcqParm->acquireType == ACQUIRE_TAKE_MAP) {
         str.Format(" saved at Z = %d", zval);
         report += str;
       }
@@ -9071,7 +9075,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       // After a multishot
     case ACQ_DO_MULTISHOT:
       ManageNumDoneAcquired();
-      err = mWinApp->mParticleTasks->GetWDLastFailed();
+      err = mWinApp->mParticleTasks->GetMSLastFailed();
       if (!err || !mRetValFromMultishot)
         SetItemSuccessfullyAcquired(item);
       if (mRetValFromMultishot) {
@@ -9467,7 +9471,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1);
     break;
 
-    // Adjust for backlash if needed
+    // Adjust for backlash if needed: This step is no longer used
   case ACQ_BACKLASH:
     if (!mWinApp->Montaging()) {
       SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
@@ -9503,7 +9507,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // This adds an idle task....
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    if (GotoCurrentAcquireArea()) {
+    if (GotoCurrentAcquireArea(mAcqParm->acquireType == ACQUIRE_TAKE_MAP && 
+      !mWinApp->Montaging())) {
       StopAcquiring();
     }
     return;
@@ -9846,14 +9851,18 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
 }
 
 // Actually do the move if called for
-int CNavigatorDlg::GotoCurrentAcquireArea()
+int CNavigatorDlg::GotoCurrentAcquireArea(bool imposeBacklash)
 {
   int err, axisBits = axisXY | axisZ;
+  float saveBackProp = mParam->stageBacklash;
   mItem = mItemArray[mAcquireIndex];
+  if (imposeBacklash && !saveBackProp)
+    mParam->stageBacklash = mWinApp->mMontageController->GetStageBacklash();
 
   if (mAcqParm->skipZmoves)
     axisBits = axisXY;
   err = MoveStage(axisBits);
+  mParam->stageBacklash = saveBackProp;
   if (err > 0)
     return 1;
   mMovingStage = axisBits != 0;

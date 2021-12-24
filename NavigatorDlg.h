@@ -77,7 +77,7 @@ public:
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
 	int FindAndSetupNextAcquireArea();
-  int GotoCurrentAcquireArea();
+  int GotoCurrentAcquireArea(bool imposeBacklash);
 	void StopAcquiring(BOOL testMacro = false);
   void SetItemSuccessfullyAcquired(CMapDrawItem *item);
   void RestoreBeamTiltIfSaved();
@@ -252,7 +252,8 @@ protected:
 	afx_msg void OnDrawOne();
 	afx_msg void OnGotoXy();
 	afx_msg void OnMove(int x, int y);
-	afx_msg void OnSelendokCombocolor();
+  afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+  afx_msg void OnSelendokCombocolor();
 	afx_msg void OnCheckAcquire();
   afx_msg void OnDblclkListviewer();
   afx_msg void OnSetFocusListviewer();
