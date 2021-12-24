@@ -625,6 +625,7 @@ MAC_SAME_NAME_ARG(AutoCorrPeakVectors, 2, 4, AUTOCORRPEAKVECTORS, SDii)
 MAC_SAME_NAME_NOARG(ReportCondenserStigmator, 0, 0, REPORTCONDENSERSTIGMATOR)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
+// Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
 //
 // The longest command name is now 25 characters but 23 is a more common limit
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK

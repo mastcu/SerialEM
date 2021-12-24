@@ -2672,8 +2672,8 @@ int CMacCmd::SaveToOtherFile(void)
   else if (mStrItems[ix0] == "JPG" || mStrItems[2] == "JPEG")
     index2 = STORE_TYPE_JPEG;
   else if (mStrItems[ix0] != "CUR" && mStrItems[2] != "-1")
-    ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
-      "\n\n");
+    ABORT_LINE(CString(ix0 == 2 ? "Second" : "Fourth") + 
+      " entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:\n\n");
   if (truth && (index2 == STORE_TYPE_MRC || index2 == STORE_TYPE_HDF))
     ABORT_LINE("A snapshot cannot be saved to an MRC or HDF file in line:\n\n");
   ix1 = -1;
@@ -2686,8 +2686,8 @@ int CMacCmd::SaveToOtherFile(void)
   else if (mStrItems[ix0 + 1] == "JPG" || mStrItems[ix0 + 1] == "JPEG")
     ix1 = COMPRESS_JPEG;
   else if (mStrItems[ix0 + 1] != "CUR" && mStrItems[ix0 + 1] != "-1")
-    ABORT_LINE("Third entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:"
-      "\n\n");
+    ABORT_LINE(CString(ix0 == 2 ? "Third" : "Fifth") + 
+      " entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:\n\n");
   if (CheckConvertFilename(mStrItems, mStrLine, ix0 + 2, report))
     return 1;
   if (truth) {
@@ -3284,7 +3284,7 @@ int CMacCmd::SetFrameBaseName(void)
   if (mItemInt[3] >= 0)
     setOrClearFlags(&format, FRAME_FOLDER_ROOT, mItemInt[3]);
   mCamera->SetFrameNameFormat(format);
-  mParamIO->StripItems(mStrLine, 4, mStrCopy);
+  SubstituteLineStripItems(mStrLine, 4, mStrCopy);
   mCamera->SetFrameBaseName(mStrCopy);
   return 0;
 }
