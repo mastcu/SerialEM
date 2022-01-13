@@ -2367,10 +2367,15 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   CString strLine, tag, mess = "Error opening";
   std::string sstr;
   char *endPtr;
+  bool checkBOM = true;
   try {
     file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
     mess = "Error reading from";
     while (file->ReadString(strLine)) {
+      if (checkBOM && CheckForByteOrderMark(strLine, "", filename,
+        "items to hide or disable"))
+        return;
+      checkBOM = false;
       if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
         continue;
 
@@ -5793,9 +5798,12 @@ int CParameterIO::CheckForByteOrderMark(CString &item0, const char * tag,
     (!first && len > 1 && (unsigned char)item0.GetAt(2) == 0xFE))
     mess.Format("%s is in a strange encoding and cannot be read as a %s file",
     (LPCTSTR)filename, descrip);
-  else 
+  else {
+    if (!strlen(tag))
+      return 0;
     mess.Format("%s does not start with %s and cannot be read as a %s file",
       (LPCTSTR)filename, tag, descrip);
+  }
   AfxMessageBox(mess, MB_EXCLAME);
   return 1;
 }
