@@ -107,50 +107,12 @@ BOOL CMacroEditer::OnInitDialog()
 {
   WINDOWPLACEMENT *place = mProcessor->GetEditerPlacement() + m_iMacroNumber;
   CBaseDlg::OnInitDialog();
-  CFont *font;
-  LOGFONT logFont;
-  CString propFont = mProcessor->GetMonoFontName();
-  const char *tryNames[] = {"Lucida Console", "Consolas", "Lucida Sans Typewriter",
-    "Courier New"};
-  int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
   
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect, OKRect, clientRect;
   GetClientRect(clientRect);
-
-  if (mHasMonoFont < 0) {
-    font = m_editMacro.GetFont();
-    font->GetLogFont(&logFont);
-    height = logFont.lfHeight;
-    mHasMonoFont = 0;
-    if (mDefaultFont.CreateFontIndirect(&logFont)) {
-      for (ind = -1; ind <= lastFont; ind++) {
-        if (ind < 0 && propFont.IsEmpty())
-          continue;
-        if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0,
-          ind < lastFont ? logFont.lfWeight : FW_SEMIBOLD,
-          0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
-          DEFAULT_QUALITY, FIXED_PITCH | (ind < lastFont ? 0 : FF_DONTCARE),
-          ind < 0 ? (LPCTSTR)propFont : tryNames[ind])) {
-          mMonoFont.GetLogFont(&logFont);
-
-          // This doesn't work!  It will tell you it got what you asked for and end up
-          // with Courier
-          if (ind < lastFont) {
-            if (strstr(logFont.lfFaceName, "Courier")) {
-              SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, tryNames[ind]);
-              continue;
-            }
-          }
-          mHasMonoFont = 1;
-          SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, 
-            ind < 0 ? (LPCTSTR)propFont : tryNames[ind]);
-          break;
-        }
-      }
-    }
-  }
   
+  MakeMonoFont(&m_editMacro);
   if (mHasMonoFont > 0 && mProcessor->GetUseMonoFont())
     m_editMacro.SetFont(&mMonoFont);
 
@@ -206,6 +168,51 @@ BOOL CMacroEditer::OnInitDialog()
 
   return FALSE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+// Make the monospaced and default font for an editor or log window, whoever calls first
+void CMacroEditer::MakeMonoFont(CEdit *edit)
+{
+  CFont *font;
+  LOGFONT logFont;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  CString propFont = winApp->mMacroProcessor->GetMonoFontName();
+  const char *tryNames[] = {"Lucida Console", "Consolas", "Lucida Sans Typewriter",
+    "Courier New"};
+  int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
+
+  if (mHasMonoFont < 0) {
+    font = edit->GetFont();
+    font->GetLogFont(&logFont);
+    height = logFont.lfHeight;
+    mHasMonoFont = 0;
+    if (mDefaultFont.CreateFontIndirect(&logFont)) {
+      for (ind = -1; ind <= lastFont; ind++) {
+        if (ind < 0 && propFont.IsEmpty())
+          continue;
+        if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0,
+          ind < lastFont ? logFont.lfWeight : FW_SEMIBOLD,
+          0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
+          DEFAULT_QUALITY, FIXED_PITCH | (ind < lastFont ? 0 : FF_DONTCARE),
+          ind < 0 ? (LPCTSTR)propFont : tryNames[ind])) {
+          mMonoFont.GetLogFont(&logFont);
+
+          // This doesn't work!  It will tell you it got what you asked for and end up
+          // with Courier
+          if (ind < lastFont) {
+            if (strstr(logFont.lfFaceName, "Courier")) {
+              SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName, tryNames[ind]);
+              continue;
+            }
+          }
+          mHasMonoFont = 1;
+          SEMTrace('1', "Got %s asking for %s", logFont.lfFaceName,
+            ind < 0 ? (LPCTSTR)propFont : tryNames[ind]);
+          break;
+        }
+      }
+    }
+  }
 }
 
 void CMacroEditer::OnSize(UINT nType, int cx, int cy) 

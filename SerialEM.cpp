@@ -172,6 +172,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_SHOWSCOPECONTROLPANEL, OnUpdateShowScopeControlPanel)
   ON_COMMAND(ID_WINDOW_RESCUELOGWINDOW, OnWindowRescuelogwindow)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_RESCUELOGWINDOW, OnUpdateWindowRescuelogwindow)
+  ON_COMMAND(ID_FILE_USEMONOSPACEDFONT, OnFileUseMonospacedFont)
+  ON_UPDATE_COMMAND_UI(ID_FILE_USEMONOSPACEDFONT, OnUpdateFileUseMonospacedFont)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -731,6 +733,7 @@ CSerialEMApp::CSerialEMApp()
   mBasicMode = false;
   mInUpdateWindows = false;
   mNavOrLogHadFocus = 0;
+  mMonospacedLog = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -3693,6 +3696,21 @@ void CSerialEMApp::OnUpdateFileContinuousSave(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mContinuousSaveLog ? 1 : 0);
+}
+
+// Toggle the option to use a monospaced font
+void CSerialEMApp::OnFileUseMonospacedFont()
+{
+  mMonospacedLog = !mMonospacedLog;
+  if (mLogWindow && CMacroEditer::mHasMonoFont > 0)
+    mLogWindow->m_editWindow.SetFont(mMonospacedLog ? &CMacroEditer::mMonoFont :
+      &CMacroEditer::mDefaultFont);
+}
+
+void CSerialEMApp::OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mMonospacedLog);
+  pCmdUI->Enable(CMacroEditer::mHasMonoFont > 0);
 }
 
 // Log window informs us if it is closing - it takes care of its own destruction

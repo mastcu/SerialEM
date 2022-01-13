@@ -128,6 +128,7 @@ public:
   static CFont mMonoFont;
   static CFont mDefaultFont;
   static int mHasMonoFont;
+  static void MakeMonoFont(CEdit *edit);
   CStatic m_statIndent;
   CButton m_butFixIndent;
   CButton m_butAddIndent;

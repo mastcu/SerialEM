@@ -154,6 +154,7 @@ BEGIN
         MENUITEM "Save Log As...",              ID_FILE_SAVELOGAS
         MENUITEM "Read && Append...",           ID_FILE_READAPPEND
         MENUITEM "Continuous Save",             ID_FILE_CONTINUOUSSAVE
+        MENUITEM "&Use Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
         MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
         MENUITEM SEPARATOR
         MENUITEM "Open .mdoc for &Frames",      ID_FILE_OPEN_MDOC
@@ -6533,6 +6534,8 @@ BEGIN
                             "Do regular defocus values plus sparse ones over a wider range"
     ID_FOCUSTUNING_SETEXTENDEDRANGE 
                             "Set limits and interval for defocus in extended range"
+    ID_FILE_USEMONOSPACEDFONT 
+                            "Toggle using a monospaced font in the Log Window"
 END
 
 STRINGTABLE

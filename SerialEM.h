@@ -604,6 +604,7 @@ public:
   GetMember(bool, HasK2OrK3Camera);
   GetMember(int, DEcamCount);
   GetSetMember(int, NavOrLogHadFocus);
+  GetSetMember(BOOL, MonospacedLog);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -898,6 +899,7 @@ private:
   bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
   int mDEcamCount;              // Number of DE cameras
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
+  BOOL mMonospacedLog;          // Flag that log window should use monospaced font
 
 public:
   void UpdateAllEditers(void);
@@ -960,6 +962,8 @@ float GetScalingForDPI();
 int ScaleValueForDPI(double value);
 afx_msg void OnWindowRescuelogwindow();
 afx_msg void OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI);
+afx_msg void OnFileUseMonospacedFont();
+afx_msg void OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI);
 };
 
 

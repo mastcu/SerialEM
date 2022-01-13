@@ -69,6 +69,7 @@ FLOAT_SETT_ASSIGN("MontageMaxAlignFrac", montParam->maxAlignFrac)
 #endif
 #ifdef SET_TEST_SECT15
 INT_SETT_GETSET("SelectedCameraParameterSet", mWinApp->, SelectedConSet)
+BOOL_SETT_GETSET("MonospacedLog", mWinApp->, MonospacedLog)
 FLOAT_SETT_GETSET("TargetDefocus", mWinApp->mFocusManager->, TargetDefocus)
 FLOAT_SETT_GETSET("AutofocusOffset", mWinApp->mFocusManager->, DefocusOffset)
 FLOAT_SETT_GETSET("RefocusThreshold", mWinApp->mFocusManager->, RefocusThreshold)

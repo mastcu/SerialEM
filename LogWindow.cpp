@@ -11,6 +11,7 @@
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include "MacroProcessor.h"
+#include "MacroEditer.h"
 #include ".\LogWindow.h"
 
 #ifdef _DEBUG
@@ -392,6 +393,9 @@ void CLogWindow::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
 BOOL CLogWindow::OnInitDialog() 
 {
   CBaseDlg::OnInitDialog();
+  CMacroEditer::MakeMonoFont(&m_editWindow);
+  if (CMacroEditer::mHasMonoFont > 0 && mWinApp->GetMonospacedLog())
+    m_editWindow.SetFont(&CMacroEditer::mMonoFont);
   
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect;
