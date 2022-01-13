@@ -294,10 +294,51 @@ void CMacCmd::TaskDone(int param)
 // Run the next command: start by checking the results of last command
 int CMacCmd::NextCommand(bool startingOut)
 {
-  CString report;
-  int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY;
+  CString name, report;
+  int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, cartInd;
+  CArray<JeolCartridgeData, JeolCartridgeData> *loaderInfo = mScope->GetJeolLoaderInfo();
+  CArray < ArrayRow, ArrayRow > *rowsFor2d;
+  ArrayRow arrRow;
+  Variable *var;
 
   bool inComment = false;
+
+  // Process an inventory of JEOL autoloader or a change in locations
+  cartInd = mScope->GetChangedLoaderInfo();
+  if (mStartedLongOp && cartInd) {
+    arrRow.numElements = 6;
+    if (cartInd < 0) {
+      rowsFor2d = new CArray < ArrayRow, ArrayRow >;
+      mWinApp->AppendToLog("Index ID     Location  Slot  Type Angle Name", mLogAction);
+      for (index = 0; index < (int)loaderInfo->GetSize(); index++) {
+        FormatCartridgeInfo(index, index2, ix0, ix1, iy0, iy1, name, report,arrRow.value);
+        mWinApp->AppendToLog(report, mLogAction);
+        rowsFor2d->Add(arrRow);
+      }
+      if (SetVariable("AUTOLOADERINFO", "0", VARTYPE_PERSIST, -1, false,
+        &report, rowsFor2d)) {
+        delete rowsFor2d;
+        mWinApp->AppendToLog("Error setting autoloaderInfo variable with data:\n" + 
+          report);
+        AbortMacro();
+        return 1;
+      }
+    } else {
+      var = LookupVariable("AUTOLOADERINFO", index);
+      if (var) {
+        cartInd = mScope->GetLoadedCartridge();
+        for (index = 0; index < 2; index++) {
+          if (cartInd >= 0) {
+            FormatCartridgeInfo(cartInd, index2, ix0, ix1, iy0, iy1, name, report,
+              arrRow.value);
+            var->rowsFor2d->SetAt(cartInd, arrRow);
+          }
+          cartInd = mScope->GetUnloadedCartridge();
+        }
+      }
+    }
+  }
+
   InitForNextCommand();
 
   if (mMovedPiezo && mWinApp->mPiezoControl->GetLastMovementError()) {
@@ -3502,6 +3543,33 @@ int CMacCmd::ReportFileNumber(void)
   return 0;
 }
 
+// AddTitleToFile
+int CMacCmd::AddTitleToFile(void)
+{
+  KImageStore *store = mWinApp->mStoreMRC;
+  int index = mItemInt[1];
+  if (!index) {
+    if (!store)
+      ABORT_LINE("There is no open image file for:\n\n");
+  } else {
+    if (index < 0 || index > mWinApp->mDocWnd->GetNumStores())
+      ABORT_LINE("File number is out of range in:\n\n");
+    store = mWinApp->mDocWnd->GetStoreMRC(index - 1);
+  }
+  if (!store->getDepth())
+    ABORT_LINE("at least one image must be saved before running:\n\n");
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  index = store->AddTitle(mStrCopy);
+  if (index)
+    PrintfToLog("Error %d adding title to autodoc structure", index);
+  index = store->WriteHeader(true);
+  if (index > 0)
+    mLogRpt = "Error rewriting the file header with new title";
+  else if (index < 0)
+    mLogRpt.Format("Error %d rewriting the mdoc file with new title", index);
+  return 0;
+}
+
 // AddToAutodoc, WriteAutodoc
 int CMacCmd::AddToAutodoc(void)
 {
@@ -6231,6 +6299,8 @@ int CMacCmd::Verbose(void)
 int CMacCmd::ProgramTimeStamps(void)
 {
   mWinApp->AppendToLog(mWinApp->GetStartupMessage(mItemInt[1] != 0));
+  if (mItemInt[2] != 0)
+    mWinApp->mParamIO->ReportSpecialOptions();
   return 0;
 }
 
@@ -6932,7 +7002,24 @@ int CMacCmd::NormalizeAllLenses(void)
 // ReportSlotStatus
 int CMacCmd::ReportSlotStatus(void)
 {
-  int index;
+  int index, slot, station, id, angle, cartType;
+  CString name, report, rowVal;
+  if (mScope->GetJeolHasNitrogenClass() > 1) {
+    if (!mScope->GetJeolLoaderInfo()->GetSize())
+      ABORT_LINE("You need to do a cassette inventory; There is no cartridge "
+        "information for:\n\n");
+    FormatCartridgeInfo(mItemInt[1] -1, id, station, slot, cartType, angle, name, report,
+      rowVal);
+    if (id < 0) {
+      mLogRpt.Format("There is no cassette information at index %d", mItemInt[1]);
+      SetReportedValues(&mStrItems[2], id);
+    } else {
+      SetReportedValues(&mStrItems[2], id, station, slot, cartType, angle);
+      SetOneReportedValue(&mStrItems[2], name, 6);
+      mLogRpt.Format("Cartridge at index %d: %s", mItemInt[1], (LPCTSTR)report);
+    }
+    return 0;
+  }
 
   if (!mScope->CassetteSlotStatus(mItemInt[1], index)) {
     AbortMacro();
@@ -6956,9 +7043,24 @@ int CMacCmd::LoadCartridge(void)
     index = mScope->LoadCartridge(mItemInt[1]);
   else
     index = mScope->UnloadCartridge();
-  if (index)
-    ABORT_LINE(index == 1 ? "The thread is already busy for a long operation in:\n\n" :
-    "There was an error trying to run a long operation with:\n\n");
+  if (index) {
+    if (index == 1)
+      ABORT_LINE("The thread is already busy for a long operation in:\n\n");
+    if (index == 3)
+      ABORT_LINE("Autoloader operations are not supported by this microscope in:\n\n");
+    if (index == 4)
+      ABORT_LINE("Slot number or index is out of range in:\n\n");
+    if (index == 6)
+      ABORT_LINE("You need to do a cassette inventory; There is no cartridge "
+        "information for:\n\n");
+    if (index == 5) {
+      ABORT_LINE((CMD_IS(LOADCARTRIDGE) ? "The cartridge is already in the stage" :
+        "There is no cartridge in the stage") +
+        CString(" according to the current inventory in:\n\n"));
+    } else {
+      ABORT_LINE("There was an error trying to run a long operation with:\n\n");
+    }
+  }
   mStartedLongOp = true;
   return 0;
 }
@@ -7926,12 +8028,13 @@ int CMacCmd::ReportNumFramesSaved(void)
 int CMacCmd::CameraProperties(void)
 {
   double delX;
-  int index, index2, ix1, iy1;
+  int index, index2, ix1, iy1, actNum = mWinApp->GetCurrentActiveCamera() + 1;
 
   if (!mItemEmpty[1]) {
     if (mItemInt[1] < 1 || mItemInt[1] > mWinApp->GetActiveCamListSize())
       ABORT_LINE("Active camera number is out of range in:\n\n")
     mCamParams = mWinApp->GetCamParams() + mActiveList[mItemInt[1] - 1];
+    actNum = mItemInt[1];
   }
   ix1 = BinDivisorI(mCamParams);
   index = mCamParams->sizeX / ix1;
@@ -7947,7 +8050,8 @@ int CMacCmd::CameraProperties(void)
     (LPCSTR)mCamParams->name, index, index2, mCamParams->rotationFlip,
     mCamParams->pixelMicrons *ix1, delX, MagForCamera(mCamParams, iy1));
   SetReportedValues((double)index, (double)index2,
-    (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX);
+    (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX,
+    (double)actNum);
   return 0;
 }
 
@@ -9040,6 +9144,36 @@ int CMacCmd::ReportHoleFinderParams(void)
   return 0;
 }
 
+// ReportLastHoleVectors
+int CMacCmd::ReportLastHoleVectors(void)
+{
+  int index = mItemInt[1];
+  ScaleMat mat, st2is;
+  if (index > 0 && (index >= MAX_MAGS || !mMagTab[index].mag))
+    ABORT_LINE("The magnification index is out of range in:\n\n");
+  if (index < 0) {
+    mat = mNavHelper->mHoleFinderDlg->GetGridImVecs();
+    mat.ypx = -mat.ypx;
+    mat.ypy = -mat.ypy;
+  } else
+    mat = mNavHelper->mHoleFinderDlg->GetGridStageVecs();
+  if (!mat.xpx)
+    ABORT_LINE("The hole finder has not saved any vectors for:\n\n");
+  if (index > 0) {
+    st2is = MatMul(mShiftManager->StageToCamera(mCurrentCam, index),
+      mShiftManager->CameraToIS(index));
+    if (!st2is.xpx)
+      ABORT_LINE("There is no calibration to get from stage to IS coordinates at the "
+        "given mag for:\n\n");
+    mShiftManager->ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
+    mShiftManager->ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
+  }
+  mLogRpt.Format("Hole %s vectors are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
+    "image", index ? "IS" : "stage"), mat.xpx, mat.ypx, mat.xpy, mat.ypy);
+  SetReportedValues(&mStrItems[2], mat.xpx, mat.ypx, mat.xpy, mat.ypy);
+  return 0;
+}
+
 // MakeNavPointsAtHoles
 int CMacCmd::MakeNavPointsAtHoles(void)
 {
@@ -9408,6 +9542,9 @@ int CMacCmd::LongOperation(void)
           ABORT_LINE("The same operation is specified twice in:\n\n");
         used[index2]++;
         operations[ix1] = index2;
+        if (index2 == LONG_OP_UNLOAD_CART && JEOLscope)
+          ABORT_LINE("For JEOL, use UnloadCartridge to unload a cartridge instead"
+            " of:\n\n");
         if (index2 == LONG_OP_HW_DARK_REF &&
           !mCamera->CanDoK2HardwareDarkRef(mCamParams, report))
           ABORT_LINE(report + " in line:\n\n");

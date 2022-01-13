@@ -4061,6 +4061,29 @@ bool CMacroProcessor::RestoreCameraSet(int index, BOOL erase)
   return retval;
 }
 
+// Given info for a cartridge, format both output for the log table and a row for an array
+void CMacroProcessor::FormatCartridgeInfo(int index, int &id, int &station, int &slot,
+  int &cartType, int &rotation, CString &name, CString &report, CString &rowVal)
+{
+  const char *stations[4] = {"Unknown", "Magazine", "Storage ", "Stage   "};
+  JeolCartridgeData jcd;
+  CArray<JeolCartridgeData, JeolCartridgeData> *loaderInfo = mScope->GetJeolLoaderInfo();
+  id = -1;
+  if (index < 0 || index >= (int)loaderInfo->GetSize())
+    return;
+  jcd = loaderInfo->GetAt(index);
+  id = jcd.id;
+  station = jcd.station;
+  slot = jcd.slot;
+  cartType = jcd.type;
+  rotation = jcd.rotation;
+  name = jcd.name;
+  report.Format("%2d %7d  %s  %d    %d    %d    %s", index + 1, id, stations[station],
+    slot, cartType, rotation, (LPCTSTR)name);
+  rowVal.Format("%d\n%d\n%d\n%d\n%d\n", id, station, slot, cartType, rotation);
+  rowVal += name;
+}
+
 // Returns a navigator item specified by a positive index, a negative distance from end
 // of table (-1 = last item), or 0 for current or acquire item.  Updates the value of
 // index with the true 0-based value.  Issues message, aborts and returns NULL on failures

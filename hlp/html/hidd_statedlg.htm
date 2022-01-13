@@ -65,6 +65,12 @@
       <br />Clicking a line in the table selects the
       current line in the table, and double clicking actually sets the state if 
       possible.</P>
+    <P><strong><em>The Prior state:</em></strong> The &#39;Prior&#39; line summarizes the 
+      state that was left upon the first setting of a state, and that will be returned 
+      to if <strong>Restore State</strong> 
+      is pressed.&nbsp; When multiple states of the same kind are set in succession, 
+      the states do not form a stack that can be undone in succession, nor does a 
+      previously set state become the Prior state.</P>
     <P><em><strong>Controls</strong></em></P>
     <P><B>Add Current State</B></P>
     <P>This buttons adds the current microscope and imaging parameters as a new imaging
@@ -89,7 +95,7 @@
       <li>In Low Dose mode, the state can be set for each of the three areas 
         independently, so you can set the state for Record, View, and Search in 
         succession without restoring or replacing any of those.&nbsp; However, if you go 
-        to another state for the same are, it will replace the previously set state for 
+        to another state for the same area, it will replace the previously set state for 
         that area.</li>
       <li>Each currently set state is marked in the table with a &Dagger; after the 
         frame size.</li>

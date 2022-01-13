@@ -455,6 +455,8 @@ public:
   void SaveControlSet(int index);
   bool CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index, CString &message);
   bool RestoreCameraSet(int index, BOOL erase);
+  void FormatCartridgeInfo(int index, int &id, int &station, int &slot, int &type, int &rotation,
+    CString &name, CString &report, CString &rowVal);
   int SkipToLabel(CString label, CString line, int &numPops, int &delTryLevel);
   void LeaveCallLevel(bool popBlocks);
   int CheckBalancedParentheses(CString * strItems, int maxItems, CString &strLine, CString &errmess);

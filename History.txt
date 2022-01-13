@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/13/22: Set information needed  to get adjustment for high defocus when
+loading a map.
+
+1/13/22: Extended autoloader script commands to support the JEOL autoloader.
+
+1/13/22: Added script commands to get the vectors from hole finding and to add
+a title to the header of an image file.
+
+1/13/22: Added option to use a monospaced font in the log window.
+
 12/17/21: Fixed reporting of frame alignment results for Falcon 2 (in 3.8).
 
 12/24/21: SEM_3-8-17

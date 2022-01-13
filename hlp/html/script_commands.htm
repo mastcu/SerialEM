@@ -816,8 +816,9 @@
         <TR>
           <TD class="scriptcommand">CameraProperties [#C] [#M]</TD>
           <TD>Reports unbinned size in X and Y, RotationAndFlip property, size of
-            detector pixel in microns, and unbinned pixel size of the current camera, or
-            of the active camera whose number is given by the optional <b>#C</b>, numbered from 1.
+            detector pixel in microns, and unbinned pixel size, and active camera number of the current camera, or
+            of the active camera whose number is given by the optional <b>#C</b>&nbsp; Active
+            camera values are numbered from 1.
              The unbinned pixel size is for the current magnification, or for the magnification
              index given by the optional <b>#M</b>.</TD>
         </TR>
@@ -1946,6 +1947,15 @@
             in <I>reportedValue4</I>.&nbsp; No optional assignment to variable.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">AddTitleToFile #F title</TD>
+          <TD>Adds the text in <b>title</b> to the header of the file whose number is given by <b>#F</b>,
+             or to the current open file if <b>#F</b> is 0.&nbsp; The file must already have 
+            at least one image saved to it before running this command.&nbsp; The title will also be added
+            to the ".mdoc" file for an MRC file, or to an ".idoc" file, but it will appear after
+             the section for the last image written.&nbsp; Command added in 4.0, 1/12/22.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportLastFrameFile</TD>
           <TD>Reports the full path and filename of the last frame file saved from a K2/K3, DE, or
             Falcon camera and sets it into <I>reportedValue1</I>, sets the directory only into <i>reportedValue2</i>,
@@ -2831,17 +2841,30 @@
         <TR>
           <TD class="scriptcommand">LoadCartridge #</TD>
           <TD>Loads the cartridge from the given slot <b>#</b> (numbered from 1) if there is an
-            Thermo/FEI autoloader.  This command starts a long operation.</TD>
+            Thermo/FEI autoloader.&nbsp; With a JEOL autoloader, unloads a cartridge on the stage, if any,
+             into sample storage, then loads the cartridge at the given index in the cassette 
+            inventory array.&nbsp; The inventory must be obtained first with 'LongOperation 
+            In'.&nbsp; This command starts a long operation.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">UnloadCartridge</TD>
-          <TD>If there is a Thermo/FEI autoloader, unloads the cartridge.  This command starts a long operation</TD>
+          <TD>If there is a Thermo/FEI or JEOL autoloader, unloads the cartridge.&nbsp; For JEOL,
+             an inventory must be obtained first with 'LongOperation In'.&nbsp;  This command 
+            starts a long operation</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportSlotStatus #</TD>
-          <TD>Reports the status of the cartridge slot given by <b>#</b> (numbered from 1) if there
-            is a Thermo/FEI autoloader.&nbsp; Status is -1 for an error, 0 for empty, and 1 for
-            occupied.</TD>
+          <TD>Reports the status of the autoloader cartridge slot or index given by <b>#</b> (numbered from 1).
+            &nbsp; With a Thermo/FEI autoloader, the command takes the slot number and reports a single value:
+             -1 for an error, 0 for empty, and 1 for occupied.&nbsp; With a JEOL autoloader, a cassette
+             inventory must be obtained first with 'LongOperation In'.&nbsp; The command takes 
+            the index of the cartridge in the array populated by the 
+            inventory.&nbsp; It reports just -1 if there is no information at that index (i.e., index out of 
+            range).&nbsp; Otherwise it reports 6 values: the cartridge ID; where it is located (0 for unknown, 1 for
+             magazine, 2 for storage, 3 for stage); the slot number in that location; the cartridge type
+             (0 for unknown, 1 for regular, 2 for rotating); the angle value (0 for unknown, 1 for 0 degrees, 
+            2 for 90 degrees, or 3 for a regular cartridge); and the name.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AreDewarsFilling</TD>
@@ -2894,17 +2917,19 @@
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
           <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
-            refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In'), Loader buffer cycle ('Lo'),
-            Unload cartridge ('Un'), Dark
+            refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In') on Thermo/FEI 
+            or JEOL, Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only, Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS') or Refill Transfer
             tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL or Thermo/FEI.&nbsp; Operations are identified by the first two
-            letters of whatever full word you use (case insensitive).&nbsp; Each operation
+            letters of whatever full word you use (case insensitive).&nbsp; 
+            <br />&nbsp;&nbsp;&nbsp;&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;
             0, the operation is done only if the time since the last such operation is
             greater than <b>#</b>; if <b>#</b> is 0, the operation is done unconditionally; if <b>#</b> is -1, it
             simply records the current time as the time of the last operation; if <b>#</b> is &lt; -1,
               it reports the time in hours since the last operation and places it into one of
-              the <I>reportedValue</I> variables.&nbsp;&nbsp; The scope operations will occur sequentially
+              the <I>reportedValue</I> variables.&nbsp;&nbsp;
+            <br /> &nbsp;&nbsp;&nbsp;&nbsp; The scope operations will occur sequentially
             and be started in &nbsp;the order that they are listed. The dark reference update
             will be done simultaneously with scope operations.&nbsp; If an error occurs in a
             scope operation, other operations will be finished and the error reported at the
@@ -2916,7 +2941,15 @@
             refilling on a JEOL is included in the operations, a STOP will just stop all
             filling.&nbsp; In order for time
             intervals to be kept track of between runs of the program, the property
-            IgnoreShortTermCals must not be set.</TD>
+            IgnoreShortTermCals must not be set.
+            <br />&nbsp;&nbsp;&nbsp;&nbsp; With a JEOL autoloader, the Inventory does three things: fills an internal program array
+             with the information about each cartridge, prints a table to the log, and creates a persistent variable 
+            <i>autoloaderInfo</i> with the same information in a 2D array.&nbsp; Each line of the 2D array has the
+            6 elements described above as reported by 'ReportSlotStatus'.&nbsp; Both this array and the 
+            internal program array are maintained with any changes resulting from 'LoadCartridge' and 
+            'UnloadCartridge' commands, so it should not be necessary to run a new inventory unless the program is
+            restarted or there are external operations with the autoloader.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ManageDewarsAndPumps [#]</TD>
@@ -3774,7 +3807,7 @@
             value.<TD>
         </TR>
         <TR>
-          <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating Commands</B></TD>
+          <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating and Hole Finder Commands</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NewMap [#N text]</TD>
@@ -3842,6 +3875,16 @@
           <TD class="scriptcommand">ReportHoleFinderParams</TD>
           <TD>Reports the diameter and center-to-center spacing in microns currently being 
             used for hole finding.&nbsp; Command added in 4.0, 9/24/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportLastHoleVectors #</TD>
+          <TD>Reports the vectors between holes along the two axes from the last hole finding operation in
+            one of 3 forms.&nbsp; If <b>#</b> is 0, the vectors are in stage coordinates, adjusted for
+            View or Search defocus offset if there is a high-magnification defocus calibration.&nbsp; If
+            <b>#</b> is negative, the vectors are in image coordinates, with Y inverted.&nbsp; If <b>#</b>
+            is a magnification index, the vectors are in image shift coordinates at the given magnification.
+            Command added in 4.0, 1/13/22.
+          </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>
@@ -4078,9 +4121,12 @@
               HHMM.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ProgramTimeStamps [#]</TD>
+          <TD class="scriptcommand">ProgramTimeStamps [#s] [#o]</TD>
           <TD>Prints the program version and build date, plus the current date and time, or
-            the date and time of program startup if the optional <b>#</b> is nonzero.</TD>
+            the date and time of program startup if the optional <b>#s</b> is nonzero.&nbsp; If the
+            optional <b>#o</b> is nonzero, it also prints the report of special options set that 
+            is printed on program startup.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand"><A name="scale_matrix"></A><B>Scale Matrix Commands</B></TD>

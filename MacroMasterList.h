@@ -623,6 +623,8 @@ MAC_SAME_NAME_ARG(SetSimpleOriginActive, 1, 4, SETSIMPLEORIGINACTIVE, I)
 MAC_SAME_NAME_ARG(SetFrameBaseName, 4, 4, SETFRAMEBASENAME, IIIS)
 MAC_SAME_NAME_ARG(AutoCorrPeakVectors, 2, 4, AUTOCORRPEAKVECTORS, SDii)
 MAC_SAME_NAME_NOARG(ReportCondenserStigmator, 0, 0, REPORTCONDENSERSTIGMATOR)
+MAC_SAME_NAME_ARG(AddTitleToFile, 2, 4, ADDTITLETOFILE, IS)
+MAC_SAME_NAME_ARG(ReportLastHoleVectors, 1, 4, REPORTLASTHOLEVECTORS, I)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
