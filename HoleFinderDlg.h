@@ -24,6 +24,8 @@ public:
   void SetExclusionsAndDraw();
   void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff);
   GetMember(bool, FindingHoles);
+  GetMember(ScaleMat, GridImVecs);
+  GetMember(ScaleMat, GridStageVecs);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
   void StopScanning(void);
@@ -92,10 +94,13 @@ private:
   KImageStore *mImageStore;
   int mCurStore, mBufInd;
   ScaleMat mImToStage;
+  ScaleMat mAdjustedStageToCam;
+  ScaleMat mGridImVecs, mGridStageVecs;
   int mSigInd, mThreshInd, mBestSigInd, mBestThreshInd;
   MontParam mMontParam;
   CMapDrawItem *mNavItem;
   int mFullYsize, mFullBinning;
+  int mBufBinning;
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;

@@ -66,6 +66,8 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   mLastHoleSpacing = 0.;
   mFindingFromDialog = false;
   mSkipAutoCor = false;
+  mGridImVecs.xpx = 0.;
+  mGridStageVecs.xpx = 0.;
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -765,6 +767,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mHelper->GetHFscanVectors(&widths, &increments, &numCircles);
   mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
   mWinApp->mScope->GetStagePosition(tstageX, tstageY, mZstage);
+  mBufBinning = imBuf->mBinning;
   //if (mWinApp->mProcessImage->GetTestCtfPixelSize())
   //mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * imBuf->mBinning;
   if (!mPixelSize) {
@@ -792,6 +795,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       "least 0.5 micron bigger than the hole size");
     return 1;
   }
+  mAdjustedStageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
 
   autocorSpacing = mParams.spacing;
   if (mFindingFromDialog && !mSkipAutoCor && image->getWidth() / mParams.spacing >= 4. &&
@@ -909,6 +913,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       // Save the overview binning and the minioffset so the imBuf does not need to be
       // accessed again
       mFullBinning = imBuf->mOverviewBin;
+      mBufBinning = imBuf->mBinning;
       mMontage = montP->xNframes * montP->yNframes > 1;
       if (mMontage && imBuf->mMiniOffsets) {
         mMiniOffsets = new MiniOffsets;
@@ -1073,9 +1078,10 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   int err, ind;
   float sigUsed, threshUsed;
   FloatVec peakVals, xMissing, yMissing, xCenClose, yCenClose;
-  FloatVec peakClose, xInPiece, yInPiece;
+  FloatVec peakClose, xInPiece, yInPiece, xCenAlt, yCenAlt, peakAlt, xMissing2, yMissing2;
+  float avgAngle, avgLen, anSpacing;
   IntVec pieceSavedAt, tileXnum, tileYnum, pieceIndex, secIxAliPiece, secIyAliPiece;
-  IntVec fileZindex;
+  IntVec fileZindex, altInds2;
   FloatVecArray pieceXcenVec, pieceYcenVec, piecePeakVec, pieceMeanVec, pieceSDsVec;
   FloatVecArray pieceOutlieVec;
   MontParam *montP = &mMontParam;
@@ -1083,7 +1089,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   EMimageBuffer *imBuf = &allBufs[mBufInd];
   int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf;
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
-  ScaleMat aMat, aInv;
+  ScaleMat aMat, aInv, adjInv;
   float delX, delY, ptX, ptY;
   CString noMontReason, statStr;
 
@@ -1251,6 +1257,17 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mWinApp->AppendToLog("Hole finder: " + statStr);
 
   mHaveHoles = true;
+
+  // Get the grid vectors and convert them to stage coordinates.  Vectors are right-handed
+  mHelper->mFindHoles->analyzeNeighbors(mXcenters, mYcenters, peakVals, altInds2, xCenAlt,
+    yCenAlt, peakAlt, 0., 0., 0, anSpacing, xMissing2, yMissing2);
+  mHelper->mFindHoles->getGridVectors(mGridImVecs.xpx, mGridImVecs.ypx, mGridImVecs.xpy,
+    mGridImVecs.ypy, avgAngle, avgLen);
+  adjInv = MatInv(mAdjustedStageToCam);
+  mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpx, 
+    mBufBinning * mGridImVecs.ypx, mGridStageVecs.xpx, mGridStageVecs.ypx);
+  mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
+    mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
 
   // Get stage positions
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
