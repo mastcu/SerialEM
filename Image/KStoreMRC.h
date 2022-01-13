@@ -72,4 +72,5 @@ public:
   virtual void  BigSeek(int base, int size1, int size2, UINT flag);
   int getExtraData(EMimageExtra * extra, int section);
   virtual int ReorderPieceZCoords(int *sectOrder);
+  int WriteHeader(bool adocAlso);
 };

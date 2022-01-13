@@ -534,6 +534,27 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
   return retval;
 }
 
+// Rewrite the header to the file and the autodoc (e.g., after a label change)
+int KStoreMRC::WriteHeader(bool adocAlso)
+{
+  int err;
+  try {
+    Seek(0, CFile::begin);
+    Write(mHead, MRCheadSize);
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    return 1;
+  }
+  if (!adocAlso || mAdocIndex < 0)
+    return 0;
+  if ((err = AdocGetMutexSetCurrent(mAdocIndex)) < 0)
+    return err - 1;
+  err = AdocWrite((char *)(LPCTSTR)getAdocName());
+  AdocReleaseMutex();
+  return err < 0 ? -1 : 0;
+}
+
 // Read a section from the file at the current z value
 KImage *KStoreMRC::getRect(void)
 {

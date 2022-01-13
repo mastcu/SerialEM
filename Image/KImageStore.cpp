@@ -316,7 +316,7 @@ int KImageStore::AddTitleToAdoc(const char * inTitle)
     retval = AdocAddSection(ADOC_TITLE, inTitle);
     AdocReleaseMutex();
   }
-  return retval;
+  return retval < 0 ? 1 : 0;
 }
 
 int KImageStore::CheckAdocForMontage(MontParam * inParam)

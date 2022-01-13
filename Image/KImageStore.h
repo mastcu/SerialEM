@@ -113,6 +113,7 @@ public:
   virtual int GetStageCoordFromAdoc(const char *sectName, int inSect, double &outX, double &outY);
   virtual int ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz);
   virtual void AddTitleToLabelArray(char *label, int &numTitle, const char *inTitle);
+  virtual int WriteHeader(bool adocAlso) { return 0; };
 };
 
 
