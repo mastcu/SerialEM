@@ -575,7 +575,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   string.Format("%s%s%d%s%s%s%d%s%s%.1f%s%s%s%.2f%s%s%s%.1fx%.1f%s%c%s%s", (LPCTSTR)lds, sep, 
     active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, percentC2, sep, 
     (LPCTSTR)defstr, sep, state->exposure, sep, mWinApp->BinningText(state->binning, camp)
-    , sep, state->xFrame / 1000., state->yFrame / 1000., sep, selected ? (char)0x87 : ' ', 
+    , sep, state->xFrame / 1000., state->yFrame / 1000., sep, selected ? (char)0x86 : ' ', 
     sep, (LPCTSTR)state->name);
 }
 
