@@ -6889,7 +6889,7 @@ void CNavigatorDlg::FinishLoadMap(void)
   EMimageExtra *extra1;
   int uncroppedX, uncroppedY;
   float stageX, stageY, angle;
-  bool noStage, noTilt, cropped;
+  bool noStage, noTilt, cropped, needDefocusData;
 
   LoadMapCleanup();
   if (mLoadItem->mMapMontage && mWinApp->mMontageController->GetLastFailed()) {
@@ -6915,10 +6915,19 @@ void CNavigatorDlg::FinishLoadMap(void)
     imBuf->mConSetUsed = mLoadItem->mMapLowDoseConSet;
   }
 
+  // Copy defocus offset and set other items needed to evaluate defocus adjustment
+  needDefocusData = mLoadItem->mMapLowDoseConSet == VIEW_CONSET ||
+    mLoadItem->mMapLowDoseConSet == SEARCH_CONSET; 
+  if (needDefocusData && mLoadItem->mDefocusOffset) {
+    imBuf->mViewDefocus = mLoadItem->mDefocusOffset;
+    if (mLoadItem->mMapProbeMode >= 0)
+      imBuf->mProbeMode = mLoadItem->mMapProbeMode;
+  }
+
   // Attach the map stage position to the image if it is missing
   noStage = !imBuf->GetStagePosition(stageX, stageY);
   noTilt = !imBuf->GetTiltAngle(angle) && mLoadItem->mMapTiltAngle > RAW_STAGE_TEST;
-  if (noStage || noTilt) {
+  if (noStage || noTilt || needDefocusData) {
     extra1 = (EMimageExtra *)imBuf->mImage->GetUserData();
     if (!extra1) {
       extra1 = new EMimageExtra;
@@ -6930,6 +6939,10 @@ void CNavigatorDlg::FinishLoadMap(void)
     }
     if (noTilt)
       extra1->m_fTilt = mLoadItem->mMapTiltAngle;
+    if (needDefocusData) {
+      extra1->mSpotSize = mLoadItem->mMapSpotSize;
+      extra1->m_fIntensity = (float)mLoadItem->mMapIntensity;
+    }
     extra1->ValuesIntoShorts();
   }
 
@@ -6942,8 +6955,9 @@ void CNavigatorDlg::FinishLoadMap(void)
     uncroppedX > 0;
   if (mHelper->GetConvertMaps() && !cropped && !mLoadItem->mMapMontage && 
     mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale)
-    mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale, mLoadItem->mMapMaxScale);
-  
+    mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale, 
+      mLoadItem->mMapMaxScale);
+
   // Copy montage to read buffer, get loaded size, rotate if requested, and display
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
   // then copy it again so that both buffers have the map data
