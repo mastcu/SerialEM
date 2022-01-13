@@ -973,6 +973,19 @@
         However, when the routine is called while in Low Dose mode, the state is always
         restored by going back to the previous Low Dose area after taking images in the
         same conditions as the map.</P>
+    <P>When in Low Dose mode and realigning to a map taken in Low Dose, the routine 
+      will attempt to remain in Low Dose if the current parameters of the area with 
+      which the map was taken match the parameters used for taking the map.&nbsp; The 
+      match is not considered good enough if there is a change in the camera, the 
+      magnification, or the probe mode (on Thermo/FEI) or alpha (on JEOL); or if the 
+      defocus offset (for a View or Search map) has changed by more than a limit set 
+      by the RealignItemFocusChangeLimit property, which is not set by default.&nbsp; 
+      If the match is not good enough, the program will internally leave Low Dose mode 
+      by going to the Record area first, which can waste many seconds.&nbsp;&nbsp; If 
+      the match is good enough, the routine will substitute the map parameters into 
+      the Low Dose area and take images with those parameters, unless an option is set 
+      in the Tasks-Specials Options submenu to realign with the current area 
+      parameters.</P>
       <P>In most cases, the routine will adjust for misalignments between magnifications
       even if you have not selected the 'Adjust image shift between mags' option in
       the Alignment &amp; Focus control panel. Specifically, in situations 1) and 2)
