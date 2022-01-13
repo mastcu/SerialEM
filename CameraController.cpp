@@ -3502,7 +3502,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     conSet.useFrameAlign = 0;
   mTD.DoseFrac = conSet.doseFrac;
   B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam), 10.f);
-  if ((conSet.doseFrac || (IS_FALCON2_3_4(mParam) && FCAM_ADVANCED(mParam))) && 
+  if ((conSet.doseFrac || (IS_FALCON2_3_4(mParam) && FCAM_ADVANCED(mParam)) || 
+    (IS_BASIC_FALCON2(mParam) && weCanAlignFalcon)) && 
     conSet.alignFrames && conSet.useFrameAlign) {
     mTD.AlignFrames = 0; 
     if (conSet.useFrameAlign == 1) {
