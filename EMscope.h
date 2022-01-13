@@ -39,6 +39,7 @@ enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 enum {CassetteSlotStatus_Unknown, CassetteSlotStatus_Occupied, CassetteSlotStatus_Empty};
 enum {RefrigerantLevel_AutoloaderDewar = 0,
     RefrigerantLevel_ColumnDewar, RefrigerantLevel_HeliumDewar};
+enum { JAL_STATION_UNKNOWN = 0, JAL_STATION_MAGAZINE, JAL_STATION_STORAGE, JAL_STATION_STAGE };
 enum {gsUnderflow = 1, gsOverflow, gsInvalid};
 enum {imNanoProbe = 0, imMicroProbe};
 enum {lpRegular = 1, lpEFTEM};
@@ -96,6 +97,15 @@ struct StageThreadData {
   StageMoveInfo *info;
 };
 
+struct JeolCartridgeData {
+  int id;
+  CString name;
+  short station;
+  short slot;
+  short type;
+  short rotation;
+};
+
 #define LONGOP_FLASH_HIGH    1
 #define LONGOP_SIMPLE_ORIGIN 2
 
@@ -107,6 +117,8 @@ struct LongThreadData {
   JeolStateData *JeolSD;
   ScopePluginFuncs *plugFuncs;
   CString errString;
+  CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo;
+  int maxLoaderSlots;
 };
 
 enum { SYNCHRO_DO_MAG, SYNCHRO_DO_SPOT, SYNCHRO_DO_PROBE, SYNCHRO_DO_ALPHA, 
@@ -247,7 +259,7 @@ public:
   BOOL SetProbeMode(int micro, BOOL fromLowDose = false);
   CArray<ChannelSet, ChannelSet> *GetBlockedChannels() { return &mBlockedChannels; };
   CArray<LensRelaxData, LensRelaxData> *GetLensRelaxProgs() { return &mLensRelaxProgs; };
-
+  CArray<JeolCartridgeData, JeolCartridgeData> *GetJeolLoaderInfo() {return &mJeolLoaderInfo;};
   static void TaskScreenError(int error);
   static int TaskScreenBusy();
   void StageCleanup(int error);
@@ -482,6 +494,9 @@ public:
   GetSetMember(int, DewarVacCapabilities);
   GetSetMember(int, ScopeCanFlashFEG);
   GetSetMember(int, ScopeHasPhasePlate);
+  GetMember(int, ChangedLoaderInfo);
+  GetMember(int, LoadedCartridge);
+  GetMember(int, UnloadedCartridge);
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
@@ -725,6 +740,7 @@ private:
   BOOL mJeolSTEMunitsX;       // Flag that STEM mag units come through as X not ABC
   CArray<ChannelSet, ChannelSet> mBlockedChannels;
   CArray<LensRelaxData, LensRelaxData> mLensRelaxProgs;
+  CArray<JeolCartridgeData, JeolCartridgeData> mJeolLoaderInfo;
   BOOL mUsePLforIS;           // Flag to use PL when initialize scope
   BOOL mUseCLA2forSTEM;       // Flag to use CLA2 for JEOL STEM
   bool mXYbacklashValid;      // Flag that backlash values are still valid for a position
@@ -832,6 +848,10 @@ private:
   int mDewarVacCapabilities;   // Flags: 1 for autoloader, 2 for temperature control
   int mScopeCanFlashFEG;       // 1 if it can flash cold FEG, 0 not
   int mScopeHasPhasePlate;     // 1 if there is a phase plate, 0 not
+  int mMaxJeolAutoloaderSlots; // Number of slots to query 
+  int mChangedLoaderInfo;      // Flag to indicate info was gotten or changed
+  int mUnloadedCartridge;      // Index in table of cartridge that was unloaded
+  int mLoadedCartridge;      // Index in table of cartridge that was unloaded
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -911,6 +931,7 @@ public:
   BOOL CassetteSlotStatus(int slot, int &status);
   int LoadCartridge(int slot);
   int UnloadCartridge(void);
+  int FindCartridgeAtStage(int &id);
   static ScopePluginFuncs *GetPlugFuncs() {return mPlugFuncs;};
   void SetValidXYbacklash(StageMoveInfo * info);
   void SetValidZbacklash(StageMoveInfo * info);

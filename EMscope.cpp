@@ -516,6 +516,8 @@ CEMscope::CEMscope()
   mDewarVacParams.startIntervalMin = 15.;
   mDewarVacParams.postFillWaitMin = 5.;
   mDewarVacParams.doChecksBeforeTask = true;
+  mChangedLoaderInfo = false;
+  mMaxJeolAutoloaderSlots = 17;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -823,7 +825,7 @@ int CEMscope::Initialize()
       SEMReportCOMError(E, "setting whether to skip advanced scripting ");
   }
   try {
-    if (mPlugFuncs->ASIsetVersion) {
+    if (mPlugFuncs->ASIsetVersion && !mSkipAdvancedScripting) {
       if (mAdvancedScriptVersion > 0)
         mPlugFuncs->ASIsetVersion(mAdvancedScriptVersion);
       else
@@ -6499,13 +6501,27 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
 
 int CEMscope::LoadCartridge(int slot)
 {
-  int oper = LONG_OP_LOAD_CART;
+  int id, oper = LONG_OP_LOAD_CART;
+  JeolCartridgeData jcd;
   float sinceLast = 0.;
-  if (!sInitialized || !FEIscope)
-    return 2;
+  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2))
+    return 3;
   if (slot <= 0)
-    return 2;
-  sCartridgeToLoad = slot;
+    return 4;
+  if (FEIscope) {
+    sCartridgeToLoad = slot;
+  } else {
+    if (!mJeolLoaderInfo.GetSize())
+      return 6;
+    if (slot > mJeolLoaderInfo.GetSize())
+      return 4;
+    jcd = mJeolLoaderInfo.GetAt(slot - 1);
+    if (jcd.station == JAL_STATION_STAGE)
+      return 5;
+    sCartridgeToLoad = jcd.id;
+    mLoadedCartridge = slot - 1;
+    mUnloadedCartridge = FindCartridgeAtStage(id);
+  }
   return (StartLongOperation(&oper, &sinceLast, 1));
 }
 
@@ -6513,9 +6529,33 @@ int CEMscope::UnloadCartridge(void)
 {
   int oper = LONG_OP_UNLOAD_CART;
   float sinceLast = 0.;
-  if (!sInitialized || !FEIscope)
-    return 2;
+  JeolCartridgeData jcd;
+  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2))
+    return 3;
+  if (JEOLscope) {
+    if (!mJeolLoaderInfo.GetSize())
+      return 6;
+    mLoadedCartridge = -1;
+    mUnloadedCartridge = FindCartridgeAtStage(sCartridgeToLoad);
+    if (mUnloadedCartridge < 0)
+      return 5;
+  }
   return (StartLongOperation(&oper, &sinceLast, 1));
+}
+
+int CEMscope::FindCartridgeAtStage(int &id)
+{
+  int ind;
+  JeolCartridgeData jcd;
+  id = -1;
+  for (ind = 0; ind < mJeolLoaderInfo.GetSize(); ind++) {
+    jcd = mJeolLoaderInfo.GetAt(ind);
+    if (jcd.station == JAL_STATION_STAGE) {
+      id = jcd.id;
+      return ind;
+    }
+  }
+  return -1;
 }
 
 // Functions for dealing with temperature control
@@ -9067,6 +9107,12 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   // Change second one back to 0 to enable simpleorigin
   short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0};
   mDoingStoppableRefill = 0;
+  mChangedLoaderInfo = false;
+  if (mJeolHasNitrogenClass > 1) {
+    scopeType[LONG_OP_INVENTORY] = 0;
+    scopeType[LONG_OP_LOAD_CART] = 0;
+    scopeType[LONG_OP_UNLOAD_CART] = 0;
+  }
 
   // Loop through the operations, test if it is time to do each and add to list to do
   for (ind = 0; ind < numOps; ind++) {
@@ -9131,6 +9177,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0) |
         (mHasSimpleOrigin ? LONGOP_SIMPLE_ORIGIN : 0);
       mDoNextFEGFlashHigh = false;
+      mLongOpData[thread].cartInfo = &mJeolLoaderInfo;
+      mLongOpData[thread].maxLoaderSlots = mMaxJeolAutoloaderSlots;
       mLongOpThreads[thread] = AfxBeginThread(LongOperationProc, &mLongOpData[thread],
         THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
     } else {
@@ -9161,8 +9209,12 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
   CString descrip;
-  int retval = 0, longOp, ind, error;
-  bool fillTransfer;
+  int retval = 0, longOp, ind, error, dummy;
+  bool fillTransfer, loadCart;
+  double startTime;
+  const char *name;
+  int slot, station, rotation, cartType;
+  JeolCartridgeData jcData;
 
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("LongOperationProc", true);
@@ -9179,6 +9231,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
     for (ind = 0; ind < lod->numOperations; ind++) {
       longOp = lod->operations[ind];
       fillTransfer = longOp == LONG_OP_FILL_TRANSFER;
+      loadCart = longOp == LONG_OP_LOAD_CART;
       error = 0;
       try {
 
@@ -9195,7 +9248,29 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         }
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
-          lod->plugFuncs->DoCassetteInventory();
+          if (JEOLscope) {
+            lod->plugFuncs->GetCartridgeInfo(0, &dummy, &dummy, &dummy, &dummy, &dummy);
+            // For JEOL, get as much info as possible;
+            lod->cartInfo->RemoveAll();
+            for (ind = 1; ind < lod->maxLoaderSlots; ind++) {
+              try {
+                name = mPlugFuncs->GetCartridgeInfo(ind, &jcData.id, &station, &slot,
+                  &rotation, &cartType);
+                if (name && name[0] != 0x00 && jcData.id > 0) {
+                  jcData.station = station;
+                  jcData.slot = slot;
+                  jcData.rotation = rotation;
+                  jcData.type = cartType;
+                  jcData.name = name;
+                  lod->cartInfo->Add(jcData);
+                }
+              }
+              catch (_com_error E) {
+              }
+            }
+          } else {
+            lod->plugFuncs->DoCassetteInventory();
+          }
         }
 
         // Run autoloader buffer cycle
@@ -9209,14 +9284,23 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             (LPCTSTR)sMessageBoxTitle, (LPCTSTR)sMessageBoxText);
         }
 
-        // Unload a cartridge
-        if (longOp == LONG_OP_UNLOAD_CART) {
-          lod->plugFuncs->UnloadCartridge();
-        }
-
-        // Load a cartridge
-        if (longOp == LONG_OP_LOAD_CART) {
-          lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
+        // Unload or load a cartridge
+        if (longOp == LONG_OP_UNLOAD_CART || loadCart) {
+          if (JEOLscope) {
+            startTime = GetTickCount();
+            while (SEMTickInterval(startTime) < 120000) {
+              error = lod->plugFuncs->MoveCartridge(sCartridgeToLoad,
+                loadCart ? JAL_STATION_STAGE : JAL_STATION_STORAGE, 0);
+              if (error != 1)
+                break;
+              Sleep(5000);
+            }
+          } else {
+            if (loadCart)
+              lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
+            else
+              lod->plugFuncs->UnloadCartridge();
+          }
         }
 
         // Fill JEOL stage tank or transfer tank
@@ -9267,6 +9351,7 @@ int CEMscope::LongOperationBusy(int index)
   int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
     "", "", "", "", "", ""};
+  JeolCartridgeData jcData;
   bool throwErr = false;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
@@ -9289,10 +9374,30 @@ int CEMscope::LongOperationBusy(int index)
               mLongOpData[thread].errString);
             mLongOpData[thread].finished[op] = true;
             busy = 0;
-        } else
-          mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) + 
-             B3DCHOICE(busy && (!mLongOpData[thread].finished[op] || thread == 1), 
-               " ended with error", " finished successfully"));
+        } else {
+          if (longOp == LONG_OP_INVENTORY && JEOLscope) {
+              mChangedLoaderInfo = mJeolLoaderInfo.GetSize() ? -1 : 0;
+          }
+
+          // If moved a cartridge, change the table
+          if (JEOLscope && (longOp == LONG_OP_LOAD_CART ||
+            longOp == LONG_OP_UNLOAD_CART)) {
+            if (mLoadedCartridge >= 0) {
+              jcData = mJeolLoaderInfo.GetAt(mLoadedCartridge);
+              jcData.station = JAL_STATION_STAGE;
+              mJeolLoaderInfo.SetAt(mLoadedCartridge, jcData);
+            }
+            if (mUnloadedCartridge >= 0) {
+              jcData = mJeolLoaderInfo.GetAt(mUnloadedCartridge);
+              jcData.station = JAL_STATION_STORAGE;
+              mJeolLoaderInfo.SetAt(mUnloadedCartridge, jcData);
+            }
+            mChangedLoaderInfo = 1;
+          }
+          mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
+            B3DCHOICE(busy && (!mLongOpData[thread].finished[op] || thread == 1),
+              " ended with error", " finished successfully"));
+        }
 
         // Record time if completed, throw error if not and error not OK
         if (mLongOpData[thread].finished[op]) {
