@@ -518,15 +518,17 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Speciali&zed Options"
         BEGIN
-            MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
-            MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
-            MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
             MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
             MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
             MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
             MENUITEM "&Turn Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
+            MENUITEM "Tasks &Use View Even if Search Better", ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER
+            MENUITEM SEPARATOR
+            MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
+            MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
+            MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
         END
     END
     POPUP "T&ilt Series"

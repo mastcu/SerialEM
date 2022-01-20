@@ -27,9 +27,9 @@
         set up for a highly binned, low exposure image.</LI>
       <LI>
         View area - this area is centered on the Record area. The magnification should
-        be low for several reasons: to provide an overview of a larger area, to
+        be low (but not in Low Magnification mode) for several reasons: to provide an overview of a larger area, to
         minimize specimen exposure, and to provide reliable tracking in the various
-        SerialEM 'tasks' that require low magnification views. Taking an image with the
+        SerialEM 'tasks' that require lower magnification views. Taking an image with the
         View camera parameters will acquire from this area. View camera parameters
         should be set up for a binned, low exposure image.</LI>
       <LI>
@@ -81,9 +81,16 @@
       and diffraction focus are stored as parameters.</P>
     <P><i>Special Features in Low Dose Mode.</i>&nbsp; In low dose mode, numerous features of SerialEM operate differently.    <UL>
       <LI>
-        Tasks that use low magnification tracking (finding eucentricity, reversing
-        tilt, and resetting image shifts) will automatically use View images. Walking
-        up will use images of the Trial area.
+        Tasks that use lower magnification tracking (e.g., 
+        finding eucentricity and resetting image shifts) will generally use View images, 
+        although some have menu entries to control which area is used.&nbsp; However, 
+        each such task has a required minimum field of view when run outside of low 
+        dose, which sets a minimum magnification at which it should be run.&nbsp; When 
+        the View magnification is higher than that minimum, and the Search magnification 
+        is lower than View and not in LM mode, the program will use Search instead to 
+        minimize the risk of excessive shifts between images.&nbsp; See the
+        <a href="#hid_specializedoptions_tasksuseviewevenifsearchbetter">Tasks Use View Even if Search Better</a>
+        command for more details.
       </LI>
       <LI>
         Autoalignment operates with two autoalign buffers. A Record or Preview image
@@ -113,11 +120,7 @@
       then adjusting its features. The current area and its beam properties are
       displayed on the second line of the <A HREF="hidd_lowdose.htm">Low Dose control
         panel</A> . There are two ways to set the current area: take an image of
-      the area, or select the area with the 'Go to area / show
-      when screen down' radio buttons. As that label indicates, this radio button
-      selection has two consequences: the area is changed when the selection is
-      changed, and the selected area is also set when the screen is lowered. For the search area, there is also a button to
-      press, since there is no image acquisition in this area. You can adjust most
+      the area, or select the area with the 'Go to' button in the control panel.&nbsp; You can adjust most
       properties of the current area by turning on the 'Continuous update of mag
       &amp; beam' checkbox. With this option on, any changes in the magnification,
       spot size, condenser lens setting, or energy filter settings will change the
@@ -128,7 +131,7 @@
       off, you can change these features temporarily, but the stored properties of
       the area will be reimposed next time a picture is taken of the area.</P>
     <P>If you want to make initial adjustments to the properties of an area with no
-      exposure of the specimen at all, then select the area with a radio button and
+      exposure of the specimen at all, then select the area with a 'Go to' button and
       adjust its features.</P>
     <P><i>Setting Positions of Trial/Focus Areas. </i>&nbsp;The positions of the Focus and Trial areas can be set by selecting the Focus or
       Trial radio buttons in the 'Define position of area' box. Once one of these

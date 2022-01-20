@@ -107,6 +107,7 @@ CComplexTasks::CComplexTasks()
   mMagStackInd = 0;
   mVerbose = false;
   mUseTrialSize = false;
+  mTasksUseViewNotSearch = false;
   mTotalDose = 0.;
   mOnAxisDose = 0.;
   mMinLMSlitWidth = 25;
@@ -503,6 +504,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
   int camera = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
   ControlSet *conSet = &mConSets[conSetNum];
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int error, sizeX, sizeY;
   float actualFac;
   float deadTime = camParam->deadTime;
@@ -521,7 +523,13 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
 
   // If low dose mode, skip out, it is handled there
   if (mWinApp->LowDoseMode()) {
-    mLowMagConSet = 0;
+    mLowMagConSet = VIEW_CONSET;
+    if (!mTasksUseViewNotSearch && ldParam[VIEW_CONSET].magIndex > maxMagInd && 
+      ldParam[SEARCH_AREA].magIndex <= ldParam[VIEW_CONSET].magIndex &&
+      ldParam[SEARCH_AREA].magIndex >= mScope->GetLowestMModeMagInd()) {
+      SEMTrace('1', "Using Search instead of View for this task");
+      mLowMagConSet = SEARCH_CONSET;
+    }
     if (mMagStackInd < MAX_MAG_STACK)
       mMagStackInd++;
     return;

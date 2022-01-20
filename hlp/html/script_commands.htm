@@ -1475,7 +1475,8 @@
           <TD class="scriptcommand">CropImage buf #X0 #X1 #Y0 #Y1</TD>
           <TD>Crops out a subarea of the given buffer, which can be in the FFT window, from
             <b>#X0</b> to <b>#X1</b> in X and from <b>#Y0</b> to <b>#Y1</b> in
-            Y. Coordinates are numbered from 0 to size - 1 in each dimension and 0 in Y is
+            Y (inclusive). The size in X is rounded down to be even if necessary.
+            Coordinates are numbered from 0 to size - 1 in each dimension and 0 in Y is
             at the top.</TD>
         </TR>
         <TR>

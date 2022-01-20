@@ -176,6 +176,7 @@ BOOL_SETT_GETSET("ResetRealignUseTrialInLowDose", mWinApp->mComplexTasks->,
 BOOL_SETT_GETSET("FineEucenUseTrialInLowDose", mWinApp->mComplexTasks->, FEUseTrialInLD)
 BOOL_SETT_GETSET("RoughEucenUseSearchIfInLM", mWinApp->mComplexTasks->, FEUseSearchIfInLM)
 BOOL_SETT_GETSET("WalkupUseViewInLowDose", mWinApp->mComplexTasks->, WalkUseViewInLD)
+BOOL_SETT_GETSET("TasksUseViewNotSearch", mWinApp->mComplexTasks->, TasksUseViewNotSearch)
 BOOL_SETT_GETSET("ComplexTasksVerbose", mWinApp->mComplexTasks->, Verbose)
 FLOAT_SETT_GETSET("UsersAstigTilt", mWinApp->mAutoTuning->, UsersAstigTilt)
 FLOAT_SETT_GETSET("MenuZemlinTilt", mWinApp->mAutoTuning->, MenuZemlinTilt)

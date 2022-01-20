@@ -345,6 +345,7 @@ hid_specialoptions_adjustfocusonprobemodechange = SerialEM.chm::/html\menu_tasks
 hid_specialoptions_normalizealllens = SerialEM.chm::/html\menu_tasks.htm#hid_specialoptions_normalizealllens
 hid_specializedoptions_skipblankinginldwithscreenup = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_skipblankinginldwithscreenup
 hid_specializedoptions_closevalvesafterlonginactivity = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_closevalvesafterlonginactivity
+hid_specializedoptions_tasksuseviewevenifsearchbetter = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_tasksuseviewevenifsearchbetter
 hid_tasks_tiltseries						= SerialEM.chm::/html\menu_tilt_series.htm#hid_tasks_tiltseries
 hid_tiltseries_terminate				= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_terminate
 hid_tiltseries_extraoutput			= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_extraoutput

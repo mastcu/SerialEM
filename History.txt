@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/22: Made most tasks taking lower-magnification tracking shots use Search
+instead of View in Low Dose mode if View has an inadequate field of view but
+Search has a better one and is not in LM.  There is a special option to
+override this behavior.
+
+1/19/22: SEM_4-0-0beta3
 1/16/22: Included dose of Records retaken before being saved in
 PriorRecordDose values (In 3.8).
 

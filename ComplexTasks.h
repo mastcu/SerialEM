@@ -82,6 +82,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(int, EucenRestoreStageXY);
   GetMember(int, LowMagConSet);
   GetSetMember(BOOL, UseTrialSize);
+  GetSetMember(BOOL, TasksUseViewNotSearch);
   GetSetMember(float, FESizeOrFracForMean);
   GetSetMember(float, MaxFEFineAngle);
   GetSetMember(float, MaxFEFineInterval);
@@ -158,6 +159,7 @@ class CComplexTasks : public CCmdTarget
   BOOL mVerbose;
   int mLowMagConSet;              // control used for low mag tracking shots
   BOOL mUseTrialSize;             // Flag to use current trial size instead of full-field
+  BOOL mTasksUseViewNotSearch;    // Flag to turn off using S when more suitable than V
 
   float mMinRSRAField;            // Minimum field size for reset-realign
   int mSavedMagInd[MAX_MAG_STACK];         // Mag at which procedure started

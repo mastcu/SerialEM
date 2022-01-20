@@ -6066,6 +6066,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mScope->GetIdleTimeToCloseValves() > 0)
     PrintfToLog("Special option is set to turn off beam after %d minutes of inactivity",
       mWinApp->mScope->GetIdleTimeToCloseValves());
+  if (mWinApp->mComplexTasks->GetTasksUseViewNotSearch())
+    mWinApp->AppendToLog("Special option is set to use View for tasks in Low Dose even if"
+      " Search has more appropriate magnification");
 }
 
 // Outputs a short or float vector in as many lines as it takes

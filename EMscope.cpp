@@ -6464,7 +6464,7 @@ double CEMscope::GetHTValue()
   return result;
 }
 
-// Functions for dealing with FEI autoloader
+// Functions for dealing with FEI or JEOL autoloader
 // Get the status of a slot; slots are apparently numbered from 1
 BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
 {
@@ -6499,6 +6499,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
   return success;
 }
 
+// Load a cartridge to the stage
 int CEMscope::LoadCartridge(int slot)
 {
   int id, oper = LONG_OP_LOAD_CART;
@@ -6525,6 +6526,7 @@ int CEMscope::LoadCartridge(int slot)
   return (StartLongOperation(&oper, &sinceLast, 1));
 }
 
+// Unload a cartridge from the stage
 int CEMscope::UnloadCartridge(void)
 {
   int oper = LONG_OP_UNLOAD_CART;
@@ -6543,6 +6545,7 @@ int CEMscope::UnloadCartridge(void)
   return (StartLongOperation(&oper, &sinceLast, 1));
 }
 
+// Lookup which cartridge is in the stage in the JEOL table
 int CEMscope::FindCartridgeAtStage(int &id)
 {
   int ind;
@@ -9164,6 +9167,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       sLongOpDescriptions[thread] = longOpDescription[LONG_OP_HW_DARK_REF];
     } else if (thread == 0 && numScopeOps) {
       sLongOpDescriptions[thread] = "";
+      mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0) |
+        (mHasSimpleOrigin ? LONGOP_SIMPLE_ORIGIN : 0);
       for (ind = 0; ind < numScopeOps; ind++) {
         if (ind)
           sLongOpDescriptions[thread] += ", ";
@@ -9174,9 +9179,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mLongOpData[thread].numOperations = numScopeOps;
       mLongOpData[thread].JeolSD = &mJeolSD;
       mLongOpData[thread].plugFuncs = mPlugFuncs;
-      mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0) |
-        (mHasSimpleOrigin ? LONGOP_SIMPLE_ORIGIN : 0);
-      mDoNextFEGFlashHigh = false;
+       mDoNextFEGFlashHigh = false;
       mLongOpData[thread].cartInfo = &mJeolLoaderInfo;
       mLongOpData[thread].maxLoaderSlots = mMaxJeolAutoloaderSlots;
       mLongOpThreads[thread] = AfxBeginThread(LongOperationProc, &mLongOpData[thread],
