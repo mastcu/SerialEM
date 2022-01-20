@@ -1568,7 +1568,7 @@ void CTSController::NextAction(int param)
   DriftWaitParams dwParams, *dwParmP = mWinApp->mParticleTasks->GetDriftWaitParams();
   KImage *image;
   ControlSet *cset;
-  double cosRot, sinRot, rotation, fsY0, dose, angle, oldAngle;
+  double cosRot, sinRot, rotation, fsY0, angle, oldAngle;
   double specErrorX, specErrorY, specSizeX, specSizeY, pixelSize, fracThick;
   double fracErrorX, fracErrorY, shotIntensity;
   CString recordMontage = mMontaging ? "Montage" : "Record";
@@ -2566,6 +2566,9 @@ void CTSController::NextAction(int param)
       }
       mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
       mShotAngle = angle;
+
+      // Add dose in any mode if calibrated
+      mCurRecordDose = AddToDoseSum(RECORD_CONSET);
       return;
     
     // SAVE A RECORD SHOT, also adjust intensity
@@ -2653,10 +2656,8 @@ void CTSController::NextAction(int param)
       if (RestoreStageXYafterTilt() < 0)
         mScope->GetStagePosition(mStageXtoRestore, mStageYtoRestore, delFac);
 
-      // Add dose in any mode if calibrated
-      dose = AddToDoseSum(RECORD_CONSET);
-      if (dose) {
-        message2.Format("dose = %.2f e/A2  ", dose);
+      if (mCurRecordDose) {
+        message2.Format("dose = %.2f e/A2  ", mCurRecordDose);
         message += message2;
       }
 
