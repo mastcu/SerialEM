@@ -11,6 +11,7 @@
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
+#include "ChildFrm.h"
 #include "ScreenShotDialog.h"
 #include "NavHelper.h"
 #include "EMbufferManager.h"
@@ -103,6 +104,7 @@ BOOL CScreenShotDialog::OnInitDialog()
   m_sbcScaleSizesBy.SetRange(0, MAX_SCALING);
   m_sbcJpegQuality.SetRange(MIN_JPEG_QUALITY, 100);
   ParamsToDialog();
+  UpdateActiveView();
   ManageEnables();
 
   SetDefID(45678);    // Disable OK from being default button
@@ -137,8 +139,13 @@ void CScreenShotDialog::UpdateSettings()
   ManageEnables();
 }
 
-
-
+void CScreenShotDialog::UpdateActiveView()
+{
+  CString title;;
+  CChildFrame *parent = (CChildFrame *)(mWinApp->mActiveView->GetParent());
+  parent->GetWindowTextA(title);
+  SetDlgItemText(IDC_STAT_ACTIVE_VIEW, "Active window: " + title);
+}
 
 void CScreenShotDialog::OnImageScaling()
 {

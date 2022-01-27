@@ -28,6 +28,7 @@ protected:
   DECLARE_MESSAGE_MAP()
 public:
   void UpdateSettings();
+  void UpdateActiveView();
   static bool GetSnapshotError(int err, CString &report);
 
 private:
