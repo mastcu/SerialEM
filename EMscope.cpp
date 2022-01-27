@@ -979,6 +979,7 @@ int CEMscope::Initialize()
     if (JEOLscope) {
       ScopeMutexAcquire("Initialize", true);
       try {
+        mPlugFuncs->GetStageStatus();
         if (!mPlugFuncs->GetSTEMMode()) {
           int mode = mPlugFuncs->GetImagingMode();
           if (((mode == JEOL_SAMAG_MODE && sJeolIndForMagMode == JEOL_MAG1_MODE) ||
@@ -1679,6 +1680,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
             SEMMessageBox(message);
           }
           mDisconnected = true;
+          SuspendUpdate(2000);
 
       } else if (!mErrCount) {
         message = "getting scope update after " + checkpoint + " ";
@@ -1710,8 +1712,11 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   // Check if valves should be closed due to message box up
   if (sCloseValvesInterval > 0. && 
     SEMTickInterval(sCloseValvesStart) > sCloseValvesInterval) {
-    SetColumnValvesOpen(false);
-    sCloseValvesInterval = 0.;
+    if (GetColumnValvesOpen() > 0) {
+      SetColumnValvesOpen(false);
+      sCloseValvesInterval = 0.;
+    } else
+      sCloseValvesInterval = -1.;
   }
 
   // Or if the option is set to close after inactivity
