@@ -632,6 +632,7 @@ MAC_SAME_NAME_NOARG(ReportRoughEucenFailed, 0, 4, REPORTROUGHEUCENFAILED)
 MAC_SAME_NAME_ARG(RunGatanScript, 1, 0, RunGatanScript, S)
 MAC_SAME_FUNC(EchoBreakLines, 0, 4, Echo, ECHOBREAKLINES)
 MAC_SAME_NAME_ARG(NoLineWrapInMessageBox, 0, 4, NOLINEWRAPINMESSAGEBOX, i)
+MAC_SAME_NAME_NOARG(ReportRotationProblems, 0, 4, REPORTROTATIONPROBLEMS)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

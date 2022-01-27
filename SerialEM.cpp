@@ -1529,6 +1529,8 @@ BOOL CSerialEMApp::InitInstance()
     }
   }
 
+  mShiftManager->ReportFallbackRotations(!mAdministrator);
+
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)
@@ -1564,6 +1566,7 @@ BOOL CSerialEMApp::InitInstance()
   SetTitleFile("");
   if (mEnableExternalPython)
     SetEnableExternalPython(true);
+  UpdateBufferWindows();
   iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
   if (iCam >= 0)
     mMacroProcessor->Run(iCam);
@@ -1945,12 +1948,13 @@ void CSerialEMApp::RestoreViewFocus()
 // the pointer to the main view
 void CSerialEMApp::SetActiveView(CSerialEMView *inActiveView)
 {
-  
-  mActiveView = inActiveView;
+   mActiveView = inActiveView;
   if (mMainView == NULL) {
     mMainView = inActiveView;
     mMainFrame->SetDialogOffset(mMainView);   
   }
+  if (mScreenShotDialog)
+    mScreenShotDialog->UpdateActiveView();
 }
 
 // Return the rectange and dialog offset of the main frame for positioning clients
@@ -2892,7 +2896,8 @@ bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int 
 
 // And global function for accessing ThreeChoiceBox through TSMessageBox
 int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
-  CString cancelText, UINT type, int setDefault, BOOL terminate, int retval)
+  CString cancelText, UINT type, int setDefault, BOOL terminate, int retval,
+  bool noLineWrap)
 {
   CTSController *tsc = ((CSerialEMApp *)AfxGetApp())->mTSController;
   tsc->SetTCBoxYesText(yesText);
@@ -2900,6 +2905,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
   tsc->SetTCBoxCancelText(cancelText);
   tsc->SetCallFromThreeChoice(true);
   tsc->SetTCBoxDefault(setDefault);
+  tsc->SetTCBoxNoLineWrap(noLineWrap);
   return tsc->TSMessageBox(message, type, terminate, retval);
 }
 

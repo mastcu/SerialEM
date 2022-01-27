@@ -6409,6 +6409,15 @@ int CMacCmd::ReportSettingsFile(void)
   return 0;
 }
 
+// ReportRotationProblems
+int CMacCmd::ReportRotationProblems(void)
+{
+  if (!mShiftManager->ReportFallbackRotations(false))
+    mLogRpt = "There is good calibrated rotation information for magnifications "
+    "with other calibrations";
+  return 0;
+}
+
 // ListAllCalibrations
 int CMacCmd::ListAllCalibrations(void)
 {

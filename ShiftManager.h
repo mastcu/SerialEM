@@ -5,6 +5,9 @@
 #if !defined(AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_)
 #define AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_
 
+#include <set>
+#include <vector>
+
 //#include "MontageParam.h" // Added by ClassView
 #include "MagTable.h"   // Added by ClassView
 #include "EMscope.h"
@@ -259,11 +262,17 @@ private:
   int mLastAlignXTrimRef, mLastAlignYTrimRef;
   float mLastFocusForMagCal;
   int mLastApertureForMagCal;
+  bool mAnyAbsRotCal;           // FLag for there being any absolute rotation calibrations
+  std::set<int> mCamWithRotFallback;   // Set of cameras with full rotation fallbacks
+  std::vector<int> mMagsWithRotFallback[MAX_CAMERAS];
 
 public:
   void PropagateRotations(void);
+  void PropagateCalibratedRotations(int actCamToDo, int &derived);
+  void FallbackToRotationDifferences(int actCamToDo, int &derived);
   int NearestIScalMag(int inMag, int iCam, BOOL crossBorders);
-  void PickMagForFallback(int & calMag, int & regCam);
+  void PickMagForFallback(int camToDo, int & calMag, int & regCam);
+  int ReportFallbackRotations(int onlyAbs);
   void PropagatePixelSizes(void);
   double TransferPixelSize(int fromMag, int fromCam, int toMag, int toCam);
   float NearbyFilmCameraRatio(int inMag, int inCam, int derived);

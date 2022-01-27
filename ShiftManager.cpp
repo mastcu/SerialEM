@@ -21,6 +21,7 @@
 #include "Utilities\XCorr.h"
 #include "EMscope.h"
 #include "MacroProcessor.h"
+#include "LogWindow.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "TSController.h"
@@ -1894,6 +1895,7 @@ void CShiftManager::PropagatePixelSizes(void)
   CameraParameters *camP = mCamParams;
   MagTable *magT = mMagTab;
   BOOL anyCal = false;
+  mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
 
   // Clear out existing derived calibrations; see if there are any calibrated pixels
   for (iAct = 0; iAct < numCam; iAct++) {
@@ -1911,7 +1913,7 @@ void CShiftManager::PropagatePixelSizes(void)
   // If there are no direct calibrations, pick a camera and mag to set the fallback in
   derived = 1;
   if (!anyCal) {
-    PickMagForFallback(calMag, regCam);
+    PickMagForFallback(-1, calMag, regCam);
     magT[calMag].pixelSize[regCam] = camP[regCam].pixelMicrons / 
       (MagForCamera(regCam, calMag) * camP[regCam].magRatio);
     magT[calMag].pixDerived[regCam] = derived++;
@@ -2062,6 +2064,9 @@ void CShiftManager::PropagatePixelSizes(void)
       }
     }
   }
+  mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);
+  if (mWinApp->mLogWindow)
+    mWinApp->mLogWindow->FlushDeferredLines();
 }
 
 // Transfer a pixel size from one mag and camera to another via image shift calibrations
@@ -2106,14 +2111,16 @@ float CShiftManager::NearbyFilmCameraRatio(int inMag, int inCam, int derived)
 // changes in scope rotation angles
 void CShiftManager::PropagateRotations(void)
 {
-  int iAct, iCam, iMag, regCam, mag2, delInd, iDir, calMag, delta, derived, iAct2, iCam2;
-  int fromMag, toMag, numRanges, range, limlo, limhi, lowestMicro, midFilmMag = 15000;
-  double rotation;
+  int iAct, iCam, iMag, regCam, calMag, derived, iAct2, iCam2;
+  int numRanges, range, limlo, limhi, lowestMicro, midFilmMag = 15000;
   int numCam = mWinApp->GetNumReadInCameras();
   int lowestMmag = mScope->GetLowestMModeMagInd();
-  bool anyProp, anyCal = false;
+  bool anyCal = false;
   CameraParameters *camP = mCamParams;
   MagTable *magT = mMagTab;
+  int camFallbackDerived[MAX_CAMERAS];
+  mAnyAbsRotCal = false;
+  mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
 
   // Clear out existing derived calibrations; see if there are any calibrated rotations
   for (iAct = 0; iAct < numCam; iAct++) {
@@ -2121,10 +2128,10 @@ void CShiftManager::PropagateRotations(void)
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
       if (magT[iMag].rotation[iCam] < 900. && !magT[iMag].rotDerived[iCam]) {
         if (!camP[iCam].STEMcamera) {
-          if (!anyCal)
+          if (!mAnyAbsRotCal)
             SEMTrace('c', "First calibrated absolute rotation of %.2f found at mag %d "
             "for camera %d", magT[iMag].rotation[iCam], iMag, iCam);
-          anyCal = true;
+          mAnyAbsRotCal = true;
         }
       } else {
         magT[iMag].rotation[iCam] = 999.;
@@ -2135,8 +2142,8 @@ void CShiftManager::PropagateRotations(void)
 
   // If there are no direct calibrations, pick a camera and mag to set the fallback in
   derived = 1;
-  if (!anyCal) {
-    PickMagForFallback(calMag, regCam);
+  if (!mAnyAbsRotCal) {
+    PickMagForFallback(-1, calMag, regCam);
     if (camP[regCam].STEMcamera)
       magT[calMag].rotation[regCam] = 0.;
     else
@@ -2148,144 +2155,7 @@ void CShiftManager::PropagateRotations(void)
       magT[calMag].rotation[regCam], calMag, regCam);
   }
 
-  anyCal = true;
-  while (anyCal) {
-    anyCal = false;
-
-    // Propagate calibrated rotations by relative rotations within camera
-    for (iAct = 0; iAct < numCam; iAct++) {
-      iCam = mActiveCameraList[iAct];
-      mWinApp->GetNumMagRanges(iCam, numRanges, lowestMicro);
-      for (range = 0; range < numRanges; range++) {
-        mWinApp->GetMagRangeLimits(iCam, range * lowestMicro, limlo, limhi);
-        SEMTrace('c', "cam  %d range %d lo %d hi %d", iCam, range, limlo, limhi);
-        anyProp = true;
-        while (anyProp) {
-          anyProp = false;
-          for (iMag = limlo; iMag <= limhi; iMag++) {
-            if (magT[iMag].rotation[iCam] < 900.) {
-
-              // Go one step forward then backward
-              // Don't do anything if a mag is calibrated already or there is no delta
-              for (delInd = 0; delInd < 2; delInd++) {
-                iDir = 1 - 2 * delInd;
-                mag2 = iMag + iDir;
-                if (mag2 < limlo || mag2 + delInd > limhi || magT[mag2].rotation[iCam] < 
-                  900. || magT[mag2 + delInd].deltaRotation[iCam] > 900.)
-                  continue;
-                magT[mag2].rotation[iCam] = GoodAngle(magT[mag2 - iDir].rotation[iCam]
-                + iDir * magT[mag2 + delInd].deltaRotation[iCam]);
-                magT[mag2].rotDerived[iCam] = derived;
-                anyCal = true;
-                anyProp = true;
-                SEMTrace('c', "Mag %d Cam %d  Rotation by delta = %.1f, derived %d", 
-                  mag2, iCam, magT[mag2].rotation[iCam],derived);
-
-                // Skip the mag we just assigned to to avoid propagating it forward
-                if (iDir > 0)
-                  iMag++;
-              }
-            }
-          }
-        }
-
-        // Now search for and satisfy any relative rotations in the special table
-        for (iMag = limlo; iMag <= limhi; iMag++) {
-          if (magT[iMag].rotation[iCam] < 900.) {
-            for (iDir = 0; iDir < mNumRelRotations; iDir++) {
-              if (mRelRotations[iDir].camera == iCam) {
-                fromMag = mRelRotations[iDir].fromMag;
-                toMag = mRelRotations[iDir].toMag;
-                mag2 = 0;
-                if (fromMag == iMag && magT[toMag].rotation[iCam] > 900.) {
-                  mag2 = toMag;
-                  rotation = mRelRotations[iDir].rotation;
-                }
-                if (toMag == iMag && magT[fromMag].rotation[iCam] > 900.) {
-                  mag2 = fromMag;
-                  rotation = -mRelRotations[iDir].rotation;
-                }
-                if (mag2) {
-                  magT[mag2].rotation[iCam] = GoodAngle(magT[iMag].rotation[iCam]
-                  + rotation);
-                  magT[mag2].rotDerived[iCam] = derived;
-                  anyCal = true;
-                  SEMTrace('c', "Mag %d Cam %d  Rotation by special = %.1f, derived %d", 
-                    mag2, iCam, magT[mag2].rotation[iCam],derived);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    derived++;
-
-    // Propagate calibrations between mags with image shifts
-    // Skip STEM camera because 1) image shift needs to be calibrated after relative 
-    // angles are stabilized; 2) not sure of the sign
-    for (iAct = 0; iAct < numCam; iAct++) {
-      iCam = mActiveCameraList[iAct];
-      if (camP[iCam].STEMcamera)
-        continue;
-      for (iMag = 1; iMag < MAX_MAGS; iMag++) {
-        if (!magT[iMag].matIS[iCam].xpx)
-          continue;
-        for (delta = 1; delta < MAX_MAGS && magT[iMag].rotation[iCam] > 900.; 
-          delta++) {
-            for (iDir = -1; iDir <= 1; iDir += 2) {
-              mag2 = iMag + delta * iDir;
-
-              // If the other mag has a calibrated rotation at a lower level of 
-              // derivation and it has an image shift cal that can transfer, get the 
-              // rotation
-              if (mag2 >= 1 && mag2 < MAX_MAGS && magT[mag2].rotDerived[iCam] < 
-                derived && magT[mag2].matIS[iCam].xpx && CanTransferIS(mag2, iMag)) {
-                  magT[iMag].rotation[iCam] = TransferImageRotation(
-                    magT[mag2].rotation[iCam],iCam, mag2, iCam, iMag);
-                  magT[iMag].rotDerived[iCam] = derived;
-                  anyCal = true;
-                  SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by IS transfer from mag"
-                    " %d, derived %d", iMag, iCam, magT[iMag].rotation[iCam], mag2, 
-                    derived);
-                  break;
-              }
-            }
-        }
-      }
-    }
-    derived++;
-
-    // Propagate calibrations between cameras at same mag by image shift cal
-    // Skip STEM cameras for this
-    for (iAct = 0; iAct < numCam; iAct++) {
-      iCam = mActiveCameraList[iAct];
-      if (camP[iCam].STEMcamera)
-        continue;
-      for (iMag = 1; iMag < MAX_MAGS; iMag++) {
-        if (!magT[iMag].matIS[iCam].xpx || magT[iMag].rotation[iCam] < 900.)
-          continue;
-        for (iAct2 = 0; iAct2 < numCam; iAct2++) {
-          iCam2 = mActiveCameraList[iAct2];
-
-          // Require calibrated rotation at a lower level of derivation than the
-          // preceding IS transfer, and require IS cal
-          if (iCam2 != iCam && magT[iMag].rotDerived[iCam2] < derived - 1 &&
-            magT[iMag].matIS[iCam2].xpx && !camP[iCam2].STEMcamera) {
-              magT[iMag].rotation[iCam] = TransferImageRotation(
-                magT[iMag].rotation[iCam2],iCam2, iMag, iCam, iMag);
-              magT[iMag].rotDerived[iCam] = derived;
-              anyCal = true;
-              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by IS transfer from Cam %d"
-                ", derived %d", iMag, iCam, magT[iMag].rotation[iCam], iCam2, 
-                 derived);
-              break;
-            }
-        }
-      }
-    }
-    derived++;
-  }
+  PropagateCalibratedRotations(-1, derived);
 
   // For a camera with no calibrations yet, take one angle from another camera by
   // difference in extra rotation
@@ -2335,8 +2205,227 @@ void CShiftManager::PropagateRotations(void)
     }
   }
   derived++;
+  for (iCam = 0; iCam < MAX_CAMERAS; iCam++)
+    camFallbackDerived[iCam] = derived;
 
   // Now look at each uncalibrated one and find nearest calibrated mag
+  FallbackToRotationDifferences(-1, derived);
+  derived += 2;
+
+  // Now find uncalibrated cameras and pick an individual fallback
+  mCamWithRotFallback.clear();
+  for (iAct = 0; iAct < numCam; iAct++) {
+    iCam = mActiveCameraList[iAct];
+    anyCal = false;
+    for (iMag = 1; iMag < MAX_MAGS; iMag++) {
+      if (magT[iMag].rotation[iCam] < 900. && MagForCamera(iCam, iMag)) {
+        anyCal = true;
+        break;
+      }
+    }
+    if (!anyCal) {
+      mCamWithRotFallback.insert(iCam);
+      PickMagForFallback(iAct, calMag, regCam);
+      if (camP[regCam].STEMcamera)
+        magT[calMag].rotation[regCam] = 0.;
+      else
+        magT[calMag].rotation[regCam] = GoodAngle((camP[regCam].GIF ?
+          magT[calMag].EFTEMtecnaiRotation : magT[calMag].tecnaiRotation) +
+          mGlobalExtraRotation + camP[regCam].extraRotation);
+      magT[calMag].rotDerived[regCam] = derived++;
+      SEMTrace('c', "Set rotation fallback %f for mag %d in camera %d",
+        magT[calMag].rotation[regCam], calMag, regCam);
+
+      // Rerun the propagations - the fallback should cover it completely
+      PropagateCalibratedRotations(iAct, derived);
+      camFallbackDerived[iCam] = derived;
+      FallbackToRotationDifferences(iAct, derived);
+      derived++;
+    }
+
+  }
+  
+  // Make lists of mags relying on nominal rotation differences for other cameras
+  for (iAct = 0; iAct < numCam; iAct++) {
+    iCam = mActiveCameraList[iAct];
+    mMagsWithRotFallback[iCam].clear();
+    for (iMag = 1; iMag < MAX_MAGS; iMag++) {
+      if (magT[iMag].rotDerived[iCam] >= camFallbackDerived[iCam] &&
+        (!magT[iMag].pixDerived[iCam] || magT[iMag].matIS[iCam].xpx != 0.))
+        mMagsWithRotFallback[iCam].push_back(MagForCamera(iCam, iMag));
+    }
+  }
+  mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);
+  if (mWinApp->mLogWindow)
+    mWinApp->mLogWindow->FlushDeferredLines();
+}
+
+// Spreads rotation information via calibrated relative rotation or by IS transfer
+void CShiftManager::PropagateCalibratedRotations(int actCamToDo, int & derived)
+{
+  int iAct, iCam, iMag, mag2, delInd, iDir, delta, iAct2, iCam2;
+  int fromMag, toMag, numRanges, range, limlo, limhi, lowestMicro;
+  double rotation;
+  int numCam = mWinApp->GetNumReadInCameras();
+  bool anyProp, anyCal = false;
+  CameraParameters *camP = mCamParams;
+  MagTable *magT = mMagTab;
+  int actStart = actCamToDo < 0 ? 0 : actCamToDo;
+  int actEnd = actCamToDo < 0 ? numCam - 1 : actCamToDo;
+
+  anyCal = true;
+  while (anyCal) {
+    anyCal = false;
+
+    // Propagate calibrated rotations by relative rotations within camera
+    for (iAct = actStart; iAct <= actEnd; iAct++) {
+      iCam = mActiveCameraList[iAct];
+      mWinApp->GetNumMagRanges(iCam, numRanges, lowestMicro);
+      for (range = 0; range < numRanges; range++) {
+        mWinApp->GetMagRangeLimits(iCam, range * lowestMicro, limlo, limhi);
+        SEMTrace('c', "cam  %d range %d lo %d hi %d", iCam, range, limlo, limhi);
+        anyProp = true;
+        while (anyProp) {
+          anyProp = false;
+          for (iMag = limlo; iMag <= limhi; iMag++) {
+            if (magT[iMag].rotation[iCam] < 900.) {
+
+              // Go one step forward then backward
+              // Don't do anything if a mag is calibrated already or there is no delta
+              for (delInd = 0; delInd < 2; delInd++) {
+                iDir = 1 - 2 * delInd;
+                mag2 = iMag + iDir;
+                if (mag2 < limlo || mag2 + delInd > limhi || magT[mag2].rotation[iCam] <
+                  900. || magT[mag2 + delInd].deltaRotation[iCam] > 900.)
+                  continue;
+                magT[mag2].rotation[iCam] = GoodAngle(magT[mag2 - iDir].rotation[iCam]
+                  + iDir * magT[mag2 + delInd].deltaRotation[iCam]);
+                magT[mag2].rotDerived[iCam] = derived;
+                anyCal = true;
+                anyProp = true;
+                SEMTrace('c', "Mag %d Cam %d  Rotation by delta = %.1f, derived %d",
+                  mag2, iCam, magT[mag2].rotation[iCam], derived);
+
+                // Skip the mag we just assigned to to avoid propagating it forward
+                if (iDir > 0)
+                  iMag++;
+              }
+            }
+          }
+        }
+
+        // Now search for and satisfy any relative rotations in the special table
+        for (iMag = limlo; iMag <= limhi; iMag++) {
+          if (magT[iMag].rotation[iCam] < 900.) {
+            for (iDir = 0; iDir < mNumRelRotations; iDir++) {
+              if (mRelRotations[iDir].camera == iCam) {
+                fromMag = mRelRotations[iDir].fromMag;
+                toMag = mRelRotations[iDir].toMag;
+                mag2 = 0;
+                if (fromMag == iMag && magT[toMag].rotation[iCam] > 900.) {
+                  mag2 = toMag;
+                  rotation = mRelRotations[iDir].rotation;
+                }
+                if (toMag == iMag && magT[fromMag].rotation[iCam] > 900.) {
+                  mag2 = fromMag;
+                  rotation = -mRelRotations[iDir].rotation;
+                }
+                if (mag2) {
+                  magT[mag2].rotation[iCam] = GoodAngle(magT[iMag].rotation[iCam]
+                    + rotation);
+                  magT[mag2].rotDerived[iCam] = derived;
+                  anyCal = true;
+                  SEMTrace('c', "Mag %d Cam %d  Rotation by special = %.1f, derived %d",
+                    mag2, iCam, magT[mag2].rotation[iCam], derived);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    derived++;
+
+    // Propagate calibrations between mags with image shifts
+    // Skip STEM camera because 1) image shift needs to be calibrated after relative 
+    // angles are stabilized; 2) not sure of the sign
+    for (iAct = actStart; iAct <= actEnd; iAct++) {
+      iCam = mActiveCameraList[iAct];
+      if (camP[iCam].STEMcamera)
+        continue;
+      for (iMag = 1; iMag < MAX_MAGS; iMag++) {
+        if (!magT[iMag].matIS[iCam].xpx)
+          continue;
+        for (delta = 1; delta < MAX_MAGS && magT[iMag].rotation[iCam] > 900.;
+          delta++) {
+          for (iDir = -1; iDir <= 1; iDir += 2) {
+            mag2 = iMag + delta * iDir;
+
+            // If the other mag has a calibrated rotation at a lower level of 
+            // derivation and it has an image shift cal that can transfer, get the 
+            // rotation
+            if (mag2 >= 1 && mag2 < MAX_MAGS && magT[mag2].rotDerived[iCam] <
+              derived && magT[mag2].matIS[iCam].xpx && CanTransferIS(mag2, iMag)) {
+              magT[iMag].rotation[iCam] = TransferImageRotation(
+                magT[mag2].rotation[iCam], iCam, mag2, iCam, iMag);
+              magT[iMag].rotDerived[iCam] = derived;
+              anyCal = true;
+              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by IS transfer from mag"
+                " %d, derived %d", iMag, iCam, magT[iMag].rotation[iCam], mag2,
+                derived);
+              break;
+            }
+          }
+        }
+      }
+    }
+    derived++;
+
+    // Propagate calibrations between cameras at same mag by image shift cal
+    // Skip STEM cameras for this
+    if (actCamToDo < 0) {
+      for (iAct = 0; iAct < numCam; iAct++) {
+        iCam = mActiveCameraList[iAct];
+        if (camP[iCam].STEMcamera)
+          continue;
+        for (iMag = 1; iMag < MAX_MAGS; iMag++) {
+          if (!magT[iMag].matIS[iCam].xpx || magT[iMag].rotation[iCam] < 900.)
+            continue;
+          for (iAct2 = 0; iAct2 < numCam; iAct2++) {
+            iCam2 = mActiveCameraList[iAct2];
+
+            // Require calibrated rotation at a lower level of derivation than the
+            // preceding IS transfer, and require IS cal
+            if (iCam2 != iCam && magT[iMag].rotDerived[iCam2] < derived - 1 &&
+              magT[iMag].matIS[iCam2].xpx && !camP[iCam2].STEMcamera) {
+              magT[iMag].rotation[iCam] = TransferImageRotation(
+                magT[iMag].rotation[iCam2], iCam2, iMag, iCam, iMag);
+              magT[iMag].rotDerived[iCam] = derived;
+              anyCal = true;
+              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by IS transfer from Cam %d"
+                ", derived %d", iMag, iCam, magT[iMag].rotation[iCam], iCam2,
+                derived);
+              break;
+            }
+          }
+        }
+      }
+    }
+    derived++;
+  }
+}
+
+// For remaining mags, uses nominal differences in mag table as fallback
+void CShiftManager::FallbackToRotationDifferences(int actCamToDo, int & derived)
+{
+  int iAct, iCam, iMag, mag2, iDir, delta, iAct2, iCam2;
+  int numRanges, range, limlo, limhi, lowestMicro;
+  int numCam = mWinApp->GetNumReadInCameras();
+  CameraParameters *camP = mCamParams;
+  MagTable *magT = mMagTab;
+  int actStart = actCamToDo < 0 ? 0 : actCamToDo;
+  int actEnd = actCamToDo < 0 ? numCam - 1 : actCamToDo;
+
   for (iAct = 0; iAct < numCam; iAct++) {
     iCam = mActiveCameraList[iAct];
     mWinApp->GetNumMagRanges(iCam, numRanges, lowestMicro);
@@ -2357,15 +2446,15 @@ void CShiftManager::PropagateRotations(void)
                 iCam2 = mActiveCameraList[iAct2];
                 if (iCam2 != iCam && !camP[iCam2].STEMcamera &&
                   (camP[iCam].GIF ? 1 : 0) == (camP[iCam2].GIF ? 1 : 0) &&
-                  magT[mag2].rotDerived[iCam2] < derived && 
+                  magT[mag2].rotDerived[iCam2] < derived &&
                   magT[iMag].rotDerived[iCam2] < derived) {
-                    magT[iMag].rotation[iCam] = GoodAngle(magT[mag2].rotation[iCam] +
-                      magT[iMag].rotation[iCam2] - magT[mag2].rotation[iCam2]);
-                    magT[iMag].rotDerived[iCam] = derived;
-                    SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by rotation difference"
-                      " to mag %d in cam %d", iMag, iCam, magT[iMag].rotation[iCam], mag2, 
-                      iCam2);
-                    break;
+                  magT[iMag].rotation[iCam] = GoodAngle(magT[mag2].rotation[iCam] +
+                    magT[iMag].rotation[iCam2] - magT[mag2].rotation[iCam2]);
+                  magT[iMag].rotDerived[iCam] = derived;
+                  SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by rotation difference"
+                    " to mag %d in cam %d", iMag, iCam, magT[iMag].rotation[iCam], mag2,
+                    iCam2);
+                  break;
                 }
               }
 
@@ -2375,7 +2464,7 @@ void CShiftManager::PropagateRotations(void)
                   magT[iMag].rotation[iCam] = magT[mag2].rotation[iCam];
                 else
                   magT[iMag].rotation[iCam] = GoodAngle(magT[mag2].rotation[iCam] +
-                    (camP[iCam].GIF ? 
+                  (camP[iCam].GIF ?
                     (magT[iMag].EFTEMtecnaiRotation - magT[mag2].EFTEMtecnaiRotation)
                     : (magT[iMag].tecnaiRotation - magT[mag2].tecnaiRotation)));
                 magT[iMag].rotDerived[iCam] = derived + 1;
@@ -2390,29 +2479,13 @@ void CShiftManager::PropagateRotations(void)
       }
     }
   }
-  derived += 2;
-
-  // Now find uncalibrated cameras and set up complete fallback
-  for (iAct = 0; iAct < numCam; iAct++) {
-    iCam = mActiveCameraList[iAct];
-    for (iMag = 1; iMag < MAX_MAGS; iMag++) {
-      if (magT[iMag].rotation[iCam] > 900. && MagForCamera(iCam, iMag)) {
-        magT[iMag].rotation[iCam] = GoodAngle((camP[iCam].GIF ?
-          magT[iMag].EFTEMtecnaiRotation : magT[iMag].tecnaiRotation) +
-          mGlobalExtraRotation + camP[iCam].extraRotation);
-         magT[iMag].rotDerived[iCam] = derived;
-         SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by fallback",
-           iMag, iCam, magT[iMag].rotation[iCam]);
-      }
-    }
-  }
-
 }
+
 
 // Finds a mag for assigning a fallback pixel size or rotation angle to that is
 // in the middle of the image shift calibrated range (in M mode) for a nonGIF
 // camera if possible.
-void CShiftManager::PickMagForFallback(int & calMag, int & regCam)
+void CShiftManager::PickMagForFallback(int actCamToDo, int & calMag, int & regCam)
 {
   int iAct, iCam, iMag, gifCam, midMag, minWithIS, maxWithIS, gifMin, gifMax, regMin;
   int regMax, stemMin, stemMax, limlo, limhi, numRanges, lowestMicro, range, stemCam = -1;
@@ -2420,9 +2493,11 @@ void CShiftManager::PickMagForFallback(int & calMag, int & regCam)
   int numCam = mWinApp->GetNumReadInCameras();
   int lowestMmag = mScope->GetLowestMModeMagInd();
   BOOL anyCal = false;
+  int actStart = actCamToDo < 0 ? 0 : actCamToDo;
+  int actEnd = actCamToDo < 0 ? numCam - 1 : actCamToDo;
   gifCam = -1;
   regCam = -1;
-  for (iAct = 0; iAct < numCam; iAct++) {
+  for (iAct = actStart; iAct <= actEnd; iAct++) {
     iCam = mActiveCameraList[iAct];
 
     // Find min and max mag with IS cal and closest mag to mid-range mag
@@ -2505,6 +2580,56 @@ void CShiftManager::PickMagForFallback(int & calMag, int & regCam)
   calMag = NearestIScalMag(iMag, regCam, true);
   if (calMag < 0)
     calMag = iMag;
+}
+
+// Prints the warnings about problems with rotations
+int CShiftManager::ReportFallbackRotations(int onlyAbs)
+{
+  int iAct, iCam, ind, retval = 0;
+  CString str, str2;
+  if (!mAnyAbsRotCal || mCamWithRotFallback.size() > 0) {
+    str2 = "WARNING: There is no calibrated absolute rotation information for ";
+    if (!mAnyAbsRotCal)
+      str2 += "any camera";
+    else {
+      ind = 0;
+      for (iAct = 0; iAct < mWinApp->GetNumActiveCameras(); iAct++) {
+        iCam = mActiveCameraList[iAct];
+        if (mCamWithRotFallback.count(iCam)) {
+          if (ind++)
+            str2 += " or ";
+          str2 += mCamParams[iCam].name;
+        }
+      }
+    }
+    mWinApp->AppendToLog(str2 + ".\r\n  All rotations will rely on GlobalExtraRotation "
+      "and ExtraRotation properties", LOG_SWALLOW_IF_CLOSED);
+    retval = 1;
+  }
+  if (onlyAbs)
+    return retval;
+  for (iAct = 0; iAct < mWinApp->GetNumActiveCameras(); iAct++) {
+    iCam = mActiveCameraList[iAct];
+    if (mMagsWithRotFallback[iCam].size() > 0) {
+      str = "   ";
+      mWinApp->AppendToLog("WARNING: camera " + mCamParams[iCam].name + " is missing some"
+        " information on calibrated relative rotations.\r\n  Relative rotations will rely"
+        " on differences between nominal mag table rotations for mags:",
+        LOG_SWALLOW_IF_CLOSED);
+      for (ind = 0; ind < (int)mMagsWithRotFallback[iCam].size(); ind++) {
+        str2.Format(" %d", mMagsWithRotFallback[iCam][ind]);
+        str += str2;
+        if (str.GetLength() > 90) {
+          mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
+          str = "   ";
+        }
+      }
+      if (str.GetLength() > 4)
+        mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
+      retval = 1;
+    }
+  }
+  return retval;
 }
 
 // Use image shift matrices to transfer rotation angle from one mag to another
