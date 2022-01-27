@@ -1,6 +1,6 @@
 #pragma once
 #define MAX_SOCK_CHAN 2
-#define MESS_ERR_BUFF_SIZE 240
+#define MESS_ERR_BUFF_SIZE 320
 
 #include <winsock.h>
 //#include "WinDef.h"
@@ -72,8 +72,8 @@ class CBaseServer
    static int DoProcessCommand(int sockInd, int numExpected);
   static void DebugToLog(const char *message);
   static void EitherToLog(const char *prefix, const char *message, bool saveErr = false);
-  static char mErrorBuf[MESS_ERR_BUFF_SIZE];
-  static char mMessageBuf[MAX_SOCK_CHAN][MESS_ERR_BUFF_SIZE];
+  static char mErrorBuf[MESS_ERR_BUFF_SIZE + 1];
+  static char mMessageBuf[MAX_SOCK_CHAN][MESS_ERR_BUFF_SIZE + 1];
   
   static int StartSocket(int sockInd);
   static void ShutdownSocket(int sockInd);

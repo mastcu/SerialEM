@@ -33,8 +33,8 @@ HANDLE CBaseServer::mHSocketThread[MAX_SOCK_CHAN];
 int CBaseServer::mStartupError[MAX_SOCK_CHAN];
 int CBaseServer::mLastWSAerror[MAX_SOCK_CHAN];
 bool CBaseServer::mCloseForExit[MAX_SOCK_CHAN];
-char CBaseServer::mMessageBuf[MAX_SOCK_CHAN][MESS_ERR_BUFF_SIZE];
-char CBaseServer::mErrorBuf[MESS_ERR_BUFF_SIZE] = {0x00};
+char CBaseServer::mMessageBuf[MAX_SOCK_CHAN][MESS_ERR_BUFF_SIZE + 1];
+char CBaseServer::mErrorBuf[MESS_ERR_BUFF_SIZE + 1] = {0x00};
 int CBaseServer::mChunkSize = 16810000;     // Tests indicated 16777216 was optimal size
 int CBaseServer::mHandshakeCode;
 int CBaseServer::mDebugVal = 1;
@@ -58,8 +58,10 @@ CBaseServer::CBaseServer()
     mArgsBuffer[i] = NULL;
     mArgBufSize[i] = 0;
     mMessageBuf[i][0] = 0x00;
+    mMessageBuf[i][MESS_ERR_BUFF_SIZE] = 0x00;
     mHClient[i] = INVALID_SOCKET;
   }
+  mErrorBuf[MESS_ERR_BUFF_SIZE] = 0x00;
 }
 
 void CBaseServer::ErrorToLog(const char *message)
@@ -209,7 +211,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
   // Set the value to indicate we are through all the startup
   mStartupError[sockInd] = 0;
 
-  sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+  _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
     "Listening for connections on socket %d  port %d", (int)mHListener[sockInd], 
     (int)mPort[sockInd]);
   DebugToLog(mMessageBuf[sockInd]);
@@ -230,7 +232,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
       if (err < 0 && !mCloseForExit[sockInd]) {
         mLastWSAerror[sockInd] = WSAGetLastError();
         mStartupError[sockInd] = 7;
-        sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+        _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
           "WSA Error %d on select command", mLastWSAerror[sockInd]);
         ErrorToLog(mMessageBuf[sockInd]);
       }
@@ -243,7 +245,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
       continue;
 
     if (GetDebugVal() > 1) {
-      sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+      _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
         "Select returned with Ready channel on port %d: listener %d client %d", 
         mPort[sockInd], FD_ISSET(hListener, &readFds), 
         (mHClient[sockInd] != INVALID_SOCKET && 
@@ -277,7 +279,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
 
         if (!FinishGettingBuffer(sockInd, numBytes, numExpected)) {
           if (GetDebugVal() > 1) {
-            sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+            _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
               "Got %d bytes via recv on socket %d", numExpected, (int)mHClient[sockInd]);
             DebugToLog(mMessageBuf[sockInd]);
           }
@@ -293,11 +295,11 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
       CloseClient(sockInd);
       mHClient[sockInd] = accept(hListener, NULL, NULL);
       if (mHClient[sockInd] == INVALID_SOCKET) {
-        sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+        _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
           "accept connection from ready client on port %d", mPort[sockInd]);
         ReportErrorAndClose(sockInd, SOCKET_ERROR, mMessageBuf[sockInd]);
       } else {
-        sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+        _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
           "Accepted connection from client program %d  ind %d", mPort[sockInd], sockInd);
         EitherToLog("", mMessageBuf[sockInd]);
       }
@@ -312,7 +314,7 @@ void CBaseServer::CloseClient(int sockInd)
 {
   if (mHClient[sockInd] == INVALID_SOCKET)
     return;
-  sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+  _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
     "Closing connection to client via socket %d", (int)mHClient[sockInd]);
   if (!mCloseForExit[sockInd])
     EitherToLog("", mMessageBuf[sockInd]);
@@ -364,7 +366,7 @@ int CBaseServer::PrepareCommand(int sockInd, int numBytes, ArgDescriptor *funcTa
   while (funcTable[ind].funcCode >= 0 && funcTable[ind].funcCode != funcCode)
     ind++;
   if (funcTable[ind].funcCode < 0) {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Function code not found: %d%s",
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Function code not found: %d%s",
       funcCode, upgradeMess);
     ErrorToLog(mMessageBuf[sockInd]);
     SendArgsBack(sockInd, -1);
@@ -383,7 +385,7 @@ int CBaseServer::PrepareCommand(int sockInd, int numBytes, ArgDescriptor *funcTa
   needed = sizeof(int) + mNumLongRecv[sockInd] * sizeof(long) +
     mNumBoolRecv[sockInd] * sizeof(BOOL) + mNumDblRecv[sockInd] * sizeof(double);
   if (needed > numBytes) {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Command %d  %s not long enough:"
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Command %d  %s not long enough:"
       " needed = %d (4 + %d x 4 + %d x 4 + %d x 8)  numBytes = %d", funcCode, 
       funcTable[ind].label, needed, mNumLongRecv[sockInd], mNumBoolRecv[sockInd], 
       mNumDblRecv[sockInd], numBytes);
@@ -400,7 +402,7 @@ int CBaseServer::PrepareCommand(int sockInd, int numBytes, ArgDescriptor *funcTa
     needAdd = mLongArgs[sockInd][mNumLongRecv[sockInd] - 1] * sizeof(long);
   needed += needAdd;
   if (needed != numBytes) {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Command %d  %s wrong length:"
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Command %d  %s wrong length:"
       " needed = %d (4 + %d x 4 + %d x 4 + %d " "x 8 + %d) numBytes = %d", funcCode, 
       funcTable[ind].label, needed, mNumLongRecv[sockInd], mNumBoolRecv[sockInd], 
       mNumDblRecv[sockInd], needAdd, numBytes);
@@ -409,7 +411,7 @@ int CBaseServer::PrepareCommand(int sockInd, int numBytes, ArgDescriptor *funcTa
     return 1;
   }
   if (GetDebugVal() > 1) {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Processing command %d  %s", 
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Processing command %d  %s", 
       funcCode, funcTable[ind].label);
     DebugToLog(mMessageBuf[sockInd]);
   }
@@ -423,7 +425,7 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
   int numTotalSent = 0;
   int numToSend, numSent;
   if (GetDebugVal() > 1) {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "In SendBuffer, socket %d, "
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "In SendBuffer, socket %d, "
       "sending %d bytes", (int)mHClient[sockInd], numBytes);
     DebugToLog(mMessageBuf[sockInd]);
   }
@@ -432,7 +434,7 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
     if (numToSend > mChunkSize)
       numToSend = mChunkSize;
     if (GetDebugVal() > 1) {
-      sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Going to send %d bytes to "
+      _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Going to send %d bytes to "
       "socket %d", numToSend, (int)mHClient[sockInd]);
       DebugToLog(mMessageBuf[sockInd]);
     }
@@ -451,7 +453,7 @@ void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *messa
 {
   if (retval == SOCKET_ERROR || !retval) {
     mLastWSAerror[sockInd] = WSAGetLastError();
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "WSA Error %d on call to %s", 
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "WSA Error %d on call to %s", 
       mLastWSAerror[sockInd], message);
 
     // Connections from remote machine (or at least from Linux) close gracefully and
@@ -462,7 +464,7 @@ void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *messa
     } else
       ErrorToLog(mMessageBuf[sockInd]);
   } else {
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "retval %d on call to %s", 
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "retval %d on call to %s", 
       retval, message);
     ErrorToLog(mMessageBuf[sockInd]);
   }
@@ -480,7 +482,7 @@ void CBaseServer::CloseOnExitOrSelectError(int sockInd, int err)
   if (err < 0) {
     mLastWSAerror[sockInd] = WSAGetLastError();
     mStartupError[sockInd] = 7;
-    sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
       "WSA Error %d on select command", mLastWSAerror[sockInd]);
     ErrorToLog(mMessageBuf[sockInd]);
   }
@@ -551,7 +553,7 @@ void CBaseServer::SendImageBack(int sockInd, void *imArray, int imSize, int indC
   numChunks = (imSize + mSuperChunkSize - 1) / mSuperChunkSize;
   mLongArgs[sockInd][indChunks] = numChunks;
   err = SendArgsBack(sockInd, 0);
-  sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "err sending args %d,"
+  _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "err sending args %d,"
     " sending image %d in %d chunks", err, imSize, numChunks);
   DebugToLog(mMessageBuf[sockInd]);
   if (!err) {
@@ -577,7 +579,7 @@ int CBaseServer::ReceiveImage(int sockInd, char *imArray, int numBytes, int numC
   int err, chunkSize, numToGet, chunk, totalRecv = 0;
   double startTicks;
   err = SendArgsBack(sockInd, 0);
-  sprintf_s(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "err sending args back %d,"
+  _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "err sending args back %d,"
     " receiving image %d in %d chunks", err, numBytes, numChunks);
   DebugToLog(mMessageBuf[sockInd]);
   if (err)
