@@ -194,6 +194,7 @@ CCameraController::CCameraController()
   mInsertThread = NULL;
   mAcquireThread = NULL;
   mEnsureThread = NULL;
+  mScriptThread = NULL;
   ClearOneShotFlags();
   mLastConSet = -1;
   mUseCount = 1;
@@ -546,6 +547,8 @@ void CCameraController::KillUpdateTimer()
   if (mFilterUpdateID)
     ::KillTimer(NULL, mFilterUpdateID);
   mFilterUpdateID = 0;
+  if (mScriptThread)
+    UtilThreadCleanup(&mScriptThread);
 
   //Uninit any DE cameras that were initialized to begin with.
   // DNM: Let the destructor uninitialize it once
@@ -1847,6 +1850,10 @@ void CCameraController::StopCapture(int ifNow)
   if (ifNow > 0) {
     mHalting = true;
     mTD.FrameTSstopOnCamReturn = -1;
+    if (mScriptThread && mTimeoutForScriptThread <= 0) {
+      UtilThreadCleanup(&mScriptThread);
+      ScriptDone(0);
+    }
   }
   
   // DNM: call the DE camera only if it is the current camera	
@@ -1881,7 +1888,7 @@ BOOL CCameraController::CameraBusy()
 {
   return mRaisingScreen || mInserting || mSettling >= 0 || mAcquiring || mEnsuringDark ||
    mWaitingForStacking > 0 || mStartedFalconAlign || mStartedExtraForDEalign ||
-   mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
+   mScriptThread != NULL || mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
 }
 
 int CCameraController::GetServerFramesLeft()
@@ -2517,7 +2524,8 @@ int CCameraController::ThreadBusy()
     return cam->AcquireBusy();
   if (cam->GetWaitingForStacking() > 0)
     return winApp->mFalconHelper->GetStackingFrames() ? 1 : 0;
-
+  if (cam->RunningScript())
+    return cam->ScriptBusy();
   return 0;
 }
 
@@ -9803,6 +9811,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mParam->K2Type || (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam)) ||
         (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)))
         extra->mReadMode = lastConSetp->K2ReadMode;
+      if (mParam->K2Type)
+        extra->mRotationAndFlip = mParam->rotationFlip;
       if (CanK3DoCorrDblSamp(mParam))
         extra->mCorrDblSampMode = mUseK3CorrDblSamp ? 1 : 0;
       extra->mPixel = pixelSize;
@@ -11666,6 +11676,94 @@ void CCameraController::ReportOnSizeCheck(int paramInd, int xsize, int ysize)
   }
 }
 
+/*
+ * Routines for running script in DM on thread
+ */
+
+// Convert the string and start the thread
+int CCameraController::RunScriptOnThread(CString &script, int timeoutSec)
+{
+  if (!mParam->GatanCam)
+    return 1;
+  mITD.DMindex = CAMP_DM_INDEX(mParam);
+  mITD.strSize = script.GetLength() / 4 + 1;
+  mITD.scriptStr = new long[mITD.strSize];
+  strcpy((char *)mITD.scriptStr, (LPCTSTR)script);
+  mScriptThread = AfxBeginThread(ScriptProc, &mITD, THREAD_PRIORITY_NORMAL, 0, 
+    CREATE_SUSPENDED);
+  mScriptThread->m_bAutoDelete = false;
+  mScriptThread->ResumeThread();
+  mTimeoutForScriptThread = B3DMAX(0, 1000 * timeoutSec);
+  mWinApp->AddIdleTask(ThreadBusy, ScriptDone, ScriptError, 0, mTimeoutForScriptThread);
+  mWinApp->SetStatusText(SIMPLE_PANE, "RUNNING DM SCRIPT");
+  mWinApp->UpdateBufferWindows();
+
+  return 0;
+}
+
+// Run the script and svave return value and cleanup string array
+UINT CCameraController::ScriptProc(LPVOID pParam)
+{
+  InsertThreadData *itd = (InsertThreadData *)pParam;
+  IDMCamera *pGatan;
+  HRESULT hr = S_OK;
+  int retval = 0;
+  if (itd->DMindex == COM_IND) {
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    CreateDMCamera(pGatan);
+    if (SEMTestHResult(hr, " getting second instance of camera for updating hardware"
+      " dark ref"))
+      retval = 1;
+  }
+  if (!retval) {
+    try {
+      CallDMIndCamera(itd->DMindex, pGatan, itd->td->amtCam,
+        ExecuteScript(itd->strSize, itd->scriptStr, 1, &itd->scriptRetval));
+    }
+    catch (_com_error E) {
+      SEMReportCOMError(E, _T("Error running script on thread "));
+      retval = 1;
+    }
+    if (itd->DMindex == COM_IND)
+      pGatan->Release();
+  }
+  if (itd->DMindex == COM_IND)
+    CoUninitialize();
+  delete[] itd->scriptStr;
+  return retval;
+}
+
+int CCameraController::ScriptBusy()
+{
+  return UtilThreadBusy(&mScriptThread);
+}
+
+// Cleanup: Kill and cleanup thread if there is no timeout
+void CCameraController::ScriptCleanup(int error)
+{
+  if (error)
+    mWinApp->ErrorOccurred(error);
+  if (error == IDLE_TIMEOUT_ERROR) {
+    SEMMessageBox(_T("Timeout running a script in DM for SerialEM script"));
+    if (mScriptThread)
+      UtilThreadCleanup(&mScriptThread);
+  }
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mWinApp->UpdateBufferWindows();
+}
+
+void CCameraController::ScriptError(int error)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  winApp->mCamera->ScriptCleanup(error);
+}
+
+void CCameraController::ScriptDone(int param)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  winApp->mCamera->ScriptCleanup(0);
+}
+
 // Starting call for updating the K2 hardware dark reference if it has not been done in
 // a time longer than the interval, or unconditionally if the time is 0, or simply to 
 // set the time that it was done if the argument is < 0
@@ -11764,7 +11862,7 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
 void CCameraController::CheckAndFreeK2References(bool unconditionally)
 {
   int which = 0, now, dmInd;
-  HRESULT hr = S_OK;
+  HRESULT hr = S_OK;  
   if (CameraBusy() || (mK2GainRefTimeStamp[0][0] < 0 && mK2GainRefTimeStamp[0][1] < 0 &&
     mK2GainRefTimeStamp[1][0] < 0 && mK2GainRefTimeStamp[1][1] < 0))
     return;

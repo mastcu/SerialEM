@@ -332,6 +332,9 @@ struct InsertThreadData {
   BOOL insert;                // flag to insert rather than retract
   DWORD delay;                // delay time, msec
   float exposure;             // Exposure time for K3 hardware dark reference
+  long *scriptStr;            // Pointer to copy of script to run
+  long strSize;               // Size of script string
+  double scriptRetval;        // Return value from script
   CameraThreadData *td;
 };
 
@@ -596,6 +599,8 @@ public:
   void ChangePreventToggle(int incr)
   {mPreventUserToggle = (mPreventUserToggle + incr > 0) ? mPreventUserToggle + incr : 0;};
   BOOL Raising() {return mRaisingScreen != 0;};
+  bool RunningScript() { return mScriptThread != NULL; };
+  double GetScriptReturnVal() {return mITD.scriptRetval; };
   BOOL Inserting() {return mInserting;};
   BOOL EnsuringDark() {return mEnsuringDark;};
   BOOL Acquiring() {return mAcquiring;};
@@ -629,6 +634,7 @@ public:
   CWinThread *mInsertThread;
   CWinThread *mAcquireThread;
   CWinThread *mEnsureThread;
+  CWinThread *mScriptThread;
   ControlSet *mConSetsp;
   ControlSet *mCamConSets;
   CameraParameters *mParam;
@@ -1003,6 +1009,7 @@ public:
   float mDoseAdjustmentFactor;   // Adjustment factor set from scripting
   int mNumFiltCheckFailures;     // Number of times filter check has failed in a row
   int mSkipFiltCheckCount;       // Counter for skipping the filter check
+  int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1039,6 +1046,12 @@ public:
   void SetupNewDarkRef(int inSet, double exposure);
   void CheckGatanSize(int camNum, int paramInd);
   void ReportOnSizeCheck(int paramInd, int xsize, int ysize);
+  int RunScriptOnThread(CString &script, int timeoutSec);
+  static UINT ScriptProc(LPVOID pParam);
+  int ScriptBusy();
+  void ScriptCleanup(int error);
+  static void ScriptError(int error);
+  static void ScriptDone(int param);
   bool OppositeLDAreaNextShot(void);
   bool InitiateIfPending(void);
   void TestCameraInserted(int actIndex, long &inserted);
