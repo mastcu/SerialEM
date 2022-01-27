@@ -69,7 +69,8 @@ END_MESSAGE_MAP()
 // External call to add text
 void CLogWindow::Append(CString &inString, int lineFlags)
 {
-  bool deferring = mWinApp->mMacroProcessor->DoingMacro() && 
+  bool deferring = (mWinApp->mMacroProcessor->DoingMacro() || 
+    mWinApp->mMacroProcessor->GetNonMacroDeferring()) &&
     mWinApp->mMacroProcessor->GetDeferLogUpdates();
   bool replacing = (lineFlags & 2) != 0;
 
