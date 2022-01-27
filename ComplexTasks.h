@@ -65,7 +65,9 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(double, FEMaxTilt)
   GetSetMember(double, FEMaxIncrement)
   GetSetMember(float, FETargetShift)
-  GetSetMember(float, FEMaxIncrementChange)
+  GetSetMember(float, FEMaxIncrementChange);
+  SetMember(float, FENextCoarseMaxDeltaZ);
+  GetMember(bool, FELastCoarseFailed);
   GetSetMember(int, FEIterationLimit)
   GetSetMember(double, FEMaxFineIS)
   SetMember(BOOL, SkipNextBeamShift);
@@ -252,6 +254,12 @@ class CComplexTasks : public CCmdTarget
   double mFEMaxIncrement;         // Maximum increment
   float mFETargetShift;           // Shift to try to reach by tilting
   float mFEMaxIncrementChange;    // Maximum factor to change increment
+  float mFECurRefShiftX;          // Cumulative shift from start to current reference
+  float mFECurRefShiftY;
+  float mFEReplaceRefFracField;   // Fraction of field shift at which to replace reference
+  float mFENextCoarseMaxDeltaZ;   // Externally set limit for next rough eucentricity
+  float mFEUseCoarseMaxDeltaZ;    // Limit to use on this run
+  bool mFELastCoarseFailed;       // Flag that it failed
   int mFECoarseFine;              // Saved flags from external call
   int mFEFineIndex;               // index to current angle
   BOOL mFEActPostExposure;        // flag for using post actions

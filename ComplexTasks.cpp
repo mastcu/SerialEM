@@ -145,6 +145,8 @@ CComplexTasks::CComplexTasks()
   mFEMaxIncrement = 8.;
   mFETargetShift = 2.;
   mFEMaxIncrementChange = 3.;
+  mFEReplaceRefFracField = 0.05f;
+  mFEUseCoarseMaxDeltaZ = 0.;
   mMaxFEFineAngle = 24.;
   mMaxFEFineInterval = 8.;
   mFEIterationLimit = 3;
@@ -1458,6 +1460,11 @@ void CComplexTasks::FindEucentricity(int coarseFine)
       }
       action = FE_COARSE_RESET;
       mFECoarseFine &= ~REFINE_EUCENTRICITY_ALIGN;
+      mFECurRefShiftX = 0.;
+      mFECurRefShiftY = 0.;
+      mFEUseCoarseMaxDeltaZ = mFENextCoarseMaxDeltaZ;
+      mFENextCoarseMaxDeltaZ = 0.;
+      mFELastCoarseFailed = false;
     } else if (coarseFine & REFINE_EUCENTRICITY_ALIGN) {
       LowerMagIfNeeded(mMaxFEFineAlignMag, 0.7f, 0.3f, TRACK_CONSET);
       action = FE_FINE_ALIGNSHOT1;
@@ -1527,7 +1534,7 @@ void CComplexTasks::EucentricityNextTask(int param)
 {
   ScaleMat aInv, cMat;
   double stageX, stageY, ISX, ISY, specX, specY;
-  float shiftX, shiftY, movedY, delZ, delY, intcp, movedX;
+  float shiftX, shiftY, movedY, delZ, delY, intcp, movedX, imShiftX, imShiftY;
   float backlashTilt, backlashZ, delZact, delYact, yZero, yZeroGen, angle;
   double deltaInc, increment, radians;
   int action, i;
@@ -1580,7 +1587,12 @@ void CComplexTasks::EucentricityNextTask(int param)
       // 5/27/06: call with new argument to avoid shift, so don't need to restore it
       if (mShiftManager->AutoAlign(1, 0, false, false))
         StopEucentricity();
+
+      // When the reference is already shifted, this shift IS the cumulative shift
+      // So need to subtract the reference shift to get the amount of shift between images
       mImBufs->mImage->getShifts(shiftX, shiftY);
+      imShiftX = shiftX - mFECurRefShiftX;
+      imShiftY = shiftY - mFECurRefShiftY;
 
       aInv = mShiftManager->CameraToSpecimen(mScope->FastMagIndex());
       movedY = mConSets[mLowMagConSet].binning * 
@@ -1602,18 +1614,26 @@ void CComplexTasks::EucentricityNextTask(int param)
         mFECurrentAngle < mFEMaxTilt - 0.5 &&
         mFECoarseIncrement < mFEMaxIncrement - 0.5) {
         deltaInc = mFETargetShift / fabs(movedY);
-        if (deltaInc > mFEMaxIncrementChange)
-          deltaInc = mFEMaxIncrementChange;
+        deltaInc = B3DMIN(deltaInc, mFEMaxIncrementChange);
         mFECoarseIncrement *= deltaInc;
 
         // Also make sure increment is not too big and tilt does not become too big
-        if (mFECoarseIncrement > mFEMaxIncrement)
-          mFECoarseIncrement = mFEMaxIncrement;
-        if (mFECoarseIncrement > mFEMaxTilt - mFEReferenceAngle)
-          mFECoarseIncrement = mFEMaxTilt - mFEReferenceAngle;
-
+        mFECoarseIncrement = B3DMIN(mFECoarseIncrement, mFEMaxIncrement);
+        mFECoarseIncrement = B3DMIN(mFECoarseIncrement, mFEMaxTilt - mFEReferenceAngle);
         needTilt = true;
-        mBufferManager->CopyImageBuffer(1, 0);
+
+        // If there is an accurate enough shift between this image and reference and
+        // the total shift exceeds a threshold, roll the reference; otherwise keep last
+        if (imShiftX * imShiftX + imShiftY * imShiftY >= 10 * 10 &&
+          sqrtf(powf((float)(shiftX / mImBufs->mImage->getWidth()), 2.f) +
+            powf((float)(shiftY / mImBufs->mImage->getHeight()), 2.f)) >=
+          mFEReplaceRefFracField) {
+          //PrintfToLog("Replacing ref, cum shift %.1f %.1f", shiftX, shiftY);
+          mFECurRefShiftX = shiftX;
+          mFECurRefShiftY = shiftY;
+        } else {
+          mBufferManager->CopyImageBuffer(1, 0);
+        }
       }
     }
 
@@ -1634,8 +1654,18 @@ void CComplexTasks::EucentricityNextTask(int param)
     // SIGN?
     delZ = (float)(-movedY * (mShiftManager->GetStageInvertsZAxis() ? -1. : 1.) / 
       (sin(DTOR * (mFEInitialAngle + increment)) - sin(DTOR * mFEInitialAngle)));
+    if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ) {
+      report.Format("Rough eucentricity change of %.1f um exceeds limit of %.0f um;"
+        " procedure is ending with no change", delZ, mFEUseCoarseMaxDeltaZ);
+      mWinApp->AppendToLog(report,
+        mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
+      mFELastCoarseFailed = true;
+      StopEucentricity();
+      return;
+    }
     action = FE_COARSE_LAST_MOVE;
     mFEReferenceAngle = mFECurrentAngle;
+    mFECurRefShiftX = mFECurRefShiftY = 0;
 
     // If the increment is sufficiently less than the maximum, and also less
     // than the remaining distance to the maximum tilt, then set up to go again
