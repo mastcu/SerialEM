@@ -36,6 +36,7 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 	void SetStaticFrame() {mStaticFrame = true;};
+  void SetSharedMenu(HMENU hMenu);
 //	void SetChildView(CSerialEMView *inView) {mChildView = inView;};
 	afx_msg void OnClose();
 

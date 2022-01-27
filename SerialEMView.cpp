@@ -144,6 +144,8 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
 
   type = mWinApp->GetNewViewProperties(this, iBordLeft, iBordTop, iBordRight, iBordBottom,
     mImBufs, mImBufNumber, mImBufIndex);
+  if (type != 1)
+    childFrame->SetSharedMenu(mainFrame->m_hMenuDefault);
   if (type == 1) {
   
     // If this is the static window, set the size to fill the client area
@@ -2486,6 +2488,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   char cChar = char(nChar);
   bool mainOrFFT = mMainWindow || mFFTWindow;
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  bool navCanProcess = mWinApp->mNavigator && !mWinApp->mNavigator->mNavAcquireDlg;
   mWinApp->mMacroProcessor->SetKeyPressed((int)cChar);
 
   // Keep track of ctrl and shift (ONLY IF WE GET KEYUP TOO)
@@ -2534,15 +2537,15 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (mWinApp->mNavigator && (nChar == VK_UP || nChar == VK_DOWN)) {
     mWinApp->mNavigator->MoveListSelection(nChar == VK_UP ? -1 : 1);
 
-  } else if (mWinApp->mNavigator && cChar == 'A' && (!mCtrlPressed || mShiftPressed)) {
+  } else if (navCanProcess && cChar == 'A' && (!mCtrlPressed || mShiftPressed)) {
     mWinApp->mNavigator->ProcessAkey(mCtrlPressed, mShiftPressed);
-  } else if (mWinApp->mNavigator && cChar == 'C' && !mCtrlPressed && !mShiftPressed) {
+  } else if (navCanProcess && cChar == 'C' && !mCtrlPressed && !mShiftPressed) {
     mWinApp->mNavigator->ProcessCKey();
-  } else if (mWinApp->mNavigator && cChar == 'D' && !mCtrlPressed && mShiftPressed) {
+  } else if (navCanProcess && cChar == 'D' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessDKey();
-  } else if (mWinApp->mNavigator && cChar == 'T' && !mCtrlPressed && mShiftPressed) {
+  } else if (navCanProcess && cChar == 'T' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessTKey();
-  } else if (mWinApp->mNavigator && cChar == 'N' && !mCtrlPressed && mShiftPressed) {
+  } else if (navCanProcess && cChar == 'N' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessNKey();
  
   } else if (cChar == 'X' && !mCtrlPressed && mShiftPressed) {

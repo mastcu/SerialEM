@@ -600,8 +600,15 @@ void CMainFrame::RemoveHiddenItemsFromMenus()
     // Contrary to the documentation example, you have to set this before setting the menu
     m_hMenuDefault = mainMenu->m_hMenu;
     SetMenu(mainMenu);
-  }
 
+    // Loop on the child frames and assign this menu as the shared menu
+    CWnd* clientWnd = CWnd::FromHandle(m_hWndMDIClient);
+    for (CWnd *pWnd = clientWnd->GetWindow(GW_CHILD); pWnd != NULL;
+      pWnd = pWnd->GetNextWindow(GW_HWNDNEXT)) {
+      CChildFrame *child = (CChildFrame *)pWnd;
+      child->SetSharedMenu(m_hMenuDefault);
+    }
+  }
   mainMenu = GetMenu();
   RemoveItemsFromOneMenu(mainMenu, 0);
   DrawMenuBar();

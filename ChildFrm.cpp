@@ -93,7 +93,12 @@ void CChildFrame::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CChildFrame message handlers
 
-void CChildFrame::OnClose() 
+void CChildFrame::SetSharedMenu(HMENU hMenu)
+{
+  m_hMenuShared = hMenu;
+}
+
+void CChildFrame::OnClose()
 {
   // If this is frame for the static window, cancel the close
   if (mStaticFrame)
