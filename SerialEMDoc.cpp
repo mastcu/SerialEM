@@ -844,8 +844,10 @@ void CSerialEMDoc::DoCloseFile()
     if (mCurrentStore < 0) 
       mCurrentStore = 0;
     SwitchToFile(mCurrentStore);
-  } else
+  } else {
     mWinApp->SetTitleFile("");
+    mWinApp->mBufferWindow.ReloadFileComboBox();
+  }
   mWinApp->UpdateBufferWindows();
   mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
@@ -1529,6 +1531,7 @@ void CSerialEMDoc::SwitchToFile(int which)
     mWinApp->mMontageWindow.UpdateSettings();
   }
   ComposeTitlebarLine();
+  mWinApp->mBufferWindow.ReloadFileComboBox();
   mWinApp->UpdateBufferWindows();
 }
 
@@ -1549,6 +1552,7 @@ void CSerialEMDoc::AddCurrentStore()
     *file->montParam = *param;
   }
   ComposeTitlebarLine();
+  mWinApp->mBufferWindow.ReloadFileComboBox();
   mWinApp->UpdateBufferWindows();
   ManageSaveSingle();
 }
@@ -1679,14 +1683,14 @@ void CSerialEMDoc::ComposeTitlebarLine(void)
   UtilSplitPath(mWinApp->mStoreMRC->getName(), dir, title);
   mWinApp->m_strTitle = title;
   if (mNumStores > 1) {
-    dir.Format(" (#%d)", mCurrentStore + 1);
-    title += dir;
+    title = "";
     for (int ind = 0; ind < mNumStores; ind++) {
-      if (ind != mCurrentStore) {
-        UtilSplitPath(mStoreList[ind].store->getName(), dir, filename);
-        dir.Format("   %d: ", ind + 1);
-        title += dir + filename;
-      }
+      UtilSplitPath(mStoreList[ind].store->getName(), dir, filename);
+      dir.Format("%s%s%d: ", ind > 0 ? "   " : "", ind == mCurrentStore ? "[" : "",
+        ind + 1);
+      title += dir + filename;
+      if (ind == mCurrentStore)
+        title += "]";
     }
   }
   mWinApp->SetTitleFile(title);

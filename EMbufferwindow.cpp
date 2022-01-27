@@ -41,7 +41,6 @@ CEMbufferWindow::CEMbufferWindow(CWnd* pParent /*=NULL*/)
   m_bConfirmDestroy = FALSE;
   m_bCopyOnSave = FALSE;
 	m_bAlignToB = FALSE;
-	m_strToFile = _T("");
 	//}}AFX_DATA_INIT
   for (int i = 0; i < MAX_BUFFERS; i++)
     protectBuffer[i] = false;
@@ -53,7 +52,6 @@ void CEMbufferWindow::DoDataExchange(CDataExchange* pDX)
   CToolDlg::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CEMbufferWindow)
   DDX_Control(pDX, IDC_STATTOFILE, m_statToFile);
-  DDX_Control(pDX, IDC_SPINTOFILE, m_sbcToFile);
   DDX_Control(pDX, IDC_ALIGNTOB, m_butAlignToB);
   DDX_Control(pDX, IDC_CONFIRMDESTROY, m_butConfirmDestroy);
   DDX_Control(pDX, IDC_BSAVEACTIVE, m_butSaveActive);
@@ -68,10 +66,10 @@ void CEMbufferWindow::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPINCOPY, m_sbcCopy);
   DDX_Check(pDX, IDC_CONFIRMDESTROY, m_bConfirmDestroy);
   DDX_Check(pDX, IDC_ALIGNTOB, m_bAlignToB);
-  DDX_Text(pDX, IDC_STATTOFILE, m_strToFile);
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_DELETEBUF, m_butDelete);
   DDX_Text(pDX, IDC_STATMEMORY, m_strMemory);
+  DDX_Control(pDX, IDC_COMBO_OUTFILE, m_comboOutFile);
 }
 
 
@@ -89,9 +87,9 @@ BEGIN_MESSAGE_MAP(CEMbufferWindow, CToolDlg)
   ON_BN_CLICKED(IDC_CONFIRMDESTROY, OnConfirmdestroy)
   ON_BN_CLICKED(IDC_BSAVEACTIVE, OnBsaveactive)
 	ON_BN_CLICKED(IDC_ALIGNTOB, OnAligntob)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SPINTOFILE, OnDeltaposSpintofile)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_DELETEBUF, OnClickedDeletebuf)
+  ON_CBN_SELENDOK(IDC_COMBO_OUTFILE, OnSelendokComboOutfile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -233,18 +231,17 @@ void CEMbufferWindow::OnDeltaposSpinread(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 0;
 }
 
-// The spin button for file to write to
-void CEMbufferWindow::OnDeltaposSpintofile(NMHDR* pNMHDR, LRESULT* pResult) 
+
+
+// The combo box for file to write to
+void CEMbufferWindow::OnSelendokComboOutfile()
 {
-  CNavigatorDlg *nav = mWinApp->mNavigator;
+  int newVal = m_comboOutFile.GetCurSel();
+  if (newVal != mWinApp->mDocWnd->GetCurrentStore()) {
+    mWinApp->mDocWnd->SetCurrentStore(newVal);
+    mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
+  }
   mWinApp->RestoreViewFocus();
-  int newVal;
-  if (NewSpinnerValue(pNMHDR, pResult, mWinApp->mDocWnd->GetCurrentStore(),
-    0, mWinApp->mDocWnd->GetNumStores() - 1, newVal))
-    return;
-  mWinApp->mDocWnd->SetCurrentStore(newVal);
-  mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
-	*pResult = 0;
 }
 
 // Confirm Record before destroy checkbox
@@ -282,7 +279,6 @@ BOOL CEMbufferWindow::OnInitDialog()
   m_sbcCopy.SetRange(4, MAX_BUFFERS);
   m_sbcRead.SetRange(0, MAX_BUFFERS);
   m_sbcRoll.SetRange(0, MAX_BUFFERS);
-  m_sbcToFile.SetRange(-1, MAX_STORES);
   m_sbcCopy.SetPos(mBufferManager->GetFifthCopyToBuf());
   SetSpinText(IDC_BCOPYANY, mBufferManager->GetFifthCopyToBuf());
   mInitialized = true;
@@ -329,7 +325,7 @@ void CEMbufferWindow::UpdateSaveCopy()
 {
 // If doing tasks, only the copy to new button should be active
   BOOL bEnable, noTasks, justNavAvq = mWinApp->GetJustNavAcquireOpen();
-  int maxStore, curStore, mbint, spinBuf;
+  int curStore, mbint, spinBuf;
   EMimageBuffer *activeBuf = mWinApp->mActiveView->GetActiveImBuf();
   if (!mInitialized)
     return;
@@ -364,15 +360,10 @@ void CEMbufferWindow::UpdateSaveCopy()
   m_butConfirmDestroy.EnableWindow(bEnable);
 
   // Update the file spin button
-  maxStore = mWinApp->mDocWnd->GetNumStores() - 1;
-  if (maxStore < 0) 
-    maxStore = 0;
-  curStore = mWinApp->mDocWnd->GetCurrentStore();
-  if (curStore < 0)
-    curStore = 0;
-  m_strToFile.Format("To file %d", curStore + 1);
-  m_sbcToFile.EnableWindow(maxStore > 0 && (noTasks || justNavAvq));
-  m_sbcToFile.SetPos(curStore);
+  curStore = B3DMAX(0, mWinApp->mDocWnd->GetCurrentStore());
+  m_comboOutFile.EnableWindow(mWinApp->mDocWnd->GetNumStores() > 1 && 
+    (noTasks || justNavAvq));
+  m_comboOutFile.SetCurSel(curStore);
 
   // Update the memory usage
   mbint = (int)(MemorySummary() / 1.e6);
@@ -437,4 +428,34 @@ double CEMbufferWindow::MemorySummary(void)
   }
   sum += mWinApp->mCamera->RefMemoryUsage();
   return sum;
+}
+
+// Clear out and load output files into the combo box
+void CEMbufferWindow::ReloadFileComboBox()
+{
+  int ind, maxWidth, numFiles = mWinApp->mDocWnd->GetNumStores();
+  KImageStore *store;
+  CString dir, file;
+  CRect rect;
+  CDC *pDC = m_comboOutFile.GetDC();
+  m_comboOutFile.GetClientRect(rect);
+  maxWidth = 17 * rect.Width() / 20;
+  m_comboOutFile.ResetContent();
+  for (ind = 0; ind < numFiles; ind++) {
+    store = mWinApp->mDocWnd->GetStoreMRC(ind);
+    UtilSplitPath(store->getName(), dir, file);
+
+    // Truncate by adding 3 dots and eating away characters from front of name
+    dir.Format("%d: %s", ind + 1, (LPCTSTR)file);
+    while ((pDC->GetTextExtent(dir)).cx > maxWidth && file.GetLength() > 5) {
+      file = file.Mid(1);
+      dir.Format("%d: ...%s", ind + 1, (LPCTSTR)file);
+    }
+    m_comboOutFile.AddString((LPCTSTR)dir);
+  }
+  m_comboOutFile.ReleaseDC(pDC);
+  if (numFiles > 0) {
+    m_comboOutFile.SetCurSel(mWinApp->mDocWnd->GetCurrentStore());
+    SetDropDownHeight(&m_comboOutFile, numFiles);
+  }
 }

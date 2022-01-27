@@ -28,7 +28,6 @@ public:
 	//{{AFX_DATA(CEMbufferWindow)
 	enum { IDD = IDD_BUFFERCONTROL };
 	CStatic	m_statToFile;
-	CSpinButtonCtrl	m_sbcToFile;
 	CButton	m_butAlignToB;
 	CButton	m_butConfirmDestroy;
 	CButton	m_butSaveActive;
@@ -46,7 +45,6 @@ public:
 	BOOL	m_bConfirmDestroy;
 	BOOL	m_bCopyOnSave;
 	BOOL	m_bAlignToB;
-	CString	m_strToFile;
 	//}}AFX_DATA
 
 
@@ -76,7 +74,6 @@ protected:
 	afx_msg void OnBsaveactive();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnAligntob();
-	afx_msg void OnDeltaposSpintofile(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -90,6 +87,9 @@ public:
   int ActiveBufNumIfDeletable(void);
   CString m_strMemory;
   double MemorySummary(void);
+  void ReloadFileComboBox();
+  CComboBox m_comboOutFile;
+  afx_msg void OnSelendokComboOutfile();
 };
 
 //{{AFX_INSERT_LOCATION}}
