@@ -132,6 +132,12 @@ public:
 	void UpdateListString(int index);
 	void ItemToListString(int index, CString &string);
 	BOOL UserMousePoint(EMimageBuffer *imBuf, float inX, float inY, BOOL nearCenter, int button);
+  bool ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, float &stageX,
+    float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece, float &yInPiece,
+    int &pieceIndex);
+  bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
+    float delX, float delY, bool ctrlKey, float distLim);
+  bool MouseDragSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim);
 	CArray<CMapDrawItem *, CMapDrawItem *> *GetMapDrawItems(EMimageBuffer *imBuf, 
     ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, CMapDrawItem **acquireBox);
   void AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY, IntVec &holeIndex, 

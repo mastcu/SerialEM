@@ -1155,6 +1155,7 @@ void CNavigatorDlg::OnEditMode()
     mWinApp->AppendToLog("\r\nEDIT MODE REMINDER:\r\n"
       "    Left-click to select\r\n"
       "    Ctrl-Left-Click to add or remove from selected points\r\n"
+      "    Ctrl-Left Button down to add points to selection while moving mouse\r\b"
       "    Left-double-click to delete point if already selected\r\n"
       "    Shift-Left-double-click to remove one position from multiple Record array\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"
@@ -2815,14 +2816,10 @@ bool CNavigatorDlg::MovingMapItem(void)
 BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY, 
                                    BOOL nearCenter, int button)
 {
-  ScaleMat aMat, aInv;
-  float delX, delY, stageX, stageY,xInPiece, yInPiece, dist, distMin = 1.e10;
-  int ind, indMin, nxBuf, nyBuf, pieceIndex;
+  ScaleMat aInv;
+  float delX, delY, stageX, stageY,xInPiece, yInPiece;
+  int pieceIndex;
   int groupID = 0;
-  std::set<int>::iterator iter;
-  float selXLimitFrac[4] = {-0.03f, 1.03f, 1.03f, -0.03f};
-  float selYLimitFrac[4] = {-0.03f, -0.03f, 1.03f, 1.03f};
-  float selXlimit[4], selYlimit[4], selXwindow[4], selYwindow[4];
   CMapDrawItem *item;
   BOOL acquire = false;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
@@ -2840,12 +2837,9 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
-  if (!BufferStageToImage(imBuf, aMat, delX, delY))
+  if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece, 
+    yInPiece, pieceIndex))
     return false;
-  AdjustMontImagePos(imBuf, inX, inY, &pieceIndex, &xInPiece, &yInPiece);
-  aInv = MatInv(aMat);
-  stageX = aInv.xpx * (inX - delX) + aInv.xpy * (inY - delY);
-  stageY = aInv.ypx * (inX - delX) + aInv.ypy * (inY - delY);
   if (startingMultiDel) {
     mMultiDelStageX = stageX;
     mMultiDelStageY = stageY;
@@ -2933,85 +2927,136 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
 
     // Selecting nearest point
   } else if (selecting) {
-    if (!imBuf->mImage)
-      return false;
-
-    // Get a region around the image and around the window
-    imBuf->mImage->getSize(nxBuf, nyBuf);
-    mWinApp->mMainView->WindowCornersInImageCoords(imBuf, &selXwindow[0], &selYwindow[0]);
-    for (ind = 0; ind < 4; ind++) {
-      selXlimit[ind] = aInv.xpx * (selXLimitFrac[ind] * nxBuf - delX) + 
-        aInv.xpy * (selYLimitFrac[ind] * nyBuf - delY);
-      selYlimit[ind] = aInv.ypx * (selXLimitFrac[ind] * nxBuf - delX) + 
-        aInv.ypy * (selYLimitFrac[ind] * nyBuf - delY);
-      dist = aInv.xpx * (selXwindow[ind] - delX) + aInv.xpy * (selYwindow[ind] - delY);
-      selYwindow[ind] = aInv.ypx * (selXwindow[ind] - delX) + aInv.ypy * 
-        (selYwindow[ind] - delY);
-      selXwindow[ind] = dist;
-    }
-
-    // If there is one item selected and it is a map, clear out selection list
-    if (m_bEditMode && ctrlKey && mSelectedItems.size() == 1 && SetCurrentItem() &&
-      mItem->IsMap())
-        mSelectedItems.clear();
-
-    // Loop on items; skip ones that should not be visible or are outside region
-    for (ind = 0; ind < mItemArray.GetSize(); ind++) {
-      item = mItemArray.GetAt(ind);
-      if (item->mRegistration != imBuf->mRegistration && !m_bDrawAllReg)
-        continue;
-      if (!item->mDraw || item->IsMap())
-        continue;
-      if (!(InsideContour(selXlimit, selYlimit, 4, item->mStageX, item->mStageY) ||
-        InsideContour(selXwindow, selYwindow, 4, item->mStageX, item->mStageY)))
-        continue;
-
-      // Find nearest item
-      delX = item->mStageX - stageX;
-      delY = item->mStageY - stageY;
-      dist = delX * delX + delY * delY;
-      if (dist < distMin) {
-        distMin = dist;
-        indMin = ind;
-      }
-    }
-    if (distMin > 1.e9)
-      return false;
-
-    // If doing multiple selection and this item is already in selection, remove it and
-    // switch current item to previous or next one
-    if (m_bEditMode && ctrlKey && mSelectedItems.size() > 1 && 
-      mSelectedItems.count(indMin)) {
-        iter = mSelectedItems.find(indMin);
-        if (iter == mSelectedItems.begin())
-          iter++;
-        else
-          iter--;
-        ind = *iter;
-        mSelectedItems.erase(indMin);
-        indMin = ind;
-    }
-
-    // In edit mode, if there is a single point selected and it is clicked on,
-    // set flag and return: this occurs before double click comes through
-    if (m_bEditMode && !ctrlKey && mSelectedItems.size() == 1 && 
-      mSelectedItems.count(indMin)) {
-        mLastSelectWasCurrent = true;
-        return true;
-    }
-
-    // Switch to item
-    mCurListSel = mCurrentItem = indMin;
-    if (m_bCollapseGroups)
-      mCurListSel = mItemToList[indMin];
-    m_listViewer.SetCurSel(mCurListSel);
-    if (!(m_bEditMode && ctrlKey))
-      mSelectedItems.clear();
-    mSelectedItems.insert(indMin);
-    ManageCurrentControls();
-    Redraw();
+    return SelectNearestPoint(imBuf, stageX, stageY, aInv, delX, delY, ctrlKey, 1.e9);
   }
   return true;
+}
+
+// Initial operations for adjusting a mouse point and converting it to stage coords
+bool CNavigatorDlg::ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, 
+  float &stageX, float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece,
+  float &yInPiece, int &pieceIndex)
+{
+  ScaleMat aMat;
+  if (!BufferStageToImage(imBuf, aMat, delX, delY))
+    return false;
+  AdjustMontImagePos(imBuf, inX, inY, &pieceIndex, &xInPiece, &yInPiece);
+  aInv = MatInv(aMat);
+  stageX = aInv.xpx * (inX - delX) + aInv.xpy * (inY - delY);
+  stageY = aInv.ypx * (inX - delX) + aInv.ypy * (inY - delY);
+  return true;
+}
+
+// Selects or adds to selection the nearest point within the given distance limit
+bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, 
+  ScaleMat aInv, float delX, float delY, bool ctrlKey, float distLim)
+{
+  std::set<int>::iterator iter;
+  float selXLimitFrac[4] = {-0.03f, 1.03f, 1.03f, -0.03f};
+  float selYLimitFrac[4] = {-0.03f, -0.03f, 1.03f, 1.03f};
+  float selXlimit[4], selYlimit[4], selXwindow[4], selYwindow[4];
+  float dist, distMin = 1.e10, distNext = 1.e10;
+  int ind, indMin, nxBuf, nyBuf;
+  CMapDrawItem *item;
+  bool dragging = distLim < 1.e6;
+
+  if (!imBuf->mImage)
+    return false;
+
+  // Get a region around the image and around the window
+  imBuf->mImage->getSize(nxBuf, nyBuf);
+  mWinApp->mMainView->WindowCornersInImageCoords(imBuf, &selXwindow[0], &selYwindow[0]);
+  for (ind = 0; ind < 4; ind++) {
+    selXlimit[ind] = aInv.xpx * (selXLimitFrac[ind] * nxBuf - delX) +
+      aInv.xpy * (selYLimitFrac[ind] * nyBuf - delY);
+    selYlimit[ind] = aInv.ypx * (selXLimitFrac[ind] * nxBuf - delX) +
+      aInv.ypy * (selYLimitFrac[ind] * nyBuf - delY);
+    dist = aInv.xpx * (selXwindow[ind] - delX) + aInv.xpy * (selYwindow[ind] - delY);
+    selYwindow[ind] = aInv.ypx * (selXwindow[ind] - delX) + aInv.ypy *
+      (selYwindow[ind] - delY);
+    selXwindow[ind] = dist;
+  }
+
+  // If there is one item selected and it is a map, clear out selection list
+  if (m_bEditMode && ctrlKey && mSelectedItems.size() == 1 && SetCurrentItem() &&
+    mItem->IsMap())
+    mSelectedItems.clear();
+
+  // Loop on items; skip ones that should not be visible or are outside region
+  for (ind = 0; ind < mItemArray.GetSize(); ind++) {
+    item = mItemArray.GetAt(ind);
+    if (item->mRegistration != imBuf->mRegistration && !m_bDrawAllReg)
+      continue;
+    if (!item->mDraw || item->IsMap())
+      continue;
+    if (!(InsideContour(selXlimit, selYlimit, 4, item->mStageX, item->mStageY) ||
+      InsideContour(selXwindow, selYwindow, 4, item->mStageX, item->mStageY)))
+      continue;
+
+    // Find nearest item
+    delX = item->mStageX - stageX;
+    delY = item->mStageY - stageY;
+    dist = delX * delX + delY * delY;
+    if (dist < distMin) {
+      distNext = distMin;
+      distMin = dist;
+      indMin = ind;
+    }
+  }
+  if (distMin > distLim || (dragging && distNext < 1.e9 && distMin > 0.5 * distNext))
+    return false;
+
+  // If doing multiple selection and this item is already in selection, remove it and
+  // switch current item to previous or next one
+  if (m_bEditMode && ctrlKey && mSelectedItems.size() > 1 &&
+    mSelectedItems.count(indMin)) {
+    if (dragging)
+      return false;
+    iter = mSelectedItems.find(indMin);
+    if (iter == mSelectedItems.begin())
+      iter++;
+    else
+      iter--;
+    ind = *iter;
+    mSelectedItems.erase(indMin);
+    indMin = ind;
+  }
+
+  // In edit mode, if there is a single point selected and it is clicked on,
+  // set flag and return: this occurs before double click comes through
+  if (m_bEditMode && !ctrlKey && mSelectedItems.size() == 1 &&
+    mSelectedItems.count(indMin)) {
+    mLastSelectWasCurrent = true;
+    return true;
+  }
+
+  // Switch to item
+  mCurListSel = mCurrentItem = indMin;
+  if (m_bCollapseGroups)
+    mCurListSel = mItemToList[indMin];
+  m_listViewer.SetCurSel(mCurListSel);
+  if (!(m_bEditMode && ctrlKey))
+    mSelectedItems.clear();
+  mSelectedItems.insert(indMin);
+  ManageCurrentControls();
+  Redraw();
+  return true;
+}
+
+// Select point under mouse in edit mode
+bool CNavigatorDlg::MouseDragSelectPoint(EMimageBuffer * imBuf, float inX, float inY, 
+  float imDistLim)
+{
+  ScaleMat aInv;
+  float delX, delY, stageX, stageY, xInPiece, yInPiece, distLim;
+  int pieceIndex;
+  if (!m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem || mNavAcquireDlg)
+    return false;
+  if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece,
+    yInPiece, pieceIndex))
+    return false;
+  distLim = imDistLim * sqrtf(aInv.xpx * aInv.xpx + aInv.ypx * aInv.ypx);
+  return SelectNearestPoint(imBuf, stageX, stageY, aInv, delX, delY, true, distLim);
 }
 
 // Double click on the currently selected point deletes it

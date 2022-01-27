@@ -2274,13 +2274,15 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
 {
   int iDx, iDy, pDx, pDy;
   double zoomFac = mZoom < 1 ? mZoom : 1.;
-  float shiftX, shiftY, prevX, prevY, angle, pixScale;
+  float shiftX, shiftY, prevX, prevY, angle, pixScale, crossLen;
   BOOL shiftKey = ::GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   BOOL ctrlKey = ::GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  bool dragSelect = mWinApp->mNavigator && mWinApp->mNavigator->m_bEditMode && ctrlKey &&
+    !shiftKey && (nFlags & MK_LBUTTON) && !mDrawingLine;
   EMimageBuffer *imBuf;
   CRect rect;
   CString lenstr;
-  if (mImBufs != NULL && GetCapture() == this && (!ctrlKey || shiftKey)) {
+  if (mImBufs != NULL && GetCapture() == this && (!ctrlKey || shiftKey || dragSelect)) {
     if (nFlags & MK_RBUTTON) {
 
       // Right button: if there is a change in position, and mouse shifting is either
@@ -2315,10 +2317,11 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
       iDx = B3DNINT(pDx / zoomFac);
       pDy = point.y - m_iPrevMY;
       iDy = -B3DNINT(pDy / zoomFac);
+
       // Take this as a panning move if there is a move, and either panning
       // has already started, or click time is expired, or the move is greater
       // than a threshold
-      if ((iDx || iDy) && (mPanning || mDrawingLine || 
+      if ((iDx || iDy) && (mPanning || mDrawingLine || dragSelect ||
         GetTickCount() - mMouseDownTime > USER_PT_CLICK_TIME || 
         pDx < -PAN_THRESH || pDx > PAN_THRESH || 
         pDy < -PAN_THRESH || pDy > PAN_THRESH)) {
@@ -2326,7 +2329,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
         // Start or continue panning if panning already or no shift key
         GetClientRect(&rect);
         imBuf = &mImBufs[mImBufIndex];
-        if (mPanning || (!mDrawingLine && !shiftKey)) {
+        if (mPanning || (!mDrawingLine && !shiftKey && !dragSelect)) {
           mPanning = true;
           m_iOffsetX += iDx;
           m_iOffsetY += iDy;
@@ -2335,8 +2338,12 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
           DrawImage();
         } else if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
 
-          // Otherwise start or continue drawing a line if point is within image
-          if (!mDrawingLine) {
+          if (dragSelect) {
+            crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / zoomFac);
+            mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
+
+            // Otherwise start or continue drawing a line if point is within image
+          } else if (!mDrawingLine) {
             CPoint prev(m_iPrevMX, m_iPrevMY);
             if (!ConvertMousePoint(&rect, imBuf->mImage, &prev, prevX, prevY)) {
               prevX = shiftX;

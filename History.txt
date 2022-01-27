@@ -3,6 +3,42 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/26/22: Added special option to keep Trial and Focus at same position while
+allowing other differences.
+
+1/26/22: Added Navigator Edit Mode feature for selecting multiple points by
+holding down Ctrl and the left button and moving the mouse of over points.
+
+1/26/22: Added a report of problems with rotation calibrations.
+
+1/25/22: Allowed embedded newlines in a string assignment to a variable make
+the variable an array of strings.
+
+1/25/22: Added EchoBreakLines command to print each element of an array on
+separate line.
+
+1/25/22: Made "three-choice" message box able to have only one button and to
+become wider instead of wrapping lines; added script command to turn off
+wrapping, and used this box for OKBox and YesNoBox when wrapping is off.
+
+1/25/22: Added rotation and flip value for K2/K3 to mdoc and made frame files
+saved without rotation/flip indicate the value needed with "nrf".
+
+1/25/22: Added script command to run a script in DM.
+
+1/25/22: Made rough eucentricity use previous image instead of original one as
+reference if shift is big enough, since correlating with progressively
+larger shifts is more prone to fail.  Added script commands to set a limit for
+Z movement and to test if last run failed due to the limit.
+
+1/25/22: Changed "To file" spinner in Buffer Control panel to a combo box for
+showing and selecting the current file; kept open files in order in title bar.
+
+1/25/22: Added line to snapshot dialog showing active window name, and script
+commands to report and set active window.
+
+1/25/22: Fixed menus when New Window is used after being in Basic mode.
+
 1/20/22: Made most tasks taking lower-magnification tracking shots use Search
 instead of View in Low Dose mode if View has an inadequate field of view but
 Search has a better one and is not in LM.  There is a special option to
