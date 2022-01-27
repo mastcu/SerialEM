@@ -192,6 +192,7 @@ CMacroProcessor::CMacroProcessor()
   mStartedLongOp = false;
   mMovedPiezo = false;
   mMovedAperture = false;
+  mRanGatanScript = false;
   mLoadingMap = false;
   mMakingDualMap = false;
   mLastCompleted = false;
@@ -200,6 +201,7 @@ CMacroProcessor::CMacroProcessor()
   mEnteredName = "";
   mRunningScrpLang = false;
   mCalledFromScrpLang = false;
+  mNonMacroDeferring = false;
   mScrpLangData.externalControl = 0;
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
@@ -908,6 +910,7 @@ int CMacroProcessor::TaskBusy()
     (mStartedLongOp && mScope->LongOperationBusy()) ||
     (mMovedPiezo && mWinApp->mPiezoControl->PiezoBusy() > 0) ||
     (mMovedAperture && mScope->GetMovingAperture()) ||
+    (mRanGatanScript &&  mCamera->CameraBusy()) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     (mMakingDualMap && mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
@@ -918,7 +921,7 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
-    mWinApp->mFilterTasks->RefiningZLP() || 
+    mWinApp->mFilterTasks->RefiningZLP() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
@@ -1043,6 +1046,7 @@ void CMacroProcessor::Run(int which)
   mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
   mParseQuotes = false;
+  mNoLineWrapInMessageBox = false;
   mLogAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;
   mStartClock = GetTickCount();
@@ -2821,7 +2825,7 @@ int CMacroProcessor::EvaluateIfStatement(CString *strItems, int maxItems, CStrin
   int ind, left, right, maxLevel, level, numItems = 0;
   int leftInds[MAX_LOOP_DEPTH];
 
-  if (SeparateParentheses(strItems, maxItems)) {
+  if (SeparateParentheses(strItems, maxItems, mParseQuotes)) {
     AfxMessageBox("Too many items on line after separating out parentheses in script"
       " line:\n\n" + line, MB_EXCLAME);
     return 1;
@@ -3053,6 +3057,12 @@ void CMacroProcessor::SetReportedValues(CString *strItems, double val1, double v
     SetOneReportedValue(strItems, val6, 6);
 }
 
+void CMacroProcessor::SetRepValsAndVars(int firstInd, double val1, double val2, 
+  double val3, double val4, double val5, double val6)
+{
+  SetReportedValues(&mStrItems[firstInd], val1, val2, val3, val4, val5, val6);
+}
+
 // Sets one reported value with a numeric or string value, also sets an optional variable
 // Pass the address of the FIRST optional variable
 // Clears all report variables when index is 1 and then requires report variables to
@@ -3118,14 +3128,16 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
   MacroFunction *func;
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
-  int numLabels = 0, numSkips = 0;
+  int tooMany, numLabels = 0, numSkips = 0;
   int i, inloop, needVers, index, skipInd, labInd, length, cmdIndex, currentIndex = 0;
   int lastInd, newCurrentInd, startLine, lastFoundScript = -1;
-  int currentVersion = 203;
+  int currentVersion = 204;
   CString strLine, strItems[MAX_MACRO_TOKENS], errmess, intCheck;
   const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
   int numFeatures = sizeof(features) / sizeof(char *);
 
+  if (startLevel < 0)
+    mCheckingParseQuotes = false;
   mAlreadyChecked[macroNum] = true;
   for (i = 0; i <= MAX_LOOP_DEPTH; i++)
     subBlockNum[i] = 0;
@@ -3143,8 +3155,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         inComment = false;
       continue;
     }
-    if (mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS))
-      FAIL_CHECK_LINE("Too many items on line");
+    tooMany = mParamIO->ParseString(strLine, strItems, MAX_MACRO_TOKENS,
+      mCheckingParseQuotes);
     if (strItems[0].Find("/*") == 0) {
       inComment = strLine.Find("*/") < 0;
       continue;
@@ -3157,6 +3169,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
 
       // Check validity of variable assignment then skip further checks
       stringAssign = strItems[1] == "@=" || strItems[1] == ":@=";
+      if (!stringAssign && tooMany)
+        FAIL_CHECK_LINE("Too many items on line");
       if (strItems[1] == "=" || strItems[1] == ":=" || stringAssign) {
         index = 2;
         if (!stringAssign) {
@@ -3171,7 +3185,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         if (strItems[0].GetAt(0) == '$')
           FAIL_CHECK_LINE("You cannot assign to a name that is a variable in line");
         if (!stringAssign &&
-          CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess))
+          CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess,
+            mCheckingParseQuotes))
           return 99;
         continue;
       }
@@ -3182,6 +3197,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
           FAIL_CHECK_LINE("Label cannot be a variable in line");
         continue;
       }
+      if (CMD_IS(PARSEQUOTEDSTRINGS))
+        mCheckingParseQuotes = strItems[1].IsEmpty() || atoi((LPCTSTR)strItems[1]) != 0;
 
       // See if a feature is required
       if (CMD_IS(REQUIRE)) {
@@ -3365,7 +3382,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         catchFound[blockLevel] = false;
         if (isTRY)
           tryLevel++;
-        if (isIF && CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine,errmess))
+        if (isIF && CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess,
+          mCheckingParseQuotes))
           return 99;
 
       } else if (isELSE || isELSEIF) {
@@ -3381,7 +3399,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         if (isELSE && !strItems[1].IsEmpty())
           FAIL_CHECK_NOLINE("ELSE line with extraneous entries after the ELSE");
         if (isELSEIF && CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine,
-          errmess))
+          errmess, mCheckingParseQuotes))
           return 99;
 
       } else if (CMD_IS(CATCH)) {
@@ -3482,7 +3500,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
 
       // Check commands where arithmetic is allowed
       if (ArithmeticIsAllowed(strItems[0]) && 
-        CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess))
+        CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess,
+          mCheckingParseQuotes))
         return 99;
       
       if (CMD_IS(SKIPIFVERSIONLESSTHAN) && currentIndex < macro->GetLength())
@@ -3545,10 +3564,10 @@ int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex
 
 // Check a line for balanced parentheses and no empty clauses
 int CMacroProcessor::CheckBalancedParentheses(CString *strItems, int maxItems, 
-                                              CString &strLine, CString &errmess)
+  CString &strLine, CString &errmess, bool useQuotes)
 {
   int ind, level = 0;
-  if (SeparateParentheses(strItems, maxItems))
+  if (SeparateParentheses(strItems, maxItems, useQuotes))
     FAIL_CHECK_LINE("Too many items in line after separating out parentheses")
     
   for (ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++) {
@@ -3569,7 +3588,7 @@ int CMacroProcessor::CheckBalancedParentheses(CString *strItems, int maxItems,
 }
 
 // Expand the line to put parentheses in separate items, return error if too many items
-int CMacroProcessor::SeparateParentheses(CString *strItems, int maxItems)
+int CMacroProcessor::SeparateParentheses(CString *strItems, int maxItems, bool useQuotes)
 {
   int icopy, length, ind = maxItems - 1;
   int numItems = -1;
@@ -3586,7 +3605,8 @@ int CMacroProcessor::SeparateParentheses(CString *strItems, int maxItems)
 
     // Expand an item with more than one character
     if (length > 1 && (strItems[ind].GetAt(0) == '(' ||
-      strItems[ind].GetAt(length - 1) == ')')) {
+      (strItems[ind].GetAt(length - 1) == ')' && 
+        !(useQuotes && strItems[ind].Find('(') > 0)))) {
         if (numItems >= maxItems)
           return 1;
         for (icopy = numItems; icopy > ind + 1; icopy--)

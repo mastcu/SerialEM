@@ -43,6 +43,7 @@ MDOC_STRING(mMultiHoleNum, ADOC_MULTI_POS, "MultishotHoleAndPosition")
 MDOC_FLOAT(mCamPixSize, 0., 0., ADOC_CAM_PIXEL, "CameraPixelSize")
 MDOC_FLOAT(mVoltage, 0., 0., ADOC_VOLTAGE, "Voltage")
 MDOC_TWO_INTS(mUncroppedX, mUncroppedY, 0, ADOC_UNCROPPED, "UncroppedSize")
+MDOC_INTEGER(mRotationAndFlip, -1, ADOC_ROTFLIP, "RotationAndFlip")
 
 // DE12 items
 MDOC_STRING(mDE12Version, ADOC_DE12_VERSION, "DE12-ServerSoftwareVersion")

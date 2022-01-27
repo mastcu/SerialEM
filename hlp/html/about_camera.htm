@@ -350,7 +350,13 @@
       followed by a value corresponding to a RotationAndFlip entry in the SerialEM 
       properties file.&nbsp; This value is the rotation counterclockwise divided by 90 
       (i.e., 1, 2, or 3 for angles of 90, 180 or 270) plus 4 for a flip around the Y 
-      axis before the rotation.&nbsp; There are several ways to handle the rotation of the 
+      axis before the rotation.&nbsp; This operation is what needs to be applied to 
+      the gain reference.&nbsp; If the frames were saved without rotation and flip, 
+      the title line will have the text &#39;nrf&#39; followed by the rotation/flip value that 
+      was not applied to the frames. The gain reference does not need to be rotated, 
+      but the final aligned sums do need to be rotated by this operation to match 
+      images returned to SerialEM.<p>
+      There are several ways to handle the rotation of the 
       gain reference:<ol>
       <li>With &#39;alignframes&#39; in IMOD, there is no need to normalize the data separately; 
         the gain reference and defect file can be given to the program and the option 

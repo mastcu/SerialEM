@@ -163,6 +163,9 @@ public:
   GetMember(int, TryCatchLevel);
   GetMember(bool, SuspendNavRedraw);
   GetMember(bool, DeferLogUpdates);
+  GetMember(bool, NonMacroDeferring);
+  void SetNonMacroDeferLog(bool inVal) { mDeferLogUpdates = inVal; mNonMacroDeferring = inVal; };
+
   GetMember(bool, LoopInOnIdle);
   GetMember(bool, RunningScrpLang);
   GetMember(int, LastPythonErrorLine);
@@ -297,6 +300,7 @@ protected:
   BOOL mExposedFilm;   // Flag that film should be checked
   BOOL mMovedScreen;
   BOOL mStartedLongOp; // Flag that long operation was started
+  BOOL mRanGatanScript; // Flag that a DM script was started
   BOOL mMovedPiezo;    // Flag that a piezo movement was started
   BOOL mMovedAperture; // Flag that an aperture/phase plate movement was started
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
@@ -364,15 +368,18 @@ protected:
   int mRunToolArgPlacement;  // Whether to replace (0), prepend (-1), or append (1)
   int mNumTempMacros;        // Number of temporary macros assigned from script
   int mNeedClearTempMacro;   // Flag that the current temporary needs to be cleared
-  bool mParseQuotes;         // Flag that strings are parsed with quoting 
+  bool mParseQuotes;         // Flag that strings are parsed with quoting
+  bool mCheckingParseQuotes; // Flag it is happening during checking
   bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
   bool mDeferLogUpdates;     // Flag for log window to defer its updates and accumulate
+  bool mNonMacroDeferring;   // Flag that some other module is deferring
   bool mLoopInOnIdle;        // Flag for OnIdle to keep calling TaskDone
   int mNumCmdSinceAddIdle;   // Number of commands run with looping in OnIdle
   double mLastAddIdleTime;   // Time of last call to AddIdleTask
   int mMaxCmdToLoopOnIdle;   // Maximum number of commands before returning to event loop
   float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
   ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
+  bool mNoLineWrapInMessageBox;  // Flag for messages boxes without line wrap
 
   bool mRunningScrpLang;     // Flag that external interpreter is running the script
   bool mCalledFromScrpLang;  // Flag that regular script called from language script
@@ -408,6 +415,9 @@ public:
     double val3 = EXTRA_NO_VALUE, double val4 = EXTRA_NO_VALUE,
     double val5 = EXTRA_NO_VALUE, double val6 = EXTRA_NO_VALUE);
   void SetReportedValues(CString *strItems = NULL, double val1 = EXTRA_NO_VALUE, double val2 = EXTRA_NO_VALUE,
+    double val3 = EXTRA_NO_VALUE, double val4 = EXTRA_NO_VALUE,
+    double val5 = EXTRA_NO_VALUE, double val6 = EXTRA_NO_VALUE);
+  void SetRepValsAndVars(int firstInd, double val1 = EXTRA_NO_VALUE, double val2 = EXTRA_NO_VALUE,
     double val3 = EXTRA_NO_VALUE, double val4 = EXTRA_NO_VALUE,
     double val5 = EXTRA_NO_VALUE, double val6 = EXTRA_NO_VALUE);
   void ToolbarMacroRun(UINT nID);
@@ -459,8 +469,9 @@ public:
     CString &name, CString &report, CString &rowVal);
   int SkipToLabel(CString label, CString line, int &numPops, int &delTryLevel);
   void LeaveCallLevel(bool popBlocks);
-  int CheckBalancedParentheses(CString * strItems, int maxItems, CString &strLine, CString &errmess);
-  int SeparateParentheses(CString * strItems, int maxItems);
+  int CheckBalancedParentheses(CString * strItems, int maxItems, CString &strLine, 
+    CString &errmess, bool useQuotes);
+  int SeparateParentheses(CString * strItems, int maxItems, bool useQuotes);
   void ClearFunctionArray(int index);
   MacroFunction * FindCalledFunction(CString strLine, bool scanning, int &macroNum, int &argInd, int currentMac = -1);
   void ScanMacroIfNeeded(int index, bool scanning);

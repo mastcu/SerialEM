@@ -513,6 +513,13 @@
             Multiple spaces between words are preserved, as well as extra spaces before the text.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">EchoBreakLines [text]</TD>
+          <TD>Prints the <b>text</b> to the log window, or a blank line if none, after substituting variables
+            and breaking the line at either embedded newlines ('\n') in <b>text</b> or the separators between
+            array elements.&nbsp; I.e., an array of strings will be printed on separate 
+            lines.&nbsp; Command added in 4.0, 1/24/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">EchoEval [text]</TD>
           <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating
             arithmetic expressions.&nbsp; Multiple spaces between words will be lost.&nbsp; Not
@@ -548,13 +555,17 @@
           <TD>Opens a Yes-No message box with the given <b>text</b>, which should be a question that
             can be answered with yes or no. Sets <I>reportedValue1</I> to 1 or 0 for a yes or no
             answer.&nbsp; If NoMessageBoxOnError is set, no box appears, the text is printed to the
-            log, and <I>reportedValue1</I> is 0.
+            log, and <I>reportedValue1</I> is 0.&nbsp; If you do not like the way lines are broken in
+            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
+            with Yes and No buttons will be used instead.
           </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">OKBox text</TD>
           <TD>Opens a message box with the given <b>text</b> and just an OK button.&nbsp; The box is
-            not suppressed by NoMessageBoxOnError.
+            not suppressed by NoMessageBoxOnError.&nbsp; If you do not like the way lines are broken in
+            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
+            with one OK button will be used instead.
           </TD>
         </TR>
         <TR>
@@ -577,16 +588,22 @@
             $).</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ThreeChoiceBox header choice1 choice2 [choice3] buttons</TD>
-          <TD>Opens a dialog box to allow the user to choose between two or three options.&nbsp;
-            Follow with 4 or 5 variable names.&nbsp; Put initial text to appear at the top of the box
-            in variable <b>header</b>, descriptions of the two or three choices in variables
-            <b>choice1</b>, <b>choice2</b>, and the optional <b>choice3</b>, and button labels as an
+          <TD class="scriptcommand">ThreeChoiceBox header choice1 [choice2] [choice3] buttons</TD>
+          <TD>Opens a dialog box to allow the user to choose between two or three options, although 
+            just one response is also allowed.&nbsp;
+            Follow with 3 to 5 variable names.&nbsp; Put initial text to appear at the top of the box
+            in variable <b>header</b>, descriptions of the two or three choices in variable
+            <b>choice1</b>, the optional <b>choice2</b>, and the optional <b>choice3</b>, and button labels as an
             array of strings in <b>buttons</b>.&nbsp; These names are arbitrary.&nbsp; Use an array of
             strings to have multiple lines of text for the header or descriptions.&nbsp; Use a line with
             just 'header @=' to make a variable for omitting the header text.&nbsp; The number of the
             choice (1, 2, or 3) is placed in <i>reportedValue1</i>.&nbsp; See Three Choice Box in
             <A HREF="about_scripts.htm#examples">Advanced Examples</A>.&nbsp; Command added in 3.9, 3/5/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
+          <TD>Disables line wrapping in the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
+            and OKBox', or re-enables it with if the optional B<b>#</b> is 0.&nbsp; Command added 4.0, 1/24/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ParseQuotedStrings [#]</TD>
@@ -690,10 +707,13 @@
             allowed.&nbsp; 5) &#39;evalargs&#39;, which means that arithmetic expressions will be
             evaluated in arguments to some commands.&nbsp; 6) Scripting version 201, which
             means commands can be continued onto multiple lines with backslash.&nbsp;
-              7) Scripting version 202, which means that limited arithmetic can be done in
+              7) Version 202, which means that limited arithmetic can be done in
               array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.&nbsp;
-            <br>Not from Python.&nbsp; 8) Scripting version 203, in which the 'Return' command can
-             return values from a function or script.</TD>
+            <br>Not from Python.&nbsp; 8) Version 203, in which the 'Return' command can
+             return values from a function or script.&nbsp; 8) Version 204, in which string assignments
+            can have embedded newlines, and string assignments and defining an array of quoted strings can
+            have more than ~55 words.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsVersionAtLeast #V [#D]</TD>
@@ -1447,6 +1467,21 @@
             factor will be reset to 0 when the script ends.&nbsp; Command added in 3.9,
             2/12/21.</TD>
         </TR>
+
+        <TR>
+          <TD class="scriptcommand">RunGatanScript var [#T]</TD>
+          <TD>Run a script in DigitalMicrograph contained in an array of strings in variable 
+            <b>var</b>, with an optional timeout in seconds specified in <b>#T</b>.&nbsp; The
+            Exit value from the script is placed in <i>reportedValue1</i>.&nbsp; This operation
+            is run on a separate thread like other camera operations.&nbsp; If
+            there is no timeout, the STOP button will stop the script by killing its thread; if there
+            is a timeout, STOP will not kill the script, similar to image acquisitions.&nbsp; The array
+            can be created with the 'ReadStringsFromFile' command, or array of up to 
+            ~55 quoted strings can be defined in one statement, or a longer script can be stored in an array 
+            one line at time with 'AppendToArray'.&nbsp; In the latter two cases, you will need to use
+            the 'ParseQuotedStrings' command and enclose each line of the DM script in single quotes.&nbsp; Command added in 4.0, 1/22/12.
+          </TD>
+        </TR>
      </TABLE>
       <BR>
       <P><A name="buffer_file_commands"></A><B>Buffer and File Commands</B></P>
@@ -1470,6 +1505,17 @@
           <TD>Returns the letter of the buffer currently open in the main window in <i>reportedValue1</i>
           and 0 or 1 in <i>reportedValue2</i> indicating if the buffer contains an image or not. FFT windows
           or image windows other than the main window are ignored. Command added in 3.9, 7/8/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportActiveViewTitle</TD>
+          <TD>Reports the title of the currently active window (view), which is "Main Window"
+             for the main window. Command added in 4.0, 1/20/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetActiveViewByTitle name</TD>
+          <TD>Makes the window whose title matches <b>name</b> the active window, which is useful for
+            making sure that a snapshot is of the intended window.&nbsp; Sets <i>reportedValue1</i> 
+            to 0 if a window is found with that title, 1 if not.  Command added in 4.0, 1/20/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CropImage buf #X0 #X1 #Y0 #Y1</TD>
@@ -1854,8 +1900,8 @@
         </TR>
        <TR>
           <TD class="scriptcommand">SnapshotToFile #S #T feat typ cmp file</TD>
-          <TD>Takes a snapshot of the image display in the current active buffer and saves
-            it to the file with the given name and closes the file.&nbsp; <b>#S</b> sets the amount
+          <TD>Takes a snapshot of the image display in the current active buffer of the active window, saves
+            it to the file with the given name, and closes the file.&nbsp; <b>#S</b> sets the amount
             of image scaling relative to the display with a value of 1 or greater, or 0 or
             less to take the whole image at 1:1 zoom.&nbsp; <b>#T</b> sets the scaling of text
             labels and line thicknesses with a value of 1 or more, or 0 or less to use the
@@ -1870,7 +1916,10 @@
             JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current
             compression in the Image Snapshots dialog.&nbsp; If JPG or JPEG is entered for
             &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the
-            compression entry does not matter (but must be present before the filename <b>file</b>).
+            compression entry does not matter (but must be present before the filename <b>file</b>).&nbsp; Use
+            the 'ReportActiveViewTitle' and 'SetActiveViewByTitle' commands to ensure that the snapshot is
+            of the desired window.
+
           </TD>
         </TR>
         <TR>
@@ -3330,6 +3379,17 @@
             on the setting in the <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a>,
           unless <b>#W</b> is entered as a 0 to use Focus or non-zero to use View.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">LimitNextRoughEucen #</TD>
+          <TD>Limit the Z change in the next rough eucentricity run to <b>#</b>, stopping the procedure
+            without changing Z when it would exceed that amount.&nbsp; Command added in 4.0, 1/24/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportRoughEucenFailed</TD>
+          <TD>Sets <i>reportedValue1</i> to 1 if the last run of rough eucentricity failed because the
+            Z change would have exceeded the limit set with 'LimitNextRoughEucen'.&nbsp; Command added in 4.0, 1/24/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLastAxisOffset</TD>

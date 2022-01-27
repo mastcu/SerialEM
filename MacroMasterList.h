@@ -410,7 +410,7 @@ MAC_SAME_NAME_ARG(OKBox, 1, 4, OKBOX, S)
 MAC_SAME_NAME_ARG(EnterOneNumber, 1, 4, ENTERONENUMBER, S)
 MAC_SAME_FUNC_ARG(EnterDefaultedNumber, 3, 4, EnterOneNumber, ENTERDEFAULTEDNUMBER, DIS)
 MAC_SAME_NAME_ARG(EnterString, 2, 4, ENTERSTRING, SS)
-MAC_SAME_NAME_ARG(ThreeChoiceBox, 4, 4, THREECHOICEBOX, SSSSs)
+MAC_SAME_NAME_ARG(ThreeChoiceBox, 3, 4, THREECHOICEBOX, SSSSs)
 MAC_SAME_NAME_ARG(CompareNoCase, 2, 4, COMPARENOCASE, SS)
 MAC_SAME_FUNC_ARG(CompareStrings, 2, 4, CompareNoCase, COMPARESTRINGS, SS)
 MAC_SAME_NAME_ARG(StripEndingDigits, 2, 4, STRIPENDINGDIGITS, SS)
@@ -625,6 +625,14 @@ MAC_SAME_NAME_ARG(AutoCorrPeakVectors, 2, 4, AUTOCORRPEAKVECTORS, SDii)
 MAC_SAME_NAME_NOARG(ReportCondenserStigmator, 0, 0, REPORTCONDENSERSTIGMATOR)
 MAC_SAME_NAME_ARG(AddTitleToFile, 2, 4, ADDTITLETOFILE, IS)
 MAC_SAME_NAME_ARG(ReportLastHoleVectors, 1, 4, REPORTLASTHOLEVECTORS, I)
+MAC_SAME_NAME_NOARG(ReportActiveViewTitle, 0, 4, REPORTACTIVEVIEWTITLE)
+MAC_SAME_NAME_ARG(SetActiveViewByTitle, 1, 4, SETACTIVEVIEWBYTITLE, S)
+MAC_SAME_NAME_ARG(LimitNextRoughEucen, 1, 5, LIMITNEXTROUGHEUCEN, D)
+MAC_SAME_NAME_NOARG(ReportRoughEucenFailed, 0, 4, REPORTROUGHEUCENFAILED)
+MAC_SAME_NAME_ARG(RunGatanScript, 1, 0, RunGatanScript, S)
+MAC_SAME_FUNC(EchoBreakLines, 0, 4, Echo, ECHOBREAKLINES)
+MAC_SAME_NAME_ARG(NoLineWrapInMessageBox, 0, 4, NOLINEWRAPINMESSAGEBOX, i)
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python

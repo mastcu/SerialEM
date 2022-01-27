@@ -1949,6 +1949,8 @@
 #define IDC_STAT_PRIOR_SUMMARY          2974
 #define IDC_STAT_NAV_GROUP              2975
 #define IDC_STAT_DEFOCUS                2976
+#define IDC_COMBO_OUTFILE               2977
+#define IDC_STAT_ACTIVE_VIEW            2979
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2457,9 +2459,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        267
+#define _APS_NEXT_RESOURCE_VALUE        268
 #define _APS_NEXT_COMMAND_VALUE         33413
-#define _APS_NEXT_CONTROL_VALUE         2977
+#define _APS_NEXT_CONTROL_VALUE         2980
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
