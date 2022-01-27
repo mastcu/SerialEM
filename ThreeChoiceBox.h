@@ -37,6 +37,7 @@ public:
   int mDlgType;
   int mChoice;
   int mSetDefault;     // 1 to set to No, 2 to set to cancel
+  bool mNoLineWrap;
   CString m_strMessage;
   CStatic m_statMessage;
   CStatic m_statGrayPanel;

@@ -4969,6 +4969,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 {
   int index = 0;
   CString valve;
+  bool noEmpty, cancelEmpty;
   CMacroProcessor *macProc = mWinApp->mMacroProcessor;
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
@@ -5017,9 +5018,12 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     SEMTrace('m', "TSMessageBox: %s", (LPCTSTR)message);
 
     // Call three-choice box if the type and button texts are adequate
-    if (mCallFromThreeChoice && !mTCBoxYesText.IsEmpty() && !mTCBoxNoText.IsEmpty() && 
-      ((type & MB_YESNO) != 0 || 
-      ((type & MB_YESNOCANCEL) != 0 && !mTCBoxCancelText.IsEmpty()))) {
+    noEmpty = mTCBoxNoText.IsEmpty();
+    cancelEmpty = mTCBoxCancelText.IsEmpty();
+    if (mCallFromThreeChoice && !mTCBoxYesText.IsEmpty() && 
+      (((type & (MB_YESNO | MB_YESNOCANCEL)) == 0 && noEmpty && cancelEmpty) ||
+      ((type & MB_YESNO) != 0 && !noEmpty && cancelEmpty) || 
+      ((type & MB_YESNOCANCEL) != 0 && !noEmpty && !cancelEmpty))) {
         mCallFromThreeChoice = false;
         CThreeChoiceBox tcb;
         tcb.mDlgType = type;
@@ -5027,6 +5031,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         tcb.mNoText = mTCBoxNoText;
         tcb.mCancelText = mTCBoxCancelText;
         tcb.mSetDefault = mTCBoxDefault;
+        tcb.mNoLineWrap = mTCBoxNoLineWrap;
         tcb.m_strMessage = message;
         tcb.DoModal();
         retval = tcb.mChoice;

@@ -1,4 +1,4 @@
-// ThreeChoiceBox.cpp : Presents message box equaivalent with configurable buttons
+// ThreeChoiceBox.cpp : Presents message box equivalent with configurable buttons
 //
 // Copyright (C) 2016 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
@@ -20,6 +20,7 @@ CThreeChoiceBox::CThreeChoiceBox(CWnd* pParent /*=NULL*/)
 {
   mChoice = -1;
   mSetDefault = 0;
+  mNoLineWrap = false;
 }
 
 CThreeChoiceBox::~CThreeChoiceBox()
@@ -46,7 +47,7 @@ END_MESSAGE_MAP()
 
 
 // CThreeChoiceBox message handlers
-BOOL CThreeChoiceBox::OnInitDialog() 
+BOOL CThreeChoiceBox::OnInitDialog()
 {
   if (!mWinApp->GetDisplayNotTruly120DPI())
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(IDD), RT_DIALOG),
@@ -56,11 +57,12 @@ BOOL CThreeChoiceBox::OnInitDialog()
   int butHeight, yesWidth, noWidth, cancelWidth, gutter, ixOffset, rightEdge, messLeft;
   int allButWidth, addedWidth, pixPerLine, totLines, numWrap, endInd, addedHeight;
   int margin = mWinApp->ScaleValueForDPI(16);
-  int allButTop, butRight, panelTop, numLinesOrig = 4;
+  int allButTop, butRight, panelTop, numLinesOrig = 1;
   CSize size;
   CString line, mess;
   CButton *defBut = &m_butOK;
   bool hasCancel = (mDlgType & MB_YESNOCANCEL) != 0;
+  bool hasNo = (mDlgType & (MB_YESNOCANCEL | MB_YESNO)) != 0;
 
   // Create background color
   mBkgdColor = RGB(255, 255, 255);    // At least on laptop, default is 212, 208, 200
@@ -68,7 +70,11 @@ BOOL CThreeChoiceBox::OnInitDialog()
 
   // Set the labels
   SetDlgItemText(IDOK, (LPCTSTR)mYesText);
-  SetDlgItemText(IDC_BUTMIDDLE, (LPCTSTR)mNoText);
+  if (hasNo) {
+    SetDlgItemText(IDC_BUTMIDDLE, (LPCTSTR)mNoText);
+  } else {
+    m_butMiddle.ShowWindow(SW_HIDE);
+  }
   if (hasCancel) {
     SetDlgItemText(IDCANCEL, (LPCTSTR)mCancelText);
   } else {
@@ -82,8 +88,10 @@ BOOL CThreeChoiceBox::OnInitDialog()
   butHeight = butRect.Height();
   size = dc.GetTextExtent(mYesText);
   yesWidth = B3DMAX(butRect.Width(), size.cx + margin);
-  size = dc.GetTextExtent(mNoText);
-  noWidth = B3DMAX(butRect.Width(), size.cx + margin);
+  if (hasNo) {
+    size = dc.GetTextExtent(mNoText);
+    noWidth = B3DMAX(butRect.Width(), size.cx + margin);
+  }
   if (hasCancel) {
     size = dc.GetTextExtent(mCancelText);
     cancelWidth = B3DMAX(butRect.Width(), size.cx + margin);
@@ -103,7 +111,7 @@ BOOL CThreeChoiceBox::OnInitDialog()
   m_statMessage.GetWindowRect(&statRect);
   messLeft = statRect.left - winRect.left - ixOffset;
   allButWidth = hasCancel ? cancelWidth + gutter : 0;
-  allButWidth += gutter + yesWidth + noWidth;
+  allButWidth += yesWidth + (hasNo ? gutter + noWidth : 0);
   addedWidth = B3DMAX(0, allButWidth - (rightEdge - messLeft));
   allButTop = (butRect.top - winRect.top) - (winRect.Height() - clientRect.Height()) + 
     ixOffset;
@@ -126,7 +134,10 @@ BOOL CThreeChoiceBox::OnInitDialog()
     size = dc.GetTextExtent(line);
     if (size.cx < statRect.Width() - 4)
       numWrap = 1;
-    else
+    else if (mNoLineWrap) {
+      ACCUM_MAX(addedWidth, size.cx - (statRect.Width() - 4));
+      numWrap = 1;
+    } else
       numWrap = 1 + size.cx / ((9 * statRect.Width()) / 10);
     totLines += numWrap;
   } while (endInd >= 0);
@@ -135,8 +146,8 @@ BOOL CThreeChoiceBox::OnInitDialog()
   addedHeight = pixPerLine * B3DMAX(0, totLines + 1 - numLinesOrig);
   SetWindowPos(NULL, 0, 0, winRect.Width() + addedWidth, winRect.Height() + addedHeight,
     SWP_NOMOVE);
-  m_statMessage.SetWindowPos(NULL, 0, 0, statRect.Width(), statRect.Height() + 
-    addedHeight, SWP_NOMOVE);
+  m_statMessage.SetWindowPos(NULL, 0, 0, statRect.Width() + 
+    (mNoLineWrap ? addedWidth : 0), statRect.Height() + addedHeight, SWP_NOMOVE);
   m_statGrayPanel.SetWindowPos(&wndBottom, panelRect.left - winRect.left - ixOffset, 
     panelTop + addedHeight, panelRect.Width() + addedWidth, panelRect.Height(), 
     0);
@@ -146,14 +157,16 @@ BOOL CThreeChoiceBox::OnInitDialog()
       cancelWidth, butHeight, 0);
     butRight -= gutter + cancelWidth;
   }
-  m_butMiddle.SetWindowPos(&m_statGrayPanel, butRight - noWidth, allButTop + addedHeight, 
+  if (hasNo) {
+    m_butMiddle.SetWindowPos(&m_statGrayPanel, butRight - noWidth, allButTop + addedHeight,
       noWidth, butHeight, 0);
-  butRight -= gutter + noWidth;
+    butRight -= gutter + noWidth;
+  }
   m_butOK.SetWindowPos(&m_statGrayPanel,  butRight - yesWidth, allButTop + addedHeight, 
       yesWidth, butHeight, 0);
 
   // Take care of default button
-  if (mSetDefault == 1)
+  if (mSetDefault == 1 && hasNo)
     defBut = &m_butMiddle;
   if (hasCancel && mSetDefault == 2)
     defBut = &m_butCancel;
