@@ -496,6 +496,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPSCOPEMANAGEMENT, OnUpdateSetupScopeManagement)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnTasksUseViewEvenIfSearchBetter)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnUpdateTasksUseViewEvenIfSearchBetter)
+    ON_COMMAND(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnKeepFocusTrialAtSamePosition)
+    ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnUpdateKeepFocusTrialAtSamePosition)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2806,6 +2808,17 @@ void CMenuTargets::OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mScope->GetSkipBlankingInLowDose() ? 1 : 0);
+}
+
+void CMenuTargets::OnKeepFocusTrialAtSamePosition()
+{
+  mWinApp->mLowDoseDlg.SetTieFocusTrialPos(!mWinApp->mLowDoseDlg.GetTieFocusTrialPos());
+}
+
+void CMenuTargets::OnUpdateKeepFocusTrialAtSamePosition(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mWinApp->mLowDoseDlg.GetTieFocusTrialPos());
 }
 
 void CMenuTargets::OnCloseValvesAfterLongInactivity()

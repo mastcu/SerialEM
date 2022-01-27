@@ -55,7 +55,7 @@ IDC_STATBLANKED,  IDC_STATMORE, IDC_BUTMORE, PANEL_END,
 IDC_BLANKBEAM, IDC_LDNORMALIZE_BEAM, IDC_TIEFOCUSTRIAL, IDC_COPYTOVIEW, IDC_COPYTOFOCUS,
 IDC_COPYTOTRIAL, IDC_COPYTORECORD, IDC_CENTERUNSHIFTED, IDC_BALANCESHIFTS,
 IDC_STAT_COPY_LD_AREA, IDC_LD_ROTATE_AXIS, IDC_STAT_LD_DEG, IDC_COPYTOSEARCH,
-PANEL_END, TABLE_END};
+IDC_EDIT_AXISANGLE, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
 static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
@@ -102,6 +102,7 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   mLastBlanked = false;
   mTrulyLowDose = false;
   mHideOffState = false;
+  mTieFocusTrialPos = false;
   mLastBeamX = 0.;
   mLastBeamY = 0.;
   mSearchName = "Search";
@@ -1123,7 +1124,7 @@ int CLowDoseDlg::NewAxisPosition(int area, double position, int angle, bool setA
     m_iAxisAngle = angle;
   }
   mLDParams[area].axisPosition = position;
-  if (m_bTieFocusTrial)
+  if (m_bTieFocusTrial || mTieFocusTrialPos)
     mLDParams[3 - area].axisPosition = position;
   ConvertAxisPosition(true);
   ManageAxisPosition();
@@ -1233,7 +1234,10 @@ void CLowDoseDlg::UpdateSettings()
   area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
   if ((area + 1) / 2 != 1)
     area = 2;
-  SyncFocusAndTrial(area);
+  if (m_bTieFocusTrial)
+    SyncFocusAndTrial(area);
+  else
+    SyncPosOfFocusAndTrial(area);
   ManageAxisPosition();
 
   Update();
@@ -1480,6 +1484,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   LowDoseParams *ldArea;
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   int shiftedA;
+  bool needRedraw = false;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf;
 
@@ -1495,8 +1500,10 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // Disable changes in spectroscopy mode
   if (DoingContinuousUpdate(inSetArea)) {
     ldArea = &mLDParams[inSetArea];
-    TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,
-      ldArea->ISX, ldArea->ISY);
+    needRedraw = ldArea->magIndex != magIndex && m_iDefineArea && 
+      (inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET);
+    ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY);
+    ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
     ldArea->magIndex = magIndex;
     ldArea->spotSize = spotSize;
     ldArea->camLenIndex = camLenIndex;
@@ -1522,6 +1529,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
 
     // Keep trial and focus together?
     SyncFocusAndTrial(inSetArea);
+    if (!m_bTieFocusTrial)
+      SyncPosOfFocusAndTrial(inSetArea);
   }
 
   ManageMagSpot(inSetArea, screenDown);
@@ -1570,7 +1579,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         // Set new mode shift values and set the user point
         ldArea->axisPosition = tiltAxisX;
         ConvertOneAxisToIS(ldArea->magIndex, tiltAxisX, ldArea->ISX, ldArea->ISY);
-        SyncFocusAndTrial(m_iDefineArea);
+        SyncPosOfFocusAndTrial(m_iDefineArea);
         FixUserPoint(imBuf, shiftedA);
         ManageAxisPosition();
       }
@@ -1578,6 +1587,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     } else {
       CheckSeparationChange(magIndex);
     }
+    if (needRedraw)
+      mWinApp->mMainView->DrawImage();
   } else if (m_bTieFocusTrial)
     CheckSeparationChange(magIndex);
 
@@ -1646,7 +1657,7 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
   if (UsefulImageInA() > 0) {
     ldArea->axisPosition += ConvertOneIStoAxis(mImBufs->mMagInd, delISX, delISY);
     ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
-    SyncFocusAndTrial(m_iDefineArea);
+    SyncPosOfFocusAndTrial(m_iDefineArea);
     ManageAxisPosition();
     SEMTrace('W', "ImageAlignmentChange setting axis IS");
   } else {
@@ -1720,7 +1731,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
     if (m_bRotateAxis)
       m_iAxisAngle = state.axisRotation;
     ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
-    SyncFocusAndTrial(m_iDefineArea);
+    SyncPosOfFocusAndTrial(m_iDefineArea);
   }
 
   /*
@@ -1781,7 +1792,7 @@ void CLowDoseDlg::OnKillfocusEditposition()
   // Set the axis position and image shift
   ldArea->axisPosition = newAxis;
   ConvertOneAxisToIS(ldArea->magIndex, newAxis, ldArea->ISX, ldArea->ISY);
-  SyncFocusAndTrial(m_iDefineArea);
+  SyncPosOfFocusAndTrial(m_iDefineArea);
 
 
   // Output new image shift if the defined area is current
@@ -1801,7 +1812,7 @@ void CLowDoseDlg::ApplyNewISifDefineArea(void)
   int curArea = mScope->GetLowDoseArea();
   if (mScope->GetUsePiezoForLDaxis()) {
     GoToPiezoPosForLDarea(curArea);
-  } else if (curArea == m_iDefineArea || (m_bTieFocusTrial && 
+  } else if (curArea == m_iDefineArea || ((m_bTieFocusTrial || mTieFocusTrialPos) && 
     curArea == 3 - m_iDefineArea)) {
       TransferBaseIS(ldArea->magIndex, delISX, delISY);
       mScope->SetImageShift(ldArea->ISX + delISX, ldArea->ISY + delISY);
@@ -1889,8 +1900,8 @@ int CLowDoseDlg::UsefulImageInA()
   if (!mImBufs->mBinning || !mImBufs->mCaptured || !mImBufs->mMagInd || 
     conSet == RECORD_CONSET)
     return 0;
-  if (m_iDefineArea && (conSet == m_iDefineArea || (m_bTieFocusTrial &&
-    conSet == 3 - m_iDefineArea)))
+  if (m_iDefineArea && (conSet == m_iDefineArea || 
+    ((m_bTieFocusTrial || mTieFocusTrialPos) && conSet == 3 - m_iDefineArea)))
     return 1;
   return -1;
 }
@@ -2187,10 +2198,12 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
 
   // If focus/trial tied, find which one has bigger radius, set the center from the 
   // bigger one too
-  if (m_bTieFocusTrial) {
+  if (m_bTieFocusTrial || mTieFocusTrialPos) {
     delX = conSets[3 - boxArea].right - conSets[3 - boxArea].left;
     delY = conSets[3 - boxArea].bottom - conSets[3 - boxArea].top;
-    if (delX * delX + delY * delY > diamSq) {
+    if ((delX * delX + delY * delY) *
+      mShiftManager->GetPixelSize(curCam, mLDParams[3 - boxArea].magIndex) >
+      diamSq * mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex)) {
       cenArea = 3 - boxArea;
       diamSq = delX * delX + delY * delY;
       csp = &conSets[cenArea];
@@ -2286,7 +2299,7 @@ void CLowDoseDlg::CheckAndActivatePiezoShift(void)
     PrintfToLog("Turned off Balanced Shifts");
   }
 
-  if (!m_bTieFocusTrial) {
+  if (!(m_bTieFocusTrial || mTieFocusTrialPos)) {
     m_bTieFocusTrial = true;
     mLDParams[1] = mLDParams[2];
     ManageAxisPosition();
@@ -2396,6 +2409,35 @@ void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
     float delay = mLDParams[toArea].delayFactor;
     mLDParams[toArea] = mLDParams[fromArea];
     mLDParams[toArea].delayFactor = delay;
+  }
+}
+
+// External call sets tying of focus/trial positions
+void CLowDoseDlg::SetTieFocusTrialPos(BOOL inVal)
+{
+  mTieFocusTrialPos = inVal;
+  if (mWinApp->GetStartingProgram())
+    return;
+  int area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
+  if ((area + 1) / 2 != 1)
+    area = FOCUS_CONSET;
+  SyncPosOfFocusAndTrial(area);
+}
+
+// Test for whether focus and trial positions are synced by either means and if the area
+// is appropriate, then convert to axis position and copy
+void CLowDoseDlg::SyncPosOfFocusAndTrial(int fromArea)
+{
+  int toArea = B3DCHOICE(fromArea == FOCUS_CONSET, TRIAL_CONSET, FOCUS_CONSET);
+  if ((fromArea == FOCUS_CONSET || fromArea == TRIAL_CONSET) && 
+    (mTieFocusTrialPos || m_bTieFocusTrial)) {
+    if (mTrulyLowDose)
+      mLDParams[fromArea].axisPosition = ConvertOneIStoAxis(mLDParams[fromArea].magIndex,
+        mLDParams[fromArea].ISX, mLDParams[fromArea].ISY);
+    mLDParams[toArea].axisPosition = mLDParams[fromArea].axisPosition;
+    if (mTrulyLowDose)
+      ConvertOneAxisToIS(mLDParams[toArea].magIndex, mLDParams[toArea].axisPosition,
+        mLDParams[toArea].ISX, mLDParams[toArea].ISY);
   }
 }
 

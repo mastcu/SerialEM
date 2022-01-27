@@ -10,7 +10,7 @@
         width: 193px;
       }
       .auto-style1 {
-        width: 204px;
+        width: 280px;
       }
   --></style>
   </HEAD>
@@ -165,11 +165,6 @@
           <TD>Disable automatic trimming of dark borders in Autoalign in some cases</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize
-            Via View for Autofocus</a>&nbsp;</TD>
-          <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
-        </TR>
-        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;
             <a href="#hid_specialoptions_adjustfocusonprobemodechange">Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
           <TD>Maintain constant focus difference when switching between microprobe and
@@ -182,12 +177,21 @@
             mag changes</TD>
         </TR>
        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
+          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize
+            Via View for Autofocus</a>&nbsp;</TD>
+          <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
+        </TR>
+       <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
           <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
-          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a></TD>
+          <TD>Make Focus and Trial in Low Dose mode be at same position</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_tasksuseviewevenifsearchbetter">Tasks Use View Even if Search Better</a></TD>
@@ -541,16 +545,6 @@
         the choice in the control panel</li>
     </ul>
     <p>
-      <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View
-      for Autofocus command (Tasks&nbsp; - Specialized Options submenu)</B></p>
-    <p>
-      When this option is selected, the program will switch to the View area in Low
-      Dose before going to the Focus area for autofocusing, unless it is currently in
-      Focus and arrived there from View.&nbsp; When &#39;Keep Focus and Trial identical&#39;
-      is selected in the Low Dose Control Panel, Trial and Focus are considered
-      equivalent for the purpose of deciding whether this normalization needs to be
-      done.</p>
-    <p>
       <A NAME="hid_specialoptions_adjustfocusonprobemodechange"></A><B>Adjust Focus on Probe Mode Change command (Tasks&nbsp; - Special Option submenu)</B></p>
     <p>
       When changing between microprobe and nanoprobe TEM modes on Thermo/FEI scopes, the
@@ -578,8 +572,23 @@
       this option, you can enter a 1 to normalize all lenses after all mag changes
       within LM, or a 2 to normalize all lenses after all mag changes.</p>
      <p>
-     <A NAME="hid_specializedoptions_skipblankinginldwithscreenup"></A><B>Skip Blanking in LD when Screen Up command (Tasks&nbsp; - Specialized Options submenu)</B></p>
-     <p> This option controls whether the beam is kept blanked except when acquiring images when the
+     <A NAME="hid_specializedoptions_closevalvesafterlonginactivity"></A><B>Turn Off Beam After Long Inactivity command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+      <p>With this option, you can enable the program to close valves or turn off the
+        filament if it is left idle for longer than a specified length of time.&nbsp;
+        After selecting the option, enter the number of minutes of inactivity after
+        which the program should turn off the beam, or 0 to disable this feature.&nbsp;
+        The option appears checked in the menu when a positive time has been entered.</p>
+    <p>
+      <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View
+      for Autofocus command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+    <p>
+      When this option is selected, the program will switch to the View area in Low
+      Dose before going to the Focus area for autofocusing, unless it is currently in
+      Focus and arrived there from View.&nbsp; When &#39;Keep Focus and Trial identical&#39;
+      is selected in the Low Dose Control Panel, Trial and Focus are considered
+      equivalent for the purpose of deciding whether this normalization needs to be
+      done.</p>
+     <A NAME="hid_specializedoptions_skipblankinginldwithscreenup"></A><B>Skip Blanking in LD when Screen Up command (Tasks&nbsp; - Specialized Options submenu)</B><p> This option controls whether the beam is kept blanked except when acquiring images when the
        screen is up in Low Dose mode.
        &nbsp; This blanking protects the specimen from being exposed when there is no camera
        inserted that would cause shuttering to keep the beam blanked.  When there is a camera inserted,
@@ -587,13 +596,11 @@
        camera opening its shutter and SerialEM discovering that the screen is down.&nbsp; Select this option to
        prevent the blanking if it is problematic for some reason.
      </p>
-     <p>
-     <A NAME="hid_specializedoptions_closevalvesafterlonginactivity"></A><B>Turn Off Beam After Long Inactivity command (Tasks&nbsp; - Specialized Options submenu)</B></p>
-      <p>With this option, you can enable the program to close valves or turn off the
-        filament if it is left idle for longer than a specified length of time.&nbsp;
-        After selecting the option, enter the number of minutes of inactivity after
-        which the program should turn off the beam, or 0 to disable this feature.&nbsp;
-        The option appears checked in the menu when a positive time has been entered.</p>
+      <p><a name="hid_specializedoptions_keepfocustrialstsameposition"></a><B>Keep Focus & Trial at Same Position 
+        (Tasks&nbsp; - Specialized Options submenu)</B></p>
+     <p>Keep the Focus and Trial areas in Low Dose mode at the same position even when 
+       the <strong>Keep Focus and Trial identical</strong> option in the <A HREF="hidd_lowdose.htm">Low Dose control
+        panel</A> is not selected.&nbsp; </p>
       <p>
       <a NAME="hid_specializedoptions_tasksuseviewevenifsearchbetter"></A><B>Tasks Use View Even if Search Better command (Tasks&nbsp; - Specialized Options submenu)</B></p>
       <p>When a task is run in low dose mode and needs to take tracking images at a lower magnification, it will

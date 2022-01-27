@@ -2345,6 +2345,8 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
   if (mWinApp->mLowDoseDlg.m_bTieFocusTrial) {
     ldp = mWinApp->GetLowDoseParams();
     ldp[TRIAL_CONSET] = ldp[FOCUS_CONSET];
+  } else if (mWinApp->mLowDoseDlg.GetTieFocusTrialPos()) {
+    mWinApp->mLowDoseDlg.SyncPosOfFocusAndTrial(FOCUS_CONSET);
   }
   mWinApp->mLowDoseDlg.ManageAxisPosition();
   subChanged = ModifySubareaForOffset(camIndex, xOffset, yOffset, focusSet->left,

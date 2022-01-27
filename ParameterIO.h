@@ -83,6 +83,7 @@ public:
   void ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide,
     std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides);
   void ReportSpecialOptions(void);
+  void PrintAnOption(bool &anyDone, const char *mess);
   void OutputVector(const char * key, int size, ShortVec * shorts, FloatVec* floats);
   void StoreFloatsPerBinning(CString * strItems, const char * descrip, int iset, CString & strFileName, float * values);
   int MacroSetProperty(CString name, double value);

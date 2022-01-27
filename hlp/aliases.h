@@ -346,6 +346,7 @@ hid_specialoptions_normalizealllens = SerialEM.chm::/html\menu_tasks.htm#hid_spe
 hid_specializedoptions_skipblankinginldwithscreenup = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_skipblankinginldwithscreenup
 hid_specializedoptions_closevalvesafterlonginactivity = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_closevalvesafterlonginactivity
 hid_specializedoptions_tasksuseviewevenifsearchbetter = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_tasksuseviewevenifsearchbetter
+hid_specializedoptions_keepfocustrialstsameposition = SerialEM.chm::/html\menu_tasks.htm#hid_specializedoptions_keepfocustrialstsameposition
 hid_tasks_tiltseries						= SerialEM.chm::/html\menu_tilt_series.htm#hid_tasks_tiltseries
 hid_tiltseries_terminate				= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_terminate
 hid_tiltseries_extraoutput			= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_extraoutput

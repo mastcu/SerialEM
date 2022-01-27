@@ -63,8 +63,7 @@
       parameters, it is most convenient to constrain them to be identical. This saves
       the effort of setting up the beam for both areas, avoids the image shift
       settling time required for getting between them, and minimizes the total range
-      of image shift needed for low dose work. The latter factor is currently
-      important on the 300 KV Tecnai or Polara because the objective aperture begins to occlude
+      of image shift needed for low dose work. The latter factor is important on the 300 KV Tecnai or Polara because the objective aperture begins to occlude
       the image area for relatively small image shifts. Image shift is also quite
       limited on the JEOL 2100/2200 unless the scope has the high power image shift
       option, although projector shift is usually used for image shift to minimize
@@ -149,7 +148,13 @@
       relative to the center of the View will be shown by a green cross, and you can
       click with the left mouse button to select a new position. On a View image, the
       Record area and the area being defined will also be shown with a box, with a
-      circle circumscribing the area being defined.</P>
+      circle circumscribing the area being defined.&nbsp; However, if Focus and Trial 
+      are being kept at the same position, the circle will circumscribe the larger of 
+      their two acquisition areas. They can be kept together either with the option
+      <strong>Keep Focus and Trial identical</strong> option in the <A HREF="hidd_lowdose.htm">Low Dose control
+        panel</A> or with the specialized option in the Tasks menu, <a href="menu_tasks.htm#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a>.&nbsp; 
+      In the latter case, the magnifications of the two areas are taken into account 
+      when picking which area to circumscribe.</P>
     <P>
       <i>Offsets.</i>&nbsp; Several different &quot;offsets&quot; can be set by different
       procedures:</P>

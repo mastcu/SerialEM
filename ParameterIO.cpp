@@ -6033,42 +6033,57 @@ void CParameterIO::ReadPartialBad(CString *strItems, int *itemInt, UShortVec &pa
 // Report any options set in the special options submenu
 void CParameterIO::ReportSpecialOptions(void)
 {
+  bool any = false;
+  CString mess;
   if (mWinApp->mTSController->GetSkipBeamShiftOnAlign())
-    mWinApp->AppendToLog("Special option is set to skip beam shift when aligning "
+    PrintAnOption(any, "Special option is set to skip beam shift when aligning "
       "during tilt series");
   if (mWinApp->mScope->GetUsePiezoForLDaxis())
-     mWinApp->AppendToLog("Special option is set to use piezo movement for Low Dose"
+     PrintAnOption(any, "Special option is set to use piezo movement for Low Dose"
        " on-axis shift");
   if (mWinApp->mShiftManager->GetDisableAutoTrim())
-    mWinApp->AppendToLog("Special option is set to disable automatic trimming of dark "
+    PrintAnOption(any, "Special option is set to disable automatic trimming of dark "
     "borders in Autoalign for some cases");
   if (mWinApp->mTSController->GetAllowContinuous())
-    mWinApp->AppendToLog("Special option is set to allow continuous mode in tilt series");
+    PrintAnOption(any, "Special option is set to allow continuous mode in tilt series");
   if (mWinApp->mFocusManager->GetNormalizeViaView())
-    mWinApp->AppendToLog("Special option is set to normalize through View before "
+    PrintAnOption(any, "Special option is set to normalize through View before "
     "autofocus in Low Dose");
   if (mWinApp->mScope->GetAdjustFocusForProbe())
-     mWinApp->AppendToLog("Special option is set to adjust focus when changing between "
+     PrintAnOption(any, "Special option is set to adjust focus when changing between "
      "nanoprobe and microprobe");
   if (mWinApp->mCamera->GetNoNormOfDSdoseFrac())
-    mWinApp->AppendToLog("Special option is set for no gain normalization of returned"
+    PrintAnOption(any, "Special option is set for no gain normalization of returned"
     " sum for dark-subtracted K2 dose frac shots");
   if (mWinApp->mCamera->GetAntialiasBinning() <= 0)
-    mWinApp->AppendToLog("Special option is set NOT to use antialiased reduction instead"
+    PrintAnOption(any, "Special option is set NOT to use antialiased reduction instead"
       " of binning for all K2/K3 shots");
   if (mWinApp->mScope->GetNormAllOnMagChange())
     PrintfToLog("Special option is set to normalize all lenses on %s", 
     mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" : 
     "mag changes within LM");
   if (mWinApp->mScope->GetSkipBlankingInLowDose())
-    mWinApp->AppendToLog("Special option is set to skip blanking in Low Dose when the "
+    PrintAnOption(any, "Special option is set to skip blanking in Low Dose when the "
       "screen is up");
   if (mWinApp->mScope->GetIdleTimeToCloseValves() > 0)
     PrintfToLog("Special option is set to turn off beam after %d minutes of inactivity",
       mWinApp->mScope->GetIdleTimeToCloseValves());
   if (mWinApp->mComplexTasks->GetTasksUseViewNotSearch())
-    mWinApp->AppendToLog("Special option is set to use View for tasks in Low Dose even if"
+    PrintAnOption(any, "Special option is set to use View for tasks in Low Dose even if"
       " Search has more appropriate magnification");
+  if (mWinApp->mLowDoseDlg.GetTieFocusTrialPos())
+    PrintAnOption(any, "Special option is set to keep Low Dose Trial and Focus at same"
+      " position");
+  if (mWinApp->GetStartingProgram() && any)
+    mWinApp->AppendToLog(" ");
+}
+
+void CParameterIO::PrintAnOption(bool &anyDone, const char * mess)
+{
+  if (mWinApp->GetStartingProgram() && !anyDone)
+    mWinApp->AppendToLog(" ");
+  mWinApp->AppendToLog(mess);
+  anyDone = true;
 }
 
 // Outputs a short or float vector in as many lines as it takes

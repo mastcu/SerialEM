@@ -67,6 +67,8 @@ public:
   SetMember(float, PiezoFullDelay);
   SetMember(float, FocusPiezoDelayFac);
   SetMember(float, TVPiezoDelayFac);
+  GetMember(BOOL, TieFocusTrialPos);
+
 
 // Dialog Data
 	//{{AFX_DATA(CLowDoseDlg)
@@ -182,6 +184,7 @@ private:
   float mPiezoFullDelay;     // Delay for full-range movement of piezo, for Record
   float mFocusPiezoDelayFac;  // Amount to cut delay by for focus images
   float mTVPiezoDelayFac;     // Amount to cut it by for trial/focus
+  BOOL  mTieFocusTrialPos;   // Flag to keep focus/trial positions together
 
 public:
   GetMember(BOOL, TrulyLowDose);
@@ -224,6 +227,8 @@ public:
   afx_msg void OnRadioShowOffset();
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
+  void SetTieFocusTrialPos(BOOL inVal);
+  void SyncPosOfFocusAndTrial(int fromArea);
   void DeselectGoToButtons(int area);
   void SelectGoToButton(int area);
   CButton m_butCopyToSearch;

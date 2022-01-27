@@ -519,11 +519,13 @@ BEGIN
         POPUP "Speciali&zed Options"
         BEGIN
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
-            MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
             MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
-            MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
             MENUITEM "&Turn Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
+            MENUITEM SEPARATOR
+            MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
+            MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
+            MENUITEM "&Keep Focus && Trial at Same Position", ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION
             MENUITEM "Tasks &Use View Even if Search Better", ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER
             MENUITEM SEPARATOR
             MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
@@ -6554,6 +6556,8 @@ BEGIN
                             "Set limits and interval for defocus in extended range"
     ID_FILE_USEMONOSPACEDFONT 
                             "Toggle using a monospaced font in the Log Window"
+    ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION 
+                            "Keep Low Dose Focus & Trial at same position when not otherwise identical"
 END
 
 STRINGTABLE
