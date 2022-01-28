@@ -103,7 +103,8 @@
         <TR VALIGN="top">
           <TD>AdvancedScriptingVersion</TD>
           <TD>Set to 4 to indicate that the version of Advanced Scripting supports CFEG flashing and has
-            autoloader and temperature control classes.&nbsp; The property is set to 4 automatically if
+            autoloader and temperature control classes, as well as support for continuous recording from Ceta 
+            2 cameras.&nbsp; The property is set to 4 automatically if
             there is a camera with 'FEIFilterType 1' set.&nbsp; Do not set this property unless you have
             a server version of at least 7.8 (Titan 3.8, Talos 2.8) or it will crash SerialEM or FEI-SEMserver
             when a function is called that does not exist in the current version.
@@ -2081,8 +2082,11 @@
             aligning.&nbsp; However, for a Ceta camera with the speed enhancement option 
             (referred to elsewhere as Ceta 2), set to non-zero to enable frame-saving; whether 
             frame aligning is enabled depends on whether the path to frames is defined with the
-            LocalFalconFramePath general property or FalconLocalFramePath camera property is 
-            defined. &nbsp; For a OneView or Rio camera, saving and aligning are done through
+            LocalFalconFramePath general property or with the FalconLocalFramePath camera 
+            property.&nbsp; Taking frames with the Ceta 2 also requires that the Advanced Scripting
+            version be identified as high enough; this will require a property 
+            'AdvancedScriptingVersion 4' unless there is a Selectris filter. &nbsp; For a OneView
+             or Rio camera, saving and aligning are done through
              the SEMCCD plugin just as for a K2 or K3 camera.&nbsp;  For other cameras, saving and
             aligning are done within SerialEM.&nbsp; This is the same frame
               alignment that SerialEM provides for direct detectors, which is suitable for
