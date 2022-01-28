@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/27/22: Added missing line of task elements to Acquire at Items table.
+
+1/26/22: Released plugin/server in which saving frames from Ceta 2 may work.
+
 1/26/22: Added special option to keep Trial and Focus at same position while
 allowing other differences.
 
