@@ -16,6 +16,7 @@
 #include "ChildFrm.h"
 #include "LogWindow.h"
 #include "EMscope.h"
+#include "ExternalTools.h"
 #include "MacroProcessor.h"
 #include "AutocenSetupDlg.h"
 #include "shiftManager.h"
@@ -608,6 +609,7 @@ void CMainFrame::RemoveHiddenItemsFromMenus()
       CChildFrame *child = (CChildFrame *)pWnd;
       child->SetSharedMenu(m_hMenuDefault);
     }
+    mWinApp->mExternalTools->AddMenuItems();
   }
   mainMenu = GetMenu();
   RemoveItemsFromOneMenu(mainMenu, 0);
