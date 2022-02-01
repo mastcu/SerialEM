@@ -47,6 +47,7 @@ public:
 	virtual ~CMainFrame();
   bool GetClosingProgram() {return mClosingProgram;};
   void DoClose(bool afterScript);
+  GetMember(HMENU, RebuiltMenu);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -81,6 +82,8 @@ private:
   int mDialogOffset;
   int mLeftDialogOffset;
   bool mClosingProgram;
+  HMENU mRebuiltMenu;
+
 public:
   void NewWindow(void);
 };

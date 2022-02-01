@@ -81,6 +81,7 @@ CMainFrame::CMainFrame()
   m_nTimer = 0;
   mDialogOffset = 0;
   mClosingProgram = false;
+  mRebuiltMenu = NULL;
   mLeftDialogOffset = IsVersion(10, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL) ?
     WIN10_LEFT_OFFSET : DIALOG_LEFT_OFFSET;
 }
@@ -118,7 +119,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   EnableDocking(CBRS_ALIGN_ANY);
   DockControlBar(&m_wndToolBar);
   m_wndToolBar.ShowWindow(SW_HIDE);
-
 
   return 0;
 }
@@ -432,6 +432,9 @@ void CMainFrame::DoClose(bool afterScript)
     // Auto save files, may save some inquiries
     mWinApp->mDocWnd->AutoSaveFiles();
 
+    if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState)
+      mWinApp->mAutocenDlg->RestoreScopeState();
+
     // Want to shut off low dose mode now so that parameters return
     // to their normal states before settings are saved
     mWinApp->mLowDoseDlg.SetLowDoseMode(false);
@@ -472,7 +475,6 @@ void CMainFrame::DoClose(bool afterScript)
       return;
     }
   }
-
 
   mWinApp->SetAppExiting(true);
   mWinApp->mCamera->CheckAndFreeK2References(true);
@@ -583,7 +585,6 @@ void CMainFrame::InitializeStatusBar()
   m_wndStatusBar.SetPaneInfo(3, uID, uStyle, rectArea.Width());
   m_wndStatusBar.ReleaseDC(pDC);
   // SetStatusText(2, "DOING NOTHING");
-
 }
 
 // Remove items to be hidden from the menus, restroing if necessary
@@ -610,6 +611,7 @@ void CMainFrame::RemoveHiddenItemsFromMenus()
       child->SetSharedMenu(m_hMenuDefault);
     }
     mWinApp->mExternalTools->AddMenuItems();
+    mRebuiltMenu = m_hMenuDefault;
   }
   mainMenu = GetMenu();
   RemoveItemsFromOneMenu(mainMenu, 0);

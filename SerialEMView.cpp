@@ -137,15 +137,18 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
   static int windowNum = 1;
   CString str;
 
+  // The parent is good for getting the rect but it is not really the mainFrame - it is
+  // the client window under the mainframe.  So we have to get menu from THE mainFrame
   CChildFrame *childFrame = (CChildFrame *)CWnd::FromHandle(cs.hwndParent);
-  CMainFrame *mainFrame = (CMainFrame *)childFrame->GetParent();
+  CWnd *client = (CWnd *)childFrame->GetParent();
   CRect rect;
-  mainFrame->GetClientRect(&rect);
+  client->GetClientRect(&rect);
 
   type = mWinApp->GetNewViewProperties(this, iBordLeft, iBordTop, iBordRight, iBordBottom,
     mImBufs, mImBufNumber, mImBufIndex);
-  if (type != 1)
-    childFrame->SetSharedMenu(mainFrame->m_hMenuDefault);
+  if (type != 1 && mWinApp->mMainFrame->GetRebuiltMenu()) {
+    childFrame->SetSharedMenu(mWinApp->mMainFrame->GetRebuiltMenu());
+  }
   if (type == 1) {
   
     // If this is the static window, set the size to fill the client area
