@@ -430,7 +430,7 @@ MAC_SAME_NAME_ARG(ConditionPhasePlate, 0, 0, CONDITIONPHASEPLATE, i)
 MAC_SAME_NAME_NOARG(GetWaitTaskDrift, 0, 0, GETWAITTASKDRIFT)
 MAC_SAME_NAME_NOARG(BacklashAdjust, 0, 0, BACKLASHADJUST)
 MAC_SAME_NAME_ARG(CenterBeamFromImage, 0, 0, CENTERBEAMFROMIMAGE, id)
-MAC_SAME_NAME_ARG(AutoCenterBeam, 0, 0, AUTOCENTERBEAM, d)
+MAC_SAME_NAME_ARG(AutoCenterBeam, 0, 0, AUTOCENTERBEAM, di)
 MAC_SAME_NAME_NOARG(CookSpecimen, 0, 0, COOKSPECIMEN)
 MAC_SAME_NAME_NOARG(SetIntensityByLastTilt, 0, 2, SETINTENSITYBYLASTTILT)
 MAC_SAME_FUNC_ARG(ChangeIntensityBy, 1, 1, SetIntensityByLastTilt, CHANGEINTENSITYBY, D)
@@ -633,7 +633,7 @@ MAC_SAME_NAME_ARG(RunGatanScript, 1, 0, RunGatanScript, S)
 MAC_SAME_FUNC(EchoBreakLines, 0, 4, Echo, ECHOBREAKLINES)
 MAC_SAME_NAME_ARG(NoLineWrapInMessageBox, 0, 4, NOLINEWRAPINMESSAGEBOX, i)
 MAC_SAME_NAME_NOARG(ReportRotationProblems, 0, 4, REPORTROTATIONPROBLEMS)
-
+MAC_SAME_FUNC_ARG(UseHoleVectorsForMulti, 0, 4, ReportLastHoleVectors, USEHOLEVECTORSFORMULTI, i)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python

@@ -6900,10 +6900,13 @@ int CMacCmd::CenterBeamFromImage(void)
 // AutoCenterBeam
 int CMacCmd::AutoCenterBeam(void)
 {
-  double delISX;
-
-  delISX = mItemEmpty[1] ? 0. : mItemDbl[1];
-  if (mWinApp->mMultiTSTasks->AutocenterBeam((float)delISX)) {
+  float maxShift = mItemEmpty[1] ? 0.f : mItemFlt[1];
+  int pctSmaller = mItemEmpty[2] ? -1 : mItemInt[2];
+  if (mWinApp->mAutocenDlg)
+    ABORT_NOLINE("You cannot run beam autocentering with the setup dialog open");
+  if (pctSmaller >= 0 && !mWinApp->LowDoseMode())
+    ABORT_LINE("Low Dose mode must be on to autocenter with View in:\n\n");
+  if (mWinApp->mMultiTSTasks->AutocenterBeam(maxShift, pctSmaller)) {
     AbortMacro();
     return 1;
   }
@@ -9231,13 +9234,28 @@ int CMacCmd::ReportHoleFinderParams(void)
   return 0;
 }
 
-// ReportLastHoleVectors
+// ReportLastHoleVectors, UseHoleVectorsForMulti
 int CMacCmd::ReportLastHoleVectors(void)
 {
   int index = mItemInt[1];
+  bool settingMulti = CMD_IS(USEHOLEVECTORSFORMULTI);
   ScaleMat mat, st2is;
+  MultiShotParams *msParams;
   if (index > 0 && (index >= MAX_MAGS || !mMagTab[index].mag))
     ABORT_LINE("The magnification index is out of range in:\n\n");
+  if (settingMulti) {
+    mNavHelper->UpdateMultishotIfOpen();
+    msParams = mNavHelper->GetMultiShotParams();
+    if (index < 0) {
+      index = msParams->holeMagIndex;
+      if (!index)
+        ABORT_LINE("There is no existing hole magnification index to use for:\n\n");
+    }
+    if (!index)
+      index = mLdParam[RECORD_CONSET].magIndex;
+    if (!index)
+      ABORT_LINE("There is no Record magnification index to use for:\n\n");
+  }
   if (index < 0) {
     mat = mNavHelper->mHoleFinderDlg->GetGridImVecs();
     mat.ypx = -mat.ypx;
@@ -9255,9 +9273,19 @@ int CMacCmd::ReportLastHoleVectors(void)
     mShiftManager->ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
     mShiftManager->ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
   }
+  if (settingMulti) {
+    msParams->holeISXspacing[0] = mat.xpx;
+    msParams->holeISYspacing[0] = mat.ypx;
+    msParams->holeISXspacing[1] = mat.xpy;
+    msParams->holeISYspacing[1] = mat.ypy;
+    msParams->holeMagIndex = index;
+    msParams->tiltOfHoleArray = 0.;
+    if (mNavHelper->mMultiShotDlg)
+      mNavHelper->mMultiShotDlg->UpdateSettings();
+  } else
+    SetRepValsAndVars(2, mat.xpx, mat.ypx, mat.xpy, mat.ypy);
   mLogRpt.Format("Hole %s vectors are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
     "image", index ? "IS" : "stage"), mat.xpx, mat.ypx, mat.xpy, mat.ypy);
-  SetRepValsAndVars(2, mat.xpx, mat.ypx, mat.xpy, mat.ypy);
   return 0;
 }
 

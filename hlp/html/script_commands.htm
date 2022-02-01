@@ -2962,8 +2962,8 @@
        <TR>
           <TD class="scriptcommand">IsFEGFlashingAdvised #</TD>
           <TD>Reports whether flashing of a cold FEG is advisable on a Thermo/FEI scope, where <b>#</b> should be 0 for
-            a low-temperature flash and non-zero for a high-temperature flash.&nbsp; Value can be assigned
-          to a variable at end of command&nbsp; Command added in 3.9, 6/12/21.</TD>
+            a low-temperature flash and non-zero for a high-temperature flash.  FEG flashing commands are available on Thermo/FEI scopes only if there is a Selectris filter or a property entry 'AdvancedScriptingVersion 4' or higher.&nbsp; Value can be assigned
+          to a variable at end of command.&nbsp; Command added in 3.9, 6/12/21.</TD>
         </TR>
           <TD class="scriptcommand">NextFEGFlashHighTemp [#]</TD>
           <TD>Sets the next FEG flashing done with 'LongOperation FF' on a Thermo/FEI scope to be high-temperature,
@@ -3422,10 +3422,14 @@
             the time since the last run is less than that interval.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AutocenterBeam [#]</TD>
-          <TD>Starts the Beam Autocenter routine.&nbsp; The optional <b>#</b> sets a maximum
+          <TD class="scriptcommand">AutocenterBeam [#M] [#P]</TD>
+          <TD>Starts the Beam Autocenter routine.&nbsp; The optional <b>#M</b> sets a maximum
             beam shift in microns; the beam will not be moved if the shift determined
-            from the circle fit to the beam edges exceeds this value.</TD>
+            from the circle fit to the beam edges exceeds this value.&nbsp; If the optional [#P] is
+            set to 0 or a positive number, autocentering will be done using View with the specified
+             percentage reduction in beam size; this may be useful for finding a badly mis-centered
+             beam.&nbsp; The program must already be in Low Dose mode to use this option.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CookSpecimen</TD>
@@ -3951,6 +3955,18 @@
             <b>#</b> is negative, the vectors are in image coordinates, with Y inverted.&nbsp; If <b>#</b>
             is a magnification index, the vectors are in image shift coordinates at the given magnification.
             Command added in 4.0, 1/13/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UseHoleVectorsForMulti [#]</TD>
+          <TD>Converts the vectors between holes from the last hole finding operation to image shift
+             values and assigns them as the hole vectors for doing multiple records in a regular pattern 
+            of holes.&nbsp; If the optional [#] is absent or 0, the values are computed for the current
+            Low Dose Record magnification; if it is positive, the vectors are computed for the given 
+            magnification index; if it is negative, they are computed for the magnification at which 
+            hole vectors were last defined.&nbsp; The magnification associated with the image shift vectors in the
+            multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
+            the parameters is set to zero.&nbsp; Command added in 4.0, 1/28/22.
           </TD>
         </TR>
         <TR>
