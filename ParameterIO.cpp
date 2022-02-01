@@ -1714,7 +1714,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     for (i = 0; i < autocenArray->GetSize(); i++) {
       acParams = autocenArray->GetAt(i);
-      if (acParams->intensity >= 0.) {
+      if (acParams->intensity >= 0. || acParams->camera == -1) {
         acParmP = mWinApp->mMultiTSTasks->LookupAutocenParams(acParams->camera, 
           acParams->magIndex, acParams->spotSize, acParams->probeMode, 
           acParams->intensity, j);

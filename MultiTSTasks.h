@@ -74,9 +74,15 @@ private:
   int mAcPostSettingDelay;  // Delay after setting intensity
   AutocenParams * mAcUseParam;  // Save param for later use
   int mAcSavedLDDownArea;  // Saved value of low dose down area
-  float mAcMaxShift;      // maximum shift in microns, reject movement if higher
-  float mAcShiftedBeamX;  // Amount of beam shift in microns on camera imposed
+  float mAcMaxShift;       // maximum shift in microns, reject movement if higher
+  float mAcShiftedBeamX;   // Amount of beam shift in microns on camera imposed
   float mAcShiftedBeamY;
+  BOOL mUseEasyAutocen;    // Flag for using Trial with smaller beam
+  int mAcLDarea;           // Low dose area used for centering
+  int mAcConset;           // Control set used
+  int mAcSavedViewBinning; // Saved binning, continuous mode, and read area when using
+  int mAcSavedViewContin;  // View conset instead of track
+  int mAcSavedReadMode;
   WINDOWPLACEMENT mAutocenDlgPlace;
   WINDOWPLACEMENT mVPPConditionPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
@@ -188,6 +194,8 @@ public:
   GetSetMember(int, CkNumAlignSteps);
   GetSetMember(float, CkAlignStep);
   GetSetMember(int, CkNumStepCuts);
+  GetSetMember(BOOL, UseEasyAutocen);
+
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};
   int DoingBidirCopy() {return mBfcDoingCopy;};
@@ -207,7 +215,8 @@ public:
     int &index);
   void SetupAutocenter();
   void MakeAutocenConset(AutocenParams * param);
-  int AutocenterBeam(float maxShift = 0.);
+  int NextLowerNonSuperResBinning(int binning);
+  int AutocenterBeam(float maxShift = 0., int pctSmallerView = -1);
   void AutocenNextTask(int param);
   void AutocenCleanup(int error);
   void StopAutocen(void);

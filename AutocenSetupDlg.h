@@ -38,6 +38,7 @@ private:
   double mStartingBSX, mStartingBSY;
   BOOL mLowDoseMode;
   bool mLastTrialMismatch;
+  bool mOpening;
 
 public:
 
@@ -114,4 +115,12 @@ public:
   void MoreOrLessIntensity(double factor);
   CStatic m_statLdTrackScope;
   void ManageLDtrackText(bool tracking);
+  CButton m_butUseTrialSmaller;
+  BOOL m_bUseTrialSmaller;
+  CStatic m_statSmallerTrial;
+  CSpinButtonCtrl m_sbcSmallerTrial;
+  afx_msg void OnDeltaposSpinSmallerTrial(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnUseTrialSmaller();
+  void ManageSettingsLines();
+  CString m_strSmallerTrial;
 };

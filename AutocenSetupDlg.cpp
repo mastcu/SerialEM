@@ -27,10 +27,13 @@ CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
   , m_fBeamShift(1.f)
   , m_strAddedShift(_T(""))
   , m_bRecordingAddedShift(FALSE)
+  , m_bUseTrialSmaller(FALSE)
+  , m_strSmallerTrial(_T(""))
 {
   mEnableAll = true;
   mLastTrialMismatch = false;
   mParam = NULL;
+  mOpening = true;
   mNonModal = true;
 }
 
@@ -71,13 +74,18 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_editBeamShift);
   DDX_Check(pDX, IDC_ACS_SHIFT_BEAM, m_bShiftBeam);
   DDX_Text(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift);
-  MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f, 
+  MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
     "Beam shift for centering");
   DDX_Text(pDX, IDC_STAT_ACS_ADDED_SHIFT, m_strAddedShift);
   DDX_Check(pDX, IDC_RECORD_ADDED_SHIFT, m_bRecordingAddedShift);
   DDX_Control(pDX, IDC_RESET_ADDED_SHIFT, m_butResetAddedShift);
   DDX_Control(pDX, IDC_RECORD_ADDED_SHIFT, m_butRecordShift);
   DDX_Control(pDX, IDC_STAT_LD_TRACK_SCOPE, m_statLdTrackScope);
+  DDX_Control(pDX, IDC_USE_TRIAL_SMALLER, m_butUseTrialSmaller);
+  DDX_Check(pDX, IDC_USE_TRIAL_SMALLER, m_bUseTrialSmaller);
+  DDX_Control(pDX, IDC_STAT_SMALLER_TRIAL, m_statSmallerTrial);
+  DDX_Control(pDX, IDC_SPIN_SMALLER_TRIAL, m_sbcSmallerTrial);
+  DDX_Text(pDX, IDC_STAT_SMALLER_TRIAL, m_strSmallerTrial);
 }
 
 
@@ -97,6 +105,8 @@ BEGIN_MESSAGE_MAP(CAutocenSetupDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_ACS_BEAM_SHIFT, OnEnKillfocusEditBeamShift)
   ON_BN_CLICKED(IDC_RECORD_ADDED_SHIFT, OnRecordAddedShift)
   ON_BN_CLICKED(IDC_RESET_ADDED_SHIFT, OnResetAddedShift)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_SMALLER_TRIAL, OnDeltaposSpinSmallerTrial)
+  ON_BN_CLICKED(IDC_USE_TRIAL_SMALLER, OnUseTrialSmaller)
 END_MESSAGE_MAP()
 
 
@@ -115,7 +125,6 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   if (mWinApp->GetNumActiveCameras() > 1) {
     m_strCamName = mCamParams->name;
   } else {
-    m_statCamLabel1.ShowWindow(SW_HIDE);
     m_statCamLabel2.ShowWindow(SW_HIDE);
     m_statCamName.ShowWindow(SW_HIDE);
   }
@@ -140,6 +149,12 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     // value at the start of state tracking when leaving tracking
     mCurIntensity = mScope->GetIntensity();
   }
+
+  // Get smaller trial params just to set the value in case it is off
+  mParam = mMultiTasks->GetAutocenSettings(-1, mCurMagInd, mCurSpot,
+    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+  m_strSmallerTrial.Format("%d%%", mParam->spotSize);
+
   FetchParams();
   m_butAcquire.EnableWindow(mLowDoseMode);
 
@@ -149,10 +164,14 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   m_sbcMag.SetPos(15000);
   m_sbcBinning.SetRange(0,30000);
   m_sbcBinning.SetPos(15000);
+  m_sbcSmallerTrial.SetRange(0, 30000);
+  m_sbcSmallerTrial.SetPos(15000);
+  ManageSettingsLines();
   UpdateParamSettings();
   UpdateMagSpot();
   UpdateEnables();
   SetDefID(45678);    // Disable OK from being default button
+  mOpening = false;
 
   return TRUE;
 }
@@ -200,6 +219,43 @@ void CAutocenSetupDlg::OnSetbeamstate()
   m_butMore.EnableWindow(m_bSetState);
   m_butLess.EnableWindow(m_bSetState);
   mWinApp->RestoreViewFocus();
+}
+
+// Spinner for smaller Trial
+void CAutocenSetupDlg::OnDeltaposSpinSmallerTrial(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  mWinApp->RestoreViewFocus();
+  if (NewSpinnerValue(pNMHDR, pResult, mParam->spotSize, 0, 75, mParam->spotSize))
+    return;
+  UpdateParamSettings();
+}
+
+// Button to use smaller trial
+void CAutocenSetupDlg::OnUseTrialSmaller()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+  mMultiTasks->SetUseEasyAutocen(m_bUseTrialSmaller);
+  FetchParams();
+  UpdateEnables();
+  UpdateParamSettings();
+  ManageSettingsLines();
+}
+
+void CAutocenSetupDlg::ManageSettingsLines()
+{
+  if (mLowDoseMode && m_bUseTrialSmaller) {
+    SetDlgItemText(IDC_STAT_SEP_SETTINGS1, "Current, not stored, Trial values will be used");
+    SetDlgItemText(IDC_STAT_SEP_SETTINGS2, "Settings here");
+    m_statCamLabel1.SetWindowText(" will not apply if Trial changes");
+    m_statCamLabel1.ShowWindow(SW_SHOW);
+
+  } else {
+    SetDlgItemText(IDC_STAT_SEP_SETTINGS1,"Separate settings can be stored for each mag");
+    SetDlgItemText(IDC_STAT_SEP_SETTINGS2, "and spot size");
+    m_statCamLabel1.SetWindowText(" and for each camera");
+    m_statCamLabel1.ShowWindow(mWinApp->GetNumActiveCameras() > 1 ? SW_SHOW : SW_HIDE);
+  }
 }
 
 // Spot size change
@@ -393,7 +449,7 @@ void CAutocenSetupDlg::OnRecordAddedShift()
     SetDlgItemText(IDC_RESET_ADDED_SHIFT, "Reset");
   } else {
 
-    // Starting to rtecord: give a caution
+    // Starting to record: give a caution
     if (!FEIscope)
       mWinApp->AppendToLog("Stay at the same scope conditions while recording this"
         " beam shift");
@@ -426,7 +482,8 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool mismatch = false;
-  if (!mMultiTasks->AutocenTrackingState() || mScope->GetChangingLDArea())
+  if (mOpening || !mMultiTasks->AutocenTrackingState() || mScope->GetChangingLDArea() ||
+    m_bUseTrialSmaller)
     return;
   if (mLowDoseMode) {
     mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize || 
@@ -469,17 +526,41 @@ void CAutocenSetupDlg::UpdateParamSettings(void)
 {
   CString str1, str2;
   CString prefix = mLowDoseMode ? "Intensity was" : "Settings were";
-  m_fExposure = (float)mParam->exposure;
-  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mParam->binning, mCamParams));
+  bool easyTrial = mLowDoseMode && m_bUseTrialSmaller;
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  ControlSet *conSet = mWinApp->GetConSets() + TRIAL_CONSET;
+  double pctDone, intensity;
+  float roundFac, exposure = mParam->exposure;
+  int err, binning = mParam->binning;
+  if (easyTrial) {
+    binning = mMultiTasks->NextLowerNonSuperResBinning(conSet->binning);
+    roundFac = mWinApp->mCamera->ExposureRoundingFactor(mCamParams);
+    exposure = conSet->exposure;
+    if (roundFac)
+      exposure = (float)(B3DNINT(exposure * roundFac) / roundFac);
+  }
+  m_fExposure = exposure;
+  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(binning, mCamParams));
   m_iUseCentroid = mParam->useCentroid;
-  if (mLowDoseMode && mParam->intensity < 0) {
+  if (mLowDoseMode && !easyTrial && mParam->intensity < 0) {
     if (mScope->GetLowDoseArea() == TRIAL_CONSET)
       mCurIntensity = mScope->GetIntensity();
     mParam->intensity = mCurIntensity;
     ParamChanged();
   }
-
-  if (mParam->intensity >= 0.) {
+  if (easyTrial) {
+    err = mWinApp->mBeamAssessor->AssessChangeForSmallerBeam(mParam->spotSize, intensity,
+      pctDone, TRIAL_CONSET);
+    m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(ldParam->spotSize,
+      intensity, ldParam->probeMode), mScope->GetC2Units(), mScope->GetC2Name());
+    if (err == BEAM_ENDING_OUT_OF_RANGE)
+      m_strSource.Format("At end of calibrated range, only %.0f%% smaller", pctDone);
+    else if (err)
+      m_strSource = "Current Trial intensity not calibrated, no change";
+    else
+      m_strSource = "Intensity set from current Trial and size change";
+    m_strSmallerTrial.Format("%d%%", mParam->spotSize);
+  } else if (mParam->intensity >= 0.) {
     m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mCurSpot, mParam->intensity,
       mParam->probeMode), mScope->GetC2Units(), mScope->GetC2Name());
     if (mSynthesized && mBestMag > 0) {
@@ -531,9 +612,13 @@ void CAutocenSetupDlg::StartTrackingState(void)
 // Update the strings for mag and spot
 void CAutocenSetupDlg::UpdateMagSpot(void)
 {
-  m_strSpot.Format("%d", mCurSpot);
-  m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF, mCurMagInd));
-  m_statNanoprobe.ShowWindow(mCurProbe > 0 ? SW_HIDE : SW_SHOW);
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  bool easyTrial = mLowDoseMode && m_bUseTrialSmaller;
+  m_strSpot.Format("%d", easyTrial ? ldParam->spotSize : mCurSpot);
+  m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF, 
+    easyTrial ? ldParam->magIndex : mCurMagInd));
+  m_statNanoprobe.ShowWindow(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) > 0,
+    SW_HIDE, SW_SHOW));
   UpdateData(false);
 }
 
@@ -569,13 +654,28 @@ void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe)
 // Get params for current mag/spot and find the binning index
 void CAutocenSetupDlg::FetchParams(void)
 {
-  mParam = mMultiTasks->GetAutocenSettings(mCamera, mCurMagInd, mCurSpot, mCurProbe,
-    mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  ControlSet *conSet = mWinApp->GetConSets() + TRIAL_CONSET;
+  m_bUseTrialSmaller = mMultiTasks->GetUseEasyAutocen();
+  bool easyTrial = mWinApp->LowDoseMode() && m_bUseTrialSmaller;
+  int binning;
+  mParam = mMultiTasks->GetAutocenSettings(easyTrial ? -1 : mCamera, mCurMagInd, mCurSpot,
+    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+  binning = mParam->binning;
+  if (easyTrial)
+    binning = mMultiTasks->NextLowerNonSuperResBinning(conSet->binning);
   for (int i = 0; i < mCamParams->numBinnings; i++) {
-    if (mCamParams->binnings[i] >= mParam->binning) {
+    if (mCamParams->binnings[i] >= binning) {
       mBinIndex = i;
       break;
     }
+  }
+
+  // Add new smaller Trial params right away
+  if (easyTrial && mSynthesized) {
+    mMultiTasks->AddAutocenParams(mParam);
+    mParam = mMultiTasks->GetAutocenSettings(-1, mCurMagInd, mCurSpot,
+      mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
   }
 }
 
@@ -612,21 +712,31 @@ void CAutocenSetupDlg::UpdateEnables()
     !(mWinApp->mCamera->GetInitialized() && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire());
   bool canAcquire = mEnableAll && (m_bSetState || mLowDoseMode);
+  bool smallTrial = mLowDoseMode && m_bUseTrialSmaller;
   button = (CButton *)GetDlgItem(IDOK);
   button->EnableWindow(mEnableAll);
   button = (CButton *)GetDlgItem(IDCANCEL);
   button->EnableWindow(mEnableAll);
   m_butSetState.EnableWindow(mEnableAll && !mLowDoseMode);
-  m_editExposure.EnableWindow(mEnableAll);
+  m_editExposure.EnableWindow(mEnableAll && !smallTrial);
   m_butUseEdge.EnableWindow(mEnableAll);
   m_butUseCentroid.EnableWindow(mEnableAll);
-  m_butMore.EnableWindow(canAcquire);
-  m_butLess.EnableWindow(canAcquire);
-  m_butDelete.EnableWindow(mEnableAll);
+  m_butMore.EnableWindow(canAcquire && !smallTrial);
+  m_butLess.EnableWindow(canAcquire && !smallTrial);
+  m_butDelete.EnableWindow(mEnableAll && !smallTrial);
   m_sbcMag.EnableWindow(mEnableAll && !mLowDoseMode);
+  EnableDlgItem(IDC_STATACBMAG, mEnableAll && !mLowDoseMode);
+  EnableDlgItem(IDC_AUTOCENSPOT, mEnableAll && !mLowDoseMode);
   m_butAcquire.EnableWindow(canAcquire);
-  m_sbcBinning.EnableWindow(mEnableAll);
+  m_sbcBinning.EnableWindow(mEnableAll && !smallTrial);
+  EnableDlgItem(IDC_STATACBBINNING, mEnableAll && !smallTrial);
+  EnableDlgItem(IDC_STATACBPCTC2, mEnableAll && !smallTrial);
+  m_statCamName.EnableWindow(!smallTrial);
+  m_statNanoprobe.EnableWindow(!smallTrial);
   m_sbcSpot.EnableWindow(mEnableAll && !mLowDoseMode);
+  m_sbcSmallerTrial.EnableWindow(mEnableAll && smallTrial);
+  m_statSmallerTrial.EnableWindow(mEnableAll && smallTrial);
+  m_butUseTrialSmaller.EnableWindow(mEnableAll && mLowDoseMode);
   m_butShiftBeam.EnableWindow(mEnableAll && !m_iUseCentroid);
   m_editBeamShift.EnableWindow(mEnableAll && !m_iUseCentroid && m_bShiftBeam);
   m_butRecordShift.EnableWindow(mEnableAll);
@@ -638,6 +748,8 @@ void CAutocenSetupDlg::UpdateEnables()
 // Set the text for whether intensity is being tracked
 void CAutocenSetupDlg::ManageLDtrackText(bool tracking)
 {
+  if (mOpening)
+    return;
   m_statLdTrackScope.SetWindowText(tracking ? "Tracking intensity on scope" : 
     "NOT tracking intensity on scope");
 }

@@ -1484,7 +1484,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   LowDoseParams *ldArea;
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   int shiftedA;
-  bool needRedraw = false;
+  bool needRedraw = false, needAutoCen = false;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf;
 
@@ -1510,6 +1510,9 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     ldArea->diffFocus = focus;
     ldArea->beamAlpha = alpha;
     ldArea->probeMode = probeMode;
+    needAutoCen = intensity != ldArea->intensity && mWinApp->mAutocenDlg &&
+      (inSetArea == TRIAL_CONSET || (inSetArea == FOCUS_CONSET && m_bTieFocusTrial)) &&
+        mWinApp->mMultiTSTasks->GetUseEasyAutocen();
     if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || 
@@ -1531,6 +1534,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     SyncFocusAndTrial(inSetArea);
     if (!m_bTieFocusTrial)
       SyncPosOfFocusAndTrial(inSetArea);
+    if (needAutoCen)
+      mWinApp->mAutocenDlg->UpdateParamSettings();
   }
 
   ManageMagSpot(inSetArea, screenDown);

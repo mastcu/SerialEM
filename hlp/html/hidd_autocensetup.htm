@@ -31,13 +31,11 @@
           reliably close to circular, it should be adjusted&nbsp;until it is just 
           inscribed in the camera field of view; there should be no need to make it 
           smaller than that.</P>
-      <P>With an initial shift applied, the beam can be larger than the camera field, 
-          perhaps up to twice as big.&nbsp; This option provides one solution if the beam 
-          shifts its position when condensed small enough to use it without any shift.&nbsp; 
-          An amount of shift should be applied that will bring the edge close to the 
-          center of the field when the beam starts out centered.&nbsp; A non-circular beam 
-          will definitely give a biased result when analyzing much less than half the beam 
-          edge, but in practice this may be acceptable. </P>
+      <P>With an initial shift applied to bring the beam edge to the center of the 
+        field, the beam can be larger than the camera field, perhaps up to twice as big.&nbsp; 
+        This option provides one solution if the beam shifts its position when condensed 
+        small enough to use it without any shift. See the description of this option 
+        below for details.</P>
     <P>The program can store the settings to control the autocentering separately for 
       each spot size, magnification, and camera. In addition, separate settings can 
       be stored for intensities on either side of condenser crossover. This does not 
@@ -45,11 +43,14 @@
       a limited extent, the program will derive settings for a particular mag and 
       spot size from the settings for a nearby mag and spot. However, it cannot 
       transfer settings from one camera to another or from one side of crossover to 
-      another.</P>
-      <P>This dialog is non-modal (as of SerialEM 3.8), which means other 
-          operations are allowed while the dialog is open.&nbsp; Two incompatible 
-          operations are prevented when the dialog is open: changing the current camera 
-          and turning Low Dose mode on or off.&nbsp; Other tasks and complex operations will 
+      another.&nbsp; In Low Dose mode, there is an option to constrict the beam by a 
+      specified amount from whatever the current settings of the Trial area are when 
+      autocentering; this avoids having to save specific intensity values that may 
+      need adjusting, and should be more convenient in many cases.</P>
+      <P>This dialog is non-modal (as of SerialEM 3.8), which means other operations are 
+        allowed while the dialog is open.&nbsp; Three incompatible operations are 
+        prevented when the dialog is open: changing the current camera, turning Low Dose mode on or off, 
+        and beam autocentering itself.&nbsp; Other tasks and complex operations will 
           temporarily disable all the controls in the dialog.</P>
       <P>There are some fundamental differences in the way the dialog behaves and how you 
           can adjust settings depending on whether Low Dose mode is on or off.</P>
@@ -72,12 +73,23 @@
       These latter values are originally based on the Trial camera parameter set.</P>
       <P><strong>&nbsp;<em>In Low Dose mode</em></strong>, autocentering images are taken 
           with the Trial area microscope parameters, and only the intensity can be changed 
-          from the current Trial microscope state.&nbsp; The exposure time and binning can 
-          also be changed; they are initially based on those of the Trial parameter set.&nbsp; 
+          from the current Trial microscope state.&nbsp; Here there is a basic choice: 
+        whether to save specific intensity and acquisition values for particular 
+        magnification and spot size combinations, or whether to use the simplified 
+        approach of taking Trial images with a specified reduction in beam size.&nbsp; 
+        In the simplified method, no parameters are stored except the percentage 
+        reduction in beam size.&nbsp; When autocentering is run, the current Trial 
+        exposure time will be used, and the current binning will be reduced by one step 
+        if possible.&nbsp; This method does require the beam intensity to be in the 
+        calibrated range, unless zero reduction in beam size is specified.</P>
+    <P>When this simple approach is not used, there are a number of points to be aware 
+      of:&nbsp; 
           Here are points to be aware of:</P>
       <ul>
           <li>The magnification and spot size spin buttons are disabled and only reflect the 
               current settings of the Trial area.&nbsp; </li>
+          <li>The exposure time and binning can be changed; they are initially based on 
+            those of the Trial parameter set. </li>
           <li>There is no specific option to control whether changes in intensity will be 
               linked between the scope and dialog.&nbsp; Instead, this tracking of state is 
               enabled in two conditions: when the screen is down and Trial is the current 
@@ -105,12 +117,27 @@
               take an image with that intensity applied.&nbsp; If you take single Trial images 
               by any other means, the current Trial intensity is used instead.</li>
       </ul>
+    <p>
+      <strong><em>Dialog Controls</em></strong></p>
+    <P><b>Use Trial in LD with beam smaller by x%</b></P>
+    <P>Select this option to use the Trial parameters for autocentering, whatever they 
+      are at the time, but with intensity changed to reduce the beam diameter by the 
+      selected amount.&nbsp; All of the values shown below in the dialog are what 
+      would be used if autocentering is done with the current Trial parameters.&nbsp; 
+      They are not stored values, and if Trial parameters are changed, the new values 
+      would apply instead.&nbsp; Note that the <strong>Smaller</strong> and <strong>
+      Bigger</strong> buttons are disabled; only the spinner on this line can be used 
+      to adjust the intensity used.</P>
     <P><B>Source of settings</B></P>
-    <P>This line reports whether the currently shown settings are stored values 
+    <P>When not using the simplified method in Low Dose mod, this line reports whether the currently shown settings are stored values 
       specific to this spot size and magnification, or whether they have been derived 
       from a different spot size and/or magnification. If settings are derived, then 
       as soon as you modify them in any way (i.e., change intensity, binning, 
-      exposure, or centering method), they will be stored and shown as directly set.</P>
+      exposure, or centering method), they will be stored and shown as directly set.&nbsp;&nbsp; 
+      When using Trial in Low Dose with a smaller beam, the line will either state 
+      that the intensity value shown is derived from the current Trial intensity and 
+      the size reduction, or will indicate whether the end of the calibrated range of 
+      intensity would be reached.</P>
     <P><B>Setup beam on scope and track scope state</B></P>
     <P>As explained above, this option appears only outside of Low Dose mode and 
         sychronizes the dialog and 
@@ -120,8 +147,8 @@
       binning or exposure time but not intensity.</P>
     <P><B>Spot size and Mag readouts and selectors</B></P>
     <P>The controls let you see the current magnification and spot size of 
-      the dialog, which determine which parameter set is displayed.&nbsp; Outside of low 
-        dose, you can also change these parameters with the spin buttons.&nbsp; If you 
+      the dialog, which determine which parameter set is displayed.&nbsp; Outside of Low 
+        Dose, you can also change these parameters with the spin buttons.&nbsp; If you 
         want to use these buttons to browse through the parameter sets and possibly 
         delete some, you should open the dialog with Low Dose mode off.&nbsp; Even the 
         sets added in Low Dose mode will be displayed.</P>
@@ -147,14 +174,23 @@
       <P>Use this option to shift the beam before finding the edges, which allows a beam 
           larger than the field of view to be used for centering.&nbsp; This provides a 
           way to avoid problems with the beam being constricted so that enough edges show, 
-          such as the beam shifting when condensed that much.&nbsp; The shift should be 
-          enough to bring the edge of the beam near the center of the field.&nbsp; With 
+          such as the beam shifting when condensed that much.&nbsp; Only a single shift 
+        is done, not a series of shifts to find a badly mis-centered beam.&nbsp; The shift should be 
+          enough to bring the edge of the beam near the center of the field.&nbsp; If 
+        the beam is near circular, the center can be estimated reliably from less than 
+        half the circumference, but a non-circular beam will definitely give a biased 
+        result when the fraction of beam edge analyzed is not close to half.&nbsp; In 
+        practice this may be acceptable. &nbsp; This method will also not tolerate the 
+        beam being mis-centered by as much as it can be with an unshifted, constricted 
+        beam, but it should be able to handle the beam being mis-centered by up to a 
+        quarter of the field (compared with at least half the field when using an 
+        unshifted, constricted beam.&nbsp; With 
           Low Dose mode off, the beam is shifted on a diagonal to maximize the beam edge 
           in the field; in Low Dose mode, the beam is shifted perpendicular to the axis 
           between Record and Trial to avoid impinging on either the Record area or another 
           more distant area.&nbsp; The shift can be either negative or positive and 
           determines the direction of movement.</P>
-      <P><strong>Record shift</strong></P>
+      <P><strong>Record the shift</strong></P>
       <P>This feature can be used to leave the beam miscentered by a desired amount after 
           centering it.&nbsp; This would provide a second way to deal with a consistent 
           shift between the beam used for centering and the uncondensed beam, but it can 
@@ -184,8 +220,9 @@
           recorded shift.&nbsp; When recording a shift, it is labeled 'Abort' and lets you 
           stop recording a shift without losing the previous value.</P>
       <P><B>Test Acquire</B></P>
-    <P>Use this button to take an image with the current settings and see how large the 
-      beam is and whether it is saturating the camera. The screen will be restored to its state before taking the picture 
+    <P>Use this button to take an image with the current settings and see how large 
+      the beam is and whether it is saturating the camera. The screen will be restored 
+      to the state it was in before taking the picture 
       unless you are in Low Dose mode.</P>
     <P><B>Delete Settings</B></P>
     <P>The button can be used to delete stored settings, which might be useful if you 

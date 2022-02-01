@@ -301,7 +301,10 @@
       those are advised, or only low-temperature flashes when they are advised.&nbsp;
       For JEOL scopes, there is no <strong>Setup</strong> button, and the task will
       flash the FEG unconditionally when it is run, so it is important to specify an
-      appropriate interval at which it should be flashed.</P>
+      appropriate interval at which it should be flashed.&nbsp; (In order for this 
+      task to appear, there must be a Selectris filter or a property entry 
+      &#39;AdvancedScriptingVersion 4&#39; or higher for Thermo/FEI scopes, or the property 
+      entry &#39;HasNitrogenClass 1&#39; or higher for JEOL scopes.)</P>
     <P><strong>Coma-free Alignment - </strong>This task will run the coma-free
       alignment routine that uses CTF fitting.&nbsp; The <strong>Setup</strong> button
       will run the Focus menu <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A>

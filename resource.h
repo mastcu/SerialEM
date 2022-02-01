@@ -1951,6 +1951,11 @@
 #define IDC_STAT_DEFOCUS                2976
 #define IDC_COMBO_OUTFILE               2977
 #define IDC_STAT_ACTIVE_VIEW            2979
+#define IDC_USE_TRIAL_SMALLER           2980
+#define IDC_SPIN_SMALLER_TRIAL          2981
+#define IDC_STAT_SMALLER_TRIAL          2982
+#define IDC_STAT_SEP_SETTINGS1          2983
+#define IDC_STAT_SEP_SETTINGS2          2984
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2462,7 +2467,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        268
 #define _APS_NEXT_COMMAND_VALUE         33414
-#define _APS_NEXT_CONTROL_VALUE         2980
+#define _APS_NEXT_CONTROL_VALUE         2985
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

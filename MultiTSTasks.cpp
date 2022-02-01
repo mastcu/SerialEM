@@ -74,6 +74,7 @@ CMultiTSTasks::CMultiTSTasks(void)
   mTiltRangeLowStamp = 0.;
   mTiltRangeHighStamp = 0.;
   mAcPostSettingDelay = 200;
+  mUseEasyAutocen = false;
   mBfcCopyIndex = -1;
   mBfcDoingCopy = 0;
   mBfcStopFlag = false;
@@ -639,6 +640,15 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
     acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac); 
   acParams.useCentroid = false;
   acParams.probeMode = probe;
+  acParams.shiftBeamForCen = false;
+  acParams.beamShiftUm = 0.;
+  acParams.addedShiftX = 0.;
+  acParams.addedShiftY = 0.;
+  if (camera < 0) {
+    acParams.spotSize = 20;
+    synthesized = true;
+    return &acParams;
+  }
 
   // Now look at each setting and evaluate feasibility of adapting it
   for (i = 0; i < mAcParamArray.GetSize(); i++) {
@@ -748,6 +758,10 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
       if (roundFac)
         acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
       acParams.useCentroid = parmP->useCentroid;
+      acParams.shiftBeamForCen = parmP->shiftBeamForCen;
+      acParams.beamShiftUm = parmP->beamShiftUm;
+      acParams.addedShiftX = parmP->addedShiftX;
+      acParams.addedShiftY = parmP->addedShiftY;
     }
   }
   return &acParams;
@@ -785,8 +799,8 @@ AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int s
     parmP = mAcParamArray[index];
     aboveCross = mBeamAssessor->GetAboveCrossover(parmP->spotSize, parmP->intensity, 
       parmP->probeMode);
-    if (parmP->camera == camera && parmP->magIndex == magInd && parmP->spotSize == spot
-      && aboveCross == aboveNeeded && parmP->probeMode == probe)
+    if (parmP->camera == camera && (camera < 0 || (parmP->magIndex == magInd && 
+      parmP->spotSize == spot && aboveCross == aboveNeeded && parmP->probeMode == probe)))
       return parmP;
   }
   index = -1;
@@ -799,7 +813,8 @@ bool CMultiTSTasks::AutocenParamExists(int camera, int magInd, int probe)
   AutocenParams *parmP;
   for (int index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];
-    if (parmP->camera == camera && parmP->magIndex == magInd && parmP->probeMode == probe)
+    if (parmP->camera == camera && (camera < 0 || 
+      (parmP->magIndex == magInd && parmP->probeMode == probe)))
       return true;
   }
   return false;
@@ -874,14 +889,14 @@ WINDOWPLACEMENT *CMultiTSTasks::GetAutocenPlacement(void)
 }
 
 // Test for whether autocenter setup is tracking the state in general:
-// when not doing tsaks, and either with option on in non-low dose, or if the area is
+// when not doing tasks, and either with option on in non-low dose, or if the area is
 // Trial or we are going to Trial in Low dose
 bool CMultiTSTasks::AutocenTrackingState(int changing)
 {
   return mWinApp->mAutocenDlg && (!mWinApp->DoingTasks() || 
     mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) && 
     ((!mWinApp->LowDoseMode() && mWinApp->mAutocenDlg->m_bSetState) ||
-    (mWinApp->LowDoseMode() && 
+    (mWinApp->LowDoseMode() && !mUseEasyAutocen &&
       (mScope->GetLowDoseArea() == TRIAL_CONSET || changing == ACTRACK_TO_TRIAL)));
 }
 
@@ -904,21 +919,35 @@ void CMultiTSTasks::TestAutocenAcquire()
   AutocenParams *param;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool synth;
-  int bestMag, bestSpot;
+  double pctDone;
+  int bestMag, bestSpot, err;
   mAcSavedMagInd = dlg->mSavedMagInd;
   mAcSavedSpot = dlg->mSavedSpot;
   mAcSavedProbe = dlg->mSavedProbe;
   mAcSavedIntensity = dlg->mSavedIntensity;
   mAcSavedScreen = mScope->GetScreenPos();
-  param = GetAutocenSettings(dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot,
+  param = GetAutocenSettings((mWinApp->LowDoseMode() && mUseEasyAutocen) ?
+    -1 : dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot,
     dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot);
-  MakeAutocenConset(param);
   if (mWinApp->LowDoseMode()) {
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
     mAcLDTrialIntensity = ldParm->intensity;
-    ldParm->intensity = param->intensity;
+    if (mUseEasyAutocen) {
+      if (param->spotSize > 0) {
+        err = mWinApp->mBeamAssessor->AssessChangeForSmallerBeam(param->spotSize,
+          ldParm->intensity, pctDone, TRIAL_CONSET);
+        if (err == BEAM_ENDING_OUT_OF_RANGE)
+          PrintfToLog("WARNING: Reached the end of calibrated beam intensity with a "
+            "size change of only %.1f%%", pctDone);
+        else if (err)
+          mWinApp->AppendToLog("WARNING: Trial beam intensity is not in the calibrated"
+            " range, size was not changed");
+      }
+    } else
+      ldParm->intensity = param->intensity;
     mScope->GotoLowDoseArea(TRIAL_CONSET);
   }
+  MakeAutocenConset(param);
   ShiftBeamForCentering(param);
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_TEST_AUTOCEN, 0, 0);
@@ -943,26 +972,72 @@ void CMultiTSTasks::AutocenTestAcquireDone()
 // Make a control set for taking an autocenter image
 void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
 {
-  int sizeX, sizeY, left, top, bottom, right;
+  int sizeX, sizeY, left, top, bottom, right, err;
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   ControlSet  *conSets = mWinApp->GetConSets();
+  bool useView = param->camera < -1;
+  double linearThresh = .3, outFactor, threshIntensity, useIntensity;
+  ControlSet *conSet = conSets + (useView ? VIEW_CONSET : TRACK_CONSET);
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  conSets[TRACK_CONSET] = conSets[TRIAL_CONSET];
-  conSets[TRACK_CONSET].binning = param->binning;
-  conSets[TRACK_CONSET].exposure = (float)param->exposure;
-  conSets[TRACK_CONSET].forceDark = false;
-  conSets[TRACK_CONSET].onceDark = false;
-  conSets[TRACK_CONSET].drift = 0.;
-  conSets[TRACK_CONSET].mode = SINGLE_FRAME;
-  conSets[TRACK_CONSET].processing = GAIN_NORMALIZED;
+  if (!useView)
+    conSets[TRACK_CONSET] = conSets[TRIAL_CONSET];
+  else {
+    mAcSavedViewBinning = conSet->binning;
+    mAcSavedViewContin = conSet->mode;
+    mAcSavedReadMode = conSet->K2ReadMode;
+  }
+  if (param->camera >= 0) {
+    conSet->binning = param->binning;
+    conSet->exposure = (float)param->exposure;
+  } else {
+    conSet->binning = NextLowerNonSuperResBinning(conSet->binning);
+  }
+  conSet->onceDark = false;
+  conSet->mode = SINGLE_FRAME;
 
-  // Use the largest centered square that fits in the field
-  sizeX = sizeY = B3DMIN(camParams->sizeX, camParams->sizeY) / param->binning;
-  mCamera->CenteredSizes(sizeX, camParams->sizeX, camParams->moduloX, left, right, 
-    sizeY, camParams->sizeY, camParams->moduloY, top, bottom, param->binning);
-  conSets[TRACK_CONSET].left = left * param->binning;
-  conSets[TRACK_CONSET].top = top * param->binning;
-  conSets[TRACK_CONSET].right = right * param->binning;
-  conSets[TRACK_CONSET].bottom = bottom * param->binning;
+  // Switch a direct detector to linear mode if there is a big enough intensity change
+  if (mCamera->IsDirectDetector(camParams) && conSet->K2ReadMode > 0) {
+    err = mWinApp->mBeamAssessor->AssessBeamChange(linearThresh, threshIntensity, 
+      outFactor,
+      B3DCHOICE(mWinApp->LowDoseMode(), useView ? VIEW_CONSET : TRIAL_CONSET, -1));
+    if (mWinApp->LowDoseMode()) {
+      useIntensity = ldParm[useView ? VIEW_CONSET : TRIAL_CONSET].intensity;
+    } else {
+      useIntensity = param->intensity;
+    }
+    if (!err && ((threshIntensity < mAcSavedIntensity && useIntensity < threshIntensity)
+      || (threshIntensity > mAcSavedIntensity && useIntensity > threshIntensity)))
+      conSet->K2ReadMode = LINEAR_MODE;
+  }
+  if (!useView) {
+    conSet->drift = 0.;
+    conSet->forceDark = false;
+    conSet->processing = GAIN_NORMALIZED;
+
+    // Use the largest centered square that fits in the field
+    sizeX = sizeY = B3DMIN(camParams->sizeX, camParams->sizeY) / param->binning;
+    mCamera->CenteredSizes(sizeX, camParams->sizeX, camParams->moduloX, left, right,
+      sizeY, camParams->sizeY, camParams->moduloY, top, bottom, param->binning);
+    conSet->left = left * param->binning;
+    conSet->top = top * param->binning;
+    conSet->right = right * param->binning;
+    conSet->bottom = bottom * param->binning;
+  }
+}
+
+// Find the next lower binning, excluding super-resolution mode
+int CMultiTSTasks::NextLowerNonSuperResBinning(int binning)
+{
+  CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
+  for (int ind = 0; ind < camParams->numBinnings; ind++) {
+    if (binning == camParams->binnings[ind]) {
+      if (ind >= BinDivisorI(camParams) && !(ind == 1 && camParams->DE_camType &&
+        (camParams->CamFlags & DE_APOLLO_CAMERA)))
+        return camParams->binnings[ind - 1];
+      break;
+    }
+  }
+  return binning;
 }
 
 // Apply a beam shift for autocentering if one is specified and beam edges are being used
@@ -988,29 +1063,44 @@ void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param)
 }
 
 // Autocenter beam: takes an optional maximum radius in microns
-int CMultiTSTasks::AutocenterBeam(float maxShift)
+int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
 {
-  int magInd, spotSize, probe;
-  int bestMag, bestSpot;
-  bool synth, raise;
+  int magInd, spotSize, probe, err;
+  int bestMag, bestSpot, camForParam = mWinApp->GetCurrentCamera();
+  bool synth, raise, smallerTrial = false;
+  double pctDone;
   CString report;
+  CString *names = mWinApp->GetModeNames();
   AutocenParams *param;
   LowDoseParams *ldParm;
   FilterParams *filtParm = mWinApp->GetFilterParams();
   mAcMaxShift = maxShift;
+  mAcLDarea = TRIAL_CONSET;
+  mAcConset = TRACK_CONSET;
     
   if (mWinApp->LowDoseMode()) {
-    ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+    smallerTrial = mUseEasyAutocen || pctSmallerView >= 0;
+    if (pctSmallerView >= 0) {
+      mAcLDarea = VIEW_CONSET;
+      mAcConset = VIEW_CONSET;
+      camForParam = -2;
+    } else if (mUseEasyAutocen)
+      camForParam = -1;
+    ldParm = mWinApp->GetLowDoseParams() + mAcLDarea;
     magInd = ldParm->magIndex;
     spotSize = ldParm->spotSize;
     mAcSavedIntensity = ldParm->intensity;
     probe = ldParm->probeMode;
     if (!magInd || !spotSize || !mAcSavedIntensity) {
-      SEMMessageBox("You need to set up the Trial low dose area\nbefore trying to "
-      "autocenter in low dose", MB_EXCLAME);
+      SEMMessageBox("You need to set up the " + names[mAcLDarea] + " low dose area\n"
+        "before trying to autocenter in low dose", MB_EXCLAME);
       return 1;
     }
   } else {
+    if (pctSmallerView >= 0) {
+      SEMMessageBox("You cannot autocenter beam with View outside low dose mode");
+      return 1;
+    }
     magInd = mScope->GetMagIndex();
     spotSize = mScope->GetSpotSize();
     mAcSavedIntensity = mScope->GetIntensity();
@@ -1022,14 +1112,14 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
   mAcSavedSpot = spotSize;
 
   // Get the param and make sure it works
-  param = mWinApp->mMultiTSTasks->GetAutocenSettings(mWinApp->GetCurrentCamera(), magInd,
+  param = mWinApp->mMultiTSTasks->GetAutocenSettings(camForParam, magInd,
     spotSize, probe, mAcSavedIntensity, synth, bestMag, bestSpot);
-  if (param->intensity < 0) {
+  if (!smallerTrial && param->intensity < 0) {
     SEMMessageBox("There are no usable settings for autocentering at this magnification"
       " and spot size", MB_EXCLAME);
     return 1;
   }
-  if (bestSpot != spotSize) {
+  if (!smallerTrial && bestSpot != spotSize) {
     report.Format("Warning: using intensity setting for spot %d to center beam at spot"
       " %d", bestSpot, spotSize);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED); 
@@ -1040,21 +1130,40 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
     mScope->GetLDCenteredShift(mAcISX, mAcISY);
     mScope->IncImageShift(-mAcISX, -mAcISY);
   }
-  MakeAutocenConset(param);
-  mAcUseParam = param;
 
   // Have to raise screen before setting intensity if in EFTEM with auto mag changes
   // Otherwise set it now or set LD intensity
   raise = !mWinApp->LowDoseMode() && mWinApp->GetEFTEMMode() && filtParm->autoMag && 
     mScope->GetScreenPos() == spDown;
-  if (mWinApp->LowDoseMode())
-    ldParm->intensity = param->intensity;
-  else if (!raise) {
+  if (mWinApp->LowDoseMode()) {
+    if (smallerTrial) {
+      if (pctSmallerView >= 0)
+        param->spotSize = pctSmallerView;
+      if (param->spotSize > 0) {
+        err = mWinApp->mBeamAssessor->AssessChangeForSmallerBeam(param->spotSize, 
+          ldParm->intensity, pctDone, mAcLDarea);
+        if ((!err || err == BEAM_ENDING_OUT_OF_RANGE) && synth && pctSmallerView < 0)
+          PrintfToLog("WARNING: No parameters found for autocentering with %s,"
+            " using %d%% smaller beam", (LPCTSTR)names[mAcLDarea],  param->spotSize);
+        if (err == BEAM_ENDING_OUT_OF_RANGE)
+          PrintfToLog("WARNING: Autocentering reached the end of calibrated beam "
+            "intensity with a size change of only %.1f%%, not %d%%", pctDone);
+        else if (err) {
+          SEMMessageBox("Cannot autocenter beam with smaller " + names[mAcLDarea] + 
+            " beam.\n" + names[mAcLDarea] + " intensity is not in the calibrated range");
+          return 1;
+        }
+      }
+    } else
+      ldParm->intensity = param->intensity;
+  } else if (!raise) {
     SEMTrace('I', "AutocenBeam setting intensity to %.5f  %.3f%%", param->intensity, 
       mScope->GetC2Percent(spotSize, param->intensity, param->probeMode));
     mScope->SetIntensity(param->intensity, spotSize, param->probeMode);
     Sleep(mAcPostSettingDelay);
   }
+  MakeAutocenConset(param);
+  mAcUseParam = param;
 
   mAutoCentering = true;
   mAcUseCentroid = param->useCentroid ? 1 : 0;
@@ -1066,9 +1175,9 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
     mWinApp->SetStatusText(SIMPLE_PANE, "RAISING SCREEN");
   } else {
     if (mWinApp->LowDoseMode())
-      mScope->GotoLowDoseArea(TRIAL_CONSET);
+      mScope->GotoLowDoseArea(mAcLDarea);
     ShiftBeamForCentering(param);
-    mCamera->InitiateCapture(TRACK_CONSET);
+    mCamera->InitiateCapture(mAcConset);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
   }
   return 0;
@@ -1120,11 +1229,11 @@ void CMultiTSTasks::AutocenNextTask(int param)
         mAcUseParam->probeMode);
       Sleep(mAcPostSettingDelay);
       if (mWinApp->LowDoseMode())
-        mScope->GotoLowDoseArea(TRIAL_CONSET);
+        mScope->GotoLowDoseArea(mAcLDarea);
       ShiftBeamForCentering(mAcUseParam);
     } else
       mAcUseCentroid++;
-    mCamera->InitiateCapture(TRACK_CONSET);
+    mCamera->InitiateCapture(mAcConset);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
     return;
   }
@@ -1149,6 +1258,7 @@ void CMultiTSTasks::AutocenCleanup(int error)
 void CMultiTSTasks::StopAutocen(void)
 {
   LowDoseParams *ldParm;
+  ControlSet *conSet = mWinApp->GetConSets() + VIEW_CONSET;
   if (!mAutoCentering)
     return;
   SEMTrace('I', "StopAutocen restoring intensity %.5f", mAcSavedIntensity);
@@ -1157,12 +1267,17 @@ void CMultiTSTasks::StopAutocen(void)
 
     // Restore both trial and focus if tied, in case the trial value leaked into focus
     ldParm = mWinApp->GetLowDoseParams();
-    ldParm[TRIAL_CONSET].intensity = mAcSavedIntensity;
-    if (mWinApp->mLowDoseDlg.m_bTieFocusTrial)
+    ldParm[mAcLDarea].intensity = mAcSavedIntensity;
+    if (mWinApp->mLowDoseDlg.m_bTieFocusTrial && mAcLDarea == TRIAL_CONSET)
       ldParm[FOCUS_CONSET].intensity = mAcSavedIntensity;
 
     // Go back to area to restore the intensity in case continuous update is on
-    mScope->GotoLowDoseArea(TRIAL_CONSET);
+    mScope->GotoLowDoseArea(mAcLDarea);
+    if (mAcLDarea == VIEW_CONSET) {
+      conSet->binning = mAcSavedViewBinning;
+      conSet->mode = mAcSavedViewContin;
+      conSet->K2ReadMode = mAcSavedReadMode;
+    }
   } else
     mScope->IncImageShift(mAcISX, mAcISY);
   mAutoCentering = false;
