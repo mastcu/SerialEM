@@ -112,7 +112,9 @@ class CBeamAssessor
                                     double &newIntensity, double &outFactor);
   int AssessBeamChange(double inFactor, double &outIntensity, double &outFactor,
              int lowDoseArea);
-  BOOL IntensityCalibrated();
+  int AssessChangeForSmallerBeam(double pctChange, double &outIntensity, double &pctDone,
+    int lowDoseArea);
+    BOOL IntensityCalibrated();
   void FitIntensityCurve(int indStart, int nFit, float &a, float &b, float &con);
   void FitCurrentCurve(int indStart, int nFit, float &a, float &b, float &con);
   int ChangeBeamStrength(double inFactor, int lowDoseArea);

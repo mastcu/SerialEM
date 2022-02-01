@@ -977,10 +977,23 @@ int CBeamAssessor::AssessBeamChange(double inFactor, double &newIntensity,
   probe = lowDoseArea < 0 ? mScope->GetProbeMode() : mLDParam[lowDoseArea].probeMode;
   startIntensity = 
     lowDoseArea < 0 ? mScope->GetIntensity() : mLDParam[lowDoseArea].intensity;
+  newIntensity = startIntensity;
   if (!startIntensity)
     return BEAM_STRENGTH_SCOPE_ERROR;
   return AssessBeamChange(startIntensity, spotSize, probe, inFactor, newIntensity, 
     outFactor);
+}
+
+// Get intensity for given percentage reduction in beam size, and percent actually done
+int CBeamAssessor::AssessChangeForSmallerBeam(double pctChange, double &outIntensity,
+  double &pctDone, int lowDoseArea)
+{
+  double outFactor, inFactor = 1. / pow(1. - 0.01 * pctChange, 2.);
+  int err = AssessBeamChange(inFactor, outIntensity, outFactor, lowDoseArea);
+  pctDone = err ? 0. : pctChange;
+  if (err == BEAM_ENDING_OUT_OF_RANGE)
+    pctDone = 100. * (1. - sqrt(outFactor / inFactor));
+  return err;
 }
 
 int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int probe,
@@ -1104,8 +1117,13 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
     // If past either extrapolation limit, just take it to the limit
     if ((indStart && diffSign * (newIntensity - rightExtrapLimit) > 0.) ||
       (!indStart && diffSign * (newIntensity - leftExtrapLimit) < 0.)) {
-      newIntensity = intensityLimit;
-      outFactor = inFactor / exp(logLimit - startLog);
+      newIntensity = indStart ? rightExtrapLimit : leftExtrapLimit;
+      con -= (float)newIntensity;
+      newLog = (-b + sqrt(b * b - 4 * a * con)) / (2. * a);
+      rightLog = (-b - sqrt(b * b - 4 * a * con)) / (2. * a);
+      if (fabs(rightLog - logLimit) < fabs(newLog - logLimit))
+        newLog = rightLog;
+      outFactor = inFactor / exp(newLog - startLog);
 
       // But if that takes it farther from where we started, then just stay at the
       // starting intensity
