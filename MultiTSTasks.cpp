@@ -914,6 +914,7 @@ void CMultiTSTasks::TestAutocenAcquire()
     dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot);
   MakeAutocenConset(param);
   if (mWinApp->LowDoseMode()) {
+    mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
     mAcLDTrialIntensity = ldParm->intensity;
     ldParm->intensity = param->intensity;
     mScope->GotoLowDoseArea(TRIAL_CONSET);
