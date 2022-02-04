@@ -182,6 +182,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mSavedBeamTiltX = EXTRA_NO_VALUE;
   mSavedAstigX = EXTRA_NO_VALUE;
   mNavAcquireDlg = NULL;
+  mRunScriptAfterNextAcq = -1;
 }
 
 
@@ -8649,6 +8650,17 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
     }
   }
  
+  if (!mResumedFromPause) {
+    mScriptToRunAtEnd = mRunScriptAfterNextAcq;
+    mRunScriptAfterNextAcq = -1;
+    if (mScriptToRunAtEnd >= 0 && 
+      mMacroProcessor->EnsureMacroRunnable(mScriptToRunAtEnd)) {
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+      return;
+    }
+  }
+  mRetractAtAcqEnd = mWinApp->GetAnyRetractableCams() && mAcqParm->retractCameras;
+
   runPremacro = mAcqParm->runPremacro;
   if (mAcqParm->acquireType != ACQUIRE_DO_TS)
     runPremacro = mAcqParm->runPremacroNonTS;
@@ -9556,7 +9568,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
         mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
         return;
       }
-      EndAcquireWithMessage();
+      if (EndAcquireWithMessage())
+        return;
     }
     mAcqStepIndex = -1;
     break;
@@ -9632,9 +9645,16 @@ int CNavigatorDlg::ResumeFromPause()
 }
 
 // Message box on normal stopping or ending from paused state
-void CNavigatorDlg::EndAcquireWithMessage(void)
+int CNavigatorDlg::EndAcquireWithMessage(void)
 {
-  CString report;
+  CString report, scrp;
+  bool runScript = mAcquireEnded == 10 && !mPausedAcquire && mScriptToRunAtEnd >= 0;
+  if (mRetractAtAcqEnd) {
+    mRetractAtAcqEnd = false;
+    mCamera->RetractAllCameras();
+    mWinApp->AddIdleTask(TASK_NAV_ACQ_RETRACT, 0, 60000);
+    return 1;
+  }
   StopAcquiring();
   mWinApp->SetStatusText(COMPLEX_PANE, "");
   if (mNumAcquired) {
@@ -9642,8 +9662,18 @@ void CNavigatorDlg::EndAcquireWithMessage(void)
       "Tilt series acquired" : (mAcqParm->acquireType == ACQUIRE_RUN_MACRO ?
       "Script run to completion" : (mAcqParm->acquireType == ACQUIRE_MULTISHOT ? 
         "Multiple Records acquired" : "Images acquired")), mNumAcquired);
-    AfxMessageBox(report, MB_EXCLAME);
+    if (runScript) {
+      scrp.Format("\r\nRunning script %d next", mScriptToRunAtEnd + 1);
+      mWinApp->AppendToLog(report + scrp);
+    } else {
+      AfxMessageBox(report, MB_EXCLAME);
+    }
   }
+  if (runScript) {
+    mMacroProcessor->Run(mScriptToRunAtEnd);
+    return 1;
+  }
+  return 0;
 }
 
 // Task boilerplate
@@ -9905,7 +9935,7 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
     UpdateListString(ind);
     return 0;
   }
-  mAcquireEnded = 1;
+  mAcquireEnded = 10;
   return -1;
 }
 

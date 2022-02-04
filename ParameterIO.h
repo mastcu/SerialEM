@@ -74,7 +74,7 @@ public:
     CString &strLine);
   int ReadOneMacro(int iset, CString & strLine, CString * strItems, int maxMacros);
   void WriteAllMacros(int numWrite);
-  int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros);
+  int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros, bool printMess = false);
   void WriteMacrosToFile(CString filename, int maxMacros);
   int ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &unrecognized);
   void WriteNavAcqParams(int which, NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, bool skipNum);

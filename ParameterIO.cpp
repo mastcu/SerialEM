@@ -2065,7 +2065,7 @@ void CParameterIO::WriteSettings(CString strFileName)
 
 // Read macros from a file with the given name
 int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettings,
-  int maxMacros)
+  int maxMacros, bool printMess)
 {
   CString strLine, setPath, scriptTail;
   CString strItems[MAX_TOKENS];
@@ -2080,14 +2080,14 @@ int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettin
     UtilSplitPath(curSettings, setPath, strLine);
     UtilSplitPath(filename, strLine, scriptTail);
     if (loadMess || setPath == strLine) {
-      AfxMessageBox("The script file " + filename + " does not exist", MB_EXCLAME);
+      SEMMessageBox("The script file " + filename + " does not exist", MB_EXCLAME);
       return 1;
     }
     if (setPath.GetLength() > 0 && setPath.GetAt(setPath.GetLength() - 1) != '\\')
       setPath += "\\";
     strLine = setPath + scriptTail;
     if (!CFile::GetStatus((LPCTSTR)strLine, status)) {
-      AfxMessageBox("Neither script file " + filename + " nor " + strLine + " exists",
+      SEMMessageBox("Neither script file " + filename + " nor " + strLine + " exists",
         MB_EXCLAME);
       return 1;
     }
@@ -2123,12 +2123,15 @@ int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettin
     mFile = NULL;
   }
   if (retval) {
-    AfxMessageBox("An error occurred reading scripts from the file\n" + filename,
+    SEMMessageBox("An error occurred reading scripts from the file\n" + filename,
       MB_EXCLAME);
     filename = "";
   }  else if (loadMess) {
     strLine.Format("Loaded %d scripts from the file", numLoaded);
-    AfxMessageBox(strLine, MB_OK | MB_ICONINFORMATION);
+    if (printMess)
+      mWinApp->AppendToLog(strLine);
+    else
+      AfxMessageBox(strLine, MB_OK | MB_ICONINFORMATION);
   }
   return retval;
 }
@@ -2221,6 +2224,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
       navParams->hideUnselectedOpts = itemInt[18] != 0;
       if (!itemEmpty[19])
         navParams->mapWithViewSearch = itemInt[19];
+      if (!itemEmpty[20])
+        navParams->retractCameras = itemInt[20] != 0;
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
@@ -2274,7 +2279,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    "%d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
@@ -2283,7 +2288,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->highFlashIfOK, navParams->astigByBTID ? 1 : 0,
     navParams->adjustBTforIS ? 1 : 0, navParams->relaxStage ? 1 : 0,
     navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
-    navParams->mapWithViewSearch);
+    navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";

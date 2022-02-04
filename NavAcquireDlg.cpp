@@ -33,7 +33,7 @@
 static int idTable[] = {IDC_STAT_PRIMARY_GROUP, IDC_NA_ACQUIREMAP, IDC_NA_SAVE_AS_MAP,
 IDC_NA_RUNMACRO, IDC_NA_ACQUIRE_TS, IDC_NA_DO_MULTISHOT, IDC_EDIT_SUBSET_END,
 IDC_EDIT_SUBSET_START,  IDC_EDIT_CYCLE_TO, IDC_EDIT_CYCLE_FROM, IDC_EDIT_EARLY_FRAMES,
-IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING,
+IDC_NA_CLOSE_VALVES, IDC_COMBO_MACRO, IDC_NA_SKIP_SAVING, IDC_NA_RETRACT_CAMS,
 IDC_STAT_WHICH_CONSET, IDC_RMAP_WITH_REC, IDC_RMAP_WITH_VIEW, IDC_RMAP_WITH_SEARCH,
 IDC_STAT_SAVING_FATE, IDC_STAT_FILE_SAVING_INTO, IDC_NA_DO_SUBSET, IDC_STAT_TASK_OPTIONS,
 IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_OPTIONS,
@@ -128,6 +128,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bHideUnselectedOpts(FALSE)
   , m_iMapWithViewSearch(0)
   , m_bSaveAsMap(FALSE)
+  , m_bRetractCams(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -216,6 +217,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RMAP_WITH_REC, m_iMapWithViewSearch);
   DDX_Control(pDX, IDC_NA_SAVE_AS_MAP, m_butSaveAsMap);
   DDX_Check(pDX, IDC_NA_SAVE_AS_MAP, m_bSaveAsMap);
+  DDX_Check(pDX, IDC_NA_RETRACT_CAMS, m_bRetractCams);
 }
 
 
@@ -271,6 +273,7 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RMAP_WITH_VIEW, OnMapWithRecViewSearch)
   ON_BN_CLICKED(IDC_RMAP_WITH_SEARCH, OnMapWithRecViewSearch)
   ON_BN_CLICKED(IDC_NA_SAVE_AS_MAP, OnSaveAsMap)
+  ON_BN_CLICKED(IDC_NA_RETRACT_CAMS, OnRetractCams)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -397,6 +400,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   m_butOKGO.SetWindowText(navState == NAV_PAUSED ? "Resume" : "GO");
   EnableDlgItem(IDC_RMAPPING, navState != NAV_PAUSED);
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
+  EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
 
   // Get params in and set everything right
   for (int which = 0; which < 2; which++) {
@@ -620,6 +624,7 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->skipZmoves = m_bSkipZmoves;
   mParam->skipSaving = m_bSkipSaving;
   mParam->closeValves = m_bCloseValves;
+  mParam->retractCameras = m_bRetractCams;
   mParam->sendEmail = m_bSendEmail;
   mParam->adjustBTforIS = m_bAdjustBTforIS;
   mParam->hideUnusedActs = m_bHideUnusedActions;
@@ -644,6 +649,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bSkipInitialMove = mParam->skipInitialMove;
   m_bSkipZmoves = mParam->skipZmoves;
   m_bCloseValves = mParam->closeValves;
+  m_bRetractCams = mParam->retractCameras;
   m_fCycleFrom = mParam->cycleDefFrom;
   m_fCycleTo = mParam->cycleDefTo;
   m_bCycleDefocus = mParam->cycleDefocus;
@@ -1022,6 +1028,8 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_NA_NO_MBOX_ON_ERROR);
     if (!m_bCloseValves)
       mIDsToDrop.push_back(IDC_NA_CLOSE_VALVES);
+    if (!m_bRetractCams || !mWinApp->GetAnyRetractableCams())
+      mIDsToDrop.push_back(IDC_NA_RETRACT_CAMS);
     if (!m_bSendEmail)
       mIDsToDrop.push_back(IDC_NA_SENDEMAIL);
     if (m_iAcquireChoice > 0) {
@@ -1517,6 +1525,12 @@ void CNavAcquireDlg::OnHideUnselectedOptions()
 }
 
 void CNavAcquireDlg::OnMapWithRecViewSearch()
+{
+  UpdateData(true);
+}
+
+
+void CNavAcquireDlg::OnRetractCams()
 {
   UpdateData(true);
 }

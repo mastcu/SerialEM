@@ -475,6 +475,7 @@ struct NavAcqParams {
   BOOL hideUnselectedOpts;  // Hide options not checked
   int mapWithViewSearch;    // Take single images with different areas
   BOOL saveAsMapChoice;     // Flag that option to save images/montages as maps is checked
+  BOOL retractCameras;      // Flag to retract cameras at end
 };
 
 // Other Nav parameters

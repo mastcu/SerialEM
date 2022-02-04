@@ -186,4 +186,6 @@ public:
   afx_msg void OnSaveAsMap();
   void AcquireTypeToOptions(int acqType);
   int OptionsToAcquireType();
+  BOOL m_bRetractCams;
+  afx_msg void OnRetractCams();
 };
