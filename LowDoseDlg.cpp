@@ -957,6 +957,7 @@ void CLowDoseDlg::OnSetViewShift()
     mViewShiftY[m_iOffsetShown] = magTab[magv].offsetISY - delY;
   }
 
+  SetContinuousUpdate(false);
   if (shiftType > 0) {
 
     // Y inversion for deltas, then subtract the image shift just as negative is taken
@@ -1464,7 +1465,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   mLastDose = dose;
 }
 
-// Enable the define boxes if mode is on and no tasks and not in search
+// Enable the define boxes if mode is on and no tasks
 // Allow changes during a tilt series
 void CLowDoseDlg::ManageDefines(int area)
 {
@@ -1691,8 +1692,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   CMapDrawItem *item;
   bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
 
-  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf)
-    || (imBuf->mLowDoseArea && imBuf->mConSetUsed == SEARCH_CONSET))
+  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
     return;
 
   // Get the focus position that applies here, and a modified camera to specimen matrix
