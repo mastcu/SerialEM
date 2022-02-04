@@ -498,6 +498,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnUpdateTasksUseViewEvenIfSearchBetter)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnKeepFocusTrialAtSamePosition)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnUpdateKeepFocusTrialAtSamePosition)
+    ON_COMMAND(ID_TILTSERIES_SETBIDIRRETURNDELAY, &CMenuTargets::OnTiltseriesSetBidirReturnDelay)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2346,6 +2347,15 @@ void CMenuTargets::OnUpdateTiltseriesFixedNumFrames(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mTSController->GetFixedNumFrames());
   pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+
+void CMenuTargets::OnTiltseriesSetBidirReturnDelay()
+{
+  int delay = mTSController->GetPostBidirReturnDelay();
+  if (KGetOneInt("Seconds of delay after returning to start point of bidirectional "
+    "series:", delay))
+    mTSController->SetPostBidirReturnDelay(delay);
 }
 
 void CMenuTargets::OnTiltseriesBackup() 

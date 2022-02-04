@@ -57,12 +57,12 @@
             K2/K3 camera</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tiltseries_sendemail">Send Email at End</A></TD>
-          <TD>Toggles sending email when tilt series stops or finishes.</TD>
+          <TD class="auto-style1"><a href="#hid_tiltseries_setbidirreturndelay">Set Bidir Return Delay</a></TD>
+          <TD>Sets a delay after the return to the starting point of a bidirectional series</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tiltseries_setaddress">Set Email Address</A></TD>
-          <TD>Opens dialog box to set address to send emails to.</TD>
+          <TD class="auto-style1"><A HREF="#hid_tiltseries_sendemail">Send Email at End</A></TD>
+          <TD>Toggles sending email when tilt series stops or finishes.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tiltseries_stop">Stop</A></TD>
@@ -207,20 +207,19 @@
         frame times.&nbsp; This adjustment will not be made if you have scheduled 
         changes in frame time explicitly with the <a href="hidd_tsvariations.htm">Tilt 
         Series Scheduled Changes</a> dialog.</P>
-     <P><A NAME="hid_tiltseries_sendemail"></A><B>Send Email at End command (Tilt 
+       <P><A NAME="hid_tiltseries_setbidirreturndelay"></A><B>Set Bidir Return Delay command (Tilt 
+      Series menu)</B></P>
+      <p>Use this command to add a delay between returning to the starting point of a bidirectional
+        tilt series and taking an image.&nbsp; Enter the delay in seconds.
+      </p>
+          <P><A NAME="hid_tiltseries_sendemail"></A><B>Send Email at End command (Tilt 
         Series menu) menu)</B></P>
       <P>If this entry is checked, SerialEM will send an email when a tilt series reaches 
         its end or stops in need of attention, except when the stop is immediately 
         after an action that you have taken. To send email, an SMTP server and an 
         address to send from must be defined in the SerialEM properties file, and you 
-        must enter an email address with the 'Set Email Address' command described 
-        next.</P>
-      <P><A NAME="hid_tiltseries_setaddress"></A><B>Set Email Address command (Tilt Series 
-          menu)</B></P>
-      <P>Use this command to set the address(es) to which emails from SerialEM will be 
-        sent. You can enter more than one address, separated by commas or spaces. The 
-        address entered here will be used for any emails sent from SerialEM; i.e., ones 
-        sent by the Navigator as well as ones after a tilt series stops.</P>
+        must enter an email address with the <A HREF="menu_settings.htm#hid_tiltseries_setaddress">
+          Set Email Address</A> command in the Settings menu.</P>
       <P><A NAME="hid_tiltseries_stop"></A><B>Stop command (Tilt Series menu)</B></P>
       <P>Use this command to stop a tilt series at the next logical step. The Tilt Series 
         Controller will still be in control of the program. If you open the <A HREF="hidd_tsresume.htm">

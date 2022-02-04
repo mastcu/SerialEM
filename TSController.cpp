@@ -432,6 +432,7 @@ CTSController::CTSController()
   mFixedNumFrames = false;
   mTermOnHighExposure = false;
   mMaxExposureIncrease = 3.;
+  mPostBidirReturnDelay = 0;
   mRestoreStageXYonTilt = -1;
   mCheckScopeDisturbances = -1;
   mTrackAfterScopeStopTime = 5;
@@ -2991,7 +2992,8 @@ void CTSController::NextAction(int param)
               mLDParam[RECORD_CONSET].intensity = mFirstIntensity;
           }
 
-
+          if (mPostBidirReturnDelay > 0)
+            mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBidirReturnDelay * 1000);
         }
         if (mMultiTSTasks->BidirAnchorImage(
           mTSParam.bidirAnchorMagInd[2 * mSTEMindex + (mLowDoseMode ? 1 : 0)], 

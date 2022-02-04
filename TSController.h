@@ -141,6 +141,7 @@ public:
   SetMember(bool, ClosedDoseSymFile);
   GetSetMember(int, WaitAfterScopeFilling);
   GetMember(CString, LastNoBoxMessage);
+  GetSetMember(int, PostBidirReturnDelay);
 
   double GetCumulativeDose();
 
@@ -570,7 +571,8 @@ private:
   double mScopeEventDoneTime;   // Time when it ended
   int mTrackAfterScopeStopTime;
   int mFocusAfterScopeStopTime;
-  int mWaitAfterScopeFilling; // Seconds of extra delay after ned of filling
+  int mWaitAfterScopeFilling;  // Seconds of extra delay after end of filling
+  int mPostBidirReturnDelay;   // Seconds of delay after biderectional return
   CString mLastNoBoxMessage;   // Last message logged with no message box on error
 
 public:

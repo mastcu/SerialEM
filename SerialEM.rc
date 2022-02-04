@@ -176,6 +176,7 @@ BEGIN
         MENUITEM "R&ead Defaults",              ID_SETTINGS_READDEFAULTS
         MENUITEM "A&utosave",                   ID_SETTINGS_AUTOSAVE
         MENUITEM SEPARATOR
+        MENUITEM "Set E&mail Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
         MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
     END
@@ -546,9 +547,9 @@ BEGIN
         MENUITEM "&Call TS Plugins",            ID_TILTSERIES_CALL_TS_PLUGIN
         MENUITEM SEPARATOR
         MENUITEM "Sen&d Email at End",          ID_TILTSERIES_SENDEMAIL
-        MENUITEM "Set Ema&il Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Fixed # of K2/3 Frames",     ID_TILTSERIES_FIXED_NUM_FRAMES
+        MENUITEM "Set B&idir Return Delay",     ID_TILTSERIES_SETBIDIRRETURNDELAY
         MENUITEM SEPARATOR
         MENUITEM "S&TOP",                       ID_TILTSERIES_STOP
         MENUITEM "&End Loop",                   ID_TILTSERIES_ENDLOOP
@@ -2225,7 +2226,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,322,396,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,377,398,10,10
     CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,328,68,14
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,68,10
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,198,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,208,149,8
     CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,293,76,10
@@ -2258,7 +2259,7 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,306,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,380,83,12
@@ -2290,7 +2291,7 @@ BEGIN
     CONTROL         "Every",IDC_RNAVACQ_AFTER_MINUTES,"Button",BS_AUTORADIOBUTTON,188,333,30,10
     CONTROL         "When moved >",IDC_RNAVACQ_WHEN_MOVED,"Button",BS_AUTORADIOBUTTON,188,346,58,10
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,286,105,73,WS_GROUP
-    LTEXT           "",IDC_STAT_SPACER3,157,349,8,8
+    LTEXT           "",IDC_STAT_SPACER3,157,361,8,8
     CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,183,39,10
     CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,183,31,10
     CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,183,38,10
@@ -2306,6 +2307,7 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,281,158,1
     CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,170,274,217,1
     CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,170,377,217,1
+    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,90,10
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -3033,10 +3035,10 @@ BEGIN
     CONTROL         "",IDC_SPIN_BIN_TO,"msctls_updown32",UDS_ARROWKEYS,169,268,9,14
     LTEXT           "pixels",IDC_STAT_ALIBIN_PIX,180,271,18,8
     RTEXT           "1250",IDC_STAT_ALIGN_TARGET,149,271,18,8
-    CONTROL         "None",IDC_RSUPER_NONE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,128,255,31,10
-    CONTROL         "2x",IDC_RSUPER_2X,"Button",BS_AUTORADIOBUTTON,161,255,21,10
-    CONTROL         "4x",IDC_RSUPER_4X,"Button",BS_AUTORADIOBUTTON,183,255,21,10
-    LTEXT           "Super-resolution sampling of EER data:",IDC_STAT_EER_SUPER_LABEL,8,256,120,8
+    CONTROL         "None",IDC_RSUPER_NONE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,132,255,31,10
+    CONTROL         "2x",IDC_RSUPER_2X,"Button",BS_AUTORADIOBUTTON,165,255,21,10
+    CONTROL         "4x",IDC_RSUPER_4X,"Button",BS_AUTORADIOBUTTON,187,255,21,10
+    LTEXT           "Process EER data with super-resolution:",IDC_STAT_EER_SUPER_LABEL,8,256,122,8
 END
 
 IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 76
@@ -6566,6 +6568,8 @@ BEGIN
                             "Toggle using a monospaced font in the Log Window"
     ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION 
                             "Keep Low Dose Focus & Trial at same position when not otherwise identical"
+    ID_TILTSERIES_SETBIDIRRETURNDELAY 
+                            "Set a delay after the return to starting point in bidirectional series"
 END
 
 STRINGTABLE
