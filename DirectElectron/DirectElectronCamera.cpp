@@ -60,6 +60,7 @@ static const char *psDisable = "Disable";
 static const char *psMotionCor = "Motion Correction";
 static const char *psMotionCorNew = "Image Processing - Motion Correction";
 static const char *psCountsPerElec = "Electron Counting - Counts Per Electron";
+static const char *psADUsPerElectron = "ADUs Per Electron";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -436,10 +437,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     bool result;
     BOOL debug = GetDebugOutput('D');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
-      DE_PROP_TEMP_SET_PT, psReadoutDelay, psHardwareBin, psHardwareROI, psCountsPerElec};
+      DE_PROP_TEMP_SET_PT, psReadoutDelay, psHardwareBin, psHardwareROI, psCountsPerElec,
+      psADUsPerElectron};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN, 
       DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI,
-      DE_SCALES_ELEC_COUNTS};
+      DE_SCALES_ELEC_COUNTS, DE_HARDWARE_SCALES};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
@@ -503,7 +505,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     mNormAllInServer = mServerVersion >= DE_ALL_NORM_IN_SERVER;
     if (mNormAllInServer) {
       mCamParams[camIndex].CamFlags |= DE_NORM_IN_SERVER; 
-      setIntProperty(DE_PROP_AUTOMOVIE"Ignored Frames", 0);
+      if (!IsApolloCamera())
+        setIntProperty(DE_PROP_AUTOMOVIE"Ignored Frames", 0);
       //setStringProperty("Backward Compatibility", psDisable);
       // Leave this for engineers to be able to set depending on what is best
       //if (mCamParams[camIndex].CamFlags & DE_CAM_CAN_COUNT)
@@ -531,7 +534,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       mLastAutoRepeatRef = 0;
     }
 
-    if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
+    if (IsApolloCamera()) {
+      if (mCamParams[camIndex].CamFlags & DE_HARDWARE_SCALES)
+        getIntProperty(psADUsPerElectron, mElecCountsScaled);
+      else
+        mElecCountsScaled = 16;
+    } else if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
       getIntProperty(psCountsPerElec, mElecCountsScaled);
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
@@ -2070,8 +2078,9 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
   extra->mPreExposeTime = (float)(mLastPreExposure / 1000.);
   if (mReadoutDelay >= 0)
     extra->mReadoutDelay = mReadoutDelay;
-  getFloatProperty("Faraday Plate - Last Exposure Peak Density (pA/cm^2)", 
-    extra->mFaraday);
+  if (!IsApolloCamera())
+    getFloatProperty("Faraday Plate - Last Exposure Peak Density (pA/cm^2)",
+      extra->mFaraday);
 
   // Autosave path and frames...
   if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {

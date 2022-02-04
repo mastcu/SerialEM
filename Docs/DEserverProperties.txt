@@ -52,6 +52,7 @@ Autosave Previous Dataset Name (2.3 on)
 Autosave Movie - Correction Mode
 Autosave Movie - Pixel Depth
 Image Processing - Motion Correction
+ADUs Per Electron
 
 
 These are only referred to by these globals in the header file
