@@ -3133,9 +3133,15 @@ void CCameraController::Capture(int inSet, bool retrying)
             mFalconReadoutInterval));
           ind = conSet.faParamSetInd;
           B3DCLAMP(ind, 0, (int)mFrameAliParams.GetSize() - 1);
-          faParam = mFrameAliParams.GetAt(ind);
-          B3DCLAMP(faParam.EERsuperRes, 0, 2);
-          mFalconHelper->SetEERsuperRes(faParam.EERsuperRes);
+
+          // With antialias reading, we read only at super-res 0
+          if (mFalconHelper->GetReadEERantialiased()) {
+            mFalconHelper->SetEERsuperRes(0);
+          } else {
+            faParam = mFrameAliParams.GetAt(ind);
+            B3DCLAMP(faParam.EERsuperRes, 0, 2);
+            mFalconHelper->SetEERsuperRes(faParam.EERsuperRes);
+          }
         }
       }
 

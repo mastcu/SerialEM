@@ -94,6 +94,7 @@ CFalconHelper::CFalconHelper(void)
   mContinuousAliParam.rad2Filt1 = 0.06f;
   mLastEERcountScaling = 100.f;
   mLastUseOfFalconRef = 0;
+  mReadEERantialiased = true;
 }
 
 CFalconHelper::~CFalconHelper(void)
@@ -371,8 +372,10 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
     str.Format("The EER gain reference is not a floating point TIFF file: " + refName);
     err = 1;
   } else {
+
+    // Set defect pad for antialias reading; was 1 for bin reading
     err = CorDefProcessFeiDefects(iiFile, mFalconDefects, iiFile->nx, iiFile->ny, false,
-      superFac, 1, NULL, messBuf, 256);
+      superFac, mReadEERantialiased ? 20 : 1, NULL, messBuf, 256);
     if (err > 0)
       str.Format("Error processing camera defects from EER gain reference file:\n%s",
         messBuf);
@@ -504,7 +507,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
       mTrimYend = conSet.bottom / conSet.binning - 1;
       mTrimDEsum = (conSet.left > 0 || conSet.right < camParams->sizeX ||
         conSet.top > 0 || conSet.bottom < camParams->sizeY);
-      param.multAliBinByEERfac = true;
+      param.multAliBinByEERfac = !mReadEERantialiased;
       mLastUseOfFalconRef = mWinApp->MinuteTimeStamp();
 
     } else {
@@ -614,7 +617,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   CameraThreadData *camTD)
 {
   int invBeforeMap[8] = {6, 7, 4, 5, 2, 3, 0, 1};
-  int ind, totalSubframes = 0, start, end, retval = 0;
+  int ind, eerFlags, totalSubframes = 0, start, end, retval = 0;
   CFileStatus status;
   CString str, str2;
   CFile file;
@@ -692,8 +695,10 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     // Open a file locally if flag set for that
   if (readLocally) {
     if (mEERsumming > 0) {
-      tiffSetEERreadProperties(mEERsuperRes, mEERsumming,
-        mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0);
+      eerFlags = mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0;
+      if (mEERsuperRes < 2 && mReadEERantialiased)
+        eerFlags |= (IIFLAG_ANTIALIAS_EER | IIFLAG_EER_USE_LANCZOS);
+      tiffSetEERreadProperties(mEERsuperRes, mEERsumming, eerFlags);
       mFloatScale = mLastEERcountScaling * pow((float)GetEERsuperFactor(mEERsuperRes), 2);
     }
     mFrameFP = iiFOpen((LPCTSTR)localPath, "rb");
@@ -816,7 +821,10 @@ void CFalconHelper::StackNextTask(int param)
     if (rotateForSave)
       NewArray2(mRotData, short, mNx, mNy);
     if (mEERsumming > 0) {
-      mImage = (KImageShort *)(new KImage(mNx, mNy));
+      if (mReadEERantialiased)
+        mImage = new KImageShort(mNx, mNy);
+      else
+        mImage = (KImageShort *)(new KImage(mNx, mNy));
     } else {
       mImage = new KImageShort((rotateForSave % 2) ? mNy : mNx,
         (rotateForSave % 2) ? mNx : mNy);

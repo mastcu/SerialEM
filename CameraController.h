@@ -85,6 +85,7 @@ struct CamPluginFuncs;
 #define DE_HAS_HARDWARE_ROI       0x80
 #define DE_SCALES_ELEC_COUNTS     0x100
 #define DE_APOLLO_CAMERA          0x200
+#define DE_HARDWARE_SCALES        0x400
 
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2

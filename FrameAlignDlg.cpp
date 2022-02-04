@@ -461,6 +461,11 @@ void CFrameAlignDlg::ManagePanels(void)
     ShowDlgItem(IDC_USE_FRAME_FOLDER, false);
     ShowDlgItem(IDC_BUT_SET_FOLDER, false);
   }
+  if (mCamParams->FEItype == FALCON4_TYPE) {
+    EnableDlgItem(IDC_RSUPER_NONE, m_iWhereAlign == 2);
+    EnableDlgItem(IDC_RSUPER_2X, m_iWhereAlign == 2);
+    EnableDlgItem(IDC_RSUPER_4X, m_iWhereAlign == 2);
+  }
 }
 
 // Show more or less parameters

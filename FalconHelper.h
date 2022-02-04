@@ -38,6 +38,7 @@ public:
   GetSetMember(int, GpuForContinuousAli);
   SetMember(float, LastEERcountScaling);
   GetMember(CString, FalconRefName);
+  GetSetMember(BOOL, ReadEERantialiased);
   void SetContinAliBinning(int val) { mContinuousAliParam.aliBinning = val; }
   int GetContinAliBinning() { return mContinuousAliParam.aliBinning; }
   void SetContinAliPairwise(int val) { mContinuousAliParam.numAllVsAll = val; }
@@ -90,6 +91,7 @@ private:
   std::vector<long> mReadouts;          // Vector of subframes per frame
   int mEERsumming;                      // Number of frames to sum if reading from EER
   int mEERsuperRes;                     // Super-resolution to read: 0, 1, or 2
+  BOOL mReadEERantialiased;             // Flag to read EER files with antialiasing
   bool mStackingFrames;                 // Flag that we are stacking frames
   int mUseImage2;                       // Flag to use the second buffer
   std::vector<long> mDeleteList;        // List of frames files to delete
