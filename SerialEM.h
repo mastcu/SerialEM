@@ -85,7 +85,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_CAL_COMA_VS_IS, TASK_REMOTE_CTRL, TASK_MOVE_APERTURE, TASK_WAIT_FOR_DRIFT,
   TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
   TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
-  TASK_DEWARS_VACUUM
+  TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -569,6 +569,7 @@ public:
   SetMember(int, IdleBaseCount);
   GetMember(bool, AnyDirectDetectors);
   GetMember(bool, AnySuperResMode);
+  GetMember(bool, AnyRetractableCams);
   GetSetMember(BOOL, FrameAlignMoreOpen);
   GetSetMember(int, BkgdGrayOfFFT);
   GetSetMember(float, TruncDiamOfFFT);
@@ -851,6 +852,7 @@ private:
   bool mPlugImagingTask;        // Flag that plugin task is tested as an imaging task
   bool mAnyDirectDetectors;     // Flag for whther any cameras are direct detectors
   bool mAnySuperResMode;        // Flag if any camera has a super-res mode
+  bool mAnyRetractableCams;     // Flag if any camera is retractable
   BOOL mFrameAlignMoreOpen;     // Flag that bottom panel is open in frame align dialog
   bool mAppExiting;             // Flag that program is exiting
   int mIdleBaseCount;           // Count for letting base class finish idle tasks

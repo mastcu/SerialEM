@@ -601,6 +601,11 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].astigByBTID = false;
     mNavAcqParams[i].adjustBTforIS = false;
     mNavAcqParams[i].relaxStage = false;
+    mNavAcqParams[i].hybridRealign = false;
+    mNavAcqParams[i].hideUnselectedOpts = false;
+    mNavAcqParams[i].mapWithViewSearch = 0;
+    mNavAcqParams[i].retractCameras = false;
+    mNavAcqParams[0].saveAsMapChoice = i == 0;
   }
 
   mNavParams.warnedOnSkipMove = false;
@@ -719,6 +724,7 @@ CSerialEMApp::CSerialEMApp()
   mAnyDirectDetectors = false;
   mAnySuperResMode = false;
   mHasK2OrK3Camera = false;
+  mAnyRetractableCams = false;
   mFrameAlignMoreOpen = false;
   mShowRemoteControl = true;
   mHasFEIcamera = false;
@@ -1245,6 +1251,8 @@ BOOL CSerialEMApp::InitInstance()
       mAnyDirectDetectors = true;
     if (mCamParams[iCam].canTakeFrames & FRAMES_CAN_BE_SAVED)
       anyFrameSavers = true;
+    if (mCamParams[iCam].retractable)
+      mAnyRetractableCams = true;
   }
   if ((mAnyDirectDetectors || anyFrameSavers) && mDocWnd->GetDfltUseMdoc() < 0)
     mDocWnd->SetDfltUseMdoc(1);
@@ -2264,6 +2272,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mNavHelper->DualMapBusy();
     else if (idc->source == TASK_NAVIGATOR_ACQUIRE && mNavigator)
       busy = mNavigator->TaskAcquireBusy();
+    else if (idc->source == TASK_NAV_ACQ_RETRACT && mNavigator)
+      busy = mCamera->TaskCameraBusy();
     else if (idc->source == TASK_ASYNC_SAVE)
       busy = mBufferManager->AsyncSaveBusy();
     else if (idc->source == TASK_GAIN_REF)
@@ -2301,6 +2311,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           (*(idc->nextFunc))(idc->param);
         else if (idc->source == TASK_NAVIGATOR_ACQUIRE && mNavigator)
           mNavigator->AcquireNextTask(idc->param);
+        else if (idc->source == TASK_NAV_ACQ_RETRACT && mNavigator)
+          mNavigator->EndAcquireWithMessage();
         else if (idc->source == TASK_LOAD_MAP && mNavigator)
           mNavigator->FinishLoadMap();
         else if (idc->source == TASK_NAV_REALIGN)
@@ -2432,6 +2444,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           (*(idc->errorFunc))(busy);
         else if (idc->source == TASK_NAVIGATOR_ACQUIRE && mNavigator)
           mNavigator->AcquireCleanup(busy);
+        else if (idc->source == TASK_NAV_ACQ_RETRACT && mNavigator)
+          mNavigator->EndAcquireWithMessage();
         else if (idc->source == TASK_NAV_REALIGN)
           mNavHelper->RealignCleanup(busy);
         else if (idc->source == TASK_DUAL_MAP)
@@ -3232,7 +3246,8 @@ BOOL CSerialEMApp::DoingTasks()
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc());
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
-  mJustDoingSynchro = !trulyBusy && mScope->DoingSynchroThread();
+  mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
+    mBufferManager->DoingSychroThread());
   mJustNavAcquireOpen = !trulyBusy && mNavigator && mNavigator->mNavAcquireDlg;
   return trulyBusy || mJustChangingLDarea || mJustDoingSynchro || mJustNavAcquireOpen;
 }
