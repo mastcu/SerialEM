@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/2/22: Fixed matrix used when adding points from hole finder with "away from
+focus" option (In 3.8).
+
+2/2/22: Prevented clicking on Search image from moving focus area (In 3.8).
+
 2/1/22: Added option to beam autocentering to use current Trial parameters
 with a specified reduction in beam size.
 

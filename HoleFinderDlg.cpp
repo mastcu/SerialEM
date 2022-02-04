@@ -786,10 +786,6 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     return 1;
   }
 
-  // This is a matrix between right-handed stage coordinates and inverted image coords
-  // So invert it with argument for that, so it can still be used with inverted coords
-  mImToStage = MatInv(aMat, true);
-
   if (mParams.spacing < mParams.diameter + 0.5f) {
     SEMMessageBox("The hole spacing is a center-to-center distance and must be at "
       "least 0.5 micron bigger than the hole size");
@@ -1269,9 +1265,10 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
     mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
 
-  // Get stage positions
+// Get stage positions, save matrix for converting average vector later
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
   aInv = MatInv(aMat);
+  mImToStage = aInv;
   mXstages.resize(numPoints);
   mYstages.resize(numPoints);
   rsMedian(&mHoleMeans[0], numPoints, &mXstages[0], &mMidMean);

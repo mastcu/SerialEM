@@ -1691,7 +1691,8 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   CMapDrawItem *item;
   bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
 
-  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
+  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf)
+    || (imBuf->mLowDoseArea && imBuf->mConSetUsed == SEARCH_CONSET))
     return;
 
   // Get the focus position that applies here, and a modified camera to specimen matrix
