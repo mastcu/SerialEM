@@ -4131,6 +4131,12 @@
             be used when Navigator is already acquiring or a tilt series is running.</TD>
         </TR>
 
+        <TR>
+          <TD class="scriptcommand">RunScriptAfterNavAcquire #</TD>
+          <TD>Sets up for the script numbered <b>#</b> to be run after successful
+            completion of the next Navigator Acquire at Items operation.&nbsp; Command added in 4.0, 2/4/22.</TD>
+        </TR>
+
          <TR>
           <TD class="scriptcommand">SuffixForExtraFile suffix [suffix] [suffix] [...]</TD>
           <TD>Sets one or more suffixes so that the Acquire at Items routine will open the
@@ -4326,7 +4332,7 @@
           <TD>Sends an email containing the given <b>text</b>, which can include variables to be
             substituted. An SMTP server and address to send from must be defined in the
             properties file, and recipient(s) must be defined using 'Set Email Address' in
-            the Tilt Series Menu.</TD>
+            the Settings Menu.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ErrorBoxSendEmail text</TD>
@@ -4431,10 +4437,17 @@
             set on resume.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">LoadScriptPackAtEnd #S name</TD>
+          <TD>Loads the script package with the given <b>name</b> after the script completes 
+            successfully.&nbsp; The current scripts are saved to the current package if <b>#S</b> is
+            non-zero, otherwise they are not.&nbsp;  Command added in 4.0, 2/4/22.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportEnvironVar name</TD>
           <TD>Reports whether the environment variable given by <b>name</b> exists in <i>reportedValue1</i>
             and its value in <I>reportedValue2</I> if so or 'none' if not.&nbsp; The name must be a single word
-             without spaces.&nbsp; Command added in 4.9, 1/8/21.
+             without spaces.&nbsp; Command added in 3.9, 1/8/21.
           </TD>
         </TR>
         <TR>

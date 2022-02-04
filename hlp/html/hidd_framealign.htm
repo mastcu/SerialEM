@@ -386,20 +386,27 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       reference is chosen, grouping of frames and testing of multiple filter cutoffs
       are not available.</p>
     <p>
-      <strong>Super-resolution sampling of EER data&nbsp;&nbsp;&nbsp; (Falcon 4 only)</strong></p>
+      <strong>Process EER data with super-resolution&nbsp;&nbsp;&nbsp; (Falcon 4 only)</strong></p>
     <p>
       These radio buttons determine the resolution at which data are read in from EER
-      files for alignment: with no super-resolution, with 2x super-resolution to give
-      an 8K image, or with 4x super-resolution to give a 16K image.&nbsp; Reading in
-      with some super-resolution will reduce aliasing which is not currently avoided
-      when reading in as 4K.&nbsp; The 4x super-resolution will probably require too
-      much time or memory for aligning in SerialEM but may be useful for aligning in
-      IMOD.&nbsp; To keep the effect of other parameters invariant when this option
+      files for alignment in IMOD: with no super-resolution, with 2x super-resolution to give
+      an 8K image, or with 4x super-resolution to give a 16K image.&nbsp; When 
+      aligning in SerialEM, each summed frame is 4K and the electron events are summed 
+      into this image with antialiasing before gain correction.&nbsp; The capability 
+      to read with antialiasing was added in IMOD 4.12.3; before that version, reading 
+      at 2x or no super-resolution always involved binning, which would introduce some 
+      noise due to aliasing. In principle, the antialiasing provided by Fourier 
+      reduction in Alignframes should be slightly better than the real-space 
+      antialiasing done when reading the image, so you may wish to process images in 
+      IMOD at 2x super-resolution with a 4.12 version.&nbsp; You will certainly want 
+      to use at least 2x with IMOD 4.11. &nbsp; The 4x super-resolution may require too
+      much time or memory, depending on your processing capability.&nbsp; To keep the effect of other parameters invariant when this option
       alone is changed, the binning, filter cutoffs, maximum frame shift, and the
       criterion for stopping iterative refinement are all scaled by this
-      super-resolution factor before being sent to &#39;framealign&#39; or placed in a command
+      super-resolution factor before being placed in a command
       file.&nbsp; The value for reduction of the aligned sum placed in a command file
-      will be 1 for 2x super-resolution or 2 for 4x super-resolution.</p>
+      will be 1 for 2x super-resolution or 2 for 4x super-resolution.&nbsp; Reading in 
+      as 2x for aligning in SerialEM could be supported if there is demand for it.</p>
     <p>
       <b>Alignment binning</b></p>
     <p>

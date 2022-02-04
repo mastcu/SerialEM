@@ -3,6 +3,27 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/4/22: Fixed setting View shift offset with shifted View image when
+continuous update is on.
+
+2/4/22: Moved menu entry for setting email address from Tilt Series to
+Settings menu.
+
+2/4/22: Added Tilt Series menu entry to set a delay after return to the
+starting point in bidirectional series.
+
+2/4/22: Added option to Navigator Acquire at Items to retract cameras at end.
+
+2/4/22: Added script commands to set up a script to run after Navigator
+acquisition, and to load a script package at end of script.
+
+2/4/22: Saved larger TIFF and JPEG files in a thread to keep UI alive.
+
+2/4/22: Switched reading of EER files when aligning frames to use
+antialiasing and read in 4K images only.
+
+2/4/22: Fix scaling for Apollo camera to come from the right property.
+
 2/2/22: Fixed matrix used when adding points from hole finder with "away from
 focus" option (In 3.8).
 
