@@ -209,7 +209,9 @@ BOOL CMultiShotDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   if (!mHasIlluminatedArea)
     mIDsToDrop.push_back(IDC_CHECK_USE_ILLUM_AREA);
-  SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+  mIDsToIgnoreBot.insert(IDC_EDIT_EARLY_FRAMES);  // 2337
+  mIDsToIgnoreBot.insert(IDC_STAT_NUM_Y_HOLES);   // 2411
+  SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mLastPanelStates[6] = false;
   UpdateSettings();
