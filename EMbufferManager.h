@@ -69,7 +69,7 @@ public :
   SetMember(int, NextSecToRead);
   GetMember(int, AsyncTimeout);
   GetMember(BOOL, DoingAsyncSave);
-
+  bool DoingSychroThread() {return mSynchronousThread != NULL; };
 
  private:
   int mShiftsOnAcquire;
@@ -98,6 +98,7 @@ public :
   EMimageBuffer mImBufForSave;  // Copy of image buffer being saved
   CWinThread *mSavingThread;   // Thread pointer
   SaveThreadData mSaveTD;      // Data passed to thread
+  CWinThread *mSynchronousThread;  // Synchronous save thread for large save to other
   BOOL mDoingAsyncSave;
   int mAsyncTimeout;           // timeout for the async save
   double mAsyncStartTime;
@@ -113,6 +114,7 @@ public:
   int StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int section);
   int StartAsyncSave(KImageStore *store, KImage *image, int section);
   static UINT SavingProc(LPVOID pParam);
+  static UINT SynchronousProc(LPVOID pParam);
   int AsyncSaveBusy(void);
   void AsyncSaveDone(void);
   void AsyncSaveCleanup(int error);

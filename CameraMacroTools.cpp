@@ -337,7 +337,8 @@ void CCameraMacroTools::OnButstop()
   else if (navState == NAV_SCRIPT_STOPPED) {
     mMacProcessor->SetNonResumable();
     mNav->EndAcquireWithMessage();
-  } else if (!mWinApp->mScope->DoingSynchroThread()) {
+  } else if (!mWinApp->mScope->DoingSynchroThread() && 
+    !mWinApp->mBufferManager->DoingSychroThread()) {
     mWinApp->mCamera->StopCapture(1);
     mUserStop = TRUE;
     mWinApp->ErrorOccurred(0);

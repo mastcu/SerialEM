@@ -67,6 +67,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mDoingAsyncSave = false;
   mAsyncFromImage = false;
   mImageAsyncFailed = false;
+  mSynchronousThread = NULL;
   mNextSecToRead = NO_SUPPLIED_SECTION;
   mHdfUpdateTimePerSect = 0.05f;
   AdocRetryWriteOpens(5);
@@ -404,9 +405,39 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther))
       toBuf->mSecNumber = inSect < 0 ? secnum : inSect;
   } else {
-    tiffStore = (KStoreIMOD *)inStore;
-    
-    err = tiffStore->WriteSection(toBuf->mImage);
+
+    // Save directly if image is <= 4K
+    if ((float)toBuf->mImage->getWidth() * toBuf->mImage->getHeight() < 1.7e7) {
+      tiffStore = (KStoreIMOD *)inStore;
+
+      err = tiffStore->WriteSection(toBuf->mImage);
+    } else {
+
+      // Otherwise save in a synchronous thread
+      mSaveTD.image = toBuf->mImage;
+      mSaveTD.store = inStore;
+      mSynchronousThread = AfxBeginThread(SynchronousProc, &mSaveTD,
+        THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+      mSynchronousThread->m_bAutoDelete = false;
+      mSynchronousThread->ResumeThread();
+      mWinApp->UpdateBufferWindows();
+      mWinApp->SetStatusText(SIMPLE_PANE, "SAVING IMAGE");
+
+      // Wait until done
+      while (1) {
+        err = UtilThreadBusy(&mSynchronousThread);
+        if (err <= 0)
+          break;
+        mWinApp->ManageBlinkingPane(GetTickCount());
+        SleepMsg(20);
+      }
+      err = mSaveTD.error;
+
+      // Restore windows
+      mWinApp->UpdateBufferWindows();
+      mWinApp->SetStatusText(SIMPLE_PANE, "");
+
+    }
     if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther))
       toBuf->mSecNumber = 0;
   }
@@ -441,6 +472,14 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       return 1;
   }
   return 0;
+}
+
+UINT EMbufferManager::SynchronousProc(LPVOID pParam)
+{
+  SaveThreadData *td = (SaveThreadData *)pParam;
+  KStoreIMOD *tiffStore = (KStoreIMOD *)td->store;
+  td->error = tiffStore->WriteSection(td->image);
+  return td->error ? 1 : 0;
 }
 
 int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
