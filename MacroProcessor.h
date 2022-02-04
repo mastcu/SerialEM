@@ -361,6 +361,8 @@ protected:
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
+  CString mPackToLoadAtEnd;  // Name of script package to load at end if successful
+  bool mSaveCurrentPack;     // Flag to save current package first
   int mTestNextMultiShot;    // 1 or 2 to test image area or coma
   bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
   BOOL mRestoreMacroEditors; // Flag to reopen the editor windows on startup/settings
@@ -542,6 +544,7 @@ public:
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
   float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
   afx_msg void OnScriptLoadNewPackage();
+  int LoadNewScriptPackage(CString &filename, bool saveCurrent);
   void UpdateAllForNewScripts(bool oneLinersToo);
   afx_msg void OnScriptSavePackage();
   afx_msg void OnScriptSavePackageAs();

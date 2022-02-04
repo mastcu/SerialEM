@@ -894,6 +894,7 @@ int CMacCmd::SkipTo(void)
 }
 
 // DoMacro, DoScript, CallMacro, CallScript, Call, CallFunction, CallStringArray
+// RunScriptAfterNavAcquire
 int CMacCmd::DoMacro(void)
 {
   CString report;
@@ -938,7 +939,8 @@ int CMacCmd::DoMacro(void)
       }
 
     } else {
-      if ((CMD_IS(CALLMACRO) || CMD_IS(CALLSCRIPT)) && mItemInt[1] == -1) {
+      if ((CMD_IS(CALLMACRO) || CMD_IS(CALLSCRIPT) || CMD_IS(RUNSCRIPTAFTERNAVACQUIRE)) 
+        && mItemInt[1] == -1) {
         if (mScriptNumFound < 0)
           ABORT_LINE("No script number was previously found with FindScriptByName for "
             "line:\n\n");
@@ -947,6 +949,11 @@ int CMacCmd::DoMacro(void)
         index = mItemInt[1] - 1;
         if (index < 0 || index >= MAX_MACROS)
           ABORT_LINE("Illegal script number in line:\n\n")
+      }
+      if (CMD_IS(RUNSCRIPTAFTERNAVACQUIRE)) {
+        ABORT_NONAV;
+        mNavigator->SetRunScriptAfterNextAcq(index);
+        return 0;
       }
     }
 
@@ -8927,6 +8934,18 @@ int CMacCmd::StartNavAcquireAtEnd(void)
     ABORT_NOLINE(CString("You cannot use StartNavAcquireAtEnd when ") +
       (mWinApp->DoingTiltSeries() ? "a tilt series is running" :
       "Navigator is already acquiring"));
+  return 0;
+}
+
+// LoadScriptPackAtEnd
+int CMacCmd::LoadScriptPackAtEnd(void)
+{
+  if (mWinApp->DoingTiltSeries() || (mNavigator && mNavigator->GetAcquiring()))
+    ABORT_NOLINE(CString("You cannot use LoadScriptPackAtEnd when ") +
+    (mWinApp->DoingTiltSeries() ? "a tilt series is running" :
+      "Navigator is already acquiring"));
+  mSaveCurrentPack = mItemInt[1] != 0;
+  SubstituteLineStripItems(mStrLine, 2, mPackToLoadAtEnd);
   return 0;
 }
 

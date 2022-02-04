@@ -634,6 +634,8 @@ MAC_SAME_FUNC(EchoBreakLines, 0, 4, Echo, ECHOBREAKLINES)
 MAC_SAME_NAME_ARG(NoLineWrapInMessageBox, 0, 4, NOLINEWRAPINMESSAGEBOX, i)
 MAC_SAME_NAME_NOARG(ReportRotationProblems, 0, 4, REPORTROTATIONPROBLEMS)
 MAC_SAME_FUNC_ARG(UseHoleVectorsForMulti, 0, 4, ReportLastHoleVectors, USEHOLEVECTORSFORMULTI, i)
+MAC_SAME_FUNC_ARG(RunScriptAfterNavAcquire, 1, 4, DoMacro, RUNSCRIPTAFTERNAVACQUIRE, I)
+MAC_SAME_NAME_ARG(LoadScriptPackAtEnd, 2, 4, LOADSCRIPTPACKATEND, IS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
