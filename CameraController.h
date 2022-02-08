@@ -304,6 +304,8 @@ struct CameraThreadData {
   FloatVec FrameTSfocusChange;    // Change in focus from initial value
   FloatVec FrameTSdeltaISX;       // Change in image shift, already converted to IS units
   FloatVec FrameTSdeltaISY;
+  FloatVec FrameTSdeltaBeamX;     // Change in beam shift, already converted to BS units
+  FloatVec FrameTSdeltaBeamY;
   float FrameTSinitialDelay;      // Initial delay before starting steps
   float FrameTSpostISdelay;       // Delay after image shift when no discrete tilts
   FloatVec FrameTSactualAngle;    // Actual angles reached
@@ -1165,7 +1167,8 @@ bool IsK3BinningSuperResFrames(const ControlSet *conSet, CameraParameters *param
 int * GetTietzSizes(CameraParameters *param, int & numSizes, int & offsetModulo);
 int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
 int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
-  FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay, float postISdelay);
+  FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, FloatVec &deltaBeamX, FloatVec &deltaBeamY, 
+  float initialDelay, float postISdelay);
 int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double stageYrestore);
 void ModifyFrameTSShifts(int index, float ISX, float ISY);
 int ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY);

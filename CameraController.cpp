@@ -2714,7 +2714,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
 // shot with frame-saving
 int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, 
   FloatVec &waitOrInterval, FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY,
-  float initialDelay, float postISdelay)
+  FloatVec &deltaBeamX, FloatVec &deltaBeamY, float initialDelay, float postISdelay)
 {
   CString mess;
   float focusLim = 10., ISlim = 10., tiltLim = 91., openLim = 20., waitLim = 20.;
@@ -2793,6 +2793,10 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
     }
   }
 
+  if (mess.IsEmpty() && (deltaBeamX.size() > 0 || deltaBeamY.size() > 0) &&
+    ((int)deltaBeamX.size() < numSteps || (int)deltaBeamY.size() < numSteps))
+      mess = "there are fewer beam shift changes defined than steps in the tilt series";
+
   if (mess.IsEmpty() && initialDelay < 0 || initialDelay > waitLim) {
     mess.Format("initial delay has value %f, outside the limits of 0 to %f sec",
       initialDelay, waitLim);
@@ -2812,6 +2816,8 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   mTD.FrameTSfocusChange = focusChange;
   mTD.FrameTSdeltaISX = deltaISX;
   mTD.FrameTSdeltaISY = deltaISY;
+  mTD.FrameTSdeltaBeamX = deltaBeamX;
+  mTD.FrameTSdeltaBeamY = deltaBeamY;
   mTD.FrameTSpostISdelay = postISdelay;
   return 0;
 }
@@ -8194,6 +8200,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   DWORD startTime, curTime, lastTime;
   double interval, elapsed, baseISX, baseISY, newISX, newISY, intervalSum, intervalSumSq;
   double destX, destY, destZ, destAlpha, dblStartTime, firstUnblankTime = -1.;
+  double baseBeamX, baseBeamY;
   TIMECAPS tc;
   BOOL periodSet = false;
 
@@ -8203,6 +8210,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   bool shutterTS = td->FrameTSopenTime.size() > 0;
   bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
   bool doISinTS = td->FrameTSdeltaISX.size() > 0;
+  bool doBSinTS = td->FrameTSdeltaBeamX.size() > 0;
   int  numScan, step, numSteps;
   float minDelayOneRefine = 0.5f, minDelayPostTiltRefine = 0.2f;
   double focus, focusBase;
@@ -8396,6 +8404,11 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           td->scopePlugFuncs->SetImageShift(baseISX + td->FrameTSdeltaISX[0],
             baseISY + td->FrameTSdeltaISY[0]);
         }
+        if (doBSinTS) {
+          td->scopePlugFuncs->GetBeamShift(&baseBeamX, &baseBeamY);
+          td->scopePlugFuncs->SetBeamShift(baseBeamX + td->FrameTSdeltaBeamX[0],
+            baseBeamY + td->FrameTSdeltaBeamY[0]);
+        }
         if (doFocusInTS) {
           if (!JEOLscope) {
             focusBase = 1.e6 * td->scopePlugFuncs->GetDefocus();
@@ -8435,6 +8448,11 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             if (doFocusInTS)
               focusChange = td->FrameTSfocusChange[step];
           }
+
+          // Do beam shift
+          if (doBSinTS)
+            td->scopePlugFuncs->SetBeamShift(baseBeamX + td->FrameTSdeltaBeamX[step],
+              baseBeamY + td->FrameTSdeltaBeamY[step]);
 
           // Do image shift and focus
           if (doISinTS && applyBefore) {
@@ -8507,6 +8525,8 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         // Done: restore IS and focus if set
         if (doISinTS)
           td->scopePlugFuncs->SetImageShift(baseISX, baseISY);
+        if (doBSinTS)
+          td->scopePlugFuncs->SetBeamShift(baseBeamX, baseBeamY);
         if (doFocusInTS)
           ChangeDynFocus(td, focusBase, 0., fineBase, coarseBase, 
           last_coarse);
