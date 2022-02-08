@@ -574,6 +574,7 @@ public:
   GetSetMember(int, BkgdGrayOfFFT);
   GetSetMember(float, TruncDiamOfFFT);
   GetSetMember(int, SystemDPI);
+  GetSetMember(int, LastSystemDPI);
   GetSetMember(int, ToolExtraWidth);
   GetSetMember(int, ToolExtraHeight);
   GetSetMember(int, ToolTitleHeight);
@@ -857,6 +858,7 @@ private:
   bool mAppExiting;             // Flag that program is exiting
   int mIdleBaseCount;           // Count for letting base class finish idle tasks
   int mSystemDPI;               // DPI detected from system or passed by properties
+  int mLastSystemDPI;           // DPI saved in a settings file
   int mToolExtraWidth;          // DPI-dependent parameters for tool panel 
   int mToolExtraHeight;
   int mToolTitleHeight;
@@ -925,6 +927,7 @@ public:
   CString PixelFormat(float pixelInNm, float pixScale = 1.);
   int CountOpenViews(void);
   void SetPlacementFixSize(CWnd * window, WINDOWPLACEMENT * lastPlacement);
+  void FixInitialPlacements(void);
   void ReopenCameraSetup(void);
   void SetSTEMMode(BOOL inState);
   void GetNumMagRanges(int camera, int &numRanges, int &lowestMicro);

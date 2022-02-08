@@ -37,6 +37,22 @@
 #include "MultiTSTasks.h"
 #include "HoleFinderDlg.h"
 #include "Mailer.h"
+#include "MultiShotDlg.h"
+#include "MultiCombinerDlg.h"
+#include "CtffindParamDlg.h"
+#include "AutocenSetupDlg.h"
+#include "VPPConditionSetup.h"
+#include "CtffindParamDlg.h"
+#include "ZbyGSetupDlg.h"
+#include "ScreenShotDialog.h"
+#include "StateDlg.h"
+#include "ReadFileDlg.h"
+#include "StageMoveTool.h"
+#include "OneLineScript.h"
+#include "MacroToolbar.h"
+#include "ScreenMeter.h"
+#include "NavRotAlignDlg.h"
+#include "DoseMeter.h"
 #include "BaseSocket.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
@@ -115,6 +131,10 @@ CParameterIO::~CParameterIO()
   else if (strItems[0] == a) \
     b = (float)itemDbl[1];
 
+#define SET_PLACEMENT(tag, win) \
+  if (NAME_IS(tag) && win != NULL && place->rcNormalPosition.right > 0) \
+    win->SetWindowPlacement(place);
+
 // BEWARE: FOR ANYTHING THAT CAN BE ON MULTIPLE LINES AND IS JUST ADDED TO A VECTOR,
 // THE VECTOR MUST BE CLEARED FIRST
 
@@ -180,6 +200,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
   zbgArray->RemoveAll();
   CFileStatus status;
+  BOOL startingProg = mWinApp->GetStartingProgram();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -376,6 +397,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptToRunAtEnd")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunAtEnd(strCopy);
+      } else if (NAME_IS("LastDPI")) {
+        mWinApp->SetLastSystemDPI(itemInt[1]);
       } else if (NAME_IS("FrameNameData")) {
         camera->SetFrameNameFormat(itemInt[1]);
         camera->SetFrameNumberStart(itemInt[2]);
@@ -786,7 +809,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             AfxMessageBox("Error in panel placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5]);
+          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5], 
+            !startingProg);
           dlgPlacements[index].left = itemInt[2];
           dlgPlacements[index].top = itemInt[3];
           dlgPlacements[index].right = itemInt[4];
@@ -828,7 +852,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         winPlace.rcNormalPosition.top = itemInt[5];
         winPlace.rcNormalPosition.right = itemInt[6];
         winPlace.rcNormalPosition.bottom = itemInt[7];
-        ConstrainWindowPlacement(&winPlace);
+        ConstrainWindowPlacement(&winPlace, !startingProg);
         if (winPlace.rcNormalPosition.right > 0 && 
           winPlace.rcNormalPosition.bottom > 0)
           mWinApp->SetWindowPlacement(&winPlace);
@@ -896,10 +920,33 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           place->rcNormalPosition.top = itemInt[index + 8];
           place->rcNormalPosition.right = itemInt[index + 9];
           place->rcNormalPosition.bottom = itemInt[index + 10];
-          ConstrainWindowPlacement(place);
+          ConstrainWindowPlacement(place, !startingProg);
           if (NAME_IS("MacroEditerPlacement")) {
             for (index = 1; index < MAX_MACROS; index++)
               place[index] = place[0];
+          }
+          if (!startingProg) {
+            SET_PLACEMENT("NavigatorPlacement", mWinApp->mNavigator);
+            SET_PLACEMENT("MeterPlacement", mWinApp->mScopeStatus.mScreenMeter);
+            SET_PLACEMENT("DosePlacement", mWinApp->mScopeStatus.mDoseMeter);
+            SET_PLACEMENT("RotAlignPlacement", mWinApp->mNavHelper->mRotAlignDlg);
+            SET_PLACEMENT("LogPlacement", mWinApp->mLogWindow);
+            SET_PLACEMENT("MultiShotPlacement", mWinApp->mNavHelper->mMultiShotDlg);
+            SET_PLACEMENT("MultiCombinerPlacement", 
+              mWinApp->mNavHelper->mMultiCombinerDlg);
+            SET_PLACEMENT("CtffindPlacement", mWinApp->mProcessImage->mCtffindParamDlg);
+            SET_PLACEMENT("AutocenPlacement", mWinApp->mAutocenDlg);
+            SET_PLACEMENT("VppCondPlacement", mWinApp->mVPPConditionSetup);
+            SET_PLACEMENT("ZbyGSetupPlacement", mWinApp->mParticleTasks->mZbyGsetupDlg);
+            SET_PLACEMENT("SnapshotPlacement", mWinApp->mScreenShotDialog);
+            SET_PLACEMENT("StatePlacement", mWinApp->mNavHelper->mStateDlg);
+            SET_PLACEMENT("ReadDlgPlacement", mWinApp->mDocWnd->mReadFileDlg);
+            SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
+            SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
+            SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
+            if (NAME_IS("HoleFinderPlacement") && 
+              mWinApp->mNavHelper->mHoleFinderDlg->IsOpen())
+              mWinApp->mNavHelper->mHoleFinderDlg->SetWindowPlacement(place);
           }
         }
 
@@ -945,6 +992,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           stateP->ldShiftOffsetX = itemFlt[34];
           stateP->ldShiftOffsetY = itemFlt[35];
         }
+        if (!itemEmpty[36])
+          stateP->montMapConSet = itemInt[36] != 0;
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
         if (index < 0 || index >= stateArray->GetSize()) {
@@ -1472,6 +1521,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunAtEnd();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunAtEnd", oneState);
+    WriteInt("LastDPI", mWinApp->GetSystemDPI());
 
     // Write any consets that are initialized (right != 0)
     for (int iCam = 0; iCam < MAX_CAMERAS; iCam++) {
@@ -1859,18 +1909,18 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
       oneState.Format("StateParameters %d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f\n",
-        stateP->lowDose, stateP->camIndex, stateP->magIndex, 
+        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d\n",
+        stateP->lowDose, stateP->camIndex, stateP->magIndex,
         stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
-        stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame, 
+        stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
         stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
-        stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac, 
-        stateP->saveFrames, stateP->processing, stateP->alignFrames, 
-        stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView, 
-        stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev, 
-        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha, 
-        stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX, 
-        stateP->ldShiftOffsetY);
+        stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac,
+        stateP->saveFrames, stateP->processing, stateP->alignFrames,
+        stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView,
+        stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
+        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
+        stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
+        stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0);
         mFile->WriteString(oneState);
         if (!stateP->name.IsEmpty()) {
           oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);

@@ -740,6 +740,7 @@ CSerialEMApp::CSerialEMApp()
   mInUpdateWindows = false;
   mNavOrLogHadFocus = 0;
   mMonospacedLog = false;
+  mLastSystemDPI = 0;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -1052,6 +1053,7 @@ BOOL CSerialEMApp::InitInstance()
   }
   if (mSystemDPI != 120)
     mDisplayNotTruly120DPI = false;
+  FixInitialPlacements();
   if (mReopenLog) {
     if (mLogWindow) {
       if (mLogPlacement.rcNormalPosition.right > 0)
@@ -3400,6 +3402,8 @@ void CSerialEMApp::OnCameraParameters()
   mCamSetupPlacement = camDlg.mPlacement;
   RestoreViewFocus();
   UpdateBufferWindows();
+  if (mAutocenDlg)
+    mAutocenDlg->UpdateParamSettings();
   if (camDlg.mAcquireAndReopen) {
     if (LowDoseMode() && mUseViewForSearch && mScope->GetLowDoseArea() == SEARCH_AREA &&
       mSelectedConSet == VIEW_CONSET)
@@ -4214,6 +4218,48 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
   window->ShowWindow(SW_SHOW);
 }
 
+#define FIX_PLACEMENT(get) \
+  place = get; \
+  ConstrainWindowPlacement(place, true);
+
+void CSerialEMApp::FixInitialPlacements(void)
+{
+  WINDOWPLACEMENT *place;
+  int ind;
+  RECT *dlgRect;
+  FIX_PLACEMENT(mScopeStatus.GetMeterPlacement());
+  FIX_PLACEMENT(mScopeStatus.GetDosePlacement());
+  FIX_PLACEMENT(GetNavPlacement());
+  FIX_PLACEMENT(mNavHelper->GetRotAlignPlacement());
+  FIX_PLACEMENT(mNavHelper->GetMultiShotPlacement(false));
+  FIX_PLACEMENT(mNavHelper->GetHoleFinderPlacement());
+  FIX_PLACEMENT(mNavHelper->GetMultiCombinerPlacement());
+  FIX_PLACEMENT(mNavHelper->GetAcquireDlgPlacement(false));
+  FIX_PLACEMENT(mProcessImage->GetCtffindPlacement());
+  FIX_PLACEMENT(mMultiTSTasks->GetAutocenPlacement());
+  FIX_PLACEMENT(mMultiTSTasks->GetConditionPlacement());
+  FIX_PLACEMENT(mParticleTasks->GetZbyGPlacement());
+  FIX_PLACEMENT(GetScreenShotPlacement());
+  FIX_PLACEMENT(mNavHelper->GetStatePlacement());
+  FIX_PLACEMENT(mDocWnd->GetReadDlgPlacement());
+  FIX_PLACEMENT(GetStageToolPlacement());
+  FIX_PLACEMENT(mMacroProcessor->GetToolPlacement());
+  FIX_PLACEMENT(GetLogPlacement());
+  FIX_PLACEMENT(mMacroProcessor->GetOneLinePlacement());
+  for (ind = 0; ind < MAX_MACROS; ind++) {
+    FIX_PLACEMENT(mMacroProcessor->GetEditerPlacement() + ind);
+  }
+  for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
+    dlgRect = &mDlgPlacements[ind];
+    ConstrainWindowPlacement((int *)&dlgRect->left, (int *)&dlgRect->top, 
+      (int *)&dlgRect->right, (int *)&dlgRect->bottom, true);
+  }
+  GetWindowPlacement(place);
+  ConstrainWindowPlacement(place, true);
+  if (place->rcNormalPosition.right > 0 && place->rcNormalPosition.bottom > 0)
+    SetWindowPlacement(place);
+}
+
 // Returns the number of mag ranges to consider for a camera and the index of the second
 // mag range for STEM microprobe in FEI
 void CSerialEMApp::GetNumMagRanges(int camera, int &numRanges, int &lowestMicro)
@@ -4503,13 +4549,19 @@ void CSerialEMApp::SetMaxDialogWidth(void)
 // closes ones that are open if needed
 void CSerialEMApp::OpenOrCloseMacroEditors(void)
 {
+  WINDOWPLACEMENT *place;
   if (!mMacroProcessor->GetRestoreMacroEditors())
     return;
   for (int ind = 0; ind < MAX_MACROS; ind++) {
     if (mReopenMacroEditor[ind] && !mMacroEditer[ind]) 
       mMacroProcessor->OpenMacroEditor(ind);
-    else if (!mReopenMacroEditor[ind] && mMacroEditer[ind])
+    else if (!mReopenMacroEditor[ind] && mMacroEditer[ind]) {
       mMacroEditer[ind]->JustCloseWindow();
+    } else if (mMacroEditer[ind]) {
+      place = mMacroProcessor->GetEditerPlacement() + ind;
+      if (place->rcNormalPosition.right > 0)
+        mMacroEditer[ind]->SetWindowPlacement(place);
+    }
   }
   mMacroProcessor->OpenOrJustCloseOneLiners(mReopenMacroEditor[MAX_MACROS]);
   UpdateBufferWindows();

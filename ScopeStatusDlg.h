@@ -104,7 +104,6 @@ private:
 	CFont mBigFont;			// Font for bigger values
 	CFont mMedFont;			// Medium font for others
   CFont mProbeFont;   // Font for the Spot/nPr indicator
-	CScreenMeter *mScreenMeter;
 	double mMeterCurrent;	// Current last displayed on floating meter
 	int mFloatingMeterSmoothed;
 	float mCurrentLogBase;
@@ -123,7 +122,6 @@ private:
   double mRawIntensity; // Last raw intensity
   int mCameraIndex;     // Last current camera index
   WINDOWPLACEMENT mMeterPlace;
-  CDoseMeter *mDoseMeter;
   WINDOWPLACEMENT mDosePlace;
   double mLastDoseTime;
   BOOL mSmallScreen;    // Last small screen state
@@ -132,6 +130,8 @@ private:
   BOOL mShowIntensityCal;  // Flag to show colored intensity calibration
   BOOL mTEMnanoProbe;   // Flag that nanoprobe is on in TEM
 public:
+  CScreenMeter *mScreenMeter;
+  CDoseMeter *mDoseMeter;
   CButton m_butResetDef;
   afx_msg void OnResetDefocus();
   CStatic m_statSpotLabel;

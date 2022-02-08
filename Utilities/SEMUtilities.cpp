@@ -708,16 +708,26 @@ int CamLDParamIndex(CameraParameters *camParam)
 
 // Constrain a window position to be on the desktop, first by shifting it then by
 // squeezing it as necessary
-void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom)
+void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom, bool scale)
 {
   static bool firstTime = true;
   static int deskWidth, deskHeight, deskLeft, deskTop;
+  float ratio;
   if (firstTime) {
     deskWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     deskHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
     deskLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
     deskTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
     firstTime = false;
+  }
+  if (*right <= 0)
+    return;
+  if (scale && sWinApp->GetLastSystemDPI()) {
+    ratio = (float)sWinApp->GetSystemDPI() / (float)sWinApp->GetLastSystemDPI();
+    *right = B3DNINT(*right * ratio);
+    *bottom = B3DNINT(*bottom * ratio);
+    *left = B3DNINT(*left * ratio);
+    *top = B3DNINT(*top * ratio);
   }
 
   // Shift to left if right side is past edge
@@ -743,11 +753,11 @@ void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom)
 }
 
 // Constrain window to be on a desktop in the given placement
-void ConstrainWindowPlacement(WINDOWPLACEMENT *place)
+void ConstrainWindowPlacement(WINDOWPLACEMENT *place, bool scale)
 {
   ConstrainWindowPlacement((int *)&place->rcNormalPosition.left, 
     (int *)&place->rcNormalPosition.top, (int *)&place->rcNormalPosition.right, 
-    (int *)&place->rcNormalPosition.bottom);
+    (int *)&place->rcNormalPosition.bottom, scale);
 }
 
 /*

@@ -45,8 +45,8 @@ float BinDivisorF(CameraParameters *camParam);
 bool CamHasDoubledBinnings(CameraParameters *camParam);
 bool UtilInvertedMagRangeLimits(BOOL EFTEM, int &lowInd, int &highInd);
 bool UtilMagInInvertedRange(int magInd, BOOL EFTEM);
-void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom);
-void ConstrainWindowPlacement(WINDOWPLACEMENT *place);
+void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom, bool scale);
+void ConstrainWindowPlacement(WINDOWPLACEMENT *place, bool scale);
 float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, bool defects,
   int sumBinning,  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, 
   int refineIter, int groupSize, int numFilt, int doSpline, double gpuMemory, 

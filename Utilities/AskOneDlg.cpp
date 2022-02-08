@@ -140,7 +140,7 @@ BOOL CAskOneDlg::OnInitDialog()
 
   // Doing this breaks positioning somehow, so set it in middle of SerialEM area
   ((CSerialEMApp *)AfxGetApp())->GetWindowPlacement(&winPlace);
-  ConstrainWindowPlacement(&winPlace);
+  ConstrainWindowPlacement(&winPlace, false);
   SetWindowPos(NULL, (winPlace.rcNormalPosition.right + winPlace.rcNormalPosition.left - 
     clientWidth) / 2, (winPlace.rcNormalPosition.bottom + winPlace.rcNormalPosition.top - 
     rectWnd.Height()) / 2, clientWidth + 2 * iXoffset, rectWnd.Height(), SWP_NOZORDER);
