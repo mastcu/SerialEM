@@ -1218,11 +1218,13 @@
             one step followed by those for the next step, etc.&nbsp; <b>#F</b> is the sum of 1 if
             there are tilt angles, 2 if there are shutter open times, 4 if there are&nbsp;
             wait times or intervals between steps, 8 if there are changes in defocus from
-            the current value, and 16 if there are image shift changes from the current
-            value.&nbsp; In the latter case there would be values for X and Y in microns in&nbsp;
+            the current value, 16 if there are image shift changes from the current
+            value, and 32 if there are beam shift changes from the current value.&nbsp; For image shift,
+             there should be values for X and Y in microns in
             &#39;specimen&#39; coordinates, i.e. with the X axis along the tilt axis.&nbsp; The
             shifts will be converted to image shift units at the Record magnification if in
-            Low Dose mode, or at the current magnification if not.&nbsp; The values must be
+            Low Dose mode, or at the current magnification if not.&nbsp; For beam shift, the values would be the
+            changes in raw X and Y beam shift units.&nbsp; The values must be
             present in the order just listed.&nbsp; If there are tilt angles, then the third
             possible value in the array, wait times or intervals, is a delay between the end of the tilt and the 
             opening of the shutter, if any.&nbsp; If there are no tilt angles because
@@ -1599,6 +1601,40 @@
             is floating point unless the optional <b>#K</b> is non-zero to keep the existing image
             type.&nbsp; Command added in 3.9, 11/11/20.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ConvertToBytes buf [#L #H]</TD>
+          <TD>Converts the image in buffer <b>buf</b> from float or integer to bytes, applying the scaling
+             in the current display by default, with values between the 'Black' and 'White' levels scaled 
+            from 0 to 255, values less than 'Black' truncated at 0, and values above 'White' truncated
+            at 255. &nbsp;The optional <b>#L</b> and <b>#H</b> can be used to specify the scaling, with <b>#L</b>
+            mapped to 0 and <b>#H</b> mapped to 255.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; Command added in 4.0, 2/7/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">PasteImagesTogether buf1 buf2 buf3 [#V]</TD>
+          <TD>Creates a byte image in buffer <b>buf3</b> with the image in <b>buf1</b> on the left
+             and the image in buffer <b>buf2</b> on the right, or with <b>buf1</b> on the top and
+            <b>buf2</b> on the bottom if the optional <b>#V</b> is nonzero.&nbsp; <B>buf1</B> and
+             <b>buf2</b> may be in the FFT window but <b>buf3</b> may not.&nbsp; Scaling to bytes is based on the 
+            Black and White limits in the current display; if you want a different scaling, use
+             'ConvertToBytes' first.&nbsp; Command added in 4.0, 2/7/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ScaledSpectrum buf #S</TD>
+          <TD>Takes the FFT of the image in buffer <b>buf</b> after padding it to be square, reduces it 
+            with antialiasing to the size given by <b>#S</b>, and scales it to bytes using the standard
+            FFT scaling specifications set with Set Truncation in the Image Display control panel. &nbsp;<b>#S</b> must
+             be no larger than the biggest dimension of the image, but can be 0 to specify no 
+            reduction.&nbsp; The result is placed into buffer A.&nbsp; Command added in 4.0, 2/7/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SpectrumBesideImage buf #Y</TD>
+          <TD>Produces a byte image in buffer A with the image in <b>buf</b> on the left, reduced to 
+            <b>#Y</b> in height, and the scaled spectrum of the image on the right.<b>#Y</b> must
+             be no larger the biggest dimension of the image, but can be 0 to specify no 
+            reduction.&nbsp; The reduced image ends up in buffer B and the original image in A ends up in
+             C.&nbsp; Command added in 4.0, 2/7/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>

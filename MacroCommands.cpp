@@ -1947,23 +1947,28 @@ int CMacCmd::FrameThresholdNextShot(void)
 int CMacCmd::QueueFrameTiltSeries(void)
 {
   CString report;
-  ScaleMat aMat;
+  ScaleMat aMat; //, IStoBS, bMat;
   double delISX, delX, delY;
-  float postISdelay = 0.;
+  float postISdelay = 0.;  // , pixel;
   int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
   Variable *var;
   CString *valPtr;
   FloatVec openTime, tiltToAngle, waitOrInterval, focusChange, deltaISX, deltaISY;
+  FloatVec deltaBeamX, deltaBeamY;
 
   // Get matrix for image shift conversion
   index = mWinApp->LowDoseMode() ? mLdParam[RECORD_CONSET].magIndex :
     mScope->GetMagIndex();
   aMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(index)),
     mShiftManager->CameraToIS(index));
+  //IStoBS = mShiftManager->GetBeamShiftCal(index);
 
   // Set up series based on specifications
   if (CMD_IS(QUEUEFRAMETILTSERIES)) {
     delISX = mItemEmpty[4] ? 0. : mItemDbl[4];
+    if (!mItemEmpty[9] && !aMat.xpx)
+      ABORT_LINE("There is no calibration needed to convert the image shift values "
+        "for:\n\n");
     for (index = 0; index < mItemInt[3]; index++) {
       tiltToAngle.push_back((float)(mItemDbl[1] + mItemDbl[2] * index));
       if (!mItemEmpty[5])
@@ -1981,6 +1986,19 @@ int CMacCmd::QueueFrameTiltSeries(void)
     }
 
   } else {
+    if ((mItemInt[2] & 16) && !aMat.xpx)
+      ABORT_LINE("There is no calibration needed to convert the image shift values "
+        "for:\n\n");
+
+    // Beam shift is in raw units by request; commented out code will convert them to 
+    // microns in the camera coordinate system
+    /*if (mItemInt[2] & 32) {
+      bMat = MatMul(mShiftManager->CameraToIS(index), IStoBS);
+      pixel = mShiftManager->GetPixelSize(mCurrentCam, index);
+      if (!bMat.xpx)
+        ABORT_LINE("There is no calibration needed to convert the beam shift values "
+          "for:\n\n");
+    }*/
 
     // Or pull the values out of the big variable array: figure out how many per step
     delISX = mItemEmpty[3] ? 0. : mItemDbl[3];
@@ -1989,8 +2007,8 @@ int CMacCmd::QueueFrameTiltSeries(void)
     if (!var)
       ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
     sizeX = 0;
-    if (mItemInt[2] > 31 || mItemInt[2] < 1)
-      ABORT_LINE("The entry with flags must be between 1 and 31 in line:\n\n");
+    if (mItemInt[2] > 63 || mItemInt[2] < 1)
+      ABORT_LINE("The entry with flags must be between 1 and 63 in line:\n\n");
     if (mItemInt[2] & 1)
       sizeX++;
     if (mItemInt[2] & 2)
@@ -2000,6 +2018,8 @@ int CMacCmd::QueueFrameTiltSeries(void)
     if (mItemInt[2] & 8)
       sizeX++;
     if (mItemInt[2] & 16)
+      sizeX += 2;
+    if (mItemInt[2] & 32)
       sizeX += 2;
     if (var->rowsFor2d) {
       sizeY = (int)var->rowsFor2d->GetSize();
@@ -2066,12 +2086,26 @@ int CMacCmd::QueueFrameTiltSeries(void)
         deltaISY.push_back((float)(delX *aMat.ypx + delY * aMat.ypy));
         iy0++;
       }
+      if (mItemInt[2] & 32) {
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        delX = atof((LPCTSTR)report);  // / pixel;
+        iy0++;
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        delY = atof((LPCTSTR)report); // / pixel;
+        deltaBeamX.push_back((float)delX);
+        deltaBeamY.push_back((float)delY);
+        //deltaBeamX.push_back((float)(delX * bMat.xpx + delY * bMat.xpy));
+        //deltaBeamY.push_back((float)(delX * bMat.ypx + delY * bMat.ypy));
+        iy0++;
+      }
     }
   }
 
   // Queue it: This does all the error checking
   if (mCamera->QueueTiltSeries(openTime, tiltToAngle, waitOrInterval, focusChange,
-    deltaISX, deltaISY, (float)delISX, postISdelay)) {
+    deltaISX, deltaISY, deltaBeamX, deltaBeamY, (float)delISX, postISdelay)) {
       AbortMacro();
       return 1;
   }
@@ -5983,6 +6017,106 @@ int CMacCmd::ScaleImage(void)
   if (mProcessImage->ScaleImage(ImBufForIndex(index), index2, mItemFlt[2], mItemFlt[3],
     !mItemEmpty[5] && mItemInt[5]))
     ABORT_LINE("Failed to scale image for line:\n\n");
+  return 0;
+}
+
+// ConvertToBytes
+int CMacCmd::ConvertToBytes(void)
+{
+  CString report;
+  int index;
+  EMimageBuffer *imBuf;
+  if (!mItemEmpty[2] && mItemEmpty[3])
+    ABORT_LINE("You must enter two scaling values or none for:\n\n");
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  if (imBuf->mImage->getType() == kRGB)
+    ABORT_LINE("The buffer has a color image that cannot be converted in:\n\n");
+  if (imBuf->mImage->getType() == kUBYTE)
+    mLogRpt = "The image to be converted is already bytes";
+  else
+    imBuf->ConvertToByte(mItemEmpty[2] ? 0.f : mItemFlt[2], 
+      mItemEmpty[3] ? 0.f : mItemFlt[3]);
+  if (index >= 0)
+    mWinApp->SetCurrentBuffer(index);
+  return 0;
+}
+
+// PasteImagesTogether
+int CMacCmd::PasteImagesTogether(void)
+{
+  CString report;
+  int index, index2, outInd;
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, true) ||
+    ConvertBufferLetter(mStrItems[2], -1, true, index2, report, true) ||
+    ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
+    ABORT_LINE(report);
+  if (mProcessImage->PasteImages(ImBufForIndex(index), ImBufForIndex(index2), outInd,
+    !mItemEmpty[4] && mItemInt[4])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
+// ScaledSpectrum, SpectrumBesideImage
+int CMacCmd::ScaledSpectrum(void)
+{
+  CString report;
+  int index, err, nx, ny, maxSize, finalSize, padSize;
+  KImage *image;
+  EMimageBuffer tmpImBuf;
+  float factor;
+  unsigned char *buf;
+  bool sideBySide = CMD_IS(SPECTRUMBESIDEIMAGE);
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report, false))
+    ABORT_LINE(report);
+  image = mImBufs[index].mImage;
+  image->getSize(nx, ny);
+  maxSize = B3DMAX(nx, ny);
+  padSize = XCorrNiceFrame(4 * ((maxSize + 3) / 4), 4, 19);
+  finalSize = mItemInt[2] ? mItemInt[2] : padSize;
+  finalSize = 4 * ((finalSize + 3) / 4);
+  factor = B3DMAX(1.f, (float)ny / (float)finalSize);
+  if (sideBySide) {
+    finalSize = B3DMIN(finalSize, padSize);
+    if (finalSize < 100)
+      ABORT_LINE("The output size needs to eb either 0 or at least 100for:\n\n");
+  } else if (finalSize < 100 || finalSize > padSize)
+    ABORT_LINE("The output size needs to be either 0 or between 100 and the maximum"
+      " dimension of the input image for:\n\n");
+  NewArray2(buf, unsigned char, finalSize, finalSize);
+  if (!buf)
+    ABORT_LINE("Failed to allocate array for output of:\n\n");
+
+  image->Lock();
+  err = spectrumScaled(image->getData(), image->getType(), nx, ny, buf, padSize,
+    finalSize, mWinApp->GetBkgdGrayOfFFT(), mWinApp->GetTruncDiamOfFFT(), 4, twoDfft);
+  image->UnLock();
+  if (err) {
+    delete[] buf;
+    report.Format("Error %d calling spectrum with finalSize %d for:\n\n", err, finalSize);
+    ABORT_LINE(report);
+  }
+  if (sideBySide) {
+    tmpImBuf.mImage = new KImage();
+    tmpImBuf.mImage->useData((char *)buf, finalSize, finalSize);
+    if (factor > 1.) {
+
+      // Change factor to make reduction gave a factor of 4 in X, needed to avoid gray
+      // line when it converts to bytes by assigning the pixmap
+      err = 2 * (int)(0.5 * nx / factor);
+      err = 4 * (err / 4);
+      factor = (float)nx / (float)err - 0.0001f;
+      if (mProcessImage->ReduceImage(&mImBufs[index], factor, &report))
+        ABORT_LINE(report + " for:\n\n");
+      index = 0;
+    }
+    mProcessImage->PasteImages(&mImBufs[index], &tmpImBuf, 0, false);
+  } else 
+    mProcessImage->NewProcessedImage(&mImBufs[index], (short *)buf, kUBYTE, finalSize,
+      finalSize, 1);
   return 0;
 }
 

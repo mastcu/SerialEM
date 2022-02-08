@@ -56,6 +56,7 @@ public:
   int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2);
   int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);
   int ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, float offset, bool retainType);
+  int PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2, int outBufNum, bool vertical);
   BOOL GetLiveFFT() {return mLiveFFT;};
   GetSetMember(BOOL, CircleOnLiveFFT)
   GetSetMember(bool, SideBySideFFT);

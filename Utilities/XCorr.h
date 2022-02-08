@@ -83,6 +83,8 @@ int DLL_IM_EX ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol
           int *nSkipped, int *nTruncated, int *replacedX, int *replacedY, int replacedSize);
 void DLL_IM_EX ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left, 
                        int boundary, int ifY);
+void DLL_IM_EX ProcPasteByteImages(unsigned char *first, int nx1, int ny1, unsigned char *second,
+  int nx2, int ny2, unsigned char *outImage, bool vertical);
 
 int DLL_IM_EX StatGaussj(float *a, int n, int np, float *b, int m, int mp);
 int DLL_IM_EX StatMultr(float *x, int *xsiz, int *mpin, int *ng, float *xm, float *sd, 

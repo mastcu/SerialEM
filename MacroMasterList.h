@@ -636,6 +636,10 @@ MAC_SAME_NAME_NOARG(ReportRotationProblems, 0, 4, REPORTROTATIONPROBLEMS)
 MAC_SAME_FUNC_ARG(UseHoleVectorsForMulti, 0, 4, ReportLastHoleVectors, USEHOLEVECTORSFORMULTI, i)
 MAC_SAME_FUNC_ARG(RunScriptAfterNavAcquire, 1, 4, DoMacro, RUNSCRIPTAFTERNAVACQUIRE, I)
 MAC_SAME_NAME_ARG(LoadScriptPackAtEnd, 2, 4, LOADSCRIPTPACKATEND, IS)
+MAC_SAME_NAME_ARG(ConvertToBytes, 1, 4, CONVERTTOBYTES, Sdd)
+MAC_SAME_NAME_ARG(PasteImagesTogether, 3, 4, PASTEIMAGESTOGETHER, SSSi)
+MAC_SAME_NAME_ARG(ScaledSpectrum, 2, 4, SCALEDSPECTRUM, SI)
+MAC_SAME_FUNC_ARG(SpectrumBesideImage, 2, 4, ScaledSpectrum, SPECTRUMBESIDEIMAGE, SI)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python

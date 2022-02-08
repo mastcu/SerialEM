@@ -13,8 +13,10 @@
       imaging parameters. It distinguishes between three kinds of states:</P>
     <P><B><I>Imaging states:</I></B> An imaging state consists of the state of the 
       microscope together with the parameters used to acquire an image.&nbsp; Outside 
-      of Low Dose mode, such a state always stores Record parameters; whereas in Low 
-      Dose mode, states can be stored separately for Record, View, and Search.&nbsp; A 
+      of Low Dose mode, such a state can store Record or Mont-map parameters; whereas in Low 
+      Dose mode, states can be stored separately for Record, View, and Search, as well 
+      as for Mont-map, where the Record microscope parameters and the Mont-map camera 
+      parameters are stored.&nbsp; A 
       state always includes the magnification, spot size, intensity, probe mode for a 
       Thermo/FEI scope or alpha for a JEOL, and energy filter settings if any (slit 
       in/out, slit width, energy loss, whether to do zero loss). The stored state for 
@@ -61,7 +63,7 @@
       <br />&nbsp;&nbsp;&nbsp; Bin: Binning
       <br />&nbsp;&nbsp;&nbsp; Frame: The frame size in 1000's (e.g.,
       2048 x 1536 shows up as 2.0x1.5)
-      <br />&nbsp;&nbsp;&nbsp; Name: The name entered in the text box
+      , followed by &#39;M&#39; for a Mont-map state<br />&nbsp;&nbsp;&nbsp; Name: The name entered in the text box
       <br />Clicking a line in the table selects the
       current line in the table, and double clicking actually sets the state if 
       possible.</P>
@@ -73,10 +75,18 @@
       previously set state become the Prior state.</P>
     <P><em><strong>Controls</strong></em></P>
     <P><B>Add Current State</B></P>
-    <P>This buttons adds the current microscope and imaging parameters as a new imaging
+    <P>This button adds the current microscope and imaging parameters as a new imaging
       state in the table.</P>
     <P><B>Name</B></P>
     <P>You can enter a name for the current state in the table with this text box.</P>
+    <P><strong>Add Mont-Map State</strong></P>
+    <P>This button adds the Mont-map camera parameters and either the current 
+      microscope parameters (outside of Low Dose) or the Low Dose Record area 
+      parameters as a new imaging state.</P>
+    <P><strong>Save Target Defocus</strong></P>
+    <P>This button allows you to save the value of the target defocus for autofocusing 
+      in a non-Low Dose state.&nbsp; Saving target defocus is optional because it is a 
+      recent addition and saving it by default would not be desired in some scenarios.&nbsp; </P>
     <P><B>Go to Selected State</B></P>
     <P>This button will change the microscope and acquisition settings to the imaging state
       on the current line of the table. It is equivalent to double clicking on a line
@@ -93,11 +103,13 @@
       <li>Outside of Low Dose mode, setting a different state will completely replace 
         the previously set state.</li>
       <li>In Low Dose mode, the state can be set for each of the three areas 
-        independently, so you can set the state for Record, View, and Search in 
+        independently, so you can set the state for Record or Mont-map, View, and Search in 
         succession without restoring or replacing any of those.&nbsp; However, if you go 
         to another state for the same area, it will replace the previously set state for 
-        that area.</li>
-      <li>Each currently set state is marked in the table with a &Dagger; after the 
+        that area.&nbsp; The situation with Record and Mont-map is a bit different; if 
+        you set the state for one then the other, the microscope parameters of the 
+        Record area will be replaced when the second state is set.</li>
+      <li>Each currently set state is marked in the table with a &dagger; after the 
         frame size.</li>
     </ul>
     <P><B>Update It</B></P>
@@ -106,10 +118,6 @@
       microscope and imaging parameters.</P>
     <P><B>Delete It</B></P>
     <P>This button deletes the current line of the table.</P>
-    <P><strong>Save Target Defocus</strong></P>
-    <P>This button allows you to save the value of the target defocus for autofocusing 
-      in a non-Low Dose state.&nbsp; Saving target defocus is optional because it is a 
-      recent addition and saving it by default would not be desired in some scenarios.&nbsp; </P>
     <P><B>Go to Map Acquire State</B></P>
     <P>This button is enabled if the Navigator is open and the current item there is a
       map. It will change the microscope and imaging parameters to the state used to

@@ -635,6 +635,81 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   return 0;
 }
 
+// Copy two images into one side by side or top/bottom
+int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2, 
+  int outBufNum, bool vertical)
+{
+  EMimageBuffer copy1, copy2;
+  KImage *image1 = imBuf1->mImage;
+  KImage *image2 = imBuf2->mImage;
+  int type1 = image1->getType();
+  int type2 = image2->getType();
+  int nx1, ny1, nx2, ny2, nxOut, nyOut;
+  unsigned char *outBuf;
+  double moreBin;
+  if (!image1 || !image2)
+    return -1;
+  if (type1 == kRGB || type2 == kRGB) {
+    SEMMessageBox("You cannot paste together RGB images");
+    return 1;
+  }
+
+  // Convert each to byte first - the size may change to be a multiple of 4
+  if (type1 != kUBYTE) {
+    if (mWinApp->mBufferManager->CopyImBuf(imBuf1, &copy1, false))
+      return 1;
+    copy1.UpdatePixMap();
+    if (!copy1.ConvertToByte(0., 0.)) {
+      SEMMessageBox("Cannot convert first buffer to bytes for pasting images");
+      return 1;
+    }
+    image1 = copy1.mImage;
+    image1->getSize(nx1, ny1);
+  }
+  if (type2 != kUBYTE) {
+    if (mWinApp->mBufferManager->CopyImBuf(imBuf2, &copy2, false))
+      return 1;
+    copy2.UpdatePixMap();
+    if (!copy2.ConvertToByte(0., 0.)) {
+      SEMMessageBox("Cannot convert second buffer to bytes for pasting images");
+      return 1;
+    }
+  }
+
+  // Set sizes and output buffer
+  image1->getSize(nx1, ny1);
+  image2->getSize(nx2, ny2);
+  if (vertical) {
+    nxOut = B3DMAX(nx1, nx2);
+    nyOut = ny1 + ny2;
+  } else {
+    nxOut = nx1 + nx2;
+    nyOut = B3DMAX(ny1, ny2);
+  }
+  NewArray2(outBuf, unsigned char, nxOut, nyOut);
+  if (!outBuf) {
+    SEMMessageBox("Failed to get array for for pasting images");
+    return 1;
+  }
+
+  // Call the processing routine
+  image1->Lock();
+  image2->Lock();
+  ProcPasteByteImages((unsigned char *)image1->getData(), nx1, ny1,
+    (unsigned char *)image2->getData(), nx2, ny2, outBuf, vertical);
+  image1->UnLock();
+  image2->UnLock();
+
+  // Put it in the output buffer as usual, give it less binning so it displays fully
+  // at same zoom
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf1, &mImBufs[outBufNum], false);
+  moreBin = 1. / B3DMAX(nxOut / (float)nx1, nyOut / (float)ny1);
+  NewProcessedImage(imBuf1, (short *)outBuf, kUBYTE, nxOut, nyOut, moreBin, -1, false,
+    outBufNum);
+  return 0;
+}
+
 // Common routine for putting a newly processed image based on the given buffer into 
 // buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,

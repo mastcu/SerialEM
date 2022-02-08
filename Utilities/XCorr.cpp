@@ -2528,6 +2528,80 @@ void ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left,
   }
 }
 
+void DLL_IM_EX ProcPasteByteImages(unsigned char *first, int nx1, int ny1, 
+  unsigned char *second, int nx2, int ny2, unsigned char *outImage, bool vertical)
+{
+  int nxOut, nyOut, loop, iyOut, ix, iy, numLeft, numRight, numBot, numTop;
+  int nxCopy, nyCopy, offset = 0;
+  unsigned char *inPtr, *outPtr;
+
+  // Get output size
+  if (vertical) {
+    nxOut = B3DMAX(nx1, nx2);
+    nyOut = ny1 + ny2;
+  } else {
+    nxOut = nx1 + nx2;
+    nyOut = B3DMAX(ny1, ny2);
+  }
+
+  // setup to copy first image, with zero left offset
+  inPtr = first;
+  iyOut = 0;
+  nxCopy = nx1;
+  nyCopy = ny1;
+  offset = 0;
+  for (loop = 0; loop < 2; loop++) {
+
+    // Set up pad to left and right, or pad line below and above
+    if (vertical) {
+      numLeft = (nxOut - nxCopy) / 2;
+      numRight = (nxOut - nxCopy) - numLeft;
+      numBot = 0;
+      numTop = 0;
+    } else {
+      numBot = (nyOut - nyCopy) / 2;
+      numTop = (nyOut - nyCopy) - numBot;
+      numLeft = 0;
+      numRight = 0;
+    }
+
+    // Set output pointer with possible offset
+    // Do pad lines, the each line with possible pad, then top pad lines
+    outPtr = outImage + iyOut * nxOut + offset;
+    for (iy = 0; iy < numBot; iy++) {
+      for (ix = 0; ix < nxCopy; ix++)
+        *outPtr++ = 127;
+      outPtr += nxOut - nxCopy;
+    }
+    for (iy = 0; iy < nyCopy; iy++) {
+      for (ix = 0; ix < numLeft; ix++)
+        *outPtr++ = 127;
+      for (ix = 0; ix < nxCopy; ix++)
+        *outPtr++ = *inPtr++;
+      for (ix = 0; ix < numRight; ix++)
+        *outPtr++ = 127;
+      if (!vertical)
+        outPtr += nxOut - nxCopy;
+    }
+    for (iy = 0; iy < numTop; iy++) {
+      for (ix = 0; ix < nxCopy; ix++)
+        *outPtr++ = 127;
+      outPtr += nxOut - nxCopy;
+    }
+
+    // Set up for second image
+    inPtr = second;
+    nxCopy = nx2;
+    nyCopy = ny2;
+    if (vertical) {
+      iyOut = ny1;
+    } else {
+      iyOut = 0;
+      offset = nx1;
+    }
+  }
+}
+
 /*
 c subroutine multr
 c from Cooley and Lohnes - Multivariate Procedures for the
