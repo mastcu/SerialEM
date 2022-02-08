@@ -1505,15 +1505,17 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       (inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET);
     ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY);
     ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+    needAutoCen = (intensity != ldArea->intensity || ldArea->probeMode != probeMode ||
+      ldArea->spotSize != spotSize || ldArea->magIndex != magIndex) &&
+      mWinApp->mAutocenDlg &&
+      (inSetArea == TRIAL_CONSET || (inSetArea == FOCUS_CONSET && m_bTieFocusTrial)) &&
+      mWinApp->mMultiTSTasks->GetUseEasyAutocen();
     ldArea->magIndex = magIndex;
     ldArea->spotSize = spotSize;
     ldArea->camLenIndex = camLenIndex;
     ldArea->diffFocus = focus;
     ldArea->beamAlpha = alpha;
     ldArea->probeMode = probeMode;
-    needAutoCen = intensity != ldArea->intensity && mWinApp->mAutocenDlg &&
-      (inSetArea == TRIAL_CONSET || (inSetArea == FOCUS_CONSET && m_bTieFocusTrial)) &&
-        mWinApp->mMultiTSTasks->GetUseEasyAutocen();
     if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || 
@@ -1535,8 +1537,10 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     SyncFocusAndTrial(inSetArea);
     if (!m_bTieFocusTrial)
       SyncPosOfFocusAndTrial(inSetArea);
-    if (needAutoCen)
+    if (needAutoCen) {
       mWinApp->mAutocenDlg->UpdateParamSettings();
+      mWinApp->mAutocenDlg->UpdateMagSpot();
+    }
   }
 
   ManageMagSpot(inSetArea, screenDown);
