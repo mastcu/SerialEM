@@ -474,9 +474,9 @@ public:
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
     int hideLDoff = 0);
   void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
-  void SaveCurrentState(int type, bool saveLDfocusPos, int camNum, int saveTargOffs);
-  void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs);
-  int AreaFromStateLowDoseValue(int lowDose, int *setNum);
+  void SaveCurrentState(int type, bool saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false);
+  void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs, BOOL montMap);
+  int AreaFromStateLowDoseValue(StateParams *param, int *setNum);
   void ForgetSavedState(void);
   bool GetSavedPriorState(StateParams &state);
   StateParams* NewStateParam(bool navAcquire);

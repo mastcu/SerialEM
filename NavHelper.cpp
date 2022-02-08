@@ -1817,7 +1817,7 @@ void CNavHelper::RestoreSavedState(void)
   if (mTypeOfSavedState == STATE_NONE)
     return;
   for (ind = (int)mSavedStates.GetSize() - 1; ind >= 0; ind--) {
-    area = AreaFromStateLowDoseValue(mSavedStates[ind].lowDose, &setNum);
+    area = AreaFromStateLowDoseValue(&mSavedStates[ind], &setNum);
     destCam = mSavedStates[ind].camForParams < 0 ?
       mSavedStates[ind].camIndex : mSavedStates[ind].camForParams;
     if (ind) {
@@ -1977,12 +1977,13 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   double shiftX, shiftY;
   int curCam = mWinApp->GetCurrentCamera();
   int ldInd = RECORD_CONSET;
+  int montInd = MONT_USER_CONSET;
   if (camNum < 0)
     camNum = curCam;
-  if (lowdose < 0) {
+  if (lowdose < 0 && !param->montMapConSet) {
     ldInd = -1 - lowdose;
   } else if (lowdose > 0) {
-    if (mScope->GetLowDoseArea() >= 0)
+    if (mScope->GetLowDoseArea() >= 0 && !param->montMapConSet)
       ldInd = mScope->GetLowDoseArea();
     lowdose = -1 - ldInd;
   }
@@ -1991,6 +1992,10 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   ldp = mWinApp->GetLDParamsForCamera(camNum) + ldInd;
   if (ldInd == SEARCH_AREA)
     ldInd = mWinApp->GetUseViewForSearch() ? VIEW_CONSET : SEARCH_CONSET;
+  if (ldInd == RECORD_CONSET && param->montMapConSet) {
+    ldInd = MONT_USER_CONSET;
+    montInd = RECORD_CONSET;
+  }
 
   // Should it do this or just access the master?  Map state accesses the master
   if (camNum == curCam)
@@ -2054,7 +2059,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   param->readModeSrch = (lowdose || mWinApp->GetUseViewForSearch()) ? -1 : 
     conSets[SEARCH_CONSET].K2ReadMode;
   param->readModeMont = (lowdose || mWinApp->GetUseRecordForMontage()) ? -1 : 
-    conSets[MONT_USER_CONSET].K2ReadMode;
+    conSets[montInd].K2ReadMode;
 }
 
 // Save the low dose focus area for the current camera in the given parameters
@@ -2170,7 +2175,7 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
   }
 
   if (param->lowDose) {
-    ldArea = AreaFromStateLowDoseValue(param->lowDose, NULL);
+    ldArea = AreaFromStateLowDoseValue(param, NULL);
     ldp = mWinApp->GetLDParamsForCamera(
       param->camForParams < 0 ? param->camIndex : param->camForParams) + ldArea;
 
@@ -2254,6 +2259,7 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
   ControlSet *workSets;
   ControlSet *camSets = mWinApp->GetCamConSets();
   int destCam = param->camForParams < 0 ? param->camIndex : param->camForParams;
+  int montInd = baseNum == MONT_USER_CONSET ? RECORD_CONSET : MONT_USER_CONSET;
 
   // Set the working sets to either the current ones or ones in the master.  The caller
   // was responsible for passing in conSet as current or master depending on whether 
@@ -2310,7 +2316,7 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
   if (param->readModeSrch >= 0 && !mWinApp->GetUseViewForSearch())
     workSets[SEARCH_CONSET].K2ReadMode = param->readModeSrch;
   if (param->readModeMont >= 0 && !mWinApp->GetUseRecordForMontage())
-    workSets[MONT_USER_CONSET].K2ReadMode = param->readModeMont;
+    workSets[montInd].K2ReadMode = param->readModeMont;
 
   // Copy back to the camera sets IF this is the current camera
   if (destCam == curCam)
@@ -2360,12 +2366,14 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
 
 // Save the current state if it is not already saved
 void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos, int camNum,
-  int saveTargOffs)
+  int saveTargOffs, BOOL montMap)
 {
   StateParams state;
   if (mTypeOfSavedState != STATE_NONE)
     return;
+  state.montMapConSet = montMap;
   mTypeOfSavedState = type;
+  mPriorState.montMapConSet = montMap;
   StoreCurrentStateInParam(&mPriorState, mWinApp->LowDoseMode() ? 1 : 0, false, 
     mWinApp->GetCurrentCamera(), 0);
   StoreCurrentStateInParam(&state, mWinApp->LowDoseMode() ? 1 : 0, saveLDfocusPos, 
@@ -2376,9 +2384,10 @@ void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos, int camNum,
   mSavedLowDoseArea = mScope->GetLowDoseArea();
 }
 
-// Adds additional stated to the array of saved states for other area - the point is
+// Adds additional state to the array of saved states for other area - the point is
 // to save the state that can be modified
-void CNavHelper::SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs)
+void CNavHelper::SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs,
+  BOOL montMap)
 {
   int savedArea, ind;
   StateParams state;
@@ -2387,24 +2396,25 @@ void CNavHelper::SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs
     return;
   for (ind = 0; ind < mSavedStates.GetSize(); ind++) {
     state = mSavedStates.GetAt(ind);
-    savedArea = AreaFromStateLowDoseValue(state.lowDose, NULL);
-    if (savedArea == area)
+    savedArea = AreaFromStateLowDoseValue(&state, NULL);
+    if (savedArea == area && BOOL_EQUIV(montMap, state.montMapConSet))
       return;
   }
 
+  state.montMapConSet = montMap;
   StoreCurrentStateInParam(&state, -1 - area, false, camNum, saveTargOffs ? area + 1 : 0);
   mSavedStates.Add(state);
 }
 
 // Return the low dose area (-1 for none) and optionally the control set number from the 
 // lowDose value in a state
-int CNavHelper::AreaFromStateLowDoseValue(int lowDose, int *setNum)
+int CNavHelper::AreaFromStateLowDoseValue(StateParams *param, int *setNum)
 {
   int area = -1;
-  if (lowDose) {
+  if (param->lowDose) {
     area = RECORD_CONSET;
-    if (lowDose < 0)
-      area = -1 - lowDose;
+    if (param->lowDose < 0)
+      area = -1 - param->lowDose;
   }
   if (setNum) {
     if (area >= 0)
@@ -2413,6 +2423,8 @@ int CNavHelper::AreaFromStateLowDoseValue(int lowDose, int *setNum)
       *setNum = RECORD_CONSET;
     if (area == SEARCH_AREA)
       *setNum = SEARCH_CONSET;
+    if (*setNum == RECORD_CONSET && param->montMapConSet)
+      *setNum = MONT_USER_CONSET;
   }
   return area;
 }

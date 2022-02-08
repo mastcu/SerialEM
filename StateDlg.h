@@ -7,7 +7,7 @@ class CNavHelper;
 struct StateParams;
 
 // CStateDlg dialog
-
+#define MAX_SAVED_STATE_IND (MAX_LOWDOSE_SETS + 1)
 class CStateDlg : public CBaseDlg
 {
 public:
@@ -33,7 +33,7 @@ private:
   int mListBorderX, mListBorderY;
   int mNameBorderX;
   int mNameHeight;
-  int mSetStateIndex[MAX_LOWDOSE_SETS + 1];
+  int mSetStateIndex[MAX_SAVED_STATE_IND + 1];
   BOOL mInitialized;
   CArray<StateParams *, StateParams *> *mStateArray;
   CNavHelper *mHelper;
@@ -42,6 +42,7 @@ private:
   int mPanelStart[2];
   bool mAdjustingPanels;
   bool mWarnedSharedParams;
+  bool mWarnedNoMontMap;
   int mCamOfSetState;
 
 public:
@@ -85,4 +86,6 @@ public:
   CButton m_butSaveDefocus;
   afx_msg void OnButSaveDefocus();
   CString m_strPriorSummary;
+  CButton m_butAddMontMap;
+  afx_msg void OnButAddMontMap();
 };
