@@ -1944,7 +1944,6 @@
 #define IDC_RMAP_WITH_VIEW              2970
 #define IDC_RMAP_WITH_SEARCH            2971
 #define IDC_NA_SAVE_AS_MAP              2972
-#define IDC_BUTTON1                     2973
 #define IDC_BUT_SAVE_DEFOCUS            2973
 #define IDC_STAT_PRIOR_SUMMARY          2974
 #define IDC_STAT_NAV_GROUP              2975
@@ -1957,6 +1956,7 @@
 #define IDC_STAT_SEP_SETTINGS1          2983
 #define IDC_STAT_SEP_SETTINGS2          2984
 #define IDC_NA_RETRACT_CAMS             2985
+#define IDC_BUT_ADD_MONT_MAP            2986
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2469,7 +2469,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        268
 #define _APS_NEXT_COMMAND_VALUE         33415
-#define _APS_NEXT_CONTROL_VALUE         2986
+#define _APS_NEXT_CONTROL_VALUE         2987
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

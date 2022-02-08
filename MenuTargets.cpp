@@ -1687,6 +1687,7 @@ void CMenuTargets::OnUpdateCameraUseViewForSearch(CCmdUI *pCmdUI)
 void CMenuTargets::OnCameraUseRecordForMontage()
 {
   mWinApp->SetUseRecordForMontage(!mWinApp->GetUseRecordForMontage());
+  mNavHelper->UpdateStateDlg();
 }
 
 void CMenuTargets::OnUpdateCameraUseRecordForMontage(CCmdUI *pCmdUI)
