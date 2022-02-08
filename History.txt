@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/22: Fixed setting View shift offset with shifted View image when
+continuous update is on, or turned on afterwards.
+
 2/7/22: Added script commands to scale an image to bytes, paste two images
 side by side or vertically, produce a reduced spectrum scaled to bytes, and
 produce a side-by-side reduced image and scaled spectrum.
@@ -15,9 +18,6 @@ sizes be set when loading settings after startup.
 Record camera parameters, to the State dialog.
 
 2/7/22: Added ability to specify beam shift changes in FrameSeriesFromVar.
-
-2/4/22: Fixed setting View shift offset with shifted View image when
-continuous update is on.
 
 2/4/22: Moved menu entry for setting email address from Tilt Series to
 Settings menu.

@@ -957,7 +957,6 @@ void CLowDoseDlg::OnSetViewShift()
     mViewShiftY[m_iOffsetShown] = magTab[magv].offsetISY - delY;
   }
 
-  SetContinuousUpdate(false);
   if (shiftType > 0) {
 
     // Y inversion for deltas, then subtract the image shift just as negative is taken
@@ -1488,6 +1487,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   bool needRedraw = false, needAutoCen = false;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf;
+  bool focusOrTrial = inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET;
 
   if (!mInitialized || !mTrulyLowDose)
     return;
@@ -1501,10 +1501,19 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // Disable changes in spectroscopy mode
   if (DoingContinuousUpdate(inSetArea)) {
     ldArea = &mLDParams[inSetArea];
-    needRedraw = ldArea->magIndex != magIndex && m_iDefineArea && 
-      (inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET);
-    ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY);
-    ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+    needRedraw = ldArea->magIndex != magIndex && m_iDefineArea && focusOrTrial;
+
+    // Change IS position only if mag changes, and treat it as on-axis only for T and F
+    if (ldArea->magIndex != magIndex) {
+      if (focusOrTrial) {
+        ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX,
+          ldArea->ISY);
+        ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+      } else {
+        TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,
+          ldArea->ISX, ldArea->ISY);
+      }
+    }
     needAutoCen = (intensity != ldArea->intensity || ldArea->probeMode != probeMode ||
       ldArea->spotSize != spotSize || ldArea->magIndex != magIndex) &&
       mWinApp->mAutocenDlg &&
