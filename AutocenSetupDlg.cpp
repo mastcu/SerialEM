@@ -44,7 +44,6 @@ CAutocenSetupDlg::~CAutocenSetupDlg()
 void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
-  DDX_Control(pDX, IDC_STATCAMLABEL, m_statCamLabel1);
   DDX_Control(pDX, IDC_STATCAMLABEL2, m_statCamLabel2);
   DDX_Control(pDX, IDC_STATCAMNAME, m_statCamName);
   DDX_Text(pDX, IDC_STATCAMNAME, m_strCamName);
@@ -86,6 +85,9 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_SMALLER_TRIAL, m_statSmallerTrial);
   DDX_Control(pDX, IDC_SPIN_SMALLER_TRIAL, m_sbcSmallerTrial);
   DDX_Text(pDX, IDC_STAT_SMALLER_TRIAL, m_strSmallerTrial);
+  DDX_Control(pDX, IDC_STAT_SEP_SETTINGS1, m_statSepSettings1);
+  DDX_Control(pDX, IDC_STAT_SEP_SETTINGS2, m_statSepSettings2);
+  DDX_Control(pDX, IDC_STATSOURCE, m_statSource);
 }
 
 
@@ -116,6 +118,8 @@ BOOL CAutocenSetupDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  CFont *font;
+  LOGFONT logFont;
   mScope = mWinApp->mScope;
   mMultiTasks = mWinApp->mMultiTSTasks;
   mCamera = mWinApp->GetCurrentCamera();
@@ -125,9 +129,18 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   if (mWinApp->GetNumActiveCameras() > 1) {
     m_strCamName = mCamParams->name;
   } else {
-    m_statCamLabel2.ShowWindow(SW_HIDE);
     m_statCamName.ShowWindow(SW_HIDE);
+    m_statCamLabel2.ShowWindow(SW_HIDE);
   }
+  font = m_statLdTrackScope.GetFont();
+  font->GetLogFont(&logFont);
+  mItalicFont.CreateFont(logFont.lfHeight, logFont.lfWidth, 0, 0, logFont.lfWeight, 1, 0,
+    0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
+    DEFAULT_QUALITY, logFont.lfPitchAndFamily, logFont.lfFaceName);
+  m_statLdTrackScope.SetFont(&mItalicFont);
+  m_statSepSettings1.SetFont(&mItalicFont);
+  m_statSepSettings2.SetFont(&mItalicFont);
+  m_statSource.SetFont(&mItalicFont);
 
   // In low dose, start with the trial parameters for fetching the parameters to use
   if (mLowDoseMode) {
@@ -244,17 +257,16 @@ void CAutocenSetupDlg::OnUseTrialSmaller()
 
 void CAutocenSetupDlg::ManageSettingsLines()
 {
+  CString str = "and spot size";
   if (mLowDoseMode && m_bUseTrialSmaller) {
-    SetDlgItemText(IDC_STAT_SEP_SETTINGS1, "Current, not stored, Trial values will be used");
-    SetDlgItemText(IDC_STAT_SEP_SETTINGS2, "Settings here");
-    m_statCamLabel1.SetWindowText(" will not apply if Trial changes");
-    m_statCamLabel1.ShowWindow(SW_SHOW);
+    m_statSepSettings1.SetWindowText("");
+    m_statSepSettings2.SetWindowText("");
 
   } else {
-    SetDlgItemText(IDC_STAT_SEP_SETTINGS1,"Separate settings can be stored for each mag");
-    SetDlgItemText(IDC_STAT_SEP_SETTINGS2, "and spot size");
-    m_statCamLabel1.SetWindowText(" and for each camera");
-    m_statCamLabel1.ShowWindow(mWinApp->GetNumActiveCameras() > 1 ? SW_SHOW : SW_HIDE);
+    m_statSepSettings1.SetWindowText("Separate settings can be stored for each mag");
+    if (mWinApp->GetNumActiveCameras() > 1)
+      str += " and for each camera";
+    m_statSepSettings2.SetWindowText(str);
   }
 }
 
@@ -558,7 +570,7 @@ void CAutocenSetupDlg::UpdateParamSettings(void)
     else if (err)
       m_strSource = "Current Trial intensity not calibrated, no change";
     else
-      m_strSource = "Intensity set from current Trial and size change";
+      m_strSource = "";
     m_strSmallerTrial.Format("%d%%", mParam->spotSize);
   } else if (mParam->intensity >= 0.) {
     m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mCurSpot, mParam->intensity,
@@ -617,8 +629,9 @@ void CAutocenSetupDlg::UpdateMagSpot(void)
   m_strSpot.Format("%d", easyTrial ? ldParam->spotSize : mCurSpot);
   m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF, 
     easyTrial ? ldParam->magIndex : mCurMagInd));
-  m_statNanoprobe.ShowWindow(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) > 0,
-    SW_HIDE, SW_SHOW));
+  m_statNanoprobe.SetWindowText(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) >
+    0, "uPr", "nPr"));
+  m_statNanoprobe.ShowWindow(B3DCHOICE(FEIscope, SW_SHOW, SW_HIDE));
   UpdateData(false);
 }
 

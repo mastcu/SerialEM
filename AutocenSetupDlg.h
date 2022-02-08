@@ -39,6 +39,7 @@ private:
   BOOL mLowDoseMode;
   bool mLastTrialMismatch;
   bool mOpening;
+  CFont mItalicFont;
 
 public:
 
@@ -52,7 +53,6 @@ public:
   int mCurProbe;
   AutocenParams *mParam;
   double mCurIntensity;
-  CStatic m_statCamLabel1;
   CStatic m_statCamLabel2;
   CStatic m_statCamName;
   CString m_strCamName;
@@ -123,4 +123,7 @@ public:
   afx_msg void OnUseTrialSmaller();
   void ManageSettingsLines();
   CString m_strSmallerTrial;
+  CStatic m_statSepSettings1;
+  CStatic m_statSepSettings2;
+  CStatic m_statSource;
 };
