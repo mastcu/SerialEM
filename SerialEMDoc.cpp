@@ -2014,7 +2014,8 @@ void CSerialEMDoc::ReadNewSettingsFile(CString newSettings)
 
 void CSerialEMDoc::OnUpdateSettingsOpen(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingComplexTasks());    
+  pCmdUI->Enable(!mWinApp->DoingComplexTasks() && !(mWinApp->mNavigator && 
+    mWinApp->mNavigator->mNavAcquireDlg));
 }
 
 // Reread settings file
@@ -2032,7 +2033,8 @@ void CSerialEMDoc::OnSettingsReadagain()
 
 void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen);
+  pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen &&
+  !(mWinApp->mNavigator &&mWinApp->mNavigator->mNavAcquireDlg));
   UtilModifyMenuItem("Settings", ID_SETTINGS_READAGAIN, "&Reload " + 
     (mSettingsReadable && mSettingsOpen ? mCurrentSettingsPath : "settings"));
 }
