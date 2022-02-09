@@ -463,9 +463,14 @@
           the existing position will be updated.&nbsp; Although these stored positions 
           include a possible subarea offset in the Focus camera parameters, clicking will 
           change only the image shift to the Focus area.</p>
+    <p>
+          With <strong>Edit Focus</strong> on, turning on <strong>Show Acquire</strong> 
+          will display the Record and Focus areas on all points marked for acquisition.&nbsp; 
+          This display takes precedence over showing multiple Record areas on all points 
+          when the option for that is on.&nbsp; Toggle <strong>Edit Focus</strong> 
+          off and on to visualize those areas relative to the Focus area.</p>
       <p>
-          There are some restrictions.&nbsp; Low dose mode must be on.&nbsp; &#39;Edit Focus&#39; 
-          and &#39;Edit mode&#39; are mutually exclusive and turn each other off when selected.&nbsp; 
+          There are some restrictions.&nbsp; Low dose mode must be on.&nbsp; <strong>Edit Focus</strong> and <strong>Edit mode</strong> are mutually exclusive and turn each other off when selected.&nbsp; 
           Turning on &#39;Define area&#39; in the Low Dose panel disables the editing of Focus 
           areas here, but it is enabled again when the &#39;Define area&#39; returns to &#39;None&#39;.&nbsp; 
           There is no way to enable axis rotation here if it is not already enabled, or to 
@@ -485,7 +490,9 @@
           settings need not match between the offline and real settings, but the boxes 
           draw for the areas will not be the right size unless Focus and Record 
           magnifications match.&nbsp; If you are doing tilt series, you should set items as 
-          Tilt Series to enable saving and editing focus.&nbsp; <em>
+          Tilt Series to enable saving and editing focus.&nbsp; It is no longer necessary 
+          to set them as Acquire in the offline instance, because the tilt series 
+          parameters are now stored in the Navigator file.&nbsp; <em>
           If you set such items as Acquire instead, you must turn off the Acquire before saving 
           from the offline instance, because the focus positions will be lost if you turn 
           off Acquire in the real session in order to turn on Tilt Series</em>.</p>

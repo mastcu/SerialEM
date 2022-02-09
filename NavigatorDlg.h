@@ -174,6 +174,7 @@ public:
   GetMember(int, EndingAcquireIndex);
   GetMember(int, FocusCycleCounter);
   GetMember(bool, DidEucentricity);
+  GetMember(bool, ShowingLDareas);
   SetMember(int, RunScriptAfterNextAcq);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
 
@@ -447,6 +448,7 @@ private:
   int mLastGridAwayFromFocus;  // Whether last grid of points was laid out away from focus
   float mLastGridPolyArea;     // Area of polygon/map in ast grid of points filling one
   bool mEditFocusEnabled;      // Keep track if Edit Focus is enabled, required for drawing
+  bool mShowingLDareas;        // Flag if conditions are set for showing all areas
   ScaleMat mIStoStageForHoles; // Matrix for converting multihole IS values to stage
   int mMagIndForHoles;         // The mag index and camera needed when working with 
   int mCameraForHoles;         // hole pattern of current point

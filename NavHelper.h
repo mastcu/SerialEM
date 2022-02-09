@@ -557,7 +557,7 @@ public:
   int GetUserValue(CMapDrawItem *item, int number, CString &value);
   bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,
     int &top, int &right, int &bottom);
-  void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
+  void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate, int curInd = -1);
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
   bool GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal);
   int GetNumHolesForItem(CMapDrawItem *item, int numDefault);

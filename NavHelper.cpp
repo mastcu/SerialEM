@@ -5428,11 +5428,12 @@ bool CNavHelper::ModifySubareaForOffset(int camera, int xOffset, int yOffset, in
 // stored in it, or the state or stored focus position for a previous acquire item of the
 // type.  If there is no current or prior setting, or Nav is not open or there is no 
 // current item, it returns the defined Low Dose focus position
-void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate)
+void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate,
+  int curInd)
 {
   CMapDrawItem *item;
   StateParams *statePtr;
-  int curInd, ind, firstInd;
+  int ind, firstInd;
   bool tilts;
 
   // initialize to current state
@@ -5442,10 +5443,11 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
 
   if (!mNav || justLDstate)
     return;
-  curInd = mNav->GetCurrentIndex();
+  if (curInd < 0)
+    curInd = mNav->GetCurrentIndex();
+
   if (curInd < 0 || curInd >= (int)mItemArray->GetSize())
     return;
-
 
   item = mItemArray->GetAt(curInd);
   tilts = item->mTSparamIndex >= 0;

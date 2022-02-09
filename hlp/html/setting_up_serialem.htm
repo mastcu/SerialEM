@@ -1407,7 +1407,10 @@
         &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied
         to the aligned sum to make it match (e.g., 1 or
         3 for 90 degrees counterclockwise or clockwise).&nbsp; Check the need for this
-        reorientation by aligning with saving selected.&nbsp; </li>
+        reorientation by aligning frames and comparing to an image with no frames 
+        acquired.&nbsp;&nbsp; For a <em>Falcon 4</em>, only frames saved in EER files 
+        need to be reoriented, so check aligning either with saving to an EER file or 
+        with no saving of frames (in which case it saves to a temporary EER file).</li>
       <li>The camera property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39; can be set to control the scaling of
         images from the camera.&nbsp; It specifies the power of 2 to divide by, where
         positive or negative values set a power for dividing linear or counting mode counts,

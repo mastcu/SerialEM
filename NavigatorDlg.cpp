@@ -3201,7 +3201,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
-  bool showMulti, asIfLowDose, showCurPtAcquire, showLDareas;
+  bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire;
   int ring;
   if (!SetCurrentItem(true))
     mItem = NULL;
@@ -3222,15 +3222,16 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   // there is no user point (turns off draw on the acquire box)
   showCurPtAcquire = !imBuf->mHasUserPt && mItem && (showMulti || (m_bShowAcquireArea &&
     mItem->mAcquire && mItem->mNumPoints == 1 && mItem->mDraw));
-  showLDareas = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0) && m_bEditFocus &&
+  curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0);
+  mShowingLDareas = (curIsAcquire || m_bShowAcquireArea) && m_bEditFocus &&
     mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
 
   // Showing low dose area in edit mode: just provide a copy of current item
-  if (showLDareas) {
+  if (mShowingLDareas && curIsAcquire) {
     *acquireBox = new CMapDrawItem(mItem);
     (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
 
-  } else if ((imBuf->mHasUserPt || showCurPtAcquire) &&
+  } else if (!mShowingLDareas && (imBuf->mHasUserPt || showCurPtAcquire) &&
     (m_bShowAcquireArea || showMulti) && 
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 

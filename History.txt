@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/9/22: Made it possible to see Record/Focus areas on all acquire points by
+turning on Show acuire in Edit Focus mode.
+
+2/9/22: Attempted to prevent files from being marked as montage when not
+montaging.
+
 2/9/22: Stabilized drawing of acquire box on marker point when current point
 changes (In 3.8).
 

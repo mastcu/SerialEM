@@ -862,7 +862,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (navigator && !(mFFTWindow || imBuf->mCaptured == BUFFER_FFT ||
     imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW))
     itemArray = GetMapItemsForImageCoords(imBuf, false);
-  mDrewLDAreasAtNavPt = itemArray && mAcquireBox && mAcquireBox->mNumPoints == 1;
+  mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
+    navigator->GetShowingLDareas());
 
   if (mMainWindow) {
 
@@ -872,7 +873,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
       imBuf->mLowDoseArea && !(skipExtra & 1);
     if (bufferOK && !mDrewLDAreasAtNavPt) {
-      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1);
+      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1, -1);
     }
 
     // Draw tilt axis if option set or when defining LD area on View
@@ -1060,7 +1061,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     if (doMultiHole)
       mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
-  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
+  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2) &&
+    !(mDrewLDAreasAtNavPt && navigator->m_bShowAcquireArea);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
     !mWinApp->mNavHelper->GetMHCenableMultiDisplay();
   if (useMultiShot && !imBuf->GetTiltAngle(tiltAngle))
@@ -1105,15 +1107,19 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, item->mPieceDrawnOn);
 
       // Draw low dose areas around current point
-      if (iDraw < 0 && mDrewLDAreasAtNavPt) {
+      if (mDrewLDAreasAtNavPt && (iDraw < 0 || 
+        ((item->mAcquire || item->mTSparamIndex >= 0) && navigator->m_bShowAcquireArea))){
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
-        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1);
-        mNavLDAreasXcenter = ptX;
-        mNavLDAreasYcenter = ptY;
-      } else {
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, iDraw);
+        if (iDraw < 0) {
+          mNavLDAreasXcenter = ptX;
+          mNavLDAreasYcenter = ptY;
+        }
+      }
 
-        // Otherwise draw a cross at a single point
+      // Otherwise draw a cross at a single point
+      if (!mDrewLDAreasAtNavPt || iDraw >= 0) {
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         DrawCross(&cdc, &pnSolidPen, point, crossLen);
       }
@@ -1463,14 +1469,14 @@ void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float i
 
 // Draw Record and area being defined for low dose
 void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
-  float xOffset, float yOffset, int thick)
+  float xOffset, float yOffset, int thick, int curInd)
 {
   COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
   float cornerX[4], cornerY[4], cenX, cenY, radius;
   CPoint point;
   StateParams state;
   state.camIndex = mWinApp->GetCurrentCamera();
-  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt);
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt, curInd);
   for (int type = 0; type < 2; type++) {
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
       cornerX, cornerY, cenX, cenY, radius);
