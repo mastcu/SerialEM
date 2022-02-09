@@ -6079,6 +6079,8 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
     Right = xMax / 2 + 2;
     DMsizeX = 4;
   }
+  if (!moduloX)
+    moduloX = 1;
 
   // First check for restricted sizes using size requested or the last restricted size
   // The last restricted size is used to enforce Y having same index after a call for X

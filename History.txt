@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/9/22: Prevented division by 0 in a camear routine (In 3.8).
+
 2/7/22: Fixed setting View shift offset with shifted View image when
 continuous update is on, or turned on afterwards.
 
