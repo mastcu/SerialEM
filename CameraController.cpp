@@ -1566,6 +1566,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           err = 1;
         }
         mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
+        if (flags & PLUGFLAG_NO_DIV_BY_2)
+          mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
 
         // Send a gain index if that function exists and there is a non-negative value
         // Clamp it to the given range if the the plugin supplies a limit 
@@ -1765,6 +1767,11 @@ void CCameraController::SetDivideBy2(int inVal)
       DeleteOneReference(i--);
     }
   }
+}
+
+int CCameraController::GetDivideBy2()
+{
+  return ((mParam->CamFlags & CAMFLAG_NO_DIV_BY_2) ? 0 : mDivideBy2);
 }
 
 
@@ -3289,8 +3296,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // load some thread data
-  mTD.ImageType = (mParam->unsignedImages && mDivideBy2 <= 0) ? kUSHORT : kSHORT;
-  mTD.DivideBy2 = (mParam->unsignedImages && mDivideBy2 > 0) ? mDivideBy2 : 0;
+  mTD.ImageType = (mParam->unsignedImages && GetDivideBy2() <= 0) ? kUSHORT : kSHORT;
+  mTD.DivideBy2 = (mParam->unsignedImages && GetDivideBy2() > 0) ? mDivideBy2 : 0;
   if (ReturningFloatImages(mParam))
     mTD.ImageType = kFLOAT;
 
@@ -7246,7 +7253,7 @@ void CCameraController::StartAcquire()
   StageThreadData stData;
   bool moreDarkRefs, redoBadRef = false;
   DWORD ticks = GetTickCount();
-  if (mParam->unsignedImages && mDivideBy2)
+  if (mParam->unsignedImages && GetDivideBy2())
     darkCrit /= 2.;
   if (setText.Find("ont") < 0)
     setText.MakeUpper();
@@ -9628,7 +9635,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                 err = 0;
                 if (!mNumAlignedContinuous) {
                   err = mFalconHelper->SetupContinuousAlign(*lastConSetp, &mTD,
-                    mDivideBy2, mNumContinuousToAlign);
+                    GetDivideBy2(), mNumContinuousToAlign);
                   if (err)
                     SEMTrace('1', "Error %d setting up alignment of continuous frames",
                       err);

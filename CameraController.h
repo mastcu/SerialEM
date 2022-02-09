@@ -94,6 +94,7 @@ struct CamPluginFuncs;
 // But these conflict with the max Falcon frames in the high 2 bytes
 #define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)
 #define CAMFLAG_CAN_DIV_MORE      (1 << 17)
+#define CAMFLAG_NO_DIV_BY_2       (1 << 18)
 
 #define AMT_VERSION_CAN_NORM     700
 #define TIETZ_VERSION_HAS_GPU    102
@@ -351,8 +352,8 @@ public:
   void SetupBeamScan(ControlSet *conSetp);
   static CWinThread *StartBlankerThread(CameraThreadData *td, bool waitForSignal = false);
   static int WaitForBlankerThread(CameraThreadData * td, DWORD timeout, CString message);
-  GetMember(int, DivideBy2)
     void SetDivideBy2(int inVal);
+  int GetDivideBy2();
   GetSetMember(int, ScanSleep)
     GetSetMember(int, ScanMargin)
     GetSetMember(float, BeamWidth)
