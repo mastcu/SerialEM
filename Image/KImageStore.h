@@ -97,6 +97,7 @@ public:
     bool &needToDelete);
   virtual void CommonInit(void);
   virtual bool montCoordsInAdoc() {return mAdocIndex >= 0 && mMontCoordsInMdoc;};
+  virtual int FixInappropriateMontage();
   virtual CString getAdocName(void);
   virtual int getImageShift(int inSect, double &outISX, double &outISY);
   virtual unsigned int getChecksum();

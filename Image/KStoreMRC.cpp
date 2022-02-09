@@ -715,6 +715,18 @@ int KStoreMRC::CheckMontage(MontParam *inParam)
   return KImageStore::CheckMontage(inParam, mHead->nx, mHead->ny, mHead->nz);  
 }
 
+// There are elusive reports of files marked as montage when they should not be; this is
+// called on first save when montaging is not being done to detect and fix it
+int KStoreMRC::FixInappropriateMontage()
+{
+  if ((mHead->typext & MONTAGE_MASK) || montCoordsInAdoc()) {
+    mHead->typext &= ~MONTAGE_MASK;
+    mMontCoordsInMdoc = false;
+    return 1;
+  }
+  return 0;
+}
+
 // Get the piece coordinates for a section.  Return 0 if OK, -1 if section bad
 int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
 {

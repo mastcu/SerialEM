@@ -438,6 +438,15 @@ CString KImageStore::getFilePath()
   return mFile->GetFilePath();
 }
 
+int KImageStore::FixInappropriateMontage()
+{
+  if (montCoordsInAdoc()) {
+    mMontCoordsInMdoc = false;
+    return 1;
+  }
+  return 0;
+}
+
 CString KImageStore::getAdocName(void)
 {
   if (mStoreType == STORE_TYPE_ADOC)

@@ -357,6 +357,13 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (toBuf->mImage && toBuf->mImage->getType() == kFLOAT)
       inStore->setMode(MRC_MODE_FLOAT);
 
+    // Check if montaging flags are set and not montaging
+    if (!mWinApp->mMontageController->DoingMontage() &&
+      inStore->FixInappropriateMontage()) {
+      mWinApp->AppendToLog("WARNING: File was originally marked as a montage; this was"
+        " fixed because a montage is not being done");
+    }
+
     cam = inStore->GetAdocIndex();
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
       AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 

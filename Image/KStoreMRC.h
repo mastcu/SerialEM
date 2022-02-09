@@ -67,7 +67,8 @@ public:
 	virtual int    AddTitle(const char *inTitle);
   virtual int     setMode(int inMode);
   virtual int   CheckMontage(MontParam *inParam); 
-	virtual int   getPcoord(int inSect, int &outX, int &outY, int &outZ);
+  virtual int FixInappropriateMontage();
+  virtual int   getPcoord(int inSect, int &outX, int &outY, int &outZ);
   virtual int   getStageCoord(int inSect, double &outX, double &outY);
   virtual void  BigSeek(int base, int size1, int size2, UINT flag);
   int getExtraData(EMimageExtra * extra, int section);
