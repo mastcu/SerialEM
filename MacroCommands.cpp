@@ -8240,6 +8240,8 @@ int CMacCmd::ReportCountScaling(void)
 // SetDivideBy2
 int CMacCmd::SetDivideBy2(void)
 {
+  if ((mCamParams->CamFlags & CAMFLAG_NO_DIV_BY_2) != 0 && mItemInt[1])
+    ABORT_LINE("The cuurent camera does not support division by 2 for:\n\n");
   mCamera->SetDivideBy2(mItemInt[1] != 0 ? 1 : 0);
   return 0;
 }
