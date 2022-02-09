@@ -2775,7 +2775,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
         magIndex = mPlugFuncs->GetMagnificationIndex();
         if (!mCheckedNeutralIS[magIndex]) {
           mPlugFuncs->SetToNeutral(ID);
-          Sleep(500);
+          //Sleep(500);  Should no longer be necessary 2/9/22
           mPlugFuncs->GetImageShift(&neutISX, &neutISY);
           mCheckedNeutralIS[magIndex] = 1;
           neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] / 
