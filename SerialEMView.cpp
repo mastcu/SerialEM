@@ -1121,7 +1121,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // For a map, find the adjust that applies to the center, turn off adjustment for
       // the corner points, and adjust them all by the center adjustment to get a square
-      if (item->IsMap() || (iDraw < 0 && !useMultiShot))
+      if (item->IsMap() || (iDraw < 0 && !useMultiShot && !imBuf->mHasUserPt))
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
       // Draw lines if there is more than one point
