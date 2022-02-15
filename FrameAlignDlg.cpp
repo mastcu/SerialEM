@@ -241,7 +241,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   mParams = mWinApp->mCamera->GetFrameAliParams();
-  FrameAliParams *param = mParams->GetData();
+  FrameAliParams *param;
   mCamParams = mWinApp->GetCamParams() + mCameraSelected;
   m_sbcPairwiseNum.SetRange(0, 500);
   m_sbcPairwiseNum.SetPos(250);
@@ -283,6 +283,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
 
+
   // Rename buttons for Falcon, disable some items
   if (!mCamParams->K2Type) {
     if (mFalconCanAlign)
@@ -313,6 +314,10 @@ BOOL CFrameAlignDlg::OnInitDialog()
     SetDlgItemText(IDC_RALIBIN_BY_FAC, "By");
   } else
     SetDlgItemText(IDC_RALIBIN_BY_FAC, "To");
+
+  // This is needed in case settings were never read
+  mWinApp->mCamera->AddFrameAliDefaultsIfNone();
+  param = mParams->GetData();
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)

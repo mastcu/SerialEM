@@ -521,6 +521,17 @@ void CCameraController::SetFrameAliDefaults(FrameAliParams &faParam, const char 
   faParam.EERsuperRes = 0;
 }
 
+void CCameraController::AddFrameAliDefaultsIfNone()
+{
+  FrameAliParams faParam;
+  if (!mFrameAliParams.GetSize()) {
+    SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
+    mFrameAliParams.Add(faParam);
+    SetFrameAliDefaults(faParam, "8K default set", 6, 0.05f, 2);
+    mFrameAliParams.Add(faParam);
+  }
+}
+
 CCameraController::~CCameraController()
 {
   if (mDMInitialized[AMT_IND])
@@ -1769,6 +1780,7 @@ void CCameraController::SetDivideBy2(int inVal)
   }
 }
 
+// Get this flag or enforce that the camera does not divide by 2
 int CCameraController::GetDivideBy2()
 {
   return ((mParam->CamFlags & CAMFLAG_NO_DIV_BY_2) ? 0 : mDivideBy2);
@@ -9112,7 +9124,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   DWORD ticks;
   float partialExposure = (float)mExposure;
   short int *parray, *imin, *imout;
-  int conSetUsed = mLastConSet;
+  int conSetUsed = mLastConSet, errForCleanup = 0;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
   float pixelSize = (float)(mBinning * 10000. * 
@@ -9370,8 +9382,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         if (mWinApp->mCalibTiming->Calibrating())
           invertCon = 0;
         if (operation || invertCon) {
-          if (RotateAndReplaceArray(chan, operation, invertCon))
+          if (RotateAndReplaceArray(chan, operation, invertCon)) {
             SEMMessageBox("Failed to get memory for processing STEM image", MB_EXCLAME);
+            errForCleanup = 1;
+          }
         }
         
       } else if ((mParam->K2Type || oneViewTakingFrames) &&  mTD.NumAsyncSumFrames == 0) {
@@ -9396,9 +9410,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             SEMMessageBox( message, MB_EXCLAME);
             mDMsizeX = mTD.DMSizeX * mTD.Binning / mBinning;
             mDMsizeY = mTD.DMSizeY * mTD.Binning / mBinning;
-          } else if (mParam->rotationFlip && 
-            RotateAndReplaceArray(chan, mParam->rotationFlip,0))
-              SEMMessageBox("Failed to get memory for rotating K2/K3 image", MB_EXCLAME);
+            errForCleanup = 1;
+          } else if (mParam->rotationFlip &&
+            RotateAndReplaceArray(chan, mParam->rotationFlip, 0)) {
+            SEMMessageBox("Failed to get memory for rotating K2/K3 image", MB_EXCLAME);
+            errForCleanup = 1;
+          }
 
           // need to adjust sizes again without the full frame constraint to get size the
           // same as it would be without dose frac on
@@ -9407,7 +9424,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
 
         // Compare adjusted binning to the desired binning
-        if (mTD.Binning < mBinning) {
+        if (!errForCleanup && mTD.Binning < mBinning) {
 
           // Antialias reduction is needed if binning does not yet match
           double filtScale = (double)mTD.Binning / mBinning;
@@ -9419,15 +9436,15 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           ayoff = (float)(B3DMAX(0, mTD.DMSizeY - mDMsizeY * mBinning / mTD.Binning) /2.);
           NewArray2(parray, short int, mDMsizeX, mDMsizeY);
           B3DCLAMP(mZoomFilterType, 0, 5);
-          err = selectZoomFilter(mZoomFilterType, filtScale, &i);
-          if (!err && parray && linePtrs) {
+          errForCleanup = selectZoomFilter(mZoomFilterType, filtScale, &i);
+          if (!errForCleanup && parray && linePtrs) {
             setZoomValueScaling((float)(1. / (filtScale * filtScale)));
-            err = zoomWithFilter(linePtrs, mTD.DMSizeX, mTD.DMSizeY, axoff, ayoff, 
-              mDMsizeX, mDMsizeY, mDMsizeX, 0, 
+            errForCleanup = zoomWithFilter(linePtrs, mTD.DMSizeX, mTD.DMSizeY, axoff, 
+              ayoff, mDMsizeX, mDMsizeY, mDMsizeX, 0,
               mTD.ImageType == kUSHORT ? SLICE_MODE_USHORT : SLICE_MODE_SHORT,
               parray, NULL, NULL);
-            if (!err) {
-              delete [] mTD.Array[chan];
+            if (!errForCleanup) {
+              delete[] mTD.Array[chan];
               mTD.Array[chan] = parray;
               mTD.DMSizeX = mDMsizeX;
               mTD.DMSizeY = mDMsizeY;
@@ -9437,21 +9454,17 @@ void CCameraController::DisplayNewImage(BOOL acquired)
               SEMMessageBox(message);
             }
           } else {
-            if (err)
+            if (errForCleanup)
               message.Format("Error %d setting up image reduction with selectZoomFilter",
-              err);
+                err);
             else
               message = "Failed to allocate memory for image reduction";
             SEMMessageBox(message);
             delete parray;
-            err = 1;
+            errForCleanup = 1;
           }
           B3DFREE(linePtrs);
 
-          if (err && mRepFlag >= 0) {
-            TurnOffRepeatFlag();
-            StopContinuousSTEM();
-          }
         } else if (mTD.DoseFrac && (mTD.DMSizeX > mDMsizeX || mTD.DMSizeY > mDMsizeY)) {
 
           // Or simple trimming is needed for unbinned dose frac data
@@ -9507,6 +9520,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                 relBottom)) {
                   SEMMessageBox("Error getting memory for finding dark edges of drift"
                     " corrected image");
+                  errForCleanup = 1;
               } else {
 
                 // Modify the usable area limits for any edge that is not at the limit
@@ -10181,7 +10195,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       mWinApp->mNavigator->AddFocusAreaPoint(false);
   }
 
-  ErrorCleanup(0);
+  if (errForCleanup && mRepFlag >= 0) {
+    TurnOffRepeatFlag();
+    StopContinuousSTEM();
+  }
+
+  ErrorCleanup(errForCleanup);
   mInDisplayNewImage = false;
   if (mRepFlag >= 0) {
     axoff = (float)(1000. * mContinuousCount / SEMTickInterval(mContinStartTime));
