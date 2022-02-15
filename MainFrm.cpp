@@ -554,6 +554,11 @@ void CMainFrame::SetStatusText(int iPane, CString strText)
   m_wndStatusBar.SetPaneText(iPane, strText);
 }
 
+void CMainFrame::GetStatusText(int iPane, CString & strText)
+{
+  m_wndStatusBar.GetPaneText(iPane, strText);
+}
+
 void CMainFrame::InitializeStatusBar()
 {
   // Set the sizes of the the status bar panes

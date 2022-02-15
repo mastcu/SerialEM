@@ -34,8 +34,9 @@ public:
 	void InitializeStatusBar();
   void RemoveHiddenItemsFromMenus();
   void RemoveItemsFromOneMenu(CMenu *menu, int level);
-	void SetStatusText(int iPane, CString strText);
-	void SetDialogPositions();
+  void SetStatusText(int iPane, CString strText);
+  void GetStatusText(int iPane, CString &strText);
+  void SetDialogPositions();
   void InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 
     int *colorIndex);
 	void InitializeDialogTable(DialogTable *inTable, int *initialState, int numDialog,
