@@ -418,6 +418,7 @@ public:
   void WarnIfUsingOldFilterAlign();
   SetMember(CString, StartupMessage);
   CString GetStartupMessage(bool original = false);
+  CString GetVersionString();
   SetMember(BOOL, StartupInfo);
   SetMember(BOOL, ExitOnScopeError);
   void SetAdministratorMode(int inVal);

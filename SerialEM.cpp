@@ -1626,17 +1626,25 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
 CString CSerialEMApp::GetStartupMessage(bool original)
 {
   if (!original) {
+    CString str = GetVersionString();
     CTime ctdt = CTime::GetCurrentTime();
-    int iCam = 32;
-#ifdef _WIN64
-    iCam = 64;
-#endif
-    mStartupMessage.Format("%s %d-bit,  built %s  %s\r\n%s  %d/%d/%d  %02d:%02d:%02d",
-      VERSION_STRING, iCam, (LPCTSTR)sBuildDate, (LPCTSTR)sBuildTime,
+    mStartupMessage.Format("%s\r\n%s  %d/%d/%d  %02d:%02d:%02d", (LPCTSTR)str,
       mStartingProgram ? "Started" : "Current date", ctdt.GetMonth(),
       ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
   }
   return mStartupMessage;
+}
+
+CString CSerialEMApp::GetVersionString()
+{
+  CString str;
+  int iCam = 32;
+#ifdef _WIN64
+  iCam = 64;
+#endif
+  str.Format("%s %d-bit,  built %s  %s",
+    VERSION_STRING, iCam, (LPCTSTR)sBuildDate, (LPCTSTR)sBuildTime);
+  return str;
 }
 
 // Return an integer of the form yyyymmdd
