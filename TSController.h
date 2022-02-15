@@ -309,6 +309,7 @@ private:
   BOOL mVaryFilter;           // Flag for whether varying filter settings
   BOOL mVaryFrameTime;        // Flag for whether varying frame time
   bool mFrameAlignInIMOD;     // Flag to put out mdoc and com file to align TS frames
+  int mSavedSaveFrames;       // Saved value of Record conset saveframes
   double mCenBeamTimeStamp;   // Time beam center was last done, or start of series
   BOOL mCrossedBeamCenAngle;  // Flag that
   int mNumRollingBuf;         // Number of rolling buffers

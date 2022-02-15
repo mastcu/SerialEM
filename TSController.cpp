@@ -1094,9 +1094,12 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
           return 1;
        }
        mFrameAlignInIMOD = true;
+       mSavedSaveFrames = mConSets[RECORD_CONSET].saveFrames;
        mConSets[RECORD_CONSET].alignFrames = 0;
+       mConSets[RECORD_CONSET].saveFrames = 1;
        i = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
        mCamConSets[i].alignFrames = 0;
+       mCamConSets[i].saveFrames = 1;
     }
 
     // Put out starting message.  Navigator took care of the log file change
@@ -4642,8 +4645,10 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   }
 
   // If doing deferred frame alignment restore align flag first
-  if (mFrameAlignInIMOD)
+  if (mFrameAlignInIMOD) {
     csets[RECORD_CONSET].alignFrames = 1;
+    csets[RECORD_CONSET].saveFrames = mSavedSaveFrames;
+  }
 
   // And if any of those got restored, copy the consets
   if (mChangeRecExp || mChangeRecDrift || mChangeAllDrift || mVaryFrameTime || 
