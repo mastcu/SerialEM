@@ -1337,12 +1337,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       + " :\n" + unrecognized , MB_EXCLAME);
 
   // If there are no frame align params, set up default sets
-  if (!faParamArray->GetSize()) {
-    mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
-    faParamArray->Add(faParam);
-    mWinApp->mCamera->SetFrameAliDefaults(faParam, "8K default set", 6, 0.05f, 2);
-    faParamArray->Add(faParam);
-  }
+  mWinApp->mCamera->AddFrameAliDefaultsIfNone();
   
   // Remove state params that are supposed to be low dose but don't have LD param
   err = 0;
