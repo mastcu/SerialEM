@@ -3,8 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/9/22: SEM_3-8-18
+2/9/22: Guaranteed that image shift would be read from scope after setting it
+to neutral on JEOL (In 3.8).
+
 2/9/22: Made it possible to see Record/Focus areas on all acquire points by
-turning on Show acuire in Edit Focus mode.
+turning on Show acquire in Edit Focus mode.
 
 2/9/22: Attempted to prevent files from being marked as montage when not
 montaging.
@@ -12,7 +16,7 @@ montaging.
 2/9/22: Stabilized drawing of acquire box on marker point when current point
 changes (In 3.8).
 
-2/9/22: Prevented division by 0 in a camear routine (In 3.8).
+2/9/22: Prevented division by 0 in a camera routine (In 3.8).
 
 2/7/22: Fixed setting View shift offset with shifted View image when
 continuous update is on, or turned on afterwards.

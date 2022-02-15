@@ -2719,7 +2719,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->centeredOnly = 1;
             } else if (itemInt[1] == 4) {
               camP->TietzBlocks = 1024;
-            } else {
+            } else if (itemInt[1] != 0) {
 
               // Otherwise, type is encoded as negative modulo, #2 or #5 means no subareas
               camP->moduloX = -itemInt[1];
