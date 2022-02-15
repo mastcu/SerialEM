@@ -121,9 +121,6 @@ public:
   CSpinButtonCtrl m_sbcSmallerTrial;
   afx_msg void OnDeltaposSpinSmallerTrial(NMHDR *pNMHDR, LRESULT *pResult);
   afx_msg void OnUseTrialSmaller();
-  void ManageSettingsLines();
   CString m_strSmallerTrial;
-  CStatic m_statSepSettings1;
-  CStatic m_statSepSettings2;
   CStatic m_statSource;
 };

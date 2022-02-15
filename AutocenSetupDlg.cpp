@@ -85,8 +85,6 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_SMALLER_TRIAL, m_statSmallerTrial);
   DDX_Control(pDX, IDC_SPIN_SMALLER_TRIAL, m_sbcSmallerTrial);
   DDX_Text(pDX, IDC_STAT_SMALLER_TRIAL, m_strSmallerTrial);
-  DDX_Control(pDX, IDC_STAT_SEP_SETTINGS1, m_statSepSettings1);
-  DDX_Control(pDX, IDC_STAT_SEP_SETTINGS2, m_statSepSettings2);
   DDX_Control(pDX, IDC_STATSOURCE, m_statSource);
 }
 
@@ -118,8 +116,6 @@ BOOL CAutocenSetupDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
-  CFont *font;
-  LOGFONT logFont;
   mScope = mWinApp->mScope;
   mMultiTasks = mWinApp->mMultiTSTasks;
   mCamera = mWinApp->GetCurrentCamera();
@@ -132,15 +128,17 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     m_statCamName.ShowWindow(SW_HIDE);
     m_statCamLabel2.ShowWindow(SW_HIDE);
   }
+
+  // Here is how to get italics for regular dialog elements
+  /*  CFont *font;
+  LOGFONT logFont;
   font = m_statLdTrackScope.GetFont();
   font->GetLogFont(&logFont);
   mItalicFont.CreateFont(logFont.lfHeight, logFont.lfWidth, 0, 0, logFont.lfWeight, 1, 0,
     0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
     DEFAULT_QUALITY, logFont.lfPitchAndFamily, logFont.lfFaceName);
   m_statLdTrackScope.SetFont(&mItalicFont);
-  m_statSepSettings1.SetFont(&mItalicFont);
-  m_statSepSettings2.SetFont(&mItalicFont);
-  m_statSource.SetFont(&mItalicFont);
+  m_statSource.SetFont(&mItalicFont);*/
 
   // In low dose, start with the trial parameters for fetching the parameters to use
   if (mLowDoseMode) {
@@ -179,7 +177,6 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   m_sbcBinning.SetPos(15000);
   m_sbcSmallerTrial.SetRange(0, 30000);
   m_sbcSmallerTrial.SetPos(15000);
-  ManageSettingsLines();
   UpdateParamSettings();
   UpdateMagSpot();
   UpdateEnables();
@@ -252,22 +249,6 @@ void CAutocenSetupDlg::OnUseTrialSmaller()
   FetchParams();
   UpdateEnables();
   UpdateParamSettings();
-  ManageSettingsLines();
-}
-
-void CAutocenSetupDlg::ManageSettingsLines()
-{
-  CString str = "and spot size";
-  if (mLowDoseMode && m_bUseTrialSmaller) {
-    m_statSepSettings1.SetWindowText("");
-    m_statSepSettings2.SetWindowText("");
-
-  } else {
-    m_statSepSettings1.SetWindowText("Separate settings can be stored for each mag");
-    if (mWinApp->GetNumActiveCameras() > 1)
-      str += " and for each camera";
-    m_statSepSettings2.SetWindowText(str);
-  }
 }
 
 // Spot size change
