@@ -1595,8 +1595,8 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
           mat = AdjustedISmatrix(iCam, inMagInd, inCamera, inMagInd);
           if (debug)
             SEMTrace('c', "IStoGivenCamera at cam %d mag %d by specimen transfer "
-                      "from cam %d at same mag: %f %f %f %f", inCamera, inMagInd, iCam,
-                      mat.xpx, mat.xpy, mat.ypx, mat.ypy);
+                      "from cam %d at same mag: %.5g %.5g %.5g %.5g", inCamera, inMagInd,
+                      iCam, mat.xpx, mat.xpy, mat.ypx, mat.ypy);
           return mat;
         }
     }
@@ -1620,8 +1620,8 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
           mat = AdjustedISmatrix(inCamera, iMag, inCamera, inMagInd);
           if (debug)
             SEMTrace('c', "IStoGivenCamera at cam %d mag %d by specimen transfer "
-                      "from mag %d in same cam: %f %f %f %f", inCamera, inMagInd, iMag,
-                      mat.xpx, mat.xpy, mat.ypx, mat.ypy);
+                      "from mag %d in same cam: %.5g %.5g %.5g %.5g", inCamera, inMagInd,
+                      iMag, mat.xpx, mat.xpy, mat.ypx, mat.ypy);
           return mat;
         }
       }
@@ -1671,11 +1671,12 @@ ScaleMat CShiftManager::IStoSpecimen(int inMagInd, int toCam)
     return bMat;
 
   // These traces make it give output during updates
-  /*SEMTrace('c', "Mag %d: camera to specimen %f %f %f %f\r\n    IS to camera %f %f %f %f",
-    inMagInd, aInv.xpx, aInv.xpy, aInv.ypx, aInv.ypy, bMat.xpx, bMat.xpy, bMat.ypx, 
-    bMat.ypy); */
+  /*SEMTrace('c', "Mag %d: camera to specimen %.5g %.5g %.5g %.5g\r\n    IS to camera "
+  "%.5g %.5g %.5g %.5g", inMagInd, aInv.xpx, aInv.xpy, aInv.ypx, aInv.ypy, bMat.xpx, 
+  bMat.xpy, bMat.ypx, bMat.ypy); */
   mat = MatMul(bMat, aInv);
-  //SEMTrace('c', "     IS to specimen %f %f %f %f", mat.xpx, mat.xpy, mat.ypx, mat.ypy);
+  //SEMTrace('c', "     IS to specimen %.5g %.5g %.5g %.5g", mat.xpx, mat.xpy, mat.ypx, 
+  //mat.ypy);
   return mat;
 }
 
@@ -1689,7 +1690,7 @@ ScaleMat CShiftManager::AveragedStageToCamera(int inCamera, int inMagInd)
 
 // Get matrix relating stage to camera coordinates,
 // based on a direct calibration if possible or derived from one
-ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
+ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
 {
   ScaleMat mat, ISthisCam, ISotherCam, ISinv, prod;
   mat.xpx = 0.;
@@ -1700,14 +1701,16 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
   MagTable *magtab = &mMagTab[inMagInd];
 
    // If the stage is calibrated here, return matrix
-  if (magtab->matStage[inCamera].xpx != 0.)
+  if (magtab->matStage[inCamera].xpx != 0. && (specOnly & 2) == 0)
     return magtab->matStage[inCamera];
  
   // Use this image shift to convert from another calibration on first round,
   // only from same camera with transferrable IS
   // On second round use specimen to camera transformation
   ISthisCam = IStoGivenCamera(inMagInd, inCamera);
-  for (int source = 0; source < 2; source++) {
+  for (int source = ((specOnly & 1) ? 1 : 0); source < 2; source++) {
+    if (source)
+      ISthisCam = SpecimenToCamera(inCamera, inMagInd);
     if (ISthisCam.xpx == 0.)
       continue;
 
@@ -1740,8 +1743,8 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
                   mat = MatMul(prod, ISthisCam);
                   if (doTrace)
                     SEMTrace('c', "StageToCamera at cam %d mag %d by IS transfer from mag"
-                      " %d: %f %f %f %f", inCamera, inMagInd, iMag, mat.xpx, mat.xpy, 
-                      mat.ypx, mat.ypy);
+                      " %d: %.5g %.5g %.5g %.5g", inCamera, inMagInd, iMag, mat.xpx, 
+                      mat.xpy, mat.ypx, mat.ypy);
                   return mat;
                 } else if (source) {
                   
@@ -1752,8 +1755,8 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
                   mat = MatMul(prod, ISthisCam);
                   if (doTrace)
                     SEMTrace('c', "StageToCamera at cam %d mag %d by specimen transfer "
-                      "from cam %d mag %d: %f %f %f %f", inCamera, inMagInd, iCam, iMag,
-                      mat.xpx, mat.xpy, mat.ypx, mat.ypy);
+                      "from cam %d mag %d: %.5g %.5g %.5g %.5g", inCamera, inMagInd, iCam,
+                      iMag, mat.xpx, mat.xpy, mat.ypx, mat.ypy);
                   return mat;
                 }
               }
@@ -1762,7 +1765,6 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
         }
       }
     }
-    ISthisCam = SpecimenToCamera(inCamera, inMagInd);
   }
 
   // Fallback to inverse of fallback specimen to stage times specimen to camera
@@ -1771,7 +1773,7 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
   mat = SpecimenToCamera(inCamera, inMagInd);
   prod = MatMul(ISinv, mat);
   if (doTrace)
-    SEMTrace('c', "StageToCamera at cam %d mag %d by fallback: %f %f %f %f",
+    SEMTrace('c', "StageToCamera at cam %d mag %d by fallback: %.5g %.5g %.5g %.5g",
       inCamera, inMagInd, mat.xpx, mat.xpy, mat.ypx, mat.ypy);
   return prod;
 }
@@ -2627,6 +2629,87 @@ int CShiftManager::ReportFallbackRotations(int onlyAbs)
       if (str.GetLength() > 4)
         mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
       retval = 1;
+    }
+  }
+  return retval;
+}
+
+// Compares stage cal matrices derived multippe ways and reports discrepancies
+int CShiftManager::CheckStageToCamConsistency(float rotCrit, float magCrit, bool debug)
+{
+  int iAct, iCam, ind, direct, loop, retval = 0;
+  float theta, smag, phi, strtch;
+  bool anyForCam;
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  CString str, saveKeys = mWinApp->GetDebugKeys();
+  ScaleMat fromIS, fromSpec, invProd;
+  for (iAct = 0; iAct < mWinApp->GetNumActiveCameras(); iAct++) {
+    iCam = mActiveCameraList[iAct];
+    for (direct = 0; direct < 2; direct++) {
+      anyForCam = false;
+      for (ind = 0; ind < MAX_MAGS; ind++) {
+
+        // Check any mag where there is either a defined pixel size, or absolute or relative
+        // rotation value
+        if (mMagTab[ind].mag && BOOL_EQUIV(mMagTab[ind].matStage[iCam].xpx != 0., direct >
+          0) && (!mMagTab[ind].pixDerived[iCam] ||
+            mMagTab[ind].rotDerived[iCam] <= (mAnyAbsRotCal ? 1 : 2))) {
+          fromIS = StageToCamera(iCam, ind, 2 * direct);
+          fromSpec = StageToCamera(iCam, ind, 1 + 2 * direct);
+          if (fromIS.xpx && fromSpec.xpx) {
+            for (loop = 0; loop <= direct; loop++) {
+              if (direct) {
+                if (!loop && fromIS.xpx == fromSpec.xpx && fromIS.xpy == fromSpec.xpy &&
+                  fromIS.ypx == fromSpec.ypx && fromIS.ypy == fromSpec.ypy)
+                  continue;
+                invProd = MatMul(loop ? fromSpec : fromIS,
+                  MatInv(mMagTab[ind].matStage[iCam]));
+              } else
+                invProd = MatMul(fromIS, MatInv(fromSpec));
+              amatToRotmagstr(invProd.xpx, invProd.xpy, invProd.ypx, invProd.ypy, &theta,
+                &smag, &strtch, &phi);
+              if (fabs(theta) > rotCrit || fabs(smag - 1.) > magCrit ||
+                fabs(strtch - 1.) > magCrit || strtch < 0) {
+                if (!anyForCam) {
+                  if (direct)
+                    mWinApp->AppendToLog("\r\nThere are inconsistencies between the stage"
+                      " calibration done at a mag and one derived\r\n from another mag "
+                      "using image shift or rotation and pixel values for camera " +
+                      mCamParams[iCam].name);
+                  else
+                    mWinApp->AppendToLog("\r\nThere are inconsistencies between stage to "
+                      "camera matrices derived from image shift cals\r\n and ones derived"
+                      " from rotation and pixel information for camera " + 
+                      mCamParams[iCam].name);
+                  mWinApp->AppendToLog("Index Mag   rotation  scaling   stretch  between "
+                    "matrices");
+                  anyForCam = true;
+                }
+                str.Format("%3d %8d  %7.1f  %6.2f  %6.2f", ind, MagForCamera(iCam, ind),
+                  theta, smag, strtch);
+                if (direct)
+                  str += loop ? "  (derived from rotation/pixel)" : 
+                  "  (derived from IS cals)";
+                mWinApp->AppendToLog(str);
+                if (debug) {
+                  mWinApp->SetDebugOutput("c");
+                  if (direct) {
+                    PrintfToLog("Calibrated matrix  %.5g  %.5g  %.5g  %.5g", 
+                      mMagTab[ind].matStage[iCam].xpx, mMagTab[ind].matStage[iCam].xpy,
+                      mMagTab[ind].matStage[iCam].ypx, mMagTab[ind].matStage[iCam].ypy);
+                      StageToCamera(iCam, ind, loop + 2);
+                  } else {
+                    StageToCamera(iCam, ind, 0);
+                    StageToCamera(iCam, ind, 1);
+                  }
+                  mWinApp->SetDebugOutput(saveKeys);
+                }
+                retval++;
+              }
+            }
+          }
+        }
+      }
     }
   }
   return retval;
@@ -3501,7 +3584,7 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
     (camSets[recSet].right - camSets[recSet].left))) > 10. ||
     fabs((double)(mInterSetShifts.sizeY[recSet] * recBin - 
     (camSets[recSet].bottom - camSets[recSet].top))) > 10.) {
-      SEMTrace('s', "%d %d %d %d %d %d %d %d %f %f %f %f", 
+      SEMTrace('s', "%d %d %d %d %d %d %d %d %.5g %.5g %.5g %.5g", 
         mInterSetShifts.binning[conSet], camSets[conSet].binning,
         mInterSetShifts.binning[recSet], recBin,
         mInterSetShifts.magInd[conSet], setMag , mInterSetShifts.magInd[recSet] , recMag,
@@ -3759,7 +3842,8 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, i
     rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2))
     return aMat;
   aMat = MatScaleRotate(aMat, scale, rotation);
-  SEMTrace('c', "Adjusted stage cal %f %f %f %f", aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
+  SEMTrace('c', "Adjusted stage cal %.5g %.5g %.5g %.5g", aMat.xpx, aMat.xpy, aMat.ypx, 
+    aMat.ypy);
   return aMat;
 }
 

@@ -139,7 +139,7 @@ public:
   float GetPixelSize(int inCamera, int inMagIndex);
   ScaleMat SpecimenToCamera(int inCamera, int inMagInd);
   ScaleMat AveragedStageToCamera(int inCamera, int inMagInd);
-  ScaleMat StageToCamera(int inCamera, int inMagInd);
+  ScaleMat StageToCamera(int inCamera, int inMagInd, int specOnly = 0);
   ScaleMat IStoCamera(int inMagInd);
   ScaleMat IStoSpecimen(int inMagInd, int toCam = -1);
   CShiftManager();
@@ -273,6 +273,7 @@ public:
   int NearestIScalMag(int inMag, int iCam, BOOL crossBorders);
   void PickMagForFallback(int camToDo, int & calMag, int & regCam);
   int ReportFallbackRotations(int onlyAbs);
+  int CheckStageToCamConsistency(float rotCrit, float magCrit, bool debug);
   void PropagatePixelSizes(void);
   double TransferPixelSize(int fromMag, int fromCam, int toMag, int toCam);
   float NearbyFilmCameraRatio(int inMag, int inCam, int derived);

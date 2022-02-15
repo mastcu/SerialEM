@@ -6559,6 +6559,15 @@ int CMacCmd::ReportRotationProblems(void)
   return 0;
 }
 
+// CheckStageToCamera
+int CMacCmd::CheckStageToCamera(void)
+{
+  int ret = mShiftManager->CheckStageToCamConsistency(mItemEmpty[1] ? 8.f : mItemFlt[1],
+    mItemEmpty[2] ? 0.08f : mItemFlt[2], !mItemEmpty[3] && mItemInt[3] != 0);
+  SetRepValsAndVars(3, ret);
+  return 0;
+}
+
 // ListAllCalibrations
 int CMacCmd::ListAllCalibrations(void)
 {
@@ -6569,6 +6578,9 @@ int CMacCmd::ListAllCalibrations(void)
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
+  mShiftManager->ReportFallbackRotations(false);
+  mShiftManager->CheckStageToCamConsistency(8.f, 0.08f, true);
+  mWinApp->mMenuTargets.OnListFocusMagCals();
 
   return 0;
 }

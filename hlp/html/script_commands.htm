@@ -1856,14 +1856,30 @@
         <TR>
           <TD class="scriptcommand">ListAllCalibrations</TD>
           <TD>Print tables with image shift, stage shift, focus, astigmatism via CTF, beam shift, beam
-          intensity and spot intensity calibrations to the log window for diagnostic purposes.
-          &nbsp; Command added in 3.9, 1/8/21.</TD>
+          intensity, spot intensity, and high focus mag calibrations to the log window for diagnostic purposes.
+          &nbsp; It also reports rotation problems and inconsistencies between stage calibrations.
+            &nbsp; Command added in 3.9, 1/8/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportRotationProblems</TD>
           <TD>Prints warnings about both the lack of calibrated absolute rotations (as is 
             printed on program startup by default) and the lack of relative rotation 
-            information (printed on program startup in Administrator Mode).</TD>
+            information (printed on program startup in Administrator Mode).&nbsp; Command added in 4.0, 1/26/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CheckStageToCamera [#R] [#S] [#D]</TD>
+          <TD>Checks for inconsistencies between stage calibrations that are directly measured, derived for a mag
+            from another mag using image shift calibrations, and derived using rotation and pixel size 
+            information.&nbsp; If there is no stage calibration at a mag, it compares one derived by IS 
+            calibrations (if any) with one derived from rotation and pixel values.&nbsp; If there is a stage
+             calibration, it compares it with one derived by IS calibrations (if any) and separately compares
+            it with one derived from rotation and pixel values.&nbsp; The rotation, average scaling in X and Y, and
+            maximum stretch along an axis are reported if the rotation is larger than 8 degrees (or the value entered
+            with the optional <b>#R</b>), or the scaling or stretch differ from 1 by more than 0.08 (or the value
+            entered with <b>#S</b>).&nbsp; If <b>#D</b> is nonzero, it prints details about how each troublesome 
+            matrix is derived.&nbsp; Only mags where there is either a calibrated pixel size or calibrated relative or absolute rotation angle will be tested.&nbsp; Not all of the discrepancies will cause a problem in 
+            practice.&nbsp; Command added in 4.0, 2/15/22.
+          </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
