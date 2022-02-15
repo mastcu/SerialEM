@@ -12,6 +12,7 @@
 #include "SerialEM.h"
 #include ".\CameraMacroTools.h"
 #include "MacroProcessor.h"
+#include "MainFrm.h"
 #include "CameraController.h"
 #include "MacroEditer.h"
 #include "MacroToolbar.h"
@@ -43,6 +44,7 @@ CCameraMacroTools::CCameraMacroTools(CWnd* pParent /*=NULL*/)
   mMacroNumber[2] = 2;
   mDoingTS = false;
   mUserStop = FALSE;
+  mDeferredUserStop = false;
 }
 
 
@@ -330,6 +332,7 @@ void CCameraMacroTools::HandleMacroRightClick(CMyButton &but, int index, bool op
 void CCameraMacroTools::OnButstop() 
 {
   CNavigatorDlg *nav = mWinApp->mNavigator;
+  CString str;
   int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
   if (navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED)
@@ -337,13 +340,26 @@ void CCameraMacroTools::OnButstop()
   else if (navState == NAV_SCRIPT_STOPPED) {
     mMacProcessor->SetNonResumable();
     mNav->EndAcquireWithMessage();
-  } else if (!mWinApp->mScope->DoingSynchroThread() && 
-    !mWinApp->mBufferManager->DoingSychroThread()) {
-    mWinApp->mCamera->StopCapture(1);
-    mUserStop = TRUE;
-    mWinApp->ErrorOccurred(0);
-    mUserStop = FALSE;
+  } else if (mWinApp->mScope->DoingSynchroThread() ||
+    mWinApp->mBufferManager->DoingSychroThread()) {
+    mDeferredUserStop = true;
+    mWinApp->mMainFrame->GetStatusText(MEDIUM_PANE, str);
+    mMediumWasEmpty = str.IsEmpty();
+    mWinApp->SetStatusText(MEDIUM_PANE, "STOPPING...");
+  } else {
+    DoUserStop();
   }
+}
+
+void CCameraMacroTools::DoUserStop(void)
+{
+  mWinApp->mCamera->StopCapture(1);
+  mUserStop = TRUE;
+  mWinApp->ErrorOccurred(0);
+  mUserStop = FALSE;
+  if (mDeferredUserStop && mMediumWasEmpty)
+    mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mDeferredUserStop = false;
 }
 
 // The End button 

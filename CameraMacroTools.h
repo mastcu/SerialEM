@@ -30,7 +30,8 @@ public:
 	void DoMacro(int inMacro);
 	void DeltaposSpin(NMHDR *pNMHDR, LRESULT *pResult, UINT nID, int iMacro);
 	void Update();
-  GetSetMember(BOOL, UserStop)
+  GetSetMember(BOOL, UserStop);
+  GetMember(bool, DeferredUserStop);
 	CCameraMacroTools(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -94,12 +95,15 @@ private:
 	int mMacroNumber[6];
   BOOL mUserStop;     // Flag that user pushed stop
   bool mEnabledSearch;
+  bool mDeferredUserStop;
+  bool mMediumWasEmpty;
 public:
   void HandleMacroRightClick(CMyButton &but, int index, bool openOK);
   void SetOneMacroLabel(int num, UINT nID);
   void MacroNameChanged(int num);
   void CalibratingISoffset(bool ifCal);
   int GetNavigatorState(void);
+  void DoUserStop(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

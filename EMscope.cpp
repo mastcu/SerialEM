@@ -9551,6 +9551,8 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   // Get mutex back if needed.  Return TRUE on success like other routines
   if (routine)
     CEMscope::ScopeMutexAcquire(routine, true);
+  if (mWinApp->mCameraMacroTools.GetDeferredUserStop())
+    mWinApp->mCameraMacroTools.DoUserStop();
   return retval == 0;
 }
 
