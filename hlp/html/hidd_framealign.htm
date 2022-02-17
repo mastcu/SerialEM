@@ -82,10 +82,15 @@
     <p class="style2">
       Aligning in DigitalMicrograph or Thermo/FEI or DE Software</p>
     <p>
-      For a K2/K3, the alignment in DM has only one parameter, the filter that is used in the
+      For a K2, the alignment in DM has one parameter, the filter that is used in the
       alignment procedure.&nbsp; The combo box should show the same set of filters
       that are available in DM; if not, the SerialEMproperties file needs to be
-      modified to list the correct filters.</p>
+      modified to list the correct filters.&nbsp; This alignment is slow, especially 
+      with super-resolution frames.&nbsp; With a K3, alignment is done with the 
+      MotionCor2 built into DM.&nbsp; There is no control of parameters from SerialEM.&nbsp; 
+      With a GPU, the alignment is somewhat slower than the one available in the 
+      SerialEMCCD plugin and CTF fitting indicates no better performance for images 
+      requiring only a shift.</p>
     <p>
       For Falcon 3, alignment with the Thermo/FEI software has no parameters but does require
       a certain minimum exposure time per frame and a minimum number of frames.</p>

@@ -4330,6 +4330,13 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     faParam.multAliBinByEERfac = false;
   }
 
+  if (conSet.alignFrames && !conSet.useFrameAlign && mParam->K2Type == K3_TYPE &&
+    mK2SynchronousSaving) {
+    SEMMessageBox("You cannot use alignment in DM and save frames with the property"
+      " K2SynchronousSaving set");
+    return 1;
+  }
+
   // Get pixel size from mag we are going to be in after changing low dose area
   if (mScope->GetLowDoseMode()) {
     ldArea = ConSetToLDArea(inSet);

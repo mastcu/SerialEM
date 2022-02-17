@@ -3,13 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-2/15/21: Fix crash in frame alignment dialog if settings were never read.
+2/16/22: Made alignment in DM with a K3 use the MotionCor2 capability.
 
-2/15/21: Fixed crash when aligning whole tilt series in IMOD and Save was not
+2/16/22: Added ability to flip an imported map when rotating it.
+
+2/16/22: Made Zemlin tableau use Record images with CTF acquire parameters.
+
+2/15/22: Fix crash in frame alignment dialog if settings were never read.
+
+2/15/22: Fixed crash when aligning whole tilt series in IMOD and Save was not
 actually checked, and passed on errors in the camera image display routine
 properly to stop running procedures.
 
-2/15/21: Added script command to report discrepancies between stage
+2/15/22: Added script command to report discrepancies between stage
 calibrations derived in different ways.
 
 2/9/22: SEM_3-8-18

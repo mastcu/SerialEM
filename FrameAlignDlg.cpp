@@ -438,7 +438,7 @@ void CFrameAlignDlg::ManagePanels(void)
   BOOL states[9] = {true, true, true, true, true, true, true, true, true};
   bool constrainByRes;
   states[0] = mShowWhereToAlign;
-  states[1] = m_iWhereAlign == 0 && mCamParams->K2Type;
+  states[1] = m_iWhereAlign == 0 && mCamParams->K2Type && mCamParams->K2Type != K3_TYPE;
   states[2] = states[6] = m_iWhereAlign > 0;
   states[3] = mShowRestrictions && m_iWhereAlign > 0;
   states[5] = (mCamParams->K2Type || mCamParams->FEItype == FALCON4_TYPE) &&
