@@ -872,13 +872,19 @@ void CAutoTuning::BacklashedStigmator(double astX, double astY, bool doBacklash)
 // Start making the tableau
 int CAutoTuning::MakeZemlinTableau(float beamTilt, int panelSize, int cropPix)
 {
+  if (mCtfExposure < 0) {
+    SEMMessageBox("You must set up CTF acquire parameters\n"
+      "before running a Zemlin tableau");
+    return 1;
+  }
+  SetRecordConSetForCTF();
   mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   if (mWinApp->LowDoseMode())
-    mScope->GotoLowDoseArea(FOCUS_CONSET);
+    mScope->GotoLowDoseArea(RECORD_CONSET);
   mScope->SetImageShift(0., 0.);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_ZEMLIN, 0, 0);
   mWinApp->SetStatusText(MEDIUM_PANE, "MAKING ZEMLIN TABLEAU");
-  mWinApp->mCamera->InitiateCapture(FOCUS_CONSET);
+  mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
   mWinApp->UpdateBufferWindows();
   mZemlinIndex = 0;
   mZemlinBeamTilt = beamTilt;
@@ -976,7 +982,7 @@ void CAutoTuning::ZemlinNextTask(int param)
     if (mPostBeamTiltDelay > 0)
       Sleep(mPostBeamTiltDelay);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_ZEMLIN, 0, 0);
-    mWinApp->mCamera->InitiateCapture(FOCUS_CONSET);
+    mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
     return;
   }
 
@@ -991,12 +997,14 @@ void CAutoTuning::ZemlinNextTask(int param)
 // Restore settings and clean up for normal or error stop
 void CAutoTuning::StopZemlin(void)
 {
+  ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   if (mZemlinIndex < 0)
     return;
   mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mZemlinIndex = -1;
   delete mMontTableau;
   delete mSpectrum;
+  *recSet = mSavedRecSet;
   mMontTableau = NULL;
   mSpectrum = NULL;
   mWinApp->UpdateBufferWindows();
@@ -1021,13 +1029,12 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   bool leaveIS, BOOL noMessageBox)
 {
   double curDefocus, tryFocus, stageX, stageY, stageZ;
-  int binInd, realBin, maxMinutes = 5;
+  int maxMinutes = 5;
   float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
   float minMagChangeInterval = 10000.;
   float ISdelayFactor = 2.f;
   UINT lastTimeOut;
   FloatVec radii;
-  CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   CString str;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
@@ -1047,7 +1054,6 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mCtfCal.numFits = 0;
   mCtfCal.comaType = comaFree > 0;
   mCtfCal.amplitude = mAstigToApply;
-  mSavedRecSet = *recSet;
 
   if (comaFree) 
     mLastXTiltNeeded = mLastYTiltNeeded = 0.;
@@ -1070,28 +1076,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   }
 
   // Massage the control set
-  if (mCtfBinning > 0) {
-    recSet->binning = mCtfBinning * BinDivisorI(camParam);
-    mWinApp->mCamera->FindNearestBinning(camParam, recSet, binInd, realBin);
-    recSet->binning = realBin;
-  }
-  if (mCtfExposure > 0)
-    recSet->exposure = mCtfExposure;
-  if (mCtfDriftSettling > 0)
-    recSet->drift = mCtfDriftSettling;
-  if (mCtfUseFullField) {
-    recSet->left = recSet->top = 0;
-    recSet->right = camParam->sizeX;
-    recSet->bottom = camParam->sizeY;
-  }
-  recSet->mode = SINGLE_FRAME;
-  recSet->alignFrames = 0;
-  recSet->saveFrames = 0;
-  recSet->doseFrac = 0;
-  B3DCLAMP(recSet->K2ReadMode, 0, 1);
-  if (camParam->K2Type)
-    recSet->binning = B3DMAX(2, recSet->binning);
-  recSet->processing = GAIN_NORMALIZED;
+  SetRecordConSetForCTF();
 
   // Find limits to allowed focus range based on number of rings.  Unfortunately the 
   // absolute limits and the ones to use are in negative microns, the trial value is in
@@ -1187,6 +1172,38 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mWinApp->AddIdleTask(TASK_CTF_BASED, 0, 0); 
   mWinApp->UpdateBufferWindows();
   return 0;
+}
+
+// Use the CTF-based parameters to set up the Record control set
+void CAutoTuning::SetRecordConSetForCTF()
+{
+  ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  int binInd, realBin;
+
+  mSavedRecSet = *recSet;
+  if (mCtfBinning > 0) {
+    recSet->binning = mCtfBinning * BinDivisorI(camParam);
+    mWinApp->mCamera->FindNearestBinning(camParam, recSet, binInd, realBin);
+    recSet->binning = realBin;
+  }
+  if (mCtfExposure > 0)
+    recSet->exposure = mCtfExposure;
+  if (mCtfDriftSettling > 0)
+    recSet->drift = mCtfDriftSettling;
+  if (mCtfUseFullField) {
+    recSet->left = recSet->top = 0;
+    recSet->right = camParam->sizeX;
+    recSet->bottom = camParam->sizeY;
+  }
+  recSet->mode = SINGLE_FRAME;
+  recSet->alignFrames = 0;
+  recSet->saveFrames = 0;
+  recSet->doseFrac = 0;
+  B3DCLAMP(recSet->K2ReadMode, 0, 1);
+  if (camParam->K2Type)
+    recSet->binning = B3DMAX(2, recSet->binning);
+  recSet->processing = GAIN_NORMALIZED;
 }
 
 // The next task after autofocus or an image is done

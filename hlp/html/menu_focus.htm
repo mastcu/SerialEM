@@ -466,7 +466,7 @@
       http://bio3d.colorado.edu/SerialEM/OpenSerialEM/Docs/Coma.docx</p>
     <P><A NAME="hid_focus_setctfacquireparams"></A><B>Set CTF Acquire Params command (Focus menu)</B></P>
     <p>Use this command to set the parameters for acquiring and analyzing images for
-      the CTF-based astigmatism and coma routines.&nbsp; You can set:</p>
+      the CTF-based astigmatism and coma routines, and for the Zemlin tableau.&nbsp; You can set:</p>
     <ol>
       <li><i>Exposure time</i>.&nbsp; Enter a specific time 0 to use the current Record
         exposure time.&nbsp; If you take long Record images during single particle
@@ -598,8 +598,8 @@
       <P><A NAME="hid_focus_makezemlintableau"></A><B>Beam-Tilted FFT Array (Focus menu)</B></P>
       <P>Use this command to create a Zemlin tableau, in which the FFTs of images taken
         with the beam tilted in 8 different directions are arranged around a central FFT
-        taken with no beam tilt.&nbsp; Images are currently taken with the Focus
-        parameters, so these parameters as well as the defocus need to be set to give
+        taken with no beam tilt.&nbsp; As of SerialEM 4.0, images are taken with Record 
+        using the CTF acquire parameters, so these parameters as well as the defocus need to be set to give
         informative FFTs with good Thon rings if possible.&nbsp; If a focus calibration
         is available, the direction of beam tilt is set so that the long axis of the
         Thon rings is approximately tangential.&nbsp; However, this is just for a nice
@@ -610,10 +610,7 @@
     <P>The program will first ask what beam tilt to use, in milliradians on a Thermo/FEI
       scope or percent of full scale on other scopes.</P>
     <P>Image shift is set to zero before the images are taken.&nbsp; The command can
-      be run in Low Dose mode and currently, it will go to the focus area before
-      setting image shift to zero so that it can take on-axis images with the Focus
-      parameters.&nbsp; At this point the IS/PLA readout in the Scope Status panel
-      will show the underlying shift of the Focus area, not 0.</P>
+      be run in Low Dose mode.</P>
     <P>The full tableau will be 1020x1020 pixels, with each FFT reduced to 510x510
       then cropped to 340x340.&nbsp; A dialog may be added to set alternative imaging
       and size parameters, but for now parameters can be controlled with the

@@ -244,6 +244,7 @@ public:
   float DefocusDiffFromTwoCtfFits(float * fitValues, int index1, int index2, float angle);
   void AstigCoefficientsFromCtfFits(float * fitValues, float angle, float astig,  float &xCoeff, float &yCoeff);
   int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS, BOOL noMessageBox);
+  void SetRecordConSetForCTF();
   void CtfBasedNextTask(int tparm);
   void ErrorInCtfBased(const char *mess);
   void StopCtfBased(bool restore = true, bool failed = true);

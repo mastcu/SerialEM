@@ -2944,7 +2944,7 @@ void CMenuTargets::OnFocusMakeZemlinTableau()
     mess += "in milliradians";
   else
     mess += "as percent of full range";
-  if (!KGetOneFloat("Images are taken with current Focus parameters", mess, tilt, 1))
+  if (!KGetOneFloat("Images are taken with CTF acquire Record parameters", mess, tilt, 1))
     return;
   mWinApp->mAutoTuning->SetMenuZemlinTilt(tilt);
   mWinApp->mAutoTuning->MakeZemlinTableau(tilt, 340, 170);
