@@ -808,7 +808,7 @@
       <P><A NAME="hid_navigator_rotatemap"></A><B>Rotate Map command (Navigator menu)</B></P>
       <P>Use this command to rotate the map in the active buffer into the correct
         orientation for the current magnification and registration, or to rotate an
-        imported map by a desired angle. Specifically, the rotation may include two
+        imported map by a desired angle and optionally flip it. Specifically, the rotation may include two
         components: the relative rotation between the magnification at which the map
         was acquired and the current magnification; and whatever rotation and mirroring
         around the X axis resulted from any transformations that have been applied to
@@ -817,7 +817,8 @@
         be reloaded and rotated to a new orientation.</P>
       <P>If a map is imported and has not yet been transformed into registration with
         native EM maps, then the program will ask you the angle by which to rotate the
-        map (counterclockwise is positive).</P>
+        map (counterclockwise is positive), then ask whether to flip the image around 
+        the X axis after rotation.</P>
       <P><A NAME="hid_navigator_adjust_backlash"></A><B>Adjust for Backlash command (Navigator menu)</B></P>
       <P>With this command, the program will measure the stage backlash at the location
         of the current item and then adjust the item's stage position and record the
