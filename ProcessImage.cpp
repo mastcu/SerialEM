@@ -3288,7 +3288,8 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
       params.pixel_size_of_input_image = mTestCtfPixelSize * 10.f;
     if (!params.pixel_size_of_input_image)
       return 1;
-    params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
+    params.minimum_resolution = params.pixel_size_of_input_image / 0.05f;
+    B3DCLAMP(params.minimum_resolution, 13.f, 50.f);
     params.maximum_resolution = params.pixel_size_of_input_image / 0.3f;
     if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
       (&camParams[imBuf->mCamera]))
