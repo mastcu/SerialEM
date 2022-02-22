@@ -716,7 +716,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         acParmP->useCentroid = itemInt[7];
         acParmP->probeMode = itemInt[8] < 0 ? 1 : itemInt[8];
         acParmP->shiftBeamForCen = itemInt[9] < 0 ? 0 : itemInt[9];
-        acParmP->beamShiftUm = itemInt[9] < 0 ? 1.f : itemInt[10];
+        acParmP->beamShiftUm = itemInt[9] < 0 ? 1.f : itemFlt[10];
         acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : itemFlt[11];
         acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : itemFlt[12];
         mWinApp->mMultiTSTasks->AddAutocenParams(acParmP);
