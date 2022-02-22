@@ -348,6 +348,7 @@ CTSController::CTSController()
   mTSParam.waitDosymIgnoreAngles = false;
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
+  mTSParam.tiltDelay = -1.;
   mTSParam.initialized = false;
   mReorderDoseSymFile = true;
   mPostponed = false;
@@ -463,6 +464,8 @@ void CTSController::Initialize()
   mBeamAssessor = mWinApp->mBeamAssessor;
   mDocWnd = mWinApp->mDocWnd;
   mProcessImage = mWinApp->mProcessImage;
+  if (mTSParam.tiltDelay < 0.)
+    mTSParam.tiltDelay = mShiftManager->GetTiltDelay();
   if (mTiltFailPolicy < 0)
     mTiltFailPolicy = JEOLscope ? 1 : 0;
   if (!mStepForBidirReturn)
@@ -1195,7 +1198,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mWinApp->mBufferWindow.ProtectBuffer(mExtraRefBuf, true);   
     mWinApp->mBufferWindow.ProtectBuffer(mReadBuf, true);   
     mWinApp->mBufferWindow.ProtectBuffer(mAnchorBuf, true);
-    
+
     // If there is any GIF camera, set autocamera feature to manage EFTEM
     if (mFilterParams->firstGIFCamera >= 0)
       mFilterParams->autoCamera = true;
@@ -7062,7 +7065,6 @@ void CTSController::SyncOtherModulesToParam(void)
   mTSParam.applyAbsFocusLimits = mFocusManager->GetUseEucenAbsLimits();
   mTSParam.cosineTilt = mScope->GetCosineTilt();
   mTSParam.tiltIncrement = mScope->GetBaseIncrement();
-  mTSParam.tiltDelay = mShiftManager->GetTiltDelay();
 }
 
 // Take parameters in param and place back in other interfaces
@@ -7076,7 +7078,6 @@ void CTSController::SyncParamToOtherModules(void)
   mFocusManager->SetUseEucenAbsLimits(mTSParam.applyAbsFocusLimits);
   mScope->SetCosineTilt(mTSParam.cosineTilt);
   mScope->SetIncrement(mTSParam.tiltIncrement);
-  mShiftManager->SetTiltDelay(mTSParam.tiltDelay);
 }
 
 // Copy a TSParam - it could get more complicated, but not easily!

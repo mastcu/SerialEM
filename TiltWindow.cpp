@@ -104,7 +104,8 @@ void CTiltWindow::OnTiltIncrement()
 void CTiltWindow::OnTiltDelay() 
 {
   float delay = mWinApp->mShiftManager->GetTiltDelay();
-  if (KGetOneFloat("Delay time after tilting by the basic increment (seconds): ", delay, 2))
+  if (KGetOneFloat("Delay time after tilting by the basic increment for tasks and general"
+    " tilting (sec): ", delay, 2))
     mWinApp->mShiftManager->SetTiltDelay(delay);
   mWinApp->RestoreViewFocus();  
 }
