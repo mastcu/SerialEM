@@ -861,6 +861,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
+          if (index && itemInt[1] < 0)
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
