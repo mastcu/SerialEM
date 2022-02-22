@@ -1947,8 +1947,8 @@ int CMacCmd::FrameThresholdNextShot(void)
 int CMacCmd::QueueFrameTiltSeries(void)
 {
   CString report;
-  ScaleMat aMat; //, IStoBS, bMat;
-  double delISX, delX, delY;
+  ScaleMat aMat, IStoBS; //, bMat;
+  double delay, delISX, delISY, delX, delY;
   float postISdelay = 0.;  // , pixel;
   int index, index2, ix0, ix1, iy0, iy1, sizeX, sizeY;
   Variable *var;
@@ -1961,11 +1961,11 @@ int CMacCmd::QueueFrameTiltSeries(void)
     mScope->GetMagIndex();
   aMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(index)),
     mShiftManager->CameraToIS(index));
-  //IStoBS = mShiftManager->GetBeamShiftCal(index);
+  IStoBS = mShiftManager->GetBeamShiftCal(index);
 
   // Set up series based on specifications
   if (CMD_IS(QUEUEFRAMETILTSERIES)) {
-    delISX = mItemEmpty[4] ? 0. : mItemDbl[4];
+    delay = mItemEmpty[4] ? 0. : mItemDbl[4];
     if (!mItemEmpty[9] && !aMat.xpx)
       ABORT_LINE("There is no calibration needed to convert the image shift values "
         "for:\n\n");
@@ -2000,8 +2000,12 @@ int CMacCmd::QueueFrameTiltSeries(void)
           "for:\n\n");
     }*/
 
+    if (mItemInt[2] & 16 && JEOLscope && !IStoBS.xpx) {
+      ABORT_LINE("There is no calibration for getting beam shifts from the image shifts");
+    }
+
     // Or pull the values out of the big variable array: figure out how many per step
-    delISX = mItemEmpty[3] ? 0. : mItemDbl[3];
+    delay = mItemEmpty[3] ? 0. : mItemDbl[3];
     postISdelay = mItemEmpty[4] ? 0.f : mItemFlt[4];
     var = LookupVariable(mItem1upper, index2);
     if (!var)
@@ -2082,9 +2086,16 @@ int CMacCmd::QueueFrameTiltSeries(void)
         FindValueAtIndex(*valPtr, iy0, ix1, iy1);
         report = valPtr->Mid(ix1, iy1 - ix1);
         delY = atof((LPCTSTR)report);
-        deltaISX.push_back((float)(delX *aMat.xpx + delY * aMat.xpy));
-        deltaISY.push_back((float)(delX *aMat.ypx + delY * aMat.ypy));
+        mShiftManager->ApplyScaleMatrix(aMat, (float)delX, (float)delY, delISX, delISY);
+        deltaISX.push_back((float)(delISX));
+        deltaISY.push_back((float)(delISX));
         iy0++;
+        if (JEOLscope) {
+          mShiftManager->ApplyScaleMatrix(IStoBS, (float)delISX, (float)delISY, delX,
+            delY);
+          deltaBeamX.push_back((float)delX);
+          deltaBeamY.push_back((float)delY);
+        }
       }
       if (mItemInt[2] & 32) {
         FindValueAtIndex(*valPtr, iy0, ix1, iy1);
@@ -2094,8 +2105,14 @@ int CMacCmd::QueueFrameTiltSeries(void)
         FindValueAtIndex(*valPtr, iy0, ix1, iy1);
         report = valPtr->Mid(ix1, iy1 - ix1);
         delY = atof((LPCTSTR)report); // / pixel;
-        deltaBeamX.push_back((float)delX);
-        deltaBeamY.push_back((float)delY);
+        if (JEOLscope && (mItemInt[2] & 16)) {
+          ix0 = (int)deltaBeamX.size() - 1;
+          deltaBeamX[ix0] += (float)delX;
+          deltaBeamY[ix0] += (float)delY;
+        } else {
+          deltaBeamX.push_back((float)delX);
+          deltaBeamY.push_back((float)delY);
+        }
         //deltaBeamX.push_back((float)(delX * bMat.xpx + delY * bMat.xpy));
         //deltaBeamY.push_back((float)(delX * bMat.ypx + delY * bMat.ypy));
         iy0++;
@@ -2105,7 +2122,7 @@ int CMacCmd::QueueFrameTiltSeries(void)
 
   // Queue it: This does all the error checking
   if (mCamera->QueueTiltSeries(openTime, tiltToAngle, waitOrInterval, focusChange,
-    deltaISX, deltaISY, deltaBeamX, deltaBeamY, (float)delISX, postISdelay)) {
+    deltaISX, deltaISY, deltaBeamX, deltaBeamY, (float)delay, postISdelay)) {
       AbortMacro();
       return 1;
   }

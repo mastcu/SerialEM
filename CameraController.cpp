@@ -2804,7 +2804,7 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   if (mess.IsEmpty() && (deltaISX.size() > 0 || deltaISY.size() > 0)) {
     if ((int)deltaISX.size() < numSteps || (int)deltaISY.size() < numSteps) {
       mess = "there are fewer image shift changes defined than steps in the tilt series";
-    } else {
+    } else if (!JEOLscope) {
       for (ind = 0; ind < numSteps; ind++) {
         if (sqrt(deltaISX[ind] * deltaISX[ind] + deltaISY[ind] * deltaISY[ind]) > ISlim) {
           mess.Format("image shift change %d has value %f, %f, beyond the limit of %f um",
