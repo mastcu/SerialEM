@@ -1957,6 +1957,9 @@
 #define IDC_STAT_SEP_SETTINGS2          2984
 #define IDC_NA_RETRACT_CAMS             2985
 #define IDC_BUT_ADD_MONT_MAP            2986
+#define IDC_ACS_ITERATE                 2987
+#define IDC_EDIT_ACS_ITERATE            2988
+#define IDC_STAT_ACS_ITERATE_UM         2989
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2486,7 +2489,6 @@
 #define ID_MACRO_RUN59                  33495
 #define ID_MACRO_RUN60                  33496
 
-
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
@@ -2494,7 +2496,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        268
 #define _APS_NEXT_COMMAND_VALUE         33497
-#define _APS_NEXT_CONTROL_VALUE         2987
+#define _APS_NEXT_CONTROL_VALUE         2990
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -70,6 +70,7 @@ private:
   double mAcLDTrialIntensity;  // Saved low dose intensity
   double mAcISX, mAcISY;  // Image shift values before running autocen
   int mAcUseCentroid;    // Flag that current operation should use centroid
+  int mAcDoIteration;     // Flag that current operation should iterate
   BOOL mAutoCentering;    // Flag for taking image when autocentering
   int mAcPostSettingDelay;  // Delay after setting intensity
   AutocenParams * mAcUseParam;  // Save param for later use
@@ -83,6 +84,8 @@ private:
   int mAcSavedViewBinning; // Saved binning, continuous mode, and read area when using
   int mAcSavedViewContin;  // View conset instead of track
   int mAcSavedReadMode;
+  BOOL mAutoCenIterate;    // Flag to iterate
+  float mAutoCenIterThresh;   // Threshold in microns for iterating
   WINDOWPLACEMENT mAutocenDlgPlace;
   WINDOWPLACEMENT mVPPConditionPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
@@ -195,6 +198,8 @@ public:
   GetSetMember(float, CkAlignStep);
   GetSetMember(int, CkNumStepCuts);
   GetSetMember(BOOL, UseEasyAutocen);
+  GetSetMember(BOOL, AutoCenIterate);
+  GetSetMember(float, AutoCenIterThresh);
 
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};
@@ -258,7 +263,7 @@ public:
   WINDOWPLACEMENT *GetAutocenPlacement(void);
   void VPPConditionClosing(int OKorGo);
   WINDOWPLACEMENT *GetConditionPlacement(void);
-  void ShiftBeamForCentering(AutocenParams * param);
+  void ShiftBeamForCentering(AutocenParams * param, int fullInitial);
   void GetCenteringBeamShift(float &cenShiftX, float &cenShiftY) {
     cenShiftX = mAcShiftedBeamX; cenShiftY = mAcShiftedBeamY;};
   void SetupVPPConditioning();

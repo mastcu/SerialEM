@@ -75,6 +75,8 @@ CMultiTSTasks::CMultiTSTasks(void)
   mTiltRangeHighStamp = 0.;
   mAcPostSettingDelay = 200;
   mUseEasyAutocen = false;
+  mAutoCenIterate = false;
+  mAutoCenIterThresh = 0.1f;
   mBfcCopyIndex = -1;
   mBfcDoingCopy = 0;
   mBfcStopFlag = false;
@@ -948,7 +950,7 @@ void CMultiTSTasks::TestAutocenAcquire()
     mScope->GotoLowDoseArea(TRIAL_CONSET);
   }
   MakeAutocenConset(param);
-  ShiftBeamForCentering(param);
+  ShiftBeamForCentering(param, 2);
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_TEST_AUTOCEN, 0, 0);
 
@@ -1041,25 +1043,38 @@ int CMultiTSTasks::NextLowerNonSuperResBinning(int binning)
 }
 
 // Apply a beam shift for autocentering if one is specified and beam edges are being used
-void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param)
+// or if there is a shift after centering defined.  Call with 0 to skip the shift after
+// centering (for restoring the shift when iterating), 1 to apply the post-shift but not
+// include it in stored shift values (for initial shift before centering), 2 to set the 
+// stored shift values to the total moved (for testing)
+void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param, int fullInitial)
 {
   double angle = 45.;
+  float moveX, moveY;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   mAcShiftedBeamX = mAcShiftedBeamY = 0.;
-  if (!param->shiftBeamForCen || param->useCentroid || !param->beamShiftUm)
-    return;
+  if (param->shiftBeamForCen && !param->useCentroid && param->beamShiftUm) {
 
-  // Put it on diagonalfor perhaps more edges for normal dose, but in low dose move the
-  // beam perpendicular to the low dose axis
-  if (mWinApp->LowDoseMode()) {
-    angle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), ldParm->magIndex)
-      - 90.;
-    if (mWinApp->mLowDoseDlg.m_bRotateAxis)
-      angle += mWinApp->mLowDoseDlg.m_iAxisAngle;
+    // Put it on diagonalfor perhaps more edges for normal dose, but in low dose move the
+    // beam perpendicular to the low dose axis
+    if (mWinApp->LowDoseMode()) {
+      angle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), ldParm->magIndex)
+        - 90.;
+      if (mWinApp->mLowDoseDlg.m_bRotateAxis)
+        angle += mWinApp->mLowDoseDlg.m_iAxisAngle;
+    }
+    mAcShiftedBeamX = param->beamShiftUm * (float)cos(DTOR * angle);
+    mAcShiftedBeamY = param->beamShiftUm * (float)sin(DTOR * angle);
   }
-  mAcShiftedBeamX = param->beamShiftUm * (float)cos(DTOR * angle);
-  mAcShiftedBeamY = param->beamShiftUm * (float)sin(DTOR * angle);
-  mWinApp->mProcessImage->MoveBeam(NULL, mAcShiftedBeamX, mAcShiftedBeamY);
+  moveX = mAcShiftedBeamX - (fullInitial ? param->addedShiftX : 0.f);
+  moveY = mAcShiftedBeamY - (fullInitial ? param->addedShiftY : 0.f);
+  if (moveX || moveY)
+    mWinApp->mProcessImage->MoveBeam(NULL, moveX, moveY);
+  if (fullInitial > 1) {
+    mAcShiftedBeamX = moveX;
+    mAcShiftedBeamY = moveY;
+  }
+
 }
 
 // Autocenter beam: takes an optional maximum radius in microns
@@ -1167,6 +1182,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
 
   mAutoCentering = true;
   mAcUseCentroid = param->useCentroid ? 1 : 0;
+  mAcDoIteration = (!mAcUseCentroid && mAutoCenIterate) ? 1 : 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "AUTOCENTERING BEAM");
   if (raise) {
@@ -1176,7 +1192,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
   } else {
     if (mWinApp->LowDoseMode())
       mScope->GotoLowDoseArea(mAcLDarea);
-    ShiftBeamForCentering(param);
+    ShiftBeamForCentering(param, 1);
     mCamera->InitiateCapture(mAcConset);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
   }
@@ -1188,6 +1204,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   float postShiftX = 0, postShiftY = 0;
+  bool iterate;
   int err;
   if (!mAutoCentering)
     return;
@@ -1196,43 +1213,43 @@ void CMultiTSTasks::AutocenNextTask(int param)
   if (!param) {
     mImBufs->mCaptured = BUFFER_TRACKING;
 
-    // But if there is post-shift, add it to the original shift so the report from 
-    // MoveBeam can be compensated for both shifts
-    if (mAcUseCentroid != 1 && (mAcUseParam->addedShiftX || mAcUseParam->addedShiftY)) {
-      postShiftX = mAcUseParam->addedShiftX;
-      postShiftY = mAcUseParam->addedShiftY;
-      mAcShiftedBeamX += postShiftX;
-      mAcShiftedBeamY += postShiftY;
-    }
-
-    // Center the beam: if it fails, remove the post-shift to undo the original shift
+    // Center the beam: if it fails, restore original shift
     err = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0,
       mAcMaxShift);
 
-    // These high error codes were added for the case where the beam wasn't moved but the
-    // routine did not return an error, so only do this in the case where it used to be
-    // done and hope that is correct
-    if (err && err < 6) {
-      postShiftX = -(mAcShiftedBeamX - postShiftX);
-      postShiftY = -(mAcShiftedBeamY - postShiftY);
+    iterate = mAcUseCentroid == 1 || (!err && mAcDoIteration == 1 &&
+      mWinApp->mProcessImage->GetBeamShiftFromImage() > mAutoCenIterThresh);
+
+    // Set up the post-shift as the imposed shift after
+    postShiftX = mAcUseParam->addedShiftX;
+    postShiftY = mAcUseParam->addedShiftY;
+
+    // If there was an error and the beam wasn't used, take off the initial shift too.
+    if (err) {
+      postShiftX -= mAcShiftedBeamX;
+      postShiftY -= mAcShiftedBeamY;
     }
   }
 
-  // Need another shot if screen was raised or centroid being used; save and set 
-  // intensity now if screen was raised in EFTEM mode
-  if (param || mAcUseCentroid == 1) {
+  // Need another shot if screen was raised or centroid being used or iterating and above
+  // threshold; save and set intensity now if screen was raised in EFTEM mode
+  if (param || iterate) {
     if (param) {
       mAcSavedIntensity = mScope->GetIntensity();
-      SEMTrace('I', "AutocenNextTask saving intensity %.5f  setting %.5f", 
+      SEMTrace('I', "AutocenNextTask saving intensity %.5f  setting %.5f",
         mAcSavedIntensity, mAcUseParam->intensity);
-      mScope->SetIntensity(mAcUseParam->intensity, mAcUseParam->spotSize, 
+      mScope->SetIntensity(mAcUseParam->intensity, mAcUseParam->spotSize,
         mAcUseParam->probeMode);
       Sleep(mAcPostSettingDelay);
       if (mWinApp->LowDoseMode())
         mScope->GotoLowDoseArea(mAcLDarea);
-      ShiftBeamForCentering(mAcUseParam);
-    } else
+      ShiftBeamForCentering(mAcUseParam, 1);
+    } else if (mAcUseCentroid) {
       mAcUseCentroid++;
+    } else {
+      mAcDoIteration++;
+      ShiftBeamForCentering(mAcUseParam, 0);
+    }
     mCamera->InitiateCapture(mAcConset);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
     return;

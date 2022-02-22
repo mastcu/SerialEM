@@ -123,4 +123,8 @@ public:
   afx_msg void OnUseTrialSmaller();
   CString m_strSmallerTrial;
   CStatic m_statSource;
+  BOOL m_bIterate;
+  float m_fIterThresh;
+  afx_msg void OnIterate();
+  afx_msg void OnKillfocusEditIterate();
 };

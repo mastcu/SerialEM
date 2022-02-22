@@ -29,6 +29,8 @@ CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bRecordingAddedShift(FALSE)
   , m_bUseTrialSmaller(FALSE)
   , m_strSmallerTrial(_T(""))
+  , m_bIterate(FALSE)
+  , m_fIterThresh(0.1f)
 {
   mEnableAll = true;
   mLastTrialMismatch = false;
@@ -86,6 +88,10 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPIN_SMALLER_TRIAL, m_sbcSmallerTrial);
   DDX_Text(pDX, IDC_STAT_SMALLER_TRIAL, m_strSmallerTrial);
   DDX_Control(pDX, IDC_STATSOURCE, m_statSource);
+  DDX_Check(pDX, IDC_ACS_ITERATE, m_bIterate);
+  DDX_Text(pDX, IDC_EDIT_ACS_ITERATE, m_fIterThresh);
+  MinMaxFloat(IDC_EDIT_ACS_ITERATE, m_fIterThresh, 0.01f, 10.f,
+    "Threshold for running twice");
 }
 
 
@@ -107,6 +113,8 @@ BEGIN_MESSAGE_MAP(CAutocenSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RESET_ADDED_SHIFT, OnResetAddedShift)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_SMALLER_TRIAL, OnDeltaposSpinSmallerTrial)
   ON_BN_CLICKED(IDC_USE_TRIAL_SMALLER, OnUseTrialSmaller)
+  ON_BN_CLICKED(IDC_ACS_ITERATE, OnIterate)
+  ON_EN_KILLFOCUS(IDC_EDIT_ACS_ITERATE, OnKillfocusEditIterate)
 END_MESSAGE_MAP()
 
 
@@ -168,6 +176,8 @@ BOOL CAutocenSetupDlg::OnInitDialog()
 
   FetchParams();
   m_butAcquire.EnableWindow(mLowDoseMode);
+  m_bIterate = mMultiTasks->GetAutoCenIterate();
+  m_fIterThresh = mMultiTasks->GetAutoCenIterThresh();
 
   m_sbcSpot.SetRange(0,30000);
   m_sbcSpot.SetPos(15000);
@@ -189,6 +199,8 @@ BOOL CAutocenSetupDlg::OnInitDialog()
 void CAutocenSetupDlg::OnOK() 
 {
   UpdateIfExposureChanged();
+  mMultiTasks->SetAutoCenIterate(m_bIterate);
+  mMultiTasks->SetAutoCenIterThresh(m_fIterThresh);
   mMultiTasks->AutocenClosing();
 }
 
@@ -470,6 +482,20 @@ void CAutocenSetupDlg::OnResetAddedShift()
   mWinApp->RestoreViewFocus();
 }
 
+// Iterate checkbox
+void CAutocenSetupDlg::OnIterate()
+{
+  UpdateData(true);
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+// Iteration threshold
+void CAutocenSetupDlg::OnKillfocusEditIterate()
+{
+  UpdateData(true);
+}
+
 // Called from scope update with current values when they have changed
 void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double intensity)
 {
@@ -735,6 +761,9 @@ void CAutocenSetupDlg::UpdateEnables()
   m_editBeamShift.EnableWindow(mEnableAll && !m_iUseCentroid && m_bShiftBeam);
   m_butRecordShift.EnableWindow(mEnableAll);
   m_butResetAddedShift.EnableWindow(mEnableAll);
+  EnableDlgItem(IDC_ACS_ITERATE, mEnableAll && !m_iUseCentroid);
+  EnableDlgItem(IDC_STAT_ACS_ITERATE_UM, mEnableAll && !m_iUseCentroid);
+  EnableDlgItem(IDC_EDIT_ACS_ITERATE, mEnableAll && !m_iUseCentroid && m_bIterate);
   if (mLowDoseMode)
     ManageLDtrackText(mMultiTasks->AutocenMatchingIntensity());
 }
@@ -755,4 +784,3 @@ void CAutocenSetupDlg::UpdateSettings()
   UpdateParamSettings();
   UpdateEnables();
 }
-

@@ -2419,7 +2419,7 @@ BEGIN
     PUSHBUTTON      "GO",IDC_COOKGO,18,152,33,14
 END
 
-IDD_AUTOCENSETUP DIALOGEX 0, 0, 153, 208
+IDD_AUTOCENSETUP DIALOGEX 0, 0, 153, 224
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Beam Autocentering Setup"
@@ -2448,11 +2448,11 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON,21,120,110,10
     GROUPBOX        "Beam centering method",IDC_STATIC,17,101,117,31,WS_GROUP
     CTEXT           "Directly set at this mag",IDC_STATSOURCE,2,29,145,8
-    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,19,176,54,12
-    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,79,176,54,12
-    DEFPUSHBUTTON   "OK",IDOK,23,194,45,12
-    PUSHBUTTON      "Cancel",IDCANCEL,83,194,45,12
-    PUSHBUTTON      "?",IDC_BUTHELP,139,195,10,10
+    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,19,192,54,12
+    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,79,192,54,12
+    DEFPUSHBUTTON   "OK",IDOK,23,210,45,12
+    PUSHBUTTON      "Cancel",IDCANCEL,83,210,45,12
+    PUSHBUTTON      "?",IDC_BUTHELP,139,211,10,10
     PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,83,70,29,12
     PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,119,70,29,12
     LTEXT           "nPr",IDC_STAT_NANOPROBE,62,55,14,8
@@ -2469,6 +2469,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,6,117,10
     CONTROL         "",IDC_SPIN_SMALLER_TRIAL,"msctls_updown32",UDS_ARROWKEYS,138,4,9,14
     RTEXT           "88%",IDC_STAT_SMALLER_TRIAL,123,7,14,8
+    CONTROL         "Center twice if beam is moved >",IDC_ACS_ITERATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,177,104,10
+    EDITTEXT        IDC_EDIT_ACS_ITERATE,112,175,24,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_ACS_ITERATE_UM,137,178,10,8
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
@@ -4006,7 +4009,7 @@ BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 150
         TOPMARGIN, 3
-        BOTTOMMARGIN, 205
+        BOTTOMMARGIN, 221
     END
 
     IDD_READFILEDLG, DIALOG
@@ -4952,17 +4955,38 @@ BEGIN
     ID_SPECIALSETTINGS_ALWAYSANTIALIASK2 
                             "Always reduce with antialiasing instead of binning"
     ID_BEAMSPOT_LISTCALIBRATIONS "List some beam-related calibrations"
-    ID_MACRO_RUN1           "Run Script 1"
-    ID_MACRO_RUN2           "Run Script 2"
-    ID_MACRO_RUN3           "Run Script 3"
-    ID_MACRO_RUN4           "Run Script 4"
-    ID_MACRO_RUN5           "Run Script 5"
-    ID_MACRO_RUN6           "Run Script 6"
-    ID_MACRO_RUN7           "Run Script 7"
 END
 
 STRINGTABLE
 BEGIN
+    ID_EUCENTRICITY_EUCENTRICITYBYFOCUS 
+                            "Adjust Z by measuring defocus at a calibrated absolute focus"
+    ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS 
+                            "Calibrate defocus and set parameters for Eucentricy by Focus"
+    ID_NAVIGATOR_SETUPALIGN "Set parameters for aligning to template and Realign to Item"
+    ID_TASKS_SETUPSCOPEMANAGEMENT 
+                            "Set parameters for managing nitrogen and vacuum"
+    ID_FOCUSTUNING_EXTENDEDAUTOFOCUS 
+                            "Do regular defocus values plus sparse ones over a wider range"
+    ID_FOCUSTUNING_SETEXTENDEDRANGE 
+                            "Set limits and interval for defocus in extended range"
+    ID_FILE_USEMONOSPACEDFONT 
+                            "Toggle using a monospaced font in the Log Window"
+    ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION 
+                            "Keep Low Dose Focus & Trial at same position when not otherwise identical"
+    ID_TILTSERIES_SETBIDIRRETURNDELAY 
+                            "Set a delay after the return to starting point in bidirectional series"
+    ID_MACRO_RUN1           "Run Script 1"
+    ID_MACRO_RUN2           "Run Script 2"
+    ID_MACRO_RUN3           "Run Script 3"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MACRO_RUN4           "Run Script 4"
+    ID_MACRO_RUN5           "Run Script 5"
+    ID_MACRO_RUN6           "Run Script 6"
+    ID_MACRO_RUN7           "Run Script 7"
     ID_MACRO_RUN8           "Run Script 8"
     ID_MACRO_RUN9           "Run Script 9"
     ID_MACRO_RUN10          "Run Script 10"
@@ -4975,14 +4999,14 @@ BEGIN
     ID_MACRO_RUN17          "Run Script 17"
     ID_MACRO_RUN18          "Run Script 18"
     ID_MACRO_RUN19          "Run Script 19"
-    ID_MACRO_RUN20          "Run Script 20"
-    ID_MACRO_RUN21          "Run Script 21"
-    ID_MACRO_RUN22          "Run Script 22"
-    ID_MACRO_RUN23          "Run Script 23"
 END
 
 STRINGTABLE
 BEGIN
+    ID_MACRO_RUN20          "Run Script 20"
+    ID_MACRO_RUN21          "Run Script 21"
+    ID_MACRO_RUN22          "Run Script 22"
+    ID_MACRO_RUN23          "Run Script 23"
     ID_MACRO_RUN24          "Run Script 24"
     ID_MACRO_RUN25          "Run Script 25"
     ID_MACRO_RUN26          "Run Script 26"
@@ -4995,15 +5019,19 @@ BEGIN
     ID_MACRO_RUN33          "Run Script 33"
     ID_MACRO_RUN34          "Run Script 34"
     ID_MACRO_RUN35          "Run Script 35"
-    ID_MACRO_RUN36          "Run Script 36"
-    ID_MACRO_RUN37          "Run Script 37"
-    ID_MACRO_RUN38          "Run Script 38"
-    ID_MACRO_RUN39          "Run Script 39"
 END
 
 STRINGTABLE
 BEGIN
+    ID_MACRO_RUN36          "Run Script 36"
+    ID_MACRO_RUN37          "Run Script 37"
+    ID_MACRO_RUN38          "Run Script 38"
+    ID_MACRO_RUN39          "Run Script 39"
     ID_MACRO_RUN40          "Run Script 40"
+END
+
+STRINGTABLE
+BEGIN
     ID_WINDOW_TAKESCREENSHOT "Take image window screen shot"
     ID_SCRIPT_LISTPERSISTENTVARS "List all persistent variables"
     ID_SCRIPT_LOADNEWPACKAGE 
@@ -5015,12 +5043,34 @@ BEGIN
                             "Convert regular array of points to subset for multishots"
     ID_CAMERA_SETEXTRADIVISIONBY2 
                             "Set number of additional factors of 2 to divide by"
+END
+
+STRINGTABLE
+BEGIN
     ID_CAMERA_RETURNFLOATIMAGE 
                             "Get image back in floating point, not short integers"
     ID_BEAMSPOT_REFINEBEAMSHIFT 
                             "Get more accurate beam shift calibration over longer shift"
     ID_BEAMSPOT_ILLUMINATEDAREALIMITS 
                             "Record limits of illuminated area for different spot sizes and probe modes"
+    ID_WINDOW_RESCUELOGWINDOW 
+                            "Bring the log window up in the upper left corner of screen"
+    ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
+    ID_SETTINGS_BASICMODE   "Toggle basic mode with simpler interface on or off"
+    ID_SCRIPT_RUNONPROGRAMSTART "Select script to run when the program starts"
+    ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
+    ID_OPTIONS_USEITEMLABELSINFILENAMES 
+                            "Substitute item's label for previous one when generating new filenames"
+    ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 
+                            "Close valves or turn off filament when program is idle for specified time"
+    ID_TASKS_ROUGHUSESEARCHIFINLM 
+                            "Use Search in Low Dose for rough eucentricity if scope and Search are in LM"
+    ID_SCRIPT_USEMONOSPACEDFONT 
+                            "Use a non-proportional (evenly spaced) font in Editor"
+    ID_SCRIPT_SHOWINDENTBUTTONS 
+                            "In editor, include buttons fix, increase, or reduce indentation"
+    ID_NAVIGATOR_APPLYSAVEDSHIFT 
+                            "Shift maps and marked items at one mag by a shift saved for that mag"
 END
 
 STRINGTABLE
@@ -6545,33 +6595,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_WINDOW_RESCUELOGWINDOW 
-                            "Bring the log window up in the upper left corner of screen"
-    ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
-    ID_SETTINGS_BASICMODE   "Toggle basic mode with simpler interface on or off"
-    ID_SCRIPT_RUNONPROGRAMSTART "Select script to run when the program starts"
-    ID_SCRIPT_RUNATPROGRAMEND "Select script to run when the program exits"
-    ID_OPTIONS_USEITEMLABELSINFILENAMES 
-                            "Substitute item's label for previous one when generating new filenames"
-    ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY 
-                            "Close valves or turn off filament when program is idle for specified time"
-    ID_TASKS_ROUGHUSESEARCHIFINLM 
-                            "Use Search in Low Dose for rough eucentricity if scope and Search are in LM"
-    ID_SCRIPT_USEMONOSPACEDFONT 
-                            "Use a non-proportional (evenly spaced) font in Editor"
-    ID_SCRIPT_SHOWINDENTBUTTONS 
-                            "In editor, include buttons fix, increase, or reduce indentation"
-    ID_NAVIGATOR_APPLYSAVEDSHIFT 
-                            "Shift maps and marked items at one mag by a shift saved for that mag"
-    ID_EUCENTRICITY_EUCENTRICITYBYFOCUS 
-                            "Adjust Z by measuring defocus at a calibrated absolute focus"
-    ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS 
-                            "Calibrate defocus and set parameters for Eucentricy by Focus"
-    ID_NAVIGATOR_SETUPALIGN "Set parameters for aligning to template and Realign to Item"
-END
-
-STRINGTABLE
-BEGIN
     IDC_RAPPLY_ALL_MAPS_AT_MAG 
                             "Shift maps at indicated mag and any items drawn on them"
     IDC_RAPPLY_IN_COHORT    "Shift a group of maps and items drawn on them"
@@ -6596,22 +6619,6 @@ END
 STRINGTABLE
 BEGIN
     IDC_EDIT_ITER_THRESH    "Stop when difference between target and measured defocus is less than this"
-END
-
-STRINGTABLE
-BEGIN
-    ID_TASKS_SETUPSCOPEMANAGEMENT 
-                            "Set parameters for managing nitrogen and vacuum"
-    ID_FOCUSTUNING_EXTENDEDAUTOFOCUS 
-                            "Do regular defocus values plus sparse ones over a wider range"
-    ID_FOCUSTUNING_SETEXTENDEDRANGE 
-                            "Set limits and interval for defocus in extended range"
-    ID_FILE_USEMONOSPACEDFONT 
-                            "Toggle using a monospaced font in the Log Window"
-    ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION 
-                            "Keep Low Dose Focus & Trial at same position when not otherwise identical"
-    ID_TILTSERIES_SETBIDIRRETURNDELAY 
-                            "Set a delay after the return to starting point in bidirectional series"
 END
 
 STRINGTABLE
