@@ -1434,10 +1434,12 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
     if (maxMicronShift > 0. && bsTot > maxMicronShift) {
       PrintfToLog("Beam shift of %.3f microns would exceed limit of %.2f; "
         "beam was not moved", bsTot, maxMicronShift);
+      mBeamShiftFromImage = 0.;
       return 0;
     } else {
       message.Format("Beam was shifted %.3f microns", bsTot);
       mWinApp->AppendToLog(message, LOG_MESSAGE_IF_CLOSED);
+      mBeamShiftFromImage = (float)bsTot;
     }
   }
 
