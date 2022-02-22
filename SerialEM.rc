@@ -397,6 +397,10 @@ BEGIN
             MENUITEM "Edit 30",                     ID_MACRO_EDIT30
             MENUITEM "Edit 35",                     ID_MACRO_EDIT35
             MENUITEM "Edit 40",                     ID_MACRO_EDIT40
+            MENUITEM "Edit 45",                     ID_MACRO_EDIT45
+            MENUITEM "Edit 50",                     ID_MACRO_EDIT50
+            MENUITEM "Edit 55",                     ID_MACRO_EDIT55
+            MENUITEM "Edit 60",                     ID_MACRO_EDIT60
         END
         POPUP "&Run"
         BEGIN
@@ -440,6 +444,26 @@ BEGIN
             MENUITEM "Run 38",                      ID_MACRO_RUN38
             MENUITEM "Run 39",                      ID_MACRO_RUN39
             MENUITEM "Run 40",                      ID_MACRO_RUN40
+            MENUITEM "Run 41",                      ID_MACRO_RUN41
+            MENUITEM "Run 42",                      ID_MACRO_RUN42
+            MENUITEM "Run 43",                      ID_MACRO_RUN43
+            MENUITEM "Run 44",                      ID_MACRO_RUN44
+            MENUITEM "Run 45",                      ID_MACRO_RUN45
+            MENUITEM "Run 46",                      ID_MACRO_RUN46
+            MENUITEM "Run 47",                      ID_MACRO_RUN47
+            MENUITEM "Run 48",                      ID_MACRO_RUN48
+            MENUITEM "Run 49",                      ID_MACRO_RUN49
+            MENUITEM "Run 50",                      ID_MACRO_RUN50
+            MENUITEM "Run 51",                      ID_MACRO_RUN51
+            MENUITEM "Run 52",                      ID_MACRO_RUN52
+            MENUITEM "Run 53",                      ID_MACRO_RUN53
+            MENUITEM "Run 54",                      ID_MACRO_RUN54
+            MENUITEM "Run 55",                      ID_MACRO_RUN55
+            MENUITEM "Run 56",                      ID_MACRO_RUN56
+            MENUITEM "Run 57",                      ID_MACRO_RUN57
+            MENUITEM "Run 58",                      ID_MACRO_RUN58
+            MENUITEM "Run 59",                      ID_MACRO_RUN59
+            MENUITEM "Run 60",                      ID_MACRO_RUN60
         END
         MENUITEM "Edit/Run &One Line...",       ID_SCRIPT_RUNONECOMMAND
         MENUITEM "&Stop",                       ID_MACRO_STOP
@@ -2078,6 +2102,26 @@ BEGIN
     PUSHBUTTON      "Script 8",ID_MACRO_RUN38,0,444,50,10,NOT WS_TABSTOP
     PUSHBUTTON      "Script 9",ID_MACRO_RUN39,0,456,50,10,NOT WS_TABSTOP
     PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN40,0,468,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 1",ID_MACRO_RUN41,0,480,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 2",ID_MACRO_RUN42,0,492,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 3",ID_MACRO_RUN43,0,504,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 4",ID_MACRO_RUN44,0,516,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 5",ID_MACRO_RUN45,0,528,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 6",ID_MACRO_RUN46,0,540,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 7",ID_MACRO_RUN47,0,552,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 8",ID_MACRO_RUN48,0,564,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 9",ID_MACRO_RUN49,0,576,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN50,0,588,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 1",ID_MACRO_RUN51,0,600,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 2",ID_MACRO_RUN52,0,612,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 3",ID_MACRO_RUN53,0,624,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 4",ID_MACRO_RUN54,0,636,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 5",ID_MACRO_RUN55,0,648,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 6",ID_MACRO_RUN56,0,660,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 7",ID_MACRO_RUN57,0,672,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 8",ID_MACRO_RUN58,0,684,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 9",ID_MACRO_RUN59,0,696,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN60,0,708,50,10,NOT WS_TABSTOP
 END
 
 IDD_TSPOLICIES DIALOGEX 0, 0, 209, 283

@@ -94,8 +94,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   //}}AFX_MSG_MAP
   ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnMacroEdit)
   ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnUpdateMacroEdit)
-  ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN40, OnMacroRun)
-  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN40, OnUpdateMacroRun)
+  ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnMacroRun)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnUpdateMacroRun)
   ON_COMMAND(ID_MACRO_TOOLBAR, OnMacroToolbar)
   ON_UPDATE_COMMAND_UI(ID_MACRO_END, OnUpdateMacroEnd)
   ON_COMMAND(ID_MACRO_SETLENGTH, OnMacroSetlength)
@@ -113,6 +113,14 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT35, OnUpdateMacroEdit)
   ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT40, OnUpdateMacroEdit)
   ON_COMMAND(ID_MACRO_EDIT40, OnMacroEdit40)
+  ON_COMMAND(ID_MACRO_EDIT45, OnMacroEdit45)
+  ON_COMMAND(ID_MACRO_EDIT50, OnMacroEdit50)
+  ON_COMMAND(ID_MACRO_EDIT55, OnMacroEdit55)
+  ON_COMMAND(ID_MACRO_EDIT60, OnMacroEdit60)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT45, OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT50, OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT55, OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT60, OnUpdateMacroEdit)
   ON_COMMAND(ID_MACRO_READMANY, OnMacroReadMany)
   ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, OnUpdateMacroReadMany)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
@@ -280,6 +288,14 @@ void CMacroProcessor::OnMacroEdit(UINT nID)
     index = 34;
   if (nID == ID_MACRO_EDIT40)
     index = 39;
+  if (nID == ID_MACRO_EDIT45)
+    index = 44;
+  if (nID == ID_MACRO_EDIT50)
+    index = 49;
+  if (nID == ID_MACRO_EDIT55)
+    index = 54;
+  if (nID == ID_MACRO_EDIT60)
+    index = 59;
   OpenMacroEditor(index);
 }
 
@@ -312,6 +328,14 @@ void CMacroProcessor::OnUpdateMacroEdit(CCmdUI* pCmdUI)
     index = 34;
   if (pCmdUI->m_nID == ID_MACRO_EDIT40)
     index = 39;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT45)
+    index = 44;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT50)
+    index = 49;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT55)
+    index = 54;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT60)
+    index = 59;
   pCmdUI->Enable(!DoingMacro() && !mMacroEditer[index]);
 }
 
@@ -343,6 +367,26 @@ void CMacroProcessor::OnMacroEdit35()
 void CMacroProcessor::OnMacroEdit40()
 {
   OnMacroEdit(ID_MACRO_EDIT40);
+}
+
+void CMacroProcessor::OnMacroEdit45()
+{
+  OnMacroEdit(ID_MACRO_EDIT45);
+}
+
+void CMacroProcessor::OnMacroEdit50()
+{
+  OnMacroEdit(ID_MACRO_EDIT50);
+}
+
+void CMacroProcessor::OnMacroEdit55()
+{
+  OnMacroEdit(ID_MACRO_EDIT55);
+}
+
+void CMacroProcessor::OnMacroEdit60()
+{
+  OnMacroEdit(ID_MACRO_EDIT60);
 }
 
 void CMacroProcessor::OnMacroToolbar()

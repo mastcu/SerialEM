@@ -456,6 +456,10 @@ public:
   afx_msg void OnMacroEdit30();
   afx_msg void OnMacroEdit35();
   afx_msg void OnMacroEdit40();
+  afx_msg void OnMacroEdit45();
+  afx_msg void OnMacroEdit50();
+  afx_msg void OnMacroEdit55();
+  afx_msg void OnMacroEdit60();
   void PrepareForMacroChecking(int which);
   afx_msg void OnMacroReadMany();
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);

@@ -160,15 +160,20 @@ void CMacroToolbar::SetLength(int num, int butHeight)
   int ind, gutter, width, height, maxExtent = 0, deltaForBut = 6, deltaForWin = 6;
   CButton *button;
   CString *names = mWinApp->GetMacroNames();
-  if (butHeight < mButHeightOrig) {
+  if (!butHeight)
     butHeight = mButHeightOrig;
+  if (butHeight < B3DNINT(0.8 * mButHeightOrig)) {
+    butHeight = B3DNINT(0.8 * mButHeightOrig);
     mWinApp->mMacroProcessor->SetToolButHeight(butHeight);
   }
   B3DCLAMP(num, 1, MAX_MACROS);
 
   // Make the gutter a little bigger
   ind = (mGutterHeight * butHeight) / mButHeightOrig;
-  gutter = mGutterHeight + (ind - mGutterHeight) / 2;
+  if (num > 40 && ind <= mGutterHeight)
+    gutter = B3DMAX(4, ind);
+  else
+    gutter = mGutterHeight + (ind - mGutterHeight) / 2;
 
   // Compute height of dialog
   height = mBaseWinHeight + num * butHeight + (num - 1) * gutter;
@@ -195,6 +200,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
     button->SetWindowPos(NULL, mLeftPos, mTopPos + ind * (butHeight + gutter), 
       width, butHeight, SWP_NOZORDER);
   }
+  Invalidate();
   mWinApp->RestoreViewFocus();
 }
 
