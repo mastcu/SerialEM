@@ -585,7 +585,7 @@ BOOL CCameraController::CreateCamera(int createFor, bool popupError)
   sCreateFor = createFor;
   CreateDMCamera(mGatanCamera);
   if (popupError)
-    bRtn = SEMTestHResult(hr, "getting instance of camera ");
+    bRtn = SEMTestHResult(hr, "getting instance of camera " + mParam->name + " ");
   else 
     bRtn = !SUCCEEDED(hr);
   mCOMBusy = !bRtn;
@@ -2255,7 +2255,9 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
     catch (CFileException *err) {
       err->Delete();
       SEMMessageBox("Error reading in mdoc file " + mdocPath);
-      retVal = 1;
+      delete file;
+      delete[] strings;
+      return 1;
     }
     delete file;
   } else {
@@ -2265,7 +2267,8 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
   }
   if (!retVal && !mParam->useSocket && CreateCamera(CREATE_FOR_CURRENT, false)) {
     SEMMessageBox("Error connecting with camera for making tilt series align com file");
-    retVal = 1;
+    delete[] strings;
+    return 1;
   }
 
   // Call the setup routine with appropriate flags and the com file name
@@ -2436,9 +2439,9 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
   // Now send the string to DM for a K2
   if (message.IsEmpty() && mParam->K2Type) {
     stringSize = (int)strlen(buffer) / 4 + 1;
-    if (!mParam->useSocket && CreateCamera(CREATE_FOR_CURRENT, false))
+    if (!mParam->useSocket && CreateCamera(CREATE_FOR_CURRENT, false)) {
       message = "connecting with Gatan camera";
-    else {
+    } else {
       try {
         MainCallGatanCamera(SaveFrameMdoc(stringSize, (long *)buffer, 0));
       }
@@ -2452,9 +2455,9 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
         message.Format("(%s) calling SEMCCD plugin", 
         retVal >= 0 ? SEMCCDErrorMessage(retVal) : "");
       }
+      if (!mParam->useSocket)
+        ReleaseCamera(CREATE_FOR_CURRENT);
     }
-    if (!mParam->useSocket)
-      ReleaseCamera(CREATE_FOR_CURRENT);
   }
   if (!message.IsEmpty()) {
     message = "Error " + message + " for writing frame stack mdoc file";
