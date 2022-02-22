@@ -152,7 +152,9 @@
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon3Details">For a Falcon 3 camera</a>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconGPU">To use a GPU for aligning Falcon frames in SerialEM</a>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Ceta2Details">For a Ceta 2 camera (Ceta with speed enhancement option)</a>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconGPU">To use a GPU for aligning Falcon or Ceta 2 frames in SerialEM</a>
       <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#JeolCamera">For accessing
          a JEOL camera or STEM signals</a>
@@ -1444,9 +1446,29 @@
       this scaling so that binning is done by averaging.&nbsp; The scaling can be
       adjusted by factors of 2 with the property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39;.&nbsp;
       The property &#39;RelativeGainFactors 1 0.25 0.0625&#39; is needed.</p>
-    <p>
+      <p>
+ <a name="Ceta2Details"><i>For a Ceta 2 camera (Ceta with speed enhancement option):</i></a></p>
+      <p>You can save and/or align frames from a Ceta camera with the speed enhancement 
+        option if you have microscope server version 7.8 or higher with Advanced Scripting 
+        installed.&nbsp; These property settings are relevant:</p>
+      <ul>
+        <li>Camera property &#39;CanTakeFrames 1&#39; is required.</li>
+        <li>General property &#39;LocalFalconFramePath&#39; or camera property 
+          &#39;FalconLocalFramePath&#39; is needed if you want to align frames either in SerialEM 
+          or in IMOD (by saving a command file for alignment).&nbsp; The property should 
+          have the path to the location on the storage server where frames are 
+          saved, as seen from the computer running SerialEM.&nbsp; The camera property is 
+          preferable in general, or required if there is also a Falcon 3 or 4.&nbsp; The 
+          path on the storage server is generally
+          C:\OffloadData\TemScripting\BM-Ceta, so this property would be Z:\TemScripting\BM-Ceta if 
+          C:\OffloadData is mounted as Z: on the SerialEM computer.</li>
+        <li>General property 'AdvancedScriptingVersion 4' (or higher if appropriate) is 
+          required to identify the Advanced Scripting version unless there is a Selectris 
+          filter.</li>
+      </ul>
+         <p>
       <a name="FalconGPU"><i>To use a GPU for aligning frames in SerialEM with any of these Falcon
-      configurations:</i></p>
+      configurations or the Ceta 2:</i></a></p>
     <ul>
       <li>The GPU currently works only with 64-bit SerialEM but could be available for
         32-bit SerialEM if there is enough need.</li>
