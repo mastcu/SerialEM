@@ -181,6 +181,8 @@ BOOL_SETT_GETSET("WalkupUseViewInLowDose", mWinApp->mComplexTasks->, WalkUseView
 BOOL_SETT_GETSET("TasksUseViewNotSearch", mWinApp->mComplexTasks->, TasksUseViewNotSearch)
 BOOL_SETT_GETSET("ComplexTasksVerbose", mWinApp->mComplexTasks->, Verbose)
 BOOL_SETT_GETSET("UseEasyAutocen", mWinApp->mMultiTSTasks->, UseEasyAutocen)
+BOOL_SETT_GETSET("AutoCenIterate", mWinApp->mMultiTSTasks->, AutoCenIterate)
+FLOAT_SETT_GETSET("AutoCenIterThresh", mWinApp->mMultiTSTasks->, AutoCenIterThresh)
 FLOAT_SETT_GETSET("UsersAstigTilt", mWinApp->mAutoTuning->, UsersAstigTilt)
 FLOAT_SETT_GETSET("MenuZemlinTilt", mWinApp->mAutoTuning->, MenuZemlinTilt)
 FLOAT_SETT_GETSET("UsersComaTilt", mWinApp->mAutoTuning->, UsersComaTilt)
@@ -195,6 +197,7 @@ FLOAT_SETT_GETSET("MinCtfBasedDefocus", mWinApp->mAutoTuning->, MinCtfBasedDefoc
 #endif
 #ifdef SET_TEST_SECT3
 #include "NavAdocParams.h"
+FLOAT_SETT_ASSIGN("TSTiltDelay", tsParam->tiltDelay)
 FLOAT_SETT_GETSET("TiltSeriesExposureStep", mWinApp->mTSController->, ExpSeriesStep)
 BOOL_SETT_GETSET("ExposureSeriesFixNumFrames", mWinApp->mTSController->,
             ExpSeriesFixNumFrames)

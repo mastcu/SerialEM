@@ -121,11 +121,64 @@ CShiftManager::~CShiftManager()
 // Further initialization of program component addresses
 void CShiftManager::Initialize()
 {
+  float oldDefaults[14] = {0.1f, 0.f, 0.3f, 0.4f, 0.8f, 0.9f, 1.6f, 1.7f, 3.f, 3.f,
+    3.5f, 3.5f, 4.f, 3.7f};
+  float newDefaults[8] = {0.1f, 0.f, 0.3f, 0.4f, 0.5f, 0.5f, 1.0f, 0.5f};
+  bool stillOldDflt = false, stillNewDflt = false;
+  int ind;
+
   mScope = mWinApp->mScope;
   mCamera = mWinApp->mCamera;
   mBufferManager = mWinApp->mBufferManager;
   if (!mSTEMRoughISscale)
     mSTEMRoughISscale = mRoughISscale;
+
+  // Determine if IS delays are still the old default
+  if (fabs(mISdelayScaleFactor - 1.) < 1.e-3) {
+    if (mNumISdelays == 7) {
+      stillOldDflt = true;
+      for (ind = 0; ind < 7; ind++) {
+        if (fabs(oldDefaults[2 * ind] - mISmoved[ind]) > 1.e-3 ||
+          fabs(oldDefaults[2 * ind + 1] - mISdelayNeeded[ind]) > 1.e-3) {
+          stillOldDflt = false;
+          break;
+        }
+      }
+    }
+    
+    // IF not, see if they are the new default
+    if (mNumISdelays == 4 && !stillOldDflt) {
+      stillNewDflt = true;
+      for (ind = 0; ind < 4; ind++) {
+        if (fabs(newDefaults[2 * ind] - mISmoved[ind]) > 1.e-3 ||
+          fabs(newDefaults[2 * ind + 1] - mISdelayNeeded[ind]) > 1.e-3) {
+          stillNewDflt = false;
+          break;
+        }
+      }
+    }
+  }
+
+  // Identifiably modern scopes with old defaults: make them the new ones, adjust mag
+  // dependence
+  if (stillOldDflt && (mScope->GetUseIllumAreaForC2() ||
+    mScope->GetAdvancedScriptVersion() > 0)) {
+    mNumISdelays = 4;
+    for (ind = 0; ind < 4; ind++) {
+      mISmoved[ind] = newDefaults[2 * ind];
+      mISdelayNeeded[ind] = newDefaults[2 * ind + 1];
+    }
+    mDelayPerMagDoubling = 0.1f;
+  }
+
+  // Scopes with the new default: adjust mag doubling
+  if (stillNewDflt && FEIscope)
+    mDelayPerMagDoubling = 0.1f;
+
+  // JEOL scopes still need a distance dependent delay but lower scaling - TODO
+  //if (stillOldDflt && JEOLscope)
+    //mISdelayScaleFactor = 0.25f;
+
 }
 
 // Sets the max # of peaks and minimum peak strength to retain and evaluate by correlation
@@ -3341,14 +3394,20 @@ UINT CShiftManager::GetAdjustedTiltDelay(double tiltChange)
 {
   double scaleFac = 1.;
   double baseInc = mScope->GetBaseIncrement();
+
+  // Get the basic tilt delay from TS if doing one and not doing a task
+  float tiltDelay = mTiltDelay;
+  TiltSeriesParam *tsParam = mWinApp->mTSController->GetTiltSeriesParam();
+  if (mWinApp->DoingTiltSeries() && !mWinApp->mComplexTasks->DoingTasks())
+    tiltDelay = tsParam->tiltDelay;
   if (tiltChange > 0. && baseInc > 0)
     scaleFac = sqrt(tiltChange / baseInc);
   scaleFac = B3DMAX(0.33, B3DMIN(2., scaleFac));
 
   // 6/12/10: limit scale factor to 1 by a tilt delay of 8 (fix stupid bug from 4/09)
   if (scaleFac > 1.)
-    scaleFac = 1. + B3DMIN(6., B3DMAX(0., (8. - mTiltDelay))) * (scaleFac - 1.) / 6.;
-  return (UINT)(1000. * scaleFac * mTiltDelay);
+    scaleFac = 1. + B3DMIN(6., B3DMAX(0., (8. - tiltDelay))) * (scaleFac - 1.) / 6.;
+  return (UINT)(1000. * scaleFac * tiltDelay);
 }
 
 UINT CShiftManager::GetGeneralTimeOut(int whichSet)

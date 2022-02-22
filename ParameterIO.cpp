@@ -2611,7 +2611,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       message = strItems[0];
       std::string propLower = (LPCTSTR)message.MakeLower();
-      if (!itemEmpty[0]) {
+      if (!itemEmpty[0] && strItems[0].Find("/*") != 0) {
         if (genPropSet.count(propLower) && !dupOKgenProps.count(propLower))
           mDupMessage += strItems[0] + " (general property)\r\n";
         else

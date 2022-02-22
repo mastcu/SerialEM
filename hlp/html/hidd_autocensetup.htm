@@ -221,6 +221,17 @@
       <P>When not recording a shift, this button is labeled 'Reset' and will clear out a 
           recorded shift.&nbsp; When recording a shift, it is labeled 'Abort' and lets you 
           stop recording a shift without losing the previous value.</P>
+    <P><strong>Center twice if beam is moved &gt; X um</strong></P>
+    <P>Select this option to run another iteration of the centering when the first 
+      image leads to a beam movement greater the distance specified in the text box.&nbsp; 
+      This option is enabled only when using beam edges for centering, because it 
+      already runs twice when using the centroid.&nbsp; If the autocentering tends not 
+      to come out well enough, either because the beam calibration is not accurate 
+      enough at the conditions used, or perhaps because the beam edge was visible only 
+      on one side, iterating can give a much more accurate result.&nbsp; For example, 
+      if the error in movement is 10%, the centering might only be off by ~1% after 
+      iterating.&nbsp; Unlike all the other settings above, this is a global setting 
+      that applies to all autocentering parameter sets. </P>
       <P><B>Test Acquire</B></P>
     <P>Use this button to take an image with the current settings and see how large 
       the beam is and whether it is saturating the camera. The screen will be restored 

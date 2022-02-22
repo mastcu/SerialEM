@@ -3,8 +3,29 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-2/17/20: SEM_4-0-0beta5
-2/17/20: Fixed "No message box on eroor" in Navigator Acquire interfering with
+2/22/22: Fixed rotate on load and Rotate Map, broken 2/16/22.
+
+2/22/22: For Titan or scopes with Advanced Scripting, the program will adjust
+image shift settling times to new, much lower values if ImageShiftDelays are
+still at the original defaults and ISDelayScaleFactor is not set.
+
+2/22/22: Fixed parsing of /* */ comments in properties file.
+
+2/22/22: Made FrameSeriesFromVar set up an appropriate beam shift when given
+image shifts on a JEOL.
+
+2/22/22: The tilt delay set in the tilt series setup dialog is now separate
+from the general tilt delay which applies during eucentricity.
+
+2/22/22: Added option to iterate beam autocentering.
+
+2/18/22: SEM_4-0-0beta6
+2/18/22: Changed SEMCCD plugin to keep r/f 0 and add "need n" when frames are
+saved without rotation and flip to avoid breaking alignframes.  The start of
+the title after "SerialEMCCD" has also been changed.
+
+2/17/22: SEM_4-0-0beta5
+2/17/22: Fixed "No message box on error" in Navigator Acquire interfering with
 proper tilt series termination on error.
 
 2/17/22: Increased available number of scripts to 60.
