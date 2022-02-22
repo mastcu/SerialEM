@@ -3441,9 +3441,13 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
     // But the cross-terms of rotation matrix need to be negated to operate on inverted Y
     if (imBuf->mRotAngle || imBuf->mInverted || width != imBuf->mLoadWidth || 
       height != imBuf->mLoadHeight) {
-      rMat = GetRotationMatrix(imBuf->mRotAngle, imBuf->mInverted);
+      rMat = GetRotationMatrix(imBuf->mRotAngle, false);
       rMat.xpy *= -1.;
       rMat.ypx *= -1.;
+      if (imBuf->mInverted) {
+        rMat.ypx *= -1.;
+        rMat.ypy *= -1.;
+      }
       aMat = MatMul(aMat, rMat);
       tmpX = delX - imBuf->mLoadWidth / 2.f;
       tmpY = delY - imBuf->mLoadHeight / 2.f;
@@ -6058,13 +6062,14 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
     rotAngle = 0.;
     if (!KGetOneFloat("Angle to rotate imported map by:", rotAngle, 0))
       return 1;
-    err = SEMThreeChoiceBox("Do you want to flip around X after rotating?", "Flip",
+    err = SEMThreeChoiceBox("Do you want to flip around X before rotating?", "Flip",
       "No Flip", "Cancel", MB_YESNOCANCEL, 1);
     if (err == IDCANCEL)
       return 1;
     if (err == IDYES)
       invertSign = -1;
     inverted = imBuf->mInverted;
+    rotAngle = invertSign * rotAngle;
 
   } else {
 
@@ -6080,10 +6085,8 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   // Find matrix needed for sizing, and real rotation matrix
   aMat = GetRotationMatrix(newAngle, newInvert);
   rMat = GetRotationMatrix(rotAngle, inverted);
-  if (invertSign) {
-    rMat.ypx = -rMat.ypx;
-    rMat.ypy = -rMat.ypy;
-  }
+  rMat.ypx = invertSign * rMat.ypx;
+  rMat.ypy = invertSign * rMat.ypy;
 
   mWinApp->SetStatusText(SIMPLE_PANE, "ROTATING MAP");
   err = mHelper->TransformBuffer(imBuf, aMat, imBuf->mLoadWidth, 
