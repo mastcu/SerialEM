@@ -4984,7 +4984,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   mLastNoBoxMessage = "";
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
     (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() ||
-      macProc->GetTryCatchLevel() > 0)) ||mWinApp->mNavHelper->GetNoMessageBoxOnError()) {
+      macProc->GetTryCatchLevel() > 0)) || 
+    (!DoingTiltSeries() && mWinApp->mNavHelper->GetNoMessageBoxOnError())) {
     for (int ind = 0; ind < message.GetLength(); ind++) {
       if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
         message.GetAt(ind - 1) != '\n'))) {

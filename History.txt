@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/17/20: SEM_4-0-0beta5
+2/17/20: Fixed "No message box on eroor" in Navigator Acquire interfering with
+proper tilt series termination on error.
+
+2/17/22: Increased available number of scripts to 60.
+
 2/16/22: Made alignment in DM with a K3 use the MotionCor2 capability.
 
 2/16/22: Added ability to flip an imported map when rotating it.
