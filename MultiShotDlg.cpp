@@ -699,7 +699,7 @@ void CMultiShotDlg::OnRnoEarly()
 {
   UpdateData(true);
   ManageEnables();
-  if (mWinApp->mNavigator->mNavAcquireDlg)
+  if (mWinApp->mNavigator && mWinApp->mNavigator->mNavAcquireDlg)
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
@@ -708,7 +708,7 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 {
   UpdateData(true);
   ManageEnables();
-  if (mWinApp->mNavigator->mNavAcquireDlg)
+  if (mWinApp->mNavigator && mWinApp->mNavigator->mNavAcquireDlg)
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
@@ -723,7 +723,7 @@ void CMultiShotDlg::OnOmit3x3Corners()
 void CMultiShotDlg::OnSaveRecord()
 {
   UpdateAndUseMSparams();
-  if (mWinApp->mNavigator->mNavAcquireDlg)
+  if (mWinApp->mNavigator && mWinApp->mNavigator->mNavAcquireDlg)
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
