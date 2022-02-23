@@ -457,6 +457,7 @@ void CCameraController::ClearOneShotFlags()
   mLDwasSetToArea = -1;
   mSettling = -1;
   mNextAsyncSumFrames = -1;
+  mNoStackNextAsync = false;
   mNextFrameSkipThresh = 0.;
   mNextPartialStartThresh = mNextPartialEndThresh = 0.;
   mNextRelativeThresh = 0.;
@@ -2061,7 +2062,7 @@ bool CCameraController::OppositeLDAreaNextShot(void)
 }
 
 // Sets up for early return on next K2 shot, return true for error
-bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum)
+bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum, bool noStack)
 {
   if (!mParam->K2Type) {
     SEMMessageBox("Early return works only with a K2/K3 camera");
@@ -2078,6 +2079,7 @@ bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum)
   }
   mNextAsyncSumFrames = inVal;
   mDeferSumOnNextAsync = deferSum;
+  mNoStackNextAsync = noStack;
   return false;
 }
 
@@ -3102,6 +3104,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Finally the one-shot flag can be cleared since we are done leaving and coming back
   mNextAsyncSumFrames = -1;
+  mNoStackNextAsync = false;
   mDeferSumOnNextAsync = false;
   mNextFrameSkipThresh = 0.;
 
@@ -4784,7 +4787,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
     // When saving, the grab stack helps it keep up, but it doesn't seem to be needed
     // when aligning on K3
-    if (mNextAsyncSumFrames >= 0 && (mNextFrameSkipThresh <= 0. ||
+    if (mNextAsyncSumFrames >= 0 && !mNoStackNextAsync && (mNextFrameSkipThresh <= 0. ||
       (mTD.DoingTiltSums && saving))) {
       numGrab = B3DMIN(numFrames, maxInRAM);
       numAsyncSum += 65536. * numGrab;

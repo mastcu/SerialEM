@@ -9460,7 +9460,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       timeOut = 300000;
       mCamera->SetCancelNextContinuous(true);
       if (mDoingEarlyReturn && mCamera->SetNextAsyncSumFrames(
-        mAcqParm->numEarlyFrames < 0 ? 65535 : mAcqParm->numEarlyFrames, false)) {
+        mAcqParm->numEarlyFrames < 0 ? 65535 : mAcqParm->numEarlyFrames, false, false)) {
         StopAcquiring();
         return;
       }

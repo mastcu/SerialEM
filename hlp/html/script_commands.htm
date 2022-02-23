@@ -1142,19 +1142,23 @@
             be supplied to re-enable the checking. </TD>
         </TR>
                 <TR>
-          <TD class="scriptcommand">EarlyReturnNextShot #N [#D]</TD>
+          <TD class="scriptcommand">EarlyReturnNextShot #N [#D] [#S]</TD>
           <TD>Returns as early as possible from the next acquisition, which must involve
             either aligning or saving dose-fractionation frames from a K2/K3 camera.&nbsp; Follow with the number
             of frames <b>#N</b> to be summed in the returned image, 0 to return without any summed
             image, or -1 to return with the full sum.&nbsp; The optional <b>#D</b> should be 1 to make a deferred
             full sum when not aligning in the plugin; this sum is always made when aligning in the plugin
-            for an ordinary acquisition.&nbsp;
+            for an ordinary acquisition.&nbsp; If the optional <b>#S</b> is non-zero, the plugin will <i>not</i> 
+            stack frames, which is done by default in order to allow another single-shot image to be taken as 
+            soon as possible; this
+            stacking takes extra time and delays the ability to take another dose-fractionation image.&nbsp; 
             Single-shot and dose-fractionation images can be
             requested without delay in the script.&nbsp; The single-shot images will be taken
             as soon as possible (after the
-            frame stack has been accessed).&nbsp; Another
+            frame stack has been accessed), do not enter <b>#S</b> if the next image will be a single-shot.&nbsp; Another
             dose-fractionation shot will be delayed until saving is finished for the current
-            shot.&nbsp; When a frame tilt series is to be taken, a non-zero value of
+            shot, so do use <b>#S</b> when doing a series of frame-saving shots.&nbsp; When a frame
+             tilt series is to be taken, a non-zero value of
             <b>#D</b> triggers the making of separate deferred sums for each tilt angle.&nbsp;
             In this case, the Record parameters can specify just saving, just aligning, or
             both operations.</TD>

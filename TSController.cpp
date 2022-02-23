@@ -2539,7 +2539,7 @@ void CTSController::NextAction(int param)
               mTSParam.earlyReturnNumFrames && !mConSets[FOCUS_CONSET].doseFrac && 
               !mConSets[TRIAL_CONSET].doseFrac && !(mLowDoseMode && 
               (mConSets[VIEW_CONSET].doseFrac || mConSets[PREVIEW_CONSET].doseFrac))) {
-                mCamera->SetNextAsyncSumFrames(mTSParam.earlyReturnNumFrames, true);
+                mCamera->SetNextAsyncSumFrames(mTSParam.earlyReturnNumFrames, true,false);
                 mNeedDeferredSum = true;
                 mSecForDeferredSum = mOverwriteSec < 0 ? mWinApp->mStoreMRC->getDepth() :
                   mOverwriteSec;

@@ -587,7 +587,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
       mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)));
   if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
-    mMSEarlyRetFrames, false)) {
+    mMSEarlyRetFrames, false, GetNextShotAndHole(nextShot, nextHole))) {
     StopMultiShot();
     return 1;
   }

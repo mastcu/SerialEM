@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/22/22: Fixed crash using multishot dialog with Novaigaotr not open.
+
+2/22/22: Made it possible to avoid making a temporary stack when doing K2/K3
+early returns; early return will now show some or more benefit when using it
+for multiple Records.
+
 2/22/22: Fixed rotate on load and Rotate Map, broken 2/16/22.
 
 2/22/22: For Titan or scopes with Advanced Scripting, the program will adjust

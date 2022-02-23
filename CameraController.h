@@ -523,7 +523,7 @@ public:
   GetMember(int, RepFlag);
   GetMember(double, LastImageTime);
   GetSetMember(int, WaitingForStacking);
-  bool SetNextAsyncSumFrames(int inVal, bool deferSum);
+  bool SetNextAsyncSumFrames(int inVal, bool deferSum, bool noStack);
   SetMember(float, NextFrameSkipThresh);
   void SetNextPartialThresholds(float start, float end)
   {
@@ -915,6 +915,7 @@ public:
   int mDMbuild[3];
   int mPluginVersion[3];
   int mNextAsyncSumFrames;      // 0 for async next shot, > 0 to return partial sum
+  bool mNoStackNextAsync;       // Do not do a grab stack on early return shot
   DWORD mLastAsyncTimeout;      // timeout for last async shot
   double mAsyncTickStart;       // time it started
   float mLastAsyncExpTime;      // Just the exposure time of last async shot
