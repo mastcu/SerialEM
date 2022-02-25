@@ -25,8 +25,20 @@ IF NOT EXIST ..\FEIScopePlugin.dll IF NOT EXIST ../Plugins\FEIScopePlugin.dll SE
 set HASJEOLPLUG=1
 IF NOT EXIST ..\JeolScopePlugin.dll IF NOT EXIST ../Plugins\JeolScopePlugin.dll SET HASJEOLPLUG=0
 
+set GMS64PLUGS=SEMCCD-GMS2-64.dll SEMCCD-GMS2.2-64.dll SEMCCD-GMS2.30-64.dll SEMCCD-GMS2.31-64.dll^
+ SEMCCD-GMS3.01-64.dll SEMCCD-GMS3.30-64.dll SEMCCD-GMS3.31-64.dll SEMCCD-GMS3.42-64.dll^
+ SEMCCD-GMS3.50-64.dll
+
 rem # Clean up all existing and older files
-for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll SEMCCD-GMS2-64.dll SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll hdf5.dll) DO (
+for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll^
+ libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll^
+ register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll^
+ SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll %GMS64PLUGS% ^
+ msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll^
+ JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll^
+ DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
+ libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
+ hdf5.dll) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 
@@ -336,7 +348,7 @@ if %BIT64% EQU 1 (
 
   Rem # 64-bit GMS2
   set REGISTER=register-GMS2-64.bat
-  COPY /Y %SEMCCD64% ..\SEMCCD-GMS2-64.dll
+  COPY /Y %SEMCCD64% ..\
   IF EXIST SEMCCDps-GMS2-32.dll  COPY /Y  SEMCCDps-GMS2-32.dll ..
   COPY /Y  SEMCCDps-GMS2-64.dll ..
   COPY /Y  b3dregsvr64.exe ..

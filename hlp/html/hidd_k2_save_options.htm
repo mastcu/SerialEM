@@ -99,9 +99,17 @@
       orientation.&nbsp; These defect lists always have a RotationFlip entry showing 
       the orientation to which they apply, and the title in the image file shows the 
       operation applied to the frames after &#39;r/f&#39; with this option 
-      off.&nbsp; With the option on, the title shows &#39;nrf&#39; and the operation that 
+      off.&nbsp; </p>
+    <p>
+      With this option on, the title in the file header for frames saved from a K2/K3 
+      camera shows &#39;r/f 0 need&#39; and the operation that 
       still needs to be applied to the aligned sums to have them match the orientation 
-      of images in SerialEM.</p>
+      of images in SerialEM.&nbsp; Alignframes in IMOD 4.12.18 or higher will 
+      recognize this &#39;need&#39; entry and can use it to perform the needed operation on 
+      the aligned sums.&nbsp; If you have selected options to &#39;Align in IMOD&#39;, the 
+      Alignframes command file (.pcm file) will now contain the entry &#39;RotationAndFlip 
+      -2&#39;, which will result in properly reoriented output from IMOD 4.12.18 and cause 
+      no problems with earlier IMOD versions.</p>
     <p>
       &nbsp;</p>
     <p>

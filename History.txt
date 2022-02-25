@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/24/22: Changed RotationAndFlip value in .pcm files when aligning in IMOD to
+-2, so that nonnormalized files saved without reorientation are aligned in
+IMOD 4.12.18 or higher, it will reorient the aligned sums properly.
+
+2/24/22: Stopped renaming the 64-bit SEMCCD files to SEMCCD-GMS2-64.dll so
+that it is more clear that the right version is present.
+
 2/24/22: Sped up variable frame summing in SEMCCD plugin when saving
 unnormalized frames.
 

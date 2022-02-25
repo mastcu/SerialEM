@@ -68,6 +68,14 @@
         width: 896px;
         height: 24px;
       }
+      .auto-style1 {
+        width: 303px;
+        height: 22px;
+      }
+      .auto-style2 {
+        width: 896px;
+        height: 22px;
+      }
     --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -220,7 +228,7 @@
       <P><A name="setup_install"></A><B>Program Installation</B></P>
     <P><a name="packagesContents"><i>The Packages and their Contents</i></a>.&nbsp;
       The files needed to run SerialEM consist of executable programs and libraries,
-      which are distributed in a package SerialEM_3-x-x.exe, and configuration and
+      which are distributed in a package SerialEM_4-x-x.exe, and configuration and
       data files, some of which are obtained from a 'framework' package.&nbsp; The
       program itself should be installed in a folder C:\Program Files\SerialEM; this
       is the location where the package unpacks by default. The configuration and data
@@ -229,7 +237,7 @@
       C:\ProgramData\SerialEM instead. For the latter systems, if you received a
       custom framework file, it should be set up to unpack in C:\ProgramData, but if
       not, you should change 'Program Files' to 'ProgramData' before unzipping. </P>
-    <P>The SerialEM_3-x-x.exe package will create a subfolder SerialEM_3-x-x under
+    <P>The SerialEM_4-x-x.exe package will create a subfolder SerialEM_4-x-x under
       C:\Program Files\SerialEM.&nbsp; See&nbsp;
         <A href="#package_files">Files in a SerialEM Install Package</A> for a
       description of the package contents.</P>
@@ -288,7 +296,7 @@
       <P style="Z-INDEX: 0">
         <a name="runningInstaller"><i>Running the Installer.</i></a>&nbsp;
         For initial installation or upgrading to a new version, simply click on
-        'install.bat' in the SerialEM_3-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you
+        'install.bat' in the SerialEM_4-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you
         will need to right click and select 'Run as Administrator'.&nbsp; If you have a
         Gatan camera, make sure that DigitalMicrograph is not running.&nbsp; The
         installer does the following: </P>
@@ -342,10 +350,8 @@
           After you hit a key, it will copy the DM plugin to the Gatan Plugins
           folder&nbsp;(C:\Program Files\Gatan\DigitalMicrograph\Plugins in GMS 1.x, C:\Program
           Files\Gatan\Plugins for GMS 2 32-bit, and C:\ProgramData\Gatan\Plugins for GMS 2-3
-          64-bit) and register the DLL's; this should result in 2 or
-          3 message boxes saying that registration succeeded.&nbsp; For GMS 2 or 3, the plugin
-          will be renamed before it is copied to just the generic name for a GMS2 plugin (e.g.,
-          SEMCCD-GMS2-32.dll).&nbsp; For 64-bit versions, it will also copy or update
+          64-bit) and register the DLL's; this should result in 2 or 3 message boxes saying
+           that registration succeeded.&nbsp; For 64-bit versions, it will also copy or update
           components needed for alignment of K2/K3 frames through the CPU.</P>
       </li>
       <li>
@@ -395,7 +401,7 @@
         tab, press Advanced Sharing, turn on 'Share this folder', press 'Permissions',
         then 'Add' the appropriate user group (or select 'Everyone') and turn on 'Full
         Control'.</P>
-    <P>In Windows 7/Server 2008 with GMS 2.x, it may be necessary to run SerialEM as
+    <P>In Windows 7/Server 2008/Server 2012 with GMS 2.x or 3.x, it may be necessary to run SerialEM as
       Administrator.&nbsp; If there is an initial error connecting to the SerialEMCCD
       plugin, try right-clicking on the SerialEM shortcut and selecting &quot;Run as
       Administrator&quot;.&nbsp; If this is successful, you can set up any shortcut to run
@@ -1162,13 +1168,12 @@
       <li>Set a property &#39;UseSocket&nbsp; 1&#39; for each camera being accessed through the
         socket interface.</li>
       <li>If DM and SerialEM are running on different computers, install the Shrmemframe package mentioned above for
-      a K2/K3 camera, otherwise copy the appropriate SerialEMCDD plugin from the SerialEM_3-x-x folder to a
+      a K2/K3 camera, otherwise copy the appropriate SerialEMCDD plugin from the SerialEM_4-x-x folder to a
         Plugins folder on the other computer (the one running DM).&nbsp; Specifically:<ul>
           <li>If the other computer is running 64-bit Windows, copy&nbsp;
             SEMCCD-GMS2.31-64.dll,
             SEMCCD-GMS3.30-64.dll, or
-            SEMCCD-GMS3.31-64.dll to C:\ProgramData\Gatan\Plugins and rename it to
-            SEMCCD-GMS2-64.dll</li>
+            SEMCCD-GMS3.31-64.dll to C:\ProgramData\Gatan\Plugins</li>
           <li>If the other computer is running GMS2 on Windows XP or Windows 7 32-bit, copy SEMCCD-GMS2.0-32.dll
             or SEMCCD-GMS2.3-32.dll to
             C:\Program Files\Gatan\Plugins and rename it to SEMCCD-GMS2-32.dll</li>
@@ -4096,7 +4101,7 @@ Device Settings:
         like disable the HT until the computer is rebooted.)</P>
     <P>&nbsp;</P>
     <P><A name="package_files"></A><B>Files in the SerialEM Install Package</B></P>
-    <P>The SerialEM_3-7-x.exe package will create a subfolder SerialEM_3-7-x under
+    <P>The SerialEM_4-0-x.exe package will create a subfolder SerialEM_4-0-x under
       C:\Program Files\SerialEM with the following files (not all included in a 64-bit
       SerialEM package).&nbsp; The &#39;Microsoft.VC90&#39; folders and all of the DLL&#39;s above
       that line below are required for SerialEM to run.</P>
@@ -4131,6 +4136,18 @@ Device Settings:
             libiomp5md.dll</td>
           <td class="style3">
             Intel OpenMP library</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            hdf5.dll</td>
+          <td class="style3">
+            Library for HD5 files</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            imodzlib1.dll</td>
+          <td class="style3">
+            Library needed by hdf5.dll</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4216,7 +4233,13 @@ Device Settings:
           <td class="style2">
             SEMCCD-GMS3.42-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3.4 and above</td>
+            The plugin to DigitalMicrograph for 64-bit GMS 3.4</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            EMCCD-GMS3.50-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 64-bit GMS 3.5</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4246,10 +4269,17 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
-            FrameGPU.dll</td>
+            FrameGPU4.dll</td>
           <td class="style3">
             A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the
-            plugin to DM or in SerialEM itself</td>
+            plugin to DM or in SerialEM itself, built with CUDA 4</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FrameGPU8.dll</td>
+          <td class="style3">
+            A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the
+            plugin to DM or in SerialEM itself, built with CUDA 8</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4332,9 +4362,9 @@ Device Settings:
             the DE DLL into SerialEM</td>
         </tr>
         <tr>
-          <td class="style2">
+          <td class="auto-style1">
             DeInterface.Win32.dll</td>
-          <td class="style3">
+          <td class="auto-style2">
             A DLL from Direct Electron for connecting with the DE server</td>
         </tr>
         <tr>
@@ -4375,6 +4405,12 @@ Device Settings:
             Janelia.txt</td>
           <td class="style3">
             License covering the libctffind library from IMOD</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            HDF5.txt</td>
+          <td class="style3">
+            License covering the HDF5 library</td>
         </tr>
     </table>
   </BODY>
