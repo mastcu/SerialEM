@@ -1169,7 +1169,7 @@ BEGIN
     CTEXT           "Align in Server",IDC_STAT_DE_WHERE_ALIGN,63,511,123,8
     LTEXT           "sec",IDC_STAT_DE_FRAME_SEC,178,468,12,8
     CONTROL         "Use Hardware ROI",IDC_CHECK_HARDWARE_ROI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,167,73,10
-    CONTROL         "Bin counting frames by 2 in hardware",IDC_CHECK_TAKE_K3_BINNED,
+    CONTROL         "Bin counting frames by 2",IDC_CHECK_TAKE_K3_BINNED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,438,136,10
     LTEXT           "99.99 e/sq A per frame",IDC_STAT_DOSE_PER_FRAME,27,302,97,8
     CONTROL         "Use correlated double sampling (CDS)",IDC_CHECK_USE_CORR_DBL_SAMP,
@@ -1808,7 +1808,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,64,16,10,10,NOT WS_VISIBLE
 END
 
-IDD_FILTERCONTROL DIALOGEX 0, 0, 119, 118
+IDD_FILTERCONTROL DIALOGEX 0, 0, 119, 128
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1828,7 +1828,7 @@ BEGIN
     RTEXT           "Loss",IDC_STATIC,54,47,24,8
     EDITTEXT        IDC_EDITLOSS,80,45,26,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Spin1",IDC_SPINLOSS,"msctls_updown32",UDS_ARROWKEYS,106,44,10,14
-    CONTROL         "Switch cameras automatically",IDC_AUTOCAMERA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,108,104,10
+    CONTROL         "Switch cameras automatically",IDC_AUTOCAMERA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,118,104,10
     PUSHBUTTON      "-",IDC_BUTMORE,4,67,9,7
     LTEXT           "Options",IDC_STATMORE,15,67,24,8
     CONTROL         "Match intensity (electrons/pixel)",IDC_MATCHINTENSITY,
@@ -1841,6 +1841,8 @@ BEGIN
     PUSHBUTTON      "Refine ZLP",IDC_REFINE_ZLP,77,9,39,10
     PUSHBUTTON      "Adjust Slit Offset",IDC_OFFSET_SLIT,14,9,56,10,NOT WS_VISIBLE
     PUSHBUTTON      "Clear Adjustment",IDC_ZLPALIGNED,63,74,53,10
+    CONTROL         "Refine ZLP with Trial in Low Dose",IDC_REFINE_WITH_TRIAL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,108,111,10
 END
 
 IDD_GAINREFERENCE DIALOGEX 0, 0, 196, 261
@@ -3919,7 +3921,7 @@ BEGIN
 
     IDD_FILTERCONTROL, DIALOG
     BEGIN
-        BOTTOMMARGIN, 116
+        BOTTOMMARGIN, 126
     END
 
     IDD_GAINREFERENCE, DIALOG
@@ -4497,6 +4499,11 @@ BEGIN
     0
 END
 
+IDD_FILTERCONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4838,6 +4845,7 @@ BEGIN
     IDC_DRAW_ALL_REG        "Draw items at all registrations over images"
     IDC_DRAW_NONE           "Turn off drawing of all Navigator items"
     IDC_REFINE_ZLP          "Refine alignment of ZLP with a series of pictures"
+    IDC_REFINE_WITH_TRIAL   "Use modified Trial instead of Preview images for Refine ZLP in Low Dose"
 END
 
 STRINGTABLE
@@ -5686,6 +5694,9 @@ BEGIN
     IDC_EDITACBEXPOSURE     "Set exposure time of image to acquire"
     IDC_RADIOUSEEDGE        "Use centering routine that finds edges in image"
     IDC_RADIOUSECENTROID    "Take average location of counts in image as center of beam"
+    IDC_USE_TRIAL_SMALLER   "Center with Trial parameters set at the time, with smaller beam"
+    IDC_SPIN_SMALLER_TRIAL  "Set the percentage reduction in diameter for the Trial beam to use"
+    IDC_ACS_ITERATE         "Take a second image and center again when using beam edges to center"
 END
 
 STRINGTABLE

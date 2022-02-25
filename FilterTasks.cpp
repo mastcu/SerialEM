@@ -574,14 +574,18 @@ void CFilterTasks::StopCalMagShift()
 //////////////////////////////////////////////////////////////////////////
 
 // Start the procedure. Return false if error
-BOOL CFilterTasks::RefineZLP(bool interactive)
+BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
 {
   mLowDoseMode = mWinApp->LowDoseMode();
   ControlSet *conSet;
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   mSavedParams = *mFiltParams;
   CString *modeNames = mWinApp->GetModeNames();
+  bool trialInLD;
   float cancelSlit = 0.;
+  if (!useTrial)
+    useTrial = mFiltParams->refineWithTrial ? 1 : -1;
+  trialInLD = useTrial > 0 && mLowDoseMode && !JEOLscope;
 
   // Set up maximum scan size, and arrays
   mNumEnergies = (int)(1.5 * mRZlpSlitWidth / mRZlpStepSize);
@@ -640,7 +644,7 @@ BOOL CFilterTasks::RefineZLP(bool interactive)
   mFiltParams->zeroLoss = false;
 
   // Use preview set in low dose, trial in regular mode
-  mRZlpConSetNum = mLowDoseMode ? 4 : 2;
+  mRZlpConSetNum = (mLowDoseMode && !trialInLD) ? PREVIEW_CONSET : TRIAL_CONSET;
   mLDParam = mWinApp->GetLowDoseParams() + mCamera->ConSetToLDArea(mRZlpConSetNum);
   if (mLowDoseMode) {
     mLDPsave = *mLDParam;
@@ -671,7 +675,8 @@ BOOL CFilterTasks::RefineZLP(bool interactive)
 
   // Drop the exposure by 10 if possible.  Use dead time and also apply minimum exposure
   // then do standard constraint
-  conSet->exposure = (conSet->exposure - camParams->deadTime) / 10.f + camParams->deadTime;
+  conSet->exposure = (conSet->exposure - camParams->deadTime) / (trialInLD ? 3.f : 10.f) +
+    camParams->deadTime;
   conSet->exposure = B3DMAX(conSet->exposure, mRZlpMinExposure);
   mCamera->ConstrainExposureTime(camParams, conSet);
   

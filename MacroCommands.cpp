@@ -7516,12 +7516,12 @@ int CMacCmd::RefineZLP(void)
 {
   CString report;
 
-  if (mItemEmpty[1] || SEMTickInterval(1000. * mFiltParam->alignZLPTimeStamp) >
-      60000. *mItemDbl[1]) {
+  if (mItemEmpty[1] || !mItemDbl[1] || 
+    SEMTickInterval(1000. * mFiltParam->alignZLPTimeStamp) > 60000. *mItemDbl[1]) {
     CTime ctdt = CTime::GetCurrentTime();
     report.Format("%02d:%02d:%02d", ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    mWinApp->mFilterTasks->RefineZLP(false);
+    mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2]);
   }
   return 0;
 }

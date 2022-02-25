@@ -159,6 +159,13 @@
         slit centered on a desired energy loss when magnification or slit width is
         changed. In order for this to work correctly, mag-dependent energy shifts need
         to be calibrated and SerialEM needs to be aware of when the ZLP is aligned.</P>
+    <P><b>Refine ZLP with Trial in Low Dose (post-column filter only)</P>
+    <P>Select this option to have the Refine ZLP procedure use images in the Trial 
+      area instead of the Record area when in Low Dose mode.&nbsp; The Trial camera 
+      parameters will be used with some modifications, such as a 3-fold reduction in 
+      exposure time.&nbsp; You should run the routine with and without this option to 
+      verify that there is not a significant dependence of the ZLP on image shift.&nbsp; 
+      The option is disabled for JEOL microcopes because of such a dependency.</P>
       <P><B>Switch cameras automatically (post-column filter only)</B></P>
       <P>With this option selected, the program will automatically select the energy filter or
         upper camera when EFTEM mode is turned on or off, and it turns EFTEM mode on or

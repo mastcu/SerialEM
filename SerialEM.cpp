@@ -511,6 +511,7 @@ CSerialEMApp::CSerialEMApp()
   mFilterParams.currentMagShift = 0.;
   mFilterParams.alignZLPTimeStamp = 0.;
   mFilterParams.refineZLPOffset = 0.;
+  mFilterParams.refineWithTrial = false;
   mFilterParams.cumulNonRunTime = 0;
   mFilterParams.usedOldAlign = false;
   mRetractOnEFTEM = false;

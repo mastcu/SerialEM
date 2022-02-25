@@ -3,7 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-2/22/22: Fixed crash using multishot dialog with Novaigaotr not open.
+2/24/22: Added an option to Filter Control panel to do Refine ZLP with Trial
+in Low Dose.
+
+2/24/22: JEOL scopes with original defaults for image shift delays will have
+ISDelayScalingFactor set to 0.2 based on new measurements.
+
+2/22/22: Fixed crash using multishot dialog with Navigator not open.
 
 2/22/22: Made it possible to avoid making a temporary stack when doing K2/K3
 early returns; early return will now show some or more benefit when using it

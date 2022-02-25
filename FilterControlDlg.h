@@ -108,6 +108,8 @@ private:
 public:
   BOOL LossOutOfRange(double nominal, double & netLoss);
   CButton m_butClearAdjustment;
+  BOOL m_bRefineWithTrial;
+  afx_msg void OnRefineWithTrial();
 };
 
 //{{AFX_INSERT_LOCATION}}

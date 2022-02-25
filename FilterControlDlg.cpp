@@ -36,6 +36,7 @@ static UINT sHideableIDs[] = {IDC_AUTOMAG};
 
 CFilterControlDlg::CFilterControlDlg(CWnd* pParent /*=NULL*/)
   : CToolDlg(CFilterControlDlg::IDD, pParent)
+  , m_bRefineWithTrial(FALSE)
 {
   //{{AFX_DATA_INIT(CFilterControlDlg)
   m_bAutoMag = FALSE;
@@ -99,6 +100,7 @@ void CFilterControlDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_ZEROLOSS, m_bZeroLoss);
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_ZLPALIGNED, m_butClearAdjustment);
+  DDX_Check(pDX, IDC_REFINE_WITH_TRIAL, m_bRefineWithTrial);
 }
 
 
@@ -120,6 +122,7 @@ BEGIN_MESSAGE_MAP(CFilterControlDlg, CToolDlg)
   ON_BN_CLICKED(IDC_MATCHINTENSITY, OnOptionButton)
 	ON_BN_CLICKED(IDC_OFFSET_SLIT, OnOffsetSlit)
 	//}}AFX_MSG_MAP
+  ON_BN_CLICKED(IDC_REFINE_WITH_TRIAL, OnRefineWithTrial)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -260,9 +263,11 @@ BOOL CFilterControlDlg::OnInitDialog()
     m_statOnOff.ShowWindow(SW_HIDE);
     if (mParam->positiveLossOnly)
       m_butOffsetSlit.ShowWindow(SW_SHOW);
-  } else
-    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() && 
+  } else {
+    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() &&
       !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? SW_SHOW : SW_HIDE);
+    EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope);
+  }
 
   UpdateSettings(); 
   ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
@@ -300,6 +305,7 @@ void CFilterControlDlg::Update()
     mWinApp->mScope->FastMagIndex() < mWinApp->mScope->GetLowestMModeMagInd())));
   m_butDoMagShifts.EnableWindow(bEnable && !noControl);
   m_butOffsetSlit.EnableWindow(bEnable && bOmega);
+  EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope && bEnable);
   ManageZLPAligned();
   bEnable = bEnable && m_bEFTEMMode && !noControl;
   m_butRefineZLP.EnableWindow(bEnable);
@@ -328,6 +334,7 @@ void CFilterControlDlg::UpdateSettings()
   m_bSlitIn = mParam->slitIn;
   m_bZeroLoss = mParam->zeroLoss;
   m_bDoMagShifts = mParam->doMagShifts;
+  m_bRefineWithTrial = mParam->refineWithTrial;
   m_strLoss.Format(LOSS_FORMAT, mParam->energyLoss);
   m_strWidth.Format(WIDTH_FORMAT, mParam->slitWidth);
   m_bEFTEMMode = mWinApp->GetFilterMode();
@@ -518,6 +525,13 @@ void CFilterControlDlg::OnRefineZlp()
   mWinApp->mFilterTasks->RefineZLP(true);
 }
 
+void CFilterControlDlg::OnRefineWithTrial()
+{
+  mWinApp->RestoreViewFocus();
+  UpdateData(true);
+  mParam->refineWithTrial = m_bRefineWithTrial;
+}
+
 // For JEOL, need to offset slit and energy loss from zero
 void CFilterControlDlg::OnOffsetSlit() 
 {
@@ -554,4 +568,3 @@ void CFilterControlDlg::OnOffsetSlit()
   mWinApp->mCamera->SetupFilter();
   UpdateSettings();
 }
-

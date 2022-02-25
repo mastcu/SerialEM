@@ -3472,10 +3472,14 @@
             optional 1 or -1 to specify a specific direction for further tilts</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RefineZLP [#]</TD>
-          <TD>Reports time of day and run Refine Zero Loss Peak procedure.&nbsp; If the
-            optional <b>#</b> is entered with an interval in minutes, the procedure is not run if
-            the time since the last run is less than that interval.</TD>
+          <TD class="scriptcommand">RefineZLP [#I] [#T]</TD>
+          <TD>Reports time of day and runs Refine Zero Loss Peak procedure.&nbsp; If the
+            optional <b>#I</b> is entered with an interval in minutes, the procedure is not run if
+            the time since the last run is less than that interval.&nbsp; If the
+            optional <b>#T</b> has a positive value, the procedure is run with Trial in Low Dose; if 
+            it has a negative value, the procedure is run with Preview; otherwise it is governed by
+            the selection in the<a href="hidd_filtercontrol.htm"> Filter Control</a> panel.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AutocenterBeam [#M] [#P]</TD>

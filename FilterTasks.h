@@ -40,7 +40,7 @@ class CFilterTasks : public CCmdTarget
   void RefineZLPCleanup(int error);
   void StopRefineZLP();
   void RefineZLPNextTask();
-  BOOL RefineZLP(bool interactive = false);
+  BOOL RefineZLP(bool interactive = false, int useTrial = 0);
   int InitializeRegularScan();
   void StartAcquisition(DWORD delay, int conSetNum, int taskNum);
   void InitializeScan(float startEnergy);

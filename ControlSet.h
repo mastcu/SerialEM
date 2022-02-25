@@ -423,6 +423,7 @@ struct FilterParams {
   double lastFeiZLPshift;   // Zero loss peak adjustment from FEI interface
   BOOL adjustForSlitWidth;    // Flag to adjust for slit width changes
   BOOL positiveLossOnly;    // Flag that filter has only positive energy shifts
+  BOOL refineWithTrial;     // Flag to refine with Trial in Low Dose
   float minLoss, maxLoss;     // Minimum and maximum allowed energy loss
   float minWidth, maxWidth;   // Minimum and maximum slit width
   int cumulNonRunTime;      // cumulative non run time since align/refine zlp
