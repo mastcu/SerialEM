@@ -7,8 +7,8 @@ set INCLUDE=c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\INCLUDE;c:\Pr
 msbuild /t:Rebuild /p:Configuration=Release /p:Platform=x64 SerialEM.vcxproj
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-msbuild /t:Rebuild /p:Configuration=NoHang /p:Platform=Win32 SerialEM.vcxproj
-if %errorlevel% neq 0 exit /b %errorlevel%
+Rem msbuild /t:Rebuild /p:Configuration=NoHang /p:Platform=Win32 SerialEM.vcxproj
+Rem if %errorlevel% neq 0 exit /b %errorlevel%
 
 msbuild /t:Rebuild /p:Configuration=Release /p:Platform=Win32 SerialEM.vcxproj
 if %errorlevel% neq 0 exit /b %errorlevel%

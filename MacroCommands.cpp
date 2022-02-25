@@ -6556,12 +6556,12 @@ int CMacCmd::ReportSettingsFile(void)
   CString report;
 
   report = mWinApp->mDocWnd->GetCurrentSettingsPath();
-  mWinApp->AppendToLog("Current settings file: " + report);
+  mWinApp->AppendToLog("Current settings file: " + report, mLogAction);
   SetOneReportedValue(&mStrItems[1], report, 1);
   report = "None";
   if (mWinApp->mDocWnd->GetReadScriptPack()) {
     report = mWinApp->mDocWnd->GetCurScriptPackPath();
-    mWinApp->AppendToLog("Current script package: " + report);
+    mWinApp->AppendToLog("Current script package: " + report, mLogAction);
   }
   SetOneReportedValue(&mStrItems[1], report, 2);
   return 0;
