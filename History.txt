@@ -3,31 +3,32 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-2/24/22: Changed RotationAndFlip value in .pcm files when aligning in IMOD to
--2, so that nonnormalized files saved without reorientation are aligned in
+2/25/22: SEM_4-0-0 stable
+* 2/24/22: Changed RotationAndFlip value in .pcm files when aligning in IMOD to
+-2, so that if nonnormalized files saved without reorientation are aligned in
 IMOD 4.12.18 or higher, it will reorient the aligned sums properly.
 
 2/24/22: Stopped renaming the 64-bit SEMCCD files to SEMCCD-GMS2-64.dll so
 that it is more clear that the right version is present.
 
-2/24/22: Sped up variable frame summing in SEMCCD plugin when saving
+* 2/24/22: Sped up variable frame summing in SEMCCD plugin when saving
 unnormalized frames.
 
 2/24/22: Added an option to Filter Control panel to do Refine ZLP with Trial
 in Low Dose.
 
-2/24/22: JEOL scopes with original defaults for image shift delays will have
+* 2/24/22: JEOL scopes with original defaults for image shift delays will have
 ISDelayScalingFactor set to 0.2 based on new measurements.
 
 2/22/22: Fixed crash using multishot dialog with Navigator not open.
 
-2/22/22: Made it possible to avoid making a temporary stack when doing K2/K3
+* 2/22/22: Made it possible to avoid making a temporary stack when doing K2/K3
 early returns; early return will now show some or more benefit when using it
 for multiple Records.
 
 2/22/22: Fixed rotate on load and Rotate Map, broken 2/16/22.
 
-2/22/22: For Titan or scopes with Advanced Scripting, the program will adjust
+* 2/22/22: For Titan or scopes with Advanced Scripting, the program will adjust
 image shift settling times to new, much lower values if ImageShiftDelays are
 still at the original defaults and ISDelayScaleFactor is not set.
 
@@ -36,10 +37,10 @@ still at the original defaults and ISDelayScaleFactor is not set.
 2/22/22: Made FrameSeriesFromVar set up an appropriate beam shift when given
 image shifts on a JEOL.
 
-2/22/22: The tilt delay set in the tilt series setup dialog is now separate
+* 2/22/22: The tilt delay set in the tilt series setup dialog is now separate
 from the general tilt delay which applies during eucentricity.
 
-2/22/22: Added option to iterate beam autocentering.
+* 2/22/22: Added option to iterate beam autocentering.
 
 2/18/22: SEM_4-0-0beta6
 2/18/22: Changed SEMCCD plugin to keep r/f 0 and add "need n" when frames are
@@ -50,13 +51,13 @@ the title after "SerialEMCCD" has also been changed.
 2/17/22: Fixed "No message box on error" in Navigator Acquire interfering with
 proper tilt series termination on error.
 
-2/17/22: Increased available number of scripts to 60.
+* 2/17/22: Increased available number of scripts to 60.
 
-2/16/22: Made alignment in DM with a K3 use the MotionCor2 capability.
+* 2/16/22: Made alignment in DM with a K3 use the MotionCor2 capability.
 
 2/16/22: Added ability to flip an imported map when rotating it.
 
-2/16/22: Made Zemlin tableau use Record images with CTF acquire parameters.
+* 2/16/22: Made Zemlin tableau use Record images with CTF acquire parameters.
 
 2/15/22: Fix crash in frame alignment dialog if settings were never read.
 
@@ -71,7 +72,7 @@ calibrations derived in different ways.
 2/9/22: Guaranteed that image shift would be read from scope after setting it
 to neutral on JEOL (In 3.8).
 
-2/9/22: Made it possible to see Record/Focus areas on all acquire points by
+* 2/9/22: Made it possible to see Record/Focus areas on all acquire points by
 turning on Show acquire in Edit Focus mode.
 
 2/9/22: Attempted to prevent files from being marked as montage when not
@@ -85,7 +86,7 @@ changes (In 3.8).
 2/7/22: Fixed setting View shift offset with shifted View image when
 continuous update is on, or turned on afterwards.
 
-2/7/22: Added script commands to scale an image to bytes, paste two images
+* 2/7/22: Added script commands to scale an image to bytes, paste two images
 side by side or vertically, produce a reduced spectrum scaled to bytes, and
 produce a side-by-side reduced image and scaled spectrum.
 
@@ -93,12 +94,12 @@ produce a side-by-side reduced image and scaled spectrum.
 from when the program was last run; also made all such dialog positions and
 sizes be set when loading settings after startup.
 
-2/7/22: Added button to save Mont-map states, ones having Mont-map instead of
+* 2/7/22: Added button to save Mont-map states, ones having Mont-map instead of
 Record camera parameters, to the State dialog.
 
 2/7/22: Added ability to specify beam shift changes in FrameSeriesFromVar.
 
-2/4/22: Moved menu entry for setting email address from Tilt Series to
+* 2/4/22: Moved menu entry for setting email address from Tilt Series to
 Settings menu.
 
 2/4/22: Added Tilt Series menu entry to set a delay after return to the
@@ -121,7 +122,7 @@ focus" option (In 3.8).
 
 2/2/22: Prevented clicking on Search image from moving focus area (In 3.8).
 
-2/1/22: Added option to beam autocentering to use current Trial parameters
+* 2/1/22: Added option to beam autocentering to use current Trial parameters
 with a specified reduction in beam size.
 
 2/1/22: Made beam autocentering switch a direct detector to linear mode if the
@@ -137,12 +138,12 @@ prevent the regular Trial intensity from being changed by test (in 3.8).
 
 1/28/22: Added missing line of task elements to Acquire at Items table.
 
-1/26/22: Released plugin/server in which saving frames from Ceta 2 may work.
+* 1/26/22: Released plugin/server in which saving frames from Ceta 2 works.
 
 1/26/22: Added special option to keep Trial and Focus at same position while
 allowing other differences.
 
-1/26/22: Added Navigator Edit Mode feature for selecting multiple points by
+* 1/26/22: Added Navigator Edit Mode feature for selecting multiple points by
 holding down Ctrl and the left button and moving the mouse of over points.
 
 1/26/22: Added a report of problems with rotation calibrations.
@@ -157,17 +158,18 @@ separate line.
 become wider instead of wrapping lines; added script command to turn off
 wrapping, and used this box for OKBox and YesNoBox when wrapping is off.
 
-1/25/22: Added rotation and flip value for K2/K3 to mdoc and made frame files
-saved without rotation/flip indicate the value needed with "nrf".
+* 1/25/22: Added rotation and flip value for K2/K3 to mdoc and made frame files
+saved without rotation/flip indicate the value needed with "nrf" (which became
+"need" later).
 
 1/25/22: Added script command to run a script in DM.
 
-1/25/22: Made rough eucentricity use previous image instead of original one as
+* 1/25/22: Made rough eucentricity use previous image instead of original one as
 reference if shift is big enough, since correlating with progressively
 larger shifts is more prone to fail.  Added script commands to set a limit for
 Z movement and to test if last run failed due to the limit.
 
-1/25/22: Changed "To file" spinner in Buffer Control panel to a combo box for
+* 1/25/22: Changed "To file" spinner in Buffer Control panel to a combo box for
 showing and selecting the current file; kept open files in order in title bar.
 
 1/25/22: Added line to snapshot dialog showing active window name, and script
@@ -175,7 +177,7 @@ commands to report and set active window.
 
 1/25/22: Fixed menus when New Window is used after being in Basic mode.
 
-1/20/22: Made most tasks taking lower-magnification tracking shots use Search
+* 1/20/22: Made most tasks taking lower-magnification tracking shots use Search
 instead of View in Low Dose mode if View has an inadequate field of view but
 Search has a better one and is not in LM.  There is a special option to
 override this behavior.
@@ -187,7 +189,7 @@ PriorRecordDose values (In 3.8).
 1/13/22: Set information needed  to get adjustment for high defocus when
 loading a map.
 
-1/13/22: Extended autoloader script commands to support the JEOL autoloader.
+* 1/13/22: Extended autoloader script commands to support the JEOL autoloader.
 
 1/13/22: Added script commands to get the vectors from hole finding and to add
 a title to the header of an image file.
@@ -197,10 +199,10 @@ a title to the header of an image file.
 12/28/21: Fixed reporting of frame alignment results for Falcon 2 (in 3.8).
 
 12/24/21: SEM_3-8-17
-12/24/21: Made Acquire at Items make to the position with backlash instead of
+12/24/21: Made Acquire at Items move to the position with backlash instead of
 doing the backlash routine afterwards when making a single-frame map.
 
-12/24/21: Made scroll wheel zoom image only when over the image window and
+* 12/24/21: Made scroll wheel zoom image only when over the image window and
 scroll either the log or the Navigator table when it is over those windows.
 
 12/24/21: Fixed saving of maps when (disabled) skipping of save is checked and
@@ -214,14 +216,14 @@ program too (In 3.8).
 12/23/21: Fixed image read in for Realign to Item being displayed at the wrong
 zoom (In 3.8).
 
-12/19/21: Upgraded state dialog and state saving so that Record, View, and
+* 12/19/21: Upgraded state dialog and state saving so that Record, View, and
 Search states can all be saved and set, including focus offsets, and so that
 target defocus can be saved outside of Low Dose mode.
 
 12/19/21: Prevented several scenarios for getting stuck with a View/Search
 defocus offset in other modes.
 
-12/19/21: Added support in SerialEM for saving and aligning frames from
+* 12/19/21: Added support in SerialEM for saving and aligning frames from
 Ceta 2 camera (plugin not finished).
 
 12/14/21: Fixed defocus offset spinner for Search changing actual defocus when
@@ -245,7 +247,7 @@ to do backlash adjustment after making a montage map.
 
 11/23/21: More changes for camera timing calibration with NoShutter = 2.
 
-11/23/21: Changed from two primary actions for saving images in Acquire at
+* 11/23/21: Changed from two primary actions for saving images in Acquire at
 Items to one action with a checkbox for making a map.  Also allowed this action
 to be with View/Search images regardless of whether a map is being made.
 
@@ -287,7 +289,7 @@ inversion of bidirectional series fails and leaves file closed.
 11/16/21: Added scriptable properties to control image toggling during stage
 calibration.
 
-11/16/21: Enabled buttons for defining Trial/Focus areas in Search mode.
+* 11/16/21: Enabled buttons for defining Trial/Focus areas in Search mode.
 
 11/16/21: Fixed some problems with using OpenNewMontage when no montage was
 opened before.
@@ -299,7 +301,7 @@ overflow for arrays > 2 Gpixels, except for images sent to Python.
 
 11/6/21: Made ReportLastFrameFile report directory and filename separately.
 
-11/6/21: Made the mouse wheen scroll Navigator table if it is the last item
+11/6/21: Made the mouse wheel scroll Navigator table if it is the last item
 clicked on, without giving the dialog focus.
 
 11/3/21: Fixed problem with holefinder assigning points to grid after
@@ -309,13 +311,13 @@ correlation with raw average gives no usable points (In 3.8).
 
 11/2/21: Added script command to set base name for frame files.
 
-11/2/21: Made hole finder check spacing between holes with analysis of
+* 11/2/21: Made hole finder check spacing between holes with analysis of
 autocorrelation peaks using pixel size routine.
 
 11/2/21: Added script command to find spacing and vectors of a lattice of
 points in an autocorrelation using the pixel size routine.
 
-11/2/21: Added option to Acquire at Items to take single-image maps in Low
+* 11/2/21: Added option to Acquire at Items to take single-image maps in Low
 Dose with View or Search.
 
 10/30/21: SEM_3-8-16
@@ -330,7 +332,7 @@ acquire parameters.
 10/25/21: Fixed clearing of Acquire flag after Acquire at Items runs a Python
 script, and passing exception from camera and possibly other errors back.
 
-10/25/21: Added support for getting refrigerant level and time remaining until
+* 10/25/21: Added support for getting refrigerant level and time remaining until
 a refill from JEOL scopes.
 
 10/25/21: Fixed hole finder crash with very bad pixel size defined and added
@@ -346,7 +348,7 @@ diagonal when pixel size is too large.
 10/12/21: Added ability to start a SimpleOrigin refill (requires latest
 software) and added script command to turn system on or off.
 
-10/12/21: Changed terminology for dose rate from "unbinned pixel" to "physical
+* 10/12/21: Changed terminology for dose rate from "unbinned pixel" to "physical
 pixel".
 
 10/12/21: Added a camera type for DE Apollo camera and changed dialogs as
@@ -362,7 +364,7 @@ at different defocus offsets from the slope of an extended autofocus
 calibration and provided a new script to measure the scaling directly if
 necessary; CHANGED MEANING OF ZbyGFocusScalings PROPERTY COMPLETELY.
  
-10/6/21: Added commands to do an autofocus calibration over a wider range with
+* 10/6/21: Added commands to do an autofocus calibration over a wider range with
 measurements at a sparse interval outside the normal range; increased
 limit on number of points in a focus calibration.
 
@@ -480,7 +482,7 @@ mag index.
 
 8/23/21: Fixed termination of external script from remote machine (Linux?).
 
-8/23/21: Changed multi-hole combiner to use image positions for a montage
+* 8/23/21: Changed multi-hole combiner to use image positions for a montage
 whenever possible (i.e., if points were drawn on a loaded map), which fixes
 problem of bad center positions when there are big piece offsets.
 
@@ -498,7 +500,7 @@ and folders.
 8/18/21: Prevented problem with mismatched sizes in shift calibrations when
 using trial area (In 3.8).
 
-8/17/21: Put stage coordinates of marker point in status bar when Navigator
+* 8/17/21: Put stage coordinates of marker point in status bar when Navigator
 is open.
 
 8/17/21: Prevented some inappropriate operations when the stage is busy.
@@ -515,17 +517,17 @@ output file for frame saving cannot be opened (In 3.8).
 when the file to be reordered for bidirectional or dose-symmetric series
 cannot be renamed (i.e., when open elsewhere) (In 3.8).
 
-8/4/21: Expanded the set of tasks that Navigator Acquire at Items can run,
+* 8/4/21: Expanded the set of tasks that Navigator Acquire at Items can run,
 provided flexibility in where and when they run, added multiple Records as
 another primary acquisition action, revamped the Acquire at Items dialog and
 made it nonmodal so other setup dialogs can be opened and checked from it, and
 added various other options that should allow SPA acquisition to be done
 without scripts.
 
-8/4/21: Added routine for managing nitrogen filling and vacuum pump events and
+* 8/4/21: Added routine for managing nitrogen filling and vacuum pump events and
 a dialog for setting parameters.
 
-8/4/21: Added routine for aligning to a template image, which is saved as a
+* 8/4/21: Added routine for aligning to a template image, which is saved as a
 map and has to look like a cropped image.
 
 8/4/21: SEM_3-9-0beta9
@@ -546,9 +548,9 @@ with a Rio or Oneview (IN 3.8).
 
 6/30/21: Made Script stop after an error doing arithmetic expression (In 3.8).
 
-6/29/21: Added routine to set eucentricity by measuring defocus.
+* 6/29/21: Added routine to set eucentricity by measuring defocus.
 
-6/22/21: Added ability to use "Shift to Marker" on mag-specific subsets of
+* 6/22/21: Added ability to use "Shift to Marker" on mag-specific subsets of
 items and to save shifts for reuse on newly acquired maps.
 
 6/17/21: Added partial support for SimpleOrigin nitrogen filling system.
@@ -560,11 +562,11 @@ when 'TSCheckScopeDisturbances' causes it to wait before a Record.
 6/15/21: Saved tilt series, montaging, and file opening parameters to the
 Navigator file.
 
-6/15:21: To allow extra tilt series output settings to be varied in batch
+* 6/15:21: To allow extra tilt series output settings to be varied in batch
 acquisitions, added a button to open the extra output dialog to the tilt
 series setup dialog when it is opened from Navigator.
 
-6/12/21: Added support for FEI Selectris filter.
+* 6/12/21: Added support for FEI Selectris filter.
 
 6/12/21: Added support for CFEG flashing on FEI scopes.
 
@@ -605,7 +607,7 @@ mode images (In 3.8).
 
 5/9/21: Fixed ReportIfNavOpen to give 1 when no file defined (In 3.8).
 
-5/5/21: Added ability to embed Python inside regular scripts.
+* 5/5/21: Added ability to embed Python inside regular scripts.
 
 5/5/21: Fixed display of multi-shot areas when multiple holes not selected (In
 3.8).
@@ -621,11 +623,11 @@ states gets restored, after asking the user to confirm.
 
 4/29/21: Fix potential crash changing STEM mag on JEOL.
 
-4/29/21: Allowed a regular script function to be called from Python, switched
+* 4/29/21: Allowed a regular script function to be called from Python, switched
 to collecting standard output from Python and putting it in the log so that
 the standard 'print' function could be used.
 
-4/28/21: Allowed a regular script to be called from a Python script, and a
+* 4/28/21: Allowed a regular script to be called from a Python script, and a
 Python script to be called from a regular script.  Added ability to return
 values from a function or script call with the Return command.
 
@@ -636,7 +638,7 @@ values from a function or script call with the Return command.
 escape backslashes so they are not misinterpreted in Python, add library to
 module package.
 
-4/23/21: Changed Python scripting to run Python executable with script to
+* 4/23/21: Changed Python scripting to run Python executable with script to
 solve import problems; this also allows external control from a Python
 script.  Added a command to place an image into a buffer.
 
@@ -660,7 +662,7 @@ detector (In 3.8).
 
 3/31/21: Added optional entry to UpdateGroupZ to update the next item's group.
 
-3/31/21: Added ability to use a monospaced font and to adjust
+* 3/31/21: Added ability to use a monospaced font and to adjust
 indentation more easily in script editor.
 
 3/29/21: Fixed commands taking strings from the rest of the line for Python.
@@ -668,7 +670,7 @@ indentation more easily in script editor.
 3/27/21: Improvements and changes in behavior for Python support; new plugins
 available.
 
-3/23/21: Python scripting now works, with plugins available.
+* 3/23/21: Python scripting now works, with plugins available.
 
 3/22/21: Fixed dose-symmetric series in STEM mode to stop saving, restoring,
 or adjusting intensity (In 3.8).
@@ -702,7 +704,7 @@ interpreter embedded in a plugin.
 2/23/21: Added camera property to set delay from setting intensity to starting
 acquisition.
 
-2/22/21: Added options to use Search area to Autofocus script command.
+* 2/22/21: Added options to use Search area to Autofocus script command.
 
 2/22/21: SEM_3-8-7
 2/22/21: Added button to Hole Finder to toggle display of points while button
@@ -723,7 +725,7 @@ points that would be acquired by MultipleRecords using only points that
 include a specified minimum number of holes.  ReportNavItem also sets a
 variable for the number of holes that would be acquired for one item.
 
-2/16/21: Made excluded points in the hole finder be colored light or dark blue
+* 2/16/21: Made excluded points in the hole finder be colored light or dark blue
 depending on which mean cutoff they exceeded.
 
 2/11/21: SEM_3-9-0beta4
@@ -757,7 +759,7 @@ Shrmemframe; this will restore direct GPU access from SEMCCD on some systems.
 1/12/21: Echo in scripts will now preserve indentation. There are now variables
 defined with the script name and long name.
 
-1/10/21: Expanded ability to hide dialog elements and made it possible to
+* 1/10/21: Expanded ability to hide dialog elements and made it possible to
 close up empty space in control panels after hiding.
 
 1/8/21: Made various normalizations happen after a mag change on a JEOL if
@@ -782,17 +784,17 @@ vs. before), broken 6/3/20 (In 3.8).
 12/30/20: Fixed orientation of drawn circles for multiple Records in a hole to
 match what will be taken (In 3.8).
 
-12/27/20: Added ability to do rough eucentricity with Search area.
+* 12/27/20: Added ability to do rough eucentricity with Search area.
 
 12/23/20: Added script command to set a PLA offset between cameras on JEOL
 scopes using PLA for image shift, and a camera property to designate cameras
 as on or off axis on scopes using IS.
 
-12/16/20: Moved slow lens changes with normalizations into threads so that the
+* 12/16/20: Moved slow lens changes with normalizations into threads so that the
 user interface stays responsive during long changes.
 
-12/15/20: Added option to draw tilt axis to Image Display panel and added a
-tilt axis line on View/Serach images when defining Trial/Focus areas.
+* 12/15/20: Added option to draw tilt axis to Image Display panel and added a
+tilt axis line on View/Search images when defining Trial/Focus areas.
 
 12/14/20: Fixed problem with frames not being saved when aligning whole tilt
 series in IMOD is selected and the Save checkbox is not checked (In 3.8).
@@ -837,7 +839,7 @@ assessing whether focus calibration exists in Low Dose; used Focus area values
 instead (In 3.8).
 
 11/25/20: SEM_3-9-0beta1  REQUIRED FOR USING LATER BETA SERIALEM.EXE
-11/24/20: Added support for HDF files.
+* 11/24/20: Added support for HDF files.
 
 11/24/20: Added property JeolBeamRampupTimeout to allow beam to be turned on
 from within SerialEM on systems with rampup problem.
@@ -894,7 +896,7 @@ in A or in a specified buffer.
 
 11/10/20: Added script command to set tilt axis offset.
 
-11/10/20: Added capability to define dialog and menu items to hide or disable
+* 11/10/20: Added capability to define dialog and menu items to hide or disable
 unconditionally and also to define a selectable "basic mode" with a list of
 items to hide or disable.
 
@@ -909,7 +911,7 @@ from saving calibrations.
 11/3/20: Added property to skip the check of neutral IS values on a JEOL
 (In 3.8).
 
-11/2/20: Changed cosine power specification in the tilt series setup dialog to
+* 11/2/20: Changed cosine power specification in the tilt series setup dialog to
 be expressed in terms of increase in exposure from 0 to 60 degrees.
 
 11/2/20: Added properties to control tilt range and increment of the fine
@@ -952,7 +954,6 @@ low dose for alignments shots.
 
 10/16/20: Added property to use Trial size for tasks instead of full field.
 
-
 10/8/20: Fixed taking frames totalling more than with 4 Gpixels with Tietz
 burst mode (may work only with GPU version) (In 3.8).
 
@@ -963,7 +964,7 @@ functions for commands.
 
 10/4/20: Fixed names of counting mode movies for newer DE servers (In 3.8).
 
-10/4/20: Enabled display of Low Dose areas on Search images.
+* 10/4/20: Enabled display of Low Dose areas on Search images.
 
 10/3/20: Fixed rounding of exposure times when setting up variable frame sums
 for K3 and improved behavior of frame summing setup upon changes (In 3.8).
