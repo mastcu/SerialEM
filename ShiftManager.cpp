@@ -82,6 +82,7 @@ CShiftManager::CShiftManager()
   mISdelayNeeded[1] = 1.;
   mDelayPerMagDoubling = 0.25;
   mISdelayScaleFactor = 1.;
+  mStartupForISDelays = 0.8f;
   mISTimeOut = GetTickCount();
   mDefocusZFactor = 1.;
   mNormalizationDelay = 2000;
@@ -168,16 +169,28 @@ void CShiftManager::Initialize()
       mISmoved[ind] = newDefaults[2 * ind];
       mISdelayNeeded[ind] = newDefaults[2 * ind + 1];
     }
-    mDelayPerMagDoubling = 0.1f;
+    ACCUM_MIN(mDelayPerMagDoubling, 0.1f);
+    SEMTrace('1', "Image shift delays were at old defaults and are being set to new "
+      "recommended values");
+    mStartupForISDelays = 0.25f;
   }
 
   // Scopes with the new default: adjust mag doubling
-  if (stillNewDflt && FEIscope)
-    mDelayPerMagDoubling = 0.1f;
+  if (stillNewDflt && FEIscope) {
+    if (mDelayPerMagDoubling > 0.1f)
+      SEMTrace('1', "Image shift delay table has new recommended values, "
+        "reducing mag dependency factor");
+    ACCUM_MIN(mDelayPerMagDoubling, 0.1f);
+    mStartupForISDelays = 0.25f;
+  }
 
-  // JEOL scopes still need a distance dependent delay but lower scaling - TODO
-  //if (stillOldDflt && JEOLscope)
-    //mISdelayScaleFactor = 0.25f;
+  // JEOL scopes still need a distance dependent delay but lower scaling
+  if (stillOldDflt && JEOLscope) {
+    mISdelayScaleFactor = 0.2f;
+    SEMTrace('1', "Image shift delays were at old defaults; ISdelayScaleFactor is being"
+      " set to new recommended value, %.2f", mISdelayScaleFactor);
+    mStartupForISDelays = 0.25f;
+  }
 
 }
 

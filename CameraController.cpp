@@ -4925,12 +4925,13 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
   UINT genTOorig = genTimeOut;
   UINT tickCount = GetTickCount();
   float startUp = 0.;
+  float assumedStart = mShiftManager->GetStartupForISDelays();
 
   // Skip the additional delay for image shift and a STEM camera
   if (!(mParam->STEMcamera && mShiftManager->GetLastTimeoutWasIS())) {
-    startUp = 0.8f - mParam->startupDelay;
+    startUp = assumedStart - mParam->startupDelay;
     if (mParam->K2Type)
-      startUp = 0.8f - B3DMIN(1.4f, mParam->startupDelay);
+      startUp = assumedStart - B3DMIN(1.4f, mParam->startupDelay);
   }
   if (mParam->GatanCam && !mParam->onlyOneShutter && !mParam->STEMcamera)
     startUp -= mParam->builtInSettling;

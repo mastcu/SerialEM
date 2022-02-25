@@ -705,12 +705,60 @@
           this.</LI></OL>
       <P><A name="hid_calibration_set_is_delay_factor"></A><B>Set IS Delay Factor
         command (Calibration menu)</B></P>
-      <P style="Z-INDEX: 0">Use this command to set a factor for scaling the delay that
-        occurs after an image shift.&nbsp; This change applies&nbsp;only&nbsp;during&nbsp;this session
-        of the program; a permanent value can be set with the property
-        ISdelayScalingFactor.&nbsp; This delay is imposed because it takes some time for
-        image shift to settle at the target position, particularly on&nbsp;a Thermo/FEI scope.&nbsp;
-        The need for more or less delay can be assessed by running the&nbsp;<A href="#hid_calibration_imageshift">Image&nbsp;Shift
+      <P style="Z-INDEX: 0">Use this command to set a factor for scaling the delay that 
+        occurs after an image shift.&nbsp; This change applies&nbsp;only&nbsp;during&nbsp;this session 
+        of the program; a permanent value can be set with the property 
+        ISdelayScalingFactor.&nbsp; This delay is imposed because it takes some time for 
+        image shift to settle at the target position, particularly on&nbsp;older Thermo/FEI 
+        scopes.&nbsp; Image shift delay was re-evaluated in February 2022, leading to 
+        some new recommended defaults and the ability of the program to adopt the new 
+        defaults automatically in some cases.&nbsp; These changes are described in
+        <a href="about_properties.htm#ISdelays">ImageShiftDelays</a>,
+        
+         which should be read thoroughly before trying to adjust delays.&nbsp; You 
+        should also make sure that there is a roughly accurate value for the camera 
+        property 'StartupDelay' for any cameras where image shift settling is an issue.</P>
+    <P style="Z-INDEX: 0"><em>The new way</em> to assess delays involves using a K2 or K3 
+      camera and taking frames while image shift is applied with the 
+      FrameSeriesFromVar command.&nbsp; (Minor program changes would be needed to use 
+      other frame-saving cameras for this.)&nbsp; A typical script is:
+      <BR>&nbsp;&nbsp; var = { 0.1 0 0 5 2 0 }
+      <BR>&nbsp;&nbsp; FrameSeriesFromVar var 20 0.1
+      <BR>&nbsp;&nbsp; Record
+      <br />
+    </P>
+    <P style="Z-INDEX: 0">where Record is set up to save frames with a 5 sec exposure 
+      and 0.08 sec frame time, and pixel size is around 1 Angstrom.&nbsp; The '2' that 
+      is the next to last number in the 'var' line represents the desired image shift 
+      in X to test; a shift in Y could be used instead.&nbsp; If the specimen is not 
+      already stable, one or more conditioning shots should be done with no frame 
+      saving.&nbsp; After the script is run:</P>
+    <ul>
+      <li>
+        <P style="Z-INDEX: 0">
+&nbsp;The frame file is opened in 3dmod to find 
+      the first frame at the new position, e.g. 18.&nbsp; If the shift is not in the first 
+          third of the frames, you need to adjust the StartupDelay in the camera 
+          properties; if the shift is too early, adjust oneof&nbsp; the '0.1' delays in the 
+          script.</P>
+      </li>
+      <li>
+        <P style="Z-INDEX: 0">
+          Alignframes is run on unnormalized frames with a command such as:
+          <br />&nbsp;&nbsp; alignframes -out junk.ali -vary 0.05,0.06,0.7,0.08 -pai 13 -titl -fra 18,63 -xf 2.xf 001.tif
+          <br />where the '-titl' is added to read gain reference and defect files from 
+          the file header and '18' was observerd to be
+          the first frame after the shift. This outputs a file of shifts in '001.2.xf'.</P>
+      </li>
+      <li>
+        <P style="Z-INDEX: 0">
+          The curve is examined with
+        <br />&nbsp;&nbsp; tomodataplots -type 3 001.2.xf
+        <br /> and the point is found where the drift has settled to roughly 1 Angstrom/sec.</P>
+      </li>
+    </ul>
+    <P style="Z-INDEX: 0"><em>The old way</em> of assessing the need for more or less delay was 
+      to run the&nbsp;<A href="#hid_calibration_imageshift">Image&nbsp;Shift
         command</A> in the Calibrate menu.&nbsp;&nbsp;First set the debug output key letters to
         anything&nbsp;other than 0 (1 will do).&nbsp; Also, turn off <A href="menu_camera.htm#hid_camera_postactions">
           Post-actions</A>&nbsp;in the&nbsp;Camera menu.&nbsp;Calibrate image shift and at the end it
@@ -760,6 +808,13 @@
         differences that appear to be due to incomplete settling, but if the differences
         remain constant as the scaling factor is increased, then the lowest factor at
         which the differences&nbsp;have these stable values&nbsp;is appropriate.</P>
+    <P style="Z-INDEX: 0">Note that this method cannot detect settling times less than 
+      the startup time of the camera, the time from when an image is requested to when 
+      the exposure starts.&nbsp; The 0.8 sec adjustment mentioned in 
+      <a href="about_properties.htm#ISdelays">ImageShiftDelays</a> as the default for 
+      the property 'StartupForISDelays' derives from the fact that
+      the table was first prepared using a camera with that startup time.
+    </P>
       <P><A NAME="hid_process_findpixelsize"></A><B>Find Pixel Size command (Calibration
         - Pixel Size sub-menu)</B></P>
       <P>Use this command to analyze an image of the cross-line replica grating in

@@ -2840,11 +2840,12 @@
           </TD>
         </TR>
         <TR VALIGN="top">
-          <TD>ImageShiftDelays</TD>
+          <TD><a name="ISdelays"></a>ImageShiftDelays</TD>
           <TD>A table of delays to apply after an image shift. The delays are applied before
-            taking an image, and they are scaled up or down in some situations. They are
+            taking an image, and they are scaled up or down in some situations. By default, they are
             also adjusted up or down for camera startup and clearing times lower or higher
-            than 0.8 seconds. The line with this entry must contain the number of entries to
+            than 0.8 seconds (the default for 'StartupForISDelays'). The line with this entry must 
+            contain the number of entries to
             follow, then there must be that many lines of the following form:
             <BR>
             &nbsp;&nbsp;&nbsp; Distance in microns&nbsp;&nbsp;&nbsp;&nbsp; Delay in seconds
@@ -2852,6 +2853,44 @@
             movement, which is excessively long for large image shifts.  With at least two
             entries, it will interpolate between them and extrapolate beyond them; with one
             entry it will use the single delay at all moves.
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;The values originally distributed in properties files through 2021 were:
+            <br>
+<br>&nbsp;&nbsp;    ImageShiftDelays 7
+<br>&nbsp;&nbsp;   0.1 0.
+<br>&nbsp;&nbsp;   0.3 0.4
+<br>&nbsp;&nbsp;   0.8 0.9
+<br>&nbsp;&nbsp;   1.6 1.7
+<br>&nbsp;&nbsp;   3. 3.
+<br>&nbsp;&nbsp;   3.5 3.5
+<br>&nbsp;&nbsp;   4.0 3.7
+            </br>
+            </br>
+            &nbsp;&nbsp;&nbsp;&nbsp;If these values are still present and 'ISdelayScaleFactor' still has its default 
+            value of 1, the values will be revised based on new measurements from frames in 
+            two cases: 1) when a Thermo/FEI scope can be recognized as of a newer generation, 
+            namely when either it is a Titan or the program uses Advanced Scripting, the values 
+            are changed internally to the new recommended values, listed below, and
+            'ExtraISdelayPerMagDoubling' is changed to 0.1; or 2) for a JEOL scope, the 
+            values are left as they are and 'ISdelayScaleFactor' is set to 0.2.<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;For a Talos or Glacios that can <i>not</i> be recognized because it does not use Advanced Scripting,
+            it is recommended that the table be changed to these values:
+            <br>
+<br>&nbsp;&nbsp;   ImageShiftDelays 4
+<br>&nbsp;&nbsp;   0.1 0.
+<br>&nbsp;&nbsp;   0.3 0.4
+<br>&nbsp;&nbsp;   0.5 0.5
+<br>&nbsp;&nbsp;   1.0 0.5
+            </br>
+            </br>
+            &nbsp;&nbsp;&nbsp;&nbsp;When the table is recognized as having these new values and 'ISdelayScaleFactor' is 1, 
+            'ExtraISdelayPerMagDoubling' is changed to 0.1.
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;When the program adjusts values automatically in these 3 cases, it also changes the
+             adjustment for camera startup in 'StartupForISDelays' from 0.8 to 0.25 to reflect the 
+            new way that values were measured.
+            To get a message on startup about whether defaults were recognized and values were changed,
+            set 'DebugOutput' to '1' or a letter.
           </TD>
         </TR>
         <TR>
@@ -2859,7 +2898,7 @@
           <TD>Overall factor for scaling the delay to apply after an image shift.&nbsp; The
             default is 1.0.&nbsp;&nbsp;Use&nbsp;<A HREF="menu_calibration.htm#hid_calibration_set_is_delay_factor">
               Set IS Delay Factor</A> in the Calibrate menu to assess the needed factor;
-            see&nbsp;the instructions there.</TD>
+            see the instructions there.&nbsp; The recommended value is 0.2 for JEOL scopes.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExtraISdelayPerMagDoubling</TD>
@@ -2868,6 +2907,12 @@
             value of 0.25 second, 0.7 * 0.25 is added to the delay with a pixel size of 0.75
             nm, 0.25 is added for 0.5 nm, 1.4 * 0.25 for 0.375 nm, 0.5 is added for 0.25 nm,
             etc.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StartupForISDelays</TD>
+          <TD>Startup time involved in the measurement of the 'ImageShiftDelays', the sum of 'StartupDelay' and
+            'BuiltInSettling' camera properties.&nbsp; The default is 0.8; this should be set to ~0.25 if new 
+            delays are entered based on frames.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>LowDoseBeamNormDelay</TD>

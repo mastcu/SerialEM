@@ -111,8 +111,9 @@ public:
     float relaxation = 0.);
   float *GetISmoved() {return &mISmoved[0];};
   float *GetISdelayNeeded() {return &mISdelayNeeded[0];};
-  SetMember(int, NumISdelays)
-  GetSetMember(float, DelayPerMagDoubling)
+  SetMember(int, NumISdelays);
+  GetSetMember(float, DelayPerMagDoubling);
+  GetSetMember(float, StartupForISDelays);
   void SetISTimeOut(float inDelay);
   void SetGeneralTimeOut(UINT inTime);
   void SetGeneralTimeOut(UINT inTicks, int interval);
@@ -230,6 +231,7 @@ private:
   float mISdelayNeeded[MAX_IS_DELAYS];
   float mDelayPerMagDoubling;  // Extra delay per halving of Record pixel below 1 nm
   float mISdelayScaleFactor;   // Overall factor for scaling delay
+  float mStartupForISDelays;   // Startup value to be assumed built in to IS delays
   float mDefocusZFactor;       // Fudge factor to get from actual Z to defocus change
   BOOL mInvertStageXAxis;      // Flag that the X axis of stage coordinates is inverted
   int mStageInvertsZAxis;      // Flag that Z axis in inverted (Hitachi)
