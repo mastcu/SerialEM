@@ -210,8 +210,6 @@
         <BR>
         <A href="#setup_final">Final Tasks</A>
         <BR>
-        <A href="#setup_timing_optional">Obsolete Tuning of Camera Timing</A>
-        <BR>
         <A href="#separate_kv">Setting Up for a Separate Voltage</A><br />
         <a href="#nanoprobe">Setting Up to Use Nanoprobe TEM on Thermo/FEI Scopes </a>&nbsp;<BR>
         <a href="#alpha_beamshift">Alpha and Beam Shift Calibration Issues on JEOL scopes </a>&nbsp;<BR>
@@ -1706,13 +1704,11 @@
       <P>Camera timing settings are important for proper function of SerialEM's 'Dual
         shuttering - minimum exposure' option, which is needed to minimize specimen
         exposure using the standard shutter and to provide a flexible range of drift
-        settling times. Measuring them involves two steps: using a DigitalMicrograph
+        settling times with older Gatan CCD cameras. Measuring them involves two steps: using a DigitalMicrograph
         script to estimate the BuiltInSettling, or clear time of the CCD chip; and using
         a procedure within SerialEM to determine the average delay for an exposure to
         start after SerialEM issues a request for one, and the variability in this
-        delay. An alternative procedure involving an oscilloscope is described below but
-        is not needed because the measurement of the startup delay time makes up for any
-        inaccuracies in the clearing time.</P>
+        delay.</P>
       <P>If the camera controls only one shutter, skip the DigitalMicrograph script and
         just follow the procedure described in the next section. It is not so important
         but it will to provide a check on the timing for performing tasks after an
@@ -1753,11 +1749,12 @@
     <P>&nbsp;</P>
       <P><A name="setup_tietz_timing"></A><B>Measuring Camera Timing for Non-Gatan
         Camera or Gatan Camera with One Shutter (Priority 2)</B></P>
-      <P>Calibration of the timing of a Tietz camera, or a Gatan camera with only one
-        shutter, is needed only to allow the program to takes actions (e.g., tilt and
-        image shift) during image readout or frame-saving. It is not needed for Thermo/FEI or
-        DE cameras where
-        these actions are not allowed because the timing is inherently more
+      <P>Calibration of the timing of other kinds of cameras, or a Gatan camera with only one
+        shutter, is needed for two reasons: 1) in general, an approximately correct 
+        value of stratup delay is needed for delays after image shift and other 
+        drift-producing actions to be imposed correctly; 2) for some cameras, it will allow the program to takes actions (e.g., tilt and
+        image shift) during image readout or frame-saving. For Thermo/FEI or
+        DE cameras, these actions are not allowed because the timing is inherently more
         unpredictable. Change the 'Trial' camera parameters so that the exposure time is
         0.4 seconds and set the binning to get a 1024x1024 pixel image. Take a 'Trial'
         picture without a specimen and adjust the beam to give an image with moderately
@@ -3491,39 +3488,6 @@ MoveStage 0 0 -$zRange / 2.
     Desktop using these folders as described
     in <A HREF="#shortcutsArgs">Shortcuts, Command Line Arguments, and
     Administrator mode</A>.
-    <P>&nbsp;</P>
-      <P><A name="setup_timing_optional"></A><B>Obsolete Tuning of Camera Timing (For the
-          Sake of Completeness)</B></P>
-      <P>If you want to measure the BuiltInSettling exactly, you need a two-channel
-        oscilloscope, two BNC cables, and two BNC tees. Connect the standard and
-        alternate shutter outputs on the camera controller to the two scope inputs.
-        Display the alternate shutter above the standard one. The alternate shutter is
-        high (5 V) when it is closed and drops to open. The standard shutter behaves
-        the same for an upper camera and is inverted for the GIF shutter, i.e. low when
-        closed then high when open. Set up for triggering on the downward phase of the
-        alternate shutter. In DM, take a picture with standard shuttering and 0.5
-        second exposure, then take another, which will not require a dark reference.
-        You should get a pattern similar to the first picture shown in<A href="about_camera.htm">Image
-          Acquisition</A> , except that the traces will be upside down. First the
-        beam shutter opens while the standard shutter closes; then the standard shutter
-        opens again for the 0.5 second duration. Your goal is to measure the time
-        between the opening of the beam shutter and the re-opening of the standard
-        shutter to within 20 ms. (Note that if you have the standard shutter connected
-        to the beam shutter and the camera configured to have standard shutter normally
-        closed instead of alternate shutter normally closed, you will see the same
-        behavior but with the two traces swapped.)</P>
-      <P>The ExtraUnblankTime is relevant only if beam shutter control is broken (DM
-        3.6.0 - 3.7.1.5). It would be adjusted by taking 0.1 sec exposures with 'DM
-        film shutter' (which will have constant means) then taking exposures with 'Dual
-        shuttering' (which will vary). The ExtraUnblankTime is adjusted to make the
-        'Dual shuttering' exposures have the same mean, on the average, as the 'DM film
-        shutter' exposure.</P>
-      <P>The ExtraOpenShutter time can be assessed with the oscilloscope set up as
-        described above. Set this entry to 0 and restart SerialEM. Set up an exposure
-        with 'Dual shuttering' and drift settling longer than the clear time, e.g. 1.3
-        seconds. Watch the shutters during an exposure. The beam shutter will open more
-        than 1.3 seconds before the film shutter - the amount extra is the
-        ExtraOpenShutterTime.</P>
     <P>&nbsp;</P>
       <P><A name="separate_kv"></A><B>Setting Up for a Separate Voltage</B></P>
       <P>Here is a procedure for setting up the program to be used extensively at a

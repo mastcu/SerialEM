@@ -4931,7 +4931,8 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
   if (!(mParam->STEMcamera && mShiftManager->GetLastTimeoutWasIS())) {
     startUp = assumedStart - mParam->startupDelay;
     if (mParam->K2Type)
-      startUp = assumedStart - B3DMIN(1.4f, mParam->startupDelay);
+      startUp = assumedStart - B3DMIN((mParam->K2Type == K3_TYPE ? 1.0f : 1.4f), 
+        mParam->startupDelay);
   }
   if (mParam->GatanCam && !mParam->onlyOneShutter && !mParam->STEMcamera)
     startUp -= mParam->builtInSettling;

@@ -1997,7 +1997,8 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
         the startup delay for some other types of cameras, as well as the flyback time
         for a STEM camera. With a proper startup delay, the program can do several
         microscope operations (image shift, stage shift, magnification change) after the
-        exposure ends. The procedure
+        exposure ends for some cameras.  Also, an approximately accurate startup delay is needed
+         for the delay after an image shift or other operations to be imposed correctly. The procedure
         uses full-field images binned to 1024x1024 pixels by default.&nbsp; For a
         non-STEM camera, it
         measures the mean counts in such images with
