@@ -583,9 +583,10 @@ int CParticleTasks::StartOneShotOfMulti(void)
   CString str;
   int nextShot, nextHole;
   int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
-  bool earlyRet = (mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  bool earlyRet = ((mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
-      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)));
+      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type;
   if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
     mMSEarlyRetFrames, false, GetNextShotAndHole(nextShot, nextHole))) {
     StopMultiShot();
