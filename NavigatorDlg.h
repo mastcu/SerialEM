@@ -468,6 +468,7 @@ private:
   int mStepIndForDewarCheck;   // The step at which to do dewar check just before acquire
   bool mDidEucentricity;       // Flag that eucentricity was done one of 3 ways
   bool mWillDoTemplateAlign;   // Flag this will be done, so realign to item can do hybrid
+  bool mWillRelaxStage;        // Flag this will be done, so move can impose backlash
   int mRetValFromMultishot;    // Return value has negative of number being gotten
   int mRunScriptAfterNextAcq;  // Script # to run at end of next acquisition if completed
   int mScriptToRunAtEnd;       // Script # to run when current acquisition ends
