@@ -8877,6 +8877,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mStepIndForDewarCheck = -1;
     mDidEucentricity = false;
     mWillDoTemplateAlign = false;
+    mWillRelaxStage = false;
     for (after = 0; after < 2; after++) {
 
       // Do final things before primary action, at start of second loop
@@ -8892,6 +8893,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
                 mAcqSteps[next + 1] = mAcqSteps[next];
               mNumAcqSteps++;
               mAcqSteps[ind + 1] = ACQ_RELAX_STAGE;
+              mWillRelaxStage = true;
               break;
             }
           }
@@ -8913,8 +8915,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
           mAcqParm->acquireType == ACQUIRE_RUN_MACRO)) {
           mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
           elsewhereInd = -1;
-          if (mAcqParm->relaxStage)
+          if (mAcqParm->relaxStage) {
             mAcqSteps[mNumAcqSteps++] = ACQ_RELAX_STAGE;
+            mWillRelaxStage = true;
+          }
         }
 
         //Open file if needed and run the primary task
@@ -9545,8 +9549,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
       msParams->doCenter, msParams->spokeRad[0],
       msParams->doSecondRing ? msParams->numShots[1] : 0, msParams->spokeRad[1],
       msParams->extraDelay, 
-      (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0) ?
-      msParams->saveRecord : false, msParams->doEarlyReturn, msParams->numEarlyFrames,
+      (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0 || 
+        !camParams->K2Type) ? msParams->saveRecord : false, 
+      camParams->K2Type ? msParams->doEarlyReturn : 0, msParams->numEarlyFrames,
       msParams->adjustBeamTilt, msParams->inHoleOrMultiHole);
     stopErr = B3DMAX(mRetValFromMultishot, 0);
     break;
@@ -9594,8 +9599,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // This adds an idle task....
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    if (GotoCurrentAcquireArea(mAcqParm->acquireType == ACQUIRE_TAKE_MAP && 
-      !mWinApp->Montaging())) {
+    if (GotoCurrentAcquireArea((mAcqParm->acquireType == ACQUIRE_TAKE_MAP || 
+      mWillRelaxStage) && !mWinApp->Montaging())) {
       StopAcquiring();
     }
     return;

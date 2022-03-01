@@ -2911,7 +2911,7 @@ float CFocusManager::EstimatedBeamTiltScaling(void)
 
   // If alpha exists, first look for ones with matching alpha, then take anything if that
   // gave nothing
-  for (loop = 0; loop < mScope->GetHasNoAlpha() ? 1 : 2; loop++) {
+  for (loop = 0; loop < (mScope->GetHasNoAlpha() ? 1 : 2); loop++) {
     for (ind = 0; ind < mFocTab.GetSize(); ind++) {
       camera = mFocTab[ind].camera;
       if (mWinApp->LookupActiveCamera(camera) >= 0 && 
