@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/28/22: Made Navigator Acquire ignore early return setting if camera is not a
+K2/K3 (In 4.0).
+
+2/28/22: Fixed infinite loop when compensating beam tilt for image shift (In
+4.0).
+
+2/28/22: Made Navigator Acquire impose backlash when moving to point if stage
+relaxation is selected (In 4.0).
+
 2/25/22: SEM_4-0-0 stable
 * 2/24/22: Changed RotationAndFlip value in .pcm files when aligning in IMOD to
 -2, so that if nonnormalized files saved without reorientation are aligned in
