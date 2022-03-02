@@ -75,8 +75,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define VERSION_STRING  "SerialEM Version 4.0.0"
-#define TAG_STRING      "(Tagged SEM_4-0-0, 2/25/22)"
+#define VERSION_STRING  "SerialEM Version 4.0.1"
+#define TAG_STRING      "(Tagged SEM_4-0-1, 3/2/22)"
 
 // Offsets for static window inside main frame
 #define STATIC_BORDER_TOP      0
@@ -4487,6 +4487,11 @@ int SEMNumFEIChannels()
 double CSerialEMApp::ProgramStartTime(void)
 {
   return sStartTime;
+}
+
+BOOL CSerialEMApp::GetDummyInstance()
+{
+  return mDummyInstance || (mScope && mScope->GetNoScope() > 0 && mNoCameras > 0);
 }
 
 // Toggle basic mode, managing tool dlgs and calling various things to manage menu/dialogs
