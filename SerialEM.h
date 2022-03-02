@@ -564,7 +564,7 @@ public:
   GetMember(CString, SysSubpath);
   GetMember(CString, ArgPlugDir);
   GetSetMember(int, NoExceptionHandler);
-  GetMember(BOOL, DummyInstance);
+  BOOL GetDummyInstance();
   GetSetMember(BOOL, NoCameras);
   GetSetMember(BOOL, ImageWithStageToolMove);
   GetSetMember(bool, AppExiting);

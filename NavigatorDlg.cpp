@@ -3210,6 +3210,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     return NULL;
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
+  mMagIndForHoles = mCameraForHoles = 0;
 
   // Show multishot somehow if one or other type is on, and either the dialog is open
   // or acquire is on and "Show shots when show acquire" is checked
