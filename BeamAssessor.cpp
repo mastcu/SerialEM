@@ -1502,6 +1502,8 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)mean, doseRate);
   pixel = 10000. * BinDivisorI(camParam) * 
     mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
+  if (camParam->DE_camType && (camParam->CamFlags & DE_APOLLO_CAMERA))
+    pixel *= 2.f;
 
   dtp->dose = doseRate / (pixel * pixel);
   dtp->intensity = intensity;
