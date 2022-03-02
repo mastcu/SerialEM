@@ -1182,11 +1182,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           // Get the convex boundary
           convXinHole.resize(drawnXinHole.size());
           convYinHole.resize(drawnYinHole.size());
-          convexBound(&drawnXinHole[0], &drawnYinHole[0], (int)drawnXinHole.size(), 0., 
-            0., &convXinHole[0], &convYinHole[0], &size, &ptX, &ptY, 
-            (int)drawnXinHole.size());
-          convXinHole.resize(size);
-          convYinHole.resize(size);
+          if (drawnXallHole.size() > 0) {
+            convexBound(&drawnXinHole[0], &drawnYinHole[0], (int)drawnXinHole.size(), 0.,
+              0., &convXinHole[0], &convYinHole[0], &size, &ptX, &ptY,
+              (int)drawnXinHole.size());
+            convXinHole.resize(size);
+            convYinHole.resize(size);
+          }
         }
 
         // If there are hole positions without multi-shot in hole, then need basic box
