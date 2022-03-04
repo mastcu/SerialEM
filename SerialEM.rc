@@ -2346,7 +2346,7 @@ BEGIN
     LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,283,62,8
     LTEXT           "Primary Action-related options",IDC_STAT_TASK_OPTIONS,4,108,101,8
     LTEXT           "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,171,5,120,8
-    LTEXT           "Currently selected task controls",IDC_STAT_SELECTED_GROUP,171,276,156,8
+    LTEXT           "Currently selected task controls",IDC_STAT_SELECTED_GROUP,171,276,216,8
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,3,20,158,1
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,3,106,158,1
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,3,219,158,1
@@ -4845,6 +4845,13 @@ BEGIN
     IDC_DRAW_ALL_REG        "Draw items at all registrations over images"
     IDC_DRAW_NONE           "Turn off drawing of all Navigator items"
     IDC_REFINE_ZLP          "Refine alignment of ZLP with a series of pictures"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_USE_TRIAL_SMALLER   "Center with Trial parameters set at the time, with smaller beam"
+    IDC_SPIN_SMALLER_TRIAL  "Set the percentage reduction in diameter for the Trial beam to use"
+    IDC_ACS_ITERATE         "Take a second image and center again when using beam edges to center"
     IDC_REFINE_WITH_TRIAL   "Use modified Trial instead of Preview images for Refine ZLP in Low Dose"
 END
 
@@ -5694,9 +5701,6 @@ BEGIN
     IDC_EDITACBEXPOSURE     "Set exposure time of image to acquire"
     IDC_RADIOUSEEDGE        "Use centering routine that finds edges in image"
     IDC_RADIOUSECENTROID    "Take average location of counts in image as center of beam"
-    IDC_USE_TRIAL_SMALLER   "Center with Trial parameters set at the time, with smaller beam"
-    IDC_SPIN_SMALLER_TRIAL  "Set the percentage reduction in diameter for the Trial beam to use"
-    IDC_ACS_ITERATE         "Take a second image and center again when using beam edges to center"
 END
 
 STRINGTABLE
