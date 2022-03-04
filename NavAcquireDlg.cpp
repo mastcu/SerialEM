@@ -420,6 +420,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
 
   BuildActionSection();
   SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
+  SetDefID(45678);    // Disable OK from being default button
   return TRUE;
 }
 
@@ -1063,7 +1064,7 @@ void CNavAcquireDlg::FormatTimingString(int actInd, int posInd)
   switch (mActions[actInd].timingType) {
   case NAA_EVERY_N_ITEMS:
     if (mActions[actInd].everyNitems <= 1)
-      str = "every item";
+      str = "Every item";
     else
       str.Format("Every %d items", mActions[actInd].everyNitems);
     break;
