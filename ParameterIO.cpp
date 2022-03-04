@@ -2559,7 +2559,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
     "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
-    "toolarguments", "pathtopython"};
+    "toolarguments", "pathtopython", "endifversionbelow"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
