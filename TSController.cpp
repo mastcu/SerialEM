@@ -359,6 +359,7 @@ CTSController::CTSController()
   mAutosaveXYZ = false;
   mDebugMode = false;
   mTerminateOnError = 0;
+  mOriginalTermOnError = 0;
   mTermFromMenu = false;
   mInInitialChecks = false;
   mBackingUpTilt = 0;
@@ -4962,6 +4963,7 @@ void CTSController::DoFinalTerminationTasks()
     mDocWnd->DoCloseFile();
   if (mWinApp->mStackView)
     mWinApp->mStackView->CloseFrame();
+  mOriginalTermOnError = 0;
 }
 
 
