@@ -17,6 +17,7 @@
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "EMscope.h"
+#include "MainFrm.h"
 #include "ParameterIO.h"
 #include "ProcessImage.h"
 #include "FocusManager.h"
@@ -408,6 +409,8 @@ void CNavigatorDlg::OnCancel()
   if (AskIfSave("closing window?"))
     return;
   mHelper->SetCollapseGroups(m_bCollapseGroups);
+  if (!mWinApp->mMainFrame->GetClosingProgram())
+    Redraw();
 
   // DO NOT call base class, it will leak memory
   //CDialog::OnCancel();
@@ -1166,6 +1169,7 @@ void CNavigatorDlg::OnEditMode()
   if (m_bEditFocus) {
     m_bEditFocus = false;
     UpdateData(false);
+    Redraw();
   }
   if (m_bEditMode) {
     EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
@@ -3205,6 +3209,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   int ring;
   if (!SetCurrentItem(true))
     mItem = NULL;
+  if (m_bCollapseGroups)
+    mItem = GetSingleSelectedItem();
   *acquireBox = NULL;
   if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
     return NULL;

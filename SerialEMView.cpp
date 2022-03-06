@@ -1033,7 +1033,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
-  int lastGroupID = -1, lastGroupSize, size, numPoints;
+  int lastGroupID = -1, lastGroupSize, size, numPoints, tempInd;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
@@ -1111,7 +1111,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         ((item->mAcquire || item->mTSparamIndex >= 0) && navigator->m_bShowAcquireArea))){
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
-        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, iDraw);
+        tempInd = iDraw;
+        if (iDraw < 0 && navigator->GetSingleSelectedItem(&currentIndex))
+          tempInd = currentIndex;
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, tempInd);
         if (iDraw < 0) {
           mNavLDAreasXcenter = ptX;
           mNavLDAreasYcenter = ptY;
@@ -1948,6 +1951,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
   BOOL legal, used = false;
   CString lenstr;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
+  bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   EMimageBuffer *imBuf;
   CProcessImage *processImg = mWinApp->mProcessImage;
   CRect rect;
@@ -1966,9 +1970,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
-      if (!mDrewLDAreasAtNavPt && mWinApp->mNavigator && (legal || 
-        (!shiftKey &&
-        (GetAsyncKeyState(VK_CONTROL) / 2 || mWinApp->mNavigator->InEditMode())) ||
+      if ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) && mWinApp->mNavigator && 
+        (legal || (!shiftKey && (ctrlKey || mWinApp->mNavigator->InEditMode())) ||
         (shiftKey && mWinApp->mNavigator->InEditMode())))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);
