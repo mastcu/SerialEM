@@ -1737,14 +1737,16 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   mShiftManager->ApplyScaleMatrix(aInv, offsetX, -offsetY, specX, specY);
   newAxis = imBuf->mBinning * (specX < 0 ? -1 : 1.) * sqrt(specX * specX + specY * specY);
   if (navArea) {
-    item = mWinApp->mNavigator->GetCurrentItem();
-    item->mFocusAxisPos = (float)newAxis;
-    item->mRotateFocusAxis = state.rotateAxis;
-    item->mFocusAxisAngle = state.axisRotation;
-    item->mFocusXoffset = state.focusXoffset;
-    item->mFocusYoffset = state.focusYoffset;
-    mWinApp->mNavigator->SetChanged(true);
-    mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetCurrentIndex());
+    item = mWinApp->mNavigator->GetSingleSelectedItem();
+    if (item) {
+      item->mFocusAxisPos = (float)newAxis;
+      item->mRotateFocusAxis = state.rotateAxis;
+      item->mFocusAxisAngle = state.axisRotation;
+      item->mFocusXoffset = state.focusXoffset;
+      item->mFocusYoffset = state.focusYoffset;
+      mWinApp->mNavigator->SetChanged(true);
+      mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetCurrentIndex());
+    }
   } else {
     ldArea->axisPosition = mLDParams[conSet].axisPosition + newAxis;
     if (m_bRotateAxis)

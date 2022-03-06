@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/6/22: Fixed crash adjusting focus position with Navigator "Edit focus" when
+groups are collapsed, made several other operations in Edit focus mode work
+right with groups collapsed, and allowed Ctrl-left click to select a point in
+Edit focus mode (In 4.0).
+
 3/4/22: Fixed "TILT SERIES TERMINATING" messages showing instead of message
 boxes (In 4.0).
 
