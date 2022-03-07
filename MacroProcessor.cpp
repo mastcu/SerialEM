@@ -3830,12 +3830,12 @@ void CMacroProcessor::LeaveCallLevel(bool popBlocks)
   ClearVariables(VARTYPE_LOCAL, mCallLevel);
   if (mCallFunction[mCallLevel])
     mCallFunction[mCallLevel]->wasCalled = false;
-  mCallLevel--;
-  if (mCurrentMacro == mNeedClearTempMacro) {
+  if (mCurrentMacro == mNeedClearTempMacro && mClearTempAtCallLevel == mCallLevel) {
     mMacros[mNeedClearTempMacro] = "";
     mNumTempMacros--;
     mNeedClearTempMacro = -1;
   }
+  mCallLevel--;
   mCurrentMacro = mCallMacro[mCallLevel];
   mCurrentIndex = mCallIndex[mCallLevel];
   mLastIndex = -1;
@@ -4945,6 +4945,66 @@ void CMacroProcessor::CloseFileForText(int index)
       mTextFileArray.RemoveAt(ind);
     }
   }
+}
+
+// Read in the given file to the next temporary script position, optionally delete it,
+// and run the script as a "call"
+int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CString &mess)
+{
+  // Run a script: read it in
+  int index2 = 0;
+  int index = MAX_MACROS + MAX_ONE_LINE_SCRIPTS + mNumTempMacros++;
+  CString line, action;
+  CStdioFile *sFile = NULL;
+  try {
+    action = "opening file";
+    sFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
+    action = "reading file";
+    mMacros[index] = "";
+    while (sFile->ReadString(line)) {
+      if (!mMacros[index].IsEmpty())
+        mMacros[index] += "\r\n";
+      mMacros[index] += line;
+    }
+  }
+  catch (CFileException * perr) {
+    perr->Delete();
+    index2 = 1;
+  }
+  delete sFile;
+
+  // Delete the file
+  if (deleteFile) {
+    try {
+      CFile::Remove(filename);
+    }
+    catch (CFileException * pEx) {
+      pEx->Delete();
+      if (!index2)
+        action = "removing";
+      index2 = 1;
+    }
+  }
+  if (index2) {
+    mess = "Error " + action + " " + filename;
+    return 1;
+  }
+  if (mMacros[index].IsEmpty())
+    return -1;
+
+  ScanForName(index, &mMacros[index]);
+
+  // Set it up like callScript
+  mCallIndex[mCallLevel++] = mCurrentIndex;
+  mCurrentMacro = index;
+  mCallMacro[mCallLevel] = mCurrentMacro;
+  mBlockDepths[mCallLevel] = -1;
+  mCallFunction[mCallLevel] = NULL;
+  mCurrentIndex = 0;
+  mLastIndex = -1;
+  mNeedClearTempMacro = mCurrentMacro;
+  mClearTempAtCallLevel = mCallLevel;
+  return 0;
 }
 
 // Extract part of entered line after substituting variables

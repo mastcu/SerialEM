@@ -370,6 +370,7 @@ protected:
   int mRunToolArgPlacement;  // Whether to replace (0), prepend (-1), or append (1)
   int mNumTempMacros;        // Number of temporary macros assigned from script
   int mNeedClearTempMacro;   // Flag that the current temporary needs to be cleared
+  int mClearTempAtCallLevel; // Call level at which to clear temp macro
   bool mParseQuotes;         // Flag that strings are parsed with quoting
   bool mCheckingParseQuotes; // Flag it is happening during checking
   bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
@@ -536,6 +537,7 @@ public:
   void SetOneReportedValue(CString *strItem, double value, int index);
   FileForText *LookupFileForText(CString & ID, int checkReadOrWrite, CString &strLine, int &index);
   void CloseFileForText(int index);
+  int RunScriptFromFile(CString &filename, bool deleteFile, CString &mess);
   void SubstituteLineStripItems(CString & strLine, int numStrip, CString & strCopy);
   void JustStripItems(CString & strLine, int numStrip, CString & strCopy, bool allowComment = false);
   int CheckAndConvertLDAreaLetter(CString & item, int needOnOrOff, int & index, CString &strLine);

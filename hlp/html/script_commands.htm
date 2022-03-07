@@ -688,6 +688,11 @@
             sees it.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">RunScriptInFile name</TD>
+          <TD>Runs a script in <b>file</b> by reading it into an extra script position and 
+            calling it from the current script.&nbsp; Command added in 4.0, 3/7/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">Require feature [feature] ...<br />
             Require script_version_number</TD>
           <TD>This command tests whether scripting features used in the script are available in this
@@ -1884,6 +1889,14 @@
             matrix is derived.&nbsp; Only mags where there is either a calibrated pixel size or calibrated relative or absolute rotation angle will be tested.&nbsp; Not all of the discrepancies will cause a problem in 
             practice.&nbsp; Command added in 4.0, 2/15/22.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RunSerialEMSnapshot</TD>
+          <TD>Captures diagnostic information about the SerialEM configuration and calibrations in the log
+            by running the script SerialEM_Snapshot.txt.&nbsp; It looks for this script in the directory
+            with SerialEM.exe, then in C:\Program Files\SerialEM.&nbsp; If it is not present, the current version
+             can be downloaded from the<a href="https://serialemscripts.nexperion.net/script/74"> 
+            Nexperion script repository</a> and renamed to this name.&nbsp; Command added in 4.0, 3/7/22.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>

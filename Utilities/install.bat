@@ -38,7 +38,7 @@ for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg6
  JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll^
  DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
  libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
- hdf5.dll) DO (
+ hdf5.dll SerialEM_Snapshot.txt) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 
@@ -99,6 +99,7 @@ COPY /Y libmmd.dll ..
 COPY /Y libctffind.dll ..
 COPY /Y imodzlib1.dll ..
 COPY /Y hdf5.dll ..
+COPY /Y SerialEM_Snapshot.txt ..
 
 Rem # If neither properties file seen, just copy them
 if %SAWPROPS% EQU 0 (
