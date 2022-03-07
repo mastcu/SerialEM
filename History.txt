@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/7/22: SEM_4-0-2
 3/7/22: Added script commands RunScriptInFile and RunSerialEMSnapshot, added
 the diagnostic script for the latter to the program package, and fixed
 problems with running functions in scripts loaded with these commands or
