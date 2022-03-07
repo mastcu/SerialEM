@@ -641,6 +641,8 @@ MAC_SAME_NAME_ARG(PasteImagesTogether, 3, 4, PASTEIMAGESTOGETHER, SSSi)
 MAC_SAME_NAME_ARG(ScaledSpectrum, 2, 4, SCALEDSPECTRUM, SI)
 MAC_SAME_FUNC_ARG(SpectrumBesideImage, 2, 4, ScaledSpectrum, SPECTRUMBESIDEIMAGE, SI)
 MAC_SAME_NAME_ARG(CheckStageToCamera, 0, 4, CHECKSTAGETOCAMERA, ddi)
+MAC_SAME_FUNC_ARG(RunScriptInFile, 1, 0, GetFileInWatchedDir, RUNSCRIPTINFILE, S)
+MAC_SAME_FUNC(RunSerialEMSnapshot, 0, 0, GetFileInWatchedDir, RUNSERIALEMSNAPSHOT)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python

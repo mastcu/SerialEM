@@ -3396,117 +3396,91 @@ int CMacCmd::SetFrameBaseName(void)
   return 0;
 }
 
-// GetFileInWatchedDir, RunScriptInWatchedDir
+// GetFileInWatchedDir, RunScriptInWatchedDir, RunScriptInFile, RunSerialEMSnapshot
 int CMacCmd::GetFileInWatchedDir(void)
 {
   CString report;
   BOOL truth;
-  int index, index2;
+  bool doSnapshot = CMD_IS(RUNSERIALEMSNAPSHOT);
+  bool justFromFile = CMD_IS(RUNSCRIPTINFILE) || doSnapshot;
+  int index;
   CFileStatus status;
   WIN32_FIND_DATA findFileData;
   CStdioFile *sFile = NULL;
   CString direc, fname;
-  if (CMD_IS(RUNSCRIPTINWATCHEDDIR)) {
+  if (CMD_IS(RUNSCRIPTINWATCHEDDIR) || justFromFile) {
     if (mNumTempMacros >= MAX_TEMP_MACROS)
       ABORT_LINE("No free temporary scripts available for line:\n\n");
     if (mNeedClearTempMacro >= 0)
       ABORT_LINE("When running a script from a file, you cannot run another one in"
         " line:\n\n");
   }
-  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
+  if (doSnapshot) {
+    report = mWinApp->mPluginManager->GetExePath() + "\\SerialEM_Snapshot.txt";
+    if (!CFile::GetStatus((LPCTSTR)report, status)) {
+      report = "C:\\Program Files\\SerialEM\\SerialEM_Snapshot.txt";
+      if (!CFile::GetStatus((LPCTSTR)report, status))
+        ABORT_LINE("Cannot find SerialEM_Snapshot.txt in SerialEM program directory for "
+          "line:\n\n");
+    }
+  } else if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
 
-  // If the string has no wild card and it is a directory, add *
-  if (report.Find('*') < 0) {
-    truth = CFile::GetStatus((LPCTSTR)report, status);
-    if (truth && (status.m_attribute & CFile::directory))
-      report += "\\*";
-  }
-  UtilSplitPath(report, direc, fname);
-  HANDLE hFind = FindFirstFile((LPCTSTR)report, &findFileData);
-  if (hFind == INVALID_HANDLE_VALUE) {
-    SetOneReportedValue(0., 1);
-    SetOneReportedValue(CString("none"), 2);
-    return 0;
-  }
-  truth = false;
-  do {
-    report = findFileData.cFileName;
+  if (!justFromFile) {
 
-    // If found a file, look for lock file and wait until goes away, or give up and
-    // go on to next file if any
-    for (index = 0; index < 10; index++) {
-      if (!CFile::GetStatus((LPCTSTR)(report + ".lock"), status)) {
-        truth = true;
-        break;
-      }
-      Sleep(20);
+    // If the string has no wild card and it is a directory, add *
+    if (report.Find('*') < 0) {
+      truth = CFile::GetStatus((LPCTSTR)report, status);
+      if (truth && (status.m_attribute & CFile::directory))
+        report += "\\*";
     }
-    if (truth)
-      break;
+    UtilSplitPath(report, direc, fname);
+    HANDLE hFind = FindFirstFile((LPCTSTR)report, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+      SetOneReportedValue(0., 1);
+      SetOneReportedValue(CString("none"), 2);
+      return 0;
+    }
+    truth = false;
+    do {
+      report = findFileData.cFileName;
 
-  } while (FindNextFile(hFind, &findFileData) == 0);
-  FindClose(hFind);
+      // If found a file, look for lock file and wait until goes away, or give up and
+      // go on to next file if any
+      for (index = 0; index < 10; index++) {
+        if (!CFile::GetStatus((LPCTSTR)(report + ".lock"), status)) {
+          truth = true;
+          break;
+        }
+        Sleep(20);
+      }
+      if (truth)
+        break;
 
-  // Just set report value if no file. give message if there is one
-  if (!truth) {
-    SetOneReportedValue(0., 1);
-    SetOneReportedValue(CString("none"), 2);
-  } else {
-    report = direc + "\\" + report;
-    SetOneReportedValue(1., 1);
-    SetOneReportedValue(report, 2);
-    mLogRpt = "Found file " + report;
+    } while (FindNextFile(hFind, &findFileData) == 0);
+    FindClose(hFind);
+
+    // Just set report value if no file. give message if there is one
+    if (!truth) {
+      SetOneReportedValue(0., 1);
+      SetOneReportedValue(CString("none"), 2);
+    } else {
+      report = direc + "\\" + report;
+      SetOneReportedValue(1., 1);
+      SetOneReportedValue(report, 2);
+      mLogRpt = "Found file " + report;
+    }
   }
 
   if (CMD_IS(GETFILEINWATCHEDDIR))
     return 0;
 
-  // Run a script: read it in
-  index2 = 0;
-  index = MAX_MACROS + MAX_ONE_LINE_SCRIPTS + mNumTempMacros++;
-  try {
-    mStrCopy = "opening file";
-    sFile = new CStdioFile(report, CFile::modeRead | CFile::shareDenyWrite);
-    mStrCopy = "reading file";
-    mMacros[index] = "";
-    while (sFile->ReadString(mItem1upper)) {
-      if (!mMacros[index].IsEmpty())
-        mMacros[index] += "\r\n";
-      mMacros[index] += mItem1upper;
-    }
-  }
-  catch (CFileException * perr) {
-    perr->Delete();
-    index2 = 1;
-  }
-  delete sFile;
-
-  // Delete the file
-  try {
-    CFile::Remove(report);
-  }
-  catch (CFileException * pEx) {
-    pEx->Delete();
-    mStrCopy = "removing";
-    index2 = 0;
-  }
-  if (index2)
-    ABORT_LINE("Error " + mStrCopy + " " + report + " for line:\n\n");
-  if (mMacros[index].IsEmpty()) {
+  index = RunScriptFromFile(report, !justFromFile, mStrCopy);
+  if (index > 0)
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  mLogRpt = "Running script in " + report;
+  if (index < 0)
     mLogRpt += ", which is empty (nothing to run)";
-    return 0;
-  }
-
-  // Set it up like callScript
-  mCallIndex[mCallLevel++] = mCurrentIndex;
-  mCurrentMacro = index;
-  mCallMacro[mCallLevel] = mCurrentMacro;
-  mBlockDepths[mCallLevel] = -1;
-  mCallFunction[mCallLevel] = NULL;
-  mCurrentIndex = 0;
-  mLastIndex = -1;
-  mNeedClearTempMacro = mCurrentMacro;
   return 0;
 }
 
@@ -6588,6 +6562,8 @@ int CMacCmd::CheckStageToCamera(void)
 // ListAllCalibrations
 int CMacCmd::ListAllCalibrations(void)
 {
+  bool saveDefer = mDeferLogUpdates;
+  mDeferLogUpdates = true;
   mWinApp->mMenuTargets.DoListISVectors(true);
   mWinApp->mMenuTargets.DoListISVectors(false);
   mWinApp->mMenuTargets.DoListStageCals();
@@ -6598,7 +6574,9 @@ int CMacCmd::ListAllCalibrations(void)
   mShiftManager->ReportFallbackRotations(false);
   mShiftManager->CheckStageToCamConsistency(8.f, 0.08f, true);
   mWinApp->mMenuTargets.OnListFocusMagCals();
-
+  mDeferLogUpdates = saveDefer;
+  if (!mDeferLogUpdates && mWinApp->mLogWindow)
+    mWinApp->mLogWindow->FlushDeferredLines();
   return 0;
 }
 
