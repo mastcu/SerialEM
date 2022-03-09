@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/9/22: SEM_4-0-3
 3/9/22: Fixed the camera coordinates used for an anchor map when there is more
 than one camera and stopped anchor map routine from proceeding after an error
 getting the image (In 4.0).
