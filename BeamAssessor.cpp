@@ -1550,18 +1550,36 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       return;
     }
 
-  } else if (interactive) {
-    AfxMessageBox("The beam intensity is outside the calibrated\n"
-    "range for this spot size.\n\n"
-    "You need to take a picture with brightness set\n"
-    "in the calibrated range for this spot size.", MB_EXCLAME);
-  } else
-
-    // SHOULD CHECK ON WHETHER THERE IS CALIBRATION AT ALL FOR THIS SPOT
-    mWinApp->AppendToLog("Unable to calibrate electron dose with this picture.\r\n"
-      "The beam intensity is outside the calibrated range for this spot size.", 
-      LOG_SWALLOW_IF_CLOSED);
-
+  } else {
+    indTab = FindBestTable(spotSize, intensity, probe);
+    addon = '.';
+    if (indTab >= 0) {
+      mean = mScope->GetC2Percent(spotSize, mBeamTables[indTab].intensities[0], probe);
+      pixel = mScope->GetC2Percent(spotSize, 
+        mBeamTables[indTab].intensities[mBeamTables[indTab].numIntensities - 1], probe);
+      addon.Format(" (%.2f to %.2f%s).", B3DMIN(mean, pixel), B3DMAX(mean, pixel), 
+        mScope->GetC2Units());
+    }
+    if (interactive) {
+      if (indTab < 0)
+        AfxMessageBox("There is no beam intensity calibration for this spot size on this"
+          " side of crossover", MB_EXCLAME);
+      else
+        AfxMessageBox("The beam intensity is outside the directly calibrated\n"
+          "range for this spot size" + addon +"\n\n"
+          "You need to take a picture with brightness set\n"
+          "in the calibrated range for this spot size.", MB_EXCLAME);
+    } else {
+      if (indTab < 0)
+        mWinApp->AppendToLog("Unable to calibrate electron dose with this picture.\r\n"
+          "There is no beam intensity calibration for this spot size on this"
+          " side of crossover",  LOG_SWALLOW_IF_CLOSED);
+      else
+        mWinApp->AppendToLog("Unable to calibrate electron dose with this picture.\r\n"
+          "The beam intensity is outside the directly calibrated range for this spot size"
+          + addon, LOG_SWALLOW_IF_CLOSED);
+    }
+  }
 
   // Restore table entries
   dtp->dose = saveDose;

@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/9/22: Fixed the camera coordinates used for an anchor map when there is more
+than one camera and stopped anchor map routine from proceeding after an error
+getting the image (In 4.0).
+
+3/9/22: In Navigator Acquire dialog, made most disabled options be hidden when
+hiding is selected, even if they are checked (In 4.0).
+
+3/9/22: Added another color to spot indicator (light cyan) to indicate when
+intensity is in the extrapolated region of the calibration, clarified in the
+help this distinction and the fact that this region is not allowed for
+calibrating dose, and improved the error message when calibrating electron
+dose fails (In 4.0).
+
+3/9/22: Explained in help that View or Search will be reasserted with old
+parameters if Low Dose continuous update is turned on after changing probe
+mode or crossing LM-nonLM boundary (In 4.0).
+
 3/7/22: SEM_4-0-2
 3/7/22: Added script commands RunScriptInFile and RunSerialEMSnapshot, added
 the diagnostic script for the latter to the program package, and fixed

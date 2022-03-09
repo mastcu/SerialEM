@@ -65,7 +65,9 @@
     <P><B>Spot</B></P>
     <P>The numeric readout shows the spot size. Also, the label 'Spot' has a colored
       background indicating whether the current intensity is calibrated at this spot
-      size: blue if intensity is in the calibrated range, orange if intensity is
+      size: blue if intensity is in the directly calibrated range, light cyan if it is 
+      in the region outside that range where the 
+      calibration is extrapolated, orange if it is completely
       outside the range of a calibration, or magenta if there is no calibration on
       the current side of crossover. This feature can be disabled by adding a line
       'ShowIntensityCalStatus 0' to SerialEMproperties.txt.</P>

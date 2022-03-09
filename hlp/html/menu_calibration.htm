@@ -1661,14 +1661,18 @@
         is only good for a limited period of time (1 day by default, but this time can be
         set with the property 'DoseLifetimeInHours'). The calibration requires
         that beam intensity be calibrated and that the SerialEMproperties.txt file
-        contain an entry for CountsPerElectron for the CCD camera. </P>
+        contain an entry for CountsPerElectron for the camera. </P>
     <P>Before activating
         the command, take an image of the blank beam with a reliable exposure time
         (e.g., 0.2 or more seconds) and with the beam in the calibrated range for the
-      current spot size (the &#39;SPOT&#39; label in the microscope status panel should be
-      blue). Select the command and press OK. The program will report
+      current spot size.&nbsp; Specifically, the intensity has to be within the 
+      directly calibrated range, not in the range where the calibration can be 
+      extrapolated, so the &#39;SPOT&#39; label in the microscope status panel 
+      should be darker blue, not light cyan. Select the command and press OK. The program will report
         the dose rate (electrons per square Angstroms per second) of the beam
-        intensity at which that image was taken.</P>
+        intensity at which that image was taken.&nbsp; Or, if intensity was not in the 
+      directly calibrated range, there will be a message telling you what that range 
+      is.</P>
       <P>The dose calibration will be most accurate if the spot size is normalized (on
         a Thermo/FEI scope). To do this, open the Normalizations panel in the Microscope User
         Interface, select TEM Spotsize, and check Spotsize. Then change spot size to
