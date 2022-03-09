@@ -46,6 +46,13 @@ private:
   int mOKtoAdjustBT;
   int *mMasterOrder;
   CFont mBoldFont;
+  bool mCycleEnabled;
+  bool mEarlyRetEnabled;
+  bool mSetTypeEnabled;
+  bool mHybridEnabled;
+  bool mAdjustBTenabled;
+  bool mSkipMoveEnabled;
+  bool mSkipSaveEnabled;
 
 public:
   int CheckActionOrder(int *order);
@@ -96,7 +103,8 @@ public:
   int m_iSubsetEnd;
   afx_msg void OnKillfocusSubsetStart();
   afx_msg void OnKillfocusSubsetEnd();
-  void ManageEnables(void);
+  void ManageEnables(bool rebuilding = false);
+  void RebuildIfEnabled(bool OK, bool &enabled, bool &doBuild);
   void ExternalUpdate();
   void ManageForSubset(void);
   void BuildActionSection(void);

@@ -132,6 +132,13 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
 {
   mCurActSelected = -1;
   mNonModal = true;
+  mEarlyRetEnabled = true;
+  mCycleEnabled = true;
+  mSetTypeEnabled = true;
+  mHybridEnabled = true;
+  mAdjustBTenabled = true;
+  mSkipMoveEnabled = true;
+  mSkipSaveEnabled = true;
 }
 
 CNavAcquireDlg::~CNavAcquireDlg()
@@ -415,7 +422,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   }
 
   LoadParamsToDialog();
-  ManageEnables();
+  ManageEnables(true);
   ManageOutputFile();
 
   BuildActionSection();
@@ -567,7 +574,7 @@ void CNavAcquireDlg::OnReadParams()
   if (mAnyTSpoints && !mAnyAcquirePoints)
     AcquireTypeToOptions(ACQUIRE_DO_TS);
   LoadParamsToDialog();
-  ManageEnables();
+  ManageEnables(true);
   ManageOutputFile();
   BuildActionSection();
 }
@@ -691,7 +698,7 @@ void CNavAcquireDlg::OnRadioCurParamSet()
     AcquireTypeToOptions(mParam->nonTSacquireType);
   if (mAnyTSpoints && !mAnyAcquirePoints)
     AcquireTypeToOptions(ACQUIRE_DO_TS);
-  ManageEnables();
+  ManageEnables(true);
   ManageOutputFile();
   BuildActionSection();
 }
@@ -837,11 +844,11 @@ void CNavAcquireDlg::ManageOutputFile(void)
 }
 
 // Take care of all the state-dependent enabling except the timing section
-void CNavAcquireDlg::ManageEnables(void)
+void CNavAcquireDlg::ManageEnables(bool rebuilding)
 {
+  bool doBuild = false;
   int acquireType = OptionsToAcquireType();
-  bool imageOrMap = acquireType == ACQUIRE_IMAGE_ONLY ||
-    acquireType == ACQUIRE_TAKE_MAP;
+  bool imageOrMap = acquireType == ACQUIRE_IMAGE_ONLY || acquireType == ACQUIRE_TAKE_MAP;
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   bool cycleOK = acquireType == ACQUIRE_DO_TS || acquireType == ACQUIRE_RUN_MACRO ||
     DOING_ACTION(NAACT_RUN_POSTMACRO) || DOING_ACTION(NAACT_RUN_PREMACRO) ||
@@ -849,6 +856,10 @@ void CNavAcquireDlg::ManageEnables(void)
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC);
   bool consetOK = mWinApp->LowDoseMode() && 
     (acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY);
+  bool hybridOK = DOING_ACTION(NAACT_REALIGN_ITEM) && DOING_ACTION(NAACT_ALIGN_TEMPLATE)
+    && mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
+    mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1;
+  bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset);
   m_editSubsetEnd.EnableWindow(m_bDoSubset);
@@ -857,28 +868,47 @@ void CNavAcquireDlg::ManageEnables(void)
   m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice);
   m_butDoMultishot.EnableWindow(mAnyAcquirePoints);
   m_butRunMacro.EnableWindow(mAnyAcquirePoints);
-  m_butSkipInitialMove.EnableWindow(mWinApp->mNavigator->OKtoSkipStageMove(mActions, 
-    acquireType) != 0);
+  m_butSkipInitialMove.EnableWindow(skipMoveOK);
+  RebuildIfEnabled(skipMoveOK, mSkipMoveEnabled, doBuild);
+
   EnableDlgItem(IDC_NA_CYCLE_DEFOCUS, cycleOK);
   m_editCycleFrom.EnableWindow(m_bCycleDefocus && cycleOK);
   m_editCycleTo.EnableWindow(m_bCycleDefocus && cycleOK);
   m_sbcCycleDef.EnableWindow(m_bCycleDefocus && cycleOK);
   EnableDlgItem(IDC_STAT_CYCLE_UM, m_bCycleDefocus && cycleOK);
   EnableDlgItem(IDC_STAT_CYCLE_STEPS, m_bCycleDefocus && cycleOK);
+  EnableDlgItem(IDC_STAT_CYCLE_FROM, m_bCycleDefocus && cycleOK);
+  EnableDlgItem(IDC_STAT_CYCLE_TO, m_bCycleDefocus && cycleOK);
+  RebuildIfEnabled(cycleOK, mCycleEnabled, doBuild);
+
   m_editEarlyFrames.EnableWindow(m_bEarlyReturn && imageOrMap);
   m_butEarlyReturn.EnableWindow(imageOrMap);
   EnableDlgItem(IDC_STAT_FRAMES, imageOrMap);
+  RebuildIfEnabled(imageOrMap, mEarlyRetEnabled, doBuild);
+
   m_butAdjustBtforIS.EnableWindow(imageOrMap && mOKtoAdjustBT);
+  RebuildIfEnabled(imageOrMap && mOKtoAdjustBT, mAdjustBTenabled, doBuild);
   m_butSkipSaving.EnableWindow(acquireType == ACQUIRE_IMAGE_ONLY);
-  m_butHybridRealign.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM) && 
-    DOING_ACTION(NAACT_ALIGN_TEMPLATE) &&
-    mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
-    mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1);
+  RebuildIfEnabled(acquireType == ACQUIRE_IMAGE_ONLY, mSkipSaveEnabled, doBuild);
+  m_butHybridRealign.EnableWindow(hybridOK);
+  RebuildIfEnabled(hybridOK, mHybridEnabled, doBuild);
+
   EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK);
   EnableDlgItem(IDC_RMAP_WITH_REC, consetOK);
   EnableDlgItem(IDC_RMAP_WITH_VIEW, consetOK);
   EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK);
+  RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
+
   ManageOutputFile();
+  if (doBuild && m_bHideUnselectedOpts && !rebuilding)
+    BuildActionSection();
+}
+
+void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
+{
+  if (OK && !enabled)
+    doBuild = true;
+  enabled = OK;
 }
 
 // For disabling/enabling action buttons when something else happens
@@ -991,7 +1021,8 @@ void CNavAcquireDlg::BuildActionSection(void)
     NewActionSelected(m_iSelectedPos);
 
   // Add any permanently dropped items now
-  if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts && !m_bEarlyReturn)) {
+  if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts && 
+    (!m_bEarlyReturn || !mEarlyRetEnabled))) {
     mIDsToDrop.push_back(IDC_NA_EARLY_RETURN);
     mIDsToDrop.push_back(IDC_STAT_FRAMES);
     mIDsToDrop.push_back(IDC_EDIT_EARLY_FRAMES);
@@ -999,7 +1030,7 @@ void CNavAcquireDlg::BuildActionSection(void)
 
   // Now drop unselected items
   if (m_bHideUnselectedOpts) {
-    if (!m_bCycleDefocus) {
+    if (!m_bCycleDefocus || !mCycleEnabled) {
       mIDsToDrop.push_back(IDC_NA_CYCLE_DEFOCUS);
       mIDsToDrop.push_back(IDC_EDIT_CYCLE_FROM);
       mIDsToDrop.push_back(IDC_EDIT_CYCLE_TO);
@@ -1009,15 +1040,22 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_STAT_CYCLE_STEPS);
       mIDsToDrop.push_back(IDC_SPIN_CYCLE_DEF);
     }
-    if (!m_bAdjustBTforIS)
+    if (!mWinApp->LowDoseMode() || !mSetTypeEnabled) {
+      mIDsToDrop.push_back(IDC_STAT_WHICH_CONSET);
+      mIDsToDrop.push_back(IDC_RMAP_WITH_REC);
+      mIDsToDrop.push_back(IDC_RMAP_WITH_VIEW);
+      mIDsToDrop.push_back(IDC_RMAP_WITH_SEARCH);
+    }
+
+    if (!m_bAdjustBTforIS || !mAdjustBTenabled)
       mIDsToDrop.push_back(IDC_NA_ADJUST_BT_FOR_IS);
-    if (!m_bHybridRealign)
+    if (!m_bHybridRealign || !mHybridEnabled)
       mIDsToDrop.push_back(IDC_NA_APPLY_REALIGN_ERR);
     if (!m_bRelaxStage)
-    mIDsToDrop.push_back(IDC_NA_RELAX_STAGE);
+      mIDsToDrop.push_back(IDC_NA_RELAX_STAGE);
     if (!m_bSkipZmoves)
       mIDsToDrop.push_back(IDC_NA_SKIP_Z_MOVES);
-    if (!m_bSkipInitialMove)
+    if (!m_bSkipInitialMove || !mSkipMoveEnabled)
       mIDsToDrop.push_back(IDC_NA_SKIP_INITIAL_MOVE);
     if (!m_bDoSubset) {
       mIDsToDrop.push_back(IDC_NA_DO_SUBSET);
@@ -1037,7 +1075,9 @@ void CNavAcquireDlg::BuildActionSection(void)
       mIDsToDrop.push_back(IDC_NA_ACQUIREMAP);
       mIDsToDrop.push_back(IDC_NA_SAVE_AS_MAP);
       mIDsToDrop.push_back(IDC_NA_SKIP_SAVING);
-    }
+    } else if (!m_bSkipSaving || !mSkipSaveEnabled)
+      mIDsToDrop.push_back(IDC_NA_SKIP_SAVING);
+
     if (acquireType != ACQUIRE_MULTISHOT) {
       mIDsToDrop.push_back(IDC_NA_DO_MULTISHOT);
       mIDsToDrop.push_back(IDC_NA_SETUP_MULTISHOT);
@@ -1187,7 +1227,7 @@ void CNavAcquireDlg::OnRadioSelectAction(UINT nID)
     if (button)
       button->SetCheck(BST_UNCHECKED);
     m_iSelectedPos = -1;
-  } else {
+  } else  {
     NewActionSelected(nID - IDC_RADIO_NAVACQ_SEL1);
   }
   if (oldSelected < 0 || m_iSelectedPos < 0) {
@@ -1195,6 +1235,7 @@ void CNavAcquireDlg::OnRadioSelectAction(UINT nID)
     AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
       sHeightTable);
   }
+  m_statActionGroup.SetFocus();
 }
 
 // New interval for every N

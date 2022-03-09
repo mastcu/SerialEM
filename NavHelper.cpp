@@ -2098,8 +2098,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
   ControlSet *conSet;
 
   // Start by filling with the current state in case some map items are not there
-  StoreCurrentStateInParam(param, 0, false, 
-    item->mMapLowDoseConSet < 0 ? 0 : -1 - item->mMapLowDoseConSet, 0);
+  StoreCurrentStateInParam(param, 0, false, mWinApp->GetCurrentCamera(), 0);
   param->magIndex = item->mMapMagInd;
   if (item->mMapIntensity)
     param->intensity = item->mMapIntensity;
@@ -2107,8 +2106,10 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
     param->spotSize = item->mMapSpotSize;
   param->probeMode = item->mMapProbeMode;
   param->beamAlpha = item->mMapAlpha;
-  if (item->mMapCamera >= 0)
+  if (item->mMapCamera >= 0) {
     param->camIndex = item->mMapCamera;
+    param->camForParams = item->mMapCamera;
+  }
   param->slitWidth = 0.;
   if ((mCamParams[param->camIndex].GIF || mWinApp->ScopeHasFilter()) && 
     item->mMapSlitWidth) {
@@ -4148,6 +4149,8 @@ void CNavHelper::DualMapDone(int param)
 {
   CMapDrawItem *item;
   int savedIndex = -1;
+  if (!mAcquiringDual)
+    return;
   if (!(mWinApp->Montaging() && mWinApp->mMontageController->GetLastFailed())) {
     if (!mWinApp->Montaging()) {
       if (!mBufferManager->IsBufferSavable(mImBufs)) {

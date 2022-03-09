@@ -490,12 +490,18 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (mShowIntensityCal && mIntCalStatus >= -1) {
     int error, junk;
     if (mWinApp->GetSTEMMode()) {
-      error = 3;
+      error = 4;
     } else {
       error = mWinApp->mBeamAssessor->OutOfCalibratedRange(rawIntensity, inSpot, 
-        inProbeMode, junk);
-      if (error)
-        error = error == BEAM_STARTING_OUT_OF_RANGE ? 1 : 2;
+        inProbeMode, junk, true);
+      if (error) {
+        if (error == BEAM_ENDING_OUT_OF_RANGE)
+          error = 1;
+        else if (error == BEAM_STARTING_OUT_OF_RANGE)
+          error = 2;
+        else
+          error = 3;
+      }
     }
     if (error != mIntCalStatus) {
       if (error)
@@ -568,8 +574,8 @@ void CScopeStatusDlg::OnPaint()
   CRect statRect;
   CRect clientRect;
   COLORREF vacColors[3] = {RGB(0,255,0), RGB(255, 255, 0), RGB(255, 0, 0)};
-  COLORREF intColors[4] = {RGB(0,192,255), RGB(255, 128, 0), RGB(255, 0, 255),
-    RGB(212, 208, 200)};
+  COLORREF intColors[5] = {RGB(0,192,255), RGB(128, 255, 255), RGB(255,128,0),  
+    RGB(255, 0, 255), RGB(212, 208, 200)};
   CPaintDC dc(this); // device context for painting
   GetWindowRect(&winRect);
   GetClientRect(&clientRect);
