@@ -3433,7 +3433,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // DE cameras: Handle numerous items
-  mTD.AlignFrames = conSet.alignFrames;
+  mTD.AlignFrames = (mParam->K2Type && !conSet.doseFrac) ? 0 : conSet.alignFrames;
   mTD.UseFrameAlign = false;
   mDoingDEframeAlign = 0;
   if (mParam->DE_camType) {
