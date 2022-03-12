@@ -873,7 +873,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
       imBuf->mLowDoseArea && !(skipExtra & 1);
     if (bufferOK && !mDrewLDAreasAtNavPt) {
-      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1, -1);
+      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1, -2);
     }
 
     // Draw tilt axis if option set or when defining LD area on View
@@ -1033,7 +1033,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
-  int lastGroupID = -1, lastGroupSize, size, numPoints, tempInd;
+  int lastGroupID = -1, lastGroupSize, size, numPoints;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
@@ -1111,10 +1111,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         ((item->mAcquire || item->mTSparamIndex >= 0) && navigator->m_bShowAcquireArea))){
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
-        tempInd = iDraw;
-        if (iDraw < 0 && navigator->GetSingleSelectedItem(&currentIndex))
-          tempInd = currentIndex;
-        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, tempInd);
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, iDraw);
         if (iDraw < 0) {
           mNavLDAreasXcenter = ptX;
           mNavLDAreasYcenter = ptY;
@@ -1480,13 +1477,21 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
   float cornerX[4], cornerY[4], cenX, cenY, radius;
   CPoint point;
   StateParams state;
+  int newInd;
+  bool useDash = mDrewLDAreasAtNavPt;
   state.camIndex = mWinApp->GetCurrentCamera();
-  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt, curInd);
+  if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) && 
+    (curInd == -1 || curInd == newInd)) {
+    curInd = newInd;
+    useDash = false;
+  }
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt, 
+    imBuf->mRegistration, curInd);
   for (int type = 0; type < 2; type++) {
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
       cornerX, cornerY, cenX, cenY, radius);
     if (area) {
-      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, 
+      CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, 
         mDrewLDAreasAtNavPt ? 1 : thick, areaColors[area - 1]);
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
       for (int pt = 0; pt < 5; pt++) {

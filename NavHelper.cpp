@@ -3038,10 +3038,23 @@ CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString ne
 {
   int curnum, numdig;
   CString str, format, extra, ext = "";
-  if (mUseLabelInFilenames && !oldLabel.IsEmpty() && oldLabel != newLabel &&
-    inStr.Find(oldLabel) >= 0) {
-    inStr.Replace(oldLabel, newLabel);
-    return inStr;
+  if (mUseLabelInFilenames && !oldLabel.IsEmpty() && oldLabel != newLabel) {
+    UtilSplitPath(inStr, str, format);
+    if (format.Find(oldLabel) >= 0) {
+      curnum = format.GetLength() + 1 - oldLabel.GetLength();
+      while (curnum >= 0 && format.Find(oldLabel, curnum) < 0)
+        curnum--;
+      if (curnum >= 0) {
+        extra = format.Mid(curnum);
+        if (curnum)
+          format = format.Left(curnum);
+        else
+          format = "";
+        extra.Replace(oldLabel, newLabel);
+        inStr = str + "\\" + format + extra;
+        return inStr;
+      }
+    }
   }
   inStr = DecomposeNumberedName(inStr, ext, curnum, numdig, extra);
   if (numdig) {
@@ -5432,7 +5445,7 @@ bool CNavHelper::ModifySubareaForOffset(int camera, int xOffset, int yOffset, in
 // type.  If there is no current or prior setting, or Nav is not open or there is no 
 // current item, it returns the defined Low Dose focus position
 void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate,
-  int curInd)
+  int registration, int curInd)
 {
   CMapDrawItem *item;
   StateParams *statePtr;
@@ -5451,16 +5464,14 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
 
   if (curInd < 0 || curInd >= (int)mItemArray->GetSize())
     return;
-
   item = mItemArray->GetAt(curInd);
   tilts = item->mTSparamIndex >= 0;
   
   // Look back for last state if any
   for (ind = curInd; ind >= 0; ind--) {
     item = mItemArray->GetAt(ind);
-    if (item->mRegistration == mNav->GetCurrentRegistration() &&
-      (BOOL_EQUIV(item->mAcquire, !tilts) ||
-        BOOL_EQUIV(item->mTSparamIndex >= 0, tilts))) {
+    if (item->mRegistration == registration && (BOOL_EQUIV(item->mAcquire, !tilts) || 
+      BOOL_EQUIV(item->mTSparamIndex >= 0, tilts))) {
       if (item->mFilePropIndex >= 0 && item->mStateIndex >= 0) {
         statePtr = mAcqStateArray->GetAt(item->mStateIndex);
         state = *statePtr;
@@ -5473,8 +5484,7 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
   firstInd = B3DMAX(0, ind);
   for (ind = curInd; ind >= firstInd; ind--) {
     item = mItemArray->GetAt(ind);
-    if (item->mRegistration == mNav->GetCurrentRegistration() &&
-      (BOOL_EQUIV(item->mAcquire, !tilts) ||
+    if (item->mRegistration == registration && (BOOL_EQUIV(item->mAcquire, !tilts) ||
         BOOL_EQUIV(item->mTSparamIndex >= 0, tilts)) &&
       item->mFocusAxisPos > EXTRA_VALUE_TEST) {
       state.focusAxisPos = item->mFocusAxisPos;

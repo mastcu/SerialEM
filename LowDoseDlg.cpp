@@ -1709,7 +1709,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
     return;
 
   // Get the focus position that applies here, and a modified camera to specimen matrix
-  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea);
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea, imBuf->mRegistration);
   aMat = mShiftManager->SpecimenToCamera(state.camIndex, imBuf->mMagInd);
   if (!aMat.xpx)
     return;
@@ -1885,7 +1885,8 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
         aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
       }
       conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
-      mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea);
+      mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea, 
+        imBuf->mRegistration);
       delAxis = state.focusAxisPos;
       delX = delAxis;
       delY = 0.;
