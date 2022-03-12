@@ -1159,7 +1159,7 @@ void CNavigatorDlg::OnEditMode()
     mWinApp->AppendToLog("\r\nEDIT MODE REMINDER:\r\n"
       "    Left-click to select\r\n"
       "    Ctrl-Left-Click to add or remove from selected points\r\n"
-      "    Ctrl-Left Button down to add points to selection while moving mouse\r\b"
+      "    Ctrl-Left Button down to add points to selection while moving mouse\r\n"
       "    Left-double-click to delete point if already selected\r\n"
       "    Shift-Left-double-click to remove one position from multiple Record array\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"

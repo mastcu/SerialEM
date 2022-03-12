@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/11/22: Fixed align flag being sent to K2/K3 when dose frac is not selected
+(In 4.0).
+
+3/11/22: Fixed "Use item labels in filenames" to not replace text in the
+directory name and to replace only the last matching text in the name so
+numbers can be used in the name prior to the label (In 4.0).
+
+3/11/22: Fixed Edit focus to use the registration of the image being
+displayed, not the current registration in the Navigator (In 4.0).
+
 3/9/22: SEM_4-0-3
 3/9/22: Fixed the camera coordinates used for an anchor map when there is more
 than one camera and stopped anchor map routine from proceeding after an error

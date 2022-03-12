@@ -332,14 +332,17 @@
         <strong>Tilt series</strong>, the filename will be initialized to the item's
         label plus the appropriate file type extension, and that name will appear in the
         file chooser window that comes up for defining the filename. You can add more
-        text or replace the label as you desire for this file.&nbsp; If there is a
+        text or replace the label as you desire for this file.&nbsp; If you add text 
+        that might be the same as any label (i.e., having numbers), be sure to add it 
+        before the label.&nbsp; If there is a
         previous filename that is the basis for a new name and it still contains the
         label of its respective item, then the current item's label will be substituted
-        for the previous one.&nbsp; To stop having names based on the label, either turn
+        for the previous one.&nbsp; The last occurrence of the label will be replaced if 
+        it occurs more than once.&nbsp; To stop having names based on the label, either turn
         off this option or remove the label from the next name that you define.&nbsp; To
         start having names based on the label when there is a preceding filename without
-        its label, press <strong>Set Filename</strong> and insert the current
-        item's label into the name.</p>
+        its label, press <strong>Set Filename</strong> and insert the current item&#39;s 
+        label into the name (but again, after any other numbers in the name).</p>
     <p>This option should be particularly useful for generating names that correspond
       between the two axes of dual-axis tilt series.</p>
       <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator -
