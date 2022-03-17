@@ -70,7 +70,8 @@
         numbered variation on this name rather than replace an existing file. New logs
         will be started automatically even if the <A HREF="menu_tilt_series.htm#hid_tiltseries_autosavelog">
           Autosave Log</A> option is not selected in the Tilt Series menu.</P>
-    <P><b>Consider batch series successful or end first part of bidirectional series
+    <P><b>Consider batch series successful or end first part of bidirectional or 
+      dose-symmetric series
       at high angles</b></P>
     <P>This option can be selected to keep either dim images or a failure of autofocus
       from being treated as an error in some cases when the tilt angle is high enough.&nbsp;
@@ -79,10 +80,11 @@
       the ending angle in the &#39;within&#39; text box (default 5 degrees).&nbsp; This policy
       applies during a batch series when a dim image or autofocus failure occurs near
       the ending tilt angle of the series.&nbsp; It applies during any bidirectional
-      tilt series, batch or manual, when a dim image or autofocus failure occurs near
-      the &#39;Tilt to&#39; angle that is the high angle for the first part of the series.&nbsp;
-      In the latter case, the program terminates the first part of the series and goes
-      on to the second part automatically.</P>
+      or dose-symmetric tilt series, batch or manual, when a dim image or autofocus 
+      failure occurs near the &#39;Tilt to&#39; angle that is the high angle for the first 
+      part of the series.&nbsp; In the latter case, the program terminates the first 
+      part of a bidirectional series and goes on to the second part automatically, or 
+      continues a dose-symmetric series to the end on the other side of 0 degrees.</P>
     <P><b>Do similar at high tilt if intensity/exposure set for mean exceeds X times
       its minimum value</b></P>
     <P>With this option checked, if intensity or exposure time is being varied to

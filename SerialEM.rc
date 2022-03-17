@@ -2126,7 +2126,7 @@ BEGIN
     PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN60,0,708,50,10,NOT WS_TABSTOP
 END
 
-IDD_TSPOLICIES DIALOGEX 0, 0, 209, 283
+IDD_TSPOLICIES DIALOGEX 0, 0, 225, 284
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Batch Tilt Series & Other Policies"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2135,24 +2135,24 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,16,178,10
     CONTROL         "Terminate series or take specific action selected below",IDC_ERRORTERM,
                     "Button",BS_AUTORADIOBUTTON,13,27,175,10
-    GROUPBOX        "General response to error during series",IDC_STATIC,7,7,195,33,WS_GROUP
+    GROUPBOX        "General response to error during series",IDC_STATIC,7,7,211,33,WS_GROUP
     CONTROL         "Stop with message box",IDC_DIM_DO_MESSAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,56,83,10
     CONTROL         "Terminate",IDC_DIM_TERM_NOT_BOX,"Button",BS_AUTORADIOBUTTON,112,56,45,10
-    GROUPBOX        "After 3 images too dim or one dim Record in Low Dose mode",IDC_STAT_DIM_TERM_NOT_BOX,7,45,195,25,WS_GROUP
+    GROUPBOX        "After 3 images too dim or one dim Record in Low Dose mode",IDC_STAT_DIM_TERM_NOT_BOX,7,45,211,25,WS_GROUP
     CONTROL         "Terminate",IDC_TILTTERM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,86,45,10
     CONTROL         "Continue",IDC_TILTCONT,"Button",BS_AUTORADIOBUTTON,67,86,41,10
-    GROUPBOX        "After failure to tilt to expected angle (possible pole touch)",IDC_STAT_TILT_FAIL,7,75,195,25,WS_GROUP
+    GROUPBOX        "After failure to tilt to expected angle (possible pole touch)",IDC_STAT_TILT_FAIL,7,75,211,25,WS_GROUP
     CONTROL         "Take again",IDC_LDLOSSREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,116,47,10
     CONTROL         "Continue",IDC_LDLOSSCONT,"Button",BS_AUTORADIOBUTTON,67,116,41,10
     CONTROL         "Terminate",IDC_LDLOSSTERM,"Button",BS_AUTORADIOBUTTON,112,116,45,10
-    GROUPBOX        "When Record image is too misaligned in Low Dose mode",IDC_STAT_LD_LOSS,7,105,195,25,WS_GROUP
+    GROUPBOX        "When Record image is too misaligned in Low Dose mode",IDC_STAT_LD_LOSS,7,105,211,25,WS_GROUP
     CONTROL         "Take again",IDC_LDDIMREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,147,47,10
     CONTROL         "Continue",IDC_LDDIMCONT,"Button",BS_AUTORADIOBUTTON,67,147,41,10
     CONTROL         "Terminate",IDC_LDDIMTERM,"Button",BS_AUTORADIOBUTTON,112,147,45,10
-    GROUPBOX        "When Record image is too dim in Low Dose mode",IDC_STAT_LD_DIM,7,136,195,25,WS_GROUP
+    GROUPBOX        "When Record image is too dim in Low Dose mode",IDC_STAT_LD_DIM,7,136,211,25,WS_GROUP
     DEFPUSHBUTTON   "OK",IDOK,42,261,45,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,117,261,45,14
-    PUSHBUTTON      "?",IDC_BUTHELP,197,265,10,10
+    PUSHBUTTON      "?",IDC_BUTHELP,213,265,10,10
     CONTROL         "Autosave log and start new log for each tilt series",IDC_CHECK_AUTO_NEW_LOG,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,165,160,10
     CONTROL         "Close column valves after message box is open",IDC_CHECK_MB_VALVES,
@@ -2162,14 +2162,14 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,182,69,1
     LTEXT           "Other Policies",IDC_STATIC,82,178,42,8
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,129,182,72,1
-    CONTROL         "Consider batch series successful or end first part of a",IDC_CHECK_END_BIDIR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,188,171,10
+    CONTROL         "Consider batch series successful or end first part of a bidirectional",IDC_CHECK_END_BIDIR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,188,204,10
     LTEXT           "above ",IDC_STATIC,24,209,21,8
     EDITTEXT        IDC_EDIT_BIDIR_ABS_ANGLE,44,207,23,12,ES_AUTOHSCROLL
     LTEXT           "or within ",IDC_STATIC,71,209,29,8
     EDITTEXT        IDC_EDIT_BIDIR_END_DIFF,100,207,23,12,ES_AUTOHSCROLL
     LTEXT           "degrees of ending tilt",IDC_STATIC,125,209,63,8
-    LTEXT           "bidirectional series if dim image or bad autofocus occurs",IDC_STATIC,25,198,166,8
+    LTEXT           "or dose-symmetric series if dim image or bad autofocus occurs",IDC_STATIC,25,198,191,8
     CONTROL         "Do similar at high tilt if intensity/exposure set for mean",IDC_CHECK_END_HIGH_EXP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,222,175,10
     LTEXT           "exceeds",IDC_STAT_MAX_DELTA1,25,234,26,8
@@ -3977,9 +3977,9 @@ BEGIN
     IDD_TSPOLICIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 202
+        RIGHTMARGIN, 218
         TOPMARGIN, 7
-        BOTTOMMARGIN, 276
+        BOTTOMMARGIN, 277
     END
 
     IDD_NAVACQUIRE, DIALOG
@@ -4500,6 +4500,11 @@ BEGIN
 END
 
 IDD_FILTERCONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TSPOLICIES AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
