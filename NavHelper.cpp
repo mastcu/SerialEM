@@ -2063,23 +2063,36 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
 }
 
 // Save the low dose focus area for the current camera in the given parameters
+// The returned axisPos is the full R to F offset, not the net offset stored in low dose
+// parameters
 void CNavHelper::SaveLDFocusPosition(bool saveIt, float &axisPos, BOOL &rotateAxis, 
   int &axisRotation, int &xOffset, int &yOffset, bool traceIt)
 {
   ControlSet *conSet = mWinApp->GetConSets() + FOCUS_CONSET;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
+  LowDoseParams *ldrec = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   xOffset = yOffset = 0;
   axisPos = EXTRA_NO_VALUE;
   rotateAxis = false;
   axisRotation = 0;
   if (saveIt) {
-    if (mWinApp->LowDoseMode() && ldp->magIndex)
-      ldp->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldp->magIndex, ldp->ISX,
-        ldp->ISY);
+
+    // Make sure axis position is up to date in ld params
+    if (mWinApp->LowDoseMode()) {
+      if (ldp->magIndex)
+        ldp->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldp->magIndex,
+          ldp->ISX, ldp->ISY);
+      if (mWinApp->mLowDoseDlg.ShiftsBalanced() && ldrec->magIndex)
+        ldrec->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldrec->magIndex,
+          ldrec->ISX, ldrec->ISY);
+    }
+
+    // Return the full offset from R to F if R not at 0
     xOffset = (conSet->right + conSet->left) / 2 - camParam->sizeX / 2;
     yOffset = (conSet->bottom + conSet->top) / 2 - camParam->sizeY / 2;
-    axisPos = (float)ldp->axisPosition;
+    axisPos = (float)(ldp->axisPosition - (fabs(ldrec->axisPosition) > 1.e-5 ?
+      ldrec->axisPosition : 0.));
     rotateAxis = mWinApp->mLowDoseDlg.m_bRotateAxis;
     axisRotation = rotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
     if (traceIt)
@@ -2330,6 +2343,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
   int axisRotation, int xOffset, int yOffset, const char *descrip)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
+  LowDoseParams *ldRec = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   ControlSet *camSets = mWinApp->GetCamConSets();
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
   CameraParameters *camP = &mCamParams[camIndex];
@@ -2345,7 +2359,11 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
     mWinApp->mLowDoseDlg.m_iAxisAngle = axisRotation;
   if (oldRotation != axisRotation && needConversions)
     mWinApp->mLowDoseDlg.ConvertAxisPosition(true);
-  ldp->axisPosition = axisPos;
+
+  // The passed-in position is the full offset from R to F, but the axis position stored
+  // in low-dose params is the net offset from the center
+  ldp->axisPosition = axisPos + (fabs(ldRec->axisPosition) > 1.e-5 ? ldRec->axisPosition :
+    0.);
   if (needConversions)
     mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
       ldp->ISY);
