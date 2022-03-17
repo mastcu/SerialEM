@@ -150,16 +150,20 @@ void CBeamAssessor::CalIntensityCCD()
   mScope->NormalizeCondenser();
   mCalSpotSize = mScope->GetSpotSize();
   aboveCross = GetAboveCrossover(mCalSpotSize, mStartIntensity, probe);
-  message.Format("To calibrate beam intensity for a spot size:\n"
+  message = "To calibrate beam intensity for a spot size:\n"
     "1) Make sure there is no specimen in the beam.\n"
     "2) Make sure the beam is on the side of crossover where you want to work.\n"
     "3) Start at the highest mag and brightest beam that you want calibrated\n"
     "  (It might be safest to start at a mag 2 times higher).\n"
     "4) Center the beam and spread it so that it just covers the camera (for FEG) or "
-    "fills the screen (non-FEG)\n%s" 
-    "5) Be sure to cover the viewing port after setting up the beam.", 
-    FEIscope ? "   (Check it now - it could have changed due to normalization or setting"
-    " intensity.)\n" : "");
+    "fills the screen (non-FEG)\n";
+  if (mScope->GetUseIllumAreaForC2())
+    message += "   (Check it now - Retract and re-insert the flu screen to make\n"
+    "sure the beam position is not affected by screen retraction OR\n"
+    "center beam with screen retracted on a live image outside SerialEM)";
+  else if (FEIscope)
+    message += "   (Check it now - it could have changed due to normalization or setting"
+    " intensity.)";
   
   if (mScope->GetCrossover(mCalSpotSize, probe) > 0.) {
     message = message + "\n\nThe calibration will be done for intensities " + 
