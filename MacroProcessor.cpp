@@ -4968,8 +4968,8 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
     }
   }
   catch (CFileException * perr) {
+    index2 = perr->m_lOsError;
     perr->Delete();
-    index2 = 1;
   }
   delete sFile;
 
@@ -4979,14 +4979,14 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
       CFile::Remove(filename);
     }
     catch (CFileException * pEx) {
-      pEx->Delete();
       if (!index2)
         action = "removing";
-      index2 = 1;
+      index2 = pEx->m_lOsError;
+      pEx->Delete();
     }
   }
   if (index2) {
-    mess = "Error " + action + " " + filename;
+    mess.Format("Error %d %s %s", index2, (LPCTSTR)action, (LPCTSTR)filename);
     return 1;
   }
   if (mMacros[index].IsEmpty())
@@ -4994,6 +4994,18 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
 
   ScanForName(index, &mMacros[index]);
 
+  index2 = CheckForScriptLanguage(index, false, 0);
+  if (index2 > 0) {
+    AbortMacro();
+    mess = "";
+    return 1;
+  }
+  if (index2 < 0) {
+    mRunningScrpLang = true;
+    mCalledFromSEMmacro = true;
+    StartRunningScrpLang();
+  }
+  
   // Set it up like callScript
   mCallIndex[mCallLevel++] = mCurrentIndex;
   mCurrentMacro = index;

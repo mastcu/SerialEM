@@ -417,8 +417,10 @@ void CMacroEditer::OnLoadmacro()
   unsigned char *buffer = NULL;
   int memErr = 0;
   int fileErr = 0;
+  static char szFilter[] = "Script files (*.txt, *.py)|*.txt; *.py|All files (*.*)|*.*||";
   CString cPathname, filename;
-  if (mWinApp->mDocWnd->GetTextFileName(true, false, cPathname, &filename))
+  if (mWinApp->mDocWnd->GetTextFileName(true, false, cPathname, &filename, NULL,
+    &szFilter[0]))
     return;
   
   try {

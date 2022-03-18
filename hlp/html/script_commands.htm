@@ -685,12 +685,14 @@
             and runs that script. &nbsp;It sets <I>reportedValue1</I> and <I>2</I> just as
             for 'GetFileInWatchedDir'. &nbsp;As for &#39;GetFileInWatchedDir&#39;, a &#39;.lock&#39;
             file can be used to avoid the risk that the file is not complete when SerialEM
-            sees it.</TD>
+            sees it.<br>Not from Python, although the script may be Python.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RunScriptInFile name</TD>
+          <TD class="scriptcommand">RunScriptInFile file</TD>
           <TD>Runs a script in <b>file</b> by reading it into an extra script position and 
-            calling it from the current script.&nbsp; Command added in 4.0, 3/7/22.</TD>
+            calling it from the current script.&nbsp; Command added in 4.0, 3/7/22.
+            <br>Not from Python, although the script may be Python.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Require feature [feature] ...<br />
@@ -714,10 +716,11 @@
             means commands can be continued onto multiple lines with backslash.&nbsp;
               7) Version 202, which means that limited arithmetic can be done in
               array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.&nbsp;
-            <br>Not from Python.&nbsp; 8) Version 203, in which the 'Return' command can
-             return values from a function or script.&nbsp; 8) Version 204, in which string assignments
+            8) Version 203, in which the 'Return' command can
+             return values from a function or script.&nbsp; 9) Version 204, in which string assignments
             can have embedded newlines, and string assignments and defining an array of quoted strings can
             have more than ~55 words.
+            <br>Not from Python.&nbsp; 
           </TD>
         </TR>
         <TR>
