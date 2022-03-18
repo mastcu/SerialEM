@@ -162,13 +162,13 @@
       off again, it will restore the previous setting of the stage move option if that 
       is known.</P>
     <P><b>Use continuous mode with settling factor</b></P>
-    <P>This option is enabled for Gatan cameras where continuous camera acquisition 
-      can be used through the SerialEMCCD plugin and allows a montage to be acquired 
+    <P>This option is enabled for cameras where true continuous acquisition is available:
+      Gatan, DE, and some Tietz cameras.&nbsp; It allows a montage to be acquired 
       by selecting from the stream of images taken in continuous mode.&nbsp; It is 
       most effective for OneView and Rio cameras, where drift correction can be used in 
       continuous mode to produce good-quality images even if there is some residual 
       drift in the images.&nbsp; It could also be useful for taking good-quality 
-      montages with a K2/K3 or Orius camera if the normal settling time after movement is 
+      montages with other cameras if the normal settling time after movement is 
       used, or for taking maps with a reduced settling time.&nbsp; The settling factor 
       is a multiplier applied to the normal settling time that is allowed to elapse 
       after an image or stage shift before starting a regular image acquisition.&nbsp; 

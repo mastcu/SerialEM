@@ -12,7 +12,7 @@
 // Bit 3 (4) signifies that looping in OnIdle is allowed for a command, it is redundant
 // to set this for a Report command.
 // Bit 4 (8) indicates that a command is NOT available in external scripting and it is
-// added in the macros that construct, so not specified here
+// added in the macros that construct the command table, so not specified here
 // In sum:
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK
 //
@@ -207,7 +207,7 @@ MAC_SAME_FUNC_NOARG(ReportLastFrameFile, 0, 4, ReportCurrentFilename, REPORTLAST
 MAC_SAME_FUNC_ARG(ReportNavFile, 0, 0, ReportCurrentFilename, REPORTNAVFILE, i)
 MAC_SAME_NAME_NOARG(ReportFrameBaseName, 0, 0, REPORTFRAMEBASENAME)
 MAC_SAME_NAME_ARG(GetFileInWatchedDir, 1, 4, GETFILEINWATCHEDDIR, S)
-MAC_SAME_FUNC_ARG(RunScriptInWatchedDir, 1, 4, GetFileInWatchedDir, RUNSCRIPTINWATCHEDDIR, S)
+MAC_SAME_FUNC(RunScriptInWatchedDir, 1, 4, GetFileInWatchedDir, RUNSCRIPTINWATCHEDDIR)
 MAC_SAME_NAME_ARG(AllowFileOverwrite, 1, 4, ALLOWFILEOVERWRITE, I)
 MAC_SAME_NAME_ARG(SetDirectory, 1, 6, SETDIRECTORY, S)
 MAC_SAME_FUNC_ARG(MakeDirectory, 1, 4, SetDirectory, MAKEDIRECTORY, S)
@@ -641,10 +641,11 @@ MAC_SAME_NAME_ARG(PasteImagesTogether, 3, 4, PASTEIMAGESTOGETHER, SSSi)
 MAC_SAME_NAME_ARG(ScaledSpectrum, 2, 4, SCALEDSPECTRUM, SI)
 MAC_SAME_FUNC_ARG(SpectrumBesideImage, 2, 4, ScaledSpectrum, SPECTRUMBESIDEIMAGE, SI)
 MAC_SAME_NAME_ARG(CheckStageToCamera, 0, 4, CHECKSTAGETOCAMERA, ddi)
-MAC_SAME_FUNC_ARG(RunScriptInFile, 1, 0, GetFileInWatchedDir, RUNSCRIPTINFILE, S)
+MAC_SAME_FUNC(RunScriptInFile, 1, 0, GetFileInWatchedDir, RUNSCRIPTINFILE)
 MAC_SAME_FUNC(RunSerialEMSnapshot, 0, 0, GetFileInWatchedDir, RUNSERIALEMSNAPSHOT)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
+// New Not from Python items omit _ARG or _NOARG
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
 //
 // The longest command name is now 25 characters but 23 is a more common limit

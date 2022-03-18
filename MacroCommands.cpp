@@ -3476,8 +3476,11 @@ int CMacCmd::GetFileInWatchedDir(void)
     return 0;
 
   index = RunScriptFromFile(report, !justFromFile, mStrCopy);
-  if (index > 0)
+  if (index > 0) {
+    if (mStrCopy.IsEmpty())
+      return 1;
     ABORT_LINE(mStrCopy + " for line:\n\n");
+  }
   mLogRpt = "Running script in " + report;
   if (index < 0)
     mLogRpt += ", which is empty (nothing to run)";
