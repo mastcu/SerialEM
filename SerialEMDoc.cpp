@@ -1968,10 +1968,12 @@ void CSerialEMDoc::OnSettingsOpen()
 
 // Utility function to open a text file, optionally in the original directory
 int CSerialEMDoc::GetTextFileName(bool openOld, bool originalDir, CString &pathname,
-                                  CString *filename, CString *initialDir)
+  CString *filename, CString *initialDir, const char *filter)
 {
   static char szFilter[] = "Text files (*.txt)|*.txt|All files (*.*)|*.*||";
-  MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, szFilter);
+  if (!filter)
+    filter = &szFilter[0];
+  MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, filter);
 
   // Set the original directory.  Note this no longer works in Windows 7
   if (initialDir && !initialDir->IsEmpty())
