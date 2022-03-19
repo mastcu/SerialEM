@@ -2091,8 +2091,8 @@ void CNavHelper::SaveLDFocusPosition(bool saveIt, float &axisPos, BOOL &rotateAx
     // Return the full offset from R to F if R not at 0
     xOffset = (conSet->right + conSet->left) / 2 - camParam->sizeX / 2;
     yOffset = (conSet->bottom + conSet->top) / 2 - camParam->sizeY / 2;
-    axisPos = (float)(ldp->axisPosition - (fabs(ldrec->axisPosition) > 1.e-5 ?
-      ldrec->axisPosition : 0.));
+    axisPos = (float)(ldp->axisPosition - B3DCHOICE(fabs(ldrec->axisPosition) > 1.e-5,
+      ldrec->axisPosition, 0.));
     rotateAxis = mWinApp->mLowDoseDlg.m_bRotateAxis;
     axisRotation = rotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
     if (traceIt)
@@ -2362,8 +2362,8 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
 
   // The passed-in position is the full offset from R to F, but the axis position stored
   // in low-dose params is the net offset from the center
-  ldp->axisPosition = axisPos + (fabs(ldRec->axisPosition) > 1.e-5 ? ldRec->axisPosition :
-    0.);
+  ldp->axisPosition = axisPos + B3DCHOICE(fabs(ldRec->axisPosition) > 1.e-5, 
+    ldRec->axisPosition, 0.);
   if (needConversions)
     mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
       ldp->ISY);
