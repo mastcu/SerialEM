@@ -85,8 +85,7 @@ public:
 	CButton	m_butCopyToTrial;
 	CButton	m_butCopyToFocus;
 	CButton	m_butCopyToView;
-	CButton	m_butBalanceShifts;
-	CButton	m_butCenterUnshifted;
+	CMyButton	m_butBalanceShifts;
 	CButton	m_butContinuousUpdate;
 	CButton	m_butTieFocusTrial;
 	CButton	m_butLowDoseMode;

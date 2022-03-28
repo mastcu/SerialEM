@@ -1773,8 +1773,7 @@ BEGIN
     PUSHBUTTON      "F",IDC_COPYTOFOCUS,33,199,14,8
     PUSHBUTTON      "T",IDC_COPYTOTRIAL,53,199,14,8
     PUSHBUTTON      "R",IDC_COPYTORECORD,73,199,14,8
-    PUSHBUTTON      "Center Unshifted",IDC_CENTERUNSHIFTED,3,211,54,10
-    PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,62,211,54,10
+    PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,33,211,54,10
     LTEXT           "Position on tilt axis:",IDC_STATPOSITION,3,60,59,8
     EDITTEXT        IDC_EDITPOSITION,63,58,25,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um",IDC_STATMICRON,91,60,10,8
@@ -5120,7 +5119,7 @@ BEGIN
     IDC_SAVEMACRO           "Save this script to a file"
     IDC_CONTINUOUSUPDATE    "Apply change of mag, spot, intensity, filter, probe or alpha to current area"
     IDC_CENTERUNSHIFTED     "Keep first and fourth areas in center of unshifted field of view"
-    IDC_BALANCESHIFTS       "Shift all areas to minimize distances from center of unshifted field"
+    IDC_BALANCESHIFTS       "Shift all areas to minimize distances from center of field, or recenter Record"
     IDC_BUTSMALLER10        "Reduce linear dimensions of area by 10%"
     IDC_BUTABITLESS         "Remove a few pixels (if A Bit Less) or trim to square area (if Square)"
     IDC_SPINRECORDMAG       "Set magnification for final acquired images"

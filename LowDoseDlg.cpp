@@ -53,7 +53,7 @@ IDC_STATOVERLAP, IDC_GOTO_VIEW, IDC_GOTO_FOCUS, IDC_GOTO_TRIAL,
 IDC_GOTO_RECORD, IDC_GOTO_SEARCH, IDC_STAT_LDCP_GO, IDC_UNBLANK,
 IDC_STATBLANKED,  IDC_STATMORE, IDC_BUTMORE, PANEL_END,
 IDC_BLANKBEAM, IDC_LDNORMALIZE_BEAM, IDC_TIEFOCUSTRIAL, IDC_COPYTOVIEW, IDC_COPYTOFOCUS,
-IDC_COPYTOTRIAL, IDC_COPYTORECORD, IDC_CENTERUNSHIFTED, IDC_BALANCESHIFTS,
+IDC_COPYTOTRIAL, IDC_COPYTORECORD, IDC_BALANCESHIFTS,
 IDC_STAT_COPY_LD_AREA, IDC_LD_ROTATE_AXIS, IDC_STAT_LD_DEG, IDC_COPYTOSEARCH,
 IDC_EDIT_AXISANGLE, PANEL_END, TABLE_END};
 
@@ -134,7 +134,6 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COPYTOFOCUS, m_butCopyToFocus);
   DDX_Control(pDX, IDC_COPYTOVIEW, m_butCopyToView);
   DDX_Control(pDX, IDC_BALANCESHIFTS, m_butBalanceShifts);
-  DDX_Control(pDX, IDC_CENTERUNSHIFTED, m_butCenterUnshifted);
   DDX_Control(pDX, IDC_CONTINUOUSUPDATE, m_butContinuousUpdate);
   DDX_Control(pDX, IDC_TIEFOCUSTRIAL, m_butTieFocusTrial);
   DDX_Control(pDX, IDC_LOWDOSEMODE, m_butLowDoseMode);
@@ -192,7 +191,6 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_BN_CLICKED(IDC_TIEFOCUSTRIAL, OnTiefocustrial)
   ON_EN_KILLFOCUS(IDC_EDITPOSITION, OnKillfocusEditposition)
   ON_BN_CLICKED(IDC_BALANCESHIFTS, OnBalanceshifts)
-  ON_BN_CLICKED(IDC_CENTERUNSHIFTED, OnCenterunshifted)
   ON_BN_CLICKED(IDC_CONTINUOUSUPDATE, OnContinuousupdate)
   ON_BN_CLICKED(IDC_UNBLANK, OnUnblank)
 	ON_BN_CLICKED(IDC_LDNORMALIZE_BEAM, OnLdNormalizeBeam)
@@ -571,6 +569,10 @@ void CLowDoseDlg::OnTiefocustrial()
 void CLowDoseDlg::OnBalanceshifts() 
 {
   double delAxis, meanFTaxis, newViewAxis;
+  if (ShiftsBalanced()) {
+    OnCenterunshifted();
+    return;
+  }
 
   mWinApp->RestoreViewFocus();  
   ConvertAxisPosition(false);
@@ -1191,6 +1193,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_sbcViewDefocus.SetRange(0, 100);
   m_sbcViewDefocus.SetPos(50);
   DeselectGoToButtons(-1);
+  m_butBalanceShifts.mSpecialColor = RGB(96, 255, 96);
 
   // Assume all variables are set into this dialog
 
@@ -1280,6 +1283,9 @@ void CLowDoseDlg::Update()
   bEnable = !STEMmode && ldShown->magIndex > 0;
   m_sbcViewDefocus.EnableWindow(enableIfNavAcq && !mWinApp->DoingTasks() && !camBusy);
   m_statViewDefocus.EnableWindow(enableIfNavAcq);
+  m_butBalanceShifts.m_bShowSpecial = m_bLowDoseMode && bCentered;
+  m_butBalanceShifts.SetWindowText(m_butBalanceShifts.m_bShowSpecial ?
+    "Center Unshifted" : "Balance Shifts");
 
   // Make mag-spot line visible if mode on
   m_statMagSpot.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
@@ -1297,9 +1303,7 @@ void CLowDoseDlg::Update()
   m_butContinuousUpdate.EnableWindow(enableIfNavAcq);
   m_butNormalizeBeam.EnableWindow(!STEMmode && enableIfNavAcq);
   m_butBalanceShifts.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined && 
-    bCentered && !usePiezo);
-  m_butCenterUnshifted.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined && 
-    !bCentered && !usePiezo);
+    !usePiezo);
   m_butTieFocusTrial.EnableWindow(bEnable && !usePiezo);
 
   // Turn off define position if doing tasks for real
