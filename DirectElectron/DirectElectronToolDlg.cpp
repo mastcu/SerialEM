@@ -349,7 +349,7 @@ const char * DirectElectronToolDlg::FileFormatProperty()
 // Change the state the protection if it does not match the incoming state
 void DirectElectronToolDlg::SetProtectionCoverMode(int nIndex)
 {
-  if (nIndex == mLastProtCoverSet || !mDECamera)
+  if (nIndex == mLastProtCoverSet || !mDECamera || mWinApp->mCamera->CameraBusy())
     return;
   CString stringname = "Protection Cover Operation Mode";
   CString value = nIndex ? DE_OPEN_CLOSE_COVER : DE_KEEP_COVER_OPEN;

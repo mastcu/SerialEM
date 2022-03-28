@@ -4154,17 +4154,17 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
   if (!mRIstayingInLD)
     SetMapOffsetsIfAny(item);
 
+  mAcquiringDual = true;
+  mWinApp->UpdateBufferWindows();
   if (item->mMapMontage) {
     mWinApp->StartMontageOrTrial(false);
   } else {
     mCamera->SetCancelNextContinuous(true);
     mWinApp->mCamera->InitiateCapture(mRIstayingInLD ? mRIconSetNum : RECORD_CONSET);
   }
-  mAcquiringDual = true;
 
   mWinApp->AddIdleTask(TASK_DUAL_MAP, 0, 0);
   mWinApp->SetStatusText(COMPLEX_PANE, "MAKING ANCHOR MAP");
-  mWinApp->UpdateBufferWindows();
   return 0;
 }
 
