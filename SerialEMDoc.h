@@ -199,7 +199,7 @@ private:
   EMbufferManager * mBufferManager;
   CSerialEMApp * mWinApp;
   CRecentFileList *mRecentSettings;
-  StoreData mStoreList[MAX_STORES];  // List of open stores (image files)
+  CArray<StoreData, StoreData> mStoreList;  // List of open stores (image files)
   int mNumStores;                // Number of open stores
   int mCurrentStore;             // Current one
 

@@ -834,8 +834,7 @@ void CSerialEMDoc::DoCloseFile()
 
   // pack the store list down
   mNumStores--;
-  for (int i = mCurrentStore; i < mNumStores; i++)
-    mStoreList[i] = mStoreList[i + 1];
+  mStoreList.RemoveAt(mCurrentStore);
   mCurrentStore--;
   ManageSaveSingle();
 
@@ -1539,18 +1538,19 @@ void CSerialEMDoc::SwitchToFile(int which)
 void CSerialEMDoc::AddCurrentStore()
 {
   MontParam *param = mWinApp->GetMontParam();
-  StoreData *file = &mStoreList[mNumStores++];
-  mCurrentStore = mNumStores - 1;
-  file->store = mWinApp->mStoreMRC;
-  CopyMasterFileOpts(&file->fileOpt, COPY_FROM_MASTER);
-  file->montage = mWinApp->Montaging() != 0;
-  file->protectNum = -1;
-  file->saveOnNewMap = -1;
-  file->montParam = NULL;
-  if (file->montage) {
-    file->montParam = new MontParam;
-    *file->montParam = *param;
+  StoreData stData;
+  mCurrentStore = mNumStores++;
+  stData.store = mWinApp->mStoreMRC;
+  CopyMasterFileOpts(&stData.fileOpt, COPY_FROM_MASTER);
+  stData.montage = mWinApp->Montaging() != 0;
+  stData.protectNum = -1;
+  stData.saveOnNewMap = -1;
+  stData.montParam = NULL;
+  if (stData.montage) {
+    stData.montParam = new MontParam;
+    *stData.montParam = *param;
   }
+  mStoreList.Add(stData);
   ComposeTitlebarLine();
   mWinApp->mBufferWindow.ReloadFileComboBox();
   mWinApp->UpdateBufferWindows();
@@ -1675,6 +1675,7 @@ int CSerialEMDoc::StoreIndexFromName(CString name)
 // Make a title with all the open filenames in it
 void CSerialEMDoc::ComposeTitlebarLine(void)
 {
+  int limit = 8, indStart;
   CString dir, filename, title;
   if (!mNumStores || !mWinApp->mStoreMRC) {
     mWinApp->SetTitleFile("");
@@ -1683,8 +1684,9 @@ void CSerialEMDoc::ComposeTitlebarLine(void)
   UtilSplitPath(mWinApp->mStoreMRC->getName(), dir, title);
   mWinApp->m_strTitle = title;
   if (mNumStores > 1) {
+    indStart = B3DMAX(0, mCurrentStore + 1 - limit);
     title = "";
-    for (int ind = 0; ind < mNumStores; ind++) {
+    for (int ind = indStart; ind < B3DMIN(mNumStores, indStart + limit); ind++) {
       UtilSplitPath(mStoreList[ind].store->getName(), dir, filename);
       dir.Format("%s%s%d: ", ind > 0 ? "   " : "", ind == mCurrentStore ? "[" : "",
         ind + 1);

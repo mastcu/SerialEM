@@ -110,7 +110,7 @@ struct JeolParams;
 #define MAX_BUFFERS  20
 #define MAX_ROLL_BUFFERS 14
 #define MAX_FFT_BUFFERS 8
-#define MAX_STORES    8
+#define MAX_STORES    100
 #define MAX_EXTRA_SAVES 5
 #define MAX_EXTRA_RECORDS 30
 #define MAX_TS_VARIES  50
