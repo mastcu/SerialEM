@@ -2183,7 +2183,7 @@ void CShiftManager::PropagateRotations(void)
   int numRanges, range, limlo, limhi, lowestMicro, midFilmMag = 15000;
   int numCam = mWinApp->GetNumReadInCameras();
   int lowestMmag = mScope->GetLowestMModeMagInd();
-  bool anyCal = false;
+  bool anyCal = false, anyOK;
   CameraParameters *camP = mCamParams;
   MagTable *magT = mMagTab;
   int camFallbackDerived[MAX_CAMERAS];
@@ -2262,7 +2262,7 @@ void CShiftManager::PropagateRotations(void)
               magT[iMag].rotation[iCam] = GoodAngle(magT[iMag].rotation[iCam2] +
                 camP[iCam].extraRotation - camP[iCam2].extraRotation);
               anyCal = true;
-              magT[iMag].rotDerived[iCam] = derived;
+              magT[iMag].rotDerived[iCam] = derived + 1;
               SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f assigned from Cam %d",
                 iMag, iCam, magT[iMag].rotation[iCam], iCam2);
               break;
@@ -2317,10 +2317,18 @@ void CShiftManager::PropagateRotations(void)
   for (iAct = 0; iAct < numCam; iAct++) {
     iCam = mActiveCameraList[iAct];
     mMagsWithRotFallback[iCam].clear();
+    anyOK = false;
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
-      if (magT[iMag].rotDerived[iCam] >= camFallbackDerived[iCam] &&
-        (!magT[iMag].pixDerived[iCam] || magT[iMag].matIS[iCam].xpx != 0.))
-        mMagsWithRotFallback[iCam].push_back(MagForCamera(iCam, iMag));
+      if (!magT[iMag].pixDerived[iCam] || magT[iMag].matIS[iCam].xpx != 0.) {
+        if (magT[iMag].rotDerived[iCam] >= camFallbackDerived[iCam])
+          mMagsWithRotFallback[iCam].push_back(MagForCamera(iCam, iMag));
+        else
+          anyOK = true;
+      }
+    }
+    if (mMagsWithRotFallback[iCam].size() > 0 && !anyOK) {
+      mCamWithRotFallback.insert(iCam);
+      mMagsWithRotFallback[iCam].clear();
     }
   }
   mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);

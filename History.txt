@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/28/22: Fixed rotation problem report to report no absolute calibrated angle
+instead of all mags relying on nominal relative rotations (In 4.0).
+
+3/28/22: Fixed program getting screwed up by warning from waiting for lens
+relaxation if the log is closed (In 4.0).
+
 3/24/22: Prevented DE protection cover mode from being changed after an
 acquisition is started (In 4.0).
 
