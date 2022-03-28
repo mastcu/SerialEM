@@ -7991,7 +7991,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
     Sleep(50);
   }
   if (!state) {
-    PrintfToLog("%.3f: WARNING: Lens relaxation event not detected within %d msec "
+    SEMTrace('0', "%.3f: WARNING: Lens relaxation event not detected within %d msec "
       "timeout, going on", SEMSecondsSinceStart(), sJeolStartRelaxTimeout);
     return 1;
   }
@@ -8007,7 +8007,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
     Sleep(50);
   }
   if (state) {
-    PrintfToLog("%.3f: WARNING: End of lens relaxation not detected within %d msec, "
+    SEMTrace('0', "%.3f: WARNING: End of lens relaxation not detected within %d msec, "
       "going on", SEMSecondsSinceStart(), sJeolEndRelaxTimeout);
     return 1;
   }
