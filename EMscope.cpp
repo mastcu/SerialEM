@@ -770,8 +770,8 @@ int CEMscope::Initialize()
       // Add shift boundaries for HR mode.  LM is pretty good in most of range
       if (mLowestSecondaryMag > 0) {
         for (ind = mLowestSecondaryMag; ind < MAX_MAGS; ind++)
-          if (mNumShiftBoundaries < MAX_MAGS - 1 && mMagTab[ind].mag)
-            mShiftBoundaries[mNumShiftBoundaries++] = ind;
+          if (mMagTab[ind].mag)
+            AddShiftBoundary(ind);
       }
       mDewarVacCapabilities = 0;
       mScopeHasPhasePlate = 0;
@@ -792,17 +792,23 @@ int CEMscope::Initialize()
       for (ind = 0; ind <= mNumShiftBoundaries; ind++) {
         if (ind == mNumShiftBoundaries || mLowestSecondaryMag <= mShiftBoundaries[ind]) {
           if (ind == mNumShiftBoundaries) {
-            mShiftBoundaries[mNumShiftBoundaries++] = mLowestSecondaryMag;
+            AddShiftBoundary(mLowestSecondaryMag);
           } else if (mLowestSecondaryMag < mShiftBoundaries[ind]) {
-            for (ind2 = mNumShiftBoundaries; ind2 > ind; ind2--)
+            AddShiftBoundary(0);
+            for (ind2 = mNumShiftBoundaries - 1; ind2 > ind; ind2--)
               mShiftBoundaries[ind2] = mShiftBoundaries[ind2 - 1];
             mShiftBoundaries[ind] = mLowestSecondaryMag;
-            mNumShiftBoundaries++;
           }
           break;
         }
       }
     }
+
+    // Copy the boundary list to the EFTEM list and change LM boundary to EFTEM one
+    mEFTEMShiftBoundaries = mShiftBoundaries;
+    for (ind = 0; ind < mNumShiftBoundaries; ind++)
+      if (mShiftBoundaries[ind] == mLowestMModeMagInd)
+        mEFTEMShiftBoundaries[ind] = mLowestEFTEMNonLMind;
   }
 
   // Get the various pointers for the scope objects
@@ -1488,7 +1494,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // If the mag change is across boundary between non-congruent shifts,
       // Get the real image shift including axis offset, excluding neutral and offset
       if (manageISonMagChg && (changedJeolEFTEM ||
-        !shiftManager->CanTransferIS(lastMag, magIndex, STEMmode != 0))) {
+        !shiftManager->CanTransferIS(lastMag, magIndex, STEMmode != 0, EFTEM ? 1 : 0))) {
+
+        // I think this is for non-JEOL because it was already done for JEOL
         if (!JEOLscope) {
           ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX + 
             mDetectorOffsetX);
@@ -8159,9 +8167,9 @@ void CEMscope::SetJeolUsePLforIS(BOOL inVal)
     mJeolSD.usePLforIS = inVal;
     if (!inVal)
       return;
-    mNumShiftBoundaries = MAX_MAGS - 2;
+    mShiftBoundaries.clear();
     for (int i = 2; i < MAX_MAGS; i++)
-      mShiftBoundaries[i - 2] = i;
+      AddShiftBoundary(i);
   }
 }
 

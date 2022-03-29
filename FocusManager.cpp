@@ -1977,7 +1977,8 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
                 // On first pass, insist that both image shifts be calibrated
                 if (!iPass && (mMagTab[iMag].matIS[iCamTry].xpx == 0. ||
                   mMagTab[inMag].matIS[inCam].xpx == 0. || 
-                  !mShiftManager->CanTransferIS(iMag, inMag)))
+                  !mShiftManager->CanTransferIS(iMag, inMag, false, 
+                    mCamParams[iCamTry].GIF ? 1 : 0)))
                   continue;
                 if ((focInd = LookupFocusCal(iMag, iCamTry, mTiltDirection, probeMode, 
                   inAlpha, alphaPass > 0)) < 0)

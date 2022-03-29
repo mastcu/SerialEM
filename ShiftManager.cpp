@@ -1642,6 +1642,7 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
   int iCam, iMag, iAct;
   int iDir, delta, limlo, limhi;
   BOOL STEMcamera = mCamParams[inCamera].STEMcamera;
+  int EFTEM = mCamParams[inCamera].GIF ? 1 : 0;
   bool debug = GetDebugOutput('c') && (GetDebugOutput('i') || GetDebugOutput('l'));
 
   MagTable *magtab = &mMagTab[inMagInd];
@@ -1656,7 +1657,7 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
   for (iAct = 0; iAct < mWinApp->GetNumReadInCameras(); iAct++) {
     iCam = mActiveCameraList[iAct];
     if (iCam != inCamera && !mCamParams[iCam].STEMcamera && !STEMcamera && 
-      (mCamParams[iCam].GIF ? 1 : 0) == (mCamParams[inCamera].GIF ? 1 : 0) ) {
+      (mCamParams[iCam].GIF ? 1 : 0) == EFTEM ) {
         if (mMagTab[inMagInd].matIS[iCam].xpx != 0.) {
           mat = AdjustedISmatrix(iCam, inMagInd, inCamera, inMagInd);
           if (debug)
@@ -1682,7 +1683,7 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
               SEMTrace('c', "IStoGivenCamera at cam %d mag %d by direct copy of PLA cal "
                 "from mag %d:", inCamera, inMagInd, iMag);
             return mMagTab[iMag].matIS[inCamera];
-        } else if (CanTransferIS(iMag, inMagInd, STEMcamera)) {
+        } else if (CanTransferIS(iMag, inMagInd, STEMcamera, EFTEM)) {
           mat = AdjustedISmatrix(inCamera, iMag, inCamera, inMagInd);
           if (debug)
             SEMTrace('c', "IStoGivenCamera at cam %d mag %d by specimen transfer "
@@ -1707,7 +1708,8 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
         iMag = inMagInd + delta * iDir;
         if (iMag < 1 || iMag >= MAX_MAGS)
           continue;
-        if (mMagTab[iMag].matIS[iCam].xpx != 0. && CanTransferIS(iMag, inMagInd)) {
+        if (mMagTab[iMag].matIS[iCam].xpx != 0. && CanTransferIS(iMag, inMagInd, false,
+          mCamParams[iCam].GIF ? 1 : 0)) {
           mat = AdjustedISmatrix(iCam, iMag, inCamera, inMagInd);
           return mat;
         }
@@ -1798,8 +1800,8 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
               if (iMag < limlo || iMag > limhi)
                 continue;
               if (mMagTab[iMag].matStage[iCam].xpx != 0.) {
-                if (!source && CanTransferIS(iMag, inMagInd, mCamParams[iCam].STEMcamera))
-                {
+                if (!source && CanTransferIS(iMag, inMagInd, mCamParams[iCam].STEMcamera, 
+                  mCamParams[iCam].GIF ? 1 : 0)) {
                   
                   // Transform the other stage to camera calibration via the
                   // inverse of the IS cal times this mag/cam IS cal
@@ -2010,7 +2012,7 @@ void CShiftManager::PropagatePixelSizes(void)
             if (mag2 >= limlo && mag2 <= limhi && 
               magT[mag2].pixDerived[iCam] < derived &&
               magT[mag2].matIS[iCam].xpx && 
-              CanTransferIS(mag2, iMag, camP[iCam].STEMcamera)) {
+              CanTransferIS(mag2, iMag, camP[iCam].STEMcamera, camP[iCam].GIF ? 1 : 0)) {
                 magT[iMag].pixelSize[iCam] = TransferPixelSize(
                   mag2, iCam, iMag, iCam);
                 magT[iMag].pixDerived[iCam] = derived;
@@ -2441,7 +2443,8 @@ void CShiftManager::PropagateCalibratedRotations(int actCamToDo, int & derived)
             // derivation and it has an image shift cal that can transfer, get the 
             // rotation
             if (mag2 >= 1 && mag2 < MAX_MAGS && magT[mag2].rotDerived[iCam] <
-              derived && magT[mag2].matIS[iCam].xpx && CanTransferIS(mag2, iMag)) {
+              derived && magT[mag2].matIS[iCam].xpx && CanTransferIS(mag2, iMag, false,
+                camP[iCam].GIF ? 1 : 0)) {
               magT[iMag].rotation[iCam] = TransferImageRotation(
                 magT[mag2].rotation[iCam], iCam, mag2, iCam, iMag);
               magT[iMag].rotDerived[iCam] = derived;
@@ -2882,12 +2885,14 @@ ScaleMat CShiftManager::AdjustedISmatrix(int iCamCal, int iMagCal, int iCamWant,
 }
 
 // Returns whether IS values are consistent between the two mags
-BOOL CShiftManager::CanTransferIS(int magFrom, int magTo, BOOL STEMcamera)
+BOOL CShiftManager::CanTransferIS(int magFrom, int magTo, BOOL STEMcamera, int GIFcamera)
 {
   int i, mag;
   if (!mScope)
   	return false;
-  int *boundaries = mScope->GetShiftBoundaries();
+  if (GIFcamera < 0)
+    GIFcamera = mCamParams[mWinApp->GetCurrentCamera()].GIF ? 1 : 0;
+  int *boundaries = mScope->GetShiftBoundaries(GIFcamera);
 
   // For a STEM camera, check each LM-M boundary  (JEOL????)
   if (STEMcamera) {
@@ -2930,7 +2935,8 @@ void CShiftManager::TransferGeneralIS(int fromMag, double fromX, double fromY, i
     return;
   toX = fromX;
   toY = fromY;
-  if (toMag == fromMag || CanTransferIS(toMag, fromMag, mCamParams[iCam].STEMcamera)) {
+  if (toMag == fromMag || CanTransferIS(toMag, fromMag, mCamParams[iCam].STEMcamera,
+    mCamParams[iCam].GIF ? 1 : 0)) {
     SEMTrace('l', "TransferGeneralIS %d to %d direct copy", fromMag, toMag);
     return;
   } else {
@@ -2960,7 +2966,8 @@ int CShiftManager::NearestIScalMag(int inMag, int iCam, BOOL crossBorders)
       if (iMag < limlo || iMag > limhi)
         continue;
       if (mMagTab[iMag].matIS[iCam].xpx && 
-        (CanTransferIS(iMag, inMag, mCamParams[iCam].STEMcamera) || crossBorders))
+        (CanTransferIS(iMag, inMag, mCamParams[iCam].STEMcamera, 
+          mCamParams[iCam].GIF ? 1 : 0) || crossBorders))
         return iMag;
     }
   }

@@ -901,7 +901,8 @@ void CShiftCalibrator::ShiftDone()
     int numToDo = 0;
     mWinApp->GetMagRangeLimits(iCam, mCalIndex, limlo, limhi);
     for (int iMag = limlo; iMag <= limhi; iMag++) {
-      if (mSM->CanTransferIS(mCalIndex, iMag, mCamParams[iCam].STEMcamera)) {
+      if (mSM->CanTransferIS(mCalIndex, iMag, mCamParams[iCam].STEMcamera, 
+        mCamParams[iCam].GIF ? 1 : 0)) {
         if (mMagsTransFrom.count(iMag) > 0) {
           numToDo = 0;
           break;
@@ -921,7 +922,8 @@ void CShiftCalibrator::ShiftDone()
     if (numToDo > 0 && AfxMessageBox(report, MB_QUESTION) == IDYES) {
       for (int iMag = limlo; iMag <= limhi; iMag++) {
         if (!mMagTab[iMag].calibrated[iCam] && mMagTab[iMag].matIS[iCam].xpx != 0. && 
-          mSM->CanTransferIS(mCalIndex, iMag, mCamParams[iCam].STEMcamera))
+          mSM->CanTransferIS(mCalIndex, iMag, mCamParams[iCam].STEMcamera,
+            mCamParams[iCam].GIF ? 1 : 0))
           mMagTab[iMag].matIS[iCam] = MatMul(mMagTab[iMag].matIS[iCam], delMat);
       }
       mMagsTransFrom.insert(mCalIndex);
@@ -1478,7 +1480,8 @@ void CShiftCalibrator::ConvertIS(int fromCam, int fromMag, double fromISX,
   // If it is same camera and IS can transfer, or if there is no matrix for one of them,
   // just copy the IS
   if ((fromCam == toCam && mSM->CanTransferIS(fromMag, toMag, 
-    mCamParams[toCam].STEMcamera)) || bMat.xpx || !bfMat.xpx) {
+    mCamParams[toCam].STEMcamera, mCamParams[toCam].GIF ? 1 : 0)) || bMat.xpx || 
+    !bfMat.xpx) {
     toISX = fromISX;
     toISY = fromISY;
     return;

@@ -180,7 +180,7 @@ public:
   int GetColumnValvesOpen();
   int FastColumnValvesOpen();
   BOOL BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2);
-  void AddShiftBoundary(int inVal) { mShiftBoundaries[mNumShiftBoundaries++] = inVal; };
+  void AddShiftBoundary(int inVal) { mShiftBoundaries.push_back(inVal); mNumShiftBoundaries++; };
   void StopCalNeutralIS();
   void CalNeutralNextMag(int magInd);
   BOOL CalibratingNeutralIS() { return mCalNeutralStartMag >= 0; };
@@ -232,11 +232,11 @@ public:
   GetSetMember(int, JeolExternalMagDelay);
   GetSetMember(int, JeolMagEventWait);
   GetSetMember(int, JeolSTEMPreMagDelay);
-  GetSetMember(int, NumSpotSizes)
-    GetSetMember(int, MinSpotSize);
+  GetSetMember(int, NumSpotSizes);
+  GetSetMember(int, MinSpotSize);
   GetSetMember(int, NumAlphas);
-  GetMember(int, NumShiftBoundaries)
-    int *GetShiftBoundaries() { return &mShiftBoundaries[0]; };
+  GetMember(int, NumShiftBoundaries);
+  int *GetShiftBoundaries(BOOL EFTEM = mLastEFTEMmode) { return (EFTEM && mEFTEMShiftBoundaries.size() > 0) ? &mEFTEMShiftBoundaries[0] : &mShiftBoundaries[0]; };
   BOOL ScanMagnifications();
   float GetC2IntensityFactor(int probe = -1);
   void SetC2IntensityFactor(int probe, float inVal) { mC2IntensityFactor[probe] = inVal; };
@@ -666,7 +666,8 @@ private:
   int mLowestGIFModeMag;      // Index to lowest mag that should be used in GIF mode
   int mLowestSTEMnonLMmag[2]; // Index to lowest non LM mag in STEM mode
   int mLowestMicroSTEMmag;    // Index to start of microprobe mags
-  int mShiftBoundaries[MAX_MAGS + 10];  // Mags that start a new image or beam shift regime
+  IntVec mShiftBoundaries;    // Mags that start a new image or beam shift regime
+  IntVec mEFTEMShiftBoundaries;  // separate copy for EFTEM mode
   int mNumShiftBoundaries;    // Number of boundaries
   float mC2IntensityFactor[2];   // Factor to scale intensity to C2 reading, each probe mode
   float mC2SpotOffset[MAX_SPOT_SIZE + 1][2];    // Offset for each spot size, each probe mode
@@ -851,7 +852,7 @@ private:
   int mMaxJeolAutoloaderSlots; // Number of slots to query 
   int mChangedLoaderInfo;      // Flag to indicate info was gotten or changed
   int mUnloadedCartridge;      // Index in table of cartridge that was unloaded
-  int mLoadedCartridge;      // Index in table of cartridge that was unloaded
+  int mLoadedCartridge;        // Index in table of cartridge that was unloaded
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

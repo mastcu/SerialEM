@@ -74,7 +74,7 @@ public:
   ScaleMat CameraToIS(int magInd);
   ScaleMat CameraToSpecimen(int magInd);
   GetSetMember(BOOL, TrimDarkBorders)
-  BOOL CanTransferIS(int magFrom, int magTo, BOOL STEMcamera = false);
+  BOOL CanTransferIS(int magFrom, int magTo, BOOL STEMcamera = false, int GIFcamera = -1);
 	void TransferGeneralIS(int fromMag, double fromX, double fromY, int toMag, double &toX,
     double &toY, int toCam = -1);
   double TransferImageRotation(double fromAngle, int fromCam, int fromMag,
