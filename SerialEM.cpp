@@ -484,6 +484,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.forFullMontage = false;
   mMontParam.useViewInLowDose = false;
   mMontParam.useSearchInLowDose = false;
+  mMontParam.useMontMapParams = false;
   mMontParam.useContinuousMode = false;
   mMontParam.continDelayFactor = 0.5f;
   mMontParam.noDriftCorr = true;
