@@ -695,11 +695,13 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     // Open a file locally if flag set for that
   if (readLocally) {
     if (mEERsumming > 0) {
-      eerFlags = mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0;
-      if (mEERsuperRes < 2 && mReadEERantialiased)
-        eerFlags |= (IIFLAG_ANTIALIAS_EER | IIFLAG_EER_USE_LANCZOS);
-      tiffSetEERreadProperties(mEERsuperRes, mEERsumming, eerFlags);
       mFloatScale = mLastEERcountScaling * pow((float)GetEERsuperFactor(mEERsuperRes), 2);
+      eerFlags = mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0;
+      if (mEERsuperRes < 2 && mReadEERantialiased) {
+        eerFlags |= (IIFLAG_ANTIALIAS_EER | IIFLAG_EER_USE_LANCZOS);
+        mFloatScale /= 100.;
+      }
+      tiffSetEERreadProperties(mEERsuperRes, mEERsumming, eerFlags);
     }
     mFrameFP = iiFOpen((LPCTSTR)localPath, "rb");
     if (!mFrameFP) {
