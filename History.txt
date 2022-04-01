@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/1/22: Fixed Navigator Acquire not moving to stage position after failing to
+find a map for realigning to (In 4.0).
+
 3/30/22: Fixed scaling by 100 when aligning EER frames in SerialEM (In 4.0).
 
 3/28/22: Fixed rotation problem report to report no absolute calibrated angle

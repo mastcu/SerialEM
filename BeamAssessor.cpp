@@ -2614,7 +2614,6 @@ void CBeamAssessor::ConvertSettingsForFirstIALimitCal(bool skipLDcopy)
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
 
   // Low dose parameters
-  mWinApp->SetDebugOutput('1');
   if (!skipLDcopy)
     mWinApp->CopyCurrentToCameraLDP();
   for (j = 0; j < 3; j++) {
