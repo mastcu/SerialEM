@@ -6057,6 +6057,7 @@ STRINGTABLE
 BEGIN
     IDC_CHECK_USE_VIEW_IN_LOWDOSE 
                             "Use View camera and scope parameters in Low Dose mode"
+    IDC_CHECK_USE_MULTISHOT "Use the Multiple Records routine to get montage in Low Dose mode"
     IDC_SHOW_ACQUIRE_AREA   "Show acquisition area around marker or line endpoint"
     IDC_CORRECT_BACKLASH    "Correct for backlash when moving stage with mouse or resetting IS"
     IDC_TSV_FRAME_TIME      "Change frame time for K2/K3 camera dose fractionation"
