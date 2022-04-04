@@ -3573,10 +3573,15 @@ void CCameraController::Capture(int inSet, bool retrying)
   mAstigQueued = false;
   mDefocusQueued = false;
   mNumDRdelete = 0;
-  mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
-    mWinApp->mTSController->GetCumulativeDose(), -1.);
+
+  // Get prior record dose from tilt series or macro
+  mPriorRecordDose = -1.;
   if (mTD.DoingTiltSums)
     mPriorRecordDose = 0.;
+  else if (mWinApp->DoingTiltSeries())
+    mPriorRecordDose = (float)mWinApp->mTSController->GetCumulativeDose();
+  else if (mWinApp->mMacroProcessor->DoingMacro())
+    mPriorRecordDose = mWinApp->mMacroProcessor->GetCumulRecordDose();
 
   // Adjust or set scaling for FEI cameras in advanced interface
   mDivBy2ForExtra = mDivBy2ForImBuf = mTD.DivideBy2;

@@ -12,6 +12,7 @@ class KImageStore;
 const char *SEMCCDErrorMessage(int code);
 int MontageConSetNum(MontParam *param, bool trueSet, int lowDose = -1);
 int MontageLDAreaIndex(MontParam *param);
+bool UseMultishotForMontage(MontParam *param, int lowDose = -1);
 void SEMUtilInitialize();
 bool UtilOKtoAllocate(int numBytes);
 int UtilThreadBusy(CWinThread **threadpp, DWORD *exitPtr = NULL);

@@ -152,12 +152,15 @@ private:
   int mPanelStart[5];
   int mNumInPanel[5];
   int mLastRecordMoveStage;
+  int mXoverlap, mYoverlap;
 
 public:
   int CheckNavigatorFit(int magIndex, int binning, float minOverlap = -1.f, 
     float minMicrons = -1.f, BOOL switchingVinLD = FALSE);
   void LoadParamData(BOOL setPos);
   void ManageSizeFields(void);
+  void LoadOverlapBoxes();
+  void UnloadOverlapBoxes();
   void ManageStageAndGeometry(BOOL reposition);
   void UnloadParamData(void);
   void MinOverlapsInPixels(int & minOverX, int & minOverY);
@@ -204,10 +207,13 @@ public:
   CButton m_butUseSearchInLD;
   BOOL m_bUseSearchInLD;
   afx_msg void OnUseSearchInLD();
-  void UseViewOrSearchInLD(BOOL & otherFlag);
+  void UseViewOrSearchInLD(BOOL & otherFlag, BOOL &secondFlag);
   CButton m_butUseMontMapParams;
   BOOL m_bUseMontMapParams;
   afx_msg void OnUseMontMapParams();
+  CButton m_butUseMultishot;
+  BOOL m_bUseMultishot;
+  afx_msg void OnUseMultishot();
 };
 
 //{{AFX_INSERT_LOCATION}}

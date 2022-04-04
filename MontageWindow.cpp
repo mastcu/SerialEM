@@ -257,6 +257,7 @@ void CMontageWindow::Update()
   BOOL bEnable = mWinApp->Montaging() && !mMontageController->DoingMontage() &&
     !mWinApp->DoingComplexTasks();
   BOOL noShift = mWinApp->Montaging() && mParam->skipCorrelations && mParam->useHqParams;
+  bool usingMS = UseMultishotForMontage(mParam);
   m_statCurrentZ.EnableWindow(bEnable);
   m_editCurrentZ.EnableWindow(bEnable);
   m_sbcZ.EnableWindow(bEnable);
@@ -265,13 +266,13 @@ void CMontageWindow::Update()
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage());
   m_butStart.EnableWindow(bEnable && !mWinApp->StartedTiltSeries() &&
     !mWinApp->mCamera->CameraBusy());
-  m_butTrial.EnableWindow(bEnable && !mWinApp->mCamera->CameraBusy());
+  m_butTrial.EnableWindow(bEnable && !mWinApp->mCamera->CameraBusy() && !usingMS);
   
   bEnable = !mMontageController->DoingMontage() && !mWinApp->DoingComplexTasks();
   m_butShiftOverview.EnableWindow(bEnable && !noShift);
-  m_butVerySloppy.EnableWindow(bEnable && !noShift);
-  m_butCorrectDrift.EnableWindow(bEnable && !mParam->moveStage && !noShift);
-  m_butAdjustFocus.EnableWindow(bEnable && !mParam->moveStage);
+  m_butVerySloppy.EnableWindow(bEnable && !noShift && !usingMS);
+  m_butCorrectDrift.EnableWindow(bEnable && !mParam->moveStage && !noShift && !usingMS);
+  m_butAdjustFocus.EnableWindow(bEnable && !mParam->moveStage && !usingMS);
 
   // If montaging is on, fix the prescan maximum and actual values
   if (mWinApp->Montaging()) {

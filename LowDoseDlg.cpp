@@ -1283,7 +1283,7 @@ void CLowDoseDlg::Update()
   bEnable = !STEMmode && ldShown->magIndex > 0;
   m_sbcViewDefocus.EnableWindow(enableIfNavAcq && !mWinApp->DoingTasks() && !camBusy);
   m_statViewDefocus.EnableWindow(enableIfNavAcq);
-  m_butBalanceShifts.m_bShowSpecial = m_bLowDoseMode && bCentered;
+  m_butBalanceShifts.m_bShowSpecial = m_bLowDoseMode && !bCentered;
   m_butBalanceShifts.SetWindowText(m_butBalanceShifts.m_bShowSpecial ?
     "Center Unshifted" : "Balance Shifts");
 

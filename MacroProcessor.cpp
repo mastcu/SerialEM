@@ -1102,6 +1102,7 @@ void CMacroProcessor::Run(int which)
   mMaxDeltaFocus = 0.;
   mMinAbsFocus = 0.;
   mMaxAbsFocus = 0.;
+  mCumulRecordDose = -1.;
   mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
   mParseQuotes = false;

@@ -16,6 +16,8 @@
 #include <vector>
 #include "EMscope.h"
 
+struct MultiShotParams;
+
 // Structure for storing limits to frame sizes in fitted montages
 struct MontLimits
 {
@@ -45,7 +47,7 @@ class EMmontageController
     KImageStore *inStoreMRC = NULL, BOOL centerOnly = false, BOOL synchronous = false,
   int bufToCopyTo = -1);
   void StopMontage(int error = 0);
-  void SavePiece();
+  int SavePiece();
   void SetMontaging(BOOL inVal);
   void PieceCleanup(int error);
   int DoNextPiece(int param);
@@ -109,6 +111,9 @@ class EMmontageController
   int   mMontCenterX, mMontCenterY;
   float mFocusPitchX, mFocusPitchY;
   KImageStore *mReadStoreMRC;
+  MultiShotParams *mMultiShotParams;
+  bool mUsingMultishot;
+  int mAdjustedOverlaps[2];
   int mAction;
   int mNumActions;
 
@@ -129,6 +134,7 @@ class EMmontageController
   double mBaseFocus;              // Base focus
   ScaleMat mBinv;                 // Matrix for getting from pixels to Image Shift
   StageMoveInfo mMoveInfo;        // Structure for stage moves
+  bool mDoStageMoves;             // Replacement for moveStage in param, in case multishot
   BOOL mMovingStage;              // Flag that stage is being moved
   BOOL mRestoringStage;           // Flag for final stage move at end
   BOOL mFocusing;                 // Flag for focusing after stage move

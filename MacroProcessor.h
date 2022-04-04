@@ -164,6 +164,7 @@ public:
   GetMember(bool, SuspendNavRedraw);
   GetMember(bool, DeferLogUpdates);
   GetMember(bool, NonMacroDeferring);
+  GetMember(float, CumulRecordDose);
   void SetNonMacroDeferLog(bool inVal) { mDeferLogUpdates = inVal; mNonMacroDeferring = inVal; };
 
   GetMember(bool, LoopInOnIdle);
@@ -399,6 +400,7 @@ protected:
   std::vector<std::string> mVersionsOfPython;
   CString mPyModulePath;       // Module path set by property or set as default
   int mScriptNumFound;         // Last script number (0-based) for FindScriptByName
+  float mCumulRecordDose;      // Cumulative Record dose for tilt series
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);

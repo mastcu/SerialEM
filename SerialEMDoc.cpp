@@ -730,6 +730,8 @@ bool CSerialEMDoc::FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose,
   NavParams *navp = mWinApp->GetNavParams();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   int magInd = param->magIndex;
+  if (lowDose && param->useMultiShot)
+    return false;
   if (lowDose)
     magInd = ldp[MontageLDAreaIndex(param)].magIndex;
   return magInd < mWinApp->mScope->GetLowestNonLMmag() ||

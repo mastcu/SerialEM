@@ -31,6 +31,7 @@ CParticleTasks::CParticleTasks(void)
   mImBufs = mWinApp->GetImBufs();
   mMSCurIndex = -2;             // Index when it is not doing anything must be < -1
   mMSTestRun = 0;
+  mNextMSParams = NULL;
   mWaitingForDrift = 0;
   mWDDfltParams.measureType = WFD_USE_FOCUS;
   mWDDfltParams.driftRate = 1.;
@@ -45,6 +46,7 @@ CParticleTasks::CParticleTasks(void)
   mWDDfltParams.priorAutofocusRate = 0.5f;
   mMSLastHoleStageX = EXTRA_NO_VALUE;
   mMSLastHoleISX = mMSLastHoleISY = 0.;
+  mMSinHoleStartAngle = -900.;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -77,10 +79,12 @@ void CParticleTasks::Initialize(void)
   mShiftManager = mWinApp->mShiftManager;
   mFocusManager = mWinApp->mFocusManager;
   mNavHelper = mWinApp->mNavHelper;
-  mMSParams = mWinApp->mNavHelper->GetMultiShotParams();
+  mMSParams = mNavHelper->GetMultiShotParams();
   mZBGCalOffsetToUse = mFocusManager->GetDefocusOffset();
   mZBGCalBeamTiltToUse = mFocusManager->GetBeamTilt();
 }
+
+#define RESTORE_MSP_RETURN(a) mMSParams = mNavHelper->GetMultiShotParams(); return (a);
 
 /*
  * External call to start the operation with all the parameters
@@ -111,16 +115,22 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSExtraDelay = extraDelay;
   mMSIfEarlyReturn = ifEarlyReturn;
   mMSEarlyRetFrames = earlyRetFrames;
+  mMSsaveToMontage = numPeripheral == -1;
   mMSAdjustBeamTilt = adjustBT && comaVsIS->magInd > 0;
   mRecConSet = mWinApp->GetConSets() + RECORD_CONSET;
   mSavedAlignFlag = mRecConSet->alignFrames;
   mMSPosIndex.clear();
 
+  if (mNextMSParams) {
+    mMSParams = mNextMSParams;
+    mNextMSParams = NULL;
+  }
+
   // Check conditions, first for test runs
   if (testImage && testComa) {
     SEMMessageBox("You cannot test both multishot image location and coma correction in "
       "one run");
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
   testRun = testImage;
   if (testImage) {
@@ -128,7 +138,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       montP->useSearchInLowDose)) || montP->moveStage)) {
         SEMMessageBox("You cannot test multishot image location with a View or Search "
           "montage or a stage montage");
-        return 1;
+        RESTORE_MSP_RETURN(1);
     }
   }
   if (testComa) {
@@ -136,7 +146,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (comaVsIS->magInd <= 0 && adjustBT) {
       SEMMessageBox("You cannot test multishot coma correction with\r\n""adjustment for"
         " image shift: there is no calibration of coma versus image shift");
-      return 1;
+      mMSParams = mNavHelper->GetMultiShotParams();
+      RESTORE_MSP_RETURN(1);
     }
     mMSAdjustBeamTilt = true;
     mMSSaveRecord = false;
@@ -156,53 +167,54 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       mMSDoCenter = 0;
   }
 
-  mMSSaveRecord = !(multiHoles && mWinApp->Montaging()) && !testComa && saveRec;
+  mMSSaveRecord = (mMSsaveToMontage || !(multiHoles && mWinApp->Montaging())) && !testComa
+    && saveRec;
 
   // Then test other conditions
   if (mMSIfEarlyReturn && !camParam->K2Type) {
     SEMMessageBox("The current camera must be a K2/K3 to use early return for multiple "
        "shots");
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
   if (multiInHole  && (numPeripheral < 2 || numPeripheral > MAX_PERIPHERAL_SHOTS ||
     numSecondRing == 1 || numSecondRing > MAX_PERIPHERAL_SHOTS)) {
     str.Format("To do multiple shots in a hole, the number of shots\n"
         "in one ring around the center must be between 2 and %s", MAX_PERIPHERAL_SHOTS);
     SEMMessageBox(str);
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
   if (multiHoles && !((mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
     mMSParams->holeMagIndex > 0)) {
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
-      return 1;
+      RESTORE_MSP_RETURN(1);
   }
   if (mMSIfEarlyReturn == 2 && earlyRetFrames == 0 && mMSSaveRecord) {
     SEMMessageBox("You cannot save Record images from multiple\n"
       "shots when doing an early return with 0 frames");
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
   if (mMSSaveRecord && !mWinApp->mStoreMRC) {
     SEMMessageBox("An image file must be open for saving\n"
       "before starting to acquire multiple Record shots");
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
-  if (mMSSaveRecord && mWinApp->Montaging()) {
+  if (mMSSaveRecord && !mMSsaveToMontage && mWinApp->Montaging()) {
     SEMMessageBox("Multiple Records are supposed to be saved but the current image file"
       " is a montage");
-    return 1;
+    RESTORE_MSP_RETURN(1);
   }
 
-  if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
+  if (!mMSsaveToMontage && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
     if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
       SEMMessageBox("Could not retrieve the Navigator item currently being acquired");
-      return 1;
+      RESTORE_MSP_RETURN(1);
     }
     numXholes = item->mNumXholes;
     numYholes = item->mNumYholes;
     if (ItemIsEmptyMultishot(item)) {
       PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped", 
         (LPCTSTR)item->mLabel);
-      return 0;
+      RESTORE_MSP_RETURN(0);
     }
   }
 
@@ -217,7 +229,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   // Set up to adjust for defocus if angle is high enough
   angle = mScope->GetTiltAngle();
-  if (fabs(angle) < minTiltToCompenate) {
+  if (fabs(angle) < minTiltToCompenate && !mMSsaveToMontage) {
     mMSDefocusTanFac = 0.;
   } else {
 
@@ -230,7 +242,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (!mIStoSpec.xpx) {
       SEMMessageBox("No image shift to specimen matrix available at the\n"
         "current magnification and one is needed to adjust defocus for tilt");
-      return 1;
+      RESTORE_MSP_RETURN(1);
     }
     mMSBaseDefocus = mScope->GetDefocus();
   }
@@ -326,9 +338,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   // Set up axis of peripheral shots along tilt axis if tilted enough, otherwise along
   // short axis of camera
   mPeripheralRotation = 0.;
-  if (fabs(mScope->GetTiltAngle()) > 20.)
+  if (fabs(mScope->GetTiltAngle()) > 20. || mMSinHoleStartAngle > 500.)
     mPeripheralRotation = (float)mShiftManager->GetImageRotation(
       mWinApp->GetCurrentCamera(), mMagIndex);
+  else if (fabs(mMSinHoleStartAngle) < 500.)
+    mPeripheralRotation = mMSinHoleStartAngle;
   else if (camParam->sizeY < camParam->sizeX)
     mPeripheralRotation = 90.f;
 
@@ -380,16 +394,21 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
  */
 void CParticleTasks::MultiShotNextTask(int param)
 {
-  int nextShot, nextHole;
+  int nextShot, nextHole, err;
   if (mMSCurIndex < -1)
     return;
 
   // Save Record
   mRecConSet->alignFrames = mSavedAlignFlag;
-  if (mMSSaveRecord && mMSImageReturned &&
-    mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
-    StopMultiShot();
-    return;
+  if (mMSSaveRecord && mMSImageReturned) {
+    if (mMSsaveToMontage)
+      err = mWinApp->mMontageController->SavePiece();
+    else
+      err = mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
+    if (err) {
+      StopMultiShot();
+      return;
+    }
   }
 
   // Set indices for next shot if there is one, otherwise quit
@@ -416,7 +435,7 @@ void CParticleTasks::MultiShotNextTask(int param)
 int CParticleTasks::MultiShotBusy(void)
 {
   return (DoingMultiShot() && (mWinApp->mCamera->CameraBusy() || 
-    mWinApp->mMontageController->DoingMontage() || 
+    (mWinApp->mMontageController->DoingMontage() && !mMSsaveToMontage) || 
     mWinApp->mAutoTuning->GetDoingCtfBased())) ? 1 : 0;
 }
 
@@ -457,8 +476,10 @@ void CParticleTasks::StopMultiShot(void)
   mRecConSet->alignFrames = mSavedAlignFlag;
   mMSCurIndex = -2;
   mMSTestRun = 0;
+  mMSParams = mNavHelper->GetMultiShotParams();
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mMSsaveToMontage = false;
 }
 
 /*
@@ -673,30 +694,35 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     endInd[0] = numXholes - 1;
     endInd[1] = numYholes - 1;
     jump[0] = jump[1] = 1;
-    if (mMSTestRun && !crossPattern) {
-      jump[0] = B3DMAX(2, numXholes) - 1;
-      jump[1] = B3DMAX(2, numYholes) - 1;
-    }
-    for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0; 
-      iy += direction[1] * jump[1]) {
-      for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0 ; 
-        ix += direction[0] * jump[0]) {
-        if (!(crossPattern && ((ix % 2 == 0) && (iy % 2 == 0)) ||
-          (mMSTestRun && ix == 1 && iy == 1))) {
-          fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
-            (iy * mMSParams->holeISXspacing[1] - yCenISX));
-          fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
-            (iy * mMSParams->holeISYspacing[1] - yCenISY));
-          posIndex.push_back(ix);
-          posIndex.push_back(iy);
+    if (mMSsaveToMontage) {
+      for (ix = 0; ix < numXholes; ix++) {
+        for (iy = 0; iy < numYholes; iy++) {
+          AddHolePosition(ix, iy, fromISX, fromISY, xCenISX, yCenISX, xCenISY, yCenISY,
+            posIndex);
         }
       }
+    } else {
+      if (mMSTestRun && !crossPattern) {
+        jump[0] = B3DMAX(2, numXholes) - 1;
+        jump[1] = B3DMAX(2, numYholes) - 1;
+      }
+      for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0;
+        iy += direction[1] * jump[1]) {
+        for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0;
+          ix += direction[0] * jump[0]) {
+          if (!(crossPattern && ((ix % 2 == 0) && (iy % 2 == 0)) ||
+            (mMSTestRun && ix == 1 && iy == 1))) {
+            AddHolePosition(ix, iy, fromISX, fromISY, xCenISX, yCenISX, xCenISY, yCenISY,
+              posIndex);
+          }
+        }
 
-      // For now, zigzag pattern
-      ix = startInd[0];
-      startInd[0] = endInd[0];
-      endInd[0] = ix;
-      direction[0] = -direction[0];
+        // For now, zigzag pattern
+        ix = startInd[0];
+        startInd[0] = endInd[0];
+        endInd[0] = ix;
+        direction[0] = -direction[0];
+      }
     }
   }
 
@@ -729,7 +755,19 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   return numHoles;
 }
 
-/*
+  void CParticleTasks::AddHolePosition(int ix, int iy, std::vector<double> &fromISX, 
+    std::vector<double> &fromISY, double xCenISX, double yCenISX, double xCenISY,
+    double yCenISY, IntVec &posIndex)
+  {
+    fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
+      (iy * mMSParams->holeISXspacing[1] - yCenISX));
+    fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
+      (iy * mMSParams->holeISYspacing[1] - yCenISY));
+    posIndex.push_back(ix);
+    posIndex.push_back(iy);
+  }
+
+  /*
  * Given the existing vectors and their position indexes for holes, remove the ones
  * listed in the skipIndex list
  */

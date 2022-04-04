@@ -38,7 +38,8 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_CHECK_SKIP_OUTSIDE, IDC_EDIT_SKIP_OUTSIDE, IDC_CHECKOFFERMAP, IDC_STAT_LINE2, 
   IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
   IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
-  IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, PANEL_END,
+  IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, IDC_CHECK_USE_MULTISHOT,
+  PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS, 
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES, 
   IDC_SPIN_BLOCK_SIZE, IDC_STAT_DELAY, 
@@ -76,6 +77,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_fContinDelayFac(0)
   , m_bUseSearchInLD(FALSE)
   , m_bUseMontMapParams(FALSE)
+  , m_bUseMultishot(FALSE)
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -220,6 +222,8 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_bUseSearchInLD);
   DDX_Control(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_butUseMontMapParams);
   DDX_Check(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_bUseMontMapParams);
+  DDX_Control(pDX, IDC_CHECK_USE_MULTISHOT, m_butUseMultishot);
+  DDX_Check(pDX, IDC_CHECK_USE_MULTISHOT, m_bUseMultishot);
 }
 
 
@@ -262,12 +266,13 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_CONTINUOUS_MODE, OnCheckContinuousMode)
   ON_BN_CLICKED(IDC_CHECK_USE_SEARCH_IN_LD, OnUseSearchInLD)
   ON_BN_CLICKED(IDC_CHECK_USE_MONT_MAP_PARAMS, OnUseMontMapParams)
+  ON_BN_CLICKED(IDC_CHECK_USE_MULTISHOT, OnUseMultishot)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CMontageSetupDlg message handlers
 
-BOOL CMontageSetupDlg::OnInitDialog() 
+BOOL CMontageSetupDlg::OnInitDialog()
 {
   CButton *radio;
   int ind, i, delta, camPosInds[MAX_DLG_CAMERAS];
@@ -291,20 +296,24 @@ BOOL CMontageSetupDlg::OnInitDialog()
   mMinOverlap = mWinApp->mDocWnd->GetMinMontageOverlap();
   mMaxPieces = mWinApp->mDocWnd->GetMaxMontagePieces();
   CBaseDlg::OnInitDialog();
-  if (mParam.useViewInLowDose)
+  if (mParam.useViewInLowDose) {
     mParam.useSearchInLowDose = false;
+    mParam.useMultiShot = false;
+  } else if (mParam.useSearchInLowDose) {
+    mParam.useMultiShot = false;
+  }
 
-  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   if (mNumCameras > 4) {
     ind = 0;
-    while (sIdTable[ind] != TABLE_END){
+    while (sIdTable[ind] != TABLE_END) {
       i = sIdTable[ind] - IDC_RCAMERA1;
       if (i >= 0 && i < MAX_DLG_CAMERAS)
         camPosInds[i] = ind;
       ind++;
     }
-    delta = (sLeftTable[camPosInds[MAX_DLG_CAMERAS - 1]] - sLeftTable[camPosInds[1]]) / 
+    delta = (sLeftTable[camPosInds[MAX_DLG_CAMERAS - 1]] - sLeftTable[camPosInds[1]]) /
       (MAX_DLG_CAMERAS / 2 - 1);
     radio = (CButton *)GetDlgItem(IDC_RCAMERA1 + MAX_DLG_CAMERAS - 1);
     radio->GetClientRect(&butrect);
@@ -312,11 +321,11 @@ BOOL CMontageSetupDlg::OnInitDialog()
     for (ind = 0; ind < mNumCameras; ind++) {
       sLeftTable[camPosInds[ind]] = sLeftTable[camPosInds[0]] + (ind / 2) * delta;
       radio = (CButton *)GetDlgItem(IDC_RCAMERA1 + ind);
-      radio->SetWindowPos(NULL, 0, 0, butrect.Width(), butrect.Height(), 
+      radio->SetWindowPos(NULL, 0, 0, butrect.Width(), butrect.Height(),
         SWP_NOMOVE | SWP_NOZORDER);
       if (needFont)
         radio->SetFont(littleFont);
-   } 
+    }
   }
 
   // Set up the camera buttons
@@ -335,15 +344,15 @@ BOOL CMontageSetupDlg::OnInitDialog()
     // Setup just can't be changed if View is to be used, but otherwise it is always
     // OK going from LD to regular because the mag index just carries over, but if the
     // mag changes going from regulr to LD, treat it like mag change requiring one confirm
-    if (mMismatchedModes && !mParam.useViewInLowDose && 
+    if (mMismatchedModes && !mParam.useViewInLowDose &&
       !(mParam.useSearchInLowDose && mLdp[SEARCH_AREA].magIndex)) {
       if (mLowDoseMode && mParam.magIndex != mLdp[RECORD_CONSET].magIndex &&
         !mParam.warnedMagChange) {
         if (AfxMessageBox("These parameters have been used at one magnification in "
           "regular mode\n\nDo you really want to use them at a different magnification"
           " in Low Dose mode?", MB_QUESTION) == IDYES) {
-            mParam.warnedMagChange = true;
-            mParam.setupInLowDose = mLowDoseMode;
+          mParam.warnedMagChange = true;
+          mParam.setupInLowDose = mLowDoseMode;
         }
       } else
         mParam.setupInLowDose = mLowDoseMode;
@@ -361,7 +370,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
       mParam.magIndex = mWinApp->mScope->GetMagIndex();
       if (mLowDoseMode)
         mParam.magIndex = mLdp[MontageLDAreaIndex(&mParam)].magIndex;
-      mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam,false));
+      mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam, false));
       mParam.setupInLowDose = mLowDoseMode;
     }
   }
@@ -371,19 +380,28 @@ BOOL CMontageSetupDlg::OnInitDialog()
   searchOK = mLdp[SEARCH_AREA].magIndex != 0;
   ReplaceDlgItemText(IDC_CHECK_USE_VIEW_IN_LOWDOSE, "View", modeName[VIEW_CONSET]);
   ReplaceDlgItemText(IDC_CHECK_USE_MONT_MAP_PARAMS, "Record", modeName[RECORD_CONSET]);
-  m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
-    && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
-      !recordOK)));
-  m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked && viewOK && 
+  m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked && viewOK &&
     (recordOK || searchOK));
   m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && searchOK);
+  m_butUseMultishot.EnableWindow(mLowDoseMode && !mSizeLocked && recordOK &&
+    !mFittingItem);
   if (mLowDoseMode && !searchOK)
     mParam.useSearchInLowDose = false;
   if (mLowDoseMode && !recordOK && !mParam.useSearchInLowDose)
     mParam.useViewInLowDose = true;
   if (mLowDoseMode && !viewOK)
     mParam.useViewInLowDose = false;
-  ManageSizeFields();
+  if (mLowDoseMode && (!recordOK || mFittingItem || mParam.useViewInLowDose || 
+    mParam.useSearchInLowDose))
+    mParam.useMultiShot = false;
+  m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
+    && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
+      mParam.useMultiShot || !recordOK)));
+  if (mParam.useMultiShot) {
+    mParam.moveStage = false;
+    EnableDlgItem(IDC_MOVESTAGE, false);
+    EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, false);
+  }
   m_editXoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_editYoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_statOverlap.EnableWindow(!mSizeLocked && !mFittingItem);
@@ -408,6 +426,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_strAnchorMag.Format("%d", MagForCamera(mCurrentCamera, mParam.anchorMagInd));
 
   LoadParamData(true);
+  ManageSizeFields();
 
   if (mSizeLocked || mLowDoseMode || mFittingItem || mMismatchedModes) {
     ManageCameras();
@@ -450,16 +469,16 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
 
   // Load the parameters into the text boxes
   m_iXnFrames = mParam.xNframes;
-  m_iXoverlap = mParam.xOverlap;
+  mXoverlap = mParam.xOverlap;
   m_iXsize = mParam.xFrame;
   m_iYnFrames = mParam.yNframes;
-  m_iYoverlap = mParam.yOverlap;
+  mYoverlap = mParam.yOverlap;
   m_iYsize = mParam.yFrame;
   m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mParam.binning, 
     &mCamParams[mCurrentCamera]));
   m_bMoveStage = mParam.moveStage;
   m_bSkipOutside = mParam.skipOutsidePoly;
-  m_editSkipOutside.EnableWindow(m_bSkipOutside);
+  m_editSkipOutside.EnableWindow(m_bSkipOutside &&!(mLowDoseMode && mParam.useMultiShot));
   m_iInsideNavItem = mParam.insideNavItem + 1;
   m_bIgnoreSkips = mParam.ignoreSkipList;
   m_butIgnoreSkips.EnableWindow(mParam.numToSkip > 0);
@@ -490,6 +509,8 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_bUseMontMapParams = mParam.useMontMapParams;
   m_bUseViewInLowDose = mParam.useViewInLowDose;
   m_bUseSearchInLD = mParam.useSearchInLowDose;
+  m_bUseMultishot = mParam.useMultiShot;
+  LoadOverlapBoxes();
   UpdateData(false);
   ValidateEdits();
   UpdateSizes();
@@ -537,11 +558,35 @@ void CMontageSetupDlg::ManageCameras()
 // Enable size if camera allows arbitrary sizes and sizes not locked
 void CMontageSetupDlg::ManageSizeFields(void)
 {
-  BOOL enable = !mSizeLocked && mCamParams[mCurrentCamera].moduloX >= 0;
+  bool useMulti = mLowDoseMode && m_bUseMultishot;
+  BOOL enable = !mSizeLocked && mCamParams[mCurrentCamera].moduloX >= 0 && !useMulti;
   m_statPieceSize.EnableWindow(enable);
   m_statY2.EnableWindow(enable);
   m_editXsize.EnableWindow(enable);
   m_editYsize.EnableWindow(enable);
+  SetDlgItemText(IDC_STATOVERLAP, useMulti ? "0-tilt % overlap in X:" : "Overlap in X:");
+}
+
+void CMontageSetupDlg::LoadOverlapBoxes()
+{
+  if (mLowDoseMode && m_bUseMultishot) {
+    m_iXoverlap = B3DNINT(100. * mXoverlap / m_iXsize);
+    m_iYoverlap = B3DNINT(100. * mYoverlap / m_iXsize);
+  } else {
+    m_iXoverlap = mXoverlap;
+    m_iYoverlap = mYoverlap;
+  }
+}
+
+void CMontageSetupDlg::UnloadOverlapBoxes()
+{
+  if (mLowDoseMode && m_bUseMultishot) {
+    mXoverlap = B3DNINT(m_iXoverlap * m_iXsize / 100.);
+    mYoverlap = B3DNINT(m_iYoverlap * m_iYsize / 100.);
+  } else {
+    mXoverlap = m_iXoverlap;
+    mYoverlap = m_iYoverlap;
+  }
 }
 
 // The focus leaves any edit field
@@ -609,10 +654,11 @@ void CMontageSetupDlg::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult)
     m_iYsize = fullY / newVal;
 
     // No good way to keep the overlap from wandering, but round it up to be even
-    m_iXoverlap = (mParam.binning * m_iXoverlap) / newVal;
-    m_iYoverlap = (mParam.binning * m_iYoverlap) / newVal;
-    m_iXoverlap += m_iXoverlap % 2;
-    m_iYoverlap += m_iYoverlap % 2;
+    mXoverlap = (mParam.binning * mXoverlap) / newVal;
+    mYoverlap = (mParam.binning * mYoverlap) / newVal;
+    mXoverlap += mXoverlap % 2;
+    mYoverlap += mYoverlap % 2;
+    LoadOverlapBoxes();
 
     // Need to check that things still fit constraints
     UpdateData(false);
@@ -781,12 +827,13 @@ void CMontageSetupDlg::OnRcamera()
       (mCamSizeX / mSizeScaling);
     m_iYsize = (m_iYsize * mCamParams[newCam].sizeY / newScale) / 
       (mCamSizeY / mSizeScaling);
-    m_iXoverlap = (m_iXoverlap * mCamParams[newCam].sizeX / newScale) / 
+    mXoverlap = (mXoverlap * mCamParams[newCam].sizeX / newScale) / 
       (mCamSizeX / mSizeScaling);
-    m_iYoverlap = (m_iYoverlap * mCamParams[newCam].sizeY / newScale) / 
+    mYoverlap = (mYoverlap * mCamParams[newCam].sizeY / newScale) / 
       (mCamSizeY / mSizeScaling);
-    m_iXoverlap += m_iXoverlap % 2;
-    m_iYoverlap += m_iYoverlap % 2;
+    mXoverlap += mXoverlap % 2;
+    mYoverlap += mYoverlap % 2;
+    LoadOverlapBoxes();
     UpdateData(false);
     mCurrentCamera = newCam;
     ValidateEdits();
@@ -811,8 +858,8 @@ void CMontageSetupDlg::OnOK()
   int lowestM = mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
   int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
   ValidateEdits();
-  int xExtent = (m_iXsize - m_iXoverlap) * (m_iXnFrames - 1);
-  int yExtent = (m_iYsize - m_iYoverlap) * (m_iYnFrames - 1);
+  int xExtent = (m_iXsize - mXoverlap) * (m_iXnFrames - 1);
+  int yExtent = (m_iYsize - mYoverlap) * (m_iYnFrames - 1);
   double maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
   double montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * mParam.binning *
     mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex) / 2.;
@@ -845,10 +892,10 @@ void CMontageSetupDlg::OnOK()
 void CMontageSetupDlg::UnloadParamData(void)
 {
   mParam.xNframes= m_iXnFrames;
-  mParam.xOverlap = m_iXoverlap;
+  mParam.xOverlap = mXoverlap;
   mParam.xFrame = m_iXsize;
   mParam.yNframes= m_iYnFrames;
-  mParam.yOverlap = m_iYoverlap;
+  mParam.yOverlap = mYoverlap;
   mParam.yFrame = m_iYsize;
   mParam.moveStage = m_bMoveStage;
   mParam.ignoreSkipList = m_bIgnoreSkips;
@@ -873,6 +920,7 @@ void CMontageSetupDlg::UnloadParamData(void)
   mParam.useMontMapParams = m_bUseMontMapParams;
   mParam.useViewInLowDose = m_bUseViewInLowDose;
   mParam.useSearchInLowDose = m_bUseSearchInLD;
+  mParam.useMultiShot = m_bUseMultishot;
   mParam.useContinuousMode = m_bUseContinMode;
   mParam.continDelayFactor = m_fContinDelayFac;
   if (m_bUseHq)
@@ -898,8 +946,8 @@ void CMontageSetupDlg::UpdateSizes()
   m_strPixelSize.Format("Pixel size: " + format, pixel * 1000.);
 
   // Compute total extent of area and output as pixels and microns
-  iTotalX = (m_iXnFrames * m_iXsize - (m_iXnFrames - 1) * m_iXoverlap);
-  iTotalY = (m_iYnFrames * m_iYsize - (m_iYnFrames - 1) * m_iYoverlap);
+  iTotalX = (m_iXnFrames * m_iXsize - (m_iXnFrames - 1) * mXoverlap);
+  iTotalY = (m_iYnFrames * m_iYsize - (m_iYnFrames - 1) * mYoverlap);
   m_strTotalPixels.Format("%d x %d pixels", iTotalX, iTotalY);
 
   totalX = iTotalX * pixel;
@@ -921,6 +969,7 @@ void CMontageSetupDlg::ValidateEdits()
   int left, right, tempX, tempY, top, bot, minOverX, minOverY;
   CameraParameters *cam = &mCamParams[mCurrentCamera];
   UpdateData(true);
+  UnloadOverlapBoxes();
   BOOL needUpdate = false;
 
   // Constrain maximum pieces in one direction
@@ -936,8 +985,8 @@ void CMontageSetupDlg::ValidateEdits()
 
   // Constrain total maximum pieces and coordinate size if file already opened
   while (m_iXnFrames * m_iYnFrames > MAX_MONT_PIECES || (mConstrainSize &&
-    ((m_iXsize - m_iXoverlap) * (m_iXnFrames - 1) > 65535 ||
-    (m_iYsize - m_iYoverlap) * (m_iYnFrames - 1) > 65535))) {
+    ((m_iXsize - mXoverlap) * (m_iXnFrames - 1) > 65535 ||
+    (m_iYsize - mYoverlap) * (m_iYnFrames - 1) > 65535))) {
     needUpdate = true;
     if (m_iXnFrames > m_iYnFrames)
       m_iXnFrames--;
@@ -982,34 +1031,36 @@ void CMontageSetupDlg::ValidateEdits()
 
     // Overlap must be at least the minimum and less than twice the size
     MinOverlapsInPixels(minOverX, minOverY);
-    if (m_iXnFrames > 1 && m_iXoverlap < minOverX) {
-      m_iXoverlap = minOverX;
+    if (m_iXnFrames > 1 && mXoverlap < minOverX) {
+      mXoverlap = minOverX;
       needUpdate = true;
     }
-    if (m_iXoverlap > mMaxOverFrac * m_iXsize) {
-      m_iXoverlap = B3DNINT(mMaxOverFrac * m_iXsize);
+    if (mXoverlap > mMaxOverFrac * m_iXsize) {
+      mXoverlap = B3DNINT(mMaxOverFrac * m_iXsize);
       needUpdate = true;
     }
-    if (m_iXoverlap % 2) {
-      m_iXoverlap--;
+    if (mXoverlap % 2) {
+      mXoverlap--;
       needUpdate = true;
     }
-    if (m_iYnFrames > 1 && m_iYoverlap < minOverY) {
-      m_iYoverlap = minOverY;
+    if (m_iYnFrames > 1 && mYoverlap < minOverY) {
+      mYoverlap = minOverY;
       needUpdate = true;
     }
-    if (m_iYoverlap > mMaxOverFrac * m_iYsize) {
-      m_iYoverlap = B3DNINT(mMaxOverFrac * m_iYsize);
+    if (mYoverlap > mMaxOverFrac * m_iYsize) {
+      mYoverlap = B3DNINT(mMaxOverFrac * m_iYsize);
       needUpdate = true;
     }
-    if (m_iYoverlap % 2) {
-      m_iYoverlap--;
+    if (mYoverlap % 2) {
+      mYoverlap--;
       needUpdate = true;
     }
   }
 
-  if (needUpdate)
+  if (needUpdate) {
+    LoadOverlapBoxes();
     UpdateData(false);
+  }
 
   // Update the spin box positions
   m_sbcXnFrames.SetPos(m_iXnFrames);
@@ -1078,6 +1129,7 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
   // Copy the param for trial use
   if (!mFittingItem)
     return 0;
+  UnloadOverlapBoxes();
   UnloadParamData();
   MontParam tmpParam = mParam;
   if (minOverlap >= 0.)
@@ -1254,7 +1306,8 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
 // Manage a few things that depend on camera and maybe stage too
 void CMontageSetupDlg::ManageCamAndStageEnables(void)
 {
-  m_butUseContinMode.EnableWindow(mCamParams[mCurrentCamera].useContinuousMode > 0);
+  m_butUseContinMode.EnableWindow(mCamParams[mCurrentCamera].useContinuousMode > 0 &&
+  !(mLowDoseMode && m_bUseMultishot));
   m_editContinDelayFac.EnableWindow(m_bUseContinMode && 
     mCamParams[mCurrentCamera].useContinuousMode > 0);
   m_butNoDriftCorr.EnableWindow(mCamParams[mCurrentCamera].OneViewType != 0 && 
@@ -1277,10 +1330,11 @@ void CMontageSetupDlg::MinOverlapsInPixels(int & minOverX, int & minOverY)
 
 void CMontageSetupDlg::OnButResetOverlaps()
 {
-  m_iXoverlap = 2 * (m_iXsize / 20);
-  m_iYoverlap = 2 * (m_iYsize / 20);
+  mXoverlap = 2 * (m_iXsize / 20);
+  mYoverlap = 2 * (m_iYsize / 20);
   if (m_bMoveStage)
-    MinOverlapsInPixels(m_iXoverlap, m_iYoverlap);
+    MinOverlapsInPixels(mXoverlap, mYoverlap);
+  LoadOverlapBoxes();
   UpdateData(false);
   ValidateEdits();
   UpdateSizes();  
@@ -1290,23 +1344,32 @@ void CMontageSetupDlg::OnButResetOverlaps()
 
 void CMontageSetupDlg::OnUseMontMapParams()
 {
-  BOOL dummy = false;
-  UseViewOrSearchInLD(dummy);
+  BOOL dummy = false, dummy2 = false;
+  UseViewOrSearchInLD(dummy, dummy2);
+}
+
+void CMontageSetupDlg::OnUseMultishot()
+{
+  UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseSearchInLD);
+  if (m_bUseMultishot)
+    m_bMoveStage = false;
+  EnableDlgItem(IDC_MOVESTAGE, !m_bUseMultishot);
+  EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, !m_bUseMultishot);
 }
 
 void CMontageSetupDlg::OnUseViewInLowdose()
 {
-  UseViewOrSearchInLD(m_bUseSearchInLD);
+  UseViewOrSearchInLD(m_bUseSearchInLD, m_bUseMultishot);
 }
 
 void CMontageSetupDlg::OnUseSearchInLD()
 {
-  UseViewOrSearchInLD(m_bUseViewInLowDose);
+  UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseMultishot);
 }
 
 // When Use View changes, put values back in the param, reinitialize with these
 // conset sizes, and reload the dialog
-void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
+void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag, BOOL &secondFlag)
 {
   BOOL saveVinLD = m_bUseViewInLowDose;
   BOOL saveSinLD = m_bUseSearchInLD;
@@ -1316,13 +1379,16 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
   int saveMoveStage = m_bMoveStage ? 1 : 0;
   if (mLowDoseMode && !m_bUseViewInLowDose && !m_bUseSearchInLD)
     mLastRecordMoveStage = saveMoveStage;
+  UnloadOverlapBoxes();
 
   UpdateData(true);
-  if (otherFlag) {
+  if (otherFlag || secondFlag) {
     otherFlag = false;
+    secondFlag = false;
     UpdateData(false);
   } else if (!mLdp[RECORD_CONSET].magIndex) {
     otherFlag = true;
+    secondFlag = false;
     UpdateData(false);
   }
   
@@ -1346,12 +1412,15 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
   mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam, false));
   if (!mLowDoseMode)
     mParam.moveStage = saveMoveStage > 0;
-  else if (!m_bUseViewInLowDose && !m_bUseSearchInLD && mLastRecordMoveStage >= 0)
+  else if (!m_bUseViewInLowDose && !m_bUseSearchInLD && !m_bUseMultishot &&
+    mLastRecordMoveStage >= 0)
     mParam.moveStage = mLastRecordMoveStage > 0;
   LoadParamData(true);
   if ((m_bMoveStage ? 1 : 0) != saveMoveStage)
     OnMovestage();
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
-    && !(mLowDoseMode && (m_bUseViewInLowDose || m_bUseSearchInLD || 
+    && !(mLowDoseMode && (m_bUseViewInLowDose || m_bUseSearchInLD || m_bUseMultishot ||
       !mLdp[RECORD_CONSET].magIndex)));
+  ManageSizeFields();
+  ManageCamAndStageEnables();
 }

@@ -39,6 +39,7 @@ using namespace AdocDefs;
 #define ADOC_ALI_COORDVS "AlignedPieceCoordsVS"
 #define ADOC_STAGEOFF "StageOffsets"
 #define ADOC_ADJ_PIXEL "AdjustedPixelSpacing"
+#define ADOC_ADJ_OVERLAPS "AdjustedOverlaps"
 #define ADOC_ADJ_ROTATION "AdjustedRotation"
 #define ADOC_MONT_SECT "MontSection"
 #define ADOC_BUF_ISXY "BufISXY"

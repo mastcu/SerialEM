@@ -113,11 +113,13 @@ int MontageConSetNum(MontParam *param, bool trueSet, int lowDose)
   LowDoseParams *ldp = sWinApp->GetLowDoseParams();
   int set = RECORD_CONSET;
   if (lowDose < 0)
-    lowDose = sWinApp->LowDoseMode();
+    lowDose = sWinApp->LowDoseMode() ? 1 : 0;
   if (lowDose && param->useViewInLowDose)
     set = VIEW_CONSET;
   else if (lowDose && param->useSearchInLowDose && ldp[SEARCH_AREA].magIndex)
     set = SEARCH_CONSET;
+  else if (lowDose && param->useMultiShot && ldp[RECORD_CONSET].magIndex)
+    set = RECORD_CONSET;
   else if (!sWinApp->GetUseRecordForMontage() && param->useMontMapParams)
     set = MONT_USER_CONSET;
   if (!trueSet && set == SEARCH_CONSET && sWinApp->GetUseViewForSearch())
@@ -130,6 +132,19 @@ int MontageLDAreaIndex(MontParam *param)
 {
   int set = MontageConSetNum(param, true, 1);
   return sWinApp->mCamera->ConSetToLDArea(set);
+}
+
+// Returns true if the montage parameters specifying using multishot and it is OK
+// lowDose should be 0 or > 0 and is optional, the default is the current state
+bool UseMultishotForMontage(MontParam *param, int lowDose)
+{
+  LowDoseParams *ldp = sWinApp->GetLowDoseParams();
+  if (lowDose < 0)
+    lowDose = sWinApp->LowDoseMode() ? 1 : 0;
+
+  // View and Search take precedence in case they are set
+  return (lowDose > 0 && param->useMultiShot && ldp[RECORD_CONSET].magIndex &&
+    !param->useViewInLowDose && !param->useSearchInLowDose);
 }
 
 bool UtilOKtoAllocate(int numBytes)

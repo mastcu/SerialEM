@@ -1655,7 +1655,12 @@
             which can be in the FFT window.&nbsp; It also sets the variable <i>imageTickTime</i>
             with the time that the image finished being acquired,
             in seconds since the program started.
-            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
+            &nbsp; Values can be assigned to variables after the buffer letter.&nbsp; Command added in 4.1, 4/1/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageConditions buf</TD>
+          <TD>Reports the electron dose for the image in buffer <b>buf</b>; other items will be added
+            upon request.&nbsp;</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageMetadataToVar buf var</TD>
@@ -4380,6 +4385,17 @@
             Iterate if desired for a more accurate result.&nbsp; If aligning more than two
             cameras, use one camera as a reference for aligning each of the others to.&nbsp;
             Command added in 3.9, 12/23/20.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">AccumulateRecordDose #</TD>
+          <TD>Adds <b>#</b> to a cumulative dose that will be assigned as the PriorRecordDose value
+            for images that are taken while the script is running.&nbsp; This dose accumulator is disabled
+            when a script starts.&nbsp; Use this command with a <b>#</b> of 0 to enable the accumulator 
+            and initialize it to 0; the next image will have a PriorRecordDose.&nbsp; Thereafter,for each 
+            Record image or montage, get the dose from a buffer ('A' after a Record, 'C' after a 
+            montage) with the 'ImageConditions' command and use this command with that dose value 
+            for <b>#</b>.&nbsp; Use -1 for <b>#</b> to disable the accumulator again if needed.&nbsp; Command added in 4.1, 4/1/22.
+          </TD>
         </TR>
        <TR>
           <TD width="207">Plugin name func [args]</TD>

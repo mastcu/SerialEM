@@ -643,6 +643,8 @@ MAC_SAME_FUNC_ARG(SpectrumBesideImage, 2, 4, ScaledSpectrum, SPECTRUMBESIDEIMAGE
 MAC_SAME_NAME_ARG(CheckStageToCamera, 0, 4, CHECKSTAGETOCAMERA, ddi)
 MAC_SAME_FUNC(RunScriptInFile, 1, 0, GetFileInWatchedDir, RUNSCRIPTINFILE)
 MAC_SAME_FUNC(RunSerialEMSnapshot, 0, 0, GetFileInWatchedDir, RUNSERIALEMSNAPSHOT)
+MAC_SAME_NAME_ARG(ImageConditions, 1, 4, IMAGECONDITIONS, S)
+MAC_SAME_NAME_ARG(AccumulateRecordDose, 1, 4, ACCUMULATERECORDDOSE, D)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

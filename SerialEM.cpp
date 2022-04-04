@@ -485,6 +485,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.useViewInLowDose = false;
   mMontParam.useSearchInLowDose = false;
   mMontParam.useMontMapParams = false;
+  mMontParam.useMultiShot = false;
   mMontParam.useContinuousMode = false;
   mMontParam.continDelayFactor = 0.5f;
   mMontParam.noDriftCorr = true;
@@ -2262,6 +2263,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mAutoTuning->GetDoingCtfBased() ? 1 : 0;
     else if (idc->source == TASK_MONTAGE_DWELL)
       busy = mMontageController->CookingDwellBusy();
+    else if (idc->source == TASK_MONT_MULTISHOT)
+      busy = mParticleTasks->DoingMultiShot() ? 1 : 0;
     else if (idc->source == TASK_DEL_OTHER_STORE || idc->source == TASK_LOAD_MAP)
       busy = mMontageController->DoingMontage();
     else if (idc->source == TASK_COOKER)
@@ -2392,7 +2395,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_CAL_IS_NEUTRAL)
           mScope->CalNeutralNextMag(idc->param);
         else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_FOCUS ||
-          idc->source == TASK_MONTAGE_DWELL)
+          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT)
           mMontageController->DoNextPiece(idc->param);
         else if (idc->source == TASK_MONTAGE_RESTORE)
           mMontageController->StageRestoreDone();
@@ -2516,7 +2519,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mFilterTasks->RefineZLPCleanup(busy);
         else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_RESTORE ||
           idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_MONTAGE_REALIGN || 
-          idc->source == TASK_MONTAGE_DWELL)
+          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT)
           mMontageController->PieceCleanup(busy);
         else if (idc->source == TASK_TILT_SERIES)
           mTSController->TiltSeriesError(busy);

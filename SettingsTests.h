@@ -49,6 +49,7 @@ INT_SETT_GETSET("MontageMinimumCounts", mWinApp->mMontageController->, CountLimi
 BOOL_SETT_ASSIGN("MontageUseMontMap", montParam->useMontMapParams)
 BOOL_SETT_ASSIGN("MontageUseViewInLD", montParam->useViewInLowDose)
 BOOL_SETT_ASSIGN("MontageUseSearchInLD", montParam->useSearchInLowDose)
+BOOL_SETT_ASSIGN("MontageUseMultishot", montParam->useMultiShot)
 BOOL_SETT_ASSIGN("MontageUseHQparams", montParam->useHqParams)
 BOOL_SETT_ASSIGN("MontageFocusInBlocks", montParam->focusInBlocks)
 BOOL_SETT_ASSIGN("MontageRepeatFocus", montParam->repeatFocus)

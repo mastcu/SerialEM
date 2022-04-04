@@ -56,11 +56,13 @@ public:
   GetSetMember(int, ZBGMaxTotalChange);
   GetSetMember(BOOL, ZbyGUseViewInLD);
   GetSetMember(int, ZbyGViewSubarea);
+  GetSetMember(float, MSinHoleStartAngle);
   GetMember(int, ZBGMeasuringFocus);
   GetMember(bool, DVDoingDewarVac);
   GetMember(bool, ATLastFailed);
   GetMember(bool, MSLastFailed);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
+  SetMember(MultiShotParams *, NextMSParams);
 
 private:
   CSerialEMApp * mWinApp;
@@ -99,6 +101,8 @@ private:
   IntVec mMSPosIndex;              // Position index of hole being acquired
   int mMSLastShotIndex;           // Last index of multishots in hole
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
+  MultiShotParams *mNextMSParams;  // Temporary pointer to params to use for next run
+  bool mMSsaveToMontage;           // Flag to save through montage savePiece
   int mMSTestRun;
   int mMagIndex;                   // Mag index for the run
   int mSavedAlignFlag;
@@ -110,6 +114,7 @@ private:
   ScaleMat mIStoSpec;              // Transform for adjusting defocus
   double mMSBaseDefocus;           // Defocus at center
   bool mMSLastFailed;              // Flag if last one did not run to completion
+  float mMSinHoleStartAngle;       // Value controlling peripheral rotation
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -196,6 +201,8 @@ public:
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
     int camera, int numXholes, int numYholes, float tiltAngle);
+  void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
+    double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
     unsigned char *skipIndex, int numSkip, int &numHoles);
   bool ItemIsEmptyMultishot(CMapDrawItem *item);

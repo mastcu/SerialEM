@@ -5856,6 +5856,20 @@ int CMacCmd::ElectronStats(void)
   return 0;
 }
 
+// AccumulateRecordDose
+int CMacCmd::AccumulateRecordDose(void)
+{
+
+  // Disable it, or initialize it if it is disabled, or add to it
+  if (mItemFlt[1] < 0.)
+    mCumulRecordDose = -1.;
+  else if (mCumulRecordDose < 0.)
+    mCumulRecordDose = mItemFlt[1];
+  else
+    mCumulRecordDose += mItemFlt[1];
+  return 0;
+}
+
 // CropImage, CropCenterToSize
 int CMacCmd::CropImage(void)
 {
@@ -6219,6 +6233,24 @@ int CMacCmd::ImageProperties(void)
     1000.;
   report.Format("%.3f", delISX);
   SetVariable("IMAGETICKTIME", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+  return 0;
+}
+
+// ImageConditions
+int CMacCmd::ImageConditions(void)
+{
+  CString report;
+  EMimageBuffer *imBuf;
+  EMimageExtra *extra;
+  int index;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  imBuf = ImBufForIndex(index);
+  extra = imBuf->mImage->GetUserData();
+  if (!extra)
+    ABORT_LINE("The image has no extra data structure for line:\n\n");
+  mLogRpt.Format("Buffer %c: electron dose %.3f", 'A' + index, extra->m_fDose);
+  SetRepValsAndVars(2, extra->m_fDose);
   return 0;
 }
 
