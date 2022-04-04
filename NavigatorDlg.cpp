@@ -9280,6 +9280,11 @@ void CNavigatorDlg::AcquireNextTask(int param)
         "\r\n    Images will be acquired at the nominal stage position without any "
         "alignment", (LPCTSTR)item->mLabel);
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      if (GotoCurrentAcquireArea((mAcqParm->acquireType == ACQUIRE_TAKE_MAP ||
+        mWillRelaxStage) && !mWinApp->Montaging())) {
+        StopAcquiring();
+      }
+      return;
     }
     break;
 
