@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/4/22: Added property MultiInHoleStartAngle to set angle of first peripheral
+shot take in a hole with multishot routine.
+
 4/4/22: Added option to take montages through the multishot routine.
 
 4/4/22: Added script commands to accumulate Record dose through a series of
