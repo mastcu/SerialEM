@@ -567,6 +567,7 @@ void CMontageSetupDlg::ManageSizeFields(void)
   SetDlgItemText(IDC_STATOVERLAP, useMulti ? "0-tilt % overlap in X:" : "Overlap in X:");
 }
 
+// Use overlap directly or convert to a percentage if doing multishot
 void CMontageSetupDlg::LoadOverlapBoxes()
 {
   if (mLowDoseMode && m_bUseMultishot) {
@@ -578,6 +579,7 @@ void CMontageSetupDlg::LoadOverlapBoxes()
   }
 }
 
+// Convert percentage back to overlap if useing multishot
 void CMontageSetupDlg::UnloadOverlapBoxes()
 {
   if (mLowDoseMode && m_bUseMultishot) {

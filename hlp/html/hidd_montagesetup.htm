@@ -161,6 +161,30 @@
       parameters is turned 
       off again, it will restore the previous setting of the stage move option if that 
       is known.</P>
+    <P><strong>Acquire with Multiple Record routine</strong></P>
+    <P>If this option is checked, montages in Low Dose mode will be acquired with the 
+      Multiple Record routine. There are several consequences:</P>
+    <ul>
+      <li>The Record parameters will be used, so piece size and binning cannot be 
+        adjusted here.</li>
+      <li>Overlap is specified as a percentage overlap at zero tilt, to make it easier 
+        to adjust for this kind of montage.</li>
+      <li>The specimen position in the center of each piece at zero tilt will stay in 
+        that center as montages are acquired at increasing tilt.&nbsp; Thus, overlaps 
+        will increase with tilt.</li>
+      <li>Beam tilt will be adjusted to compensate for image shift if that is enabled in 
+        the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>.&nbsp; 
+        The delay times there also apply, but no other parameters apply.&nbsp; Early 
+        returns are not allowed (but could be if desired), so full Record sums are 
+        acquired and saved.</li>
+      <li>Defocus will be adjustedfor tilt to be the same at the center of each piece.</li>
+      <li>The status bar will show the progress of the Multiple Record routine.</li>
+      <li>Pieces will not be aligned by correlating in their overlap zones; instead, 
+        their shifts will be assigned by the expected change in position caused by 
+        tilt-foreshortening.</li>
+      <li>The <a href="hidd_montagecontrol.htm">Montage Controls panel</a> will have 
+        various controls disabled to reflect the restrictions being applied.</li>
+    </ul>
     <P><b>Use continuous mode with settling factor</b></P>
     <P>This option is enabled for cameras where true continuous acquisition is available:
       Gatan, DE, and some Tietz cameras.&nbsp; It allows a montage to be acquired 

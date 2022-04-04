@@ -3565,6 +3565,15 @@
           <TD>Set to 1 to use a GPU for aligning continuous mode images. &nbsp;This property is
             active only on program startup, not if set with the SetProperty script command.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD>MultiInHoleStartAngle</TD>
+          <TD>Angle at which to start the first peripheral image taken by the Multiple Records
+            routine when doing points within a hole.&nbsp; The default is to set this angle to
+            the short axis of the camera unless tilted to 20 degrees or abovem in which case it
+            sets the angle axong the tilt axis.&nbsp; Enter a value greater than 500 to have at along the tilt
+            axis at any tilt angle, or the actual angle desired, or a value less than 500 to restore the default.
+          </TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="tsc_properties"></A><B>Tilt series controller properties</B></P>

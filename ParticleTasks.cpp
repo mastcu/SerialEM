@@ -89,6 +89,7 @@ void CParticleTasks::Initialize(void)
 /*
  * External call to start the operation with all the parameters
  * Returns positive for an error or negative of the number of positions being done
+ * Call with numPeripheral -1 to do a multishot montage
  */
 int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
   int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn, 
@@ -146,7 +147,6 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (comaVsIS->magInd <= 0 && adjustBT) {
       SEMMessageBox("You cannot test multishot coma correction with\r\n""adjustment for"
         " image shift: there is no calibration of coma versus image shift");
-      mMSParams = mNavHelper->GetMultiShotParams();
       RESTORE_MSP_RETURN(1);
     }
     mMSAdjustBeamTilt = true;
@@ -755,17 +755,18 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   return numHoles;
 }
 
-  void CParticleTasks::AddHolePosition(int ix, int iy, std::vector<double> &fromISX, 
-    std::vector<double> &fromISY, double xCenISX, double yCenISX, double xCenISY,
-    double yCenISY, IntVec &posIndex)
-  {
-    fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
-      (iy * mMSParams->holeISXspacing[1] - yCenISX));
-    fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
-      (iy * mMSParams->holeISYspacing[1] - yCenISY));
-    posIndex.push_back(ix);
-    posIndex.push_back(iy);
-  }
+// Add one position to the hole list
+void CParticleTasks::AddHolePosition(int ix, int iy, std::vector<double> &fromISX,
+  std::vector<double> &fromISY, double xCenISX, double yCenISX, double xCenISY,
+  double yCenISY, IntVec &posIndex)
+{
+  fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
+    (iy * mMSParams->holeISXspacing[1] - yCenISX));
+  fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
+    (iy * mMSParams->holeISYspacing[1] - yCenISY));
+  posIndex.push_back(ix);
+  posIndex.push_back(iy);
+}
 
   /*
  * Given the existing vectors and their position indexes for holes, remove the ones

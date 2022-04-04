@@ -1382,7 +1382,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (memoryLimit)
     currentUsage = mWinApp->mBufferWindow.MemorySummary();
 
-  borderTry = (mDoCorrelations && mParam->shiftInOverview && !mUsingMultishot &&
+  borderTry = ((mDoCorrelations || mUsingMultishot) && mParam->shiftInOverview && 
     !mAlreadyHaveShifts && mNumPieces > 1) ? 10 : -1;
 
   // Enter loop to try to get minizoom with different border strategies and zooms
@@ -2379,8 +2379,6 @@ int EMmontageController::SavePiece()
       mActualErrorX[mPieceIndex] /= 2.;
       mActualErrorY[mPieceIndex]  /= 2.;
     }
-    SEMTrace('1', "Piece %d %d  error %.0f %.0f", mPieceX, mPieceY,
-    mActualErrorX[mPieceIndex], mActualErrorY[mPieceIndex]);
     mErrorSumX += mActualErrorX[mPieceIndex];
     mErrorSumY += mActualErrorY[mPieceIndex];
     mNumErrSum++;
@@ -3214,6 +3212,8 @@ void EMmontageController::StopMontage(int error)
   delete [] mMiniData;
   mMiniData = NULL;
   CleanPatches();
+  delete mMultiShotParams;
+  mMultiShotParams = NULL;
   
   for (int i = 0; i < 4; i++) {
     delete mCenterImage[i];
@@ -4791,7 +4791,7 @@ void EMmontageController::RetilePieces(int miniType)
       if (ivar >= 0) {
 
         // Get top line of this frame, trim, limit to top of final image
-        useMat = mDoCorrelations ? mBmat[2 * ivar + 1] : 0.;
+        useMat = (mDoCorrelations || mUsingMultishot) ? mBmat[2 * ivar + 1] : 0.;
         top = (mParam->yNframes + 1 - iy) * mMiniFrameY - B3DNINT(useMat / mMiniZoom);
         if (iy > 1)
           top -= ytrim;
@@ -4851,9 +4851,9 @@ void EMmontageController::RetilePieces(int miniType)
         miniBaseY = (mParam->yNframes - iy) * mMiniDeltaY; 
 
         // Get the final offset, set the minioffsets, then adjust for shift
-        useMat = mDoCorrelations ? mBmat[2 * ivar] : 0.;
+        useMat = (mDoCorrelations || mUsingMultishot) ? mBmat[2 * ivar] : 0.;
         xofset = B3DNINT(useMat / mMiniZoom);
-        useMat = mDoCorrelations ? mBmat[2 * ivar + 1] : 0.;
+        useMat = (mDoCorrelations || mUsingMultishot) ? mBmat[2 * ivar + 1] : 0.;
         yofset = -B3DNINT(useMat / mMiniZoom);
         mMiniOffsets.offsetX[ipc] = xofset;
         mMiniOffsets.offsetY[ipc] = yofset;
