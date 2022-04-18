@@ -763,6 +763,7 @@ void CMultiShotDlg::ManageEnables(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   CString str2, str = "Use custom pattern (NONE DEFINED)";
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
   m_statBeamDiam.EnableWindow(enable);
@@ -774,7 +775,15 @@ void CMultiShotDlg::ManageEnables(void)
   m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog);
   m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
   m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
-  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0);
+  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0 || 
+    !camParams->K2Type);
+  EnableDlgItem(IDC_RNO_EARLY, camParams->K2Type);
+  EnableDlgItem(IDC_RLAST_EARLY, camParams->K2Type);
+  EnableDlgItem(IDC_RALL_EARLY, camParams->K2Type);
+  EnableDlgItem(IDC_RFIRST_FULL, camParams->K2Type);
+  EnableDlgItem(IDC_STAT_NUM_EARLY, camParams->K2Type);
+  EnableDlgItem(IDC_STAT_EARLY_GROUP, camParams->K2Type);
+  EnableDlgItem(IDC_EDIT_EARLY_FRAMES, camParams->K2Type);
   m_statCenterUm.EnableWindow(m_bDoShotsInHoles);
   m_statCenterDist.EnableWindow(m_bDoShotsInHoles);
   m_statCenterGroup.EnableWindow(m_bDoShotsInHoles);

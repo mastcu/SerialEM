@@ -7984,7 +7984,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
 {
   double startTime;
   BOOL state, eventTime;
-  if (!JEOLscope || !(type & sJeolRelaxationFlags))
+  if (!JEOLscope || !(type & sJeolRelaxationFlags) || sJeolSD->JeolSTEM)
     return 0;
   startTime = GetTickCount();
   while (SEMTickInterval(startTime) < sJeolStartRelaxTimeout) {

@@ -135,6 +135,7 @@ private:
   int mBfcCopyIndex;              // Index of next section to copy
   int mBfcDoingCopy;              // 1 if doing synchronous, -1 if doing asynchronous
   bool mBfcStopFlag;              // One-shot flag to stop either kind of copy
+  bool mBfcIgnoreNextStop;        // Flag to ignore that if save error started dosym copy
   IntVec mBfcSectOrder;           // Section numbers to copy in order
   KImageStore *mBfcSortedStore;   // Output file for sorted images
   bool mBfcReorderWholeFile;      // Flag to close dose-symmetric output file when done
@@ -200,6 +201,7 @@ public:
   GetSetMember(BOOL, UseEasyAutocen);
   GetSetMember(BOOL, AutoCenIterate);
   GetSetMember(float, AutoCenIterThresh);
+  SetMember(bool, BfcIgnoreNextStop);
 
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};

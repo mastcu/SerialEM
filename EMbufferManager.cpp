@@ -67,6 +67,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mDoingAsyncSave = false;
   mAsyncFromImage = false;
   mImageAsyncFailed = false;
+  mBufferAsyncFailed = false;
   mSynchronousThread = NULL;
   mNextSecToRead = NO_SUPPLIED_SECTION;
   mHdfUpdateTimePerSect = 0.05f;
@@ -1181,6 +1182,7 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int 
   mImBufForSave.mSaveCopyp = NULL;
   mImBufForSave.IncrementSaveCopy();
   mAsyncFromImage = false;
+  mBufferAsyncFailed = false;
 
   // Start the thread; fromStore NULL is sign that this is save
   StartAsyncThread(NULL, store, section, false);
@@ -1205,6 +1207,7 @@ int EMbufferManager::StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore
 {
   mSaveTD.fromSection = fromSection;
   mAsyncFromImage = false;
+  mBufferAsyncFailed = false;
   StartAsyncThread(fromStore, toStore, toSection, synchronous);
   if (!synchronous)
     return 0;
@@ -1245,6 +1248,14 @@ void EMbufferManager::StartAsyncThread(KImageStore *fromStore, KImageStore *stor
 UINT EMbufferManager::SavingProc(LPVOID pParam)
 {
   SaveThreadData *saveTD = (SaveThreadData *)pParam;
+  static int numTimes = 0;
+  if ((((CSerialEMApp *)AfxGetApp())->GetDebugKeys()).Find('}') >= 0) {
+    numTimes++;
+    if (numTimes == 8)
+      Sleep(600000);
+  } else
+    numTimes = 0;
+
   if (saveTD->fromStore) {
 
     // Copy
@@ -1277,8 +1288,12 @@ int EMbufferManager::AsyncSaveBusy(void)
   int retval = UtilThreadBusy(&mSavingThread, &exitCode);
   if (retval < 0)
     SEMTrace('y', "Async save thread exited with code %d", exitCode);
-  if (retval < 0 && mAsyncFromImage)
-    mImageAsyncFailed = true;
+  if (retval < 0) {
+    if (mAsyncFromImage)
+      mImageAsyncFailed = true;
+    else
+      mBufferAsyncFailed = true;
+  }
   return retval;
 }
 
@@ -1299,8 +1314,10 @@ void EMbufferManager::AsyncSaveDone(void)
 void EMbufferManager::AsyncSaveCleanup(int error)
 {
   CString message;
-  if (!mDoingAsyncSave)
+  static bool inCleanup = false;
+  if (!mDoingAsyncSave || inCleanup)
     return;
+  inCleanup = true;
   UtilThreadCleanup(&mSavingThread);
   if (error || mSaveTD.error) {
 
@@ -1320,6 +1337,10 @@ void EMbufferManager::AsyncSaveCleanup(int error)
     // Report error
     if (error == IDLE_TIMEOUT_ERROR && !mSaveTD.error)
       mSaveTD.error = 18;
+    if (mAsyncFromImage)
+      mImageAsyncFailed = true;
+    else
+      mBufferAsyncFailed = true;
     message = ComposeErrorMessage(mSaveTD.error, "in the background ");
     if (!mSaveTD.fromStore && !mAsyncFromImage)
       message += "\r\n\r\nThe unsaved image is now in buffer " + 
@@ -1341,6 +1362,7 @@ void EMbufferManager::AsyncSaveCleanup(int error)
   mImBufForSave.mImage = NULL;
   mImBufForSave.DeleteOffsets();
   mDoingAsyncSave = false;
+  inCleanup = false;
 }
 
 // Check if asynchronous saving is in progress and wait for it to be done or timed out
@@ -1377,8 +1399,6 @@ int EMbufferManager::CheckAsyncSaving(void)
   // If drop out of loop, call the timeout so its message will be first
   AsyncSaveCleanup(IDLE_TIMEOUT_ERROR);
   mWinApp->RemoveIdleTask(TASK_ASYNC_SAVE);
- if (mAsyncFromImage)
-   mImageAsyncFailed = true;
-  return 1;
+ return 1;
 }
 

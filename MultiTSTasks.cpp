@@ -80,6 +80,7 @@ CMultiTSTasks::CMultiTSTasks(void)
   mBfcCopyIndex = -1;
   mBfcDoingCopy = 0;
   mBfcStopFlag = false;
+  mBfcIgnoreNextStop = false;
   mBaiSavedViewMag = -9;
   mSkipNextBeamShift = false;
   mVppParams.lowDoseArea = -1;
@@ -1997,8 +1998,11 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
 // Set a stop flag to stop after the current copy
 void CMultiTSTasks::StopBidirFileCopy(void)
 {
-  if (mBfcDoingCopy)
-    mBfcStopFlag = true;
+  if (mBfcDoingCopy) {
+    if (!mBfcIgnoreNextStop)
+      mBfcStopFlag = true;
+    mBfcIgnoreNextStop = false;
+  }
 }
 
 // When an asynchronous copy succeeds, go ahead and restart if indicated, or clear flags

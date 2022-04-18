@@ -326,6 +326,7 @@ void CFilterTasks::CalibrateMagShift()
     return;
   mCamera->SetIgnoreFilterDiffs(true);        
   mWinApp->mFilterControl.UpdateSettings();
+  mWinApp->mCamera->SetupFilter();
 
   // NEED MORE DELAY HERE
   // Fire off starting shot

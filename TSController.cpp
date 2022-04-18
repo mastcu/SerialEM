@@ -4481,11 +4481,13 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   float pixelSize;
   int sizeX, sizeY, mbSaved, filmMag, i, error;
   CTime ctdt = CTime::GetCurrentTime();
+  bool saveFailed = mBufferManager->GetSaveAsynchronously() &&
+    mBufferManager->GetBufferAsyncFailed();
   if (!mTerminationStarted)
     mEndCtlMdocPath = "";
   if (terminating)
     mTerminationStarted = true;
-  if (!mClosedDoseSymFile) {
+  if (!mClosedDoseSymFile && mWinApp->mStoreMRC) {
     mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
     mEndCtlWidth = mWinApp->mStoreMRC->getWidth();
     mEndCtlHeight = mWinApp->mStoreMRC->getHeight();
@@ -4505,7 +4507,12 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     mFinishingLastReorder = false;
 
     // Base Z is not allowed for these files, so leave it out
-    error = mMultiTSTasks->InvertFileInZ(mTiltIndex, mTiltAngles, mFrameAlignInIMOD);
+    // If there was failure in asynchronous save, skip last Z value and make it reorder
+    // synchronously.  The ErrorOccurred is still to be called, so make it ignore stop
+    if (saveFailed)
+      mMultiTSTasks->SetBfcIgnoreNextStop(true);
+    error = mMultiTSTasks->InvertFileInZ(mTiltIndex - (saveFailed ? 1 : 0), mTiltAngles, 
+      mFrameAlignInIMOD || saveFailed);
     if (error > 3 && error != 11)
       mClosedDoseSymFile = true;
 
