@@ -66,6 +66,7 @@ public :
   GetSetMember(BOOL, RotateAxisAngle);
   void ReportError (int inErr);
   GetMember(bool, ImageAsyncFailed);
+  GetMember(bool, BufferAsyncFailed);
   SetMember(int, NextSecToRead);
   GetMember(int, AsyncTimeout);
   GetMember(BOOL, DoingAsyncSave);
@@ -104,6 +105,7 @@ public :
   double mAsyncStartTime;
   bool mAsyncFromImage;
   bool mImageAsyncFailed;
+  bool mBufferAsyncFailed;
   int mNextSecToRead;
   float mHdfUpdateTimePerSect;  // Maximum time per section to spend updating HDF header
 
