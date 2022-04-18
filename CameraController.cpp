@@ -24,6 +24,7 @@
 #include "BeamAssessor.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
+#include "MultiShotDlg.h"
 #include "AutocenSetupDlg.h"
 #include "FalconHelper.h"
 #include "PluginManager.h"
@@ -894,11 +895,11 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
     report = "while connecting to AMT camera.";
   } else if (DMind == COM_IND) {
     CreateDMCamera(mGatanCamera);
-    report = "while connecting to Gatan Camera.\nIs DigitalMicrograph running?";
+    report = "while connecting to Gatan Camera.\nDigitalMicrograph needs to be running.";
   } else {
     hr = mWinApp->mGatanSocket->Initialize() ? E_FAIL : S_OK;
-    report = "while connecting to Gatan camera via socket.\nIs DigitalMicrograph "
-      "running on the server?";
+    report = "while connecting to Gatan camera via socket.\nDigitalMicrograph "
+      "needs to be running on the server.";
   }
 
   if(!SEMTestHResult(hr, report)) {
@@ -1748,6 +1749,9 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     mLocalFalconFramePath = mParam->falconFramePath;
     mFalconReferenceDir = mParam->falconRefDir;
   }
+
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
 
   // Manage blanking of AMT camera
   if (!mAMTactive && mParam->AMTtype)
