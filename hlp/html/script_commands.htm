@@ -510,12 +510,14 @@
           <TD class="scriptcommand">Echo [text]</TD>
           <TD>Prints the <b>text</b> to the log window, or a blank line if there is no text.&nbsp;
             Variables are substituted but arithmetic expressions are not evaluated.&nbsp;
-            Multiple spaces between words are preserved, as well as extra spaces before the text.</TD>
+            Multiple spaces between words are preserved, as well as extra spaces before the text.  The two 
+            characters '\n' will print unchanged, so file paths will print correctly.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EchoBreakLines [text]</TD>
           <TD>Prints the <b>text</b> to the log window, or a blank line if none, after substituting variables
-            and breaking the line at either embedded newlines ('\n') in <b>text</b> or the separators between
+            and breaking the line at either escaped newlines (the two characters '\n') in <b>text</b> or at 
+            embedded newline characters, which are the separators between
             array elements.&nbsp; I.e., an array of strings will be printed on separate 
             lines.&nbsp; Command added in 4.0, 1/24/22.</TD>
         </TR>

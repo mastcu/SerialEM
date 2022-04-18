@@ -2389,9 +2389,11 @@ int CMacCmd::MultipleRecords(void)
   index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
   if (!mItemEmpty[9] && mItemInt[9] > -9) {
     index2 = mItemInt[9];
-    if (index2 < 1 || index2 > 11)
-      ABORT_LINE("The ninth entry for doing within holes or\n"
-        "in multiple holes must be between 1 and 11 in line:\n\n");
+    if (index2 < 1 || index2 > MAX_PERIPHERAL_SHOTS) {
+      mStrCopy.Format("The ninth entry for doing within holes or\n"
+        "in multiple holes must be between 1 and %d in line:\n\n", MAX_PERIPHERAL_SHOTS);
+      ABORT_LINE(mStrCopy);
+    }
   }
   doSave = (doEarly != 2 || numEarly != 0) ? msParams->saveRecord : false;
   ix0 = msParams->doSecondRing ? 1 : 0;
@@ -6433,7 +6435,8 @@ int CMacCmd::Echo(void)
   if ((CMD_IS(ECHO) || breakl) && !mRunningScrpLang)
     SubstituteVariables(&mStrLine, 1, mStrLine);
   JustStripItems(mStrLine, 1, report, true);
-  report.Replace("\\n", "\r\n");
+  if (breakl)
+    report.Replace("\\n", "\r\n");
 
   // Preserve line ending, convert array separators to spaces
   if (report.Find("\n") >= 0) {
