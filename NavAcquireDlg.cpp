@@ -1179,7 +1179,8 @@ void CNavAcquireDlg::ManageTimingEnables()
   m_editAfterMinutes.EnableWindow(act->timingType == NAA_AFTER_TIME && notOnlyEveryN);
   m_editWhenMoved.EnableWindow(act->timingType == NAA_IF_SEPARATED && notOnlyEveryN);
   m_editGotoItem.EnableWindow(notOnlyEveryN && !anywhere);
-  m_butMoveUp.EnableWindow(m_iSelectedPos > 0);// && m_iSelectedPos != mFirstPosAfterTask);
+  m_butMoveUp.EnableWindow(m_iSelectedPos > 0 && 
+    !(mCurActSelected == NAACT_RUN_POSTMACRO && m_iSelectedPos == mFirstPosAfterTask));
   m_butMoveDown.EnableWindow(m_iSelectedPos < mNumShownActs - 1 && 
     !(m_iSelectedPos == mFirstPosAfterTask - 1 && (act->flags & NAA_FLAG_ONLY_BEFORE)));
   EnableDlgItem(IDC_RNAVACQ_EVERY_N, runIt);
@@ -1193,7 +1194,8 @@ void CNavAcquireDlg::ManageTimingEnables()
   EnableDlgItem(IDC_NA_RUN_AT_OTHER, notOnlyEveryN && !anywhere);
   EnableDlgItem(IDC_RGOTO_LABEL, m_bRunAtOther && notOnlyEveryN && !anywhere);
   EnableDlgItem(IDC_RGOTO_NOTE, m_bRunAtOther && notOnlyEveryN && !anywhere);
-  EnableDlgItem(IDC_NA_RUN_AFTER_TASK, !(act->flags & NAA_FLAG_ONLY_BEFORE) && runIt);
+  EnableDlgItem(IDC_NA_RUN_AFTER_TASK, !(act->flags & NAA_FLAG_ONLY_BEFORE) && runIt &&
+    mCurActSelected != NAACT_RUN_POSTMACRO);
 }
 
 // New timing type is selected

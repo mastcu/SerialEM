@@ -88,7 +88,7 @@ CNavHelper::CNavHelper(void)
     {"Align to Template", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
     {"Refine ZLP", 0, 0, 1, 15, 40.},
     {"Run Script before Action", NAA_FLAG_ONLY_BEFORE, 0, 1, 15, 40.},
-    {"Run Script after Action", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_AFTER_ITEM, 0, 1, 15,40.},
+    {"Run Script after Action", NAA_FLAG_AFTER_ITEM, 0, 1, 15,40.},
     {"Flash FEG", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
     {"Manage Dewars/Vacuum", NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY |
     NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.}
