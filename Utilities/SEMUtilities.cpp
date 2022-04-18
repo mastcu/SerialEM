@@ -992,7 +992,7 @@ void LoadMacrosIntoDropDown(CComboBox &combo, bool useLong, bool addNone)
       str = names[ind];
     combo.AddString((LPCTSTR)str);
   }
-  SetDropDownHeight(&combo, MAX_MACROS + (addNone ? 1 : 0));
+  SetDropDownHeight(&combo, B3DMIN(MAX_DROPDOWN_TO_SHOW, MAX_MACROS + (addNone ? 1 : 0)));
 }
 
 // Modify a menu item given its submenu # and ID

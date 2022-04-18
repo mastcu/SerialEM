@@ -456,6 +456,6 @@ void CEMbufferWindow::ReloadFileComboBox()
   m_comboOutFile.ReleaseDC(pDC);
   if (numFiles > 0) {
     m_comboOutFile.SetCurSel(mWinApp->mDocWnd->GetCurrentStore());
-    SetDropDownHeight(&m_comboOutFile, numFiles);
+    SetDropDownHeight(&m_comboOutFile, B3DMIN(MAX_DROPDOWN_TO_SHOW, numFiles));
   }
 }

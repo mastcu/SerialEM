@@ -4,6 +4,8 @@ struct FrameAliParams;
 #include <string>
 #include <vector>
 
+#define MAX_DROPDOWN_TO_SHOW 40
+
 #define RELEASE_RETURN_ON_ERR(a, b) if (a) { AdocReleaseMutex() ; return b;}
 
 struct MontParam;
