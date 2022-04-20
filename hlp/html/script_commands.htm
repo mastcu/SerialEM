@@ -1730,8 +1730,12 @@
             unless the option <b>#H</b> is entered with 1 for horizontal or 0 for vertical
             stripes.&nbsp; Reports the number of significant transitions found and the number
             of those that are within a few pixels of the expected boundaries between channels for a
-            K2 or K3 camera.&nbsp; The latter would be a more reliable number to use if
-            there is a risk of very straight grid bars in the field.</TD>
+            K2 or K3 camera.&nbsp; Multiple significant transitions near the same boundary are counted as 
+              a single transition.&nbsp; If there is just one transition and it occurs at the first or
+              last expected boundary, the second value is returned as -1.&nbsp; The second value would 
+              be a more reliable number to use if there are uncorrected line defects or a risk of very 
+              straight grid bars in the field.&nbsp; The appropriate test would be for a value either 
+              greater than 1 or less than 0.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CtfFind buf #M #N [#F] [#B] [#P0] [#P9] [#S]
