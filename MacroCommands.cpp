@@ -6397,6 +6397,9 @@ int CMacCmd::CheckForBadStripe(void)
   index2 = mProcessImage->CheckForBadStripe(&mImBufs[index], ix0, ix1);
   if (!index2)
     mLogRpt = "No bad stripes detected";
+  else if (ix1 < 0)
+    mLogRpt.Format("Bad stripes detected with %d sharp transitions; 1 near first or last "
+      "expected boundary", index2);
   else
     mLogRpt.Format("Bad stripes detected with %d sharp transitions; %d near expected"
       " boundaries", index2, ix1);

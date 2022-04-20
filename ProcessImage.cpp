@@ -2878,6 +2878,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
 {
   int nx, ny, numSums, iy, ix, isum, isumSq, type, idiff, retval = 0;
   int csizeX, csizeY, tLeft, tTop, tBot, tRight, tsizeX, tsizeY, k2Ind = -1;
+  int imLeft, imTop, imRight, imBot, retInc;
   int indent = 8, numRoll = 32, nearCrit = 4;
   int firstExpected[2] = {511, 576};
   int deltaExpected[2] = {512, 576};
@@ -2886,11 +2887,12 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
   float crit = 18.;   // SD's about mean using trimmed mean/SD
   float mean, SD, sem, median = 0., MADN = 1.;
   double allSum = 0.;
-  bool lastHigh = false;
+  bool lastHigh = false, atFirstOrLastExpected = false;
   unsigned short *usdata, *usdata2;
   short *data, *data2;
   CameraParameters *camParam; 
   ControlSet *cset, *conSets = mWinApp->GetCamConSets();
+  std::set<int> nearExpected;
   numNear = 0;
   if (!imBuf || !imBuf->mImage)
     return 0;
@@ -2970,7 +2972,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
       &SD);
     colDiffs[ix] = (float)fabs(mean / B3DMAX(1.e-6, SD));
   }
-  /*avgSD(colDiffs, numSums, &leftMean, &leftSD, &sem);
+  /*avgSD(colDiffs, numSums, &mean, &SD, &sem);
   rsMedian(colDiffs, numSums, temp, &median);
   rsMADN(colDiffs, numSums, median, temp, &MADN);
   PrintfToLog("mean diff Z %.3f  sd  %.3f  med %.3f  MADN %.3f", mean, SD, median,MADN);*/
@@ -2988,17 +2990,27 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
   for (ix = indent; ix < numSums - indent; ix++) {
     if ((colDiffs[ix] - mean) > crit * SD) {
       /*PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix], 
-        (colDiffs[ix] - mean) / SD); */
+        (colDiffs[ix] - mean) / SD);*/
+      retInc = 1;
 
       // Only record the first one in a contiguous series
       if (!lastHigh) {
         if (k2Ind >= 0) {
 
           // Get the location of this line on the chip as tLeft
-          tLeft = cset->left / imBuf->mBinning;
-          tTop = cset->top / imBuf->mBinning;
-          tRight = cset->right / imBuf->mBinning;
-          tBot = cset->bottom / imBuf->mBinning;
+          // First get the left and right coordinates of the position on the chip
+          imLeft = tLeft = cset->left / imBuf->mBinning;
+          imTop = tTop = cset->top / imBuf->mBinning;
+          imRight = tRight = cset->right / imBuf->mBinning;
+          imBot = tBot = cset->bottom / imBuf->mBinning;
+          csizeX = camParam->sizeX;
+          csizeY = camParam->sizeY;
+          tsizeX = tRight - tLeft;
+          tsizeY = tBot - tTop;
+          if (camParam->rotationFlip)
+            CorDefUserToRotFlipCCD(camParam->rotationFlip, imBuf->mBinning, csizeX, csizeY,
+              tsizeX, tsizeY, imTop, imLeft, imBot, imRight);
+
 
           // Need to set both sides to the actual coordinate of the line since either one
           // may end up as the left coordinate after the rotation/flip
@@ -3020,18 +3032,34 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
           // Test positions for proximity
           for (iy = 0; iy < 20; iy++) {
             idiff = (firstExpected[k2Ind] + iy * deltaExpected[k2Ind]) / imBuf->mBinning;
-            if (fabs((double)tLeft - idiff) < nearCrit)
-              numNear++;
+            if (fabs((double)tLeft - idiff) < nearCrit) {
+
+              // Only count transitions near the same boundary once both here and in 
+              // number of transitions return value
+              if (nearExpected.count(iy)) {
+                retInc = 0;
+              } else {
+                numNear++;
+                nearExpected.insert(iy);
+                if (idiff - deltaExpected[k2Ind] / imBuf->mBinning < imLeft ||
+                  idiff + deltaExpected[k2Ind] / imBuf->mBinning> imRight)
+                  atFirstOrLastExpected = true;
+              }
+            }
             if (idiff - tLeft > tsizeX)
               break;
           }
         }
-        retval++;
+        retval += retInc;
       }
       lastHigh = true;
     } else
       lastHigh = false;
   }
+
+  // Convert a single transition to -1 if it is at start/end
+  if (numNear == 1 && atFirstOrLastExpected)
+    numNear = -1;
 
   // Clean up and return
   delete[] temp;
