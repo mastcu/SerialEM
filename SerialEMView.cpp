@@ -2680,7 +2680,7 @@ BOOL CSerialEMView::OnEraseBkgnd(CDC* pDC)
 
 EMimageBuffer *CSerialEMView::GetActiveImBuf()
 {
-  if (!mImBufs)
+  if (!mImBufs || mImBufIndex < 0 || mImBufIndex >= mImBufNumber)
     return NULL;
   return &mImBufs[mImBufIndex];
 }
