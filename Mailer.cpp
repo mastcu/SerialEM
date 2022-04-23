@@ -70,7 +70,7 @@ bool CMailer::Initialize()
 
 bool CMailer::SendMail(CString subject, CString message)
 {
-  CString report, fromAddress;
+  CString report, fromAddress, sendTo = mSendTo;
   char *username;
   bool acceptedForDelivery = false;
   SOCKET hServer; 
@@ -80,7 +80,17 @@ bool CMailer::SendMail(CString subject, CString message)
   if (!mInitialized)
     return false;
 
-  if (mSendTo.IsEmpty()) {
+  if (!mNextEmailAddress.IsEmpty()) {
+    if (mAddToAddress) {
+      if (!mSendTo.IsEmpty())
+        sendTo + ", ";
+      sendTo += mNextEmailAddress;
+    } else {
+      sendTo = mNextEmailAddress;
+    }
+  }
+
+  if (sendTo.IsEmpty()) {
     mWinApp->AppendToLog("Mailer: No address to send to has been defined", 
       LOG_OPEN_IF_CLOSED);
     return false;
@@ -112,6 +122,7 @@ bool CMailer::SendMail(CString subject, CString message)
     return false;
   }
 
+
   try {
 
     // Receive initial response from SMTP server.
@@ -130,12 +141,12 @@ bool CMailer::SendMail(CString subject, CString message)
     // Send RCPT TO: <receiver@domain.com>
     int curPos= 0;
 
-    report = mSendTo.Tokenize(", ",curPos);
+    report = sendTo.Tokenize(", ",curPos);
     while (!report.IsEmpty()) {
       sprintf(szMsgLine, "RCPT TO:<%s>%s", (LPCTSTR)report, CRLF);
       Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() RCPT TO");
       Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() RCPT TO");  
-      report = mSendTo.Tokenize(", ",curPos);
+      report = sendTo.Tokenize(", ",curPos);
     }
 
     // Send DATA.
@@ -143,7 +154,7 @@ bool CMailer::SendMail(CString subject, CString message)
     Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() DATA");
     Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() DATA");
 
-    sprintf(szMsgLine, "%s%s%s%s%s%s%s%s%s", "To: ", (LPCTSTR)mSendTo, CRLF, "Subject: ",
+    sprintf(szMsgLine, "%s%s%s%s%s%s%s%s%s", "To: ", (LPCTSTR)sendTo, CRLF, "Subject: ",
       (LPCTSTR)subject, CRLF, CRLF, (LPCTSTR)message, CRLF);
     Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() message-line"); 
 
@@ -151,8 +162,8 @@ bool CMailer::SendMail(CString subject, CString message)
     sprintf(szMsgLine, "%s.%s", CRLF, CRLF);
     Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() end-message");
     Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() end-message");
-
-    acceptedForDelivery = (strncmp("250", szBuffer, 3) == 0);
+    
+    acceptedForDelivery = (strncmp("250", szBuffer, B3DMIN(3, strlen(szBuffer))) == 0);
 
     // Send QUIT.
     sprintf(szMsgLine, "QUIT%s", CRLF);
@@ -170,6 +181,7 @@ bool CMailer::SendMail(CString subject, CString message)
 
   // Close server socket
   closesocket(hServer);
+
   return acceptedForDelivery;
 }
 
