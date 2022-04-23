@@ -249,12 +249,13 @@ public:
   void StopBidirFileCopy(void);
   void CleanupBidirFileCopy(void);
   void ResetFromBidirFileCopy(void);
+  int ReorderMontageByTilt(CString &errStr);
   void AsyncCopySucceeded(bool restart);
   int BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave, bool setImageShifts);
   void StopAnchorImage();
   void BidirAnchorCleanup(int error);
   void BidirAnchorNextTask(int param);
-  int InvertFileInZ(int zmax, float *tiltAngles = NULL, bool synchronous = false);
+  int InvertFileInZ(int zmax, float *tiltAngles = NULL, bool synchronous = false, CString *errStr = NULL);
   void BidirFileCopyClearFlags(void);
   void SetAnchorStageXYMove(StageMoveInfo & smi);
   void TestAutocenAcquire();

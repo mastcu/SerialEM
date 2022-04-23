@@ -27,6 +27,7 @@
 #include "Utilities\XCorr.h"
 #include "Image\KStoreIMOD.h"
 #include "Shared\b3dutil.h"
+#include "Shared\autodoc.h"
 
 enum {TRACK_SHOT_DONE, SCREEN_DROPPED, START_WAITING, DOSE_DONE, TILT_RESTORED, 
   SCREEN_RESTORED, ALIGN_TRACK_SHOT, RESET_SHIFT_DONE};
@@ -1773,7 +1774,8 @@ void CMultiTSTasks::StoreLimitAngle(bool userAuto, float angle)
 
 // Top-level routine starts file inversion for single-frame and inverts piece list Z for
 // montage
-int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
+int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous, 
+  CString *errStr)
 {
   int ind, err = 0;
   CString mess;
@@ -1796,12 +1798,12 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
   if (mWinApp->Montaging()) {
     err = mWinApp->mStoreMRC->ReorderPieceZCoords(&sectMap[0]);
     if (err && err < 3)
-      mess.Format("An error (code %d) occurred trying to invert the\nZ coordinates in the"
-        " image file header.\nThe state of the file is unknown.\n\n", err);
+      mess.Format("An error (code %d) occurred trying to reorder the\nZ coordinates in "
+        "the image file header.\nThe state of the file is unknown.\n\n", err);
     else
-      mess.Format("An error (code %d) occurred trying to invert the Z coordinates in the"
-        "\n.mdoc file, although the coordinates in the image file header inverted OK.\n\n",
-        err);
+      mess.Format("An error (code %d) occurred trying to reorder the Z coordinates in the"
+        "\n.mdoc file, although the coordinates in the image file header inverted OK.\n\n"
+        , err);
   } else if (mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_HDF) {
     err = ((KStoreIMOD *)(mWinApp->mStoreMRC))->ReorderHdfStackZvalues(&sectMap[0]);
     if (err)
@@ -1828,10 +1830,14 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
         "the file to a new one with reordered Z values.\n\n", err);
     }
   }
-  if (err > 0 && err < 11)
+  if (err > 0 && err < 11 && !errStr)
     mess += "This error cannot be recovered from;\nthe tilt series is being terminated.";
-  if (err > 0)
-    SEMMessageBox(mess);
+  if (err > 0) {
+    if (errStr)
+      *errStr = mess;
+    else
+      SEMMessageBox(mess);
+  }
   return err;
 }
 
@@ -2047,6 +2053,76 @@ void CMultiTSTasks::ResetFromBidirFileCopy(void)
   if (mBfcReorderWholeFile)
     delete mBfcSortedStore;
   BidirFileCopyClearFlags();
+}
+#include <algorithm>
+
+// Partially related routine: do a free-standing reordering of piece list in montage
+int CMultiTSTasks::ReorderMontageByTilt(CString &errStr)
+{
+  IntVec ixPiece, iyPiece, izPiece;
+  FloatVec tiltAngles;
+  int adocInd, err, ifMont, numSect, sectType, numFound, maxZ, numVals;
+  float dummy;
+  if (!mWinApp->mStoreMRC) {
+    errStr = "There is no current file open";
+    return 1;
+  }
+  if (!mWinApp->Montaging()) {
+    errStr = "The current file is not a montage";
+    return 1;
+  }
+  adocInd = mWinApp->mStoreMRC->GetAdocIndex();
+  if (adocInd < 0) {
+    errStr = "To reorder a montage, it must be an MRC file with an mdoc "
+      "or an HDF file";
+    return 1;
+  }
+  err = AdocGetMutexSetCurrent(adocInd);
+  if (err) {
+    errStr = err < -1 ? "Failed to acquire access to autodoc structure" :
+      "Could not set the autodoc structure as the current one";
+    return 1;
+  }
+  err = AdocGetImageMetaInfo(&ifMont, &numSect, &sectType);
+  if (err || !ifMont) {
+    errStr = "There are inconsistencies in the autodoc";
+    err = 1;
+  }
+  if (!err) {
+
+    // Get the piece list
+    ixPiece.resize(numSect);
+    iyPiece.resize(numSect);
+    izPiece.resize(numSect);
+    if (getMetadataPieces(adocInd, sectType, numSect, &ixPiece[0], &iyPiece[0], 
+      &izPiece[0], numSect, &numFound)) {
+      errStr = b3dGetError();
+      err = 1;
+    }
+  }
+  if (!err) {
+
+    // get the maximum Z and the tilt angles using the Z values
+    maxZ = *std::max_element(izPiece.begin(), izPiece.end()) + 1;
+    tiltAngles.resize(maxZ);
+    if (getMetadataItems(adocInd, sectType, numSect, 1, &tiltAngles[0], &dummy, &numVals,
+      &numFound, maxZ, &izPiece[0])) {
+      errStr = b3dGetError();
+      err = 1;
+    } else {
+
+      // Reorder
+      err = InvertFileInZ(maxZ, &tiltAngles[0], true, &errStr);
+    }
+  }
+
+  // The mdoc inversion routine writes a real mdoc but not the hdf header: do it here
+  if (!err && mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_HDF) {
+    ((KStoreIMOD *)(mWinApp->mStoreMRC))->UpdateHdfMrcHeader();
+  }
+    
+  AdocReleaseMutex();
+  return err;
 }
 
 //////////////////////////////////////////////////////////
