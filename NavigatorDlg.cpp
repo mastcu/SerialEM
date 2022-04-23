@@ -9558,14 +9558,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // Do Multishot
   case ACQ_DO_MULTISHOT:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    mRetValFromMultishot = mWinApp->mParticleTasks->StartMultiShot(msParams->numShots[0],
-      msParams->doCenter, msParams->spokeRad[0],
-      msParams->doSecondRing ? msParams->numShots[1] : 0, msParams->spokeRad[1],
-      msParams->extraDelay, 
-      (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0 || 
-        !camParams->K2Type) ? msParams->saveRecord : false, 
-      camParams->K2Type ? msParams->doEarlyReturn : 0, msParams->numEarlyFrames,
-      msParams->adjustBeamTilt, msParams->inHoleOrMultiHole);
+    mRetValFromMultishot = mWinApp->mParticleTasks->StartMultiShot(msParams,
+        camParams);
     stopErr = B3DMAX(mRetValFromMultishot, 0);
     break;
 
