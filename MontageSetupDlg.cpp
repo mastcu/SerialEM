@@ -397,7 +397,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
     && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
       mParam.useMultiShot || !recordOK)));
-  if (mParam.useMultiShot) {
+  if (mParam.useMultiShot && mLowDoseMode) {
     mParam.moveStage = false;
     EnableDlgItem(IDC_MOVESTAGE, false);
     EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, false);
@@ -455,6 +455,8 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
 {
 
   // Set the spin button data
+  bool binEnable = !(mLowDoseMode && (mSizeLocked || mParam.useMultiShot)) &&
+    !mMismatchedModes;
   mLDsetNum = mParam.useViewInLowDose ? VIEW_CONSET : RECORD_CONSET;
   if (mParam.useSearchInLowDose && mLdp[SEARCH_AREA].magIndex)
     mLDsetNum = SEARCH_AREA;
@@ -465,7 +467,9 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   } else if(setPos)
     m_sbcMag.SetPos(mParam.magIndex);
   m_sbcMag.EnableWindow(!mLowDoseMode && !mMismatchedModes);
-  m_sbcBinning.EnableWindow(!(mLowDoseMode && mSizeLocked) &&!mMismatchedModes);
+  m_sbcBinning.EnableWindow(binEnable);
+  EnableDlgItem(IDC_STATBIN, binEnable);
+  EnableDlgItem(IDC_STATBINLABEL, binEnable);
 
   // Load the parameters into the text boxes
   m_iXnFrames = mParam.xNframes;
