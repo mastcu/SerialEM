@@ -115,6 +115,8 @@ private:
   double mMSBaseDefocus;           // Defocus at center
   bool mMSLastFailed;              // Flag if last one did not run to completion
   float mMSinHoleStartAngle;       // Value controlling peripheral rotation
+  int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
+  int mMSFirstSepFile;             // Number of first separate file when created
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -193,6 +195,7 @@ public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, int numSecondRing, float spokeRad2, float extraDelay,
     BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti);
+  int StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams);
   void SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt);
   int StartOneShotOfMulti(void);
   void MultiShotNextTask(int param);
@@ -208,6 +211,8 @@ public:
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);
+  int OpenSeparateMultiFiles(CString &basename);
+  void CloseSeparateMultiFiles();
   int WaitForDrift(DriftWaitParams &param, bool useImageInA,
     float requiredMean = 0., float changeLimit = 0.);
   void WaitForDriftNextTask(int param);

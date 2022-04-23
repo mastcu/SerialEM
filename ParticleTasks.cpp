@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "SerialEMDoc.h"
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
@@ -47,6 +48,7 @@ CParticleTasks::CParticleTasks(void)
   mMSLastHoleStageX = EXTRA_NO_VALUE;
   mMSLastHoleISX = mMSLastHoleISY = 0.;
   mMSinHoleStartAngle = -900.;
+  mMSNumSepFiles = -1;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -108,6 +110,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   bool multiHoles = (inHoleOrMulti & MULTI_HOLES) != 0;
   int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
   bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
+  bool openingFiles = mMSNumSepFiles == 0;
   ScaleMat dMat;
   mMSNumPeripheral = multiInHole ? (numPeripheral + numSecondRing) : 0;
   mMSNumInRing[0] = mMSNumPeripheral - numSecondRing;
@@ -168,7 +171,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
 
   mMSSaveRecord = (mMSsaveToMontage || !(multiHoles && mWinApp->Montaging())) && !testComa
-    && saveRec;
+    && (saveRec || mMSNumSepFiles >= 0);
 
   // Then test other conditions
   if (mMSIfEarlyReturn && !camParam->K2Type) {
@@ -193,12 +196,12 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       "shots when doing an early return with 0 frames");
     RESTORE_MSP_RETURN(1);
   }
-  if (mMSSaveRecord && !mWinApp->mStoreMRC) {
+  if (mMSSaveRecord && !mWinApp->mStoreMRC && !openingFiles) {
     SEMMessageBox("An image file must be open for saving\n"
       "before starting to acquire multiple Record shots");
     RESTORE_MSP_RETURN(1);
   }
-  if (mMSSaveRecord && !mMSsaveToMontage && mWinApp->Montaging()) {
+  if (mMSSaveRecord && !mMSsaveToMontage && mWinApp->Montaging() && !openingFiles) {
     SEMMessageBox("Multiple Records are supposed to be saved but the current image file"
       " is a montage");
     RESTORE_MSP_RETURN(1);
@@ -214,7 +217,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (ItemIsEmptyMultishot(item)) {
       PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped", 
         (LPCTSTR)item->mLabel);
-      RESTORE_MSP_RETURN(0);
+      RESTORE_MSP_RETURN(openingFiles ? -1 : 0);
     }
   }
 
@@ -280,6 +283,13 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSNumHoles = 1;
     mMSHoleISX.push_back(0.);
     mMSHoleISY.push_back(0.);
+  }
+
+  // If opening files, all checks and setup are done, set indexes and return
+  if (openingFiles) {
+    mMSCurIndex = mMSDoCenter < 0 ? -1 : 0;
+    mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
+    RESTORE_MSP_RETURN(0);
   }
 
   if (!testRun) {
@@ -390,21 +400,49 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 }
 
 /*
+* Convenience function to start multishot with a given set of parameters
+*/
+int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams)
+{
+  return StartMultiShot(msParams->numShots[0],
+    msParams->doCenter, msParams->spokeRad[0],
+    msParams->doSecondRing ? msParams->numShots[1] : 0, msParams->spokeRad[1],
+    msParams->extraDelay,
+    (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0 ||
+      !camParams->K2Type) ? msParams->saveRecord : false,
+    camParams->K2Type ? msParams->doEarlyReturn : 0, msParams->numEarlyFrames,
+    msParams->adjustBeamTilt, msParams->inHoleOrMultiHole);;
+}
+
+/*
  * Do the next operations after a shot is done
  */
 void CParticleTasks::MultiShotNextTask(int param)
 {
-  int nextShot, nextHole, err;
+  int nextShot, nextHole, err, protectNum, storeNum;
+  int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
+  KImageStore *storeMRC;
   if (mMSCurIndex < -1)
     return;
 
   // Save Record
   mRecConSet->alignFrames = mSavedAlignFlag;
   if (mMSSaveRecord && mMSImageReturned) {
-    if (mMSsaveToMontage)
+    if (mMSsaveToMontage) {
       err = mWinApp->mMontageController->SavePiece();
-    else
+    } else if (mMSNumSepFiles > 0) {
+      protectNum = mMSFirstSepFile + mMSHoleIndex * numInHole +
+        mMSCurIndex + (mMSDoCenter < 0 ? 1 : 0);
+      storeNum = mWinApp->mDocWnd->LookupProtectedStore(protectNum);
+      storeMRC = mWinApp->mDocWnd->GetStoreMRC(storeNum);
+      if (!storeMRC) {
+        StopMultiShot();
+        return;
+      }
+      err = mWinApp->mBufferManager->SaveImageBuffer(storeMRC);
+    } else {
       err = mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
+    }
     if (err) {
       StopMultiShot();
       return;
@@ -822,6 +860,80 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     strCurPos.Format("%d-%d", curHole, curPos);
   }
   return true;
+}
+
+// Open a file for each multishot position
+int CParticleTasks::OpenSeparateMultiFiles(CString &basename)
+{
+  int err = 0;
+  int nextShot, nextHole;
+  CString root, ext, holePos, fullName;
+  mWinApp->mNavHelper->UpdateMultishotIfOpen(false);
+  if (mMSNumSepFiles > 0) {
+    SEMMessageBox("Separate multishot files are already open");
+    return 1;
+  }
+  mMSNumSepFiles = 0;
+  mMSFirstSepFile = mWinApp->mDocWnd->GetNumStores();
+  UtilSplitExtension(basename, root, ext);
+
+  // Get startup routine to do checks and set up indexes
+  err = StartMultiShot(mMSParams, mWinApp->GetActiveCamParam());
+  if (err)
+    return err;
+  mWinApp->mBufferWindow.SetDeferComboReloads(true);
+  mWinApp->SetDeferBufWinUpdates(true);
+
+  // Cycle through the positions
+  for (;;) {
+    CurrentHoleAndPosition(holePos);
+    fullName = root + "_" + holePos + ext;
+    if (mWinApp->mDocWnd->StoreIndexFromName(fullName) >= 0) {
+      SEMMessageBox("The separate multishot file to be opened,\n" + fullName
+        + "\n" + "is already open.");
+      CloseSeparateMultiFiles();
+      return 1;
+    }
+    err = mWinApp->mDocWnd->DoOpenNewFile(fullName);
+    if (err) {
+      CloseSeparateMultiFiles();
+      return err;
+    }
+
+    // Protect the store
+    mWinApp->mDocWnd->ProtectStore(mMSFirstSepFile + mMSNumSepFiles);
+    mMSNumSepFiles++;
+    if (GetNextShotAndHole(nextShot, nextHole)) {
+      mMSCurIndex = nextShot;
+      mMSHoleIndex = nextHole;
+    } else {
+      break;
+    }
+  }
+
+  // Get evreything updated when done
+  mWinApp->mBufferWindow.SetDeferComboReloads(false);
+  mWinApp->SetDeferBufWinUpdates(false);
+  mWinApp->UpdateBufferWindows();
+  mMSCurIndex = -2;
+  return 0;
+}
+
+// Close all files, or whatever were opened before an error, and update UI
+void CParticleTasks::CloseSeparateMultiFiles()
+{
+  int index;
+  mWinApp->mBufferWindow.SetDeferComboReloads(true);
+  mWinApp->SetDeferBufWinUpdates(true);
+  for (index = mMSFirstSepFile + mMSNumSepFiles - 1; index >= mMSFirstSepFile; index--) {
+    mWinApp->mDocWnd->SetToProtectedStore(index);
+    mWinApp->mDocWnd->EndStoreProtection(index);
+    mWinApp->mDocWnd->DoCloseFile();
+  }
+  mMSNumSepFiles = -1;
+  mWinApp->mBufferWindow.SetDeferComboReloads(true);
+  mWinApp->SetDeferBufWinUpdates(false);
+  mWinApp->UpdateBufferWindows();
 }
 
 ///////////////////////////////////////////////////////////////////////
