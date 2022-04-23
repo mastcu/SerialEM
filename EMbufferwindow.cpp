@@ -290,6 +290,11 @@ BOOL CEMbufferWindow::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+void CEMbufferWindow::OnOK()
+{
+  mWinApp->RestoreViewFocus();
+}
+
 // Set up the various buttons that might be affected by a change of settings
 void CEMbufferWindow::UpdateSettings()
 {

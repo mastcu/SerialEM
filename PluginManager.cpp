@@ -284,6 +284,7 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEnoArg, abortAcquisition);
           DECAM_PROC(CamNoArg, getLastErrorCode);
           DECAM_PROC(DEerrString, getLastErrorDescription);
+          DECAM_PROC(DEstartAcquis, StartAcquisition);
 
           if (i)
             mess.Format("Tried to load %s as a plugin for the DE camera interface but\r\n"
