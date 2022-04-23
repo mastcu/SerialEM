@@ -8168,6 +8168,7 @@ void CEMscope::SetJeolUsePLforIS(BOOL inVal)
     if (!inVal)
       return;
     mShiftBoundaries.clear();
+    mNumShiftBoundaries = 0;
     for (int i = 2; i < MAX_MAGS; i++)
       AddShiftBoundary(i);
   }
