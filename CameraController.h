@@ -591,6 +591,7 @@ public:
   SetMember(float, DoseAdjustmentFactor);
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   GetSetMember(int, CanSaveEERformat);
+  int GetDEServerVersion();
   void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
   void SetCameraISOffset(int ind, float inX, float inY) { mISXcameraOffset[ind] = inX; mISYcameraOffset[ind] = inY; };
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};

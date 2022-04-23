@@ -6609,6 +6609,12 @@ int CCameraController::GetPluginVersion(CameraParameters *camP)
   return 0;
 }
 
+// Return version of DE server if any
+int CCameraController::GetDEServerVersion()
+{
+  return mTD.DE_Cam ? mTD.DE_Cam->GetServerVersion() : 0;
+};
+
 // Convenience function for testing capability
 bool CCameraController::CanPluginDo(int minVersion, CameraParameters *param)
 {

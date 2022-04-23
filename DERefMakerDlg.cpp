@@ -12,6 +12,7 @@
 #include "SerialEM.h"
 #include "DERefMakerDlg.h"
 #include "CameraController.h"
+#include "DirectElectron\DirectElectronCamera.h"
 
 #define MAX_REPEATS 1000
 
@@ -80,6 +81,7 @@ BOOL CDERefMakerDlg::OnInitDialog()
   mRecSet = mWinApp->GetConSets() + RECORD_CONSET;
   CBaseDlg::OnInitDialog();
   bool hasHardwareROI = (mCamParams->CamFlags & DE_HAS_HARDWARE_ROI) != 0;
+  int version = mWinApp->mCamera->GetDEServerVersion();
   ShowDlgItem(IDC_USE_HARDWARE_BIN, (mCamParams->CamFlags & DE_HAS_HARDWARE_BIN) != 0);
   ShowDlgItem(IDC_USE_REC_HARDWARE_ROI, hasHardwareROI);
   mEnableROI = hasHardwareROI && (mRecSet->left > 0 || mRecSet->right < mCamParams->sizeX 
@@ -101,6 +103,13 @@ BOOL CDERefMakerDlg::OnInitDialog()
     ShowDlgItem(IDC_RLINEAR_REF, false);
     ShowDlgItem(IDC_RSUPER_RES_REF, false);
     B3DCLAMP(m_iProcessingType, 1, 2);
+  }
+  if (version >= DE_HAS_API2) {
+    B3DCLAMP(m_iProcessingType, 0, 1);
+    ShowDlgItem(IDC_RPOST_COUNTING, false);
+    ShowDlgItem(IDC_RSUPER_RES_REF, false);
+    m_iReferenceType = 0;
+    EnableDlgItem(IDC_RGAIN_REF, false);
   }
   if (mSetupDarkForRec) {
     m_iProcessingType = B3DMIN(1, mRecSet->K2ReadMode);
