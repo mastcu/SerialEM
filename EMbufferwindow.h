@@ -22,7 +22,8 @@ public:
 	void ProtectBuffer(int inBuf, BOOL inProtect);
 	void UpdateSaveCopy();
 	void SetSpinText(UINT inID, int newVal);
-	CEMbufferWindow(CWnd* pParent = NULL);   // standard constructor
+  void OnOK();
+  CEMbufferWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CEMbufferWindow)

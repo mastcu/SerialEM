@@ -422,6 +422,14 @@ int DirectElectronCamera::initDEServer()
   std::string propValue;
   if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
     SetSoftwareAndServerVersion(propValue);
+#ifndef _WIN64
+  if (mServerVersion >= DE_HAS_API2) {
+    AfxMessageBox("A 32-bit version of SerialEM will not work with this version of the DE"
+      " server.\nInstall a 64-bit version of SerialEM.", MB_EXCLAME);
+    unInitialize();
+    return -1;
+  }
+#endif
   return 1;
 }
 
@@ -826,6 +834,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
   CString valStr;
   int actualSizeX, actualSizeY;
   double startTime = GetTickCount();
+  bool api2Reference = mServerVersion >= DE_HAS_API2 && mRepeatForServerRef > 0;
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
     m_STOPPING_ACQUISITION = false;
@@ -962,7 +971,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
          return 1;
 
     unsigned short *useBuf = image4k;
-    if (operation) {
+    if (operation && !api2Reference) {
       NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
       if (!useBuf) {
         SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
@@ -973,18 +982,25 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
     SEMTrace('D', "About to get image from DE server now that all properties are set.");
 
     // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
-    if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY *  2)) {
+    if (api2Reference) {
+      if (mDeServer->StartAcquisition(mNumLeftServerRef)) {
+        mLastErrorString = ErrorTrace("ERROR: Could not start reference acquisitions");
+        mDateInPrevSetName = 0;
+        return 1;
+      }
+    } else if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2)) {
       mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
       if (operation)
         delete useBuf;
       mDateInPrevSetName = 0;
       return 1;
     }
-    SEMTrace('D', "Got something back from DE Server..");
+    SEMTrace('D', api2Reference ? " Started reference acquisitions" : 
+      "Got something back from DE Server..");
 
     // Try to read back the actual image size from these READ-ONLY properties and if it 
     // is different, truncate the Y size if necessary and set the return size from actual
-    if (mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
+    if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
       mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
       (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
       if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
@@ -1004,8 +1020,9 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       startTime = GetTickCount();
       mDateInPrevSetName = 0;
       while (SEMTickInterval(startTime) < maxInterval && !m_STOPPING_ACQUISITION) {
-        ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
-          &remaining);
+        ret1 = mDeServer->getIntProperty(api2Reference ? 
+          "Remaining Number of Acquisitions": 
+          "Auto Repeat Reference - Remaining Acquisitions", &remaining);
         if (ret1 && remaining != mNumLeftServerRef)
           break;
         Sleep(100);
@@ -1023,6 +1040,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
           delete useBuf;
         return 1;
       }
+    }
+    if (api2Reference) {
+      memset(useBuf, 0, imageSizeX * imageSizeY * 2);
+      return 0;
     }
 
     // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
@@ -1441,7 +1462,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
       mLastAutoRepeatRef = mRepeatForServerRef > 0 ? 1 : 0;
   }
 
-  if (mRepeatForServerRef > 0) {
+  if (mRepeatForServerRef > 0 && mServerVersion < DE_HAS_API2) {
     if (!justSetIntProperty("Auto Repeat Reference - Total Number of Acquisitions", 
       mRepeatForServerRef)) {
         mLastErrorString = ErrorTrace("ERROR: Could NOT set the auto repeat # of acquires"
