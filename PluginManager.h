@@ -151,6 +151,7 @@ typedef bool (*DEgetInt)(std::string, int *);
 typedef bool (*DEgetString)(std::string, std::string *);
 typedef bool (*DEsetMode)(bool);
 typedef void (*DEerrString)(std::string *);
+typedef bool (*DEstartAcquis)(int);
 
 // DE camera functions
 struct DEPluginFuncs {
@@ -170,6 +171,7 @@ struct DEPluginFuncs {
   DEnoArg abortAcquisition;
   CamNoArg getLastErrorCode;
   DEerrString getLastErrorDescription;
+  DEstartAcquis StartAcquisition;
 };
 
 typedef int(*RunScriptLang)(const char *);
