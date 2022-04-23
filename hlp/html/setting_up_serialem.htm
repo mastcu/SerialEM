@@ -158,7 +158,7 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon2NewDetails">For a Falcon 2 camera under the new advanced scripting interface</a>
       <br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon3Details">For a Falcon 3 camera</a>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon3Details">For a Falcon 3 or 4 camera</a>
       <br>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Ceta2Details">For a Ceta 2 camera (Ceta with speed enhancement option)</a>
       <br>
@@ -1430,6 +1430,10 @@
       <li>Making the counts match between counting and linear modes requires an accurate
         setting for the camera property 'LinearToCountingRatio'; procedures for setting
         this and the counts per electron later are described in
+        <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
+      <li><em>Falcon 4</em> needs an additional property, 'FalconEventScaling', to make 
+        counting mode images produced by aligning EER frames match the counts in other 
+        counting mode images; this is estimated as described in
         <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
       <li>There are two things that can speed up frame alignment in SerialEM: most
         importantly, not reading the frames across a 1 gigabit network connection;
@@ -2862,29 +2866,38 @@ MoveStage 0 0 -$zRange / 2.
                   K3CDSLinearRatio or adjust it with the new ratio.</li>
           </ol>
           <p>
-              <i>For a Falcon 3 camera:</i> The procedure for setting CountsPerElectron is, to
-        first order, simple.&nbsp; Take an image in counting mode with frame-saving
+              <i>For a Falcon 3 or 4 camera:</i> The procedure for setting CountsPerElectron is simple.&nbsp; Take an image in counting mode with frame-saving
         turned on and open the .xml file.&nbsp; Take the inverse of the value for
-        CountsToElectrons and use that for the CountsPerElectron (it is typically ~105).&nbsp;
-        It is not known whether there is loss in detecting electrons even at the lowest
-        dose rates such as there is
-        for the K2/K3; if this becomes established or you have measurements indicating that
-        it occurs, multiply the value by the efficiency factor (1 minus the fraction
-        lost).</p>
+        CountsToElectrons and use that for the CountsPerElectron (it is typically ~105 for 
+              Falcon 3 and ~300 for Falcon 4).&nbsp;  It is not known whether there is loss in detecting electrons even at the lowest
+-        dose rates such as there is
+-        for the K2/K3; if this becomes established or you have measurements indicating that
+-        it occurs, multiply the value by the efficiency factor (1 minus the fraction
+-        lost).</p>
+        <p>For Falcon 4, a different property is needed for scaling raw electron counts when aligning frames being saved as EER, 
+              or aligning without permanently saving (in this case frames are saved into 
+          an EER file).&nbsp; This scaling factor is needed to make the counts in aligned 
+          images match those in unaligned images (ones scaled by the Thermo/FEI software). 
+          To estimate this factor, set Record parameters for unbinned, 2 second exposure, 
+          no frame saving, and counting mode.&nbsp; Take an image without aligning, and an 
+          image with aligning in SerialEM.&nbsp; Use Ctrl-I to get the mean counts of 
+          each.&nbsp; Set the property FalconEventScaling to CountsPerElectron * (mean 
+          with aligning) / (mean without aligning).</p>
     <p>
         It is also important for some purposes to make linear mode and counting mode
         give the same number of counts; this is achieved with the camera property
-        'LinearToCountingRatio'.&nbsp; A procedure for estimating this is:</p>
+        'LinearToCountingRatio'.&nbsp; A procedure for estimating this for is:</p>
     <ol>
       <li>Add the property 'LinearToCountingRatio 8' if it is not already present.</li>
-      <li>Turn on Divide By 2 in the Camera menu so that linear mode measurements will
+      <li>For Falcon 3, turn on Divide By 2 in the Camera menu so that linear mode measurements will
         not be biased by truncation at 0.</li>
       <li>Set Record parameters for unbinned, 2 second exposure, no frame saving.</li>
-      <li>Set the beam intensity to give ~0.5 electrons/physical pixel/sec.&nbsp; It is
+      <li>Set the beam intensity to give ~0.5 or ~3.5 electrons/physical pixel/sec for 
+        Falcon 3 or 4, respectively.&nbsp; It is
         not necessary to set this to a very low value, where loss of counting efficiency
         is minimal, because the mean counts for counting mode will be linearized to
         account for this loss by a table built into SerialEM.</li>
-      <li>Copy and paste this into a script window:
+      <li>Copy and paste this into a script window:<br />
       sumc = 0.
       <br />
       suml = 0.<br />
