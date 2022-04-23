@@ -285,7 +285,7 @@ void CSerialEMDoc::OnFileOpennew()
 int CSerialEMDoc::DoOpenNewFile(CString filename)
 {
   if (mNumStores >= MAX_STORES) {
-    AfxMessageBox("Cannot open new file; there are too many files open already",
+    SEMMessageBox("Cannot open new file; there are too many files open already",
       MB_EXCLAME);
     return 1;
   }
@@ -1679,6 +1679,8 @@ void CSerialEMDoc::ComposeTitlebarLine(void)
 {
   int limit = 8, indStart;
   CString dir, filename, title;
+  if (mWinApp->mBufferWindow.GetDeferComboReloads())
+    return;
   if (!mNumStores || !mWinApp->mStoreMRC) {
     mWinApp->SetTitleFile("");
     return;

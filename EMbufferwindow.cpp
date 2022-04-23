@@ -44,6 +44,7 @@ CEMbufferWindow::CEMbufferWindow(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
   for (int i = 0; i < MAX_BUFFERS; i++)
     protectBuffer[i] = false;
+  mDeferComboReloads = false;
 }
 
 
@@ -437,6 +438,8 @@ void CEMbufferWindow::ReloadFileComboBox()
   KImageStore *store;
   CString dir, file;
   CRect rect;
+  if (mDeferComboReloads)
+    return;
   CDC *pDC = m_comboOutFile.GetDC();
   m_comboOutFile.GetClientRect(rect);
   maxWidth = 17 * rect.Width() / 20;
@@ -457,5 +460,15 @@ void CEMbufferWindow::ReloadFileComboBox()
   if (numFiles > 0) {
     m_comboOutFile.SetCurSel(mWinApp->mDocWnd->GetCurrentStore());
     SetDropDownHeight(&m_comboOutFile, B3DMIN(MAX_DROPDOWN_TO_SHOW, numFiles));
+  }
+}
+
+// Set or clear flag to not update the combo box; when turned off, update it and the title
+void CEMbufferWindow::SetDeferComboReloads(bool inVal)
+{
+  mDeferComboReloads = inVal;
+  if (!inVal) {
+    ReloadFileComboBox();
+    mWinApp->mDocWnd->ComposeTitlebarLine();
   }
 }

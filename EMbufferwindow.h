@@ -81,6 +81,7 @@ private:
 	void ManageCopyOnSave(int inVal);
 	EMbufferManager * mBufferManager;
 	void DoCopyBuffer(int iWhich);
+  bool mDeferComboReloads;
 public:
   CButton m_butDelete;
   afx_msg void OnClickedDeletebuf();
@@ -88,6 +89,8 @@ public:
   CString m_strMemory;
   double MemorySummary(void);
   void ReloadFileComboBox();
+  void SetDeferComboReloads(bool inVal);
+  GetMember(bool, DeferComboReloads);
   CComboBox m_comboOutFile;
   afx_msg void OnSelendokComboOutfile();
 };
