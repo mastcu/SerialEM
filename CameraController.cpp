@@ -3602,12 +3602,12 @@ void CCameraController::Capture(int inSet, bool retrying)
         if (mParam->falcon3ScalePower <= 0) {
           mTD.DivideBy2 -= mParam->falcon3ScalePower;
           if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
-            scaleFac = (float)(mParam->countsPerElectron / pow(2.,mTD.DivideBy2));
+            scaleFac = (float)(mParam->falconEventScaling / pow(2.,mTD.DivideBy2));
         } else {
           mTD.CountScaling = mParam->linear2CountingRatio /
             (float)pow(2., mTD.DivideBy2 + mParam->falcon3ScalePower);
           if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
-            scaleFac = (float)(mTD.CountScaling * mParam->countsPerElectron);
+            scaleFac = (float)(mTD.CountScaling * mParam->falconEventScaling);
         }
         if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
           mFalconHelper->SetLastEERcountScaling(scaleFac);
@@ -3619,8 +3619,9 @@ void CCameraController::Capture(int inSet, bool retrying)
         else
           mTD.DivideBy2 += mParam->falcon3ScalePower;
       }
-      SEMTrace('E', "Falcon 3 scaling: divideBy2 %d float scale %f  flags %x", 
-        mTD.DivideBy2, mTD.CountScaling, mTD.FEIacquireFlags);
+      SEMTrace('E', "Falcon 3 scaling: divideBy2 %d float scale %f  cpe %f eventsc %f "
+        "flags %x", mTD.DivideBy2, mTD.CountScaling, mParam->countsPerElectron, 
+        mParam->falconEventScaling, mTD.FEIacquireFlags);
     }
   } else if (IS_FALCON3_OR_4(mParam) && mParam->falcon3ScalePower > -10 &&
     mScope->GetPluginVersion() >= FEI_PLUGIN_SCALES_DUMB_F3) {
@@ -6579,6 +6580,7 @@ float CCameraController::GetCountScaling(CameraParameters *camParam)
 }
 
 // Adjust the working value of counts per electron for a Falcon for the chosen scaling
+// THIS CAN NOW BE CALLED ONLY ONCE UNLESS EVENT SCALING IS STORED UNSCALED TOO
 void CCameraController::AdjustCountsPerElecForScale(CameraParameters *param)
 {
   if (!IS_FALCON3_OR_4(param))
@@ -6589,6 +6591,10 @@ void CCameraController::AdjustCountsPerElecForScale(CameraParameters *param)
   else if (param->falcon3ScalePower > 0)
     param->countsPerElectron *= 
       param->linear2CountingRatio / (float)pow(2., param->falcon3ScalePower);
+  if (param->falconEventScaling > 0)
+    param->falconEventScaling *= param->countsPerElectron / param->unscaledCountsPerElec;
+  else
+    param->falconEventScaling = param->countsPerElectron;
 }
 
 // Return the target size for tasks for the given camera, or the current on if camaParam

@@ -4,8 +4,7 @@
  *  Original author: James Kremer
  *  Revised by David Mastronarde
  *
- *  Copyright (C) 1995-2007 by Boulder Laboratory for 3-Dimensional Electron
- *  Microscopy of Cells ("BL3DEMC") and the Regents of the University of 
+ *  Copyright (C) 1995-2021 by the Regents of the University of 
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  $Id$
@@ -100,6 +99,8 @@ extern "C" {
   int     sliceFloatEx(Islice *slice, int freeData);
   int     sliceComplexFloat(Islice *slice);
   int     sliceMMM(Islice *slice);
+  void fullArrayMinMaxMean(void *array, int type, int nx, int ny, float *dmin,
+                           float *dmax, float *dmean);
   Islice *mrc_slice_getvol(Istack *v, int sno, char axis);
   int     mrc_slice_putvol(Istack *v, Islice *s, int sno, char axis);
   int     sliceMode(char *mst);

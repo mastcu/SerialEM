@@ -2967,6 +2967,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->pixelMicrons = itemFlt[1];
           else if (MatchNoCase("CountsPerElectron"))
             camP->countsPerElectron = itemFlt[1];
+          else if (MatchNoCase("FalconEventScaling"))
+            camP->falconEventScaling = itemFlt[1];
           else if (MatchNoCase("LinearToCountingRatio"))
             camP->linear2CountingRatio = itemFlt[1];
           else if (MatchNoCase("LinearOffset"))

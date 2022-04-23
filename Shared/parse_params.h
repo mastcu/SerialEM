@@ -12,6 +12,7 @@
 #include <stdio.h>
 #define PIP_INTEGER  1
 #define PIP_FLOAT    2
+#define PIP_DOUBLE   3
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,6 +64,7 @@ void PipReadOrParseOptions(int argc, char *argv[], const char *options[],
                            int numOpts, const char *progName, int minArgs, 
                            int numInFiles, int numOutFiles, int *numOptArgs,
                            int *numNonOptArgs, void (headerFunc)(const char *));
+void PipReadProgDefaults(const char *progName);
 int PipReadNextLine(FILE *pFile, char *lineStr, int strSize, char comment, 
                     int keepComments, int inLineComments, int *firstNonWhite);
 int PipGetLineOfValues(const char *option, const char *strPtr, void *array, int valType, 

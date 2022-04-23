@@ -410,6 +410,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].postActionsOK = -1;     // -1 = Unspecified and OK
     mCamParams[i].addToExposure = -999.;
     mCamParams[i].falcon3ScalePower = 4;
+    mCamParams[i].falconEventScaling = 0.;
     mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].linearOffset = 0.;
     mCamParams[i].K3CDSLinearRatio = 1.5f;

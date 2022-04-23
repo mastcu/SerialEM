@@ -3880,6 +3880,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
   if (!montDlg) {
+    SEMTrace('S', "Moving to center of montage %.2f  %.2f", item->mStageX, item->mStageY);
     AdjustAndMoveStage(item->mStageX, item->mStageY, 0., axisXY);
     mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
     mWinApp->UpdateBufferWindows();

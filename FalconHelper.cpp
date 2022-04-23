@@ -933,7 +933,8 @@ void CFalconHelper::StackNextTask(int param)
       useDefects = &camParam->defects;
     }
     hasDefects = AreDefectsNonEmpty(useDefects);
-    ind = mFrameAli->nextFrame(outPtr,mEERsumming > 0 ? MRC_MODE_BYTE : mImage->getMode(),
+    ind = mFrameAli->nextFrame(outPtr, 
+      (mEERsumming > 0 && !mReadEERantialiased) ? MRC_MODE_BYTE : mImage->getMode(),
       useGainArr, useNxGain, useNyGain, mDarkp ? mDarkp->Array : NULL, mAlignTruncation,
       useDefects, hasDefects ? useNxGain : 0, hasDefects ? useNyGain : 0, 1, 0., 0.);
     if (ind) {

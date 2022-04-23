@@ -179,7 +179,8 @@ void CMailer::Check(int iStatus, char *szFunction)
   CString report;
   if(iStatus != SOCKET_ERROR && iStatus != 0) 
     return;
-  report.Format("Error during call to %s: %d - %s", szFunction, iStatus, GetLastError());
+  report.Format("Error during call to %s: status %d - error %d", szFunction, iStatus,
+    GetLastError());
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   throw 1;
 }

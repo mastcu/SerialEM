@@ -336,10 +336,13 @@ int KImageStore::CheckAdocForMontage(MontParam * inParam)
 int KImageStore::GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY,
   int &outZ)
 {
-  int retval = 0;
+  int adocSect, retval = 0;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
-  if (AdocGetThreeIntegers(sectName, inSect, ADOC_PCOORD, &outX, &outY, &outZ))
+  adocSect = AdocLookupByNameValue(sectName, inSect);
+  if (adocSect < 0)
+    retval = -1;
+  else if (AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &outX, &outY, &outZ))
     retval = -1;
   AdocReleaseMutex();
   return retval;
@@ -349,10 +352,13 @@ int KImageStore::GetStageCoordFromAdoc(const char *sectName, int inSect, double 
   double & outY)
 {
   float X, Y;
-  int retval = 0;
+  int adocSect, retval = 0;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
-  if (AdocGetTwoFloats(sectName, inSect, ADOC_STAGE, &X, &Y)) {
+  adocSect = AdocLookupByNameValue(sectName, inSect);
+  if (adocSect < 0) {
+    retval = -1;
+  } else if (AdocGetTwoFloats(sectName, adocSect, ADOC_STAGE, &X, &Y)) {
     retval = -1;
   } else {
     outX = X;
@@ -365,18 +371,20 @@ int KImageStore::GetStageCoordFromAdoc(const char *sectName, int inSect, double 
 // This takes a map from current section number to new section number
 int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz)
 {
-  int ind, pcX, pcY, pcZ, retval = 0;
+  int ind, pcX, pcY, pcZ, adocSect, retval = 0;
   CString mdocName;
 
   if (mAdocIndex >= 0) {
     if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
       return 3;
     for (ind = 0; ind < nz; ind++) {
-      RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(sectName, ind, ADOC_PCOORD, &pcX,
+      adocSect = AdocLookupByNameValue(sectName, ind);
+      RELEASE_RETURN_ON_ERR(adocSect < 0, 7);
+      RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &pcX,
         &pcY, &pcZ), 4);
       pcZ = sectOrder[pcZ];
-      RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, ind, ADOC_PCOORD, pcX, pcY,
-        pcZ), 5);
+      RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, adocSect, ADOC_PCOORD, pcX,
+        pcY, pcZ), 5);
     }
     if (mStoreType != STORE_TYPE_HDF) {
       mdocName = getAdocName();
