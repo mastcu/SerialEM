@@ -931,7 +931,7 @@ void CParticleTasks::CloseSeparateMultiFiles()
     mWinApp->mDocWnd->DoCloseFile();
   }
   mMSNumSepFiles = -1;
-  mWinApp->mBufferWindow.SetDeferComboReloads(true);
+  mWinApp->mBufferWindow.SetDeferComboReloads(false);
   mWinApp->SetDeferBufWinUpdates(false);
   mWinApp->UpdateBufferWindows();
 }

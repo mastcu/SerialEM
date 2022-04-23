@@ -2435,6 +2435,33 @@ int CMacCmd::RotateMultiShotPattern(void)
   return 0;
 }
 
+// OpenMultiShotFiles
+int CMacCmd::OpenMultiShotFiles(void)
+{
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(mStrCopy)) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
+// CloseMultiShotFiles
+int CMacCmd::CloseMultiShotFiles(void)
+{
+  mWinApp->mParticleTasks->CloseSeparateMultiFiles();
+  return 0;
+}
+
+// ReorderMontageByTilt
+int CMacCmd::ReorderMontageByTilt(void)
+{
+  mStrCopy = "";
+  if (mWinApp->mMultiTSTasks->ReorderMontageByTilt(mStrCopy))
+    ABORT_NOLINE("Error reordering a montage by tilt angle:\n" + mStrCopy);
+  return 0;
+}
+
 // AutoAlign, A, AlignTo, ConicalAlignTo
 int CMacCmd::AutoAlign(void)
 {
@@ -6814,6 +6841,17 @@ int CMacCmd::StripEndingDigits(void)
     ABORT_LINE("Error setting variable " + mStrItems[2] + " with string " + report +
     " in:\n\n");
   SetReportedValues(atoi((LPCTSTR)mStrCopy));
+  return 0;
+}
+
+// SetNextEmailAddress
+int CMacCmd::SetNextEmailAddress(void)
+{
+  if (mItemInt < 0)
+    mStrCopy = "";
+  else
+    SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  mWinApp->mMailer->SetNextEmailAddress(mStrCopy, mItemInt[1] > 0);
   return 0;
 }
 

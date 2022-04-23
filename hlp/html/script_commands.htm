@@ -1913,6 +1913,15 @@
             Nexperion script repository</a> and renamed to this name.&nbsp; Command added in 4.0, 3/7/22.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReorderMontageByTilt</TD>
+          <TD>Changes the piece coordinates in the current open file, which must be a 
+            montage, to reorder them by tilt, just as is done for bidirectional and 
+            dose-symmetric tilt series.&nbsp; An MRC file must have an associated metadata 
+            audoc (&#39;.mdoc&#39;), and both the piece coordinates in the image file header and the 
+            ones in the .mdoc will be reordered.&nbsp; An HDF file can also have its piece 
+            coordinates reordered.&nbsp; Command added in 4.1, 4/23/22.</TD>
+        </TR>
+        <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
         </TR>
          <TR>
@@ -3636,6 +3645,25 @@
             or the needed transformation is not available.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">OpenMultiShotFiles name</TD>
+          <TD>Opens a set of files, one for each of the positions specified in the current settings of
+            the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> (which need not be 
+            open).&nbsp; The file names will be based on <b>name</b> (which can include a full path), with
+            each name being <i>rootname_ShotPosition.ext</i>, where <i>rootname</i> and <i>ext</i> are the
+            root and extension of <b>name</b>, amd <i>ShotPosition</i> is the same text used to label frame 
+            files from different positions.&nbsp; After this command is given, and until the files are
+            closed with the next command, the Multiple Record routine 
+            will save the image at each position into its respective file, regardless of whether saving is
+            selected in the dialog.&nbsp; This command is intended to allow parallel tilt series but is
+            probably not useful until a more sophisticated alignment procedure is added.&nbsp; Command added in 4.1, 4/23/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CloseMultiShotFiles</TD>
+          <TD>Closes the set of files opened with 'OpenMultiShotFiles' and returns the Multiple Record
+            routine to its normal operation of saving into a single file if at all.&nbsp; Command added in 4.1, 4/23/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
           <TD>Calibrates image shift at the current mag. Do the calibration from scratch if
             the optional <b>#</b> is nonzero.</TD>
@@ -4426,11 +4454,18 @@
             <b>text</b> can include variables to be substituted.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetNextEmailAddress # [addr]</TD>
+          <TD>If <B>#</B> is 0, sets the email address(es) to be used on the next sending of email by any 
+            source to <b>addr</b>, which can contain several addresses separated by commas.&nbsp; If
+            <b>#</b> is 1, it appends to the addresses defined in the user settings.&nbsp; If <b>#</b> is -1, 
+            an address set by a previous command and not used yet is canceled.&nbsp; Command added in 4.1, 4/23/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SendEmail text</TD>
           <TD>Sends an email containing the given <b>text</b>, which can include variables to be
             substituted. An SMTP server and address to send from must be defined in the
-            properties file, and recipient(s) must be defined using 'Set Email Address' in
-            the Settings Menu.</TD>
+            properties file, and recipient(s) must be defined using either 'Set Email Address' in
+            the Settings Menu or the 'SetNextEmailAddress' command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ErrorBoxSendEmail text</TD>

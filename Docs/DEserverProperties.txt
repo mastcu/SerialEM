@@ -1,58 +1,56 @@
 These properties are used in current versions:
 
-Camera Position
+ADUs Per Electron
+Auto Repeat Reference - Multiple Acquisitions  ELIM
+Auto Repeat Reference - Remaining Acquisitions  ?? 
+Auto Repeat Reference - Total Number of Acquisitions ??
+Autosave Directory
+Autosave File Format (2.3 on)
+Autosave Filename Suffix (User Input)    2.5 ->  Autosave Filename Suffix
+Autosave Final Image
+Autosave Final Image - Sum Count
+Autosave Frames - Format (before 2.3)
+Autosave Frames - Previous Dataset Name (before 2.3)
+Autosave Movie
+Autosave Movie - Completed
+Autosave Movie - Correction Mode
+Autosave Movie - Format for Unnormalized Movie  (before 2.3)
+Autosave Movie - Frames Written in Last Exposure  2.5 -> Autosave Integrated Movie Frames Written
+Autosave Movie - Ignored Frames   2.5 -> Autosave Movie - Frames to Ignore
+Autosave Movie - Pixel Depth      2.5 -> Autosave Integrated Movie Pixel Format
+Autosave Movie - Sum Count        2.5 -> Autosave Final Image Sum Count
+Autosave Previous Dataset Name (2.3 on)  2.5 - >  Dataset Name
+Autosave Raw Frames
+Binning Algorithm    2.5 -> Binning Method
+Camera Position      2.5 -> Camera Position Status
+Camera Position Status
+Correction Mode Counting Gain Reference Status
+Correction Mode Dark Reference Status   2.5 -> Reference - Dark
+Correction Mode Gain Reference Status   2.5 -> Reference - Gain
+Electron Counting    2.5 -> Image Processing - Mode
+Electron Counting - Apply Post-Counting Gain   2.5 -> Event Counting - Apply Post-Counting Gain
+Electron Counting - Dose Fractionation Number of Frames   2.5 -> Autosave Movie Sum Count
+Electron Counting - Super Resolution    2.5 -> Event Counting - Super Resolution
+Exposure Time Max (seconds)
+Faraday Plate - Last Exposure Peak Density (pA/cm^2)   2.5 -> Faraday Plate - Peak Intensity (pA/cm^2)
+Frames Per Second
+Frames Per Second (Max)
+Ignore Number of Frames    2.5 -> Readout - Frames to Ignore
+Image Processing - Motion Correction
+Motion Correction   (before 2.1)
+Preexposure Time (seconds)
+Protection Cover Delay (milliseconds)
+Protection Cover Operation Mode
+Sensor Hardware Binning   2.5 -> Binning Mode
+Sensor Hardware ROI       2.5 -> ROI Mode
+Sensor Module SN
 Sensor Readout Delay (milliseconds)
 Server Software Version
-Sensor Hardware Binning
-Sensor Hardware ROI
-Auto Repeat Reference - Multiple Acquisitions
-Motion Correction   (before 2.1)
-Protection Cover Operation Mode
-Autosave Frames - Format (before 2.3)
-Autosave File Format (2.3 on)
-Temperature Control
-Camera Position Status
-Frames Per Second (Max)
-Frames Per Second
-Protection Cover Delay (milliseconds)
-Temperature Control - Setpoint (Celsius)
-Autosave Directory
-Electron Counting
-Electron Counting - Super Resolution
-Electron Counting - Apply Post-Counting Gain
-Autosave Movie - Ignored Frames
-Autosave Movie - Sum Count
-Autosave Movie - Format for Unnormalized Movie  (before 2.3)
-Autosave Movie - Frames Written in Last Exposure
-Autosave Movie - Completed
-Binning Algorithm
-Autosave Final Image - Sum Count
-Sensor Module SN
-Autosave Raw Frames
-Autosave Final Image
-Autosave Movie
-Electron Counting - Dose Fractionation Number of Frames
-Preexposure Time (seconds)
-Exposure Time Max (seconds)
-Correction Mode Dark Reference Status
-Correction Mode Gain Reference Status
-Correction Mode Counting Gain Reference Status
-Auto Repeat Reference - Remaining Acquisitions
-Auto Repeat Reference - Total Number of Acquisitions
 Temperature - Detector (Celsius)
-Electron Counting - Dose Fractionation Number of Frames
-Autosave Filename Suffix (User Input)
+Temperature - Detector (Celsius)
 Temperature - Water Line (Celsius)
-Temperature - Detector (Celsius)
-Temperature Control
-Ignore Number of Frames
-Faraday Plate - Last Exposure Peak Density (pA/cm^2)
-Autosave Frames - Previous Dataset Name (before 2.3)
-Autosave Previous Dataset Name (2.3 on)
-Autosave Movie - Correction Mode
-Autosave Movie - Pixel Depth
-Image Processing - Motion Correction
-ADUs Per Electron
+Temperature Control                 2.5 -> Temperature - Control
+Temperature Control - Setpoint (Celsius)  2.5 -> Temperature - Cool Down Setpoint (Celsius)
 
 
 These are only referred to by these globals in the header file

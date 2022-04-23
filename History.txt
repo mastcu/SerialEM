@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/23/22: Added script command to set email address for next email.
+
+4/23/22: Added script command to reorder a montage piece list by tilt angle.
+
+4/23/22: Added script command to enable saving multiple records into separate
+files (a work in progress, needs an alignment procedure for tilt series).
+
+4/23/22: Fixed crash on JEOL using PLA for IS, broken 3/28/22.
+
 4/22/22: Added property FalconEventScaling for scaling images from EER files
 aligned in SerialEM the same as other counting images and revised help to
 describe measuring this (In 4.0).
