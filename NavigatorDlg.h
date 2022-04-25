@@ -438,6 +438,7 @@ private:
   int mPostponedSubsetStart; // Subset values when postponed
   int mPostponedSubsetEnd;
   BOOL mPostposedDoSubset;
+  bool mAcqCycleDefocus;     // Flag that acquire is actually cycling focus given settings
   bool mSettingUpFullMont;   // Flag so that fitting can not add extra area if skewed
   float mMaxAngleExtraFullMont;  // Maximum angle at which extra size will be added
   int mMinNewFileInterval;   // Interval at which to add new files when using Shift N
