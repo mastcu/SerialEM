@@ -1552,7 +1552,8 @@ void CFocusManager::FocusDone()
     if (needBin > 1) {
       imA->Lock();
       data = imA->getData();
-      NewArray(temp, short int, ((size_t)nxframe * nyframe) / needBin);
+      NewArray(temp, short int, (type == kFLOAT ? 2 : 1) * ((size_t)nxframe * nyframe) / 
+        (needBin * needBin));
       if (!temp) {
         SEMMessageBox(_T("Error getting buffer for binning - focus aborted"));
         StopFocusing();
@@ -1597,7 +1598,7 @@ void CFocusManager::FocusDone()
     if (type == kUBYTE) {
       NewArray2(stretchData, unsigned char, nxframe, nyframe);
     } else {
-      NewArray2(stretchData, short int, nxframe, nyframe);
+      NewArray2(stretchData, short int, (type == kFLOAT ? 2 : 1) * nxframe, nyframe);
     }
   }
 

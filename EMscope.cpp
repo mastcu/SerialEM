@@ -1013,7 +1013,7 @@ int CEMscope::Initialize()
               "and should be upgraded to the current version (%d)\n\n"
               "This is usually accomplished by running install.bat\n"
               "in a current SerialEM installation package\n"
-              "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)",
+              "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)",
               plugVers, FEISCOPE_PLUGIN_VERSION);
             AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
           }
@@ -1023,14 +1023,14 @@ int CEMscope::Initialize()
                 "(FEI-SEMserver.exe)\nis version %d and should be upgraded to the "
                 "current version (%d)\n\n"
                 "Copy the file from a current SerialEM installation package\n"
-                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)\n" 
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n" 
                 "to the microscope computer, replacing the version there", 
                 servVers, FEISCOPE_PLUGIN_VERSION);
             else
               message.Format("The scope server (FEI-SEMserver.exe) is version %d\n"
                 "and should be upgraded to the current version (%d)\n\n"
                 "Copy the file from a current SerialEM installation package\n"
-                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)\n" 
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n" 
                 "and replace the version that you are now running", 
                 servVers, FEISCOPE_PLUGIN_VERSION);
             AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
