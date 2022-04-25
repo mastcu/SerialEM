@@ -2640,6 +2640,8 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
     NewArray2(array, unsigned char, sizeX, sizeY);
   } else if (type == kRGB) {
     NewArray2(array, unsigned char, 3 * sizeX, sizeY);
+  } else if (type == kFLOAT) {
+    NewArray2(array, float, sizeX, sizeY);
   } else {
     NewArray2(array, short int, sizeX, sizeY);
   }
@@ -2662,6 +2664,8 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
     imBuf->mImage = new KImage;
   else if (type == kRGB)
     imBuf->mImage = new KImageRGB;
+  else if (type == kFLOAT)
+    imBuf->mImage = new KImageFloat;
   else {
     imBuf->mImage = new KImageShort;
     imBuf->mImage->setType(type);
