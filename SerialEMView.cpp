@@ -891,6 +891,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
       tempY += (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, 
           imBuf->mMagInd);
+      if (imBuf->mRotAngle)
+        tempY += imBuf->mInverted ? -imBuf->mRotAngle : imBuf->mRotAngle;
       ptX = (float)cos(DTOR * tempY) * tempX;
       ptY = -(float)sin(DTOR * tempY) * tempX;
       CPen pnSolidPen(PS_SOLID, thick1, RGB(255, 255, 0));
