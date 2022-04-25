@@ -2121,6 +2121,7 @@ int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg,
   }
   if (numShift)
     SetChanged(true);
+  Redraw();
   return numShift;
 }
 
@@ -8603,6 +8604,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   CNavAcquireDlg *dlg;
   if (!dlgClosing && mNavAcquireDlg) {
     if (fromMenu)
@@ -8786,7 +8788,11 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
     mAcqActions[ind].lastDoneAtY = -10000.;
     mAcqActions[ind].timeLastDone = -1;
   }
-  if (mAcqParm->cycleDefocus)
+  mAcqCycleDefocus = mAcqParm->cycleDefocus && (mAcqParm->acquireType == ACQUIRE_DO_TS ||
+    mAcqParm->acquireType == ACQUIRE_RUN_MACRO || DOING_ACTION(NAACT_RUN_POSTMACRO) ||
+    DOING_ACTION(NAACT_RUN_PREMACRO) || DOING_ACTION(NAACT_AUTOFOCUS) ||
+    (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC));
+  if (mAcqCycleDefocus)
     mFocusCycleCounter = 0;
 
   mAcqStepIndex = -1;
@@ -9062,7 +9068,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     }
 
     // Handle defocus target cycling
-    if (mAcqParm->cycleDefocus) {
+    if (mAcqCycleDefocus) {
       target = (float)(mAcqParm->cycleDefFrom + (mAcqParm->cycleDefTo - 
         mAcqParm->cycleDefFrom) * mFocusCycleCounter / mAcqParm->cycleSteps);
       oldTarget = mWinApp->mFocusManager->GetTargetDefocus();
