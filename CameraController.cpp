@@ -1473,7 +1473,7 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
         // DNM: need to test for + return value
         if (mTD.DE_Cam->initialize(mAllParams[i].name, i) > 0) {
           SEMTrace('D', "successfully initialized the camera: %s", mAllParams[i].name);
-          mNumDECameras = mNumDECameras + 1;	
+          mNumDECameras = mNumDECameras + 1;
           mDEInitialized = true;
           if (mAllParams[i].useContinuousMode < 0 && mAllParams[i].DE_camType >= 2) {
             mAllParams[i].useContinuousMode = 1;
@@ -1494,7 +1494,7 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
           if ((mAllParams[i].CamFlags & DE_APOLLO_CAMERA) &&
             !mAllParams[i].countsPerElectron)
             mAllParams[i].countsPerElectron = 16.;
-        }	else {
+        } else if (mWinApp->mPluginManager->GetDEplugIndex() >= 0) {
           AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
           mAllParams[i].failedToInitialize = true;
         }
