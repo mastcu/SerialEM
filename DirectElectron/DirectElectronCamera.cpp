@@ -982,13 +982,14 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
     SEMTrace('D', "About to get image from DE server now that all properties are set.");
 
     // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
-    if (api2Reference) {
+    /*if (api2Reference) {
       if (mDeServer->StartAcquisition(mNumLeftServerRef)) {
         mLastErrorString = ErrorTrace("ERROR: Could not start reference acquisitions");
         mDateInPrevSetName = 0;
         return 1;
       }
-    } else if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2)) {
+    } else*/
+    if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2)) {
       mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
       if (operation)
         delete useBuf;

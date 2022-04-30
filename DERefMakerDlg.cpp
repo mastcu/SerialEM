@@ -110,6 +110,10 @@ BOOL CDERefMakerDlg::OnInitDialog()
     ShowDlgItem(IDC_RSUPER_RES_REF, false);
     m_iReferenceType = 0;
     EnableDlgItem(IDC_RGAIN_REF, false);
+    for (int ind = 0; ind < 10; ind++)
+      mRepeatList[ind] = 10;
+    m_spinNumRepeats.EnableWindow(false);
+    EnableDlgItem(IDC_EDIT_NUM_REPEATS, false);
   }
   if (mSetupDarkForRec) {
     m_iProcessingType = B3DMIN(1, mRecSet->K2ReadMode);

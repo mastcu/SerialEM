@@ -17,6 +17,7 @@
 #include "ProcessImage.h"
 #include "BeamAssessor.h"
 #include "GatanSocket.h"
+#include "DirectElectron\DirectElectronCamera.h"
 #include "Utilities\XCorr.h"
 
 #ifdef _DEBUG
@@ -422,7 +423,8 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
     mConSet->bottom = mParam->sizeY;
     mConSet->magAllShots = 0;
   }
-  mStartingServerFrames = mFrameCount = mDEnumRepeats[ind];
+  mStartingServerFrames = mFrameCount =mCamera->GetDEServerVersion() < DE_HAS_API2 ?
+    mDEnumRepeats[ind] : 10;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, referenceType ? "ACQUIRING GAIN REF" :
     "ACQUIRING DARK REF");
