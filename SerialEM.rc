@@ -2945,7 +2945,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,214,155,10
     CONTROL         "Label of Navigator item",IDC_CHECK_NAVLABEL_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,226,82,10
     CONTROL         "Sequential number starting from:",IDC_CHECK_NUMBER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,238,112,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,238,109,10
     CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,262,58,10
     CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,274,77,10
     LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,9,311,214,8
@@ -3448,7 +3448,7 @@ BEGIN
     EDITTEXT        IDC_EDITPPCONDDOSE,116,104,33,14,ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,166,33,10
     CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,52,166,28,10
-    LTEXT           "starting with",IDC_STAT_STARTING,85,167,38,8
+    LTEXT           "starting with",IDC_STAT_STARTING,84,167,37,8
     DEFPUSHBUTTON   "Close",IDOK,88,182,33,14
     PUSHBUTTON      "Cancel",IDCANCEL,126,182,33,14
     PUSHBUTTON      "?",IDC_BUTHELP,162,184,11,10

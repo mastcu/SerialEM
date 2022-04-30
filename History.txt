@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/30/22: Fixed default for PythonModulePath so this property really shouldn't
+be needed if PythonModules in directory with SerialEM.exe (In 4.0).
+
+4/30/22: Made EchoBreakLines available in Python and made it break lines at
+'\n' without needing the | prefix (In 4.0).
+
+4/30/22: Changes to be able to take DE dark references with 2.5 server
+version, with fixed number of repeats (In 4.0).
+
+4/30/22: Fixed anchor map and realign to item returning to "prior state" in
+state dialog instead of forgetting that state (In 4.0).
+
+4/27/22: Restored "Save one frame per file" to Frame Options dialog (In 4.0).
+
+4/27/22: Added manifest entries that may prevent "Error adding Python process
+to job object" (In 4.0).
+
 4/24/22: Fixed crash autofocusing with tilted floating point images (In 4.0).
 
 4/24/22: Fixed crash rotating floating point map image (In 4.0).
