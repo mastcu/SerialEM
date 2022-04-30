@@ -873,7 +873,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRIdidSaveState = false;
   if (restoreState) {
     mRIdidSaveState = true;
-    mTypeOfSavedState = STATE_NONE;
+    ForgetSavedState();
     SaveCurrentState(STATE_MAP_ACQUIRE, false, item->mMapCamera, 0);
   }
 
@@ -4147,7 +4147,7 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
     mSavedMapStateID = mMapStateItemID;
     RestoreFromMapState();
   } else {
-    mTypeOfSavedState = STATE_NONE;
+    ForgetSavedState();
   }
 
   // Go to imaging state, apply any defocus offset
