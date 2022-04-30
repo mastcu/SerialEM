@@ -257,7 +257,6 @@ int CPluginManager::LoadPlugins(void)
 
       // Get Direct Electron plugin functions, forbid two, require all functions
       if (flags & PLUGFLAG_DECAM) {
-        mDEcamFuncs = new DEPluginFuncs;
         if (mDEplugIndex >= 0) {
           i = 1;
           mess.Format("There is more than one DE camera interface plugin in\r\n%s%s%s\r\n"
@@ -267,8 +266,9 @@ int CPluginManager::LoadPlugins(void)
             FindFileData.cFileName, (LPCTSTR)path);
         } else {
 
+          mDEcamFuncs = new DEPluginFuncs;
           i = 0;
-          DECAM_PROC(DEconnect, connect);
+          DECAM_PROC(DEconnect, connectDE);
           DECAM_PROC(DEnoArg, close);
           DECAM_PROC(DEnoArg, isConnected);
           DECAM_PROC(DEtwoChar, setProperty);
@@ -284,7 +284,7 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEnoArg, abortAcquisition);
           DECAM_PROC(CamNoArg, getLastErrorCode);
           DECAM_PROC(DEerrString, getLastErrorDescription);
-          DECAM_PROC(DEstartAcquis, StartAcquisition);
+          //DECAM_PROC(DEstartAcquis, StartAcquisition);
 
           if (i)
             mess.Format("Tried to load %s as a plugin for the DE camera interface but\r\n"

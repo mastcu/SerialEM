@@ -155,7 +155,7 @@ typedef bool (*DEstartAcquis)(int);
 
 // DE camera functions
 struct DEPluginFuncs {
-  DEconnect connect;
+  DEconnect connectDE;
   DEnoArg close;
   DEnoArg isConnected;
   DEtwoChar setProperty;
