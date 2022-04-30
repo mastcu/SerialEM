@@ -173,7 +173,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
     states[1] = true;
     if (!mCanSaveFrameStackMdoc)
       mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
-  } else
+  } else if (!mK2Type)
     mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
@@ -343,6 +343,7 @@ void CK2SaveOptionDlg::UpdateFormat(void)
       ctDateTime.GetYear(), ctDateTime.GetMonth(), ctDateTime.GetDay(), filename);
   } else
     m_strExample = CString("Format: ") + m_strExample + filename;
+  EnableDlgItem(IDC_CHECK_ONLY_ACQUIRE, m_bNavLabelFile || m_bNavLabelFolder);
   UpdateData(false);
 }
 
