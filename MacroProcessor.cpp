@@ -268,7 +268,7 @@ void CMacroProcessor::Initialize()
         mWinApp->AppendToLog(mCmdList[i].mixedCase);
   }
   if (mPyModulePath.IsEmpty())
-    mPyModulePath = mWinApp->mPluginManager->GetExePath() + "\\PythonMoules";
+    mPyModulePath = mWinApp->mPluginManager->GetExePath() + "\\PythonModules";
   mPyModulePath.Replace("\\", "/");
 }
 
@@ -4475,7 +4475,10 @@ void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
   // but restore intended escape codes prefixed by |
   // For convenience, preserve clear cases of \n and \r\n
   if (line.Find("\\n") >= 0) {
-    line.Replace("'\\n'", "'|\\n'");
+    if (line.Find("EchoBreakLine(") >= 0)
+      line.Replace("\\n", "|\\n");
+    else
+      line.Replace("'\\n'", "'|\\n'");
     line.Replace("'\\r\\n'", "'|\\r|\\n'");
     line.Replace("\"\\n\"", "\"|\\n\"");
     line.Replace("\"\\r\\n\"", "\"|\\r|\\n\"");
@@ -4747,7 +4750,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // Assign the process to the job object so that if SerialEM dies, it will be killed
     if (CPythonServer::mJobObject) {
       if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle))
-        SEMTrace('0', "Error %d occurred assigning python process to job object", 
+        SEMTrace('0', "WARNING: Error %d occurred assigning python process to job object", 
           GetLastError());
     }
 

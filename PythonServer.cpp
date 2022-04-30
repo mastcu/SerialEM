@@ -83,31 +83,31 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     mess = "";
     mJobObject = CreateJobObject(NULL, NULL);
     if (!mJobObject)
-      mess.Format("Error creating job object: error code %d", GetLastError);
+      mess.Format("creating job object: error code %d", GetLastError);
 
     // Get the existing process info and set the flag to kill processes when last handle
     // is closed, which happens when SerialEM dies.
     if (mess.IsEmpty()) {
       if (!QueryInformationJobObject(mJobObject, JobObjectExtendedLimitInformation,
         &jobInfo, sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION), NULL))
-        mess.Format("Error calling QueryInformationJobObject: error code %d", 
+        mess.Format("calling QueryInformationJobObject: error code %d", 
           GetLastError);
     }
     if (mess.IsEmpty()) {
       jobInfo.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
       if (!SetInformationJobObject(mJobObject, JobObjectExtendedLimitInformation,
         &jobInfo, sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)))
-        mess.Format("Error calling SetInformationJobObject: error code %d", GetLastError);
+        mess.Format("calling SetInformationJobObject: error code %d", GetLastError);
     }
     if (mess.IsEmpty()) {
       if (!AssignProcessToJobObject(mJobObject, GetCurrentProcess()))
-        mess.Format("Error calling AssignProcessToJobObject: error code %d", 
+        mess.Format("calling AssignProcessToJobObject: error code %d", 
           GetLastError);
     }
 
     // This is not a fatal error but needs to be reported
     if (!mess.IsEmpty())
-      mWinApp->AppendToLog(mess);
+      mWinApp->AppendToLog("WARNING: Error" + mess);
   }
   return err;
 }
