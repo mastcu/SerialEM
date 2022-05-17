@@ -9063,7 +9063,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (GetDebugOutput('n')) {
       for (ind = 0; ind < mNumAcqSteps; ind++) {
         mWinApp->AppendToLog(mAcqSteps[ind] < mHelper->GetNumAcqActions() ?
-          mAcqActions[mAcqSteps[ind]].name : stepNames[ind]);
+          mAcqActions[mAcqSteps[ind]].name : stepNames[mAcqSteps[ind]]);
       }
     }
 
@@ -9414,7 +9414,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         if (ind)
           mScope->SetDoNextFEGFlashHigh(true);
       }
-      if (!ind && mScope->GetIsFlashingAdvised(1, ind)) {
+      if (!ind && mScope->GetIsFlashingAdvised(0, ind)) {
         StopAcquiring();
         return;
       }
