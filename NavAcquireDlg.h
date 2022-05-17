@@ -107,7 +107,7 @@ public:
   void RebuildIfEnabled(bool OK, bool &enabled, bool &doBuild);
   void ExternalUpdate();
   void ManageForSubset(void);
-  void BuildActionSection(void);
+  void BuildActionSection(bool unhiding = false);
   void FormatTimingString(int actInd, int posInd);
   void NewActionSelected(int posInd);
   void ManageTimingEnables();

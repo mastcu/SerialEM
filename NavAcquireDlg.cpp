@@ -940,7 +940,7 @@ void CNavAcquireDlg::ManageForSubset(void)
 }
 
 // Put the specific tasks into the general buttons in the task list
-void CNavAcquireDlg::BuildActionSection(void)
+void CNavAcquireDlg::BuildActionSection(bool unhiding)
 {
   int ind, actInd, pos = 0, loop;
   CButton *button;
@@ -987,7 +987,7 @@ void CNavAcquireDlg::BuildActionSection(void)
         }
 
         // Keep track of current action and build up maps
-        if (actInd == mCurActSelected && m_iSelectedPos >= 0)
+        if (actInd == mCurActSelected && (m_iSelectedPos >= 0 || unhiding))
           m_iSelectedPos = pos;
         mUnhiddenPosMap[pos] = ind;
         mShownPosToIndex[pos++] = mCurrentOrder[ind];
@@ -1343,7 +1343,7 @@ void CNavAcquireDlg::MoveAction(int dir)
 void CNavAcquireDlg::OnNaHideUnused()
 {
   UpdateData(true);
-  BuildActionSection();
+  BuildActionSection(!m_bHideUnusedActions);
 }
 
 // Hide the selected action
