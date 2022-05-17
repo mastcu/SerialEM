@@ -141,6 +141,7 @@ class CBeamAssessor
   CShiftManager *mShiftManager;
   int mNumTables;         // Number of tables filled
   double *mIntensities;    // Pointers for current table
+  double *mCalIntensities; // Pointers for table while calibrating
   float *mCurrents;
   float *mLogCurrents;
   int mTableInd;

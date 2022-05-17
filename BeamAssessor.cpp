@@ -235,7 +235,7 @@ void CBeamAssessor::CalIntensityCCD()
   mTableInd = mNumTables++;
   mCalTable = &mBeamTables[mTableInd];
   mCurrents = mCalTable->currents = &mAllCurrents[mFreeIndex];
-  mIntensities = mCalTable->intensities = &mAllIntensities[mFreeIndex];
+  mCalIntensities = mCalTable->intensities = &mAllIntensities[mFreeIndex];
   mCalTable->logCurrents = &mAllLogs[mFreeIndex];
   mCalTable->spotSize = mCalSpotSize;
   mCalTable->magIndex = mCalMagInd;
@@ -368,7 +368,7 @@ void CBeamAssessor::CalIntensityImage(int param)
   case CAL_FIRST_SHOT:
     mStartCurrent = testCurrent;
     mCurrents[0] = (float)testCurrent;
-    mIntensities[0] = (float)mStartIntensity;
+    mCalIntensities[0] = (float)mStartIntensity;
     mTestIntensity = mStartIntensity + mTestIncrement;
     mNumIntensities = 1;
     mTrials[0] = 1;
@@ -403,7 +403,7 @@ void CBeamAssessor::CalIntensityImage(int param)
     if (mNumIntensities == 1 && ratio < 0 && mCalTable->crossover >= 0.) {
      SEMTrace('c', "%d %.1f %7.1f %8.3f %8.3f %8.5f %.5f %.5f %.5f %.5f %.5f", mBinning, 
        mExposure, meanCounts, testCurrent, mCurrents[0], mTestIntensity, testInterval, 
-       targetInterval, mTestIncrement, mIntensities[0], mCalTable->crossover);
+       targetInterval, mTestIncrement, mCalIntensities[0], mCalTable->crossover);
      AfxMessageBox("The counts increased even though intensity was changed in the "
         "direction away from crossover.\r\n\r\nYou need to either redo the "
         "crossover calibration or start farther from crossover", MB_EXCLAME);
@@ -439,7 +439,7 @@ void CBeamAssessor::CalIntensityImage(int param)
       
       // Save values; quit if enough change has been measured
       mTrials[mNumIntensities] = mNumTry + 1;
-      mIntensities[mNumIntensities] = (float)mTestIntensity;
+      mCalIntensities[mNumIntensities] = (float)mTestIntensity;
       mCurrents[mNumIntensities++] = (float)testCurrent;
       report.Format("%9.2f  %9.5f   %d", testCurrent, mTestIntensity, mNumTry + 1);
       mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
@@ -488,7 +488,7 @@ void CBeamAssessor::CalIntensityImage(int param)
     }
     
     // Set up intensity for next round and test it for termination
-    mTestIntensity = mIntensities[mNumIntensities - 1] + mTestIncrement;
+    mTestIntensity = mCalIntensities[mNumIntensities - 1] + mTestIncrement;
     if (SetAndTestIntensity())
       task = CAL_TEST_SHOT;
     break;
@@ -523,8 +523,8 @@ void CBeamAssessor::CalIntensityImage(int param)
       // Due to unresolved issue on JEOL F200(?), wait a bit and check and reset intensity
       ratio = mScope->GetIntensity();
       SEMTrace('c', "Intensity after mag change %.5f", ratio);
-      if (fabs(ratio - mIntensities[mNumIntensities - 1]) > mTestIncrement)
-        mScope->SetIntensity(mIntensities[mNumIntensities - 1], mCalSpotSize);
+      if (fabs(ratio - mCalIntensities[mNumIntensities - 1]) > mTestIncrement)
+        mScope->SetIntensity(mCalIntensities[mNumIntensities - 1], mCalSpotSize);
     } else
       mExposure *= 4.;
     if (mExposure > mUseMaxExposure)
@@ -547,7 +547,7 @@ void CBeamAssessor::CalIntensityImage(int param)
     // Adjust the match factor to make new numbers match old ones
     mMatchFactor *= mCurrents[mNumIntensities - 1] / (mMatchSum / mMatchInd);
     SEMTrace('c', "New matching factor %f", mMatchFactor);
-    mTestIntensity = mIntensities[mNumIntensities - 1] + mTestIncrement;
+    mTestIntensity = mCalIntensities[mNumIntensities - 1] + mTestIncrement;
     if (SetAndTestIntensity())
       task = CAL_TEST_SHOT;
     break;
@@ -748,8 +748,8 @@ BOOL CBeamAssessor::SetAndTestIntensity()
   // back up to the starting intensity to counteract hysteresis or overshooting
   if (mNumIntensities > 1 && mLastNumIntensities == mNumIntensities &&
     fabs(mLastIncrement) > fabs(1.000001 * mTestIncrement)) {
-      SEMTrace('c', "Backing up to %.5f", mIntensities[mNumIntensities - 1]);
-      mScope->SetIntensity(mIntensities[mNumIntensities - 1], mCalSpotSize);
+      SEMTrace('c', "Backing up to %.5f", mCalIntensities[mNumIntensities - 1]);
+      mScope->SetIntensity(mCalIntensities[mNumIntensities - 1], mCalSpotSize);
       Sleep(B3DNINT(0.25 * B3DMAX(mPostSettingDelay, 1000)));
   }
 
@@ -2813,9 +2813,9 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
       return 0;
   str.Format("%s, the beam calibration table has all zero intensities\r\n"
     "  for spot %d, # values %d, starting mag %d, extrap flags %d\r\n"
-    "(table %p, calTable is %p)\r\n", message, 
+    "(table %p, calTable is %p, mInt %p tab->int %p)\r\n", message, 
     table.spotSize, table.numIntensities, table.magIndex, table.dontExtrapFlags,
-    &table, mCalTable);
+    &table, mCalTable, mCalIntensities, table.intensities);
   if (table.aboveCross / 2 == 0) {
     str2.Format(", aboveCross %d, start intensity %.5f, crossover %.5f", table.aboveCross,
       mStartIntensity, mWinApp->mScope->GetCrossover(table.spotSize));
