@@ -971,7 +971,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
          return 1;
 
     unsigned short *useBuf = image4k;
-    if (operation && !api2Reference) {
+    if (operation /*&& !api2Reference*/) {
       NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
       if (!useBuf) {
         SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
@@ -1001,7 +1001,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
 
     // Try to read back the actual image size from these READ-ONLY properties and if it 
     // is different, truncate the Y size if necessary and set the return size from actual
-    if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
+    if (/*!api2Reference &&*/ mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
       mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
       (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
       if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
@@ -1042,10 +1042,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         return 1;
       }
     }
-    if (api2Reference) {
+    /*if (api2Reference) {
       memset(useBuf, 0, imageSizeX * imageSizeY * 2);
       return 0;
-    }
+    }*/
 
     // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
     if (operation) {
