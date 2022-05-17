@@ -4717,8 +4717,8 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // Create the child process.
     bSuccess = CreateProcess(NULL,
       cmdLine,       // command line
-      NULL,          // process security attributes
-      NULL,          // primary thread security attributes
+      &saAttr,          // process security attributes
+      &saAttr,          // primary thread security attributes
       TRUE,          // handles are inherited
       CREATE_NO_WINDOW,             // creation flags
       NULL,          // use parent's environment
@@ -4746,6 +4746,10 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     CloseHandle(hChildStd_ERR_Wr);
     CloseHandle(hChildStd_IN_Rd);
 
+    // People are getting error 5, access denied.  Tried: CREATE_SUSPENDED: it hung
+    //        BREAKAWAY_FROM_JOB  it couldn't run python
+    //        &saAttr instead of NULL for the security attributes: no difference
+    //
     // Assign the process to the job object so that if SerialEM dies, it will be killed
     if (CPythonServer::mJobObject) {
       if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle))
