@@ -3527,6 +3527,7 @@ int CMacCmd::AllowFileOverwrite(void)
 int CMacCmd::SetDirectory(void)
 {
   CFileStatus status;
+  CString mess;
 
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (mStrCopy.IsEmpty())
@@ -3538,10 +3539,11 @@ int CMacCmd::SetDirectory(void)
     if (CFile::GetStatus((LPCTSTR)mStrCopy, status)) {
       mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists");
     } else {
-      if (!_mkdir((LPCTSTR)mStrCopy))
+      if (!UtilRecursiveMakeDir(mStrCopy, mess))
         mWinApp->AppendToLog("Created directory " + mStrCopy);
       else
-        SUSPEND_NOLINE("because of failure to create directory " + mStrCopy);
+        SUSPEND_NOLINE("because of failure to create directory " + mStrCopy + ":\n" + 
+          mess);
     }
   }
   return 0;

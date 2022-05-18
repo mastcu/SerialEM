@@ -341,7 +341,16 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
 
     // Make the copy if necessary
     if (needCopy) {
-      if (!CopyFile((LPCTSTR)refName, (LPCTSTR)str, false)) {
+      err = 0;
+      if (!CFile::GetStatus((LPCTSTR)localFrameFolder, status)) {
+        if (UtilRecursiveMakeDir(localFrameFolder, mess)) {
+          str.Format("Failed to copy gain reference from %s to %s: %s",
+            (LPCTSTR)refDir, (LPCTSTR)localFrameFolder, (LPCTSTR)mess);
+          SEMMessageBox(str);
+          err = 1;
+        }
+      }
+      if (!err && !CopyFile((LPCTSTR)refName, (LPCTSTR)str, false)) {
         mess.Format("Failed to copy gain reference from %s to %s  (error %d)",
           (LPCTSTR)refDir, (LPCTSTR)localFrameFolder, GetLastError());
         SEMMessageBox(mess);

@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/18/22: Created directory for copying EER gain reference if it is not there
+yet (In 4.1).
+
+5/17/22: Returned DE dark reference image with server 2.5 (In 4.11).
+
+5/17/22: Fixed one source of zero intensity calibrations (In 4.11).
+
+5/17/22: Fixed checking for high flash advised instead of low in Navigator
+Acquire (In 4.11).
+
 4/30/22: SEM_4-0-6
 4/30/22: Fixed default for PythonModulePath so this property really shouldn't
 be needed if PythonModules in directory with SerialEM.exe (In 4.0).

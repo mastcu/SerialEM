@@ -455,6 +455,46 @@ int UtilStandardizePath(CString &dir)
   return ind;
 }
 
+// Makes a directory even if multiple parents do not exist
+int UtilRecursiveMakeDir(CString dir, CString &mess)
+{
+  CString parent, subdir;
+  CFileStatus status;
+  UtilSplitPath(dir, parent, subdir);
+  int err, len;
+
+  // Either one can be empty if different cases occur: check for a drive only
+  if (subdir.IsEmpty() || parent.IsEmpty()) {
+    subdir += parent;
+    if ((!subdir.IsEmpty() && subdir.GetLength() <= 3 && subdir.GetAt(1) == ':')) {
+      mess = "Drive " + subdir + " does not exist; cannot make subdirectory";
+      return 1;
+    }
+  }
+
+  // Strip trailing backslash
+  len = parent.GetLength();
+  if (len > 0 && parent.GetAt(len - 1) == '\\')
+    parent = parent.Left(len - 1);
+
+  // If there is a parent and it does not exist, recurse to create it
+  if (!parent.IsEmpty() && !CFile::GetStatus((LPCTSTR)parent, status)) {
+    err = UtilRecursiveMakeDir(parent, mess);
+    if (err)
+      return err;
+  }
+
+  // Try to make the directory, ignore error if it (now) exists due to FEI
+  if (_mkdir((LPCTSTR)dir)) {
+    err = GetLastError();
+    if (err = ERROR_ALREADY_EXISTS)
+      return 0;
+    mess.Format("Error %d creating directory %s", err, (LPCTSTR)dir);
+    return 1;
+  }
+  return 0;
+}
+
 // Append a component to a string with the given separator if the string is not empty
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
 {
