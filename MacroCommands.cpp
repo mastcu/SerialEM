@@ -6280,8 +6280,9 @@ int CMacCmd::ImageConditions(void)
   extra = imBuf->mImage->GetUserData();
   if (!extra)
     ABORT_LINE("The image has no extra data structure for line:\n\n");
-  mLogRpt.Format("Buffer %c: electron dose %.3f", 'A' + index, extra->m_fDose);
-  SetRepValsAndVars(2, extra->m_fDose);
+  mLogRpt.Format("Buffer %c: electron dose %.3f  magnification %d", 'A' + index, 
+    extra->m_fDose, extra->m_iMag);
+  SetRepValsAndVars(2, extra->m_fDose, extra->m_iMag);
   return 0;
 }
 
