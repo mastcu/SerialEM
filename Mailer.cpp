@@ -83,7 +83,7 @@ bool CMailer::SendMail(CString subject, CString message)
   if (!mNextEmailAddress.IsEmpty()) {
     if (mAddToAddress) {
       if (!mSendTo.IsEmpty())
-        sendTo + ", ";
+        sendTo += ", ";
       sendTo += mNextEmailAddress;
     } else {
       sendTo = mNextEmailAddress;
