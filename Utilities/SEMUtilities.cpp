@@ -472,7 +472,7 @@ int UtilRecursiveMakeDir(CString dir, CString &mess)
   // Try to make the directory, ignore error if it (now) exists due to FEI
   if (_mkdir((LPCTSTR)dir)) {
     err = GetLastError();
-    if (err = ERROR_ALREADY_EXISTS)
+    if (err == ERROR_ALREADY_EXISTS)
       return 0;
     mess.Format("Error %d creating directory %s", err, (LPCTSTR)dir);
     return 1;
