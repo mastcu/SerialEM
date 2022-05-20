@@ -23,7 +23,7 @@ struct DisableHideItem {
  *    2 if the item can be hidden but not disabled
  *    3 if the item can be both disabled and hidden
  * The third entry in the table is 1 if a whole line of items is hidden together,
- * and the fourth is the ID value that is used in the program for the item
+ * and the fourth is the ID value that is used in titem
  * The examples at the top illustrate 
  *   To hide the contents of a group box, you must also include the string for the group
  *     box as well as the one(s) for the items in the box
@@ -35,8 +35,9 @@ struct DisableHideItem {
  *
  * There are two options for setting up hiding, either use the panel tables or 
  * have a simple list of IDs to hide and call ManageHideableItems
- * A control panel with the latter must have an UpdateHiding function that is called
- * on initialization and by SetBasicMode, but one using panel tables does not need to.
+ * A control panel with the latter must have an UpdateHiding override that is called
+ * on initialization and by SetBasicMode to call ManageHideableItems, but one using panel 
+ * tables does not need to since the base function in CToolDlg handles it.
  * A non-modal dialog with either mechanism must have an UpdateHiding function that is 
  * called on initialization and by SetBasicMode.
  * Be sure mInitialized is set to true and that it is NOT a subclass member
@@ -90,7 +91,7 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Offsets View", 2, 1, IDC_RVIEW_OFFSET},
   {"LowDoseDlg - Offsets Def spin", 2, 1, IDC_SPINVIEWDEFOCUS},
   {"LowDoseDlg - Offsets line 5", 2, 0, IDC_STAT_LDCP_LINE5},
-  {"LowDoseDlg - Offsets group", 2, 0, IDC_STAT_VS_OFFSETS}, // Otherwise use entries for singel items
+  {"LowDoseDlg - Offsets group", 2, 0, IDC_STAT_VS_OFFSETS}, // Otherwise use entries for single items
   {"LowDoseDlg - Offsets line 1", 2, 0, IDC_STAT_LDCP_LINE1},
   {"LowDoseDlg - Offsets line 2", 2, 0, IDC_STAT_LDCP_LINE2},
   {"LowDoseDlg - Offsets line 3", 2, 0, IDC_STAT_LDCP_LINE3},
@@ -101,6 +102,10 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Offsets Zero", 2, 0, IDC_ZERO_VIEW_SHIFT},
   {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},
   {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},
+  // Camera & Script panel
+  {"CameraScript - Spinner 1", 2, 0, IDC_SPINMACRO1},
+  {"CameraScript - Spinner 2", 2, 0, IDC_SPINMACRO2},
+  {"CameraScript - Spinner 3", 2, 0, IDC_SPINMACRO3},
   // Image Alignment & Focus panel
   {"ImageAlignFocus - Align", 2, 1, IDC_BUTALIGN},
   {"ImageAlignFocus - Clear", 2, 0, IDC_BUTCLEARALIGN},
@@ -117,10 +122,12 @@ static DisableHideItem sDisableHideList[] =
   {"MontSetupDlg - Skip pieces check", 2, 0, IDC_CHECK_SKIP_OUTSIDE},
   {"MontSetupDlg - Skip pieces edit", 2, 0, IDC_EDIT_SKIP_OUTSIDE},
   {"MontSetupDlg - Do full rect", 2, 0, IDC_IGNORESKIPS},
-  {"MontSetupDlg - Ask about map", 2, 0, IDC_CHECKOFFERMAP},
+  {"MontSetupDlg - Ask about map", 2, 0, IDC_CHECKOFFERMAP},  // Now just "Make map..."
+  {"MontSetupDlg - Close when done", 2, 0, IDC_CHECK_CLOSE_WHEN_DONE},
   {"MontSetupDlg - Use mont-map", 2, 0, IDC_CHECK_USE_MONT_MAP_PARAMS},
   {"MontSetupDlg - Use View", 2, 0, IDC_CHECK_USE_VIEW_IN_LOWDOSE},
   {"MontSetupDlg - Use Search", 2, 0, IDC_CHECK_USE_SEARCH_IN_LD},
+  {"MontSetupDlg - Use multishot", 2, 0, IDC_CHECK_USE_MULTISHOT},
   {"MontSetupDlg - Continuous check", 2, 0, IDC_CHECK_CONTINUOUS_MODE},
   {"MontSetupDlg - Continuous edit", 2, 0, IDC_EDIT_CONTIN_DELAY_FAC},
   {"MontSetupDlg - Turn off drift", 2, 0, IDC_CHECK_NO_DRIFT_CORR},

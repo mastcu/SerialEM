@@ -26,7 +26,15 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+static int sIdTable[] = {IDC_BUTFLOATDOCK, IDC_STAT_CAMNAME, IDC_BUTOPEN, IDC_STATTOPLINE,
+IDC_BUTHELP, PANEL_END, ID_CAMERA_PARAMETERS, ID_CAMERA_VIEW, ID_CAMERA_FOCUS, 
+ID_CAMERA_TRIAL, ID_CAMERA_RECORD, IDC_BUTMONTAGE, IDC_BUTMACRO1, IDC_BUTMACRO2,
+IDC_SPINMACRO2, IDC_SPINMACRO1, IDC_BUTSTOP, IDC_BUTEND, IDC_BUTRESUME,
+IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END, TABLE_END};
 
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 /////////////////////////////////////////////////////////////////////////////
 // CCameraMacroTools dialog
@@ -126,7 +134,9 @@ BOOL CCameraMacroTools::OnInitDialog()
   m_sbcMacro2.SetRange(1, MAX_MACROS);
   m_sbcMacro3.SetRange(1, MAX_MACROS);
   UpdateSettings();
-  
+  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
+  mInitialized = true;
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
