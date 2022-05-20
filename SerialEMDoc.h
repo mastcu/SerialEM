@@ -121,6 +121,7 @@ public:
   GetSetMember(BOOL, ScriptPackBackedUp);
   SetMember(CString, SettingsName);
   GetSetMember(CString, BasicModeFile);
+  GetSetMember(BOOL, AbandonSettings);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void FixSettingsForIALimitCal();
@@ -264,7 +265,7 @@ private:
   bool mDeferWritingFrameMdoc;   // Flag to wait until write call and do last section only
   BOOL mSkipFileDlg;             // Settings flag to skip the file dialog
   bool mShowFileDlgOnce;         // Flag to be able to show it once
-  bool mAbandonSettings;         // Flag not to save settings on exit or autosave
+  BOOL mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
   CString mBasicModeFile;        // File with disables/hides for basic mode
   bool mHDFsupported;            // Flag that HDF files are supported
