@@ -2833,8 +2833,8 @@ void StatLSFitPred(float *x, float *y, int n, float *slope, float *bint,
 }
 
 void XCorrTaperInPad(void *array, int type, int nxdimin, int ix0, int ix1,
-                     int iy0, int iy1, float *brray, int nxdim, int nx,
-                     int ny, int nxtap, int nytap) {
-	sliceTaperInPad(array, type, nxdimin, ix0, ix1, iy0, iy1, brray, nxdim, nx, 
-                  ny, nxtap, nytap);
+  int iy0, int iy1, float *brray, int nxdim, int nx,
+  int ny, int nxtap, int nytap) {
+  sliceTaperInPad(array, type, nxdimin, ix0, ix1, iy0, iy1, brray, nxdim, nx,
+    ny, nxtap, nytap);
 }
