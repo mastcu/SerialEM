@@ -7,18 +7,18 @@ significance, for the stable release version
 opened during Navigator acquire and Record binning to access right camera
 control set (In 4.0).
 
-5/20/22: Fixed hiding of items for some control panels when optons section is
+5/20/22: Fixed hiding of items for some control panels when options section is
 not being hidden (In 4.0).
 
 5/18/22: Created directory for copying EER gain reference if it is not there
-yet (In 4.1).
+yet (In 4.0).
 
-5/17/22: Returned DE dark reference image with server 2.5 (In 4.11).
+5/17/22: Returned DE dark reference image with server 2.5 (In 4.0).
 
-5/17/22: Fixed one source of zero intensity calibrations (In 4.11).
+5/17/22: Fixed one source of zero intensity calibrations (In 4.0).
 
 5/17/22: Fixed checking for high flash advised instead of low in Navigator
-Acquire (In 4.11).
+Acquire (In 4.0).
 
 4/30/22: SEM_4-0-6
 4/30/22: Fixed default for PythonModulePath so this property really shouldn't
