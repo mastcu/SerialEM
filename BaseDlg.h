@@ -16,44 +16,44 @@
 
 class CBaseDlg : public CDialog
 {
-// Construction
+  // Construction
 public:
-	CBaseDlg(UINT inIDD, CWnd* pParent = NULL);   // standard constructor
-  BOOL OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult );
+  CBaseDlg(UINT inIDD, CWnd* pParent = NULL);   // standard constructor
+  BOOL OnToolTipNotify(UINT id, NMHDR * pNMHDR, LRESULT * pResult);
 
-// Dialog Data
-	//{{AFX_DATA(CBaseDlg)
-	//enum { IDD = _UNKNOWN_RESOURCE_ID_ };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
+  // Dialog Data
+    //{{AFX_DATA(CBaseDlg)
+    //enum { IDD = _UNKNOWN_RESOURCE_ID_ };
+      // NOTE: the ClassWizard will add data members here
+    //}}AFX_DATA
 
 
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CBaseDlg)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
+  // Overrides
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CBaseDlg)
+protected:
+  virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+  //}}AFX_VIRTUAL
 
 // Implementation
 protected:
 
-	// Generated message map functions
-	//{{AFX_MSG(CBaseDlg)
-		// NOTE: the ClassWizard will add member functions here
-	afx_msg void OnButhelp();
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
-	afx_msg void OnMButtonDblClk(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+  // Generated message map functions
+  //{{AFX_MSG(CBaseDlg)
+    // NOTE: the ClassWizard will add member functions here
+  afx_msg void OnButhelp();
+  afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+  afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
+  afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+  afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+  afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
+  afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+  afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+  afx_msg void OnMButtonDblClk(UINT nFlags, CPoint point);
+  afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+  virtual BOOL OnInitDialog();
+  //}}AFX_MSG
+  DECLARE_MESSAGE_MAP()
 
 private:
   UINT mIDD;      // Dialog ID
@@ -96,7 +96,7 @@ public:
   void SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, int *numInPanel,
     int *panelStart, int groupAdjust);
   int FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelStart);
-  void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
+  void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable,
     int *numInPanel, int *panelStart, int numCameras, int *heightTable = NULL);
   void ManageDropping(int *topTable, int index, int nID, int topAtLastDraw, int &cumulDrop, int &firstDropped,
     bool &droppingLine, bool &drop);

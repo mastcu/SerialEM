@@ -119,6 +119,18 @@ void CToolDlg::SetOpenClosed(int inState)
   }
 }
 
+// Base function to update hiding when there are panel tables - just adjust panels
+void CToolDlg::UpdateHiding(void)
+{
+  BOOL states[3] = {true, false, false};
+  if (mNumPanels) {
+    states[1] = mState & TOOL_OPENCLOSED;
+    states[2] = states[1] && (mState & TOOL_FULLOPEN);
+    AdjustPanels(states, mIdTable, mLeftTable, mTopTable, mNumInPanel, mPanelStart, 0,
+      mHeightTable);
+  }
+}
+
 void CToolDlg::ToggleState(int inFlag)
 {
   if (mState & inFlag)
@@ -187,11 +199,14 @@ int CToolDlg::CurrentButHeight(CButton *butMore)
 
 // If there is a more/less button, hide or show this and the Options label
 // When hiding, close up the options if open
-void CToolDlg::HideOrShowOptions(int showHide)
+// Return false if there are no options or they are not being hidden
+bool CToolDlg::HideOrShowOptions(int showHide)
 {
   CWnd *but = GetDlgItem(IDC_BUTMORE);
   if (!but)
-    return;
+    return false;
+  if (showHide && but->IsWindowVisible())
+    return false;
   but->ShowWindow(showHide);
   but = GetDlgItem(IDC_STATMORE);
   if (but)
@@ -210,6 +225,7 @@ void CToolDlg::HideOrShowOptions(int showHide)
     mNumIDsToHide -= 2;
     SetOpenClosed(mState);
   }
+  return true;
 }
 
 // Convenience function to call with all arguments and store pointers so subclass can
