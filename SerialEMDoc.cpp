@@ -501,7 +501,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           param->warnedCalOpen = false;
           param->warnedCalAcquire = false;
           param->warnedConSetBin = false;
-          param->offerToMakeMap = false;
+          param->makeNewMap = false;
           param->overviewBinning = 0;
 
           // Set to current state or to proper state for low dose
@@ -691,7 +691,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
   param->insideNavItem = -1;
   param->warnedCalOpen = !filename.IsEmpty();
   param->warnedCalAcquire = !filename.IsEmpty();
-  param->offerToMakeMap = frameSet;
+  param->makeNewMap = frameSet;
   param->byteMinScale = 0.;
   param->byteMaxScale = 0.;
   if (param->anchorMagInd <= 0)

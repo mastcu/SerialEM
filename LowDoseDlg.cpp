@@ -1321,7 +1321,7 @@ void CLowDoseDlg::Update()
   m_statDegrees.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
 
   // Disable go to buttons if busy
-  bEnable = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq) && !camBusy && 
+  bEnable = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq) && !camBusy &&
     !stageBusy;
   m_butGotoSearch.EnableWindow(bEnable);
   m_butGotoView.EnableWindow(bEnable);

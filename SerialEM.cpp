@@ -491,6 +491,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.continDelayFactor = 0.5f;
   mMontParam.noDriftCorr = true;
   mMontParam.noHQDriftCorr = false;
+  mMontParam.closeFileWhenDone = false;
   mSelectedConSet = 3;
   mActPostExposure = true;
   mSmallFontsBad = false;

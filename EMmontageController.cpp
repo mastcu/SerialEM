@@ -3143,17 +3143,16 @@ int EMmontageController::SavePiece()
   doingTasks = mWinApp->DoingTasks();
   mPieceIndex = iDirX;
 
-  if (!mReadingMontage && mParam->offerToMakeMap && !mWinApp->DoingTiltSeries() && 
-    !doingTasks && !mUsingMultishot && mWinApp->mNavigator && 
+  if (!mReadingMontage && mParam->makeNewMap && !mWinApp->DoingTiltSeries() &&
+    !doingTasks && !mUsingMultishot && mWinApp->mNavigator &&
     !mWinApp->mNavigator->GetAcquiring()) {
-      iDirX = SEMThreeChoiceBox("Do you want to make a new map from this montage?\n\n"
-        "Press \"No Always\" if your answer is always No for this file.\n\n"
-        "(You will still be able to make it a map with \"New Map\" if you say No here)",
-        "Yes", "No", "No Always", MB_YESNOCANCEL | MB_ICONQUESTION);
-      mParam->offerToMakeMap = iDirX != IDCANCEL;
-      if (iDirX == IDYES)
-        mWinApp->mNavigator->NewMap();
-    }
+    mWinApp->mNavigator->NewMap();
+  }
+  if (!mReadingMontage && mParam->closeFileWhenDone && !mWinApp->DoingTiltSeries() &&
+    !doingTasks && !mUsingMultishot && (!mWinApp->mNavigator ||
+    !mWinApp->mNavigator->GetAcquiring())) {
+    mWinApp->mDocWnd->DoCloseFile();
+  }
   SEMTrace('M', "Montage Done processing");
   return 0;
 }

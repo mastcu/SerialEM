@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/21/22: Added property to start program with Discard Settings set.
+
+5/21/22: Allowed script spinners in Camera & Script panel to be hidden.
+
+5/21/22: Changed "Ask about making map" to "Make map..." in montage setup
+dialog, so it will no longer ask, just do it as specified.
+
+5/21/22: Added montage option to close file when montage is done.
+
 5/20/22: Fixed warning of difference between binning of montage set to be
 opened during Navigator acquire and Record binning to access right camera
 control set (In 4.0).

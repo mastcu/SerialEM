@@ -75,7 +75,8 @@ public:
   CEdit m_editSkipOutside;
   int m_iInsideNavItem;
   CButton m_butOfferMap;
-  BOOL m_bOfferMap;
+  BOOL m_bCloseWhenDone;
+  BOOL m_bMakeMap;
   CButton m_butUseHq;
   BOOL m_bUseHq;
   BOOL m_bFocusAll;

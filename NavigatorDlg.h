@@ -402,6 +402,7 @@ private:
   int mNextFileOptInd;      // File and mont param index for file to be opened on the
   int mNextMontParInd;      // item being acquired, set in GoToNextAcquirearea
   CString mAcquireOpenedFile;  // Name of file opened by Acquire
+  bool mUsedPreExistingMont;  // Flag that an already open montage was acquired to
   CString mExtraFileToClose[MAX_STORES - 1];   // Name of extra files opened by Acquire
   int mNumExtraFilesToClose;   // Number of files to close
   CString mExtraFileSuffix[MAX_STORES - 1]; // Suffix for extra files to open when Acquire opens a file

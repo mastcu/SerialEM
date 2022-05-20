@@ -39,7 +39,7 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
   IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
   IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, IDC_CHECK_USE_MULTISHOT,
-  PANEL_END,
+  IDC_CHECK_CLOSE_WHEN_DONE, PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS, 
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES, 
   IDC_SPIN_BLOCK_SIZE, IDC_STAT_DELAY, 
@@ -62,7 +62,8 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_strMinOvValue(_T(""))
   , m_bSkipOutside(FALSE)
   , m_iInsideNavItem(0)
-  , m_bOfferMap(FALSE)
+  , m_bMakeMap(FALSE)
+  , m_bCloseWhenDone(FALSE)
   , m_iMaxAlign(0)
   , m_bISrealign(FALSE)
   , m_fISlimit(0)
@@ -150,7 +151,8 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_MOVESTAGE, m_bMoveStage);
   DDX_Check(pDX, IDC_CHECK_SKIP_OUTSIDE, m_bSkipOutside);
   DDX_Check(pDX, IDC_IGNORESKIPS, m_bIgnoreSkips);
-  DDX_Check(pDX, IDC_CHECKOFFERMAP, m_bOfferMap);
+  DDX_Check(pDX, IDC_CHECKOFFERMAP, m_bMakeMap);
+  DDX_Check(pDX, IDC_CHECK_CLOSE_WHEN_DONE, m_bCloseWhenDone);
   DDX_Control(pDX, IDC_MINOVLABEL, m_statMinOvLabel);
   DDX_Text(pDX, IDC_MINOVVALUE, m_strMinOvValue);
   DDX_Control(pDX, IDC_MINOVVALUE, m_statMinOvValue);
@@ -406,7 +408,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_editYoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_statOverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_statY3.EnableWindow(!mSizeLocked && !mFittingItem);
-  m_butOfferMap.EnableWindow(mWinApp->mNavigator != NULL);
+  //m_butOfferMap.EnableWindow(mWinApp->mNavigator != NULL);
   m_butResetOverlaps.EnableWindow(!mFittingItem);
 
   // Initialize the spin controls
@@ -486,7 +488,8 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_iInsideNavItem = mParam.insideNavItem + 1;
   m_bIgnoreSkips = mParam.ignoreSkipList;
   m_butIgnoreSkips.EnableWindow(mParam.numToSkip > 0);
-  m_bOfferMap = mParam.offerToMakeMap;
+  m_bMakeMap = mParam.makeNewMap;
+  m_bCloseWhenDone = mParam.closeFileWhenDone;
   m_bUseContinMode = mParam.useContinuousMode;
   m_fContinDelayFac = mParam.continDelayFactor;
   m_bUseHq = mParam.useHqParams;
@@ -907,7 +910,8 @@ void CMontageSetupDlg::UnloadParamData(void)
   mParam.ignoreSkipList = m_bIgnoreSkips;
   mParam.skipOutsidePoly = m_bSkipOutside;
   mParam.insideNavItem = m_iInsideNavItem - 1;
-  mParam.offerToMakeMap = m_bOfferMap;
+  mParam.makeNewMap = m_bMakeMap;
+  mParam.closeFileWhenDone = m_bCloseWhenDone;
   mParam.useHqParams = m_bUseHq;
   mParam.focusAfterStage = m_bFocusAll;
   mParam.repeatFocus = m_bRepeatFocus;

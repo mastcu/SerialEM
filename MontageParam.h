@@ -28,7 +28,8 @@ struct MontParam {
   BOOL warnedCamChange;    // User was warned about changing camera
   BOOL warnedStageChange;  // User was warned about changing move stage
   BOOL warnedConSetBin;    // User was warned about binning different from parameter set
-  BOOL offerToMakeMap;     // Ask user whether to make a map from montage
+  BOOL makeNewMap;         // Make a map from montage
+  BOOL closeFileWhenDone;  // Close the file after montage if not Nav or script or TS
   BOOL adjustFocus;        // Change focus for column
   BOOL correctDrift;       // Use drift correction
   BOOL focusAfterStage;    // Autofocus after each stage move

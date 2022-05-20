@@ -8801,6 +8801,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mSavedTargetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
   mNumAcquired = 0;
   mAcquireEnded = 0;
+  mUsedPreExistingMont = false;
   mPausedAcquire = false;
   mResumedFromPause = false;
   mEmailWasSent = false;
@@ -9480,6 +9481,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mWinApp->Montaging() && 
       !(mSkippingSave && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY)) {
       stopErr = mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
+      if (!stopErr && mAcquireOpenedFile.IsEmpty())
+        mUsedPreExistingMont = true;
     } else {
       timeOut = 300000;
       mCamera->SetCancelNextContinuous(true);
@@ -9750,6 +9753,7 @@ void CNavigatorDlg::AcquireCleanup(int error)
 // Stop the acquisitions unless a macro or a TS was started
 void CNavigatorDlg::StopAcquiring(BOOL testMacro)
 {
+  MontParam *montP = mWinApp->GetMontParam();
   if (mAcquireIndex < 0)
     return;
   if (testMacro && (StartedMacro() || mStartedTS))
@@ -9759,6 +9763,8 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   }
   RestoreBeamTiltIfSaved();
   CloseFileOpenedByAcquire();
+  if (mUsedPreExistingMont && mWinApp->Montaging() && montP->closeFileWhenDone)
+    mWinApp->mDocWnd->DoCloseFile();
   mAcquireIndex = -1;
   mFocusCycleCounter = -1;
   mWinApp->mFocusManager->SetTargetDefocus(mSavedTargetDefocus);

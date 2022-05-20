@@ -3457,7 +3457,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     } else if (montDlg.DoModal() != IDOK)
       return -1;
 
-    // Set some params after the dialog: note offerToMakeMap is irrelevant in Nav acquire
+    // Set some params after the dialog: note makeNewMap is irrelevant in Nav acquire
     // 5/11/18: give up on setting very sloppy for stage
     montDlg.mParam.warnedCalOpen = true;
     montDlg.mParam.warnedCalAcquire = true;

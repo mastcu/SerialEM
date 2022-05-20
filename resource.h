@@ -632,6 +632,7 @@
 #define IDC_STATLISTHEADER              1587
 #define IDC_CHECKOFFERMAP               1588
 #define IDC_SCALEBAR                    1589
+#define IDC_CHECK_CLOSE_WHEN_DONE       2992
 #define IDC_SET_TRACK_STATE             1590
 #define IDC_COOKMAG                     1591
 #define IDC_COOKSPOT                    1592
@@ -1861,7 +1862,7 @@
 #define IDC_STAT_INFO_LINE1             2884
 #define IDC_STAT_INFO_LINE2             2885
 #define IDC_RCHOICE_ONE                 2886
-#define IDC_RCHOICE_ONE2                2887
+#define IDC_RCHOICE_ONE2                2993
 #define IDC_STAT_SPACER                 2887
 #define IDC_RCHOICE_THREE               2888
 #define IDC_NA_ADJUST_BT_FOR_IS         2888
@@ -2498,7 +2499,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        270
 #define _APS_NEXT_COMMAND_VALUE         33497
-#define _APS_NEXT_CONTROL_VALUE         2992
+#define _APS_NEXT_CONTROL_VALUE         2994
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
