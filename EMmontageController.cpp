@@ -1302,8 +1302,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       mConSets[MONTAGE_CONSET].alignFrames = 0;
     
     // Adjust exposure, try to do something about reducing drift settling if exposure is
-    // now very short.  THIS IS OBSOLETE SINCE BINNING IS ALREADY LOCKED TO MATCH,
-    // But it does set the prescan exposure
+    // now very short.  This is not obsoleted by the binning lock - it is applied in 
+    // navigator acquire with new file at item, keep NavHelper AssessAcquireProblems syncd
+    // But it does also set the prescan exposure
     float binRatio = (float)mConSets[setNum].binning / mParam->binning;
     if (binRatio < 0.9 && mWinApp->LowDoseMode())
       binRatio *= B3DMIN(2., B3DMAX(1., 1. / binRatio));

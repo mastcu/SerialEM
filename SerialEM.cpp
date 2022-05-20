@@ -4525,9 +4525,7 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   }
   ManageDialogOptionsHiding();
 
-  // Update control panels with simple hideable ID list and any other non-model dialog
-  mFilterControl.UpdateHiding();
-  mMontageWindow.UpdateHiding();
+  // Update any other non-model dialog
   if (mNavHelper->mStateDlg)
     mNavHelper->mStateDlg->UpdateHiding();
   mMainFrame->RemoveHiddenItemsFromMenus();
@@ -4535,13 +4533,17 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   UpdateWindowSettings();
 }
 
-// Show or hide the options sections in control panels
+// Show or hide the options sections in control panels AND take care of calling 
+// UpdateHiding if there is no adjustment from the option section to do that
+// This will manage both panels with tables and ones with simple hideable ID list
 void CSerialEMApp::ManageDialogOptionsHiding(void)
 {
   int ind;
   for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
     if (mToolDlgs[ind] != NULL && mToolDlgs[ind]->mInitialized) {
-      mToolDlgs[ind]->HideOrShowOptions(IsIDinHideSet(-30 - ind) ? SW_HIDE : SW_SHOW);
+      if (!mToolDlgs[ind]->HideOrShowOptions(IsIDinHideSet(-30 - ind) ?
+        SW_HIDE : SW_SHOW))
+        mToolDlgs[ind]->UpdateHiding();
     }
   }
   mMainFrame->SetDialogPositions();

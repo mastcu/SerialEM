@@ -567,7 +567,7 @@ void CNavigatorDlg::Update()
     mItem = mItemArray[start];
 
   // If acquiring, update the number done and estimated completion
-  if (mAcquireIndex >= 0) {
+  if (mAcquireIndex >= 0 && mInitialNumAcquire > 0) {
     str.Format("%d of %d Done", mNumDoneAcq, mInitialNumAcquire);
     if (mWinApp->mMontageController->DoingMontage())
       montLeft = mWinApp->mMontageController->GetRemainingTime();
@@ -8779,6 +8779,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mStartingAcquireIndex = mAcquireIndex;
 
   // done with dialog
+  mInitialNumAcquire = 0;
   ManageAcquireDlgCleanup(fromMenu, dlgClosing);
 
   // Initialize the action run-time data
@@ -10078,6 +10079,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     if (mNextMontParInd >= 0) {
       montp = mMontParArray.GetAt(mNextMontParInd);
       *masterMont = *montp;
+      masterMont->warnedConSetBin = true;
     }
     fileOptp = (FileOptions *)mFileOptArray.GetAt(mNextFileOptInd);
     if (mNextMontParInd < 0) {

@@ -4260,13 +4260,14 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   StateParams *state;
   TiltSeriesParam *tsp;
   CString mess, mess2, label;
+  CString *names = mWinApp->GetModeNames();
   int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
   NavAcqParams *navParam = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
   mAcqActions = mAllAcqActions[mCurAcqParamIndex];
   int lastBin[MAX_CAMERAS];
-  int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd;
+  int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
   bool seen;
   BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && IsMultishotSaving();
   int *seenGroups;
@@ -4429,10 +4430,12 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       }
 
       // Get defined camera and binning from the parameter sets
+      setNum = RECORD_CONSET;
       if (montParInd >= 0) {
         montp = mMontParArray->GetAt(montParInd);
         cam = montp->cameraIndex;
         bin = montp->binning;
+        setNum = MontageConSetNum(montp, true);
       } else if (item->mTSparamIndex >= 0) {
         tsp = mTSparamArray->GetAt(item->mTSparamIndex);
         cam = tsp->cameraIndex;
@@ -4446,8 +4449,11 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
 
       // No binning defined by state defined yet: get the binning from the camera conset
       if (lastBin[cam] < 0)
-        lastBin[cam] = masterSets[activeList[cam] * MAX_CONSETS + RECORD_CONSET].binning;
-      if (lastBin[cam] != bin)
+        lastBin[cam] = masterSets[activeList[cam] * MAX_CONSETS + setNum].binning;
+
+      // See "Adjust exposure..." in StartMontage for this exception
+      if (lastBin[cam] != bin && !(montParInd >= 0 && mWinApp->LowDoseMode() && 
+        bin > lastBin[cam] && bin <= 2 * lastBin[cam]))
         binMismatch++;
 
       // This param binning becomes the binning for next time unless there is a state
@@ -4493,7 +4499,8 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       "to be set for that item.  This is odd.\n\n", camMismatch);
     if (binMismatch) {
       mess2.Format("The binning specified in the montage or tilt series parameters for "
-        "an item differs from the existing Record binning for the particular camera. "
+        "an item differs from the existing binning for the "
+        "particular camera and parameter set. "
         "This happens %d times.\nThe exposure time would be changed to compensate, but"
       " this is probably undesirable\n\n", binMismatch);
       mess += mess2;

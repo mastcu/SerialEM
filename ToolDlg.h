@@ -78,7 +78,8 @@ public:
   void DrawSideBorders(CPaintDC & dc);
   void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness, COLORREF color);
   int CurrentButHeight(CButton *butMore);
-  void HideOrShowOptions(int showHide);
+  bool HideOrShowOptions(int showHide);
+  virtual void UpdateHiding(void);
   GetMember(int, State);
   void SetupPanels(int * idTable, int * leftTable, int * topTable,
     int *heightTable = NULL, int sortStart = 0);
