@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/20/22: Fixed warning of difference between binning of montage set to be
+opened during Navigator acquire and Record binning to access right camera
+control set (In 4.0).
+
+5/20/22: Fixed hiding of items for some control panels when optons section is
+not being hidden (In 4.0).
+
 5/18/22: Created directory for copying EER gain reference if it is not there
 yet (In 4.1).
 
