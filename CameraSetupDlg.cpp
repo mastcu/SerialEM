@@ -1383,6 +1383,7 @@ void CCameraSetupDlg::ManageCamera()
   int canConfig, state;
   BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, 0, true};
   bool twoRowPos;
+  bool alpine = mParam->K2Type == K3_TYPE && mParam->sizeX < ALPINE_SIZE_TEST;
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
     IDC_ALIGN_DOSE_FRAC, IDC_STAT_ANTIALIAS, IDC_STAT_SAVE_SUMMARY, 
@@ -1588,6 +1589,9 @@ void CCameraSetupDlg::ManageCamera()
   if (mParam->K2Type) {
     radio = (CButton *)GetDlgItem(IDC_RCOUNTING);
     radio->EnableWindow(mParam->K2Type != K2_BASE);
+    radio->ShowWindow(alpine ? SW_HIDE : SW_SHOW);
+    ShowDlgItem(IDC_RLINEAR, alpine ? SW_HIDE : SW_SHOW);
+    ShowDlgItem(IDC_STAT_K2MODE, alpine ? SW_HIDE : SW_SHOW);
     radio = (CButton *)GetDlgItem(IDC_RSUPERRES);
     radio->ShowWindow(mParam->K2Type == K2_SUMMIT ? SW_SHOW : SW_HIDE);
     radio->EnableWindow(mParam->K2Type == K2_SUMMIT);

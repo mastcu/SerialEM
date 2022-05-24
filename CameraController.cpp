@@ -315,11 +315,14 @@ CCameraController::CCameraController()
   mK2ReadoutInterval = -1.;
   mK2BaseModeScaling = -1.;
   mK3ReadoutInterval = .000665779f;
-  mMinK3FrameTime = 0.01331558f; 
+  mMinK3FrameTime = 0.01331558f;
+  mMinAlpineFrameTime = 0.0066578f;
   mBaseK2CountingTime = 0.1f;
   mBaseK2SuperResTime = 0.5f;
   mBaseK3LinearTime = 0.01331558f;
   mBaseK3SuperResTime = 0.0106525f;
+  mBaseAlpineLinearTime = 0.0066578f;
+  mBaseAlpineSuperResTime = 0.0066578f;
   mUseK3CorrDblSamp = false;
   mK3HWDarkRefExposure = 10.;
 
@@ -3055,6 +3058,10 @@ void CCameraController::Capture(int inSet, bool retrying)
         mSaveUnnormalizedFrames && CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
         conSet.processing = DARK_SUBTRACTED;
   }
+
+  // For Alpine, set mode to counting
+  if (mParam->K2Type == K3_TYPE && mParam->sizeX < ALPINE_SIZE_TEST)
+    conSet.K2ReadMode = COUNTING_MODE;
 
   // For K3, unprocessed for counting mode is really raw and not the same as DS so promote
   if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
@@ -6409,6 +6416,15 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
         retval = true;
       baseTime = frameTime;
 
+    } else if (camP->K2Type == K3_TYPE && camP->sizeX < ALPINE_SIZE_TEST) {
+      baseTime = readMode == LINEAR_MODE ? mBaseAlpineLinearTime :
+        mBaseAlpineSuperResTime;
+      if (exposure < baseTime) {
+        exposure = baseTime;
+        retval = true;
+      }
+      baseTime = GetK2ReadoutInterval(camP);
+
       // TODO: Is this doubled for CDS?
     } else if (camP->K2Type == K3_TYPE) {
       baseTime = readMode == LINEAR_MODE ? mBaseK3LinearTime : mBaseK3SuperResTime;
@@ -6635,7 +6651,7 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   int special)
 { 
   float time, CDSfac = 1.f;
-  float numBlocks;
+  float numBlocks, minTime;
   if (param->FEItype) {
     if (FCAM_CONTIN_SAVE(param))
       return mCeta2ReadoutInterval;
@@ -6652,7 +6668,9 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
     }
     return time;
   }
-  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mMinK3FrameTime, mMinK2FrameTime);
+  minTime = (param->K2Type == K3_TYPE && param->sizeX < ALPINE_SIZE_TEST) ?
+    mMinAlpineFrameTime : mMinK3FrameTime;
+  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * minTime, mMinK2FrameTime);
 };
 
 // Returns the basic readout interval for K2/K3, OR whatever frame times must be multiple
