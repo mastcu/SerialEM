@@ -336,10 +336,11 @@ int KImageStore::CheckAdocForMontage(MontParam * inParam)
 int KImageStore::GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY,
   int &outZ)
 {
-  int adocSect, retval = 0;
+  int adocSect = inSect, retval = 0;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
-  adocSect = AdocLookupByNameValue(sectName, inSect);
+  if (mStoreType == STORE_TYPE_HDF)
+    adocSect = AdocLookupByNameValue(sectName, inSect);
   if (adocSect < 0)
     retval = -1;
   else if (AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &outX, &outY, &outZ))
@@ -352,10 +353,11 @@ int KImageStore::GetStageCoordFromAdoc(const char *sectName, int inSect, double 
   double & outY)
 {
   float X, Y;
-  int adocSect, retval = 0;
+  int adocSect = inSect, retval = 0;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
-  adocSect = AdocLookupByNameValue(sectName, inSect);
+  if (mStoreType == STORE_TYPE_HDF)
+    adocSect = AdocLookupByNameValue(sectName, inSect);
   if (adocSect < 0) {
     retval = -1;
   } else if (AdocGetTwoFloats(sectName, adocSect, ADOC_STAGE, &X, &Y)) {
@@ -378,7 +380,10 @@ int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int 
     if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
       return 3;
     for (ind = 0; ind < nz; ind++) {
-      adocSect = AdocLookupByNameValue(sectName, ind);
+      if (mStoreType == STORE_TYPE_HDF)
+        adocSect = AdocLookupByNameValue(sectName, ind);
+      else
+        adocSect = ind;
       RELEASE_RETURN_ON_ERR(adocSect < 0, 7);
       RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &pcX,
         &pcY, &pcZ), 4);

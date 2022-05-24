@@ -3431,8 +3431,7 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
   already = 0;
   nsec = storeMRC->getDepth();
   for (int isec = 0; isec <  nsec ; isec++) {
-    storeMRC->getPcoord(isec, ix, iy, iz);
-    if (iz == zValue) {
+    if (!storeMRC->getPcoord(isec, ix, iy, iz) && iz == zValue) {
       ind = (ix / (param->xFrame - param->xOverlap) ) * 
         param->yNframes + iy / (param->yFrame - param->yOverlap);
       pieceSavedAt[ind] = isec;

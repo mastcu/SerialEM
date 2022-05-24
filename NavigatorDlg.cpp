@@ -8877,9 +8877,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
   mStartedTS = false;
   int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetCurAcqParamIndex());
   const char *stepNames[ACQ_MAX_STEPS] = {"", "", "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "Setup next item", "Open file if needed", "Acquire image/montage",
-    "Do multishot", "Run script", "Tilt series", "Move to item", "Manage backlash",
-    "Move to other item", "Relax stage"};
+    "", "", "", "", "", "", "Setup next item", "Open file if needed", 
+    "Acquire image/montage", "Do multishot", "Run script", "Tilt series", "Move to item",
+    "Manage backlash", "Move to other item", "Relax stage"};
 
   if (mAcquireIndex < 0)
     return;
