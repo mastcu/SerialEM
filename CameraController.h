@@ -38,6 +38,7 @@ struct CamPluginFuncs;
 #define NEW_GAIN_REFERENCE 2
 #define RETRACT_BLOCKERS -1
 #define RETRACT_ALL -2
+#define ALPINE_SIZE_TEST 7000
 
 // Version that is good enough if there are no K2 cameras
 #define SEMCCD_VERSION_OK_NO_K2  104
@@ -840,6 +841,7 @@ public:
   float mK3CDSLinearRatio;      // Ratio of CDS to non-CDS shots in linera mode
   float mMinK3FrameTime;        // Minimum frame time for K3
   float mK3ReadoutInterval;     // Actual readout interval for K3
+  float mMinAlpineFrameTime;    // Minimum frame time for Alpine
   int mZoomFilterType;          // Type for antialias filter
   BOOL mOneK2FramePerFile;      // Flag to save one file per frame
   CString mDirForK2Frames;      // Directory to save them in
@@ -891,6 +893,8 @@ public:
   float mBaseK2SuperResTime;    // of these for K3
   float mBaseK3LinearTime;      // And for K3
   float mBaseK3SuperResTime;
+  float mBaseAlpineLinearTime;  // And for Alpine
+  float mBaseAlpineSuperResTime;
   float mLastK2BaseTime;        // Base time last time that exposure time was constrained
   BOOL mUseK3CorrDblSamp;       // Flag to use CDS on a K3
   float mK3HWDarkRefExposure;   // Exposure time for K3 hardware dark ref: use Record if 0
