@@ -728,7 +728,7 @@ int KStoreMRC::FixInappropriateMontage()
 }
 
 // Get the piece coordinates for a section.  Return 0 if OK, -1 if section bad
-int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
+int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex)
 {
   char *edata;
   unsigned short int usTemp;
@@ -736,7 +736,7 @@ int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
   int retval = 0;
   int offset = inSect * mHead->nbytext;
   if (mMontCoordsInMdoc) {
-    if (GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ))
+    if (GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ, gotMutex))
       return -1;
   } else {
     if ((mHead->typext & TILT_MASK) != 0) 

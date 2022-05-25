@@ -158,11 +158,11 @@ int KStoreIMOD::CheckMontage(MontParam * inParam)
   return KImageStore::CheckMontage(inParam, mWidth, mHeight, mDepth);
 }
 
-int KStoreIMOD::getPcoord(int inSect, int & outX, int & outY, int & outZ)
+int KStoreIMOD::getPcoord(int inSect, int & outX, int & outY, int & outZ, bool gotMutex)
 {
   if (mAdocIndex < 0)
     return -1;
-  return GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ);
+  return GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ, gotMutex);
 }
 
 int KStoreIMOD::getStageCoord(int inSect, double & outX, double & outY)

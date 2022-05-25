@@ -69,7 +69,7 @@ public:
   virtual void    SetUpdateTimePerSect(float inVal) { mUpdateTimePerSect = inVal; };
   virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam) {return 0;}; 
-  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ) {return -1;};
+  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false) {return -1;};
   virtual int     getStageCoord(int inSect, double &outX, double &outY) {return -1;};
   virtual KImage  *getRect(void) {return NULL;};
   virtual int     ReorderPieceZCoords(int *sectOrder) { return -1; };
@@ -110,7 +110,7 @@ public:
   virtual int AddExtraValuesToAdoc(KImage *inImage, int inSect, bool needNewSect, bool &gotMutex);
   virtual int AddTitleToAdoc(const char *inTitle);
   virtual int CheckAdocForMontage(MontParam *inParam);
-  virtual int GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY, int &outZ);
+  virtual int GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false);
   virtual int GetStageCoordFromAdoc(const char *sectName, int inSect, double &outX, double &outY);
   virtual int ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz);
   virtual void AddTitleToLabelArray(char *label, int &numTitle, const char *inTitle);

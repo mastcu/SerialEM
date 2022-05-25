@@ -68,7 +68,7 @@ public:
   virtual int     setMode(int inMode);
   virtual int   CheckMontage(MontParam *inParam); 
   virtual int FixInappropriateMontage();
-  virtual int   getPcoord(int inSect, int &outX, int &outY, int &outZ);
+  virtual int   getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false);
   virtual int   getStageCoord(int inSect, double &outX, double &outY);
   virtual void  BigSeek(int base, int size1, int size2, UINT flag);
   int getExtraData(EMimageExtra * extra, int section);

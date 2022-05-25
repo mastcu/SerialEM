@@ -73,7 +73,7 @@ public:
 	virtual int     WriteSection(KImage * inImage, int inSect);
   virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam); 
-  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ);
+  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false);
   virtual int     getStageCoord(int inSect, double &outX, double &outY);
   virtual int     ReorderPieceZCoords(int *sectOrder);
   virtual KImage  *getRect(void);

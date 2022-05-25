@@ -16,7 +16,7 @@ public:
   virtual BOOL  FileOK();
 	virtual KImage  *getRect(void);
   virtual int     CheckMontage(MontParam *inParam);
-  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ);
+  virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false);
   virtual int     getStageCoord(int inSect, double &outX, double &outY);
   virtual int     ReorderPieceZCoords(int *sectOrder);
   virtual int   getMode() {return mMode;}

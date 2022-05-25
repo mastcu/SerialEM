@@ -334,10 +334,10 @@ int KImageStore::CheckAdocForMontage(MontParam * inParam)
 }
 
 int KImageStore::GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, int &outY,
-  int &outZ)
+  int &outZ, bool gotMutex)
 {
   int adocSect = inSect, retval = 0;
-  if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
+  if (!gotMutex && AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
   if (mStoreType == STORE_TYPE_HDF)
     adocSect = AdocLookupByNameValue(sectName, inSect);
@@ -345,7 +345,8 @@ int KImageStore::GetPCoordFromAdoc(const char *sectName, int inSect, int &outX, 
     retval = -1;
   else if (AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &outX, &outY, &outZ))
     retval = -1;
-  AdocReleaseMutex();
+  if (!gotMutex)
+    AdocReleaseMutex();
   return retval;
 }
 
@@ -749,6 +750,9 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
   int ixp, iyp, izp, xMin, xNonZeroMin, yMin, yNonZeroMin, miss;
   BOOL xOK, yOK;
   int missCheck = 100;
+  bool gotMutex = mAdocIndex >= 0 && (mStoreType != STORE_TYPE_MRC || montCoordsInAdoc());
+  if (gotMutex && AdocGetMutexSetCurrent(mAdocIndex) < 0)
+    return -1;
 
   // Find absolute minimum, and minimum above zero  
   xMin = 1000000;
@@ -757,8 +761,11 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
   yNonZeroMin = xMin;
   xMax = yMax = zMax = -1;
   for (iz = 0; iz < nz; iz++) {
-    if (getPcoord(iz, ixp, iyp, izp))
+    if (getPcoord(iz, ixp, iyp, izp, gotMutex)) {
+      if (gotMutex)
+        AdocReleaseMutex();
       return -1;
+    }
     if (ixp < xMin)
       xMin = ixp;
     if (ixp > 0 && ixp < xNonZeroMin)
@@ -782,7 +789,7 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
     if (xNonZeroMin % miss)
       continue;
     for (iz = 0; iz < nz; iz++) {
-      getPcoord(iz, ixp, iyp, izp);
+      getPcoord(iz, ixp, iyp, izp, gotMutex);
       if (ixp % (xNonZeroMin / miss))
         break;
     }
@@ -797,7 +804,7 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
     if (yNonZeroMin % miss)
       continue;
     for (iz = 0; iz < nz; iz++) {
-      getPcoord(iz, ixp, iyp, izp);
+      getPcoord(iz, ixp, iyp, izp, gotMutex);
       if (iyp % (yNonZeroMin / miss))
         break;
     }
@@ -807,6 +814,8 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
       break;
     }
   }
+  if (gotMutex)
+    AdocReleaseMutex();
 
   if (!xOK || !yOK)
     return -1;

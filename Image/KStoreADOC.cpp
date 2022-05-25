@@ -291,9 +291,9 @@ int KStoreADOC::CheckMontage(MontParam *inParam)
 
 
 // Get the piece coordinates for a section.  Return 0 if OK, -1 if section bad
-int KStoreADOC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
+int KStoreADOC::getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex)
 {
-  return GetPCoordFromAdoc(ADOC_IMAGE, inSect, outX, outY, outZ);
+  return GetPCoordFromAdoc(ADOC_IMAGE, inSect, outX, outY, outZ, gotMutex);
 }
 
 // Get the stage coordinates for a section

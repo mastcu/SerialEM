@@ -3505,6 +3505,8 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
                                            int zValue, std::vector<int> &pieceSavedAt)
 {
   int already, nsec, ind, ix, iy, iz;
+  bool gotMutex = storeMRC->GetAdocIndex() >= 0 && 
+    (storeMRC->getStoreType() != STORE_TYPE_MRC || storeMRC->montCoordsInAdoc());
   if (param->xNframes <= 0 || param->yNframes <= 0 || param->xFrame - param->xOverlap <= 0
     || param->yFrame - param->yOverlap <= 0 || param->xNframes >= 10000 ||
     param->yNframes >= 10000 || param->xFrame > 17000 || param->yFrame > 17000) {
@@ -3519,16 +3521,21 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
     pieceSavedAt[ind] = -1;
   already = 0;
   nsec = storeMRC->getDepth();
+  if (gotMutex && AdocGetMutexSetCurrent(storeMRC->GetAdocIndex()) < 0)
+    return 0;
   for (int isec = 0; isec <  nsec ; isec++) {
-    if (!storeMRC->getPcoord(isec, ix, iy, iz) && iz == zValue) {
+    if (!storeMRC->getPcoord(isec, ix, iy, iz, gotMutex) && iz == zValue) {
       ind = (ix / (param->xFrame - param->xOverlap) ) * 
         param->yNframes + iy / (param->yFrame - param->yOverlap);
       pieceSavedAt[ind] = isec;
       already++;
     }
   }
+  if (gotMutex)
+    AdocReleaseMutex();
   return already;
 }
+
 // Compute and save the effective stage position at which piece was acquired, adjusting
 // for image shift
 void EMmontageController::SetAcquiredStagePos(int piece, double stageX, double stageY, 
