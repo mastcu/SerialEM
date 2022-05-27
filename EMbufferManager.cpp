@@ -653,6 +653,11 @@ int EMbufferManager::RereadOtherFile(CString &message)
     KStoreIMOD *storeIMOD = new KStoreIMOD(mOtherFile);
     if (storeIMOD && storeIMOD->FileOK()) {
       err = ReadFromFile(storeIMOD);
+      if (err == READ_MONTAGE_OK) {
+        mOtherStoreMRC = storeIMOD;
+        mWinApp->AddIdleTask(NULL, TASK_DEL_OTHER_STORE, 0, 0);
+        return err;
+      }
       delete storeIMOD;
 
     } else {
