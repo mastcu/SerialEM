@@ -574,8 +574,11 @@ int EMbufferManager::ReadOtherFile()
 {
   int err;
   CString mess;
-  static char BASED_CODE szFilter[] = "Image files (*.mrc, *.st, *.map, *.tif*, *.dm3,"
-    " *.dm4)|*.mrc; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
+  static char imodFilter[] = "Image files (*.mrc, *.st, *.map, *.tif*, *.dm3, *.dm4)|"
+    "*.mrc; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
+  static char imodHdfFilter[] = "Image files (*.mrc, *.hdf, *.st, *.map, *.tif*, *.dm3,"
+    " *.dm4)|*.mrc; *.hdf; *.st; *.map; *.tif*; *.dm3; *.dm4|All files (*.*)|*.*||";
+  static char *szFilter = mWinApp->mDocWnd->GetHDFsupported() ?imodHdfFilter : imodFilter;
   LPCTSTR lpszFileName = NULL;
   if (!mOtherFile.IsEmpty())
     lpszFileName = mOtherFile;
