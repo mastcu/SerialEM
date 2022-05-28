@@ -157,6 +157,14 @@ int KStoreADOC::AddTitle(const char *inTitle)
   return retval;
 }
 
+int KStoreADOC::setMode(int inMode)
+{
+  if (mDepth > 0)
+    return 1;
+  mMode = inMode;
+  return 0;
+}
+
 // Append one image to the collection: This must be the first call to write an image
 int KStoreADOC::AppendImage(KImage *inImage)
 {
