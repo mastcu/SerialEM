@@ -3876,8 +3876,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
   // Store new center stage position in the temporary item for fixing polygon center
   // Go to center only if not defining for future
+  // This matrix adjusted stage to camera for tilt, so don't adjust the inverse again
   aInv = MatInv(mPolyToCamMat);
-  mShiftManager->AdjustCameraToStageForTilt(aInv, item->mMapTiltAngle);
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
   if (!montDlg) {
