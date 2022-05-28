@@ -3,10 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-5/27/22: Fix adjusted center of montage fit to polygon being off when drawn
+5/28/22: Fixed writing float images to .idoc file (series of TIFFs) (In 4.0).
+
+5/27/22: Fixed adjusted center of montage fit to polygon being off when drawn
 on tilted image (In 4.0).
 
-5/27/22: Fix reading montage from HDF file with Read from Other (In 4.0).
+5/27/22: Fixed reading montage from HDF file with Read from Other (In 4.0).
 
 5/25/22: Made loops that access all piece coordinates more efficient.
 
