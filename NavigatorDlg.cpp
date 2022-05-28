@@ -6336,6 +6336,9 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     item->mMapTiltAngle = (float)mScope->GetTiltAngle();
   item->mMapMontage = mWinApp->Montaging();
   item->mMapFile = mWinApp->mStoreMRC->getName();
+
+  // Not assigned here until 5/28/22
+  item->mImageType = mWinApp->mStoreMRC->getStoreType();
   trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
   item->mTrimmedName = item->mMapFile.Right(trimCount);
   ComputeStageToImage(imBuf, item->mStageX, item->mStageY, hasStage, item->mMapScaleMat,
@@ -7067,7 +7070,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
 {
   CFile *file;
   CameraParameters *cam;
-  int binInd;
+  int binInd, xNframe, yNframe;
   bool useNavPath = true;
   KImageStore *storeMRC;
   KStoreIMOD *storeIMOD;
@@ -7086,7 +7089,8 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   navPathName += item->mTrimmedName;
 
   curStore = -1;
-  if (item->mImageType == STORE_TYPE_MRC || item->mImageType == STORE_TYPE_ADOC) {
+  if (item->mImageType == STORE_TYPE_MRC || item->mImageType == STORE_TYPE_ADOC || 
+    item->mImageType == STORE_TYPE_HDF) {
     curStore = mDocWnd->StoreIndexFromName(item->mMapFile);
 
     // If this fails, check with the trimmed name and the nav/current directory, because
@@ -7159,6 +7163,15 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
           delete storeMRC;
           return 3;
         }
+        if (storeMRC->GetAdocIndex() >= 0 &&
+          !AdocGetMutexSetCurrent(storeMRC->GetAdocIndex())) {
+          if (!AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_MONT_FRAMES, &xNframe, &yNframe)
+            && xNframe > 0 && yNframe > 0) {
+            ACCUM_MAX(montP->xNframes, xNframe);
+            ACCUM_MAX(montP->yNframes, yNframe);
+          }
+          AdocReleaseMutex();
+        }
 
         // Figure out the smallest binning that fits frame; fall back to 1
         cam = &mCamParams[item->mMapCamera];
@@ -7205,7 +7218,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   }
   if (item->mMapMontage && item->mMontUseStage >= 0)
     montP->moveStage = item->mMontUseStage > 0;
-  
+
   return 0;
 }
 

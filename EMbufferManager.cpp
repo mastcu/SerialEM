@@ -737,6 +737,15 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
       inStore->getStoreType() == STORE_TYPE_HDF) {
       param = *masterMont;
       montErr = inStore->CheckMontage(&param);
+      if (montErr > 0 && inStore->GetAdocIndex() >= 0 && 
+        !AdocGetMutexSetCurrent(inStore->GetAdocIndex())) {
+        if (!AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_MONT_FRAMES, &xPc, &yPc) && 
+          xPc > 0 && yPc > 0) {
+          ACCUM_MAX(param.xNframes, xPc);
+          ACCUM_MAX(param.yNframes, yPc);
+        }
+        AdocReleaseMutex();
+      }
 
       // New behavior 2/3/04: unless this is the current file, read whole montage
       // from a montaged file; return code to prevent read buffer from being displayed

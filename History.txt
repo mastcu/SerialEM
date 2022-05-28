@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/28/22: When reading from or reopening a montage with whole rows or columns
+skipped, the program will treat it as having the full originally specified
+size for consistency with when it was initially open.  Instructions for
+importing externally defined Navigator items have been changed and clarified
+to enable importing points picked on such montages.
+
 5/28/22: Fixed writing float images to .idoc file (series of TIFFs) (In 4.0).
 
 5/27/22: Fixed adjusted center of montage fit to polygon being off when drawn

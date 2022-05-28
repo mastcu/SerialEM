@@ -108,6 +108,7 @@ EMmontageController::EMmontageController()
   mUseFilterSet2 = false;
   mUseSet2InLD = false;
   mRedoCorrOnRead = false;
+  mMultiShotParams = NULL;
 }
 
 EMmontageController::~EMmontageController()
@@ -2093,7 +2094,7 @@ int EMmontageController::DoNextPiece(int param)
           mDuplicateRetryCount = 0;
       }
         
-    } else if (mAction == DWELL_TO_COOK) {
+    } else if (mAction == DWELL_TO_COOK && precooking) {
       mDwellStartTime = GetTickCount();
       mWinApp->AddIdleTask(TASK_MONTAGE_DWELL, 0, 1000 + 3 * mDwellTimeMsec);
       return 0;

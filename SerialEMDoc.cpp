@@ -418,6 +418,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
 {
   MontParam *param;
   CameraParameters *cam;
+  int fullFramesX, fullFramesY;
   NavParams *navp = mWinApp->GetNavParams();
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
@@ -465,6 +466,11 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
                   mWinApp->mStoreMRC->getHeight() * binning <= cam->sizeY)
                   param->binning = binning;
               }
+          }
+          if (!AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_MONT_FRAMES, &fullFramesX,
+            &fullFramesY) && fullFramesX > 0 && fullFramesY > 0) {
+            ACCUM_MAX(param->xNframes, fullFramesX);
+            ACCUM_MAX(param->yNframes, fullFramesY);
           }
           AdocReleaseMutex();
         }

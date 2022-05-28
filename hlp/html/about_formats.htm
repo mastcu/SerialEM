@@ -1100,8 +1100,12 @@
       entries:</P>
     <ul>
       <li>CoordsInMap - Pixel coordinate in the map image, which can be either a
-        single-frame image or a montage with pieces at their regularly space, nominal
-        piece coordinates.</li>
+        single-frame image or a montage with pieces at their regularly spaced, nominal
+        piece coordinates.&nbsp; If entire rows or columns were skipped on the bottom or 
+        left side of a montage, coordinates starting at (0,0) in an analyzed image must 
+        be offset by the nominal piece coordinates of the first column and row included 
+        in the montage.&nbsp; The same offset should be applied for the following two 
+        entries.</li>
       <li>CoordsInAliMont - Pixel coordinates in a montage map where the pieces are
         aligned without the Very Sloppy option, i.e., placed at the coordinates
         specified by AlignedPieceCoords in the .mdoc file. </li>
@@ -1111,7 +1115,12 @@
       <li>CoordsInPiece - Pixels coordinates within one piece of a montage, which must
         be specified with a PieceOn entry.&nbsp; Pieces are numbered from 0 by their
         positions in a complete array; i.e., piece index = piece_#_in_X *
-        #_of_pieces_in_Y + piece_#_in_Y, all numbered from 0.</li>
+        #_of_pieces_in_Y + piece_#_in_Y, all numbered from 0.&nbsp; The number of pieces 
+        in Y must be the value when the montage was first defined, including all skipped 
+        rows.&nbsp; This value is available in the Navigator MapFramesXY entry and in 
+        the FullMontSize entry in any MontSection of the montage metadata.&nbsp; 
+        Similarly, the piece number must be the value it would have if skipped rows or 
+        columns were included.</li>
     </ul>
     <P>The following points apply to externally defined items:</P>
     <ul>
@@ -1130,7 +1139,7 @@
       <li>Coordinates of the points, given by PtsX and PtsY, must also be pixel
         coordinates and will be converted in the same way as the main item stage
         position is.</li>
-      <li>Point coordinates in PtsX and PtsZ are optional for a point item having a
+      <li>Point coordinates in PtsX and PtsY are optional for a point item having a
         NumPts entry of 0; if missing, they will be made identical to the main stage
         coordinates.</li>
       <li>In addition to the entries mentioned already, every item must have a Color,
