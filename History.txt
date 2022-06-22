@@ -4,6 +4,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance, for the stable release version
 ============================================================================
 6/22/22: SEM_4-0-8
+6/22/22: Fixed tasks using Search instead of View when View has a field of
+view below the criterion but they have the same mag (In 4.0).
+
 5/28/22: Fixed writing float images to .idoc file (series of TIFFs) (In 4.0).
 
 5/27/22: Fixed adjusted center of montage fit to polygon being off when drawn
