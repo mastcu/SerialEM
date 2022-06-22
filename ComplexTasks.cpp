@@ -527,7 +527,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
   if (mWinApp->LowDoseMode()) {
     mLowMagConSet = VIEW_CONSET;
     if (!mTasksUseViewNotSearch && ldParam[VIEW_CONSET].magIndex > maxMagInd && 
-      ldParam[SEARCH_AREA].magIndex <= ldParam[VIEW_CONSET].magIndex &&
+      ldParam[SEARCH_AREA].magIndex < ldParam[VIEW_CONSET].magIndex &&
       ldParam[SEARCH_AREA].magIndex >= mScope->GetLowestMModeMagInd()) {
       SEMTrace('1', "Using Search instead of View for this task");
       mLowMagConSet = SEARCH_CONSET;

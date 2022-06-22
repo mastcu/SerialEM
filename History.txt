@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/22/22: SEM_4-0-8
+6/22/22: Fixed tasks using Search instead of View when View has a field of
+view below the criterion but they have the same mag (In 4.0).
+
 5/28/22: When reading from or reopening a montage with whole rows or columns
 skipped, the program will treat it as having the full originally specified
 size for consistency with when it was initially open.  Instructions for
