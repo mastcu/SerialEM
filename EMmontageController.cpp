@@ -2252,10 +2252,9 @@ int EMmontageController::SavePiece()
         mActualErrorX[mPieceIndex] += mActualErrorX[lower] - idir * xPeak;
         mActualErrorY[mPieceIndex] += mActualErrorY[lower] + idir * yPeak;
         nSum++;
-        if (ixy)
-          mAdjustedOverlaps[1] = mParam->yOverlap + B3DNINT(yPeak);
-        else
-          mAdjustedOverlaps[0] = mParam->xOverlap - B3DNINT(xPeak);
+        mAdjustedOverlaps[ixy] = mParam->yOverlap + B3DNINT(yPeak);
+        mExpectedShiftsX[ixy] = idir * xPeak;
+        mExpectedShiftsY[ixy] = -idir * yPeak;
       }
       if (idir) {
         mUpperShiftX[2 * lower + ixy] = -xPeak;
@@ -4249,7 +4248,8 @@ int EMmontageController::FindPieceForRealigning(int pieceX, int pieceY)
   }
   if (iy < 0)
     return -1;
-  SEMTrace('1', "Realigning to piece %d %d for piece %d %d (adjusted X %d)", ix, iy, xorig, pieceY, pieceX);
+  SEMTrace('1', "Realigning to piece %d %d for piece %d %d (adjusted X %d)", ix, iy, 
+    xorig, pieceY, pieceX);
   return PieceIndexFromXY(ix, iy);
 }
 
@@ -4713,6 +4713,10 @@ int EMmontageController::MapParamsToAutodoc(void)
   if (mUsingMultishot) {
     errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_ADJ_OVERLAPS,
       mAdjustedOverlaps[0], mAdjustedOverlaps[1]);
+    errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_XEDGE_EXPECT,
+      mExpectedShiftsX[0], mExpectedShiftsY[0]);
+    errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_YEDGE_EXPECT,
+      mExpectedShiftsX[1], mExpectedShiftsY[1]);
   }
 
   // SetValue returns 1 for error, all the Adoc sets return -1

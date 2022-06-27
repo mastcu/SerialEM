@@ -114,6 +114,8 @@ class EMmontageController
   MultiShotParams *mMultiShotParams;
   bool mUsingMultishot;
   int mAdjustedOverlaps[2];
+  float mExpectedShiftsX[2];
+  float mExpectedShiftsY[2];
   int mAction;
   int mNumActions;
 
