@@ -6866,8 +6866,12 @@ int CEMscope::CheckApertureKind(int kind)
   CString str;
   if (!sInitialized)
     return 1;
+  if (HitachiScope && kind != 2) {
+    SEMMessageBox("Aperture kind must be 2 for a Hitachi scope");
+    return 1;
+  }
   if (!JEOLscope) {
-    SEMMessageBox("Aperture movement is available only a JEOL");
+    SEMMessageBox("Aperture movement is not available on a Thermo/FEI scope");
     return 1;
   }
   if (kind < 0 || kind > 11 || (!mJeolHasExtraApertures && (kind < 1 || kind > 6))) {
@@ -6879,8 +6883,8 @@ int CEMscope::CheckApertureKind(int kind)
   return 0;
 }
 
-#define CHECK_APERTURE_KIND(k) (!sInitialized || !JEOLscope || k < 0 || k > 11 || \
-    (!mJeolHasExtraApertures && (k < 1 || k > 6)))
+#define CHECK_APERTURE_KIND(k) (!sInitialized || FEIscope || (JEOLscope &&  (k < 0 || \
+  k > 11 || (!mJeolHasExtraApertures && (k < 1 || k > 6)))) || (HitachiScope && k != 2))
 
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)
@@ -6954,12 +6958,14 @@ int CEMscope::RemoveAperture(int kind)
   int size = GetApertureSize(kind);
   if (size < 0)
     return 1;
-  if (!GetAperturePosition(kind, mSavedAperturePosX[kind], 
-    mSavedAperturePosY[kind]))
-    return 2;
-  mSavedApertureSize[kind] = size;
-  SEMTrace('1', "RemoveAperture %d: size %d, at %f  %f", kind, size, 
-    mSavedAperturePosX[kind], mSavedAperturePosY[kind]);
+  if (!HitachiScope) {
+    if (!GetAperturePosition(kind, mSavedAperturePosX[kind],
+      mSavedAperturePosY[kind]))
+      return 2;
+    mSavedApertureSize[kind] = size;
+    SEMTrace('1', "RemoveAperture %d: size %d, at %f  %f", kind, size,
+      mSavedAperturePosX[kind], mSavedAperturePosY[kind]);
+  }
   if (!SetApertureSize(kind, 0))
     return 1;
   return 0;
@@ -6972,19 +6978,24 @@ int CEMscope::ReInsertAperture(int kind)
   int retval = 0;
   if (CheckApertureKind(kind))
     return 1;
-  if (!mPlugFuncs->SetApertureSize || !mPlugFuncs->SetAperturePosition)
+  if (!mPlugFuncs->SetApertureSize || (!HitachiScope && !mPlugFuncs->SetAperturePosition))
     return 3;
-  if (mSavedApertureSize[kind] < 0) {
-    str.Format("No size and position has been saved for aperture number %d by the "
-      "function to remove an aperture", kind);
-    SEMMessageBox(str);
-    return 2;
+  if (HitachiScope) {
+    mApertureTD.actionFlags = APERTURE_SET_SIZE;
+    mApertureTD.sizeOrIndex = 1;
+  } else {
+    if (mSavedApertureSize[kind] < 0) {
+      str.Format("No size and position has been saved for aperture number %d by the "
+        "function to remove an aperture", kind);
+      SEMMessageBox(str);
+      return 2;
+    }
+    mApertureTD.actionFlags = APERTURE_SET_SIZE | APERTURE_SET_POS;
+    mApertureTD.sizeOrIndex = mSavedApertureSize[kind];
+    mApertureTD.posX = mSavedAperturePosX[kind];
+    mApertureTD.posY = mSavedAperturePosY[kind];
   }
-  mApertureTD.actionFlags = APERTURE_SET_SIZE | APERTURE_SET_POS;
   mApertureTD.apIndex = kind;
-  mApertureTD.sizeOrIndex = mSavedApertureSize[kind];
-  mApertureTD.posX = mSavedAperturePosX[kind];
-  mApertureTD.posY = mSavedAperturePosY[kind];
   if (StartApertureThread("reinserting aperture "))
     retval = 4;
   mSavedApertureSize[kind] = -1;
