@@ -6362,9 +6362,9 @@ void CParameterIO::UserSetProperty(void)
       "command");
   }
   if (ivalIn > -1000000000)
-    PrintfToLog("Property %s set to %d\n", (LPCTSTR)name, ival);
+    PrintfToLog("Property %s set to %d", (LPCTSTR)name, ival);
   if (fvalIn > EXTRA_VALUE_TEST)
-    PrintfToLog("Property %s set to %f\n", (LPCTSTR)name, fval);
+    PrintfToLog("Property %s set to %f", (LPCTSTR)name, fval);
 }
 #undef INT_PROP_TEST
 #undef BOOL_PROP_TEST

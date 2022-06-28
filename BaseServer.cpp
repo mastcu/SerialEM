@@ -99,6 +99,7 @@ int CBaseServer::StartSocket(int sockInd)
     Cleanup(sockInd);
     return 2;
   }
+  mCloseForExit[sockInd] = false;
 
   // Is this an appropriate priority here?
   //SetThreadPriority(mHSocketThread, THREAD_PRIORITY_HIGHEST);
@@ -138,6 +139,7 @@ void CBaseServer::ShutdownSocket(int sockInd)
       TerminateThread(mHSocketThread[sockInd], 1);
     }
     CloseHandle(mHSocketThread[sockInd]);
+    mHSocketThread[sockInd] = NULL;
   } else {
     CloseClient(sockInd);
     closesocket(mHListener[sockInd]);
