@@ -1615,7 +1615,10 @@ void CCameraSetupDlg::ManageCamera()
       ShowDlgItem(IDC_RDE_SUPERRES, false);
       ShowDlgItem(IDC_STAT_DEMODE, false);
     }
-    ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign || 
+
+    ShowDlgItem(IDC_STAT_DEFPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
+    ShowDlgItem(IDC_EDIT_DE_FPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
+    ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign ||
       (mParam->CamFlags & DE_CAM_CAN_ALIGN));
     if (mParam->CamFlags && DE_NORM_IN_SERVER)
        ReplaceWindowText(&m_butDESaveFrames, "single", "raw");

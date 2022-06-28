@@ -103,6 +103,7 @@ BOOL CDERefMakerDlg::OnInitDialog()
     ShowDlgItem(IDC_RLINEAR_REF, false);
     ShowDlgItem(IDC_RSUPER_RES_REF, false);
     B3DCLAMP(m_iProcessingType, 1, 2);
+    m_editRefFPS.EnableWindow(false);
   }
   if (version >= DE_HAS_API2) {
     B3DCLAMP(m_iProcessingType, 0, 1);

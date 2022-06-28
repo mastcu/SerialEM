@@ -6066,7 +6066,7 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int
   int diff;
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
   int operation = 0;
-  if (camParam->DE_camType >= 2) {
+  if (camParam->DE_camType >= 2 && mTD.DE_Cam) {
     if (mTD.DE_Cam->GetServerVersion() < DE_ROI_IS_ON_CHIP)
       operation = mTD.DE_Cam->OperationForRotateFlip(camParam->DE_ImageRot,
         camParam->DE_ImageInvertX);
@@ -9358,7 +9358,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (nameConfirmed) {
         mStartedExtraForDEalign = !mFalconHelper->AlignFramesFromFile(
           mExtraDeferred->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip,
-          mTD.DivideBy2, (float)mTD.CountScaling, ix, &mTD);
+          mTD.DivideBy2, mTD.DE_Cam->GetLastCountScaling(), ix, &mTD);
 
         if (mStartedExtraForDEalign) {
           mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
