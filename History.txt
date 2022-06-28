@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/28/22: For DE Apollo camera, made frames per second read-only, fixed getting
+name of frame file, and fixed count scaling when aligning images.  Also fixed
+determining status of saving with 2.5 server (In 4.0).
+
 6/22/22: SEM_4-0-8
 6/22/22: Fixed tasks using Search instead of View when View has a field of
 view below the criterion but they have the same mag (In 4.0).
