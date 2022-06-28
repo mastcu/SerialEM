@@ -43,6 +43,11 @@ Protection Cover Delay (milliseconds)
 Protection Cover Operation Mode
 Sensor Hardware Binning   2.5 -> Binning Mode
 Sensor Hardware ROI       2.5 -> ROI Mode
+Autosave Movie - Frames Written in Last Exposure (before 2.5)
+Autosave Integrated Movie Frames Written (2.5 on)
+Autosave Counting Movie Frames Written (2.5 on)
+Autosave Movie - Completed  (before 2.5)
+Autosave Status   (2.5 on)
 Sensor Module SN
 Sensor Readout Delay (milliseconds)
 Server Software Version
@@ -51,6 +56,8 @@ Temperature - Detector (Celsius)
 Temperature - Water Line (Celsius)
 Temperature Control                 2.5 -> Temperature - Control
 Temperature Control - Setpoint (Celsius)  2.5 -> Temperature - Cool Down Setpoint (Celsius)
+Autosave Previous Dataset Name (2.3 - 2.4)
+Dataset Name (2.5 on)
 
 
 These are only referred to by these globals in the header file
