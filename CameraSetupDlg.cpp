@@ -923,6 +923,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
   // For DE camera, set checkboxes by the flags and the appropriate sum count and FPS
   // for the mode, and save the starting values of FPS
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
+    if (mParam->CamFlags & DE_APOLLO_CAMERA)
+      mCurSet->saveFrames &= ~DE_SAVE_SINGLE;
     m_bDEsaveMaster = (mCurSet->saveFrames & DE_SAVE_MASTER) != 0;
     m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_SINGLE) != 0;
     m_bDEsaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
@@ -1618,6 +1620,8 @@ void CCameraSetupDlg::ManageCamera()
 
     ShowDlgItem(IDC_STAT_DEFPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
     ShowDlgItem(IDC_EDIT_DE_FPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
+    m_butDESaveFrames.ShowWindow((mParam->CamFlags & DE_APOLLO_CAMERA) ? 
+      SW_HIDE : SW_SHOW);
     ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign ||
       (mParam->CamFlags & DE_CAM_CAN_ALIGN));
     if (mParam->CamFlags && DE_NORM_IN_SERVER)
