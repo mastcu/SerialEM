@@ -547,6 +547,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         getIntProperty(psADUsPerElectron, mElecCountsScaled);
       else
         mElecCountsScaled = 16;
+      getFloatProperty("Frames Per Second", mCamParams[camIndex].DE_FramesPerSec);
+      mCamParams[camIndex].DE_CountingFPS = mCamParams[camIndex].DE_FramesPerSec;
     } else if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
       getIntProperty(psCountsPerElec, mElecCountsScaled);
 
@@ -743,8 +745,14 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw)
+    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw) {
+      /*if (mServerVersion >= DE_HAS_API2)
+        ret1 = mDeServer->setProperty("Autosave Single Frames", saveRaw ? "On" : "Off");
+      else*/
       ret1 = mDeServer->setProperty("Autosave Raw Frames", saveRaw ? psSave : psNoSave);
+      if (!ret1)
+        mWinApp->AppendToLog(ErrorTrace("Error setting save raw/single"));
+    }
     if (setSaves || ((mLastSaveFlags & DE_SAVE_FINAL) ? 1 : 0) != saveFinal)
       ret3 = mDeServer->setProperty("Autosave Final Image", saveFinal ? psSave :psNoSave);
     if (setSaves || ((mLastSaveFlags & DE_SAVE_SUMS) ? 1 : 0) != saveSums)
@@ -753,7 +761,7 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
     if (saveSums && (mLastSumCount < 0 || !mTrustLastSettings || 
       mLastSumCount != sumCount)) {
         if (mNormAllInServer)
-          ret4 = justSetIntProperty(B3DCHOICE(counting, 
+          ret4 = justSetIntProperty(B3DCHOICE(counting && !IsApolloCamera(), 
             "Electron Counting - Dose Fractionation Number of Frames", 
             DE_PROP_AUTOMOVIE"Sum Count"), sumCount);
         else
@@ -1985,6 +1993,8 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
   CameraParameters *camP = mCamParams + 
     (mInitializingIndex >= 0 ? mInitializingIndex : mCurCamIndex);
   bool apollo = (camP->CamFlags & DE_APOLLO_CAMERA) != 0;
+  if (apollo)
+    return 0;
   SEMTrace('D', "cam index %d  flags %x", mCurCamIndex, camP->CamFlags);
   int readoutDelay = (int)floor(1000. / value);
   CSingleLock slock(&m_mutex);
@@ -2116,13 +2126,16 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
 
     // Try to use new property and fall back to what it is maybe supposed to be
     if (mServerVersion >= DE_RETURNS_FRAME_PATH) {
-      if (mDeServer->getProperty(mLastElectronCounting > 0 ?
+      if (mDeServer->getProperty(mLastElectronCounting > 0 && !IsApolloCamera() ?
         "Autosave Counted Movie Frames File Path" :
         "Autosave Integrated Movie Frames File Path", &valStr) && valStr.length() > 0) {
         str = valStr.c_str();
       } else {
-        str += mLastElectronCounting > 0 ? "_counted_frames.mrc" : 
-          "_integrated_frames.mrc";
+        if (IsApolloCamera())
+          str += "_integrated_movie.mrc";
+        else
+          str += mLastElectronCounting > 0 ? "_counted_frames.mrc" :
+            "_integrated_frames.mrc";
       }
 
     } else {
@@ -2146,8 +2159,12 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
     // Get the number of frames saved if name was actually gotten
     extra->mNumSubFrames = 0;
     if (nameConfirmed) {
-      str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? DE_PROP_AUTOMOVIE 
-        : (saveSums ? DE_PROP_AUTOSUM : DE_PROP_AUTORAW));
+      if (mServerVersion >= DE_HAS_API2)
+        str.Format("Autosave %s Movie Frames Written", mLastElectronCounting > 0 && 
+          !IsApolloCamera() ? "Counted" : "Integrated");
+      else
+        str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? 
+          DE_PROP_AUTOMOVIE : (saveSums ? DE_PROP_AUTOSUM : DE_PROP_AUTORAW));
       getIntProperty(str, extra->mNumSubFrames);
     }
   } else if (mLastElectronCounting > 0)
@@ -2175,7 +2192,11 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
   int currentDate = ctdt.GetYear() * 10000 + ctdt.GetMonth() * 100 + ctdt.GetDay();
   name = "";
   mLastPredictedSetName= "";
-  str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? DE_PROP_AUTOMOVIE 
+  if (mServerVersion >= DE_HAS_API2)
+    str.Format("Autosave %s Movie Frames Written", mLastElectronCounting > 0 &&
+      !IsApolloCamera() ? "Counted" : "Integrated");
+  else
+    str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? DE_PROP_AUTOMOVIE
     : (saveSums ? DE_PROP_AUTOSUM : DE_PROP_AUTORAW));
   numStr = (LPCTSTR)str;
   if (slock.Lock(1000)) {
@@ -2189,13 +2210,25 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
 
     // Timeout is set only for new server, so wait for savingto be completed
     if (timeout > 0) {
-      valStr = "Not Yet";
-      while (valStr == "Not Yet" && SEMTickInterval(startTime) < 1000. * timeout)
-        mDeServer->getProperty(DE_PROP_AUTOMOVIE"Completed", &valStr);
+      if (mServerVersion >= DE_HAS_API2) {
+        valStr = "In Progress";
+        while (valStr != "Finished" && SEMTickInterval(startTime) < 1000. * timeout) {
+          mDeServer->getProperty("Autosave Status", &valStr);
+          SleepMsg(100);
+        }
+
+      } else {
+        valStr = "Not Yet";
+        while (valStr == "Not Yet" && SEMTickInterval(startTime) < 1000. * timeout) {
+          mDeServer->getProperty(DE_PROP_AUTOMOVIE"Completed", &valStr);
+          SleepMsg(100);
+        }
+      }
     }
 
-    if (mDeServer->getProperty(mServerVersion >= DE_AUTOSAVE_RENAMES1 ? 
-      "Autosave Previous Dataset Name" : "Autosave Frames - Previous Dataset Name",
+    if (mDeServer->getProperty(B3DCHOICE(mServerVersion > DE_HAS_API2, "Dataset Name",
+      mServerVersion >= DE_AUTOSAVE_RENAMES1 ? 
+      "Autosave Previous Dataset Name" : "Autosave Frames - Previous Dataset Name"),
       &valStr) && valStr.length() > 0) {
 
         // Valid name: return it and save the time and store the two numeric components
@@ -2241,6 +2274,13 @@ void DirectElectronCamera::VerifyLastSetNameIfPredicted(float timeout)
       "differs from what was assumed and reported (%s)", (LPCTSTR)str, 
       (LPCTSTR)predictedSave);
   mLastPredictedSetName = "";
+}
+
+float DirectElectronCamera::GetLastCountScaling()
+{
+  if (mLastNormCounting && mElecCountsScaled > 0)
+    return mCountScaling / mElecCountsScaled;
+  return mCountScaling;
 }
 
 

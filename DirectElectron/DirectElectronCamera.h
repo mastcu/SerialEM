@@ -231,6 +231,7 @@ public:
     const char *propStr, const char *messStr);
   bool GetPreviousDatasetName(float timeout, int ageLimitSec, bool predictName, CString &name);
   void VerifyLastSetNameIfPredicted(float timeout);
+  float GetLastCountScaling();
 
 private:
 	int mCamType;
