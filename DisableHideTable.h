@@ -109,6 +109,8 @@ static DisableHideItem sDisableHideList[] =
   {"MontControl - Prescan", 2, 0, IDC_BTRIAL},
   // Filter Control panel   (hiding will leave empty space)
   {"FilterControl - TEM screen down", 2, 0, IDC_AUTOMAG},
+  // STEM Control panel   (hiding will leave empty space)
+  {"STEMControl - TEM screen down", 2, 0, IDC_SCREEN_SWITCH_STEM},
   // Montage Setup Dialog
   {"MontSetupDlg - Piece size", 2, 1, IDC_EDITXSIZE},
   {"MontSetupDlg - Overlap", 2, 1, IDC_EDITXOVERLAP},
