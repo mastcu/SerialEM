@@ -1507,7 +1507,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
       cdc.SelectObject(pOldPen);
 
       // Draw circle around center for area being defined
-      if (!type)
+      if (!type && !mWinApp->GetSTEMMode())
         DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset, 
           cenY + yOffset, radius, true);
     }
