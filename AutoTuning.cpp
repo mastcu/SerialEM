@@ -1233,7 +1233,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   bool iterating = false;
   CtfBasedCalib calUse;
   CString suggest = "You may need more exposure time, a different binning, or more "
-    "structure or carbon in the field of view.\n%s" + CString(mCtfComaFree ? "Try less "
+    "structure or carbon in the field of view.\n" + CString(mCtfComaFree ? "Try less "
       "beam tilt if the Thon rings are not visible on the long axis in beam-tilted "
       "images." : "");
 
