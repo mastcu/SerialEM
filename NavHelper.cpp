@@ -339,8 +339,8 @@ void CNavHelper::InitAcqActionFlags(bool opening)
         setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_RUN_IT, 0);
 
       // Manage Check dewars
-      setFlag = !(FEIscope || (JEOLscope && mScope->GetJeolHasNitrogenClass()) ||
-        mScope->GetHasSimpleOrigin());
+      setFlag = !(FEIscope || (JEOLscope && mScope->GetJeolHasNitrogenClass() && 
+        mScope->GetDewarVacCapabilities() > 0) || mScope->GetHasSimpleOrigin());
       setOrClearFlags(&actions[NAACT_CHECK_DEWARS].flags, NAA_FLAG_ALWAYS_HIDE,
         setFlag ? 1 : 0);
       if (setFlag)
