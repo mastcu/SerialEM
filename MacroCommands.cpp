@@ -7324,6 +7324,8 @@ int CMacCmd::RefrigerantLevel(void)
   if (JEOLscope && (mItemInt[1] < 0 || mItemInt[1] > 2))
     ABORT_LINE("Dewar number must be between 0 and 2 in: \n\n");
   if (!mScope->GetRefrigerantLevel(mItemInt[1], delX)) {
+    if (JEOLscope && GetDebugOutput('1'))
+      SEMMessageBox("Script halted due to failure in RefrigerantLevel");
     AbortMacro();
     return 1;
   }
@@ -7338,6 +7340,8 @@ int CMacCmd::DewarsRemainingTime(void)
   int index;
 
   if (!mScope->GetDewarsRemainingTime(0, index)) {
+    if (JEOLscope && GetDebugOutput('1'))
+      SEMMessageBox("Script halted due to failure in DewarsRemainingTime");
     AbortMacro();
     return 1;
   }
@@ -7359,6 +7363,8 @@ int CMacCmd::AreDewarsFilling(void)
   int index;
 
   if (!mScope->AreDewarsFilling(index)) {
+    if (JEOLscope && GetDebugOutput('1'))
+      SEMMessageBox("Script halted due to failure in AreDewarsFilling");
     AbortMacro();
     return 1;
   }
