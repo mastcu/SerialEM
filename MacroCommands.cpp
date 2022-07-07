@@ -4439,6 +4439,8 @@ int CMacCmd::ImageShiftByPixels(void)
 
   delISX = bInv.xpx * index + bInv.xpy * index2;
   delISY = bInv.ypx * index + bInv.ypy * index2;
+  if (TestIncrementalImageShift(delISX, delISY))
+    return 0;
   if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
     !mItemEmpty[3], mItemDbl[3], report))
     ABORT_LINE(report);
@@ -4454,6 +4456,8 @@ int CMacCmd::ImageShiftByUnits(void)
 
   delISX = mItemDbl[1];
   delISY = mItemDbl[2];
+  if (TestIncrementalImageShift(delISX, delISY))
+    return 0;
   if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
     !mItemEmpty[3], mItemDbl[3], report))
     ABORT_LINE(report);
@@ -4481,6 +4485,8 @@ int CMacCmd::ImageShiftByMicrons(void)
   bInv = mShiftManager->MatInv(aMat);
   delISX = bInv.xpx * delX + bInv.xpy * delY;
   delISY = bInv.ypx * delX + bInv.ypy * delY;
+  if (TestIncrementalImageShift(delISX, delISY))
+    return 0;
   if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
     !mItemEmpty[3], mItemDbl[3], report))
     ABORT_LINE(report);
@@ -4502,6 +4508,8 @@ int CMacCmd::ImageShiftByStageDiff(void)
   bInv = MatMul(aMat, mShiftManager->CameraToIS(index));
   mShiftManager->ApplyScaleMatrix(bInv, mItemFlt[1] * backlashX,
     mItemFlt[2] *backlashY, delISX, delISY);
+  if (TestIncrementalImageShift(delISX, delISY))
+    return 0;
   if (AdjustBTApplyISSetDelay(delISX, delISY, mItemInt[4],
     !mItemEmpty[3], mItemDbl[3], report))
     ABORT_LINE(report);
@@ -4746,6 +4754,14 @@ int CMacCmd::SetImageShift(void)
 
   delX = mItemDbl[1];
   delY = mItemDbl[2];
+  if (!mShiftManager->ImageShiftIsOK(delX, delY, false)) {
+    mLogRpt.Format("Image shift %.3f %.3f is bigger than the limit and is not being done",
+      delX, delY);
+    SetReportedValues(1.);
+    return 0;
+  }
+  SetReportedValues(0.);
+
   truth = mItemInt[4];
   if (truth)
     mScope->GetLDCenteredShift(delISX, delISY);
@@ -4808,6 +4824,27 @@ int CMacCmd::ReportImageShift(void)
     mLogRpt += report;
   }
   SetRepValsAndVars(1, delX, delY, delISX, delISY, stageX, stageY);
+  return 0;
+}
+
+// ReportTiltAxisOffset
+int CMacCmd::ReportTiltAxisOffset(void)
+{
+  float ISX, ISY, stageX, stageY, offset = mScope->GetTiltAxisOffset();
+  ScaleMat aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex(), mCurrentCam);
+  if (!aMat.xpx)
+    ABORT_LINE("There is no image shift to specimen matrix available for line:\n\n");
+  aMat = mShiftManager->MatInv(aMat);
+  ISX = aMat.xpy * offset;
+  ISY = aMat.ypy * offset;
+  aMat = mShiftManager->SpecimenToStage(1., 1.);
+  stageX = -aMat.xpy * offset;
+  stageY = -aMat.ypy * offset;
+  mLogRpt.Format("Tilt axis offset %.3f um, %.3f %.3f stage units, %.3f %.3f IS units, %s"
+    " applied", offset, stageX, stageY, ISX, ISY, mScope->GetShiftToTiltAxis() ? 
+    "IS BEING" : "is NOT being");
+  SetRepValsAndVars(1, offset, stageX, stageY, ISX, ISY, mScope->GetShiftToTiltAxis() ? 
+    1 : 0);
   return 0;
 }
 
@@ -5427,16 +5464,21 @@ int CMacCmd::ReportStageBAxis(void)
 // ReportMag
 int CMacCmd::ReportMag(void)
 {
-  int index, index2;
+  int index, index2, mode = 0;
 
   index2 = mScope->GetMagIndex();
+  if (mWinApp->GetEFTEMMode())
+    mode = 1;
+  if (mWinApp->GetSTEMMode())
+    mode = 2;
 
   // This is not right if the screen is down and FEI is not in EFTEM
   index = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), index2, mScope->GetSTEMmode());
-  mLogRpt.Format("Mag is %d%s", index,
-    index2 < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
+  mLogRpt.Format("Mag is %d%s%s", index,
+    index2 < mScope->GetLowestNonLMmag() ? "   (Low mag)":"",
+    B3DCHOICE(mode, mode > 1 ? "   STEM" : "   EFTEM", ""));
   SetRepValsAndVars(1, (double)index,
-    index2 < mScope->GetLowestNonLMmag() ? 1. : 0.);
+    index2 < mScope->GetLowestNonLMmag() ? 1. : 0., mode);
   return 0;
 }
 
@@ -6332,26 +6374,52 @@ int CMacCmd::ImageLowDoseSet(void)
   return 0;
 }
 
-// MeasureBeamSize
+// MeasureBeamSize, MeasureBeamPosition
 int CMacCmd::MeasureBeamSize(void)
 {
   CString report;
-  int index, index2, ix0, ix1;
-  float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY, fitErr;
+  int index, binning, ix0, numQuad;
+  float xcen, ycen, xcenUse, ycenUse, radUse, fracUse, radius, shiftX, shiftY, fitErr;
+  float pixel;
 
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
     ABORT_LINE(report);
-  ix0 = mProcessImage->FindBeamCenter(&mImBufs[index], backlashX, backlashY,
-    cpe, bmin, bmax, bmean, bSD, index2, ix1, shiftX, shiftY, fitErr);
+  ix0 = mProcessImage->FindBeamCenter(&mImBufs[index], xcen, ycen,
+    radius, xcenUse, ycenUse, radUse, fracUse, binning, numQuad, shiftX, shiftY, fitErr);
   if (ix0)
     ABORT_LINE("No beam edges were detected in image for line:\n\n");
-  bmean = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
-  if (!bmean)
-    ABORT_LINE("No pixel size is available for the image for line:\n\n");
-  cpe *= 2.f * index2 * bmean;
-  mLogRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error %.3f"
-    , cpe, ix1, fitErr);
-  SetReportedValues(cpe, ix1, fitErr);
+  if (CMD_IS(MEASUREBEAMPOSITION)) {
+    xcen = (float)(xcen * binning - mImBufs[index].mImage->getWidth() / 2.);
+    ycen = (float)(ycen * binning - mImBufs[index].mImage->getHeight() / 2.);
+    mLogRpt.Format("Beam offset from image center measured to be %.1f  %.1f pixels, from"
+      " %d quadrants, fit error %.3f", xcen, ycen, numQuad, fitErr);
+    SetReportedValues(xcen, ycen, numQuad, fitErr);
+  } else {
+    pixel = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
+    if (!pixel)
+      ABORT_LINE("No pixel size is available for the image for line:\n\n");
+    radius *= 2.f * binning * pixel;
+    mLogRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error"
+      " %.3f", radius, numQuad, fitErr);
+    SetReportedValues(radius, numQuad, fitErr);
+  }
+  return 0;
+}
+
+// MeasureBeamEllipse
+int CMacCmd::MeasureBeamEllipse(void)
+{
+  CString report;
+  int index;
+  float xcen, ycen, longAxis, shortAxis, angle;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  if (mProcessImage->FindEllipticalBeamParams(&mImBufs[index], xcen, ycen, longAxis,
+    shortAxis, angle))
+    ABORT_LINE("Image analysis failed for line:\n\n");
+  mLogRpt.Format("Offset %.1f %.1f pixels, long and short axes %.1f and %.1f pixels, "
+    "long axis at %.1f degrees", xcen, ycen, longAxis, shortAxis, angle);
+  SetReportedValues(xcen, ycen, longAxis, shortAxis, angle);
   return 0;
 }
 
@@ -8824,6 +8892,125 @@ int CMacCmd::SetNavItemUserValue(void)
     }
     SetOneReportedValue(mStrCopy, 1);
   }
+  return 0;
+}
+
+// DeleteNavigatorItem
+int CMacCmd::DeleteNavigatorItem(void)
+{
+  int index;
+  CMapDrawItem *navItem;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  mNavigator->ExternalDeleteItem(navItem, index);
+  if (!mItemInt[2])
+    mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
+// AddImagePosAsNavPoint, AddImagePointsAsPolygon
+int CMacCmd::AddImagePosAsNavPoint(void)
+{
+  CString report;
+  int index, numX, retVal = 0;
+  bool draw = true;
+  float stageZ;
+  float *xArray = NULL, *yArray = NULL;
+  ABORT_NONAV;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  if (mItemEmpty[4] || mItemFlt[4] < -900.) {
+    if (!mImBufs[index].GetStageZ(stageZ))
+      ABORT_LINE("The image buffer has no stage Z value for line:\n\n");
+  } else {
+    stageZ = mItemFlt[4];
+  }
+  if (CMD_IS(ADDIMAGEPOSASNAVPOINT)) {
+    draw = mItemInt[6] == 0;
+    if (mNavigator->AddImagePositionOnBuffer(&mImBufs[index], mItemFlt[2], mItemFlt[3],
+      stageZ, mItemInt[5])) {
+      report = "The image does not have adequate coordinate information to add a point";
+      retVal = 1;
+    }
+  } else {
+    draw = mItemInt[5] == 0;
+    retVal = GetPairedFloatArrays(2, &xArray, &yArray, numX, report);
+    if (!retVal && mNavigator->AddPolygonFromImagePositions(&mImBufs[index], xArray,
+      yArray, numX, stageZ)) {
+      report = "The image does not have adequate coordinate information to add a point";
+      retVal = 1;
+    }
+
+    delete[] xArray, yArray;
+  }
+  if (retVal)
+    ABORT_LINE(report + " in line:\n\n");
+  if (draw)
+    mWinApp->mMainView->DrawImage();
+  SetReportedValues(mNavigator->GetNumberOfItems());
+  return 0;
+}
+
+// AdjustStagePosForNav
+int CMacCmd::AdjustStagePosForNav(void)
+{
+  float stageX = mItemFlt[1];
+  float stageY = mItemFlt[2];
+  double ISX = mItemEmpty[3] ? 0. : mItemDbl[3];
+  double ISY = mItemEmpty[4] ? 0. : mItemDbl[4];
+  int camera = mCurrentCam;
+  int magInd = (mItemEmpty[6] || mItemInt[6] < 0) ? mScope->FastMagIndex() : mItemInt[6];
+  float tilt = mItemEmpty[7] ? (float)mScope->FastTiltAngle() : mItemFlt[7];
+  ABORT_NONAV;
+  if (!mItemEmpty[5] && mItemInt[5] >= 0) {
+    if (mItemInt[5] < 1 || mItemInt[5] > mWinApp->GetActiveCamListSize())
+      ABORT_LINE("The active camera number is out of range in line:\n\n");
+    camera = mActiveList[mItemInt[5] - 1];
+  }
+  mNavigator->ConvertIStoStageIncrement(magInd, camera, ISX, ISY, tilt, stageX, stageY);
+  mLogRpt.Format("Adjusted stage position %.3f  %.3f", stageX, stageY);
+  SetReportedValues(stageX, stageY);
+  return 0;
+}
+
+// AddStagePosAsNavPoint, AddStagePointsAsPolygon
+int CMacCmd::AddStagePosAsNavPoint(void)
+{
+  CString report;
+  bool draw = true;
+  float *xArray = NULL, *yArray = NULL;
+  int numPts, retVal;
+  ABORT_NONAV;
+  if (CMD_IS(ADDSTAGEPOSASNAVPOINT)) {
+    draw = mItemInt[5] == 0;
+    mNavigator->AddItemFromStagePositions(&mItemFlt[1], &mItemFlt[2], 1, mItemFlt[3],
+      mItemInt[4]);
+  } else {
+    draw = mItemInt[4] == 0;
+    retVal = GetPairedFloatArrays(1, &xArray, &yArray, numPts, report);
+    if (!retVal)
+      mNavigator->AddItemFromStagePositions(xArray, yArray, numPts, mItemFlt[3], 0);
+    delete[] xArray, yArray;
+    if (retVal)
+      ABORT_LINE(report + " in line:\n\n");
+  }
+
+  if (draw)
+    mWinApp->mMainView->DrawImage();
+  SetReportedValues(mNavigator->GetNumberOfItems());
+  return 0;
+}
+
+// GetUniqueNavID
+int CMacCmd::GetUniqueNavID(void)
+{
+  int ID;
+  ABORT_NONAV;
+  ID = mNavigator->MakeUniqueID();
+  SetRepValsAndVars(1, ID);
   return 0;
 }
 

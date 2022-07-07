@@ -2482,7 +2482,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportMag</TD>
-          <TD>Reports the current mag; also sets <I>reportedValue2</I> to 1 if low mag mode, 0 if not</TD>
+          <TD>Reports the current mag; also sets <I>reportedValue2</I> to 1 if low mag mode, 0 if not,
+            and <i>reportedValue3</i> to 1 if in EFTEM, 2 if in STEM mode, or 0 otherwise.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportMagIndex</TD>
@@ -2709,22 +2711,31 @@
         <TR>
           <TD class="scriptcommand">ImageShiftByPixels #X #Y [#D] [#A]</TD>
           <TD>Changes image shift by given <b>#</b> of unbinned pixels in camera X and Y; optional <b>#D</b>
-            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
+            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just 
+            described.&nbsp; As of SerialEM 4.1, 6/29/22, the shift is tested for staying within 
+            the standard limit and not done if the limited would be exceeded;
+            <i>reportedValue1</i> is set to 0 if it is within limits or 1 if it is not.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageShiftByUnits #X #Y&nbsp; [#D] [#A]</TD>
           <TD>Changes image shift by given <b>#</b> of IS units in X &amp; Y; optional <b>#D</b> and <b>#A</b> provide settling time
-            and beam-tilt adjustment for the image shift as just described.</TD>
+            and beam-tilt adjustment for the image shift as just described.&nbsp; The shift is tested and 
+            <i>reportedValue1</i> is set as for 'ImageShiftByPixels'.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageShiftByMicrons #X #Y [#D] [#A]</TD>
           <TD>Changes image shift by given distance on specimen (X is tilt axis); optional <b>#D</b>
-            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
+            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just 
+            described.&nbsp; The shift is tested and 
+            <i>reportedValue1</i> is set as for 'ImageShiftByPixels'</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageShiftByStageDiff #X #Y [#D] [#A]</TD>
           <TD>Changes image shift by the equivalent of the given stage shift in X and Y; optional <b>#D</b>
-            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
+            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just 
+            described.&nbsp; The shift is tested and 
+            <i>reportedValue1</i> is set as for 'ImageShiftByPixels'</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportImageShift</TD>
@@ -2740,6 +2751,12 @@
           <TD>Reports the image shift, as just described, in the &quot;specimen&quot; coordinates used
             internally by the program, which are coordinates in microns with X along the tilt
             axis.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportTiltAxisOffset</TD>
+          <TD>Reports the tilt axis offset in microns, which is a single value in 'specimen' coordinates, 
+            plus the corresponding X and Y stage units, X and Y IS units, and 1 or 0 
+            for whether the user option to shift to tilt axis is selected&nbsp; Command adding in 4.1, 6/29/22.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
@@ -3563,6 +3580,20 @@
             the buffer given by the optional <b>buf</b>.&nbsp; The value is reported in microns.</TD>
         </TR>
        <TR>
+          <TD class="scriptcommand">MeasureBeamPosition [buf]</TD>
+          <TD>Measures the beam position by detecting its edges in the image in buffer A, or in
+            the buffer given by the optional <b>buf</b>.&nbsp; Reports the X and Y offset of the position 
+            from image center in pixels (Y inverted), the number of quadrant with points found, and the 
+            fitting error.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MeasureBeamEllipse [buf]</TD>
+          <TD>Reports the offset from the center (with Y inverted), the long and shirt axis lengths, and the angle
+            of the long axis (counterclockwise from the X axis) for an elliptical beam, using the 
+            centroid and second moments of image pixels above a threshold.&nbsp; The beam should be completely
+            within the image for the measurement to be valid.&nbsp; Command added in 4.1, 7/6/22.</TD>
+        </TR>
+       <TR>
           <TD class="scriptcommand">BacklashAdjust</TD>
           <TD>Runs the routine to adjust for backlash by taking an image, applying the current montaging
              backlash, and aligning a new image to the original image.</TD>
@@ -4091,6 +4122,63 @@
             multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
             the parameters is set to zero.&nbsp; Command added in 4.0, 1/28/22.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetUniqueNavID</TD>
+          <TD>Creates an ID value unique from any current Navigator items and places it in <i>reportedValue1</i>;
+             it can be assigned to a variable after the command.&nbsp; The ID can be used with 
+            'AddStagePosAsNavPoint' and 'AddImagePosAsNavPoint' to assign multiple points to a 
+            group.&nbsp; Command added in 4.1, 7/6/22</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AdjustStagePosForNav #SX #SY [#IX #IY] [#C] [#M] [#T]</TD>
+          <TD>Adjusts a stage position <B>#SX</B>, <B>#SY</B> so that it is suitable for assigning to a Navigator item, 
+            accounting for the optional image shift values in <b>#IX></b>, <b>#IY</b>, with possible
+             adjustments for tilt axis offset and image shift offsets. and a tilt angle given in the 
+            optional <b>#T</b>.&nbsp; These adjustments depend on the active camera number, which can be entered
+            <b>#C</b> (numbered from 1, use -1 for current camera), on the magnification index, which can be
+            entered with <b>#M</b> (use -1 for current magnification), and on the tilt angle, which can be entered
+            with <b>#T</b> and defaults to the current angle.&nbsp; Command added in 4.0, 1/28/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddStagePosAsNavPoint #X #Y #Z [#I] [#D]</TD>
+          <TD>Adds a single stage position in <B>#X</B>, <B>#Y</B>, adjusted with 'AdjustStagePosForNav', as a 
+            Navigator point item with the Z value given by <b>#Z</b>.&nbsp; A group ID can be assigned 
+            with the optional <b>#I</b>, otherwise it will be 0.&nbsp; The optional <b>#D</b> can be set
+            non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
+            the new item.&nbsp; Command added in 4.0, 1/28/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddStagePointsAsPolygon xvar yvar #Z [#D]</TD>
+          <TD>Adds the adjusted stage positions in two arrays, <b>xvar</b> and <b>yvar</b>, as a polygon
+            item.&nbsp; The Z position must be supplied in <b>#Z</b>.&nbsp; The optional <b>#D</b> can be set
+            non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
+            the new item.&nbsp; Command added in 4.0, 1/28/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddImagePosAsNavPoint buf #X #Y [#Z] [#I] [#D]</TD>
+          <TD>Adds a new Navigator point item with the position <B>#X</B>, <B>#Y</B> (Y inverted) in the image in buffer
+            <b>buf</b>, with Z taken the stage Z position of the image, or from the optional <b>#Z</b> if it is greater
+             than -990.&nbsp; If the image is a montage, the position must be valid for the way that it is currently
+             displayed, i.e., with regular, very sloppy, or no alignment.&nbsp; A group ID can be assigned
+             with the optional <b>#I</b>, otherwise it will be 0.&nbsp; The optional <b>#D</b> can be set
+            non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
+            the new item.&nbsp; Command added in 4.0, 1/28/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddImagePointsAsPolygon buf xvar yvar [#Z] [#D]</TD>
+          <TD>Adds the image positions on the buffer <b>buf</b> in two arrays, <b>xvar</b> and <b>yvar</b> 
+            (Y inverted) as a polygon
+            item.&nbsp; The points for 'AddImagePosAsNavPoint' about image alignment, Z position, drawing, 
+            and <i>reportedValue1</i> apply here.&nbsp; Command added in 4.0, 1/28/22.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">DeleteNavigatorItem #</TD>
+          <TD>Removes the Navigator item specified by <b>#I</b>
+            (positive for table index, 0 for current item, or negative for index from
+            end; this command cannot be used while acquiring.&nbsp; Command added in 4.0, 1/28/22.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>
