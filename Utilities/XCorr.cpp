@@ -1109,6 +1109,42 @@ void ProcCentroid(void *array, int type, int nx, int ny, int ix0, int ix1,
   ycen = ysum / wsum;
 }
 
+// Macro for ProcMomentsAboveThreshold
+#define MOMENT_SUMS(tnam, data, typ) \
+    case tnam:  \
+data = (typ *)array + nx * iy + ix0; \
+for (ix = ix0; ix <= ix1; ix++) {  \
+  if (*data++ > thresh) {  \
+    M11 += (iy - ycen) * (ix - xcen);  \
+    M20 += (iy - ycen) * (iy - ycen);  \
+    M02 += (ix - xcen) * (ix - xcen);  \
+  }   \
+}  \
+break;
+
+// Compute unweighted second order moments of pixels above threshold in the given image
+void ProcMomentsAboveThreshold(void *array, int type, int nx, int ny, int ix0, int ix1,
+  int iy0, int iy1, double thresh, float xcen, float ycen, double &M11,
+  double &M20, double &M02)
+{
+  int ix, iy;
+  unsigned char *bdata;
+  short int *sdata;
+  unsigned short int *usdata;
+  float *fdata;
+  M11 = 0.;
+  M20 = 0.;
+  M02 = 0.;
+  for (iy = iy0; iy <= iy1; iy++) {
+    switch (type) {
+      MOMENT_SUMS(BYTE, bdata, unsigned char);
+      MOMENT_SUMS(SIGNED_SHORT, sdata, short int);
+      MOMENT_SUMS(UNSIGNED_SHORT, usdata, unsigned short int);
+      MOMENT_SUMS(FLOAT, fdata, float);
+    }
+  }
+}
+
 // These two routines are switched from expectations because Y is inverted
 // Byte and int data are both returned as int, float is returned as float
 // and rgb is returned as rgb
@@ -1869,7 +1905,7 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
       // Go through one more time to get gradient across 3 steps
       if (gotCross == 2) {
         if (mean3 > -1.e9)
-          grad[numPts++] = boxMean - mean3;
+          grad[numPts++] = B3DMAX(0., boxMean - mean3);
         break;
       } else if (gotCross)
         gotCross = 2;

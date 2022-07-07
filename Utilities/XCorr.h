@@ -42,6 +42,9 @@ void DLL_IM_EX ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, 
 					 int iy0, int iy1, float *mean, float *min, float *max, float *sd);
 void DLL_IM_EX ProcCentroid(void *array, int type, int nx, int ny, int ix0, int ix1,
 					 int iy0, int iy1, double baseval, float &xcen, float &ycen, double thresh = 1.e30);
+void DLL_IM_EX ProcMomentsAboveThreshold(void *array, int type, int nx, int ny, int ix0, int ix1,
+  int iy0, int iy1, double thresh, float xcen, float ycen, double &M11,
+  double &M20, double &M02);
 void DLL_IM_EX ProcRotateLeft(void *array, int type, int nx, int ny, short int *brray);
 void DLL_IM_EX ProcRotateRight(void *array, int type, int nx, int ny, short int *brray);
 void DLL_IM_EX ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, int shiftY,
