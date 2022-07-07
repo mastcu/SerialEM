@@ -1216,10 +1216,7 @@ void CNavigatorDlg::OnCheckAcquire()
   mItem->mAcquire = m_bAcquire;
   if (!m_bAcquire)
     mHelper->EndAcquireOrNewFile(mItem);
-  ManageCurrentControls();
-  UpdateListString(mCurrentItem);
-  SetChanged(true);
-  Redraw();
+  UpdateForCurrentItemChange();
   if (m_bAcquire)
     AddFocusAreaPoint(false);
 }
@@ -1273,11 +1270,8 @@ void CNavigatorDlg::OnCheckTiltSeries()
   } else if (mItem->mTSparamIndex >= 0 && !m_bTiltSeries) {
     mHelper->EndAcquireOrNewFile(mItem);
   }
-  SetChanged(true);
   mWinApp->RestoreViewFocus();
-  ManageCurrentControls();
-  UpdateListString(mCurrentItem);
-  Redraw();
+  UpdateForCurrentItemChange();
   AddFocusAreaPoint(false);
 }
 
@@ -2014,11 +2008,8 @@ void CNavigatorDlg::OnAddStagePos()
   CheckRawStageMatches();
   mScope->GetValidXYbacklash(mLastScopeStageX, mLastScopeStageY, item->mBacklashX, 
     item->mBacklashY);
-  UpdateListString(mCurrentItem);
-  SetChanged(true);
+  UpdateForCurrentItemChange();
   mWinApp->RestoreViewFocus();
-  ManageCurrentControls();
-  Redraw();
 }
 
 // Update the current point with the current stage position
@@ -2344,11 +2335,8 @@ void CNavigatorDlg::OnAddMarker()
   item->mPieceDrawnOn = pcInd;
   item->mXinPiece = xInPiece;
   item->mYinPiece = yInPiece;
-  UpdateListString(mCurrentItem);
-  SetChanged(true);
+  UpdateForCurrentItemChange();
   mWinApp->RestoreViewFocus();
-  ManageCurrentControls();
-  Redraw();
 }
 
 // Function for whether it is OK to add or marker point, or go to one, for that matter
@@ -2646,36 +2634,8 @@ void CNavigatorDlg::OnDeleteitem()
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 
-  if (mItem->mAcquire || mItem->mTSparamIndex >= 0) {
-    mItem->mAcquire = false;
-    mHelper->EndAcquireOrNewFile(mItem);
-  }
-  if (mItem->IsMap() && mItem->mMapID == mDualMapID)
-    mDualMapID = -1;
+   FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
 
-  // If removing a point while adding and groups are collapsed, set item to last entry in
-  // array if it is not the only one; otherwise delete the string unless there will
-  // still be items in it for edit-mode deletion
-  if (mRemoveItemOnly && mAddingPoints && m_bCollapseGroups && mItemArray.GetSize() > 
-    mNumberBeforeAdd + 1) {
-    delIndex = (int)mItemArray.GetSize() - 1;
-    mItem = mItemArray[delIndex];
-  } else if (!multipleInGroup) {
-    m_listViewer.DeleteString(mCurListSel);
-  }
-  delete mItem;
-  mItemArray.RemoveAt(delIndex);
-  if (mCurListSel >= m_listViewer.GetCount())
-    mCurListSel--;
-  m_listViewer.SetCurSel(mCurListSel);
-  MakeListMappings();
-
-  // Set current item to beginning of group
-  IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
-  if (multipleInGroup)
-    UpdateListString(mCurrentItem);
-  SetChanged(true);
-  mSelectedItems.clear();
   delIndex = B3DMAX(0, delIndex - 1);
   if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints && 
     mCurrentItem >= 0 && mItemToList[delIndex] == mItemToList[mCurrentItem])
@@ -2710,7 +2670,6 @@ void CNavigatorDlg::OnDrawPoints()
 // Initiate polygon drawing
 void CNavigatorDlg::OnDrawPolygon() 
 {
-  float xsum = 0., ysum = 0.;
   bool addedPoints = mAddingPoly > 1;
 
   m_butDrawPoly.SetWindowText(mAddingPoly ? "Add Polygon" : "Stop Adding");
@@ -2725,12 +2684,7 @@ void CNavigatorDlg::OnDrawPolygon()
       } else if (addedPoints) {
 
         // Otherwise fix the center coordinate to be the mean of the corners
-        for (int i = 0; i < mItem->mNumPoints; i++) {
-          xsum += mItem->mPtX[i];
-          ysum += mItem->mPtY[i];
-        }
-        mItem->mStageX = xsum / mItem->mNumPoints;
-        mItem->mStageY = ysum / mItem->mNumPoints;
+        SetPolygonCenterToMidpoint(mItem);
 
         // If one point, convert to a point type; if > 2, add point for closure
         if (mItem->mNumPoints == 1)
@@ -3168,6 +3122,72 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
   TransferBacklash(imBuf, item);
   item->AppendPoint(stageX, stageY);
   return item;
+}
+
+// Add a point item from a position on an image
+int CNavigatorDlg::AddImagePositionOnBuffer(EMimageBuffer *imBuf, float imageX, 
+  float imageY, float stageZ, int groupID)
+{
+  CMapDrawItem *item;
+  ScaleMat aInv;
+  float delX, delY, stageX, stageY, xInPiece, yInPiece;
+  int pieceIndex;
+  if (!ConvertMousePoint(imBuf, imageX, imageY, stageX, stageY, aInv, delX, delY, 
+    xInPiece, yInPiece, pieceIndex))
+    return 1;
+  item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, groupID);
+  item->mPieceDrawnOn = pieceIndex;
+  item->mXinPiece = xInPiece;
+  item->mYinPiece = yInPiece;
+  item->mStageZ = stageZ;
+  UpdateForCurrentItemChange();
+  return 0;
+}
+
+// Add a polygon from an array of positions on an image
+int CNavigatorDlg::AddPolygonFromImagePositions(EMimageBuffer *imBuf, float *imageX, 
+  float *imageY, int numPts, float stageZ)
+{
+  CMapDrawItem *item;
+  ScaleMat aInv;
+  float delX, delY, stageX, stageY, xInPiece, yInPiece;
+  int pieceIndex, ind;
+  for (ind = 0; ind < numPts; ind++) {
+    if (!ConvertMousePoint(imBuf, imageX[ind], imageY[ind], stageX, stageY, aInv, delX,
+      delY, xInPiece, yInPiece, pieceIndex))
+      return 1;
+    if (!ind) {
+      item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 0);
+      item->mType = ITEM_TYPE_POLYGON;
+      item->mColor = DEFAULT_POLY_COLOR;
+      item->mStageZ = stageZ;
+    } else {
+      item->AppendPoint(stageX, stageY);
+    }
+  }
+  SetPolygonCenterToMidpoint(item);
+  UpdateForCurrentItemChange();
+  return 0;
+}
+
+// Add either a point or a polygon from stage positions
+void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int numPts,
+  float stageZ, int groupID)
+{
+  int ind;
+  CMapDrawItem *item = MakeNewItem(groupID);
+  item->mStageX = stageX[0];
+  item->mStageY = stageY[0];
+  item->mStageZ = stageZ;
+  for (ind = 0; ind < numPts; ind++)
+    item->AppendPoint(stageX[ind], stageY[ind]);
+  if (numPts > 1) {
+    item->mType = ITEM_TYPE_POLYGON;
+    item->mColor = DEFAULT_POLY_COLOR;
+    SetPolygonCenterToMidpoint(item);
+  }
+
+  UpdateForCurrentItemChange();
 }
 
 // Delete points on backspace if drawing polygon, adding points, or in Edit mode
@@ -3984,6 +4004,10 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
       xFrame = mFrameLimitX / binning;
       yFrame = mFrameLimitY / binning;
     }
+    if (mParam->fitMontWithFullFrames < 0 && xNframes == 1 && yNframes == 1) {
+      xFrame = mFrameLimitX / binning;
+      yFrame = mFrameLimitY / binning;
+    }
 
     // If image shift, evaluate the maximum extent and either accept or restore overlap
     if (!which) {
@@ -4552,10 +4576,7 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
     ptY = stageY + (float)(radius * sin(theta));
     item->AppendPoint(ptX, ptY);
   }
-  UpdateListString(mCurrentItem);
-  SetChanged(true);
-  ManageCurrentControls();
-  Redraw();
+  UpdateForCurrentItemChange();
 }
 
 // Add regular grid of points based on a template and/or in a polygon
@@ -6555,12 +6576,9 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     }
   }
   
-  UpdateListString(mCurrentItem);
-  SetChanged(true);
-  ManageCurrentControls();
   mWinApp->UpdateBufferWindows();
   mWinApp->mActiveView->NewImageScale();
-  Redraw();
+  UpdateForCurrentItemChange();
 
   // Determine if backlash setting is needed
   delX = mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
@@ -10347,6 +10365,93 @@ CMapDrawItem *CNavigatorDlg::MakeNewItem(int groupID)
   return item;
 }
 
+// Perform common steps for some forms of deleting an item
+void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int listInd,
+  bool multipleInGroup, int groupStart)
+{
+  bool isCurrentInList = listInd == mCurListSel;
+  if (item->mAcquire || item->mTSparamIndex >= 0) {
+    item->mAcquire = false;
+    mHelper->EndAcquireOrNewFile(item);
+  }
+  if (item->IsMap() && item->mMapID == mDualMapID)
+    mDualMapID = -1;
+
+  // If removing a point while adding and groups are collapsed, set item to last entry in
+  // array if it is not the only one; otherwise delete the string unless there will
+  // still be items in it for edit-mode deletion
+  if (mRemoveItemOnly && mAddingPoints && m_bCollapseGroups && mItemArray.GetSize() >
+    mNumberBeforeAdd + 1) {
+    delIndex = (int)mItemArray.GetSize() - 1;
+    item = mItemArray[delIndex];
+  } else if (!multipleInGroup) {
+    m_listViewer.DeleteString(listInd);
+  }
+  delete item;
+
+  mItemArray.RemoveAt(delIndex);
+  MakeListMappings();
+  if (!isCurrentInList) {
+    if (listInd < mCurListSel && !multipleInGroup) {
+      mCurListSel--;
+      mCurrentItem--;
+    }
+    if (multipleInGroup)
+      UpdateListString(groupStart);
+  }
+  if (mCurListSel >= m_listViewer.GetCount())
+    mCurListSel--;
+  m_listViewer.SetCurSel(mCurListSel);
+
+  // Set current item to beginning of group
+  if (isCurrentInList) {
+    IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
+    if (multipleInGroup)
+      UpdateListString(mCurrentItem);
+  }
+  SetChanged(true);
+  mSelectedItems.clear();
+}
+
+// External call to delete an item
+void CNavigatorDlg::ExternalDeleteItem(CMapDrawItem *item, int delIndex)
+{
+  int groupStart, groupEnd, listInd = delIndex;
+  bool multipleInGroup = false;
+  if (delIndex < 0 || delIndex >= mItemArray.GetSize())
+    return;
+  if (m_bCollapseGroups) {
+    multipleInGroup = LimitsOfContiguousGroup(delIndex, groupStart, groupEnd) > 1;
+    listInd = mItemToList[delIndex];
+  }
+  FinishSingleDeletion(item, delIndex, listInd, multipleInGroup, groupStart);
+  ManageCurrentControls();
+  Redraw();
+}
+
+// Compute the bounding box of a polygon and set the stage position to the midpoint
+void CNavigatorDlg::SetPolygonCenterToMidpoint(CMapDrawItem * item)
+{
+  float xmin = 1.e10, ymin = xmin, xmax = -xmin, ymax = -ymin;
+  for (int i = 0; i < item->mNumPoints; i++) {
+    ACCUM_MIN(xmin, item->mPtX[i]);
+    ACCUM_MAX(xmax, item->mPtX[i]);
+    ACCUM_MIN(ymin, item->mPtY[i]);
+    ACCUM_MAX(ymax, item->mPtY[i]);
+  }
+  item->mStageX = (xmin + xmax) / 2.f;
+  item->mStageY = (ymin + ymax) / 2.f;
+}
+
+// Common operations needed after adding an item or some operations on current item
+void CNavigatorDlg::UpdateForCurrentItemChange()
+{
+  UpdateListString(mCurrentItem);
+  SetChanged(true);
+  ManageCurrentControls();
+  Redraw();
+}
+
 // Make an ID number based on two random numbers and higher than a minimum value and
 // not already in the set; add to set
 int CNavigatorDlg::MakeUniqueID(void)
@@ -11182,13 +11287,16 @@ void CNavigatorDlg::IStoXYandAdvance(int &direction)
 }
 
 // Returns the index of first and last item in the same group as the given item and in
-// a contiguous set of items in same group
+// a contiguous set of items in same group; return value is number in that group
 int CNavigatorDlg::LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd)
 {
   CMapDrawItem *item;
   int ind, groupID;
   item = mItemArray.GetAt(itemInd);
   groupID = item->mGroupID;
+  groupStart = groupEnd = itemInd;
+  if (!groupID)
+    return 1;
   for (ind = itemInd; ind >= 0; ind--) {
     item = mItemArray.GetAt(ind);
     if (item->mGroupID == groupID)

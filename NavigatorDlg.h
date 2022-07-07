@@ -121,6 +121,11 @@ public:
 	int MoveStage(int axisBits, bool justCheck = false);
 	void SetCurrentStagePos(int index);
 	CMapDrawItem *MakeNewItem(int groupID);
+  void FinishSingleDeletion(CMapDrawItem *item, int delIndex, int listInd, 
+    bool multipleInGroup, int groupStart);
+  void ExternalDeleteItem(CMapDrawItem *item, int delIndex);
+  void SetPolygonCenterToMidpoint(CMapDrawItem *item);
+  void UpdateForCurrentItemChange();
 	void OnListItemDrag(int oldIndex, int newIndex);
 	void SetRegPtNum(int inVal);
 	int GetFreeRegPtNum(int registration, int proposed);
@@ -625,6 +630,9 @@ public:
   afx_msg void OnShowAcquireArea();
   CMapDrawItem *AddPointMarkedOnBuffer(EMimageBuffer * imBuf, float stageX, float stageY,
     int groupID);
+  int AddImagePositionOnBuffer(EMimageBuffer * imBuf, float imageX, float imageY, float stageZ, int groupID);
+  int AddPolygonFromImagePositions(EMimageBuffer * imBuf, float *imageX, float *imageY, int numPts, float stageZ);
+  void AddItemFromStagePositions(float *imageX, float *imageY, int numPts, float stageZ, int groupID);
   bool OKtoAddMarkerPoint(void);
   void UpdateAddMarker(void);
   bool RawStageIsRevisable(bool fastStage);
