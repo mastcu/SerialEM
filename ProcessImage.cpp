@@ -1310,47 +1310,12 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
   float xcen, ycen, radius, xcenUse, ycenUse, radUse, fracUse;
   int binning, err, numQuadrant;
+  double d1, d2, d3;
 
   if (useCentroid) {
-    KImage *image = imBuf->mImage;
-    float nSample = 10000.;
-    float matt = 0.1f;
-    int ix0, ix1, iy0, iy1;
-    int nx = image->getWidth();
-    int ny = image->getHeight();
-    image->Lock();
-    void *data = image->getData();
-    int type = image->getType();
-    double mean, border = 1.e20;
-
-    // Compute the mean on the 4 edges, outer 1/16 of field; use the lowest
-    ix0 = nx / 16;
-    ix1 = nx - ix0;
-    iy0 = ny / 16;
-    iy1 = ny - iy0;
-    border = ProcImageMean(data, type, nx, ny, 0, ix0 -1, 0, ny - 1);
-    mean = ProcImageMean(data, type, nx, ny, ix1, nx -1, 0, ny - 1);
-    border = B3DMIN(border, mean);
-    mean = ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, 0, iy0 - 1);
-    border = B3DMIN(border, mean);
-    mean = ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, iy1, ny - 1);
-    border = B3DMIN(border, mean);
-
-    // This had no merit.  It would work if the border could be defined to exclude 
-    // points outside the beam reliably, but without that it gives those points more
-    // weight by downweighting the points inside the beam.
-    /*KImageScale::PctStretch((char *)data, type, nx, ny, nSample, matt, 1.f, 1.f, &xcen, 
-      &cenPeak);
-    thresh = border + threshFrac * (cenPeak - border); */
-
-    // Get centroid and use it to shift
-    ProcCentroid(data, type, nx, ny, 0, nx -1 , 0, ny - 1, border, xcen, ycen);
-    shiftX = (float)(nx / 2. - xcen);
-    shiftY = (float)(ny / 2. - ycen);
+    GetCentroidOfBuffer(imBuf, xcen, ycen, shiftX, shiftY, false, d1, d2, d3);
     MoveBeam(imBuf, shiftX, shiftY, maxMicronShift);
     mMoveBeamStamp = imBuf->mTimeStamp;
-    image->UnLock();
-    return 0;
   }
 
   // Or analyze from beam edges
@@ -1374,6 +1339,61 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
     mMoveBeamStamp = imBuf->mTimeStamp;
   }
   return err;
+}
+
+// Common routine to get the centroid of a buffer and, optionally, determine the second
+// order moments
+void CProcessImage::GetCentroidOfBuffer(EMimageBuffer *imBuf, float &xcen, float &ycen,
+  float &shiftX, float &shiftY, bool doMoments, double &M11, double &M20, double &M02)
+{
+  KImage *image = imBuf->mImage;
+  float nSample = 10000.;
+  float matt = 0.1f;
+  int ix0, ix1, iy0, iy1;
+  int nx = image->getWidth();
+  int ny = image->getHeight();
+  image->Lock();
+  void *data = image->getData();
+  int type = image->getType();
+  double mean, border = 1.e20;
+
+  // Compute the mean on the 4 edges, outer 1/16 of field; use the lowest
+  ix0 = nx / 16;
+  ix1 = nx - ix0;
+  iy0 = ny / 16;
+  iy1 = ny - iy0;
+  border = ProcImageMean(data, type, nx, ny, 0, ix0 - 1, 0, ny - 1);
+  mean = ProcImageMean(data, type, nx, ny, ix1, nx - 1, 0, ny - 1);
+  border = B3DMIN(border, mean);
+  mean = ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, 0, iy0 - 1);
+  border = B3DMIN(border, mean);
+  mean = ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, iy1, ny - 1);
+  border = B3DMIN(border, mean);
+
+  // This had no merit.  It would work if the border could be defined to exclude 
+  // points outside the beam reliably, but without that it gives those points more
+  // weight by downweighting the points inside the beam.
+  /*KImageScale::PctStretch((char *)data, type, nx, ny, nSample, matt, 1.f, 1.f, &xcen,
+  &cenPeak);
+  thresh = border + threshFrac * (cenPeak - border); */
+
+  // Get centroid
+  ProcCentroid(data, type, nx, ny, 0, nx - 1, 0, ny - 1, border, xcen, ycen);
+  if (doMoments) {
+
+    // For moments, we want to eliminate the periphery more reliably, so get a mean in 
+    // the center, set a threshold halfway up, and get new centroid FWIW
+    ix0 = B3DMIN(ix0, iy0) / 2;
+    mean = ProcImageMean(data, type, nx, ny, B3DNINT(xcen) - ix0, B3DNINT(xcen) + ix0,
+      B3DNINT(ycen) - ix0, B3DNINT(ycen) + ix0);
+    border = 0.5 * (border + mean);
+    ProcCentroid(data, type, nx, ny, 0, nx - 1, 0, ny - 1, border, xcen, ycen);
+    ProcMomentsAboveThreshold(data, type, nx, ny, 0, nx - 1, 0, ny - 1, border, xcen,
+      ycen, M11, M20, M02);
+  }
+  shiftX = (float)(nx / 2. - xcen);
+  shiftY = (float)(ny / 2. - ycen);
+  image->UnLock();
 }
 
 void CProcessImage::OnUpdateTasksCenterbeam(CCmdUI *pCmdUI)
@@ -1730,6 +1750,36 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   shiftX = (float)(binning * fracUse * delX);
   shiftY = (float)(binning * fracUse * delY);
 
+  return 0;
+}
+
+// Find the parameters of an elliptical area from the second moments
+int CProcessImage::FindEllipticalBeamParams(EMimageBuffer *imBuf, float &xcen, 
+  float &ycen, float &longAxis, float &shortAxis, float &axisAngle)
+{
+  float shiftX, shiftY;
+  double M11, M02, M20, lambda1, lambda2, discr;
+  double pi4inv = 4. / 3.1415927;
+
+  GetCentroidOfBuffer(imBuf, xcen, ycen, shiftX, shiftY, true, M11, M20, M02);
+  if (!M11 || !M20 || !M02) {
+    PrintfToLog("One of the computed moments for finding elliptic parameters is 0:"
+      " %f %f %f", M11, M20, M02);
+    return 1;
+  }
+
+  // This is directly from IMOD except we are doubling the axes and inverting angle
+  discr = sqrt(4. * M11 * M11 + (M02 - M20) * (M02 - M20));
+  lambda1 = (M02 + M20 + discr) / 2.;
+  lambda2 = (M02 + M20 - discr) / 2.;
+  axisAngle = -(float)(atan2(M11, lambda1 - M20) / RADIANS_PER_DEGREE);
+  if (axisAngle < 0.)
+    axisAngle += 180.;
+
+  longAxis = 2.f * (float)exp((log(pi4inv * pi4inv / lambda2) + 3. * log(lambda1)) / 8.);
+  shortAxis = 2.f * (float)pow(pi4inv * lambda2 / longAxis, 0.3333333);
+  xcen = -shiftX;
+  ycen = -shiftY;
   return 0;
 }
 
