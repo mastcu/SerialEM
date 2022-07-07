@@ -2462,6 +2462,26 @@ float *CMacroProcessor::FloatArrayFromVariable(CString name, int &numVals,
   return fvalues;
 }
 
+// Get two float arrays from variables with names at itemInd and itemInd + 1, where they
+// are required to have equal numbers of values.
+int CMacroProcessor::GetPairedFloatArrays(int itemInd, float **xArray, float **yArray,
+  int &numVals, CString &report)
+{
+  int numY, retVal = 0;
+  *xArray = FloatArrayFromVariable(mStrItems[itemInd], numVals, report);
+  if (*xArray)
+    *yArray = FloatArrayFromVariable(mStrItems[itemInd + 1], numY, report);
+  if (!*xArray || !*yArray) {
+    retVal = 1;
+  } else {
+    if (numVals != numY) {
+      report = "The two arrays do not have the same number of values";
+      retVal = 1;
+    }
+  }
+  return retVal;
+}
+
 // This checks for the array assignment delimiter being at both ends of the set of
 // string items starting from firstInd, and strips it from the set of items
 // Returns -1 for unbalanced delimiter, 0 for none, 1 for array
@@ -4108,6 +4128,21 @@ int CMacroProcessor::AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL 
   return 0;
 }
 
+// Tests whether a prospective image shift is within limits
+int CMacroProcessor::TestIncrementalImageShift(double delX, double delY)
+{
+  CString str;
+  if (!mShiftManager->ImageShiftIsOK(delX, delY, true)) {
+    str.Format("Image shift by %.3f %.3f would exceed the limit and is not being done", 
+      delX, delY);
+    mWinApp->AppendToLog(str, mLogAction);
+    SetReportedValues(1.);
+    return 1;
+  }
+  SetReportedValues(0.);
+  return 0;
+}
+
 // Saves a control set in the stack if it has not been saved already
 void CMacroProcessor::SaveControlSet(int index)
 {
@@ -4183,7 +4218,7 @@ CMapDrawItem *CMacroProcessor::CurrentOrIndexedNavItem(int &index, CString &strL
   else {
     index = mWinApp->mNavigator->GetCurrentOrAcquireItem(item);
     if (index < 0) {
-      ABORT_NORET_LINE("There is no current Navigator item for line:\n\n.");
+      ABORT_NORET_LINE("There is no current Navigator item for line:\n\n");
       return NULL;
     }
   }

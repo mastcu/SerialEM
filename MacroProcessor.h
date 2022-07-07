@@ -520,6 +520,7 @@ public:
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
   bool AdjustBeamTiltAndAstig(double delISX, double delISY, double &BTX, double &BTY, double &astigX, double &astigY);
   int AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message);
+  int TestIncrementalImageShift(double delISX, double delISY);
   afx_msg void OnOpenEditorsOnStart();
   afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
   void TransferOneLiners(bool fromDialog);
@@ -551,6 +552,7 @@ public:
   int DoStageRelaxation(double delx);
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
   float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
+  int GetPairedFloatArrays(int itemInd, float **xArray, float **yArray, int &numVals, CString & report);
   afx_msg void OnScriptLoadNewPackage();
   int LoadNewScriptPackage(CString &filename, bool saveCurrent);
   void UpdateAllForNewScripts(bool oneLinersToo);
