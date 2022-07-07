@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/6/22: SEM_4-0-9
+7/6/22: Fixed test in Navigator Acquire for whether call to find out if
+flashing is advised failed (In 4.0).
+
 6/28/22: Fixed not being able to reenable external Python control (In 4.0).
 
 6/28/22: Made script commands for dewar levels give a message box on JEOL if

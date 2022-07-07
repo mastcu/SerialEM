@@ -3836,10 +3836,12 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
         montParam->useViewInLowDose = true;
         continue;
       }
-      AfxMessageBox(err == 2 ? "The amount of overlap between frames required to do a "
-        "montage with stage\nmovement is too high (more than half the frame size) at this"
-        " magnification" : "This area would require more than the\n allowed number of "
-        "montage pieces", MB_EXCLAME);
+      AfxMessageBox(err == 2 ? "The amount of overlap between frames required to do a\n"
+        "montage with stage movement is too high (more than half the frame size) at this"
+        " magnification.\nOpen the Montage Setup dialog from the File menu,\nselect"
+        " \"Move stage\", reduce the minimum overlap in microns, press OK, and Cancel in"
+        " the next dialog." : "This area would require more than the\n allowed number"
+        " of montage pieces", MB_EXCLAME);
       if (!montDlg)
         mDocWnd->RestoreCurrentFile();
       mMontItem = NULL;
@@ -9415,7 +9417,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         if (ind)
           mScope->SetDoNextFEGFlashHigh(true);
       }
-      if (!ind && mScope->GetIsFlashingAdvised(0, ind)) {
+      if (!ind && !mScope->GetIsFlashingAdvised(0, ind)) {
         StopAcquiring();
         return;
       }
