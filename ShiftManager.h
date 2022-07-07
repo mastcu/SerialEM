@@ -164,6 +164,7 @@ public:
   GetSetMember(float, HitachiStageSpecAngle);
   GetMember(BOOL, MouseShifting);
   SetMember(float, NextAutoalignLimit);
+  GetSetMember(int, UseSquareShiftLimits);
   CArray<RotStretchXform, RotStretchXform> *GetRotXforms() {return &mRotXforms;};
   STEMinterSetShifts *GetSTEMinterSetShifts() {return &mInterSetShifts;};
   CArray<HighFocusMagCal, HighFocusMagCal> *GetFocusMagCals() {return &mFocusMagCals;};
@@ -191,6 +192,7 @@ private:
   EMbufferManager *mBufferManager;
   float mRegularShiftLimit;    // Limit of image shift on specimen in regular mags
   float mLowMagShiftLimit;     // Limit of image shift on specimen in low mag (LM)
+  int mUseSquareShiftLimits;      // Flag to apply these limits to each axis separately
   int mMaxNumPeaksToEval;      // Maximum number to evaluate
   float mPeakStrengthToEval;   // Minimum fraction of highest peak strength to evaluate
   float *mPeakHere;            // Temporary arrays for peak data

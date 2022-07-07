@@ -2722,6 +2722,14 @@
             some but not all situations. The default is 150 microns.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UseSquareShiftLimits</TD>
+          <TD>Set to 1 to test each axis of image shift separately against the limit on 
+            image shift, or 0 to convert the whole image shift into distance on the specimen 
+            and test that radial distance against the limit (the behavior before SerialEM 
+            4.1).&nbsp; The default is 1 for Hitachi and JEOL scopes, Krios, and other 
+            FEI/Thermo scopes with access to advanced scripting.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>MaxCalibrationImageShift</TD>
           <TD>Maximum image shift change when calibrating image shift</TD>
         </TR>
@@ -3982,7 +3990,9 @@
             bigger; with 2, the overlap is increased as much as possible to keep the
             captured area the same.&nbsp; For a number between 1 and 2, the value minus 1 is the
             fraction of the extra area per frame used to increase overlap instead of
-            captured area.</TD>
+            captured area.&nbsp; Set to a negative value to use the full frame size only when the
+            montage consists of a singe frame in X and Y.
+          </TD>
         </TR>
       </TABLE>
       <BR>

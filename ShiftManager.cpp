@@ -112,6 +112,7 @@ CShiftManager::CShiftManager()
   mLastAlignXTrimA = mLastAlignXTrimRef = mLastAlignYTrimA = mLastAlignYTrimRef = 0;
   for (int i = 0; i < 5; i++)
     mInterSetShifts.binning[i] = 0;
+  mUseSquareShiftLimits = -1;
 }
 
 CShiftManager::~CShiftManager()
@@ -192,6 +193,12 @@ void CShiftManager::Initialize()
     mStartupForISDelays = 0.25f;
   }
 
+  if (mUseSquareShiftLimits < 0) {
+    mUseSquareShiftLimits = 0;
+    if (!FEIscope || mScope->GetUseIllumAreaForC2() ||
+      mScope->GetAdvancedScriptVersion() > 0)
+      mUseSquareShiftLimits = 1;
+  }
 }
 
 // Sets the max # of peaks and minimum peak strength to retain and evaluate by correlation
@@ -3280,6 +3287,8 @@ ScaleMat CShiftManager::MatScaleRotate(ScaleMat aMat, float scale, float rotatio
 BOOL CShiftManager::ImageShiftIsOK(double newX, double newY, BOOL incremental)
 {
   double oldX, oldY;
+  ScaleMat cMat;
+  float specX, specY;
   int magInd = mScope->FastMagIndex();
   float limit = magInd >= mScope->GetLowestNonLMmag() 
     ? mRegularShiftLimit : mLowMagShiftLimit;
@@ -3290,6 +3299,21 @@ BOOL CShiftManager::ImageShiftIsOK(double newX, double newY, BOOL incremental)
     newY += oldY;
   }
   
+  if (mUseSquareShiftLimits) {
+    cMat = IStoSpecimen(magInd);
+    if (cMat.xpx == 0.)
+      return true;
+
+    // Test specimen distance on each axis separately
+    specX = newX * cMat.xpx;
+    specY = newX * cMat.ypx;
+    if (sqrt(specX * specX + specY * specY) >= limit)
+      return false;
+    specX = newY * cMat.xpy;
+    specY = newY * cMat.ypy;
+    return (sqrt(specX * specX + specY * specY) < limit);
+  }
+
   // Compute distance in specimen plane and compare to its limit
   return (RadialShiftOnSpecimen(newX, newY, magInd) < limit);
 }
