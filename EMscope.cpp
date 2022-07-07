@@ -6870,7 +6870,7 @@ int CEMscope::CheckApertureKind(int kind)
     SEMMessageBox("Aperture kind must be 2 for a Hitachi scope");
     return 1;
   }
-  if (!JEOLscope) {
+  if (FEIscope) {
     SEMMessageBox("Aperture movement is not available on a Thermo/FEI scope");
     return 1;
   }
