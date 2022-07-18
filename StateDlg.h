@@ -43,6 +43,7 @@ private:
   bool mAdjustingPanels;
   bool mWarnedSharedParams;
   bool mWarnedNoMontMap;
+  bool mRemindedToGoTo;
   int mCamOfSetState;
 
 public:

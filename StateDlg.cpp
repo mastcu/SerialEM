@@ -34,6 +34,7 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
   mInitialized = false;
   mWarnedSharedParams = false;
   mWarnedNoMontMap = false;
+  mRemindedToGoTo = false;
   mCamOfSetState = -1;
   mNonModal = true;
 }
@@ -406,8 +407,12 @@ void CStateDlg::OnButSetImState()
     return;
   }
   area = mHelper->AreaFromStateLowDoseValue(mParam, &setNum);
-  PrintfToLog("%s%s parameters set from state # %d  %s", area < 0 ? "" : "Low dose ",
-    names[setNum], mCurrentItem + 1, (LPCTSTR)mParam->name);
+  PrintfToLog("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
+    names[setNum], mCurrentItem + 1, (LPCTSTR)mParam->name, 
+    (area >= 0 && !mRemindedToGoTo) ? " (Press the Go To button in Low Dose to set the "
+    "scope state)" : "");
+  if (area >= 0)
+    mRemindedToGoTo = true;
   if (setNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
     setNum = VIEW_CONSET;
   if (setNum == VIEW_CONSET && mWinApp->GetUseViewForSearch() && !mWarnedSharedParams) {
