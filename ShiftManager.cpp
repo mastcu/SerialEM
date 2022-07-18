@@ -3211,7 +3211,9 @@ double CShiftManager::GoodAngle(double angle)
 // Multiply two matrices: aa is matrix applied first
 ScaleMat MatMul(ScaleMat aa, ScaleMat bb)
 {
-  ScaleMat cc;
+  ScaleMat cc = {0., 0., 0., 0.};;
+  if (!aa.xpx || !bb.xpx)
+    return cc;
   cc.xpx = bb.xpx * aa.xpx + bb.xpy * aa.ypx;
   cc.xpy = bb.xpx * aa.xpy + bb.xpy * aa.ypy;
   cc.ypx = bb.ypx * aa.xpx + bb.ypy * aa.ypx;
