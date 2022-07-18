@@ -4197,6 +4197,13 @@ int CSerialEMApp::MinuteTimeStamp(void)
   return ((int)(time.GetTime() / 60));
 }
 
+int CSerialEMApp::SecondTimeStamp(void)
+{
+  CTime start(2020, 1, 1, 0, 0, 0);
+  CTime time = CTime::GetCurrentTime();
+  return (int)(time.GetTime() - start.GetTime());
+}
+
 // Draws an image just read in
 void CSerialEMApp::DrawReadInImage(void)
 {

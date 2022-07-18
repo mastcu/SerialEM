@@ -286,7 +286,7 @@ public:
   CString DateTimeForFrameSaving(void);
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
   int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);
-  CString DateTimeForTitle(void);
+  CString DateTimeForTitle(bool year4digits = false);
   afx_msg void OnFileOpenMdoc();
   afx_msg void OnFileCloseMdoc();
   afx_msg void OnUpdateFileCloseMdoc(CCmdUI *pCmdUI);

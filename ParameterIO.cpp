@@ -5266,9 +5266,8 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
           customTimes->insert(std::pair<std::string, int>(sstr, itemInt[2]));
         }
 
-      } else if (NAME_IS("LastDEdarkRefTimes")) {
-        DEdarkRefTimes[0] = itemInt[1];
-        DEdarkRefTimes[1] = itemInt[2];
+      } else if (NAME_IS("FEGFlashCount")) {
+        mWinApp->mScope->SetFegFlashCounter(itemInt[1]);
 
       } else if (ignoreCals) {
 
@@ -5467,6 +5466,9 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     }
     if (err > 0)
       mFile->WriteString(oneState + "\n");
+
+    if (mWinApp->mScope->GetScopeCanFlashFEG())
+      WriteInt("FEGFlashCount", mWinApp->mScope->GetFegFlashCounter());
     
     for (std::map<std::string, int>::iterator it = customTimes->begin();
       it != customTimes->end(); it++) {

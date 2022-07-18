@@ -9856,7 +9856,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mStageY = (float)mStageYbefore;
       extra->mStageZ = (float)mStageZbefore;
       extra->mDividedBy2 = mDivBy2ForExtra;
-      extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
+      extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle(true);
+      extra->mSecondTimeStamp = mWinApp->SecondTimeStamp();
+      if (mScope->GetScopeCanFlashFEG())
+        extra->mFlashCounter = mScope->GetFegFlashCounter();
       if (mParam->STEMcamera)
         extra->mChannelName = mParam->channelName[mTD.ChanIndOrig[chan]];
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {

@@ -1470,12 +1470,13 @@ void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numeric
 }
 
 // Return the date-time string for title format
-CString CSerialEMDoc::DateTimeForTitle(void)
+CString CSerialEMDoc::DateTimeForTitle(bool year4digits)
 {
   CString str;
+  CString format = "%02d-%s-%0" + CString(year4digits ? "4" : "2") + "d  %02d:%02d:%02d";
   CTime ctDateTime = CTime::GetCurrentTime();
-  str.Format("%02d-%s-%02d  %02d:%02d:%02d", ctDateTime.GetDay(), 
-    months[ctDateTime.GetMonth() - 1], ctDateTime.GetYear() % 100,
+  str.Format((LPCTSTR)format, ctDateTime.GetDay(),
+    months[ctDateTime.GetMonth() - 1], ctDateTime.GetYear() % (year4digits ? 10000 : 100),
     ctDateTime.GetHour(), ctDateTime.GetMinute(), ctDateTime.GetSecond());
   return str;
 }
