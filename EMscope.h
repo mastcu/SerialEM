@@ -497,6 +497,7 @@ public:
   GetMember(int, ChangedLoaderInfo);
   GetMember(int, LoadedCartridge);
   GetMember(int, UnloadedCartridge);
+  GetSetMember(int, FegFlashCounter);
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
@@ -853,6 +854,7 @@ private:
   int mChangedLoaderInfo;      // Flag to indicate info was gotten or changed
   int mUnloadedCartridge;      // Index in table of cartridge that was unloaded
   int mLoadedCartridge;        // Index in table of cartridge that was unloaded
+  int mFegFlashCounter;        // Cumulative count of FEG flashes
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

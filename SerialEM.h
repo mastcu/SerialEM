@@ -918,6 +918,7 @@ public:
   BOOL UserAcquireOK(void);
   float GetGainFactor(int camera, int binning);
   int MinuteTimeStamp(void);
+  int SecondTimeStamp(void);
   void UpdateMacroButtons(void);
   void ViewOpening(void);
   afx_msg void OnFileContinuousSave();

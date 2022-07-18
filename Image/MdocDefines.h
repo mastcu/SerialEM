@@ -44,6 +44,8 @@ MDOC_FLOAT(mCamPixSize, 0., 0., ADOC_CAM_PIXEL, "CameraPixelSize")
 MDOC_FLOAT(mVoltage, 0., 0., ADOC_VOLTAGE, "Voltage")
 MDOC_TWO_INTS(mUncroppedX, mUncroppedY, 0, ADOC_UNCROPPED, "UncroppedSize")
 MDOC_INTEGER(mRotationAndFlip, -1, ADOC_ROTFLIP, "RotationAndFlip")
+MDOC_INTEGER(mSecondTimeStamp, 0, ADOC_SEC_STAMP, "TimeStamp")
+MDOC_INTEGER(mFlashCounter, -1, ADOC_FLASH_COUNT, "FlashCounter")
 
 // DE12 items
 MDOC_STRING(mDE12Version, ADOC_DE12_VERSION, "DE12-ServerSoftwareVersion")

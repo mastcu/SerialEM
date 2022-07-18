@@ -367,6 +367,14 @@
             number and assigned to <I>reportedValue1</I>.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">TrimString var #F token</TD>
+          <TD>Trims a string in variable <B>var</B>from either the back or the front, depending on whether
+             <B>#F</B> is 0 or nonzero.&nbsp; Trimming from the back, it starts at and includes the 
+            last occurrence of <b>token</b> (one character or word without spaces).&nbsp; From 
+            the front, it trims through the first occurrence of <b>token</b>.&nbsp; The result can be assigned
+             to a variable at the end of the command.&nbsp; Command added in 4.1, 7/14/22.</TD>
+        </TR>
+        <TR>
             <TD class="scriptcommand">ListVars</TD>
             <TD>Lists all variables and their values in the log window, including reported
             values, persistent variables, and loop indices.
@@ -851,6 +859,13 @@
             camera values are numbered from 1.
              The unbinned pixel size is for the current magnification, or for the magnification
              index given by the optional <b>#M</b>.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCameraName #</TD>
+          <TD>Reports the name of the active camera <b>#</b> (numbered from 1), or of the current
+             camera if <b>#</b> is not positive.&nbsp; <i>reportedValue1</i> is set to NOCAM if
+            <b>#</b> is out of range.&nbsp; Command added in 4.1, 7/17/22.  
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDivideBy2 #</TD>

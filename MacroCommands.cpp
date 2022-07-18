@@ -6890,6 +6890,36 @@ int CMacCmd::CompareNoCase(void)
   return 0;
 }
 
+// TrimString
+int CMacCmd::TrimString(void)
+{
+  int index, index2;
+  Variable *var;
+  bool front = mItemInt[2] != 0;
+
+  var = LookupVariable(mItem1upper, index2);
+  if (!var)
+    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+
+  index = var->value.Find(mStrItems[3]);
+  if (index < 0)
+    ABORT_LINE("The string \"" + var->value + "\" does not contain \"" + mStrItems[3] +
+      "\" in line:\n\n");
+  if (front) {
+    mStrCopy = var->value.Mid(index + mStrItems[3].GetLength());
+  } else {
+    for (;;) {
+      index2 = var->value.Find(mStrItems[3], index + 1);
+      if (index2 < 0)
+        break;
+      index = index2;
+    }
+    mStrCopy = var->value.Left(index);
+  }
+  SetOneReportedValue(&mStrItems[4], mStrCopy, 1);
+  return 0;
+}
+
 // StripEndingDigits
 int CMacCmd::StripEndingDigits(void)
 {
@@ -8448,6 +8478,27 @@ int CMacCmd::CameraProperties(void)
   SetReportedValues((double)index, (double)index2,
     (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX,
     (double)actNum);
+  return 0;
+}
+
+// ReportCameraName
+int CMacCmd::ReportCameraName(void)
+{
+  CString name = "NOCAM";
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  int index = mItemInt[1];
+  if (index <= 0) {
+    mLogRpt = "The name of the current camera is ";
+    index = mWinApp->GetCurrentActiveCamera() + 1;
+  } else {
+    mLogRpt.Format("The name of active camera # %d is ", index);
+  }
+  if (index <= mWinApp->GetNumActiveCameras()) {
+    name = camParams[mActiveList[index - 1]].name;
+    mLogRpt += name;
+  } else
+    mLogRpt.Format("There is no active camera # %d", index);
+  SetOneReportedValue(&mStrItems[2], name, 1);
   return 0;
 }
 
