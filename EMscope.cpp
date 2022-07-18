@@ -518,6 +518,7 @@ CEMscope::CEMscope()
   mDewarVacParams.doChecksBeforeTask = true;
   mChangedLoaderInfo = false;
   mMaxJeolAutoloaderSlots = 17;
+  mFegFlashCounter = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -9429,6 +9430,8 @@ int CEMscope::LongOperationBusy(int index)
 
         // Record time if completed, throw error if not and error not OK
         if (mLongOpData[thread].finished[op]) {
+          if (longOp == LONG_OP_FLASH_FEG)
+            mFegFlashCounter++;
           mLastLongOpTimes[longOp] = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
         } else if (busy < 0 && !errorOK[longOp])
