@@ -659,6 +659,8 @@ MAC_SAME_NAME_ARG(AdjustStagePosForNav, 2, 5, ADJUSTSTAGEPOSFORNAV, DDddiid)
 MAC_SAME_NAME_ARG(AddStagePosAsNavPoint, 3, 5, ADDSTAGEPOSASNAVPOINT, DDDii)
 MAC_SAME_FUNC_ARG(AddStagePointsAsPolygon, 3, 4, AddStagePosAsNavPoint, ADDSTAGEPOINTSASPOLYGON, SSDi)
 MAC_SAME_NAME_NOARG(GetUniqueNavID, 0, 5, GETUNIQUENAVID)
+MAC_SAME_NAME_ARG(TrimString, 3, 4, TRIMSTRING, ISS)
+MAC_SAME_NAME_ARG(ReportCameraName, 1, 4, REPORTCAMERANAME, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
