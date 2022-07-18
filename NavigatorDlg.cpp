@@ -9534,6 +9534,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // Run a pre-macro
   case NAACT_RUN_PREMACRO:
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ?
       mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1);
     break;
@@ -9608,7 +9609,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run a post-macro
   case NAACT_RUN_POSTMACRO:
-    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ? 
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ?
       mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1);
     break;
 

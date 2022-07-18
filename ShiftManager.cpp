@@ -2483,7 +2483,10 @@ void CShiftManager::PropagateCalibratedRotations(int actCamToDo, int & derived)
             // Require calibrated rotation at a lower level of derivation than the
             // preceding IS transfer, and require IS cal
             if (iCam2 != iCam && magT[iMag].rotDerived[iCam2] < derived - 1 &&
-              magT[iMag].matIS[iCam2].xpx && !camP[iCam2].STEMcamera) {
+              magT[iMag].matIS[iCam2].xpx && !camP[iCam2].STEMcamera &&
+              (camP[iCam].GIF == camP[iCam2].GIF ||
+                BOOL_EQUIV(iMag < mScope->GetLowestMModeMagInd(camP[iCam].GIF != 0),
+                  iMag < mScope->GetLowestMModeMagInd(camP[iCam2].GIF) != 0))) {
               magT[iMag].rotation[iCam] = TransferImageRotation(
                 magT[iMag].rotation[iCam2], iCam2, iMag, iCam, iMag);
               magT[iMag].rotDerived[iCam] = derived;

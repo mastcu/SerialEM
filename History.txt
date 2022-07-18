@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/17/22: Fixed assignment of rotation to the first EFTEM non-LM magnification
+and problem calibrating first image shift when the LowestEFTEMNonLMIndex
+property is set.
+
+7/17/22: Made the year in the DateTime entry .mdoc entry be 4 digits.
+
+7/17/22: Added an integer time stamp and a FEG flash counter to the .mdoc
+file; the latter is kept in SEMshortTermCal.txt and incremented on every flash
+done by SerialEM.
+
+7/17/22: Added script commands to trim a string from the front or back up to a
+specified substring, and to report camera name.
+
 7/16/22: SEM_4-0-1beta1
 7/7/22: Added a collection of script commands for adding new points or
 polygons from stage positions or pixel positions on an image, and a command
