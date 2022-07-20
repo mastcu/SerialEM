@@ -498,6 +498,7 @@ public:
   GetMember(int, LoadedCartridge);
   GetMember(int, UnloadedCartridge);
   GetSetMember(int, FegFlashCounter);
+  GetSetMember(int, SkipNormalizations);
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
@@ -855,6 +856,7 @@ private:
   int mUnloadedCartridge;      // Index in table of cartridge that was unloaded
   int mLoadedCartridge;        // Index in table of cartridge that was unloaded
   int mFegFlashCounter;        // Cumulative count of FEG flashes
+  int mSkipNormalizations;     // Flag to not normalize on mag (1) or spot (2) change
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

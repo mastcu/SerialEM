@@ -129,6 +129,7 @@ INT_PROP_TEST("HasSimpleOriginSystem", scope->, HasSimpleOrigin)
 INT_PROP_TEST("DewarVacCapabilities", scope->, DewarVacCapabilities)
 INT_PROP_TEST("ScopeCanFlashFEG", scope->, ScopeCanFlashFEG)
 INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
+INT_PROP_TEST("SkipNormalizations", scope->, SkipNormalizations)
 
 #endif
 #ifdef PROP_TEST_SECT2

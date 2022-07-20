@@ -519,6 +519,7 @@ CEMscope::CEMscope()
   mChangedLoaderInfo = false;
   mMaxJeolAutoloaderSlots = 17;
   mFegFlashCounter = 0;
+  mSkipNormalizations = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -3831,7 +3832,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   mSynchroTD.initialSleep = 0;
   mSynchroTD.ifSTEM = ifSTEM;
   mSynchroTD.lowestM = lowestM;
-  mSynchroTD.normalize = 1;
+  mSynchroTD.normalize = (mSkipNormalizations & 1) ? 0 : 1;
   mSynchroTD.newProbeMode = mProbeMode;
 
   // JEOL STEM dies if mag is changed too soon after last image; 
@@ -6073,6 +6074,8 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
   unblankAfter = BlankTransientIfNeeded(routine);
 
   // Change the spot size.  
+  if (mSkipNormalizations & 2)
+    normalize = 0;
   mSynchroTD.normalize = normalize;
   result = RunSynchronousThread(SYNCHRO_DO_SPOT, inIndex, curSpot, NULL);
 

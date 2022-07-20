@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/19/22: Added ability to toggle drawing of a range of Navigator items with
+the V key, as for A, D, etc.
+
+7/19/22: Added property to skip normalizations after mag and/or spot change.
+
+7/19/22: Changed label for polygon supermontage items to start with label of
+original polygon.
+
 7/19/22: Fixed loading a montage map from an HDF file (In 4.0).
 
 7/19/22: Made Polygon Supermontage assign the backlash of the original polygon
