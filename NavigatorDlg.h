@@ -377,6 +377,7 @@ private:
   int mShiftDIndex;        // Starting index for doing shift D
   int mShiftTIndex;        // Starting index for doing shift T
   int mShiftNIndex;        // Starting index for doing shift N
+  int mShiftVIndex;        // Starting index for doing shift V
   int mNumSavedRegXforms;  // Number of saved reg-to-reg transforms
   int mLastXformToReg;     // Registration it was transformed to
   ScaleMat mMatSaved[MAX_SAVED_REGXFORM];
@@ -667,6 +668,7 @@ public:
   void ProcessDKey(void);
   void ProcessTKey(void);
   void ProcessNKey(void);
+  void ProcessVKey(void);
   int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
   BOOL m_bDrawLabels;
   afx_msg void OnDrawLabels();

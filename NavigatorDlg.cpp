@@ -155,6 +155,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mShiftDIndex = -1;
   mShiftTIndex = -1;
   mShiftNIndex = -1;
+  mShiftVIndex = -1;
   mMinNewFileInterval = 1;
   mNumSavedRegXforms = 0;
   mSuperCoordIndex = -1;
@@ -1805,6 +1806,22 @@ void CNavigatorDlg::ProcessNKey(void)
   ManageCurrentControls();
   Redraw();
   mHelper->SetDoingMultipleFiles(false);
+}
+
+// Toggle drawing
+void CNavigatorDlg::ProcessVKey(void)
+{
+  CMapDrawItem *item;
+  int start, end, ind, num = 0;
+  if (ProcessRangeKey("V again to toggle drawing", mShiftVIndex, start, end))
+    return;
+  for (ind = start; ind <= end; ind++) {
+    item = mItemArray[ind];
+    item->mDraw = !item->mDraw;
+    UpdateListString(ind);
+  }
+  ManageCurrentControls();
+  Redraw();
 }
 
 // Do common actions for selecting a range of contiguous items with collapse off
@@ -4446,7 +4463,7 @@ void CNavigatorDlg::PolygonSupermontage(void)
         mNewItemNum--;
         item->mType = ITEM_TYPE_POLYGON;
         item->mColor = DEFAULT_SUPER_COLOR;
-        item->mLabel.Format("%d-%d-%d", startNum, ix + 1, iy + 1);
+        item->mLabel.Format("%s-%d-%d", (LPCTSTR)mItem->mLabel, ix + 1, iy + 1);
 
         item->mAcquire = acquire;
         item->mPolygonID = polyID;
