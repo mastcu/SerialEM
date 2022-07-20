@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/19/22: Fixed loading a montage map from an HDF file (In 4.0).
+
+7/19/22: Made Polygon Supermontage assign the backlash of the original polygon
+to the new supermontage items (In 4.0).
+
 7/16/22: Fixed navigator index being off for tasks like a script run after a
 multishot in Acquire at Items (In 4.0).
 

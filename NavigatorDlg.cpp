@@ -4456,6 +4456,8 @@ void CNavigatorDlg::PolygonSupermontage(void)
         item->mStageZ = (float)stageZ;
         item->mSuperMontX = ix * (montSizeX / montP->binning - mSuperOverlap);
         item->mSuperMontY = iy * (montSizeY / montP->binning - mSuperOverlap);
+        item->mBacklashX = mItem->mBacklashX;
+        item->mBacklashY = mItem->mBacklashY;
 
         // Add the corners
         for (int i = 0; i < 5; i++) {
@@ -9202,9 +9204,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
       // Count any success for now
       if (mWinApp->mTSController->GetLastSucceeded()) {
         mNumAcquired++;
-        report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, %.2f,"
-          " TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, item->mStageX,
-          item->mStageY, mWinApp->mTSController->GetStopStageX(),
+        report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, "
+          "%.2f, TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, 
+          item->mStageX, item->mStageY, mWinApp->mTSController->GetStopStageX(),
           mWinApp->mTSController->GetStopStageY());
         mWinApp->AppendToLog(report);
         item->mTargetDefocus = EXTRA_NO_VALUE;
