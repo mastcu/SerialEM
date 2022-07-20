@@ -9197,7 +9197,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         // Stop or go on after error just like macro
         if (err && !mAcqParm->noMBoxOnError) {
           mAcquireEnded = 1;
-        } else
+        } else if (err)
           mAcquireIndex++;
       }
       break;
