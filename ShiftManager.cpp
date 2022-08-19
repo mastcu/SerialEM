@@ -2678,9 +2678,11 @@ int CShiftManager::ReportFallbackRotations(int onlyAbs)
         }
       }
     }
-    mWinApp->AppendToLog(str2 + ".\r\n  All rotations will rely on GlobalExtraRotation "
-      "and ExtraRotation properties", LOG_SWALLOW_IF_CLOSED);
-    retval = 1;
+    if (!mAnyAbsRotCal || ind > 0) {
+      mWinApp->AppendToLog(str2 + ".\r\n  All rotations will rely on GlobalExtraRotation "
+        "and ExtraRotation properties", LOG_SWALLOW_IF_CLOSED);
+      retval = 1;
+    }
   }
   if (onlyAbs)
     return retval;
