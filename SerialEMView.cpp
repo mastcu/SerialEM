@@ -1035,7 +1035,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
-  int lastGroupID = -1, lastGroupSize, size, numPoints;
+  int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
@@ -1095,6 +1095,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
       (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
       continue;
+    pieceDrawnOn = (imBuf->mMapID && item->mDrawnOnMapID == imBuf->mMapID) ?
+      item->mPieceDrawnOn : -1;
+
     SetStageErrIfRealignedOnMap(imBuf, item);
     crossLen = DSB_DPI_SCALE(item->IsPoint() ? 9 : 5);
     CPen pnSolidPen(PS_SOLID, thick, item->GetColor(highlight));
@@ -1106,7 +1109,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         continue;
       if (mWinApp->mParticleTasks->ItemIsEmptyMultishot(item))
         continue;
-      StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, item->mPieceDrawnOn);
+      StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, pieceDrawnOn);
 
       // Draw low dose areas around current point
       if (mDrewLDAreasAtNavPt && (iDraw < 0 || 
@@ -1364,7 +1367,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
       }
       if (draw) {
-        StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, item->mPieceDrawnOn);
+        StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, pieceDrawnOn);
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         if (item->mNumPoints == 1)
           point = point + CPoint(10, 0);
@@ -1393,9 +1396,11 @@ void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawIte
   float &delPtX, float &delPtY)
 {
   float ptX, ptY;
-  StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY, item->mPieceDrawnOn);
+  int drawnOn = (imBuf->mMapID && item->mDrawnOnMapID == imBuf->mMapID) ?
+    item->mPieceDrawnOn : -1;
+  StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY, drawnOn);
   mAdjustPt = -1;
-  StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, item->mPieceDrawnOn);
+  StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, drawnOn);
   delPtX -= ptX;
   delPtY -= ptY;
 }
