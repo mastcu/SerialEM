@@ -93,8 +93,11 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   int yStart, xStart, xDir, magInd, registration, divStart;
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
   float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm;
+  int realXstart, realYstart, realXend, realYend;
+
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
+  mDebug = 0;
   mUseImageCoords = false;
   mGroupIDsInPoly.clear();
 
@@ -342,6 +345,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
         minFullNum = num;
         fullBestSd = fullSd;
         bestFullArray.Copy(fullArray);
+        if (mDebug)
+          PrintfToLog("Best at rowStart %d  num %d  fullSd %.2f", rowStart, num, fullSd);
       }
     }
 
@@ -359,6 +364,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
         minFullNum = num;
         fullBestSd = fullSd;
         bestFullArray.Copy(fullArray);
+        if (mDebug)
+          PrintfToLog("Best at colStart %d  num %d  fullSd %.2f", colStart, num, fullSd);
       }
     }
 
@@ -397,19 +404,23 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
               if (leftOK && acqXend > bestFullArray[ind].endX) {
                 acqXend--;
                 acqXstart--;
-                //mWinApp->AppendToLog("Shift left");
+                if (mDebug)
+                  mWinApp->AppendToLog("Shift left");
               } else if (rightOK && acqXstart < bestFullArray[ind].startX) {
                 acqXend++;
                 acqXstart++;
-                //mWinApp->AppendToLog("Shift right");
+                if (mDebug)
+                  mWinApp->AppendToLog("Shift right");
               } else if (downOK && acqYend > bestFullArray[ind].endY) {
                 acqYend--;
                 acqYstart--;
-                //mWinApp->AppendToLog("Shift down");
+                if (mDebug)
+                  mWinApp->AppendToLog("Shift down");
               } else if (upOK && acqYstart < bestFullArray[ind].startY) {
                 acqYend++;
                 acqYstart++;
-                //mWinApp->AppendToLog("Shift up");
+                if (mDebug)
+                  mWinApp->AppendToLog("Shift up");
 
                 // Or split if there is good center on each side
               } else if (leftOK && rightOK) {
@@ -428,14 +439,14 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                   num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
                   acqXstart = (ix - 1) - num;
                   acqXend = (ix - 1) + num;
-                  //mWinApp->AppendToLog("Split, new right");
+                  mWinApp->AppendToLog("Split, new right");
                 } else {
                   bestFullArray[ind].startX = divStart;
                   data.endX = divStart - 1;
                   num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
                   acqXstart = (ix + 1) - num;
                   acqXend = (ix + 1) + num;
-                  //mWinApp->AppendToLog("Split, new left");
+                  mWinApp->AppendToLog("Split, new left");
                 }
                 bestFullArray.Add(data);
               } else if (downOK && upOK) {
@@ -451,17 +462,69 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                   num = (bestFullArray[ind].endY + 1 - bestFullArray[ind].startY) / 2;
                   acqYstart = (iy - 1) - num;
                   acqYend = (iy - 1) + num;
-                  //mWinApp->AppendToLog("Split, new above ");
+                  if (mDebug)
+                    mWinApp->AppendToLog("Split, new above ");
                 } else {
                   bestFullArray[ind].startY = divStart;
                   data.endY = divStart - 1;
                   num = (bestFullArray[ind].endY + 1 - bestFullArray[ind].startY) / 2;
                   acqYstart = (iy + 1) - num;
                   acqYend = (iy + 1) + num;
-                  //mWinApp->AppendToLog("Split, new below");
+                  if (mDebug)
+                    mWinApp->AppendToLog("Split, new below");
                 }
                 bestFullArray.Add(data);
               }
+            }
+          }
+
+          // Determine limits of points that would actually go in the box
+          realXstart = acqXend - 1;
+          realYstart = acqYend + 1;
+          realXend = acqXstart - 1;
+          realYend = acqYend + 1;
+          for (iy = acqYstart; iy <= acqYend; iy++) {
+            for (ix = acqXstart; ix <= acqXend; ix++) {
+
+              if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
+                ix >= bestFullArray[ind].startX && ix <= bestFullArray[ind].endX &&
+                iy >= bestFullArray[ind].startY && iy <= bestFullArray[ind].endY &&
+                mGrid[iy][ix] >= 0 && boxAssigns[mGrid[iy][ix]] < 0) {
+                ACCUM_MIN(realXstart, ix);
+                ACCUM_MAX(realXend, ix);
+                ACCUM_MIN(realYstart, iy);
+                ACCUM_MAX(realYend, iy);
+              }
+            }
+          }
+
+          // If a dimension is less by a multiple of 2, use the actual limits so the 
+          // center ends up in the box
+          if ((realXend - realXstart) % 2 != (acqXend - acqXstart) % 2) {
+            realXstart = acqXstart;
+            realXend = acqXend;
+          }
+          if ((realYend - realYstart) % 2 != (acqYend - acqYstart) % 2) {
+            realYstart = acqYstart;
+            realYend = acqYend;
+          }
+          if (realXend - realXstart < acqXend - acqXstart ||
+            realYend - realYstart < acqYend - acqYstart) {
+            num = 0;
+
+            // But first make sure the center is not missing
+            if ((mNumXholes * mNumYholes) % 2) {
+              ix = (acqXstart + acqXend) / 2;
+              iy = (acqYstart + acqYend) / 2;
+              if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
+                (mGrid[iy][ix] < 0 || boxAssigns[mGrid[iy][ix]] >= 0))
+                num = 1;
+            }
+            if (!num) {
+              acqXstart = realXstart;
+              acqXend = realXend;
+              acqYstart = realYstart;
+              acqYend = realYend;
             }
           }
 
@@ -476,8 +539,9 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
           numInBox = 0;
           minCenDist = 1.e30f;
 
-          /*PrintfToLog("Point %d box %d x %d - %d y %d - %d", navInds[point], ind, 
-            acqXstart, acqXend, acqYstart, acqYend);*/
+          if (mDebug)
+            PrintfToLog("Point %d box %d x %d - %d y %d - %d", navInds[point], ind,
+            acqXstart, acqXend, acqYstart, acqYend);
 
           // Loop on the positions in the (expanded) box 
           for (iy = acqYstart; iy <= acqYend; iy++) {
@@ -490,7 +554,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
               if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
                 ix >= bestFullArray[ind].startX && ix <= bestFullArray[ind].endX &&
                 iy >= bestFullArray[ind].startY && iy <= bestFullArray[ind].endY &&
-                mGrid[iy][ix] >= 0) {
+                mGrid[iy][ix] >= 0 && boxAssigns[mGrid[iy][ix]] < 0) {
                 boxAssigns[mGrid[iy][ix]] = ind;
                 numInBox++;
                 item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
@@ -500,10 +564,11 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                   boxDy * gridMat.xpy;
                 stageY += yCenters[mGrid[iy][ix]] + boxDx * gridMat.ypx +
                   boxDy * gridMat.ypy;
-                /*PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %.1f %.1f  stage X"
+                if (mDebug)
+                  PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %.1f %.1f  stage X"
                   " Y %.3f %.1f", navInds[mGrid[iy][ix]], ix, iy, (LPCTSTR)item->mLabel,
                   ind, boxDx, boxDy, item->mStageX + boxDx * gridMat.xpx + boxDy * 
-                  gridMat.xpy, item->mStageY + boxDx * gridMat.ypx + boxDy * gridMat.ypy);*/
+                  gridMat.xpy, item->mStageY + boxDx * gridMat.ypx + boxDy * gridMat.ypy);
                 cenDist = boxDx * boxDy + boxDy * boxDy;
                 if (cenDist < minCenDist) {
                   minCenDist = cenDist;
@@ -514,7 +579,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                 // Otherwise add to skip list
                 ixSkip.push_back(bx);
                 iySkip.push_back(by);
-                //PrintfToLog("missing %d %d", bx, by);
+                if (mDebug)
+                  PrintfToLog("missing %d %d", bx, by);
               }
             }
           }
@@ -764,6 +830,7 @@ void CMultiHoleCombiner::TryBoxStartsOnLine(int otherStart, bool doCol,
   int num, cenMissing, minNum[2] = {10000000, 10000000};
   float sdOfLine, sdAtBest[2];
   int vStart = 1 - (doCol ? mNumYholes : mNumXholes);
+  int bestv;
 
   // Try possible starts for the line of boxes at the otherStart
   for (; vStart <= 0; vStart++) {
@@ -775,11 +842,14 @@ void CMultiHoleCombiner::TryBoxStartsOnLine(int otherStart, bool doCol,
       minNum[cenMissing] = num;
       sdAtBest[cenMissing] = sdOfLine;
       bestLineArray[cenMissing].Copy(lineArray);
+      bestv = vStart;
     }
   }
 
   // Add best one to the full array
   fullArray.Append(bestLineArray[minNum[0] < 1000 ? 0 : 1]);
+  if (mDebug)
+    PrintfToLog("Best start for %d at %d", otherStart, bestv);
 }
 
 // For a line of boxes at one start position, get the boxes and compute SD of # in each
@@ -805,6 +875,9 @@ void CMultiHoleCombiner::EvaluateLineOfBoxes(int xStart, int yStart, bool doCol,
   sdOfNums = 0;
   if (xnums.size() > 1)
     avgSD(&xnums[0], (int)xnums.size(), &avg, &sdOfNums, &sem);
+  if (mDebug)
+    PrintfToLog("xs %d  ys %d col %d  numbox %d  avg %.1f sd %.2f", xStart, yStart, 
+      doCol ? 1 : 0, xnums.size(), avg, sdOfNums);
 }
 
 // Find grid points inside a box and compute the limits actually occupied for the box
@@ -854,6 +927,11 @@ void CMultiHoleCombiner::mergeBoxesAndEvaluate(
         startY = B3DMIN(posArray[ind].startY, posArray[jnd].startY);
         endY = B3DMAX(posArray[ind].endY, posArray[jnd].endY);
         if (endY - startY < mNumYholes) {
+          if (mDebug)
+            PrintfToLog("Merge %d: x %d %d y %d %d with %d: x %d %d y %d %d", 
+              ind, posArray[ind].startX, posArray[ind].endX, posArray[ind].startY, 
+              posArray[ind].endY, jnd, posArray[jnd].startX, posArray[jnd].endX,
+              posArray[jnd].startY, posArray[jnd].endY);
 
           // Combine the ranges into the first position, make the second one impossible
           posArray[ind].startX = startX;
@@ -977,9 +1055,10 @@ void CMultiHoleCombiner::AddMultiItemToArray(
         iySkip[ix] - boxYcen, skipXrot, skipYrot, false, false);
       newItem->mSkipHolePos[2 * ix] = (unsigned char)B3DNINT(skipXrot + backXcen);
       newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)B3DNINT(skipYrot + backYcen);
-      /*PrintfToLog("Skip %d %d  cen %.1f %.1f skiprot  %.1f %.1f  cen %.1f %.1f  shp %d"
-      " %d", ixSkip[ix], iySkip[ix], boxXcen, boxYcen, skipXrot, skipYrot, backXcen, 
-         backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);*/
+      if (mDebug)
+        PrintfToLog("Skip %d %d  cen %.1f %.1f skiprot  %.1f %.1f  cen %.1f %.1f  shp %d"
+        " %d", ixSkip[ix], iySkip[ix], boxXcen, boxYcen, skipXrot, skipYrot, backXcen, 
+         backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);
     }
   }
   itemArray->Add(newItem);
