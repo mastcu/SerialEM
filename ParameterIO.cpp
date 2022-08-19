@@ -2943,8 +2943,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->retractable = itemInt[1] != 0;
           else if (MatchNoCase("InsertingRetractsCam"))
             camP->insertingRetracts = itemInt[1];
-          else if (MatchNoCase("GIF"))
-            camP->GIF = itemInt[1] != 0;
+          else if (MatchNoCase("GIF") && itemInt[1] != 0)
+            camP->GIF = true;
           else if (MatchNoCase("FEIFilterType")) {
             if (itemInt[1] > 0) {
               camP->filterIsFEI = itemInt[1];

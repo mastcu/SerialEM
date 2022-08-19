@@ -8575,6 +8575,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   // Set up list box and counters
   SetCurrentRegFromMax();
   SetRegPtNum(GetFreeRegPtNum(mCurrentRegistration, 0));
+  mCurrentItem = B3DMIN(mCurrentItem, (int)mItemArray.GetSize() - 1);
   if (m_bCollapseGroups)
     MakeListMappings();
   FillListBox(false, mergeFile);
@@ -10518,7 +10519,7 @@ void CNavigatorDlg::Redraw()
 // Get the current item into mItem and return true, or return false if no current item
 BOOL CNavigatorDlg::SetCurrentItem(bool groupOK)
 {
-  if (mCurrentItem < 0 || mCurListSel < 0 ||
+  if (mCurrentItem < 0 || mCurrentItem >= mItemArray.GetSize() || mCurListSel < 0 ||
     (!groupOK && m_bCollapseGroups && mListToItem[mCurListSel] < 0))
     return false;
   IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
@@ -10543,7 +10544,7 @@ int CNavigatorDlg::GetCurrentOrAcquireItem(CMapDrawItem *&item)
   else if (IndexOfSingleOrFirstInGroup(mCurListSel, index))
     index = -1;
   item = NULL;
-  if (index >= 0) {
+  if (index >= 0 && index < mItemArray.GetSize()) {
     mItem = mItemArray[index];
     item = mItem;
   }

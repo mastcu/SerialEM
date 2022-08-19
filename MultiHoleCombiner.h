@@ -51,6 +51,7 @@ private:
   std::set<int> mIDsOutsidePoly;  // IDs of ones turned off
   ScaleMat mSkipXform;            // Transform to get from stage to IS space skip list
   bool mTransposeSize;            // Flag to transpose sizes from stage to IS space
+  int mDebug;
 
   void TryBoxStartsOnLine(int otherStart, bool doCol,
     CArray<PositionData, PositionData> &fullArray);
