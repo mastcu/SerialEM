@@ -3,6 +3,24 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/19/22: SEM_4-0-10
+8/19/22: Fix DM crash with GMS 3.5 after taking ~1 million frames (In 4.0).
+
+8/19/22: Fix problem if property "GIF 0" occurs after "FEIFilterType 1"
+(In 4.0).
+
+8/19/22: Fix InitialCurrentCamera being assigned with AssumeCameraForDummy
+value when the latter wasn't set (In 4.0).
+
+8/19/22: Prevented some bad array accesses in Navigator after loaded a file
+smaller than the previous one (In 4.0).
+
+8/19/22: Fixed some duplication of acquired positions in hole combiner
+(In 4.0).
+
+7/22/22: Fixed using the wrong information about what piece a point is drawn
+on when drawing on an image that is not the original map drawn on (In 4.0).
+
 7/19/22: Fixed loading a montage map from an HDF file (In 4.0).
 
 7/19/22: Made Polygon Supermontage assign the backlash of the original polygon

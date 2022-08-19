@@ -112,10 +112,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
-          <TD>Set to 1 to indicate a microscope/camera simulator is being used (enables some
-            actions on JEOL and is needed to use an Eagle camera in simulation mode).
-              Do not use this with a real camera instead of NoScope, since it also divides
-              dark references by 8 and reduces the variation in gain references by 8</TD>
+          <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
+            is being used (enables some actions on JEOL and is needed to use an Eagle camera in simulation mode).
+             &nbsp;  Do not use this instead of NoScope with a real camera that uses dark references in SerialEM,
+             since it also divides dark references by 8 and reduces the variation in gain references by 8.&nbsp; If
+            it is set higher than 1, the value will be used instead of reading high voltage from the scope.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoScope</TD>
