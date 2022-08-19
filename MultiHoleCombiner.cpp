@@ -439,14 +439,16 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                   num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
                   acqXstart = (ix - 1) - num;
                   acqXend = (ix - 1) + num;
-                  mWinApp->AppendToLog("Split, new right");
+                  if (mDebug)
+                    mWinApp->AppendToLog("Split, new right");
                 } else {
                   bestFullArray[ind].startX = divStart;
                   data.endX = divStart - 1;
                   num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
                   acqXstart = (ix + 1) - num;
                   acqXend = (ix + 1) + num;
-                  mWinApp->AppendToLog("Split, new left");
+                  if (mDebug)
+                    mWinApp->AppendToLog("Split, new left");
                 }
                 bestFullArray.Add(data);
               } else if (downOK && upOK) {
@@ -463,7 +465,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                   acqYstart = (iy - 1) - num;
                   acqYend = (iy - 1) + num;
                   if (mDebug)
-                    mWinApp->AppendToLog("Split, new above ");
+                      mWinApp->AppendToLog("Split, new above ");
                 } else {
                   bestFullArray[ind].startY = divStart;
                   data.endY = divStart - 1;
