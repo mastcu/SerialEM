@@ -40,6 +40,9 @@
 //
 // The longest command name is now 25 characters but 23 is a more common limit
 
+#pragma push_macro("CreateProcess")
+#undef CreateProcess
+
 MAC_SAME_NAME(ScriptEnd, 0, 0, SCRIPTEND)
 MAC_DIFF_NAME(Label, 0, 0, NoOperation, LABEL)
 MAC_DIFF_NAME_ARG(SetVariable, 0, 0, SetVariableCmd, SETVARIABLE, SS)
@@ -680,3 +683,5 @@ MAC_SAME_NAME_ARG(ReportCameraName, 1, 4, REPORTCAMERANAME, I)
 #undef MAC_SAME_NAME
 #undef MAC_SAME_NAME_ARG
 #undef MAC_SAME_NAME_NOARG
+
+#pragma pop_macro("CreateProcess")
