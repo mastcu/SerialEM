@@ -9917,6 +9917,9 @@ int CMacCmd::NextProcessArgs(void)
   return 0;
 }
 
+#pragma push_macro("CreateProcess")
+#undef CreateProcess
+
 // CreateProcess
 int CMacCmd::CreateProcess(void)
 {
@@ -9929,6 +9932,7 @@ int CMacCmd::CreateProcess(void)
     ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
   return 0;
 }
+#pragma pop_macro("CreateProcess")
 
 // ExternalToolArgPlace
 int CMacCmd::ExternalToolArgPlace(void)
