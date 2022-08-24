@@ -8,6 +8,13 @@ public:
   CExternalTools(void);
   ~CExternalTools(void);
   GetMember(int, NumToolsAdded);
+  GetMember(int, LastPSresol);
+  GetMember(float, LastCropPixel);
+  GetMember(float, LastFitStart);
+  GetMember(float, LastFitEnd);
+  GetSetMember(CString, CtfplotterPath);
+  PROCESS_INFORMATION mExtProcInfo;
+
 
 private:
   CSerialEMApp *mWinApp;
@@ -16,15 +23,29 @@ private:
   CArray<CString, CString> mTitles;
   CArray<CString, CString> mCommands;
   CArray<CString, CString> mArgStrings;
+  CString mCtfplotterPath;
+  int mLastPSresol;
+  float mLastCropPixel;
+  float mLastFitStart;
+  float mLastFitEnd;
+  int mFitAstigPhase;
+  bool mDidAutotune;
+  float mLastStartPhase;
 public:
   void AddTool(CString &title);
   int AddCommand(int index, CString &command);
   int AddArgString(int index, CString &argString);
   int RunToolCommand(CString &title, CString extraArgs, int extraPlace);
   int RunToolCommand(int index);
-  int RunCreateProcess(CString &command, CString argString);
+  int RunCreateProcess(CString &command, CString argString, bool leaveHandles);
   void AddMenuItems();
-  void SubtituteAndQuote(CString &argString, const char *keyword, CString &replacement,
+  void SubstituteAndQuote(CString &argString, const char *keyword, CString &replacement,
     bool doQuotes = true);
+  ImodImageFile *SaveBufferToSharedMemory(int bufInd, CString nameSuffix, CString &filename);
+  int MakeCtfplotterCommand(CString &memFile, int bufInd, float tiltOffset, 
+    float defStart, float defEnd, int astigPhase, float phase,
+    int resolTune, float cropPixel, float fitStart, float fitEnd, CString &command);
+  int ReadCtfplotterResults(float &defocus, float &astig, float &angle, float &phase,
+    int &ifAstigPhase, float &fitFreq, float &CCC, CString &results, CString &errString);
 };
 

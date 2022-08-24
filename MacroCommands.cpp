@@ -52,6 +52,7 @@
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
+#include "Shared\iimage.h"
 #include "Shared\autodoc.h"
 #include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
@@ -298,6 +299,7 @@ int CMacCmd::NextCommand(bool startingOut)
 {
   CString name, report;
   int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, cartInd;
+  float defocus, astig, angle, phase, fitFreq, ctfCCC;
   CArray<JeolCartridgeData, JeolCartridgeData> *loaderInfo = mScope->GetJeolLoaderInfo();
   CArray < ArrayRow, ArrayRow > *rowsFor2d;
   ArrayRow arrRow;
@@ -343,6 +345,25 @@ int CMacCmd::NextCommand(bool startingOut)
 
   if (mRanGatanScript)
     SetReportedValues(mCamera->GetScriptReturnVal());
+
+  // If ctfplotter was run, see if succeeded
+  if (mRanCtfplotter) {
+    if (mExtProcExitStatus) {
+      SetReportedValues(1., mExtProcExitStatus);
+    } else {
+      index = mWinApp->mExternalTools->ReadCtfplotterResults(defocus, astig, angle, phase,
+        index2, fitFreq, ctfCCC, name, report);
+      if (index > 0) {
+        mWinApp->AppendToLog("Error getting Ctfplotter results: " + report);
+        AbortMacro();
+        return 1;
+      }
+      if (index < 0)
+        mWinApp->AppendToLog("WARNING: " + report);
+      mWinApp->AppendToLog(name, mLogAction);
+      SetReportedValues(defocus, astig, angle, phase, fitFreq, ctfCCC);
+    }
+  }
 
   InitForNextCommand();
 
@@ -592,6 +613,8 @@ void CMacCmd::InitForNextCommand()
   mStartedLongOp = false;
   mMovedAperture = false;
   mRanGatanScript = false;
+  mRanExtProcess = false;
+  mRanCtfplotter = false;
   mLoadingMap = false;
   mLoopInOnIdle = false;
 }
@@ -6259,11 +6282,110 @@ int CMacCmd::CtfFind(void)
   mProcessImage->SetCtffindParamsForDefocus(param,
     0.8 *mItemDbl[2] + 0.2 * mItemDbl[3], true);
   param.compute_extra_stats = true;
-  if (mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray))
+  if (mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray, 
+    mLogAction == LOG_IGNORE))
     ABORT_LINE("Ctffind fitting returned an error for line:\n\n");
   SetReportedValues(-(resultsArray[0] + resultsArray[1]) / 20000.,
     (resultsArray[0] - resultsArray[1]) / 10000., resultsArray[2],
     resultsArray[3] / DTOR, resultsArray[4], resultsArray[5]);
+  return 0;
+}
+
+// Ctfplotter
+int CMacCmd::Ctfplotter(void)
+{
+  CString report, command;
+  float phase = 0., imPixel, cropPixel = 0., fitStart = -1., fitEnd = 0., tiltOffset = 0.;
+  int index, astigPhase = 1, resolOrTune = 1;
+
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+
+  // Need pixel size here, other items from imbuf are checked in called routine
+  imPixel = 1000.f * mShiftManager->GetPixelSize(&mImBufs[index]);
+  if (!imPixel)
+    ABORT_LINE("No pixel size is available for the image for line:\n\n");
+  
+  if (mItemDbl[2] > 0. || mItemDbl[3] > 0. || mItemDbl[2] < -100 || mItemDbl[3] < -100)
+    ABORT_LINE("Minimum and maximum defocus must be negative and in microns");
+  if (!mItemEmpty[4])
+    astigPhase = mItemInt[4];
+  if (!mItemEmpty[5]) {
+    phase = mItemFlt[5];
+    if (!phase)
+      phase = mProcessImage->GetPlatePhase();
+  }
+  if (!mItemEmpty[6])
+    tiltOffset = mItemFlt[6];
+
+  // Handle resolution or tuning entry
+  if (!mItemEmpty[7]) {
+    resolOrTune = mItemInt[7];
+    if (resolOrTune > 1 && resolOrTune < 100)
+      ABORT_LINE("Power spectrum resolution must be at least 100 in line:\n\n");
+    if (!resolOrTune || resolOrTune > 1) {
+      if (mItemEmpty[10])
+        ABORT_LINE("If power spectrum resolution is entered or the default specified, "
+          "then fitting range must be entered for line:\n\n");
+      if (mItemFlt[8] >= imPixel)
+        cropPixel = mItemFlt[8];
+      fitStart = mItemFlt[9];
+      fitEnd = mItemFlt[10];
+      if (fitStart > 0.51)
+        fitStart = 10.f * imPixel / fitStart;
+      if (fitEnd > 0.51)
+        fitEnd = 10.f * imPixel / fitEnd;
+      if (fitStart > fitEnd || (fitStart >= 0 && fitStart < 0.1)) {
+        report.Format("The start of the fitting range (%.3f/pixel) is too small or past "
+          "the end of the range (%.2f/pixel) in line:\n\n", fitStart, fitEnd);
+        ABORT_LINE(report);
+      }
+      if (fitEnd > 0.48) {
+        report.Format("The end of the fitting range (%.3f/pixel) is too high in line:\n\n"
+          , fitEnd);
+        ABORT_LINE(report);
+      }
+    }
+    if ((resolOrTune < 0 || resolOrTune == 1) && !mItemEmpty[8])
+      ABORT_LINE("You cannot enter crop or fitting values after specifying to use last"
+        " parameters or to autotune for line:\n\n");
+    if (resolOrTune < 0 && !mWinApp->mExternalTools->GetLastCropPixel())
+      ABORT_LINE("There are no previous fitting and sampling parameters to use for "
+          "line:\n\n");
+  }
+
+  // Save the image to shared memory
+  mShrMemFile = mWinApp->mExternalTools->SaveBufferToSharedMemory(index,
+    "ctftmp.mrc", report);
+  if (!mShrMemFile)
+    ABORT_LINE(report + " in line:\n\n");
+
+  // Get the command and run it in a thread, set flags
+  if (mWinApp->mExternalTools->MakeCtfplotterCommand(report, index, tiltOffset,
+    mItemFlt[2], mItemFlt[3], astigPhase, phase, resolOrTune, cropPixel, fitStart, 
+    fitEnd, mEnteredName))
+    ABORT_LINE(report + " in line:\n\n");
+  mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true);
+  mRanExtProcess = true;
+  mRanCtfplotter = true;
+  return 0;
+}
+
+// ReportCtplotterTuning
+int CMacCmd::ReportCtplotterTuning(void)
+{
+  int resol = mWinApp->mExternalTools->GetLastPSresol();
+  float crop = mWinApp->mExternalTools->GetLastCropPixel();
+  float fitStart = mWinApp->mExternalTools->GetLastFitStart();
+  float fitEnd = mWinApp->mExternalTools->GetLastFitEnd();
+  if (!resol) {
+    mLogRpt = "There are no stored values from previous autotuning";
+    SetReportedValues(&mStrItems[1], 0);
+  } else {
+    mLogRpt.Format("Tuned parameters are psResol = %d,  crop to pixel %.3f, fit to %.3f"
+      " - %.3f/pixel", resol, crop, fitStart, fitEnd);
+    SetReportedValues(&mStrItems[1], resol, crop, fitStart, fitEnd);
+  }
   return 0;
 }
 
@@ -6279,7 +6401,7 @@ int CMacCmd::ImageProperties(void)
     ABORT_LINE(report);
   imBuf = ImBufForIndex(index);
   imBuf->mImage->getSize(sizeX, sizeY);
-  delX = 1000. * mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
+  delX = 1000. * mShiftManager->GetPixelSize(&mImBufs[index]);
   mLogRpt.Format("Image size %d by %d, binning %s, exposure %.4f",
     sizeX, sizeY, (LPCTSTR)imBuf->BinningText(),
     imBuf->mExposure);
@@ -6395,7 +6517,7 @@ int CMacCmd::MeasureBeamSize(void)
       " %d quadrants, fit error %.3f", xcen, ycen, numQuad, fitErr);
     SetReportedValues(xcen, ycen, numQuad, fitErr);
   } else {
-    pixel = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
+    pixel = mShiftManager->GetPixelSize(&mImBufs[index]);
     if (!pixel)
       ABORT_LINE("No pixel size is available for the image for line:\n\n");
     radius *= 2.f * binning * pixel;
@@ -8893,7 +9015,7 @@ int CMacCmd::NavIndexItemDrawnOn(void)
 int CMacCmd::NavItemFileToOpen(void)
 {
   CString report;
-  int index;
+  int index, result = 0;
   CMapDrawItem *navItem;
 
   index = mItemInt[1];
@@ -8907,8 +9029,10 @@ int CMacCmd::NavItemFileToOpen(void)
   } else {
     mLogRpt.Format("File to open at Navigator item %d is: %s", index + 1,
       (LPCTSTR)report);
+    result = 1;
   }
   SetOneReportedValue(report, 1);
+  SetOneReportedValue(result, 2);
   return 0;
 }
 
@@ -10219,6 +10343,16 @@ int CMacCmd::RunInShell(void)
   return 0;
 }
 
+// RunProcess
+int CMacCmd::RunProcess(void)
+{
+  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
+  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, mNextProcessArgs, true))
+    ABORT_LINE("Error creating process for line:\n\n");
+  mRanExtProcess = true;
+  return 0;
+}
+
 // NextProcessArgs
 int CMacCmd::NextProcessArgs(void)
 {
@@ -10235,7 +10369,7 @@ int CMacCmd::CreateProcess(void)
   int index;
 
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs);
+  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs, false);
   mNextProcessArgs = "";
   if (index)
     ABORT_LINE("Script aborted due to failure to run process for line:\n\n");

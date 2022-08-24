@@ -35,9 +35,11 @@
 #include "Mailer.h"
 #include "PiezoAndPPControl.h"
 #include "MacroSelector.h"
+#include "ExternalTools.h"
 #include "PythonServer.h"
 #include "BaseSocket.h"
 #include "Utilities\KGetOne.h"
+#include "Shared\iimage.h"
 
 
 #ifdef _DEBUG
@@ -201,6 +203,8 @@ CMacroProcessor::CMacroProcessor()
   mMovedPiezo = false;
   mMovedAperture = false;
   mRanGatanScript = false;
+  mRanCtfplotter = false;
+  mRanExtProcess = false;
   mLoadingMap = false;
   mMakingDualMap = false;
   mLastCompleted = false;
@@ -211,6 +215,7 @@ CMacroProcessor::CMacroProcessor()
   mCalledFromScrpLang = false;
   mNonMacroDeferring = false;
   mScrpLangData.externalControl = 0;
+  mShrMemFile = NULL;
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
   mToolButHeight = 0;
@@ -862,6 +867,7 @@ int CMacroProcessor::TaskBusy()
 {
   double diff, dose;
   int tbusy;
+  DWORD waitResult;
   CString report;
 
   // If accumulating dose: do periodic reports, stop when done
@@ -962,6 +968,21 @@ int CMacroProcessor::TaskBusy()
     mWinApp->AppendToLog(report, mLogAction);
   }
 
+  // If doing external process, report result and clean it up here
+  if (mRanExtProcess) {
+    waitResult = WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 20);
+    if (waitResult != WAIT_OBJECT_0)
+      return 1;
+    GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess,
+      &mExtProcExitStatus);
+    report.Format("%s exited with status %d", (LPCTSTR)mEnteredName, mExtProcExitStatus);
+    SetReportedValues(mExtProcExitStatus);
+    if (mExtProcExitStatus || !mRanCtfplotter) {
+      mWinApp->AppendToLog(report, mLogAction);
+    }
+    CleanupExternalProcess();
+  }
+
   return ((mScope->GetInitialized() && ((mMovedStage &&
     mScope->StageBusy() > 0) || (mExposedFilm && mScope->FilmBusy() > 0) ||
     (mMovedScreen && mScope->ScreenBusy()))) ||
@@ -982,6 +1003,23 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mFilterTasks->RefiningZLP() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
+}
+
+// Clean up handles from external process, and kill it if it is still running, and close
+// shared memory file
+void CMacroProcessor::CleanupExternalProcess()
+{
+  if (mRanExtProcess && mWinApp->mExternalTools->mExtProcInfo.hProcess) {
+    if (WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 1)
+      != WAIT_OBJECT_0)
+      TerminateProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, 1);
+    CloseHandle(mWinApp->mExternalTools->mExtProcInfo.hProcess);
+    CloseHandle(mWinApp->mExternalTools->mExtProcInfo.hThread);
+    mWinApp->mExternalTools->mExtProcInfo.hProcess = NULL;
+  }
+  if (mShrMemFile)
+    iiDelete(mShrMemFile);
+  mShrMemFile = NULL;
 }
 
 // If the program is not busy, set the flag for running an external script and start it
@@ -1141,6 +1179,7 @@ void CMacroProcessor::RunOrResume()
   mLastCompleted = false;
   mLastAborted = false;
   mLastTestResult = true;
+  mRanCtfplotter = false;
   mCamera->SetTaskWaitingForFrame(false);
   mFrameWaitStart = -1.;
   mNumStatesToRestore = 0;
@@ -1445,6 +1484,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mScrpLangData.exitedFromWrapper))
     SEMMessageBox("Error running Python script; see log for information");
 
+  CleanupExternalProcess();
   if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
     return;
   if (TestAndStartFuncOnStop())

@@ -1787,6 +1787,54 @@
             resolution in Angstroms to which Thon rings fit.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">Ctfplotter buf #M #N [#AP] [#P] [#O] [#T] [#C] [#S] [#E]</TD>
+          <TD>Runs the IMOD program Ctfplotter to determine defocus and astigmatism of he 
+            image in the given buffer.&nbsp; &nbsp; Follow the buffer letter/number with the 
+            minimum (<b>#M</b>) and
+            maximum (<b>#N</b>) values for the initial defocus scan (in microns, underfocus negative), and with these
+            optional entries: 
+            <br />&nbsp; <b>#AP</b> sum of 1 to find astigmatism and 2 to find phase; the default is 1
+            <br />&nbsp; <b>#P</b> expected phase shift in degrees; if it is 0, it will use the
+            phase shift set in the <A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A>
+            menu item
+            <br />&nbsp; <b>#O</b> tilt angle offset used in adjusting spectra for tilt-dependent defocus changes,
+             such as a lamellar pretilt
+            <br />&nbsp; <b>#T</b> tuning or power spectra resolution value: 0 for the default resolution (101), a value 
+            greater than 100 to set the resolution, 1 for autotuning, or -1 to use the last values from 
+            autotuning for PS resolution, spectrum cropping, and fitting limits.  When setting the resolution with or a value,
+            the following three values must be entered; when autotuning or using autotune values, no more entries after this
+            are allowed.
+            <br />&nbsp; <b>#C</b> Pixel size to crop spectra to, or 0 for no cropping
+            <br />&nbsp; <b>#S</b> Start of the fitting range in either reciprocal pixels (&lt; 0.5) or Angstroms (&gt; 0.5), or
+            -1 to use the default start of the range determined from the defocus
+            <br />&nbsp; <b>#E</b> End of the fitting range in either reciprocal pixels or Angstroms
+            <br />Automatic truncation of the fitting range, and weighting by local correlation coefficient, will be
+            used in the fit.  After successful fitting, the command will set <I>reportedValue1</I>-<i>6</i> with
+            mean defocus and astigmatism (difference between maximum and minimum defocus) in
+            microns (underfocus negative), astigmatism angle in degrees, phase shift
+            in degrees, overall cross-correlation coefficient (CCC) between the power spectrum and fitted CTF curve, and
+            resolution in Angstroms of the last point with a correlation coefficient high enough to be
+             included in the fit.&nbsp; The CCC is not at all comparable to the score from Ctffind.&nbsp; If the program
+            exits with an error, <I>reportedValue1</I> will be set to 1, and <I>reportedValue2</I> will contain 
+            the exit status.&nbsp; Failure to start the program or to read results after successful 
+            completion generates a script error, but a non-zero exit status will not.&nbsp; Three files will
+            be created in the current directory: 'single.defocus' with the basic results, 'ctfplotter.log' 
+            with program output, and 'ctfplotter.info' with stored settings plus the CCC and fit-to-resolution values.
+            <br />To use this command, you must have either and installation of IMOD 4.12.27 or higher, or
+            a standalone Windows 3dmod package based on this version or higher.&nbsp; Either Ctfplotter must 
+            be on the system path, or the property CtfplotterPath must be entered with the path to the 
+            executable.&nbsp; Ctfplotter is currently much slower than Ctffind but will give significantly more
+            accurate results for images with weaker signals or ones taken at higher tilt.
+            To save some time, use autotuning (the default) on an initial image and use last 
+            parameters (-1 for <B>#T</B>on a similar images.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCtplotterTuning</TD>
+          <TD>Reports the values set from the last autotuning in Ctfplotter: power spectrum 
+            resolution, pixel size to which spectra are cropped or 0 if no cropping, and 
+            start and end of the fitting range in reciprocal pixels.</TD>
+        </TR>
+        <TR>
           <TD colspan="2"><A name="directory"></A><B>Directory and Miscellaneous Commands</B></TD>
         </TR>
         <TR>
@@ -3983,7 +4031,8 @@
     <TR>
           <TD class="scriptcommand">NavItemFileToOpen #</TD>
           <TD>Reports the name of the file set to be opened for the specified Navigator item.&nbsp;
-            Sets <i>reportedValue1</i> to the filename or to 0 if there is none.&nbsp; For <b>#</b>, enter 0 for
+            Sets <i>reportedValue1</i> to the filename or to 0 if there is none, and sets 
+            dee<i>reportedValue2</i> to 1 if there is a file or 0 if there is none.&nbsp; For <b>#</b>, enter 0 for
               the current item; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the
               table, where -1 is the last item.&nbsp; The command will not work for the item
@@ -4596,7 +4645,7 @@
             to redirect standard error output to a file, or &#39;&gt; outfile 2&gt;&amp;1&#39; to redirect
             both to one file.&nbsp; Single arguments like filenames that contain spaces
             should be enclosed in double quotes.&nbsp; The exit status of the command will
-            be placed in <i>reportedValue1</i>; if it is -1, this indicates an error in before
+            be placed in <i>reportedValue1</i>; if it is -1, this indicates an error before
             running the command, and <i>reportedValue2</i> will be set with the following values: 1
             if argument list too big, 2 or 3 if command interpreter cannot be found or is
             not executable, 4 for insufficient memory or other memory problem, 5 for
@@ -4608,7 +4657,8 @@
             besides 1 for failure of the operation to distinguish it from failure to run the
             command.&nbsp;&nbsp; If STOP is used while the command is running, the script
             will stop and the thread that is running the command will be killed, but the
-            command will keep running.</TD>
+            command will keep running.&nbsp; If this feature or the DOS window that opens is a
+             problem, see the if you can use the 'RunProcess' command</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CreateProcess command</TD>
@@ -4616,6 +4666,18 @@
             the argument list defined previously with the 'NextProcessArgs' command.&nbsp;
             See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
             for a description of the rules governing this command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RunProcess command</TD>
+          <TD>Like 'CreateProcess' except that it wait for the program to finish and sets <i>reportedValue1</i> 
+            with its exit status.&nbsp; See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
+            for a description of the rules governing this command.&nbsp; Failure to start the program generates
+            a script error, but a non-zero exit status will not.&nbsp; Unlike 'RunInShell', this
+            command avoids opening a DOS window.&nbsp; Redirection of output to a file
+            is possible, but if you need more elaborate shell features like piping, you need to use
+            'RunInShell'.&nbsp; If STOP is used while the command is running, the process will be 
+            terminated.&nbsp; Command added in 4.1, 8/24/22.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NextProcessArgs arg [arg] [...]</TD>

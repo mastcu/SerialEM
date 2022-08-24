@@ -58,6 +58,15 @@
       filename yourself to 
       prevent quotes from being in the wrong place.</p>
     <p>
+      <strong>Optional redirection of output to a file</strong></p>
+    <p>
+      The standard output from the command can be written to a file by ending the 
+      command with &#39;&gt; filename&#39;; standard error and output can be written together 
+      using &#39;&gt;&amp; filename&#39;.&nbsp; These redirections are implemented by SerialEM 
+      connecting the command output to the output file, not by running in a shell, so 
+      no other standard piping or redirection is allowed here, unlike with the 
+      &#39;RunInShell script&#39; command.</p>
+    <p>
       <b>Examples</b></p>
       <pre>ExternalTool Open Mdoc File
 ToolCommand 1 notepad

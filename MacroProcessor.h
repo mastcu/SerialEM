@@ -133,6 +133,7 @@ public:
   void Resume();
   void Run(int which);
   int TaskBusy();
+  void CleanupExternalProcess();
   void CheckAndSetupExternalControl(void);
   void Initialize();
   CMacroProcessor();
@@ -302,6 +303,8 @@ protected:
   BOOL mMovedScreen;
   BOOL mStartedLongOp; // Flag that long operation was started
   BOOL mRanGatanScript; // Flag that a DM script was started
+  BOOL mRanCtfplotter;  // Flag that ctfplotter was run
+  BOOL mRanExtProcess;  // Flag that 
   BOOL mMovedPiezo;    // Flag that a piezo movement was started
   BOOL mMovedAperture; // Flag that an aperture/phase plate movement was started
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
@@ -401,6 +404,8 @@ protected:
   CString mPyModulePath;       // Module path set by property or set as default
   int mScriptNumFound;         // Last script number (0-based) for FindScriptByName
   float mCumulRecordDose;      // Cumulative Record dose for tilt series
+  ImodImageFile *mShrMemFile;  // Shared memory file for a process
+  DWORD mExtProcExitStatus;    // Exit status from external process run sychronously
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);

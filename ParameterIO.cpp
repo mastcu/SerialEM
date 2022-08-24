@@ -3819,6 +3819,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           mWinApp->mExternalTools->AddArgString(itemInt[1] - 1, message);
         }
 
+      } else if (MatchNoCase("CtfplotterPath")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mExternalTools->SetCtfplotterPath(message);
+
       } else if (MatchNoCase("FFTCircleRadii")) {
         for (ind = 1; ind < MAX_FFT_CIRCLES; ind++) {
           if (itemEmpty[ind])
@@ -3827,7 +3831,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         }
         mWinApp->mProcessImage->SetNumCircles(ind - 1);
 
-     } else if (MatchNoCase("FFTZeroParams")) {
+      } else if (MatchNoCase("FFTZeroParams")) {
        mWinApp->mProcessImage->SetSphericalAber((float)B3DMAX(0.01, itemDbl[1]));
        if (!itemEmpty[2])
          mWinApp->mProcessImage->SetNumFFTZeros(itemInt[2]);

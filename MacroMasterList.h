@@ -664,6 +664,10 @@ MAC_SAME_FUNC_ARG(AddStagePointsAsPolygon, 3, 4, AddStagePosAsNavPoint, ADDSTAGE
 MAC_SAME_NAME_NOARG(GetUniqueNavID, 0, 5, GETUNIQUENAVID)
 MAC_SAME_NAME_ARG(TrimString, 3, 4, TRIMSTRING, ISS)
 MAC_SAME_NAME_ARG(ReportCameraName, 1, 4, REPORTCAMERANAME, I)
+MAC_SAME_NAME_ARG(Ctfplotter, 3, 1, CTFPLOTTER, SDDiddiddd)
+MAC_SAME_NAME_ARG(RunProcess, 1, 0, RUNPROCESS, S)
+MAC_SAME_NAME_NOARG(ReportCtplotterTuning, 0, 4, REPORTCTPLOTTERTUNING)
+
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
