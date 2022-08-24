@@ -3408,7 +3408,7 @@ void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defo
 
 // Run
 int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
-  float results_array[7])
+  float results_array[7], bool skipOutput)
 {
   float *spectrum;
   //float *rotationalAvg, *normalizedAvg, *fitCurve;
@@ -3475,7 +3475,8 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
       /*if (results_array[6])
         PrintfToLog("Antialiasing detected at %.1f", results_array[6]);*/
     }
-    mWinApp->AppendToLog(mess);
+    if (!skipOutput)
+      mWinApp->AppendToLog(mess);
     //PrintfToLog("Elapsed time %.3f sec", wallTime() - wallStart);
   } else {
     err = 1;
