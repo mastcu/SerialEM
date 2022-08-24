@@ -14,7 +14,8 @@ public:
   KStoreIMOD(CString inFilename, FileOptions inFileOpt);
   ~KStoreIMOD(void);
   virtual BOOL  FileOK();
-	virtual KImage  *getRect(void);
+  virtual bool    fileIsShrMem();
+  virtual KImage  *getRect(void);
   virtual int     CheckMontage(MontParam *inParam);
   virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMutex = false);
   virtual int     getStageCoord(int inSect, double &outX, double &outY);

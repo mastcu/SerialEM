@@ -4,11 +4,13 @@
 
 #ifndef IIMAGE_H
 #define IIMAGE_H
-
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+#include <math.h>
 #include "ilist.h"
 #include "mrcfiles.h"
 #include "mrcslice.h"
-#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +28,7 @@ extern "C" {
 #define IIFILE_HDF     5
 #define IIFILE_JPEG    6
 #define IIFILE_ADOC    7
+#define IIFILE_SHR_MEM 8
 
   /* Values for the format member of ImodImageFile, describing kind data */
 #define IIFORMAT_LUMINANCE 0
@@ -116,7 +119,12 @@ extern "C" {
 #define IIAXIS_Y 2
 #define IIAXIS_Z 3
 
+#define MAX_HALF_FLOAT 65504.
+
 #define MAX_TIFF_THREADS 16
+
+#define SHR_MEM_NAME_TAG "/IMODShrMem_"
+#define SHR_MEM_DATA_OFFSET 2048
 
   /* DOC_CODE ImodImageFile structure */
   typedef struct  ImodImageFileStruct ImodImageFile;
@@ -158,6 +166,11 @@ extern "C" {
     int   sectionSkip;
     int   hasPieceCoords;    /* Flag that MRC file has piece coordinates in header */
     char *header;
+#ifdef _WIN32
+    HANDLE shrMemFile;
+#else
+    int shrMemFile;
+#endif
     char *userData;
     unsigned int userFlags;  /* Flags for the userData */
     int userCount;           /* Number of bytes of userData */
@@ -177,7 +190,8 @@ extern "C" {
     int  tileSizeY;          /* Tile size in Y if tiles, strip size if not */
     int  lastWrittenZ;       /* Last Z written, needed if sequential writing only */
     int  packed4bits;        /* Data in file are 4-bit, packed 2 pixels per byte */
-    int fillOrder;           /* Fill order for the 4-bit data */
+    int  fillOrder;          /* Fill order for the 4-bit data */
+    int  halfFloats;         /* Data in file are 16-bit floats */
     Ilist *directoryNums;    /* List of directory numbers for qualifying images in file */
 
     /* HDF variables */
@@ -267,6 +281,7 @@ extern "C" {
     int pixSize;
     int swapped;
     int packed4bits;
+    int halfFloats;
     int bytesSinceCheck;
   } LineProcData;
 
@@ -366,6 +381,7 @@ extern "C" {
   void tiffGainReferenceForEER(float *ref);
   int tiffGetMaxEERsuperRes();
   int tiffGetMinEERsuperRes();
+  void getDfltEERsummingFromEnv(int *superRes, int *zSumming);
   void tiffAddDescription(const char *text);
   int tiffNumReadThreads(int nx, int ny, int compression, int maxThreads);
   int tiffParallelRead(ImodImageFile **fileCopies, int maxThreads, int llx, int urx,
@@ -387,7 +403,8 @@ extern "C" {
   int iiHDFopenNew(ImodImageFile *inFile, const char *mode);
   int hdfWriteGlobalAdoc(ImodImageFile *inFile);
   int hdfWriteDummySection(ImodImageFile *inFile, char *buf, int cz);
-  int iiProcessReadLine(MrcHeader *hdata, IloadInfo *li, LineProcData *d);
+  int iiProcessReadLine(MrcHeader *hdata, IloadInfo *li, LineProcData *d, 
+                        unsigned char *bdataIn, unsigned char *bufpIn);
   int iiInitReadSectionAny(MrcHeader *hdata, IloadInfo *li, unsigned char *buf,
                            LineProcData *d, int *freeMap, int *yEnd, const char *caller);
   void iiBestTileSize(int imSize, int *tileSize, int *numTiles, int multipleOf);
@@ -401,6 +418,10 @@ extern "C" {
   int jpegWriteSection(ImodImageFile *inFile, char *buf, int inverted, int resolution, 
                        int quality);
   int iiSimpleFillMrcHeader(ImodImageFile *inFile, MrcHeader *hdata);
+  int iiShrMemCreate(const char *filename, ImodImageFile *iiFile);
+  ImodImageFile *iiShrMemOpen(const char *filename, const char *mode);
+  size_t iiShrMemCheckSize(const char *filename);
+  int iiShrMemRemove(const char *filename);
 
   int iiADOCCheck(ImodImageFile *inFile);
   /* This is here in case a program links with iiqimage */

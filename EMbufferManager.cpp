@@ -393,7 +393,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
-  if (inStore->getStoreType() != STORE_TYPE_IMOD) {
+  if (inStore->getStoreType() != STORE_TYPE_IMOD && inStore->getStoreType() != STORE_TYPE_IIMRC) {
     err = 1;
     int secnum = inStore->getDepth();
     if (mSaveAsynchronously && !savingOther) {
@@ -450,7 +450,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
         mWinApp->mCameraMacroTools.DoUserStop();
 
     }
-    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther))
+    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther) && 
+      !inStore->fileIsShrMem())
       toBuf->mSecNumber = 0;
   }
 
@@ -467,7 +468,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     return 1;
   }
 
-  toBuf->NegateSaveCopy();
+  if (!inStore->fileIsShrMem())
+    toBuf->NegateSaveCopy();
   check = MainImBufIndex(toBuf);
   if (mCopyOnSave > 0 && !mWinApp->Montaging() && !savingOther && check >= 0)
     CopyImageBuffer(check, mCopyOnSave);

@@ -1236,6 +1236,7 @@
     <ClInclude Include="ScreenShotDialog.h" />
     <ClInclude Include="SettingsTests.h" />
     <ClInclude Include="Shared\ctffind.h" />
+    <ClInclude Include="Shared\ctfutils.h" />
     <ClInclude Include="Shared\framealign.h" />
     <ClInclude Include="Shared\gpuframe.h" />
     <ClInclude Include="Shared\holefinder.h" />

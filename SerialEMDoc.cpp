@@ -1409,9 +1409,9 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
       // ADOC series
       KStoreADOC *storeADOC = new KStoreADOC(cFilename, *fileOptp);
       store = (KImageStore *)storeADOC;
-    } else if (fileType == STORE_TYPE_HDF) {
+    } else if (fileType == STORE_TYPE_HDF || fileType == STORE_TYPE_IIMRC) {
 
-      // HDF file
+      // HDF or single MRC file
       KStoreIMOD *storeHDF = new KStoreIMOD(cFilename, *fileOptp);
       store = (KImageStore *)storeHDF;
     } else {

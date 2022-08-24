@@ -31,26 +31,43 @@ KStoreIMOD::KStoreIMOD(CString filename)
   }
 }
 
-// Open a new IMOD type file for writing a TIFF image
+// Open a new IMOD type file for writing a single TIFF, JPEG, or MRC image, or open HDF
 KStoreIMOD::KStoreIMOD(CString inFilename, FileOptions inFileOpt)
   : KImageStore()
 {
   int fileType = inFileOpt.useMont() ? inFileOpt.montFileType : inFileOpt.fileType;
   bool isJpeg = fileType == STORE_TYPE_JPEG;
   bool isHdf = fileType == STORE_TYPE_HDF;
+  bool isMrc = fileType == STORE_TYPE_IIMRC;
   char *compEnvVar;
   int zipLevel = 5, varLevel;
+  int iiType = IIFILE_TIFF;
+  FILE *fp;
   CommonInit();
   mFileOpt = inFileOpt;
   mFilename = inFilename;
   if (fileType == STORE_TYPE_ADOC)
     fileType = STORE_TYPE_TIFF;
-  if (fileType != STORE_TYPE_TIFF && !isJpeg && !isHdf)
+  if (fileType != STORE_TYPE_TIFF && !isJpeg && !isHdf && !isMrc)
     return;
-  if (mFileOpt.compression == COMPRESS_JPEG || isJpeg)
+  if ((mFileOpt.compression == COMPRESS_JPEG || isJpeg) && !isMrc)
     mFileOpt.mode = MRC_MODE_BYTE;
-  mIIfile = iiOpenNew(inFilename, isHdf ? "rw" : "w",
-    B3DCHOICE(isHdf, IIFILE_HDF, isJpeg ? IIFILE_JPEG : IIFILE_TIFF));
+  if (isHdf)
+    iiType = IIFILE_HDF;
+  else if (isJpeg)
+    iiType = IIFILE_JPEG;
+  if (isMrc) {
+    iiType = IIFILE_MRC;
+    mStoreType = STORE_TYPE_IIMRC;
+    fp = iiFOpen((LPCTSTR)inFilename, "wb");
+    if (!fp)
+      return;
+    mIIfile = iiLookupFileFromFP(fp);
+    if (!mIIfile)
+      iiFClose(fp);
+  } else {
+    mIIfile = iiOpenNew(inFilename, isHdf ? "rw" : "w", iiType);
+  }
   if (!mIIfile)
     return;
 
@@ -90,6 +107,11 @@ KStoreIMOD::~KStoreIMOD(void)
 BOOL KStoreIMOD::FileOK()
 {
   return (mIIfile != NULL);
+}
+
+bool KStoreIMOD::fileIsShrMem()
+{
+  return mIIfile && mIIfile->file == IIFILE_SHR_MEM;
 }
 
 KImage  *KStoreIMOD::getRect(void)
@@ -180,7 +202,7 @@ int KStoreIMOD::ReorderPieceZCoords(int * sectOrder)
 void KStoreIMOD::Close(void)
 {
   CString str;
-  if (mStoreType == STORE_TYPE_HDF) {
+  if (mIIfile && mStoreType == STORE_TYPE_HDF) {
     if (AdocGetMutexSetCurrent(mAdocIndex) < 0) {
       SEMMessageBox("Failed to get mutex for writing header of HDF file");
     } else {
@@ -191,6 +213,18 @@ void KStoreIMOD::Close(void)
       AdocReleaseMutex();
     }
   }
+  if (mIIfile && mStoreType == STORE_TYPE_IIMRC) {
+    if (mIIfile->file == IIFILE_SHR_MEM && iiWriteHeader(mIIfile)) {
+      str.Format("Error writing header to shared memory file:\n%s", b3dGetError());
+      SEMMessageBox(str);
+    }
+    if (mIIfile->file == IIFILE_MRC && mrc_head_write(mIIfile->fp, 
+      (MrcHeader *)mIIfile->header)) {
+      str.Format("Error writing header of MRC file:\n%s", b3dGetError());
+      SEMMessageBox(str);
+    }
+  }
+
   if (mIIfile)
     iiDelete(mIIfile);
   mIIfile = NULL;
@@ -285,7 +319,7 @@ int KStoreIMOD::getTiffValue(int tag, int type, int tokenNum, double &dvalue,
   return err;
 }
 
-// Write a section to a TIFF or JPEG file
+// Write a section to a TIFF or JPEG file or MRC file
 int KStoreIMOD::WriteSection(KImage * inImage)
 {
   char *idata;
@@ -294,12 +328,14 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   int retval = 0;
   int resolution = 0;
   bool isJpeg = mFileOpt.fileType == STORE_TYPE_JPEG;
-  if (inImage == NULL) 
+  bool isMrc = mFileOpt.fileType == STORE_TYPE_IIMRC;
+  if (inImage == NULL)
     return 1;
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
+  MrcHeader *header = (MrcHeader *)mIIfile->header;
   if (mIIfile == NULL)
     return 2;
-  if (mFileOpt.fileType != STORE_TYPE_TIFF && !isJpeg)
+  if (mFileOpt.fileType != STORE_TYPE_TIFF && !isJpeg && !isMrc)
     return 10;
   mIIfile->nx = mWidth = inImage->getWidth();
   mIIfile->ny = mHeight = inImage->getHeight();
@@ -310,14 +346,15 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   } else
     mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
   mPixSize = lookupPixSize(mMode);
-  mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;
+  if (!isMrc) 
+    mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;
   int dataSize = mWidth * mHeight * mPixSize;
 
   if (AssignIIfileTypeAndFormat())
     return 11;
 
   inImage->Lock();
-  idata   = convertForWriting(inImage, false, needToReflip, needToDelete);
+  idata   = convertForWriting(inImage, isMrc, needToReflip, needToDelete);
   if (!idata) {
     inImage->UnLock();
     return 4;
@@ -343,10 +380,35 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     mNumTitles = 0;
     mTitles = "";
 
-    // Write the data with given compression; 1 means it is already inverted
-    if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution, 
-      mFileOpt.compression == COMPRESS_JPEG ? mFileOpt.jpegQuality  : -1))
-      retval = 6;
+    if (isMrc) {
+      header->mode = mMode;
+      header->nx = header->mx = mIIfile->nx;
+      header->ny = header->my = mIIfile->ny;
+      header->amin = mIIfile->amin;
+      header->amax = mIIfile->amax;
+      header->amean = (float)theMean;
+      if (mrc_write_slice(idata, header->fp, header, mIIfile->nz, 'Z')) {
+        retval = 6;
+        CString str = b3dGetError();
+        AfxMessageBox(str, MB_EXCLAME);
+      } else {
+        if (mIIfile->file == IIFILE_MRC)
+          mIIfile->nz++;
+        header->nz = header->mz = mIIfile->nz;
+        if (extra && extra->mPixel > 0)
+          mrc_set_scale(header, extra->mPixel, extra->mPixel, extra->mPixel);
+      }
+    } else {
+
+      // Write the data with given compression; 1 means it is already inverted
+      if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution,
+        mFileOpt.compression == COMPRESS_JPEG ? mFileOpt.jpegQuality : -1))
+        retval = 6;
+    }
+  }
+  if (needToReflip) {
+    inImage->flipY();
+    inImage->setNeedToReflip(false);
   }
   if (needToDelete)
     delete [] idata;
@@ -531,7 +593,7 @@ int KStoreIMOD::AddTitle(const char *inTitle)
   MrcHeader *hdata = (MrcHeader *)mIIfile->header;
   if (KImageStore::AddTitle(inTitle))
     return 1;
-  if (mStoreType == STORE_TYPE_HDF) {
+  if (mStoreType == STORE_TYPE_HDF || mStoreType == STORE_TYPE_IIMRC) {
     if (hdata->nlabl >= 10)
       return 1;
     AddTitleToLabelArray(&hdata->labels[hdata->nlabl][0], hdata->nlabl, inTitle);

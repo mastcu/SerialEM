@@ -23,6 +23,7 @@
 #define STORE_TYPE_ADOC 3
 #define STORE_TYPE_JPEG 4
 #define STORE_TYPE_HDF  5
+#define STORE_TYPE_IIMRC 6
 
 class KImageStore : public KImageBase
 {
@@ -74,6 +75,7 @@ public:
   virtual KImage  *getRect(void) {return NULL;};
   virtual int     ReorderPieceZCoords(int *sectOrder) { return -1; };
   virtual int     setMode(int inMode) {return 0;};
+  virtual bool    fileIsShrMem() { return false; };
 
   int CheckMontage(MontParam *inParam, int nx, int ny, int nz);
   virtual void    setTime(int inTime);
