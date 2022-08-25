@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/25/22: Fixed Camera - Divide 16 Bit by 2 being disabled for FEI cameras
+(In 4.0).
+
 8/24/22: Added ability to run the Ctfplotter program from IMOD instead of the
 built in Ctffind.
 

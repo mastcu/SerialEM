@@ -1881,7 +1881,8 @@ void CMenuTargets::OnUpdateCameraDivideby2(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetActiveCamParam();
   BOOL bEnable = !DoingTasks() && !mCamera->CameraBusy() && 
-    !mWinApp->StartedTiltSeries() && (param->CamFlags & CAMFLAG_NO_DIV_BY_2) == 0;
+    !mWinApp->StartedTiltSeries() && 
+    (param->FEItype || (param->CamFlags & CAMFLAG_NO_DIV_BY_2) == 0);
   pCmdUI->Enable(bEnable);
   pCmdUI->SetCheck(mCamera->GetDivideBy2() > 0 ? 1 : 0);
 }
