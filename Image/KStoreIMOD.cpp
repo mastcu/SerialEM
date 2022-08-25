@@ -397,6 +397,8 @@ int KStoreIMOD::WriteSection(KImage * inImage)
         header->nz = header->mz = mIIfile->nz;
         if (extra && extra->mPixel > 0)
           mrc_set_scale(header, extra->mPixel, extra->mPixel, extra->mPixel);
+        else if (mHasPixelSpacing)
+          mrc_set_scale(header, mPixelSpacing, mPixelSpacing, mPixelSpacing);
       }
     } else {
 

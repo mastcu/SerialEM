@@ -372,15 +372,21 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
     memFile = "No pixel size is available for running Ctfplotter on this image";
     return 1;
   }
-  if (!imBuf->GetAxisAngle(axisAngle)) {
-    memFile = "No tilt axis rotation angle is available for running "
-      "Ctfplotter on this image";
-    return 1;
-  }
-  axisAngle -= 90.;
   if (!imBuf->GetTiltAngle(tiltAngle)) {
     memFile = "No tilt angle is available for running Ctfplotter on this image";
     return 1;
+  }
+
+  // Get tilt axis angle, allow it not to exist if tilt is small
+  if (imBuf->GetAxisAngle(axisAngle)) {
+    axisAngle -= 90.;
+  } else {
+    axisAngle = 0;
+    if (fabs(tiltAngle) > 1.) {
+      memFile = "A tilt axis rotation angle is needed for running "
+        "Ctfplotter on this image, which is tilted > 1 degree, and none is available";
+      return 1;
+    }
   }
 
   // Make the command  The path may eventually be required

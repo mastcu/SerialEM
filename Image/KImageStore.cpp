@@ -58,6 +58,7 @@ void KImageStore::CommonInit(void)
   mMeanSum = 0.;
   mNumWritten = 0;
   mPixelSpacing = 1.;
+  mHasPixelSpacing = false;
 }
 
 KImageStore::~KImageStore()
@@ -85,6 +86,7 @@ int KImageStore::AddTitle(const char *inTitle)
 void KImageStore::SetPixelSpacing(float pixel)
 {
   mPixelSpacing = pixel;
+  mHasPixelSpacing = true;
   if (mAdocIndex < 0 || AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return;
   AdocSetFloat(ADOC_GLOBAL, 0, ADOC_PIXEL, pixel);

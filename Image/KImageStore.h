@@ -47,6 +47,7 @@ protected:
   int        mNumWritten;
   float      mPixelSpacing;
   float      mUpdateTimePerSect;
+  bool       mHasPixelSpacing;
 
 public:
 	         KImageStore(CString inFilename);
