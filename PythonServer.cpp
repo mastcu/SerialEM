@@ -278,6 +278,7 @@ long *CPythonServer::AddReturnArrays(int &lenTot)
 
 void CPythonServer::TryToStartExternalControl(void)
 {
+  sScriptData->waitingForCommand = 0;
   sScriptData->externalControl = -1;
   Sleep(10);
   for (int ind = 0; ind < 500; ind++) {

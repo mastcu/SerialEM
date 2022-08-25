@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/22/22: Fixed script run by external Python from getting hung up (In 4.0).
+
+8/22/22: Prevented ChangeIntensityBy from applying negative factor (In 4.0).
+
 8/20/22: Prevented CreateProcess command from being named CreateProcessA
 (in 4.0).
 
