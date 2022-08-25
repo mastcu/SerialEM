@@ -7103,6 +7103,8 @@ int CMacCmd::SetIntensityByLastTilt(void)
     delISX = mIntensityFactor;
   } else {
     delISX = mItemDbl[1];
+    if (delISX <= 0.)
+      ABORT_LINE("The factor to change by must be positive in line:/n/n");
     index2 = mScope->GetLowDoseArea();
   }
 
