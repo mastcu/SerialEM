@@ -2092,7 +2092,7 @@ int HoleFinder::analyzeNeighbors
 
   // If need to find spacing, get median of nearest neighbor distance, then mean of 
   // all distances 
-  if (justFindSpacing) {
+  if (justFindSpacing && numPoints > 1) {
     saveLenBelow = mAvgLenBelow;
     saveLenAbove = mAvgLenAbove;
     saveAngBelow = mPeakAngBelow;

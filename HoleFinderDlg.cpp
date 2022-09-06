@@ -890,9 +890,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
           image = imBuf->mImage;
           mFullYsize = image->getHeight();
           mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
-          if (mWinApp->mProcessImage->GetTestCtfPixelSize())
+          // This is deadly, uncomment to use it!
+          /*if (mWinApp->mProcessImage->GetTestCtfPixelSize())
             mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * 
-            imBuf->mBinning;
+            imBuf->mBinning;*/
           if (!mPixelSize) {
             SEMMessageBox("The image has no pixel size after reloading for finding "
               "holes");
@@ -1278,7 +1279,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
     // It turns out that the pieceOn values from above are not quite right or consistent
     // with what is needed for proper display, so replace them
-    if (mMontage)
+    if (mMontage && mPieceOn.size())
       mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
         &mYinPiece[ind]);
     mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
