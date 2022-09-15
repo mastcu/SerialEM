@@ -391,20 +391,30 @@ void CStateDlg::OnButUpdateState()
 // Set imaging state
 void CStateDlg::OnButSetImState()
 {
+  CString errStr;
   mWinApp->RestoreViewFocus();
+  if (!SetCurrentParam())
+    return;
+  if (DoSetImState(errStr))
+    mWinApp->AppendToLog(errStr);
+}
+
+// Common function that does the work
+int CStateDlg::DoSetImState(CString & errStr)
+{
   ControlSet *conSet = mWinApp->GetConSets();
   CString *names = mWinApp->GetModeNames();
   int type = mHelper->GetTypeOfSavedState();
   int area, setNum, indSave, areaInd, saveTarg = 0;
-  if (!SetCurrentParam())
-    return;
-  if (mWinApp->LookupActiveCamera(mParam->camIndex) < 0)
-    return;
+  if (mWinApp->LookupActiveCamera(mParam->camIndex) < 0) {
+    errStr = "The camera number defined for this state is not an active camera";
+    return 5;
+  }
   if (type != STATE_NONE && mParam->lowDose && mCamOfSetState >= 0 &&
     mParam->camIndex != mCamOfSetState) {
-    mWinApp->AppendToLog("Cannot set a low dose state with a camera different from that"
-      " of the first state set");
-    return;
+    errStr = "Cannot set a low dose state with a camera different from that"
+      " of the first state set";
+    return 6;
   }
   area = mHelper->AreaFromStateLowDoseValue(mParam, &setNum);
   PrintfToLog("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
@@ -450,6 +460,7 @@ void CStateDlg::OnButSetImState()
   if (mCamOfSetState < 0)
     mCamOfSetState = mParam->camIndex;
   Update();
+  return 0;
 }
 
 // Set map acquire state
@@ -542,6 +553,62 @@ void CStateDlg::OnButForgetState()
   DisableUpdateButton();
   mCamOfSetState = -1;
   Update();
+}
+
+// For an external caller to set a state specified by name or number in table
+int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
+{
+  StateParams *state;
+  CString ucName = name.Trim(), stateName;
+  int ind, selInd = -1, selNum;
+  bool numOK, twoMatch = false;
+  const char *namePtr = (LPCTSTR)name;
+  char *endPtr;
+  ucName.MakeUpper();
+  selNum = strtol(namePtr, &endPtr, 10) - 1;
+  numOK = endPtr - namePtr == ucName.GetLength();
+  selInd >= 0 && selInd < (int)mStateArray->GetSize() &&
+    ucName.Trim().GetLength() == stateName.GetLength();
+  for (ind = 0; ind < (int)mStateArray->GetSize(); ind++) {
+    state = mStateArray->GetAt(ind);
+    stateName = state->name;
+    stateName.MakeUpper();
+    if (!stateName.IsEmpty() && stateName.Find(ucName) == 0) {
+      if (selInd < 0)
+        selInd = ind;
+      else
+        twoMatch = true;
+    }
+  }
+  if (selInd < 0 && !numOK) {
+    errStr = "There is no state whose name starts with " + name;
+    return 1;
+  }
+  if (twoMatch && !numOK) {
+    errStr = "There are two states whose names start with " + name;
+    return 2;
+  }
+  if (selInd < 0 && numOK) {
+    if (selNum >= 0 && selNum < (int)mStateArray->GetSize())
+      selInd = selNum;
+    else {
+      errStr = "There is no state numbered " + name;
+      return 3;
+    }
+  }
+  if (mHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE) {
+    errStr = "A map acquire state is already set";
+    return 4;
+  }
+  selNum = mCurrentItem;
+  mCurrentItem = selInd;
+  mParam = mStateArray->GetAt(selInd);
+  ind = DoSetImState(errStr);
+  mCurrentItem = selNum;
+  SetCurrentParam();
+  if (mCurrentItem >= 0)
+    m_listViewer.SetCurSel(mCurrentItem);
+  return ind;
 }
 
 // Format the string for the list box

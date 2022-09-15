@@ -66,9 +66,11 @@ public:
   afx_msg void OnButAddNavState();
   afx_msg void OnButDelState();
   afx_msg void OnButSetImState();
+  int DoSetImState(CString &errStr);
   afx_msg void OnButSetMapState();
   afx_msg void OnButRestoreState();
   afx_msg void OnButForgetState();
+  int SetStateByNameOrNum(CString name, CString &errStr);
   void Update(void);
   void UpdateListString(int index);
   void FillListBox(void);
