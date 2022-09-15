@@ -34,6 +34,7 @@ private:
   int mNumInPanel[7];
   bool mRecordingRegular;
   bool mRecordingCustom;
+  int mSteppingAdjusting;
   std::vector<double> mSavedISX, mSavedISY;
   BOOL mSavedMouseStage;
   double mRecordStageX, mRecordStageY;
@@ -122,7 +123,7 @@ public:
   afx_msg void OnButEndPattern();
   afx_msg void OnButAbort();
   CStatic m_statSaveInstructions;
-  bool RecordingHoles() {return mRecordingRegular || mRecordingCustom;};
+  bool RecordingHoles() {return mRecordingRegular || mRecordingCustom || mSteppingAdjusting;};
   void StopRecording(void);
   void StartRecording(const char *instruct);
   void UpdateSettings(void);
@@ -149,4 +150,8 @@ public:
   afx_msg void OnKillfocusEditRing2Dist();
   CString m_strNum2Shots;
   CButton m_butDoSecondRing;
+  CButton m_butUseLastHoleVecs;
+  CButton m_butStepAdjust;
+  afx_msg void OnButUseLastHoleVecs();
+  afx_msg void OnButStepAdjust();
 };

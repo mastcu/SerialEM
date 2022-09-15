@@ -18,6 +18,8 @@
 #include "ShiftCalibrator.h"
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
+#include "NavHelper.h"
+#include "HoleFinderDlg.h"
 #include "NavAcquireDlg.h"
 
 static int idTable[] = {IDC_CHECK_DO_SHOTS_IN_HOLE, PANEL_END,
@@ -30,8 +32,9 @@ IDC_TSS_LINE1, IDC_CHECK_DO_MULTIPLE_HOLES, PANEL_END,
 IDC_EDIT_HOLE_DELAY_FAC, IDC_STAT_REGULAR, IDC_STAT_NUM_X_HOLES, IDC_SPIN_NUM_X_HOLES, 
 IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INSTRUCTIONS,
 IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
-IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT,
-IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, PANEL_END,
+IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
+IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, IDC_BUT_STEP_ADJUST,
+PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
@@ -72,6 +75,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mNonModal = true;
   mRecordingRegular = false;
   mRecordingCustom = false;
+  mSteppingAdjusting = 0;
   mDisabledDialog = false;
   mWarnedIStoNav = false;
   mLastMagIndex = 0;
@@ -92,11 +96,11 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_NUM_SHOTS, m_strNumShots);
   DDX_Control(pDX, IDC_SPIN_NUM_SHOTS, m_sbcNumShots);
   DDX_Text(pDX, IDC_EDIT_SPOKE_DIST, m_fSpokeDist);
-  MinMaxFloat(IDC_EDIT_SPOKE_DIST, m_fSpokeDist, 0.05f, 50., 
+  MinMaxFloat(IDC_EDIT_SPOKE_DIST, m_fSpokeDist, 0.05f, 50.,
     "Main ring distance from center");
   DDX_Control(pDX, IDC_EDIT_EARLY_FRAMES, m_editEarlyFrames);
   DDX_Text(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames);
-  MinMaxInt(IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 999, 
+  MinMaxInt(IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 999,
     "Early return number of frames");
   DDX_Check(pDX, IDC_CHECK_SAVE_RECORD, m_bSaveRecord);
   DDX_Control(pDX, IDC_CHECK_USE_ILLUM_AREA, m_butUseIllumArea);
@@ -111,7 +115,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_RNO_EARLY, m_butNoEarly);
   DDX_Radio(pDX, IDC_RNO_EARLY, m_iEarlyReturn);
   DDX_Text(pDX, IDC_EDIT_EXTRA_DELAY, m_fExtraDelay);
-  MinMaxFloat(IDC_EDIT_EXTRA_DELAY, m_fExtraDelay, 0., 100., 
+  MinMaxFloat(IDC_EDIT_EXTRA_DELAY, m_fExtraDelay, 0., 100.,
     "Extra delay after image shift");
   DDX_Control(pDX, IDC_CHECK_SAVE_RECORD, m_butSaveRecord);
   DDX_Control(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_butAdjustBeamTilt);
@@ -144,7 +148,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_HOLE_DELAY_FAC, m_statHoleDelayFac);
   DDX_Control(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_editHoleDelayFac);
   DDX_Text(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac);
-  MinMaxFloat(IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac, 0.1f, 5.0f, 
+  MinMaxFloat(IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac, 0.1f, 5.0f,
     "Multiplier of delay after shifting to hole");
   DDX_Control(pDX, IDC_BUT_SAVE_IS, m_butSaveIS);
   DDX_Control(pDX, IDC_BUT_END_PATTERN, m_butEndPattern);
@@ -165,6 +169,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   MinMaxFloat(IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f, "Distance to second ring");
   DDX_Text(pDX, IDC_STAT_NUM2_SHOTS, m_strNum2Shots);
   DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
+  DDX_Control(pDX, IDC_BUT_USE_LAST_HOLE_VECS, m_butUseLastHoleVecs);
+  DDX_Control(pDX, IDC_BUT_STEP_ADJUST, m_butStepAdjust);
 }
 
 
@@ -198,6 +204,8 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_SECOND_RING, OnDoSecondRing)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RING2_NUM, OnDeltaposSpinRing2Num)
   ON_EN_KILLFOCUS(IDC_EDIT_RING2_DIST, OnKillfocusEditRing2Dist)
+  ON_BN_CLICKED(IDC_BUT_USE_LAST_HOLE_VECS, OnButUseLastHoleVecs)
+  ON_BN_CLICKED(IDC_BUT_STEP_ADJUST, OnButStepAdjust)
 END_MESSAGE_MAP()
 
 
@@ -455,10 +463,20 @@ void CMultiShotDlg::OnSetCustom()
   StartRecording("Shift image to central point of pattern (not acquired)");
 }
 
+// Button to step and adjust IS
+void CMultiShotDlg::OnButStepAdjust()
+{
+  mSteppingAdjusting = (m_bUseCustom && mActiveParams->customHoleX.size() > 0) ? 2 : 1;
+  StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
+    "Adjust shift at first corner of pattern");
+}
+
 // Common operations to start recording corners/points
 void CMultiShotDlg::StartRecording(const char *instruct)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  int prevMag;
+  double ISX, ISY;
   mSavedISX.clear();
   mSavedISY.clear();
   if (mWinApp->mNavigator)
@@ -467,11 +485,31 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   mWinApp->mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
   mNavPointIncrement = -9;
+  if (mSteppingAdjusting) {
+    prevMag = mSteppingAdjusting > 1 ? mActiveParams->customMagIndex :
+      mActiveParams->holeMagIndex;
+    mWinApp->mScope->SetMagIndex(prevMag);
+  }
   if (mWinApp->LowDoseMode()) {
     mSavedLDRecParams = ldp[RECORD_CONSET];
     mSavedLDForCamera = mWinApp->GetCurrentCamera();
     PrintfToLog("Low Dose Record parameters will be restored when you finish defining the"
       " pattern");
+    if (mSteppingAdjusting && ldp[RECORD_CONSET].magIndex != prevMag &&
+      AfxMessageBox("The magnification has been set to the value "
+        "used to define existing shifts.\n\nDo you want to set the Record area to that "
+        "magnification?", MB_QUESTION) == IDYES) {
+      ldp[RECORD_CONSET].magIndex = prevMag;
+      if (mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)
+        mWinApp->mScope->GotoLowDoseArea(RECORD_CONSET);
+    }
+  }
+  if (mSteppingAdjusting == 1) {
+    ISX = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISXspacing[0] +
+      (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISXspacing[1]) / 2.;
+    ISY = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISYspacing[0] +
+      (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISYspacing[1]) / 2.;
+    mWinApp->mScope->IncImageShift(ISX, ISY);
   }
   ManageEnables();
 }
@@ -480,8 +518,9 @@ void CMultiShotDlg::StartRecording(const char *instruct)
 void CMultiShotDlg::StopRecording(void)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-  if (mRecordingCustom || mRecordingRegular) {
+  if (mRecordingCustom || mRecordingRegular || mSteppingAdjusting) {
     mRecordingCustom = mRecordingRegular = false;
+    mSteppingAdjusting = 0;
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
     mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
@@ -565,7 +604,7 @@ void CMultiShotDlg::OnButSaveIs()
   float focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString str;
-  int dir, numSteps[2], size = (int)mSavedISX.size() + 1;
+  int dir, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
 
@@ -602,7 +641,7 @@ void CMultiShotDlg::OnButSaveIs()
   mSavedISX.push_back(ISX);
   mSavedISY.push_back(ISY);
   mWinApp->RestoreViewFocus();
-  if (mRecordingRegular) {
+  if (mRecordingRegular || mSteppingAdjusting == 1) {
     for (dir = 0; dir < 2; dir++)
       numSteps[dir] = B3DMAX(1, mActiveParams->numHoles[dir] - 1);
 
@@ -621,6 +660,15 @@ void CMultiShotDlg::OnButSaveIs()
       ManageEnables();
       UpdateAndUseMSparams();
       return;
+    } else if (mSteppingAdjusting) {
+      str.Format("Adjust shift for %s %s hole", size == 1 ? "bottom" : "top",
+        size == 3 ? "left" : "right");
+      ind = size == 2 ? 1 : 0;
+      dir = size == 3 ? -1 : 1;
+      ISX = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISXspacing[ind]) * 
+        dir;
+      ISY = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISYspacing[ind]) *
+        dir;
     } else {
 
       // Set up the instruction label
@@ -630,13 +678,27 @@ void CMultiShotDlg::OnButSaveIs()
       else
         str.Format("Shift by %d holes in second direction", numSteps[1]);
     }
+  } else if (mSteppingAdjusting) {
+    if (size == (int)mActiveParams->customHoleX.size()) {
+    } else if (size > 1) {
+      str.Format("Adjust shift for position # %d in the pattern", size);
+      ISX = mActiveParams->customHoleX[size - 1] - mActiveParams->customHoleX[size - 2];
+      ISY = mActiveParams->customHoleY[size - 1] - mActiveParams->customHoleY[size - 2];
+    } else {
+      str = "Adjust shift for first acquire position in the pattern";
+      ISX = mActiveParams->customHoleX[size - 1];
+      ISX = mActiveParams->customHoleY[size - 1];
+    }
   } else {
     if (size > 1)
       str.Format("Shift to acquire position # %d in the pattern", size);
     else
       str = "Shift to the first acquire position in the pattern";
+
   }
   m_statSaveInstructions.SetWindowText(str);
+  if (mSteppingAdjusting)
+    mWinApp->mScope->IncImageShift(ISX, ISY);
 }
 
 // Separate button to end the custom pattern
@@ -652,7 +714,8 @@ void CMultiShotDlg::OnButEndPattern()
   mActiveParams->tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
 
   // Accept the current position if it is different from the last
-  if (mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
+  if (!mSteppingAdjusting && 
+    mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
     ISY - mSavedISY[size], mActiveParams->customMagIndex) > 0.05) {
     mSavedISX.push_back(ISX);
     mSavedISY.push_back(ISY);
@@ -677,6 +740,16 @@ void CMultiShotDlg::OnButAbort()
 {
   StopRecording();
   ManageEnables();
+}
+
+
+void CMultiShotDlg::OnButUseLastHoleVecs()
+{
+  CString str2;
+  ScaleMat mat;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  mat = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
+    true, str2);
 }
 
 // New beam diameter
@@ -763,9 +836,14 @@ void CMultiShotDlg::ManageEnables(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   CString str2, str = "Use custom pattern (NONE DEFINED)";
+  ScaleMat mat;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
+  bool notRecording = !recording && !mSteppingAdjusting;
+  bool useCustom = m_bDoMultipleHoles && m_bUseCustom &&
+    mActiveParams->customHoleX.size() > 0;
   m_statBeamDiam.EnableWindow(enable);
   m_statBeamMicrons.EnableWindow(enable);
   m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
@@ -801,7 +879,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_statRing2Um.EnableWindow(enable);
   m_editRing2Dist.EnableWindow(enable);
   m_sbcRing2Num.EnableWindow(enable);
-  enable = m_bDoMultipleHoles && (!m_bUseCustom || !mActiveParams->customHoleX.size());
+  enable = m_bDoMultipleHoles && !useCustom;
   m_statHoleDelayFac.EnableWindow(m_bDoMultipleHoles);
   m_editHoleDelayFac.EnableWindow(m_bDoMultipleHoles);
   m_statRegular.EnableWindow(enable);
@@ -813,18 +891,31 @@ void CMultiShotDlg::ManageEnables(void)
   m_butOmit3x3Corners.EnableWindow(enable && mActiveParams->numHoles[0] == 3 && 
     mActiveParams->numHoles[1] == 3);
   m_butUseCustom.EnableWindow(m_bDoMultipleHoles && mActiveParams->customHoleX.size() >0);
-  m_butSetRegular.EnableWindow(enable && !recording &&
+  m_butSetRegular.EnableWindow(enable && notRecording &&
     (mActiveParams->numHoles[0] > 1 || mActiveParams->numHoles[1] > 1));
-  m_butSaveIS.EnableWindow(recording);
+  m_butSaveIS.EnableWindow(recording || mSteppingAdjusting);
   m_butIStoPt.EnableWindow(recording && mWinApp->mNavigator);
-  m_butAbort.EnableWindow(recording);
+  m_butAbort.EnableWindow(recording || mSteppingAdjusting);
   m_butEndPattern.EnableWindow(mRecordingCustom);
-  m_butSetCustom.EnableWindow(m_bDoMultipleHoles && !recording);
+  m_butSetCustom.EnableWindow(m_bDoMultipleHoles && notRecording);
+  m_butStepAdjust.EnableWindow(m_bDoMultipleHoles && notRecording && (useCustom ||
+    mActiveParams->holeMagIndex));
   if (mActiveParams->customHoleX.size() > 0)
     str.Format("Use custom pattern (%d positions defined)", 
     mActiveParams->customHoleX.size());
   m_butUseCustom.SetWindowText(str);
-  if (!recording)
+  enable = enable && mWinApp->LowDoseMode() && ldp->magIndex > 0 && notRecording;
+  if (enable) {
+    mat = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
+      false, str2);
+    enable = mat.xpx != 0.;
+    if (enable)
+      enable = fabs(mWinApp->mNavHelper->mHoleFinderDlg->GetLastTiltAngle() - 
+        B3DCHOICE(useCustom,
+        mActiveParams->tiltOfCustomHoles, mActiveParams->tiltOfHoleArray)) < 1.5;
+  }
+  m_butUseLastHoleVecs.EnableWindow(enable);
+  if (notRecording)
     m_statSaveInstructions.SetWindowText("Image shift should be measured near focus");
   str = "No regular pattern defined";
 
