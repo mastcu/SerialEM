@@ -590,6 +590,7 @@ public:
   GetSetMember(int, RotFlipInFalcon3ComFile);
   GetSetMember(BOOL, SubdirsOkInFalcon3Save);
   SetMember(float, DoseAdjustmentFactor);
+  SetMember(bool, SuspendFilterUpdates);
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   GetSetMember(int, CanSaveEERformat);
   int GetDEServerVersion();
@@ -1019,6 +1020,7 @@ public:
   float mDoseAdjustmentFactor;   // Adjustment factor set from scripting
   int mNumFiltCheckFailures;     // Number of times filter check has failed in a row
   int mSkipFiltCheckCount;       // Counter for skipping the filter check
+  bool mSuspendFilterUpdates;    // Flag that current operation uses advanced scripting
   int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
 
 public:

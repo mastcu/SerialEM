@@ -7011,6 +7011,8 @@ bool CEMscope::MovePhasePlateToNextPos()
 {
   if (!sInitialized || !mPlugFuncs->GoToNextPhasePlatePos)
     return false;
+  if (FEIscope && mWinApp->FilterIsSelectris())
+    mWinApp->mCamera->SetSuspendFilterUpdates(true);
   mApertureTD.actionFlags = APERTURE_NEXT_PP_POS;
   if (StartApertureThread("moving phase plate to next position "))
     return false;
@@ -7059,6 +7061,8 @@ int CEMscope::ApertureBusy()
 {
   int retval = UtilThreadBusy(&mApertureThread);
   mMovingAperture = retval > 0;
+  if (retval <= 0)
+    mWinApp->mCamera->SetSuspendFilterUpdates(false);
   return retval;
 }
 
@@ -7077,6 +7081,7 @@ void CEMscope::ApertureCleanup(int error)
       mApertureTD.description);
   mWinApp->ErrorOccurred(error);
   mMovingAperture = false;
+  mWinApp->mCamera->SetSuspendFilterUpdates(false);
 }
 
 // The procedure for aperture or phase plate movement
@@ -7262,6 +7267,7 @@ BOOL CEMscope::GetSTEMmode(void)
   bool needMutex = !(JEOLscope && sGettingValuesFast);
   if (needMutex)
     ScopeMutexAcquire("GetSTEMmode", true);
+  SEMSetFunctionCalled("GetSTEMmode");
   try {
     result = mPlugFuncs->GetSTEMMode();
   }
@@ -7269,6 +7275,7 @@ BOOL CEMscope::GetSTEMmode(void)
     SEMReportCOMError(E, _T("getting TEM vs. STEM mode "));
     result = false;
   }
+  SEMSetFunctionCalled("", "");
   if (needMutex)
     ScopeMutexRelease("GetSTEMmode");
   return result;
@@ -8757,6 +8764,8 @@ int CEMscope::GetFEIChannelList(CameraParameters * params, bool refresh)
     B3DFREE(detNames[chan]);
   if (err == 3)
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
+  else if (!refresh)
+    mWinApp->AppendToLog(mPlugFuncs->GetLastErrorString());
   return err;
 }
 
@@ -9134,10 +9143,11 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
 {
   int ind, thread, longOp, scopeOps[MAX_LONG_OPERATIONS], numScopeOps = 0;
   float sinceLast;
-  bool needHWDR = false, startedThread = false;
+  bool needHWDR = false, startedThread = false, suspendFilter = false;
   int now = mWinApp->MinuteTimeStamp();
   // Change second one back to 0 to enable simpleorigin
   short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0};
+  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
   if (mJeolHasNitrogenClass > 1) {
@@ -9175,7 +9185,10 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
         if (longOp == LONG_OP_REFILL) {
           if (!FEIscope && !mHasSimpleOrigin)
             return 2;
-         }
+        }
+        if (FEIscope && blocksFilter[longOp] > 0 && mWinApp->FilterIsSelectris() &&
+          mAdvancedScriptVersion >= blocksFilter[longOp])
+          suspendFilter = true;
     }
     if (sinceLast < -1.5) {
       hoursSinceLast[ind] = (float)(now - mLastLongOpTimes[longOp]) / 60.f;
@@ -9230,6 +9243,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mWinApp->SetStatusText(MEDIUM_PANE, "DOING LONG OPERATION");
     mWinApp->UpdateBufferWindows();
     mWinApp->AddIdleTask(TASK_LONG_OPERATION, 0, 0);
+    if (suspendFilter)
+      mWinApp->mCamera->SetSuspendFilterUpdates(true);
     return 0;
   }
   return -1;
@@ -9470,7 +9485,8 @@ int CEMscope::LongOperationBusy(int index)
     }
 
     mDoingLongOperation = false;
-    mWinApp->SetStatusText(mWinApp->mParticleTasks->GetDVDoingDewarVac() ? 
+    mWinApp->mCamera->SetSuspendFilterUpdates(false);
+    mWinApp->SetStatusText(mWinApp->mParticleTasks->GetDVDoingDewarVac() ?
       SIMPLE_PANE : MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();
   }

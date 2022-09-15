@@ -444,6 +444,7 @@ CCameraController::CCameraController()
   mDoseAdjustmentFactor = 0.;
   mNumFiltCheckFailures = 0;
   mSkipFiltCheckCount = 0;
+  mSuspendFilterUpdates = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -2954,7 +2955,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     mShiftManager->SetGeneralTimeOut(GetTickCount(), mScreenUpSTEMdelay);
   mRaisingScreen = 0;
   mInserting = false;
-  
+  mSuspendFilterUpdates = false;
+
   // If the halt flag is set, clear it and exit
   if (mHalting) {
     mHalting = false;
@@ -4241,6 +4243,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
 
         // Start thread if needed
         if (mInserting) {
+          mSuspendFilterUpdates = mITD.FEItype && mWinApp->FilterIsSelectris();
           mInsertThread = AfxBeginThread(InsertProc, &mITD,
             THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
           SEMTrace('R', "InsertProc created with ID 0x%0x",mInsertThread->m_nThreadID);
@@ -7569,6 +7572,10 @@ void CCameraController::StartAcquire()
   }
   mStartedScanning = true;
 
+  if (mTD.FEItype && (mTD.CamFlags & PLUGFEI_USES_ADVANCED) &&
+    mWinApp->FilterIsSelectris())
+    mSuspendFilterUpdates = true;
+
   // Unblank now for noShutter = 2 camera with known timing; it will get reblanked in
   // the blanker thread
   if (mParam->noShutter == 2 && mTD.UnblankTime <= mTD.MinBlankTime)
@@ -9063,6 +9070,7 @@ void CCameraController::ScreenOrInsertCleanup(int error)
     mScope->BlankBeam(false, "ScreenOrInsertCleanup");
   mRaisingScreen = 0;
   mInserting = false;
+  mSuspendFilterUpdates = false;
   mHalting = false;
   if (mWaitingForStacking > 0)  
     mWaitingForStacking = -1;
@@ -10398,6 +10406,7 @@ void CCameraController::ErrorCleanup(int error)
   mAligningFalconFrames = false;
   mRemoveFEIalignedFrames = false;
   mDoingDEframeAlign = 0;
+  mSuspendFilterUpdates = false;
 
   // clear flags for one-shot type items, mostly set from elsewhere
   ClearOneShotFlags();
@@ -10685,6 +10694,9 @@ int CCameraController::CheckFilterSettings()
   DWORD curTime = GetTickCount();
   BOOL timingOut = curTime < mBackToImagingTime + 7000;
   if (mNoFilterControl)
+    return 0;
+
+  if (mSuspendFilterUpdates)
     return 0;
 
   if (mNumFiltCheckFailures > 0 && mSkipFiltCheckCount > 0) {
@@ -11347,6 +11359,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     SEMErrorOccurred(1);
     return 1;
   }
+
   if (advanced) {
     SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
       "%d %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
@@ -11812,7 +11825,7 @@ int CCameraController::RunScriptOnThread(CString &script, int timeoutSec)
   return 0;
 }
 
-// Run the script and svave return value and cleanup string array
+// Run the script and save return value and cleanup string array
 UINT CCameraController::ScriptProc(LPVOID pParam)
 {
   InsertThreadData *itd = (InsertThreadData *)pParam;
