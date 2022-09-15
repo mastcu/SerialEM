@@ -133,10 +133,12 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_FILE_OPEN_MDOC, OnUpdateFileOpenMdoc)
   ON_COMMAND(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnSkipFilePropertiesDlg)
   ON_UPDATE_COMMAND_UI(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnUpdateSkipFilePropertiesDlg)
-  ON_COMMAND(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnSettingsDiscardOnExit)
-  ON_UPDATE_COMMAND_UI(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnUpdateSettingsDiscardOnExit)
-  ON_COMMAND(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnSettingsBasicmode)
-  ON_UPDATE_COMMAND_UI(ID_SETTINGS_BASICMODE, &CSerialEMDoc::OnUpdateSettingsBasicmode)
+  ON_COMMAND(ID_SETTINGS_DISCARDONEXIT, OnSettingsDiscardOnExit)
+  ON_UPDATE_COMMAND_UI(ID_SETTINGS_DISCARDONEXIT, OnUpdateSettingsDiscardOnExit)
+  ON_COMMAND(ID_SETTINGS_BASICMODE, OnSettingsBasicmode)
+  ON_UPDATE_COMMAND_UI(ID_SETTINGS_BASICMODE, OnUpdateSettingsBasicmode)
+  ON_COMMAND(ID_FILE_CLOSEALLFILES, OnCloseAllFiles)
+  ON_UPDATE_COMMAND_UI(ID_FILE_CLOSEALLFILES, OnUpdateCloseAllFiles)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -866,7 +868,33 @@ void CSerialEMDoc::OnUpdateFileClose(CCmdUI* pCmdUI)
     mWinApp->mStoreMRC != NULL && mStoreList[mCurrentStore].protectNum < 0);  
 }
 
-// Efficiently close all the files for exiting
+// Close all open files if none are protected
+void CSerialEMDoc::OnCloseAllFiles()
+{
+  mWinApp->mBufferWindow.SetDeferComboReloads(true);
+  mWinApp->SetDeferBufWinUpdates(true);
+  for (int ind = mNumStores - 1; ind >= 0; ind--)
+    DoCloseFile();
+  mWinApp->mBufferWindow.SetDeferComboReloads(false);
+  mWinApp->SetDeferBufWinUpdates(false);
+  mWinApp->UpdateBufferWindows();
+}
+
+void CSerialEMDoc::OnUpdateCloseAllFiles(CCmdUI *pCmdUI)
+{
+  bool anyProtected = false;
+  for (int ind = 0; ind < mNumStores; ind++) {
+    if (mStoreList[ind].protectNum >= 0) {
+      anyProtected = true;
+      break;
+    }
+  }
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
+    !mWinApp->mMacroProcessor->DoingMacro() &&
+    mWinApp->mStoreMRC != NULL && !anyProtected);
+}
+
+// Efficiently close all the files for exiting only
 void CSerialEMDoc::CloseAllStores()
 {
   for (int i = 0; i < mNumStores; i++) {
@@ -1479,6 +1507,11 @@ CString CSerialEMDoc::DateTimeForTitle(bool year4digits)
     months[ctDateTime.GetMonth() - 1], ctDateTime.GetYear() % (year4digits ? 10000 : 100),
     ctDateTime.GetHour(), ctDateTime.GetMinute(), ctDateTime.GetSecond());
   return str;
+}
+
+const char ** CSerialEMDoc::GetMonthStrings()
+{
+  return (const char **)months;
 }
 
 // Compose a full title string with the given one contained
@@ -2414,13 +2447,19 @@ int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
 // Periodically save navigator, log, and settings, if user selected; save short term cal
 void CSerialEMDoc::AutoSaveFiles()
 {
+  BOOL saveAuto = mWinApp->GetSaveAutosaveLog();
   if (mWinApp->mNavigator && mAutoSaveNav)
     mWinApp->mNavigator->AutoSave();
   if (mAutoSaveSettings && mSettingsOpen && !mAbandonSettings &&
     !mWinApp->mTSController->StartedTiltSeries())
-      OnSettingsSave();
-  if (mWinApp->mTSController->GetAutosaveLog() && mWinApp->mLogWindow)
-    mWinApp->mLogWindow->UpdateSaveFile(false);
+    OnSettingsSave();
+  if (mWinApp->mLogWindow && (mWinApp->mTSController->GetAutosaveLog() || saveAuto)) {
+    if (saveAuto && (mWinApp->mLogWindow->GetSaveFile()).IsEmpty() && 
+      !mWinApp->DoingTasks())
+      mWinApp->mLogWindow->SaveAndOfferName();
+    else
+      mWinApp->mLogWindow->UpdateSaveFile(saveAuto);
+  }
   SaveShortTermCal();
 }
 

@@ -667,9 +667,10 @@
         <TR VALIGN="top">
           <TD>InitialCurrentCamera</TD>
           <TD>The index on the CameraProperties line of the camera that should initially be
-            set as the current camera. Without this entry, the program will start with the
+            set as the current camera.&nbsp; Without this entry, the program will start with the
             first camera in the active camera list, or the first non-energy filter camera if that is an
-            energy filter camera.</TD>
+            energy filter camera.&nbsp; The property 'KeepSTEMstate' will make this selection be
+             ignored if it would cause a change in STEM state.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AssumeCameraForDummy</TD>
@@ -698,6 +699,11 @@
           <TD>The position in the ActiveCameraList (numbered from 0) of the camera that
             should be selected when leaving EFTEM mode or STEM mode.&nbsp; If this is not
             set, the first regular camera in the list will be used.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>KeepSTEMstate</TD>
+          <TD>Set to 1 to stay in or out of STEM on program startup even if &#39;InitialCurrentCamera&#39; is set with a camera that would require it to change
+             state. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>AllowCameraInSTEMMode</TD>

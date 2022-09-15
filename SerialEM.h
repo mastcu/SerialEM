@@ -583,6 +583,7 @@ public:
   GetSetMember(BOOL, ShowRemoteControl);
   GetMember(bool, HasFEIcamera);
   GetSetMember(BOOL, KeepEFTEMstate);
+  GetSetMember(BOOL, KeepSTEMstate);
   GetSetMember(BOOL, UseRecordForMontage);
   GetSetMember(BOOL, UseViewForSearch);
   GetSetMember(float, RightBorderFrac);
@@ -609,6 +610,7 @@ public:
   GetMember(int, DEcamCount);
   GetSetMember(int, NavOrLogHadFocus);
   GetSetMember(BOOL, MonospacedLog);
+  GetSetMember(BOOL, SaveAutosaveLog);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -868,9 +870,10 @@ private:
   CFont mLittleFont;            // Central place to get the right font
   bool mMadeLittleFont;         // Flag that it was made already
   CFont mBoldFont;              // Central place to get a bold font for standard text
-  bool mMadeBoldFont;         // Flag that it was made already
+  bool mMadeBoldFont;           // Flag that it was made already
   bool mHasFEIcamera;           // Flag that there is an FEI camera
   BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
+  BOOL mKeepSTEMstate;          // Flag to stay in or out of STEM and ignore initialCurCam
   BOOL mUseRecordForMontage;    // Flag to use Record parameters for Montage
   BOOL mUseViewForSearch;       // Flag to use View parameters for Search
   float mRightBorderFrac;       // User's setting for right border of main as frac of area
@@ -906,6 +909,7 @@ private:
   int mDEcamCount;              // Number of DE cameras
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
   BOOL mMonospacedLog;          // Flag that log window should use monospaced font
+  BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
 
 public:
   void UpdateAllEditers(void);
@@ -972,6 +976,9 @@ afx_msg void OnWindowRescuelogwindow();
 afx_msg void OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI);
 afx_msg void OnFileUseMonospacedFont();
 afx_msg void OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI);
+afx_msg void OnFileAutosaveLog();
+afx_msg void OnUpdateFileAutosaveLog(CCmdUI *pCmdUI);
+bool FilterIsSelectris() {return mFilterParams.firstGIFCamera >= 0 && mCamParams[mActiveCameraList[mFilterParams.firstGIFCamera]].filterIsFEI ; };
 };
 
 

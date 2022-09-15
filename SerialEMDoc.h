@@ -287,6 +287,7 @@ public:
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
   int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);
   CString DateTimeForTitle(bool year4digits = false);
+  const char **GetMonthStrings();
   afx_msg void OnFileOpenMdoc();
   afx_msg void OnFileCloseMdoc();
   afx_msg void OnUpdateFileCloseMdoc(CCmdUI *pCmdUI);
@@ -314,6 +315,8 @@ void DoCloseFrameMdoc();
 afx_msg void OnSettingsBasicmode();
 afx_msg void OnUpdateSettingsBasicmode(CCmdUI *pCmdUI);
 int DoFileOpenold();
+afx_msg void OnCloseAllFiles();
+afx_msg void OnUpdateCloseAllFiles(CCmdUI *pCmdUI);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

@@ -3309,6 +3309,8 @@ int CParameterIO::ReadProperties(CString strFileName)
         mWinApp->SetInitialCurrentCamera(itemInt[1]);
       else if (MatchNoCase("KeepEFTEMstate"))
         mWinApp->SetKeepEFTEMstate(itemInt[1] != 0);
+      else if (MatchNoCase("KeepSTEMstate"))
+        mWinApp->SetKeepSTEMstate(itemInt[1] != 0);
       else if (MatchNoCase("NoCameras"))
         mWinApp->SetNoCameras(itemInt[1] != 0);
       else if (MatchNoCase("DebugOutput"))
@@ -5210,6 +5212,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
 {
   int retval = 0;
   int err, index, cam, inTime;
+  bool anyDoseCal = false, calExpired = false;
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
@@ -5285,10 +5288,13 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         } else {
           doseTables[index].timeStamp = itemInt[5];
           doseTables[index].currentAperture = itemEmpty[7] ? 0 : itemInt[7];
-          if (timeStamp - doseTables[index].timeStamp < 
+          if (timeStamp - doseTables[index].timeStamp <
             60 * mWinApp->GetDoseLifetimeHours()) {
-              doseTables[index].intensity = itemDbl[3];
-              doseTables[index].dose = itemDbl[4];
+            doseTables[index].intensity = itemDbl[3];
+            doseTables[index].dose = itemDbl[4];
+            anyDoseCal = true;
+          } else if (timeStamp - doseTables[index].timeStamp < 7 * 24 * 60) {
+            calExpired = true;
           }
         }
 
@@ -5365,7 +5371,9 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
     delete mFile;
     mFile = NULL;
   }
-
+  if (!anyDoseCal && calExpired)
+    mWinApp->AppendToLog("The dose calibration has expired; you can recalibrate it with"
+      " Tasks - Calibrate Electron Dose");
   return retval;
 }
 

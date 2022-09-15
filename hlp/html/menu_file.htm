@@ -37,6 +37,10 @@
           <TD>Closes an open image file.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_closeallfiles">Close</A></TD>
+          <TD>Closes all open image files if none are protected.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD width="190"><A HREF="#hidm_file_save">Save A</A></TD>
           <TD>Saves image in Buffer A to file.</TD>
         </TR>
@@ -97,6 +101,10 @@
         <TR VALIGN="top">
           <TD width="190"><A HREF="#hid_file_readappend">Read &amp; Append</A></TD>
           <TD>Reads from an existing log file and appends output to it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_autosavelog">Save &amp; Autosave Log</A></TD>
+          <TD>Saves the log window to a file immediately and keeps it up to date thereafter.</TD>
         </TR>
         <TR VALIGN="top">
           <TD width="190"><A HREF="#hid_file_continuoussave">Continuous Save</A></TD>
@@ -191,7 +199,11 @@
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
-      <P><A NAME="hidm_file_save"></A><B>Save A command (File menu)</B></P>
+&nbsp;<P><A NAME="hidm_file_closeallfiles"></A><B>Close All Files command (File menu)</B></P>
+      <P>Use this command to close all open image files.&nbsp; This command is disabled 
+        if any open file is marked as &#39;protected&#39;, such as when a tilt series is 
+        running.</P>
+           <P><A NAME="hidm_file_save"></A><B>Save A command (File menu)</B></P>
       <P>Use this command to save the image in Buffer A to the current open image file. 
         If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
           File Properties</A> (unless the option to skip this 
@@ -374,14 +386,27 @@
         to select a file. The program will then read in the contents of this file, 
         place it before any text already in the Log Window, then write the window back 
         out to the file.</P>
-      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+    <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+       <P><A NAME="hid_file_autosavelog"></A><B>Save &amp; Autosave Log command (File menu)</B></P>
+      <p>When this command is toggled on, the program will save the log to a file 
+        immediately and then save it every minute if it has changed.&nbsp; If no file is 
+        defined yet, a file chooser dialog will open with a default name based on the 
+        date and time.&nbsp; If this setting is already on when starting the program, 
+        the chooser dialog will open with that default name at the end of the startup 
+        actions.&nbsp; If the log window is closed and reopened, the chooser dialog will 
+        come up to define a name at the next autosave, provided that the program is not 
+        busy.&nbsp; This will not happen if the log is kept closed.</p>
+     <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
       <P><A NAME="hid_file_continuoussave"></A><B>Continuous Save command (File menu)</B></P>
       <P>Use this command to control whether each line of output to the Log Window is 
         saved immediately to a log file. If there is no log file open when you turn 
         this on, you will be prompted to open one the next time output is sent to the 
-        log window.</P>
+        log window.&nbsp; This command is primarily for debugging purposes and could 
+        slow down program operation.</P>
       <P><A NAME="#hid_file_usemonospacedfont"></A><B>Use Monospaced Font</B></P>
     <P>Use this command to control whether text is displayed in the log window with a 
       monospaced (fixed width) font or a proportionally spaced font.</P>

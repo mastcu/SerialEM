@@ -131,6 +131,7 @@ FLOAT_SETT_GETSET("UserMaxCtfFitRes", mWinApp->mProcessImage->, UserMaxCtfFitRes
 FLOAT_SETT_GETSET("MinCtfFitResIfPhase", mWinApp->mProcessImage->, MinCtfFitResIfPhase)
 BOOL_SETT_GETSET("AutosaveSettings", mWinApp->mDocWnd->, AutoSaveSettings)
 BOOL_SETT_GETSET("AutosaveNavNew", mWinApp->mDocWnd->, AutoSaveNav)
+BOOL_SETT_GETSET("SaveAutosaveLog", mWinApp->, SaveAutosaveLog)
 BOOL_SETT_GETSET("SkipFileDlg", mWinApp->mDocWnd->, SkipFileDlg)
 BOOL_SETT_GETSET("AutosaveLog", mWinApp->mTSController->, AutosaveLog)
 BOOL_SETT_GETSET("AutosaveXYZ", mWinApp->mTSController->, AutosaveXYZ)
@@ -196,6 +197,7 @@ BOOL_SETT_GETSET("CtfDoFullArray", mWinApp->mAutoTuning->, CtfDoFullArray)
 FLOAT_SETT_GETSET("ComaIterationThresh", mWinApp->mAutoTuning->, ComaIterationThresh)
 FLOAT_SETT_GETSET("ComaVsISextent", mWinApp->mAutoTuning->, ComaVsISextent)
 FLOAT_SETT_GETSET("MinCtfBasedDefocus", mWinApp->mAutoTuning->, MinCtfBasedDefocus)
+FLOAT_SETT_GETSET("AddToMinForAstigCTF", mWinApp->mAutoTuning->, AddToMinForAstigCTF)
 #endif
 #ifdef SET_TEST_SECT3
 #include "NavAdocParams.h"

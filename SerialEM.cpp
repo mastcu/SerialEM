@@ -174,6 +174,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_RESCUELOGWINDOW, OnUpdateWindowRescuelogwindow)
   ON_COMMAND(ID_FILE_USEMONOSPACEDFONT, OnFileUseMonospacedFont)
   ON_UPDATE_COMMAND_UI(ID_FILE_USEMONOSPACEDFONT, OnUpdateFileUseMonospacedFont)
+  ON_COMMAND(ID_FILE_AUTOSAVELOG, OnFileAutosaveLog)
+  ON_UPDATE_COMMAND_UI(ID_FILE_AUTOSAVELOG, OnUpdateFileAutosaveLog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -218,6 +220,7 @@ CSerialEMApp::CSerialEMApp()
   mSavingOther = false;
   mLogWindow = NULL;
   mContinuousSaveLog = false;
+  mSaveAutosaveLog = false;
   mNavigator = NULL;
   mNavHelper = NULL;
   mStageMoveTool = NULL;
@@ -734,6 +737,7 @@ CSerialEMApp::CSerialEMApp()
   mShowRemoteControl = true;
   mHasFEIcamera = false;
   mKeepEFTEMstate = true;   // Changed for 3.7.6
+  mKeepSTEMstate = false;
   mUseRecordForMontage = false;
   mUseViewForSearch = false;
   mIdleBaseCount = 0;
@@ -1383,6 +1387,7 @@ BOOL CSerialEMApp::InitInstance()
   
   // Make sure low dose parameters get copied in
   CopyCameraToCurrentLDP();
+  bool inSTEM = mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode();
 
   // set default startup camera as non GIF camera if possible
   iCam = mFilterParams.firstRegularCamera >= 0 ? 
@@ -1391,11 +1396,13 @@ BOOL CSerialEMApp::InitInstance()
     iCam = 0;
 
   // Then if an initial current camera is entered, try to find that in active list
-  if (mInitialCurrentCamera >= 0)
+  if (mInitialCurrentCamera >= 0 && LookupActiveCamera(mInitialCurrentCamera) >= 0 &&
+    !(mKeepSTEMstate && ((inSTEM && !mCamParams[mInitialCurrentCamera].STEMcamera) ||
+      (!inSTEM && mCamParams[mInitialCurrentCamera].STEMcamera) )))
     iCam = LookupActiveCamera(mInitialCurrentCamera);
 
   // And if not, stay in STEM mode if in STEM
-  else if (mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode())
+  else if (inSTEM)
     iCam = mFirstSTEMcamera;
 
   // Or pick the camera that keeps the EFTEM state if flag set
@@ -1585,6 +1592,12 @@ BOOL CSerialEMApp::InitInstance()
   iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
   if (iCam >= 0)
     mMacroProcessor->Run(iCam);
+  if (mSaveAutosaveLog) {
+    if (!mLogWindow)
+      OnFileOpenlog();
+    mLogWindow->SaveAndOfferName();
+  }
+
   return TRUE;
 }
 
@@ -1630,12 +1643,17 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
 
 CString CSerialEMApp::GetStartupMessage(bool original)
 {
-  if (!original) {
-    CString str = GetVersionString();
+  const char **months = mDocWnd->GetMonthStrings();
+  if (!original || mStartingProgram) {
+    CString str2, str = GetVersionString();
     CTime ctdt = CTime::GetCurrentTime();
-    mStartupMessage.Format("%s\r\n%s  %d/%d/%d  %02d:%02d:%02d", (LPCTSTR)str,
-      mStartingProgram ? "Started" : "Current date", ctdt.GetMonth(),
+    str.Format("%s\r\n%s  %s %d %d  %02d:%02d:%02d", (LPCTSTR)str,
+      mStartingProgram ? "Started" : "Current date", months[ctdt.GetMonth() - 1],
       ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
+    if (mStartingProgram)
+      mStartupMessage = str;
+    if (!original)
+      return str;
   }
   return mStartupMessage;
 }
@@ -3736,6 +3754,23 @@ void CSerialEMApp::OnUpdateFileContinuousSave(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mContinuousSaveLog ? 1 : 0);
+}
+
+// Toggle the log autosave, and save it when it is turned on
+void CSerialEMApp::OnFileAutosaveLog()
+{
+  mSaveAutosaveLog = !mSaveAutosaveLog;
+  if (mSaveAutosaveLog) {
+    if (!mLogWindow)
+      OnFileOpenlog();
+    mLogWindow->SaveAndOfferName();
+  }
+}
+
+void CSerialEMApp::OnUpdateFileAutosaveLog(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mSaveAutosaveLog ? 1 : 0);
 }
 
 // Toggle the option to use a monospaced font

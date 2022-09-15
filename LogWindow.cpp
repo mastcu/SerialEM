@@ -133,18 +133,34 @@ void CLogWindow::FlushDeferredLines()
 int CLogWindow::SaveAs()
 {
   mLastStackname = "";
-  if (GetFileName(FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT))
+  if (GetFileName(FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL))
     return 1;
   return (DoSave());
 }
 
+// Do a save, but if no file is defined, make one up based on date/time and offer it
+int CLogWindow::SaveAndOfferName()
+{
+  CTime ctdt = CTime::GetCurrentTime();
+  CString offer;
+  const char **months = mWinApp->mDocWnd->GetMonthStrings();
+  if (mSaveFile.IsEmpty()) {
+    mLastStackname = "";
+    offer.Format("%02d%s%d-%02d%02d", ctdt.GetDay(), months[ctdt.GetMonth() - 1],
+      ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute());
+    if (GetFileName(FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, (LPCTSTR)offer))
+      return 1;
+  }
+  return (DoSave());
+}
+
 // Get file name for new or existing file
-int CLogWindow::GetFileName(BOOL oldFile, UINT flags)
+int CLogWindow::GetFileName(BOOL oldFile, UINT flags, LPCTSTR offerName)
 {
   static char BASED_CODE szFilter[] = 
     "Log files (*.log)|*.log|All files (*.*)|*.*||";
 
-  MyFileDialog fileDlg(oldFile, ".log", NULL, flags, szFilter);
+  MyFileDialog fileDlg(oldFile, ".log", offerName, flags, szFilter);
 
   int result = fileDlg.DoModal();
   mWinApp->RestoreViewFocus();
@@ -283,7 +299,7 @@ int CLogWindow::ReadAndAppend()
   int nread;
   UpdateData(true);
   CString oldSave = mSaveFile;
-  if (GetFileName(TRUE, OFN_HIDEREADONLY)) {
+  if (GetFileName(TRUE, OFN_HIDEREADONLY, NULL)) {
     mSaveFile = oldSave;
     return 1;
   }
