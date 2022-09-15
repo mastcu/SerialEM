@@ -18,6 +18,8 @@
 #include "ProcessImage.h"
 #include "EMmontageController.h"
 #include "HoleFinderDlg.h"
+#include "NavHelper.h"
+#include "MultiShotDlg.h"
 #include "Shared\holefinder.h"
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
@@ -919,6 +921,9 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     }
   }
 
+  mLastTiltAngle = 0.;
+  imBuf->GetTiltAngle(mLastTiltAngle);
+
   // Report failure, but go on
   if (mMontage && !noMontReason.IsEmpty()) {
     mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " + 
@@ -1332,6 +1337,47 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
       mExcluded[ind] = 1;
   }
   mWinApp->mMainView->DrawImage();
+}
+
+// Convert the hole vectors to image shift vectors at a specified magnification index
+// and optionally set the vectors in the multishot dialog
+ScaleMat CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, CString &errStr)
+{
+  ScaleMat mat, st2is;
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  mat.xpx = 0.;
+  if (index < 0) {
+    mat = mGridImVecs;
+    mat.ypx = -mat.ypx;
+    mat.ypy = -mat.ypy;
+  } else
+    mat = mGridStageVecs;
+  if (!mat.xpx) {
+    errStr = "The hole finder has not saved any vectors";
+    return mat;
+  }
+  if (index > 0) {
+    st2is = MatMul(mWinApp->mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
+      index), mWinApp->mShiftManager->CameraToIS(index));
+    if (!st2is.xpx) {
+      errStr = "There is no calibration to get from stage to IS coordinates at the "
+        "given mag";
+      return st2is;
+    }
+    mWinApp->mShiftManager->ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
+    mWinApp->mShiftManager->ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
+  }
+  if (setVecs) {
+    msParams->holeISXspacing[0] = mat.xpx;
+    msParams->holeISYspacing[0] = mat.ypx;
+    msParams->holeISXspacing[1] = mat.xpy;
+    msParams->holeISYspacing[1] = mat.ypy;
+    msParams->holeMagIndex = index;
+    msParams->tiltOfHoleArray = mLastTiltAngle;
+    if (mWinApp->mNavHelper->mMultiShotDlg)
+      mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
+  }
+  return mat;
 }
 
 

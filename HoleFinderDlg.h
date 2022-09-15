@@ -23,6 +23,7 @@ public:
   bool HaveHolesToDrawOrMakePts();
   void SetExclusionsAndDraw();
   void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff);
+  ScaleMat ConvertHoleToISVectors(int index, bool setVecs, CString &errStr);
   GetMember(bool, FindingHoles);
   GetMember(ScaleMat, GridImVecs);
   GetMember(ScaleMat, GridStageVecs);
@@ -104,6 +105,7 @@ private:
   MiniOffsets *mMiniOffsets;
   float mLastHoleSize;
   float mLastHoleSpacing;
+  float mLastTiltAngle;
   bool mFindingFromDialog;
   bool mSkipAutoCor;
   CFont *mBoldFont;
