@@ -1755,10 +1755,17 @@ int CAutoTuning::SetupCtfAcquireParams(bool fromCheck)
     return 1;
   mCtfUseFullField = full != 0;
   if (!KGetOneFloat("Smallest defocus allowed for correcting astigmatism (must be at"
-    " least -0.4)", mMinCtfBasedDefocus, 2))
+    " least -0.1)", mMinCtfBasedDefocus, 2))
     return 1;
-  B3DCLAMP(mMinCtfBasedDefocus, -10.f, -0.4f);
+  B3DCLAMP(mMinCtfBasedDefocus, -10.f, -0.1f);
+  val = -mAddToMinForAstigCTF;
+  if (!KGetOneFloat("Amount to increase underfocus when calbrating astigmatic or "
+    "measuring coma (must be at least 0.2)", val, 2))
+    return 1;
+  mAddToMinForAstigCTF = -val;
+  B3DCLAMP(mAddToMinForAstigCTF, -10.f, -0.2f);
   return 0;
+
 }
 
 // Check whether the acquisition parameters have ever been set up, and if not, call to

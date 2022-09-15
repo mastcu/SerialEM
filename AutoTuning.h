@@ -81,6 +81,7 @@ public:
   GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
   GetSetMember(float, MinCtfBasedDefocus);
+  GetSetMember(float, AddToMinForAstigCTF);
   GetMember(float, AstigBacklash);
   GetSetMember(int, BacklashDelay);
   float GetBeamTiltBacklash();
