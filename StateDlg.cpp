@@ -564,11 +564,15 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
   bool numOK, twoMatch = false;
   const char *namePtr = (LPCTSTR)name;
   char *endPtr;
+
+  // Do case insensitive comparisons, convert to number and detect if there are bad chars
   ucName.MakeUpper();
   selNum = strtol(namePtr, &endPtr, 10) - 1;
   numOK = endPtr - namePtr == ucName.GetLength();
   selInd >= 0 && selInd < (int)mStateArray->GetSize() &&
     ucName.Trim().GetLength() == stateName.GetLength();
+
+  // Find a match or more than one
   for (ind = 0; ind < (int)mStateArray->GetSize(); ind++) {
     state = mStateArray->GetAt(ind);
     stateName = state->name;
@@ -580,6 +584,8 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
         twoMatch = true;
     }
   }
+
+  // Error conditions
   if (selInd < 0 && !numOK) {
     errStr = "There is no state whose name starts with " + name;
     return 1;
@@ -600,6 +606,8 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
     errStr = "A map acquire state is already set";
     return 4;
   }
+
+  // Set the current item temporarily, call common routine, restore current item
   selNum = mCurrentItem;
   mCurrentItem = selInd;
   mParam = mStateArray->GetAt(selInd);

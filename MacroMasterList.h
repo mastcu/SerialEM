@@ -667,8 +667,11 @@ MAC_SAME_NAME_ARG(ReportCameraName, 1, 4, REPORTCAMERANAME, I)
 MAC_SAME_NAME_ARG(Ctfplotter, 3, 1, CTFPLOTTER, SDDiddiddd)
 MAC_SAME_NAME_ARG(RunProcess, 1, 0, RUNPROCESS, S)
 MAC_SAME_NAME_NOARG(ReportCtplotterTuning, 0, 4, REPORTCTPLOTTERTUNING)
-
-
+MAC_SAME_NAME_ARG(CycleTargetDefocus, 3, 5, CYCLETARGETDEFOCUS, DDIi)
+MAC_SAME_NAME_ARG(SetCustomHoleShifts, 2, 6, SETCUSTOMHOLESHIFTS, SSdd)
+MAC_SAME_NAME_ARG(SetCustomHoleDefocus, 1, 6, SETCUSTOMHOLEDEFOCUS, S)
+MAC_SAME_NAME_ARG(GoToImagingState, 1, 0, GOTOIMAGINGSTATE, S)
+MAC_SAME_NAME_NOARG(OpenImagingStateDialog, 0, 4, OPENIMAGINGSTATEDIALOG)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

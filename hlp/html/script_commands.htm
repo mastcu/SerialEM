@@ -2764,7 +2764,7 @@
             axis offset, image shift offset, and low dose area shift.&nbsp; Add the optional
             <b>#D</b> to impose a settling time before the next camera image equal to <b>#D</b> times
             the normal settling time (i.e., 1 for regular settling).&nbsp; Add the optional
-            <b>#A</b> to use the <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs.
+            <b>#A</b> to use the <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs.
             Image Shift</a> calibration to adjust beam tilt and objective stigmation for the incremental change in
             image shift from its current value. With that option, the command saves the
             current beam tilt, if it has not been saved before in the script, and it will be
@@ -3333,6 +3333,14 @@
           <TD>Sets the defocus target to <b>#</b></TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CycleTargetDefocus #S #E #N [#C]</TD>
+          <TD>Changes the defocus target in <b>#N</b> steps from the starting value in <B>#S</B> to
+            the ending value in <b>#E</b></TD> then cycles it back to the starting value.&nbsp; The change depends only on the current target defocus; nothing is kept track of 
+          between invocations of this command.&nbsp; If the target is outside the given range,
+           the first call will set it to the nearest end of the range.&nbsp; If the optional <B>#C</B> is
+          nonzero, the microscope defocus wll be changed by the change in target.&nbsp; Command added in 4.1, 9/4/22.
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportAutofocusOffset</TD>
           <TD>Reports the current value of the defocus offset used for autofocusing</TD>
         </TR>
@@ -3439,7 +3447,7 @@
         <TR>
           <TD class="scriptcommand">ReportComaVsISmatrix</TD>
           <TD>Reports the matrix computed from the
-            <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
+            <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
             calibration.&nbsp; The 4 values are xpx, xpy, ypx, and ypy, where the change in
             beam tilt for a given image shift (in IS units) is given by<br />
 &nbsp; BTx = ISx * xpx + ISy * xpy<br />
@@ -3449,7 +3457,7 @@
           <TD class="scriptcommand">AdjustBeamTiltforIS</TD>
           <TD>&nbsp;Adjusts beam tilt to compensate for the current image shift (as
             displayed in the Scope Status panel), provided that the
-            <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
+            <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
             calibration has been done.&nbsp; This command saves the current beam tilt, if it
             has not been saved before in the script, and it will be automatically restored
             when the script exits.&nbsp; Astigmatism will also be adjusted if that calibration
@@ -3766,6 +3774,21 @@
             routine to its normal operation of saving into a single file if at all.&nbsp; Command added in 4.1, 4/23/22.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetCustomHoleShifts xvar yvar [#M] [#T]</TD>
+          <TD>Defines the custom hole shifts for multiple Records with the image shift 
+            values in two array variables, <b>xvar</b> and <B>yvar</B>, with the X and Y components,
+             respectively.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
+            magnification index and tilt angle at which the image shift values apply.&nbsp; 
+            Command added in 4.1, 9/5/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetCustomHoleDefocus var</TD>
+          <TD>Defines a defocus offset to be applied for each custom hole position to be 
+            acquired with the Multiple Records routine.&nbsp; If there are fewer defocus 
+            values than hole positions, the offset will be zero for the remaining positions.&nbsp; 
+            Command added in 4.1, 9/5/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
           <TD>Calibrates image shift at the current mag. Do the calibration from scratch if
             the optional <b>#</b> is nonzero.</TD>
@@ -4017,10 +4040,28 @@
               for the item with that index in the table; or a value less than 0 to count back
               from the end of the table, where -1 is the last item.</TD>
         </TR>
+         <TR>
+          <TD class="scriptcommand">SetImagingState name</TD>
+          <TD>Sets an imaging state listed in the table of the <A HREF="hidd_statedlg.htm">Imaging 
+            States dialog</A>, which must be open.&nbsp; The text on the rest of the line, <b>name</b>, 
+            can be either a unique set of starting letters in the name of the state, or the number 
+            of the state in the table (numbered from 1).&nbsp; The comparison with state names is 
+            case-insensitive.&nbsp; If the command fails, a message is printed to the log 
+            and <i>reportedValue1</i> is set to -1 if the state dialog is not open, 1 for no matching name,
+            2 for more than one matching name, 3 for a number out of range, 4 if a map acquire state is already set,
+            5 if the camera that the state is defined for is not available, or 6 if it is a Low Dose state and there
+            is already a state set with a different camera number.&nbsp; Command added in 4.1, 9/15/22.
+          </TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">RestoreState</TD>
           <TD>Restores the state if one has been saved with either with 'SetMapAcquireState' or
               the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">OpenImagingStateDialog</TD>
+          <TD>Opens the <A HREF="hidd_statedlg.htm">Imaging States dialog</A> if it is not already 
+            open.&nbsp; Command added in 4.1, 9/15/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipPiecesOutsideItem #I</TD>
@@ -4487,9 +4528,10 @@
         <TR>
           <TD class="scriptcommand">ProgramTimeStamps [#s] [#o]</TD>
           <TD>Prints the program version and build date, plus the current date and time, or
-            the date and time of program startup if the optional <b>#s</b> is nonzero.&nbsp; If the
+            the date and time of program startup if the optional <b>#s</b> is positive.&nbsp; If the
             optional <b>#o</b> is nonzero, it also prints the report of special options set that 
-            is printed on program startup.
+            is printed on program startup.&nbsp; If <b>#s</b> is negative, it prints only the 
+            current date and time.
           </TD>
         </TR>
         <TR>

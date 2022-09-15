@@ -265,6 +265,7 @@ void CMacroProcessor::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   mNavHelper = mWinApp->mNavHelper;
   mProcessImage = mWinApp->mProcessImage;
+  mFocusManager = mWinApp->mFocusManager;
   mParamIO = mWinApp->mParamIO;
   if (GetDebugOutput('%')) {
     mWinApp->AppendToLog("Commands allowing arithmetic in arguments:");
@@ -998,7 +999,7 @@ int CMacroProcessor::TaskBusy()
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
     mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
-    mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
+    mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
@@ -1533,7 +1534,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       if (mFocusToRestore > -2.)
         mScope->SetFocus(mFocusToRestore);
       if (mFocusOffsetToRestore > -9000.)
-        mWinApp->mFocusManager->SetDefocusOffset(mFocusOffsetToRestore);
+        mFocusManager->SetDefocusOffset(mFocusOffsetToRestore);
       if (mDEframeRateToRestore > 0 || mDEcamIndToRestore >= 0) {
         camParams[mDEcamIndToRestore].DE_FramesPerSec = mDEframeRateToRestore;
         mWinApp->mDEToolDlg.UpdateSettings();
@@ -1541,8 +1542,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       probe = mScope->GetProbeMode();
       if (mBeamTiltXtoRestore[probe] > EXTRA_VALUE_TEST) {
         mScope->SetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
-        if (mWinApp->mFocusManager->DoingFocus())
-          mWinApp->mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+        if (mFocusManager->DoingFocus())
+          mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
           mBeamTiltYtoRestore[probe]);
         if (mWinApp->mAutoTuning->DoingZemlin() || 
           mWinApp->mAutoTuning->GetDoingCtfBased())

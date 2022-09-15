@@ -475,7 +475,7 @@ int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &a
     return 1;
   }
   saved = (SavedDefocus *)ilistItem(savedList, 0);
-  defocus = -0.001f * (float)saved->defocus;
+  defocus = -(float)saved->defocus;
   if (ifAstigPhase & 1) {
     defocus = -0.5f * (float)(saved->defocus + saved->defocus2);
     astig = (float)(saved->defocus - saved->defocus2);

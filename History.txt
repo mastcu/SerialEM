@@ -3,6 +3,36 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/15/22: Added buttons to the multiple Record setup dialog to step to
+positions in an existing pattern and adjust image shift values, and to use the
+vectors from the last holee-finding for a regular pattern.
+
+9/15/22: Made FEI autoloader and refrigerant commands use advanced scripting
+if the version is high enough.  Prevented Selectris filter update from being
+attempted during other calls that use advanced scripting.
+
+9/15/22: List of FEI STEM detectors should now come out in log window instead
+of just in server window.
+
+9/15/22: Added property to specify staying in or out of STEM on startup even
+when InitialCurrentCamera setting would cause a state change.
+
+9/15/22: Added File menu entries to close all open files and to specify
+initial saving and autosaving of the log.
+
+9/15/22: Moved calibration of beam tilt versus image shift to Focus/Tune menu
+and move electron dose calibration from Calibration to Tasks menu, so that the
+Calibration menu can be omitted in basic mode.  Added a reminder to calibrate
+dose if it expired in the last week.
+
+9/15/22: Allowed smaller minimum defocus for coma and astigmatism by CTF;
+added another setting to specify the additional defocus for astigmatic images
+and allowed this to be smaller too.
+
+9/15/22: Added script commands to open state dialog and set an imaging state,
+to cycle the autofocus target, to set image shift values for a custom pattern
+of multiple Records, and to set defocus offsets for a custom pattern.
+
 9/6/22: Fixed two crashes if hole finder finds only one or two points in
 montage (In 4.0).
 

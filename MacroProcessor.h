@@ -221,6 +221,7 @@ protected:
   EMbufferManager *mBufferManager;
   CNavHelper *mNavHelper;
   CProcessImage *mProcessImage;
+  CFocusManager *mFocusManager;
   CParameterIO *mParamIO;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;

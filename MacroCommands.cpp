@@ -1802,16 +1802,16 @@ int CMacCmd::OppositeTrial(void)
 
   if (!mWinApp->LowDoseMode())
     ABORT_LINE("Low dose mode needs to be on to use opposite area in statement: \n\n");
-  if (CMD_IS(OPPOSITEAUTOFOCUS) && !mWinApp->mFocusManager->FocusReady())
+  if (CMD_IS(OPPOSITEAUTOFOCUS) && !mFocusManager->FocusReady())
     ABORT_NOLINE("because autofocus not calibrated");
   if (mCamera->OppositeLDAreaNextShot())
     ABORT_LINE("You can not use opposite areas when Balance Shifts is on in "
     "statement: \n\n");
   mTestScale = true;
   if (CMD_IS(OPPOSITEAUTOFOCUS)) {
-    mWinApp->mFocusManager->SetUseOppositeLDArea(true);
+    mFocusManager->SetUseOppositeLDArea(true);
     index = mItemEmpty[1] ? 1 : mItemInt[1];
-    mWinApp->mFocusManager->AutoFocusStart(index);
+    mFocusManager->AutoFocusStart(index);
   } else if (CMD_IS(OPPOSITETRIAL))
     mCamera->InitiateCapture(2);
   else
@@ -2476,6 +2476,72 @@ int CMacCmd::CloseMultiShotFiles(void)
   return 0;
 }
 
+// SetCustomHoleShifts
+int CMacCmd::SetCustomHoleShifts(void)
+{
+  int index, ix0, ix1;
+  MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
+  Variable *yvar, *xvar = LookupVariable(mItem1upper, index);
+  if (!xvar)
+    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+  mItem1upper = mStrItems[2];
+  mItem1upper.MakeUpper();
+  yvar = LookupVariable(mItem1upper, index);
+  if (!yvar)
+    ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
+  if (xvar->rowsFor2d || yvar->rowsFor2d)
+    ABORT_LINE("Neither variable should be a 2D array for line:\n\n");
+  if (xvar->numElements != yvar->numElements)
+    ABORT_LINE("The two variables do not have the same number of values for line:\n\n");
+  if (mItemEmpty[3] && !msParams->customMagIndex)
+    ABORT_LINE("A magnification index must be included because there is none currently "
+      "defined for custom holes");
+  if (!mItemEmpty[3] && mItemInt[3] < 1 || mItemInt[3] >= MAX_MAGS)
+    ABORT_LINE("The magnification index is out of range in line:\n\n");
+  if (!mItemEmpty[4] && fabs(mItemFlt[4]) > mScope->GetMaxTiltAngle())
+    ABORT_LINE("The tilt angle is out of range in line:\n\n");
+  msParams->customHoleX.clear();
+  msParams->customHoleY.clear();
+  for (index = 0; index < xvar->numElements; index++) {
+    FindValueAtIndex(xvar->value, index + 1, ix0, ix1);
+    mStrCopy = xvar->value.Mid(ix0, ix1 - ix0);
+    msParams->customHoleX.push_back((float)atof((LPCTSTR)mStrCopy));
+    FindValueAtIndex(yvar->value, index + 1, ix0, ix1);
+    mStrCopy = yvar->value.Mid(ix0, ix1 - ix0);
+    msParams->customHoleY.push_back((float)atof((LPCTSTR)mStrCopy));
+  }
+  if (!mItemEmpty[3])
+    msParams->customMagIndex = mItemInt[3];
+  if (!mItemEmpty[4])
+    msParams->tiltOfCustomHoles = mItemFlt[4];
+  if (mNavHelper->mMultiShotDlg)
+    mNavHelper->mMultiShotDlg->UpdateSettings();
+  return 0;
+}
+
+// SetCustomHoleDefocus
+int CMacCmd::SetCustomHoleDefocus(void)
+{
+  int index, ix0, ix1;
+  MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
+  Variable *var = LookupVariable(mItem1upper, index);
+  if (!var)
+    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+  if (!msParams->customMagIndex)
+    ABORT_LINE("There are no custom holes defined for line:\n\n");
+  if (var->rowsFor2d)
+    ABORT_LINE("The variable " + mStrItems[1] + " should not be a 2D array for line"
+      ":\n\n");
+  msParams->customDefocus.clear();
+  for (index = 0; index < var->numElements; index++) {
+    FindValueAtIndex(var->value, index + 1, ix0, ix1);
+    mStrCopy = var->value.Mid(ix0, ix1 - ix0);
+    msParams->customDefocus.push_back((float)atof((LPCTSTR)mStrCopy));
+  }
+  return 0;
+}
+
+
 // ReorderMontageByTilt
 int CMacCmd::ReorderMontageByTilt(void)
 {
@@ -2550,17 +2616,17 @@ int CMacCmd::AutoFocus(void)
   index = 1;
   if (!mItemEmpty[1])
     index = mItemInt[1];
-  if (index > -2 && !mWinApp->mFocusManager->FocusReady())
+  if (index > -2 && !mFocusManager->FocusReady())
     SUSPEND_NOLINE("because autofocus not calibrated");
   if (mMinDeltaFocus != 0. || mMaxDeltaFocus != 0.)
-    mWinApp->mFocusManager->NextFocusChangeLimits(mMinDeltaFocus, mMaxDeltaFocus);
+    mFocusManager->NextFocusChangeLimits(mMinDeltaFocus, mMaxDeltaFocus);
   if (mMinAbsFocus != 0. || mMaxAbsFocus != 0.)
-    mWinApp->mFocusManager->NextFocusAbsoluteLimits(mMinAbsFocus, mMaxAbsFocus);
+    mFocusManager->NextFocusAbsoluteLimits(mMinAbsFocus, mMaxAbsFocus);
   if (index < -1)
-    mWinApp->mFocusManager->DetectFocus(FOCUS_REPORT,
+    mFocusManager->DetectFocus(FOCUS_REPORT,
     !mItemEmpty[2] ? mItemInt[2] : 0);
   else
-    mWinApp->mFocusManager->AutoFocusStart(index,
+    mFocusManager->AutoFocusStart(index,
       !mItemEmpty[2] ? mItemInt[2] : 0);
   mTestScale = true;
   return 0;
@@ -2569,7 +2635,7 @@ int CMacCmd::AutoFocus(void)
 // BeamTiltDirection
 int CMacCmd::BeamTiltDirection(void)
 {
-  mWinApp->mFocusManager->SetTiltDirection(mItemInt[1]);
+  mFocusManager->SetTiltDirection(mItemInt[1]);
   return 0;
 }
 
@@ -4101,8 +4167,8 @@ int CMacCmd::IncTargetDefocus(void)
 
   if (fabs(mItemDbl[1]) > 100.)
     ABORT_LINE("Change in target defocus too large in statement: \n\n");
-  delX = mWinApp->mFocusManager->GetTargetDefocus();
-  mWinApp->mFocusManager->SetTargetDefocus((float)(delX + mItemDbl[1]));
+  delX = mFocusManager->GetTargetDefocus();
+  mFocusManager->SetTargetDefocus((float)(delX + mItemDbl[1]));
   mWinApp->mAlignFocusWindow.UpdateSettings();
   return 0;
 }
@@ -4112,17 +4178,46 @@ int CMacCmd::SetTargetDefocus(void)
 {
   if (mItemDbl[1] < -200. || mItemDbl[1] > 50.)
     ABORT_LINE("Target defocus too large in statement: \n\n");
-  mWinApp->mFocusManager->SetTargetDefocus(mItemFlt[1]);
+  mFocusManager->SetTargetDefocus(mItemFlt[1]);
   mWinApp->mAlignFocusWindow.UpdateSettings();
   return 0;
 }
 
+// CycleTargetDefocus
+int CMacCmd::CycleTargetDefocus(void)
+{
+  float target = mFocusManager->GetTargetDefocus();
+  float step, origTarget = target, startDef = mItemFlt[1], endDef = mItemFlt[2];
+  float minDef = B3DMIN(startDef, endDef);
+  float maxDef = B3DMAX(startDef, endDef);
+
+  if (mItemInt[3] <= 0)
+    ABORT_LINE("Number of steps must be positive for line:\n\n");
+  step = (endDef - startDef) / mItemInt[3];
+  if (target < minDef - 0.2 * fabs(step)) {
+    target = minDef;
+  } else if (target > maxDef + 0.2 * fabs(step)) {
+    target = maxDef;
+  } else {
+    B3DCLAMP(target, minDef, maxDef);
+    target += step;
+    if (target < minDef - 0.2 * fabs(step))
+      target = maxDef;
+    else if (target > maxDef + 0.2 * fabs(step))
+      target = minDef;
+  }
+  mFocusManager->SetTargetDefocus(target);
+  if (mItemInt[4])
+    mScope->IncDefocus(target - origTarget);
+  mLogRpt.Format("Target defocus set to %.2f microns", target);
+  return 0;
+}
 // ReportAutofocusOffset
 int CMacCmd::ReportAutofocusOffset(void)
 {
   double delX;
 
-  delX = mWinApp->mFocusManager->GetDefocusOffset();
+  delX = mFocusManager->GetDefocusOffset();
   mStrCopy.Format("Autofocus offset is: %.2f um", delX);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
   SetRepValsAndVars(1, delX);
@@ -4135,10 +4230,10 @@ int CMacCmd::SetAutofocusOffset(void)
   if (mItemDbl[1] < -200. || mItemDbl[1] > 200.)
     ABORT_LINE("Autofocus offset too large in statement: \n\n");
   if (mFocusOffsetToRestore < -9000.) {
-    mFocusOffsetToRestore = mWinApp->mFocusManager->GetDefocusOffset();
+    mFocusOffsetToRestore = mFocusManager->GetDefocusOffset();
     mNumStatesToRestore++;
   }
-  mWinApp->mFocusManager->SetDefocusOffset(mItemFlt[1]);
+  mFocusManager->SetDefocusOffset(mItemFlt[1]);
   return 0;
 }
 
@@ -4580,7 +4675,7 @@ int CMacCmd::ReportFocusDrift(void)
 {
   double delX, delY;
 
-  if (mWinApp->mFocusManager->GetLastDrift(delX, delY))
+  if (mFocusManager->GetLastDrift(delX, delY))
     ABORT_LINE("No drift available from last autofocus for statement: \n\n");
   mStrCopy.Format("Last drift in autofocus: %.3f %.3f nm/sec", delX, delY);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
@@ -4616,9 +4711,9 @@ int CMacCmd::ReportAutoFocus(void)
   double delX;
   int index, index2;
 
-  delX = mWinApp->mFocusManager->GetCurrentDefocus();
-  index = mWinApp->mFocusManager->GetLastFailed() ? - 1 : 0;
-  index2 = mWinApp->mFocusManager->GetLastAborted();
+  delX = mFocusManager->GetCurrentDefocus();
+  index = mFocusManager->GetLastFailed() ? - 1 : 0;
+  index2 = mFocusManager->GetLastAborted();
   if (index2)
     index = index2;
   if (index)
@@ -4635,7 +4730,7 @@ int CMacCmd::ReportTargetDefocus(void)
 {
   double delX;
 
-  delX = mWinApp->mFocusManager->GetTargetDefocus();
+  delX = mFocusManager->GetTargetDefocus();
   mStrCopy.Format("Target defocus is: %.2f um", delX);
   mWinApp->AppendToLog(mStrCopy, mLogAction);
   SetRepValsAndVars(1, delX);
@@ -6735,6 +6830,13 @@ int CMacCmd::Verbose(void)
 // ProgramTimeStamps
 int CMacCmd::ProgramTimeStamps(void)
 {
+  const char **months = mWinApp->mDocWnd->GetMonthStrings();
+  if (mItemInt[1] < 0) {
+    CTime ctdt = CTime::GetCurrentTime();
+    PrintfToLog("Current date  %s %d %d  %02d:%02d:%02d", months[ctdt.GetMonth() - 1],
+      ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
+    return 0;
+  }
   mWinApp->AppendToLog(mWinApp->GetStartupMessage(mItemInt[1] != 0));
   if (mItemInt[2] != 0)
     mWinApp->mParamIO->ReportSpecialOptions();
@@ -6828,7 +6930,7 @@ int CMacCmd::ListAllCalibrations(void)
   mWinApp->mMenuTargets.DoListISVectors(true);
   mWinApp->mMenuTargets.DoListISVectors(false);
   mWinApp->mMenuTargets.DoListStageCals();
-  mWinApp->mFocusManager->OnAutofocusListCalibrations();
+  mFocusManager->OnAutofocusListCalibrations();
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
@@ -9236,6 +9338,31 @@ int CMacCmd::RestoreState(void)
   return 0;
 }
 
+// GoToImagingState
+int CMacCmd::GoToImagingState(void)
+{
+  int index;
+  CString errStr;
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  if (!mNavHelper->mStateDlg) {
+    errStr = "the state dialog is not open";
+    index = -1;
+  } else
+    index = mNavHelper->mStateDlg->SetStateByNameOrNum(mStrCopy, errStr);
+  if (index)
+    mLogRpt = "Cannot set imaging state; " + errStr;
+  SetReportedValues(index);
+  return 0;
+}
+
+// OpenStateDialog
+int CMacCmd::OpenImagingStateDialog(void)
+{
+  if (!mNavHelper->mStateDlg)
+    mNavHelper->OpenStateDialog();
+  return 0;
+}
+
 // ReportNumNavAcquire
 int CMacCmd::ReportNumNavAcquire(void)
 {
@@ -9853,7 +9980,7 @@ int CMacCmd::ReportLastHoleVectors(void)
 {
   int index = mItemInt[1];
   bool settingMulti = CMD_IS(USEHOLEVECTORSFORMULTI);
-  ScaleMat mat, st2is;
+  ScaleMat mat;
   MultiShotParams *msParams;
   if (index > 0 && (index >= MAX_MAGS || !mMagTab[index].mag))
     ABORT_LINE("The magnification index is out of range in:\n\n");
@@ -9870,33 +9997,10 @@ int CMacCmd::ReportLastHoleVectors(void)
     if (!index)
       ABORT_LINE("There is no Record magnification index to use for:\n\n");
   }
-  if (index < 0) {
-    mat = mNavHelper->mHoleFinderDlg->GetGridImVecs();
-    mat.ypx = -mat.ypx;
-    mat.ypy = -mat.ypy;
-  } else
-    mat = mNavHelper->mHoleFinderDlg->GetGridStageVecs();
+  mat = mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(index, settingMulti, mStrCopy);
   if (!mat.xpx)
-    ABORT_LINE("The hole finder has not saved any vectors for:\n\n");
-  if (index > 0) {
-    st2is = MatMul(mShiftManager->StageToCamera(mCurrentCam, index),
-      mShiftManager->CameraToIS(index));
-    if (!st2is.xpx)
-      ABORT_LINE("There is no calibration to get from stage to IS coordinates at the "
-        "given mag for:\n\n");
-    mShiftManager->ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
-    mShiftManager->ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
-  }
-  if (settingMulti) {
-    msParams->holeISXspacing[0] = mat.xpx;
-    msParams->holeISYspacing[0] = mat.ypx;
-    msParams->holeISXspacing[1] = mat.xpy;
-    msParams->holeISYspacing[1] = mat.ypy;
-    msParams->holeMagIndex = index;
-    msParams->tiltOfHoleArray = 0.;
-    if (mNavHelper->mMultiShotDlg)
-      mNavHelper->mMultiShotDlg->UpdateSettings();
-  } else
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  if (!settingMulti)
     SetRepValsAndVars(2, mat.xpx, mat.ypx, mat.xpy, mat.ypy);
   mLogRpt.Format("Hole %s vectors are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
     "image", index ? "IS" : "stage"), mat.xpx, mat.ypx, mat.xpy, mat.ypy);

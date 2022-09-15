@@ -134,6 +134,7 @@ BEGIN
         MENUITEM "&New Montage...",             ID_FILE_NEWMONTAGE
         MENUITEM "&Montage Setup...",           IDM_FILE_MONTAGESETUP
         MENUITEM "&Close",                      IDM_FILE_CLOSE
+        MENUITEM "Close All F&iles",            ID_FILE_CLOSEALLFILES
         MENUITEM SEPARATOR
         MENUITEM "&Save A\tCtrl+S",             IDM_FILE_SAVE
         MENUITEM "S&ave Active",                IDM_FILE_SAVEACTIVE
@@ -153,6 +154,7 @@ BEGIN
         MENUITEM "Save Lo&g...",                ID_FILE_SAVELOG
         MENUITEM "Save Log As...",              ID_FILE_SAVELOGAS
         MENUITEM "Read && Append...",           ID_FILE_READAPPEND
+        MENUITEM "Save && Autosave...",         ID_FILE_AUTOSAVELOG
         MENUITEM "Continuous Save",             ID_FILE_CONTINUOUSSAVE
         MENUITEM "&Use Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
         MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
@@ -284,7 +286,6 @@ BEGIN
             MENUITEM "Asti&gmatism by CTF",         ID_FOCUSTUNING_CTF
             MENUITEM "Astig&matism by BTID",        ID_AUTOFOCUSFOCUS_ASTIGMATI
             MENUITEM "S&etup Astigmatism",          ID_AUTOFOCUSFOCUS_SETUPASTIGMATISM
-            MENUITEM "Coma vs. Image Shift",        ID_FOCUSTUNING_COMAVS
             POPUP "Old Coma-Free Alignment"
             BEGIN
                 MENUITEM "BTID &Coma-free Aligment",    ID_AUTOFOCUSFOCUS_COMA
@@ -310,8 +311,6 @@ BEGIN
         END
         MENUITEM "Set Aperture Si&ze",          ID_CALIBRATION_SET_APERTURE_SIZE
         MENUITEM SEPARATOR
-        MENUITEM "Ele&ctron Dose",              ID_CALIBRATION_ELECTRONDOSE
-        MENUITEM "Purg&e Old Calibs",           ID_CALIBRATION_PURGEOLDCALIBS
         MENUITEM SEPARATOR
         MENUITEM "Dist&ortion",                 ID_CALIBRATION_DISTORTION
         MENUITEM "Set Ove&rlaps",               ID_CALIBRATION_SETOVERLAPS
@@ -362,6 +361,7 @@ BEGIN
         MENUITEM "Coma-free A&lignment by CTF", ID_FOCUS_COMA_BY_CTF
         MENUITEM "Set CTF Ac&quire Params",     ID_FOCUS_SETCTFACQUIREPARAMS
         MENUITEM "Set CTF Coma-free &Params",   ID_FOCUS_SET_CTF_COMA_BT
+        MENUITEM "Calibrate Coma vs Image Shift", ID_FOCUSTUNING_COMAVS
         MENUITEM "Beam-tilted FFT Arra&y",      ID_FOCUS_MAKEZEMLINTABLEAU
         MENUITEM SEPARATOR
         MENUITEM "Correct Astigmatism by BTID", ID_FOCUS_CORRECTASTIGMATISM
@@ -511,6 +511,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
+        MENUITEM "Calibra&te Electron Dose",    ID_CALIBRATION_ELECTRONDOSE
+        MENUITEM "Purge Old Dose Calibs",       ID_CALIBRATION_PURGEOLDCALIBS
+        MENUITEM SEPARATOR
         MENUITEM "M&ove beam\tShift+M",         ID_PROCESS_MOVEBEAM
         MENUITEM "&Center Beam\tShift+C",       ID_TASKS_CENTERBEAM
         MENUITEM "Autocenter &Beam\tShift+E",   ID_TASKS_AUTOCENTERBEAM
@@ -3144,7 +3147,7 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,121,23,45,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 180, 380
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 180, 395
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Multiple Record Setup"
@@ -3154,36 +3157,36 @@ BEGIN
     CONTROL         "Before others",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,58,65,51,10
     CONTROL         "After others",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,118,65,48,10
     GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,13,56,155,23,WS_GROUP
-    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,236,120,10
-    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,246,110,10
-    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,18,256,94,10
+    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,251,120,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,261,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,18,271,94,10
     CONTROL         "Early return, except for full sum on first shot",IDC_RFIRST_FULL,
-                    "Button",BS_AUTORADIOBUTTON,18,266,140,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,20,278,110,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,131,276,22,12,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,12,226,150,64
-    DEFPUSHBUTTON   "OK",IDOK,33,362,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,109,362,40,14
+                    "Button",BS_AUTORADIOBUTTON,18,281,140,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,20,293,110,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,131,291,22,12,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,12,241,150,64
+    DEFPUSHBUTTON   "OK",IDOK,33,377,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,377,40,14
     LTEXT           "Number of shots in main ring around center:",IDC_STAT_NUM_PERIPHERAL,6,17,130,8
     CTEXT           "99",IDC_STAT_NUM_SHOTS,136,17,9,8
     CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,147,14,10,14
     LTEXT           "Distance from center to main ring of shots:",IDC_STAT_CENTER_DIST,6,32,124,8
     EDITTEXT        IDC_EDIT_SPOKE_DIST,130,30,30,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_CENTER_UM,162,32,11,8
-    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,216,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,5,338,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,88,336,26,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,118,338,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,231,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,5,353,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,88,351,26,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,118,353,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,349,166,10
-    PUSHBUTTON      "?",IDC_BUTHELP,165,366,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,296,89,8
-    LTEXT           "sec",IDC_STAT_SEC,120,296,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,294,26,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,364,166,10
+    PUSHBUTTON      "?",IDC_BUTHELP,165,381,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,311,89,8
+    LTEXT           "sec",IDC_STAT_SEC,120,311,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,309,26,12,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,307,170,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,317,152,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,325,157,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,322,170,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,332,152,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,340,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,4,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
@@ -3201,13 +3204,13 @@ BEGIN
     LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,6,98,133,8
     EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,138,96,28,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,82,172,1
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,212,172,1
-    GROUPBOX        "Save image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,172,53
-    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,183,55,12
-    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,183,39,12
-    PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,183,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,197,169,10
-    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,183,40,12
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,227,172,1
+    GROUPBOX        "Save image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,172,68
+    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,198,55,12
+    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,198,39,12
+    PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,198,21,12
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,212,169,10
+    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,198,40,12
     CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,134,147,10
     CONTROL         "Do second ring of ",IDC_CHECK_SECOND_RING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,45,66,10
@@ -3216,6 +3219,8 @@ BEGIN
     LTEXT           "um",IDC_STAT_RING2_UM,162,46,11,8
     CONTROL         "",IDC_SPIN_RING2_NUM,"msctls_updown32",UDS_ARROWKEYS,91,43,10,14
     EDITTEXT        IDC_EDIT_RING2_DIST,130,44,30,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Use Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,12,183,75,12
+    PUSHBUTTON      "Step To and Adjust IS",IDC_BUT_STEP_ADJUST,92,183,75,12
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -4162,7 +4167,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 176
         TOPMARGIN, 4
-        BOTTOMMARGIN, 376
+        BOTTOMMARGIN, 391
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -5695,13 +5700,17 @@ BEGIN
     IDC_SPIN_REGNUM         "Registration number for imported image"
     IDC_CROSSHAIRS          "Draw the big red cross in center all the time"
     IDC_CHECKOFFERMAP       "Make new map if Navigator open and montage not made by Nav/TS/script"
-    IDC_CHECK_CLOSE_WHEN_DONE
-                            "Close file after montage is done if not made by Nav, TS, or script"
     IDC_SET_TRACK_STATE     "Adjust settings on the scope and see dose rate and time"
     IDC_ALIGNCOOKED         "Take images before an after cooking and align them"
     IDC_EDITCOOKDOSE        "Target dose for cooking"
     IDC_SPINCOOKDOSE        "Adjust dose in steps of 50"
     IDC_TILTFORCOOK         "Tilt to the given angle before cooking"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_CLOSE_WHEN_DONE 
+                            "Close file after montage is done if not made by Nav, TS, or script"
 END
 
 STRINGTABLE
@@ -6818,6 +6827,12 @@ BEGIN
     IDC_CHECK_USE_PRIOR_AUTOFOCUS 
                             "Skip running the dirft routine if the last autofocus has a low enough drift"
     IDC_EDIT_PRIOR_THRESH   "Enter the maximum drift considered acceptable for the last autofocus"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_CLOSEALLFILES   "Close all open image files if none are protected"
+    ID_FILE_AUTOSAVELOG     "Save to file on startup and autosave thereafter"
 END
 
 #endif    // English (United States) resources

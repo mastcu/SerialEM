@@ -27,6 +27,7 @@ public:
   GetMember(bool, FindingHoles);
   GetMember(ScaleMat, GridImVecs);
   GetMember(ScaleMat, GridStageVecs);
+  GetMember(float, LastTiltAngle);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
   void StopScanning(void);

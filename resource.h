@@ -632,7 +632,6 @@
 #define IDC_STATLISTHEADER              1587
 #define IDC_CHECKOFFERMAP               1588
 #define IDC_SCALEBAR                    1589
-#define IDC_CHECK_CLOSE_WHEN_DONE       2992
 #define IDC_SET_TRACK_STATE             1590
 #define IDC_COOKMAG                     1591
 #define IDC_COOKSPOT                    1592
@@ -1862,7 +1861,6 @@
 #define IDC_STAT_INFO_LINE1             2884
 #define IDC_STAT_INFO_LINE2             2885
 #define IDC_RCHOICE_ONE                 2886
-#define IDC_RCHOICE_ONE2                2993
 #define IDC_STAT_SPACER                 2887
 #define IDC_RCHOICE_THREE               2888
 #define IDC_NA_ADJUST_BT_FOR_IS         2888
@@ -1963,6 +1961,10 @@
 #define IDC_STAT_ACS_ITERATE_UM         2989
 #define IDC_REFINE_WITH_TRIAL           2990
 #define IDC_CHECK_USE_MULTISHOT         2991
+#define IDC_CHECK_CLOSE_WHEN_DONE       2992
+#define IDC_RCHOICE_ONE2                2993
+#define IDC_BUT_USE_LAST_HOLE_VECS      2995
+#define IDC_BUT_STEP_ADJUST             2996
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2491,6 +2493,9 @@
 #define ID_MACRO_RUN58                  33494
 #define ID_MACRO_RUN59                  33495
 #define ID_MACRO_RUN60                  33496
+#define ID_FILE_CLOSEALLFILES           33497
+#define ID_TASKS_CALIBRATEELECTRONDOSE  33498
+#define ID_FILE_AUTOSAVELOG             33499
 
 // Next default values for new objects
 // 
@@ -2498,8 +2503,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        270
-#define _APS_NEXT_COMMAND_VALUE         33497
-#define _APS_NEXT_CONTROL_VALUE         2994
+#define _APS_NEXT_COMMAND_VALUE         33500
+#define _APS_NEXT_CONTROL_VALUE         2997
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

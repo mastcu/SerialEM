@@ -44,7 +44,12 @@
       defined at one tilt angle and acquisition is done at another angle, the program
       will adjust the positions appropriately.&nbsp; This adjustment is also imperfect&nbsp;for large differences in tilt angle but may be useful in some cases.</p>
     <p><i><b>Saving Accurate Image Shift Values for Holes</b></i></p>
-    <p>There are several possible methods of setting the image shift values for the
+    <p>If you have used the hole finder to mark hole positions, the best way of 
+      getting image shift values may be to use the <b>Use Last Hole Vectors</b> button.&nbsp; 
+      Since these vectors are stored as stage positions, they can be accurately 
+      converted to image shift positions at the Record magnification even when they 
+      were detected on a highly defocused View image (provided that the High Defocus 
+      Magnification calibration has been done).&nbsp; Otherwise, there are several possible methods of setting the image shift values for the
       holes, ranging from centering holes in an image where they are all visible
       (e.g., low dose View), through centering consistent positions at a magnification
       still lower than the Record mag, to centering positions at the Record mag
@@ -267,10 +272,10 @@
       positions that are not regularly and symmetrically arranged around the marked Navigator point.
     </p>
     <p><b>Save Image Shift Values at Holes</b></p>
-    <p>Press &#39;For Corners of Regular Pattern&#39; to start setting the image shifts needed
-      for a regular pattern, or &#39;For custom pattern&#39; to start setting the shifts for
-      arbitrary positions.&nbsp; After pressing one of these buttons, the label below
-      the next line of buttons will summarize what to do next.</p>
+    <p>Press <strong>For Corners of Regular Pattern</strong> to start setting the image shifts needed
+      for a regular pattern, or <strong>For Custom Pattern</strong> to start setting the shifts for
+      arbitrary positions.&nbsp; Press <B>Step To and Adjust IS</B> to visit the corners of a regular pattern, or all of the positions in a custom pattern, and adjust the image shift there, and save the new shifts.  After pressing one of these buttons, the label below
+      the third line of buttons will summarize what to do next.</p>
     <p>To set the corners of a regular pattern, you will save image shifts at 4 hole
       positions, even if one of the spinners is set to 1.&nbsp; Start at one corner of
       the pattern and save the position.&nbsp; Then shift by the needed number of
@@ -279,13 +284,25 @@
       indicated by the second spinner, save, and shift back by the number of holes
       along the first axis.&nbsp; If one of the spinners is set to 1, the program will
       still expect you to shift by one hole along that axis.</p>
-    <p>To set the positions in a custom pattern, shift to a center position for the
-      pattern and save the shift.&nbsp; When taking multiple Records, this position will not
-      be acquired at, but all the shifts
-      will be done relative to it.&nbsp; Then shift to the first point to
-      be acquired and save that position.&nbsp; Repeat until the last point and press
-      &#39;End Pattern&#39;.</p>
-    <p> See above for instructions on how to save sufficiently accurate shift values.</p>
+    <p>To set the positions in a custom pattern, shift to a center position for the 
+      pattern and save the shift.&nbsp; When taking multiple Records, this position 
+      will not be acquired at, but all the shifts will be done relative to it.&nbsp; 
+      Then shift to the first point to be acquired and save that position.&nbsp; 
+      Repeat until the last point and press <strong>End Pattern</strong>.</p>
+    <p> When adjusting existing image shift values, new image shifts are recorded at 
+      the same sequence of positions as when first saving them.&nbsp; If a regular pattern is selected 
+      (i.e., if <strong>Use custom pattern </strong>is not checked), you should start out 
+      positioned on the center of the pattern.&nbsp; Then press <b>Step To and Adjust 
+      IS</b>, and the image shift will be set to reach the first corner of the pattern.&nbsp; Press <b>Save Image Shift</b> after adjusting the image shift (or not), and it will move on to the next position.&nbsp; 
+      If a custom pattern is selected, first press <b>Step To and Adjust 
+      IS</b>, then adjust the centering on the origin of the pattern.&nbsp; Press <b>Save Image Shift</b> and it will move to the first position to be 
+      recorded.&nbsp; The magnification will be set to that at which image shifts were 
+      previously defined, and in Low Dose mode the Record magnification will be set 
+      that value as well as long as it is in not closer to the View magnification.&nbsp; 
+      However, you are free to change the magnification at which you adjust the 
+      shifts.</p>
+    <p> See above for instructions on how to save sufficiently accurate shift values 
+      with these methods.</p>
       <p><b>IS to Nav Pt</b></p>
     <p>Press this button to move to the location of the current Navigator point
       with image shift and then select the next point&nbsp; in the table.&nbsp; This saves you from
@@ -301,7 +318,7 @@
       going to work for a custom group unless you marked the central point at the
       end), or simply leave the selected point alone.</p>
     <p><b>Save Image Shift&nbsp; </b> </p>
-    <p>Press this button to save the current image shift as the next corner in a
+    <p>Press this button to save the current image shift at the next corner in a
       regular pattern, or the next spot in a custom pattern.</p>
     <p><b>End Pattern</b></p>
     <p>Press this button to end the entries when defining a custom pattern.&nbsp; It
@@ -309,7 +326,14 @@
       saving it.&nbsp; The current image shift will be saved if it is different from
       that of the last saved point.</p>
     <p><b>Abort</b></p>
-    <p>Press this button to stop entering shifts and throw away all entries.</p>
+    <p>Press this button to stop entering or adjusting shifts and throw away all entries.</p>
+    <p><strong>Use Last Hole Vectors</strong></p>
+    <p>Press this button to convert the vectors from the last hole-finding operation 
+      to image shift values for a regular pattern.&nbsp; This operation is equivalent 
+      to using the 'UseHoleVectorsForMulti' script command.&nbsp; The tilt angle at 
+      which the holes were found must match the tilt angle last used to define the 
+      vectors (but in fact there is no compensation for tilt so hole need to be found 
+      at zero tilt.)</p>
     <p><b>Save Record image</b></p>
     <p>Select this option to have the Record image saved in the current file.&nbsp;
       The option is disabled and its setting is irrelevant if an early return is
