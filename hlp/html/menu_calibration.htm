@@ -187,8 +187,9 @@
           <TD>Set parameters for astigmatism calibration (other than beam tilt).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_focustuning_comavs">Coma vs. Image Shift</a>&nbsp;</TD>
-          <TD>Calibrate beam tilt changes needed to compensate for image shift.</TD>
+          <TD class="style1">&nbsp;&nbsp;&nbsp; Coma vs. Image Shift</a>&nbsp;</TD>
+          <TD>Moved to <a href="menu_focus.htm#hid_focustuning_comavs">Focus/Tune menu</a> in SerialEM 4.1
+            because it is a user-managed calibration saved in settings.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style2">&nbsp;&nbsp;&nbsp;&nbsp;Old Coma-free Alignment</TD>
@@ -258,12 +259,12 @@
           <TD>Inform program about size of C2 aperture on Titan microscope.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style4"><A href="#hid_calibration_electrondose">Electron Dose</A></TD>
-          <TD class="style5">Calibrate electron dose for the current spot size with an existing image.</TD>
+          <TD class="style4">Electron Dose</TD>
+          <TD class="style5">Moved to <A href="menu_tasks.htm#hid_calibration_electrondose">Tasks menu</A> in SerialEM 4.1 to allow whole Calibration menu to be removed in Basic mode.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1"><A href="#hid_calibration_purgeoldcalibs">Purge Old Calibs</A></TD>
-          <TD>Remove dose calibrations done prior to current run of the program.</TD>
+          <TD class="style1">Purge Old Calibs</A></TD>
+          <TD>Also moved to <A href="menu_tasks.htm#hid_calibration_purgeoldcalibs">Tasks menu</A>in SerialEM 4.1.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_distortion">Distortion</A></TD>
@@ -1230,46 +1231,6 @@
       The first value is important, as discussed for the previous command, but the
       defaults for the others are probably fine.</p>
     <p>
-      <A name="hid_focustuning_comavs"></A><B>Coma vs. Image Shift command
-        (Calibration - Focus &amp; Tuning sub-menu)</B></p>
-    <p>
-      Use this command to calibrate how beam tilt must be changed to achieve coma-free
-      alignment when an image shift is imposed.&nbsp; The program will ask you what
-      image shift extent to calibrate, and then run the
-      <a href="menu_focus.htm#ID_FOCUS_COMA_BY_CTF">Coma-free Alignment by CTF</a>
-      routine to measure the beam tilt needed at four locations, image shifted in +/-X
-      and +/-Y by the given amount.&nbsp;&nbsp; The measured beam tilt is applied
-      temporarily and astigmatism is measured so that its dependence on image shift is
-      also calibrated.&nbsp; The calibration can then be applied by the
-      multi-shot routine (see <a href="menu_navigator.htm#ID_OPTIONS_SETMULTI">Set
-      Multi-Shot Parameters</a>) and with several other script commands.</p>
-    <p>
-      It is important to realize that this calibration strictly applies only under the
-      current illumination conditions (specifically, the C2/C3 lens setting or
-      illuminated area, and the probe mode or alpha setting).&nbsp; When near parallel illumination, it may not change much
-      with beam changes; otherwise it might change considerably.&nbsp; This has
-      several consequences:</p>
-    <ul>
-      <li>It may be necessary to do the calibration once per session, after setting up
-        the illumination to be used for acquisition.</li>
-      <li>The calibration should be done in Low Dose mode if acquisition is to be done
-        in Low Dose mode</li>
-      <li>Because it depends on your settings for illumination, the calibration will be
-        saved in your settings file, not shared with others using other settings files.</li>
-      <li>The calibration can be checked with the script command 'TestNextMultiShot 1'
-        (see <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a>) or with a script like<br />
-&nbsp;&nbsp; FixComaByCTF<br />
-&nbsp;&nbsp; ImageShiftByMicrons 2 0 1 1<br />
-&nbsp;&nbsp; Delay 3<br />
-&nbsp;&nbsp; FixComaByCTF 1 1<br />
-&nbsp;&nbsp; FixAstigmatismByCTF 1 1<br />
-        where you could omit the first FixComaByCTF if you have already done the
-        coma-free alignment, the &quot;2 0&quot; can be replaced by an image shift of your choice,
-        the astigmatism test could be omitted, and you could add additional tests at other image shift positions.&nbsp; Such a
-        script could be used to explore how much the adjusted beam tilt gets off when
-        the beam intensity is changed.</li>
-    </ul>
-    <p>
       <A name="hid_autofocusfocus_coma"></A><B>BTID Coma-free Alignment command
         (Calibration - Focus &amp; Tuning - Old Coma-free Alignment sub-menu)</B></p>
     <p>
@@ -1656,65 +1617,6 @@
       size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;
       after one of those calibrations, it will be remembered between sessions in the
       short term calibration file.</P>
-      <P><A name="hid_calibration_electrondose"></A><B>Electron Dose command (Calibration
-          menu)</B></P>
-      <P>Use this command to calibrate electron dose for a particular spot size. This
-        calibration is also specific to the probe mode for Thermo/FEI scopes.  It is automatically
-        saved in a special short-term calibration file and
-        is only good for a limited period of time (1 day by default, but this time can be
-        set with the property 'DoseLifetimeInHours'). The calibration requires
-        that beam intensity be calibrated and that the SerialEMproperties.txt file
-        contain an entry for CountsPerElectron for the camera. </P>
-    <P>Before activating
-        the command, take an image of the blank beam with a reliable exposure time
-        (e.g., 0.2 or more seconds) and with the beam in the calibrated range for the
-      current spot size.&nbsp; Specifically, the intensity has to be within the 
-      directly calibrated range, not in the range where the calibration can be 
-      extrapolated, so the &#39;SPOT&#39; label in the microscope status panel 
-      should be darker blue, not light cyan. Select the command and press OK. The program will report
-        the dose rate (electrons per square Angstroms per second) of the beam
-        intensity at which that image was taken.&nbsp; Or, if intensity was not in the 
-      directly calibrated range, there will be a message telling you what that range 
-      is.</P>
-      <P>The dose calibration will be most accurate if the spot size is normalized (on
-        a Thermo/FEI scope). To do this, open the Normalizations panel in the Microscope User
-        Interface, select TEM Spotsize, and check Spotsize. Then change spot size to
-        get a normalized beam, take a picture, and calibrate the dose with it. By the
-        same token, the actual measurement of dose at a particular beam setting will be
-        more accurate if the spot size is normalized whenever you change spot sizes.
-        Hysteresis in the second condenser lens will also reduce the accuracy of a dose
-        measurement, but this is more difficult to control for.</P>
-      <P>The dose calibration is specific to the side of beam crossover on which the
-        calibration image was taken. Once a calibration is present, the program can
-        compute the dose for any image acquisition when beam intensity is within the
-        calibrated range, taking into account drift settling time as well as CCD
-        exposure time. If relative spot intensities have been calibrated, then a
-        calibration at a single spot size will allow dose to be computed at any spot
-        size. Note that dose is automatically calibrated when you take a gain
-        reference, unless you deselect this option in the <A href="hidd_gainreference.htm">Gain
-          Reference dialog</A> .</P>
-      <P>When there is an electron dose calibration, the estimated dose at the specimen will be displayed in several
-        places:</Pq
-      <OL>
-        <LI>
-        The dose for a low dose acquisition area will appear in the upper right of the
-        Low Dose control panel, with a continuous readout if 'Continuous update' is
-        selected.
-        <LI>
-          The dose for the current camera exposure time, in the lower right of the <A href="hidd_camerasetup.htm">
-            Camera Setup dialog</A> .</LI>
-        <LI>
-          When a direct electron detector is the selected camera, the dose rate at the
-          specimen, per unbinned pixel per second, will appear in the Options portion of
-          the <a href="hidd_scopestatus.htm">Microscope Status panel</a>.</LI></OL>
-      <P><A name="hid_calibration_purgeoldcalibs"></A><B>Purge Old Calibs command
-          (Calibration menu)</B></P>
-      <P>This command will remove any dose calibrations done before the current instance
-        of the program was started. You would use this if you do a dose calibration (or
-        take a gain reference) and then want to remove any earlier calibrations. Dose
-        calibrations older than 24 hours are ignored when the program starts. Also,
-        when dose is calibrated, other calibrations older than 12 hours are then
-        removed.</P>
       <P><A name="hid_calibration_distortion"></A><B>Distortion command (Calibration menu)</B></P>
       <P>This command will allow you to capture a pair of images that can be used for
         measuring the microscope distortion field with programs in IMOD. The pairs can overlap side by side,
