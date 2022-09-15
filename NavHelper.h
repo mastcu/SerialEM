@@ -55,6 +55,7 @@ struct MultiShotParams
   float tiltOfCustomHoles;  // Tilt angle at which custom holes defined
   FloatVec customHoleX;  // For custom holes, list of hole IS relative
   FloatVec customHoleY;  // to item point
+  FloatVec customDefocus;  // Optional defocus change to impose
   float beamDiam;        // Beam diameter: display only
   BOOL useIllumArea;     // Whether to use illuminated area for drawing diameter
 };

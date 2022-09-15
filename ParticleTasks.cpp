@@ -371,6 +371,14 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
   mWinApp->UpdateBufferWindows();
 
+  mMSDefocusIndex = -1;
+  if (multiHoles && mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0 &&
+    mMSParams->customDefocus.size()) {
+    if (!mMSDefocusTanFac)
+      mMSBaseDefocus = mScope->GetDefocus();
+    mMSDefocusIndex = 0;
+  }
+
   // Need to shift to the first position if doing holes or if center is not being done
   // first
   if (mMSUseHoleDelay || mMSDoCenter >= 0)
@@ -497,7 +505,7 @@ void CParticleTasks::StopMultiShot(void)
       mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
     if (mMSAdjustAstig)
       mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
-    if (mMSDefocusTanFac)
+    if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
       mCamera->SetDefocusToRestore(mMSBaseDefocus);
   } else {
     mScope->SetImageShift(mBaseISX, mBaseISY);
@@ -505,7 +513,7 @@ void CParticleTasks::StopMultiShot(void)
       mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     if (mMSAdjustAstig)
       mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
-    if (mMSDefocusTanFac)
+    if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
       mScope->SetDefocus(mMSBaseDefocus);
   }
 
@@ -527,7 +535,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle;
   double transISX, transISY, delAstigX = 0., delAstigY = 0.;
-  float delay, delFocus;
+  float delay, delFocus = 0.;
   int ring = 0, indBase = 0;
   CString str, str2;
   BOOL debug = GetDebugOutput('1');
@@ -559,13 +567,17 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   
   if (mMSDefocusTanFac != 0.) {
     delFocus = (float)(mIStoSpec.ypx * delISX + mIStoSpec.ypy * delISY) *mMSDefocusTanFac;
-    if (debug || mMSTestRun) {
+  }
+  if (mMSDefocusIndex >= 0 && mMSDefocusIndex < (int)mMSParams->customDefocus.size()) {
+    delFocus += mMSParams->customDefocus[mMSDefocusIndex++];
+  }
+  if (debug || mMSTestRun) {
+    if (mMSDefocusTanFac != 0. || mMSDefocusIndex >= 0) {
       str2.Format("   delFocus %.3f", delFocus);
       str += str2;
     }
-  }
-  if (debug || mMSTestRun)
     mWinApp->AppendToLog(str);
+  }
 
   delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
   if (mMSUseHoleDelay)
@@ -604,7 +616,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     if (mMSAdjustAstig)
       mCamera->QueueStigmator(mCenterAstigX + delAstigX, mCenterAstigY + delAstigY,
         doBacklash ? BTdelay : 0);
-    if (mMSDefocusTanFac)
+    if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
       mCamera->QueueDefocus(mMSBaseDefocus + delFocus);
   } else {
     mScope->SetImageShift(ISX, ISY);
@@ -615,9 +627,10 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     if (mMSAdjustAstig)
       mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX + delAstigX,
         mCenterAstigY + delAstigY, doBacklash);
-    if (mMSDefocusTanFac)
+    if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
       mScope->SetDefocus(mMSBaseDefocus + delFocus);
   }
+
   mLastISX = ISX;
   mLastISY = ISY;
 }

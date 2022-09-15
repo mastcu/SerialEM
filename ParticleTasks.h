@@ -113,6 +113,7 @@ private:
   float mMSDefocusTanFac;          // Tangent of tilt angle times defocus factor if adjust
   ScaleMat mIStoSpec;              // Transform for adjusting defocus
   double mMSBaseDefocus;           // Defocus at center
+  int mMSDefocusIndex;             // Index of focus to set
   bool mMSLastFailed;              // Flag if last one did not run to completion
   float mMSinHoleStartAngle;       // Value controlling peripheral rotation
   int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
