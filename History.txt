@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/15/22: SEM_4-0-1beta2
 9/15/22: Added buttons to the multiple Record setup dialog to step to
 positions in an existing pattern and adjust image shift values, and to use the
 vectors from the last holee-finding for a regular pattern.
