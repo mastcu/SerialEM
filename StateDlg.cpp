@@ -13,9 +13,9 @@
 #include "ShiftManager.h"
 
 static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADDNAVSTATE, IDC_BUT_DELSTATE,
-IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_RESTORESTATE, IDC_BUT_FORGETSTATE,
+IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_FORGETSTATE,
 IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
-IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP,
+IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP, IDC_BUT_RESTORESTATE,
 IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, IDC_BUT_ADD_MONT_MAP, PANEL_END,
 IDC_LIST_STATES, PANEL_END, TABLE_END};
 
@@ -112,8 +112,14 @@ BOOL CStateDlg::OnInitDialog()
   m_listViewer.SetTabStops(11, tabs);
   ReplaceDlgItemText(IDC_STAT_TITLELINE,"C2", mWinApp->mScope->GetC2Name());
   FillListBox();
+  mIDsToAdjustHeight.push_back(IDC_STAT_NAV_GROUP);
+  mIDsForNextTop.push_back(IDC_BUT_RESTORESTATE);
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
+  CWnd *wnd = GetDlgItem(IDC_STAT_PRIOR_SUMMARY);
+  wnd->GetWindowRect(clientRect);
+  SetupUnitsToAdd(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
+    -2 * clientRect.Height() / 4);
   UpdateHiding();
 
   mInitialized = true;
