@@ -1965,6 +1965,8 @@
 #define IDC_RCHOICE_ONE2                2993
 #define IDC_BUT_USE_LAST_HOLE_VECS      2995
 #define IDC_BUT_STEP_ADJUST             2996
+#define IDC_STAT_NAV_DRAW               2997
+#define IDC_STAT_NAV_SET                2998
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2502,9 +2504,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        270
+#define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         33500
-#define _APS_NEXT_CONTROL_VALUE         2997
+#define _APS_NEXT_CONTROL_VALUE         2999
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

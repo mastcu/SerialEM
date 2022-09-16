@@ -364,7 +364,8 @@ BOOL CNavigatorDlg::OnInitDialog()
 
   FillListBox();
   mNewItemNum = (int)mItemArray.GetSize() + 1;
-  
+  UpdateHiding();
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -11386,4 +11387,16 @@ void CNavigatorDlg::SetCurrentNavFile(CString & inFile)
   mNavFilename = inFile;
   UtilSplitPath(mNavFilename, str, str2);
   SetWindowText("Navigator:  " + str2);
+}
+
+// The quick and dirty approach to hiding without panel tables
+void CNavigatorDlg::UpdateHiding()
+{
+  int IDsToHide[] = {IDC_NEW_MAP, IDC_BUT_DUAL_MAP, IDC_CHECKCORNER, IDC_CHECKROTATE,
+    IDC_CHECK_DUALMAP, IDC_DRAW_LABELS, IDC_DRAW_NONE, IDC_DRAW_ALL_REG, 
+    IDC_STAT_NAV_DRAW, IDC_STAT_NAV_SET, IDC_BUT_NAV_FILEPROPS, IDC_BUT_NAV_STATE,
+    IDC_BUT_NAV_TSPARAMS, IDC_BUT_NAV_FILENAME, IDC_BUT_NAV_FOCUS_POS};
+  int numHide = sizeof(IDsToHide) / sizeof(int);
+  for (int ind = 0; ind < numHide; ind++)
+    ShowDlgItem(IDsToHide[ind], !mWinApp->IsIDinHideSet(IDsToHide[ind]));
 }

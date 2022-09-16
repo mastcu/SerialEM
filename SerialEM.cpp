@@ -4571,6 +4571,8 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   // Update any other non-model dialog
   if (mNavHelper->mStateDlg)
     mNavHelper->mStateDlg->UpdateHiding();
+  if (mNavigator)
+    mNavigator->UpdateHiding();
   mMainFrame->RemoveHiddenItemsFromMenus();
   UpdateBufferWindows();
   UpdateWindowSettings();

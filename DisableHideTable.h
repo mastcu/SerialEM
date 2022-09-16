@@ -103,6 +103,8 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},
   {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},
   // Camera & Script panel
+  {"CameraScript - Focus", 2, 0, ID_CAMERA_FOCUS},
+  {"CameraScript - Trial", 2, 0, ID_CAMERA_TRIAL},
   {"CameraScript - Spinner 1", 2, 0, IDC_SPINMACRO1},
   {"CameraScript - Spinner 2", 2, 0, IDC_SPINMACRO2},
   {"CameraScript - Spinner 3", 2, 0, IDC_SPINMACRO3},
@@ -145,6 +147,25 @@ static DisableHideItem sDisableHideList[] =
   {"ImageStateDlg - Scheduled", 2, 0, IDC_BUT_SETSCHEDSTATE},
   {"ImageStateDlg - Restore", 2, 0, IDC_BUT_RESTORESTATE},
   {"ImageStateDlg - Forget", 2, 0, IDC_BUT_FORGETSTATE},
+  {"ImageStateDlg - Save target", 2, 0, IDC_BUT_SAVE_DEFOCUS},
+  {"ImageStateDlg - Go to state", 2, 0, IDC_BUT_SETIMSTATE},
+  {"ImageStateDlg - Add mont-map", 2, 0, IDC_BUT_ADD_MONT_MAP},
+  // Navigator Dialog
+  {"Navigator - Corner", 2, 0, IDC_CHECKCORNER},
+  {"Navigator - New map", 2, 0, IDC_NEW_MAP},
+  {"Navigator - Anchor map", 2, 0, IDC_BUT_DUAL_MAP},
+  {"Navigator - Rotate", 2, 0, IDC_CHECKROTATE},
+  {"Navigator - Anchor state", 2, 0, IDC_CHECK_DUALMAP},
+  {"Navigator - Draw labels", 2, 0, IDC_DRAW_LABELS},
+  {"Navigator - Draw none", 2, 0, IDC_DRAW_NONE},
+  {"Navigator - Draw all reg", 2, 0, IDC_DRAW_ALL_REG},
+  {"Navigator - Draw text", 2, 0, IDC_STAT_NAV_DRAW},   // "Draw" to left of checkboxes
+  {"Navigator - Set text", 2, 0, IDC_STAT_NAV_SET},    // "Set" to left of buttons
+  {"Navigator - File properties", 2, 0, IDC_BUT_NAV_FILEPROPS},
+  {"Navigator - State", 2, 0, IDC_BUT_NAV_STATE},
+  {"Navigator - TS params", 2, 0, IDC_BUT_NAV_TSPARAMS},
+  {"Navigator - Filename", 2, 0, IDC_BUT_NAV_FILENAME},
+  {"Navigator - Focus pos", 2, 0, IDC_BUT_NAV_FOCUS_POS},
   // Frame File Options Dialog
   {"FrameFileOpts - Save MRC", 2, 0, IDC_SAVE_MRC},
   {"FrameFileOpts - Use .mrcs", 2, 0, IDC_USE_EXTENSION_MRCS},
