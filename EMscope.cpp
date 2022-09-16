@@ -569,6 +569,7 @@ int CEMscope::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams();
+  mCamera = mWinApp->mCamera;
   if (mNoScope) {
     mMaxTiltAngle = 70.;
     return 0;
@@ -1557,7 +1558,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // Change the last mag index then get the new tilt axis etc offset
     changedSTEM = STEMmode != mLastSTEMmode;
     if (changedSTEM && !STEMmode)
-      mWinApp->mCamera->OutOfSTEMUpdate();
+      mCamera->OutOfSTEMUpdate();
     if (!deferISchange)
       mLastMagIndex = magIndex;
     mLastSeenMagInd = magIndex;
@@ -1630,7 +1631,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     if (mLastScreen != screenPos || changedSTEM || 
       mLastSkipLDBlank != mSkipBlankingInLowDose) {
       if (mLastScreen != screenPos)
-        mWinApp->mCamera->SetAMTblanking(screenPos == spUp);
+        mCamera->SetAMTblanking(screenPos == spUp);
       if (!mLowDoseMode || changedSTEM || mLastSkipLDBlank != mSkipBlankingInLowDose)
         BlankBeam(needBlank, "ScopeUpdate");
       mLastSkipLDBlank = mSkipBlankingInLowDose;
@@ -1715,7 +1716,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
   if (mCheckFreeK2RefCount++ > 30000 / mUpdateInterval) {
     mCheckFreeK2RefCount = 0;
-    mWinApp->mCamera->CheckAndFreeK2References(false);
+    mCamera->CheckAndFreeK2References(false);
     mWinApp->mFalconHelper->ManageFalconReference(false, false, "");
   }
 
@@ -1909,7 +1910,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
         // For omega filter, assert the filter settings
         if (GetHasOmegaFilter())
-          mWinApp->mCamera->SetupFilter();
+          mCamera->SetupFilter();
       }
 
       // Refresh the spot size and intensity
@@ -1946,9 +1947,9 @@ void CEMscope::updateEFTEMSpectroscopy(BOOL &EFTEM)
 
         // Reassert filter setting when coming out of spectroscopy
         if (mLastSpectroscopy) {
-          mWinApp->mCamera->SetupFilter();
+          mCamera->SetupFilter();
 
-        } else if (!mWinApp->mCamera->GetIgnoreFilterDiffs() && 
+        } else if (!mCamera->GetIgnoreFilterDiffs() && 
           (fabs(mFiltParam->slitWidth - mJeolSD.slitWidth) > 0.1 ||
           (mFiltParam->slitIn ? 1 : 0) != (mJeolSD.slitIn ? 1 : 0))) {
             mFiltParam->slitIn = mJeolSD.slitIn;
@@ -3837,7 +3838,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
   // JEOL STEM dies if mag is changed too soon after last image; 
   if (JEOLscope && ifSTEM && !camParam->pluginName.IsEmpty()) {
-    ticks = (int)SEMTickInterval(1000. * mWinApp->mCamera->GetLastImageTime());
+    ticks = (int)SEMTickInterval(1000. * mCamera->GetLastImageTime());
     mSynchroTD.initialSleep = B3DMAX(0, mJeolSTEMPreMagDelay - ticks);
   }
   if (ifSTEM)
@@ -5128,7 +5129,7 @@ BOOL CEMscope::GetBeamBlanked()
 // This and the unblank function are to be called from with a try block
 bool CEMscope::BlankTransientIfNeeded(const char *routine)
 {   
-  if ((mBlankTransients || mWinApp->mCamera->DoingContinuousAcquire()) && !sBeamBlanked &&
+  if ((mBlankTransients || mCamera->DoingContinuousAcquire()) && !sBeamBlanked &&
     mPlugFuncs->SetBeamBlank != NULL) {
       mPlugFuncs->SetBeamBlank(*vTrue);
       sBeamBlanked = true;
@@ -5432,9 +5433,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
     // with an energy offset, it adjusts intensity
     // Yes, let camera set filter and this will put the proper delays in
     if (filterChanged) {
-      mWinApp->mCamera->SetIgnoreFilterDiffs(true);
+      mCamera->SetIgnoreFilterDiffs(true);
       if (JEOLscope)
-        mWinApp->mCamera->SetupFilter();
+        mCamera->SetupFilter();
       mWinApp->mFilterControl.UpdateSettings();
     }
   }
@@ -5687,7 +5688,7 @@ void CEMscope::SetLowDoseDownArea(int inArea)
   if (gotoArea && mLowDoseDownArea >= 0) {
     GotoLowDoseArea(inArea);
     if (!mWinApp->GetSTEMMode() && mHasOmegaFilter)
-      mWinApp->mCamera->SetupFilter();
+      mCamera->SetupFilter();
   }
 }
 
@@ -7012,7 +7013,7 @@ bool CEMscope::MovePhasePlateToNextPos()
   if (!sInitialized || !mPlugFuncs->GoToNextPhasePlatePos)
     return false;
   if (FEIscope && mWinApp->FilterIsSelectris())
-    mWinApp->mCamera->SetSuspendFilterUpdates(true);
+    mCamera->SetSuspendFilterUpdates(true);
   mApertureTD.actionFlags = APERTURE_NEXT_PP_POS;
   if (StartApertureThread("moving phase plate to next position "))
     return false;
@@ -7062,7 +7063,7 @@ int CEMscope::ApertureBusy()
   int retval = UtilThreadBusy(&mApertureThread);
   mMovingAperture = retval > 0;
   if (retval <= 0)
-    mWinApp->mCamera->SetSuspendFilterUpdates(false);
+    mCamera->SetSuspendFilterUpdates(false);
   return retval;
 }
 
@@ -7081,7 +7082,7 @@ void CEMscope::ApertureCleanup(int error)
       mApertureTD.description);
   mWinApp->ErrorOccurred(error);
   mMovingAperture = false;
-  mWinApp->mCamera->SetSuspendFilterUpdates(false);
+  mCamera->SetSuspendFilterUpdates(false);
 }
 
 // The procedure for aperture or phase plate movement
@@ -8696,7 +8697,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       SEMTrace('E', "index ret %x  flags %x  mind %f  maxd %f", params->eagleIndex, 
         params->CamFlags, minDrift, maxDrift);
       if (params->CamFlags & PLUGFEI_USES_ADVANCED)
-        mWinApp->mCamera->SetOtherCamerasInTIA(false);
+        mCamera->SetOtherCamerasInTIA(false);
       if (doMessage) {
         mWinApp->AppendToLog(CString("Connected to ") +
           B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, "Advanced", "Standard") +
@@ -8717,17 +8718,17 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON2_TYPE && (params->CamFlags & PLUGFEI_CAM_CAN_COUNT) && 
         (params->CamFlags & PLUGFEI_CAM_CAN_ALIGN))
         params->FEItype = FALCON3_TYPE;
-      if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
+      if (params->FEItype == FALCON3_TYPE && mCamera->GetFalconReadoutInterval()
         > 0.05)
-        mWinApp->mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
-      if (params->FEItype == FALCON4_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
+        mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
+      if (params->FEItype == FALCON4_TYPE && mCamera->GetFalconReadoutInterval()
         > 0.05)
-        mWinApp->mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
+        mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
       if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_CAM_SAVES_EER &&
-        mWinApp->mCamera->GetCanSaveEERformat() < 0)
-        mWinApp->mCamera->SetCanSaveEERformat(1);
+        mCamera->GetCanSaveEERformat() < 0)
+        mCamera->SetCanSaveEERformat(1);
       if (params->FEItype == FALCON4_TYPE)
-        mWinApp->mCamera->SetMinAlignFractionsCounting(mMinFalcon4CountAlignFrac);
+        mCamera->SetMinAlignFractionsCounting(mMinFalcon4CountAlignFrac);
       if (params->FEItype == FALCON3_TYPE && params->addToExposure < -1.)
         params->addToExposure = mAddToFalcon3Exposure;
       if (params->FEItype == FALCON4_TYPE && params->addToExposure < -1.)
@@ -8929,7 +8930,7 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   goToLDarea = false;
 
   // Blanking during a dark reference takes priority, in case screen signals are screwed
-  if (mWinApp->mCamera->EnsuringDark())
+  if (mCamera->EnsuringDark())
     return true;
 
   // Don't blank if camera is acquiring unless it is being managed by the camera
@@ -9205,7 +9206,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mLongOpData[thread].numOperations = 1;
       mLongOpData[thread].operations[0] = LONG_OP_HW_DARK_REF;
       mLongOpData[thread].finished[0] = true;
-      mLongOpThreads[thread] = mWinApp->mCamera->StartHWDarkRefThread();
+      mLongOpThreads[thread] = mCamera->StartHWDarkRefThread();
       sLongOpDescriptions[thread] = longOpDescription[LONG_OP_HW_DARK_REF];
     } else if (thread == 0 && numScopeOps) {
       sLongOpDescriptions[thread] = "";
@@ -9244,7 +9245,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
     mWinApp->UpdateBufferWindows();
     mWinApp->AddIdleTask(TASK_LONG_OPERATION, 0, 0);
     if (suspendFilter)
-      mWinApp->mCamera->SetSuspendFilterUpdates(true);
+      mCamera->SetSuspendFilterUpdates(true);
     return 0;
   }
   return -1;
@@ -9485,7 +9486,7 @@ int CEMscope::LongOperationBusy(int index)
     }
 
     mDoingLongOperation = false;
-    mWinApp->mCamera->SetSuspendFilterUpdates(false);
+    mCamera->SetSuspendFilterUpdates(false);
     mWinApp->SetStatusText(mWinApp->mParticleTasks->GetDVDoingDewarVac() ?
       SIMPLE_PANE : MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();

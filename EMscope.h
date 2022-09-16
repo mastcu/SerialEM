@@ -560,6 +560,7 @@ public:
 private:
   static ScopePluginFuncs *mPlugFuncs;
   int *mActiveCamList;
+  CCameraController *mCamera;
 
   static int mLastMagIndex;          // Used by timer to detect user mag changes
   static BOOL mMagChanged;           // Flag that mag has changed since normalization
