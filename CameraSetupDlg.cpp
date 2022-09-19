@@ -2310,6 +2310,7 @@ void CCameraSetupDlg::ManageDose()
 {
   int spotSize, special;
   double intensity, dose;
+  CString saveType;
   int camera = mActiveCameraList[mCurrentCamera];
   float doseFac = mParam->specToCamDoseFac;
   int mode = mParam->DE_camType ? m_iDEMode : m_iK2Mode;
@@ -2345,7 +2346,7 @@ void CCameraSetupDlg::ManageDose()
       float pixel = 10000.f * BinDivisorF(mParam) * 
         mWinApp->mShiftManager->GetPixelSize(mActiveCameraList[mCurrentCamera], 
         GetMagIndexForCamAndSet());
-      m_strDoseRate.Format("%.2f e/ub pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
+      m_strDoseRate.Format("%.2f e/phys pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
         dose * pixel * pixel /B3DMAX(0.0025, realExp - mParam->deadTime), 
         doseFac > 0 ? "camera" : "specimen");
 
@@ -2357,18 +2358,27 @@ void CCameraSetupDlg::ManageDose()
         if (m_bSaveFrames && m_bSaveK2Sums && mSummedFrameList.size() > 0)
           frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
       } else if (mFalconCanSave && m_bDoseFracMode && (m_bSaveFrames || 
-        (mWeCanAlignFalcon && m_bAlignDoseFrac && !mCurSet->useFrameAlign))) {
+        (m_bAlignDoseFrac && mWeCanAlignFalcon && mCurSet->useFrameAlign))) {
         if (mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
-          mCurSet->useFrameAlign, m_iK2Mode))
-          frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval());
-        else
+          mCurSet->useFrameAlign, m_iK2Mode)) {
+          if (m_bAlignDoseFrac && mWeCanAlignFalcon && mCurSet->useFrameAlign) {
+            frames = B3DNINT(realExp / m_fFrameTime);
+            saveType = "summed ";
+          } else {
+            frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval());
+            saveType = "raw ";
+          }
+        } else {
           frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
+          saveType = "summed ";
+        }
       } else if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && 
         (m_bDEsaveMaster || m_bDEalignFrames)) {
           frames = (int)floor(realExp / m_fDEframeTime) + 1;
       }
       if (frames)
-        m_strDosePerFrame.Format("%.2f e/A2 per frame", dose / frames);
+        m_strDosePerFrame.Format("%.2f e/A2 per %sframe", dose / frames, 
+        (LPCTSTR)saveType);
     } else {
       m_strDoseRate = "Dose rate: Not calibrated";
     }
@@ -2965,6 +2975,7 @@ void CCameraSetupDlg::OnButFileOptions()
     ManageK2Binning();
     ManageK2SaveSummary();
     ManageDoseFrac();
+    ManageDose();
   }
   FixButtonFocus(m_butFileOptions);
 }
