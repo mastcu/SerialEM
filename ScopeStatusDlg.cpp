@@ -269,6 +269,11 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha || 
     temNano != (mTEMnanoProbe ? 1 : 0)))
     mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
+  if (STEM != mSTEM && JEOLscope) {
+    SetDlgItemText(IDC_STATISORPS, B3DCHOICE(STEM, "CLA",
+      mWinApp->mScope->GetUsePLforIS() ? "PLA" : "IS"));
+  }
+
   if (inMagInd) {
     MagTable *magTab = mWinApp->GetMagTable();
     int inMag = screenUp ? magTab[inMagInd].mag : magTab[inMagInd].screenMag;
@@ -411,10 +416,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       inAlpha);
   mRawIntensity = rawIntensity;
   mLastAutocen = mWinApp->mAutocenDlg != NULL;
-
-  if (STEM != mSTEM && mWinApp->mScope->GetUsePLforIS()) {
-    SetDlgItemText(IDC_STATISORPS, STEM ? "IS" : "PLA");
-  }
 
   if (inDefocus != mDefocus) {
     if (fabs(inDefocus) < 99.98)
