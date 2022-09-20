@@ -1587,7 +1587,7 @@ void CShiftManager::MaintainOrImposeBacklash(StageMoveInfo *smi, double delX, do
 // This is referred to as the A matrix
 ScaleMat CShiftManager::SpecimenToCamera(int inCamera, int inMagInd)
 {
-  ScaleMat mat;
+  ScaleMat mat = {0., 0., 0., 0.};
   double angle;
   float pixel;
 
@@ -1595,7 +1595,6 @@ ScaleMat CShiftManager::SpecimenToCamera(int inCamera, int inMagInd)
 
   // Compute matrix to get from microns to pixels
   pixel = GetPixelSize(inCamera, inMagInd);
-  mat.xpx = 0.;
   if (angle > 900 || pixel <= 0.)
     return mat;
   mat.xpx = (float)cos(angle * DTOR) / pixel;
@@ -2275,6 +2274,7 @@ void CShiftManager::PropagateRotations(void)
   derived++;
   for (iCam = 0; iCam < MAX_CAMERAS; iCam++)
     camFallbackDerived[iCam] = derived;
+  derived++;
 
   // Now look at each uncalibrated one and find nearest calibrated mag
   FallbackToRotationDifferences(-1, derived);

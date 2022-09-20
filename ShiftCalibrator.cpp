@@ -163,6 +163,12 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
         "Are you sure you want to proceed?", MB_QUESTION) == IDNO)
         return;
     }
+    if (!pr.xpx && !pr.ypx) {
+      AfxMessageBox("There is insufficient information about pixel sizes and rotations in"
+        " the properties and calibrations to do a stage calibration\n\n"
+        "This is probably due to a bug in the program", MB_EXCLAME);
+      return;
+    }
     mScope->GetStagePosition(mBaseISX, mBaseISY, baseZ);
   } else {
 
