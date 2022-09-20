@@ -840,8 +840,17 @@ int CEMscope::Initialize()
       else
         mAdvancedScriptVersion = mPlugFuncs->ASIgetVersion();
     }
-    if (mScopeCanFlashFEG < 0)
-      mScopeCanFlashFEG = mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP;
+    if (mScopeCanFlashFEG < 0) {
+      mScopeCanFlashFEG = 0;
+      if (mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP &&
+        mPlugFuncs->GetFlashingAdvised) {
+        try {
+          mScopeCanFlashFEG = mPlugFuncs->GetFlashingAdvised(0);
+        }
+        catch (_com_error E) {
+        }
+      }
+    }
   }
   catch (_com_error E) {
     SEMReportCOMError(E, "accessing the advanced scripting version ");
