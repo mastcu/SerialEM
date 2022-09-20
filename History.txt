@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/20/22: Fixed a problem with initial rotation angles if the EFTEM camera
+is calibrated first, and made it test for FEG flashing capability for an FEI
+scope instead of assuming it exists.
+
 9/19/22: Clarified dose/frame text for Falcon 4 and fixed showing CLA for IS
 in STEM mode on JEOL (In 4.0).
 
