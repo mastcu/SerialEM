@@ -840,6 +840,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 "", 0, 3, 1.99f));
               letString += firstLabel;
             }
+            if (mWinApp->mCamera->IsDirectDetector(camP) && imBuf->mK2ReadMode >= 0)
+              letString += imBuf->mK2ReadMode > 0 ? "  counted" : "  linear";
             cdc.TextOut(mWinApp->ScaleValueForDPI(25), 
               rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
           }
