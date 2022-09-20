@@ -45,14 +45,14 @@ public:
 	//{{AFX_DATA(CScopeStatusDlg)
 	enum { IDD = IDD_SCOPESTATUS };
 	CStatic	m_statXLM;
-	CStatic	m_statNano;
+	//CStatic	m_statNano;
 	CButton	m_butDose;
 	CStatic	m_statUmMm;
 	CStatic	m_statVacuum;
 	CStatic	m_statSpotSize;
 	CStatic	m_statObjective;
 	CButton	m_butFloat;
-	CStatic	m_statCurrent;
+	//CStatic	m_statCurrent;
 	CStatic	m_statMag;
 	CStatic	m_statImageShift;
 	CStatic	m_statDefocus;
@@ -100,8 +100,11 @@ private:
 	double mISX, mISY;		// Image shift X and Y in microns
 	double mDefocus;		// Defocus in microns
   double mDoseRate;   // Dose rate
+  double mCamDoseRate;  // Dose rate on camera
   bool mShowedDose;     // Flag that dose was shown last time
-	CFont mBigFont;			// Font for bigger values
+  int mLastSpecCamDose; // Last value of cam-spec selection
+  bool mEnabledSpecCam; // Flag that cam/spec dose rate buttons enabled
+  CFont mBigFont;			// Font for bigger values
 	CFont mMedFont;			// Medium font for others
   CFont mProbeFont;   // Font for the Spot/nPr indicator
 	double mMeterCurrent;	// Current last displayed on floating meter
@@ -129,6 +132,7 @@ private:
   BOOL mWatchDose;      // Flag to watch for dose even if meter not open
   BOOL mShowIntensityCal;  // Flag to show colored intensity calibration
   BOOL mTEMnanoProbe;   // Flag that nanoprobe is on in TEM
+  int mEMmode;          // 0 for TEM, 1 for EFTEM, 2 for STEM, 3 for DIFF
 public:
   CScreenMeter *mScreenMeter;
   CDoseMeter *mDoseMeter;
@@ -147,6 +151,10 @@ public:
   CStatic m_statDoseRate;
   CStatic m_statUbpix;
   int DoseHeightAdjustment(void);
+  CStatic m_statEMmode;
+  CString m_strEMmode;
+  BOOL m_iSpecVsCamDose;
+  afx_msg void OnRspecVsCamDose();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -11,23 +11,29 @@
     <P><A NAME="hidd_scopestatus"></A><B><FONT size="3">Microscope Status Panel</FONT></B></P>
     <P>This window displays critical microscope parameters so that a microscope user
       interface&nbsp; can be covered over by SerialEM.</P>
-    <P><B>Screen current (na) and Float button (Thermo/FEI and JEOL only)</B></P>
-    <P>This readout shows the screen current in nanoamps (na). If the small focusing
-      screen is in, then this is the amount of current that would be measured if the
-      beam uniformly covered the whole large projection screen. If SerialEM thinks
-      the small focusing screen is in it will display the label as na-fs. This
+    <P><B>Current&nbsp; button (Thermo/FEI and JEOL only)</B></P>
+    <P>This readout of screen current was eliminated in SerialEM 4.1.&nbsp; This
       readout has some smoothing to prevent jitter, so it may not respond to very
       small changes in screen current.</P>
-    <P>The Float button will launch a small window with the screen current readout.
-      This window will stay on top of all other windows, so it can be seen even if
-      other windows are brought on top of SerialEM. Smoothing is optional in this readout, so it
-      may be more suitable for use when aligning gun tilt.</P>
+    <P>This button will launch a small window with the screen current readout in 
+      nanoamps (nA).
+      If the small focusing screen is in, then this is the amount of current that 
+      would be measured if the beam uniformly covered the whole large projection 
+      screen. If SerialEM thinks the small focusing screen is in it will display the 
+      label as nA-fs. There is an option for smoothing to prevent jitter, in which 
+      case it may not respond to very small changes in screen current.&nbsp; Turning 
+      this option off may make it easier to judge small changes in current, e.g., when 
+      aligning gun tilt.&nbsp; This window will stay on top of all other windows, so 
+      it can be seen even if other windows are brought on top of SerialEM. </P>
     <P><B>Dose button</B></P>
     <P>The Dose button will launch a small window showing a cumulative dose in
       electrons per square Angstrom. Dose is added whenever the screen is down, and
       whenever a picture is taken, except that pictures of the Trial and Focus areas
       will be ignored in Low Dose mode. No dose is added when the beam intensity is
       outside a calibrated range. Press the Reset button to zero the cumulative dose.</P>
+    <P><strong>Microscope imaging mode</strong></P>
+    <P>There is a text indicator of whether the microscpe is in TEM, EFTEM, STEM, or 
+      diffraction.</P>
     <P><B>Magnification (X)</B></P>
     <P>This readout shows the current magnification, or camera length in diffraction mode.
       On a Thermo/FEI scope, it changes when the screen is
@@ -62,6 +68,9 @@
     <P>This is an indicator of vacuum quality that may alert you to watch the actual
       vacuum readings in the Thermo/FEI interface. It should be set up so that green means near perfect,
       yellow means adequate for working, and red means do not open the column values.</P>
+    <P><strong>Alpha (JEOL only)</strong></P>
+    <P>On a JEOL with alpha values, this readout shows the alpha value after the 
+      letter &#39;a&#39;.</P>
     <P><B>Spot</B></P>
     <P>The numeric readout shows the spot size. Also, the label 'Spot' has a colored
       background indicating whether the current intensity is calibrated at this spot
@@ -83,14 +92,20 @@
       This readout shows the percent C2 or C3 value or the illuminated area in microns
       for a Titan.</p>
     <p>
-      <b>Dose rate</b></p>
+      <b>Dose rate and S/C buttons</b></p>
     <p>
       This readout appears when
-      electron dose is calibrated and shows the estimated dose rate incident on the
-      specimen in electrons per square Angstrom per
-      second. The value is based on a dose calibration plus the change in beam
+      electron dose is calibrated and shows the estimated dose rate incident on either the
+      specimen (in electrons per square Angstrom per
+      second) or the camera (in electrons per physical pixel per second). The value is based on a dose calibration plus the change in beam
       intensity from that at which dose was calibrated, which is estimated from the
-      beam and spot intensity calibrations.</p>
+      beam and spot intensity calibrations.&nbsp; If any of the cameras are direct 
+      detectors, the S and C buttons will appear for switching between specimen and 
+      camera dose rates.&nbsp; They are enabled only when the current camera is a 
+      direct detector and an image has been taken that provides a scaling between 
+      specimen and camera doses.&nbsp; In Low Dose mode, the camera dose rate is based 
+      on the current magnification, spot size, and intensity, unlike in the camera 
+      setup dialog, where it depends on the defined properties of each Low Dose area.</p>
     </basefont>
   </BODY>
 </HTML>

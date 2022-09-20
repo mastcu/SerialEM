@@ -31,13 +31,15 @@ static char THIS_FILE[] = __FILE__;
 CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   : CToolDlg(CScopeStatusDlg::IDD, pParent)
   , m_strIntensity(_T(""))
+  , m_strEMmode(_T("EFTEM"))
+  , m_iSpecVsCamDose(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CScopeStatusDlg)
   m_strDefocus = _T("");
   m_strImageShift = _T("");
   m_strMag = _T("");
-  m_strCurrent = _T("");
+  //m_strCurrent = _T("");
   m_strObjective = _T("");
   m_strSpotSize = _T("");
 	m_strUmMm = _T("um");
@@ -65,6 +67,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mBeamAlpha = -999;
   mShowIntensityCal = true;
   mTEMnanoProbe = false;
+  mEMmode = -1;
   // Made the base bigger to reduce noise at low readings
   mCurrentLogBase = 0.02f;
   mFloatingMeterSmoothed = 0;
@@ -74,6 +77,9 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mDosePlace.rcNormalPosition.right = 0;
   mFullCumDose = 0.;
   mWatchDose = false;
+  mEnabledSpecCam = true;
+  mCamDoseRate = -1.;
+  mLastSpecCamDose = -1;
 }
 
 
@@ -82,21 +88,21 @@ void CScopeStatusDlg::DoDataExchange(CDataExchange* pDX)
   CToolDlg::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CScopeStatusDlg)
   DDX_Control(pDX, IDC_STATXLM, m_statXLM);
-  DDX_Control(pDX, IDC_STATNANO, m_statNano);
+  //DDX_Control(pDX, IDC_STATNANO, m_statNano);
   DDX_Control(pDX, IDC_BUTDOSE, m_butDose);
   DDX_Control(pDX, IDC_STAT_UMMM, m_statUmMm);
   DDX_Control(pDX, IDC_STATVACUUM, m_statVacuum);
   DDX_Control(pDX, IDC_SPOTSIZE, m_statSpotSize);
   DDX_Control(pDX, IDC_OBJECTIVE, m_statObjective);
   DDX_Control(pDX, IDC_BUTFLOAT, m_butFloat);
-  DDX_Control(pDX, IDC_SCREEN_CURRENT, m_statCurrent);
+  //DDX_Control(pDX, IDC_SCREEN_CURRENT, m_statCurrent);
   DDX_Control(pDX, IDC_MAGNIFICATION, m_statMag);
   DDX_Control(pDX, IDC_IMAGE_SHIFT, m_statImageShift);
   DDX_Control(pDX, IDC_DEFOCUS, m_statDefocus);
   DDX_Text(pDX, IDC_DEFOCUS, m_strDefocus);
   DDX_Text(pDX, IDC_IMAGE_SHIFT, m_strImageShift);
   DDX_Text(pDX, IDC_MAGNIFICATION, m_strMag);
-  DDX_Text(pDX, IDC_SCREEN_CURRENT, m_strCurrent);
+  //DDX_Text(pDX, IDC_SCREEN_CURRENT, m_strCurrent);
   DDX_Text(pDX, IDC_OBJECTIVE, m_strObjective);
   DDX_Text(pDX, IDC_SPOTSIZE, m_strSpotSize);
   DDX_Text(pDX, IDC_STAT_UMMM, m_strUmMm);
@@ -115,6 +121,9 @@ void CScopeStatusDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_UBPIX, m_statUbpix);
   DDX_Text(pDX, IDC_STAT_DOSERATE, m_strDoseRate);
   DDX_Control(pDX, IDC_STAT_DOSERATE, m_statDoseRate);
+  DDX_Control(pDX, IDC_STAT_EM_MODE, m_statEMmode);
+  DDX_Text(pDX, IDC_STAT_EM_MODE, m_strEMmode);
+  DDX_Radio(pDX, IDC_RSPEC_DOSE, m_iSpecVsCamDose);
 }
 
 
@@ -126,6 +135,8 @@ BEGIN_MESSAGE_MAP(CScopeStatusDlg, CToolDlg)
 	ON_BN_CLICKED(IDC_BUTDOSE, OnButdose)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_BUTRESETDEFOCUS, OnResetDefocus)
+  ON_BN_CLICKED(IDC_RSPEC_DOSE, OnRspecVsCamDose)
+  ON_BN_CLICKED(IDC_RCAM_DOSE, OnRspecVsCamDose)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -138,7 +149,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
 
   // Get the fonts for big and medium windows
   CRect rect;
-  m_statCurrent.GetWindowRect(&rect);
+  m_statMag.GetWindowRect(&rect);
   mBigFont.CreateFont(B3DNINT(0.95 * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
@@ -154,7 +165,8 @@ BOOL CScopeStatusDlg::OnInitDialog()
     FF_DONTCARE, mBigFontName);
   
   // Set the fonts
-  m_statCurrent.SetFont(&mBigFont);
+  //m_statCurrent.SetFont(&mMedFont);
+  m_statEMmode.SetFont(&mMedFont);
   m_statMag.SetFont(&mBigFont);
   m_statDefocus.SetFont(&mBigFont);
   m_statImageShift.SetFont(&mMedFont);
@@ -171,6 +183,8 @@ BOOL CScopeStatusDlg::OnInitDialog()
   m_butDose.SetFont(mLittleFont);
   m_statDoseRate.ShowWindow(SW_HIDE);
   m_statUbpix.ShowWindow(SW_HIDE);
+  ShowDlgItem(IDC_RSPEC_DOSE, mWinApp->GetAnyDirectDetectors());
+  ShowDlgItem(IDC_RCAM_DOSE, mWinApp->GetAnyDirectDetectors());
   if (JEOLscope || HitachiScope) {
     m_butResetDef.SetFont(mLittleFont);
     if (mWinApp->mScope->GetUsePLforIS()) {
@@ -184,9 +198,9 @@ BOOL CScopeStatusDlg::OnInitDialog()
     m_statZlabel.ShowWindow(SW_HIDE);
   }
   if (HitachiScope && !hitachi->screenAreaSqCm) {
-    m_statCurrent.ShowWindow(SW_HIDE);
+    //m_statCurrent.ShowWindow(SW_HIDE);
     m_butFloat.ShowWindow(SW_HIDE);
-    m_statNano.ShowWindow(SW_HIDE);
+    //m_statNano.ShowWindow(SW_HIDE);
   }
   if (JEOLscope && !mWinApp->mScope->GetHasNoAlpha()) {
     m_statVacuum.ShowWindow(SW_SHOW);
@@ -225,14 +239,16 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
                              int gunState, int inAlpha)
 {
   double curTime = GetTickCount();
-  double newDose, diffTime, dose = 0.;
+  double newDose, diffTime, pixel, camDose, dose = 0.;
   CString strCurrent, format;
   CString umMm = _T("um");
   CString naSm = smallScreen ? "nA-fs" : "nA";
   double screenCurrent = inCurrent;
   int camera = mWinApp->GetCurrentCamera();
   int pendingSpot = -1, pendingMag = -1, pendingCamLen = -1, numRegCamLens, numLADCamLens;
-  bool needDraw = false, showPending = false, magChanged = false;
+  int EMmode = 0;
+  const char *modeNames[] = {"TEM", "EFTEM", "STEM", "DIFF"};
+  bool needDraw = false, showPending = false, magChanged = false, haveCamDose;
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
   int *camLenTab = mWinApp->GetCamLenTable();
   BOOL noScope = mWinApp->mScope->GetNoScope();
@@ -245,6 +261,17 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     return;
 
   int temNano = B3DCHOICE(!STEM && inProbeMode == 0, 1, 0);
+  if (STEM)
+    EMmode = 2;
+  else if (!inMagInd)
+    EMmode = 3;
+  else if (EFTEM)
+    EMmode = 1;
+  if (mEMmode != EMmode) {
+    m_strEMmode = modeNames[EMmode];
+    m_statEMmode.SetWindowText(modeNames[EMmode]);
+    mEMmode = EMmode;
+  }
   if (mWinApp->GetShowRemoteControl())
     mWinApp->mRemoteControl.GetPendingMagOrSpot(pendingMag, pendingSpot, pendingCamLen);
   if (pendingMag > 0)
@@ -357,12 +384,14 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (noScope)
     return;
 
-  if (smallScreen && !mSmallScreen || !smallScreen && mSmallScreen)
-    m_statNano.SetWindowText(naSm);
+  /*if (smallScreen && !mSmallScreen || !smallScreen && mSmallScreen)
+    m_statNano.SetWindowText(naSm);*/
   mSmallScreen = smallScreen;
 
   inCurrent = exp(mCurrentSmoother.Readout(log(inCurrent + mCurrentLogBase))) -
     mCurrentLogBase;
+  if (inCurrent < 0 && inCurrent > -1.e-4)
+    inCurrent = 0;
   if (inCurrent != mCurrent) {
     int ndec = 4;
     if (inCurrent > 0.0001)
@@ -373,10 +402,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       ndec = 4;
     format.Format("%%.%df", ndec);
     m_strCurrent.Format(format, inCurrent);
-    m_statCurrent.SetWindowText(m_strCurrent);
+    //m_statCurrent.SetWindowText(m_strCurrent);
     mCurrent = inCurrent;
     if (mScreenMeter && mScreenMeter->m_bSmoothed) {
-      mScreenMeter->m_strCurrent = m_strCurrent + " nA";
+      mScreenMeter->m_strCurrent = m_strCurrent + " " + naSm;
       mScreenMeter->m_statCurrent.SetWindowText(mScreenMeter->m_strCurrent);
     }
   }
@@ -390,7 +419,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       ndec = 0;
     if (ndec > 4)
       ndec = 4;
-    format.Format("%%.%df nA", ndec);
+    format.Format("%%.%df %s", ndec, (LPCTSTR)naSm);
     mScreenMeter->m_strCurrent.Format(format, screenCurrent);
     mScreenMeter->m_statCurrent.SetWindowText(mScreenMeter->m_strCurrent);
     mMeterCurrent = screenCurrent;
@@ -441,13 +470,36 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_statDoseRate.ShowWindow(dose > 0. ? SW_SHOW : SW_HIDE);
   }
 
+  haveCamDose = mWinApp->mCamera->IsDirectDetector(camParam) &&
+    camParam->specToCamDoseFac > 0. && dose > 0;
+  if (!BOOL_EQUIV(haveCamDose, mEnabledSpecCam)) {
+    EnableDlgItem(IDC_RSPEC_DOSE, haveCamDose);
+    EnableDlgItem(IDC_RCAM_DOSE, haveCamDose);
+  }
+  bool showCamDose = haveCamDose && m_iSpecVsCamDose > 0;
+  bool switchCamDose = !BOOL_EQUIV(showCamDose, mEnabledSpecCam && mLastSpecCamDose);
+  if (switchCamDose)
+    m_statUbpix.SetWindowText(showCamDose ? "e/pix/s at camera" :
+      "e/A2/s at specimen");
+
   if (mShowedDose) {
-    if (dose != mDoseRate) {
+    if (showCamDose) {
+      pixel = 10000. * mWinApp->mShiftManager->GetPixelSize(camera, inMagInd);
+      camDose = dose * pixel * pixel * camParam->specToCamDoseFac;
+      if (fabs(camDose - mCamDoseRate) > 1.e-6 || switchCamDose) {
+        m_strDoseRate.Format("%.2f", camDose);
+        m_statDoseRate.SetWindowText(m_strDoseRate);
+        mCamDoseRate = camDose;
+      }
+
+    } else if (fabs(dose - mDoseRate) > 1.e-6 || switchCamDose) {
       m_strDoseRate.Format("%.2f", dose);
       m_statDoseRate.SetWindowText(m_strDoseRate);
       mDoseRate = dose;
     }
   }
+  mEnabledSpecCam = haveCamDose;
+  mLastSpecCamDose = m_iSpecVsCamDose;
 
   if (B3DNINT(inStageX * 100.) != B3DNINT(mStageX * 100.)) {
     format.Format("%.2f", inStageX);
@@ -616,6 +668,13 @@ void CScopeStatusDlg::OnResetDefocus()
     mWinApp->mScope->ResetDefocus();
 
   // Gets the dotted line and border focus to the first button
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+}
+
+void CScopeStatusDlg::OnRspecVsCamDose()
+{
+  UpdateData(true);
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
