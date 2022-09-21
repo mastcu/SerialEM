@@ -14,7 +14,7 @@
     <P><B><I>Imaging states:</I></B> An imaging state consists of the state of the 
       microscope together with the parameters used to acquire an image.&nbsp; Outside 
       of Low Dose mode, such a state can store Record or Mont-map parameters; whereas in Low 
-      Dose mode, states can be stored separately for Record, View, and Search, as well 
+      Dose mode, states can be stored separately for Record, View, Focus, Trial, and Search, as well 
       as for Mont-map, where the Record microscope parameters and the Mont-map camera 
       parameters are stored.&nbsp; A 
       state always includes the magnification, spot size, intensity, probe mode for a 
@@ -51,8 +51,7 @@
       opened, depending on how the montage is set to be acquired.</P>
     <P><strong><em>The table:</em></strong> The dialog shows a table of imaging states that are saved with your settings.
       The essential properties of the state are summarized in the table: 
-      <br />&nbsp;&nbsp;&nbsp; LD:  'R', 'V', or 'S' for a Low Dose Record, 
-      View, or Search state, &#39; - ' otherwise
+      <br />&nbsp;&nbsp;&nbsp; LD:  'R', 'V', &#39;F, &#39;T&#39;, or 'S' for a Low Dose state, &#39; - ' otherwise
       <br />&nbsp;&nbsp;&nbsp; Cam: The camera number, based on their order in any dialogs and numbered from 1
       <br />&nbsp;&nbsp;&nbsp; Mag: The magnification
       <br />&nbsp;&nbsp;&nbsp; Spot: The spot size, plus 'uP' or 'nP' for probe mode on 
@@ -70,7 +69,7 @@
     <P><strong><em>The Prior state:</em></strong> The &#39;Prior&#39; line summarizes the 
       state that was left upon the first setting of a state, and that will be returned 
       to if <strong>Restore State</strong> 
-      is pressed.&nbsp; When multiple states of the same kind are set in succession, 
+      is pressed or if state is restored by other means.&nbsp; When multiple states of the same kind are set in succession, 
       the states do not form a stack that can be undone in succession, nor does a 
       previously set state become the Prior state.</P>
     <P><em><strong>Controls</strong></em></P>
@@ -102,13 +101,26 @@
       </li>
       <li>Outside of Low Dose mode, setting a different state will completely replace 
         the previously set state.</li>
-      <li>In Low Dose mode, the state can be set for each of the three areas 
-        independently, so you can set the state for Record or Mont-map, View, and Search in 
+      <li>In Low Dose mode, the state can be set for each of the five areas 
+        independently, so you can set the state for Record or Mont-map, View, Focus, 
+        Trial (if different), and Search in 
         succession without restoring or replacing any of those.&nbsp; However, if you go 
         to another state for the same area, it will replace the previously set state for 
         that area.&nbsp; The situation with Record and Mont-map is a bit different; if 
         you set the state for one then the other, the microscope parameters of the 
         Record area will be replaced when the second state is set.</li>
+      <li>If the option to keep Focus and Trial identical is checked in the Low Dose 
+        panel, then setting one of these states will change the microscope parameters 
+        for the other, but not its camera parameters.</li>
+      <li>The area position relative to Record and the offset of a camera subarea from 
+        center are saved for both Focus and Trial states.</li>
+      <li>When Focus or Trial is set and the scope is currently in that area (or the 
+        other area, if they are kept at the same position), the program will switch to 
+        Record area before changing the parameters of the state being set.</li>
+      <li>&nbsp;If a state is set and then Low Dose mode is turned on or off, either by 
+        setting a different state, by toggling the mode in the Low Dose panel, or with a 
+        script command, the prior state is restored to avoid inconsistent changes and 
+        loss of some parameters.</li>
       <li>Each currently set state is marked in the table with a &dagger; after the 
         frame size.</li>
     </ul>

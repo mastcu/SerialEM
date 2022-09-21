@@ -18,6 +18,7 @@
 #include "EMmontageController.h"
 #include "BeamAssessor.h"
 #include "NavHelper.h"
+#include "StateDlg.h"
 #include "AutocenSetupDlg.h"
 #include "MacroProcessor.h"
 #include "NavigatorDlg.h"
@@ -412,6 +413,8 @@ void CLowDoseDlg::TransferBaseIS(int mag, double &ISX, double &ISY)
 // Switching the mode: inform the scope, and update the enables
 void CLowDoseDlg::OnLowdosemode() 
 {
+  BOOL saveTruly, saveLDmode, saveHideOff;
+
   // If STEM is on and set to switch with screen, restore check box and get it disabled
   if (mWinApp->GetSTEMMode() && mWinApp->DoSwitchSTEMwithScreen()) {
     UpdateData(false);
@@ -428,6 +431,27 @@ void CLowDoseDlg::OnLowdosemode()
 
   if (m_bSetBeamShift)
     FinishSettingBeamShift(false);
+
+  // Restore an imaging state if there is a change in low dose; handle this being rentered
+  if (mWinApp->mNavHelper->GetTypeOfSavedState() == STATE_IMAGING &&
+    !BOOL_EQUIV(mTrulyLowDose, mWinApp->LowDoseMode()) && 
+    !mWinApp->mNavHelper->GetSettingState()) {
+    saveTruly = mTrulyLowDose;
+    saveLDmode = m_bLowDoseMode;
+    saveHideOff = mHideOffState;
+    mWinApp->mNavHelper->RestoreSavedState();
+    if (mWinApp->mNavHelper->mStateDlg) {
+      mWinApp->mNavHelper->mStateDlg->Update();
+      mWinApp->mNavHelper->mStateDlg->DisableUpdateButton();
+      mWinApp->mNavHelper->mStateDlg->SetCamOfSetState(-1);
+    }
+    mTrulyLowDose = saveTruly;
+    mHideOffState = saveHideOff;
+    if (saveLDmode != m_bLowDoseMode) {
+      m_bLowDoseMode = saveLDmode;
+      UpdateData(false);
+    }
+  }
 
   ConvertAxisPosition(mTrulyLowDose);
   if (mTrulyLowDose && mScope->GetUsePiezoForLDaxis())

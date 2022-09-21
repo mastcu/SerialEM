@@ -218,6 +218,7 @@ public:
   GetMember(int, NumAcqActions);
   GetMember(int, RIconSetNum);
   GetMember(bool, RIstayingInLD);
+  GetMember(bool, SettingState);
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
   NavAcqAction *GetAcqActions(int which) {return &mAllAcqActions[which][0] ; };
@@ -365,6 +366,7 @@ private:
   int mRIconSetNum;
   bool mRIstayingInLD;
   bool mRIdidSaveState;
+  bool mSettingState;           // Flag set that state or low dose is being set
   float mRIresetISCritForAlign; // Criterion for doing a reset shift - realign operation
   int mRIresetISmaxNumAlign;    // Maximum times to do rest shift - realign
   int mRIresetISleaveZero;      // Whether to leave IS at zero
@@ -469,13 +471,13 @@ public:
   void DeleteArrays(void);
   int FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState);
   void StoreCurrentStateInParam(StateParams * param, int lowdose,
-    bool saveLDfocusPos, int camNum, int saveTargOffs);
+    int saveLDfocusPos, int camNum, int saveTargOffs);
   void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
     int hideLDoff = 0);
   void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
-  void SaveCurrentState(int type, bool saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false);
+  void SaveCurrentState(int type, int saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false);
   void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs, BOOL montMap);
   int AreaFromStateLowDoseValue(StateParams *param, int *setNum);
   void ForgetSavedState(void);
@@ -547,10 +549,10 @@ public:
   WINDOWPLACEMENT *GetMultiCombinerPlacement();
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
-  void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
+  void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
-    int xOffset, int yOffset, const char *descrip);
+    int xOffset, int yOffset, const char *descrip, bool forTrial);
   int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
   int FindMapIDforReadInImage(CString filename, int secNum);

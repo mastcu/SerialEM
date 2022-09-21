@@ -91,4 +91,6 @@ public:
   CString m_strPriorSummary;
   CButton m_butAddMontMap;
   afx_msg void OnButAddMontMap();
+  SetMember(int, CamOfSetState);
+
 };

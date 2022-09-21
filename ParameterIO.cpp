@@ -1000,9 +1000,24 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         if (index < 0 || index >= stateArray->GetSize()) {
           AfxMessageBox("Index out of range in state name line in settings file "
             + strFileName + " :\n" + strLine, MB_EXCLAME);
-       } else {
+        } else {
           stateP = stateArray->GetAt(index);
           StripItems(strLine, 2, stateP->name);
+        }
+
+      } else if (NAME_IS("StateParams2")) {
+        index = itemInt[1];
+        if (index < 0 || index >= stateArray->GetSize()) {
+          AfxMessageBox("Index out of range in StateParams2 line in settings file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        } else {
+          stateP = stateArray->GetAt(index);
+          if (itemFlt[2] > -999)
+            stateP->focusAxisPos = itemFlt[2];
+          stateP->rotateAxis = itemInt[3] != 0;
+          stateP->axisRotation = itemInt[4];
+          stateP->focusXoffset = itemInt[5];
+          stateP->focusYoffset = itemInt[6];
         }
 
       } else if (NAME_IS("LowDoseParameters")) {
@@ -1917,11 +1932,17 @@ void CParameterIO::WriteSettings(CString strFileName)
         stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
         stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
         stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0);
+      mFile->WriteString(oneState);
+      if (!stateP->name.IsEmpty()) {
+        oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
         mFile->WriteString(oneState);
-        if (!stateP->name.IsEmpty()) {
-          oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
-          mFile->WriteString(oneState);
-        }
+      }
+      if (stateP->focusAxisPos > EXTRA_VALUE_TEST) {
+        oneState.Format("StateParams2 %d %f %d %d %d %d\n", i, stateP->focusAxisPos,
+          stateP->rotateAxis ? 1 : 0, stateP->axisRotation, stateP->focusXoffset,
+          stateP->focusYoffset);
+        mFile->WriteString(oneState);
+      }
     }
 
     // Save low dose params, including those in states

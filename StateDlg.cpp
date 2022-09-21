@@ -221,8 +221,7 @@ void CStateDlg::Update(void)
         schedItem = true;
     }
   }
-  m_butAddCurState.EnableWindow(noTasks && (ldArea == -2 || 
-    !(ldArea == -1 || ldArea == TRIAL_CONSET || ldArea == FOCUS_CONSET)));
+  m_butAddCurState.EnableWindow(noTasks && (ldArea == -2 || ldArea != -1));
   m_butAddMontMap.ShowWindow(mWinApp->GetUseRecordForMontage() ? SW_HIDE : SW_SHOW);
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
@@ -320,8 +319,9 @@ void CStateDlg::OnButAddCurState()
     return;
   if (lowdose && area < 0)
     return;
-  mHelper->StoreCurrentStateInParam(state, lowdose, false, -1, 
-    IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
+  mHelper->StoreCurrentStateInParam(state, lowdose, 
+    B3DCHOICE(area == FOCUS_CONSET || area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2,
+      0), -1, IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
   AddNewStateToList();
 }
 
@@ -333,7 +333,7 @@ void CStateDlg::OnButAddMontMap()
   if (!state)
     return;
   state->montMapConSet = true;
-  mHelper->StoreCurrentStateInParam(state, mWinApp->LowDoseMode() ? 1 : 0, false, -1, 0);
+  mHelper->StoreCurrentStateInParam(state, mWinApp->LowDoseMode() ? 1 : 0, 0, -1, 0);
   AddNewStateToList();
 }
 
@@ -384,8 +384,9 @@ void CStateDlg::OnButUpdateState()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentParam())
     return;
-  mHelper->StoreCurrentStateInParam(mParam, mWinApp->LowDoseMode() ? 1 : 0, false, -1, 
-    IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
+  mHelper->StoreCurrentStateInParam(mParam, mWinApp->LowDoseMode() ? 1 : 0, 
+    B3DCHOICE(area == FOCUS_CONSET || area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2,
+      0), -1, IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
   str.Format("Updated state # %d  %s   with current imaging state", mCurrentItem + 1, 
     (LPCTSTR)mParam->name);
   mWinApp->AppendToLog(str);
@@ -443,6 +444,9 @@ int CStateDlg::DoSetImState(CString & errStr)
     mWarnedNoMontMap = true;
   }
 
+  if (type == STATE_IMAGING && !BOOL_EQUIV(mParam->lowDose != 0, mWinApp->LowDoseMode()))
+    OnButRestoreState();
+
   conSet += setNum;
 
   // Save the current defocus target or offset if one is set in this state
@@ -452,7 +456,8 @@ int CStateDlg::DoSetImState(CString & errStr)
     else if (!mParam->lowDose)
       saveTarg = -1;
   }
-  mHelper->SaveCurrentState(STATE_IMAGING, false, mParam->camIndex, saveTarg,
+  mHelper->SaveCurrentState(STATE_IMAGING, B3DCHOICE(area == FOCUS_CONSET ||
+    area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2, 0), mParam->camIndex, saveTarg,
     mParam->montMapConSet);
   mHelper->SaveLowDoseAreaForState(area, mParam->camIndex, saveTarg > 0, 
     mParam->montMapConSet);
@@ -511,7 +516,7 @@ void CStateDlg::OnButSetSchedState()
     area = mHelper->AreaFromStateLowDoseValue(state, &setNum);
     if (setNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
       setNum = VIEW_CONSET;
-    mHelper->SaveCurrentState(STATE_IMAGING, true, state->camIndex, 0);
+    mHelper->SaveCurrentState(STATE_IMAGING, 1, state->camIndex, 0);
     mHelper->SetStateFromParam(state, conSet + setNum, setNum);
     DisableUpdateButton();
     Update();
@@ -521,7 +526,7 @@ void CStateDlg::OnButSetSchedState()
   if (item->mFocusAxisPos > EXTRA_VALUE_TEST)
     mHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(), item->mFocusAxisPos,
       item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset,
-      item->mFocusYoffset, "position for item");
+      item->mFocusYoffset, "position for item", false);
 }
 
 // Save target defocus

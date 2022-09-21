@@ -358,6 +358,9 @@ struct StateParams {
     ldShiftOffsetX = -9999.f;
     camForParams = -1;
     montMapConSet = false;
+    focusXoffset = focusYoffset = 0;
+    rotateAxis = false;
+    axisRotation = 0;
   }
   LowDoseParams ldParams;  // Low dose Record parameters if this is a low dose state
   int lowDose;            // Flag that it is a low dose state
@@ -388,7 +391,7 @@ struct StateParams {
   int faParamSetInd;
   int focusXoffset;        // Offsets from center of focus area, in unbinned pixels (RTO)
   int focusYoffset;
-  float focusAxisPos;      // Axis position of focus area: Run time only
+  float focusAxisPos;      // Axis position of focus area
   BOOL rotateAxis;         // Whether axis is rotated from tilt axis
   int axisRotation;        // Amount of rotation, or 0 if not rotated
   // Camera modes for other parameter sets when not a low dose state
