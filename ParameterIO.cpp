@@ -3000,7 +3000,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             } else {
               mMagTab[magInd].deltaRotation[iset] = itemFlt[2];
               mMagTab[magInd].rotation[iset] = itemFlt[3];
-              if (fabs(itemDbl[4]) > 997 && fabs(itemDbl[4]) < 1001) {
+              if (fabs(itemDbl[4]) > 998.9 && fabs(itemDbl[4]) < 999.1) {
                 if (!warned999)
                   AfxMessageBox("RotationAndPixel lines should have 0 for undefined"
                     " pixel\nsizes, not 999, in properties file " + strFileName,

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/21/22: SEM_4-0-11
+9/21/22: Added message box for RotationAndPixel pixel sizes of 999 (In 4.0).
+
 9/20/22: Fixed a problem with initial rotation angles if the EFTEM camera
 is calibrated first, and made it test for FEG flashing capability for an FEI
 scope instead of assuming it exists.
