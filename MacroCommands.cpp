@@ -8797,8 +8797,8 @@ int CMacCmd::IsFEGFlashingAdvised(void)
 {
   int answer;
   if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
-    ABORT_NOLINE("The version of advanced scripting has not been identified as high enough"
-      " to support FEG flashing");
+    ABORT_NOLINE("The version of advanced scripting has not been identified as high "
+      "enough to support FEG flashing");
   if (!mScope->GetIsFlashingAdvised(mItemInt[1], answer)) {
     AbortMacro();
     return 1;
@@ -8813,9 +8813,23 @@ int CMacCmd::IsFEGFlashingAdvised(void)
 int CMacCmd::NextFEGFlashHighTemp(void)
 {
   if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
-    ABORT_NOLINE("The version of advanced scripting has not been identified as high enough"
-      " to support FEG flashing");
+    ABORT_NOLINE("The version of advanced scripting has not been identified as high "
+      "enough to support FEG flashing");
   mScope->SetDoNextFEGFlashHigh(mItemEmpty[1] || mItemInt[1]);
+  return 0;
+}
+
+// ReportFEGBeamCurrent
+int CMacCmd::ReportFEGBeamCurrent(void)
+{
+  double current;
+  if (!FEIscope || !mScope->GetScopeCanFlashFEG())
+    ABORT_NOLINE("FEG Beam current is available only for a TFS/FEI scope that can flash "
+      "the FEG");
+  if (!mScope->GetFEGBeamCurrent(current))
+    ABORT_NOLINE("An error occurred getting the FEG beam current");
+  mLogRpt.Format("FEG beam current is %5g nA", current);
+  SetRepValsAndVars(1, current);
   return 0;
 }
 
@@ -9332,8 +9346,10 @@ int CMacCmd::RestoreState(void)
       if (mNavHelper->mStateDlg)
         mNavHelper->mStateDlg->Update();
     }
-    if (mNavHelper->mStateDlg)
+    if (mNavHelper->mStateDlg) {
       mNavHelper->mStateDlg->DisableUpdateButton();
+      mNavHelper->mStateDlg->SetCamOfSetState(-1);
+    }
   }
   return 0;
 }
@@ -9615,13 +9631,16 @@ int CMacCmd::SkipAcquiringGroup(void)
   ABORT_NONAV;
   if (!mNavigator->GetAcquiring())
     ABORT_NOLINE("The navigator must be acquiring to set a group ID to skip");
-  if (mItemEmpty[1]) {
+  if (mItemEmpty[1] || !mItemInt[1]) {
     index2 = mNavigator->GetCurrentOrAcquireItem(navItem);
     index = navItem->mGroupID;
   } else {
     index = mItemInt[1];
   }
   mNavigator->SetGroupIDtoSkip(index);
+  if (!mItemEmpty[2] && mItemInt[2] && index) {
+    mNavigator->SetGroupAcquireFlags(index, false);
+  }
   return 0;
 }
 

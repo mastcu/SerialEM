@@ -3072,7 +3072,7 @@
         </TR>
         <TR>
           <TD colspan="2"><A name="loader_vacuum"></A><B>Autoloader,
-          Refrigerant, and Vacuum Commands</B></TD>
+          Refrigerant, Vacuum, and FEG Commands</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LoadCartridge #</TD>
@@ -3144,6 +3144,13 @@
           <TD>Reports whether flashing of a cold FEG is advisable on a Thermo/FEI scope, where <b>#</b> should be 0 for
             a low-temperature flash and non-zero for a high-temperature flash.  FEG flashing commands are available on Thermo/FEI scopes only if there is a Selectris filter or a property entry 'AdvancedScriptingVersion 4' or higher.&nbsp; Value can be assigned
           to a variable at end of command.&nbsp; Command added in 3.9, 6/12/21.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportFEGBeamCurrent</TD>
+          <TD>Reports the beam current of the FEG in nanoamps for a Thermo/FEI scope that 
+            can flash the FEG.&nbsp; This command will access the value on the scope every 
+            time, not use the value that gets store for up to 5 minutes.&nbsp; Command added 
+            in 4.1, 9/20/22.</TD>
         </TR>
           <TD class="scriptcommand">NextFEGFlashHighTemp [#]</TD>
           <TD>Sets the next FEG flashing done with 'LongOperation FF' on a Thermo/FEI scope to be high-temperature,
@@ -3335,10 +3342,12 @@
         <TR>
           <TD class="scriptcommand">CycleTargetDefocus #S #E #N [#C]</TD>
           <TD>Changes the defocus target in <b>#N</b> steps from the starting value in <B>#S</B> to
-            the ending value in <b>#E</b></TD> then cycles it back to the starting value.&nbsp; The change depends only on the current target defocus; nothing is kept track of 
+            the ending value in <b>#E</b> then cycles it back to the starting value.&nbsp; The change 
+            depends only on the current target defocus; nothing is kept track of 
           between invocations of this command.&nbsp; If the target is outside the given range,
            the first call will set it to the nearest end of the range.&nbsp; If the optional <B>#C</B> is
           nonzero, the microscope defocus wll be changed by the change in target.&nbsp; Command added in 4.1, 9/4/22.
+            </TD> 
         </TR>
         <TR>
           <TD class="scriptcommand">ReportAutofocusOffset</TD>
@@ -4041,7 +4050,7 @@
               from the end of the table, where -1 is the last item.</TD>
         </TR>
          <TR>
-          <TD class="scriptcommand">SetImagingState name</TD>
+          <TD class="scriptcommand">GoToImagingState name</TD>
           <TD>Sets an imaging state listed in the table of the <A HREF="hidd_statedlg.htm">Imaging 
             States dialog</A>, which must be open.&nbsp; The text on the rest of the line, <b>name</b>, 
             can be either a unique set of starting letters in the name of the state, or the number 
@@ -4055,7 +4064,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">RestoreState</TD>
-          <TD>Restores the state if one has been saved with either with 'SetMapAcquireState' or
+          <TD>Restores the state if one has been saved with 'SetMapAcquireState' or 
+            'GoToImagingState' or with 
               the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.</TD>
         </TR>
          <TR>
