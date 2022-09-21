@@ -836,7 +836,7 @@ int CEMscope::Initialize()
       if (mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP &&
         mPlugFuncs->GetFlashingAdvised) {
         try {
-          mScopeCanFlashFEG = mPlugFuncs->GetFlashingAdvised(0);
+          mScopeCanFlashFEG = mPlugFuncs->GetFlashingAdvised(-1);
         }
         catch (_com_error E) {
         }
