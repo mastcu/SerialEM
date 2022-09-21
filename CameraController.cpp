@@ -9868,6 +9868,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mSecondTimeStamp = mWinApp->SecondTimeStamp();
       if (mScope->GetScopeCanFlashFEG())
         extra->mFlashCounter = mScope->GetFegFlashCounter();
+      if (FEIscope && mScope->GetScopeCanFlashFEG() && mScope->FastFEGBeamCurrent(delay))
+        extra->mFEGCurrent = (float)delay;
       if (mParam->STEMcamera)
         extra->mChannelName = mParam->channelName[mTD.ChanIndOrig[chan]];
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
