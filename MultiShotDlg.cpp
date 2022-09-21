@@ -467,6 +467,7 @@ void CMultiShotDlg::OnSetCustom()
 void CMultiShotDlg::OnButStepAdjust()
 {
   mSteppingAdjusting = (m_bUseCustom && mActiveParams->customHoleX.size() > 0) ? 2 : 1;
+  mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
   StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
     "Adjust shift at first corner of pattern");
 }
@@ -520,7 +521,8 @@ void CMultiShotDlg::StopRecording(void)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   if (mRecordingCustom || mRecordingRegular || mSteppingAdjusting) {
     mRecordingCustom = mRecordingRegular = false;
-    mSteppingAdjusting = 0;
+    if (mSteppingAdjusting)
+      mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
     mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);

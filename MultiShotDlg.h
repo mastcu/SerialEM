@@ -38,6 +38,7 @@ private:
   std::vector<double> mSavedISX, mSavedISY;
   BOOL mSavedMouseStage;
   double mRecordStageX, mRecordStageY;
+  double mStartingISX, mStartingISY;
   bool mDisabledDialog;
   int mNavPointIncrement;
   bool mWarnedIStoNav;
