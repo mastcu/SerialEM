@@ -1350,7 +1350,7 @@ void CNavigatorDlg::OnButFileprops()
           lowdose = -1 - VIEW_CONSET;
         else if (montp->useSearchInLowDose)
           lowdose = -1 - SEARCH_AREA;
-        mHelper->StoreCurrentStateInParam(state, lowdose, true, montp->cameraIndex, 0);
+        mHelper->StoreCurrentStateInParam(state, lowdose, 1, montp->cameraIndex, 0);
       }
     }
   }
@@ -1405,7 +1405,7 @@ void CNavigatorDlg::OnButState()
     camNum = montp->cameraIndex;
   }
   mWinApp->AppendToLog(str);
-  mHelper->StoreCurrentStateInParam(state, lowdose, true, camNum, 0);
+  mHelper->StoreCurrentStateInParam(state, lowdose, 1, camNum, 0);
   if (sched)
     UpdateGroupStrings(mItem->mGroupID);
   else
@@ -1448,7 +1448,7 @@ void CNavigatorDlg::OnButNavFocusPos()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
     return;
-  mHelper->SaveLDFocusPosition(true, mItem->mFocusAxisPos, mItem->mRotateFocusAxis,
+  mHelper->SaveLDFocusPosition(1, mItem->mFocusAxisPos, mItem->mRotateFocusAxis,
     mItem->mFocusAxisAngle, mItem->mFocusXoffset, mItem->mFocusYoffset, true);
   UpdateListString(mCurrentItem);
   SetChanged(true);
@@ -3245,7 +3245,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 {
   float angle, tiltAngle;
   bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire;
-  int ring;
+  int ring, magForHoles;
   if (!SetCurrentItem(true))
     mItem = NULL;
   if (m_bCollapseGroups)
@@ -3283,7 +3283,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
-      ScaleMat s2c, c2s, is2cam;
+      ScaleMat s2c, c2s, st2is;
       ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
       int camera = mWinApp->GetCurrentCamera();
       MontParam *montp;
@@ -3352,10 +3352,16 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           IntVec holeIndex;
           CameraParameters *camParam = mWinApp->GetCamParams() + camera;
           bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
-          is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
-          if (pixel && is2cam.xpx) {
-            mIStoStageForHoles = MatMul(is2cam, c2s);
-            mMagIndForHoles = magInd;
+          magForHoles = custom ? msParams->customMagIndex : msParams->holeMagIndex;
+
+          // This is the inverse of the conversion of hole vectors to image shifts
+          // it is done at the defined mag and hole IS positions are gotten at that
+          st2is = MatMul(mShiftManager->StageToCamera(camera, magForHoles),
+            mShiftManager->CameraToIS(magForHoles));
+         // is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
+          if (pixel && st2is.xpx) {
+            mIStoStageForHoles = MatInv(st2is);
+            mMagIndForHoles = magForHoles;
             mCameraForHoles = camera;
 
             // Make multihole positions relative to center
@@ -3363,7 +3369,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
               if (!imBuf->GetTiltAngle(tiltAngle))
                 tiltAngle = -999.;
               int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, magInd, camera, 0, 0, tiltAngle);
+                holeIndex, magForHoles, camera, 0, 0, tiltAngle);
               AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
             }
 
@@ -9986,6 +9992,8 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
       PrintfToLog("Skipping point(s) with group ID %d", mGroupIDtoSkip);
       skippedGroup = true;
     }
+    if (!acquire && skippingGroup)
+      mNumDoneAcq++;
     if (!acquire)
       continue;
 
@@ -10105,7 +10113,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   if (item->mFocusAxisPos > EXTRA_VALUE_TEST && stateOnly) {
     mHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(), item->mFocusAxisPos,
       item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset, 
-      item->mFocusYoffset, "position for item");
+      item->mFocusYoffset, "position for item", false);
   }
   if (item->mTargetDefocus > EXTRA_VALUE_TEST && stateOnly)
     mWinApp->mFocusManager->SetTargetDefocus(item->mTargetDefocus);
@@ -10450,6 +10458,29 @@ void CNavigatorDlg::ExternalDeleteItem(CMapDrawItem *item, int delIndex)
   FinishSingleDeletion(item, delIndex, listInd, multipleInGroup, groupStart);
   ManageCurrentControls();
   Redraw();
+}
+
+// Set the acquire flag for all items in a group
+void CNavigatorDlg::SetGroupAcquireFlags(int groupID, BOOL acquire)
+{
+  CMapDrawItem *item;
+  int numTS, numNonTS, numBefore, numAfter;
+  if (mAcquireIndex >= 0) {
+    mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, numNonTS, numTS);
+    numBefore = mAcqParm->acquireType == ACQUIRE_DO_TS ? numTS : numNonTS;
+  }
+  for (int ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
+    item = mItemArray.GetAt(ind);
+    if (item->mGroupID == groupID) {
+      item->mAcquire = acquire;
+      UpdateListString(ind);
+    }
+  }
+  if (mAcquireIndex >= 0) {
+    mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, numNonTS, numTS);
+    numAfter = mAcqParm->acquireType == ACQUIRE_DO_TS ? numTS : numNonTS;
+    mNumDoneAcq += numBefore - numAfter - 1;
+  }
 }
 
 // Compute the bounding box of a polygon and set the stage position to the midpoint

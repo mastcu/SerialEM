@@ -124,6 +124,7 @@ public:
   void FinishSingleDeletion(CMapDrawItem *item, int delIndex, int listInd, 
     bool multipleInGroup, int groupStart);
   void ExternalDeleteItem(CMapDrawItem *item, int delIndex);
+  void SetGroupAcquireFlags(int groupID, BOOL acquire);
   void SetPolygonCenterToMidpoint(CMapDrawItem *item);
   void UpdateForCurrentItemChange();
 	void OnListItemDrag(int oldIndex, int newIndex);
