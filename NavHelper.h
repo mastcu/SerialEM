@@ -219,6 +219,7 @@ public:
   GetMember(int, RIconSetNum);
   GetMember(bool, RIstayingInLD);
   GetMember(bool, SettingState);
+  GetSetMember(bool, OKtoUseHoleVectors);
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
   NavAcqAction *GetAcqActions(int which) {return &mAllAcqActions[which][0] ; };
@@ -396,6 +397,7 @@ private:
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
   bool mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
+  bool mOKtoUseHoleVectors;      // Flag that it is OK to use vectors without confirmation
   float mHFtargetDiamPix;        // Hole finder parameters: see holefinder source
   int mHFretainFFTs;
   int mHFminNumForTemplate;

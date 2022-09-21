@@ -1309,6 +1309,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   m_bShowIncluded = true;
   ParamsToDialog();
   ManageEnables();
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
   if (!mIsOpen)
     *mMasterParams = mParams;
   SetExclusionsAndDraw();

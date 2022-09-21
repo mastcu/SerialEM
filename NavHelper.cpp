@@ -256,6 +256,7 @@ CNavHelper::CNavHelper(void)
   mDoingMultipleFiles = false;
   mCurAcqParamIndex = 0;
   mSettingState = false;
+  mOKtoUseHoleVectors = false;
 }
 
 CNavHelper::~CNavHelper(void)

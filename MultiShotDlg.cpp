@@ -523,6 +523,7 @@ void CMultiShotDlg::StopRecording(void)
     mRecordingCustom = mRecordingRegular = false;
     if (mSteppingAdjusting)
       mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
+    mSteppingAdjusting = 0;
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
     mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
@@ -749,7 +750,17 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
 {
   CString str2;
   ScaleMat mat;
+  int ans;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  if (!mWinApp->mNavHelper->GetOKtoUseHoleVectors()) {
+    ans = SEMThreeChoiceBox("Using last hole vectors will replace the currently defined "
+      "image shift vectors for the regular pattern\n\nAre you sure you want to do this?",
+      "Yes", "Yes Always", "No", MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (ans == IDCANCEL)
+      return;
+    if (ans == IDNO)
+      mWinApp->mNavHelper->SetOKtoUseHoleVectors(true);
+  }
   mat = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
     true, str2);
 }

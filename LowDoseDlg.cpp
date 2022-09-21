@@ -19,6 +19,7 @@
 #include "BeamAssessor.h"
 #include "NavHelper.h"
 #include "StateDlg.h"
+#include "MultiShotDlg.h"
 #include "AutocenSetupDlg.h"
 #include "MacroProcessor.h"
 #include "NavigatorDlg.h"
@@ -491,6 +492,8 @@ void CLowDoseDlg::OnLowdosemode()
   mWinApp->UpdateBufferWindows();
   if (mWinApp->mParticleTasks->mZbyGsetupDlg)
     mWinApp->mParticleTasks->mZbyGsetupDlg->OnButUpdateState();
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
   if (mWinApp->ScopeHasSTEM())
     mWinApp->mSTEMcontrol.UpdateEnables();
   if (!m_bLowDoseMode)
