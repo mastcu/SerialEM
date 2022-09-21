@@ -2514,6 +2514,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
   BOOL recognized15;
+  bool warned999 = false;
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
@@ -2999,6 +3000,14 @@ int CParameterIO::ReadProperties(CString strFileName)
             } else {
               mMagTab[magInd].deltaRotation[iset] = itemFlt[2];
               mMagTab[magInd].rotation[iset] = itemFlt[3];
+              if (fabs(itemDbl[4]) > 997 && fabs(itemDbl[4]) < 1001) {
+                if (!warned999)
+                  AfxMessageBox("RotationAndPixel lines should have 0 for undefined"
+                    " pixel\nsizes, not 999, in properties file " + strFileName,
+                    MB_EXCLAME);
+                warned999 = true;
+                itemDbl[4] = 0.;
+              }
               mMagTab[magInd].pixelSize[iset] = (float)(0.001 * itemDbl[4]);
             }
 
