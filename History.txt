@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/21/22: SEM_4-0-11
+9/21/22: Added message box for RotationAndPixel pixel sizes of 999 (In 4.0).
+
 9/20/22: SEM_4-1-0beta3
 9/20/22: Added ability to save Focus and Trial states in Low Dose, and
 automatically restored prior state when Low Dose is turned on or off.
