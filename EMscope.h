@@ -858,6 +858,8 @@ private:
   int mLoadedCartridge;        // Index in table of cartridge that was unloaded
   int mFegFlashCounter;        // Cumulative count of FEG flashes
   int mSkipNormalizations;     // Flag to not normalize on mag (1) or spot (2) change
+  double mLastBeamCurrentTime; // Time when beam current was last gotten
+  double mFEGBeamCurrent;      // Last value gotten
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -967,6 +969,8 @@ public:
   bool GetTemperatureInfo(int type, BOOL & busy, int & time, int which, double & level);
   BOOL IsPVPRunning(BOOL & state);
   BOOL GetIsFlashingAdvised(int high, int &answer);
+  BOOL GetFEGBeamCurrent(double &current, bool skipError = false);
+  BOOL FastFEGBeamCurrent(double &current);
   int GetApertureSize(int kind);
   bool SetApertureSize(int kind, int size);
   bool SetAperturePosition(int kind, float posX, float posY);

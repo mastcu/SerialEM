@@ -519,6 +519,7 @@ CEMscope::CEMscope()
   mChangedLoaderInfo = false;
   mMaxJeolAutoloaderSlots = 17;
   mFegFlashCounter = 0;
+  mLastBeamCurrentTime = -1.e9;
   mSkipNormalizations = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
@@ -6465,6 +6466,40 @@ BOOL CEMscope::GetIsFlashingAdvised(int high, int &answer)
   }
   ScopeMutexRelease("GetIsFlashingAdvised");
   return result;
+}
+
+// Get the beam current from the FEG
+BOOL CEMscope::GetFEGBeamCurrent(double &current, bool skipErr)
+{
+  BOOL result = true;
+  if (!sInitialized || !FEIscope || !mPlugFuncs->GetFEGBeamCurrent ||
+    mAdvancedScriptVersion < ASI_FILTER_FEG_LOAD_TEMP)
+    return false;
+
+  ScopeMutexAcquire("GetFEGBeamCurrent", true);
+  try {
+    current = mPlugFuncs->GetFEGBeamCurrent();
+    mFEGBeamCurrent = current;
+    mLastBeamCurrentTime = GetTickCount();
+  }
+  catch (_com_error E) {
+    if (!skipErr)
+      SEMReportCOMError(E, _T("getting FEG beam current "));
+    result = false;
+  }
+  ScopeMutexRelease("GetFEGBeamCurrent");
+  return result;
+}
+
+// Get beam current or read a fresh value every 5 minutes
+BOOL CEMscope::FastFEGBeamCurrent(double &current)
+{
+  float minutes = 5.;
+  if (SEMTickInterval(mLastBeamCurrentTime) < minutes * 60000) {
+    current = mFEGBeamCurrent;
+    return true;
+  }
+  return GetFEGBeamCurrent(current, true);
 }
 
 // Get the accelerating voltage in KV
