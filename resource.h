@@ -1967,6 +1967,10 @@
 #define IDC_BUT_STEP_ADJUST             2996
 #define IDC_STAT_NAV_DRAW               2997
 #define IDC_STAT_NAV_SET                2998
+#define IDC_STAT_EM_MODE                2999
+#define IDC_RSPEC_DOSE                  3000
+#define IDC_RSPEC_DOSE2                 3001
+#define IDC_RCAM_DOSE                   3001
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2506,7 +2510,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         33500
-#define _APS_NEXT_CONTROL_VALUE         2999
+#define _APS_NEXT_CONTROL_VALUE         3001
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

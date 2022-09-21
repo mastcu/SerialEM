@@ -1759,7 +1759,7 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
   mATDidSaveState = !mWinApp->LowDoseMode();
   if (mATDidSaveState) {
     mNavHelper->SetTypeOfSavedState(STATE_NONE);
-    mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, false, map->mMapCamera, 0);
+    mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, map->mMapCamera, 0);
   }
   mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState 
     || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0);

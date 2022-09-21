@@ -76,6 +76,7 @@ GET_ONE_DBL(GetIlluminatedArea) LINE_END
 SET_ONE_DBL(SetIlluminatedArea) LINE_END
 GET_ONE_DBL(GetImageDistanceOffset) LINE_END
 SET_ONE_DBL(SetImageDistanceOffset) LINE_END
+GET_ONE_DBL(GetFEGBeamCurrent) LINE_END
 GET_TWO_DBL(GetObjectiveStigmator) LINE_END
 SET_TWO_DBL(SetObjectiveStigmator) LINE_END
 GET_TWO_DBL(GetCondenserStigmator) LINE_END

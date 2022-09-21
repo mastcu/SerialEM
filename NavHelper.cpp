@@ -2403,8 +2403,6 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
       " offset %d %d", forTrial ? "Trial" : "Focus", descrip, axisPos, rotateAxis ? axisRotation : 0, 
       xOffset / focusSet->binning, yOffset / focusSet->binning);
   camSets[camIndex * MAX_CONSETS + area] = *focusSet;
-  //if (needGotoRec)   // IS THIS NEEDED?
-    //mScope->GotoLowDoseArea(curArea);
 
 }
 
