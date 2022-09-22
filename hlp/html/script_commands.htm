@@ -58,7 +58,8 @@
         For example, &#39;RealignToNavItem #R [#C] [#S #N #Z]&#39; must have at least one entry,
         and can have 2 or 5, such as &#39;RealignToNavItem 0&#39;, &#39; RealignToNavItem 0 1&#39;, or
         &#39;RealignToNavItem 0 0 0.3 2 0&#39;.</P>
-    <P>Frequently used non-numeric parameters used in SerialEM scripting are:</P>
+    <P>Frequently used non-numeric parameters used in SerialEM scripting are referred 
+      to by these names:</P>
     <UL>
       <LI>buf - A single buffer letter or number, where A is numbered one, or two
         letters like &#39;AF&#39; for commands that can work on a buffer in the FFT window</LI>
@@ -67,6 +68,10 @@
       <LI>set - A camera parameter set, given by a single letter or number</LI>
       <LI>var - A SerialEM scripting variable name, without leading $</LI>
     </UL>
+    <P>Commands assign the primary values that they report to the variables <i>reportedVariable1</i>, etc.&nbsp; 
+      When the command description lists the various values that it reports, with no 
+      other details, it can be assumed that these variables are each assigned to one 
+      of the <i>reportedVariables</i>, in the order in which they are listed.</P>
     <P>Commands starting with &#39;Report...&#39; will assign output to one or more variable
         names listed after the command (omitting the &#39;$&#39;), except where the table notes
         otherwise.&nbsp; For other commands, the table explicitly states when they
