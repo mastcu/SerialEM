@@ -11,7 +11,7 @@
  * See FeiScope PlugSocket.cpp for a checklist on adding a new function for FEI
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 112
+#define FEISCOPE_PLUGIN_VERSION 113
 #define SCALE_POWER_OFFSET  12
 #endif
 
