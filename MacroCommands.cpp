@@ -300,6 +300,8 @@ int CMacCmd::NextCommand(bool startingOut)
   int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, cartInd;
   CArray<JeolCartridgeData, JeolCartridgeData> *loaderInfo = mScope->GetJeolLoaderInfo();
   CArray < ArrayRow, ArrayRow > *rowsFor2d;
+  const char *strPtr;
+  char *endPtr;
   ArrayRow arrRow;
   Variable *var;
 
@@ -467,15 +469,18 @@ int CMacCmd::NextCommand(bool startingOut)
     mStrItems[0].MakeUpper();
   }
 
-  // Convert a single number to a DOMACRO (obsolete and bad!)
-  InsertDomacro(&mStrItems[0]);
-
   // Substitute variables in parsed items and check for control word substitution
   report = mStrItems[0];
   if (SubstituteVariables(mStrItems, MAX_MACRO_TOKENS, mStrLine)) {
     AbortMacro();
     return 1;
   }
+
+  strPtr = (LPCTSTR)mStrItems[0];
+  strtod(strPtr, &endPtr);
+  if (endPtr == strPtr + strlen(strPtr))
+    ABORT_LINE("A command cannot start with a number in line:\n\n");
+
   mStrItems[0].MakeUpper();
   mItem1upper = mStrItems[1];
   mItem1upper.MakeUpper();

@@ -3186,6 +3186,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
   int blockLevel = startLevel;
   bool stringAssign, isIF, isELSE, isELSEIF, isTRY, inFunc = false, inComment = false;
   bool useFound;
+  char *endPtr;
   MacroFunction *func;
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
@@ -3225,7 +3226,9 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
 
     if (!strItems[0].IsEmpty()) {
       strItems[0].MakeUpper();
-      InsertDomacro(&strItems[0]);
+      strtod((LPCTSTR)strItems[0], &endPtr);
+      if (endPtr - (LPCTSTR)strItems[0] == strItems[0].GetLength())
+        FAIL_CHECK_LINE("A command cannot start with a number in line");
       cmdIndex = LookupCommandIndex(strItems[0]);
 
       // Check validity of variable assignment then skip further checks
@@ -3842,20 +3845,6 @@ void CMacroProcessor::LeaveCallLevel(bool popBlocks)
   if (!mCallLevel && mCalledFromScrpLang) {
     mCalledFromScrpLang = false;
     mRunningScrpLang = true;
-  }
-}
-
-// Convert a single number to a DOMACRO
-void CMacroProcessor::InsertDomacro(CString * strItems)
-{
-  if (strItems[1].IsEmpty()) {
-    for (int i = 0; i < MAX_MACROS; i++) {
-      if (mStrNum[i] == strItems[0]) {
-        strItems[0] = "DOMACRO";
-        strItems[1] = mStrNum[i];
-        break;
-      }
-    }
   }
 }
 

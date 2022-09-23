@@ -444,7 +444,6 @@ public:
   afx_msg void OnUpdateMacroEnd(CCmdUI *pCmdUI);
   int FindCalledMacro(CString strLine, bool scanning, CString useName = "");
   int FindMacroByNameOrTextNum(CString name);
-  void InsertDomacro(CString * strItem);
   BOOL WordIsReserved(CString str);
   int CheckIntensityChangeReturn(int err);
   int CheckConvertFilename(CString * strItems, CString strLine, int index, CString & strCopy);
