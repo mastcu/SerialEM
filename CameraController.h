@@ -231,6 +231,7 @@ struct CameraThreadData {
   double ISperMsX, ISperMsY;  // IS change per msec in X and Y
   int DriftISinterval;        // Interval for changes: also flag to do it
   int DynFocusInterval;       // Interval for dynamic focus
+  BOOL RamperWaitForBlank;    // Flag for FocusRamper to wait for blank to finish
   float InitialDriftSteps;    // Number of initial steps to take
   double FocusStep1, FocusStep2; // One or two single focus steps (first is flag to do it)
   int Step2FocusDelay;        // Interval to second focus change if any
@@ -589,6 +590,7 @@ public:
   SetMember(BOOL, SaveInEERformat);
   GetSetMember(int, RotFlipInFalcon3ComFile);
   GetSetMember(BOOL, SubdirsOkInFalcon3Save);
+  GetSetMember(BOOL, RamperWaitForBlank);
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
@@ -1022,6 +1024,7 @@ public:
   int mSkipFiltCheckCount;       // Counter for skipping the filter check
   bool mSuspendFilterUpdates;    // Flag that current operation uses advanced scripting
   int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
+  BOOL mRamperWaitForBlank;      // Flag to wait for blank when measuring STEMM flyback
 
 public:
   void SetNonGatanPostActionTime(void);

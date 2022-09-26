@@ -445,6 +445,7 @@ CCameraController::CCameraController()
   mNumFiltCheckFailures = 0;
   mSkipFiltCheckCount = 0;
   mSuspendFilterUpdates = false;
+  mRamperWaitForBlank = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -5211,6 +5212,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
   mTD.ReblankTime = 0;
   mTD.ShutterTime = 0;
   mTD.DynFocusInterval = 0;
+  mTD.RamperWaitForBlank = mRamperWaitForBlank;
   mTD.ScanTime = 0;
   mTD.ShotDelayTime = 0;
   mTD.MinBlankTime = (int)(1000. * mMinBlankingTime);
@@ -8862,10 +8864,13 @@ bool CCameraController::ProcessFrameTSRefinements(CameraThreadData *td, int step
 // Start the external focus ramper for an FEI scope
 int CCameraController::StartFocusRamp(CameraThreadData * td, bool & rampStarted)
 {
-  int chan, retval = 0;
+  int chan, retval = 0, useInterval = td->DynFocusInterval;
   try {
-    if (!td->DynFocusInterval)
+    if (!td->DynFocusInterval) {
       td->ScanDelay = td->UnblankTime;
+      if (td->RamperWaitForBlank)
+        useInterval = -1;
+    }
 
     // If startup delay is negative, it means start the ramper and then wait to 
     // start the shot
@@ -8881,7 +8886,7 @@ int CCameraController::StartFocusRamp(CameraThreadData * td, bool & rampStarted)
         retval = 1;
       } else {
         if (td->scopePlugFuncs->DoFocusRamp(td->ScanDelay, td->PostActionTime, 
-          td->DynFocusInterval, td->rampTable, MAX_RAMP_STEPS, td->IndexPerMs)) {
+          useInterval, td->rampTable, MAX_RAMP_STEPS, td->IndexPerMs)) {
             DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
             SEMErrorOccurred(1);
             retval = 1;
