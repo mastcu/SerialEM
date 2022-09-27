@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/27/22: Changed test for whether a camera is an Alpine so that it excludes a
+variant of K3 put on Continuum filter (In 4.0).
+
 9/26/22: Fixed taking FEI STEM images when there is advanced scripting
 (In 4.0).
 
