@@ -38,7 +38,6 @@ struct CamPluginFuncs;
 #define NEW_GAIN_REFERENCE 2
 #define RETRACT_BLOCKERS -1
 #define RETRACT_ALL -2
-#define ALPINE_SIZE_TEST 7000
 
 // Version that is good enough if there are no K2 cameras
 #define SEMCCD_VERSION_OK_NO_K2  104
@@ -115,6 +114,9 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 // This is not specific to K2, will give true for DE also
 #define IS_SUPERRES(p, ck2rm) (((p)->K2Type == K2_SUMMIT && (ck2rm) == SUPERRES_MODE) || \
   ((p)->K2Type == K3_TYPE && (ck2rm) > LINEAR_MODE))
+
+// There is a K3 variant that is 3456 x 3456; this is midway between Alpine and that
+#define IS_ALPINE(p) (p->K2Type == K3_TYPE && p->sizeX * p->sizeY < 4 * 9600000)
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)

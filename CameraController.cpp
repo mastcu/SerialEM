@@ -3063,7 +3063,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // For Alpine, set mode to counting
-  if (mParam->K2Type == K3_TYPE && mParam->sizeX < ALPINE_SIZE_TEST)
+  if (IS_ALPINE(mParam))
     conSet.K2ReadMode = COUNTING_MODE;
 
   // For K3, unprocessed for counting mode is really raw and not the same as DS so promote
@@ -6426,7 +6426,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
         retval = true;
       baseTime = frameTime;
 
-    } else if (camP->K2Type == K3_TYPE && camP->sizeX < ALPINE_SIZE_TEST) {
+    } else if (IS_ALPINE(camP)) {
       baseTime = readMode == LINEAR_MODE ? mBaseAlpineLinearTime :
         mBaseAlpineSuperResTime;
       if (exposure < baseTime) {
@@ -6678,8 +6678,7 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
     }
     return time;
   }
-  minTime = (param->K2Type == K3_TYPE && param->sizeX < ALPINE_SIZE_TEST) ?
-    mMinAlpineFrameTime : mMinK3FrameTime;
+  minTime = IS_ALPINE(param) ? mMinAlpineFrameTime : mMinK3FrameTime;
   return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * minTime, mMinK2FrameTime);
 };
 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/27/22: Changed test for whether a camera is an Alpine so that it excludes a
+variant of K3 put on Continuum filter (In 4.0).
+
 9/26/22: SEM_4-1-0beta5
 9/26/22: Added property and changed FocusRamper to fix the blanking in camera
 timing calibrations starting after the scan with FEI STEM.
