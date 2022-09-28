@@ -476,10 +476,12 @@ int CMacCmd::NextCommand(bool startingOut)
     return 1;
   }
 
-  strPtr = (LPCTSTR)mStrItems[0];
-  strtod(strPtr, &endPtr);
-  if (endPtr == strPtr + strlen(strPtr))
-    ABORT_LINE("A command cannot start with a number in line:\n\n");
+  if (!mStrItems[0].IsEmpty()) {
+    strPtr = (LPCTSTR)mStrItems[0];
+    strtod(strPtr, &endPtr);
+    if (endPtr == strPtr + strlen(strPtr))
+      ABORT_LINE("A command cannot start with a number in line:\n\n");
+  }
 
   mStrItems[0].MakeUpper();
   mItem1upper = mStrItems[1];
