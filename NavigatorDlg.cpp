@@ -3283,7 +3283,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
-      ScaleMat s2c, c2s, st2is;
+      ScaleMat s2c, c2s, st2is, is2cam;
       ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
       int camera = mWinApp->GetCurrentCamera();
       MontParam *montp;
@@ -3358,10 +3358,15 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           // it is done at the defined mag and hole IS positions are gotten at that
           st2is = MatMul(mShiftManager->StageToCamera(camera, magForHoles),
             mShiftManager->CameraToIS(magForHoles));
-         // is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
-          if (pixel && st2is.xpx) {
-            mIStoStageForHoles = MatInv(st2is);
-            mMagIndForHoles = magForHoles;
+          is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
+          if (pixel && is2cam.xpx) {
+            if (st2is.xpx && mHelper->MultipleHolesAreSelected()) {
+              mMagIndForHoles = magForHoles;
+              mIStoStageForHoles = MatInv(st2is);
+            } else {
+              mIStoStageForHoles = MatMul(is2cam, c2s);
+              mMagIndForHoles = magInd;
+            }
             mCameraForHoles = camera;
 
             // Make multihole positions relative to center
@@ -3369,7 +3374,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
               if (!imBuf->GetTiltAngle(tiltAngle))
                 tiltAngle = -999.;
               int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, magForHoles, camera, 0, 0, tiltAngle);
+                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle);
               AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
             }
 

@@ -311,7 +311,6 @@ BEGIN
         END
         MENUITEM "Set Aperture Si&ze",          ID_CALIBRATION_SET_APERTURE_SIZE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Dist&ortion",                 ID_CALIBRATION_DISTORTION
         MENUITEM "Set Ove&rlaps",               ID_CALIBRATION_SETOVERLAPS
         MENUITEM SEPARATOR
