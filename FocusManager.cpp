@@ -1039,7 +1039,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
 {
   float slope, shiftX, shiftY;
   FocusTable focTmp;
-  int hasCal, areaNum;
+  int hasCal, areaNum, probe, alpha;
   CString mess;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   mFocusSetNum = areaNum = FOCUS_CONSET;
@@ -1093,8 +1093,14 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   if (!mWinApp->GetSTEMMode()) { 
 
     // Regular
-    hasCal = GetFocusCal(mFocusMag, mWinApp->GetCurrentCamera(), mScope->GetProbeMode(),
-      mScope->FastAlpha(), focTmp);
+    if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex) {
+      alpha = (int)ldParm[mFocusSetNum].beamAlpha;
+      probe = ldParm[mFocusSetNum].probeMode;
+    } else {
+      alpha = mScope->FastAlpha();
+      probe = mScope->GetProbeMode();
+    }
+    hasCal = GetFocusCal(mFocusMag, mWinApp->GetCurrentCamera(), probe, alpha, focTmp);
     if (inChange > 0 && !hasCal && mFocusMag < mScope->GetLowestMModeMagInd()) {
       double focus = mScope->GetStandardLMFocus(mFocusMag);
       if (focus > -900.) {
@@ -1157,6 +1163,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
     SEMTrace('f', "STEM focus starting %.3f  step %.2f with shift %.2f %.2f", 
       mSFbaseFocus, mCalDelta, shiftX, shiftY);
   }
+  if (mWinApp->GetNoCameras())
+    return;
   if (mDoChangeFocus > 0)
     mWinApp->SetStatusText(MEDIUM_PANE, "AUTOFOCUSING");
   else if (mWinApp->mParticleTasks->DoingZbyG())
