@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/5/22: Add handlers to catch invalid parameter and termination errors that
+do not go through the exception handler and added a backtrace to crash
+message.
+
+10/5/22: Added check for special/unicode characters in properties.
+
 10/5/22: Fixed problem with autofocus using wrong alpha or probe mode to
 assess if calibration exists (In 4.0).
 

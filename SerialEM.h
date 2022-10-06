@@ -963,6 +963,7 @@ afx_msg void OnShowScopeControlPanel();
 void SetMaxDialogWidth(void);
 void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
 int GetBuildDayStamp(void);
+void CleanupAndReportCrash(CString &message);
 int GetIntegerVersion(void);
 void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin);

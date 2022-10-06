@@ -99,7 +99,14 @@ static char THIS_FILE[] = __FILE__;
 #define EXTRA_OPEN_SHUTTER_TIME 0.12f
 
 static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
+static void SEMInvalidParameterHandler(const wchar_t* expression, const wchar_t* function,
+  const wchar_t* file, unsigned int line, uintptr_t pReserved);
+static void SEMTerminateHandler();
+static void CommonErrorHandler(const char *cause);
+void AddBackTraceToMessage(CString &message);
+
 typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+typedef USHORT(WINAPI *BackTraceFunc)(ULONG, ULONG, PVOID *, PULONG);
 
 // Initial state of tool dialogs
 static int  initialDlgState[MAX_TOOL_DLGS] = 
@@ -1043,8 +1050,11 @@ BOOL CSerialEMApp::InitInstance()
   // now in case someone has debugging output to the log
   mParamIO = new CParameterIO;
   mDocWnd->ReadSetPropCalFiles();
-  if (mNoExceptionHandler <= 0)
+  if (mNoExceptionHandler <= 0) {
     SetUnhandledExceptionFilter(SEMExceptionFilter);
+    _set_invalid_parameter_handler(SEMInvalidParameterHandler);
+    set_terminate(SEMTerminateHandler);
+  }
   if (mScope->GetNoScope() && mNoCameras && mScope->GetSimulationMode())
     mDummyInstance = true;
   if (mDummyInstance) {
@@ -1706,10 +1716,11 @@ int CSerialEMApp::ExitInstance()
   return CWinApp::ExitInstance();
 }
 
+// The exception filter for structured exceptions
 static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
 {
   static bool first = true;
-  CString name, func;
+  CString func;
   CString message;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   int startInd = winApp->mStartupMessage.Find('\r');
@@ -1738,15 +1749,79 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
         ExceptionInfo->ExceptionRecord->ExceptionCode, 
         ExceptionInfo->ExceptionRecord->ExceptionAddress, SEMTrace);
     
-      // Tried adding a backtrace but it was short and useless
+      // Not clear if this will be any more useful than the address we were given
+      AddBackTraceToMessage(message);
     }
+  }
+  catch (...) {
+  }
+  winApp->CleanupAndReportCrash(message);
 
+  first = false;
+  return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// Handler for invalid parameter errors; these arguments are non-null only in debug build
+void SEMInvalidParameterHandler(const wchar_t* expression, const wchar_t* function,
+  const wchar_t* file, unsigned int line, uintptr_t pReserved)
+{
+  CommonErrorHandler("an invalid parameter in a function call");
+}
+
+// Handler for errors that cause terminate
+void SEMTerminateHandler()
+{
+  CommonErrorHandler("an error causing termination");
+}
+
+// Handler for either of those; start the crash message, add backtrace, do cleanup
+void CommonErrorHandler(const char *cause)
+{
+  CString message;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int startInd = winApp->mStartupMessage.Find('\r');
+  message.Format("%s is crashing due to %s", startInd > 0 ?
+    (LPCTSTR)winApp->mStartupMessage.Left(startInd) : "SerialEM", cause);
+  AddBackTraceToMessage(message);
+  winApp->CleanupAndReportCrash(message);
+}
+
+// Try to do a backtrace by loading kernel32.dll and the needed function
+void AddBackTraceToMessage(CString &message)
+{
+  BackTraceFunc btFunc;
+  PVOID backTrace[12];
+  HMODULE module = AfxLoadLibrary("Kernel32.dll");
+  CString str;
+  if (module) {
+    
+    // This requires WIN32_WINNT=0x0600 in preprocessor defs so we try to load it instead
+    btFunc = (BackTraceFunc)GetProcAddress(module, "RtlCaptureStackBackTrace");
+    if (btFunc) {
+      int numBack = btFunc(2, 12, &backTrace[0], NULL);
+      if (numBack) {
+        str.Format("\r\nSEMTrace is 0x%x; backtrace:", SEMTrace);
+        message += str;
+      }
+      for (int ind = 0; ind < numBack; ind++) {
+        str.Format("\r\n0x%x", backTrace[ind]);
+        message += str;
+      }
+    }
+  }
+}
+
+// Do other cleanup and reporting operations for a crash
+void CSerialEMApp::CleanupAndReportCrash(CString &message)
+{
+  CString name;
+  try {
     // First try to close the valves immediately
-    if (winApp->mTSController->GetMessageBoxCloseValves() && 
-      winApp->mTSController->GetMessageBoxValveTime() > 0. && 
-      !winApp->mScope->GetNoColumnValve()) {
-        winApp->mScope->SetColumnValvesOpen(false, true);
-        message += "\r\n\r\nValves have been closed";
+    if (mTSController->GetMessageBoxCloseValves() &&
+      mTSController->GetMessageBoxValveTime() > 0. &&
+      !mScope->GetNoColumnValve()) {
+      mScope->SetColumnValvesOpen(false, true);
+      message += "\r\n\r\nValves have been closed";
     }
   }
   catch (...) {
@@ -1754,38 +1829,36 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   try {
 
     // Clean up python process if any
-    winApp->mMacroProcessor->TerminateScrpLangProcess();
+    mMacroProcessor->TerminateScrpLangProcess();
 
     // Then try to save the log somewhere
-    if (winApp->mLogWindow) {
-      winApp->AppendToLog(message);
-      if ((winApp->mLogWindow->GetSaveFile()).IsEmpty()) {
-        if (winApp->mStoreMRC)
-          name = winApp->mStoreMRC->getName();
+    if (mLogWindow) {
+      AppendToLog(message);
+      if ((mLogWindow->GetSaveFile()).IsEmpty()) {
+        if (mStoreMRC)
+          name = mStoreMRC->getName();
         if (name.IsEmpty())
           name = "SerialEMcrash";
-        winApp->mLogWindow->UpdateSaveFile(true, name);
+        mLogWindow->UpdateSaveFile(true, name);
       } else {
-        winApp->mLogWindow->DoSave();
+        mLogWindow->DoSave();
       }
-      if (!(winApp->mLogWindow->GetLastFilePath()).IsEmpty())
+      if (!(mLogWindow->GetLastFilePath()).IsEmpty())
         message += "\n\nThe log has been saved to:\n" +
-        winApp->mLogWindow->GetLastFilePath();
+        mLogWindow->GetLastFilePath();
     }
 
     // Try to close files and rescue HDF
-    winApp->mDocWnd->CloseAllStores();
+    mDocWnd->CloseAllStores();
   }
   catch (...) {
   }
-  if (winApp->LowDoseMode())
+  if (LowDoseMode())
     message += "\r\n\r\nWill try to leave low dose mode before closing...";
   AfxMessageBox(message);
-  if (winApp->LowDoseMode())
-    winApp->mLowDoseDlg.SetLowDoseMode(false);
+  if (LowDoseMode())
+    mLowDoseDlg.SetLowDoseMode(false);
   CBaseSocket::UninitializeWSA();
-  first = false;
-  return EXCEPTION_EXECUTE_HANDLER;
 }
 
 // Winsock initialization is invoked by Mailer and by any socket class initialization
