@@ -308,7 +308,7 @@ void CFilterControlDlg::Update()
   EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope && bEnable);
   ManageZLPAligned();
   bEnable = bEnable && m_bEFTEMMode && !noControl;
-  m_butRefineZLP.EnableWindow(bEnable);
+  m_butRefineZLP.EnableWindow(bEnable && !noControl);
   m_butSlitIn.EnableWindow(bEnable && slitOK && lossOK);
   m_editWidth.EnableWindow(bEnable && slitOK);
   m_sbcWidth.EnableWindow(bEnable && slitOK);
