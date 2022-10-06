@@ -2535,7 +2535,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
   BOOL recognized15;
-  bool warned999 = false;
+  bool startCcomment, warned999 = false;
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
@@ -2632,8 +2632,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       recognized15 = true;
 
       message = strItems[0];
+      startCcomment = strItems[0].Find("/*") == 0;
       std::string propLower = (LPCTSTR)message.MakeLower();
-      if (!itemEmpty[0] && strItems[0].Find("/*") != 0) {
+      if (!itemEmpty[0] && !startCcomment) {
         if (genPropSet.count(propLower) && !dupOKgenProps.count(propLower))
           mDupMessage += strItems[0] + " (general property)\r\n";
         else
@@ -2644,11 +2645,13 @@ int CParameterIO::ReadProperties(CString strFileName)
           AfxMessageBox(message, MB_EXCLAME);
         }
       }
+      if (!startCcomment)
+        CheckForSpecialChars(strLine);
       if (MatchNoCase("EndIfVersionBelow")) {
         if (mWinApp->GetIntegerVersion() < itemInt[1])
           break;
 
-      } else if (strItems[0].Find("/*") == 0) {
+      } else if (startCcomment) {
         while (strLine.Find("*/") < 0 && 
           (err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {}
 
@@ -2683,6 +2686,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             }
           }
 
+          CheckForSpecialChars(strLine);
           recognizedc1 = true;
           if (MatchNoCase("EndCameraProperties"))
             break;
@@ -5904,6 +5908,22 @@ int CParameterIO::CheckForByteOrderMark(CString &item0, const char * tag,
   }
   AfxMessageBox(mess, MB_EXCLAME);
   return 1;
+}
+
+// Test for characters above 127 in properties
+void CParameterIO::CheckForSpecialChars(CString & strLine)
+{
+  int ind, len = strLine.GetLength();
+  const unsigned char *linePtr = (const unsigned char *)(LPCTSTR)strLine;
+  for (ind = 0; ind < len; ind++) {
+    if (linePtr[ind] == '#' || linePtr[ind] == '\r' || linePtr[ind] == '\n')
+      return;
+    if (linePtr[ind] > 127) {
+      AfxMessageBox("Warning: there is a special or unicode character in line\n" +
+        strLine + "\n\n" + "Properties may not be read correctly", MB_EXCLAME);
+      return;
+    }
+  }
 }
 
 void CParameterIO::WritePlacement(const char *string, int open, WINDOWPLACEMENT *place)

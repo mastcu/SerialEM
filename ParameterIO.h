@@ -39,6 +39,7 @@ public:
   int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems, 
     bool useQuotes = false);
   int ReadAndParse(CString &strLine, CString *strItems, int maxItems, bool useQuotes = false);
+  void CheckForSpecialChars(CString &strLine);
   CString *GetDupMessage(void) {return &mDupMessage;};
   CParameterIO();
   virtual ~CParameterIO();
