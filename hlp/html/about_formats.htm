@@ -1399,7 +1399,7 @@
       <p>The image rotation value is intimately related to the stage calibration.&nbsp;
           For a Thermo/FEI scope or JEOL scope without omega filter, an image rotation of 0 produces
            this pattern of image movement</p>
-      <pre>  ^  image movement for positive Y stage move
+      <pre>   ^  image movement for positive Y stage move
   |
   |
   |
@@ -1411,18 +1411,51 @@
       The image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx,
       -xpx) (from the X axis rotation) or atan2(-ypy, -xpy) - 90 ( from the Y axis
       rotation); the program averages these two estimates when it reports the rotation
-      angle with a stage calibration.&nbsp; For a JEOL with omega filter, the pattern is this:
-<pre>           ^  image movement for positive Y stage move
+      angle with a stage calibration.&nbsp;More common angles for Thermo/FEI scopes 
+    (except Krios) are near 90 degrees and the pattern of movement is
+<pre>            ^  image movement for positive X stage move
            |
            |
            |
            |
-  <---------   image movement for positive X stage move
+  <---------   image movement for positive Y stage move
+</pre>
+    <p>
+      A typical stage calibration will have values like: -54&nbsp;&nbsp; 261&nbsp;&nbsp; 
+      -262&nbsp;&nbsp; -55, which indicates that an X movement produces predominantly 
+      a negative Y change in camera coordinate, while a Y movement produces a positive 
+      change in X coordinate.&nbsp; This is inverted from the diagram because a 
+      positive shift of the image corresponds to a negative change in the 
+      (right-handed) camera coordinates 
+      of the centered point.&nbsp; Similarly, a Krios or a JEOL F200 has an axis angle 
+      near 180 with a pattern
+<pre>
+   <---------   image movement for positive X stage move
+           |
+           |
+           |
+           |
+           v  image movement for positive Y stage move
+</pre>
+
+    and a typical calibration of 490&nbsp;&nbsp; 44&nbsp;&nbsp; -67&nbsp;&nbsp; 464.</p>
+            <p>
+    For a JEOL with omega filter with the tilt axis near horizontal (.e.g, 2200FS), the pattern is this:
+     <pre>
+   --------->   image movement for positive X stage move
+  |
+  |
+  |
+  |
+  v  image movement for positive Y stage move
 </pre>
       The X axis is inverted and this requires the property InvertStageXAxis to be
       set.&nbsp; In this case the image rotation is estimated from atan2(ypx, xpx) and
       atan2(-ypy, -xpy) - 90.&nbsp; These estimates are simply reported and never used
       directly by the program; they must be placed into the RotationAndPixel&nbsp;
-      lines to have any effect.</p>
+      lines to have any effect.&nbsp; A typical stage calibration would be -799&nbsp;&nbsp; 
+    -109&nbsp;&nbsp; -104&nbsp;&nbsp; 823 (again, because of the inversion between direction of movement 
+    and sign of the matrix), and the program would report an angle around 180 from 
+    stage calibration once the InvertStageXAxis property is set.</p>
   </BODY>
 </HTML>
