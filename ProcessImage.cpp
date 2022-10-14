@@ -2185,7 +2185,8 @@ void CProcessImage::OnUpdateProcessPixelsizefrommarker(CCmdUI *pCmdUI)
 {
   int cap = mImBufs[1].mCaptured;
   pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() && 
-    mImBufs->mCaptured == BUFFER_PROCESSED && mImBufs->mHasUserPt && 
+    (mImBufs->mCaptured == BUFFER_PROCESSED || 
+      mImBufs->mCaptured == BUFFER_AUTOCOR_OVERVIEW) && mImBufs->mHasUserPt &&
     mImBufs[1].mImage && mImBufs[1].mImage->getMode() == kGray && cap != BUFFER_PROCESSED &&
     cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT); 
 }

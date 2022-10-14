@@ -198,12 +198,13 @@ void CComplexTasks::Initialize()
 // MESSAGE HANDLERS
 void CComplexTasks::OnUpdateNoTasks(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks());  
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy());
 }
 
 void CComplexTasks::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries());  
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
+    !mCamera->CameraBusy());
 }
 
 void CComplexTasks::OnEucentricity(UINT nID) 
@@ -222,7 +223,7 @@ void CComplexTasks::OnTasksFinerealign()
 void CComplexTasks::OnUpdateNoTasksNoTSNoHitachi(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
-    !mHitachiWithoutZ);  
+    !mHitachiWithoutZ && !mCamera->CameraBusy());  
 }
 
 void CComplexTasks::OnReverseTilt() 

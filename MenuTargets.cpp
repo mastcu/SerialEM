@@ -2700,7 +2700,7 @@ void CMenuTargets::OnUpdateEucentricityByFocus(CCmdUI *pCmdUI)
 {
   int index, area, paramInd, nearest, error;
   pCmdUI->Enable(mWinApp->mParticleTasks->GetZbyGCalAndCheck(-1, index, area, paramInd,
-    nearest, error) != NULL);
+    nearest, error) != NULL && !mCamera->CameraBusy());
 }
 
 void CMenuTargets::OnSetupEucentricityByFocus()
