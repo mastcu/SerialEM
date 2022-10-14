@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/14/22: Prevented various tasks from being started from the menu when
+continuous acquisition is running; they can still be run from script (In 4.0).
+
+10/14/22: Fixed Try Again with Marker for a montage (In 4.0).
+
 10/14/22: Made it pick the nearest beam shift calibration in a magnification
 range instead of using the first one it finds in the range, which made
 refined calibrations not get used (In 4.0).
