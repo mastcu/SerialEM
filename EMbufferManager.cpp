@@ -58,7 +58,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mOtherFile = "";
   mImBufsp = inImBufs;
   mStackWinMaxXY = 512;
-  mRotateAxisAngle = false;
+  mRotateAxisAngle = -1;
   mDrawCrosshairs = false;
   mDrawTiltAxis = false;
   mUnsignedTruncLimit = 0.01f;
@@ -338,7 +338,9 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (!toBuf->GetSpotSize(spot))
       spot = mWinApp->mScope->FastSpotSize();
     CString str, bidir;
-    if (mRotateAxisAngle)
+    if (mRotateAxisAngle < 0)
+      mRotateAxisAngle = mWinApp->mShiftManager->GetInvertStageXAxis() ? 1 : 0;
+    if (mRotateAxisAngle > 0)
       axisRot += 180.;
     axisRot = UtilGoodAngle(axisRot);
 

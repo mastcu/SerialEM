@@ -63,7 +63,7 @@ public :
   int ReplaceImage(char *inData, int inType, int inX, int inY,
                    int inBuf, int inCap, int inConSet, bool fftBuf = false);
   int MainImBufIndex(EMimageBuffer *imBuf);
-  GetSetMember(BOOL, RotateAxisAngle);
+  GetSetMember(int, RotateAxisAngle);
   void ReportError (int inErr);
   GetMember(bool, ImageAsyncFailed);
   GetMember(bool, BufferAsyncFailed);
@@ -93,7 +93,7 @@ public :
   CString mOtherFile;
   KImageStore *mOtherStoreMRC;
   int mStackWinMaxXY;
-  BOOL mRotateAxisAngle;
+  int mRotateAxisAngle;
   float mUnsignedTruncLimit;   // Fraction of truncation allowed when saving unsigned
   BOOL mSaveAsynchronously;    // Flag to write to files asynchronously
   EMimageBuffer mImBufForSave;  // Copy of image buffer being saved

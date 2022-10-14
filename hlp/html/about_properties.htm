@@ -2671,7 +2671,9 @@
             reconstructions with inverted handedness, set this entry to 1 to rotate the
             angle output to the image file header by 180 degrees and restore the handedness.
             This is generally needed if InvertStageXAxis is set, and is probably needed
-            for a Hitachi HT7700 or 7800.</TD>
+            for a Hitachi HT7700 or 7800.&nbsp; As of SerialEM 4.0, 10/7/22, this property is set
+            by default if InvertStageXAxis is set; enter a 0 to override this behavior.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>FloatingCurrentMeterSmoothed</TD>

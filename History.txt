@@ -17,6 +17,9 @@ refined calibrations not get used (In 4.0).
 with the option to convert to bytes on, and assignment of map ID to loaded-in
 single-frame images (In 4.0).
 
+10/7/22: Set RotateHeaderAngleBy180 to 1 by default if InvertStageXAxis is
+set.
+
 10/5/22: Added handlers to catch invalid parameter and termination errors that
 do not go through the exception handler and added a backtrace to crash
 message.
