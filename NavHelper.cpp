@@ -4793,12 +4793,12 @@ bool CNavHelper::AnyMontageMapsInNavTable()
 
 // See if a read-in image is actually a map and return the map ID, except when a map is
 // being loaded
-int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum)
+int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum, int ignoreLoad)
 {
   CString navDir, navPath, str;
   CMapDrawItem *item;
   CFileStatus status;
-  if (!mNav || mNav->GetLoadingMap())
+  if (!mNav || (!ignoreLoad && mNav->GetLoadingMap()))
     return 0;
   mNav->GetCurrentNavDir(navDir);
   while (navDir.Replace("\\\\", "\\")) {};

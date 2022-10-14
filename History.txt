@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/14/22: Made it pick the nearest beam shift calibration in a magnification
+range instead of using the first one it finds in the range, which made
+refined calibrations not get used (In 4.0).
+
+10/14/22: Fixed wrong image being displayed when loading single-frame maps
+with the option to convert to bytes on, and assignment of map ID to loaded-in
+single-frame images (In 4.0).
+
 10/5/22: Fixed problem with autofocus using wrong alpha or probe mode to
 assess if calibration exists (In 4.0).
 
