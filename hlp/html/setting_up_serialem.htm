@@ -3648,7 +3648,7 @@ MoveStage 0 0 -$zRange / 2.
       magnification ranges defined by the boundaries.&nbsp; Ideally, you should
       calibrate beam shift in the middle of the magnification range where such a
       calibration applies and is to be used.&nbsp; Once you have a calibration, you
-      can check how well it applies at other (typcially lower) magnifications by the
+      can check how well it applies at other (typically lower) magnifications by the
       following procedure:</P>
     <ol>
       <li>Adjust beam size and position so that an edge of the beam is in the periphery
@@ -3670,14 +3670,20 @@ MoveStage 0 0 -$zRange / 2.
     <P>
       When using image shift deflectors for image shift, you might be able to
       accomplish the same thing with an image shift boundary (defined with
-      OtherShiftBoundaries), but using a beam shift boundary is more direct and
+      OtherShiftBoundaries), but these boundaries are not the same in general and are 
+      not treated as beam shift boundaries in the program.&nbsp; Using a beam shift boundary
       guarantees that the right beam shift calibration is used regardless of where the
       image shift boundaries are.&nbsp; When using PLA for image shift, you can
       actually store a calibration at each magnification, but defining a beam shift
       boundary is the only way to make sure the program uses the calibration
       appropriate for a given magnification.</P>
     <P>
-      &nbsp;</P>
+      If you <a href="menu_calibration.htm#hid_beamspot_refinebeamshift">refine the 
+      beam shift calibration</a>, the calibration will be stored without removing 
+      another calibration in the same magnification range, and will not be replaced 
+      when the either the initial or refining calibration is done for a different 
+      magnification in that range.&nbsp; Thus, there can be refined calibrations for 
+      multiple magnifications in a range.</P>
     <P>
       &nbsp;</P>
     <P><A name="using_gpu"></A><B>Setting Up to Use a GPU for Frame Alignment</B></P>
