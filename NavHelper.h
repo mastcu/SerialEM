@@ -557,7 +557,7 @@ public:
     int xOffset, int yOffset, const char *descrip, bool forTrial);
   int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
-  int FindMapIDforReadInImage(CString filename, int secNum);
+  int FindMapIDforReadInImage(CString filename, int secNum, int ignoreLoad = false);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);
   int GetUserValue(CMapDrawItem *item, int number, CString &value);
   bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,

@@ -3050,6 +3050,7 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
 ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
 {
   int j, dir, diff, calMag, loop, skipBound, numBoundLoop, numLoop, calSign = 1;
+  int bestJ = -1, bestMag;
   ScaleMat mat, mat2, currIStoSpec, calSpecToIS;
   mat.xpx = 0.;
   if (!mNumBeamShiftCals)
@@ -3091,10 +3092,20 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
           calMag = mScope->GetLowestMModeMagInd();
         if (CanTransferIS(calMag, magInd) &&
           (skipBound || !CrossesBeamShiftBoundary(calMag, magInd))) {
-          return mIStoBS[j];
+          if (bestJ < 0 || B3DABS(calMag - magInd) < B3DABS(bestMag - magInd)) {
+            bestJ = j;
+            bestMag = calMag;
+            if (bestMag == magInd)
+              break;
+          }
         }
       }
-
+      if (bestJ >= 0) {
+        if (JEOLscope)
+          SEMTrace('c', "For mag %d  alpha %d returning BS cal from mag %d alpha %d",
+            magInd, inAlpha + 1, bestMag, mBeamCalAlpha[bestJ] + 1);
+        return mIStoBS[bestJ];
+      }
 
       // Must have a IS to specimen transformation for this mag for next loops
       if (!currIStoSpec.xpx)
@@ -3126,6 +3137,9 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
                 calSpecToIS = MatInv(mat2);
                 mat2 = MatMul(calSpecToIS, mIStoBS[j]);
                 mat = MatMul(currIStoSpec, mat2);
+                SEMTrace('c', "For mag %d  alpha %d using specimen transfer of BS cal"
+                    " from mag %d alpha %d", magInd, inAlpha + 1, calMag, 
+                  mBeamCalAlpha[j] + 1);
                 return mat;
               }
             }
@@ -3141,24 +3155,51 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
 // List the beam shift calibrations
 void CShiftManager::ListBeamShiftCals()
 {
-  int ind, iCam = mWinApp->GetCurrentCamera(), useMag;
+  int ind, jnd, iCam = mWinApp->GetCurrentCamera(), useMag;
   CString str1, str2;
   ScaleMat prod, specToIS;
+  IntVec calInds;
+  bool hasAlpha = JEOLscope && !mScope->GetHasNoAlpha();
   if (!mNumBeamShiftCals)
     return;
+
+  // Sort on alpha/probe then on mag within alpha/probe
+  for (ind = 0; ind < mNumBeamShiftCals; ind++)
+    calInds.push_back(ind);
+  for (ind = 0; ind < mNumBeamShiftCals - 1; ind++) {
+    for (jnd = ind + 1; jnd < mNumBeamShiftCals; jnd++) {
+      if ((hasAlpha &&
+        mBeamCalAlpha[calInds[ind]] > mBeamCalAlpha[calInds[jnd]]) ||
+        (FEIscope && mBeamCalProbe[calInds[ind]] > mBeamCalProbe[calInds[jnd]]))
+        B3DSWAP(calInds[ind], calInds[jnd], useMag);
+    }
+  }
+  for (ind = 0; ind < mNumBeamShiftCals - 1; ind++) {
+    for (jnd = ind + 1; jnd < mNumBeamShiftCals; jnd++) {
+      if ((HitachiScope || (JEOLscope && (!hasAlpha ||
+        mBeamCalAlpha[calInds[ind]] == mBeamCalAlpha[calInds[jnd]])) ||
+        (FEIscope && mBeamCalProbe[calInds[ind]] == mBeamCalProbe[calInds[jnd]])) &&
+        mBeamCalMagInd[calInds[ind]] > mBeamCalMagInd[calInds[jnd]]) {
+        B3DSWAP(calInds[ind], calInds[jnd], useMag);
+      }
+    }
+  }
+
   mWinApp->AppendToLog("\r\nBeam shift calibrations as specimen to beam shift matrices:");
   str1 = "Ind ";
   if (FEIscope)
     str1 += "Probe";
-  else if (JEOLscope && !mScope->GetHasNoAlpha())
+  else if (hasAlpha)
     str1 += "Alpha";
-  mWinApp->AppendToLog(str1 + "    Matrix                                           Mag");
-  for (ind = 0; ind < mNumBeamShiftCals; ind++) {
+  mWinApp->AppendToLog(str1 + "    Matrix                                        Mag"
+    + CString(JEOLscope ? "  Refined" : ""));
+  for (jnd = 0; jnd < mNumBeamShiftCals; jnd++) {
+    ind = calInds[jnd];
     str1.Format("%2d  ", mBeamCalMagInd[ind]);
     str2 = "";
     if (FEIscope)
       str2 = mBeamCalProbe[ind] ? "   uP   " : "   nP   ";
-    else if (JEOLscope && !mScope->GetHasNoAlpha())
+    else if (hasAlpha)
       str2.Format("    %d   ", mBeamCalAlpha[ind] + 1);
     str1 += str2;
 
@@ -3167,10 +3208,12 @@ void CShiftManager::ListBeamShiftCals()
     specToIS = MatInv(IStoSpecimen(useMag));
     if (specToIS.xpx) {
       prod = MatMul(specToIS, mIStoBS[ind]);
-      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %15d", prod.xpx, prod.xpy, prod.ypx, 
+      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %12d", prod.xpx, prod.xpy, prod.ypx, 
         prod.ypy, mMagTab[useMag].mag);
+      if (JEOLscope)
+        str2 += mBeamCalRetain[ind] ? "   1" : "   0";
     } else {
-      str2.Format(" No image shift to specimen matrix available  %15d",
+      str2.Format(" No image shift to specimen matrix available  %12d",
         MagForCamera(iCam, useMag));
     }
     str1 += str2;

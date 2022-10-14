@@ -6989,8 +6989,12 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
     err = mWinApp->mMontageController->ReadMontage(mLoadItem->mMapSection, NULL, NULL, 
       false, synchronous, bufToReadInto);
   else
-    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mLoadItem->mMapSection, 
+    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mLoadItem->mMapSection,
       bufToReadInto, false, synchronous);
+
+  if (!mLoadItem->mMapMontage)
+    mLoadItem->mMapID = mHelper->FindMapIDforReadInImage(mLoadStoreMRC->getFilePath(),
+      mLoadItem->mMapSection, true);
 
   if (err && err != READ_MONTAGE_OK) {
     SEMMessageBox("Error reading image from file.", MB_EXCLAME);
@@ -7077,10 +7081,12 @@ void CNavigatorDlg::FinishLoadMap(void)
   // Convert single frame map to bytes now if flag set
   cropped = mImBufs[mBufToLoadInto].GetUncroppedSize(uncroppedX, uncroppedY) &&
     uncroppedX > 0;
-  if (mHelper->GetConvertMaps() && !cropped && !mLoadItem->mMapMontage && 
-    mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale)
-    mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale, 
+  if (mHelper->GetConvertMaps() && !cropped && !mLoadItem->mMapMontage &&
+    mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale) {
+    mImBufs[mBufToLoadInto].UpdatePixMap();
+    mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale,
       mLoadItem->mMapMaxScale);
+  }
 
   // Copy montage to read buffer, get loaded size, rotate if requested, and display
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
