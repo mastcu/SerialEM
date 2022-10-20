@@ -2362,7 +2362,8 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
           m_iPrevMX += B3DNINT(zoomFac * iDx);
           m_iPrevMY -= B3DNINT(zoomFac * iDy);
           DrawImage();
-        } else if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
+        } else if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY) || 
+          dragSelect) {
 
           if (dragSelect) {
             crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / zoomFac);

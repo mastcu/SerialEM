@@ -416,7 +416,11 @@
       <li><em>Ctrl-left button click</em> will <b>add</b> the nearest point or polygon to a list 
         of selected items, or remove it from the list if it is already 
         selected.&nbsp; All selected items will be drawn with thicker lines.&nbsp; The
-        <b>Delete Item</b> button can then be used to delete all points at once.</li>
+        <b>Delete Item</b> button can then be used to delete all points at once.&nbsp; Points 
+        outside the image area can be selected, but determining the stage coordinates of 
+        such points involves extrapolation. The wrong point may be selected as a result, 
+        particularly if one piece of a montage map is loaded and points are being 
+        selected outside that image.</li>
       <li><em>Ctrl-left button held down</em> while moving the mouse will add points to the 
         selection as the mouses passes over or near them.</li>
       <li><em>Left button double-click</em> will delete the nearest point if it is already the 
