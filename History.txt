@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/18/22: Allowed points to be selected outside the image area when
+dragging the mouse when Navigator is in Edit Mode (In 4.0).
+
 10/14/22: SEM_4-0-13
 10/14/22: Prevented various tasks from being started from the menu when
 continuous acquisition is running; they can still be run from script (In 4.0).
