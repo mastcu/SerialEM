@@ -13,6 +13,7 @@ public:
   GetMember(float, LastFitStart);
   GetMember(float, LastFitEnd);
   GetSetMember(CString, CtfplotterPath);
+  GetSetMember(BOOL, AllowWindow);
   PROCESS_INFORMATION mExtProcInfo;
 
 
@@ -31,6 +32,7 @@ private:
   int mFitAstigPhase;
   bool mDidAutotune;
   float mLastStartPhase;
+  BOOL mAllowWindow;
 public:
   void AddTool(CString &title);
   int AddCommand(int index, CString &command);
@@ -38,6 +40,7 @@ public:
   int RunToolCommand(CString &title, CString extraArgs, int extraPlace);
   int RunToolCommand(int index);
   int RunCreateProcess(CString &command, CString argString, bool leaveHandles);
+  void CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile);
   void AddMenuItems();
   void SubstituteAndQuote(CString &argString, const char *keyword, CString &replacement,
     bool doQuotes = true);

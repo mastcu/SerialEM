@@ -30,6 +30,7 @@ CExternalTools::CExternalTools(void)
   mNumToolsAdded = 0;
   mPopupMenu = NULL;
   mLastPSresol = 0;
+  mAllowWindow = false;
 }
 
 
@@ -149,11 +150,11 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   bool isBatch = (command.Right(4)).CompareNoCase(".bat") == 0 || 
     (command.Right(4)).CompareNoCase(".cmd") == 0;
   TCHAR systemDirPath[MAX_PATH];
-  CString report, outFile;
+  CString report, outFile, inFile;
   char *cmdString;
   int retval, index, ind2;
   bool stdErrToFile = false;
-  HANDLE hFile = NULL;
+  HANDLE hFile = NULL, hInFile = NULL;
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
@@ -186,7 +187,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     SubstituteAndQuote(argString, "%currentdir%", CString(_getcwd(NULL, MAX_PATH)));
   }
 
-  // Look for standard redirection character and open a file if needed
+  // Look for standard output redirection character and open a file if needed
   index = argString.ReverseFind('>');
   if (index >= 0 && index < argString.GetLength() - 1) {
     ind2 = index + 1;
@@ -215,6 +216,27 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     }
   }
 
+  // Then look for standard input redirection, open that file
+  index = argString.ReverseFind('<');
+  if (index >= 0 && index < argString.GetLength() - 1) {
+    ind2 = index + 1;
+    inFile = argString.Mid(ind2);
+    inFile = inFile.Trim();
+    if (index)
+      argString = argString.Left(index);
+    else
+      argString = "";
+    hInFile = CreateFile(_T(inFile), GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hInFile == INVALID_HANDLE_VALUE) {
+      report.Format("Error (%d) opening input file for redirection into process",
+        GetLastError());
+      SEMMessageBox(report);
+      CloseFileHandles(hInFile, hFile);
+      return 1;
+    }
+  }
+
   // set up the process arguments
   ZeroMemory( &sinfo, sizeof(STARTUPINFO) );
   sinfo.cb = sizeof(STARTUPINFO);
@@ -225,10 +247,14 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     report += " " + argString;
 
   // Attach the output file
-  if (hFile) {
-    sinfo.hStdOutput = hFile;
-    if (stdErrToFile)
-      sinfo.hStdError = hFile;
+  if (hFile || hInFile) {
+    if (hFile) {
+      sinfo.hStdOutput = hFile;
+      if (stdErrToFile)
+        sinfo.hStdError = hFile;
+    }
+    if (hInFile)
+      sinfo.hStdInput = hInFile;
     sinfo.dwFlags |= STARTF_USESTDHANDLES;
   }
 
@@ -247,14 +273,14 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   if (!cmdString) {
     SEMMessageBox("Memory error composing string for process and arguments when trying to"
       " run a process");
+    CloseFileHandles(hInFile, hFile);
     return 1;
   }
   retval = CreateProcess(isBatch  ? (LPCTSTR)cstrCmd : NULL, cmdString, NULL, NULL, TRUE,
-    (isBatch ? 0 : DETACHED_PROCESS) | CREATE_NO_WINDOW, NULL, NULL,
+    (isBatch ? 0 : DETACHED_PROCESS) | (mAllowWindow ? 0 : CREATE_NO_WINDOW), NULL, NULL,
     &sinfo, &mExtProcInfo);
   if (!retval) {
-    if (hFile)
-      CloseHandle(hFile);
+    CloseFileHandles(hInFile, hFile);
     report.Format("CreateProcess failed to start process %s with error %d",
         (LPCTSTR)command, GetLastError());
       SEMMessageBox(report);
@@ -262,8 +288,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
 
     // Give it a second to finish with the command string
     WaitForSingleObject(mExtProcInfo.hProcess, 1000);
-    if (hFile)
-      CloseHandle(hFile);
+    CloseFileHandles(hInFile, hFile);
     if (!leaveHandles) {
       CloseHandle(mExtProcInfo.hProcess);
       CloseHandle(mExtProcInfo.hThread);
@@ -271,6 +296,15 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   }
   free(cmdString);
   return retval ? 0 : 1;
+}
+
+// Convenience function to close both file handles
+void CExternalTools::CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile)
+{
+  if (hOutFile != NULL && hOutFile != INVALID_HANDLE_VALUE)
+    CloseHandle(hOutFile);
+  if (hInFile != NULL && hInFile != INVALID_HANDLE_VALUE)
+    CloseHandle(hInFile);
 }
 
 // Substitute every occurrence of the keyword in the argumnet string, quoting the whole 

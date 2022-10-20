@@ -338,7 +338,7 @@ FLOAT_PROP_TEST("RealignItemFocusChangeLimit", navHelper->, RIdefocusChangeLimit
 BOOL_PROP_TEST("ConvertMapsToBytesDefault", navHelper->, ConvertMaps)
 BOOL_PROP_TEST("SkipAstigAdjustmentForIS", navHelper->, SkipAstigAdjustment)
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
-
+BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 #endif
 #ifdef PROP_TEST_SECT4
 FLOAT_PROP_TEST("TSDefaultStartAngle", tsController->, DefaultStartAngle)

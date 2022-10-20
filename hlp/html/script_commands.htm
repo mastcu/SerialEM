@@ -4719,26 +4719,28 @@
             command will keep running.&nbsp; If this feature or the DOS window that opens is a
              problem, see the if you can use the 'RunProcess' command</TD>
         </TR>
-        <TR>
-          <TD class="scriptcommand">CreateProcess command</TD>
-          <TD>Starts the program given by <b>command</b> without waiting for it to finish, using
-            the argument list defined previously with the 'NextProcessArgs' command.&nbsp;
-            See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
-            for a description of the rules governing this command.</TD>
-        </TR>
-        <TR>
+         <TR>
           <TD class="scriptcommand">RunProcess command</TD>
-          <TD>Like 'CreateProcess' except that it wait for the program to finish and sets <i>reportedValue1</i> 
+          <TD>Runs the program given by <b>command</b> with 
+            the argument list defined previously with the 'NextProcessArgs' command, waits for the program to finish,
+             and sets <i>reportedValue1</i> 
             with its exit status.&nbsp; See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
             for a description of the rules governing this command.&nbsp; Failure to start the program generates
             a script error, but a non-zero exit status will not.&nbsp; Unlike 'RunInShell', this
-            command avoids opening a DOS window.&nbsp; Redirection of output to a file
-            is possible, but if you need more elaborate shell features like piping, you need to use
+            command avoids opening a DOS window (unless the property 'AllowWindowWithTools' is set).&nbsp; Redirection 
+            of input from a file and output to a file
+            are possible, but if you need more elaborate shell features like piping, you need to use
             'RunInShell'.&nbsp; If STOP is used while the command is running, the process will be 
             terminated.&nbsp; Command added in 4.1, 8/24/22.
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CreateProcess command</TD>
+          <TD>Like 'RunProcess' except that it starts the program without waiting for it to finish.&nbsp;
+            See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
+            for a description of the rules governing this command.</TD>
+        </TR>
+       <TR>
           <TD class="scriptcommand">NextProcessArgs arg [arg] [...]</TD>
           <TD>Sets arguments for the next process run with 'CreateProcess' or 'RunExternalTool'.&nbsp; The argument
           list can contain script variables that are substituted, as well as several keywords

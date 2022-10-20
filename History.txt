@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/18/22: Added ability to use standard input redirection with tools and
+other processes run in the same way, and added a property to allow commands
+using a command processor to open the DOS window.
+
 10/18/22: Allowed points to be selected outside the image area when
 dragging the mouse when Navigator is in Edit Mode (In 4.0).
 

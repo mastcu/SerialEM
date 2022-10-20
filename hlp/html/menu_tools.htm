@@ -58,11 +58,14 @@
       filename yourself to 
       prevent quotes from being in the wrong place.</p>
     <p>
-      <strong>Optional redirection of output to a file</strong></p>
+      <strong>Optional redirection of input from a file or output to a file</strong></p>
     <p>
       The standard output from the command can be written to a file by ending the 
-      command with &#39;&gt; filename&#39;; standard error and output can be written together 
-      using &#39;&gt;&amp; filename&#39;.&nbsp; These redirections are implemented by SerialEM 
+      arguments with &#39;&gt; filename&#39;; standard error and output can be written together 
+      using &#39;&gt;&amp; filename&#39;.&nbsp; The standard input to the command can 
+      be read from a file by including &#39;&lt; filename&#39; in the arguments; this redirection 
+      must be placed at the end of the arguments, but before redirection of standard 
+      out if any.&nbsp; These redirections are implemented by SerialEM 
       connecting the command output to the output file, not by running in a shell, so 
       no other standard piping or redirection is allowed here, unlike with the 
       &#39;RunInShell script&#39; command.</p>
