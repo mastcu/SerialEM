@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/23/22: Fixed setup of extra Record parameters for batch to store the
+parameters set from the tilt series setup dialog (In 4.0).
+
+10/23/22: When suffixes are set for extra files opened during Navigator
+acquisition, after closing the files, it removes any files not written to
+during the acquisition (In 4.0).
+
+10/23/22: Allowed SetFrameTime command for Falcon 4 (In 4.0).
+
 10/18/22: Added ability to use standard input redirection with tools and
 other processes run in the same way, and added a property to allow commands
 using a command processor to open the DOS window.

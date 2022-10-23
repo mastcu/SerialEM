@@ -10222,13 +10222,18 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 // Close either the main file or an extra file that was opened by AcquireAreas
 void CNavigatorDlg::CloseFileOpenedByAcquire(void)
 {
+  int nz;
   if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 && 
     mAcquireOpenedFile == mWinApp->mStoreMRC->getFilePath())
     mDocWnd->DoCloseFile();
   for (int ind = mNumExtraFilesToClose - 1; ind >= 0; ind--) {
-    if (mDocWnd->GetNumStores() > 0 && 
-      mExtraFileToClose[ind] == mWinApp->mStoreMRC->getFilePath())
-        mDocWnd->DoCloseFile();
+    if (mDocWnd->GetNumStores() > 0 &&
+      mExtraFileToClose[ind] == mWinApp->mStoreMRC->getFilePath()) {
+      nz = mWinApp->mStoreMRC->getDepth();
+      mDocWnd->DoCloseFile();
+      if (!nz)
+        UtilRemoveFile(mExtraFileToClose[ind]);
+    }
   }
   mNumExtraFilesToClose = 0;
   mAcquireOpenedFile = "";

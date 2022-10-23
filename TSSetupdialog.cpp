@@ -1787,7 +1787,7 @@ void CTSSetupDialog::OnOK()
 {
   if (mFuture) {
     FixButtonStyle(IDC_TSGO);
-    mWinApp->mTSController->SetExtraOutput();
+    mWinApp->mTSController->SetExtraOutput(&mTSParam);
   } else {
     DoOK();
   }

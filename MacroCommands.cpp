@@ -8239,7 +8239,8 @@ int CMacCmd::SetFrameTime(void)
 
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (!mCamParams->K2Type && !mCamParams->canTakeFrames)
+  if (!mCamParams->K2Type && !mCamParams->canTakeFrames && 
+    !(mCamParams->FEItype == FALCON4_TYPE))
     ABORT_NOLINE("Frame time cannot be set for the current camera type");
   SaveControlSet(index);
   truth = CMD_IS(CHANGEFRAMEANDEXPOSURE);

@@ -1961,6 +1961,7 @@
 #define IDC_STAT_ACS_ITERATE_UM         2989
 #define IDC_REFINE_WITH_TRIAL           2990
 #define IDC_CHECK_USE_MULTISHOT         2991
+#define IDC_STAT_PUSH_BUT               3002
 #define IDC_CHECK_CLOSE_WHEN_DONE       2992
 #define IDC_RCHOICE_ONE2                2993
 #define IDC_BUT_USE_LAST_HOLE_VECS      2995
@@ -2510,7 +2511,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         33500
-#define _APS_NEXT_CONTROL_VALUE         3001
+#define _APS_NEXT_CONTROL_VALUE         3002
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
