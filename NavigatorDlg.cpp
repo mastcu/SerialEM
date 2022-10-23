@@ -8945,6 +8945,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   NavAlignParams *aliParams = mHelper->GetNavAlignParams();
   DewarVacParams *dvParams = mScope->GetDewarVacParams();
+  BOOL *tsStoreExtra = mWinApp->mTSController->GetStoreExtra();
+  int *tsExtraFileStarts = mWinApp->mTSController->GetExtraFileStarts();
   mMovingStage = false;
   mStartedTS = false;
   int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetCurAcqParamIndex());
@@ -9599,6 +9601,25 @@ void CNavigatorDlg::AcquireNextTask(int param)
       SEMMessageBox(str + report);
       StopAcquiring();
       return;
+    }
+
+    // If extra files were set up, and they are only of one type, then set the starting
+    // file number to the first file that was opened
+    if (mNumExtraFilesToClose > 0) {
+      len = -1;
+      for (ind = 0; ind < MAX_EXTRA_SAVES; ind++) {
+        if (tsStoreExtra[ind]) {
+          if (len >= 0) {
+            len = -1;
+            break;
+          }
+          len = ind;
+        }
+      }
+      if (len >= 0) {
+        ind = mDocWnd->GetNumStores() - 1;
+        tsExtraFileStarts[len] = B3DMAX(0, ind - mNumExtraFilesToClose);
+      }
     }
     mWinApp->mTSController->CopyParamToMaster(tsp, true);
 

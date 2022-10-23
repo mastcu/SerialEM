@@ -101,10 +101,13 @@
     <P>When running multiple tilt series from the Navigator, you can use the 
       &#39;SuffixForExtraFile&#39; script command to have one or more files opened for extra 
       output.&nbsp; These files will all be opened before the main tilt series output 
-      file.&nbsp; You need to anticipate how many other files will be open when 
+      file.&nbsp; As of SerialEM 4.1, 10/23/22, if only one type of extra output is 
+      selected (e.g, just extra Records), the program will automatically set the 
+      starting file number to the first file opened, and the file number here is 
+      irrelevant.&nbsp; Prior to that, or if there is more than one type of output 
+      selected, you need to anticipate how many other files will be open when 
       starting the batch acquisition and set the file numbers here appropriately.&nbsp; 
-      Specifically, if no other files are open and you are doing just one kind of 
-      output, you need to set its file number to 1.</P>
+      Specifically, if no other files are open, you need to set the lowest file number to 1.</P>
     <P><b>Save multiple Records in consecutive files</b></P>
     <P>Select this option to have each extra Record image at one tilt angle saved into 
       a separate file, where the file numbers are consecutive from the one selected 

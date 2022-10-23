@@ -142,6 +142,8 @@ public:
   GetSetMember(int, WaitAfterScopeFilling);
   GetMember(CString, LastNoBoxMessage);
   GetSetMember(int, PostBidirReturnDelay);
+  BOOL *GetStoreExtra() { return &mStoreExtra[0]; };
+  BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
 
   double GetCumulativeDose();
 
