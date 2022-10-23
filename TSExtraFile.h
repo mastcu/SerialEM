@@ -119,6 +119,7 @@ public:
   BOOL m_bConsecutiveFiles;
   CString m_statConsecList;
   afx_msg void OnConsecutiveFiles();
+  afx_msg void OnKillfocusEditEntries();
 };
 
 //{{AFX_INSERT_LOCATION}}

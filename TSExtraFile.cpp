@@ -124,7 +124,8 @@ BEGIN_MESSAGE_MAP(CTSExtraFile, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_NEWSPOT, OnDeltaposSpinNewspot)
   ON_BN_CLICKED(IDC_CHECK_TRIAL_BIN, OnCheckTrialBin)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_TRIAL_BIN, OnDeltaposSpinTrialBin)
-  ON_BN_CLICKED(IDC_CONSECUTIVE_FILES, &CTSExtraFile::OnConsecutiveFiles)
+  ON_BN_CLICKED(IDC_CONSECUTIVE_FILES, OnConsecutiveFiles)
+  ON_EN_KILLFOCUS(IDC_EDITENTRIES, OnKillfocusEditEntries)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -235,6 +236,13 @@ void CTSExtraFile::OnDeltaposSpinTrialBin(NMHDR *pNMHDR, LRESULT *pResult)
     mCamParam->binnings[newVal], mCamParam));
   UpdateData(false);
   *pResult = 0;
+}
+
+void CTSExtraFile::OnKillfocusEditEntries()
+{
+  UpdateData(true);
+  ValidateRecordEntries(m_iWhichRecord);
+  ManageExtraRecords();
 }
 
 // Make sure the text string is good before closing the dialog
