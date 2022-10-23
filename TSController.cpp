@@ -4959,7 +4959,7 @@ void CTSController::DoFinalTerminationTasks()
 {
   if (mLowDoseMode)
     mLDParam[RECORD_CONSET].intensity = mOriginalIntensity;
-  else
+  else if (!mSTEMindex)
     mScope->SetIntensity(mOriginalIntensity);
   mScope->TiltTo(0.);
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
@@ -5623,87 +5623,89 @@ int CTSController::FindClosestStackReference(double curAngle, int direction,
 // EXTRA OUTPUT HANDLING
 
 // Open the dialog controlling extra output
-void CTSController::SetExtraOutput()
+void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
 {
   CTSExtraFile extraDlg;
   int i;
+  if (!tsParam)
+    tsParam = &mTSParam;
 
   // If tilt series started, reload the files array with actual file numbers
   if (mStartedTS && LookupProtectedFiles())
     return;
 
-  extraDlg.m_bStackRecord = mTSParam.stackRecords;
-  extraDlg.mMaxStackSizeXY = mTSParam.stackBinSize;
+  extraDlg.m_bStackRecord = tsParam->stackRecords;
+  extraDlg.mMaxStackSizeXY = tsParam->stackBinSize;
   for (i = 0; i < MAX_EXTRA_SAVES; i++) {
     extraDlg.mSaveOn[i] = mStoreExtra[i];
     extraDlg.mFileIndex[i] = mExtraFiles[i];
   }
-  if (!mTSParam.numExtraExposures) {
-    mTSParam.numExtraExposures = 1;
-    mTSParam.extraExposures[0] = 0.;
-    mTSParam.extraDrift = mConSets[RECORD_CONSET].drift;
+  if (!tsParam->numExtraExposures) {
+    tsParam->numExtraExposures = 1;
+    tsParam->extraExposures[0] = 0.;
+    tsParam->extraDrift = mConSets[RECORD_CONSET].drift;
   }
-  extraDlg.m_fNewDrift = mTSParam.extraDrift;
-  extraDlg.m_iWhichRecord = mTSParam.extraRecordType;
-  extraDlg.mNumExtraFocus = mTSParam.numExtraFocus;
-  extraDlg.mNumExtraExposures = mTSParam.numExtraExposures;
-  extraDlg.mNumExtraFilter = mTSParam.numExtraFilter;
-  extraDlg.mNumExtraChannels = mTSParam.numExtraChannels;
-  for (i = 0; i < mTSParam.numExtraFocus; i++)
-    extraDlg.mExtraFocus[i] = mTSParam.extraFocus[i];
-  for (i = 0; i < mTSParam.numExtraExposures; i++)
-    extraDlg.mExtraExposures[i] = mTSParam.extraExposures[i];
-  for (i = 0; i < mTSParam.numExtraFilter; i++) {
-    extraDlg.mExtraLosses[i] = mTSParam.extraLosses[i];
-    extraDlg.mExtraSlits[i] = mTSParam.extraSlits[i];
+  extraDlg.m_fNewDrift = tsParam->extraDrift;
+  extraDlg.m_iWhichRecord = tsParam->extraRecordType;
+  extraDlg.mNumExtraFocus = tsParam->numExtraFocus;
+  extraDlg.mNumExtraExposures = tsParam->numExtraExposures;
+  extraDlg.mNumExtraFilter = tsParam->numExtraFilter;
+  extraDlg.mNumExtraChannels = tsParam->numExtraChannels;
+  for (i = 0; i < tsParam->numExtraFocus; i++)
+    extraDlg.mExtraFocus[i] = tsParam->extraFocus[i];
+  for (i = 0; i < tsParam->numExtraExposures; i++)
+    extraDlg.mExtraExposures[i] = tsParam->extraExposures[i];
+  for (i = 0; i < tsParam->numExtraFilter; i++) {
+    extraDlg.mExtraLosses[i] = tsParam->extraLosses[i];
+    extraDlg.mExtraSlits[i] = tsParam->extraSlits[i];
   }
-  for (i = 0; i < mTSParam.numExtraChannels; i++)
-    extraDlg.mExtraChannels[i] = mTSParam.extraChannels[i];
-  extraDlg.m_fDeltaC2 = mTSParam.extraDeltaIntensity;
-  extraDlg.m_bSetSpot = mTSParam.extraSetSpot;
-  extraDlg.m_bSetExposure = mTSParam.extraSetExposure;
-  if (!mTSParam.extraSpotSize)
-    mTSParam.extraSpotSize = mScope->GetSpotSize();
-  extraDlg.mSpotSize = mTSParam.extraSpotSize;
-  extraDlg.mBinIndex = mTSParam.extraBinIndex;
-  extraDlg.m_bTrialBin = mTSParam.extraSetBinning;
-  extraDlg.m_bKeepBidirAnchor = mTSParam.retainBidirAnchor;
+  for (i = 0; i < tsParam->numExtraChannels; i++)
+    extraDlg.mExtraChannels[i] = tsParam->extraChannels[i];
+  extraDlg.m_fDeltaC2 = tsParam->extraDeltaIntensity;
+  extraDlg.m_bSetSpot = tsParam->extraSetSpot;
+  extraDlg.m_bSetExposure = tsParam->extraSetExposure;
+  if (!tsParam->extraSpotSize)
+    tsParam->extraSpotSize = mScope->GetSpotSize();
+  extraDlg.mSpotSize = tsParam->extraSpotSize;
+  extraDlg.mBinIndex = tsParam->extraBinIndex;
+  extraDlg.m_bTrialBin = tsParam->extraSetBinning;
+  extraDlg.m_bKeepBidirAnchor = tsParam->retainBidirAnchor;
   extraDlg.m_bConsecutiveFiles = mSeparateExtraRecFiles;
 
   if (extraDlg.DoModal() != IDOK)
     return;
-  mTSParam.stackRecords = extraDlg.m_bStackRecord;
-  mTSParam.stackBinSize = extraDlg.mMaxStackSizeXY;
+  tsParam->stackRecords = extraDlg.m_bStackRecord;
+  tsParam->stackBinSize = extraDlg.mMaxStackSizeXY;
   for (i = 0; i < MAX_EXTRA_SAVES; i++) {
     mStoreExtra[i] = extraDlg.mSaveOn[i];
     mExtraFiles[i] = extraDlg.mFileIndex[i];
   }
-  mTSParam.extraRecordType = extraDlg.m_iWhichRecord;
-  mTSParam.numExtraFocus = extraDlg.mNumExtraFocus;
-  mTSParam.numExtraExposures = extraDlg.mNumExtraExposures;
-  mTSParam.numExtraFilter = extraDlg.mNumExtraFilter;
-  mTSParam.numExtraChannels = extraDlg.mNumExtraChannels;
-  for (i = 0; i < mTSParam.numExtraFocus; i++)
-    mTSParam.extraFocus[i] = extraDlg.mExtraFocus[i];
-  for (i = 0; i < mTSParam.numExtraExposures; i++)
-    mTSParam.extraExposures[i] = extraDlg.mExtraExposures[i];
-  for (i = 0; i < mTSParam.numExtraFilter; i++) {
-    mTSParam.extraLosses[i] = extraDlg.mExtraLosses[i];
-    mTSParam.extraSlits[i] = extraDlg.mExtraSlits[i];
+  tsParam->extraRecordType = extraDlg.m_iWhichRecord;
+  tsParam->numExtraFocus = extraDlg.mNumExtraFocus;
+  tsParam->numExtraExposures = extraDlg.mNumExtraExposures;
+  tsParam->numExtraFilter = extraDlg.mNumExtraFilter;
+  tsParam->numExtraChannels = extraDlg.mNumExtraChannels;
+  for (i = 0; i < tsParam->numExtraFocus; i++)
+    tsParam->extraFocus[i] = extraDlg.mExtraFocus[i];
+  for (i = 0; i < tsParam->numExtraExposures; i++)
+    tsParam->extraExposures[i] = extraDlg.mExtraExposures[i];
+  for (i = 0; i < tsParam->numExtraFilter; i++) {
+    tsParam->extraLosses[i] = extraDlg.mExtraLosses[i];
+    tsParam->extraSlits[i] = extraDlg.mExtraSlits[i];
   }
-  for (i = 0; i < mTSParam.numExtraChannels; i++)
-    mTSParam.extraChannels[i] = extraDlg.mExtraChannels[i];
+  for (i = 0; i < tsParam->numExtraChannels; i++)
+    tsParam->extraChannels[i] = extraDlg.mExtraChannels[i];
 
-  mTSParam.extraDeltaIntensity = extraDlg.m_fDeltaC2;
-  mTSParam.extraSetSpot = extraDlg.m_bSetSpot;
-  mTSParam.extraSetExposure = extraDlg.m_bSetExposure;
-  mTSParam.extraSpotSize = extraDlg.mSpotSize;
-  mTSParam.extraDrift = extraDlg.m_fNewDrift;
+  tsParam->extraDeltaIntensity = extraDlg.m_fDeltaC2;
+  tsParam->extraSetSpot = extraDlg.m_bSetSpot;
+  tsParam->extraSetExposure = extraDlg.m_bSetExposure;
+  tsParam->extraSpotSize = extraDlg.mSpotSize;
+  tsParam->extraDrift = extraDlg.m_fNewDrift;
   if (mWinApp->LowDoseMode()) {
-    mTSParam.extraSetBinning = extraDlg.m_bTrialBin;
-    mTSParam.extraBinIndex = extraDlg.mBinIndex;
+    tsParam->extraSetBinning = extraDlg.m_bTrialBin;
+    tsParam->extraBinIndex = extraDlg.mBinIndex;
   }
-  mTSParam.retainBidirAnchor = extraDlg.m_bKeepBidirAnchor;
+  tsParam->retainBidirAnchor = extraDlg.m_bKeepBidirAnchor;
   mSeparateExtraRecFiles = extraDlg.m_bConsecutiveFiles;
   
   // Renew the protections with the potentially new file numbers
@@ -5794,7 +5796,7 @@ int CTSController::CheckExtraFiles()
         }
         if (fileNum == mCurrentStore) {
           message.Format("File #%d for %s is selected as\nthe current file for output\n\n"
-            "Use the \"To #\" spinner in the Buffer Controls panel to make\n"
+            "Use the \"To\" filename drop-down box in the Buffer Controls panel to make\n"
             "the desired file for regular %ss be the current file", 
             fileNum + 1, (LPCTSTR)typestr, (LPCTSTR)mModeNames[RECORD_CONSET]);
           TSMessageBox(message);

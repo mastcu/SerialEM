@@ -42,7 +42,7 @@ public:
   void SetProtections();
   int CheckExtraFiles();
   int LookupProtectedFiles();
-  void SetExtraOutput();
+  void SetExtraOutput(TiltSeriesParam *tsParam = NULL);
   BOOL AutoAlignAndTest(int bufNum, int smallPad, char *shotName, bool scaling = false);
   int SetupTiltSeries(int future = 0, int futureLDstate = -1, int ldMagIndex = 0,
     int navOverrideFlags = 0);
