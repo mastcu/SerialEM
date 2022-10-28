@@ -31,6 +31,7 @@ CExternalTools::CExternalTools(void)
   mPopupMenu = NULL;
   mLastPSresol = 0;
   mAllowWindow = false;
+  mCheckedForIMOD = false;
 }
 
 
@@ -116,11 +117,12 @@ int CExternalTools::RunToolCommand(int index)
 {
   if (index < 0 || index >= mNumToolsAdded)
     return 1;
-  return RunCreateProcess(mCommands[index], mArgStrings[index], false);
+  return RunCreateProcess(mCommands[index], mArgStrings[index], false, "");
 }
 
 // Run a command by its title if it can be found
-int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraPlace)
+int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraPlace, 
+  CString inputStr)
 {
   int strVal = atoi((LPCTSTR)title);
   for (int ind = 0; ind < mNumToolsAdded; ind++)
@@ -136,7 +138,7 @@ int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraP
     } else if (extraPlace < 0) {
       extraArgs = extraArgs + " " + mArgStrings[strVal - 1];
     }
-    return RunCreateProcess(mCommands[strVal - 1], extraArgs, false);
+    return RunCreateProcess(mCommands[strVal - 1], extraArgs, false, inputStr);
   }
   SEMMessageBox("No external tool menu entry matches " + title, MB_EXCLAME);
   return 1;
@@ -144,7 +146,7 @@ int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraP
 
 // Actually do the work of starting the process
 int CExternalTools::RunCreateProcess(CString &command, CString argString, 
-  bool leaveHandles)
+  bool leaveHandles, CString inputString)
 {
   STARTUPINFO sinfo;
   bool isBatch = (command.Right(4)).CompareNoCase(".bat") == 0 || 
@@ -152,10 +154,15 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   TCHAR systemDirPath[MAX_PATH];
   CString report, outFile, inFile;
   char *cmdString;
-  int retval, index, ind2;
+  BOOL retval;
+  int index, ind2;
   bool stdErrToFile = false;
   HANDLE hFile = NULL, hInFile = NULL;
   SECURITY_ATTRIBUTES sa;
+  HANDLE hChildStd_IN_Rd = NULL;
+  HANDLE hChildStd_IN_Wr = NULL;
+  DWORD dwWrite, dwWritten;
+  bool pipeInput = !inputString.IsEmpty();
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
@@ -219,6 +226,12 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   // Then look for standard input redirection, open that file
   index = argString.ReverseFind('<');
   if (index >= 0 && index < argString.GetLength() - 1) {
+    if (pipeInput) {
+      SEMMessageBox("RunCreateProcess was called with a string to pipe to the input\n"
+        "but the command string contains a < for input from a file");
+      CloseFileHandles(hInFile, hFile);
+      return 1;
+    }
     ind2 = index + 1;
     inFile = argString.Mid(ind2);
     inFile = inFile.Trim();
@@ -245,6 +258,23 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   report = "\"" + command + "\"";
   if (!argString.IsEmpty())
     report += " " + argString;
+
+  if (pipeInput) {
+    if (!CreatePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &sa, 0)) {
+      SEMMessageBox("Error creating pipe for input to external process");
+      CloseFileHandles(hInFile, hFile);
+      return 1;
+    }
+    if (!SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0)) {
+      SEMMessageBox("Error running SetHandleInformation on input pipe to external "
+        "process");
+      CloseFileHandles(hInFile, hFile);
+      CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
+      return 1;
+    }
+    sinfo.hStdInput = hChildStd_IN_Rd;
+    sinfo.dwFlags |= STARTF_USESTDHANDLES;
+  }
 
   // Attach the output file
   if (hFile || hInFile) {
@@ -274,6 +304,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     SEMMessageBox("Memory error composing string for process and arguments when trying to"
       " run a process");
     CloseFileHandles(hInFile, hFile);
+    CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
     return 1;
   }
   retval = CreateProcess(isBatch  ? (LPCTSTR)cstrCmd : NULL, cmdString, NULL, NULL, TRUE,
@@ -281,17 +312,37 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     &sinfo, &mExtProcInfo);
   if (!retval) {
     CloseFileHandles(hInFile, hFile);
+    CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
     report.Format("CreateProcess failed to start process %s with error %d",
         (LPCTSTR)command, GetLastError());
       SEMMessageBox(report);
   } else {
 
-    // Give it a second to finish with the command string
-    WaitForSingleObject(mExtProcInfo.hProcess, 1000);
-    CloseFileHandles(hInFile, hFile);
-    if (!leaveHandles) {
-      CloseHandle(mExtProcInfo.hProcess);
-      CloseHandle(mExtProcInfo.hThread);
+    if (pipeInput) {
+      CloseHandle(hChildStd_IN_Rd);
+      dwWrite = inputString.GetLength();
+      retval = WriteFile(hChildStd_IN_Wr, (LPCTSTR)inputString, dwWrite, &dwWritten, 
+        NULL);
+      CloseHandle(hChildStd_IN_Wr);
+      if (!retval) {
+        CloseFileHandles(hInFile, hFile);
+        CloseFileHandles(mExtProcInfo.hProcess, mExtProcInfo.hThread);
+        report.Format("Writing input pipe to process %s failed with error %d",
+          (LPCTSTR)command, GetLastError());
+        SEMMessageBox(report);
+      }
+    }
+
+
+    if (!retval) {
+
+      // Give it a second to finish with the command string
+      WaitForSingleObject(mExtProcInfo.hProcess, pipeInput ? 250 : 1000);
+      CloseFileHandles(hInFile, hFile);
+      if (!leaveHandles) {
+        CloseHandle(mExtProcInfo.hProcess);
+        CloseHandle(mExtProcInfo.hThread);
+      }
     }
   }
   free(cmdString);
@@ -389,6 +440,10 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
   return iiFile;
 }
 
+//////////////////////////////////////////////////
+// CTFPLOTTER FUNCTIONS
+//////////////////////////////////////////////////
+
 // Compose a command for running Ctfplotter with the given set of parameters and the 
 // shared memory file whose full name is in memFile, returns the arguments in memFile or
 // an error string on error; returns the ctfplotter command in command
@@ -399,6 +454,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + bufInd;
   CString args, str;
   float tiltAngle, axisAngle;
+
+  CheckForIMODPath();
 
   // Get important information from the image buffer
   float imPixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
@@ -570,6 +627,39 @@ int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &a
   return 0;
 }
 
+// Check for the location of Ctfplotter/Genhstplt
+void CExternalTools::CheckForIMODPath()
+{
+  CString path;
+  const char *checkDirs[4] = {"C:\\Program Files\\3dmod", "C:\\Program Files\\IMOD\\bin",
+    "C:\\cygwin\\usr\\local\\IMOD\\bin", "C:\\cygwin64\\usr\\local\\IMOD\\bin"};
+  CFileStatus status;
+  if (mCheckedForIMOD || !mCtfplotterPath.IsEmpty())
+    return;
+  mCheckedForIMOD = true;
+
+  // Look on PATH and accept this if found
+  path = getenv("PATH");
+  if (path.Find("IMOD\\bin") >= 0) {
+    SEMTrace('1', "Found IMOD on system path");
+    return;
+  }
+  if (path.Find("3dmod") >= 0) {
+    SEMTrace('1', "Found standalone 3dmod on system path");
+    return;
+  }
+
+  // Otherwise check the possible locations for standard installations
+  for (int ind = 0; ind < 4; ind++) {
+    if (CFile::GetStatus(checkDirs[ind], status)) {
+      if (!ind && !CFile::GetStatus("C:\\Program Files\\3dmod\\genhstplt.exe", status))
+        continue;
+      mCtfplotterPath = checkDirs[ind];
+      SEMTrace('1', "Found genhstplt, set CTfplotterPath to %s", checkDirs[ind]);
+    }
+  }
+}
+
 // This is ALMOST a copy of what is in IMOD, had to change it to store errors instead of
 // exiting
 
@@ -703,4 +793,256 @@ int addItemToDefocusList(Ilist *lstSaved, SavedDefocus toSave)
     return -1;
   }
   return matchInd < 0 ? insertInd : matchInd;
+}
+
+///////////////////////////////////////////////////////////
+// GRAPHING WITH GENHSTPLT
+///////////////////////////////////////////////////////////
+
+// Write a data file, generate the commands to make a graph, and run genhstplt
+int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
+  IntVec typeList, IntVec columnList, IntVec symbolList, CString &axisLabel,
+  std::vector<std::string> &keys,
+  CString &errString, bool connect, int ordinals, int colors, int xlog, float xbase,
+  int ylog, float ybase, float xmin, float xmax, float ymin, float ymax)
+{
+  CString dataStr;
+  CFileStatus status;
+  CString input, line, val, defKeyBase;
+  int ind, col, xcol, numCurves, ifTypes = types.size() ? 1 : 0;
+  int numInColList, numCol = values.size();
+  const char *dataName = "genhstplt.data";
+  int numData = values[0].size();
+  const int numHues = 12;
+  int hues[numHues][3] = {{0, 0, 139},{139, 0, 0},{0, 100, 0},{148, 0, 211},
+  {255, 140, 0},{0, 128, 128},{128, 128, 0},{0, 0, 0},{255, 0, 0},{0, 128, 0},
+  {255, 0, 255},{0, 255, 255}};
+  const int maxSymbols = 14;
+  int symbols[maxSymbols] = {9, 7, 5, 8, 13, 14, 1, 11, 3, 10, 6, 2, 12, 4};
+  bool newType, noTypeList = !typeList.size(), noColumns = !columnList.size();
+
+  CheckForIMODPath();
+  errString = "";
+  defKeyBase = ifTypes ? "Type " : "Column ";
+  B3DCLAMP(ordinals, 0, 1);
+  if (numCol == 1 || columnList.size() == 1)
+    ordinals = 1;
+
+  // Check that arrays have matching lengths
+  if (ifTypes && types.size() != numData) {
+    errString = "There are not the same number of type values as data values";
+    return 1;
+  }
+  if (ifTypes && numCol > 2) {
+    errString = "When plotting by types, there can only be two columns of values";
+  }
+
+  if (noColumns)
+    columnList.push_back(1);
+  for (col = 1; col < numCol; col++) {
+    if (values[col].size() != numData) {
+      errString.Format("There are not the same number of values for column %d as for"
+        " column 1 (%d vs. %d)", col + 1, values[col].size(), numData);
+      return 1;
+    }
+    if (noColumns)
+      columnList.push_back(col + 1);
+  }
+  numInColList = (int)columnList.size();
+
+  // Put the data into the lines
+  for (ind = 0; ind < numData; ind++) {
+    line = "";
+    if (ifTypes) {
+      line.Format("%d ", types[ind]);
+
+      // Also build a type list if needed
+      if (noTypeList) {
+        newType = true;
+        for (col = 0; col < (int)typeList.size(); col++) {
+          if (types[ind] == typeList[col]) {
+            newType = false;
+            break;
+          }
+        }
+        if (newType)
+          typeList.push_back(types[ind]);
+      }
+    }
+    for (col = 0; col < numCol; col++) {
+      val.Format("%g ", values[col][ind]);
+      line += val;
+    }
+    dataStr += line + "\r\n";
+  }
+
+  // Set up column and type list when no types and multiple curves
+  if (!ifTypes && numInColList > 2 - ordinals) {
+    ifTypes = -1;
+    typeList.clear();
+    for (ind = 1 - ordinals; ind < numInColList; ind++)
+      typeList.push_back(columnList[ind]);
+    xcol = columnList[0];
+    columnList.clear();
+    if (!ordinals)
+      columnList.push_back(1);
+    columnList.push_back(2);
+  }
+  numCurves = ifTypes ? typeList.size() : 1;
+  if (numCurves > maxSymbols) {
+    errString = "There are too many data columns for symbols available";
+    return 1;
+  }
+
+  // Wait a second for a previous genhstplt to delete the file before proceeding
+  for (ind = 0; ind < 20; ind++) {
+    if (!CFile::GetStatus(dataName, status))
+      break;
+    Sleep(50);
+  }
+
+  if (UtilWriteTextFile(dataName, dataStr)) {
+    errString = "Error writing a text file with data to graph";
+    return 1;
+  }
+
+  // Set up default axis label
+  if (axisLabel.IsEmpty()) {
+    if (ordinals)
+      axisLabel = "Data number";
+    else
+      axisLabel.Format("Column %d", columnList[0]);
+  }
+
+  // Set up symbol list
+  for (ind = 0; ind < (int)B3DMIN(symbolList.size(), maxSymbols); ind++)
+    if (symbolList[ind] >= -1 && symbolList[ind] < 19)
+      symbols[ind] = symbolList[ind];
+
+  // Build the awful input list
+
+  input.Format("-1\r\n%d\r\n%d\r\n0\r\n%s\r\n", ifTypes, numCol, dataName);
+  if (ifTypes < 0)
+    AddSingleValueLine(input, xcol);
+  if (ifTypes) {
+    AddSingleValueLine(input, -(int)typeList.size());
+    for (ind = 0; ind < (int)typeList.size(); ind++) {
+      line.Format("%d,%d\r\n", typeList[ind], symbols[ind]);
+      input += line;
+    }
+  } else
+    AddSingleValueLine(input, symbols[0]);
+
+  if (numCol > 1)
+    AddSingleValueLine(input, columnList[0]);
+
+  // Xlog inputs
+  line.Format("%d,%f\r\n", xlog, xbase);
+  input += line;
+  AddSingleValueLine(input, 0);
+
+  // Set up ordinals then add second column
+  if (ordinals)
+    AddSingleValueLine(input, 16);
+  AddSingleValueLine(input, 1);
+  if (numCol > 1)
+    AddSingleValueLine(input, columnList[1 - ordinals]);
+
+  // Xlog and Ylog inputs
+  line.Format("%d,%f\r\n", ylog, ybase);
+  input += line;
+  AddSingleValueLine(input, 0);
+  AddSingleValueLine(input, -2);
+  input += axisLabel + "\r\n";
+  AddSingleValueLine(input, numCurves);
+
+  // Keys
+  for (ind = 0; ind < B3DMIN((int)keys.size(), numCurves); ind++)
+    input += CString(keys[ind].c_str()) + "\r\n";
+  for (ind = keys.size(); ind < numCurves; ind++) {
+    line.Format("%s%d\r\n", (LPCTSTR)defKeyBase, B3DCHOICE(ifTypes, typeList[ind],
+      columnList[ind + 1 - ordinals]));
+    input += line;
+  }
+
+  // Colors
+  if (colors >= 0) {
+    AddSingleValueLine(input, -4);
+    AddSingleValueLine(input, numCurves);
+    ind = 0;
+    for (col = 0; col < numCurves; col++) {
+      if (col + 1 == colors) {
+        line.Format("%d,0,0,0\r\n", col + 1);
+      } else {
+        if (colors > 0 && !hues[ind][0] && !hues[ind][1] && !hues[ind][2])
+          ind = (ind + 1) % numHues;
+        line.Format("%d,%d,%d,%d\r\n", col + 1, hues[ind][0], hues[ind][1], hues[ind][2]);
+        ind = (ind + 1) % numHues;
+      }
+      input += line;
+    }
+  }
+
+  // X and Y ranges
+  if (xmin > EXTRA_VALUE_TEST && xmax > EXTRA_VALUE_TEST) {
+    AddSingleValueLine(input, -10);
+    line.Format("%f,%f\r\n", xmin, xmax);
+    input += line;
+  }
+  if (ymin > EXTRA_VALUE_TEST && ymax > EXTRA_VALUE_TEST) {
+    AddSingleValueLine(input, -9);
+    line.Format("%f,%f\r\n", ymin, ymax);
+    input += line;
+  }
+
+  AddSingleValueLine(input, connect ? 17 : 2);
+  AddSingleValueLine(input, 0);
+  AddSingleValueLine(input, 0);
+  AddSingleValueLine(input, -11);
+  AddSingleValueLine(input, -8);
+  //mWinApp->AppendToLog(input);
+
+  // Make the command 
+  if (mCtfplotterPath.IsEmpty())
+    line = "genhstplt.exe";
+  else
+    line = mCtfplotterPath + "\\genhstplt.exe";
+
+  col = RunCreateProcess(line, "", true, input);
+  if (!col) {
+    mGraphProcessHandles.push_back(mExtProcInfo.hProcess);
+    mGraphThreadHandles.push_back(mExtProcInfo.hThread);
+  }
+
+  return col;
+}
+
+// Close all the graph processes
+void CExternalTools::CloseAllGraphs()
+{
+  for (int ind = 0; ind < (int)mGraphProcessHandles.size(); ind++) {
+    if (WaitForSingleObject(mGraphProcessHandles[ind], 1) != WAIT_OBJECT_0)
+      TerminateProcess(mGraphProcessHandles[ind], 1);
+    CloseHandle(mGraphProcessHandles[ind]);
+    CloseHandle(mGraphThreadHandles[ind]);
+  }
+  mGraphProcessHandles.clear();
+  mGraphThreadHandles.clear();
+}
+
+// Find out if any graphs open so it can be asked if close on exit
+bool CExternalTools::CheckIfGraphsOpen()
+{
+  for (int ind = 0; ind < (int)mGraphProcessHandles.size(); ind++)
+    if (WaitForSingleObject(mGraphProcessHandles[ind], 1) != WAIT_OBJECT_0)
+      return true;
+  return false;
+}
+
+// Add a line with a single integer to the string
+void CExternalTools::AddSingleValueLine(CString & input, int value)
+{
+  CString val;
+  val.Format("%d\r\n", value);
+  input += val;
 }

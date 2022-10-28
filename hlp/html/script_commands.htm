@@ -622,7 +622,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ParseQuotedStrings [#]</TD>
-          <TD>Allows strings that may have spaces to be enclosed in single quotes (e.g.,
+          <TD>Allows strings that may have spaces to be enclosed in <B><i>single quotes</i></B> (e.g.,
             'text string') and treated as a single entity in cases where it would be broken
             up at the spaces.&nbsp; Follow with a 0 to turn off such parsing.&nbsp; The best
             use of this feature would be for making an array of strings in a single
@@ -1640,6 +1640,17 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ComputeIceThickness buf1 buf2 [obuf] [#C]</TD>
+          <TD>Computes an ice thickness image from an unfiltered image (U) in <b>buf1</b> and an energy-filtered
+            image (F) in <b>buf2</b>, using the equation C * ln( U / F ).&nbsp; The coefficient is
+             taken from the property 'ThicknessCoefficient', or from the optional entry [#C], but it must
+            be available one way or the other.&nbsp; The floating point output is
+            placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
+            is added specifying a different buffer, which can be <b>buf1</b> or <b>buf2</b>.&nbsp; A shift 
+            between the images is taken into account, with non-overlapping areas filled with 0; thus, images 
+            can be aligned with each other.&nbsp; Command added in 4.1, 10/26/22.</TD>
+        </TR>
+       <TR>
           <TD class="scriptcommand">ConvertToBytes buf [#L #H]</TD>
           <TD>Converts the image in buffer <b>buf</b> from float or integer to bytes, applying the scaling
              in the current display by default, with values between the 'Black' and 'White' levels scaled 
@@ -1825,13 +1836,13 @@
             completion generates a script error, but a non-zero exit status will not.&nbsp; Three files will
             be created in the current directory: 'single.defocus' with the basic results, 'ctfplotter.log' 
             with program output, and 'ctfplotter.info' with stored settings plus the CCC and fit-to-resolution values.
-            <br />To use this command, you must have either and installation of IMOD 4.12.27 or higher, or
-            a standalone Windows 3dmod package based on this version or higher.&nbsp; Either Ctfplotter must 
-            be on the system path, or the property CtfplotterPath must be entered with the path to the 
-            executable.&nbsp; Ctfplotter is currently much slower than Ctffind but will give significantly more
+            <br />To use this command, Ctfplotter must be available to SerialEM; see <a href="setting_up_serialem.htm#addedPackages">
+              Additional Packages for GPU and Python Support, and for Displaying Graphs and Using Ctfplotter</a>
+             for details on how to achieve this.
+            &nbsp; With IMOD 4.12.31 or higher, Ctfplotter is about as fast as Ctffind and will give significantly more
             accurate results for images with weaker signals or ones taken at higher tilt.
             To save some time, use autotuning (the default) on an initial image and use last 
-            parameters (-1 for <B>#T</B>on a similar images.</TD>
+            parameters (-1 for <B>#T</B>) on a similar image.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportCtplotterTuning</TD>
@@ -1952,6 +1963,15 @@
           intensity, spot intensity, and high focus mag calibrations to the log window for diagnostic purposes.
           &nbsp; It also reports rotation problems and inconsistencies between stage calibrations.
             &nbsp; Command added in 3.9, 1/8/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ListISVectorsToGraph #P #C #W</TD>
+          <TD>List image shift vectors for one camera whose active camera number is given in <b>#C</b>
+             (numbered from 1), using calibrated pixel sizes and relative rotations if <b>#P</b>
+            is non-zero, and save values in arrays for plotting with 'GraphPreStoredValues'.&nbsp; The
+            magnification is stored in column 1.&nbsp; Set <b>#W</b> to 1 to store just lengths in 
+            columns 2 and 3, 2 to store just angles there, or 3 to store lengths in 2 and 3 and angles
+             in 4 and 5.&nbsp; Command added in 4.1, 10/27/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportRotationProblems</TD>
@@ -4555,6 +4575,118 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand"><A name="graphing"></A><B>Graphing Commands</B></TD>
+          <td>
+            These commands are used to display graphs using the Genhstplt program in IMOD. 
+            &nbsp; See <a href="setting_up_serialem.htm#addedPackages">
+              Additional Packages for GPU
+          and Python Support, and for Displaying Graphs and Using Ctfplotter</a> for details on how to make
+             this program available to SerialEM.&nbsp; This program opens a plotting window 
+            that can be resized.&nbsp; Right-clicking within the window brings up a menu allowing
+            one to save the graph to a PNG file or print it (if there is a printer available).&nbsp; All 
+            commands here were added in 4.1, 10/27/22.
+          </td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">GraphValuesInArrays #T var1 [var2 ...]</TD>
+          <td>Graphs values provided in a set of 1-D array variables <b>var1</b>, <b>var2</b>, etc,
+            where the a non-zero value of <b>#T</b> specifies that the first variable contains type
+            identifiers for graphing by type.&nbsp; These type numbers can be arbitrary numbers but must
+            be integers.&nbsp; The data are loaded
+            into a matrix and individual value variables (i.e, other than a type variable) correspond to columns
+            in the matrix.&nbsp; When there are no types, the default is to plot each column past the
+            first one versus the first column, all in one graph.&nbsp; If the 'ordinal' option is
+             given with the 'SetGraphOptions' command, all columns would be plotted versus their
+            index in the array.&nbsp; The 'SetGraphColumns' command can be used to plot specific
+            columns instead of all of them. <br />
+            When there are types, only two columns can be plotted, or only one if 'ordinal' is 
+            set.&nbsp; Either this command must contain only that number of value variables, or 
+            'SetGraphColumns' must be used to set that number of columns.<br />
+            The various options set by the commands below are all cleared at the start of a script
+             and after each graphing command.
+            &nbsp;</td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">GraphPreStoredValues #T</TD>
+          <td>
+            Graphs values that have already been stored, using types if <b>#T</b> is non-zero&nbsp; Values
+            are stored for possible reuse whenever the 'GraphValuesInArrays' command is used.&nbsp; In 
+            addition, specific operations may store values for graphing (so far, just the
+             'ListISVectorsToGraph' command).
+          </td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SetGraphTypes # [# ...]</TD>
+          <td>
+            Sets the list of data types to plot in the next graphing command&nbsp; If only one type is
+            provided, its values will be plotted versus their index in the array.
+          </td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SetGraphColumns # [# ...]</TD>
+          <td>
+            Sets the list of columns to be plotted in the next graphing command, numbered from 1.&nbsp; Columns after 
+            the first one will each be plotted versus the first column.</td>
+          </TR>
+       <TR>
+          <TD class="scriptcommand">SetGraphSymbolss # [# ...]</TD>
+          <td>
+            Sets a list of symbols to be substituted for the default ones in the next graphing
+             command&nbsp; These can be numbers from -1 to 19: open and
+             filled square (1 & 2), open and filled diamond (3 & 4), open and filled
+             triangle (5 & 6), X and + (7 & 8), open and filled circle (9 & 10),
+            open and filled inverted triangle (11 & 12), U (13), S (14), circle
+            with vertical line (15), small dot (18), and horizontal line (19).  In addition, 0 gives no symbol
+            and -1 shows the point number for each data value instead of a symbol. </td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SetGraphOptions opt [#] [opt] [#]...</TD>
+          <td>
+            This command can set multiple options by having a list of keywords, each one followed by
+            0, 1, or 2 values: <br />
+            ordinal &nbsp;&nbsp;Plot each data type or column versus each point's index in the data array 
+            (can be abbreviated to 'ord')<br />
+            connect &nbsp;&nbsp;Draw lines connecting successive data values (can be abbreviated 'con')<br />
+            color # &nbsp;&nbsp;Use colors for symbols, lines, and key label.&nbsp; If <B>#</B> is 0, the colors
+            will be used in their fixed order (starting with dark blue, dark red, dark green, and magenta, 
+            with black not occurring until the 8th color).  With a non-zero value of <B>#</B>, that curve will be
+            drawn in black instead of its default color.<br />
+            xlog # &nbsp;&nbsp;Take the log of the X values after adding the base value in <b>#</b> <br />
+            xsqrt # &nbsp;&nbsp;Take the log of the Y values after adding the base value in <b>#</b> <br />
+            ylog # &nbsp;&nbsp;Take the square root of the X values after adding the base value in <b>#</b> <br />
+            ysqrt # &nbsp;&nbsp;Take the square root of the Y values after adding the base value in <b>#</b> <br />
+            xrange #L #H &nbsp;&nbsp;Set the range of the X axis with low and high values given by
+             <b>#L</b> and <b>#H</b> <br />
+            yrange #L #H&nbsp;&nbsp;Set the range of the X axis with low and high values given by 
+            <b>#L</b> and <b>#H</b> <br />
+            Note that when taking the log or square root, the base value is used prevent negative numbers
+             as well as to control the relative compression of the axis at the high end.&nbsp; The numeric
+            labels on the axis correspond to values after, not before, this operation.
+          </td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SetGraphAxisLabel text</TD>
+          <td>
+            Sets the label for the X axis in the next graph.&nbsp;</td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SetGraphKeyLabel text</TD>
+          <td>
+            Sets one label to appear after a symbol in the key ion the right in the bext graph.&nbsp; This
+             command can be used multiple times, once for each type or column being graphed.</td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">CloseAllGraphs</TD>
+          <td>
+            This command will close all graph windows that are still open.&nbsp;</td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">GetLastTiltXYZToGraph</TD>
+          <td>
+            Stores the X/Y/Z values from the last tilt series in the graphing arrays, with tilt angles in
+            column 1 and X, Y, Z values in columns 2-4.
+          </td>
+          </TR>
           <TD class="scriptcommand"><A name="scale_matrix"></A><B>Scale Matrix Commands</B></TD>
           <td>These commands output the 4 elements of the various scale matrices used to
             convert between 4 different kinds of positional coordinates:<br /> &nbsp; camera coordinates
@@ -4566,7 +4698,8 @@
             Y per X, and Y per Y in that order.&nbsp; The coordinate transformation is <br />
             Xout = Xin * XperX + Yin * XperY <br />
             Yout = Xin * YperX + Yin * YperY <br />
-            All commands return a matrix for the current camera where relevant, and all require an entry <b>#M</b> for the magnification index, or 0 to use the current
+            All commands return a matrix for the current camera where relevant, and all require an entry
+             <b>#M</b> for the magnification index, or 0 to use the current
             index.&nbsp; Variables to assign to can be entered after that.
           </td>
         </TR>
@@ -4725,7 +4858,8 @@
          <TR>
           <TD class="scriptcommand">RunProcess command</TD>
           <TD>Runs the program given by <b>command</b> with 
-            the argument list defined previously with the 'NextProcessArgs' command, waits for the program to finish,
+            the argument list defined previously with the 'NextProcessArgs' command and input possibly
+             defined previously with 'PipeToNextProcess', waits for the program to finish,
              and sets <i>reportedValue1</i> 
             with its exit status.&nbsp; See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a>
             for a description of the rules governing this command.&nbsp; Failure to start the program generates
@@ -4753,11 +4887,19 @@
           used up by running the process and must be defined with this command each time a
           process is run. </TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">PipeToNextProcess var</TD>
+          <TD>Sets an input string to be piped into the next process run with 'CreateProcess' or
+             'RunExternalTool', which should be more efficient than writing the input to a file
+             and redirecting input from it.&nbsp; The variable <b>var</b> would typically contain
+             an array of strings or numeric values, one per line of input.</TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">RunExternalTool #N|name</TD>
           <TD>Runs an external tool shown in the Tools menu, where <b>#N</b> is either the number of
             the tool in the Tools menu, numbered from 1, or <b>name</b> is the full name of the tool in the menu.
-            If arguments were set with 'NextProcessArgs', they will be included when running the command.</TD>
+            If arguments were set with 'NextProcessArgs', or input to be piped in set with 
+            'PipeToNextProcess', they will be included when running the command.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ExternalToolArgPlace #</TD>

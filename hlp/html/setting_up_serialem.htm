@@ -83,8 +83,11 @@
       <P><A name="setting_up_serialem"></A><B><FONT size="3">Setting Up SerialEM</FONT></B></P>
       <P><A href="#setup_install">Program Installation</A>
         <BR>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#packagesContents">The Packages
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#packagesContents">The Basic Packages
           and their Contents</a>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#addedPackages">Additional Packages for GPU
+          and Python Support, and for Displaying Graphs and Using Ctfplotter</a>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#pluginVersions">Versions of
           the DigitalMicrograph Plugin and Compatibility with Leginon</a>
@@ -226,7 +229,7 @@
         <A href="#using_film_setup">Using Film</A><BR>
         <A href="#package_files">Files in a SerialEM Install Package</A></P>
       <P><A name="setup_install"></A><B>Program Installation</B></P>
-    <P><a name="packagesContents"><i>The Packages and their Contents</i></a>.&nbsp;
+    <P><a name="packagesContents"><i>The Basic Packages and their Contents</i></a>.&nbsp;
       The files needed to run SerialEM consist of executable programs and libraries,
       which are distributed in a package SerialEM_4-x-x.exe, and configuration and
       data files, some of which are obtained from a 'framework' package.&nbsp; The
@@ -268,14 +271,48 @@
         See this section also for instructions on modifications needed under Windows 7/Server
         2008
         and with GMS 2.x.</P>
-    <P>Depending on your situation, you may need one or two other packages.&nbsp; If
+      <p><a name="addedPackages"><I>Additional Packages for GPU
+          and Python Support, and for Displaying Graphs and Using Ctfplotter</I></a>.&nbsp;
+    Depending on your situation, you may need one or more other packages.</P>
+      <ul>
+        <li>&nbsp;If
       you are running a K2 or K3 camera and SerialEM is either running on a different
       computer or is a 32-bit version on the K2/3 computer, then you need a
       Shrmemframe package specific to your version of GMS.&nbsp; Simply run this
       package on the K2/3 computer and it will place the needed files in
-      C:\ProgramData\Gatan\Plugins.  To do frame alignment with a GPU for any camera,
+      C:\ProgramData\Gatan\Plugins.  </li>
+        <li>To do frame alignment with a GPU for any camera,
       you will need a FrameGPU package.&nbsp;  See <a href="#using_gpu">Setting Up to
-      Use a GPU for Frame Alignment</a>.</P>
+      Use a GPU for Frame Alignment</a>.</li>
+        <li>To use Python with SerialEM, you will need a PythonModules package; see
+          <a href="about_scripts.htm#pythonInstall">Installation Options</a> in the 
+          scripting guide.</li>
+        <li>SerialEM can display graphs with the Genhstplt program in IMOD, and do CTF 
+          fitting with the Ctfplotter program, which performs better than the built-in 
+          Ctffind module on tilted images, especially when finding astigmatism.&nbsp; A 
+          full IMOD installation can be done to provide these programs, but an easier and 
+          more lightweight option is to use a standalone 3dmod package, which simply 
+          unpacks in 'C:\Program Files\3dmod' by default, but can be unzipped elsewhere if necessary.&nbsp; 
+          To use both of these programs, you need an installation of IMOD 4.12.32 or higher (available from the 
+          <a href = "http://bio3d.colorado.edu/imod/download.html">IMOD download page</a>), or a standalone
+          3dmod package based on this version or higher, available at
+            <a href = "http://bio3d.colorado.edu/ftp/Windows3dmod">http://bio3d.colorado.edu/ftp/Windows3dmod</a>.
+          For just graphing, you can use an older installation of IMOD, but it will take 
+          an extra second to display a graph.<br />
+            In order for SerialEM to run these programs, the directory containing the 
+          executables must be either on the system path, in one of three standard 
+          locations, or provided with
+             the 'CtfplotterPath' property.&nbsp; Specifically, if 'CtfplotterPath' is not set, the program
+             will check for 'IMOD\bin' and '3dmod' on the system path, and if it finds one 
+          of these locations, it assumes that
+            is sufficient and will try to run the program with no path specified.&nbsp; If not, 
+          it then checks for 'C:\Program Files\3dmod', 'C:\Program Files\IMOD\bin', and 
+          'C:\Cygwin\usr\local\IMOD\bin', using the first one that it finds 
+            as the path (although it rejects 'C:\Program Files\3dmod' if it does not contain 'genhstplt.exe'). 
+          If the programs are in a non-standard location and not on the path, you need to 
+          set the property 'CtfplotterPath' with the path to the executables.<br />
+        </li>
+      </ul>
     <P><a name="pluginVersions"><i>Versions of the DigitalMicrograph Plugin and Compatibility with Leginon</i></a>.&nbsp;
       The version number on the SEMCCD plugin does not need to match the GMS version
       exactly; the versions provided in the package are compatible with the full range

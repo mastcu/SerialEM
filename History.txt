@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/28/22: Added ability to pipe input to a program run with RunProcess,
+CreateProcess, or RunExternalTool.
+
+10/27/22: Added false color display with F12 as a hot key and replaced the
+Autozoom button in the Image Display panel with this.
+
+10/27/22: Added script commands for drawing graphs with genhstplt in IMOD.
+
+10/27/22: Added script command to computer ice thickness from energy-
+filtered/unfiltered pair of images.
+
 10/23/22: Automatically set the file number of the first extra Record output
 file when running batch tilt series.
 

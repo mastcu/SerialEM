@@ -33,13 +33,17 @@ private:
   bool mDidAutotune;
   float mLastStartPhase;
   BOOL mAllowWindow;
+  bool mCheckedForIMOD;
+  std::vector<HANDLE> mGraphProcessHandles;
+  std::vector<HANDLE> mGraphThreadHandles;
+
 public:
   void AddTool(CString &title);
   int AddCommand(int index, CString &command);
   int AddArgString(int index, CString &argString);
-  int RunToolCommand(CString &title, CString extraArgs, int extraPlace);
+  int RunToolCommand(CString &title, CString extraArgs, int extraPlace, CString inputStr);
   int RunToolCommand(int index);
-  int RunCreateProcess(CString &command, CString argString, bool leaveHandles);
+  int RunCreateProcess(CString &command, CString argString, bool leaveHandles, CString inputString);
   void CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile);
   void AddMenuItems();
   void SubstituteAndQuote(CString &argString, const char *keyword, CString &replacement,
@@ -50,5 +54,15 @@ public:
     int resolTune, float cropPixel, float fitStart, float fitEnd, CString &command);
   int ReadCtfplotterResults(float &defocus, float &astig, float &angle, float &phase,
     int &ifAstigPhase, float &fitFreq, float &CCC, CString &results, CString &errString);
+  int StartGraph(std::vector<FloatVec> &values, IntVec &types, IntVec typeList, IntVec columnList, 
+    IntVec symbolList, CString &axisLabel,
+    std::vector<std::string> &keys, CString &errString, bool connect, int ordinals, int colors, int xlog,
+    float xbase, int ylog, float ybase, float xmin = EXTRA_NO_VALUE, float xmax = EXTRA_NO_VALUE,
+    float ymin = EXTRA_NO_VALUE, float ymax = EXTRA_NO_VALUE);
+  void CloseAllGraphs();
+  bool CheckIfGraphsOpen();
+  void AddSingleValueLine(CString &input, int value);
+  void CheckForIMODPath();
+
 };
 

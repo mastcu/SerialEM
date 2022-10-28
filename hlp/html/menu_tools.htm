@@ -58,7 +58,8 @@
       filename yourself to 
       prevent quotes from being in the wrong place.</p>
     <p>
-      <strong>Optional redirection of input from a file or output to a file</strong></p>
+      <strong>Optional redirection of input from a file, output to a file, or input 
+      from a pipe</strong></p>
     <p>
       The standard output from the command can be written to a file by ending the 
       arguments with &#39;&gt; filename&#39;; standard error and output can be written together 
@@ -67,8 +68,12 @@
       must be placed at the end of the arguments, but before redirection of standard 
       out if any.&nbsp; These redirections are implemented by SerialEM 
       connecting the command output to the output file, not by running in a shell, so 
-      no other standard piping or redirection is allowed here, unlike with the 
-      &#39;RunInShell script&#39; command.</p>
+      no other standard piping or redirection is allowed in the command, unlike with the 
+      &#39;RunInShell script&#39; command.&nbsp; However, it is possible to pipe input 
+      to a process started with &#39;RunProcess&#39;, &#39;CreateProcess&#39;, or &#39;RunExternalTool&#39; 
+      instead of redirecting it from a file, using &#39;PipeToNextProcess&#39; to set the 
+      input strings from an array variable.&nbsp; In this case, the argument string 
+      may not contain a &#39;&lt;&#39; for input redirection.</p>
     <p>
       <b>Examples</b></p>
       <pre>ExternalTool Open Mdoc File

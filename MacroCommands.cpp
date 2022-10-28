@@ -2486,7 +2486,7 @@ int CMacCmd::CloseMultiShotFiles(void)
 // SetCustomHoleShifts
 int CMacCmd::SetCustomHoleShifts(void)
 {
-  int index, ix0, ix1;
+  int index;
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
   Variable *yvar, *xvar = LookupVariable(mItem1upper, index);
   if (!xvar)
@@ -2507,16 +2507,8 @@ int CMacCmd::SetCustomHoleShifts(void)
     ABORT_LINE("The magnification index is out of range in line:\n\n");
   if (!mItemEmpty[4] && fabs(mItemFlt[4]) > mScope->GetMaxTiltAngle())
     ABORT_LINE("The tilt angle is out of range in line:\n\n");
-  msParams->customHoleX.clear();
-  msParams->customHoleY.clear();
-  for (index = 0; index < xvar->numElements; index++) {
-    FindValueAtIndex(xvar->value, index + 1, ix0, ix1);
-    mStrCopy = xvar->value.Mid(ix0, ix1 - ix0);
-    msParams->customHoleX.push_back((float)atof((LPCTSTR)mStrCopy));
-    FindValueAtIndex(yvar->value, index + 1, ix0, ix1);
-    mStrCopy = yvar->value.Mid(ix0, ix1 - ix0);
-    msParams->customHoleY.push_back((float)atof((LPCTSTR)mStrCopy));
-  }
+  FillVectorFromArrayVariable(&msParams->customHoleX, NULL, xvar);
+  FillVectorFromArrayVariable(&msParams->customHoleY, NULL, yvar);
   if (!mItemEmpty[3])
     msParams->customMagIndex = mItemInt[3];
   if (!mItemEmpty[4])
@@ -6189,24 +6181,33 @@ int CMacCmd::FilterImage(void)
   return 0;
 }
 
-// AddImages, SubtractImages, MultiplyImages, DivideImages
+// AddImages, SubtractImages, MultiplyImages, DivideImages, ComputeIceThickness
 int CMacCmd::CombineImages(void)
 {
   CString report;
-  int index, index2, ix0, ix1;
+  int index, index2, proc, outInd;
 
   if (ConvertBufferLetter(mStrItems[1], -1, true, index, report) ||
     ConvertBufferLetter(mStrItems[2], -1, true, index2, report) ||
-    ConvertBufferLetter(mStrItems[3], 0, false, ix1, report))
+    ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
     ABORT_LINE(report);
-  ix0 = PROC_ADD_IMAGES;
+  proc = PROC_ADD_IMAGES;
   if (CMD_IS(SUBTRACTIMAGES))
-    ix0 = PROC_SUBTRACT_IMAGES;
+    proc = PROC_SUBTRACT_IMAGES;
   if (CMD_IS(MULTIPLYIMAGES))
-    ix0 = PROC_MULTIPLY_IMAGES;
+    proc = PROC_MULTIPLY_IMAGES;
   if (CMD_IS(DIVIDEIMAGES))
-    ix0 = PROC_DIVIDE_IMAGES;
-  if (mProcessImage->CombineImages(index, index2, ix1, ix0))
+    proc = PROC_DIVIDE_IMAGES;
+  if (CMD_IS(COMPUTEICETHICKNESS)) {
+    proc = PROC_COMPUTE_THICKNESS;
+    if (!mItemEmpty[4]) {
+      if (mItemFlt[4] <= 0.)
+        ABORT_LINE("Thickness coefficient is not positive in line:\n\n");
+      mProcessImage->SetNextThicknessCoeff(mItemFlt[4]);
+    } else if (mProcessImage->GetThicknessCoefficient() <= 0.)
+      ABORT_LINE("No thickness coefficient is set in properties for line:\n\n");
+  }
+  if (mProcessImage->CombineImages(index, index2, outInd, proc))
     ABORT_LINE("Failed to combine images for line:\n\n");
   return 0;
 }
@@ -6467,7 +6468,7 @@ int CMacCmd::Ctfplotter(void)
     mItemFlt[2], mItemFlt[3], astigPhase, phase, resolOrTune, cropPixel, fitStart, 
     fitEnd, mEnteredName))
     ABORT_LINE(report + " in line:\n\n");
-  mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true);
+  mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""));
   mRanExtProcess = true;
   mRanCtfplotter = true;
   return 0;
@@ -6488,6 +6489,165 @@ int CMacCmd::ReportCtplotterTuning(void)
       " - %.3f/pixel", resol, crop, fitStart, fitEnd);
     SetReportedValues(&mStrItems[1], resol, crop, fitStart, fitEnd);
   }
+  return 0;
+}
+
+// GraphValuesInArrays, GraphPreStoredValues
+int CMacCmd::GraphValuesInArrays(void)
+{
+  bool stored = CMD_IS(GRAPHPRESTOREDVALUES);
+  bool ifTypes = mItemInt[1] != 0;
+  int index = 2, ind, numCol = 0;
+  int numToGraph = (int)mGraphColumns.size();
+  IntVec dummy;
+  Variable *var;
+  CString errString;
+
+  if (!numToGraph) {
+    if (stored) {
+      numToGraph = (int)(mStoredGraphValues.size());
+    } else {
+      for (ind = index; ind < MAX_MACRO_TOKENS; ind++) {
+        if (mItemEmpty[index])
+          break;
+        numToGraph++;
+      }
+    }
+  }
+
+  if (ifTypes && stored && !mStoredGraphTypes.size())
+    ABORT_LINE("No prestored type identifiers were saved for graphing with in line:\n\n");
+  if (stored && !mStoredGraphValues.size())
+    ABORT_LINE("No prestored values were saved for graphing in line:\n\n");
+  if (ifTypes && numToGraph > 2 - mGraphVsOrdinals)
+    ABORT_LINE("There are too many columns of values for graphing by type in line:\n\n");
+  if (!stored) {
+    mStoredGraphTypes.clear();
+    mStoredGraphValues.clear();
+    for (; index < MAX_MACRO_TOKENS; index++) {
+      if (mItemEmpty[index])
+        break;
+      var = LookupVariable(mStrItems[index], ind);
+      if (!var)
+        ABORT_LINE("Variable \"" + mStrItems[index] + "\" is not defined for line:\n\n");
+
+      if (ifTypes && index == 2) {
+        FillVectorFromArrayVariable(NULL, &mStoredGraphTypes, var);
+      } else {
+        mStoredGraphValues.resize(numCol + 1);
+        FillVectorFromArrayVariable(&mStoredGraphValues[numCol++], NULL, var);
+      }
+    }
+  }
+  ind = mWinApp->mExternalTools->StartGraph(mStoredGraphValues, 
+    ifTypes ? mStoredGraphTypes : dummy, mGraphTypeList, mGraphColumns, mGraphSymbols, 
+    mGraphAxisLabel, mGraphKeys, errString, mConnectGraph,
+    mGraphVsOrdinals, mGraphColorOpt, mGraphXlogSqrt, mGraphXlogBase, mGraphYlogSqrt, 
+    mGraphYlogBase, mGraphXmin, mGraphXmax, mGraphYmin, mGraphYmax);
+  if (ind) {
+    if (!errString.IsEmpty())
+      ABORT_LINE(errString + " in line\n\n");
+    AbortMacro();
+  }
+  ClearGraphVariables();
+  return ind;
+}
+
+// SetGraphAxisLabel
+int CMacCmd::SetGraphAxisLabel(void)
+{
+  SubstituteLineStripItems(mStrLine, 1, mGraphAxisLabel);
+  return 0;
+}
+
+// SetGraphKeyLabel
+int CMacCmd::SetGraphKeyLabel(void)
+{
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  mGraphKeys.push_back((LPCTSTR)mStrCopy);
+  return 0;
+}
+
+// SetGraphTypes
+int CMacCmd::SetGraphTypes(void)
+{
+  SetGraphListVec(mGraphTypeList);
+  return 0;
+}
+
+// SetGraphColumns
+int CMacCmd::SetGraphColumns(void)
+{
+  SetGraphListVec(mGraphColumns);
+  return 0;
+}
+
+// SetGraphSymbols
+int CMacCmd::SetGraphSymbols(void)
+{
+  SetGraphListVec(mGraphSymbols);
+  return 0;
+}
+
+// SetGraphOptions
+int CMacCmd::SetGraphOptions(void)
+{
+  int ind;
+  for (ind = 1; ind < MAX_MACRO_TOKENS; ind++) {
+    if (mItemEmpty[ind])
+      break;
+    if (mStrItems[ind].Find("con") == 0) {
+      mConnectGraph = true;
+    } else if (mStrItems[ind].Find("ord") == 0) {
+      mGraphVsOrdinals = true;
+    } else if (mStrItems[ind].Find("color") == 0) {
+      if (mItemEmpty[ind + 1])
+        ABORT_LINE("A value must be entered after \"" + mStrItems[ind] + 
+          "\" in line:\n\n");
+      mGraphColorOpt = mItemInt[++ind];
+    } else if (mStrItems[ind] == "xsqrt" || mStrItems[ind] == "xlog") {
+      if (mItemEmpty[ind + 1])
+        ABORT_LINE("A base value to add must be entered after \"" + mStrItems[ind] +
+          "\" in line:\n\n");
+      mGraphXlogSqrt = mStrItems[ind++] == "xsqrt" ? 2 : 1;
+      mGraphXlogBase = mItemFlt[ind];
+    } else if (mStrItems[ind] == "ysqrt" || mStrItems[ind] == "ylog") {
+      if (mItemEmpty[ind + 1])
+        ABORT_LINE("A base value to add must be entered after \"" + mStrItems[ind] +
+          "\" in line:\n\n");
+      mGraphYlogSqrt = mStrItems[ind++] == "ysqrt" ? 2 : 1;
+      mGraphYlogBase = mItemFlt[ind];
+    } else if (mStrItems[ind].Find("xran") == 0 || mStrItems[ind].Find("yran") == 0) {
+      if (mItemEmpty[ind + 2])
+        ABORT_LINE("Min and max values must be entered after \"" + mStrItems[ind] +
+          "\" in line:\n\n");
+      if (mStrItems[ind].Find("xran") == 0) {
+        mGraphXmin = mItemFlt[ind + 1];
+        mGraphXmax = mItemFlt[ind + 2];
+      } else {
+        mGraphYmin = mItemFlt[ind + 1];
+        mGraphYmax = mItemFlt[ind + 2];
+      }
+      ind += 2;
+    } else {
+      ABORT_LINE("Unrecognized graphing option \"" + mStrItems[ind] + "\" in line:\n\n");
+    }
+  }
+  return 0;
+}
+
+// CloseAllGraphs
+int CMacCmd::CloseAllGraphs(void)
+{
+  mWinApp->mExternalTools->CloseAllGraphs();
+  return 0;
+}
+
+// GetLastTiltXYZToGraph
+int CMacCmd::GetLastTiltXYZToGraph(void)
+{
+  if (mWinApp->mTSController->StoreXYZForGraphing())
+    ABORT_LINE("There are no X/Y/Z values from a tilt series available for line:\n\n");
   return 0;
 }
 
@@ -6944,6 +7104,19 @@ int CMacCmd::ListAllCalibrations(void)
   mShiftManager->ReportFallbackRotations(false);
   mShiftManager->CheckStageToCamConsistency(8.f, 0.08f, true);
   mWinApp->mMenuTargets.OnListFocusMagCals();
+  mDeferLogUpdates = saveDefer;
+  if (!mDeferLogUpdates && mWinApp->mLogWindow)
+    mWinApp->mLogWindow->FlushDeferredLines();
+  return 0;
+}
+
+// ListISVectorsToGraph
+int CMacCmd::ListISVectorsToGraph(void)
+{
+  bool saveDefer = mDeferLogUpdates;
+  mDeferLogUpdates = true;
+  mWinApp->mMenuTargets.SaveNextISVectorsForGraph(mItemInt[2] - 1, mItemInt[3]);
+  mWinApp->mMenuTargets.DoListISVectors(mItemInt[1] != 0);
   mDeferLogUpdates = saveDefer;
   if (!mDeferLogUpdates && mWinApp->mLogWindow)
     mWinApp->mLogWindow->FlushDeferredLines();
@@ -10480,8 +10653,11 @@ int CMacCmd::RunInShell(void)
 int CMacCmd::RunProcess(void)
 {
   SubstituteLineStripItems(mStrLine, 1, mEnteredName);
-  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, mNextProcessArgs, true))
+  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, mNextProcessArgs, true, 
+    mInputToNextProcess))
     ABORT_LINE("Error creating process for line:\n\n");
+  mNextProcessArgs = "";
+  mInputToNextProcess = "";
   mRanExtProcess = true;
   return 0;
 }
@@ -10493,6 +10669,18 @@ int CMacCmd::NextProcessArgs(void)
   return 0;
 }
 
+// PipeToNextProcess
+int CMacCmd::PipeToNextProcess(void)
+{
+  int ind;
+  Variable *var = LookupVariable(mStrItems[1], ind);
+  if (!var)
+    ABORT_LINE("variable is not defined for line:\n\n");
+  mInputToNextProcess = var->value;
+  mInputToNextProcess.Replace("\\n", "\\r\\n");
+  mInputToNextProcess + "\\r\\n";
+}
+
 #pragma push_macro("CreateProcess")
 #undef CreateProcess
 
@@ -10502,8 +10690,10 @@ int CMacCmd::CreateProcess(void)
   int index;
 
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs, false);
+  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs, false, 
+    mInputToNextProcess);
   mNextProcessArgs = "";
+  mInputToNextProcess = "";
   if (index)
     ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
   return 0;
@@ -10524,8 +10714,9 @@ int CMacCmd::RunExternalTool(void)
 
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   index = mWinApp->mExternalTools->RunToolCommand(mStrCopy, mNextProcessArgs,
-    mRunToolArgPlacement);
+    mRunToolArgPlacement, mInputToNextProcess);
   mNextProcessArgs = "";
+  mInputToNextProcess = "";
   if (index)
     ABORT_LINE("Script aborted due to failure to run command for line:\n\n");
   return 0;
