@@ -3409,7 +3409,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   // Run the fit and report results
   if (!err && ctffind(params, spectrum, params.box_size + 2, results_array, NULL,
                  NULL, NULL, numPoints, lastBinFreq)) {
-    mess.Format("Ctffind: defocus: %.3f,  astig: %.3f um,  angle: %.1f,  ",  
+    mess.Format("Ctffind: defocus: %.3f um,  astig: %.3f um,  angle: %.1f,  ",  
       -(results_array[0] + results_array[1]) / 20000., 
       (results_array[0] - results_array[1]) / 10000., results_array[2]);
     if (params.find_additional_phase_shift) {
