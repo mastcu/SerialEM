@@ -15,6 +15,7 @@
 #include "SerialEMView.h"
 #include ".\MenuTargets.h"
 #include "MacroSelector.h"
+#include "MacroProcessor.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "MapDrawItem.h"
@@ -67,6 +68,7 @@ CMenuTargets::CMenuTargets()
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mNavigator = NULL;
+  mCamForNextVectorSave = -1;
 }
 
 CMenuTargets::~CMenuTargets()
@@ -1445,9 +1447,19 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
   MagTable *magTab = mWinApp->GetMagTable();
   ScaleMat mat, rot;
   int iCam, mag, lowestMicro, limlo, limhi, numRanges, range;
+  int camStart = 0, camEnd = numCam;
   double xvec, yvec, xang, yang, pixel, rough, rotation, calRot;
+  std::vector<FloatVec> *graphValues = mWinApp->mMacroProcessor->GetStoredGraphValues();
+  if (mCamForNextVectorSave >= 0) {
+    B3DCLAMP(mCamForNextVectorSave, 0, numCam - 1);
+    graphValues->clear();
+    B3DCLAMP(mWhichNextVectorSave, 1, 3);
+    graphValues->resize(mWhichNextVectorSave > 2 ? 5 : 3);
+    camStart = mCamForNextVectorSave;
+    camEnd = camStart + 1;
+  }
 
-  for (int actCam = 0; actCam < numCam; actCam++) {
+  for (int actCam = camStart; actCam < camEnd; actCam++) {
     iCam = active[actCam];
     str.Format("\r\nImage shift calibration vectors for %s  (using %s pixel sizes)",
       camP[iCam].name, useCalPixel ? "calibrated" : "mag-derived");
@@ -1496,10 +1508,22 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
         yang = atan2(mat.xpy, mat.ypy) / DTOR;
         str.Format("  %2d %7d   %10.3f     %10.3f   %8.1f    %8.1f", 
           i, mag, xvec, yvec, xang, yang);
+        if (mCamForNextVectorSave == actCam) {
+          graphValues->at(0).push_back((float)i);
+          if (mWhichNextVectorSave & 1) {
+            graphValues->at(1).push_back((float)xvec);
+            graphValues->at(2).push_back((float)yvec);
+          }
+          if (mWhichNextVectorSave & 2) {
+            graphValues->at(mWhichNextVectorSave == 2 ? 1 : 3).push_back((float)xang);
+            graphValues->at(mWhichNextVectorSave == 2 ? 2 : 4).push_back((float)yang);
+          }
+        }
         mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
       }
     }
   }
+  mCamForNextVectorSave = -1;
 }
 
 // List specimen to stage matrices for all stage calibrations

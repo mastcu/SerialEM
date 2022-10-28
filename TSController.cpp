@@ -7181,6 +7181,23 @@ void CTSController::WriteTiltXYZFile(CString *inFile)
     delete cFile;
 }
 
+// Load the Tilt X/Y/Z values into the graphing arrays in scripting
+int CTSController::StoreXYZForGraphing()
+{
+  std::vector<FloatVec> *vecs = mWinApp->mMacroProcessor->GetStoredGraphValues();
+  if (mTiltIndex <= 0)
+    return 1;
+  vecs->clear();
+  vecs->resize(4);
+  for (int ind = 0; ind < mTiltIndex; ind++) {
+    vecs->at(0).push_back(mTiltAngles[ind]);
+    vecs->at(1).push_back(mSpecimenX[ind]);
+    vecs->at(2).push_back(mSpecimenY[ind]);
+    vecs->at(3).push_back(mSpecimenZ[ind]);
+  }
+  return 0;
+}
+
 // Compute factor for changing exposure/intensity by cosine-power, taking the base angle
 // into account
 double CTSController::CosineIntensityChangeFac(double fromAngle, double toAngle)

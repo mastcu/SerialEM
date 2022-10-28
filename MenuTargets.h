@@ -174,6 +174,9 @@ public:
   int SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2, int &value);
   void DoListStageCals();
   void DoListISVectors(BOOL useCalPixel);
+  void SaveNextISVectorsForGraph(int inCam, int whichSave) {
+    mCamForNextVectorSave = inCam; mWhichNextVectorSave = whichSave;
+  };
 
 private:
   CSerialEMApp *mWinApp;
@@ -184,6 +187,9 @@ private:
   CNavHelper *mNavHelper;
   CString mFlybackSet;
   CScreenShotDialog* m_pDlgScreenShot;
+  int mCamForNextVectorSave;
+  int mWhichNextVectorSave;
+
 public:
   afx_msg void OnNavigatorChangeregistration();
   afx_msg void OnUpdateNavigatorChangeregistration(CCmdUI *pCmdUI);

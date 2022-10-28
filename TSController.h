@@ -603,6 +603,7 @@ public:
   void ManageTerminateMenu(void);
   int LookupActionFromText(const char * actionName);
   void WriteTiltXYZFile(CString *inFile);
+  int StoreXYZForGraphing();
   void SetupExtraOverwriteSec(void);
   int CheckAndLimitAbsFocus(void);
   int StartGettingDeferredSum(int fromWhere);
