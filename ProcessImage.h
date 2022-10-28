@@ -15,7 +15,8 @@
 
 struct CtffindParams;
 class CCtffindParamDlg;
-enum { PROC_ADD_IMAGES, PROC_SUBTRACT_IMAGES, PROC_MULTIPLY_IMAGES, PROC_DIVIDE_IMAGES };
+enum { PROC_ADD_IMAGES, PROC_SUBTRACT_IMAGES, PROC_MULTIPLY_IMAGES, PROC_DIVIDE_IMAGES,
+PROC_COMPUTE_THICKNESS};
 
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage command target
@@ -90,6 +91,8 @@ public:
   GetSetMember(BOOL, CtfFixAstigForPhase);
   GetSetMember(float, FindBeamOutsideFrac);
   GetMember(float, BeamShiftFromImage);
+  GetSetMember(float, ThicknessCoefficient);
+  SetMember(float, NextThicknessCoeff);
 
 
 // Overrides
@@ -184,6 +187,8 @@ private:
   int mCtfMaxPhase;
   BOOL mCtfFindPhaseOnClick;
   BOOL mCtfFixAstigForPhase;
+  float mThicknessCoefficient;  // Coefficient in thickness calculation 
+  float mNextThicknessCoeff;    // Value to use on next call
 
 public:
   afx_msg void OnProcessMinmaxmean();

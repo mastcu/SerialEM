@@ -76,6 +76,8 @@ CProcessImage::CProcessImage()
   mKVTime = -1.;
   mFixedRingDefocus = 0.;
   mReductionFactor = 4.;
+  mThicknessCoefficient = 0.;
+  mNextThicknessCoeff = 0.;
   mCtffindOnClick = false;
   mCtfFitFocusRangeFac = 2.5f;
   mSlowerCtfFit = true;
@@ -502,8 +504,10 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
   KImage *image2 = mImBufs[bufNum2].mImage;
   int type1 = image1->getType();
   int type2 = image2->getType();
-  int nx, ny, ind;
+  int nx, ny, ind, delx, dely, ix, iy, ix2, iy2, ind2;
+  float shiftX1, shiftY1, shiftX2, shiftY2;
   float *inArray1, *inArray2, *outArray;
+  float coeff = (mNextThicknessCoeff > 0.) ? mNextThicknessCoeff : mThicknessCoefficient;
   if (!image1 || !image2)
     return -1;
   image1->getSize(nx, ny);
@@ -513,6 +517,10 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
   }
   if (image2->getWidth() != nx || image2->getHeight() != ny) {
     SEMMessageBox("You cannot do arithmetic operations on different-sized images");
+    return 1;
+  }
+  if (operation == PROC_COMPUTE_THICKNESS && coeff <= 0.) {
+    SEMMessageBox("There is no thickness coefficient set for computing thickness");
     return 1;
   }
 
@@ -571,6 +579,36 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
         outArray[ind] = inArray1[ind] / inArray2[ind];
       else
         outArray[ind] = 0.;
+    }
+    break;
+
+  case PROC_COMPUTE_THICKNESS:
+
+    // Unlike the others, this one takes image alignment into account
+    image1->getShifts(shiftX1, shiftY1);
+    image2->getShifts(shiftX2, shiftY2);
+    delx = B3DNINT(shiftX2 - shiftX1);
+    dely = B3DNINT(shiftY2 - shiftY1);
+    for (iy = 0; iy < ny; iy++) {
+      iy2 = iy - dely;
+      if (iy2 < 0 || iy2 >= ny) {
+        for (ix = 0; ix < nx; ix++)
+          outArray[ix + iy * nx] = 0.;
+      } else {
+        for (ix = 0; ix < nx; ix++) {
+          ind = iy * nx + ix;
+          ix2 = ix - delx;
+          if (ix2 < 0 || ix2 >= nx) {
+            outArray[ind] = 0.;
+          } else {
+            ind2 = iy2 * nx  + ix2;
+            if (inArray2[ind2] > 0. && inArray1[ind] > 0.)
+              outArray[ind] = coeff * logf(inArray1[ind] / inArray2[ind2]);
+            else
+              outArray[ind] = 0.;
+          }
+        }
+      }
     }
     break;
   }

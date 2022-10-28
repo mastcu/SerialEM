@@ -383,8 +383,10 @@
         </TR>
         <TR VALIGN="top">
           <TD>CtfplotterPath</TD>
-          <TD>Full path to Ctfplotter executable.&nbsp; Without this entry, the Ctfplotter 
-            script command cannot be run unless Ctfplotter is on the system path. </TD>
+          <TD>Full path to Ctfplotter executable.&nbsp; This entry should not be needed if
+            this directory is in a standard location or on the system path.&nbsp; See 
+            <a href="setting_up_serialem.htm#addedPackages">Additional Packages for GPU and Python 
+              Support, and for Displaying Graphs and Using Ctfplotter</a> for details</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GridLinesPerMM</TD>
@@ -395,6 +397,12 @@
           <TD>CatalaseAxisLengths</TD>
           <TD>Distances along the short and long axes to assume for catalase crystal when
             finding pixel size.&nbsp; The defaults are 6.85 and 8.75.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ThicknessCoefficient</TD>
+          <TD>Coefficient used for computing ice thickness from the log of the ratio 
+            of intensities in unfiltered and energy filtered images, such as by the 
+            'ComputeIceThickness' script command.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SMTPServer</TD>
