@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/28/22: Fixed adjustment of counting mode exposure time for Falcon 3, which
+was given the adjustment for Falcon 4 on 2/3/21 (In 4.0).
+
 10/28/22: Added ability to pipe input to a program run with RunProcess,
 CreateProcess, or RunExternalTool.
 

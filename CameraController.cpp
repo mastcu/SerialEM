@@ -3803,7 +3803,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
     // This formula is wrong for Falcon 3 but the timings are based on it
     // In a message about Falcon 4 TFS used the formula ceil(n * 32 / 31)
-    mTD.Exposure = mFalconReadoutInterval * B3DCHOICE(mParam->K2Type == FALCON3_TYPE,
+    mTD.Exposure = mFalconReadoutInterval * B3DCHOICE(mParam->FEItype == FALCON3_TYPE,
       (ind + ind / 32), (ind * 32 + 30) / 31);
     SEMTrace('E', "Adjusted exposure time for lost frames in counting from %.3f to %.3f",
       mExposure, mTD.Exposure);
