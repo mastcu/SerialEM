@@ -810,9 +810,9 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
   CFileStatus status;
   CString input, line, val, defKeyBase;
   int ind, col, xcol, numCurves, ifTypes = types.size() ? 1 : 0;
-  int numInColList, numCol = values.size();
+  int numInColList, numCol = (int)values.size();
   const char *dataName = "genhstplt.data";
-  int numData = values[0].size();
+  int numData = (int)values[0].size();
   const int numHues = 12;
   int hues[numHues][3] = {{0, 0, 139},{139, 0, 0},{0, 100, 0},{148, 0, 211},
   {255, 140, 0},{0, 128, 128},{128, 128, 0},{0, 0, 0},{255, 0, 0},{0, 128, 0},
@@ -888,7 +888,7 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
       columnList.push_back(1);
     columnList.push_back(2);
   }
-  numCurves = ifTypes ? typeList.size() : 1;
+  numCurves = ifTypes ? (int)typeList.size() : 1;
   if (numCurves > maxSymbols) {
     errString = "There are too many data columns for symbols available";
     return 1;
@@ -959,7 +959,7 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
   // Keys
   for (ind = 0; ind < B3DMIN((int)keys.size(), numCurves); ind++)
     input += CString(keys[ind].c_str()) + "\r\n";
-  for (ind = keys.size(); ind < numCurves; ind++) {
+  for (ind = (int)keys.size(); ind < numCurves; ind++) {
     line.Format("%s%d\r\n", (LPCTSTR)defKeyBase, B3DCHOICE(ifTypes, typeList[ind],
       columnList[ind + 1 - ordinals]));
     input += line;

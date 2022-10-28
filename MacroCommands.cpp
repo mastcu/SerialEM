@@ -10679,6 +10679,7 @@ int CMacCmd::PipeToNextProcess(void)
   mInputToNextProcess = var->value;
   mInputToNextProcess.Replace("\\n", "\\r\\n");
   mInputToNextProcess + "\\r\\n";
+  return 0;
 }
 
 #pragma push_macro("CreateProcess")
