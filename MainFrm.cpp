@@ -447,6 +447,12 @@ void CMainFrame::DoClose(bool afterScript)
       return;
     }
 
+    if (mWinApp->mExternalTools->CheckIfGraphsOpen()) {
+      if (AfxMessageBox("Do want to close all graphs before exiting?",
+        MB_QUESTION) == IDYES)
+        mWinApp->mExternalTools->CloseAllGraphs();
+    }
+
     if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
       (!mWinApp->GetExitWithUnsavedLog() &&
         mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
