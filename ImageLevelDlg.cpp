@@ -41,7 +41,7 @@ CImageLevelDlg::CImageLevelDlg(CWnd* pParent /*=NULL*/)
   mBrightSlider = 0;
   mContrastSlider = 0;
   m_editZoom = _T("");
-  m_bAutozoom = FALSE;
+  m_bFalseColor = FALSE;
   m_strWhite = _T("");
   m_strBlack = _T("");
   m_bCrosshairs = FALSE;
@@ -57,7 +57,7 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_TRUNCATION, m_butTruncation);
   DDX_Control(pDX, IDC_STATWHITE, m_statWhite);
   DDX_Control(pDX, IDC_AREAFRACTION, m_butAreaFrac);
-  DDX_Control(pDX, IDC_AUTOZOOM, m_butAutozoom);
+  DDX_Control(pDX, IDC_AUTOZOOM, m_butFalseColor);
   DDX_Control(pDX, IDC_STATZOOM, m_statZoom);
   DDX_Control(pDX, IDC_STATCON, m_statCon);
   DDX_Control(pDX, IDC_STATBLACK, m_statBlack);
@@ -72,7 +72,7 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Slider(pDX, IDC_CONTRAST, mContrastSlider);
   DDX_Text(pDX, IDC_EDITZOOM, m_editZoom);
   DDV_MaxChars(pDX, m_editZoom, 7);
-  DDX_Check(pDX, IDC_AUTOZOOM, m_bAutozoom);
+  DDX_Check(pDX, IDC_AUTOZOOM, m_bFalseColor);
   DDX_Check(pDX, IDC_ANTIALIAS, m_bAntialias);
   DDX_Check(pDX, IDC_SCALEBAR, m_bScaleBars);
   DDX_Check(pDX, IDC_CROSSHAIRS, m_bCrosshairs);
@@ -101,7 +101,7 @@ BEGIN_MESSAGE_MAP(CImageLevelDlg, CToolDlg)
   ON_WM_HSCROLL()
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINZOOM, OnDeltaposSpinzoom)
   ON_EN_KILLFOCUS(IDC_EDITZOOM, OnKillfocusEditzoom)
-  ON_BN_CLICKED(IDC_AUTOZOOM, OnAutozoom)
+  ON_BN_CLICKED(IDC_AUTOZOOM, OnFalseColor)
   ON_EN_KILLFOCUS(IDC_WHITE, OnKillfocusBW)
   //}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_SCALEBAR, OnScalebar)
@@ -166,7 +166,6 @@ BOOL CImageLevelDlg::OnInitDialog()
 // Set items that can be affected by external settings
 void CImageLevelDlg::UpdateSettings()
 {
-  m_bAutozoom = (mWinApp->mBufferManager->GetAutoZoom() != 0);
   m_bAntialias = (mWinApp->mBufferManager->GetAntialias() != 0);
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
@@ -370,6 +369,16 @@ void CImageLevelDlg::ToggleInvertContrast(void)
   OnInvertContrast();
 }
 
+// External call to toggle false color with a hot key
+void CImageLevelDlg::ToggleFalseColor(void)
+{
+  m_bFalseColor = !m_bFalseColor;
+  if (mInitialized)
+    UpdateData(false);
+  OnFalseColor();
+
+}
+
 // The spin control for zoom
 void CImageLevelDlg::OnDeltaposSpinzoom(NMHDR* pNMHDR, LRESULT* pResult) 
 {
@@ -408,11 +417,18 @@ void CImageLevelDlg::NewZoom(double inZoom)
   UpdateData(FALSE);
 }
 
-void CImageLevelDlg::OnAutozoom() 
+void CImageLevelDlg::OnFalseColor() 
 {
-  UpdateData(true);
+  if (mInitialized)
+    UpdateData(true);
+  if (mWinApp->mActiveView) {
+    EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+    if (imBuf->mImageScale) {
+      imBuf->mImageScale->mFalseColor = m_bFalseColor ? 1 : 0;
+      mWinApp->mActiveView->DrawImage();
+    }
+  }
   mWinApp->RestoreViewFocus();
-  mWinApp->mBufferManager->SetAutoZoom(m_bAutozoom ? 1 : 0);
 }
 
 void CImageLevelDlg::OnScalebar()

@@ -28,7 +28,7 @@ public:
 	virtual  void doneWithRect();	
 	virtual  void KPixMap::SetLut(int inType, int inMin, int inRange);
 	virtual  void setLevels(int inBrightness, int inContrast, int inInverted, 
-    float boostContrast, float mean);
+    int inFalseColor, float boostContrast, float mean);
 	virtual  void setLevels(KImageScale &inScale);
 	virtual  void setLevels();
 	virtual  BITMAPINFO *getBMInfo() { return mBMInfo; };	

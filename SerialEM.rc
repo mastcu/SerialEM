@@ -841,7 +841,7 @@ BEGIN
     EDITTEXT        IDC_EDITZOOM,82,54,24,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Extra info",IDC_SCALEBAR,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,80,38,10
     EDITTEXT        IDC_BLACK,82,8,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Autozoom",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,90,41,10
+    CONTROL         "False color",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,90,52,10
     EDITTEXT        IDC_WHITE,82,21,34,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Antialiasing",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,57,10
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
@@ -4929,7 +4929,7 @@ BEGIN
     IDC_CONFIRMDESTROY      "Ask for user confirmation before destroying these images"
     IDC_ALIGNONSAVE         "Align image being saved to image in autoalign buffer"
     IDC_CORRECTDRIFT        "Compensate for montaging errors by assuming they arise from drift"
-    IDC_AUTOZOOM            "Adjust zoom optimally when switching between images"
+    IDC_AUTOZOOM            "Toggle false color display of current image (hot key F12)"
 END
 
 STRINGTABLE

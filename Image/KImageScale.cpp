@@ -18,6 +18,7 @@ KImageScale::KImageScale()
   mBrightness  = 0;
   mContrast    = 0;
   mInverted    = 0;
+  mFalseColor  = 0;
   mBoostContrast = 1.;
   mMeanForBoost = 128.;
   
@@ -35,6 +36,7 @@ int KImageScale::operator==(KImageScale &inScale)
     inScale.mMinScale != mMinScale || inScale.mMaxScale != mMaxScale ||
     inScale.mSampleMin != mSampleMin || inScale.mSampleMax != mSampleMax ||
     inScale.mSampleMin != mSampleMin || inScale.mInverted != mInverted ||
+    inScale.mFalseColor != mFalseColor ||
     fabs(inScale.mBoostContrast - mBoostContrast) > 1.e-3 ||
     fabs(inScale.mMeanForBoost - mMeanForBoost) > 1.e-3)
     return false;

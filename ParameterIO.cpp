@@ -477,7 +477,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       else if (NAME_IS("AutofocusEucenAbsParams")) {
         mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
         itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
-      } else if (NAME_IS("AssessMultiplePeaksInAlign")) {
+      } else if (NAME_IS("AssessMultiplePeaksInAlign") || NAME_IS("AutoZoom")) {
       } 
 #define SET_TEST_SECT1
 #include "SettingsTests.h"

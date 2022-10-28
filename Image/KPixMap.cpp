@@ -263,7 +263,7 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
 // takes the incoming brightness and contrast, transfers them to the brightness and
 // contrast of THIS pixmap, and computes a ramp and sets the color table from it.
 void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted, 
-                        float boostContrast, float mean)
+  int inFalseColor, float boostContrast, float mean)
 {
   if (mHasScaled && (inBrightness == mScale.mBrightness) && 
     (inContrast == mScale.mContrast) && inInverted == mScale.mInverted && 
@@ -273,6 +273,7 @@ void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted,
   mScale.mBrightness = inBrightness;  // -127 to 128
   mScale.mContrast = inContrast;
   mScale.mInverted = inInverted;
+  mScale.mFalseColor = inFalseColor;
   mScale.mBoostContrast = boostContrast;
   mScale.mMeanForBoost = mean;
 
@@ -303,14 +304,29 @@ void KPixMap::setLevels()
 { 
   // Get the ramp from the image scale.
   unsigned int ramp[256];
+  unsigned char table[3][256];
+  int *rampData;
   mScale.DoRamp(ramp);
-  
-  // Copy the ramp to the BITMAPINFO ColorTable.
-  for(short i = 0; i < 256; i++){
-    mBMInfo->bmiColors[i].rgbRed = ramp[i];
-    mBMInfo->bmiColors[i].rgbGreen = ramp[i];
-    mBMInfo->bmiColors[i].rgbBlue = ramp[i];
-    mBMInfo->bmiColors[i].rgbReserved = 0;
+
+  if (mScale.mFalseColor) {
+    rampData = cmapStandardRamp();
+    cmapConvertRamp(rampData, table);
+    for (short i = 0; i < 256; i++) {
+      mBMInfo->bmiColors[i].rgbRed = table[0][ramp[i]];
+      mBMInfo->bmiColors[i].rgbGreen = table[1][ramp[i]];
+      mBMInfo->bmiColors[i].rgbBlue = table[2][ramp[i]];
+      mBMInfo->bmiColors[i].rgbReserved = 0;
+    }
+
+  } else {
+
+    // Copy the ramp to the BITMAPINFO ColorTable.
+    for (short i = 0; i < 256; i++) {
+      mBMInfo->bmiColors[i].rgbRed = ramp[i];
+      mBMInfo->bmiColors[i].rgbGreen = ramp[i];
+      mBMInfo->bmiColors[i].rgbBlue = ramp[i];
+      mBMInfo->bmiColors[i].rgbReserved = 0;
+    }
   }
 
   mHasScaled = true;  

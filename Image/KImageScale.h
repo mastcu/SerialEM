@@ -16,6 +16,7 @@ protected:
 	short mBrightness; // -127 to 128   
 	short mContrast;
   short mInverted;
+  short mFalseColor;
   float mBoostContrast;
   float mMeanForBoost;
 	
@@ -39,7 +40,9 @@ public:
 	virtual float GetSampleMax() {return mSampleMax;}
   virtual int GetBrightness() {return mBrightness;};
   virtual int GetContrast() {return mContrast;};
-  virtual int GetInverted() {return mInverted;};
+  virtual int GetInverted() { return mInverted; };
+  virtual short GetFalseColor() { return mFalseColor; };
+  void SetFalseColor(short inVal) { mFalseColor = inVal; };
 
 	unsigned char DoScale(int inValue);
   void SetMinMax(float inMin, float inMax) {mMinScale = inMin; mMaxScale = inMax;};

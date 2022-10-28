@@ -34,7 +34,7 @@ public:
 	CButton	m_butTruncation;
 	CStatic	m_statWhite;
 	CButton	m_butAreaFrac;
-	CButton	m_butAutozoom;
+	CButton	m_butFalseColor;
 	CStatic	m_statZoom;
 	CStatic	m_statTitle;
 	CStatic	m_statCon;
@@ -49,7 +49,7 @@ public:
 	int		mBrightSlider;
 	int		mContrastSlider;
 	CString	m_editZoom;
-	BOOL	m_bAutozoom;
+	BOOL	m_bFalseColor;
 	CString	m_strWhite;
 	CString	m_strBlack;
 	//}}AFX_DATA
@@ -75,7 +75,7 @@ protected:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnDeltaposSpinzoom(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnKillfocusEditzoom();
-	afx_msg void OnAutozoom();
+	afx_msg void OnFalseColor();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -102,6 +102,7 @@ public:
   afx_msg void OnInvertContrast();
   CButton m_butInvertCon;
   void ToggleInvertContrast(void);
+  void ToggleFalseColor(void);
   CSliderCtrl m_scBlack;
   int mBlackSlider;
   CSliderCtrl m_scWhite;

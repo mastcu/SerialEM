@@ -664,8 +664,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             boost = targetSD / filtSD;
       }
       pixMap->setLevels(imBuf->mImageScale->GetBrightness(), 
-        imBuf->mImageScale->GetContrast(), imBuf->mImageScale->GetInverted(), boost,
-        filtMean);
+        imBuf->mImageScale->GetContrast(), imBuf->mImageScale->GetInverted(), 
+        imBuf->mImageScale->GetFalseColor(), boost, filtMean);
       xSrc = 0;
       ySrc = 0;
       iDestWidth = tmpWidth;
@@ -2548,6 +2548,9 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     // Invert contrast
   } else if (nChar == VK_F11) {
     mWinApp->mImageLevel.ToggleInvertContrast();
+
+  } else if (nChar == VK_F12) {
+    mWinApp->mImageLevel.ToggleFalseColor();
 
     // Beam shift with shifted arrow keys; change increment with < or >
   } else if (mShiftPressed && nChar >= VK_LEFT && nChar <= VK_DOWN) {
