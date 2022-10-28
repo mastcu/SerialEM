@@ -132,6 +132,7 @@ public:
   void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
+  void ClearGraphVariables();
   int TaskBusy();
   void CleanupExternalProcess();
   void CheckAndSetupExternalControl(void);
@@ -180,6 +181,8 @@ public:
   bool GetAlignWholeTSOnly() { return DoingMacro() && mAlignWholeTSOnly; };
   bool SkipCheckingFrameAli() { return DoingMacro() && mSkipFrameAliCheck; };
   EMimageBuffer *ImBufForIndex(int ind) { return (ind >= 0 ? &mImBufs[ind] : &mFFTBufs[-1 - ind]); };
+  IntVec *GetStoredGraphTypes() { return &mStoredGraphTypes; };
+  std::vector<FloatVec> *GetStoredGraphValues() { return &mStoredGraphValues; };
   COneLineScript *mOneLineScript;
   static ScriptLangData mScrpLangData;         // Data structure for external scripting
   static ScriptLangPlugFuncs *mScrpLangFuncs;  // The functions of a scripting plugin
@@ -407,6 +410,25 @@ protected:
   float mCumulRecordDose;      // Cumulative Record dose for tilt series
   ImodImageFile *mShrMemFile;  // Shared memory file for a process
   DWORD mExtProcExitStatus;    // Exit status from external process run sychronously
+  IntVec mGraphTypeList;       // Entered type list for graphs
+  IntVec mGraphColumns;        // Columns to graph
+  IntVec mGraphSymbols;        // Symbol numbers
+  CString mGraphAxisLabel;     // Bottom axis  label
+  std::vector<std::string> mGraphKeys;   // Key labels
+  bool mConnectGraph;          // Flag to connect
+  int mGraphVsOrdinals;        // Flag to do ordinals
+  int mGraphColorOpt;          // Use colors, except black for given group #
+  int mGraphXlogSqrt;          // 1 or 2 for log/sqrt for X
+  float mGraphXlogBase;        // Base to add for log/sqrt
+  int mGraphYlogSqrt;
+  float mGraphYlogBase;
+  float mGraphXmin;            // MIn and max in X and Y
+  float mGraphXmax;
+  float mGraphYmin;
+  float mGraphYmax;
+  IntVec mStoredGraphTypes;    // Stored type data
+  std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
+  CString mInputToNextProcess; // Input to pipe in when running next process
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
@@ -507,6 +529,7 @@ public:
   void FindValueAtIndex(CString &value, int arrInd, int & beginInd, int & endInd);
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements,
     CString * errMess);
+  void FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, Variable *var);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
   static int CreateOnePipe(HANDLE *childRd, HANDLE *childWr, SECURITY_ATTRIBUTES *saAttr, bool setForWrite,
@@ -558,6 +581,7 @@ public:
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
   float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
   int GetPairedFloatArrays(int itemInd, float **xArray, float **yArray, int &numVals, CString & report);
+  void SetGraphListVec(IntVec &graphList);
   afx_msg void OnScriptLoadNewPackage();
   int LoadNewScriptPackage(CString &filename, bool saveCurrent);
   void UpdateAllForNewScripts(bool oneLinersToo);

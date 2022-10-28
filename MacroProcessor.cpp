@@ -1150,6 +1150,7 @@ void CMacroProcessor::Run(int which)
   mLogErrAction = LOG_IGNORE;
   mStartClock = GetTickCount();
   mOverwriteOK = false;
+  ClearGraphVariables();
   mVerbose = mInitialVerbose ? 1 : 0;
   if (external) {
     name = "External Script";
@@ -1164,6 +1165,27 @@ void CMacroProcessor::Run(int which)
   CloseFileForText(-1);
 
   RunOrResume();
+}
+
+// Clear these variables before a script or after starting a graph
+void CMacroProcessor::ClearGraphVariables()
+{
+  mGraphTypeList.clear();
+  mGraphColumns.clear();
+  mGraphSymbols.clear();
+  mGraphAxisLabel = "";
+  mGraphKeys.clear();
+  mConnectGraph = false;
+  mGraphVsOrdinals = 0;
+  mGraphColorOpt = -1;
+  mGraphXlogSqrt = 0;
+  mGraphXlogBase = 0.;
+  mGraphYlogSqrt = 0;
+  mGraphYlogBase = 0.;
+  mGraphXmin = EXTRA_NO_VALUE;
+  mGraphXmax = EXTRA_NO_VALUE;
+  mGraphYmin = EXTRA_NO_VALUE;
+  mGraphYmax = EXTRA_NO_VALUE;
 }
 
 // Do all the common initializations for running or restarting a macro
@@ -1196,6 +1218,7 @@ void CMacroProcessor::RunOrResume()
   mDeferLogUpdates = false;
   mCropXafterShot = -1;
   mNextProcessArgs = "";
+  mInputToNextProcess = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltYtoRestore[1] = EXTRA_NO_VALUE;
   mAstigXtoRestore[0] = mAstigXtoRestore[1] = EXTRA_NO_VALUE;
@@ -2521,6 +2544,37 @@ int CMacroProcessor::GetPairedFloatArrays(int itemInd, float **xArray, float **y
     }
   }
   return retVal;
+}
+
+// Get a float or integer vector from a 1D array
+void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, 
+  Variable *var)
+{
+  int index, ix0, ix1;
+  CString valStr;
+  float fval;
+  if (fvec)
+    fvec->clear();
+  for (index = 0; index < var->numElements; index++) {
+    FindValueAtIndex(var->value, index + 1, ix0, ix1);
+    valStr = var->value.Mid(ix0, ix1 - ix0);
+    fval = (float)atof((LPCTSTR)valStr);
+    if (fvec)
+      fvec->push_back(fval);
+    if (ivec)
+      ivec->push_back(B3DNINT(fval));
+  }
+}
+
+// Fill an integer vector from all values on command
+void CMacroProcessor::SetGraphListVec(IntVec &graphList)
+{
+  graphList.clear();
+  for (int ind = 1; ind < MAX_MACRO_TOKENS; ind++) {
+    if (mItemEmpty[ind])
+      return;
+    graphList.push_back(mItemInt[ind]);
+  }
 }
 
 // This checks for the array assignment delimiter being at both ends of the set of
@@ -4781,7 +4835,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     }
 
     // Create the child process.
-    bSuccess = CreateProcess(NULL,
+    bSuccess = CreateProcessA(NULL,
       cmdLine,       // command line
       &saAttr,          // process security attributes
       &saAttr,          // primary thread security attributes
@@ -4792,10 +4846,19 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       &siStartInfo,  // STARTUPINFO pointer
       &piProcInfo);  // receives PROCESS_INFORMATION
 
-                     // If an error occurs, exit the application.
+    // Close handles to the stdin and stdout pipes no longer needed by the child process
+    // If they are not explicitly closed, there is no way to recognize that the child 
+    // process has ended.
+    CloseHandle(hChildStd_OUT_Wr);
+    CloseHandle(hChildStd_ERR_Wr);
+    CloseHandle(hChildStd_IN_Rd);
+
     if (!bSuccess) {
       mScrpLangData.strItems[0] = "Error starting Python with this command: ";
       mScrpLangData.strItems[0] += cmdLine;
+      CloseHandle(hChildStd_IN_Wr);
+      CloseHandle(hChildStd_ERR_Rd);
+      CloseHandle(hChildStd_OUT_Rd);
       free(cmdLine);
       return 1;
     }
@@ -4805,14 +4868,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     CloseHandle(piProcInfo.hThread);
     mPyProcessHandle = piProcInfo.hProcess;
 
-    // Close handles to the stdin and stdout pipes no longer needed by the child process
-    // If they are not explicitly closed, there is no way to recognize that the child 
-    // process has ended.
-    CloseHandle(hChildStd_OUT_Wr);
-    CloseHandle(hChildStd_ERR_Wr);
-    CloseHandle(hChildStd_IN_Rd);
-
-    // People are getting error 5, access denied.  Tried: CREATE_SUSPENDED: it hung
+     // People are getting error 5, access denied.  Tried: CREATE_SUSPENDED: it hung
     //        BREAKAWAY_FROM_JOB  it couldn't run python
     //        &saAttr instead of NULL for the security attributes: no difference
     //
