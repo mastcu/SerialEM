@@ -1041,7 +1041,7 @@ void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
     comPath = (mCamera->GetComPathIsFramePath() ? mDirectory : 
       mCamera->GetAlignFramesComPath()) + '\\' + mRootname + ".pcm";
     err = WriteAlignComFile(mDirectory + "\\" + mRootname + ".mrc", comPath, 
-      mAliComParamInd, mUseGpuForAlign[1], false, mNx, mNy, 0);
+      mAliComParamInd, mUseGpuForAlign[1], false, mNx, mNy, 0, 0.);
   }
   if (saving && !(mUseFrameAlign && async))
     PrintfToLog("%d of %d frames were stacked successfully%s", mNumStacked, mNumFiles,
@@ -1736,7 +1736,7 @@ float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float fram
  * Write a com file for alignment with alignframes
  */
 int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faParamInd, 
-  int useGPU, bool ifMdoc, int frameX, int frameY, int EERsumming)
+  int useGPU, bool ifMdoc, int frameX, int frameY, int EERsumming, float pixelSize)
 {
   CString comStr, strTemp, aliHead, inputPath, relPath, outputRoot, outputExt, temp,temp2;
   CArray<FrameAliParams, FrameAliParams> *faParams = 
@@ -1753,6 +1753,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     fSuperFac = (float)superFac;
     frameX *= superFac;
     frameY *= superFac;
+    pixelSize /= superFac;
   }
   numAllVsAll = mCamera->NumAllVsAllFromFAparam(param, mNumStacked, groupSize, 
     refineIter, doSpline, numFilters, radius2);
@@ -1809,6 +1810,10 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     comStr += strTemp;
     mLastUseOfFalconRef = mWinApp->MinuteTimeStamp();
   }
+  if (pixelSize > 0.) {
+    strTemp.Format("PixelSize %f\n", pixelSize);
+    comStr += strTemp;
+  }
 
   if (param.alignSubset) {
     strTemp.Format("StartingEndingFrames %d %d\n", param.subsetStart,
@@ -1824,7 +1829,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   if (ifMdoc) {
     UtilSplitPath(inputFile, temp, temp2);
     temp = mLastFrameDir + '\\' + temp2;
-    if (CopyFile((LPCTSTR)inputFile, (LPCTSTR)temp, false))
+    if (!CopyFile((LPCTSTR)inputFile, (LPCTSTR)temp, false))
       return -1;
     inputFile = temp2;
   }

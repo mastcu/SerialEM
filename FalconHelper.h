@@ -167,7 +167,7 @@ public:
   void FinishFrameAlignment(int binning);
   void CleanupAndFinishAlign(bool saving, int async);
   int WriteAlignComFile(CString inputFile, CString comName, int faParamInd, int useGPU,
-    bool ifMdoc, int frameX, int frameY, int EERsumming);
+    bool ifMdoc, int frameX, int frameY, int EERsumming, float pixelSize);
   float AlignedSubsetExposure(ShortVec & summedFrameList, float frameTime, int subsetStart,
     int subsetEnd, int maxFrames = -1);
   int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 

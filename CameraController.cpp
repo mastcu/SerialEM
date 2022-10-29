@@ -2165,9 +2165,10 @@ int CCameraController::GetDeferredSum(void)
  */
 int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 {
-  CString mdocName, tempStr, comRoot;
+  CString mdocName, tempStr, comRoot, comDir, frameDir;
   int nameLen, textLen, stringSize, summing = 0, frameX, frameY;
   long retVal = 0;
+  float pixelSize = 0.;
   UINT numRead;
   CFile *file = NULL;
   CFileStatus status;
@@ -2200,27 +2201,45 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
   }
 
   // Set path and start working with mdoc file
-  if (mAlignFramesComPath.IsEmpty())
-    mAlignFramesComPath = mDirForK2Frames;
+  if (mAlignFramesComPath.IsEmpty()) {
+    if (mParam->canTakeFrames)
+      mAlignFramesComPath = mParam->dirForFrameSaving;
+    else if (mParam->FEItype)
+      mAlignFramesComPath = mDirForFalconFrames;
+    else
+      mAlignFramesComPath = mDirForK2Frames;
+  }
   if (mdocPath.IsEmpty())
     mdocPath = mWinApp->mStoreMRC->getAdocName();
   UtilSplitPath(mdocPath, tempStr, mdocName);
   UtilSplitExtension(mdocName, comRoot, tempStr);
-  if (!mParam->K2Type) {
 
-    // For Falcon, just call routine and leave
+  // For Falcon, just call routine and leave
+  if (!mParam->K2Type) {
+    UtilSplitPath(mLastLocalFramePath, frameDir, tempStr);
+    mFalconHelper->SetLastFrameDir(frameDir);
+    comDir = mAlignFramesComPath;
+    if (mComPathIsFramePath)
+      comDir = frameDir;
+
     mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
     if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
       summing = B3DNINT(conSet->frameTime / mFalconReadoutInterval);
+      if (mWinApp->mStoreMRC)
+        pixelSize = (float)(0.1 *mWinApp->mStoreMRC->GetPixelSpacing() / conSet->binning);
+    } else if (IS_FALCON2_3_4(mParam) && mWinApp->mStoreMRC) {
+      pixelSize = 0.1f * mWinApp->mStoreMRC->GetPixelSpacing();
     }
-    retVal = mFalconHelper->WriteAlignComFile(mdocPath, mAlignFramesComPath + 
-      '\\' + comRoot + ".pcm", conSet->faParamSetInd, 
-      mFalconHelper->GetUseGpuForAlign(1), true, frameX, frameY, summing);
+    retVal = mFalconHelper->WriteAlignComFile(mdocPath, comDir + '\\' + comRoot + ".pcm",
+      conSet->faParamSetInd, mFalconHelper->GetUseGpuForAlign(1), true, frameX, frameY,
+      summing, pixelSize);
     if (retVal) {
       tempStr = "The com file for aligning frames was not written:\r\n   ";
-      if (retVal < 0)
-        tempStr += "An error occurred copying the mdoc file to the frame location";
-      else
+      if (retVal < 0) {
+        frameDir.Format("An error (%d) occurred copying the mdoc file to the frame "
+          "location", GetLastError());
+        tempStr += frameDir;
+      } else
         tempStr += SEMCCDErrorMessage(retVal);
       SEMMessageBox(tempStr);
       return 1;
@@ -2316,6 +2335,7 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
   int err, frameX, frameY, summing = 0;
   CString dirPath, filename, root, ext;
   int paramInd = conSet->faParamSetInd;
+  float pixelSize = 0.;
   
   // Extract folder and make sure that
   // helper has this as the last frame folder, and compose name
@@ -2329,10 +2349,15 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
   mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
   if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
     summing = B3DNINT(conSet->frameTime / mFalconReadoutInterval);
+    pixelSize = 1000.f * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+      mMagBefore);
+  } else if (IS_FALCON3_OR_4(mParam)) {
+    pixelSize = 1000.f * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
+      mMagBefore) * (float)conSet->binning;
   }
   err = mFalconHelper->WriteAlignComFile(filename, root, 
     paramInd, mFalconHelper->GetUseGpuForAlign(1),
-    false, frameX, frameY, summing);
+    false, frameX, frameY, summing, pixelSize);
   if (err)
     PrintfToLog("WARNING: The com file for aligning was not saved: %s",
     SEMCCDErrorMessage(err));
