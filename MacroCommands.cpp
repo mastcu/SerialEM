@@ -6468,7 +6468,10 @@ int CMacCmd::Ctfplotter(void)
     mItemFlt[2], mItemFlt[3], astigPhase, phase, resolOrTune, cropPixel, fitStart, 
     fitEnd, mEnteredName))
     ABORT_LINE(report + " in line:\n\n");
-  mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""));
+  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""))) {
+    AbortMacro();
+    return 1;
+  }
   mRanExtProcess = true;
   mRanCtfplotter = true;
   return 0;

@@ -162,6 +162,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   HANDLE hChildStd_IN_Rd = NULL;
   HANDLE hChildStd_IN_Wr = NULL;
   DWORD dwWrite, dwWritten;
+  CString saveAutodoc;
   bool pipeInput = !inputString.IsEmpty();
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
@@ -307,9 +308,23 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
     return 1;
   }
+
+  if (!m3dmodAutodocDir.IsEmpty()) {
+    if (getenv("IMOD_AUTODOC_DIR"))
+      saveAutodoc = getenv("IMOD_AUTODOC_DIR");
+    _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + m3dmodAutodocDir));
+  }
+
+  // RUN THE PROCESS
   retval = CreateProcess(isBatch  ? (LPCTSTR)cstrCmd : NULL, cmdString, NULL, NULL, TRUE,
     (isBatch ? 0 : DETACHED_PROCESS) | (mAllowWindow ? 0 : CREATE_NO_WINDOW), NULL, NULL,
     &sinfo, &mExtProcInfo);
+
+  // Restore 
+  if (!m3dmodAutodocDir.IsEmpty()) {
+    _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + saveAutodoc));
+  }
+
   if (!retval) {
     CloseFileHandles(hInFile, hFile);
     CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
@@ -333,8 +348,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
       }
     }
 
-
-    if (!retval) {
+    if (retval) {
 
       // Give it a second to finish with the command string
       WaitForSingleObject(mExtProcInfo.hProcess, pipeInput ? 250 : 1000);
@@ -406,7 +420,8 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
   ImodImageFile *iiFile;
   int err;
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + bufInd;
-  int nx, ny, pixSize, channels, kbSize;
+  FileOptions *otherOpt = mWinApp->mDocWnd->GetOtherFileOpt();
+  int nx, ny, pixSize, channels, kbSize, modeSave = otherOpt->mode;
   if (bufInd < 0 || bufInd >= MAX_BUFFERS || !imBuf->mImage) {
     filename = "Incorrect buffer index or no image in buffer";
     return NULL;
@@ -428,7 +443,9 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
     free(iiFile);
     return NULL;
   }
+  otherOpt->mode = imBuf->mImage->getType();
   err = mWinApp->mDocWnd->SaveToOtherFile(bufInd, STORE_TYPE_IIMRC, 0, &filename);
+  otherOpt->mode = modeSave;
   if (err) {
     if (err == 1)
       filename = "Background save error prevented saving to shared memory file";
@@ -595,6 +612,7 @@ int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &a
     if (!cropSpec)
       mLastCropPixel = 0.;
     if (err) {
+      AdocClear(adocInd);
       errString = "Some parameters from autotuning were not found in ctfplotter.info";
       mLastPSresol = 0;
       return -1;
@@ -623,7 +641,7 @@ int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &a
     str.Format(",   fit to %.1f A", fitToFreq);
     results += str;
   }
-
+  AdocClear(adocInd);
   return 0;
 }
 
@@ -634,28 +652,53 @@ void CExternalTools::CheckForIMODPath()
   const char *checkDirs[4] = {"C:\\Program Files\\3dmod", "C:\\Program Files\\IMOD\\bin",
     "C:\\cygwin\\usr\\local\\IMOD\\bin", "C:\\cygwin64\\usr\\local\\IMOD\\bin"};
   CFileStatus status;
-  if (mCheckedForIMOD || !mCtfplotterPath.IsEmpty())
+  std::vector<std::string> strList;
+  int ind;
+
+  if (mCheckedForIMOD)
     return;
+  
   mCheckedForIMOD = true;
+
+  if (!mCtfplotterPath.IsEmpty()) {
+    if (mCtfplotterPath.Find("3dmod") >= 0 &&
+      CFile::GetStatus((LPCTSTR)(mCtfplotterPath + "\\genhstplt.adoc"), status))
+      m3dmodAutodocDir = mCtfplotterPath;
+    return;
+  }
 
   // Look on PATH and accept this if found
   path = getenv("PATH");
-  if (path.Find("IMOD\\bin") >= 0) {
-    SEMTrace('1', "Found IMOD on system path");
-    return;
-  }
-  if (path.Find("3dmod") >= 0) {
-    SEMTrace('1', "Found standalone 3dmod on system path");
-    return;
+
+  UtilSplitString(path, ";", strList);
+  if (path.Find("IMOD\\bin") >= 0 || path.Find("3dmod") >= 0) {
+    for (ind = 0; ind < (int)strList.size(); ind++) {
+      if (strList[ind].find("IMOD\\bin") >= 0 && CFile::GetStatus((LPCTSTR)
+        (strList[ind].c_str() + CString("\\genhstplt.exe")), status)) {
+        SEMTrace('1', "Found IMOD on system path");
+        return;
+      }
+      if (strList[ind].find("3dmod") >= 0 && CFile::GetStatus((LPCTSTR)
+        (strList[ind].c_str() + CString("\\ctfplotter.exe")), status)) {
+        SEMTrace('1', "Found standalone 3dmod on system path");
+        if (CFile::GetStatus((LPCTSTR)
+          (strList[ind].c_str() + CString("\\ctfplotter.adoc")), status))
+          m3dmodAutodocDir = strList[ind].c_str();
+        return;
+      }
+    }
   }
 
   // Otherwise check the possible locations for standard installations
-  for (int ind = 0; ind < 4; ind++) {
+  for (ind = 0; ind < 4; ind++) {
     if (CFile::GetStatus(checkDirs[ind], status)) {
       if (!ind && !CFile::GetStatus("C:\\Program Files\\3dmod\\genhstplt.exe", status))
         continue;
+      if (!ind && CFile::GetStatus("C:\\Program Files\\3dmod\\ctfplotter.adoc", status))
+        m3dmodAutodocDir = "C:\\Program Files\\3dmod";
       mCtfplotterPath = checkDirs[ind];
       SEMTrace('1', "Found genhstplt, set CTfplotterPath to %s", checkDirs[ind]);
+      break;
     }
   }
 }

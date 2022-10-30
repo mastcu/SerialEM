@@ -33,7 +33,8 @@ private:
   bool mDidAutotune;
   float mLastStartPhase;
   BOOL mAllowWindow;
-  bool mCheckedForIMOD;
+  bool mCheckedForIMOD;    // 1 if check is done
+  CString m3dmodAutodocDir;
   std::vector<HANDLE> mGraphProcessHandles;
   std::vector<HANDLE> mGraphThreadHandles;
 
