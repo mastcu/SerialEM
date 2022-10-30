@@ -527,6 +527,19 @@ char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descri
   return bad;
 }
 
+// Split a CString into std::string vector
+void UtilSplitString(CString fullStr, const char *delim, 
+  std::vector<std::string> &strList)
+{
+  int ind, lenDelim = strlen(delim);
+  strList.clear();
+  while ((ind = fullStr.Find(delim)) >= 0) {
+    strList.push_back((LPCTSTR)fullStr.Left(ind));
+    fullStr = fullStr.Mid(ind + lenDelim);
+  }
+  strList.push_back((LPCTSTR)fullStr);
+}
+
 // Remove zeros from end of a string ending in a floating point number
 void UtilTrimTrailingZeros(CString & str)
 {

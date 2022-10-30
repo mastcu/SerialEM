@@ -33,6 +33,7 @@ int UtilRelativePath(CString fromDir, CString toDir, CString &relPath);
 int UtilStandardizePath(CString &dir);
 int UtilRecursiveMakeDir(CString dir, CString &mess);
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
+void UtilSplitString(CString fullStr, const char *delim, std::vector<std::string> &strList);
 char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descrip);
 void DLL_IM_EX UtilTrimTrailingZeros(CString &str);
 int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug);
