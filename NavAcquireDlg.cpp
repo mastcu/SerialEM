@@ -10,6 +10,7 @@
 #include ".\NavAcquireDlg.h"
 #include "NavigatorDlg.h"
 #include "NavRealignDlg.h"
+#include "NavAcqHoleFinder.h"
 #include "CameraController.h"
 #include "CookerSetupDlg.h"
 #include "ManageDewarsDlg.h"
@@ -65,11 +66,12 @@ IDC_BUT_NAVACQ_SETUP6, IDC_BUT_NAVACQ_SETUP7, IDC_BUT_NAVACQ_SETUP8,
 IDC_BUT_NAVACQ_SETUP9, IDC_BUT_NAVACQ_SETUP10, IDC_BUT_NAVACQ_SETUP11,
 IDC_BUT_NAVACQ_SETUP12, IDC_BUT_NAVACQ_SETUP13, IDC_BUT_NAVACQ_SETUP14,
 IDC_BUT_NAVACQ_SETUP15, IDC_BUT_NAVACQ_SETUP16, IDC_BUT_NAVACQ_SETUP17,
-IDC_BUT_NAVACQ_SETUP18,
+IDC_BUT_NAVACQ_SETUP18, IDC_BUT_NAVACQ_SETUP19,
 IDC_CHECK_NAVACQ_RUN15, IDC_RADIO_NAVACQ_SEL15, IDC_STAT_NAVACQ_WHEN15,
 IDC_CHECK_NAVACQ_RUN16, IDC_RADIO_NAVACQ_SEL16, IDC_STAT_NAVACQ_WHEN16,
 IDC_CHECK_NAVACQ_RUN17, IDC_RADIO_NAVACQ_SEL17, IDC_STAT_NAVACQ_WHEN17,
 IDC_CHECK_NAVACQ_RUN18, IDC_RADIO_NAVACQ_SEL18, IDC_STAT_NAVACQ_WHEN18,
+IDC_CHECK_NAVACQ_RUN19, IDC_RADIO_NAVACQ_SEL19, IDC_STAT_NAVACQ_WHEN19,
 IDC_TSS_LINE5, PANEL_END,
 IDC_RNAVACQ_EVERY_N, IDC_RNAVACQ_GROUP_START,
 IDC_RNAVACQ_GROUP_END, IDC_RNAVACQ_AFTER_MINUTES, IDC_RNAVACQ_WHEN_MOVED,
@@ -847,6 +849,7 @@ void CNavAcquireDlg::ManageOutputFile(void)
 void CNavAcquireDlg::ManageEnables(bool rebuilding)
 {
   bool doBuild = false;
+  int pos;
   int acquireType = OptionsToAcquireType();
   bool imageOrMap = acquireType == ACQUIRE_IMAGE_ONLY || acquireType == ACQUIRE_TAKE_MAP;
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
@@ -899,6 +902,15 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK);
   RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
 
+  for (pos = 0; pos < mNumShownActs; pos++) {
+    if (mShownPosToIndex[pos] == NAACT_HOLE_FINDER) {
+      EnableDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
+      EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
+      EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, acquireType == ACQUIRE_TAKE_MAP);
+      break;
+    }
+  }
+
   ManageOutputFile();
   if (doBuild && m_bHideUnselectedOpts && !rebuilding)
     BuildActionSection();
@@ -945,7 +957,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   int ind, actInd, pos = 0, loop;
   CButton *button;
   CRect actRect;
-  bool runIt;
+  bool runIt, holeEnable;
   BOOL states[5] = {true, true, true, true, true};
   int acquireType = OptionsToAcquireType();
   Invalidate();
@@ -970,12 +982,14 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
         button = (CButton *)GetDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos);
         button->SetWindowText("");
         button->SetCheck(runIt ? BST_CHECKED : BST_UNCHECKED);
+        holeEnable = acquireType == ACQUIRE_TAKE_MAP || actInd != NAACT_HOLE_FINDER;
+        button->EnableWindow(holeEnable);
         FormatTimingString(actInd, pos);
-        EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, runIt);
+        EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, runIt && holeEnable);
 
         // Show or drop setup button
         if (mActions[actInd].flags & NAA_FLAG_HAS_SETUP)
-          EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, runIt ? 1 : 0);
+          EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, (runIt && holeEnable) ? 1 : 0);
         else
           mIDsToDrop.push_back(IDC_BUT_NAVACQ_SETUP1 + pos);
 
@@ -1174,13 +1188,15 @@ void CNavAcquireDlg::ManageTimingEnables()
   bool anywhere = (act->flags & NAA_FLAG_ANY_SITE_OK) != 0 ||
     (act->flags & NAA_FLAG_HERE_ONLY) != 0;
   bool notOnlyEveryN = runIt && (act->flags & NAA_FLAG_EVERYN_ONLY) == 0;
+  bool afterOnly = mCurActSelected == NAACT_RUN_POSTMACRO ||
+    mCurActSelected == NAACT_HOLE_FINDER;
   m_editEveryN.EnableWindow(act->timingType == NAA_EVERY_N_ITEMS && runIt);
   m_sbcEveryN.EnableWindow(act->timingType == NAA_EVERY_N_ITEMS && runIt);
   m_editAfterMinutes.EnableWindow(act->timingType == NAA_AFTER_TIME && notOnlyEveryN);
   m_editWhenMoved.EnableWindow(act->timingType == NAA_IF_SEPARATED && notOnlyEveryN);
   m_editGotoItem.EnableWindow(notOnlyEveryN && !anywhere);
   m_butMoveUp.EnableWindow(m_iSelectedPos > 0 && 
-    !(mCurActSelected == NAACT_RUN_POSTMACRO && m_iSelectedPos == mFirstPosAfterTask));
+    !(afterOnly && m_iSelectedPos == mFirstPosAfterTask));
   m_butMoveDown.EnableWindow(m_iSelectedPos < mNumShownActs - 1 && 
     !(m_iSelectedPos == mFirstPosAfterTask - 1 && (act->flags & NAA_FLAG_ONLY_BEFORE)));
   EnableDlgItem(IDC_RNAVACQ_EVERY_N, runIt);
@@ -1195,7 +1211,7 @@ void CNavAcquireDlg::ManageTimingEnables()
   EnableDlgItem(IDC_RGOTO_LABEL, m_bRunAtOther && notOnlyEveryN && !anywhere);
   EnableDlgItem(IDC_RGOTO_NOTE, m_bRunAtOther && notOnlyEveryN && !anywhere);
   EnableDlgItem(IDC_NA_RUN_AFTER_TASK, !(act->flags & NAA_FLAG_ONLY_BEFORE) && runIt &&
-    mCurActSelected != NAACT_RUN_POSTMACRO);
+    !afterOnly);
 }
 
 // New timing type is selected
@@ -1510,6 +1526,15 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
   {
     CManageDewarsDlg dlg;
     dlg.DoModal();
+  }
+
+  // Hole finder/combiner
+  case NAACT_HOLE_FINDER:
+  {
+    NavAcqHoleFinder dlg;
+    dlg.m_bRunCombiner = mParam->runHoleCombiner;
+    if (dlg.DoModal() == IDOK)
+      mParam->runHoleCombiner = dlg.m_bRunCombiner;
   }
   break;
   }

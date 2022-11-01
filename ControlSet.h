@@ -101,6 +101,7 @@ struct CameraParameters {
   BOOL failedToInitialize; // Flag that Tietz camera failed to initialize
   int AMTtype;             // Flag for AMT camera
   int FEItype;             // Type of FEI camera
+  float ReadoutInterval;   // Camera-specific readout interval to cover different Falcons
   unsigned int CamFlags;   // Flags for FEI camera in advanced scripting
   int DE_camType;     	   // Flag to determine DE camera type	
   int DE_indexType;   	   // Index to look up the proper DE camera type
@@ -483,6 +484,7 @@ struct NavAcqParams {
   int mapWithViewSearch;    // Take single images with different areas
   BOOL saveAsMapChoice;     // Flag that option to save images/montages as maps is checked
   BOOL retractCameras;      // Flag to retract cameras at end
+  BOOL runHoleCombiner;     // Flag to run the multi-hole combiner after hole finder
 };
 
 // Other Nav parameters

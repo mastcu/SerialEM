@@ -2231,13 +2231,17 @@ NAA_FLAG_ONLY_BEFORE | NAA_FLAG_EVERYN_ONLY | NAA_FLAG_ANY_SITE_OK)
 int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navActions, 
   int *actOrder, CString &unrecognized)
 {
-  int err, index;
+  int err, index, ind2, numActions = mWinApp->mNavHelper->GetNumAcqActions();
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   float itemFlt[MAX_TOKENS];
+  bool included[NAA_MAX_ACTIONS];
+  for (index = 0; index < numActions; index++)
+    included[index] = false;
+
   while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
     itemFlt, MAX_TOKENS)) == 0) {
     if (NAME_IS("NavAcquireParams"))
@@ -2293,6 +2297,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->mapWithViewSearch = itemInt[19];
       if (!itemEmpty[20])
         navParams->retractCameras = itemInt[20] != 0;
+      if (!itemEmpty[21])
+        navParams->runHoleCombiner = itemInt[21] != 0;
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
@@ -2310,6 +2316,17 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         if (itemEmpty[index + 1])
           break;
         actOrder[index] = itemInt[index + 1];
+        if (actOrder[index] >= 0 && actOrder[index] < numActions)
+          included[actOrder[index]] = true;
+      }
+      for (; index < numActions; index++) {
+        for (ind2 = 0; ind2 < numActions; ind2++) {
+          if (!included[ind2]) {
+            actOrder[index] = ind2;
+            included[ind2] = true;
+            break;
+          }
+        }
       }
     } else {
       unrecognized += strLine + "\n";
@@ -2346,7 +2363,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    "%d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
@@ -2355,7 +2372,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->highFlashIfOK, navParams->astigByBTID ? 1 : 0,
     navParams->adjustBTforIS ? 1 : 0, navParams->relaxStage ? 1 : 0,
     navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
-    navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0);
+    navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0,
+    navParams->runHoleCombiner ? 1 : 0);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";
@@ -2867,6 +2885,8 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("FrameTimeDivisors"))
             StoreFloatsPerBinning(strItems, "divisor for frame times", iset, strFileName,
               camP->frameTimeDivisor);
+          else if (MatchNoCase("ReadoutInterval"))
+            camP->ReadoutInterval = itemFlt[1];
           else if (MatchNoCase("ImageRotation"))
             camP->imageRotation = itemInt[1];
           else if (MatchNoCase("InvertFocusRamp"))

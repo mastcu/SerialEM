@@ -1224,6 +1224,7 @@
     <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
     <ClInclude Include="MyButton.h" />
+    <ClInclude Include="NavAcqHoleFinder.h" />
     <ClInclude Include="NavAdocParams.h" />
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="NavRealignDlg.h" />
@@ -2184,6 +2185,7 @@ echo.
     <ClCompile Include="MultiHoleCombiner.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />
     <ClCompile Include="MyButton.cpp" />
+    <ClCompile Include="NavAcqHoleFinder.cpp" />
     <ClCompile Include="NavRealignDlg.cpp" />
     <ClCompile Include="OneLineScript.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />

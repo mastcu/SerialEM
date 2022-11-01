@@ -61,7 +61,9 @@ int CNavHelper::mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1] = {
   NAACT_AUTOFOCUS, 
   NAACT_WAIT_DRIFT,
   NAACT_RUN_PREMACRO, 
-  NAACT_RUN_POSTMACRO, -1};
+  NAACT_HOLE_FINDER,
+  NAACT_RUN_POSTMACRO, 
+ -1};
 
 #define BEFORE_SETUP_EVERYN (NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY)
 
@@ -91,7 +93,9 @@ CNavHelper::CNavHelper(void)
     {"Run Script after Action", NAA_FLAG_AFTER_ITEM, 0, 1, 15,40.},
     {"Flash FEG", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
     {"Manage Dewars/Vacuum", NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY |
-    NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.}
+    NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
+    {"Hole Finder && Combiner", NAA_FLAG_AFTER_ITEM | NAA_FLAG_HAS_SETUP | 
+    NAA_FLAG_EVERYN_ONLY | NAA_FLAG_HERE_ONLY, 0, 1, 15, 40.}
   };
 
   mWinApp = (CSerialEMApp *)AfxGetApp();

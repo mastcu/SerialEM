@@ -32,12 +32,12 @@ protected:
 private:
   int mPanelStart[5];
   int mNumInPanel[5];
-  int mAllOrders[2][NAA_MAX_ACTIONS];
-  int *mCurrentOrder;
+  int mAllOrders[2][NAA_MAX_ACTIONS]; // List of NAACT tasks in their order of doing,
+  int *mCurrentOrder;                 // except that this is looped twice, before & after action
   int mNumActions;
   int mNumShownActs;
-  int mShownPosToIndex[NAA_MAX_ACTIONS];
-  int mUnhiddenPosMap[NAA_MAX_ACTIONS];
+  int mShownPosToIndex[NAA_MAX_ACTIONS];  // Map from position in shown items to NAACT index
+  int mUnhiddenPosMap[NAA_MAX_ACTIONS]; // Map from position in shown items to overall table index
   NavAcqAction *mMasterActions;
   NavAcqAction mAllActions[2][NAA_MAX_ACTIONS];
   NavAcqAction *mActions;

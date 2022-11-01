@@ -85,6 +85,7 @@
 #define IDD_RADIO_CHOICE                259
 #define IDD_NAVREALIGN                  261
 #define IDD_MANAGE_DEWARS               263
+#define IDD_NAVACQ_HOLE_FINDER          271
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1961,7 +1962,6 @@
 #define IDC_STAT_ACS_ITERATE_UM         2989
 #define IDC_REFINE_WITH_TRIAL           2990
 #define IDC_CHECK_USE_MULTISHOT         2991
-#define IDC_STAT_PUSH_BUT               3002
 #define IDC_CHECK_CLOSE_WHEN_DONE       2992
 #define IDC_RCHOICE_ONE2                2993
 #define IDC_BUT_USE_LAST_HOLE_VECS      2995
@@ -1971,7 +1971,11 @@
 #define IDC_STAT_EM_MODE                2999
 #define IDC_RSPEC_DOSE                  3000
 #define IDC_RSPEC_DOSE2                 3001
-#define IDC_RCAM_DOSE                   3001
+#define IDC_RCAM_DOSE                   3002
+#define IDC_STAT_PUSH_BUT               3003
+#define IDC_CHECK_RUN_COMBINER          3004
+#define IDC_BUT_OPEN_HOLE_FINDER        3005
+#define IDC_BUT_OPEN_COMBINER           3006
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2509,9 +2513,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        271
+#define _APS_NEXT_RESOURCE_VALUE        273
 #define _APS_NEXT_COMMAND_VALUE         33500
-#define _APS_NEXT_CONTROL_VALUE         3002
+#define _APS_NEXT_CONTROL_VALUE         3007
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -1050,7 +1050,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     CACHE_KEEP_BOTH + (numMedians > 1 ? CACHE_KEEP_MEDIAN : 0));
   image->UnLock();
   if (err) {
-    AfxMessageBox(CString("Error in initializing holefinder routine:\n") +
+    SEMMessageBox(CString("Error in initializing holefinder routine:\n") +
       mHelper->mFindHoles->returnErrorString(err), MB_EXCLAME);
     StopScanning();
     return 1;
