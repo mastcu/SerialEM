@@ -70,7 +70,7 @@ public:
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
     BOOL forceStage);
 	void SetupSuperMontage(BOOL skewed);
-	void FullMontage();
+	void FullMontage(bool skipDlg);
   void AutoSave();
 	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
     float angle, float &stageX, float &stageY);
@@ -478,6 +478,7 @@ private:
   bool mDidEucentricity;       // Flag that eucentricity was done one of 3 ways
   bool mWillDoTemplateAlign;   // Flag this will be done, so realign to item can do hybrid
   bool mWillRelaxStage;        // Flag this will be done, so move can impose backlash
+  int mAcqMadeMapWithID;       // Map ID of map made on this cycle
   int mRetValFromMultishot;    // Return value has negative of number being gotten
   int mRunScriptAfterNextAcq;  // Script # to run at end of next acquisition if completed
   int mScriptToRunAtEnd;       // Script # to run when current acquisition ends
@@ -653,6 +654,7 @@ public:
     float spacing, float diameter, float incStageX1, float incStageY1, float incStageX2, float incStageY2, int registration, int mapID, float stageZ,
     CMapDrawItem *poly, int layoutType);
   int FindBufferWithMontMap(int mapID);
+  int FindBufferWithMapID(int mapID);
   CButton m_butEditMode;
   BOOL m_bEditMode;
   afx_msg void OnEditMode();

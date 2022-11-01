@@ -34,6 +34,7 @@
 #include "NavImportDlg.h"
 #include "MultiShotDlg.h"
 #include "MultiCombinerDlg.h"
+#include "MultiHoleCombiner.h"
 #include "HoleFinderDlg.h"
 #include "ShiftToMarkerDlg.h"
 #include "FilterTasks.h"
@@ -3721,7 +3722,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
 }
 
 // Setup a montage for the full area (or user specified area)
-void CNavigatorDlg::FullMontage()
+void CNavigatorDlg::FullMontage(bool skipDlg)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
@@ -3798,7 +3799,7 @@ void CNavigatorDlg::FullMontage()
   itmp->AppendPoint(minCornerX, minCornerY);
 
   mSettingUpFullMont = true;
-  SetupMontage(itmp, NULL, false);
+  SetupMontage(itmp, NULL, skipDlg);
   mSettingUpFullMont = false;
   if (mWinApp->Montaging()) {
     montp->forFullMontage = true;
@@ -3909,7 +3910,11 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   if (montDlg) {
     err = B3DCHOICE(!skipSetupDlg && montDlg->DoModal() != IDOK, 1, 0);
   } else {
-    err = mDocWnd->GetMontageParamsAndFile(true);
+    if (mSettingUpFullMont && mWinApp->mMacroProcessor->DoingMacro())
+      err = mDocWnd->GetMontageParamsAndFile(true, montParam->xFrame, montParam->yFrame, 
+        mWinApp->mMacroProcessor->GetEnteredName());
+    else
+      err = mDocWnd->GetMontageParamsAndFile(true);
   }
   if (err) {
     mMontItem = NULL;
@@ -8967,6 +8972,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mDidEucentricity = false;
     mWillDoTemplateAlign = false;
     mWillRelaxStage = false;
+    mAcqMadeMapWithID = 0;
     for (after = 0; after < 2; after++) {
 
       // Do final things before primary action, at start of second loop
@@ -9031,6 +9037,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
           !DOING_ACTION(act))
           continue;
         runIt = false;
+        if (act == NAACT_HOLE_FINDER && mAcqParm->acquireType != ACQUIRE_TAKE_MAP)
+          continue;
 
         // See if it is to be run for this item
         switch (mAcqActions[act].timingType) {
@@ -9219,6 +9227,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mItem->mNote = mItem->mNote + " - " + item->mNote;
       m_strLabel = mItem->mLabel;
       UpdateListString(mCurrentItem);
+      mAcqMadeMapWithID = mItem->mMapID;
       break;
 
       // After a script
@@ -9271,6 +9280,36 @@ void CNavigatorDlg::AcquireNextTask(int param)
           mAcquireEnded = 1;
         } else if (err)
           mAcquireIndex++;
+      }
+      break;
+
+      // After hole finding, make Nav points and possibly combine
+    case NAACT_HOLE_FINDER:
+      err = 1;
+      if (mHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts()) {
+        len = mHelper->mHoleFinderDlg->DoMakeNavPoints(-1, (float)EXTRA_NO_VALUE,
+          (float)EXTRA_NO_VALUE, -1., -1.);
+        if (len > 0)
+          PrintfToLog("Hole finder made %d Navigator points", len);
+        else
+          SEMMessageBox("All of the holes found in the map were excluded by the "
+            "criteria");
+        err = len > 0 ? 0 : 1;
+        if (!err && mAcqParm->runHoleCombiner) {
+          err = mHelper->mCombineHoles->CombineItems(0,
+            mHelper->GetMHCturnOffOutsidePoly());
+          if (err)
+            SEMMessageBox("Error trying to combine hole for multiple Records:\n" +
+              CString(mHelper->mCombineHoles->GetErrorMessage(err)));
+        }
+      } else
+        SEMMessageBox("No holes were found in the map that was just acquired");
+
+      if (err) {
+        if (!mAcqParm->noMBoxOnError)
+          mAcquireEnded = 1;
+        else
+          SkipToNextItemInAcquire(item, "in hole finder");
       }
       break;
 
@@ -9516,6 +9555,24 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mStepIndForDewarCheck >= 0)
       next = (mAcqStepIndex == mStepIndForDewarCheck) ? 1 : -1;
     stopErr = mWinApp->mParticleTasks->ManageDewarsVacuum(*dvParams, next);
+    break;
+
+    // Start the hole finder
+  case NAACT_HOLE_FINDER:
+    SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    if (!mAcqMadeMapWithID) {
+      SEMMessageBox("Program error: hole finder step is being called but no map ID was"
+        " saved for a new map");
+      StopAcquiring();
+      return;
+    }
+    ind = FindBufferWithMapID(mAcqMadeMapWithID);
+    if (ind < 0) {
+      SEMMessageBox("Cannot run hole finder: the new map is no longer in a buffer");
+      StopAcquiring();
+      return;
+    }
+    stopErr = mHelper->mHoleFinderDlg->DoFindHoles(&mImBufs[ind]);
     break;
 
     // Relax the stage
@@ -9830,7 +9887,8 @@ int CNavigatorDlg::TaskAcquireBusy()
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries() ||
     mWinApp->mAutoTuning->DoingAutoTune() || mScope->GetDoingLongOperation() || 
     mWinApp->mGainRefMaker->AcquiringGainRef() || mWinApp->mFilterTasks->RefiningZLP() ||
-    mWinApp->mParticleTasks->GetDVDoingDewarVac()) ? 1 : 0;
+    mWinApp->mParticleTasks->GetDVDoingDewarVac() ||  
+    mHelper->mHoleFinderDlg->GetFindingHoles()) ? 1 : 0;
 }
 
 void CNavigatorDlg::AcquireCleanup(int error)
@@ -10722,6 +10780,17 @@ int CNavigatorDlg::FindBufferWithMontMap(int mapID)
 {
   CMapDrawItem *item = FindItemWithMapID(mapID);
   if (item && item->mMapMontage)
+    for (int i = 0; i < MAX_BUFFERS; i++)
+      if (mImBufs[i].mMapID == mapID && mImBufs[i].mImage)
+        return i;
+  return -1;
+}
+
+// Look for any kind of map in a buffer with the given ID
+int CNavigatorDlg::FindBufferWithMapID(int mapID)
+{
+  CMapDrawItem *item = FindItemWithMapID(mapID);
+  if (item)
     for (int i = 0; i < MAX_BUFFERS; i++)
       if (mImBufs[i].mMapID == mapID && mImBufs[i].mImage)
         return i;

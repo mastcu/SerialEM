@@ -111,6 +111,7 @@ public:
   void SetSystemPath(CString sysPath);
   GetMember(CString, SysPathForSettings);
   GetMember(CString, CurrentSettingsPath);
+  GetMember(BOOL, SettingsOpen);
   GetSetMember(CString, PluginPath)
   GetSetMember(CString, PluginPath2)
   GetMember(CString, FlybackName);
