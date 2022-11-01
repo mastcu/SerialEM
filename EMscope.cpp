@@ -8693,6 +8693,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   static bool doMessage = true;
   int i, err;
   double minDrift, maxDrift;
+  float readout;
   if (!FEIscope)
     return 2;
   if (!sInitialized)
@@ -8762,12 +8763,28 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON2_TYPE && (params->CamFlags & PLUGFEI_CAM_CAN_COUNT) && 
         (params->CamFlags & PLUGFEI_CAM_CAN_ALIGN))
         params->FEItype = FALCON3_TYPE;
-      if (params->FEItype == FALCON3_TYPE && mCamera->GetFalconReadoutInterval()
-        > 0.05)
-        mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
-      if (params->FEItype == FALCON4_TYPE && mCamera->GetFalconReadoutInterval()
-        > 0.05)
-        mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
+
+      // For Falcon 3 or 4, set the general readout interval if it is a Falcon 2 value,
+      // and set this camera's interval from that value if not set already, provided it
+      // doesn't match the value set for the other kind of camera
+      if (params->FEItype == FALCON3_TYPE && params->ReadoutInterval <= 0.) {
+        if (mCamera->GetFalconReadoutInterval() > 0.05)
+          mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
+        readout = mCamera->GetFalconReadoutInterval();
+        if (fabs(readout - mFalcon4ReadoutInterval) < 0.01 * mFalcon4ReadoutInterval)
+          params->ReadoutInterval = mFalcon3ReadoutInterval;
+        else
+          params->ReadoutInterval = readout;
+      }
+      if (params->FEItype == FALCON4_TYPE  && params->ReadoutInterval <= 0.) {
+        if (mCamera->GetFalconReadoutInterval() > 0.05)
+          mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
+        readout = mCamera->GetFalconReadoutInterval();
+        if (fabs(readout - mFalcon3ReadoutInterval) < 0.01 * mFalcon3ReadoutInterval)
+          params->ReadoutInterval = mFalcon4ReadoutInterval;
+        else
+          params->ReadoutInterval = readout;
+      }
       if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_CAM_SAVES_EER &&
         mCamera->GetCanSaveEERformat() < 0)
         mCamera->SetCanSaveEERformat(1);

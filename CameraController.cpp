@@ -2224,7 +2224,7 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 
     mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
     if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
-      summing = B3DNINT(conSet->frameTime / mFalconReadoutInterval);
+      summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
       if (mWinApp->mStoreMRC)
         pixelSize = (float)(0.1 *mWinApp->mStoreMRC->GetPixelSpacing() / conSet->binning);
     } else if (IS_FALCON2_3_4(mParam) && mWinApp->mStoreMRC) {
@@ -2348,7 +2348,7 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
     root = mAlignFramesComPath + '\\' + root + ".pcm";
   mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
   if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
-    summing = B3DNINT(conSet->frameTime / mFalconReadoutInterval);
+    summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
     pixelSize = 1000.f * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
       mMagBefore);
   } else if (IS_FALCON3_OR_4(mParam)) {
@@ -3200,7 +3200,7 @@ void CCameraController::Capture(int inSet, bool retrying)
         mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
         if (mAligningFalconFrames) {
           mFalconHelper->SetEERsumming(B3DNINT(conSet.frameTime /
-            mFalconReadoutInterval));
+            GetFalconReadoutInterval(mParam)));
           ind = conSet.faParamSetInd;
           B3DCLAMP(ind, 0, (int)mFrameAliParams.GetSize() - 1);
 
@@ -3824,12 +3824,12 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   mTD.Exposure = mExposure;
   if (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0) {
-    ind = B3DNINT(mTD.Exposure / mFalconReadoutInterval);
+    ind = B3DNINT(mTD.Exposure / GetFalconReadoutInterval(mParam));
 
     // This formula is wrong for Falcon 3 but the timings are based on it
     // In a message about Falcon 4 TFS used the formula ceil(n * 32 / 31)
-    mTD.Exposure = mFalconReadoutInterval * B3DCHOICE(mParam->FEItype == FALCON3_TYPE,
-      (ind + ind / 32), (ind * 32 + 30) / 31);
+    mTD.Exposure = GetFalconReadoutInterval(mParam) * 
+      B3DCHOICE(mParam->FEItype == FALCON3_TYPE, (ind + ind / 32), (ind * 32 + 30) / 31);
     SEMTrace('E', "Adjusted exposure time for lost frames in counting from %.3f to %.3f",
       mExposure, mTD.Exposure);
   }
@@ -6522,7 +6522,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     } else {
 
       // Otherwise start with the readout time
-      baseTime = mFalconReadoutInterval;
+      baseTime = GetFalconReadoutInterval(camP);
       saveFrames = (alignSaveFlags & AS_FLAG_SAVE) != 0;
       if (camP->FEItype == FALCON4_TYPE) {
 
@@ -6605,7 +6605,7 @@ bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *c
 
 float CCameraController::FalconAlignFractionTime(CameraParameters * camP)
 {
-  return (float)(mFalconReadoutInterval * mFalcon3AlignFraction * 
+  return (float)(GetFalconReadoutInterval(camP) * mFalcon3AlignFraction * 
     (camP->FEItype == FALCON4_TYPE ? mFalcon4RawSumSize : 1));
 }
 
@@ -6690,7 +6690,7 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   if (param->FEItype) {
     if (FCAM_CONTIN_SAVE(param))
       return mCeta2ReadoutInterval;
-    return mFalconReadoutInterval;
+    return GetFalconReadoutInterval(param);
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
@@ -6716,7 +6716,7 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
   if (param->FEItype) {
     if (FCAM_CONTIN_SAVE(param))
       return mCeta2ReadoutInterval;
-    return mFalconReadoutInterval;
+    return GetFalconReadoutInterval(param);
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->frameTimeDivisor[0]);
@@ -6730,8 +6730,8 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
 
 float CCameraController::GetFalconFractionDivisor(CameraParameters *param)
 {
-  return param->FEItype == FALCON4_TYPE ? (mFalcon4RawSumSize * mFalconReadoutInterval) :
-    mFalconReadoutInterval;
+  float readout = GetFalconReadoutInterval(param);
+  return param->FEItype == FALCON4_TYPE ? (mFalcon4RawSumSize * readout) : readout;
 }
 
 // The times array may have one time or a time per binning, or stop before all the
@@ -9700,7 +9700,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       else 
         partialExposure = mFalconHelper->AlignedSubsetExposure(
           lastConSetp->summedFrameList, (mParam->K2Type || oneViewTakingFrames) ? 
-          lastConSetp->frameTime : mFalconReadoutInterval, mAlignStart, mAlignEnd);
+          lastConSetp->frameTime : GetFalconReadoutInterval(mParam), mAlignStart, 
+          mAlignEnd);
     }
 
     // Modify mImBufs only if there is actually an image, but save info when starting
@@ -10152,7 +10153,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           summedList.push_back(1);
         } else
           summedList = lastConSetp->summedFrameList;
-        frameTimeForDose = mFalconReadoutInterval;
+        frameTimeForDose = GetFalconReadoutInterval(mParam);
       } else if (mParam->K2Type) {
 
         // Set up dummy summed frame list or use the one that was used

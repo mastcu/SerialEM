@@ -2365,7 +2365,7 @@ void CCameraSetupDlg::ManageDose()
             frames = B3DNINT(realExp / m_fFrameTime);
             saveType = "summed ";
           } else {
-            frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval());
+            frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval(mParam));
             saveType = "raw ";
           }
         } else {
@@ -3190,7 +3190,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
         mCurSet->useFrameAlign), 1, realExp, realFrame, special, 1 - m_iContSingle);
     if (mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
       mCurSet->useFrameAlign, m_iK2Mode)) {
-      frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval());
+      frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval(mParam));
       if (m_bDoseFracMode && m_bSaveFrames)
         str.Format("%d raw to EER file", frames);
       frames = B3DNINT(realExp / realFrame);

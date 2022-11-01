@@ -1039,7 +1039,9 @@
             FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.
             &nbsp; The default for Falcon 3 is 0.02495, but at least one site needed 0.02505.&nbsp; The
             default for Falcon 4 is 0.004021, but Falcon 4i needs a property entry with the value 0.003147
-            .&nbsp; As of
+            .&nbsp; Do not set this property unless it is needed, and do not use this property if 
+            there is more than one kind of Falcon camera, or multiple cameras needing different intervals; use the camera 
+            property 'ReadoutInterval' for whichever camera requires a non-standard interval.&nbsp; As of
             SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
             SerialEM or FEI-SEMserver when saving frames.
           </TD>
@@ -1545,6 +1547,15 @@
             as seen from the computer running
             SerialEM.&nbsp; If this property is omitted, the path is taken from the general property
             'FalconReferenceDir'; see that property for details.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ReadoutInterval</TD>
+          <TD>Readout interval for a specific Falcon camera.&nbsp; Use this property if 
+            there is more than one Falcon camera and one or more non-standard intervals need 
+            to be used.&nbsp; If the system has both Falcon 3 and Falcon 4 with standard 
+            readout intervals (see the general property 'FalconReadoutInterval'), this 
+            interval should be assigned correctly by the program and this property should 
+            not need to be entered.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>

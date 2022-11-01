@@ -302,7 +302,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
     if (AfxMessageBox(mess, MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL)
       return;
   } else if (IS_FALCON2_3_4(camParam)) {
-    baseTime = mWinApp->mCamera->GetFalconReadoutInterval();
+    baseTime = mWinApp->mCamera->GetFalconReadoutInterval(camParam);
   } else if (mWinApp->mDEToolDlg.HasFrameTime(camParam)) {
     fps = camParam->DE_FramesPerSec > 0 ? camParam->DE_FramesPerSec :
       mWinApp->mDEToolDlg.GetFramesPerSecond();

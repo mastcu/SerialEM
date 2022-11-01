@@ -420,6 +420,8 @@ public:
   float GetFalconFractionDivisor(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
   GetSetMember(float, FalconReadoutInterval);
+  float GetFalconReadoutInterval(CameraParameters *param) { 
+    return param->ReadoutInterval > 0 ? param->ReadoutInterval : mFalconReadoutInterval; };
   GetSetMember(float, Ceta2ReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
   int GetMaxFalconFrames(CameraParameters *params);
