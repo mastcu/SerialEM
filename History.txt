@@ -3,8 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/1/22: Added script commands ImageMarkerPosition, GetNavGroupStageCoords,
+GetNavGroupImageCoords, LoadSettingsFile, and SetupFullMontage.
+
+11/1/22: Added task to Acquire at Items to run hole finder and combiner after
+acquiring a map.
+
 10/31/22: Set flag to force an autofocus after taking or aligning to
 dose-symmetric anchor (in 4.0).
+
+10/29/22: Added camera property to specify readout interval for individual
+Falcon cameras and made changes so that no property entries should be needed
+if there is a Falcon 3 and 4 with standard intervals.
 
 10/29/22: Fixed writing of full tilt series alignframes command file and
 copying of the mdoc file for Falcon 3/4.  Also added pixel size to the command

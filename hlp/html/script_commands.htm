@@ -1694,6 +1694,14 @@
             &nbsp; Values can be assigned to variables after the buffer letter.&nbsp; Command added in 4.1, 4/1/22.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ImageMarkerPosition buf</TD>
+          <TD>Reports the coordinates of the green marker point in the image in buffer <b>buf</b>, where
+            <B>buf</B> can be 0 or -1 to select the active image buffer.&nbsp; Reports -1, -1 if there
+            is no marker point set.&nbsp; Values can be assigned to variables after the buffer 
+            letter.&nbsp; Command added in 4.1, 10/31/22.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ImageConditions buf</TD>
           <TD>Reports the electron dose and the magnification for the image in buffer <b>buf</b>; other items will be added upon request.&nbsp;</TD>
         </TR>
@@ -1952,6 +1960,11 @@
               unique new name.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">LoadSettingsFile file</TD>
+          <TD>Loads the given settings file after saving to the current one.&nbsp; Command 
+            added in 4.1, 10/31/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SaveCalibrations</TD>
           <TD>Saves the calibrations to a file. The name of the calibrations file is printed in the
               log window; execution of this command requires Administrator mode to be enabled in the
@@ -2065,6 +2078,12 @@
             open a new one with the given name.&nbsp; Variables will be substituted, so the
             name can contain the mag index, for example. It sets <I>reportedValue1</I> to 1 or 0
             depending on whether montaging is needed or not. </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetupFullMontage file</TD>
+          <TD>Opens a full grid montage with the given name at the current magnification, without opening
+             any dialogs.&nbsp; The current acquisition parameters of the camera parameter set indicated 
+            in the Montage Setup dialog will be used.&nbsp; Command added in 4.1, 10/31/22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNumMontagePieces</TD>
@@ -4034,6 +4053,22 @@
             The X and Y coordinates are returned in <i>reportedValue1</i> and <i>2</i>, <i>reportedValue3</i> is set to 0
             if item <b>#I</b> is outside the buffer or to -1 if the transformation can not be completed.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetNavGroupStageCoords #I xvar yvar [zvar]</TD>
+          <TD>Returns the stage coordinates of all Navigator points with the group ID <b>#I</b> into
+            variables named <b>xvar</b> and <b>yvar</b>, and also returns the Z coordinates if the optional
+            name <b>zvar</b> is provided.&nbsp; Sets <i>reportedValue1</i> to the number of points found,
+            including 0 if none found.&nbsp; Command added in 4.1, 10/31/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetNavGroupImageCoords #I buf xvar yvar</TD>
+          <TD>Returns the image coordinates of all Navigator points within the image in buffer <b>buf</b>
+              and having the group ID <b>#I</b>, placing them in variables named <b>xvar</b> and <b>yvar</b>.&nbsp; Sets
+             <i>reportedValue1</i> to the number of points found, including 0 if none found within the
+            bounds of the image, and -1 if stage positions could not be transformed for this 
+            image.&nbsp; Command added in 4.1, 10/31/22;</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeItemRegistration #I #R</TD>

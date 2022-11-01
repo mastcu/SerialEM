@@ -3040,6 +3040,15 @@ int CMacCmd::SetupWaffleMontage(void)
   return 0;
 }
 
+// SetupFullMontage
+int CMacCmd::SetupFullMontage(void)
+{
+  ABORT_NONAV;
+  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
+  mNavigator->FullMontage(true);
+  return 0;
+}
+
 // ReportNumMontagePieces
 int CMacCmd::ReportNumMontagePieces(void)
 {
@@ -3947,6 +3956,18 @@ int CMacCmd::SaveCalibrations(void)
   else
     mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode "
      "not enabled");
+  return 0;
+}
+
+// LoadSettingsFile
+int CMacCmd::LoadSettingsFile(void)
+{
+  CString curFile = mWinApp->mDocWnd->GetCurrentSettingsPath();
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  
+  if (mWinApp->mDocWnd->GetSettingsOpen() && !curFile.IsEmpty())
+    mWinApp->mParamIO->WriteSettings(curFile);
+  mWinApp->mDocWnd->ReadNewSettingsFile(mStrCopy);
   return 0;
 }
 
@@ -6696,6 +6717,33 @@ int CMacCmd::ImageProperties(void)
   return 0;
 }
 
+// ImageMarkerPosition
+int CMacCmd::ImageMarkerPosition(void)
+{
+  CString report;
+  EMimageBuffer *imBuf;
+  float delX = -1., delY = -1.;
+  int index;
+
+  if (mStrItems[1] == "0" || mStrItems[1] == "-1") {
+    imBuf = mWinApp->mMainView->GetActiveImBuf();
+    if (!imBuf || !imBuf->mImage)
+      ABORT_LINE("There is no image in the active buffer for line\n\n:");
+  } else {
+    if (ConvertBufferLetter(mStrItems[1], 0, true, index, report, true))
+      ABORT_LINE(report);
+    imBuf = ImBufForIndex(index);
+  }
+  if (imBuf->mHasUserPt) {
+    delX = imBuf->mUserPtX;
+    delY = imBuf->mUserPtY;
+    mLogRpt.Format("Marker point coordinates %.1f, %.1f", delX, delY);
+  } else
+    mLogRpt = "The image has no marker point set";
+  SetRepValsAndVars(2, delX, delY);
+  return 0;
+}
+
 // ImageConditions
 int CMacCmd::ImageConditions(void)
 {
@@ -9385,6 +9433,71 @@ int CMacCmd::DeleteNavigatorItem(void)
   mNavigator->ExternalDeleteItem(navItem, index);
   if (!mItemInt[2])
     mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
+// GetNavGroupStageCoords, GetNavGroupImageCoords
+int CMacCmd::GetNavGroupStageCoords(void)
+{
+  CMapDrawItem *item;
+  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray;
+  int ind, bufInd, varInd = 2, sizeX, sizeY;
+  int numPts = 0;
+  float xx, yy;
+  CString xval, yval, zval, str;
+  bool image = CMD_IS(GETNAVGROUPIMAGECOORDS);
+  ABORT_NONAV;
+  if (mItemInt[1] <= 0)
+    ABORT_LINE("Group ID must be positive in line:\n\n");
+  if (image) {
+    if (ConvertBufferLetter(mStrItems[2], 0, true, bufInd, mStrCopy))
+      ABORT_LINE(mStrCopy);
+    if (!mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[bufInd], true)) {
+      mLogRpt.Format("Navigator items could not be transformed to %c", bufInd + 65);
+      SetReportedValues(-1);
+      return 0;
+    }
+    varInd = 3;
+    mImBufs[bufInd].mImage->getSize(sizeX, sizeY);
+  }
+  itemArray = mNavigator->GetItemArray();
+  for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsPoint() && item->mGroupID == mItemInt[1]) {
+      if (image) {
+        mWinApp->mMainView->GetItemImageCoords(&mImBufs[bufInd], item, xx, yy);
+        if (xx < 0. || xx > sizeX || yy < 0. || yy > sizeY)
+          continue;
+      } else {
+        xx = item->mStageX;
+        yy = item->mStageY;
+        if (!mItemEmpty[4]) {
+          str.Format("%s%f", numPts ? "\n" : "", item->mStageZ);
+          zval += str;
+        }
+      }
+      str.Format("%s%f", numPts ? "\n" : "", xx);
+      xval += str;
+      str.Format("%s%f", numPts ? "\n" : "", yy);
+      yval += str;
+      numPts++;
+    }
+  }
+  mLogRpt.Format("%d point positions found in group", numPts);
+  if (numPts) {
+    if (SetVariable(mStrItems[varInd].MakeUpper(), xval, VARTYPE_REGULAR, -1, false,
+      &mStrCopy))
+      ABORT_LINE(mStrCopy + "in line:\n\n");
+    if (SetVariable(mStrItems[varInd + 1].MakeUpper(), yval, VARTYPE_REGULAR, -1, false,
+      &mStrCopy))
+      ABORT_LINE(mStrCopy + "in line:\n\n");
+    if (!image && !mItemEmpty[4]) {
+      if (SetVariable(mStrItems[4].MakeUpper(), zval, VARTYPE_REGULAR, -1, false,
+        &mStrCopy))
+        ABORT_LINE(mStrCopy + "in line:\n\n");
+    }
+  }
+  SetReportedValues(numPts);
   return 0;
 }
 

@@ -686,6 +686,12 @@ MAC_SAME_NAME_ARG(ListISVectorsToGraph, 3, 4, LISTISVECTORSTOGRAPH, III)
 MAC_SAME_NAME_NOARG(CloseAllGraphs, 0, 4, CLOSEALLGRAPHS)
 MAC_SAME_NAME_NOARG(GetLastTiltXYZToGraph, 0, 4, GETLASTTILTXYZTOGRAPH)
 MAC_SAME_NAME_ARG(PipeToNextProcess, 1, 4, PIPETONEXTPROCESS, S)
+MAC_SAME_NAME_ARG(ImageMarkerPosition, 1, 4, IMAGEMARKERPOSITION, S)
+MAC_SAME_NAME_ARG(GetNavGroupStageCoords, 3, 4, GETNAVGROUPSTAGECOORDS, ISSs)
+MAC_SAME_FUNC_ARG(GetNavGroupImageCoords, 3, 4, GetNavGroupStageCoords, GETNAVGROUPIMAGECOORDS, ISSS)
+MAC_SAME_NAME_ARG(LoadSettingsFile, 1, 0, LOADSETTINGSFILE, S)
+MAC_SAME_NAME_ARG(SetupFullMontage, 1, 0, SETUPFULLMONTAGE, S)
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

@@ -297,6 +297,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].failedToInitialize = false;
     mCamParams[i].AMTtype = 0;
     mCamParams[i].FEItype = 0;
+    mCamParams[i].ReadoutInterval = 0.;
     mCamParams[i].CamFlags = 0;
     mCamParams[i].DE_camType = 0;      // Wasn't init
     mCamParams[i].DE_ImageInvertX = 0;
