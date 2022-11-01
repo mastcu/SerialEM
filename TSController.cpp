@@ -134,10 +134,11 @@ static const char *actionText[][2] =
 #define NEW_REFERENCE       32
 #define DRIFTED_AT_STOP     64
 #define REFINED_ZLP        128
+#define TOOK_DOSYM_ANCHOR  256
 #define SHIFT_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | \
   NEW_REFERENCE | DRIFTED_AT_STOP)
 #define FOCUS_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | \
-  NEW_REFERENCE | USER_CHANGED_FOCUS)
+  NEW_REFERENCE | USER_CHANGED_FOCUS | TOOK_DOSYM_ANCHOR)
 
 #define MAX_BACKUP_LIST_ENTRIES  20
 
@@ -2876,6 +2877,11 @@ void CTSController::NextAction(int param)
           return;
       }
       mTakingBidirAnchor = true;
+
+      // mTiltIndex is incremented when Record is taken/saved, so both the anchor shot and
+      // the realign will be at index - 1 when predictions are computed with index - 1
+      if (mTiltIndex > 0)
+        mDisturbance[mTiltIndex - 1] |= TOOK_DOSYM_ANCHOR;
       mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
       return;
 
