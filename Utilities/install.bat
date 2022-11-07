@@ -29,7 +29,7 @@ set GMS64PLUGS=SEMCCD-GMS2-64.dll SEMCCD-GMS2.2-64.dll SEMCCD-GMS2.30-64.dll SEM
  SEMCCD-GMS3.01-64.dll SEMCCD-GMS3.30-64.dll SEMCCD-GMS3.31-64.dll SEMCCD-GMS3.42-64.dll^
  SEMCCD-GMS3.50-64.dll
 
-rem # Clean up all existing and older files
+rem # Clean up all existing and older and near-future files
 for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll^
  libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll^
  register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll^
@@ -38,9 +38,12 @@ for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg6
  JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll^
  DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
  libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
- hdf5.dll SerialEM_Snapshot.txt) DO (
+ hdf5.dll SerialEM_Snapshot.txt concrt140.dll mfc140.dll msvcp140.dll ucrtbase.dll^
+ vcruntime140.dll msvcp120.dll msvcr120.dll) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
+
+IF EXIST ..\api-ms-win-core-console-l1-1-0.dll  DEL ..\api-ms*.dll
 
 FOR %%A in (Microsoft.VC90.CRT Microsoft.VC90.MFC Microsoft.VC90.OPENMP) DO (
   IF EXIST ..\%%A RMDIR /Q /S ..\%%A
