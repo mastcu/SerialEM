@@ -383,7 +383,7 @@ int KStoreIMOD::AssignIIfileTypeAndFormat()
 
 CString KStoreIMOD::getFilePath()
 {
-  if (mStoreType == STORE_TYPE_HDF && mIIfile)
+  if ((mStoreType == STORE_TYPE_HDF || mStoreType == STORE_TYPE_IMOD) && mIIfile)
     return mIIfile->filename;
   return KImageStore::getFilePath();
 }
