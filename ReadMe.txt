@@ -1,12 +1,11 @@
-SerialEM is currently developed in Visual Studio 2015 with the v90 (VS 2008)
-platform toolset, which is required for it to run under Windows 2000 and XP
-below SP3.  The solution can still be opened in VS 2010 and presumably with
-2012 and 2013 too.  To compile it with VS 2015 alone, use the v140
-configurations.  To compile with earlier versions, you must either have the
-V90 toolset or change the selected toolset for the configurations you want to
-build.  Beware: the first time that you open the solution in VS 2015, it will
-want to upgrade the project to use the current toolset on all configurations,
-even though there is a v140 configuration.  Just cancel this message.
+SerialEM is currently developed in Visual Studio 2015 with the v140_xp
+platform toolset so that it can still run on XP SP3, but it includes a pure
+v140 configuration as well.  Using the v140_xp configuration requires the
+Windows 7.1A Platform SDK (and possibly a corresponding version of Visual
+Studio).  Beware: the first time that you open the solution in a higher
+version of Visdual Studio, it will want to upgrade the project to use the
+current toolset on all configurations.  Just cancel this message, then adjust
+the platform toolset for the v140 configuration.
 
 There are 7 project configurations:
 Debug (Win 32 & x64)
@@ -23,49 +22,26 @@ JEOL Release (Win 32 & x64)
    settingsJeol and read SerialEMsettings.txt there.
 NoHang (Win32 only; x64 properties are not maintained)
    A Release build that compiles the MyFileDialog class in SerialEMDoc.cpp to
-   use the SDK file dialog instead of CFileDialog, which hangs on some Windows
-   2000 machines
+   use the SDK file dialog instead of CFileDialog, which used to hang on some
+   Windows 2000 machines and maybe Windows XP also.
 v140 Debug (Win 32 & x64)
-   A Debug build for building in VS 2015 with the open source versions of all
-   libraries.
+   A Debug build for building in VS 2015 with no dependence on Intel
+   libraries and no Windows XP compatibility.
 v140 Release (Win 32 & x64)
-   A release build for building in VS 2015 with the open source versions of all
-   libraries.
+   A Debug build for building in VS 2015 with no dependence on Intel
+   libraries and no Windows XP compatibility.
 
 You must have the library collection SerialEMLibs in an adjacent directory, or
 change the project properties to access this repository elsewhere.  This
 collection includes libraries that you should not use unless you have a
 license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
 libraries for the corresponding DLLs in the binary SerialEM distributions,
-which incorporate Intel Math Kernel Library FFT routines from version 11.1 of
+which incorporate Intel Math Kernel Library FFT routines from version 15 of
 the Intel compiler collection.  If you do not have a license for these, you
-should either compile with the v140 configurations, or change the project
-configuration under Linker - Input as follows:
-  1) Remove "-MKL" from the entry for libifft in "Additional Dependencies".
-  2) Remove "-IOMP" from the entries there for libiimod and libcfshr.
-  3) Completely remove the entry there for libiomp5md.lib.
-  5) Add -VCOMP to the entry there for libctffind. (The executable will depend
-  on libctffind-VCOMP.dll in SerialEMLibs, not on the libctffind.dll
-  distributed with SerialEM.)
-  4) Remove "VCOMP;VCOMPD;" from "Ignore Specific Default Libraries".
-
-The collection also includes 32-bit version 2 of FFTW that was formerly used
-under a purchased license.  If you should happen to have a license for this,
-you could use it by removing libifft.lib, adding in FFTW2st.lib and
-RFFTW2st.lib, making the changes in steps 2-5 above, and defining USE_FFTW2 at
-least for the compilation of Xcorr.cpp.
-
-If you modify a configuration to use other than the v90 toolset, you will
-probably have to change preprocessor definition _WIN32_WINNT=0x0500 to
-0x0501.  However, the libraries used with v90 should still work up to the VS
-2013 toolset.
-
-Both 32 and 64-bit versions of SerialEM can be compiled in VS 2015 with the
-v140 configurations, which use libraries without MKL or FFTW in SerialEMLibs,
-named with "-14".  To run it, copy the file libctffind-VCOMP-14.dll from
-SerialEMLibs or SerialEMLibs/x64 to the executable directory and rename it
-libctffind-VCOMP.dll.  For a 64-bit version, also copy hdf5-14.dll from
-SerialEMLibs/x64 to the executable directory and rename it hdf5.dll.
+should compile with the v140 configurations.  To run the program after such a
+compilation, copy libctffind-VCOMP.dll from SerialEMLibs or SerialEMLibs/x64
+to the executable directory, and copy hdf5.dll and imodzlib1.dll from the
+appropriate SerialEM distribution.
 
 
 The rest of this file contains a description of the modules in SerialEM.  This
