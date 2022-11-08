@@ -41,8 +41,9 @@
       on those maps.</p>
     <p>The second set of choices determine whether the measured shift is saved for 
       reuse with the Apply Saved Shift command.&nbsp; Saved shifts are useful if maps 
-      being shifted at a particular magnification are not all available at once.&nbsp;&nbsp; 
-      Newly obtained maps can be easily shifted by the same amount as previous ones by 
+      being shifted at a particular magnification are not all available at once, or if 
+      shifts are sufficiently stable over time to be reusable in multiple sessions, 
+      since they are saved in the settings file.&nbsp;Newly obtained maps can be easily shifted by the same amount as previous ones by 
       using a saved shift.&nbsp; A shift is saved specifically for the magnification 
       at which the Navigator item is marked and the magnification of the image with 
       the marker point.&nbsp; A saved shift can be used only for maps taken at the 
@@ -96,6 +97,13 @@
       not the same as the one when that shift was saved.&nbsp; Adding to a shift in 
       that case would be appropriate if the two higher magnifications are 
       well-aligned.</p>
+    <p><strong>List of Shifts and 'Remove Selected Shift'</strong></p>
+    <p>The list box shows all saved shifts, identifying them by their lower and higher 
+      magnifications.&nbsp; The <strong>Remove Selected Shifts</strong> button will 
+      delete the currently selected item after you confirm that you want to do so.&nbsp; 
+      If there are saved shifts, this dialog can be opened in order to inspect and 
+      remove shifts even when the conditions for doing a Shift to Marker are not 
+      satisfied.</p>
     <p><strong>Scenarios for Using Shift to Marker</strong></p>
     <ol>
       <li>A whole grid map is taken and a point is added at a recognizable feature.&nbsp; 

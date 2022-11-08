@@ -150,6 +150,8 @@ BOOL_SETT_GETSET("DivideGridIntoGroups", mWinApp->mNavHelper->, DivideIntoGroups
 BOOL_SETT_GETSET("RIuseCurrentLDparams", mWinApp->mNavHelper->, RIuseCurrentLDparams)
 BOOL_SETT_GETSET("SkipMontFitDlgs", mWinApp->mNavHelper->, SkipMontFitDlgs)
 INT_SETT_GETSET("CurAcqParamIndex", mWinApp->mNavHelper->, CurAcqParamIndex)
+INT_SETT_GETSET("MarkShftSaveType", mWinApp->mNavHelper->, MarkerShiftSaveType)
+INT_SETT_GETSET("MarkShftApplyWhich", mWinApp->mNavHelper->, MarkerShiftApplyWhich)
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
 INT_SETT_GETSET("ExtraDivideBy2", camera->, ExtraDivideBy2)
 BOOL_SETT_GETSET("AcquireFloatImages", camera->, AcquireFloatImages)

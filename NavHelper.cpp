@@ -261,6 +261,8 @@ CNavHelper::CNavHelper(void)
   mCurAcqParamIndex = 0;
   mSettingState = false;
   mOKtoUseHoleVectors = false;
+  mMarkerShiftApplyWhich = 0;
+  mMarkerShiftSaveType = 0;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -3072,6 +3074,14 @@ void CNavHelper::ApplyBaseMarkerShift()
   mNav->ShiftCohortOfItems(mMarkerShiftArray[useInd].shiftX,
     mMarkerShiftArray[useInd].shiftY, mNav->GetCurrentRegistration(), magInd, 
     mNav->MakeUniqueID(), false, false, 1);
+}
+
+// Centralized routine for testing the conditions for Shift to Marker
+bool CNavHelper::OKtoShiftToMarker()
+{
+  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  return (mNav && mNav->NoDrawing() && !mNav->GetAcquiring() &&
+    !mWinApp->DoingTasks() && imBuf && imBuf->mHasUserPt && mNav->GetItemType() >= 0);
 }
 
 

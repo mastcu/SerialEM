@@ -1056,9 +1056,8 @@ void CMenuTargets::OnNavigatorShifttomarker()
 
 void CMenuTargets::OnUpdateNavigatorShifttomarker(CCmdUI *pCmdUI)
 {
- 	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->GetAcquiring() &&
-    !DoingTasks() && imBuf && imBuf->mHasUserPt && mNavigator->GetItemType() >= 0);
+  pCmdUI->Enable(mNavHelper->GetMarkerShiftArray()->GetSize() > 0 ||
+    mNavHelper->OKtoShiftToMarker());
 }
 
 void CMenuTargets::OnNavigatorUndolastshift()

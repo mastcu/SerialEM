@@ -198,6 +198,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   NavAcqAction *navActions;
   NavAlignParams *navAliParm = mWinApp->mNavHelper->GetNavAlignParams();
   DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
+  CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
+    mWinApp->mNavHelper->GetMarkerShiftArray();
+  BaseMarkerShift markerShift;
   zbgArray->RemoveAll();
   CFileStatus status;
   BOOL startingProg = mWinApp->GetStartingProgram();
@@ -643,6 +646,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         navAliParm->leaveISatZero = itemInt[5] != 0;
       } else if (NAME_IS("NavAliMapLabel")) {
         StripItems(strLine, 1, navAliParm->templateLabel);
+
+      } else if (NAME_IS("MarkerShift")) {
+        markerShift.fromMagInd = itemInt[1];
+        markerShift.toMagInd = itemInt[2];
+        markerShift.shiftX = itemFlt[3];
+        markerShift.shiftY = itemFlt[4];
+        markerShiftArr->Add(markerShift);
 
       } else if (NAME_IS("DewarVacParams")) {
         dewar->checkPVP = itemInt[1] != 0;
@@ -1493,6 +1503,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   AutocenParams *acParams, *acParmP;
   LowDoseParams *ldp;
   StateParams *stateP;
+  BaseMarkerShift markShft;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
   int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
   float *deExposures = mWinApp->mGainRefMaker->GetDEexposureTimes();
@@ -1508,6 +1519,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   NavAlignParams *navAliParm = mWinApp->mNavHelper->GetNavAlignParams();
   DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
+  CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
+    mWinApp->mNavHelper->GetMarkerShiftArray();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -1741,6 +1754,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       navAliParm->leaveISatZero ? 1 : 0);
     mFile->WriteString(oneState);
     mFile->WriteString("NavAliMapLabel " + navAliParm->templateLabel + "\n");
+
+    for (i = 0; i < markerShiftArr->GetSize(); i++) {
+      markShft = markerShiftArr->GetAt(i);
+      oneState.Format("MarkerShift %d %d %f %f\n", markShft.fromMagInd, markShft.toMagInd,
+        markShft.shiftX, markShft.shiftY);
+      mFile->WriteString(oneState);
+    }
 
     oneState.Format("DewarVacParams %d %d %d %d %d %d %f %d %f %d %f %f %d\n",
       dewar->checkPVP ? 1 : 0, dewar->runBufferCycle ? 1 : 0,

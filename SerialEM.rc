@@ -3584,7 +3584,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_SELECTOR,70,31,100,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_SHIFT_TO_MARKER DIALOGEX 0, 0, 252, 165
+IDD_SHIFT_TO_MARKER DIALOGEX 0, 0, 252, 235
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Shift To Marker"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3593,21 +3593,24 @@ BEGIN
     CTEXT           "Selected non-imported items at registration 2 will be shifted by that amount",IDC_STAT_WHAT_SHIFTS,7,21,238,8
     CONTROL         "All items at the registration of the image with marker point",IDC_RAPPLY_ALL_AT_REG,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,43,204,10
-    CONTROL         "All maps at 23000x and items marked on them",IDC_RAPPLY_ALL_MAPS_AT_MAG,
-                    "Button",BS_AUTORADIOBUTTON,13,54,193,10
-    CONTROL         "Only maps at 23000x and marked items that have not been shifted before",IDC_RAPPLY_IN_COHORT,
+    CONTROL         "All maps at a mag and items marked on them",IDC_RAPPLY_ALL_MAPS_AT_MAG,
+                    "Button",BS_AUTORADIOBUTTON,13,54,232,10
+    CONTROL         "Only maps at a mag and marked items that have not been shifted before",IDC_RAPPLY_IN_COHORT,
                     "Button",BS_AUTORADIOBUTTON,13,65,228,10
     GROUPBOX        "Which items to shift",IDC_STATIC,7,33,238,55,WS_GROUP
     CONTROL         "Do not save shift for reuse",IDC_RNO_SAVING,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,102,99,10
-    CONTROL         "Save shift to apply again from 4700x to 23000x or other higher mag",IDC_RSAVE_NEW_SHIFT,
-                    "Button",BS_AUTORADIOBUTTON,16,113,225,10
-    CONTROL         "Add to saved shift from 4700x to 20000x (non-matching higher mag)",IDC_RADD_TO_SAVED,
-                    "Button",BS_AUTORADIOBUTTON,16,124,228,10
+    CONTROL         "Save shift to apply again from lower to higher mag",IDC_RSAVE_NEW_SHIFT,
+                    "Button",BS_AUTORADIOBUTTON,16,113,229,10
+    CONTROL         "Add to saved shift from lower to higher mag",IDC_RADD_TO_SAVED,
+                    "Button",BS_AUTORADIOBUTTON,16,124,229,10
     GROUPBOX        "Saving shift for reuse",IDC_STATIC,7,92,238,46,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,47,144,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,147,144,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,235,148,10,10
+    DEFPUSHBUTTON   "OK",IDOK,47,214,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,147,214,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,235,218,10,10
     LTEXT           "the map that the current item was marked on",IDC_STAT_MAP_MARKED,25,75,141,8
+    PUSHBUTTON      "Remove Selected Shift:",IDC_BUT_REMOVE_SHIFT,17,172,80,14
+    LISTBOX         IDC_LIST_SAVED_SHIFTS,104,152,141,55,LBS_SORT | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "From mag   To mag   Shift in X, Y",IDC_STATIC,105,142,115,8
 END
 
 IDD_Z_BY_G_SETUP DIALOGEX 0, 0, 166, 243
@@ -4273,7 +4276,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 245
         TOPMARGIN, 7
-        BOTTOMMARGIN, 158
+        BOTTOMMARGIN, 228
     END
 
     IDD_Z_BY_G_SETUP, DIALOG

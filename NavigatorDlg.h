@@ -363,8 +363,6 @@ private:
   int mMarkerShiftType;     // Type of shift, > 0 if not all at reg
   int mMarkerShiftMagInd;   // Mag index
   int mMarkerShiftCohortID; // ID
-  int mMarkerShiftApplyTo;  // Saved dialog selection for which ones to apply to
-  int mMarkerShiftSaveType; // And whether/how to save shifts
   int mAcquireEnded;        // Flag that End Nav or Pause was pressed when running macro
   KImageStore *mLoadStoreMRC; // Variables to save state for asynchronous loading of map
   BOOL mReadingOther;

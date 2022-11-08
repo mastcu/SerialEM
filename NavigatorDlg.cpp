@@ -179,8 +179,6 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLastGridInSpacing = 0.;
   mAddingFoundHoles = false;
   mDeferAddingToViewer = false;
-  mMarkerShiftApplyTo = 0;
-  mMarkerShiftSaveType = 0;
   mFocusCycleCounter = -1;
   mSavedBeamTiltX = EXTRA_NO_VALUE;
   mSavedAstigX = EXTRA_NO_VALUE;
@@ -2160,54 +2158,63 @@ void CNavigatorDlg::ShiftToMarker(void)
   EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
   CShiftToMarkerDlg dlg;
   CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
-  if (!SetCurrentItem())
-    return;
+  dlg.mOKtoShift = mHelper->OKtoShiftToMarker();
+  dlg.m_iApplyToWhich = mHelper->GetMarkerShiftApplyWhich();
+  dlg.m_iSaveType = mHelper->GetMarkerShiftSaveType();
+  if (dlg.mOKtoShift) {
+    if (!SetCurrentItem())
+      return;
 
-  if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
-    AfxMessageBox("The currently active image does not have enough information\n"
-      "to convert the marker point to a stage coordinate.", MB_EXCLAME);
-    return;
-  }
-
-  registration = imBuf->mRegistration ? imBuf->mRegistration : mItem->mRegistration;
-  if (registration != mItem->mRegistration) {
-    AfxMessageBox("The currently active image is not at the same registration\n"
-      "as the currently selected Navigator item.", MB_EXCLAME);
-    return;
-  }
-
-  MarkerStagePosition(imBuf, aMat, delX, delY, ptX, ptY);
-  shiftX = ptX - mItem->mStageX;
-  shiftY = ptY - mItem->mStageY;
-
-  dlg.mToMag = imBuf->mMagInd;
-  dlg.mFromMag = 0;
-  dlg.mBaseToMag = 0;
-  dlg.mMapWasShifted = false;
-  dlg.m_iApplyToWhich = mMarkerShiftApplyTo;
-  dlg.m_iSaveType = mMarkerShiftSaveType;
-  if (mItem->mDrawnOnMapID) {
-    map = FindItemWithMapID(mItem->mDrawnOnMapID);
-    if (map) {
-      dlg.mFromMag = map->mMapMagInd;
-      dlg.mMapWasShifted = map->mShiftCohortID && map->mMarkerShiftX > EXTRA_VALUE_TEST;
+    if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
+      AfxMessageBox("The currently active image does not have enough information\n"
+        "to convert the marker point to a stage coordinate.", MB_EXCLAME);
+      return;
     }
-  } else
-    dlg.mFromMag = mItem->mMapMagInd;
-  baseShift = mHelper->FindNearestBaseShift(dlg.mFromMag, dlg.mToMag);
-  if (baseShift)
-   dlg.mBaseToMag = baseShift->toMagInd;
 
-  dlg.m_strMarkerShift.Format("The shift between the current item and the marker point"
-    " is %.2f, %.2f microns", shiftX, shiftY);
-  dlg.m_strWhatShifts.Format("All selected %sitems at "
-    "registration %d will be shifted by that amount",  
-    (RegistrationUseType(registration) == NAVREG_IMPORT ? "non-imported " : ""), 
-    registration);
+    registration = imBuf->mRegistration ? imBuf->mRegistration : mItem->mRegistration;
+    if (registration != mItem->mRegistration) {
+      AfxMessageBox("The currently active image is not at the same registration\n"
+        "as the currently selected Navigator item.", MB_EXCLAME);
+      return;
+    }
+
+    MarkerStagePosition(imBuf, aMat, delX, delY, ptX, ptY);
+    shiftX = ptX - mItem->mStageX;
+    shiftY = ptY - mItem->mStageY;
+
+    dlg.mToMag = imBuf->mMagInd;
+    dlg.mFromMag = 0;
+    dlg.mBaseToMag = 0;
+    dlg.mMapWasShifted = false;
+
+    if (mItem->mDrawnOnMapID) {
+      map = FindItemWithMapID(mItem->mDrawnOnMapID);
+      if (map) {
+        dlg.mFromMag = map->mMapMagInd;
+        dlg.mMapWasShifted = map->mShiftCohortID && map->mMarkerShiftX > EXTRA_VALUE_TEST;
+      }
+    } else
+      dlg.mFromMag = mItem->mMapMagInd;
+    baseShift = mHelper->FindNearestBaseShift(dlg.mFromMag, dlg.mToMag);
+    if (baseShift)
+      dlg.mBaseToMag = baseShift->toMagInd;
+
+    dlg.m_strMarkerShift.Format("The shift between the current item and the marker point"
+      " is %.2f, %.2f microns", shiftX, shiftY);
+    dlg.m_strWhatShifts.Format("All selected %sitems at "
+      "registration %d will be shifted by that amount",
+      (RegistrationUseType(registration) == NAVREG_IMPORT ? "non-imported " : ""),
+      registration);
+  } else {
+    dlg.m_strMarkerShift = "No marker shift is available";
+    dlg.m_strWhatShifts = "Dialog opened just for viewing and removing saved shifts";
+  }
   if (dlg.DoModal() == IDCANCEL)
     return;
-  mMarkerShiftApplyTo = dlg.m_iApplyToWhich;
-  mMarkerShiftSaveType = dlg.m_iSaveType;
+  mHelper->SetMarkerShiftApplyWhich(dlg.m_iApplyToWhich);
+  mHelper->SetMarkerShiftSaveType(dlg.m_iSaveType);
+  if (!dlg.mOKtoShift)
+    return;
   if (!dlg.m_iApplyToWhich || !dlg.mFromMag || !dlg.mToMag) {
     ShiftItemsAtRegistration(shiftX, shiftY, registration, 1);
     mMarkerShiftType = 0;

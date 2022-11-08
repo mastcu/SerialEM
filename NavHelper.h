@@ -220,6 +220,9 @@ public:
   GetMember(bool, RIstayingInLD);
   GetMember(bool, SettingState);
   GetSetMember(bool, OKtoUseHoleVectors);
+  GetSetMember(int, MarkerShiftSaveType);
+  GetSetMember(int, MarkerShiftApplyWhich);
+
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
   NavAcqAction *GetAcqActions(int which) {return &mAllAcqActions[which][0] ; };
@@ -427,6 +430,8 @@ private:
   static int mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1];    // A modifiable default order
   int mAcqActCurrentOrder[2][NAA_MAX_ACTIONS];    // Current order
   int mCurAcqParamIndex;         // Current acquire param set
+  int mMarkerShiftApplyWhich;    // Saved dialog selection for which ones to apply to
+  int mMarkerShiftSaveType;      // And whether/how to save shifts      
 
 
 public:
@@ -573,6 +578,7 @@ public:
   BaseMarkerShift *FindNearestBaseShift(int fromMag, int toMag);
   bool OKtoApplyBaseMarkerShift();
   void ApplyBaseMarkerShift();
+  bool OKtoShiftToMarker();
   void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
   {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
 
