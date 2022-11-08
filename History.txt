@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/8/22: Disabled all radio buttons about saving shifts when no saving is
+possible in Shift to Marker dialog (In 4.0).
+
 11/7/22: Switched distribution to being built with Visual C++ 2015 tools.
 SerialEM will no longer run directly on Windows 2000 and XP SP1 or SP2 but has
 to be run on a separate computer connecting to FEI-SEMserver on the scope

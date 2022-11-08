@@ -93,6 +93,7 @@ BOOL CShiftToMarkerDlg::OnInitDialog()
       "Add to saved shift: insufficient information available");
     
   }
+  UpdateData(false);
   OnRadioWhichToShift();
   return TRUE;
 }
@@ -112,6 +113,8 @@ void CShiftToMarkerDlg::OnCancel()
 void CShiftToMarkerDlg::OnRadioWhichToShift()
 {
   UpdateData(true);
-  EnableDlgItem(IDC_RSAVE_NEW_SHIFT, m_iApplyToWhich != 0);
-  EnableDlgItem(IDC_RADD_TO_SAVED, m_iApplyToWhich != 0 && mBaseToMag != 0);
+  bool enable = m_iApplyToWhich != 0;
+  EnableDlgItem(IDC_RNO_SAVING, enable);
+  EnableDlgItem(IDC_RSAVE_NEW_SHIFT, enable);
+  EnableDlgItem(IDC_RADD_TO_SAVED, enable && mBaseToMag != 0);
 }
