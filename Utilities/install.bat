@@ -59,16 +59,35 @@ ver | findstr /i " 5\.0" > nul
 IF %ERRORLEVEL% EQU 0 (
 
   Rem # Windows 2000
-  FOR %%A in (Microsoft.VC90.CRT Microsoft.VC90.MFC) DO (
-    COPY /Y %%A\*.dll ..
-  )
-) ELSE (
-
-  Rem # All other OS's understand manifests, etc
-  FOR %%A in (Microsoft.VC90.CRT Microsoft.VC90.MFC) DO (
-    XCOPY /Q /S /Y /I %%A ..\%%A
-  )
+  echo .
+  echo ERROR!
+  echo SerialEM can no longer run on Windows 2000.  You must run it on a
+  echo separate computer and connect with FEI-SEMserver.exe running on this computer
+  echo.
+  pause
+  exit
 )
+set NEEDREDIST=0
+ver | findstr /i  " 5\.1" > nul
+IF %ERRORLEVEL% EQU 0 GOTO :TestXP
+COPY /Y Microsoft.VC140\*.dll .. > nul
+GOTO :MSDllsDone
+
+:TestXP
+systeminfo | findstr /i "Service Pack 3" 1> nul
+IF %ERRORLEVEL% EQU 0 (
+  set NEEDREDIST=1
+) ELSE (
+  echo .
+  echo ERROR!
+  echo SerialEM can no longer run on Windows XP SP 1 or SP 2.  You must run it on a
+  echo separate computer and connect with FEI-SEMserver.exe running on this computer
+  echo.
+  pause
+  exit
+)
+
+:MSDllsDone
 
 Rem # Check properties file(s) for Tietz or DE cameras
 set SAWPROPS=0
@@ -102,6 +121,8 @@ COPY /Y libmmd.dll ..
 COPY /Y libctffind.dll ..
 COPY /Y imodzlib1.dll ..
 COPY /Y hdf5.dll ..
+IF EXIST msvcp120.dll  COPY /Y msvcp120.dll ..
+IF EXIST msvcr120.dll  COPY /Y msvcr120.dll ..
 COPY /Y SerialEM_Snapshot.txt ..
 
 Rem # If neither properties file seen, just copy them
@@ -438,21 +459,21 @@ set NOSHRMEM=0
 IF %REGISTER% == 0 GOTO :ShrMemDone
 IF %BIT64% == 0 GOTO :ShrMemDone
 
-IF NOT EXIST shrmemframe.exe (
+IF NOT EXIST Shrmemframe (
   set NOSHRMEM=1
   GOTO :ShrMemDone
 )
 
 echo Copying frame alignment components
+
 IF NOT EXIST %SHRMEMDIR% MKDIR %SHRMEMDIR%
 IF EXIST %SHRMEMDIR%\Microsoft.VC90.CRT RMDIR /Q /S %SHRMEMDIR%\Microsoft.VC90.CRT
-COPY /Y shrmemframe.exe %SHRMEMDIR%
-COPY /Y libiomp5md.dll %SHRMEMDIR%
-COPY /Y libmmd.dll %SHRMEMDIR%
-XCOPY /Q /S /Y /I Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
+COPY /Y Shrmemframe\shrmemframe.exe %SHRMEMDIR%
+COPY /Y Shrmemframe\libiomp5md.dll %SHRMEMDIR%
+COPY /Y Shrmemframe\libmmd.dll %SHRMEMDIR%
+XCOPY /Q /S /Y /I Shrmemframe\Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
 
 :ShrMemDone
-
 echo.
 echo All Done.
 echo There should not be any error messages in the above.
@@ -476,6 +497,12 @@ IF %NOSHRMEM% == 1 (
   echo ...
   echo If you have a K2 or K3 camera, for CPU-based frame alignment
   echo you need to install a Shrmemframe package for GMS %versRange64%
+  echo ...
+)
+IF %NEEDREDIST% EQU 1 (
+  echo ...
+  echo You must have a Visual C++ 2015 Redistributables package installed
+  echo to run this version of SerialEM on this computer
   echo ...
 )
 pause

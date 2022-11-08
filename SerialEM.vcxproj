@@ -77,37 +77,37 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -122,25 +122,25 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -152,7 +152,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -161,7 +161,7 @@
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
-    <PlatformToolset>v90</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -271,7 +271,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">.\x64\Debug\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">false</LinkIncremental>
-    <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</EmbedManifest>
+    <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EmbedManifest>
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">true</EmbedManifest>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Build</CustomBuildAfterTargets>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">Build</CustomBuildAfterTargets>
@@ -287,10 +287,10 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <EmbedManifest>false</EmbedManifest>
+    <EmbedManifest>true</EmbedManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">
-    <EmbedManifest>false</EmbedManifest>
+    <EmbedManifest>true</EmbedManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
@@ -318,7 +318,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -337,10 +337,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;..\SerialEMLibs\hdf5.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/SerialEM.pdb</ProgramDatabaseFile>
       <GenerateMapFile>false</GenerateMapFile>
@@ -352,6 +352,7 @@
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities/dpiaware.manifest</AdditionalManifestFiles>
@@ -401,7 +402,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-14.lib;..\SerialEMLibs\libtiff-14.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg-14.lib;..\SerialEMLibs\libifft-14.lib;..\SerialEMLibs\libctffind-VCOMP-14.lib;..\SerialEMLibs\libcfshr-14.lib;..\SerialEMLibs\libimxml-14.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -416,6 +417,7 @@
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>
@@ -442,7 +444,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -461,7 +463,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP-64.lib;..\SerialEMLibs\libtiff-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-64.lib;..\SerialEMLibs\libifft-MKL-64.lib;..\SerialEMLibs\x64\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP-64.lib;..\SerialEMLibs\libimxml-64.lib;..\SerialEMLibs\x64\libiomp5md.lib;..\SerialEMLibs\hdf5-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -476,6 +478,7 @@
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities\dpiaware.manifest</AdditionalManifestFiles>
@@ -525,7 +528,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-14-64.lib;..\SerialEMLibs\libtiff-14-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-14-64.lib;..\SerialEMLibs\libifft-14-64.lib;..\SerialEMLibs\x64\libctffind-VCOMP-14.lib;..\SerialEMLibs\libcfshr-14-64.lib;..\SerialEMLibs\libimxml-14-64.lib;..\SerialEMLibs\hdf5-14-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;hdf5-14-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -540,6 +543,7 @@
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>
@@ -567,7 +571,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -587,10 +591,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;..\SerialEMLibs\hdf5.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Release/SerialEM.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -601,17 +605,18 @@
       </DataExecutionPrevention>
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
     </Manifest>
     <CustomBuildStep>
       <Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -655,7 +660,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-14.lib;..\SerialEMLibs\libtiff-14.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg-14.lib;..\SerialEMLibs\libifft-14.lib;..\SerialEMLibs\libctffind-VCOMP-14.lib;..\SerialEMLibs\libcfshr-14.lib;..\SerialEMLibs\libimxml-14.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;libimod.lib;hdf5-14.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -669,6 +674,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
@@ -678,7 +684,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -702,7 +709,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -722,7 +729,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP-64.lib;..\SerialEMLibs\libtiff-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-64.lib;..\SerialEMLibs\libifft-MKL-64.lib;..\SerialEMLibs\x64\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP-64.lib;..\SerialEMLibs\libimxml-64.lib;..\SerialEMLibs\x64\libiomp5md.lib;..\SerialEMLibs\hdf5-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -736,13 +743,14 @@
       </DataExecutionPrevention>
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/x64-Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:x64/Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -786,7 +794,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-14-64.lib;..\SerialEMLibs\libtiff-14-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-14-64.lib;..\SerialEMLibs\libifft-14-64.lib;..\SerialEMLibs\x64\libctffind-VCOMP-14.lib;..\SerialEMLibs\libcfshr-14-64.lib;..\SerialEMLibs\libimxml-14-64.lib;..\SerialEMLibs\hdf5-14-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;hdf5-14-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -800,6 +808,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities\win10.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -830,7 +839,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -850,10 +859,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;..\SerialEMLibs\hdf5.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\NoHang_Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>.\NoHang_Release/SerialEM.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <LargeAddressAware>true</LargeAddressAware>
@@ -863,6 +872,7 @@
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>
@@ -892,7 +902,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -912,7 +922,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\NoHang_Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -924,6 +934,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
@@ -950,7 +961,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -970,7 +981,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;..\SerialEMLibs\hdf5.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -983,13 +994,14 @@
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -1013,7 +1025,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1033,7 +1045,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP-64.lib;..\SerialEMLibs\libtiff-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-64.lib;..\SerialEMLibs\libifft-MKL-64.lib;..\SerialEMLibs\x64\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP-64.lib;..\SerialEMLibs\libimxml-64.lib;..\SerialEMLibs\x64\libiomp5md.lib;..\SerialEMLibs\hdf5-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -1046,13 +1058,14 @@
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
+      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/x64-Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:x64/Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -1075,7 +1088,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -1094,7 +1107,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP.lib;..\SerialEMLibs\libtiff.lib;..\SerialEMLibs\zlib.lib;..\SerialEMLibs\libjpeg.lib;..\SerialEMLibs\libifft-MKL.lib;..\SerialEMLibs\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP.lib;..\SerialEMLibs\libimxml.lib;..\SerialEMLibs\libiomp5md.lib;..\SerialEMLibs\hdf5.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -1108,6 +1121,7 @@
       <ImportLibrary>SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities/dpiaware.manifest</AdditionalManifestFiles>
@@ -1137,7 +1151,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -1157,7 +1171,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\SerialEMLibs\libiimod-IOMP-64.lib;..\SerialEMLibs\libtiff-64.lib;..\SerialEMLibs\zlib-64.lib;..\SerialEMLibs\libjpeg-64.lib;..\SerialEMLibs\libifft-MKL-64.lib;..\SerialEMLibs\x64\libctffind.lib;..\SerialEMLibs\libcfshr-IOMP-64.lib;..\SerialEMLibs\libimxml-64.lib;..\SerialEMLibs\x64\libiomp5md.lib;..\SerialEMLibs\hdf5-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\x64\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -1171,6 +1185,7 @@
       <ImportLibrary>x64\SerialEM.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Utilities/dpiaware.manifest</AdditionalManifestFiles>
@@ -1190,6 +1205,7 @@
     </Manifest>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
@@ -1202,6 +1218,9 @@
     <PreBuildEvent>
       <Command>C:/cygwin/bin/python Utilities/makeHideDisable</Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalLibraryDirectories>..\SerialEMLibs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AlignFocusWindow.h" />
@@ -2196,12 +2215,12 @@ echo.
     <ClCompile Include="Shared\framealign.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">NotUsing</PrecompiledHeader>
@@ -2214,15 +2233,15 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Template|x64'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;USE_SDK_FILEDLG;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">DELAY_LOAD_FGPU;WIN32;NDEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">DELAY_LOAD_FGPU;WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="Shared\frameutil.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -4221,7 +4240,7 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">Use</PrecompiledHeader>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">ProgramDatabase</DebugInformationFormat>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">Disabled</Optimization>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0500;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">WIN32;_DEBUG;_WINDOWS;_WIN32_DCOM;_SERIALEM;_WIN32_WINNT=0x0501;_OPENMP_NOFORCE_MANIFEST;_CRT_SECURE_NO_DEPRECATE;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">Use</PrecompiledHeader>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">ProgramDatabase</DebugInformationFormat>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">MaxSpeed</Optimization>
