@@ -19,7 +19,7 @@
       an image, then the feature is found in an image at some higher magnification, 
       and the green marker point is placed on the feature.&nbsp; The program can then 
       compute the amount that the Navigator item's stage position needs to be shifted 
-      so that it corresponds to feature's position at the higher magnification.&nbsp; 
+      so that it corresponds to the feature's position at the higher magnification.&nbsp; 
       In the simplest (and original) use of this operation, the coordinates of all 
       Navigator points are shifted.&nbsp; This kind of global shift is appropriate 
       when a single low magnification map is taken and needs to be shifted to give 
@@ -43,7 +43,14 @@
       reuse with the Apply Saved Shift command.&nbsp; Saved shifts are useful if maps 
       being shifted at a particular magnification are not all available at once.&nbsp;&nbsp; 
       Newly obtained maps can be easily shifted by the same amount as previous ones by 
-      using a saved shift.</p>
+      using a saved shift.&nbsp; A shift is saved specifically for the magnification 
+      at which the Navigator item is marked and the magnification of the image with 
+      the marker point.&nbsp; A saved shift can be used only for maps taken at the 
+      lower magnification and the items marked on them.&nbsp; The saved shift is used 
+      through the Navigator menu item <a href="menu_navigator.htm#hid_navigator_applysavedshift">Apply 
+      Saved Shift</a>, not by opening this dialog.</p>
+    <p>See the Scenarios section below for some examples of applying these operations 
+      in different situations.</p>
     <p><strong>Which items to shift</strong></p>
     <p><em>All items at the  registration of the image with marker point</em>: This is the original 
       behavior, before this dialog existed.&nbsp; With this option, the only way to 
@@ -52,7 +59,7 @@
       place of <em>Y</em> is 
       that of the current item (if it is a map) or of the map on which it was drawn.&nbsp; 
       This option is appropriate if you wish to protect already-shifted items at other 
-      magnifications from being shifted, and if it acceptable to shift all maps at the 
+      magnifications from being shifted, and if it is acceptable to shift all maps at the 
       magnification in question.&nbsp; </p>
     <p>The third option will appear as:<br />
       
@@ -73,6 +80,8 @@
       <li>For each map in collection =&gt; include every point marked on the map. </li>
     </ol>
     <p><strong>Saving shifts for reuse</strong></p>
+    <p>These options are available only when shifting items at a specific 
+      magnification.</p>
     <p>&nbsp;<em>Do not save shift for reuse</em>: existing saved shifts, if any, will 
       not be affected.</p>
     <p><em>Save shift to apply again from Yx to Zx or other higher mag</em>: The first 
@@ -87,6 +96,63 @@
       not the same as the one when that shift was saved.&nbsp; Adding to a shift in 
       that case would be appropriate if the two higher magnifications are 
       well-aligned.</p>
+    <p><strong>Scenarios for Using Shift to Marker</strong></p>
+    <ol>
+      <li>A whole grid map is taken and a point is added at a recognizable feature.&nbsp; 
+        The feature is found in an image at an intermediate magnification to be used for 
+        mapping and the marker point is placed on it.</li>
+      <ul>
+        <li>The first option, for shifting all items, can be used as was done with prior 
+          versions.</li>
+        <li>However, if there are more grid maps to be processed in this session, the 
+          second, magnification-specific shifting option can be used along with the option 
+          to save the shift for later reuse.</li>
+        <li>Items such as polygons can be drawn on the map either before or after the 
+          shift.&nbsp; If they are drawn before, they will be shifted along with the map.&nbsp; 
+          If they are drawn after, their stage coordinates are based on the shifted 
+          position of the map and they should still end up in the right place at the 
+          medium magnification.</li>
+      </ul>
+      <li>Shift to marker is applied with a whole grid map, medium magnification maps 
+        are taken, and points are marked on them.&nbsp; One of these points is visited 
+        with the Navigator button 'Go to X/Y', an image is taken at high magnification 
+        and the marker point is placed there, on the actual location of the feature.</li>
+      <ul>
+        <li>Either the second option, to shift all items at the intermediate magification, 
+          or the third option, to shift ones that have not been shifted before, can be 
+          used because there are no other maps to consider.&nbsp; </li>
+        <li>The first option should not be used because it would shift the grid map also, 
+          making new intermediate maps come out in the wrong place.</li>
+        <li>The shift should be saved for reuse if any more intermediate maps are to be 
+          taken.</li>
+      </ul>
+      <li>After the operations in 2), more intermediate maps are taken and points marked 
+        on those.</li>
+      <ul>
+        <li>If the previous shift used in 2) was saved, it can be used with
+          <a href="menu_navigator.htm#hid_navigator_applysavedshift">Apply 
+      Saved Shift</a>.</li>
+        <li>If a different shift is needed for some reason, the current Navigator point 
+          would be found in a high magnification image and the marker placed on it.&nbsp; 
+          Now the third option, to shift only maps that have not been shifted before, must 
+          be used to avoid shifting the maps previously adjusted in 2)</li>
+      </ul>
+      <li>After the operations in 2) resulted in some well-adjusted positions for high 
+        magnification, some new maps are taken in another area, and the shift saved in 
+        2) is applied to them.&nbsp; When an adjusted point is viewed at higher 
+        magnification, it appears 
+        that the shift needs some refinement.</li>
+      <UL>
+        <li>The marker point is placed on the actual position in the high magnification 
+          image of the current Navigator point.</li>
+        <li>The third shift option must be used to shift only this cohort of new maps that 
+          need the refinement.</li>
+        <li>The third saving option can be used to save the total shift, the original one 
+          plus this refinement, to give a shift that might work well when applied to 
+          another set of maps.</li>
+      </UL>
+    </ol>
+    <p>&nbsp;</p>
 
   </body>
 </html>
