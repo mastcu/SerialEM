@@ -1191,8 +1191,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             convexBound(&drawnXinHole[0], &drawnYinHole[0], (int)drawnXinHole.size(), 0.,
               0., &convXinHole[0], &convYinHole[0], &size, &ptX, &ptY,
               (int)drawnXinHole.size());
-            convXinHole.resize(size);
-            convYinHole.resize(size);
+            convXinHole.resize(B3DMAX(0, size));
+            convYinHole.resize(B3DMAX(0, size));
           }
         }
 
@@ -1219,11 +1219,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // Get the convex boundary
         convXallHole.resize(drawnXallHole.size());
         convYallHole.resize(drawnYallHole.size());
-        convexBound(&drawnXallHole[0], &drawnYallHole[0], (int)drawnXallHole.size(), 0., 
-          0., &convXallHole[0], &convYallHole[0], &size, &ptX, &ptY, 
-          (int)drawnXallHole.size());
-        convXallHole.resize(size);
-        convYallHole.resize(size);
+        if (drawnXallHole.size() > 0) {
+          convexBound(&drawnXallHole[0], &drawnYallHole[0], (int)drawnXallHole.size(), 0.,
+            0., &convXallHole[0], &convYallHole[0], &size, &ptX, &ptY,
+            (int)drawnXallHole.size());
+          convXallHole.resize(B3DMAX(0, size));
+          convYallHole.resize(B3DMAX(0, size));
+        }
 
         // Setup to draw circles, switch color and draw them
         // Get radii of Record and multishot in hole
