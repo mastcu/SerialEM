@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/9/22: Explicitly turned off emission before flashing FEG on JEOL to make it
+ramp down better (In 4.0).
+
 10/8/22: SEM_4-0-14
 10/8/22: Changed installer to clean up all files added by installing a new 4.1
 build (In 4.0).
