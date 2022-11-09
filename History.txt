@@ -3,10 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-10/8/22: Started saving shifts from Shift to Marker in settings and added a
+10/8/22: SEM_4-0-14
+10/8/22: Changed installer to clean up all files added by installing a new 4.1
+build (In 4.0).
+
+10/8/22: Fixed vulnerability in drawing routine that probably caused crash (In
+4.0).
+
+110/8/22: Started saving shifts from Shift to Marker in settings and added a
 list box to allow removing shifts.
 
-10/8/22: Disabled all radio buttons about saving shifts when no saving is
+0/8/22: Disabled all radio buttons about saving shifts when no saving is
 possible in Shift to Marker dialog (In 4.0).
 
 11/7/22: Switched distribution to being built with Visual C++ 2015 tools.
@@ -22,7 +29,7 @@ GetNavGroupImageCoords, LoadSettingsFile, and SetupFullMontage.
 acquiring a map.
 
 10/31/22: Set flag to force an autofocus after taking or aligning to
-dose-symmetric anchor (in 4.0).
+dose-symmetric anchor (In 4.0).
 
 10/29/22: Added camera property to specify readout interval for individual
 Falcon cameras and made changes so that no property entries should be needed
