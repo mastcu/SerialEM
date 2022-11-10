@@ -39,7 +39,11 @@
     <p> If you want to align to the template with images smaller than the typical 
       full-field ones, you can acquire an image of whatever size you prefer and crop 
       the template from that.&nbsp; However, this should not be necessary if you 
-      specify an appropriate maximum distance for the alignment shift.</p>
+      specify an appropriate maximum distance for the alignment shift.&nbsp; You can 
+      also use an uncropped image taken with a camera subarea, but this will constrain 
+      the size of the image taken for realigning to be the same size as the template, 
+      which may not work well if the image is not big enough to contain the entire 
+      feature of interest when it is displaced by the maximum allowed distance.</p>
     <p> <strong><em>Parameters for Aligning to a Template</em></strong></p>
     <p> <strong>Label of Navigator map with template</strong></p>
     <p> The map to use is found by its label.&nbsp; Enter either the label of an 
@@ -49,10 +53,13 @@
       withat label is not a map, or whether it is a montage map, which is not allowed.&nbsp; 
       The tests for whether the label exists are case-insensitive.</p>
     <p> <strong>Make Map from Image in A</strong></p>
-    <p> This button is enabled if there is a cropped image in buffer A that has not 
+    <p> This button is enabled if there is an image in buffer A that has not 
       been made a map yet (has no map ID value).&nbsp; Press this button to make it a 
-      map.&nbsp; If it is not saved to file yet, the browser for specifying a file 
-      name will open.&nbsp; The program will make a map and close the file if it 
+      map.&nbsp; If it is not saved to file yet and it is either a cropped image or 
+      cannot be saved to the current file, the browser for specifying a file 
+      name will open.&nbsp; If the image can be saved to the current file, then you 
+      can choose whether to do so or to save it to a separate single-image file; in 
+      the latter case, the browser then opens.&nbsp; The program will make a map and close the file if it 
       opened one.&nbsp; Then a dialog will open with a text box for setting the label 
       of the map.&nbsp; If you already had an entry in the <strong>Label</strong> text 
       box above and there was not already an item with that label, it will offer that 

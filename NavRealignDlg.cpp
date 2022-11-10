@@ -151,18 +151,34 @@ void CNavRealignDlg::OnMakeTemplateMap()
   CString str, info;
   CMapDrawItem *item;
   int index, close = 0, mapErr = 1;
+  int uncroppedX, uncroppedY;
+  int answer = IDNO;
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
-
+  bool notCropped = !(imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0);
+  
   // If not saved yet, open a file and save it
   if (imBuf->GetSaveCopyFlag() >= 0) {
     if (mWinApp->mBufferManager->CheckAsyncSaving())
       return;
-    if (mWinApp->mDocWnd->DoOpenNewFile())
-      return;
-    close = 1;
+    if (notCropped && mWinApp->mStoreMRC &&
+      mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC)) {
+      answer = SEMThreeChoiceBox("This image can be saved into the current open file.  "
+        "Press:\n\n"
+        "\"Current File\" to save it into the current file\n\n"
+        "\"New File\" to save it into a new single-image file\n\n"
+        "\"Cancel\" to stop making a map this way", "Current File", "New File", "Cancel",
+        MB_YESNOCANCEL);
+      if (answer == IDCANCEL)
+        return;
+    }
+    if (answer == IDNO) {
+      if (mWinApp->mDocWnd->DoOpenNewFile())
+        return;
+      close = 1;
+    }
 
     if (mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC, true))
-      close = -1;
+      close = -close - 1;
   }
 
   // Make it a map if no error
@@ -170,7 +186,7 @@ void CNavRealignDlg::OnMakeTemplateMap()
     mapErr = mWinApp->mNavigator->NewMap();
 
   // Then close file
-  if (close)
+  if (close > 0 || close < -1)
     mWinApp->mDocWnd->DoCloseFile();
   if (mapErr)
     return;
@@ -259,11 +275,10 @@ void CNavRealignDlg::OnCheckLeaveIsZero()
 void CNavRealignDlg::ManageMap()
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
-  int uncroppedX, uncroppedY;
   CString str = "The image in A ";
   CMapDrawItem *map;
   bool exists = true, notMap = false, isMont = false, badBin, isMap, noMeta;
-  bool notCropped;
+  
   if (!m_strMapLabel.IsEmpty()) {
     map = mWinApp->mNavigator->FindItemWithString(m_strMapLabel, false, true);
     exists = map && map->IsMap() && !map->mMapMontage;
@@ -281,8 +296,7 @@ void CNavRealignDlg::ManageMap()
     badBin = imBuf->mOverviewBin > 1;
     isMap = imBuf->mMapID != 0;
     noMeta = !imBuf->mImage->GetUserData();
-    notCropped = !(imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0);
-    exists = !(isMap || notCropped || noMeta || badBin);
+    exists = !(isMap || noMeta || badBin);
   }
   ShowDlgItem(IDC_STAT_WHY_A_NO_GOOD, !exists);
   if (!exists) {
@@ -290,10 +304,8 @@ void CNavRealignDlg::ManageMap()
       str += "is already a map";
     else if (noMeta)
       str += "has insufficient metadata";
-    else if (notCropped)
-      str += "is not cropped";
     else
-      str += "was cropped from a binned montage overview";
+      str += "is based on a binned montage overview";
     SetDlgItemText(IDC_STAT_WHY_A_NO_GOOD, str);
   }
   m_butMakeMap.EnableWindow(exists && imBuf->mImage);
