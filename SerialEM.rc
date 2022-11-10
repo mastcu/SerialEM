@@ -626,7 +626,7 @@ BEGIN
         MENUITEM "Open",                        ID_TASKS_NAVIGATOR
         MENUITEM "Read && &Open...",            ID_LOAD_NAV_FILE
         MENUITEM "Mer&ge File...",              ID_NAVIGATOR_MERGEFILE
-        MENUITEM "Save",                        ID_SAVE_NAV_FILE
+        MENUITEM "Sa&ve",                       ID_SAVE_NAV_FILE
         MENUITEM "Save As...",                  ID_SAVEAS_NAV_FILE
         MENUITEM "Close",                       ID_NAVIGATOR_CLOSE
         MENUITEM SEPARATOR
@@ -673,16 +673,15 @@ BEGIN
         MENUITEM "Align &with Rotation...",     ID_NAVIGATOR_ALIGN_TO_MAP
         MENUITEM SEPARATOR
         MENUITEM "&Shift to Marker...",         ID_NAVIGATOR_SHIFTTOMARKER
-        MENUITEM "Apply Sa&ved Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
+        MENUITEM "Apply Save&d Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
         MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
         MENUITEM SEPARATOR
-        MENUITEM "&New Map from Image",         ID_NEW_MAP
         MENUITEM "Import Map...",               ID_NAVIGATOR_IMPORTMAP
         MENUITEM "Rotat&e Map",                 ID_NAVIGATOR_ROTATEMAP
         MENUITEM "Adjust for &Backlash",        ID_NAVIGATOR_ADJUST_BACKLASH
         MENUITEM "Bac&klash Settings...",       ID_NAVIGATOR_BACKLASHSETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "Open Imaging States ...",     ID_NAVIGATOR_OPENSTATEDLG
+        MENUITEM "Ope&n Imaging States ...",    ID_NAVIGATOR_OPENSTATEDLG
         MENUITEM "Set Ma&p Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
         MENUITEM "&Restore State",              ID_NAVIGATOR_RESTORESTATE
         MENUITEM SEPARATOR
@@ -690,7 +689,6 @@ BEGIN
         MENUITEM "End Ac&quire",                ID_NAVIGATOR_ENDACQUIRE
         MENUITEM "List &Files/Series/States",   ID_MONTAGE_LISTFILESTOOPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Delete Item",                ID_DELETEITEM
         MENUITEM "Real&ign to Item",            ID_NAVIGATOR_ALIGNTOITEM
         MENUITEM "Setup Align/Realign...",      ID_NAVIGATOR_SETUPALIGN
         MENUITEM "For&ce Center Align",         ID_NAVIGATOR_FORCE_CENTER_ALIGN

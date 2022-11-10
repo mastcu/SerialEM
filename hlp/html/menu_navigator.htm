@@ -199,10 +199,6 @@
           <TD class="style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
           <TD>Undo the last shift to marker point or use of a saved shift.</TD>
         </TR>
-         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_new_map">New Map from Image</A></TD>
-          <TD>Make a new map from the current image.</TD>
-        </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_navigator_importmap">Import Map</A></TD>
           <TD>Define an externally acquired image as a map.</TD>
@@ -243,10 +239,6 @@
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_montage_listfilestoopen">List Files/Series/States</A></TD>
           <TD>List the tilt series to run, files to open, or states or Focus area positions to set during an acquire</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_deleteitem">Delete Item</A></TD>
-          <TD>Delete the current item or group of items.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_navigator_aligntoitem">Realign to item</A></TD>
@@ -779,11 +771,6 @@
       <P>Use this command to undo the shift imposed by the 'Shift to Marker' or
         'Apply Saved Shift' commands. It
         is disabled if the 'Transform Points' command is used.</P>
-     <P><A NAME="hid_new_map"></A><B>New Map from Image command (Navigator menu)</B></P>
-      <P>Use this command to define the current image as a map. It performs the same
-        operation as the New Map button in the Navigator dialog; see the
-        <a href="hidd_navigator.htm#navab_newmap">help for New Map</a> for a full
-        description.</P>
       <P><A NAME="hid_navigator_importmap"></A><B>Import Map command (Navigator menu)</B></P>
       <P>Use this command to define an image obtained elsewhere, such as on a light
         microscope, as a map. First, a dialog will open to allow you to select the
@@ -927,16 +914,7 @@
           Focus subarea in binned pixels. In addition, the Focus position will be listed
           for any items that have it stored, regardless of whether a file is to be opened
           or a state set.</P>
-      <P><A NAME="hid_deleteitem"></A><B>Delete Item command (Navigator menu)</B></P>
-      <P>Use this command to delete the current item from the list, or to delete the
-        group of items summarized on the current line of the table if 'Collapse groups'
-        is on. A group is created whenever a set of items are added in single
-        operation: i.e., when adding a series of points by clicking on an image, when
-        defining a supermontage, or when adding a grid of points. If the current table
-        line summarizes a group, a message box will appear telling you how many items
-        will be deleted and the range of their labels, and asking you to confirm the
-        deletion.</P>
-      <P><A NAME="hid_navigator_aligntoitem"></A><B>Realign to Item command (Navigator menu)</B></P>
+       <P><A NAME="hid_navigator_aligntoitem"></A><B>Realign to Item command (Navigator menu)</B></P>
       <P>This command can be used to return accurately to the position of an item by
         correlating with available map images. The item must be located within, or must
         itself be, a map whose extent is large enough to allow the position to be found
