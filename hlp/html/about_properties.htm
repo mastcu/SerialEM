@@ -1038,7 +1038,7 @@
             Falcon camera.&nbsp; The default for Falcon 2 is 0.055771 sec, which works for a camera that reads out at 17.9
             FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.
             &nbsp; The default for Falcon 3 is 0.02495, but at least one site needed 0.02505.&nbsp; The
-            default for Falcon 4 is 0.004021, but Falcon 4i needs a property entry with the value 0.003147
+            default for Falcon 4 is 0.004021, and the default for Falcon 4i is 0.003147.
             .&nbsp; Do not set this property unless it is needed, and do not use this property if 
             there is more than one kind of Falcon camera, or multiple cameras needing different intervals; use the camera 
             property 'ReadoutInterval' for whichever camera requires a non-standard interval.&nbsp; As of
@@ -1131,6 +1131,14 @@
             Scripting does not support saving EER files (TEM server version less than 7.6,
             i.e., Titan 3.6, Talos 2.6).&nbsp; You will also need a patch to Advanced Scripting
             from ThermoFisher to acquire frames.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TakeUnbinnedIfSavingEER</TD>
+          <TD>Set to 1 if a Falcon 4 camera gives an error when acquiring binned inages and 
+            frames are being saved as EER or just aligned in SerialEM. FEIScopePlugin or 
+            FEI-SEMserver will request such images unbinned and bin them in software.&nbsp; 
+            This error has been found with the 7.12 and 7.13 server but not 7.8; it is not 
+            yet known if it occurs before 7.12 or is a bug that will be fixed.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>
@@ -1357,13 +1365,13 @@
           <TD>FEIcameraType</TD>
           <TD>1 for a Thermo/FEI Eagle camera or Thermo/FEI STEM, 2 for a Falcon 1 or 2 camera, 3 for
             Ceta 1 or 2 or another
-            camera with no shuttering capabilities, 4 for Falcon 3, or 5 for Falcon 4.&nbsp;
+            camera with no shuttering capabilities, 4 for Falcon 3, 5 for Falcon 4, or 6 for Falcon 4i.&nbsp;
             If 5 is used for a Falcon 4 and the TEM server version is less than 7.6, you
             must also set the general property 'Falcon4CanSaveEER 0'.&nbsp; If the type is
             2 and a camera is determined to have electron counting and aligning
             capabilities, it will be converted to a 4. This entry implies RestrictedSizeType
             1. It also implies a MinimumExposure of 0.011, unless a different value is
-            entered, or unless the Advanced scripting camera interface is available.&nbsp; 12, 14 and 15
+            entered, or unless the Advanced scripting camera interface is available.&nbsp; 12, 14, 15, and 16
             can be used to test various features for Falcon 2-4 with the Advanced scripting interface
             even when it is not present, if the property 'SimulationMode' is also entered.</TD>
         </TR>

@@ -110,6 +110,7 @@ enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE, K3_LINEAR_SET_MODE, K3_COUN
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4, DE_TYPE_APOLLO=5};
 enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE, FALCON4_TYPE};
 enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
+#define FALCON4I_VARIANT 1
 
 // This is not specific to K2, will give true for DE also
 #define IS_SUPERRES(p, ck2rm) (((p)->K2Type == K2_SUMMIT && (ck2rm) == SUPERRES_MODE) || \
@@ -127,11 +128,11 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 a->FEItype == FALCON4_TYPE)
 #define IS_FALCON3_OR_4(a) ((a)->FEItype == FALCON3_TYPE || (a)->FEItype == FALCON4_TYPE)
 #define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->CamFlags & PLUGFEI_USES_ADVANCED))
-// This needs to be 108 when that exists
-#define PLUGFEI_ALLOWS_ALIGN_HERE 107
+#define PLUGFEI_ALLOWS_ALIGN_HERE 108
 #define PLUGFEI_CAM_SAVES_EER     110
 #define PLUGFEI_FILT_FLASH_LOAD   111
-#define PLUGFEI_CONTINUOUS_SAVE   111    // TODO SET TO 112
+#define PLUGFEI_CONTINUOUS_SAVE   112
+#define PLUGFEI_CAN_BIN_IMAGE     114
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -573,6 +574,7 @@ public:
   GetSetMember(BOOL, ASIgivesGainNormOnly);
   GetMember(bool, StartedFalconAlign);
   GetSetMember(int, Falcon3AlignFraction);
+  GetSetMember(int, TakeUnbinnedIfSavingEER);
   GetSetMember(int, MinAlignFractionsLinear);
   GetSetMember(int, MinAlignFractionsCounting);
   GetMember(int, NoMessageBoxOnError);
@@ -890,6 +892,7 @@ public:
   BOOL mFalconAlignsWithoutSave;  // A flag just in case this is wrong
   int mRotFlipInFalcon3ComFile; // Value to set in com file if default is wrong
   BOOL mSubdirsOkInFalcon3Save; // Flag that Advanced scripting will create multiple dirs
+  BOOL mTakeUnbinnedIfSavingEER;  // 1 to acquire and bin with averaging, > 1 bin by summing
 
   bool mSavingPluginFrames;     // Flags for saving or aligning frames from plugin camera
   bool mAligningPluginFrames;

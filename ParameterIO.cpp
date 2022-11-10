@@ -2799,6 +2799,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("UseSocket"))
             camP->useSocket = itemInt[1] != 0;
           else if (MatchNoCase("FEICameraType")) {
+            if (itemInt[1] == FALCON4_TYPE + 1 || itemInt[1] == FALCON4_TYPE + 11) {
+              itemInt[1] -= 1;
+              camP->falconVariant = FALCON4I_VARIANT;
+            }
             camP->FEItype = itemInt[1];
             camP->moduloX = camP->moduloY = -1;
           } else if (MatchNoCase("AMTCameraType"))

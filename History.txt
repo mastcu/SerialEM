@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/10/22: Made Navigator Align to Template setup allow making the image in A
+a map even if it is not cropped.
+
+10/10/22: Removed New Map and Delete Item from Navigator menu.
+
+10/10/22: Added ability to bin images in FEI scope plugin/server because of
+error when binning is requested while saving EER files in new TEM server
+versions; property 'TakeUnbinnedIfSavingEER' enables this.
+
+10/10/22: Added camera type of 6 Falcon 4i and a default readout interval, and
+made it skip waiting on the next acquisition after a frame-saving one.
+
 10/10/22: Fixed missing line break after last FEI ZLP shift in short term
 calibrations (In 4.0).
 

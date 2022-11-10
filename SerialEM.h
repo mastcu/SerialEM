@@ -208,7 +208,9 @@ struct JeolParams;
 #define PLUGFEI_APPLY_PIX2COUNT   2
 #define PLUGFEI_UNBIN_PIX2COUNT   4
 #define PLUGFEI_CALL_EER_MODE     8
-#define PLUGFEI_USE_EER_MODE      0x10   
+#define PLUGFEI_USE_EER_MODE      0x10
+#define PLUGFEI_TAKE_UNBINNED     0x20
+#define PLUGFEI_SKIP_FRAME_WAIT   0x40
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);

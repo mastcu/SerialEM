@@ -49,7 +49,7 @@ static char THIS_FILE[]=__FILE__;
 // Scope plugin version that is good enough if there are no FEI cameras, and if there 
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 105
-#define FEISCOPE_CAM_VERSION   111
+#define FEISCOPE_CAM_VERSION   114
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -488,6 +488,7 @@ CEMscope::CEMscope()
   mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
   mFalcon4ReadoutInterval = 0.004021f;
+  mFalcon4iReadoutInterval = 0.003147f;
   mMinFalcon4CountAlignFrac = 8;
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;
@@ -1053,6 +1054,14 @@ int CEMscope::Initialize()
                 "and replace the version that you are now running", 
                 servVers, FEISCOPE_PLUGIN_VERSION);
             AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
+          }
+          if (mCamera->GetTakeUnbinnedIfSavingEER() &&
+            mPluginVersion < PLUGFEI_CAN_BIN_IMAGE) {
+            message.Format("The version needs to be %d to do software binning, so\n"
+              "software binning has been disabled and Falcon binning may not work",
+              PLUGFEI_CAN_BIN_IMAGE);
+            AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
+            mCamera->SetTakeUnbinnedIfSavingEER(false);
           }
       }
       try {
@@ -8693,7 +8702,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   static bool doMessage = true;
   int i, err;
   double minDrift, maxDrift;
-  float readout;
+  float readout, f4readout;
   if (!FEIscope)
     return 2;
   if (!sInitialized)
@@ -8766,22 +8775,28 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
 
       // For Falcon 3 or 4, set the general readout interval if it is a Falcon 2 value,
       // and set this camera's interval from that value if not set already, provided it
-      // doesn't match the value set for the other kind of camera
+      // doesn't match the value set for the other kind of camera.  This is going to get
+      // out of hand with more timings
+      f4readout = params->falconVariant == FALCON4I_VARIANT ? mFalcon4iReadoutInterval :
+        mFalcon4ReadoutInterval;
       if (params->FEItype == FALCON3_TYPE && params->ReadoutInterval <= 0.) {
         if (mCamera->GetFalconReadoutInterval() > 0.05)
           mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
         readout = mCamera->GetFalconReadoutInterval();
-        if (fabs(readout - mFalcon4ReadoutInterval) < 0.01 * mFalcon4ReadoutInterval)
+        if (fabs(readout - mFalcon4ReadoutInterval) < 0.01 * mFalcon4ReadoutInterval ||
+          fabs(readout - mFalcon4iReadoutInterval) < 0.01 * mFalcon4iReadoutInterval)
           params->ReadoutInterval = mFalcon3ReadoutInterval;
         else
           params->ReadoutInterval = readout;
       }
       if (params->FEItype == FALCON4_TYPE  && params->ReadoutInterval <= 0.) {
         if (mCamera->GetFalconReadoutInterval() > 0.05)
-          mCamera->SetFalconReadoutInterval(mFalcon4ReadoutInterval);
+          mCamera->SetFalconReadoutInterval(f4readout);
         readout = mCamera->GetFalconReadoutInterval();
-        if (fabs(readout - mFalcon3ReadoutInterval) < 0.01 * mFalcon3ReadoutInterval)
-          params->ReadoutInterval = mFalcon4ReadoutInterval;
+        if (fabs(readout - (mFalcon3ReadoutInterval)) < 0.01 * mFalcon3ReadoutInterval ||
+          fabs((params->falconVariant == FALCON4I_VARIANT ? mFalcon4ReadoutInterval :
+            mFalcon4iReadoutInterval) - readout) < 0.01 * mFalcon4ReadoutInterval)
+          params->ReadoutInterval = f4readout;
         else
           params->ReadoutInterval = readout;
       }
@@ -8793,7 +8808,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON3_TYPE && params->addToExposure < -1.)
         params->addToExposure = mAddToFalcon3Exposure;
       if (params->FEItype == FALCON4_TYPE && params->addToExposure < -1.)
-        params->addToExposure = mFalcon4ReadoutInterval / 2.f;
+        params->addToExposure = f4readout / 2.f;
       if (params->canTakeFrames) {
         if (params->FEItype == OTHER_FEI_TYPE &&mPluginVersion >= PLUGFEI_CONTINUOUS_SAVE)
           params->CamFlags |= PLUGFEI_CAM_CONTIN_SAVE;

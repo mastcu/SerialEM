@@ -446,6 +446,7 @@ CCameraController::CCameraController()
   mSkipFiltCheckCount = 0;
   mSuspendFilterUpdates = false;
   mRamperWaitForBlank = false;
+  mTakeUnbinnedIfSavingEER = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -1402,6 +1403,13 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
       if (mAllParams[i].CamFlags & PLUGFEI_USES_ADVANCED) {
+        if (mTakeUnbinnedIfSavingEER > 0 && IS_FALCON2_3_4((&mAllParams[i]))) {
+          mAllParams[i].autoGainAtBinning = 0;
+          B3DCLAMP(mAllParams[i].numBinnings, 1, 3);
+          mAllParams[i].gainFactor[0] = 1.;
+          mAllParams[i].gainFactor[1] = mTakeUnbinnedIfSavingEER > 1 ? 1.f : 0.25f;
+          mAllParams[i].gainFactor[2] = mTakeUnbinnedIfSavingEER > 1 ? 1.f : 0.0625f;
+        }
         if (mAllParams[i].autoGainAtBinning > 0) {
           for (bin = 0; bin < mAllParams[i].numBinnings; bin++) {
             if (mAllParams[i].gainFactor[bin] != 1.) {
@@ -3177,6 +3185,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (FCAM_ADVANCED(mParam) && conSet.alignFrames && weCanAlignFalcon && 
     conSet.useFrameAlign > 0)
     mTD.FEIacquireFlags |= PLUGFEI_WAIT_FOR_FRAMES;
+  if (mSavingFalconFrames && mParam->FEItype == FALCON4_TYPE &&
+    mParam->falconVariant == FALCON4I_VARIANT)
+    mTD.FEIacquireFlags |= PLUGFEI_SKIP_FRAME_WAIT;
 
   // Check for inability to write a com file for Falcon 2
   if (FCAM_ADVANCED(mParam) && mParam->FEItype == FALCON2_TYPE && conSet.alignFrames &&
@@ -3198,6 +3209,10 @@ void CCameraController::Capture(int inSet, bool retrying)
 
       if (IsSaveInEERMode(mParam, &conSet)) {
         mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
+
+        // Set up for software binning in server if property is set for it
+        if (conSet.binning > 1 && mTakeUnbinnedIfSavingEER)
+          mTD.FEIacquireFlags |= PLUGFEI_TAKE_UNBINNED;
         if (mAligningFalconFrames) {
           mFalconHelper->SetEERsumming(B3DNINT(conSet.frameTime /
             GetFalconReadoutInterval(mParam)));

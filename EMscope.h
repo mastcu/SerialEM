@@ -827,6 +827,7 @@ private:
   int mDoingStoppableRefill;  // Sum of bits for refill types
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
   float mFalcon4ReadoutInterval; // Frame interval for Falcon 4 camera
+  float mFalcon4iReadoutInterval; // Frame interval for Falcon 4i camera
   int mMinFalcon4CountAlignFrac; // Minimum align fraction for Falcon 4 in counting
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
