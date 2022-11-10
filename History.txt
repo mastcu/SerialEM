@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/10/22: Fixed missing line break after last FEI ZLP shift in short term
+calibrations (In 4.0).
+
 10/9/22: Explicitly turned off emission before flashing FEG on JEOL to make it
 ramp down better (In 4.0).
 

@@ -5420,7 +5420,7 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
       mFile->WriteString(oneState);
     }
     if (filtP->lastFeiZLPshift > EXTRA_VALUE_TEST) {
-      oneState.Format("LastFeiZLPshift %f", filtP->lastFeiZLPshift);
+      oneState.Format("LastFeiZLPshift %f\n", filtP->lastFeiZLPshift);
       mFile->WriteString(oneState);
     }
 
