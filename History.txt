@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/11/22: Fixed error in drawing Navigator items on very large montages
+(In 4.0).
+
 10/10/22: Made Navigator Align to Template setup allow making the image in A
 a map even if it is not cropped.
 

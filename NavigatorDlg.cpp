@@ -7278,11 +7278,11 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   useWidth = (float)item->mMapWidth;
   useHeight = (float)item->mMapHeight;
   if (item->mMapMontage && item->mMapFramesX && item->mMapFramesY) {
-    useWidth = (float)(item->mMapWidth * (montP->xNframes * montP->xFrame - 
-      (montP->xNframes - 1) * montP->xOverlap) / (item->mMapFramesX * montP->xFrame - 
+    useWidth = (float)((item->mMapWidth * (INT64)(montP->xNframes * montP->xFrame -
+      (montP->xNframes - 1) * montP->xOverlap)) / (item->mMapFramesX * montP->xFrame - 
       (item->mMapFramesX - 1) * montP->xOverlap));
-    useHeight = (float)(item->mMapHeight * (montP->yNframes * montP->yFrame - 
-      (montP->yNframes - 1) * montP->yOverlap) / (item->mMapFramesY * montP->yFrame - 
+    useHeight = (float)((item->mMapHeight * (INT64)(montP->yNframes * montP->yFrame -
+      (montP->yNframes - 1) * montP->yOverlap)) / (item->mMapFramesY * montP->yFrame - 
       (item->mMapFramesY - 1) * montP->yOverlap));
   }
   if (item->mMapMontage && item->mMontUseStage >= 0)
