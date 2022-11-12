@@ -1134,11 +1134,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>TakeUnbinnedIfSavingEER</TD>
-          <TD>Set to 1 if a Falcon 4 camera gives an error when acquiring binned inages and 
+          <TD>Set to 1 if a Falcon 4 camera gives an error when acquiring binned or subarea images and 
             frames are being saved as EER or just aligned in SerialEM. FEIScopePlugin or 
-            FEI-SEMserver will request such images unbinned and bin them in software.&nbsp; 
+            FEI-SEMserver will request such images unbinned and full sized, and bin and extract 
+            the subarea from them in software.&nbsp; 
             This error has been found with the 7.12 and 7.13 server but not 7.8; it is not 
-            yet known if it occurs before 7.12 or is a bug that will be fixed.</TD>
+            yet known if it occurs before 7.12 or if it is a bug that will be fixed.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>

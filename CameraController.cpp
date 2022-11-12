@@ -3211,7 +3211,8 @@ void CCameraController::Capture(int inSet, bool retrying)
         mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
 
         // Set up for software binning in server if property is set for it
-        if (conSet.binning > 1 && mTakeUnbinnedIfSavingEER)
+        if ((conSet.binning > 1 || conSet.right < mParam->sizeX) && 
+          mTakeUnbinnedIfSavingEER)
           mTD.FEIacquireFlags |= PLUGFEI_TAKE_UNBINNED;
         if (mAligningFalconFrames) {
           mFalconHelper->SetEERsumming(B3DNINT(conSet.frameTime /
