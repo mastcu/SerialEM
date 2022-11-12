@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/12/22: Fixed crash when stop reading a montage using shifts in the mdoc
+file (In 4.0).
+
 10/11/22: Extended the fix for Falcon 4 binning to cover subareas, which also
 give an error when saving EER.
 
