@@ -2225,6 +2225,12 @@ void EMmontageController::SavePiece()
         lower = mPieceIndex;
       }
 
+      // Clean these up right away, crashes occurred when nulled in a clause below
+      if (mAlreadyHaveShifts && upper >= 0)
+        mLowerPatch[2 * mPieceIndex + ixy] = NULL;
+      if (mAlreadyHaveShifts && lower >= 0)
+        mUpperPatch[2 * mPieceIndex + ixy] = NULL;
+
       if (idir && !mAlreadyHaveShifts) {
 
         montXCorrEdge(mLowerPatch[2 * lower + ixy], mUpperPatch[2 * upper + ixy], 
@@ -2271,6 +2277,8 @@ void EMmontageController::SavePiece()
         // Now get rid of the patches
         delete [] mUpperPatch[2 * upper + ixy];
         delete [] mLowerPatch[2 * lower + ixy];
+        mUpperPatch[2 * upper + ixy] = NULL;
+        mLowerPatch[2 * upper + ixy] = NULL;
       } else if (idir) {
 
         // If already have shifts, set the peak values for use below
@@ -2287,9 +2295,6 @@ void EMmontageController::SavePiece()
         /*SEMTrace('1', "Piece %d %d  %s %s error %.0f %.0f plus %.0f %.0f", mPieceX, 
         mPieceY, idir > 0 ? "lower" : "upper", ixy ? "Y" : "X", mActualErrorX[i], 
         mActualErrorY[i], - idir * xPeak, idir * yPeak);*/
-
-        mUpperPatch[2 * upper + ixy] = NULL;
-        mLowerPatch[2 * lower + ixy] = NULL;
       }
       //SEMTrace('1',"Correlation time %.3f", wallTime() - wallstart);
     }
@@ -3097,7 +3102,8 @@ void EMmontageController::StopMontage(int error)
   }
   
   // Just return to starting position of image shifts or stage
-  mCamera->StopCapture(1);
+  if (!mReadingMontage)
+    mCamera->StopCapture(1);
   mCamera->ChangePreventToggle(-1);
   if (mLoweredMag)
     mWinApp->mComplexTasks->RestoreMagIfNeeded();
