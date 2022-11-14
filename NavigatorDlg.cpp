@@ -10646,7 +10646,7 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
 // This is all that is needed for redraw
 void CNavigatorDlg::Redraw()
 {
-  if (!(mMacroProcessor->DoingMacro() || mMacroProcessor->GetSuspendNavRedraw()))
+  if (!(mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw()))
     mWinApp->mMainView->DrawImage();
 }
 
