@@ -2357,7 +2357,7 @@ int EMmontageController::SavePiece()
         delete[] mUpperPatch[2 * upper + ixy];
         delete[] mLowerPatch[2 * lower + ixy];
         mUpperPatch[2 * upper + ixy] = NULL;
-        mLowerPatch[2 * upper + ixy] = NULL;
+        mLowerPatch[2 * lower + ixy] = NULL;
       } else if (idir) {
 
         // If already have shifts, set the peak values for use below
