@@ -12,11 +12,11 @@
 #include "CameraController.h"
 #include "ShiftManager.h"
 
-static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADDNAVSTATE, IDC_BUT_DELSTATE,
-IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_FORGETSTATE,
+static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADD_MONT_MAP, IDC_BUT_ADDNAVSTATE,
+IDC_BUT_DELSTATE, IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_FORGETSTATE,
 IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
 IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP, IDC_BUT_RESTORESTATE,
-IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, IDC_BUT_ADD_MONT_MAP, PANEL_END,
+IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, PANEL_END,
 IDC_LIST_STATES, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
@@ -222,7 +222,8 @@ void CStateDlg::Update(void)
     }
   }
   m_butAddCurState.EnableWindow(noTasks && (ldArea == -2 || ldArea != -1));
-  m_butAddMontMap.ShowWindow(mWinApp->GetUseRecordForMontage() ? SW_HIDE : SW_SHOW);
+  m_butAddMontMap.ShowWindow((mWinApp->GetUseRecordForMontage() || 
+    mWinApp->IsIDinHideSet(IDC_BUT_ADD_MONT_MAP)) ? SW_HIDE : SW_SHOW);
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
   m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0);
