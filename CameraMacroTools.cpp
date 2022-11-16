@@ -14,6 +14,7 @@
 #include "MacroProcessor.h"
 #include "MainFrm.h"
 #include "CameraController.h"
+#include "ProcessImage.h"
 #include "MacroEditer.h"
 #include "MacroToolbar.h"
 #include "TSController.h"
@@ -30,7 +31,14 @@ static int sIdTable[] = {IDC_BUTFLOATDOCK, IDC_STAT_CAMNAME, IDC_BUTOPEN, IDC_ST
 IDC_BUTHELP, PANEL_END, ID_CAMERA_PARAMETERS, ID_CAMERA_VIEW, ID_CAMERA_FOCUS, 
 ID_CAMERA_TRIAL, ID_CAMERA_RECORD, IDC_BUTMONTAGE, IDC_BUTMACRO1, IDC_BUTMACRO2,
 IDC_SPINMACRO2, IDC_SPINMACRO1, IDC_BUTSTOP, IDC_BUTEND, IDC_BUTRESUME,
-IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END, TABLE_END};
+IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END, 
+IDC_BUTMACRO4, IDC_BUTMACRO5, IDC_BUTMACRO6, IDC_SPINMACRO4, IDC_SPINMACRO5,
+IDC_SPINMACRO6, PANEL_END,
+IDC_BUTMACRO7, IDC_BUTMACRO8, IDC_BUTMACRO9, IDC_SPINMACRO7, IDC_SPINMACRO8,
+IDC_SPINMACRO9, PANEL_END,
+IDC_BUTMACRO10, IDC_BUTMACRO11, IDC_BUTMACRO12, IDC_SPINMACRO10, IDC_SPINMACRO11,
+IDC_SPINMACRO12, PANEL_END,
+TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
 static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
@@ -47,9 +55,8 @@ CCameraMacroTools::CCameraMacroTools(CWnd* pParent /*=NULL*/)
   //{{AFX_DATA_INIT(CCameraMacroTools)
     // NOTE: the ClassWizard will add member initialization here
   //}}AFX_DATA_INIT
-  mMacroNumber[0] = 0;
-  mMacroNumber[1] = 1;
-  mMacroNumber[2] = 2;
+  for (int ind = 0; ind < NUM_SPINNER_MACROS; ind++)
+    mMacroNumber[ind] = ind;
   mDoingTS = false;
   mUserStop = FALSE;
   mDeferredUserStop = false;
@@ -95,6 +102,9 @@ BEGIN_MESSAGE_MAP(CCameraMacroTools, CToolDlg)
   ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO1, OnMacBut1Draw)
   ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO2, OnMacBut2Draw)
   ON_NOTIFY(NM_LDOWN, IDC_BUTMACRO3, OnMacBut3Draw)
+  ON_NOTIFY_RANGE(NM_LDOWN, IDC_BUTMACRO4, IDC_BUTMACRO12, OnMacButNDraw)
+  ON_NOTIFY_RANGE(UDN_DELTAPOS, IDC_SPINMACRO4, IDC_SPINMACRO12, OnDeltaposSpinmacroN)
+  ON_COMMAND_RANGE(IDC_BUTMACRO4, IDC_BUTMACRO12, OnButmacroN)
   ON_WM_PAINT()
   //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -105,6 +115,9 @@ END_MESSAGE_MAP()
 BOOL CCameraMacroTools::OnInitDialog() 
 {
   CToolDlg::OnInitDialog();
+  int ind;
+  CSpinButtonCtrl *spin;
+  CButton *but;
   mMacros = mWinApp->GetMacros();
   mMacProcessor = mWinApp->mMacroProcessor;
 
@@ -133,9 +146,19 @@ BOOL CCameraMacroTools::OnInitDialog()
   m_sbcMacro1.SetRange(1, MAX_MACROS);
   m_sbcMacro2.SetRange(1, MAX_MACROS);
   m_sbcMacro3.SetRange(1, MAX_MACROS);
-  UpdateSettings();
-  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
+  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 2); ind++) {
+    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO4 + ind);
+    if (spin)
+      spin->SetRange(1, MAX_MACROS);
+    but = (CMyButton *)GetDlgItem(IDC_BUTMACRO4 + ind);
+    if (but)
+      but->SetFont(mLittleFont);
+  }
+  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+    sHeightTable);
+  ManagePanels();
   mInitialized = true;
+  UpdateSettings();
 
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
@@ -159,10 +182,15 @@ void CCameraMacroTools::OnButmontage()
 
 void CCameraMacroTools::SetMacroLabels()
 {
+  int ind;
+  if (!mInitialized)
+    return;
   if (!mDoingCalISO)
     SetOneMacroLabel(0, IDC_BUTMACRO1);
   SetOneMacroLabel(1, IDC_BUTMACRO2);
   SetOneMacroLabel(2, IDC_BUTMACRO3);
+  for (ind = 3; ind < 3 * mWinApp->mMacroProcessor->GetNumCamMacRows(); ind++)
+    SetOneMacroLabel(ind, IDC_BUTMACRO4 + ind - 3);
 }
 
 void CCameraMacroTools::SetOneMacroLabel(int num, UINT nID)
@@ -185,6 +213,7 @@ void CCameraMacroTools::SetOneMacroLabel(int num, UINT nID)
 // External notification that a name changed
 void CCameraMacroTools::MacroNameChanged(int num)
 {
+  int ind;
   if (mWinApp->mMacroToolbar) {
     mWinApp->mMacroToolbar->SetOneMacroLabel(num);
     mWinApp->mMacroToolbar->SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
@@ -198,13 +227,36 @@ void CCameraMacroTools::MacroNameChanged(int num)
     SetOneMacroLabel(1, IDC_BUTMACRO2);
   if (num == mMacroNumber[2])
     SetOneMacroLabel(2, IDC_BUTMACRO3);
+  for (ind = 3; ind < 3 * (NUM_CAM_MAC_PANELS - 1); ind++) {
+    if (num == mMacroNumber[ind])
+      SetOneMacroLabel(ind, IDC_BUTMACRO4 + ind - 3);
+  }
+}
+
+void CCameraMacroTools::ManagePanels()
+{
+  BOOL states[NUM_CAM_MAC_PANELS];
+  if (!mInitialized)
+    return;
+  int ind, numRows = mWinApp->mMacroProcessor->GetNumCamMacRows();
+  for (ind = 0; ind < NUM_CAM_MAC_PANELS; ind++)
+    states[ind] = ind <= numRows && (!ind || (GetState() & TOOL_OPENCLOSED));
+  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+    sHeightTable);
 }
 
 void CCameraMacroTools::UpdateSettings()
 {
+  int ind;
+  CSpinButtonCtrl *spin;
   m_sbcMacro1.SetPos(mMacroNumber[0] + 1);
   m_sbcMacro2.SetPos(mMacroNumber[1] + 1);
   m_sbcMacro3.SetPos(mMacroNumber[2] + 1);
+  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 2); ind++) {
+    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO4 + ind);
+    if (spin)
+      spin->SetPos(mMacroNumber[ind + 3] + 1);
+  }
   if (!mDoingTS)
     SetMacroLabels();
   Update();
@@ -241,6 +293,12 @@ void CCameraMacroTools::OnDeltaposSpinmacro2(NMHDR* pNMHDR, LRESULT* pResult)
 void CCameraMacroTools::OnDeltaposSpinmacro3(NMHDR* pNMHDR, LRESULT* pResult) 
 {
   DeltaposSpin(pNMHDR, pResult, IDC_BUTMACRO3, 2);
+}
+
+void CCameraMacroTools::OnDeltaposSpinmacroN(UINT nID, NMHDR * pNMHDR, LRESULT * pResult)
+{
+  int index = nID + 3 - IDC_SPINMACRO4;
+  DeltaposSpin(pNMHDR, pResult, index + IDC_BUTMACRO4 - 3, index);
 }
 
 // Single routine to run a macro if a button is pushed
@@ -307,30 +365,44 @@ void CCameraMacroTools::OnButmacro3()
     DoMacro(mMacroNumber[2]);
 }
 
+void CCameraMacroTools::OnButmacroN(UINT nID)
+{
+  int index = nID + 3 - IDC_BUTMACRO4;
+  DoMacro(mMacroNumber[index]);
+}
+
 // Handlers for the right click from each button
 void CCameraMacroTools::OnMacBut1Draw(NMHDR *pNotifyStruct, LRESULT *result)
 {
-  HandleMacroRightClick(m_butMacro1, 0, !mDoingTS && !mDoingCalISO);
+  HandleMacroRightClick(&m_butMacro1, 0, !mDoingTS && !mDoingCalISO);
 }
 
 void CCameraMacroTools::OnMacBut2Draw(NMHDR *pNotifyStruct, LRESULT *result)
 {
   int navState = GetNavigatorState();
-  HandleMacroRightClick(m_butMacro2, 1, !mDoingTS && !(navState == NAV_SCRIPT_RUNNING || 
+  HandleMacroRightClick(&m_butMacro2, 1, !mDoingTS && !(navState == NAV_SCRIPT_RUNNING || 
     navState == NAV_SCRIPT_STOPPED || navState == NAV_RUNNING_NO_SCRIPT_TS || 
     navState == NAV_PAUSED));
 }
 
 void CCameraMacroTools::OnMacBut3Draw(NMHDR *pNotifyStruct, LRESULT *result)
 {
-  HandleMacroRightClick(m_butMacro3, 2, !mDoingTS);
+  HandleMacroRightClick(&m_butMacro3, 2, !mDoingTS);
+}
+
+void CCameraMacroTools::OnMacButNDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result)
+{
+  CMyButton *but = (CMyButton *)GetDlgItem(nID);
+  if (!but)
+    return;
+  HandleMacroRightClick(but, nID + 3 - IDC_BUTMACRO4, !mDoingTS);
 }
 
 // Common function to open the editor on valid right click
-void CCameraMacroTools::HandleMacroRightClick(CMyButton &but, int index, bool openOK)
+void CCameraMacroTools::HandleMacroRightClick(CMyButton *but, int index, bool openOK)
 {
-  if (but.m_bRightWasClicked) {
-    but.m_bRightWasClicked = false;
+  if (but->m_bRightWasClicked) {
+    but->m_bRightWasClicked = false;
     if (openOK)
       mMacProcessor->OpenMacroEditor(mMacroNumber[index]);
   }
@@ -493,8 +565,8 @@ void CCameraMacroTools::Update()
   // enable/disables 
   stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
     !mWinApp->GetJustDoingSynchro() && !mWinApp->GetJustNavAcquireOpen() && 
-    !mWinApp->mScope->DoingSynchroThread()) ||
-    camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
+    !mWinApp->mScope->DoingSynchroThread() && !mWinApp->mProcessImage->DoingAutoContour())
+    || camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;
   m_butStop.EnableWindow(stopEnabled);
@@ -555,6 +627,11 @@ void CCameraMacroTools::Update()
     name = camParams[mWinApp->GetCurrentCamera()].name;
     SetDlgItemText(IDC_STAT_CAMNAME, name);
   }
+}
+
+void CCameraMacroTools::UpdateHiding(void)
+{
+  ManagePanels();
 }
 
 // Change macro tools to tilt series tools or vice versa

@@ -306,6 +306,7 @@ hid_script_runonecommand        = SerialEM.chm::/html\menu_script.htm#hid_script
 hid_script_clearpersistentvars  = SerialEM.chm::/html\menu_script.htm#hid_script_clearpersistentvars
 hid_script_runonprogramstart    = SerialEM.chm::/html\menu_script.htm#hid_script_runonprogramstart
 hid_script_runatprogramend      = SerialEM.chm::/html\menu_script.htm#hid_script_runatprogramend
+hid_script_setpanelrows         = SerialEM.chm::/ html\menu_script.htm#hid_script_setpanelrows
 hid_process_setintensity				= SerialEM.chm::/html\menu_tasks.htm#hid_process_setintensity
 hid_process_movebeam						= SerialEM.chm::/html\menu_tasks.htm#hid_process_movebeam
 hid_tasks_set_dose_rate					= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_set_dose_rate

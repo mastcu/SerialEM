@@ -9,6 +9,8 @@
 
 #include "MyButton.h"
 
+#define NUM_CAM_MAC_PANELS 5
+#define NUM_SPINNER_MACROS (3 * (NUM_CAM_MAC_PANELS - 1))
 enum {NO_NAV_RUNNING = 0, NAV_RUNNING_NO_SCRIPT_TS, NAV_PAUSED, NAV_TS_RUNNING,
   NAV_TS_STOPPED, NAV_PRE_TS_RUNNING, NAV_PRE_TS_STOPPED, NAV_SCRIPT_RUNNING,
   NAV_SCRIPT_STOPPED};
@@ -30,6 +32,7 @@ public:
 	void DoMacro(int inMacro);
 	void DeltaposSpin(NMHDR *pNMHDR, LRESULT *pResult, UINT nID, int iMacro);
 	void Update();
+  void UpdateHiding(void);
   GetSetMember(BOOL, UserStop);
   GetMember(bool, DeferredUserStop);
 	CCameraMacroTools(CWnd* pParent = NULL);   // standard constructor
@@ -71,11 +74,13 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDeltaposSpinmacro1(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDeltaposSpinmacro2(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDeltaposSpinmacro3(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnButmacro1();
+  afx_msg void OnDeltaposSpinmacro3(NMHDR* pNMHDR, LRESULT* pResult);
+  afx_msg void OnDeltaposSpinmacroN(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
+  afx_msg void OnButmacro1();
 	afx_msg void OnButmacro2();
-	afx_msg void OnButmacro3();
-	afx_msg void OnButstop();
+  afx_msg void OnButmacro3();
+  afx_msg void OnButmacroN(UINT nID);
+  afx_msg void OnButstop();
 	afx_msg void OnButend();
 	afx_msg void OnButresume();
 	afx_msg void OnButmontage();
@@ -83,6 +88,7 @@ protected:
   afx_msg void OnMacBut1Draw(NMHDR *pNotifyStruct, LRESULT *result);
   afx_msg void OnMacBut2Draw(NMHDR *pNotifyStruct, LRESULT *result);
   afx_msg void OnMacBut3Draw(NMHDR *pNotifyStruct, LRESULT *result);
+  afx_msg void OnMacButNDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result);
   //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -92,15 +98,18 @@ private:
 	BOOL mDoingTS;
   BOOL mDoingCalISO;
 	CString *mMacros;
-	int mMacroNumber[6];
+	int mMacroNumber[NUM_SPINNER_MACROS];
   BOOL mUserStop;     // Flag that user pushed stop
   bool mEnabledSearch;
   bool mDeferredUserStop;
   bool mMediumWasEmpty;
+  int mPanelStart[NUM_CAM_MAC_PANELS];
+  int mNumInPanel[NUM_CAM_MAC_PANELS];
 public:
-  void HandleMacroRightClick(CMyButton &but, int index, bool openOK);
+  void HandleMacroRightClick(CMyButton *but, int index, bool openOK);
   void SetOneMacroLabel(int num, UINT nID);
   void MacroNameChanged(int num);
+  void ManagePanels();
   void CalibratingISoffset(bool ifCal);
   int GetNavigatorState(void);
   void DoUserStop(void);

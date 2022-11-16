@@ -1979,6 +1979,48 @@
 #define IDC_BUT_LIST_SHIFTS             3007
 #define IDC_BUT_REMOVE_SHIFT            3008
 #define IDC_LIST_SAVED_SHIFTS           3009
+#define IDC_BUTMACRO4                   3010
+#define IDC_BUTMACRO5                   3011
+#define IDC_BUTMACRO6                   3012
+#define IDC_BUTMACRO7                   3013
+#define IDC_BUTMACRO8                   3014
+#define IDC_BUTMACRO9                   3015
+#define IDC_BUTMACRO10                  3016
+#define IDC_BUTMACRO11                  3017
+#define IDC_BUTMACRO12                  3018
+#define IDC_BUTMACRO13                  3019
+#define IDC_BUTMACRO14                  3020
+#define IDC_BUTMACRO15                  3021
+#define IDC_BUTMACRO16                  3022
+#define IDC_BUTMACRO17                  3023
+#define IDC_BUTMACRO18                  3024
+#define IDC_BUTMACRO19                  3025
+#define IDC_BUTMACRO20                  3026
+#define IDC_BUTMACRO21                  3027
+#define IDC_BUTMACRO22                  3028
+#define IDC_BUTMACRO23                  3029
+#define IDC_BUTMACRO24                  3030
+#define IDC_SPINMACRO4                  3031
+#define IDC_SPINMACRO5                  3032
+#define IDC_SPINMACRO6                  3033
+#define IDC_SPINMACRO7                  3034
+#define IDC_SPINMACRO8                  3035
+#define IDC_SPINMACRO9                  3036
+#define IDC_SPINMACRO10                 3037
+#define IDC_SPINMACRO11                 3038
+#define IDC_SPINMACRO12                 3039
+#define IDC_SPINMACRO13                 3040
+#define IDC_SPINMACRO14                 3041
+#define IDC_SPINMACRO15                 3042
+#define IDC_SPINMACRO16                 3043
+#define IDC_SPINMACRO17                 3044
+#define IDC_SPINMACRO18                 3045
+#define IDC_SPINMACRO19                 3046
+#define IDC_SPINMACRO20                 3047
+#define IDC_SPINMACRO21                 3048
+#define IDC_SPINMACRO22                 3049
+#define IDC_SPINMACRO23                 3050
+#define IDC_SPINMACRO24                 3051
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2510,6 +2552,7 @@
 #define ID_FILE_CLOSEALLFILES           33497
 #define ID_TASKS_CALIBRATEELECTRONDOSE  33498
 #define ID_FILE_AUTOSAVELOG             33499
+#define ID_SCRIPT_SETPANELROWS          33500
 
 // Next default values for new objects
 // 
@@ -2517,8 +2560,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        273
-#define _APS_NEXT_COMMAND_VALUE         33500
-#define _APS_NEXT_CONTROL_VALUE         3010
+#define _APS_NEXT_COMMAND_VALUE         33501
+#define _APS_NEXT_CONTROL_VALUE         3052
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

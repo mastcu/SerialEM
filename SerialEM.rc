@@ -471,6 +471,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar...",                 ID_MACRO_TOOLBAR
         MENUITEM "Set &Height",                 ID_MACRO_SETLENGTH
+        MENUITEM "Set Cam Panel Rows",          ID_SCRIPT_SETPANELROWS
         MENUITEM "&Controls...",                ID_MACRO_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "Load Ne&w Package...",        ID_SCRIPT_LOADNEWPACKAGE
@@ -1410,7 +1411,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,167,105,10,10
 END
 
-IDD_CAMERA_MACRO DIALOGEX 0, 0, 119, 57
+IDD_CAMERA_MACRO DIALOGEX 0, 0, 119, 105
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1435,6 +1436,24 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CTEXT           "",IDC_STAT_CAMNAME,69,0,37,8,SS_ENDELLIPSIS
+    PUSHBUTTON      "Script 4",IDC_BUTMACRO4,4,58,25,13
+    PUSHBUTTON      "Script 5",IDC_BUTMACRO5,42,58,25,13
+    PUSHBUTTON      "Script 6",IDC_BUTMACRO6,80,58,25,13
+    CONTROL         "Spin2",IDC_SPINMACRO4,"msctls_updown32",UDS_ARROWKEYS,30,57,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO5,"msctls_updown32",UDS_ARROWKEYS,68,57,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO6,"msctls_updown32",UDS_ARROWKEYS,106,57,9,14
+    PUSHBUTTON      "Script 7",IDC_BUTMACRO7,4,74,25,13
+    PUSHBUTTON      "Script 8",IDC_BUTMACRO8,42,74,25,13
+    PUSHBUTTON      "Script 9",IDC_BUTMACRO9,80,74,25,13
+    CONTROL         "Spin2",IDC_SPINMACRO7,"msctls_updown32",UDS_ARROWKEYS,30,73,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO8,"msctls_updown32",UDS_ARROWKEYS,68,73,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO9,"msctls_updown32",UDS_ARROWKEYS,106,73,9,14
+    PUSHBUTTON      "Script 10",IDC_BUTMACRO10,4,90,25,13
+    PUSHBUTTON      "Script 11",IDC_BUTMACRO11,42,90,25,13
+    PUSHBUTTON      "Script 12",IDC_BUTMACRO12,80,90,25,13
+    CONTROL         "Spin2",IDC_SPINMACRO10,"msctls_updown32",UDS_ARROWKEYS,30,89,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO11,"msctls_updown32",UDS_ARROWKEYS,68,89,9,14
+    CONTROL         "Spin1",IDC_SPINMACRO12,"msctls_updown32",UDS_ARROWKEYS,106,89,9,14
 END
 
 IDD_SCOPESTATUS DIALOGEX 0, 0, 119, 76
@@ -6871,6 +6890,7 @@ STRINGTABLE
 BEGIN
     ID_FILE_CLOSEALLFILES   "Close all open image files if none are protected"
     ID_FILE_AUTOSAVELOG     "Save to file on startup and autosave thereafter"
+    ID_SCRIPT_SETPANELROWS  "Set the number of rows of script buttons in Camera & Scrip control panel"
 END
 
 #endif    // English (United States) resources
