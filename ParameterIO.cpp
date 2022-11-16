@@ -829,7 +829,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (NAME_IS("MacroButtonNumbers")) {
         index = 0;
-        while (!strItems[index + 1].IsEmpty()) {
+        while (!strItems[index + 1].IsEmpty() && index < NUM_SPINNER_MACROS) {
           macroButtonNumbers[index] = atoi((LPCTSTR)strItems[index + 1]);
           index++;
         }
@@ -1871,9 +1871,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       }
     }
 
-    oneState.Format("MacroButtonNumbers %d %d %d\n", macroButtonNumbers[0],
-      macroButtonNumbers[1], macroButtonNumbers[2]);
-    mFile->WriteString(oneState);
+    oneState = "MacroButtonNumbers ";
+    for (i = 0; i < NUM_SPINNER_MACROS; i++) {
+      macCopy.Format(" %d", macroButtonNumbers[i]);
+      oneState += macCopy;
+    }
+    mFile->WriteString(oneState + "\n");
+
     oneState.Format("RemoteControlParams %d %f %f %d %d %d %d\n", 
       mWinApp->GetShowRemoteControl() ? 1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(), 
       mWinApp->mRemoteControl.GetIntensityIncrement(), 
