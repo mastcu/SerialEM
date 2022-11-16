@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
+
+10/15/22: Fixed another vulnerability in drawing routine (In 4.0).
+
 10/12/22: Fixed crash when stop reading a montage using shifts in the mdoc
 file (In 4.0).
 
