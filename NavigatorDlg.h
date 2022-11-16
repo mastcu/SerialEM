@@ -20,6 +20,7 @@ struct TiltSeriesParam;
 class CNavAcquireDlg;
 class CMacCmd;
 struct NavAcqAction;
+typedef struct Mod_Object Iobj;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -631,9 +632,11 @@ public:
   afx_msg void OnShowAcquireArea();
   CMapDrawItem *AddPointMarkedOnBuffer(EMimageBuffer * imBuf, float stageX, float stageY,
     int groupID);
+  void SetupItemMarkedOnBuffer(EMimageBuffer *imBuf, CMapDrawItem *item);
   int AddImagePositionOnBuffer(EMimageBuffer * imBuf, float imageX, float imageY, float stageZ, int groupID);
   int AddPolygonFromImagePositions(EMimageBuffer * imBuf, float *imageX, float *imageY, int numPts, float stageZ);
   void AddItemFromStagePositions(float *imageX, float *imageY, int numPts, float stageZ, int groupID);
+  int ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj);
   bool OKtoAddMarkerPoint(void);
   void UpdateAddMarker(void);
   bool RawStageIsRevisable(bool fastStage);

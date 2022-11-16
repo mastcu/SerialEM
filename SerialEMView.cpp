@@ -1355,7 +1355,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // The rule is to draw first and last in a group and up to 5 around the current
       // point if the group is above the threshold size
       draw = true;
-      if (groupThresh > 0 && item->IsPoint() && (iDraw < currentIndex - 2
+      if (groupThresh > 0 && !item->IsMap() && (iDraw < currentIndex - 2
         || iDraw > currentIndex + 2 || item->mGroupID != currentGroup) && 
         item->mGroupID > 0) {
         if (item->mGroupID == lastGroupID) {
@@ -1366,8 +1366,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           lastGroupID = item->mGroupID;
         }
         draw = size <= groupThresh || item->mLabel == firstLabel || 
-          item->mLabel == lastLabel || 
-          (iDraw > 0 && sqrt(pow((double)lastStageX - item->mStageX, 2.) + 
+          item->mLabel == lastLabel || (iDraw > 0 && item->IsPoint() &&
+            sqrt(pow((double)lastStageX - item->mStageX, 2.) + 
           pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
       }
       if (draw) {

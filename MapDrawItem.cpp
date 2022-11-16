@@ -171,6 +171,14 @@ void CMapDrawItem::AddPoint(float inX, float inY, int index)
   mNumPoints++;
 }
 
+// Allocate for a known number of points
+void CMapDrawItem::AllocatePoints(int numPoints)
+{
+  mMaxPoints = numPoints;
+  mPtX = new float[mMaxPoints];
+  mPtY = new float[mMaxPoints];
+}
+
 
 void CMapDrawItem::AppendPoint(float inX, float inY)
 {
@@ -193,7 +201,8 @@ void CMapDrawItem::DeletePoint(int index)
 
 COLORREF CMapDrawItem::GetColor(bool highlight)
 {
-  if (highlight && mType == ITEM_TYPE_POINT && mColor == DEFAULT_POINT_COLOR)
+  if (highlight && ((mType == ITEM_TYPE_POINT && mColor == DEFAULT_POINT_COLOR) ||
+    (mType == ITEM_TYPE_POLYGON && mColor == DEFAULT_POLY_COLOR && mGroupID > 0)))
     return colors[HIGHLIGHT_COLOR];
   if (mAcquire) {
     if (mType == ITEM_TYPE_POINT && mColor == DEFAULT_POINT_COLOR)

@@ -54,6 +54,7 @@
 #include "Image\KStoreADOC.h"
 #include "Shared\b3dutil.h"
 #include "Shared\iimage.h"
+#include "Shared\imodel.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2945,6 +2946,7 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
   int ind, indMin, nxBuf, nyBuf;
   CMapDrawItem *item;
   bool dragging = distLim < 1.e6;
+  bool minIsPolyInGroup = false;
 
   if (!imBuf->mImage)
     return false;
@@ -2987,9 +2989,11 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
       distNext = distMin;
       distMin = dist;
       indMin = ind;
+      minIsPolyInGroup = item->mGroupID > 0 && item->IsPolygon();
     }
   }
-  if (distMin > distLim || (dragging && distNext < 1.e9 && distMin > 0.5 * distNext))
+  if (distMin > B3DCHOICE(dragging && minIsPolyInGroup, 10., 1.) * distLim || 
+    (dragging && distNext < 1.e9 && distMin > 0.5 * distNext))
     return false;
 
   // If doing multiple selection and this item is already in selection, remove it and
@@ -3117,12 +3121,22 @@ bool CNavigatorDlg::GetHolePositionVectors(FloatVec **xypos, IntVec **index)
 CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float stageX, 
                                                     float stageY, int groupID)
 { 
-  CMapDrawItem *item, *mapItem;
-  float stageZ;
+  CMapDrawItem *item;
   item = MakeNewItem(groupID);
   SetCurrentStagePos(mCurrentItem);
   item->mStageX = stageX;
   item->mStageY = stageY;
+
+  SetupItemMarkedOnBuffer(imBuf, item);
+  item->AppendPoint(stageX, stageY);
+  return item;
+}
+
+// Set properties for item marked on a buffer, transferring buffer values  as available
+void CNavigatorDlg::SetupItemMarkedOnBuffer(EMimageBuffer *imBuf, CMapDrawItem *item)
+{
+  CMapDrawItem *mapItem;
+  float stageZ;
 
   // The registration of the buffer rules.  If it doesn't have one, assign current reg
   if (!imBuf->mRegistration)
@@ -3146,8 +3160,6 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
   if (!item->mDrawnOnMapID)
     item->mMapMagInd = imBuf->mMagInd;
   TransferBacklash(imBuf, item);
-  item->AppendPoint(stageX, stageY);
-  return item;
 }
 
 // Add a point item from a position on an image
@@ -3214,6 +3226,47 @@ void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int 
   }
 
   UpdateForCurrentItemChange();
+}
+
+// Add a set of polygons from an IMOD model object
+int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
+{
+  ScaleMat aMat, aInv;
+  float delX, delY, stageX, stageY;
+  CMapDrawItem *item;
+  int coNum, groupID, pt;
+  Icont *cont;
+  float imageX, imageY, stageZ = 0.;
+
+  if (!BufferStageToImage(imBuf, aMat, delX, delY))
+    return 1;
+  aInv = MatInv(aMat);
+  groupID = obj->contsize > 1 ? MakeUniqueID() : 0;
+  mDeferAddingToViewer = true;
+  for (coNum = 0; coNum < obj->contsize; coNum++) {
+    cont = &obj->cont[coNum];
+    item = MakeNewItem(groupID);
+    item->mType = ITEM_TYPE_POLYGON;
+    item->mColor = DEFAULT_POLY_COLOR;
+    SetupItemMarkedOnBuffer(imBuf, item);
+    item->AllocatePoints(cont->psize);
+    for (pt = 0; pt < cont->psize; pt++) {
+      imageX = cont->pts[pt].x;
+      imageY = cont->pts[pt].y;
+      AdjustMontImagePos(imBuf, imageX, imageY);
+      mShiftManager->ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, stageX,
+        stageY);
+      item->AppendPoint(stageX, stageY);
+    }
+    SetPolygonCenterToMidpoint(item);
+  }
+  FillListBox(false, true);
+  mDeferAddingToViewer = false;
+  SetChanged(true);
+  ManageCurrentControls();
+  Update();
+  Redraw();
+  return 0;
 }
 
 // Delete points on backspace if drawing polygon, adding points, or in Edit mode

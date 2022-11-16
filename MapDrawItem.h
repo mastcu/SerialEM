@@ -33,6 +33,7 @@ public:
   void DeletePoint(int index);
   void AppendPoint(float inX, float inY);
   void AddPoint(float inX, float inY, int index);
+  void AllocatePoints(int numPoints);
   CMapDrawItem();
   CMapDrawItem(CMapDrawItem *item);
   virtual ~CMapDrawItem();
