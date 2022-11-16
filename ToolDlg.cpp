@@ -68,7 +68,6 @@ END_MESSAGE_MAP()
 // Set state of button and state value
 void CToolDlg::SetOpenClosed(int inState)
 {
-  BOOL states[3] = {true, false, false};
   CRect rcWin;
   CButton *openBut;
   int dockHeight, floatHeight;
@@ -111,12 +110,17 @@ void CToolDlg::SetOpenClosed(int inState)
   }
 
   // Adjust panels after handling the float/dock distinctions
-  if (mNumPanels) {
-    states[1] = mState & TOOL_OPENCLOSED;
-    states[2] = states[1] && (mState & TOOL_FULLOPEN);
-    AdjustPanels(states, mIdTable, mLeftTable, mTopTable, mNumInPanel, mPanelStart, 0,
-      mHeightTable);
-  }
+  if (mNumPanels)
+    ManagePanels();
+}
+
+void CToolDlg::ManagePanels()
+{
+  BOOL states[3] = {true, false, false};
+  states[1] = mState & TOOL_OPENCLOSED;
+  states[2] = states[1] && (mState & TOOL_FULLOPEN);
+  AdjustPanels(states, mIdTable, mLeftTable, mTopTable, mNumInPanel, mPanelStart, 0,
+    mHeightTable);
 }
 
 // Base function to update hiding when there are panel tables - just adjust panels

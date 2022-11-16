@@ -27,6 +27,7 @@ public:
 	virtual int GetMidHeight();
 	CToolDlg(UINT inIDD, CWnd* pParent = NULL);   // standard constructor
 	void SetOpenClosed(int inState);
+  virtual void ManagePanels();
 
 // Dialog Data
 	//{{AFX_DATA(CToolDlg)
