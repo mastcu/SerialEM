@@ -265,8 +265,9 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
 void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted, 
   int inFalseColor, float boostContrast, float mean)
 {
-  if (mHasScaled && (inBrightness == mScale.mBrightness) && 
-    (inContrast == mScale.mContrast) && inInverted == mScale.mInverted && 
+  if (mHasScaled && (inBrightness == mScale.mBrightness) &&
+    (inContrast == mScale.mContrast) && inInverted == mScale.mInverted &&
+    mScale.mFalseColor == inFalseColor &&
     fabs(boostContrast - mScale.mBoostContrast) < 1.e-3 && 
     fabs(mean - mScale.mMeanForBoost) < 1.e-3) 
     return;

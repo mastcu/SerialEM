@@ -347,7 +347,8 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
     mWhiteLevel == inImageScale->GetMaxScale() &&
     mSampleMin == inImageScale->GetSampleMin() &&
     mSampleMax == inImageScale->GetSampleMax() &&
-    (m_bInvertCon ? 1 : 0) == (inImageScale->GetInverted() ? 1 : 0))
+    (m_bInvertCon ? 1 : 0) == (inImageScale->GetInverted() ? 1 : 0) &&
+    BOOL_EQUIV(m_bFalseColor, inImageScale->GetFalseColor() != 0))
       return;
   mBrightSlider = inImageScale->mBrightness;
   mContrastSlider = inImageScale->mContrast;
@@ -356,6 +357,7 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
   mSampleMin = inImageScale->GetSampleMin();
   mSampleMax = inImageScale->GetSampleMax();
   m_bInvertCon = inImageScale->GetInverted() != 0;
+  m_bFalseColor = inImageScale->GetFalseColor() != 0;
   if (mInitialized)
     SetEditBoxes();
 }
