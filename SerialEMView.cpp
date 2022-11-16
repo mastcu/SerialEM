@@ -1187,7 +1187,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           // Get the convex boundary
           convXinHole.resize(drawnXinHole.size());
           convYinHole.resize(drawnYinHole.size());
-          if (drawnXallHole.size() > 0) {
+          if (drawnXinHole.size() > 0) {
             convexBound(&drawnXinHole[0], &drawnYinHole[0], (int)drawnXinHole.size(), 0.,
               0., &convXinHole[0], &convYinHole[0], &size, &ptX, &ptY,
               (int)drawnXinHole.size());

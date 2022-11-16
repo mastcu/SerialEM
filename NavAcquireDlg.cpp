@@ -422,10 +422,10 @@ BOOL CNavAcquireDlg::OnInitDialog()
   }
 
   LoadParamsToDialog();
-  ManageEnables(true);
   ManageOutputFile();
 
   BuildActionSection();
+  ManageEnables(true);
   SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
