@@ -103,6 +103,7 @@ private:
   bool mEnabledSearch;
   bool mDeferredUserStop;
   bool mMediumWasEmpty;
+  int mLastRowsShows;
   int mPanelStart[NUM_CAM_MAC_PANELS];
   int mNumInPanel[NUM_CAM_MAC_PANELS];
 public:

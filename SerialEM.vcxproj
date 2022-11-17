@@ -1262,6 +1262,9 @@
     <ClInclude Include="Shared\framealign.h" />
     <ClInclude Include="Shared\gpuframe.h" />
     <ClInclude Include="Shared\holefinder.h" />
+    <ClInclude Include="Shared\icont.h" />
+    <ClInclude Include="Shared\imodel.h" />
+    <ClInclude Include="Shared\iobj.h" />
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ShiftToMarkerDlg.h" />

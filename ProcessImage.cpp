@@ -28,6 +28,7 @@
 #include "NavigatorDlg.h"
 #include "GainRefMaker.h"
 #include "CtffindParamDlg.h"
+#include "Shared\imodel.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,6 +70,7 @@ CProcessImage::CProcessImage()
   mLongCatalaseNM = 8.75f;
   mGridMeshSize = 0;
   mPixelTimeStamp = 0;
+  mAutoContThread = NULL;
   mPlatePhase = 0.;
   mNumFFTZeros = 5;
   mAmpRatio = 0.07f;
@@ -3525,6 +3527,341 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   return err;
 }
 
+// AUTOCONTOURING 
+//
+// Top function to start the process; all the error checking is in the thread
+void CProcessImage::AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix,
+  float minSize, float maxSize, float interPeakThresh, float useThresh)
+{
+
+  // Load the data
+  AutoContData *acd = &mAutoContData;
+  mAutoContFailed = true;
+  acd->pixel = mShiftManager->GetPixelSize(imBuf);
+  acd->imBuf = imBuf;
+  acd->targetSizeOrPix = targetSizeOrPix;
+  acd->minSize = minSize;
+  acd->maxSize = maxSize;
+  acd->interPeakThresh = interPeakThresh;
+  acd->useThresh = useThresh;
+  acd->tdata = acd->xlist = acd->ylist = NULL;
+  acd->fdata = acd->idata = NULL;
+  acd->linePtrs = NULL;
+  acd->obj = NULL;
+  acd->errString = "";
+  acd->needRefill = acd->imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW;
+  acd->needReduce = false;
+
+  // Start thread
+  mAutoContThread = AfxBeginThread(AutoContProc, &mAutoContData,
+    THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+  mAutoContThread->m_bAutoDelete = false;
+  mAutoContThread->ResumeThread();
+  mWinApp->AddIdleTask(TASK_AUTO_CONTOUR, 0, 0);
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "AUTOCONTOURING");
+}
+
+UINT CProcessImage::AutoContProc(LPVOID pParam)
+{
+  AutoContData *acd = (AutoContData *)pParam;
+  int nxBuf, nyBuf, longest, longix, longiy, idir, err = 0, nxRed, nyRed, dataSize;
+  int numSamples, trim = 8, listSize, ind, ix, iy, numThreads;
+  float xOffset = 0., yOffset = 0.;
+  KImage *image = acd->imBuf->mImage;
+  Ival val;
+  int coNum, pt;
+  Icont *cont;
+  bool targetIsPix = acd->targetSizeOrPix < 10.;
+  int mode = image->getType();
+  unsigned char **zoomPtrs;
+  float firstVal, lastVal, histDip, peakBelow, peakAbove, sampMin, sampMax, sampMean;
+  const int maxSamples = 50000, histSize = 1000;
+  float samples[maxSamples], bins[histSize], base;
+  float minScale, maxScale, scaleFac;
+  float sqrtBaseFac = 0.05f, sigma = 2.5f;
+  Islice slSource;
+  float fval, redFac, newFill, fillVal = -1.e30f;
+  //double wallStart = wallTime();
+
+  // Set up variables and initialize source slice with input data
+  acd->imIsBytes = mode == MRC_MODE_BYTE;
+  acd->slRefilled = &slSource;
+  acd->slReduced = &slSource;
+  image->getSize(nxBuf, nyBuf);
+  sliceInit(&slSource, nxBuf, nyBuf, mode, image->getData());
+  dataSizeForMode(mode, &dataSize, &idir);
+
+  // Check conditions: is there scaling needed to scale a threshold
+  if (!acd->pixel && (targetIsPix || acd->minSize || acd->maxSize)) {
+    acd->errString = "The image has no pixel size and can be used only with a target size"
+      "and no min or max contour sizes";
+    return 1;
+  }
+
+  if (!acd->imIsBytes && !acd->imBuf->mImageScale) {
+    acd->errString = "There is no scaling information in this image buffer, needed "
+      "because it is not bytes";
+    return 1;
+  }
+  if (acd->imBuf->mImageScale) {
+    minScale = acd->imBuf->mImageScale->GetMinScale();
+    maxScale = acd->imBuf->mImageScale->GetMaxScale();
+  }
+
+  if (acd->interPeakThresh <= 0. && acd->useThresh < 1.) {
+    if (!acd->imBuf->mImageScale) {
+      acd->errString = "There is no scaling information in this image buffer, needed "
+        "because a relative threshold was specified";
+      return 1;
+    }
+    acd->useThresh = minScale + acd->useThresh * (maxScale - minScale);
+  }
+  
+  // Determine reduction
+  if (targetIsPix) {
+    redFac = acd->targetSizeOrPix / acd->pixel;
+  } else {
+    redFac = sqrt(nxBuf * nyBuf / (acd->targetSizeOrPix * acd->targetSizeOrPix));
+  }
+  acd->needReduce = redFac > 1.25;
+
+  // Find the fill value and set that refill is needed if there is a long enough stretch
+  if (acd->needRefill) {
+    sliceFindFillValue(&slSource, &fillVal, &longest, &longix, &longiy, &idir);
+    acd->needRefill = longest > 50;
+  }
+
+  // Make sure this is now NULL in case of error cleanup before it is allocated
+  if (acd->needRefill)
+    acd->slRefilled = NULL;
+ 
+  // Set up the reduction
+  if (acd->needReduce) {
+    acd->slReduced = NULL;
+    nxRed = (int)(nxBuf / redFac);
+    nyRed = (int)(nyBuf / redFac);
+    xOffset = (float)(nxBuf - redFac * nxRed) / 2.f;
+    yOffset = (float)(nyBuf - redFac * nyRed) / 2.f;
+    if (nxRed < 100 || nyRed < 100) {
+      acd->errString.Format("The size reduction by %.1f would make the size too small,"
+        " %d x %d", redFac, nxRed, nyRed);
+      return 1;
+    }
+    if (selectZoomFilter(5, 1. / redFac, &idir)) {
+      acd->errString.Format("Error setting filter for reducing by %.1f", redFac);
+      return 1;
+    }
+  } else {
+    redFac = 1.;
+    nxRed = nxBuf;
+    nyRed = nyBuf;
+  }
+
+  // Adjust size limits in pixel, set default for min
+  acd->minSize /= acd->pixel * redFac;
+  acd->maxSize /= acd->pixel * redFac;
+  acd->minSize *= acd->minSize;
+  acd->maxSize *= acd->maxSize;
+  if (!acd->minSize)
+    acd->minSize = 10;
+
+  // Get number of threads
+  numThreads = B3DNINT(sqrt(nxRed * nyRed / 50.));
+  B3DCLAMP(numThreads, 1, MAX_AUTO_SLICE_THREADS);
+  numThreads = numOMPthreads(numThreads);
+
+  // Get arrays if needed for refill, reduction, and byte conversion
+  if (acd->needRefill) {
+    acd->slRefilled = sliceCreate(nxBuf, nyBuf, mode);
+    if (!acd->slRefilled) {
+      acd->errString = "Error allocating slice for copy of image to replace fill in";
+      return 1;
+    }
+  }
+  
+  acd->slReduced = acd->slRefilled;
+  if (acd->needReduce) {
+    acd->slReduced = sliceCreate(nxRed, nyRed, mode);
+    if (!acd->slReduced) {
+      acd->errString = "Error allocating slice for copy of image to replace fill in";
+      return 1;
+    }
+  }
+
+  acd->idata = acd->slReduced->data.b;
+  if (!acd->imIsBytes) {
+    NewArray(acd->idata, unsigned char, nxRed * nyRed);
+    if (!acd->idata) {
+      acd->errString = "Error allocating array for byte copy of image";
+      return 1;
+    }
+  }
+
+  // Get the arrays needed internally by the auto routines
+  listSize = 4 * (nxRed + nyRed);
+  acd->tdata = B3DMALLOC(int, nxRed * nyRed);
+  acd->fdata = B3DMALLOC(unsigned char, nxRed * nyRed * numThreads);
+  acd->xlist = B3DMALLOC(int, listSize * numThreads);
+  acd->ylist = B3DMALLOC(int, listSize * numThreads);
+  acd->linePtrs = makeLinePointers(acd->idata, nxRed, nyRed, 1);
+  acd->obj = imodObjectNew();
+  if (!acd->tdata || !acd->fdata || !acd->xlist || !acd->ylist || !acd->linePtrs ||
+    !acd->obj) {
+    acd->errString = "Error allocating arrays for contouring the data";
+    return 1;
+  }
+
+  // Start doing operations: refill
+  if (acd->needRefill) {
+    memcpy(acd->slRefilled->data.b, image->getData(), dataSize * nxBuf * nyBuf);
+    if (!sliceReplaceFill(acd->slRefilled, 1, 1, &fillVal, &newFill))
+      fillVal = newFill;
+  }
+
+  // Reduce
+  if (acd->needReduce) {
+    zoomPtrs = makeLinePointers(acd->slRefilled->data.b, nxBuf, nyBuf, dataSize);
+    if (!zoomPtrs) {
+      acd->errString = "Error making line pointers for reducing image";
+      return 1;
+    } else {
+
+      err = zoomWithFilter(zoomPtrs, nxBuf, nyBuf, xOffset, yOffset, nxRed, nyRed, nxRed,
+        0, mode, acd->slReduced->data.b, NULL, NULL);
+      free(zoomPtrs);
+      if (err) {
+        acd->errString.Format("Error %d reducing image with zoomWithFilter", err);
+        return 1;
+      }
+    }
+  }
+
+  // Sampling and histogram for threshold
+  if (acd->interPeakThresh > 0.) {
+
+    getSampleOfArray(acd->slReduced->data.b, mode, nxRed, nyRed, 1., trim, trim,
+      nxRed - 2 * trim, nyRed - 2 * trim, fillVal, samples, maxSamples, &numSamples);
+    fullArrayMinMaxMean(samples, MRC_MODE_FLOAT, numSamples, 1, &sampMin, &sampMax, 
+      &sampMean);
+
+    // Take square root after adding a base.  Then mimic clip on the trimming
+    base = sqrtBaseFac * (sampMean - sampMin) - sampMin;
+    for (ind = 0; ind < numSamples; ind++)
+      samples[ind] = sqrtf(samples[ind] + base);
+    lastVal = -1.e37f;
+    firstVal = 1.e37f;
+    if (numSamples > 4000) {
+      idir = (int)(0.0005 * numSamples);
+      firstVal = percentileFloat(idir + 1, samples, numSamples);
+      lastVal = percentileFloat(numSamples - idir, samples, numSamples);
+    }
+
+    // Find dip, convert back to original values and set threshold
+    err = findHistogramDip(samples, numSamples, 0, bins, histSize, firstVal,
+      lastVal, &histDip, &peakBelow, &peakAbove, 0);
+    if (err) {
+      acd->errString = "Failed to find a dip in histogram of square root values";
+      return 1;
+    } else {
+      peakBelow = peakBelow * peakBelow - base;
+      peakAbove = peakAbove * peakAbove - base;
+      acd->useThresh = acd->interPeakThresh * (peakAbove - peakBelow) + peakBelow;
+    }
+  }
+
+
+  // Convert to bytes and adjust threshold for scaling
+  if (!acd->imIsBytes) {
+    scaleFac = 255.f / (maxScale - minScale);
+    acd->useThresh = (acd->useThresh - minScale) * scaleFac;
+    for (iy = 0; iy < nyRed; iy++) {
+      for (ix = 0; ix < nxRed; ix++) {
+        sliceGetVal(acd->slReduced, ix, iy, val);
+        fval = (val[0] - minScale) * scaleFac;
+        B3DCLAMP(fval, 0.f, 255.f);
+        acd->idata[ix + iy * nxRed] = (unsigned char)fval;
+      }
+    }
+  }
+
+  // Do it!
+  if (imodAutoContoursFromSlice(sigma, acd->useThresh, 0., -1, 1, (int)acd->minSize,
+    (int)acd->maxSize, 1, 0, 0., 0., 2, 3, NULL, 0, acd->obj, NULL, nxRed, nyRed,
+    acd->tdata, acd->idata, acd->fdata, acd->xlist, acd->ylist, acd->linePtrs, 0., 0,
+    listSize, numThreads)) {
+    acd->errString = "Error allocating memory in autocontouring library routine";
+    return 1;
+  }
+
+  // Scale the contours back to full image coordinates
+  for (coNum = 0; coNum < acd->obj->contsize; coNum++) {
+    cont = &acd->obj->cont[coNum];
+    for (pt = 0; pt < cont->psize; pt++) {
+      cont->pts[pt].x = cont->pts[pt].x * redFac + xOffset;
+      cont->pts[pt].y = cont->pts[pt].y * redFac + yOffset;
+    }
+    imodContourReduce(cont, 0.75);
+  }
+
+  return 0;
+}
+
+int CProcessImage::AutoContBusy()
+{
+  return UtilThreadBusy(&mAutoContThread);
+}
+
+// Done: convert to polygons
+void CProcessImage::AutoContDone()
+{
+  AutoContData *acd = &mAutoContData;
+  if (mWinApp->mNavigator->ImodObjectToPolygons(acd->imBuf, acd->obj)) {
+    SEMMessageBox("An error occurred converting autocontours to Navigator polygons");
+  } else {
+    mAutoContFailed = false;
+  }
+  StopAutoCont(true);
+}
+
+// This better not be called for timeout! Cleanup crashes it
+void CProcessImage::CleanupAutoCont(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR) {
+    UtilThreadCleanup(&mAutoContThread);
+  }
+  StopAutoCont(true);
+  if (error)
+    SEMMessageBox(_T(error == IDLE_TIMEOUT_ERROR ? "Time out doing autocontouring" : 
+      "Autocontouring failed: " + mAutoContData.errString));
+  mWinApp->ErrorOccurred(error);
+}
+
+// Stop function also better not be called for a user stop... just to clean up
+void CProcessImage::StopAutoCont(bool justFree)
+{
+  AutoContData *acd = &mAutoContData;
+  if (!justFree) {
+    UtilThreadCleanup(&mAutoContThread);
+  }
+  if (acd->obj)
+    imodObjectDelete(acd->obj);
+  free(acd->xlist);
+  free(acd->ylist);
+  free(acd->tdata);
+  free(acd->fdata);
+  free(acd->linePtrs);
+  if (acd->needRefill)
+    sliceFree(acd->slRefilled);
+  if (acd->needReduce)
+    sliceFree(acd->slReduced);
+  if (!acd->imIsBytes)
+    free(acd->idata);
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+}
+
+
 // DOSE RATE AND LINEARIZATION ROUTINES
 
 // Return a dose rate in electrons per unbinned pixel per second given the mean value
@@ -3806,3 +4143,4 @@ float CProcessImage::GetMaxCtfFitRes(void)
 {
   return (mUserMaxCtfFitRes > 0 ? mUserMaxCtfFitRes : mDefaultMaxCtfFitRes);
 }
+

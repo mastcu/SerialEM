@@ -150,6 +150,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_USEMONOSPACEDFONT, OnUpdateUseMonospacedFont)
   ON_COMMAND(ID_SCRIPT_SHOWINDENTBUTTONS, OntShowIndentButtons)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, OnUpdateShowIndentButtons)
+  ON_COMMAND(ID_SCRIPT_SETPANELROWS, OnScriptSetpanelrows)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETPANELROWS, OnUpdateScriptSetpanelrows)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -219,6 +221,7 @@ CMacroProcessor::CMacroProcessor()
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
   mToolButHeight = 0;
+  mNumCamMacRows = 1;
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
@@ -420,6 +423,27 @@ void CMacroProcessor::OnMacroSetlength()
   mNumToolButtons = B3DMIN(MAX_MACROS, B3DMAX(5, num));
   if (mWinApp->mMacroToolbar)
     mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+}
+
+void CMacroProcessor::OnScriptSetpanelrows()
+{
+  int val = mNumCamMacRows;
+  if (KGetOneInt("Number of rows of script buttons and spinners to show in Camera & Macro"
+    " control panel (1 - 4):", val))
+    SetNumCamMacRows(val);
+}
+
+void CMacroProcessor::OnUpdateScriptSetpanelrows(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+void CMacroProcessor::SetNumCamMacRows(int inVal)
+{
+  B3DCLAMP(inVal, 1, NUM_CAM_MAC_PANELS);
+  mNumCamMacRows = inVal;
+  mWinApp->mCameraMacroTools.ManagePanels();
+  mWinApp->mCameraMacroTools.SetMacroLabels();
 }
 
 void CMacroProcessor::OnScriptListPersistentVars()
@@ -993,6 +1017,7 @@ int CMacroProcessor::TaskBusy()
     (mRanGatanScript &&  mCamera->CameraBusy()) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     (mMakingDualMap && mNavHelper->GetAcquiringDual()) ||
+    (mAutoContouring && mProcessImage->DoingAutoContour()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
     (mCamera->GetTaskWaitingForFrame() || 

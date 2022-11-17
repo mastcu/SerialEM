@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/16/22: Added AutoContourGridSquares command to make polygons around grid
+squares.
+
+10/16/22: Made label display and selecting of polygons behave like points when
+the polygons are members of a group.
+
+10/16/22: Added optional entry to UpdateItemZ to specify item index.
+
+10/16/22: Added ability to have up to 3 more rows of script buttons and
+spinners in the Camera &MScript control panel.
+
+10/16/22: Fixed some problems with the false color display.
+
 10/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
 
 10/15/22: Fixed another vulnerability in drawing routine (In 4.0).

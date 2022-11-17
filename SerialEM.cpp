@@ -2402,6 +2402,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mParticleTasks->WaitForDriftBusy();
     else if (idc->source == TASK_MACRO_AT_EXIT)
       busy = mMacroProcessor->DoingMacro() ? 1 : 0;
+    else if (idc->source == TASK_AUTO_CONTOUR)
+      busy = mProcessImage->AutoContBusy();
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -2546,6 +2548,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->ScanningNextTask(idc->param);
         else if (idc->source == TASK_MACRO_AT_EXIT)
           mMainFrame->DoClose(true);
+        else if (idc->source == TASK_AUTO_CONTOUR)
+          mProcessImage->AutoContDone();
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
@@ -2646,6 +2650,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mScope->ApertureCleanup(busy);
         else if (idc->source == TASK_FIND_HOLES)
           mNavHelper->mHoleFinderDlg->StopScanning();
+        else if (idc->source == TASK_AUTO_CONTOUR)
+          mProcessImage->CleanupAutoCont(busy);
      }
 
       // Delete task from memory and drop index
@@ -2806,6 +2812,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopCtfBased();
   if (mAutoTuning->DoingComaVsIS())
     mAutoTuning->StopComaVsISCal();
+  if (mProcessImage->DoingAutoContour())
+    mProcessImage->StopAutoCont(false);
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);
@@ -3347,7 +3355,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 BOOL CSerialEMApp::DoingTasks()
 {
   bool trulyBusy = DoingImagingTasks()|| 
-    mMacroProcessor->DoingMacro() ||
+    mMacroProcessor->DoingMacro() || mProcessImage->DoingAutoContour() ||
     mShiftManager->ResettingIS() || mParticleTasks->GetDVDoingDewarVac() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||

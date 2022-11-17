@@ -15,8 +15,33 @@
 
 struct CtffindParams;
 class CCtffindParamDlg;
+typedef struct Mod_Object Iobj;
+
 enum { PROC_ADD_IMAGES, PROC_SUBTRACT_IMAGES, PROC_MULTIPLY_IMAGES, PROC_DIVIDE_IMAGES,
 PROC_COMPUTE_THICKNESS};
+
+struct AutoContData {
+  EMimageBuffer *imBuf;
+  float targetSizeOrPix;
+  float minSize;
+  float maxSize;
+  float interPeakThresh;
+  float useThresh;
+  float pixel;
+  bool needReduce;
+  bool imIsBytes; 
+  bool needRefill;
+  Iobj *obj;
+  int *tdata;
+  unsigned char *fdata;
+  int *xlist;
+  int *ylist;
+  Islice *slRefilled;
+  Islice *slReduced;
+  unsigned char *idata;
+  unsigned char **linePtrs;
+  CString errString;
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage command target
@@ -93,6 +118,8 @@ public:
   GetMember(float, BeamShiftFromImage);
   GetSetMember(float, ThicknessCoefficient);
   SetMember(float, NextThicknessCoeff);
+  GetMember(bool, AutoContFailed);
+  bool DoingAutoContour() { return mAutoContThread != NULL; };
 
 
 // Overrides
@@ -189,6 +216,9 @@ private:
   BOOL mCtfFixAstigForPhase;
   float mThicknessCoefficient;  // Coefficient in thickness calculation 
   float mNextThicknessCoeff;    // Value to use on next call
+  AutoContData mAutoContData;   // Structure for passing data to autocontouring
+  CWinThread *mAutoContThread;
+  bool mAutoContFailed;         // Flag cleared at successful completion
 
 public:
   afx_msg void OnProcessMinmaxmean();
@@ -274,6 +304,13 @@ float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
 int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
 afx_msg void OnProcessReduceimage();
 int RunCtffind(EMimageBuffer *imBuf, CtffindParams &params, float results_array[7], bool skipOutput = false);
+void AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix, float minSize, float maxSize,
+  float interPeakThresh, float useThresh);
+static UINT AutoContProc(LPVOID pParam);
+int AutoContBusy();
+void AutoContDone();
+void CleanupAutoCont(int error);
+void StopAutoCont(bool justFree);
 int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
 afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);

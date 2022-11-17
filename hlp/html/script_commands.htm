@@ -4300,6 +4300,31 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">AutoContourGridSquares buf #R #H [#T] [#S] [#L] </TD>
+          <TD>Find areas above a threshold in the image in [buf] and makes polygons around them, which are all assigned
+            the same group ID.&nbsp; The autocontouring routines in the IMOD model library are used and take byte input,
+            so theimage will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; Inputs are:<br />
+            &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
+            image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
+            much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
+             ~1500-2000 pixels; a pixel size of ~1.2 um is useful.<br />
+            &nbsp;&nbsp;&nbsp; <b>#H</b> - Fraction used for setting a threshold based on a histogram analysis
+            that finds two peak values in a bimodal distribution of image intensities.&nbsp; The contouring 
+            threshold is set to the given fractional distance between the peaks.&nbsp; If the analysis fails to find two
+            peaks, a specific threshold must be set instead.<br />
+            &nbsp;&nbsp;&nbsp; <b>#T</b> - A specific threshold to use instead of doing a histogram analysis;
+            enter 0 for <b>#H</b> and enter either an actual intensity value in the displayed image (a value &gt; 1),
+            or a relative threshold, the fraction of the way between the Black and White values in the current 
+            display.&nbsp; This value is ignored if <b>#H</b> is nonzero.<br />
+            &nbsp;&nbsp;&nbsp; <b>#S</b> - Smallest size, in microns, for an area; the square of this value is used
+            to set the minimum area to retain as a polygon.<br />
+            &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
+            used to set the maximum area to retain as a polygon.<br />
+            The autocontouring may take on the order of 15 seconds for ~500 grid squares.&nbsp; It cannot be stopped
+            because that would crash the program.&nbsp; Command added in 4.1, 11/16/22.
+         </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">GetUniqueNavID</TD>
           <TD>Creates an ID value unique from any current Navigator items and places it in <i>reportedValue1</i>;
              it can be assigned to a variable after the command.&nbsp; The ID can be used with 

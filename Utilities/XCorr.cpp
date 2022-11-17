@@ -690,19 +690,20 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
     float amat22, float xc, float yc, float xt, float yt)
 {
   float xcen, ycen, xco, yco, a11, a12, a21, a22, denom;
-  float dyo, xbase, ybase,xst, xnd, xlft,xrt, dx, dy, omdy, xp, yp, mean;
-  int iy, ix, iybase, ixnd, ixst,iqst, iqnd, ifall, ixp, iyp, indbase;
-  int indbasex, indbasey, indbasexy;
-  double dxp, dyp;
+  float dyo = 0., xbase = 0., ybase = 0., xst = 0., xnd = 0, xlft = 0., xrt = 0., dx = 0.;
+  float dy = 0., omdy = 0., xp = 0., yp = 0., mean;
+  int iy, ix = 0, iybase = 0, ixnd = 0, ixst = 0, iqst = 0, iqnd = 0, ifall = 0, ixp = 0;
+  int iyp = 0, indbase = 0, indbasex = 0, indbasey = 0, indbasexy = 0;
+  double dxp = 0., dyp = 0.;
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
   short int *sbray = (short int *)bray;
   unsigned short int *ubray = (unsigned short int *)bray;
   unsigned char *bbray = (unsigned char *)bray;
   unsigned char *cdata = (unsigned char *)array;
-  short int smean;
-  unsigned char cmean;
-  unsigned short int usmean;
+  short int smean = 0; 
+  unsigned char cmean = 0;
+  unsigned short int usmean  = 0;
   float *fdata = (float *)array;
   float *fbray = (float *)bray;
   int maxThreads = 8, numThreads;

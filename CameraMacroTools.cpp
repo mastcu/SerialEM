@@ -156,6 +156,7 @@ BOOL CCameraMacroTools::OnInitDialog()
   }
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
     sHeightTable);
+  mLastRowsShows = mWinApp->mMacroProcessor->GetNumCamMacRows();
   ManagePanels();
   mInitialized = true;
   UpdateSettings();
@@ -243,6 +244,9 @@ void CCameraMacroTools::ManagePanels()
     states[ind] = ind <= numRows && (!ind || (GetState() & TOOL_OPENCLOSED));
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
+  if (mLastRowsShows != numRows)
+    mWinApp->mMainFrame->SetDialogPositions();
+  mLastRowsShows = numRows;
 }
 
 void CCameraMacroTools::UpdateSettings()

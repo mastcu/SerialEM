@@ -151,6 +151,7 @@ public:
     GetMember(BOOL, OpenDE12Cover);
   GetSetMember(int, NumToolButtons);
   GetSetMember(int, ToolButHeight);
+  GetMember(int, NumCamMacRows);
   GetSetMember(int, AutoIndentSize);
   GetMember(BOOL, UseMonoFont);
   void SetUseMonoFont(BOOL inVal);
@@ -285,6 +286,7 @@ protected:
   WINDOWPLACEMENT mToolPlacement;
   int mNumToolButtons;    // Number of tool bottons to show
   int mToolButHeight;     // Height of tool buttons
+  int mNumCamMacRows;     // Number of rowsof buttons in camera-macro tool panel
   WINDOWPLACEMENT mEditerPlacement[MAX_MACROS];
   WINDOWPLACEMENT mOneLinePlacement;
   int mLogErrAction;      // Log argument for error messages
@@ -314,6 +316,7 @@ protected:
   BOOL mMovedAperture; // Flag that an aperture/phase plate movement was started
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
   BOOL mMakingDualMap; // Flag that anchor map has been started
+  BOOL mAutoContouring; // Flag that autocontouring was started
   double mDoseStart;   // Starting cumulative dose
   double mDoseTarget;  // Target dose to accumulate
   double mDoseTime;    // Time it started
@@ -432,6 +435,7 @@ protected:
   CString mInputToNextProcess; // Input to pipe in when running next process
 
 public:
+  void SetNumCamMacRows(int inVal);
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
   int ScanForName(int macroNumber, CString *macro = NULL);
   bool SetVariable(CString name, CString value, int type, int index, bool mustBeNew,
@@ -597,6 +601,8 @@ public:
   afx_msg void OnUpdateUseMonospacedFont(CCmdUI *pCmdUI);
   afx_msg void OntShowIndentButtons();
   afx_msg void OnUpdateShowIndentButtons(CCmdUI *pCmdUI);
+  afx_msg void OnScriptSetpanelrows();
+  afx_msg void OnUpdateScriptSetpanelrows(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

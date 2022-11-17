@@ -10012,11 +10012,17 @@ int CMacCmd::UpdateItemZ(void)
   ABORT_NONAV;
   index2 = CMD_IS(UPDATEGROUPZ) ? 1 : 0;
   if (!mItemEmpty[1] && mItemInt[1]) {
-    if (!mNavigator->GetAcquiring())
-      ABORT_LINE("The Navigator needs to be acquiring for updating the next group Z in "
-        "line:\n\n");
-    if (!mNavigator->FindNextAcquireItem(index))
-      ABORT_LINE("There is no next Navigator item to be acquired for line:\n\n");
+    if (index2) {
+      if (!mNavigator->GetAcquiring())
+        ABORT_LINE("The Navigator needs to be acquiring for updating the next group Z in "
+          "line:\n\n");
+      if (!mNavigator->FindNextAcquireItem(index))
+        ABORT_LINE("There is no next Navigator item to be acquired for line:\n\n");
+    } else {
+      index = mItemInt[1] - 1;
+      if (index < 0 || index >= mNavigator->GetNumberOfItems())
+        ABORT_LINE("Index of Navigator item is out of range in line:\n\n");
+    }
   } else
     index = mNavigator->GetCurrentOrAcquireItem(navItem);
   if (index < 0)
@@ -10372,6 +10378,20 @@ int CMacCmd::UndoHoleCombining(void)
   if (!mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine())
     ABORT_NOLINE("It is no longer possible to undo the last hole combination");
   mWinApp->mNavHelper->mCombineHoles->UndoCombination();
+  return 0;
+}
+
+// AutoContourGridSquares
+int CMacCmd::AutoContourGridSquares(void)
+{
+  int index;
+  ABORT_NONAV;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  mProcessImage->AutoContourImage(&mImBufs[index], mItemFlt[2],
+    mItemEmpty[5] ? 0.f : mItemFlt[5], mItemEmpty[6] ? 0.f : mItemFlt[6],
+    mItemFlt[3], mItemFlt[4]);
+  mAutoContouring = true;
   return 0;
 }
 

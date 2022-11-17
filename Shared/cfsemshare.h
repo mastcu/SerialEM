@@ -60,6 +60,10 @@ extern "C" {
   int sampleMeanOnly(unsigned char **image, int type, int nx, int ny, float sample,
                      int ixStart, int iyStart, int nxUse, int nyUse, float *mean);
   int typeForSampleMean(int mrcMode);
+  int getSampleOfArray(void *image, int mode, int nx, int ny, float sampleFrac,
+                       int ixStart, int iyStart, int nxUse, int nyUse,
+                       float filltoExclude, float *samples, int maxSamples, 
+                       int *numSamples);
 
   /* pctstretch.c - for computing percentile limits quickly by sampling */
   int percentileStretch(unsigned char **image, int mode, int nx, int ny, float sample,
@@ -89,6 +93,8 @@ extern "C" {
                       void *brray, int keepByte, int *nxr, int *nyr);
   void binIntoSlice(float *array, int nxDim, float *brray, int nxBin, int nyBin,
                     int binFacX, int binFacY, float zWeight);
+  void repackFloatImage(void *brray, void *array, int nxin, int xStart, int xEnd,
+                        int yStart, int yEnd);
 
   /* filtxcorr.c */
   int niceFrame(int num, int idnum, int limit);
@@ -152,6 +158,8 @@ extern "C" {
                        int ny, int nxtap, int nytap);
   double sliceEdgeMean(float *array, int nxdim, int ixlo, int ixhi, int iylo,
                        int iyhi);
+  float imageEdgeMean(void *array, int type, int nxdim, int ixlo, int ixhi, int iylo, 
+                      int iyhi);
   double sliceEdgeMedian(float *array, int nxdim, int ixlo, int ixhi, int iylo,
                          int iyhi, int meanOfSides);
   void sliceSplitFill(float *array, int nxbox, int nybox, float *brray,
@@ -164,8 +172,13 @@ extern "C" {
 
   /* taperatfill.c */
   int sliceTaperAtFill(Islice *sl, int ntaper, int inside);
+  int taperAtFill(void *array, int type, int nx, int ny, int ntaper, int inside);
   int getLastTaperFillValue(float *value);
-
+  void sliceFindFillValue(Islice *sl, float *fillvalP, int *longestP, int *longixP,
+                          int *longiyP, int *dirP);
+  int sliceReplaceFill(Islice *sl, int median, int haveFill, float *oldFill, 
+                       float *newFill);
+  
   /* circlefit.c */
   int circleThrough3Pts(float x1, float y1, float x2, float y2, float x3, 
                              float y3, float *rad, float *xc, float *yc);
@@ -203,9 +216,13 @@ extern "C" {
                          double *sd);
   void arrayMinMaxMean(float *array, int nx, int ny, int ix0, int ix1, int iy0, int iy1,
                        float *dmin, float *dmax, float *dmean);
+  float imageSubareaMean(void *array, int type, int nxDim, int ix0, int ix1, int iy0,
+                         int iy1);
   void arrayMinMaxMeanSd(float *array, int nx, int ny, int ix0, int ix1, int iy0, int iy1,
                          float *dmin, float *dmax, double *sumDbl, double *sumSqDbl,
                          float *avg, float *SD);
+  void scaleArrayForMode(float *array, int nxDim, int mode, int nx1, int nx2, int ny1, 
+                         int ny2, float *dmin, float *dmax, float *dmean);
   void lsFit(float *x, float *y, int num, float *slope, float *intcp,
              float *ro);
   void lsFitPred(float *x, float *y, int n, float *slope, float *bint,
@@ -330,12 +347,18 @@ extern "C" {
   int matrixToAngles(float *matrix, double *x, double *y, double *z, int rows);
   void icalc_angles(float *angles, float *matrix);
   void invertMatrix(float *m1, float *m2);
+  int readOneXform(FILE *fp, float *xf);
+  int readAllXforms(FILE *fp, float *xforms, int maxRead, int *numRead);
+  void exitFromXFReadError(int ierr, const char *descrip);
 
   /* piecefuncs.c */
   int checkPieceList(int *pclist, int stride, int npclist, int redfac, int nframe,
                      int *minpiece, int *npieces, int *noverlap);
   void adjustPieceOverlap(int *pclist, int stride, int npclist, int nframe, int minpiece,
                           int noverlap, int newOverlap);
+  void fillListOfPieceZ(int *izPcList, int nPcList, int *listZ, int *numListZ);
+  int readPieceList(const char *pieceFile, int *ixPcList, int *iyPcList, int *izPcList, 
+                    int *nPcList, int maxPieces);
 
   /* regression.c */
   void statMatrices(float *x, int xsize, int colFast, int m, int msize, int ndata,
@@ -358,6 +381,12 @@ extern "C" {
   int robustPolySmooth(float *x, float *yIn, int ndata, int order, float *yOut, 
                        int numFit, int minFit, float *work, float kfactor, int maxIter, 
                        int maxZeroWgt, float *weights);
+
+  /* findtransform.c */
+  int findTransform(float *xMat, int mSize, int icolX, int numPoints, float xcen,
+                    float yCen, int ifTrans, int ifRotrans, int ifDev, float *xf,
+                    float *devAvg, float *devSd, float *devMax, int *ipntMax);
+
 
   /* minimize1D.c */
   int minimize1D(float curPosition, float curValue, float initialStep, int numScanSteps,
@@ -389,7 +418,11 @@ extern "C" {
   int montXCFindBinning(int maxBin, int targetSize, int indentXC, int *nxyPiece,
                         int *nxyOverlap, float aspectMax, float extraWidth, float padFrac,
                         int niceLimit, int *numPaddedPix, int *numBoxedPix);
-  void montXCorrEdge(float *lowerIn, float *upperIn, int *nxyBox, int *nxyPiece, 
+  int montXCFindBinning2(int maxBin, int targetSize, int indentXC, int ixy, int *nxyPiece,
+                         int *nxyOverlap, int *expectedShift, float aspectMax,
+                         float extraWidth, float padFrac, int niceLimit,
+                         int *numPaddedPix, int *numBoxedPix);
+ void montXCorrEdge(float *lowerIn, float *upperIn, int *nxyBox, int *nxyPiece, 
                      int *nxyOverlap, int nxSmooth, int nySmooth, int nxPad, int nyPad,
                      float *lowerPad, float *upperPad, float *lowerCopy,
                      int numXcorrPeaks, int legacy, float *ctf, float delta,

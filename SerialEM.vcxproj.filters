@@ -515,6 +515,15 @@
     <ClInclude Include="NavAcqHoleFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shared\icont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\imodel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\iobj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
