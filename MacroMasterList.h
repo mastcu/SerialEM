@@ -692,6 +692,8 @@ MAC_SAME_FUNC_ARG(GetNavGroupImageCoords, 3, 4, GetNavGroupStageCoords, GETNAVGR
 MAC_SAME_NAME_ARG(LoadSettingsFile, 1, 0, LOADSETTINGSFILE, S)
 MAC_SAME_NAME_ARG(SetupFullMontage, 1, 0, SETUPFULLMONTAGE, S)
 MAC_SAME_NAME_ARG(AutoContourGridSquares, 3, 0, AUTOCONTOURGRIDSQUARES, SDDddd)
+MAC_SAME_NAME_ARG(ForgetPriorState, 0, 4, FORGETPRIORSTATE, i)
+MAC_SAME_NAME_NOARG(CalibrateElectronDose, 0, 4, CALIBRATEELECTRONDOSE)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

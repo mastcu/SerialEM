@@ -6067,6 +6067,14 @@ int CMacCmd::ElectronStats(void)
   return 0;
 }
 
+// CalibrateElectronDose
+int CMacCmd::CalibrateElectronDose(void)
+{
+  if (mWinApp->mBeamAssessor->CalibrateElectronDose(false))
+    ABORT_LINE("One of the preconditions for calibrating dose is not met for line:\n\n");
+  return 0;
+}
+
 // AccumulateRecordDose
 int CMacCmd::AccumulateRecordDose(void)
 {
@@ -9647,6 +9655,24 @@ int CMacCmd::RestoreState(void)
       mNavHelper->mStateDlg->DisableUpdateButton();
       mNavHelper->mStateDlg->SetCamOfSetState(-1);
     }
+  }
+  return 0;
+}
+
+// ForgetPriorState
+int CMacCmd::ForgetPriorState(void)
+{
+  CString report;
+  if (mNavHelper->GetTypeOfSavedState() == STATE_NONE) {
+    report.Format("Cannot forget prior state: no state has been saved");
+    if (mItemInt[1])
+      ABORT_LINE(report + " for line:\n\n");
+    mWinApp->AppendToLog(report, mLogAction);
+  } else {
+    if (mNavHelper->mStateDlg)
+      mNavHelper->mStateDlg->OnButForgetState();
+    else
+      mNavHelper->ForgetSavedState();
   }
   return 0;
 }

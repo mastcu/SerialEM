@@ -87,7 +87,7 @@ class CBeamAssessor
   void AssignCrossovers();
   DoseTable *GetDoseTables() {return &mDoseTables[0][0][0];};
   SpotTable *GetSpotTables() {return &mSpotTables[0];};
-  void CalibrateElectronDose(BOOL interactive);
+  int CalibrateElectronDose(BOOL interactive);
   double GetCurrentElectronDose(int conSetNum);
   BOOL LookupCurrent(int numIntensities, double inIntensity, double &newLog);
   double GetElectronDose(int spotSize, double inIntensity, float exposure, int probe = -1);

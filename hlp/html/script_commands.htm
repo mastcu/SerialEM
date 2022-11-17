@@ -1747,6 +1747,12 @@
           counting mode.&nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CalibrateElectronDose</TD>
+          <TD>Calibrates electron dose with the image in buffer A without popping up any 
+            message boxes, but generates an error if any of the preconditions for 
+            calibrating dose are not met.&nbsp; Command added in 4.0, 11/6/22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SubareaMean #X0 #X1 #Y0 #Y1</TD>
           <TD>Reports the mean counts in a subarea of the A buffer from <b>#X0</b> to <b>#X1</b> in X and from
             <b>#Y0</b> to <b>#Y1</b> in Y. Coordinates are numbered from 0 to size - 1 in each dimension
@@ -4124,10 +4130,18 @@
           </TD>
         </TR>
         <TR>
-          <TD>Restores the state if one has been saved with 'SetMapAcquireState' or 
+           <TD class="scriptcommand">RestoreState [#]</TD>
+         <TD>Restores the state if one has been saved with 'SetMapAcquireState' or 
             'GoToImagingState' or with the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; Set the optional <b>#</b> 
             non-zero to generate an error if no state was saved.
           </TD>
+        </TR>
+        <TR>
+           <TD class="scriptcommand">ForgetPriorState [#]</TD>
+         <TD>Forgets a state if one has been saved with 'SetMapAcquireState' or 
+            'GoToImagingState' or with the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>, equivalent to
+           pressing <b>Forget Prior State</b> in that dialog.&nbsp; Set the optional <b>#</b> 
+            non-zero to generate an error if no state was saved.&nbsp; Command added in 4.1, 11/16/22</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">OpenImagingStateDialog</TD>

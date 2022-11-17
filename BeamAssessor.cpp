@@ -1451,7 +1451,7 @@ double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, float csExp
 }
 
 // Calibrate the dose from the current image
-void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
+int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
 {
   double intensity = mScope->GetIntensity();
   int spotSize = mScope->GetSpotSize();
@@ -1475,7 +1475,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       AfxMessageBox("To calibrate electron dose, Buffer A must contain an \n"
       "image acquired from a camera with calibrated gain.\n\n"
       "To proceed, acquire an image.", MB_EXCLAME);
-    return;
+    return 1;
   }
   extra = imBuf->mImage->GetUserData();
 
@@ -1484,16 +1484,17 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       AfxMessageBox("The SerialEM properties file does not contain a gain in \n"
       "counts per electron for the camera from which this image was taken\n\n"
       "Dose cannot be calibrated with this image", MB_EXCLAME);
-    return;
+    return 1;
   }
 
   if (imBuf->mCamera >= 0 && imBuf->mConSetUsed >= 0 && camParam->OneViewType &&
     allConSets[imBuf->mConSetUsed + imBuf->mCamera * MAX_CONSETS].correctDrift) {
-    AfxMessageBox("It appears that this image was taken with drift correction "
-      "turned on.\n\nBlank images with drift correction can lose frames and give"
-      " a bad dose estimate.\n\nYou need to take another image without this"
-      " setting", MB_EXCLAME);
-      return;
+    if (interactive)
+      AfxMessageBox("It appears that this image was taken with drift correction "
+        "turned on.\n\nBlank images with drift correction can lose frames and give"
+        " a bad dose estimate.\n\nYou need to take another image without this"
+        " setting", MB_EXCLAME);
+    return 1;
   }
 
   if (extra && extra->m_fIntensity > -1.)
@@ -1544,14 +1545,14 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       // Purge older calibrations that are linked by spot ratios
       indTab = FindSpotTableIndex(aboveCross, probe);
       if (indTab < 0 || !mSpotTables[indTab].ratio[spotSize])
-        return;
+        return 0;
       for (i = 0; i < mScope->GetNumSpotSizes(); i++)
         if (i != spotSize && mSpotTables[indTab].ratio[i] && 
           mDoseTables[i][aboveCross][probe].dose && 
           timeStamp - mDoseTables[i][aboveCross][probe].timeStamp > 60 * AUTO_PURGE_HOURS)
           mDoseTables[i][aboveCross][probe].dose = 0.;
 
-      return;
+      return 0;
     }
 
   } else {
@@ -1588,6 +1589,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   // Restore table entries
   dtp->dose = saveDose;
   dtp->intensity = saveIntensity;
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////////////
