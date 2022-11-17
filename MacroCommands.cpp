@@ -8795,7 +8795,7 @@ int CMacCmd::RestoreState(void)
   if (index == STATE_NONE) {
     report.Format("Cannot Restore State: no state has been saved");
     if (mItemInt[1])
-      ABORT_LINE(report);
+      ABORT_LINE(report + " for line:\n\n");
     mWinApp->AppendToLog(report, mLogAction);
   } else {
     if (index == STATE_MAP_ACQUIRE)
