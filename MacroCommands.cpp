@@ -8467,15 +8467,40 @@ int CMacCmd::SetProcessing(void)
 int CMacCmd::SetFrameTime(void)
 {
   BOOL truth;
-  int index, ix0, iy1;
+  int index, ix0, iy1, newSum;
+  float fps;
+  int *sumP;
 
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (!mCamParams->K2Type && !mCamParams->canTakeFrames && 
-    !(mCamParams->FEItype == FALCON4_TYPE))
+  if (!mCamParams->K2Type && !mCamParams->canTakeFrames &&
+    !(mCamParams->FEItype == FALCON4_TYPE) &&
+    !mWinApp->mDEToolDlg.CanSaveFrames(mCamParams))
     ABORT_NOLINE("Frame time cannot be set for the current camera type");
   SaveControlSet(index);
   truth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
+
+  // DE camera is handled separately
+  if (mCamParams->DE_camType) {
+    fps = mCamParams->DE_FramesPerSec;
+    if (mCamSet->K2ReadMode > 0 && mCamParams->DE_CountingFPS > 0.)
+      fps = mCamParams->DE_CountingFPS;
+    sumP = mCamSet->K2ReadMode > 0 ? &mCamSet->sumK2Frames : &mCamSet->DEsumCount;
+    if (truth) {
+      newSum = B3DNINT(mItemFlt[2] * *sumP);
+      mCamSet->exposure *= (float)newSum / (float)(*sumP);
+      *sumP = newSum;
+    } else {
+      *sumP = B3DMAX(1, B3DNINT(fps * mItemFlt[2]));
+      ix0 = B3DNINT(mCamSet->exposure / (*sumP / fps));
+      mCamSet->exposure = B3DMAX(1, ix0) * (*sumP / fps);
+    }
+    SetRepValsAndVars(3, *sumP / fps, mCamSet->exposure);
+    mLogRpt.Format("New frame time %.3f  exposure %.3f", *sumP / fps, mCamSet->exposure);
+    return 0;
+  }
+
+  // Other cameras
   if (truth) {
     ix0 = B3DNINT(mCamSet->exposure / mCamSet->frameTime);
     mCamSet->frameTime *= mItemFlt[2];
