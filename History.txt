@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/17/22: Fixed crash when reverting to version before the new script buttons.
+
 10/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
 cameras (In 4.0).
 
@@ -18,7 +20,7 @@ the polygons are members of a group.
 10/16/22: Added optional entry to UpdateItemZ to specify item index.
 
 10/16/22: Added ability to have up to 3 more rows of script buttons and
-spinners in the Camera &MScript control panel.
+spinners in the Camera & Script control panel.
 
 10/16/22: Fixed some problems with the false color display.
 

@@ -833,6 +833,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           macroButtonNumbers[index] = atoi((LPCTSTR)strItems[index + 1]);
           index++;
         }
+      } else if (NAME_IS("MoreScriptButtons")) {
+        index = 0;
+        while (!strItems[index + 1].IsEmpty() && index + 3 < NUM_SPINNER_MACROS) {
+          macroButtonNumbers[index + 3] = atoi((LPCTSTR)strItems[index + 1]);
+          index++;
+        }
       } else if (NAME_IS("MacroToolbarButtons")) {
         mWinApp->mMacroProcessor->SetNumToolButtons(itemInt[1]);
         if (!itemEmpty[2])
@@ -1871,8 +1877,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       }
     }
 
-    oneState = "MacroButtonNumbers ";
-    for (i = 0; i < NUM_SPINNER_MACROS; i++) {
+    oneState.Format("MacroButtonNumbers %d %d %d\n", macroButtonNumbers[0],
+      macroButtonNumbers[1], macroButtonNumbers[2]);
+    mFile->WriteString(oneState);
+    oneState = "MoreScriptButtons ";
+    for (i = 3; i < NUM_SPINNER_MACROS; i++) {
       macCopy.Format(" %d", macroButtonNumbers[i]);
       oneState += macCopy;
     }
