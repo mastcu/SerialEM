@@ -39,7 +39,7 @@ for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg6
  DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
  libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
  hdf5.dll SerialEM_Snapshot.txt concrt140.dll mfc140.dll msvcp140.dll ucrtbase.dll^
- vcruntime140.dll msvcp120.dll msvcr120.dll) DO (
+ vcruntime140.dll msvcp120.dll msvcr120.dll DE.Win32.dll DE.Win64.dll) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 
