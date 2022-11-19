@@ -145,7 +145,8 @@ IF  %SAWPROPS% EQU 1 IF %NEEDDECAM% EQU 1 (
 )
 if %NEEDDECAM% EQU 1 (
   COPY /Y DEcamPlugin.dll ..
-  COPY /Y DeInterface.Win32.dll ..
+  IF EXIST DE.Win32.dll COPY /Y DE.Win32.dll ..
+  IF EXIST DE.Win64.dll COPY /Y DE.Win64.dll ..
 )
 
 IF EXIST FTComm.dll COPY /Y FTComm.dll ..

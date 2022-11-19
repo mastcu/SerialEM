@@ -235,6 +235,11 @@ void CBaseSocket::CloseBeforeNextUse(int typeID)
     mCloseBeforeNextUse[mIdIndexToSockIndMap[idInd]] = true;
 }
 
+// 11/17/22: This is to disable deprecation warning on inet_addr that says to use
+// inet_pton or InetPton (unicode version).  Neither of these is defined even when
+// including Ws2tcpip.h as instructed.  Maybe later...
+#pragma warning(disable:4996) 
+
 // Open the socket and connect it to the server
 int CBaseSocket::OpenServerSocket(int sockInd)
 {
