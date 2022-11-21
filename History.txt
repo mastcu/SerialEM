@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/19/22: SEM_4-1-0beta7
+10/19/22: Switched to latest DLLs from DE two work with the new SerialEM
+build.
+
 10/17/22: SEM_4-0-15
 10/17/22: Fixed crash when reverting to version before the new script buttons.
 
