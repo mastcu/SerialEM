@@ -3,57 +3,59 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-10/19/22: SEM_4-1-0beta7
-10/19/22: Switched to latest DLLs from DE two work with the new SerialEM
+11/19/22: SEM_4-1-0beta8
+11/19/22: Switched to latest DLLs from DE two work with the new SerialEM
 build.
 
 11/17/22: SEM_4-0-15
+11/17/22: Fixed crash when reverting to version before the new script buttons.
+
 11/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
-
-10/17/22: Fixed crash when reverting to version before the new script buttons.
-
-101/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
 cameras (In 4.0).
 
-11/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
+11/16/22: Added script commands to forget prior state and calibrate electron
 dose.
 
-10/16/22: Added AutoContourGridSquares command to make polygons around grid
+11/16/22: Added AutoContourGridSquares command to make polygons around grid
 squares.
 
-10/16/22: Made label display and selecting of polygons behave like points when
+11/16/22: Made label display and selecting of polygons behave like points when
 the polygons are members of a group.
 
-10/16/22: Added optional entry to UpdateItemZ to specify item index.
+11/16/22: Added optional entry to UpdateItemZ to specify item index.
 
-10/16/22: Added ability to have up to 3 more rows of script buttons and
+11/16/22: Added ability to have up to 3 more rows of script buttons and
 spinners in the Camera & Script control panel.
 
-10/16/22: Fixed some problems with the false color display.
+11/16/22: Fixed some problems with the false color display.
 
+11/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
 
+11/15/22: Fixed another vulnerability in drawing routine (In 4.0).
 
 11/12/22: Fixed crash when stop reading a montage using shifts in the mdoc
 file (In 4.0).
 
-11/11/22: Fixed error in drawing Navigator items on very large montages
+11/11/22: Extended the fix for Falcon 4 binning to cover subareas, which also
 give an error when saving EER.
 
+11/11/22: Fixed error in drawing Navigator items on very large montages
 (In 4.0).
 
-11/11/22: Fixed missing line break after last FEI ZLP shift in short term
-10/10/22: Made Navigator Align to Template setup allow making the image in A
+11/10/22: SEM_4-1-0beta7
+11/10/22: Made Navigator Align to Template setup allow making the image in A
 a map even if it is not cropped.
 
-10/10/22: Removed New Map and Delete Item from Navigator menu.
+11/10/22: Removed New Map and Delete Item from Navigator menu.
 
-10/10/22: Added ability to bin images in FEI scope plugin/server because of
+11/10/22: Added ability to bin images in FEI scope plugin/server because of
 error when binning is requested while saving EER files in new TEM server
 versions; property 'TakeUnbinnedIfSavingEER' enables this.
 
-10/10/22: Added camera type of 6 Falcon 4i and a default readout interval, and
+11/10/22: Added camera type of 6 Falcon 4i and a default readout interval, and
 made it skip waiting on the next acquisition after a frame-saving one.
 
+11/10/22: Fixed missing line break after last FEI ZLP shift in short term
 calibrations (In 4.0).
 
 11/9/22: Explicitly turned off emission before flashing FEG on JEOL to make it
@@ -66,7 +68,7 @@ build (In 4.0).
 11/8/22: Fixed vulnerability in drawing routine that probably caused crash (In
 4.0).
 
-11/8/22: Disabled all radio buttons about saving shifts when no saving is
+11/8/22: Started saving shifts from Shift to Marker in settings and added a
 list box to allow removing shifts.
 
 0/8/22: Disabled all radio buttons about saving shifts when no saving is
