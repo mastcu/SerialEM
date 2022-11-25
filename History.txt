@@ -7,13 +7,15 @@ significance, for the stable release version
 10/19/22: Switched to latest DLLs from DE two work with the new SerialEM
 build.
 
-10/17/22: SEM_4-0-15
+11/17/22: SEM_4-0-15
+11/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
+
 10/17/22: Fixed crash when reverting to version before the new script buttons.
 
-10/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
+101/17/22: Made SetFrameTime and ChangeFrameAndExposure commands work for DE
 cameras (In 4.0).
 
-10/16/22: Added script commands to forget prior state and calibrate electron
+11/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
 dose.
 
 10/16/22: Added AutoContourGridSquares command to make polygons around grid
@@ -29,20 +31,17 @@ spinners in the Camera & Script control panel.
 
 10/16/22: Fixed some problems with the false color display.
 
-10/15/22: Fixed crash opening Navigator Acquire dialog (In 4.0).
 
-10/15/22: Fixed another vulnerability in drawing routine (In 4.0).
 
-10/12/22: Fixed crash when stop reading a montage using shifts in the mdoc
+11/12/22: Fixed crash when stop reading a montage using shifts in the mdoc
 file (In 4.0).
 
-10/11/22: Extended the fix for Falcon 4 binning to cover subareas, which also
+11/11/22: Fixed error in drawing Navigator items on very large montages
 give an error when saving EER.
 
-10/11/22: Fixed error in drawing Navigator items on very large montages
 (In 4.0).
 
-10/10/22: SEM_4-1-0beta7
+11/11/22: Fixed missing line break after last FEI ZLP shift in short term
 10/10/22: Made Navigator Align to Template setup allow making the image in A
 a map even if it is not cropped.
 
@@ -55,20 +54,19 @@ versions; property 'TakeUnbinnedIfSavingEER' enables this.
 10/10/22: Added camera type of 6 Falcon 4i and a default readout interval, and
 made it skip waiting on the next acquisition after a frame-saving one.
 
-10/10/22: Fixed missing line break after last FEI ZLP shift in short term
 calibrations (In 4.0).
 
-10/9/22: Explicitly turned off emission before flashing FEG on JEOL to make it
+11/9/22: Explicitly turned off emission before flashing FEG on JEOL to make it
 ramp down better (In 4.0).
 
-10/8/22: SEM_4-0-14
-10/8/22: Changed installer to clean up all files added by installing a new 4.1
+11/8/22: SEM_4-0-14
+11/8/22: Changed installer to clean up all files added by installing a new 4.1
 build (In 4.0).
 
-10/8/22: Fixed vulnerability in drawing routine that probably caused crash (In
+11/8/22: Fixed vulnerability in drawing routine that probably caused crash (In
 4.0).
 
-11/8/22: Started saving shifts from Shift to Marker in settings and added a
+11/8/22: Disabled all radio buttons about saving shifts when no saving is
 list box to allow removing shifts.
 
 0/8/22: Disabled all radio buttons about saving shifts when no saving is
