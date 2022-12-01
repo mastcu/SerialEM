@@ -129,6 +129,7 @@ public:
   void SaveActiveBuffer();
   void SaveRegularBuffer();
   int SettingsSaveAs();
+  int ExtSaveSettings();
   void SetPointers(EMbufferManager *inManager, CEMbufferWindow *inWindow);
   virtual ~CSerialEMDoc();
 #ifdef _DEBUG
@@ -269,6 +270,7 @@ private:
   BOOL mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
   CString mBasicModeFile;        // File with disables/hides for basic mode
+  CString mPreReadBasicFile;     // Filename before reading settings
   bool mHDFsupported;            // Flag that HDF files are supported
 
 public:
@@ -318,6 +320,8 @@ afx_msg void OnUpdateSettingsBasicmode(CCmdUI *pCmdUI);
 int DoFileOpenold();
 afx_msg void OnCloseAllFiles();
 afx_msg void OnUpdateCloseAllFiles(CCmdUI *pCmdUI);
+afx_msg void OnReadBasicModeFile();
+afx_msg void OnUpdateReadBasicModeFile(CCmdUI *pCmdUI);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

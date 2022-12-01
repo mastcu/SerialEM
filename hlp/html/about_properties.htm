@@ -303,10 +303,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>BasicModeDisableHideFile</TD>
-          <TD>Full path name of a file listing dialog and menu items to be disabled or
+          <TD>Full path name of a default file listing dialog and menu items to be disabled or
             hidden when <a href="menu_settings.htm#hid_settings_basicmode">
-            Basic Mode</a> is turned on in the Settings menu.&nbsp; This file will
-            be read instead of looking for and reading SEMbasicModeItems.txt in the system
+            Basic Mode</a> is turned on in the Settings menu.&nbsp; Since the Basic Mode
+            filename is saved in the settings file as of SerialEM 4.1, 30-Nov-22, this entry
+            just provides a default if no Basic
+            Mode file name was read in from settings.&nbsp; If a filename is provided in neither
+            file, the program looks for and reads SEMbasicModeItems.txt in the system
             directory.&nbsp; See <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for details.</TD>
         </TR>
         <TR VALIGN="top">

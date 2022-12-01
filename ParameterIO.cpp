@@ -400,6 +400,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptToRunAtEnd")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunAtEnd(strCopy);
+      } else if (MatchNoCase("BasicModeFile")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->mDocWnd->SetBasicModeFile(strCopy);
       } else if (NAME_IS("LastDPI")) {
         mWinApp->SetLastSystemDPI(itemInt[1]);
       } else if (NAME_IS("FrameNameData")) {
@@ -1551,6 +1554,9 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunAtEnd();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunAtEnd", oneState);
+    oneState = mWinApp->mDocWnd->GetBasicModeFile();
+    if (!oneState.IsEmpty())
+      WriteString("BasicModeFile", oneState);
     WriteInt("LastDPI", mWinApp->GetSystemDPI());
 
     // Write any consets that are initialized (right != 0)
@@ -2487,7 +2493,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   CStdioFile *file;
   int err = 0, type, ind, space;
   int numInTable = sizeof(sDisableHideList) / sizeof(DisableHideItem);
-  CString strLine, tag, mess = "Error opening";
+  CString strLine, tag, mess = "Error opening", unknown;
   std::string sstr;
   char *endPtr;
   bool checkBOM = true;
@@ -2495,10 +2501,15 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
     mess = "Error reading from";
     while (file->ReadString(strLine)) {
-      if (checkBOM && CheckForByteOrderMark(strLine, "", filename,
-        "items to hide or disable"))
-        return;
-      checkBOM = false;
+      if (checkBOM) {
+        if (CheckForByteOrderMark(strLine, "", filename, "items to hide or disable"))
+          return;
+        checkBOM = false;
+        IDsToHide->clear();
+        IDsToDisable->clear();
+        lineHideIDs->clear();
+        stringHides->clear();
+      }
       if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
         continue;
 
@@ -2515,7 +2526,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
           // hide if hiding is specified
           sstr = tag;
           ind = strtol(sstr.c_str(), &endPtr, 10);
-          if (ind > 0 && ind < 65536  && (*endPtr == 0x00 || *endPtr == ' ') && 
+          if (ind > 0 && ind < 65536 && (*endPtr == 0x00 || *endPtr == ' ') &&
             type == 2) {
             IDsToHide->insert(ind);
           } else {
@@ -2545,8 +2556,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
               }
             }
             if (ind >= numInTable) {
-              AfxMessageBox("Unrecognized description of item to disable or hide in "
-                "line:\n" + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
+              unknown += "\n" + strLine;
             }
           }
         }
@@ -2554,6 +2564,9 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
         AfxMessageBox("Incomplete entry to disable or hide in line:\n"
           + strLine + "\n\nin file:  " + filename, MB_EXCLAME);
     }
+    if (!unknown.IsEmpty())
+      AfxMessageBox("Unrecognized description of item(s) to disable or hide in "
+        "\nin file:  " + filename + "\n" + unknown, MB_EXCLAME);
     file->Close();
   }
   catch (CFileException *perr) {
@@ -2567,6 +2580,10 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   }
   if (err)
     AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
+  if (!err && !mWinApp->GetStartingProgram() && mWinApp->GetBasicMode()) {
+    mWinApp->SetBasicMode(false);
+    mWinApp->SetBasicMode(true);
+  }
 }
 
 // Properties are measured outside the program, entered by hand into the
@@ -3436,7 +3453,8 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("BasicModeDisableHideFile")) {
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetBasicModeFile(message);
+        if (mWinApp->mDocWnd->GetBasicModeFile().IsEmpty())
+          mWinApp->mDocWnd->SetBasicModeFile(message);
 
       } else if (MatchNoCase("ProgramTitleText")) {
         StripItems(strLine, 1, message);

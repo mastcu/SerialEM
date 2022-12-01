@@ -23,6 +23,20 @@ V
 W
 X
 
+Settings:
+A
+B
+C
+D
+E
+F
+M
+O
+P
+R
+S
+U
+
 Camera:
 A
 B

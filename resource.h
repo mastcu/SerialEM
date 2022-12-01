@@ -2553,6 +2553,7 @@
 #define ID_TASKS_CALIBRATEELECTRONDOSE  33498
 #define ID_FILE_AUTOSAVELOG             33499
 #define ID_SCRIPT_SETPANELROWS          33500
+#define ID_SETTINGS_READBASICMODEFILE   33501
 
 // Next default values for new objects
 // 
@@ -2560,7 +2561,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        273
-#define _APS_NEXT_COMMAND_VALUE         33501
+#define _APS_NEXT_COMMAND_VALUE         33502
 #define _APS_NEXT_CONTROL_VALUE         3052
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

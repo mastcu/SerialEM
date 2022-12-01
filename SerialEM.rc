@@ -181,6 +181,7 @@ BEGIN
         MENUITEM "Set E&mail Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
         MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
+        MENUITEM "Read Basic Mode &File",       ID_SETTINGS_READBASICMODEFILE
     END
     POPUP "&Camera"
     BEGIN
@@ -6891,6 +6892,8 @@ BEGIN
     ID_FILE_CLOSEALLFILES   "Close all open image files if none are protected"
     ID_FILE_AUTOSAVELOG     "Save to file on startup and autosave thereafter"
     ID_SCRIPT_SETPANELROWS  "Set the number of rows of script buttons in Camera & Scrip control panel"
+    ID_SETTINGS_READBASICMODEFILE 
+                            "Read in file defining items to hide in Basic Mode and make it current file"
 END
 
 #endif    // English (United States) resources

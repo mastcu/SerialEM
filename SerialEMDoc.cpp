@@ -139,6 +139,8 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_SETTINGS_BASICMODE, OnUpdateSettingsBasicmode)
   ON_COMMAND(ID_FILE_CLOSEALLFILES, OnCloseAllFiles)
   ON_UPDATE_COMMAND_UI(ID_FILE_CLOSEALLFILES, OnUpdateCloseAllFiles)
+  ON_COMMAND(ID_SETTINGS_READBASICMODEFILE, OnReadBasicModeFile)
+  ON_UPDATE_COMMAND_UI(ID_SETTINGS_READBASICMODEFILE, OnUpdateReadBasicModeFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1868,11 +1870,6 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   else if (!mSettingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
 
-  // Set up basic mode file name, can be overridden in properties
-  strSys = mSystemPath + "\\" + BASIC_MODE_NAME;
-  if (CFile::GetStatus((LPCTSTR)strSys, status))
-    mBasicModeFile = strSys;
-
   // Read properties; but first set gain reference path to system path
   // Try the current path which may have come from settings file, then try the
   // default path in case it has changed
@@ -1903,6 +1900,13 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       "or stop trying to access that file by changing the\n"
       "SystemPath entry in " + mCurrentSettingsPath + "\n"
       "or by changing the properties in the shortcut used to start SerialEM", MB_EXCLAME);
+  }
+
+  // Set up basic mode file name if in neither settinsg nor properties
+  if (mBasicModeFile.IsEmpty()) {
+    strSys = mSystemPath + "\\" + BASIC_MODE_NAME;
+    if (CFile::GetStatus((LPCTSTR)strSys, status))
+      mBasicModeFile = strSys;
   }
 
   // Set the file options from defaults; set other file options EXCEPT the managed ones
@@ -2130,6 +2134,14 @@ int CSerialEMDoc::SettingsSaveAs()
   return 0;
 }
 
+int CSerialEMDoc::ExtSaveSettings()
+{
+  if (!mSettingsOpen)
+    return SettingsSaveAs();
+  OnSettingsSave();
+  return 0;
+}
+
 // Close just means mark as not open for saving
 void CSerialEMDoc::OnSettingsClose() 
 {
@@ -2233,6 +2245,7 @@ void CSerialEMDoc::PreSettingsRead()
   mTrueLDArea = mWinApp->mScope->GetLowDoseArea();
   if (mWinApp->LowDoseMode() && mTrueLDArea >= 0)
     mWinApp->mScope->GotoLowDoseArea(0);
+  mPreReadBasicFile = mBasicModeFile;
 }
 
 void CSerialEMDoc::PostSettingsRead()
@@ -2269,6 +2282,10 @@ void CSerialEMDoc::PostSettingsRead()
   else if (!mCurScriptPackPath.IsEmpty())
     mWinApp->AppendToLog("Scripts will be saved to " + mCurScriptPackPath +
       "\r\n   unless you do \"Scripts - Save Package As\" to a different name");
+  if (mBasicModeFile.CompareNoCase(mPreReadBasicFile))
+    mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
+      mWinApp->GetBasicHideStrings());
 }
 
 // Make previous version a backup if it exists and this hasn't been done before
@@ -2410,6 +2427,26 @@ void CSerialEMDoc::OnUpdateSettingsBasicmode(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mBasicModeFile.IsEmpty());
   pCmdUI->SetCheck(mWinApp->GetBasicMode() ? 1 : 0);
+}
+
+// Read new file
+void CSerialEMDoc::OnReadBasicModeFile()
+{
+  CString newFile;
+  if (GetTextFileName(true, true, newFile))
+    return;
+  if (!mBasicModeFile.CompareNoCase(newFile))
+    return;
+  mBasicModeFile = newFile;
+  mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
+    mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
+    mWinApp->GetBasicHideStrings());
+}
+
+
+void CSerialEMDoc::OnUpdateReadBasicModeFile(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 // Append an entry to the log book file; return 1 if no log book defined, -1 if error
