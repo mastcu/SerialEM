@@ -1172,7 +1172,7 @@ void CShiftCalibrator::CalISoffsetNextMag(void)
 
   // If it is the last mag, treat as an end
   newIndex = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), mMagIndex, -1);
-  if (newIndex <= 0 || newIndex < mLowestISOmag || !mMagTab[mMagIndex - 1].mag) {
+  if (newIndex <= 0 || newIndex < mLowestISOmag) {
     CalISoffsetDone(false);
     return;
   }
@@ -1187,7 +1187,7 @@ void CShiftCalibrator::CalISoffsetNextMag(void)
   mMagIndex = newIndex;
   mScope->SetMagIndex(mMagIndex);
   mScope->SetFocusToStandardIfLM(mMagIndex);
-  if (mMagIndex == mScope->GetLowestMModeMagInd() - 1) {
+  if (!mScope->BothLMorNotLM(mMagIndex, false, magIndex, false)) {
     mWinApp->AppendToLog("\r\nEntered Low Mag - check beam before taking a picture.",
       LOG_OPEN_IF_CLOSED);
   } else if (mTakeTrial && !mCamera->DoingContinuousAcquire())
