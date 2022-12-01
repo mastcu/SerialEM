@@ -95,6 +95,7 @@ struct CamPluginFuncs;
 #define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)
 #define CAMFLAG_CAN_DIV_MORE      (1 << 17)
 #define CAMFLAG_NO_DIV_BY_2       (1 << 18)
+#define CAMFLAG_SINGLE_OK_IF_SAVE (1 << 19)
 
 #define AMT_VERSION_CAN_NORM     700
 #define TIETZ_VERSION_HAS_GPU    102
@@ -544,6 +545,7 @@ public:
     mNumContinuousToAlign = inVal;
     mAverageContinAlign = average; mNumAlignedContinuous = 0;
   };
+  SetMember(int, NumDropAtContinStart);
   GetMember(bool, AverageContinAlign);
   SetMember(float, ContinuousDelayFrac);
   GetSetMember(int, PreventUserToggle);
@@ -600,6 +602,9 @@ public:
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
+  void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
+  void GetProcessingCoords(int &binning, int &top, int &left, int &bot, int &right) {
+    binning = mBinning; top = mTop, left = mLeft; bot = mBottom; right = mRight; };
   GetSetMember(int, CanSaveEERformat);
   int GetDEServerVersion();
   void GetCameraISOffset(int ind, float &outX, float &outY) { outX = mISXcameraOffset[ind]; outY = mISYcameraOffset[ind]; };
@@ -954,6 +959,7 @@ public:
   bool mAverageContinAlign;     // Falg to average instead of summing
   int mNumAlignedContinuous;    // Number already aligned
   bool mLastWasContinForTask;   // Flag that last image was continuous mode for task
+  int mNumDropAtContinStart;    // Number of images to drop at start of continuous
   CString mDirForDEFrames;      // Single directory name for a subfolder of main location
   float mDEPrevSetNameTimeout;  // Sec of timeout when fetching set name
   float mDESetNameTimeoutUsed;  // Actual value used for timeout
@@ -1203,7 +1209,10 @@ bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
 bool DefectListHasEntries(CameraDefects *defp);
 float FindConstraintForBinning(CameraParameters * param, int binning, float *times);
-void ProcessImageOrFrame(short *array, int imageType, int processing, int removeXrays, int darkScale);
+void ProcessImageOrFrame(short *array, int imageType, int processing, int removeXrays, 
+  int darkScale, CameraParameters *param, DarkRef *darkp,
+  DarkRef *darkBelow, DarkRef *darkAbove, DarkRef *gainp, int DMSizeX, int DMSizeY,
+  int binning, int top, int left, int bottom, int right, int tdImageType, int procPlus);
 bool CanFramealignProcessSubarea(ControlSet *lastConSetp, DarkRef **darkp, DarkRef **gainp);
 void DeleteOneReference(int index);
 int CheckFrameStacking(bool updateIfDone, bool testIfStacking);

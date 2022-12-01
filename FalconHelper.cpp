@@ -925,7 +925,10 @@ void CFalconHelper::StackNextTask(int param)
   }
 
   if (mProcessingPlugin && mNeedNormHere)
-    mCamera->ProcessImageOrFrame(outPtr, mImage->getType(), mProcessing, mRemoveXrays, 1);
+    mCamera->ProcessImageOrFrame(outPtr, mImage->getType(), mProcessing, mRemoveXrays, 1,
+      mNormParam, mNormDark, NULL, NULL, mNormGain, mNormDMSizeX, mNormDMSizeY, 
+      mNormBinning, mNormTop, mNormLeft, mNormBot, mNormRight, mNormImageType, 
+      mProcessing);
   
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
@@ -1262,6 +1265,7 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   mDoingAdvancedFrames = false;
   mReadLocally = false;
   mNx = mNy = -1;
+  mCamTD = camTD;
   mHeadNums[0] = camTD->DMSizeX;
   mHeadNums[1] = camTD->DMSizeY;
   mDirectory = directory;
@@ -1272,7 +1276,6 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   mAliSumRotFlip = 0;
   mSumNeedsRotFlip = mAliSumRotFlip != 0;
   mPixel = pixel;
-  mCamTD = camTD;
   mAliComParamInd = aliParamInd;
   mRotFlipForComFile = mAliSumRotFlip;
   mNumStacked = 0;
@@ -1305,6 +1308,16 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
       &mGainp);
     SEMTrace('1',"Frames will be normalized %s", mNeedNormHere ? "in cam controller" : 
       "in framealign");
+  }
+
+  // Save EVERYTHING needed for a processing call in case a single shot occurs
+  if (mNeedNormHere) {
+    mCamera->GetProcessingRefs(&mNormDark, &mNormGain);
+    mCamera->GetProcessingCoords(mNormBinning, mNormTop, mNormLeft, mNormBot, mNormRight);
+    mNormDMSizeX = mCamTD->DMSizeX;
+    mNormDMSizeY = mCamTD->DMSizeY;
+    mNormImageType = mCamTD->ImageType;
+    mNormParam = camParam;
   }
   mFileInd = 0;
   mStackingFrames = true;

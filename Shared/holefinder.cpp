@@ -1524,8 +1524,8 @@ void HoleFinder::addToSampleAndQueue(int ix, int iy)
 */
 void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sobelMin,
                            float &sobelMax) {
-  float xsum, ysum, tempTheta, tmin = 0., tmax = 0., center = 3.;
-  int iy, ix, ind, numThreads, threadNum;
+  float xsum = 0, ysum= 0., tempTheta= 0., tmin = 0., tmax = 0., center = 3.;
+  int iy, ix = 0, ind, numThreads, threadNum = 0;
   float *newData = mSobelGrad;
   int xsize = mXsize, ysize = mYsize;
   const int maxThreads = 16;

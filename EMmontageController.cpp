@@ -1283,6 +1283,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
     if (mUseContinuousMode) {
       mConSets[MONTAGE_CONSET].mode = CONTINUOUS;
+      mNumDropAtContinStart = B3DNINT(mConSets[MONTAGE_CONSET].drift / 
+        mConSets[MONTAGE_CONSET].exposure);
       mConSets[MONTAGE_CONSET].drift = 0.;
       mCamera->ChangePreventToggle(1);
       mNumContinuousAlign = B3DNINT(acqExposure / minContExp);
@@ -1962,8 +1964,10 @@ int EMmontageController::DoNextPiece(int param)
       if (mParam->useHqParams && mParam->skipRecReblanks && !mUseContinuousMode)
         mCamera->SetSkipNextReblank(true);
       if (!mUseContinuousMode || !mCamera->DoingContinuousAcquire()) {
-        if (mUseContinuousMode)
+        if (mUseContinuousMode) {
           mCamera->SetContinuousDelayFrac(mParam->continDelayFactor);
+          mCamera->SetNumDropAtContinStart(mNumDropAtContinStart);
+        }
         mCamera->InitiateCapture(MONTAGE_CONSET);
       }
       if (mUseContinuousMode) {

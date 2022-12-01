@@ -183,6 +183,7 @@ struct JeolParams;
 #define PLUGFLAG_CAN_DIV_MORE      (1 << 8)
 #define PLUGFLAG_SCRIPT_LANG       (1 << 9)
 #define PLUGFLAG_NO_DIV_BY_2       (1 << 10)
+#define PLUGFLAG_SINGLE_OK_IF_SAVE (1 << 11)
 #define PLUGCALL_TSACTION          1
 #define PLUGCAM_DIVIDE_BY2         1
 #define PLUGCAM_CONTINUOUS         2

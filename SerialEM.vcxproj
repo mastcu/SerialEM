@@ -1112,7 +1112,7 @@
       <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/SerialEM.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>

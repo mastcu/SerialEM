@@ -577,7 +577,7 @@
       (OneView, Rio, Tietz XF416/Fn16, and Ceta 2)</FONT></B></i></P>
     <P>For a camera capable of taking frames, controls in this section will appear
       based on an entry in SerialEMproperties.txt: either ones related to saving
-      frames, or ones related to aligning frames, or both.</P>
+      frames, or ones related to aligning frames, or both.&nbsp; </P>
     <P><b>Frame Time</b></P>
     <P>The frame time entry is enabled, and becomes relevant, when either saving or
       aligning of the frames is selected.&nbsp; Enter the exposure time of each frame of the exposure.&nbsp; The frame time is constrained to
@@ -605,6 +605,17 @@
       selected.&nbsp; They will generally be saved with whatever division by 2 is
       specified in the Camera menu, so that their counts match those of the summed
       images.</P>
+    <P>When saving frames without aligning them, it may be possible to do other 
+      operations before the saving is completed.&nbsp; For OneView and Rio cameras, 
+      the situation is the same as for K2/K3 cameras: the &#39;EarlyReturnNextShot&#39; script 
+      command can be used to allow other operations to proceed, including single-shot 
+      images after the frames are stored in a temporary stack in the SerialEMCCD 
+      plugin.&nbsp; For Tietz cameras, other operations including single-shot images 
+      can be done while saving.&nbsp; For other plugin-based cameras that can save 
+      frames, other operations can be done, and single-shot images are allowed if the 
+      plugin passes a flag indicating that is the case.&nbsp; For the Tietz and other 
+      plugin-based cameras, a new frame-saving shot can be requested while saving and 
+      will start as soon as the saving is done.</P>
     <P><b>Set File Options</b></P>
     <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
       Options dialog</a>, which allows you to control the names of these files and to

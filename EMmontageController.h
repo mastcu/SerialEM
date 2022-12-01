@@ -286,6 +286,7 @@ class EMmontageController
   bool mExpectingFloats;          // Flag that images should be floats
   BOOL mUseContinuousMode;        // Flag to use camera continuous acquisition
   int mNumContinuousAlign;        // Number of continuous mode shots to align
+  int mNumDropAtContinStart;      // Drift settling: pass to camera when starting continous
   double mStartTime;              // Tick time when it started
   double mLastElapsed;            // Elapsed time and mNumDoing values when
   int mLastNumDoing;               // GetRemainingTime was last called

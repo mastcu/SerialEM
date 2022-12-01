@@ -413,6 +413,7 @@ CCameraController::CCameraController()
   mStoppedContinuous = false;
   mNumContinuousToAlign = 0;
   mLastWasContinForTask = false;
+  mNumDropAtContinStart = 0;
   mFrameNameFormat = FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC;
   mFrameNumberStart = 0;
   mLastUsedFrameNumber = -1;
@@ -1285,6 +1286,7 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
             param->CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
           if (flags & PLUGFLAG_CAN_DIV_MORE)
             param->CamFlags |= CAMFLAG_CAN_DIV_MORE;
+          param->CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
 
           // Set this if the test for processing ability passes
           param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
@@ -1594,6 +1596,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
         if (flags & PLUGFLAG_NO_DIV_BY_2)
           mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
+        if (flags & PLUGFLAG_SINGLE_OK_IF_SAVE)
+          mAllParams[i].CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
 
         // Send a gain index if that function exists and there is a non-negative value
         // Clamp it to the given range if the the plugin supplies a limit 
@@ -3000,7 +3004,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   if (CheckFrameStacking(false, (mParam->FEItype == FALCON2_TYPE && mFrameSavingEnabled 
-    && conSet.saveFrames) || (mTD.plugFuncs && mParam->canTakeFrames))) {
+    && conSet.saveFrames) || (mTD.plugFuncs && mParam->canTakeFrames && 
+    (conSet.saveFrames || conSet.alignFrames || 
+      !(mParam->CamFlags & CAMFLAG_SINGLE_OK_IF_SAVE))))) {
     mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone, ScreenOrInsertError, inSet, 0);
     return;
   }
@@ -5796,7 +5802,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
             mDarkp = ref;
             ref->UseCount = mUseCount;
           } else if (mInterpDarkRefs && !conSet.forceDark && 
-            !ReturningFloatImages(mParam)) {
+            !ReturningFloatImages(mParam) && !(mTD.plugFuncs && mParam->canTakeFrames &&
+            (conSet.saveFrames || conSet.alignFrames))) {
 
             // If interpolating, find nearest dark reference above and below, where
             // one at minimum exposure counts as being below
@@ -9599,7 +9606,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
         // Gain normalization or other processing
         ProcessImageOrFrame(mTD.Array[chan], mTD.ImageType, lastConSetp->processing, 
-          lastConSetp->removeXrays, darkScale);
+          lastConSetp->removeXrays, darkScale, mParam, mDarkp, mDarkBelow, mDarkAbove,
+          mGainp, mTD.DMSizeX, mTD.DMSizeY, mBinning, mTop, mLeft, mBottom, mRight,
+          mTD.ImageType, mTD.ProcessingPlus);
  
       } else if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
 
@@ -9739,11 +9748,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
         // If a task is waiting for next continuous frame, make sure it is unique frame 
         // and an exposure time has elapsed, plus any general timeout that was set and not
-        // turned into a delay before capture, and clear the task flag
+        // turned into a delay before capture, plus any initial images dropped,
+        // and clear the task flag
         // If images are being aligned and a stop came in, proceed with next one even
         // if it is a duplicate
         if ((mRepFlag >= 0 || mNumContinuousToAlign > 0) && 
           (mTaskFrameWaitStart >= 0. || mTaskFrameWaitStart < -1.1) &&
+          (mNumDropAtContinStart <= 0 || mNumDropAtContinStart <= numDrop) &&
           (!mImBufs->IsImageDuplicate(image) || mNumContinuousToAlign > 0)) {
             ticks = mShiftManager->GetGeneralTimeOut(mObeyTiltDelay ? RECORD_CONSET : 
               mLastConSet);
@@ -9794,6 +9805,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
               mTaskFrameWaitStart = -1.;
               mLastWasContinForTask = true;
               numDrop = 0; numWait = 0;
+              mNumDropAtContinStart = 0;
             } else
               numWait++;
         } else if (mRepFlag >= 0) {
@@ -10350,8 +10362,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 }
 
 // Do defect correct and gain normalization for an image or frame being saved
+// All these parameters need to be passed in case a single shot comes along during save
 void CCameraController::ProcessImageOrFrame(short *array, int imageType, int processing,
-  int removeXrays, int darkScale)
+  int removeXrays, int darkScale, CameraParameters *param, DarkRef *darkp,
+  DarkRef *darkBelow, DarkRef *darkAbove, DarkRef *gainp, int DMSizeX, int DMSizeY, 
+  int binning, int top, int left, int bottom, int right, int tdImageType, int procPlus)
 {
   int ix, ixoff;
   short *array2 = NULL;
@@ -10359,36 +10374,39 @@ void CCameraController::ProcessImageOrFrame(short *array, int imageType, int pro
   double wallstart = wallTime();
 
   // If processing needed, first dark subtract or gain correct, then correct defects
-  if (mTD.DMSizeX == mDarkp->SizeX && mTD.DMSizeY == mDarkp->SizeY) {
-    if (mDarkAbove) {
-      mDarkp = mDarkBelow;
-      array2 = (short int *)mDarkAbove->Array;
-      exp2 = mDarkAbove->Exposure;
+  if (DMSizeX == darkp->SizeX && DMSizeY == darkp->SizeY) {
+
+    // Interpolation is not allowed for plugin saving shot, so member exposure time can
+    // be used in these calls
+    if (darkAbove) {
+      darkp = darkBelow;
+      array2 = (short int *)darkAbove->Array;
+      exp2 = darkAbove->Exposure;
     }
     if (processing == DARK_SUBTRACTED) {
-      ProcDarkSubtract(array, imageType, mTD.DMSizeX, mTD.DMSizeY,
-        (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure, darkScale);
+      ProcDarkSubtract(array, imageType, DMSizeX, DMSizeY,
+        (short *)darkp->Array, darkp->Exposure, array2, exp2, mExposure, darkScale);
     } else {
-      ProcGainNormalize(array, imageType, mGainp->SizeX, mTop, mLeft,
-        mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
-        mExposure, darkScale, mDarkp->ByteSize, mGainp->Array, mGainp->ByteSize, 
-        mGainp->GainRefBits);
+      ProcGainNormalize(array, imageType, gainp->SizeX, top, left, bottom, right, 
+        (short *)darkp->Array, darkp->Exposure, array2, exp2,
+        mExposure, darkScale, darkp->ByteSize, gainp->Array, gainp->ByteSize, 
+        gainp->GainRefBits);
     }
 
     // Keep this processing here in case there is defect correction right at the
     // boundary
-    if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
-      ix = mParam->ifHorizontalBoundary ? mParam->sizeY : mParam->sizeX;
-      ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
-      ProcBalanceHalves(array, imageType, mTD.DMSizeX, mTD.DMSizeY,
-        mTop, mLeft, ixoff, mParam->ifHorizontalBoundary);
+    if ((procPlus & CONTINUOUS_USE_THREAD) && param->balanceHalves) {
+      ix = param->ifHorizontalBoundary ? param->sizeY : param->sizeX;
+      ixoff = (param->halfBoundary - ix / 2) / binning + (ix / 2) / binning;
+      ProcBalanceHalves(array, imageType, DMSizeX, DMSizeY,
+        top, left, ixoff, param->ifHorizontalBoundary);
     }
-    CorDefCorrectDefects(&mParam->defects, array, mTD.ImageType,
-      mBinning, mTop, mLeft, mBottom, mRight);
+    CorDefCorrectDefects(&param->defects, array, tdImageType,
+      binning, top, left, bottom, right);
     if (removeXrays)
-      mWinApp->mProcessImage->RemoveXRays(mParam, array, imageType,
-        mBinning, mTop, mLeft, mBottom, mRight, mParam->imageXRayAbsCrit,
-        mParam->imageXRayNumSDCrit, mParam->imageXRayBothCrit, mDebugMode);
+      mWinApp->mProcessImage->RemoveXRays(param, array, imageType,
+        binning, top, left, bottom, right, param->imageXRayAbsCrit,
+        param->imageXRayNumSDCrit, param->imageXRayBothCrit, mDebugMode);
 
   } else
     SEMMessageBox("The image is not the expected size so\nit has not been"

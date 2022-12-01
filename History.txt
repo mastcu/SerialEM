@@ -3,7 +3,24 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-11/26/22: SEM_4-1-0beta9
+12/1/22: Added command to set image shift vectors of regular hole pattern.
+
+11/30/22: Made the Basic Mode filename be saved and loaded from settings, and
+added a menu entry to load a different file.
+
+11/29/22: Allowed single shots to occur when saving frames from Tietz cameras,
+and from generic frame-saving plugin cameras that pass a flag indicating they
+can do single shots before all frames are fetched.
+
+11/29/22: Allowed calibration of mag-IS offsets to continue across gaps in the
+mag table.
+
+11/29/22: When montaging with continuous mode, a drift settling value will be
+converted to a number of initial frames to drop when starting the mode.
+
+11/25/22: SEM_4-1-0beta9
+11/25/22: Fixed I/O library for SEMCCD plugin putting up a message box.
+
 11/19/22: SEM_4-1-0beta8
 11/19/22: Switched to latest DLLs from DE two work with the new SerialEM
 build.

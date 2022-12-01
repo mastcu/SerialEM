@@ -123,8 +123,15 @@ private:
   DarkRef *mDarkp;                      // Dark and gain references to apply in align
   DarkRef *mGainp;
   bool mNeedNormHere;                   // Flag that we need to normalize in camcontroller
-  int mProcessing;                      // Parameters sto save and send for normalizing
+  int mProcessing;                      // Parameters to save and send for normalizing
   int mRemoveXrays;
+  DarkRef *mNormGain;
+  DarkRef *mNormDark;
+  CameraParameters *mNormParam;
+  int mNormTop, mNormBot, mNormRight, mNormLeft;
+  int mNormBinning;
+  int mNormDMSizeX, mNormDMSizeY;
+  int mNormImageType;
   bool mDoingAdvancedFrames;            // Flag fror using advanced vs basic interface
   bool mReadLocally;                    // Flag to read FEI stack directly
   FILE *mFrameFP;                       // file pointer for local reading

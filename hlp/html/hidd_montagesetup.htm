@@ -203,7 +203,12 @@
       before asking for the next image that comes from the camera.&nbsp; You will need 
       to experiment with this factor to determine what value gives adequate quality 
       for your application.&nbsp; Small values like 0.25 to 0.5, or even 0, may be 
-      acceptable with a OneView doing drift correction.</P>
+      acceptable with a OneView doing drift correction.&nbsp; Separately from this, 
+      there may be drift in the first image (or loss of frames with a OneView or Rio 
+      camera when the drift correction is used).&nbsp; This can be handled with a 
+      drift setlling value for the particular camera parameter set being used, which 
+      will be converted to a number of exposures to drop before accepting the first 
+      image after continuous mode is turned on.</P>
     <P><b>Turn off Drift Correction for stage montage</b></P>
     <P>This option is enabled when a montage with stage movement is to be taken with a 
       OneView camera.&nbsp; If it is turned on, the Drift Correction setting can be 
