@@ -2483,36 +2483,56 @@ int CMacCmd::CloseMultiShotFiles(void)
   return 0;
 }
 
-// SetCustomHoleShifts
+// SetCustomHoleShifts, SetRegularHoleVectors
 int CMacCmd::SetCustomHoleShifts(void)
 {
   int index;
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
-  Variable *yvar, *xvar = LookupVariable(mItem1upper, index);
-  if (!xvar)
-    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
-  mItem1upper = mStrItems[2];
-  mItem1upper.MakeUpper();
-  yvar = LookupVariable(mItem1upper, index);
-  if (!yvar)
-    ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
-  if (xvar->rowsFor2d || yvar->rowsFor2d)
-    ABORT_LINE("Neither variable should be a 2D array for line:\n\n");
-  if (xvar->numElements != yvar->numElements)
-    ABORT_LINE("The two variables do not have the same number of values for line:\n\n");
-  if (mItemEmpty[3] && !msParams->customMagIndex)
-    ABORT_LINE("A magnification index must be included because there is none currently "
-      "defined for custom holes");
-  if (!mItemEmpty[3] && mItemInt[3] < 1 || mItemInt[3] >= MAX_MAGS)
+  Variable *yvar, *xvar;
+  bool custom = CMD_IS(SETCUSTOMHOLESHIFTS);
+  if (custom) {
+    xvar = LookupVariable(mItem1upper, index);
+    if (!xvar)
+      ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+    mItem1upper = mStrItems[2];
+    mItem1upper.MakeUpper();
+    yvar = LookupVariable(mItem1upper, index);
+    if (!yvar)
+      ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
+    if (xvar->rowsFor2d || yvar->rowsFor2d)
+      ABORT_LINE("Neither variable should be a 2D array for line:\n\n");
+    if (xvar->numElements != yvar->numElements)
+      ABORT_LINE("The two variables do not have the same number of values for line:\n\n");
+    if (mItemEmpty[3] && !msParams->customMagIndex)
+      ABORT_LINE("A magnification index must be included because there is none currently "
+        "defined for custom holes");
+  } else {
+    if (mItemEmpty[5] && !msParams->holeMagIndex)
+      ABORT_LINE("A magnification index must be included because there is none currently "
+        "defined for regular hole vectors");
+  }
+  index = custom ? 3 : 5;
+  if (!mItemEmpty[index] && (mItemInt[index] < 0 || mItemInt[index] >= MAX_MAGS))
     ABORT_LINE("The magnification index is out of range in line:\n\n");
-  if (!mItemEmpty[4] && fabs(mItemFlt[4]) > mScope->GetMaxTiltAngle())
+  if (!mItemEmpty[index + 1] && fabs(mItemFlt[index + 1]) > mScope->GetMaxTiltAngle())
     ABORT_LINE("The tilt angle is out of range in line:\n\n");
-  FillVectorFromArrayVariable(&msParams->customHoleX, NULL, xvar);
-  FillVectorFromArrayVariable(&msParams->customHoleY, NULL, yvar);
-  if (!mItemEmpty[3])
-    msParams->customMagIndex = mItemInt[3];
-  if (!mItemEmpty[4])
-    msParams->tiltOfCustomHoles = mItemFlt[4];
+  if (custom) {
+    FillVectorFromArrayVariable(&msParams->customHoleX, NULL, xvar);
+    FillVectorFromArrayVariable(&msParams->customHoleY, NULL, yvar);
+    if (!mItemEmpty[3] && mItemInt[3])
+      msParams->customMagIndex = mItemInt[3];
+    if (!mItemEmpty[4])
+      msParams->tiltOfCustomHoles = mItemFlt[4];
+  } else {
+    msParams->holeISXspacing[0] = mItemDbl[1];
+    msParams->holeISYspacing[0] = mItemDbl[2];
+    msParams->holeISXspacing[1] = mItemDbl[3];
+    msParams->holeISYspacing[1] = mItemDbl[4];
+    if (!mItemEmpty[5] && mItemInt[5])
+      msParams->holeMagIndex = mItemInt[5];
+    if (!mItemEmpty[6])
+      msParams->tiltOfHoleArray = mItemFlt[6];
+  }
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
   return 0;
@@ -3956,6 +3976,14 @@ int CMacCmd::SaveCalibrations(void)
   else
     mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode "
      "not enabled");
+  return 0;
+}
+
+// SaveSettings
+int CMacCmd::SaveSettings(void)
+{
+  if (mWinApp->mDocWnd->ExtSaveSettings())
+    ABORT_LINE("Failed to save settings for line:\n\n");
   return 0;
 }
 

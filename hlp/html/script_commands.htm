@@ -1968,7 +1968,14 @@
         <TR>
           <TD class="scriptcommand">LoadSettingsFile file</TD>
           <TD>Loads the given settings file after saving to the current one.&nbsp; Command 
-            added in 4.1, 10/31/22.</TD>
+            added in 4.1, 31-Oct-22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SaveSettings</TD>
+          <TD>Saves settings to file; if there is no current setting file, the user will be asked to
+            provide a filename.&nbsp; If the user cancels, the command gives an error.&nbsp; Command
+            added in 4.1., 28-Nov-22.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SaveCalibrations</TD>
@@ -3837,15 +3844,26 @@
           <TD>Defines the custom hole shifts for multiple Records with the image shift 
             values in two array variables, <b>xvar</b> and <B>yvar</B>, with the X and Y components,
              respectively.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
-            magnification index and tilt angle at which the image shift values apply.&nbsp; 
-            Command added in 4.1, 9/5/22.</TD>
+            magnification index and tilt angle at which the image shift values apply (enter
+            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
+            Command added in 4.1, 5-Sept-2.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetCustomHoleDefocus var</TD>
           <TD>Defines a defocus offset to be applied for each custom hole position to be 
             acquired with the Multiple Records routine.&nbsp; If there are fewer defocus 
             values than hole positions, the offset will be zero for the remaining positions.&nbsp; 
-            Command added in 4.1, 9/5/22.</TD>
+            Command added in 4.1, 5-Sept-22.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetRegularHoleVectors #X1 #Y1 #X2 #Y2 [#M] [#T]</TD>
+          <TD>Defines the image shifts for multiple Records taken with a regular pattern with 
+            <b>#X1</b>, <b>#Y1</b> specifying the X and Y components of image shift between adjacent holes
+             in one direction and <b>#X2</b>, <b>#Y2</b> specifying the shift in the orthogonal 
+            direction.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
+            magnification index and tilt angle at which the image shift values apply (enter
+            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
+            Command added in 4.1, 1-Dec-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
