@@ -71,6 +71,8 @@ static DisableHideItem sDisableHideList[] =
   {"Image Display panel", 2, 0, -12},
   {"Scope Control panel", 2, 0, -14},
   {"Tilt panel", 2, 0, -15},
+  {"Low Dose panel", 2, 0, -18},
+  {"Montage panel", 2, 0, -19},
   // Options sections in control panels
   {"Buffer Control options", 2, 0, -31},
   {"Image Display options", 2, 0, -32},
