@@ -124,8 +124,11 @@ for line in menus:
       if not name:
          exitError('Failed to extract POPUP name from line: ' + line)
 
-      if name == 'Tools':
-         break
+      if name == 'Tools' or name == 'Help':
+         continue
+
+      if level == 0:
+         inWindow = name == 'Window'
 
       if level and (name == 'Edit' or name == 'Run'):
          needFlush = True
@@ -148,11 +151,13 @@ for line in menus:
       if name == None:
          exitError('Failed to extract item name from line: ' + line)
       
-      if name == 'Exit' or not name:
+      if name == 'Exit' or not name or name.startswith('Tool '):
          continue
       
       lsplit = line.split()
       if lsplit[-1] not in idDict:
+         if inWindow:
+            continue
          exitError('ID is not listed in resources in line: ' + line)
 
       outMenu.append(indent[level] + '2 ' + idDict[lsplit[-1]] + ' ' + name)
