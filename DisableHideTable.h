@@ -54,6 +54,7 @@ static DisableHideItem sDisableHideList[] =
   {"Cal - Mag Energy Shifts", 2, 0, ID_CALIBRATION_MAGENERGYSHIFTS}, // A main menu item
   {"Calibration menu", 2, 0, -1},                                    // An entire menu
   {"Tilt Series menu", 2, 0, -1},
+  {"Script menu", 2, 0, -1},
   // Whole submenus
   {"Beam & Spot submenu", 2, 0, -1},
   {"Pixel Size submenu", 2, 0, -1},

@@ -4512,6 +4512,8 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
         if (BOOL_EQUIV(mShowRemoteControl, inVal))
           OnShowScopeControlPanel();
       } else if (inVal) {
+        if (ind == LOW_DOSE_PANEL_INDEX && LowDoseMode())
+          mLowDoseDlg.SetLowDoseMode(false);
         mToolDlgs[ind]->mInitialized = false;
         mMainFrame->RemoveOneDialog(ind);
       } else {

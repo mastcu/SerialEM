@@ -224,7 +224,8 @@ BOOL CMontageWindow::OnInitDialog()
   m_bShowOverview = mParam->showOverview;
   CRect rect;
   m_editCurrentZ.GetWindowRect(&rect);
-  mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_MEDIUM,
+  if (!mFont.m_hObject)
+    mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
@@ -240,6 +241,8 @@ BOOL CMontageWindow::OnInitDialog()
 
 void CMontageWindow::UpdateSettings()
 {
+  if (!mInitialized)
+    return;
   m_bAdjustFocus = mParam->adjustFocus;
   m_bCorrectDrift = mParam->correctDrift;
   m_bShowOverview = mParam->showOverview;
@@ -252,6 +255,8 @@ void CMontageWindow::UpdateSettings()
 
 void CMontageWindow::Update()
 {
+  if (!mInitialized)
+    return;
   m_iCurrentZ = mParam->zCurrent;
   m_sbcZ.SetPos(m_iCurrentZ);
   BOOL bEnable = mWinApp->Montaging() && !mMontageController->DoingMontage() &&
