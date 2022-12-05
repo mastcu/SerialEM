@@ -236,6 +236,8 @@ void CLowDoseDlg::ToggleBlankWhenDown(void)
 // External entry for changing the mode
 void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
 {
+  if (!mInitialized)
+    return;
   if (inVal == m_bLowDoseMode && inVal == mTrulyLowDose)
     return;
   if (inVal && mWinApp->GetSTEMMode() && mWinApp->DoSwitchSTEMwithScreen())
@@ -1113,6 +1115,8 @@ int CLowDoseDlg::OKtoSetViewShift()
 // External call for enabling just the set view button when mouse shifting
 void CLowDoseDlg::EnableSetViewShiftIfOK(void)
 {
+  if (!mInitialized)
+    return;
   m_butSetViewShift.EnableWindow(mTrulyLowDose && OKtoSetViewShift() && 
     !mWinApp->DoingTasks());
 }
@@ -1181,11 +1185,13 @@ BOOL CLowDoseDlg::OnInitDialog()
   CRect rect;
   int abbrev = 3;
 
-  m_statLDArea.GetClientRect(rect);
-  mBigFont.CreateFont((rect.Height() - 2), 0, 0, 0, FW_HEAVY,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-     FF_DONTCARE, mBigFontName);
+  if (!mBigFont.m_hObject) {
+    m_statLDArea.GetClientRect(rect);
+    mBigFont.CreateFont((rect.Height() - 2), 0, 0, 0, FW_HEAVY,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, mBigFontName);
+  }
   m_statLDArea.SetFont(&mBigFont);
 
   // Set names
@@ -1248,6 +1254,8 @@ void CLowDoseDlg::UpdateSettings()
 {
   float defocus= mScope->GetLDViewDefocus(m_iOffsetShown);
   int area = mScope->GetLowDoseArea();
+  if (!mInitialized)
+    return;
 
   mScope->SetBlankWhenDown(m_bBlankWhenDown);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
@@ -1284,6 +1292,8 @@ void CLowDoseDlg::Update()
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
   BOOL stageBusy = mScope->StageBusy(-2) > 0 && !mWinApp->GetDummyInstance();
   LowDoseParams *ldShown = &mLDParams[m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET];
+  if (!mInitialized)
+    return;
   ManageDefines(mScope->GetLowDoseArea());
 
   // Enable unblank button if blanked and no tasks, and camera not busy
@@ -1499,6 +1509,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 // Allow changes during a tilt series
 void CLowDoseDlg::ManageDefines(int area)
 {
+  if (!mInitialized)
+    return;
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks() &&
     (mScope->StageBusy(-2) <= 0 || mWinApp->GetDummyInstance());
   m_butDefineNone.EnableWindow(bEnable);
@@ -1659,7 +1671,7 @@ bool CLowDoseDlg::DoingContinuousUpdate(int inSetArea)
 // Routine update about blanking status regardless of low dose mode
 void CLowDoseDlg::BlankingUpdate(BOOL blanked)
 {
-  if (BOOL_EQUIV(blanked, mLastBlanked))
+  if (BOOL_EQUIV(blanked, mLastBlanked) || !mInitialized)
     return;
   mLastBlanked = blanked;
   m_statBlanked.ShowWindow(blanked ? SW_SHOW : SW_HIDE);
