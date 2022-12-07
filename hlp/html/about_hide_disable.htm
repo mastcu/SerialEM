@@ -41,7 +41,14 @@
       the file, but you should copy enough of the string so that you know what the
       item is afterwards.<P>
       These files can also have blank lines and comment lines with a # as the first
-      character.<P>
+      character.&nbsp; A special line can be included to make the program skip the rest of
+        the file if its version is too low:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        EndIfVersionBelow ######<br />
+        The integer version '#####' is 10000 times the first digit, plus
+            100 times the release number, plus the update value; thus use 40100 to skip
+            properties not defined in version 4.0.&nbsp; More than one entry is allowed;
+           the one for the earlier version should come before the later version.
         <p>A file for a Basic mode constructed by Tillman Shaefer is available at
           <a href="http://bio3d.colorado.edu/ftp/SerialEM/Tools/SEMbasicModeItems.txt">
             http://bio3d.colorado.edu/ftp/SerialEM/Tools/SEMbasicModeItems.txt</a>.
