@@ -1254,6 +1254,8 @@ void CLowDoseDlg::UpdateSettings()
 // Update enables based on state of system
 void CLowDoseDlg::Update()
 {
+  if (!mInitialized)
+    return;
   BOOL bCentered = fabs(mLDParams[3].ISX) < 1.e-5 && fabs(mLDParams[3].ISY) < 1.e-5;
   BOOL defined = mLDParams[0].magIndex && mLDParams[1].magIndex && 
     mLDParams[2].magIndex && mLDParams[3].magIndex;
@@ -1262,8 +1264,6 @@ void CLowDoseDlg::Update()
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
   BOOL stageBusy = mScope->StageBusy(-2) > 0 && !mWinApp->GetDummyInstance();
   LowDoseParams *ldShown = &mLDParams[m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET];
-  if (!mInitialized)
-    return;
   ManageDefines(mScope->GetLowDoseArea());
 
   // Enable unblank button if blanked and no tasks, and camera not busy
