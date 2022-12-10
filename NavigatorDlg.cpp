@@ -3232,10 +3232,11 @@ void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int 
 int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
 {
   ScaleMat aMat, aInv;
-  float delX, delY, stageX, stageY;
+  float delX, delY, stageX, stageY, midX, midY, adjustX, adjustY;
   CMapDrawItem *item;
   int coNum, groupID, pt;
   Icont *cont;
+  Ipoint lowLeft, upRight;
   float imageX, imageY, stageZ = 0.;
 
   if (!BufferStageToImage(imBuf, aMat, delX, delY))
@@ -3250,15 +3251,26 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
     item->mColor = DEFAULT_POLY_COLOR;
     SetupItemMarkedOnBuffer(imBuf, item);
     item->AllocatePoints(cont->psize);
+
+    // Get the midpoint of the contour, adjust it, and use that as single adjustment for
+    // the rest of the points
+    imodContourGetBBox(cont, &lowLeft, &upRight);
+    midX = imageX = (lowLeft.x + upRight.x) / 2;
+    midY = imageY = (lowLeft.y + upRight.y) / 2;
+    AdjustMontImagePos(imBuf, midX, midY, &item->mPieceDrawnOn, &item->mXinPiece,
+      &item->mYinPiece);
+    adjustX = midX - imageX;
+    adjustY = midY - imageY;
+    mShiftManager->ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, item->mStageX,
+      item->mStageY);
+
     for (pt = 0; pt < cont->psize; pt++) {
-      imageX = cont->pts[pt].x;
-      imageY = cont->pts[pt].y;
-      AdjustMontImagePos(imBuf, imageX, imageY);
+      imageX = cont->pts[pt].x + adjustX;
+      imageY = cont->pts[pt].y + adjustY;
       mShiftManager->ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, stageX,
         stageY);
       item->AppendPoint(stageX, stageY);
     }
-    SetPolygonCenterToMidpoint(item);
   }
   FillListBox(false, true);
   mDeferAddingToViewer = false;
