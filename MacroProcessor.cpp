@@ -152,6 +152,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, OnUpdateShowIndentButtons)
   ON_COMMAND(ID_SCRIPT_SETPANELROWS, OnScriptSetpanelrows)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETPANELROWS, OnUpdateScriptSetpanelrows)
+  ON_COMMAND(ID_HELP_RUNSERIALEMSNAPSHOT, &CMacroProcessor::OnRunSerialemSnapshot)
+  ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, &CMacroProcessor::OnUpdateRunSerialemSnapshot)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -633,6 +635,18 @@ void CMacroProcessor::OnScriptSavePackageAs()
   mWinApp->mDocWnd->SetCurScriptPackPath(filename);
   mWinApp->mDocWnd->SetScriptPackBackedUp(false);
   mWinApp->AppendToLog("Current script package file is now " + filename);
+}
+
+// Run the serialEM Snapshot script from menu
+void CMacroProcessor::OnRunSerialemSnapshot()
+{
+  mMacros[MAX_TOT_MACROS - 1] = "RunSerialEMSnapshot";
+  Run(MAX_TOT_MACROS - 1);
+}
+
+void CMacroProcessor::OnUpdateRunSerialemSnapshot(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy());
 }
 
 void CMacroProcessor::OpenMacroToolbar(void)

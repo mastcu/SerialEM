@@ -603,6 +603,8 @@ public:
   afx_msg void OnUpdateShowIndentButtons(CCmdUI *pCmdUI);
   afx_msg void OnScriptSetpanelrows();
   afx_msg void OnUpdateScriptSetpanelrows(CCmdUI *pCmdUI);
+  afx_msg void OnRunSerialemSnapshot();
+  afx_msg void OnUpdateRunSerialemSnapshot(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"
