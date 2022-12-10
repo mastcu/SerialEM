@@ -28,8 +28,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 static int sIdTable[] = {IDC_BUTFLOATDOCK, IDC_STAT_CAMNAME, IDC_BUTOPEN, IDC_STATTOPLINE,
-IDC_BUTHELP, PANEL_END, ID_CAMERA_PARAMETERS, ID_CAMERA_VIEW, ID_CAMERA_FOCUS, 
-ID_CAMERA_TRIAL, ID_CAMERA_RECORD, IDC_BUTMONTAGE, IDC_BUTMACRO1, IDC_BUTMACRO2,
+IDC_BUTHELP, PANEL_END, IDC_BUT_SETUP_CAM, IDC_BUT_VIEW, IDC_BUT_FOCUS, 
+IDC_BUT_TRIAL, IDC_BUT_RECORD, IDC_BUTMONTAGE, IDC_BUTMACRO1, IDC_BUTMACRO2,
 IDC_SPINMACRO2, IDC_SPINMACRO1, IDC_BUTSTOP, IDC_BUTEND, IDC_BUTRESUME,
 IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END, 
 IDC_BUTMACRO4, IDC_BUTMACRO5, IDC_BUTMACRO6, IDC_SPINMACRO4, IDC_SPINMACRO5,
@@ -77,12 +77,12 @@ void CCameraMacroTools::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUTMACRO1, m_butMacro1);
   DDX_Control(pDX, IDC_BUTRESUME, m_butResume);
   DDX_Control(pDX, IDC_BUTEND, m_butEnd);
-  DDX_Control(pDX, ID_CAMERA_VIEW, m_butView);
-  DDX_Control(pDX, ID_CAMERA_TRIAL, m_butTrial);
-  DDX_Control(pDX, ID_CAMERA_RECORD, m_butRecord);
-  DDX_Control(pDX, ID_CAMERA_PARAMETERS, m_butSetup);
+  DDX_Control(pDX, IDC_BUT_VIEW, m_butView);
+  DDX_Control(pDX, IDC_BUT_TRIAL, m_butTrial);
+  DDX_Control(pDX, IDC_BUT_RECORD, m_butRecord);
+  DDX_Control(pDX, IDC_BUT_SETUP_CAM, m_butSetup);
   DDX_Control(pDX, IDC_BUTMONTAGE, m_butMontage);
-  DDX_Control(pDX, ID_CAMERA_FOCUS, m_butFocus);
+  DDX_Control(pDX, IDC_BUT_FOCUS, m_butFocus);
   //}}AFX_DATA_MAP
 }
 
@@ -107,6 +107,8 @@ BEGIN_MESSAGE_MAP(CCameraMacroTools, CToolDlg)
   ON_COMMAND_RANGE(IDC_BUTMACRO4, IDC_BUTMACRO12, OnButmacroN)
   ON_WM_PAINT()
   //}}AFX_MSG_MAP
+  ON_BN_CLICKED(IDC_BUT_SETUP_CAM, OnButSetupCam)
+  ON_COMMAND_RANGE(IDC_BUT_VIEW, IDC_BUT_RECORD, OnButVFTR)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -172,7 +174,17 @@ void CCameraMacroTools::OnPaint()
   DrawSideBorders(dc);
 }
 
-void CCameraMacroTools::OnButmontage() 
+void CCameraMacroTools::OnButSetupCam()
+{
+  mWinApp->OnCameraParameters();
+}
+
+void CCameraMacroTools::OnButVFTR(UINT nID)
+{
+  mWinApp->UserRequestedCapture(VIEW_CONSET + nID - IDC_BUT_VIEW);
+}
+
+void CCameraMacroTools::OnButmontage()
 {
   mWinApp->RestoreViewFocus();
   if (mWinApp->Montaging() && !mWinApp->LowDoseMode())

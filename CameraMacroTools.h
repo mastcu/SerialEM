@@ -114,6 +114,8 @@ public:
   void CalibratingISoffset(bool ifCal);
   int GetNavigatorState(void);
   void DoUserStop(void);
+  afx_msg void OnButSetupCam();
+  afx_msg void OnButVFTR(UINT nID);
 };
 
 //{{AFX_INSERT_LOCATION}}
