@@ -500,7 +500,9 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnUpdateTasksUseViewEvenIfSearchBetter)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnKeepFocusTrialAtSamePosition)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnUpdateKeepFocusTrialAtSamePosition)
-    ON_COMMAND(ID_TILTSERIES_SETBIDIRRETURNDELAY, &CMenuTargets::OnTiltseriesSetBidirReturnDelay)
+    ON_COMMAND(ID_TILTSERIES_SETBIDIRRETURNDELAY, OnTiltseriesSetBidirReturnDelay)
+    ON_COMMAND(ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP, OnSetParamsForGridMap)
+    ON_UPDATE_COMMAND_UI(ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP, OnUpdateNoTasks)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1800,6 +1802,21 @@ void CMenuTargets::OnUpdateMontageRedoCorrWhenRead(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
   pCmdUI->SetCheck(mWinApp->mMontageController->GetRedoCorrOnRead());
+}
+
+void CMenuTargets::OnSetParamsForGridMap()
+{
+  float size = mWinApp->mMontageController->GetGridMapMinSizeMm();
+  if (!KGetOneFloat("Enter minimum size in millimeters for applying grid map",
+    "correlation parameters to a montage, or 0 not to use grid map parameters:", size,
+    2))
+    return;
+  mWinApp->mMontageController->SetGridMapMinSizeMm(size);
+  size = mWinApp->mMontageController->GetGridMapCutoffInvUm();
+  if (!KGetOneFloat("High-frequency filter cutoff in reciprocal microns:", size, 2))
+    return;
+  B3DCLAMP(size, 0.01f, 1000.f);
+  mWinApp->mMontageController->SetGridMapCutoffInvUm(size);
 }
 
 void CMenuTargets::OnCameraSetFrameAlignLines()

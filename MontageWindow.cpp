@@ -47,6 +47,7 @@ void CMontageWindow::DoDataExchange(CDataExchange* pDX)
 {
   CToolDlg::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CMontageWindow)
+  DDX_Control(pDX, IDC_EVALMULTIPLE, m_butEvalMultiple);
   DDX_Control(pDX, IDC_VERY_SLOPPY, m_butVerySloppy);
   DDX_Control(pDX, IDC_SHIFT_IN_OVERVIEW, m_butShiftOverview);
   DDX_Control(pDX, IDC_SPINVIEWBIN, m_sbcViewBin);
@@ -67,6 +68,7 @@ void CMontageWindow::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATSCANBIN, m_strScanBin);
   DDX_Check(pDX, IDC_SHIFT_IN_OVERVIEW, m_bShiftOverview);
   DDX_Check(pDX, IDC_VERY_SLOPPY, m_bVerySloppy);
+  DDX_Check(pDX, IDC_EVALMULTIPLE, m_bEvalMultiple);
   //}}AFX_DATA_MAP
 }
 
@@ -83,8 +85,9 @@ BEGIN_MESSAGE_MAP(CMontageWindow, CToolDlg)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPINVIEWBIN, OnDeltaposSpinviewbin)
 	ON_BN_CLICKED(IDC_SHIFT_IN_OVERVIEW, OnShiftInOverview)
   ON_BN_CLICKED(IDC_CORRECTDRIFT, OnFocusOrDrift)
-	ON_BN_CLICKED(IDC_VERY_SLOPPY, OnVerySloppy)
-	//}}AFX_MSG_MAP
+  ON_BN_CLICKED(IDC_VERY_SLOPPY, OnVerySloppy)
+  ON_BN_CLICKED(IDC_EVALMULTIPLE, OnEvalMultiple)
+  //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -175,7 +178,14 @@ void CMontageWindow::OnVerySloppy()
   mWinApp->RestoreViewFocus();
 }
 
-void CMontageWindow::OnDeltaposSpinscanbin(NMHDR* pNMHDR, LRESULT* pResult) 
+void CMontageWindow::OnEvalMultiple()
+{
+  UpdateData(true);
+  mParam->evalMultiplePeaks = m_bEvalMultiple;
+  mWinApp->RestoreViewFocus();
+}
+
+void CMontageWindow::OnDeltaposSpinscanbin(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -231,9 +241,9 @@ BOOL CMontageWindow::OnInitDialog()
       FF_DONTCARE, mBigFontName);
   m_editCurrentZ.SetFont(&mFont);
 
-  UpdateSettings();
   ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
   mInitialized = true;
+  UpdateSettings();
 
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
@@ -248,6 +258,7 @@ void CMontageWindow::UpdateSettings()
   m_bShowOverview = mParam->showOverview;
   m_bShiftOverview = mParam->shiftInOverview;
   m_bVerySloppy = mParam->verySloppy;
+  m_bEvalMultiple = mParam->evalMultiplePeaks;
   m_sbcViewBin.SetRange(1, mParam->maxOverviewBin);
   m_sbcViewBin.SetPos(mParam->overviewBinning);
   Update();
@@ -276,6 +287,8 @@ void CMontageWindow::Update()
   bEnable = !mMontageController->DoingMontage() && !mWinApp->DoingComplexTasks();
   m_butShiftOverview.EnableWindow(bEnable && !noShift);
   m_butVerySloppy.EnableWindow(bEnable && !noShift && !usingMS);
+  m_butEvalMultiple.EnableWindow(bEnable && !noShift && !usingMS && 
+    (!mWinApp->Montaging() || !mMontageController->TreatAsGridMap()));
   m_butCorrectDrift.EnableWindow(bEnable && !mParam->moveStage && !noShift && !usingMS);
   m_butAdjustFocus.EnableWindow(bEnable && !mParam->moveStage && !usingMS);
 

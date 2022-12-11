@@ -18,8 +18,12 @@ extern "C" {
 #ifdef F77FUNCAP
 #define icalc_angles ICALC_ANGLES
 #define metro METRO
+#define montXCSetDistWeightHalfFall MONTXCSETDISTWEIGHTHALFFALL
+#define montXCGetLastTrimmedMaxSD MONTXCGETLASTTRIMMEDMAXSD
 #else
 #define metro metro_
+#define montXCSetDistWeightHalfFall montxcsetdistweighthalffall_
+#define montXCGetLastTrimmedMaxSD montxcgetlasttrimmedmaxsd_
 #ifdef G77__HACK
 #define icalc_angles icalc_angles__
 #else
@@ -132,6 +136,15 @@ extern "C" {
   double CCCoefficientTwoPads(float *array, float *brray, int nxdim, int nx, int ny,
                               float xpeak, float ypeak, int nxpadA, int nypadA,
                               int nxpadB, int nypadB, int minPixels, int *nsum);
+  double subareaCCCoefficient(float *array, float *brray, int nxdim, int xstart, int xend,
+                              int ystart, int yend, int delx, int dely);
+  double weightedCCCoefficient(float *array, float *brray, int nxDim, int ix0, int ix1,
+                               int iy0, int iy1, int delX, int delY, float *aWeights,
+                               float *bWeights, int nxWgt, int binning, int wgtXoffset,
+                               int wgtYoffset);
+  double weightedCorrFromSums(double aSum, double aSumSq, double bsum, double bSumSq,
+                              double abSum, double wSum, double *sumArray,
+                              const char *descrip);
   void sliceGaussianKernel(float *mat, int dim, float sigma);
   void scaledGaussianKernel(float *mat, int *dim, int limit, float sigma);
   void applyKernelFilter(float *array, float *brray, int nxdim, int nx, int ny,
@@ -310,7 +323,7 @@ extern "C" {
   (int *ivarpc, int nvar, int *indvar, int *ixpclist, int *iypclist, 
    float *dxedge, float *dyedge, int idir, int *pieceLower, int *pieceUpper, 
    int *ifskipEdge, int edgeStep, float *dxyvar, int varStep, int *edgelower,
-   int *edgeupper, int pcStep, int *work, int fort, int leaveInd, int skipCrit,
+   int *edgeupper, int pcStep, float *work, int fort, int leaveInd, int skipCrit,
    float robustCrit, float critMaxMove, float critMoveDiff, int maxIter,
    int numAvgForTest, int intervalForTest, int *numIter, float *wErrMean, 
    float *wErrMax);
@@ -318,10 +331,16 @@ extern "C" {
   (int *ivarpc, int *nvar, int *indvar, int *ixpclist, int *iypclist, 
    float *dxedge, float *dyedge, int *idir, int *pieceLower, int *pieceUpper, 
    int *ifskipEdge, int *edgeStep, float *dxyvar, int *varStep, int *edgeLower,
-   int *edgeUpper, int *pcStep, int *work, int *fort, int *leaveInd, 
+   int *edgeUpper, int *pcStep, float *work, int *fort, int *leaveInd, 
    int *skipCrit, float *robustCrit, float *critMaxMove, float *critMoveDiff,
    int *maxIter, int *numAvgForTest, int *intervalForTest, int *numIter,
    float *wErrMean, float *wErrMax);
+  int pickAlternativeShifts(int *ivarpc, int nvar, int *indvar, float *dxedge,
+                            float *dyedge, int *pieceLower, int *pieceUpper,
+                            int *ifskipEdge, int edgeStep, int *edgeLower, 
+                            int *edgeUpper, int pcStep, int fort, float *altDxys,
+                            int numAlts, int altIxy, float errThresh, float reduceFac,
+                            float newThresh, int *fixedEdges, int *numFixed);
   
   /* zoomdown.c */
   int selectZoomFilter(int type, double zoom, int *outWidth);
@@ -401,9 +420,12 @@ extern "C" {
                     int numBoxes[][3], int *bufferStartInds, int *statStartInds, 
                     float *buffer, float *means, float *SDs, int *funcData,
                     int (*getSliceFunc)(int *, int *, float *));
+  void makeStandardDevMap(float *array, int nxDim, int ixStart, int ixEnd, int iyStart, 
+                          int iyEnd, int binning, int boxSize, float *sdArr, 
+                          float *sumArr, float *sqrArr, int *xOffset, int *yOffset);
 
   /* montagexcorr */
-#define MONTXC_MAX_PEAKS  30
+#define MONTXC_MAX_PEAKS  100
 #define MONTXC_MAX_DEBUG_LINE 90
   void montXCBasicSizes(int ixy, int nbin,  int indentXC, int *nxyPiece, int *nxyOverlap, 
                         float aspectMax, float extraWidth, float padFrac, int niceLimit,
@@ -431,6 +453,17 @@ extern "C" {
                      float *CCC, void (*twoDfft)(float *, int *, int *, int *),
                      void (*dumpEdge)(float *, int *, int *, int *, int *, int *), 
                      char *debugStr, int debugLen, int debugLevel);
+  void montXCFindBestCorr(float *array, float *brray, int nxDim, int nx, int ny, 
+                          int nxTrim,
+                          int nyTrim, int ixStart, int ixEnd, int iyStart, int iyEnd,
+                          float *delX, float *delY, float *corr, float maxDist,
+                          float *aWeights, float *bWeights, int nxWgt, int binning,
+                          int wgtXoffset, int wgtYoffset, float threshCCC,
+                          double *bestSumArr);
+  void montXCSetDistWeightHalfFall(float *inVal);
+  double montXCGetLastTrimmedMaxSD();
+  void montXCGetLastRunnersUp(float *disps, int maxPairs);
+
 
   /* sdsearch */
   void montBigSearch(float *array, float *brray, int nx, int ny, int ixBox0,

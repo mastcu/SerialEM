@@ -35,46 +35,66 @@
       the least amount of time. You can set this binning to a lower value if you want 
       to see more detail in the prescan. Note that the overview binning is always 1 
       for a prescan montage, so you need not adjust that binning as well.</P>
-    <P><B>Correct Drift</B></P>
+    <P><B>Correct drift</B></P>
     <P>If this option is selected, the program will use the misregistration between a 
       pair of successive pieces to predict and correct for the error in position of 
       the next acquired piece. When there is significant drift, this option can 
       reduce the mean error before shifting pieces into registration, and it can 
       prevent very large errors between successive columns of pieces.</P>
-    <P><B>Change Focus with Height</B></P>
+    <P><B>Change focus with height</B></P>
     <P>If this option is selected, focus will be changed for every piece that is 
       acquired from a tilted specimen. This focus change will compensate for the 
       differences in Z height at the centers of the pieces. If you are processing the 
       data in IMOD and using corrections ofr magnification gradients, be sure to 
       check the option that focus was adjusted between pieces on the eTomo setup 
       page.</P>
-    <P><B>Show Overview at End</B></P>
+    <P><B>Show overview at end</B></P>
     <P>If this option is selected, the overview image in buffer B will be shown at the 
       end of every montage acquisition.</P>
-    <P><B>Align Pieces in Overview</B></P>
+    <P><B>Align pieces in overview</B></P>
     <P>If this option is selected, each piece will be shifted into alignment with 
       preceding pieces as it is added to the overview image, based on the shifts in 
-      the overlap zones that it shares with preceding pieces. This may give a 
-      seamless overview, or it may not if there are errors in measuring shifts in the 
-      overlap zones. When a montage is read from a file, the pieces are read in from 
-      the center outward so that interior pieces will not be misaligned by keep 
+      the overlap zones that it shares with preceding pieces. This may give a seamless 
+      overview, or it may not if there are errors in measuring shifts in the overlap 
+      zones. When a montage is read from a file, the pieces are read in from the 
+      center outward so that interior pieces will not be misaligned by 
       errors in the shifts between pieces at the edges of the montage.</P>
-    <P><B>Treat as Very Sloppy Montage</B></P>
+    <P><B>Treat as very sloppy montage</B></P>
     <P>If this option is selected, SerialEM will analyze the overlap zones with the 
-      same parameters that are invoked by default with the VerySloppyMontage option 
-      in Blendmont. The large correlation areas and other parameter settings will 
-      give much better results with montages where the errors are large and where 
-      there may be strong edge effects from the edge of a cell or a grid bar. In 
-      addition, correlation coefficients will be computed in real space at the shifts 
-      corresponding to the ten highest peaks in the cross-correlation, thus 
+      same parameters that are invoked by default with the VerySloppyMontage option in 
+      Blendmont. The large correlation areas and other parameter settings will give 
+      much better results with montages where the errors are large and where there may 
+      be strong edge effects from the edge of a cell or a grid bar. In addition, 
+      correlation coefficients will be computed in real space at the shifts 
+      corresponding to the 16 highest peaks in the cross-correlation, thus 
       eliminating the edge effects that contaminate Fourier-based correlation. The 
       option is turned on or off depending on whether you choose to montage by moving 
       the stage in the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> , 
       but you can then toggle it as desired when reading in a montage from a file. 
       This option is not the default for two reasons: there is significantly more 
       computation time with the larger correlations, which will be noticeable when 
-      reading from a file; and there is very little experience with using these 
-      parameters for normal montages based on image shift that have less error.</P>
+      reading from a file if previously computed shifts are not coming from an mdoc 
+      file; and if there are problems in getting the right correlation, the greater 
+      shifts allowed can give much bigger piece displacements and a much worse-looking 
+      overview.</P>
+    <P><strong>Assess multiple peaks with weights</strong></P>
+    <P>If this option is selected, correlation coefficients will be computed in real 
+      space at the shifts corresponding to the 16 highest peaks in the 
+      cross-correlation,&nbsp; The correlations will be weighted by the deviation from 
+      the expected peak location.&nbsp; This weighting will help the program find the 
+      true shift when there are periodic structures (holes or grid squares), but it 
+      may be counterproductive in other cases.&nbsp; In general, then, this setting 
+      should be appropriate for montages with cryo-specimens on grids with regularly 
+      spaced holes, unless the stage calibration is bad enough that the error is 
+      comparable to the spacing between periodic structures.&nbsp; Make sure there is 
+      a high-defocus magnification calibration to prevent this problem in grid square 
+      maps.</P>
+    <P>This option will be disabled when a montage satisfies the size criterion for 
+      applying grid map parameters in the correlations to find the shifts; in that 
+      case 50 peaks will be analyzed (or 100 if <strong>Treat as very sloppy montage</strong> 
+      is selected and weighting by distance from expected shift will always be used.&nbsp; 
+      See <a href="menu_camera.htm#hid_correlationfilter_setparamsforgridmap">Set 
+      Params for Grid Maps</a> in the Camera - Cross-correlation submenu.</P>
     </basefont>
   </BODY>
 </HTML>

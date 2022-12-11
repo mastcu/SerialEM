@@ -52,9 +52,11 @@ enum {SET_PANE = 0, REALIGN_ANCHOR, ALIGN_EXISTING, MOVE_TO_FOCUS_BLOCK, BLOCK_F
 #define NO_PREVIOUS_ACTION   -1
 
 // The realign actions: The SHOT processing must be right after the ACQUIRE
-enum {EXIST_CHECKPOS_ACQUIRE, EXIST_ALIGN_SHOT, ISALIGN_ACQUIRE, ISALIGN_SHOT, 
-  ANCHOR_ACQUIRE, ANCHOR_SAVE_SHOT, BACKLASH_CHECK_ACQUIRE, BACKLASH_SHOT, 
-  ANCHALI_CHECK_ACQUIRE, ANCHALI_ALIGN_SHOT};
+enum {
+  EXIST_CHECKPOS_ACQUIRE, EXIST_ALIGN_SHOT, ISALIGN_ACQUIRE, ISALIGN_SHOT,
+  ANCHOR_ACQUIRE, ANCHOR_SAVE_SHOT, BACKLASH_CHECK_ACQUIRE, BACKLASH_SHOT,
+  ANCHALI_CHECK_ACQUIRE, ANCHALI_ALIGN_SHOT
+};
 
 
 //////////////////////////////////////////////////////////////////////
@@ -103,12 +105,15 @@ EMmontageController::EMmontageController()
   mRadius2[0] = mRadius2[1] = 0.35f;
   mSigma1[0] = mSigma1[1] = 0.05f;
   mSigma2[0] = mSigma2[1] = 0.05f;
+  mGridMapMinSizeMm = 0.65f;
+  mGridMapCutoffInvUm = 0.25f;
   mDivFilterSet1By2 = false;
   mDivFilterSet2By2 = false;
   mUseFilterSet2 = false;
   mUseSet2InLD = false;
   mRedoCorrOnRead = false;
   mMultiShotParams = NULL;
+  mXCorrThread = NULL;
 }
 
 EMmontageController::~EMmontageController()
@@ -149,6 +154,7 @@ void EMmontageController::SetupOverlapBoxes()
   float aspectMax = 2.0f;    //Aspect ratio for overlap boxes
   float padFrac = 0.45f;    // padding fraction
   float radius1 = 0.0;
+  float sigma1, radius2, sigma2, ubRadius2;
   float extraWidth = 0.0;
   int indentXC = 2;
   int numSmooth = 6;
@@ -166,6 +172,9 @@ void EMmontageController::SetupOverlapBoxes()
     filtIndex = 1;
   if ((!filtIndex && mDivFilterSet1By2) || (filtIndex && mDivFilterSet2By2))
     divFilter = 2.;
+  sigma1 = mSigma1[filtIndex] / divFilter;
+  sigma2 = mSigma2[filtIndex] / divFilter;
+  radius2 = mRadius2[filtIndex] / divFilter;
 
   // If moving stage, switch to Blendmont's VerySloppyMontage params
   if (mVerySloppy) {
@@ -174,11 +183,21 @@ void EMmontageController::SetupOverlapBoxes()
     extraWidth = 0.25f;   //0.25f;
   }
 
+  ubRadius2 = TreatAsGridMap();
+  mTreatingAsGridMap = ubRadius2 > 0.;
+  if (mTreatingAsGridMap) {
+    sigma1 = 0.01f;
+    radius1 = 0.;
+  }
+
   CLEAR_RESIZE(mUpperShiftX, float, 2 * mNumPieces);
   CLEAR_RESIZE(mUpperShiftY, float, 2 * mNumPieces);
   CLEAR_RESIZE(mUpperFirstX, float, 2 * mNumPieces);
   CLEAR_RESIZE(mUpperFirstY, float, 2 * mNumPieces);
   CLEAR_RESIZE(mPatchCCC, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mMaxSDToPieceNum, int, 2 * mNumPieces);
+  CLEAR_RESIZE(mMaxSDToIxyOfEdge, int, 2 * mNumPieces);
+  CLEAR_RESIZE(mAlternShifts, float, 8 * mNumPieces);
   CLEAR_RESIZE(mBmat, float, 2 * mNumPieces);
   CLEAR_RESIZE(mLowerPatch, float *, 2 * mNumPieces);
   CLEAR_RESIZE(mUpperPatch, float *, 2 * mNumPieces);
@@ -211,6 +230,10 @@ void EMmontageController::SetupOverlapBoxes()
 
   mXCorrBinning = montXCFindBinning(maxBinning, targetXcorrSize, indentXC, mXYpieceSize,
     mXYoverlap, aspectMax, extraWidth, padFrac, 19, &mPadPixels, &mBoxPixels[0]);
+  if (mTreatingAsGridMap) {
+    radius2 = ubRadius2 * mXCorrBinning;
+    sigma2 = radius2 / 8.f;
+  }
   for (ix = 0; ix < 2; ix++) {
     montXCBasicSizes(ix, mXCorrBinning, indentXC, mXYpieceSize, mXYoverlap, aspectMax, 
       extraWidth, padFrac, 19, &indentUse, &mXYbox[ix][0], &mNumExtra[ix][0], &mXpad[ix], 
@@ -218,8 +241,7 @@ void EMmontageController::SetupOverlapBoxes()
 
     montXCIndsAndCTF(ix, mXYpieceSize, mXYoverlap, &mXYbox[ix][0], mXCorrBinning, 
       indentUse, &mNumExtra[ix][0], mXpad[ix], mYpad[ix], numSmooth, 
-      mSigma1[filtIndex] / divFilter, mSigma2[filtIndex] / divFilter,
-      radius1, mRadius2[filtIndex] / divFilter, mVerySloppy ? 1 : 0, &mLowerInd0[ix][0],
+      sigma1, sigma2, radius1, radius2, mVerySloppy ? 1 : 0, &mLowerInd0[ix][0],
       &mLowerInd1[ix][0], &mUpperInd0[ix][ix], &mUpperInd1[ix][ix], &mXsmooth[ix], 
       &mYsmooth[ix], mCTFp[ix], &mDelta[ix]);
 
@@ -235,6 +257,21 @@ void EMmontageController::SetupOverlapBoxes()
     mBoxPixels[ix] = mXYbox[ix][0] * mXYbox[ix][1];
   }
   mNeedBoxSetup = false;
+}
+
+// Determines whether current parameters qualify montage to be treated as grid map and
+// returns the cutoff in unbinned 1/pixel if so, otherwise 0
+float EMmontageController::TreatAsGridMap()
+{
+  int nx = (mParam->xNframes - 1) * (mParam->xFrame - mParam->xOverlap) + mParam->xFrame;
+  int ny = (mParam->yNframes - 1) * (mParam->yFrame - mParam->yOverlap) + mParam->yFrame;
+  int *activeList = mWinApp->GetActiveCameraList();
+  float pixel = mShiftManager->GetPixelSize(activeList[mParam->cameraIndex], 
+    mParam->magIndex) * mParam->binning;
+  if (mGridMapMinSizeMm <= 0. || 
+    sqrt((double)nx * ny) * pixel / 1000. < mGridMapMinSizeMm)
+    return 0.;
+  return pixel * mGridMapCutoffInvUm;
 }
 
 // Turn montaging on or off
@@ -253,6 +290,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
 
   if (inVal) {
     mVerySloppy = mParam->verySloppy;
+    mUseExpectedShifts = mParam->evalMultiplePeaks;
     SetupOverlapBoxes();
     if (!mMagTab[mParam->magIndex].calibrated[iCam] && 
       mParam->magIndex >= mScope->GetLowestNonLMmag() &&
@@ -304,21 +342,56 @@ int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
                                           KImageStore *inStoreMRC, BOOL centerOnly,
                                           BOOL synchronous, int bufToCopyTo)
 {
+  int *activeList = mWinApp->GetActiveCameraList();
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
+  int adocInd, nameInd, camNum, ind;
   if (inParam) {
     mParam = inParam;
-    mParam->magIndex = mScope->GetMagIndex();
 
-    // Obey the verysloppy setting in the parameter set
+    // Default to current settings and mark binning as needed
+    mParam->cameraIndex = mWinApp->GetCurrentActiveCamera();
+    mParam->magIndex = mScope->FastMagIndex();
+    mParam->binning = 0;
+
+    // But try to replace/set from adoc
+    adocInd = inStoreMRC->GetAdocIndex();
+    if (adocInd >= 0) {
+      if (!AdocGetMutexSetCurrent(adocInd)) {
+        nameInd = inStoreMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
+
+        // Replace mag index and set binning if they are there
+        // If camera number is there, look it up in active list and assign it
+        AdocGetInteger(names[nameInd], 0, ADOC_MAGIND, &mParam->magIndex);
+        AdocGetInteger(names[nameInd], 0, ADOC_BINNING, &mParam->binning);
+        if (!AdocGetInteger(names[nameInd], 0, ADOC_CAMERA, &camNum)) {
+          for (ind = 0; ind < mWinApp->GetNumActiveCameras(); ind++) {
+            if (camNum == activeList[ind]) {
+              mParam->cameraIndex = ind;
+              break;
+            }
+          }
+        }
+        AdocReleaseMutex();
+      }
+    }
+
+    // Obey the verysloppy and useExpected settings in the parameter set
     mVerySloppy = mParam->verySloppy;
+    mUseExpectedShifts = mParam->evalMultiplePeaks;
+
+    // Set binning based on full field of camera if it didn't come from adoc
+    if (!mParam->binning) {
+      CameraParameters *camParam = mWinApp->GetCamParams() +
+        activeList[mParam->cameraIndex];
+      int binX = camParam->sizeX / inStoreMRC->getWidth();
+      int binY = camParam->sizeY / inStoreMRC->getHeight();
+      mParam->binning = binX < binY ? binX : binY;
+      if (!mParam->binning)
+        mParam->binning = 1;
+    }
+
     SetupOverlapBoxes();
 
-    // Set binning based on full field of camera
-    CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-    int binX = camParam->sizeX / inStoreMRC->getWidth();
-    int binY = camParam->sizeY / inStoreMRC->getHeight();
-    mParam->binning = binX < binY ? binX : binY;
-    if (!mParam->binning)
-      mParam->binning = 1;
     mReadStoreMRC = inStoreMRC;
     mReadResetBoxes = mMontaging;
   } else {
@@ -559,13 +632,19 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
     // Need very sloppy parameters if it is set as an option
     // If state not already set, set up boxes again
-    if ((!BOOL_EQUIV(mParam->verySloppy, mVerySloppy) && !mUsingMultishot) ||
-      mNeedBoxSetup) {
+    if (mNeedBoxSetup || ((!BOOL_EQUIV(mParam->verySloppy, mVerySloppy) ||
+      !BOOL_EQUIV(mTreatingAsGridMap, TreatAsGridMap() > 0.)) && !mUsingMultishot)) {
       mVerySloppy = mParam->verySloppy;
       SetupOverlapBoxes();
     }
   }
 
+  // Set up to use expected shifts and set number of Xcorr peaks
+  mUseExpectedShifts = mParam->evalMultiplePeaks || mTreatingAsGridMap;
+  mNumXcorrPeaks = (mVerySloppy || mUseExpectedShifts) ? 16 : 1;
+  if (mTreatingAsGridMap)
+    mNumXcorrPeaks = mVerySloppy ? 100 : 50;
+  mTrimmedMaxSDs.clear();
 
   // Fill arrays with the piece coordinates
   frameDelX = mParam->xFrame - mParam->xOverlap;
@@ -1337,7 +1416,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     if (mAlreadyHaveShifts)
       mAlreadyHaveShifts = FindBestShifts(mNumPieces - mNumToSkip, &mUpperShiftX[0], 
       &mUpperShiftY[0], &mBmat[0], mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, 
-      mWgtErrMean, mWgtErrMax) == 0;
+      mWgtErrMean, mWgtErrMax, false) == 0;
   }
 
   // Allocate center piece and bail out if that fails
@@ -1354,12 +1433,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (mDoCorrelations) {
     NewArray(mLowerPad, float, mPadPixels);
     NewArray(mUpperPad, float, mPadPixels);
-    if (mVerySloppy)
-      NewArray(mLowerCopy, float, mPadPixels);
+    NewArray(mLowerCopy, float, mPadPixels / (mNumXcorrPeaks > 1 ? 1 : 2));
     if (mXCorrBinning > 1)
       NewArray(mBinTemp, float, B3DMAX(mBoxPixels[0], mBoxPixels[1]));
-    if (!mLowerPad || !mUpperPad || (mVerySloppy && !mLowerCopy) || 
-      (mXCorrBinning > 1 && !mBinTemp)) {
+    if (!mLowerPad || !mUpperPad || !mLowerCopy || (mXCorrBinning > 1 && !mBinTemp)) {
       SEMMessageBox("Cannot get memory for edge correlation arrays");
       CleanPatches();
       return 1;
@@ -1637,7 +1714,7 @@ int EMmontageController::DoNextPiece(int param)
   double ISX, ISY, postISX, postISY, sterr, stageX, stageY;
   int timeOut = 120000;
   float delayFactor = MONTAGE_DELAY_FACTOR;
-  CString report;
+  CString report, str;
   bool doBacklash, invertBacklash, gotStageXY = false;
   bool precooking = mTrialMontage == MONT_TRIAL_PRECOOK;
   BOOL moveStage = mDoStageMoves;
@@ -1699,7 +1776,9 @@ int EMmontageController::DoNextPiece(int param)
     mAction = (mAction + 1) % mNumActions;
 
   if (mFocusing) {
-    report.Format("MONTAGING, PIECE %d of %d", mNumDoing, mNumPieces - mNumToSkip);
+    report.Format("%s, %d/%d", mNumPieces - mNumToSkip > 1000 ? "MONTAGE" : "MONTAGING",
+      mNumDoing, mNumPieces - mNumToSkip);
+    AddRemainingTime(report);
     mWinApp->SetStatusText(MEDIUM_PANE, report);
   }    
 
@@ -1712,8 +1791,10 @@ int EMmontageController::DoNextPiece(int param)
     nextPiece = NextPieceIndex();
     ComputeMoveToPiece(mPieceIndex, false, iDelX, iDelY, adjISX, adjISY);
     if (mAction == SET_PANE) {
-      report.Format("%s, PIECE %d of %d", precooking ? "PRECOOKING" : "MONTAGING", 
+      report.Format("%s, %d/%d", B3DCHOICE(precooking, "PRECOOKING", 
+        mNumPieces - mNumToSkip > 1000 ? "MONTAGE" : "MONTAGING"),
         mNumDoing, mNumPieces - mNumToSkip);
+      AddRemainingTime(report);
       mWinApp->SetStatusText(MEDIUM_PANE, report);
 
     } else if (mAction == REALIGN_ANCHOR && mNeedRealignToAnchor && 
@@ -2148,17 +2229,15 @@ int EMmontageController::SavePiece()
   int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd, dataSize;
   float xPeak, yPeak;
   CString report;
-  float sDmin, denmin, xFirst, yFirst;
   ScaleMat camToSpec, specToCam;
   int centerTaper = 12;
   int numIter = 4 + (mXCorrBinning > 1 ? 1 : 0); // Search here is on binned data, do more
   int limStep = 10;
-  int numPeaks = mVerySloppy ? 16 : 1;
-  const int debugLen = 18 * MONTXC_MAX_DEBUG_LINE;
+  const int debugLen = 100 * MONTXC_MAX_DEBUG_LINE;
   char debugStr[debugLen];
   int isave, startX, startY, endX, endY, iy, iny, outy, indin, indout, ix;
   int iDirX, iDirY, shiftX, shiftY, debugLevel;
-  float angle, adjBaseX, adjBaseY, CCCmax, specX, specY;
+  float angle, adjBaseX, adjBaseY, specX, specY;
   float *centerFloat = (float *)mCenterData;
   unsigned short int *uCenter = (unsigned short int *)mCenterData;
   double aMaxCos;
@@ -2269,13 +2348,24 @@ int EMmontageController::SavePiece()
   } else if (mDoCorrelations) {
     SEMTrace('M', "SaveImage Processing");
 
+    if (mXCorrThread) {
+      if (WaitForXCorrProc(5000)) {
+        SEMMessageBox("Piece correlation thread timed out");
+        StopMontage();
+        return 1;
+      }
+      ProcessXCorrResult();
+      nSum = AddToActualErrors();
+      MaintainErrorSums(nSum, mXCTD.pieceIndex);
+    }
+
     // Extract the patches in the edges and correlate whatever is 
     // available to get displacements from neighboring pieces
     for (int ixy = 0; ixy < 2; ixy++) {
       double wallstart = wallTime();
       // get patch in upper edge if there is another piece above this one; it is a lower
-      upper = UpperIndex(mPieceIndex, ixy);
-      if (upper >= 0) {
+      mXCTD.upper[ixy] = UpperIndex(mPieceIndex, ixy);
+      if (mXCTD.upper[ixy] >= 0) {
         if (mAlreadyHaveShifts) {
 
           // If there are already shifts, need to set this non-NULL to use tests below
@@ -2287,8 +2377,8 @@ int EMmontageController::SavePiece()
       }
 
       // Get patch in lower edge if it is needed
-      lower = LowerIndex(mPieceIndex, ixy);
-      if (lower >= 0) {
+      mXCTD.lower[ixy] = LowerIndex(mPieceIndex, ixy);
+      if (mXCTD.lower[ixy] >= 0) {
         if (mAlreadyHaveShifts) {
           mUpperPatch[2 * mPieceIndex + ixy] = &mBefErrMax;
         } else {
@@ -2298,107 +2388,97 @@ int EMmontageController::SavePiece()
       }
 
       // Correlate with the patch from the lower piece if it exists, or with upper
-      idir = 0;
-      if (lower >= 0 && mUpperPatch[2 * mPieceIndex + ixy] && mLowerPatch[2 * lower + ixy]) {
-        idir = 1;
-        upper = mPieceIndex;
-      } else if (upper >= 0 && mUpperPatch[2 * upper + ixy] &&
+      mXCTD.idir[ixy] = 0;
+      if (mXCTD.lower[ixy] >= 0 && mUpperPatch[2 * mPieceIndex + ixy] &&
+        mLowerPatch[2 * mXCTD.lower[ixy] + ixy]) {
+        mXCTD.idir[ixy] = 1;
+        mXCTD.upper[ixy] = mPieceIndex;
+      } else if (mXCTD.upper[ixy] >= 0 && mUpperPatch[2 * mXCTD.upper[ixy] + ixy] &&
         mLowerPatch[2 * mPieceIndex + ixy]) {
-        idir = -1;
-        lower = mPieceIndex;
+        mXCTD.idir[ixy] = -1;
+        mXCTD.lower[ixy] = mPieceIndex;
       }
 
       // Clean these up right away, crashes occurred when nulled in a clause below
-      if (mAlreadyHaveShifts && upper >= 0)
+      if (mAlreadyHaveShifts && mXCTD.upper[ixy] >= 0)
         mLowerPatch[2 * mPieceIndex + ixy] = NULL;
-      if (mAlreadyHaveShifts && lower >= 0)
+      if (mAlreadyHaveShifts && mXCTD.lower[ixy] >= 0)
         mUpperPatch[2 * mPieceIndex + ixy] = NULL;
+    }
 
-      if (idir && !mAlreadyHaveShifts) {
+    if ((mXCTD.idir[0] || mXCTD.idir[1]) && !mAlreadyHaveShifts) {
 
-        montXCorrEdge(mLowerPatch[2 * lower + ixy], mUpperPatch[2 * upper + ixy],
-          &mXYbox[ixy][0],
-          &mXYpieceSize[0], &mXYoverlap[0], mXsmooth[ixy], mYsmooth[ixy], mXpad[ixy],
-          mYpad[ixy], mLowerPad, mUpperPad, mLowerCopy, numPeaks, 0, mCTFp[ixy],
-          mDelta[ixy], &mNumExtra[ixy][0], mXCorrBinning, ixy, mMaxLongShift[ixy], 1,
-          &xFirst, &yFirst, &CCCmax, twoDfft, NULL, debugStr, debugLen, debugLevel);
-        if (debugLevel) {
-          char *lineEnd, *curDebug = &debugStr[0];
-          while ((lineEnd = strchr(curDebug, '\n')) != NULL) {
-            *lineEnd = 0x00;
-            SEMTrace('a', "pc %d low %d up %d dir %d xy %d  %s", mPieceIndex, lower,
-              upper, idir, ixy, curDebug);
-            curDebug = lineEnd + 1;
-          }
+      // Load the thread data structure with all the values needed
+      for (ixy = 0; ixy < 2; ixy++) {
+        if (mXCTD.idir[ixy]) {
+          mXCTD.lowerPatch[ixy] = mLowerPatch[2 * mXCTD.lower[ixy] + ixy];
+          mXCTD.upperPatch[ixy] = mUpperPatch[2 * mXCTD.upper[ixy] + ixy];
+          mXCTD.XYbox[ixy] = &mXYbox[ixy][0];
+          mXCTD.numExtra[ixy] = &mNumExtra[ixy][0];
+          mXCTD.CTFp[ixy] = mCTFp[ixy];
         }
-
-        // First get back to the correlation peak position in these images by undoing what
-        // montXcorrEdge did. Take the negative before and after as in Blendmont,
-        // so function can be called as lower, upper
-        xPeak = -B3DNINT(xFirst / mXCorrBinning + mNumExtra[ixy][0]);
-        yPeak = -B3DNINT((yFirst / mXCorrBinning + mNumExtra[ixy][1]));
-
-        // Also adjust the Y peak; it had numExtra subtracted and it needs to be added
-        yFirst = yFirst + 2 * mXCorrBinning * mNumExtra[ixy][1];
-        montBigSearch(mLowerPatch[2 * lower + ixy], mUpperPatch[2 * upper + ixy],
-          mXYbox[ixy][0], mXYbox[ixy][1], 0, 0, mXYbox[ixy][0] - 1, mXYbox[ixy][1] - 1,
-          &xPeak, &yPeak, &sDmin, &denmin, numIter, limStep);
-
-        // Use negative peak value, apply adjustment by extra
-        xPeak = mXCorrBinning * (-xPeak - mNumExtra[ixy][0]);
-        yPeak = mXCorrBinning * (-yPeak + mNumExtra[ixy][1]);
-
-        // This returned the amount to shift the upper edge to align it to the
-        // lower, except that Y is inverted.  We need the amount that upper
-        // edge is displaced from the lower one, so take -X and +Y.
-        mUpperShiftX[2 * lower + ixy] = -xPeak;
-        mUpperShiftY[2 * lower + ixy] = yPeak;
-        mUpperFirstX[2 * lower + ixy] = -xFirst;
-        mUpperFirstY[2 * lower + ixy] = yFirst;
-        mPatchCCC[2 * lower + ixy] = CCCmax;
-
-        // Now get rid of the patches
-        delete[] mUpperPatch[2 * upper + ixy];
-        delete[] mLowerPatch[2 * lower + ixy];
-        mUpperPatch[2 * upper + ixy] = NULL;
-        mLowerPatch[2 * lower + ixy] = NULL;
-      } else if (idir) {
-
-        // If already have shifts, set the peak values for use below
-        xPeak = -mUpperShiftX[2 * lower + ixy];
-        yPeak = mUpperShiftY[2 * lower + ixy];
       }
+      mXCTD.XYpieceSize = &mXYpieceSize[0];
+      mXCTD.XYoverlap = &mXYoverlap[0];
+      mXCTD.Xsmooth = &mXsmooth[0];
+      mXCTD.Ysmooth = &mYsmooth[0];
+      mXCTD.Xpad = &mXpad[0];
+      mXCTD.Ypad = &mYpad[0];
+      mXCTD.lowerPad = mLowerPad;
+      mXCTD.upperPad = mUpperPad;
+      mXCTD.lowerCopy = mLowerCopy;
+      mXCTD.numXcorrPeaks = mNumXcorrPeaks;
+      mXCTD.delta = &mDelta[0];
+      mXCTD.XCorrBinning = mXCorrBinning;
+      mXCTD.maxLongShift = &mMaxLongShift[0];
+      mXCTD.debugStr = debugStr;
+      mXCTD.debugLen = debugLen;
+      mXCTD.debugLevel = debugLevel;
+      mXCTD.pieceIndex = mPieceIndex;
 
-      if (idir) {
-        // Compute contribution to actual error in position of this piece
-        i = idir > 0 ? lower : upper;
-        mActualErrorX[mPieceIndex] += mActualErrorX[i] - idir * xPeak;
-        mActualErrorY[mPieceIndex] += mActualErrorY[i] + idir * yPeak;
-        nSum++;
-        /*SEMTrace('1', "Piece %d %d  %s %s error %.0f %.0f plus %.0f %.0f", mPieceX,
-        mPieceY, idir > 0 ? "lower" : "upper", ixy ? "Y" : "X", mActualErrorX[i],
-        mActualErrorY[i], - idir * xPeak, idir * yPeak);*/
+      if (debugLevel > 1) {
+        mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
       }
-      //SEMTrace('1',"Correlation time %.3f", wallTime() - wallstart);
+      if (mMiniBorderY && !(mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
+        mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()]) && !debugLevel
+        && NextPieceIndex() / mParam->yNframes < mParam->xNframes) {
+
+        // Start thread if deferred tiling, no drift correction, not debugging and not the
+        // last frame
+        mXCorrThread = AfxBeginThread(XCorrProc, &mXCTD, THREAD_PRIORITY_BELOW_NORMAL, 0,
+          CREATE_SUSPENDED);
+        mXCorrThread->m_bAutoDelete = false;
+        mXCorrThread->ResumeThread();
+
+      } else {
+
+        // Otherwise run directly and process
+        XCorrProc(&mXCTD);
+        if (debugLevel > 1) {
+          mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);
+          if (mWinApp->mLogWindow)
+            mWinApp->mLogWindow->FlushDeferredLines();
+        }
+        ProcessXCorrResult();
+      }
     }
+
+    // If already have shifts, set the peak values for use below
+    if (mAlreadyHaveShifts) {
+      for (ixy = 0; ixy < 2; ixy++) {
+        if (mXCTD.idir[ixy]) {
+          mXCTD.xPeak[ixy] = -mUpperShiftX[2 * mXCTD.lower[ixy] + ixy];
+          mXCTD.yPeak[ixy] = mUpperShiftY[2 * mXCTD.lower[ixy] + ixy];
+        }
+      }
+    }
+
+    if (!mXCorrThread)
+      nSum = AddToActualErrors();
   }
 
-  // In either case, compute actualError, needed for aligning when not deferring tiling
-  if (mDoCorrelations || mUsingMultishot) {
-    if (nSum > 1) {
-      mActualErrorX[mPieceIndex] /= 2.;
-      mActualErrorY[mPieceIndex]  /= 2.;
-    }
-    mErrorSumX += mActualErrorX[mPieceIndex];
-    mErrorSumY += mActualErrorY[mPieceIndex];
-    mNumErrSum++;
-
-    if (mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
-      mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()]) {
-      mPredictedErrorX += mActualErrorX[mPieceIndex];
-      mPredictedErrorY += mActualErrorY[mPieceIndex]; 
-    }
-  }
+  if (!mXCorrThread)
+    MaintainErrorSums(nSum, mPieceIndex);
 
   // Convert the buffer to bytes now if required and it is not
   if (mMiniData && mConvertMini && type != kUBYTE) {
@@ -2666,11 +2746,13 @@ int EMmontageController::SavePiece()
         isave = 0;
       else
         isave = FindBestShifts(nVar, &mUpperFirstX[0], &mUpperFirstY[0], &bMat1[0],
-          mBefErrMean, mBefErrMax, aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst);
+          mBefErrMean, mBefErrMax, aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst, 
+          mNumXcorrPeaks > 1 && nVar > 3);
 
       if (!isave) 
         isave = FindBestShifts(nVar, &mUpperShiftX[0], &mUpperShiftY[0], &mBmat[0], 
-          mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, mWgtErrMean, mWgtErrMax);
+          mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, mWgtErrMean, mWgtErrMax, 
+          false);
     }
 
     if (mAlreadyHaveShifts || !isave) {
@@ -3166,6 +3248,169 @@ int EMmontageController::SavePiece()
   return 0;
 }
 
+// Do operations after an edge correlation is done
+void EMmontageController::ProcessXCorrResult()
+{
+  int ix, iy, ixy;
+  int lower, upper;
+
+  for (ixy = 0; ixy < 2; ixy++) {
+    if (!mXCTD.idir[ixy])
+      continue;
+
+    lower = mXCTD.lower[ixy];
+    upper = mXCTD.upper[ixy];
+
+
+    // Get the max SD and alternative shifts; apply same operation to them as to 
+    // xfirst, yfirst and hope its right
+    mMaxSDToIxyOfEdge[mTrimmedMaxSDs.size()] = ixy;
+    mMaxSDToPieceNum[mTrimmedMaxSDs.size()] = lower;
+    mTrimmedMaxSDs.push_back(mXCTD.trimmedMaxSD[ixy]);
+    if (mNumXcorrPeaks > 1) {
+      iy = 4 * (2 * lower + ixy);
+      for (ix = 0; ix < 2; ix++) {
+        if (mXCTD.alternShifts[ixy][2 * ix] > -1.e20) {
+          mAlternShifts[iy + 2 * ix] = -mXCTD.alternShifts[ixy][2 * ix];
+          mAlternShifts[iy + 2 * ix + 1] = mXCTD.alternShifts[ixy][2 * ix + 1];
+        }
+      }
+    }
+
+    // This returned the amount to shift the upper edge to align it to the
+    // lower, except that Y is inverted.  We need the amount that upper
+    // edge is displaced from the lower one, so take -X and +Y.
+    mUpperShiftX[2 * lower + ixy] = -mXCTD.xPeak[ixy];
+    mUpperShiftY[2 * lower + ixy] = mXCTD.yPeak[ixy];
+    mUpperFirstX[2 * lower + ixy] = -mXCTD.xFirst[ixy];
+    mUpperFirstY[2 * lower + ixy] = mXCTD.yFirst[ixy];
+    mPatchCCC[2 * lower + ixy] = mXCTD.CCCmax[ixy];
+
+
+
+    // Now get rid of the patches
+    delete[] mUpperPatch[2 * upper + ixy];
+    delete[] mLowerPatch[2 * lower + ixy];
+    mUpperPatch[2 * upper + ixy] = NULL;
+    mLowerPatch[2 * lower + ixy] = NULL;
+  }
+}
+
+// Add correlation peak positions to the mActualErrorX/Y
+int EMmontageController::AddToActualErrors()
+{
+  int idir, i, ixy, nSum = 0;
+  for (ixy = 0; ixy < 2; ixy++) {
+    idir = mXCTD.idir[ixy];
+    if (idir) {
+      // Compute contribution to actual error in position of this piece
+      i = idir > 0 ? mXCTD.lower[ixy] : mXCTD.upper[ixy];
+      mActualErrorX[mXCTD.pieceIndex] += mActualErrorX[i] - idir * mXCTD.xPeak[ixy];
+      mActualErrorY[mXCTD.pieceIndex] += mActualErrorY[i] + idir * mXCTD.yPeak[ixy];
+      nSum++;
+      /*SEMTrace('1', "Piece %d %d  %s %s error %.0f %.0f plus %.0f %.0f", mPieceX,
+      mPieceY, idir > 0 ? "lower" : "upper", ixy ? "Y" : "X", mActualErrorX[i],
+      mActualErrorY[i], - idir * xPeak, idir * yPeak);*/
+    }
+  }
+  return nSum;
+}
+// Finish actual error computation, add to error sum and predicted error if needed
+void EMmontageController::MaintainErrorSums(int nSum, int pieceIndex)
+{
+
+  // In either case, compute actualError, needed for aligning when not deferring tiling
+  if (mDoCorrelations || mUsingMultishot) {
+    if (nSum > 1) {
+      mActualErrorX[pieceIndex] /= 2.;
+      mActualErrorY[pieceIndex] /= 2.;
+    }
+    mErrorSumX += mActualErrorX[pieceIndex];
+    mErrorSumY += mActualErrorY[pieceIndex];
+    mNumErrSum++;
+
+    if (mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
+      mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()]) {
+      mPredictedErrorX += mActualErrorX[pieceIndex];
+      mPredictedErrorY += mActualErrorY[pieceIndex];
+    }
+  }
+}
+
+// The edge correlation procedure
+UINT EMmontageController::XCorrProc(LPVOID param)
+{
+  int ixy, useExtra[2];
+  XCorrThreadData *td = (XCorrThreadData *)param;
+  float sDmin, denmin;
+  // Search here is on binned data, do more
+  int numIter = 4 + (td->XCorrBinning > 1 ? 1 : 0);
+  int limStep = 10;
+
+  for (ixy = 0; ixy < 2; ixy++) {
+    if (!td->idir[ixy])
+      continue;
+    // If we ever pass expected shifts through these, they need to account for Y
+    // inversion.  Pass -Y extra so it adjusts correctly for inversion
+    td->xFirst[ixy] = td->yFirst[ixy] = 0.;
+    useExtra[0] = td->numExtra[ixy][0];
+    useExtra[1] = -td->numExtra[ixy][1];
+    montXCorrEdge(td->lowerPatch[ixy], td->upperPatch[ixy], td->XYbox[ixy], 
+      td->XYpieceSize, td->XYoverlap, td->Xsmooth[ixy], td->Ysmooth[ixy], td->Xpad[ixy],
+      td->Ypad[ixy], td->lowerPad, td->upperPad, td->lowerCopy, td->numXcorrPeaks, 0,
+      td->CTFp[ixy], td->delta[ixy], &useExtra[0], td->XCorrBinning, ixy,
+      td->maxLongShift[ixy], td->numXcorrPeaks > 1 ? 1 : 0, &td->xFirst[ixy],
+      &td->yFirst[ixy], &td->CCCmax[ixy], twoDfft, NULL, td->debugStr, td->debugLen,
+      td->debugLevel);
+
+    if (td->debugLevel) {
+      char *lineEnd, *curDebug = &td->debugStr[0];
+
+      while ((lineEnd = strchr(curDebug, '\n')) != NULL) {
+        *lineEnd = 0x00;
+        SEMTrace('a', "pc %d low %d up %d dir %d xy %d  %s", td->pieceIndex, td->lower[ixy],
+          td->upper[ixy], td->idir[ixy], ixy, curDebug);
+        curDebug = lineEnd + 1;
+      }
+    }
+    td->trimmedMaxSD[ixy] = montXCGetLastTrimmedMaxSD();
+    if (td->numXcorrPeaks > 1)
+      montXCGetLastRunnersUp(&td->alternShifts[ixy][0], 2);
+
+    // First get back to the correlation peak position in these images by undoing what
+    // montXcorrEdge did. Take the negative before and after as in Blendmont,
+    // so function can be called as lower, upper
+    // No longer need to adjust Y peak by 2 * extraWidth;
+    td->xPeak[ixy] = -B3DNINT(td->xFirst[ixy] / td->XCorrBinning + td->numExtra[ixy][0]);
+    td->yPeak[ixy] = -B3DNINT((td->yFirst[ixy] / td->XCorrBinning -td->numExtra[ixy][1]));
+
+    montBigSearch(td->lowerPatch[ixy], td->upperPatch[ixy],
+      td->XYbox[ixy][0], td->XYbox[ixy][1], 0, 0, td->XYbox[ixy][0] - 1, td->XYbox[ixy][1] - 1,
+      &td->xPeak[ixy], &td->yPeak[ixy], &sDmin, &denmin, numIter, limStep);
+
+    // Use negative peak value, apply adjustment by extra
+    td->xPeak[ixy] = td->XCorrBinning * (-td->xPeak[ixy] - td->numExtra[ixy][0]);
+    td->yPeak[ixy] = td->XCorrBinning * (-td->yPeak[ixy] + td->numExtra[ixy][1]);
+  }
+  return 0;
+}
+
+// Wait for the XCorrProc thread to finish and return 0, 
+// if it doesn't finish, kill it and clean up, return 1
+int EMmontageController::WaitForXCorrProc(int timeout)
+{
+  double startTime = GetTickCount();
+  int busy;
+  while (SEMTickInterval(startTime) < timeout) {
+    busy = UtilThreadBusy(&mXCorrThread);
+    if (busy <= 0)
+      return 0;
+    Sleep(25);
+  }
+  UtilThreadCleanup(&mXCorrThread);
+  return 1;
+}
+
 ///////////////////////////////////////
 // TERMINATION ROUTINES
 ///////////////////////////////////////
@@ -3190,6 +3435,9 @@ void EMmontageController::StopMontage(int error)
       StageRestoreDone();
     return;
   }
+
+  if (mXCorrThread)
+    WaitForXCorrProc(5000);
   
   // Just return to starting position of image shifts or stage
   if (!mReadingMontage)
@@ -3374,6 +3622,8 @@ void EMmontageController::SetNextPieceIndexXY()
   mSeqIndex = mNextSeqInd;
   mPieceX = mPieceIndex / mParam->yNframes + 1;
   mPieceY = mPieceIndex % mParam->yNframes + 1;
+  if (mNumDoing == mInitialNumDoing + 1)
+    mStartTime = GetTickCount();
   mNumDoing++;
 }
 
@@ -3686,6 +3936,20 @@ void EMmontageController::SetMiniOffsetsParams(MiniOffsets &mini, int xNframes,
     mini.yDelta = (yFrame + yDelta) / 2;
   else
     mini.yBase = (yFrame - yDelta) / 2;
+}
+
+// Add minutes or seconds of remaining time if more than 3 pieces done
+void EMmontageController::AddRemainingTime(CString & report)
+{
+  CString str;
+  int remaining = B3DNINT(GetRemainingTime() / 1000);
+  if (remaining > 0) {
+    if (remaining < 180)
+      str.Format(", %d sec", remaining);
+    else
+      str.Format(", %d min", (remaining + 30) / 60);
+    report += str;
+  }
 }
 
 //////////////////////////////////////////////
@@ -4335,15 +4599,15 @@ void EMmontageController::FindAdjacentForISrealign(void)
 int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upperShiftY,
                                         float *bMat, float &bMean, float &bMax, 
                                         float &aMean, float &aMax, float &wMean, 
-                                        float &wMax)
+                                        float &wMax, bool tryAltern)
 {
   int *ixpclist, *iypclist, *pieceLower, *pieceUpper, *edgeLower, *edgeUpper;
-  int *ifSkipEdge, *work, *ivarpc, *indvar;
-  float *dxedge, *dyedge, *ccc, *outlier;
-  int i, inde, ixy, lower, upper, upVar, maxEdges, nSum, nedge[2], retval = -1;
-  int numIter, numEdge;
+  int *ifSkipEdge, *ivarpc, *indvar, *usedAltern;
+  float *dxedge, *dyedge, *ccc, *outlier, *work, *alternShifts = NULL;
+  int i, j, inde, ixy, lower, upper, upVar, maxEdges, nSum, nedge[2], retval = -1;
+  int numIter, numEdge, altIxy;
   float dx, dy, bDist, aDist, aSum, bSum, median;
-  float outlierCrit = 2.5f;
+  float outlierCrit = 2.5f, sdOutlierCrit = 2.24f, sdMedianRatio = 0.25f;
   float lowerMedRatio = 0.1f, upperMedRatio = 0.66f;  // 9/17/14: lowered from 0.8
 
                           //  Values are from midas ; blendmont
@@ -4375,9 +4639,12 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
   NewArray(ifSkipEdge, int, maxEdges * 2);
   NewArray(edgeLower, int, 2 * mNumPieces);
   NewArray(edgeUpper, int, 2 * mNumPieces);
-  NewArray(work, int, 21 * nvar + 1);
+  NewArray(work, float, 21 * nvar + 1);
+  if (tryAltern)
+    NewArray(alternShifts, float, maxEdges * 8);
   if (ixpclist && iypclist && dxedge && dyedge && pieceLower && pieceUpper &&
-    edgeLower && edgeUpper && work && ifSkipEdge && indvar && ivarpc) {
+    edgeLower && edgeUpper && work && ifSkipEdge && indvar && ivarpc &&
+    (!tryAltern || alternShifts)) {
 
     // Fill the arrays
     for (i = 0; i < mNumPieces; i++) {
@@ -4395,6 +4662,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
       pieceLower[i] = pieceUpper[i] = -1;
     }
     numEdge = 0;
+    altIxy = 4 * maxEdges;
     ccc = (float *)work;
     outlier = (float *)(work + 4 * nvar);
     for (ixy = 0; ixy < 2; ixy++) {
@@ -4409,15 +4677,35 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           pieceUpper[2 * inde + ixy] = upper;
           dxedge[2 * inde + ixy] = upperShiftX[2 * lower + ixy];
           dyedge[2 * inde + ixy] = upperShiftY[2 * lower + ixy];
+          if (tryAltern) {
+            for (j = 0; j < 4; j++)
+              alternShifts[4 * inde + altIxy * ixy + j] = 
+              mAlternShifts[4 * (2 * lower + ixy) + j];
+          }
           inde++;
-          if (mVerySloppy)
+          if (mNumXcorrPeaks > 1)
             ccc[numEdge++] = mPatchCCC[2 * lower + ixy];
         }
       }
     }
 
+    // Get the median max SD and analyze for outliers
+    if (mTrimmedMaxSDs.size() > 5) {
+      rsMedian(&mTrimmedMaxSDs[0], mTrimmedMaxSDs.size(), outlier, &median);
+      rsMadMedianOutliers(&mTrimmedMaxSDs[0], mTrimmedMaxSDs.size(), sdOutlierCrit, outlier);
+      for (i = 0; i < (int)mTrimmedMaxSDs.size(); i++) {
+        if (outlier[i] < 0. && mTrimmedMaxSDs[i] <= sdMedianRatio * median) {
+          ixy = mMaxSDToIxyOfEdge[i];
+          inde = edgeUpper[2 * mMaxSDToPieceNum[i] + ixy];
+          ifSkipEdge[2 * inde + ixy] = 1;
+          SEMTrace('1', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i], 
+            inde, mMaxSDToPieceNum[i], ixy);
+        }
+      }
+    }
+
     // Get the median CCC and analyze for outliers if very sloppy
-    if (mVerySloppy && nvar > 10) {
+    if (mNumXcorrPeaks > 1 && nvar > 10) {
       rsMedian(ccc, numEdge, outlier, &median);
       rsMadMedianOutliers(ccc, numEdge, outlierCrit, outlier);
       numEdge = 0;
@@ -4429,8 +4717,8 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           if (upper >= 0) {
 
             // Skip an edge if it is an outlier or if its CCC is very low
-            if ((outlier[numEdge] < 0. && ccc[numEdge] < upperMedRatio * median) ||
-              ccc[numEdge] < 0.01 + lowerMedRatio * median){
+            if (!ifSkipEdge[2 * inde + ixy] && ((outlier[numEdge] < 0. && ccc[numEdge] < 
+              upperMedRatio * median) || ccc[numEdge] < 0.01 + lowerMedRatio * median)) {
               SEMTrace('1', "Skipping %d, %d %c edge, outlier %.0f  ccc %.4f  medcrit "
                 "%.4f", lower / mParam->yNframes + 1, lower % mParam->yNframes + 1, 'X'+
                 ixy, outlier[numEdge], ccc[numEdge], 0.01 + lowerMedRatio * median);
@@ -4441,6 +4729,15 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           }
         }
       }
+    }
+
+    // Try to substitute alternate shifts
+    if (tryAltern) {
+      usedAltern = (int *)work;
+      j = 0;
+      pickAlternativeShifts(ivarpc, nvar, indvar, dxedge, dyedge, pieceLower, pieceUpper,
+        ifSkipEdge, 1, edgeLower, edgeUpper, 1, 0, alternShifts, 2, altIxy, 3., 0.33f,
+        15., usedAltern, &j);
     }
 
     // Do the fit
@@ -4496,6 +4793,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
   delete [] edgeLower;
   delete [] edgeUpper;
   delete [] work;
+  delete [] alternShifts;
   return retval;
 }
 
@@ -4503,10 +4801,12 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
 int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX, 
                                              float * upperShiftY)
 {
-  char *keys[4] = {ADOC_XEDGE, ADOC_YEDGE, ADOC_XEDGEVS, ADOC_YEDGEVS};
+  char *keys[8] = {ADOC_XEDGE, ADOC_YEDGE, ADOC_XEDGEVS, ADOC_YEDGEVS, ADOC_EDGEX_MAXSD,
+  ADOC_EDGEY_MAXSD, ADOC_EDGEXVS_MAXSD, ADOC_EDGEYVS_MAXSD};
   char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
   KImageStore *store = mReadingMontage ? mReadStoreMRC : mWinApp->mStoreMRC;
-  int ipc, ixy, keyInd, nameInd, retval = 0, iz;
+  int ipc, ixy, keyInd, nameInd, retval = 0, iz, ind;
+  float sdVal;
   int adocInd = store->GetAdocIndex();
   if (adocInd < 0)
     return -1;
@@ -4520,7 +4820,7 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
     for (ixy = 0; ixy < 2; ixy++) {
       keyInd = ixy + (mVerySloppy ? 2 : 0);
       if (UpperIndex(ipc, ixy) >= 0) {
-        if (mVerySloppy) {
+        if (mNumXcorrPeaks > 1) {
           if (write)
             retval = AdocSetThreeFloats(names[nameInd], iz, keys[keyInd], 
             upperShiftX[2*ipc + ixy], upperShiftY[2*ipc + ixy], mPatchCCC[2 * ipc + ixy]);
@@ -4540,6 +4840,28 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
         if (retval) {
           AdocReleaseMutex();
           return 2;
+        }
+        keyInd += 4;
+        if (write) {
+
+          // Find a trimmed max SD for this edge and write it
+          for (ind = 0; ind < (int)mTrimmedMaxSDs.size(); ind++) {
+            if (mMaxSDToIxyOfEdge[ind] == ixy && mMaxSDToPieceNum[ind] == ipc) {
+              if (AdocSetFloat(names[nameInd], iz, keys[keyInd], mTrimmedMaxSDs[ind])) {
+                AdocReleaseMutex();
+                return 2;
+              }
+              break;
+            }
+          }
+        } else {
+
+          // Or read one in and store it and piece # and ixy in vectors
+          if (!AdocGetFloat(names[nameInd], iz, keys[keyInd], &sdVal)) {
+            mMaxSDToIxyOfEdge[mTrimmedMaxSDs.size()] = ixy;
+            mMaxSDToPieceNum[mTrimmedMaxSDs.size()] = ipc;
+            mTrimmedMaxSDs.push_back(sdVal);
+          }
         }
       }
     }
@@ -4968,7 +5290,7 @@ double EMmontageController::GetRemainingTime()
     interval = SEMTickInterval(mStartTime);
   mLastElapsed = interval;
   mLastNumDoing = mNumDoing;
-  return  interval * (numTot / (double)numDone - 1.);
+  return  interval * (numTot / (numDone - 1.) - 1.);
 }
 
 // Test for whether the stage position is sufficiently close to the target; if not 

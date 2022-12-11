@@ -26,6 +26,34 @@ struct MontLimits
   int top, left, bottom, right;    // Unbinned usable area
 };
 
+struct XCorrThreadData
+{
+  float *lowerPatch[2];
+  float *upperPatch[2];
+  int *XYbox[2];
+  int *XYpieceSize;
+  int *XYoverlap;
+  int *Xsmooth, *Ysmooth, *Xpad, *Ypad;
+  float *lowerPad;
+  float *upperPad;
+  float *lowerCopy;
+  int numXcorrPeaks;
+  float *CTFp[2];
+  float *delta;
+  int *numExtra[2];
+  int XCorrBinning;
+  int *maxLongShift;
+  char *debugStr;
+  int debugLen;
+  int debugLevel;
+  int lower[2], upper[2], idir[2], pieceIndex;
+  float xPeak[2], yPeak[2];
+  float xFirst[2], yFirst[2];
+  float CCCmax[2];
+  float trimmedMaxSD[2];
+  float alternShifts[2][4];
+};
+
 class EMmontageController
 {
  public:
@@ -36,6 +64,7 @@ class EMmontageController
 	 void SetNextPieceIndexXY();
 	 int NextPieceIndex();
 	 void SetupOverlapBoxes();
+   float TreatAsGridMap();
   EMmontageController();
   ~EMmontageController();
   void Initialize();
@@ -48,6 +77,11 @@ class EMmontageController
   int bufToCopyTo = -1);
   void StopMontage(int error = 0);
   int SavePiece();
+  void ProcessXCorrResult();
+  int AddToActualErrors();
+  void MaintainErrorSums(int nSum, int pieceIndex);
+  static UINT XCorrProc(LPVOID param);
+  int WaitForXCorrProc(int timeout);
   void SetMontaging(BOOL inVal);
   void PieceCleanup(int error);
   int DoNextPiece(int param);
@@ -82,6 +116,8 @@ class EMmontageController
   GetSetMember(bool, RedoCorrOnRead);
   SetMember(bool, NeedBoxSetup);
   GetMember(BOOL, UseContinuousMode);
+  GetSetMember(float, GridMapCutoffInvUm);
+  GetSetMember(float, GridMapMinSizeMm);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -102,6 +138,8 @@ class EMmontageController
   CShiftManager *mShiftManager;
   CameraParameters *mCamParams;
   MiniOffsets mMiniOffsets;
+  XCorrThreadData mXCTD;
+  CWinThread *mXCorrThread;
   BOOL mMontaging;
   IntVec   mMontageX, mMontageY;
   IntVec   mPieceSavedAt;
@@ -176,6 +214,10 @@ class EMmontageController
   FloatVec  mUpperShiftX, mUpperShiftY;
   FloatVec  mUpperFirstX, mUpperFirstY;
   FloatVec mPatchCCC;
+  FloatVec mTrimmedMaxSDs;
+  IntVec mMaxSDToPieceNum;
+  IntVec mMaxSDToIxyOfEdge;
+  FloatVec mAlternShifts;
   FloatVec mActualErrorX, mActualErrorY; // Error from true position
   FloatVec mAcquiredStageX, mAcquiredStageY; // Actual position at which acquired
   FloatVec mStageOffsetX, mStageOffsetY; // Stage offset from nominal to actual
@@ -201,9 +243,14 @@ class EMmontageController
   KImage *mCenterImage[4];        // KImage's of saved pieces
   short int *mCenterData;         // Array for composed center piece
   float mRequiredBWMean;          // Black/white mean per unbinned sec required
+  float mGridMapCutoffInvUm;      // radius2 in 1/um when doing grid map
+  float mGridMapMinSizeMm;        // Min linear size in mm for treating as grid map
+  bool mTreatingAsGridMap;        // Flag that it is setup with grid map parameters
+  int mNumXcorrPeaks;             // Number of peaks to analyze
   int mNumTooDim;                 // Number of frames too dim
   BOOL mLastFailed;               // Flag that last capture did not complete
   BOOL mVerySloppy;               // Flag to do big correlations with special parameters
+  BOOL mUseExpectedShifts;        // Weight by deviation from expected shifts
   int mNumToSkip;                 // Number of pieces to skip
   IntVec mSkipIndex;   // Index of pieces to skip
   IntVec mPieceToVar;  // Index from piece number to variable number
@@ -310,7 +357,7 @@ public:
   bool PieceNeedsRealigning(int index, bool nextPiece);
   bool AddToSkipListIfUnique(int ix);
   int FindBestShifts(int nvar, float *upperShiftX, float *upperShiftY, float *bMat,
-     float &bMean, float &bMax, float &aMean, float &aMax, float &wMean, float &wMax);
+     float &bMean, float &bMax, float &aMean, float &aMax, float &wMean, float &wMax, bool tryAltern);
   int AutodocShiftStorage(bool write, float * upperShiftX, float * upperShiftY);
   void NextMiniZoomAndBorder(int &borderTry);
   void RetilePieces(int miniType);
@@ -335,6 +382,7 @@ public:
   int AccessMontSectInAdoc(KImageStore *store, int secNum);
   int StoreAlignedCoordsInAdoc(void);
   void SetMiniOffsetsParams(MiniOffsets & mini, int xNframes, int xFrame, int xDelta, int yNframes, int yFrame, int yDelta);
+  void AddRemainingTime(CString &report);
   int TestStageError(double ISX, double ISY, double &sterr);
   int SetImageShiftTestClip(double adjISX, double adjISY, float delayFac);
 };

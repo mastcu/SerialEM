@@ -417,6 +417,7 @@ public:
   afx_msg void OnKeepFocusTrialAtSamePosition();
   afx_msg void OnUpdateKeepFocusTrialAtSamePosition(CCmdUI *pCmdUI);
   afx_msg void OnTiltseriesSetBidirReturnDelay();
+  afx_msg void OnSetParamsForGridMap();
 };
 
 /////////////////////////////////////////////////////////////////////////////

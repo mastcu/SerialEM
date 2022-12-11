@@ -106,6 +106,11 @@
           <TD>Recompute correlations when reading a montage instead of using values from 
             .mdoc file.</TD>
         </TR>
+        <TR VALIGN="top">hid_correlationfilter_setparamsforgridmap
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_setparamsforgridmap">Set Params for Grid Map</a></TD>
+          <TD>Set minimum size for using grid map parameters for correlations, and filter 
+            cutoff.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_camera_setcountlimit">Set Minimum Counts</A></TD>
           <TD>Set the minimum required mean counts for a montage frame.</TD>
@@ -366,6 +371,32 @@
       montage.&nbsp; Otherwise, it will use the shifts stored in the .mdoc file 
       associated with the image file.&nbsp; In fact, with this option on, new shifts 
       will be stored in the .mdoc file every time a montage is read in.</P>
+      
+       <P><A NAME="hid_correlationfilter_setparamsforgridmap"></A><B>Set Params for Grid Map command (Camera - Correlation Filter submenu)</B></P>
+      <p>Use this command to control whether the program uses special parameters for a 
+        low-magnification montage and the high-frequency filter that it applies.&nbsp; 
+        These parameters are designed to prevent regular hole arrays inside of grid 
+        squares from dominating correlations and giving incorrect shifts.&nbsp; </p>
+    <p>The primary aspect of these parameters is a very strong high-frequency filter 
+      that attenuates the signal from the hole pattern.&nbsp; The filter cutoff 
+      (radius 2) is expressed in reciprocal microns and the original default is 0.25 / 
+      um, which corresponds to a 4 um spacing.&nbsp; The falloff past the cutoff 
+      (sigma 2) is fixed at 1/8 of the cutoff.&nbsp; The low frequency filter rises 
+      from 0 with a sigma 1 of 0.01 and starts at a frequency of 0 (radius 1 is 0) 
+      even when 'Very sloppy montage' is selected.</p>
+    <p>The other aspect is that many correlation peaks are evaluated regardless of the 
+      setting of 'Evaluate multiple peaks', either 50 instead of the usual 16, or 100 
+      when 'Very sloppy montage' is selected.</p>
+    <p>Two entry boxes will open: the first is for specifying the minimum size in 
+      millimeters that a montage needs to be for the grid map parameters to be 
+      applied.&nbsp; The geometric mean of the montage's sizes in X and Y is compared 
+      with this value.&nbsp; It should be possible to set a value that discriminates 
+      between a map of all or most of a grid, and a montage for data from of a very 
+      large area.&nbsp; However, if it turns out that these parameters are bad for 
+      other kinds of grid maps (e.g., slot grids), the use of grid map parameters can 
+      be prevented by entering 0.</p>
+    <p>The second entry box asks for the high-frequency cutoff radius in reciprocal 
+      microns.</p>
       <P><A NAME="hid_camera_setcountlimit"></A><B>Set Minimum Counts command (Camera menu)</B></P>
       <P>Use this command to set a minimum required number of mean counts for each 
         montage frame. When a frame is taken that falls below this limit, the program 

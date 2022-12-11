@@ -206,7 +206,9 @@ BEGIN
             MENUITEM "Di&vide Filter Set 2 by 2",   ID_CORRELATIONFILTER_DIVIDEFILTERSET2BY2
             MENUITEM "&Test Values for Set 1",      ID_CORRELATIONFILTER_TESTSET1VALUES
             MENUITEM "T&est Values for Set 2",      ID_CORRELATIONFILTER_TESTSET2VALUES
+            MENUITEM SEPARATOR
             MENUITEM "&Redo Corr when Read",        ID_CORRELATIONFILTER_REDOCORRWHENREAD
+            MENUITEM "Set &Params for Grid Map",    ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP
         END
         MENUITEM "Set Minimum &Counts",         ID_CAMERA_SETCOUNTLIMIT
         MENUITEM SEPARATOR
@@ -741,6 +743,7 @@ BEGIN
         MENUITEM "&Context Help\tShift+F1",     ID_CONTEXT_HELP
         MENUITEM "&Using Help",                 ID_HELP_USING
         MENUITEM "&About SerialEM...",          ID_APP_ABOUT
+        MENUITEM "&Run SerialEM Snapshot",      ID_HELP_RUNSERIALEMSNAPSHOT
     END
 END
 
@@ -1315,7 +1318,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,238,112,10
 END
 
-IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 98
+IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 108
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1341,6 +1344,8 @@ BEGIN
     CONTROL         "Spin1",IDC_SPINSCANBIN,"msctls_updown32",UDS_ARROWKEYS,106,35,10,14
     CONTROL         "Align pieces in overview",IDC_SHIFT_IN_OVERVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,78,88,10
     CONTROL         "Treat as very sloppy montage",IDC_VERY_SLOPPY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,88,106,10
+    CONTROL         "Assess multiple peaks with weights",IDC_EVALMULTIPLE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,98,113,10
 END
 
 IDD_LOGWINDOW DIALOGEX 0, 0, 282, 135
@@ -1417,11 +1422,11 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Setup",ID_CAMERA_PARAMETERS,4,10,21,13
-    PUSHBUTTON      "View",ID_CAMERA_VIEW,29,10,18,13
-    PUSHBUTTON      "Focus",ID_CAMERA_FOCUS,51,10,18,13
-    PUSHBUTTON      "Trial",ID_CAMERA_TRIAL,73,10,18,13
-    PUSHBUTTON      "Record",ID_CAMERA_RECORD,95,10,21,13
+    PUSHBUTTON      "Setup",IDC_BUT_SETUP_CAM,4,10,21,13
+    PUSHBUTTON      "View",IDC_BUT_VIEW,29,10,18,13
+    PUSHBUTTON      "Focus",IDC_BUT_FOCUS,51,10,18,13
+    PUSHBUTTON      "Trial",IDC_BUT_TRIAL,73,10,18,13
+    PUSHBUTTON      "Record",IDC_BUT_RECORD,95,10,21,13
     PUSHBUTTON      "Montage",IDC_BUTMONTAGE,4,26,24,13
     PUSHBUTTON      "Script 1",IDC_BUTMACRO1,4,42,25,13
     PUSHBUTTON      "Script 2",IDC_BUTMACRO2,42,42,25,13
@@ -3907,6 +3912,7 @@ BEGIN
 
     IDD_MONTAGECONTROL, DIALOG
     BEGIN
+        BOTTOMMARGIN, 98
     END
 
     IDD_LOGWINDOW, DIALOG
@@ -4580,6 +4586,11 @@ BEGIN
     0
 END
 
+IDD_MONTAGECONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4730,6 +4741,19 @@ END
 
 STRINGTABLE
 BEGIN
+    IDC_BUT_SETUP_CAM       "Set parameters for image acquisition"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_VIEW            "Acquire image with View parameter set"
+    IDC_BUT_FOCUS           "Acquire image with Focus parameter set"
+    IDC_BUT_TRIAL           "Acquire image with Trial parameter set"
+    IDC_BUT_RECORD          "Acquire image with Record parameter set"
+END
+
+STRINGTABLE
+BEGIN
     ID_CAMERA_USEVIEWFORSEARCH "Use View camera parameters for Search images"
     ID_CAMERA_USERECORDFORMONTAGE 
                             "Do not show separate Montage Mapping parameter set"
@@ -4846,6 +4870,7 @@ BEGIN
     IDC_EDITNEWTRACKDIFF    "Replace track reference when its alignment disagrees with that of Record"
     IDC_EDITPREDICTERRORZ   "Do autofocus when actual or computed error in focus prediction exceeds this"
     IDC_EDITPREDICTERRORXY  "Do tracking when actual or computed error exceeds this value as % of field"
+    IDC_EVALMULTIPLE        "Weight CCC by deviation from expected shift; good for periodic structures"
     ID_TESTACQUIRE          "Take image at this setting and reopen dialog"
     IDC_RNEXTTILT           "Consider current tilt complete and go on to next tilt"
 END
@@ -6894,6 +6919,8 @@ BEGIN
     ID_SCRIPT_SETPANELROWS  "Set the number of rows of script buttons in Camera & Scrip control panel"
     ID_SETTINGS_READBASICMODEFILE 
                             "Read in file defining items to hide in Basic Mode and make it current file"
+    ID_HELP_RUNSERIALEMSNAPSHOT 
+                            "Run the script in SerialEM_Snaphot.txt, located with SerialEM.exe"
 END
 
 #endif    // English (United States) resources

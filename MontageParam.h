@@ -38,6 +38,7 @@ struct MontParam {
   BOOL showOverview;       // Show overview at end
   BOOL shiftInOverview;    // Shift pieces when putting into overview 
   BOOL verySloppy;         // Use correlation parameters for very sloppy montages
+  BOOL evalMultiplePeaks;  // Examine multiple peaks with weighting by expected shift
   int numToSkip;           // Number of pieces to skip
   std::vector<short int> skipPieceX;    // Piece numbers to skip, numbered from 0
   std::vector<short int> skipPieceY;

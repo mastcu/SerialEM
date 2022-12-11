@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/9/22: Incorporated improved montage piece alignment routine recently
+implemented in IMOD.  Added checkbox to Montage Control window to make it
+evaluate multiple peaks with cross-correlations weighted by deviation from
+expected shift, which helps when there are regularly spaced holes.  Made it
+use a special set of filter parameters for montages that appear to be for
+whole grid maps, to prevent correlations dominated by holes.  Made
+correlations run in a background thread while the next piece is acquired, when
+possible.
+
+12/9/22: Added item in Help menu for running SerialEM snapshot.
+
+12/9/22: Provided separate IDs for V-F-T-R-Setup buttons in Camera & Script
+Tools so these items can be hidden in Camera menu.
+
+12/9/22: Fixed display of autocontour polygons on a montage to use a single
+adjustment for montage position.
+
 12/1/22: Added command to set image shift vectors of regular hole pattern.
 
 11/30/22: Made the Basic Mode filename be saved and loaded from settings, and
@@ -22,7 +39,7 @@ converted to a number of initial frames to drop when starting the mode.
 11/25/22: Fixed I/O library for SEMCCD plugin putting up a message box.
 
 11/19/22: SEM_4-1-0beta8
-11/19/22: Switched to latest DLLs from DE two work with the new SerialEM
+11/19/22: Switched to latest DLLs from DE to work with the new SerialEM
 build.
 
 11/17/22: SEM_4-0-15
@@ -324,7 +341,7 @@ edges, to find the parameters of an elliptical beam if it is fully within the
 image, and to report the tilt axis offset.
 
 7/7/22: A negative value of FitMontageWithFullFrames makes it use the full
-frames size only when a fitted montage is just a single piece.
+frame size only when a fitted montage is just a single piece.
 
 7/7/22: SetImageShift and the ImageShiftBy... commands now test for image
 shift going out of range and do not shift if it will.
@@ -509,7 +526,7 @@ lowest nonLM mag index is different in EFTEM mode.
 3/28/22: There can now be up to 100 files open.
 
 3/28/22: Changed "Balanced Shifts" in Low Dose dialog to be a single button
-with mutable lable that is green when shifts are balanced.
+with mutable label that is green when shifts are balanced.
 
 3/28/22: Fixed rotation problem report to report no absolute calibrated angle
 instead of all mags relying on nominal relative rotations (In 4.0).

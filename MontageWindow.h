@@ -83,6 +83,9 @@ private:
 	MontParam *mParam;
 	CFont mFont;
 public:
+  CButton m_butEvalMultiple;
+  BOOL m_bEvalMultiple;
+  afx_msg void OnEvalMultiple();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -2021,6 +2021,11 @@
 #define IDC_SPINMACRO22                 3049
 #define IDC_SPINMACRO23                 3050
 #define IDC_SPINMACRO24                 3051
+#define IDC_BUT_VIEW                    3052
+#define IDC_BUT_FOCUS                   3053
+#define IDC_BUT_TRIAL                   3054
+#define IDC_BUT_RECORD                  3055
+#define IDC_BUT_SETUP_CAM               3056
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2554,15 +2559,17 @@
 #define ID_FILE_AUTOSAVELOG             33499
 #define ID_SCRIPT_SETPANELROWS          33500
 #define ID_SETTINGS_READBASICMODEFILE   33501
+#define ID_HELP_RUNSERIALEMSNAPSHOT     33502
+#define ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP 33503
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        273
-#define _APS_NEXT_COMMAND_VALUE         33502
-#define _APS_NEXT_CONTROL_VALUE         3052
+#define _APS_NEXT_RESOURCE_VALUE        274
+#define _APS_NEXT_COMMAND_VALUE         33504
+#define _APS_NEXT_CONTROL_VALUE         3057
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
