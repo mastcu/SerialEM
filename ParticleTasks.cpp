@@ -1543,6 +1543,7 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
       conSet->bottom= conSet->binning * bottom;
       conSet->right = conSet->binning * right;
     }
+    mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
   } else {
 
     // For non LD, just set the intensity
