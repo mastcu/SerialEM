@@ -655,8 +655,6 @@ int CEMscope::Initialize()
         mAdjustForISSkipBacklash = 0;
       if (mDewarVacCapabilities < 0)
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
-      if (mScopeHasPhasePlate < 0)
-        mScopeHasPhasePlate = 1;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -857,6 +855,8 @@ int CEMscope::Initialize()
   catch (_com_error E) {
     SEMReportCOMError(E, "accessing the advanced scripting version ");
   }
+  if (FEIscope && mScopeHasPhasePlate < 0)
+    mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
 
   // Now set up a lot of things for TEMCON JEOL scope
   if (JEOLscope) {
