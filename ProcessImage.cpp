@@ -887,9 +887,9 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
     bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED);
   free(newsl);
   extra = mImBufs->mImage->GetUserData();
-  if (extra->mUncroppedX < 0)
+  if (extra && extra->mUncroppedX < 0)
     extra->mUncroppedX = -extra->mUncroppedX;
-  if (extra->mUncroppedY < 0)
+  if (extra && extra->mUncroppedY < 0)
     extra->mUncroppedY = -extra->mUncroppedY;
 
   return 0;
