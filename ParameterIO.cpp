@@ -2496,7 +2496,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   CString strLine, tag, mess = "Error opening", unknown;
   std::string sstr;
   char *endPtr;
-  bool checkBOM = true;
+  bool versionEnd, checkBOM = true;
   try {
     file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
     mess = "Error reading from";
@@ -2515,12 +2515,18 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
 
       // Separate the type from the tag string and convert the type
       if (ParseString(strLine, &tag, 1, false) == 2) {
+        versionEnd = tag.CompareNoCase("EndIfVersionBelow") == 0;
         type = atoi((LPCTSTR)tag);
-        if (type < 1) {
+        if (type < 1 && !versionEnd) {
           AfxMessageBox("Incorrect number for disabling or hiding in line:\n" +
             strLine + "\n\nin file:  " + filename, MB_EXCLAME);
         } else {
           StripItems(strLine, 1, tag);
+          if (versionEnd) {
+            if (mWinApp->GetIntegerVersion() < atoi(tag))
+              break;
+            continue;
+          }
 
           // See if the tag starts with a legal number which is assumed to be an ID to
           // hide if hiding is specified
