@@ -1030,9 +1030,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   }
 
   ACCUM_MIN(m_iSelectedPos, mNumShownActs - 1);
-  //if (mShownPosToIndex[m_iSelectedPos] != mCurActSelected)
-  if (m_iSelectedPos >= 0)
-    NewActionSelected(m_iSelectedPos);
+  NewActionSelected(m_iSelectedPos);
 
   // Add any permanently dropped items now
   if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts && 
@@ -1151,6 +1149,16 @@ void CNavAcquireDlg::NewActionSelected(int posInd)
   CButton *button;
   int actInd = mShownPosToIndex[posInd];
   NavAcqAction *act = &mActions[actInd];
+
+  // Fix the buttons and leave if nothing selected
+  m_iSelectedPos = posInd;
+  for (ind = 0; ind < mNumShownActs; ind++) {
+    button = (CButton *)GetDlgItem(IDC_RADIO_NAVACQ_SEL1 + ind);
+    if (button)
+      button->SetCheck(ind == posInd ? BST_CHECKED : BST_UNCHECKED);
+  }
+  if (posInd < 0)
+    return;
   m_statSelectedGroup.SetWindowText("General controls for task: " + act->name);
 
   // Load everything from the dialog to the action: the previous action is assumed to be
@@ -1167,13 +1175,7 @@ void CNavAcquireDlg::NewActionSelected(int posInd)
   m_iGotoLabelNote = (act->flags & NAA_FLAG_MATCH_NOTE) ? 1 : 0;
   m_strGotoItem = act->labelOrNote;
   m_bRunAfterTask = (act->flags & NAA_FLAG_AFTER_ITEM) != 0;
-  m_iSelectedPos = posInd;
   mCurActSelected = actInd;
-  for (ind = 0; ind < mNumShownActs; ind++) {
-    button = (CButton *)GetDlgItem(IDC_RADIO_NAVACQ_SEL1 + ind);
-    if (button)
-      button->SetCheck(ind == posInd ? BST_CHECKED : BST_UNCHECKED);
-  }
 
   ManageTimingEnables();
   UpdateData(false);
