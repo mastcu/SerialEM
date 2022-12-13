@@ -840,12 +840,12 @@ int CEMscope::Initialize()
         }
       }
     }
-    if (mScopeHasPhasePlate < 0)
-      mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, "accessing the advanced scripting version ");
   }
+  if (FEIscope && mScopeHasPhasePlate < 0)
+    mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
 
   // Now set up a lot of things for TEMCON JEOL scope
   if (JEOLscope) {
