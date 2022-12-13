@@ -219,6 +219,9 @@ BOOL CMontageWindow::OnInitDialog()
   mMontageController = mWinApp->mMontageController;
   mParam = mWinApp->GetMontParam();
   m_sbcZ.SetRange(0,1500);
+  m_sbcViewBin.SetRange(1, 8);
+  B3DCLAMP(mParam->overviewBinning, 1, 8);
+  m_sbcViewBin.SetPos(mParam->overviewBinning);
   m_bAdjustFocus = mParam->adjustFocus;
   m_bCorrectDrift = mParam->correctDrift;
   m_bShowOverview = mParam->showOverview;
