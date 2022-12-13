@@ -1242,9 +1242,9 @@ BOOL CLowDoseDlg::OnInitDialog()
 
   m_iDefineArea = 0;
 
+  mInitialized = true;
   UpdateSettings();
   SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
-  mInitialized = true;  
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }

@@ -1484,6 +1484,7 @@ void CParticleTasks::ZbyGNextTask(int param)
 void CParticleTasks::StopZbyG()
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  LowDoseParams ldsaParams;
   ControlSet *conSet = mWinApp->GetConSets() + VIEW_CONSET;
   if (mZBGIterationNum < 0)
     return;
@@ -1491,8 +1492,12 @@ void CParticleTasks::StopZbyG()
   mScope->SetDefocus(mZBGInitialFocus);
   if (mZBGInitialIntensity > -900)
     mScope->SetIntensity(mZBGInitialIntensity);
-  if (mZBGLowDoseAreaSaved >= 0)
+  if (mZBGLowDoseAreaSaved >= 0) {
+    ldsaParams = ldp[mZBGLowDoseAreaSaved];
+    mScope->SetLdsaParams(&ldsaParams);
     ldp[mZBGLowDoseAreaSaved] = mZBGSavedLDparam;
+    mScope->GotoLowDoseArea(mZBGLowDoseAreaSaved);
+  }
   mFocusManager->SetBeamTilt(mZBGSavedBeamTilt, "from StopZbyG");
   mFocusManager->SetDefocusOffset(mZBGSavedOffset);
   if (mZBGUsingView)
@@ -1674,6 +1679,8 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
       mZBGLowDoseAreaSaved = param.lowDoseArea;
       ldp = mWinApp->GetLowDoseParams() + param.lowDoseArea;
       mZBGSavedLDparam = *ldp;
+      if (mScope->GetLowDoseArea() == param.lowDoseArea)
+        mScope->SetLdsaParams(&mZBGSavedLDparam);
       ldp->intensity = param.intensity;
       ldp->spotSize = param.spotSize;
       if (JEOLscope && !mScope->GetHasNoAlpha())
