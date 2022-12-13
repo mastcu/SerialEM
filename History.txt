@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/13/22: Fixed Low Dose parameters getting screwed up if Eucentricity by
+Focus is calibrated with continuous update on (In 4.0).
+
 12/13/22: Fixed task button in Navigator Acquire being left depressed when
 switching between Mapping and Acquisition (In 4.0).
 
