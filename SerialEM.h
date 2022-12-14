@@ -539,7 +539,7 @@ public:
   MacroControl *GetMacControl() { return &mMacControl; };
   int *GetInitialDlgState();
   GetMember(DialogTable *, DialogTable)
-    GetMember(int, NumToolDlg)
+    GetSetMember(int, NumToolDlg)
     GetMember(RECT *, DlgPlacements)
     GetSetMember(BOOL, ExitWithUnsavedLog)
     GetSetMember(BOOL, TestGainFactors)

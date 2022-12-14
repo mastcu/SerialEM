@@ -1475,6 +1475,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   CString *macros = mWinApp->GetMacros();
   DialogTable *dlgTable = mWinApp->GetDialogTable();
   int *dlgColorIndex = mWinApp->GetDlgColorIndex();
+  int *initialDlgState = mWinApp->GetInitialDlgState();
+  RECT *dlgPlacements = mWinApp->GetDlgPlacements();
   CFocusManager *focusMan = mWinApp->mFocusManager;
   CString states = "ToolDialogStates2";
   CString oneState;
@@ -1864,7 +1866,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     // Save states of tool windows, but set montage closed
     for (i = 0; i < MAX_TOOL_DLGS; i++) {
       j = mWinApp->LookupToolDlgIndex(i);
-      int state = j >= 0 ? dlgTable[j].state : 0;
+      int state = j >= 0 ? dlgTable[j].state : initialDlgState[i];
       if (i == MONTAGE_DIALOG_INDEX)
         state &= ~1;
       oneState.Format(" %d", state);
@@ -1873,12 +1875,19 @@ void CParameterIO::WriteSettings(CString strFileName)
     states += "\n";
     mFile->WriteString(states);
 
-    for (i = 0; i < mWinApp->GetNumToolDlg(); i++) {
-      if (dlgTable[i].state & TOOL_FLOATDOCK) {
-        dlgTable[i].pDialog->GetWindowPlacement(&winPlace);
-        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", dlgColorIndex[i], 
-          winPlace.rcNormalPosition.left, winPlace.rcNormalPosition.top,
-          winPlace.rcNormalPosition.right, winPlace.rcNormalPosition.bottom);
+    for (i = 0; i < MAX_TOOL_DLGS; i++) {
+      j = mWinApp->LookupToolDlgIndex(i);
+      int state = j >= 0 ? dlgTable[j].state : initialDlgState[i];
+      if (state & TOOL_FLOATDOCK) {
+        RECT dlgRect;
+        if (j >= 0) {
+          dlgTable[j].pDialog->GetWindowPlacement(&winPlace);
+          dlgRect = winPlace.rcNormalPosition;
+        } else {
+          dlgRect = dlgPlacements[i];
+        }
+        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", i, 
+          dlgRect.left, dlgRect.top, dlgRect.right, dlgRect.bottom);
         mFile->WriteString(oneState);
       }
     }

@@ -3611,12 +3611,19 @@ void CSerialEMApp::OnUpdateCalibrationAdministrator(CCmdUI* pCmdUI)
 
 void CSerialEMApp::OnShowScopeControlPanel()
 {
+  int useInd;
   if (!mShowRemoteControl) {
     mRemoteControl.Create(IDD_REMOTE_CONTROL);
     mMainFrame->InsertOneDialog((CToolDlg *)(&mRemoteControl), 
-      REMOTE_PANEL_INDEX, dlgBorderColors);
+      REMOTE_PANEL_INDEX, dlgBorderColors, &mDlgPlacements[REMOTE_PANEL_INDEX]);
+    useInd = LookupToolDlgIndex(REMOTE_PANEL_INDEX);
+    if (useInd >= 0)
+      mMainFrame->InitializeOnePosition(useInd, REMOTE_PANEL_INDEX, 
+        initialDlgState[REMOTE_PANEL_INDEX], &mDlgPlacements[REMOTE_PANEL_INDEX]);
+    mMainFrame->SetDialogPositions();
   } else {
-    if (mMainFrame->RemoveOneDialog(REMOTE_PANEL_INDEX))
+    if (mMainFrame->RemoveOneDialog(REMOTE_PANEL_INDEX, 
+      &mDlgPlacements[REMOTE_PANEL_INDEX], false))
       return;
     mRemoteControl.mInitialized = false;
   }
@@ -4628,7 +4635,7 @@ BOOL CSerialEMApp::GetDummyInstance()
 // Toggle basic mode, managing tool dlgs and calling various things to manage menu/dialogs
 void CSerialEMApp::SetBasicMode(BOOL inVal)
 {
-  int ind;
+  int ind, useInd;
   if (mBasicMode == inVal)
     return;
   mBasicMode = inVal;
@@ -4644,10 +4651,16 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
         if (ind == LOW_DOSE_PANEL_INDEX && LowDoseMode())
           mLowDoseDlg.SetLowDoseMode(false);
         mToolDlgs[ind]->mInitialized = false;
-        mMainFrame->RemoveOneDialog(ind);
+        initialDlgState[ind] = mToolDlgs[ind]->GetState();
+        mMainFrame->RemoveOneDialog(ind, &mDlgPlacements[ind], true);
       } else {
         mToolDlgs[ind]->Create(sToolDlgIDs[ind]);
-        mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors);
+        mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors, 
+          &mDlgPlacements[ind]);
+        useInd = LookupToolDlgIndex(ind);
+        if (useInd >= 0)
+          mMainFrame->InitializeOnePosition(useInd, ind, initialDlgState[ind], 
+            &mDlgPlacements[ind]);
       }
     }
   }

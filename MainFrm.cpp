@@ -214,27 +214,34 @@ void CMainFrame::InitializeOneDialog(DialogTable &inTable, int colorIndex,
 
 // Remove a dialog with given color index from the tool panel array, returns 1 if that
 // index cannot be found
-int CMainFrame::RemoveOneDialog(int colorInd)
+int CMainFrame::RemoveOneDialog(int colorInd, RECT *dlgPlacement, bool deferSetAll)
 {
   int *dlgColorIndex = mWinApp->GetDlgColorIndex();
   int ind;
+  WINDOWPLACEMENT winPlace;
   int dlgInd = mWinApp->LookupToolDlgIndex(colorInd);
   if (dlgInd < 0)
     return 1;
   CToolDlg *dlg = mDialogTable[dlgInd].pDialog;
+  dlg->GetWindowPlacement(&winPlace);
+  *dlgPlacement = winPlace.rcNormalPosition;
   for (ind = dlgInd; ind < mNumDialogs - 1; ind++) {
     mDialogTable[ind] = mDialogTable[ind + 1];
     dlgColorIndex[ind] = dlgColorIndex[ind + 1];
   }
   mNumDialogs--;
+  mWinApp->SetNumToolDlg(mNumDialogs);
   dlg->DestroyWindow();
   mWinApp->SetMaxDialogWidth();
-  SetDialogPositions();
+  if (!deferSetAll)
+    SetDialogPositions();
   return 0;
 }
 
 // Insert a dialog with the given color index into the tool panel array and initialize it
-void CMainFrame::InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderColors)
+// Caller needs to make call to set one position and SetDialogPositions
+void CMainFrame::InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderColors,
+  RECT *dlgPlacement)
 {
   int *dlgColorIndex = mWinApp->GetDlgColorIndex();
   int ind, insertAt;
@@ -246,19 +253,17 @@ void CMainFrame::InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderCo
     dlgColorIndex[ind + 1] = dlgColorIndex[ind];
   }
   mNumDialogs++;
+  mWinApp->SetNumToolDlg(mNumDialogs);
   mDialogTable[insertAt].pDialog = dlg;
   dlgColorIndex[insertAt] = colorInd;
   InitializeOneDialog(mDialogTable[insertAt], colorInd, borderColors);
   mWinApp->SetMaxDialogWidth();
-  SetDialogPositions();
 }
 
 // Set up initial dialog positions
 void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 
   int *colorIndex)
 {
-  CToolDlg *dlg;
-  WINDOWPLACEMENT winPlace;
   int useInd, state;
   for (int i = 0; i < mNumDialogs; i++) {
 
@@ -275,24 +280,30 @@ void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacement
         useInd = -1;
     }
     state = useInd < 0 ? 0 : initialState[useInd];
-    mDialogTable[i].state = state;
-    dlg = mDialogTable[i].pDialog;
-    dlg->SetOpenClosed(state);
-
-    // If the window is floating and there is a placement rectangle, set the position
-    if ((state & TOOL_FLOATDOCK) && 
-      dlgPlacements[useInd].right > 0 && dlgPlacements[useInd].bottom > 0) {
-      dlg->GetWindowPlacement(&winPlace);
-      winPlace.rcNormalPosition.top = dlgPlacements[useInd].top;
-      winPlace.rcNormalPosition.left = dlgPlacements[useInd].left;
-      winPlace.rcNormalPosition.bottom = dlgPlacements[useInd].bottom;
-      winPlace.rcNormalPosition.right = dlgPlacements[useInd].right;
-      dlg->SetWindowPlacement(&winPlace);
-    }
+    InitializeOnePosition(i, useInd, state, &dlgPlacements[useInd]);
   }
   
   //  This will call back into SetDialogPositions
   mWinApp->ManageDialogOptionsHiding();
+}
+
+// Set one position, on startup or later, including setting state and floated position
+void CMainFrame::InitializeOnePosition(int tableInd, int absInd, int state, 
+  RECT *dlgPlacement)
+{
+  CToolDlg *dlg;
+  WINDOWPLACEMENT winPlace;
+  mDialogTable[tableInd].state = state;
+  dlg = mDialogTable[tableInd].pDialog;
+  dlg->SetOpenClosed(state);
+
+  // If the window is floating and there is a placement rectangle, set the position
+  if ((state & TOOL_FLOATDOCK) &&
+    dlgPlacement->right > 0 && dlgPlacement->bottom > 0) {
+    dlg->GetWindowPlacement(&winPlace);
+    winPlace.rcNormalPosition = *dlgPlacement;
+    dlg->SetWindowPlacement(&winPlace);
+  }
 }
 
 // Set the dialog positions.  Go down from the top, setting the height of

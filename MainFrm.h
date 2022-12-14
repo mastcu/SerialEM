@@ -39,11 +39,12 @@ public:
   void SetDialogPositions();
   void InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 
     int *colorIndex);
+  void InitializeOnePosition(int tableInd, int absInd, int state, RECT *dlgPlacement);
 	void InitializeDialogTable(DialogTable *inTable, int *initialState, int numDialog,
 		COLORREF *borderColors, int *colorIndex, RECT *dlgPlacements);
   void InitializeOneDialog(DialogTable &inTable, int colorIndex, COLORREF *borderColors);
-  int RemoveOneDialog(int colorIndex);
-  void InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderColors);
+  int RemoveOneDialog(int colorIndex, RECT *dlgPlacements, bool deferSetAll);
+  void InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderColors, RECT *dlgPlacement);
 	void DialogChangedState(CToolDlg *inDialog, int inState);
 	virtual ~CMainFrame();
   bool GetClosingProgram() {return mClosingProgram;};
