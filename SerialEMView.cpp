@@ -1017,6 +1017,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
     CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
     short exclude;
+    mStageErrX = mStageErrY = 0.;
     crossLen = DSB_DPI_SCALE(9);
     iy = (int)pieceOn->size();
     for (ix = 0; ix < (int)xHoleCens->size(); ix++) {

@@ -1412,6 +1412,10 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
   int boolVal;
   if (posInd < 0 || posInd >= mNumShownActs)
     return;
+  CButton *button = (CButton *)GetDlgItem(nID);
+  if (button)
+    FixButtonFocus(*button);
+
   switch (mShownPosToIndex[posInd]) {
 
     // Center beam
