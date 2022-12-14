@@ -281,13 +281,17 @@ void CBeamAssessor::CalIntensityCCD()
   mSaveUseK3CDS = mCamera->GetUseK3CorrDblSamp();
   mCamera->SetUseK3CorrDblSamp(false);
   MakeControlSet(fracField, false);
-  mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
-    CAL_RANGE_SHOT, 0);
+
+  // Get updated before requesting the shot because DE failed to set the protection cover
+  // to always open before the first shot, and this made it stay closed thereafter, 
+  // Somehow this didn't happen in 3.8 and does now
   mCalibratingIntensity = true;
   mStoppingCal = false;
   mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING BEAM");
   mWinApp->UpdateBufferWindows();
+  mCamera->InitiateCapture(TRACK_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
+    CAL_RANGE_SHOT, 0);
 }
 
 // HANDLE THE NEXT IMAGE FROM BEAM INTENSITY CALIBRATION
