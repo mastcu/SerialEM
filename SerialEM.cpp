@@ -3626,6 +3626,7 @@ void CSerialEMApp::OnShowScopeControlPanel()
       &mDlgPlacements[REMOTE_PANEL_INDEX], false))
       return;
     mRemoteControl.mInitialized = false;
+    initialDlgState[REMOTE_PANEL_INDEX] = mToolDlgs[REMOTE_PANEL_INDEX]->GetState();
   }
   mShowRemoteControl = !mShowRemoteControl;
   mScope->RemoteControlChanged(mShowRemoteControl);
