@@ -91,7 +91,7 @@
     images are clearly shifted; however, sometimes the correlation fails only for 
     one of the two pairs of images, giving an intermediate defocus value.&nbsp; The 
       best way to diagnose this problem is to obtain images from an autofocus that 
-      fails and use the <A HREF="#hid_focus_showexistingcorr">Show Existing Corr</A> 
+      fails and use the <A HREF="menu_focus.htm#hid_focus_showexistingcorr">Show Existing Corr</A> 
       command.&nbsp; The solutions to pursue in order, are:</P>
     <ul>
       <li>Improve the gain-normalization of the camera images.&nbsp; Gain references 
@@ -107,7 +107,7 @@
         images that it receives, so it is necessary to apply the needed binning during 
         acquisition.&nbsp; The exception to this situation is available for direct detectors 
         or other cameras where adequate binning may easily saturate a 16-bit image; for 
-        these cameras, the <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> 
+        these cameras, the <A HREF="menu_focus.htm#hid_focus_set_ddd_min_binning">Set Min Binning</A> 
         command can be used to make the autofocus routine apply binning before 
         correlation when necessary.&nbsp; The set binning is applied automatically for 
         direct detectors, but for other cameras the camera property 
@@ -117,11 +117,11 @@
         SerialEMproperties.txt: &#39;FocusFilterRadius2&#39; for the cutoff frequency (default 
         0.25/pixel) and &#39;FocusFilterSigma2&#39; for the Gaussian rolloff of the filter to 
         zero (default 0.05/pixel).&nbsp; Smaller values are used to apply more 
-        filtering.&nbsp; In SerialEM 4.5, the <A HREF="#hid_focus_set_filter_cutoffs">Test Filter Cutoffs</A> 
+        filtering.&nbsp; In SerialEM 4.5, the <A HREF="menu_focus.htm#hid_focus_set_filter_cutoffs">Test Filter Cutoffs</A> 
         command can be used to experiment with different values.&nbsp; Thus, with this 
         version, if you have the set of three images from a failed autofocus in buffers 
         A, B, and C, you can adjust either the filter with this command or the minimum 
-        binning with <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> then 
+        binning with <A HREF="menu_focus.htm#hid_focus_set_ddd_min_binning">Set Min Binning</A> then 
         run <a href="menu_focus.htm#hid_focus_reportonexisting">Report On Existing</a> 
         to see if it gives a correct result.</li>
       <li>For target defocus near zero, use a negative &#39;autofocus offset&#39; to have the 
@@ -141,7 +141,7 @@
       or more, coupled with the absence of appropriate shifts between the autofocus 
       images.&nbsp; If the target defocus is not also very near zero, then the program 
       will repeatedly change the focus by the target value, resulting in a runaway 
-      focus.&nbsp; There is a procedure, <A HREF="#hid_focus_checkautofocus">Check Autofocus</A>, 
+      focus.&nbsp; There is a procedure, <A HREF="menu_focus.htm#hid_focus_checkautofocus">Check Autofocus</A>, 
       that can be run to check for this kind of problem; it measures defocus 5 microns 
       above and below the current defocus and reports how much of the actual focus 
       change it can detect.&nbsp; This routine can be run automatically at the start 
@@ -153,9 +153,9 @@
         shift is largely perpendicular to the tilt axis, and that it helps to choose a 
         beam tilt direction that makes the image shift parallel to the tilt axis.&nbsp; 
         In order to use this solution, you need to find this direction, then calibrate 
-        autofocus for that beam tilt direction.&nbsp; With the <A HREF="#hid_focus_set_tilt_direction">Set Tilt Direction</A> 
+        autofocus for that beam tilt direction.&nbsp; With the <A HREF="menu_focus.htm#hid_focus_set_tilt_direction">Set Tilt Direction</A> 
         command, you can pick one of 4 directions, spaced 45 degrees apart.&nbsp; To 
-        find the right direction, select a direction, run <A HREF="#hid_focus_reportshiftdrift">Report 
+        find the right direction, select a direction, run <A HREF="menu_focus.htm#hid_focus_reportshiftdrift">Report 
         Shift &amp; Drift</A>, and toggle through the images to visualize the direction 
         of shift.&nbsp; Repeat for each direction and pick the one where the direction 
         of shift is closest to parallel to the tilt axis.&nbsp; If you actually have a 

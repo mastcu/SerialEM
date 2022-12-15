@@ -100,7 +100,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_listpersistentvars">List Persistent Vars</a></TD>
-          <TD class="auto-style1">List sall persistent variables defined by scripts in the log window.</TD>
+          <TD class="auto-style1">Lists all persistent variables defined by scripts in the log window.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_clearpersistentvars">Clear Persistent Vars</a></TD>
@@ -158,7 +158,7 @@
       <P>Use one of these commands to run a selected script.&nbsp; There is an entry for 
         all of the currently available scripts.</P>
     </b>
-      <P><A NAME="hid_macro_stop"></A><b>Edit/Run One Line command (Script menu)</b></P>
+      <P><A NAME="hid_script_runonecommand"></A><b>Edit/Run One Line command (Script menu)</b></P>
     <P>Use this command to open a small free-standing window in which you can enter a 
       set of one-line commands and run them.&nbsp;The window allows up to 5 such 
       scripts.&nbsp; When you edit in one of the lines, its <strong>Run</strong> 
@@ -174,7 +174,7 @@
       this window just as in a regular script editor.&nbsp; In addition, Ctrl-A will 
       select the whole line, after which can be deleted with the Delete key.&nbsp; 
       Ctrl-Z can be used to undo the last operation.</P>
-    <P><B>Stop command (Script menu)</B></P>
+    <P><A NAME="hid_macro_stop"></A><B>Stop command (Script menu)</B></P>
       <P>Use this command to stop a running script.</P>
       <P><A NAME="hid_macro_end"></A><B>End command (Script menu)</B></P>
       <P>Use this command to stop a running script at the end of a loop or the end of the 
@@ -249,7 +249,10 @@
     <P>Use this command to get a list in the log window of all functions defined in 
       all scripts.&nbsp; The function name will be followed by the number of 
       arguments and 0 or 1 for whether it takes a string argument.</P>
-    <P><A NAME="hid_script_clearpersistentvars"></A><B>Clear Persistent Vars command (Script menu)</B></P>
+    
+      <P><A NAME="hid_script_listpersistentvars"></A><B>List Persistent Vars command (Script menu)</B></P>
+    <P>Use this command to get a list in the log window of all currently defined persistent variables.</P>
+        <P><A NAME="hid_script_clearpersistentvars"></A><B>Clear Persistent Vars command (Script menu)</B></P>
     <P>Use this command to clear all of the persistent variables that have been 
       defined by previously run scripts.&nbsp; This will make a stopped script 
       non-resumable.</P>

@@ -2275,7 +2275,7 @@
         take and save single frame images at each mag, starting with the last one where
         pixel size was measured, and follow the procedure below in <B><I>Measuring further relative rotations and pixel sizes
         by aligning images.</I></B>  Alternatively, you can use catalase crystals; see
-        the&nbsp; <a href="#hid_process_catalase_crystal">Catalase Crystal</a> command.</p>
+        the&nbsp; <a href="menu_calibration.htm#hid_process_catalase_crystal">Catalase Crystal</a> command.</p>
     <p>
         When you have reached the highest feasible or needed mag, return to the starting
         mag, change the 'IncMagIfFoundPixel 1' to -1 in the script, and close any open
@@ -2295,7 +2295,7 @@
         the top of LM mode.&nbsp; A very long settling time after lens normalization has
         been required on some microscopes.&nbsp; The need for this will be revealed by a
         poor result on the first image shift calibration at the top of LM mode.&nbsp; If
-        this happens, first try running <a href="#hid_imagestageshift_removeiscal">
+        this happens, first try running <a href="menu_calibration.htm#hid_imagestageshift_removeiscal">
             Remove IS Cal</a> to make the program forget the bad
         calibration, then run the script again.&nbsp; The &#39;ShiftCalSkipLensNorm&#39; command
         in the script will keep the calibration routine from normalizing lenses again and
@@ -2333,8 +2333,8 @@
         to this, run <a href="menu_calibration.htm#hid_process_listrelativerotations">List Relative Rotations</a>,
         fix large angles if necessary as described above, and copy and paste into the
         properties file the values starting with the lowest magnification where the
-        pixel size was measured reliably.&nbsp; Then select the <a href="#hid_pixelsize_meshforgridbars">Mesh for Grid Bars</a>
-        command, enter a 400, and run the <A HREF="#hid_process_setbinnedsize">Set Binned Size</A>
+        pixel size was measured reliably.&nbsp; Then select the <a href="menu_calibration.htm#hid_pixelsize_meshforgridbars">Mesh for Grid Bars</a>
+        command, enter a 400, and run the <A HREF="menu_calibration.htm#hid_process_setbinnedsize">Set Binned Size</A>
         command and enter 512.&nbsp; Restore the Record parameters to a full field image.&nbsp;
         Try to run the pixel size routine with these parameters.&nbsp; You will
         definitely have to be careful that the measured pixel size is correct, you may
@@ -2633,7 +2633,7 @@
       calibration over a wide range will be needed at least for efficient operation of 
       the routine and possibly even for the routine to work at all, because the 
       autofocus calibration becomes quite nonlinear over large focus ranges.&nbsp; Such a 
-      calibration can be prepared with the <A href="#menu_calibration.htm#hid_calibration_autofocus">Extended Autofocus</A> 
+      calibration can be prepared with the <A href="menu_calibration.htm#hid_calibration_autofocus">Extended Autofocus</A> 
       command in the Calibration - Focus &amp; Tuning menu after setting the limits with the <A href="menu_calibration.htm#hid_focustuning_setextendedrange">Set Extended Range</A> 
       command.&nbsp; The needed range depends on both the range of Z changes to be 
       handled and the range of defocus offsets when measuring defocus.&nbsp; Here are 

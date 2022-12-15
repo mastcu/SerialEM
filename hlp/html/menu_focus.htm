@@ -575,8 +575,13 @@
       is calibrated.</P>
     <P>This command cannot be run in Low Dose mode, because the beam-tilt alignment is
       different at the shifted location of the Focus area.</P>
-    <p>
-      <A name="hid_focustuning_comavs"></A><B>Calibrate Coma vs. Image Shift command
+    <P>Use the <a href="#hid_focus_makezemlintableau">Beam-Tilted FFT Array</a> command to assess how good the coma-free alignment
+
+      is.&nbsp; The precision or reproducibility of the routine can be assessed by
+      running the script command 'CorrectComa -1' several times in a row to find the
+      misalignment without correcting it, which lets you see how much the reported
+      misalignment varies.&nbsp; </P>
+       <A name="hid_focustuning_comavs"></A><B>Calibrate Coma vs. Image Shift command
         (Focus/Tune menu)</B></p>
     <p>
       Use this command to calibrate how beam tilt must be changed to achieve coma-free
@@ -615,12 +620,7 @@
         script could be used to explore how much the adjusted beam tilt gets off when
         the beam intensity is changed.</li>
     </ul>
-    <P>Use the <a href="#hid_focus_zemlintableau">Beam-Tilted FFT Array</a> command to assess how good the coma-free alignment
-      is.&nbsp; The precision or reproducibility of the routine can be assessed by
-      running the script command 'CorrectComa -1' several times in a row to find the
-      misalignment without correcting it, which lets you see how much the reported
-      misalignment varies.&nbsp; </P>
-    <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Beam Tilt command (Focus/Tune - Old
+   <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Beam Tilt command (Focus/Tune - Old
       Coma-free Alignment submenu)</B></P>
     <P>Use this command to set the maximum beam tilt for coma-free calibrations by
       BTID.&nbsp;
