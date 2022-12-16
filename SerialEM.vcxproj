@@ -1228,6 +1228,7 @@
     <ClInclude Include="AlignFocusWindow.h" />
     <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="BaseServer.h" />
+    <ClInclude Include="ComaVsISCalDlg.h" />
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DefineScriptMacros.h" />
     <ClInclude Include="DERefMakerDlg.h" />
@@ -1666,6 +1667,9 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\html\about_scripts.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="hlp\html\hidd_coma_vs_is_cal.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="hlp\html\hidd_ctffinddlg.htm">
@@ -2196,6 +2200,7 @@ echo.
     </ClCompile>
     <ClCompile Include="AutoTuning.cpp" />
     <ClCompile Include="BaseServer.cpp" />
+    <ClCompile Include="ComaVsISCalDlg.cpp" />
     <ClCompile Include="CtffindParamDlg.cpp" />
     <ClCompile Include="DERefMakerDlg.cpp" />
     <ClCompile Include="DriftWaitSetupDlg.cpp" />

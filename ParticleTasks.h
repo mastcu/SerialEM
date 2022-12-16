@@ -196,7 +196,7 @@ public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, int numSecondRing, float spokeRad2, float extraDelay,
     BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti);
-  int StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams);
+  int StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams, int testValue);
   void SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt);
   int StartOneShotOfMulti(void);
   void MultiShotNextTask(int param);

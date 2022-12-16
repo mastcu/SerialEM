@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/16/22: Added dialog to run Coma vs. Image Shift calibration; the positions
+tested can seen on a View image and distance and rotation of vectors to
+positions can be adjusted in dialog.
+
+12/15/22: Fixed Setup on Manage Vacuum/Dewars in Navigator Acquire falling
+through to Setup on Hole Finder.
+
+12/15/22: Fixed crash switching basic mode files.
+
+12/15/22: Added script command to calibrate coma vs. image shift.
+
+12/15/22: Restored BlankWhenRetractingCamera property.
+
+12/15/22: Allowed images from ScaleImage and FilterImage to be made maps, as
+well as ones resulting from arithmetic operations as long as both contributing
+images are eligible to be maps.
+
 12/14/22: SEM_4-0-16
 12/14/22: Preserved open/closed states and floated positions of tool panels
 hidden in basic mode, even across sessions (In 4.0).

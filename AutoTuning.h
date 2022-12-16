@@ -3,6 +3,9 @@
 enum {COMA_JUST_MEASURE = 0, COMA_INITIAL_ITERS, COMA_ADD_ONE_ITER, COMA_CONTINUE_RUN};
 #define MAX_CAL_CTF_FITS 10
 
+#define MIN_COMA_VS_IS_EXTENT 0.5f
+#define MAX_COMA_VS_IS_EXTENT 18.f
+
 struct AstigCalib {
   int probeMode;
   int alpha;
@@ -80,6 +83,7 @@ public:
   GetMember(bool, LastCtfBasedFailed);
   GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
+  GetSetMember(int, ComaVsISrotation);
   GetSetMember(float, MinCtfBasedDefocus);
   GetSetMember(float, AddToMinForAstigCTF);
   GetMember(float, AstigBacklash);
@@ -203,6 +207,9 @@ private:
   float mLastXTiltNeeded;         // Change needed from last CTF coma measurement only
   float mLastYTiltNeeded;
   float mComaVsISextent;
+  int mComaVsISrotation;
+  float mCVISextentToUse;
+  int mCVISrotationToUse;
   int mComaVsISindex;
   float mComaVsISAppliedISX[4];
   float mComaVsISAppliedISY[4];
@@ -255,9 +262,11 @@ public:
   float beamTilt, float *factors);
   int SetupCtfAcquireParams(bool fromCheck);
   int CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup);
-  int CalibrateComaVsImageShift(bool interactive);
+  int CalibrateComaVsImageShift(float extent, int rotation);
   void ComaVsISNextTask(int param);
   void ComaVsISCleanup(int error);
   void StopComaVsISCal(void);
+  void GetComaVsISVector(int magInd, float extent, int rotation, int posIndex, float &delISX,
+    float &delISY);
 };
 

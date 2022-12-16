@@ -33,6 +33,7 @@
 #include "holefinder.h"
 #include "MultiHoleCombiner.h"
 #include "MultiCombinerDlg.h"
+#include "ComaVsISCalDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
@@ -155,6 +156,7 @@ CNavHelper::CNavHelper(void)
   mHoleFinderPlace.rcNormalPosition.right = 0;
   mMultiCombinerDlg = NULL;
   mMultiCombinerPlace.rcNormalPosition.right = 0;
+  mComaVsISCalDlg = NULL;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
   mRIbeamTiltSetX = mRIbeamTiltSetY = 0.;
@@ -5179,6 +5181,26 @@ WINDOWPLACEMENT *CNavHelper::GetMultiCombinerPlacement()
 {
   if (mMultiCombinerDlg) {
     mMultiCombinerDlg->GetWindowPlacement(&mMultiCombinerPlace);
+  }
+  return &mMultiCombinerPlace;
+}
+
+void CNavHelper::OpenComaVsISCal(void)
+{
+  if (mComaVsISCalDlg) {
+    mComaVsISCalDlg->BringWindowToTop();
+    return;
+  }
+  mComaVsISCalDlg = new CComaVsISCalDlg();
+  mComaVsISCalDlg->Create(IDD_COMA_VS_IS_CAL);
+  mWinApp->SetPlacementFixSize(mComaVsISCalDlg, &mMultiCombinerPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
+{
+  if (mComaVsISCalDlg) {
+    mComaVsISCalDlg->GetWindowPlacement(&mMultiCombinerPlace);
   }
   return &mMultiCombinerPlace;
 }

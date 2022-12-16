@@ -3173,7 +3173,7 @@ void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnCalibrateComaVsIS()
 {
-  mWinApp->mAutoTuning->CalibrateComaVsImageShift(true);
+  mWinApp->mNavHelper->OpenComaVsISCal();
 }
 
 void CMenuTargets::OnSettingsSetProperty()

@@ -86,6 +86,7 @@
 #define IDD_NAVREALIGN                  261
 #define IDD_MANAGE_DEWARS               263
 #define IDD_NAVACQ_HOLE_FINDER          271
+#define IDD_COMA_VS_IS_CAL              274
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2026,6 +2027,13 @@
 #define IDC_BUT_TRIAL                   3054
 #define IDC_BUT_RECORD                  3055
 #define IDC_BUT_SETUP_CAM               3056
+#define IDC_EDIT_CVIC_DISTANCE          3057
+#define IDC_SPIN_CVIC_DISTANCE          3058
+#define IDC_BUT_TEST_MULTISHOT          3059
+#define IDC_EDIT_CVIC_ROTATION          3060
+#define IDC_BUT_CAL                     3060
+#define IDC_BUTCAL_BT_VS_IS             3060
+#define IDC_SPIN_CVIC_ROTATION          3061
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2567,9 +2575,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        274
+#define _APS_NEXT_RESOURCE_VALUE        276
 #define _APS_NEXT_COMMAND_VALUE         33504
-#define _APS_NEXT_CONTROL_VALUE         3057
+#define _APS_NEXT_CONTROL_VALUE         3061
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

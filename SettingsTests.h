@@ -201,6 +201,7 @@ BOOL_SETT_GETSET("CtfUseFullField", mWinApp->mAutoTuning->, CtfUseFullField)
 BOOL_SETT_GETSET("CtfDoFullArray", mWinApp->mAutoTuning->, CtfDoFullArray)
 FLOAT_SETT_GETSET("ComaIterationThresh", mWinApp->mAutoTuning->, ComaIterationThresh)
 FLOAT_SETT_GETSET("ComaVsISextent", mWinApp->mAutoTuning->, ComaVsISextent)
+INT_SETT_GETSET("ComaVsISrotation", mWinApp->mAutoTuning->, ComaVsISrotation)
 FLOAT_SETT_GETSET("MinCtfBasedDefocus", mWinApp->mAutoTuning->, MinCtfBasedDefocus)
 FLOAT_SETT_GETSET("AddToMinForAstigCTF", mWinApp->mAutoTuning->, AddToMinForAstigCTF)
 #endif

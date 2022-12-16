@@ -78,6 +78,7 @@ CAutoTuning::CAutoTuning(void)
   mComaVsIScal.magInd = -1;
   mComaVsIScal.spotSize = -1;
   mComaVsISextent = 3.f;
+  mComaVsISrotation = 0;
 }
 
 
@@ -1789,29 +1790,33 @@ int CAutoTuning::CheckAndSetupCtfAcquireParams(const char *operation, bool fromS
 }
 
 // Calibrate the dependence of beam tilt and astigmatism on image shift
-int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
+int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation)
 {
   CString str;
-  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+
+  int magIndex = mWinApp->LowDoseMode() ? ldp->magIndex : mScope->FastMagIndex();
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magIndex);
   if (!aMat.xpx) {
     SEMMessageBox("Beam tilt versus image shift cannot be calibrated.\n"
       "There is no image shift to specimen calibration available at this magnification");
     return 1;
   }
 
-  if (interactive && !KGetOneFloat("Change in beam tilt will be measured at 4 "
-    "image-shifted positions", "Extent of image shift to apply in plus and minus"
-    " directions (microns):", mComaVsISextent, 1))
-    return 1;
-  mComaVsISextent = (float)fabs(mComaVsISextent);
-  if (mComaVsISextent < 0.5 && mComaVsISextent > 10.) {
+  // Check extent
+  extent = (float)fabs(extent);
+  if (extent < MIN_COMA_VS_IS_EXTENT || extent > MAX_COMA_VS_IS_EXTENT) {
     str.Format("The value for image shift extent, %.1f, is out of the allowed range"
-      " (0.5 to 10.)", mComaVsISextent);
+      " (%.1f to %.1f)", extent, MIN_COMA_VS_IS_EXTENT, MAX_COMA_VS_IS_EXTENT);
     SEMMessageBox(str, MB_EXCLAME);
     return 1;
   }
+
+  // Go to Record, set variables to use
   if (mWinApp->LowDoseMode())
     mScope->GotoLowDoseArea(RECORD_CONSET);
+  mCVISextentToUse = extent;
+  mCVISrotationToUse = rotation;
   mComaVsISindex = 0;
   mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
@@ -1822,14 +1827,10 @@ int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
 // An operation is done, start the next one
 void CAutoTuning::ComaVsISNextTask(int param)
 {
-  int delx[4] = {-1, 1, 0, 0};
-  int dely[4] = {0, 0, -1, 1};
   float delayFactor = 2.;
-  float delISX, delISY;
+  float delISX1, delISY1, delISX2, delISY2, denom;
   int posIndex, index = mComaVsISindex;
-  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
-  double ISX = mComaVsISextent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
-  double ISY = mComaVsISextent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
+  int magInd = mScope->FastMagIndex();
 
   if (index < 0)
     return;
@@ -1864,14 +1865,21 @@ void CAutoTuning::ComaVsISNextTask(int param)
       BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
         mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
     } else {
-      mComaVsISAppliedISX[posIndex] = (float)(delx[posIndex] * ISX);
-      mComaVsISAppliedISY[posIndex] = (float)(dely[posIndex] * ISY);
-      PrintfToLog("Measuring at image shift %.1f  %.1f um (%.1f %.1f IS units)",
-        delx[posIndex] * mComaVsISextent, dely[posIndex] * mComaVsISextent,
+      GetComaVsISVector(magInd, mComaVsISextent, mComaVsISrotation, posIndex,
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
+      PrintfToLog("Measuring at image shift %.1f %.1f (IS units)",
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
       mScope->SetImageShift(mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
       mWinApp->mShiftManager->SetISTimeOut(delayFactor *
         mWinApp->mShiftManager->GetLastISDelay());
+
+      // To test that the equations are right, uncomment this and comment out CtfBased...
+      /*mWinApp->mShiftManager->ApplyScaleMatrix(mComaVsIScal.matrix,
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXTiltNeeded, 
+        mLastYTiltNeeded);
+      mWinApp->mShiftManager->ApplyScaleMatrix(mComaVsIScal.astigMat,
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXStigNeeded, 
+        mLastYStigNeeded);*/
     }
     mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
     CtfBasedAstigmatismComa((index + 1)  % 2, false, 1, true, false);
@@ -1879,31 +1887,36 @@ void CAutoTuning::ComaVsISNextTask(int param)
     return;
   }
 
-  // Finished; save the calibration
-
-  delISX = mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0];
-  delISY = mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2];
-  mComaVsIScal.matrix.xpx = (mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) /
-    delISX;
-  mComaVsIScal.matrix.ypx = (mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) /
-    delISX;
-  mComaVsIScal.matrix.xpy = (mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2]) /
-    delISY;
-  mComaVsIScal.matrix.ypy = (mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2]) /
-    delISY;
+  // Finished; compute the calibration
+  delISX1 = mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0];
+  delISY1 = mComaVsISAppliedISY[1] - mComaVsISAppliedISY[0];
+  delISX2 = mComaVsISAppliedISX[3] - mComaVsISAppliedISX[2];
+  delISY2 = mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2];
+  denom = delISX1 * delISY2 - delISX2 * delISY1;
+  mComaVsIScal.matrix.xpx = ((mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) * 
+    delISY2 - (mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2]) * delISY1) / denom;
+  mComaVsIScal.matrix.xpy = ((mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2])  *
+    delISX1 - (mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) * delISX2) / denom;
+  mComaVsIScal.matrix.ypx = ((mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) *
+    delISY2 - (mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2]) * delISY1) / denom;
+  mComaVsIScal.matrix.ypy = ((mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2])  *
+    delISX1 - (mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) * delISX2) / denom;
   PrintfToLog("IS to beam tilt matrix: %f  %f  %f  %f", mComaVsIScal.matrix.xpx,
     mComaVsIScal.matrix.xpy, mComaVsIScal.matrix.ypx, mComaVsIScal.matrix.ypy);
 
-  mComaVsIScal.astigMat.xpx = (mComaVsISXAstigNeeded[1] - mComaVsISXAstigNeeded[0]) /
-    delISX;
-  mComaVsIScal.astigMat.ypx = (mComaVsISYAstigNeeded[1] - mComaVsISYAstigNeeded[0]) /
-    delISX;
-  mComaVsIScal.astigMat.xpy = (mComaVsISXAstigNeeded[3] - mComaVsISXAstigNeeded[2]) /
-    delISY;
-  mComaVsIScal.astigMat.ypy = (mComaVsISYAstigNeeded[3] - mComaVsISYAstigNeeded[2]) /
-    delISY;
+  mComaVsIScal.astigMat.xpx = ((mComaVsISXAstigNeeded[1] - mComaVsISXAstigNeeded[0]) *
+    delISY2 - (mComaVsISXAstigNeeded[3] - mComaVsISXAstigNeeded[2]) * delISY1) / denom;
+  mComaVsIScal.astigMat.xpy = ((mComaVsISXAstigNeeded[3] - mComaVsISXAstigNeeded[2])  *
+    delISX1 - (mComaVsISXAstigNeeded[1] - mComaVsISXAstigNeeded[0]) * delISX2) / denom;
+  mComaVsIScal.astigMat.ypx = ((mComaVsISYAstigNeeded[1] - mComaVsISYAstigNeeded[0]) *
+    delISY2 - (mComaVsISYAstigNeeded[3] - mComaVsISYAstigNeeded[2]) * delISY1) / denom;
+  mComaVsIScal.astigMat.ypy = ((mComaVsISYAstigNeeded[3] - mComaVsISYAstigNeeded[2])  *
+    delISX1 - (mComaVsISYAstigNeeded[1] - mComaVsISYAstigNeeded[0]) * delISX2) / denom;
   PrintfToLog("IS to astigmatism matrix: %f  %f  %f  %f", mComaVsIScal.astigMat.xpx,
-    mComaVsIScal.astigMat.xpy, mComaVsIScal.astigMat.ypx, mComaVsIScal.astigMat.ypy);
+    mComaVsIScal.astigMat.xpy, mComaVsIScal.astigMat.ypx, 
+    mComaVsIScal.astigMat.ypy);
+
+  // Save the calibration conditions
   mComaVsIScal.magInd = mMagIndex;
   mComaVsIScal.spotSize = mScope->GetSpotSize();
   mComaVsIScal.intensity = (float)mScope->GetIntensity();
@@ -1917,7 +1930,6 @@ void CAutoTuning::ComaVsISNextTask(int param)
   StopComaVsISCal();
 }
 
-
 void CAutoTuning::ComaVsISCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
@@ -1926,11 +1938,27 @@ void CAutoTuning::ComaVsISCleanup(int error)
   mWinApp->ErrorOccurred(1);
 }
 
-
+// Stop function, restore values
 void CAutoTuning::StopComaVsISCal(void)
 {
   mComaVsISindex = -1;
   mScope->SetImageShift(0., 0.);
   mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
+}
+
+// Function to provide the IS vectors at the given mag for a position
+void CAutoTuning::GetComaVsISVector(int magInd, float extent, int rotation, int posIndex,
+  float & delISX, float & delISY)
+{
+  int delx[4] = {-1, 1, 0, 0};
+  int dely[4] = {0, 0, -1, 1};
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magInd);
+  double ISX = extent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
+  double ISY = extent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
+  double cosRot = cos(DTOR * rotation);
+  double sinRot = sin(DTOR * rotation);
+  B3DCLAMP(posIndex, 0, 3);
+  delISX = (float)(cosRot  * delx[posIndex] * ISX - sinRot * dely[posIndex] * ISY);
+  delISY = (float)(sinRot *  delx[posIndex] * ISX + cosRot * dely[posIndex] * ISY);
 }

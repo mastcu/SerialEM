@@ -124,7 +124,7 @@
           <TD class="style2">Set parameters for the coma-free alignment by CTF fitting</TD>
         </TR>
          <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_focustuning_comavs">Calibrate Coma vs. Image Shift</a>&nbsp;</TD>
+          <TD class="style1"><a href="#hid_focustuning_comavs">Calibrate Coma vs. Image Shift</a>&nbsp;</TD>
           <TD>Calibrate beam tilt changes needed to compensate for image shift.</TD>
         </TR>
        <TR VALIGN="top">
@@ -153,11 +153,11 @@
           <TD class="style2">Measure and correct for beam-tilt misalignment by BTID.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomabeamtilt">Set Coma Beam Tilt</a></TD>
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomabeamtilt">Set Beam Tilt</a></TD>
           <TD class="style2">Set the maximum beam tilt for coma-free alignment by BTID.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomaiterations">Set Coma Iterations</a></TD>
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomaiterations">Set Iterations</a></TD>
           <TD class="style2">Set number of coma measurements to average over.</TD>
         </TR>
         <TR VALIGN="top">
@@ -510,7 +510,49 @@
         once when the initial correction of beam tilt exceeds this threshold.&nbsp;
         Enter a value in milliradians.</li>
     </ol>
-    <P><A NAME="hid_focus_correctastigmatism"></A><B>Correct Astigmatism by BTID command (Focus/Tune menu)</B></P>
+    <P><A NAME="hid_focustuning_comavs"></A><B>Calibrate Coma vs. Image Shift command
+        (Focus/Tune menu)</B><p>
+      Use this command to open the <A HREF="hidd_coma_vs_is_cal.htm">Coma vs. Image Shift Calibration dialog</A> 
+      to measure how beam tilt must be changed to achieve coma-free
+      alignment when an image shift is imposed.&nbsp; 
+      </p>
+   <P><A NAME="hid_focus_makezemlintableau"></A><B>Beam-Tilted FFT Array (Focus/Tune menu)</B></P>
+      <P>Use this command to create a Zemlin tableau, in which the FFTs of images taken
+        with the beam tilted in 8 different directions are arranged around a central FFT
+        taken with no beam tilt.&nbsp; As of SerialEM 4.0, images are taken with Record 
+        using the CTF acquire parameters, so these parameters as well as the defocus need to be set to give
+        informative FFTs with good Thon rings if possible.&nbsp; If a focus calibration
+        is available, the direction of beam tilt is set so that the long axis of the
+        Thon rings is approximately tangential.&nbsp; However, this is just for a nice
+        appearance: the direction of this axis is not an indicator of how well beam tilt
+        is adjusted.&nbsp; Rather, when there is no coma, the FFTs on opposite sides of
+        the center should look the same, with the same direction and elongation to the
+        rings.</P>
+    <P>The program will first ask what beam tilt to use, in milliradians on a Thermo/FEI
+      scope or percent of full scale on other scopes.</P>
+    <P>Image shift is set to zero before the images are taken.&nbsp; The command can
+      be run in Low Dose mode.</P>
+    <P>The full tableau will be 1020x1020 pixels, with each FFT reduced to 510x510
+      then cropped to 340x340.&nbsp; A dialog may be added to set alternative imaging
+      and size parameters, but for now parameters can be controlled with the
+      'ZemlinTableau' script command.&nbsp; For example, the following script can be
+      used to set the defocus to -1 micron, take full-field images with binning 1 and
+      exposure 1 second, and make a larger tableau image with only half as much
+      cropping outside each FFT.</P>
+    <P>focus = -1.<br />
+      exposure = 1.<br />
+      binning = 1<br />
+      #
+      <br />
+      Autofocus -1<br />
+      ReportAutoFocus curFocus<br />
+      change = $focus - $curFocus<br />
+      ChangeFocus $change<br />
+      SetCameraArea F F<br />
+      SetBinning F $binning<br />
+      SetExposure F $exposure<br />
+      ZemlinTableau 6 450 70 </P>
+      <P><A NAME="hid_focus_correctastigmatism"></A><B>Correct Astigmatism by BTID command (Focus/Tune menu)</B></P>
     <P>Use this command to measure and correct for objective astigmatism with
       beam-tilt induced displacements.&nbsp; The
       procedure first measures defocus and changes to the focus used for the
@@ -581,46 +623,7 @@
       running the script command 'CorrectComa -1' several times in a row to find the
       misalignment without correcting it, which lets you see how much the reported
       misalignment varies.&nbsp; </P>
-       <A name="hid_focustuning_comavs"></A><B>Calibrate Coma vs. Image Shift command
-        (Focus/Tune menu)</B></p>
-    <p>
-      Use this command to calibrate how beam tilt must be changed to achieve coma-free
-      alignment when an image shift is imposed.&nbsp; The program will ask you what
-      image shift extent to calibrate, and then run the
-      <a href="menu_focus.htm#ID_FOCUS_COMA_BY_CTF">Coma-free Alignment by CTF</a>
-      routine to measure the beam tilt needed at four locations, image shifted in +/-X
-      and +/-Y by the given amount.&nbsp;&nbsp; The measured beam tilt is applied
-      temporarily and astigmatism is measured so that its dependence on image shift is
-      also calibrated.&nbsp; The calibration can then be applied by the
-      multi-shot routine (see <a href="menu_navigator.htm#ID_OPTIONS_SETMULTI">Set
-      Multi-Shot Parameters</a>) and with several other script commands.</p>
-    <p>
-      It is important to realize that this calibration strictly applies only under the
-      current illumination conditions (specifically, the C2/C3 lens setting or
-      illuminated area, and the probe mode or alpha setting).&nbsp; When near parallel illumination, it may not change much
-      with beam changes; otherwise it might change considerably.&nbsp; This has
-      several consequences:</p>
-    <ul>
-      <li>It may be necessary to do the calibration once per session, after setting up
-        the illumination to be used for acquisition.</li>
-      <li>The calibration should be done in Low Dose mode if acquisition is to be done
-        in Low Dose mode</li>
-      <li>Because it depends on your settings for illumination, the calibration will be
-        saved in your settings file, not shared with others using other settings files.</li>
-      <li>The calibration can be checked with the script command 'TestNextMultiShot 1'
-        (see <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a>) or with a script like<br />
-&nbsp;&nbsp; FixComaByCTF<br />
-&nbsp;&nbsp; ImageShiftByMicrons 2 0 1 1<br />
-&nbsp;&nbsp; Delay 3<br />
-&nbsp;&nbsp; FixComaByCTF 1 1<br />
-&nbsp;&nbsp; FixAstigmatismByCTF 1 1<br />
-        where you could omit the first FixComaByCTF if you have already done the
-        coma-free alignment, the &quot;2 0&quot; can be replaced by an image shift of your choice,
-        the astigmatism test could be omitted, and you could add additional tests at other image shift positions.&nbsp; Such a
-        script could be used to explore how much the adjusted beam tilt gets off when
-        the beam intensity is changed.</li>
-    </ul>
-   <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Beam Tilt command (Focus/Tune - Old
+       <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Beam Tilt command (Focus/Tune - Old
       Coma-free Alignment submenu)</B></P>
     <P>Use this command to set the maximum beam tilt for coma-free calibrations by
       BTID.&nbsp;
@@ -631,7 +634,7 @@
       such calibrations, for a non-Thermo/FEI scope, the box will show the scaling from
       percent of full scale to milliradians, so that an appropriately large percentage
       value can be entered. </P>
-      <P><A NAME="hid_focus_setcomaiterations"></A><B>Set Coma Iterations command (Focus/Tune
+      <P><A NAME="hid_focus_setcomaiterations"></A><B>Set Iterations command (Focus/Tune
         - Old Coma-free Alignment submenu)</B></P>
       <P>Use this command to adjust the number of iterations, or misalignment
         measurements to be averaged, for an initial run of the <a href="#hid_focus_coma">
@@ -642,43 +645,7 @@
       <P>Use this command after the <a href="#hid_focus_coma">BTID Coma-free Alignment</a>
         command to make one more measurement of misalignment and average it with the
         previous results.&nbsp; This command can be used repeatedly if necessary.</P>
-      <P><A NAME="hid_focus_makezemlintableau"></A><B>Beam-Tilted FFT Array (Focus/Tune menu)</B></P>
-      <P>Use this command to create a Zemlin tableau, in which the FFTs of images taken
-        with the beam tilted in 8 different directions are arranged around a central FFT
-        taken with no beam tilt.&nbsp; As of SerialEM 4.0, images are taken with Record 
-        using the CTF acquire parameters, so these parameters as well as the defocus need to be set to give
-        informative FFTs with good Thon rings if possible.&nbsp; If a focus calibration
-        is available, the direction of beam tilt is set so that the long axis of the
-        Thon rings is approximately tangential.&nbsp; However, this is just for a nice
-        appearance: the direction of this axis is not an indicator of how well beam tilt
-        is adjusted.&nbsp; Rather, when there is no coma, the FFTs on opposite sides of
-        the center should look the same, with the same direction and elongation to the
-        rings.</P>
-    <P>The program will first ask what beam tilt to use, in milliradians on a Thermo/FEI
-      scope or percent of full scale on other scopes.</P>
-    <P>Image shift is set to zero before the images are taken.&nbsp; The command can
-      be run in Low Dose mode.</P>
-    <P>The full tableau will be 1020x1020 pixels, with each FFT reduced to 510x510
-      then cropped to 340x340.&nbsp; A dialog may be added to set alternative imaging
-      and size parameters, but for now parameters can be controlled with the
-      'ZemlinTableau' script command.&nbsp; For example, the following script can be
-      used to set the defocus to -1 micron, take full-field images with binning 1 and
-      exposure 1 second, and make a larger tableau image with only half as much
-      cropping outside each FFT.</P>
-    <P>focus = -1.<br />
-      exposure = 1.<br />
-      binning = 1<br />
-      #
-      <br />
-      Autofocus -1<br />
-      ReportAutoFocus curFocus<br />
-      change = $focus - $curFocus<br />
-      ChangeFocus $change<br />
-      SetCameraArea F F<br />
-      SetBinning F $binning<br />
-      SetExposure F $exposure<br />
-      ZemlinTableau 6 450 70 </P>
-      <P><A NAME="hid_focus_resetdefocus"></A><B>Reset Defocus command (Focus/Tune menu)</B></P>
+       <p><A NAME="hid_focus_resetdefocus"></A><B>Reset Defocus command (Focus/Tune menu)</B></P>
       <P>Use this command to reset the defocus readout in the Microscope Status panel to
         zero, without actually changing microscope focus. On a Thermo/FEI scope, this simply
         does the same thing as the Reset Defocus command in the Microscope User Interface.

@@ -443,6 +443,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_manage_dewars.htm">Dewar and Vacuum Management dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Coma vs. Image Shift Calibration dialog">
+			<param name="Local" value="html/hidd_coma_vs_is_cal.htm">
+			</OBJECT>
+			<A HREF="hidd_coma_vs_is_cal.htm">Coma vs. Image Shift Calibration dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Stage Move Tool">
 			<param name="Local" value="html/hidd_stagemovetool.htm">
 			</OBJECT>

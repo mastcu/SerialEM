@@ -11,6 +11,7 @@ class CHoleFinderDlg;
 class HoleFinder;
 class CMultiHoleCombiner;
 class CMultiCombinerDlg;
+class CComaVsISCalDlg;
 
 #define MULTI_IN_HOLE   0x1
 #define MULTI_HOLES     0x2
@@ -238,6 +239,7 @@ public:
   HoleFinder *mFindHoles;
   CMultiHoleCombiner *mCombineHoles;
   CMultiCombinerDlg *mMultiCombinerDlg;
+  CComaVsISCalDlg *mComaVsISCalDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -354,6 +356,7 @@ private:
   WINDOWPLACEMENT mMultiCombinerPlace;
   WINDOWPLACEMENT mHoleFinderPlace;
   WINDOWPLACEMENT mAcquireDlgPlace;
+  WINDOWPLACEMENT mComaVsISDlgPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -554,6 +557,8 @@ public:
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);
   WINDOWPLACEMENT *GetMultiCombinerPlacement();
+  void OpenComaVsISCal(void);
+  WINDOWPLACEMENT *GetComaVsISDlgPlacement();
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
   void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,

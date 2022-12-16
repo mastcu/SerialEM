@@ -524,6 +524,9 @@
     <ClInclude Include="Shared\iobj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ComaVsISCalDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -860,6 +863,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_navrealign.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_coma_vs_is_cal.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1270,6 +1276,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="NavAcqHoleFinder.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComaVsISCalDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

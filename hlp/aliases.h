@@ -6,6 +6,7 @@ hidd_buffercontrol							= SerialEM.chm::/html\hidd_buffercontrol.htm
 hidd_bufferstatus								= SerialEM.chm::/html\hidd_bufferstatus.htm
 hidd_camera_macro								= SerialEM.chm::/html\hidd_camera_macro.htm
 hidd_camerasetup								= SerialEM.chm::/html\hidd_camerasetup.htm
+hidd_coma_vs_is_cal             = SerialEM.chm::/html\hidd_coma_vs_is_cal.htm
 hidd_cooksetup									= SerialEM.chm::/html\hidd_cooksetup.htm
 hidd_ctffinddlg                 = SerialEM.chm::/html\hidd_ctffinddlg.htm
 hidd_de_reference         			= SerialEM.chm::/html\hidd_de_reference.htm

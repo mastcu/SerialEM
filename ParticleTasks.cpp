@@ -410,7 +410,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 /*
 * Convenience function to start multishot with a given set of parameters
 */
-int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams)
+int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams,
+  int testValue)
 {
   return StartMultiShot(msParams->numShots[0],
     msParams->doCenter, msParams->spokeRad[0],
@@ -419,7 +420,7 @@ int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *
     (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0 ||
       !camParams->K2Type) ? msParams->saveRecord : false,
     camParams->K2Type ? msParams->doEarlyReturn : 0, msParams->numEarlyFrames,
-    msParams->adjustBeamTilt, msParams->inHoleOrMultiHole);;
+    msParams->adjustBeamTilt, msParams->inHoleOrMultiHole | (testValue << 2));
 }
 
 /*
@@ -891,7 +892,7 @@ int CParticleTasks::OpenSeparateMultiFiles(CString &basename)
   UtilSplitExtension(basename, root, ext);
 
   // Get startup routine to do checks and set up indexes
-  err = StartMultiShot(mMSParams, mWinApp->GetActiveCamParam());
+  err = StartMultiShot(mMSParams, mWinApp->GetActiveCamParam(), 0);
   if (err)
     return err;
   mWinApp->mBufferWindow.SetDeferComboReloads(true);
