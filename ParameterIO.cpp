@@ -2506,6 +2506,9 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   std::string sstr;
   char *endPtr;
   bool versionEnd, checkBOM = true;
+  bool toggleMode = !mWinApp->GetStartingProgram() && mWinApp->GetBasicMode();
+  if (toggleMode)
+    mWinApp->SetBasicMode(false);
   try {
     file = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
     mess = "Error reading from";
@@ -2595,10 +2598,8 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
   }
   if (err)
     AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
-  if (!err && !mWinApp->GetStartingProgram() && mWinApp->GetBasicMode()) {
-    mWinApp->SetBasicMode(false);
+  if (!err && toggleMode)
     mWinApp->SetBasicMode(true);
-  }
 }
 
 // Properties are measured outside the program, entered by hand into the
