@@ -2217,7 +2217,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   int boxArea, cenArea, delX, delY, diamSq, top, left, bottom, right, camXcen, camYcen;
   float scale, rotation, pixel;
   bool drawingNav = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
-  if ((!m_iDefineArea && !drawingNav) || !mTrulyLowDose)
+  if (((!m_iDefineArea && !drawingNav) || !mTrulyLowDose) && type < 2)
     return 0;
   vMat = mShiftManager->SpecimenToCamera(curCam, magInd);
   if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd()) {
@@ -2250,7 +2250,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
     left, bottom, state, cornerX[3], cornerY[3]);
 
-  if (type > 0)
+  if (type > 0 && type < 2)
     return boxArea;
   
   // Get squared diameter of area for radius
@@ -2263,7 +2263,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
 
   // If focus/trial tied, find which one has bigger radius, set the center from the 
   // bigger one too
-  if (m_bTieFocusTrial || mTieFocusTrialPos) {
+  if (type < 2 && (m_bTieFocusTrial || mTieFocusTrialPos)) {
     delX = conSets[3 - boxArea].right - conSets[3 - boxArea].left;
     delY = conSets[3 - boxArea].bottom - conSets[3 - boxArea].top;
     if ((delX * delX + delY * delY) *

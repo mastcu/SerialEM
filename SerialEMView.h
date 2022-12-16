@@ -206,7 +206,7 @@ public:
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
   int FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr, double &defocus, FloatVec &radii);
   void DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, float xOffset, 
-    float yOffset, int thick, int curInd);
+    float yOffset, int thick, int curInd, bool recOnly = false);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp

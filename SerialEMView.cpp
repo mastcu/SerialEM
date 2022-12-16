@@ -28,6 +28,8 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
+#include "AutoTuning.h"
+#include "ComaVsISCalDlg.h"
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
@@ -357,7 +359,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
       FF_DONTCARE, fontName);
   }
 
-  // Do the draw abd restore everything
+  // Do the draw and restore everything
   drew = DrawToScreenOrBuffer(memDC, memDC.m_hDC, rect, sizeScaling, skipExtra, true);
   memDC.SelectObject(oldBitmap);
   mZoom = zoomSave;
@@ -462,8 +464,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   std::vector<short> *holeExcludes;
   CFont *useFont, *useLabelFont;
   CPoint point;
+  LowDoseParams *ldp;
   CString letString, firstLabel, lastLabel, fontName;
-  ScaleMat aInv;
+  ScaleMat aInv, IStoSpec, specToStage, stageToCam, prod;
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
   COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
@@ -982,6 +985,32 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);
 
+  // Draw coma vs IS cal locations
+  if (mWinApp->mNavHelper->mComaVsISCalDlg && imBuf->mLowDoseArea &&
+    mWinApp->LowDoseMode() && imBuf->mBinning > 0 && imBuf->mCamera >= 0 &&
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
+    ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    IStoSpec = mWinApp->mShiftManager->IStoSpecimen(ldp->magIndex);
+    specToStage = mWinApp->mShiftManager->SpecimenToStage(1., 1.);
+    stageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
+    prod = MatMul(MatMul(IStoSpec, specToStage), stageToCam);
+    cenX = imBuf->mImage->getWidth() / 2.f;
+    cenY = imBuf->mImage->getHeight() / 2.f;
+    boost = 0.;
+    for (ix = 0; ix < 4; ix++) {
+      mWinApp->mAutoTuning->GetComaVsISVector(ldp->magIndex,
+        mWinApp->mNavHelper->mComaVsISCalDlg->m_fDistance,
+        mWinApp->mNavHelper->mComaVsISCalDlg->m_iRotation, ix, tempX, tempY);
+      mWinApp->mShiftManager->ApplyScaleMatrix(prod, tempX, tempY, ptX, ptY);
+      ptX /= (float)imBuf->mBinning;
+      ptY /= (float)imBuf->mBinning;
+      DrawLowDoseAreas(cdc, rect, imBuf, ptX, -ptY, thick2, -1, true);
+      boost += sqrtf(ptX * ptX + ptY * ptY) / 4.f;
+    }
+    CPen pnSolidPen(PS_SOLID, thick2, RGB(0, 255, 0));
+    DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, boost);
+  }
+
   // Various tests for skipping navigator display
   if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy) && ix > 0)) {
     if (itemArray)
@@ -1484,24 +1513,25 @@ void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float i
 
 // Draw Record and area being defined for low dose
 void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
-  float xOffset, float yOffset, int thick, int curInd)
+  float xOffset, float yOffset, int thick, int curInd, bool recOnly)
 {
   COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
   float cornerX[4], cornerY[4], cenX, cenY, radius;
   CPoint point;
   StateParams state;
   int newInd;
-  bool useDash = mDrewLDAreasAtNavPt;
+  bool useDash = mDrewLDAreasAtNavPt && !recOnly;
   state.camIndex = mWinApp->GetCurrentCamera();
   if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) && 
-    (curInd == -1 || curInd == newInd)) {
+    (curInd == -1 || curInd == newInd) && !recOnly) {
     curInd = newInd;
     useDash = false;
   }
-  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt, 
-    imBuf->mRegistration, curInd);
-  for (int type = 0; type < 2; type++) {
-    int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
+  if (!recOnly)
+    mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt,
+      imBuf->mRegistration, curInd);
+  for (int type = (recOnly ? 1 : 0); type < 2; type++) {
+    int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type + (recOnly ? 1 : 0), imBuf, state,
       cornerX, cornerY, cenX, cenY, radius);
     if (area) {
       CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, 
@@ -1518,7 +1548,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
       cdc.SelectObject(pOldPen);
 
       // Draw circle around center for area being defined
-      if (!type && !mWinApp->GetSTEMMode())
+      if ((!type || recOnly) && !mWinApp->GetSTEMMode())
         DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset, 
           cenY + yOffset, radius, true);
     }
@@ -1661,7 +1691,9 @@ void CSerialEMView::DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *ima
 {
   CPoint point;
   float ptX, ptY;
-  CPen *pOldPen = cdc->SelectObject(pNewPen);
+  CPen *pOldPen;
+  if (pNewPen)
+    pOldPen = cdc->SelectObject(pNewPen);
   for (int pt = 0; pt < 91; pt++) {
     ptX = (float)(cenX + radius * cos(DTOR * pt * 4));
     ptY = (float)(cenY + radius * sin(DTOR * pt * 4));
@@ -1672,7 +1704,8 @@ void CSerialEMView::DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *ima
       cdc->MoveTo(point);
   }
 
-  cdc->SelectObject(pOldPen);
+  if (pNewPen)
+    cdc->SelectObject(pOldPen);
 }
 
 // Draw an ellipse with the given pen, given two radii and the right-handed angle of
