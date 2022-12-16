@@ -696,6 +696,7 @@ MAC_SAME_NAME_ARG(ForgetPriorState, 0, 4, FORGETPRIORSTATE, i)
 MAC_SAME_NAME_NOARG(CalibrateElectronDose, 0, 4, CALIBRATEELECTRONDOSE)
 MAC_SAME_NAME_NOARG(SaveSettings, 0, 4, SAVESETTINGS)
 MAC_SAME_FUNC_ARG(SetRegularHoleVectors, 4, 4, SetCustomHoleShifts, SETREGULARHOLEVECTORS, DDDDid)
+MAC_SAME_NAME_ARG(CalibrateComaVsIS, 0, 1, CALIBRATECOMAVSIS, di)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

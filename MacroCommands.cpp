@@ -2744,6 +2744,22 @@ int CMacCmd::FixAstigmatismByCTF(void)
   return 0;
 }
 
+// CalibrateComaVsIS
+int CMacCmd::CalibrateComaVsIS(void)
+{
+  float extent = mWinApp->mAutoTuning->GetComaVsISextent();
+  int rotation = mWinApp->mAutoTuning->GetComaVsISrotation();
+  if (mItemFlt[1] > 0.)
+    extent = mItemFlt[1];
+  if (!mItemEmpty[2])
+    rotation = mItemInt[2];
+  if (mWinApp->mAutoTuning->CalibrateComaVsImageShift(extent, rotation)) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportStigmatorNeeded
 int CMacCmd::ReportStigmatorNeeded(void)
 {

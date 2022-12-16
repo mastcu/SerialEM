@@ -3474,6 +3474,13 @@
             suppress the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CalibrateComaVsIS [#D] [#R]</TD>
+          <TD>Calibrates the beam tilt needed to fix coma as a function of image shift.&nbsp The maximum 
+            distance in microns and rotation angle set in the <A HREF="hidd_coma_vs_is_cal.htm">Coma vs. Image
+               Shift Calibration dialog</A> will be used, unless the optional <b>#D</b> is entered with the
+            maximum distance, and <b>#R</b> is entered with the rotation angle.&nbsp; (Enter 0 for the distance to modify just the rotation angle.)&nbsp Command added in 4.1, 15-Dec-22.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CorrectAstigmatism [#]</TD>
           <TD>Measures astigmatism by beam-tilt-induced displacements (BTID), outputs the stigmator
             values to the log, and corrects for those values
