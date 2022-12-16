@@ -81,6 +81,7 @@ INT_PROP_TEST("XRayCriterionIterations", mWinApp->mProcessImage->, XRayCritItera
 FLOAT_PROP_TEST("XRayCriterionIncrease", mWinApp->mProcessImage->, XRayCritIncrease)
 BOOL_PROP_TEST("RetractCameraOnEnteringEFTEM", mWinApp->, RetractOnEFTEM)
 BOOL_PROP_TEST("RetractCameraOnEnteringSTEM", mWinApp->, RetractOnSTEM)
+BOOL_PROP_TEST("BlankWhenRetractingCamera", camera->, BlankWhenRetracting)
 BOOL_PROP_TEST("DefaultActAfterExposures", mWinApp->, ActPostExposure)
 BOOL_PROP_TEST("RamperWaitForBlank", camera->, RamperWaitForBlank)
 INT_PROP_TEST("StartAsAdministrator", mWinApp->, AdministratorMode)
