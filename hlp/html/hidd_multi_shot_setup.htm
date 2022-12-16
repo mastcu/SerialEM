@@ -386,6 +386,17 @@
       adjustment.&nbsp; The conditions under which the calibration was taken are shown on the following
       line.&nbsp; For the adjustment to work accurately, the current beam intensity at
       least should be close to what it was when the calibration was done.</p>
+    <p><strong>Calibrate Coma vs. IS</strong></p>
+    <p>Pressing this button will open the <a href="hidd_coma_vs_is_cal.htm">Coma vs. 
+      Image Shift Calibration dialog</a> and allow you to calibrate the beam tilt 
+      adjustments needed to compensate for image shift.</p>
+    <p><strong>Test Multishot Positions</strong></p>
+    <p>Pressing this button will start a test of the beam tilt adjustment needed at 
+      various positions, either with or without adjustment for image shitf depending 
+      on whether <b>Adjust beam tilt &amp; astig to compensate for image shift </b>is 
+      checked.&nbsp; See details in <a HREF="#testing"></a><i><b>Testing Image Location and Coma Adjustment</b></i> 
+      below.</p>
+    below.
     <p><b>Diameter of circles to draw</b></p>
     <p>If the multi-shot circles are being displayed, the diameter of the circles is
       set to the entered value in microns, unless the option described next is
@@ -404,11 +415,13 @@
       readout must be fairly accurate in the range of interest, which may not be the
       case.</p>
     <p><a NAME="testing"></a><i><b>Testing Image Location and Coma Adjustment</b></i></p>
-    <p>Once positions are set up in this dialog, the script command &#39;TestNextMultiShot
-      1&#39; followed by &#39;MultipleRecords&#39; can be used to test whether image positions are
-      suitable, and &#39;TestNextMultiShot 2&#39; can be used to measure the amount of beam
+    <p>Once positions are set up in this dialog, the script command 'TestNextMultiShot 
+      1' followed by 'MultipleRecords' can be used to test whether image positions are 
+      suitable. &#39;TestNextMultiShot 2&#39; or the <strong>Test Multishot Positions</strong> 
+      button can be used to measure the amount of beam
       tilt adjustment needed at various positions, either with or without an
-      adjustment for image shift.&nbsp; The details of this operation are as follows:</p>
+      adjustment for image shift, depending on the state of the <b>Adjust beam tilt &amp; astig to compensate for image shift </b>
+      checkbox.&nbsp; The details of this operation are as follows:</p>
     <ul>
       <li>If shots are being taken only within a hole, then test images will be taken
         only at each peripheral position, while beam tilt will be measured first in the

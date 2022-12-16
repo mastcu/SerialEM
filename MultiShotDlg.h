@@ -155,4 +155,8 @@ public:
   CButton m_butStepAdjust;
   afx_msg void OnButUseLastHoleVecs();
   afx_msg void OnButStepAdjust();
+  CButton m_butCalBTvsIS;
+  CButton m_butTestMultishot;
+  afx_msg void OnButCalBtVsIs();
+  afx_msg void OnButTestMultishot();
 };

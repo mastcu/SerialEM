@@ -4691,8 +4691,9 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
 
     // Get the median max SD and analyze for outliers
     if (mTrimmedMaxSDs.size() > 5) {
-      rsMedian(&mTrimmedMaxSDs[0], mTrimmedMaxSDs.size(), outlier, &median);
-      rsMadMedianOutliers(&mTrimmedMaxSDs[0], mTrimmedMaxSDs.size(), sdOutlierCrit, outlier);
+      rsMedian(&mTrimmedMaxSDs[0], (int)mTrimmedMaxSDs.size(), outlier, &median);
+      rsMadMedianOutliers(&mTrimmedMaxSDs[0], (int)mTrimmedMaxSDs.size(), sdOutlierCrit, 
+        outlier);
       for (i = 0; i < (int)mTrimmedMaxSDs.size(); i++) {
         if (outlier[i] < 0. && mTrimmedMaxSDs[i] <= sdMedianRatio * median) {
           ixy = mMaxSDToIxyOfEdge[i];

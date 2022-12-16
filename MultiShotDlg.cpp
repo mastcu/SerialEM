@@ -38,9 +38,10 @@ PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
-IDC_EDIT_EXTRA_DELAY, IDC_STAT_BEAM_DIAM, IDC_EDIT_BEAM_DIAM,
+IDC_EDIT_EXTRA_DELAY, IDC_STAT_BEAM_DIAM, IDC_EDIT_BEAM_DIAM, IDC_TSS_LINE3, 
 IDC_STAT_BEAM_UM, IDC_CHECK_USE_ILLUM_AREA, IDC_STAT_EXTRA_DELAY, IDC_STAT_SEC,
-IDC_CHECK_ADJUST_BEAM_TILT, IDC_STAT_COMA_IS_CAL,
+IDC_CHECK_ADJUST_BEAM_TILT, IDC_STAT_COMA_IS_CAL, IDC_TSS_LINE4, IDC_BUTCAL_BT_VS_IS,
+IDC_BUT_TEST_MULTISHOT,
 IDC_STAT_COMA_CONDITIONS, IDCANCEL, IDOK, IDC_BUTHELP, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(idTable) / sizeof(int)];
@@ -171,6 +172,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
   DDX_Control(pDX, IDC_BUT_USE_LAST_HOLE_VECS, m_butUseLastHoleVecs);
   DDX_Control(pDX, IDC_BUT_STEP_ADJUST, m_butStepAdjust);
+  DDX_Control(pDX, IDC_BUTCAL_BT_VS_IS, m_butCalBTvsIS);
+  DDX_Control(pDX, IDC_BUT_TEST_MULTISHOT, m_butTestMultishot);
 }
 
 
@@ -206,6 +209,8 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_RING2_DIST, OnKillfocusEditRing2Dist)
   ON_BN_CLICKED(IDC_BUT_USE_LAST_HOLE_VECS, OnButUseLastHoleVecs)
   ON_BN_CLICKED(IDC_BUT_STEP_ADJUST, OnButStepAdjust)
+  ON_BN_CLICKED(IDC_BUTCAL_BT_VS_IS, OnButCalBtVsIs)
+  ON_BN_CLICKED(IDC_BUT_TEST_MULTISHOT, OnButTestMultishot)
 END_MESSAGE_MAP()
 
 
@@ -818,6 +823,18 @@ void CMultiShotDlg::OnAdjustBeamTilt()
   UpdateAndUseMSparams();
 }
 
+void CMultiShotDlg::OnButCalBtVsIs()
+{
+  mWinApp->mNavHelper->OpenComaVsISCal();
+  mWinApp->RestoreViewFocus();
+}
+
+void CMultiShotDlg::OnButTestMultishot()
+{
+  UpdateAndUseMSparams();
+  mWinApp->mParticleTasks->StartMultiShot(mActiveParams, mWinApp->GetActiveCamParam(), 2);
+}
+
 // Unload dialog parameters into the structure and redraw
 void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 {
@@ -913,6 +930,9 @@ void CMultiShotDlg::ManageEnables(void)
   m_butSetCustom.EnableWindow(m_bDoMultipleHoles && notRecording);
   m_butStepAdjust.EnableWindow(m_bDoMultipleHoles && notRecording && (useCustom ||
     mActiveParams->holeMagIndex));
+  m_butCalBTvsIS.EnableWindow(notRecording && !mSteppingAdjusting);
+  m_butTestMultishot.EnableWindow(notRecording && !mSteppingAdjusting && !mDisabledDialog
+    && (m_bDoMultipleHoles || m_bDoShotsInHoles) && comaVsIS->magInd > 0);
   if (mActiveParams->customHoleX.size() > 0)
     str.Format("Use custom pattern (%d positions defined)", 
     mActiveParams->customHoleX.size());

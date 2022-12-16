@@ -6320,7 +6320,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       return 2;
   }
 
-  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && (imBuf->mCaptured > 0 || cropped);
+  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && (imBuf->IsProcessedOKforMap() || 
+    cropped);
   singleBufReadIn = !imBuf->mCaptured && imBuf->mSecNumber >= 0;
   if ((mWinApp->Montaging() || singleBufSaved || singleBufReadIn) && 
     imBuf->mCurStoreChecksum != mWinApp->mStoreMRC->getChecksum()) {
@@ -6370,7 +6371,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
     // Regular images
     imBuf = mImBufs;
-    if (!imBuf->mImage || (imBuf->mCaptured < 0 && !cropped)) {
+    if (!imBuf->mImage || (imBuf->mCaptured < 0 && !cropped && 
+      imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)) {
       if (unsuitableOK)
         return -1;
       SEMMessageBox("Buffer A does not contain an image that can be saved as a\n"
@@ -9791,7 +9793,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   case ACQ_DO_MULTISHOT:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     mRetValFromMultishot = mWinApp->mParticleTasks->StartMultiShot(msParams,
-        camParams);
+        camParams, 0);
     stopErr = B3DMAX(mRetValFromMultishot, 0);
     break;
 
