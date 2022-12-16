@@ -1533,6 +1533,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     CManageDewarsDlg dlg;
     dlg.DoModal();
   }
+  break;
 
   // Hole finder/combiner
   case NAACT_HOLE_FINDER:
