@@ -289,6 +289,11 @@ bool EMimageBuffer::GetUncroppedSize(int & uncroppedX, int & uncroppedY)
   return true;
 }
 
+bool EMimageBuffer::IsProcessedOKforMap()
+{
+  return mCaptured > 0 || mCaptured == BUFFER_PROC_OK_FOR_MAP;
+}
+
 BOOL EMimageBuffer::IsMontageOverview()
 {
   return mCaptured == BUFFER_MONTAGE_OVERVIEW ||
@@ -304,7 +309,8 @@ BOOL EMimageBuffer::IsMontageCenter()
 BOOL EMimageBuffer::IsProcessed(void)
 {
   return mCaptured == BUFFER_PROCESSED || mCaptured == BUFFER_FFT || 
-    mCaptured == BUFFER_LIVE_FFT || mCaptured == BUFFER_AUTOCOR_OVERVIEW;
+    mCaptured == BUFFER_LIVE_FFT || mCaptured == BUFFER_AUTOCOR_OVERVIEW ||
+    mCaptured == BUFFER_PROC_OK_FOR_MAP;
 }
 
 // Convert the image to a byte image with given scaling

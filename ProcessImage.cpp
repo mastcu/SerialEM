@@ -470,6 +470,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   int nx, ny, nxpad, nypad, nxdim, dir = 1;
   float ctf[8193], delta, *brray;
   float padFrac = 0.05f;
+  int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
   if (!image)
     return -1;
   if (image->getType() == kRGB) {
@@ -495,7 +496,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   // NewprocessedImage happy
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
-  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, -1, false, outBufNum);
+  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, newProc, false, outBufNum);
   return 0;
 }
 
@@ -510,6 +511,7 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
   float shiftX1, shiftY1, shiftX2, shiftY2;
   float *inArray1, *inArray2, *outArray;
   float coeff = (mNextThicknessCoeff > 0.) ? mNextThicknessCoeff : mThicknessCoefficient;
+  int newProc = -1;
   if (!image1 || !image2)
     return -1;
   image1->getSize(nx, ny);
@@ -525,6 +527,8 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
     SEMMessageBox("There is no thickness coefficient set for computing thickness");
     return 1;
   }
+  if (mImBufs[bufNum1].IsProcessedOKforMap() && mImBufs[bufNum2].IsProcessedOKforMap())
+    newProc = BUFFER_PROC_OK_FOR_MAP;
 
   // Get float array for result
   image1->Lock();
@@ -623,8 +627,8 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
 
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
-  NewProcessedImage(&mImBufs[bufNum1], (short *)outArray, kFLOAT, nx, ny, 1, -1, false, 
-    outBufNum);
+  NewProcessedImage(&mImBufs[bufNum1], (short *)outArray, kFLOAT, nx, ny, 1, newProc,
+    false, outBufNum);
   return 0;
 }
 
@@ -637,6 +641,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   int nx, ny, type, newType = kFLOAT, dataSize = 4, numChan = 1;
   unsigned char *array;
   void *inArray;
+  int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
   if (!image)
     return -1;
   type = image->getType();
@@ -671,7 +676,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   image->UnLock();
   if (!mImBufs[outBufNum].mImage)
     mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
-  NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, -1, false, outBufNum);
+  NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, newProc, false, outBufNum);
   return 0;
 }
 
@@ -2649,10 +2654,14 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
   KImage *rect;
   BOOL gotScale = false;
   ScaleMat aMat;
+  int newProc = -1;
   float delX, delY;
   imbufs[0] = redBuf;
   imbufs[1] = grnBuf;
   imbufs[2] = bluBuf;
+  if (redBuf->IsProcessedOKforMap() && grnBuf->IsProcessedOKforMap() &&
+    bluBuf->IsProcessedOKforMap())
+    newProc = BUFFER_PROC_OK_FOR_MAP;
   
   // Check the images for existence, gray scale, and matching sizes
   for (i = 0; i < 3; i++) {
@@ -2717,7 +2726,7 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
     rect->UnLock();
   }
 
-  NewProcessedImage(firstBuf, (short *)array, SLICE_MODE_RGB, xsize, ysize, 1);
+  NewProcessedImage(firstBuf, (short *)array, SLICE_MODE_RGB, xsize, ysize, 1, newProc);
   if (gotScale) {
     mImBufs->mStage2ImMat = aMat;
     mImBufs->mStage2ImDelX = delX;

@@ -169,6 +169,7 @@ struct JeolParams;
 #define BUFFER_MONTAGE_PIECE     -14
 #define BUFFER_AUTOCOR_OVERVIEW  -15
 #define BUFFER_CROPPED           -16
+#define BUFFER_PROC_OK_FOR_MAP   -17
 
 #define DTOR 0.01745329252
 
