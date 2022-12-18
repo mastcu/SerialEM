@@ -25,6 +25,26 @@ typedef struct scale_bar {
   int customVal;
 } ScaleBar;
 
+struct SnapshotData {
+  DWORD memBMX, memBMY;
+  CDC memDC;
+  BITMAP bm;
+  CBitmap bitmap;
+  CBitmap *oldBitmap;
+  FileOptions fileOpt;
+  char *buffer;
+  char *fullBuf;
+  int xOffsetSave, yOffsetSave;
+  int xReduction, yReduction, nxFull, nyFull;
+  IntVec xStarts, yStarts, xOffsets, yOffsets;
+  double zoomSave, zoomUse;
+  float pixel;
+  ScaleBar barParamSaved;
+  float sizeScaling;
+  int skipExtra;
+  CString filename;
+  CSerialEMView *view;
+};
 
 class DLL_IM_EX CSerialEMView : public CView
 {
@@ -73,6 +93,7 @@ public:
   SetMember(bool, FlashNextDisplay);
   SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
+  static GetMember(bool, TakingSnapshot);
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
   double GetZoom() {return mZoom; };
@@ -81,6 +102,10 @@ public:
   void SetImBufs(EMimageBuffer *inImBufs, int inNumber) {mImBufs = inImBufs; mImBufNumber = inNumber;};
   void CloseFrame();
   int TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra, int fileType, int compression, int quality, CString &filename);
+  static void CleanupSnapshotData();
+  void RestoreMembersFromSnapshot();
+  void SetupMontageStarts(int image, int red, DWORD &win, IntVec &starts, IntVec &offsets, int offSign);
+  void SnapshotNextTask(int shotNum);
   bool DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, float sizeScaling, int skipExtra, bool toBuffer);
   void DrawImage(void);
   double b3dStepPixelZoom(double czoom, int step);
@@ -92,6 +117,7 @@ public:
                          int *woff,       /* window offset in wpixels.        */
                          int *doff);       /* data offset in ipixels           */
   EMimageBuffer *GetActiveImBuf();
+  static SnapshotData *mSnapshotData;   // Structure for snapshot data,to be new/deleted
 
 #ifdef _DEBUG
   virtual void AssertValid() const;
@@ -157,6 +183,8 @@ private:
   bool mDrewLDAreasAtNavPt;      // Flag that low dose areas were drawn at a Navigator pt
   float mNavLDAreasXcenter;      // Image position around which areas were drawn
   float mNavLDAreasYcenter;
+  int mDoingMontSnapshot;        // Flag that montage snapshot is being done, 2 for last
+  static bool mTakingSnapshot;   // Flag set only when idle task occurs between calls
 
 protected:
 
@@ -206,7 +234,7 @@ public:
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
   int FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr, double &defocus, FloatVec &radii);
   void DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, float xOffset, 
-    float yOffset, int thick, int curInd, bool recOnly = false);
+    float yOffset, int thick, int curInd, int recOnly = -1);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp

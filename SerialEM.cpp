@@ -2404,6 +2404,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMacroProcessor->DoingMacro() ? 1 : 0;
     else if (idc->source == TASK_AUTO_CONTOUR)
       busy = mProcessImage->AutoContBusy();
+    else if (idc->source == TASK_SNAPSHOT_TO_BUF)
+      busy = 0;
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -2550,7 +2552,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
           mProcessImage->AutoContDone();
-
+        else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
+          CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
           busy = IDLE_TIMEOUT_ERROR;
@@ -2800,6 +2803,8 @@ void CSerialEMApp::ErrorOccurred(int error)
   mCamera->StopFrameTSTilting();
   if (mScope->GetDoingLongOperation() && mCameraMacroTools.GetUserStop())
     mScope->StopLongOperation(false);
+  if (CSerialEMView::GetTakingSnapshot() && mCameraMacroTools.GetUserStop())
+    CSerialEMView::CleanupSnapshotData();
   if (mAutoTuning->GetDoingCalAstig())
     mAutoTuning->StopAstigCal();
   if (mAutoTuning->GetDoingFixAstig())
@@ -3270,6 +3275,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavHelper->mMultiCombinerDlg->UpdateEnables();
   if (mParticleTasks->mZbyGsetupDlg)
     mParticleTasks->mZbyGsetupDlg->UpdateEnables();
+  if (mScreenShotDialog)
+    mScreenShotDialog->UpdateRunnable();
   UpdateAllEditers();
   UpdateMacroButtons();
   mInUpdateWindows = false;
@@ -3362,7 +3369,7 @@ BOOL CSerialEMApp::DoingTasks()
     (mNavigator && mNavigator->GetLoadingMap()) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
-    (mPlugDoingFunc && mPlugDoingFunc());
+    (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot();
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
   mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
     mBufferManager->DoingSychroThread());

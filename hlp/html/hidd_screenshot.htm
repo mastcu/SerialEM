@@ -21,8 +21,7 @@
       at higher resolution.&nbsp; Snapshots can be saved to TIFF files with various 
       kinds of compression, or to JPEG files.&nbsp; The snapshot is done by creating a 
       buffer of the size needed to contain the scaled image, drawing into that buffer, 
-      and saving the buffer.&nbsp; This can potentially take too much memory when 
-      drawing a large montage at 1:1 zoom.&nbsp; Only the image area is drawn, not the 
+      and saving the buffer.&nbsp; Only the image area is drawn, not the 
       purple background that shows up when an image is smaller than the window.&nbsp; 
       By default, the pixel size will be saved as TIFF resolution information in dots 
       per inch and will usually be detected correctly as a pixel size in IMOD.&nbsp; 
@@ -31,6 +30,18 @@
       pixel size from being stored, or to a specific value greater than 1 (e.g., 300) 
       to set the resolution to that DPI value.&nbsp; This property can be set with the 
       script command 'SetProperty'.</p>
+    <p>Drawing into a buffer is limited to 512 Mpixels (~23Kx23K).&nbsp; A montage 
+      larger than this can be drawn at 1:1 zoom because the program draws a series of 
+      subareas smaller than this size limit and composes a full image from them.&nbsp; 
+      This can take several secondsper subarea, and the STOP button can be used to stop the 
+      process.&nbsp; This method is not implemented when a scaling other than 1:1 zoom 
+      makes the scaled images too large; in this case the program will suggest that 
+      you use 1:1 zoom instead.</p>
+    <p>Saving a large compressed TIFF snapshot can take many seconds.&nbsp; The 
+      snapshot is saved in a background thread unless saving to files in the 
+      background is disabled.&nbsp; Other operations can be done during saving, but 
+      any file access for reading or saving will cause the program to wait until the 
+      background save is finished.</p>
     <p><strong>Active window</strong></p>
     <p>This line shows the name of the current active image window.&nbsp; Click on the 
       desired window to activate it.</p>

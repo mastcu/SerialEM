@@ -29,6 +29,7 @@ protected:
 public:
   void UpdateSettings();
   void UpdateActiveView();
+  void UpdateRunnable();
   static bool GetSnapshotError(int err, CString &report);
 
 private:
@@ -72,4 +73,5 @@ public:
   CSpinButtonCtrl m_sbcJpegQuality;
   afx_msg void OnDeltaposSpinJpegQuality(NMHDR *pNMHDR, LRESULT *pResult);
   CStatic m_statJpegQuality;
+  CButton m_butTakeSnapshot;
 };

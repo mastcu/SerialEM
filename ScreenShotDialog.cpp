@@ -70,6 +70,7 @@ void CScreenShotDialog::DoDataExchange(CDataExchange* pDX)
   MinMaxInt(IDC_EDIT_JPEG_QUALITY, m_iJpegQuality, MIN_JPEG_QUALITY, 100, "JPEG quality");
   DDX_Control(pDX, IDC_SPIN_JPEG_QUALITY, m_sbcJpegQuality);
   DDX_Control(pDX, IDC_STAT_JPEG_QUALITY, m_statJpegQuality);
+  DDX_Control(pDX, ID_TAKE_TIFF, m_butTakeSnapshot);
 }
 
 BEGIN_MESSAGE_MAP(CScreenShotDialog, CBaseDlg)
@@ -145,6 +146,11 @@ void CScreenShotDialog::UpdateActiveView()
   CChildFrame *parent = (CChildFrame *)(mWinApp->mActiveView->GetParent());
   parent->GetWindowTextA(title);
   SetDlgItemText(IDC_STAT_ACTIVE_VIEW, "Active window: " + title);
+}
+
+void CScreenShotDialog::UpdateRunnable()
+{
+  m_butTakeSnapshot.EnableWindow(!mWinApp->DoingTasks());
 }
 
 void CScreenShotDialog::OnImageScaling()
@@ -259,11 +265,13 @@ void CScreenShotDialog::OnTakeSnapshot()
 }
 
 
-#define NUM_MESSAGES 5
+#define NUM_MESSAGES 6
 static char *messages[NUM_MESSAGES] = {
   "No image in buffer", "Not enough memory available for a snapshot this large",
   "Call to get information needed to take snapshot failed",
-  "Cannot take a snapshot with data in the current graphics format", "Unknown error"
+  "Cannot take a snapshot with data in the current graphics format",
+  "Taking a snapshot with an image scaled up this large is not supported; try "
+  "using \"Whole image at 1:1 zoom\"", "Unknown error"
 };
 
 bool CScreenShotDialog::GetSnapshotError(int err, CString &report)
