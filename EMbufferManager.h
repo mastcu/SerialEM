@@ -104,6 +104,7 @@ public :
   int mAsyncTimeout;           // timeout for the async save
   double mAsyncStartTime;
   bool mAsyncFromImage;
+  int mAsyncImageDeleteFlags;  // 1 to delete image, 2 to delete store
   bool mImageAsyncFailed;
   bool mBufferAsyncFailed;
   int mNextSecToRead;
@@ -114,7 +115,7 @@ public:
   void FindScaling(EMimageBuffer * imBuf);
   void DeleteOtherStore() {delete mOtherStoreMRC;};
   int StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int section);
-  int StartAsyncSave(KImageStore *store, KImage *image, int section);
+  int StartAsyncSave(KImageStore *store, KImage *image, int section, int deleteFlags);
   static UINT SavingProc(LPVOID pParam);
   static UINT SynchronousProc(LPVOID pParam);
   int AsyncSaveBusy(void);

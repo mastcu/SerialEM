@@ -395,7 +395,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
-  if (inStore->getStoreType() != STORE_TYPE_IMOD && inStore->getStoreType() != STORE_TYPE_IIMRC) {
+  if (inStore->getStoreType() != STORE_TYPE_IMOD && 
+    inStore->getStoreType() != STORE_TYPE_IIMRC) {
     err = 1;
     int secnum = inStore->getDepth();
     if (mSaveAsynchronously && !savingOther) {
@@ -1203,6 +1204,7 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int 
   mImBufForSave.mSaveCopyp = NULL;
   mImBufForSave.IncrementSaveCopy();
   mAsyncFromImage = false;
+  mAsyncImageDeleteFlags = 0;
   mBufferAsyncFailed = false;
 
   // Start the thread; fromStore NULL is sign that this is save
@@ -1211,13 +1213,15 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int 
 }
 
 // Start an asynchronous save of an image not in an image buffer
-int EMbufferManager::StartAsyncSave(KImageStore *store, KImage *image, int section)
+int EMbufferManager::StartAsyncSave(KImageStore *store, KImage *image, int section, 
+  int deleteFlags)
 {
   int numBytes = image->getRowBytes() * image->getHeight();
   mAsyncTimeout = 10000 + numBytes / 1000;
   mImBufForSave.mImage = image;
   mAsyncFromImage = true;
   mImageAsyncFailed = false;
+  mAsyncImageDeleteFlags = deleteFlags;
   StartAsyncThread(NULL, store, section, false);
   return 0;
 }
@@ -1269,6 +1273,7 @@ void EMbufferManager::StartAsyncThread(KImageStore *fromStore, KImageStore *stor
 UINT EMbufferManager::SavingProc(LPVOID pParam)
 {
   SaveThreadData *saveTD = (SaveThreadData *)pParam;
+  KStoreIMOD *istore;
   static int numTimes = 0;
   if ((((CSerialEMApp *)AfxGetApp())->GetDebugKeys()).Find('}') >= 0) {
     numTimes++;
@@ -1294,7 +1299,10 @@ UINT EMbufferManager::SavingProc(LPVOID pParam)
     // Save
     if (saveTD->section < 0)
       saveTD->error = saveTD->store->AppendImage(saveTD->image);
-    else
+    else if (saveTD->store->getStoreType() == STORE_TYPE_IMOD) {
+      istore = (KStoreIMOD *)saveTD->store;
+      saveTD->error = istore->WriteSection(saveTD->image);
+    } else
       saveTD->error = saveTD->store->WriteSection(saveTD->image, saveTD->section);
   }
   if (!saveTD->error)
@@ -1378,8 +1386,10 @@ void EMbufferManager::AsyncSaveCleanup(int error)
   }
   
   // Clean up the image buffer
-  if (!mAsyncFromImage)
+  if (!mAsyncFromImage || (mAsyncImageDeleteFlags & 1))
     mImBufForSave.DeleteImage();
+  if (mAsyncFromImage && (mAsyncImageDeleteFlags & 2))
+    delete mSaveTD.store;
   mImBufForSave.mImage = NULL;
   mImBufForSave.DeleteOffsets();
   mDoingAsyncSave = false;

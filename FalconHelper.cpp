@@ -978,7 +978,7 @@ void CFalconHelper::StackNextTask(int param)
       // then Start a new async save and swap to other image
       mStartedAsyncSave = mFileInd;
       mWinApp->mBufferManager->StartAsyncSave(mStoreMRC, 
-        mUseImage2 > 0 ? mImage2 : mImage, -1);
+        mUseImage2 > 0 ? mImage2 : mImage, -1, 0);
       mUseImage2 = -mUseImage2;
       ind = 0;
 
