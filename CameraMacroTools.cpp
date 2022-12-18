@@ -145,16 +145,18 @@ BOOL CCameraMacroTools::OnInitDialog()
   m_butRecord.SetWindowText(modeNames[3]);
 
   // Set the spin button controls
-  m_sbcMacro1.SetRange(1, MAX_MACROS);
-  m_sbcMacro2.SetRange(1, MAX_MACROS);
-  m_sbcMacro3.SetRange(1, MAX_MACROS);
-  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 2); ind++) {
-    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO4 + ind);
+  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 1); ind++) {
+    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO1 + ind);
     if (spin)
       spin->SetRange(1, MAX_MACROS);
-    but = (CMyButton *)GetDlgItem(IDC_BUTMACRO4 + ind);
+    but = (CMyButton *)GetDlgItem(IDC_BUTMACRO1 + ind);
     if (but)
       but->SetFont(mLittleFont);
+
+    // Allow push `buttons to grow if spinners are hidden
+    mGrowWidthSet.insert(IDC_BUTMACRO1 + ind);
+    mIDsToGrowWidth.push_back(IDC_BUTMACRO1 + ind);
+    mIDsTakeWidthFrom.push_back(IDC_SPINMACRO1 + ind);
   }
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
     sHeightTable);
@@ -236,13 +238,9 @@ void CCameraMacroTools::MacroNameChanged(int num)
     return;
   if (num == mMacroNumber[0] && !mDoingCalISO)
     SetOneMacroLabel(0, IDC_BUTMACRO1);
-  if (num == mMacroNumber[1])
-    SetOneMacroLabel(1, IDC_BUTMACRO2);
-  if (num == mMacroNumber[2])
-    SetOneMacroLabel(2, IDC_BUTMACRO3);
-  for (ind = 3; ind < 3 * (NUM_CAM_MAC_PANELS - 1); ind++) {
+  for (ind = 1; ind < 3 * (NUM_CAM_MAC_PANELS - 1); ind++) {
     if (num == mMacroNumber[ind])
-      SetOneMacroLabel(ind, IDC_BUTMACRO4 + ind - 3);
+      SetOneMacroLabel(ind, IDC_BUTMACRO1 + ind);
   }
 }
 
@@ -265,13 +263,10 @@ void CCameraMacroTools::UpdateSettings()
 {
   int ind;
   CSpinButtonCtrl *spin;
-  m_sbcMacro1.SetPos(mMacroNumber[0] + 1);
-  m_sbcMacro2.SetPos(mMacroNumber[1] + 1);
-  m_sbcMacro3.SetPos(mMacroNumber[2] + 1);
-  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 2); ind++) {
-    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO4 + ind);
+  for (ind = 0; ind < 3 * (NUM_CAM_MAC_PANELS - 1); ind++) {
+    spin = (CSpinButtonCtrl *)GetDlgItem(IDC_SPINMACRO1 + ind);
     if (spin)
-      spin->SetPos(mMacroNumber[ind + 3] + 1);
+      spin->SetPos(mMacroNumber[ind] + 1);
   }
   if (!mDoingTS)
     SetMacroLabels();

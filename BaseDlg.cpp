@@ -455,7 +455,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   int *numInPanel, int *panelStart, int numCameras, int *heightTable)
 {
   bool draw, drop, droppingLine, doingAtEnd;
-  int curTop = topTable[0];
+  int width, curTop = topTable[0];
   CRect rect, winRect, tempRect;
   int panel, panelTop, index, jj, id, cumulDrop, firstDropped, topPos, drawnMaxBottom;
   int topAtLastDraw, topAtFirstColEnd, unitInd, addInd, topDiff, lastDiff, thisID;
@@ -549,9 +549,24 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
         }
         topAtLastDraw = topTable[index];
         //wnd->ShowWindow(SW_SHOW);
-        if (!doingAtEnd)
-          positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
-            topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+        if (!doingAtEnd) {
+
+          // This element is to be drawn: now check if it needs to change width because it
+          // can steal size from its neighbor to the right; if so, draw with size change
+          width = 0;
+          if (mGrowWidthSet.count(thisID))
+            width = WidthToGrowIfNbrHidden(thisID);
+          if (!width) {
+            positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
+              topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+          } else {
+            wnd->GetClientRect(&tempRect);
+            width += tempRect.Width();
+            positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
+              topPos, width, tempRect.Height(), SWP_NOZORDER | SWP_SHOWWINDOW);
+          }
+        }
+
         //CString name;
         //wnd->GetWindowText(name);
         //PrintfToLog("Put %d  %s  at %d %d", thisID, name, leftTable[index], topPos);
@@ -675,6 +690,45 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
     firstDropped = -1;
     droppingLine = false;
   }
+}
+
+// Call if this ID is in the set to grow: this function finds the neighbor ID and window
+// and gets its width and position.  A positive width is returned if the 
+// neighbor is hidden and the item currently ends before the neighbor's left edge; or 
+// a negative value is returned if the neighbor is present and this item is too long
+int CBaseDlg::WidthToGrowIfNbrHidden(int thisID)
+{
+  int ind, nID = 0;
+  bool drop;
+  CWnd *wnd, *thisWnd;
+  CRect rect, thisRect;
+
+  // Find neighbor
+  for (ind = 0; ind < (int)mIDsToGrowWidth.size() && !nID; ind++)
+    if (mIDsToGrowWidth[ind] == thisID)
+      nID = mIDsTakeWidthFrom[ind];
+  if (!nID)
+    return 0;
+
+  // See if it is hidden one way or another
+  drop = mWinApp->IsIDinHideSet(nID);
+  for (ind = 0; ind < (int)mIDsToDrop.size() && !drop; ind++)
+    if (nID == mIDsToDrop[ind])
+      drop = true;
+  for (ind = 0; ind < mNumIDsToHide && !drop; ind++)
+    if (nID == mIDsToHide[ind])
+      drop = true;
+
+  // Get rectangles and return the appropriate value
+  wnd = GetDlgItem(nID);
+  thisWnd = GetDlgItem(thisID);
+  if (!wnd || !thisWnd)
+    return 0;
+  wnd->GetWindowRect(&rect);
+  thisWnd->GetWindowRect(&thisRect);
+  if ((!drop && thisRect.right < rect.left) || (drop && thisRect.right > rect.left))
+    return 0;
+  return (rect.Width()) * (drop ? 1 : -1);
 }
 
 // Hide or show items in the hideable set

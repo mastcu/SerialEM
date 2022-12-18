@@ -86,6 +86,10 @@ protected:
   IntVec mIDsForNextTop;           // Next item below group box
   std::set<int> mNextTopSet;       // Set of both of these
   ShortVec mAdjustmentToTopDiff;   // Left and top of group box, top of next item
+  std::set<int> mGrowWidthSet;     // Set of ID's to extend width of if neighbor hidden
+  IntVec mIDsToGrowWidth;          // Vector of ones to grow
+  IntVec mIDsTakeWidthFrom;         // Vector of ones to take width from
+
 
 public:
   CButton m_butHelp;
@@ -100,6 +104,7 @@ public:
     int *numInPanel, int *panelStart, int numCameras, int *heightTable = NULL);
   void ManageDropping(int *topTable, int index, int nID, int topAtLastDraw, int &cumulDrop, int &firstDropped,
     bool &droppingLine, bool &drop);
+  int WidthToGrowIfNbrHidden(int ID);
   void EnableDlgItem(int nID, BOOL enable);
   void ShowDlgItem(int nID, BOOL show);
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
