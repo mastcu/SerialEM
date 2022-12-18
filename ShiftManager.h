@@ -292,7 +292,7 @@ public:
     float scale, float rotation);
   bool ImposeImageShiftOnScope(float delX, float delY, int magInd, int camera,
     BOOL incremental, BOOL mouseShifting);
-  float GetPixelSize(EMimageBuffer * imBuf);
+  float GetPixelSize(EMimageBuffer * imBuf, float *rotation = NULL);
   int FindBoostedMagIndex(int magInd, int boostMag);
   bool ShiftAdjustmentForSet(int conSet, int magInd, float & shiftX, float & shiftY,
     int camera = -1, int recBin = -1);

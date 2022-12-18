@@ -1934,17 +1934,22 @@ float CShiftManager::GetPixelSize(int inCamera, int inMagIndex)
 }
 
 // Get the pixel size of an image
-float CShiftManager::GetPixelSize(EMimageBuffer *imBuf)
+float CShiftManager::GetPixelSize(EMimageBuffer *imBuf, float *focusRot)
 {
   float scale, rotation, pixel = 0.;
+  if (focusRot)
+    *focusRot = 0.;
   if (imBuf ) {
     if (imBuf->mPixelSize > 0)
       pixel = imBuf->mPixelSize;
     else if (imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd)
       pixel = (float)(imBuf->mBinning * GetPixelSize(imBuf->mCamera, imBuf->mMagInd));
     if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd() &&
-      GetScaleAndRotationForFocus(imBuf, scale, rotation))
+      GetScaleAndRotationForFocus(imBuf, scale, rotation)) {
       pixel /= scale;
+      if (focusRot)
+        *focusRot = rotation;
+    }
   }
   return pixel;
 }
