@@ -8511,21 +8511,54 @@ int CMacCmd::SetProcessing(void)
 int CMacCmd::SetFrameTime(void)
 {
   BOOL truth;
-  int index, ix0, iy1, newSum;
-  float fps;
+  int index, ix0, iy1, newSum, subframes;
+  float fps, exposure;
   int *sumP;
+  bool savingInEER, alignInFalcon, falconCanSave = false;
 
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
+  if (mCamParams->FEItype) {
+    mCamera->CanWeAlignFalcon(mCamParams, true, falconCanSave,
+      mCamSet->K2ReadMode);
+    savingInEER = mCamera->IsSaveInEERMode(mCamParams, mCamSet);
+    alignInFalcon = IS_FALCON3_OR_4(mCamParams) && FCAM_CAN_ALIGN(mCamParams) &&
+      mCamSet->alignFrames && !mCamSet->useFrameAlign;
+    if (!(IS_FALCON3_OR_4(mCamParams) || mCamera->GetMaxFalconFrames() > 7))
+      falconCanSave = false;
+  }
   if (!mCamParams->K2Type && !mCamParams->canTakeFrames &&
-    !(mCamParams->FEItype == FALCON4_TYPE) &&
-    !mWinApp->mDEToolDlg.CanSaveFrames(mCamParams))
+    !falconCanSave && !mWinApp->mDEToolDlg.CanSaveFrames(mCamParams))
+
     ABORT_NOLINE("Frame time cannot be set for the current camera type");
   SaveControlSet(index);
   truth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
 
-  // DE camera is handled separately
-  if (mCamParams->DE_camType) {
+  // Falcon is handled separately for fractions
+  if (falconCanSave && !savingInEER) {
+    exposure = (truth ? mItemFlt[2] : 1.f) * mCamSet->exposure;
+    subframes = B3DNINT(exposure / mCamera->GetFalconFractionDivisor(mCamParams)
+      - (mCamSet->numSkipBefore + mCamSet->numSkipAfter));
+    if (truth && !mCamSet->summedFrameList.size()) {
+      mCamSet->userFrameFractions.resize(1);
+      mCamSet->userFrameFractions[0] = 1.;
+      mCamSet->userSubframeFractions.resize(1);
+      mCamSet->userSubframeFractions[0] = 1.;
+    }
+    if (truth) {
+      ix0 = mWinApp->mFalconHelper->GetFrameTotals(mCamSet->summedFrameList, subframes);
+      mCamSet->exposure = exposure;
+    } else
+      ix0 = B3DNINT(exposure / mItemFlt[2]);
+    mWinApp->mFalconHelper->DistributeSubframes(mCamSet->summedFrameList, subframes, ix0, 
+      mCamSet->userFrameFractions, mCamSet->userSubframeFractions, alignInFalcon);
+    ix0 = mWinApp->mFalconHelper->GetFrameTotals(mCamSet->summedFrameList, subframes);
+    SetRepValsAndVars(3, ix0, exposure / ix0, exposure);
+    if (mCamParams->FEItype != FALCON4_TYPE)
+      return 0;
+
+    // DE camera is handled separately
+  } else if (mCamParams->DE_camType) {
     fps = mCamParams->DE_FramesPerSec;
     if (mCamSet->K2ReadMode > 0 && mCamParams->DE_CountingFPS > 0.)
       fps = mCamParams->DE_CountingFPS;
@@ -8556,10 +8589,10 @@ int CMacCmd::SetFrameTime(void)
     mCamSet->mode, iy1);
   mCamera->ConstrainFrameTime(mCamSet->frameTime, mCamParams,
     mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:iy1);
-  if (truth) {
+  if ((!falconCanSave || savingInEER) && truth) {
     mCamSet->exposure = mCamSet->frameTime * ix0;
     SetRepValsAndVars(3, mCamSet->frameTime, mCamSet->exposure);
-  } else {
+  } else if (!falconCanSave || savingInEER) {
     SetRepValsAndVars(3, mCamSet->frameTime);
   }
   return 0;

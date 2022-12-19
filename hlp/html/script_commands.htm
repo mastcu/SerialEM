@@ -1020,17 +1020,32 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetFrameTime set #F</TD>
-          <TD>Sets the frame time in <B>set</B> for a K2/K3, Falcon 4, DE, or generic frame-saving camera
+          <TD>Sets the frame time in <B>set</B> for a K2/K3, Falcon 4 where the
+            parameter set will result in saving as EER (even just for aligning), DE, or generic frame-saving camera
              to the given number <B>#F</B>.&nbsp; <I>reportedValue1</I> is set to the actual frame time
-            after constraints are applied; for DE, <I>reportedValue2</I> is set to the new exposure time.
+            after constraints are applied; for DE, <I>reportedValue2</I> is set to the new exposure 
+            time.&nbsp; For a Falcon 4 where the parameter set
+            would not result in saving as EER, or a Falcon 3, or a Falcon 2 that can save more than 7 frames,
+             the fractions for saving in MRC files are adjusted to give a
+            mean fraction time close to <b>#F</b>, and <i>reportedValue1-3</i> are set with the number
+            of fractions, mean fraction time, and exposure time.&nbsp; For Falcon 4, the frame time for aligning
+            EER frames is also modified as when parameters are set for saving as EER, but not set in <I>reportedValue1</I>.
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeFrameAndExposure set #F</TD>
-          <TD>Changes the frame time and exposure time in <B>set</B> for a K2/K3, Falcon 4, DE, or generic
+          <TD>Changes the frame time and exposure time in <B>set</B> for a K2/K3, Falcon 4 where the
+            parameter set will result in saving as EER (even just for aligning), DE, or generic
              frame-saving camera by the given factor <B>#F</B>, maintaining the same number of
             frames.&nbsp; <I>reportedValue1</I> and <I>reportedValue2</I> are set to the actual frame time
-            and exposure time after constraints are applied.&nbsp; Command added in 3.9, 2/9/21.</TD>
+            and exposure time after constraints are applied.&nbsp; &nbsp; For a Falcon 4 where the parameter set
+            would not result in saving as EER, or a Falcon 3, or a Falcon 2 that can save more than 7 frames, the 
+            exposure time is adjusted by the given amount, as closely as possible, and fractions for saving
+             in MRC files are adjusted to change the mean fraction time by <b>#F</b>;
+            <i>reportedValue1-3</i> are set with the number of fractions, mean fraction time, and exposure 
+            time.&nbsp; For Falcon 4, the frame time for aligning
+            EER frames is also modified as when parameters are set for saving as EER, but not set 
+            in <I>reportedValue1</I>&nbsp; Command added in 3.9, 2/9/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportCurrentPixelSize set</TD>

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/18/22: Made SetFrameTime and ChangeFrameAndExposure adjust fraction times
+for all Falcons when appropriate.
+
 12/18/22: Added ability to take snapshots of images > 512 Mpixel at 1:1 zoom.
 
 12/18/22: Allowed script buttons in Camera/Script Tools to grow if their

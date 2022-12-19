@@ -269,7 +269,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   CRect rectWin;
   EMimageBuffer *imBuf = NULL;
   KImage      *imageRect;
-  int pixelLimit = 32768 * 16384;
+  unsigned int pixelLimit = 32768 * 16384;
   CClientDC cdcWin(this);
   int nxImage, nyImage, nxDrawn, nyDrawn, nxWin, nyWin, err = 0;
   int xyReduction;
