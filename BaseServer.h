@@ -32,7 +32,7 @@ class CBaseServer
 {
  public:
   CBaseServer();
-  ~CBaseServer() {};
+  ~CBaseServer();
 
  protected:
 

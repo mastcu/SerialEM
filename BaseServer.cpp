@@ -64,6 +64,12 @@ CBaseServer::CBaseServer()
   mErrorBuf[MESS_ERR_BUFF_SIZE] = 0x00;
 }
 
+CBaseServer::~CBaseServer()
+{
+  for (int i = 0; i < MAX_SOCK_CHAN; i++)
+    free(mArgsBuffer[i]);
+}
+
 void CBaseServer::ErrorToLog(const char *message)
 {
   SEMTrace('0', "CBaseServer: %s", message);
