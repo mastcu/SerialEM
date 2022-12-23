@@ -2,6 +2,7 @@
 ; http::/www.help-info.de/en/Help_Info_HTMLHelp/hh_context-id.htm
 hidd_alignfocus									= SerialEM.chm::/html\hidd_alignfocus.htm
 hidd_autocensetup								= SerialEM.chm::/html\hidd_autocensetup.htm
+hidd_autocontour                = SerialEM.chm::/html\hidd_autocontour.htm
 hidd_buffercontrol							= SerialEM.chm::/html\hidd_buffercontrol.htm
 hidd_bufferstatus								= SerialEM.chm::/html\hidd_bufferstatus.htm
 hidd_camera_macro								= SerialEM.chm::/html\hidd_camera_macro.htm
@@ -422,6 +423,7 @@ hid_navigator_alignedsupermontage = SerialEM.chm::/html\menu_navigator.htm#hid_n
 hid_supermontaging_polygonsupermontage = SerialEM.chm::/html\menu_navigator.htm#hid_supermontaging_polygonsupermontage
 hid_montaginggrids_findregulararrayofholes = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_findregulararrayofholes
 hid_montaginggrids_combinepointsintomulti  = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_combinepointsintomulti
+hid_montaginggrids_autocontourgridsquares = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_autocontourgridsquares
 hid_navigator_addgridofpoints		= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_addgridofpoints
 hid_montaginggrids_addgridlikelastone		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_addgridlikelastone
 hid_montaginggrids_grouppointsingrid		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_grouppointsingrid

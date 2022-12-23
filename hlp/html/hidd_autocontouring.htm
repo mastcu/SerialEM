@@ -1,0 +1,125 @@
+<html>
+  <head>
+    <title>Autocontouring Grid Squares Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_autocontouring"></a><span class="style1">Autocontouring Grid Squares
+        Dialog</span></p>
+    <p>This dialog runs an autocontouring routine to make contours around grid squares 
+      at a particular threshold level.&nbsp; The contours are then sorted into groups 
+      by either their sizes or the mean intensity of the areas within them, and the 
+      groups are displayed in different colors on the image.&nbsp; Various criteria 
+      can be set for eliminating some of the contours, and groups of contours can also 
+      be toggled off.&nbsp; The contours that are still visible can be converted to 
+      Navigator polygons, with each group being a separate group of polygons.</p>
+    <p>A low-magnification map generally needs to be reduced in size for this 
+      operation, for two reasons: computational time is proportional to the number of 
+      image pixels (the square of the size) and will become prohibitive with large 
+      images; and, unreduced images can give more jagged contours.&nbsp; Computation 
+      time is reasonable with images in the range of 1500-2000 pixels, and grid square 
+      edges seem adequately defined when contouring is done in an image reduced so 
+      that the pixel size is ~2 microns.&nbsp; If you find that the contours do not 
+      follow the deatails of the square edges adequately, the remedy is to reduce 
+      less, to a bigger size and a smaller pixel size.</p>
+    <p>The program finds the threshold automatically by analyzing a histogram of image 
+      intensities, looking for two peaks representing the intensities of the grid bars 
+      and the unoccluded grid squares.&nbsp; A threshold is then set at a specified 
+      fraction of the way from the lower to the upper peak.&nbsp; This relative 
+      threshold generally needs to be higher than 0.5 to keep the contours inside the 
+      grid bars.&nbsp; The histogram analysis can fail, in which case the main 
+      recourse is to set an absolute intensity value as the threshold instead 
+      (although if the image is noisy even after reduction, it is possible that more 
+      reduction would make the analysis succeed).</p>
+    <p>Autocontouring uses IMOD model library routines that require byte input, so the 
+      reduced image is converted to bytes using the Black and White limits in the 
+      Image Display control panel.</p>
+    <p><strong><em>Controls of Autocontouring </em></strong></p>
+    <p><strong>Reduce image to</strong></p>
+    <p>Choose the first radio button to specify the reduction as a number of <strong>
+      pixels</strong> (of linear size, not area; specifically, the geometric mean of 
+      the reduced image dimensions in X and Y).&nbsp; Shoose the second button to 
+      specify the <strong>pixel size </strong>in microns to which the image should be 
+      reduced.</p>
+    <p><strong>Contour threshold</strong></p>
+    <p>Choose <strong>Relative</strong> to set a relative threshold between the two 
+      peaks of the intensity distribution.&nbsp; Choose <strong>Absolute</strong> to 
+      set a specific intensity level for the threshold.</p>
+    <p><strong>Range of sizes in microns</strong></p>
+    <p>Enter the lower and upper limits for the square size, which will govern which 
+      contours are retained bythe autocontouring operation.&nbsp; These linear sizes 
+      in microns are converted to pixels in the reduced image and squared to provide 
+      the limits on the number of pixels in a contoured area.</p>
+    <p><strong>Autocontour Image</strong></p>
+    <p>Press this button to run the autocontouring.&nbsp; It is multithreaded and can 
+      take several to many seconds, depending on the image size, number of contours, 
+      and how powerful the computer is.&nbsp; The processing can be stopped&nbsp; with 
+      the STOP button.</p>
+    <p><strong>Clear Data</strong></p>
+    <p>Press this button to remove all stored data about contours that were generated.</p>
+    <p><strong><em>Controls for Working with the Contours</em></strong></p>
+    <p><strong>Split into groups</strong></p>
+    <p>Select the number of groups to divide the contours into, and choose <strong>
+      Size</strong> to have them order by size, or <strong>Mean value</strong> to have 
+      them ordered by mean intensity within the contour.&nbsp; The ordered contours 
+      will be divided into equally spaced, not equally sized, groups.&nbsp; Up to 8 
+      groups can be selected.&nbsp; The colors used will be red, orange, yellow, 
+      green, dark blue, cyan, violet, and magenta.&nbsp; If you are displaying fewer 
+      than 8 groups and find the colors on the blue end easier to distinguish, the 
+      property &quot;ReverseAutocontColors&quot; can be set to reverse the order of colors, 
+      starting from the magenta end.</p>
+    <p><strong>Show groups</strong></p>
+    <p>The checkboxes allow you to toggle the display of each group on or off and 
+      control which groups are converted to Navigator polygons.</p>
+    <p><strong>Lower mean cutoff</strong></p>
+    <p>Use this slider or the edit box to set a lower limit on the mean intensity 
+      within the grid squares to be displayed.</p>
+    <p><strong>Upper mean cutoff</strong></p>
+    <p>Use this slider or the edit box to set an upper limit on the mean intensity 
+      within the grid squares to be displayed.</p>
+    <p><strong>Minimum size cutoff</strong></p>
+    <p>Use this slider or the edit box to set a lower limit on the size of the grid 
+      squares to be displayed; the size here is just the square root of the area 
+      within the contour.</p>
+    <p><strong>Irregularity cutoff</strong></p>
+    <p>Use this slider to set an upper limit on a measure of how much the contour 
+      deviates from a square.&nbsp; The average angle of the lines between grid 
+      squares is determined, and each contour is compared with a square at that 
+      orientation and with the same area as a contour.&nbsp; The area within the 
+      contour but outside the square, plus the area within the square but outside the 
+      contour, is divided by the contour area.&nbsp; The measure thus ranges from 0 
+      for a square to just under 1 for a long, thin contour.</p>
+    <p><strong>SD cutoff</strong></p>
+    <p>Use this slider to set an upper limit on the standard deviation of intensities 
+      within the grid squares.&nbsp; The SD is measured on the reduced image used for 
+      contouring, which is heavily smoothed by a Gaussian kernel filter with a sigma 
+      of 2.5 pixels.&nbsp; The SD should thus be dominated by the presence of larger 
+      structures within the grid squares, rather than by noise.</p>
+    <p><strong>Edge distance cutoff</strong></p>
+    <p>Use this slider or the edit box to set a lower limit on the distance of 
+      contours from the edge of the area where there are contours.&nbsp; Specifically, 
+      the value is the distance from the center of each contours to the convex 
+      boundary of the centers of all the contours; thus, the outermost contours are at 
+      a distance of 0.</p>
+    <p><strong>Make Navigator Polygons</strong></p>
+    <p>Press this button to convert the currently displayed contours to Navigator 
+      polygons.&nbsp; <em>What you see is what you get.</em>&nbsp; Only the groups 
+      whose checkbox is on will be converted, each group to a separate Navigator 
+      group.&nbsp; Only the contours not eliminated by the various cutoffs will be 
+      converted.</p>
+    <p><strong>Undo</strong></p>
+    <p>Use this button the revert the last conversion to polygons.&nbsp; This 
+      operation is available only if no additions or deletions from the Navigator 
+      table have been done, and new contours have not been made.</p>
+
+  </body>
+</html>

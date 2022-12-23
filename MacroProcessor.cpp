@@ -26,6 +26,7 @@
 #include "BeamAssessor.h"
 #include "ComplexTasks.h"
 #include "HoleFinderDlg.h"
+#include "AutoContouringDlg.h"
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "ProcessImage.h"
@@ -1031,7 +1032,7 @@ int CMacroProcessor::TaskBusy()
     (mRanGatanScript &&  mCamera->CameraBusy()) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     (mMakingDualMap && mNavHelper->GetAcquiringDual()) ||
-    (mAutoContouring && mProcessImage->DoingAutoContour()) ||
+    (mAutoContouring && mNavHelper->mAutoContouringDlg->DoingAutoContour()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
     (mCamera->GetTaskWaitingForFrame() || 

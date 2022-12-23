@@ -59,6 +59,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_fMaxError(0.05f)
   , m_bBracketLast(FALSE)
 {
+  mNonModal = true;
   mHaveHoles = false;
   mFindingHoles = false;
   mIsOpen = false;

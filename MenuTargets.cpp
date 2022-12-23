@@ -467,8 +467,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPVPPCONDITIONING, OnUpdateTasksSetupVppConditioning)
   ON_COMMAND(ID_WINDOW_TAKESCREENSHOT, OnWindowTakeScreenShot)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_TAKESCREENSHOT, OnUpdateNoTasks)
-  ON_COMMAND(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnMontagingGridsFindHoles)
-  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnUpdateMontagingGridsFindHoles)
+    ON_COMMAND(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnMontagingGridsFindHoles)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnUpdateMontagingGridsFindHoles)
   ON_COMMAND(ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI, OnCombinePointsIntoMultiShots)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI, OnUpdateMontagingGridsFindHoles)
     ON_COMMAND(ID_CAMERA_SETEXTRADIVISIONBY2, OnCameraSetExtraDivisionBy2)
@@ -503,6 +503,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_TILTSERIES_SETBIDIRRETURNDELAY, OnTiltseriesSetBidirReturnDelay)
     ON_COMMAND(ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP, OnSetParamsForGridMap)
     ON_UPDATE_COMMAND_UI(ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP, OnUpdateNoTasks)
+    ON_COMMAND(ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES, OnAutocontourGridSquares)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES, OnUpdateMontagingGridsFindHoles)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -899,6 +901,11 @@ void CMenuTargets::OnMontagingGridsFindHoles()
 void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
+}
+
+void CMenuTargets::OnAutocontourGridSquares()
+{
+  mWinApp->mNavHelper->OpenAutoContouring();
 }
 
 void CMenuTargets::OnCombinePointsIntoMultiShots()

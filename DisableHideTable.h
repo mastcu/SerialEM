@@ -106,8 +106,8 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},
   {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},
   // Camera & Script panel
-  {"CameraScript - Focus", 2, 0, ID_CAMERA_FOCUS},
-  {"CameraScript - Trial", 2, 0, ID_CAMERA_TRIAL},
+  {"CameraScript - Focus", 2, 0, IDC_BUT_FOCUS},
+  {"CameraScript - Trial", 2, 0, IDC_BUT_TRIAL},
   {"CameraScript - Spinner 1", 2, 0, IDC_SPINMACRO1},
   {"CameraScript - Spinner 2", 2, 0, IDC_SPINMACRO2},
   {"CameraScript - Spinner 3", 2, 0, IDC_SPINMACRO3},

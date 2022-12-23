@@ -618,6 +618,7 @@ public:
   GetSetMember(int, NavOrLogHadFocus);
   GetSetMember(BOOL, MonospacedLog);
   GetSetMember(BOOL, SaveAutosaveLog);
+  GetMember(bool, InRestoreViewFocus);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -917,6 +918,7 @@ private:
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
   BOOL mMonospacedLog;          // Flag that log window should use monospaced font
   BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
+  bool mInRestoreViewFocus;     // Flag so draw can be skipped if it is just from SetFocus
 
 public:
   void UpdateAllEditers(void);

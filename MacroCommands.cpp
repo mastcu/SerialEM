@@ -36,6 +36,7 @@
 #include "MultiTSTasks.h"
 #include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
+#include "AutoContouringDlg.h"
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "MacroControlDlg.h"
@@ -10516,7 +10517,7 @@ int CMacCmd::AutoContourGridSquares(void)
   ABORT_NONAV;
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  mProcessImage->AutoContourImage(&mImBufs[index], mItemFlt[2],
+  mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], mItemFlt[2],
     mItemEmpty[5] ? 0.f : mItemFlt[5], mItemEmpty[6] ? 0.f : mItemFlt[6],
     mItemFlt[3], mItemFlt[4]);
   mAutoContouring = true;

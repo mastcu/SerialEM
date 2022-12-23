@@ -4355,9 +4355,10 @@
         </TR>
         <TR>
           <TD class="scriptcommand">AutoContourGridSquares buf #R #H [#T] [#S] [#L] </TD>
-          <TD>Find areas above a threshold in the image in [buf] and makes polygons around them, which are all assigned
-            the same group ID.&nbsp; The autocontouring routines in the IMOD model library are used and take byte input,
-            so theimage will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; Inputs are:<br />
+          <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
+            that are displayed in different colors, depending on the elimination criteria and settings in the
+            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The autocontouring routines in the IMOD model library are used and take byte input,
+            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; Inputs are:<br />
             &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
             image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
             much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
@@ -4374,8 +4375,7 @@
             to set the minimum area to retain as a polygon.<br />
             &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
             used to set the maximum area to retain as a polygon.<br />
-            The autocontouring may take on the order of 15 seconds for ~500 grid squares.&nbsp; It cannot be stopped
-            because that would crash the program.&nbsp; Command added in 4.1, 11/16/22.
+            &nbsp; Command added in 4.1, 16-Nov-22; no longer makes Navigator polygons, 23-Dec-22.
          </TD>
         </TR>
         <TR>

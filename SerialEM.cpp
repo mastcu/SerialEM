@@ -63,6 +63,7 @@
 #include "ScreenShotDialog.h"
 #include "HoleFinderDlg.h"
 #include "MultiCombinerDlg.h"
+#include "AutoContouringDlg.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
 #include "PythonServer.h"
@@ -2056,8 +2057,11 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
 
 void CSerialEMApp::RestoreViewFocus()
 {
-  if (mActiveView)
+  if (mActiveView) {
+    mInRestoreViewFocus = true;
     mActiveView->SetFocus();
+    mInRestoreViewFocus = false;
+  }
 }
 
 // Retain a pointer to the active view, and the first time, store
@@ -2403,7 +2407,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
     else if (idc->source == TASK_MACRO_AT_EXIT)
       busy = mMacroProcessor->DoingMacro() ? 1 : 0;
     else if (idc->source == TASK_AUTO_CONTOUR)
-      busy = mProcessImage->AutoContBusy();
+      busy = mNavHelper->mAutoContouringDlg->AutoContBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -2551,7 +2555,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_MACRO_AT_EXIT)
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
-          mProcessImage->AutoContDone();
+          mNavHelper->mAutoContouringDlg->AutoContDone();
         else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
           CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
       } else {
@@ -2654,7 +2658,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_FIND_HOLES)
           mNavHelper->mHoleFinderDlg->StopScanning();
         else if (idc->source == TASK_AUTO_CONTOUR)
-          mProcessImage->CleanupAutoCont(busy);
+          mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
      }
 
       // Delete task from memory and drop index
@@ -2817,8 +2821,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopCtfBased();
   if (mAutoTuning->DoingComaVsIS())
     mAutoTuning->StopComaVsISCal();
-  if (mProcessImage->DoingAutoContour())
-    mProcessImage->StopAutoCont(false);
+  if (mNavHelper->mAutoContouringDlg->DoingAutoContour())
+    mNavHelper->mAutoContouringDlg->StopAutoCont(false);
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);
@@ -3271,6 +3275,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mAutocenDlg->UpdateEnables();
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->ManageEnables();
+  if (mNavHelper->mAutoContouringDlg->IsOpen())
+    mNavHelper->mAutoContouringDlg->ManageAll(true);
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->UpdateEnables();
   if (mParticleTasks->mZbyGsetupDlg)
@@ -3324,6 +3330,8 @@ void CSerialEMApp::UpdateWindowSettings()
   mNavHelper->UpdateSettings();
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->UpdateSettings();
+  if (mNavHelper->mAutoContouringDlg->IsOpen())
+    mNavHelper->mAutoContouringDlg->UpdateSettings();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->UpdateSettings();
   if (mParticleTasks->mZbyGsetupDlg)
@@ -3362,7 +3370,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 BOOL CSerialEMApp::DoingTasks()
 {
   bool trulyBusy = DoingImagingTasks()|| 
-    mMacroProcessor->DoingMacro() || mProcessImage->DoingAutoContour() ||
+    mMacroProcessor->DoingMacro() || mNavHelper->mAutoContouringDlg->DoingAutoContour() ||
     mShiftManager->ResettingIS() || mParticleTasks->GetDVDoingDewarVac() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
@@ -3908,6 +3916,8 @@ void CSerialEMApp::NavigatorClosing()
   mOpenStateWithNav = mNavHelper->mStateDlg != NULL;
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->CloseWindow();
+  if (mNavHelper->mAutoContouringDlg->IsOpen())
+    mNavHelper->mAutoContouringDlg->CloseWindow();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->CloseWindow();
 }

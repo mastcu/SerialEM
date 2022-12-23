@@ -34,6 +34,7 @@
 #include "MultiHoleCombiner.h"
 #include "MultiCombinerDlg.h"
 #include "ComaVsISCalDlg.h"
+#include "AutoContouringDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
@@ -110,6 +111,7 @@ CNavHelper::CNavHelper(void)
   mFindHoles = new HoleFinder();
   mCombineHoles = new CMultiHoleCombiner();
   mHoleFinderDlg = new CHoleFinderDlg();
+  mAutoContouringDlg = new CAutoContouringDlg();
 
   // Copy the default acquire action structures
   for (mNumAcqActions = 0; mNumAcqActions < NAA_MAX_ACTIONS; mNumAcqActions++) {
@@ -156,6 +158,7 @@ CNavHelper::CNavHelper(void)
   mHoleFinderPlace.rcNormalPosition.right = 0;
   mMultiCombinerDlg = NULL;
   mMultiCombinerPlace.rcNormalPosition.right = 0;
+  mAutoContDlgPlace.rcNormalPosition.right = 0;
   mComaVsISCalDlg = NULL;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
@@ -229,6 +232,22 @@ CNavHelper::CNavHelper(void)
   mHoleFinderParams.blackFracCutoff = EXTRA_NO_VALUE;
   mHoleFinderParams.showExcluded = true;
   mHoleFinderParams.layoutType = 0;
+  mAutoContourParams.targetPixSizeUm = 2.f;
+  mAutoContourParams.targetSizePixels = 1500;
+  mAutoContourParams.usePixSize = true;
+  mAutoContourParams.minSize = 30;
+  mAutoContourParams.maxSize = 70;
+  mAutoContourParams.relThreshold = 0.75f;
+  mAutoContourParams.absThreshold = 0.;
+  mAutoContourParams.useAbsThresh = false;
+  mAutoContourParams.numGroups = 5;
+  mAutoContourParams.groupByMean = false;
+  mAutoContourParams.lowerMeanCutoff = EXTRA_NO_VALUE;
+  mAutoContourParams.upperMeanCutoff = EXTRA_NO_VALUE;
+  mAutoContourParams.minSizeCutoff = 0.;
+  mAutoContourParams.SDcutoff = EXTRA_NO_VALUE;
+  mAutoContourParams.irregularCutoff = 3.;
+  mAutoContourParams.borderDistCutoff = 0.;
   float widths[] = {4, 2, 1.5}, increments[] = {3., 1.5, 1.};
   int numCircles[] = {7, 3, 1};
   mHFwidths.insert(mHFwidths.begin(), &widths[0], &widths[3]);
@@ -265,6 +284,7 @@ CNavHelper::CNavHelper(void)
   mOKtoUseHoleVectors = false;
   mMarkerShiftApplyWhich = 0;
   mMarkerShiftSaveType = 0;
+  mReverseAutocontColors = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -273,6 +293,7 @@ CNavHelper::~CNavHelper(void)
   delete mFindHoles;
   delete mCombineHoles;
   delete mHoleFinderDlg;
+  delete mAutoContouringDlg;
 }
 
 
@@ -5203,6 +5224,25 @@ WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
     mComaVsISCalDlg->GetWindowPlacement(&mMultiCombinerPlace);
   }
   return &mMultiCombinerPlace;
+}
+
+void CNavHelper::OpenAutoContouring(void)
+{
+  if (mAutoContouringDlg->IsOpen()) {
+    mAutoContouringDlg->BringWindowToTop();
+    return;
+  }
+  mAutoContouringDlg->Create(IDD_AUTOCONTOUR);
+  mWinApp->SetPlacementFixSize(mAutoContouringDlg, &mAutoContDlgPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CNavHelper::GetAutoContDlgPlacement(void)
+{
+  if (mAutoContouringDlg->IsOpen()) {
+    mAutoContouringDlg->GetWindowPlacement(&mAutoContDlgPlace);
+  }
+  return &mAutoContDlgPlace;
 }
 
 WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)

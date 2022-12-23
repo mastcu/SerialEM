@@ -87,6 +87,7 @@
 #define IDD_MANAGE_DEWARS               263
 #define IDD_NAVACQ_HOLE_FINDER          271
 #define IDD_COMA_VS_IS_CAL              274
+#define IDD_AUTOCONTOUR                 276
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -220,7 +221,10 @@
 #define IDC_EDIT_MONTERROR              1145
 #define IDC_EDIT_RUNS                   1146
 #define IDC_EDIT_IMAGESHIFT             1147
+#define IDC_BUT_LIST_SHIFTS             1151
+#define IDC_BUT_REMOVE_SHIFT            1152
 #define IDC_BUTSTOP                     1155
+#define IDC_LIST_SAVED_SHIFTS           1156
 #define IDC_STATTOPLINE                 1159
 #define IDC_STATBLACK                   1160
 #define IDC_STATWHITE                   1161
@@ -1602,13 +1606,21 @@
 #define IDC_STAT_MIN_UPPER_MEAN         2626
 #define IDC_STAT_MAX_UPPER_MEAN         2627
 #define IDC_SLIDER_STANDEV              2628
+#define IDC_STAT_MIN_MIN_SIZE           3125
 #define IDC_STAT_MIN_STANDEV            2629
+#define IDC_STAT_MAX_MIN_SIZE           3126
 #define IDC_STAT_MAX_STANDEV            2630
+#define IDC_STAT_MIN_SQUARE_SD          3127
 #define IDC_STAT_SD_CUTOFF              2631
+#define IDC_STAT_MAX_SQUARE_SD          3128
 #define IDC_SLIDER_BLACK_CUTOFF         2632
+#define IDC_STAT_MAX_IRREGULAR          3129
 #define IDC_STAT_MIN_BLACKPCT           2633
+#define IDC_STAT_MIN_IRREGULAR          3130
 #define IDC_STAT_MAX_BLACKPCT           2634
+#define IDC_STAT_MIN_BORDER_DIST        3131
 #define IDC_STAT_BLACK_CUTOFF           2635
+#define IDC_STAT_MAX_BORDER_DIST        3132
 #define IDC_SHOW_INCLUDED               2636
 #define IDC_SHOW_EXCLUDED               2637
 #define IDC_BUT_MAKE_NAV_PTS            2638
@@ -1971,9 +1983,6 @@
 #define IDC_CHECK_RUN_COMBINER          3004
 #define IDC_BUT_OPEN_HOLE_FINDER        3005
 #define IDC_BUT_OPEN_COMBINER           3006
-#define IDC_BUT_LIST_SHIFTS             1151
-#define IDC_BUT_REMOVE_SHIFT            1152
-#define IDC_LIST_SAVED_SHIFTS           1156
 #define IDC_BUTMACRO1                   3007
 #define IDC_BUTMACRO2                   3008
 #define IDC_BUTMACRO3                   3009
@@ -2039,6 +2048,56 @@
 #define IDC_EDIT_CVIC_ROTATION          3070
 #define IDC_BUTCAL_BT_VS_IS             3071
 #define IDC_SPIN_CVIC_ROTATION          3072
+#define IDC_RTOPIXELS                   3075
+#define IDC_IDC_EDIT_TO_PIXELS          3076
+#define IDC_RTOPIXSIZE                  3077
+#define IDC_EDIT_TO_PIX_SIZE            3078
+#define IDC_EDIT_MINSIZE                3079
+#define IDC_EDIT_MAXSIZE                3080
+#define IDC_RRELATIVE_THRESH            3081
+#define IDC_EDIT_REL_THRESH             3082
+#define IDC_RABS_THRESH                 3083
+#define IDC_EDIT_ABS_THRESH             3084
+#define IDC_BUT_MAKE_CONTOURS           3085
+#define IDC_STAT_SHOW_GROUPS            3086
+#define IDC_SPIN_NUM_GROUPS             3087
+#define IDC_RGROUP_BY_SIZE              3088
+#define IDC_RGROUP_BY_MEAN              3089
+#define IDC_STAT_TO_PIXELS              3091
+#define IDC_SLIDER_MIN_MEAN             3092
+#define IDC_EDIT_MIN_MEAN               3093
+#define IDC_BUT_CREATE_POLYS            3094
+#define IDC_BUT_CLEAR_POLYS             3095
+#define IDC_BUT_UNDO_POLYS              3096
+#define IDC_CHECK_GROUP1                3097
+#define IDC_CHECK_GROUP2                3098
+#define IDC_CHECK_GROUP3                3099
+#define IDC_CHECK_GROUP4                3100
+#define IDC_CHECK_GROUP5                3101
+#define IDC_CHECK_GROUP6                3102
+#define IDC_CHECK_GROUP7                3103
+#define IDC_CHECK_GROUP8                3104
+#define IDC_SLIDER_MAX_MEAN             3105
+#define IDC_SLIDER_MIN_SIZE             3106
+#define IDC_SLIDER_SQUARE_SD            3107
+#define IDC_SLIDER_IRREGULARITY         3108
+#define IDC_SLIDER_BORDER_DIST          3109
+#define IDC_SLIDER_RESERVED             3110
+#define IDC_EDIT_MAX_MEAN               3111
+#define IDC_EDIT_MIN_SIZE               3112
+#define IDC_EDIT_BORDER_DIST            3113
+#define IDC_STAT_TO_PIX_SIZE            3114
+#define IDC_STAT_GROUP_BY               3115
+#define IDC_STAT_SHOW_CREATE            3116
+#define IDC_STAT_IRREGULARITY           3117
+#define IDC_STAT_PCT_BLACK              3118
+#define IDC_STAT_SQUARE_SD              3118
+#define IDC_STAT_MIN_MEAN_LABEL         3119
+#define IDC_STAT_MAX_MEAN_LABEL2        3120
+#define IDC_STAT_MIN_SIZE_LABEL         3121
+#define IDC_STAT_PCT_BLACK_LABEL        3122
+#define IDC_STAT_IRREGULAR_LABEL        3123
+#define IDC_STAT_BORDER_DIST_LABEL      3124
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2574,15 +2633,16 @@
 #define ID_SETTINGS_READBASICMODEFILE   33501
 #define ID_HELP_RUNSERIALEMSNAPSHOT     33502
 #define ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP 33503
+#define ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES 33504
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        276
-#define _APS_NEXT_COMMAND_VALUE         33504
-#define _APS_NEXT_CONTROL_VALUE         3073
+#define _APS_NEXT_RESOURCE_VALUE        278
+#define _APS_NEXT_COMMAND_VALUE         33505
+#define _APS_NEXT_CONTROL_VALUE         3133
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -418,6 +418,7 @@ public:
   afx_msg void OnUpdateKeepFocusTrialAtSamePosition(CCmdUI *pCmdUI);
   afx_msg void OnTiltseriesSetBidirReturnDelay();
   afx_msg void OnSetParamsForGridMap();
+  afx_msg void OnAutocontourGridSquares();
 };
 
 /////////////////////////////////////////////////////////////////////////////

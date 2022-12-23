@@ -28,6 +28,7 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
+#include "AutoContouringDlg.h"
 #include "ScreenShotDialog.h"
 #include "AutoTuning.h"
 #include "ComaVsISCalDlg.h"
@@ -579,6 +580,8 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
 // Entry point for a regular image draw to screen
 void CSerialEMView::DrawImage(void)
 {
+  if (mWinApp->GetInRestoreViewFocus())
+    return;
   CRect rect;
   GetClientRect(rect);
   CClientDC cdcWin(this);
@@ -596,7 +599,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   float sizeScaling, int skipExtra, bool toBuffer)
 {
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
-  int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy;
+  int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy, group, numGroups;
+  int adjSave;
   float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, filtMean = 128., filtSD, boost, targetSD = 40.;
@@ -611,10 +615,16 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
   CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = NULL;
+  CArray<CMapDrawItem *, CMapDrawItem *> *polyArray;
+  CMapDrawItem *item, *polygon;
+  int *showGroup;
+  COLORREF contColors[MAX_AUTOCONT_GROUPS] = {RGB(220,0,0), RGB(245,160,0), 
+    RGB(255,255,0), RGB(0,255,0), RGB(0,255,255), RGB(0,0,255), RGB(178,107,210),
+    RGB(255,0,255)};
   FloatVec zeroRadii, zeroRadii2;
   FloatVec *curHoleXYpos, *xHoleCens, *yHoleCens;
   IntVec *curHoleIndex, *pieceOn;
-  std::vector<short> *holeExcludes;
+  ShortVec *holeExcludes, *polyGroups;
   CFont *useFont, *useLabelFont;
   CPoint point;
   LowDoseParams *ldp;
@@ -1227,6 +1237,33 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
   }
 
+  // Draw autocontour polygons
+  polyArray = mWinApp->mNavHelper->mAutoContouringDlg->GetPolyArrayToDraw(&polyGroups, 
+    &holeExcludes, numGroups, &showGroup);
+  if (polyArray) {
+    for (group = 0; group < numGroups; group++) {
+      if (!showGroup[group])
+        continue;
+      ix = group % MAX_AUTOCONT_GROUPS;
+      if (mWinApp->mNavHelper->GetReverseAutocontColors())
+        ix = (MAX_AUTOCONT_GROUPS - 1) - ix;
+      CPen polyPen(PS_SOLID, thick1, contColors[ix]);
+      CPen *pOldPen = cdc.SelectObject(&polyPen);
+      for (ix = 0; ix < (int)polyArray->GetSize(); ix++) {
+        float delPtX = 0., delPtY = 0.;
+        if (holeExcludes->at(ix) || polyGroups->at(ix) != group)
+          continue;
+        adjSave = mAdjustPt;
+        item = polyArray->GetAt(ix);
+        GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
+        DrawMapItemBox(cdc, &rect, item, imBuf, item->mNumPoints, 0., 0., delPtX, delPtY,
+          NULL, NULL);
+        mAdjustPt = adjSave;
+      }
+      cdc.SelectObject(pOldPen);
+    }
+  }
+
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
@@ -1234,7 +1271,6 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw, doInHole;
-  CMapDrawItem *item, *polygon;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1267,7 +1303,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
-    int adjSave = mAdjustPt;
+    adjSave = mAdjustPt;
     float delPtX = 0., delPtY = 0.;
 
     if (iDraw < 0) {

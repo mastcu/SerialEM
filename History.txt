@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/23/22: Added dialog for autocontouring grid squares and converting selected
+ones to polygons.
+
 12/22/22: Fixed SEMCCD getting frames for just aligning with
 K2SynchronousSaving set (In 4.0).
 

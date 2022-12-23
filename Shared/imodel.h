@@ -685,6 +685,7 @@ extern "C" {
                                      int xsize, int ysize, int z, 
                                      unsigned char testmask, int diagonal,
                                      float threshold, int polarity, int *ncont);
+  void imodAutoContourStop();
 
 #ifdef __cplusplus
 }

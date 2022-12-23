@@ -36,6 +36,7 @@
 #include "EMmontageController.h"
 #include "MultiTSTasks.h"
 #include "HoleFinderDlg.h"
+#include "AutoContouringDlg.h"
 #include "Mailer.h"
 #include "MultiShotDlg.h"
 #include "MultiCombinerDlg.h"
@@ -189,6 +190,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   HoleFinderParams *hfParams = mWinApp->mNavHelper->GetHoleFinderParams();
+  AutoContourParams *contParams = mWinApp->mNavHelper->GetAutocontourParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
@@ -582,6 +584,23 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mNavHelper->SetMHCenableMultiDisplay(itemInt[2] != 0);
         if (!itemEmpty[3])
           mWinApp->mNavHelper->SetMHCturnOffOutsidePoly(itemInt[3] != 0);
+      } else if (NAME_IS("AutoContParams")) {
+        contParams->targetSizePixels = itemInt[1];
+        contParams->targetPixSizeUm = itemFlt[2];
+        contParams->usePixSize = itemInt[3] != 0;
+        contParams->minSize = itemFlt[4];
+        contParams->maxSize = itemFlt[5];
+        contParams->relThreshold = itemFlt[6];
+        contParams->absThreshold = itemFlt[7];
+        contParams->useAbsThresh = itemInt[8] != 0;
+        contParams->numGroups = itemInt[9];
+        contParams->groupByMean = itemInt[10] != 0;
+        contParams->lowerMeanCutoff = itemFlt[11];
+        contParams->upperMeanCutoff = itemFlt[12];
+        contParams->minSizeCutoff = itemFlt[13];
+        contParams->SDcutoff = itemFlt[14];
+        contParams->irregularCutoff = itemFlt[15];
+        contParams->borderDistCutoff = itemFlt[16];
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = itemFlt[2];
@@ -897,6 +916,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mNavHelper->GetHoleFinderPlacement();
           else if (NAME_IS("MultiCombinerPlacement"))
             place = mWinApp->mNavHelper->GetMultiCombinerPlacement();
+          else if (NAME_IS("AutoContPlacement"))
+            place = mWinApp->mNavHelper->GetAutoContDlgPlacement();
           else if (NAME_IS("NavAcqPlacement"))
             place = mWinApp->mNavHelper->GetAcquireDlgPlacement(false);
           else if (NAME_IS("CtffindPlacement"))
@@ -964,9 +985,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
             SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
             SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
-            if (NAME_IS("HoleFinderPlacement") && 
+            if (NAME_IS("HoleFinderPlacement") &&
               mWinApp->mNavHelper->mHoleFinderDlg->IsOpen())
               mWinApp->mNavHelper->mHoleFinderDlg->SetWindowPlacement(place);
+            if (NAME_IS("AutoContPlacement") &&
+              mWinApp->mNavHelper->mAutoContouringDlg->IsOpen())
+              mWinApp->mNavHelper->mAutoContouringDlg->SetWindowPlacement(place);
           }
         }
 
@@ -1524,6 +1548,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   HoleFinderParams *hfParams = mWinApp->mNavHelper->GetHoleFinderParams();
+  AutoContourParams *contParams = mWinApp->mNavHelper->GetAutocontourParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
@@ -1541,6 +1566,8 @@ void CParameterIO::WriteSettings(CString strFileName)
 
   if (mWinApp->mNavHelper->mHoleFinderDlg)
     mWinApp->mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+  if (mWinApp->mNavHelper->mAutoContouringDlg)
+    mWinApp->mNavHelper->mAutoContouringDlg->SyncToMasterParams();
 
   try {
     // Open the file for writing, 
@@ -1751,6 +1778,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0, 
       mWinApp->mNavHelper->GetMHCturnOffOutsidePoly() ? 1 : 0);
     mFile->WriteString(oneState);
+    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f\n",
+      contParams->targetSizePixels, contParams->targetPixSizeUm,
+      contParams->usePixSize ? 1 : 0, contParams->minSize, contParams->maxSize,
+      contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,
+      contParams->numGroups, contParams->groupByMean ? 1 : 0, contParams->lowerMeanCutoff,
+      contParams->upperMeanCutoff, contParams->minSizeCutoff, contParams->SDcutoff,
+      contParams->irregularCutoff, contParams->borderDistCutoff);
+    mFile->WriteString(oneState);
     oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n", 
       dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0, 
       dwParams->interval, dwParams->maxWaitTime, dwParams->failureAction,
@@ -1948,9 +1983,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
     WritePlacement("NavAcqPlacement", 0, navAcqPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
-    WritePlacement("HoleFinderPlacement", 0, mWinApp->mNavHelper->GetHoleFinderPlacement());
+    WritePlacement("HoleFinderPlacement", 0, 
+      mWinApp->mNavHelper->GetHoleFinderPlacement());
     WritePlacement("MultiCombinerPlacement", 0, 
       mWinApp->mNavHelper->GetMultiCombinerPlacement());
+    WritePlacement("AutoContPlacement", 0, 
+      mWinApp->mNavHelper->GetAutoContDlgPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);

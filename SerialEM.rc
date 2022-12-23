@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -655,6 +655,7 @@ BEGIN
             MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
             MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
             MENUITEM SEPARATOR
+            MENUITEM "A&utocontour Grid Squares...", ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES
             MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
         END
@@ -3548,7 +3549,6 @@ BEGIN
     CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,129,118,12
     CTEXT           "Lower mean cutoff",IDC_STAT_LOW_MEAN_LABEL,27,140,71,8
     EDITTEXT        IDC_EDIT_LOWER_MEAN,123,128,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,20,8
     RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,99,140,20,8
     CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,150,118,12
     CTEXT           "Upper mean cutoff",IDC_STAT_UP_MEAN_LABEL,27,161,71,8
@@ -3578,6 +3578,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,116,10
     PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,102,56,12
     PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,212,44,12
+    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,20,8
 END
 
 IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 90
@@ -3822,6 +3823,82 @@ BEGIN
     LTEXT           "deg",IDC_STATIC,153,23,13,8
     CONTROL         "",IDC_SPIN_CVIC_ROTATION,"msctls_updown32",UDS_ARROWKEYS,141,20,10,14
     PUSHBUTTON      "?",IDC_BUTHELP,167,43,11,10
+END
+
+IDD_AUTOCONTOUR DIALOGEX 0, 0, 158, 260
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Autocontouring Grid Squares"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_RTOPIXELS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,7,13,9,10
+    CONTROL         "",IDC_RTOPIXSIZE,"Button",BS_AUTORADIOBUTTON,7,27,8,10
+    GROUPBOX        "Reduce image to",IDC_STATIC,3,3,76,38,WS_GROUP
+    CONTROL         "Relative:",IDC_RRELATIVE_THRESH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,86,12,37,10
+    CONTROL         "Absolute:",IDC_RABS_THRESH,"Button",BS_AUTORADIOBUTTON,86,27,38,10
+    GROUPBOX        "Contour threshold",IDC_STATIC,82,3,73,38,WS_GROUP
+    CONTROL         "Size",IDC_RGROUP_BY_SIZE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,82,74,25,10
+    CONTROL         "Mean value",IDC_RGROUP_BY_MEAN,"Button",BS_AUTORADIOBUTTON,109,74,45,10
+    LTEXT           "Split into 8",IDC_STAT_SHOW_GROUPS,5,75,31,8
+    DEFPUSHBUTTON   "OK",IDOK,19,243,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,89,243,50,12
+    PUSHBUTTON      "?",IDC_BUTHELP,145,245,10,10,NOT WS_VISIBLE
+    EDITTEXT        IDC_IDC_EDIT_TO_PIXELS,17,12,28,12,ES_AUTOHSCROLL
+    LTEXT           "pixels",IDC_STAT_TO_PIXELS,46,13,19,8
+    EDITTEXT        IDC_EDIT_TO_PIX_SIZE,17,26,20,12,ES_AUTOHSCROLL
+    LTEXT           " um pixel size",IDC_STAT_TO_PIX_SIZE,37,27,40,8
+    LTEXT           "Range of sizes:",IDC_STATIC,6,44,47,8
+    EDITTEXT        IDC_EDIT_MINSIZE,55,43,20,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STATIC,82,44,8,8
+    EDITTEXT        IDC_EDIT_MAXSIZE,91,43,20,12,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATIC,116,44,25,8
+    EDITTEXT        IDC_EDIT_REL_THRESH,125,11,27,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ABS_THRESH,125,26,27,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Autocontour Image",IDC_BUT_MAKE_CONTOURS,13,58,72,12
+    CONTROL         "",IDC_SPIN_NUM_GROUPS,"msctls_updown32",UDS_ARROWKEYS,37,72,10,14
+    LTEXT           "groups by",IDC_STAT_GROUP_BY,48,75,31,8
+    CONTROL         "1",IDC_CHECK_GROUP1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,25,88,15,10
+    CONTROL         "2",IDC_CHECK_GROUP2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,41,88,15,10
+    CONTROL         "3",IDC_CHECK_GROUP3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,88,15,10
+    CONTROL         "4",IDC_CHECK_GROUP4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,73,88,15,10
+    CONTROL         "5",IDC_CHECK_GROUP5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,89,88,15,10
+    CONTROL         "6",IDC_CHECK_GROUP6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,105,88,15,10
+    CONTROL         "7",IDC_CHECK_GROUP7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,121,88,15,10
+    CONTROL         "8",IDC_CHECK_GROUP8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,137,88,13,10
+    LTEXT           "Show:",IDC_STAT_SHOW_CREATE,5,89,19,8
+    CONTROL         "",IDC_SLIDER_MIN_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,100,124,12
+    CONTROL         "",IDC_SLIDER_MAX_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,121,124,12
+    CONTROL         "",IDC_SLIDER_MIN_SIZE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,142,124,12
+    CONTROL         "",IDC_SLIDER_SQUARE_SD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,184,124,12
+    CONTROL         "",IDC_SLIDER_IRREGULARITY,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,163,124,12
+    CONTROL         "",IDC_SLIDER_BORDER_DIST,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,206,124,12
+    EDITTEXT        IDC_EDIT_MIN_MEAN,127,100,27,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_MEAN,127,120,27,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MIN_SIZE,127,141,27,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BORDER_DIST,127,205,27,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Make Navigator Polygons",IDC_BUT_CREATE_POLYS,5,227,88,12
+    PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_POLYS,96,58,50,12
+    PUSHBUTTON      "Undo",IDC_BUT_UNDO_POLYS,102,227,50,12
+    LTEXT           "Static",IDC_STAT_IRREGULARITY,129,164,24,8
+    LTEXT           "Static",IDC_STAT_SQUARE_SD,128,184,24,8
+    LTEXT           "Static",IDC_STAT_MIN_LOWER_MEAN,5,111,20,8
+    LTEXT           "Static",IDC_STAT_MAX_LOWER_MEAN,105,111,20,8
+    LTEXT           "Static",IDC_STAT_MIN_UPPER_MEAN,5,133,20,8
+    LTEXT           "Static",IDC_STAT_MAX_UPPER_MEAN,105,132,20,8
+    LTEXT           "Static",IDC_STAT_MIN_MIN_SIZE,5,154,20,8
+    LTEXT           "Static",IDC_STAT_MAX_MIN_SIZE,105,154,20,8
+    LTEXT           "Static",IDC_STAT_MIN_SQUARE_SD,5,196,20,8
+    LTEXT           "Static",IDC_STAT_MAX_SQUARE_SD,105,196,20,8
+    LTEXT           "Static",IDC_STAT_MAX_IRREGULAR,105,175,20,8
+    LTEXT           "Static",IDC_STAT_MIN_IRREGULAR,5,175,20,8
+    LTEXT           "Static",IDC_STAT_MIN_BORDER_DIST,5,217,20,8
+    LTEXT           "Static",IDC_STAT_MAX_BORDER_DIST,105,217,20,8
+    CTEXT           "Lower mean cutoff",IDC_STAT_MIN_MEAN_LABEL,27,111,71,8
+    CTEXT           "Upper mean cutoff",IDC_STAT_MAX_MEAN_LABEL2,27,132,71,8
+    CTEXT           "Minimum size cutoff",IDC_STAT_MIN_SIZE_LABEL,27,153,71,8
+    CTEXT           "SD cutoff",IDC_STAT_PCT_BLACK_LABEL,27,195,71,8
+    CTEXT           "Irregularity cutoff",IDC_STAT_IRREGULAR_LABEL,27,174,71,8
+    CTEXT           "Edge distance cutoff",IDC_STAT_BORDER_DIST_LABEL,27,217,71,8
 END
 
 
@@ -4373,6 +4450,14 @@ BEGIN
         TOPMARGIN, 3
         BOTTOMMARGIN, 52
     END
+
+    IDD_AUTOCONTOUR, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 155
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 255
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -4627,6 +4712,11 @@ BEGIN
     0
 END
 
+IDD_AUTOCONTOUR AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4777,15 +4867,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_BUT_SETUP_CAM       "Set parameters for image acquisition"
-END
-
-STRINGTABLE
-BEGIN
     IDC_BUT_VIEW            "Acquire image with View parameter set"
     IDC_BUT_FOCUS           "Acquire image with Focus parameter set"
     IDC_BUT_TRIAL           "Acquire image with Trial parameter set"
     IDC_BUT_RECORD          "Acquire image with Record parameter set"
+    IDC_BUT_SETUP_CAM       "Set parameters for image acquisition"
+    IDC_BUT_TEST_MULTISHOT  "Test coma correction at positions in hole or corners of hole pattern"
+    IDC_BUTCAL_BT_VS_IS     "Open Coma vs. Image Shift Calibration dialog to run the calibration"
 END
 
 STRINGTABLE
@@ -5015,11 +5103,19 @@ END
 STRINGTABLE
 BEGIN
     IDC_BUTMACRO2           "Execute the given script or execute on step of tilt series"
-    IDC_SPINMACRO2          "Change script executed by second button"
-    IDC_BUTSTOP             "STOP the current operation"
     IDC_BUTMACRO3           "Execute the given script or tilt back up in tilt series"
-    IDC_SPINMACRO3          "Change script executed by third button"
+END
+
+STRINGTABLE
+BEGIN
     IDC_SPINMACRO1          "Change script executed by first button"
+    IDC_SPINMACRO2          "Change script executed by second button"
+    IDC_SPINMACRO3          "Change script executed by third button"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUTSTOP             "STOP the current operation"
 END
 
 STRINGTABLE
@@ -5077,6 +5173,15 @@ STRINGTABLE
 BEGIN
     IDC_RADIORECORD         "Acquire image with fourth parameter set after autofocus"
     IDC_RADIOTRIAL          "Acquire image with third parameter set after autofocus"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_CLOSE_WHEN_DONE 
+                            "Close file after montage is done if not made by Nav, TS, or script"
+    IDC_BUT_USE_LAST_HOLE_VECS 
+                            "Use vectors from last hole-finding as the vectors for regular pattern"
+    IDC_BUT_STEP_ADJUST     "Step to corners of regular pattern or each custom position and adjust IS"
     IDC_BUTMACRO1           "Execute the given script or execute one loop of tilt series"
 END
 
@@ -5405,11 +5510,6 @@ BEGIN
     IDC_CHECK_SECOND_RING   "Take a second ring of peripheral shots (can be inner or outer ring)"
     IDC_SPIN_RING2_NUM      "Set number of shots to take in second ring"
     IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"
-    IDC_BUT_USE_LAST_HOLE_VECS
-                            "Use vectors from last hole-finding as the vectors for regular pattern"
-    IDC_BUT_STEP_ADJUST     "Step to corners of regular pattern or each custom position and adjust IS"
-    IDC_BUT_TEST_MULTISHOT  "Test coma correction at positions in hole or corners of hole pattern"
-    IDC_BUTCAL_BT_VS_IS     "Open Coma vs. Image Shift Calibration dialog to run the calibration"
 END
 
 STRINGTABLE
@@ -5829,12 +5929,6 @@ BEGIN
     IDC_EDITCOOKDOSE        "Target dose for cooking"
     IDC_SPINCOOKDOSE        "Adjust dose in steps of 50"
     IDC_TILTFORCOOK         "Tilt to the given angle before cooking"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_CHECK_CLOSE_WHEN_DONE 
-                            "Close file after montage is done if not made by Nav, TS, or script"
 END
 
 STRINGTABLE
@@ -6964,6 +7058,45 @@ BEGIN
                             "Run the script in SerialEM_Snaphot.txt, located with SerialEM.exe"
 END
 
+STRINGTABLE
+BEGIN
+    IDC_RTOPIXELS           "Reduce image size to a specific number of pixels in X and Y"
+    IDC_RTOPIXSIZE          "Reduce image size to reach a specific pixel size"
+    IDC_RRELATIVE_THRESH    "Set contour threshold to a relative value between 0 and 1"
+    IDC_RABS_THRESH         "Set contour threshold to a fixed image intensity"
+    IDC_RGROUP_BY_SIZE      "Order squares by size and divide into groups"
+    IDC_RGROUP_BY_MEAN      "Order points by mean image intensity and divide into groups"
+    IDC_IDC_EDIT_TO_PIXELS  "Enter the target number of pixels to reduce size to"
+    IDC_EDIT_TO_PIX_SIZE    "Enter the target pixel size to reduce image to"
+    IDC_EDIT_MINSIZE        "Eliminate coutours less than this size in microns"
+    IDC_EDIT_MAXSIZE        "Eliminate contours bigger than this size in microns"
+    IDC_EDIT_REL_THRESH     "Threshold value as fraction of way from dark to light peaks in histogram"
+    IDC_EDIT_ABS_THRESH     "Absolute intensity value for threshold; use if relative threshold fails"
+    IDC_BUT_MAKE_CONTOURS   "Run autocontouring routine"
+    IDC_SPIN_NUM_GROUPS     "Set number of groups to divide contours into"
+    IDC_CHECK_GROUP1        "Toggle display and conversion to polygons of group 1"
+    IDC_CHECK_GROUP2        "Toggle display and conversion to polygons of group 2"
+    IDC_CHECK_GROUP3        "Toggle display and conversion to polygons of group 3"
+    IDC_CHECK_GROUP4        "Toggle display and conversion to polygons of group 4"
+    IDC_CHECK_GROUP5        "Toggle display and conversion to polygons of group 5"
+    IDC_CHECK_GROUP6        "Toggle display and conversion to polygons of group 6"
+    IDC_CHECK_GROUP7        "Toggle display and conversion to polygons of group 7"
+    IDC_CHECK_GROUP8        "Toggle display and conversion to polygons of group 8"
+    IDC_SLIDER_MIN_MEAN     "Adjust the cutoff for minimum mean intensity"
+    IDC_SLIDER_MAX_MEAN     "Adjust the cutoff for maximum mean intensity"
+    IDC_SLIDER_MIN_SIZE     "Adjust the cutoff for minimum contour size in microns"
+    IDC_SLIDER_SQUARE_SD    "Adjust the cutoff for maximum standard deviation of intensity"
+    IDC_SLIDER_IRREGULARITY "Adjust the cutoff for maximum deviation of contour from square"
+    IDC_SLIDER_BORDER_DIST  "Adjust the minimum distance from edge of contoured area in microns"
+    IDC_EDIT_MIN_MEAN       "Enter a specific cutoff for minimum mean intensity"
+    IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
+    IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
+    IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
+    IDC_BUT_CREATE_POLYS    "Convert the selected groups of contours to Navigator polygons"
+    IDC_BUT_CLEAR_POLYS     "Remove all the contour data"
+    IDC_BUT_UNDO_POLYS      "Remove the Navigator polygons and restore them as contours"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -6987,7 +7120,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

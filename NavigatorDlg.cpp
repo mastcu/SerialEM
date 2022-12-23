@@ -3228,13 +3228,14 @@ void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int 
   UpdateForCurrentItemChange();
 }
 
-// Add a set of polygons from an IMOD model object
-int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
+// Convert a set of polygons from an IMOD model object to a set of items in polyArray
+int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, 
+  CArray<CMapDrawItem *, CMapDrawItem *> &polyArray)
 {
   ScaleMat aMat, aInv;
   float delX, delY, stageX, stageY, midX, midY, adjustX, adjustY;
   CMapDrawItem *item;
-  int coNum, groupID, pt;
+  int coNum, pt;
   Icont *cont;
   Ipoint lowLeft, upRight;
   float imageX, imageY, stageZ = 0.;
@@ -3242,11 +3243,10 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
   if (!BufferStageToImage(imBuf, aMat, delX, delY))
     return 1;
   aInv = MatInv(aMat);
-  groupID = obj->contsize > 1 ? MakeUniqueID() : 0;
-  mDeferAddingToViewer = true;
   for (coNum = 0; coNum < obj->contsize; coNum++) {
     cont = &obj->cont[coNum];
-    item = MakeNewItem(groupID);
+    item = new CMapDrawItem();
+    polyArray.Add(item);
     item->mType = ITEM_TYPE_POLYGON;
     item->mColor = DEFAULT_POLY_COLOR;
     SetupItemMarkedOnBuffer(imBuf, item);
@@ -3261,7 +3261,7 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
       &item->mYinPiece);
     adjustX = midX - imageX;
     adjustY = midY - imageY;
-    mShiftManager->ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, item->mStageX,
+    mShiftManager->ApplyScaleMatrix(aInv, midX - delX, midY - delY, item->mStageX,
       item->mStageY);
 
     for (pt = 0; pt < cont->psize; pt++) {
@@ -3272,13 +3272,79 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj)
       item->AppendPoint(stageX, stageY);
     }
   }
+  return 0;
+}
+
+// Add the non-excluded items in the selected groups to the Naviigator array
+void CNavigatorDlg::AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, 
+  ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, 
+  int &lastID)
+{
+  int ind, group, numPolys = (int)polyArray.GetSize();
+  int groupID;
+  bool needFirst = true;
+  CMapDrawItem *item = NULL;
+
+  for (group = 0; group < numGroups; group++) {
+    if (!groupShown[group])
+      continue;
+
+    // New ID for each  group: loop on points and add non-excludedones in group
+    groupID = MakeUniqueID();
+    for (ind = 0; ind < numPolys; ind++) {
+      if (excluded[ind] || groupNums[ind] != group)
+        continue;
+      item = polyArray.GetAt(ind);
+      item->mGroupID = groupID;
+      item->mMapID = MakeUniqueID();
+      if (needFirst) {
+        firstID = item->mMapID;
+        needFirst = false;
+      }
+      item->mLabel.Format("%d", mNewItemNum++);
+      item->mRegistration = mCurrentRegistration;
+      item->mOriginalReg = mCurrentRegistration;
+      mItemArray.Add(item);
+      polyArray.SetAt(ind, NULL);
+    }
+  }
+  if (item)
+    lastID = item->mMapID;
+  RefillAfterAutocontPolys();
+}
+
+// Put the added polygons back into the polyArray in the empty spots: it has to be checked
+// beforehand that this matches up
+void CNavigatorDlg::UndoAutocontPolyAddition(
+  CArray<CMapDrawItem*, CMapDrawItem*> &polyArray, int numRemove)
+{
+  CMapDrawItem *item;
+  int ind, itemInd = (int)mItemArray.GetSize() - 1;
+  for (ind = (int)polyArray.GetSize() - 1; ind >= 0; ind--) {
+    if (polyArray.GetAt(ind) == NULL) {
+      item = mItemArray.GetAt(itemInd);
+      mItemArray.RemoveAt(itemInd--);
+      polyArray.SetAt(ind, item);
+    }
+  }
+  RefillAfterAutocontPolys();
+}
+
+// Common operations after bulk changes in the table like these
+void CNavigatorDlg::RefillAfterAutocontPolys()
+{
+  mCurrentItem = (int)mItemArray.GetSize() - 1;
+  mCurListSel = mCurrentItem;
+  if (m_bCollapseGroups) {
+    MakeListMappings();
+    mCurListSel = mItemToList[mCurrentItem];
+  }
+
   FillListBox(false, true);
-  mDeferAddingToViewer = false;
   SetChanged(true);
   ManageCurrentControls();
   Update();
   Redraw();
-  return 0;
 }
 
 // Delete points on backspace if drawing polygon, adding points, or in Edit mode

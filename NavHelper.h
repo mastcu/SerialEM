@@ -12,6 +12,7 @@ class HoleFinder;
 class CMultiHoleCombiner;
 class CMultiCombinerDlg;
 class CComaVsISCalDlg;
+class CAutoContouringDlg;
 
 #define MULTI_IN_HOLE   0x1
 #define MULTI_HOLES     0x2
@@ -76,6 +77,26 @@ struct HoleFinderParams
   float blackFracCutoff;   // Cutoff for excluding holes with high # of black outliers
   BOOL showExcluded;      // Show the excluded holes
   int layoutType;         // How to order nav points
+};
+
+struct AutoContourParams
+{
+  int targetSizePixels;    // Target for reduction in pixels
+  float targetPixSizeUm;   // Target pixel size to reduce to
+  int usePixSize;          // Flag to reduce to pixel size
+  float minSize;           // Minimum size in um for autocontouring
+  float maxSize;           // Maximum size in um
+  float relThreshold;      // Relative threshold value
+  float absThreshold;      // Absolute threshold
+  int useAbsThresh;        // Flag to use absolute threshold
+  int numGroups;           // Number of groups to split into
+  int groupByMean;         // Flag to group by mean value, not size
+  float lowerMeanCutoff;  // Cutoff for the excluding dark squares
+  float upperMeanCutoff;  // Cutoff for excluding light squares
+  float minSizeCutoff;    // Cutoff for excluding ones too small
+  float SDcutoff;         // Cutoff for excluding highly variable squares
+  float irregularCutoff;  // Cutoff for excluding based on irregularity
+  float borderDistCutoff; // Cutoff for excluding based on distance from border
 };
 
 struct BaseMarkerShift
@@ -179,6 +200,7 @@ public:
     (!mMultiShotParams.useCustomHoles && mMultiShotParams.holeMagIndex > 0));};
   MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
   HoleFinderParams *GetHoleFinderParams() { return &mHoleFinderParams; };
+  AutoContourParams *GetAutocontourParams() { return &mAutoContourParams; };
   NavAlignParams *GetNavAlignParams() {return &mNavAlignParams;};
   GetSetMember(float, DistWeightThresh);
   GetSetMember(float, RImaxLMfield);
@@ -223,6 +245,7 @@ public:
   GetSetMember(bool, OKtoUseHoleVectors);
   GetSetMember(int, MarkerShiftSaveType);
   GetSetMember(int, MarkerShiftApplyWhich);
+  GetSetMember(BOOL, ReverseAutocontColors);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -240,6 +263,7 @@ public:
   CMultiHoleCombiner *mCombineHoles;
   CMultiCombinerDlg *mMultiCombinerDlg;
   CComaVsISCalDlg *mComaVsISCalDlg;
+  CAutoContouringDlg *mAutoContouringDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -267,6 +291,7 @@ private:
   MultiShotParams mMultiShotParams;
   int mEnableMultiShot;
   HoleFinderParams mHoleFinderParams;
+  AutoContourParams mAutoContourParams;
   NavAcqAction mAllAcqActions[2][NAA_MAX_ACTIONS];
   NavAcqAction *mAcqActions;
   NavAlignParams mNavAlignParams;
@@ -357,6 +382,7 @@ private:
   WINDOWPLACEMENT mHoleFinderPlace;
   WINDOWPLACEMENT mAcquireDlgPlace;
   WINDOWPLACEMENT mComaVsISDlgPlace;
+  WINDOWPLACEMENT mAutoContDlgPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -434,7 +460,8 @@ private:
   int mAcqActCurrentOrder[2][NAA_MAX_ACTIONS];    // Current order
   int mCurAcqParamIndex;         // Current acquire param set
   int mMarkerShiftApplyWhich;    // Saved dialog selection for which ones to apply to
-  int mMarkerShiftSaveType;      // And whether/how to save shifts      
+  int mMarkerShiftSaveType;      // And whether/how to save shifts  
+  BOOL mReverseAutocontColors;   // Flag to use colors in reverse
 
 
 public:
@@ -559,6 +586,8 @@ public:
   WINDOWPLACEMENT *GetMultiCombinerPlacement();
   void OpenComaVsISCal(void);
   WINDOWPLACEMENT *GetComaVsISDlgPlacement();
+  void OpenAutoContouring(void);
+  WINDOWPLACEMENT *GetAutoContDlgPlacement(void);
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
   void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
