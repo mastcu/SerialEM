@@ -181,6 +181,8 @@ BOOL CAutoContouringDlg::OnInitDialog()
   ManageGroupSelectors(1);
   ManageACEnables();
   ManagePostEnables(false);
+  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+    mShowGroup[ind] = 1;
 
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
@@ -1098,7 +1100,8 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
   }
 
   // Get statistics on reduced image
-  SquareStatistics(acd, nxRed, nyRed, minScale, maxScale, redFac, 2.25f);
+  if (acd->obj->contsize)
+    SquareStatistics(acd, nxRed, nyRed, minScale, maxScale, redFac, 2.25f);
 
   // Scale the contours back to full image coordinates
   for (coNum = 0; coNum < acd->obj->contsize; coNum++) {
@@ -1124,16 +1127,39 @@ void CAutoContouringDlg::AutoContDone()
   AutoContData *acd = &mAutoContData;
   if (!DoingAutoContour())
     return;
-  mStatMinMean = *std::min_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
-  mStatMaxMean = *std::max_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
-  mStatMinSize = *std::min_element(acd->sqrSizes.begin(), acd->sqrSizes.end());
-  mStatMaxSize = *std::max_element(acd->sqrSizes.begin(), acd->sqrSizes.end());
-  mStatMinSD = *std::min_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
-  mStatMaxSD = *std::max_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
-  mStatMinSquareness = *std::min_element(acd->squareness.begin(), acd->squareness.end());
-  mStatMaxSquareness = *std::max_element(acd->squareness.begin(), acd->squareness.end());
-  mStatMaxBoundDist = *std::max_element(acd->boundDists.begin(), acd->boundDists.end());
-  mStatMaxBoundDist = B3DMAX(3.f * acd->spacing, mStatMaxBoundDist / 3.f);
+  if (!acd->obj->contsize) {
+    SEMMessageBox("No contours found - is the \"Range of sizes\" too narrow?");
+    StopAutoCont();
+  }
+  PrintfToLog("Autocontouring found %d contours", acd->obj->contsize);
+  if (acd->obj->contsize > 1) {
+    mStatMinMean = *std::min_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
+    mStatMaxMean = *std::max_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
+    mStatMinSize = *std::min_element(acd->sqrSizes.begin(), acd->sqrSizes.end());
+    mStatMaxSize = *std::max_element(acd->sqrSizes.begin(), acd->sqrSizes.end());
+    mStatMinSD = *std::min_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
+    mStatMaxSD = *std::max_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
+    mStatMinSquareness = *std::min_element(acd->squareness.begin(), 
+      acd->squareness.end());
+    mStatMaxSquareness = *std::max_element(acd->squareness.begin(), 
+      acd->squareness.end());
+    mStatMaxBoundDist = *std::max_element(acd->boundDists.begin(), acd->boundDists.end());
+    if (acd->spacing) {
+      mStatMaxBoundDist = B3DMAX(3.f * acd->spacing, mStatMaxBoundDist / 3.f);
+    } else {
+      mStatMaxSquareness = 1.f;
+      mStatMaxBoundDist = 100.f;
+    }
+  } else {
+    mStatMinMean = B3DMIN(0.9f * mMedianMean, 1.1f * mMedianMean);
+    mStatMaxMean = B3DMAX(0.9f * mMedianMean, 1.1f * mMedianMean);
+    mStatMinSize = 0.9f * acd->sqrSizes[0];
+    mStatMaxSize = 1.1f * acd->sqrSizes[0];
+    mStatMinSD = 0.9f * acd->sqrSDs[0];
+    mStatMaxSD = 1.1f * acd->sqrSDs[0];
+    mStatMaxSquareness = 1.f;
+    mStatMaxBoundDist = 100.f;
+  }
   mMedianMean = acd->medianMean;
 
   if (mWinApp->mNavigator->ImodObjectToPolygons(acd->imBuf, acd->obj, mPolyArray)) {
@@ -1145,7 +1171,7 @@ void CAutoContouringDlg::AutoContDone()
     ManagePostEnables(false);
     SetExclusionsAndGroups();
   }
-  StopAutoCont(true);
+  StopAutoCont();
 }
 
 // This should be OK to call on a timeout, but...
@@ -1154,7 +1180,7 @@ void CAutoContouringDlg::CleanupAutoCont(int error)
   if (error == IDLE_TIMEOUT_ERROR) {
     UtilThreadCleanup(&mAutoContThread);
   }
-  StopAutoCont(true);
+  StopAutoCont();
   if (error)
     SEMMessageBox(_T(error == IDLE_TIMEOUT_ERROR ? "Time out doing autocontouring" :
       "Autocontouring failed: " + mAutoContData.errString));
@@ -1162,7 +1188,7 @@ void CAutoContouringDlg::CleanupAutoCont(int error)
 }
 
 // Stop function, a bit problematic because stopping the thread doesn't stop the openmp
-void CAutoContouringDlg::StopAutoCont(bool justFree)
+void CAutoContouringDlg::StopAutoCont()
 {
   AutoContData *acd = &mAutoContData;
   double startTime = GetTickCount();
@@ -1226,6 +1252,7 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
     scaleFac = 255.f / (maxScale - minScale);
   if (acd->pixel)
     sizeScale *= acd->pixel;
+  acd->spacing = 0.;
 
   numConts = acd->obj->contsize;
 
@@ -1233,7 +1260,8 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
   acd->sqrMeans.resize(numConts);
   acd->sqrSDs.resize(numConts);
   acd->sqrSizes.resize(numConts);
-  acd->squareness.resize(numConts);
+  acd->squareness.clear();
+  acd->squareness.resize(numConts, 0.);
   acd->pctBlackPix.resize(numConts);
   acd->boundDists.clear();
   acd->boundDists.resize(numConts, 0.);
@@ -1314,112 +1342,119 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
     acd->pctBlackPix[ind] = fracLow;
   }
 
-  // Get the grid angle
-  acd->holeFinder->analyzeNeighbors(xCenters, yCenters, peaks, altInds, xBound, yBound,
-    altPeaks, 0., 0., 0, xcen, tmpVec, valVec);
-  acd->holeFinder->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, 
-    avgAngle, acd->spacing);
-  cosAng = (float)cos(DTOR * avgAngle);
-  sinAng = (float)sin(DTOR * avgAngle);
+  if (numConts > 1)
+    rsFastMedian(&acd->sqrMeans[0], numConts, &xBound[0], &acd->medianMean);
+  else
+    acd->medianMean = acd->sqrMeans[0];
 
-  // Get a contour and allocated points for rotated, scaled contours
-  rotCont = imodContourNew();
-  if (rotCont) {
-    rotCont->pts = B3DMALLOC(Ipoint, maxSize);
-    if (!rotCont->pts) {
-      imodContourDelete(rotCont);
-      rotCont = NULL;
-    }
-  }
-  if (rotCont) {
-    for (ind = 0; ind < numConts; ind++) {
-      cont = &acd->obj->cont[ind];
+  // Squareness and edge distance computation: skip if too few
+  if (numConts > 3) {
 
-      // Set up equivalent box, determine how much to scale for good area measures
-      half = 0.5f * acd->sqrSizes[ind] / sizeScale;
-      scaleForScan = B3DMAX(1.f, minForScan / (2.f * half));
-      half *= scaleForScan;
+    // Get the grid angle
+    acd->holeFinder->analyzeNeighbors(xCenters, yCenters, peaks, altInds, xBound, yBound,
+      altPeaks, 0., 0., 0, xcen, tmpVec, valVec);
+    acd->holeFinder->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
+      avgAngle, acd->spacing);
+    cosAng = (float)cos(DTOR * avgAngle);
+    sinAng = (float)sin(DTOR * avgAngle);
 
-      // Rotate the contour
-      rotCont->psize = cont->psize;
-      for (ix = 0; ix < cont->psize; ix++) {
-        delx = cont->pts[ix].x - xCenters[ind];
-        dely = cont->pts[ix].y - yCenters[ind];
-        rotCont->pts[ix].x = scaleForScan * (cosAng * delx + sinAng * dely);
-        rotCont->pts[ix].y = scaleForScan * (-sinAng * delx + cosAng * dely);
+    // Get a contour and allocated points for rotated, scaled contours
+    rotCont = imodContourNew();
+    if (rotCont) {
+      rotCont->pts = B3DMALLOC(Ipoint, maxSize);
+      if (!rotCont->pts) {
+        imodContourDelete(rotCont);
+        rotCont = NULL;
       }
+    }
+    if (rotCont) {
+      for (ind = 0; ind < numConts; ind++) {
+        cont = &acd->obj->cont[ind];
 
-      // Get a scan contour
-      scanCont = imodel_contour_scan(rotCont);
-      area = 0.;
-      if (scanCont) {
-        for (ix = 0; ix < scanCont->psize; ix += 2) {
+        // Set up equivalent box, determine how much to scale for good area measures
+        half = 0.5f * acd->sqrSizes[ind] / sizeScale;
+        scaleForScan = B3DMAX(1.f, minForScan / (2.f * half));
+        half *= scaleForScan;
 
-          // segment outside area in Y: add it entirely
-          if (scanCont->pts[ix].y > half || scanCont->pts[ix].y < -half) {
-            area += scanCont->pts[ix + 1].x - scanCont->pts[ix].x;
-            continue;
-          }
-
-          // Segment at same Y as last: consider the gap first, add part inside
-          if (ix && scanCont->pts[ix - 1].y == scanCont->pts[ix].y) {
-            left = B3DMAX(scanCont->pts[ix - 1].x, -half);
-            right = B3DMIN(scanCont->pts[ix].x, half);
-            if (right > left)
-              area += right - left;
-          } else if (scanCont->pts[ix].x > -half) {
-
-            // If no gap to left, add in part to left of this segment
-            area += B3DMIN(scanCont->pts[ix].x, half) + half;
-          }
-
-          // Add parts of segment outside
-          if (scanCont->pts[ix].x < -half)
-            area += -half - scanCont->pts[ix].x;
-          if (scanCont->pts[ix + 1].x > half)
-            area += scanCont->pts[ix + 1].x - half;
-
-          // If ends inside and no gap to right, add to right
-          else if (ix + 2 < scanCont->psize &&
-            scanCont->pts[ix + 2].y > scanCont->pts[ix].y)
-            area += half - scanCont->pts[ix + 1].x;
+        // Rotate the contour
+        rotCont->psize = cont->psize;
+        for (ix = 0; ix < cont->psize; ix++) {
+          delx = cont->pts[ix].x - xCenters[ind];
+          dely = cont->pts[ix].y - yCenters[ind];
+          rotCont->pts[ix].x = scaleForScan * (cosAng * delx + sinAng * dely);
+          rotCont->pts[ix].y = scaleForScan * (-sinAng * delx + cosAng * dely);
         }
-        imodContourDelete(scanCont);
+
+        // Get a scan contour
+        scanCont = imodel_contour_scan(rotCont);
+        area = 0.;
+        if (scanCont) {
+          for (ix = 0; ix < scanCont->psize; ix += 2) {
+
+            // segment outside area in Y: add it entirely
+            if (scanCont->pts[ix].y > half || scanCont->pts[ix].y < -half) {
+              area += scanCont->pts[ix + 1].x - scanCont->pts[ix].x;
+              continue;
+            }
+
+            // Segment at same Y as last: consider the gap first, add part inside
+            if (ix && scanCont->pts[ix - 1].y == scanCont->pts[ix].y) {
+              left = B3DMAX(scanCont->pts[ix - 1].x, -half);
+              right = B3DMIN(scanCont->pts[ix].x, half);
+              if (right > left)
+                area += right - left;
+            } else if (scanCont->pts[ix].x > -half) {
+
+              // If no gap to left, add in part to left of this segment
+              area += B3DMIN(scanCont->pts[ix].x, half) + half;
+            }
+
+            // Add parts of segment outside
+            if (scanCont->pts[ix].x < -half)
+              area += -half - scanCont->pts[ix].x;
+            if (scanCont->pts[ix + 1].x > half)
+              area += scanCont->pts[ix + 1].x - half;
+
+            // If ends inside and no gap to right, add to right
+            else if (ix + 2 < scanCont->psize &&
+              scanCont->pts[ix + 2].y > scanCont->pts[ix].y)
+              area += half - scanCont->pts[ix + 1].x;
+          }
+          imodContourDelete(scanCont);
+        }
+
+        // Divide by area of scaled square
+        acd->squareness[ind] = area / (4.f * half * half);
+      }
+      imodContourDelete(rotCont);
+    }
+
+
+    // Get convex boundary of centers and put in a contour;
+    convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0],
+      &numBelow, &xcen, &ycen, numConts);
+
+    // Put boundary in a contour and get distances
+    cont = imodContourNew();
+    if (!cont)
+      return;
+    cont->pts = B3DMALLOC(Ipoint, numBelow);
+    if (cont->pts) {
+      cont->psize = numBelow;
+      for (ind = 0; ind < numBelow; ind++) {
+        cont->pts[ind].x = xBound[ind];
+        cont->pts[ind].y = yBound[ind];
+        cont->pts[ind].z = 0.;
       }
 
-      // Divide by area of scaled square
-      acd->squareness[ind] = area / (4.f * half * half);
+      // Get distance of each center from boundary
+      for (ind = 0; ind < numConts; ind++) {
+        tpt.x = xCenters[ind];
+        tpt.y = yCenters[ind];
+        acd->boundDists[ind] = sizeScale * imodPointContDistance(cont, &tpt, 0, 0, &ix);
+      }
     }
-    imodContourDelete(rotCont);
+    imodContourDelete(cont);
   }
-
-  rsFastMedian(&acd->sqrMeans[0], numConts, &xBound[0], &acd->medianMean);
-
-
-  // Get convex boundary of centers and put in a contour;
-  convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0], 
-    &numBelow, &xcen, &ycen, numConts);
-
-  // Put boundary in a contour and get distances
-  cont = imodContourNew();
-  if (!cont)
-    return;
-  cont->pts = B3DMALLOC(Ipoint, numBelow);
-  if (cont->pts) {
-    cont->psize = numBelow;
-    for (ind = 0; ind < numBelow; ind++) {
-      cont->pts[ind].x = xBound[ind];
-      cont->pts[ind].y = yBound[ind];
-      cont->pts[ind].z = 0.;
-    }
-
-    // Get distance of each center from boundary
-    for (ind = 0; ind < numConts; ind++) {
-      tpt.x = xCenters[ind];
-      tpt.y = yCenters[ind];
-      acd->boundDists[ind] = sizeScale * imodPointContDistance(cont, &tpt, 0, 0, &ix);
-    }
-  }
-  imodContourDelete(cont);
 }
 

@@ -62,7 +62,7 @@ public:
   int AutoContBusy();
   void AutoContDone();
   void CleanupAutoCont(int error);
-  void StopAutoCont(bool justFree);
+  void StopAutoCont();
   static void SquareStatistics(AutoContData *acd, int nxRed, int nyRed, float minScale, float maxScale, 
     float redFac, float outlieCrit);
   GetMember(bool, AutoContFailed);

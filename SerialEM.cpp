@@ -2822,7 +2822,7 @@ void CSerialEMApp::ErrorOccurred(int error)
   if (mAutoTuning->DoingComaVsIS())
     mAutoTuning->StopComaVsISCal();
   if (mNavHelper->mAutoContouringDlg->DoingAutoContour())
-    mNavHelper->mAutoContouringDlg->StopAutoCont(false);
+    mNavHelper->mAutoContouringDlg->StopAutoCont();
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);
