@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -641,9 +641,6 @@ BEGIN
             MENUITEM "Setup &Full Montage",         ID_NAVIGATOR_SETUPFULLMONTAGE
             MENUITEM "Set &Grid Limits",            ID_NAVIGATOR_SETGRIDLIMITS
             MENUITEM SEPARATOR
-            MENUITEM "Setup &Super Montage",        ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
-            MENUITEM "P&olygon Super Montage",      ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
-            MENUITEM SEPARATOR
             MENUITEM "Fi&nd Holes in Regular Grid...", ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES
             MENUITEM "&Add Grid of Points",         ID_NAVIGATOR_ADDGRIDOFPOINTS
             MENUITEM "Add Grid &Like Last One",     ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE
@@ -656,6 +653,11 @@ BEGIN
             MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
             MENUITEM SEPARATOR
             MENUITEM "A&utocontour Grid Squares...", ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES
+            MENUITEM "Reverse Con&tour Colors",     ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS
+            MENUITEM "&Keep Colors for Polygons",   ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS
+            MENUITEM SEPARATOR
+            MENUITEM "Setup &Super Montage",        ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
+            MENUITEM "P&olygon Super Montage",      ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
             MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
         END
@@ -4481,6 +4483,22 @@ BEGIN
 0x614d, 0x6567, 0x746e, 0x0061, 
     IDC_COMBOCOLOR, 0x403, 10, 0
 0x6f4e, 0x6552, 0x6c61, 0x6769, 0x006e, 
+    IDC_COMBOCOLOR, 0x403, 4, 0
+0x6552, 0x0064, 
+    IDC_COMBOCOLOR, 0x403, 7, 0
+0x724f, 0x6e61, 0x6567, "\000" 
+    IDC_COMBOCOLOR, 0x403, 7, 0
+0x6559, 0x6c6c, 0x776f, "\000" 
+    IDC_COMBOCOLOR, 0x403, 6, 0
+0x7247, 0x6565, 0x006e, 
+    IDC_COMBOCOLOR, 0x403, 5, 0
+0x7943, 0x6e61, "\000" 
+    IDC_COMBOCOLOR, 0x403, 5, 0
+0x6c42, 0x6575, "\000" 
+    IDC_COMBOCOLOR, 0x403, 7, 0
+0x6956, 0x6c6f, 0x7465, "\000" 
+    IDC_COMBOCOLOR, 0x403, 8, 0
+0x614d, 0x6567, 0x746e, 0x0061, 
     0
 END
 
@@ -4683,11 +4701,6 @@ BEGIN
 END
 
 IDD_TSPOLICIES AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_NAVIGATOR AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -7066,19 +7079,28 @@ END
 STRINGTABLE
 BEGIN
     IDC_RTOPIXELS           "Reduce image size to a specific number of pixels in X and Y"
-    IDC_RTOPIXSIZE          "Reduce image size to reach a specific pixel size"
-    IDC_RRELATIVE_THRESH    "Set contour threshold to a relative value between 0 and 1"
-    IDC_RABS_THRESH         "Set contour threshold to a fixed image intensity"
-    IDC_RGROUP_BY_SIZE      "Order squares by size and divide into groups"
-    IDC_RGROUP_BY_MEAN      "Order points by mean image intensity and divide into groups"
     IDC_IDC_EDIT_TO_PIXELS  "Enter the target number of pixels to reduce size to"
+    IDC_RTOPIXSIZE          "Reduce image size to reach a specific pixel size"
     IDC_EDIT_TO_PIX_SIZE    "Enter the target pixel size to reduce image to"
     IDC_EDIT_MINSIZE        "Eliminate coutours less than this size in microns"
     IDC_EDIT_MAXSIZE        "Eliminate contours bigger than this size in microns"
+    IDC_RRELATIVE_THRESH    "Set contour threshold to a relative value between 0 and 1"
     IDC_EDIT_REL_THRESH     "Threshold value as fraction of way from dark to light peaks in histogram"
+    IDC_RABS_THRESH         "Set contour threshold to a fixed image intensity"
     IDC_EDIT_ABS_THRESH     "Absolute intensity value for threshold; use if relative threshold fails"
     IDC_BUT_MAKE_CONTOURS   "Run autocontouring routine"
     IDC_SPIN_NUM_GROUPS     "Set number of groups to divide contours into"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RGROUP_BY_SIZE      "Order squares by size and divide into groups"
+    IDC_RGROUP_BY_MEAN      "Order points by mean image intensity and divide into groups"
+    IDC_SLIDER_MIN_MEAN     "Adjust the cutoff for minimum mean intensity"
+    IDC_EDIT_MIN_MEAN       "Enter a specific cutoff for minimum mean intensity"
+    IDC_BUT_CREATE_POLYS    "Convert the selected groups of contours to Navigator polygons"
+    IDC_BUT_CLEAR_POLYS     "Remove all the contour data"
+    IDC_BUT_UNDO_POLYS      "Remove the Navigator polygons and restore them as contours"
     IDC_CHECK_GROUP1        "Toggle display and conversion to polygons of group 1"
     IDC_CHECK_GROUP2        "Toggle display and conversion to polygons of group 2"
     IDC_CHECK_GROUP3        "Toggle display and conversion to polygons of group 3"
@@ -7086,20 +7108,27 @@ BEGIN
     IDC_CHECK_GROUP5        "Toggle display and conversion to polygons of group 5"
     IDC_CHECK_GROUP6        "Toggle display and conversion to polygons of group 6"
     IDC_CHECK_GROUP7        "Toggle display and conversion to polygons of group 7"
+END
+
+STRINGTABLE
+BEGIN
     IDC_CHECK_GROUP8        "Toggle display and conversion to polygons of group 8"
-    IDC_SLIDER_MIN_MEAN     "Adjust the cutoff for minimum mean intensity"
     IDC_SLIDER_MAX_MEAN     "Adjust the cutoff for maximum mean intensity"
     IDC_SLIDER_MIN_SIZE     "Adjust the cutoff for minimum contour size in microns"
     IDC_SLIDER_SQUARE_SD    "Adjust the cutoff for maximum standard deviation of intensity"
     IDC_SLIDER_IRREGULARITY "Adjust the cutoff for maximum deviation of contour from square"
     IDC_SLIDER_BORDER_DIST  "Adjust the minimum distance from edge of contoured area in microns"
-    IDC_EDIT_MIN_MEAN       "Enter a specific cutoff for minimum mean intensity"
     IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
     IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
     IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
-    IDC_BUT_CREATE_POLYS    "Convert the selected groups of contours to Navigator polygons"
-    IDC_BUT_CLEAR_POLYS     "Remove all the contour data"
-    IDC_BUT_UNDO_POLYS      "Remove the Navigator polygons and restore them as contours"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS 
+                            "Use the 8 possible contour colors in inverted order"
+    ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 
+                            "Make contours into polygons with the same colors"
 END
 
 #endif    // English (United States) resources
@@ -7125,7 +7154,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

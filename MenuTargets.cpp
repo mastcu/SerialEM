@@ -505,6 +505,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP, OnUpdateNoTasks)
     ON_COMMAND(ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES, OnAutocontourGridSquares)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES, OnUpdateMontagingGridsFindHoles)
+    ON_COMMAND(ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS, OnReverseContourColors)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS, OnUpdateReverseContourColors)
+    ON_COMMAND(ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS, OnKeepColorsForPolygons)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS, OnUpdateKeepColorsForPolygons)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -890,12 +894,12 @@ void CMenuTargets::OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorSetMultiShotParams()
 {
-  mWinApp->mNavHelper->OpenMultishotDlg();
+  mNavHelper->OpenMultishotDlg();
 }
 
 void CMenuTargets::OnMontagingGridsFindHoles()
 {
-  mWinApp->mNavHelper->OpenHoleFinder();
+  mNavHelper->OpenHoleFinder();
 }
 
 void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
@@ -905,12 +909,37 @@ void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnAutocontourGridSquares()
 {
-  mWinApp->mNavHelper->OpenAutoContouring();
+  mNavHelper->OpenAutoContouring();
 }
 
 void CMenuTargets::OnCombinePointsIntoMultiShots()
 {
-  mWinApp->mNavHelper->OpenMultiCombiner();
+  mNavHelper->OpenMultiCombiner();
+}
+
+void CMenuTargets::OnReverseContourColors()
+{
+  mNavHelper->SetReverseAutocontColors(!mNavHelper->GetReverseAutocontColors());
+  mWinApp->mMainView->RedrawWindow();
+}
+
+void CMenuTargets::OnUpdateReverseContourColors(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mNavHelper->GetReverseAutocontColors() ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
+}
+
+
+void CMenuTargets::OnKeepColorsForPolygons()
+{
+  mNavHelper->SetKeepColorsForPolygons(!mNavHelper->GetKeepColorsForPolygons());
+}
+
+
+void CMenuTargets::OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mNavHelper->GetKeepColorsForPolygons() ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
 }
 
 void CMenuTargets::OnNavigatorRealignScaling()
@@ -3180,7 +3209,7 @@ void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnCalibrateComaVsIS()
 {
-  mWinApp->mNavHelper->OpenComaVsISCal();
+  mNavHelper->OpenComaVsISCal();
 }
 
 void CMenuTargets::OnSettingsSetProperty()

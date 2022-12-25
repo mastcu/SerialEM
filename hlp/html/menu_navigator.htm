@@ -64,17 +64,7 @@
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_setgridlimits">Set Grid Limits</A></TD>
           <TD>Set limits in X and Y for the full-grid montage.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_alignedsupermontage">Setup Super
-              Montage</A></TD>
-          <TD>Add polygons representing overlapping montages aligned to camera axes.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_supermontaging_polygonsupermontage">Polygon
-              Super Montage</A></TD>
-          <TD>Add polygons representing overlapping montages to fill the current polygon.</TD>
-        </TR>
-        <TR VALIGN="top">
+         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_findregulararrayofholes">Find Holes in Regular Array</A></TD>
           <TD>Open dialog to find regularly-spaced circular holes in a support film.</TD>
         </TR>
@@ -127,7 +117,27 @@
             Squares</A></TD>
           <TD>Make contours around grid squares and convert selected ones to Navigator polygons.</TD>
         </TR>
-         <TR VALIGN="top">
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_reversecontourcolors">Reverse Contour
+            Colors</A></TD>
+          <TD>Use the set of colors for contours from autocontouring in reverse order.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_keepcolorsforpolygons">Keep Colors for 
+            Polygons</A></TD>
+          <TD>Keep contours from autocontouring the same color when converting to polygons.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_alignedsupermontage">Setup Super
+              Montage</A></TD>
+          <TD>Add polygons representing overlapping montages aligned to camera axes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_supermontaging_polygonsupermontage">Polygon
+              Super Montage</A></TD>
+          <TD>Add polygons representing overlapping montages to fill the current polygon.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addcirclepolygon">Add Circle
               Polygon</A></TD>
           <TD>Add a polygon that is a circle of specified radius.</TD>
@@ -452,56 +462,6 @@
         limit.&nbsp; If you want access to the full range of motion on a JEOL scope, you
         need to enter or change the &#39;StageLimits&#39; property to be &#39;-1190 1190 -1190 1190&#39;
         (or less extreme values if appropriate).</P>
-      <P><A NAME="hid_navigator_alignedsupermontage"></A><B>Setup Super Montage command
-          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
-      <P>Use this command to add a set of rectangles at the positions of overlapping
-        montages, laid out on a rectangular grid that is aligned to the camera axes.
-        First, you must have montaging set up with the desired number of pieces and
-        magnification. Specify a center position in the active image by clicking with
-        the left mouse button. Then select this command. You will be asked to enter the
-        number of montages in X and in Y then the number of pixels of overlap in X and
-        Y. A set of polygons will be created, numbered by their positions in the super
-        montage. To try again with different parameters, just use the <B>Delete</B> button
-        in the Navigator to delete the whole group of items.</P>
-      <P>To get fairly accurate overlaps between montages, use the following procedure.
-        First take a montage that encompasses the whole needed area, at a lower
-        magnification if necessary. On a Thermo/FEI microscope, it is recommended that you use
-        the option to realign with image shift (see <B>Acquiring High-Quality Montages of Large Areas </B>
-        in <a href="about_montaging.htm">Montaging</a> and the last paragraph of <i><b>
-        Returning to a Position Reliably</b></i> in <a href="about_navigator.htm">Using
-        the Navigator</a>
-        for details). Turn on 'Align pieces in Overview', and also have
-        'Sloppy montage' on as well if this is needed to get the pieces properly
-        aligned. Make this montage be a map. Then go to the working magnification for
-        the supermontage and set up the montage file. After you answer the queries
-        about number of montages and overlaps, you will be asked if you want the
-        positions to be laid out at regularly spaced image positions rather than stage
-        positions. Do not select this option unless the pieces are indeed properly
-        aligned in the area covered by the supermontage (there can be errors in
-        alignment elsewhere). Also, only select this option if you are going to use the
-        'Realign to Item' routine at some point to get to individual montage positions.
-        One approach would be to check 'Acquire' for each of the new montage position
-        items and then run the <A HREF="#hid_navigator_acquire">Acquire at Items command</A>
-        with the option checked to 'Realign at item'. This will yield montages that can
-        be blended and analyzed for overlap.</P>
-      <P>The Setup Super Montage command was originally called Aligned Super Montage, and
-        there was also a Skewed Super Montage command to lay out montages on a grid
-        that is aligned to the specimen axes. Such montages require more overlap to
-        avoid gaps between montages, and the stitching programs in IMOD work well with
-        the aligned supermontages, so the skew capability has no apparent merit.</P>
-      <P><A NAME="hid_supermontaging_polygonsupermontage"></A><B>Polygon Super Montage
-          command (Navigator - Montaging &amp; Grids sub-menu)</B></P>
-      <P>Use this command to add a set of rectangles at the positions of overlapping
-        montages that will fill a polygon. First, you must have montaging set up with
-        the desired number of pieces and magnification, and the current Navigator item
-        must be a polygon. After you select this command, specify whether the positions
-        should be marked for acquisition. The supermontage will include any montage
-        that is needed to cover the area within the polygon, with a little allowance
-        for errors in positioning. You can then use the 'Skip pieces outside Navigator
-        item' option in the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>,
-        to have each individual montage include only the frames inside the polygon. If
-        you use an entry of 0 there to specify the current Navigator item, be sure to
-        reselect the polygon item after defining the supermontage.</P>
       <P><A NAME="hid_montaginggrids_findregulararrayofholes"></A><B>Find Holes in Regular Array command (Navigator
           - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to open the <a href="hidd_hole_finder.htm">Hole Finder</a> dialog, find circular holes in a support film, and make Navigator points from them.  The Navigator must be open to open this dialog.</P>
@@ -683,7 +643,71 @@
         make contours around grid squares at an intensity threshold, allow you to set criteria
         for eliminating some contours, and convert selected contours into Navigator polygons.
       </p>
-      <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command
+            <P><A NAME="hid_montaginggrids_reversecontourcolors"></A><B>Reverse Contour
+            Colors command (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <p>Use this command to invert the order in which colors are assigned to groups of 
+        contours generated by the <a href="hidd_autocontour.htm">Autocontouring Grid 
+        Squares dialog</a> in 
+        inverted order, from magenta and purple to orange and red, instead of from red 
+        through magenta.&nbsp; This could be useful if you use only 5 or 6 groups and 
+        find the colors on the blue-magenta end more distinguishable.</p>
+             <P><A NAME="hid_montaginggrids_keepcolorsforpolygons"></A><B>Keep Colors for 
+            Polygons command (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <p>This command toggles whether the groups of contours generated by the
+        <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a> are 
+        assigned the same colors when they are converted to polygons, rather than given 
+        the default polygon color.</p>
+       <P><A NAME="hid_navigator_alignedsupermontage"></A><B>Setup Super Montage command
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a set of rectangles at the positions of overlapping
+        montages, laid out on a rectangular grid that is aligned to the camera axes.
+        First, you must have montaging set up with the desired number of pieces and
+        magnification. Specify a center position in the active image by clicking with
+        the left mouse button. Then select this command. You will be asked to enter the
+        number of montages in X and in Y then the number of pixels of overlap in X and
+        Y. A set of polygons will be created, numbered by their positions in the super
+        montage. To try again with different parameters, just use the <B>Delete</B> button
+        in the Navigator to delete the whole group of items.</P>
+      <P>To get fairly accurate overlaps between montages, use the following procedure.
+        First take a montage that encompasses the whole needed area, at a lower
+        magnification if necessary. On a Thermo/FEI microscope, it is recommended that you use
+        the option to realign with image shift (see <B>Acquiring High-Quality Montages of Large Areas </B>
+        in <a href="about_montaging.htm">Montaging</a> and the last paragraph of <i><b>
+        Returning to a Position Reliably</b></i> in <a href="about_navigator.htm">Using
+        the Navigator</a>
+        for details). Turn on 'Align pieces in Overview', and also have
+        'Sloppy montage' on as well if this is needed to get the pieces properly
+        aligned. Make this montage be a map. Then go to the working magnification for
+        the supermontage and set up the montage file. After you answer the queries
+        about number of montages and overlaps, you will be asked if you want the
+        positions to be laid out at regularly spaced image positions rather than stage
+        positions. Do not select this option unless the pieces are indeed properly
+        aligned in the area covered by the supermontage (there can be errors in
+        alignment elsewhere). Also, only select this option if you are going to use the
+        'Realign to Item' routine at some point to get to individual montage positions.
+        One approach would be to check 'Acquire' for each of the new montage position
+        items and then run the <A HREF="#hid_navigator_acquire">Acquire at Items command</A>
+        with the option checked to 'Realign at item'. This will yield montages that can
+        be blended and analyzed for overlap.</P>
+      <P>The Setup Super Montage command was originally called Aligned Super Montage, and
+        there was also a Skewed Super Montage command to lay out montages on a grid
+        that is aligned to the specimen axes. Such montages require more overlap to
+        avoid gaps between montages, and the stitching programs in IMOD work well with
+        the aligned supermontages, so the skew capability has no apparent merit.</P>
+      <P><A NAME="hid_supermontaging_polygonsupermontage"></A><B>Polygon Super Montage
+          command (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a set of rectangles at the positions of overlapping
+        montages that will fill a polygon. First, you must have montaging set up with
+        the desired number of pieces and magnification, and the current Navigator item
+        must be a polygon. After you select this command, specify whether the positions
+        should be marked for acquisition. The supermontage will include any montage
+        that is needed to cover the area within the polygon, with a little allowance
+        for errors in positioning. You can then use the 'Skip pieces outside Navigator
+        item' option in the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>,
+        to have each individual montage include only the frames inside the polygon. If
+        you use an entry of 0 there to specify the current Navigator item, be sure to
+        reselect the polygon item after defining the supermontage.</P>
+     <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to add a polygon that is a circle. First mark the desired
         center point by clicking in an image. Then select this command and enter the

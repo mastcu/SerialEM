@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "MapDrawItem.h"
+#include "AutoContouringDlg.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -15,8 +16,9 @@ static char THIS_FILE[]=__FILE__;
 #define POINT_CHUNK  5
 
 static COLORREF colors[] = {RGB(255,0,0), RGB(0,255,0), RGB(0,150,255), RGB(255,255,0),
-                            RGB(255,0,255), RGB(0,0,64), RGB(255,0,170), RGB(0,220,255),
-                            RGB(240,170,0)};
+  RGB(255,0,255), RGB(0,0,64), RGB(220,0,0), RGB(245,160,0), RGB(255,255,0), RGB(0,255,0), 
+  RGB(0,255,255), RGB(0,0,255), RGB(178,107,210), RGB(255,0,255), RGB(255,0,170), 
+  RGB(0,220,255), RGB(240,170,0), RGB(229, 209, 94)};
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -204,6 +206,8 @@ COLORREF CMapDrawItem::GetColor(bool highlight)
   if (highlight && ((mType == ITEM_TYPE_POINT && mColor == DEFAULT_POINT_COLOR) ||
     (mType == ITEM_TYPE_POLYGON && mColor == DEFAULT_POLY_COLOR && mGroupID > 0)))
     return colors[HIGHLIGHT_COLOR];
+  if (highlight && mType == ITEM_TYPE_POLYGON && mGroupID > 0)
+    return colors[POLY_HIGHLIGHT_COLOR];
   if (mAcquire) {
     if (mType == ITEM_TYPE_POINT && mColor == DEFAULT_POINT_COLOR)
       return colors[POINT_ACQUIRE_COLOR];
@@ -211,4 +215,10 @@ COLORREF CMapDrawItem::GetColor(bool highlight)
       return colors[MAP_ACQUIRE_COLOR];
   }
   return colors[mColor];
+}
+
+COLORREF CMapDrawItem::GetContourColor(int index)
+{
+  B3DCLAMP(index, 0, MAX_AUTOCONT_GROUPS - 1);
+  return colors[index + CONT_COLOR_BASE_IND];
 }

@@ -22,14 +22,17 @@
 #define DEFAULT_POLY_COLOR 1
 #define DEFAULT_MAP_COLOR 2
 #define DEFAULT_SUPER_COLOR 3
-#define POINT_ACQUIRE_COLOR 6
-#define MAP_ACQUIRE_COLOR   7
-#define HIGHLIGHT_COLOR     8
+#define POINT_ACQUIRE_COLOR 14
+#define MAP_ACQUIRE_COLOR   15
+#define HIGHLIGHT_COLOR     16
+#define POLY_HIGHLIGHT_COLOR 17
+#define CONT_COLOR_BASE_IND 6
 
 class CMapDrawItem
 {
 public:
   COLORREF GetColor(bool highlight);
+  static COLORREF GetContourColor(int index);
   void DeletePoint(int index);
   void AppendPoint(float inX, float inY);
   void AddPoint(float inX, float inY, int index);

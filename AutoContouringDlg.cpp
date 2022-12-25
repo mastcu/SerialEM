@@ -52,7 +52,6 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   mAutoContThread = NULL;
   mFindingFromDialog = false;
   mHaveConts = false;
-  mConvertedConts = false;
   mDoingAutocont = false;
 }
 
@@ -252,14 +251,15 @@ CArray<CMapDrawItem*, CMapDrawItem*>* CAutoContouringDlg::GetPolyArrayToDraw(
 bool CAutoContouringDlg::IsUndoFeasible()
 {
   CMapDrawItem *item;
+  int numConv = (int)mFirstConvertedIndex.size();
   CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = mWinApp->mNavigator->GetItemArray();
-  if (mHaveConts || !mConvertedConts || itemArray->GetSize() != mSizeAfterConversion)
+  if (!numConv || itemArray->GetSize() - 1 != mLastConvertedIndex[numConv - 1])
     return false;
-  item = itemArray->GetAt(mFirstConvertedIndex);
-  if (item->mMapID != mFirstMapID)
+  item = itemArray->GetAt(mFirstConvertedIndex[numConv - 1]);
+  if (item->mMapID != mFirstMapID[numConv - 1])
     return false;
-  item = itemArray->GetAt(mSizeAfterConversion - 1);
-  return item->mMapID == mLastMapID;
+  item = itemArray->GetAt(mLastConvertedIndex[numConv - 1]);
+  return item->mMapID == mLastMapID[numConv - 1];
 }
 
 // Call all three managing functions
@@ -333,6 +333,7 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
   }
 
   // Assign groups
+  memset(mNumInGroup, 0, MAX_AUTOCONT_GROUPS * sizeof(int));
   groupInc = (maxIncl - minIncl) / mNumGroups;
   for (ind = 0; ind < numCont; ind++) {
     if (mExcluded[ind]) {
@@ -342,8 +343,10 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
         minIncl) / groupInc);
       B3DCLAMP(group, 0, mNumGroups - 1);
       mGroupNums[ind] = group;
+      mNumInGroup[group]++;
     }
   }
+  ManageGroupSelectors(0);
   mWinApp->mMainView->RedrawWindow();
 }
 
@@ -449,6 +452,11 @@ void CAutoContouringDlg::OnButClearData()
   }
   mPolyArray.RemoveAll();
   mHaveConts = false;
+  CLEAR_RESIZE(mFirstConvertedIndex, int, 0);
+  CLEAR_RESIZE(mLastConvertedIndex, int, 0);
+  CLEAR_RESIZE(mFirstMapID, int, 0);
+  CLEAR_RESIZE(mLastMapID, int, 0);
+  mConvertedInds.clear();
   ManageAll(false);
   mWinApp->mMainView->RedrawWindow();
 }
@@ -458,51 +466,59 @@ void CAutoContouringDlg::OnCheckShowGroup(UINT nID)
 {
   CButton *but = (CButton *)GetDlgItem(nID);
   mShowGroup[nID - IDC_CHECK_GROUP1] = but && but->GetCheck() != 0;
+  mWinApp->RestoreViewFocus();
   mWinApp->mMainView->DrawImage();
 }
 
 // Convert to Navigator polygons
 void CAutoContouringDlg::OnButCreatePolys()
 {
-  if (!mHaveConts || mConvertedConts) {
-    SEMMessageBox(mConvertedConts ? "Selected Contours have already been converted to"
-      " polygons" : "There are no contours to convert");
+  int firstID, lastID, num = 0, numAfter, ind;
+  int numBefore = mWinApp->mNavigator->GetNumNavItems();
+  IntVec indsInPoly;
+  mWinApp->RestoreViewFocus();
+  for (ind = 0; ind < mNumGroups; ind++)
+    if (mShowGroup[ind])
+      num += mNumInGroup[ind];
+  if (!mHaveConts || !num) {
+    SEMMessageBox("There are no contours to convert" + 
+      CString(mHaveConts ? " in the selected groups" : ""));
     return;
   }
-  mFirstConvertedIndex = mWinApp->mNavigator->GetNumNavItems();
-  mHaveConts = false;
-  mConvertedConts = true;
   mWinApp->mNavigator->AddAutocontPolygons(mPolyArray, mExcluded, mGroupNums,
-    &mShowGroup[0], mNumGroups, mFirstMapID, mLastMapID);
-  mSizeAfterConversion = mWinApp->mNavigator->GetNumNavItems();
-  ManagePostEnables(false);
-  ManageGroupSelectors(0);
+    &mShowGroup[0], mNumGroups, firstID, lastID, indsInPoly);
+  numAfter = mWinApp->mNavigator->GetNumNavItems();
+  if (numBefore < numAfter) {
+    mFirstConvertedIndex.push_back(numBefore);
+    mLastConvertedIndex.push_back(numAfter - 1);
+    mFirstMapID.push_back(firstID);
+    mLastMapID.push_back(lastID);
+    mConvertedInds.push_back(indsInPoly);
+    //SetExclusionsAndGroups();
+    ManagePostEnables(false);
+    ManageGroupSelectors(0);
+  }
 }
 
 // Undo the coversion to Nav polygons
 void CAutoContouringDlg::OnButUndoPolys()
 {
-  int ind, numNull = 0;
-  bool feasible = IsUndoFeasible();
-
-  // Make sure that there are the right number of empty slots here
-  if (feasible) {
-    for (ind = 0; ind < (int)mPolyArray.GetSize(); ind++)
-      if (mPolyArray.GetAt(ind) == NULL)
-        numNull++;
-    feasible = numNull == mSizeAfterConversion - mFirstConvertedIndex;
-  }
-  if (!feasible) {
+  int vecInd = (int)mFirstConvertedIndex.size() - 1;
+  if (!IsUndoFeasible()) {
     SEMMessageBox("Something has changed in the Navigator table; "
       "cannot undo the addition of polygons");
     return;
   }
 
-  // This does not check, it just swaps things back in
-  mWinApp->mNavigator->UndoAutocontPolyAddition(mPolyArray, numNull);
-  mHaveConts = true;
-  mConvertedConts = false;
-  ManageGroupSelectors(0);
+  // Get things added back in and pop the undo stack
+  mWinApp->mNavigator->UndoAutocontPolyAddition(mPolyArray, 
+    mLastConvertedIndex[vecInd] + 1 - mFirstConvertedIndex[vecInd], 
+    mConvertedInds[vecInd]);
+  mConvertedInds.pop_back();
+  mFirstConvertedIndex.pop_back();
+  mLastConvertedIndex.pop_back();
+  mFirstMapID.pop_back();
+  mLastMapID.pop_back();
   ManagePostEnables(false);
   SetExclusionsAndGroups();
   mWinApp->RestoreViewFocus();
@@ -654,8 +670,7 @@ void CAutoContouringDlg::ManageACEnables()
   EnableDlgItem(IDC_IDC_EDIT_TO_PIXELS, !m_iReduceToWhich);
   EnableDlgItem(IDC_EDIT_TO_PIX_SIZE, m_iReduceToWhich);
   EnableDlgItem(IDC_BUT_MAKE_CONTOURS, !mWinApp->DoingTasks());
-  EnableDlgItem(IDC_BUT_CLEAR_POLYS, (mHaveConts || mConvertedConts) &&
-    !mWinApp->DoingTasks());
+  EnableDlgItem(IDC_BUT_CLEAR_POLYS, mHaveConts && !mWinApp->DoingTasks());
 }
 
 // Manage dialog items that depend on contours existing
@@ -718,7 +733,8 @@ void CAutoContouringDlg::ManageGroupSelectors(int set)
   BOOL busy = mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen();
   CButton *but;
   for (ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++) {
-    EnableDlgItem(IDC_CHECK_GROUP1 + ind, ind < mNumGroups && mHaveConts && !busy);
+    EnableDlgItem(IDC_CHECK_GROUP1 + ind, ind < mNumGroups && mHaveConts && !busy &&
+      mNumInGroup[ind] > 0);
     if (set) {
       but = (CButton *)GetDlgItem(IDC_CHECK_GROUP1 + ind);
       if (but)

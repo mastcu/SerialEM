@@ -74,8 +74,9 @@
       will be divided into equally spaced, not equally sized, groups.&nbsp; Up to 8 
       groups can be selected.&nbsp; The colors used will be red, orange, yellow, 
       green, dark blue, cyan, violet, and magenta.&nbsp; If you are displaying fewer 
-      than 8 groups and find the colors on the blue end easier to distinguish, the 
-      property &quot;ReverseAutocontColors&quot; can be set to reverse the order of colors, 
+      than 8 groups and find the colors on the blue end easier to distinguish, you can 
+      use the <A HREF="menu_navigator.htm#hid_montaginggrids_reversecontourcolors">Reverse Contour
+            Colors</A> menu entry to reverse the order of colors, 
       starting from the magenta end.</p>
     <p><strong>Show groups</strong></p>
     <p>The checkboxes allow you to toggle the display of each group on or off and 
@@ -115,11 +116,20 @@
       polygons.&nbsp; <em>What you see is what you get.</em>&nbsp; Only the groups 
       whose checkbox is on will be converted, each group to a separate Navigator 
       group.&nbsp; Only the contours not eliminated by the various cutoffs will be 
-      converted.</p>
+      converted.&nbsp; The polygons will be given the same colors as the contours they 
+      came from, or they will all be green if you have turned off
+       <A HREF="#hid_montaginggrids_keepcolorsforpolygons">Keep Colors for 
+            Polygons</A> in the Navigator - Montaging and Grids menu.&nbsp; After you 
+      convert a subset of contours, the remaining contours should still have the same 
+      group assignments.&nbsp; However, all contours will be reassigned if you change 
+      any of the selection criteria, so there may then be contours in the groups you 
+      just converted.</p>
     <p><strong>Undo</strong></p>
-    <p>Use this button the revert the last conversion to polygons.&nbsp; This 
+    <p>Use this button to revert the last conversion to polygons.&nbsp; This 
       operation is available only if no additions or deletions from the Navigator 
-      table have been done, and new contours have not been made.</p>
+      table have been done, and new contours have not been made.&nbsp; Each conversion 
+      is kept track of separately, so multiple conversions can be undone, in reverse 
+      order.</p>
 
   </body>
 </html>

@@ -1606,21 +1606,13 @@
 #define IDC_STAT_MIN_UPPER_MEAN         2626
 #define IDC_STAT_MAX_UPPER_MEAN         2627
 #define IDC_SLIDER_STANDEV              2628
-#define IDC_STAT_MIN_MIN_SIZE           3125
 #define IDC_STAT_MIN_STANDEV            2629
-#define IDC_STAT_MAX_MIN_SIZE           3126
 #define IDC_STAT_MAX_STANDEV            2630
-#define IDC_STAT_MIN_SQUARE_SD          3127
 #define IDC_STAT_SD_CUTOFF              2631
-#define IDC_STAT_MAX_SQUARE_SD          3128
 #define IDC_SLIDER_BLACK_CUTOFF         2632
-#define IDC_STAT_MAX_IRREGULAR          3129
 #define IDC_STAT_MIN_BLACKPCT           2633
-#define IDC_STAT_MIN_IRREGULAR          3130
 #define IDC_STAT_MAX_BLACKPCT           2634
-#define IDC_STAT_MIN_BORDER_DIST        3131
 #define IDC_STAT_BLACK_CUTOFF           2635
-#define IDC_STAT_MAX_BORDER_DIST        3132
 #define IDC_SHOW_INCLUDED               2636
 #define IDC_SHOW_EXCLUDED               2637
 #define IDC_BUT_MAKE_NAV_PTS            2638
@@ -2098,6 +2090,14 @@
 #define IDC_STAT_PCT_BLACK_LABEL        3122
 #define IDC_STAT_IRREGULAR_LABEL        3123
 #define IDC_STAT_BORDER_DIST_LABEL      3124
+#define IDC_STAT_MIN_MIN_SIZE           3125
+#define IDC_STAT_MAX_MIN_SIZE           3126
+#define IDC_STAT_MIN_SQUARE_SD          3127
+#define IDC_STAT_MAX_SQUARE_SD          3128
+#define IDC_STAT_MAX_IRREGULAR          3129
+#define IDC_STAT_MIN_IRREGULAR          3130
+#define IDC_STAT_MIN_BORDER_DIST        3131
+#define IDC_STAT_MAX_BORDER_DIST        3132
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2634,6 +2634,8 @@
 #define ID_HELP_RUNSERIALEMSNAPSHOT     33502
 #define ID_CORRELATIONFILTER_SETPARAMSFORGRIDMAP 33503
 #define ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES 33504
+#define ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS 33505
+#define ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 33506
 
 // Next default values for new objects
 // 
@@ -2641,7 +2643,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        278
-#define _APS_NEXT_COMMAND_VALUE         33505
+#define _APS_NEXT_COMMAND_VALUE         33507
 #define _APS_NEXT_CONTROL_VALUE         3133
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

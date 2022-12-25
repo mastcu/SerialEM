@@ -419,6 +419,10 @@ public:
   afx_msg void OnTiltseriesSetBidirReturnDelay();
   afx_msg void OnSetParamsForGridMap();
   afx_msg void OnAutocontourGridSquares();
+  afx_msg void OnReverseContourColors();
+  afx_msg void OnUpdateReverseContourColors(CCmdUI *pCmdUI);
+  afx_msg void OnKeepColorsForPolygons();
+  afx_msg void OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

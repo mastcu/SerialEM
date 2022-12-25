@@ -116,12 +116,13 @@ private:
   ShortVec mGroupNums;
   ShortVec mExcluded;
   int mShowGroup[MAX_AUTOCONT_GROUPS];
+  int mNumInGroup[MAX_AUTOCONT_GROUPS];
   CFont *mBoldFont;
-  bool mConvertedConts;
-  int mFirstConvertedIndex;
-  int mSizeAfterConversion;
-  int mFirstMapID;
-  int mLastMapID;
+  IntVec mFirstConvertedIndex;
+  IntVec mLastConvertedIndex;
+  IntVec mFirstMapID;
+  IntVec mLastMapID;
+  std::vector<IntVec> mConvertedInds;
 
 public:
   int m_iReduceToWhich;

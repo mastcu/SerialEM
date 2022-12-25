@@ -339,7 +339,6 @@ FLOAT_PROP_TEST("RealignItemTiltTolerance", navHelper->, RITiltTolerance)
 FLOAT_PROP_TEST("RealignItemFocusChangeLimit", navHelper->, RIdefocusChangeLimit)
 BOOL_PROP_TEST("ConvertMapsToBytesDefault", navHelper->, ConvertMaps)
 BOOL_PROP_TEST("SkipAstigAdjustmentForIS", navHelper->, SkipAstigAdjustment)
-BOOL_PROP_TEST("ReverseAutocontColors", navHelper->, ReverseAutocontColors)
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
 BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 #endif

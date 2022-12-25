@@ -36,6 +36,7 @@
 #include "MultiCombinerDlg.h"
 #include "MultiHoleCombiner.h"
 #include "HoleFinderDlg.h"
+#include "AutoContouringDlg.h"
 #include "ShiftToMarkerDlg.h"
 #include "FilterTasks.h"
 #include "GainRefMaker.h"
@@ -62,7 +63,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI"};
+static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI", "Red", "Ora", 
+"Yel", "Grn", "Blu", "Cya", "Vio", "Mag", "SPC", "SPC", "SPC", "SPC"};
 static char *typeString[] = {"Pt", "Poly", "Map", "Imp", "Anc"};
 
 #define MAX_REGPT_NUM 99
@@ -349,6 +351,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   mInitialized = true;
   m_bCollapseGroups = mHelper->GetCollapseGroups();
   m_iColor = 0;
+  SetDropDownHeight(&m_comboColor, CONT_COLOR_BASE_IND + MAX_AUTOCONT_GROUPS);
 
   tabs[0] = fields[0];
   for (i = 1; i < 10; i++)
@@ -1232,7 +1235,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
   int start = 0, end = (int)mItemArray.GetSize() - 1;
   if (!SetCurrentItem(true)) 
     return;
-  if (mItem->IsPolygon() || !mItem->mGroupID || mItem->mTSparamIndex >= 0)
+  if (!mItem->mGroupID || mItem->mTSparamIndex >= 0)
     return;
   acquire = !mItem->mAcquire;
   if (collapsedGroup)
@@ -1240,7 +1243,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
 
   for (int i = start; i <= end; i++) {
     item = mItemArray[i];
-    if (item->IsNotPolygon() && item->mGroupID == mItem->mGroupID && 
+    if (item->mGroupID == mItem->mGroupID && 
       mItem->mTSparamIndex < 0) {
       if (acquire) {
         if (!item->mAcquire)
@@ -3278,24 +3281,38 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
 // Add the non-excluded items in the selected groups to the Naviigator array
 void CNavigatorDlg::AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, 
   ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, 
-  int &lastID)
+  int &lastID, IntVec &indsInPoly)
 {
-  int ind, group, numPolys = (int)polyArray.GetSize();
+  int ind, group, numOut = 0, numPolys = (int)polyArray.GetSize();
   int groupID;
   bool needFirst = true;
   CMapDrawItem *item = NULL;
+  int color = DEFAULT_POLY_COLOR;
+  CString str, conv = "Converted group";
+  indsInPoly.clear();
 
   for (group = 0; group < numGroups; group++) {
     if (!groupShown[group])
       continue;
 
-    // New ID for each  group: loop on points and add non-excludedones in group
+    // New ID for each  group: loop on points and add non-excluded ones in group
     groupID = MakeUniqueID();
+    str.Format("  %d", group + 1);
+    conv += str;
+    if (mHelper->GetKeepColorsForPolygons()) {
+      color = group % MAX_AUTOCONT_GROUPS;
+      if (mHelper->GetReverseAutocontColors())
+        color = (MAX_AUTOCONT_GROUPS - 1) - color;
+      color += CONT_COLOR_BASE_IND;
+    }
     for (ind = 0; ind < numPolys; ind++) {
       if (excluded[ind] || groupNums[ind] != group)
         continue;
       item = polyArray.GetAt(ind);
+      if (!item)
+        continue;
       item->mGroupID = groupID;
+      item->mColor = color;
       item->mMapID = MakeUniqueID();
       if (needFirst) {
         firstID = item->mMapID;
@@ -3306,27 +3323,27 @@ void CNavigatorDlg::AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &
       item->mOriginalReg = mCurrentRegistration;
       mItemArray.Add(item);
       polyArray.SetAt(ind, NULL);
+      indsInPoly.push_back(ind);
+      lastID = item->mMapID;
     }
   }
-  if (item)
-    lastID = item->mMapID;
+  mWinApp->AppendToLog(conv);
   RefillAfterAutocontPolys();
 }
 
 // Put the added polygons back into the polyArray in the empty spots: it has to be checked
 // beforehand that this matches up
 void CNavigatorDlg::UndoAutocontPolyAddition(
-  CArray<CMapDrawItem*, CMapDrawItem*> &polyArray, int numRemove)
+  CArray<CMapDrawItem*, CMapDrawItem*> &polyArray, int numRemove, IntVec &indsInPoly)
 {
   CMapDrawItem *item;
-  int ind, itemInd = (int)mItemArray.GetSize() - 1;
-  for (ind = (int)polyArray.GetSize() - 1; ind >= 0; ind--) {
-    if (polyArray.GetAt(ind) == NULL) {
-      item = mItemArray.GetAt(itemInd);
-      mItemArray.RemoveAt(itemInd--);
-      polyArray.SetAt(ind, item);
-    }
+  int ind, size = (int)mItemArray.GetSize();
+  numRemove = B3DMIN(numRemove, size);
+  for (ind = 0; ind < numRemove; ind++) {
+    item = mItemArray.GetAt(ind + size - numRemove);
+    polyArray.SetAt(indsInPoly[ind], item);
   }
+  mItemArray.RemoveAt(size - numRemove, numRemove);
   RefillAfterAutocontPolys();
 }
 
@@ -3335,7 +3352,7 @@ void CNavigatorDlg::RefillAfterAutocontPolys()
 {
   mCurrentItem = (int)mItemArray.GetSize() - 1;
   mCurListSel = mCurrentItem;
-  if (m_bCollapseGroups) {
+  if (m_bCollapseGroups && mCurrentItem >= 0) {
     MakeListMappings();
     mCurListSel = mItemToList[mCurrentItem];
   }

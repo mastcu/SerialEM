@@ -638,8 +638,8 @@ public:
   void AddItemFromStagePositions(float *imageX, float *imageY, int numPts, float stageZ, int groupID);
   int ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, CArray<CMapDrawItem *, CMapDrawItem *> &polyArray);
   void AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, ShortVec &excluded,
-    ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID);
-  void UndoAutocontPolyAddition(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, int numRemove);
+    ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID, IntVec &indsInPoly);
+  void UndoAutocontPolyAddition(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, int numRemove, IntVec &indsInPoly);
   void RefillAfterAutocontPolys();
   bool OKtoAddMarkerPoint(void);
   void UpdateAddMarker(void);

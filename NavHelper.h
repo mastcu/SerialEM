@@ -246,6 +246,7 @@ public:
   GetSetMember(int, MarkerShiftSaveType);
   GetSetMember(int, MarkerShiftApplyWhich);
   GetSetMember(BOOL, ReverseAutocontColors);
+  GetSetMember(BOOL, KeepColorsForPolygons);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -462,6 +463,7 @@ private:
   int mMarkerShiftApplyWhich;    // Saved dialog selection for which ones to apply to
   int mMarkerShiftSaveType;      // And whether/how to save shifts  
   BOOL mReverseAutocontColors;   // Flag to use colors in reverse
+  BOOL mKeepColorsForPolygons;   // Flag to keep same colors when converting to polygons
 
 
 public:

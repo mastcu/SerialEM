@@ -246,7 +246,7 @@ CNavHelper::CNavHelper(void)
   mAutoContourParams.upperMeanCutoff = EXTRA_NO_VALUE;
   mAutoContourParams.minSizeCutoff = 0.;
   mAutoContourParams.SDcutoff = EXTRA_NO_VALUE;
-  mAutoContourParams.irregularCutoff = 3.;
+  mAutoContourParams.irregularCutoff = 1.;
   mAutoContourParams.borderDistCutoff = 0.;
   float widths[] = {4, 2, 1.5}, increments[] = {3., 1.5, 1.};
   int numCircles[] = {7, 3, 1};
@@ -285,6 +285,7 @@ CNavHelper::CNavHelper(void)
   mMarkerShiftApplyWhich = 0;
   mMarkerShiftSaveType = 0;
   mReverseAutocontColors = false;
+  mKeepColorsForPolygons = true;
 }
 
 CNavHelper::~CNavHelper(void)

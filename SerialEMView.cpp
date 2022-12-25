@@ -1247,14 +1247,16 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       ix = group % MAX_AUTOCONT_GROUPS;
       if (mWinApp->mNavHelper->GetReverseAutocontColors())
         ix = (MAX_AUTOCONT_GROUPS - 1) - ix;
-      CPen polyPen(PS_SOLID, thick1, contColors[ix]);
+      CPen polyPen(PS_SOLID, thick1, CMapDrawItem::GetContourColor(ix));
       CPen *pOldPen = cdc.SelectObject(&polyPen);
       for (ix = 0; ix < (int)polyArray->GetSize(); ix++) {
         float delPtX = 0., delPtY = 0.;
         if (holeExcludes->at(ix) || polyGroups->at(ix) != group)
           continue;
-        adjSave = mAdjustPt;
         item = polyArray->GetAt(ix);
+        if (!item)
+          continue;
+        adjSave = mAdjustPt;
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
         DrawMapItemBox(cdc, &rect, item, imBuf, item->mNumPoints, 0., 0., delPtX, delPtY,
           NULL, NULL);
@@ -1315,7 +1317,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       numPoints = B3DMIN(5, item->mNumPoints);
     } else {
       item = itemArray->GetAt(iDraw);
-      thick = item->IsPoint() ? 3 : 2;
+      thick = (item->IsPoint()  || (item->IsPolygon() && item->mGroupID)) ? 3 : 2;
       highlight = selectedItems->count(iDraw) > 0;
       thick = highlight ? thick : 1;
       numPoints = item->mNumPoints;
