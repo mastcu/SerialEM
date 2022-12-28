@@ -7675,7 +7675,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   TiltSeriesParam *tsParam, *tsp2;
   TiltSeriesParam *tsMasterParam = mWinApp->mTSController->GetTiltSeriesParam();
   FileOptions *fileOpt, *fileo2;
-  MontParam *montParam, *montp2;
+  MontParam *montParam, *montp2, *masterMont = mWinApp->GetMontParam();
   CMapDrawItem *item, *prev, *testItem;
   int originalSize = (int)mItemArray.GetSize();
   bool resetAcquireEnd = mAcquireIndex >= 0 && originalSize - 1 <= mEndingAcquireIndex;
@@ -7889,6 +7889,23 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       for (ind1 = 0; ind1 < numParams; ind1++) {
         montParam = new MontParam;
 #include "NavAdocParams.h"
+
+        // Initialize unsaved items
+        montParam->settingsUsed = false;
+        montParam->warnedBinChange = false;
+        montParam->warnedMagChange = false;
+        montParam->warnedCamChange = false;
+        montParam->warnedCalOpen = false;
+        montParam->warnedCalAcquire = false;
+        montParam->warnedConSetBin = false;
+        montParam->zMax = 0;
+        montParam->zCurrent = 0;
+        montParam->byteMinScale = 0.;
+        montParam->byteMaxScale = 0.;
+        montParam->minOverlapFactor = masterMont->minOverlapFactor;
+        montParam->minMicronsOverlap = masterMont->minMicronsOverlap;
+
+        // Take care of skip list
         if (montParam->numToSkip > 0) {
           montParam->skipPieceX.resize(montParam->numToSkip);
           numToGet = montParam->numToSkip;
