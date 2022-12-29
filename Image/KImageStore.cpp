@@ -48,6 +48,8 @@ void KImageStore::CommonInit(void)
 {
   mMin = 0;
   mMax = 255;
+  mDamagedNz = 0;
+  mIncompleteMontZ = 0;
   mStoreType = STORE_TYPE_MRC;
   mAdocIndex = -1;
   mMontCoordsInMdoc = false;
@@ -748,7 +750,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
 // or 1 if OK
 int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
 {
-  int iz, xMax, yMax, zMax;
+  int iz, xMax, yMax, zMax, badPcZ = -1;
   int ixp, iyp, izp, xMin, xNonZeroMin, yMin, yNonZeroMin, miss;
   BOOL xOK, yOK;
   int missCheck = 100;
@@ -762,6 +764,8 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
   yMin = xMin;
   yNonZeroMin = xMin;
   xMax = yMax = zMax = -1;
+  if (mDamagedNz && !getPcoord(nz, ixp, iyp, izp, gotMutex) && izp > 0)
+    badPcZ = izp;
   for (iz = 0; iz < nz; iz++) {
     if (getPcoord(iz, ixp, iyp, izp, gotMutex)) {
       if (gotMutex)
@@ -780,9 +784,12 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
       xMax = ixp;
     if (iyp > yMax)
       yMax = iyp;
+    if (badPcZ > 0 && izp >= badPcZ)
+      mIncompleteMontZ = badPcZ;
     if (izp > zMax)
       zMax = izp;
   }
+    
   
   // Scan all values to make sure they are multiples of the non-zero minima
   // or an even divisor of the minima, in the latter case that is the basic interval

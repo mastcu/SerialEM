@@ -422,7 +422,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
 {
   MontParam *param;
   CameraParameters *cam;
-  int fullFramesX, fullFramesY;
+  int fullFramesX, fullFramesY, numMissing = 0;
   NavParams *navp = mWinApp->GetNavParams();
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
@@ -435,6 +435,8 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
     mWinApp->mStoreMRC = new KStoreIMOD(cFilename);
   if (mWinApp->mStoreMRC != NULL) {
     if (mWinApp->mStoreMRC->FileOK()) {
+      if (mWinApp->mStoreMRC->GetDamagedNz())
+        numMissing = mWinApp->mStoreMRC->GetDamagedNz() - mWinApp->mStoreMRC->getDepth();
       SetFileOptsForSTEM();
       mWinApp->mStoreMRC->SetTruncation(mFileOpt.pctTruncLo, mFileOpt.pctTruncHi);
       mWinApp->mStoreMRC->SetUnsignedOption(mFileOpt.unsignOpt);
@@ -513,6 +515,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           param->warnedConSetBin = false;
           param->makeNewMap = false;
           param->overviewBinning = 0;
+          param->reusability = 0;
 
           // Set to current state or to proper state for low dose
           if (lowDose < 0) {
@@ -533,22 +536,32 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           OpenMontageDialog(true);
           ManageExposure();
           mWinApp->SetMontaging(true);
+
+          if (numMissing)
+            PrintfToLog("WARNING: This file is missing %d image%s; the last complete "
+              "montage is at Z %d", numMissing, numMissing > 1 ? "s" : "", 
+              mWinApp->mStoreMRC->GetIncompleteMontZ() > 0 ? 
+              mWinApp->mStoreMRC->GetIncompleteMontZ() - 1 : param->zMax);
         } else
-          AfxMessageBox("This is a montaged file but there is no\r"
+          SEMMessageBox("This is a montaged file but there is no\r"
           "camera that can produce such large images."
           "\r\rMontaging not activated", MB_EXCLAME); 
 
-      } else if (err < 0)
-        AfxMessageBox("This is a montaged file but the piece list is corrupted."
-        "\r\rMontaging not activated", MB_EXCLAME); 
+      } else if (err < 0) {
+        SEMMessageBox("This is a montaged file but the piece list is corrupted."
+          "\r\rMontaging not activated", MB_EXCLAME);
 
+      } else if (numMissing) {
+        PrintfToLog("WARNING: This file is missing %d image%s; the last usable Z is %d", 
+          numMissing, numMissing > 1 ? "s" : "", mWinApp->mStoreMRC->getDepth() - 1);
+      }
     } else {
       delete mWinApp->mStoreMRC;
       mWinApp->mStoreMRC = NULL;
     }
   }
   if (mWinApp->mStoreMRC == NULL) {
-    AfxMessageBox("Error: Problems opening the selected file.", MB_EXCLAME);
+    SEMMessageBox("Error: Problems opening the selected file.", MB_EXCLAME);
     SwitchToFile(mCurrentStore);
     return MRC_OPEN_ERROR;
   } else
@@ -697,6 +710,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
   param->wasFitToPolygon = false;
   param->forFullMontage = false;
   param->overviewBinning = 0;
+  param->reusability = 0;
   param->setupInLowDose = mWinApp->LowDoseMode();
   param->insideNavItem = -1;
   param->warnedCalOpen = !filename.IsEmpty();

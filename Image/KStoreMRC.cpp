@@ -92,17 +92,10 @@ BOOL KStoreMRC::IsMRC(CFile *inFile)
   BOOL sizeError = false;
   if (inFile == NULL) return false;
   
-  // Try to get the file size; if there is an error, set to-1 and see if
-  // everything elese is consistent with that
   try {
     fileSize = (double)inFile->GetLength();
-    if (fileSize < MRCheadSize) return false;
-  }
-  catch(CFileException *perr) {
-    perr->Delete();
-    sizeError = true;
-  }
-  try {
+    if (fileSize < MRCheadSize) 
+      return false;
       
     Int32 nx, ny, nz, mode, mapc, mapr, maps;
     inFile->Read(&nx, 4);   
@@ -123,16 +116,12 @@ BOOL KStoreMRC::IsMRC(CFile *inFile)
   
     int pixSize = lookupPixSize(mode);
     imageSize = (double)nx * ny * pixSize;
-    // If the filesize gave an error, require the z size to be within
-    // 3 or 4 of what would make the file be 4 GB
-    if (sizeError) {
-      if (nz < (int)(4294000000 / imageSize) - 4)
+    if (fileSize < imageSize * nz + MRCheadSize) {
+      if (nz < 3 || (nz < 10 && fileSize < imageSize * (nz - 1) + MRCheadSize) ||
+        (nz < 20 && fileSize < imageSize * (nz - 2) + MRCheadSize) ||
+        (nz >= 20 && fileSize < imageSize * (nz - nz / 10) + MRCheadSize))
         return false;
-    } else {
-      imageSize *= nz;
-      imageSize += MRCheadSize;
-      if (fileSize < imageSize) return false;
-    }   
+    }
     return true;
   
   }
@@ -246,22 +235,14 @@ KStoreMRC::KStoreMRC(CFile *inFile)
   mMontCoordsInMdoc = false;
   HeaderMRC *head = new HeaderMRC;
   double fileSize;
-  BOOL sizeError = false;
-
-  try {
-    fileSize = (double)mFile->GetLength();
-  }
-  catch (CFileException *perr) {
-    perr->Delete();
-    sizeError = true;
-  }
 
   try{
     if (mFile == NULL) 
       throw (-1);
     if (head == NULL) 
       throw (-1);
-    if (!sizeError && fileSize < (unsigned int)MRCheadSize)
+    fileSize = (double)mFile->GetLength();
+    if (fileSize <= (unsigned int)MRCheadSize)
       throw(-1);
     Seek(0, CFile::begin);
     Read(head, headSize);
@@ -284,25 +265,21 @@ KStoreMRC::KStoreMRC(CFile *inFile)
 
     mPixSize = lookupPixSize(mMode);
 
-    unsigned int imageSize = nx * ny * mPixSize;
+    double imageSize = nx * ny * mPixSize;
 
-    // If the filesize gave an error, require the z size to be within
-    // 3 or 4 of what would make the file be 4 GB
-    if (sizeError) {
-      if (nz < (int)(4294000000 / imageSize) - 4)
+    if (fileSize < imageSize * nz + mHeadSize) {
+      if (nz < 3 || (nz < 10 && fileSize < imageSize * (nz - 1) + mHeadSize) ||
+        (nz < 20 && fileSize < imageSize * (nz - 2) + mHeadSize) ||
+        (nz >= 20 && fileSize < imageSize * (nz - nz / 10) + mHeadSize))
         throw (-1);
-    } else {
-      imageSize *= nz;
-      imageSize += mHeadSize;
-      if (fileSize < imageSize) 
-        throw (-1);
-    }   
-
-    
+      mDepth = (int)((fileSize + 0.5 - mHeadSize) / imageSize);
+      mDamagedNz = nz;
+      head->nz = mDepth;
+    } else
+      mDepth = nz;
     
     mWidth  = nx;
     mHeight = ny;
-    mDepth  = nz;
     
     if (head->next) {
       NewArray(mExtra, char, head->next);

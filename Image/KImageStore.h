@@ -36,6 +36,8 @@ protected:
   int mStoreType;
 	int mMode;
 	int mPixSize;
+  int mDamagedNz;
+  int mIncompleteMontZ;
   int mAdocIndex;
   float mFracIntTrunc;
 	FileOptions  mFileOpt;
@@ -63,6 +65,8 @@ public:
   virtual int     getStoreType() {return mStoreType;};    
 	virtual int     getMode() {return mMode;};
   virtual int     GetAdocIndex(void) {return mAdocIndex;};
+  virtual int     GetDamagedNz() {return mDamagedNz ; };
+  virtual int     GetIncompleteMontZ() {return mIncompleteMontZ ; };
 
   // Methods that need to be defined appropriately in subclasses
   virtual int     AppendImage(KImage *inImage) {return 1;};
