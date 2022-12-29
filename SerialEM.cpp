@@ -912,6 +912,7 @@ BOOL CSerialEMApp::InitInstance()
             mArgPlugDir = mSysSubpath.Left(indSpace);
           mArgPlugDir = mArgPlugDir.Mid(9);
         }
+      } else if (mSysSubpath.Find("/#") == 0) {
       } else
         break;
 
@@ -2558,6 +2559,9 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mAutoContouringDlg->AutoContDone();
         else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
           CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
+        else if (idc->source == TASK_NAV_FILE_RANGE && mNavigator)
+          mNavigator->NewFileRangeNextTask(idc->param);
+
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
           busy = IDLE_TIMEOUT_ERROR;
@@ -3374,7 +3378,7 @@ BOOL CSerialEMApp::DoingTasks()
     mShiftManager->ResettingIS() || mParticleTasks->GetDVDoingDewarVac() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
-    (mNavigator && mNavigator->GetLoadingMap()) ||
+    (mNavigator && (mNavigator->GetLoadingMap() || mNavigator->DoingNewFileRange())) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot();

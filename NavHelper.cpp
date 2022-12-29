@@ -278,7 +278,7 @@ CNavHelper::CNavHelper(void)
   mRIuseCurrentLDparams = false;
   mNav = NULL;
   mExtDrawnOnID = 0;
-  mDoingMultipleFiles = false;
+  mDoingMultipleFiles = 0;
   mCurAcqParamIndex = 0;
   mSettingState = false;
   mOKtoUseHoleVectors = false;
@@ -286,6 +286,7 @@ CNavHelper::CNavHelper(void)
   mMarkerShiftSaveType = 0;
   mReverseAutocontColors = false;
   mKeepColorsForPolygons = true;
+  mMaxMontReuseWaste = 0.2f;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -393,6 +394,7 @@ void CNavHelper::UpdateSettings()
   if (mNav) {
     InitAcqActionFlags(true);
     mNav->SetCurAcqParmActions(mCurAcqParamIndex);
+    mNav->SetCollapsing(mCollapseGroups);
   }
 }
 
@@ -3322,7 +3324,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
 
   // If nothing found, need to create file options and filename
   index = SetFileProperties(itemNum, listType, sched, false, 
-    breakForFit && mSkipMontFitDlgs);
+    (breakForFit && mSkipMontFitDlgs) || mDoingMultipleFiles > 2);
   if (index) {
     *propIndexp = *montIndexp = -1;
     RecomputeArrayRefs();
@@ -3488,12 +3490,32 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   typeDlg.mPolyFitOK = item->IsPolygon() && listType == NAVFILE_ITEM;
   typeDlg.m_bFitPoly = mLastMontFitToPoly;
   typeDlg.m_bSkipDlgs = mSkipMontFitDlgs;
+  typeDlg.m_iReusability = 0;
+  if (prevIndex >= 0 && montpSrc->reusability)
+    typeDlg.m_iReusability = 2;
+  if (mDoingMultipleFiles > 1) {
+    typeDlg.m_iReusability = 1;
+    typeDlg.m_bFitPoly = true;
+    typeDlg.m_iSingleMont = 1;
+  }
+  if (*montIndexp >= 0) {
+    newMontp = mMontParArray->GetAt(*montIndexp);
+    typeDlg.m_iReusability = newMontp->reusability;
+    typeDlg.mJustChangeOK = newMontp->wasFitToPolygon;
+  }
+
   if (prevIndex >= 0 && typeDlg.mPolyFitOK)
     typeDlg.m_bFitPoly = montpSrc->wasFitToPolygon;
   if (!skipFitDlgs && typeDlg.DoModal() != IDOK)
     return -1;
   mLastTypeWasMont = typeDlg.m_iSingleMont != 0;
   mLastMontFitToPoly = typeDlg.m_bFitPoly;
+  if (mLastTypeWasMont && mLastMontFitToPoly && typeDlg.mJustChangeOK &&
+    typeDlg.m_bChangeReusable) {
+    newMontp->reusability = typeDlg.m_iReusability;
+    return 0;
+  }
+
   mSkipMontFitDlgs = typeDlg.m_bSkipDlgs;
 
   AddInheritingItems(itemNum, prevIndex, NAVARRAY_MONTPARAM, inheritors);
@@ -3524,6 +3546,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     montDlg.mParam.warnedCalOpen = true;
     montDlg.mParam.warnedCalAcquire = true;
     movingStage = montDlg.mParam.moveStage ? 1 : 0;
+    montDlg.mParam.reusability = typeDlg.m_iReusability;
 
     // Need to make a new param if there is not one in array, or if the reference count
     // was greater than 1 and it is shared with earlier ones
@@ -3758,7 +3781,7 @@ void CNavHelper::NoLongerInheritMessage(int itemNum, int sharedInd, char * typeT
   CString str;
   CMapDrawItem *item1 = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2 = mItemArray->GetAt(sharedInd);
-  if (!mDoingMultipleFiles)
+  if (mDoingMultipleFiles != 1)
     return;
   str.Format("Item # %d (%s) no longer inherits changes in %s from item # %d (%s)", 
     itemNum + 1, (LPCTSTR)item1->mLabel, typeText, sharedInd + 1, (LPCTSTR)item2->mLabel);
@@ -4645,13 +4668,14 @@ void CNavHelper::ListFilesToOpen(void)
   int i, j, k, numGroups = 0;
   float starting, ending, bidir;
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
-  bool seen, single = false;
+  bool seen, needed, single = false;
 
   if (!mItemArray->GetSize())
     return;
   int *seenGroups = new int[mItemArray->GetSize()];
   mWinApp->AppendToLog("\r\nListing of files to open and states to be set", LOG_OPEN_IF_CLOSED);
   for (i = 0; i < mItemArray->GetSize(); i++) {
+    needed = true;
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration() && 
       (item->mAcquire || item->mTSparamIndex >= 0)) {
@@ -4685,7 +4709,7 @@ void CNavHelper::ListFilesToOpen(void)
       if (namep) {
         if (j >= 0) {
           num = mNav->CountItemsInGroup(sched->groupID, label, lastlab, numacq);
-          mess.Format("Group of %d items (%d set to Acquire), labels from %s to %s",
+          mess.Format("Group of %d items (%d set to Acquire), labels from %s to %s\r\n",
             num, numacq, (LPCTSTR)label, (LPCTSTR)lastlab);
         } else if (item->mTSparamIndex >= 0) {
           tsp = mTSparamArray->GetAt(item->mTSparamIndex);
@@ -4705,18 +4729,18 @@ void CNavHelper::ListFilesToOpen(void)
             mess2 += mess;
           }
           mess.Format("Tilt series with camera %d,   binning %d,   %s "
-            "deg%s,  item # %d,  label %s", tsp->cameraIndex + 1,
+            "deg%s,  item # %d,  label %s\r\n", tsp->cameraIndex + 1,
             tsp->binning / BinDivisorI(camp), (LPCTSTR)mess2, 
             item->mTSstartAngle > EXTRA_VALUE_TEST ? "*" : "", i, (LPCTSTR)item->mLabel);
           single = true;
         } else {
-          mess.Format("Single item # %d,  label %s", i, (LPCTSTR)item->mLabel);
+          mess.Format("Single item # %d,  label %s\r\n", i, (LPCTSTR)item->mLabel);
           single = true;
         }
-        mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
-        mess = CString("   ") + *namep;
+        mess += CString("   ") + *namep;
         if (montParInd >= 0) {
           montp = mMontParArray->GetAt(montParInd);
+          needed = montp->reusability < 2;
           mess2.Format("     %d x %d montage", montp->xNframes, montp->yNframes);
           mess += mess2;
           if (item->mTSparamIndex < 0) {
@@ -4726,7 +4750,8 @@ void CNavHelper::ListFilesToOpen(void)
             mess += mess2;
           }
         }
-        mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
+        if (needed)
+          mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         if (stateInd >= 0) {
           state = mAcqStateArray->GetAt(stateInd);
           magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
@@ -4851,6 +4876,113 @@ bool CNavHelper::AnyMontageMapsInNavTable()
       return true;
   }
   return false;
+}
+
+// Given the list of parameter indexes, analyze for matching geometry and change the sizes
+// so a subset of files can be used repeatedly
+void CNavHelper::ModifyMontsForReusability(IntVec &montInds)
+{
+  int checkStart, check, numXpiece, numYpiece, minXoverlap, minYoverlap, numFiles = 0;
+  int maxXsize, maxYsize, magIndex, binning, camera, indMinWaste;
+  bool firstFile;
+  float waste, minWaste;
+  int numMont = (int)montInds.size();
+  MontParam *param;
+
+  for (check = 0; check < numMont; check++) {
+    param = mMontParArray->GetAt(montInds[check]);
+    param->reusability = 0;
+  }
+
+  // Find next unassigned montage
+  checkStart = 0;
+  while (checkStart < numMont) {
+    param = mMontParArray->GetAt(montInds[checkStart]);
+    if (param->reusability) {
+      checkStart++;
+      continue;
+    }
+
+    // Set geometry, start limits
+    numXpiece = param->xNframes;
+    numYpiece = param->yNframes;
+    minXoverlap = param->xOverlap;
+    minYoverlap = param->yOverlap;
+    maxXsize = param->xFrame;
+    maxYsize = param->yFrame;
+    magIndex = param->magIndex;
+    binning = param->binning;
+    camera = param->cameraIndex;
+
+    // Loop on rest to accumulate limits from eligible ones
+    for (check = checkStart; check < numMont; check++) {
+      param = mMontParArray->GetAt(montInds[check]);
+      if (param->reusability || numXpiece != param->xNframes || 
+        numYpiece != param->yNframes || magIndex != param->magIndex ||
+        binning != param->binning || camera != param->cameraIndex)
+        continue;
+      ACCUM_MIN(minXoverlap, param->xOverlap);
+      ACCUM_MIN(minYoverlap, param->yOverlap);
+      ACCUM_MAX(maxXsize, param->xFrame);
+      ACCUM_MAX(maxYsize, param->yFrame);
+    }
+
+    // Find file with minimum waste and make sure it is assigned
+    minWaste = 2.;
+    indMinWaste = checkStart;
+    for (check = checkStart; check < numMont; check++) {
+      param = mMontParArray->GetAt(montInds[check]);
+      if (param->reusability || numXpiece != param->xNframes ||
+        numYpiece != param->yNframes || magIndex != param->magIndex ||
+        binning != param->binning || camera != param->cameraIndex)
+        continue;
+      waste = 1.f - ((float)param->xFrame * param->yFrame) / (maxXsize * maxYsize);
+      if (waste < minWaste) {
+        minWaste = waste;
+        indMinWaste = check;
+      }
+    }
+
+    // Go through files again and set eligible ones without too much waste to this size
+    numFiles++;
+    firstFile = true;
+    for (check = checkStart; check < numMont; check++) {
+      param = mMontParArray->GetAt(montInds[check]);
+      if (param->reusability || numXpiece != param->xNframes ||
+        numYpiece != param->yNframes || magIndex != param->magIndex ||
+        binning != param->binning || camera != param->cameraIndex)
+        continue;
+      if (param->xFrame * param->yFrame >
+        maxXsize * maxYsize * (1. - mMaxMontReuseWaste) || check == indMinWaste) {
+        param->reusability = firstFile ? 1 : 2;
+        firstFile = false;
+        param->xFrame = maxXsize;
+        param->yFrame = maxYsize;
+        param->xOverlap = minXoverlap;
+        param->yOverlap = minYoverlap;
+      }
+    }
+  }
+  PrintfToLog("%d files will be needed for %d montages", numFiles, numMont);
+}
+
+// Find reusable file for either using it or closing it
+int CNavHelper::FindLastFileWithMatchingMontParams(MontParam *param1)
+{
+  MontParam *param2;
+  int store;
+  if (!param1->reusability)
+    return -1;
+  for (store = mWinApp->mDocWnd->GetNumStores() - 1; store >= 0; store--) {
+    param2 = mWinApp->mDocWnd->GetStoreMontParam(store);
+    if (param2 && param2->reusability > 0 && param1->magIndex == param2->magIndex &&
+      param1->binning == param2->binning && param1->cameraIndex == param2->cameraIndex &&
+      param1->xOverlap == param2->xOverlap && param1->yOverlap == param2->yOverlap &&
+      param1->xNframes == param2->xNframes && param1->yNframes == param2->yNframes &&
+      param1->xFrame == param2->xFrame && param1->yFrame == param2->yFrame)
+      return store;
+  }
+  return -1;
 }
 
 // See if a read-in image is actually a map and return the map ID, except when a map is

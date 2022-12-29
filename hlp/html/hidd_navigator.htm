@@ -282,12 +282,19 @@
       some or no items are set for files, an entry box will appear that allows three 
       choices:</P>
     <ol>
-      <li>&nbsp;Enter 1 to open a new file at every eligible item.</li>
+      <li>Enter 1 to open a new file at every eligible item.</li>
       <li>Enter a number greater than 1 to open files at the given interval between 
         point items; files will still be opened at all polygon items.</li>
-      <li>Enter -1 to open files at polygons only, not at points.&nbsp; This entry 
-        allows you to fit a new montage to each polygon and save images at points 
-        between the polygons into the existing montage files.</li>
+      <li>If there are any polygons, enter -1 or -2 to open files at polygons only, not at points.&nbsp; The entry -1 
+        lets you fit a new montage to each polygon and save images at points 
+        between the polygons into the previously opened montage file.&nbsp; The entry -2 
+        lets you fit a montage to each polygon but consolidate them into a subset of 
+        files that cover the needed polygon sizes without excessive wasted image 
+        storage.&nbsp; These files are referred to as reusable montage files that are 
+        left open even when other new files are opened.&nbsp; With this entry, the
+        <a href="hidd_navfiletype.htm">Properties of File To Open dialog</a> will open 
+        with the settings for fitting to a montage and for opening a reusable file to be 
+        left open; see that dialog's help for details.</li>
     </ol>
       <P><B><A NAME="navac_newfile_group"></A>New file at group</B></P>
       <P>Use this checkbox to set up a new file to be opened when the first item in a 
@@ -633,12 +640,17 @@
         when adding a grid of points. If you do 
         select multiple points when groups are collapsed, the selected points will be 
         deleted rather than the ones summarized on the selected line.&nbsp; </P>
-    <P>Another way to delete a contiguous set of points is by using Shift D twice.&nbsp; 
-      With &#39;Collapse groups&#39; turned off, click to select one end of the range and 
+    <P>Another way to delete a contiguous set of items is by using Shift D twice.&nbsp; 
+      Click to select one end of the range and 
       press Shift D.&nbsp; Then select the other end of the range and press Shift D 
-      again.&nbsp; You will be asked to confirm the deletion if there are more than 3 
-      points to be deleted.&nbsp; Only point items in the range will be deleted, not 
-      maps or polygons.</P>
+      again.&nbsp; If there are collapsed groups in the range, all items summarized on 
+      those group lines will be included. If there is only one kind of item in the 
+      range, you will be asked to confirm the deletion unless there are fewer than 4 
+      points.&nbsp; Otherwise, a choice box will open, telling you how many items of 
+      each kind are in the range, and giving you the choice of deleting all items or 
+      just one kind of item, namely just the points if any are included, or just the 
+      polygons if there are no point items.&nbsp; Once you have confirmed deletion of 
+      maps, they will all be deleted without a confirmation message for each one.</P>
       <P><B><A NAME="navab_realign"></A>Realign to Item</B></P>
       <P>This button will start a routine to return accurately to the position of the 
         current item by cross-correlation with an appropriate map. See the <A HREF="menu_navigator.htm#hid_navigator_aligntoitem">
@@ -665,14 +677,25 @@
           mouse button down while dragging the item to the desired place. This even works 
           when groups are collapsed to a single line.</LI></UL>
       <P>Although the box does not allow selection of multiple items by the usual Shift 
-        or Ctrl clicking, a range of points can be selected for several operations by 
+        or Ctrl clicking, a range of items can be selected for several operations by 
         pressing Shift and a key twice, once at each end of the range.&nbsp; These 
-        include deleting with Shift D, toggling of 
-        the acquisition state with Shift A, setting up tilt series with Shift T, setting up new files at items with Shift N, 
-        and toggling drawing of items with Shift V.&nbsp;&nbsp; For the first four, see the description of these operations under
-        <a href="#navab_delete">Delete Item</a>, <a href="#navac_acquire">Acquire</a>, <A HREF="#navac_tiltseries">Tilt series</A>, 
-        and <A HREF="#navac_newfile">New file at item</A>.&nbsp; Shift V simply toggles 
-        items that are being drawn to be off, and ones that are off to be drawn.</P>
+        include:</P>
+    <ul>
+      <li>&nbsp;Shift D to delete: see <a href="#navab_delete">Delete Item</a> for 
+        details.</li>
+      <li>Shift A to toggle the acquisition state; see <a href="#navac_acquire">Acquire</a> 
+        for details.</li>
+      <li>Shift T to set up tilt series; see <A HREF="#navac_tiltseries">Tilt series</A> 
+        for details.</li>
+      <li>&nbsp;Shift N to set up new files at items; see <A HREF="#navac_newfile">New file at item</A> 
+        for details.</li>
+      <li>&nbsp;Shift V to toggle the drawing of items, turning off ones being drawn and 
+        drawing ones that are off. </li>
+    </ul>
+    <P>As of SerialEM 4.1, 28-Dec-22, this range selection works with groups 
+      collapsed; all eligible items in a collapsed group line will be included in an 
+      operation.&nbsp; If you start an operation by mistake, you can end it with the 
+      Escape key as long as the main program has the focus.</P>
     <P>The table can be scrolled with the mouse wheel when the mouse is over the 
       Navigator window and not over the image display window, even though the main 
       program window has the focus.&nbsp; 
@@ -689,16 +712,18 @@
         acquisition status of the item:</P>
       <P>C: corner point<BR>
         A: Acquire item<BR>
-        AF: Acquire item at which a file it set to be opened<BR>
+        AF: Acquire item at which a file is set to be opened<BR>
         AG: Acquire item and member of a group, where a new file is to be opened on the 
         first point of the group<BR>
+        AL: Acquire item at which a reusable montage file is set to be opened and left open<br />
+        AO: Acquire item at which a montage file will be opened only if needed and left open<br />
         TS: Tilt series to be acquired<BR>
-        AFS, AGS, TSS: A stored state will be set when the file is opened, or earlier 
+        AFS, AGS, ALS, TSS: A stored state will be set when the file is opened, or earlier 
         for a tilt series<BR>
-        AP, AFP, AGP, TSP: A stored Low Dose Focus area position and subarea offset will 
+        AP, AFP, AGP, ALP, AOP, TSP: A stored Low Dose Focus area position and subarea offset will 
           be set before the item is acquired or tilt series is started<BR>
-        AFSP, AGSP, TSSP: A stored state will be set then a stored Focus position will be set,
-          overriding the FOcus position in the state<BR>
+        AFSP, AGSP, ALSP, TSSP: A stored state will be set then a stored Focus position will be set,
+          overriding the Focus position in the state<BR>
       </P>
       <P>Finally, the note will appear at the end of the line.</P>
     </basefont>

@@ -580,7 +580,8 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
 // Entry point for a regular image draw to screen
 void CSerialEMView::DrawImage(void)
 {
-  if (mWinApp->GetInRestoreViewFocus())
+  if (mWinApp->GetInRestoreViewFocus() || 
+    (mWinApp->mNavHelper && mWinApp->mNavHelper->GetDoingMultipleFiles()))
     return;
   CRect rect;
   GetClientRect(rect);

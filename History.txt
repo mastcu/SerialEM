@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/29/22: Added mechanism for "reusable" files for Navigator acquire so that
+many polygons can be fit to montages and consolidated into a subset of files
+rather than one per file.
+
+12/29/22: Started storing the Collapse groups state in settings.
+
+12/29/22: Made all 5 range-selecting keys in Navigator work with groups
+collapsed.  Allowed easy deletion of multiple maps in a range with Shift D.
+
+12/29/22: Made program able to open MRC files missing some sections at the
+end.
+
 12/23/22: Added dialog for autocontouring grid squares and converting selected
 ones to polygons.
 

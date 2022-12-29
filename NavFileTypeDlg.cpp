@@ -14,7 +14,10 @@ CNavFileTypeDlg::CNavFileTypeDlg(CWnd* pParent /*=NULL*/)
   , m_iSingleMont(0)
   , m_bFitPoly(FALSE)
   , m_bSkipDlgs(FALSE)
+  , m_iReusability(0)
+  , m_bChangeReusable(FALSE)
 {
+  mJustChangeOK = false;
 }
 
 CNavFileTypeDlg::~CNavFileTypeDlg()
@@ -29,19 +32,25 @@ void CNavFileTypeDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_FIT_POLY, m_bFitPoly);
   DDX_Control(pDX, IDC_CHECK_SKIP_DLGS, m_butSkipDlgs);
   DDX_Check(pDX, IDC_CHECK_SKIP_DLGS, m_bSkipDlgs);
+  DDX_Radio(pDX, IDC_RCLOSE_FOR_NEXT, m_iReusability);
+  DDX_Check(pDX, IDC_CHECK_CHANGE_REUSABLE, m_bChangeReusable);
 }
 
 BOOL CNavFileTypeDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
   UpdateData(false);
-  m_butFitPoly.EnableWindow(m_iSingleMont && mPolyFitOK);
+  ManageEnables();
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 BEGIN_MESSAGE_MAP(CNavFileTypeDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_ROPEN_FOR_SINGLE, OnRopenForSingle)
   ON_BN_CLICKED(IDC_ROPEN_FOR_MONTAGE, OnRopenForSingle)
+  ON_BN_CLICKED(IDC_RCLOSE_FOR_NEXT, OnRcloseForNext)
+  ON_BN_CLICKED(IDC_RLEAVE_OPEN, OnRcloseForNext)
+  ON_BN_CLICKED(IDC_RONLY_IF_NEEDED, OnRcloseForNext)
+  ON_BN_CLICKED(IDC_CHECK_FIT_POLY, OnCheckFitPoly)
 END_MESSAGE_MAP()
 
 
@@ -56,5 +65,29 @@ void CNavFileTypeDlg::OnOK()
 void CNavFileTypeDlg::OnRopenForSingle()
 {
   UpdateData(true);
-  m_butFitPoly.EnableWindow(m_iSingleMont && mPolyFitOK);
+  ManageEnables();
+}
+
+
+void CNavFileTypeDlg::OnRcloseForNext()
+{
+  UpdateData(true);
+}
+
+
+void CNavFileTypeDlg::OnCheckFitPoly()
+{
+  UpdateData(true);
+  ManageEnables();
+}
+
+void CNavFileTypeDlg::ManageEnables()
+{
+  bool enable = m_iSingleMont && mPolyFitOK;
+  m_butFitPoly.EnableWindow(enable);
+  enable = enable && m_bFitPoly;
+  EnableDlgItem(IDC_RCLOSE_FOR_NEXT, enable);
+  EnableDlgItem(IDC_RLEAVE_OPEN, enable);
+  EnableDlgItem(IDC_RONLY_IF_NEEDED, enable);
+  EnableDlgItem(IDC_CHECK_CHANGE_REUSABLE, enable && mJustChangeOK);
 }

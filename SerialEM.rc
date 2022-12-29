@@ -2608,20 +2608,29 @@ BEGIN
     PUSHBUTTON      "Close && Keep Stack",IDC_BUT_CLOSE_KEEP,71,2,63,12
 END
 
-IDD_NAVFILETYPE DIALOGEX 0, 0, 181, 91
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_NAVFILETYPE DIALOGEX 0, 0, 184, 151
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Properties of File to Open"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Single frame images",IDC_ROPEN_FOR_SINGLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,17,75,10
     CONTROL         "Montaged images",IDC_ROPEN_FOR_MONTAGE,"Button",BS_AUTORADIOBUTTON,13,27,67,11
-    GROUPBOX        "Open file for",IDC_STATIC,7,7,168,34,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,29,70,45,14
-    PUSHBUTTON      "Cancel",IDCANCEL,108,70,45,14
+    GROUPBOX        "Open file for",IDC_STATIC,7,7,170,34,WS_GROUP
+    CONTROL         "Close file when next new file is to be opened",IDC_RCLOSE_FOR_NEXT,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,79,154,10
+    CONTROL         "Leave file open for reuse; close matching montage",IDC_RLEAVE_OPEN,
+                    "Button",BS_AUTORADIOBUTTON,13,89,163,10
+    CONTROL         "Open file only if needed; leave open for reuse",IDC_RONLY_IF_NEEDED,
+                    "Button",BS_AUTORADIOBUTTON,13,99,157,10
+    GROUPBOX        "Montage reusability",IDC_STATIC,7,69,170,44,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,29,130,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,105,130,45,14
     CONTROL         "Fit montage to polygon",IDC_CHECK_FIT_POLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,44,82,10
-    PUSHBUTTON      "?",IDC_BUTHELP,170,75,10,10,NOT WS_VISIBLE
+    PUSHBUTTON      "?",IDC_BUTHELP,167,134,10,10,NOT WS_VISIBLE
     CONTROL         "Skip montage setup dialog when fitting in future",IDC_CHECK_SKIP_DLGS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,56,152,10
+    CONTROL         "Just change reusability without refitting montage",IDC_CHECK_CHANGE_REUSABLE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,115,164,10
 END
 
 IDD_STATEDLG DIALOGEX 0, 0, 164, 157
@@ -4204,9 +4213,9 @@ BEGIN
     IDD_NAVFILETYPE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 174
+        RIGHTMARGIN, 177
         TOPMARGIN, 7
-        BOTTOMMARGIN, 84
+        BOTTOMMARGIN, 144
     END
 
     IDD_STATEDLG, DIALOG
@@ -4731,6 +4740,11 @@ BEGIN
 END
 
 IDD_AUTOCONTOUR AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_NAVFILETYPE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -7121,6 +7135,11 @@ BEGIN
     IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
     IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
     IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
+    IDC_RCLOSE_FOR_NEXT     "A new file will be opened for each polygon, and the last one closed"
+    IDC_RLEAVE_OPEN         "File will be left open for other polygons needing same piece number, etc"
+    IDC_RONLY_IF_NEEDED     "Montages will be saved into matching file if one is still open"
+    IDC_CHECK_CHANGE_REUSABLE
+                            "Skip montage fitting so montage keeps its current piece size and overlap"
 END
 
 STRINGTABLE

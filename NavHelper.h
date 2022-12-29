@@ -218,7 +218,7 @@ public:
   GetSetMember(BOOL, CollapseGroups);
   SetMember(int, ExtDrawnOnID);
   GetSetMember(BOOL, SkipMontFitDlgs);
-  GetSetMember(bool, DoingMultipleFiles);
+  GetSetMember(int, DoingMultipleFiles);
   GetSetMember(float, HFtargetDiamPix);
   GetSetMember(int, HFretainFFTs);
   GetSetMember(int, HFminNumForTemplate);
@@ -247,6 +247,7 @@ public:
   GetSetMember(int, MarkerShiftApplyWhich);
   GetSetMember(BOOL, ReverseAutocontColors);
   GetSetMember(BOOL, KeepColorsForPolygons);
+  GetSetMember(float, MaxMontReuseWaste);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -429,7 +430,7 @@ private:
   MiniOffsets mExtOffsets;       // Offset values for aligned montage map
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
-  bool mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
+  int mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
   bool mOKtoUseHoleVectors;      // Flag that it is OK to use vectors without confirmation
   float mHFtargetDiamPix;        // Hole finder parameters: see holefinder source
   int mHFretainFFTs;
@@ -464,6 +465,7 @@ private:
   int mMarkerShiftSaveType;      // And whether/how to save shifts  
   BOOL mReverseAutocontColors;   // Flag to use colors in reverse
   BOOL mKeepColorsForPolygons;   // Flag to keep same colors when converting to polygons
+  float mMaxMontReuseWaste;      // Maximum fraction of area to waste when reusing montage
 
 
 public:
@@ -598,6 +600,8 @@ public:
     int xOffset, int yOffset, const char *descrip, bool forTrial);
   int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
+  void ModifyMontsForReusability(IntVec &montInds);
+  int FindLastFileWithMatchingMontParams(MontParam *param1);
   int FindMapIDforReadInImage(CString filename, int secNum, int ignoreLoad = false);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);
   int GetUserValue(CMapDrawItem *item, int number, CString &value);

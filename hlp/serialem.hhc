@@ -378,6 +378,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_navigator.htm">Navigator Window</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Properties of File to Open dialog">
+			<param name="Local" value="html/hidd_navfiletype.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navfiletype.htm">Properties of File to Open dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Navigator Acquire dialog">
 			<param name="Local" value="html/hidd_navacquire.htm">
 			</OBJECT>

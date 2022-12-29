@@ -194,6 +194,7 @@ public:
   std::set<int> *GetSelectedItems() {return &mSelectedItems;};
   void SetNextFileIndices(int fileIn, int montIn) {mNextFileOptInd = fileIn; mNextMontParInd = montIn;};
   int GetCurrentIndex() {return mCurrentItem;};
+  bool DoingNewFileRange() { return mFRangeIndex >= 0; };
 
 // Dialog Data
 	//{{AFX_DATA(CNavigatorDlg)
@@ -378,6 +379,18 @@ private:
   int mShiftTIndex;        // Starting index for doing shift T
   int mShiftNIndex;        // Starting index for doing shift N
   int mShiftVIndex;        // Starting index for doing shift V
+  int mRangeGroupEnd;      // Ending index of range if group
+  bool mInRangeDelete;     // Flag that Delete is being called from range deletion
+  int mFRangeNumOff;       // Variables needed to run new files in range as task
+  bool mFRangeAllOn;
+  int mFRangeInterval;
+  int mFRangeStart;
+  int mFRangeEnd;
+  int mFRangeIndex;
+  IntVec mFRangeMontInds;
+  bool mFRangeAnyPoly;
+  int mFRangeCurrItemSave;
+  int mFRangeCurrSelSave;
   int mNumSavedRegXforms;  // Number of saved reg-to-reg transforms
   int mLastXformToReg;     // Registration it was transformed to
   ScaleMat mMatSaved[MAX_SAVED_REGXFORM];
@@ -482,6 +495,7 @@ private:
   int mRunScriptAfterNextAcq;  // Script # to run at end of next acquisition if completed
   int mScriptToRunAtEnd;       // Script # to run when current acquisition ends
   bool mRetractAtAcqEnd;
+  int mNumAcqFilesLeftOpen;    // Flag that some files were left open
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -678,6 +692,9 @@ public:
   void ProcessNKey(void);
   void ProcessVKey(void);
   int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
+  void ClearRangeKeys();
+  void ToggleNewFileOverRange(int start, int end);
+  void NewFileRangeNextTask(int param);
   BOOL m_bDrawLabels;
   afx_msg void OnDrawLabels();
   void ManageNumDoneAcquired(void);

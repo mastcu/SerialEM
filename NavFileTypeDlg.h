@@ -26,7 +26,13 @@ public:
   CButton m_butFitPoly;
   BOOL m_bFitPoly;
   BOOL mPolyFitOK;
+  BOOL mJustChangeOK;
   afx_msg void OnRopenForSingle();
   CButton m_butSkipDlgs;
   BOOL m_bSkipDlgs;
+  int m_iReusability;
+  afx_msg void OnRcloseForNext();
+  afx_msg void OnCheckFitPoly();
+  void ManageEnables();
+  BOOL m_bChangeReusable;
 };

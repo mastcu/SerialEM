@@ -40,7 +40,7 @@ CFilePropDlg::CFilePropDlg(CWnd* pParent /*=NULL*/)
   , m_bSkipFileDlg(FALSE)
 {
   //{{AFX_DATA_INIT(CFilePropDlg)
-  m_iMaxSects = 0;
+  m_iMaxSects = 1;
   m_iByteInt = 0;
   m_bStagePos = FALSE;
   m_bTiltAngle = FALSE;

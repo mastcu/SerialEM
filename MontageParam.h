@@ -6,6 +6,8 @@
 #define MIN_Y_MONT_REALIGN 5
 #define MINI_NO_PIECE -30000
 
+// IF YOU ADD SOMETHING: See if it either should be saved in NavAdocParams or initialized
+// on read-in from adoc
 struct MontParam {
   int xFrame, yFrame;      // Frame size
   int xNframes, yNframes;  // # of frames in X and Y
@@ -78,6 +80,7 @@ struct MontParam {
   float fullMontStageY;
   int refCount;             // Reference count for multiple use
   int navID;                   // ID for avoiding duplication when merging nav files
+  int reusability;          // 1 open and leave open, 2 open only if needed for geometry
 };
 
 // Structure to keep track of offsets applied in making montage overview

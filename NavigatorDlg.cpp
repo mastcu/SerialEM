@@ -187,6 +187,8 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mSavedAstigX = EXTRA_NO_VALUE;
   mNavAcquireDlg = NULL;
   mRunScriptAfterNextAcq = -1;
+  mFRangeIndex = -1;
+  mInRangeDelete = false;
 }
 
 
@@ -552,7 +554,7 @@ void CNavigatorDlg::ManageCurrentControls()
 // Manage the state of action buttons, some of which depend on task status
 void CNavigatorDlg::Update()
 {
-  int index, i, start, end, numTS = 0, numAcq = 0, numFile = 0;
+  int index, i, start, end, numTS = 0, numAcq = 0, numFile = 0, numAcqInGroup = 0;
   CMapDrawItem *item;
   CString str;
   double timePerItem, sinceLastDone, remaining, montLeft = -1.;
@@ -564,12 +566,22 @@ void CNavigatorDlg::Update()
   BOOL stageMoveOK = curExists && noTasks && noDrawing && 
     RegistrationUseType(mItem->mRegistration) != NAVREG_IMPORT;
   BOOL fileOK = curExists && noTasks;
-  BOOL groupOK = false;
+  BOOL groupOK = false, anyAcqInGroup = false;
   BOOL propsNameStateOK;
   BOOL grpExists = GetCollapsedGroupLimits(mCurListSel, start, end);
   BOOL recordingHoles = mHelper->mMultiShotDlg &&mHelper->mMultiShotDlg->RecordingHoles();
-  if (grpExists)
+  if (grpExists) {
     mItem = mItemArray[start];
+    for (i = start; i <= end; i++) {
+      item = mItemArray[i];
+      if (item->mAcquire)
+        numAcqInGroup++;
+      if (item->mTSparamIndex >= 0) {
+        numAcqInGroup = 0;
+        break;
+      }
+    }
+  }
 
   // If acquiring, update the number done and estimated completion
   if (mAcquireIndex >= 0 && mInitialNumAcquire > 0) {
@@ -659,7 +671,7 @@ void CNavigatorDlg::Update()
   m_butDualMap.EnableWindow(noDrawing && noTasks && mDualMapID >= 0);
   m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing && 
     mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks() &&
-    !mNavAcquireDlg);
+    !mNavAcquireDlg && mFRangeIndex < 0);
   m_butRealign.EnableWindow(curExists && noDrawing && mAcquireIndex < 0 && noTasks &&
     !mCamera->CameraBusy());
   m_listViewer.EnableWindow(!mAddingPoints && !mLoadingMap && mAcquireIndex < 0);
@@ -670,8 +682,8 @@ void CNavigatorDlg::Update()
   m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) || 
     (grpExists && noTasks && !numTS)));
   m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire);
-  m_butFileAtItem.EnableWindow(fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0 &&
-    index < 0);
+  m_butFileAtItem.EnableWindow(((fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0) ||
+    (grpExists && noTasks && numAcqInGroup > 1)) && index < 0);
   m_butGroupFile.EnableWindow(groupOK && noTasks);
   propsNameStateOK = (fileOK && (mItem->mFilePropIndex >= 0 || index >= 0)) ||
     (grpExists && noTasks && index >= 0);
@@ -1283,8 +1295,13 @@ void CNavigatorDlg::OnCheckTiltSeries()
 // Open a file at the single item
 void CNavigatorDlg::OnCheckFileatitem()
 {
-  if (UpdateIfItem())
+  int start, end;
+  if (UpdateIfItem()) {
+    if (GetCollapsedGroupLimits(mCurListSel, start, end)) {
+      ToggleNewFileOverRange(start, end);
+    }
     return;
+  }
   if (mItem->mFilePropIndex < 0 && m_bFileAtItem) {
     mHelper->NewAcquireFile(mCurrentItem, NAVFILE_ITEM, NULL);
   } else if (mItem->mFilePropIndex >= 0 && !m_bFileAtItem) {
@@ -1664,9 +1681,10 @@ void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
 // Delete a contiguous set of points with Shift D at both ends of range
 void CNavigatorDlg::ProcessDKey(void)
 {
-  CString str;
+  CString str, onlyBut, onlyMess, str2;
   CMapDrawItem *item;
-  int start, end, ind, num = 0;
+  BOOL allItems, saveCollapsed;
+  int start, end, ind, numPt = 0, numPoly = 0, numMap = 0;
   if (ProcessRangeKey("D again to delete", mShiftDIndex, start, end))
     return;
 
@@ -1674,25 +1692,79 @@ void CNavigatorDlg::ProcessDKey(void)
   for (ind = start; ind <= end; ind++) {
     item = mItemArray[ind];
     if (item->IsPoint())
-      num++;
+      numPt++;
+    if (item->IsPolygon())
+      numPoly++;
+    if (item->IsMap())
+      numMap++;
   }
 
   // Confirm and delete in inverse order, rather clumsily
-  if (num > 3) {
-    str.Format("Do you really want to delete the %d points from index %d to %d?", 
-      num, start + 1, end + 1);
+  if ((numPt > 3 && !numPoly && !numMap) || (numPoly > 3 && !numPt && !numMap) ||
+    (numMap > 0 && !numPoly && !numMap)) {
+
+    // For one kind of item, just do a simple confirmation
+    str.Format("Do you really want to delete the %d %s from index %d to %d?", 
+      B3DCHOICE(numPt, numPt, numPoly ? numPoly : numMap),
+      B3DCHOICE(numPt, "points", numPoly ? "polygons" : "maps"),
+      start + 1, end + 1);
     if (AfxMessageBox(str, MB_QUESTION) == IDNO)
       return;
+    allItems = true;
+
+  } else if (numPoly || numMap) {
+
+    // If there are polygons or maps, compose complete message but with a limited
+    // choice of points or polygons only, vs all items
+    str = "There are ";
+    if (numPt) {
+      str2.Format("%d points", numPt);
+      str += str2;
+      onlyBut = "Points Only";
+      onlyMess = "Press \"Points Only\" to delete only the points\n\n";
+    } else {
+      onlyBut = "Polygons Only";
+      onlyMess = "Press \"Polygons Only\" to delete only the polygons\n\n";
+    }
+    if (numPoly) {
+      if (numPt)
+        str += numMap ? ", " : " and ";
+      str2.Format("%d polygons", numPoly);
+      str += str2;
+    }
+    if (numMap) {
+      if (numPt && numPoly)
+        str += ",";
+      str2.Format(" and %d maps", numMap);
+      str += str2;
+    }
+    str2.Format(" from index %d to %d\n\n", start + 1, end + 1);
+    str += str2;
+    ind = SEMThreeChoiceBox(str + onlyMess + "Press \"All Items\" to delete all items in "
+      "the range\n\nPress \"Cancel\" to delete nothing", onlyBut, "All Items", "Cancel",
+      MB_YESNOCANCEL, 0);
+    if (ind == IDCANCEL)
+      return;
+    allItems = ind == IDNO;
   }
+
+  // Do the deletion, prevent the map warning
+  mInRangeDelete = true;
+  saveCollapsed = m_bCollapseGroups;
+  SetCollapsing(false);
   for (ind = end; ind >= start; ind--) {
     item = mItemArray[ind];
-    if (item->IsPoint()) {
+    if (item->IsPoint() || allItems || (!numPt && item->IsPolygon())) {
       mCurrentItem = ind;
       mCurListSel = ind;
       m_listViewer.SetCurSel(mCurListSel);
       OnDeleteitem();
     }
   }
+  SetCollapsing(saveCollapsed);
+  mInRangeDelete = false;
+  ManageCurrentControls();
+  Redraw();
 }
 
 // Start tilt series at contiguous set of points with Shift T at both ends of range
@@ -1757,59 +1829,10 @@ bool CNavigatorDlg::AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, in
 // Start new file at item at contiguous set of points with Shift N at both ends of range
 void CNavigatorDlg::ProcessNKey(void)
 {
-  CMapDrawItem *item;
-  int start, end, ind, interval, numAcq = 0, numOff = 0;
-  int currItemSave = mCurrentItem, curSelSave = mCurListSel;
-  bool allOn = true;
+  int start, end;
   if (ProcessRangeKey("N again for new files", mShiftNIndex, start, end))
     return;
-
-  // See if they are all already on, in which case they will be turned off
-  for (ind = start; ind <= end; ind++) {
-    item = mItemArray[ind];
-    if (item->mAcquire)
-      numAcq++;
-    if (item->mFilePropIndex < 0) {
-      allOn = false;
-      numOff++;
-    }
-  }
-
-  if (!numAcq)
-    return;
-
-  if (!allOn) {
-    if (!KGetOneInt("Enter 1 for file at all acquire items, or -1 for file only at "
-      "polygons", "Interval between items at which to set up new files:", 
-      mMinNewFileInterval))
-      return;
-  }
-  interval = mMinNewFileInterval < 0 ? numOff + 10 : mMinNewFileInterval;
-  mHelper->SetDoingMultipleFiles(true);
-
-  // Then loop and turn on ones not on, or turn off if all on
-  numOff = 0;
-  for (ind = start; ind <= end; ind++) {
-    mCurrentItem = mCurListSel = ind;
-    item = mItemArray[ind];
-    if (item->mAcquire && item->mFilePropIndex < 0) {
-      numOff++;
-      if (numOff >= interval || item->IsPolygon()) {
-        if (mHelper->NewAcquireFile(ind, NAVFILE_ITEM, NULL))
-          break;
-        UpdateListString(ind);
-        numOff = 0;
-      }
-    } else if (allOn && item->mAcquire) {
-      mHelper->EndAcquireOrNewFile(item);
-      UpdateListString(ind);
-    }
-  }
-  mCurrentItem = currItemSave;
-  mCurListSel = curSelSave;
-  ManageCurrentControls();
-  Redraw();
-  mHelper->SetDoingMultipleFiles(false);
+  ToggleNewFileOverRange(start, end);
 }
 
 // Toggle drawing
@@ -1831,28 +1854,182 @@ void CNavigatorDlg::ProcessVKey(void)
 // Do common actions for selecting a range of contiguous items with collapse off
 int CNavigatorDlg::ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end)
 {
+  int grpStart, grpEnd;
+  bool groupIsCur = GetCollapsedGroupLimits(mCurListSel, grpStart, grpEnd);
   if (!SetCurrentItem(true))
     return 1;
 
-  if (m_bCollapseGroups)
-    return 1;
   if (shiftIndex < 0) {
 
     // Only allow one to be on, don't confuse the header line etc
     if (mShiftTIndex >= 0 || mShiftDIndex >= 0 || mShiftAIndex >= 0 || mShiftNIndex > 0)
       return 1;
-    shiftIndex = mCurrentItem;
-    ManageListHeader(CString("Select other end of range, press Shift ") + 
+    if (groupIsCur) {
+      shiftIndex = grpStart;
+      mRangeGroupEnd = grpEnd;
+    } else {
+      shiftIndex = mCurrentItem;
+      mRangeGroupEnd = -1;
+    }
+    ManageListHeader(CString("Select other end of range, press Shift ") +
       key);
     return 1;
   }
 
   // Get ordered range
-  start = B3DMIN(shiftIndex, mCurrentItem);
-  end = B3DMAX(shiftIndex, mCurrentItem);
+  if (mRangeGroupEnd < 0)
+    mRangeGroupEnd = shiftIndex;
+  if (!groupIsCur) {
+    grpStart = grpEnd = mCurrentItem;
+  }
+  start = B3DMIN(shiftIndex, grpStart);
+  end = B3DMAX(mRangeGroupEnd, grpEnd);
   ManageListHeader();
   shiftIndex = -1;
   return 0;
+}
+
+// Allow Esc to clear the indexes and fix the header
+void CNavigatorDlg::ClearRangeKeys()
+{
+  mShiftAIndex = mShiftVIndex = mShiftNIndex = mShiftTIndex = mShiftDIndex = -1;
+  ManageListHeader();
+}
+
+// Do the new file at item operation over a range of indexes
+void CNavigatorDlg::ToggleNewFileOverRange(int start, int end)
+{
+  CMapDrawItem *item;
+  int ind, numAcq = 0;
+  mFRangeCurrItemSave = mCurrentItem;
+  mFRangeCurrSelSave = mCurListSel;
+  mFRangeAnyPoly = false;
+
+  mFRangeAllOn = true;
+  mFRangeStart = start;
+  mFRangeEnd = end;
+
+  // See if they are all already on, in which case they will be turned off
+  mFRangeNumOff = 0;
+  for (ind = start; ind <= end; ind++) {
+    item = mItemArray[ind];
+    if (item->mAcquire) {
+      numAcq++;
+      if (item->IsPolygon() && item->mFilePropIndex < 0)
+        mFRangeAnyPoly = true;
+    }
+    if (item->mFilePropIndex < 0) {
+      mFRangeAllOn = false;
+      mFRangeNumOff++;
+    }
+  }
+
+  if (!numAcq)
+    return;
+
+  // Offer tailored choices
+  if (!mFRangeAllOn) {
+    if (mFRangeAnyPoly) {
+      if (!KGetOneInt("Enter -1 or -2 for new file only at polygons; -2 for minimum # of "
+        "reusable montage files", "Interval between items at which to set up new files "
+        "(1 for file at all acquire items):", mMinNewFileInterval))
+        return;
+    } else {
+      if (!KGetOneInt("Enter 1 for new file at all acquire items",
+        "Interval between items at which to set up new files:", mMinNewFileInterval))
+        return;
+    }
+  }
+
+  // Set up for looping on task
+  mFRangeInterval = mMinNewFileInterval < 0 ? mFRangeNumOff + 10 : mMinNewFileInterval;
+  mFRangeIndex = start;
+
+  mHelper->SetDoingMultipleFiles(mFRangeAnyPoly && mMinNewFileInterval < -1 ? 2 : 1);
+  mFRangeNumOff = 0;
+  CLEAR_RESIZE(mFRangeMontInds, int, 0);
+
+  // Start on-idle task if there is there enough polygon fitting
+  if (mFRangeAnyPoly && !mFRangeAllOn && numAcq > 10) {
+    NewFileRangeNextTask(0);
+    return;
+  }
+
+  // Otherwise just loop to finish
+  while (mFRangeIndex >= 0)
+    NewFileRangeNextTask(1);
+}
+
+// Do the new file operation for one index, can be run as task or in a synchronous loop
+void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
+{
+  CMapDrawItem *item;
+  int ind = mFRangeIndex, err = 0;
+
+  // Turn on ones not on, or turn off if all on
+  mCurrentItem = mCurListSel = ind;
+  if (m_bCollapseGroups)
+    mCurListSel = mItemToList[ind];
+  item = mItemArray[ind];
+  if (item->mAcquire && item->mFilePropIndex < 0) {
+    mFRangeNumOff++;
+    if (mFRangeNumOff >= mFRangeInterval || item->IsPolygon()) {
+      mItem = item;
+      err = mHelper->NewAcquireFile(ind, NAVFILE_ITEM, NULL);
+      if (!err) {
+        UpdateListString(ind);
+        mFRangeNumOff = 0;
+        if (item->IsPolygon() && mMinNewFileInterval < -1) {
+          mHelper->SetDoingMultipleFiles(3);
+          mFRangeMontInds.push_back(item->mMontParamIndex);
+        }
+      }
+    }
+  } else if (mFRangeAllOn && item->mAcquire) {
+    mHelper->EndAcquireOrNewFile(item);
+    UpdateListString(ind);
+  }
+
+  // If not done or error, return if synchronous or set up task to come back otherwise
+  if (!err && mFRangeIndex < mFRangeEnd) {
+    mFRangeIndex++;
+    if (synchronous)
+      return;
+    if (mFRangeIndex == mFRangeStart + 1) {
+      mWinApp->UpdateBufferWindows();
+      mWinApp->SetStatusText(SIMPLE_PANE, "SETTING UP FILES");
+    }
+    mWinApp->AddIdleTask(TASK_NAV_FILE_RANGE, 0, 0);
+    return;
+  }
+
+  // Done
+  mFRangeIndex = -1;
+  if (!synchronous) {
+    mWinApp->UpdateBufferWindows();
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
+  }
+
+  // Fix any table entries that had to change to open if needed
+  if (mFRangeAnyPoly && mMinNewFileInterval < -1) {
+    mHelper->ModifyMontsForReusability(mFRangeMontInds);
+    for (ind = mFRangeStart; ind <= mFRangeEnd; ind++) {
+      item = mItemArray[ind];
+      if (item->mMontParamIndex >= 0 &&
+        mMontParArray[item->mMontParamIndex]->reusability > 1)
+        UpdateListString(ind);
+    }
+  }
+
+
+  // Restore
+  CLEAR_RESIZE(mFRangeMontInds, int, 0);
+  mCurrentItem = mFRangeCurrItemSave;
+  mCurListSel = mFRangeCurrSelSave;
+  m_listViewer.SetCurSel(mCurListSel);
+  ManageCurrentControls();
+  Redraw();
+  mHelper->SetDoingMultipleFiles(0);
 }
 
 // Construct list box string for the given item
@@ -1905,8 +2082,15 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
     string += substr;
     if (item->mAcquire) {
       string += "A";
-      if (item->mFilePropIndex >= 0)
-        string += "F";
+      if (item->mFilePropIndex >= 0) {
+        if (item->mMontParamIndex >= 0) {
+          if (mMontParArray[item->mMontParamIndex]->reusability)
+            string += mMontParArray[item->mMontParamIndex]->reusability > 1 ? "O" : "L";
+          else
+            string += "F";
+        } else
+          string += "F";
+      }
       if (sched) {
         string += "G";
         if (sched->stateIndex >= 0)
@@ -2657,7 +2841,7 @@ void CNavigatorDlg::OnDeleteitem()
     DeleteGroup(true);
     return;
   }
-  if (mItem->IsMap() && !mItem->mImported && 
+  if (mItem->IsMap() && !mItem->mImported && !mInRangeDelete &&
     AfxMessageBox("This item is a map image\n\n"
     "It includes critical information about the file\n and coordinate scaling that "
     "would be very hard to recreate.\n\n Are you sure you want to delete the item?",
@@ -2674,8 +2858,10 @@ void CNavigatorDlg::OnDeleteitem()
   // But when adding points, set selection to last point
   if (mRemoveItemOnly && mAddingPoints && mItemArray.GetSize() > mNumberBeforeAdd)
     mSelectedItems.insert((int)mItemArray.GetSize() - 1);
-  ManageCurrentControls();
-  Redraw();
+  if (!mInRangeDelete) {
+    ManageCurrentControls();
+    Redraw();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -3700,6 +3886,8 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
 
   // Sign woes as usual.  This transform is a true transformation from the stage
   // to the camera coordinate system, but invert Y to get to image coordinate system
+  // | 1  0 | * | xpx xpy | * | X |  = |  xpx  xpy | * | X |
+  // | 0 -1 |   | ypx ypy |   | Y |    | -ypx -ypy |   | Y |
   aMat = mShiftManager->FocusAdjustedStageToCamera(imBuf);
   aMat.xpx /= imBuf->mBinning;
   aMat.xpy /= imBuf->mBinning;
@@ -3849,8 +4037,9 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
   CString str;
   MontParam *montp;
   int err;
-  mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem())
+  if (!mHelper->GetDoingMultipleFiles())
+    mWinApp->RestoreViewFocus();
+  if (!mHelper->GetDoingMultipleFiles() && !SetCurrentItem(false))
     return 1;
   if (mItem->IsNotPolygon())	
     return 1;
@@ -9050,6 +9239,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 
   mSavedTargetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
   mNumAcquired = 0;
+  mNumAcqFilesLeftOpen = 0;
   mAcquireEnded = 0;
   mUsedPreExistingMont = false;
   mPausedAcquire = false;
@@ -10010,6 +10200,8 @@ int CNavigatorDlg::ResumeFromPause()
 int CNavigatorDlg::EndAcquireWithMessage(void)
 {
   CString report, scrp;
+  int ind;
+  MontParam *montp;
   bool runScript = mAcquireEnded == 10 && !mPausedAcquire && mScriptToRunAtEnd >= 0;
   if (mRetractAtAcqEnd) {
     mRetractAtAcqEnd = false;
@@ -10029,6 +10221,21 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
       mWinApp->AppendToLog(report + scrp);
     } else {
       AfxMessageBox(report, MB_EXCLAME);
+      if (mNumAcqFilesLeftOpen) {
+        report.Format("%d files were left open for reuse\n\nDo you want to close them?",
+          mNumAcqFilesLeftOpen);
+        if (AfxMessageBox(report, MB_QUESTION) == IDYES) {
+          for (ind = mDocWnd->GetNumStores() - 1; ind >= 0; ind--) {
+            montp = mDocWnd->GetStoreMontParam(ind);
+            if (montp && montp->reusability) {
+              mDocWnd->LeaveCurrentFile();
+              mDocWnd->SwitchToFile(ind);
+              mDocWnd->DoCloseFile();
+            }
+          }
+          mDocWnd->SwitchToFile(mDocWnd->GetNumStores() - 1);
+        }
+      }
     }
   }
   if (runScript) {
@@ -10090,7 +10297,7 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   RestoreBeamTiltIfSaved();
   CloseFileOpenedByAcquire();
   if (mUsedPreExistingMont && mWinApp->Montaging() && montP->closeFileWhenDone)
-    mWinApp->mDocWnd->DoCloseFile();
+    mDocWnd->DoCloseFile();
   mAcquireIndex = -1;
   mFocusCycleCounter = -1;
   mWinApp->mFocusManager->SetTargetDefocus(mSavedTargetDefocus);
@@ -10290,7 +10497,7 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
           mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
             mWinApp->mLogWindow->DoSave();
             mWinApp->mLogWindow->CloseLog();
-            mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+            mWinApp->AppendToLog(mDocWnd->DateTimeForTitle());
         }
         mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
         mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
@@ -10331,12 +10538,13 @@ int CNavigatorDlg::GotoCurrentAcquireArea(bool imposeBacklash)
 // This is called once for state only when going to next item, and again at File Open step
 int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 {
-  int j, ind;
+  int j, ind, lastMatch;
   ScheduledFile *sched;
   FileOptions *fileOptp;
   CString root, extension, extraName;
   CString *namep;
   int *stateIndp;
+  bool leaveOpen = false;
   MontParam *masterMont = mWinApp->GetMontParam();
   MontParam *montp;
   StateParams *state;
@@ -10388,8 +10596,45 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 
   if (mNextFileOptInd >= 0) {
 
-    // Close current file if we opened it, check if it is still OK
+    // Close current file if we opened it
     CloseFileOpenedByAcquire();
+
+    // Check for reusability, and if so, see if there is a match
+    if (mNextMontParInd >= 0) {
+      montp = mMontParArray.GetAt(mNextMontParInd);
+      if (montp->reusability) {
+        leaveOpen = true;
+        lastMatch = mHelper->FindLastFileWithMatchingMontParams(montp);
+
+        // No match goes on to open a file regardless, otherwise switch to file
+        if (lastMatch >= 0) {
+          if (lastMatch != mDocWnd->GetCurrentStore()) {
+            mDocWnd->LeaveCurrentFile();
+            mDocWnd->SwitchToFile(lastMatch);
+          }
+
+          // Close file if new one is to be opened
+          if (montp->reusability == 1) {
+            mDocWnd->DoCloseFile();
+          } else {
+
+            // Or fix the montage params with the current skip list and clear out the
+            // parameters from arrays
+            masterMont->numToSkip = montp->numToSkip;
+            masterMont->skipPieceX = montp->skipPieceX;
+            masterMont->skipPieceY = montp->skipPieceY;
+            mHelper->ChangeRefCount(NAVARRAY_MONTPARAM, mNextMontParInd, -1);
+            mHelper->ChangeRefCount(NAVARRAY_FILEOPT, mNextFileOptInd, -1);
+            item->mMontParamIndex = -1;
+            item->mFilePropIndex = -1;
+            item->mFileToOpen = "";
+            return 0;
+          }
+        }
+      }
+    }
+
+      // Check if file is still OK
     if (mDocWnd->StoreIndexFromName(*namep) >= 0) {
       SEMMessageBox("The file set to be opened for this item,\n" + *namep 
         + "\n" + "is already open.");
@@ -10411,7 +10656,6 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     // But leave the current file first because that copies master to current
     mDocWnd->LeaveCurrentFile();
     if (mNextMontParInd >= 0) {
-      montp = mMontParArray.GetAt(mNextMontParInd);
       *masterMont = *montp;
       masterMont->warnedConSetBin = true;
     }
@@ -10449,7 +10693,25 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       return 1;
     }
     mHelper->ChangeRefCount(NAVARRAY_FILEOPT, mNextFileOptInd, -1);
-    mAcquireOpenedFile = mWinApp->mStoreMRC->getFilePath();
+    if (!leaveOpen) {
+      mAcquireOpenedFile = mWinApp->mStoreMRC->getFilePath();
+    } else {
+      mNumAcqFilesLeftOpen++;
+
+      // If a file is left open and the file limit is near, close oldest reusable file
+      if (mDocWnd->GetNumStores() >= MAX_STORES - 2) {
+        for (ind = 0; ind < mDocWnd->GetNumStores() - 2; ind++) {
+          montp = mDocWnd->GetStoreMontParam(ind);
+          if (montp && montp->reusability) {
+            mDocWnd->LeaveCurrentFile();
+            mDocWnd->SwitchToFile(ind);
+            mDocWnd->DoCloseFile();
+            mDocWnd->SwitchToFile(mDocWnd->GetNumStores() - 1);
+            break;
+          }
+        }
+      }
+    }
 
     // Need to set montaging before adding the store
     if (mNextMontParInd >= 0) {

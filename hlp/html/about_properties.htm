@@ -4055,6 +4055,15 @@
             montage consists of a singe frame in X and Y.
           </TD>
         </TR>
+        <TR VALIGN="top">
+          <TD>MaxMontReuseWaste</TD>
+          <TD>The maximum fraction of image area&nbsp; that is extra, or wasted, when a 
+            montage fit to a polygon is changed to match the size of a larger, &#39;reusable&#39;, 
+            montage file.&nbsp; The ratio of piece area for the original fit to piece area 
+            for the reusable file must be bigger than 1 minus this fraction; otherwise the polygon
+            will be assigned to a smaller montage.&nbsp; The default is 0.2.
+          </TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="beamcal_properties"></A><B>Beam intensity calibration properties</B></P>

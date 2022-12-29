@@ -1697,6 +1697,9 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
     <None Include="hlp\html\hidd_multi_shot_setup.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="hlp\html\hidd_navfiletype.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="hlp\html\hidd_navrealign.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>

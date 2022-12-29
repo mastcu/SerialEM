@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>Properties of File to Open Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_navfiletype"></a><span class="style1">Properties of File to Open
+        Dialog</span></p>
+    <p>This dialog lets you set the properties of a file to open for a Navigator item 
+      to be acquired.</p>
+
+    <p><strong>Open file for</strong>:</p>
+    <p>Select <strong>Single frame images</strong> to open a file for single images, 
+      or <strong>Montaged images</strong> to open a file for a montage, in which case 
+      the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> will open next.</p>
+    <p><strong>Fit montage to polygon</strong></p>
+    <p>If the Navigator item in a polygon and you have selected to open a montage, 
+      this option can be selected to fit the montage to the polygon.&nbsp; Number of 
+      pieces, frame sizes, and overlaps will be adjusted to acquire just the area 
+      needed to cover the polygon, and pieces fully outside the polygon will be 
+      skipped.</p>
+    <p><strong>Skip montage setup dialog when fitting in future</strong></p>
+    <p>If you are fitting montages to polygons, select this option to avoid having 
+      both this dialog and the <A HREF="hidd_montagesetup.htm">Montage Setup dialog </A> 
+      open when you select <strong>New file at item</strong> in the Navigator for 
+      other polygons.&nbsp; You can still use the <strong>File Props</strong> button 
+      there to open these dialogs.</p>
+    <p><strong>Montage reusability</strong></p>
+    <p>Ordinarily, when a new file is opened during Navigator acquisition, a 
+      previously opened file will be closed.&nbsp; The choices here represent a 
+      mechanism for leaving montage files open and reusing them for montages where the 
+      polygon would require the same number of pieces, with the same piece size and 
+      overlap.&nbsp; (The location and number of skipped pieces can differ.)&nbsp; The 
+      goal is to reduce the number of files that need to be managed when acquiring 
+      montages as many polygons.&nbsp; The setup of files using this mechanism is 
+      handled automatically when new files are set to be opened for a whole collection 
+      of polygons at once, using Shift-N at both ends of the range of polygons in the 
+      Navigator.&nbsp; In that case, the program fits montages independently to each 
+      polygon.&nbsp; With all those montage parameters available, it then analyzes 
+      each set of montages with the same number of pieces, determining a piece size 
+      and overlap that will cover all of them.&nbsp; It assigns those size and overlap 
+      values to all matching montages where the extra area being acquired by taking a 
+      larger area does not exceed a certain fraction of the overall area, where the 
+      file would be opened for the first such montage and left open, and used for the 
+      later montages.&nbsp; That fraction is set by the property &#39;MaxMontReuseWaste&#39; 
+      and has a default of 0.2.&nbsp; The process is repeated until all montages are 
+      handled.</p>
+    <p>The choices here are:</p>
+    <ul>
+      <li><strong>Close file when next new file is to be opened</strong> - the normal 
+        behavior with no file reuse</li>
+      <li><strong>Leave file open for reuse; close matching montage</strong> - A new 
+        file will be opened unconditionally for this item and left open when the next 
+        file is opened.&nbsp; Rather than closing the last opened file, a previously 
+        left-open montage with matching settings will be closed if one exists.&nbsp; 
+        This practice prevents an unlimited number of files being left open.&nbsp; Items 
+        with this setting will show acquisition codes of AL instead of AF.</li>
+      <li><strong>Open file only if needed; leave open for reuse</strong> - A new file 
+        will be opened only if there is no previous left-open montage with matching 
+        settings to use instead.&nbsp; The new file will in turn be left open for reuse.&nbsp; 
+        Items with this setting will show acquisition codes of AO instead of AF.</li>
+    </ul>
+    <p><strong>Just change reusability without refitting montage</strong></p>
+    <p>This option is available in case you do fitting to a large number of polygons 
+      and wish to split the montages into more files than the minimum number that the 
+      program came up with.&nbsp;&nbsp; Without this option, if you open this dialog 
+      for an item where you want to start a new file, change the setting from <strong>
+      Open only if needed</strong> to <strong>Leave file open for reuse</strong>, and 
+      press <strong>OK</strong>, it will go on to the montage setup dialog and refit 
+      the polygon, almost certainly giving it a size that is not suitable for reuse.&nbsp; 
+      With this option checked, pressing <strong>OK</strong> causes the new setting to 
+      be stored and no other changes to occur.</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+  </body>
+</html>
