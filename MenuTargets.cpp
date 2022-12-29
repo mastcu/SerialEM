@@ -2167,13 +2167,17 @@ void CMenuTargets::OnpdateCameratoggle(CCmdUI* pCmdUI)
 // Escape key is a general stop
 void CMenuTargets::OnEscape() 
 {
-  mCamera->StopCapture(1);
-  mWinApp->ErrorOccurred(0); 
+  if (DoingTasks() || mCamera->CameraBusy()) {
+    mCamera->StopCapture(1);
+    mWinApp->ErrorOccurred(0);
+  }
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->ClearRangeKeys();
 }
 
 void CMenuTargets::OnUpdateEscape(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(DoingTasks() || mCamera->CameraBusy());  
+  pCmdUI->Enable(true);  
 }
 
 // The user enters the values for C2 in TUI
