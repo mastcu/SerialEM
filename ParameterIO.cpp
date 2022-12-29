@@ -518,6 +518,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("AutoBacklashNewMap")) {
         mWinApp->mNavHelper->SetAutoBacklashNewMap(itemInt[1]);
         mWinApp->mNavHelper->SetAutoBacklashMinField(itemFlt[2]);
+      } else if (NAME_IS("NavCollapseGroups")) {
+        mWinApp->mNavHelper->SetCollapseGroups(itemInt[1] != 0);
       } else if (NAME_IS("MultiShotParams")) {
         msParams->beamDiam = itemFlt[1];
         msParams->spokeRad[0] = itemFlt[2]; 
@@ -1744,6 +1746,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetAutoBacklashNewMap(),
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
+    WriteInt("NavCollapseGroups", B3DCHOICE(mWinApp->mNavigator, 
+      mWinApp->mNavigator->m_bCollapseGroups, mWinApp->mNavHelper->GetCollapseGroups()) ?
+      1 : 0);
     oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
       "%d %d %d %d %d %d %d %f %f %f %f\n", msParams->beamDiam, msParams->spokeRad[0],
       msParams->numShots[0], msParams->doCenter, msParams->doEarlyReturn,
