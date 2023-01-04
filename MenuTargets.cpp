@@ -509,6 +509,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS, OnUpdateReverseContourColors)
     ON_COMMAND(ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS, OnKeepColorsForPolygons)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS, OnUpdateKeepColorsForPolygons)
+    ON_COMMAND(ID_IMAGESTAGESHIFT_HIGH, OnCalHighDefocusIS)
+    ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_HIGH, OnUpdateNoTasksNoSTEM)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2291,40 +2293,50 @@ void CMenuTargets::OnCalibrationHighDefocus()
   mWinApp->mShiftCalibrator->CalibrateHighDefocus();
 }
 
+void CMenuTargets::OnCalHighDefocusIS()
+{
+  mWinApp->mShiftCalibrator->CalibrateISatHighDefocus(true, 0.);
+}
+
 void CMenuTargets::OnListFocusMagCals()
 {
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
-    mWinApp->mShiftManager->GetFocusMagCals();
+  HighFocusCalArray *focusMagCals;
   HighFocusMagCal cal, calj;
   float tol = 5.;
-  int ind, jnd, tmp, numCal = (int)focusMagCals->GetSize();
-  if (!numCal)
-    return;
-  int *index = new int[numCal];
-  PrintfToLog("Focus  spot    %s-%s      scale    rotation", mScope->GetC2Name(), 
-    mScope->GetC2Units());
-  for (ind = 0; ind < numCal; ind++)
-    index[ind] = ind;
-  for (ind = 0; ind < numCal - 1; ind++) {
-    for (jnd = ind + 1; jnd < numCal; jnd++) {
-      cal = focusMagCals->GetAt(index[ind]);
-      calj = focusMagCals->GetAt(index[jnd]);
-      if (calj.defocus > cal.defocus + tol || fabs((double)calj.defocus - cal.defocus) <
-        tol && calj.intensity < cal.intensity) {
+  int ind, jnd, tmp, loop, numCal;
+  for (loop = 0; loop < 2; loop++) {
+    focusMagCals = loop ? mWinApp->mShiftManager->GetFocusISCals() :
+      mWinApp->mShiftManager->GetFocusMagCals();
+    numCal = (int)focusMagCals->GetSize();
+    if (!numCal)
+      continue;
+    int *index = new int[numCal];
+    PrintfToLog("\r\nHigh focus %s calibrations:\r\nFocus  spot    %s-%s      scale    "
+      "rotation", loop ? "image shift" : "mag", mScope->GetC2Name(),
+      mScope->GetC2Units());
+    for (ind = 0; ind < numCal; ind++)
+      index[ind] = ind;
+    for (ind = 0; ind < numCal - 1; ind++) {
+      for (jnd = ind + 1; jnd < numCal; jnd++) {
+        cal = focusMagCals->GetAt(index[ind]);
+        calj = focusMagCals->GetAt(index[jnd]);
+        if (calj.defocus > cal.defocus + tol || fabs((double)calj.defocus - cal.defocus) <
+          tol && calj.intensity < cal.intensity) {
           tmp = index[ind];
           index[ind] = index[jnd];
           index[jnd] = tmp;
+        }
       }
     }
-  }
 
-  for (ind = 0; ind < numCal; ind++) {
-    cal = focusMagCals->GetAt(index[ind]);
-    PrintfToLog("%.0f      %d       %7.3f       %.3f       %.2f   %s", cal.defocus, 
-      cal.spot, mScope->GetC2Percent(cal.spot, cal.intensity, cal.probeMode), cal.scale, 
-      cal.rotation, cal.probeMode == 0 ? "nanoprobe": "");
+    for (ind = 0; ind < numCal; ind++) {
+      cal = focusMagCals->GetAt(index[ind]);
+      PrintfToLog("%.0f      %d       %7.3f       %.3f       %.2f   %s", cal.defocus,
+        cal.spot, mScope->GetC2Percent(cal.spot, cal.intensity, cal.probeMode), cal.scale,
+        cal.rotation, cal.probeMode == 0 ? "nanoprobe" : "");
+    }
+    delete[] index;
   }
-  delete [] index;
 }
 
 // TILT SERIES MENU

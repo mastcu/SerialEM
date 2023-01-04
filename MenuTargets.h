@@ -423,6 +423,7 @@ public:
   afx_msg void OnUpdateReverseContourColors(CCmdUI *pCmdUI);
   afx_msg void OnKeepColorsForPolygons();
   afx_msg void OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI);
+  afx_msg void OnCalHighDefocusIS();
 };
 
 /////////////////////////////////////////////////////////////////////////////
