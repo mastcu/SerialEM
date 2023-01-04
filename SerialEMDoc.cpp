@@ -216,6 +216,7 @@ CSerialEMDoc::CSerialEMDoc()
   mNumCalsAskThresh[CAL_DONE_STAGE] = 2;
   mNumCalsAskThresh[CAL_DONE_BEAM] = 1;
   mNumCalsAskThresh[CAL_DONE_SPOT] = 1;
+  mNumCalsAskThresh[CAL_DONE_HIGH_FOCUS] = 2;
   mAbandonSettings = false;
   mHDFsupported = iiTestIfHDF("Animpossible63873Filename_629384") != -2;
 }
@@ -2343,7 +2344,7 @@ int CSerialEMDoc::SaveSettingsOnExit()
 {
   int result, ind;
   const char *calType[NUM_CAL_DONE_TYPES] = {"image shift", "stage shift", "focus", 
-    "beam intensity", "spot intensity"};
+    "beam intensity", "spot intensity", "high-focus mag or IS"};
   CString str, str2;
   SaveShortTermCal();
   if (mWinApp->GetAdministrator() && mWinApp->CalibrationsNotSaved()) {
