@@ -429,8 +429,6 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY, dist, minDist;
-  double nearC2dist[2];
-  int nearC2Ind[2];
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
   float acqExposure, trialExposure, minContExp, polyRealignErrX, polyRealignErrY;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
@@ -709,12 +707,12 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       mParam->skipPieceY[ix];
 
     // Get transformation matrix
+    ix = mScope->FastSpotSize();
+    iy = mScope->GetProbeMode();
+    delISX = mScope->FastIntensity();
     if (mDoStageMoves) {
 
       // Stage move case - adjust Y by cosine of tilt angle and adjust for defocus
-      ix = mScope->FastSpotSize();
-      iy = mScope->GetProbeMode();
-      delISX = mScope->FastIntensity();
       bMat = mShiftManager->FocusAdjustedStageToCamera(mWinApp->GetCurrentCamera(),
         mParam->magIndex, ix, iy, delISX, mDefocusForCal);
       if (bMat.xpx == 0.) {
@@ -724,10 +722,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         return 1;
       }
       if (!mShiftManager->GetDefocusMagAndRot(ix, iy, delISX, mDefocusForCal, 
-        mAdjustmentScale, mAdjustmentRotation, cornX, nearC2dist, nearC2Ind, icx1))
+        mAdjustmentScale, mAdjustmentRotation))
         mAdjustmentScale = 0.;
 
-      mBinv = mShiftManager->MatInv(bMat);
+      mBinv = MatInv(bMat);
       mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
       mBinv.xpx /= xTiltFac;
       mBinv.xpy /= xTiltFac;
@@ -737,13 +735,15 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     } else {
 
       // Normal Image shift case
-      mBinv = mShiftManager->CameraToIS(mParam->magIndex);
-      if (mBinv.xpx == 0.) {
+      bMat = mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(),
+        mParam->magIndex, ix, iy, delISX, mDefocusForCal);
+      if (bMat.xpx == 0.) {
         SEMMessageBox("There is no measured or derived image "
           "shift \ncalibration available at this magnification.\n\n"
           "You must calibrate image shift to take this montage");
         return 1;
       }
+      mBinv = MatInv(bMat);
     }
 
     notSkipping = mUsingMultishot;
