@@ -725,6 +725,10 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
   } else {
     newVal = mScope->GetIntensity() + 0.01 * mIntensityIncrement * delta /
       mScope->GetC2IntensityFactor();
+    if (newVal <= 0. && delta > 0)
+      newVal = 0.01 * mIntensityIncrement;
+    if (newVal >= 1. && delta < 0)
+      newVal = 1. - 0.01 * mIntensityIncrement;
   }
   if (newVal > 0. && (newVal < 1.0 || mWinApp->mScope->GetUseIllumAreaForC2()))
     mScope->SetIntensity(newVal, mLastSpot, mLastProbeMode);
