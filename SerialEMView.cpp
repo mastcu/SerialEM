@@ -604,7 +604,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int adjSave;
   float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
-  float cenX, cenY, filtMean = 128., filtSD, boost, targetSD = 40.;
+  float cenX, cenY, scale, rotation, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0.;
   double defocus;
   unsigned char **filtPtrs;
@@ -630,7 +630,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   CPoint point;
   LowDoseParams *ldp;
   CString letString, firstLabel, lastLabel, fontName;
-  ScaleMat aInv, IStoSpec, specToStage, stageToCam, prod;
+  ScaleMat aInv, isToCamNoFoc, isToCam;
+  double transX, transY;
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
   COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
@@ -1163,10 +1164,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     mWinApp->LowDoseMode() && imBuf->mBinning > 0 && imBuf->mCamera >= 0 &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
     ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
-    IStoSpec = mWinApp->mShiftManager->IStoSpecimen(ldp->magIndex);
-    specToStage = mWinApp->mShiftManager->SpecimenToStage(1., 1.);
-    stageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
-    prod = MatMul(MatMul(IStoSpec, specToStage), stageToCam);
+
+    // What did not work: IS to specimen * specimen to stage * focus-adjusted stage to cam
+    // But this does work much better:
+    mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    isToCamNoFoc = mWinApp->mShiftManager->IStoGivenCamera(imBuf->mMagInd,
+      imBuf->mCamera);
+    isToCam = mWinApp->mShiftManager->MatScaleRotate(isToCamNoFoc, scale, rotation);
     cenX = imBuf->mImage->getWidth() / 2.f;
     cenY = imBuf->mImage->getHeight() / 2.f;
     boost = 0.;
@@ -1174,7 +1178,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mWinApp->mAutoTuning->GetComaVsISVector(ldp->magIndex,
         mWinApp->mNavHelper->mComaVsISCalDlg->m_fDistance,
         mWinApp->mNavHelper->mComaVsISCalDlg->m_iRotation, ix, tempX, tempY);
-      mWinApp->mShiftManager->ApplyScaleMatrix(prod, tempX, tempY, ptX, ptY);
+      mWinApp->mShiftManager->TransferGeneralIS(ldp->magIndex, tempX, tempY,
+        imBuf->mMagInd, transX, transY);
+      ApplyScaleMatrix(isToCam, (float)transX, (float)transY, 
+        ptX, ptY);
       ptX /= (float)imBuf->mBinning;
       ptY /= (float)imBuf->mBinning;
       DrawLowDoseAreas(cdc, rect, imBuf, ptX, -ptY, thick2, -1, ix);
@@ -1199,7 +1206,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   halfYwin = (float)(rect.Height() / (2 * mZoom));
   for (ix = -1; ix <= 1; ix += 2) {
     for (iy = -1; iy <= 1; iy += 2) {
-      mWinApp->mShiftManager->ApplyScaleMatrix(aInv, imXcenter + ix * halfXwin - mDelX,
+      ApplyScaleMatrix(aInv, imXcenter + ix * halfXwin - mDelX,
         imYcenter + iy * halfYwin - mDelY, tempX, tempY);
       ACCUM_MIN(minXstage, tempX);
       ACCUM_MIN(minYstage, tempY);
