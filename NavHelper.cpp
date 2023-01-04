@@ -1020,7 +1020,7 @@ void CNavHelper::RealignNextTask(int param)
 {
   CMapDrawItem *item = mItemArray->GetAt(mRIitemInd);
   std::vector<BOOL> pieceDone;
-  ScaleMat bMat = ItemStageToCamera(item);
+  ScaleMat aMat, bMat = ItemStageToCamera(item);
   ScaleMat bInv = MatInv(bMat);
   float stageDelX, stageDelY, peakMax, peakVal, shiftX, shiftY, stageX, stageY, scaling;
   float cenMontErrX, cenMontErrY, itemCenX, itemCenY, imagePixelSize;
@@ -1220,7 +1220,8 @@ void CNavHelper::RealignNextTask(int param)
       // If shift can be done with image shift, do that then go to second round
       if (sqrt(stageDelX * stageDelX + stageDelY * stageDelY) < mRImaximumIS && 
         !(mRIresetISleaveZero > 0 || mRIresetISmaxNumAlign > 0)) {
-          bInv = MatMul(bMat, mShiftManager->CameraToIS(item->mMapMagInd));
+          aMat = mShiftManager->FocusAdjustedISToCamera(mImBufs);
+          bInv = MatMul(bMat, MatInv(aMat));
 
           // Subtract the local error which is assumed to be from stage moves
           stageDelX -= mPrevLocalErrX;
@@ -1235,9 +1236,8 @@ void CNavHelper::RealignNextTask(int param)
 
           // Shift the image as well (will need an override for debugging)
           //mImBufs->mImage->getShifts(shiftX, shiftY);
-          bMat = mShiftManager->IStoCamera(item->mMapMagInd);
-          shiftX = -(float)((bMat.xpx * delISX + bMat.xpy * delISY) / mImBufs->mBinning);
-          shiftY = (float)((bMat.ypx * delISX + bMat.ypy * delISY) / mImBufs->mBinning);
+          shiftX = -(float)((aMat.xpx * delISX + aMat.xpy * delISY) / mImBufs->mBinning);
+          shiftY = (float)((aMat.ypx * delISX + aMat.ypy * delISY) / mImBufs->mBinning);
           mImBufs->mImage->setShifts(shiftX , shiftY);
           mImBufs->SetImageChanged(1);
           mNav->Redraw();
@@ -3497,6 +3497,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     typeDlg.m_iReusability = 1;
     typeDlg.m_bFitPoly = true;
     typeDlg.m_iSingleMont = 1;
+    typeDlg.mOnlyLeaveOpenOK = true;
   }
   if (*montIndexp >= 0) {
     newMontp = mMontParArray->GetAt(*montIndexp);

@@ -18,6 +18,7 @@ CNavFileTypeDlg::CNavFileTypeDlg(CWnd* pParent /*=NULL*/)
   , m_bChangeReusable(FALSE)
 {
   mJustChangeOK = false;
+  mOnlyLeaveOpenOK = false;
 }
 
 CNavFileTypeDlg::~CNavFileTypeDlg()
@@ -86,8 +87,8 @@ void CNavFileTypeDlg::ManageEnables()
   bool enable = m_iSingleMont && mPolyFitOK;
   m_butFitPoly.EnableWindow(enable);
   enable = enable && m_bFitPoly;
-  EnableDlgItem(IDC_RCLOSE_FOR_NEXT, enable);
+  EnableDlgItem(IDC_RCLOSE_FOR_NEXT, enable && !mOnlyLeaveOpenOK);
   EnableDlgItem(IDC_RLEAVE_OPEN, enable);
-  EnableDlgItem(IDC_RONLY_IF_NEEDED, enable);
+  EnableDlgItem(IDC_RONLY_IF_NEEDED, enable && !mOnlyLeaveOpenOK);
   EnableDlgItem(IDC_CHECK_CHANGE_REUSABLE, enable && mJustChangeOK);
 }
