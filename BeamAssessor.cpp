@@ -2186,14 +2186,13 @@ void CBeamAssessor::StopSpotCalibration()
 void CBeamAssessor::CalibrateCrossover(void)
 {
   double delCross, crossover, intensity;
- 	int spotSize, spot, i, j;
+ 	int spotSize, spot, i, j, loop;
   int minSpot = mScope->GetMinSpotSize();
   int numBeamChg = 0, numWarn = 0;
   BOOL changed = false;
   bool focChanged = false;
   CString message;
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
-    mShiftManager->GetFocusMagCals();
+  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals;
  	int spotSave = mScope->GetSpotSize();
   int probe = mScope->ReadProbeMode();
   if (AfxMessageBox("To calibrate crossover, the program will go to each spot\n"
@@ -2268,14 +2267,18 @@ void CBeamAssessor::CalibrateCrossover(void)
   }
 
   // Shift High focus mag cals if any
-  for (i = 0; i < focusMagCals->GetSize(); i++) {
-    HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
-    if (focCal.probeMode == probe && focCal.crossover > 0.) {
-      crossover = mScope->GetCrossover(focCal.spot, probe);
-      delCross = crossover - focCal.crossover;
-      focCal.intensity += delCross;
-      focCal.crossover = crossover;
-      focChanged = true;
+  for (loop = 0; loop < 2; loop++) {
+    focusMagCals = loop ? mShiftManager->GetFocusISCals() :
+      mShiftManager->GetFocusMagCals();
+    for (i = 0; i < focusMagCals->GetSize(); i++) {
+      HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
+      if (focCal.probeMode == probe && focCal.crossover > 0.) {
+        crossover = mScope->GetCrossover(focCal.spot, probe);
+        delCross = crossover - focCal.crossover;
+        focCal.intensity += delCross;
+        focCal.crossover = crossover;
+        focChanged = true;
+      }
     }
   }
 
@@ -2295,7 +2298,7 @@ void CBeamAssessor::CalibrateCrossover(void)
     "calibrations\nwere shifted by the changes in crossover.";
   if (focChanged)
     message += "\n" + CString(mScope->GetC2Name()) + " values in the high defocus mag "
-    "calibrations\nwere shifted by the changes in crossover.";
+    "and/or IS calibrations\nwere shifted by the changes in crossover.";
 
   if (numBeamChg || changed || numWarn || focChanged)
     AfxMessageBox(message, MB_EXCLAME);
