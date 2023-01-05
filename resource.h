@@ -839,7 +839,6 @@
 #define IDC_STAT_TITLELINE              1797
 #define IDC_CHECK_FIT_POLY              1798
 #define IDC_MATCH_REG_PIXEL             1799
-#define IDC_CHECK_CHANGE_REUSABLE       3136
 #define IDC_MATCH_REG_INTENSITY         1800
 #define IDC_CHECK_USE_HQ_SETTINGS       1801
 #define IDC_STAT_HQSTAGEBOX             1802
@@ -2102,6 +2101,7 @@
 #define IDC_RCLOSE_FOR_NEXT             3133
 #define IDC_RLEAVE_OPEN                 3134
 #define IDC_RONLY_IF_NEEDED             3135
+#define IDC_CHECK_CHANGE_REUSABLE       3136
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2640,6 +2640,7 @@
 #define ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES 33504
 #define ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS 33505
 #define ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 33506
+#define ID_IMAGESTAGESHIFT_HIGH         33507
 
 // Next default values for new objects
 // 
@@ -2647,7 +2648,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        279
-#define _APS_NEXT_COMMAND_VALUE         33507
+#define _APS_NEXT_COMMAND_VALUE         33508
 #define _APS_NEXT_CONTROL_VALUE         3137
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

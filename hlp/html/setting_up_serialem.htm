@@ -2490,9 +2490,10 @@
         microns for X or 41 microns for Y, add lines for 'StageCycleLengthX' and
         'StageCycleLengthY' to the property file. Do not bother if the percent error is
         only a few percent.</P>
-      <P>This step may be optional since the values reported by Pulokas et al. and also
-        found on the Boulder Tecnais may be universal constants for the Compustage.&nbsp;
-        However, the problem appears to be minimal on recent stages.&nbsp;
+      <P>This step is optional since the values reported by Pulokas et al. and also
+        found on the Boulder Tecnais may be universal constants for the Compustage.&nbsp; 
+        Moreover, the problem appears to be minimal on later Tecnai stages and on stages 
+        in newer Thermo/FEI scopes.&nbsp;
         The JEOL and Hitachi stages do not have cyclical errors but require much greater backlash
         correction.</P>
       <P>
@@ -2515,7 +2516,7 @@
         also prone to create problems with the cross-line grating.&nbsp; The recommended
         procedure for using a grating would be:</P>
     <ol>
-      <li>Leave this option on for the first stage calibration, making sure that is
+      <li>Leave this option on for the first stage calibration, making sure that it is
         giving accurate correlations.</li>
       <li>Insert the rotation angle from the procedure as the absolute calibrated
         rotation in the appropriate &#39;RotationAndPixel&#39; line in the camera properties.
@@ -2552,7 +2553,7 @@
       beam and spot intensity calibrations and some other intensity-related items.&nbsp; See
       <A href="menu_calibration.htm#hid_beamspot_illuminatedarealimits">Illuminated Area Limits</A>
       for details.</P>
-    <P>The following three calibrations will ask you to enter the C2 aperture size.&nbsp;
+    <P>The following five calibrations will ask you to enter the C2 aperture size.&nbsp;
       You should first add a property &#39;C2ApertureSizes&#39; with the available sizes in
       microns (.e.g., &#39;C2ApertureSizes 50 70 100 150&#39;).</P>
       <P><B><I>Beam crossover calibration:</I></B> This calibration should be done
@@ -2589,6 +2590,16 @@
         a calibration for each alpha value that is used.&nbsp; (Older calibrations will
         still work at any alpha.) Follow the procedure in <A href="menu_calibration.htm#hid_calibration_beamshift">
           Beam Shift</A>.</P>
+      <P><b><i>High-defocus magnification calibration: </i></b>This calibration is 
+        fairly essential for making and using Navigator maps (especially montages) with 
+        Low Dose View or Search images having a substantial defocus offset.&nbsp; See <A href="menu_calibration.htm#hid_calibration_high_defocus">High-Defocus Mag
+          </A> for details.&nbsp; </P>
+      <P><b><i>High-defocus image shift calibration: </i></b>This calibration is not as 
+        essential as the last one but makes many things work more smoothly and 
+        accurately with substantially defocused View or Search images, especially in 
+        conjunction with the high-defocus mag calibration. 
+        See <A href="menu_calibration.htm#hid_imagestageshift_high">High-Defocus IS
+          </A> for details.&nbsp; </P>
       <P><B><I>Small screen factor:</I></B> This is needed to get the same current
         readout with the small screen in and out. Fill the main screen with a moderately
         bright, uniform beam (5-10 na). Note the current reported in SerialEM. Insert

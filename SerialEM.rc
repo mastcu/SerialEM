@@ -314,9 +314,6 @@ BEGIN
         END
         MENUITEM "Set Aperture Si&ze",          ID_CALIBRATION_SET_APERTURE_SIZE
         MENUITEM SEPARATOR
-        MENUITEM "Dist&ortion",                 ID_CALIBRATION_DISTORTION
-        MENUITEM "Set Ove&rlaps",               ID_CALIBRATION_SETOVERLAPS
-        MENUITEM SEPARATOR
         MENUITEM "&Mag Energy Shifts",          ID_CALIBRATION_MAGENERGYSHIFTS
         MENUITEM "&List Mags",                  ID_CALIBRATION_LISTMAGS
         MENUITEM "&Neutral IS Values",          ID_CALIBRATION_NEUTRALISVALUES
@@ -324,13 +321,17 @@ BEGIN
         MENUITEM "&Stage Stretch",              ID_CALIBRATION_STAGESTRETCH
         MENUITEM SEPARATOR
         MENUITEM "&High-Defocus Mag",           ID_CALIBRATION_HIGH_DEFOCUS
-        MENUITEM "List Focus-M&ag Cals",        ID_CALIBRATION_LISTFOCUS
+        MENUITEM "High-&Defocus IS",            ID_IMAGESTAGESHIFT_HIGH
+        MENUITEM "List High-Focus C&als",       ID_CALIBRATION_LISTFOCUS
         MENUITEM SEPARATOR
         MENUITEM "Camera Timin&g",              ID_CALIBRATION_CAMERATIMING
         MENUITEM "&Quick Flyback Time",         ID_CALIBRATION_QUICK_FLYBACK_TIME
         MENUITEM "Shutter Dead &Time",          ID_CALIBRATION_SHUTTERDEADTIME
         MENUITEM SEPARATOR
-        MENUITEM "A&dministrator",              ID_CALIBRATION_ADMINISTRATOR
+        MENUITEM "Dist&ortion",                 ID_CALIBRATION_DISTORTION
+        MENUITEM "Set Overlaps",                ID_CALIBRATION_SETOVERLAPS
+        MENUITEM SEPARATOR
+        MENUITEM "Administrato&r",              ID_CALIBRATION_ADMINISTRATOR
         MENUITEM "Sa&ve Calibrations",          ID_SETTINGS_SAVECALIBRATIONS
         MENUITEM "Set Deb&ug Output",           ID_CALIBRATION_SETDEBUGOUTPUT
     END
@@ -3249,7 +3250,7 @@ BEGIN
     PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,198,55,12
     PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,198,39,12
     PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,198,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,212,169,10
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,6,212,169,10
     PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,198,40,12
     CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,134,147,10
@@ -7135,10 +7136,18 @@ BEGIN
     IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
     IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
     IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
+END
+
+STRINGTABLE
+BEGIN
     IDC_RCLOSE_FOR_NEXT     "A new file will be opened for each polygon, and the last one closed"
     IDC_RLEAVE_OPEN         "File will be left open for other polygons needing same piece number, etc"
     IDC_RONLY_IF_NEEDED     "Montages will be saved into matching file if one is still open"
-    IDC_CHECK_CHANGE_REUSABLE
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_CHANGE_REUSABLE 
                             "Skip montage fitting so montage keeps its current piece size and overlap"
 END
 
@@ -7148,6 +7157,7 @@ BEGIN
                             "Use the 8 possible contour colors in inverted order"
     ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 
                             "Make contours into polygons with the same colors"
+    ID_IMAGESTAGESHIFT_HIGH "Calibrate image shift at high defocus"
 END
 
 #endif    // English (United States) resources

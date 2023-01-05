@@ -3899,6 +3899,14 @@
             magnification.&nbsp; Set the optional <b>#</b> to 0 to NOT skip normalization.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CalibrateHighFocusIS #D [#C]</TD>
+          <TD>Runs the <A href="menu_calibration.htm#hid_imagestageshift_high">High-Defocus 
+            Image Shift Calibration</A> routine and stores the result with the
+            defocus given by <b>#D</b>&nbsp; Set the optional <b>#C</b> to an amount to change defocus
+            before starting; it is not restored afterwards.&nbsp; Command added in 4.1, 4-Jan-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">FindPixelSize</TD>
           <TD>Runs the routine to find the pixel size in an image of a cross-line grating.</TD>
         </TR>
@@ -3910,7 +3918,7 @@
             not unbinned pixels.&nbsp; The entry <b>#T</b> should 
             contain the expected spacing, which can be a rough value because it used only to determine
             the amount of image binning and does not affect the search for peaks.&nbsp; The optional <b>#T</b>
-            can be set non-zero skip trimming of dark borders, and <b>#D</b> can be set non-zero to skip
+            can be set non-zero to skip trimming of dark borders, and <b>#D</b> can be set non-zero to skip
              displaying the autocorrelation.&nbsp; Command added in 4.0, 11/1/21.
           </TD>
         </TR>

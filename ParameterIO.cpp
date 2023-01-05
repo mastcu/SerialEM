@@ -4271,8 +4271,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals =
-    mWinApp->mShiftManager->GetFocusMagCals();
+  HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
   STEMFocusZTable sfZtable;
@@ -4353,7 +4352,11 @@ int CParameterIO::ReadCalibration(CString strFileName)
             mMagTab[index].stageCalFocus[camera] = itemFlt[7];
         }
 
-      } else if (NAME_IS("HighFocusMagCal")) {
+      } else if (NAME_IS("HighFocusMagCal") || NAME_IS("HighFocusISCal")) {
+        focusMagCals = NAME_IS("HighFocusISCal") ? 
+          mWinApp->mShiftManager->GetFocusISCals() :
+          mWinApp->mShiftManager->GetFocusMagCals();
+
         focCal.spot = itemInt[1];
         focCal.probeMode = itemInt[2];
         focCal.defocus = itemFlt[3];
@@ -4362,6 +4365,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         focCal.rotation = itemFlt[6];
         focCal.crossover = itemEmpty[7] ? 0. : itemDbl[7];
         focCal.measuredAperture = itemEmpty[8] ? 0 : itemInt[8];
+        focCal.magIndex = itemEmpty[9] ? 0 : itemInt[9];
         focusMagCals->Add(focCal);
 
       } else if (NAME_IS("IntensityToC2Factor")) {
@@ -4958,8 +4962,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
-    mWinApp->mShiftManager->GetFocusMagCals();
+  HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
   FocusTable focTable;
@@ -5004,16 +5007,21 @@ void CParameterIO::WriteCalibration(CString strFileName)
       }
 
     // Write high focus mag calibrations
-    for (i = 0; i < focusMagCals->GetSize(); i++) {
-      focCal = focusMagCals->GetAt(i);
-      string.Format("HighFocusMagCal %d %d %f %f %f %f %f %d\n", focCal.spot, 
-        focCal.probeMode, focCal.defocus, mWinApp->mScope->IntensityAfterApertureChange(
-        focCal.intensity, curAperture, focCal.measuredAperture, focCal.spot, 
-          focCal.probeMode), focCal.scale, 
-        focCal.rotation, mWinApp->mScope->IntensityAfterApertureChange(
-        focCal.crossover, curAperture, focCal.measuredAperture, focCal.spot,
-          focCal.probeMode), focCal.measuredAperture);
-      mFile->WriteString(string);
+    for (j = 0; j < 2; j++) {
+      focusMagCals = j ? mWinApp->mShiftManager->GetFocusISCals() :
+        mWinApp->mShiftManager->GetFocusMagCals();
+      for (i = 0; i < focusMagCals->GetSize(); i++) {
+        focCal = focusMagCals->GetAt(i);
+        string.Format("%s %d %d %f %f %f %f %f %d %d\n", j ? "HighFocusISCal" :
+          "HighFocusMagCal", focCal.spot,
+          focCal.probeMode, focCal.defocus, mWinApp->mScope->IntensityAfterApertureChange(
+            focCal.intensity, curAperture, focCal.measuredAperture, focCal.spot,
+            focCal.probeMode), focCal.scale,
+          focCal.rotation, mWinApp->mScope->IntensityAfterApertureChange(
+            focCal.crossover, curAperture, focCal.measuredAperture, focCal.spot,
+            focCal.probeMode), focCal.measuredAperture, focCal.magIndex);
+        mFile->WriteString(string);
+      }
     }
 
     // Write intensity to C2 factors

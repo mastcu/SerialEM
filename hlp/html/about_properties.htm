@@ -2798,6 +2798,13 @@
           <TD>Maximum image shift change when calibrating image shift at LM-mode mags.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>SixPointIScalMinField</TD>
+          <TD>Minimum field of view for using a 6-point image shift calibration instead of a 
+            9-image one; the default is 3 microns.&nbsp; The 6-point calibration cannot 
+            assess the consistency of drift or account for changes in drift over the course 
+            of the calibration, so it is less appropriate for higher magnifications.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>ISoffsetCalStageLimit</TD>
           <TD>Maximum stage shift allowed during calibration of image shift offsets between
             magnifications. The default is 0.025 micron.</TD>

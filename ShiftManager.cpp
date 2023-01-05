@@ -293,7 +293,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
          (mMouseMoveStage && (fieldFrac >= mMouseStageThresh || 
            absMove >= mMouseStageAbsThresh)) ||
          (montOverview && montParam->moveStage)))) {
-      imposeShift = ImposeImageShiftOnScope(delX, delY, magInd, camera, 
+      imposeShift = ImposeImageShiftOnScope(imBuf, delX, delY, magInd, camera, 
         incremental, mMouseShifting);
 
       // Otherwise, proceed with stage move if at end of shift
@@ -380,15 +380,16 @@ void CShiftManager::AdjustStageMoveAndClearIS(int camera, int magInd, double &de
 
 // Convert the image shift (already in right-handed coordinates) to a scope image shift
 // and impose it if possible
-bool CShiftManager::ImposeImageShiftOnScope(float delX, float delY, int magInd, 
-                                            int camera, BOOL incremental, 
-                                            BOOL mouseShifting)
+bool CShiftManager::ImposeImageShiftOnScope(EMimageBuffer *imBuf, float delX, float delY,
+  int magInd, int camera, BOOL incremental, BOOL mouseShifting)
 {
   double delISX, delISY, bufISX, bufISY;
   ScaleMat bMat, bInv;
   CString str;
   int curMag;
-  bMat = IStoGivenCamera(magInd, camera);
+  bMat = FocusAdjustedISToCamera(imBuf);
+  if (!bMat.xpx)
+    bMat = IStoGivenCamera(magInd, camera);
   if (!bMat.xpx) {
     if (!incremental) {
       SEMMessageBox(_T("There is no image shift calibration available\n"
@@ -1391,7 +1392,8 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
 {
   double shiftX, shiftY, delX, delY, angle, specX, specY;
   double adjustX, adjustY, roughScale;
-  int magInd;
+  int magInd, area;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   float defocusFac = mDefocusZFactor * (mStageInvertsZAxis ? -1 : 1);
   float xTiltFac, yTiltFac;
   bool setBacklash;
@@ -1436,12 +1438,24 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   }
   specX = aMat.xpx * shiftX + aMat.xpy * shiftY;
   specY = aMat.ypx * shiftX + aMat.ypy * shiftY;
-  
+
   // Compute the stage displacement with no adjustments
   // Use the nearest stage to camera matrix for this, so use IS not specimen coords
   angle = DTOR * GetStageTiltFactors(xTiltFac, yTiltFac);
-  dMat = MatMul(IStoCamera(magInd), 
-    MatInv(StageToCamera(mWinApp->GetCurrentCamera(), magInd)));
+  if (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(mScope->GetLowDoseArea())) {
+
+    // If in low dose mode and current area is view or search, use focus-adjusted
+    // transformations
+    area = mScope->GetLowDoseArea();
+    ldp += area;
+    dMat = MatMul(FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), magInd,
+      ldp->spotSize, ldp->probeMode, ldp->intensity, mScope->GetLDViewDefocus(area)),
+      MatInv(FocusAdjustedStageToCamera(mWinApp->GetCurrentCamera(), magInd,
+        ldp->spotSize, ldp->probeMode, ldp->intensity, mScope->GetLDViewDefocus(area))));
+  } else {
+    dMat = MatMul(IStoCamera(magInd),
+      MatInv(StageToCamera(mWinApp->GetCurrentCamera(), magInd)));
+  }
   delX = (dMat.xpx * shiftX + dMat.xpy * shiftY) / xTiltFac;
   delY = (dMat.ypx * shiftX + dMat.ypy * shiftY) / yTiltFac;
   adjustX = adjustY = 1.;
@@ -3303,18 +3317,18 @@ ScaleMat CShiftManager::MatInv(ScaleMat aa)
 
 // Apply a scale matrix to x and Y values, adding to existing values if incremental is set
 // (default false).  Set testXpx to false for simple 90-degree matrix!
-void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
+void ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
   float &xTo, float &yTo, bool incremental, bool testXpx)
 {
   if (!incremental)
     xTo = yTo = 0.;
   if (testXpx && !mat.xpx)
     return;
-  xTo += mat.xpx * xFrom + mat.xpy * yFrom;
-  yTo += mat.ypx * xFrom + mat.ypy * yFrom;
+  xTo += (float)(mat.xpx * xFrom + mat.xpy * yFrom);
+  yTo += (float)(mat.ypx * xFrom + mat.ypy * yFrom);
 }
 
-void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
+void ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
   double &xTo, double &yTo, bool incremental, bool testXpx)
 {
   float fxTo = (float)xTo;
@@ -3322,6 +3336,18 @@ void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
   ApplyScaleMatrix(mat, xFrom, yFrom, fxTo, fyTo, incremental, testXpx);
   xTo = fxTo;
   yTo = fyTo;
+}
+
+void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
+  float &xTo, float &yTo, bool incremental, bool testXpx)
+{
+  ::ApplyScaleMatrix(mat, xFrom, yFrom, xTo, yTo, incremental, testXpx);
+}
+
+void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
+  double &xTo, double &yTo, bool incremental, bool testXpx)
+{
+  ::ApplyScaleMatrix(mat, xFrom, yFrom, xTo, yTo, incremental, testXpx);
 }
 
 // Scales and rotates a matrix
@@ -3780,13 +3806,13 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
 // nearest calibrations.  Returns true if interpolated values are provided
 bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
   float defocus, float &scale, float &rotation, float &nearestFocus,
-  double nearC2Dist[2], int nearC2ind[2], int &numNearC2)
+  double nearC2Dist[2], int nearC2ind[2], int &numNearC2, int magIndForIS)
 {
   bool anyMode0 = false, anyMode1 = false;
   int ind, dirFoc, dirInt, indFoc, indInt, nearIntInd[2][2], numNearInt[2], nearestInd;
   int minInd[2][2] = {-1, -1, -1, -1};
-  int spotDiff, minSpotDiff = 100;
-  bool aboveTol;
+  int spotDiff, minSpotDiff = 100, magDiff, minMagDiff = 1000;
+  bool aboveTol, closerIntFoc;
   double focDiff, minFocDiff, intDiff, minIntDiff, bestInt[2][2], focTol = 5.;
   float bestFocus[2][2] = {999., 999., 999., 999.};
   double dist[2], distInt, nearIntDist[2][2];
@@ -3794,14 +3820,16 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
   int aboveCross = mWinApp->mBeamAssessor->GetAboveCrossover(spot, intensity, probeMode) ?
     1 : 0;
   double crossover = mScope->GetCrossover(spot, probeMode);
+  HighFocusCalArray *focusCals = magIndForIS ? &mFocusISCals : &mFocusMagCals;
   scale = 1.;
   rotation = 0.;
-  if (!mFocusMagCals.GetSize())
+  if (!focusCals->GetSize())
     return false;
 
   // See if there are any calibrations in nanoprobe or microprobe
-  for (ind = 0; ind < mFocusMagCals.GetSize(); ind++) {
-    if (mFocusMagCals[ind].probeMode)
+  for (ind = 0; ind < focusCals->GetSize(); ind++) {
+    HighFocusMagCal& cal = focusCals->ElementAt(ind);
+    if (cal.probeMode)
       anyMode1 = true;
     else
       anyMode0 = true;
@@ -3824,22 +3852,23 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
     for (dirInt = -1; dirInt <= 1; dirInt += 2) {
       indInt = (dirInt + 1) / 2;
       minFocDiff = minIntDiff = 1.e10;
-      for (ind = 0; ind < mFocusMagCals.GetSize(); ind++) {
-        HighFocusMagCal& cal = mFocusMagCals.ElementAt(ind);
+      for (ind = 0; ind < focusCals->GetSize(); ind++) {
+        HighFocusMagCal& cal = focusCals->ElementAt(ind);
         if (cal.probeMode == probeMode && aboveCross ==
           (mWinApp->mBeamAssessor->GetAboveCrossover(cal.spot, cal.intensity, 
           cal.probeMode) ? 1 : 0)) {
             intDiff = cal.intensity - intensity;
             focDiff = cal.defocus - defocus;
             spotDiff = B3DABS(cal.spot - spot);
+            magDiff = B3DABS(cal.magIndex - magIndForIS);
             aboveTol = fabs(bestFocus[indFoc][indInt] - cal.defocus) >= focTol;
 
             // A calibration is better if it is from a closer spot size, or they are
             // at about the same focus and at a closer intensity, or the focus is closer
+            closerIntFoc = (fabs(intDiff) < minIntDiff && !aboveTol) ||
+              (fabs(focDiff) < minFocDiff && aboveTol);
             if (dirInt * intDiff >= 0. && dirFoc * focDiff >= 0 &&
-              (spotDiff < minSpotDiff || (spotDiff == minSpotDiff &&
-              ((fabs(intDiff) < minIntDiff && !aboveTol) || 
-              (fabs(focDiff) < minFocDiff && aboveTol))))) {
+              (spotDiff < minSpotDiff || (spotDiff == minSpotDiff && closerIntFoc))) {
 
                 // Keep track of focus and intensity at best cal
                 bestInt[indFoc][indInt] = cal.intensity;
@@ -3848,6 +3877,7 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
                 minFocDiff = fabs(focDiff);
                 minInd[indFoc][indInt] = ind;
                 minSpotDiff = spotDiff;
+                minMagDiff = magDiff;
             }
         }
       }
@@ -3873,7 +3903,8 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
       distInt = 1. / fabs(intensity - crossover);
     for (ind = 0; ind < 2; ind++) {
       if (minInd[indFoc][ind] >= 0) {
-        dist[ind] = mFocusMagCals[minInd[indFoc][ind]].intensity;
+        HighFocusMagCal& cal = focusCals->ElementAt(minInd[indFoc][ind]);
+        dist[ind] = cal.intensity;
         if (crossover > 0)
           dist[ind] = 1. / fabs(dist[ind] - crossover);
         nearIntInd[indFoc][numNearInt[indFoc]] = minInd[indFoc][ind];
@@ -3884,25 +3915,27 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
 
     // If still two left, interpolate 
     if (minInd[indFoc][0] >= 0 && minInd[indFoc][1] >= 0) {
+      HighFocusMagCal& cal0 = focusCals->ElementAt(minInd[indFoc][0]);
+      HighFocusMagCal& cal1 = focusCals->ElementAt(minInd[indFoc][1]);
       if (dist[1] < dist[0])
         frac = (float)((distInt - dist[0]) / B3DMIN(-1.e-6, dist[1] - dist[0]));
       else
         frac = (float)((distInt - dist[0]) / B3DMAX(1.e-6, dist[1] - dist[0]));
-      oneScale[indFoc] = (1.f - frac) * mFocusMagCals[minInd[indFoc][0]].scale +
-        frac * mFocusMagCals[minInd[indFoc][1]].scale;
-      oneRot[indFoc] = (1.f - frac) * mFocusMagCals[minInd[indFoc][0]].rotation +
-        frac * mFocusMagCals[minInd[indFoc][1]].rotation;
-      oneFocus[indFoc] = mFocusMagCals[minInd[indFoc][0]].defocus;
+      oneScale[indFoc] = (1.f - frac) * cal0.scale + frac * cal1.scale;
+      oneRot[indFoc] = (1.f - frac) * cal0.rotation + frac * cal1.rotation;
+      oneFocus[indFoc] = cal0.defocus;
     } else if (minInd[indFoc][0] >= 0) {
 
       // Or assign from one or the other
-      oneScale[indFoc] = mFocusMagCals[minInd[indFoc][0]].scale;
-      oneRot[indFoc] = mFocusMagCals[minInd[indFoc][0]].rotation;
-      oneFocus[indFoc] = mFocusMagCals[minInd[indFoc][0]].defocus;
+      HighFocusMagCal& cal0 = focusCals->ElementAt(minInd[indFoc][0]);
+      oneScale[indFoc] = cal0.scale;
+      oneRot[indFoc] = cal0.rotation;
+      oneFocus[indFoc] = cal0.defocus;
     } else if (minInd[indFoc][1] >= 0) {
-      oneScale[indFoc] = mFocusMagCals[minInd[indFoc][1]].scale;
-      oneRot[indFoc] = mFocusMagCals[minInd[indFoc][1]].rotation;
-      oneFocus[indFoc] = mFocusMagCals[minInd[indFoc][1]].defocus;
+      HighFocusMagCal& cal1 = focusCals->ElementAt(minInd[indFoc][1]);
+      oneScale[indFoc] = cal1.scale;
+      oneRot[indFoc] = cal1.rotation;
+      oneFocus[indFoc] = cal1.defocus;
    }
   }
 
@@ -3932,40 +3965,55 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
     nearC2ind[ind] = nearIntInd[nearestInd][ind];
     nearC2Dist[ind] = nearIntDist[nearestInd][ind];
   }
-  SEMTrace('c', "For focus %.2f intensity %.5f  scale = %.4f rotation = %.2f", defocus,
-    intensity, scale, rotation);
+  SEMTrace('c', "For focus %.2f intensity %.5f  %s scale = %.4f rotation = %.2f", defocus,
+    intensity, magIndForIS ? " IS" : "stage", scale, rotation);
 
   return true;
 }
 
+// Version for those who don't care about details
+bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
+  float defocus, float &scale, float &rotation)
+{
+  double nearC2dist[2];
+  float nearestFocus;
+  int nearC2Ind[2], numNearC2;
+  return GetDefocusMagAndRot(spot, probeMode, intensity, defocus, scale, rotation,
+    nearestFocus, nearC2dist, nearC2Ind, numNearC2);
+}
+
 // Add one calibration to the array
 void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity, 
-  float defocus, float scale, float rotation)
+  float defocus, float scale, float rotation, int magIndForIS)
 {
   double focTol = 5.;
   double distC2tol = 0.2;
   double nearC2dist[2];
   int ind, nearC2Ind[2], numNearC2, numRemove = 0, remove[2], newAp = 0;
   float nearScale, nearRot, nearFoc;
+  HighFocusCalArray *focusCals = magIndForIS ? &mFocusISCals : &mFocusMagCals;
   HighFocusMagCal cal;
   GetDefocusMagAndRot(spot, probeMode, intensity, defocus, nearScale,
-      nearRot, nearFoc, nearC2dist, nearC2Ind, numNearC2);
+      nearRot, nearFoc, nearC2dist, nearC2Ind, numNearC2, magIndForIS);
   cal.crossover = mScope->GetCrossover(spot, probeMode);
   if (cal.crossover <= 0.)
     distC2tol = 0.05;
 
   // Remove existing one(s) if inverse intensity is close enough
-  if (fabs((double)defocus - nearFoc) < focTol) {
+  if (focusCals->GetSize() && fabs((double)defocus - nearFoc) < focTol) {
     for (ind = 0; ind < numNearC2; ind++)
       if (nearC2dist[ind] < distC2tol)
         remove[numRemove++] = nearC2Ind[ind];
     if (numRemove == 2 && remove[0] == remove[1])
       numRemove = 1;
     for (ind = 0; ind < numRemove; ind++) {
-      PrintfToLog("Removing nearby calibration at defocus %.2f  intensity %.3f%s",
-        mFocusMagCals[remove[ind]].defocus, mScope->GetC2Percent(spot, 
-        mFocusMagCals[remove[ind]].intensity, probeMode), mScope->GetC2Units());
-      mFocusMagCals.RemoveAt(remove[ind]);
+      HighFocusMagCal& cal = focusCals->ElementAt(remove[ind]);
+      if (magIndForIS && magIndForIS == cal.magIndex && spot == cal.spot) {
+        PrintfToLog("Removing nearby calibration at defocus %.2f  intensity % .3f%s",
+          cal.defocus, mScope->GetC2Percent(spot, cal.intensity, probeMode),
+          mScope->GetC2Units());
+        focusCals->RemoveAt(remove[ind]);
+      }
     }
   }
 
@@ -3992,28 +4040,32 @@ void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity
   cal.rotation = rotation;
   cal.scale = scale;
   cal.spot = spot;
-  mFocusMagCals.Add(cal);
+  cal.magIndex = magIndForIS;
+  focusCals->Add(cal);
+  mWinApp->mDocWnd->CalibrationWasDone(CAL_DONE_HIGH_FOCUS);
 }
 
 // Return a stage to camera matrix adjusted for the given conditions
 ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, 
-  int probe, double intensity, float defocus)
+  int probe, double intensity, float defocus, bool forIS)
 {
   float scale, rotation, nearFoc; 
   double nearC2dist[2];
   int nearC2Ind[2], numNearC2;
-  ScaleMat aMat = StageToCamera(inCamera, inMagInd);
+  ScaleMat aMat = forIS ? IStoGivenCamera(inMagInd, inCamera) :
+    StageToCamera(inCamera, inMagInd);
   if (defocus >= 0. || inMagInd < mScope->GetLowestMModeMagInd() || 
     !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale, 
-    rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2))
+    rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2, forIS ? inMagInd : 0))
     return aMat;
   aMat = MatScaleRotate(aMat, scale, rotation);
-  SEMTrace('c', "Adjusted stage cal %.5g %.5g %.5g %.5g", aMat.xpx, aMat.xpy, aMat.ypx, 
-    aMat.ypy);
+  SEMTrace('c', "Adjusted %s cal %.5g %.5g %.5g %.5g", forIS ? "IS" : "stage", 
+    aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
   return aMat;
 }
 
-ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf)
+// Variant for using an image buffer
+ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool forIS)
 {
   float defocus = 0.;
   int spot = 1;
@@ -4029,21 +4081,34 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf)
   }
 
   return FocusAdjustedStageToCamera(imBuf->mCamera, imBuf->mMagInd, spot,
-    imBuf->mProbeMode, intensity, defocus);
+    imBuf->mProbeMode, intensity, defocus, forIS);
 }
 
 // Return scale and rotation values for an image buffer, returns true if any returned
 bool CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale, 
   float &rotation)
 {
-  double intensity, nearC2dist[2];
-  int spot, nearC2Ind[2], numNearC2;
-  float nearFoc;
+  double intensity;
+  int spot;
   scale = 1.;
   rotation = 0.;
   if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && 
       imBuf->GetSpotSize(spot) && imBuf->GetIntensity(intensity))
      return GetDefocusMagAndRot(spot, imBuf->mProbeMode, intensity, imBuf->mViewDefocus,
-          scale, rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2);
+          scale, rotation);
   return false;
 }
+
+// Return a stage to camera matrix adjusted for the given conditions
+ScaleMat CShiftManager::FocusAdjustedISToCamera(int inCamera, int inMagInd, int spot,
+  int probe, double intensity, float defocus)
+{
+  return FocusAdjustedStageToCamera(inCamera, inMagInd, spot, probe, intensity, defocus,
+    true);
+}
+
+ScaleMat CShiftManager::FocusAdjustedISToCamera(EMimageBuffer *imBuf)
+{
+  return FocusAdjustedStageToCamera(imBuf, true);
+}
+

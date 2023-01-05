@@ -4735,6 +4735,20 @@ int CMacCmd::CalibrateImageShift(void)
   return 0;
 }
 
+// CalibrateHighFocusIS
+int CMacCmd::CalibrateHighFocusIS(void)
+{
+  if (mItemFlt[1] > 0)
+    ABORT_LINE("The current defocus should be negative for line:\n\n");
+  if (!mItemEmpty[2] && mItemDbl[2])
+    mScope->IncDefocus(mItemDbl[2]);
+  if (mWinApp->mShiftCalibrator->CalibrateISatHighDefocus(false, mItemFlt[1])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportFocusDrift
 int CMacCmd::ReportFocusDrift(void)
 {

@@ -198,6 +198,7 @@ hid_calibration_restoreneutralis = SerialEM.chm::/html\menu_calibration.htm#hid_
 hid_calibration_stagestretch		= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_stagestretch
 hid_calibration_listfocus		    = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_listfocus
 hid_calibration_high_defocus	  = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_high_defocus
+hid_imagestageshift_high        = SerialEM.chm::/html\menu_calibration.htm#hid_imagestageshift_high
 hid_calibration_cameratiming		= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_cameratiming
 hid_calibration_quick_flyback_time = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_quick_flyback_time
 hid_calibration_shutterdeadtime = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_shutterdeadtime

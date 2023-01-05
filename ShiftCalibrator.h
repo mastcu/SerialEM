@@ -29,6 +29,7 @@ public:
   SetMember(bool, SkipLensNormNextIScal);
   GetSetMember(int, CalToggleInterval);
   GetSetMember(int, NumCalToggles);
+  GetSetMember(float, MinFieldSixPointCal);
   BOOL CalibratingIS() {return mShiftIndex >= 0;};
   void Initialize();
   void CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro);
@@ -60,6 +61,13 @@ private:
   double mBaseISX, mBaseISY;   // Starting image shift values
   BOOL mFirstCal;              // Flag that there is no previous cal data
   ScaleMat mFirstMat;          // Matrix from first calibration
+  bool mSixPointIScal;         // Flag for doing 6-point instead of 9-point cal
+  float mMinFieldSixPointCal;  // Min field size for using 6-point cal
+  bool mCalIsHighFocus;        // Calibration is being done for high defocus
+  float mHighDefocusForIS;     // Focus applied for high defocus IS cal
+  int mLastISFocusTimeStamp;   // Time when last hi focus IS cal was done
+  float mLastISZeroFocus;      // Value of 0 focus at that time
+  bool mWarnedHighFocusNotCal; // Flag the warning was given about base cal not done
   int mCalIndex;               // Mag index
   int mShiftIndex;             // Index into calibration list
   int mNumShiftCal;            // Number of images to do for calibration
@@ -138,4 +146,6 @@ public:
   void ReviseOrCancelInterSetShifts(void);
   bool MatrixIsAsymmetric(ScaleMat *mat, float symCrit);
   void CalibrateHighDefocus(void);
+  int CalibrateISatHighDefocus(bool interactive, float curFocus);
+  void FinishHighFocusIScal();
 };

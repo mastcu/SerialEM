@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/4/22: Added a high-defocus image shift calibration, which improves many
+operations when working with defocused View and Search images.
+
+1/4/22: Improved positions for coma-vs-IS cal when drawn on defocused View.
+
 12/29/22: Added mechanism for "reusable" files for Navigator acquire so that
 many polygons can be fit to montages and consolidated into a subset of files
 rather than one per file.

@@ -5563,9 +5563,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
 void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY)
 {
   double oldISX, oldISY, useISX = 0., useISY = 0., posChgX = 0., posChgY = 0.;
-  double vsXshift, vsYshift;
-  float delay;
-  ScaleMat bsMat;
+  double vsXshift, vsYshift, curISX, curISY, adjISX, adjISY, transISX, transISY;
+  float delay, scale, rotation, defocus;
+  ScaleMat bsMat, focMat, sclMat;
+  bool doAdj;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
 
   // IF using piezo for axis shift, do the movement
@@ -5625,6 +5626,63 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
     }
   }
   mLDChangeCurArea = inArea;
+
+  // If going in or out of View or Search with defocus offset, try to correct an
+  // existing image shift for the defocus : need both kinds of calibrations
+  if ((((mLowDoseSetArea == VIEW_CONSET || inArea == VIEW_CONSET) && mLDViewDefocus) ||
+    ((mLowDoseSetArea == SEARCH_AREA || inArea == SEARCH_AREA) && mSearchDefocus)) &&
+    mLowDoseSetArea != inArea && mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mShiftManager->GetFocusMagCals()->GetSize()) { 
+
+    // Get centered IS to avoid being fooled by offsets, and only do it if it is nonzero
+    GetLDCenteredShift(curISX, curISY);
+    doAdj = fabs(curISX) > 0.01 || fabs(curISY) > 0.01;
+    if (doAdj && ((mLowDoseSetArea == VIEW_CONSET && mLDViewDefocus) ||
+      (mLowDoseSetArea == SEARCH_AREA  && mSearchDefocus))) {
+
+      // For leaving an area, convert defocused IS to camera coords and back scale/rotate
+      // it, then convert back to unfocused IS
+      defocus = mLowDoseSetArea == SEARCH_AREA ? mSearchDefocus : mLDViewDefocus;
+      mShiftManager->GetDefocusMagAndRot(mLdsaParams->spotSize, mLdsaParams->probeMode,
+        mLdsaParams->intensity, defocus, scale, rotation);
+      sclMat = mShiftManager->MatScaleRotate(mShiftManager->FocusAdjustedISToCamera(
+        mWinApp->GetCurrentCamera(), curMag, mLdsaParams->spotSize,
+        mLdsaParams->probeMode, mLdsaParams->intensity, defocus), 1.f / scale, -rotation);
+      focMat =  MatMul(sclMat, mShiftManager->CameraToIS(curMag));
+      ApplyScaleMatrix(focMat, curISX, curISY, adjISX, adjISY);
+
+      // Add the change in image shift and set it as the current shift at the starting mag
+      delISX += adjISX - curISX;
+      delISY += adjISY - curISY;
+      /*PrintfToLog("Leaving V/S, cur %.2f %.2f  adj %.2f %.2f, adjust %.2f %.2f", curISX, 
+      curISY, adjISX, adjISY, adjISX - curISX, adjISY - curISY);*/
+      curISX = adjISX;
+      curISY = adjISY;
+    }
+    if (doAdj && ((inArea == VIEW_CONSET && mLDViewDefocus) ||
+      (inArea == SEARCH_AREA  && mSearchDefocus))) {
+
+      // Entering either area, transfer the image shift, transform to camera, rotate and
+      // scale for defocus, tranform back to IS, again add the change
+      defocus = inArea == SEARCH_AREA ? mSearchDefocus : mLDViewDefocus;
+      mShiftManager->TransferGeneralIS(curMag, curISX, curISY, ldParams[inArea].magIndex,
+        transISX, transISY);
+      mShiftManager->GetDefocusMagAndRot(mLdsaParams->spotSize, 
+        ldParams[inArea].probeMode, ldParams[inArea].intensity, defocus, scale, rotation);
+      sclMat = mShiftManager->MatScaleRotate(mShiftManager->IStoCamera(
+        ldParams[inArea].magIndex), scale, rotation);
+      focMat = MatMul(sclMat, MatInv(mShiftManager->FocusAdjustedISToCamera(
+        mWinApp->GetCurrentCamera(), ldParams[inArea].magIndex, ldParams[inArea].spotSize,
+          ldParams[inArea].probeMode, ldParams[inArea].intensity, defocus)));
+      ApplyScaleMatrix(focMat, transISX, transISY, adjISX, adjISY);
+      /*PrintfToLog("Entering V/S, cur %.2f %.2f  trans %.2f %.2f  adj %.2f %.2f  "
+      "adjust %.2f %.2f", curISX, curISY, 
+        transISX, transISY, adjISX, adjISY, adjISX - transISX, adjISY - transISY);*/
+      delISX += adjISX - transISX;
+      delISY += adjISY - transISY;
+    }
+  }
+
   if (!delISX && !delISY)
     return;
   SEMTrace('l', "Changing IS for LD area change by %.3f, %.3f", delISX, delISY);

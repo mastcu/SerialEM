@@ -267,14 +267,6 @@
           <TD>Also moved to <A href="menu_tasks.htm#hid_calibration_purgeoldcalibs">Tasks menu</A>in SerialEM 4.1.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1"><A href="#hid_calibration_distortion">Distortion</A></TD>
-          <TD>Acquire overlapping pair of images for measuring distortion field.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style1"><A href="#hid_calibration_setoverlaps">Set Overlaps</A></TD>
-          <TD>Set the minimum and maximum overlap factors for acquiring distortion pairs.</TD>
-        </TR>
-        <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_magenergyshifts">Mag Energy Shifts</A></TD>
           <TD>Calibrate the energy shift of the zero-loss peak with change in
             magnification.</TD>
@@ -304,8 +296,13 @@
           <TD>Measure rotation and change in magnification at a large underfocus value.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1"><a href="#hid_calibration_listfocus">List Focus-Mag Cals</a></TD>
-          <TD>List the measurements of rotation and mag change at high defocus.</TD>
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_imagestageshift_high">High-Defocus IS</A></TD>
+          <TD>Calibrate image shift as a function of defocus and intensity.&nbsp;</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1"><a href="#hid_calibration_listfocus">List High-Focus Cals</a></TD>
+          <TD>List the measurements of rotation and mag change, and of the image shift 
+            calibration, at high defocus.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_cameratiming">Camera Timing</A></TD>
@@ -321,6 +318,14 @@
         <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_shutterdeadtime">Shutter Dead Time</A></TD>
           <TD>Determine the minimum exposure time possible.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1"><A href="#hid_calibration_distortion">Distortion</A></TD>
+          <TD>Acquire overlapping pair of images for measuring distortion field.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1"><A href="#hid_calibration_setoverlaps">Set Overlaps</A></TD>
+          <TD>Set the minimum and maximum overlap factors for acquiring distortion pairs.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_administrator">Administrator</A></TD>
@@ -704,6 +709,7 @@
           Invoke this command. If you have not already specified which camera should have
           one magnification with image shift offset set to zero, you will be asked about
           this.</LI></OL>
+
       <P><A name="hid_calibration_set_is_delay_factor"></A><B>Set IS Delay Factor
         command (Calibration menu)</B></P>
       <P style="Z-INDEX: 0">Use this command to set a factor for scaling the delay that 
@@ -1617,37 +1623,6 @@
       size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;
       after one of those calibrations, it will be remembered between sessions in the
       short term calibration file.</P>
-      <P><A name="hid_calibration_distortion"></A><B>Distortion command (Calibration menu)</B></P>
-      <P>This command will allow you to capture a pair of images that can be used for
-        measuring the microscope distortion field with programs in IMOD. The pairs can overlap side by side,
-        top to bottom, or diagonally. The direction of overlap is specified by a number
-        from 0 to 7. Directions 4 to 7 are equivalent to directions 0 to 3, so you just
-        need to use directions 0 to 3 to obtain a complete set of the different kinds
-        of overlapping pictures that will give twice as much data as unknowns when
-        solving for a distortion field.</P>
-      <P>Before starting, center the specimen on an area that has rich image information
-        throughout. Set up Record parameters for fairly high counts in images binned to
-        1Kx1K. Select the command and specify a direction for the pairs. The program
-        will offer to set image shift to zero if you have not done so already. Then it
-        will proceed to take overlapping image pairs with stage movement between the
-        two images of a pair, until it acquires a pair with overlap within acceptable
-        limits. It will try ten times. If it fails, just try again, perhaps moving to a
-        new area.</P>
-    <P>At high magnification, addition delay time after moving the stage may be
-      needed.&nbsp; This can be imposed by setting the property &#39;DistortionStageDelay&#39;
-      to the desired value in milliseconds, which will replace the default delay time
-      set by the property &#39;StageMoveDelay&#39;.</P>
-      <P><A name="hid_calibration_setoverlaps"></A><B>Set Overlaps command (Calibration menu)</B></P>
-      <P>This command allows you to set the limits within which overlap factors must fall
-        for the distortion pairs. You might need to expand the range of acceptable
-        overlaps if you are trying to get pairs at a high magnification. Images
-        arranged side by side or one on top of the other must meet three criteria. The
-        overlap factor in the direction separating the images must fall between a
-        minimum and a maximum value, and the overlap in the perpendicular direction
-        must exceed a high minimum value. There are two separate criteria for images
-        arranged diagonally: the minimum and maximum overlap factors, which must be met
-        separately in X and Y. If you need to change these factors, try to expand the
-        maxima more than you reduce the minima.</P>
       <P><A name="hid_calibration_magenergyshifts"></A><B>Mag Energy Shifts command
           (Calibration menu)</B></P>
       <P>Use this command to calibrate how much the zero loss peak shifts in energy when
@@ -1809,7 +1784,7 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
           <P>Use this command to measure the change in magnification and rotation between an
             image taken near zero focus and one at a high negative defocus.&nbsp; The
             program can use such measurements to adjust the stage calibration when using
-            View images in Low Dose mode with a large defocus offset.&nbsp; Montaging and
+            View or Search images in Low Dose mode with a large defocus offset.&nbsp; Montaging and
             Navigator operations can then operate accurately with such images. </P>
     <P>Using a View defocus of -100 microns or more can change the magnification by
       5-20% and rotate images by 2-10 degrees.&nbsp; The rotation is proportional to
@@ -1892,11 +1867,103 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
       calibration.&nbsp; There will be a message in the log window when this occurs.&nbsp;
       Use the List Focus-Mag Cals command described next to determine the intensity
       values to use.</p>
-      <P><A name="hid_calibration_listfocus"></A><B>List Focus-Mag Cals command (Calibration
+     <P><A name="hid_imagestageshift_high"></A><B>High-Defocus IS command
+        (Calibration menu)</B></P>
+      <p>Use this command to calibrate how the image shift calibration changes at high 
+        underfocus.&nbsp; With adequate calibrations, many things will work better when 
+        using highly defocused View or Search images in Low Dose mode:</p>
+    <ul>
+      <li>Shifting an image with the right mouse button or shifting to a marker point 
+        with Shift-P or the <strong>To Marker</strong> button will work accurately.</li>
+      <li>Image shift montages will have more accurate overlaps between adjacent pieces, 
+        so the piece alignments may work better.</li>
+      <li>Setting the View or Search shift offset will work in one or very few 
+        iterations.</li>
+      <li>When Realign to Item uses image shift to go to the target position from the 
+        center of the map frame, it will do so accurately.</li>
+      </ul>
+      <p>These operations make use of both high-defocus image shift and magnification calibrations:</p>
+    <ul>
+      <li>The specimen position will stay nearly centered when switching between Record 
+        and View or Search areas even with a substantial image shift present.</li>
+      <li>Setting the View or Search shift offset can be done with images that have a pre-existing image shift, and 
+        works independent of applied image shift, thanks to the ability to maintain 
+        position when switching between areas.</li>
+      <li>Setting the image shift vectors for multiple Records by visualizing positions 
+        on a defocused View or Search will be more accurate and might be adequate.</li>
+      <li>Reset image shift will be more accurate when the current Low Dose area is View 
+        or Search.</li>
+      <li>Marking Navigator positions on an image-shifted View or Search image, or 
+        displaying positions on such an image, will be more accurate.</li>
+    </ul>
+    <p>To get the calibration, the program will do an image shift calibration at a known defocus and compute 
+      the change from the existing calibrated image shift matrix and the 
+      measured matrix, expressing this change as a scaling, rotation, and stretch.&nbsp; 
+      The scaling and rotation will be stored; the stretch (basically, the remainder 
+      after accounting for rotation and scaling) is just a possible indicator of a 
+      problem with the new or old matrix.&nbsp; The magnification, spot size, 
+      intensity, and probe mode on a Thermo/FEI scope are also stored.&nbsp; However, 
+      there is no dependence on magnification, and probably none on spot size.&nbsp; 
+      There is a strong dependence on intensity on Tecnais, and a much weaker one on a 
+      Talos.&nbsp; Thus, the calibration should be done at two or three intensity 
+      levels bracketing where it will be needed.&nbsp; It is probably best to do the 
+      calibration at a typical magnification and spot size for the defocused View 
+      images; however, it should not be done in Low Dose mode, and will use the Trial 
+      camera parameters as a starting point.</p>
+    <P>The <a href="#hid_calibration_beamcrossover">Beam Crossover</a> calibration
+      should be done before this calibration so that differences between intensities
+      can be assessed properly.</P>
+    <P>&nbsp;Because the existing image shift calibration is a reference, it is recommended 
+      that the standard 
+      calibration be redone first, near focus, so that it is up to date. Also, you 
+      should set the number of rolling buffers to at least 6 so that you can check the 
+      alignments if necessary (set 'Roll Buffers A -&gt; F' in the Buffer Control panel.)&nbsp; 
+      Before starting each high-defocus 
+      calibration, the microscope should already be at the desired defocus and 
+      intensity setting, and the beam and camera settings should be appropriate for 
+      doing image shift calibrations at that defocus.&nbsp; When you start the 
+      calibration, you will be asked what defocus you have set the microscope to.&nbsp; 
+      The first time in a session, the default choice will be -50, but thereafter it 
+      should come up with the correct value based on the actual focus readings from 
+      previous calibrations.</P>
+    <p>The image shift calibration runs with only 6 images, 3 in each direction; drift 
+      is estimated from the shift between the middle images (the second and fifth) and 
+      subtracted from the measured shifts.&nbsp; The drift and the consistency between 
+      shifts is reported in the log.&nbsp; If the calibration is judged bad enough, 
+      you will be asked whether you want to forget it; otherwise the results will be 
+      stored as a high-defocus calibration.&nbsp; You can scroll through the images to 
+      check the alignment.</p>
+    <p>A convenient way to do the calibration interactively at a series of defocus 
+      values is</p>
+    <ol>
+      <li>Pick an intensity value, magnification, and spot size, and make sure that good 
+        images can be obtained with a binned Trial images over the defocus range to be 
+        calibrated.</li>
+      <li>Set the focus increment in the Microscope Control panel to 50.</li>
+      <li>Focus.</li>
+      <li>Decrement the defocus by 50</li>
+      <li>Run the calibration, entering -50 for the defocus, and make sure it is good.</li>
+      <li>Repeat steps 4 and 5 until the highest desired defocus is reached; the correct 
+        defocus should be offered in the entry box.</li>
+    </ol>
+    <p>
+      If the whole procedure is running smoothly, an even easier way is to do step 1, 
+      focus, and run a script like:</p>
+      <pre>
+curDef = -50
+Loop 6
+   CalibrateHighFocusIS $curDef -50
+   curDef = $curDef - 50
+EndLoop 
+</pre>
+      <P>This will calibrate in 50 micron steps from -50 to -300 and leave the defocus 
+        at the high value.</P>
+    <P><A name="hid_calibration_listfocus"></A><B>List High-Focus Cals command (Calibration
           menu)</B></P>
           <P>Use this command to list the calibrations of magnification and rotation for
             different defocus values done with the <a href="#hid_calibration_high_defocus">
-            High-Defocus Mag</a> command.&nbsp; The calibrations are sorted by defocus and
+            High-Defocus Mag</a> and <A href="#hid_imagestageshift_high">High-Defocus IS</A> 
+            commands.&nbsp; The calibrations are sorted by defocus and
             intensity, and the list shows the scaling of the magnification and the degrees
             of rotation for each.</P>
       <P><A name="hid_calibration_cameratiming"></A><B>Camera Timing command (Calibration
@@ -2060,6 +2127,37 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
         to change an exposure time when going to a lower magnification, which it may
         have to do if the beam intensity cannot be lowered enough. The value is also
         used when computing the dose resulting from camera exposures.</P>
+      <P><A name="hid_calibration_distortion"></A><B>Distortion command (Calibration menu)</B></P>
+      <P>This command will allow you to capture a pair of images that can be used for
+        measuring the microscope distortion field with programs in IMOD. The pairs can overlap side by side,
+        top to bottom, or diagonally. The direction of overlap is specified by a number
+        from 0 to 7. Directions 4 to 7 are equivalent to directions 0 to 3, so you just
+        need to use directions 0 to 3 to obtain a complete set of the different kinds
+        of overlapping pictures that will give twice as much data as unknowns when
+        solving for a distortion field.</P>
+      <P>Before starting, center the specimen on an area that has rich image information
+        throughout. Set up Record parameters for fairly high counts in images binned to
+        1Kx1K. Select the command and specify a direction for the pairs. The program
+        will offer to set image shift to zero if you have not done so already. Then it
+        will proceed to take overlapping image pairs with stage movement between the
+        two images of a pair, until it acquires a pair with overlap within acceptable
+        limits. It will try ten times. If it fails, just try again, perhaps moving to a
+        new area.</P>
+    <P>At high magnification, addition delay time after moving the stage may be
+      needed.&nbsp; This can be imposed by setting the property &#39;DistortionStageDelay&#39;
+      to the desired value in milliseconds, which will replace the default delay time
+      set by the property &#39;StageMoveDelay&#39;.</P>
+      <P><A name="hid_calibration_setoverlaps"></A><B>Set Overlaps command (Calibration menu)</B></P>
+      <P>This command allows you to set the limits within which overlap factors must fall
+        for the distortion pairs. You might need to expand the range of acceptable
+        overlaps if you are trying to get pairs at a high magnification. Images
+        arranged side by side or one on top of the other must meet three criteria. The
+        overlap factor in the direction separating the images must fall between a
+        minimum and a maximum value, and the overlap in the perpendicular direction
+        must exceed a high minimum value. There are two separate criteria for images
+        arranged diagonally: the minimum and maximum overlap factors, which must be met
+        separately in X and Y. If you need to change these factors, try to expand the
+        maxima more than you reduce the minima.</P>
       <P><A name="hid_calibration_administrator"></A><B>Administrator command (Calibration
           menu)</B></P>
       <P>This command will toggle 'Administrator mode', which will enable you to save

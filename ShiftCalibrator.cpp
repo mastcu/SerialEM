@@ -68,6 +68,10 @@ CShiftCalibrator::CShiftCalibrator(void)
   mGaveFocusMagMessage = false;
   mCalToggleInterval = 250;
   mNumCalToggles = 10;
+  mHighDefocusForIS = -50.;
+  mLastISFocusTimeStamp = 0;
+  mMinFieldSixPointCal = 3.f;
+  mWarnedHighFocusNotCal = false;
 }
 
 CShiftCalibrator::~CShiftCalibrator(void)
@@ -119,10 +123,13 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   float wholeWarnDist = 75.;
   CString numToDo = "9";
   CString message;
-  mCalIndex = mScope->GetMagIndex();
-  MagTable *magTab = &mMagTab[mCalIndex];
+  MagTable *magTab;
   CameraParameters *camP;
+  if (!calStage && mWinApp->LowDoseMode())
+    mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(ISCAL_CONSET));
 
+  mCalIndex = mScope->GetMagIndex();
+  magTab = &mMagTab[mCalIndex];
   mCurrentCamera = mWinApp->GetCurrentCamera();
   mNumShiftCal = 9;
   mActPostExposure = mWinApp->ActPostExposure();
@@ -146,6 +153,8 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
     maxCalShift /= mSM->GetPixelSize(mCurrentCamera, mCalIndex);
   }
   maxCalShift /= roughScale;
+  mCalIsHighFocus = !calStage && ifRep > 1;
+  mSixPointIScal = mCalIsHighFocus;
 
   mCalStage = calStage;
   if (mCalStage) {
@@ -176,9 +185,7 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
     // If repeating, use the matrix from last time
     // If there is none, set up a matrix to move about 1/5 of normal amount in
     // arbitrary directions
-    if (mWinApp->LowDoseMode())
-      mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(ISCAL_CONSET));
-    mScope->GetImageShift(mBaseISX, mBaseISY);
+     mScope->GetImageShift(mBaseISX, mBaseISY);
     if (ifRep > 0)
       pr = mFirstMat;
     else
@@ -242,7 +249,19 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
       pr.ypy = pr.xpx;
       numToDo = "13";
       mNumShiftCal = 4;
+    } else if (!ifRep) {
+
+      // Use 6-pt cal for regular cal if field is big enough
+      if (B3DMIN(camP->sizeX, camP->sizeY) * mSM->GetPixelSize(mCurrentCamera, mCalIndex)
+        > mMinFieldSixPointCal)
+        mSixPointIScal = true;
     }
+  }
+
+  if (mSixPointIScal) {
+    numToDo = "6";
+    mNumShiftCal = 6;
+    mNumStageShiftsX = mNumStageShiftsY = 3;
   }
 
   // Get the basic image shift outputs in X and Y for moving half of the field
@@ -356,7 +375,7 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   // Fill the arrays of outputs for the stage images or the 9 or 4 IS images
   for (i = 0; i < mNumShiftCal; i++)
     mCalOutX[i] = mCalOutY[i] = 0;
-  if (mCalStage) {
+  if (mCalStage || mSixPointIScal) {
     i = 0;
     for (j = 0; j < mNumStageShiftsX; j++)
       mCalOutX[i++] = xOut * (j - mNumStageShiftsX / 2);
@@ -439,10 +458,10 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   mCCCsum = 0.;
   mCalMovingStage = false;
 
-  mCamera->SetRequiredRoll(mCalStage ? 5 : 1);
+  mCamera->SetRequiredRoll(B3DCHOICE(mCalStage, 5, mSixPointIScal ? 4 : 1));
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(MEDIUM_PANE, mCalStage ? "CALIBRATING STAGE SHIFT" : 
-    "CALIBRATING IMAGE SHIFT");
+  mWinApp->SetStatusText(MEDIUM_PANE, B3DCHOICE(mCalStage, "CALIBRATING STAGE SHIFT", 
+    mCalIsHighFocus ? "CALIBRATING HIGH FOCUS IS" : "CALIBRATING IMAGE SHIFT"));
   if (mCamera->CameraBusy()) 
     mCamera->StopCapture(0);
   DoNextShift();
@@ -474,12 +493,14 @@ void CShiftCalibrator::DoNextShift()
   
    if (mCamera->CameraBusy())
     timeOut += 20000;
-   // If not acting post-exposure, do the current image shift
-    if (!mActPostExposure) {
+   // If not acting post-exposure or if starting 6-point cal, do the current image shift
+    if (!mActPostExposure || (!mShiftIndex && mSixPointIScal)) {
       mScope->SetImageShift(mBaseISX + mCalOutX[mShiftIndex], 
         mBaseISY + mCalOutY[mShiftIndex]);
       mSM->SetISTimeOut(mCalDelayFactor * mSM->GetLastISDelay());
-    } else if (mShiftIndex < mNumShiftCal - 1) {
+    }
+    
+    if (mActPostExposure && mShiftIndex < mNumShiftCal - 1) {
       
       // Otherwise, unless its the last shot, set up the next image shift
       ISX = mBaseISX + mCalOutX[mShiftIndex + 1];
@@ -524,11 +545,11 @@ void CShiftCalibrator::ShiftDone()
   int magVal = MagForCamera(mCurrentCamera, mCalIndex);
 
   // Send the report to a log window if administrator, or message box if not
-  int action = mFirstCal ? LOG_SWALLOW_IF_NOT_ADMIN_OR_OPEN : 
+  int action = mFirstCal ? LOG_SWALLOW_IF_NOT_ADMIN_OR_OPEN :
     LOG_IF_ADMIN_MESSAGE_IF_NOT;
-  if (mFromMacro)
+  if (mFromMacro || mCalIsHighFocus)
     action = LOG_OPEN_IF_CLOSED;
-  
+
   mImBufs->mCaptured = BUFFER_CALIBRATION;
 
   // If a stop signal came in, call the stop again and quit
@@ -542,7 +563,8 @@ void CShiftCalibrator::ShiftDone()
     return;
   }
 
-  if (mShiftIndex > 0 && (!mCalStage || mShiftIndex != mNumStageShiftsX)) {
+  if (mShiftIndex > 0 && (!(mCalStage || mSixPointIScal) ||
+    mShiftIndex != mNumStageShiftsX)) {
     imA = mImBufs[1].mImage;
     imB = mImBufs[0].mImage;
     if (imA == NULL || imB == NULL) {
@@ -550,19 +572,19 @@ void CShiftCalibrator::ShiftDone()
       StopCalibrating();
       return;
     }
-    if (imA->getWidth() != binnedX ||  imB->getWidth() != binnedX ||
+    if (imA->getWidth() != binnedX || imB->getWidth() != binnedX ||
       imA->getHeight() != binnedY || imB->getHeight() != binnedY) {
       AfxMessageBox(_T(
         "Image sizes do not match expectations - calibration aborted"), MB_EXCLAME);
       StopCalibrating();
       return;
     }
-    
-     mSM->SetPeaksToEvaluate(1000, 0.2f);
-    j = mSM->AutoAlign(1, -1, false, false, NULL, (float)mBaseShiftX[mShiftIndex - 1], 
+
+    mSM->SetPeaksToEvaluate(1000, 0.2f);
+    j = mSM->AutoAlign(1, -1, false, false, NULL, (float)mBaseShiftX[mShiftIndex - 1],
       -(float)mBaseShiftY[mShiftIndex - 1], 0., 0., 0., &aaCCC, NULL, true, &aaXshift,
       &aaYshift);
-     mSM->SetPeaksToEvaluate(0, 0.);
+    mSM->SetPeaksToEvaluate(0, 0.);
     if (j) {
       AfxMessageBox(_T("Alignment routine error"), MB_EXCLAME);
       StopCalibrating();
@@ -573,14 +595,41 @@ void CShiftCalibrator::ShiftDone()
     mCCCmin = B3DMIN(mCCCmin, aaCCC);
     mCCCsum += aaCCC;
 
+    // Correlate middle images of 6-pt IS cal for drift estimate
+    if (mSixPointIScal && mShiftIndex == 4) {
+      mSM->SetPeaksToEvaluate(1000, 0.2f);
+      j = mSM->AutoAlign(3, -1, false, false, NULL, 0., 0., 0., 0., 0., &aaCCC, NULL,
+        true, &aaXshift, &aaYshift);
+      mSM->SetPeaksToEvaluate(0, 0.);
+      if (j) {
+        AfxMessageBox(_T("Alignment routine error"), MB_EXCLAME);
+        StopCalibrating();
+        return;
+      }
+      if (sqrt(aaXshift * aaXshift + aaYshift * aaYshift) > 15 || aaCCC < 0.5 * mCCCmin) {
+        mTotalShiftX[mNumShiftCal] = 0.;
+        mTotalShiftY[mNumShiftCal] = 0.;
+        mCCCsum *= 1.3333f;
+      } else {
+        mTotalShiftX[mNumShiftCal] = aaXshift;
+        mTotalShiftY[mNumShiftCal] = -aaYshift;
+        mCCCmin = B3DMIN(mCCCmin, aaCCC);
+        mCCCsum += aaCCC;
+      }
+    }
+
     // Align the shifted shots by the average of the negative of this shift and previous
-    if (!mCalStage && (((mShiftIndex - 1) % 2 && mNumShiftCal > 4) || 
-      ((mShiftIndex - 1) % 2 == 0 && mNumShiftCal == 4))) {
-      if (mNumShiftCal == 4) {
+    if (!mCalStage && (((mShiftIndex - 1) % 2 && mNumShiftCal == 9) ||
+      ((mShiftIndex - 1) % 2 == 0 && mNumShiftCal == 4) ||
+      (mShiftIndex != 3 && mSixPointIScal))) {
+      if (mNumShiftCal == 4 || (mSixPointIScal && mShiftIndex % 3 == 2)) {
         imB->setShifts(mTotalShiftX[mShiftIndex - 1], -mTotalShiftY[mShiftIndex - 1]);
         mImBufs[0].SetImageChanged(1);
+      } else if (mSixPointIScal) {
+        imA->setShifts(-mTotalShiftX[mShiftIndex - 1], mTotalShiftY[mShiftIndex - 1]);
+        mImBufs[1].SetImageChanged(1);
       } else {
-        imA->setShifts(0.5 * (mTotalShiftX[mShiftIndex - 2] - 
+        imA->setShifts(0.5 * (mTotalShiftX[mShiftIndex - 2] -
           mTotalShiftX[mShiftIndex - 1]),
           0.5 * (mTotalShiftY[mShiftIndex - 1] - mTotalShiftY[mShiftIndex - 2]));
         mImBufs[1].SetImageChanged(1);
@@ -599,30 +648,29 @@ void CShiftCalibrator::ShiftDone()
       }
     }
   }
-  
+
   mShiftIndex++;
   if (mShiftIndex < mNumShiftCal) {
     DoNextShift();
     return;
   }
-  mShiftIndex = -1;
   xOut = mCCCsum / (mNumShiftCal - (mCalStage ? 2 : 1));
   PrintfToLog("\r\nThe mean cross-correlation coefficient was %.3f and the minimum was"
     " %.3f", xOut, mCCCmin);
-  if (xOut < 0.1) 
+  if (xOut < 0.1)
     PrintfToLog("THIS IS RIDICULOUSLY LOW: YOU NEED TO USE MORE EXPOSURE\r\n");
-  else if (xOut < 0.2) 
+  else if (xOut < 0.2)
     PrintfToLog("THIS IS DANGEROUSLY LOW: YOU SHOULD USE MORE EXPOSURE\r\n");
   else if (xOut < 0.4)
     PrintfToLog("This is low, it is advisable to have a CCC of at least 0.5\r\n");
-  
+
   // STAGE CALIBRATION
 
   if (mCalStage) {
     mat = &workMat;
     numX = mNumStageShiftsX;
     numY = mNumStageShiftsY;
-    
+
     // Average all shifts; multiply to get from binned to unbinned pixels
     // Divide by the output value that represents the amount moved between
     // between successive pictures, just as for image shift, so get the negative of
@@ -643,7 +691,7 @@ void CShiftCalibrator::ShiftDone()
       mat->ypy += (float)(mCalBinning * mTotalShiftY[j] / (yOut * (numY - 1)));
       SEMTrace('c', "%8.1f %8.1f %10.3f %10.3f", mTotalShiftX[j], mTotalShiftY[j],
         mCalBinning * mTotalShiftX[j] / yOut, mCalBinning * mTotalShiftY[j] / yOut);
-   }
+    }
 
     // Get the biggest deviation from the mean matrix values
     matRange = 0.;
@@ -679,7 +727,7 @@ void CShiftCalibrator::ShiftDone()
 
     // 12/27/06: deleted alignment of images when num = 6
 
-    report.Format( "Camera %d, %dx: the scale matrix is %8.2f  %8.2f  %8.2f  %8.2f\r\n"
+    report.Format("Camera %d, %dx: the scale matrix is %8.2f  %8.2f  %8.2f  %8.2f\r\n"
       "The maximum deviation of one estimate from the mean\r\n"
       " is %8.2f (%.1f%% of maximum scale value)\r\n"
       "The implied Specimen to Stage matrix is %8.4f  %8.4f  %8.4f  %8.4f\r\n",
@@ -707,7 +755,7 @@ void CShiftCalibrator::ShiftDone()
         rotmess.Format("The rotation angle from this calibration, %.1f, is far from the"
           "\r\nangle implied by the current properties and calibrations, %.1f.\r\n"
           "Something is wrong, probably in the GlobalExtraRotation property\r\n"
-          "or the ExtraRotation camera propertes.  See the Help or get help.", angle, 
+          "or the ExtraRotation camera propertes.  See the Help or get help.", angle,
           diff);
         AfxMessageBox(rotmess, MB_EXCLAME);
       }
@@ -717,7 +765,7 @@ void CShiftCalibrator::ShiftDone()
         "ytheta = %.1f)\r\n\r\nIf this was otherwise a good calibration, fix that "
         "property and\r\nrerun this"
         " calibration to get a correct rotation angle.", mSM->GetInvertStageXAxis() ?
-        "IS" : "is NOT", mSM->GetInvertStageXAxis() ? "should NOT" : "SHOULD", angle, 
+        "IS" : "is NOT", mSM->GetInvertStageXAxis() ? "should NOT" : "SHOULD", angle,
         xtheta, ytheta);
       AfxMessageBox(rotmess, MB_EXCLAME);
     }
@@ -733,20 +781,26 @@ void CShiftCalibrator::ShiftDone()
     mWinApp->mDocWnd->CalibrationWasDone(CAL_DONE_STAGE);
 
     if (mCalIndex < mScope->GetLowestMModeMagInd()) {
-      report.Format("Absolute focus value = %f", 
+      report.Format("Absolute focus value = %f",
         mMagTab[mCalIndex].stageCalFocus[mCurrentCamera]);
       mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
     }
     return;
   }
-  
+
   // IMAGE SHIFT CALIBRATION
 
-  oldInv = mSM->CameraToIS(mCalIndex);
-  mat  = &mMagTab[mCalIndex].matIS[mCurrentCamera];
-  if (mat->xpx) {
-    strSource = "directly measured";
-    oldIsDirect = !mMagTab[mCalIndex].calibrated[mCurrentCamera];
+  if (mCalIsHighFocus) {
+    oldInv = MatInv(mFirstMat);
+    mat = &mFirstMat;
+    strSource = "starting";
+  } else {
+    oldInv = mSM->CameraToIS(mCalIndex);
+    mat = &mMagTab[mCalIndex].matIS[mCurrentCamera];
+    if (mat->xpx) {
+      strSource = "directly measured";
+      oldIsDirect = !mMagTab[mCalIndex].calibrated[mCurrentCamera];
+    }
   }
 
   // But first time around, store matrix in local member and compute one drift estimate
@@ -769,72 +823,96 @@ void CShiftCalibrator::ShiftDone()
     mWinApp->AppendToLog(report, action);
     mScope->SetImageShift(mBaseISX, mBaseISY);
     mSM->SetISTimeOut(mCalDelayFactor * mSM->GetLastISDelay());
-    if (sqrt(delX0 * delX0 + delY0 * delY0) < 5. || 
+    if (sqrt(delX0 * delX0 + delY0 * delY0) < 5. ||
       sqrt(delX2 * delX2 + delY2 * delY2) < 5.) {
-        report.Format("The image displacement was less than 5 pixels in one of the two "
-          "directions.\r\nThis is too small to give a good estimate for proceeding.\r\n"
-          "\r\nInsert a calibrated pixel size into a \"RotationAndPixel\" camera property"
-          " for this mag\r\nOr, if this is a cross-line grating, get an image and run"
-          " the\r\nFind Pixel Size routine at this mag before trying again.");
-        AfxMessageBox(report, MB_EXCLAME);
-        mWinApp->AppendToLog(report);
-        return;
+      report.Format("The image displacement was less than 5 pixels in one of the two "
+        "directions.\r\nThis is too small to give a good estimate for proceeding.\r\n"
+        "\r\nInsert a calibrated pixel size into a \"RotationAndPixel\" camera property"
+        " for this mag\r\nOr, if this is a cross-line grating, get an image and run"
+        " the\r\nFind Pixel Size routine at this mag before trying again.");
+      AfxMessageBox(report, MB_EXCLAME);
+      mWinApp->AppendToLog(report);
+      return;
     }
+    mShiftIndex = -1;
     CalibrateIS(1, false, mFromMacro);
     return;
   }
 
-  // Average the 4 shifts with the proper polarity; multiply to get from
-  // binned to unbinned pixels per IS unit
-  mat->xpx = (float)(mCalBinning * 0.25 * (mTotalShiftX[0] + mTotalShiftX[3] - 
-          (mTotalShiftX[1] + mTotalShiftX[2])) / mCalOutX[1]);
-  mat->ypx = (float)(mCalBinning * 0.25 * (mTotalShiftY[0] + mTotalShiftY[3] - 
-          (mTotalShiftY[1] + mTotalShiftY[2])) / mCalOutX[1]);
-  mat->xpy = (float)(mCalBinning * 0.25 * (mTotalShiftX[4] + mTotalShiftX[7] - 
-          (mTotalShiftX[5] + mTotalShiftX[6])) / mCalOutY[5]);
-  mat->ypy = (float)(mCalBinning * 0.25 * (mTotalShiftY[4] + mTotalShiftY[7] - 
-          (mTotalShiftY[5] + mTotalShiftY[6])) / mCalOutY[5]);
-
-
-  // Give a report, figure out the range of drift estimates and of matrix values
-  minDriftX = 10000.;
-  maxDriftX = -10000.;
-  minDriftY = 10000.;
-  maxDriftY = -10000.;
+  float driftX, driftY, ISdriftX[4], ISdriftY[4];
   matRange = 0.;
-  ScaleMat matInv = MatInv(*mat);
-  float diffX, diffY;
-  float ISdriftX[4], ISdriftY[4];
+  if (mSixPointIScal) {
+    driftX = mTotalShiftX[mNumShiftCal] / 3.f;
+    driftY = mTotalShiftY[mNumShiftCal] / 3.f;
+    mat->xpx = (float)(-mCalBinning * 0.5 * (mTotalShiftX[0] + mTotalShiftX[1] - 
+      2. * driftX) / mCalOutX[0]);
+    mat->ypx = (float)(-mCalBinning * 0.5 * (mTotalShiftY[0] + mTotalShiftY[1] -
+      2. * driftY) / mCalOutX[0]);
+    mat->xpy = (float)(-mCalBinning * 0.5 * (mTotalShiftX[3] + mTotalShiftX[4] -
+      2. * driftX) / mCalOutY[3]);
+    mat->ypy = (float)(-mCalBinning * 0.5 * (mTotalShiftY[3] + mTotalShiftY[3] -
+      2. * driftY) / mCalOutY[3]);
+    diff = fabs(mCalBinning * (mTotalShiftX[0] - mTotalShiftX[1]) / mCalOutX[0]);
+    ACCUM_MAX(matRange, diff);
+    diff = fabs(mCalBinning * (mTotalShiftY[0] - mTotalShiftY[1]) / mCalOutX[0]);
+    ACCUM_MAX(matRange, diff);
+    diff = fabs(mCalBinning * (mTotalShiftX[3] - mTotalShiftX[4]) / mCalOutY[3]);
+    ACCUM_MAX(matRange, diff);
+    diff = fabs(mCalBinning * (mTotalShiftY[3] - mTotalShiftY[4]) / mCalOutY[3]);
+    ACCUM_MAX(matRange, diff);
 
-  for (int i = 0; i < 8; i += 2) {
-    diffX = mTotalShiftX[i] + mTotalShiftX[i + 1];
-    minDriftX = B3DMIN(minDriftX, diffX);
-    maxDriftX = B3DMAX(maxDriftX, diffX);
-    diffY = mTotalShiftY[i] + mTotalShiftY[i + 1];
-    minDriftY = B3DMIN(minDriftY, diffY);
-    maxDriftY = B3DMAX(maxDriftY, diffY);
-    ISdriftX[i / 2] = 1000. * (matInv.xpx * diffX + matInv.xpy * diffY);
-    ISdriftY[i / 2] = 1000. * (matInv.ypx * diffX + matInv.ypy * diffY);
+  } else {
+
+    // Average the 4 shifts with the proper polarity; multiply to get from
+    // binned to unbinned pixels per IS unit
+    mat->xpx = (float)(mCalBinning * 0.25 * (mTotalShiftX[0] + mTotalShiftX[3] -
+      (mTotalShiftX[1] + mTotalShiftX[2])) / mCalOutX[1]);
+    mat->ypx = (float)(mCalBinning * 0.25 * (mTotalShiftY[0] + mTotalShiftY[3] -
+      (mTotalShiftY[1] + mTotalShiftY[2])) / mCalOutX[1]);
+    mat->xpy = (float)(mCalBinning * 0.25 * (mTotalShiftX[4] + mTotalShiftX[7] -
+      (mTotalShiftX[5] + mTotalShiftX[6])) / mCalOutY[5]);
+    mat->ypy = (float)(mCalBinning * 0.25 * (mTotalShiftY[4] + mTotalShiftY[7] -
+      (mTotalShiftY[5] + mTotalShiftY[6])) / mCalOutY[5]);
+
+
+    // Give a report, figure out the range of drift estimates and of matrix values
+    minDriftX = 10000.;
+    maxDriftX = -10000.;
+    minDriftY = 10000.;
+    maxDriftY = -10000.;
+    ScaleMat matInv = MatInv(*mat);
+    float diffX, diffY;
+
+    for (int i = 0; i < 8; i += 2) {
+      diffX = mTotalShiftX[i] + mTotalShiftX[i + 1];
+      minDriftX = B3DMIN(minDriftX, diffX);
+      maxDriftX = B3DMAX(maxDriftX, diffX);
+      diffY = mTotalShiftY[i] + mTotalShiftY[i + 1];
+      minDriftY = B3DMIN(minDriftY, diffY);
+      maxDriftY = B3DMAX(maxDriftY, diffY);
+      ISdriftX[i / 2] = 1000. * (matInv.xpx * diffX + matInv.xpy * diffY);
+      ISdriftY[i / 2] = 1000. * (matInv.ypx * diffX + matInv.ypy * diffY);
+    }
+    driftRange = maxDriftX - minDriftX;
+    if (driftRange < maxDriftY - minDriftY)
+      driftRange = maxDriftY - minDriftY;
+    diff = fabs(mCalBinning * 0.5 * ((mTotalShiftX[0] - mTotalShiftX[1]) -
+      (mTotalShiftX[3] - mTotalShiftX[2])) / mCalOutX[1]);
+    if (matRange < diff)
+      matRange = diff;
+    diff = fabs(mCalBinning * 0.5 * ((mTotalShiftY[0] - mTotalShiftY[1]) -
+      (mTotalShiftY[3] - mTotalShiftY[2])) / mCalOutX[1]);
+    if (matRange < diff)
+      matRange = diff;
+    diff = fabs(mCalBinning * 0.5 * ((mTotalShiftX[4] - mTotalShiftX[5]) -
+      (mTotalShiftX[7] - mTotalShiftX[6])) / mCalOutY[5]);
+    if (matRange < diff)
+      matRange = diff;
+    diff = fabs(mCalBinning * 0.5 * ((mTotalShiftY[4] - mTotalShiftY[5]) -
+      (mTotalShiftY[7] - mTotalShiftY[6])) / mCalOutY[5]);
+    if (matRange < diff)
+      matRange = diff;
   }
-  driftRange = maxDriftX - minDriftX;
-  if (driftRange < maxDriftY - minDriftY)
-    driftRange = maxDriftY - minDriftY;
-  diff = fabs(mCalBinning * 0.5 * ((mTotalShiftX[0] - mTotalShiftX[1]) - 
-    (mTotalShiftX[3] - mTotalShiftX[2])) / mCalOutX[1]);
-  if (matRange < diff)
-    matRange = diff;
-  diff = fabs(mCalBinning * 0.5 * ((mTotalShiftY[0] - mTotalShiftY[1]) - 
-    (mTotalShiftY[3] - mTotalShiftY[2])) / mCalOutX[1]);
-  if (matRange < diff)
-    matRange = diff;
-  diff = fabs(mCalBinning * 0.5 * ((mTotalShiftX[4] - mTotalShiftX[5]) - 
-    (mTotalShiftX[7] - mTotalShiftX[6])) / mCalOutY[5]);
-  if (matRange < diff)
-    matRange = diff;
-  diff = fabs(mCalBinning * 0.5 * ((mTotalShiftY[4] - mTotalShiftY[5]) -
-    (mTotalShiftY[7] - mTotalShiftY[6])) / mCalOutY[5]);
-  if (matRange < diff)
-    matRange = diff;
   matMax = MatrixMaximum(mat);
   diff = 100. * matRange / matMax;
 
@@ -849,28 +927,36 @@ void CShiftCalibrator::ShiftDone()
   if (diff > 10.0 * lowFactor)
     mess = 3;
 
-  report.Format( "Camera %d, %dx: the scale matrix is %8.1f  %8.1f  %8.1f  %8.1f\r\n"
-    "The maximum range between paired estimates\r\n is %8.1f"
-    " (%4.1f%% of maximum scale value)\r\n"
-    "The maximum range of drift estimates is %6.1f pixels.\r\n\r\n%s",
-    mCurrentCamera, magVal, mat->xpx, mat->xpy, mat->ypx, mat->ypy,
-    matRange, diff, driftRange, calMessage[mess]);
+  if (mSixPointIScal) {
+    report.Format("The scale matrix is %8.1f  %8.1f  %8.1f  %8.1f    drift = %.1f %.1f "
+      "pixels\r\nMaximum range between paired estimates: %8.1f"
+      " (%4.1f%% of maximum scale value)\r\n%s", mat->xpx, mat->xpy, mat->ypx, mat->ypy,
+      driftX, driftY, matRange, diff, calMessage[mess]);
+  } else {
+    report.Format("Camera %d, %dx: the scale matrix is %8.1f  %8.1f  %8.1f  %8.1f\r\n"
+      "The maximum range between paired estimates\r\n is %8.1f"
+      " (%4.1f%% of maximum scale value)\r\n"
+      "The maximum range of drift estimates is %6.1f pixels.\r\n\r\n%s",
+      mCurrentCamera, magVal, mat->xpx, mat->xpy, mat->ypx, mat->ypy,
+      matRange, diff, driftRange, calMessage[mess]);
+  }
   mWinApp->AppendToLog(report, action);
   if (!mWinApp->GetSTEMMode() && mCalIndex < mScope->GetLowestMModeMagInd()) {
     report.Format("Absolute focus value = %f", mScope->GetFocus());
     mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
   }
 
-  SEMTrace('1', "Drift converted to IS in nm:\r\n%6.1f %6.1f"
-    "\r\n%6.1f %6.1f\r\n%6.1f %6.1f\r\n%6.1f %6.1f", 
-    ISdriftX[0], ISdriftY[0],
-    ISdriftX[1], ISdriftY[1],
-    ISdriftX[2], ISdriftY[2],
-    ISdriftX[3], ISdriftY[3]);
+  if (!mSixPointIScal)
+    SEMTrace('1', "Drift converted to IS in nm:\r\n%6.1f %6.1f"
+      "\r\n%6.1f %6.1f\r\n%6.1f %6.1f\r\n%6.1f %6.1f", 
+      ISdriftX[0], ISdriftY[0],
+      ISdriftX[1], ISdriftY[1],
+      ISdriftX[2], ISdriftY[2],
+      ISdriftX[3], ISdriftY[3]);
 
   // Now compute an average percentage change in positions implied by the
   // change of matrix, and report to log window
-  if (oldInv.xpx) {
+  if (oldInv.xpx && !mCalIsHighFocus) {
     delMat = MatMul(oldInv, *mat);
     diff = 25. * (sqrt(pow(delMat.xpx - 1., 2.) + delMat.ypx * delMat.ypx) +
       sqrt(pow(delMat.ypy - 1., 2.) + delMat.xpy * delMat.xpy) +
@@ -878,8 +964,7 @@ void CShiftCalibrator::ShiftDone()
         pow(delMat.ypy - 1. + delMat.ypx, 2.))) +
       sqrt(0.5*(pow(-delMat.xpx + 1. + delMat.xpy, 2.) + 
         pow(delMat.ypy - 1. - delMat.ypx, 2.))));
-    report.Format("This is a change of %.2f%% from the old %s matrix", 
-      diff, strSource);
+    report.Format("This is a change of %.2f%% from the old %s matrix", diff, strSource);
     mWinApp->AppendToLog(report, LOG_SWALLOW_IF_NOT_ADMIN_OR_OPEN);
   }
 
@@ -888,6 +973,12 @@ void CShiftCalibrator::ShiftDone()
       mat->xpx = mat->xpy = 0.;
       StopCalibrating();
       return;
+  }
+
+  if (mCalIsHighFocus) {
+    FinishHighFocusIScal();
+    StopCalibrating();
+    return;
   }
 
   mMagTab[mCalIndex].calibrated[mCurrentCamera] = mWinApp->MinuteTimeStamp();
@@ -957,6 +1048,8 @@ void CShiftCalibrator::ShiftDone()
 void CShiftCalibrator::StopCalibrating()
 {
   StageMoveInfo smi;
+  if (mShiftIndex < 0)
+    return;
   if (mCalStage) {
     smi.x = mBaseISX;
     smi.y = mBaseISY;
@@ -1927,6 +2020,8 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     return;
   }
   if (haveLines) {
+
+    // If there are lines, set up scale/rotation and a more restricted search
     mWinApp->mMainView->GetLineLength(mImBufs, underPixels, dummy, underAngle);
     mWinApp->mMainView->GetLineLength(refBuf, refPixels, dummy, refAngle);
     if (underPixels < 100 || refPixels < 100) {
@@ -1942,6 +2037,9 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     scaleNumCuts = 3;
     angleRange = 6.;
   } else {
+
+    // If there are no lines, get nearby cal if any and set up from that with broader
+    // search
     mSM->GetDefocusMagAndRot(underSpot, refProbe, intensity, focDiff, scale,
       rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2);
     if (fabs((double)nearFoc - focDiff) > 10.) {
@@ -1961,9 +2059,13 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     startScale = 1.;
   else
     startScale = initialScale - (scaleNumSteps / 2.f) * scaleStep;
+
+  // Set up search
   mWinApp->mMultiTSTasks->SetCkAlignStep(scaleStep);
   mWinApp->mMultiTSTasks->SetCkNumStepCuts(scaleNumCuts);
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(scaleNumSteps);
+
+  // Do scaling then rotation
   mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, initialAngle);
 
   if (mWinApp->mNavHelper->AlignWithRotation(0, initialAngle, angleRange, rotation, 
@@ -1977,6 +2079,8 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
       mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
       return;
   }
+
+  // Then a final scaling search
   scaleStep = 0.008f;
   scaleNumSteps = 5;
   startScale = scale - (scaleNumSteps / 2.f) * scaleStep;
@@ -1984,6 +2088,8 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   mWinApp->mMultiTSTasks->SetCkNumStepCuts(4);
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(scaleNumSteps);
   mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, rotation);
+
+  // Restore, report, and flash
   mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
   mWinApp->mMultiTSTasks->SetCkNumStepCuts(saveStepCuts);
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
@@ -2010,10 +2116,89 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     Sleep(300);
     mWinApp->SetCurrentBuffer(0);
   }
+
+  // Store if approved
   mess = CString("Is this calibration good?  Are the images aligned?\n\n"
     "(If not, copy buffer B to A and try drawing ") + B3DCHOICE(haveLines, 
     "the lines better)", "lines between corresponding points on each image)");
   if (AfxMessageBox(mess, MB_QUESTION) == IDYES)
     mSM->AddHighFocusMagCal(underSpot, refProbe, intensity, focDiff, 1. / scale,
-      -rotation);
+      -rotation, 0);
+}
+
+// Calibration of image shift at high defocus runs the regular IS cal routine
+int CShiftCalibrator::CalibrateISatHighDefocus(bool interactive, float curFocus)
+{
+  ScaleMat mat;
+  int timeSinceLast = mWinApp->MinuteTimeStamp() - mLastISFocusTimeStamp;
+  if (mWinApp->LowDoseMode())
+    mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(ISCAL_CONSET));
+
+  mCalIndex = mScope->GetMagIndex();
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mat = mSM->IStoCamera(mCalIndex);
+  if (!mat.xpx) {
+    SEMMessageBox("There is no image shift calibration at the current magnification",
+      MB_EXCLAME);
+    return 1;
+  }
+
+  if (interactive) {
+    if (!mWarnedHighFocusNotCal && !mMagTab[mCalIndex].calibrated[mCurrentCamera] &&
+      !mMagsTransFrom.count(mCalIndex)) {
+      mWarnedHighFocusNotCal = true;
+      if (AfxMessageBox("It is recommended that you redo the regular image shift "
+        "calibration since it is the reference for the high-focus calibrations\n\n"
+        "Do you want to do that first?", MB_QUESTION) == IDYES)
+        return 1;
+    }
+
+    // If this is not the first time in a while, use the current defocus to put the default 
+    // in the entry box
+    if (mLastISFocusTimeStamp > 0 && mWinApp->MinuteTimeStamp() - mLastISFocusTimeStamp <
+      60)
+      mHighDefocusForIS = mScope->GetDefocus() - mLastISZeroFocus;
+
+    if (!KGetOneFloat("You must already be at high defocus and be sure that Trial images "
+      "are good for calibration", "What defocus (- for underfocus) has been applied, "
+      "in microns?", mHighDefocusForIS, 0))
+      return 1;
+  } else {
+    mHighDefocusForIS = curFocus;
+  }
+
+  // Save what is being done for next time
+  mLastISZeroFocus = mScope->GetDefocus() - mHighDefocusForIS;
+  mLastISFocusTimeStamp = mWinApp->MinuteTimeStamp();
+
+ // Set up matrix and calibrate
+  mFirstMat = mSM->FocusAdjustedISToCamera(mCurrentCamera, mCalIndex,
+    mScope->GetSpotSize(), mScope->GetProbeMode(), mScope->GetIntensity(), 
+    mHighDefocusForIS);
+
+  CalibrateIS(2, false, false);
+  return 0;
+}
+
+// This is called after successful completion and if user doesn't want to forget it
+void CShiftCalibrator::FinishHighFocusIScal()
+{
+  float rotation, scale, stretch, phi;
+  int spot = mScope->GetSpotSize();
+  int probe = mScope->GetProbeMode();
+  double intensity = mScope->GetIntensity();
+
+  // Get regular IS cal and detremine transformation between them and convert to 
+  // rot/mag/stretch
+  ScaleMat mat = mSM->IStoCamera(mCalIndex);
+  ScaleMat rotMat = MatMul(MatInv(mat), mFirstMat);
+  amatToRotmagstr(rotMat.xpx, rotMat.xpy, rotMat.ypx, rotMat.ypy, &rotation, &scale, 
+    &stretch, &phi);
+
+  // Report and store
+  PrintfToLog("Defocus %.1f  intensity %.2f%s: Scale %.4f  rotation %.2f  stretch %.2f%%", 
+    mHighDefocusForIS, mScope->GetC2Percent(spot, intensity, probe),
+    mScope->GetC2Units(), scale, rotation, 100. * (stretch - 1.0));
+  mSM->AddHighFocusMagCal(spot, probe, intensity, mHighDefocusForIS, scale, rotation, 
+    mCalIndex);
 }

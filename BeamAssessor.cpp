@@ -2192,7 +2192,7 @@ void CBeamAssessor::CalibrateCrossover(void)
   BOOL changed = false;
   bool focChanged = false;
   CString message;
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals;
+  HighFocusCalArray *focusMagCals;
  	int spotSave = mScope->GetSpotSize();
   int probe = mScope->ReadProbeMode();
   if (AfxMessageBox("To calibrate crossover, the program will go to each spot\n"
@@ -2318,10 +2318,9 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   DoseTable *dtp;
   double cross;
   CString mess;
-  int i, j, spot, probe, fromAp = mCurrentAperture;
+  int i, j, loop, spot, probe, fromAp = mCurrentAperture;
   mScope = mWinApp->mScope;
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
-    mWinApp->mShiftManager->GetFocusMagCals();
+  HighFocusCalArray *focusMagCals;
 
   // Scale beam tables
   for (i = 0; i < mNumTables; i++) {
@@ -2379,14 +2378,18 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   }
 
   // Scale high focus mag cals
-  for (i = 0; i < focusMagCals->GetSize(); i++) {
-    HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
-    if (fromMeasured)
-      fromAp = focCal.measuredAperture;
-    focCal.intensity = mScope->IntensityAfterApertureChange(focCal.intensity, fromAp, 
-      currentAp, focCal.spot, focCal.probeMode);
-    focCal.crossover = mScope->IntensityAfterApertureChange(focCal.crossover, fromAp, 
-      currentAp, focCal.spot, focCal.probeMode);
+  for (loop = 0; loop < 2; loop++) {
+    focusMagCals = loop ? mWinApp->mShiftManager->GetFocusISCals() :
+      mWinApp->mShiftManager->GetFocusMagCals();
+    for (i = 0; i < focusMagCals->GetSize(); i++) {
+      HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
+      if (fromMeasured)
+        fromAp = focCal.measuredAperture;
+      focCal.intensity = mScope->IntensityAfterApertureChange(focCal.intensity, fromAp,
+        currentAp, focCal.spot, focCal.probeMode);
+      focCal.crossover = mScope->IntensityAfterApertureChange(focCal.crossover, fromAp,
+        currentAp, focCal.spot, focCal.probeMode);
+    }
   }
   if (currentAp != mCurrentAperture)
     mWinApp->mDocWnd->SetShortTermNotSaved();
@@ -2479,12 +2482,11 @@ void CBeamAssessor::CalIllumAreaNextTask(void)
 {
   BeamTable *btp;
   DoseTable *dtp;
-  int probe, i, j, spot;
+  int probe, i, j, spot, loop;
   double cross;
   float *lowLimits = mScope->GetCalLowIllumAreaLim();
   float *highLimits = mScope->GetCalHighIllumAreaLim();
-  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals =
-    mWinApp->mShiftManager->GetFocusMagCals();
+  HighFocusCalArray *focusMagCals;
   bool notCal = highLimits[5] <= lowLimits[5];
 
   if (mCalIAlimitSpot <= 0)
@@ -2563,12 +2565,15 @@ void CBeamAssessor::CalIllumAreaNextTask(void)
         }
 
         // Scale high focus mag cals
-        for (i = 0; i < focusMagCals->GetSize(); i++) {
-          HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
-          ConvertIntensityForIACal(focCal.intensity, focCal.spot, focCal.probeMode);
-          ConvertIntensityForIACal(focCal.crossover, focCal.spot, focCal.probeMode);
+        for (loop = 0; loop < 2; loop++) {
+          focusMagCals = loop ? mWinApp->mShiftManager->GetFocusISCals() :
+            mWinApp->mShiftManager->GetFocusMagCals();
+          for (i = 0; i < focusMagCals->GetSize(); i++) {
+            HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
+            ConvertIntensityForIACal(focCal.intensity, focCal.spot, focCal.probeMode);
+            ConvertIntensityForIACal(focCal.crossover, focCal.spot, focCal.probeMode);
+          }
         }
-
         ConvertSettingsForFirstIALimitCal(false);
       }
 

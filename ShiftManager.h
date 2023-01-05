@@ -28,6 +28,8 @@
 // Globals
 ScaleMat MatMul(ScaleMat aa, ScaleMat bb);
 ScaleMat MatInv(ScaleMat aa, bool yInverted = false);
+void ApplyScaleMatrix(ScaleMat & mat, double xFrom, double yFrom, float &xTo, float &yTo, bool incremental = false, bool testXpx = true);
+void ApplyScaleMatrix(ScaleMat & mat, double xFrom, double yFrom, double &xTo, double &yTo, bool incremental = false, bool testXpx = true);
 
 // Structure for keeping transforms that align rotated images, for deriving stretch
 struct RotStretchXform {
@@ -52,11 +54,14 @@ struct HighFocusMagCal {
   float defocus;
   double intensity;
   int probeMode;
+  int magIndex;
   float scale;
   float rotation;
   double crossover;
   int measuredAperture;
 };
+
+typedef CArray<HighFocusMagCal, HighFocusMagCal> HighFocusCalArray;
 
 class CShiftManager
 {
@@ -167,7 +172,8 @@ public:
   GetSetMember(int, UseSquareShiftLimits);
   CArray<RotStretchXform, RotStretchXform> *GetRotXforms() {return &mRotXforms;};
   STEMinterSetShifts *GetSTEMinterSetShifts() {return &mInterSetShifts;};
-  CArray<HighFocusMagCal, HighFocusMagCal> *GetFocusMagCals() {return &mFocusMagCals;};
+  HighFocusCalArray *GetFocusMagCals() { return &mFocusMagCals; };
+  HighFocusCalArray *GetFocusISCals() { return &mFocusISCals; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -176,7 +182,8 @@ private:
   CString * mModeNames;
   EMimageBuffer *mImBufs;
   CArray<RotStretchXform, RotStretchXform> mRotXforms;
-  CArray<HighFocusMagCal, HighFocusMagCal> mFocusMagCals;
+  HighFocusCalArray mFocusMagCals;
+  HighFocusCalArray mFocusISCals;
   ScaleMat mStageStretchXform;
   STEMinterSetShifts mInterSetShifts;
   int *mActiveCameraList;
@@ -287,10 +294,13 @@ public:
   ScaleMat StretchCorrectedRotation(float rotation);
   ScaleMat UnderlyingStretch(ScaleMat raMat, float &smagMean, double & thetad, float & str, double & alpha);
   bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
-    float & scale, float & rotation, float &nearestFocus, double nearC2Dist[2], int nearC2ind[2], int &numNearC2);
+    float & scale, float & rotation, float &nearestFocus, double nearC2Dist[2], int nearC2ind[2],
+    int &numNearC2, int magIndForIS = 0);
+  bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
+    float & scale, float & rotation);
   void AddHighFocusMagCal(int spot, int probeMode, double intensity, float defocus,
-    float scale, float rotation);
-  bool ImposeImageShiftOnScope(float delX, float delY, int magInd, int camera,
+    float scale, float rotation, int magIndForIS);
+  bool ImposeImageShiftOnScope(EMimageBuffer *imBuf, float delX, float delY, int magInd, int camera,
     BOOL incremental, BOOL mouseShifting);
   float GetPixelSize(EMimageBuffer * imBuf, float *rotation = NULL);
   int FindBoostedMagIndex(int magInd, int boostMag);
@@ -302,16 +312,19 @@ public:
   void GetLastAlignTrims(int &xA, int &yA, int &xRef, int &yRef) {xA = mLastAlignXTrimA;
   yA = mLastAlignYTrimA; xRef = mLastAlignXTrimRef; yRef = mLastAlignYTrimRef;};
   ScaleMat FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, int probe,
-     double intensity, float defocus);
-  ScaleMat FocusAdjustedStageToCamera(EMimageBuffer *imBuf);
+     double intensity, float defocus, bool forIS = false);
+  ScaleMat FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool forIS = false);
   bool GetScaleAndRotationForFocus(EMimageBuffer * imBuf, float &scale, float &rotation);
+  ScaleMat FocusAdjustedISToCamera(int inCamera, int inMagInd, int spot, int probe,
+    double intensity, float defocus);
+  ScaleMat FocusAdjustedISToCamera(EMimageBuffer *imBuf);
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
   void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
   void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
     double & delStageY, ScaleMat bInv);
-  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, float &xTo, float &yTo, bool incremental = false, bool testXpx = true);
-  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, double &xTo, double &yTo, bool incremental = false, bool testXpx = true);
+  void ApplyScaleMatrix(ScaleMat & mat, double xFrom, double yFrom, float &xTo, float &yTo, bool incremental = false, bool testXpx = true);
+  void ApplyScaleMatrix(ScaleMat & mat, double xFrom, double yFrom, double &xTo, double &yTo, bool incremental = false, bool testXpx = true);
   void ListBeamShiftCals();
 
   bool BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd, double beamDelX, double beamDelY, float & specX, float & specY);
