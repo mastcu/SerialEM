@@ -74,7 +74,7 @@ public:
 	void FullMontage(bool skipDlg);
   void AutoSave();
 	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
-    float angle, float &stageX, float &stageY);
+    float angle, float &stageX, float &stageY, EMimageBuffer *imBuf = NULL);
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
 	int FindAndSetupNextAcquireArea();

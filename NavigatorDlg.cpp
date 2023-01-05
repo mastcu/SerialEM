@@ -3882,7 +3882,7 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
   // Convert any image shift of image into an additional stage shift
   if (needAddIS)
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY,
-      angle, stageX, stageY);
+      angle, stageX, stageY, imBuf);
 
   // Sign woes as usual.  This transform is a true transformation from the stage
   // to the camera coordinate system, but invert Y to get to image coordinate system
@@ -3903,9 +3903,9 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
 
 // If scaling exists, convert the image shift into additional stage shift
 BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX, 
-  double ISY, float angle, float &stageX, float &stageY)
+  double ISY, float angle, float &stageX, float &stageY, EMimageBuffer *imBuf)
 {
-  ScaleMat aMat, bMat;
+  ScaleMat aMat, bMat, s2c;
   
   // If scope did not already subtract mag offsets, do so now for given camera type
   if (!mScope->GetApplyISoffset()) {
@@ -3923,9 +3923,16 @@ BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX
   }
 
   // Here the plus sign replicates the plus in image shift reset
-  aMat = mShiftManager->IStoGivenCamera(magInd, camera);
+  if (imBuf)
+    aMat = mShiftManager->FocusAdjustedISToCamera(imBuf);
+  if (!imBuf || !aMat.xpx || magInd != imBuf->mMagInd || camera != imBuf->mCamera)
+    aMat = mShiftManager->IStoGivenCamera(magInd, camera);
   if (aMat.xpx) {
-    bMat = MatInv(mShiftManager->StageToCamera(camera, magInd));
+    if (imBuf)
+      s2c = mShiftManager->FocusAdjustedStageToCamera(imBuf);
+    if (!imBuf || !s2c.xpx || magInd != imBuf->mMagInd || camera != imBuf->mCamera)
+      s2c = mShiftManager->StageToCamera(camera, magInd);
+    bMat = MatInv(s2c);
     if (angle > RAW_STAGE_TEST && fabs((double)angle) > 1.)
       mShiftManager->AdjustCameraToStageForTilt(bMat, angle);
     aMat = MatMul(aMat, bMat);
@@ -6886,7 +6893,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   // when image was taken (which is already in the transformation)
   if (hasStage)
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY, 
-      item->mMapTiltAngle, item->mStageX, item->mStageY);
+      item->mMapTiltAngle, item->mStageX, item->mStageY, imBuf);
   SEMTrace('n', "Raw stage %.3f %.3f   adjusted %.3f %.3f", item->mRawStageX, 
     item->mRawStageY, item->mStageX, item->mStageY);
 

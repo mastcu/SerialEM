@@ -141,8 +141,8 @@ void CNavRotAlignDlg::OnButApplyIs()
     rMat = mNav->GetRotationMatrix(-mLastRotation, false);
     backX = (float)mImBufs[1].mBinning * (rMat.xpx * shiftX - rMat.xpy * shiftY);
     backY = (float)mImBufs[1].mBinning * (rMat.ypx * shiftX - rMat.ypy * shiftY);
-    mWinApp->mShiftManager->ImposeImageShiftOnScope(backX, backY, mImBufs[1].mMagInd, 
-      camera, false, false);
+    mWinApp->mShiftManager->ImposeImageShiftOnScope(&mImBufs[1], backX, backY,
+      mImBufs[1].mMagInd, camera, false, false);
   }
   m_butApplyIS.EnableWindow(false);
   mAppliedIS = true;
