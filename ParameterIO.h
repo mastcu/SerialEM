@@ -53,6 +53,7 @@ private:
   int mNumLDSets;
   CameraParameters *mCamParam;
   EMbufferManager *mBufferManager;
+  CShiftManager *mShiftManager;
   CArray<FocusTable, FocusTable> *mFocTab;
   LowDoseParams *mLowDoseParams;
   TiltSeriesParam *mTSParam;

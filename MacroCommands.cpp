@@ -2117,12 +2117,12 @@ int CMacCmd::QueueFrameTiltSeries(void)
         FindValueAtIndex(*valPtr, iy0, ix1, iy1);
         report = valPtr->Mid(ix1, iy1 - ix1);
         delY = atof((LPCTSTR)report);
-        mShiftManager->ApplyScaleMatrix(aMat, (float)delX, (float)delY, delISX, delISY);
+        ApplyScaleMatrix(aMat, (float)delX, (float)delY, delISX, delISY);
         deltaISX.push_back((float)(delISX));
         deltaISY.push_back((float)(delISX));
         iy0++;
         if (JEOLscope) {
-          mShiftManager->ApplyScaleMatrix(IStoBS, (float)delISX, (float)delISY, delX,
+          ApplyScaleMatrix(IStoBS, (float)delISX, (float)delISY, delX,
             delY);
           deltaBeamX.push_back((float)delX);
           deltaBeamY.push_back((float)delY);
@@ -4689,7 +4689,7 @@ int CMacCmd::ImageShiftByStageDiff(void)
   index = mScope->GetMagIndex();
   aMat = mShiftManager->StageToCamera(mCurrentCam, index);
   bInv = MatMul(aMat, mShiftManager->CameraToIS(index));
-  mShiftManager->ApplyScaleMatrix(bInv, mItemFlt[1] * backlashX,
+  ApplyScaleMatrix(bInv, mItemFlt[1] * backlashX,
     mItemFlt[2] *backlashY, delISX, delISY);
   if (TestIncrementalImageShift(delISX, delISY))
     return 0;
@@ -9565,7 +9565,7 @@ int CMacCmd::DeleteNavigatorItem(void)
 int CMacCmd::GetNavGroupStageCoords(void)
 {
   CMapDrawItem *item;
-  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray;
+  MapItemArray *itemArray;
   int ind, bufInd, varInd = 2, sizeX, sizeY;
   int numPts = 0;
   float xx, yy;

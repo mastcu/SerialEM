@@ -2323,8 +2323,8 @@ int EMmontageController::SavePiece()
         specToCam = MatInv(camToSpec);
         ix = mParam->binning * (mMontageX[upper] - mMontageX[lower]);
         iy = mParam->binning * (mMontageY[upper] - mMontageY[lower]);
-        mShiftManager->ApplyScaleMatrix(camToSpec, (float)ix, (float)iy, specX, specY);
-        mShiftManager->ApplyScaleMatrix(specToCam, specX, specY * cos(DTOR *angle), xPeak,
+        ApplyScaleMatrix(camToSpec, (float)ix, (float)iy, specX, specY);
+        ApplyScaleMatrix(specToCam, specX, specY * cos(DTOR *angle), xPeak,
           yPeak);
 
         // This is the amount that the image area moved and thus the amount to shift

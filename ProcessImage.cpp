@@ -1490,7 +1490,7 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
     ScaleMat aInv = mShiftManager->CameraToSpecimen(magInd);
     if (mWinApp->mMultiTSTasks->GetAutoCentering())
       mWinApp->mMultiTSTasks->GetCenteringBeamShift(cenShiftX, cenShiftY);
-    mShiftManager->ApplyScaleMatrix(aInv, shiftX + cenShiftX / pixel, 
+    ApplyScaleMatrix(aInv, shiftX + cenShiftX / pixel, 
       shiftY + cenShiftY / pixel, bsX, bsY);
     bsTot = sqrt(bsX * bsX + bsY * bsY);
     CString message;
@@ -1507,7 +1507,7 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
   }
 
   ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
-  mShiftManager->ApplyScaleMatrix(camToBS, shiftX, shiftY, bsX, bsY);
+  ApplyScaleMatrix(camToBS, shiftX, shiftY, bsX, bsY);
   mScope->IncBeamShift(bsX, bsY);
   return 0;
 }
@@ -2799,7 +2799,7 @@ void CProcessImage::OnProcessCropAverage()
   Islice bufSlice;
   Islice *boxSlice;
   CMapDrawItem *item;
-  CArray<CMapDrawItem *, CMapDrawItem *>*itemArray = 
+  MapItemArray *itemArray = 
     mWinApp->mMainView->GetMapItemsForImageCoords(imBuf, true);
 
   if (!itemArray) {

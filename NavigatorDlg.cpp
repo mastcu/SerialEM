@@ -3419,7 +3419,7 @@ void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int 
 
 // Convert a set of polygons from an IMOD model object to a set of items in polyArray
 int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, 
-  CArray<CMapDrawItem *, CMapDrawItem *> &polyArray)
+  MapItemArray &polyArray)
 {
   ScaleMat aMat, aInv;
   float delX, delY, stageX, stageY, midX, midY, adjustX, adjustY;
@@ -3450,13 +3450,13 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
       &item->mYinPiece);
     adjustX = midX - imageX;
     adjustY = midY - imageY;
-    mShiftManager->ApplyScaleMatrix(aInv, midX - delX, midY - delY, item->mStageX,
+    ApplyScaleMatrix(aInv, midX - delX, midY - delY, item->mStageX,
       item->mStageY);
 
     for (pt = 0; pt < cont->psize; pt++) {
       imageX = cont->pts[pt].x + adjustX;
       imageY = cont->pts[pt].y + adjustY;
-      mShiftManager->ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, stageX,
+      ApplyScaleMatrix(aInv, imageX - delX, imageY - delY, stageX,
         stageY);
       item->AppendPoint(stageX, stageY);
     }
@@ -3465,7 +3465,7 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
 }
 
 // Add the non-excluded items in the selected groups to the Naviigator array
-void CNavigatorDlg::AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, 
+void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray, 
   ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, 
   int &lastID, IntVec &indsInPoly)
 {
@@ -3520,7 +3520,7 @@ void CNavigatorDlg::AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &
 // Put the added polygons back into the polyArray in the empty spots: it has to be checked
 // beforehand that this matches up
 void CNavigatorDlg::UndoAutocontPolyAddition(
-  CArray<CMapDrawItem*, CMapDrawItem*> &polyArray, int numRemove, IntVec &indsInPoly)
+  MapItemArray &polyArray, int numRemove, IntVec &indsInPoly)
 {
   CMapDrawItem *item;
   int ind, size = (int)mItemArray.GetSize();
@@ -3581,7 +3581,7 @@ BOOL CNavigatorDlg::BackspacePressed()
 // ROUTINES FOR PROVIDING ITEMS TO DRAW, AND GETTING DRAWING TRANSFORMS
 
 // The call for SerialEMView to get the items to draw
-CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
+MapItemArray *CNavigatorDlg::GetMapDrawItems(
   EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, 
   CMapDrawItem **acquireBox)
 {

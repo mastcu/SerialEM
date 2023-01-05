@@ -106,6 +106,7 @@ private:
   CSerialEMApp *mWinApp;
   CEMscope *mScope;
   CFocusManager *mFocusManager;
+  CShiftManager *mShiftManager;
   CArray <AstigCalib, AstigCalib> mAstigCals;
   CArray <ComaCalib, ComaCalib> mComaCals;
   CArray <CtfBasedCalib, CtfBasedCalib> mCtfBasedCals;

@@ -7,19 +7,13 @@ version of Visual Studio, it will want to upgrade the project to use the
 current toolset on all configurations.  Just cancel this message, then adjust
 the platform toolset for the v140 configuration.
 
-There are 7 project configurations:
+There are 5 project configurations:
 Debug (Win 32 & x64)
    A Debug build that will start in the top source directory and read
    SerialEMsettings.txt there.
 Release (Win 32 & x64)
    A Release build that will start in the top source directory and read
    SerialEMsettings.txt there.
-JEOL Debug (Win 32 & x64)
-   A duplicate of the Debug build that will start in the subdirectory
-   settingsJeol and read SerialEMsettings.txt there.
-JEOL Release (Win 32 & x64)
-   A duplicate of the Release build that will start in the subdirectory
-   settingsJeol and read SerialEMsettings.txt there.
 NoHang (Win32 only; x64 properties are not maintained)
    A Release build that compiles the MyFileDialog class in SerialEMDoc.cpp to
    use the SDK file dialog instead of CFileDialog, which used to hang on some
@@ -49,6 +43,8 @@ is unlikely to be up-to-date.  Every .cpp file has a corresponding .h file.
 
 BASIC PROGRAM MODULES:
 AutoTuning.cpp        Calibrates and does astigmatism and coma corrections
+BaseDlg.cpp           Base class to handle help and panel formatting
+BaseServer.cpp        Base class for socket servers, used by PythonServer
 BaseSocket.cpp        Base class for running operations through sockets, used
                          in SerialEM and plugins
 BeamAssessor.cpp      Calibrates beam intensity, adjusts intensity using the
@@ -81,7 +77,8 @@ GainRefMaker.cpp      Acquires a gain reference and makes gain references
                          for the camera controller from stored gain references
 GatanSocket.cpp       Communicates with SerialEMCCD via a socket
 LC1100CamSink.cpp     Code used with old Direct Electron LC1100 camera
-MacroProcessor.cpp    Runs scripts
+MacroCommands.cpp     Has individual script commands and essential functions
+MacroProcessor.cpp    Base class for MacroCommands with supporting functions
 Mailer.cpp            Sends mail
 MainFrm.cpp           Standard MFC MDI component, manages the main program 
                          window and has code for program shutdown, control
@@ -99,6 +96,7 @@ PluginManager.cpp     Handles loading and calling of plugins
 ProcessImage.cpp      Mostly has functions in the Process menu, also has
                          code for getting image means and for correcting 
                          image defects, and for beam tasks
+PythonServer.cpp      Socket code for connecting to external Python
 SerialEM.cpp          The main module, has top level routines, and 
                          miscellaneous message handlers, and other things
                          that did not fit into other places
@@ -116,27 +114,38 @@ ShiftManager.cpp      Does autoalignment, mouse shifting, image shift reset,
                          transformation matrices
 TSController.cpp      The tilt series controller
 
-FREE-STANDING WINDOWS:
+FREE-STANDING WINDOWS: NON-MODAL DIALOGS
+AutocenSetupDlg.cpp  To set parameters for autocentering
+AutoContouring.cpp   To manage autocontouring of grid square
+ComaVsISCalDlg.cpp   To set parameters for the Coma vs. Image Shift cal
+CtffindParamDlg.cpp  To set parameters for analyzing power spect with ctffind
 DirectElectronCamPanel.cpp
 DoseMeter.cpp        A system-modal cumulative dose meter
+HoleFinderDlg.cpp    To manage automatic hole finding
 LogWindow.cpp        The log window
 MacroEditer.cpp      Macro editing window
 MacroToolbar.cpp     Toolbar with macro buttons
+MultiCombinerDlg.cpp  To combine Navigator points for multiple Records
 MultiShotDlg.cpp     Dialog for setting parameters for multiple records
+NavAcquireDlg.cpp    To set parameters for acquisition from Navigator points
 NavigatorDlg.cpp     The Navigator for storing positions and maps
 NavRotAlignDlg.cpp   Window for finding alignment with rotation
 OneLineScript.cpp    Window for entering and running up to 5 one-line scripts
 ReadFileDlg.cpp      Window for reading sections from file
 ScreenMeter.cpp      A system-modal screen meter with control on averaging
+ScreenShotDialog.cpp To set parameters and take window snapshots
+ShiftToMarkerDlg.cpp To set parameters for Shift to Marker operation
 StageMoveTool.cpp    Window for moving stage in large steps
 StateDlg.cpp         Dialog for saving and setting imaging states
 TSViewRange.cpp      Dialog open while viewing the results of TS range finding
+VPPConditionSetup.cpp To set parameters for conditioning phase plates
+ZbyGSetupDlg.cpp     To calibrate and set parameters for Eucentricity by Focus
 
 MODAL DIALOG BOXES:
-AutocenSetupDlg.cpp  To set parameters for autocentering
-BaseDlg.cpp          Base class to handle tool tips and help button
 CameraSetupDlg.cpp   To set camera exposure parameters and select camera
 CookerSetupDlg.cpp   To set parameters for specimen cooking
+DERefMakerDlg.cpp    To make gain references in DE server
+DriftWaitSetupDlg.cpp To set parameters for waiting for drift
 DummyDlg.cpp         Dialog class required for no_hang solution
 FalconFrameDlg.cpp   To set up frame sums acquired from Falcon or K2 camera
 FilePropDlg.cpp      To set properties for saving images to files
@@ -145,9 +154,10 @@ GainRefDlg.cpp       To set parameters for taking gain references
 K2SaveOptionDlg.cpp  To set options for K2 frame saving, and set name and
                         folder control for frame saving from all cameras
 MacroControlDlg.cpp  To set parameters for controlling macros
+MacroSelector.cpp    A popup dialog to select one script by name/number
 MontageSetupDlg.cpp  To set up montaging frame number, size, overlap, binning
                          and mag
-NavAcquireDlg.cpp    To start acquisition from selected Navigator points
+NavAcqHoleFinder.cpp Opened by NavAcAcquireDlg for hole finder/combiner task
 NavBacklashDlg.cpp   To set preferences for correcting new maps for backlash
 NavFileTypeDlg.cpp   To select whether an acquired file will be montage
 NavImportDlg.cpp     To import a tiff file as a Navigator map
@@ -155,6 +165,7 @@ RefPolicyDlg.cpp     To set policies for which gain references to use
 ThreeChoiceBox.cpp   To provide an option box with intelligible choices
                         instead of yes-No-Cancel
 TSBackupDlg.cpp      To select a section to back up to in a tilt series
+TSDoseSymDlg.cpp     To set parameters for dose-symmetric tilt series
 TSExtraFile.cpp      To set up extra outputs from a tilt series
 TSPolicyDlg.cpp      To set policies for errors during multiple tilt series
 TSRangeDlg.cpp       To set parameters for finding usable angular range
@@ -192,45 +203,77 @@ KPixMap.cpp           A class that builds and holds a byte pixmap for an image
                          being displayed and sets up color tables and ramps
 KStoreADOC.cpp        A class for saving and reading series of TIFF files and
                          managing mdoc files
-KStoreIMOD.cpp        A class for saving and reading TIFF files
+KStoreIMOD.cpp        A class for saving and reading TIFF, JPEG, and HDF
+                         files, and reading some other supported file types 
 KStoreMRC.cpp         A class for saving and reading MRC image files
 
 
 UTILITY FILES in Utilities
 AskOneDlg.cpp         A modal dialog box for getting a one-line entry
-FFT.cpp               Hand-translation of our Fortran FFT routines, can be
-                         used if fftw is not available
+b3dregsvr.c           Simple registration program used because regsvr32 hung
+dpiaware.manifest     Manifest used for Debug builds to specify DPI aware
+install.bat           Program installer
 KGetOne.cpp           Has routines for getting one integer, float, or string
                          using AskOneDlg
+makeHideDisable       Script to produce about_hide_disable.htm file
 Smoother.cpp          A class for smoothing a noisy data stream, used for
                          the screen meter
 STEMfocus.cpp         Has routines for analyzing power spectra and finding
                          focus in STEM mode
 SEMUtilities.cp       A collection of utilities
+win10.manifest        Manifest for other builds to set Windows 10 compatibility
 XCorr.cpp             Free standing functions for computations, prefixed with
                          XCorr, Proc, or Stat generally.  This is one
                          module that gets optimized for a debug build
-This directory also has the FFTW and tiff-related libs.
 
 
-FILES SHARED WITH IMOD in Shared
-Except for imodconfig.h, the master copy of each file is in IMOD and when it is
-modified there it can be simply copied into this directory and checked in.
-libcfshr.lib, libiimod.lib and libimxml.lib are static libs built with VS2008
+FILES SHARED WITH IMOD OR PLUGINS in Shared
+Except for imodconfig.h, the master copy of each file is
+in IMOD.  When one is modified there, it can be simply copied into this
+directory and checked in, except that CorrectDefects.h needs some changes for
+SerialEM.
 
+Headers shared with IMOD
 autodoc.h
-b3dutil.h             Needed for some functions and macros
-cfsemshare.h          Header file with declarations for functions in libcfshr
+b3dutil.h
+cfft.h
+cfsemshare.h
+CorrectDefects.h
+cppdefs.h
+ctffind.h
+ctfutils.h
+framealign.h
+frameutil.h
+gpuframe.h
+holefinder.h
 hvemtypes.h
+icont.h
 iimage.h
 ilist.h
+imat.h
+imesh.h
 imodconfig.h
-mrcslice.h            Needed for structure definitions
-mrcfiles.h            Needed for structure definitions
+imodel.h
+iobj.h
+iplane.h
+ipoint.h
+istore.h
+iview.h
+mrcfiles.h
+mrcslice.h
+mxmlwrap.h
 parse_params.h
+sliceproc.h
+
+Headers shared with plugins
 SEMCCDDefines.h       Definitions shared with SerialEMCCD
 SharedJeolDefines.h   Definitions shared with JeolScopePlugin
-CorrectDefects.cpp    Common defect correction code shared with SerialCCD too
+
+.cpp files shared with IMOD
+CorrectDefects.cpp    Common defect correction code shared with SerialEMCCD too
+framealign.cpp        Frame alignment module shared with SerialEMCCD
+frameutil.cpp         Frame alignment utilties shared with SerialEMCCD
+holefinder.cpp        Main operations for Hole finder
 
 
 FOLDER CHOOSER in XFolderDialog

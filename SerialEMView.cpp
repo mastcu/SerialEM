@@ -100,6 +100,7 @@ CSerialEMView::CSerialEMView()
   mNonMapPanX = 0;
   mNonMapPanY = 0;
   mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   mFirstDraw = true;
   mMadeFonts = false;
   mMouseShifting = false;
@@ -315,7 +316,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   sd->sizeScaling = sizeScaling;
   sd->skipExtra = skipExtra;
   sd->zoomSave = mZoom;
-  sd->pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+  sd->pixel = mShiftManager->GetPixelSize(imBuf);
 
 
   // For 1:1 whole image drawing, set size to fill image and zoom to 1
@@ -615,8 +616,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   BOOL drawIncluded, drawExcluded;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
-  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = NULL;
-  CArray<CMapDrawItem *, CMapDrawItem *> *polyArray;
+  MapItemArray *itemArray = NULL;
+  MapItemArray *polyArray;
   CMapDrawItem *item, *polygon;
   int *showGroup;
   COLORREF contColors[MAX_AUTOCONT_GROUPS] = {RGB(220,0,0), RGB(245,160,0), 
@@ -888,7 +889,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   // Draw crosshairs if mouse shifting is underway
   if (!toBuffer&& (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() || 
     (navigator && navigator->MovingMapItem()))) {
-    CPen pnSolidPen (PS_SOLID, 1, mWinApp->mShiftManager->GetShiftingDefineArea() ?
+    CPen pnSolidPen (PS_SOLID, 1, mShiftManager->GetShiftingDefineArea() ?
       RGB(0, 255, 0) : RGB(255, 0, 0));
     crossLen = (rect.Width() < rect.Height() ? rect.Width() : rect.Height()) / 5;
     CPoint point = rect.CenterPoint();
@@ -992,7 +993,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 cdc.TextOut(scaled140, scaled10, letString);
               } else if (mWinApp->mScope->GetNoScope() && imBuf->mMagInd > 0) {
                 letString.Format("%.3f e/sq A at camera", boost / 
-                  pow(10000. * mWinApp->mShiftManager->GetPixelSize(imBuf), 2.));
+                  pow(10000. * mShiftManager->GetPixelSize(imBuf), 2.));
                 cdc.TextOut(scaled140, scaled10, letString);
               }
           }
@@ -1066,8 +1067,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       CPoint point = rect.CenterPoint();
       tempY = 0.;
       if (imBuf->mMagInd >= mWinApp->mScope->GetLowestMModeMagInd())
-        mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
-      tempY += (float)mWinApp->mShiftManager->GetImageRotation(imBuf->mCamera, 
+        mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
+      tempY += (float)mShiftManager->GetImageRotation(imBuf->mCamera, 
           imBuf->mMagInd);
       if (imBuf->mRotAngle)
         tempY += imBuf->mInverted ? -imBuf->mRotAngle : imBuf->mRotAngle;
@@ -1095,7 +1096,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     || imBuf->mCaptured == BUFFER_LIVE_FFT && !mWinApp->mCamera->DoingContinuousAcquire())
     && imBuf->mCtfFocus1 > 0 && !mDoingMontSnapshot) {
       double defocus = imBuf->mCtfFocus1;
-      float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+      float pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
       if (processImg->GetTestCtfPixelSize())
         pixel = processImg->GetTestCtfPixelSize();
       boost = processImg->GetDrawExtraCtfRings() > 0 ? imBuf->mMaxRingFreq : 0.f;
@@ -1132,7 +1133,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   } else if ((mMainWindow || mFFTWindow) && !(skipExtra & 1) && !mDoingMontSnapshot &&
     imBuf->mCaptured == BUFFER_LIVE_FFT && processImg->GetCircleOnLiveFFT()) {
       float *radii = processImg->GetFFTCircleRadii();
-      float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+      float pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
       double defocus = processImg->GetFixedRingDefocus();
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
@@ -1167,10 +1168,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // What did not work: IS to specimen * specimen to stage * focus-adjusted stage to cam
     // But this does work much better:
-    mWinApp->mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
-    isToCamNoFoc = mWinApp->mShiftManager->IStoGivenCamera(imBuf->mMagInd,
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    isToCamNoFoc = mShiftManager->IStoGivenCamera(imBuf->mMagInd,
       imBuf->mCamera);
-    isToCam = mWinApp->mShiftManager->MatScaleRotate(isToCamNoFoc, scale, rotation);
+    isToCam = mShiftManager->MatScaleRotate(isToCamNoFoc, scale, rotation);
     cenX = imBuf->mImage->getWidth() / 2.f;
     cenY = imBuf->mImage->getHeight() / 2.f;
     boost = 0.;
@@ -1178,7 +1179,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mWinApp->mAutoTuning->GetComaVsISVector(ldp->magIndex,
         mWinApp->mNavHelper->mComaVsISCalDlg->m_fDistance,
         mWinApp->mNavHelper->mComaVsISCalDlg->m_iRotation, ix, tempX, tempY);
-      mWinApp->mShiftManager->TransferGeneralIS(ldp->magIndex, tempX, tempY,
+      mShiftManager->TransferGeneralIS(ldp->magIndex, tempX, tempY,
         imBuf->mMagInd, transX, transY);
       ApplyScaleMatrix(isToCam, (float)transX, (float)transY, 
         ptX, ptY);
@@ -1777,10 +1778,10 @@ int CSerialEMView::ZoomedPixelYAdjustment(CRect *rect, KImage *image)
 }
 
 // Call to set up the use of StageToImage to get image coordinates of nav points
-CArray<CMapDrawItem *, CMapDrawItem *> *CSerialEMView::GetMapItemsForImageCoords(
+MapItemArray *CSerialEMView::GetMapItemsForImageCoords(
   EMimageBuffer *imBuf, bool deleteAcqBox)
 {
-  CArray<CMapDrawItem *,CMapDrawItem *> *itemArray = mWinApp->mNavigator->GetMapDrawItems
+  MapItemArray *itemArray = mWinApp->mNavigator->GetMapDrawItems
     (imBuf, mAmat, mDelX, mDelY, mDrawAllReg, &mAcquireBox);
   if (deleteAcqBox)
     delete mAcquireBox;
@@ -1955,7 +1956,7 @@ void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
 
   if (!mScaleParams.draw)
     return;
-  pixsize = mWinApp->mShiftManager->GetPixelSize(imBuf);
+  pixsize = mShiftManager->GetPixelSize(imBuf);
 
   // Get minimum length in units, then reduce that to number between 0 and 1.   
   minlen = pixsize * mScaleParams.minLength / mZoom;
@@ -2468,7 +2469,7 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
       GetClientRect(&rect);
       if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
         if (imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) {
-          pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+          pixel = mShiftManager->GetPixelSize(imBuf);
           if (pixel) {
             shiftY = (float)(sqrt(pow(shiftX - imBuf->mImage->getWidth() / 2., 2.) +
               pow(shiftY - imBuf->mImage->getHeight() / 2., 2.)) / 
@@ -2507,7 +2508,7 @@ void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point)
     if (mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints()) {
       mMouseDownTime = GetTickCount();  // Get start time
     } else if (mMainWindow) {
-      mWinApp->mShiftManager->StartMouseShifting(shiftKey, mImBufIndex);
+      mShiftManager->StartMouseShifting(shiftKey, mImBufIndex);
       mMouseShifting = true;
     }
   }
@@ -2524,7 +2525,7 @@ void CSerialEMView::OnRButtonUp(UINT nFlags, CPoint point)
   if (GetCapture() == this) {
     ReleaseCapture();
     if (mMainWindow && mMouseShifting) {
-      mWinApp->mShiftManager->EndMouseShifting(mImBufIndex);
+      mShiftManager->EndMouseShifting(mImBufIndex);
       mMouseShifting = false;
       DrawImage();
     } else if (mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() && mImBufs
@@ -2572,10 +2573,10 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
             if (!mMouseShifting) {
 
               // Initiate shifting if not underway yet
-              mWinApp->mShiftManager->StartMouseShifting(shiftKey, mImBufIndex);
+              mShiftManager->StartMouseShifting(shiftKey, mImBufIndex);
               mMouseShifting = true;
             }
-            mWinApp->mShiftManager->SetAlignShifts((float)iDx, (float)iDy, true, 
+            mShiftManager->SetAlignShifts((float)iDx, (float)iDy, true, 
               &mImBufs[mImBufIndex]);
           }
           m_iPrevMX = point.x;
@@ -3315,7 +3316,7 @@ void CSerialEMView::GetLineLength(EMimageBuffer *imBuf, float &pixels, float &na
   double dy = imBuf->mUserPtY - imBuf->mLineEndY;
   float focusRot;
   pixels = (float)sqrt(dx * dx + dy * dy);
-  nanometers = (float)(1000. * mWinApp->mShiftManager->GetPixelSize(imBuf, &focusRot) * 
+  nanometers = (float)(1000. * mShiftManager->GetPixelSize(imBuf, &focusRot) * 
     pixels);
   angle = 0.;
   if (pixels)
@@ -3335,7 +3336,7 @@ void CSerialEMView::GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, flo
   ny = bottom + 1 - top;
   if (nx % 2)
     nx--;
-  pixSize = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  pixSize = 1000.f * mShiftManager->GetPixelSize(imBuf);
   xnm = (float)(nx * pixSize);
   ynm = (float)(ny * pixSize);
 }

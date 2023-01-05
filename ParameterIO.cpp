@@ -90,6 +90,7 @@ CParameterIO::CParameterIO()
 {
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   mModeNames = mWinApp->GetModeNames();
   mConSets = mWinApp->GetCamConSets();
   mMagTab = mWinApp->GetMagTable();
@@ -2674,14 +2675,14 @@ int CParameterIO::ReadProperties(CString strFileName)
   CameraParameters *camP;
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
   MacroControl *macControl = mWinApp->GetMacControl();
-  ShortVec *bsBoundaries = mWinApp->mShiftManager->GetBeamShiftBoundaries();
+  ShortVec *bsBoundaries = mShiftManager->GetBeamShiftBoundaries();
 #define PROP_MODULES
 #include "PropertyTests.h"
 #undef PROP_MODULES  
   NavParams *navParams = mWinApp->GetNavParams();
-  RelRotations *relRotations = mWinApp->mShiftManager->GetRelRotations();
+  RelRotations *relRotations = mShiftManager->GetRelRotations();
   CArray<RotStretchXform, RotStretchXform> *rotXformArray = 
-    mWinApp->mShiftManager->GetRotXforms();
+    mShiftManager->GetRotXforms();
   CArray<ChannelSet, ChannelSet> *channelSets = camera->GetChannelSets();
   CArray<ChannelSet, ChannelSet> *blockSets = scope->GetBlockedChannels();
   CArray<PiezoScaling, PiezoScaling> *piezoScalings = 
@@ -3290,7 +3291,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             }
 
           } else if (MatchNoCase("SpecialRelativeRotation")) {
-            ind = mWinApp->mShiftManager->GetNumRelRotations();
+            ind = mShiftManager->GetNumRelRotations();
             if (strItems[3].IsEmpty()) {
               message.Format("Relative rotation entry needs three numbers\n"
                 "for camera %d: %s", iset, strLine);
@@ -3303,7 +3304,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               relRotations[ind].fromMag = itemInt[1];
               relRotations[ind].toMag = itemInt[2];
               relRotations[ind].rotation = itemDbl[3];
-              mWinApp->mShiftManager->SetNumRelRotations(ind + 1);
+              mShiftManager->SetNumRelRotations(ind + 1);
             }
 
 
@@ -4178,8 +4179,8 @@ int CParameterIO::ReadProperties(CString strFileName)
          retval = 1;
          break;
        }
-       float *ISmoved = mWinApp->mShiftManager->GetISmoved();
-       float *ISdelay = mWinApp->mShiftManager->GetISdelayNeeded();
+       float *ISmoved = mShiftManager->GetISmoved();
+       float *ISdelay = mShiftManager->GetISdelayNeeded();
        for (int line = 0; line < nMags; line++) {
          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
            MAX_TOKENS);
@@ -4198,7 +4199,7 @@ int CParameterIO::ReadProperties(CString strFileName)
          retval = err;
          break;
        } else
-         mWinApp->mShiftManager->SetNumISdelays(nMags);
+         mShiftManager->SetNumISdelays(nMags);
 
      } else if (!strItems[0].IsEmpty() && !recognized && !recognized35)
        AfxMessageBox("Unrecognized entry in properties file " + strFileName
@@ -4354,8 +4355,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
 
       } else if (NAME_IS("HighFocusMagCal") || NAME_IS("HighFocusISCal")) {
         focusMagCals = NAME_IS("HighFocusISCal") ? 
-          mWinApp->mShiftManager->GetFocusISCals() :
-          mWinApp->mShiftManager->GetFocusMagCals();
+          mShiftManager->GetFocusISCals() :
+          mShiftManager->GetFocusMagCals();
 
         focCal.spot = itemInt[1];
         focCal.probeMode = itemInt[2];
@@ -4622,14 +4623,14 @@ int CParameterIO::ReadCalibration(CString strFileName)
           beamInd = atoi((LPCTSTR)strItems[7]);
         if (!strItems[9].IsEmpty())
           focInd = atoi((LPCTSTR)strItems[8]);
-        mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd, focInd);
+        mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd, focInd);
         
        } else if (NAME_IS("StageStretchXform")) {
          IStoBS.xpx = itemFlt[1];
          IStoBS.xpy = itemFlt[2];
          IStoBS.ypx = itemFlt[3];
          IStoBS.ypy = itemFlt[4];
-         mWinApp->mShiftManager->SetStageStretchXform(IStoBS);
+         mShiftManager->SetStageStretchXform(IStoBS);
        } else if (NAME_IS("FilterMagShifts")) {
         nCal = itemInt[1];
         for (i = 0; i < nCal; i++) {
@@ -4938,15 +4939,15 @@ void CParameterIO::WriteCalibration(CString strFileName)
   int curAperture = mWinApp->mBeamAssessor->GetCurrentAperture();
   int *crossCalAper = mWinApp->mBeamAssessor->GetCrossCalAperture();
   int *spotCalAper = mWinApp->mBeamAssessor->GetSpotCalAperture();
-  ScaleMat stageStr = mWinApp->mShiftManager->GetStageStretchXform();
-  ScaleMat *IStoBS = mWinApp->mShiftManager->GetBeamShiftMatrices();
+  ScaleMat stageStr = mShiftManager->GetStageStretchXform();
+  ScaleMat *IStoBS = mShiftManager->GetBeamShiftMatrices();
   BeamTable *beamTables = mWinApp->mBeamAssessor->GetBeamTables();
   BeamTable *btp;
   SpotTable *spotTables = mWinApp->mBeamAssessor->GetSpotTables();
-  ShortVec *beamMags = mWinApp->mShiftManager->GetBeamCalMagInd();
-  ShortVec *beamAlphas = mWinApp->mShiftManager->GetBeamCalAlpha();
-  ShortVec *beamProbes = mWinApp->mShiftManager->GetBeamCalProbe();
-  ShortVec *beamRetains = mWinApp->mShiftManager->GetBeamCalRetain();
+  ShortVec *beamMags = mShiftManager->GetBeamCalMagInd();
+  ShortVec *beamAlphas = mShiftManager->GetBeamCalAlpha();
+  ShortVec *beamProbes = mShiftManager->GetBeamCalProbe();
+  ShortVec *beamRetains = mShiftManager->GetBeamCalRetain();
   float *alphaBeamShifts = mWinApp->mScope->GetAlphaBeamShifts();
   float *alphaBeamTilts = mWinApp->mScope->GetAlphaBeamTilts();
   double *spotBeamShifts = mWinApp->mScope->GetSpotBeamShifts();
@@ -5008,8 +5009,8 @@ void CParameterIO::WriteCalibration(CString strFileName)
 
     // Write high focus mag calibrations
     for (j = 0; j < 2; j++) {
-      focusMagCals = j ? mWinApp->mShiftManager->GetFocusISCals() :
-        mWinApp->mShiftManager->GetFocusMagCals();
+      focusMagCals = j ? mShiftManager->GetFocusISCals() :
+        mShiftManager->GetFocusMagCals();
       for (i = 0; i < focusMagCals->GetSize(); i++) {
         focCal = focusMagCals->GetAt(i);
         string.Format("%s %d %d %f %f %f %f %f %d %d\n", j ? "HighFocusISCal" :
@@ -5152,7 +5153,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
       }
     }
 
-    for (i = 0; i < mWinApp->mShiftManager->GetNumBeamShiftCals(); i++) {
+    for (i = 0; i < mShiftManager->GetNumBeamShiftCals(); i++) {
       nCal = beamMags->at(i) < 0 ? mMagTab[-beamMags->at(i)].EFTEMmag : 
         mMagTab[beamMags->at(i)].mag;
       string.Format("BeamShiftCalibration %d %f %f %f %f %d %d %d  %d\n",
@@ -6301,7 +6302,7 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mScope->GetUsePiezoForLDaxis())
      PrintAnOption(any, "Special option is set to use piezo movement for Low Dose"
        " on-axis shift");
-  if (mWinApp->mShiftManager->GetDisableAutoTrim())
+  if (mShiftManager->GetDisableAutoTrim())
     PrintAnOption(any, "Special option is set to disable automatic trimming of dark "
     "borders in Autoalign for some cases");
   if (mWinApp->mTSController->GetAllowContinuous())

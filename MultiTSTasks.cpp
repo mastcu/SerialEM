@@ -2362,7 +2362,7 @@ int CMultiTSTasks::ConditionPhasePlate(bool movePlate)
 {
   double dist, minDist = 1.e30;
   int ind, nextTask;
-  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray;
+  MapItemArray *itemArray;
   CMapDrawItem *item;
   CString *strPtr;
   ControlSet  *conSet = mWinApp->GetConSets() + TRACK_CONSET;

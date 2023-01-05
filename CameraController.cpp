@@ -2926,7 +2926,7 @@ int CCameraController::ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY)
 
   WaitForSingleObject(mTD.FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
   for (index = 0; index < (int)ISX.size(); index++)
-    mShiftManager->ApplyScaleMatrix(aMat, ISX[index], ISY[index], 
+    ApplyScaleMatrix(aMat, ISX[index], ISY[index], 
       mTD.FrameTSdeltaISX[index], mTD.FrameTSdeltaISY[index]);
   ReleaseMutex(mTD.FrameTSMutexHandle);
   return 0;

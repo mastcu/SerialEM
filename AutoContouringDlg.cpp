@@ -235,7 +235,7 @@ void CAutoContouringDlg::SyncToMasterParams()
 }
 
 // Callback from SerialEMView to get items to draw
-CArray<CMapDrawItem*, CMapDrawItem*>* CAutoContouringDlg::GetPolyArrayToDraw(
+MapItemArray* CAutoContouringDlg::GetPolyArrayToDraw(
   ShortVec **groupNums, ShortVec **excluded, int &numGroups, int **showGroup)
 {
   if (!mHaveConts)
@@ -252,7 +252,7 @@ bool CAutoContouringDlg::IsUndoFeasible()
 {
   CMapDrawItem *item;
   int numConv = (int)mFirstConvertedIndex.size();
-  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = mWinApp->mNavigator->GetItemArray();
+  MapItemArray *itemArray = mWinApp->mNavigator->GetItemArray();
   if (!numConv || itemArray->GetSize() - 1 != mLastConvertedIndex[numConv - 1])
     return false;
   item = itemArray->GetAt(mFirstConvertedIndex[numConv - 1]);

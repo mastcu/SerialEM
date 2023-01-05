@@ -444,7 +444,7 @@ void CAutocenSetupDlg::OnRecordAddedShift()
     delBSX -= mStartingBSX;
     delBSY -= mStartingBSY;
     BStoCam = MatInv(MatMul(camToIS, IStoBS));
-    mWinApp->mShiftManager->ApplyScaleMatrix(BStoCam, (float)delBSX, (float)delBSY,
+    ApplyScaleMatrix(BStoCam, (float)delBSX, (float)delBSY,
       mParam->addedShiftX, mParam->addedShiftY);
     pixel = mWinApp->mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
       magInd);

@@ -28,6 +28,7 @@ CAutoTuning::CAutoTuning(void)
 {
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   mDoingCalAstig = false;
   mDoingFixAstig = false;
   mDoingComaFree = false;
@@ -215,7 +216,7 @@ void CAutoTuning::AstigCalNextTask(int param)
         mSavedAstigY + yFacs[mOperationInd - 1] * mAstigToApply, 
         "The next stigmator value to test"))
           return;
-      mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+      mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
     }
     mDirectionInd = 0;
     mOperationInd++;
@@ -382,7 +383,7 @@ void CAutoTuning::FixAstigNextTask(int param)
     mScope->SetObjectiveStigmator(baseX - xAstig, baseY - yAstig);
     if (sqrt(xAstig * xAstig + yAstig * yAstig) > threshFac * mAstigIterationThresh && 
       mNumIterations < mMaxAstigIterations) {
-        mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+        mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
         mNumIterations++;
         mOperationInd = -1;
         PrintfToLog("Iterating because astigmatism is above threshold");
@@ -789,7 +790,7 @@ void CAutoTuning::PrintMatrix(ScaleMat mat, const char *descrip)
 void CAutoTuning::GeneralSetup(void)
 {
   mMagIndex = mScope->GetMagIndex();
-  mCamToSpec = mWinApp->mShiftManager->CameraToSpecimen(mMagIndex);
+  mCamToSpec = mShiftManager->CameraToSpecimen(mMagIndex);
   mCamToSpec.xpx *= 1000.f;
   mCamToSpec.xpy *= 1000.f;
   mCamToSpec.ypx *= 1000.f;
@@ -1084,7 +1085,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   // positive microns because that function takes it that way as an & reference
   mMinDefocusForMag = 0.;
   mMaxDefocusForMag = 0.;
-  pixel = mWinApp->mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+  pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
     mCtfCal.magInd) * 1000.f * (float)recSet->binning;
   tryFocus = -mMinCtfBasedDefocus;
   while (tryFocus <= -mMaxCtfBasedDefocus) {
@@ -1120,7 +1121,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mCtfCal.amplitude = mUsersComaTilt <= 0. ? mMaxComaBeamTilt : mUsersComaTilt;
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     BacklashedBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY, true);
-    mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
+    mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
     mLastBeamX = mBaseBeamTiltX;
     mLastBeamY = mBaseBeamTiltY;
   } else {
@@ -1129,7 +1130,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mAstigBacklash= -fabs(mAstigBacklash);
     mScope->GetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
     BacklashedStigmator(mSavedAstigX, mSavedAstigY, true);
-    mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+    mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
     mLastAstigX = mSavedAstigX;
     mLastAstigY = mSavedAstigY;
   }
@@ -1137,8 +1138,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   // Zero the IS unless flag is set
   if (!leaveIS) {
     mScope->SetLDCenteredShift(0., 0.);
-    mWinApp->mShiftManager->SetISTimeOut(ISdelayFactor *
-      mWinApp->mShiftManager->GetLastISDelay());
+    mShiftManager->SetISTimeOut(ISdelayFactor *
+      mShiftManager->GetLastISDelay());
   }
   
   // Decide whether a new autofocus is needed and save current state before starting
@@ -1161,10 +1162,10 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   // Add to timeout if area changed for coma-free align.  Astig should be OK because of
   // the focusing
   if (actionType / 2 == 0 && needAreaChange && comaFree) {
-    lastTimeOut = mWinApp->mShiftManager->GetGeneralTimeOut(RECORD_CONSET);
+    lastTimeOut = mShiftManager->GetGeneralTimeOut(RECORD_CONSET);
     if (SEMTickInterval(lastTimeOut) > 0)
       lastTimeOut = GetTickCount();
-    mWinApp->mShiftManager->SetGeneralTimeOut(lastTimeOut, mCtfBasedLDareaDelay);
+    mShiftManager->SetGeneralTimeOut(lastTimeOut, mCtfBasedLDareaDelay);
   }
   if (mSkipMeasuringFocus)
     mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
@@ -1397,7 +1398,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         nextYval = mLastBeamY + yFacs[mOperationInd] * mCtfCal.amplitude;
         BacklashedBeamTilt(nextXval, nextYval, mOperationInd == 0 ||
           (!mDoingFullArray && mOperationInd == numOperations / 2) || mDoingFullArray);
-        mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
+        mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
         //PrintfToLog("Beam tilt set to %.3f %.3f", nextXval, nextYval);
       } else if (mCtfActionType / 2 == 0) {
         nextXval = mSavedAstigX + xFacs[mOperationInd] * mAstigToApply;
@@ -1410,7 +1411,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         }
         if (TestAndSetStigmator(nextXval, nextYval, "The next stigmator value to test"))
           return;
-        mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+        mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
       } 
       mOperationInd++;
     } else {
@@ -1553,7 +1554,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
               mNumIterations++;
               mLastBeamX = nextXval;
               mLastBeamY = nextYval;
-              mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), 
+              mShiftManager->SetGeneralTimeOut(GetTickCount(), 
                 mPostBeamTiltDelay);
               mOperationInd = 0;
               mCtfCal.numFits = 0;
@@ -1601,7 +1602,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
                 mNumIterations++;
                 mLastAstigX = nextXval;
                 mLastAstigY = nextYval;
-                mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(),mPostAstigDelay);
+                mShiftManager->SetGeneralTimeOut(GetTickCount(),mPostAstigDelay);
                 mOperationInd = 0;
                 mCtfCal.numFits = 0;
                 PrintfToLog("Iterating because astigmatism is above threshold");
@@ -1710,7 +1711,7 @@ int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag,
   double minRatio = 1.e30, ratio;
   int indMin = -1;
   double magAngle, calAngle;
-  magAngle = mWinApp->mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),magInd);
+  magAngle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),magInd);
   for (int ind = 0; ind < mCtfBasedCals.GetSize(); ind++) {
     if (BOOL_EQUIV(mCtfBasedCals[ind].comaType, coma)) {
       if (matchMag) {
@@ -1723,7 +1724,7 @@ int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag,
         if (ratio < minRatio) {
           minRatio = ratio;
           indMin = ind;
-          calAngle = mWinApp->mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),
+          calAngle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),
             mCtfBasedCals[ind].magInd);
           if (rotateImage)
             *rotateImage = (float)(calAngle - magAngle);
@@ -1796,7 +1797,7 @@ int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
 
   int magIndex = mWinApp->LowDoseMode() ? ldp->magIndex : mScope->FastMagIndex();
-  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magIndex);
+  ScaleMat aMat = mShiftManager->IStoSpecimen(magIndex);
   if (!aMat.xpx) {
     SEMMessageBox("Beam tilt versus image shift cannot be calibrated.\n"
       "There is no image shift to specimen calibration available at this magnification");
@@ -1870,14 +1871,14 @@ void CAutoTuning::ComaVsISNextTask(int param)
       PrintfToLog("Measuring at image shift %.1f %.1f (IS units)",
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
       mScope->SetImageShift(mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
-      mWinApp->mShiftManager->SetISTimeOut(delayFactor *
-        mWinApp->mShiftManager->GetLastISDelay());
+      mShiftManager->SetISTimeOut(delayFactor *
+        mShiftManager->GetLastISDelay());
 
       // To test that the equations are right, uncomment this and comment out CtfBased...
-      /*mWinApp->mShiftManager->ApplyScaleMatrix(mComaVsIScal.matrix,
+      /*ApplyScaleMatrix(mComaVsIScal.matrix,
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXTiltNeeded, 
         mLastYTiltNeeded);
-      mWinApp->mShiftManager->ApplyScaleMatrix(mComaVsIScal.astigMat,
+      ApplyScaleMatrix(mComaVsIScal.astigMat,
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXStigNeeded, 
         mLastYStigNeeded);*/
     }
@@ -1953,7 +1954,7 @@ void CAutoTuning::GetComaVsISVector(int magInd, float extent, int rotation, int 
 {
   int delx[4] = {-1, 1, 0, 0};
   int dely[4] = {0, 0, -1, 1};
-  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magInd);
+  ScaleMat aMat = mShiftManager->IStoSpecimen(magInd);
   double ISX = extent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
   double ISY = extent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
   double cosRot = cos(DTOR * rotation);

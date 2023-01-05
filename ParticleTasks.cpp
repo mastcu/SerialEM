@@ -393,7 +393,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   dMat = MatMul(mShiftManager->IStoCamera(mMagIndex),
     MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex)));
   mScope->GetStagePosition(mMSLastHoleStageX, mMSLastHoleStageY, delISX);
-  mShiftManager->ApplyScaleMatrix(dMat, mMSHoleISX[mMSNumHoles - 1],
+  ApplyScaleMatrix(dMat, mMSHoleISX[mMSNumHoles - 1],
     mMSHoleISY[mMSNumHoles - 1], delISX, delISY);
   mMSLastHoleStageX += delISX / xTiltFac;
   mMSLastHoleStageY += delISY / yTiltFac;
@@ -552,7 +552,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     }
     angle = DTOR * ((shotIndex -indBase) * 360. / mMSNumInRing[ring] + 
       mPeripheralRotation);
-    mShiftManager->ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam[ring] * (float)cos(angle),
+    ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam[ring] * (float)cos(angle),
       mMSRadiusOnCam[ring] * (float)sin(angle), delISX, delISY);
   }
 
@@ -796,9 +796,9 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind], magInd,
       transISX, transISY, camera);
     if (adjustForTilt) {
-      mShiftManager->ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX, 
+      ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX, 
         specY);
-      mShiftManager->ApplyScaleMatrix(specToIS, specX, cosRatio * specY, transISX, 
+      ApplyScaleMatrix(specToIS, specX, cosRatio * specY, transISX, 
         transISY);
     }
     delISX.push_back((float)transISX);
@@ -1848,7 +1848,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         mImBufs->mImage->getShifts(shiftX, shiftY);
         shiftX *= mImBufs->mBinning;
         shiftY *= -mImBufs->mBinning;
-        mShiftManager->ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
+        ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
         PrintfToLog("Shift in Align to Template is %.2f, %.2f microns",
           backlashX, backlashY);
       }

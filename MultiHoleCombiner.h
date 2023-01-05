@@ -43,7 +43,7 @@ private:
   int mNxGrid, mNyGrid;           // Size of grid points seem to fall on
   int mNumXholes, mNumYholes;     // Number of holes in current pattern
   int **mGrid;                    // Line pointers to grid array
-  CArray<CMapDrawItem *, CMapDrawItem *>mSavedItems;    // Items removed from Nav array
+  MapItemArray mSavedItems;    // Items removed from Nav array
   IntVec mIDsForUndo;             // IDs of the multi-shot items added
   IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
   std::set<int> mSetOfUndoIDs;    // A set so they can be looked up easily
@@ -62,7 +62,7 @@ private:
 
   void mergeBoxesAndEvaluate(CArray<PositionData, PositionData> &posArray, float &sdOfNums);
   void SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid, int &acqStart, int &acqEnd);
-  void AddMultiItemToArray(CArray<CMapDrawItem *, CMapDrawItem *> *itemArray, int baseInd,
+  void AddMultiItemToArray(MapItemArray *itemArray, int baseInd,
     float stageX, float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen,
     IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded);
   void ClearSavedItemArray(void);

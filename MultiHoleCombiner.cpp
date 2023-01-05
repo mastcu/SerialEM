@@ -67,7 +67,7 @@ const char *CMultiHoleCombiner::GetErrorMessage(int error)
 int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 {
   CMapDrawItem *item, *curItem;
-  CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
+  MapItemArray *itemArray;
   KImage *image;
   FloatVec xCenters, yCenters, peakVals, xCenAlt, yCenAlt, peakAlt, xMissing, yMissing;
   IntVec navInds, altInds, boxAssigns, ixSkip, iySkip;
@@ -759,7 +759,7 @@ void CMultiHoleCombiner::AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters
 bool CMultiHoleCombiner::OKtoUndoCombine(void)
 {
   int jnd;
-  CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
+  MapItemArray *itemArray;
   CMapDrawItem *item;
   mNav = mWinApp->mNavigator;
 
@@ -790,7 +790,7 @@ bool CMultiHoleCombiner::OKtoUndoCombine(void)
 void CMultiHoleCombiner::UndoCombination(void)
 {
   int jnd;
-  CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
+  MapItemArray *itemArray;
   CMapDrawItem *item;
 
   if (!OKtoUndoCombine())
@@ -1006,7 +1006,7 @@ void CMultiHoleCombiner::EvaluateCrossAtPosition(int xCen, int yCen, PositionDat
 
 // Add an item to the nav array with locked-in multi-shot parameters and skipped points
 void CMultiHoleCombiner::AddMultiItemToArray(
-  CArray<CMapDrawItem*, CMapDrawItem*>* itemArray, int baseInd, float stageX, 
+  MapItemArray* itemArray, int baseInd, float stageX, 
   float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen, 
   IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded)
 {
@@ -1053,7 +1053,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   if (ixSkip.size()) {
     newItem->mSkipHolePos = new unsigned char[2 * newItem->mNumSkipHoles];
     for (ix = 0; ix < newItem->mNumSkipHoles; ix++) {
-      mWinApp->mShiftManager->ApplyScaleMatrix(mSkipXform, ixSkip[ix] - boxXcen,
+      ApplyScaleMatrix(mSkipXform, ixSkip[ix] - boxXcen,
         iySkip[ix] - boxYcen, skipXrot, skipYrot, false, false);
       newItem->mSkipHolePos[2 * ix] = (unsigned char)B3DNINT(skipXrot + backXcen);
       newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)B3DNINT(skipYrot + backYcen);

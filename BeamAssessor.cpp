@@ -1890,7 +1890,7 @@ void CBeamAssessor::RefineShiftCalImage()
     // Adjust image shift by the shift that would be needed to move the image by the
     // same amount as the beam has moved (Y inversion here)
     camToIS = mShiftManager->CameraToIS(magInd);
-    mShiftManager->ApplyScaleMatrix(camToIS, 
+    ApplyScaleMatrix(camToIS, 
       binning * (mBSCcenX[mShiftCalIndex] - mBSCcenX[0]),
       -binning * (mBSCcenY[mShiftCalIndex] - mBSCcenY[0]), delISX, delISY);
     SEMTrace('1', "At IS %.2f %.2f, IS needed to center %.2f %.2f", mRBSCshiftISX[ind], 
@@ -1954,9 +1954,9 @@ void CBeamAssessor::RefineShiftCalImage()
 
       // Get IS shift that one BS unit gives and convert to microns on specimen,
       // scale up the IS to give target shift
-      mShiftManager->ApplyScaleMatrix(BStoIS, (float)(1 - dir), (float)dir, delISX,
+      ApplyScaleMatrix(BStoIS, (float)(1 - dir), (float)dir, delISX,
         delISY);
-      mShiftManager->ApplyScaleMatrix(IStoSpec, delISX, delISY, delSpecX, delSpecY);
+      ApplyScaleMatrix(IStoSpec, delISX, delISY, delSpecX, delSpecY);
       dist = (float)sqrt(delSpecX * delSpecX + delSpecY * delSpecY);
       delISX *= shiftInUm / dist;
       delISY *= shiftInUm / dist;
@@ -1983,7 +1983,7 @@ void CBeamAssessor::RefineShiftCalImage()
 
   // Get the shift that should have been applied with the current matrix and make sure one
   // axis is 0
-  mShiftManager->ApplyScaleMatrix(mIStoBScal, mRBSCshiftISX[mShiftCalIndex],
+  ApplyScaleMatrix(mIStoBScal, mRBSCshiftISX[mShiftCalIndex],
     mRBSCshiftISY[mShiftCalIndex], delISX, delISY);
   if (GetDebugOutput('1'))
     mScope->GetBeamShift(dx, dy);

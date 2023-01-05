@@ -30,6 +30,7 @@ protected:
 private:
   MultiShotParams *mActiveParams;
   MultiShotParams mSavedParams;
+  CShiftManager *mShiftManager;
   int mPanelStart[7];
   int mNumInPanel[7];
   bool mRecordingRegular;

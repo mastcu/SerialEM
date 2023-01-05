@@ -47,7 +47,7 @@ public:
   void CloseWindow();
   bool IsOpen() { return mIsOpen; };
   void SyncToMasterParams();
-  CArray<CMapDrawItem *, CMapDrawItem *> *GetPolyArrayToDraw(ShortVec **groupNums, ShortVec **excluded,
+  MapItemArray *GetPolyArrayToDraw(ShortVec **groupNums, ShortVec **excluded,
     int &numGroups, int **showGroup);
   void SetExclusionsAndGroups(int groupByMean, float lowerMeanCutoff, float upperMeanCutoff, 
     float minSizeCutoff, float SDcutoff, float irregularCutoff, float borderDistCutoff);
@@ -112,7 +112,7 @@ private:
   float mStatMaxBoundDist;
   float mStatMaxSquareness;
   float mStatMinSquareness;
-  CArray<CMapDrawItem *, CMapDrawItem *> mPolyArray;
+  MapItemArray mPolyArray;
   ShortVec mGroupNums;
   ShortVec mExcluded;
   int mShowGroup[MAX_AUTOCONT_GROUPS];

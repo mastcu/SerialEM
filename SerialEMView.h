@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 class CMapDrawItem;
+class CShiftManager;
 
 // Scale bar structure from 3dmod
 typedef struct scale_bar {
@@ -127,6 +128,7 @@ public:
 private:
   void NewZoom();
   CSerialEMApp * mWinApp;
+  CShiftManager *mShiftManager;
   BOOL  mFirstDraw;              // Flag that first draw is being done
   bool  mMadeFonts;              // Flag that fonts were created
   double mZoom;
@@ -216,7 +218,7 @@ public:
   void GetLineLength(EMimageBuffer *imBuf, float &pixels, float &nanometers, float &angle);
   void GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, float & xnm, float & ynm);
   int ZoomedPixelYAdjustment(CRect *rect, KImage *image);
-  CArray<CMapDrawItem *, CMapDrawItem *> *GetMapItemsForImageCoords(EMimageBuffer *imBuf,
+  MapItemArray *GetMapItemsForImageCoords(EMimageBuffer *imBuf,
     bool deleteAcqBox);
   void GetItemImageCoords(EMimageBuffer *imBuf, CMapDrawItem *item, float &outX, 
     float &outY, int pcInd = -1);

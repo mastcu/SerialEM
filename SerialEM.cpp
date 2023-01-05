@@ -953,6 +953,9 @@ BOOL CSerialEMApp::InitInstance()
 
   LoadStdProfileSettings();  // Load standard INI file options (including MRU)
 
+  // Create this first so ANY created class can set this pointer
+  mShiftManager = new CShiftManager();
+
   // Register the application's document templates.  Document templates
   //  serve as the connection between documents, frame windows and views.
 
@@ -1011,7 +1014,6 @@ BOOL CSerialEMApp::InitInstance()
   
   // Get the various task managers
   // Don't forget to add new ones to the destructor
-  mShiftManager = new CShiftManager();
   mShiftCalibrator = new CShiftCalibrator();
   mMontageController = new EMmontageController();
   mFocusManager = new CFocusManager();

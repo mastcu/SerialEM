@@ -145,13 +145,13 @@ public:
   bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
     float delX, float delY, bool ctrlKey, float distLim);
   bool MouseDragSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim);
-	CArray<CMapDrawItem *, CMapDrawItem *> *GetMapDrawItems(EMimageBuffer *imBuf, 
+	MapItemArray *GetMapDrawItems(EMimageBuffer *imBuf, 
     ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, CMapDrawItem **acquireBox);
   void AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY, IntVec &holeIndex, 
     bool custom, int numHoles, CMapDrawItem *item);
 	CNavigatorDlg(CWnd* pParent = NULL);   // standard constructor
   int GetCurrentRegistration() {return mCurrentRegistration;};
-  CArray<CMapDrawItem *, CMapDrawItem *> *GetItemArray() {return &mItemArray;};
+  MapItemArray *GetItemArray() {return &mItemArray;};
   CArray<ScheduledFile *, ScheduledFile *> *GetScheduledFiles() {return &mGroupFiles;};
   CArray<FileOptions *, FileOptions *> *GetFileOptArray() {return &mFileOptArray;};
   CArray<TiltSeriesParam *, TiltSeriesParam *> *GetTSparamArray() {return &mTSparamArray;};
@@ -302,7 +302,7 @@ private:
   BOOL mInitialized;
   CMapDrawItem *mItem;
   CMapDrawItem *mLoadItem;
-  CArray<CMapDrawItem *, CMapDrawItem *> mItemArray;
+  MapItemArray mItemArray;
   CArray<ScheduledFile *, ScheduledFile *> mGroupFiles;
   CArray<FileOptions *, FileOptions *> mFileOptArray;
   CArray<TiltSeriesParam *, TiltSeriesParam *> mTSparamArray;
@@ -650,10 +650,10 @@ public:
   int AddImagePositionOnBuffer(EMimageBuffer * imBuf, float imageX, float imageY, float stageZ, int groupID);
   int AddPolygonFromImagePositions(EMimageBuffer * imBuf, float *imageX, float *imageY, int numPts, float stageZ);
   void AddItemFromStagePositions(float *imageX, float *imageY, int numPts, float stageZ, int groupID);
-  int ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, CArray<CMapDrawItem *, CMapDrawItem *> &polyArray);
-  void AddAutocontPolygons(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, ShortVec &excluded,
+  int ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, MapItemArray &polyArray);
+  void AddAutocontPolygons(MapItemArray &polyArray, ShortVec &excluded,
     ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID, IntVec &indsInPoly);
-  void UndoAutocontPolyAddition(CArray<CMapDrawItem *, CMapDrawItem *> &polyArray, int numRemove, IntVec &indsInPoly);
+  void UndoAutocontPolyAddition(MapItemArray &polyArray, int numRemove, IntVec &indsInPoly);
   void RefillAfterAutocontPolys();
   bool OKtoAddMarkerPoint(void);
   void UpdateAddMarker(void);

@@ -1354,9 +1354,9 @@ void CNavHelper::RealignNextTask(int param)
         stageDelX = mRIdrawnTargetItem->mStageX - item->mStageX;
         stageDelY = mRIdrawnTargetItem->mStageY - item->mStageY;
         bInv = MatMul(bMat, mShiftManager->CameraToIS(item->mMapMagInd));
-        mShiftManager->ApplyScaleMatrix(bInv, stageDelX, stageDelY, delISX, delISY);
+        ApplyScaleMatrix(bInv, stageDelX, stageDelY, delISX, delISY);
         mScope->IncImageShift(delISX, delISY);
-        mShiftManager->ApplyScaleMatrix(bMat, -stageDelX / mImBufs->mBinning,
+        ApplyScaleMatrix(bMat, -stageDelX / mImBufs->mBinning,
           -stageDelY / mImBufs->mBinning, stageX, stageY);
         mImBufs->mImage->setShifts(shiftX + stageX, shiftY - stageY);
         report.Format("Aligned to marked target with image shift (%.1f  %1.f pixels)",
@@ -5284,14 +5284,14 @@ int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, boo
   // Transform hole positions
   if (custom) {
     for (ind = 0; ind < (int)params->customHoleX.size(); ind++) {
-      mWinApp->mShiftManager->ApplyScaleMatrix(aProd, params->customHoleX[ind],
+      ApplyScaleMatrix(aProd, params->customHoleX[ind],
         params->customHoleY[ind], transISX, transISY);
       params->customHoleX[ind] = transISX;
       params->customHoleY[ind] = transISY;
     }
   } else {
     for (ind = 0; ind < 2; ind++) {
-      mWinApp->mShiftManager->ApplyScaleMatrix(aProd, (float)params->holeISXspacing[ind],
+      ApplyScaleMatrix(aProd, (float)params->holeISXspacing[ind],
         (float)params->holeISYspacing[ind], transISX, transISY);
       params->holeISXspacing[ind] = transISX;
       params->holeISYspacing[ind] = transISY;

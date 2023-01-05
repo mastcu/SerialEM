@@ -498,10 +498,10 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   // Thus compute the stage vectors of the grid axes here and pass that in too
   mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
-  mWinApp->mShiftManager->ApplyScaleMatrix(mImToStage, 
+  ApplyScaleMatrix(mImToStage, 
     avgLen * (float)cos(avgAngle * DTOR),
     avgLen * (float)sin(avgAngle * DTOR), incStageX1, incStageY1);
-  mWinApp->mShiftManager->ApplyScaleMatrix(mImToStage, 
+  ApplyScaleMatrix(mImToStage, 
     avgLen * (float)cos(DTOR *(avgAngle + 90.)),
     avgLen * (float)sin(DTOR * (avgAngle + 90.)), incStageX2, incStageY2);
   mAddedGroupID = mNav->AddFoundHoles(&mXstages, &mYstages, &mExcluded,
@@ -713,7 +713,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   FloatVec *widths, *increments;
   IntVec *numCircles;
   FloatVec xBoundTemp, yBoundTemp;
-  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray;
+  MapItemArray *itemArray;
   MontParam *masterMont = mWinApp->GetMontParam();
   KImage *image;
   CMapDrawItem *item;
@@ -1267,9 +1267,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   mHelper->mFindHoles->getGridVectors(mGridImVecs.xpx, mGridImVecs.ypx, mGridImVecs.xpy,
     mGridImVecs.ypy, avgAngle, avgLen);
   adjInv = MatInv(mAdjustedStageToCam);
-  mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpx, 
+  ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpx, 
     mBufBinning * mGridImVecs.ypx, mGridStageVecs.xpx, mGridStageVecs.ypx);
-  mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
+  ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
     mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
 
 // Get stage positions, save matrix for converting average vector later
@@ -1288,7 +1288,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     if (mMontage && mPieceOn.size())
       mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
         &mYinPiece[ind]);
-    mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
+    ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
 
@@ -1367,8 +1367,8 @@ ScaleMat CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, CString
         "given mag";
       return st2is;
     }
-    mWinApp->mShiftManager->ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
-    mWinApp->mShiftManager->ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
+    ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
+    ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
   }
   if (setVecs) {
     msParams->holeISXspacing[0] = mat.xpx;

@@ -74,6 +74,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_strNum2Shots(_T(""))
 {
   mNonModal = true;
+  mShiftManager = mWinApp->mShiftManager;
   mRecordingRegular = false;
   mRecordingCustom = false;
   mSteppingAdjusting = 0;
@@ -487,8 +488,8 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   mSavedISY.clear();
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Update();
-  mSavedMouseStage = mWinApp->mShiftManager->GetMouseMoveStage();
-  mWinApp->mShiftManager->SetMouseMoveStage(false);
+  mSavedMouseStage = mShiftManager->GetMouseMoveStage();
+  mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
   mNavPointIncrement = -9;
   if (mSteppingAdjusting) {
@@ -531,7 +532,7 @@ void CMultiShotDlg::StopRecording(void)
     mSteppingAdjusting = 0;
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
-    mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
+    mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     if (mSavedLDForCamera >= 0) {
       if (!mWinApp->LowDoseMode()) {
         PrintfToLog("Low Dose Record parameters were NOT restored because you left Low "
@@ -614,8 +615,8 @@ void CMultiShotDlg::OnButSaveIs()
   CString str;
   ScaleMat sclMat, focMat;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0;
+  bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, spot, probe, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
@@ -675,12 +676,12 @@ void CMultiShotDlg::OnButSaveIs()
 
       // Convert IS to camera coordinates, back-rotate and scale them, and convert back to
       // unfocused IS values
-      mWinApp->mShiftManager->GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
+      mShiftManager->GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
         rotation);
-      sclMat = mWinApp->mShiftManager->MatScaleRotate(
-        mWinApp->mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), ind,
+      sclMat = mShiftManager->MatScaleRotate(
+        mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), ind,
           spot, probe, intensity, defocus), 1.f / scale, -rotation);
-      focMat = MatMul(sclMat, mWinApp->mShiftManager->CameraToIS(ind));
+      focMat = MatMul(sclMat, mShiftManager->CameraToIS(ind));
       ApplyScaleMatrix(focMat, ISX, ISY, ISX, ISY);
     }
   }
@@ -762,7 +763,7 @@ void CMultiShotDlg::OnButEndPattern()
 
   // Accept the current position if it is different from the last
   if (!mSteppingAdjusting && 
-    mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
+    mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
     ISY - mSavedISY[size], mActiveParams->customMagIndex) > 0.05) {
     mSavedISX.push_back(ISX);
     mSavedISY.push_back(ISY);
@@ -913,8 +914,8 @@ void CMultiShotDlg::ManageEnables(void)
   bool notRecording = !recording && !mSteppingAdjusting;
   bool useCustom = m_bDoMultipleHoles && m_bUseCustom &&
     mActiveParams->customHoleX.size() > 0;
-  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0 && mWinApp->LowDoseMode();
+  bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mShiftManager->GetFocusMagCals()->GetSize() > 0 && mWinApp->LowDoseMode();
   m_statBeamDiam.EnableWindow(enable);
   m_statBeamMicrons.EnableWindow(enable);
   m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
@@ -998,9 +999,9 @@ void CMultiShotDlg::ManageEnables(void)
   // Report spacing and angle
   if (mActiveParams->holeMagIndex > 0) {
     int camera = mWinApp->GetCurrentCamera();
-    ScaleMat s2c = mWinApp->mShiftManager->StageToCamera(camera, 
+    ScaleMat s2c = mShiftManager->StageToCamera(camera, 
       mActiveParams->holeMagIndex);
-    ScaleMat is2c = mWinApp->mShiftManager->IStoCamera(mActiveParams->holeMagIndex);
+    ScaleMat is2c = mShiftManager->IStoCamera(mActiveParams->holeMagIndex);
     if (s2c.xpx && is2c.xpx) {
       ScaleMat bMat = MatMul(is2c, MatInv(s2c));
       double delX = bMat.xpx * mActiveParams->holeISXspacing[0] + 

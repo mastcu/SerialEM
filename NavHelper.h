@@ -278,7 +278,7 @@ private:
   CameraParameters *mCamParams;
   EMbufferManager *mBufferManager;
   CNavigatorDlg *mNav;
-  CArray<CMapDrawItem *, CMapDrawItem *> *mItemArray;
+  MapItemArray *mItemArray;
   CArray<ScheduledFile *, ScheduledFile *> *mGroupFiles;
   CArray<FileOptions *, FileOptions *> *mFileOptArray;
   CArray<TiltSeriesParam *, TiltSeriesParam *> *mTSparamArray;

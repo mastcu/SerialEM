@@ -1780,7 +1780,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   // Convert to a change in specimen shift and use that to set item shift and other focus
   // position parameters or modify the mode shift
   conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
-  mShiftManager->ApplyScaleMatrix(aInv, offsetX, -offsetY, specX, specY);
+  ApplyScaleMatrix(aInv, offsetX, -offsetY, specX, specY);
   newAxis = imBuf->mBinning * (specX < 0 ? -1 : 1.) * sqrt(specX * specX + specY * specY);
   if (navArea) {
     item = mWinApp->mNavigator->GetSingleSelectedItem();
