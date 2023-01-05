@@ -607,22 +607,27 @@ void CMultiShotDlg::OnButIsToPt()
 // Save one image shift, or finish up for regular pattern when there are 4
 void CMultiShotDlg::OnButSaveIs()
 {
-  double ISX, ISY, stageX, stageY, stageZ;
+  double ISX, ISY, stageX, stageY, stageZ, intensity;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
-  float focusLim = -20.;
+  float scale, rotation, defocus = 0., focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString str;
-  int dir, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
+  ScaleMat sclMat, focMat;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0;
+  int dir, area, spot, probe, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
 
   // First time, record stage position and check for defocus
+  area = mWinApp->mScope->GetLowDoseArea();
   if (size == 1) {
     mWinApp->mScope->GetStagePosition(mRecordStageX, mRecordStageY, stageZ);
-    if ((imBufs->mLowDoseArea && imBufs->mConSetUsed == VIEW_CONSET && 
-      imBufs->mViewDefocus < focusLim) ||
-      (mWinApp->LowDoseMode() && mWinApp->mScope->GetLowDoseArea() == VIEW_CONSET &&
-      mWinApp->mScope->GetLDViewDefocus() < focusLim)) {
+    if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET || 
+      imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
+      (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area) &&
+      mWinApp->mScope->GetLDViewDefocus(area) < focusLim))) {
         str.Format("It appears that the scope is in the View Low Dose\n"
           "area with a View defocus offset bigger than %.0f microns.\n\n"
           "This procedure should be run closer to focus.\n"
@@ -646,6 +651,40 @@ void CMultiShotDlg::OnButSaveIs()
 
   // Get the IS and save it, compute spacing on 4th point for regular
   mWinApp->mScope->GetImageShift(ISX, ISY);
+
+  // But adjust IS for defocus first if possible
+  if (canAdjustIS) {
+
+    // Use parameters from image in A or from current area
+    if (imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
+      imBufs->mConSetUsed == SEARCH_CONSET)) {
+      defocus = imBufs->mViewDefocus;
+      imBufs->GetSpotSize(spot);
+      probe = imBufs->mProbeMode;
+      ind = imBufs->mMagInd;
+      imBufs->GetIntensity(intensity);
+    } else if (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area)) {
+      ldp += area;
+      defocus = mWinApp->mScope->GetLDViewDefocus(area);
+      probe = ldp->probeMode;
+      spot = ldp->spotSize;
+      ind = ldp->magIndex;
+      intensity = ldp->intensity;
+    }
+    if (defocus) {
+
+      // Convert IS to camera coordinates, back-rotate and scale them, and convert back to
+      // unfocused IS values
+      mWinApp->mShiftManager->GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
+        rotation);
+      sclMat = mWinApp->mShiftManager->MatScaleRotate(
+        mWinApp->mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), ind,
+          spot, probe, intensity, defocus), 1.f / scale, -rotation);
+      focMat = MatMul(sclMat, mWinApp->mShiftManager->CameraToIS(ind));
+      ApplyScaleMatrix(focMat, ISX, ISY, ISX, ISY);
+    }
+  }
+
   mSavedISX.push_back(ISX);
   mSavedISY.push_back(ISY);
   mWinApp->RestoreViewFocus();
@@ -874,6 +913,8 @@ void CMultiShotDlg::ManageEnables(void)
   bool notRecording = !recording && !mSteppingAdjusting;
   bool useCustom = m_bDoMultipleHoles && m_bUseCustom &&
     mActiveParams->customHoleX.size() > 0;
+  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0 && mWinApp->LowDoseMode();
   m_statBeamDiam.EnableWindow(enable);
   m_statBeamMicrons.EnableWindow(enable);
   m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
@@ -949,7 +990,9 @@ void CMultiShotDlg::ManageEnables(void)
   }
   m_butUseLastHoleVecs.EnableWindow(enable);
   if (notRecording)
-    m_statSaveInstructions.SetWindowText("Image shift should be measured near focus");
+    m_statSaveInstructions.SetWindowText(canAdjustIS ? 
+      "Measuring image shift on defocused View may work" : 
+      "Image shift should be measured near focus");
   str = "No regular pattern defined";
 
   // Report spacing and angle
