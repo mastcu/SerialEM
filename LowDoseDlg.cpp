@@ -929,10 +929,12 @@ void CLowDoseDlg::OnSetViewShift()
     return;
   if (shiftType < -1)
     topInd = 1;
-  ScaleMat bInv = mShiftManager->CameraToIS(mImBufs[topInd].mMagInd);
-  if (!bInv.xpx)
+  ScaleMat bInv, bMat = mShiftManager->FocusAdjustedISToCamera(&mImBufs[topInd]);
+  if (!bMat.xpx)
     return;
+  bInv = MatInv(bMat);
   mImBufs[topInd].mImage->getShifts(shiftX, shiftY);
+
   if (m_iOffsetShown) {
     refText += " or " + mModeNames[VIEW_CONSET];
     areaText = mModeNames[SEARCH_CONSET];
@@ -1012,7 +1014,8 @@ void CLowDoseDlg::OnSetViewShift()
       mViewShiftX[m_iOffsetShown], mViewShiftY[m_iOffsetShown]);
 
     // Convert image point in reference buffer to IS and transfer IS to main mag, subtract
-    bInv = mShiftManager->CameraToIS(mImBufs[1 - topInd].mMagInd);
+    bMat = mShiftManager->FocusAdjustedISToCamera(&mImBufs[1 - topInd]);
+    bInv = MatInv(bMat);
     delX = mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtX - 
       mImBufs[1 - topInd].mImage->getWidth() / 2.);
     delY = -mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtY - 
