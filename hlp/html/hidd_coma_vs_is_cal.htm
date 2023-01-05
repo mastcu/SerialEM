@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Coma vs. Image Shift Calibration Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_coma_vs_is_cal"></A><B><FONT size="3">Coma vs. Image
+      Shift Calibration Dialog</FONT></B></P>
+      <P> start the calibration of coma versus image shift after setting </P>
+This dialog box allows you to calibrate how beam tilt must be changed to achieve coma-free
+      alignment when an image shift is imposed.&nbsp; It has entries for the maximum image shift
+       to be tested and a rotation angle for the 
+        image shift vectors to apply.&nbsp; The calibration involves running the
+      <a href="menu_focus.htm#grabage">Coma-free Alignment by CTF</a>
+      routine to measure the beam tilt needed at four locations. At each position, 
+    the measured beam tilt is applied temporarily and astigmatism is measured so 
+    that its dependence on image shift is also calibrated.&nbsp; The calibration can then 
+    be applied by the multi-shot routine (see <a href="menu_navigator.htm#ID_OPTIONS_SETMULTI">Set
+      Multi-Shot Parameters</a>) and with several script commands. When this dialog 
+    is open in Low Dose mode, the areas that will be tested are drawn on a View or 
+    Search image.&nbsp; With a rotation of 0, image shift will be changed in +/-X 
+    then in +/-Y by the amount corresponding to the shift in microns entered in the
+    <strong>Distance to measure in each direction</strong> text box.&nbsp; When a 
+    non-zero value is set in the <strong>Rotation of measurement vectors </strong>
+    text box, these basic vectors are rotated by that amount.&nbsp; With these 
+    features, you can avoid running the coma-free alignment over a hole.</p>
+    <p>
+      It is important to realize that this calibration strictly applies only under the
+      current illumination conditions (specifically, the C2/C3 lens setting or
+      illuminated area, and the probe mode or alpha setting).&nbsp; When near parallel illumination, it may not change much
+      with beam changes; otherwise it might change considerably.&nbsp; This has
+      several consequences:</p>
+    <ul>
+      <li>It may be necessary to do the calibration once per session, after setting up
+        the illumination to be used for acquisition.</li>
+      <li>The calibration should be done in Low Dose mode if acquisition is to be done
+        in Low Dose mode</li>
+      <li>Because it depends on your settings for illumination, the calibration will be
+        saved in your settings file, not shared with others using other settings files.</li>
+      <li>The calibration can be checked with the the <strong>Test Multishot Positions</strong> 
+        button in <a href="menu_navigator.htm#hid_options_setmulti">Multi-Shot Parameters</a> 
+        dialog and with the script command 'TestNextMultiShot 2'
+        (see <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a>) 
+        ,or with a script like<br />
+&nbsp;&nbsp; FixComaByCTF<br />
+&nbsp;&nbsp; ImageShiftByMicrons 2 0 1 1<br />
+&nbsp;&nbsp; Delay 3<br />
+&nbsp;&nbsp; FixComaByCTF 1 1<br />
+&nbsp;&nbsp; FixAstigmatismByCTF 1 1<br />
+        where you could omit the first FixComaByCTF if you have already done the
+        coma-free alignment, the &quot;2 0&quot; can be replaced by an image shift of your choice,
+        the astigmatism test could be omitted, and you could add additional tests at other image shift positions.&nbsp; Such a
+        script could be used to explore how much the adjusted beam tilt gets off when
+        the beam intensity is changed.</li>
+    </ul>
+    </basefont>
+  </BODY>
+</HTML>
