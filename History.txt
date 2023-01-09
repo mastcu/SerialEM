@@ -20,6 +20,9 @@ collapsed.  Allowed easy deletion of multiple maps in a range with Shift D.
 12/29/22: Made program able to open MRC files missing some sections at the
 end.
 
+12/28/22: Fixed initialization of overlap and byte scaling when reading
+montage parameters for new file at item from Navigator file (In 4.0).
+
 12/23/22: Added dialog for autocontouring grid squares and converting selected
 ones to polygons.
 
