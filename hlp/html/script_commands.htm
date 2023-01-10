@@ -1196,8 +1196,9 @@
             for an ordinary acquisition.&nbsp; If the optional <b>#S</b> is non-zero, the plugin will <i>not</i> 
             stack frames, which is done by default in order to allow another single-shot image to be taken as 
             soon as possible; this
-            stacking takes extra time and delays the ability to take another dose-fractionation image.&nbsp; 
-            Single-shot and dose-fractionation images can be
+            stacking takes extra time and delays the ability to take another dose-fractionation image.&nbsp; However,
+            stacking is always done, and <b>#S</b> thus has no effect, if the property 'EarlyReturnUseSaveThread'
+             is set.&nbsp; Single-shot and dose-fractionation images can be
             requested without delay in the script.&nbsp; The single-shot images will be taken
             as soon as possible (after the
             frame stack has been accessed), do not enter <b>#S</b> if the next image will be a single-shot.&nbsp; Another

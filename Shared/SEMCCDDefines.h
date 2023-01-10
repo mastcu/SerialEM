@@ -43,6 +43,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define K2_ADD_FRAME_TITLE     (1 << 19) // 80000
 #define K2_SKIP_THRESH_PLUS    (1 << 20) // 100000
 #define K2_USE_TILT_ANGLES     (1 << 21) // 200000
+#define K2_USE_SAVE_THREAD     (1 << 22) // 400000
 
 // Flags for SetK2Parameters
 #define K2_ANTIALIAS_MASK      7         

@@ -522,6 +522,7 @@ public:
   SetMember(BOOL, DeferStackingFrames);
   GetSetMember(int, SmoothFocusExtraTime);
   GetSetMember(BOOL, K2SynchronousSaving);
+  GetSetMember(BOOL, EarlyRetUseSaveThread);
   SetMember(int, NumZLPAlignChanges);
   SetMember(float, MinZLPAlignInterval);
   SetMember(BOOL, LDwasSetToArea);
@@ -925,6 +926,7 @@ public:
   BOOL mNameFramesAsMRCS;       // Flag to have plugin use extension .mrcs for frame stack
   BOOL mSaveFrameStackMdoc;     // Flag to save one mdoc per frame stack/directory
   BOOL mK2SynchronousSaving;    // Flag to save the old way, synchronously
+  BOOL mEarlyRetUseSaveThread;  // Flag to use full grab stack and 2nd thread in SEMCCD
   CString mSuperResRef;         // Name of super-res reference to save with packed bytes
   CString mCountingRef;         // Name of counting mode reference file
   BOOL mRunCommandAfterSave;    // Flag to run a command after saving frames

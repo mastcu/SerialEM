@@ -395,6 +395,7 @@ CCameraController::CCameraController()
   mSkipK2FrameRotFlip = false;
   mNameFramesAsMRCS = false;
   mK2SynchronousSaving = false;
+  mEarlyRetUseSaveThread = false;
   mSmoothFocusExtraTime = 400;
   mInDisplayNewImage = false;
   mNeedToSelectDM = false;
@@ -4859,6 +4860,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       (mTD.DoingTiltSums && saving))) {
       numGrab = B3DMIN(numFrames, maxInRAM);
       numAsyncSum += 65536. * numGrab;
+      if (numFrames * 2 < maxInRAM && mEarlyRetUseSaveThread)
+        flags |= K2_USE_SAVE_THREAD;
     }
   }
   if (gpuFlags && mTestGpuInShrmemframe)

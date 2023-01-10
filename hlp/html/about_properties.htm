@@ -1001,6 +1001,19 @@
             The default is 12 for K2, or 32 for K3 (if there is not also a K2).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>EarlyReturnUseSaveThread</TD>
+          <TD>Set to 1 to do saving in a separate thread when doing an early return, thus allowing a
+             new acquisition of frames to begin before saving is finished. &nbsp;This entails
+             stacking all the frames in a temporary stack, which is itself a costly step, and testing 
+            has not shown any advantage to using a separate thread rather than avoiding the stacking
+            of frames, as is done in the Multiple Record routine and with the <b>#S</b> entry to
+            'EarlyReturnNextShot'. &nbsp;A thread will not be used when aligning in the plugin or when
+            making tilt sums or using a frame threshold. &nbsp;Also, the thread will not be used if
+            the memory limit controlled by the 'K2MaxRamStackGB' property is not at least twice the size
+            rquired to stack all frames.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>K2CountingReference</TD>
           <TD>Full path and name of counting mode software gain reference for K2 camera on the K2
             computer, so that the reference can be saved along with data when taking dose
