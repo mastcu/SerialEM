@@ -196,6 +196,8 @@ SCOPE_SAMENAME(CamGetTwoInt, GetNumStartupErrors);
 SCOPE_SAMENAME(CamTwoInt, BeginThreadAccess);
 SCOPE_SAMENAME(ScopeSetInt, EndThreadAccess);
 SCOPE_SAMENAME(GetChannelList, GetFEIChannelList);
+SCOPE_SAMENAME(GetBrightContrast, GetDetectorBrightContrast);
+SCOPE_SAMENAME(SetBrightContrast, SetDetectorBrightContrast);
 SCOPE_SAMENAME(LookupCamera, LookupScriptingCamera);
 SCOPE_SAMENAME(FEIimage, AcquireFEIimage);
 SCOPE_SAMENAME(FEIchannels, AcquireFEIchannels);

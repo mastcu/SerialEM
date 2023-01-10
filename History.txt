@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/10/22: Added script commands for getting and setting the brightness and
+contrast of an FEI STEM detector.
+
+1/9/22: Added ability to save K2/K3 in a separate thread so that a new
+frame-saving shot can be taken sooner after an early return.  This is only
+enabled by a property because tests so far have not shown any benefit.
+
 1/4/22: Added a high-defocus image shift calibration, which improves many
 operations when working with defocused View and Search images.
 

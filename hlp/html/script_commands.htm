@@ -1537,6 +1537,23 @@
             the 'ParseQuotedStrings' command and enclose each line of the DM script in single quotes.&nbsp; Command added in 4.0, 1/22/12.
           </TD>
         </TR>
+
+        <TR>
+          <TD class="scriptcommand">GetSTEMBrightContrast name</TD>
+          <TD>Reports the brightness and contrast for the STEM detector with the given <b>name</b>,
+            where this is the name in the user interface (the 'ChannelName', not the 'DetectorName',
+            in SerialEMproperties.txt.)&nbsp; This command only works for Thermo/FEI STEM, and 
+            STEM must be the currently selected camera.&nbsp; Command added in 4.1, 10-Jan-23.
+          </TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">SetSTEMBrightContrast #B #C name</TD>
+          <TD>Sets the brightness to <B>#B</B> and the contrast to <b>#C</b> for the STEM detector with
+             the given <b>name</b>; use '-1.e9' for a value to leave it unchanged and just set the other
+            value.&nbsp; This command only works for Thermo/FEI STEM, and 
+            STEM must be the currently selected camera.&nbsp; Command added in 4.1, 10-Jan-23.</TD>
+        </TR>
      </TABLE>
       <BR>
       <P><A name="buffer_file_commands"></A><B>Buffer and File Commands</B></P>

@@ -9056,6 +9056,36 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
   return retval;
 }
 
+bool CEMscope::GetSTEMBrightnessContrast(const char * name, double & bright, double & contrast)
+{
+  int error = 0;
+  if (!sInitialized || !mPlugFuncs->GetDetectorBrightContrast)
+    return false;
+
+  ScopeMutexAcquire("GetSTEMBrightnessContrast", true);
+  error = mPlugFuncs->GetDetectorBrightContrast(name, &bright, &contrast);
+  if (error)
+    SEMMessageBox(error == 1 ? "STEM detector not in currently available list for getting"
+      " brightness/contrast" : "Error getting STEM detector brightness/contrast");
+  ScopeMutexRelease("GetSTEMBrightnessContrast");
+  return error == 0;
+}
+
+bool CEMscope::SetSTEMBrightnessContrast(const char * name, double bright, double contrast)
+{
+  int error = 0;
+  if (!sInitialized || !mPlugFuncs->SetDetectorBrightContrast)
+    return false;
+
+  ScopeMutexAcquire("SetSTEMBrightnessContrast", true);
+  error = mPlugFuncs->SetDetectorBrightContrast(name, bright, contrast);
+  if (error)
+    SEMMessageBox(error == 1 ? "STEM detector not in currently available list for setting"
+      " brightness/contrast" : "Error setting STEM detector brightness/contrast");
+  ScopeMutexRelease("SetSTEMBrightnessContrast");
+  return error == 0;
+}
+
 // A single place to evaluate the appropriate beam blank state and whether a low dose area
 // needs to be switched to
 BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)

@@ -78,6 +78,8 @@ typedef void (*ScopeSetIntGetTwoDbl)(int, double *, double*);
 typedef void (*ScopeSetIntGetIntDbl)(int, int *, double*);
 typedef int (*GetChannelList)(int, int, long *, const char **, BOOL, long *, long *,
                               BOOL *);
+typedef int(*GetBrightContrast)(const char *, double *, double *);
+typedef int(*SetBrightContrast)(const char *, double, double);
 typedef int (*LookupCamera)(const char *, BOOL, int, int *, double *, double *);
 typedef int (*FEIimage)(void *, int, int, int, double, double, int, int, int, long, long, 
                         long *, const char *, BOOL, int, BOOL, BOOL, long *);

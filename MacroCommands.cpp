@@ -5914,6 +5914,32 @@ int CMacCmd::SetJeolSTEMflags(void)
   return 0;
 }
 
+// GetSTEMBrightContrast, SetSTEMBrightContrast
+int CMacCmd::GetSTEMBrightContrast(void)
+{
+  bool setIt = CMD_IS(SETSTEMBRIGHTCONTRAST);
+  int index;
+  double bright, contrast;
+  if (!mCamParams->STEMcamera || !mCamParams->FEItype)
+    ABORT_LINE("The currently selected camera must be the FEI STEM for line:\n\n");
+  SubstituteLineStripItems(mStrLine, setIt ? 3 : 1, mStrCopy);
+  for (index = 0; index < mCamParams->numChannels; index++)
+    if (mStrCopy.CompareNoCase(mCamParams->channelName[index]))
+      break;
+  if (index == mCamParams->numChannels)
+    ABORT_LINE("There is no detector with this \"ChannelName\" in the SerialEM camera"
+      " properties for line:\n\n");
+  if ((!setIt && !mScope->GetSTEMBrightnessContrast((LPCTSTR)mStrCopy, bright, contrast))
+    || (setIt && !mScope->SetSTEMBrightnessContrast((LPCTSTR)mStrCopy, mItemDbl[1], 
+      mItemDbl[2]))) {
+    AbortMacro();
+    return 1;
+  }
+  if (!setIt)
+    SetReportedValues(bright, contrast);
+  return 0;
+}
+
 // SetCameraPLAOffset
 int CMacCmd::SetCameraPLAOffset(void)
 {

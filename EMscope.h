@@ -923,6 +923,8 @@ public:
   bool TestSTEMshift(int type, int delx, int dely);
   void AddImageDetector(int id);
   bool SelectJeolDetectors(int * detInd, int numDet);
+  bool GetSTEMBrightnessContrast(const char *name, double &bright, double &contrast);
+  bool SetSTEMBrightnessContrast(const char *name, double bright, double contrast);
   BOOL NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea);
   BOOL NeedBeamBlanking(int screenPos, BOOL STEMmode);
   void ScopeUpdate(DWORD dwTime);
