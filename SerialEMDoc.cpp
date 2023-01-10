@@ -1502,9 +1502,16 @@ CString CSerialEMDoc::DateTimeForFrameSaving(void)
 }
 
 // Return the two components for date-time based filenames
-void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numericDate)
+void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numericDate, 
+  bool unique)
 {
+  static CTime lastDateTime = CTime::GetCurrentTime();
   CTime ctDateTime = CTime::GetCurrentTime();
+  if (unique && ctDateTime.GetHour() == lastDateTime.GetHour() && 
+    ctDateTime.GetMinute() == lastDateTime.GetMinute() && 
+    ctDateTime.GetSecond() == lastDateTime.GetSecond())
+    ctDateTime += CTimeSpan(0, 0, 0, 1);
+  lastDateTime = ctDateTime;
   if (numericDate)
     date.Format("%04d-%02d-%02d", ctDateTime.GetYear(), ctDateTime.GetMonth(),
       ctDateTime.GetDay());
