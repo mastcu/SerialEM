@@ -149,6 +149,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mPausedAcquire = false;
   mResumedFromPause = false;
   mNavBackedUp = false;
+  mPreCombineBackedUp = false;
   mSuperNumX = 0;
   mSuperNumY = 0;
   mSuperOverlap = 0;
@@ -7650,6 +7651,7 @@ int CNavigatorDlg::DoSave()
     return DoSaveAs();
   mDocWnd->ManageBackupFile(mNavFilename, mNavBackedUp);
   OpenAndWriteFile(false);
+  SavePreCombineFile();
   return 0;
 }
 
@@ -7665,6 +7667,8 @@ int CNavigatorDlg::DoSaveAs()
   mDocWnd->ManageBackupFile(mNavFilename, mNavBackedUp);
   OpenAndWriteFile(false);
   RemoveAutosaveFile();
+  mPreCombineBackedUp = false;
+  SavePreCombineFile();
   return 0;
 }
 
@@ -7728,6 +7732,29 @@ void CNavigatorDlg::RemoveAutosaveFile(void)
   mParam->autosaveFile = "";
   mDocWnd->SetShortTermNotSaved();
   mDocWnd->SaveShortTermCal();
+}
+
+// TEMPORARY routine for saving holes that have been combined, to track down bug in piece
+// positions
+void CNavigatorDlg::SavePreCombineFile(void)
+{
+  MapItemArray tempArray;
+  CString navSave = mNavFilename;
+  CString root, ext;
+  MapItemArray *holeArray = mHelper->mCombineHoles->GetPreCombineHoles();
+  mHelper->mCombineHoles->ClearSavedItemArray(false, true);
+  if (!holeArray->GetSize())
+    return;
+  tempArray.Append(mItemArray);
+  mItemArray.RemoveAll();
+  mItemArray.Append(*holeArray);
+  UtilSplitExtension(mNavFilename, root, ext);
+  mNavFilename = root + "_pre-combine.holes";
+  mDocWnd->ManageBackupFile(mNavFilename, mPreCombineBackedUp);
+  OpenAndWriteFile(false);
+  mNavFilename = navSave;
+  mItemArray.RemoveAll();
+  mItemArray.Append(tempArray);
 }
 
 // Finally, routine to write the file
@@ -8129,6 +8156,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     }
     name = mMergeName;
   }
+  mHelper->mCombineHoles->ClearSavedItemArray(true, true);
   UtilSplitPath(name, navRoot, str);
 
   try {

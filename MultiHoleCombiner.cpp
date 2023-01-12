@@ -12,6 +12,7 @@
 #include "EMscope.h"
 #include "ShiftManager.h"
 #include "MultiHoleCombiner.h"
+#include "MultiCombinerDlg.h"
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "holefinder.h"
@@ -47,8 +48,7 @@ CMultiHoleCombiner::CMultiHoleCombiner(void)
 
 CMultiHoleCombiner::~CMultiHoleCombiner(void)
 {
-  ClearSavedItemArray();
- 
+  ClearSavedItemArray(true, false);
 }
 
 /*
@@ -319,7 +319,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     mGrid[gridY[ind]][gridX[ind]] = ind;
 
   boxAssigns.resize(numPoints, -1);
-  ClearSavedItemArray();
+  ClearSavedItemArray(false, true);
   mIDsForUndo.clear();
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
@@ -1070,10 +1070,16 @@ void CMultiHoleCombiner::AddMultiItemToArray(
 }
 
 // Clear out the array of saved items
-void CMultiHoleCombiner::ClearSavedItemArray(void)
+void CMultiHoleCombiner::ClearSavedItemArray(bool originalToo, bool updateDlg)
 {
-  for (int ind = 0; ind < (int)mSavedItems.GetSize(); ind++)
-    delete mSavedItems[ind];
+  mPreCombineHoles.Append(mSavedItems);
   mSavedItems.RemoveAll();
+  if (originalToo) {
+    for (int ind = 0; ind < (int)mPreCombineHoles.GetSize(); ind++)
+      delete mPreCombineHoles[ind];
+    mPreCombineHoles.RemoveAll();
+  }
+  if (updateDlg && mWinApp->mNavHelper->mMultiCombinerDlg)
+    mWinApp->mNavHelper->mMultiCombinerDlg->UpdateEnables();
 }
 

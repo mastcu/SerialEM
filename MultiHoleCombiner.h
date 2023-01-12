@@ -30,6 +30,8 @@ public:
   void UndoCombination(void);
   bool IsItemInUndoList(int mapID);
   const char *GetErrorMessage(int error);
+  MapItemArray *GetPreCombineHoles() { return &mPreCombineHoles; };
+  void ClearSavedItemArray(bool originalToo, bool updateDlg);
 
 private:
   CNavHelper *mHelper;
@@ -43,7 +45,8 @@ private:
   int mNxGrid, mNyGrid;           // Size of grid points seem to fall on
   int mNumXholes, mNumYholes;     // Number of holes in current pattern
   int **mGrid;                    // Line pointers to grid array
-  MapItemArray mSavedItems;    // Items removed from Nav array
+  MapItemArray mSavedItems;       // Items removed from Nav array
+  MapItemArray mPreCombineHoles;    // All items that have been cleared out
   IntVec mIDsForUndo;             // IDs of the multi-shot items added
   IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
   std::set<int> mSetOfUndoIDs;    // A set so they can be looked up easily
@@ -65,5 +68,4 @@ private:
   void AddMultiItemToArray(MapItemArray *itemArray, int baseInd,
     float stageX, float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen,
     IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded);
-  void ClearSavedItemArray(void);
 };

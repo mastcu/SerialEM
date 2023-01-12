@@ -91,6 +91,7 @@ void CMultiCombinerDlg::OnUndoCombine()
 {
   if (!mCombiner->OKtoUndoCombine()) {
     AfxMessageBox("It is no longer possible to undo the last hole-combining", MB_EXCLAME);
+    UpdateEnables();
     return;
   }
   mCombiner->UndoCombination();
