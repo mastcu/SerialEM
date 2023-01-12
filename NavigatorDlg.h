@@ -325,6 +325,7 @@ private:
   BOOL mSaveAlignOnSave;
   BOOL mSaveProtectRecord;
   BOOL mNavBackedUp;        // Flag for managing whether to create a .bak
+  BOOL mPreCombineBackedUp; // Flag for precombined holes backed up
   int mSuperNumX, mSuperNumY;  // Number of super frames in X and Y
   int mSuperOverlap;           // Pixels of overlap
   short mAcqSteps[ACQ_MAX_STEPS * 2];        // List of actions to do
@@ -513,6 +514,7 @@ public:
   BOOL mMovingStage;
   BOOL StartedMacro(void);
   void RemoveAutosaveFile(void);
+  void SavePreCombineFile(void);
   int GetStockFilename(void);
   int MoveToItem(int index, bool skipZ = false);
   void ProcessAkey(BOOL ctrl, BOOL shift);
