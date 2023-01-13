@@ -318,9 +318,14 @@ IF %Minor% GEQ 50 (
   set versRange64=3.31-3.3x
   set SEMCCD64=SEMCCD-GMS3.31-64.dll
   set BIT64=1
+) ELSE IF EXIST SEMCCD-GMS3.30-64.dll (
+  set versRange64=3.30
+  set SEMCCD64=SEMCCD-GMS3.30-64.dll
+  set BIT64=1
 ) ELSE (
   echo.
-  echo The DM plugin for GMS 3.30 is no longer distributed
+  echo The DM plugin for GMS 3.30 is no longer distributed but you may find it
+  echo in the FrameAlign folder on the SerialEM download site
   GOTO :CheckPlugDone
 )
 

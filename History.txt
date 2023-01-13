@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/13/23: SEM_4-0-17
+1/13/23: Started writing a file along with the Navigator file, named
+..._pre-combine.holes, for narrowing down the source of a bug where Realign to
+Item fails on points after combining holes (In 4.0).
+
+1/13/23: Made some changes to reduce the possibility of the a script being run
+when Enter is pressed in its editing window (In 4.0).
+
 12/28/22: Fixed initialization of overlap and byte scaling when reading
 montage parameters for new file at item from Navigator file (In 4.0).
 

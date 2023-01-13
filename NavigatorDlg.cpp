@@ -34,6 +34,7 @@
 #include "NavImportDlg.h"
 #include "MultiShotDlg.h"
 #include "MultiCombinerDlg.h"
+#include "MultiHoleCombiner.h"
 #include "HoleFinderDlg.h"
 #include "ShiftToMarkerDlg.h"
 #include "FilterTasks.h"
