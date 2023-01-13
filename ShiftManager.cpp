@@ -455,8 +455,8 @@ void CShiftManager::EndMouseShifting(int index)
 void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 {
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
-  if (!imBuf->mHasUserPt || !imBuf->mImage || (mWinApp->DoingTasks() && 
-    !mWinApp->GetJustNavAcquireOpen()))
+  if (!(imBuf->mHasUserPt || imBuf->mIllegalUserPt) || !imBuf->mImage || 
+    (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()))
     return;
   mMouseEnding = true;
   mShiftPressed = forceStage;
