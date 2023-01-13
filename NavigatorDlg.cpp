@@ -7757,6 +7757,7 @@ void CNavigatorDlg::SavePreCombineFile(void)
   mItemArray.Append(tempArray);
 }
 
+
 // Finally, routine to write the file
 /*
  * HOW TO ADD ELEMENTS:

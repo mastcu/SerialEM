@@ -313,16 +313,21 @@ void CMacroEditer::JustCloseWindow(void)
 BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
 {
   static bool ctrlPressed = false;
+  static double ctrlTime = 0.;
+  float expireTime = 3000.f;
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB)
     pMsg->wParam = VK_OEM_3;
-  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_CONTROL)
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_CONTROL) {
     ctrlPressed = true;
+    ctrlTime = GetTickCount();
+  }
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
-  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed)
+  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed && 
+    SEMTickInterval(ctrlTime) < expireTime)
     m_editMacro.SetSel(0xFFFF0000);
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
-    m_butRun.IsWindowEnabled()) {
+    SEMTickInterval(ctrlTime) < expireTime && m_butRun.IsWindowEnabled()) {
     OnRunmacro();
     pMsg->wParam = 0x00;
   }
@@ -334,8 +339,11 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
 void CMacroEditer::OnRunmacro() 
 {
   mWinApp->RestoreViewFocus();
-  if (!mProcessor->MacroRunnable(m_iMacroNumber))
+  if (!mProcessor->MacroRunnable(m_iMacroNumber)) {
+    FixButtonFocus(m_butRun);
+    m_editMacro.SetFocus();
     return;
+  }
   TransferMacro(true);
   mProcessor->Run(m_iMacroNumber);
   FixButtonFocus(m_butRun);
