@@ -3430,7 +3430,7 @@ int CMacCmd::OpenOldFile(void)
   if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
   index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
-  if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC)
+  if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
     index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index);
   if (index != MRC_OPEN_NOERR)
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
