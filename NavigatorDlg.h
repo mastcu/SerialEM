@@ -657,7 +657,7 @@ public:
     ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID, IntVec &indsInPoly);
   void UndoAutocontPolyAddition(MapItemArray &polyArray, int numRemove, IntVec &indsInPoly);
   void RefillAfterAutocontPolys();
-  bool OKtoAddMarkerPoint(void);
+  bool OKtoAddMarkerPoint(bool justAdd);
   void UpdateAddMarker(void);
   bool RawStageIsRevisable(bool fastStage);
   bool MovingMapItem(void);

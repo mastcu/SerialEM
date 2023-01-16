@@ -612,7 +612,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int zoomFilters[] = {5, 4, 1, 0};  // lanczos3, 2, Blackman, box
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
-  bool bufferOK, filtering = false, saveCurHolePos = false;
+  bool bufferOK, drawUserPt, filtering = false, saveCurHolePos = false;
   BOOL drawIncluded, drawExcluded;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
@@ -926,14 +926,15 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Draw user point if one is set, otherwise draw line if that flag is set
-  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && !(skipExtra & 1)) {
+  drawUserPt = imBuf->mHasUserPt || imBuf->mIllegalUserPt;
+  if ((drawUserPt || imBuf->mHasUserLine) && !(skipExtra & 1)) {
     CPen pnSolidPen (PS_SOLID, thick2, RGB(0, 255, 0));
     CPoint point, point2;
-    crossLen = DSB_DPI_SCALE(imBuf->mHasUserPt ? 7 : 1);
+    crossLen = DSB_DPI_SCALE(drawUserPt ? 7 : 1);
     MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point);
     if (!imBuf->mDrawUserBox) 
       DrawCross(&cdc, &pnSolidPen, point, crossLen);
-    if (!imBuf->mHasUserPt) {
+    if (!drawUserPt) {
       MakeDrawPoint(&rect, imBuf->mImage, imBuf->mLineEndX, imBuf->mLineEndY, &point2);
       if (!imBuf->mDrawUserBox)
         DrawCross(&cdc, &pnSolidPen, point2, crossLen);
@@ -2209,7 +2210,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
   float shiftX, shiftY, angle, pixScale;
   int imX, imY;
   double defocus;
-  BOOL legal, used = false;
+  BOOL legal, used = false, showStage = false;
   CString lenstr;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
@@ -2246,6 +2247,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         imBuf->mHasUserPt = !(GetAsyncKeyState(VK_SHIFT) / 2);
         imBuf->mHasUserLine = false;
         imBuf->mDrawUserBox = false;
+        imBuf->mIllegalUserPt = false;
         imBuf->mUserPtX = shiftX;
         imBuf->mUserPtY = shiftY;
         mWinApp->mLowDoseDlg.Update();
@@ -2255,7 +2257,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
             imBuf->mCtfFocus1 = 0.;
             imX = 0;
             if (processImg->GetCtffindOnClick() &&
-              !mWinApp->mCamera->DoingContinuousAcquire()) {
+              !mWinApp->mCamera->DoingContinuousAcquire()) { 
               imX = FitCtfAtMarkedPoint(imBuf, lenstr, defocus, radii);
             }
             if (processImg->GetPlatePhase() > 0.001 || imX > 0)
@@ -2265,19 +2267,34 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           imX = (int)imBuf->mUserPtX;
           imY = (int)imBuf->mUserPtY;
           ShowImageValue(imBuf->mImage, imX, imY, MEDIUM_PANE);
-          if (mWinApp->mNavigator) {
-            if (mWinApp->mNavigator->MarkerStagePosition(imBuf, shiftX, shiftY)) {
-              lenstr.Format("%.2f, %.2f um", shiftX, shiftY);
-              mWinApp->SetStatusText(SIMPLE_PANE, lenstr, true);
-            }
-
-          }
+          showStage = true;
         }
         if (mWinApp->mNavigator)
           mWinApp->mNavigator->UpdateAddMarker();
       }
+      if (!legal && !mNavUsedLastLButtonUp) {
+        if (!(GetAsyncKeyState(VK_SHIFT) / 2)) {
+          imBuf->mHasUserPt = false;
+          imBuf->mHasUserLine = false;
+          imBuf->mDrawUserBox = false;
+          imBuf->mUserPtX = shiftX;
+          imBuf->mUserPtY = shiftY;
+          imBuf->mIllegalUserPt = true;
+          showStage = true;
+        } else
+          imBuf->mIllegalUserPt = false;
+        if (mWinApp->mNavigator)
+          mWinApp->mNavigator->UpdateAddMarker();
+        used = true;
+      }
       if (legal || used)
         DrawImage();
+      if (mWinApp->mNavigator && showStage) {
+        if (mWinApp->mNavigator->MarkerStagePosition(imBuf, shiftX, shiftY)) {
+          lenstr.Format("%.2f, %.2f um", shiftX, shiftY);
+          mWinApp->SetStatusText(SIMPLE_PANE, lenstr, true);
+        }
+      }
     } else if (mImBufs && mDrawingLine) {
 
       // If done drawing a line, output the length to log window
@@ -2628,6 +2645,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
             mDrawingLine = true;
             imBuf->mHasUserPt = false;
             imBuf->mHasUserLine = true;
+            imBuf->mIllegalUserPt = false;
             imBuf->mCtfFocus1 = 0.;
             imBuf->mUserPtX = prevX;
             imBuf->mUserPtY = prevY;

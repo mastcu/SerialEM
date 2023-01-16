@@ -98,7 +98,12 @@
         and the program will show the estimated defocus in the status bar and draw a set 
         of circles at the corresponding zeros of the CTF, or the program can fit to the 
         CTF if you have that option selected.&nbsp; See the
-        <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.</P>
+        <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.&nbsp; 
+        The marker point can actually be placed outside of the image, but very few 
+        operations recognize that as a valid position: the stage position in the status 
+        bar, <strong>Go to Marker</strong> in the Navigator window, and the Shift-P hot 
+        key and <strong>To Marker </strong>in the Image Alignment &amp; Focus control panel 
+        for shifting to the marker position.</P>
     <P><B><I>Shift - Left mouse button click:</I></B> Remove the marker point if one 
       is set.&nbsp; This is useful for getting rid of unwanted rings drawn on an FFT 
       or for showing the multiple Record pattern around the current Navigator point 
@@ -427,7 +432,8 @@
           <TR VALIGN="top">
             <TD width="85">Shift P</TD>
             <TD>Set alignment shift of image in buffer A to bring marker point to center of 
-              field, equivalent to right-mouse drag</TD>
+              field, equivalent to right-mouse drag;<br />
+              works with marker point outside the image.</TD>
           </TR>
           <TR VALIGN="top">
             <TD width="85">Shift R</TD>

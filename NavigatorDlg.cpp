@@ -708,7 +708,8 @@ void CNavigatorDlg::Update()
 // A call specifically for the Add Marker button which depends on the active buffer
 void CNavigatorDlg::UpdateAddMarker(void)
 {
-  m_butAddMarker.EnableWindow(OKtoAddMarkerPoint());
+  m_butAddMarker.EnableWindow(OKtoAddMarkerPoint(true));
+  m_butGotoMarker.EnableWindow(OKtoAddMarkerPoint(false));
 }
 
 // Return item type
@@ -2541,7 +2542,7 @@ void CNavigatorDlg::OnAddMarker()
   ScaleMat aMat;
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   mWinApp->RestoreViewFocus();
-  if (!OKtoAddMarkerPoint())
+  if (!OKtoAddMarkerPoint(true))
     return;
   BufferStageToImage(imBuf, aMat, delX, delY);
   MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, 0, &pcInd, &xInPiece,
@@ -2555,12 +2556,13 @@ void CNavigatorDlg::OnAddMarker()
 }
 
 // Function for whether it is OK to add or marker point, or go to one, for that matter
-bool CNavigatorDlg::OKtoAddMarkerPoint(void)
+bool CNavigatorDlg::OKtoAddMarkerPoint(bool justAdd)
 {
   float delX, delY;
   ScaleMat aMat;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  if (!imBuf->mHasUserPt || !BufferStageToImage(imBuf, aMat, delX, delY) ||
+  if ((!imBuf->mHasUserPt && justAdd) || (!justAdd && !imBuf->mHasUserPt && 
+    !imBuf->mIllegalUserPt) || !BufferStageToImage(imBuf, aMat, delX, delY) ||
     RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT || mWinApp->DoingTasks() ||
     mAcquireIndex >= 0 || mAddingPoly || mAddingPoints || mMovingItem || mLoadingMap)
     return false;
@@ -2594,7 +2596,7 @@ void CNavigatorDlg::OnGotoMarker()
   ScaleMat aMat;
  	EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
   mWinApp->RestoreViewFocus();
-  if (!imBuf->mHasUserPt) {
+  if (!imBuf->mHasUserPt && !imBuf->mIllegalUserPt) {
     AfxMessageBox("There is no marker point in the currently active image.\n\n"
       "Click with the left mouse button to place a temporary marker point.",
       MB_EXCLAME);

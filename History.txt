@@ -5,6 +5,9 @@ significance, for the stable release version
 ============================================================================
 1/16/22: Fixed OpenOldFile command with HDF file (In 4.0).
 
+1/13/23: Made it possible to set marker point outside image for shifting to
+marker (shift-P and To Marker button) and Go to Marker in Navigator.
+
 1/13/23: SEM_4-0-17
 1/13/23: Started writing a file along with the Navigator file, named
 ..._pre-combine.holes, for narrowing down the source of a bug where Realign to
@@ -13,17 +16,18 @@ Item fails on points after combining holes (In 4.0).
 1/13/23: Made some changes to reduce the possibility of the a script being run
 when Enter is pressed in its editing window (In 4.0).
 
-1/10/22: Added script commands for getting and setting the brightness and
+1/10/23: SEM_4-1-0beta10
+1/10/23: Added script commands for getting and setting the brightness and
 contrast of an FEI STEM detector.
 
-1/9/22: Added ability to save K2/K3 in a separate thread so that a new
+1/9/23: Added ability to save K2/K3 in a separate thread so that a new
 frame-saving shot can be taken sooner after an early return.  This is only
 enabled by a property because tests so far have not shown any benefit.
 
-1/4/22: Added a high-defocus image shift calibration, which improves many
+1/4/23: Added a high-defocus image shift calibration, which improves many
 operations when working with defocused View and Search images.
 
-1/4/22: Improved positions for coma-vs-IS cal when drawn on defocused View.
+1/4/23: Improved positions for coma-vs-IS cal when drawn on defocused View.
 
 12/29/22: Added mechanism for "reusable" files for Navigator acquire so that
 many polygons can be fit to montages and consolidated into a subset of files

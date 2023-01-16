@@ -65,6 +65,7 @@ public:
   BOOL mHasUserPt;
   float mUserPtX;
   float mUserPtY;
+  BOOL mIllegalUserPt;
   BOOL mHasUserLine;
   BOOL mDrawUserBox;
   float mLineEndX;
