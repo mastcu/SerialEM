@@ -4293,7 +4293,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">NewMap [#N text]</TD>
-          <TD>Makes the current image or montage a new Navigator map.&nbsp; If an optional <b>#N</b>
+          <TD>Makes a new Navigator map from the current image in buffer A or the current montage 
+            with overview in buffer B.&nbsp; A montage must belong to the current open file; a single image in A
+            must have been saved already, or be savable in the current file.&nbsp; If an optional <b>#N</b>
             is entered, <b>text</b> after that replaces, or is added to, the standard note for a
             map.&nbsp; <b>text</b> replaces the standard note if <b>#N</b> is 0, is added before it if
             <b>#N</b> is &lt; 0, or is added after it if <b>#N</b> &gt; 0.&nbsp; Places the index of the
