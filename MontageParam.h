@@ -64,6 +64,7 @@ struct MontParam {
   BOOL noHQDriftCorr;       // Turn off drift correction for HQ stage montage
   BOOL useHqParams;         // Enable all HQ-type params
   BOOL focusInBlocks;       // Focus in blocks
+  BOOL imShiftInBlocks;     // Use image shift in blocks
   int focusBlockSize;       // Size of blocks for focusing in when doing stage
   BOOL realignToPiece;      // Periodically realign to a full piece
   int realignInterval;      // Interval at which to do it

@@ -28,6 +28,18 @@
       set up.&nbsp; Thus, you need to turn on Low Dose mode before setting up a 
       montage to be taken in Low Dose.&nbsp; Several parameters cannot be changed when 
       in Low Dose mode.</P>
+    <P>Electronic image shift is used in a several different ways depending on the 
+      options selected below: basic montaging with image shift, hybrid montaging with 
+      image shift in blocks and stage shift to the blocks, and realigning to a piece 
+      with image shift.&nbsp; If you are doing&nbsp;extensive acquisition in any of these 
+      ways, you should see if your microscope is already using the new defaults for 
+      image shift settling introduced in SerialEM 4.0 and, if not, whether it is 
+      possible to do so.&nbsp; See the descriptions for the <a 
+          href="about_properties.htm#ISdelays">ImageShiftDelays</a> and ISdelayScaleFactor 
+        properties, and if necessary see the procedures described 
+        for&nbsp;<A href="menu_calibration.htm#hid_calibration_set_is_delay_factor">Set IS 
+          Delay Factor</A> in the Calibrate menu.</P>
+    <P><em><b>Montage Size-Related Controls</b></em></P>
       <P><B>Camera radio buttons</B></P>
       <P>If you have multiple cameras, each available camera will be listed here so that 
         you can specify or see what camera will be used for montaging. The current 
@@ -92,6 +104,7 @@
       <P>The total area is computed based on the pixel size, number of pieces, piece size 
         and overlaps. It is recomputed whenever you push a button or leave a text box, 
         but to be sure the value is current, just push the <B>Update</B> button.</P>
+    <P><b><em>Options Controlling How the Montage is Acquired</em></b></P>
       <P><B>Move stage instead of shifting Image</B></P>
       <P>Select this option to have the montage acquired by moving the stage instead of 
         using electronic image shift. Image shift is quite accurate but has a limited 
@@ -101,6 +114,26 @@
         shift has a much higher range, so you may be able to use image shift instead of 
         stage shift at the highest LM mode magnifications. In area-fitting mode, the 
         fit will be recomputed and it may not be possible to change this setting.</P>
+    <P><b>Image shift in blocks of yy x zz microns</b></P>
+    <P>With this option, a hybrid montage can be done with a mixture of stage and 
+      image shift.&nbsp; Image shift is used within an area of the selected size, and 
+      stage shift is used to move to the center of each block.&nbsp; The blocks should 
+      be small enough that image shift will stay within its allowed range; the size is 
+      specified in microns to give some indication of the image shift range required.&nbsp; 
+      When non-square pieces are being acquired, the number of image shift positions may be different 
+      in X and Y if that will result in a more nearly square area for the block.&nbsp; 
+      The overlap between pieces is the same regardless of which kind of shift is 
+      used, so the overlap must be set as large as it would need to be for a  
+      montage using just stage shift.&nbsp; If the montage size is not larger than the 
+      block size, the porgram falls back to doing a regular image shift montage.&nbsp; This option will save time only if the image shift 
+      settling times are fairly short (see paragraph on settling times at the beginning of this
+       page).&nbsp; Before adopting this method for routine use, you 
+      should assess whether it is indeed faster than a regular stage montage.</P>
+    <P>This option radically changes the order of piece acquisition. Without blocks, 
+      pieces are acquired in columns (along the Y axis of the camera). With blocks, a 
+      whole block is acquired (in columns just like a montage of that size), then the 
+      next block is acquired in Y, etc. After finishing a column of blocks, the 
+      program shifts over by the block size in X to start the next column.</P>
       <P><B>Skip pieces outside Navigator item</B></P>
       <P>With this option, it is possible to define a polygon in the Navigator and have 
         each montage that is taken include only pieces that have some portion inside 
@@ -123,7 +156,7 @@
         will make it a Navigator map.&nbsp;&nbsp; It is available regardless of whether Navigator is open, 
         in case you open it after setting up the montage. It is turned on when you set 
         up a montage through the Navigator; otherwise it is off by default. </P>
-    <P><strong>Close file when montage is done</strong></P>
+    <P><b>Close file when montage is done</b></P>
     <P>If this option is checked, then when you take a montage manually, the program 
       will close the file after the montage is done.&nbsp; In addition, if the file is 
       used to acquire montages with the Navigator and is already open when Acquire at 
@@ -164,7 +197,7 @@
       parameters is turned 
       off again, it will restore the previous setting of the stage move option if that 
       is known.</P>
-    <P><strong>Acquire with Multiple Record routine</strong></P>
+    <P><b>Acquire with Multiple Record routine</b></P>
     <P>If this option is checked, montages in Low Dose mode will be acquired with the 
       Multiple Record routine. There are several consequences:</P>
     <ul>
@@ -221,6 +254,7 @@
       &quot;high-quality&quot; stage montages (described in the next section).&nbsp; The initial 
       defaults are to have the option off for high-quality montages and on for regular 
       ones.</P>
+    <P><em><b>High-Quality Stage Montage Options</b></em></P>
       <P><B>Use settings for high-quality stage montage</B></P>
       <P>Use this option to activate a collection of settings that are relevant only when 
         doing large stage montages for acquisition of data to be analyzed, as opposed 
@@ -229,24 +263,29 @@
       <P>Select this option to have the autofocus routine run before acquiring each 
         piece. This will have no effect in Low Mag mode. Turn this on will turn off 
         'Autofocus in blocks', and vice versa.</P>
-      <P><STRONG>Repeat until drift is below a limit</STRONG></P>
+       <P><B>Autofocus in blocks of pieces</B></P>
+      <P>Select this option to acquire the montage in square blocks of a size selectable 
+        with the spin button, and to have the autofocus routine run at the center of 
+        each block before starting the block.&nbsp; This option changes the order of 
+        piece acquisition, as described above for the <b>Image shift in blocks</b> 
+        option.&nbsp; These two options can be used together, but are constrained to 
+        have the same blocks for image shift and focus.&nbsp; In fact, the spinners for 
+        the two options change the same underlying number, with the number of pieces in 
+        each dimension shown for this option and the size in microns shown for the
+        <b>Image shift in blocks</b> option.&nbsp; When both options are 
+        selected, only the spin button for the&nbsp; <b>Image shift in blocks</b> 
+        option is enabled.</P>
+     <P><b>Repeat until drift is below a limit</b></P>
       <P style="Z-INDEX: 0">Select this option to have autofocus repeated if the drift, 
         in nanometers per second, is above the limit that you enter in the text 
-        box.&nbsp; The option is available only when autofocusing at each piece.&nbsp; 
+        box.&nbsp; The option is available both when autofocusing at each piece and when 
+        using autofocus together with image shift in blocks, but is not available when 
+        just focusing in blocks.&nbsp; 
         The program will repeat the autofocus up to five times if necessary, then go on 
         to acquire the piece.&nbsp; You must have the <A href="menu_focus.htm##hid_focus_driftprotection">Drift 
           Protection</A>&nbsp;option in the focus menu selected for 
         this&nbsp;operation to work.</P>
-      <P><B>Autofocus in blocks of pieces</B></P>
-      <P>Select this option to acquire the montage in square blocks of a size selectable 
-        with the spin button, and to have the autofocus routine run at the center of 
-        each block before starting the block. This option radically changes the order 
-        of piece acquisition. Without blocks, pieces are acquired in columns (along the 
-        Y axis of the camera). With blocks, a whole block is acquired (in columns just 
-        like a montage of that size), then the next block is acquired in Y, etc. After 
-        finishing a column of blocks, the program shifts over by the block size in X to 
-        start the next column.</P>
-      <P><STRONG>Realign with image shift up to a limit</STRONG></P>
+      <P><b>Realign with image shift up to a limit</b></P>
       <P style="Z-INDEX: 0">This option can be used to deal with several problems with 
         stage montages: irregular movements that produce variable amounts of overlap; 
         long-term drift that results in overlaps between very long columns being 
@@ -261,22 +300,20 @@
         the text box, in microns.&nbsp; The image is aligned and image shift is then 
         set to take a picture that is in exactly the right location relative to the 
         neighbor. However, if the alignment shift is larger than the percentage 
-        indicated in the text box for <STRONG>Maximum alignment shift as % of piece</STRONG>, 
+        indicated in the text box for <b>Maximum alignment shift as % of piece</b>, 
         then it will be ignored.</P>
       <P style="Z-INDEX: 0">
-        This option cannot be used together with focusing in blocks.&nbsp; Using image 
-        shift can be slow because of the settling time required after an image 
-        shift.&nbsp;&nbsp;If you are doing&nbsp;extensive acquisition with this option, 
-        you should see if you can reduce this delay time using the procedure described 
-        for&nbsp;<A href="menu_calibration.htm#hid_calibration_set_is_delay_factor">Set IS 
-          Delay Factor</A> in the Calibrate menu.</P>
+        This option cannot be used together with either focusing in blocks or 
+        image shifting in blocks.&nbsp; Using image 
+        shift here can be slow because of the settling time required after an image 
+        shift; see the note at the beginning of this page.&nbsp;&nbsp;I</P>
     <P style="Z-INDEX: 0">
         With this option selected, the program will remind you to calibrate image shift 
         for the current magnification, but only if the possible error in overlap caused 
         by plausible errors in the current shift calibration is large enough.&nbsp; 
         Large amounts of image shift as a fraction of the frame size, and narrow overlap 
         zones, will trigger this reminder.</P>
-      <P style="Z-INDEX: 0"><STRONG>Go from center out; anchor at lower mag</STRONG></P>
+      <P style="Z-INDEX: 0"><b>Go from center out; anchor at lower mag</b></P>
       <P>When using realignment with image shift, this option can be used to protect 
         against the possibility of poor correlation alignments at the periphery of the 
         area being acquired (e.g., due to grid bars or empty resin).&nbsp; Pieces will 

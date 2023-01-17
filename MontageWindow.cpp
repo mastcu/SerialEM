@@ -293,7 +293,8 @@ void CMontageWindow::Update()
   m_butEvalMultiple.EnableWindow(bEnable && !noShift && !usingMS && 
     (!mWinApp->Montaging() || !mMontageController->TreatAsGridMap()));
   m_butCorrectDrift.EnableWindow(bEnable && !mParam->moveStage && !noShift && !usingMS);
-  m_butAdjustFocus.EnableWindow(bEnable && !mParam->moveStage && !usingMS);
+  m_butAdjustFocus.EnableWindow(bEnable && (!mParam->moveStage || 
+    (mParam->imShiftInBlocks && mParam->focusBlockSize > 1)) && !usingMS);
 
   // If montaging is on, fix the prescan maximum and actual values
   if (mWinApp->Montaging()) {

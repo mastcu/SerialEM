@@ -1793,6 +1793,9 @@ int CMacCmd::Montage(void)
   if (!mWinApp->Montaging())
     ABORT_NOLINE("The script contains a montage statement and \n"
       "montaging is not activated");
+  if (mWinApp->mMontageController->GetRunningMacro())
+    ABORT_NOLINE("The script contains a montage statement but \n"
+      "it was run during a montage");
   if (mWinApp->mMontageController->StartMontage(index, false,
     (float)(truth ? mItemDbl[1] : 0.), (truth && !mItemEmpty[2]) ? mItemInt[2] : 0,
     truth && mItemInt[3] != 0,
@@ -1800,6 +1803,21 @@ int CMacCmd::Montage(void)
     AbortMacro();
   mTestMontError = !truth;
   mTestScale = !truth;
+  return 0;
+}
+
+// ReportMontagePiece
+int CMacCmd::ReportMontagePiece(void)
+{
+  int xPc, yPc, ixPc, iyPc;
+  if (mWinApp->mMontageController->GetCurrentPieceInfo(mItemInt[1] != 0, xPc, yPc, ixPc,
+    iyPc))
+    ABORT_NOLINE("ReportMontagePiece can be used only in a script run from a montage");
+  SetRepValsAndVars(2, xPc + 1, yPc + 1, ixPc + 1, iyPc + 1, mMontP->xNframes, 
+    mMontP->yNframes);
+  mLogRpt.Format("%s montage piece: %d %d at %d %d, montage is %d x %d", mItemInt[1] ? 
+    "next" : "current", xPc + 1, yPc + 1, ixPc + 1, iyPc + 1, mMontP->xNframes,
+    mMontP->yNframes);
   return 0;
 }
 
@@ -2848,6 +2866,8 @@ int CMacCmd::ReadFile(void)
   if (ConvertBufferLetter(mStrItems[2], iy0, false, ix0, report))
     ABORT_LINE(report);
   mBufferManager->SetBufToReadInto(ix0);
+  if (mWinApp->Montaging() && mWinApp->mMontageController->GetRunningMacro())
+    ABORT_LINE("Trying to read from a montage in script run from a montage in line:\n\n");
   if (mWinApp->Montaging())
     index2 = mWinApp->mMontageController->ReadMontage(index, NULL, NULL, false, true);
   else {
@@ -2981,6 +3001,9 @@ int CMacCmd::OpenNewFile(void)
   CString report;
   int index, index2, ix0, iy0;
   CFileStatus status;
+  if (mWinApp->mMontageController->DoingMontage() &&
+    mWinApp->mMontageController->GetRunningMacro())
+    ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
 
   index = 1;
   if (CMD_IS(OPENNEWMONTAGE)) {
@@ -3427,6 +3450,9 @@ int CMacCmd::OpenOldFile(void)
   CFile *cfile;
   int index;
 
+  if (mWinApp->mMontageController->DoingMontage() &&
+    mWinApp->mMontageController->GetRunningMacro())
+    ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
   if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
   index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
@@ -3439,6 +3465,9 @@ int CMacCmd::OpenOldFile(void)
 
 int CMacCmd::UserOpenOldFile(void)
 {
+  if (mWinApp->mMontageController->DoingMontage() &&
+    mWinApp->mMontageController->GetRunningMacro())
+    ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
   if (mWinApp->mDocWnd->DoFileOpenold())
     SUSPEND_LINE("because existing image file was not opened in line:\n\n");
   return 0;
@@ -3447,6 +3476,9 @@ int CMacCmd::UserOpenOldFile(void)
 // CloseFile
 int CMacCmd::CloseFile(void)
 {
+  if (mWinApp->mMontageController->DoingMontage() &&
+    mWinApp->mMontageController->GetRunningMacro())
+    ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
   if (mWinApp->mStoreMRC) {
     mWinApp->mDocWnd->DoCloseFile();
   } else if (!mItemEmpty[1]) {

@@ -23,6 +23,8 @@ public:
 	BOOL SizeIsFeasible(int camInd, int binning);
 	void ValidateEdits();
 	void UpdateSizes();
+  void UpdateFocusBlockSizes();
+  CString FormatMicronSize(int xxSize, int ySize, float Pixel);
 	BOOL mSizeLocked;
 	MontParam mParam;
 	CMontageSetupDlg(CWnd* pParent = NULL);   // standard constructor
@@ -215,6 +217,12 @@ public:
   CButton m_butUseMultishot;
   BOOL m_bUseMultishot;
   afx_msg void OnUseMultishot();
+  CButton m_butImShiftInBlocks;
+  BOOL m_bImShiftInBlocks;
+  afx_msg void OnCheckImshiftInBlocks();
+  CStatic m_statISBlockSize;
+  CString m_strISBlockSize;
+  CSpinButtonCtrl m_sbcISBlocksize;
 };
 
 //{{AFX_INSERT_LOCATION}}

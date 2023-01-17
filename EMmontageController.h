@@ -118,6 +118,8 @@ class EMmontageController
   GetMember(BOOL, UseContinuousMode);
   GetSetMember(float, GridMapCutoffInvUm);
   GetSetMember(float, GridMapMinSizeMm);
+  GetSetMember(int, MacroToRun);
+  GetSetMember(bool, RunningMacro);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -172,13 +174,17 @@ class EMmontageController
   double mBaseISX, mBaseISY;      // Base image shifts
   double mBaseStageX, mBaseStageY;  // Starting stage position
   double mBaseFocus;              // Base focus
-  ScaleMat mBinv;                 // Matrix for getting from pixels to Image Shift
+  ScaleMat mBinv;                 // Matrix to get from pixels to Image or Stage Shift
+  ScaleMat mCamToIS;              // Pixels to image shift matrix for IS in blocks
   StageMoveInfo mMoveInfo;        // Structure for stage moves
   bool mDoStageMoves;             // Replacement for moveStage in param, in case multishot
   BOOL mMovingStage;              // Flag that stage is being moved
   BOOL mRestoringStage;           // Flag for final stage move at end
   BOOL mFocusing;                 // Flag for focusing after stage move
   float mStageBacklash;           // Basic backlash for moving stage
+  bool mImShiftInBlocks;          // Flag that we are image shifting in blocks
+  int mFirstResumePiece;          // Index of first piece after resume for block actions
+  bool mUsingImageShift;          // Convenience flag for not stage or doing block IS
 
   int   mXCorrBinning;            // Binning to apply to extracted boxes
   int   mXYpieceSize[2];          // Frame size and overlap in arrays for montXC functions
@@ -339,6 +345,8 @@ class EMmontageController
   int mLastNumDoing;               // GetRemainingTime was last called
   int mInitialNumDoing;
   CArray<MontLimits, MontLimits> mMontageLimits;
+  int mMacroToRun;                // Script, numbered from 1
+  bool mRunningMacro;             // Flag that we started a script
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
@@ -383,6 +391,9 @@ public:
   int StoreAlignedCoordsInAdoc(void);
   void SetMiniOffsetsParams(MiniOffsets & mini, int xNframes, int xFrame, int xDelta, int yNframes, int yFrame, int yDelta);
   void AddRemainingTime(CString &report);
+  void BlockSizesForNearSquare(int sizeX, int sizeY, int xOverlap, int yOverlap, int blockSize,
+    int &numInX, int &numInY);
+  int GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int &ixPc, int &iyPc);
   int TestStageError(double ISX, double ISY, double &sterr);
   int SetImageShiftTestClip(double adjISX, double adjISY, float delayFac);
 };

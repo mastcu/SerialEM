@@ -90,6 +90,10 @@
         correlating larger areas in the overlap zones. If there are grid bars in the
         overlap zones between images, the correlations can easily fail and either of
         these options may make things worse.</P>
+    <P>As of SerialEM 4.1, 15-Jan-23, it is possible to use image and stage shift 
+      together to move to the piece positions.&nbsp; With this hybrid method, image 
+      shift is applied in blocks that are small enough for the allowed range of image 
+      shift, and stage shift is used to move to the center of each block. </P>
       <P>When montages are acquired with stage movement, it is possible to resume a
         montage that is stopped for some reason. To resume a montage, just start the
         montage by any of the usual means. The program will ask if you want to resume
@@ -111,10 +115,10 @@
         height and thus the focus will change by only 0.18 &micro;m over a
         distance of 10 &micro;m.
         Thus, there is also an option to acquire the montage in successive square
-        blocks of images, focusing only in the center of each block. On a Thermo/FEI scope, this
+        blocks of images, focusing only in the center of each block. This method can be 
+        used in conjunction with image shifting within the same blocks.&nbsp; On a Thermo/FEI scope, this
         should save significant amounts of time. On a JEOL, the time savings may be
-        less because of the slower stage and it may result in more variable overlaps
-        between adjacent pieces.</P>
+        less if the stage speed is slower, unless image shift is used within the blocks.</P>
       <P>If there is enough drift after a stage movement to impair the quality of the
         images, you may need to increase the delay between stage movement and image
         acquisition.&nbsp; In addition, if you are focusing for each piece, you can
@@ -127,7 +131,7 @@
         with&nbsp;very little variability in the overlaps between pieces, which allows
         the overlap to be kept at 10% or even reduced to as low as 5%.&nbsp; In
         addition to dealing with drift, this realignment can overcome the&nbsp;effects
-        of cyclical variations in compustage movement, documented by Pulokas et al.,
+        of cyclical variations in compustage movement on older microscopes, documented by Pulokas et al.,
         1999.&nbsp; Over a certain range of image sizes (around 4 microns), these
         effects can be large enough&nbsp;to&nbsp;cause inadequate&nbsp;overlap between
         adjacent pieces unless the nominal overlap is set very&nbsp;high
@@ -157,7 +161,8 @@
         help for the <A href="hidd_montagesetup.htm">Montage Setup dialog box</A>.</P>
       <P>There is an option to skip the correlations needed to shift pieces into
         register. These correlations are of no real value if the data are to be
-        processed elsewhere and can consume significant time in a large acquisition.</P>
+        processed elsewhere and can consume significant time in a large acquisition, 
+        although they are often done in the background during acquisition.</P>
       <P>In stage montages, the effects of backlash are minimized by always moving the
         stage to a piece position from the same direction. For each column of pieces to
         be acquired, there is a backlash correction movement in the opposite direction.

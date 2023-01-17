@@ -1319,10 +1319,11 @@
 #define IDC_RVIEWOFFSET                 2315
 #define IDC_STAT_SUBSET_TO              2317
 #define IDC_STAT_SUBSET_PAREN           2318
-#define IDC_STAT_CYCLE_TO               2318
+#define IDC_STAT_CYCLE_TO               3141
 #define IDC_STAT_USE_ONLY_GROUP         2319
 #define IDC_STAT_LINE1                  2320
 #define IDC_FA_EDIT_SUB_START           2321
+#define IDC_STAT_LINE3                  3142
 #define IDC_FA_EDIT_SUB_END             2322
 #define IDC_RSEARCH                     2323
 #define IDC_RVIEW_OFFSET                2324
@@ -2102,6 +2103,11 @@
 #define IDC_RLEAVE_OPEN                 3134
 #define IDC_RONLY_IF_NEEDED             3135
 #define IDC_CHECK_CHANGE_REUSABLE       3136
+#define IDC_CHECK_IMSHIFT__IN_BLOCKS    3137
+#define IDC_CHECK_IMSHIFT_IN_BLOCKS     3137
+#define IDC_STAT_IS_BLOCKSIZE           3138
+#define IDC_SPIN_IS_BLOCKSIZE           3139
+#define IDC_STAT_IS_BLOCKPIECES         3140
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2649,7 +2655,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        279
 #define _APS_NEXT_COMMAND_VALUE         33508
-#define _APS_NEXT_CONTROL_VALUE         3137
+#define _APS_NEXT_CONTROL_VALUE         3143
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

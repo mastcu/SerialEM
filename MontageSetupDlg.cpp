@@ -39,7 +39,8 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
   IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
   IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, IDC_CHECK_USE_MULTISHOT,
-  IDC_CHECK_CLOSE_WHEN_DONE, PANEL_END,
+  IDC_CHECK_CLOSE_WHEN_DONE, IDC_CHECK_IMSHIFT_IN_BLOCKS, IDC_STAT_IS_BLOCKSIZE,
+  IDC_STAT_IS_BLOCKPIECES, IDC_SPIN_IS_BLOCKSIZE, IDC_STAT_LINE3, PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS, 
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES, 
   IDC_SPIN_BLOCK_SIZE, IDC_STAT_DELAY, 
@@ -79,6 +80,8 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bUseSearchInLD(FALSE)
   , m_bUseMontMapParams(FALSE)
   , m_bUseMultishot(FALSE)
+  , m_bImShiftInBlocks(FALSE)
+  , m_strISBlockSize(_T(""))
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -226,6 +229,11 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_bUseMontMapParams);
   DDX_Control(pDX, IDC_CHECK_USE_MULTISHOT, m_butUseMultishot);
   DDX_Check(pDX, IDC_CHECK_USE_MULTISHOT, m_bUseMultishot);
+  DDX_Control(pDX, IDC_CHECK_IMSHIFT_IN_BLOCKS, m_butImShiftInBlocks);
+  DDX_Check(pDX, IDC_CHECK_IMSHIFT_IN_BLOCKS, m_bImShiftInBlocks);
+  DDX_Control(pDX, IDC_STAT_IS_BLOCKSIZE, m_statISBlockSize);
+  DDX_Text(pDX, IDC_STAT_IS_BLOCKSIZE, m_strISBlockSize);
+  DDX_Control(pDX, IDC_SPIN_IS_BLOCKSIZE, m_sbcISBlocksize);
 }
 
 
@@ -256,6 +264,8 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_FOCUS_EACH, OnCheckFocusEach)
   ON_BN_CLICKED(IDC_CHECK_FOCUS_BLOCKS, OnCheckFocusBlocks)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BLOCK_SIZE, OnDeltaposSpinBlockSize)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_IS_BLOCKSIZE, OnDeltaposSpinBlockSize)
+
 	//}}AFX_MSG_MAP
   //ON_BN_CLICKED(IDC_CHECK_REALIGN, OnCheckRealign)
   ON_BN_CLICKED(IDC_BUT_RESET_OVERLAPS, OnButResetOverlaps)
@@ -269,6 +279,7 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_USE_SEARCH_IN_LD, OnUseSearchInLD)
   ON_BN_CLICKED(IDC_CHECK_USE_MONT_MAP_PARAMS, OnUseMontMapParams)
   ON_BN_CLICKED(IDC_CHECK_USE_MULTISHOT, OnUseMultishot)
+  ON_BN_CLICKED(IDC_CHECK_IMSHIFT_IN_BLOCKS, OnCheckImshiftInBlocks)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -421,6 +432,8 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_sbcMinOv.SetPos(100);
   m_sbcBlockSize.SetRange(0,100);
   m_sbcBlockSize.SetPos(50);
+  m_sbcISBlocksize.SetRange(0, 100);
+  m_sbcISBlocksize.SetPos(50);
   m_sbcAnchorMag.SetRange(0,200);
   m_sbcAnchorMag.SetPos(100);
   if (mParam.anchorMagInd <= 0)
@@ -483,6 +496,7 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mParam.binning, 
     &mCamParams[mCurrentCamera]));
   m_bMoveStage = mParam.moveStage;
+  m_bImShiftInBlocks = mParam.imShiftInBlocks;
   m_bSkipOutside = mParam.skipOutsidePoly;
   m_editSkipOutside.EnableWindow(m_bSkipOutside &&!(mLowDoseMode && mParam.useMultiShot));
   m_iInsideNavItem = mParam.insideNavItem + 1;
@@ -499,7 +513,6 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_fNmPerSec = mParam.driftLimit;
   m_bFocusBlocks = mParam.focusInBlocks;
   mParam.focusBlockSize = B3DMAX(2, mParam.focusBlockSize);
-  m_strBlockSize.Format("%d x %d", mParam.focusBlockSize, mParam.focusBlockSize);
   //m_bRealign = mParam.realignToPiece;
   //m_iRealignInterval = mParam.realignInterval;
   m_iMaxAlign = B3DNINT(100. * mParam.maxAlignFrac);
@@ -864,27 +877,42 @@ void CMontageSetupDlg::OnRcamera()
 void CMontageSetupDlg::OnOK() 
 {
   NavParams *navp = mWinApp->GetNavParams();
+  CString mess;
+  int numX, numY;
   int lowestM = mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
   int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
   ValidateEdits();
   int xExtent = (m_iXsize - mXoverlap) * (m_iXnFrames - 1);
   int yExtent = (m_iYsize - mYoverlap) * (m_iYnFrames - 1);
+  if (m_bMoveStage && m_bImShiftInBlocks) {
+    mWinApp->mMontageController->BlockSizesForNearSquare(m_iXsize, m_iYsize, mXoverlap,
+      mYoverlap, mParam.focusBlockSize, numX, numY);
+    xExtent = (m_iXsize - mXoverlap) * (numX - 1);
+    yExtent = (m_iYsize - mYoverlap) * (numY - 1);
+  }
   double maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
   double montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * mParam.binning *
     mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex) / 2.;
-  if (!m_bMoveStage && !mFittingItem && montIS > maxIS) {
-    CString mess;
-    mess.Format("The largest image shift needed for the montage is\n"
+  if (((!m_bMoveStage && !mFittingItem) || (m_bMoveStage && m_bImShiftInBlocks)) && 
+    montIS > maxIS) {
+    mess.Format("The largest image shift needed for the %s is\n"
       "%.1f microns, bigger than the maximum image shift of\n"
       "%.1f microns allowed when fitting a montage to a polygon.\n"
-      " (This limit is controlled by the property %s)\n\n"
-      "Do you want to use stage movement instead for this montage?", montIS, maxIS,
+      " (This limit is controlled by the property %s)\n\n", 
+      m_bMoveStage ? "blocks" : "montage", montIS, maxIS,
       magIndex >= lowestM ? "NavigatorMaxMontageIS" : "NavigatorMaxLMMontageIS");
-    if (AfxMessageBox(mess, MB_YESNO | MB_ICONQUESTION) == IDYES) {
-      m_bMoveStage = true;
-      UpdateData(false);
-      OnMovestage();
-      return;
+    if (m_bMoveStage) {
+      mess += "Do you want to proceed with this block size with image shift?";
+      if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
+        return;
+    } else {
+      mess += "Do you want to use stage movement instead for this montage?";
+      if (AfxMessageBox(mess, MB_YESNO | MB_ICONQUESTION) == IDYES) {
+        m_bMoveStage = true;
+        UpdateData(false);
+        OnMovestage();
+        return;
+      }
     }
   }
 
@@ -907,6 +935,7 @@ void CMontageSetupDlg::UnloadParamData(void)
   mParam.yOverlap = mYoverlap;
   mParam.yFrame = m_iYsize;
   mParam.moveStage = m_bMoveStage;
+  mParam.imShiftInBlocks = m_bImShiftInBlocks;
   mParam.ignoreSkipList = m_bIgnoreSkips;
   mParam.skipOutsidePoly = m_bSkipOutside;
   mParam.insideNavItem = m_iInsideNavItem - 1;
@@ -942,8 +971,7 @@ void CMontageSetupDlg::UnloadParamData(void)
 // Update pixel size, total pixels and total size
 void CMontageSetupDlg::UpdateSizes()
 {
-  float totalX, totalY;
-  int iTotalX, iTotalY, magIndex, nDec;
+  int iTotalX, iTotalY, magIndex;
   magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
 
   // Output the mag
@@ -960,17 +988,45 @@ void CMontageSetupDlg::UpdateSizes()
   iTotalY = (m_iYnFrames * m_iYsize - (m_iYnFrames - 1) * mYoverlap);
   m_strTotalPixels.Format("%d x %d pixels", iTotalX, iTotalY);
 
-  totalX = iTotalX * pixel;
-  totalY = iTotalY * pixel;
-  nDec = 1;
+  m_strTotalArea = FormatMicronSize(iTotalX, iTotalY, pixel) + " microns";
+
+  UpdateFocusBlockSizes();
+
+  UpdateData(false);
+}
+
+// Specifically update both of the block size spinner values
+void CMontageSetupDlg::UpdateFocusBlockSizes()
+{
+  int numX, numY, iTotalX, iTotalY;
+  int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
+  float pixel = mParam.binning * mWinApp->mShiftManager->GetPixelSize(mCurrentCamera,
+    magIndex);
+  mWinApp->mMontageController->BlockSizesForNearSquare(m_iXsize, m_iYsize, mXoverlap,
+    mYoverlap, mParam.focusBlockSize, numX, numY);
+  m_strBlockSize.Format("%d x %d", numX, numY);
+  iTotalX = (numX * m_iXsize - (numX - 1) * mXoverlap);
+  iTotalY = (numY * m_iYsize - (numY - 1) * mYoverlap);
+  m_strISBlockSize = FormatMicronSize(iTotalX, iTotalY, pixel);
+}
+
+// Make a string with Y x Y size in microns with minimal digits
+CString CMontageSetupDlg::FormatMicronSize(int xSize, int ySize, float pixel)
+{
+  CString format, str;
+  int nDec;
+  float totalX = xSize * pixel;
+  float totalY = ySize * pixel;
+  nDec = 0;
+  if (totalX < 100. && totalY < 100.)
+    nDec = 1;
   if (totalX < 10. && totalY < 10.)
     nDec = 2;
   if (totalX < 1. && totalY < 1.)
     nDec = 3;
-  format.Format("%%.%df x %%.%df microns", nDec, nDec);
-  m_strTotalArea.Format(format, totalX, totalY);
-
-  UpdateData(false);
+  format.Format("%%.%df x %%.%df", nDec, nDec);
+  str.Format(format, totalX, totalY);
+  return str;
 }
 
 // Check the values in all of the edit boxes, adjust as needed
@@ -1121,6 +1177,12 @@ void CMontageSetupDlg::OnMovestage()
   ManageCamAndStageEnables();
 }
 
+void CMontageSetupDlg::OnCheckImshiftInBlocks()
+{
+  UpdateData(true);
+  ManageStageAndGeometry(false);
+}
+
 void CMontageSetupDlg::OnCheckSkipOutside()
 {
   UpdateData(true);
@@ -1261,7 +1323,7 @@ void CMontageSetupDlg::OnDeltaposSpinBlockSize(NMHDR *pNMHDR, LRESULT *pResult)
     return;
   }
   mParam.focusBlockSize = newVal;
-  m_strBlockSize.Format("%d x %d", mParam.focusBlockSize, mParam.focusBlockSize);
+  UpdateFocusBlockSizes();
   UpdateData(false);
   *pResult = 0;
 }
@@ -1273,39 +1335,49 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
   BOOL bEnable = m_bMoveStage && m_bUseHq && !mLowDoseMode;
   BOOL focusOK = mParam.magIndex >= 
     mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
-  BOOL realignOn = false; //m_bRealign && m_iYnFrames >= MIN_Y_MONT_REALIGN;
+  BOOL tmpEnable, realignOn = false; //m_bRealign && m_iYnFrames >= MIN_Y_MONT_REALIGN;
 
   states[0] = mNumCameras > 1;
   states[1] = mFittingItem;
   states[3] = bEnable;
-  m_statMinOvLabel.EnableWindow(!mSizeLocked && m_bMoveStage);
-  m_statMinOvValue.EnableWindow(!mSizeLocked && m_bMoveStage);
-  m_sbcMinOv.EnableWindow(!mSizeLocked && m_bMoveStage);
-  m_statMinAnd.EnableWindow(!mSizeLocked && m_bMoveStage);
-  m_statMinMicron.EnableWindow(!mSizeLocked && m_bMoveStage);
-  m_editMinMicron.EnableWindow(!mSizeLocked && m_bMoveStage);
+  tmpEnable = !mSizeLocked && m_bMoveStage;
+  m_statMinOvLabel.EnableWindow(tmpEnable);
+  m_statMinOvValue.EnableWindow(tmpEnable);
+  m_sbcMinOv.EnableWindow(tmpEnable);
+  m_statMinAnd.EnableWindow(tmpEnable);
+  m_statMinMicron.EnableWindow(tmpEnable);
+  m_editMinMicron.EnableWindow(tmpEnable);
+  m_butImShiftInBlocks.EnableWindow(tmpEnable);
+  m_sbcISBlocksize.EnableWindow(tmpEnable && m_bImShiftInBlocks);
+  m_statISBlockSize.EnableWindow(tmpEnable && m_bImShiftInBlocks);
+  EnableDlgItem(IDC_STAT_IS_BLOCKPIECES, tmpEnable && m_bImShiftInBlocks);
 
   m_butUseHq.EnableWindow(m_bMoveStage && !mLowDoseMode);
-  m_butFocusEach.EnableWindow(bEnable && focusOK);
-  m_butRepeatFocus.EnableWindow(bEnable && focusOK && m_bFocusAll);
-  m_editNmPerSec.EnableWindow(bEnable && focusOK && m_bFocusAll && m_bRepeatFocus);
-  m_statNmPerSec.EnableWindow(bEnable && focusOK && m_bFocusAll && m_bRepeatFocus);
-  m_butBlockFocus.EnableWindow(bEnable && focusOK && !m_bISrealign);
-  m_statBlockSize.EnableWindow(bEnable && m_bFocusBlocks && focusOK);
-  m_sbcBlockSize.EnableWindow(bEnable && m_bFocusBlocks && focusOK);
-  m_statBlockPieces.EnableWindow(bEnable && m_bFocusBlocks && focusOK);
+  m_butFocusEach.EnableWindow(bEnable && focusOK && 
+    !(m_bFocusBlocks || m_bImShiftInBlocks));
+  tmpEnable = bEnable && focusOK && (m_bFocusAll || 
+    (m_bFocusBlocks && m_bImShiftInBlocks));
+  m_butRepeatFocus.EnableWindow(tmpEnable);
+  m_editNmPerSec.EnableWindow(tmpEnable && m_bRepeatFocus);
+  m_statNmPerSec.EnableWindow(tmpEnable && m_bRepeatFocus);
+  tmpEnable = bEnable && focusOK && (!m_bISrealign || m_bImShiftInBlocks);
+  m_butBlockFocus.EnableWindow(tmpEnable);
+  m_statBlockSize.EnableWindow(tmpEnable);
+  m_sbcBlockSize.EnableWindow(tmpEnable && !m_bImShiftInBlocks && !mSizeLocked);
+  m_statBlockPieces.EnableWindow(tmpEnable && m_bFocusBlocks);
   //m_butRealign.EnableWindow(bEnable && m_iYnFrames >= MIN_Y_MONT_REALIGN && 
   //  !m_bISrealign);
   //m_editRealign.EnableWindow(bEnable && realignOn);
   //m_statRealignPieces.EnableWindow(bEnable && realignOn);
-  m_statMaxAlign.EnableWindow(bEnable && (realignOn || m_bISrealign));
-  m_editMaxAlign.EnableWindow(bEnable && (realignOn || m_bISrealign));
-  m_butISrealign.EnableWindow(bEnable && !realignOn && !m_bFocusBlocks);
-  m_statISmicrons.EnableWindow(bEnable && m_bISrealign);
-  m_editISlimit.EnableWindow(bEnable && m_bISrealign);
-  m_butUseAnchor.EnableWindow(bEnable && m_bISrealign);
-  m_statAnchorMag.EnableWindow(bEnable && m_bISrealign && m_bUseAnchor);
-  m_sbcAnchorMag.EnableWindow(bEnable && m_bISrealign && m_bUseAnchor);
+  tmpEnable = bEnable && !realignOn && !m_bFocusBlocks && !m_bImShiftInBlocks;
+  m_statMaxAlign.EnableWindow(bEnable && (realignOn || (tmpEnable && m_bISrealign)));
+  m_editMaxAlign.EnableWindow(bEnable && (realignOn || (tmpEnable && m_bISrealign)));
+  m_butISrealign.EnableWindow(tmpEnable);
+  m_statISmicrons.EnableWindow(tmpEnable && m_bISrealign);
+  m_editISlimit.EnableWindow(tmpEnable && m_bISrealign);
+  m_butUseAnchor.EnableWindow(tmpEnable && m_bISrealign);
+  m_statAnchorMag.EnableWindow(tmpEnable && m_bISrealign && m_bUseAnchor);
+  m_sbcAnchorMag.EnableWindow(tmpEnable && m_bISrealign && m_bUseAnchor);
 
   if (!reposition)
     return;
