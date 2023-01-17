@@ -137,6 +137,7 @@
       <A href="#miscellaneous">Miscellaneous Commands</A><br />
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#time_output">Time-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#scale_matrix">Scale Matrix Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#process_running">Process Running Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_misc">Other Commands</A><br>
     <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A><br>
 
@@ -4894,82 +4895,7 @@
           <td>Converts from stage to specimen coordinates.</td>
         </TR>
         <TR>
-          <TD colspan="2"><A name="other_misc"></A><B>Other Commands</B></TD>
-        </TR>
-         <TR>
-          <TD class="scriptcommand">CircleFromPoints #X1 #Y1 #X2 #Y2 #X3 #Y3</TD>
-          <TD>Reports the X and Y center coordinate and the radius in microns for the circle
-            through three points whose coordinates are given on the line as <b>#X1:#Y1 #X2:#Y2 #X3:#Y3</b>.&nbsp;
-            Values can be assigned to variables at end of command.</TD>
-        </TR>
-         <TR>
-          <TD class="scriptcommand">SetCameraPLAOffset</TD>
-          <TD>Sets or refines a PLA offset between two cameras on a JEOL scope using PLA for
-            image shift.&nbsp; To use:<br />
-            Take an image with the camera to be aligned to (e.g., an on-axis camera).<br />
-            Center a feature and take a new image.<br />
-            Switch to the other camera (e.g., an off-axis camera).<br />
-            Use right mouse-shifting, or set the marker point and use the <strong>To Marker</strong>
-            button or Shift P hot key to center the feature with image shift only.<br />
-            Run this command.&nbsp; It will report the existing and new offsets.<br />
-            Iterate if desired for a more accurate result.&nbsp; If aligning more than two
-            cameras, use one camera as a reference for aligning each of the others to.&nbsp;
-            Command added in 3.9, 12/23/20.</TD>
-        </TR>
-         <TR>
-          <TD class="scriptcommand">AccumulateRecordDose #</TD>
-          <TD>Adds <b>#</b> to a cumulative dose that will be assigned as the PriorRecordDose value
-            for images that are taken while the script is running.&nbsp; This dose accumulator is disabled
-            when a script starts.&nbsp; Use this command with a <b>#</b> of 0 to enable the accumulator 
-            and initialize it to 0; the next image will have a PriorRecordDose.&nbsp; Thereafter,for each 
-            Record image or montage, get the dose from a buffer ('A' after a Record, 'C' after a 
-            montage) with the 'ImageConditions' command and use this command with that dose value 
-            for <b>#</b>.&nbsp; Use -1 for <b>#</b> to disable the accumulator again if needed.&nbsp; Command added in 4.1, 4/1/22.
-          </TD>
-        </TR>
-       <TR>
-          <TD width="207">Plugin name func [args]</TD>
-          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with appropriate
-            list of arguments for that function.&nbsp; Arguments (<b>args</b>) are entered as items
-            separated by spaces, except that a string argument at the end may consist of
-            multiple words.&nbsp; The return value of the function is reported and placed
-            into <i>reportedValue1</i>.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ListPluginCalls</TD>
-          <TD>Lists the names of script-callable functions in all loaded plugins along with the
-            arguments that they expect, in parentheses.&nbsp; For each argument, there
-            should be one item provided on the command line calling the function, with all
-            items separated by spaces as usual.&nbsp; Two exceptions to this are: a string
-            argument at the end can include spaces; an argument listed as [out]double is a
-            returned value, assigned to <i>reportedValue2</i> or higher.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">MailSubject text</TD>
-          <TD>Sets subject line for an email message (default is 'Message from SerialEM script').
-            <b>text</b> can include variables to be substituted.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetNextEmailAddress # [addr]</TD>
-          <TD>If <B>#</B> is 0, sets the email address(es) to be used on the next sending of email by any 
-            source to <b>addr</b>, which can contain several addresses separated by commas.&nbsp; If
-            <b>#</b> is 1, it appends to the addresses defined in the user settings.&nbsp; If <b>#</b> is -1, 
-            an address set by a previous command and not used yet is canceled.&nbsp; Command added in 4.1, 4/23/22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SendEmail text</TD>
-          <TD>Sends an email containing the given <b>text</b>, which can include variables to be
-            substituted. An SMTP server and address to send from must be defined in the
-            properties file, and recipient(s) must be defined using either 'Set Email Address' in
-            the Settings Menu or the 'SetNextEmailAddress' command.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ErrorBoxSendEmail text</TD>
-          <TD>Sends an email containing the given <b>text</b> if the script stops with a message box;
-            the text can have variables to be substituted.&nbsp; Requirements are the same
-            as for &#39;SendEmail&#39;.&nbsp; If the message box occurs during Navigator Acquire at
-            Items and the user has selected to send emails there, two emails will be sent,
-            thus allowing more specific information from the one specified here.</TD>
+          <TD colspan="2"><A name="process_running"></A><B>Process-Running Commands</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RunInShell command</TD>
@@ -5050,6 +4976,94 @@
             and a setting is retained for the duration of the script.</TD>
         </TR>
         <TR>
+          <TD colspan="2"><A name="other_misc"></A><B>Other Commands</B></TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">CircleFromPoints #X1 #Y1 #X2 #Y2 #X3 #Y3</TD>
+          <TD>Reports the X and Y center coordinate and the radius in microns for the circle
+            through three points whose coordinates are given on the line as <b>#X1:#Y1 #X2:#Y2 #X3:#Y3</b>.&nbsp;
+            Values can be assigned to variables at end of command.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">SetCameraPLAOffset</TD>
+          <TD>Sets or refines a PLA offset between two cameras on a JEOL scope using PLA for
+            image shift.&nbsp; To use:<br />
+            Take an image with the camera to be aligned to (e.g., an on-axis camera).<br />
+            Center a feature and take a new image.<br />
+            Switch to the other camera (e.g., an off-axis camera).<br />
+            Use right mouse-shifting, or set the marker point and use the <strong>To Marker</strong>
+            button or Shift P hot key to center the feature with image shift only.<br />
+            Run this command.&nbsp; It will report the existing and new offsets.<br />
+            Iterate if desired for a more accurate result.&nbsp; If aligning more than two
+            cameras, use one camera as a reference for aligning each of the others to.&nbsp;
+            Command added in 3.9, 12/23/20.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">AccumulateRecordDose #</TD>
+          <TD>Adds <b>#</b> to a cumulative dose that will be assigned as the PriorRecordDose value
+            for images that are taken while the script is running.&nbsp; This dose accumulator is disabled
+            when a script starts.&nbsp; Use this command with a <b>#</b> of 0 to enable the accumulator 
+            and initialize it to 0; the next image will have a PriorRecordDose.&nbsp; Thereafter,for each 
+            Record image or montage, get the dose from a buffer ('A' after a Record, 'C' after a 
+            montage) with the 'ImageConditions' command and use this command with that dose value 
+            for <b>#</b>.&nbsp; Use -1 for <b>#</b> to disable the accumulator again if needed.&nbsp; Command added in 4.1, 4/1/22.
+          </TD>
+        </TR>
+       <TR>
+          <TD width="207">Plugin name func [args]</TD>
+          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with appropriate
+            list of arguments for that function.&nbsp; Arguments (<b>args</b>) are entered as items
+            separated by spaces, except that a string argument at the end may consist of
+            multiple words.&nbsp; The return value of the function is reported and placed
+            into <i>reportedValue1</i>.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ListPluginCalls</TD>
+          <TD>Lists the names of script-callable functions in all loaded plugins along with the
+            arguments that they expect, in parentheses.&nbsp; For each argument, there
+            should be one item provided on the command line calling the function, with all
+            items separated by spaces as usual.&nbsp; Two exceptions to this are: a string
+            argument at the end can include spaces; an argument listed as [out]double is a
+            returned value, assigned to <i>reportedValue2</i> or higher.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportMontagePiece #</TD>
+          <TD>Reports the piece number in X and Y (numbered from 1), piece coordinates in X and Y, 
+            and the number of pieces in X and Y for the just-acquired piece of the montage being
+            acquired if <b>#</b> is 0, or for the next piece if <b>#</b> is non-zero.&nbsp; This command
+            can be used only in a script run from the montage, currently set by the property
+             'MontageScriptToRun'.&nbsp; The script is run between acquiring and saving an image.
+            &nbsp; Command added in 4.1, 16-Jan-23.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MailSubject text</TD>
+          <TD>Sets subject line for an email message (default is 'Message from SerialEM script').
+            <b>text</b> can include variables to be substituted.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetNextEmailAddress # [addr]</TD>
+          <TD>If <B>#</B> is 0, sets the email address(es) to be used on the next sending of email by any 
+            source to <b>addr</b>, which can contain several addresses separated by commas.&nbsp; If
+            <b>#</b> is 1, it appends to the addresses defined in the user settings.&nbsp; If <b>#</b> is -1, 
+            an address set by a previous command and not used yet is canceled.&nbsp; Command added in 4.1, 4/23/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SendEmail text</TD>
+          <TD>Sends an email containing the given <b>text</b>, which can include variables to be
+            substituted. An SMTP server and address to send from must be defined in the
+            properties file, and recipient(s) must be defined using either 'Set Email Address' in
+            the Settings Menu or the 'SetNextEmailAddress' command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ErrorBoxSendEmail text</TD>
+          <TD>Sends an email containing the given <b>text</b> if the script stops with a message box;
+            the text can have variables to be substituted.&nbsp; Requirements are the same
+            as for &#39;SendEmail&#39;.&nbsp; If the message box occurs during Navigator Acquire at
+            Items and the user has selected to send emails there, two emails will be sent,
+            thus allowing more specific information from the one specified here.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportProperty name [var]</TD>
           <TD>Reports the value of one program property given by <b>name</b>.&nbsp; The command can
             be used with nearly all of the general (non-camera-specific) properties that
@@ -5106,7 +5120,7 @@
         <TR>
           <TD class="scriptcommand">ReportSettingsFile</TD>
           <TD>Reports the name of the current settings file and the name of the current script
-            package file, or "None" if scripts were loaded from settings.&nbsp; Command added in 4.9, 1/8/21.</TD>
+            package file, or "None" if scripts were loaded from settings.&nbsp; Command added in 3.9, 1/8/21.</TD>
         </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>

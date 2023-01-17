@@ -217,6 +217,8 @@ INT_PROP_TEST("MontageDriftRepeatLimit", mWinApp->mMontageController->, DriftRep
 FLOAT_PROP_TEST("MontageDriftRepeatDelay", mWinApp->mMontageController->, DriftRepeatDelay)
 FLOAT_PROP_TEST("MontageMinZigzagOverlap", mWinApp->mMontageController->, MinOverlapForZigzag)
 BOOL_PROP_TEST("MontageAutosaveLog", mWinApp->mMontageController->, AutosaveLog)
+INT_PROP_TEST("MontageScriptToRun", mWinApp->mMontageController->, MacroToRun)
+
 #endif
 #ifdef PROP_TEST_SECT30
 FLOAT_PROP_TEST("JEOLStageMotorRounding", scope->, JeolStageRounding)

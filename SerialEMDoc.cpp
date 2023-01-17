@@ -637,6 +637,9 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
   MontParam *param = mWinApp->GetMontParam();
   if (mBufferManager->CheckAsyncSaving())
     return 1;
+  if (mWinApp->mMontageController->DoingMontage() &&
+    mWinApp->mMontageController->GetRunningMacro())
+    return 1;
   if (!frameSet)
     LeaveCurrentFile();
   InitMontParamsForDialog(param, frameSet, xNframes, yNframes, filename);

@@ -3365,6 +3365,17 @@
           for &#39;MontageFilterR1R2S1S2&#39;.&nbsp; All four values must be entered.&nbsp; The default
             is 0 0.35 0.05 0.05.</TD>
         </TR>
+        <TR>
+          <TD>MontageScriptToRun</TD>
+          <TD>The number of a script to run after acquiring the image and before saving it, numbered 
+            from 1.&nbsp; Values less than 1 will be ignored.&nbsp; The montage will stop with an error
+            if the script tries to run a montage, read
+            from a montage, or do various file operations that would affect the current open 
+            file.&nbsp; There are probably other script operations that would interfere with montaging
+            and possible crash the program, so use this with caution and do not assume that the 
+            program can do too many different things at once.
+          </TD>
+        </TR>
         <TR VALIGN="top">
           <TD>CheckAutofocusChange</TD>
           <TD>The change in defocus that will be applied in the positive and negative

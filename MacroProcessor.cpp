@@ -1037,7 +1037,8 @@ int CMacroProcessor::TaskBusy()
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
     (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
-    mWinApp->mMontageController->DoingMontage() || 
+    (mWinApp->mMontageController->DoingMontage() &&
+      !mWinApp->mMontageController->GetRunningMacro()) ||
     mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||

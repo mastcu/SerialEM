@@ -483,6 +483,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.wasFitToPolygon = false;
   mMontParam.focusBlockSize = 3;
   mMontParam.focusInBlocks = false;
+  mMontParam.imShiftInBlocks = false;
   mMontParam.hqDelayTime = 5.f;
   mMontParam.useHqParams = false;
   mMontParam.minOverlapFactor = 0.1f;
@@ -2361,6 +2362,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE ||
       idc->source == TASK_CTF_BASED)
       busy = mFocusManager->DoingFocus() ? 1 : 0;
+    else if (idc->source == TASK_MONT_MACRO)
+      busy = mMacroProcessor->DoingMacro();
     else if (idc->source == TASK_CAL_COMA_VS_IS)
       busy = mAutoTuning->GetDoingCtfBased() ? 1 : 0;
     else if (idc->source == TASK_MONTAGE_DWELL)
@@ -2501,7 +2504,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_CAL_IS_NEUTRAL)
           mScope->CalNeutralNextMag(idc->param);
         else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_FOCUS ||
-          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT)
+          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT ||
+          idc->source == TASK_MONT_MACRO)
           mMontageController->DoNextPiece(idc->param);
         else if (idc->source == TASK_MONTAGE_RESTORE)
           mMontageController->StageRestoreDone();
@@ -2631,7 +2635,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mFilterTasks->RefineZLPCleanup(busy);
         else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_RESTORE ||
           idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_MONTAGE_REALIGN || 
-          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT)
+          idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT ||
+          idc->source == TASK_MONT_MACRO)
           mMontageController->PieceCleanup(busy);
         else if (idc->source == TASK_TILT_SERIES)
           mTSController->TiltSeriesError(busy);
