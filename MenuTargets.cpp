@@ -511,6 +511,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS, OnUpdateKeepColorsForPolygons)
     ON_COMMAND(ID_IMAGESTAGESHIFT_HIGH, OnCalHighDefocusIS)
     ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_HIGH, OnUpdateNoTasksNoSTEM)
+    ON_COMMAND(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnSetHoleOrderForRegularArray)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnUpdateNoTasks)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1047,6 +1049,17 @@ void CMenuTargets::OnNavigatorSetGridGroupSize()
   if (size <= 0)
     return;
   mNavHelper->SetGridGroupSize(size);
+}
+
+void CMenuTargets::OnSetHoleOrderForRegularArray()
+{
+  int curVal = mWinApp->mParticleTasks->GetMSHolePatternType();
+  if (KGetOneChoice("Select the order in which holes are acquired in a regular array",
+    "For a spiral in a non-square array, extra rows or columns will be done in a zigzag"
+    " path", curVal, "Every other row in opposite directions (zigzag path)",
+    "Every row in the same direction (raster pattern)",
+    "Concentric squares from center outward to minimize shifts (spiral path)"))
+    mWinApp->mParticleTasks->SetMSHolePatternType(curVal);
 }
 
 void CMenuTargets::OnNavigatorChangeregistration()

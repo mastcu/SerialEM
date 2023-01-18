@@ -95,6 +95,10 @@
             Parameters</a></TD>
           <TD>Set parameters for acquiring multiple Records within a hole or in multiple holes with image shift.</TD>
         </TR>
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_setholeorderforregulararray">Set Hole Order for 
+            Regular Array</a></TD>
+          <TD>Select whether regular array of holes is acquired in zigzag, raster, or spiral order.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_combinepointsintomulti">
             Combine Points for Multi-shots</a></TD>
@@ -605,6 +609,17 @@
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> and set
             parameters for using image shift to take multiple Record images in a circular pattern around the
             current position, on a regular array, or in a custom pattern of positions.</p>
+      <P><A NAMEa href="#hid_montaginggrids_setholeorderforregulararray"></a><B>Set Hole Order for 
+            Regular Array command (Navigator - Montaging &amp; Grids sub-menu)</B>
+        <P>Use this command to set the order in which holes in a regular array are 
+          acquired.&nbsp; The choices are: 1) Jump from the center to the corner then do 
+          alternating rows in opposite direction, referred to as a zigzag path, so as to 
+          minimize the shifts between holes after the initial jump.&nbsp; 2) Jump to the 
+          corner and do all rows in the same direction, a raster pattern.&nbsp; 3) Start 
+          in the center and do concentric squares, following a spiral path to minimize all 
+          shifts between holes.&nbsp; If the array is not square, the spiral path is 
+          followed in a the largest possible square, then the extra rows or columns are added in a zigzag path 
+          that still minimizes shifts. </P>
       <P><A NAME="hid_montaginggrids_combinepointsintomulti"></A><B>Combine Points for Multi-shots command
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
           <p>Use this command to open the

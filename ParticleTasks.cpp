@@ -49,6 +49,7 @@ CParticleTasks::CParticleTasks(void)
   mMSLastHoleISX = mMSLastHoleISY = 0.;
   mMSinHoleStartAngle = -900.;
   mMSNumSepFiles = -1;
+  mMSHolePatternType = 2;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -700,6 +701,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   bool adjustForTilt = false;
   float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;
+  IntVec holeOrder;
   ScaleMat IStoSpec, specToIS;
 
   delISX.clear();
@@ -746,6 +748,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     endInd[0] = numXholes - 1;
     endInd[1] = numYholes - 1;
     jump[0] = jump[1] = 1;
+     
     if (mMSsaveToMontage) {
       for (ix = 0; ix < numXholes; ix++) {
         for (iy = 0; iy < numYholes; iy++) {
@@ -753,7 +756,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
             posIndex);
         }
       }
-    } else {
+    } else if (mMSHolePatternType < 2 || crossPattern || mMSTestRun) {
       if (mMSTestRun && !crossPattern) {
         jump[0] = B3DMAX(2, numXholes) - 1;
         jump[1] = B3DMAX(2, numYholes) - 1;
@@ -769,11 +772,23 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
           }
         }
 
-        // For now, zigzag pattern
-        ix = startInd[0];
-        startInd[0] = endInd[0];
-        endInd[0] = ix;
-        direction[0] = -direction[0];
+        // Zigzag pattern unless raster specified
+        if (mMSHolePatternType != 1) {
+          ix = startInd[0];
+          startInd[0] = endInd[0];
+          endInd[0] = ix;
+          direction[0] = -direction[0];
+        }
+      }
+    } else {
+
+      // Spiral with extra rows/columns if needed
+      MakeSpiralPattern(numXholes, numYholes, holeOrder);
+      for (ind = 0; ind < (int)holeOrder.size(); ind++) {
+        ix = holeOrder[ind] % numYholes;
+        iy = holeOrder[ind] / numYholes;
+        AddHolePosition(ix, iy, fromISX, fromISY, xCenISX, yCenISX, xCenISY, yCenISY,
+          posIndex);
       }
     }
   }
@@ -819,6 +834,92 @@ void CParticleTasks::AddHolePosition(int ix, int iy, std::vector<double> &fromIS
   posIndex.push_back(ix);
   posIndex.push_back(iy);
 }
+
+// Set up points in a numX x numY pattern in a spiral in initial square, the alternating
+// rows or columns
+void CParticleTasks::MakeSpiralPattern(int numX, int numY, IntVec &order)
+{
+  int delX[4] = {1, 0, -1, 0}, delY[4] = {0, 1, 0, -1};
+  int level, stepInd, dir, step, numSteps, extra;
+  bool extraAbove = numY > numX;
+  int baseNum = B3DMIN(numX, numY);
+  int numExtra = B3DMAX(numX, numY) - baseNum;
+  int ixCur, iyCur;
+
+  // Set up starting position, step index, direction, and level for odd then even
+  if (baseNum % 2) {
+    level = 3;
+    stepInd = 0;
+    ixCur = iyCur = baseNum / 2;
+    dir = extraAbove ? 1 : 0;
+  } else {
+    level = 2;
+    stepInd = 1;
+    ixCur = baseNum / 2 - (extraAbove ? 1 : 0);
+    iyCur = baseNum / 2;
+    dir = extraAbove ? 3 : 2;
+  }
+  order.clear();
+
+  // Loop until the square is full
+  while ((int)order.size() < baseNum * baseNum) {
+
+    // Add current point, step, and change direction
+    order.push_back(ixCur + iyCur * numX);
+    ixCur += delX[dir];
+    iyCur += delY[dir];
+
+    // Last step in initial square is special case
+    if (level == 2 && stepInd == 3) {
+      numSteps = 0;
+    } else {
+
+      // Otherwise change direction and set number of steps on this side
+      dir = (dir + 1) % 4;
+      numSteps = level - (3 - (stepInd + 1) / 2);   // -3, -2, -2, -1
+    }
+    if ((int)order.size() >= baseNum * baseNum)
+      break;
+
+    // Take the right number of steps in the new direction, add points and step
+    for (step = 0; step < numSteps; step++) {
+      order.push_back(ixCur + iyCur * numX);
+      ixCur += delX[dir];
+      iyCur += delY[dir];
+    }
+
+    // Advance to the next segment and increase level at segment 0
+    stepInd = (stepInd + 1) % 4;
+    if (!stepInd)
+      level += 2;
+  }
+
+  // Add extra rows in alternating directions
+  for (extra = 0; extra < numExtra; extra++) {
+    order.push_back(ixCur + iyCur * numX);
+    for (step = 1; step < baseNum; step++) {
+      ixCur += delX[dir];
+      iyCur += delY[dir];
+      order.push_back(ixCur + iyCur * numX);
+    }
+
+    // Step to next row/column and reverse
+    if (extraAbove)
+      iyCur++;
+    else
+      ixCur++;
+    dir = (dir + 2) % 4;
+  }
+}
+
+/* To test: put this is your favorite macro command:
+IntVec order;
+mWinApp->mParticleTasks->MakeSpiralPattern(mItemInt[1], mItemInt[2], order);
+PrintfToLog("\r\n%d by %d:", mItemInt[1], mItemInt[2]);
+for (int ind = 0; ind < order.size(); ind++)
+PrintfToLog("%d %d", order[ind] % mItemInt[1], order[ind] / mItemInt[1]);
+return 0;
+*/
 
   /*
  * Given the existing vectors and their position indexes for holes, remove the ones

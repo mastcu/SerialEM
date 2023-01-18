@@ -57,6 +57,7 @@ public:
   GetSetMember(BOOL, ZbyGUseViewInLD);
   GetSetMember(int, ZbyGViewSubarea);
   GetSetMember(float, MSinHoleStartAngle);
+  GetSetMember(int, MSHolePatternType);
   GetMember(int, ZBGMeasuringFocus);
   GetMember(bool, DVDoingDewarVac);
   GetMember(bool, ATLastFailed);
@@ -118,6 +119,7 @@ private:
   float mMSinHoleStartAngle;       // Value controlling peripheral rotation
   int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
   int mMSFirstSepFile;             // Number of first separate file when created
+  int mMSHolePatternType;          // 0 for zigzag, 1 for raster, 2 for spiral
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -207,6 +209,7 @@ public:
     int camera, int numXholes, int numYholes, float tiltAngle);
   void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
     double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
+  void MakeSpiralPattern(int numX, int numY, IntVec &order);
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
     unsigned char *skipIndex, int numSkip, int &numHoles);
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
