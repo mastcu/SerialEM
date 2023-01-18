@@ -403,6 +403,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptToRunAtEnd")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunAtEnd(strCopy);
+      } else if (NAME_IS("ScriptToRunOnIdle")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetScriptToRunOnIdle(strCopy);
       } else if (MatchNoCase("BasicModeFile")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mDocWnd->SetBasicModeFile(strCopy);
@@ -1586,6 +1589,9 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunAtEnd();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunAtEnd", oneState);
+    oneState = mWinApp->GetScriptToRunOnIdle();
+    if (!oneState.IsEmpty())
+      WriteString("ScriptToRunOnIdle", oneState);
     oneState = mWinApp->mDocWnd->GetBasicModeFile();
     if (!oneState.IsEmpty())
       WriteString("BasicModeFile", oneState);

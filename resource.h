@@ -1319,11 +1319,9 @@
 #define IDC_RVIEWOFFSET                 2315
 #define IDC_STAT_SUBSET_TO              2317
 #define IDC_STAT_SUBSET_PAREN           2318
-#define IDC_STAT_CYCLE_TO               3141
 #define IDC_STAT_USE_ONLY_GROUP         2319
 #define IDC_STAT_LINE1                  2320
 #define IDC_FA_EDIT_SUB_START           2321
-#define IDC_STAT_LINE3                  3142
 #define IDC_FA_EDIT_SUB_END             2322
 #define IDC_RSEARCH                     2323
 #define IDC_RVIEW_OFFSET                2324
@@ -2108,6 +2106,8 @@
 #define IDC_STAT_IS_BLOCKSIZE           3138
 #define IDC_SPIN_IS_BLOCKSIZE           3139
 #define IDC_STAT_IS_BLOCKPIECES         3140
+#define IDC_STAT_CYCLE_TO               3141
+#define IDC_STAT_LINE3                  3142
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2647,6 +2647,8 @@
 #define ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS 33505
 #define ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 33506
 #define ID_IMAGESTAGESHIFT_HIGH         33507
+#define ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY 33508
+#define ID_SCRIPT_RUNIFPROGRAMIDLE      33509
 
 // Next default values for new objects
 // 
@@ -2654,8 +2656,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        279
-#define _APS_NEXT_COMMAND_VALUE         33508
-#define _APS_NEXT_CONTROL_VALUE         3143
+#define _APS_NEXT_COMMAND_VALUE         33510
+#define _APS_NEXT_CONTROL_VALUE         3144
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

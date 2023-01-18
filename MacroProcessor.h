@@ -605,6 +605,8 @@ public:
   afx_msg void OnUpdateScriptSetpanelrows(CCmdUI *pCmdUI);
   afx_msg void OnRunSerialemSnapshot();
   afx_msg void OnUpdateRunSerialemSnapshot(CCmdUI *pCmdUI);
+  afx_msg void OnRunIfProgramIdle();
+  afx_msg void OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

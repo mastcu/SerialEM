@@ -119,12 +119,7 @@
           <TD class="auto-style2"><a href="#hid_script_usemonospacedfont">Use Monospaced Font</a></TD>
           <TD class="auto-style1">Toggles whther to use an equally spaced font in the editor.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style2"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
-          <TD class="auto-style1">Toggles whether editing windows will be restored on program 
-            startup.</TD>
-        </TR>
-        <TR VALIGN="top">
+         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
           <TD class="auto-style1">Toggles whether to run a script on program startup and 
             lets you select script</TD>
@@ -135,6 +130,16 @@
             you select script</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_runifprogramidle">Run if Program Idle...</a></TD>
+          <TD class="auto-style1">Toggles whether to run a script periodically when the program is idle and
+            lets you select script and time interval</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
+          <TD class="auto-style1">Toggles whether editing windows will be restored on program 
+            startup.</TD>
+        </TR>
+       <TR VALIGN="top">
           <TD class="auto-style2"><A HREF="#hid_macro_verbose">Verbose</A></TD>
           <TD class="auto-style1">Toggles echoing of each line at start of script.</TD>
         </TR>
@@ -277,7 +282,7 @@
       use a Courier font even though it asked for a better one.&nbsp; If you get a 
       font you do not like, add the property 'ScriptMonospaceFont' with the exact name 
       of a monospaced font available on your system, which it will try first..</p>
-      <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B>
+      <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B></P>
         <P>Use this command to choose a script to run when the program starts.&nbsp; The 
           menu entry shows up as checked when a script has been chosen.&nbsp; When you 
           select this command, a dialog will open with a drop-down list in which you can 
@@ -285,7 +290,7 @@
           assigned to the script so that if scripts are rearranged, or a different set is 
           loaded, the program will not run the wrong script.&nbsp; This script may do 
           complex operations.</P>
-      <P><A NAME="hid_script_runatprogramend"></a><B>Run at Program End command (Script menu)</B>
+      <P><A NAME="hid_script_runatprogramend"></a><B>Run at Program End command (Script menu)</B></P>
         <P>Use this command to choose a script to run when the program exits, just as for 
           previous command for a startup script.&nbsp; This script is run after the 
           program asks whether to save the Navigator and log and leaves Low Dose mode, if 
@@ -293,6 +298,15 @@
           program re-enters its exit routine after the script is run.&nbsp; While the 
           script may do complex operations, the user should be warned if they are going to 
           take more than a few seconds.</P>
+      <P><A NAME="hid_script_runifprogramidle"></a><B>Run if Program Idle command (Script menu)</B></P>
+        <p>Use this command to choose a script to run periodically when the program is not 
+          busy doing any other operations.&nbsp; When you select this command, a dialog 
+          will open with a drop-down list in which you can select the script by its name 
+          or number; having a named script is advisable.&nbsp; After specifying the 
+          script, you can then enter the interval in seconds at which the script should 
+          run. It will not run with an interval of 0, so setting it to 0 would be a quick 
+          way to disable it.&nbsp; The menu entry shows up as checked when a script has 
+          been chosen and the interval is nonzero.&nbsp; </p>
     <P><A NAME="hid_script_openeditorsonstart"></A><B>Open Editors on Start command (Script menu)</B></P>
     <p>Use this command to control whether editor windows are restored to their last 
       state when the program is restarted.&nbsp; In addition, if this option is selected, 

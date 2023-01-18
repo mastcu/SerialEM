@@ -610,6 +610,8 @@ public:
   GetSetMember(BOOL, ShiftScriptOnlyInAdmin);
   GetSetMember(CString, ScriptToRunAtStart);
   GetSetMember(CString, ScriptToRunAtEnd);
+  GetSetMember(CString, ScriptToRunOnIdle);
+  GetSetMember(int, IdleScriptIntervalSec);
   GetSetMember(CString, ProgramTitleText);
   GetSetMember(double, LastActivityTime);
   GetMember(bool, JustChangingLDarea);
@@ -910,6 +912,9 @@ private:
   BOOL mBasicMode;
   CString mScriptToRunAtStart;
   CString mScriptToRunAtEnd;
+  CString mScriptToRunOnIdle;
+  int mIdleScriptIntervalSec;   // Seconds between running idle script
+  double mLastIdleScriptTime;
   CString mProgramTitleText;
   double mLastActivityTime;     // Tick time of last redisplay or something in idle array
   bool mJustChangingLDarea;     // Flag that "DOingTasks" was true because of LD change

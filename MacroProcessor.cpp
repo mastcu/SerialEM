@@ -153,8 +153,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, OnUpdateShowIndentButtons)
   ON_COMMAND(ID_SCRIPT_SETPANELROWS, OnScriptSetpanelrows)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETPANELROWS, OnUpdateScriptSetpanelrows)
-  ON_COMMAND(ID_HELP_RUNSERIALEMSNAPSHOT, &CMacroProcessor::OnRunSerialemSnapshot)
-  ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, &CMacroProcessor::OnUpdateRunSerialemSnapshot)
+  ON_COMMAND(ID_HELP_RUNSERIALEMSNAPSHOT, OnRunSerialemSnapshot)
+  ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, OnUpdateRunSerialemSnapshot)
+  ON_COMMAND(ID_SCRIPT_RUNIFPROGRAMIDLE, OnRunIfProgramIdle)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNIFPROGRAMIDLE, OnUpdateRunIfProgramIdle)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -879,6 +881,24 @@ void CMacroProcessor::OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mWinApp->GetScriptToRunAtEnd().IsEmpty() ? 0 : 1);
+}
+
+void CMacroProcessor::OnRunIfProgramIdle()
+{
+  CString str = mWinApp->GetScriptToRunOnIdle();
+  int interval = mWinApp->GetIdleScriptIntervalSec();
+  if (SelectScriptAtStartEnd(str, "periodically when program is idle"))
+    return;
+  mWinApp->SetScriptToRunOnIdle(str);
+  if (KGetOneInt("Interval in seconds at which to run script:", interval))
+    mWinApp->SetIdleScriptIntervalSec(interval);
+}
+
+void CMacroProcessor::OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mWinApp->GetScriptToRunOnIdle().IsEmpty() ? 0 : 1 && 
+    mWinApp->GetIdleScriptIntervalSec() > 0);
 }
 
 // Common routine for opening the macro selector with the current selection and getting

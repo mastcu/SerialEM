@@ -902,7 +902,7 @@ void CMontageSetupDlg::OnOK()
       m_bMoveStage ? "blocks" : "montage", montIS, maxIS,
       magIndex >= lowestM ? "NavigatorMaxMontageIS" : "NavigatorMaxLMMontageIS");
     if (m_bMoveStage) {
-      mess += "Do you want to proceed with this block size with image shift?";
+      mess += "Do you want to proceed with this block size for image shift?";
       if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
         return;
     } else {

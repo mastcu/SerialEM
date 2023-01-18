@@ -761,9 +761,11 @@ CSerialEMApp::CSerialEMApp()
   mNavOrLogHadFocus = 0;
   mMonospacedLog = false;
   mLastSystemDPI = 0;
+  mIdleScriptIntervalSec = 60;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
+  mLastIdleScriptTime = sStartTime;
   mLastActivityTime = sStartTime;
   appThreadID = GetCurrentThreadId();
   SEMBuildTime(__DATE__, __TIME__);
@@ -2344,6 +2346,16 @@ BOOL CSerialEMApp::CheckIdleTasks()
   // Act on request for external control
   if (mMacroProcessor->mScrpLangData.externalControl < 0) {
     mMacroProcessor->CheckAndSetupExternalControl();
+  }
+
+  // Check for idle script
+  if (!mIdleArray.GetSize() && !mScriptToRunOnIdle.IsEmpty() && mIdleScriptIntervalSec >
+    0 && SEMTickInterval(time, mLastIdleScriptTime) > 1000. * mIdleScriptIntervalSec) {
+    i = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunOnIdle);
+    if (i >= 0) {
+      mLastIdleScriptTime = time;
+      mMacroProcessor->Run(i);
+    }
   }
 
   // Look through the list of tasks if any

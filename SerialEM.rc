@@ -493,6 +493,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
         MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
+        MENUITEM "Run If Program Idle...",      ID_SCRIPT_RUNIFPROGRAMIDLE
         MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
@@ -649,6 +650,7 @@ BEGIN
             MENUITEM "Set Group &Radius",           ID_MONTAGINGGRIDS_SETGROUPSIZE
             MENUITEM SEPARATOR
             MENUITEM "Set &Multi-shot Parameters...", ID_OPTIONS_SETMULTI
+            MENUITEM "S&et Hole Order for Regular Array", ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY
             MENUITEM "Com&bine Points for Multi-shots...", ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI
             MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
             MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
@@ -7164,6 +7166,10 @@ BEGIN
     ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS 
                             "Make contours into polygons with the same colors"
     ID_IMAGESTAGESHIFT_HIGH "Calibrate image shift at high defocus"
+    ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY 
+                            "Select spiral, zigzag, or raster order of shots for regular pattern"
+    ID_SCRIPT_RUNIFPROGRAMIDLE 
+                            "Select script to run periodically when program is not busy"
 END
 
 #endif    // English (United States) resources

@@ -14,6 +14,7 @@ INT_SETT_GETSET("FFTBackgroundGray", mWinApp->, BkgdGrayOfFFT)
 BOOL_SETT_GETSET("UseViewForSearch", mWinApp->, UseViewForSearch)
 BOOL_SETT_GETSET("UseRecordForMontage", mWinApp->, UseRecordForMontage)
 BOOL_SETT_GETSET("SettingsFixedForIACal", mWinApp->, SettingsFixedForIACal)
+INT_SETT_GETSET("IdleScriptInterval", mWinApp->, IdleScriptIntervalSec)
 BOOL_SETT_GETSET("BasicMode", mWinApp->, BasicMode)
 BOOL_SETT_GETSET("OneK2FramePerFile", camera->, OneK2FramePerFile)
 BOOL_SETT_GETSET("SkipK2FrameRotFlip", camera->, SkipK2FrameRotFlip)
@@ -122,6 +123,7 @@ BOOL_SETT_GETSET("RestoreMacroEditors", mWinApp->mMacroProcessor->, RestoreMacro
 INT_SETT_GETSET("ZbyGMaxTotalChange", mWinApp->mParticleTasks->, ZBGMaxTotalChange)
 FLOAT_SETT_GETSET("ZbyGIterThreshold", mWinApp->mParticleTasks->, ZBGIterThreshold)
 BOOL_SETT_GETSET("ZbyGUseViewInLD", mWinApp->mParticleTasks->, ZbyGUseViewInLD)
+INT_SETT_GETSET("MultishotPatternType", mWinApp->mParticleTasks->, MSHolePatternType)
 
 #endif
 #ifdef SET_TEST_SECT2
