@@ -590,8 +590,9 @@
         box around each point is required to be fully within the polygon. The size of
         this box as a fraction of the spacing between points is controlled by the
         GridInPolygonBoxFraction property, whose default value is 0.75.</P>
-      <P>Grid points can be added in two different patterns. One is a zigzag pattern,
-        which was the only pattern in SerialEM version 2.x, and was designed to
+      <P>Grid points can be added in two different patterns. One is a zigzag path, in which
+        points go in alternating directions between successive rows or columns.
+        This was originally the only pattern in SerialEM and was designed to
         minimize stage movement when moving between points. The other pattern goes in
         the same direction in each row and column, and proceeds in an overall direction
         away from the location of the Focus area in Low Dose mode. This pattern ensures
