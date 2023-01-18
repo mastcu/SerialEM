@@ -5344,10 +5344,11 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     } else {
       awayFromFocus = (SEMThreeChoiceBox("Do you want to lay out points so that movements"
         " from one to the next will be away from the current direction of the Low Dose"
-        " Focus area?\n\nIf not, points will be laid out in a zigzag pattern that "
-        "minimizes stage"
+        " Focus area?\n\nIf not, points will be laid out in a zigzag path, alternating "
+        "direction between successive rows to minimize stage"
         " movements.\n\nPress:\n\"Away from Focus Area\" to move in direction away from"
-        " focus area,\n\n\"Zigzag\" to move in a zigzag pattern.", "Away from Focus Area",
+        " focus area,\n\n\"Zigzag\" to move in a zigzag path, alternating direction "
+        "between rows.", "Away from Focus Area",
         "Zigzag", "", MB_YESNO | MB_ICONQUESTION) == IDYES);
       refresh = true;
       mLastGridAwayFromFocus = awayFromFocus ? 1 : 0;
