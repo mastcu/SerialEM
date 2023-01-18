@@ -298,7 +298,7 @@ void CAutocenSetupDlg::OnDeltaposSpinbinning(NMHDR *pNMHDR, LRESULT *pResult)
   int newind = mBinIndex + pNMUpDown->iDelta;
   mWinApp->RestoreViewFocus();
   if (NewSpinnerValue(pNMHDR, pResult, mBinIndex, (CamHasDoubledBinnings(mCamParams) ?
-    1 : 0), mCamParams->numBinnings, mBinIndex))
+    1 : 0), mCamParams->numBinnings - 1, mBinIndex))
       return;
   if (UpdateIfExposureChanged())
     FetchParams();

@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/18/23: Fixed binning spinner in autocenter setup dialog going past end of
+range (In 4.0).
+
+1/16/23: Fixed OpenOldFile command with HDF file (In 4.0).
+
 1/18/23: When doing multishots in a regular array of holes, the routine will
 now move to the holes in a spiral path by default, with a menu entry to select
 the old zigzag path or a raster path instead.
@@ -17,7 +22,6 @@ of pieces and stage shifting between the blocks.
 acquisition and saving, and a script command to get information on the current
 or next piece.
 
-1/16/22: Fixed OpenOldFile command with HDF file (In 4.0).
 
 1/13/23: Made it possible to set marker point outside image for shifting to
 marker (shift-P and To Marker button) and Go to Marker in Navigator.
