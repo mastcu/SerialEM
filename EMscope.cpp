@@ -9269,7 +9269,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             lod->plugFuncs->GetCartridgeInfo(0, &dummy, &dummy, &dummy, &dummy, &dummy);
             // For JEOL, get as much info as possible;
             lod->cartInfo->RemoveAll();
-            for (ind = 1; ind < lod->maxLoaderSlots; ind++) {
+            for (ind = 1; ind <= lod->maxLoaderSlots; ind++) {
               try {
                 name = mPlugFuncs->GetCartridgeInfo(ind, &jcData.id, &station, &slot,
                   &rotation, &cartType);
