@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-1/16/22: Fixed OpenOldFile command with HDF file (In 4.0).
+1/18/23: Fixed binning spinner in autocenter setup dialog going past end of
+range (In 4.0).
+
+1/16/23: Fixed OpenOldFile command with HDF file (In 4.0).
 
 1/13/23: SEM_4-0-17
 1/13/23: Started writing a file along with the Navigator file, named
