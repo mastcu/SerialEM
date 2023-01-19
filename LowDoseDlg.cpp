@@ -1738,8 +1738,8 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
     mWinApp->mMainView->GetCenterForLDAreas(xcen, ycen);
   offsetX = ptX + shiftX - xcen;
   offsetY = ptY + shiftY - ycen;
-  SnapCameraShiftToAxis(imBuf, offsetX, offsetY, imBuf->mConSetUsed == 0, state.camIndex,
-    state.rotateAxis, state.axisRotation);
+  SnapCameraShiftToAxis(imBuf, offsetX, offsetY, IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)
+    , state.camIndex, state.rotateAxis, state.axisRotation);
   ptX = offsetX + xcen - shiftX;
   ptY = offsetY + ycen - shiftY;
 
