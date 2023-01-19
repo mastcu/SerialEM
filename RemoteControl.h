@@ -39,7 +39,9 @@ public:
   GetMember(int, StageIncIndex);
   void SetFocusIncrementIndex(int inVal);
   GetMember(int, DoingTask);
-  void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
+  GetMember(bool, SpotClicked);
+  GetMember(bool, MagClicked);
+  void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd,
   int maxIndex, int maxDecimals, CString &str);
   void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd);
   CMyButton m_butValves;

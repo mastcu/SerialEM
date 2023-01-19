@@ -1487,7 +1487,7 @@ void CNavigatorDlg::OnCollapseGroups()
   if (m_bCollapseGroups) {
     MakeListMappings();
     FillListBox(true);
-    if (oldCurrent >= 0) {
+    if (oldCurrent >= 0 && oldCurrent < mItemArray.GetSize()) {
       mCurListSel = mItemToList[oldCurrent];
       IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
     }
@@ -5471,6 +5471,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     }
     mNewItemNum++;
     FillListBox(false, true);
+    firstCurItem = mItemArray.GetSize() - 1;
 
   } else {
 

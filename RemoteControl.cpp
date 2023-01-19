@@ -459,6 +459,7 @@ void CRemoteControl::SetMagOrSpot(void)
     }
     mMagClicked = false;
     m_sbcMag.EnableWindow(true);
+    mWinApp->mCamera->InitiateIfPending();
   }
   if (mSpotClicked) {
     m_sbcSpot.EnableWindow(false);
@@ -466,6 +467,7 @@ void CRemoteControl::SetMagOrSpot(void)
     mScope->SetSpotSize(mNewSpotIndex);
     mSpotClicked = false;
     m_sbcSpot.EnableWindow(true);
+    mWinApp->mCamera->InitiateIfPending();
   }
 }
 
