@@ -1809,7 +1809,9 @@ void CCameraController::InitiateCapture(int inSet)
   if (mWinApp->GetDummyInstance())
     return;
   CleanUpFromTiltSums();
-  if (CameraBusy() && !mLastWasContinForTask) {
+  if ((CameraBusy() && !mLastWasContinForTask) || (mWinApp->GetShowRemoteControl() &&
+    (mWinApp->mRemoteControl.GetSpotClicked() || 
+      mWinApp->mRemoteControl.GetMagClicked()))) {
     SetPending(inSet);
     return;
   }
