@@ -475,7 +475,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mDoStageMoves = false;
   }
   mImShiftInBlocks = mDoStageMoves && mParam->imShiftInBlocks &&
-    blockSizeInX * blockSizeInY > 1 && !preCooking;
+    blockSizeInX * blockSizeInY > 1 && !preCooking && !mReadingMontage;
   useHQ = mDoStageMoves && mParam->useHqParams && !mWinApp->LowDoseMode();
   mUsingImageShift = !mDoStageMoves || mImShiftInBlocks;
   mDefinedCenterFrames = false;
@@ -1162,7 +1162,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Set up focus blocks by setting up sequence of pieces and indices to focus centers
   if (mFocusInBlocks || mImShiftInBlocks) {
-    int ixbst, iybst, numCen, numx, numy, firstInd, ixBlock, iyBlock;
+    int ixbst, iybst, numCen, numx, firstInd, ixBlock, iyBlock, yBlockSt, yBlockEnd;
+    int iybEnd, yDir;
     float xmin, xmax, ymin, ymax;
     ixbst = 0;
     ind = 0;
@@ -1174,17 +1175,23 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       numx = mParam->xNframes / numBlocksX;
       if (ixBlock < mParam->xNframes % numBlocksX)
         numx++;
-      iybst = 0;
-      for (iyBlock = 0; iyBlock < numBlocksY; iyBlock++) {
-        numy = mParam->yNframes / numBlocksY;
-        if (iyBlock < mParam->yNframes % numBlocksY)
-          numy++;
 
+      iybst = 0;
+      yDir = 1;
+      yBlockSt = 0;
+      yBlockEnd = numBlocksY - 1;
+      if (mDoZigzagStage && ixBlock % 2) {
+        B3DSWAP(yBlockSt, yBlockEnd, iy);
+        yDir = -1;
+      }
+      for (iyBlock = yBlockSt; yDir * (iyBlock - yBlockEnd) <= 0; iyBlock += yDir) {
+        balancedGroupLimits(mParam->yNframes, numBlocksY, iyBlock, &iybst, &iybEnd);
+        
         // Loop on pieces in block in usual order, add to sequence, keep track of index
         // of first included piece and min and max positions of each included piece
         firstInd = -1;
         for (ix = ixbst; ix < ixbst + numx; ix++) {
-          for (iy = iybst; iy < iybst + numy; iy++) {
+          for (iy = iybst; iy <= iybEnd; iy++) {
             icx1 = iy + ix * mParam->yNframes;
             mIndSequence[ind++] = icx1;
             if (mPieceToVar[icx1] < 0)
@@ -1212,7 +1219,6 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           mBlockCenX[numCen] = (xmin + xmax) / 2;
           mBlockCenY[numCen++] = (ymin + ymax) / 2;
         }
-        iybst += numy;
       }
       ixbst += numx;
     }
