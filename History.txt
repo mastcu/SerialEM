@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/23: Added option autocentering to change mag wfor the imaging when not in
+Low Dose mode.
+
+1/20/23: Added script command to set tilt increment.
+
+1/20/23: Fixed some problems with hybrid montages and allowed one for low mag
+map to use zigzag pattern.
+
+1/20/23: Added script command to look up slot number for an ID on JEOL
+autoloader.
+
 1/19/23: Fixed crash when collapsing Navigator groups right after adding a
 grid of points (In 4.0).
 

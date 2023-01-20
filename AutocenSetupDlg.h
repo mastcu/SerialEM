@@ -39,6 +39,7 @@ private:
   BOOL mLowDoseMode;
   bool mLastTrialMismatch;
   bool mOpening;
+  int mStartingMagInd;
   CFont mItalicFont;
 
 public:
@@ -127,4 +128,6 @@ public:
   float m_fIterThresh;
   afx_msg void OnIterate();
   afx_msg void OnKillfocusEditIterate();
+  BOOL m_bSwitchMagToRun;
+  afx_msg void OnSwitchMagToRun();
 };

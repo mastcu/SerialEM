@@ -2467,7 +2467,7 @@ BEGIN
     PUSHBUTTON      "GO",IDC_COOKGO,18,152,33,14
 END
 
-IDD_AUTOCENSETUP DIALOGEX 0, 0, 153, 224
+IDD_AUTOCENSETUP DIALOGEX 0, 0, 153, 234
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Beam Autocentering Setup"
@@ -2483,43 +2483,45 @@ BEGIN
     LTEXT           "Mag:",IDC_STATIC,84,55,17,8
     RTEXT           "120000",IDC_STATACBMAG,102,55,23,8
     CONTROL         "",IDC_SPINACBMAG,"msctls_updown32",UDS_ARROWKEYS,127,52,9,14
-    LTEXT           "Intensity:",IDC_STATIC,6,72,28,8
-    LTEXT           "65.47% C2",IDC_STATACBPCTC2,39,72,35,8
-    LTEXT           "Binning:",IDC_STATIC,6,88,25,8
-    RTEXT           "16",IDC_STATACBBINNING,35,88,9,8
-    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,46,85,9,14
-    LTEXT           "Exposure:",IDC_STATIC,66,88,31,8
-    EDITTEXT        IDC_EDITACBEXPOSURE,99,85,27,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,129,88,11,8
-    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,110,103,10
+    LTEXT           "Intensity:",IDC_STATIC,6,82,28,8
+    LTEXT           "65.47% C2",IDC_STATACBPCTC2,39,82,35,8
+    LTEXT           "Binning:",IDC_STATIC,6,98,25,8
+    RTEXT           "16",IDC_STATACBBINNING,35,98,9,8
+    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,46,95,9,14
+    LTEXT           "Exposure:",IDC_STATIC,66,98,31,8
+    EDITTEXT        IDC_EDITACBEXPOSURE,99,95,27,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATIC,129,98,11,8
+    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,120,103,10
     CONTROL         "Use centroid of image intensities",IDC_RADIOUSECENTROID,
-                    "Button",BS_AUTORADIOBUTTON,21,120,110,10
-    GROUPBOX        "Beam centering method",IDC_STATIC,17,101,117,31,WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON,21,130,110,10
+    GROUPBOX        "Beam centering method",IDC_STATIC,17,111,117,31,WS_GROUP
     CTEXT           "Directly set at this mag",IDC_STATSOURCE,2,29,145,8
-    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,19,192,54,12
-    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,79,192,54,12
-    DEFPUSHBUTTON   "OK",IDOK,23,210,45,12
-    PUSHBUTTON      "Cancel",IDCANCEL,83,210,45,12
-    PUSHBUTTON      "?",IDC_BUTHELP,139,211,10,10
-    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,83,70,29,12
-    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,119,70,29,12
+    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,19,202,54,12
+    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,79,202,54,12
+    DEFPUSHBUTTON   "OK",IDOK,23,220,45,12
+    PUSHBUTTON      "Cancel",IDCANCEL,83,220,45,12
+    PUSHBUTTON      "?",IDC_BUTHELP,139,221,10,10
+    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,83,80,29,12
+    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,119,80,29,12
     LTEXT           "nPr",IDC_STAT_NANOPROBE,62,55,14,8
     CONTROL         "Find edges with beam shifted by",IDC_ACS_SHIFT_BEAM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,137,107,10
-    EDITTEXT        IDC_EDIT_ACS_BEAM_SHIFT,114,135,24,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_ACS_MICRONS,139,138,10,8
-    GROUPBOX        "Beam shift to add after centering",IDC_STATIC,4,149,145,23
-    CONTROL         "Record the shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,159,56,10
-    PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,66,159,24,10
-    LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,97,160,49,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,147,107,10
+    EDITTEXT        IDC_EDIT_ACS_BEAM_SHIFT,114,145,24,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_ACS_MICRONS,139,148,10,8
+    GROUPBOX        "Beam shift to add after centering",IDC_STATIC,4,159,145,23
+    CONTROL         "Record the shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,169,56,10
+    PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,66,169,24,10
+    LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,97,170,49,8
     CTEXT           "Not tracking intensity on scope ",IDC_STAT_LD_TRACK_SCOPE,19,39,112,8
     CONTROL         "Use Trial in LD with beam smaller by",IDC_USE_TRIAL_SMALLER,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,6,117,10
     CONTROL         "",IDC_SPIN_SMALLER_TRIAL,"msctls_updown32",UDS_ARROWKEYS,138,4,9,14
     RTEXT           "88%",IDC_STAT_SMALLER_TRIAL,123,7,14,8
-    CONTROL         "Center twice if beam is moved >",IDC_ACS_ITERATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,177,104,10
-    EDITTEXT        IDC_EDIT_ACS_ITERATE,112,175,24,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_ACS_ITERATE_UM,137,178,10,8
+    CONTROL         "Center twice if beam is moved >",IDC_ACS_ITERATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,187,104,10
+    EDITTEXT        IDC_EDIT_ACS_ITERATE,112,185,24,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_ACS_ITERATE_UM,137,188,10,8
+    CONTROL         "Switch to selected mag for autocentering",IDC_SWITCH_MAG_TO_RUN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,67,143,10
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
@@ -4185,7 +4187,7 @@ BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 150
         TOPMARGIN, 3
-        BOTTOMMARGIN, 221
+        BOTTOMMARGIN, 231
     END
 
     IDD_READFILEDLG, DIALOG
@@ -7151,6 +7153,10 @@ BEGIN
     IDC_RCLOSE_FOR_NEXT     "A new file will be opened for each polygon, and the last one closed"
     IDC_RLEAVE_OPEN         "File will be left open for other polygons needing same piece number, etc"
     IDC_RONLY_IF_NEEDED     "Montages will be saved into matching file if one is still open"
+    IDC_SWITCH_MAG_TO_RUN   "Change to a specific magnification to do autocentering"
+    IDC_CHECK_IMSHIFT_IN_BLOCKS
+                            "Use image shift with square blocks and stage shift to move to each block"
+    IDC_SPIN_IS_BLOCKSIZE   "Set the size of the blocks in microns"
 END
 
 STRINGTABLE

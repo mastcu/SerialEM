@@ -796,7 +796,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 {
   float ratio, derate;
   double curAngle, curIntensity, sumAngle;
-  int error, spot, iDir, probe, numTilts, imSize, newBaseZ, i, magToSet = 0;
+  int error, spot, iDir, probe, numTilts, cenMag, imSize, newBaseZ, i, magToSet = 0;
   CString message, str, bidirStr;
   MontParam *montP = mWinApp->GetMontParam();
   mLowDoseMode = mWinApp->LowDoseMode();
@@ -1285,10 +1285,13 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mOneShotCloseValves = 0;
     mUseNewRefOnResume = false;
     probe = mLowDoseMode ? mLDParam[TRIAL_CONSET].probeMode : mScope->GetProbeMode();
+    cenMag = mWinApp->mMultiTSTasks->GetAutoCenUseMagInd();
+    if (!cenMag || mLowDoseMode)
+      cenMag = mTSParam.magIndex[mSTEMindex];
     mAutocenteringBeam = (mTSParam.cenBeamPeriodically || 
       (mTSParam.cenBeamAbove && !mDoingDoseSymmetric)) &&
       mMultiTSTasks->AutocenParamExists(mActiveCameraList[mTSParam.cameraIndex], 
-      mTSParam.magIndex[mSTEMindex], probe) && !mSTEMindex;
+      cenMag, probe) && !mSTEMindex;
     mAutocenStamp = 0.001 * GetTickCount();
     mDidCrossingAutocen = false;
     if (mTSParam.cenBeamAngle < 0)

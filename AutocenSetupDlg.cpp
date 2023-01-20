@@ -31,12 +31,14 @@ CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
   , m_strSmallerTrial(_T(""))
   , m_bIterate(FALSE)
   , m_fIterThresh(0.1f)
+  , m_bSwitchMagToRun(FALSE)
 {
   mEnableAll = true;
   mLastTrialMismatch = false;
   mParam = NULL;
   mOpening = true;
   mNonModal = true;
+  mStartingMagInd = 0;
 }
 
 CAutocenSetupDlg::~CAutocenSetupDlg()
@@ -92,6 +94,7 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_ACS_ITERATE, m_fIterThresh);
   MinMaxFloat(IDC_EDIT_ACS_ITERATE, m_fIterThresh, 0.01f, 10.f,
     "Threshold for running twice");
+  DDX_Check(pDX, IDC_SWITCH_MAG_TO_RUN, m_bSwitchMagToRun);
 }
 
 
@@ -115,6 +118,7 @@ BEGIN_MESSAGE_MAP(CAutocenSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_USE_TRIAL_SMALLER, OnUseTrialSmaller)
   ON_BN_CLICKED(IDC_ACS_ITERATE, OnIterate)
   ON_EN_KILLFOCUS(IDC_EDIT_ACS_ITERATE, OnKillfocusEditIterate)
+  ON_BN_CLICKED(IDC_SWITCH_MAG_TO_RUN, OnSwitchMagToRun)
 END_MESSAGE_MAP()
 
 
@@ -149,6 +153,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   m_statSource.SetFont(&mItalicFont);*/
 
   // In low dose, start with the trial parameters for fetching the parameters to use
+  m_bSwitchMagToRun = mMultiTasks->GetAutoCenUseMagInd() > 0;
   if (mLowDoseMode) {
     mCurMagInd = ldp->magIndex;
     mCurSpot = ldp->spotSize;
@@ -162,6 +167,13 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     mCurSpot = mScope->GetSpotSize();
     mCurProbe = mScope->ReadProbeMode();
     m_statLdTrackScope.ShowWindow(SW_HIDE);
+
+    // But if the option to run with a mag is set, save starting mag and go to that mag
+    if (m_bSwitchMagToRun) {
+      mStartingMagInd = mCurMagInd;
+      mCurMagInd = mMultiTasks->GetAutoCenUseMagInd();
+      mScope->SetMagIndex(mCurMagInd);
+    }
 
     // This is held at the starting value when not tracking state, is sync'ed to the param
     // value but is needed for fetching param when tracking state, and reverts to the
@@ -178,6 +190,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   m_butAcquire.EnableWindow(mLowDoseMode);
   m_bIterate = mMultiTasks->GetAutoCenIterate();
   m_fIterThresh = mMultiTasks->GetAutoCenIterThresh();
+  EnableDlgItem(IDC_SWITCH_MAG_TO_RUN, !mLowDoseMode);
 
   m_sbcSpot.SetRange(0,30000);
   m_sbcSpot.SetPos(15000);
@@ -201,6 +214,10 @@ void CAutocenSetupDlg::OnOK()
   UpdateIfExposureChanged();
   mMultiTasks->SetAutoCenIterate(m_bIterate);
   mMultiTasks->SetAutoCenIterThresh(m_fIterThresh);
+  if (!mLowDoseMode)
+    mMultiTasks->SetAutoCenUseMagInd(m_bSwitchMagToRun ? mCurMagInd : 0);
+  if (mStartingMagInd)
+    mScope->SetMagIndex(mStartingMagInd);
   mMultiTasks->AutocenClosing();
 }
 
@@ -208,6 +225,8 @@ void CAutocenSetupDlg::OnCancel()
 {
   if (!mEnableAll)
     return;
+  if (mStartingMagInd)
+    mScope->SetMagIndex(mStartingMagInd);
   mMultiTasks->AutocenClosing();
 }
 
@@ -240,6 +259,13 @@ void CAutocenSetupDlg::OnSetbeamstate()
   m_butAcquire.EnableWindow(m_bSetState);
   m_butMore.EnableWindow(m_bSetState);
   m_butLess.EnableWindow(m_bSetState);
+  mWinApp->RestoreViewFocus();
+}
+
+// Check box to use the current mag when running
+void CAutocenSetupDlg::OnSwitchMagToRun()
+{
+  UpdateData(true);
   mWinApp->RestoreViewFocus();
 }
 

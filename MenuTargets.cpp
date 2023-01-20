@@ -2736,7 +2736,9 @@ void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
     roughInt = ldParm->intensity;
   } else {
     spot = mScope->FastSpotSize();
-    mag = mScope->FastMagIndex();
+    mag = mWinApp->mMultiTSTasks->GetAutoCenUseMagInd();
+    if (!mag)
+      mag = mScope->FastMagIndex();
     roughInt = mScope->FastIntensity();
     probe = mScope->GetProbeMode();
   }

@@ -86,6 +86,7 @@ private:
   int mAcSavedReadMode;
   BOOL mAutoCenIterate;    // Flag to iterate
   float mAutoCenIterThresh;   // Threshold in microns for iterating
+  int mAutoCenUseMagInd;   // Mag index to switch to outside low dose
   WINDOWPLACEMENT mAutocenDlgPlace;
   WINDOWPLACEMENT mVPPConditionPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
@@ -202,6 +203,7 @@ public:
   GetSetMember(BOOL, AutoCenIterate);
   GetSetMember(float, AutoCenIterThresh);
   SetMember(bool, BfcIgnoreNextStop);
+  GetSetMember(int, AutoCenUseMagInd);
 
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};

@@ -1095,6 +1095,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
   mAcLDarea = TRIAL_CONSET;
   mAcConset = TRACK_CONSET;
     
+  mAcSavedMagInd = 0;
   if (mWinApp->LowDoseMode()) {
     smallerTrial = mUseEasyAutocen || pctSmallerView >= 0;
     if (pctSmallerView >= 0) {
@@ -1118,7 +1119,13 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
       SEMMessageBox("You cannot autocenter beam with View outside low dose mode");
       return 1;
     }
+
+    // Save and set mag index if option set
     magInd = mScope->GetMagIndex();
+    if (mAutoCenUseMagInd) {
+      mAcSavedMagInd = magInd;
+      magInd = mAutoCenUseMagInd;
+    }
     spotSize = mScope->GetSpotSize();
     mAcSavedIntensity = mScope->GetIntensity();
     probe = mScope->ReadProbeMode();
@@ -1144,6 +1151,8 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
 
   // Zero image shift except in low dose, set the intensity and get an image
   if (!mWinApp->LowDoseMode()) {
+    if (mAutoCenUseMagInd)
+      mScope->SetMagIndex(magInd);
     mScope->GetLDCenteredShift(mAcISX, mAcISY);
     mScope->IncImageShift(-mAcISX, -mAcISY);
   }
@@ -1297,8 +1306,11 @@ void CMultiTSTasks::StopAutocen(void)
       conSet->mode = mAcSavedViewContin;
       conSet->K2ReadMode = mAcSavedReadMode;
     }
-  } else
+  } else {
     mScope->IncImageShift(mAcISX, mAcISY);
+    if (mAcSavedMagInd)
+      mScope->SetMagIndex(mAcSavedMagInd);
+  }
   mAutoCentering = false;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
