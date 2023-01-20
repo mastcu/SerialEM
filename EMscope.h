@@ -940,6 +940,7 @@ public:
                                      double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha);
   BOOL CassetteSlotStatus(int slot, int &status);
+  int FindCartridgeWithID(int ID, CString &errStr);
   int LoadCartridge(int slot);
   int UnloadCartridge(void);
   int FindCartridgeAtStage(int &id);

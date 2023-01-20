@@ -1708,6 +1708,19 @@ int CMacCmd::TiltTo(void)
   return 0;
 }
 
+// SetTiltIncrement
+int CMacCmd::SetTiltIncrement(void)
+{
+  if (mWinApp->mTSController->StartedTiltSeries())
+    ABORT_LINE("You cannot change tilt increment after a tilt series is started");
+  if (mItemFlt[1] < 0.02 || mItemFlt[1] > 60)
+    ABORT_LINE("Tilt increment must be between 0.02 and 60 for line:\n\n");
+  mScope->SetIncrement(mItemFlt[1]);
+  if (!mItemEmpty[2])
+    mScope->SetCosineTilt(mItemInt[2] != 0);
+  return 0;
+}
+
 // SetStageBAxis
 int CMacCmd::SetStageBAxis(void)
 {
@@ -8031,6 +8044,17 @@ int CMacCmd::ReportSlotStatus(void)
     mLogRpt.Format("Slot %d %s", mItemInt[1], index < 0 ? "has unknown status" :
     (index ? "is occupied" : "is empty"));
   SetRepValsAndVars(2, (double)index);
+  return 0;
+}
+
+// FindCartridgeWithID
+int CMacCmd::FindCartridgeWithID(void)
+{
+  int slot = mScope->FindCartridgeWithID(mItemInt[1], mStrCopy);
+  if (slot < 0)
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  mLogRpt.Format("ID %d is at inventory slot # %d", mItemInt[1], slot);
+  SetRepValsAndVars(1, (double)slot);
   return 0;
 }
 

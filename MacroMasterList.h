@@ -701,6 +701,8 @@ MAC_SAME_NAME_ARG(CalibrateHighFocusIS, 1, 1, CALIBRATEHIGHFOCUSIS, Dd)
 MAC_SAME_NAME_ARG(GetSTEMBrightContrast, 1, 0, GETSTEMBRIGHTCONTRAST, S)
 MAC_SAME_FUNC_ARG(SetSTEMBrightContrast, 3, 0, GetSTEMBrightContrast, SETSTEMBRIGHTCONTRAST, DDS)
 MAC_SAME_NAME_ARG(ReportMontagePiece, 1, 4, REPORTMONTAGEPIECE, I)
+MAC_SAME_NAME_ARG(FindCartridgeWithID, 1, 4, FINDCARTRIDGEWITHID, I)
+MAC_SAME_NAME_ARG(SetTiltIncrement, 1, 4, SETTILTINCREMENT, Ii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

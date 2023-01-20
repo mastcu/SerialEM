@@ -6690,6 +6690,33 @@ int CEMscope::FindCartridgeAtStage(int &id)
   return -1;
 }
 
+// Look up a slot number by ID
+int CEMscope::FindCartridgeWithID(int ID, CString &errStr)
+{
+  int ind;
+  JeolCartridgeData jcd;
+  if (!JEOLscope) {
+    errStr = "ID values are available only for JEOL autoloaders";
+    return -1;
+  }
+  if (mJeolHasNitrogenClass < 2) {
+    errStr = "Autoloader support is not available unless property JeolHasNitrogenClass "
+      "is set to >= 2";
+    return -1;
+  }
+  if (!mJeolLoaderInfo.GetSize()) {
+    "An inventory must be run first to get autoloader information";
+    return -1;
+  }
+  for (ind = 0; ind < mJeolLoaderInfo.GetSize(); ind++) {
+    jcd = mJeolLoaderInfo.GetAt(ind);
+    if (jcd.id == ID)
+      return ind + 1;
+  }
+  errStr.Format("ID %d was not found in the inventory", ID);
+  return -1;
+}
+
 // Functions for dealing with temperature control
 
 // Dewars busy
@@ -9461,7 +9488,9 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
           if (JEOLscope) {
-            lod->plugFuncs->GetCartridgeInfo(0, &dummy, &dummy, &dummy, &dummy, &dummy);
+            name = lod->plugFuncs->GetCartridgeInfo(0, &jcData.id, &station, &slot, 
+              &dummy, &dummy);
+
             // For JEOL, get as much info as possible;
             lod->cartInfo->RemoveAll();
             for (ind = 1; ind <= lod->maxLoaderSlots; ind++) {

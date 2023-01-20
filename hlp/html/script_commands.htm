@@ -2453,6 +2453,12 @@
           <TD>Like TiltUp, but tilts down by preset increment</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetTiltIncrement #I [#C]</TD>
+          <TD>Sets the tilt increment to the <b>#I</b>.&nbsp; If the option <b>#C</b> is entered, it sets
+            cosine tilting if non-zero or turns it off if 0.&nbsp; Command added in 4.1, 20-Jan-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">TiltTo #A&nbsp; [#R] [#X #Y]</TD>
           <TD>Like TiltUp, but tilts to given angle <b>#A</b></TD>
         </TR>
@@ -3192,6 +3198,12 @@
              (0 for unknown, 1 for regular, 2 for rotating); the angle value (0 for unknown, 1 for 0 degrees, 
             2 for 90 degrees, or 3 for a regular cartridge); and the name.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindCartridgeWithID #</TD>
+          <TD>For a JEOL autoloader, reports the index in the inventory array of the cartridge whose ID
+             is <b>#</b>&nbsp; Values are numbered from 1 and suitable for use in the 'LoadCartridge'.&nbsp; Value 
+            may be assigned to a variable after the ID.&nbsp; COmmand added in 4.1, 19-Jan-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AreDewarsFilling</TD>
@@ -4412,7 +4424,7 @@
           <TD>Creates an ID value unique from any current Navigator items and places it in <i>reportedValue1</i>;
              it can be assigned to a variable after the command.&nbsp; The ID can be used with 
             'AddStagePosAsNavPoint' and 'AddImagePosAsNavPoint' to assign multiple points to a 
-            group.&nbsp; Command added in 4.1, 7/6/22</TD>
+            group.&nbsp; Command added in 4.1, 6-Jul-22</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AdjustStagePosForNav #SX #SY [#IX #IY] [#C] [#M] [#T]</TD>
@@ -4422,7 +4434,7 @@
             optional <b>#T</b>.&nbsp; These adjustments depend on the active camera number, which can be entered
             <b>#C</b> (numbered from 1, use -1 for current camera), on the magnification index, which can be
             entered with <b>#M</b> (use -1 for current magnification), and on the tilt angle, which can be entered
-            with <b>#T</b> and defaults to the current angle.&nbsp; Command added in 4.0, 1/28/22.
+            with <b>#T</b> and defaults to the current angle.&nbsp; Command added in 4.1, 6-Jul-22.
           </TD>
         </TR>
         <TR>
@@ -4431,14 +4443,14 @@
             Navigator point item with the Z value given by <b>#Z</b>.&nbsp; A group ID can be assigned 
             with the optional <b>#I</b>, otherwise it will be 0.&nbsp; The optional <b>#D</b> can be set
             non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
-            the new item.&nbsp; Command added in 4.0, 1/28/22.</TD>
+            the new item.&nbsp; Command added in 4.1, 6-Jul-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddStagePointsAsPolygon xvar yvar #Z [#D]</TD>
           <TD>Adds the adjusted stage positions in two arrays, <b>xvar</b> and <b>yvar</b>, as a polygon
             item.&nbsp; The Z position must be supplied in <b>#Z</b>.&nbsp; The optional <b>#D</b> can be set
             non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
-            the new item.&nbsp; Command added in 4.0, 1/28/22.
+            the new item.&nbsp; Command added in 4.1, 6-Jul-22.
           </TD>
         </TR>
         <TR>
@@ -4449,20 +4461,20 @@
              displayed, i.e., with regular, very sloppy, or no alignment.&nbsp; A group ID can be assigned
              with the optional <b>#I</b>, otherwise it will be 0.&nbsp; The optional <b>#D</b> can be set
             non-zero to suppress redrawing the display.&nbsp; Sets <i>reportedValue1</i> with the index of
-            the new item.&nbsp; Command added in 4.0, 1/28/22.</TD>
+            the new item.&nbsp; Command added in 4.1, 6-Jul-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddImagePointsAsPolygon buf xvar yvar [#Z] [#D]</TD>
           <TD>Adds the image positions on the buffer <b>buf</b> in two arrays, <b>xvar</b> and <b>yvar</b> 
             (Y inverted) as a polygon
             item.&nbsp; The points for 'AddImagePosAsNavPoint' about image alignment, Z position, drawing, 
-            and <i>reportedValue1</i> apply here.&nbsp; Command added in 4.0, 1/28/22.</TD>
+            and <i>reportedValue1</i> apply here.&nbsp; Command added in 4.1, 6-Jul-22.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">DeleteNavigatorItem #</TD>
           <TD>Removes the Navigator item specified by <b>#I</b>
             (positive for table index, 0 for current item, or negative for index from
-            end; this command cannot be used while acquiring.&nbsp; Command added in 4.0, 1/28/22.</TD>
+            end; this command cannot be used while acquiring.&nbsp; Command added in 4.1, 6-Jul-22.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>
