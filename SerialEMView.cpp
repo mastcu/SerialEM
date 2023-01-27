@@ -2831,8 +2831,9 @@ void CSerialEMView::FindEffectiveZoom()
   double critErr = 0.05;  // Criterion error for using a preset zoom
   float binning = 1.;
   CameraParameters *camParam = mWinApp->GetCamParams();
-  int curCam = B3DCHOICE(mImBufs[mImBufIndex].mCamera < 0, mWinApp->GetCurrentCamera(),
-    mImBufs[mImBufIndex].mCamera);
+  int bufCam = mImBufs[mImBufIndex].mCamera;
+  int curCam = B3DCHOICE(bufCam < 0 || camParam[bufCam].sizeX <= 0,
+    mWinApp->GetCurrentCamera(), bufCam);
   int sizeX, sizeY;
   double ratioX, ratioY;
   int i;
