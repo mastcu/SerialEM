@@ -4130,7 +4130,6 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
       delISY += tranISY - realISY;
     }
   }
-
   result = (delISX || delISY || MagChgResetsIS(toInd)) && mCalNeutralStartMag < 0 &&
     (bothLMnonLM || mApplyISoffset || mLowDoseMode);
   if (result) {
@@ -7548,7 +7547,7 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
   int newMag = 0;
   int oldMag, curMag, toCam, fromCam, enumVal, regCam, lvalue;
   float toFactor, fromPixel, toPixel;
-  double ratio, factor, newIntensity;
+  double ratio, factor, newIntensity, delISX, delISY;
   BOOL savedIntensityZoom = false;
   BOOL regIsSTEM = false, mismatch = false;
 
@@ -7643,6 +7642,10 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
           if (mPlugFuncs->NormalizeLens)
             mPlugFuncs->NormalizeLens(pnmProjector);
           AUTONORMALIZE_SET(*vTrue);
+          if (oldMag != newMag && mApplyISoffset) {
+            AssessMagISchange(oldMag, newMag, false, delISX, delISY);
+            mPlugFuncs->SetImageShift(delISX, delISY);
+          }
         }
       }
 

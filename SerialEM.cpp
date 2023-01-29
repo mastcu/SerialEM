@@ -1489,6 +1489,9 @@ BOOL CSerialEMApp::InitInstance()
   }
   CopyConSets(mCurrentCamera);
 
+  // Get the image shift offsets set up now that the camera is finalized
+  mScope->SetApplyISoffset(mScope->GetApplyISoffset());
+
   // Need to start update after cameras are initialized and active number set this way
   mScope->StartUpdate();
 
@@ -4098,7 +4101,7 @@ void CSerialEMApp::RestoreCameraForExit(void)
 void CSerialEMApp::SetEFTEMMode(BOOL inState)
 {
   BOOL needed;
-  int ldArea;
+  int ldArea, magInd;
   int toCamera = mFilterParams.firstRegularCamera;
   if (toCamera < 0)
     toCamera = mFirstSTEMcamera;
@@ -4153,8 +4156,19 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
       // 1/18/12 No longer call ChangeAllShifts!
     }
 
-    // Change state and copy the proper LDP back in if not going to STEM
+     // Change state and copy the proper LDP back in if not going to STEM
     mEFTEMMode = inState;
+
+    if (mScope->GetApplyISoffset()) {
+      if (FEIscope) {
+        magInd = mScope->GetMagIndex();
+        mScope->IncImageShift(mMagTab[magInd].calOffsetISX[inState ? 1 : 0] -
+          mMagTab[magInd].calOffsetISX[inState ? 0 : 1],
+          mMagTab[magInd].calOffsetISY[inState ? 1 : 0] -
+          mMagTab[magInd].calOffsetISY[inState ? 0 : 1]);
+      }
+      mScope->SetApplyISoffset(true);
+    }
 
     // If entering EFTEM mode, take slit out
     if (mEFTEMMode)

@@ -1966,9 +1966,6 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(), 
       mWinApp->GetBasicHideStrings());
 
-  // Once calibrations are read, need to reset the IS offsets
-  mWinApp->mScope->SetApplyISoffset(mWinApp->mScope->GetApplyISoffset());
-
   // Fix intensities in settings
   FixSettingsForIALimitCal();
 }
