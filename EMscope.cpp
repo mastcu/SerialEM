@@ -5533,11 +5533,12 @@ void CEMscope::GotoLowDoseArea(int newArea)
       centeredISY, newISX, newISY);
   }
 
-  if (GetDebugOutput('L'))
+  if (GetDebugOutput('L')) {
     GetImageShift(newISX, newISY);
-  if (oldArea != newArea)
-    SEMTrace('L', "LD: from %d to %d  was %.3f, %.3f  inc by %.3f, %.3f  now %.3f, %.3f",
-      oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
+    if (oldArea != newArea)
+      SEMTrace('L', "LD: from %d to %d  was %.3f, %.3f  inc by %.3f, %.3f  now %.3f, %.3f"
+        , oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
+  }
   if (GetDebugOutput('l')) {
     SEMTrace('l', "GotoLowDoseArea: focus at end %.2f update count %d\r\n", GetDefocus(), mAutosaveCount);
     if (GetDebugOutput('b') && !STEMmode) {
