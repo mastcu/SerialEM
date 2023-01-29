@@ -11,11 +11,14 @@
 #include "NavHelper.h"
 #include "EMscope.h"
 #include "ShiftManager.h"
+#include "ParticleTasks.h"
 #include "MultiHoleCombiner.h"
 #include "MultiCombinerDlg.h"
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "holefinder.h"
+#include "MacroProcessor.h"
+#include "LogWindow.h"
 #include "MapDrawItem.h"
 #include <algorithm>
 #include "Shared\b3dutil.h"
@@ -76,24 +79,34 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   MontParam *montp;
   int *activeList;
   LowDoseParams *ldp;
-  ScaleMat s2c, is2cam, st2is, gridMat, holeInv, holeMat, prodMat;
+  ScaleMat s2c, is2cam, st2is, is2st, gridMat, holeInv, holeMat, prodMat, gridStMat;
   PositionData data;
   CArray<PositionData, PositionData> fullArray, bestFullArray;
-  float avgAngle, spacing;
+  float avgAngle, spacing, xfit[3], yfit[3];
   double hx, hy;
-  float nearIntCrit = 0.33f;
-  int ind, nx, ny, numPoints, ix, iy, groupID, drawnOnID = -1;
+  float nearIntCrit = 0.33f, near60crit = 15.f;
+  int ind, jnd, vnd, nx, ny, numPoints, ix, iy, groupID, drawnOnID = -1;
   int rowStart, colStart, num, minFullNum = 10000000;
   float fDTOR = (float)DTOR;
-  float fullSd, fullBestSd, ptX, ptY;
+  float fullSd, fullBestSd, ptX, ptY, hxHex[3], hyHex[3];
   float minCenDist, cenDist, boxDx, boxDy;
-  bool crossPattern, leftOK, rightOK, upOK, downOK;
+  bool crossPattern, leftOK, rightOK, upOK, downOK, handled;
   int *mapVals;
+  float gridXvecs[3], gridYvecs[3], restore[6] = {1., 0.5f, 0., sqrtf(3.f) / 2.f, 0., 0.};
+  float tripletX[3], tripletY[3];
   int camera = mWinApp->GetCurrentCamera();
-  int yStart, xStart, xDir, magInd, registration, divStart;
+  int yStart, xStart, xDir, magInd, registration, divStart, hex, distSq;
+  int ring, step, mainDir, sideDir, mainSign, sideSign, xCen, yCen, assignTemp = 1000000;
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
-  float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm;
+  float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm, minDist, dist;
   int realXstart, realYstart, realXend, realYend;
+  int hexIndXvecs[3] = {1, 0, -1}, hexIndYvecs[3] = {0, 1, 1};
+  IntVec tripletsDelX[3];
+  IntVec tripletsDelY[3];
+  float gridAng1, gridAng2, holeAng1, holeAng2, gridDist1, gridDist2, holeDist1;
+  float holeDist2, angDiff1, angDiff2, vecLenDiffCrit = 0.25f;
+  int hexPosRot1, hexPosRot2, hexGrid;
+  bool posRotInvertDir;
 
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
@@ -216,7 +229,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     }
   }
 
-  if (mUseImageCoords && !mNav->BufferStageToImage(mImBuf, mBSTImat, mBSTIdelX,
+  if (mUseImageCoords && !mNav->BufferStageToImage(mImBuf, mBITSmat, mBSTIdelX,
     mBSTIdelY))
     mUseImageCoords = false;
 
@@ -232,53 +245,123 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 
     // We need the image to stage matrix later, so invert
     // We need image to IS transform to replace stage to IS
-    mBSTImat = MatInv(mBSTImat);
-    st2is = MatMul(mBSTImat, st2is);
+    mBITSmat = MatInv(mBITSmat);
+    st2is = MatMul(mBITSmat, st2is);
   }
 
   // Get average angle and length with whichever positions
+  hexGrid = msParams->doHexArray ? 1 : 0;
   mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
-    peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
-  mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
-      spacing);
+    peakAlt, 0., 0., 0, spacing, xMissing, yMissing, hexGrid);
+  mFindHoles->getGridVectors(gridXvecs, gridYvecs, avgAngle, spacing, hexGrid);
+  gridMat.xpx = gridXvecs[0];
+  gridMat.ypx = gridYvecs[0];
+  gridMat.xpy = gridXvecs[1];
+  gridMat.ypy = gridYvecs[1];
 
-  // Get a matrix that would transform from relative hole positions in unit vector stage
-  // space to relative hole positions in unit vector image shift space
-  // gridMat takes unit vectors in stage or image hole space to stage or image positions
-  // st2is takes those positions to image shift positions
-  // Transfer the hole vectors from where they were defined to the mag in question
-  // Compute a transformation from IS space hole number to IS and take its inverse
-  mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
-    msParams->holeISXspacing[0], msParams->holeISYspacing[0], magInd, hx, hy, camera);
-  holeInv.xpx = (float)hx;
-  holeInv.ypx = (float)hy;
-  mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
-    msParams->holeISXspacing[1], msParams->holeISYspacing[1], magInd, hx, hy, camera);
-  holeInv.xpy = (float)hx;
-  holeInv.ypy = (float)hy;
-  holeMat = MatInv(holeInv);
-  prodMat = MatMul(MatMul(gridMat, st2is), holeMat);
-  mSkipXform.xpx = (float)B3DNINT(prodMat.xpx);
-  mSkipXform.xpy = (float)B3DNINT(prodMat.xpy);
-  mSkipXform.ypx = (float)B3DNINT(prodMat.ypx);
-  mSkipXform.ypy = (float)B3DNINT(prodMat.ypy);
-  if (fabs(mSkipXform.xpx) > 1.01 || fabs(mSkipXform.xpy) > 1.01 ||
-    fabs(mSkipXform.ypx) > 1.01 || fabs(mSkipXform.ypy) > 1.01 ||
-    fabs(mSkipXform.xpx - prodMat.xpx) > nearIntCrit ||
-    fabs(mSkipXform.xpy - prodMat.xpy) > nearIntCrit ||
-    fabs(mSkipXform.ypx - prodMat.ypx) > nearIntCrit ||
-    fabs(mSkipXform.ypy - prodMat.ypy) > nearIntCrit ||
-    fabs(mSkipXform.xpx * mSkipXform.ypx + mSkipXform.xpy * mSkipXform.ypy) > 0.001) {
-    PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
-      " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
-      "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
-      "holeMat: %.3f %.3f %.3f %.3f", sMessages[ERR_BAD_UNIT_XFORM - 1],
-      mUseImageCoords ? "image" : "stage",
-      prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
-      gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
-      mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
-      holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
-    return ERR_BAD_UNIT_XFORM;
+  // Solve for best transform from all the vectors for hex
+  if (hexGrid) {
+    xfit[0] = 1.;
+    yfit[0] = 0.;
+    xfit[1] = 0.;
+    yfit[1] = 1.;
+    xfit[2] = -1.;
+    yfit[2] = 1.;
+    lsFit2(xfit, yfit, gridXvecs, 3, &gridMat.xpx, &gridMat.xpy, NULL);
+    lsFit2(xfit, yfit, gridYvecs, 3, &gridMat.ypx, &gridMat.ypy, NULL);
+    gridStMat = gridMat;
+    if (mUseImageCoords)
+      gridStMat = MatMul(gridMat, mBITSmat);
+
+    is2st = MatInv(MatMul(s2c, MatInv(is2cam)));
+    for (ind = 0; ind < 3; ind++) {
+      mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+        msParams->hexISXspacing[ind], msParams->hexISYspacing[ind], magInd, hx, hy, 
+        camera);
+      hxHex[ind] = (float)hx;
+      hyHex[ind] = (float)hy;
+    }
+
+    // This gives best estimate of first two vectors in IS space at the given mag
+    // multiply by IS to Stage to get these vectors in stage space
+    lsFit2(xfit, yfit, hxHex, 3, &holeInv.xpx, &holeInv.xpy, NULL);
+    lsFit2(xfit, yfit, hyHex, 3, &holeInv.ypx, &holeInv.ypy, NULL);
+    holeMat = MatMul(holeInv, is2st);
+    gridAng1 = (float)(atan2f(gridStMat.ypx, gridStMat.xpx) / DTOR);
+    gridDist1 = sqrtf(gridStMat.xpx * gridStMat.xpx + gridStMat.ypx * gridStMat.ypx);
+    gridAng2 = (float)(atan2f(gridStMat.ypy, gridStMat.xpy) / DTOR);
+    gridDist2 = sqrtf(gridStMat.xpy * gridStMat.xpy + gridStMat.ypy * gridStMat.ypy);
+    holeAng1 = (float)(atan2f(holeMat.ypx, holeMat.xpx) / DTOR);
+    holeDist1 = sqrtf(holeMat.xpx * holeMat.xpx + holeMat.ypx * holeMat.ypx);
+    holeAng2 = (float)(atan2f(holeMat.ypy, holeMat.xpy) / DTOR);
+    holeDist2 = sqrtf(holeMat.xpy * holeMat.xpy + holeMat.ypy * holeMat.ypy);
+    angDiff1 = (float)UtilGoodAngle(gridAng1 - holeAng1);
+    angDiff2 = (float)UtilGoodAngle(gridAng2 - holeAng2);
+    if (angDiff1 < 0.)
+      angDiff1 += 360.;
+    if (angDiff2 < 0.)
+      angDiff2 += 360.;
+
+    // Determine rotation between rings in the two spaces and check consistency
+    hexPosRot1 = B3DNINT(angDiff1 / 60.);
+    hexPosRot2 = B3DNINT(angDiff2 / 60.);
+    if (fabs(holeDist1 / gridDist1 - 1.) > vecLenDiffCrit ||
+      fabs(holeDist2 / gridDist2 - 1.) > vecLenDiffCrit ||
+      fabs(hexPosRot1 * 60. - angDiff1) > near60crit || 
+      fabs(hexPosRot2 * 60. - angDiff2) > near60crit || 
+      (hexPosRot1 != hexPosRot2 && (hexPosRot2 + 2) % 6 != hexPosRot1)) {
+      PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
+        "  Stage vectors from actual positions: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
+        "  Stage vectors from IS vectors: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
+        " Rotations between corresponding vectors: %.1f  %.1f deg",
+        sMessages[ERR_BAD_UNIT_XFORM - 1], gridDist1, gridAng1, gridDist2, gridAng2,
+        holeDist1, holeAng1, holeDist2, holeAng2, angDiff1, angDiff2);
+      return ERR_BAD_UNIT_XFORM;
+    }
+    posRotInvertDir = hexPosRot2 != hexPosRot1;
+    avgAngle = (float)(atan2f(gridMat.ypx, gridMat.xpx) / DTOR);
+
+  } else {
+
+    // Get a matrix that would transform from relative hole positions in unit vector stage
+    // space to relative hole positions in unit vector image shift space
+    // gridMat takes unit vectors in stage or image hole space to stage or image positions
+    // st2is takes those positions to image shift positions
+    // Transfer the hole vectors from where they were defined to the mag in question
+    // Compute a transformation from IS space hole number to IS and take its inverse
+    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+      msParams->holeISXspacing[0], msParams->holeISYspacing[0], magInd, hx, hy, camera);
+    holeInv.xpx = (float)hx;
+    holeInv.ypx = (float)hy;
+    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+      msParams->holeISXspacing[1], msParams->holeISYspacing[1], magInd, hx, hy, camera);
+    holeInv.xpy = (float)hx;
+    holeInv.ypy = (float)hy;
+    holeMat = MatInv(holeInv);
+    prodMat = MatMul(MatMul(gridMat, st2is), holeMat);
+
+    mSkipXform.xpx = (float)B3DNINT(prodMat.xpx);
+    mSkipXform.xpy = (float)B3DNINT(prodMat.xpy);
+    mSkipXform.ypx = (float)B3DNINT(prodMat.ypx);
+    mSkipXform.ypy = (float)B3DNINT(prodMat.ypy);
+    if (fabs(mSkipXform.xpx) > 1.01 || fabs(mSkipXform.xpy) > 1.01 ||
+      fabs(mSkipXform.ypx) > 1.01 || fabs(mSkipXform.ypy) > 1.01 ||
+      fabs(mSkipXform.xpx - prodMat.xpx) > nearIntCrit ||
+      fabs(mSkipXform.xpy - prodMat.xpy) > nearIntCrit ||
+      fabs(mSkipXform.ypx - prodMat.ypx) > nearIntCrit ||
+      fabs(mSkipXform.ypy - prodMat.ypy) > nearIntCrit ||
+      fabs(mSkipXform.xpx * mSkipXform.ypx + mSkipXform.xpy * mSkipXform.ypy) > 0.001) {
+      PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
+        " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
+        "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
+        "holeMat: %.3f %.3f %.3f %.3f", sMessages[ERR_BAD_UNIT_XFORM - 1],
+        mUseImageCoords ? "image" : "stage",
+        prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
+        gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
+        mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+        holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
+      return ERR_BAD_UNIT_XFORM;
+    }
   }
   /*PrintfToLog(
     " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
@@ -290,13 +373,19 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);*/
 
   // Now get grid positions
-  mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);
+  mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing, 
+    hexGrid);
+  /*for (ind = 0; ind < numPoints; ind++) {
+    item = itemArray->GetAt(navInds[ind]);
+    PrintfToLog("%s  %d  %d %.2f %.2f", item->mLabel, gridX[ind], gridY[ind], 
+    xCenters[ind], yCenters[ind]);
+  }*/
 
  // If the xpx term is 0, this means thare is a 90 degree rotation involved
   // In this case, the number of holes in stage coordinates is transposed from
   // the specified geometry.  Holes will be analyzed in stage coordinates, but the hole
   // geometry has to be back in image shift space when making Nav items
-  mTransposeSize = fabs(mSkipXform.xpx) < 0.1;
+  mTransposeSize = !hexGrid && fabs(mSkipXform.xpx) < 0.1;
   if (mTransposeSize)
     B3DSWAP(mNumXholes, mNumYholes, ix);
 
@@ -325,7 +414,269 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   mIndexesForUndo.clear();
   mIDsOutsidePoly.clear();
 
-  if (!crossPattern) {
+  if (mDebug)
+    mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
+
+  if (hexGrid) {
+
+    // HEXAGONAL ARRAYS
+    mNumRings = msParams->numHexRings;
+
+    // Fill array of indexes to valid positions in hexagon.  Go from center outward
+    mHexDelX.clear();
+    mHexDelY.clear();
+    mHexDelX.push_back(0);
+    mHexDelY.push_back(0);
+    for (ring = 1; ring < 2 * mNumRings + 2; ring++) {
+      ind = 0;
+      for (iy = 0; iy < 2 * mNumRings + 1; iy++) {
+        for (ix = 0; ix < 2 * mNumRings + 1; ix++) {
+          bx = ix - mNumRings;
+          by = iy - mNumRings;
+          distSq = bx * bx + by *by;
+          if (distSq > (ring - 1) * (ring - 1) && distSq <= ring * ring) {
+            ind = 1;
+            if (!((iy < mNumRings && ix < mNumRings - iy) ||
+              (iy > mNumRings && ix > 3 * mNumRings - iy))) {
+              mHexDelX.push_back(bx);
+              mHexDelY.push_back(by);
+            }
+          }
+        }
+      }
+      if (!ind)
+        break;
+    }
+
+    // Fill lookup arrays to get from lattice indexes back to position in rings
+    mOneDIndexToHexRing.resize((2 * mNumRings + 1) * (2 * mNumRings + 1), -1);
+    mOneDIndexToPosInRing.resize((2 * mNumRings + 1) * (2 * mNumRings + 1), -1);
+    mOneDIndexToHexRing[mNumRings + mNumRings * (2 * mNumRings + 1)] = 0;
+    mOneDIndexToPosInRing[mNumRings + mNumRings * (2 * mNumRings + 1)] = 0;
+    for (ring = 1; ring <= mNumRings; ring++) {
+      for (step = 0; step < 6; step++) {
+        mWinApp->mParticleTasks->DirectionIndexesForHexSide(step, mainDir, mainSign, 
+          sideDir, sideSign);
+        for (ind = 0; ind < ring; ind++) {
+          ix = ring * hexIndXvecs[mainDir] * mainSign + ind * hexIndXvecs[sideDir] *
+            sideSign;
+          iy = ring * hexIndYvecs[mainDir] * mainSign + ind * hexIndYvecs[sideDir] *
+            sideSign;
+          point = mNumRings + ix + (mNumRings + iy) * (2 * mNumRings + 1);
+          mOneDIndexToHexRing[point] = ring;
+
+          // Might as well take the rotation into account here!
+          if (posRotInvertDir) {
+            if (ind)
+              mOneDIndexToPosInRing[point] = ((5 + hexPosRot1 - step) % 6) * ring + ring -
+              ind;
+            else
+              mOneDIndexToPosInRing[point] = ((6 + hexPosRot1 - step) % 6) * ring;
+
+          } else {
+            mOneDIndexToPosInRing[point] = ((step + hexPosRot1) % 6) * ring + ind;
+          }
+          if (mDebug)
+            PrintfToLog("Ring %d  step %d  ind %d  ixy %d %d  point %d  index %d", ring, 
+              step, ind, ix, iy, point, mOneDIndexToPosInRing[point]);
+          if (ring > 1) {
+            tripletsDelX[step / 2].push_back(ix);
+            tripletsDelY[step / 2].push_back(iy);
+          }
+        }
+      }
+    }
+
+    // Try hexes centered so that the center point is at all possible positions, and
+    // try rows pitched above and below X axis
+    int bestInd = -1, bestIx;
+    for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
+      for (ix = 0; ix < 2; ix++) {
+    //ind = 0;
+    //ix = 0;
+        fullArray.RemoveAll();
+        num = EvaluateArrangementOfHexes(mNxGrid / 2 - mHexDelX[ind],
+          mNyGrid / 2 - mHexDelY[ind], ix > 0, fullArray, fullSd, iy);
+        //PrintfToLog("ind %d ix %d num %d  sd %.2f", ind, ix, num, fullSd);
+
+        // Missing centers have either been handled by shifting or counted already as
+        // being split into two parts, so go for the smallest # of acquires and the 
+        // least variability when there is a tie
+        if (num < minFullNum || (num == minFullNum && fullSd < fullBestSd)) {
+          minFullNum = num;
+          fullBestSd = fullSd;
+          bestFullArray.Copy(fullArray);
+          bestInd = ind;
+          bestIx = ix;
+        }
+     }
+   }
+   // PrintfToLog("Best ind %d ix %d", bestInd, bestIx);
+
+    // Loop on boxes in three rounds: center at original pos, center moved, and missing
+    for (ind = 0; ind >= -1; ind--) {
+      for (hex = 0; hex < bestFullArray.GetSize(); hex++) {
+        if (bestFullArray[hex].cenMissing == ind)
+          AddPointsToHexItem(itemArray, bestFullArray[hex], hex, boxAssigns, navInds,
+            xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+      }
+    }
+
+    for (hex = 0; hex < bestFullArray.GetSize(); hex++) {
+      if (bestFullArray[hex].cenMissing <= 0)
+        continue;
+      xCen = bestFullArray[hex].xCen;
+      yCen = bestFullArray[hex].yCen;
+
+      // First see if it can shift or is empty now that there are assignments
+      EvaluateHexAtPosition(xCen, yCen, data, &boxAssigns);
+      if (!data.numAcquires)
+        continue;
+      if (data.cenMissing <= 0) {
+        bestFullArray[hex] = data;
+        AddPointsToHexItem(itemArray, bestFullArray[hex], hex, boxAssigns, navInds,
+          xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+        continue;
+      }
+
+      // Split boxes with center missing
+      // First test opposite sides around center to see if can split in two
+      handled = false;
+      for (ind = 0; ind < 3; ind++) {
+        ix = xCen + hexIndXvecs[ind];
+        iy = yCen + hexIndYvecs[ind];
+        if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
+          mGrid[iy][ix] >= 0) {
+          ix = xCen - hexIndXvecs[ind];
+          iy = yCen - hexIndYvecs[ind];
+          if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0) {
+
+            // Can split in two
+            // Set temporary assigns
+            for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
+
+              // Take cross product with 90-deg rotated line.  The current ix, iy is on
+              // the negative side of this rotated line so preserve points that are 
+              // on positive side
+              if (hexIndYvecs[ind] * mHexDelY[jnd] + hexIndXvecs[ind] * mHexDelX[jnd] >
+                0) {
+                bx = xCen + mHexDelX[jnd];
+                by = yCen + mHexDelY[jnd];
+                if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+                  mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] < 0)
+                  boxAssigns[mGrid[by][bx]] = assignTemp;
+              }
+            }
+            data.xCen = ix;
+            data.yCen = iy;
+            AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+              xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+
+            // Restore  assigns to -1
+            for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
+              bx = xCen + mHexDelX[jnd];
+              by = yCen + mHexDelY[jnd];
+              if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+                mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] == assignTemp)
+                boxAssigns[mGrid[by][bx]] = -1;
+            }
+
+            // Add around the other center
+            data.xCen = xCen + hexIndXvecs[ind];
+            data.yCen = yCen + hexIndYvecs[ind];
+            AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+              xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+            handled = true;
+            break;
+          }
+        }
+      }
+      if (handled)
+        continue;
+
+      // Now see if there are any triplets all present that can be centers
+      for (ind = 0; ind < (int)tripletsDelX[0].size(); ind++) {
+        bx = 0;
+        for (vnd = 0; vnd < 3; vnd++) {
+          ix = xCen + tripletsDelX[vnd][ind];
+          iy = yCen + tripletsDelY[vnd][ind];
+          if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0 &&
+            boxAssigns[mGrid[iy][ix]] < 0)
+            bx++;
+          else
+            break;
+        }
+        if (bx == 3) {
+
+          // Can split in 3
+          // Divide into groups by whichever is closest in undistorted space
+          for (vnd = 0; vnd < 3; vnd++)
+            xfApply(restore, 0., 0., (float)tripletsDelX[vnd][ind], 
+            (float)tripletsDelY[vnd][ind], &tripletX[vnd], &tripletY[vnd], 2);
+
+          for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
+            ix = xCen + mHexDelX[jnd];
+            iy = yCen + mHexDelY[jnd];
+            if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0
+              && boxAssigns[mGrid[iy][ix]] < 0) {
+              minDist = 1.e10f;
+              bx = 0;
+              xfApply(restore, 0., 0., (float)mHexDelX[jnd], (float)mHexDelY[jnd], &boxDx,
+                &boxDy, 2);
+              for (vnd = 0; vnd < 3; vnd++) {
+                dist = (boxDx - tripletX[vnd]) * (boxDx - tripletX[vnd]) +
+                  (boxDy - tripletY[vnd]) * (boxDy - tripletY[vnd]);
+                if (dist < minDist) {
+                  minDist = dist;
+                  bx = vnd;
+                }
+              }
+              boxAssigns[mGrid[iy][ix]] = assignTemp + bx;
+            }
+          }
+
+          // loop on the three centers and their groups
+          for (vnd = 0; vnd < vnd; bx++) {
+
+            // Restore this group's assigns
+            for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
+              bx = xCen + mHexDelX[jnd];
+              by = yCen + mHexDelY[jnd];
+              if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+                mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] == assignTemp + vnd)
+                boxAssigns[mGrid[by][bx]] = -1;
+            }
+            data.xCen = xCen + tripletsDelX[vnd][ind];
+            data.yCen = yCen + tripletsDelY[vnd][ind];
+            AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+              xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+          }
+
+          handled = true;
+          break;
+        }
+      }
+      if (handled)
+        continue;
+
+      // Stuck.  Start to dispose of points however we can: find first available
+      // center and add points around it, loop through all points in hex
+      for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
+        ix = xCen + mHexDelX[jnd];
+        iy = yCen + mHexDelY[jnd];
+        if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0
+          && boxAssigns[mGrid[iy][ix]] < 0) {
+          data.xCen = ix;
+          data.yCen = iy;
+          bx = 1;
+          AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+            xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+        }
+      }
+    }
+
+
+  } else if (!crossPattern) {
 
     // NORMAL RECTANGULAR PATTERNS
     //
@@ -369,6 +720,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
       }
     }
 
+    // Big loop on points
     for (point = 0; point < numPoints; point++) {
       if (boxAssigns[point] >= 0)
         continue;
@@ -590,7 +942,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
           // Make a new Navigator item as clone of the first point found
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox, 
             stageY / numInBox, nxBox, nyBox, boxXcen, boxYcen, ixSkip, iySkip, groupID,
-            numAdded);
+            numInBox, numAdded);
           break;
         }
       }
@@ -606,7 +958,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
         fullArray.RemoveAll();
         peakVals.clear();
         for (iy = -2; iy <= mNyGrid + 2; iy++) {
-          for (ix = -2; ix <= mNyGrid + 2; ix++) {
+          for (ix = -2; ix <= mNxGrid + 2; ix++) {
 
             // Solve for the position relative to the origin in terms of the 
             // "basis vectors", which are either (2,1) and (-1,2) or (2,-1) and (1,2)
@@ -685,7 +1037,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
           }
 
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox,
-            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip, groupID, numAdded);
+            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip, groupID, numInBox, 
+            numAdded);
           break;
         }
       }
@@ -697,10 +1050,24 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   for (ind = numPoints - 1; ind >= 0; ind--) {
     if (boxAssigns[ind] < 0) {
       item = itemArray->GetAt(navInds[ind]);
-      PrintfToLog("Program error: item # %d (%s) not assigned to a multi-shot item", 
-        navInds[ind] + 1, item ? item->mLabel : "");
+      bx = 0;
+      for (ix = 0; ix < mNxGrid && !bx; ix++) {
+        for (iy = 0; iy < mNyGrid; iy++) {
+          if (mGrid[iy][ix] == ind) {
+            bx = 1;
+            break;
+          }
+        }
+      }
+      PrintfToLog("Program error: item # %d (%s) at grid %d %d not assigned to a "
+        "multi-shot item", navInds[ind] + 1, item ? item->mLabel : "", ix, iy);
       navInds.erase(navInds.begin() + ind);
     }
+  }
+  if (mDebug) {
+    mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);
+    if (mWinApp->mLogWindow)
+      mWinApp->mLogWindow->FlushDeferredLines();
   }
 
   // Sort the remaining inds and save the items in the same order in the saved array
@@ -715,7 +1082,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 
   // Now that single points are gone, find other items in same groups that were 
   // outside the polygon
-  if (boundType == COMBINE_IN_POLYGON && turnOffOutside) {
+  if ((boundType == COMBINE_IN_POLYGON || boundType == COMBINE_ON_IMAGE) &&
+    turnOffOutside) {
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
       if (mGroupIDsInPoly.count(item->mGroupID) && item->IsPoint() && item->mAcquire &&
@@ -1004,17 +1372,325 @@ void CMultiHoleCombiner::EvaluateCrossAtPosition(int xCen, int yCen, PositionDat
   }
 }
 
+// Work outward from a given starting point, try hexagons in all possible rows, with pitch
+// along a row either up or down
+int CMultiHoleCombiner::EvaluateArrangementOfHexes(int xCen, int yCen, bool pitchDown, 
+  CArray<PositionData, PositionData> &posArray, float &sdOfNums, int &cenMissing)
+{
+  int xDir, yDir, tryXcen, tryYcen, rowXcen, rowYcen, delY, delX;
+  bool foundInRow;
+  PositionData data;
+  FloatVec xnums;
+  float avg, sem;
+
+  // Loop Y directions from middle, start row center at center
+  for (yDir = -1; yDir <= 1; yDir += 2) {
+    rowXcen = xCen;
+    rowYcen = yCen;
+    //PrintfToLog("start ydir %d row cen %d %d", yDir, rowXcen, rowYcen);
+
+    // Loop on rows in Y
+    for (delY = 0; delY < mNyGrid; delY++) {
+      if (yDir > 0 && !delY) {
+        //PrintfToLog("delY %d skip", delY);
+        continue;
+      }
+      if (delY) {
+
+        // Take a step in the right direction for the selected pitch and Y direction
+        if (pitchDown) {
+
+          // Row pitches down below X axis
+          if (yDir < 0) {
+            rowXcen += 2 * mNumRings + 1;
+            rowYcen -= mNumRings + 1;
+          } else {
+            rowXcen += mNumRings + 1;
+            rowYcen += mNumRings;
+          }
+
+          // Keep shifting X back to the middle
+          if (rowXcen > xCen + 3 * mNumRings + 2) {
+            rowXcen -= 3 * mNumRings + 2;
+            rowYcen += 1;
+          }
+        } else {
+
+          // Similarly for pitching up above X axis
+          if (yDir < 0) {
+            rowXcen += 2 * mNumRings + 1;
+            rowYcen -= mNumRings;
+          } else {
+            rowXcen += mNumRings;
+            rowYcen += mNumRings + 1;
+          }
+          if (rowXcen > xCen + 3 * mNumRings + 1) {
+            rowXcen -= 3 * mNumRings + 1;
+            rowYcen -= 1;
+          }
+        }
+      }
+      //PrintfToLog("ydir %d delY %d  rowcen %d %d", yDir, delY, rowXcen, rowYcen);
+
+      // Loop on X directions
+      foundInRow = false;
+      for (xDir = -1; xDir <= 1; xDir += 2) {
+        tryXcen = rowXcen;
+        tryYcen = rowYcen;
+        //PrintfToLog("start xdir %d row/try cen %d %d", yDir, rowXcen, rowYcen);
+
+        // Loop across the row
+        for (delX = 0; delX < mNxGrid; delX++) {
+          if (xDir > 0 && !delX) {
+            //PrintfToLog("Skip xdir %d at 0", xDir);
+            continue;
+          }
+          if (delX) {
+
+            // This is simpler, just walk one way or the other along the row by amounts
+            // that depend on the pitch
+            if (pitchDown) {
+              tryXcen += xDir * (3 * mNumRings + 2);
+              tryYcen -= xDir;
+            } else {
+              tryXcen += xDir * (3 * mNumRings + 1);
+              tryYcen += xDir;
+            }
+          }
+
+          // End of row reached
+          if (tryXcen + mNumRings < 0 || tryYcen + mNumRings < 0 ||
+            tryXcen - mNumRings >= mNxGrid || tryYcen - mNumRings >= mNyGrid) {
+            if ((xDir < 0 && tryXcen - mNumRings >= mNxGrid) ||
+              (xDir > 0 && tryXcen + mNumRings < 0)|| ((tryYcen + mNumRings < 0 ||
+              tryYcen - mNumRings >= mNyGrid) && tryXcen + mNumRings >= 0 && tryXcen - mNumRings < mNxGrid)) {
+              //PrintfToLog("xd %d  cen %d %d out of range - continue", xDir, tryXcen, tryYcen);
+            continue;
+            }
+            //PrintfToLog("xd %d  cen %d %d out of range - break", xDir, tryXcen, tryYcen);
+            break;
+          }
+
+          // Otherwise evaluate
+          foundInRow = true;
+          EvaluateHexAtPosition(tryXcen, tryYcen, data, NULL);
+          //PrintfToLog("dy %d yd %d dx %d xd %d trycen %d %d  num %d  miss %d  use cen %d %d", 
+            //delY, yDir, delX, xDir, tryXcen, tryYcen, data.numAcquires, data.cenMissing, data.xCen, data.yCen);
+          if (data.numAcquires) {
+
+            // If center is missing, assume it will be split into two equal parts:
+            // the evaluate routine already tried shifting to new center that would cover
+            // the all points
+            if (data.cenMissing > 0 && data.numAcquires > 1) {
+              xnums.push_back((float)(data.numAcquires / 2));
+              xnums.push_back((float)(data.numAcquires - data.numAcquires / 2));
+            } else
+              xnums.push_back((float)data.numAcquires);
+            posArray.Add(data);
+            if (data.cenMissing > 0)
+              cenMissing += data.cenMissing;
+          }
+        }
+      }
+
+      // Done with Y direction when all positions in a row out of range
+      if (!foundInRow) {
+        //PrintfToLog("Nonew found in row from cen %d %d", rowXcen, rowYcen);
+        break;
+      }
+    }
+  }
+
+  // Compute the SD assuming splits for cen missing, and return number based on that too
+  sdOfNums = 0.;
+  if (xnums.size() > 1)
+    avgSD(&xnums[0], (int)xnums.size(), &avg, &sdOfNums, &sem);
+  return (int)xnums.size();
+}
+
+// See how many points are included in a hexagon at the given center
+void CMultiHoleCombiner::EvaluateHexAtPosition(int xCen, int yCen, PositionData &data,
+  IntVec *boxAssigns)
+{
+  int ix, iy, ind, minXshift, maxXshift, minYshift, maxYshift, midXshift, midYshift;
+  int ring, xShift, yShift, distSq, tryXcen, tryYcen;
+  bool anyShifts, allInside;
+  std::set<int> covered;
+  IntVec indInHex;
+  data.numAcquires = 0;
+  data.startX = mNxGrid;
+  data.endX = -1;
+  data.startY = mNyGrid;
+  data.endY = -1;
+
+  // Set center missing here, save center for hexes
+  data.cenMissing = (xCen < 0 || xCen >= mNxGrid || yCen < 0 || yCen>= mNyGrid || 
+    mGrid[yCen][xCen] < 0) ? 1 : 0;
+  data.xCen = xCen;
+  data.yCen = yCen;
+  for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
+    ix = xCen + mHexDelX[ind];
+    iy = yCen + mHexDelY[ind];
+    if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0 &&
+      (!boxAssigns || boxAssigns->at(mGrid[iy][ix]) < 0)) {
+      data.numAcquires++;
+      ACCUM_MIN(data.startX, ix);
+      ACCUM_MAX(data.endX, ix);
+      ACCUM_MIN(data.startY, iy);
+      ACCUM_MAX(data.endY, iy);
+
+      // If center missing, make list of points in the hex at current position
+      if (data.cenMissing)
+        indInHex.push_back(ix + iy * mNxGrid);
+    }
+  }
+  if (!data.cenMissing || !data.numAcquires)
+    return;
+
+  // If center missing, see if it can be shifted
+  minXshift = B3DMAX(data.startX, xCen - mNumRings) - xCen;
+  maxXshift = B3DMIN(data.endX, xCen + mNumRings) - xCen;
+  minYshift = B3DMAX(data.startY, yCen - mNumRings) - yCen;
+  maxYshift = B3DMIN(data.endY, yCen + mNumRings) - yCen;
+  if (!minXshift && !maxXshift && !minYshift && !maxYshift)
+    return;
+
+  // Loop on possible shifts from the middle shift outward
+  midXshift = (maxXshift + minXshift) / 2;
+  midYshift = (maxYshift + minYshift) / 2;
+  for (ring = 1; ring < 2 * mNumRings; ring++) {
+    anyShifts = false;
+    for (yShift = minYshift; yShift <= maxYshift; yShift++) {
+      for (xShift = minXshift; xShift <= maxXshift; xShift++) {
+        distSq = (xShift - midXshift) * (xShift - midXshift) +
+          (yShift - midYshift) * (yShift - midYshift);
+        if (distSq > (ring - 1) * (ring - 1) && distSq <= ring * ring) {
+
+          // Testing a shift to a trial center - is there a point there?
+          anyShifts = true;
+          tryXcen = xCen + xShift;
+          tryYcen = yCen + yShift;
+          if (mGrid[tryYcen][tryXcen] < 0)
+            continue;
+
+          // If so make set of indexes covered by the hex
+          covered.clear();
+          for (ind = 0; ind < (int)mHexDelX.size(); ind++)
+            covered.insert(tryXcen + mHexDelX[ind] + (tryYcen + mHexDelY[ind]) * mNxGrid);
+
+          // Test if all points are covered
+          allInside = true;
+
+          for (ind = 0; ind < (int)indInHex.size(); ind++) {
+            if (!covered.count(indInHex[ind])) {
+              allInside = false;
+              break;
+            }
+          }
+
+          // If all covered, shift the center and set the missing flag to -1
+          if (allInside) {
+            data.cenMissing = -1;
+            data.useXcen = tryXcen;
+            data.useYcen = tryYcen;
+            return;
+          }
+        }
+      }
+    }
+
+    // Finished when no more shifts found
+    if (!anyShifts)
+      break;
+  }
+}
+
+// Determine which points are in a hex item, average the implied center position, and
+// compose the skip list for skipped positions
+void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray, 
+  PositionData &data, int hex, IntVec &boxAssigns, IntVec &navInds, 
+  FloatVec &xCenters, FloatVec &yCenters, ScaleMat gridMat, IntVec &ixSkip, 
+  IntVec &iySkip, int &numAdded)
+{
+  CMapDrawItem *item;
+  int ind, ix, iy, xCen, yCen, numInBox, ptNum, groupID, bx, by, fullInd;
+  int acqXcen, acqYcen, baseInd;
+  float stageX, stageY, boxDx, boxDy, cenDist, minCenDist = 1.e30f;
+  std::set<int> cenSet;
+  ixSkip.clear();
+  iySkip.clear();
+  stageX = stageY = 0.;
+  numInBox = 0;
+  
+  // Set the acquisition center: if it got moved, then make a list of point indexes that
+  // are in range of the original center
+  acqXcen = xCen = data.xCen;
+  acqYcen = yCen = data.yCen;
+  if (data.cenMissing < 0) {
+    acqXcen = data.useXcen;
+    acqYcen = data.useYcen;
+    for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
+      cenSet.insert(xCen + mHexDelX[ind] + mNxGrid * (yCen + mHexDelY[ind]));
+    }
+  }
+  if (mDebug)
+    PrintfToLog("Hex %d  cen %d %d  acq cen %d %d", hex, xCen, yCen, acqXcen, acqYcen);
+  for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
+    bx = mHexDelX[ind];
+    by = mHexDelY[ind];
+    ix = acqXcen + bx;
+    iy = acqYcen + by;
+    fullInd = ix + mNxGrid * iy;
+    if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0 &&
+      boxAssigns[mGrid[iy][ix]] < 0 && (data.cenMissing >= 0 || cenSet.count(fullInd))) {
+      ptNum = mGrid[iy][ix];
+      boxAssigns[ptNum] = hex;
+      numInBox++;
+      item = itemArray->GetAt(navInds[ptNum]);
+      boxDx = (float)bx;
+      boxDy = (float)by;
+
+      // It makes perfect sense to subtract this here - why is it added for square grids?
+      stageX += xCenters[ptNum] - (boxDx * gridMat.xpx + boxDy * gridMat.xpy);
+      stageY += yCenters[ptNum] - (boxDx * gridMat.ypx + boxDy * gridMat.ypy);
+      if (mDebug)
+        PrintfToLog("Assign %d at %d,%d (%s) to hex %d, bdxy %.0f %.0f  %s X"
+          " Y %.3f %.3f -> %.3f %.3f", navInds[ptNum], ix, iy, (LPCTSTR)item->mLabel,
+          hex, boxDx, boxDy, mUseImageCoords ? "image" : "stage", xCenters[ptNum],
+          yCenters[ptNum], xCenters[ptNum] - (boxDx * gridMat.xpx + boxDy *
+          gridMat.xpy), yCenters[ptNum] - (boxDx * gridMat.ypx + boxDy * gridMat.ypy));
+      cenDist = boxDx * boxDy + boxDy * boxDy;
+      if (cenDist < minCenDist) {
+        minCenDist = cenDist;
+        groupID = item->mGroupID;
+        baseInd = navInds[ptNum];
+      }
+    } else {
+      ixSkip.push_back(bx);
+      iySkip.push_back(by);
+      if (mDebug)
+        PrintfToLog("missing %d %d at %d %d", bx, by, ix, iy);
+    }
+  }
+
+  AddMultiItemToArray(itemArray, baseInd, stageX / numInBox, stageY / numInBox, mNumRings,
+    -1, 0., 0., ixSkip, iySkip, groupID, numInBox, numAdded);
+}
+
 // Add an item to the nav array with locked-in multi-shot parameters and skipped points
 void CMultiHoleCombiner::AddMultiItemToArray(
   MapItemArray* itemArray, int baseInd, float stageX, 
   float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen, 
-  IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded)
+  IntVec &ixSkip, IntVec &iySkip, int groupID, int numInBox, int &numAdded)
 {
   CMapDrawItem *newItem, *item;
-  int ix;
+  int ix, ind;
   float skipXrot, skipYrot, tempX;
   float backXcen = mTransposeSize ? boxYcen : boxXcen;
   float backYcen = mTransposeSize ? boxXcen : boxYcen;
+  bool fewItems = numInBox < mWinApp->mNavHelper->GetMHCthreshNumHoles();
+  if (!numInBox || (mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew() == 1 && fewItems))
+    return;
 
   // Set the stage position and # of holes and put in the skip list
   item = itemArray->GetAt(baseInd);
@@ -1024,8 +1700,8 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   if (mUseImageCoords) {
     mNav->AdjustMontImagePos(mImBuf, stageX, stageY, &newItem->mPieceDrawnOn, 
       &newItem->mXinPiece, &newItem->mYinPiece);
-    tempX = mBSTImat.xpx * (stageX - mBSTIdelX) + mBSTImat.xpy * (stageY - mBSTIdelY);
-    stageY = mBSTImat.ypx * (stageX - mBSTIdelX) + mBSTImat.ypy * (stageY - mBSTIdelY);
+    tempX = mBITSmat.xpx * (stageX - mBSTIdelX) + mBITSmat.xpy * (stageY - mBSTIdelY);
+    stageY = mBITSmat.ypx * (stageX - mBSTIdelX) + mBITSmat.ypy * (stageY - mBSTIdelY);
     stageX = tempX;
   }
   newItem->mStageX = stageX;
@@ -1035,9 +1711,14 @@ void CMultiHoleCombiner::AddMultiItemToArray(
     newItem->mPtX[0] = stageX;
     newItem->mPtY[0] = stageY;
   }
+  newItem->mNote.Format("%d holes", numInBox);
   mIDsForUndo.push_back(newItem->mMapID);
   mSetOfUndoIDs.insert(newItem->mMapID);
   mIndexesForUndo.push_back((int)itemArray->GetSize());
+  if (mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew() > 1 && fewItems) {
+    newItem->mAcquire = false;
+    newItem->mDraw = false;
+  }
 
   // The number of holes is still from the stage-space analysis and has to be transposed
   // for the item if IS-space is rotated +/-90 from that.  Also the incoming box centers
@@ -1053,14 +1734,29 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   if (ixSkip.size()) {
     newItem->mSkipHolePos = new unsigned char[2 * newItem->mNumSkipHoles];
     for (ix = 0; ix < newItem->mNumSkipHoles; ix++) {
-      ApplyScaleMatrix(mSkipXform, ixSkip[ix] - boxXcen,
-        iySkip[ix] - boxYcen, skipXrot, skipYrot, false, false);
-      newItem->mSkipHolePos[2 * ix] = (unsigned char)B3DNINT(skipXrot + backXcen);
-      newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)B3DNINT(skipYrot + backYcen);
-      if (mDebug)
-        PrintfToLog("Skip %d %d  cen %.1f %.1f skiprot  %.1f %.1f  cen %.1f %.1f  shp %d"
-        " %d", ixSkip[ix], iySkip[ix], boxXcen, boxYcen, skipXrot, skipYrot, backXcen, 
-         backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);
+
+      if (numYholes != -1) {
+        ApplyScaleMatrix(mSkipXform, ixSkip[ix] - boxXcen,
+          iySkip[ix] - boxYcen, skipXrot, skipYrot, false, false);
+        newItem->mSkipHolePos[2 * ix] = (unsigned char)B3DNINT(skipXrot + backXcen);
+        newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)B3DNINT(skipYrot + backYcen);
+        if (mDebug)
+          PrintfToLog("Skip %d %d  cen %.1f %.1f skiprot  %.1f %.1f  cen %.1f %.1f shp %d"
+            " %d", ixSkip[ix], iySkip[ix], boxXcen, boxYcen, skipXrot, skipYrot, backXcen,
+            backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);
+      } else {
+        ind = ixSkip[ix] + mNumRings + (iySkip[ix] + mNumRings) * (2 * mNumRings + 1);
+        if (mOneDIndexToHexRing[ind] >= 0) {
+          newItem->mSkipHolePos[2 * ix] = (unsigned char)mOneDIndexToHexRing[ind];
+          newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)mOneDIndexToPosInRing[ind];
+          if (mDebug)
+            PrintfToLog("%d %d (%d) -> %d %d", ixSkip[ix], ixSkip[ix], ind, 
+            (int)newItem->mSkipHolePos[2 * ix], (int)newItem->mSkipHolePos[2 * ix + 1]);
+        } else {
+          PrintfToLog("Program error: no ring/pos value for ix %d iy %d ind %d",
+            ixSkip[ix], iySkip[ix], ind);
+        }
+      }
     }
   }
   itemArray->Add(newItem);

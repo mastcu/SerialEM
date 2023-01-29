@@ -32,8 +32,9 @@
       When the relevant parameters here are changed, these changes will appear
       immediately in the display.</p>
     <p>It is important to realize that if the image areas are being displayed on a Low
-      Dose View image with a large defocus offset, the positions and sizes may be
-      misleading.</p>
+      Dose View image with a large defocus offset, the positions and sizes will be
+      misleading unless the effects of defocus on magnification and image shift are 
+      calibrated.</p>
     <p>If the stage is tilted, the program can respond in two ways.&nbsp; First, if the tilt angle
       is above 10 degrees, it
       will compensate for the differing heights of the positions by changing defocus;
@@ -194,7 +195,8 @@
     <p><b><i>The Dialog Controls</i></b></p>
     <p><b>Do multiple Records within each hole</b></p>
     <p>Select this checkbox to take images in a circular pattern.&nbsp; The relevant controls will appear when it is selected.&nbsp;
-      There is no control over the angles of the positions.&nbsp; If the specimen is
+      The property &#39;MultiInHoleStartAngle&#39; can be used to control the angles of the positions.&nbsp; 
+      In the absnce of that property, if the specimen is
         tilted above 20 degrees, the first off-center
       shot will be done on the tilt axis, so that you can take
       up to three shots along the tilt axis in a hole.&nbsp; Otherwise, the first shot
@@ -222,7 +224,7 @@
       taking it may involve one more delay for image shift settling, it is reported
       that this shot will have less drift when taken after the others.</p>
     <p><b>Do Records in multiple holes</b></p>
-    <p>Select this checkbox to take Records in either a rectangular grid of positions
+    <p>Select this checkbox to take Records in either a rectangular or hexagonal grid of positions
       or a series of arbitrary, &#39;custom&#39; positions around the current center position.&nbsp;
       The relevant controls will appear when it is selected.</p>
     <p><b>Multiplier of usual delay after shifting to hole</b></p>
@@ -234,21 +236,23 @@
       between holes without having to make the extra delay for shots within a hole
       bigger than necessary.</p>
     <p><b>Regular pattern of holes: n by n</b></p>
-    <p>Use the two spinners to set the number of positions in the rectangular pattern.&nbsp;
-      These values must be set before recording the image shift values at the corners.
-      Once the spacing of the pattern is defined, the spinners can be changed to
-      acquire more or fewer holes at that spacing.&nbsp; SerialEM will generally
-      acquire the number of positions specified by the current setting in the dialog
-      (or the last setting there when it was open).&nbsp; There is an important
-      exception to this: If Edit mode is turned on in the Navigator, then Shift-Left
+    <p>Use the two spinners to set the number of positions in a rectangular pattern.&nbsp; 
+      These values must be set before recording the image shift values at the corners. 
+      Once the spacing of the pattern is defined, the spinners can be changed to 
+      acquire more or fewer holes at that spacing.&nbsp; SerialEM will generally 
+      acquire the number of positions specified by the current setting in the dialog 
+      (or the last setting there when it was open).&nbsp; There are two important
+      exceptions to this: 1) If Edit mode is turned on in the Navigator, then Shift-Left
       double-click with the mouse sufficiently close to one of the positions in the
       array around the current item will remove that position.&nbsp; After that, the
       size of the array becomes a permanent property of that item, and it will be both
       displayed and acquired as an array of that size (minus the removed position(s))
-      regardless of changes in the selection in this dialog.</p>
-    <p>To avoid having to remove many points from a large array when marking points at
-      the edge of a grid square after filling the rest of the square, you can do the
-      following: </p>
+      regardless of changes in the selection in this dialog. 2) The
+      <a href="hidd_multi_combiner.htm">Multi-hole Combiner</a> also makes the pattern 
+      to use a permanent property of each item that it creates.</p>
+    <p>If for some reason you are not using the Multi-hole combiner, you can do the 
+      following to avoid having to remove many points from a large array when marking points at
+      the edge of a grid square after filling the rest of the square: </p>
     <ol>
       <li>&nbsp;Mark as many points as possible with the large pattern selected.</li>
       <li>Drop the pattern size down, say to 3 by 3 or to the 5-hole cross (see next).</li>
@@ -261,6 +265,10 @@
       <li>Reselect the original large array size so that the first set of marked points
         will acquire that pattern.</li>
     </ol>
+    <p><strong>Hex grid</strong></p>
+    <p>Select this option if the grid holes are in a hexagonal pattern.&nbsp; The 
+      first spinner now sets the number of hexagonal rings to acquire around the 
+      center point and the second spinner disappears.</p>
     <p><strong>Omit corners of 3 by 3 array (cross pattern)</strong></p>
     <p>This option allows one to acquire a cross-shaped pattern of 5 holes, which will
       involve less image shift than a full 3 by 3 array while still allowing one to
@@ -279,7 +287,7 @@
       for a regular pattern, or <strong>For Custom Pattern</strong> to start setting the shifts for
       arbitrary positions.&nbsp; Press <B>Step To and Adjust IS</B> to visit the corners of a regular pattern, or all of the positions in a custom pattern, and adjust the image shift there, and save the new shifts.  After pressing one of these buttons, the label below
       the third line of buttons will summarize what to do next.</p>
-    <p>To set the corners of a regular pattern, you will save image shifts at 4 hole
+    <p>To set the corners of a regular rectangular pattern, you will save to image shifts at 4 hole
       positions, even if one of the spinners is set to 1.&nbsp; Start at one corner of
       the pattern and save the position.&nbsp; Then shift by the needed number of
       holes corresponding to the value of the first spinner (i.e., move by 2 holes if
@@ -287,6 +295,8 @@
       indicated by the second spinner, save, and shift back by the number of holes
       along the first axis.&nbsp; If one of the spinners is set to 1, the program will
       still expect you to shift by one hole along that axis.</p>
+    <p>To set the corners for a hexagonal pattern, you must shift to each of the 6 
+      holes in the ring specified by the spinner.</p>
     <p>To set the positions in a custom pattern, shift to a center position for the 
       pattern and save the shift.&nbsp; When taking multiple Records, this position 
       will not be acquired at, but all the shifts will be done relative to it.&nbsp; 
@@ -346,7 +356,7 @@
       at zero tilt.)&nbsp; You must be in Low Dose mode for the button to be enabled.&nbsp; </p>
     <p><strong>Step To and Adjust</strong></p>
     <p>Press this button to step to each of the positions of a defined pattern and 
-      adjust the image shift there.&nbsp; See detail instructions above.</p>
+      adjust the image shift there.&nbsp; See detailed instructions above.</p>
     <p><b>Save Record image</b></p>
     <p>Select this option to have the Record image saved in the current file.&nbsp;
       The option is disabled and its setting is irrelevant if an early return is

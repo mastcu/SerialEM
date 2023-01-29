@@ -80,6 +80,7 @@ public:
   CButton m_butSaveRecord;
   afx_msg void OnKillfocusEditEarlyFrames();
   void ManageEnables(void);
+  void ManageHexGrid();
   CButton m_butAdjustBeamTilt;
   BOOL m_bAdjustBeamTilt;
   CStatic m_statComaIScal;
@@ -160,4 +161,7 @@ public:
   CButton m_butTestMultishot;
   afx_msg void OnButCalBtVsIs();
   afx_msg void OnButTestMultishot();
+  CButton m_butHexGrid;
+  BOOL m_bHexGrid;
+  afx_msg void OnCheckHexGrid();
 };

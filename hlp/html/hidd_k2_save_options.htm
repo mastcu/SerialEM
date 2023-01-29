@@ -307,12 +307,19 @@
           If this option is checked and multiple Records are being done, a hole identifier 
           and the position in the hole (0 for central shot, numbered from 1 for peripheral 
           positions) will be added to the file name, separated by &#39;-&#39;.&nbsp; When doing a 
-          regular pattern, the hole identifier will have the form &#39;XnYm&#39; where &#39;n&#39; and &#39;m&#39; 
+          regular rectangular pattern, the hole identifier will have the form &#39;XnYm&#39; where &#39;n&#39; and &#39;m&#39; 
           are relative to the center of the pattern and can be positive or negative.&nbsp; 
           On an axis with an even number of holes, the number is never zero and skips from 
           -1 to +1.&nbsp; For example, a 3x2 pattern will have identifiers X-1Y-1, X+0Y-1, 
           X+1Y-1, X-1Y+1, X+0Y+1, X+1Y+1.&nbsp; When doing a custom pattern, the 
-          identifier is simply a number starting at 1.</p>
+          identifier is simply a number starting at 1.&nbsp; When doing a hexagonal 
+          pattern, the hole identifier will have the form &#39;RnHm&#39; where &#39;n&#39; is the ring 
+          number and &#39;m&#39; is the position in the ring, numbered counterclockwise from a 
+          starting point at an angle that is the same for all rings.&nbsp; To minimize the 
+          shift from last hole of one ring to the first hole done in the next, the program 
+          will step outward from that last hole instead of starting the next ring at the 
+          same angle.&nbsp; For example, the order of holes at the end of ring 1 will be 
+          ... R1H6, R2H11, R2H12, R2H1...</p>
 
 </BODY>
 </HTML>

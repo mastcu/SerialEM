@@ -559,6 +559,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->tiltOfCustomHoles = itemFlt[27];
           msParams->holeFinderAngle = itemFlt[28];
         }
+      } else if (NAME_IS("MultiHexParams")) {
+        msParams->doHexArray = itemInt[1] != 0;
+        msParams->numHexRings = itemInt[2];
+        for (index = 0; index < 3; index++) {
+          msParams->hexISXspacing[index] = itemDbl[2 * index + 3];
+          msParams->hexISYspacing[index] = itemDbl[2 * index + 4];
+        }
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back(itemFlt[index]);
@@ -576,6 +583,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         hfParams->showExcluded = itemInt[8] != 0;
         hfParams->layoutType = itemInt[9];
         hfParams->bracketLast = itemInt[10] != 0;
+        if (!itemEmpty[13]) {
+          hfParams->hexagonalArray = itemInt[11] != 0;
+          hfParams->hexSpacing = itemFlt[12];
+          hfParams->hexDiameter = itemFlt[13];
+        }
       } else if (NAME_IS("HoleFiltSigmas")) {
         hfParams->sigmas.clear();
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
@@ -590,6 +602,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mNavHelper->SetMHCenableMultiDisplay(itemInt[2] != 0);
         if (!itemEmpty[3])
           mWinApp->mNavHelper->SetMHCturnOffOutsidePoly(itemInt[3] != 0);
+        if (!itemEmpty[5]) {
+          mWinApp->mNavHelper->SetMHCdelOrTurnOffIfFew(itemInt[4]);
+          mWinApp->mNavHelper->SetMHCthreshNumHoles(itemInt[5]);
+        }
       } else if (NAME_IS("AutoContParams")) {
         contParams->targetSizePixels = itemInt[1];
         contParams->targetPixSizeUm = itemFlt[2];
@@ -1769,16 +1785,23 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->doSecondRing ? 1 : 0, msParams->numShots[1], msParams->spokeRad[1],
       msParams->tiltOfHoleArray, msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
     mFile->WriteString(oneState);
+    oneState.Format("MultiHexParams %d %d %f %f %f %f %f %f\n",
+      msParams->doHexArray ? 1 : 0, msParams->numHexRings, msParams->hexISXspacing[0],
+      msParams->hexISYspacing[0], msParams->hexISXspacing[1], msParams->hexISYspacing[1],
+      msParams->hexISXspacing[2], msParams->hexISYspacing[2]);
+    mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL,
         &msParams->customHoleX);
       OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL,
         &msParams->customHoleY);
     }
-    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d\n", hfParams->spacing,
-      hfParams->diameter, hfParams->useBoundary ? 1 : 0, hfParams->lowerMeanCutoff,
-      hfParams->upperMeanCutoff, hfParams->SDcutoff, hfParams->blackFracCutoff,
-      hfParams->showExcluded ? 1 : 0, hfParams->layoutType, hfParams->bracketLast ? 1 : 0);
+    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d %d %f %f\n", 
+      hfParams->spacing, hfParams->diameter, hfParams->useBoundary ? 1 : 0, 
+      hfParams->lowerMeanCutoff, hfParams->upperMeanCutoff, hfParams->SDcutoff, 
+      hfParams->blackFracCutoff, hfParams->showExcluded ? 1 : 0, hfParams->layoutType, 
+      hfParams->bracketLast ? 1 : 0, hfParams->hexagonalArray ? 1 : 0, 
+      hfParams->hexSpacing, hfParams->hexDiameter);
     mFile->WriteString(oneState);
     if (hfParams->sigmas.size())
       OutputVector("HoleFiltSigmas", (int)hfParams->sigmas.size(), NULL,
@@ -1786,9 +1809,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     if (hfParams->thresholds.size())
       OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
         &hfParams->thresholds);
-    oneState.Format("HoleCombinerParams %d %d %d\n", mWinApp->mNavHelper->GetMHCcombineType(),
+    oneState.Format("HoleCombinerParams %d %d %d %d %d\n", 
+      mWinApp->mNavHelper->GetMHCcombineType(),
       mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0, 
-      mWinApp->mNavHelper->GetMHCturnOffOutsidePoly() ? 1 : 0);
+      mWinApp->mNavHelper->GetMHCturnOffOutsidePoly() ? 1 : 0,
+      mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew(), 
+      mWinApp->mNavHelper->GetMHCthreshNumHoles());
     mFile->WriteString(oneState);
     oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f\n",
       contParams->targetSizePixels, contParams->targetPixSizeUm,

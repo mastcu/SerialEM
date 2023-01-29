@@ -4992,7 +4992,7 @@ int CMacCmd::SetImageShift(void)
 {
   CString report;
   BOOL truth;
-  double delISX, delISY, delX, delY;
+  double delISX = 0., delISY = 0., delX, delY;
 
   delX = mItemDbl[1];
   delY = mItemDbl[2];
@@ -10525,9 +10525,9 @@ int CMacCmd::ReportHoleFinderParams(void)
 // ReportLastHoleVectors, UseHoleVectorsForMulti
 int CMacCmd::ReportLastHoleVectors(void)
 {
-  int index = mItemInt[1];
+  int numDir, index = mItemInt[1];
+  double xVecs[3], yVecs[3];
   bool settingMulti = CMD_IS(USEHOLEVECTORSFORMULTI);
-  ScaleMat mat;
   MultiShotParams *msParams;
   if (index > 0 && (index >= MAX_MAGS || !mMagTab[index].mag))
     ABORT_LINE("The magnification index is out of range in:\n\n");
@@ -10544,13 +10544,23 @@ int CMacCmd::ReportLastHoleVectors(void)
     if (!index)
       ABORT_LINE("There is no Record magnification index to use for:\n\n");
   }
-  mat = mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(index, settingMulti, mStrCopy);
-  if (!mat.xpx)
+  numDir = mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(index, settingMulti, xVecs,
+    yVecs, mStrCopy);
+  if (!numDir)
     ABORT_LINE(mStrCopy + " for line:\n\n");
-  if (!settingMulti)
-    SetRepValsAndVars(2, mat.xpx, mat.ypx, mat.xpy, mat.ypy);
-  mLogRpt.Format("Hole %s vectors are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
-    "image", index ? "IS" : "stage"), mat.xpx, mat.ypx, mat.xpy, mat.ypy);
+  if (!settingMulti) {
+    if (numDir > 2)
+      SetRepValsAndVars(2, xVecs[0], yVecs[0], xVecs[1], yVecs[1], xVecs[2], yVecs[2]);
+    else
+      SetRepValsAndVars(2, xVecs[0], yVecs[0], xVecs[1], yVecs[1]);
+  }
+  if (numDir > 2)
+    mLogRpt.Format("Hole %s vectors are %.4g, %.4g  %.4g, %.4g and %.4g, %.4g", 
+      B3DCHOICE(index < 0, "image", index ? "IS" : "stage"), xVecs[0], yVecs[0], xVecs[1],
+      yVecs[1], xVecs[2], yVecs[2]);
+  else
+    mLogRpt.Format("Hole %s vector  s are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
+      "image", index ? "IS" : "stage"), xVecs[0], yVecs[0], xVecs[1], yVecs[1]);
   return 0;
 }
 

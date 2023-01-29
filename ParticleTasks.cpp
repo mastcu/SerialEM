@@ -254,17 +254,22 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
+  mMSDoingHexGrid = false;
   if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle);
      mMSUseHoleDelay = true;
      useXholes = numXholes ? numXholes : mMSParams->numHoles[0];
      useYholes = numYholes ? numYholes : mMSParams->numHoles[1];
+     if (numXholes && numYholes)
+       mMSDoingHexGrid = numYholes == -1;
+     else
+       mMSDoingHexGrid = mMSParams->doHexArray;
      if (numXholes && numYholes && item->mNumSkipHoles)
        SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
          item->mNumSkipHoles, mMSNumHoles);
-     if (!(mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
-       (numXholes && numYholes)) {
+     if ((!(mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
+       (numXholes && numYholes)) && !mMSDoingHexGrid) {
 
        // Adjust position indexes to be relative to middle, skip 0 for even # of holes
        for (ind = 0; ind < mMSNumHoles; ind++) {
@@ -696,6 +701,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   int magInd, int camera, int numXholes, int numYholes, float tiltAngle)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
+  int ring, step, mainDir, sideDir, mainSign, sideSign;
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   BOOL crossPattern = mMSParams->skipCornersOf3x3;
   bool adjustForTilt = false;
@@ -707,6 +713,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   delISX.clear();
   delISY.clear();
   posIndex.clear();
+  holeAngle = mMSParams->tiltOfHoleArray;
+  fromMag = mMSParams->holeMagIndex;
   if (mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
 
@@ -718,6 +726,39 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
     fromMag = mMSParams->customMagIndex;
     holeAngle = mMSParams->tiltOfCustomHoles;
+  } else if (mMSParams->holeMagIndex > 0 && mMSParams->doHexArray) {
+
+    // Hex positions: start at center
+    fromISX.push_back(0.);
+    fromISY.push_back(0.);
+    posIndex.push_back(0);
+    posIndex.push_back(0);
+    ring = mMSParams->numHexRings;
+    numHoles = 3 * ring * (ring + 1) + 1;
+
+    // Loop on rings and steps in rings
+    for (ring = 1; ring <= mMSParams->numHexRings; ring++) {
+      for (step = 0; step < 6; step++) {
+
+        // For minimum shifts, step out from last point of previous ring, so this backs
+        // it up one position per ring
+        ind = (step + 7 - ring) % 6;
+
+        // Direction along side is 2 past main direction; set up indexes and signs of each
+        DirectionIndexesForHexSide(ind, mainDir, mainSign, sideDir, sideSign);
+
+        // Add each position along side
+        for (ix = 0; ix < ring; ix++) {
+          fromISX.push_back(ring * mMSParams->hexISXspacing[mainDir] * mainSign + 
+            ix * mMSParams->hexISXspacing[sideDir] * sideSign);
+          fromISY.push_back(ring * mMSParams->hexISYspacing[mainDir] * mainSign + 
+            ix * mMSParams->hexISYspacing[sideDir] * sideSign);
+          posIndex.push_back(ring);
+          posIndex.push_back(ind * ring + ix);
+        }
+      }
+    }
+
   } else if (mMSParams->holeMagIndex > 0) {
     if (numXholes && numYholes) {
       crossPattern = numXholes == -3 && numYholes == -3;
@@ -730,7 +771,6 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       numYholes = mMSParams->numHoles[1];
     }
     crossPattern = crossPattern && numXholes == 3 && numYholes == 3;
-    holeAngle = mMSParams->tiltOfHoleArray;
 
     // The hole pattern requires computing position relative to center of pattern
     numHoles = crossPattern ? 5 : (numXholes * numYholes);
@@ -740,7 +780,6 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     xCenISY = mMSParams->holeISYspacing[0] * 0.5 * (numXholes - 1);
     yCenISX = mMSParams->holeISXspacing[1] * 0.5 * (numYholes - 1);
     yCenISY = mMSParams->holeISYspacing[1] * 0.5 * (numYholes - 1);
-    fromMag = mMSParams->holeMagIndex;
 
     // Set up to do arbitrary directions in each axis
     direction[0] = direction[1] = 1;
@@ -912,7 +951,25 @@ void CParticleTasks::MakeSpiralPattern(int numX, int numY, IntVec &order)
   }
 }
 
-/* To test: put this is your favorite macro command:
+// Direction along side is 2 past main direction; set up indexes and signs of each
+void CParticleTasks::DirectionIndexesForHexSide(int step, int &mainDir, int &mainSign,
+  int &sideDir, int &sideSign)
+{
+  mainDir = step;
+  sideDir = (step + 2) % 6;
+  mainSign = 1;
+  if (mainDir > 2) {
+    mainSign = -1;
+    mainDir -= 3;
+  }
+  sideSign = 1;
+  if (sideDir > 2) {
+    sideSign = -1;
+    sideDir -= 3;
+  }
+}
+
+/* To test: put this in your favorite macro command:
 IntVec order;
 mWinApp->mParticleTasks->MakeSpiralPattern(mItemInt[1], mItemInt[2], order);
 PrintfToLog("\r\n%d by %d:", mItemInt[1], mItemInt[2]);
@@ -950,9 +1007,13 @@ bool CParticleTasks::ItemIsEmptyMultishot(CMapDrawItem * item)
   int numHoles;
   if (!item->mNumSkipHoles)
     return false;
-  numHoles = item->mNumXholes * item->mNumYholes;
-  if (item->mNumXholes == -3 && item->mNumYholes == -3)
-    numHoles = 5;
+  if (item->mNumYholes == -1) {
+    numHoles = 3 * item->mNumXholes * (item->mNumXholes + 1) + 1;
+  } else {
+    numHoles = item->mNumXholes * item->mNumYholes;
+    if (item->mNumXholes == -3 && item->mNumYholes == -3)
+      numHoles = 5;
+  }
   return numHoles == item->mNumSkipHoles;
 }
 
@@ -968,7 +1029,10 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     curPos = (mMSCurIndex + 1) % (mMSNumPeripheral + 1);
   else
     curPos = 0;
-  if (mMSPosIndex.size() > 0) {
+  if (mMSDoingHexGrid) {
+    strCurPos.Format("R%dH%d-%d", mMSPosIndex[2 * mMSHoleIndex],
+      mMSPosIndex[2 * mMSHoleIndex + 1] + 1, curPos);
+  } else if (mMSPosIndex.size() > 0) {
     strCurPos.Format("X%+dY%+d-%d", mMSPosIndex[2 * mMSHoleIndex], 
       mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
   } else {

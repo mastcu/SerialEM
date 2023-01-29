@@ -2108,6 +2108,13 @@
 #define IDC_STAT_CYCLE_TO               3141
 #define IDC_STAT_LINE3                  3142
 #define IDC_SWITCH_MAG_TO_RUN           3144
+#define IDC_CHECK_HEX_GRID              3145
+#define IDC_HEX_ARRAY                   3146
+#define IDC_CHECK_DELETE_POINTS         3147
+#define IDC_CHECK_TURN_OFF_COMBINED     3148
+#define IDC_CHECK_REMOVE_POINTS         3149
+#define IDC_STAT_HOLE_THRESH            3150
+#define IDC_SPIN_HOLE_THRESH            3151
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2657,7 +2664,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        279
 #define _APS_NEXT_COMMAND_VALUE         33510
-#define _APS_NEXT_CONTROL_VALUE         3145
+#define _APS_NEXT_CONTROL_VALUE         3152
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

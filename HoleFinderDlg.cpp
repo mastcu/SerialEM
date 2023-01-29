@@ -168,7 +168,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BRACKET_LAST, OnBracketLast)
   ON_BN_CLICKED(IDC_BUT_SET_SIZE_SPACE, OnButSetSizeSpace)
   ON_NOTIFY(NM_LDOWN, IDC_BUT_TOGGLE_HOLES, OnToggleDraw)
-  ON_BN_CLICKED(IDC_HEX_ARRAY, &CHoleFinderDlg::OnHexArray)
+  ON_BN_CLICKED(IDC_HEX_ARRAY, OnHexArray)
 END_MESSAGE_MAP()
 
 
@@ -333,6 +333,9 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYstages, float, 0);
   CLEAR_RESIZE(mXmissing, float, 0);
   CLEAR_RESIZE(mYmissing, float, 0);
+  CLEAR_RESIZE(mMissPieceOn, int, 0);
+  CLEAR_RESIZE(mMissXinPiece, float, 0);
+  CLEAR_RESIZE(mMissYinPiece, float, 0);
   CLEAR_RESIZE(mExcluded, short, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mHelper->mFindHoles->clearAll();
@@ -516,8 +519,6 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   // Thus compute the stage vectors of the grid axes here and pass that in too
   mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
-  //for (ind = 0; ind < gridX.size(); ind++)
-  //PrintfToLog("%.2f %.2f  %d %d", mXcenters[ind], mYcenters[ind], gridX[ind], gridY[ind]);
   ApplyScaleMatrix(mImToStage, 
     avgLen * (float)cos(avgAngle * DTOR),
     avgLen * (float)sin(avgAngle * DTOR), incStageX1, incStageY1);
@@ -684,6 +685,8 @@ void CHoleFinderDlg::ManageSizeSeparation(bool update)
     UpdateData(false);
 }
 
+// Place the appropriate size and spacing for grid type into the dialog, optionally saving
+// the existing values for other type
 void CHoleFinderDlg::SizeAndSpacingToDialog(bool saveOther, bool update)
 {
   if (saveOther) {
@@ -699,6 +702,7 @@ void CHoleFinderDlg::SizeAndSpacingToDialog(bool saveOther, bool update)
   ManageSizeSeparation(update);
 }
 
+// Save size and spacing for the current grid type, or the other one if flag set
 void CHoleFinderDlg::SizeAndSpacingToParam(bool other)
 {
   BOOL which = m_bHexArray;
@@ -789,7 +793,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mMissPieceOn.clear();
   mMissXinPiece.clear();
   mMissYinPiece.clear();
-mPieceOn.clear();
+  mPieceOn.clear();
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
@@ -1348,6 +1352,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       mYstages[ind]);
   }
 
+  // Treat the missing points the same way so they can be added by mouse
   numMiss = (int)xMissing.size();
   if (numMiss) {
     mXmissing.resize(numMiss);
@@ -1368,7 +1373,6 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissing[ind],
       mYmissing[ind]);
   }
-
 
   // Get mins and maxes and set the sliders if necessary
   mMeanMin = *std::min_element(mHoleMeans.begin(), mHoleMeans.end());

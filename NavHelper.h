@@ -46,12 +46,16 @@ struct MultiShotParams
   int inHoleOrMultiHole; // 1 to do pattern in hole, 2 to do multi-hole, 3 to do both
   int holeMagIndex;      // Mag at which hole positions are measured
   BOOL useCustomHoles;   // Use the list of custom holes
+  BOOL doHexArray;       // Flag to do hexagonal array
   float holeDelayFactor; // Factor by which to increase regular IS delay between holes
   double holeISXspacing[2];  // Hole spacing in each direction
   double holeISYspacing[2];
+  double hexISXspacing[3];  // Basic vectors for hex grid pattern - keep separate
+  double hexISYspacing[3];
   float tiltOfHoleArray;    // Tilt angle at which regular array defined
   float holeFinderAngle;    // Angle found in hole finder associated with regular array
   int numHoles[2];       // Number of holes in each direction
+  int numHexRings;       // NUmber of rings of hex
   BOOL skipCornersOf3x3; // Take cross pattern when it is 3x3
   int customMagIndex;
   float tiltOfCustomHoles;  // Tilt angle at which custom holes defined
@@ -77,6 +81,9 @@ struct HoleFinderParams
   float blackFracCutoff;   // Cutoff for excluding holes with high # of black outliers
   BOOL showExcluded;      // Show the excluded holes
   int layoutType;         // How to order nav points
+  BOOL hexagonalArray;    // Flag for hex grid
+  float hexDiameter;      // Set diameter and spacing for hex
+  float hexSpacing;
 };
 
 struct AutoContourParams
@@ -236,6 +243,8 @@ public:
   GetSetMember(BOOL, MHCenableMultiDisplay);
   GetSetMember(int, MHCcombineType);
   GetSetMember(BOOL, MHCturnOffOutsidePoly);
+  GetSetMember(int, MHCdelOrTurnOffIfFew);
+  GetSetMember(int, MHCthreshNumHoles);
   GetSetMember(BOOL, SkipAstigAdjustment);
   GetSetMember(int, CurAcqParamIndex);
   GetMember(int, NumAcqActions);
@@ -452,6 +461,8 @@ private:
   int mMHCcombineType;           // MultiHoleCombine way to pick points (COMBINE_...)
   BOOL mMHCenableMultiDisplay;   // Option to show multi-shot on all before combining pts
   BOOL mMHCturnOffOutsidePoly;    // Option to remove points outside if using polygon 
+  int mMHCdelOrTurnOffIfFew;     // Delete points or turn off combined item if < threshold
+  int mMHCthreshNumHoles;        // Threshold # of holes for delete or turn off
   BOOL mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
   IntVec mSavedMaShMapIDs;       // Saved map marker shift information: map ID
   IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value

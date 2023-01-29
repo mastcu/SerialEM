@@ -97,6 +97,7 @@ private:
   int mMSCurIndex;                // Index of shot, or -1 for center before; -2 inactive
   int mMSHoleIndex;               // Current hole index if any
   int mMSNumHoles;                // Number of holes to do
+  BOOL mMSDoingHexGrid;           // Flag that it is doing hex array
   bool mMSUseHoleDelay;           // Flag to use extra hole delay instead of regular one
   FloatVec mMSHoleISX, mMSHoleISY;  // IS values for all the holes
   IntVec mMSPosIndex;              // Position index of hole being acquired
@@ -210,6 +211,7 @@ public:
   void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
     double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
   void MakeSpiralPattern(int numX, int numY, IntVec &order);
+  void DirectionIndexesForHexSide(int step, int &mainDir, int &mainSign, int &sideDir, int &sideSign);
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
     unsigned char *skipIndex, int numSkip, int &numHoles);
   bool ItemIsEmptyMultishot(CMapDrawItem *item);

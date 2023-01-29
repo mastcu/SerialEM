@@ -3242,11 +3242,11 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,4,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,86,104,10
-    LTEXT           "Regular pattern of holes:",IDC_STAT_REGULAR,6,112,83,8
-    RTEXT           "99",IDC_STAT_NUM_X_HOLES,79,112,9,8
-    CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,92,109,10,14
-    LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,105,112,19,8
-    CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,126,109,10,14
+    LTEXT           "Regular array of holes:",IDC_STAT_REGULAR,6,112,71,8
+    RTEXT           "99",IDC_STAT_NUM_X_HOLES,73,112,9,8
+    CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,86,109,10,14
+    LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,99,112,19,8
+    CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,118,109,10,14
     LTEXT           "Spacing:",IDC_STAT_SPACING,13,124,163,8
     PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,8,168,97,12
     CONTROL         "Use custom pattern (NONE DEFINED)",IDC_CHECK_USE_CUSTOM,
@@ -3276,6 +3276,7 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,366,172,1
     PUSHBUTTON      "Test Multishot Positions",IDC_BUT_TEST_MULTISHOT,93,352,78,12
     PUSHBUTTON      "Calibrate Coma vs. IS",IDC_BUTCAL_BT_VS_IS,9,352,78,12
+    CONTROL         "Hex grid",IDC_CHECK_HEX_GRID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,137,111,38,10
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -3601,9 +3602,10 @@ BEGIN
     PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,102,56,12
     PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,212,44,12
     LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,20,8
+    CONTROL         "Hex grid",IDC_HEX_ARRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,112,19,35,10
 END
 
-IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 90
+IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 112
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Multiple Hole Combiner"
@@ -3613,13 +3615,24 @@ BEGIN
     CONTROL         "Inside current polygon",IDC_RIN_POLYGON,"Button",BS_AUTORADIOBUTTON,8,23,82,10
     CONTROL         "In same group as current point",IDC_RSAME_GROUP,"Button",BS_AUTORADIOBUTTON,8,33,105,10
     GROUPBOX        "Combine points marked as Acquire",IDC_STATIC,4,3,117,42,WS_GROUP
-    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,60,54,12
-    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,67,60,34,12
-    PUSHBUTTON      "?",IDC_BUTHELP,110,61,11,10
+    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,85,54,12
+    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,67,85,34,12
+    PUSHBUTTON      "?",IDC_BUTHELP,110,86,11,10
     CONTROL         "Display multi-shot before combine",IDC_CHECK_DISPLAY_MULTI,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,76,113,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,99,113,10
     CONTROL         "Turn off group items outside polygon",IDC_CHECK_REMOVE_OUTSIDE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,47,117,10
+    CONTROL         "Delete points",IDC_CHECK_REMOVE_POINTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,58,52,10
+    CONTROL         "Turn off item",IDC_CHECK_TURN_OFF_COMBINED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,67,58,47,10
+    LTEXT           "if combined item has <",IDC_STATIC,9,70,67,8
+    CTEXT           "99",IDC_STAT_HOLE_THRESH,77,70,8,8
+    LTEXT           "holes",IDC_STATIC,96,70,18,8
+    CONTROL         "",IDC_SPIN_HOLE_THRESH,"msctls_updown32",UDS_ARROWKEYS,85,67,10,14
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,82,117,1
+    CONTROL         "",IDC_STAT_LDCP_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,63,1,20
+    CONTROL         "",IDC_STAT_LDCP_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,63,7,1
+    CONTROL         "",IDC_STAT_LDCP_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,115,63,7,1
+    CONTROL         "",IDC_STAT_LDCP_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,121,63,1,20
 END
 
 IDD_MACROSELECTER DIALOGEX 0, 0, 241, 72
@@ -4406,7 +4419,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 121
         TOPMARGIN, 3
-        BOTTOMMARGIN, 86
+        BOTTOMMARGIN, 108
     END
 
     IDD_MACROSELECTER, DIALOG
@@ -7153,16 +7166,16 @@ BEGIN
     IDC_RCLOSE_FOR_NEXT     "A new file will be opened for each polygon, and the last one closed"
     IDC_RLEAVE_OPEN         "File will be left open for other polygons needing same piece number, etc"
     IDC_RONLY_IF_NEEDED     "Montages will be saved into matching file if one is still open"
-    IDC_SWITCH_MAG_TO_RUN   "Change to a specific magnification to do autocentering"
-    IDC_CHECK_IMSHIFT_IN_BLOCKS
-                            "Use image shift with square blocks and stage shift to move to each block"
-    IDC_SPIN_IS_BLOCKSIZE   "Set the size of the blocks in microns"
 END
 
 STRINGTABLE
 BEGIN
     IDC_CHECK_CHANGE_REUSABLE 
                             "Skip montage fitting so montage keeps its current piece size and overlap"
+    IDC_CHECK_IMSHIFT_IN_BLOCKS 
+                            "Use image shift with square blocks and stage shift to move to each block"
+    IDC_SPIN_IS_BLOCKSIZE   "Set the size of the blocks in microns"
+    IDC_SWITCH_MAG_TO_RUN   "Change to a specific magnification to do autocentering"
 END
 
 STRINGTABLE
@@ -7176,6 +7189,12 @@ BEGIN
                             "Select spiral, zigzag, or raster order of shots for regular pattern"
     ID_SCRIPT_RUNIFPROGRAMIDLE 
                             "Select script to run periodically when program is not busy"
+    IDC_CHECK_HEX_GRID      "Acquire from holes in a hexagonal pattern"
+    IDC_HEX_ARRAY           "Analyze for holes in a hexagonal array"
+    IDC_SPIN_HOLE_THRESH    "Set minimum number of holes in combined item to be retained"
+    IDC_CHECK_REMOVE_POINTS "Remove the points belonging to a combined item with too few holes"
+    IDC_CHECK_TURN_OFF_COMBINED
+                            "For combined item with too few points, set not acquire or be drawn"
 END
 
 #endif    // English (United States) resources

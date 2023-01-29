@@ -1449,6 +1449,7 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
 {
  EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
  ScaleMat mat, mat2;
+ mat.xpx = mat2.xpx = 0.;
  if (imBuf->mMagInd) {
    mat = mShiftManager->IStoCamera(imBuf->mMagInd);
    mat2 = mShiftManager->GetBeamShiftCal(imBuf->mMagInd);

@@ -196,11 +196,17 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.useIllumArea = false;
   mMultiShotParams.numHoles[0] = 2;
   mMultiShotParams.numHoles[1] = 2;
+  mMultiShotParams.numHexRings = 1;
+  mMultiShotParams.doHexArray = false;
   mMultiShotParams.skipCornersOf3x3 = false;
-  mMultiShotParams.holeISXspacing[0] = 1.;
-  mMultiShotParams.holeISYspacing[0] = 1.;
-  mMultiShotParams.holeISXspacing[1] = 1.;
-  mMultiShotParams.holeISYspacing[1] = 1.;
+  for (i = 0; i < 3; i++) {
+    if (i < 2) {
+      mMultiShotParams.holeISXspacing[i] = 1.;
+      mMultiShotParams.holeISYspacing[i] = 1.;
+    }
+    mMultiShotParams.hexISXspacing[i] = 1.;
+    mMultiShotParams.hexISYspacing[i] = 1.;
+  }
   mMultiShotParams.inHoleOrMultiHole = 1;
   mMultiShotParams.useCustomHoles = false;
   mMultiShotParams.holeDelayFactor = 1.5f;
@@ -223,6 +229,9 @@ CNavHelper::CNavHelper(void)
     &sigmas[4]);
   mHoleFinderParams.spacing = 2.;
   mHoleFinderParams.diameter = 1.;
+  mHoleFinderParams.hexagonalArray = false;
+  mHoleFinderParams.hexDiameter = 0.3f;
+  mHoleFinderParams.hexSpacing = 0.62f;
   mHoleFinderParams.maxError = 0.05f;
   mHoleFinderParams.useBoundary = false;
   mHoleFinderParams.bracketLast = false;
@@ -272,6 +281,8 @@ CNavHelper::CNavHelper(void)
   mMHCcombineType = COMBINE_ON_IMAGE;
   mMHCenableMultiDisplay = false;
   mMHCturnOffOutsidePoly = true;
+  mMHCdelOrTurnOffIfFew = 0;
+  mMHCthreshNumHoles = 2;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
@@ -2905,6 +2916,10 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal)
   ynum = 0;
   if (mMultiShotParams.useCustomHoles && mMultiShotParams.customHoleX.size() > 0) {
     numTotal = (int)mMultiShotParams.customHoleX.size();
+  } else if (mMultiShotParams.doHexArray) {
+    xnum = mMultiShotParams.numHexRings;
+    ynum = -1;
+    numTotal = 3 * (xnum + 1) * xnum + 1;
   } else {
     xnum = mMultiShotParams.numHoles[0];
     ynum = mMultiShotParams.numHoles[1];

@@ -34,7 +34,7 @@ IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INST
 IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
 IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, IDC_BUT_STEP_ADJUST,
-PANEL_END,
+IDC_CHECK_HEX_GRID, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
@@ -72,6 +72,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_bDoSecondRing(FALSE)
   , m_fRing2Dist(0.1f)
   , m_strNum2Shots(_T(""))
+  , m_bHexGrid(FALSE)
 {
   mNonModal = true;
   mShiftManager = mWinApp->mShiftManager;
@@ -175,6 +176,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_STEP_ADJUST, m_butStepAdjust);
   DDX_Control(pDX, IDC_BUTCAL_BT_VS_IS, m_butCalBTvsIS);
   DDX_Control(pDX, IDC_BUT_TEST_MULTISHOT, m_butTestMultishot);
+  DDX_Control(pDX, IDC_CHECK_HEX_GRID, m_butHexGrid);
+  DDX_Check(pDX, IDC_CHECK_HEX_GRID, m_bHexGrid);
 }
 
 
@@ -212,6 +215,7 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_STEP_ADJUST, OnButStepAdjust)
   ON_BN_CLICKED(IDC_BUTCAL_BT_VS_IS, OnButCalBtVsIs)
   ON_BN_CLICKED(IDC_BUT_TEST_MULTISHOT, OnButTestMultishot)
+  ON_BN_CLICKED(IDC_CHECK_HEX_GRID, OnCheckHexGrid)
 END_MESSAGE_MAP()
 
 
@@ -258,6 +262,7 @@ void CMultiShotDlg::UpdateSettings(void)
   m_bSaveRecord = mActiveParams->saveRecord;
   m_fExtraDelay = mActiveParams->extraDelay;
   m_fHoleDelayFac = mActiveParams->holeDelayFactor;
+  m_bHexGrid = mActiveParams->doHexArray;
   m_bAdjustBeamTilt = mActiveParams->adjustBeamTilt;
   m_bUseIllumArea = mActiveParams->useIllumArea;
   m_bUseCustom = mActiveParams->useCustomHoles;
@@ -283,8 +288,6 @@ void CMultiShotDlg::UpdateSettings(void)
 
   m_strNumShots.Format("%d", mActiveParams->numShots[0]);
   m_strNum2Shots.Format("%d", mActiveParams->numShots[1]);
-  m_strNumXholes.Format("%d", mActiveParams->numHoles[0]);
-  m_strNumYholes.Format("by %2d", mActiveParams->numHoles[1]);
   UpdateData(false);
   ManagePanels();
   mWinApp->mMainView->DrawImage();
@@ -361,6 +364,7 @@ void CMultiShotDlg::ManagePanels(bool adjust)
   }
   for (ind = 0; ind < numStates; ind++)
     mLastPanelStates[ind] = states[ind];
+  ManageHexGrid();
 }
 
 // Do multiple shots in hole check box
@@ -438,8 +442,12 @@ void CMultiShotDlg::OnUseCustom()
 void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int minNum = mActiveParams->numHoles[1] == 1 ? 2 : 1;
-  FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, mActiveParams->numHoles[0], 
-    m_strNumXholes, "%d");
+  int oldVal = m_bHexGrid ? mActiveParams->numHexRings : mActiveParams->numHoles[0];
+  FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, oldVal, m_strNumXholes, "%d");
+  if (m_bHexGrid)
+    mActiveParams->numHexRings = oldVal;
+  else
+    mActiveParams->numHoles[0] = oldVal;
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -450,6 +458,15 @@ void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
   int minNum = mActiveParams->numHoles[0] == 1 ? 2 : 1;
   FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, mActiveParams->numHoles[1], 
     m_strNumYholes, "by %2d");
+  ManageEnables();
+  UpdateAndUseMSparams();
+}
+
+// For Hex Grid
+void CMultiShotDlg::OnCheckHexGrid()
+{
+  UpdateData(true);
+  ManageHexGrid();
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -512,10 +529,15 @@ void CMultiShotDlg::StartRecording(const char *instruct)
     }
   }
   if (mSteppingAdjusting == 1) {
-    ISX = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISXspacing[0] +
-      (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISXspacing[1]) / 2.;
-    ISY = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISYspacing[0] +
-      (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISYspacing[1]) / 2.;
+    if (m_bHexGrid) {
+      ISX = mActiveParams->numHexRings * mActiveParams->hexISXspacing[0];
+      ISY = mActiveParams->numHexRings * mActiveParams->hexISYspacing[0];
+    } else {
+      ISX = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISXspacing[0] +
+        (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISXspacing[1]) / 2.;
+      ISY = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISYspacing[0] +
+        (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISYspacing[1]) / 2.;
+    }
     mWinApp->mScope->IncImageShift(ISX, ISY);
   }
   ManageEnables();
@@ -618,6 +640,7 @@ void CMultiShotDlg::OnButSaveIs()
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, spot, probe, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
+  int lastInd, lastDir;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
 
@@ -693,14 +716,24 @@ void CMultiShotDlg::OnButSaveIs()
     for (dir = 0; dir < 2; dir++)
       numSteps[dir] = B3DMAX(1, mActiveParams->numHoles[dir] - 1);
 
-    if (size == 4) {
-      for (dir = 0; dir < 2; dir++) {
-        mActiveParams->holeISXspacing[dir] = 
-          0.5 * ((mSavedISX[endInd1[dir]] - mSavedISX[startInd1[dir]]) + 
-          (mSavedISX[endInd2[dir]] - mSavedISX[startInd2[dir]])) / numSteps[dir];
-        mActiveParams->holeISYspacing[dir] = 
-          0.5 * ((mSavedISY[endInd1[dir]] - mSavedISY[startInd1[dir]]) + 
-          (mSavedISY[endInd2[dir]] - mSavedISY[startInd2[dir]])) / numSteps[dir];
+    if (size == (m_bHexGrid ? 6 : 4)) {
+      if (m_bHexGrid) {
+        for (dir = 0; dir < 3; dir++) {
+          mActiveParams->hexISXspacing[dir] = 0.5 * (mSavedISX[dir] - mSavedISX[dir + 3])
+            / mActiveParams->numHexRings;
+          mActiveParams->hexISYspacing[dir] = 0.5 * (mSavedISY[dir] - mSavedISY[dir + 3])
+            / mActiveParams->numHexRings;
+        }
+
+      } else {
+        for (dir = 0; dir < 2; dir++) {
+          mActiveParams->holeISXspacing[dir] =
+            0.5 * ((mSavedISX[endInd1[dir]] - mSavedISX[startInd1[dir]]) +
+            (mSavedISX[endInd2[dir]] - mSavedISX[startInd2[dir]])) / numSteps[dir];
+          mActiveParams->holeISYspacing[dir] =
+            0.5 * ((mSavedISY[endInd1[dir]] - mSavedISY[startInd1[dir]]) +
+            (mSavedISY[endInd2[dir]] - mSavedISY[startInd2[dir]])) / numSteps[dir];
+        }
       }
       mActiveParams->holeMagIndex = mWinApp->mScope->GetMagIndex();
       mActiveParams->tiltOfHoleArray = (float)mWinApp->mScope->GetTiltAngle();
@@ -709,22 +742,39 @@ void CMultiShotDlg::OnButSaveIs()
       UpdateAndUseMSparams();
       return;
     } else if (mSteppingAdjusting) {
-      str.Format("Adjust shift for %s %s hole", size == 1 ? "bottom" : "top",
-        size == 3 ? "left" : "right");
-      ind = size == 2 ? 1 : 0;
-      dir = size == 3 ? -1 : 1;
-      ISX = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISXspacing[ind]) * 
-        dir;
-      ISY = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISYspacing[ind]) *
-        dir;
+      if (m_bHexGrid) {
+        str.Format("Adjust shift for corner # %d in the hex array", size + 1);
+        ind = size % 3;
+        dir = size > 2 ? -1 : 1;
+        lastInd = (size - 1) % 3;
+        lastDir = size > 3 ? -1 : 1;
+        ISX = mActiveParams->numHexRings * (mActiveParams->hexISXspacing[ind] * dir -
+          mActiveParams->hexISXspacing[lastInd] * lastDir);
+        ISY = mActiveParams->numHexRings * (mActiveParams->hexISYspacing[ind] * dir -
+          mActiveParams->hexISYspacing[lastInd] * lastDir);
+      } else {
+        str.Format("Adjust shift for %s %s hole", size == 1 ? "bottom" : "top",
+          size == 3 ? "left" : "right");
+        ind = size == 2 ? 1 : 0;
+        dir = size == 3 ? -1 : 1;
+        ISX = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISXspacing[ind]) *
+          dir;
+        ISY = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISYspacing[ind]) *
+          dir;
+      }
     } else {
 
       // Set up the instruction label
-      if (size == 1 || size == 3)
-        str.Format("Shift %sby %d holes in first direction", size == 1 ? "" : "back ",
-                  numSteps[0]);
-      else
-        str.Format("Shift by %d holes in second direction", numSteps[1]);
+      if (m_bHexGrid) {
+        str.Format("Shift by %d holes to corner # %d in the hex array", 
+          mActiveParams->numHexRings, size + 1);
+      } else {
+        if (size == 1 || size == 3)
+          str.Format("Shift %sby %d holes in first direction", size == 1 ? "" : "back ",
+            numSteps[0]);
+        else
+          str.Format("Shift by %d holes in second direction", numSteps[1]);
+      }
     }
   } else if (mSteppingAdjusting) {
     if (size == (int)mActiveParams->customHoleX.size()) {
@@ -794,7 +844,7 @@ void CMultiShotDlg::OnButAbort()
 void CMultiShotDlg::OnButUseLastHoleVecs()
 {
   CString str2;
-  ScaleMat mat;
+  double xVecs[3], yVecs[3];
   int ans;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   if (!mWinApp->mNavHelper->GetOKtoUseHoleVectors()) {
@@ -806,8 +856,8 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
     if (ans == IDNO)
       mWinApp->mNavHelper->SetOKtoUseHoleVectors(true);
   }
-  mat = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
-    true, str2);
+  mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
+    true, xVecs, yVecs, str2);
 }
 
 // New beam diameter
@@ -889,6 +939,7 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   mActiveParams->saveRecord = m_bSaveRecord;
   mActiveParams->extraDelay = m_fExtraDelay;
   mActiveParams->holeDelayFactor = m_fHoleDelayFac;
+  mActiveParams->doHexArray = m_bHexGrid;
   mActiveParams->adjustBeamTilt = m_bAdjustBeamTilt;
   mActiveParams->useIllumArea = m_bUseIllumArea;
   mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
@@ -906,9 +957,10 @@ void CMultiShotDlg::ManageEnables(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   CString str2, str = "Use custom pattern (NONE DEFINED)";
-  ScaleMat mat;
+  double *xVec, *yVec, holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  int dir, numDir = m_bHexGrid ? 3 : 2;
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
   bool notRecording = !recording && !mSteppingAdjusting;
@@ -960,8 +1012,9 @@ void CMultiShotDlg::ManageEnables(void)
   m_statNumYholes.EnableWindow(enable);
   m_sbcNumXholes.EnableWindow(enable);
   m_sbcNumYholes.EnableWindow(enable);
+  m_butHexGrid.EnableWindow(enable);
   m_butOmit3x3Corners.EnableWindow(enable && mActiveParams->numHoles[0] == 3 && 
-    mActiveParams->numHoles[1] == 3);
+    mActiveParams->numHoles[1] == 3 && !m_bHexGrid);
   m_butUseCustom.EnableWindow(m_bDoMultipleHoles && mActiveParams->customHoleX.size() >0);
   m_butSetRegular.EnableWindow(enable && notRecording &&
     (mActiveParams->numHoles[0] > 1 || mActiveParams->numHoles[1] > 1));
@@ -981,9 +1034,9 @@ void CMultiShotDlg::ManageEnables(void)
   m_butUseCustom.SetWindowText(str);
   enable = enable && mWinApp->LowDoseMode() && ldp->magIndex > 0 && notRecording;
   if (enable) {
-    mat = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
-      false, str2);
-    enable = mat.xpx != 0.;
+    dir = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
+      false, holeXvec, holeYvec, str2);
+    enable = dir != 0.;
     if (enable)
       enable = fabs(mWinApp->mNavHelper->mHoleFinderDlg->GetLastTiltAngle() - 
         B3DCHOICE(useCustom,
@@ -1004,22 +1057,25 @@ void CMultiShotDlg::ManageEnables(void)
     ScaleMat is2c = mShiftManager->IStoCamera(mActiveParams->holeMagIndex);
     if (s2c.xpx && is2c.xpx) {
       ScaleMat bMat = MatMul(is2c, MatInv(s2c));
-      double delX = bMat.xpx * mActiveParams->holeISXspacing[0] + 
-        bMat.xpy * mActiveParams->holeISYspacing[0];
-      double delY = bMat.ypx * mActiveParams->holeISXspacing[0] + 
-        bMat.ypy * mActiveParams->holeISYspacing[0];
-      double dist2, dist = sqrt(delX * delX + delY * delY);
-      double angle2, angle = atan2(delY, delX) / DTOR;
-      delX = bMat.xpx * mActiveParams->holeISXspacing[1] + 
-        bMat.xpy * mActiveParams->holeISYspacing[1];
-      delY = bMat.ypx * mActiveParams->holeISXspacing[1] + 
-        bMat.ypy * mActiveParams->holeISYspacing[1];
-      dist2 = sqrt(delX * delX + delY * delY); 
-      angle2 = atan2(delY, delX) / DTOR - 90.;
-      angle2 = UtilGoodAngle(angle2 - angle) / 2.;
-      angle = (float)(0.1 * B3DNINT(10. * (angle + angle2)));
-      str.Format("Spacing: %.2f and %.2f um   Angle to stage X: %.1f deg", dist, dist2, 
-        angle);
+      double delX, delY, dists[3], angles[3], dist, angle;
+      xVec = m_bHexGrid ? &mActiveParams->hexISXspacing[0] :
+        &mActiveParams->holeISXspacing[0];
+      yVec = m_bHexGrid ? &mActiveParams->hexISYspacing[0] :
+        &mActiveParams->holeISYspacing[0];
+      dist = 0.;
+      for (dir = 0; dir < numDir; dir++) {
+        ApplyScaleMatrix(bMat, xVec[dir], yVec[dir], delX, delY);
+        dists[dir] = sqrt(delX * delX + delY * delY);
+        dist += dists[dir] / numDir;
+        angles[dir] = atan2(delY, delX) / DTOR - dir * 180. / numDir;
+      }
+      angles[1] = UtilGoodAngle(angles[1] - angles[0]) / 2.;
+      angle = (float)(0.1 * B3DNINT(10. * (angles[0] + angles[1])));
+      if (m_bHexGrid)
+        str.Format("Spacing: %.2f  um   Angle to stage X: %.1f deg", dist, angle);
+      else
+        str.Format("Spacing: %.2f and %.2f um   Angle to stage X: %.1f deg", dists[0], 
+          dists[1], angle);
     }
   }
   m_statSpacing.SetWindowText(str);
@@ -1047,6 +1103,18 @@ void CMultiShotDlg::ManageEnables(void)
   }
 
   mWinApp->RestoreViewFocus();
+}
+
+void CMultiShotDlg::ManageHexGrid()
+{
+  ShowDlgItem(IDC_SPIN_NUM_Y_HOLES, !m_bHexGrid);
+  m_strNumXholes.Format("%d", m_bHexGrid ? mActiveParams->numHexRings :
+    mActiveParams->numHoles[0]);
+  if (m_bHexGrid)
+    m_strNumYholes = "rings";
+  else
+    m_strNumYholes.Format("by %2d", mActiveParams->numHoles[1]);
+  UpdateData(false);
 }
 
 // Check for whether condistions have changed and display should be updated

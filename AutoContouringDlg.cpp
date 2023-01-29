@@ -1254,7 +1254,7 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
   int ind, ix, iy, ixStart, iyStart, ixEnd, iyEnd, nsum, numConts, xbase, numBelow;
   int ixSum, iySum;
   float avg, sd, val, fracLow, size, perim = 0., scaleFac, xcen, ycen;
-  float avgAngle, cosAng, sinAng;
+  float avgAngle, cosAng, sinAng, xVecs[3], yVecs[3];
   float half, delx, dely, left, right, scaleForScan, area, sizeScale = redFac;
   double sum, sumsq;
   int minForScan = 30, maxSize = 0;
@@ -1262,7 +1262,6 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
   Ipoint bbMin, bbMax, tpt;
   FloatVec tmpVec, valVec, xCenters, yCenters, xBound, yBound, peaks, altPeaks;
   IntVec altInds;
-  ScaleMat gridMat;
 
   if (!acd->imIsBytes)
     scaleFac = 255.f / (maxScale - minScale);
@@ -1369,8 +1368,7 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
     // Get the grid angle
     acd->holeFinder->analyzeNeighbors(xCenters, yCenters, peaks, altInds, xBound, yBound,
       altPeaks, 0., 0., 0, xcen, tmpVec, valVec);
-    acd->holeFinder->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
-      avgAngle, acd->spacing);
+    acd->holeFinder->getGridVectors(xVecs, yVecs, avgAngle, acd->spacing, -1);
     cosAng = (float)cos(DTOR * avgAngle);
     sinAng = (float)sin(DTOR * avgAngle);
 

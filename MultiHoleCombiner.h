@@ -11,10 +11,12 @@ enum { COMBINE_ON_IMAGE = 0, COMBINE_IN_POLYGON, COMBINE_IN_GROUP };
 
 struct PositionData
 {
-  int startX, endX;
-  int startY, endY;
-  int numAcquires;
-  int cenMissing;
+  short xCen, yCen;
+  short useXcen, useYcen;
+  short startX, endX;
+  short startY, endY;
+  short numAcquires;
+  short cenMissing;
 };
 
 class CMultiHoleCombiner
@@ -40,7 +42,7 @@ private:
   HoleFinder *mFindHoles;
   EMimageBuffer *mImBuf;          // The associate image buffer if one can be found
   bool mUseImageCoords;           // Flag that analysis is being done with image coord
-  ScaleMat mBSTImat;              // Matrix for image to stage
+  ScaleMat mBITSmat;              // Matrix for image to stage
   float mBSTIdelX, mBSTIdelY;     // Delta value from stage to image
   int mNxGrid, mNyGrid;           // Size of grid points seem to fall on
   int mNumXholes, mNumYholes;     // Number of holes in current pattern
@@ -54,6 +56,10 @@ private:
   std::set<int> mIDsOutsidePoly;  // IDs of ones turned off
   ScaleMat mSkipXform;            // Transform to get from stage to IS space skip list
   bool mTransposeSize;            // Flag to transpose sizes from stage to IS space
+  IntVec mHexDelX, mHexDelY;      // Lists of indexes in the hexagon
+  IntVec mOneDIndexToHexRing;     // Maps from a 1D index of hole number in rect pattern
+  IntVec mOneDIndexToPosInRing;   // to rung number and position
+  int mNumRings;                  // Number of rings in hex pattern
   int mDebug;
 
   void TryBoxStartsOnLine(int otherStart, bool doCol,
@@ -62,10 +68,15 @@ private:
     CArray<PositionData, PositionData> &posArray, float &sdOfNums, int &cenMissing);
   void EvaluateBoxAtPosition(int xStart, int yStart, PositionData &data);
   void EvaluateCrossAtPosition(int xCen, int yCen, PositionData &data);
+  int EvaluateArrangementOfHexes(int xCen, int yCen,  bool pitchDown, 
+    CArray<PositionData, PositionData> &posArray, float &sdOfNums, int &cenMissing);
+  void EvaluateHexAtPosition(int xCen, int yCen, PositionData &data, IntVec *boxAssigns);
+  void AddPointsToHexItem(MapItemArray *itemArray, PositionData &data, int hex, IntVec &boxAssigns,
+    IntVec &navInds, FloatVec &xCenters, FloatVec &yCenters, ScaleMat gridMat, IntVec &ixSkip, IntVec &iySkip, int &numAdded);
 
   void mergeBoxesAndEvaluate(CArray<PositionData, PositionData> &posArray, float &sdOfNums);
   void SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid, int &acqStart, int &acqEnd);
   void AddMultiItemToArray(MapItemArray *itemArray, int baseInd,
     float stageX, float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen,
-    IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded);
+    IntVec &ixSkip, IntVec &iySkip, int groupID, int numInBox, int &numAdded);
 };

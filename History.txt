@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/29/23: Prevented crash from pushing Calibrate button in coma vs. image shift
+dialog when program is busy.
+
+1/29/23: Added option to the multi-hole combiner to remove or turn off
+combined items with fewer than a selected number of holes.
+
+1/29/23: Added ability to toggle points to be included or excluded with the
+mouse after finding holes and before making Navigator points.
+
+1/29/23: Added support for grids with hexagonal arrays of holes.  Processing
+is slow, not all optimized, and not in the background - be patient.
+
 1/29/23: Fixed so that correct image shift offset calibration is used
 when starting with a GIF camera or switching between cameras; for FEI scopes,
 made it retain position when switching between GIF and nonGIF (In 4.0).
