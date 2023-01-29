@@ -30,7 +30,7 @@ class HoleFinder {
                  float &sobelMax);
   int cannyEdge(float sigma, float f1, float f2);
 
-  void setSequenceParams(float diameter, float spacing, bool retain, 
+  void setSequenceParams(float diameter, float spacing, bool hexGrid, bool retain, 
                          float maxError, float fracAvg, int minForAvg, 
                          float maxDiamErrFrac, float avgOutlieCrit,
                          float finalNegOutlieCrit, float finalPosOutlieCrit, 
@@ -52,10 +52,9 @@ class HoleFinder {
                        IntVec &altInds, FloatVec &xCenAlt, FloatVec &yCenAlt,
                        FloatVec &peakAlt,float maxSpacing, float maxError,
                        int reuseGeomBin, 
-                       float &trueSpacing, FloatVec &xMissing, FloatVec &yMissing);
+                       float &trueSpacing, FloatVec &xMissing, FloatVec &yMissing, int hexGrid = -1);
   void refineAnglesGetLengths(FloatVec &connReducedAng, FloatVec &connLengths, 
-    float &peakAngBelow, float &peakAngAbove, float &avgLenBelow, float &avgLenAbove, 
-    int &numBelow, int &numAbove);
+    float *peakAngles, float *avgLengths, int *numAngles, int hexGrid);
   int templateAndAnalyze(float midRadius, bool retain, bool &madeAverage, bool &usedRaw,
                          FloatVec &xBoundary, FloatVec &yBoundary,
                          FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
@@ -105,9 +104,8 @@ class HoleFinder {
      float pcToPcSameFrac, float pcToFullSameFrac, float substOverlapDistFrac, 
      float usePieceEdgeDistFrac, float addOverlapFrac);
   void assignGridPositions(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX,
-                           ShortVec &gridY, float &avgAngle, float &avgLen);
-  void getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, float &gridYdY,
-    float &avgAngle, float &avgLen);
+                           ShortVec &gridY, float &avgAngle, float &avgLen, int hexGrid = -1);
+  void getGridVectors(float *gridX, float *gridYdX, float &avgAngle, float &avgLen, int hexGrid);
   
  private:
   void addToSampleAndQueue(int jx, int iy);
@@ -151,10 +149,10 @@ class HoleFinder {
   float mSobelMin;                // Min Value from sobel filter
   float mHistScale;               // Scaling of histogram of sobel values
   int mHistogram[SOBEL_HIST_DIM]; // Histogram for sobel values
-  float mPeakAngBelow, mPeakAngAbove;  // Two angles of grid
-  float mAvgLenBelow, mAvgLenAbove;    // The grid lengths
-  float mJustAngBelow, mJustAngAbove;  // Values from calling just to find spacing
-  float mJustLenBelow, mJustLenAbove;
+  float mPeakAngles[3];            // Two or three angles of grid
+  float mAvgLengths[3];            // The grid lengths
+  float mJustAngles[3];            // Values from calling just to find spacing
+  float mJustLengths[3];
   float mLastBestRadius;          // Last radius found from scans
   float *mEdgeAverage;            // Average from edge image
   float *mRawAverage;             // Average from raw image
@@ -177,6 +175,7 @@ class HoleFinder {
   bool mLastCutoffsValid;         // Flag that these cutoff values are usable/valid
   float mSpacing;                 // Expected Spacing in reduced pixels
   bool mRetainFFTs;               // Flag to retain FFTs of circles
+  bool mHexGrid;                  // Flag that holes are in rectangular pattern
   float mMaxError;                // Maximum error between predicted and found
   float mDiameter;                // Expected diameter in reduced pixels
   float *mWidths;                 // Array of widths to scan

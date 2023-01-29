@@ -3,7 +3,7 @@
  *
  *  Author: David Mastronarde   email: mast@colorado.edu
  *
- *  Copyright (C) 2020 by the Regents of the University of 
+ *  Copyright (C) 2023 by the Regents of the University of 
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  Holefinder was started from Hough transform code obtained from
@@ -38,6 +38,8 @@ static const char *errStrings[] =
    "No average template was made", "Radius does not match for making template or # "
    "radii is not 1", "NULL cutoff pointers passed to removeOutliers"};
 
+void PrintfToLog(char *fmt, ...);
+
 /*
  * Constructor: initialize pointers, set some defaults
  */
@@ -54,6 +56,7 @@ HoleFinder::HoleFinder()
   mSobelDir = NULL;
   mXsize = 0;
   mXpadSize = 0;
+  mHexGrid = false;
 
   // 5: Minumum number of total points for making an average
   mMinNumForAvg = 5;
@@ -322,14 +325,15 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
  * For other parameters, pass -1 to use the default in this module
  */
 void HoleFinder::setSequenceParams
-(float diameter, float spacing, bool retain, float maxError, float fracAvg, int minForAvg,
- float maxDiamErrFrac, float avgOutlieCrit, float finalNegOutlieCrit, 
+(float diameter, float spacing, bool hexGrid, bool retain, float maxError, float fracAvg,
+ int minForAvg, float maxDiamErrFrac, float avgOutlieCrit, float finalNegOutlieCrit, 
  float finalPosOutlieCrit, float finalOutlieRadFrac)
 {
   mSpacing = spacing;
   mRetainFFTs = retain;
   mMaxError = maxError;
   mDiameter = diameter;
+  mHexGrid = hexGrid;
   if (fracAvg > 0)
     mFracToAvg = fracAvg;
   if (minForAvg > 0)
@@ -540,7 +544,7 @@ int HoleFinder::templateAndAnalyze
  FloatVec &yBoundary, FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
  float &trueSpacing, FloatVec &xMissing, FloatVec &yMissing)
 {
-  int numAvg, err, loop, domInd, domSize, dom, numPos;
+  int numAvg, err, loop, domInd, domSize, dom, numPos, dir;
   float bestRadius, fracToAvg = mFracToAvg;
   float trueSpaceRaw, maxSpacing = 1.33f * mSpacing * mReduction;
   float minSpacing = 0.75f * mSpacing;
@@ -553,7 +557,7 @@ int HoleFinder::templateAndAnalyze
   FloatVec *ycenPtr[2] = {&yCenFCedge, &yCenFCraw};
   FloatVec *peakPtr[2] = {&peakFCedge, &peakFCraw};
   bool enoughLeft;
-  float firstAngBelow, firstAngAbove, firstLenBelow, firstLenAbove;
+  float firstAngles[3], firstLengths[3];
 
   mWallStart = wallTime();
   usedRaw = false;
@@ -587,10 +591,10 @@ int HoleFinder::templateAndAnalyze
   err = analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenFCraw, yCenFCraw,
                          peakFCraw, maxSpacing, mMaxError, 0, trueSpacing, xMissing,
                          yMissing);
-  firstAngBelow = mPeakAngBelow;
-  firstAngAbove = mPeakAngAbove;
-  firstLenBelow = mAvgLenBelow;
-  firstLenAbove = mAvgLenAbove;
+  for (dir = 0; dir < 3; dir++) {
+    firstAngles[dir] = mPeakAngles[dir];
+    firstLengths[dir] = mAvgLengths[dir];
+  }
   mWallConj += wallTime() - mWallStart;
 
   //dumpPoints("edgeana.txt", xCenters, yCenters, peakVals);
@@ -673,10 +677,10 @@ int HoleFinder::templateAndAnalyze
         trueSpacing = trueSpaceRaw;
         usedRaw = true;
       } else {
-        mPeakAngBelow = firstAngBelow;
-        mPeakAngAbove = firstAngAbove;
-        mAvgLenBelow = firstLenBelow;
-        mAvgLenAbove = firstLenAbove;
+        for (dir = 0; dir < 3; dir++) {
+          mPeakAngles[dir] = firstAngles[dir];
+          mAvgLengths[dir] = firstLengths[dir];
+        }
       }
     } else {
 
@@ -1153,8 +1157,8 @@ bool HoleFinder::pointsCloseInBox(float xpos, float ypos, float xneigh, float yn
   float dy = ypos - yneigh;
   if (dx * dx + dy * dy >= circleCritSq)
     return false;
-  rcos = (float)cos(RADIANS_PER_DEGREE * mPeakAngBelow);
-  rsin = -(float)sin(RADIANS_PER_DEGREE * mPeakAngBelow);
+  rcos = (float)cos(RADIANS_PER_DEGREE * mPeakAngles[0]);
+  rsin = -(float)sin(RADIANS_PER_DEGREE * mPeakAngles[0]);
   xposRot = rcos * xpos - rsin * ypos;
   yposRot = rsin * xpos + rcos * ypos;
   xnRot = rcos * xneigh - rsin * yneigh;
@@ -1524,7 +1528,7 @@ void HoleFinder::addToSampleAndQueue(int ix, int iy)
 */
 void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sobelMin,
                            float &sobelMax) {
-  float xsum = 0, ysum= 0., tempTheta= 0., tmin = 0., tmax = 0., center = 3.;
+  float xsum = 0., ysum =0., tempTheta = 0., tmin = 0., tmax = 0., center = 3.;
   int iy, ix = 0, ind, numThreads, threadNum = 0;
   float *newData = mSobelGrad;
   int xsize = mXsize, ysize = mYsize;
@@ -2052,28 +2056,29 @@ int HoleFinder::analyzeNeighbors
 (FloatVec &xCenVec, FloatVec &yCenVec, FloatVec &peakVals, IntVec &altInds,
  FloatVec &xCenAlt, FloatVec &yCenAlt, FloatVec &peakAlt, float maxSpacing,
  float maxError, int reuseGeomBin, float &trueSpacing, FloatVec &xMissing,
- FloatVec &yMissing)
+ FloatVec &yMissing, int hexGrid)
 {
-  FloatVec connLengths, connAngles, connReducedAng, connErrors, lenBelow, lenAbove;
+  FloatVec connLengths, connAngles, connReducedAng, connErrors, lengths;
   IntVec connPoint1, connPoint2, gridVec;
   std::vector<short> ptGridX, ptGridY, connQuadrant;
   std::vector<IntVec> ptConnLists;
   std::queue<int> connQueue;
-  int ind, jnd, numBelow, numAbove, numPoints = (int)xCenVec.size();
+  int ind, jnd, numAngles[3], numPoints = (int)xCenVec.size();
   int minGridX, minGridY, maxGridX, maxGridY, numInGroup, numConn, num, bin, maxInBin;
   float maxSpaceSq, dx, dy, distSq, spacing, angle;
-  float coarseAngle, avgLenAbove, avgLenBelow, minDist, altAngAbove, altAngBelow;
-  float saveLenBelow, saveLenAbove, saveAngBelow, saveAngAbove, avgLen;
-  float sd, sem, errBelow, errAbove, error;
+  float coarseAngle, avgLengths[3], minDist, altAngles[3], altLengths[3];
+  float saveLengths[3], saveAngles[3], avgLen;
+  float sd, sem, error;
   int ptFrom, ptTo, sign, setGridVal, ix, iy, jx, jy, jxCen, jyCen, jxStart, jyStart;
-  int jyEnd, jxEnd, bestXcen, bestYcen, offset, bestOffset, bestNum, con;
-  int gridXdim, gridYdim, numFit, connPt1, connPt2, numAltBelow, numAltAbove;
-  float angForAlt, lenForAlt, altLen, errAlt, bestError, altLenBelow, altLenAbove;
+  int jyEnd, jxEnd, bestXcen, bestYcen, offset, bestOffset, bestNum, con, numAvgAngs = 2;
+  int gridXdim, gridYdim, numFit, connPt1, connPt2, dir, diag, numDiag, numAltAngles[3];
+  float angForAlt, lenForAlt, altLen, errAlt, bestError;
   float aFit, bFit, cFit, xPred, yPred, predErr;
   bool doFit, testAlt = altInds.size() > 0;
   bool justFindSpacing = maxSpacing <= 0.;
   int coarseHist[10] = {0,0,0,0,0,0,0,0,0,0};
   float maxConnError = maxError * 1.8f;
+  float coarseDelta = mHexGrid ? 6.f : 10.f;
   int minGroupSize = 3;
   int fitLen = 5;
   const int maxFit = 100, maxCol = 6;
@@ -2081,7 +2086,8 @@ int HoleFinder::analyzeNeighbors
   float *fitX = xmat[2], *fitY = xmat[3], *fitDelIX = xmat[0], *fitDelIY = xmat[1];
   float solution[2][maxCol], fitWork[2 * maxFit + maxCol * maxCol], fitMean[maxCol];
   float fitSD[maxCol], fitConst[2], kFactor = 4.68f, maxChange = 0.02f, maxOscill = 0.05f;
-  int delGridX[4] = {1, 0, -1, 0}, delGridY[4] = {0, 1, 0, -1};
+  int delGridX[6] = {1, 0, -1, 0, 0, 0}, delGridY[6] = {0, 1, 0, -1, 0, 0};
+  int hexDelX[6] = {1, 0, -1, -1, 0, 1}, hexDelY[6] = {0, 1, 1, 0, -1, -1};
   int numIter, maxIter = 30, minForRobust = 6;
   const int numKernBins = 180;
   const int noGridVal = 32767, hadGridVal = 32765, rejectGridVal = 32766;
@@ -2089,14 +2095,23 @@ int HoleFinder::analyzeNeighbors
   ptConnLists.resize(numPoints);
   xMissing.clear();
   yMissing.clear();
+  if (hexGrid < 0)
+    hexGrid = mHexGrid ? 1 : 0;
+  if (hexGrid) {
+    numAvgAngs = 3;
+    for (dir = 0; dir < 6; dir++) {
+      delGridX[dir] = hexDelX[dir];
+      delGridY[dir] = hexDelY[dir];
+    }
+  }
 
   // If need to find spacing, get median of nearest neighbor distance, then mean of 
   // all distances 
-  if (justFindSpacing && numPoints > 1) {
-    saveLenBelow = mAvgLenBelow;
-    saveLenAbove = mAvgLenAbove;
-    saveAngBelow = mPeakAngBelow;
-    saveAngAbove = mPeakAngAbove;
+  if (justFindSpacing) {
+    for (ind = 0; ind < numAvgAngs; ind++) {
+      saveLengths[ind] = mAvgLengths[ind];
+      saveAngles[ind] = mPeakAngles[ind];
+    }
 
     // Find nearest neighbor distance for each point
     for (ind = 0; ind < numPoints - 1; ind++) {
@@ -2107,31 +2122,31 @@ int HoleFinder::analyzeNeighbors
         distSq = dx * dx + dy * dy;
         ACCUM_MIN(minDist, distSq);
       }
-      lenBelow.push_back(sqrtf(minDist));
+      lengths.push_back(sqrtf(minDist));
     }
 
     // Get median or mean and estimate the spacing and maximum
-    if (lenBelow.size() > 3)
-      rsFastMedianInPlace(&lenBelow[0], (int)lenBelow.size(), &spacing);
-    else if (lenBelow.size())
-      avgSD(&lenBelow[0], (int)lenBelow.size(), &spacing, &sd, &sem);
+    if (lengths.size() > 3)
+      rsFastMedianInPlace(&lengths[0], (int)lengths.size(), &spacing);
+    else if (lengths.size())
+      avgSD(&lengths[0], (int)lengths.size(), &spacing, &sd, &sem);
     maxSpacing = 1.33f * spacing;
     maxSpaceSq = maxSpacing * maxSpacing;
 
     // Get all distances less the maximum and get refined spacing and maximum
-    lenBelow.clear();
+    lengths.clear();
     for (ind = 0; ind < numPoints - 1; ind++) {
       for (jnd = ind + 1; jnd < numPoints; jnd++) {
         dx = xCenVec[ind] - xCenVec[jnd];
         dy = yCenVec[ind] - yCenVec[jnd];
         distSq = dx * dx + dy * dy;
         if (distSq <= maxSpaceSq)
-          lenBelow.push_back(sqrtf(distSq));
+          lengths.push_back(sqrtf(distSq));
       }
     }
-    avgSD(&lenBelow[0], (int)lenBelow.size(), &spacing, &sd, &sem);
+    avgSD(&lengths[0], (int)lengths.size(), &spacing, &sd, &sem);
     maxSpacing = 1.33f * spacing;
-    lenBelow.clear();
+    lengths.clear();
   }
   
   // Make list of connections within the maximum spacing
@@ -2161,72 +2176,94 @@ int HoleFinder::analyzeNeighbors
     // Make a collapsed histogram for finding the angle between 0 and 90
     for (ind = 0; ind < numConn; ind++) {
       angle = connReducedAng[ind];
-      if (angle < 0)
-        angle += 90.;
-      bin = B3DMIN((int)(angle / 10.), 8);
+      if (hexGrid) {
+        while (angle < 0)
+          angle += 180.;
+        while (angle >= 60.)
+          angle = B3DMAX(0.f, angle - 60.f);
+        bin = B3DMIN((int)(angle / 6.), 9);
+      } else {
+        while (angle < 0)
+          angle += 90.;
+        bin = B3DMIN((int)(angle / 10.), 8);
+      }
       coarseHist[bin]++;
     }
 
+    coarseDelta = hexGrid ? 6.f : 10.f;
+    
     // Find peak of that histogram
     maxInBin = 0;
-    for (ind = 0; ind < 9; ind++) {
+    for (ind = 0; ind < 10; ind++) {
       if (coarseHist[ind] > maxInBin) {
         maxInBin = coarseHist[ind];
-        coarseAngle = (float)((ind * 10.) + 5.);
+        coarseAngle = (float)((ind * coarseDelta) + coarseDelta / 2.);
       }
     }
 
     // Do a simple mean of angles within some distance of this peak or the one 90 degrees 
     // away, iterating to work from an angle more refined than that initial bin estimate 
-    mPeakAngAbove = coarseAngle;
-    mPeakAngBelow = coarseAngle - 90.f;
-    refineAnglesGetLengths(connReducedAng, connLengths, mPeakAngBelow, mPeakAngAbove,
-      mAvgLenBelow, mAvgLenAbove, numBelow, numAbove);
-
-    // Do the same thing for the angle 45 degrees away
-    if (mPeakAngAbove >= 45.f) {
-      altAngAbove = mPeakAngAbove - 45.f;
-      altAngBelow = mPeakAngBelow - 45.f;
+    if (hexGrid) {
+      if (coarseAngle < 30.)
+        mPeakAngles[0] = coarseAngle - 60.f;
+      else 
+        mPeakAngles[0] = coarseAngle - 120.f;
+      mPeakAngles[1] = mPeakAngles[0] + 60.f;
+      mPeakAngles[2] = mPeakAngles[1] + 60.f;
     } else {
-      altAngAbove = mPeakAngAbove + 45.f;
-      altAngBelow = mPeakAngBelow + 45.f;
+      mPeakAngles[1] = coarseAngle;
+      mPeakAngles[0] = coarseAngle - 90.f;
     }
-    refineAnglesGetLengths(connReducedAng, connLengths, altAngBelow, altAngAbove,
-      altLenBelow, altLenAbove, numAltBelow, numAltAbove);
+    refineAnglesGetLengths(connReducedAng, connLengths, mPeakAngles, 
+      mAvgLengths, numAngles, hexGrid);
 
-    // An ad hoc test for when the 45-degree peak, if any, is the one to use: it has more
-    // points and is not much farther away, or it has enough points and is closer by
-    // roughly sqrt(2)
-    avgLen = 0.5f * (mAvgLenBelow + mAvgLenAbove);
-    altLen = 0.5f * (altLenBelow + altLenAbove);
-    if ((numAltBelow + numAltAbove > 1.05 * (numBelow + numAbove) &&
-      altLen < 1.05 * avgLen) ||
-      (numAltBelow + numAltAbove > 0.5 * (numBelow + numAbove) &&
-        fabs(altLen - avgLen / 1.414) < 0.1 * altLen)) {
-      mAvgLenBelow = altLenBelow;
-      mAvgLenAbove = altLenAbove;
-      mPeakAngBelow = altAngBelow;
-      mPeakAngAbove = altAngAbove;
+    if (!hexGrid) {
+      
+      // Do the same thing for the angle 45 degrees away
+      if (mPeakAngles[1] >= 45.f) {
+        altAngles[1] = mPeakAngles[1] - 45.f;
+        altAngles[0] = mPeakAngles[0] - 45.f;
+      } else {
+      altAngles[1] = mPeakAngles[1] + 45.f;
+      altAngles[0] = mPeakAngles[0] + 45.f;
+      }
+      refineAnglesGetLengths(connReducedAng, connLengths, altAngles,
+                             altLengths, numAltAngles, hexGrid);
+      
+      // An ad hoc test for when the 45-degree peak, if any, is the one to use: it has 
+      // more points and is not much farther away, or it has enough points and is closer 
+      // by roughly sqrt(2)
+      avgLen = 0.5f * (mAvgLengths[0] + mAvgLengths[1]);
+      altLen = 0.5f * (altLengths[0] + altLengths[1]);
+      if ((numAltAngles[0] + numAltAngles[1] > 1.05 * (numAngles[0] + numAngles[1]) &&
+           altLen < 1.05 * avgLen) ||
+          (numAltAngles[0] + numAltAngles[1]  > 0.5 * (numAngles[0] + numAngles[1]) &&
+           fabs(altLen - avgLen / 1.414) < 0.1 * altLen)) {
+        mAvgLengths[0] = altLengths[0];
+        mAvgLengths[1] = altLengths[1];
+        mPeakAngles[0] = altAngles[0];
+        mPeakAngles[1] = altAngles[1] ;
+      }
     }
 
-    avgLenBelow = mAvgLenBelow;
-    avgLenAbove = mAvgLenAbove;
+    for (ind = 0; ind < numAvgAngs; ind++)
+      avgLengths[ind] = mAvgLengths[ind];
   } else {
-    avgLenBelow = reuseGeomBin * mAvgLenBelow;
-    avgLenAbove = reuseGeomBin * mAvgLenAbove;    
+    for (ind = 0; ind < numAvgAngs; ind++)
+      avgLengths[ind] = reuseGeomBin * mAvgLengths[ind];
   }
 
-  trueSpacing = 0.5f * (avgLenBelow + avgLenAbove);
-  if (justFindSpacing) {
-    mJustLenBelow = mAvgLenBelow;
-    mJustLenAbove = mAvgLenAbove;
-    mJustAngBelow = mPeakAngBelow;
-    mJustAngAbove = mPeakAngAbove;
-    mAvgLenBelow = saveLenBelow;
-    mAvgLenAbove = saveLenAbove;
-    mPeakAngBelow = saveAngBelow;
-    mPeakAngAbove= saveAngAbove;
+  trueSpacing = 0.;
+  for (ind = 0; ind < numAvgAngs; ind++)
+    trueSpacing += avgLengths[ind] / numAvgAngs;
 
+  if (justFindSpacing) {
+    for (ind = 0; ind < numAvgAngs; ind++) {
+      mJustLengths[ind] = mAvgLengths[ind];
+      mJustAngles[ind] = mPeakAngles[ind];
+      mAvgLengths[ind] = saveLengths[ind];
+      mPeakAngles[ind] = saveAngles[ind];
+    }
     return 0;
   }
 
@@ -2234,18 +2271,21 @@ int HoleFinder::analyzeNeighbors
   connErrors.resize(numConn);
   connQuadrant.resize(numConn);
   for (ind = 0; ind < numConn; ind++) {
-    angle = goodAngle(connReducedAng[ind] - mPeakAngBelow);
-    errBelow = SIDES_ANGLE_ERROR(connLengths[ind], avgLenBelow, angle);
-    angle = goodAngle(connReducedAng[ind] - mPeakAngAbove);
-    errAbove = SIDES_ANGLE_ERROR(connLengths[ind], avgLenAbove, angle);
-    bestError = B3DMIN(errBelow, errAbove);
+    bestError = 1.e20f;
+    for (dir = 0; dir < numAvgAngs; dir++) {
+      angle = goodAngle(connReducedAng[ind] - mPeakAngles[dir]);
+      error = SIDES_ANGLE_ERROR(connLengths[ind], avgLengths[dir], angle);
+      if (error < bestError) {
+        bestError = error;
+        angForAlt = mPeakAngles[dir];
+        lenForAlt = avgLengths[dir];
+      }
+    }
     connPt1 = connPoint1[ind];
     connPt2 = connPoint2[ind];
 
     // Test alternative connections, but assume the angle choice is correct
     if (testAlt && (altInds[connPt1] >= 0 || altInds[connPt2] >= 0)) {
-      angForAlt = errBelow < errAbove ? mPeakAngBelow : mPeakAngAbove;
-      lenForAlt = errBelow < errAbove ? avgLenBelow : avgLenAbove;
       if (altInds[connPt1] >= 0) {
         altLen = lengthAndAngle(angForAlt, xCenAlt[altInds[connPt1]] - xCenVec[connPt2], 
                                 yCenAlt[altInds[connPt1]] - yCenVec[connPt2], angle);
@@ -2275,9 +2315,16 @@ int HoleFinder::analyzeNeighbors
     }
     error = sqrt(bestError);
     connErrors[ind] = error;
-    angle = goodAngle(connAngles[ind] + 45 - mPeakAngAbove, 180);
-    jnd = (int)((angle + 180.) / 90.);
-    B3DCLAMP(jnd, 0, 3);
+    if (hexGrid) {
+      angle = goodAngle(connAngles[ind] + 30.f - mPeakAngles[1], 180.f);
+      jnd = (int)((angle + 180.) / 60.);
+      B3DCLAMP(jnd, 0, 5);
+      
+    } else {
+      angle = goodAngle(connAngles[ind] + 45 - mPeakAngles[1], 180);
+      jnd = (int)((angle + 180.) / 90.);
+      B3DCLAMP(jnd, 0, 3);
+    }
     connQuadrant[ind] = jnd;
 
     // If connection is a good one, put it on lists for the two points
@@ -2386,7 +2433,22 @@ int HoleFinder::analyzeNeighbors
               if ((iy < gridYdim - 1 && gridVec[ix + (iy + 1) * gridXdim] >= 0) ||
                   (iy < gridYdim - 2 && gridVec[ix + (iy + 2) * gridXdim] >= 0))
                 num++;
-              doFit = num >= 3;
+
+              // Test the rest of the neighbors for hex and use higher threshold for fit
+              if (hexGrid) {
+                if ((iy > 0 && ix < gridXdim - 1 && gridVec[ix + (iy - 1) * gridXdim + 1]
+                     >= 0) ||
+                    (iy > 1 && ix < gridXdim - 2 && gridVec[ix + (iy - 2) * gridXdim + 2]
+                     >= 0))
+                  num++;
+                if ((ix > 0 && iy < gridYdim - 1 && gridVec[ix + (iy + 1) * gridXdim - 1]
+                     >= 0) ||
+                    (ix > 1 && iy < gridYdim - 2 && gridVec[ix + (iy + 2) * gridXdim - 2]
+                     >= 0))
+                  num++;
+                doFit = num >= 4;
+              } else
+                doFit = num >= 3;
               //PRINT4(ix,iy,num,doFit);
             }
 
@@ -2435,6 +2497,31 @@ int HoleFinder::analyzeNeighbors
                 }
               }
 
+              // For hex grid, add some more out past the short diagonal
+              if (hexGrid) {
+                numDiag = B3DNINT(sqrt(3.) * fitLen / 2.) - fitLen / 2;
+                for (dir = -1; dir <= 1; dir += 2) {
+                  for (diag = 1; diag <= numDiag; diag++) {
+                    if (dir < 0) {
+                      jx = jxStart - diag;
+                      jy = jyEnd + diag;
+                    } else {
+                      jx = jxEnd + diag;
+                      jy = jyStart - diag;
+                    }
+                    if (jx >= 0 && jx < gridXdim && jy >= 0 && jy < gridYdim) {
+                      jnd = gridVec[jx + jy * gridXdim];
+                      if (jnd >= 0) {
+                        fitDelIX[numFit] = (float)(jx - bestXcen);
+                        fitDelIY[numFit] = (float)(jy - bestYcen);
+                        fitX[numFit] = xCenVec[jnd];
+                        fitY[numFit++] = yCenVec[jnd];
+                      }
+                    }
+                  }
+                }
+              }
+
               // Do the fits
 
               jnd = 1;
@@ -2470,15 +2557,17 @@ int HoleFinder::analyzeNeighbors
                     ACCUM_MIN(bestError, spacing);
                   }
                 }
-                if (jnd < 0 || bestError > maxError) {
-                  xMissing.push_back(xPred);
-                  yMissing.push_back(yPred);
-                  if (jnd >= 0) {
-                    //float dist = DISTANCE(xCenVec[jnd] - xPred, yCenVec[jnd] - yPred);
-                    //PRINT4(xCenVec[jnd], xPred, yCenVec[jnd], yPred);
-                    //PRINT2(dist,maxError);
-                    ptGridX[jnd] = rejectGridVal;
-                  }
+              }
+
+              // Somehow this got indented wrong?
+              if (jnd < 0 || bestError > maxError) {
+                xMissing.push_back(xPred);
+                yMissing.push_back(yPred);
+                if (jnd >= 0) {
+                  //float dist = DISTANCE(xCenVec[jnd] - xPred, yCenVec[jnd] - yPred);
+                  //PRINT4(xCenVec[jnd], xPred, yCenVec[jnd], yPred);
+                  //PRINT2(dist,maxError);
+                  ptGridX[jnd] = rejectGridVal;
                 }
               }
             }
@@ -2514,89 +2603,108 @@ int HoleFinder::analyzeNeighbors
 // working from the peak angle in the coarse histogram, find the number, angle between,
 // and length of connectors near that angle or 90 degrees away
 void HoleFinder::refineAnglesGetLengths(FloatVec &connReducedAng, FloatVec &connLengths,
-  float &peakAngBelow, float &peakAngAbove, float &avgLenBelow, float &avgLenAbove,
-  int &numBelow, int &numAbove)
+  float *peakAngles, float *avgLengths, int *numAngles, int hexGrid)
 {
-  int loop, ind, numConn = (int)connReducedAng.size();
-  float angle, diffBelow, diffAbove, sd, sem;
-  float maxAngDiff = 10., maxCoarseDiff = 12.5f;
-  FloatVec lenBelow, lenAbove;
+  int loop, ind, numConn = (int)connReducedAng.size(), numAvgs = hexGrid ? 3 : 2;
+  int dir, num, nsum;
+  float angle, diffs[3], sd, sem, wgtSum, axisDiff = hexGrid ? 60.f : 90.f;
+  float maxAngDiff = hexGrid ? 8.f : 10.f, maxCoarseDiff = hexGrid ? 10.f : 12.5f;
+  FloatVec lengths[3];
 
+  // Average angles in each class
   for (loop = 0; loop < 2; loop++) {
-    numBelow = 0;
-    numAbove = 0;
-    diffBelow = 0.;
-    diffAbove = 0.;
+    for (dir = 0; dir < numAvgs; dir++) {
+      numAngles[dir] = 0;
+      diffs[dir] = 0.;
+    }
     for (ind = 0; ind < numConn; ind++) {
-      angle = goodAngle(connReducedAng[ind] - peakAngAbove);
-      if (fabs(angle) < maxCoarseDiff) {
-        numAbove++;
-        diffAbove += angle;
-      } else {
-        angle = goodAngle(connReducedAng[ind] - peakAngBelow);
+      for (dir = 0; dir < numAvgs; dir++) {
+        angle = goodAngle(connReducedAng[ind] - peakAngles[dir]);
         if (fabs(angle) < maxCoarseDiff) {
-          numBelow++;
-          diffBelow += angle;
+          numAngles[dir]++;
+          diffs[dir] += angle;
+          break;
         }
       }
     }
-    if (numBelow > 0)
-      peakAngBelow += diffBelow / numBelow;
-    if (numAbove > 0)
-      peakAngAbove += diffAbove / numAbove;
-    else
-      peakAngAbove = peakAngBelow + 90.f;
-    if (!numBelow)
-      peakAngBelow = peakAngAbove - 90.f;
+
+    // Get the average difference for each direction and adjust angle, add up a weighted
+    // sum of angles referenced to the first direction
+    wgtSum = 0.;
+    nsum = 0;
+    for (dir = 0; dir < numAvgs; dir++) {
+      if (numAngles[dir] > 0) {
+        peakAngles[dir] += diffs[dir] / numAngles[dir];
+        wgtSum += numAngles[dir] * (peakAngles[dir] - axisDiff * dir);
+        nsum += numAngles[dir];
+      }
+    }
+    if (nsum)
+      wgtSum /= nsum;
+
+    // Fill in missing angles
+    for (dir = 0; dir < numAvgs; dir++)
+      if (!numAngles[dir])
+        peakAngles[dir] += wgtSum + axisDiff * dir;
   }
 
-  // Get separate median for the two directions
- // Refine the angle first by 
+  // Get separate median for the each direction for angles then lengths
+  // Refine the angle first with its median before getting lengths
   for (loop = 0; loop < 2; loop++) {
     for (ind = 0; ind < numConn; ind++) {
-      angle = goodAngle(connReducedAng[ind] - peakAngBelow);
-      if (fabs(angle) < maxAngDiff) {
-        lenBelow.push_back(loop ? connLengths[ind] : angle);
-      } else {
-        angle = goodAngle(connReducedAng[ind] - peakAngAbove);
-        if (fabs(angle) < maxAngDiff)
-          lenAbove.push_back(loop ? connLengths[ind] : angle);
+      for (dir = 0; dir < numAvgs; dir++) {
+        angle = goodAngle(connReducedAng[ind] - peakAngles[dir]);
+        if (fabs(angle) < maxAngDiff) {
+          lengths[dir].push_back(loop ? connLengths[ind] : angle);
+          break;
+        }
       }
     }
 
-    if (lenAbove.size() > 3)
-      rsFastMedianInPlace(&lenAbove[0], (int)lenAbove.size(), &avgLenAbove);
-    else if (lenAbove.size())
-      avgSD(&lenAbove[0], (int)lenAbove.size(), &avgLenAbove, &sd, &sem);
-    if (lenBelow.size() > 3)
-      rsFastMedianInPlace(&lenBelow[0], (int)lenBelow.size(), &avgLenBelow);
-    else if (lenBelow.size())
-      avgSD(&lenBelow[0], (int)lenBelow.size(), &avgLenBelow, &sd, &sem);
-    else
-      avgLenBelow = avgLenAbove;
-    if (!lenAbove.size())
-      avgLenAbove = avgLenBelow;
+    nsum = 0;
+    wgtSum = 0.;
+    for (dir = 0; dir < numAvgs; dir++) {
+      avgLengths[dir] = 0.;
+      num = (int)lengths[dir].size();
+      if (num > 3)
+        rsFastMedianInPlace(&lengths[dir][0], num, &avgLengths[dir]);
+      else if (num)
+        avgSD(&lengths[dir][0], num, &avgLengths[dir], &sd, &sem);
+      nsum += num;
+      wgtSum += (float)(num * (avgLengths[dir] - (loop ? 0. : axisDiff * dir)));
+    }
+    if (nsum)
+      wgtSum /= nsum;
+
+    // Fill in missing values
+    for (dir = 0; dir < numAvgs; dir++)
+      if (!lengths[dir].size())
+        avgLengths[dir] += wgtSum + (float)(loop ? 0. : axisDiff * dir);
 
     if (!loop) {
-      /*for (jnd = 0; jnd < lenBelow.size(); jnd++)
-      printf("%.2f\n", lenBelow[jnd]);
-      for (jnd = 0; jnd < lenAbove.size(); jnd++)
-      printf("%.2f\n", lenAbove[jnd]); */
-      peakAngBelow = goodAngle(peakAngBelow + avgLenBelow);
-      peakAngAbove = goodAngle(peakAngAbove + avgLenAbove);
-      lenAbove.clear();
-      lenBelow.clear();
+      for (dir = 0; dir < numAvgs; dir++) {
+        peakAngles[dir] = goodAngle(peakAngles[dir] + avgLengths[dir]);
+        lengths[dir].clear();
+      }
     }
   }
-  numBelow = (int)lenBelow.size();
-  numAbove = (int)lenAbove.size();
-  if (peakAngBelow > peakAngAbove) {
-    B3DSWAP(peakAngBelow, peakAngAbove, sem);
-    B3DSWAP(avgLenBelow, avgLenAbove, sem);
-    B3DSWAP(numBelow, numAbove, ind);
+
+  // Final assignment of numbers
+  for (dir = 0; dir < numAvgs; dir++)
+    numAngles[dir] = (int)lengths[dir].size();
+
+  // Ordering, just in case
+  for (dir = 0; dir < numAvgs - 1; dir++){
+    for (ind = dir + 1; ind < numAvgs; ind++) {
+      if (peakAngles[dir] > peakAngles[ind]) {
+        B3DSWAP(peakAngles[dir], peakAngles[ind], sem);
+        B3DSWAP(avgLengths[dir], avgLengths[ind], sem);
+        B3DSWAP(numAngles[ind], numAngles[ind], num);
+      }
+    }
   }
   if (mVerbose) {
-    //PRINT4(peakAngBelow, avgLenBelow, peakAngAbove, avgLenAbove);
+    //PRINT4(peakAngles[0], avgLengths[0], peakAngles[1], avgLengths[1]);
   }
 }
 
@@ -2920,7 +3028,6 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
  fclose(fp);
 }
 
-
 /*
  * Given a collection of positions, determines their indexes on a regular grid, given the
  * angle and spacing of the grid.  Pass the angle as -999 or the spacing as -1 to use
@@ -2935,28 +3042,52 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
 
 void HoleFinder::assignGridPositions
 (FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY, 
- float &avgAngle, float &avgLen)
+ float &avgAngle, float &avgLen, int hexGrid)
 {
   FloatVec xrot, yrot;
   ShortVec xPrelim, yPrelim;
   IntVec indPrelim, crossInd;
   std::queue<int> neighQueue;
   int ix, iy, ixCen, iyCen, jnd, xdim, ydim, ind, numPoints = (int)xCenters.size();
-  int cenInd, indMin, idx, idy, delMin, indXbase, indYbase;
+  int cenInd, indMin, idx, idy, delMin, indXbase, indYbase, numDir;
   float rcos, rsin, xmin, xmax, ymin, ymax, dist, minDist;
   float xcen, ycen, xbase, ybase;
+  float stretch[6], restore[6], rotMat[6], transMat[6];
+  if (hexGrid < 0)
+    hexGrid = mHexGrid;
+  numDir = hexGrid ? 3 : 2;
 
   gridX.clear();
   gridY.clear();
   gridX.resize(numPoints, -1);
   gridY.resize(numPoints, -1);
 
-  if (avgAngle < -180)
-    avgAngle = (mPeakAngBelow + 90.f + mPeakAngAbove) / 2.f;
-  if (avgLen < 0)
-    avgLen = (mAvgLenAbove + mAvgLenBelow) / 2.f;
+  if (avgAngle < -180) {
+    avgAngle = 0.;
+    for (ix = 0 ; ix < numDir; ix++)
+      avgAngle += (float)((mPeakAngles[ix] + (1.f - ix) * 180.f / numDir) / numDir);
+  }
+  if (avgLen < 0) {
+    avgLen = 0.;
+    for (ix = 0 ; ix < numDir; ix++)
+      avgLen += mAvgLengths[ix] / (float)numDir;
+  }
   rcos = (float)cos(RADIANS_PER_DEGREE * avgAngle);
   rsin = -(float)sin(RADIANS_PER_DEGREE * avgAngle);
+  xfUnit(stretch, 1., 2);
+  rotMat[0] = rcos;
+  rotMat[2] = -rsin;
+  rotMat[1] = rsin;
+  rotMat[3] = rcos;
+  rotMat[4] = rotMat[5] = 0.;
+  if (hexGrid) {
+    stretch[0] = 1.;
+    stretch[1] = stretch[4] = stretch[5] = 0.;
+    stretch[2] = -1.f / sqrt(3.f);
+    stretch[3] = 2.f / sqrtf(3.f);
+    xfInvert(stretch, restore, 2);
+  }
+  xfMult(rotMat, stretch, transMat, 2);
   
   // Rotate the points to be square to the grid
   xrot.resize(numPoints);
@@ -2964,8 +3095,9 @@ void HoleFinder::assignGridPositions
   xmin = ymin = 1.e30f;
   xmax = ymax = -1.e30f;
   for (ind = 0; ind < numPoints; ind++) {
-    xrot[ind] = rcos * xCenters[ind] - rsin * yCenters[ind];
-    yrot[ind] = rsin * xCenters[ind] + rcos * yCenters[ind];
+    xfApply(transMat, 0., 0., xCenters[ind], yCenters[ind], &xrot[ind], &yrot[ind], 2);
+    //xrot[ind] = rcos * xCenters[ind] - rsin * yCenters[ind];
+    //yrot[ind] = rsin * xCenters[ind] + rcos * yCenters[ind];
     ACCUM_MIN(xmin, xrot[ind]);
     ACCUM_MIN(ymin, yrot[ind]);
     ACCUM_MAX(xmax, xrot[ind]);
@@ -3090,17 +3222,30 @@ void HoleFinder::assignGridPositions
 
 /*
  * Convert the average lengths and angles found from a call to analyzeNeighbors just to
- * find spacing into two vectors with the amount of movement dX,
- * dY per step in gridX or gridY.  X corresponds to the vector "above" and Y to the
- * vector "below" rotated by 180
+ * find spacing into two or three vectors with the amount of movement gridX,
+ * gridY per step in gridX or gridY.  Return vectors in the upper two quadrants,
+ * return average angle in first quadrant
  */
-void HoleFinder::getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, 
-  float &gridYdY, float &avgAngle, float &avgLen)
+void HoleFinder::getGridVectors(float *gridX, float *gridY, float &avgAngle,
+                                float &avgLen, int hexGrid)
 {
-  gridXdX = mJustLenAbove * (float)cos(RADIANS_PER_DEGREE * mJustAngAbove);
-  gridYdX = mJustLenAbove * (float)sin(RADIANS_PER_DEGREE * mJustAngAbove);
-  gridXdY = mJustLenBelow * (float)cos(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
-  gridYdY = mJustLenBelow * (float)sin(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
-  avgAngle = 0.5f * (mJustAngBelow + 90.f + mJustAngAbove);
-  avgLen = 0.5f * (mJustLenBelow + mJustLenAbove);
+  int numDir;
+  float angle, delta;
+  if (hexGrid < 0)
+    hexGrid = mHexGrid ? 1 : 0;
+  delta = hexGrid ? 60.f : 90.f;
+  numDir = hexGrid ? 3 : 2;
+  avgAngle = 0.;
+  avgLen = 0.;
+  for (int dir = 0; dir < numDir; dir++) {
+    angle = mJustAngles[dir];
+    if (angle < -180.)
+      angle += 180.f;
+    gridX[dir] = mJustLengths[dir] * (float)cos(RADIANS_PER_DEGREE * angle);
+    gridY[dir] = mJustLengths[dir] * (float)sin(RADIANS_PER_DEGREE * angle);
+    avgAngle += (float)((mJustAngles[dir] + (1. - dir) * delta) / numDir);
+    avgLen += mJustLengths[dir] / (float)numDir;
+  }
+  if (avgAngle < 0.)
+    avgAngle += delta;
 }
