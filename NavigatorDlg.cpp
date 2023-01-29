@@ -3131,11 +3131,9 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
   ScaleMat aInv, float delX, float delY, bool ctrlKey, float distLim)
 {
   std::set<int>::iterator iter;
-  float selXLimitFrac[4] = {-0.03f, 1.03f, 1.03f, -0.03f};
-  float selYLimitFrac[4] = {-0.03f, -0.03f, 1.03f, 1.03f};
   float selXlimit[4], selYlimit[4], selXwindow[4], selYwindow[4];
   float dist, distMin = 1.e10, distNext = 1.e10;
-  int ind, indMin, nxBuf, nyBuf;
+  int ind, indMin;
   CMapDrawItem *item;
   bool dragging = distLim < 1.e6;
   bool minIsPolyInGroup = false;
@@ -3143,24 +3141,13 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
   if (!imBuf->mImage)
     return false;
 
-  // Get a region around the image and around the window
-  imBuf->mImage->getSize(nxBuf, nyBuf);
-  mWinApp->mMainView->WindowCornersInImageCoords(imBuf, &selXwindow[0], &selYwindow[0]);
-  for (ind = 0; ind < 4; ind++) {
-    selXlimit[ind] = aInv.xpx * (selXLimitFrac[ind] * nxBuf - delX) +
-      aInv.xpy * (selYLimitFrac[ind] * nyBuf - delY);
-    selYlimit[ind] = aInv.ypx * (selXLimitFrac[ind] * nxBuf - delX) +
-      aInv.ypy * (selYLimitFrac[ind] * nyBuf - delY);
-    dist = aInv.xpx * (selXwindow[ind] - delX) + aInv.xpy * (selYwindow[ind] - delY);
-    selYwindow[ind] = aInv.ypx * (selXwindow[ind] - delX) + aInv.ypy *
-      (selYwindow[ind] - delY);
-    selXwindow[ind] = dist;
-  }
-
   // If there is one item selected and it is a map, clear out selection list
   if (m_bEditMode && ctrlKey && mSelectedItems.size() == 1 && SetCurrentItem() &&
     mItem->IsMap())
     mSelectedItems.clear();
+
+  GetSelectionLimits(imBuf, aInv, delX, delY, selXlimit, selYlimit, selXwindow, 
+    selYwindow);
 
   // Loop on items; skip ones that should not be visible or are outside region
   for (ind = 0; ind < mItemArray.GetSize(); ind++) {
@@ -3223,6 +3210,31 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
   ManageCurrentControls();
   Redraw();
   return true;
+}
+
+// Determines a region around the image and around the window for limiting selection with
+// the mouse; also used by holefinder
+void CNavigatorDlg::GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, float delX,
+  float delY, float selXlimit[4], float selYlimit[4], float selXwindow[4], 
+  float selYwindow[4])
+{
+  float selXLimitFrac[4] = {-0.03f, 1.03f, 1.03f, -0.03f};
+  float selYLimitFrac[4] = {-0.03f, -0.03f, 1.03f, 1.03f};
+  float dist;
+  int nxBuf, nyBuf,ind;
+
+  imBuf->mImage->getSize(nxBuf, nyBuf);
+  mWinApp->mMainView->WindowCornersInImageCoords(imBuf, &selXwindow[0], &selYwindow[0]);
+  for (ind = 0; ind < 4; ind++) {
+    selXlimit[ind] = aInv.xpx * (selXLimitFrac[ind] * nxBuf - delX) +
+      aInv.xpy * (selYLimitFrac[ind] * nyBuf - delY);
+    selYlimit[ind] = aInv.ypx * (selXLimitFrac[ind] * nxBuf - delX) +
+      aInv.ypy * (selYLimitFrac[ind] * nyBuf - delY);
+    dist = aInv.xpx * (selXwindow[ind] - delX) + aInv.xpy * (selYwindow[ind] - delY);
+    selYwindow[ind] = aInv.ypx * (selXwindow[ind] - delX) + aInv.ypy *
+      (selYwindow[ind] - delY);
+    selXwindow[ind] = dist;
+  }
 }
 
 // Select point under mouse in edit mode
@@ -5947,7 +5959,8 @@ void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat 
 
     // Look for matching grid index for non-excluded point
     for (int ind = 0; ind < (int)mHFgridXpos->size(); ind++) {
-      if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && !mHFexclude->at(ind)){
+      if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && 
+        mHFexclude->at(ind) <= 0){
         xx = mHFxCenters->at(ind);
         yy = mHFyCenters->at(ind);
         if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0 && 

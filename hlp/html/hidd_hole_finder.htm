@@ -16,7 +16,7 @@
     <p><a NAME="hidd_hole_finder"></a><span class="style1">Hole Finder
         Dialog</span></p>
     <p>This dialog allows you to use the Holefinder module to find circular holes in a 
-      support film that are arranged in a square lattice.&nbsp; This module was developed in the IMOD program 
+      support film that are arranged in a square or hexagonal lattice.&nbsp; This module was developed in the IMOD program 
       Imodfindholes.&nbsp; It finds holes by a sequence of steps, starting with an 
       image reduction to bring the holes to a diameter of ~50 pixels, then a smoothing 
       filter, and edge detection with a Sobel filter and a Canny edge detector.&nbsp; 
@@ -50,6 +50,10 @@
       need to get an overview with less error, not a perfect alignment. The recourse 
       is:</p>
     <ol>
+      <li>Turn on &#39;Assess multiple peaks with weights&#39; in the Montage Control panel, if 
+        it is off.&nbsp; This option may be counterproductive if there are systematic 
+        errors in piece positions because of lack of compensation for high defocus or a 
+        bad calibration, so you can also try turning it off if it is on.</li>
       <li>Turn off &#39;Treat as very sloppy montage&#39; in the Montage Control panel, if it is 
         on.&nbsp; This will usually prevent alignment errors from giving large shifts 
         between pieces.</li>
@@ -64,7 +68,7 @@
       and puts up a message box with 3 choices: to stop and measure the hole-to-hole 
       spacing directly, to go with the entered values, or to go on and skip this 
       analysis in the future.&nbsp; The autocorrelation analysis is not infallible so 
-      you may need to go on.</p>
+      you may need to go on.&nbsp; This analysis is not done with a hex grid.</p>
     <p>
       After finding holes, the image data in the holes is 
       analyzed in 3 ways: the mean intensity is computed; pixels are smoothed by 
@@ -76,7 +80,14 @@
       the first set of holes analyzed, but then become independent settings retained 
       between sets of holes.&nbsp; A cutoff can thus be outside the range found in the 
       current set of holes, which is useful if none of the holes in this particular 
-      gris square approach the extremes that are being eliminated.</p>
+      grid square approach the extremes that are being eliminated.</p>
+    <p>
+      Independent of these cutoffs, you can also select individual points to be 
+      included or excluded with the left mouse button (see below).</p>
+    <p>
+      &nbsp;</p>
+    <p>
+      <em><strong>Controls for Finding Holes</strong></em></p>
     <p>
       <strong>Hole size</strong></p>
     <p>
@@ -107,6 +118,12 @@
       of that point, based on a fit to positions in up to a 5x5 array of neighboring 
       points.&nbsp; Points will be dropped if they exceed this error.&nbsp; A value of 
       0.05 should be good.</p>
+    <p>
+      <strong>Hex grid</strong></p>
+    <p>
+      Select this option if the grid has a hexagonal arrangement of holes.&nbsp; Hole 
+      size and periodicity are kept track of separately for square and hexagonal 
+      lattices, so these values will change when this option is toggled.</p>
     <p>
       <strong>Exclude holes outside polygon</strong></p>
     <p>
@@ -170,6 +187,29 @@
       set of holes if they are the same size, saving some time, so it is best not to clear the 
       data unless memory is limited.
     </p>
+    <p>&nbsp;</p>
+    <p><strong><em>Controlling Which Points are Included</em></strong></p>
+    <p>The cutoff values here can be used to set fixed criteria for excluding points 
+      from conversion to Navigator item.&nbsp; In addition, you can use the left mouse 
+      button with the Ctrl key held down to include or exclude specific points.&nbsp; 
+      Clicking near a point, or holding the button down and dragging the mouse near a 
+      point, will change it from included to excluded, or excluded to included.&nbsp; 
+      In addition, missing points in the interior of the grid of found points can be 
+      added as included points by clicking or dragging near an unmarked hole, although 
+      points outside the boundary of that grid cannot be added this way.&nbsp; Once a 
+      point is excluded or included with the mouse, it is unaffected by any changes in 
+      the cutoff settings.&nbsp; The only way to change its status is to click it 
+      again.</p>
+    <p>Points are color-coded by their inclusion status:</p>
+    <ul>
+      <li>Red - included based on the cutoffs</li>
+      <li>Orange - included by toggling with the mouse</li>
+      <li>Light blue - below the low intensity cutoff, or excluded by the SD or black 
+        pixel cutoffs and darker than most holes</li>
+      <li>Dark blue - above the high intensity cutoff, or excluded by the SD or black 
+        pixel cutoffs and lighter than most holes</li>
+      <li>Medium green - excluded by toggling with the mouse </li>
+    </ul>
     <p><strong>Lower mean cutoff</strong></p>
     <p>Use the slider or enter a value in the text box to exclude holes whose mean 
       intensity is below the selected value.&nbsp; This slider ranges from the minimum 
@@ -197,7 +237,9 @@
       depending on which mean cutoff their means are closest to.</p>
     <p><strong>Toggle Points</strong></p>
     <p>This button can be pressed to turn off the display of all points temporarily; 
-      the points will be redsiaplyed when the button is released.</p>
+      the points will be redisplayed when the button is released.</p>
+    <p>&nbsp;</p>
+    <p><strong><em>Converting Points to Navigator Items</em></strong></p>
     <p><strong>Layout of points</strong></p>
     <p>These radio buttons determine the sequence in which points will be placed in 
       the Navigator table by the following button.&nbsp; They represent the same 

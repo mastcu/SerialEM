@@ -144,7 +144,10 @@ public:
     int &pieceIndex);
   bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
     float delX, float delY, bool ctrlKey, float distLim);
+  void GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, float delX, float delY, float selXlimit[4], float selYlimit[4],
+    float selXwindow[4], float selYwindow[4]);
   bool MouseDragSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim);
+  bool OKtoMouseSelect() {return !(mAddingPoints || mAddingPoly || mMovingItem || mNavAcquireDlg); };
 	MapItemArray *GetMapDrawItems(EMimageBuffer *imBuf, 
     ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, CMapDrawItem **acquireBox);
   void AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY, IntVec &holeIndex, 

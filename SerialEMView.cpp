@@ -636,6 +636,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
   COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
+  COLORREF userIncludeColor = RGB(255, 160, 0), userExcludeColor = RGB(0, 180, 80);
   int scaled5 = DSB_DPI_SCALE(5);
   int scaled10 = DSB_DPI_SCALE(10);
   int scaled140 = DSB_DPI_SCALE(140);
@@ -1230,6 +1231,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
     CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
     CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
+    CPen pnUserExclPen(PS_SOLID, thick2, userExcludeColor);
+    CPen pnUserInclPen(PS_SOLID, thick2, userIncludeColor);
+    CPen *holePens[5] = {&pnUserInclPen, &pnIncludePen, &pnLowExclPen,
+      &pnHighExclPen, &pnUserExclPen};
     short exclude;
     crossLen = DSB_DPI_SCALE(9);
     iy = (int)pieceOn->size();
@@ -1237,13 +1242,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       tempX = xHoleCens->at(ix);
       tempY = yHoleCens->at(ix);
       exclude = holeExcludes->at(ix);
-      if ((exclude && !drawExcluded) || (!exclude && !drawIncluded) ||
+      if ((exclude > 0 && !drawExcluded) || (exclude <= 0 && !drawIncluded) ||
         tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
         continue;
       StageToImage(imBuf, tempX, tempY, ptX, ptY, iy ? pieceOn->at(ix) : -1);
       MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
-      DrawCross(&cdc, B3DCHOICE(exclude > 0, &pnHighExclPen,
-        exclude < 0 ? &pnLowExclPen : &pnIncludePen), point, crossLen);
+      DrawCross(&cdc, holePens[1 + exclude], point, crossLen);
     }
   }
 
@@ -2207,7 +2211,7 @@ void CSerialEMView::OnLButtonDblClk(UINT nFlags, CPoint point)
 // Release mouse if it was captured by this window
 void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point) 
 {
-  float shiftX, shiftY, angle, pixScale;
+  float shiftX, shiftY, angle, pixScale, crossLen;
   int imX, imY;
   double defocus;
   BOOL legal, used = false, showStage = false;
@@ -2230,11 +2234,19 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       GetClientRect(&rect);
       legal = ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
 
+      if (mWinApp->mNavHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts() &&
+        !shiftKey && ctrlKey) {
+        crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / (mZoom < 1 ? mZoom : 1.));
+        mNavUsedLastLButtonUp = mWinApp->mNavHelper->mHoleFinderDlg->MouseSelectPoint(
+          imBuf, shiftX, shiftY, crossLen, false);
+      }
+
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
-      if ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) && mWinApp->mNavigator && 
+      if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) && 
+        mWinApp->mNavigator &&
         (legal || (!shiftKey && (ctrlKey || mWinApp->mNavigator->InEditMode())) ||
-        (shiftKey && mWinApp->mNavigator->InEditMode())))
+        (shiftKey && mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);
       if (legal && !mNavUsedLastLButtonUp) {
@@ -2569,7 +2581,9 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
   float shiftX, shiftY, prevX, prevY, angle, pixScale, crossLen;
   BOOL shiftKey = ::GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   BOOL ctrlKey = ::GetAsyncKeyState(VK_CONTROL) / 2 != 0;
-  bool dragSelect = mWinApp->mNavigator && mWinApp->mNavigator->m_bEditMode && ctrlKey &&
+  bool navEdit = mWinApp->mNavigator && mWinApp->mNavigator->m_bEditMode;
+  bool haveHoles = mWinApp->mNavHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts();
+  bool dragSelect = (navEdit || haveHoles) && ctrlKey &&
     !shiftKey && (nFlags & MK_LBUTTON) && !mDrawingLine;
   EMimageBuffer *imBuf;
   CRect rect;
@@ -2633,7 +2647,11 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
 
           if (dragSelect) {
             crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / zoomFac);
-            mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
+            if (haveHoles)
+              navEdit = !mWinApp->mNavHelper->mHoleFinderDlg->MouseSelectPoint(
+                imBuf, shiftX, shiftY, crossLen, true);
+            if (navEdit)
+              mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
 
             // Otherwise start or continue drawing a line if point is within image
           } else if (!mDrawingLine) {
