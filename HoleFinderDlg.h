@@ -17,16 +17,19 @@ public:
 	virtual ~CHoleFinderDlg();
   void ManageEnables();
   void ManageSizeSeparation(bool update);
+  void SizeAndSpacingToDialog(bool saveOther, bool update);
+  void SizeAndSpacingToParam(bool other);
   void UpdateSettings();
   bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<short> **exclude,
     BOOL &incl, BOOL &excl);
   bool HaveHolesToDrawOrMakePts();
+  bool MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim, bool dragging);
   void SetExclusionsAndDraw();
   void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff);
-  ScaleMat ConvertHoleToISVectors(int index, bool setVecs, CString &errStr);
+  int ConvertHoleToISVectors(int index, bool setVecs, double *xVecs, double *yVecs, CString &errStr);
   GetMember(bool, FindingHoles);
-  GetMember(ScaleMat, GridImVecs);
-  GetMember(ScaleMat, GridStageVecs);
+  void GetGridImVecs(float *xVecs, float *yVecs) { xVecs = &mGridImXVecs[0]; yVecs = &mGridImYVecs[0]; };
+  void GetGridStageVecs(float *xVecs, float *yVecs) { xVecs = &mGridStageXVecs[0]; yVecs = &mGridStageYVecs[0]; };
   GetMember(float, LastTiltAngle);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
@@ -73,8 +76,12 @@ private:
   FloatVec mXcenters, mYcenters;
   FloatVec mXstages, mYstages;
   FloatVec mXinPiece, mYinPiece;
+  FloatVec mXmissing, mYmissing;
+  IntVec mMissPieceOn;
+  FloatVec mMissXinPiece, mMissYinPiece;
   IntVec mPieceOn;
   std::vector<short> mExcluded;
+  int mLastUserSelectInd;
   double mSigmas[MAX_HOLE_TRIALS];
   double mThresholds[MAX_HOLE_TRIALS];
   int mIterations[MAX_HOLE_TRIALS];
@@ -97,7 +104,9 @@ private:
   int mCurStore, mBufInd;
   ScaleMat mImToStage;
   ScaleMat mAdjustedStageToCam;
-  ScaleMat mGridImVecs, mGridStageVecs;
+  float mGridImXVecs[3], mGridImYVecs[3];
+  float mGridStageXVecs[3], mGridStageYVecs[3];
+  BOOL mLastWasHexGrid;
   int mSigInd, mThreshInd, mBestSigInd, mBestThreshInd;
   MontParam mMontParam;
   CMapDrawItem *mNavItem;
@@ -187,4 +196,7 @@ public:
   afx_msg void OnButSetSizeSpace();
   CMyButton m_butToggleHoles;
   afx_msg void OnToggleDraw(NMHDR * pNotifyStruct, LRESULT * result);
+  CButton m_butHexArray;
+  BOOL m_bHexArray;
+  afx_msg void OnHexArray();
 };

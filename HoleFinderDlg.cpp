@@ -58,6 +58,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_iLayoutType(0)
   , m_fMaxError(0.05f)
   , m_bBracketLast(FALSE)
+  , m_bHexArray(FALSE)
 {
   mNonModal = true;
   mHaveHoles = false;
@@ -69,8 +70,13 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   mLastHoleSpacing = 0.;
   mFindingFromDialog = false;
   mSkipAutoCor = false;
-  mGridImVecs.xpx = 0.;
-  mGridStageVecs.xpx = 0.;
+  mLastUserSelectInd = -1;
+  for (int ind = 0; ind < 3; ind++) {
+    mGridImXVecs[ind] = 0.;
+    mGridImYVecs[ind] = 0.;
+    mGridStageXVecs[ind] = 0.;
+    mGridStageYVecs[ind] = 0.;
+  }
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -135,6 +141,8 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_SET_SIZE_SPACE, m_butSetSizeSpace);
   DDX_Text(pDX, IDC_STAT_UM_SIZE_SEP, m_strUmSizeSep);
   DDX_Control(pDX, IDC_BUT_TOGGLE_HOLES, m_butToggleHoles);
+  DDX_Control(pDX, IDC_HEX_ARRAY, m_butHexArray);
+  DDX_Check(pDX, IDC_HEX_ARRAY, m_bHexArray);
 }
 
 
@@ -160,6 +168,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BRACKET_LAST, OnBracketLast)
   ON_BN_CLICKED(IDC_BUT_SET_SIZE_SPACE, OnButSetSizeSpace)
   ON_NOTIFY(NM_LDOWN, IDC_BUT_TOGGLE_HOLES, OnToggleDraw)
+  ON_BN_CLICKED(IDC_HEX_ARRAY, &CHoleFinderDlg::OnHexArray)
 END_MESSAGE_MAP()
 
 
@@ -244,6 +253,13 @@ void CHoleFinderDlg::OnKillfocusEditMaxError()
   mWinApp->RestoreViewFocus();
 }
 
+void CHoleFinderDlg::OnHexArray()
+{
+  UpdateData(true);
+  SizeAndSpacingToDialog(true, true);
+  mWinApp->RestoreViewFocus();
+}
+
 // Handle boxes that can have lists.  Allow commas, replace by spaces
 // Filter sigmas
 void CHoleFinderDlg::OnKillfocusEditSigmas()
@@ -315,6 +331,8 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYcenters, float, 0);
   CLEAR_RESIZE(mXstages, float, 0);
   CLEAR_RESIZE(mYstages, float, 0);
+  CLEAR_RESIZE(mXmissing, float, 0);
+  CLEAR_RESIZE(mYmissing, float, 0);
   CLEAR_RESIZE(mExcluded, short, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mHelper->mFindHoles->clearAll();
@@ -484,7 +502,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
 
   // Add up number to add, return if none left
   for (ind = 0; ind < (int)mExcluded.size(); ind++)
-    if (!mExcluded[ind])
+    if (mExcluded[ind] <= 0)
       numAdded++;
   if (!numAdded)
     return 0;
@@ -498,6 +516,8 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   // Thus compute the stage vectors of the grid axes here and pass that in too
   mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
+  //for (ind = 0; ind < gridX.size(); ind++)
+  //PrintfToLog("%.2f %.2f  %d %d", mXcenters[ind], mYcenters[ind], gridX[ind], gridY[ind]);
   ApplyScaleMatrix(mImToStage, 
     avgLen * (float)cos(avgAngle * DTOR),
     avgLen * (float)sin(avgAngle * DTOR), incStageX1, incStageY1);
@@ -529,8 +549,8 @@ void CHoleFinderDlg::DialogToParams()
   mParams.useBoundary = m_bExcludeOutside;
   mParams.showExcluded = m_bShowExcluded;
   mParams.layoutType = m_iLayoutType;
-  mParams.spacing = m_fSpacing;
-  mParams.diameter = m_fHolesSize;
+  mParams.hexagonalArray = m_bHexArray;
+  SizeAndSpacingToParam(false);
   mParams.maxError = m_fMaxError;
   mParams.bracketLast = m_bBracketLast;
   mParams.sigmas.clear();
@@ -602,9 +622,8 @@ void CHoleFinderDlg::ParamsToDialog()
     mParams.lowerMeanCutoff : 0.);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff > EXTRA_VALUE_TEST ?
     mParams.upperMeanCutoff : 0.);
-  m_fSpacing = mParams.spacing;
-  m_fHolesSize = mParams.diameter;
-  ManageSizeSeparation(false);
+  m_bHexArray = mParams.hexagonalArray;
+  SizeAndSpacingToDialog(false, false);
   m_fMaxError = mParams.maxError;
   m_bExcludeOutside = mParams.useBoundary;
   m_bBracketLast = mParams.bracketLast;
@@ -665,6 +684,35 @@ void CHoleFinderDlg::ManageSizeSeparation(bool update)
     UpdateData(false);
 }
 
+void CHoleFinderDlg::SizeAndSpacingToDialog(bool saveOther, bool update)
+{
+  if (saveOther) {
+    SizeAndSpacingToParam(true);
+  }
+  if (m_bHexArray) {
+    m_fHolesSize = mParams.hexDiameter;
+    m_fSpacing = mParams.hexSpacing;
+  } else {
+    m_fHolesSize = mParams.diameter;
+    m_fSpacing = mParams.spacing;
+  }
+  ManageSizeSeparation(update);
+}
+
+void CHoleFinderDlg::SizeAndSpacingToParam(bool other)
+{
+  BOOL which = m_bHexArray;
+  if (other)
+    which = !which;
+  if (which) {
+    mParams.hexDiameter = m_fHolesSize;
+    mParams.hexSpacing = m_fSpacing;
+  } else {
+    mParams.diameter = m_fHolesSize;
+    mParams.spacing = m_fSpacing;
+  }
+}
+
 // New settings: copy master params, send to dialog
 void CHoleFinderDlg::UpdateSettings()
 {
@@ -719,7 +767,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   CMapDrawItem *item;
   int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav;
   int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
-  float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY;
+  float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY, useDiameter;
   float autocorSpacing, vectors[4], autocorCrit = 0.14f;
   double tstageX, tstageY;
   ScaleMat rMat, rInv, aMat;
@@ -727,7 +775,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   float targetDiam = mHelper->GetHFtargetDiamPix();
   float tooSmallCrit = 0.8f;
   float minFracPtsOnImage = 0.74f;
-  BOOL convertSave, loadUnbinSave;
+  BOOL convertSave, loadUnbinSave, hexArray;
   CString noMontReason, boundLabel, mess;
 
   if (CheckAndSetNav("finding holes"))
@@ -738,7 +786,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mXboundary.clear();
   mYboundary.clear();
   mXinPiece.clear();
-  mPieceOn.clear();
+  mMissPieceOn.clear();
+  mMissXinPiece.clear();
+  mMissYinPiece.clear();
+mPieceOn.clear();
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
@@ -755,6 +806,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     ParamsToDialog();
   }
   mWinApp->RestoreViewFocus();
+  hexArray = mParams.hexagonalArray;
+  useDiameter = hexArray ? mParams.hexDiameter : mParams.diameter;
   if (mNumSigmas + mNumIterations == 0 || mNumThresholds == 0) {
     SEMMessageBox(mNumThresholds ? "There are no thresholds specified for finding holes" :
       "There are no filters specified for finding holes");
@@ -789,15 +842,17 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     return 1;
   }
 
-  if (mParams.spacing < mParams.diameter + 0.5f) {
-    SEMMessageBox("The hole spacing is a center-to-center distance and must be at "
-      "least 0.5 micron bigger than the hole size");
+  if ((!hexArray && mParams.spacing < mParams.diameter + 0.5f) || 
+    (hexArray && mParams.hexSpacing < mParams.hexDiameter + 0.15f)) {
+    SEMMessageBox("The hole spacing is a center-to-center distance and must be at least "
+      + CString(hexArray ? "0.15" : "0.5") + " micron bigger than the hole size");
     return 1;
   }
   mAdjustedStageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
 
   autocorSpacing = mParams.spacing;
-  if (mFindingFromDialog && !mSkipAutoCor && image->getWidth() / mParams.spacing >= 4. &&
+  if (mFindingFromDialog && !mSkipAutoCor && !hexArray && 
+    image->getWidth() / mParams.spacing >= 4. && 
     image->getHeight() / mParams.spacing >= 4.) {
     if (!mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0., mBufInd,
       FIND_PIX_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET, autocorSpacing,
@@ -824,7 +879,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 
   // Get some sizes, get a nav item regardless of montage so it can be used as drawn on
   // and for registration and stage Z
-  curDiam = mParams.diameter / mPixelSize;
+  curDiam = useDiameter / mPixelSize;
   mFullYsize = image->getHeight();
 
   mNavItem = mNav->FindItemWithMapID(imBuf->mMapID);
@@ -902,7 +957,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
               "holes");
             return 1;
           }
-          curDiam = mParams.diameter / mPixelSize;
+          curDiam = useDiameter / mPixelSize;
           if (mNav->AccessMapFile(mNavItem, mImageStore, mCurStore, montP,
             useWidth, useHeight)) {
             noMontReason = "could not access the map file again after reloading it";
@@ -991,7 +1046,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   // Get the reduction
   mReduction = B3DMAX(1.f, curDiam / targetDiam);
   diamReduced = curDiam / mReduction;
-  spacingReduced = (mParams.spacing / mPixelSize) / mReduction;
+  spacingReduced = ((hexArray ? mParams.hexSpacing : mParams.spacing) / mPixelSize) / 
+    mReduction;
 
   // get the maximum radius assuming worst-case expansion
   maxRadius = diamReduced / 2.f;
@@ -1059,7 +1115,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 
   // Set up the parameters and call to start the scan
   mHelper->mFindHoles->setSequenceParams(diamReduced, spacingReduced,
-    mHelper->GetHFretainFFTs() != 0, mErrorMax, mHelper->GetHFfractionToAverage(),
+    hexArray == TRUE, mHelper->GetHFretainFFTs() != 0, mErrorMax,
+    mHelper->GetHFfractionToAverage(),
     mHelper->GetHFminNumForTemplate(), mHelper->GetHFmaxDiamErrFrac(),
     mHelper->GetHFavgOutlieCrit(), mHelper->GetHFfinalNegOutlieCrit(),
     mHelper->GetHFfinalPosOutlieCrit(), mHelper->GetHFfinalOutlieRadFrac());
@@ -1090,7 +1147,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   MontParam *montP = &mMontParam;
   EMimageBuffer *allBufs = mWinApp->GetImBufs();
   EMimageBuffer *imBuf = &allBufs[mBufInd];
-  int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf;
+  int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf, numMiss;
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv, adjInv;
   float delX, delY, ptX, ptY;
@@ -1238,7 +1295,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
   // OUTPUT summary line and skip if nothing
   numPoints = (int)mXcenters.size();
-  mExcluded.resize(numPoints, false);
+  mExcluded.resize(numPoints, 0);
   *mMasterParams = mParams;
   StopScanning();
   if (!numPoints) {
@@ -1251,6 +1308,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   }
   mLastHoleSize = 0.01f * B3DNINT(100.f * 2.f * mBestRadius * mReduction * mPixelSize);
   mLastHoleSpacing = 0.01f * B3DNINT(100.f * mTrueSpacing * mPixelSize);
+  mLastWasHexGrid = mParams.hexagonalArray;
   statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  per: %.2f",
     formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd],
     numPoints, mLastHoleSize, mLastHoleSpacing);
@@ -1264,13 +1322,11 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   // Get the grid vectors and convert them to stage coordinates.  Vectors are right-handed
   mHelper->mFindHoles->analyzeNeighbors(mXcenters, mYcenters, peakVals, altInds2, xCenAlt,
     yCenAlt, peakAlt, 0., 0., 0, anSpacing, xMissing2, yMissing2);
-  mHelper->mFindHoles->getGridVectors(mGridImVecs.xpx, mGridImVecs.ypx, mGridImVecs.xpy,
-    mGridImVecs.ypy, avgAngle, avgLen);
+  mHelper->mFindHoles->getGridVectors(mGridImXVecs, mGridImYVecs, avgAngle, avgLen, -1);
   adjInv = MatInv(mAdjustedStageToCam);
-  ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpx, 
-    mBufBinning * mGridImVecs.ypx, mGridStageVecs.xpx, mGridStageVecs.ypx);
-  ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
-    mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
+  for (ind = 0; ind < (mLastWasHexGrid ? 3 : 2); ind++)
+    ApplyScaleMatrix(adjInv, mBufBinning * mGridImXVecs[ind],
+    mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
 
 // Get stage positions, save matrix for converting average vector later
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
@@ -1291,6 +1347,28 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
+
+  numMiss = (int)xMissing.size();
+  if (numMiss) {
+    mXmissing.resize(numMiss);
+    mYmissing.resize(numMiss);
+    if (mMontage && mPieceOn.size()) {
+      mMissPieceOn.resize(numMiss);
+      mMissXinPiece.resize(numMiss);
+      mMissYinPiece.resize(numMiss);
+    }
+  }
+  for (ind = 0; ind < numMiss; ind++) {
+    ptX = xMissing[ind];
+    ptY = yMissing[ind];
+
+    if (mMontage && mPieceOn.size())
+      mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], &mMissXinPiece[ind],
+        &mMissYinPiece[ind]);
+    ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissing[ind],
+      mYmissing[ind]);
+  }
+
 
   // Get mins and maxes and set the sliders if necessary
   mMeanMin = *std::min_element(mHoleMeans.begin(), mHoleMeans.end());
@@ -1323,6 +1401,7 @@ void CHoleFinderDlg::SetExclusionsAndDraw()
     mParams.blackFracCutoff);
 }
 
+// Set the exclusions based on the current cutoffs
 void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff,
   float sdCutoff, float blackCutoff)
 {
@@ -1332,32 +1411,50 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    mExcluded[ind] = 0;
-    extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
-    if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle))
-      mExcluded[ind] = -1;
-    if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
-      mExcluded[ind] = 1;
+
+    // -1 and 3 are user include and exclude and are permanent; 1 and 2 are for "dark"
+    // and "light" exclusions
+    if (mExcluded[ind] >= 0 && mExcluded[ind] < 3) {
+      mExcluded[ind] = 0;
+      extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
+      if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle))
+        mExcluded[ind] = 1;
+      if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
+        mExcluded[ind] = 2;
+    }
   }
   mWinApp->mMainView->DrawImage();
 }
 
 // Convert the hole vectors to image shift vectors at a specified magnification index
 // and optionally set the vectors in the multishot dialog
-ScaleMat CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, CString &errStr)
+int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVecOut,
+  double *yVecOut, CString &errStr)
 {
-  ScaleMat mat, st2is;
+  ScaleMat st2is;
+  int dir, numVecs = mLastWasHexGrid ? 3 : 2;
+  float *xVecs, *yVecs;
+  float ySign = 1.;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
-  mat.xpx = 0.;
+  double *xSpacing = mLastWasHexGrid ? &msParams->hexISXspacing[0] :
+    &msParams->holeISXspacing[0];
+  double *ySpacing = mLastWasHexGrid ? &msParams->hexISYspacing[0] :
+    &msParams->holeISYspacing[0];
   if (index < 0) {
-    mat = mGridImVecs;
-    mat.ypx = -mat.ypx;
-    mat.ypy = -mat.ypy;
-  } else
-    mat = mGridStageVecs;
-  if (!mat.xpx) {
+    ySign = -1;
+    xVecs = mGridImXVecs;
+    yVecs = mGridImYVecs;
+  } else {
+    xVecs = mGridStageXVecs;
+    yVecs = mGridStageYVecs;
+  }
+  if (!xVecs[0]) {
     errStr = "The hole finder has not saved any vectors";
-    return mat;
+    return 0;
+  }
+  for (dir = 0; dir < numVecs; dir++) {
+    xVecOut[dir] = xVecs[dir];
+    yVecOut[dir] = yVecs[dir];
   }
   if (index > 0) {
     st2is = MatMul(mWinApp->mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
@@ -1365,22 +1462,24 @@ ScaleMat CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, CString
     if (!st2is.xpx) {
       errStr = "There is no calibration to get from stage to IS coordinates at the "
         "given mag";
-      return st2is;
+      return 0;
     }
-    ApplyScaleMatrix(st2is, mat.xpx, mat.ypx, mat.xpx, mat.ypx);
-    ApplyScaleMatrix(st2is, mat.xpy, mat.ypy, mat.xpy, mat.ypy);
+
+    for (dir = 0; dir < numVecs; dir++)
+      ApplyScaleMatrix(st2is, xVecs[dir], yVecs[dir], xVecOut[dir], yVecOut[dir]);
   }
   if (setVecs) {
-    msParams->holeISXspacing[0] = mat.xpx;
-    msParams->holeISYspacing[0] = mat.ypx;
-    msParams->holeISXspacing[1] = mat.xpy;
-    msParams->holeISYspacing[1] = mat.ypy;
+    for (dir = 0; dir < numVecs; dir++) {
+      xSpacing[dir] = xVecOut[dir];
+      ySpacing[dir] = yVecOut[dir];
+    }
     msParams->holeMagIndex = index;
     msParams->tiltOfHoleArray = mLastTiltAngle;
+    msParams->doHexArray = mLastWasHexGrid;
     if (mWinApp->mNavHelper->mMultiShotDlg)
       mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
   }
-  return mat;
+  return numVecs;
 }
 
 
@@ -1432,6 +1531,89 @@ bool CHoleFinderDlg::HaveHolesToDrawOrMakePts()
   }
   return !item;
 
+}
+
+// Process Ctrl - left mouse action at the given position to include/exclude points
+bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY, 
+  float imDistLim, bool dragging)
+{
+  float selXlimit[4], selYlimit[4], selXwindow[4], selYwindow[4];
+  float dist, distMin = 1.e10, distNext = 1.e10;
+  int ind, indMin, miss, numDo, missMin;
+  ScaleMat aInv;
+  float delX, delY, stageX, stageY, xInPiece, yInPiece, distLim, stPtX, stPtY;
+  int pieceIndex;
+
+  // Start out much as in navigator selection: make sure it's OK, convert to stage
+  // and get limits intsage coordinates (which are not square)
+  if (!mNav->OKtoMouseSelect())
+    return false;
+  if (!mNav->ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, 
+    xInPiece, yInPiece, pieceIndex))
+    return false;
+  distLim = imDistLim * sqrtf(aInv.xpx * aInv.xpx + aInv.ypx * aInv.ypx);
+  mNav->GetSelectionLimits(imBuf, aInv, delX, delY, selXlimit, selYlimit, selXwindow,
+    selYwindow);
+
+  // Loop over actual and missing points to find nearest
+  for (miss = 0; miss < 2; miss++) {
+    numDo = miss ? (int)mXmissing.size() : (int)mXstages.size();
+    for (ind = 0; ind < numDo; ind++) {
+      stPtX = miss ? mXmissing[ind] : mXstages[ind];
+      stPtY = miss ? mYmissing[ind] : mYstages[ind];
+      if (!(InsideContour(selXlimit, selYlimit, 4, stPtX, stPtY) ||
+        InsideContour(selXwindow, selYwindow, 4, stPtX, stPtY)))
+        continue;
+
+      // Find nearest item
+      delX = stPtX - stageX;
+      delY = stPtY - stageY;
+      dist = delX * delX + delY * delY;
+      if (dist < distMin) {
+        distNext = distMin;
+        distMin = dist;
+        indMin = ind;
+        missMin = miss;
+      }
+
+    }
+  }
+
+  // Apply same criteria for drag and click in this case; do not operate on last selected
+  // item when dragging - but rearm the dragging when it goes outside a  bit
+  if (distMin > distLim || distMin > 0.5 * distNext ||
+    (dragging && indMin == mLastUserSelectInd)) {
+    if (dragging && indMin == mLastUserSelectInd && distMin > 1.1 * distLim &&
+      distMin > 0.55 * distNext)
+      mLastUserSelectInd = -1;
+    return false;
+  }
+
+  // For missing point, add it to list of points, maintain pieceOn regardless
+  if (missMin) {
+    mXstages.push_back(mXmissing[indMin]);
+    mYstages.push_back(mYmissing[indMin]);
+    if (mXinPiece.size()) {
+      mXinPiece.push_back(mMissXinPiece[indMin]);
+      mYinPiece.push_back(mMissYinPiece[indMin]);
+      mPieceOn.push_back(mMissPieceOn[indMin]);
+    } else {
+      mPieceOn.push_back(-1);
+    }
+    mExcluded.push_back(-1);
+    mLastUserSelectInd = (int)mXstages.size() - 1;
+
+  } else {
+
+    // For regular point, toggle exclude and set to special values
+    if (mExcluded[indMin] <= 0)
+      mExcluded[indMin] = 3;   // User exclude
+    else 
+      mExcluded[indMin] = -1;  // User include
+    mLastUserSelectInd = indMin;
+  }
+  mWinApp->mMainView->DrawImage();
+  return true;
 }
 
 // Set pointers and make sure Nav is open, message defaults to NULL
