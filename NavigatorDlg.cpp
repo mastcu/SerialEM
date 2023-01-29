@@ -7762,8 +7762,11 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       }
       adocIndex = AdocRead((LPCTSTR)name);
       if (adocIndex < 0) {
-        SEMMessageBox("An error occurred reading in the Navigator file as an autodoc",
-          MB_EXCLAME);
+
+        str = "An error occurred reading in the Navigator file as an autodoc";
+        if (b3dGetError())
+          str += CString(":\n") + b3dGetError();
+        SEMMessageBox(str, MB_EXCLAME);
         AdocReleaseMutex();
         return 1;
       }
