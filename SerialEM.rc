@@ -1833,7 +1833,7 @@ BEGIN
     LTEXT           "Options",IDC_STATMORE,15,67,24,8
     CONTROL         "Match intensity (electrons/pixel)",IDC_MATCHINTENSITY,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,88,109,10
-    CONTROL         "Match pixel size",IDC_MATCHPIXEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,78,63,10
+    CONTROL         "Match pixel size",IDC_MATCHPIXEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,78,59,10
     CONTROL         "Do mag-dependent energy shifts",IDC_DOMAGSHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,98,110,10
     LTEXT           "Adjustment = -15.5",IDC_STATMAGSHIFT,4,58,55,8
     CONTROL         "Zero Loss",IDC_ZEROLOSS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,46,46,10

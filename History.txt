@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/29/23: Fixed so that correct set of image shift offset calibration is used
+when starting with a GIF camera or switching between cameras; for FEI scopes,
+made it retain position when switching between GIF and nonGIF (In 4.0).
+
+1/27/23: Made error message include the line that is bad when there is an
+error reading a Navigator file in autodoc format (In 4.0).
+
 1/27/23: Fixed bad zoom being set when reading in an image acquired on a
 camera not defined in current properties (In 4.0).
 
