@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "SerialEMView.h"
+#include "CameraController.h"
 #include "ComaVsISCalDlg.h"
 #include "NavHelper.h"
 #include "AutoTuning.h"
@@ -83,6 +84,8 @@ void CComaVsISCalDlg::OnOK()
   UpdateData(true);
   mWinApp->mAutoTuning->SetComaVsISextent(m_fDistance);
   mWinApp->mAutoTuning->SetComaVsISrotation(m_iRotation);
+  EnableDlgItem(IDOK, false);
+  EnableDlgItem(IDCANCEL, false);
   mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation);
   OnCancel();
 }
@@ -100,6 +103,11 @@ BOOL CComaVsISCalDlg::PreTranslateMessage(MSG* pMsg)
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
     SetFocus();
   return CDialog::PreTranslateMessage(pMsg);
+}
+
+void CComaVsISCalDlg::UpdateEnables()
+{
+  EnableDlgItem(IDOK, !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy());
 }
 
 // Distance spin button

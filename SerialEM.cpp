@@ -46,6 +46,7 @@
 #include "NavHelper.h"
 #include "NavRotAlignDlg.h"
 #include "MultiShotDlg.h"
+#include "ComaVsISCalDlg.h"
 #include "AutocenSetupDlg.h"
 #include "CalibCameraTiming.h"
 #include "MultiTSTasks.h"
@@ -3305,6 +3306,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavHelper->mAutoContouringDlg->ManageAll(true);
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->UpdateEnables();
+  if (mNavHelper->mComaVsISCalDlg)
+    mNavHelper->mComaVsISCalDlg->UpdateEnables();
   if (mParticleTasks->mZbyGsetupDlg)
     mParticleTasks->mZbyGsetupDlg->UpdateEnables();
   if (mScreenShotDialog)

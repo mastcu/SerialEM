@@ -24,7 +24,6 @@ protected:
   virtual void OnCancel();
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
-
 	DECLARE_MESSAGE_MAP()
 public:
   CSpinButtonCtrl m_sbcDistance;
@@ -37,5 +36,6 @@ public:
   afx_msg void OnKillfocusEditRotation();
   CSpinButtonCtrl m_sbcRotation;
   afx_msg void OnDeltaposSpinRotation(NMHDR *pNMHDR, LRESULT *pResult);
+  void UpdateEnables();
   CButton m_butCalibrate;
 };
