@@ -44,4 +44,13 @@ public:
   CButton m_butTurnOffOutside;
   BOOL m_bTurnOffOutside;
   afx_msg void OnTurnOffOutside();
+  CString m_strHoleThresh;
+  CSpinButtonCtrl m_sbcHoleThresh;
+  CButton m_butRemovePoints;
+  BOOL m_bRemovePoints;
+  CButton m_butTurnOffCombined;
+  BOOL m_bTurnOffCombined;
+  afx_msg void OnTurnOffCombined();
+  afx_msg void OnCheckRemovePoints();
+  afx_msg void OnDeltaposSpinHoleThresh(NMHDR *pNMHDR, LRESULT *pResult);
 };

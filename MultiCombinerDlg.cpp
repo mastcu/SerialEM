@@ -8,6 +8,7 @@
 #include "MultiHoleCombiner.h"
 #include "MultiCombinerDlg.h"
 
+#define MAX_HOLE_THRESH 20
 
 // CMultiCombinerDlg dialog
 
@@ -16,6 +17,9 @@ CMultiCombinerDlg::CMultiCombinerDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(IDD_MULTI_COMBINER, pParent)
   , m_bDisplayMultiShot(FALSE)
   , m_bTurnOffOutside(FALSE)
+  , m_strHoleThresh(_T(""))
+  , m_bRemovePoints(FALSE)
+  , m_bTurnOffCombined(FALSE)
 {
   mNonModal = true;
 }
@@ -33,6 +37,12 @@ void CMultiCombinerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_COMBINE_PTS, m_butCombinePts);
   DDX_Control(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_butTurnOffOutside);
   DDX_Check(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_bTurnOffOutside);
+  DDX_Text(pDX, IDC_STAT_HOLE_THRESH, m_strHoleThresh);
+  DDX_Control(pDX, IDC_SPIN1, m_sbcHoleThresh);
+  DDX_Control(pDX, IDC_CHECK_REMOVE_POINTS, m_butRemovePoints);
+  DDX_Check(pDX, IDC_CHECK_REMOVE_POINTS, m_bRemovePoints);
+  DDX_Control(pDX, IDC_CHECK_TURN_OFF_COMBINED, m_butTurnOffCombined);
+  DDX_Check(pDX, IDC_CHECK_TURN_OFF_COMBINED, m_bTurnOffCombined);
 }
 
 
@@ -44,6 +54,9 @@ BEGIN_MESSAGE_MAP(CMultiCombinerDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_DISPLAY_MULTI, OnCheckDisplayMulti)
   ON_BN_CLICKED(IDC_BUT_COMBINE_PTS, OnCombinePoints)
   ON_BN_CLICKED(IDC_CHECK_REMOVE_OUTSIDE, OnTurnOffOutside)
+  ON_BN_CLICKED(IDC_CHECK_TURN_OFF_COMBINED, OnTurnOffCombined)
+  ON_BN_CLICKED(IDC_CHECK_REMOVE_POINTS, OnCheckRemovePoints)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_HOLE_THRESH, OnDeltaposSpinHoleThresh)
 END_MESSAGE_MAP()
 
 
@@ -53,7 +66,11 @@ BOOL CMultiCombinerDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   mHelper = mWinApp->mNavHelper;
   mCombiner = mHelper->mCombineHoles;
+  m_sbcHoleThresh.SetRange(2, MAX_HOLE_THRESH);
   UpdateSettings();
+  UpdateEnables();
+  if (!m_bDisplayMultiShot)
+    mWinApp->mMainView->DrawImage();
   SetDefID(45678);    // Disable OK from being default button for non-modal
   return TRUE;
 }
@@ -126,12 +143,52 @@ void CMultiCombinerDlg::OnCombinePoints()
   mWinApp->RestoreViewFocus();
 }
 
+void CMultiCombinerDlg::OnTurnOffCombined()
+{
+  UpdateData(true);
+  if (m_bTurnOffCombined && m_bRemovePoints) {
+    m_bRemovePoints = false;
+    UpdateData(false);
+  }
+  mHelper->SetMHCdelOrTurnOffIfFew((m_bRemovePoints ? 1 : 0) +
+    (m_bTurnOffCombined ? 2 : 0));
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+void CMultiCombinerDlg::OnCheckRemovePoints()
+{
+  UpdateData(true);
+  if (m_bTurnOffCombined && m_bRemovePoints) {
+    m_bTurnOffCombined = false;
+    UpdateData(false);
+  }
+  mHelper->SetMHCdelOrTurnOffIfFew((m_bRemovePoints ? 1 : 0) +
+    (m_bTurnOffCombined ? 2 : 0));
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+void CMultiCombinerDlg::OnDeltaposSpinHoleThresh(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  int newVal;
+  if (NewSpinnerValue(pNMHDR, pResult, 2, MAX_HOLE_THRESH, newVal))
+    return;
+  mHelper->SetMHCthreshNumHoles(newVal);
+  m_strHoleThresh.Format("%d", newVal);
+  UpdateData(false);
+}
+
 void CMultiCombinerDlg::UpdateSettings()
 {
   m_iCombineType = mHelper->GetMHCcombineType();
   B3DCLAMP(m_iCombineType, 0, 2);
   m_bDisplayMultiShot = mHelper->GetMHCenableMultiDisplay();
   m_bTurnOffOutside = mHelper->GetMHCturnOffOutsidePoly();
+  m_bRemovePoints = mHelper->GetMHCdelOrTurnOffIfFew() == 1;
+  m_bTurnOffCombined = mHelper->GetMHCdelOrTurnOffIfFew() > 1;
+  m_sbcHoleThresh.SetPos(mHelper->GetMHCthreshNumHoles());
+  m_strHoleThresh.Format("%d", mHelper->GetMHCthreshNumHoles());
   UpdateEnables();
   UpdateData(false);
 }
@@ -140,6 +197,10 @@ void CMultiCombinerDlg::UpdateEnables()
 {
   BOOL busy = mWinApp->DoingTasks();
   m_butCombinePts.EnableWindow(!busy);
-  m_butTurnOffOutside.EnableWindow(m_iCombineType == COMBINE_IN_POLYGON);
+  m_butTurnOffOutside.EnableWindow(m_iCombineType < 2);
+  SetDlgItemText(IDC_CHECK_REMOVE_OUTSIDE, m_iCombineType ?
+    "Turn off group items outside polygon" : "Turn off group items outside image");
   m_butUndoCombine.EnableWindow(!busy && mCombiner->OKtoUndoCombine());
+  m_sbcHoleThresh.EnableWindow(m_bRemovePoints || m_bTurnOffCombined);
+  EnableDlgItem(IDC_STAT_HOLE_THRESH, m_bRemovePoints || m_bTurnOffCombined);
 }
