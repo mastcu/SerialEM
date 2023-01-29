@@ -38,7 +38,7 @@ void CMultiCombinerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_butTurnOffOutside);
   DDX_Check(pDX, IDC_CHECK_REMOVE_OUTSIDE, m_bTurnOffOutside);
   DDX_Text(pDX, IDC_STAT_HOLE_THRESH, m_strHoleThresh);
-  DDX_Control(pDX, IDC_SPIN1, m_sbcHoleThresh);
+  DDX_Control(pDX, IDC_SPIN_HOLE_THRESH, m_sbcHoleThresh);
   DDX_Control(pDX, IDC_CHECK_REMOVE_POINTS, m_butRemovePoints);
   DDX_Check(pDX, IDC_CHECK_REMOVE_POINTS, m_bRemovePoints);
   DDX_Control(pDX, IDC_CHECK_TURN_OFF_COMBINED, m_butTurnOffCombined);
