@@ -1258,13 +1258,13 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   // Get the grid vectors and convert them to stage coordinates.  Vectors are right-handed
   mHelper->mFindHoles->analyzeNeighbors(mXcenters, mYcenters, peakVals, altInds2, xCenAlt,
     yCenAlt, peakAlt, 0., 0., 0, anSpacing, xMissing2, yMissing2);
-  mHelper->mFindHoles->getGridVectors(mGridImVecs.xpx, mGridImVecs.ypx, mGridImVecs.xpy,
+  mHelper->mFindHoles->getGridVectors(mGridImVecs.xpx, mGridImVecs.xpy, mGridImVecs.ypx,
     mGridImVecs.ypy, avgAngle, avgLen);
   adjInv = MatInv(mAdjustedStageToCam);
   mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpx, 
-    mBufBinning * mGridImVecs.ypx, mGridStageVecs.xpx, mGridStageVecs.ypx);
+    -mBufBinning * mGridImVecs.ypx, mGridStageVecs.xpx, mGridStageVecs.ypx);
   mWinApp->mShiftManager->ApplyScaleMatrix(adjInv, mBufBinning * mGridImVecs.xpy,
-    mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
+    -mBufBinning * mGridImVecs.ypy, mGridStageVecs.xpy, mGridStageVecs.ypy);
 
 // Get stage positions, save matrix for converting average vector later
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
