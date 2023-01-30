@@ -1330,7 +1330,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   adjInv = MatInv(mAdjustedStageToCam);
   for (ind = 0; ind < (mLastWasHexGrid ? 3 : 2); ind++)
     ApplyScaleMatrix(adjInv, mBufBinning * mGridImXVecs[ind],
-    mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
+    -mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
 
 // Get stage positions, save matrix for converting average vector later
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
@@ -1458,7 +1458,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
   }
   for (dir = 0; dir < numVecs; dir++) {
     xVecOut[dir] = xVecs[dir];
-    yVecOut[dir] = yVecs[dir];
+    yVecOut[dir] = ySign * yVecs[dir];
   }
   if (index > 0) {
     st2is = MatMul(mWinApp->mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
@@ -1470,7 +1470,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
     }
 
     for (dir = 0; dir < numVecs; dir++)
-      ApplyScaleMatrix(st2is, xVecs[dir], yVecs[dir], xVecOut[dir], yVecOut[dir]);
+      ApplyScaleMatrix(st2is, xVecs[dir], ySign * yVecs[dir], xVecOut[dir], yVecOut[dir]);
   }
   if (setVecs) {
     for (dir = 0; dir < numVecs; dir++) {
