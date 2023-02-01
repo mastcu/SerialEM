@@ -1866,7 +1866,7 @@ void CAutoTuning::ComaVsISNextTask(int param)
       BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
         mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
     } else {
-      GetComaVsISVector(magInd, mComaVsISextent, mComaVsISrotation, posIndex,
+      GetComaVsISVector(magInd, mCVISextentToUse, mCVISrotationToUse, posIndex,
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
       PrintfToLog("Measuring at image shift %.1f %.1f (IS units)",
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
