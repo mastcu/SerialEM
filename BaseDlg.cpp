@@ -268,11 +268,12 @@ void CBaseDlg::MinMaxInt(UINT nID, int &value, int minVal, int maxVal,
   const char *descrip)
 {
   CString str;
-  if (value >= minVal && value <= maxVal)
-    return;
+  bool inRange = value >= minVal && value <= maxVal;
   B3DCLAMP(value, minVal, maxVal);
   str.Format("%d", value);
   SetDlgItemText(nID, (LPCTSTR)str);
+  if (inRange)
+    return;
   str.Format("%s must be between %d and %d", descrip, minVal, maxVal);
   AfxMessageBox(str, MB_EXCLAME);
 }
