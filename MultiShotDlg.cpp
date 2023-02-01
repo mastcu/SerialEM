@@ -1071,11 +1071,14 @@ void CMultiShotDlg::ManageEnables(void)
       }
       angles[1] = UtilGoodAngle(angles[1] - angles[0]) / 2.;
       angle = (float)(0.1 * B3DNINT(10. * (angles[0] + angles[1])));
-      if (m_bHexGrid)
-        str.Format("Spacing: %.2f  um   Angle to stage X: %.1f deg", dist, angle);
-      else
-        str.Format("Spacing: %.2f and %.2f um   Angle to stage X: %.1f deg", dists[0], 
-          dists[1], angle);
+      if (m_bHexGrid) {
+        str.Format("Spacing: %.2f  um   Maximum shift: %.1f um", dist,
+          mActiveParams->numHexRings * dist);
+      } else {
+        str.Format("Spacing: %.2f and %.2f um   Maximum shift: %.1f um", dists[0],
+          dists[1], 0.5 * sqrt(pow((mActiveParams->numHoles[0] - 1) * dists[0], 2.) +
+            pow((mActiveParams->numHoles[1] - 1) * dists[1], 2.)));
+      }
     }
   }
   m_statSpacing.SetWindowText(str);

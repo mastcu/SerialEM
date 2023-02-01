@@ -13,6 +13,7 @@ public:
 	CMultiShotDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CMultiShotDlg();
   bool RecordingISValues() {return mRecordingCustom || mRecordingRegular;};
+  bool AdjustingISValues() {return mSteppingAdjusting > 0; };
 
 // Dialog Data
 	enum { IDD = IDD_MULTI_SHOT_SETUP };
