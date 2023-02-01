@@ -4712,6 +4712,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
   CString line, numStr, name;
   int indLine, indComma, lineNum, ind, lineInSrc, indInSrc, macNum, indMod;
   int currentInd = 0, length = str.GetLength();
+  CString attribErr;
 
   if (length && mScrpLangData.exitStatus < 0) {
     mWinApp->AppendToLog("Error trying to run Python to execute script:\r\n   " + str);
@@ -4722,6 +4723,20 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
   while (currentInd < length) {
     GetNextLine(&str, currentInd, line);
     line.TrimRight(" \r\n");
+    ind = line.Find("module 'serialem' has no attribute");
+    if (ind > 0) {
+      ind = line.Find("'", ind + 20);
+      if (ind > 0) {
+        indLine = line.ReverseFind('\'');
+        name = line.Mid(ind + 1, indLine - 1 - ind);
+        name.MakeUpper();
+        if (LookupCommandIndex(name) == CME_NOTFOUND)
+          attribErr = "That is not a recognized SerialEM script command";
+        else
+          attribErr = "You need to upgrade your SerialEM module with the latest"
+          " PythonModules package";
+      }
+    }
     indLine = line.Find("line ");
     if (indLine < 0) {
       mWinApp->AppendToLog(line);
@@ -4790,6 +4805,9 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
       }
     }
   }
+
+  if (!attribErr.IsEmpty())
+    mWinApp->AppendToLog(attribErr);
 
   // Try to show error
   if (mLastPythonErrorLine > 0 && mMacroEditer[macNum]) 
