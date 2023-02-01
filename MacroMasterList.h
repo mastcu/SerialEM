@@ -703,6 +703,7 @@ MAC_SAME_FUNC_ARG(SetSTEMBrightContrast, 3, 0, GetSTEMBrightContrast, SETSTEMBRI
 MAC_SAME_NAME_ARG(ReportMontagePiece, 1, 4, REPORTMONTAGEPIECE, I)
 MAC_SAME_NAME_ARG(FindCartridgeWithID, 1, 4, FINDCARTRIDGEWITHID, I)
 MAC_SAME_NAME_ARG(SetTiltIncrement, 1, 4, SETTILTINCREMENT, Ii)
+MAC_SAME_NAME_ARG(SetHoleFinderParams, 3, 4, SETHOLEFINDERPARAMS, DDI)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

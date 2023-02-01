@@ -4370,7 +4370,13 @@
         <TR>
           <TD class="scriptcommand">ReportHoleFinderParams</TD>
           <TD>Reports the diameter and center-to-center spacing in microns currently being 
-            used for hole finding.&nbsp; Command added in 4.0, 9/24/21.</TD>
+            used for hole finding, plus whether it is set to analyze for a hexagonal array.&nbsp; Command added in 4.0, 9/24/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetHoleFinderParams #D #S #H</TD>
+          <TD>Sets the parameters for hole finding to <b>#D</b> for the diameter and <b>#S</b> for the 
+            center-to-center spacing in microns and sets it to analyze for a hexagonal array if <b>#H</b> is 
+            non-zero, in which case the hex-specific size and spacing are set.&nbsp; Command added in 4.1, 30-Jan-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLastHoleVectors #</TD>

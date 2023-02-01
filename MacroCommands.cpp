@@ -10518,7 +10518,31 @@ int CMacCmd::ReportHoleFinderParams(void)
   mNavHelper->mHoleFinderDlg->SyncToMasterParams();
   hfp = mNavHelper->GetHoleFinderParams();
   mLogRpt.Format("Hole size is %.2f and spacing is %.2f", hfp->diameter, hfp->spacing);
-  SetRepValsAndVars(1, hfp->diameter, hfp->spacing);
+  if (hfp->hexagonalArray)
+    mLogRpt += " for hexagonal array";
+  SetRepValsAndVars(1, hfp->diameter, hfp->spacing, hfp->hexagonalArray ? 1 : 0);
+  return 0;
+}
+
+// SetHoleFinderParams
+int CMacCmd::SetHoleFinderParams(void)
+{
+  HoleFinderParams *hfp;
+  if (mItemFlt[1] < 0.05f || mItemFlt[2] < 0.15f || mItemFlt[2] - 0.1 < mItemFlt[1])
+    ABORT_LINE("Size must be at least 0.1 and spacing must be at least 0.15 and 0.1 more"
+      " than size for line:\n\n");
+  mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+  hfp = mNavHelper->GetHoleFinderParams();
+  hfp->hexagonalArray = mItemInt[3] != 0;
+  if (!mItemInt[3]) {
+    hfp->diameter = mItemFlt[1];
+    hfp->spacing = mItemFlt[2];
+  } else {
+    hfp->hexDiameter = mItemFlt[1];
+    hfp->hexSpacing = mItemFlt[2];
+  }
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
+    mNavHelper->mHoleFinderDlg->UpdateSettings();
   return 0;
 }
 
@@ -10665,11 +10689,15 @@ int CMacCmd::SetMontageParams(void)
   if (!mItemEmpty[2] && mItemInt[2] > 0) {
     if (mItemInt[2] > mMontP->xFrame / 2)
       ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
+    if (mItemInt[2] < 16)
+      ABORT_LINE("The X overlap must be at least 16 in line:\n\n");
     mMontP->xOverlap = mItemInt[2];
   }
   if (!mItemEmpty[3] && mItemInt[3] > 0) {
     if (mItemInt[3] > mMontP->yFrame / 2)
       ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
+    if (mItemInt[2] < 16)
+      ABORT_LINE("The Y overlap must be at least 16 in line:\n\n");
     mMontP->yOverlap = mItemInt[3];
   }
   if (!mItemEmpty[6] && mItemInt[6] >= 0)
