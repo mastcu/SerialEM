@@ -7482,10 +7482,9 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
           if (mPlugFuncs->NormalizeLens)
             mPlugFuncs->NormalizeLens(pnmProjector);
           AUTONORMALIZE_SET(*vTrue);
-          if (oldMag != newMag && mApplyISoffset) {
-            AssessMagISchange(oldMag, newMag, false, delISX, delISY);
+          if (oldMag != newMag && mApplyISoffset &&
+            AssessMagISchange(oldMag, newMag, false, delISX, delISY))
             mPlugFuncs->SetImageShift(delISX, delISY);
-          }
         }
       }
 

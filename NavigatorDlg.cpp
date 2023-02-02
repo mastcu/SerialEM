@@ -5064,7 +5064,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     }
     mNewItemNum++;
     FillListBox(false, true);
-    firstCurItem = mItemArray.GetSize() - 1;
+    firstCurItem = (int)mItemArray.GetSize() - 1;
 
   } else {
 
