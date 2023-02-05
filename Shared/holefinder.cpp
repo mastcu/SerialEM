@@ -3223,13 +3223,13 @@ void HoleFinder::assignGridPositions
 /*
  * Convert the average lengths and angles found from a call to analyzeNeighbors just to
  * find spacing into two or three vectors with the amount of movement gridX,
- * gridY per step in gridX or gridY.  Return vectors in the upper two quadrants,
- * return average angle in first quadrant
+ * gridY per step in gridX or gridY.  For non-hex, return vectors in the upper
+ * two quadrants, return average angle in first quadrant
  */
 void HoleFinder::getGridVectors(float *gridX, float *gridY, float &avgAngle,
                                 float &avgLen, int hexGrid)
 {
-  int numDir;
+  int numDir, useDir;
   float angle, delta;
   if (hexGrid < 0)
     hexGrid = mHexGrid ? 1 : 0;
@@ -3238,11 +3238,15 @@ void HoleFinder::getGridVectors(float *gridX, float *gridY, float &avgAngle,
   avgAngle = 0.;
   avgLen = 0.;
   for (int dir = 0; dir < numDir; dir++) {
-    angle = mJustAngles[dir];
-    if (angle < -180.)
+
+    // The twisted logic of hole combiner requires the non-hex to be in the same order and
+    // quadrants as they used to be: so do the secoind one first, rotate first one by 180
+    useDir = hexGrid ? dir : 1 - dir;
+    angle = mJustAngles[useDir];
+    if (angle < -180. || (!hexGrid && dir))
       angle += 180.f;
-    gridX[dir] = mJustLengths[dir] * (float)cos(RADIANS_PER_DEGREE * angle);
-    gridY[dir] = mJustLengths[dir] * (float)sin(RADIANS_PER_DEGREE * angle);
+    gridX[dir] = mJustLengths[useDir] * (float)cos(RADIANS_PER_DEGREE * angle);
+    gridY[dir] = mJustLengths[useDir] * (float)sin(RADIANS_PER_DEGREE * angle);
     avgAngle += (float)((mJustAngles[dir] + (1. - dir) * delta) / numDir);
     avgLen += mJustLengths[dir] / (float)numDir;
   }
