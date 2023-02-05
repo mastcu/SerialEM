@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/4/23: Fixed bad rotation of pattern in multi-hole combiner.
+
 2/2/23: SEM_4-0-19
 2/2/23: Fixed bad image shifts when changing EFTEM, broken 1/29/23 (In 4.0).
 
