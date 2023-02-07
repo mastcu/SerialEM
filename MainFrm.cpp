@@ -24,6 +24,7 @@
 #include "CameraController.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "HoleFinderDlg.h"
 #include "FalconHelper.h"
 #include "ProcessImage.h"
 #include "XFolderDialog\XWinVer.h"
@@ -545,6 +546,7 @@ void CMainFrame::DoClose(bool afterScript)
     SetWindowPlacement(&winPlace);
   }
 
+  mWinApp->mNavHelper->mHoleFinderDlg->OnButClearData();
   mWinApp->mDocWnd->CloseAllStores();
   mWinApp->mDocWnd->AppendToProgramLog(false);
   CMDIFrameWnd::OnClose();
