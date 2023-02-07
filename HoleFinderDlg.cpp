@@ -72,6 +72,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
 
 CHoleFinderDlg::~CHoleFinderDlg()
 {
+  // Data are cleared by MainFrm on exit
 }
 
 void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
@@ -314,7 +315,7 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYstages, float, 0);
   CLEAR_RESIZE(mExcluded, short, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
-  mHelper->mFindHoles->clearAll();
+  mWinApp->mNavHelper->mFindHoles->clearAll();
   mWinApp->mMainView->DrawImage();
   mWinApp->RestoreViewFocus();
 }
@@ -731,7 +732,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     return 1;
 
   // Initialize by clearing out existing hole info
-  mMontage = false;
+  mMontage = 0;
   mXboundary.clear();
   mYboundary.clear();
   mXinPiece.clear();
@@ -837,6 +838,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 
   // Montaging: check preconditions first
   if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+    mMontage = -1;
     if (!imBuf->mMapID)
       noMontReason = "the buffer has no ID for finding its Navigator map";
     else if (!mNavItem)
@@ -848,7 +850,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       mCurStore, montP, useWidth, useHeight))
       noMontReason = "could not access the map file again";
     if (noMontReason.IsEmpty()) {
-      mMontage = true;
+      mMontage = 1;
 
       // Reload the overview if it is binned and holes are too small, or if it is bytes
       if ((image->getType() == kUBYTE && mImageStore->getMode() != MRC_MODE_BYTE) ||
@@ -911,8 +913,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       // accessed again
       mFullBinning = imBuf->mOverviewBin;
       mBufBinning = imBuf->mBinning;
-      mMontage = montP->xNframes * montP->yNframes > 1;
-      if (mMontage && imBuf->mMiniOffsets) {
+      mMontage = montP->xNframes * montP->yNframes > 1 ? 1 : 0;
+      if (mMontage > 0 && imBuf->mMiniOffsets) {
         mMiniOffsets = new MiniOffsets;
         *mMiniOffsets = *imBuf->mMiniOffsets;
       }
@@ -923,7 +925,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   if (mMontage && !noMontReason.IsEmpty()) {
     mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " + 
       noMontReason);
-    mMontage = false;
+    mMontage = -1;
   }
 
   // Copy the montage params to our copy if the pointer got replaced with one from an
@@ -1126,7 +1128,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     return;
   }
 
-  if (mMontage) {
+  if (mMontage > 0) {
     readBuf = mWinApp->mBufferManager->GetBufToReadInto();
     if (mBufInd == readBuf)
       readBuf = mBufInd == 0 ? 1 : 0;
@@ -1228,6 +1230,10 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   } else {
     mPieceOn.clear();
     mPieceOn.resize(mXcenters.size(), -1);
+    if (mMontage) {
+      mXinPiece.resize(mXcenters.size());
+      mYinPiece.resize(mXcenters.size());
+    }
   }
 
   // OUTPUT summary line and skip if nothing
@@ -1343,7 +1349,7 @@ void CHoleFinderDlg::ScanningCleanup(int error)
 
 void CHoleFinderDlg::StopScanning(void)
 {
-  if (mMontage && mCurStore < 0)
+  if (mMontage > 0 && mCurStore < 0)
     delete mImageStore;
   mFindingHoles = false;
   mWinApp->SetStatusText(SIMPLE_PANE, "");
