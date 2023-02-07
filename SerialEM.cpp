@@ -875,6 +875,13 @@ BOOL CSerialEMApp::InitInstance()
   AfxEnableControlContainer();
   sMainThreadID = GetCurrentThreadId();
 
+  // Uncomment lines in stdafx.h to enable this.  The break can be used if you can get
+  // leaks to come out at the same memory allocation #
+#ifdef _CRTDBG_MAP_ALLOC
+  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+  //_CrtSetBreakAlloc(64098);
+#endif
+
   // Standard initialization
   // If you are not using these features and wish to reduce the size
   //  of your final executable, you should remove from the following

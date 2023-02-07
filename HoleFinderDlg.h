@@ -93,7 +93,7 @@ private:
   bool mFindingHoles;
   FloatVec mXboundary, mYboundary;
   float mPixelSize, mReduction;
-  bool mMontage;
+  int mMontage;
   int mMapID;
   int mRegistration;
   int mBoundPolyID;

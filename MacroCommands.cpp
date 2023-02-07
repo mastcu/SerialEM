@@ -2923,7 +2923,7 @@ int CMacCmd::ReadOtherFile(void)
       Sleep(mReadOtherSleep);
   }
   mBufferManager->SetBufToReadInto(iy0);
-  if (index2)
+  if (index2 && index2 != READ_MONTAGE_OK)
     ABORT_NOLINE("Script stopped because of error reading from other file:\n" +
     mStrCopy);
   return 0;

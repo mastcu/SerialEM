@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/23: Fixed ReadOtherFile command reading from montage (In 4.0).
+
+2/7/23: Fixed memory leak in pixel size routine, used when Hole Finder is run
+from the dialog (In 4.0).
+
+2/7/23: Fixed Hole Finder not applying montage adjustments to positions when
+the montage is not a map (In 4.0).
+
 2/4/23: Fixed bad rotation of pattern in multi-hole combiner.
 
 2/2/23: SEM_4-0-19
