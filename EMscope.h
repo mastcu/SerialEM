@@ -836,6 +836,7 @@ private:
   int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
+  int mFEIhasApertureSupport;  // Flag that aperture support exists on FEI scope
   float mDiffShiftScaling;     // Scaling to apply to diffraction shift
   int mXLensModeAvailable;     // 1 if available, 0 no object, -1 not available
   int mRestoreStageXYdelay;    // Delay between tilt and restore step
@@ -939,7 +940,7 @@ public:
   void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize,
                                      double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha);
-  BOOL CassetteSlotStatus(int slot, int &status);
+  BOOL CassetteSlotStatus(int slot, int &status, CString &names);
   int FindCartridgeWithID(int ID, CString &errStr);
   int LoadCartridge(int slot);
   int UnloadCartridge(void);

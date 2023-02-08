@@ -880,6 +880,9 @@
     <None Include="hlp\html\hidd_navfiletype.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
+    <None Include="hlp\html\hidd_step_and_adjust_is.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlignFocusWindow.cpp">

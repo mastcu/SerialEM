@@ -3034,22 +3034,46 @@
             control is on and the value for the lens.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportApertureSize #</TD>
+          <TD>For Thermo/FEI scopes only, reports the size for the aperture whose index is <b>#</b>,
+            which can be 0 and 1 for Condenser 1 and 2, 2 for objective, and 4 for Selected Area.&nbsp; The
+            reported value is either the size in microns, 0 if the aperture is retracted, or 1 if it is
+            moving or not enabled.&nbsp; The
+             microscope software must be running on Windows 7 or above, and the Apertures panel
+             must be included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
+            to if that panel is not currently visible.&nbsp; Aperture operations are done with Microsoft 
+            'UI Automation', not with Thermo/FEI scripting commands.&nbsp; Command added in 4.1, 7-Feb-23.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetApertureSize #</TD>
+          <TD>For Thermo/FEI scopes only, attempts to set the size for the aperture whose index 
+            is <b>#</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
+            value can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
+            size.&nbsp; Command added in 4.1, 7-Feb-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">RemoveAperture #</TD>
-          <TD>Removes the aperture whose index is the given <b>#</b> (JEOL and Hitachi only).&nbsp; For JEOL, if the
+          <TD>Removes the aperture whose index is the given <b>#</b> (JEOL, Hitachi, and Thermo/FEI scopes 
+            as described for 'ReportApertureSize').&nbsp; For JEOL, if the
             property JeolHasExtraApertures is not set, 1 and 2 are the
             condenser and objective apertures, others are 3:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp;
             If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2,
             2:OL(OL Upper), 3:HC(OL Lower), 4:SA, 5:ENT, 6:HX, 7:BF, 8:AUX1,
              9:AUX2, 10:AUX3, 11:AUX4.&nbsp;
             The size and position of the aperture will be recorded before it is removed.&nbsp; For Hitachi, only
-             the objective aperture can be removed and <b>#</b> must be 2.</TD>
+             the objective aperture can be removed and <b>#</b> must be 2.&nbsp; For Thermo/FEI scopes, valid 
+            indexes are 2 for Objective and 4 for Selected Area.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReInsertAperture #</TD>
           <TD>Replaces the aperture whose index is the given <b>#</b> after it has been removed with
-            &#39;RemoveAperture&#39; (JEOL and Hitachi only).&nbsp; For JOEL, the aperture of the stored size will be
+            &#39;RemoveAperture&#39; (JEOL, Hitachi and Thermo/FEI scopes as described for 
+            'ReportApertureSize').&nbsp; For JEOL, the aperture of the stored size will be
             inserted and it will be set to the stored position.&nbsp; For Hitachi, only
-             the objective aperture can be reinserted and <b>#</b> must be 2.</TD>
+             the objective aperture can be reinserted and <b>#</b> must be 2.&nbsp; For Thermo/FEI scopes, valid 
+            indexes are 2 for Objective and 4 for Selected Area.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PhasePlateToNextPos</TD>
@@ -3188,8 +3212,16 @@
         <TR>
           <TD class="scriptcommand">ReportSlotStatus #</TD>
           <TD>Reports the status of the autoloader cartridge slot or index given by <b>#</b> (numbered from 1).
-            &nbsp; With a Thermo/FEI autoloader, the command takes the slot number and reports a single value:
-             -1 for an error, 0 for empty, and 1 for occupied.&nbsp; With a JEOL autoloader, a cassette
+            &nbsp; With a Thermo/FEI autoloader, the command takes the slot number and reports a one or two values:
+             first -1 for an error, 0 for empty, or 1 for occupied; then possibly a name.&nbsp; The name is
+            reported if the
+             microscope software is running on Windows 7 or above and if the 'Autoloader (User)' panel
+             is included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
+            to if that panel is not currently visible.&nbsp; Names are obtained from
+            the text boxes in the panel with Microsoft 'UI Automation', not with Thermo/FEI scripting 
+            commands.&nbsp; When these names are available, a value of 0 for <b>#</b> will retrieve the full list 
+            of names from the panel and place them in the persistent 1-D array 'autoloaderInfo'.
+            <br />With a JEOL autoloader, a cassette
              inventory must be obtained first with 'LongOperation In'.&nbsp; The command takes 
             the index of the cartridge in the array populated by the 
             inventory.&nbsp; It reports just -1 if there is no information at that index (i.e., index out of 
@@ -3520,11 +3552,15 @@
             suppress the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CalibrateComaVsIS [#D] [#R]</TD>
+          <TD class="scriptcommand">CalibrateComaVsIS [#D] [#R] [#F]</TD>
           <TD>Calibrates the beam tilt needed to fix coma as a function of image shift.&nbsp The maximum 
             distance in microns and rotation angle set in the <A HREF="hidd_coma_vs_is_cal.htm">Coma vs. Image
                Shift Calibration dialog</A> will be used, unless the optional <b>#D</b> is entered with the
-            maximum distance, and <b>#R</b> is entered with the rotation angle.&nbsp; (Enter 0 for the distance to modify just the rotation angle.)&nbsp Command added in 4.1, 15-Dec-22.</TD>
+            maximum distance, and <b>#R</b> is entered with the rotation angle.  The choice in the dialog for whether to 
+            do a full array of positions for the coma measurements will also be used, unless <b>#F</b> is entered 
+            with -1 to use the same choice as for fixing coma, 0 not to use a full array, or 1 to use a full 
+            array.&nbsp; (Enter 0 for the distance to modify just the rotation angle; enter -999 for 
+            rotation angle to set the full array option.)&nbsp Command added in 4.1, 15-Dec-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CorrectAstigmatism [#]</TD>

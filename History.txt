@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/23: Used Microsoft "UI Automation" to add aperture support for FEI scopes
+on Windows 7 or above to retrieve names from the Autoloader panel with
+ReportSlotStatus.
+
+2/7/23: Added options to Coma vs IS calibrtaion setup dialog and script
+command to use full array for coma measurements.
+
+2/7/23: Added dialog for setting imaging conditions before imposing first
+image shift in the Step To and Adjust IS procedure for multi-shot setup.
+
 2/7/23: Fixed ReadOtherFile command reading from montage (In 4.0).
 
 2/7/23: Fixed memory leak in pixel size routine, used when Hole Finder is run

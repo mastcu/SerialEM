@@ -1,7 +1,7 @@
 To make a non-modal or other dialog:
 Add Resource - Dialog
 Change the IDD and the title of the dialog
-Set Tool Window to True
+Set Tool Window to True for non-modal
 Right click it, Add Class
 Change base to CDialog
 Remove DECLARE_DYNAMIC from header and IMPLEMENT_DYNAMIC from .cpp

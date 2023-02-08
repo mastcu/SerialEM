@@ -439,6 +439,7 @@ CEMscope::CEMscope()
   mMovingStage = false;
   mBkgdMovingStage = false;
   mMovingAperture = false;
+  mFEIhasApertureSupport = -1;
   mLastGaugeStatus = gsInvalid;
   mVacCount = 100;
   mLastSpectroscopy = false;
@@ -655,6 +656,8 @@ int CEMscope::Initialize()
         mAdjustForISSkipBacklash = 0;
       if (mDewarVacCapabilities < 0)
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
+      if (!mPlugFuncs->GetApertureSize)
+        mFEIhasApertureSupport = 0;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -1703,15 +1706,15 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       mReportingErr = true;
       if (mPlugFuncs->ScopeIsDisconnected && 
         mPlugFuncs->ScopeIsDisconnected()) {
+          SuspendUpdate(2000);
           if (!mDisconnected) {
+            mDisconnected = true;
             message = "Connection to microscope has been lost";
             if (FEIscope)
               message += "\n\nIt can probably be restored if you restart FEI-SEMserver";
             SEMMessageBox(message);
           }
-          mDisconnected = true;
-          SuspendUpdate(2000);
-
+ 
       } else if (!mErrCount) {
         message = "getting scope update after " + checkpoint + " ";
         SEMReportCOMError(E, message);
@@ -6595,12 +6598,14 @@ double CEMscope::GetHTValue()
 
 // Functions for dealing with FEI or JEOL autoloader
 // Get the status of a slot; slots are apparently numbered from 1
-BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
+BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
 {
   BOOL success = false;
+  bool gettingName = false;
   int numSlots = -999;
-  int csstat; 
+  int csstat, dum1, dum2, dum3, dum4, dum5;
   status = -2;
+  names = "";
   if (!sInitialized || !FEIscope)
     return false;
   try {
@@ -6616,9 +6621,22 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
         status = -1;
       success = true;
     }
+    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo) {
+      success = true;
+      if (!slot)
+        status = 0;
+      names = mPlugFuncs->GetCartridgeInfo(slot, &dum1, &dum2, &dum3, &dum4, &dum5);
+      if (!names.Compare("!ERROR!")) {
+        success = false;
+        names = "An error occurred getting names from the autoloader panel: \n";
+        names += mPlugFuncs->GetLastErrorString();
+      }
+    }
   }
   catch (_com_error E) {
-    if (numSlots == -999)
+    if (success) {
+      mFEIhasApertureSupport = 0;
+    } else if (numSlots == -999)
       SEMReportCOMError(E, _T("getting number of autoloader cassette slots "));
     else
       SEMReportCOMError(E, _T("getting status of autoloader cassette slot "));
@@ -7014,10 +7032,26 @@ int CEMscope::CheckApertureKind(int kind)
     return 1;
   }
   if (FEIscope) {
-    SEMMessageBox("Aperture movement is not available on a Thermo/FEI scope");
-    return 1;
+    if (mFEIhasApertureSupport < 0 && mPlugFuncs->GetApertureSize) {
+      try {
+        mPlugFuncs->GetApertureSize(2);
+        mFEIhasApertureSupport = 1;
+      }
+      catch (_com_error E) {
+        mFEIhasApertureSupport = 0;
+      }
+    }
+    if (!mFEIhasApertureSupport) {
+      SEMMessageBox("Aperture movement is not available on this scope");
+      return 1;
+    }
+    if (kind < 0 || kind == 3 || kind > 4) {
+      SEMMessageBox("Aperture number must be 0, 1, 2 or 4 for FEI scope");
+      return 1;
+    }
   }
-  if (kind < 0 || kind > 11 || (!mJeolHasExtraApertures && (kind < 1 || kind > 6))) {
+  if (JEOLscope && (kind < 0 || kind > 11 || (!mJeolHasExtraApertures && 
+    (kind < 1 || kind > 6)))) {
     str.Format("Aperture number %d is out of range, it must be between %d and %d", kind,
       mJeolHasExtraApertures ? 0 : 1, mJeolHasExtraApertures ? 11 : 6);
     SEMMessageBox(str);
@@ -7032,6 +7066,7 @@ int CEMscope::CheckApertureKind(int kind)
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)
 {
+  CString mess = "getting size number of aperture ";
   int result = -1;
   if (CheckApertureKind(kind) || !mPlugFuncs->GetApertureSize)
     return -1;
@@ -7040,7 +7075,9 @@ int CEMscope::GetApertureSize(int kind)
     result = mPlugFuncs->GetApertureSize(kind);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("getting size number of aperture "));
+    if (FEIscope && mPlugFuncs->GetLastErrorString())
+      mess += mPlugFuncs->GetLastErrorString();
+    SEMReportCOMError(E, _T(mess));
   }
   ScopeMutexRelease("GetApertureSize");
   return result;
@@ -7101,7 +7138,7 @@ int CEMscope::RemoveAperture(int kind)
   int size = GetApertureSize(kind);
   if (size < 0)
     return 1;
-  if (!HitachiScope) {
+  if (JEOLscope) {
     if (!GetAperturePosition(kind, mSavedAperturePosX[kind],
       mSavedAperturePosY[kind]))
       return 2;
@@ -7121,9 +7158,9 @@ int CEMscope::ReInsertAperture(int kind)
   int retval = 0;
   if (CheckApertureKind(kind))
     return 1;
-  if (!mPlugFuncs->SetApertureSize || (!HitachiScope && !mPlugFuncs->SetAperturePosition))
+  if (!mPlugFuncs->SetApertureSize || (JEOLscope && !mPlugFuncs->SetAperturePosition))
     return 3;
-  if (HitachiScope) {
+  if (!JEOLscope) {
     mApertureTD.actionFlags = APERTURE_SET_SIZE;
     mApertureTD.sizeOrIndex = 1;
   } else {
@@ -7255,7 +7292,10 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
       }
     }
     catch (_com_error E) {
-      SEMReportCOMError(E, td->description);
+
+      // This makes it add the error string to the description and leave the message for
+      // later
+      SEMReportCOMError(E, td->description, &td->description);
       retval = 1;
     }
   }

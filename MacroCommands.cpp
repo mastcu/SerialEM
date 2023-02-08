@@ -2781,11 +2781,13 @@ int CMacCmd::CalibrateComaVsIS(void)
 {
   float extent = mWinApp->mAutoTuning->GetComaVsISextent();
   int rotation = mWinApp->mAutoTuning->GetComaVsISrotation();
+  int full = mItemEmpty[3] ? mWinApp->mAutoTuning->GetComaVsISuseFullArray() :
+    mItemInt[3];
   if (mItemFlt[1] > 0.)
     extent = mItemFlt[1];
-  if (!mItemEmpty[2])
+  if (!mItemEmpty[2] & mItemInt[2] > -900)
     rotation = mItemInt[2];
-  if (mWinApp->mAutoTuning->CalibrateComaVsImageShift(extent, rotation)) {
+  if (mWinApp->mAutoTuning->CalibrateComaVsImageShift(extent, rotation, full)) {
     AbortMacro();
     return 1;
   }
@@ -6029,6 +6031,32 @@ int CMacCmd::RemoveAperture(void)
   return 0;
 }
 
+// ReportApertureSize
+int CMacCmd::ReportApertureSize(void)
+{
+  int size = mScope->GetApertureSize(mItemInt[1]);
+  if (size < 0) {
+    AbortMacro();
+    return 1;
+  }
+  if (size < 2)
+    mLogRpt.Format("Aperture %d is %s", mItemInt[1], !size ? "retracted" : "disabled");
+  else
+    mLogRpt.Format("Size of aperture %d is %d um", mItemInt[1], size);
+  return 0;
+}
+
+// SetApertureSize
+int CMacCmd::SetApertureSize(void)
+{
+  if (mScope->SetApertureSize(mItemInt[1], mItemInt[2])) {
+    AbortMacro();
+    return 1;
+  }
+  mMovedAperture = true;
+  return 0;
+}
+
 // PhasePlateToNextPos
 int CMacCmd::PhasePlateToNextPos(void)
 {
@@ -8034,16 +8062,28 @@ int CMacCmd::ReportSlotStatus(void)
     return 0;
   }
 
-  if (!mScope->CassetteSlotStatus(mItemInt[1], index)) {
+  if (!mScope->CassetteSlotStatus(mItemInt[1], index, name)) {
+    if (!name.IsEmpty())
+      ABORT_NOLINE(name);
     AbortMacro();
     return 1;
   }
-  if (index < -1)
+  if (index < -1) {
     mLogRpt.Format("Requesting status of slot %d gives an error", mItemInt[1]);
-  else
+  } else if (!mItemInt[1] && !name.IsEmpty()) {
+    if (SetVariable("AUTOLOADERINFO", name, VARTYPE_PERSIST, -1, false, &report))
+      ABORT_LINE(report);
+    mLogRpt = "Array variable autoloaderInfo set with names for each slot";
+    return 0;
+  } else {
     mLogRpt.Format("Slot %d %s", mItemInt[1], index < 0 ? "has unknown status" :
-    (index ? "is occupied" : "is empty"));
+      (index ? "is occupied" : "is empty"));
+    if (!name.IsEmpty())
+      mLogRpt += "; name = " + name;
+  }
   SetRepValsAndVars(2, (double)index);
+  if (!name.IsEmpty())
+    SetOneReportedValue(&mStrItems[2], name, 2);
   return 0;
 }
 
