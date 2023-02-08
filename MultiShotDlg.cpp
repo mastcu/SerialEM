@@ -17,6 +17,7 @@
 #include "SerialEMView.h"
 #include "ShiftCalibrator.h"
 #include "MultiShotDlg.h"
+#include "StepAdjustISDlg.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
@@ -489,7 +490,14 @@ void CMultiShotDlg::OnSetCustom()
 // Button to step and adjust IS
 void CMultiShotDlg::OnButStepAdjust()
 {
-  mSteppingAdjusting = (m_bUseCustom && mActiveParams->customHoleX.size() > 0) ? 2 : 1;
+  CStepAdjustISDlg dlg;
+  bool custom = m_bUseCustom && mActiveParams->customHoleX.size() > 0;
+  if (mWinApp->LowDoseMode()) {
+    dlg.mPrevMag = custom ? mActiveParams->customMagIndex : mActiveParams->holeMagIndex;
+    if (dlg.DoModal() == IDCANCEL)
+      return;
+  }
+  mSteppingAdjusting = custom ? 2 : 1;
   mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
   StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
     "Adjust shift at first corner of pattern");
@@ -499,44 +507,66 @@ void CMultiShotDlg::OnButStepAdjust()
 void CMultiShotDlg::StartRecording(const char *instruct)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  MultiShotParams *params = mActiveParams;
+  CString *modeNames = mWinApp->GetModeNames();
   int prevMag;
   double ISX, ISY;
   mSavedISX.clear();
   mSavedISY.clear();
+  mAreaSaved = RECORD_CONSET;
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Update();
   mSavedMouseStage = mShiftManager->GetMouseMoveStage();
   mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
   mNavPointIncrement = -9;
+
+  // Set up saved area and mag to go to if adjusting
   if (mSteppingAdjusting) {
-    prevMag = mSteppingAdjusting > 1 ? mActiveParams->customMagIndex :
-      mActiveParams->holeMagIndex;
-    mWinApp->mScope->SetMagIndex(prevMag);
+    prevMag = mSteppingAdjusting > 1 ? params->customMagIndex :
+      params->holeMagIndex;
+    if (mWinApp->LowDoseMode()) {
+      if (!params->stepAdjLDarea)
+        mAreaSaved = SEARCH_AREA;
+      else if (params->stepAdjLDarea == 1)
+        mAreaSaved = VIEW_CONSET;
+      if (params->stepAdjWhichMag != 1)
+        prevMag = params->stepAdjWhichMag ? params->stepAdjOtherMag : 
+        ldp[mAreaSaved].magIndex;
+    } else
+      mWinApp->mScope->SetMagIndex(prevMag);
   }
+
+  // General operations for low dose
   if (mWinApp->LowDoseMode()) {
-    mSavedLDRecParams = ldp[RECORD_CONSET];
+    mSavedLDParams = ldp[mAreaSaved];
     mSavedLDForCamera = mWinApp->GetCurrentCamera();
-    PrintfToLog("Low Dose Record parameters will be restored when you finish defining the"
-      " pattern");
-    if (mSteppingAdjusting && ldp[RECORD_CONSET].magIndex != prevMag &&
-      AfxMessageBox("The magnification has been set to the value "
-        "used to define existing shifts.\n\nDo you want to set the Record area to that "
-        "magnification?", MB_QUESTION) == IDYES) {
-      ldp[RECORD_CONSET].magIndex = prevMag;
-      if (mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)
-        mWinApp->mScope->GotoLowDoseArea(RECORD_CONSET);
+    PrintfToLog("Low Dose %s parameters will be restored when you finish defining the"
+      " pattern", modeNames[mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : mAreaSaved]);
+    if (mSteppingAdjusting) {
+
+      // Adjusting: setup modified LD parameters and change view/search defocus if set
+      if (mWinApp->mScope->GetLowDoseArea() == mAreaSaved)
+        mWinApp->mScope->SetLdsaParams(&mSavedLDParams);
+      ldp[mAreaSaved].magIndex = prevMag;
+      mWinApp->mScope->GotoLowDoseArea(mAreaSaved);
+      if (mAreaSaved != RECORD_CONSET && params->stepAdjSetDefOff) {
+        mSavedDefOffset = mWinApp->mScope->GetLDViewDefocus(mAreaSaved);
+        mWinApp->mScope->SetLDViewDefocus((float)params->stepAdjDefOffset, mAreaSaved);
+        mWinApp->mLowDoseDlg.UpdateDefocusOffset();
+      }
+      mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
     }
   }
   if (mSteppingAdjusting == 1) {
     if (m_bHexGrid) {
-      ISX = mActiveParams->numHexRings * mActiveParams->hexISXspacing[0];
-      ISY = mActiveParams->numHexRings * mActiveParams->hexISYspacing[0];
+      ISX = params->numHexRings * params->hexISXspacing[0];
+      ISY = params->numHexRings * params->hexISYspacing[0];
     } else {
-      ISX = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISXspacing[0] +
-        (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISXspacing[1]) / 2.;
-      ISY = -((mActiveParams->numHoles[0] - 1) * mActiveParams->holeISYspacing[0] +
-        (mActiveParams->numHoles[1] - 1) * mActiveParams->holeISYspacing[1]) / 2.;
+      ISX = -((params->numHoles[0] - 1) * params->holeISXspacing[0] +
+        (params->numHoles[1] - 1) * params->holeISXspacing[1]) / 2.;
+      ISY = -((params->numHoles[0] - 1) * params->holeISYspacing[0] +
+        (params->numHoles[1] - 1) * params->holeISYspacing[1]) / 2.;
     }
     mWinApp->mScope->IncImageShift(ISX, ISY);
   }
@@ -547,15 +577,18 @@ void CMultiShotDlg::StartRecording(const char *instruct)
 void CMultiShotDlg::StopRecording(void)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  LowDoseParams curLDP;
   if (mRecordingCustom || mRecordingRegular || mSteppingAdjusting) {
     mRecordingCustom = mRecordingRegular = false;
     if (mSteppingAdjusting)
       mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
-    mSteppingAdjusting = 0;
-    if (mWinApp->mNavigator)
-      mWinApp->mNavigator->Update();
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     if (mSavedLDForCamera >= 0) {
+      if (mSteppingAdjusting && mAreaSaved != RECORD_CONSET &&
+        mActiveParams->stepAdjSetDefOff) {
+        mWinApp->mScope->SetLDViewDefocus(mSavedDefOffset, mAreaSaved);
+        mWinApp->mLowDoseDlg.UpdateDefocusOffset();
+      }
       if (!mWinApp->LowDoseMode()) {
         PrintfToLog("Low Dose Record parameters were NOT restored because you left Low "
           "Dose mode");
@@ -563,13 +596,20 @@ void CMultiShotDlg::StopRecording(void)
         PrintfToLog("Low Dose Record parameters were NOT restored because you changed "
           "cameras");
       } else {
-        ldp[RECORD_CONSET] = mSavedLDRecParams;
-        if (mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)
-          mWinApp->mScope->GotoLowDoseArea(RECORD_CONSET);
+
+        curLDP = ldp[mAreaSaved];
+        ldp[mAreaSaved] = mSavedLDParams;
+        if (mWinApp->mScope->GetLowDoseArea() == mAreaSaved) {
+          mWinApp->mScope->SetLdsaParams(&curLDP);
+          mWinApp->mScope->GotoLowDoseArea(mAreaSaved);
+        }
         PrintfToLog("Low Dose Record parameters were restored to original values");
       }
       mSavedLDForCamera = -1;
     }
+    mSteppingAdjusting = 0;
+    if (mWinApp->mNavigator)
+      mWinApp->mNavigator->Update();
   }
 }
 

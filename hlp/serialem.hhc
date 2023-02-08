@@ -438,6 +438,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Step and Adjust IS Setup dialog">
+			<param name="Local" value="html/hidd_step_and_adjust_is.htm">
+			</OBJECT>
+			<A HREF="html/hidd_step_and_adjust_is.htm">Step and Adjust IS Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Hole Finder dialog">
 			<param name="Local" value="html/hidd_hole_finder.htm">
 			</OBJECT>

@@ -566,6 +566,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->hexISXspacing[index] = itemDbl[2 * index + 3];
           msParams->hexISYspacing[index] = itemDbl[2 * index + 4];
         }
+      } else if (NAME_IS("StepAdjustParams")) {
+        msParams->stepAdjLDarea = itemInt[1];
+        msParams->stepAdjWhichMag = itemInt[2];
+        msParams->stepAdjOtherMag = itemInt[3];
+        msParams->stepAdjSetDefOff = itemInt[4] != 0;
+        msParams->stepAdjDefOffset = itemInt[5];
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back(itemFlt[index]);
@@ -1789,6 +1795,10 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->doHexArray ? 1 : 0, msParams->numHexRings, msParams->hexISXspacing[0],
       msParams->hexISYspacing[0], msParams->hexISXspacing[1], msParams->hexISYspacing[1],
       msParams->hexISXspacing[2], msParams->hexISYspacing[2]);
+    mFile->WriteString(oneState);
+    oneState.Format("StepAdjustParams %d %d %d %d %d\n", msParams->stepAdjLDarea,
+      msParams->stepAdjWhichMag, msParams->stepAdjOtherMag,
+      msParams->stepAdjSetDefOff ? 1 : 0, msParams->stepAdjDefOffset);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL,

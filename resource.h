@@ -88,6 +88,7 @@
 #define IDD_NAVACQ_HOLE_FINDER          271
 #define IDD_COMA_VS_IS_CAL              274
 #define IDD_AUTOCONTOUR                 276
+#define IDD_STEP_AND_ADJUST_IS          279
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2115,6 +2116,21 @@
 #define IDC_CHECK_REMOVE_POINTS         3149
 #define IDC_STAT_HOLE_THRESH            3150
 #define IDC_SPIN_HOLE_THRESH            3151
+#define IDC_RUSE_5IMAGES                3152
+#define IDC_RUSE_FULL_ARRAY             3153
+#define IDC_RUSE_SETTING                3154
+#define IDC_STAT_CUR_SETTING            3155
+#define IDC_STAA_RECORD                 3156
+#define IDC_STAA_VIEW                   3157
+#define IDC_STAA_CURRENT_MAG            3158
+#define IDC_STAA_PREV_MAG               3159
+#define IDC_STAA_OTHER_MAG              3160
+#define IDC_STAT_OTHER_MAG              3161
+#define IDC_SPIN_OTHER_MAG              3162
+#define IDC_CHECK_SET_DEF_OFFSET        3163
+#define IDC_SPIN_DEF_OFFSET             3164
+#define IDC_STAT_DEF_OFFSET             3165
+#define IDC_STAA_SEARCH                 3166
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2662,9 +2678,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        279
+#define _APS_NEXT_RESOURCE_VALUE        281
 #define _APS_NEXT_COMMAND_VALUE         33510
-#define _APS_NEXT_CONTROL_VALUE         3152
+#define _APS_NEXT_CONTROL_VALUE         3167
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

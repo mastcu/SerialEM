@@ -64,6 +64,11 @@ struct MultiShotParams
   FloatVec customDefocus;  // Optional defocus change to impose
   float beamDiam;        // Beam diameter: display only
   BOOL useIllumArea;     // Whether to use illuminated area for drawing diameter
+  int stepAdjOtherMag;   // Parameters in Setp to and Adjust IS: other magnification
+  int stepAdjLDarea;     // Low dose area
+  BOOL stepAdjSetDefOff; // Whether to change defocus offset
+  int stepAdjDefOffset;  // Defocus offset to use
+  int stepAdjWhichMag;   // Which kind of mag to use: current, recorded at, or other
 };
 
 struct HoleFinderParams

@@ -29,6 +29,7 @@ hidd_montagecontrol							= SerialEM.chm::/html\hidd_montagecontrol.htm
 hidd_montagesetup								= SerialEM.chm::/html\hidd_montagesetup.htm
 hidd_multi_combiner             = SerialEM.chm::/html\hidd_multi_combiner.htm
 hidd_multi_shot_setup      			= SerialEM.chm::/html\hidd_multi_shot_setup.htm
+hidd_step_and_adjust_is         = SerialEM.chm::/html\hidd_step_and_adjust_is.htm
 hidd_navacquire									= SerialEM.chm::/html\hidd_navacquire.htm
 hidd_navfiletype                = SerialEM.chm::/html\hidd_navfiletype.htm
 hidd_navigator									= SerialEM.chm::/html\hidd_navigator.htm

@@ -48,7 +48,9 @@ private:
   double mLastIntensity;
   double mLastDrawTime;
   int mSavedLDForCamera;
-  LowDoseParams mSavedLDRecParams;
+  int mAreaSaved;
+  float mSavedDefOffset;
+  LowDoseParams mSavedLDParams;
 
 public:
   bool mCanReturnEarly;

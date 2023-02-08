@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Step and Adjust IS Setup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_coma_vs_is_cal"></A><B><FONT size="3">Step and Adjust IS Setup
+      Dialog</FONT></B></P>
+      <P> This dialog opens when you press the <strong>Step To and Adjust IS</strong> 
+        button in <a href="menu_navigator.htm#hid_options_setmulti">Multiple Record 
+        Setup</a> dialog when in Low Dose mode and it allows you to specify which Low 
+        Dose area to take images with, what magnification to use, and whether to change 
+        the defocus offset if using View or Search.&nbsp; It is necessary to specify 
+        this in advance so that the initial image shift can be applied after going to 
+        conditions in which images will be taken.</P>
+    <P> <strong>Low Dose area to use</strong></P>
+    <P> &nbsp;<strong>Record</strong> is always available; <strong>View</strong> and
+      <strong>Search</strong> are offered as options if they are not currently set to 
+      be in low magnification mode.&nbsp; Using anything but a higher magnification, 
+      near that of Record, has the same limitations and requirements as when initially 
+      setting the areas: images should be taken near focus unless there are good 
+      calibrations for the effects of high defocus.&nbsp; If there are image shift 
+      boundaries between the magnification to be used and the Record magnification 
+      (i.e., such that an applied image shift does not produce the same shift on the 
+      specimen at the two maginifications), then there need to be adequate 
+      calibrations of rotation angle and pixel size (i.e., &#39;RotationAndPixel&#39; 
+      properties entries) to allow the image shift to be translated accurately from 
+      where it is measured to where it is used for acquisition.</P>
+    <P> <strong>Magnification to use</strong></P>
+    <P> The choices here are the <strong>Current mag of area,</strong> the <strong>Mag 
+      at which shifts were recorded</strong>, and a selected <strong>Other mag</strong>.&nbsp; 
+      When you have selected to acquire with the Record area, the latter two are 
+      liable to be successful if the magnification is a similarly high one; chosing a 
+      much lower magnification would have the same potential problems as using View or 
+      Search at such a magnification.&nbsp; If you have selected View or Search, using 
+      another magnification may impose a shift on the area unless the magnifications 
+      are well-aligned.&nbsp; Since all positions are going to be visited, such a 
+      shift is not an intrinsic problem, unless it prevents you from finding the first 
+      hole to be positioned at.&nbsp; Note that there automatic change in intensity 
+      when switching to a different magnification; you will need to make such changes 
+      yourself.</P>
+    <P> <strong>Change defocus offset to</strong></P>
+    <P> This option is available with View or Serach and allows you to switch from the 
+      currently set defocus offset to a smaller one if necessary.&nbsp; Like using a 
+      different magnification, changing the defocus offset may impose a shift that 
+      needs to be compensated for when positioning on the first hole.</P>
+    <P> Press <strong>OK</strong> to start the procedure; the program will go to the 
+      Low Dose area, with modifications if any, shift to the first position, and allow 
+      you to take images and store image shift values.</P>
+    <P> Any changes made to the chosen Low Dose area, either specified here or imposed 
+      by you after starting the procedure, will be restored when the procedure is 
+      finished.</P>
+    </basefont>
+  </BODY>
+</HTML>

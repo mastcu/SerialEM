@@ -942,6 +942,7 @@
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ShiftToMarkerDlg.h" />
+    <ClInclude Include="StepAdjustISDlg.h" />
     <ClInclude Include="ThreeChoiceBox.h" />
     <ClInclude Include="TSDoseSymDlg.h" />
     <ClInclude Include="Utilities\AskOneDlg.h" />
@@ -1816,6 +1817,7 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ShiftToMarkerDlg.cpp" />
+    <ClCompile Include="StepAdjustISDlg.cpp" />
     <ClCompile Include="ThreeChoiceBox.cpp" />
     <ClCompile Include="TSDoseSymDlg.cpp" />
     <ClCompile Include="Utilities\AskOneDlg.cpp">

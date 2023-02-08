@@ -215,6 +215,11 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.tiltOfHoleArray = -999.;
   mMultiShotParams.tiltOfCustomHoles = -999.;
   mMultiShotParams.holeFinderAngle = -999.;
+  mMultiShotParams.stepAdjLDarea = 2;
+  mMultiShotParams.stepAdjWhichMag = 0;
+  mMultiShotParams.stepAdjOtherMag = -1;
+  mMultiShotParams.stepAdjSetDefOff = false;
+  mMultiShotParams.stepAdjDefOffset = -10;
   mSkipAstigAdjustment = false;
   mNavAlignParams.maxAlignShift = 1.;
   mNavAlignParams.resetISthresh = 0.2f;
