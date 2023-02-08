@@ -84,6 +84,7 @@ public:
   GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
   GetSetMember(int, ComaVsISrotation);
+  GetSetMember(int, ComaVsISuseFullArray);
   GetSetMember(float, MinCtfBasedDefocus);
   GetSetMember(float, AddToMinForAstigCTF);
   GetMember(float, AstigBacklash);
@@ -207,10 +208,12 @@ private:
   float mLastYStigNeeded;         // Can be BTID or CTF
   float mLastXTiltNeeded;         // Change needed from last CTF coma measurement only
   float mLastYTiltNeeded;
-  float mComaVsISextent;
+  float mComaVsISextent;          // Value for extent and angle saved from the dialog
   int mComaVsISrotation;
-  float mCVISextentToUse;
+  float mCVISextentToUse;         // Values to use during calibration
   int mCVISrotationToUse;
+  int mComaVsISuseFullArray;      // Full array: -1 regular choice, 0 not to, 1 to do so
+  int mCVISfullArrayToUse;        // Value during calibration
   int mComaVsISindex;
   float mComaVsISAppliedISX[4];
   float mComaVsISAppliedISY[4];
@@ -263,7 +266,7 @@ public:
   float beamTilt, float *factors);
   int SetupCtfAcquireParams(bool fromCheck);
   int CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup);
-  int CalibrateComaVsImageShift(float extent, int rotation);
+  int CalibrateComaVsImageShift(float extent, int rotation, int useFullArray);
   void ComaVsISNextTask(int param);
   void ComaVsISCleanup(int error);
   void StopComaVsISCal(void);

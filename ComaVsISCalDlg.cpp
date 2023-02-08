@@ -22,6 +22,7 @@ CComaVsISCalDlg::CComaVsISCalDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(IDD_COMA_VS_IS_CAL, pParent)
   , m_fDistance(0.5f)
   , m_iRotation(0)
+  , m_iNumImages(FALSE)
 {
   mNonModal = true;
 }
@@ -36,14 +37,15 @@ void CComaVsISCalDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPIN_CVIC_DISTANCE, m_sbcDistance);
   DDX_Control(pDX, IDC_EDIT_CVIC_DISTANCE, m_editDistance);
   DDX_Text(pDX, IDC_EDIT_CVIC_DISTANCE, m_fDistance);
-  MinMaxFloat(IDC_EDIT_CVIC_DISTANCE, m_fDistance, MIN_COMA_VS_IS_EXTENT, 
+  MinMaxFloat(IDC_EDIT_CVIC_DISTANCE, m_fDistance, MIN_COMA_VS_IS_EXTENT,
     MAX_COMA_VS_IS_EXTENT, "distance at which to measure coma");
   DDX_Control(pDX, IDC_EDIT_CVIC_ROTATION, m_editRotation);
   DDX_Text(pDX, IDC_EDIT_CVIC_ROTATION, m_iRotation);
-  MinMaxInt(IDC_EDIT_CVIC_ROTATION, m_iRotation, -MAX_ROTATION, MAX_ROTATION, 
+  MinMaxInt(IDC_EDIT_CVIC_ROTATION, m_iRotation, -MAX_ROTATION, MAX_ROTATION,
     "rotation of vectors");
   DDX_Control(pDX, IDC_SPIN_CVIC_ROTATION, m_sbcRotation);
   DDX_Control(pDX, IDOK, m_butCalibrate);
+  DDX_Radio(pDX, IDC_RUSE_5IMAGES, m_iNumImages);
 }
 
 
@@ -52,6 +54,7 @@ BEGIN_MESSAGE_MAP(CComaVsISCalDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_CVIC_DISTANCE, OnKillfocusEditDistance)
   ON_EN_KILLFOCUS(IDC_EDIT_CVIC_ROTATION, OnKillfocusEditRotation)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_CVIC_ROTATION, OnDeltaposSpinRotation)
+  ON_BN_CLICKED(IDC_RUSE_5IMAGES, OnSetNumImages)
 END_MESSAGE_MAP()
 
 
@@ -62,6 +65,11 @@ BOOL CComaVsISCalDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   m_fDistance = mWinApp->mAutoTuning->GetComaVsISextent();
   m_iRotation = mWinApp->mAutoTuning->GetComaVsISrotation();
+  m_iNumImages = mWinApp->mAutoTuning->GetComaVsISuseFullArray();
+  if (m_iNumImages < 0)
+    m_iNumImages = 2;
+  SetDlgItemText(IDC_STAT_CUR_SETTING, mWinApp->mAutoTuning->GetCtfDoFullArray() ?
+    "(currently 9)" : "(currently 5)");
   m_sbcDistance.SetRange(0, 10000);
   m_sbcDistance.SetPos(5000);
   m_sbcRotation.SetRange(0, 10000);
@@ -81,12 +89,15 @@ void CComaVsISCalDlg::PostNcDestroy()
 // OK, Cancel, handling returns in text fields
 void CComaVsISCalDlg::OnOK()
 {
+  int useFull;
   UpdateData(true);
+  useFull = m_iNumImages > 1 ? -1 : m_iNumImages;
   mWinApp->mAutoTuning->SetComaVsISextent(m_fDistance);
   mWinApp->mAutoTuning->SetComaVsISrotation(m_iRotation);
+  mWinApp->mAutoTuning->SetComaVsISuseFullArray(useFull);
   EnableDlgItem(IDOK, false);
   EnableDlgItem(IDCANCEL, false);
-  mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation);
+  mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation, useFull);
   OnCancel();
 }
 
@@ -154,4 +165,11 @@ void CComaVsISCalDlg::OnDeltaposSpinRotation(NMHDR *pNMHDR, LRESULT *pResult)
   B3DCLAMP(m_iRotation, -MAX_ROTATION, MAX_ROTATION);
   UpdateData(false);
   mWinApp->mMainView->DrawImage();
+}
+
+// Choice for # of images
+void CComaVsISCalDlg::OnSetNumImages()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
 }

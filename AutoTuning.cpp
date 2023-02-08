@@ -80,6 +80,7 @@ CAutoTuning::CAutoTuning(void)
   mComaVsIScal.spotSize = -1;
   mComaVsISextent = 3.f;
   mComaVsISrotation = 0;
+  mComaVsISuseFullArray = 0;
 }
 
 
@@ -1791,7 +1792,7 @@ int CAutoTuning::CheckAndSetupCtfAcquireParams(const char *operation, bool fromS
 }
 
 // Calibrate the dependence of beam tilt and astigmatism on image shift
-int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation)
+int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation, int useFullArray)
 {
   CString str;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
@@ -1818,6 +1819,7 @@ int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation)
     mScope->GotoLowDoseArea(RECORD_CONSET);
   mCVISextentToUse = extent;
   mCVISrotationToUse = rotation;
+  mCVISfullArrayToUse = useFullArray;
   mComaVsISindex = 0;
   mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
@@ -1832,6 +1834,9 @@ void CAutoTuning::ComaVsISNextTask(int param)
   float delISX1, delISY1, delISX2, delISY2, denom;
   int posIndex, index = mComaVsISindex;
   int magInd = mScope->FastMagIndex();
+  int useFullFac = 1;
+  if (mCVISfullArrayToUse > 0 || (mCVISfullArrayToUse < 0 && mCtfDoFullArray))
+    useFullFac = 2;
 
   if (index < 0)
     return;
@@ -1883,7 +1888,7 @@ void CAutoTuning::ComaVsISNextTask(int param)
         mLastYStigNeeded);*/
     }
     mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-    CtfBasedAstigmatismComa((index + 1)  % 2, false, 1, true, false);
+    CtfBasedAstigmatismComa(useFullFac * ((index + 1)  % 2), false, 1, true, false);
     mComaVsISindex++;
     return;
   }

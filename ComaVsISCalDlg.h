@@ -38,4 +38,6 @@ public:
   afx_msg void OnDeltaposSpinRotation(NMHDR *pNMHDR, LRESULT *pResult);
   void UpdateEnables();
   CButton m_butCalibrate;
+  BOOL m_iNumImages;
+  afx_msg void OnSetNumImages();
 };
