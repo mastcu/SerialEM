@@ -1255,21 +1255,13 @@ BOOL CLowDoseDlg::OnInitDialog()
 // Respond to possible external changes in down area, blank, or tie focus-trial
 void CLowDoseDlg::UpdateSettings()
 {
-  float defocus= mScope->GetLDViewDefocus(m_iOffsetShown);
   int area = mScope->GetLowDoseArea();
   if (!mInitialized)
     return;
 
   mScope->SetBlankWhenDown(m_bBlankWhenDown);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
-  if (defocus < sMinVSDefocus[m_iOffsetShown] || defocus > sMaxVSDefocus[m_iOffsetShown]){
-    B3DCLAMP(defocus, sMinVSDefocus[m_iOffsetShown], sMaxVSDefocus[m_iOffsetShown]);
-    mScope->SetLDViewDefocus(defocus, m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
-  }
-  m_strViewDefocus.Format("%d", B3DNINT(defocus));
-  
-  // Synchronize dialog to state
-  UpdateData(false);
+  UpdateDefocusOffset();
 
   // If tie focus-trial set and one of them is now displayed, equalize them
   area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
@@ -1282,6 +1274,20 @@ void CLowDoseDlg::UpdateSettings()
   ManageAxisPosition();
 
   Update();
+}
+
+// Just update the defocus offset - for multishot step and adjust
+void CLowDoseDlg::UpdateDefocusOffset()
+{
+  float defocus = mScope->GetLDViewDefocus(m_iOffsetShown);
+  if (defocus < sMinVSDefocus[m_iOffsetShown] || defocus > sMaxVSDefocus[m_iOffsetShown]) {
+    B3DCLAMP(defocus, sMinVSDefocus[m_iOffsetShown], sMaxVSDefocus[m_iOffsetShown]);
+    mScope->SetLDViewDefocus(defocus, m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
+  }
+  m_strViewDefocus.Format("%d", B3DNINT(defocus));
+
+  // Synchronize dialog to state
+  UpdateData(false);
 }
 
 // Update enables based on state of system
