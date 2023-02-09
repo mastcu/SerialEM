@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+SEM_4-1-0-beta12
+2/7/23: New versions of FEI-SEMserver will not run on Windows 2000, but it
+still seems to work on non-SP3 XP.
+
 2/7/23: Used Microsoft "UI Automation" to add aperture support for FEI scopes
 on Windows 7 or above to retrieve names from the Autoloader panel with
 ReportSlotStatus.

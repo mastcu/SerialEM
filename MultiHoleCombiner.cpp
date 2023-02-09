@@ -309,7 +309,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
       fabs(holeDist2 / gridDist2 - 1.) > vecLenDiffCrit ||
       fabs(hexPosRot1 * 60. - angDiff1) > near60crit || 
       fabs(hexPosRot2 * 60. - angDiff2) > near60crit || 
-      (hexPosRot1 != hexPosRot2 && (hexPosRot2 + 2) % 6 != hexPosRot1)) {
+      (hexPosRot1 != hexPosRot2 && (hexPosRot2 + 2) % 6 != hexPosRot1 && 
+      (hexPosRot2 + 4) % 6 != hexPosRot1)) {
       PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
         "  Stage vectors from actual positions: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
         "  Stage vectors from IS vectors: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
