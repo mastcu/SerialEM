@@ -2785,7 +2785,7 @@ int CMacCmd::CalibrateComaVsIS(void)
     mItemInt[3];
   if (mItemFlt[1] > 0.)
     extent = mItemFlt[1];
-  if (!mItemEmpty[2] & mItemInt[2] > -900)
+  if (!mItemEmpty[2] && mItemInt[2] > -900)
     rotation = mItemInt[2];
   if (mWinApp->mAutoTuning->CalibrateComaVsImageShift(extent, rotation, full)) {
     AbortMacro();
