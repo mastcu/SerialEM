@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/11/23: Made precombine.holes file not be written on an autosave, so that the
+Undo button stays enabled (In 4.0).
+
 SEM_4-1-0-beta12
 2/7/23: New versions of FEI-SEMserver will not run on Windows 2000, but it
 still seems to work on non-SP3 XP.
