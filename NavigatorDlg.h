@@ -105,7 +105,7 @@ public:
 	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
-	int DoSave();
+	int DoSave(bool autoSave);
 	int AskIfSave(CString reason);
 	CString NextTabField(CString inStr, int &index);
 	int GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile);

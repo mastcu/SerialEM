@@ -8898,7 +8898,7 @@ int CMacCmd::SaveNavigator(void)
     SubstituteLineStripItems(mStrLine, 1, mStrCopy);
     mWinApp->mNavigator->SetCurrentNavFile(mStrCopy);
   }
-  mNavigator->DoSave();
+  mNavigator->DoSave(false);
   return 0;
 }
 

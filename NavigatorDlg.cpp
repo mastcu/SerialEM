@@ -7229,7 +7229,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
 // NAVIGATOR FILE I/O
 
 // Calls to do the save and save as, with potential error returns
-int CNavigatorDlg::DoSave()
+int CNavigatorDlg::DoSave(bool autoSave)
 {
   if (!mItemArray.GetSize())
     return 0;
@@ -7237,7 +7237,8 @@ int CNavigatorDlg::DoSave()
     return DoSaveAs();
   mDocWnd->ManageBackupFile(mNavFilename, mNavBackedUp);
   OpenAndWriteFile(false);
-  SavePreCombineFile();
+  if (!autoSave)
+    SavePreCombineFile();
   return 0;
 }
 
@@ -7272,7 +7273,7 @@ int CNavigatorDlg::AskIfSave(CString reason)
     RemoveAutosaveFile();
     return 0;
   }
-  return  DoSave();
+  return  DoSave(false);
 }
 
 // Do autosave if file is open, and things have changed
@@ -7281,7 +7282,7 @@ void CNavigatorDlg::AutoSave()
   if (!mChanged)
     return;
   if (!mNavFilename.IsEmpty())
-    DoSave();
+    DoSave(true);
   else {
     if (mParam->autosaveFile.IsEmpty()) {
       CString strCwd = mDocWnd->GetOriginalCwd();

@@ -627,7 +627,7 @@ void CMenuTargets::OnNavigatorImportmap()
 
 void CMenuTargets::OnSaveNavFile() 
 {
-  mNavigator->DoSave();	
+  mNavigator->DoSave(false);	
 }
 
 void CMenuTargets::OnSaveasNavFile() 
