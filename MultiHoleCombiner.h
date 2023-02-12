@@ -60,6 +60,7 @@ private:
   IntVec mOneDIndexToHexRing;     // Maps from a 1D index of hole number in rect pattern
   IntVec mOneDIndexToPosInRing;   // to rung number and position
   int mNumRings;                  // Number of rings in hex pattern
+  IntVec mHexToItemIndex;         // Map from hex number to item number as array is built
   int mDebug;
 
   void TryBoxStartsOnLine(int otherStart, bool doCol,

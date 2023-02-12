@@ -71,6 +71,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 {
   CMapDrawItem *item, *curItem;
   MapItemArray *itemArray;
+  MapItemArray tempArray;
   KImage *image;
   FloatVec xCenters, yCenters, peakVals, xCenAlt, yCenAlt, peakAlt, xMissing, yMissing;
   IntVec navInds, altInds, boxAssigns, ixSkip, iySkip;
@@ -497,8 +498,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     int bestInd = -1, bestIx;
     for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
       for (ix = 0; ix < 2; ix++) {
-    //ind = 0;
-    //ix = 0;
+        //ind = 0;
+        //ix = 0;
         fullArray.RemoveAll();
         num = EvaluateArrangementOfHexes(mNxGrid / 2 - mHexDelX[ind],
           mNyGrid / 2 - mHexDelY[ind], ix > 0, fullArray, fullSd, iy);
@@ -514,9 +515,11 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
           bestInd = ind;
           bestIx = ix;
         }
-     }
-   }
-   // PrintfToLog("Best ind %d ix %d", bestInd, bestIx);
+      }
+    }
+    // PrintfToLog("Best ind %d ix %d", bestInd, bestIx);
+
+    mHexToItemIndex.resize(bestFullArray.GetSize(), -1);
 
     // Loop on boxes in three rounds: center at original pos, center moved, and missing
     for (ind = 0; ind >= -1; ind--) {
@@ -679,6 +682,32 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
         }
       }
     }
+
+    // Loop on points and transfer items to temp array in order of point acquisition
+    for (ind = 0; ind < numPoints; ind++) {
+      hex = boxAssigns[ind];
+      if (hex >= 0) {
+        jnd = mHexToItemIndex[hex];
+        if (jnd >= 0 && itemArray->GetAt(jnd)) {
+          tempArray.Add(itemArray->GetAt(jnd));
+          itemArray->SetAt(jnd, NULL);
+        }
+      }
+    }
+
+    // Are there any left?  Transfer those
+    jnd = (int)itemArray->GetSize();
+    for (ind = jnd - numAdded; ind < jnd; ind++) {
+      if (itemArray->GetAt(ind)) {
+        PrintfToLog("Program error: item %s left over after repacking in order by points",
+          (LPCTSTR)itemArray->GetAt(ind)->mLabel);
+        tempArray.Add(itemArray->GetAt(ind));
+      }
+    }
+
+    // Now copy to real array
+    for (ind = 0; ind < (int)tempArray.GetSize(); ind++)
+      itemArray->SetAt(ind + jnd - numAdded, tempArray[ind]);
 
 
   } else if (!crossPattern) {
@@ -1619,7 +1648,7 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
 {
   CMapDrawItem *item;
   int ind, ix, iy, xCen, yCen, numInBox, ptNum, groupID, bx, by, fullInd;
-  int acqXcen, acqYcen, baseInd;
+  int acqXcen, acqYcen, baseInd, itemInd;
   float stageX, stageY, boxDx, boxDy, cenDist, minCenDist = 1.e30f;
   std::set<int> cenSet;
   ixSkip.clear();
@@ -1678,8 +1707,11 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
     }
   }
 
+  itemInd = (int)itemArray->GetSize();
   AddMultiItemToArray(itemArray, baseInd, stageX / numInBox, stageY / numInBox, mNumRings,
     -1, 0., 0., ixSkip, iySkip, groupID, numInBox, numAdded);
+  if (itemArray->GetSize() > itemInd)
+    mHexToItemIndex[hex] = itemInd;
 }
 
 // Add an item to the nav array with locked-in multi-shot parameters and skipped points
