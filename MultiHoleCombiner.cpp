@@ -295,12 +295,16 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     holeDist1 = sqrtf(holeMat.xpx * holeMat.xpx + holeMat.ypx * holeMat.ypx);
     holeAng2 = (float)(atan2f(holeMat.ypy, holeMat.xpy) / DTOR);
     holeDist2 = sqrtf(holeMat.xpy * holeMat.xpy + holeMat.ypy * holeMat.ypy);
-    angDiff1 = (float)UtilGoodAngle(gridAng1 - holeAng1);
-    angDiff2 = (float)UtilGoodAngle(gridAng2 - holeAng2);
-    if (angDiff1 < 0.)
+    angDiff1 = (float)UtilGoodAngle(holeAng1 - gridAng1);
+    angDiff2 = (float)UtilGoodAngle(holeAng2 - gridAng2);
+    if (angDiff1 < -30.)
       angDiff1 += 360.;
-    if (angDiff2 < 0.)
+    if (angDiff1 >= 330.)
+      angDiff1 -= 360.;
+    if (angDiff2 < -30.)
       angDiff2 += 360.;
+    if (angDiff2 >= 330.)
+      angDiff2 -= 360.;
 
     // Determine rotation between rings in the two spaces and check consistency
     hexPosRot1 = B3DNINT(angDiff1 / 60.);
