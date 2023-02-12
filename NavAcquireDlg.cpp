@@ -905,8 +905,10 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   for (pos = 0; pos < mNumShownActs; pos++) {
     if (mShownPosToIndex[pos] == NAACT_HOLE_FINDER) {
       EnableDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
-      EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
-      EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, acquireType == ACQUIRE_TAKE_MAP);
+      EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, acquireType == ACQUIRE_TAKE_MAP && 
+        (mActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT));
+      EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, acquireType == ACQUIRE_TAKE_MAP &&
+        (mActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT));
       break;
     }
   }
