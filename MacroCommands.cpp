@@ -6049,7 +6049,7 @@ int CMacCmd::ReportApertureSize(void)
 // SetApertureSize
 int CMacCmd::SetApertureSize(void)
 {
-  if (mScope->SetApertureSize(mItemInt[1], mItemInt[2])) {
+  if (!mScope->SetApertureSize(mItemInt[1], mItemInt[2])) {
     AbortMacro();
     return 1;
   }
