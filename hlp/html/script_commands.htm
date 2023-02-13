@@ -3036,9 +3036,10 @@
         <TR>
           <TD class="scriptcommand">ReportApertureSize #</TD>
           <TD>For Thermo/FEI scopes only, reports the size for the aperture whose index is <b>#</b>,
-            which can be 0 and 1 for Condenser 1 and 2, 2 for objective, and 4 for Selected Area.&nbsp; The
-            reported value is either the size in microns, 0 if the aperture is retracted, or 1 if it is
-            moving or not enabled.&nbsp; The
+            which can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; The
+            reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
+            moving or not enabled; or the position of a phase plate plus 1 (e.g., 3 for 'Ph P2') for the
+             objective aperture.&nbsp; The
              microscope software must be running on Windows 7 or above, and the Apertures panel
              must be included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
             to if that panel is not currently visible.&nbsp; Aperture operations are done with Microsoft 
@@ -3050,7 +3051,8 @@
           <TD>For Thermo/FEI scopes only, attempts to set the size for the aperture whose index 
             is <b>#</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
             value can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
-            size.&nbsp; Command added in 4.1, 7-Feb-23.
+            size.&nbsp; For an objective aperture with phase plates, the size can also be 2 to 7 to specify the phase
+            plates in position 1 to 6.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>

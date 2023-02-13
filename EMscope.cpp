@@ -7032,6 +7032,8 @@ int CEMscope::CheckApertureKind(int kind)
     return 1;
   }
   if (FEIscope) {
+    if (!mPlugFuncs->GetApertureSize)
+      mFEIhasApertureSupport = 0;
     if (mFEIhasApertureSupport < 0 && mPlugFuncs->GetApertureSize) {
       try {
         mPlugFuncs->GetApertureSize(2);
@@ -7045,8 +7047,8 @@ int CEMscope::CheckApertureKind(int kind)
       SEMMessageBox("Aperture movement is not available on this scope");
       return 1;
     }
-    if (kind < 0 || kind == 3 || kind > 4) {
-      SEMMessageBox("Aperture number must be 0, 1, 2 or 4 for FEI scope");
+    if (kind < 0 || kind > 4) {
+      SEMMessageBox("Aperture number must be between 0 and 4 for FEI scope");
       return 1;
     }
   }
@@ -7059,9 +7061,6 @@ int CEMscope::CheckApertureKind(int kind)
   }
   return 0;
 }
-
-#define CHECK_APERTURE_KIND(k) (!sInitialized || FEIscope || (JEOLscope &&  (k < 0 || \
-  k > 11 || (!mJeolHasExtraApertures && (k < 1 || k > 6)))) || (HitachiScope && k != 2))
 
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)

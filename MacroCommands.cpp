@@ -6041,6 +6041,8 @@ int CMacCmd::ReportApertureSize(void)
   }
   if (size < 2)
     mLogRpt.Format("Aperture %d is %s", mItemInt[1], !size ? "retracted" : "disabled");
+  else if (size < 8) 
+    mLogRpt.Format("Aperture %d is phase plate in position %d", mItemInt[1], size - 1);
   else
     mLogRpt.Format("Size of aperture %d is %d um", mItemInt[1], size);
   return 0;
