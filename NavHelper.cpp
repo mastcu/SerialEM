@@ -967,6 +967,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // of error below depend on comparisons to original first stage pos without it
   SEMTrace('h', "first stage %.2f %.2f  net view shift %.2f %.2f  firstdel %.2f %.2f"
     " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
+    mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX,
     mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
   mRealigning = 1;
   mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX - 
