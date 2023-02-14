@@ -4414,7 +4414,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 {
   bool isPython;
   int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
-  float pyVersion = 0.;
+  int pyVersion = 0;
   CString indentStr, modulePath = mPyModulePath;
 
   // Test for scripting language
@@ -4467,8 +4467,9 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
           mVersionsOfPython[ind].find((LPCTSTR)line) == 0)) {
           mScrpLangData.strItems[0] = mPathsToPython[ind].c_str();
           mScrpLangData.strItems[0] += "\\";
-          pyVersion = (float)atof(mVersionsOfPython[ind].c_str());
-          if (pyVersion >= 2.65 && pyVersion <= 3.45)
+          pyVersion = 100 * atoi(mVersionsOfPython[ind].c_str()) +
+            atoi(mVersionsOfPython[ind].c_str() + 2);
+          if (pyVersion >= 207 && pyVersion <= 304)
             modulePath = mPyModulePath + "/" + mVersionsOfPython[ind].c_str();
         }
       }
@@ -4535,7 +4536,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       }
     }
     mMacroForScrpLang += "]\r\n";
-    if (pyVersion < 1 || pyVersion > 3.) {
+    if (pyVersion < 1 || pyVersion >= 300) {
       mMacroForScrpLang += "def SEMprint(*args):\r\n"
         "  print(*args, flush = True)\r\n"
         "SEMflush = sys.stdout.flush\r\n";
