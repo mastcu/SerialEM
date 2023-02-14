@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/13/23: Fixed script toolbar buttons above 40 (In 4.0).
+
 2/11/23: Made precombine.holes file not be written on an autosave, so that the
 Undo button stays enabled (In 4.0).
 

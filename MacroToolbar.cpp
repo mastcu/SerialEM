@@ -62,13 +62,33 @@ void CMacroToolbar::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, ID_MACRO_RUN38, mRunButtons[37]);
   DDX_Control(pDX, ID_MACRO_RUN39, mRunButtons[38]);
   DDX_Control(pDX, ID_MACRO_RUN40, mRunButtons[39]);
+  DDX_Control(pDX, ID_MACRO_RUN41, mRunButtons[40]);
+  DDX_Control(pDX, ID_MACRO_RUN42, mRunButtons[41]);
+  DDX_Control(pDX, ID_MACRO_RUN43, mRunButtons[42]);
+  DDX_Control(pDX, ID_MACRO_RUN44, mRunButtons[43]);
+  DDX_Control(pDX, ID_MACRO_RUN45, mRunButtons[44]);
+  DDX_Control(pDX, ID_MACRO_RUN46, mRunButtons[45]);
+  DDX_Control(pDX, ID_MACRO_RUN47, mRunButtons[46]);
+  DDX_Control(pDX, ID_MACRO_RUN48, mRunButtons[47]);
+  DDX_Control(pDX, ID_MACRO_RUN49, mRunButtons[48]);
+  DDX_Control(pDX, ID_MACRO_RUN50, mRunButtons[49]);
+  DDX_Control(pDX, ID_MACRO_RUN51, mRunButtons[50]);
+  DDX_Control(pDX, ID_MACRO_RUN52, mRunButtons[51]);
+  DDX_Control(pDX, ID_MACRO_RUN53, mRunButtons[52]);
+  DDX_Control(pDX, ID_MACRO_RUN54, mRunButtons[53]);
+  DDX_Control(pDX, ID_MACRO_RUN55, mRunButtons[54]);
+  DDX_Control(pDX, ID_MACRO_RUN56, mRunButtons[55]);
+  DDX_Control(pDX, ID_MACRO_RUN57, mRunButtons[56]);
+  DDX_Control(pDX, ID_MACRO_RUN58, mRunButtons[57]);
+  DDX_Control(pDX, ID_MACRO_RUN59, mRunButtons[58]);
+  DDX_Control(pDX, ID_MACRO_RUN60, mRunButtons[59]);
 }
 
 
 BEGIN_MESSAGE_MAP(CMacroToolbar, CBaseDlg)
-  ON_CONTROL_RANGE(BN_CLICKED, ID_MACRO_RUN1, ID_MACRO_RUN40, OnMacroRun)
+  ON_CONTROL_RANGE(BN_CLICKED, ID_MACRO_RUN1, ID_MACRO_RUN60, OnMacroRun)
   ON_NOTIFY_EX_RANGE( TTN_NEEDTEXT, 0, 0xFFFF, OnToolTipNotify )
-  ON_NOTIFY_RANGE(NM_LDOWN, ID_MACRO_RUN1, ID_MACRO_RUN40, OnRunButDraw)
+  ON_NOTIFY_RANGE(NM_LDOWN, ID_MACRO_RUN1, ID_MACRO_RUN60, OnRunButDraw)
 END_MESSAGE_MAP()
 
 
