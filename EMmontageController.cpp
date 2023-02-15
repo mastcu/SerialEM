@@ -3040,10 +3040,10 @@ int EMmontageController::SavePiece()
           *extra1 = *extra0;
         extra1->mStageX = mBaseStageX + adjBaseX;
         extra1->mStageY = mBaseStageY + adjBaseY;
-        extra1->mISX = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets, mImBufs[0].mISX,
-          mBaseISX);
-        extra1->mISY = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets, mImBufs[0].mISY,
-          mBaseISY);
+        extra1->mISX = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets && !mImShiftInBlocks,
+          mImBufs[0].mISX, mBaseISX);
+        extra1->mISY = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets && !mImShiftInBlocks, 
+          mImBufs[0].mISY, mBaseISY);
         extra1->ValuesIntoShorts();
         mImBufs[1].mISX = mHaveStageOffsets ? 0 : extra1->mISX;
         mImBufs[1].mISY = mHaveStageOffsets ? 0 : extra1->mISY;
