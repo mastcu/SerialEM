@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/17/23: SEM_4-0-20
+2/17/23: Fixed crash opening file when buffer control panel is hidden
+(In 4.0).
+
 2/13/23: Fixed handling of python version number so 3.10+ works (In 4.0).
 
 2/13/23: Fixed script toolbar buttons above 40 (In 4.0).
