@@ -443,7 +443,7 @@ void CEMbufferWindow::ReloadFileComboBox()
   KImageStore *store;
   CString dir, file;
   CRect rect;
-  if (mDeferComboReloads)
+  if (mDeferComboReloads || !mInitialized)
     return;
   CDC *pDC = m_comboOutFile.GetDC();
   m_comboOutFile.GetClientRect(rect);
