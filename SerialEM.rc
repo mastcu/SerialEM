@@ -5083,6 +5083,7 @@ BEGIN
     IDC_ALIGNTRACKONLY      "Get tracking image every time and use only it for alignment, not Record"
     IDC_COPYTOVIEW          "Copy parameters of current area to View area"
     IDC_COPYTOFOCUS         "Copy parameters of  current area to Focus area"
+    IDC_COPYTOSEARCH        "Copy parameters of  current area to Search area"
 END
 
 STRINGTABLE
