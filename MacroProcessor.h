@@ -433,6 +433,7 @@ protected:
   IntVec mStoredGraphTypes;    // Stored type data
   std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
   CString mInputToNextProcess; // Input to pipe in when running next process
+  CString mSavedStatusPanes[3];
 
 public:
   void SetNumCamMacRows(int inVal);
@@ -597,6 +598,7 @@ public:
   afx_msg void OnRunAtProgramEnd();
   afx_msg void OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI);
   int SelectScriptAtStartEnd(CString &name, const char *when);
+  void SaveStatusPanes();
   afx_msg void OnUseMonospacedFont();
   afx_msg void OnUpdateUseMonospacedFont(CCmdUI *pCmdUI);
   afx_msg void OntShowIndentButtons();

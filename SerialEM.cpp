@@ -2365,6 +2365,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
     i = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunOnIdle);
     if (i >= 0) {
       mLastIdleScriptTime = time;
+      mMacroProcessor->SaveStatusPanes();
       mMacroProcessor->Run(i);
     }
   }

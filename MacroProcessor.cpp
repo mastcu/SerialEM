@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
+#include "MainFrm.h"
 #include ".\MacroProcessor.h"
 #include "MacroEditer.h"
 #include "MacroToolbar.h"
@@ -920,6 +921,12 @@ int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
   return 0;
 }
 
+void CMacroProcessor::SaveStatusPanes()
+{
+  for (int ind = 0; ind < 3; ind++)
+    mWinApp->mMainFrame->GetStatusText(ind + 1, mSavedStatusPanes[ind]);
+}
+
 // TASK HANDLERS AND ANCILLARY FUNCTIONS
 
 // Check for conditions that macro may have started
@@ -1706,6 +1713,12 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   mWinApp->mDocWnd->SetDeferWritingFrameMdoc(false);
   if (!mPackToLoadAtEnd.IsEmpty())
     LoadNewScriptPackage(mPackToLoadAtEnd, mSaveCurrentPack);
+  for (ind = 0; ind < 3; ind++) {
+    if (!mSavedStatusPanes[ind].IsEmpty()) {
+      mWinApp->mMainFrame->SetStatusText(ind + 1, mSavedStatusPanes[ind]);
+      mSavedStatusPanes[ind] = "";
+    }
+  }
 }
 
 
