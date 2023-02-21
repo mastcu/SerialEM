@@ -1352,7 +1352,8 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
   m_statISBlockSize.EnableWindow(tmpEnable && m_bImShiftInBlocks);
   EnableDlgItem(IDC_STAT_IS_BLOCKPIECES, tmpEnable && m_bImShiftInBlocks);
 
-  m_butUseHq.EnableWindow(m_bMoveStage && !mLowDoseMode);
+  m_butUseHq.EnableWindow(m_bMoveStage && (!mLowDoseMode ||
+    mWinApp->mMontageController->GetAllowHQMontInLD()));
   m_butFocusEach.EnableWindow(bEnable && focusOK && 
     !(m_bFocusBlocks || m_bImShiftInBlocks));
   tmpEnable = bEnable && focusOK && (m_bFocusAll || 

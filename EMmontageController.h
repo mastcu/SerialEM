@@ -120,6 +120,7 @@ class EMmontageController
   GetSetMember(float, GridMapMinSizeMm);
   GetSetMember(int, MacroToRun);
   GetSetMember(bool, RunningMacro);
+  GetSetMember(BOOL, AllowHQMontInLD);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -347,6 +348,7 @@ class EMmontageController
   CArray<MontLimits, MontLimits> mMontageLimits;
   int mMacroToRun;                // Script, numbered from 1
   bool mRunningMacro;             // Flag that we started a script
+  BOOL mAllowHQMontInLD;          // Flag to enable HQ options in low dose
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);

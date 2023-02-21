@@ -117,6 +117,7 @@ EMmontageController::EMmontageController()
   mXCorrThread = NULL;
   mMacroToRun = 0;
   mRunningMacro = false;
+  mAllowHQMontInLD = false;
 }
 
 EMmontageController::~EMmontageController()
@@ -476,7 +477,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
   mImShiftInBlocks = mDoStageMoves && mParam->imShiftInBlocks &&
     blockSizeInX * blockSizeInY > 1 && !preCooking && !mReadingMontage;
-  useHQ = mDoStageMoves && mParam->useHqParams && !mWinApp->LowDoseMode();
+  useHQ = mDoStageMoves && mParam->useHqParams && (!mWinApp->LowDoseMode() || 
+    mAllowHQMontInLD);
   mUsingImageShift = !mDoStageMoves || mImShiftInBlocks;
   mDefinedCenterFrames = false;
   mAddMiniOffsetToCenter = definedCenter;

@@ -218,6 +218,7 @@ FLOAT_PROP_TEST("MontageDriftRepeatDelay", mWinApp->mMontageController->, DriftR
 FLOAT_PROP_TEST("MontageMinZigzagOverlap", mWinApp->mMontageController->, MinOverlapForZigzag)
 BOOL_PROP_TEST("MontageAutosaveLog", mWinApp->mMontageController->, AutosaveLog)
 INT_PROP_TEST("MontageScriptToRun", mWinApp->mMontageController->, MacroToRun)
+BOOL_PROP_TEST("MontageAllowHQinLD", mWinApp->mMontageController->, AllowHQMontInLD)
 
 #endif
 #ifdef PROP_TEST_SECT30
