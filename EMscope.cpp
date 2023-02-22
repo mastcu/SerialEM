@@ -7036,17 +7036,14 @@ int CEMscope::CheckApertureKind(int kind)
       mFEIhasApertureSupport = 0;
     if (mFEIhasApertureSupport < 0 && mPlugFuncs->GetApertureSize) {
       try {
+
+        // This function will throw only if there is no automation, so it doesn't matter
+        // if it fails to work
         mPlugFuncs->GetApertureSize(2);
         mFEIhasApertureSupport = 1;
       }
       catch (_com_error E) {
-        try {
-          mPlugFuncs->GetApertureSize(1);
-          mFEIhasApertureSupport = 1;
-        }
-        catch (_com_error E) {
-          mFEIhasApertureSupport = 0;
-        }
+        mFEIhasApertureSupport = 0;
       }
     }
     if (!mFEIhasApertureSupport) {
