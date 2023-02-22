@@ -458,12 +458,16 @@
       <P><A NAME="hid_navigator_setgridlimits"></A><B>Set Grid Limits command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to enter lower and upper limits in X and Y for the full grid
-        montage. A dialog box will come up for each limit; enter the desired limit in
-        microns or 0 to use the default limit that is shown.&nbsp; These defaults may be set
-        with the &#39;StageLimits&#39; property in the SerialEMproperties.txt file to prevent the stage from moving beyond a usable range. If you
+        montage.&nbsp; Specifically, these limits will be used to construct the polygon that
+        is fit when setting up the full montage, but not to limit the stage positions visited to
+        acquire a montage covering that polygon.&nbsp; Actual stage movement can be limited only by the
+        &#39;StageLimits&#39; property in the SerialEMproperties.txt file.</P>
+      <P>A dialog box will come up for each limit; enter the desired limit in
+        microns or 0 to use the default limit that is shown, which is the property-based limit
+        that can be modified with 'StageLimits'.&nbsp; If you
         enter a number bigger than one of the defaults, you may get farther out to the
-        corners of the usable area, but the stage will still not be moved beyond that
-        limit.&nbsp; If you want access to the full range of motion on a JEOL scope, you
+        corners of the usable area, but the stage will still not be moved beyond the property-based
+        stage limits.&nbsp; If you want access to the full range of motion on a JEOL scope, you
         need to enter or change the &#39;StageLimits&#39; property to be &#39;-1190 1190 -1190 1190&#39;
         (or less extreme values if appropriate).</P>
       <P><A NAME="hid_montaginggrids_findregulararrayofholes"></A><B>Find Holes in Regular Array command (Navigator
