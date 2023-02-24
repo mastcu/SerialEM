@@ -6628,7 +6628,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
       names = mPlugFuncs->GetCartridgeInfo(slot, &dum1, &dum2, &dum3, &dum4, &dum5);
       if (!names.Compare("!ERROR!")) {
         success = false;
-        names = "An error occurred getting names from the autoloader panel: \n";
+        names = "An error occurred getting names from the autoloader panel: \r\n";
         names += mPlugFuncs->GetLastErrorString();
       }
     }

@@ -8046,6 +8046,7 @@ int CMacCmd::NormalizeAllLenses(void)
 int CMacCmd::ReportSlotStatus(void)
 {
   int index, slot, station, id, angle, cartType;
+  BOOL success;
   CString name, report, rowVal;
   if (mScope->GetJeolHasNitrogenClass() > 1) {
     if (!mScope->GetJeolLoaderInfo()->GetSize())
@@ -8064,9 +8065,8 @@ int CMacCmd::ReportSlotStatus(void)
     return 0;
   }
 
-  if (!mScope->CassetteSlotStatus(mItemInt[1], index, name)) {
-    if (!name.IsEmpty())
-      ABORT_NOLINE(name);
+  success = mScope->CassetteSlotStatus(mItemInt[1], index, name);
+  if (!success && name.IsEmpty()) {
     AbortMacro();
     return 1;
   }
@@ -8080,8 +8080,12 @@ int CMacCmd::ReportSlotStatus(void)
   } else {
     mLogRpt.Format("Slot %d %s", mItemInt[1], index < 0 ? "has unknown status" :
       (index ? "is occupied" : "is empty"));
-    if (!name.IsEmpty())
-      mLogRpt += "; name = " + name;
+    if (!name.IsEmpty()) {
+      if (success)
+        mLogRpt += "; name = " + name;
+      else
+        mLogRpt = name + mLogRpt;
+    }
   }
   SetRepValsAndVars(2, (double)index);
   if (!name.IsEmpty())
