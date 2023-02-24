@@ -5071,7 +5071,7 @@ int CMacCmd::CameraToISMatrix(void)
   case CME_STAGETOISMATRIX:
     truth = true;
   case CME_ISTOSTAGEMATRIX:
-    aMat = mShiftManager->StageToCamera(mCurrentCam, index);
+    aMat = mShiftManager->IStoGivenCamera(index, mCurrentCam);
     if (aMat.xpx) {
       bInv = mShiftManager->StageToCamera(mCurrentCam, index);
       if (bInv.xpx)
