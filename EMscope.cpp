@@ -7272,8 +7272,9 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
   ScopeMutexAcquire("ApertureMoveProc", true);
   if (FEIscope) {
     if (td->plugFuncs->BeginThreadAccess(1, 0)) {
-      sThreadErrString = "Error creating second instance of microscope object for"
-        " moving phase plate";
+      sThreadErrString.Format("Error creating second instance of microscope object for"
+        " moving %s", (td->actionFlags & APERTURE_NEXT_PP_POS) ? "phase plate" :
+        "aperture");
       SEMErrorOccurred(1);
       retval = 1;
     }
