@@ -50,6 +50,7 @@ CParticleTasks::CParticleTasks(void)
   mMSinHoleStartAngle = -900.;
   mMSNumSepFiles = -1;
   mMSHolePatternType = 2;
+  mMSsaveToMontage = false;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;

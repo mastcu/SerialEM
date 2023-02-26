@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/25/23: Fixed uninitialized variable that can cause incorrect display of
+multishot cross patterns until acquire has been run.
+
 2/25/23: Fixed numbering of holes in frame filenames with multishot cross
 pattern (In 4.0).
 
