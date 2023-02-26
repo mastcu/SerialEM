@@ -259,8 +259,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle);
      mMSUseHoleDelay = true;
-     useXholes = numXholes ? numXholes : mMSParams->numHoles[0];
-     useYholes = numYholes ? numYholes : mMSParams->numHoles[1];
+     useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
+     useYholes = B3DABS(numYholes ? numYholes : mMSParams->numHoles[1]);
      if (numXholes && numYholes)
        mMSDoingHexGrid = numYholes == -1;
      else
