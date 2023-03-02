@@ -706,6 +706,7 @@ MAC_SAME_NAME_ARG(SetTiltIncrement, 1, 4, SETTILTINCREMENT, Ii)
 MAC_SAME_NAME_ARG(SetHoleFinderParams, 3, 4, SETHOLEFINDERPARAMS, DDI)
 MAC_SAME_NAME_ARG(ReportApertureSize, 1, 4, REPORTAPERTURESIZE, I)
 MAC_SAME_NAME_ARG(SetApertureSize, 2, 0, SETAPERTURESIZE, II)
+MAC_SAME_NAME_ARG(SkipZMoveNextNavRealign, 0, 4, SKIPZMOVENEXTNAVREALIGN, i)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

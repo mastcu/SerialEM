@@ -6045,6 +6045,7 @@ int CMacCmd::ReportApertureSize(void)
     mLogRpt.Format("Aperture %d is phase plate in position %d", mItemInt[1], size - 1);
   else
     mLogRpt.Format("Size of aperture %d is %d um", mItemInt[1], size);
+  SetRepValsAndVars(2, size);
   return 0;
 }
 
@@ -9414,6 +9415,13 @@ int CMacCmd::RealignToNavItem(void)
     report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
     ABORT_NOLINE(report);
   }
+  return 0;
+}
+
+// SkipZMoveNextNavRealign
+int CMacCmd::SkipZMoveNextNavRealign(void)
+{
+  mNavHelper->SetRISkipNextZMove(mItemEmpty[1] || mItemInt[1]);
   return 0;
 }
 
