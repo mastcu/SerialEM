@@ -2360,7 +2360,7 @@ BEGIN
     CTEXT           "Primary Action inserts here",IDC_STAT_PRIMARY_LINE,241,79,88,8
     CONTROL         "Hide unused tasks",IDC_NA_HIDE_UNUSED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,174,393,74,10
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,146,139,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,23,146,139,10
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,231,149,10
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
@@ -3234,9 +3234,9 @@ BEGIN
     LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,311,89,8
     LTEXT           "sec",IDC_STAT_SEC,120,311,12,8
     EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,309,26,12,ES_AUTOHSCROLL
-    CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
+    CONTROL         "Adjust beam tilt && astig to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,325,170,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,335,152,8
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,335,163,8
     LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,343,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,4,137,10
@@ -5083,13 +5083,13 @@ BEGIN
     IDC_ALIGNTRACKONLY      "Get tracking image every time and use only it for alignment, not Record"
     IDC_COPYTOVIEW          "Copy parameters of current area to View area"
     IDC_COPYTOFOCUS         "Copy parameters of  current area to Focus area"
-    IDC_COPYTOSEARCH        "Copy parameters of  current area to Search area"
 END
 
 STRINGTABLE
 BEGIN
     IDC_COPYTOTRIAL         "Copy parameters of current area to Trial area"
     IDC_COPYTORECORD        "Copy parameters of current area to Record area"
+    IDC_COPYTOSEARCH        "Copy parameters of  current area to Search area"
     IDC_RLOWTRACKFOCUS      "Realign with low mag tracking image, then continue with autofocus, etc."
     IDC_EDITNEWTRACKDIFF    "Replace track reference when its alignment disagrees with that of Record"
     IDC_EDITPREDICTERRORZ   "Do autofocus when actual or computed error in focus prediction exceeds this"

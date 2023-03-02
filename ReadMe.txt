@@ -1,8 +1,9 @@
 SerialEM is currently developed in Visual Studio 2015 with the v140_xp
 platform toolset so that it can still run on XP SP3, but it includes a pure
 v140 configuration as well.  Using the v140_xp configuration requires the
-Windows 7.1A Platform SDK (and possibly a corresponding version of Visual
-Studio).  Beware: the first time that you open the solution in a higher
+Windows 7.1A Platform SDK, but at least when installing VS 2015, there is an
+option to supportthis toolset which takes care of the dependencies.
+Beware: the first time that you open the solution in a higher
 version of Visual Studio, it will want to upgrade the project to use the
 current toolset on all configurations.  Just cancel this message, then adjust
 the platform toolset for the v140 configuration.

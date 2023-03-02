@@ -74,6 +74,11 @@ BOOL CComaVsISCalDlg::OnInitDialog()
   m_sbcDistance.SetPos(5000);
   m_sbcRotation.SetRange(0, 10000);
   m_sbcRotation.SetPos(5000);
+  if (mWinApp->mNavHelper->GetSkipAstigAdjustment() < 0) {
+    EnableDlgItem(IDC_RUSE_5IMAGES, false);
+    EnableDlgItem(IDC_RUSE_FULL_ARRAY, false);
+    EnableDlgItem(IDC_RUSE_SETTING, false);
+  }
   UpdateData(false);
   mWinApp->mMainView->DrawImage();
   SetDefID(45678);    // Disable OK from being default button for non-modal

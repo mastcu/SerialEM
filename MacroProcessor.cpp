@@ -4257,12 +4257,14 @@ bool CMacroProcessor::AdjustBeamTiltAndAstig(double delISX, double delISY, doubl
   mScope->GetBeamTilt(BTX, BTY);
   mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY,
     comaVsIS->magInd, transISX, transISY);
-  delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
-  delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY,
-    mScope->GetAdjustForISSkipBacklash() <= 0);
+  if (mNavHelper->GetSkipAstigAdjustment() >= 0) {
+    delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+    delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+    mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY,
+      mScope->GetAdjustForISSkipBacklash() <= 0);
+  }
   mCompensatedBTforIS = true;
-  if (comaVsIS->astigMat.xpx && !mNavHelper->GetSkipAstigAdjustment()) {
+  if (comaVsIS->astigMat.xpx && mNavHelper->GetSkipAstigAdjustment() <= 0) {
     mScope->GetObjectiveStigmator(astigX, astigY);
     delBTX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
     delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;

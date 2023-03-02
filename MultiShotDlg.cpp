@@ -243,12 +243,15 @@ void CMultiShotDlg::UpdateSettings(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   CString str, str2;
+  int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   int minNum0 = 1;
 
-  m_butAdjustBeamTilt.SetWindowText(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. 
-    && !mWinApp->mNavHelper->GetSkipAstigAdjustment() ?
-    "Adjust beam tilt && astig to compensate for image shift" :
-    "Adjust beam tilt to compensate for image shift");
+  if (!(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. && !skipAdjust))
+    m_butAdjustBeamTilt.SetWindowText(skipAdjust >= 0 ?
+    "Adjust beam tilt to compensate for image shift" :
+    "Adjust astigmatism to compensate for image shift");
+  if (skipAdjust < 0)
+    m_butCalBTvsIS.SetWindowText("Calibrate Astig vs. IS");
 
   // Save original parameters and transfer them to interface elements
   mActiveParams = mWinApp->mNavHelper->GetMultiShotParams();
@@ -1125,10 +1128,17 @@ void CMultiShotDlg::ManageEnables(void)
 
   // Update the calibration conditions in case they changed
   if (comaVsIS->magInd <= 0) {
-    SetDlgItemText(IDC_STAT_COMA_IS_CAL, "Coma versus image shift is not calibrated");
+    SetDlgItemText(IDC_STAT_COMA_IS_CAL,
+      mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
+      "Coma versus  is not calibrated" :
+      "Astigmatism versus image shift is not calibrated");
     SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
   } else {
-    str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize, 
+    SetDlgItemText(IDC_STAT_COMA_IS_CAL,
+      mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
+      "Coma versus image shift was calibrated at:" :
+      "Astigmatism versus image shift was calibrated at:");
+    str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize,
       comaVsIS->intensity, comaVsIS->probeMode), mWinApp->mScope->GetC2Units(), 
       mWinApp->mScope->GetC2Name(),
       comaVsIS->spotSize);

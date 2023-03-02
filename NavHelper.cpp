@@ -25,6 +25,7 @@
 #include "MultiShotDlg.h"
 #include "MontageSetupDlg.h"
 #include "BeamAssessor.h"
+#include "MacroProcessor.h"
 #include "StateDlg.h"
 #include "TiltSeriesParam.h"
 #include "TSController.h"
@@ -220,7 +221,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.stepAdjOtherMag = -1;
   mMultiShotParams.stepAdjSetDefOff = false;
   mMultiShotParams.stepAdjDefOffset = -10;
-  mSkipAstigAdjustment = false;
+  mSkipAstigAdjustment = 0;
   mNavAlignParams.maxAlignShift = 1.;
   mNavAlignParams.resetISthresh = 0.2f;
   mNavAlignParams.maxNumResetIS = 0;
@@ -303,6 +304,7 @@ CNavHelper::CNavHelper(void)
   mReverseAutocontColors = false;
   mKeepColorsForPolygons = true;
   mMaxMontReuseWaste = 0.2f;
+  mRISkipNextZMove = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -996,8 +998,10 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // Go to Z position of item unless this is after doing eucentricity in acquire
   axes = axisXY;
-  if (!(mNav->GetAcquiring() && (mNav->GetDidEucentricity() || navParams->skipZmoves)))
+  if (!(mNav->GetAcquiring() && (mNav->GetDidEucentricity() || navParams->skipZmoves)) &&
+    !(mWinApp->mMacroProcessor->DoingMacro() && mRISkipNextZMove))
     axes |= axisZ;
+  mRISkipNextZMove = false;
 
   // Go to map tilt angle or 0 if current angle differs by more than tolerance
   mapAngle = (float)B3DCHOICE(item->mMapTiltAngle > -1000., item->mMapTiltAngle, 0.);

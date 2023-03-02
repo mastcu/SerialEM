@@ -86,6 +86,7 @@ private:
   BOOL mActPostExposure;          // Post-actions enabled
   BOOL mMSAdjustBeamTilt;
   bool mMSAdjustAstig;
+  int mMSSkipAstigBT;             // Convenient copy of value from NavHelper
   float mMSRadiusOnCam[2];        // Radius to peripheral shots in camera coords
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position

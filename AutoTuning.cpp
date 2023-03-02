@@ -1821,6 +1821,7 @@ int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation, int useFu
   mCVISrotationToUse = rotation;
   mCVISfullArrayToUse = useFullArray;
   mComaVsISindex = 0;
+  mLastCtfBasedFailed = false;
   mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
   ComaVsISNextTask(0);
@@ -1835,6 +1836,7 @@ void CAutoTuning::ComaVsISNextTask(int param)
   int posIndex, index = mComaVsISindex;
   int magInd = mScope->FastMagIndex();
   int useFullFac = 1;
+  bool skipBT = mWinApp->mNavHelper->GetSkipAstigAdjustment() < 0;
   if (mCVISfullArrayToUse > 0 || (mCVISfullArrayToUse < 0 && mCtfDoFullArray))
     useFullFac = 2;
 
@@ -1868,8 +1870,9 @@ void CAutoTuning::ComaVsISNextTask(int param)
     // On odd indexes apply the needed beam tilt in order to measure astigmatism
     // On even indexes, go to the next image shift
     if (index % 2) {
-      BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
-        mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
+      if (!skipBT)
+        BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
+          mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
     } else {
       GetComaVsISVector(magInd, mCVISextentToUse, mCVISrotationToUse, posIndex,
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
@@ -1881,15 +1884,20 @@ void CAutoTuning::ComaVsISNextTask(int param)
 
       // To test that the equations are right, uncomment this and comment out CtfBased...
       /*ApplyScaleMatrix(mComaVsIScal.matrix,
-        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXTiltNeeded, 
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXTiltNeeded,
         mLastYTiltNeeded);
       ApplyScaleMatrix(mComaVsIScal.astigMat,
-        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXStigNeeded, 
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex], mLastXStigNeeded,
         mLastYStigNeeded);*/
     }
-    mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-    CtfBasedAstigmatismComa(useFullFac * ((index + 1)  % 2), false, 1, true, false);
     mComaVsISindex++;
+    if (index % 2 || !skipBT) {
+      mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
+      CtfBasedAstigmatismComa(useFullFac * ((index + 1) % 2), false, 1, true, false);
+    } else {
+      mLastXTiltNeeded = mLastYTiltNeeded = 0.;
+      ComaVsISNextTask(0);
+    }
     return;
   }
 

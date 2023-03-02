@@ -158,8 +158,9 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSSaveRecord = false;
     mMSDoCenter = -1;
   }
+  mMSSkipAstigBT = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. && 
-    !mWinApp->mNavHelper->GetSkipAstigAdjustment();
+    mMSSkipAstigBT <= 0;
 
   // Adjust some parameters for test runs
   if (testRun) {
@@ -300,10 +301,14 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
 
   if (!testRun) {
-    str.Format("Starting multiple Records (%d position%s in %d hole%s) %s beam tilt%s "
+    str.Format("Starting multiple Records (%d position%s in %d hole%s) %s %s%s%s "
       "compensation", mMSNumPeripheral + (mMSDoCenter ? 1 : 0), mMSNumPeripheral + 
       mMSDoCenter > 1 ? "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
-      mMSAdjustBeamTilt ? "WITH" : "WITHOUT", mMSAdjustAstig ? "/astigmatism" : "");
+      mMSAdjustBeamTilt? "WITH" : "WITHOUT", 
+      mMSSkipAstigBT >= 0 ? "beam tilt" : "",
+      !mMSSkipAstigBT && mMSAdjustAstig ? "/" : "", 
+      (mMSAdjustAstig || (!mMSAdjustBeamTilt && mMSSkipAstigBT < 0)) ? 
+      "astigmatism" : "");
     mWinApp->AppendToLog(str);
   }
 
@@ -327,12 +332,17 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       mScope->GetLDCenteredShift(delISX, delISY);
       mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
         transISX, transISY);
-      delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
-      delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+      if (mMSSkipAstigBT >= 0) {
+        delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+        delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+      } else {
+        delBTX = delBTY = 0.;
+      }
       mCenterBeamTiltX = mBaseBeamTiltX + delBTX;
       mCenterBeamTiltY = mBaseBeamTiltY + delBTY;
-      mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY, 
-        mScope->GetAdjustForISSkipBacklash() <= 0);
+      if (mMSSkipAstigBT >= 0)
+        mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY,
+          mScope->GetAdjustForISSkipBacklash() <= 0);
       str.Format("For starting IS  %.3f %.3f  setting BT  %.3f  %.3f",
         delISX, delISY, delBTX, delBTY);
       if (mMSAdjustAstig) {
@@ -509,7 +519,7 @@ void CParticleTasks::StopMultiShot(void)
     return;
   if (mCamera->Acquiring()) {
     mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
-    if (mMSAdjustBeamTilt)
+    if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
       mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
     if (mMSAdjustAstig)
       mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
@@ -517,7 +527,7 @@ void CParticleTasks::StopMultiShot(void)
       mCamera->SetDefocusToRestore(mMSBaseDefocus);
   } else {
     mScope->SetImageShift(mBaseISX, mBaseISY);
-    if (mMSAdjustBeamTilt)
+    if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
       mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     if (mMSAdjustAstig)
       mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
@@ -598,8 +608,12 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
     mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
       transISX, transISY);
-    delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
-    delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+    if (mMSSkipAstigBT >= 0) {
+      delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+      delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+    } else {
+      delBTX = delBTY = 0.;
+    }
     if (debug)
       str.Format("%s incremental IS  %.3f %.3f   BT  %.3f  %.3f",
         queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
@@ -618,7 +632,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   // Queue it or do it
   if (queueIt) {
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
-    if (mMSAdjustBeamTilt)
+    if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
       mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY, 
         doBacklash ? BTdelay : 0);
     if (mMSAdjustAstig)
@@ -629,7 +643,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   } else {
     mScope->SetImageShift(ISX, ISY);
     mShiftManager->SetISTimeOut(delay);
-    if (mMSAdjustBeamTilt)
+    if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
       mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX + delBTX,
         mCenterBeamTiltY + delBTY, doBacklash);
     if (mMSAdjustAstig)

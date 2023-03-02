@@ -250,7 +250,7 @@ public:
   GetSetMember(BOOL, MHCturnOffOutsidePoly);
   GetSetMember(int, MHCdelOrTurnOffIfFew);
   GetSetMember(int, MHCthreshNumHoles);
-  GetSetMember(BOOL, SkipAstigAdjustment);
+  GetSetMember(int, SkipAstigAdjustment);
   GetSetMember(int, CurAcqParamIndex);
   GetMember(int, NumAcqActions);
   GetMember(int, RIconSetNum);
@@ -262,6 +262,7 @@ public:
   GetSetMember(BOOL, ReverseAutocontColors);
   GetSetMember(BOOL, KeepColorsForPolygons);
   GetSetMember(float, MaxMontReuseWaste);
+  SetMember(bool, RISkipNextZMove);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -430,6 +431,7 @@ private:
   int mRIContinuousMode;        // Copy of flag for this run of realign
   float mRITiltTolerance;       // Maximum tilt difference for not tilting before realign
   bool mRIJustMoving;           // Flag just to do stage move when skip center
+  bool mRISkipNextZMove;        // Flag to skip the Z move in next nav Realign if script
   float mGridGroupSize;         // Radius in microns for adding points in groups
   BOOL mDivideIntoGroups;       // Flag for whether to do it
   bool mEditReminderPrinted;     // Flag that reminder printed when edit mode turned on
@@ -468,7 +470,7 @@ private:
   BOOL mMHCturnOffOutsidePoly;    // Option to remove points outside if using polygon 
   int mMHCdelOrTurnOffIfFew;     // Delete points or turn off combined item if < threshold
   int mMHCthreshNumHoles;        // Threshold # of holes for delete or turn off
-  BOOL mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
+  int mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
   IntVec mSavedMaShMapIDs;       // Saved map marker shift information: map ID
   IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value
   FloatVec mSavedMaShXshift;     // The existing marker shift if any

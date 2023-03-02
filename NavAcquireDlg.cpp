@@ -292,6 +292,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   CRect rect;
   CFont *boldFont;
   CBaseDlg::OnInitDialog();
+  int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS, 
@@ -354,11 +355,11 @@ BOOL CNavAcquireDlg::OnInitDialog()
   mIDsToReplaceHeight.insert(IDC_EDIT_GOTO_ITEM);  // 2848
 
   // Set text for adjusting for image shift
-  mOKtoAdjustBT = comaVsIS->magInd > 0;
-  m_butAdjustBtforIS.SetWindowText(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0.
-    && !mWinApp->mNavHelper->GetSkipAstigAdjustment() ?
-    "Adjust beam tilt && astig for image shift" :
-    "Adjust beam tilt to compensate for image shift");
+  mOKtoAdjustBT = comaVsIS->magInd > 0 && (skipAdjust >= 0 || comaVsIS->astigMat.xpx);
+  if (!(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. && !skipAdjust))
+    m_butAdjustBtforIS.SetWindowText(skipAdjust < 0 ?
+      "Adjust astigmatism to compensate for image shift " :
+      "Adjust beam tilt to compensate for image shift");
 
   // Make the selector button text bold & big
   stat = GetDlgItem(IDC_STAT_PARAM_FOR);

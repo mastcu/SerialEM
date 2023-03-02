@@ -2663,7 +2663,9 @@
             This is not the default for JEOL because the +/-990 limits were present for many
             years before anyone complained.&nbsp; These limits also provide the default coordinates for
              the polygon that will be fit for a full montage, but a user entry of grid limits in the
-             Navigator - Montaging and Grids submenu will override these default coordinates.
+             Navigator - Montaging and Grids submenu will override these default coordinates.&nbsp; A
+             dashed red rectangle defined by these limits is drawn when the image being displayed
+             extends beyond these limits.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -3263,7 +3265,11 @@
           <TD class="style4">SkipAstigAdjustmentForIS</TD>
           <TD>Set to 1 to omit the adjustment of astigmatism when adjusting beam tilt for
             image shift in the Multiple Record routine and various script commands, even if
-            the calibration of coma versus image shift includes an astigmatism measurement.</TD>
+            the calibration of coma versus image shift includes an astigmatism measurement.&nbsp; Set
+            to -1 to omit the adjustment for beam tilt and adjust only astigmatism for image shift; with
+            this setting, the coma vs. image shift calibration will skip the coma measurement,
+            allowing it to be run on Cs-corrected scopes.
+          </TD>
         </TR>
       </TABLE>
       <BR>
