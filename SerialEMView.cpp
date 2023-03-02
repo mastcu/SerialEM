@@ -606,7 +606,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, scale, rotation, filtMean = 128., filtSD, boost, targetSD = 40.;
-  float crossXoffset = 0., crossYoffset = 0.;
+  float crossXoffset = 0., crossYoffset = 0., minLimX, minLimY, maxLimX, maxLimY;
   double defocus;
   unsigned char **filtPtrs;
   int zoomFilters[] = {5, 4, 1, 0};  // lanczos3, 2, Blackman, box
@@ -1217,6 +1217,31 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       ACCUM_MAX(maxYstage, tempY);
     }
   }
+
+  // Get the stage limits, see if the image goes outside them and if so draw a red dashed
+  // rectangle
+  minLimX = mWinApp->mScope->GetStageLimit(STAGE_MIN_X);
+  minLimY = mWinApp->mScope->GetStageLimit(STAGE_MIN_Y);
+  maxLimX = mWinApp->mScope->GetStageLimit(STAGE_MAX_X);
+  maxLimY = mWinApp->mScope->GetStageLimit(STAGE_MAX_Y);
+  if (minXstage < minLimX || maxXstage > maxLimX ||
+    minYstage < minLimY || maxYstage > maxLimY) {
+    FloatVec limCornX, limCornY;
+    CPen pnDashPen(PS_DASHDOT, 1, RGB(255, 0, 0));
+    limCornX.push_back(minLimX);
+    limCornY.push_back(minLimY);
+    limCornX.push_back(maxLimX);
+    limCornY.push_back(minLimY);
+    limCornX.push_back(maxLimX);
+    limCornY.push_back(maxLimY);
+    limCornX.push_back(minLimX);
+    limCornY.push_back(maxLimY);
+    CPen *pOldPen = cdc.SelectObject(&pnDashPen);
+    DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 0., 0., 0., 0., NULL, 
+      NULL);
+    cdc.SelectObject(pOldPen);
+  }
+
   tempX = 0.05f * (maxXstage - minXstage);
   tempY = 0.05f * (maxYstage - minYstage);
   minXstage -= tempX;
@@ -1698,7 +1723,7 @@ void CSerialEMView::DrawVectorPolygon(CDC &cdc, CRect *rect, CMapDrawItem *item,
       drawnX->push_back(stX);
       drawnY->push_back(stY);
     }
-    if (item->mDraw) {
+    if (!item || item->mDraw) {
       StageToImage(imBuf, stX, stY, ptX, ptY);
       MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
       if (bpt)

@@ -457,11 +457,14 @@
         same the <A HREF="#hid_corner_montage">Setup Corner Montage command </A>.</P>
       <P><A NAME="hid_navigator_setgridlimits"></A><B>Set Grid Limits command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
-      <P>Use this command to enter lower and upper limits in X and Y for the full grid
-        montage.&nbsp; Specifically, these limits will be used to construct the polygon that
-        is fit when setting up the full montage, but not to limit the stage positions visited to
-        acquire a montage covering that polygon.&nbsp; Actual stage movement can be limited only by the
-        &#39;StageLimits&#39; property in the SerialEMproperties.txt file.</P>
+      <P>Use this command to enter lower and upper limits in X and Y for the full grid 
+        montage.&nbsp; Specifically, these limits will be used to construct the polygon 
+        that is fit when setting up the full montage, but not to limit the stage 
+        positions visited to acquire a montage covering that polygon.&nbsp; Actual stage 
+        movement can be limited only by the &#39;StageLimits&#39; property in the 
+        SerialEMproperties.txt file, and this property, not the setting here, determines 
+        the coordinates of the dashed red rectangle that will be drawn on images that 
+        extend beyond the limits.</P>
       <P>A dialog box will come up for each limit; enter the desired limit in
         microns or 0 to use the default limit that is shown, which is the property-based limit
         that can be modified with 'StageLimits'.&nbsp; If you
