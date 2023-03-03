@@ -1834,6 +1834,13 @@ int CMacCmd::ReportMontagePiece(void)
   return 0;
 }
 
+// SetRedoMontageXCorrs
+int CMacCmd::SetRedoMontageXCorrs(void)
+{
+  mWinApp->mMontageController->SetRedoCorrOnRead(mItemInt[1] != 0);
+  return 0;
+}
+
 // OppositeTrial, OppositeFocus, OppositeAutoFocus
 int CMacCmd::OppositeTrial(void)
 {

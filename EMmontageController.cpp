@@ -3443,6 +3443,15 @@ UINT EMmontageController::XCorrProc(LPVOID param)
     td->xFirst[ixy] = td->yFirst[ixy] = 0.;
     useExtra[0] = td->numExtra[ixy][0];
     useExtra[1] = -td->numExtra[ixy][1];
+    if (td->debugLevel) {
+      SEMTrace('a', "box %d %d pc %d %d ov %d %d smth %d %d pad %d %d", td->XYbox[ixy][0],
+        td->XYbox[ixy][1], td->XYpieceSize[0], td->XYpieceSize[1], td->XYoverlap[0],
+        td->XYoverlap[1], td->Xsmooth[ixy], td->Ysmooth[ixy], td->Xpad[ixy], td->Ypad[ixy]);
+      SEMTrace('a', "numpk %d CTF  %f %f delta %f extra %d %d bin %d ixy %d mls %d",
+        td->numXcorrPeaks, td->CTFp[ixy][200], td->CTFp[ixy][500], td->delta[ixy],
+        useExtra[0], useExtra[1], td->XCorrBinning, ixy,
+        td->maxLongShift[ixy]);
+    }
     montXCorrEdge(td->lowerPatch[ixy], td->upperPatch[ixy], td->XYbox[ixy], 
       td->XYpieceSize, td->XYoverlap, td->Xsmooth[ixy], td->Ysmooth[ixy], td->Xpad[ixy],
       td->Ypad[ixy], td->lowerPad, td->upperPad, td->lowerCopy, td->numXcorrPeaks, 0,
