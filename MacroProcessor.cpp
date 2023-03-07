@@ -1280,6 +1280,7 @@ void CMacroProcessor::RunOrResume()
   mDEcamIndToRestore = -1;
   mLDSetAddedBeamRestore = -1;
   mK3CDSmodeToRestore = -1;
+  mRestoreGridLimits = false;
   mSavedFrameNameFormat = -1;
   mRestoreConsetAfterShot = false;
   mSuspendNavRedraw = false;
@@ -1520,6 +1521,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   CameraParameters *camParams = mWinApp->GetCamParams();
   int probe, ind;
   bool restoreArea = false;
+  float *gridLims = mNavHelper->GetGridLimits();
   mLoopInOnIdle = false;
   if (!mDoingMacro)
     return;
@@ -1670,6 +1672,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       if (mSavedFrameNameFormat >= 0) {
         mCamera->SetFrameBaseName(mSavedFrameBaseName);
         mCamera->SetFrameNameFormat(mSavedFrameNameFormat);
+      }
+      if (mRestoreGridLimits) {
+        for (ind = 0; ind < 4; ind++)
+          gridLims[ind] = mGridLimitsToRestore[ind];
       }
     }
     mSavedSettingNames.clear();
