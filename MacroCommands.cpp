@@ -3021,7 +3021,7 @@ int CMacCmd::SaveToOtherFile(void)
 int CMacCmd::OpenNewFile(void)
 {
   CString report;
-  int index, index2, ix0, iy0;
+  int index, index2, ix0, iy0, setNum, xFrame;
   CFileStatus status;
   if (mWinApp->mMontageController->DoingMontage() &&
     mWinApp->mMontageController->GetRunningMacro())
@@ -3057,7 +3057,13 @@ int CMacCmd::OpenNewFile(void)
     mWinApp->mDocWnd->LeaveCurrentFile();
     mMontP->xNframes = ix0;
     mMontP->yNframes = iy0;
-    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(mMontP->xFrame > 0, ix0, iy0,
+    setNum = MontageConSetNum(mMontP, false);
+    xFrame = mMontP->xFrame;
+
+    // If the binning has changed, start from scratch on frame sizes and overlaps
+    if (mConSets[setNum].binning != mMontP->binning)
+      xFrame = 0;
+    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(xFrame > 0, ix0, iy0,
       report);
   }
   if (index2)
@@ -10775,10 +10781,10 @@ int CMacCmd::SetMontageParams(void)
 
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
-  if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
+  if (mWinApp->Montaging() && mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
     ((mItemInt[2] > 0) || (mItemInt[3] > 0) ||
     (mItemInt[4] > 0) || (mItemInt[5] > 0)))
-      ABORT_LINE("Atfer writing to the file, you cannot change frame size or overlaps "
+      ABORT_LINE("After writing to the file, you cannot change frame size or overlaps "
         " in line:\n\n");
   if (mItemInt[1] >= 0)
     mMontP->moveStage = mItemInt[1] > 0;
@@ -10813,7 +10819,34 @@ int CMacCmd::SetMontageParams(void)
       ABORT_LINE(report);
     mMontP->binning = index;
   }
+  if (!mItemEmpty[8] && mItemInt[8] != 0) {
+    
+   }
+  mWinApp->mMontageController->SetNeedBoxSetup(true);
   mWinApp->mMontageWindow.UpdateSettings();
+  return 0;
+}
+
+// ParamSetToUseForMontage
+int CMacCmd::ParamSetToUseForMontage(void)
+{
+  int index = B3DABS(mItemInt[1]);
+  if (index > 1 && mWinApp->LowDoseMode() && mWinApp->Montaging())
+    ABORT_LINE("The parameter set to use in Low Dose mode should be selected before a "
+      "montage is opened")
+    if (index == 1)
+      mMontP->useMontMapParams = mItemInt[1] > 0;
+  if (index == 2) {
+    mMontP->useViewInLowDose = mItemInt[1] > 0;
+    if (mMontP->useViewInLowDose)
+      mMontP->useSearchInLowDose = false;
+  }
+  if (index == 3) {
+    mMontP->useSearchInLowDose = mItemInt[1] > 0;
+    if (mMontP->useSearchInLowDose)
+      mMontP->useViewInLowDose = false;
+  }
+  mWinApp->mMontageController->SetNeedBoxSetup(true);
   return 0;
 }
 

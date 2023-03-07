@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/6/23: Fixed some problems using SetMontageParams and added script command to
+set camera parameter set to use before opening a montage.
+
 3/6/23: CHANGED SetupFullMontage TO TAKE AN OVERLAP FACTOR BEFORE THE
 FILENAME.
 

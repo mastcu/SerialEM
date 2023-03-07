@@ -2109,16 +2109,28 @@
             will be taken from the last montage that was open. The file properties and
             montage setup dialogs will be bypassed, and some properties like overlap and
             whether to do a stage montage will be taken from the last montage that was
-            open.  If no montage has been open before, the montage will use full-sized frames 
-            ith the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
+            open.  If no montage has been open before, or if the binning in the montage parameters does
+            not match the binning in the camera parameter set to be used for the montage, the montage will use full-sized frames 
+            with the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B]</TD>
           <TD>Sets up to 7 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
             unchanged. The entries are: <b>#S</b> 1 to use stage movement or 0 not to; <b>#OX</b> overlap in X;
             <b>#OY</b> overlap in Y; <b>#FX</b> frame size in X; <b>#FY</b> frame size in Y, <b>#N</b> 1 to skip correlations or 0 not
-            to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, and binnings cannot validly be changed after
-            acquiring into the file.</TD>
+            to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, 
+            and binnings cannot validly be changed after acquiring into the file.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ParamSetToUseForMontage #</TD>
+          <TD>Specifies what parameters to use for a montage: 
+            <br>1 and -1 will turn on or off the option to use Mont-Map parameters;
+            <br /> 2 or -2 will turn on or off the option to use View in Low Dose mode;
+            <br />3 or -3 will turn on or off the option to use Search in Low Dose mode; 
+            <br />When one of these is turned on, the other is turned off.&nbsp; In 
+            general, it is best to use this command before opening a montage; and if Low Dose is on and a montage
+            is already open, using +/-2 or +/-3 will generate an error.&nbsp; 
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetupWaffleMontage #B file</TD>
