@@ -709,6 +709,7 @@ MAC_SAME_NAME_ARG(SetApertureSize, 2, 0, SETAPERTURESIZE, II)
 MAC_SAME_NAME_ARG(SkipZMoveNextNavRealign, 0, 4, SKIPZMOVENEXTNAVREALIGN, i)
 MAC_SAME_NAME_ARG(SetRedoMontageXCorrs, 1, 4, SETREDOMONTAGEXCORRS, I)
 MAC_SAME_NAME_ARG(SetGridMapLimits, 5, 4, SETGRIDMAPLIMITS, IDDDD)
+MAC_SAME_NAME_ARG(ParamSetToUseForMontage, 1, 4, PARAMSETTOUSEFORMONTAGE, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
