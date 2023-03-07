@@ -715,7 +715,7 @@ void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI)
 
 void CMenuTargets::OnNavigatorSetupfullmontage() 
 {
-  mNavigator->FullMontage(false);	
+  mNavigator->FullMontage(false, 0.);	
 }
 
 void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI) 

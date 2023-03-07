@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/6/23: CHANGED SetupFullMontage TO TAKE AN OVERLAP FACTOR BEFORE THE
+FILENAME.
+
+3/6/23: Added script command to set the grid limits for a full montage.
+
+3/6/23: Stage restoring after movements in eucentricity will now restore after
+movements in Z, not just tilts.
+
 3/2/23: Added script command to set option to redo montage cross-correlations.
 
 3/1/23: With SkipAstigAdjustmentForIS set to -1, only astigmatism will be

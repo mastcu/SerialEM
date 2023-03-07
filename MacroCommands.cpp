@@ -3126,8 +3126,36 @@ int CMacCmd::SetupWaffleMontage(void)
 int CMacCmd::SetupFullMontage(void)
 {
   ABORT_NONAV;
-  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
-  mNavigator->FullMontage(true);
+  if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
+    ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
+  SubstituteLineStripItems(mStrLine, 2, mEnteredName);
+  mNavigator->FullMontage(true, mItemFlt[1]);
+  return 0;
+}
+
+// SetGridMapLimits
+int CMacCmd::SetGridMapLimits(void)
+{
+  float *gridLim = mNavHelper->GetGridLimits();
+  int ind;
+  if (mItemFlt[2] > 0 || mItemFlt[3] < 0 || mItemFlt[4] > 0 || mItemFlt[5] < 0)
+    ABORT_LINE("Lower limits must be negative and upper limits must be positive for "
+      "line:\n\n");
+  if (!mItemInt[1]) {
+    mRestoreGridLimits = true;
+    mNumStatesToRestore++;
+    for (ind = 0; ind < 4; ind++)
+      mGridLimitsToRestore[ind] = gridLim[ind];
+  }
+  for (ind = 0; ind < 4; ind++) {
+    if (mItemFlt[ind + 2] * ((ind % 2) ? 1 : -1) > 0) {
+      if (ind % 2)
+        ACCUM_MIN(mItemFlt[ind + 2], mScope->GetStageLimit(ind));
+      else
+        ACCUM_MAX(mItemFlt[ind + 2], mScope->GetStageLimit(ind));
+      gridLim[ind] = mItemFlt[ind + 2];
+    }
+  }
   return 0;
 }
 
@@ -8107,7 +8135,7 @@ int CMacCmd::FindCartridgeWithID(void)
   int slot = mScope->FindCartridgeWithID(mItemInt[1], mStrCopy);
   if (slot < 0)
     ABORT_LINE(mStrCopy + " for line:\n\n");
-  mLogRpt.Format("ID %d is at inventory slot # %d", mItemInt[1], slot);
+  mLogRpt.Format("ID %d is at inventory array index # %d", mItemInt[1], slot);
   SetRepValsAndVars(1, (double)slot);
   return 0;
 }
@@ -10578,10 +10606,12 @@ int CMacCmd::ReportHoleFinderParams(void)
   HoleFinderParams *hfp;
   mNavHelper->mHoleFinderDlg->SyncToMasterParams();
   hfp = mNavHelper->GetHoleFinderParams();
-  mLogRpt.Format("Hole size is %.2f and spacing is %.2f", hfp->diameter, hfp->spacing);
+  mLogRpt.Format("Hole size is %.2f and spacing is %.2f um", hfp->diameter, hfp->spacing);
   if (hfp->hexagonalArray)
     mLogRpt += " for hexagonal array";
-  SetRepValsAndVars(1, hfp->diameter, hfp->spacing, hfp->hexagonalArray ? 1 : 0);
+  mStrCopy.Format("  max error %.3f um", hfp->maxError);
+  SetRepValsAndVars(1, hfp->diameter, hfp->spacing, hfp->hexagonalArray ? 1 : 0,
+    hfp->maxError);
   return 0;
 }
 
@@ -10589,9 +10619,18 @@ int CMacCmd::ReportHoleFinderParams(void)
 int CMacCmd::SetHoleFinderParams(void)
 {
   HoleFinderParams *hfp;
+  Variable *var[2] = {NULL, NULL};
+  int ind, index;
   if (mItemFlt[1] < 0.05f || mItemFlt[2] < 0.15f || mItemFlt[2] - 0.1 < mItemFlt[1])
     ABORT_LINE("Size must be at least 0.1 and spacing must be at least 0.15 and 0.1 more"
       " than size for line:\n\n");
+  for (ind = 0; ind < 2; ind++) {
+    if (!mItemEmpty[5 + ind] && (ind || mStrItems[5 + ind] != "NONE")) {
+      var[ind] = LookupVariable(mStrItems[ind + 5], index);
+      if (!var[ind])
+        ABORT_LINE("The variable " + mStrItems[5 + ind] + " is not defined in line:\n\n");
+    }
+  }
   mNavHelper->mHoleFinderDlg->SyncToMasterParams();
   hfp = mNavHelper->GetHoleFinderParams();
   hfp->hexagonalArray = mItemInt[3] != 0;
@@ -10602,6 +10641,12 @@ int CMacCmd::SetHoleFinderParams(void)
     hfp->hexDiameter = mItemFlt[1];
     hfp->hexSpacing = mItemFlt[2];
   }
+  if (!mItemEmpty[4] && mItemFlt[4] > 0.)
+    hfp->maxError = mItemFlt[4];
+  if (var[0])
+    FillVectorFromArrayVariable(&hfp->sigmas, NULL, var[0]);
+  if (var[1])
+    FillVectorFromArrayVariable(&hfp->thresholds, NULL, var[1]);
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->UpdateSettings();
   return 0;

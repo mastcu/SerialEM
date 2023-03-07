@@ -69,9 +69,9 @@ public:
   CNavAcquireDlg *mNavAcquireDlg;
   BOOL FittingMontage() {return mMontItem != NULL;};
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
-    BOOL forceStage);
+    BOOL forceStage, float overlapFac = 0.);
 	void SetupSuperMontage(BOOL skewed);
-	void FullMontage(bool skipDlg);
+	void FullMontage(bool skipDlg, float overlapFac);
   void AutoSave();
 	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
     float angle, float &stageX, float &stageY, EMimageBuffer *imBuf = NULL);
@@ -103,7 +103,7 @@ public:
   BOOL NoDrawing() {return !(mAddingPoints || mAddingPoly || mMovingItem);};
 	int GetItemType();
   int LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename = NULL);
-	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg);
+	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg, float overlapFac = 0.);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
 	int DoSave(bool autoSave);

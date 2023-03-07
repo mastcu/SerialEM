@@ -4088,7 +4088,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
 }
 
 // Setup a montage for the full area (or user specified area)
-void CNavigatorDlg::FullMontage(bool skipDlg)
+void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
@@ -4165,7 +4165,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg)
   itmp->AppendPoint(minCornerX, minCornerY);
 
   mSettingUpFullMont = true;
-  SetupMontage(itmp, NULL, skipDlg);
+  SetupMontage(itmp, NULL, skipDlg, overlapFac);
   mSettingUpFullMont = false;
   if (mWinApp->Montaging()) {
     montp->forFullMontage = true;
@@ -4177,7 +4177,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg)
 
 // Common routine to set up a montage
 int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, 
-  bool skipSetupDlg)
+  bool skipSetupDlg, float overlapFac)
 {
   ScaleMat aInv;
   int i, err;
@@ -4247,7 +4247,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     }
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
-    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage))) {
+    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac))) {
       if (lowDose && !montParam->useViewInLowDose) {
         montParam->useViewInLowDose = true;
         continue;
@@ -4314,7 +4314,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
 // Find the smallest montage framing that covers the region of the polygon
 int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIndex,
-                                    BOOL forceStage)
+                                    BOOL forceStage, float overlapFac)
 {
   ScaleMat aMat;
   float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov, rotation;
@@ -4329,6 +4329,9 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   int iCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
   CMapDrawItem *item = mMontItem;
+
+  if (overlapFac <= 0. || overlapFac >= 0.5)
+    overlapFac = montParam->minOverlapFactor;
 
   // Force a stage montage if there is no image shift calibration available
   aMat = mShiftManager->IStoCamera(magIndex);
@@ -4359,7 +4362,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   yy = (1.f + extraSizeFactor) * (yMax - yMin);
 
   camSize = B3DMAX(mFrameLimitX, mFrameLimitY);
-  overlap = binx2 * ((int)(montParam->minOverlapFactor * camSize) / binx2);
+  overlap = binx2 * ((int)(overlapFac * camSize) / binx2);
   pixel = mShiftManager->GetPixelSize(iCam, magIndex);
   maxIS = magIndex < mScope->GetLowestNonLMmag(&mCamParams[iCam]) ? 
     mParam->maxLMMontageIS : mParam->maxMontageIS;
