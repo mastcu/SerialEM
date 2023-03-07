@@ -1968,11 +1968,11 @@ void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
     smi.axisBits |= axisA;
     smi.alpha = finalTilt;
     smi.backAlpha = backlashTilt;
-    smi.x = mStageXtoRestore;
-    smi.y = mStageYtoRestore;
   }
-  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, false, false, 
-    doTilt && mStageXtoRestore > EXTRA_VALUE_TEST);
+  smi.x = mStageXtoRestore;
+  smi.y = mStageYtoRestore;
+  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, false, false,
+    mStageXtoRestore > EXTRA_VALUE_TEST);
   mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, 
     B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
 }
