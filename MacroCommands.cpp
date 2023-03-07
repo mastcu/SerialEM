@@ -10781,7 +10781,7 @@ int CMacCmd::SetMontageParams(void)
 
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
-  if (mWinApp->Montaging() && mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
+  if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
     ((mItemInt[2] > 0) || (mItemInt[3] > 0) ||
     (mItemInt[4] > 0) || (mItemInt[5] > 0)))
       ABORT_LINE("After writing to the file, you cannot change frame size or overlaps "
@@ -10819,9 +10819,6 @@ int CMacCmd::SetMontageParams(void)
       ABORT_LINE(report);
     mMontP->binning = index;
   }
-  if (!mItemEmpty[8] && mItemInt[8] != 0) {
-    
-   }
   mWinApp->mMontageController->SetNeedBoxSetup(true);
   mWinApp->mMontageWindow.UpdateSettings();
   return 0;
