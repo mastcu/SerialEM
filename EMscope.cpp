@@ -7068,16 +7068,22 @@ int CEMscope::CheckApertureKind(int kind)
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)
 {
-  CString mess = "getting size number of aperture ";
+  CString mess = "getting size number of aperture: ";
   int result = -1;
   if (CheckApertureKind(kind) || !mPlugFuncs->GetApertureSize)
     return -1;
   ScopeMutexAcquire("GetApertureSize", true);
   try {
     result = mPlugFuncs->GetApertureSize(kind);
+    if (result < 0) {
+      mess = "Error " + mess;
+      if (FEIscope && mPlugFuncs->GetLastErrorString)
+        mess += mPlugFuncs->GetLastErrorString();
+      SEMMessageBox(mess);
+    }
   }
   catch (_com_error E) {
-    if (FEIscope && mPlugFuncs->GetLastErrorString())
+    if (FEIscope && mPlugFuncs->GetLastErrorString)
       mess += mPlugFuncs->GetLastErrorString();
     SEMReportCOMError(E, _T(mess));
   }
