@@ -9,8 +9,11 @@
 
 #include "MyButton.h"
 
+// Make sure this is <= MAX_SKIP_IDS 
+#define NUM_CM_MESSAGE_LINES 6
 #define NUM_CAM_MAC_PANELS 5
 #define NUM_SPINNER_MACROS (3 * (NUM_CAM_MAC_PANELS - 1))
+#define TOT_CAM_MAC_PANELS (NUM_CAM_MAC_PANELS + 1)
 enum {NO_NAV_RUNNING = 0, NAV_RUNNING_NO_SCRIPT_TS, NAV_PAUSED, NAV_TS_RUNNING,
   NAV_TS_STOPPED, NAV_PRE_TS_RUNNING, NAV_PRE_TS_STOPPED, NAV_SCRIPT_RUNNING,
   NAV_SCRIPT_STOPPED};
@@ -103,9 +106,10 @@ private:
   bool mEnabledSearch;
   bool mDeferredUserStop;
   bool mMediumWasEmpty;
-  int mLastRowsShows;
-  int mPanelStart[NUM_CAM_MAC_PANELS];
-  int mNumInPanel[NUM_CAM_MAC_PANELS];
+  int mLastRowsShown;
+  int mLastLinesShown;
+  int mPanelStart[TOT_CAM_MAC_PANELS];
+  int mNumInPanel[TOT_CAM_MAC_PANELS];
 public:
   void HandleMacroRightClick(CMyButton *but, int index, bool openOK);
   void SetOneMacroLabel(int num, UINT nID);

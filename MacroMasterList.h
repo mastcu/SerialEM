@@ -691,7 +691,7 @@ MAC_SAME_NAME_ARG(GetNavGroupStageCoords, 3, 4, GETNAVGROUPSTAGECOORDS, ISSs)
 MAC_SAME_FUNC_ARG(GetNavGroupImageCoords, 3, 4, GetNavGroupStageCoords, GETNAVGROUPIMAGECOORDS, ISSS)
 MAC_SAME_NAME_ARG(LoadSettingsFile, 1, 0, LOADSETTINGSFILE, S)
 MAC_SAME_NAME_ARG(SetupFullMontage, 2, 0, SETUPFULLMONTAGE, DS)
-MAC_SAME_NAME_ARG(AutoContourGridSquares, 3, 0, AUTOCONTOURGRIDSQUARES, SDDddd)
+MAC_SAME_NAME_ARG(AutoContourGridSquares, 3, 0, AUTOCONTOURGRIDSQUARES, Sddddd)
 MAC_SAME_NAME_ARG(ForgetPriorState, 0, 4, FORGETPRIORSTATE, i)
 MAC_SAME_NAME_NOARG(CalibrateElectronDose, 0, 4, CALIBRATEELECTRONDOSE)
 MAC_SAME_NAME_NOARG(SaveSettings, 0, 4, SAVESETTINGS)
@@ -710,11 +710,17 @@ MAC_SAME_NAME_ARG(SkipZMoveNextNavRealign, 0, 4, SKIPZMOVENEXTNAVREALIGN, i)
 MAC_SAME_NAME_ARG(SetRedoMontageXCorrs, 1, 4, SETREDOMONTAGEXCORRS, I)
 MAC_SAME_NAME_ARG(SetGridMapLimits, 5, 4, SETGRIDMAPLIMITS, IDDDD)
 MAC_SAME_NAME_ARG(ParamSetToUseForMontage, 1, 4, PARAMSETTOUSEFORMONTAGE, I)
-
+MAC_SAME_NAME_ARG(SetStatusLine, 2, 4, SETSTATUSLINE, IS)
+MAC_SAME_NAME_ARG(ClearStatusLine, 1, 4, CLEARSTATUSLINE, I)
+MAC_SAME_FUNC_ARG(HighlightStatusLine, 2, 4, ClearStatusLine, HIGHLIGHTSTATUSLINE, II)
+MAC_SAME_NAME_ARG(MakePolygonsAtSquares, 0, 4, MakePolygonsAtSquares, dddddd)
+MAC_SAME_NAME_ARG(SetAutocontourGroups, 2, 4, SETAUTOCONTOURGROUPS, IIiiiiiiii)
+MAC_SAME_NAME_NOARG(ReportAutocontourStats, 0, 4, ReportAutocontourStats)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
+// Update the argument list when you add arguments
 //
 // The longest command name is now 25 characters but 23 is a more common limit
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK

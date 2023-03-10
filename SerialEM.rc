@@ -491,6 +491,9 @@ BEGIN
         MENUITEM "Show Indent &Buttons",        ID_SCRIPT_SHOWINDENTBUTTONS
         MENUITEM "Use Monospaced &Font",        ID_SCRIPT_USEMONOSPACEDFONT
         MENUITEM SEPARATOR
+        MENUITEM "Set # of Status Lines",       ID_SCRIPT_SET_NUM_STATUS
+        MENUITEM "Monospace Status Lines",      ID_SCRIPT_MONOSPACESTATUSLINES
+        MENUITEM SEPARATOR
         MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
         MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
         MENUITEM "Run If Program Idle...",      ID_SCRIPT_RUNIFPROGRAMIDLE
@@ -1429,7 +1432,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,167,105,10,10
 END
 
-IDD_CAMERA_MACRO DIALOGEX 0, 0, 119, 105
+IDD_CAMERA_MACRO DIALOGEX 0, 0, 120, 154
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1438,20 +1441,20 @@ BEGIN
     PUSHBUTTON      "View",IDC_BUT_VIEW,29,10,18,13
     PUSHBUTTON      "Focus",IDC_BUT_FOCUS,51,10,18,13
     PUSHBUTTON      "Trial",IDC_BUT_TRIAL,73,10,18,13
-    PUSHBUTTON      "Record",IDC_BUT_RECORD,95,10,21,13
+    PUSHBUTTON      "Record",IDC_BUT_RECORD,96,10,21,13
     PUSHBUTTON      "Montage",IDC_BUTMONTAGE,4,26,24,13
     PUSHBUTTON      "Script 1",IDC_BUTMACRO1,4,42,25,13
     PUSHBUTTON      "Script 2",IDC_BUTMACRO2,42,42,25,13
     CONTROL         "Spin1",IDC_SPINMACRO2,"msctls_updown32",UDS_ARROWKEYS,68,41,9,14
     CONTROL         "Spin2",IDC_SPINMACRO1,"msctls_updown32",UDS_ARROWKEYS,30,41,9,14
-    PUSHBUTTON      "STOP",IDC_BUTSTOP,90,26,26,13
+    PUSHBUTTON      "STOP",IDC_BUTSTOP,91,26,26,13
     PUSHBUTTON      "End",IDC_BUTEND,32,26,26,13
     PUSHBUTTON      "Resume",IDC_BUTRESUME,62,26,24,13
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     LTEXT           "Camera && Script",IDC_STATTOPLINE,28,1,38,8
     PUSHBUTTON      "Script 3",IDC_BUTMACRO3,80,42,25,13
     CONTROL         "Spin1",IDC_SPINMACRO3,"msctls_updown32",UDS_ARROWKEYS,106,41,9,14
-    PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
+    PUSHBUTTON      "?",IDC_BUTHELP,108,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CTEXT           "",IDC_STAT_CAMNAME,69,0,37,8,SS_ENDELLIPSIS
     PUSHBUTTON      "Script 4",IDC_BUTMACRO4,4,58,25,13
@@ -1472,6 +1475,12 @@ BEGIN
     CONTROL         "Spin2",IDC_SPINMACRO10,"msctls_updown32",UDS_ARROWKEYS,30,89,9,14
     CONTROL         "Spin1",IDC_SPINMACRO11,"msctls_updown32",UDS_ARROWKEYS,68,89,9,14
     CONTROL         "Spin1",IDC_SPINMACRO12,"msctls_updown32",UDS_ARROWKEYS,106,89,9,14
+    LTEXT           "",IDC_STAT_MESSAGE_LINE1,3,104,111,8
+    LTEXT           "",IDC_STAT_MESSAGE_LINE2,3,112,111,8
+    LTEXT           "",IDC_STAT_MESSAGE_LINE3,3,120,111,8
+    LTEXT           "",IDC_STAT_MESSAGE_LINE4,3,128,111,8
+    LTEXT           "",IDC_STAT_MESSAGE_LINE5,3,136,111,8
+    LTEXT           "",IDC_STAT_MESSAGE_LINE6,3,144,111,8
 END
 
 IDD_SCOPESTATUS DIALOGEX 0, 0, 119, 76
@@ -4094,7 +4103,8 @@ BEGIN
 
     IDD_CAMERA_MACRO, DIALOG
     BEGIN
-        RIGHTMARGIN, 116
+        RIGHTMARGIN, 117
+        BOTTOMMARGIN, 99
     END
 
     IDD_SCOPESTATUS, DIALOG
@@ -4812,6 +4822,11 @@ BEGIN
 END
 
 IDD_STEP_AND_ADJUST_IS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_CAMERA_MACRO AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -7239,6 +7254,10 @@ BEGIN
                             "Select spiral, zigzag, or raster order of shots for regular pattern"
     ID_SCRIPT_RUNIFPROGRAMIDLE 
                             "Select script to run periodically when program is not busy"
+    ID_SCRIPT_SET_NUM_STATUS 
+                            "Set number of status lines to show in Camera & Script panel"
+    ID_SCRIPT_MONOSPACESTATUSLINES 
+                            "Use monospaced font in status lines of Camera & Script control panel"
 END
 
 #endif    // English (United States) resources

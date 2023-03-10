@@ -93,6 +93,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#flow_control">Flow Control Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#var_array">Variable and Array Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_control">Other Script Operation Control Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#interaction">Log Output, User Input, and Other Communication Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#python_only">Functions Available Only from Python</A><br>
       <A href="#camera_commands">Camera Commands</A>
       <BR>
@@ -520,108 +521,7 @@
             <b>#M</b> (the minute from 0 to 59), the script will wait until <b>#A</b> minutes after
             midnight or the given time.</TD>
         </TR>
-        <TR>
-          <TD class="scriptcommand">Echo [text]</TD>
-          <TD>Prints the <b>text</b> to the log window, or a blank line if there is no text.&nbsp;
-            Variables are substituted but arithmetic expressions are not evaluated.&nbsp;
-            Multiple spaces between words are preserved, as well as extra spaces before the text.  The two 
-            characters '\n' will print unchanged, so file paths will print correctly.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EchoBreakLines [text]</TD>
-          <TD>Prints the <b>text</b> to the log window, or a blank line if none, after substituting variables
-            and breaking the line at either escaped newlines (the two characters '\n') in <b>text</b> or at 
-            embedded newline characters, which are the separators between
-            array elements.&nbsp; I.e., an array of strings will be printed on separate 
-            lines.&nbsp; Command added in 4.0, 1/24/22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EchoEval [text]</TD>
-          <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating
-            arithmetic expressions.&nbsp; Multiple spaces between words will be lost.&nbsp; Not
-            from Python.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EchoNoLineEnd text</TD>
-          <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating
-            arithmetic expressions, without adding a line ending, so more text can be
-            written to the line.&nbsp; Multiple spaces between words will be lost.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EchoReplaceLine [text]</TD>
-          <TD>Removes existing text from the log back to the last line ending, if there is
-            any such text, then prints the optional <b>text</b> to the log after substituting
-            variables and evaluating arithmetic expressions, without adding a line ending.&nbsp;
-            This command can be used repeatedly to update the text on a line, such as with a
-            status output.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EchoNoVarSub [text]</TD>
-          <TD>Prints the <b>text</b> verbatim to the log window including initial extra spaces,
-            or a blank line if there is
-            no text, without substituting variables.&nbsp; <br>Not from Python.&nbsp; Command added in 4.9, 1/8/21.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">Pause [text]</TD>
-          <TD>Opens message box with optional <b>text</b> plus question of whether to proceed with
-            script.&nbsp; Is not suppressed by NoMessageBoxOnError.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">YesNoBox text</TD>
-          <TD>Opens a Yes-No message box with the given <b>text</b>, which should be a question that
-            can be answered with yes or no. Sets <I>reportedValue1</I> to 1 or 0 for a yes or no
-            answer.&nbsp; If NoMessageBoxOnError is set, no box appears, the text is printed to the
-            log, and <I>reportedValue1</I> is 0.&nbsp; If you do not like the way lines are broken in
-            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
-            with Yes and No buttons will be used instead.
-          </TD>
-        </TR>
-       <TR>
-          <TD class="scriptcommand">OKBox text</TD>
-          <TD>Opens a message box with the given <b>text</b> and just an OK button.&nbsp; The box is
-            not suppressed by NoMessageBoxOnError.&nbsp; If you do not like the way lines are broken in
-            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
-            with one OK button will be used instead.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EnterOneNumber text</TD>
-          <TD>Opens a dialog box for the user to enter one floating point number, with the
-            given text as the prompt.&nbsp; Sets <I>reportedValue1</I> to the entered value.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EnterDefaultedNumber #V #D text</TD>
-          <TD>Opens a dialog box for the user to enter one floating point or
-            integer value.&nbsp; Follow with the default value <b>#V</b> to show in the box, the
-            number of decimal places <b>#D</b> to show for a float entry or -1 for an integer entry,
-            and the prompt <b>text</b> on the rest of the line.&nbsp; Sets <I>reportedValue1</I> to the
-            entered value.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">EnterString var text</TD>
-          <TD>Opens a dialog box for the user to enter a string of <b>text</b>, with the
-            given text as the prompt, and assigns it to the given variable <b>var</b> (without a
-            $).</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ThreeChoiceBox header choice1 [choice2] [choice3] buttons</TD>
-          <TD>Opens a dialog box to allow the user to choose between two or three options, although 
-            just one response is also allowed.&nbsp;
-            Follow with 3 to 5 variable names.&nbsp; Put initial text to appear at the top of the box
-            in variable <b>header</b>, descriptions of the choices in variables
-            <b>choice1</b>, the optional <b>choice2</b>, and the optional <b>choice3</b>, and button labels as an
-            array of strings in <b>buttons</b>.&nbsp; These names are arbitrary.&nbsp; Use an array of
-            strings to have multiple lines of text for the header or descriptions.&nbsp; Use a line with
-            just 'header @=' to make a variable for omitting the header text.&nbsp; The number of the
-            choice (1, 2, or 3) is placed in <i>reportedValue1</i>.&nbsp; See Three Choice Box in
-            <A HREF="about_scripts.htm#examples">Advanced Examples</A>.&nbsp; Command added in 3.9, 3/5/21.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
-          <TD>Disables line wrapping in the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
-            and OKBox', or re-enables it with if the optional <b>#</b> is 0.&nbsp; Command added 4.0, 1/24/22.</TD>
-        </TR>
-        <TR>
+         <TR>
           <TD class="scriptcommand">ParseQuotedStrings [#]</TD>
           <TD>Allows strings that may have spaces to be enclosed in <B><i>single quotes</i></B> (e.g.,
             'text string') and treated as a single entity in cases where it would be broken
@@ -629,15 +529,6 @@
             use of this feature would be for making an array of strings in a single
             statement that encloses the entries with braces.&nbsp; It also allows a string
             to be assigned to a variable without using '@='. &nbsp; <br>Not from Python.</TD>
-        </TR>
-       <TR>
-          <TD class="scriptcommand">FlashDisplay [#T] [#D] [rgb]</TD>
-          <TD>Flashes between a uniformly colored screen and normal image display
-            several times.&nbsp; The first optional entry, <b>#T</b>, sets the number of times to
-            flash (default 4) and the second optional entry, <b>#D</b>, sets the duration of each
-            state in seconds (default 0.3).&nbsp; Total duration may not exceed 6 seconds.
-            The third optional entry, <b>rgb</b>, sets the color of the flashing screen in
-            hexadecimal (RRGGBB) notation, e.g. FF5500 is orange.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Verbose #</TD>
@@ -779,7 +670,138 @@
             optional text (unless NoMessageBoxOnError; is set) and aborts the script.&nbsp; Not
             from Python.</TD>
         </TR>
+       <TR>
+          <TD colspan="2"><A name="interaction"></A><B>Log Output, User Input, and Other 
+            Communication Commands</B></TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">Echo [text]</TD>
+          <TD>Prints the <b>text</b> to the log window, or a blank line if there is no text.&nbsp;
+            Variables are substituted but arithmetic expressions are not evaluated.&nbsp;
+            Multiple spaces between words are preserved, as well as extra spaces before the text.  The two 
+            characters '\n' will print unchanged, so file paths will print correctly.</TD>
+        </TR>
         <TR>
+          <TD class="scriptcommand">EchoBreakLines [text]</TD>
+          <TD>Prints the <b>text</b> to the log window, or a blank line if none, after substituting variables
+            and breaking the line at either escaped newlines (the two characters '\n') in <b>text</b> or at 
+            embedded newline characters, which are the separators between
+            array elements.&nbsp; I.e., an array of strings will be printed on separate 
+            lines.&nbsp; Command added in 4.0, 1/24/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EchoEval [text]</TD>
+          <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating
+            arithmetic expressions.&nbsp; Multiple spaces between words will be lost.&nbsp; Not
+            from Python.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EchoNoLineEnd text</TD>
+          <TD>Prints the <b>text</b> to the log window after substituting variables and evaluating
+            arithmetic expressions, without adding a line ending, so more text can be
+            written to the line.&nbsp; Multiple spaces between words will be lost.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EchoReplaceLine [text]</TD>
+          <TD>Removes existing text from the log back to the last line ending, if there is
+            any such text, then prints the optional <b>text</b> to the log after substituting
+            variables and evaluating arithmetic expressions, without adding a line ending.&nbsp;
+            This command can be used repeatedly to update the text on a line, such as with a
+            status output.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EchoNoVarSub [text]</TD>
+          <TD>Prints the <b>text</b> verbatim to the log window including initial extra spaces,
+            or a blank line if there is
+            no text, without substituting variables.&nbsp; <br>Not from Python.&nbsp; Command added in 4.9, 1/8/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">Pause [text]</TD>
+          <TD>Opens message box with optional <b>text</b> plus question of whether to proceed with
+            script.&nbsp; Is not suppressed by NoMessageBoxOnError.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">YesNoBox text</TD>
+          <TD>Opens a Yes-No message box with the given <b>text</b>, which should be a question that
+            can be answered with yes or no. Sets <I>reportedValue1</I> to 1 or 0 for a yes or no
+            answer.&nbsp; If NoMessageBoxOnError is set, no box appears, the text is printed to the
+            log, and <I>reportedValue1</I> is 0.&nbsp; If you do not like the way lines are broken in
+            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
+            with Yes and No buttons will be used instead.
+          </TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">OKBox text</TD>
+          <TD>Opens a message box with the given <b>text</b> and just an OK button.&nbsp; The box is
+            not suppressed by NoMessageBoxOnError.&nbsp; If you do not like the way lines are broken in
+            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
+            with one OK button will be used instead.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EnterOneNumber text</TD>
+          <TD>Opens a dialog box for the user to enter one floating point number, with the
+            given text as the prompt.&nbsp; Sets <I>reportedValue1</I> to the entered value.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EnterDefaultedNumber #V #D text</TD>
+          <TD>Opens a dialog box for the user to enter one floating point or
+            integer value.&nbsp; Follow with the default value <b>#V</b> to show in the box, the
+            number of decimal places <b>#D</b> to show for a float entry or -1 for an integer entry,
+            and the prompt <b>text</b> on the rest of the line.&nbsp; Sets <I>reportedValue1</I> to the
+            entered value.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EnterString var text</TD>
+          <TD>Opens a dialog box for the user to enter a string of <b>text</b>, with the
+            given text as the prompt, and assigns it to the given variable <b>var</b> (without a
+            $).</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ThreeChoiceBox header choice1 [choice2] [choice3] buttons</TD>
+          <TD>Opens a dialog box to allow the user to choose between two or three options, although 
+            just one response is also allowed.&nbsp;
+            Follow with 3 to 5 variable names.&nbsp; Put initial text to appear at the top of the box
+            in variable <b>header</b>, descriptions of the choices in variables
+            <b>choice1</b>, the optional <b>choice2</b>, and the optional <b>choice3</b>, and button labels as an
+            array of strings in <b>buttons</b>.&nbsp; These names are arbitrary.&nbsp; Use an array of
+            strings to have multiple lines of text for the header or descriptions.&nbsp; Use a line with
+            just 'header @=' to make a variable for omitting the header text.&nbsp; The number of the
+            choice (1, 2, or 3) is placed in <i>reportedValue1</i>.&nbsp; See Three Choice Box in
+            <A HREF="about_scripts.htm#examples">Advanced Examples</A>.&nbsp; Command added in 3.9, 3/5/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
+          <TD>Disables line wrapping in the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
+            and OKBox', or re-enables it with if the optional <b>#</b> is 0.&nbsp; Command added 4.0, 1/24/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetStatusLine #L text</TD>
+          <TD>Places the given text in status line <b>#L</b> at the bottom of the Camera & Script control panel and makes 
+            sure that enough lines are displayed there to show this line (see <a href="menu_script.htm#hid_script_set_num_status">Set
+               # of Status Lines</a> in the Script menu).&nbsp; There are currently up to 6 lines allowed so <B>#L</B> can be between
+            1 and 6.&nbsp; Command added in 4.1, 9-Mar-23.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">HighlightStatusLine #L #O</TD>
+          <TD>Sets the background color of status line <b>#L</b> to magenta if <b>#O</b> is nonzero or restores
+            it to yellow if it is 0, or does so to all lines if <b>#L</b> is 0.&nbsp; Command added in 4.1, 9-Mar-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ClearStatusLine #L</TD>
+          <TD>Clears the text out of status line <b>#L</b> and restores it from using the highlight color, or does
+            so with all lines if <b>#L</b> is 0.&nbsp; Command added in 4.1, 9-Mar-23.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">FlashDisplay [#T] [#D] [rgb]</TD>
+          <TD>Flashes between a uniformly colored screen and normal image display
+            several times.&nbsp; The first optional entry, <b>#T</b>, sets the number of times to
+            flash (default 4) and the second optional entry, <b>#D</b>, sets the duration of each
+            state in seconds (default 0.3).&nbsp; Total duration may not exceed 6 seconds.
+            The third optional entry, <b>rgb</b>, sets the color of the flashing screen in
+            hexadecimal (RRGGBB) notation, e.g. FF5500 is orange.</TD>
+        </TR>
          <TD colspan="2"><A name ="python_only"></A><B>Functions Available Only from Python</B></TD>
         </TR>
         <TR>
@@ -3071,10 +3093,15 @@
             reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
             moving or not enabled; or the position of a phase plate plus 1 (e.g., 3 for 'Ph P2') for the
              objective aperture.&nbsp; The
-             microscope software must be running on Windows 7 or above, and the Apertures panel
+             microscope software must be running on Windows 7 or above, the TEM user interface must 
+            not be minimized, and the Apertures panel
              must be included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
             to if that panel is not currently visible.&nbsp; Aperture operations are done with Microsoft 
-            'UI Automation', not with Thermo/FEI scripting commands.&nbsp; Command added in 4.1, 7-Feb-23.
+            'UI Automation', not with Thermo/FEI scripting commands.&nbsp; These operations, and 'ReportSlotStatus',
+            will hang FEI-SEMserver.exe on some Windows 7 systems, even though they work when SerialEM is running 
+            directly on the scope computer. &nbsp; If this occurs, set the environment variable 
+            FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from being 
+            attempted.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>
@@ -3249,12 +3276,13 @@
             &nbsp; With a Thermo/FEI autoloader, the command takes the slot number and reports a one or two values:
              first -1 for an error, 0 for empty, or 1 for occupied; then possibly a name.&nbsp; The name is
             reported if the
-             microscope software is running on Windows 7 or above and if the 'Autoloader (User)' panel 
-            (<em>not</em> the 'Autoloader (Service)' panel)
+             microscope software is running on Windows 7 or above, the TEM user interface is not minimized, and 
+            the 'Autoloader (User)' panel (<em>not</em> the 'Autoloader (Service)' panel)
              is included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
             to if that panel is not currently visible.&nbsp; Names are obtained from
             the text boxes in the panel with Microsoft 'UI Automation', not with Thermo/FEI scripting 
-            commands.&nbsp; When these names are available, a value of 0 for <b>#</b> will retrieve the full list 
+            commands.&nbsp; See 'ReportApertureSize' if the command hangs on a Windows 7 system.&nbsp; When
+             these names are available, a value of 0 for <b>#</b> will retrieve the full list 
             of names from the panel and place them in the persistent 1-D array 'autoloaderInfo'.
             <br />With a JEOL autoloader, a cassette
              inventory must be obtained first with 'LongOperation In'.&nbsp; The command takes 
@@ -4478,11 +4506,11 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AutoContourGridSquares buf #R #H [#T] [#S] [#L] </TD>
+          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] </TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The autocontouring routines in the IMOD model library are used and take byte input,
-            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; Inputs are:<br />
+            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; If an optional input is omitted or negative, the value from the dialog will be used.&nbsp; Option inputs are:<br />
             &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
             image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
             much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
@@ -4501,6 +4529,39 @@
             used to set the maximum area to retain as a polygon.<br />
             &nbsp; Command added in 4.1, 16-Nov-22; no longer makes Navigator polygons, 23-Dec-22.
          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetAutocontourGroups #N #W [#O...]</TD>
+          <TD>Sets the number of groups of grid square contours with <B>#N</B>and the way in which contours are
+             sorted into groups with <b>#W</b> (0 for size or 1 for mean).&nbsp; This can be followed by a series
+            values to the option to show a group on (1) or off (0); values need not be entered for all groups.&nbsp; Any
+            of these entries can be -1 to leave the existing setting unchanged.&nbsp; This command modifies the user
+            settings for these items, and if the <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>
+             is open it will reflect these changes.&nbsp; Command added in 4.1, 9-Mar-23.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportAutocontourStats</TD>
+          <TD>Reports the minimum, maximum, and median intensity inside of the current set of grid 
+            squares found with 'AutoContourGridSquares'.&nbsp; Command added in 4.1, 9-Mar-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B]</TD>
+          <TD>Converts the current set of grid squares found with 'AutoContourGridSquares' to Navigator
+            polygons, equivalent to pushing the <b>Make Polygons</b> button in the
+            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>.&nbsp; The values from the
+            dialog, or stored settings, are used for the various cutoffs, but they can be overridden by these optional
+            entries: (enter -1 for any of these to use the dialog or stored value instead:
+            <br />&nbsp;&nbsp;&nbsp; <b>#L</b> - Lower mean cutoff, either an absolute value > 1, or a value between
+             0 and 1 for a relative cutoff, this fraction of the way between the minimum and median mean (which 
+            corresponds to the fractional position of the slider in the dialog).
+            <br />&nbsp;&nbsp;&nbsp; <b>#U</b> - Upper mean cutoff, either an absolute value > 1, or a value between
+             0 and 1 for a relative cutoff, this fraction of the way between the median and maximum mean.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum size cutoff in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum SD cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum irregularity cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum border distance, in microns.
+             &nbsp;</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetUniqueNavID</TD>

@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/9/23: Added capability for "status lines" at the bottom of the Camera &
+Script control panel that can be written to by script command.
+
+3/9/23: Fixed error processing when GetApertureSize command files and added
+environment variable to keep FEI-SEMserver from trying to access aperture or
+autoloader dialogs if that makes it hang on Windows 7.
+
+3/9/23: Fixed problems with using AutocontourGridSquares when dialog is not
+open, changed parameters to use dialog values as defaults, added script
+commands to make polygons and get statistics about means,
+
 3/6/23: Fixed some problems using SetMontageParams and added script command to
 set camera parameter set to use before opening a montage.
 

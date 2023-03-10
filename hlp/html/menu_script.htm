@@ -117,7 +117,15 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_usemonospacedfont">Use Monospaced Font</a></TD>
-          <TD class="auto-style1">Toggles whther to use an equally spaced font in the editor.</TD>
+          <TD class="auto-style1">Toggles whether to use an equally spaced font in the editor.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_set_num_status">Set # of Status Lines</a></TD>
+          <TD class="auto-style1">Sets the number of status lines displayed in the Camrea & Script panel.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_monospacestatuslines">Monospace Status Lines</a></TD>
+          <TD class="auto-style1">Toggles whether to use an equally spaced font in the status lines.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
@@ -282,6 +290,19 @@
       use a Courier font even though it asked for a better one.&nbsp; If you get a 
       font you do not like, add the property 'ScriptMonospaceFont' with the exact name 
       of a monospaced font available on your system, which it will try first..</p>
+    <P><A NAME="hid_script_set_num_status"></A><B>Set # of Status Lines command (Script menu)</B></P>
+    <p>Use this command to adjust the number of status lines visible at the bottom of 
+      the Camera &amp; Script control panel.&nbsp; These lines are written to with the 
+      &#39;SetStatusLine&#39; script command, and the number of lines is always set so that 
+      the line being written will be displayed.&nbsp; Thus, this setting can be changed 
+      by that command, and this menu entry allows one way to close up the lines, the 
+      other being a script command &#39;SetUserSetting NumStatusLines 0 1&#39;.&nbsp; Enter a 
+      value from 0 to 6, the current maximum.</p>
+    <P><A NAME="hid_script_monospacestatuslines"></A><B>Monospace Status Lines command (Script menu)</B></P>
+    <p>Use this command to toggle whether the status lines written at the&nbsp; bottom 
+      of the Camera &amp; Script control panel use the regular proportional font or an 
+      equally-spaced font.&nbsp; See the <strong>Use Monospaced Font</strong> command 
+      just above for more details on using a monospaced font.</p>
       <P><A NAME="hid_script_runonprogramstart"></a><B>Run at Program Start command (Script menu)</B></P>
         <P>Use this command to choose a script to run when the program starts.&nbsp; The 
           menu entry shows up as checked when a script has been chosen.&nbsp; When you 

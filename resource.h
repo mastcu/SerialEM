@@ -2131,6 +2131,18 @@
 #define IDC_SPIN_DEF_OFFSET             3164
 #define IDC_STAT_DEF_OFFSET             3165
 #define IDC_STAA_SEARCH                 3166
+#define IDC_STAT_MESSAGE_LINE1          3167
+#define IDC_STAT_MESSAGE_LINE2          3168
+#define IDC_STAT_MESSAGE_LINE3          3169
+#define IDC_STAT_MESSAGE_LINE4          3170
+#define IDC_STAT_MESSAGE_LINE5          3171
+#define IDC_STAT_MESSAGE_LINE6          3172
+#define IDC_STAT_MESSAGE_LINE7          3173
+#define IDC_STAT_MESSAGE_LINE8          3174
+#define IDC_STAT_MESSAGE_LINE9          3175
+#define IDC_STAT_MESSAGE_LINE10         3176
+#define IDC_STAT_MESSAGE_LINE11         3177
+#define IDC_STAT_MESSAGE_LINE12         3178
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2672,15 +2684,18 @@
 #define ID_IMAGESTAGESHIFT_HIGH         33507
 #define ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY 33508
 #define ID_SCRIPT_RUNIFPROGRAMIDLE      33509
+#define ID_SCRIPT_SET                   33510
+#define ID_SCRIPT_SET_NUM_STATUS        33511
+#define ID_SCRIPT_MONOSPACESTATUSLINES  33512
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        281
-#define _APS_NEXT_COMMAND_VALUE         33510
-#define _APS_NEXT_CONTROL_VALUE         3167
+#define _APS_NEXT_RESOURCE_VALUE        282
+#define _APS_NEXT_COMMAND_VALUE         33513
+#define _APS_NEXT_CONTROL_VALUE         3179
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -152,11 +152,15 @@ public:
   GetSetMember(int, NumToolButtons);
   GetSetMember(int, ToolButHeight);
   GetMember(int, NumCamMacRows);
+  GetMember(int, NumStatusLines);
   GetSetMember(int, AutoIndentSize);
   GetMember(BOOL, UseMonoFont);
   void SetUseMonoFont(BOOL inVal);
   GetSetMember(BOOL, ShowIndentButtons);
   GetSetMember(CString, MonoFontName);
+  CString *GetStatusLines() {return &mStatusLines[0]; };
+  bool *GetHighlightStatus() { return &mHighlightStatus[0]; };
+  GetSetMember(BOOL, MonospaceStatus);
   SetMember(int, KeyPressed);
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
@@ -286,7 +290,8 @@ protected:
   WINDOWPLACEMENT mToolPlacement;
   int mNumToolButtons;    // Number of tool bottons to show
   int mToolButHeight;     // Height of tool buttons
-  int mNumCamMacRows;     // Number of rowsof buttons in camera-macro tool panel
+  int mNumCamMacRows;     // Number of rows of buttons in camera-macro tool panel
+  int mNumStatusLines;   // Number of message lines in camera-macro tool panel
   WINDOWPLACEMENT mEditerPlacement[MAX_MACROS];
   WINDOWPLACEMENT mOneLinePlacement;
   int mLogErrAction;      // Log argument for error messages
@@ -436,9 +441,13 @@ protected:
   std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
   CString mInputToNextProcess; // Input to pipe in when running next process
   CString mSavedStatusPanes[3];
+  CString mStatusLines[NUM_CM_MESSAGE_LINES];
+  bool mHighlightStatus[NUM_CM_MESSAGE_LINES];
+  BOOL mMonospaceStatus;
 
 public:
   void SetNumCamMacRows(int inVal);
+  void SetNumStatusLines(int inVal);
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
   int ScanForName(int macroNumber, CString *macro = NULL);
   bool SetVariable(CString name, CString value, int type, int index, bool mustBeNew,
@@ -611,6 +620,9 @@ public:
   afx_msg void OnUpdateRunSerialemSnapshot(CCmdUI *pCmdUI);
   afx_msg void OnRunIfProgramIdle();
   afx_msg void OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI);
+  afx_msg void OnScriptSetNumStatus();
+  afx_msg void OnMonospaceStatusLines();
+  afx_msg void OnUpdateMonospaceStatusLines(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

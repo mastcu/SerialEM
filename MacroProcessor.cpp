@@ -158,6 +158,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, OnUpdateRunSerialemSnapshot)
   ON_COMMAND(ID_SCRIPT_RUNIFPROGRAMIDLE, OnRunIfProgramIdle)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNIFPROGRAMIDLE, OnUpdateRunIfProgramIdle)
+  ON_COMMAND(ID_SCRIPT_SET_NUM_STATUS, OnScriptSetNumStatus)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SET_NUM_STATUS, OnUpdateScriptSetpanelrows)
+  ON_COMMAND(ID_SCRIPT_MONOSPACESTATUSLINES, &CMacroProcessor::OnMonospaceStatusLines)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, &CMacroProcessor::OnUpdateMonospaceStatusLines)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -228,6 +232,10 @@ CMacroProcessor::CMacroProcessor()
   mNumToolButtons = 10;
   mToolButHeight = 0;
   mNumCamMacRows = 1;
+  mNumStatusLines = 0;
+  for (i = 0; i < NUM_CM_MESSAGE_LINES; i++)
+    mHighlightStatus[i] = false;
+  mMonospaceStatus = false;
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
@@ -434,8 +442,8 @@ void CMacroProcessor::OnMacroSetlength()
 void CMacroProcessor::OnScriptSetpanelrows()
 {
   int val = mNumCamMacRows;
-  if (KGetOneInt("Number of rows of script buttons and spinners to show in Camera & Macro"
-    " control panel (1 - 4):", val))
+  if (KGetOneInt("Number of rows of script buttons and spinners to show in Camera & "
+    "Script control panel (1 - 4):", val))
     SetNumCamMacRows(val);
 }
 
@@ -446,10 +454,38 @@ void CMacroProcessor::OnUpdateScriptSetpanelrows(CCmdUI *pCmdUI)
 
 void CMacroProcessor::SetNumCamMacRows(int inVal)
 {
-  B3DCLAMP(inVal, 1, NUM_CAM_MAC_PANELS);
+  B3DCLAMP(inVal, 1, NUM_CAM_MAC_PANELS - 1);
   mNumCamMacRows = inVal;
   mWinApp->mCameraMacroTools.ManagePanels();
   mWinApp->mCameraMacroTools.SetMacroLabels();
+}
+
+void CMacroProcessor::OnScriptSetNumStatus()
+{
+  int val = mNumStatusLines;
+  if (KGetOneInt("Number of lines for status messages to show in Camera & "
+    "Script control panel (0 - 6):", val))
+    SetNumStatusLines(val);
+}
+
+void CMacroProcessor::SetNumStatusLines(int inVal)
+{
+  B3DCLAMP(inVal, 0, NUM_CM_MESSAGE_LINES);
+  mNumStatusLines = inVal;
+  mWinApp->mCameraMacroTools.ManagePanels();
+}
+
+void CMacroProcessor::OnMonospaceStatusLines()
+{
+  mMonospaceStatus = !mMonospaceStatus;
+  if (mNumStatusLines)
+    mWinApp->mCameraMacroTools.Invalidate();
+}
+
+void CMacroProcessor::OnUpdateMonospaceStatusLines(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mMonospaceStatus ? 1 : 0);
 }
 
 void CMacroProcessor::OnScriptListPersistentVars()

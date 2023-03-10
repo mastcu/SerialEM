@@ -7536,6 +7536,40 @@ int CMacCmd::NoLineWrapInMessageBox(void)
   return 0;
 }
 
+// SetStatusLine
+int CMacCmd::SetStatusLine(void)
+{
+  if (mItemInt[1] < 1 || mItemInt[1] > NUM_CM_MESSAGE_LINES)
+    ABORT_LINE("Status line number out of range in line:\n\n");
+  SubstituteLineStripItems(mStrLine, 2, mStatusLines[mItemInt[1] - 1]);
+  if (mItemInt[1] > mNumStatusLines)
+    SetNumStatusLines(mItemInt[1]);
+  else
+    mWinApp->mCameraMacroTools.Invalidate();
+  return 0;
+}
+
+// ClearStatusLine, HighlightStatusLine
+int CMacCmd::ClearStatusLine(void)
+{
+  int ind, start = mItemInt[1], end = mItemInt[1];
+  if (start < 0 || start > NUM_CM_MESSAGE_LINES)
+    ABORT_LINE("Status line number out of range in line:\n\n");
+  if (!start) {
+    start = 1;
+    end = NUM_CM_MESSAGE_LINES;
+  }
+  for (ind = start; ind <= end; ind++) {
+    if (CMD_IS(CLEARSTATUSLINE)) {
+      mStatusLines[ind - 1] = "";
+      mHighlightStatus[ind - 1] = 0;
+    } else
+      mHighlightStatus[ind - 1] = mItemInt[2] != 0;
+  }
+  mWinApp->mCameraMacroTools.Invalidate();
+  return 0;
+}
+
 // CompareNoCase, CompareStrings
 int CMacCmd::CompareNoCase(void)
 {
@@ -10755,14 +10789,68 @@ int CMacCmd::UndoHoleCombining(void)
 // AutoContourGridSquares
 int CMacCmd::AutoContourGridSquares(void)
 {
-  int index;
   ABORT_NONAV;
+  int index;
+  mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+  AutoContourParams *param = mNavHelper->GetAutocontourParams();
+  float target = param->usePixSize ? param->targetPixSizeUm :
+    param->targetSizePixels;
+  float minSize = (mItemEmpty[5] || mItemFlt[5] < 0) ? param->minSize : mItemFlt[5];
+  float maxSize = (mItemEmpty[6] || mItemFlt[6] < 0) ? param->maxSize : mItemFlt[6];
+  float relThresh = param->useAbsThresh ? 0.f : param->relThreshold;
+  float absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
+  if (!mItemEmpty[2] && mItemFlt[2] >= 0)
+    target = mItemFlt[2];
+  if (!mItemEmpty[3] && mItemFlt[3] >= 0)
+    relThresh = mItemFlt[3];
+  if (!mItemEmpty[4] && mItemFlt[4] >= 0)
+    absThresh = mItemFlt[4];
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], mItemFlt[2],
-    mItemEmpty[5] ? 0.f : mItemFlt[5], mItemEmpty[6] ? 0.f : mItemFlt[6],
-    mItemFlt[3], mItemFlt[4]);
+  mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], target, minSize, 
+    maxSize, relThresh, absThresh);
   mAutoContouring = true;
+  return 0;
+}
+
+// MakePolygonsAtSquares
+int CMacCmd::MakePolygonsAtSquares(void)
+{
+  if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(mItemEmpty[1] ? -1.f : 
+    mItemFlt[1], mItemEmpty[2] ? -1.f : mItemFlt[2], mItemEmpty[3] ? -1.f : mItemFlt[3],
+    mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5], 
+    mItemEmpty[6] ? -1.f : mItemFlt[6], mStrCopy))
+    ABORT_NOLINE("Failed to convert grid square contours to polygons: " + mStrCopy);
+  mLogRpt = "Converted grid square contours to Navigator polygons";
+  return 0;
+}
+
+// SetAutocontourGroups
+int CMacCmd::SetAutocontourGroups(void)
+{
+  int showGroup[MAX_AUTOCONT_GROUPS];
+  int ind, numShow = 0;
+  if (!mItemInt[1] || mItemInt[1] > MAX_AUTOCONT_GROUPS)
+    ABORT_LINE("Number of groups is out of range in line:\n\n");
+  for (ind = 3; ind < 3 + MAX_AUTOCONT_GROUPS; ind++) {
+    if (mItemEmpty[ind])
+      break;
+    showGroup[numShow++] = mItemInt[ind];
+  }
+  mNavHelper->mAutoContouringDlg->ExternalSetGroups(mItemInt[1], mItemInt[2], showGroup,
+    numShow);
+  return 0;
+}
+
+// ReportAutocontourStats
+int CMacCmd::ReportAutocontourStats(void)
+{
+  float minMean, maxMean, median;
+  if (mNavHelper->mAutoContouringDlg->GetSquareStats(minMean, maxMean, median))
+    ABORT_LINE("There are no contours to give statistics on for line:\n\n");
+  mLogRpt.Format("Grid square means: min %.1f  max %.1f  median %.1f",
+    minMean, maxMean, median);
+  SetRepValsAndVars(1, minMean, maxMean, median);
   return 0;
 }
 

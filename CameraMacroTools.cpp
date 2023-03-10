@@ -37,7 +37,9 @@ IDC_SPINMACRO6, PANEL_END,
 IDC_BUTMACRO7, IDC_BUTMACRO8, IDC_BUTMACRO9, IDC_SPINMACRO7, IDC_SPINMACRO8,
 IDC_SPINMACRO9, PANEL_END,
 IDC_BUTMACRO10, IDC_BUTMACRO11, IDC_BUTMACRO12, IDC_SPINMACRO10, IDC_SPINMACRO11,
-IDC_SPINMACRO12, PANEL_END,
+IDC_SPINMACRO12, PANEL_END, 
+IDC_STAT_MESSAGE_LINE1, IDC_STAT_MESSAGE_LINE2, IDC_STAT_MESSAGE_LINE3, 
+IDC_STAT_MESSAGE_LINE4, IDC_STAT_MESSAGE_LINE5, IDC_STAT_MESSAGE_LINE6, PANEL_END,
 TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
@@ -160,7 +162,8 @@ BOOL CCameraMacroTools::OnInitDialog()
   }
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
     sHeightTable);
-  mLastRowsShows = mWinApp->mMacroProcessor->GetNumCamMacRows();
+  mLastRowsShown = mMacProcessor->GetNumCamMacRows();
+  mLastLinesShown = mMacProcessor->GetNumStatusLines();
   ManagePanels();
   mInitialized = true;
   UpdateSettings();
@@ -171,9 +174,43 @@ BOOL CCameraMacroTools::OnInitDialog()
 
 void CCameraMacroTools::OnPaint()
 {
+  CRect winRect;
+  CRect statRect;
+  CRect clientRect;
+  CWnd *wnd;
+  int ind, iLeft, iTop, border, first = 1;
+  BOOL useMono = mMacProcessor->GetMonospaceStatus();
+  int numMess = mMacProcessor->GetNumStatusLines();
+  bool *highlight = mMacProcessor->GetHighlightStatus();
+  CString *statusLines = mMacProcessor->GetStatusLines();
   CPaintDC dc(this); // device context for painting
 
   DrawSideBorders(dc);
+  if (!numMess)
+    return;
+  GetWindowRect(&winRect);
+  GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  for (ind = 0; ind < numMess; ind++) {
+    wnd = GetDlgItem(IDC_STAT_MESSAGE_LINE1 + ind);
+    if (!wnd)
+      continue;
+    if (first) {
+      if (CMacroEditer::mHasMonoFont < 0 && useMono)
+        CMacroEditer::MakeMonoFont(wnd);
+      if (CMacroEditer::mHasMonoFont > 0 && useMono)
+        dc.SelectObject(&CMacroEditer::mMonoFont);
+      else
+        dc.SelectObject(wnd->GetFont());
+    }
+    first = 0;
+    wnd->GetWindowRect(&statRect);
+    iLeft = statRect.left - winRect.left;
+    iTop = statRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border);
+    CRect dcRect(iLeft, iTop, iLeft + statRect.Width(), iTop + statRect.Height());
+    dc.FillSolidRect(&dcRect, highlight[ind] ? RGB(255, 160, 255) : RGB(255, 255, 210));
+    dc.DrawText(statusLines[ind], &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
+  }
 }
 
 void CCameraMacroTools::OnButSetupCam()
@@ -204,7 +241,7 @@ void CCameraMacroTools::SetMacroLabels()
     SetOneMacroLabel(0, IDC_BUTMACRO1);
   SetOneMacroLabel(1, IDC_BUTMACRO2);
   SetOneMacroLabel(2, IDC_BUTMACRO3);
-  for (ind = 3; ind < 3 * mWinApp->mMacroProcessor->GetNumCamMacRows(); ind++)
+  for (ind = 3; ind < 3 * mMacProcessor->GetNumCamMacRows(); ind++)
     SetOneMacroLabel(ind, IDC_BUTMACRO4 + ind - 3);
 }
 
@@ -231,8 +268,8 @@ void CCameraMacroTools::MacroNameChanged(int num)
   int ind;
   if (mWinApp->mMacroToolbar) {
     mWinApp->mMacroToolbar->SetOneMacroLabel(num);
-    mWinApp->mMacroToolbar->SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
-      mWinApp->mMacroProcessor->GetToolButHeight());
+    mWinApp->mMacroToolbar->SetLength(mMacProcessor->GetNumToolButtons(),
+      mMacProcessor->GetToolButHeight());
   }
   if (mDoingTS)
     return;
@@ -246,17 +283,25 @@ void CCameraMacroTools::MacroNameChanged(int num)
 
 void CCameraMacroTools::ManagePanels()
 {
-  BOOL states[NUM_CAM_MAC_PANELS];
+  BOOL states[TOT_CAM_MAC_PANELS];
   if (!mInitialized)
     return;
-  int ind, numRows = mWinApp->mMacroProcessor->GetNumCamMacRows();
+  int ind, numRows = mMacProcessor->GetNumCamMacRows();
+  int numStat = mMacProcessor->GetNumStatusLines();
   for (ind = 0; ind < NUM_CAM_MAC_PANELS; ind++)
     states[ind] = ind <= numRows && (!ind || (GetState() & TOOL_OPENCLOSED));
+  states[NUM_CAM_MAC_PANELS] = numStat > 0 && (GetState() & TOOL_OPENCLOSED);
+  mNumIDsToHide = 0;
+  for (ind = numStat; ind < NUM_CM_MESSAGE_LINES; ind++)
+    mIDsToHide[mNumIDsToHide++] = IDC_STAT_MESSAGE_LINE1 + ind;
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
-  if (mLastRowsShows != numRows)
+  for (ind = 0; ind < numStat; ind++)
+    ShowDlgItem(IDC_STAT_MESSAGE_LINE1 + ind, false);
+  if (mLastRowsShown != numRows || mLastLinesShown != numStat)
     mWinApp->mMainFrame->SetDialogPositions();
-  mLastRowsShows = numRows;
+  mLastRowsShown = numRows;
+  mLastLinesShown = numStat;
 }
 
 void CCameraMacroTools::UpdateSettings()
