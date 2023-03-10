@@ -171,7 +171,7 @@ BOOL CMacroEditer::OnInitDialog()
 }
 
 // Make the monospaced and default font for an editor or log window, whoever calls first
-void CMacroEditer::MakeMonoFont(CEdit *edit)
+void CMacroEditer::MakeMonoFont(CWnd *edit)
 {
   CFont *font;
   LOGFONT logFont;
