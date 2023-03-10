@@ -53,6 +53,8 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   mFindingFromDialog = false;
   mHaveConts = false;
   mDoingAutocont = false;
+  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+    mShowGroup[ind] = 1;
 }
 
 CAutoContouringDlg::~CAutoContouringDlg()
@@ -69,7 +71,7 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RGROUP_BY_SIZE, m_iGroupType);
   DDX_Text(pDX, IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels);
   MinMaxInt(IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels, 200, 5000,
-    "mumber of pixels to reduce to");
+    "number of pixels to reduce to");
   DDX_Control(pDX, IDC_SPIN_NUM_GROUPS, m_sbcNumGroups);
   DDX_Text(pDX, IDC_EDIT_MIN_MEAN, m_strLowerMean);
   DDX_Text(pDX, IDC_EDIT_MAX_MEAN, m_strUpperMean);
@@ -227,8 +229,12 @@ void CAutoContouringDlg::CloseWindow()
 // Make sure master params are updated
 void CAutoContouringDlg::SyncToMasterParams()
 {
-  if (!mIsOpen)
+  if (!mIsOpen) {
+    mMasterParams = mWinApp->mNavHelper->GetAutocontourParams();
+    mParams = *mMasterParams;
+    mNumGroups = mParams.numGroups;
     return;
+  }
   UpdateData(true);
   DialogToParams();
   *mMasterParams = mParams;
@@ -281,9 +287,9 @@ void CAutoContouringDlg::UpdateSettings()
 // Determine which contours to exclude and divide the remaining ones into groups
 void CAutoContouringDlg::SetExclusionsAndGroups()
 {
-  SetExclusionsAndGroups(mParams.groupByMean, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
-    mParams.minSizeCutoff, mParams.SDcutoff, mParams.irregularCutoff,
-    mParams.borderDistCutoff);
+  SetExclusionsAndGroups(mParams.groupByMean, mParams.lowerMeanCutoff,
+    mParams.upperMeanCutoff, mParams.minSizeCutoff, mParams.SDcutoff, 
+    mParams.irregularCutoff, mParams.borderDistCutoff);
 }
 
 void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMeanCutoff,
@@ -346,7 +352,8 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
       mNumInGroup[group]++;
     }
   }
-  ManageGroupSelectors(0);
+  if (mIsOpen)
+    ManageGroupSelectors(0);
   mWinApp->mMainView->RedrawWindow();
 }
 
@@ -405,13 +412,33 @@ void CAutoContouringDlg::OnKillfocusEditAbsThresh()
 // New number of groups: redo groups
 void CAutoContouringDlg::OnDeltaposSpinNumGroups(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, 1, 8, mNumGroups))
+  if (NewSpinnerValue(pNMHDR, pResult, 1, MAX_AUTOCONT_GROUPS, mNumGroups))
     return;
   m_strShowGroups.Format("Split into %d", mNumGroups);
   ManageGroupSelectors(0);
   SetExclusionsAndGroups();
   UpdateData(false);
   mWinApp->RestoreViewFocus();
+}
+
+// External call to set the groups
+void CAutoContouringDlg::ExternalSetGroups(int numGroups, int which, int *showGroups,
+  int numShow)
+{
+  int ind;
+  if (numGroups > 0 && numGroups <= MAX_AUTOCONT_GROUPS)
+    mNumGroups = numGroups;
+  if (which >= 0)
+    mParams.groupByMean = m_iGroupType = which ? 1 : 0;
+  for (ind = 0; ind < numShow; ind++)
+    if (showGroups[ind] >= 0)
+      mShowGroup[ind] = showGroups[ind] ? 1 : 0;
+  SetExclusionsAndGroups();
+  if (mIsOpen) {
+    m_strShowGroups.Format("Split into %d", mNumGroups);
+    ManageGroupSelectors(2);
+    UpdateData(false);
+  }
 }
 
 // Start autocontouring
@@ -424,7 +451,6 @@ void CAutoContouringDlg::OnButMakeContours()
     return;
   }
   mFindingFromDialog = true;
-  OnButClearData();
   DialogToParams();
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize, mParams.useAbsThresh ?
@@ -457,7 +483,8 @@ void CAutoContouringDlg::OnButClearData()
   CLEAR_RESIZE(mFirstMapID, int, 0);
   CLEAR_RESIZE(mLastMapID, int, 0);
   mConvertedInds.clear();
-  ManageAll(false);
+  if (mIsOpen)
+    ManageAll(false);
   mWinApp->mMainView->RedrawWindow();
 }
 
@@ -473,17 +500,55 @@ void CAutoContouringDlg::OnCheckShowGroup(UINT nID)
 // Convert to Navigator polygons
 void CAutoContouringDlg::OnButCreatePolys()
 {
+  CString mess;
+  mWinApp->RestoreViewFocus();
+  if (DoCreatePolys(mess))
+    SEMMessageBox(mess);
+}
+
+// External call to create the polygons with possible replcement cutoff values
+int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMeanCutoff, 
+  float minSizeCutoff, float SDcutoff, float irregularCutoff, float borderDistCutoff, 
+  CString &mess)
+{
+  if (!mHaveConts) {
+    mess = "There are no contours to convert";
+    return 1;
+  }
+  if (lowerMeanCutoff < 0)
+    lowerMeanCutoff = mParams.lowerMeanCutoff;
+  else if (lowerMeanCutoff < 1)
+    lowerMeanCutoff = mStatMinMean + lowerMeanCutoff * (mMedianMean - mStatMinMean);
+  if (upperMeanCutoff < 0)
+    upperMeanCutoff = mParams.upperMeanCutoff;
+  else if (upperMeanCutoff <= 1.)
+    upperMeanCutoff = mStatMinMean + upperMeanCutoff * (mStatMaxMean - mMedianMean);
+  if (minSizeCutoff < 0)
+    minSizeCutoff = mParams.minSizeCutoff;
+  if (SDcutoff < 0)
+    SDcutoff = mParams.SDcutoff;
+  else if (SDcutoff <= 1.)
+    SDcutoff = mStatMinSD + SDcutoff * (mStatMaxSD - mStatMinSD);
+  if (borderDistCutoff < 0)
+    borderDistCutoff = mParams.borderDistCutoff;
+  SetExclusionsAndGroups(mParams.groupByMean, lowerMeanCutoff, upperMeanCutoff,
+    minSizeCutoff, SDcutoff, irregularCutoff, borderDistCutoff);
+  return DoCreatePolys(mess);
+}
+
+// Common function to creat polygons
+int CAutoContouringDlg::DoCreatePolys(CString &mess)
+{
   int firstID, lastID, num = 0, numAfter, ind;
   int numBefore = mWinApp->mNavigator->GetNumNavItems();
   IntVec indsInPoly;
-  mWinApp->RestoreViewFocus();
   for (ind = 0; ind < mNumGroups; ind++)
     if (mShowGroup[ind])
       num += mNumInGroup[ind];
   if (!mHaveConts || !num) {
-    SEMMessageBox("There are no contours to convert" + 
-      CString(mHaveConts ? " in the selected groups" : ""));
-    return;
+    mess = "There are no contours to convert" +
+      CString(mHaveConts ? " in the selected groups" : "");
+    return 1;
   }
   mWinApp->mNavigator->AddAutocontPolygons(mPolyArray, mExcluded, mGroupNums,
     &mShowGroup[0], mNumGroups, firstID, lastID, indsInPoly);
@@ -495,12 +560,15 @@ void CAutoContouringDlg::OnButCreatePolys()
     mLastMapID.push_back(lastID);
     mConvertedInds.push_back(indsInPoly);
     //SetExclusionsAndGroups();
-    ManagePostEnables(false);
-    ManageGroupSelectors(0);
+    if (mIsOpen) {
+      ManagePostEnables(false);
+      ManageGroupSelectors(0);
+    }
   }
+  return 0;
 }
 
-// Undo the coversion to Nav polygons
+// Undo the conversion to Nav polygons
 void CAutoContouringDlg::OnButUndoPolys()
 {
   int vecInd = (int)mFirstConvertedIndex.size() - 1;
@@ -522,6 +590,18 @@ void CAutoContouringDlg::OnButUndoPolys()
   ManagePostEnables(false);
   SetExclusionsAndGroups();
   mWinApp->RestoreViewFocus();
+}
+
+// Return some of the statistics
+int CAutoContouringDlg::GetSquareStats(float &minMean, float &maxMean, 
+  float &medianMean)
+{
+  if (!mHaveConts)
+    return 1;
+  minMean = mStatMinMean;
+  maxMean = mStatMaxMean;
+  medianMean = mMedianMean;
+  return 0;
 }
 
 // Lower mean cutoff
@@ -677,6 +757,8 @@ void CAutoContouringDlg::ManageACEnables()
 void CAutoContouringDlg::ManagePostEnables(bool forBusy)
 {
   BOOL doingTasks = mWinApp->DoingTasks();
+  if (!mIsOpen)
+    return;
   EnableDlgItem(IDC_BUT_CREATE_POLYS, mHaveConts && !doingTasks);
   EnableDlgItem(IDC_BUT_UNDO_POLYS, IsUndoFeasible() && !doingTasks);
   if (forBusy)
@@ -738,7 +820,7 @@ void CAutoContouringDlg::ManageGroupSelectors(int set)
     if (set) {
       but = (CButton *)GetDlgItem(IDC_CHECK_GROUP1 + ind);
       if (but)
-        but->SetCheck(1);
+        but->SetCheck((mShowGroup[ind] || set == 1) ? 1 : 0);
     }
   }
 }
@@ -757,8 +839,10 @@ void CAutoContouringDlg::ParamsToDialog()
   mNumGroups = mParams.numGroups;
   m_strShowGroups.Format("Split into %d", mNumGroups);
   m_iGroupType = mParams.groupByMean;
-  m_sbcNumGroups.SetPos(mNumGroups);
-  ManageGroupSelectors(0);
+  if (mIsOpen) {
+    m_sbcNumGroups.SetPos(mNumGroups);
+    ManageGroupSelectors(0);
+  }
 
   if (mHaveConts) {
 
@@ -815,7 +899,8 @@ void CAutoContouringDlg::ParamsToDialog()
     mParams.minSizeCutoff : 0.);
   m_strBorderDist.Format("%.1f", mParams.borderDistCutoff > EXTRA_VALUE_TEST ?
     mParams.minSizeCutoff : 0.);
-  UpdateData(false);
+  if (mIsOpen)
+    UpdateData(false);
 }
 
 // Copy dialog variables to parameters
@@ -852,6 +937,7 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
       " contours to polygons");
     return;
   }
+  OnButClearData();
 
   // Load the data
   mAutoContFailed = true;
@@ -1183,7 +1269,8 @@ void CAutoContouringDlg::AutoContDone()
   } else {
     mAutoContFailed = false;
     mHaveConts = true;
-    ParamsToDialog();
+    if (mIsOpen)
+      ParamsToDialog();
     ManagePostEnables(false);
     SetExclusionsAndGroups();
   }

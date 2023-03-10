@@ -3543,6 +3543,7 @@ void CNavigatorDlg::UndoAutocontPolyAddition(
   for (ind = 0; ind < numRemove; ind++) {
     item = mItemArray.GetAt(ind + size - numRemove);
     polyArray.SetAt(indsInPoly[ind], item);
+    item->mDraw = true;
   }
   mItemArray.RemoveAt(size - numRemove, numRemove);
   RefillAfterAutocontPolys();

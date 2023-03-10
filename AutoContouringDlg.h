@@ -138,11 +138,17 @@ public:
   afx_msg void OnKillfocusEditAbsThresh();
   CSpinButtonCtrl m_sbcNumGroups;
   afx_msg void OnDeltaposSpinNumGroups(NMHDR *pNMHDR, LRESULT *pResult);
+  void ExternalSetGroups(int numGroups, int which, int *showGroups, int numShow);
   afx_msg void OnButMakeContours();
   afx_msg void OnButClearData();
   afx_msg void OnCheckShowGroup(UINT nID);
   afx_msg void OnButCreatePolys();
+  int ExternalCreatePolys(float lowerMeanCutoff,
+    float upperMeanCutoff, float minSizeCutoff, float SDcutoff, float irregularCutoff,
+    float borderDistCutoff, CString &mess);
+  int DoCreatePolys(CString &mess);
   afx_msg void OnButUndoPolys();
+  int GetSquareStats(float &minMean, float &maxMean, float &medianMean);
   CString m_strLowerMean;
   CString m_strUpperMean;
   CString m_strMinSize;
