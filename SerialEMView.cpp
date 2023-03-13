@@ -988,7 +988,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
           cdc.SetTextColor(RGB(0, 255, 40));
           cdc.SelectObject(useLabelFont);
-          if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
+          if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK && !camP->STEMcamera &&
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
                 letString.Format("%.2f e/physpix/s at camera", boost);

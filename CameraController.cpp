@@ -1224,8 +1224,9 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 int CCameraController::InitializeTietz(int whichCameras, int *originalList, int numOrig, 
                                         BOOL anyPreExp)
 {
-  int i, ind, flags, type, plugVers, servVers;
-  bool anyGPU = false, anyNonGPU = false;
+  int i, ind, flags, type, plugVers, servVers, idum;
+  bool anyGPU = false, anyNonGPU = false, hasSTEM = false, lockFailed = false;
+  double minPixel, rotInc, ddum;
   CString mess;
   CameraParameters *param;
   CamPluginFuncs *funcs;
@@ -1255,7 +1256,15 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
         anyGPU = true;
       else
         anyNonGPU = true;
+      if (param->STEMcamera)
+        hasSTEM = true;
     }
+    if (hasSTEM && (!funcs->GetSTEMProperties || !funcs->AcquireSTEMImage)) {
+      AfxMessageBox("The TietzPlugin is missing a required function for STEM access; no "
+        "Tietz camera will be available", MB_EXCLAME);
+      return 1;
+    }
+
     if (anyGPU) {
       funcs->GetPluginVersion(&plugVers, &servVers);
       if (plugVers < TIETZ_VERSION_HAS_GPU) {
@@ -1268,7 +1277,8 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
     }
 
     ind = funcs->InitializeInterface((anyPreExp ? TIETZ_USE_SHUTTERBOX : 0) + 
-      (anyGPU ? TIETZ_IS_GPU_CAMERA : 0));
+      (anyGPU ? TIETZ_IS_GPU_CAMERA : 0) + (hasSTEM ? TIETZ_HAS_STEM : 0) +
+    (!(anyGPU || anyNonGPU) ? TIETZ_HAS_NO_CAMERAS : 0));
     if ((ind & ~TIETZ_NO_SHUTTERBOX) == 0) {
       mTietzInstances = true;
       mShutterInstance = anyPreExp && !ind;
@@ -1282,29 +1292,39 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
           if (anyPreExp && !mShutterInstance)
             param->TietzCanPreExpose = false;
           mPlugFuncs[ind] = funcs;
-          param->cameraNumber = param->TietzType;
+          param->cameraNumber = param->STEMcamera ? -1 : param->TietzType;
           if (flags & PLUGFLAG_FLOATS_BY_FLAG)
             param->CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
           if (flags & PLUGFLAG_CAN_DIV_MORE)
             param->CamFlags |= CAMFLAG_CAN_DIV_MORE;
           param->CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
 
-          // Set this if the test for processing ability passes
-          param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
-            && type >= 11 && type != 13;
-          if (param->pluginCanProcess && param->cropFullSizeImages < 0)
-            param->cropFullSizeImages = 3;
-          if (param->cropFullSizeImages < 0)
-            param->cropFullSizeImages = 0;
-          if (param->cropFullSizeImages && !funcs->SetSizeOfCamera) {
-            param->cropFullSizeImages = 0;
-            AfxMessageBox("The TietzPlugin is missing a function required for cropping"
-              " full sized image; that feature will be unavailable", MB_EXCLAME);
+          if (!param->STEMcamera) {
+
+            //   Set this if the test for processing ability passes
+            param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
+              && type >= 11 && type != 13;
+            if (param->pluginCanProcess && param->cropFullSizeImages < 0)
+              param->cropFullSizeImages = 3;
+            if (param->cropFullSizeImages < 0)
+              param->cropFullSizeImages = 0;
+            if (param->cropFullSizeImages && !funcs->SetSizeOfCamera) {
+              param->cropFullSizeImages = 0;
+              AfxMessageBox("The TietzPlugin is missing a function required for cropping"
+                " full sized image; that feature will be unavailable", MB_EXCLAME);
+            }
+            if (param->canTakeFrames & FRAMES_CAN_BE_ALIGNED)
+              mFalconHelper->Initialize(-2);
+            if (param->useContinuousMode < 0)
+              param->useContinuousMode = (type >= 11 && type != 13) ? 1 : 0;
+          } else {
+
+            funcs->GetSTEMProperties(param->sizeX, param->sizeY,
+              &minPixel, &param->maxPixelTime, &param->pixelTimeIncrement,
+              &rotInc, &ddum, &param->maxIntegration, &idum);
+            if (minPixel > 0)
+              mAllParams[i].minPixelTime = (float)minPixel;
           }
-          if (param->canTakeFrames & FRAMES_CAN_BE_ALIGNED)
-            mFalconHelper->Initialize(-2);
-          if (param->useContinuousMode < 0)
-            param->useContinuousMode = (type >= 11 && type != 13) ? 1 : 0;
         }
       }
     } else {
@@ -1324,9 +1344,12 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
     // to reinitialize
     if (LockInitializeTietz(true)) {
       mNumTietzCameras = 1;
+      lockFailed = true;
       if (whichCameras == INIT_CURRENT_CAMERA)
         return 1;
-    } else {
+
+    }
+    if (!lockFailed) {
 
       // If initialization succeeds, count up number of cameras
       mTietzInitialized = true;
@@ -5543,7 +5566,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
   }
 
   // If there is no shutter, redo all of this!
-  if (mParam->noShutter) {
+  if (mParam->noShutter && mScope->GetInitialized()) {
     mTD.DMsettling = 0.;
     mTD.UnblankTime = 0;
     mTD.ReblankTime = 0;
@@ -7243,7 +7266,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
     flags |= TIETZ_SET_READ_MODE;
 
   // Do the selection for Tietz dark reference but not image
-  if (!retval && td->plugFuncs->SelectCamera && !tietzImage)
+  if (!retval && td->plugFuncs->SelectCamera && 
+    (!tietzImage || td->TietzType && td->STEMcamera))
     retval = td->plugFuncs->SelectCamera(td->SelectCamera);
 
   // Shutter selection for Tietz is handled by the Prepare call
@@ -7265,7 +7289,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Do preliminary steps for Tietz that were always before starting blanker
   if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 && setReadMode && 
-    !tietzAlreadyLive) {
+    !tietzAlreadyLive && !td->STEMcamera) {
 
     // The speed and mode values seem to apply to F416 and XF416
     // Perhaps flatfielding with F416 does not require a read mode in plugin but
@@ -7280,7 +7304,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   // This sets shuttermode, it does have to be set to beam blank at some point when in
   // rolling shutter mode, so don't just skip it
   if (!retval && tietzImage && !tietzAlreadyLive)
-    retval = td->plugFuncs->PrepareForAcquire(td->TietzType, td->ShutterMode);
+    retval = td->plugFuncs->PrepareForAcquire(td->STEMcamera ? -1 : td->TietzType,
+      td->ShutterMode);
   if (!retval && blanker)
     StartBlankerThread(td);
 
@@ -10962,7 +10987,7 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
     ind = mActiveList[i];
     camP = &mAllParams[ind];
     if (camP->TietzType && !camP->failedToInitialize) {
-      err = mPlugFuncs[ind]->InitializeCamera(camP->TietzType);
+      err = mPlugFuncs[ind]->InitializeCamera(camP->STEMcamera ? -1 : camP->TietzType);
       if (err) {
         report = mPlugFuncs[ind]->GetLastErrorString();
 
@@ -10978,6 +11003,7 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
         if (err == TIETZ_NO_LOCK)
           return 1;
         camP->failedToInitialize = true;
+      } else if (camP->STEMcamera) {
       } else {
         if (camP->LowestGainIndex < 0)
           camP->LowestGainIndex = (camP->TietzType >= MIN_XF416_TYPE) ? 2 : 1;
@@ -11212,6 +11238,10 @@ BOOL CCameraController::CreateFocusRamper(void)
 void CCameraController::SetNonGatanPostActionTime(void)
 {
   mTD.PostActionTime = 0;
+  if (!mScope->GetInitialized()) {
+    mTD.UnblankTime = mTD.ReblankTime = 0;
+    return;
+  }
   if (mParam->extraBeamTime < 0.) {
     mTD.UnblankTime = B3DNINT(1000. * mParam->startupDelay);
     if (!mTD.UnblankTime)

@@ -248,8 +248,12 @@ typedef bool (*PlugDoingFunc)(void);
 #define TIETZ_NO_SOCKET        (1)
 #define TIETZ_NO_CAMC4        (1 << 1)
 #define TIETZ_NO_SHUTTERBOX   (1 << 2)
+// Initialization flags
 #define TIETZ_USE_SHUTTERBOX (1)
 #define TIETZ_IS_GPU_CAMERA  (1 << 2)
+#define TIETZ_HAS_STEM       (1 << 3)
+#define TIETZ_HAS_NO_CAMERAS (1 << 4)
+// Flags
 #define TIETZ_GET_DARK_REF    4
 #define TIETZ_RESTORE_BBMODE (1 << 1)
 #define TIETZ_SET_READ_MODE  (1 << 2)
