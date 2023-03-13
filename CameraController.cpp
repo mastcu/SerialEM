@@ -7267,7 +7267,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Do the selection for Tietz dark reference but not image
   if (!retval && td->plugFuncs->SelectCamera && 
-    (!tietzImage || td->TietzType && td->STEMcamera))
+    (!tietzImage || (td->TietzType && td->STEMcamera)))
     retval = td->plugFuncs->SelectCamera(td->SelectCamera);
 
   // Shutter selection for Tietz is handled by the Prepare call
