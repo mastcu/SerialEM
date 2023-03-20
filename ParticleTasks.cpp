@@ -839,8 +839,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       // Spiral with extra rows/columns if needed
       MakeSpiralPattern(numXholes, numYholes, holeOrder);
       for (ind = 0; ind < (int)holeOrder.size(); ind++) {
-        ix = holeOrder[ind] % numYholes;
-        iy = holeOrder[ind] / numYholes;
+        ix = holeOrder[ind] % numXholes;
+        iy = holeOrder[ind] / numXholes;
         AddHolePosition(ix, iy, fromISX, fromISY, xCenISX, yCenISX, xCenISY, yCenISY,
           posIndex);
       }

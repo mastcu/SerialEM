@@ -107,8 +107,10 @@
       <A href="#buffer_file_commands">Buffer and File Commands</A>
       <BR>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#buffer_image">Buffer and Image Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#image_process">Image Processing Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#directory">Directory and Miscellaneous Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#imagefile">Image File Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#montage">Montage File Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#textfile">Text File Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autodoc">Autodoc/.mdoc File Commands</A><br>
       <A href="#scope_filter_commands">Microscope and Filter Commands</A>
@@ -774,6 +776,27 @@
           <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
           <TD>Disables line wrapping in the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
             and OKBox', or re-enables it with if the optional <b>#</b> is 0.&nbsp; Command added 4.0, 1/24/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EnterNameOpenFile [prompt]</TD>
+          <TD>Gets a filename through a dialog with a simple text box and open it as a new
+            file.&nbsp; If the optional <b>prompt</b> string is not supplied, the prompt is 'Enter
+            name for new file:'.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ChooserForNewFile # var</TD>
+          <TD>Opens a file chooser for the user to specify a new file; <b>#</b> should be 0 for an
+            MRC file or non-zero for an .idoc file, and <b>var</b> must be the name of a variable
+            to which the full filename will be assigned.&nbsp; Since the user will confirm
+            the replacement of a file, the command also allows &#39;OpenNewFile&#39; and
+            &#39;OpenNewMontage&#39; to overwrite an existing file.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UserOpenOldFile</TD>
+          <TD>Opens a file chooser for a user to open an existing MRC, HDF or .idoc file and opens the file,
+            just like the <a href="menu_file.htm#hidm_file_openold">Open Old</a> item in the File menu.
+            The script is suspended if the user cancels or pick a file that cannot be
+            opened.&nbsp; Command added in 3.9, 2/6/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetStatusLine #L text</TD>
@@ -1620,6 +1643,97 @@
             to 0 if a window is found with that title, 1 if not.  Command added in 4.0, 1/20/22.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ImageProperties [buf]</TD>
+          <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
+            used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>,
+            which can be in the FFT window.&nbsp; It also sets the variable <i>imageTickTime</i>
+            with the time that the image finished being acquired,
+            in seconds since the program started.
+            &nbsp; Values can be assigned to variables after the buffer letter.&nbsp; Command added in 4.1, 4/1/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageMarkerPosition buf</TD>
+          <TD>Reports the coordinates of the green marker point in the image in buffer <b>buf</b>, where
+            <B>buf</B> can be 0 or -1 to select the active image buffer.&nbsp; Reports -1, -1 if there
+            is no marker point set.&nbsp; Values can be assigned to variables after the buffer 
+            letter.&nbsp; Command added in 4.1, 10/31/22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageConditions buf</TD>
+          <TD>Reports the electron dose and the magnification for the image in buffer <b>buf</b>; other items will be added upon request.&nbsp;</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageMetadataToVar buf var</TD>
+          <TD>For the image in buffer <b>buf</b>, saves the metadata text that would be output 
+            to an '.mdoc' file into the variable <b>var</b>, which will contain an array of 
+            strings.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; The section header in the 
+            first line will be '[ImageMetadata = #]', where '#' is the buffer number (positive
+             for a regular buffer and negative for an FFT buffer).&nbsp; Command added in 4.0, 9/3/21.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageLowDoseSet [buf]</TD>
+          <TD>Reports the parameter set that an image was taken with and whether it was taken
+            in Low Dose mode, for the image in buffer A or in the buffer indicated by <b>buf</b>.&nbsp;
+            For one of the 5 standard parameter sets, it will report the set name.&nbsp; For
+            a montage image, it will report Record.&nbsp; For a tracking image, it will
+            report View if the mag matches that of View in Low Dose; if the mag matches
+            Record in Low Dose, it will report Record or Preview depending on which has an
+            closest exposure time closest to that of the image.
+            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportMeanCounts [buf] [#]</TD>
+          <TD>Reports the mean counts of the A buffer, or of the buffer indicated by <b>buf</b>;
+            add a 1 as <b>#</b> to get unbinned counts per second instead, or add a 2 as <b>#</b> to get
+            a report of mean, standard deviation, minimum and maximum.&nbsp; No optional
+            assignment to variables.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ElectronStats [buf]</TD>
+          <TD>Reports the min, max, mean, and SD of the A buffer, or of the buffer indicated
+            by <b>buf</b>, scaled to electrons, and also reports the electrons per unbinned pixel
+            per second.&nbsp; The camera must have a defined counts per electron.  Values
+            recorded in electron counting mode will be linearized if possible
+            (corrected for decreasing counting efficiency at higher dose rates).
+            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RawElectronStats [buf]</TD>
+          <TD>Reports the same items as 'ElectronStats' without linearizing them for loss in
+          counting mode.&nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CalibrateElectronDose</TD>
+          <TD>Calibrates electron dose with the image in buffer A without popping up any 
+            message boxes, but generates an error if any of the preconditions for 
+            calibrating dose are not met.&nbsp; Command added in 4.0, 11/6/22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SubareaMean #X0 #X1 #Y0 #Y1</TD>
+          <TD>Reports the mean counts in a subarea of the A buffer from <b>#X0</b> to <b>#X1</b> in X and from
+            <b>#Y0</b> to <b>#Y1</b> in Y. Coordinates are numbered from 0 to size - 1 in each dimension
+            and 0 in Y is at the top.&nbsp; Value can be assigned to variable at end of command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CircularSubareaMean #X #Y #R</TD>
+          <TD>Reports the mean counts in a circular subarea of the A buffer defined by center point
+            <b>#X</b>,<b>#Y</b> and radius <b>#R</b>. Value can be assigned to variable at end of command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">QuadrantMeans [#N] [#F1] [#F2]</TD>
+          <TD>Reports means of strips along quadrant boundaries. Optional entries are <b>#N</b> for
+            the number of pixels between strip and boundary (default 2), <b>#F1</b> for the strip
+            width as a fraction of quadrant extent (default 0.1), and <b>#F2</b> for the fraction
+            of quadrant extent to trim off the length of the strip (default 0.1). Output is
+            labeled by quadrant number (1 to 4) and 'h' for horizontal strips or 'v' for
+            vertical strips.</TD>
+        </TR>
+        <TR>
+          <TD colspan="2"><A name="image_process"></A><B>Image Processing Commands</B></TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CropImage buf #X0 #X1 #Y0 #Y1</TD>
           <TD>Crops out a subarea of the given buffer, which can be in the FFT window, from
             <b>#X0</b> to <b>#X1</b> in X and from <b>#Y0</b> to <b>#Y1</b> in
@@ -1746,94 +1860,6 @@
              be no larger the biggest dimension of the image, but can be 0 to specify no 
             reduction.&nbsp; The reduced image ends up in buffer B and the original image in A ends up in
              C.&nbsp; Command added in 4.0, 2/7/22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageProperties [buf]</TD>
-          <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
-            used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>,
-            which can be in the FFT window.&nbsp; It also sets the variable <i>imageTickTime</i>
-            with the time that the image finished being acquired,
-            in seconds since the program started.
-            &nbsp; Values can be assigned to variables after the buffer letter.&nbsp; Command added in 4.1, 4/1/22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageMarkerPosition buf</TD>
-          <TD>Reports the coordinates of the green marker point in the image in buffer <b>buf</b>, where
-            <B>buf</B> can be 0 or -1 to select the active image buffer.&nbsp; Reports -1, -1 if there
-            is no marker point set.&nbsp; Values can be assigned to variables after the buffer 
-            letter.&nbsp; Command added in 4.1, 10/31/22.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageConditions buf</TD>
-          <TD>Reports the electron dose and the magnification for the image in buffer <b>buf</b>; other items will be added upon request.&nbsp;</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageMetadataToVar buf var</TD>
-          <TD>For the image in buffer <b>buf</b>, saves the metadata text that would be output 
-            to an '.mdoc' file into the variable <b>var</b>, which will contain an array of 
-            strings.&nbsp; <B>buf</B> may be in the FFT window.&nbsp; The section header in the 
-            first line will be '[ImageMetadata = #]', where '#' is the buffer number (positive
-             for a regular buffer and negative for an FFT buffer).&nbsp; Command added in 4.0, 9/3/21.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageLowDoseSet [buf]</TD>
-          <TD>Reports the parameter set that an image was taken with and whether it was taken
-            in Low Dose mode, for the image in buffer A or in the buffer indicated by <b>buf</b>.&nbsp;
-            For one of the 5 standard parameter sets, it will report the set name.&nbsp; For
-            a montage image, it will report Record.&nbsp; For a tracking image, it will
-            report View if the mag matches that of View in Low Dose; if the mag matches
-            Record in Low Dose, it will report Record or Preview depending on which has an
-            closest exposure time closest to that of the image.
-            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportMeanCounts [buf] [#]</TD>
-          <TD>Reports the mean counts of the A buffer, or of the buffer indicated by <b>buf</b>;
-            add a 1 as <b>#</b> to get unbinned counts per second instead, or add a 2 as <b>#</b> to get
-            a report of mean, standard deviation, minimum and maximum.&nbsp; No optional
-            assignment to variables.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ElectronStats [buf]</TD>
-          <TD>Reports the min, max, mean, and SD of the A buffer, or of the buffer indicated
-            by <b>buf</b>, scaled to electrons, and also reports the electrons per unbinned pixel
-            per second.&nbsp; The camera must have a defined counts per electron.  Values
-            recorded in electron counting mode will be linearized if possible
-            (corrected for decreasing counting efficiency at higher dose rates).
-            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">RawElectronStats [buf]</TD>
-          <TD>Reports the same items as 'ElectronStats' without linearizing them for loss in
-          counting mode.&nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">CalibrateElectronDose</TD>
-          <TD>Calibrates electron dose with the image in buffer A without popping up any 
-            message boxes, but generates an error if any of the preconditions for 
-            calibrating dose are not met.&nbsp; Command added in 4.0, 11/6/22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SubareaMean #X0 #X1 #Y0 #Y1</TD>
-          <TD>Reports the mean counts in a subarea of the A buffer from <b>#X0</b> to <b>#X1</b> in X and from
-            <b>#Y0</b> to <b>#Y1</b> in Y. Coordinates are numbered from 0 to size - 1 in each dimension
-            and 0 in Y is at the top.&nbsp; Value can be assigned to variable at end of command.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">CircularSubareaMean #X #Y #R</TD>
-          <TD>Reports the mean counts in a circular subarea of the A buffer defined by center point
-            <b>#X</b>,<b>#Y</b> and radius <b>#R</b>. Value can be assigned to variable at end of command.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">QuadrantMeans [#N] [#F1] [#F2]</TD>
-          <TD>Reports means of strips along quadrant boundaries. Optional entries are <b>#N</b> for
-            the number of pixels between strip and boundary (default 2), <b>#F1</b> for the strip
-            width as a fraction of quadrant extent (default 0.1), and <b>#F2</b> for the fraction
-            of quadrant extent to trim off the length of the strip (default 0.1). Output is
-            labeled by quadrant number (1 to 4) and 'h' for horizontal strips or 'v' for
-            vertical strips.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CheckForBadStripe [buf] [#H]</TD>
@@ -2125,72 +2151,6 @@
             commands that open files as well.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">OpenNewMontage #X #Y file</TD>
-          <TD>Opens a file with the given name for montaging, with the number of frames in X
-            and Y given by <b>#X</b> and <b>#Y</b>. If either <b>#X</b> or <b>#Y</b> is 0, the number of frames
-            will be taken from the last montage that was open. The file properties and
-            montage setup dialogs will be bypassed, and some properties like overlap and
-            whether to do a stage montage will be taken from the last montage that was
-            open.  If no montage has been open before, or if the binning in the montage parameters does
-            not match the binning in the camera parameter set to be used for the montage, the montage will use full-sized frames 
-            with the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B]</TD>
-          <TD>Sets up to 7 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
-            unchanged. The entries are: <b>#S</b> 1 to use stage movement or 0 not to; <b>#OX</b> overlap in X;
-            <b>#OY</b> overlap in Y; <b>#FX</b> frame size in X; <b>#FY</b> frame size in Y, <b>#N</b> 1 to skip correlations or 0 not
-            to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, 
-            and binnings cannot validly be changed after acquiring into the file.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ParamSetToUseForMontage #</TD>
-          <TD>Specifies what parameters to use for a montage: 
-            <br>1 and -1 will turn on or off the option to use Mont-Map parameters;
-            <br /> 2 or -2 will turn on or off the option to use View in Low Dose mode;
-            <br />3 or -3 will turn on or off the option to use Search in Low Dose mode; 
-            <br />When one of these is turned on, the other is turned off.&nbsp; In 
-            general, it is best to use this command before opening a montage; and if Low Dose is on and a montage
-            is already open, using +/-2 or +/-3 will generate an error.&nbsp; 
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetupWaffleMontage #B file</TD>
-          <TD>Opens a montage file or adjust the current file&#39;s properties so that it will
-            hold an image of the cross-line (waffle) replica grating with at least <b>#B</b> blocks
-            in X and Y at the current magnification. Follow with the minimum <b>#</b> of blocks and
-            the name of the <b>file</b> to be opened if necessary.&nbsp; If montaging is not
-            needed, no changes are made.&nbsp; If there is an existing montage that is
-            adequate, its properties will be adjusted to work at the current mag.&nbsp; If a
-            new montage is needed, it will close the current file if it is a montage and
-            open a new one with the given name.&nbsp; Variables will be substituted, so the
-            name can contain the mag index, for example. It sets <I>reportedValue1</I> to 1 or 0
-            depending on whether montaging is needed or not. </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetupFullMontage #O file</TD>
-          <TD>Opens a full grid montage with the given name at the current magnification, without opening
-             any dialogs.&nbsp; The current acquisition parameters of the camera parameter set indicated 
-            in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
-            overlap factor for fitting the montage, overriding the corresponding entry in the setup 
-            dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5&nbsp; Command added in 4.1, 31-Oct-22, 
-            changed to have an overlap factor 6-Mar-23.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetGridMapLimits #P #LX #UX #LY #UY</TD>
-          <TD>Sets the limiting stage positions to be covered by a full grid montage, overriding the limits
-            set with Set Grid Limits in the Navigator - Montaging &amp; Grids submenu until the script ends (if
-             <b>#P</b> is 0) or replacing those limits if <b>#P</b> is nonzero.&nbsp; <b>LX</b> and <b>UX</b>
-            are the lower and upper X coordinates in microns and they must be negative and positive, 
-            respectively; enter a 0 to use the existing limit.&nbsp; <b>LY</b> and <b>UY</b> are similar for 
-            Y.&nbsp; Command added in 4.1, 6-Mar-23.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportNumMontagePieces</TD>
-          <TD>Reports the number of pieces that will be acquired for a montage if one is
-            currently open, or 1 if not.</TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">SaveToOtherFile buf typ cmp file</TD>
           <TD>Saves one image in the given buffer <b>buf</b>, which can be in the FFT window,
              to the file with the given name and closes
@@ -2230,20 +2190,6 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">EnterNameOpenFile [prompt]</TD>
-          <TD>Gets a filename through a dialog with a simple text box and open it as a new
-            file.&nbsp; If the optional <b>prompt</b> string is not supplied, the prompt is 'Enter
-            name for new file:'.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ChooserForNewFile # var</TD>
-          <TD>Opens a file chooser for the user to specify a new file; <b>#</b> should be 0 for an
-            MRC file or non-zero for an .idoc file, and <b>var</b> must be the name of a variable
-            to which the full filename will be assigned.&nbsp; Since the user will confirm
-            the replacement of a file, the command also allows &#39;OpenNewFile&#39; and
-            &#39;OpenNewMontage&#39; to overwrite an existing file.</TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">OpenFrameSumFile suffix</TD>
           <TD>Opens a file whose name starts with the last name used for saving
             frames from a K2/K3, DE, or Falcon camera, and ends with the <b>suffix</b> string given in the command.&nbsp;
@@ -2253,13 +2199,6 @@
           <TD class="scriptcommand">OpenOldFile file</TD>
           <TD>Opens an existing MRC, HDF, or .idoc file with the given name, which can contain
             spaces.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">UserOpenOldFile</TD>
-          <TD>Opens a file chooser for a user to open an existing MRC, HDF or .idoc file and opens the file,
-            just like the <a href="menu_file.htm#hidm_file_openold">Open Old</a> item in the File menu.
-            The script is suspended if the user cancels or pick a file that cannot be
-            opened.&nbsp; Command added in 3.9, 2/6/21.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReadFile # [buf]</TD>
@@ -2331,6 +2270,75 @@
               Set <b>#F</b> to 1 to use the name in frame file names, 0 not to, or -1 to leave the current 
             settings unchanged.&nbsp; Set <b>#D</b> to 1 to use it in directory names, 0 not to, or -1 to leave
              the setting as is.&nbsp; Command added in 4.0, 11/30/21.</TD>
+        </TR>
+        <TR>
+          <TD colspan="2"><A name="montage"></A><B>Montage File Commands</B></TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">OpenNewMontage #X #Y file</TD>
+          <TD>Opens a file with the given name for montaging, with the number of frames in X
+            and Y given by <b>#X</b> and <b>#Y</b>. If either <b>#X</b> or <b>#Y</b> is 0, the number of frames
+            will be taken from the last montage that was open. The file properties and
+            montage setup dialogs will be bypassed, and some properties like overlap and
+            whether to do a stage montage will be taken from the last montage that was
+            open.  If no montage has been open before, or if the binning in the montage parameters does
+            not match the binning in the camera parameter set to be used for the montage, the montage will use full-sized frames 
+            with the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B]</TD>
+          <TD>Sets up to 7 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
+            unchanged. The entries are: <b>#S</b> 1 to use stage movement or 0 not to; <b>#OX</b> overlap in X;
+            <b>#OY</b> overlap in Y; <b>#FX</b> frame size in X; <b>#FY</b> frame size in Y, <b>#N</b> 1 to skip correlations or 0 not
+            to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, 
+            and binnings cannot validly be changed after acquiring into the file.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ParamSetToUseForMontage #</TD>
+          <TD>Specifies what parameters to use for a montage: 
+            <br>1 and -1 will turn on or off the option to use Mont-Map parameters;
+            <br /> 2 or -2 will turn on or off the option to use View in Low Dose mode;
+            <br />3 or -3 will turn on or off the option to use Search in Low Dose mode; 
+            <br />When one of these is turned on, the other is turned off.&nbsp; In 
+            general, it is best to use this command before opening a montage; and if Low Dose is on and a montage
+            is already open, using +/-2 or +/-3 will generate an error.&nbsp; 
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetupWaffleMontage #B file</TD>
+          <TD>Opens a montage file or adjust the current file&#39;s properties so that it will
+            hold an image of the cross-line (waffle) replica grating with at least <b>#B</b> blocks
+            in X and Y at the current magnification. Follow with the minimum <b>#</b> of blocks and
+            the name of the <b>file</b> to be opened if necessary.&nbsp; If montaging is not
+            needed, no changes are made.&nbsp; If there is an existing montage that is
+            adequate, its properties will be adjusted to work at the current mag.&nbsp; If a
+            new montage is needed, it will close the current file if it is a montage and
+            open a new one with the given name.&nbsp; Variables will be substituted, so the
+            name can contain the mag index, for example. It sets <I>reportedValue1</I> to 1 or 0
+            depending on whether montaging is needed or not. </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetupFullMontage #O file</TD>
+          <TD>Opens a full grid montage with the given name at the current magnification, without opening
+             any dialogs.&nbsp; The current acquisition parameters of the camera parameter set indicated 
+            in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
+            overlap factor for fitting the montage, overriding the corresponding entry in the setup 
+            dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5&nbsp; Command added in 4.1, 31-Oct-22, 
+            changed to have an overlap factor 6-Mar-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetGridMapLimits #P #LX #UX #LY #UY</TD>
+          <TD>Sets the limiting stage positions to be covered by a full grid montage, overriding the limits
+            set with Set Grid Limits in the Navigator - Montaging &amp; Grids submenu until the script ends (if
+             <b>#P</b> is 0) or replacing those limits if <b>#P</b> is nonzero.&nbsp; <b>LX</b> and <b>UX</b>
+            are the lower and upper X coordinates in microns and they must be negative and positive, 
+            respectively; enter a 0 to use the existing limit.&nbsp; <b>LY</b> and <b>UY</b> are similar for 
+            Y.&nbsp; Command added in 4.1, 6-Mar-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportNumMontagePieces</TD>
+          <TD>Reports the number of pieces that will be acquired for a montage if one is
+            currently open, or 1 if not.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="textfile"></A><B>Text File Commands</B></TD>
@@ -4509,8 +4517,10 @@
           <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] </TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the
-            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The autocontouring routines in the IMOD model library are used and take byte input,
-            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; If an optional input is omitted or negative, the value from the dialog will be used.&nbsp; Option inputs are:<br />
+            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 
+            autocontouring routines in the IMOD model library are used and take byte input,
+            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; If
+             an optional input is omitted or negative, the value from the dialog will be used.&nbsp; Optional inputs are:<br />
             &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
             image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
             much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
@@ -4532,9 +4542,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetAutocontourGroups #N #W [#O...]</TD>
-          <TD>Sets the number of groups of grid square contours with <B>#N</B>and the way in which contours are
+          <TD>Sets the number of groups of grid square contours with <B>#N</B> and the way in which contours are
              sorted into groups with <b>#W</b> (0 for size or 1 for mean).&nbsp; This can be followed by a series
-            values to the option to show a group on (1) or off (0); values need not be entered for all groups.&nbsp; Any
+            values to set the option to show a group on (1) or off (0); values need not be entered for all groups.&nbsp; Any
             of these entries can be -1 to leave the existing setting unchanged.&nbsp; This command modifies the user
             settings for these items, and if the <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>
              is open it will reflect these changes.&nbsp; Command added in 4.1, 9-Mar-23.
@@ -4553,10 +4563,10 @@
             dialog, or stored settings, are used for the various cutoffs, but they can be overridden by these optional
             entries: (enter -1 for any of these to use the dialog or stored value instead:
             <br />&nbsp;&nbsp;&nbsp; <b>#L</b> - Lower mean cutoff, either an absolute value > 1, or a value between
-             0 and 1 for a relative cutoff, this fraction of the way between the minimum and median mean (which 
+             0 and 1 for a relative cutoff, the fraction of the way between the minimum and median mean (which 
             corresponds to the fractional position of the slider in the dialog).
             <br />&nbsp;&nbsp;&nbsp; <b>#U</b> - Upper mean cutoff, either an absolute value > 1, or a value between
-             0 and 1 for a relative cutoff, this fraction of the way between the median and maximum mean.
+             0 and 1 for a relative cutoff, the fraction of the way between the median and maximum mean.
             <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum size cutoff in microns.
             <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum SD cutoff.
             <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum irregularity cutoff.
