@@ -549,6 +549,8 @@ void CMenuTargets::OnUpdateNoTasksNoTSnoSTEM(CCmdUI *pCmdUI)
 void CMenuTargets::OnTasksNavigator() 
 {
   WINDOWPLACEMENT *placement = mWinApp->GetNavPlacement();
+  WINDOWPLACEMENT curPlace;
+  int curHeight;
   NavParams *param = mWinApp->GetNavParams();
   if (!param->stockFile.IsEmpty()) {
     CString mess = "You have a file of 'stock states' in the Navigator file:\r\n" +
@@ -567,8 +569,13 @@ void CMenuTargets::OnTasksNavigator()
   mWinApp->mNavigator = mNavigator;
   mNavHelper->NavOpeningOrClosing(true);
   mNavigator->Create(IDD_NAVIGATOR);
-  if (placement->rcNormalPosition.right > 0)
+  if (placement->rcNormalPosition.right > 0) {
+    mNavigator->GetWindowPlacement(&curPlace);
+    curHeight = curPlace.rcNormalPosition.bottom - curPlace.rcNormalPosition.top;
+    if (placement->rcNormalPosition.bottom - placement->rcNormalPosition.top < curHeight)
+      placement->rcNormalPosition.bottom = placement->rcNormalPosition.top + curHeight;
     mNavigator->SetWindowPlacement(placement);
+  }
   mNavigator->ShowWindow(SW_SHOW);
   if (mWinApp->GetOpenStateWithNav())
     mNavHelper->OpenStateDialog();
