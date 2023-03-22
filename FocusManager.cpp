@@ -1105,10 +1105,12 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
       double focus = mScope->GetStandardLMFocus(mFocusMag);
       if (focus > -900.) {
         mScope->SetFocus(focus);
-        mess.Format("Setting to standard focus (%f) since this is low mag (%dx)",
-          focus, MagForCamera(mWinApp->GetCurrentCamera(), mFocusMag));
         mLastFailed = false;
-        mWinApp->AppendToLog(mess, LOG_SWALLOW_IF_CLOSED);
+        if (!mWinApp->GetSuppressSomeMessages()) {
+          mess.Format("Setting to standard focus (%f) since this is low mag (%dx)",
+            focus, MagForCamera(mWinApp->GetCurrentCamera(), mFocusMag));
+          mWinApp->AppendToLog(mess, LOG_SWALLOW_IF_CLOSED);
+        }
       } else
         mWinApp->AppendToLog("There is no autofocus calibration in low mag, and no "
           "standard focus defined; nothing was done", LOG_SWALLOW_IF_CLOSED);

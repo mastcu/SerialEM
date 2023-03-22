@@ -761,6 +761,7 @@ CSerialEMApp::CSerialEMApp()
   mInUpdateWindows = false;
   mNavOrLogHadFocus = 0;
   mMonospacedLog = false;
+  mSuppressSomeMessages = false;
   mLastSystemDPI = 0;
   mIdleScriptIntervalSec = 60;
   SEMUtilInitialize();

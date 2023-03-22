@@ -570,8 +570,14 @@
             turn off the beam immediately if the user's settings specify that this should
             occur when a message box has been up for a period of time; and will then try to
             save the log.&nbsp; Set this to 1 to not set up the unhandled exception handler for
-            this; or -1 to skip the Microsoft error&nbsp; report box that comes up after
+            this; or -1 to skip the Microsoft error report box that comes up after
             SerialEM's message box.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SuppressSomeMessages</TD>
+          <TD>Set to 1 to suppress selected messages, which so far include starting a 
+            long-running operation, the operation finished successfully, and setting to 
+            standard focus in LM.&nbsp; Items will be added on request.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BufferStatusShowFocus</TD>

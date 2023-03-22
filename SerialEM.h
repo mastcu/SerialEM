@@ -616,6 +616,7 @@ public:
   GetSetMember(CString, ScriptToRunAtEnd);
   GetSetMember(CString, ScriptToRunOnIdle);
   GetSetMember(int, IdleScriptIntervalSec);
+  GetSetMember(int, SuppressSomeMessages);
   GetSetMember(CString, ProgramTitleText);
   GetSetMember(double, LastActivityTime);
   GetMember(bool, JustChangingLDarea);
@@ -932,6 +933,7 @@ private:
   BOOL mMonospacedLog;          // Flag that log window should use monospaced font
   BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
   bool mInRestoreViewFocus;     // Flag so draw can be skipped if it is just from SetFocus
+  int mSuppressSomeMessages;    // For Jaap...
 
 public:
   void UpdateAllEditers(void);

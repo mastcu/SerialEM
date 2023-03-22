@@ -9476,8 +9476,9 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
     mDoingLongOperation = true;
     mLongOpThreads[thread]->m_bAutoDelete = false;
     mLongOpThreads[thread]->ResumeThread();
-    mWinApp->AppendToLog("Started a long running operation: " + 
-      sLongOpDescriptions[thread]);
+    if (!mWinApp->GetSuppressSomeMessages())
+      mWinApp->AppendToLog("Started a long running operation: " +
+        sLongOpDescriptions[thread]);
     startedThread = true;
   }
   if (startedThread) {
@@ -9645,7 +9646,7 @@ int CEMscope::LongOperationBusy(int index)
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
     "", "", "", "", "", ""};
   JeolCartridgeData jcData;
-  bool throwErr = false;
+  bool throwErr = false, didError;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
   if (!mDoingLongOperation)
@@ -9687,9 +9688,10 @@ int CEMscope::LongOperationBusy(int index)
             }
             mChangedLoaderInfo = 1;
           }
-          mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-            B3DCHOICE(busy && (!mLongOpData[thread].finished[op] || thread == 1),
-              " ended with error", " finished successfully"));
+          didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);
+          if (didError || !mWinApp->GetSuppressSomeMessages())
+            mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
+            B3DCHOICE(didError, " ended with error", " finished successfully"));
         }
 
         // Record time if completed, throw error if not and error not OK
