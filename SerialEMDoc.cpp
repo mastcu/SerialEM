@@ -1286,7 +1286,7 @@ KImageStore * CSerialEMDoc::OpenSaveFile(FileOptions *fileOptp)
 {
   int err;
   CString cFilename;
-  if (FilePropForSaveFile(fileOptp, false)) {
+  if (FilePropForSaveFile(fileOptp, 0)) {
     mWinApp->RestoreViewFocus();
     return NULL;
   }
@@ -1301,7 +1301,7 @@ KImageStore * CSerialEMDoc::OpenSaveFile(FileOptions *fileOptp)
 }
 
 // Runs the file properties dialog with the given options, returns -1 if user cancels
-int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, bool openAnyway)
+int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, int openAnyway)
 {
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
 
@@ -1310,8 +1310,8 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, bool openAnyway)
   // there is an unsigned short buffer
   CFilePropDlg propDlg;
   propDlg.mFileOpt = *fileOptp;
-  propDlg.mShowDlgThisTime = mShowFileDlgOnce || openAnyway;
-  propDlg.m_bSkipFileDlg = mSkipFileDlg;
+  propDlg.mShowDlgThisTime = mShowFileDlgOnce || openAnyway > 0;
+  propDlg.m_bSkipFileDlg = mSkipFileDlg || openAnyway < 0;
   mShowFileDlgOnce = false;
   propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() && 
     (mWinApp->mCamera->GetDivideBy2() <= 0);
@@ -1326,7 +1326,8 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, bool openAnyway)
 
   // unload properties from the dialog even if the rest of this aborts
   *fileOptp = propDlg.mFileOpt;
-  mSkipFileDlg = propDlg.m_bSkipFileDlg;
+  if (openAnyway >= 0)
+    mSkipFileDlg = propDlg.m_bSkipFileDlg;
   return 0;
 }
 

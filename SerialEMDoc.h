@@ -279,7 +279,7 @@ public:
   int OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK);
   int OpenOldFile(CFile *file, CString cFilename, int err);
   KImageStore * GetStoreForSaving(int type);
-  int FilePropForSaveFile(FileOptions * fileOptp, bool openAnyway);
+  int FilePropForSaveFile(FileOptions * fileOptp, int openAnyway);
   int FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, CString & cFilename);
   void ManageSaveSingle(void);
   void SetFileOptsForSTEM(void);

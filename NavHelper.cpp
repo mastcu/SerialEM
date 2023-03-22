@@ -3669,7 +3669,8 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
       newFileOpt->typext |= VOLT_XY_MASK;
   }
 
-  if (mDocWnd->FilePropForSaveFile(newFileOpt, fromFilePropButton)) {
+  if (mDocWnd->FilePropForSaveFile(newFileOpt, B3DCHOICE(skipFitDlgs, -1, 
+    fromFilePropButton ? 1 : 0))) {
     if (madeNewOpt)
       delete newFileOpt;
     return -1;
