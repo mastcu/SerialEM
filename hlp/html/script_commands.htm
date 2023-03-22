@@ -2321,7 +2321,7 @@
           <TD class="scriptcommand">SetupFullMontage #O file</TD>
           <TD>Opens a full grid montage with the given name at the current magnification, without opening
              any dialogs.&nbsp; The current acquisition parameters of the camera parameter set indicated 
-            in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
+            in the Montage Setup dialog will be used.&nbsp; If <b>#O</b> is nonzero, it sets the minimum 
             overlap factor for fitting the montage, overriding the corresponding entry in the setup 
             dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5&nbsp; Command added in 4.1, 31-Oct-22, 
             changed to have an overlap factor 6-Mar-23.</TD>
@@ -2334,6 +2334,19 @@
             are the lower and upper X coordinates in microns and they must be negative and positive, 
             respectively; enter a 0 to use the existing limit.&nbsp; <b>LY</b> and <b>UY</b> are similar for 
             Y.&nbsp; Command added in 4.1, 6-Mar-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetupPolygonMontage #I #O file</TD>
+          <TD>Opens a polygon montage with the given name at the current magnification, without opening
+             any dialogs.&nbsp; For <b>#I</b>, enter 0 for
+              the current Navigator item or the item being acquired; an index greater than 0 for the item with
+              that index in the table; or a value less than 0 to count back from the end of the
+              table, where -1 is the last item.&nbsp; The indicated item must be a montage.&nbsp; The current 
+            acquisition parameters of the camera parameter set indicated 
+            in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
+            overlap factor for fitting the montage, overriding the corresponding entry in the setup 
+            dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5&nbsp; Command added in 4.1, 31-Oct-22, 
+            changed to have an overlap factor 6-Mar-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNumMontagePieces</TD>

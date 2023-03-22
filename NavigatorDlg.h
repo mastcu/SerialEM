@@ -71,7 +71,7 @@ public:
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
     BOOL forceStage, float overlapFac = 0.);
 	void SetupSuperMontage(BOOL skewed);
-	void FullMontage(bool skipDlg, float overlapFac);
+	void FullMontage(bool skipDlg, float overlapFac, bool forMacro = false);
   void AutoSave();
 	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
     float angle, float &stageX, float &stageY, EMimageBuffer *imBuf = NULL);
@@ -92,7 +92,8 @@ public:
   int NewMap(bool unsuitableOK = false, int addOrReplaceNote = 0, CString *newNote = NULL);
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
-	int PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg);
+	int PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, int itemInd = -1, 
+    float overlapFac = 0., bool forMacro = false);
 	void TransformPts();
   void DoClose() {OnCancel();};
   BOOL GetAcquiring() {return mAcquireIndex >= 0;};
@@ -103,7 +104,8 @@ public:
   BOOL NoDrawing() {return !(mAddingPoints || mAddingPoly || mMovingItem);};
 	int GetItemType();
   int LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename = NULL);
-	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg, float overlapFac = 0.);
+	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg, 
+    float overlapFac = 0., bool forMacro = false);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
 	int DoSave(bool autoSave);

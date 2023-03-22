@@ -172,7 +172,6 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CookParams *cookParams = mWinApp->GetCookParams();
   AutocenParams acParams;
   AutocenParams *acParmP;
-  mWinApp->mMultiTSTasks->ClearAutocenParams();
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
 
@@ -182,7 +181,6 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
-  mWinApp->mNavHelper->ClearStateArray();
   int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
   float *deExposures = mWinApp->mGainRefMaker->GetDEexposureTimes();
   CArray<FrameAliParams, FrameAliParams> *faParamArray =
@@ -204,10 +202,16 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
     mWinApp->mNavHelper->GetMarkerShiftArray();
   BaseMarkerShift markerShift;
-  zbgArray->RemoveAll();
   CFileStatus status;
   BOOL startingProg = mWinApp->GetStartingProgram();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
+
+  // Clear all arrays being added to
+  mWinApp->mMultiTSTasks->ClearAutocenParams();
+  mWinApp->mNavHelper->ClearStateArray();
+  zbgArray->RemoveAll();
+  markerShiftArr->RemoveAll();
+
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
   msParams->customHoleX.clear();
@@ -698,11 +702,24 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         StripItems(strLine, 1, navAliParm->templateLabel);
 
       } else if (NAME_IS("MarkerShift")) {
-        markerShift.fromMagInd = itemInt[1];
-        markerShift.toMagInd = itemInt[2];
-        markerShift.shiftX = itemFlt[3];
-        markerShift.shiftY = itemFlt[4];
-        markerShiftArr->Add(markerShift);
+        mag = 0;
+        for (index = 0; index < (int)markerShiftArr->GetSize(); index++) {
+          markerShift = markerShiftArr->GetAt(index);
+          if (markerShift.fromMagInd == itemInt[1] &&
+            markerShift.toMagInd == itemInt[2]) {
+            markerShift.shiftX = itemFlt[3];
+            markerShift.shiftY = itemFlt[4];
+            mag = 1;
+            break;
+          }
+        }
+        if (!mag) {
+          markerShift.fromMagInd = itemInt[1];
+          markerShift.toMagInd = itemInt[2];
+          markerShift.shiftX = itemFlt[3];
+          markerShift.shiftY = itemFlt[4];
+          markerShiftArr->Add(markerShift);
+        }
 
       } else if (NAME_IS("DewarVacParams")) {
         dewar->checkPVP = itemInt[1] != 0;

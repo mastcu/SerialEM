@@ -22,6 +22,7 @@
 #include "ShiftManager.h"
 #include "ShiftCalibrator.h"
 #include "EMmontageController.h"
+#include "MontageSetupDlg.h"
 #include "LogWindow.h"
 #include "EMscope.h"
 #include "CameraController.h"
@@ -3135,7 +3136,28 @@ int CMacCmd::SetupFullMontage(void)
   if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
   SubstituteLineStripItems(mStrLine, 2, mEnteredName);
-  mNavigator->FullMontage(true, mItemFlt[1]);
+  mNavigator->FullMontage(true, mItemFlt[1], true);
+  return 0;
+}
+
+// SetupPolygonMontage
+int CMacCmd::SetupPolygonMontage(void)
+{
+  int index;
+  CMapDrawItem *navItem;
+  CMontageSetupDlg dlg;
+
+  index = mItemEmpty[1] ? 0 : mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  if (navItem->IsNotPolygon())
+    ABORT_LINE("Navigator item is not a polygon for line:\n\n");
+  if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
+    ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
+  SubstituteLineStripItems(mStrLine, 3, mEnteredName);
+  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
+    ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
   return 0;
 }
 

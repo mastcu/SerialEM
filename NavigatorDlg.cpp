@@ -4054,34 +4054,43 @@ void CNavigatorDlg::PolygonFromCorners(void)
 }
 
 // Setup a montage from a polygon
-int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg) 
+int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, 
+  int itemInd, float overlapFac, bool forMacro)
 {
-	CMapDrawItem *itmp;
+	CMapDrawItem *item, *itmp;
   CString str;
   MontParam *montp;
   int err;
   if (!mHelper->GetDoingMultipleFiles())
     mWinApp->RestoreViewFocus();
-  if (!mHelper->GetDoingMultipleFiles() && !SetCurrentItem(false))
-    return 1;
-  if (mItem->IsNotPolygon())	
+  if (itemInd < 0) {
+    if (!mHelper->GetDoingMultipleFiles() && !SetCurrentItem(false))
+      return 1;
+    item = mItem;
+    itemInd = mCurrentItem;
+  } else {
+    if (itemInd >= mItemArray.GetSize())
+      return 1;
+    item = mItemArray.GetAt(itemInd);
+  }
+  if (item->IsNotPolygon())	
     return 1;
   itmp = new CMapDrawItem;
-  for (int i = 0; i < mItem->mNumPoints; i++)
-    itmp->AppendPoint(mItem->mPtX[i], mItem->mPtY[i]);
-  err = SetupMontage(itmp, montDlg, skipSetupDlg);
-  if (!err && (fabs(mItem->mStageX - itmp->mStageX) > 0.005 || 
-    fabs(mItem->mStageY - itmp->mStageY) > 0.005)) {
+  for (int i = 0; i < item->mNumPoints; i++)
+    itmp->AppendPoint(item->mPtX[i],item->mPtY[i]);
+  err = SetupMontage(itmp, montDlg, skipSetupDlg, overlapFac, forMacro);
+  if (!err && (fabs(item->mStageX - itmp->mStageX) > 0.005 ||
+    fabs(item->mStageY - itmp->mStageY) > 0.005)) {
       if (!mHelper->GetDoingMultipleFiles()) {
         str.Format("Changing center of polygon from %.2f,%.2f to center for montage, "
-          "%.2f,%.2f", mItem->mStageX, mItem->mStageY, itmp->mStageX, itmp->mStageY);
+          "%.2f,%.2f", item->mStageX, item->mStageY, itmp->mStageX, itmp->mStageY);
       mWinApp->AppendToLog(str);
       }
-    mItem->mStageX = itmp->mStageX;
-    mItem->mStageY = itmp->mStageY;
+    item->mStageX = itmp->mStageX;
+    item->mStageY = itmp->mStageY;
     montp = mWinApp->GetMontParam();
-    montp->fitToPolygonID = mItem->mMapID;
-    UpdateListString(mCurrentItem);
+    montp->fitToPolygonID = item->mMapID;
+    UpdateListString(itemInd);
     SetChanged(true);
   }
   delete itmp;
@@ -4089,7 +4098,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
 }
 
 // Setup a montage for the full area (or user specified area)
-void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac)
+void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
@@ -4166,7 +4175,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac)
   itmp->AppendPoint(minCornerX, minCornerY);
 
   mSettingUpFullMont = true;
-  SetupMontage(itmp, NULL, skipDlg, overlapFac);
+  SetupMontage(itmp, NULL, skipDlg, overlapFac, forMacro);
   mSettingUpFullMont = false;
   if (mWinApp->Montaging()) {
     montp->forFullMontage = true;
@@ -4178,7 +4187,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac)
 
 // Common routine to set up a montage
 int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, 
-  bool skipSetupDlg, float overlapFac)
+  bool skipSetupDlg, float overlapFac, bool forMacro)
 {
   ScaleMat aInv;
   int i, err;
@@ -4236,7 +4245,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     mFrameLimitY = camParam->sizeY;
     mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
       mFrameLimitX, mFrameLimitY, 1);
-    if ((conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
+    if (!skipSetupDlg && (conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
       conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) &&
       AfxMessageBox("The " + modeNames[consetNum] + " area is significantly smaller than "
       "the camera frame size."
@@ -4277,7 +4286,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   if (montDlg) {
     err = B3DCHOICE(!skipSetupDlg && montDlg->DoModal() != IDOK, 1, 0);
   } else {
-    if (mSettingUpFullMont && mWinApp->mMacroProcessor->DoingMacro())
+    if (forMacro && mWinApp->mMacroProcessor->DoingMacro())
       err = mDocWnd->GetMontageParamsAndFile(true, montParam->xFrame, montParam->yFrame, 
         mWinApp->mMacroProcessor->GetEnteredName());
     else
@@ -7805,8 +7814,6 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   IntVec skipIndex;
   int adocInd, adocErr, ind, sectInd, outInd, ind2;
   float varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
-  BaseMarkerShift baseShift;
-  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
   FILE *fp;
   if (autosave)
     filename = mParam->autosaveFile;
@@ -7910,22 +7917,6 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_FILE_OPTS
 
-    // Save base marker shifts
-#undef ADOC_ARG
-#define ADOC_ARG "BaseMarkerShift",sectInd
-#define BASE_MARKER_SHIFTS
-    for (ind = 0; ind < shiftArray->GetSize(); ind++) {
-      baseShift = shiftArray->GetAt(ind);
-      str.Format("%d", ind);
-      sectInd = AdocAddSection("BaseMarkerShift", str);
-      if (sectInd < 0) {
-        adocErr++;
-      } else {
-#include "NavAdocParams.h"
-      }
-    }
-#undef BASE_MARKER_SHIFTS
-
     if (adocErr) {
       str.Format("%d errors occurred setting Navigator data into autodoc structure before"
         " writing it as XML", adocErr);
@@ -8009,21 +8000,6 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       }
     }
 #undef NAV_FILE_OPTS
-
-    // Save base marker shifts
-#define BASE_MARKER_SHIFTS
-    for (ind = 0; ind < shiftArray->GetSize(); ind++) {
-      baseShift = shiftArray->GetAt(ind);
-      str.Format("%d", ind);
-      fprintf(fp, "\n");
-      sectInd = AdocWriteSectionStart(fp, "BaseMarkerShift", str);
-      if (sectInd < 0) {
-        adocErr++;
-      } else {
-#include "NavAdocParams.h"
-      }
-    }
-#undef BASE_MARKER_SHIFTS
 
     if (adocErr) {
       str.Format("%d errors occurred writing Navigator data into file", adocErr);
@@ -8128,8 +8104,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   float xx, yy, fvals[4], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
   int numExternal, externalType, numParams, curNum, numDig, maxNum;
   int holeSkips[2000];
-  BaseMarkerShift baseShift;
-  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray = mHelper->GetMarkerShiftArray();
   std::set<std::string> filesNotFound;
   std::set<std::string>::iterator fileIter;
   std::map<std::string, std::string> filesFoundMap;
@@ -8276,7 +8250,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       mNewItemNum = 1;
       mDualMapID = -1;
       mHelper->ClearSavedMapMarkerShifts();
-      shiftArray->RemoveAll();
     }
     mHelper->SetExtDrawnOnID(0);
     addIndex = mergeFile ? (int)mItemArray.GetSize() : 0;
@@ -8413,17 +8386,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         FIND_DUP_OR_ADD(mFileOptArray, fileOpt, fileo2, newFileOptInds);
       }
 #undef NAV_FILE_OPTS
-#undef SECT_NAME
-
-      // Base marker shifts
-#define BASE_MARKER_SHIFTS
-#define SECT_NAME "BaseMarkerShift"
-      numParams = AdocGetNumberOfSections("BaseMarkerShift");
-      for (ind1 = 0; ind1 < numParams && !mergeFile; ind1++) {
-#include "NavAdocParams.h"
-        shiftArray->Add(baseShift);
-      }
-#undef BASE_MARKER_SHIFTS
 #undef SECT_NAME
 
 #undef INT_SETT_ASSIGN
