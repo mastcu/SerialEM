@@ -3,8 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-3/20/22: SEM_4-1-0beta14
-3/20/22: Fixed spiral hole pattern for non-square patterns.
+3/25/23: Changed SkipAdvancedScripting property so that negative values
+provide flags for particular components to skip (autoloader and/or temperature
+control).
+
+3/22/23: Prevented file properties dialog from opening when checking New file
+at item for a polygon and dialogs are being skipped.
+
+3/22/23: Removed marker shifts from Navigator file, cleared them out before
+loading them from settings, and eliminated duplicates when loading.
+
+3/22/23: Added script command to setup polygon montage.
+
+3/22/23: Added property to suppress selected messages.
+
+3/20/23: SEM_4-1-0beta14
+3/20/23: Fixed spiral hole pattern for non-square patterns.
 
 3/9/23: Added capability for "status lines" at the bottom of the Camera &
 Script control panel that can be written to by script command.

@@ -48,8 +48,8 @@ static char THIS_FILE[]=__FILE__;
 
 // Scope plugin version that is good enough if there are no FEI cameras, and if there 
 // are cameras.  This allows odd features to be added without harrassing other users
-#define FEISCOPE_NOCAM_VERSION 105
-#define FEISCOPE_CAM_VERSION   114
+#define FEISCOPE_NOCAM_VERSION 115
+#define FEISCOPE_CAM_VERSION   115
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -183,7 +183,7 @@ CEMscope::CEMscope()
   vFalse = new _variant_t(false);
   vTrue = new _variant_t(true);
   mUseTEMScripting = 0;
-  mSkipAdvancedScripting = false;
+  mSkipAdvancedScripting = 0;
   mIncrement = 1.5;
   mStageThread = NULL;
   mScreenThread = NULL;
@@ -837,7 +837,7 @@ int CEMscope::Initialize()
       SEMReportCOMError(E, "setting whether to skip advanced scripting ");
   }
   try {
-    if (mPlugFuncs->ASIsetVersion && !mSkipAdvancedScripting) {
+    if (mPlugFuncs->ASIsetVersion && mSkipAdvancedScripting <= 0) {
       if (mAdvancedScriptVersion > 0)
         mPlugFuncs->ASIsetVersion(mAdvancedScriptVersion);
       else
@@ -6630,6 +6630,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
         success = false;
         names = "An error occurred getting names from the autoloader panel: \r\n";
         names += mPlugFuncs->GetLastErrorString();
+        names += "\r\n";
       }
     }
   }
@@ -8860,7 +8861,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     CCDname = params->detectorName[0];
 
   // It outputs a message only for error 3, COM error
-  if (restoreShutter < -900 && mSkipAdvancedScripting)
+  if (restoreShutter < -900 && mSkipAdvancedScripting > 0)
     restoreShutter = -950;
   err = mPlugFuncs->LookupScriptingCamera((LPCTSTR)CCDname, refresh, restoreShutter,
     &params->eagleIndex, &minDrift, &maxDrift);
@@ -8893,7 +8894,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         mWinApp->AppendToLog(CString("Connected to ") +
           B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, "Advanced", "Standard") +
           " Scripting interface for FEI camera access" + B3DCHOICE(
-          mSkipAdvancedScripting, " because property SkipAdvancedScripting is set!", ""));
+          mSkipAdvancedScripting > 0, " because property SkipAdvancedScripting is set!",
+            ""));
         doMessage = false;
       }
       if (params->CamFlags & PLUGFEI_USES_ADVANCED) {

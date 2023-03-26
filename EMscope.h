@@ -830,7 +830,7 @@ private:
   float mFalcon4iReadoutInterval; // Frame interval for Falcon 4i camera
   int mMinFalcon4CountAlignFrac; // Minimum align fraction for Falcon 4 in counting
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
-  BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
+  int mSkipAdvancedScripting;  // To make cameras connect by old scripting
   std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested
   BOOL mSkipJeolNeutralCheck;  // Flag to skip the check of neutral values
   int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"

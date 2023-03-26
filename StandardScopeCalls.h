@@ -11,7 +11,7 @@
  * See FeiScope PlugSocket.cpp for a checklist on adding a new function for FEI
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 114
+#define FEISCOPE_PLUGIN_VERSION 115
 #define SCALE_POWER_OFFSET  12
 #endif
 
@@ -102,7 +102,7 @@ CALL_NO_ARGS(LoaderBufferCycle) LINE_END
 GET_ONE_INT(NumberOfLoaderSlots) LINE_END
 SET_ONE_BOOL(SetScreenDim) LINE_END
 GET_ONE_INT(GetFilmStock) LINE_END
-SET_ONE_BOOL(SkipAdvancedScripting) LINE_END
+SET_ONE_INT(SkipAdvancedScripting) LINE_END
 GET_ONE_INT(GetXLensModeAvailable) LINE_END
 GET_TWO_DBL(GetXLensTilt) LINE_END
 SET_TWO_DBL(SetXLensTilt) LINE_END
