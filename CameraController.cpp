@@ -3414,6 +3414,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.LowestMModeMag = mScope->GetLowestMModeMagInd();
   mTD.JeolMagChangeDelay = mScope->GetJeolPostMagDelay();
   mTD.RestoreBBmode = mParam->restoreBBmode != 0;
+  mTD.scopeSimulation = mScope->GetSimulationMode();
 
   // Set up all the shuttering and timing parameters
   CapSetupShutteringTiming(conSet, inSet, bEnsureDark);
@@ -10010,6 +10011,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mExposure = (float)mExposure;
       extra->mBinning = (float)mBinning / BinDivisorF(mParam);
       extra->mCamera = curCam;
+      if (FEIscope)
+        extra->mProbeMode = mScope->GetProbeMode();
       extra->mUncroppedX = -mTD.DMSizeX;
       extra->mUncroppedY = -mTD.DMSizeY;
       if (mParam->K2Type || (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam)) ||
@@ -11483,6 +11486,10 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   if (retval)
     message = td->scopePlugFuncs->GetLastErrorString();
   td->scopePlugFuncs->EndThreadAccess(2);
+
+  // Workaround for a problem on a simulator
+  if (retval == 2 && td->scopeSimulation && message.Find("Cable::Exception") > 0)
+    retval = 0;
   if (retval == 2 && td->MakeFEIerrorTimeout) {
 
     // Turn into a timeout

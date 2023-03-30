@@ -162,6 +162,7 @@ struct CameraThreadData {
   BOOL Simulation;            // Flag for the early simulation mode
   BOOL FauxCamera;            // Using a simulation camera
   int PluginVersion;          // DM Plugin version for this camera
+  int scopeSimulation;        // Copy of EMScope's simulation value
   int Camera;                 // Active Camera number
   int SelectCamera;           // Gatan camera number to select
   int TietzType;              // Or type of Tietz camera
