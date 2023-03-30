@@ -3635,6 +3635,10 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
     1.107f, 1.463f, 2.077f, 2.576f, 3.096f, 3.752f, 4.569f, 5.538f, 6.631f,
     7.434f, 8.03f, 8.66f, 9.565f, 11.071f, 12.714f, 14.403f, 16.463f, 19.035f,
     21.459f, 24.426f, 27.234f, 30.f, 34.4f, 39.275f, 43.48f, 48.019f, 53.144f};
+  const float Falcon4iCounts200KV[] = {0.398f, 0.806f, 1.689f, 2.450f, 3.627f, 5.800f,
+    7.426f, 9.572f, 11.82f, 14.02f, 15.95f};
+  const float Falcon4iRates200KV[] = {0.4f, 0.81f, 1.75f, 2.59f, 3.98f, 6.84f, 9.31f,
+    13.15f, 18.28f, 25.09f, 34.2f};
 
   const float *countsArr, *ratesArr;
   int numVals;
@@ -3664,6 +3668,10 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
       countsArr = &Falcon3Counts200KV[0];
       ratesArr = &Falcon3Rates200KV[0];
       numVals = sizeof(Falcon3Counts200KV) / sizeof(float);
+    } else if (camParam->falconVariant == FALCON4I_VARIANT) {
+      countsArr = &Falcon4iCounts200KV[0];
+      ratesArr = &Falcon4iRates200KV[0];
+      numVals = sizeof(Falcon4iCounts200KV) / sizeof(float);
     } else {
       if (mScope->GetHTValue() > 250) {
         countsArr = &Falcon4Counts300KV[0];
