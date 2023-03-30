@@ -1061,6 +1061,10 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
                 (float)(bx * gridMat.xpx + by * gridMat.xpy);
               stageY += yCenters[mGrid[iy][ix]] - 
                 (float)(bx * gridMat.ypx + by * gridMat.ypy);
+              /*PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %d %d  stage X"
+                " Y %.3f %.1f", navInds[mGrid[iy][ix]], ix, iy, (LPCTSTR)item->mLabel,
+                ind, bx, by, item->mStageX - bx * gridMat.xpx - by *
+                gridMat.xpy, item->mStageY - bx * gridMat.ypx - by * gridMat.ypy);*/
               if (groupID < 0 || bx + by == 0)
                 groupID = item->mGroupID;
             } else {

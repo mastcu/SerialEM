@@ -56,10 +56,10 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_MAKE_TEMPLATE_MAP, m_butMakeMap);
   DDX_Text(pDX, IDC_STAT_SELECTED_BUF, m_strSelectedBuf);
   DDX_Text(pDX, IDC_EDIT_MAX_SHIFT, m_fAlignShift);
-  DDV_MinMaxFloat(pDX, m_fAlignShift, 0.02f, 10.f);
+  DDV_MinMaxFloat(pDX, m_fAlignShift, 0.02f, 25.f);
   DDX_Control(pDX, IDC_EDIT_RESET_IS, m_editResetIS);
   DDX_Text(pDX, IDC_EDIT_RESET_IS, m_fResetThresh);
-  DDV_MinMaxFloat(pDX, m_fResetThresh, 0.01f, 10.f);
+  DDV_MinMaxFloat(pDX, m_fResetThresh, 0.01f, 20.f);
   DDX_Control(pDX, IDC_STAT_REPEAT_RESET, m_statRepeatReset);
   DDX_Text(pDX, IDC_STAT_REPEAT_RESET, m_strRepeatReset);
   DDX_Control(pDX, IDC_STAT_RESET_TIMES, m_statResetTimes);

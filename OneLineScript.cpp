@@ -176,8 +176,11 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
 void COneLineScript::Update()
 {
   BOOL runnable = mWinApp->mMacroProcessor->MacroRunnable(MAX_MACROS);
-  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++)
+  BOOL busy = mWinApp->DoingTasks();
+  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
     m_butRun[ind].EnableWindow(runnable);
+    m_editOneLine[ind].EnableWindow(!busy);
+  }
 }
 
 // Process a character in a line
