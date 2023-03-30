@@ -239,6 +239,7 @@ CMacroProcessor::CMacroProcessor()
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
+  mFocusedWndWhenSavedStatus = NULL;
   mRestoreMacroEditors = true;
   mOneLinePlacement.rcNormalPosition.right = 0;
   mMailSubject = "Message from SerialEM script";
@@ -957,10 +958,13 @@ int CMacroProcessor::SelectScriptAtStartEnd(CString &name, const char *when)
   return 0;
 }
 
-void CMacroProcessor::SaveStatusPanes()
+void CMacroProcessor::SaveStatusPanes(int macNum)
 {
   for (int ind = 0; ind < 3; ind++)
     mWinApp->mMainFrame->GetStatusText(ind + 1, mSavedStatusPanes[ind]);
+  if (macNum >= 0 && macNum < MAX_MACROS && mMacroEditer[macNum])
+    mMacroEditer[macNum]->TransferMacro(true);
+  mFocusedWndWhenSavedStatus = GetFocus();
 }
 
 // TASK HANDLERS AND ANCILLARY FUNCTIONS
@@ -1760,6 +1764,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       mWinApp->mMainFrame->SetStatusText(ind + 1, mSavedStatusPanes[ind]);
       mSavedStatusPanes[ind] = "";
     }
+  }
+  if (mFocusedWndWhenSavedStatus) {
+    SetFocus(mFocusedWndWhenSavedStatus);
+    mFocusedWndWhenSavedStatus = NULL;
   }
 }
 

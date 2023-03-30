@@ -440,6 +440,7 @@ protected:
   IntVec mStoredGraphTypes;    // Stored type data
   std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
   CString mInputToNextProcess; // Input to pipe in when running next process
+  HWND mFocusedWndWhenSavedStatus;
   CString mSavedStatusPanes[3];
   CString mStatusLines[NUM_CM_MESSAGE_LINES];
   bool mHighlightStatus[NUM_CM_MESSAGE_LINES];
@@ -609,7 +610,7 @@ public:
   afx_msg void OnRunAtProgramEnd();
   afx_msg void OnUpdateRunAtProgramEnd(CCmdUI *pCmdUI);
   int SelectScriptAtStartEnd(CString &name, const char *when);
-  void SaveStatusPanes();
+  void SaveStatusPanes(int macNum);
   afx_msg void OnUseMonospacedFont();
   afx_msg void OnUpdateUseMonospacedFont(CCmdUI *pCmdUI);
   afx_msg void OntShowIndentButtons();
