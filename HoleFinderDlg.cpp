@@ -16,6 +16,7 @@
 #include "EMbufferManager.h"
 #include "ShiftManager.h"
 #include "ProcessImage.h"
+#include "Utilities\XCorr.h"
 #include "EMmontageController.h"
 #include "HoleFinderDlg.h"
 #include "NavHelper.h"
@@ -773,7 +774,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav;
   int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
   float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY, useDiameter;
-  float autocorSpacing, vectors[4], autocorCrit = 0.14f;
+  float autocorSpacing, testSpacing, vectors[4], autocorCrit = 0.14f;
   double tstageX, tstageY;
   ScaleMat rMat, rInv, aMat;
   MontParam *montP = &mMontParam;
@@ -855,15 +856,16 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   }
   mAdjustedStageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
 
-  autocorSpacing = mParams.spacing;
-  if (mFindingFromDialog && !mSkipAutoCor && !hexArray && 
-    image->getWidth() / mParams.spacing >= 4. && 
-    image->getHeight() / mParams.spacing >= 4.) {
+  testSpacing = hexArray ? mParams.hexSpacing : mParams.spacing;
+  autocorSpacing = testSpacing;
+  if (mFindingFromDialog && !mSkipAutoCor && 
+    image->getWidth() / testSpacing >= 4. && 
+    image->getHeight() / testSpacing >= 4.) {
     if (!mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0., mBufInd,
-      FIND_PIX_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET, autocorSpacing,
-      vectors)) {
+      FIND_ACPK_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET | 
+      (hexArray ? FIND_ACPK_HEX_GRID : 0), autocorSpacing, vectors)) {
       autocorSpacing *= mPixelSize;
-      delX = fabs(mParams.spacing - autocorSpacing) / mParams.spacing;
+      delX = fabs(testSpacing - autocorSpacing) / testSpacing;
       if (delX > autocorCrit) {
         mess.Format("Autocorrelation peak analysis indicates that the spacing\n"
           "between hole centers is %.2f microns, %.0f%% from the entered value\n\n"
@@ -1052,8 +1054,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   // Get the reduction
   mReduction = B3DMAX(1.f, curDiam / targetDiam);
   diamReduced = curDiam / mReduction;
-  spacingReduced = ((hexArray ? mParams.hexSpacing : mParams.spacing) / mPixelSize) / 
-    mReduction;
+  spacingReduced = (testSpacing / mPixelSize) / mReduction;
 
   // get the maximum radius assuming worst-case expansion
   maxRadius = diamReduced / 2.f;
