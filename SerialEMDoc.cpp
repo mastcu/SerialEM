@@ -572,7 +572,8 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
 
 void CSerialEMDoc::OnUpdateFileOpenold(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mNumStores < MAX_STORES);
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+    mNumStores < MAX_STORES);
 }
 
 void CSerialEMDoc::OnFileMontagesetup() 
