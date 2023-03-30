@@ -6702,7 +6702,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           "magnification are the same as when the image was taken.\n\n"
           "Are you sure you want to create a map from this image?", 
           hasStage ? "" : "stage position, ");
-        if (!cropped && SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
+        if (!cropped && !mWinApp->mMacroProcessor->DoingMacro() && 
+          SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
           return 2;
       } else if (!mBufferManager->IsBufferSavable(imBuf)) {
         
