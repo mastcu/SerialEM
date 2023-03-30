@@ -39,6 +39,7 @@ static char THIS_FILE[] = __FILE__;
 static void ctffindPrintFunc(const char *strMessage);
 static int ctffindDumpFunc(const char *filename, float *data, int xsize, int ysize);
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage
 
@@ -2152,7 +2153,7 @@ double CProcessImage::WholeImageMean(EMimageBuffer *imBuf)
 
 void CProcessImage::OnProcessShowcrosscorr() 
 {
-  mShiftManager->AutoAlign(0, 0, false, true);	
+  mShiftManager->AutoAlign(0, 0, false, AUTOALIGN_SHOW_CORR);
 }
 
 void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI) 
@@ -2170,7 +2171,7 @@ void CProcessImage::OnProcessAutocorrelation()
   mShiftManager->SetSigma1(0.);
   mShiftManager->SetSigma2(0.);
   mShiftManager->SetRadius2(0.);
-  mShiftManager->AutoAlign(-1, 0, false, true);
+  mShiftManager->AutoAlign(-1, 0, false, AUTOALIGN_SHOW_CORR);
 
   // Fix the scaling, 32000 is not really good
   if (mImBufs->mImageScale) {
@@ -2280,11 +2281,6 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   float testFrac = 0.02f;
   float trimFrac = 0.01f;
   float taperFrac = 0.05f;
-  int numScan = 8;
-  float minDivDist = 3.;
-  float totMaxCrit = 0.5f;
-  float totDistCrit = 0.75f;
-  float perpMedCrit = 0.2f;
   int targetMinBlocks[MAX_AUTO_TARGET] = {170, 125, 12, 8, 5, 3, 0};
   int autoTargetSizes[MAX_AUTO_TARGET] = {2048, 1536, 1024, 768, 512, 384, 256};
   double gridNM = B3DCHOICE(spacing != 0, 1000. / spacing, 1000000. / mGridLinesPerMM);
@@ -2325,6 +2321,8 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   if (!spacing && mGridMeshSize > 0)
     gridNM = 2.54e7 / mGridMeshSize;
+  if (findFlags & FIND_ACPK_HEX_GRID)
+    catalFac = sqrtf(3.);
 
   // Handle automatic target selection
   if (!targetSize) {
@@ -2408,8 +2406,9 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   XCorrSetCTF(sigma1, 0.f, 0.f, 0.f, CTF, nxPad, nyPad, &delta);
   XCorrCrossCorr(array, array, nxPad, nyPad, delta, CTF);
 
-  ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], numPeaks,
-    doCatalase ? 16 : 64, catalFac, findFlags & FIND_PIX_NO_WAFFLE, markedX, markedY, 
+  ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], 
+    numPeaks, doCatalase ? 16 : 64, catalFac, 
+    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_RATIOS), markedX, markedY,
     &dist1, &dist2, &angle, vectors, num, &ind1, &messBuf[0], MAX_MESS_BUF);
 
   // Now take care of display regardless, display point
@@ -2451,8 +2450,11 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   dist2 *= needBin;
   for (ind1 = 0; ind1 < 4; ind1++)
     vectors[ind1] *= needBin;
-  spacing = (dist1 + dist2) / 2.f;
-  if (findFlags & FIND_PIX_NO_WAFFLE)
+  if (findFlags & FIND_ACPK_HEX_GRID)
+    spacing = dist1;
+  else
+    spacing = (dist1 + dist2) / 2.f;
+  if (findFlags & FIND_ACPK_NO_WAFFLE)
     return 0;
 
   if (doCatalase) {

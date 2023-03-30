@@ -283,7 +283,7 @@ void CDistortionTasks::SPNextTask(int param)
 
   case SP_SECOND_SHOT:
     // 11/30/11: Call with argument not to shift so it doesn't need to be restored
-    mShiftManager->AutoAlign(1, 0, false, false, NULL, (mMinShiftX + mMaxShiftX) / 2.f,
+    mShiftManager->AutoAlign(1, 0, false, 0, NULL, (mMinShiftX + mMaxShiftX) / 2.f,
       -(mMinShiftY + mMaxShiftY) / 2.f);
     mImBufs->mImage->getShifts(shiftX, shiftY);
     mImBufs[1].mImage->getShifts(bShiftX, bShiftY);

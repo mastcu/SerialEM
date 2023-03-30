@@ -65,6 +65,8 @@ CShiftManager::CShiftManager()
   mLMRoughISscale = 0.0;
   mSTEMRoughISscale = 0.0;
   mTrimDarkBorders = false;
+  mErasePeriodicPeaks = false;
+  mNoDefaultPeakErasing = 0;
   mDisableAutoTrim = 0;
   SetPeaksToEvaluate(0, 0.);
   mTrimFrac = 0.04f;       // Fraction to trim for correlations
@@ -471,7 +473,8 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 // inSmallPad can be 1 for padding by only a small fraction, 0 for default padding by
 //            by 0.45, or -1 for full padding by 0.9; a value > 1 indicates template corr
 // doImShift (default true) controls whether it does scope image shift
-// showCor (default false) can be set true to put cross-correlation in A
+// corrFlags (default 0) can be set 1 to put cross-correlation in A plus 2 to try to 
+// eliminate peaks in FFT from periodic structures
 // peakVal is returned with the raw correlation peak value if non-NULL 
 // expectedXshift, expectedYshift are the expected shifts so that correlation is over the
 //                                region of overlap (default 0,0)
@@ -485,7 +488,7 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 // on the image or scope or accounting for shift in C
 // If probSigma is non-zero, CCC values will also be weighted by a gaussian that depends
 // on the image shift of the peak as fraction of area extent, with this sigma
-int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL showCor,
+int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int corrFlags,
                              float *peakVal, float expectedXshift, float expectedYshift,
                              float conical, float scaling, float rotation, float *CCC,
                              float *fracPix, BOOL trimOutput, float *xShiftOut, 
@@ -502,6 +505,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   float trimCenFrac = 0.2f;
   float trimPassRatio = 0.3f;
   float oversizeFrac = 0.1f;
+  float freqScale = 1.;
   bool centered = true;
   int numPeaks = mMaxNumPeaksToEval;
   int xInd, yInd;
@@ -511,6 +515,10 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   if (mWinApp->mNavHelper->GetRealigning() || mWinApp->mShiftCalibrator->CalibratingIS())
     trimFrac = 0.04f;
   bool tmplCorr = inSmallPad > 1;
+  bool showCor = (corrFlags & AUTOALIGN_SHOW_CORR) != 0;
+  bool fillSpots = (corrFlags & AUTOALIGN_FILL_SPOTS) != 0 || (mErasePeriodicPeaks &&
+    !(corrFlags & AUTOALIGN_KEEP_SPOTS));
+  BOOL debugTime = GetDebugOutput('T');
   if (inSmallPad > 0)
     fracPad = 0.05f;
   else if (inSmallPad < 0)
@@ -546,6 +554,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   bool disableTaskTrim = (mDisableAutoTrim & NOTRIM_TASKS_ALL) || 
     ((mDisableAutoTrim & NOTRIM_TASKS_TS) && mWinApp->DoingTiltSeries());
   bool disableItemTrim = (mDisableAutoTrim & NOTRIM_REALIGN_ITEM) != 0;
+  double startTime, time1, time2, time3, time4, time5;
 
   // Set up pointers and flags for cleanup on error or completion
   mArray = NULL;
@@ -584,8 +593,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     peak = mPeakHere;
   }
 
-  DWORD startTime = GetTickCount();
-  DWORD time1, time2, time3, time4, time5;
+  if (debugTime)
+    startTime = wallTime() * 1000.;
+
   if (!CCCptr)
     CCCptr = &CCChere;
   if (!fracPtr)
@@ -597,6 +607,10 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   if (autoCorr) {
     toBuf = 0;
     targetSize = 2048; //??
+  }
+  if (fillSpots) {
+    targetSize = 768;
+    freqScale = 0.75f;
   }
 
   if (scaling == 1.)
@@ -701,7 +715,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     mDeleteC = true;
   }
 
-  time1 = GetTickCount();
+  if (debugTime)
+    time1 = wallTime() * 1000.;
 
   // Get amount to stretch A to align to C;
   stretch = 1.0;
@@ -996,7 +1011,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     nxPad = B3DMAX(nxPad, nyPad);
     nyPad = nxPad;
   }
-  XCorrSetCTF(mSigma1, mSigma2, 0.f, mRadius2, mCTFa, nxPad, nyPad, &delta);
+  XCorrSetCTF(mSigma1 * freqScale, mSigma2 * freqScale, 0.f, mRadius2 * freqScale, mCTFa,
+    nxPad, nyPad, &delta);
   if (delta)
     for (int jj = 0; jj < 8193; jj++)
       mCTFa[jj] = (float)sqrt((double)mCTFa[jj]);
@@ -1008,7 +1024,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     return 1;
   }
 
-  time2 = GetTickCount();
+  if (debugTime)
+    time2 = wallTime() * 1000.;
 
   // Get tapered, padded images and correlate them.
   // It used to be taperFrac * (nxUseA + 2 * nxTrimA; i.e., trim size added back because
@@ -1030,10 +1047,16 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   XCorrTaperInPad(mDataC, typeC, widthC, ix0C, ix1C, iy0C, iy1C, mBrray,
         nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
 
-  time3 = GetTickCount();
+  if (debugTime)
+    time3 = wallTime() * 1000.;
 
-  XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
-  time4 = GetTickCount();
+  if (fillSpots) {
+    fillSpots = XCorrPeriodicCorr(mBrray, mArray, mCrray, nxPad, nyPad, delta, mCTFa);
+  } else {
+    XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
+  }
+  if (debugTime)
+    time4 = wallTime() * 1000.;
 
   if (alignLimit > 0) {
     iPeak = (int)(alignLimit / needBinA) + 2;
@@ -1104,8 +1127,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
           pow(yPeak[iy] + baseYshift, 2)) * needBinA > alignLimit)
           continue;
         CCChere = CCCoefficientTwoPads(mCrray, mArray,nxPad + 2, nxPad, nyPad,
-          xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2 + 2, (nyPad - nyUseC) / 2 + 2, 
-          (nxPad - nxUseA) / 2 + 2, (nyPad - nyUseA) / 2 + 2, minPixel, &numPixel);
+          xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2, (nyPad - nyUseC) / 2 + 2,
+          (nxPad - nxUseA) / 2 + 2, (nyPad - nyUseA) / 2 + 2 , minPixel, &numPixel);
         if (numPixel >= minPixel) {
           fracHere = (float)numPixel / (nxUse * nyUse);
           wgtCCC = CCChere * pow((double)fracHere, overlapPow);
@@ -1174,8 +1197,26 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     mImA->UnLock();
     if (toBuf < mWinApp->mBufferManager->GetShiftsOnAcquire())
       mImC->UnLock();
-    mWinApp->mProcessImage->CorrelationToBufferA(mBrray, nxPad, nyPad, 
-      commonBin / mImBufs->mBinning, corMin, corMax);
+
+    // Images have to be handled differently: get a new array and repack into it
+    if (corrFlags & (AUTOALIGN_SHOW_FILTA | AUTOALIGN_SHOW_FILTC)) {
+      float *imArr = (corrFlags & AUTOALIGN_SHOW_FILTA) ? mArray : mCrray;
+      short *tmpArr;
+      NewArray2(tmpArr, short int, nxPad, nyPad);
+      if (!tmpArr) {
+        AutoalignCleanup();
+        return 1;
+      }
+      for (int iy = 0; iy < nyPad; iy++)
+        for (int ix = 0; ix < nxPad; ix++)
+          tmpArr[ix + iy * nxPad] = (short)imArr[ix + iy * (nxPad + 2)];
+      mWinApp->mProcessImage->NewProcessedImage((corrFlags & AUTOALIGN_SHOW_FILTA) ?
+        mImBufs : &mImBufs[bufIndex], tmpArr, kSHORT, nxPad, nyPad, 
+        commonBin / mImBufs->mBinning);
+    } else {
+      mWinApp->mProcessImage->CorrelationToBufferA(mBrray, nxPad, nyPad,
+        commonBin / mImBufs->mBinning, corMin, corMax);
+    }
 
     // Reaquire pointers to image now in B
     mImA = mImBufs[1].mImage;
@@ -1197,7 +1238,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
   if (peakVal)
     *peakVal = peak[0];
-  time5 = GetTickCount();
+  if (debugTime)
+    time5 = wallTime() * 1000.;
 
   // This returned the shift to apply to A to align it to C, except that Y is inverted
   // But deStretch the shift if A was stretched; invert Y for this operation
@@ -1213,8 +1255,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     Ypeaks[indMaxPeak] *= needBinA;
   }
 
-  SEMTrace('T', "%d to bin, %d to stretch, %d to pad, %d to correlate\r\n"
-    "%d to find %d peaks and get CCCs",
+  if (debugTime)
+    PrintfToLog("%.1f to bin, %.1f to stretch, %.1f to pad, %.1f to correlate\r\n"
+    "%.1f to find %d peaks and get CCCs",
     time1 - startTime, time2 - time1, time3 - time2, time4 - time3,
     time5 - time4, numRealPeaks);
 

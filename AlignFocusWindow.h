@@ -73,6 +73,8 @@ public:
   void UpdateAutofocus(int magInd);
   afx_msg void OnButToMarker();
   CButton m_butToMarker;
+  BOOL m_bErasePeriodicPeaks;
+  afx_msg void OnErasePeriodicPeaks();
 };
 
 //{{AFX_INSERT_LOCATION}}

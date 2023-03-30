@@ -4421,7 +4421,7 @@ void EMmontageController::RealignNextTask(int param)
         expectX /= mImBufs->mBinning;
         expectY /= -mImBufs->mBinning;
       }
-      mShiftManager->AutoAlign(1, 0, false, false, NULL, expectX, expectY);
+      mShiftManager->AutoAlign(1, 0, false, 0, NULL, expectX, expectY);
       /*for (int jj = 0; jj < 3; jj++) {
       Sleep(300);
       mWinApp->SetCurrentBuffer(1);

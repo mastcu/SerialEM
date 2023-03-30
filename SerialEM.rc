@@ -1190,7 +1190,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,427,135,10
 END
 
-IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 126
+IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 136
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1210,13 +1210,15 @@ BEGIN
     CONTROL         "Center image shift on tilt axis",IDC_CENTERONAXIS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,82,99,10
     CONTROL         "Trim dark borders in Autoalign",IDC_TRIMBORDERS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,102,106,10
-    PUSHBUTTON      "Set Autoalign Trim Fraction",IDC_SET_TRIM_FRAC,14,113,91,10
+    PUSHBUTTON      "Set Autoalign Trim Fraction",IDC_SET_TRIM_FRAC,14,123,91,10
     LTEXT           "Def. target = -8.12 um",IDC_STATDEFTARGET,50,38,67,8
     CONTROL         "Adjust image shift between mags",IDC_APPLYISOFFSET,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,92,111,10
     CONTROL         "Correct backlash in stage moves",IDC_CORRECT_BACKLASH,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,72,111,10
     PUSHBUTTON      "To Marker",IDC_BUT_TO_MARKER,47,10,40,12
+    CONTROL         "Erase periodic peaks in Autoalign",IDC_ERASE_PERIODIC_PEAKS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,112,113,10
 END
 
 IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 512
@@ -1432,7 +1434,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,167,105,10,10
 END
 
-IDD_CAMERA_MACRO DIALOGEX 0, 0, 120, 154
+IDD_CAMERA_MACRO DIALOGEX 0, 0, 119, 154
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -4076,7 +4078,8 @@ BEGIN
 
     IDD_ALIGNFOCUS, DIALOG
     BEGIN
-        BOTTOMMARGIN, 124
+        RIGHTMARGIN, 118
+        BOTTOMMARGIN, 134
     END
 
     IDD_MONTAGESETUP, DIALOG
@@ -5177,6 +5180,8 @@ BEGIN
     IDC_USEINTENSITYATZERO  "Increase intensity to start series, so current value is used at zero tilt"
     IDC_CENTERONAXIS        "Move the center for image shift to the tilt axis"
     IDC_TRIMBORDERS         "Exclude unilluminated areas around image edge from alignment correlation"
+    IDC_ERASE_PERIODIC_PEAKS
+                            "Remove peaks in FFTs due to periodic structures to reduce bad correlations"
     IDC_SPINVIEWBIN         "Set binning for the complete overview image"
     IDC_SPINCURRENT_REG     "Set to a new value when the grid is rotated or item positions change"
     IDC_SPINCOSINEPOWER     "Set power for changing intensity by less than full cosine factor"

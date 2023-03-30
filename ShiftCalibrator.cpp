@@ -581,7 +581,9 @@ void CShiftCalibrator::ShiftDone()
     }
 
     mSM->SetPeaksToEvaluate(1000, 0.2f);
-    j = mSM->AutoAlign(1, -1, false, false, NULL, (float)mBaseShiftX[mShiftIndex - 1],
+    j = mSM->AutoAlign(1, -1, false,
+      ((mSM->GetNoDefaultPeakErasing() & 2) == 0 || mSM->GetErasePeriodicPeaks()) ?
+      AUTOALIGN_FILL_SPOTS : 0, NULL, (float)mBaseShiftX[mShiftIndex - 1],
       -(float)mBaseShiftY[mShiftIndex - 1], 0., 0., 0., &aaCCC, NULL, true, &aaXshift,
       &aaYshift);
     mSM->SetPeaksToEvaluate(0, 0.);
@@ -598,8 +600,10 @@ void CShiftCalibrator::ShiftDone()
     // Correlate middle images of 6-pt IS cal for drift estimate
     if (mSixPointIScal && mShiftIndex == 4) {
       mSM->SetPeaksToEvaluate(1000, 0.2f);
-      j = mSM->AutoAlign(3, -1, false, false, NULL, 0., 0., 0., 0., 0., &aaCCC, NULL,
-        true, &aaXshift, &aaYshift);
+      j = mSM->AutoAlign(3, -1, false, 
+        ((mSM->GetNoDefaultPeakErasing() & 2) == 0 || mSM->GetErasePeriodicPeaks()) ?
+        AUTOALIGN_FILL_SPOTS : 0, NULL, 0., 0., 0., 0., 0., &aaCCC, NULL, true, &aaXshift,
+        &aaYshift);
       mSM->SetPeaksToEvaluate(0, 0.);
       if (j) {
         AfxMessageBox(_T("Alignment routine error"), MB_EXCLAME);

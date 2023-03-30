@@ -2614,9 +2614,9 @@ int CMacCmd::ReorderMontageByTilt(void)
 int CMacCmd::AutoAlign(void)
 {
   CString report;
-  BOOL truth, doShift;
+  BOOL doShift;
   double delX;
-  int index, index2;
+  int index, index2, flags = 0;
 
   index = 0;
   if (CMD_IS(ALIGNTO)  || CMD_IS(CONICALALIGNTO)) {
@@ -2624,16 +2624,24 @@ int CMacCmd::AutoAlign(void)
       ABORT_LINE(report);
   }
   delX = 0;
-  truth = false;
   doShift = true;
   if (CMD_IS(CONICALALIGNTO)) {
     delX = mItemDbl[2];
-    truth = mItemInt[3] != 0;
+    flags = (mItemInt[3] != 0) ? AUTOALIGN_SHOW_CORR : 0;
   }
-  if (CMD_IS(ALIGNTO) && mItemInt[2])
-    doShift = false;
-  mDisableAlignTrim = CMD_IS(ALIGNTO) && mItemInt[3];
-  index2 = mShiftManager->AutoAlign(index, 0, doShift, truth, NULL, 0., 0.,
+  if (CMD_IS(ALIGNTO)) {
+    if (mItemInt[2])
+      doShift = false;
+    if (mItemInt[4] > 0)
+      flags += AUTOALIGN_FILL_SPOTS;
+    if (mItemInt[4] < 0)
+      flags += AUTOALIGN_KEEP_SPOTS;
+    if (mItemInt[5])
+      flags += AUTOALIGN_SHOW_CORR + ((mItemInt[5] & 2) ? AUTOALIGN_SHOW_FILTA : 0) +
+      ((mItemInt[5] & 4) ? AUTOALIGN_SHOW_FILTC : 0);
+    mDisableAlignTrim = mItemInt[3] != 0;
+  }
+  index2 = mShiftManager->AutoAlign(index, /*doAutocor ? 1 :*/ 0, doShift, flags, NULL, 0., 0.,
     (float)delX);
   mDisableAlignTrim = false;
   if (index2 > 0)
@@ -7210,7 +7218,7 @@ int CMacCmd::FindPixelSize(void)
 int CMacCmd::AutoCorrPeakVectors(void)
 {
   float vectors[4], spacing = mItemFlt[2];
-  int bufInd, flags = FIND_PIX_NO_WAFFLE;
+  int bufInd, flags = FIND_ACPK_NO_WAFFLE;
   CString report;
   if (ConvertBufferLetter(mStrItems[1], -1, true, bufInd, report))
     ABORT_LINE(report);

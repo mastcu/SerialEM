@@ -343,6 +343,7 @@ private:
   float mRImaximumIS;           // Maximum image shift to apply in first round
   float mRImaxLMfield;          // Maximum field of view for realigning to LM map
   bool mRItryScaling;           // Flag to do scaling in this realign
+  int mRIautoAlignFlags;        // corrFlags vale for autoalign
   BOOL mUseMontCenter;          // Flag to align to montage center instead of a piece
   float mExpectedXshift;        // Expected shift to feed to autoalign in align to target
   float mExpectedYshift;

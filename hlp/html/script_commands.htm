@@ -3126,13 +3126,12 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetApertureSize #</TD>
-          <TD>For Thermo/FEI scopes running Windows 10 only, attempts to set the size for the aperture whose index 
-            is <b>#</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
-            value can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
+          <TD class="scriptcommand">SetApertureSize #I #S</TD>
+          <TD>For Thermo/FEI scopes running Windows 10 only, attempts to set the size with <B>#S</B>for the aperture whose index 
+            is <b>#I</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
+            value of <B>#S</B> can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
             size.&nbsp; For an objective aperture with phase plates, the size can also be 2 to 7 to specify the phase
-            plates in position 1 to 6.&nbsp; Setting a specific aperture size does not work for scopes running under Windows 
-            7.&nbsp; Command added in 4.1, 7-Feb-23.
+            plates in position 1 to 6.&nbsp; Setting a specific aperture size does not work for scopes running under Windows 7 and even for some scopes running Windows 10.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>
@@ -3470,10 +3469,13 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AlignTo buf [#N] [#T]</TD>
+          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
-            avoid changing microscope image shift, and 1 for <b>#T</b> to prevent trimming of
-            dark borders.&nbsp; Behaves like 'AutoAlign' on errors.</TD>
+            avoid changing microscope image shift; 1 for <b>#T</b> to prevent trimming of
+            dark borders; 1 for <b>#P</b> to force it to analyze for a periodic specimen and erase peaks
+             in the FFT or -1 to force it not to do that analysis; and 1 for <b>#S</b> to show the
+             cross-correlation or 3 or 5 to show one of the filtered images being correlated.&nbsp; Behaves
+             like 'AutoAlign' on errors.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearAlignment [#N]</TD>

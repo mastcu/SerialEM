@@ -492,7 +492,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     scale = startScale + (float)ist * step;
-    if (mShiftManager->AutoAlign(buffer, 0, false, false, &peak, 0., 0., 0., 
+    if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., 
       scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
       return 1;
     usePeak = peak;
@@ -521,7 +521,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     curMax = scaleMax;
     for (idir = -1; idir <= 1; idir += 2) {
       scale = curMax + idir * step;
-      if (mShiftManager->AutoAlign(buffer, 0, false, false, &peak, 0., 0., 0., scale,
+      if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scale,
         rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
         return 1;
       if (CCCp)
@@ -552,7 +552,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       100. * (scaleMax - 1.));
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   }
-  return mShiftManager->AutoAlign(buffer, 0, doImShift, false, &peak, 0., 0., 0., 
+  return mShiftManager->AutoAlign(buffer, 0, doImShift, 0, &peak, 0., 0., 0., 
         scaleMax, rotation);
 }
 

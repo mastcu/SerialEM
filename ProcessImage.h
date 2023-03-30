@@ -8,10 +8,12 @@
 //
 
 #define MAX_FFT_CIRCLES 8
-#define FIND_PIX_NO_TRIM    0x1
-#define FIND_PIX_NO_DISPLAY 0x2
-#define FIND_PIX_NO_WAFFLE  0x4
-#define FIND_PIX_NO_TARGET  0x8
+
+// Flags for FindPixelSize, are passed together with flags to findAutocorrPeaks
+// So they need to be distinct
+#define FIND_PIX_NO_TRIM     0x100
+#define FIND_PIX_NO_DISPLAY  0x200
+#define FIND_PIX_NO_TARGET   0x400
 
 struct CtffindParams;
 class CCtffindParamDlg;
@@ -215,13 +217,10 @@ public:
   afx_msg void OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI);
   int CorrelationToBufferA(float * array, int nxpad, int nypad, int binning,
                                         float &corMin, float &corMax);
-  void FindPeakSeries(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks,
-    float & delX, float & delY, int & indFar, int & numSeries, int &indNear, float &variation);
   int FindPixelSize(float markedX, float markedY, float minScale, float maxScale, int bufInd, 
     int findFlags, float &spacing, float vectors[4]);
   afx_msg void OnProcessPixelsizefrommarker();
   afx_msg void OnUpdateProcessPixelsizefrommarker(CCmdUI *pCmdUI);
-  int ClosestRightSidePeak(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks, float delX, float delY);
   bool OverlayImages(EMimageBuffer * redBuf, EMimageBuffer * grnBuf, EMimageBuffer * bluBuf);
   afx_msg void OnProcessMakecoloroverlay();
   afx_msg void OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI);
@@ -245,8 +244,6 @@ public:
   afx_msg void OnProcessCropAverage();
   afx_msg void OnUpdateProcessCropAverage(CCmdUI *pCmdUI);
   afx_msg void OnMeshForGridBars();
-  float PerpendicularLineMedian(float *acorr, int nxPad, int nyPad, float xPeak,
-    float yPeak);
   void GetPixelArrays(ShortVec **camera, ShortVec **magInd, ShortVec **addedRot,
     std::vector<float> **sizes, std::vector<float> **rotations) {*camera = &mPixSizCamera;
     *magInd = &mPixSizMagInd; *addedRot = &mAddedRotation; *sizes = &mPixelSizes;

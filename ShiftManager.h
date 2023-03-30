@@ -23,6 +23,11 @@
 #define NOTRIM_TASKS_TS       4
 #define NOTRIM_TASKS_ALL      8
 #define NOTRIM_REALIGN_ITEM  16
+#define AUTOALIGN_SHOW_CORR   1
+#define AUTOALIGN_FILL_SPOTS  2
+#define AUTOALIGN_KEEP_SPOTS  4
+#define AUTOALIGN_SHOW_FILTA  8
+#define AUTOALIGN_SHOW_FILTC 16
 
 
 // Globals
@@ -78,7 +83,9 @@ public:
   void ResetAllTimeouts();
   ScaleMat CameraToIS(int magInd);
   ScaleMat CameraToSpecimen(int magInd);
-  GetSetMember(BOOL, TrimDarkBorders)
+  GetSetMember(BOOL, TrimDarkBorders);
+  GetSetMember(BOOL, ErasePeriodicPeaks);
+  GetSetMember(int, NoDefaultPeakErasing);
   BOOL CanTransferIS(int magFrom, int magTo, BOOL STEMcamera = false, int GIFcamera = -1);
 	void TransferGeneralIS(int fromMag, double fromX, double fromY, int toMag, double &toX,
     double &toY, int toCam = -1);
@@ -129,7 +136,7 @@ public:
   void StartMouseShifting(BOOL shiftPressed, int index);
   ScaleMat IStoGivenCamera(int inMagInd, int inCamera);
   double GetImageRotation(int inCamera, int inMagInd);
-  int AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift = true, BOOL showCor = false,
+  int AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift = true, int corrFlags = 0,
     float *peakVal = NULL, float expectedXshift = 0., float expectedYshift = 0.,
     float conical = 0., float scaling = 0., float rotation = 0., float *CCC = NULL,
     float *fracPix = NULL, BOOL trimOutput = true, float *xShiftOut = NULL,
@@ -206,6 +213,8 @@ private:
   float *mXpeaksHere;
   float *mYpeaksHere;
   BOOL mTrimDarkBorders;       // Flag to trim borders in Autoalign - default in low dose
+  BOOL mErasePeriodicPeaks;    // Use setting flag to erase periodic peaks
+  int mNoDefaultPeakErasing;   // Flags to override default in calibrations and realign
   float mTrimFrac;             // Trimming fraction for correlation
   float mTaperFrac;            // Fraction of area to taper inside for correlation
   float mSigma1;               // Low frequency cutoff sigma

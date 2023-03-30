@@ -48,6 +48,7 @@ CAlignFocusWindow::CAlignFocusWindow(CWnd* pParent /*=NULL*/)
   , m_strDefTarget(_T(""))
   , m_bApplyISoffset(FALSE)
   , m_bCorrectBacklash(FALSE)
+  , m_bErasePeriodicPeaks(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CAlignFocusWindow)
@@ -80,6 +81,7 @@ void CAlignFocusWindow::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATDEFTARGET, m_statDefTarget);
   DDX_Check(pDX, IDC_CORRECT_BACKLASH, m_bCorrectBacklash);
   DDX_Control(pDX, IDC_BUT_TO_MARKER, m_butToMarker);
+  DDX_Check(pDX, IDC_ERASE_PERIODIC_PEAKS, m_bErasePeriodicPeaks);
 }
 
 
@@ -99,6 +101,7 @@ BEGIN_MESSAGE_MAP(CAlignFocusWindow, CToolDlg)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_CORRECT_BACKLASH, OnCorrectBacklash)
   ON_BN_CLICKED(IDC_BUT_TO_MARKER, OnButToMarker)
+  ON_BN_CLICKED(IDC_ERASE_PERIODIC_PEAKS, OnErasePeriodicPeaks)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -218,6 +221,13 @@ void CAlignFocusWindow::OnTrimborders()
   mWinApp->RestoreViewFocus();
 }
 
+void CAlignFocusWindow::OnErasePeriodicPeaks()
+{
+  UpdateData(true);
+  mWinApp->mShiftManager->SetErasePeriodicPeaks(m_bErasePeriodicPeaks);
+  mWinApp->RestoreViewFocus();
+}
+
 BOOL CAlignFocusWindow::OnInitDialog() 
 {
   CToolDlg::OnInitDialog();
@@ -239,6 +249,7 @@ void CAlignFocusWindow::UpdateSettings()
   m_bCenterOnAxis = mWinApp->mScope->GetShiftToTiltAxis();
   m_bApplyISoffset = mWinApp->mScope->GetApplyISoffset();
   m_bTrimBorders = mWinApp->mShiftManager->GetTrimDarkBorders();
+  m_bErasePeriodicPeaks = mWinApp->mShiftManager->GetErasePeriodicPeaks();
   m_strDefTarget.Format("Def. target = %.2f um", 
     mWinApp->mFocusManager->GetTargetDefocus());
   UpdateData(false);
@@ -332,4 +343,3 @@ void CAlignFocusWindow::UpdateAutofocus(int magInd)
     (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }
-

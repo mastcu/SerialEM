@@ -52,6 +52,7 @@
 #define MRC_FLAGS_CTF_CORRECTED  32
 #define INVERT_MRC_ORIGIN_DEFAULT 1
 #define INVERT_MRC_ORIGIN_ENV_VAR "INVERT_MRC_ORIGIN"
+#define WRITE_FLOATS_16BIT "IMOD_WRITE_FLOATS_16BIT"
 
 /* Duplicate definitions of output-capable IITYPE values to avoid including iimage.h */
 #define OUTPUT_TYPE_TIFF    1
@@ -73,6 +74,11 @@
 #define EXT_HEAD_VAL_INT    3
 #define EXT_HEAD_VAL_DOUBLE 4
 
+/* Flags for call findautocorrpeaks */
+#define FIND_ACPK_NO_WAFFLE   0x1
+#define FIND_ACPK_BOTH_RATIOS 0x2
+#define FIND_ACPK_HEX_GRID    0x4
+
 /* Determinant of 3x3 matrix */
 #define determ3(a1,a2,a3,b1,b2,b3,c1,c2,c3) ((a1)*(b2)*(c3) - (a1)*(b3)*(c2) +\
   (a2)*(b3)*(c1) - (a2)*(b1)*(c3) + (a3)*(b1)*(c2) - (a3)*(b2)*(c1))
@@ -87,6 +93,7 @@ extern "C" {
   char *IMOD_DIR_or_default(int *assumed);
   char *imodProgName(const char *fullname);
   int imodBackupFile(const char *filename);
+  FILE *b3dOpenFile(const char *name, const char *mode);
   int imodGetpid();
   void pidToStderr();
   char *f2cString(const char *str, int strSize);
@@ -139,6 +146,9 @@ extern "C" {
   int setTiffCompressionType(int typeIndex, int overrideEnv);
   void set4BitOutputMode(int inVal);
   int write4BitModeForBytes();
+  void setFloat16outputMode(int inVal, int testForMRC);
+  int setFloatOutputForEnteredMode(int mode);
+  int write16BitModeForFloats();
   int dataSizeForMode(int mode, int *bytes, int *channels);
   int numCoresAndLogicalProcs(int *physical, int *logical);
   int totalCudaCores(int major, int minor, int multiprocCount);

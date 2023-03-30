@@ -919,6 +919,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // Set up to use scaling in first if option selected and not low dose
   mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
+  mRIautoAlignFlags = (mShiftManager->GetErasePeriodicPeaks() ||
+    (mWinApp->LowDoseMode() && (mShiftManager->GetNoDefaultPeakErasing() & 1) == 0)) ?
+    AUTOALIGN_FILL_SPOTS : 0;
 
   // Save state if desired; which will only work by forgetting prior state
   mRIdidSaveState = false;
@@ -1104,8 +1107,9 @@ void CNavHelper::RealignNextTask(int param)
                 }
 
                 // Align without shifting image
-                mShiftManager->AutoAlign(1, -1, false, false, &peakVal, 0., 0., 0., 0., 
-                  0., &CCC, &overlap, GetDebugOutput('1'), &pcShiftX, &pcShiftY);
+                mShiftManager->AutoAlign(1, -1, false, mRIautoAlignFlags, &peakVal, 0.,
+                  0., 0., 0., 0., &CCC, &overlap, GetDebugOutput('1'), &pcShiftX, 
+                  &pcShiftY);
                 pieceDone[ind] = true;
 
                 // Compute the change in position that this correlation implies and
@@ -1195,8 +1199,8 @@ void CNavHelper::RealignNextTask(int param)
         if (mRItryScaling)
           AlignWithScaling(shiftX, shiftY, scaling);
         if (!scaling) {
-          mShiftManager->AutoAlign(1, -1, false, false, &peakVal,  0., 0., 0., 0., 0., 
-            NULL, NULL, GetDebugOutput('1'));
+          mShiftManager->AutoAlign(1, -1, false, mRIautoAlignFlags, &peakVal,  0., 0., 0.,
+            0., 0., NULL, NULL, GetDebugOutput('1'));
           mImBufs->mImage->getShifts(shiftX, shiftY);
         }
         stageX = itemCenX;
@@ -1302,7 +1306,7 @@ void CNavHelper::RealignNextTask(int param)
     case TASK_SECOND_SHOT:
       imagePixelSize = (float)mImBufs->mBinning *
         mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd);
-      mShiftManager->AutoAlign(1, -1, true, false, &peakVal, mExpectedXshift, 
+      mShiftManager->AutoAlign(1, -1, true, mRIautoAlignFlags, &peakVal, mExpectedXshift,
         mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL, 
         mRIweightSigma / imagePixelSize);
       mImBufs[1].mImage->setShifts(-mExpectedXshift, -mExpectedYshift);
@@ -1347,8 +1351,8 @@ void CNavHelper::RealignNextTask(int param)
       return;
 
     case TASK_FINAL_SHOT:
-      mShiftManager->AutoAlign(1, 0, 1, false, NULL, 0., 0., 0., 0., 0., NULL, NULL,
-        GetDebugOutput('1'));
+      mShiftManager->AutoAlign(1, 0, true, mRIautoAlignFlags, NULL, 0., 0., 0., 0., 0.,
+        NULL, NULL, GetDebugOutput('1'));
       mImBufs->mImage->getShifts(shiftX, shiftY);
       SEMTrace('1', "Realigned to map item itself with image shift of %.1f %.1f pixels",
         shiftX, shiftY);
@@ -1400,7 +1404,7 @@ void CNavHelper::RealignNextTask(int param)
 
       // Realign the shot after a reset, then do another operation or finish up
     case TASK_RESET_SHOT:
-      mShiftManager->AutoAlign(1, 0);
+      mShiftManager->AutoAlign(1, 0, true, mRIautoAlignFlags);
       StartResetISorFinish(item->mMapMagInd);
       return;
   }
@@ -5126,7 +5130,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     rotation = centerAngle - 0.5f * angleRange + (float)ist * step;
-    if (mShiftManager->AutoAlign(buffer, 0, false, false, &peak, 0., 0., 0., scaling, 
+    if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scaling, 
       rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
       return 1;
     if (CCCp)
@@ -5158,7 +5162,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       curMax = rotBest;
       for (idir = -1; idir <= 1; idir += 2) {
         rotation = curMax + idir * step;
-        if (mShiftManager->AutoAlign(buffer, 0, false, false, &peak, 0., 0., 0., scaling,
+        if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scaling,
           rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
           return 1;
         if (CCCp)

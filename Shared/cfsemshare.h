@@ -303,6 +303,7 @@ extern "C" {
   double gammaFunc(double x);
   double lnGamma(double x);
   float gaussianDeviate(int seed);
+  void twoGaussianDeviates(float *value1, float *value2, int *pseudo);
 
   /* surfacesort.c */
   int surfaceSort(float *xyz, int numPts, int markersInGroup, int *group);
@@ -525,7 +526,7 @@ extern "C" {
   /* autocorrpeaks */
   int findAutoCorrPeaks(float *array, int nxPad, int nyPad, float *Xpeaks, float *Ypeaks,
                         float *peak, int numPeaks, int maxScan, float catalFac, 
-                        int noWaffle, float markedX, float markedY, float *dist1Ptr,
+                        int flags, float markedX, float markedY, float *dist1Ptr,
                         float *dist2Ptr, float *angle, float vectors[4], int num[2],
                         int *nearInd, char *messBuf, int bufSize);
 

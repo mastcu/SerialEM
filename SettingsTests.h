@@ -96,6 +96,7 @@ INT_SETT_GETSET("IdleTimeToCloseValves", mWinApp->mScope->, IdleTimeToCloseValve
 BOOL_SETT_GETSET("NormAutofocusViaView", mWinApp->mFocusManager->, NormalizeViaView)
 BOOL_SETT_GETSET("SkipBlankingInLowDose", mWinApp->mScope->, SkipBlankingInLowDose)
 BOOL_SETT_GETSET("TrimBordersInAutoalign", mWinApp->mShiftManager->, TrimDarkBorders)
+BOOL_SETT_GETSET("ErasePeriodicPeaks", mWinApp->mShiftManager->, ErasePeriodicPeaks)
 INT_SETT_GETSET("DisableAutoTrim", mWinApp->mShiftManager->, DisableAutoTrim)
 BOOL_SETT_GETSET("MoveStageOnBigMouseShift", mWinApp->mShiftManager->, MouseMoveStage)
 BOOL_SETT_GETSET("BacklashMouseAndISR", mWinApp->mShiftManager->, BacklashMouseAndISR)

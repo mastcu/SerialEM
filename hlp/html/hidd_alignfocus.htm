@@ -57,7 +57,7 @@
         tilted) then change the defocus to your chosen target value. In Low Mag mode, 
         it will use the same routine if autofocus is calibrated in Low Mag; otherwise, the button will simply set the focus to the standard focus for the current 
         magnification.</P>
-      <P><B>Move Stage for Big Mouse Shifts</B></P>
+      <P><B>Move stage for big mouse shifts</B></P>
       <P>When this check box is selected, moving the image in Buffer A with the right 
         mouse button will result in the stage being moved by the corresponding amount, 
         provided that the move is bigger than a threshold that can be adjusted with the 
@@ -70,7 +70,7 @@
         the image with the right mouse button. First you will be asked to enter a 
         relative threshold, expressed as a fraction of the size of the camera field. 
         Then you will enter an absolute threshold in microns.</P>
-    <P><b>Correct Backlash in Stage Moves</b></P>
+    <P><b>Correct backlash in stage moves</b></P>
     <P>When this check box is selected, backlash correction will be applied in stage 
       movements initiated with the mouse and when resetting image shift.&nbsp; This 
       should result in more consistent shifts in actual position when there is 
@@ -81,7 +81,7 @@
       the movement is already the right direction.&nbsp; If the stage is not in a 
       backlash corrected state, the backlash correction used in montaging at the 
       current magnification will be applied.</P>
-      <P><B>Center Image Shift on Tilt Axis</B></P>
+      <P><B>Center image shift on tilt axis</B></P>
       <P>When this check box is selected, SerialEM will move the origin for image shift 
         laterally from the optic axis to the tilt axis. Resetting image shift will then 
         set the image shift to a position on the tilt axis, and the IS readout in the 
@@ -91,7 +91,7 @@
         option on or off will misalign the objective aperture on the 300 KV Tecnai or Polara. 
         When the option is selected, the program will move the image shift origin when 
         it is started and reset the origin when it exits.</P>
-      <P><B>Adjust Image Shift between Mags</B></P>
+      <P><B>Adjust image shift between mags</B></P>
       <P>This check box will be enabled if the image shift offsets between magnifications 
         have been calibrated. When it is selected, these offsets will be applied 
         whenever you or the program changes magnification, and features should stay 
@@ -107,7 +107,7 @@
         at the same stage coordinates at another magnification. Thus, while calibration 
         of the offsets is necessary for optimal performance of the Navigator, the use 
         of this option is more of a convenience than a necessity.</P>
-      <P><B>Trim Dark Borders in Autoalign</B></P>
+      <P><B>Trim dark borders in Autoalign</B></P>
       <P>When this check box is selected, SerialEM will always analyze each image being 
         correlated in an autoalign and exclude dark regions that appear to be outside 
         the area of the beam. Even when the option is not selected, this analysis is 
@@ -117,6 +117,21 @@
         <a href="menu_tasks.htm#hid_special_disable_dark_trim_in_align">Disable Dark 
         Trim in Align</a> can be used prevent this automatic trimming operation in 
         selected cases.</P>
+    <P><strong>Erase periodic peaks in Autoalign</strong></P>
+    <P>When this check box is selected, the autoalign routine will analyze an 
+      autocorrelation of each image to find periodic peaks from repeated structures.&nbsp; 
+      If at least 2 peaks are found in each direction (and at least 5 total), they go out far enough from the 
+      origin, and the vectors to these peaks match well enough between the images, the 
+      program will replace signal with random noise at all of the positions for this 
+      regular pattern in the FFTs.&nbsp; This erasing has been found to be effective for
+      preventing spurious alignments on the wrong square with cross-line gratings and on 
+      the wrong hole with gold foil grids having hexagonal patterns; it 
+      should work as well with regular gold foil grids, and might be useful with 
+      carbon foil grids having regular hole arrangements.&nbsp; This erasing is done 
+      by default when doing image or stage shift calibrations and when running Realign to Item 
+      in Low Dose mode; 
+      those defaults can be overridden independently with the property 
+      &#39;NoDefaultPeakErasing&#39;, in which case the option set here prevails. </P>
       <P><B>Set Autoalign Trim Fraction</B></P>
       <P>Use this button to set the fraction to trim off each edge of the images that are 
         being aligned. For example, with a fraction of 0.1, 100 pixels will be trimmed 

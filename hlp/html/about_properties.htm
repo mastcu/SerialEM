@@ -3180,6 +3180,18 @@
           <TD>Radius at which high-frequency Gaussian rolloff starts (default 0.25).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style4">NoDefaultPeakErasing</TD>
+          <TD>By default, the autoalign routine will try to detect whether the specimen is periodic
+            and erase the peaks in the FFT caused by this periodicity in three cases: when the 
+            'Erase periodic peaks in Autoalign'
+            option in the Image Alignment &amp; Focus panel is set, when calibrating
+             image or stage shift, and when being run from the Realign to Item routine in Low Dose
+            mode.&nbsp; Enter the sum of 1 to override this default for calibrations, and 2 to override 
+            the default for Realign to Item.&nbsp; If either is overridden, the 
+            option in the Image Alignment &amp; Focus panel governs whether erasing is attempted.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style4">FocusPadFraction</TD>
           <TD>Fraction to pad images for autofocus correlations (default 0.1).</TD>
         </TR>

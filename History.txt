@@ -3,6 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/30/23: Added ability to do alignment correlations after erasing peaks in
+FFTs from periodic structures; this is used by default for stage and image
+shift calibrations and in Realign to Item in low dose mode, subject to
+override by a property, and otherwise controlled by an option in the Image
+Alignment & Focus panel.
+
+3/30/23: If a script is run when idle, the script is updated from the editor
+if it is open, and keyboard focus is restored to whatever window had it.
+
+3/30/23: Fixed crash in ctffind on images with no Thon rings.
+
+3/30/23: Implemented check for spacing in hole finder for hex grids.
+
+3/30/23: Stopped asking for confirmation of making a map from a read-in image
+when run from script.
+
 3/25/23: Changed SkipAdvancedScripting property so that negative values
 provide flags for particular components to skip (autoloader and/or temperature
 control).
