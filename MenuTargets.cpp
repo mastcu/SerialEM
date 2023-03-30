@@ -1916,8 +1916,8 @@ void CMenuTargets::OnCameraReturnFloatImage()
 void CMenuTargets::OnUpdateCameraReturnFloatImage(CCmdUI *pCmdUI)
 {
   CameraParameters *param = mWinApp->GetActiveCamParam();
+  pCmdUI->Enable(!param->FEItype && (param->CamFlags & CAMFLAG_FLOATS_BY_FLAG) != 0);
   pCmdUI->SetCheck(mCamera->GetAcquireFloatImages());
-  pCmdUI->Enable((param->CamFlags & CAMFLAG_FLOATS_BY_FLAG) != 0);
 }
 
 void CMenuTargets::OnCameraShowgainref()
