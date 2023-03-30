@@ -1130,7 +1130,7 @@ void CMultiShotDlg::ManageEnables(void)
   if (comaVsIS->magInd <= 0) {
     SetDlgItemText(IDC_STAT_COMA_IS_CAL,
       mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
-      "Coma versus  is not calibrated" :
+      "Coma versus versus image shift is not calibrated" :
       "Astigmatism versus image shift is not calibrated");
     SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
   } else {

@@ -775,6 +775,7 @@ void CMacroProcessor::OnScriptRunOneCommand()
   for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
     mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
     mOneLineScript->m_strOneLine[ind].TrimRight("\r\n");
+    mOneLineScript->m_strOneLine[ind].Replace("\r\n", ";");
   }
   mOneLineScript->mMacros = mMacros;
   mOneLineScript->Create(IDD_ONELINESCRIPT);
@@ -821,10 +822,14 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
   if (fromDialog)
     mOneLineScript->UpdateData(true);
   for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
-    if (fromDialog)
+    if (fromDialog) {
       mMacros[MAX_MACROS + ind] = mOneLineScript->m_strOneLine[ind];
-    else
+      mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
+    } else {
       mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
+      mOneLineScript->m_strOneLine[ind].TrimRight("\r\n");
+      mOneLineScript->m_strOneLine[ind].Replace("\r\n", ";");
+    }
   }
   if (!fromDialog)
     mOneLineScript->UpdateData(false);

@@ -879,7 +879,7 @@ void CMacroEditer::OnEnChangeEditmacro()
   if (!rejecting) {
     UpdateData(true);
     HandleCompletionsAndIndent(m_strMacro, m_strCompletions, sel2, setCompletions,
-      completing);
+      completing, false);
     if (setCompletions)
       SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
   }
@@ -898,7 +898,7 @@ void CMacroEditer::OnEnChangeEditmacro()
 // Process a change in an edit control and do 'backtick' completion or list completions,
 // and indentation of the current line
 void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
-  int &sel2, bool &setCompletions, bool &completing)
+  int &sel2, bool &setCompletions, bool &completing, bool oneLine)
 {
 
   int sel1, delStart, numDel, i, numCommands, lineStart, numMatch, saveStart;
@@ -956,7 +956,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     saveStart = -1;
     for (lineStart = sel2 - 1; lineStart > 0; lineStart--) {
       ch = strMacro.GetAt(lineStart - 1);
-      if (ch == '\n' || ch == '\r' || (isPython && ch == '='))
+      if (ch == '\n' || ch == '\r' || (isPython && ch == '=') || (oneLine && ch == ';'))
         break;
 
       // Save the position of the first character after white space

@@ -117,7 +117,7 @@ public:
   static bool FindIndentAndMatch(CString &strMacro, int lineStart, int limit, const char ** keywords, int numKeys, 
     int & curIndent);
   static void HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
-    int &sel2, bool &setCompletions, bool &completing);
+    int &sel2, bool &setCompletions, bool &completing, bool oneLine);
   static bool CheckForPythonAndImport(CString &strMacro, CString &importName);
   static bool GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython, 
     int &indStart, int &indEnd, bool &isContinued);

@@ -107,6 +107,7 @@ void COneLineScript::OnRunClicked(UINT nID)
   int ind = nID - IDC_RUN_ONE_LINE1;
   UpdateData(true);
   mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
+  mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
   if (!m_strOneLine[ind].IsEmpty())
     mWinApp->mMacroProcessor->Run(MAX_MACROS + ind);
   mWinApp->RestoreViewFocus();
@@ -119,8 +120,10 @@ void COneLineScript::OnCancel()
   UpdateData(true);
   if (mWinApp->mMacroProcessor->DoingMacro())
     return;
-  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++)
-    mMacros[MAX_MACROS+ ind] = m_strOneLine[ind];
+  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
+    mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
+    mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
+  }
   mWinApp->mMacroProcessor->OneLineClosing();
   DestroyWindow();
 }
@@ -191,7 +194,7 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
   CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2, 
-    setCompletions, completing);
+    setCompletions, completing, true);
   if (setCompletions)
     SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
   if (completing) {
