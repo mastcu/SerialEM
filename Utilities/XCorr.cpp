@@ -13,7 +13,9 @@
 #include "XCorr.h"
 #include "b3dutil.h"
 #include "mrcslice.h"
+#include "cfft.h"
 #include "..\Shared\CorrectDefects.h"
+
 
 void SEMTrace(char key, char *fmt, ...);
 void PrintfToLog(char *fmt, ...);
@@ -27,73 +29,24 @@ void PrintfToLog(char *fmt, ...);
 
 #define DTOR 0.01745329252
 
-#if defined(USE_FFTW2) && !defined(_WIN64)
-#include "rfftw.h"
-#else
-#include "cfft.h"
-#endif
-
-static float amax(float x1, float x2)
-{
-     return x2 > x1 ? x2 : x1;
-}
-static int imax(int i1, int i2)
-{
-     return i2 > i1 ? i2 : i1;
-}
-static float amin(float x1, float x2)
-{
-     return x2 < x1 ? x2 : x1;
-}
-static int imin(int i1, int i2)
-{
-     return i2 < i1 ? i2 : i1;
-}
 
 // A generalized 2-D FFT routine with calling convention compatible with IMOD todfft
 void twoDfft(float *array, int *nxpad, int *nypad, int *dir)
 {
-#ifdef USE_FFTW2
-  rfftwnd_plan plan;
-  fftw_real dumreal;
-  fftw_complex dumcomp;
-  plan = rfftw2d_create_plan(*nypad, *nxpad, (*dir) ? FFTW_BACKWARD : FFTW_FORWARD, 
-    FFTW_IN_PLACE);
-  if (*dir)
-    rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
-  else
-    rfftwnd_one_real_to_complex(plan, array, &dumcomp);
-  rfftwnd_destroy_plan(plan);
-
-#else
   todfftc(array, *nxpad, *nypad, *dir);
-#endif
 }
 
 void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad, 
                     float deltap, float *ctfp, float *crray)
 {
-#ifdef USE_FFTW2
-  rfftwnd_plan plan;
-  fftw_real dumreal;
-  fftw_complex dumcomp;
-#endif
   
   /* set mean of one of the arrays to zero */
   XCorrMeanZero(array, nxpad+2, nxpad, nypad);
   
   /* take forward transforms */
-#ifndef USE_FFTW2
   todfftc(array, nxpad, nypad, 0);
   if (array != brray)
     todfftc(brray, nxpad, nypad, 0);
-#else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
-  rfftwnd_one_real_to_complex(plan, array, &dumcomp);
-  if (array != brray)
-    rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
-  rfftwnd_destroy_plan(plan);
-#endif       
   /* filter if desired */
   if(deltap != 0.)
     XCorrFilterPart(array, array, nxpad, nypad, ctfp, deltap);
@@ -107,21 +60,11 @@ void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad,
   conjugateProduct(array, brray, nxpad, nypad);  
   
   
-#ifndef USE_FFTW2
   todfftc(array, nxpad, nypad, 1);
   if (crray) {
     todfftc(brray, nxpad, nypad, 1);
     todfftc(crray, nxpad, nypad, 1);
   }
-#else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
-  rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
-  if (crray) {
-    rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
-    rfftwnd_one_complex_to_real(plan, (fftw_complex *)crray, &dumreal);
-  }
-  rfftwnd_destroy_plan(plan);
-#endif
 }
 
 void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist,
@@ -129,31 +72,14 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
 {
   double suma, tsuma, sumb, tsumb, meana, meanb, sumab, abar, bbar, corr;
      int dx, dy, jx, jy, xbase;
-#ifdef USE_FFTW2
-     rfftwnd_plan plan;
-     fftw_real dumreal;
-     fftw_complex dumcomp;
-#endif
 
      /* filter one array if desired */
      if(deltap != 0.) {
-#ifndef USE_FFTW2
         todfftc(brray, nxpad, nypad, 0);
-#else
-    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
-    rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
-    rfftwnd_destroy_plan(plan);
-#endif        
 
     XCorrFilterPart(brray, brray, nxpad, nypad, ctfp, deltap);
 
-#ifndef USE_FFTW2
     todfftc(brray, nxpad, nypad, 1);
-#else
-    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
-    rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
-    rfftwnd_destroy_plan(plan);
-#endif
    }
 
   // loop on positions
@@ -205,27 +131,14 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 {
   float a, b, c, d;
   int jx, jp1;
-#ifdef USE_FFTW2
-  rfftwnd_plan plan;
-  fftw_real dumreal;
-  fftw_complex dumcomp;
-#endif
   
   /* set mean of the middle array to zero */
   XCorrMeanZero(brray, nxpad+2, nxpad, nypad);
   
   /* take forward transforms */
-#ifndef USE_FFTW2
   todfftc(array, nxpad, nypad, 0);
   todfftc(brray, nxpad, nypad, 0);
   todfftc(crray, nxpad, nypad, 0);
-#else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
-  rfftwnd_one_real_to_complex(plan, array, &dumcomp);
-  rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
-  rfftwnd_one_real_to_complex(plan, crray, &dumcomp);
-  rfftwnd_destroy_plan(plan);
-#endif       
   
   /* filter middle array if desired */
   if(deltap != 0.) 
@@ -253,15 +166,356 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
   
   /* take reverse transform */
   
-#ifndef USE_FFTW2
   todfftc(array, nxpad, nypad, 1);
   todfftc(brray, nxpad, nypad, 1);
-#else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
-  rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
-  rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
-  rfftwnd_destroy_plan(plan);
-#endif
+}
+
+/*
+ * Function to analyze for periodic specimen and erase peaks from FFTs before correlating
+ * The filter is tobe applied to the correlation; autocorrelation has a fixed low 
+ * frequency filter.
+ * This function could go into IMOD wih SEMTrace removed
+ */
+#define MAX_GRID_PEAKS 10000
+#define MAX_SCAN 64
+#define MAX_MESS_BUF 200
+#define MAX_BORDER_PIX 200
+#define MAX_PERIOD_THREADS 8
+
+bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
+  float deltap, float *ctfp)
+{
+  float Xpeaks[MAX_GRID_PEAKS], Ypeaks[MAX_GRID_PEAKS], peak[MAX_GRID_PEAKS];
+  float *arrays[2], *useArr;
+  float dist1[2], dist2[2], angles[2], vectors[2][6], pixFreq[6];
+  float xfreq, yfreq, length, vecAng, xx, yy, maxPix, noiseDist = 0, xcomp = 0, ycomp = 0;
+  float dev1, dev2, outAvg = 0, outSd = 0, magSq = 0, bkgAvg = 0, bkgSd = 0, unitFreq;
+  float dx = 0, dy = 0, bkgThresh = 0, maxMag = 0, radius = 0, dist = 0, freqRad = 0;
+  float deltaA, ctfA[8193];
+  float sigma1 = 0.02f;
+  float threshNumSd = 0.5f, limDev = 1.5f;
+  float *borderTemp = NULL;
+  float *borderComp[MAX_PERIOD_THREADS], *borderMag[MAX_PERIOD_THREADS];
+  float *medTmp[MAX_PERIOD_THREADS];
+  int numFound[2][3], nearInd[3], numSteps[3];
+  int ix = 0, iy = 0, xst = 0, xnd = 0, yst = 0, ynd = 0, numSum = 0, base = 0;
+  int numVecxy = 4, ixMax = 0, iyMax = 0, iyPos = 0;
+  int ind, err, ixy, numPeaks = MAX_GRID_PEAKS;
+  int numThreads, thrd, vecInd;
+  FloatVec xxVec, yyVec;
+  IntVec sortInd;
+  float minFracExtent = 0.1f, distCrit = 0.05f, angleCrit = 5.;
+  float hexRatio = sqrtf(3.f);
+  float radiusMin = 6., radiusMax = 9., border = 1.5f, noiseWidth = 2.;
+  int minFound = 2, minTotFound = 5;
+  int minPixExtent = (int)(B3DMIN(nxPad, nyPad) * minFracExtent / 2.);
+  int pseudoVals[MAX_PERIOD_THREADS];
+  bool doAutocorr = true;
+  char messBuf[MAX_MESS_BUF];
+  double wallNow, wallStart = wallTime();
+  arrays[0] = array;
+  arrays[1] = brray;
+  XCorrSetCTF(sigma1, 0.f, 0.f, 0.f, ctfA, nxPad, nyPad, &deltaA);
+
+  /* Times on K3 for bin 1/2/8 are: 
+  * initial FFT to autocorr: 14 ms (2 images)
+  * peak finding             28 ms (2 images
+  * filling   86.9 for 1 thread, 16.8 for 6 (86%), 13.7 for 8 (79%)  (two images)
+  * final FFTs               9 ms
+  * Carbon X1 laptop 50.9 - 14.4 for 6 (59%), 12.7 for 8 (50%)
+  * A quick try with findSpacedXcorrPeaks gave a worse time (34 ms)
+  */
+
+  for (ind = 0; ind < 2; ind++) {
+    useArr = arrays[ind];
+
+    // Forward FFT
+    todfftc(useArr, nxPad, nyPad, 0);
+
+    if (doAutocorr) {
+
+      // Apply low frequency filter and put it in crray, then get autocorrelation
+      XCorrFilterPart(useArr, crray, nxPad, nyPad, ctfA, deltaA);
+      conjugateProduct(crray, crray, nxPad, nyPad);
+      todfftc(crray, nxPad, nyPad, 1);
+      wallNow = wallTime();
+      SEMTrace('T', "Autocorr %.1f", 1000. *(wallNow - wallStart));
+      wallStart = wallNow;
+
+      // Find the peaks if any, make sure it is acceptable
+      err = findAutoCorrPeaks(crray, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0],
+        numPeaks, MAX_SCAN, hexRatio,
+        FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_RATIOS | FIND_ACPK_HEX_GRID, 0., 0.,
+        &dist1[ind], &dist2[ind], &angles[ind], &vectors[ind][0], &numFound[ind][0],
+        &nearInd[ind], messBuf, MAX_MESS_BUF);
+      wallNow = wallTime();
+      SEMTrace('T', "Peak find %.1f", 1000. *(wallNow - wallStart));
+      wallStart = wallNow;
+      //for (ix = 0; ix < 8; ix++)
+        //PrintfToLog("%.1f %.1f %f", Xpeaks[ix], Ypeaks[ix], peak[ix]);
+      if (err || numFound[ind][0] < minFound || numFound[ind][1] < minFound ||
+        numFound[ind][0] + numFound[ind][1] < minTotFound ||
+        dist1[ind] * numFound[ind][0] < minPixExtent ||
+        dist2[ind] * numFound[ind][1] < minPixExtent)
+        doAutocorr = false;
+    }
+  }
+
+  doAutocorr = doAutocorr && fabs(dist1[0] - dist1[1]) / B3DMAX(dist1[0], dist1[1]) <
+    distCrit && fabs(dist2[0] - dist2[1]) / B3DMAX(dist2[0], dist2[1]) < distCrit &&
+    fabs(angles[0] - angles[1]) < angleCrit;
+
+  // Set up parallel arrays
+  pseudoVals[0] = 0;
+  if (doAutocorr) {
+    twoGaussianDeviates(&dev1, &dev2, &pseudoVals[0]);
+    numThreads = MAX_PERIOD_THREADS;
+    numThreads = numOMPthreads(numThreads);
+    borderTemp = B3DMALLOC(float, numThreads * 5 * MAX_BORDER_PIX);
+    if (!borderTemp) {
+      doAutocorr = false;
+    } else {
+      for (thrd = 0; thrd < numThreads; thrd++) {
+        if (thrd)
+          pseudoVals[thrd] = (pseudoVals[thrd - 1] + 5417) & 0xFFFFF;
+        borderComp[thrd] = borderTemp + thrd * 5 * MAX_BORDER_PIX;
+        borderMag[thrd] = borderTemp + (thrd * 5 + 2) * MAX_BORDER_PIX;
+        medTmp[thrd] = borderTemp + (thrd * 5 + 3) * MAX_BORDER_PIX;
+      }
+    }
+  }
+
+  if (doAutocorr) {
+    maxPix = 0;
+    for (ind = 0; ind < 2; ind++) {
+      vecAng = acosf((vectors[ind][0] * vectors[ind][2] + vectors[ind][1] *
+        vectors[ind][3]) / (dist1[ind] * dist2[ind])) / RADIANS_PER_DEGREE;
+      useArr = arrays[ind];
+      xxVec.clear();
+      yyVec.clear();
+      if (numFound[ind][2]) {
+
+        // FWIW, if it is a hex pattern, use the two vectors with the most spots
+        if (numFound[ind][2] > numFound[ind][0] || numFound[ind][2] > numFound[ind][1]) {
+          ixy = 0;
+          if (numFound[ind][1] < numFound[ind][0])
+            ixy = 2;
+          B3DSWAP(vectors[ind][ixy], vectors[ind][4], xfreq);
+          B3DSWAP(vectors[ind][ixy + 1], vectors[ind][5], xfreq);
+        }
+
+        // Hex is missing the fundamental and its odd multiples, so cut the vectors by 2
+        numVecxy = 6;
+        for (ixy = 0; ixy < 6; ixy++)
+          vectors[ind][ixy] /= 2.f;
+      }
+
+      // Convert real space vectors to fourier space via angle and length
+      for (ixy = 0; ixy < numVecxy; ixy += 2) {
+        length = sqrtf(vectors[ind][ixy] * vectors[ind][ixy] +
+          vectors[ind][ixy + 1] * vectors[ind][ixy + 1]);
+        vecAng = atan2f(vectors[ind][ixy + 1], vectors[ind][ixy]);
+        xfreq = cosf(vecAng) / length;
+        yfreq = sinf(vecAng) / length;
+        pixFreq[ixy] = nxPad * xfreq;
+        pixFreq[ixy + 1] = nyPad * yfreq;
+        numSteps[ixy / 2] = (int)(2. * B3DMIN(1. / B3DMAX(1.e-6, xfreq),
+          1. / B3DMAX(1.e-6, fabs(yfreq))));
+        ACCUM_MAX(maxPix, pixFreq[ixy]);
+        ACCUM_MAX(maxPix, pixFreq[ixy + 1]);
+        if (!ind)
+          SEMTrace('a', "Periodic spacing %d: %.1f %.1f", ixy / 2 + 1, pixFreq[ixy],
+            pixFreq[ixy + 1]);
+      }
+
+      // Loop on indexed positions and store ones in range
+      unitFreq = sqrtf(sqrtf(pixFreq[0] * pixFreq[0] + pixFreq[1] * pixFreq[1]) *
+        sqrtf(pixFreq[2] * pixFreq[2] + pixFreq[3] * pixFreq[3]));
+      xxVec.clear();
+      yyVec.clear();
+      sortInd.clear();
+      for (int i1 = -numSteps[1]; i1 <= numSteps[1]; i1++) {
+        for (int i0 = -numSteps[0]; i0 <= numSteps[0]; i0++) {
+          if (!i0 && !i1)
+            continue;
+
+          // Work with yy positive or negative until it is time to get a pixel
+          xx = i0 * pixFreq[0] + i1 * pixFreq[2];
+          yy = i0 * pixFreq[1] + i1 * pixFreq[3];
+          if (xx >= 0 && xx < nxPad / 2 - 1 && yy > 2 - nyPad / 2 && yy < nyPad / 2 - 2) {
+            xxVec.push_back(xx);
+            yyVec.push_back(yy);
+            sortInd.push_back((int)sortInd.size());
+          }
+        }
+      }
+
+      // Sort: very important since this is a bad memory access situation
+      rsSortIndexedFloats(&yyVec[0], &sortInd[0], (int)xxVec.size());
+
+#pragma omp parallel for num_threads(numThreads) default(none) \
+  shared(xxVec, yyVec, sortInd, radiusMin, radiusMax, border, noiseWidth, unitFreq, \
+         nxPad, nyPad, pseudoVals, useArr, maxPix, limDev, threshNumSd, borderComp, \
+         borderMag, medTmp) \
+  private(thrd, vecInd, xx, yy, freqRad, radius, noiseDist, ixMax, iyMax, xst, xnd, yst, \
+          ynd, iy, ix, dx, dy, base, xcomp, ycomp, magSq, maxMag, numSum, iyPos, dist, \
+          dev1, dev2, outAvg, outSd, bkgAvg, bkgSd, bkgThresh)
+      for (vecInd = 0; vecInd < (int)xxVec.size(); vecInd++) {
+        xx = xxVec[sortInd[vecInd]];
+        yy = yyVec[sortInd[vecInd]];
+        thrd = b3dOMPthreadNum();
+
+
+        freqRad = sqrt(xx * xx + yy * yy);
+        radius = radiusMax + 1. - freqRad / unitFreq;
+        B3DCLAMP(radius, radiusMin, maxPix / 2.f);
+        noiseDist = radius + border + noiseWidth + 0.5f;
+
+        // find new center within circle
+        ixMax = B3DNINT(xx - 0.5);
+        iyMax = B3DNINT(yy - 0.5);
+        maxMag = -1.;
+        yst = B3DNINT(yy - 0.5 - radius);
+        yst = B3DMAX(yst, 1 - nyPad / 2);
+        ynd = B3DNINT(yy - 0.5 + radius);
+        ynd = B3DMIN(ynd, nyPad / 2 - 1);
+        for (iy = yst; iy <= ynd; iy++) {
+
+          // Convert to actual Y pixel index, wraps properly on horizontal axis
+          iyPos = (iy + nyPad) % nyPad;
+          dy = (float)fabs((double)(yy - 0.5 - iy));
+          if (dy > radius)
+            continue;
+          dx = sqrtf(radius * radius - dy * dy);
+
+          // Loop X within range
+          xst = B3DNINT(xx - dx);
+          xnd = B3DNINT(xx + dx);
+          xnd = B3DMIN(xnd, nxPad / 2 - 1);
+          for (ix = xst; ix < xnd; ix++) {
+
+            // Wrap around vertical axis into other quadrant
+            if (ix < 0) {
+              base = -2 * ix + ((nyPad - iy) % nyPad) * (nxPad + 2);
+            } else {
+              base = 2 * ix + iyPos * (nxPad + 2);
+            }
+            xcomp = useArr[base];
+            ycomp = useArr[base + 1];
+            magSq = xcomp * xcomp + ycomp * ycomp;
+            if (magSq > maxMag) {
+              maxMag = magSq;
+              ixMax = ix;
+              iyMax = iy;
+            }
+          }
+        }
+        /*if (B3DABS(i0) < 4 && B3DABS(i1) < 4)
+        PrintfToLog("%d %d moved %.1f %.1f", i0, i1, ixMax - (xx - 0.5),
+        iyMax - (yy - 0.5));*/
+
+        // Get the background noise in the annulus
+        numSum = 0;
+
+        xst = B3DNINT(ixMax - noiseDist);
+        xnd = B3DNINT(ixMax + noiseDist);
+        xnd = B3DMIN(xnd, nxPad / 2 - 1);
+        yst = B3DNINT(iyMax - noiseDist);
+        yst = B3DMAX(yst, 1 - nyPad / 2);
+        ynd = B3DNINT(iyMax + noiseDist);
+        ynd = B3DMIN(ynd, nyPad / 2 - 1);
+        for (iy = yst; iy <= ynd; iy++) {
+          iyPos = (iy + nyPad) % nyPad;
+          for (ix = xst; ix <= xnd; ix++) {
+            dist = sqrtf(powf(ix - ixMax, 2.f) + powf(iy - iyMax, 2.f));
+            if (dist >= radius + border && dist <= radius + border + noiseWidth) {
+              if (ix < 0) {
+                base = -2 * ix + ((nyPad - iy) % nyPad) * (nxPad + 2);
+              } else {
+                base = 2 * ix + iyPos * (nxPad + 2);
+              }
+              xcomp = useArr[base];
+              ycomp = useArr[base + 1];
+
+              // Keep track of magnitude to allow threshold to be set, and save
+              // components to get their distribution for making random values
+              magSq = xcomp * xcomp + ycomp * ycomp;
+              borderMag[thrd][numSum / 2] = sqrtf(magSq);
+              borderComp[thrd][numSum++] = xcomp;
+              borderComp[thrd][numSum++] = ycomp;
+            }
+          }
+        }
+        //PrintfToLog("numSum %d", numSum);
+
+        // Use medians to reject crosses and tails extending into border
+        rsFastMedian(borderComp[thrd], numSum, medTmp[thrd], &outAvg);
+        rsFastMADN(borderComp[thrd], numSum, outAvg, medTmp[thrd], &outSd);
+        rsFastMedian(borderMag[thrd], numSum / 2, medTmp[thrd], &bkgAvg);
+        rsFastMADN(borderMag[thrd], numSum / 2, bkgAvg, medTmp[thrd], &bkgSd);
+        bkgThresh = bkgAvg + threshNumSd * bkgSd;
+        bkgThresh *= bkgThresh;
+
+        // Fill pixels above a threshold with random value
+        yst = B3DNINT(iyMax - radius);
+        yst = B3DMAX(yst, 1 - nyPad / 2);
+        ynd = B3DNINT(iyMax + radius);
+        ynd = B3DMIN(ynd, nyPad / 2 - 1);
+        for (iy = yst; iy <= ynd; iy++) {
+          iyPos = (iy + nyPad) % nyPad;
+          dy = (float)fabs((double)(iyMax - iy));
+          if (dy > radius)
+            continue;
+          dx = sqrtf(radius * radius - dy * dy);
+
+          xst = B3DNINT(ixMax - dx);
+          xnd = B3DNINT(ixMax + dx);
+          xnd = B3DMIN(xnd, nxPad / 2 - 1);
+          for (ix = xst; ix < xnd; ix++) {
+            if (ix < 0) {
+              base = -2 * ix + ((nyPad - iy) % nyPad) * (nxPad + 2);
+            } else {
+              base = 2 * ix + iyPos * (nxPad + 2);
+            }
+            xcomp = useArr[base];
+            ycomp = useArr[base + 1];
+            magSq = xcomp * xcomp + ycomp * ycomp;;
+            if (magSq > bkgThresh) {
+
+              // Use a thread-safe pseudo generator, when only one image is erased, it
+              // it actually does a little worse than the rand-based routine
+              //dev1 = gaussianDeviate(0);
+              //dev2 = gaussianDeviate(0);
+              twoGaussianDeviates(&dev1, &dev2, &pseudoVals[thrd]);
+              B3DCLAMP(dev1, -limDev, limDev);
+              useArr[base] = outAvg + outSd * dev1;
+              B3DCLAMP(dev2, -limDev, limDev);
+              useArr[base + 1] = outAvg + outSd * dev2;
+            }
+          }
+        }
+      }
+    }
+  }
+  wallNow = wallTime();
+  SEMTrace('T', "Fill: %d threads, time %.1f", numThreads, 1000. *(wallNow - wallStart));
+  wallStart = wallNow;
+  free(borderTemp);
+
+  // Now filter the arrays  and get the copy in C 
+  XCorrFilterPart(array, array, nxPad, nyPad, ctfp, deltap);
+  XCorrFilterPart(brray, brray, nxPad, nyPad, ctfp, deltap);
+  memcpy(crray, array, (nxPad + 2) * nyPad * sizeof(float));
+
+  // multiply array by complex conjugate of brray, put back in array
+  conjugateProduct(array, brray, nxPad, nyPad);
+
+  // Get all inverses
+  todfftc(array, nxPad, nyPad, 1);
+  todfftc(brray, nxPad, nyPad, 1);
+  todfftc(crray, nxPad, nyPad, 1);
+  SEMTrace('T', "Final FFTs %.1f", 1000. *(wallTime() - wallStart));
+  return doAutocorr;
 }
 
 // Filters the image in array with the given type and size into the array brray, which
@@ -271,11 +525,6 @@ void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int n
   int nypad, float delta, float *ctf)
 {
   float *inp, *outp = brray;
-#ifdef USE_FFTW2
-  rfftwnd_plan plan;
-  fftw_real dumreal;
-  fftw_complex dumcomp;
-#endif
   int ixlo = (nxpad - nxin) / 2;
   int iylo = (nypad - nyin) / 2;
 
@@ -285,23 +534,11 @@ void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int n
 
   // Filter it laboriously
   if (delta) {
-#ifndef USE_FFTW2
     todfftc(brray, nxpad, nypad, 0);
-#else
-    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
-    rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
-    rfftwnd_destroy_plan(plan);
-#endif        
 
     XCorrFilterPart(brray, brray, nxpad, nypad, ctf, delta);
 
-#ifndef USE_FFTW2
     todfftc(brray, nxpad, nypad, 1);
-#else
-    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
-    rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
-    rfftwnd_destroy_plan(plan);
-#endif
   }
 
   //Move data back to contiguous space in brray
@@ -754,8 +991,8 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
     if(fabs(a11) > 1.e-10) {
       xlft = (1.01 - xbase) / a11;
       xrt = (nxa-2.01 - xbase) / a11;
-      xst = amax(xst, amin(xlft, xrt));
-      xnd = amin(xnd, amax(xlft, xrt));
+      xst = B3DMAX(xst, B3DMIN(xlft, xrt));
+      xnd = B3DMIN(xnd, B3DMAX(xlft, xrt));
     } else if (xbase < 1. || xbase >= nxa - 2.) {
       xst = nxb - 1;
       xnd = 0;
@@ -763,16 +1000,16 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
     if(fabs(a21) > 1.e-10) {
       xlft = (1.01-ybase) / a21;
       xrt = (nya - 2.01 - ybase) / a21;
-      xst = amax(xst, amin(xlft, xrt));
-      xnd = amin(xnd, amax(xlft, xrt));
+      xst = B3DMAX(xst, B3DMIN(xlft, xrt));
+      xnd = B3DMIN(xnd, B3DMAX(xlft, xrt));
     } else if (ybase < 1. || ybase >= nya - 2.) {
       xst = nxb - 1;
       xnd = 0;
     }
     
     /*    truncate the ending value down and the starting value up */
-    ixnd = (int)amax(-1.e5, xnd);
-    ixst = nxb + 1 - (int)(nxb + 1 -amin(xst, (float)(nxb + 1.)));
+    ixnd = (int)B3DMAX(-1.e5, xnd);
+    ixst = nxb + 1 - (int)(nxb + 1 -B3DMIN(xst, (float)(nxb + 1.)));
 
 	/*  if they're crossed, set them up so fallback will do whole line */
     if(ixst > ixnd) {
