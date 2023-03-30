@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/30/23: Disabled one-line script text boxes when program is busy (In 4.0).
+
+3/30/23: Allowed maximum shift of 25 um in template alignment dialog (In 4.0).
+
 2/25/23: Fixed numbering of holes in frame filenames with multishot cross
 pattern (In 4.0).
 
