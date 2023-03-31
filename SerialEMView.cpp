@@ -603,7 +603,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy, group, numGroups;
   int adjSave;
-  float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
+  float tempX, tempY, ptX, ptY;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, scale, rotation, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0., minLimX, minLimY, maxLimX, maxLimY;
@@ -1201,16 +1201,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     return true;
   }
 
-  // Determine stage coordinate limits of image
+  // Determine stage coordinate limits of image.  This is IS-adjusted Nav stage positions
   aInv = MatInv(mAmat);
-  imXcenter = (float)(imageRect->getWidth() / 2. - m_iOffsetX);
-  imYcenter = (float)(imageRect->getHeight() / 2. + m_iOffsetY);
-  halfXwin = (float)(rect.Width() / (2 * mZoom));
-  halfYwin = (float)(rect.Height() / (2 * mZoom));
-  for (ix = -1; ix <= 1; ix += 2) {
-    for (iy = -1; iy <= 1; iy += 2) {
-      ApplyScaleMatrix(aInv, imXcenter + ix * halfXwin - mDelX,
-        imYcenter + iy * halfYwin - mDelY, tempX, tempY);
+  for (ix = 0; ix <= 1; ix ++) {
+    for (iy = 0; iy <= 1; iy ++) {
+      ApplyScaleMatrix(aInv, ix * imageRect->getWidth() - mDelX,
+        iy * imageRect->getHeight() - mDelY, tempX, tempY);
       ACCUM_MIN(minXstage, tempX);
       ACCUM_MIN(minYstage, tempY);
       ACCUM_MAX(maxXstage, tempX);

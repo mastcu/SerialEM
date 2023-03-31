@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/31/23: One-line script changes: focus now returns the the text box of the
+script that was run when it finishes.  Enabled Ctrl-C and Ctrl-V for copy and
+paste, Ctrl-U to delete the line, and up and down arrows to move between
+lines.
+
+3/31/23: Managed the Smaller/Larger intensity buttons in the autocenter setup
+dialog so that they are enabled only when intensity is in the calibrated
+range.
+
+3/31/23: Fixed dashed red rectangle for stage limits to display only on images
+that extend beyond it.
+
+3/31/23: Fixed crash in autocontouring when there are no contours found.
+
 3/30/23: Added ability to enter multiple commands separated by commas in
 one-line script window.
 
