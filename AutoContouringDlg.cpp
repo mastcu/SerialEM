@@ -1232,6 +1232,7 @@ void CAutoContouringDlg::AutoContDone()
   if (!acd->obj->contsize) {
     SEMMessageBox("No contours found - is the \"Range of sizes\" too narrow?");
     StopAutoCont();
+    return;
   }
   PrintfToLog("Autocontouring found %d contours", acd->obj->contsize);
   if (acd->obj->contsize > 1) {
