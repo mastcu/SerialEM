@@ -180,6 +180,7 @@ public:
   GetSetMember(BOOL, RestoreMacroEditors);
   SetMember(CString, PyModulePath);
   GetMember(CString, EnteredName);
+  SetMember(HWND, FocusedWndWhenSavedStatus);
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };

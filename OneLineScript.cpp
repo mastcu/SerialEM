@@ -108,8 +108,10 @@ void COneLineScript::OnRunClicked(UINT nID)
   UpdateData(true);
   mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
   mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
-  if (!m_strOneLine[ind].IsEmpty())
+  if (!m_strOneLine[ind].IsEmpty()) {
     mWinApp->mMacroProcessor->Run(MAX_MACROS + ind);
+    mWinApp->mMacroProcessor->SetFocusedWndWhenSavedStatus(m_editOneLine[ind].m_hWnd);
+  }
   mWinApp->RestoreViewFocus();
 }
 
@@ -157,6 +159,9 @@ void COneLineScript::OnSize(UINT nType, int cx, int cy)
 // Keep track of Ctrl so Ctrl A and Ctrl Z can be implemented
 BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
 {
+  CEdit *edit;
+  int length;
+  CString text;
   static bool ctrlPressed = false;
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB)
     pMsg->wParam = VK_OEM_3;
@@ -164,12 +169,34 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
     ctrlPressed = true;
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
+  if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_DOWN ||pMsg->wParam == VK_UP)) {
+    if ((pMsg->wParam == VK_DOWN && mLineWithFocus < 4) ||
+      (pMsg->wParam == VK_UP && mLineWithFocus > 0)) {
+      edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE +
+        (pMsg->wParam == VK_UP ? -1 : 1));
+      edit->SetFocus();
+      edit->GetWindowText(text);
+      length = text.GetLength();
+      edit->SetSel(length, length);
+    }
+    pMsg->wParam = 0x00;
+  }
   if (ctrlPressed && pMsg->message == WM_KEYDOWN && mLineWithFocus >= 0 &&
     mLineWithFocus < 5) {
+    edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE);
     if (pMsg->wParam == 'A')
-      ((CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE))->SetSel(0xFFFF0000);
+      edit->SetSel(0xFFFF0000);
     if (pMsg->wParam == 'Z')
-      ((CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE))->Undo();
+      edit->Undo();
+    if (pMsg->wParam == 'U') {
+      edit->SetSel(0xFFFF0000);
+      edit->Clear();
+      m_strOneLine[mLineWithFocus] = "";
+    }
+    if (pMsg->wParam == 'C')
+      edit->Copy();
+    if (pMsg->wParam == 'V')
+      edit->Paste();
     pMsg->wParam = 0x00;
   }
   return CDialog::PreTranslateMessage(pMsg);
