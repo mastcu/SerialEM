@@ -97,6 +97,7 @@ public:
   CButton m_butUseEdge;
   CButton m_butUseCentroid;
   void UpdateEnables();
+  void ManageMoreLessEnables();
   void UpdateSettings();
   CButton m_butShiftBeam;
   CStatic m_statMicrons;
@@ -114,6 +115,7 @@ public:
   double GetParamIntensity() { return mParam ? mParam->intensity : 0.; };
   CButton m_butRecordShift;
   void MoreOrLessIntensity(double factor);
+  int AssessMoreLessChange(double factor, double &newIntensity);
   CStatic m_statLdTrackScope;
   void ManageLDtrackText(bool tracking);
   CButton m_butUseTrialSmaller;

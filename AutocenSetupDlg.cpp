@@ -257,8 +257,7 @@ void CAutocenSetupDlg::OnSetbeamstate()
   else
     RestoreScopeState();
   m_butAcquire.EnableWindow(m_bSetState);
-  m_butMore.EnableWindow(m_bSetState);
-  m_butLess.EnableWindow(m_bSetState);
+  ManageMoreLessEnables();
   mWinApp->RestoreViewFocus();
 }
 
@@ -408,8 +407,7 @@ void CAutocenSetupDlg::OnButAcLess()
 
 void CAutocenSetupDlg::MoreOrLessIntensity(double factor)
 {
-  double newIntensity, outFactor;
-  int err;
+  double newIntensity;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   mWinApp->RestoreViewFocus();
   if (UpdateIfExposureChanged())
@@ -417,16 +415,26 @@ void CAutocenSetupDlg::MoreOrLessIntensity(double factor)
 
   // In low dose, we may just be changing the value here and not on scope so get the
   // new intensity, apply only if appropriate
-  err = mWinApp->mBeamAssessor->AssessBeamChange(mParam->intensity, 
-    mLowDoseMode ? ldp->spotSize : mParam->spotSize, 
-    mLowDoseMode ? ldp->probeMode : mParam->probeMode, factor, newIntensity, outFactor);
-  if (err && err != BEAM_ENDING_OUT_OF_RANGE)
+  if (AssessMoreLessChange(factor, newIntensity))
     return;
   if (mMultiTasks->AutocenMatchingIntensity())
     mScope->SetIntensity(newIntensity, mLowDoseMode ? ldp->spotSize : mParam->spotSize);
   mParam->intensity = newIntensity;
   mCurIntensity = newIntensity;
   ParamChanged();
+}
+
+// Common assessment routine to keep enabling of buttons and ability to make change in sync
+int CAutocenSetupDlg::AssessMoreLessChange(double factor, double &newIntensity)
+{
+  double outFactor;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  int err = mWinApp->mBeamAssessor->AssessBeamChange(mParam->intensity,
+    mLowDoseMode ? ldp->spotSize : mParam->spotSize,
+    mLowDoseMode ? ldp->probeMode : mParam->probeMode, factor, newIntensity, outFactor);
+  if (err && !(err == BEAM_ENDING_OUT_OF_RANGE && fabs(outFactor / factor - 1.) > 0.1))
+    return 1;
+  return 0;
 }
 
 // Take a test shot
@@ -608,6 +616,7 @@ void CAutocenSetupDlg::UpdateParamSettings(void)
   } else if (mParam->intensity >= 0.) {
     m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mCurSpot, mParam->intensity,
       mParam->probeMode), mScope->GetC2Units(), mScope->GetC2Name());
+    ManageMoreLessEnables();
     if (mSynthesized && mBestMag > 0) {
       str1 = "this mag";
       str2 = "this spot";
@@ -792,6 +801,24 @@ void CAutocenSetupDlg::UpdateEnables()
   EnableDlgItem(IDC_EDIT_ACS_ITERATE, mEnableAll && !m_iUseCentroid && m_bIterate);
   if (mLowDoseMode)
     ManageLDtrackText(mMultiTasks->AutocenMatchingIntensity());
+  ManageMoreLessEnables();
+}
+
+// Central place to enable/disable the Smaller/Larger buttons
+void CAutocenSetupDlg::ManageMoreLessEnables()
+{
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  int err;
+  double newIntensity;
+  if (m_bSetState) {
+    err = AssessMoreLessChange(1.25, newIntensity);
+    m_butMore.EnableWindow(!err);
+    err = AssessMoreLessChange(0.8, newIntensity);
+    m_butLess.EnableWindow(!err);
+  } else {
+    m_butMore.EnableWindow(m_bSetState);
+    m_butLess.EnableWindow(m_bSetState);
+  }
 }
 
 // Set the text for whether intensity is being tracked
