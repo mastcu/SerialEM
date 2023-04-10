@@ -717,6 +717,8 @@ MAC_SAME_NAME_ARG(MakePolygonsAtSquares, 0, 4, MakePolygonsAtSquares, dddddd)
 MAC_SAME_NAME_ARG(SetAutocontourGroups, 2, 4, SETAUTOCONTOURGROUPS, IIiiiiiiii)
 MAC_SAME_NAME_NOARG(ReportAutocontourStats, 0, 4, ReportAutocontourStats)
 MAC_SAME_NAME_ARG(SetupPolygonMontage, 3, 0, SETUPPOLYGONMONTAGE, IDS)
+MAC_SAME_FUNC_ARG(StopBackgroundTilt, 0, 0, BackgroundTilt, STOPBACKGROUNDTILT, d)
+MAC_SAME_FUNC_ARG(ReadMontagePiece, 3, 0, ReadFile, READMONTAGEPIECE, IIIs)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

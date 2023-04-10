@@ -2448,7 +2448,7 @@ int CMacCmd::TestNextMultiShot(void)
 int CMacCmd::MultipleRecords(void)
 {
   BOOL doSave;
-  int doEarly, index2, ix0, ix1, iy1, numEarly;
+  int doEarly, index2, ix0, ix1, iy1, numEarly, maxFlags = MULTI_FORCE_CUSTOM * 2 - 1;
 
   mNavHelper->UpdateMultishotIfOpen();
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
@@ -2459,9 +2459,9 @@ int CMacCmd::MultipleRecords(void)
   index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
   if (!mItemEmpty[9] && mItemInt[9] > -9) {
     index2 = mItemInt[9];
-    if (index2 < 1 || index2 > MAX_PERIPHERAL_SHOTS) {
+    if (index2 < 1 || index2 > maxFlags) {
       mStrCopy.Format("The ninth entry for doing within holes or\n"
-        "in multiple holes must be between 1 and %d in line:\n\n", MAX_PERIPHERAL_SHOTS);
+        "in multiple holes must be between 1 and %d in line:\n\n", maxFlags);
       ABORT_LINE(mStrCopy);
     }
   }
@@ -2640,9 +2640,13 @@ int CMacCmd::AutoAlign(void)
       flags += AUTOALIGN_SHOW_CORR + ((mItemInt[5] & 2) ? AUTOALIGN_SHOW_FILTA : 0) +
       ((mItemInt[5] & 4) ? AUTOALIGN_SHOW_FILTC : 0);
     mDisableAlignTrim = mItemInt[3] != 0;
+    if (!mItemEmpty[7]) {
+      mImBufs[0].mImage->setShifts(0., 0.);
+      mImBufs[index].mImage->setShifts(0., 0.);
+    }
   }
-  index2 = mShiftManager->AutoAlign(index, /*doAutocor ? 1 :*/ 0, doShift, flags, NULL, 0., 0.,
-    (float)delX);
+  index2 = mShiftManager->AutoAlign(index, 0, doShift, flags, NULL, 
+    mItemEmpty[6] ? 0.f : mItemFlt[6], mItemEmpty[7] ? 0.f : mItemFlt[7], (float)delX);
   mDisableAlignTrim = false;
   if (index2 > 0)
     SUSPEND_NOLINE("because of failure to autoalign");
@@ -2884,22 +2888,31 @@ int CMacCmd::Save(void)
   return 0;
 }
 
-// ReadFile
+// ReadFile, ReadMontagePiece
 int CMacCmd::ReadFile(void)
 {
   CString report;
   int index, index2, ix0, iy0;
-
+  bool piece = CMD_IS(READMONTAGEPIECE);
   index = mItemInt[1];
   iy0 = mBufferManager->GetBufToReadInto();
   if (!mWinApp->mStoreMRC)
-    SUSPEND_NOLINE("on ReadFile because there is no open file");
-  if (ConvertBufferLetter(mStrItems[2], iy0, false, ix0, report))
+    SUSPEND_NOLINE("on " + CString(piece? "ReadMontagePiece" : "ReadFile") +
+      " because there is no open file");
+  if (ConvertBufferLetter(mStrItems[piece ? 4 : 2], iy0, false, ix0, report))
     ABORT_LINE(report);
   mBufferManager->SetBufToReadInto(ix0);
   if (mWinApp->Montaging() && mWinApp->mMontageController->GetRunningMacro())
     ABORT_LINE("Trying to read from a montage in script run from a montage in line:\n\n");
-  if (mWinApp->Montaging())
+  if (piece) {
+    if (!mWinApp->Montaging())
+      ABORT_LINE("The current file is not a montage for line:\n\n")
+    index = mBufferManager->FindSectionForPiece(mWinApp->mStoreMRC, *mMontP, index - 1,
+      mItemInt[2] - 1, mItemInt[3]);
+    if (index < 0)
+      ABORT_LINE("Could not find piece in file for line:\n\n");
+  }
+  if (mWinApp->Montaging() && !piece)
     index2 = mWinApp->mMontageController->ReadMontage(index, NULL, NULL, false, true);
   else {
     index2 = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, index);
@@ -5680,7 +5693,7 @@ int CMacCmd::MoveStage(void)
 
       // Start the movement
       if (smi.axisBits) {
-        if (!mScope->MoveStage(smi, truth && backlashX != 0., smi.useSpeed, false,
+        if (!mScope->MoveStage(smi, truth && backlashX != 0., smi.useSpeed, 0,
           truth))
           SUSPEND_NOLINE("because of failure to start stage movement");
         mMovedStage = true;
@@ -5705,13 +5718,22 @@ int CMacCmd::RelaxStage(void)
   return 0;
 }
 
-// BackgroundTilt
+// BackgroundTilt, StopBackgroundTilt
 int CMacCmd::BackgroundTilt(void)
 {
   double delX;
   StageMoveInfo smi;
+  int background = 1;
+  if (CMD_IS(STOPBACKGROUNDTILT)) {
+    if (!mScope->StageBusy())
+      return 0;
+    background = -1;
+    if (mItemEmpty[1])
+      mItemDbl[1] = 0.;
+    mItemDbl[1] += mScope->GetTiltAngle();
+  }
 
-  if (mScope->StageBusy() > 0)
+  if (background > 0 && mScope->StageBusy() > 0)
     mLastIndex = mCurrentIndex;
   else {
     smi.alpha = mItemDbl[1];
@@ -5724,7 +5746,7 @@ int CMacCmd::BackgroundTilt(void)
       smi.useSpeed = true;
     }
     smi.axisBits = axisA;
-    if (!mScope->MoveStage(smi, false, smi.useSpeed, true)) {
+    if (!mScope->MoveStage(smi, false, smi.useSpeed, background)) {
       AbortMacro();
       return 1;
     }
@@ -10069,7 +10091,7 @@ int CMacCmd::ReportNumNavAcquire(void)
   if (index < 0)
     mLogRpt = "The Navigator is not open; there are no acquire items";
   else
-    mLogRpt.Format("Navigator has %d Acquire items, %d Tilt Series items", index,
+    mLogRpt.Format("Navigator has %d Acquire items and %d Tilt Series items", index, 
       index2);
   SetRepValsAndVars(1, (double)index, (double)index2);
   return 0;

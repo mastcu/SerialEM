@@ -2218,6 +2218,12 @@
             with a 2-second wait between trials.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReadMontagePiece #X #Y #Z [buf]</TD>
+          <TD>Reads a piece from the current montage file at piece index <b>#X</b> and <b>#Y</b>
+            (numbered from 1) in section <b>#Z</b> (numbered from 0), placing it in the current read 
+            buffer or the the buffer indicated by the optional <b>buf</b>&nbsp; Command added in 4.1, 07-Apr-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CloseFile [#]</TD>
           <TD>Closes the current file. Enter optional <b>#</b> to stop script if no file is open.</TD>
         </TR>
@@ -2554,6 +2560,13 @@
             operations is opened when the program starts.  If the command
               crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.
               </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StopBackgroundTilt [#]</TD>
+          <TD>Stops tilting started by BackgroundTilt by issuing a new call to tilt at normal speed, at the 
+            current angle or the current angle plus the optional <b>#</b>.&nbsp; This command works on JEOL scopes
+             and has been seen to work on Thermo/FEI scopes with 7.x servers, but not with 6.x servers or 
+            earlier&nbsp; Command added in 4.1, 10-Apr-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportTiltAngle</TD>
@@ -3469,12 +3482,13 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S]</TD>
+          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S] [#X] [#Y]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
             avoid changing microscope image shift; 1 for <b>#T</b> to prevent trimming of
             dark borders; 1 for <b>#P</b> to force it to analyze for a periodic specimen and erase peaks
              in the FFT or -1 to force it not to do that analysis; and 1 for <b>#S</b> to show the
-             cross-correlation or 3 or 5 to show one of the filtered images being correlated.&nbsp; Behaves
+             cross-correlation or 3 or 5 to show one of the filtered images being correlated.&nbsp; Enter
+            expected shifts for [#X] and [#Y] (as reported by RealignToItem with debug output 'h').&nbsp; Behaves
              like 'AutoAlign' on errors.</TD>
         </TR>
         <TR>
@@ -3956,7 +3970,8 @@
             adjust beam tilt to compensate for image shift or 0 not to<br /> 9) <b>#H</b> the sum of 1 to do
             shots around a center (within a hole) and 2 to do shots in multiple holes or
             specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing
-            image locations or 8 for testing the coma correction.)<br /> 10)
+            image locations or 8 for testing the coma correction, plus 16 to force it to use a regular 
+            array of holes or 32 to force it to use custom holes.)<br /> 10)
              <b>#R2</b> greater than 0 to do a second ring of positions<br /> 11) <b>#N2</b>
             with the number of positions in the second ring <br /> 12) <b>#O2</b> for the distance from center
             of the second ring
