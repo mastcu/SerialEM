@@ -2212,7 +2212,7 @@ BOOL CEMscope::SetStageBAxis(double inVal)
 
 // External call to move stage
 BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
-  BOOL inBackground, BOOL doRelax, BOOL doRestore)
+  int inBackground, BOOL doRelax, BOOL doRestore)
 {
   // This call is not supposed to happen unless stage is ready, so don't wait long
   // 5/17/11: Hah.  Nothing is too long for a JEOL...  increased from 4000 to 12000
@@ -2222,11 +2222,11 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     if (SEMCheckStageTimeout())
       waitTime += mJeolSD.postMagStageDelay;
   }
-  if (WaitForStageReady(waitTime)) {
+  if (inBackground >= 0 && WaitForStageReady(waitTime)) {
     SEMMessageBox(_T("Stage not ready"));
     return false;
   }
-  if (inBackground && FEIscope && CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0 
+  if (inBackground > 0 && FEIscope && CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0 
     && SEMNumFEIChannels() < 4) {
     SEMMessageBox("The stage cannot be moved in the background.\n"
       "You must have the property BackgroundSocketToFEI set to\n"
@@ -2240,7 +2240,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     useSpeed = true;
     info.speed = B3DCHOICE(info.axisBits == axisA, mTiltSpeedFactor, mStageXYSpeedFactor);
   }
-  
+
   if (((info.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {
     SEMMessageBox("Current scope plugin version does not support setting speed or B "
       "axis");
@@ -2260,7 +2260,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     mMoveInfo.relaxX = mMoveInfo.relaxY = 0.;
   mMoveInfo.useSpeed = useSpeed && mPlugFuncs->SetStagePositionExtra;
 
-  mMoveInfo.inBackground = inBackground;
+  mMoveInfo.inBackground = B3DMAX(0, inBackground);
   mRequestedStageX = (float)info.x;
   mRequestedStageY = (float)info.y;
   mRequestedStageZ = (float)info.z;
@@ -2298,7 +2298,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mStageThread->m_bAutoDelete = false;
   mStageThread->ResumeThread();
   mMovingStage = true;
-  mBkgdMovingStage = inBackground;
+  mBkgdMovingStage = inBackground > 0;
   UpdateWindowsForStage();
   if (!mWinApp->GetAppExiting())
     mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
