@@ -88,6 +88,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, FESizeOrFracForMean);
   GetSetMember(float, MaxFEFineAngle);
   GetSetMember(float, MaxFEFineInterval);
+  GetSetMember(BOOL, DebugRoughEucen);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -289,6 +290,8 @@ class CComplexTasks : public CCmdTarget
   int mEucenRestoreStageXY;       // 1 to restore XY in fine eucentricity, 2 for both
   double mStageXtoRestore;        // Position to restore
   double mStageYtoRestore;
+  BOOL mDebugRoughEucen;          // Flag to save in buffers
+  int mFEDebugBuffer;             // Buffer to save to
 
 public:
   afx_msg void OnTasksSetincrements();

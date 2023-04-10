@@ -156,6 +156,7 @@ CComplexTasks::CComplexTasks()
   mFEWarnedUseTrial = false;
   mFEUseSearchIfInLM = false;
   mFESizeOrFracForMean = 0.;
+  mDebugRoughEucen = false;
   mZMicronsPerDialMark = 3.1f;
   mManualHitachiBacklash = 10.;
   mWalkUseViewInLD = false;
@@ -1505,7 +1506,13 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "FINDING EUCENTRICITY");
   mCamera->SetRequiredRoll(1);
+  mWUSavedShiftsOnAcquire = -1;
   mCamera->SetObeyTiltDelay(obeyDelay);
+  if (mDebugRoughEucen && (coarseFine & FIND_EUCENTRICITY_COARSE)) {
+    mWUSavedShiftsOnAcquire = mBufferManager->GetShiftsOnAcquire();
+    mBufferManager->SetShiftsOnAcquire(1);
+    mFEDebugBuffer = 2;
+  }
 
   // If doing fine & align, set up to get first shot
   if (action == FE_FINE_ALIGNSHOT1) {
@@ -1586,8 +1593,17 @@ void CComplexTasks::EucentricityNextTask(int param)
 
       // Otherwise, find out the shift and evaluate whether further tilt is needed
       // 5/27/06: call with new argument to avoid shift, so don't need to restore it
-      if (mShiftManager->AutoAlign(1, 0, false, false))
+      if (mShiftManager->AutoAlign(1, 0, false))
         StopEucentricity();
+
+      if (mDebugRoughEucen && mFEDebugBuffer < MAX_BUFFERS - 2) {
+        mImBufs[0].GetTiltAngle(delZ);
+        mImBufs[1].GetTiltAngle(delY);
+        PrintfToLog("Copying image %.1f to %c, ref %.1f to %c", delZ, 
+          (char)'A' + mFEDebugBuffer, delY, (char)'A' + mFEDebugBuffer + 1);
+        mBufferManager->CopyImageBuffer(0, mFEDebugBuffer++);
+        mBufferManager->CopyImageBuffer(1, mFEDebugBuffer++);
+      }
 
       // When the reference is already shifted, this shift IS the cumulative shift
       // So need to subtract the reference shift to get the amount of shift between images
@@ -1629,7 +1645,8 @@ void CComplexTasks::EucentricityNextTask(int param)
           sqrtf(powf((float)(shiftX / mImBufs->mImage->getWidth()), 2.f) +
             powf((float)(shiftY / mImBufs->mImage->getHeight()), 2.f)) >=
           mFEReplaceRefFracField) {
-          //PrintfToLog("Replacing ref, cum shift %.1f %.1f", shiftX, shiftY);
+          if (mDebugRoughEucen)
+            PrintfToLog("Replacing ref, cum shift %.1f %.1f", shiftX, shiftY);
           mFECurRefShiftX = shiftX;
           mFECurRefShiftY = shiftY;
         } else {
@@ -1971,7 +1988,7 @@ void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
   }
   smi.x = mStageXtoRestore;
   smi.y = mStageYtoRestore;
-  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, false, false,
+  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, 0, false,
     mStageXtoRestore > EXTRA_VALUE_TEST);
   mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, 
     B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
@@ -2015,6 +2032,8 @@ void CComplexTasks::StopEucentricity()
   mTiltingBack = 0;
   mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
   mCamera->SetRequiredRoll(0);
+  if (mDebugRoughEucen && mWUSavedShiftsOnAcquire >= 0)
+    mBufferManager->SetShiftsOnAcquire(mWUSavedShiftsOnAcquire);
   mCamera->SetObeyTiltDelay(false);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
