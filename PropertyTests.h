@@ -324,6 +324,7 @@ FLOAT_PROP_TEST("EucentricityCoarseMaxIncrementChange", complexTasks->, FEMaxInc
 INT_PROP_TEST("EucentricityFineIterationLimit", complexTasks->, FEIterationLimit)
 DBL_PROP_TEST("EucentricityMaxFineIS", complexTasks->, FEMaxFineIS)
 INT_PROP_TEST("EucentricityRestoreStageXY", complexTasks->, EucenRestoreStageXY)
+BOOL_PROP_TEST("DebugRoughEucentricity", complexTasks->, DebugRoughEucen)
 FLOAT_PROP_TEST("TiltBacklash", complexTasks->, TiltBacklash)
 FLOAT_PROP_TEST("StageTimeoutFactor", complexTasks->, StageTimeoutFactor)
 FLOAT_PROP_TEST("CookerISLimit", mWinApp->mMultiTSTasks->, CkISLimit)
