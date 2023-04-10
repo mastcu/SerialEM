@@ -59,6 +59,7 @@ public :
   int   ReadFromFile(KImageStore *inStore, int inSect = NO_SUPPLIED_SECTION,
     int inBufTo = -1, BOOL readPiece = false, BOOL synchronous = false,
     CString *message = NULL);
+  int FindSectionForPiece(KImageStore *inStore, MontParam &param, int pieceX, int pieceY, int secNum);
   EMimageBuffer *GetSaveBuffer();
   int ReplaceImage(char *inData, int inType, int inX, int inY,
                    int inBuf, int inCap, int inConSet, bool fftBuf = false);

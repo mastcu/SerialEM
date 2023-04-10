@@ -698,7 +698,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   static MontParam param;
   EMimageExtra *extra;
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
-  int xPc, yPc, zPc;
+  int xPc, yPc;
   int pieceX, pieceY, sizeX, sizeY;
   float bufBin;
   KStoreMRC *storeMRC;
@@ -798,17 +798,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
           }
 
           // Search through piece coords for ones matching this piece
-          int coordX = (pieceX - 1) * (param.xFrame - param.xOverlap);
-          int coordY = (pieceY - 1) * (param.yFrame - param.yOverlap);
-          int sec = -1;
-          for (int iz = 0; iz < inStore->getDepth(); iz++) {
-            inStore->getPcoord(iz, xPc, yPc, zPc);
-            if (zPc == number && xPc == coordX && 
-              yPc == coordY) {
-                sec = iz;
-                break;
-              }
-          }
+          int sec = FindSectionForPiece(inStore, param, pieceX - 1, pieceY - 1, number);
 
           if (sec < 0) {
             AfxMessageBox("Piece not found in file.", MB_EXCLAME);
@@ -969,6 +959,23 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
     toBuf->mMagInd = mWinApp->mScope->GetMagIndex();
 
   return 0;
+}
+
+// Search through piece coords for ones matching this piece
+int EMbufferManager::FindSectionForPiece(KImageStore *inStore, MontParam &param,
+  int pieceX, int pieceY, int secNum)
+{
+  int coordX = pieceX * (param.xFrame - param.xOverlap);
+  int coordY = pieceY * (param.yFrame - param.yOverlap);
+  int xPc, yPc, zPc;
+  for (int iz = 0; iz < inStore->getDepth(); iz++) {
+    inStore->getPcoord(iz, xPc, yPc, zPc);
+    if (zPc == secNum && xPc == coordX &&
+      yPc == coordY) {
+      return iz;
+    }
+  }
+  return -1;
 }
 
 int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY, 
