@@ -349,6 +349,10 @@ BOOL CNavigatorDlg::OnInitDialog()
   m_listViewer.GetWindowRect(editRect);
   mListBorderX = clientRect.Width() - editRect.Width();
   mListBorderY = clientRect.Height() - editRect.Height();
+  m_statListHeader.GetWindowRect(editRect);
+  mHeaderBorderX = clientRect.Width() - editRect.Width();
+  mHeaderHeight = editRect.Height();
+  m_statListHeader.GetWindowText(mHeaderStart);
   m_statFilename.GetWindowRect(editRect);
   mFilenameBorderX = clientRect.Width() - editRect.Width();
   mInitialized = true;
@@ -395,7 +399,10 @@ void CNavigatorDlg::OnSize(UINT nType, int cx, int cy)
   newX = cx - mNoteBorderX;
   m_editPtNote.SetWindowPos(NULL, 0, 0, newX, mNoteHeight, SWP_NOZORDER | SWP_NOMOVE);
   m_statFilename.GetClientRect(rect);
-  m_statFilename.SetWindowPos(NULL, 0, 0, cx - mFilenameBorderX, rect.Height(), 
+  newX = cx - mHeaderBorderX;
+  m_statListHeader.SetWindowPos(NULL, 0, 0, newX, mHeaderHeight, 
+    SWP_NOZORDER | SWP_NOMOVE);
+  m_statFilename.SetWindowPos(NULL, 0, 0, cx - mFilenameBorderX, rect.Height(),
     SWP_NOZORDER | SWP_NOMOVE);
   m_statFilename.Invalidate();
   mWinApp->RestoreViewFocus();
@@ -556,8 +563,9 @@ void CNavigatorDlg::ManageCurrentControls()
 void CNavigatorDlg::Update()
 {
   int index, i, start, end, numTS = 0, numAcq = 0, numFile = 0, numAcqInGroup = 0;
+  int numLeft, numHoles, numShots;
   CMapDrawItem *item;
-  CString str;
+  CString str, str2;
   double timePerItem, sinceLastDone, remaining, montLeft = -1.;
   EMimageBuffer *imBuf = &mImBufs[mWinApp->Montaging() ? 1 : 0];
   BOOL noTasks = !mWinApp->DoingTasks() && mAcquireIndex < 0;
@@ -568,7 +576,7 @@ void CNavigatorDlg::Update()
     RegistrationUseType(mItem->mRegistration) != NAVREG_IMPORT;
   BOOL fileOK = curExists && noTasks;
   BOOL groupOK = false, anyAcqInGroup = false;
-  BOOL propsNameStateOK;
+  BOOL propsNameStateOK, multishot = false;
   BOOL grpExists = GetCollapsedGroupLimits(mCurListSel, start, end);
   BOOL recordingHoles = mHelper->mMultiShotDlg &&mHelper->mMultiShotDlg->RecordingHoles();
   if (grpExists) {
@@ -586,7 +594,14 @@ void CNavigatorDlg::Update()
 
   // If acquiring, update the number done and estimated completion
   if (mAcquireIndex >= 0 && mInitialNumAcquire > 0) {
-    str.Format("%d of %d Done", mNumDoneAcq, mInitialNumAcquire);
+    numLeft = mInitialNumAcquire - mNumDoneAcq;
+    multishot = mAcqParm->acquireType == ACQUIRE_MULTISHOT;
+    if (multishot)
+      mHelper->CountHoleAcquires(mAcquireIndex, -1, 0, numLeft, numHoles, numShots);
+    str = FormatProgress(mNumDoneAcq, mInitialNumAcquire, numLeft,
+      multishot ? "items" : "done");
+    if (multishot)
+      str += ";  " + FormatProgress(mNumTotalShotsAcq, mInitialTotalShots, numShots, "shots");
     if (mWinApp->mMontageController->DoingMontage())
       montLeft = mWinApp->mMontageController->GetRemainingTime();
     if (mNumDoneAcq || montLeft >= 0.) {
@@ -618,9 +633,11 @@ void CNavigatorDlg::Update()
         B3DMIN(sinceLastDone, timePerItem);
       CTimeSpan ts(B3DNINT(B3DMAX(0., remaining) / 1000.));
       if (ts.GetDays() > 0)
-        str += ts.Format(";  Estimated completion in %D days %H:%M:%S");
+        str += ts.Format(";  ETC %D da %H:%M");
+      else if (multishot)
+        str += ts.Format(";  ETC %H:%M");
       else
-        str += ts.Format(";  Estimated completion in %H:%M:%S");
+        str += ts.Format(";  ETC %H:%M:%S");
     }
     ManageListHeader(str);
   }
@@ -703,6 +720,19 @@ void CNavigatorDlg::Update()
   if (mNavAcquireDlg)
     mNavAcquireDlg->ExternalUpdate();
   UpdateAddMarker();
+}
+
+// Compose a compact progress string with number done, left , and rate
+CString CNavigatorDlg::FormatProgress(int numDone, int numTot, int numLeft, 
+  const char *text)
+{
+  CString str, str2;
+  str.Format("%d/%d %s, %d left", numDone, numTot, text, numLeft);
+  if (mElapsedAcqTime > 0.) {
+    str2.Format(" (%.3g/hr)", numDone / (mElapsedAcqTime / 3600000.));
+    str += str2;
+  }
+  return str;
 }
 
 // A call specifically for the Add Marker button which depends on the active buffer
@@ -9284,10 +9314,14 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 
   mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, loop, loopEnd);
   mInitialNumAcquire = mAcqParm->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
+  if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
+    mHelper->CountHoleAcquires(mAcquireIndex, mEndingAcquireIndex, 0, loop, loopEnd, 
+      mInitialTotalShots);
   mElapsedAcqTime = 0.;
   mLastAcqDoneTime = GetTickCount();
   mLastAcquireTicks = mLastAcqDoneTime;
   mNumDoneAcq = 0;
+  mNumTotalShotsAcq = 0;
   mLastMontLeft = -1.;
   if (!mScope->FastColumnValvesOpen()) {
     mWinApp->AppendToLog("Opening valves for acquisition!");
@@ -9662,6 +9696,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
           err ? " FAILED before completion" :
           "successfully completed", 0.001 * SEMTickInterval(ticks, mLastAcquireTicks));
         mLastAcquireTicks = ticks;
+        mNumTotalShotsAcq -= mRetValFromMultishot;
 
         // Stop or go on after error just like macro
         if (err && !mAcqParm->noMBoxOnError) {
@@ -10236,13 +10271,18 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
   StopAcquiring();
   mWinApp->SetStatusText(COMPLEX_PANE, "");
   if (mNumAcquired) {
-    report.Format("%s at %d areas", mAcqParm->acquireType == ACQUIRE_DO_TS ? 
+    report.Format("%s at %d areas (%.4g/hr)", mAcqParm->acquireType == ACQUIRE_DO_TS ?
       "Tilt series acquired" : (mAcqParm->acquireType == ACQUIRE_RUN_MACRO ?
       "Script run to completion" : (mAcqParm->acquireType == ACQUIRE_MULTISHOT ? 
-        "Multiple Records acquired" : "Images acquired")), mNumAcquired);
+        "Multiple Records acquired" : "Images acquired")), mNumAcquired,
+      mNumDoneAcq / (mElapsedAcqTime / 3600000.));
+    if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
+      scrp.Format(";  %d Records (%.4g/hr)", mNumTotalShotsAcq,
+        mNumTotalShotsAcq / (mElapsedAcqTime / 3600000.));
+    mWinApp->AppendToLog(report + scrp);
     if (runScript) {
-      scrp.Format("\r\nRunning script %d next", mScriptToRunAtEnd + 1);
-      mWinApp->AppendToLog(report + scrp);
+      scrp.Format("Running script %d next", mScriptToRunAtEnd + 1);
+      mWinApp->AppendToLog(scrp);
     } else {
       AfxMessageBox(report, MB_EXCLAME);
       if (mNumAcqFilesLeftOpen) {
@@ -11710,7 +11750,7 @@ void CNavigatorDlg::SetCollapsing(BOOL state)
 void CNavigatorDlg::ManageListHeader(CString str)
 {
   int ind, hideShow = str == "Label" ? SW_SHOW : SW_HIDE;
-  m_statListHeader.SetWindowText(str);
+  m_statListHeader.SetWindowText(str == "Label" ? mHeaderStart : str);
   for (ind = 0; ind < 8; ind++) {
     CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER2 + ind);
     if (part)

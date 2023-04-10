@@ -1936,7 +1936,7 @@ BEGIN
     CONTROL         "Autosave sum of raw frames",IDC_AUTOSAVE_RAW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,213,100,10
 END
 
-IDD_NAVIGATOR DIALOGEX 0, 0, 251, 259
+IDD_NAVIGATOR DIALOGEX 0, 0, 255, 260
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Navigator"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1965,7 +1965,7 @@ BEGIN
     COMBOBOX        IDC_COMBOCOLOR,23,19,48,63,CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "Color",IDC_STATIC,3,21,17,8
     CONTROL         "Acquire (A)",IDC_CHECK_ACQUIRE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,49,49,10
-    PUSHBUTTON      "?",IDC_BUTHELP,239,3,10,10
+    PUSHBUTTON      "?",IDC_BUTHELP,243,3,10,10
     CONTROL         "All reg.",IDC_DRAW_ALL_REG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,78,33,10
     CONTROL         "Rotate when load",IDC_CHECKROTATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,107,20,68,10
     PUSHBUTTON      "Realign to Item",IDC_REALIGNTOITEM,3,245,50,10
@@ -1991,15 +1991,15 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,56,1
     CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,161,91,44,10
     PUSHBUTTON      "Go To XY",IDC_GOTO_XY,3,154,50,10
-    LTEXT           "Label  ",IDC_STATLISTHEADER,72,102,181,8
-    LTEXT           "Color",IDC_STATLISTHEADER2,93,102,20,8
-    LTEXT           "X",IDC_STATLISTHEADER3,121,102,10,8
-    LTEXT           "Y",IDC_STATLISTHEADER4,146,102,10,8
-    LTEXT           "Z",IDC_STATLISTHEADER5,166,102,10,8
-    LTEXT           "Type",IDC_STATLISTHEADER6,174,102,16,8
-    LTEXT           "Reg.",IDC_STATLISTHEADER7,193,102,14,8
-    LTEXT           "Acq.",IDC_STATLISTHEADER8,210,102,13,8
-    LTEXT           "Note",IDC_STATLISTHEADER9,226,102,15,8
+    LTEXT           "       Label  ",IDC_STATLISTHEADER,57,102,196,8
+    LTEXT           "Color",IDC_STATLISTHEADER2,104,102,20,8
+    LTEXT           "X",IDC_STATLISTHEADER3,133,102,10,8
+    LTEXT           "Y",IDC_STATLISTHEADER4,158,102,10,8
+    LTEXT           "Z",IDC_STATLISTHEADER5,179,102,10,8
+    LTEXT           "Type",IDC_STATLISTHEADER6,187,102,16,8
+    LTEXT           "Reg.",IDC_STATLISTHEADER7,206,102,14,8
+    LTEXT           "Acq.",IDC_STATLISTHEADER8,223,102,13,8
+    LTEXT           "Note",IDC_STATLISTHEADER9,239,102,15,8
     CONTROL         "Draw",IDC_DRAW_ONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,20,32,10
     CONTROL         "None",IDC_DRAW_NONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,78,29,10
     LTEXT           "Draw:",IDC_STAT_NAV_DRAW,122,79,18,8
@@ -4167,9 +4167,9 @@ BEGIN
     IDD_NAVIGATOR, DIALOG
     BEGIN
         LEFTMARGIN, 2
-        RIGHTMARGIN, 249
+        RIGHTMARGIN, 253
         TOPMARGIN, 3
-        BOTTOMMARGIN, 256
+        BOTTOMMARGIN, 257
         HORZGUIDE, 167
     END
 
@@ -5180,8 +5180,6 @@ BEGIN
     IDC_USEINTENSITYATZERO  "Increase intensity to start series, so current value is used at zero tilt"
     IDC_CENTERONAXIS        "Move the center for image shift to the tilt axis"
     IDC_TRIMBORDERS         "Exclude unilluminated areas around image edge from alignment correlation"
-    IDC_ERASE_PERIODIC_PEAKS
-                            "Remove peaks in FFTs due to periodic structures to reduce bad correlations"
     IDC_SPINVIEWBIN         "Set binning for the complete overview image"
     IDC_SPINCURRENT_REG     "Set to a new value when the grid is rotated or item positions change"
     IDC_SPINCOSINEPOWER     "Set power for changing intensity by less than full cosine factor"
@@ -5190,6 +5188,12 @@ BEGIN
     IDC_DRAW_ALL_REG        "Draw items at all registrations over images"
     IDC_DRAW_NONE           "Turn off drawing of all Navigator items"
     IDC_REFINE_ZLP          "Refine alignment of ZLP with a series of pictures"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_ERASE_PERIODIC_PEAKS 
+                            "Remove peaks in FFTs due to periodic structures to reduce bad correlations"
 END
 
 STRINGTABLE

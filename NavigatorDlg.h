@@ -121,6 +121,7 @@ public:
 	void ShiftItemPoints(CMapDrawItem *item, float delX, float delY);
 	void Redraw();
 	void Update();
+  CString FormatProgress(int numDone, int numTot, int numLeft, const char *text);
 	int MoveStage(int axisBits, bool justCheck = false);
 	void SetCurrentStagePos(int index);
 	CMapDrawItem *MakeNewItem(int groupID);
@@ -303,7 +304,9 @@ private:
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;
   int mLineBorderX;
+  int mHeaderBorderX, mHeaderHeight;
   int mFilenameBorderX;
+  CString mHeaderStart;
   BOOL mInitialized;
   CMapDrawItem *mItem;
   CMapDrawItem *mLoadItem;
@@ -454,7 +457,9 @@ private:
   double mLastAcqDoneTime;  // Time when last acquire item finished the full cycle
   double mElapsedAcqTime;   // Cumulative elapsed time since start of acquire
   int mNumDoneAcq;          // Number of acquire points done (including failures)
+  int mNumTotalShotsAcq;    // Total number of shots in multishot
   int mInitialNumAcquire;   // Initial number to be acquired
+  int mInitialTotalShots;   // Initial total shots
   bool mSkipAcquiringItem;  // Flag pre-macro can set to skip the item
   double mLastMontLeft;     // Last remaining montage time
   double mLastTimePerItem;  // Last time per item for that montage time
