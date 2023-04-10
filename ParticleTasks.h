@@ -88,6 +88,7 @@ private:
   bool mMSAdjustAstig;
   int mMSSkipAstigBT;             // Convenient copy of value from NavHelper
   float mMSRadiusOnCam[2];        // Radius to peripheral shots in camera coords
+  BOOL mMSUseCustomHoles;         // Flag to do custom holes during acquisition
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position
   double mBaseBeamTiltX, mBaseBeamTiltY;  // Starting beam tilt
@@ -208,7 +209,7 @@ public:
   void MultiShotCleanup(int error);
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
-    int camera, int numXholes, int numYholes, float tiltAngle);
+    int camera, int numXholes, int numYholes, float tiltAngle, bool startingMulti = false);
   void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
     double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
   void MakeSpiralPattern(int numX, int numY, IntVec &order);

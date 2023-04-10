@@ -131,6 +131,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSParams = mNextMSParams;
     mNextMSParams = NULL;
   }
+  mMSUseCustomHoles = mMSParams->useCustomHoles;
+  if (inHoleOrMulti & MULTI_FORCE_CUSTOM)
+    mMSUseCustomHoles = true;
+  else if (inHoleOrMulti & MULTI_FORCE_REGULAR)
+    mMSUseCustomHoles = false;
 
   // Check conditions, first for test runs
   if (testImage && testComa) {
@@ -189,7 +194,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     SEMMessageBox(str);
     RESTORE_MSP_RETURN(1);
   }
-  if (multiHoles && !((mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
+  if (multiHoles && !((mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
     mMSParams->holeMagIndex > 0)) {
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
       RESTORE_MSP_RETURN(1);
@@ -259,7 +264,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSDoingHexGrid = false;
   if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
-       mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle);
+       mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, true);
      mMSUseHoleDelay = true;
      useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
      useYholes = B3DABS(numYholes ? numYholes : mMSParams->numHoles[1]);
@@ -270,7 +275,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
      if (numXholes && numYholes && item->mNumSkipHoles)
        SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
          item->mNumSkipHoles, mMSNumHoles);
-     if ((!(mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
+     if ((!(mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
        (numXholes && numYholes)) && !mMSDoingHexGrid) {
 
        // Adjust position indexes to be relative to middle, skip 0 for even # of holes
@@ -389,7 +394,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mWinApp->UpdateBufferWindows();
 
   mMSDefocusIndex = -1;
-  if (multiHoles && mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0 &&
+  if (multiHoles && mMSUseCustomHoles && mMSParams->customHoleX.size() > 0 &&
     mMSParams->customDefocus.size()) {
     if (!mMSDefocusTanFac)
       mMSBaseDefocus = mScope->GetDefocus();
@@ -713,7 +718,8 @@ int CParticleTasks::StartOneShotOfMulti(void)
  * mag and camera
  */
 int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
-  int magInd, int camera, int numXholes, int numYholes, float tiltAngle)
+  int magInd, int camera, int numXholes, int numYholes, float tiltAngle, 
+  bool startingMulti)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   int ring, step, mainDir, sideDir, mainSign, sideSign;
@@ -730,7 +736,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   posIndex.clear();
   holeAngle = mMSParams->tiltOfHoleArray;
   fromMag = mMSParams->holeMagIndex;
-  if (mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0 &&
+  if (((!startingMulti && mMSParams->useCustomHoles) || 
+    (startingMulti && mMSUseCustomHoles)) && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
 
     // Custom holes are easy, the list is relative to the center position
