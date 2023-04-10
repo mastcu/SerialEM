@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/10/23: Made peak detection for erasing in FFTs adjust for tilt angle; made
+peak erasing for Realign to Item be off by default for now.
+
+4/10/23: Added details about shots, remaining numbers, and rates to progress
+line during Acquire at Items.
+
+4/10/23: Added StopBackgroundTilt command that seems to work on JEOL and
+latest FEI scope server versions.
+
+4/10/23: Added script command to read one piece of a montage.
+
+4/10/23: Added flags to MultiplRecords force doing regular or custom holes.
+
 3/31/23: One-line script changes: focus now returns the the text box of the
 script that was run when it finishes.  Enabled Ctrl-C and Ctrl-V for copy and
 paste, Ctrl-U to delete the line, and up and down arrows to move between

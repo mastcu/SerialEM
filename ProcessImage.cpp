@@ -2171,7 +2171,7 @@ void CProcessImage::OnProcessAutocorrelation()
   mShiftManager->SetSigma1(0.);
   mShiftManager->SetSigma2(0.);
   mShiftManager->SetRadius2(0.);
-  mShiftManager->AutoAlign(-1, 0, false, AUTOALIGN_SHOW_CORR);
+  mShiftManager->AutoAlign(-1, 0, false, AUTOALIGN_SHOW_CORR | AUTOALIGN_KEEP_SPOTS);
 
   // Fix the scaling, 32000 is not really good
   if (mImBufs->mImageScale) {

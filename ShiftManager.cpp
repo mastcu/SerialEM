@@ -66,7 +66,7 @@ CShiftManager::CShiftManager()
   mSTEMRoughISscale = 0.0;
   mTrimDarkBorders = false;
   mErasePeriodicPeaks = false;
-  mNoDefaultPeakErasing = 0;
+  mNoDefaultPeakErasing = 2;
   mDisableAutoTrim = 0;
   SetPeaksToEvaluate(0, 0.);
   mTrimFrac = 0.04f;       // Fraction to trim for correlations
@@ -537,7 +537,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   //short int *crray;
   float xPeak[2], yPeak[2];
   float *Xpeaks, *Ypeaks, *peak;
-  float tiltA, tiltC;
+  float tiltA = 0., tiltC = 0., tiltAngles[2] = {0., 0.}, axisAngle = 0.;
   int commonBin, size, sizeC, maxBin;
   float stretchAxis, alignLimit = -1.;
   ScaleMat str, strInv;
@@ -732,6 +732,10 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
       stretchAxis = (float)GetImageRotation(mWinApp->GetCurrentCamera(),
       mScope->GetMagIndex());
     stretchAxis -= 90.;
+  }
+  if (mImBufs[0].GetAxisAngle(axisAngle)) {
+    tiltAngles[0] = tiltA;
+    tiltAngles[1] = tiltC;
   }
 
   // Initialize str in case of no stretch
@@ -1051,7 +1055,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     time3 = wallTime() * 1000.;
 
   if (fillSpots) {
-    fillSpots = XCorrPeriodicCorr(mBrray, mArray, mCrray, nxPad, nyPad, delta, mCTFa);
+    fillSpots = XCorrPeriodicCorr(mBrray, mArray, mCrray, nxPad, nyPad, delta, mCTFa, 
+      tiltAngles, axisAngle);
   } else {
     XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
   }
@@ -1560,7 +1565,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   if (!bAdjustScale  && magInd >= mScope->GetLowestNonLMmag())
     mScope->IncDefocus(specY * defocusFac * tan(angle));
   mScope->IncImageShift(-shiftX, -shiftY);
-  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0., false, false, 
+  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0., false, 0, 
     smi.relaxX != 0. || smi.relaxY != 0.);
   SetISTimeOut(GetLastISDelay());
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_RESET_SHIFT, 0, 30000);

@@ -78,6 +78,7 @@
 #define FIND_ACPK_NO_WAFFLE   0x1
 #define FIND_ACPK_BOTH_RATIOS 0x2
 #define FIND_ACPK_HEX_GRID    0x4
+#define FIND_ACPK_TILT_IN_VEC 0x8
 
 /* Determinant of 3x3 matrix */
 #define determ3(a1,a2,a3,b1,b2,b3,c1,c2,c3) ((a1)*(b2)*(c3) - (a1)*(b3)*(c2) +\

@@ -6897,7 +6897,7 @@ void CTSController::TiltWithDoseSymBacklash(StageMoveInfo &smi, double tiltAngle
   smi.backAlpha = -mDosymBacklashDir * mComplexTasks->GetTiltBacklash();
   if (!justSetup)
     mScope->MoveStage(smi, mDoingDoseSymmetric && !mTSParam.dosymSkipBacklash, false, 
-      false, false, RestoreStageXYafterTilt() > 0);
+      0, false, RestoreStageXYafterTilt() > 0);
 }
 
 // Returns whether it is the right tilt index at which to take dose-symmetric anchor

@@ -29,7 +29,6 @@ void PrintfToLog(char *fmt, ...);
 
 #define DTOR 0.01745329252
 
-
 // A generalized 2-D FFT routine with calling convention compatible with IMOD todfft
 void twoDfft(float *array, int *nxpad, int *nypad, int *dir)
 {
@@ -183,7 +182,7 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 #define MAX_PERIOD_THREADS 8
 
 bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
-  float deltap, float *ctfp)
+  float deltap, float *ctfp, float tiltAngles[2], float axisAngle)
 {
   float Xpeaks[MAX_GRID_PEAKS], Ypeaks[MAX_GRID_PEAKS], peak[MAX_GRID_PEAKS];
   float *arrays[2], *useArr;
@@ -241,10 +240,13 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
       wallNow = wallTime();
       SEMTrace('T', "Autocorr %.1f", 1000. *(wallNow - wallStart));
       wallStart = wallNow;
+      vectors[ind][0] = tiltAngles[ind];
+      vectors[ind][1] = axisAngle;
 
       // Find the peaks if any, make sure it is acceptable
       err = findAutoCorrPeaks(crray, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0],
-        numPeaks, MAX_SCAN, hexRatio,
+        numPeaks, MAX_SCAN, hexRatio, 
+        (fabs(tiltAngles[ind]) > 1. ? FIND_ACPK_TILT_IN_VEC : 0) |
         FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_RATIOS | FIND_ACPK_HEX_GRID, 0., 0.,
         &dist1[ind], &dist2[ind], &angles[ind], &vectors[ind][0], &numFound[ind][0],
         &nearInd[ind], messBuf, MAX_MESS_BUF);
@@ -258,6 +260,8 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
         dist1[ind] * numFound[ind][0] < minPixExtent ||
         dist2[ind] * numFound[ind][1] < minPixExtent)
         doAutocorr = false;
+      if (err)
+        SEMTrace('a', "%s", messBuf);
     }
   }
 
@@ -498,7 +502,9 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
     }
   }
   wallNow = wallTime();
-  SEMTrace('T', "Fill: %d threads, time %.1f", numThreads, 1000. *(wallNow - wallStart));
+  if (doAutocorr)
+    SEMTrace('T', "Fill: %d threads, time %.1f", numThreads, 
+      1000. *(wallNow - wallStart));
   wallStart = wallNow;
   free(borderTemp);
 
