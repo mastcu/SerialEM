@@ -18,6 +18,8 @@ class CAutoContouringDlg;
 #define MULTI_HOLES     0x2
 #define MULTI_TEST_IMAGE 0x4
 #define MULTI_TEST_COMA 0x8
+#define MULTI_FORCE_REGULAR 0x10
+#define MULTI_FORCE_CUSTOM 0x20
 
 // Structure for keeping track of parameters that enable skipping center align in round 1
 struct CenterSkipData

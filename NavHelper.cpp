@@ -1306,6 +1306,8 @@ void CNavHelper::RealignNextTask(int param)
     case TASK_SECOND_SHOT:
       imagePixelSize = (float)mImBufs->mBinning *
         mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd);
+      SEMTrace('h', "Aligning with expected shift %.1f %.1f", mExpectedXshift,
+        mExpectedYshift);
       mShiftManager->AutoAlign(1, -1, true, mRIautoAlignFlags, &peakVal, mExpectedXshift,
         mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL, 
         mRIweightSigma / imagePixelSize);
@@ -2956,6 +2958,8 @@ int CNavHelper::GetNumHolesForItem(CMapDrawItem *item, int numDefault)
   if (item->mNumXholes && item->mNumYholes) {
     if (item->mNumXholes == -3 && item->mNumYholes == -3)
       numForItem = 5;
+    else if (item->mNumXholes > 0 && item->mNumYholes == -1)
+      numForItem = 3 * (item->mNumXholes + 1) * item->mNumXholes + 1;
     else
       numForItem = item->mNumXholes * item->mNumYholes;
     numForItem -= item->mNumSkipHoles;
@@ -4831,7 +4835,7 @@ void CNavHelper::ListFilesToOpen(void)
 }
 
 // return count of items marked for acquire and tilt series, or -1 if Nav not open
-void CNavHelper::CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS)
+void CNavHelper::CountAcquireItems(int startInd, int endInd, int &numAcquire, int &numTS)
 {
   CMapDrawItem *item;
   if (!mNav) {
