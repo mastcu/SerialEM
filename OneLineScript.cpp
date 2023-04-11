@@ -163,12 +163,18 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
   int length;
   CString text;
   static bool ctrlPressed = false;
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE) {
+    mWinApp->RestoreViewFocus();
+    return FALSE;
+  }
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_TAB)
     pMsg->wParam = VK_OEM_3;
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_CONTROL)
     ctrlPressed = true;
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
+  if (pMsg->message == VK_PRIOR || pMsg->message == VK_NEXT)
+    return FALSE;
   if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_DOWN ||pMsg->wParam == VK_UP)) {
     if ((pMsg->wParam == VK_DOWN && mLineWithFocus < 4) ||
       (pMsg->wParam == VK_UP && mLineWithFocus > 0)) {
@@ -197,6 +203,8 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
       edit->Copy();
     if (pMsg->wParam == 'V')
       edit->Paste();
+    if (pMsg->wParam == 'X')
+      edit->Cut();
     pMsg->wParam = 0x00;
   }
   return CDialog::PreTranslateMessage(pMsg);
