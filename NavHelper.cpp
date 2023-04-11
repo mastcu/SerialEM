@@ -1306,8 +1306,8 @@ void CNavHelper::RealignNextTask(int param)
     case TASK_SECOND_SHOT:
       imagePixelSize = (float)mImBufs->mBinning *
         mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd);
-      SEMTrace('h', "Aligning with expected shift %.1f %.1f", mExpectedXshift,
-        mExpectedYshift);
+      SEMTrace('h', "Aligning with expected shift %.1f %.1f  sigma %1f", mExpectedXshift,
+        mExpectedYshift, mRIweightSigma / imagePixelSize);
       mShiftManager->AutoAlign(1, -1, true, mRIautoAlignFlags, &peakVal, mExpectedXshift,
         mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL, 
         mRIweightSigma / imagePixelSize);

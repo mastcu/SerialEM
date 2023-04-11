@@ -977,6 +977,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   baseYshift = (int)(expectedYshift / needBinA);
   peakXoffset = -baseXshift;
   peakYoffset = -baseYshift;
+  if (fillSpots) {
+    baseXshift = baseYshift = 0;
+  }
   if (baseXshift || baseYshift) {
     extra = (int)(oversizeFrac * size);
     ShiftCoordinatesToOverlap(widthA, widthC, extra, baseXshift, ix0A, ix1A, ix0C, ix1C);
@@ -1315,6 +1318,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     tempX -= (expectedXshift * binA) / binC;
     tempY -= (expectedYshift * binA) / binC;
     mImC->setShifts(tempX, tempY);
+    mImBufs[toBuf].SetImageChanged(1);
     if (scaling) {
       cshiftX += (1. - 1. / scaling) * expectedXshift;
       cshiftY += (1. - 1. / scaling) * expectedYshift;

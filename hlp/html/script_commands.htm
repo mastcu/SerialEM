@@ -3482,14 +3482,15 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S] [#X] [#Y]</TD>
+          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S] [#X] [#Y] [#W]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
             avoid changing microscope image shift; 1 for <b>#T</b> to prevent trimming of
             dark borders; 1 for <b>#P</b> to force it to analyze for a periodic specimen and erase peaks
              in the FFT or -1 to force it not to do that analysis; and 1 for <b>#S</b> to show the
              cross-correlation or 3 or 5 to show one of the filtered images being correlated.&nbsp; Enter
-            expected shifts for [#X] and [#Y] (as reported by RealignToItem with debug output 'h').&nbsp; Behaves
-             like 'AutoAlign' on errors.</TD>
+            expected shifts for <b>[#X]</b> and <b>[#Y]</b>, and set <B>#W</B> with a sigma in pixels for 
+            weighting by deviation from the expected shift (all as reported by RealignToItem with debug 
+            output 'h').&nbsp; Behaves like 'AutoAlign' on errors.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearAlignment [#N]</TD>

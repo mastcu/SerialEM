@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/10/23: Allowed Escape key in One-line script window to return focus to main
+program.
+
+4/10/23: Made peak erasing in second round of Realign to Item probably work
+better by not trimming images being correlated to their overlapping region.
+
 4/10/23: Made peak detection for erasing in FFTs adjust for tilt angle; made
 peak erasing for Realign to Item be off by default for now.
 

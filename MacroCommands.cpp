@@ -2646,7 +2646,8 @@ int CMacCmd::AutoAlign(void)
     }
   }
   index2 = mShiftManager->AutoAlign(index, 0, doShift, flags, NULL, 
-    mItemEmpty[6] ? 0.f : mItemFlt[6], mItemEmpty[7] ? 0.f : mItemFlt[7], (float)delX);
+    mItemEmpty[6] ? 0.f : mItemFlt[6], mItemEmpty[7] ? 0.f : mItemFlt[7], (float)delX, 0.,
+    0., NULL, NULL, true, NULL, NULL, mItemEmpty[8] ? 0.f : mItemFlt[8]);
   mDisableAlignTrim = false;
   if (index2 > 0)
     SUSPEND_NOLINE("because of failure to autoalign");
@@ -3153,10 +3154,16 @@ int CMacCmd::SetupWaffleMontage(void)
 // SetupFullMontage
 int CMacCmd::SetupFullMontage(void)
 {
+  CFileStatus status;
   ABORT_NONAV;
   if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
   SubstituteLineStripItems(mStrLine, 2, mEnteredName);
+
+  // Check if file already exists
+  if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
+    SUSPEND_NOLINE("opening setting up a full montage because " + mEnteredName +
+      " already exists");
   mNavigator->FullMontage(true, mItemFlt[1], true);
   return 0;
 }
@@ -3164,6 +3171,7 @@ int CMacCmd::SetupFullMontage(void)
 // SetupPolygonMontage
 int CMacCmd::SetupPolygonMontage(void)
 {
+  CFileStatus status;
   int index;
   CMapDrawItem *navItem;
   CMontageSetupDlg dlg;
@@ -3177,6 +3185,9 @@ int CMacCmd::SetupPolygonMontage(void)
   if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
   SubstituteLineStripItems(mStrLine, 3, mEnteredName);
+  if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
+    SUSPEND_NOLINE("opening setting up a polygon  montage because " + mEnteredName +
+      " already exists");
   if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
   return 0;
