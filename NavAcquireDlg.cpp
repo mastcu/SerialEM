@@ -177,8 +177,8 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   MinMaxInt(IDC_EDIT_EVERY_N, m_iEveryNitems, 1, MAX_EVERY_N, "Interval between items");
   DDX_Control(pDX, IDC_SPIN_EVERY_N, m_sbcEveryN);
   DDX_Control(pDX, IDC_EDIT_AFTER_MINUTES, m_editAfterMinutes);
-  MinMaxInt(IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500, "Time interval for action");
   DDX_Text(pDX, IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes);
+  MinMaxInt(IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500, "Time interval for action");
   DDX_Control(pDX, IDC_EDIT_WHEN_MOVED, m_editWhenMoved);
   DDX_Text(pDX, IDC_EDIT_WHEN_MOVED, m_fWhenMoved);
   MinMaxFloat(IDC_EDIT_WHEN_MOVED, m_fWhenMoved, 0.1f, 2000.f, "Distance moved");
