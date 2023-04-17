@@ -2622,6 +2622,15 @@
             the internal intensity values in the program in the range of 0 to 1; default is
             0.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD>ConstantBrightnessInNano</TD>
+          <TD>Set to 1 if fringe-free illumination on a Thermo/FEI scope keeps brightness from changing
+            when intensity (C2) changes in nanoprobe.&nbsp; The program will allow dose to be calibrated, will use that
+            dose value at the same spot size regardless of C2 setting, and will use the spot intensity 
+            calibration to use a dose calibration at one spot size to obtain the dose at another spot size, again
+            regardless of intensity.
+          </TD>
+        </TR>
         <TR>
           <TD>UseIlluminatedAreaForC2</TD>
           <TD>This entry must be set to 1 on a Titan Krios in order to calibrate and
@@ -4213,6 +4222,12 @@
           <TD>The delay between initializing the JEOL COM object and the first attempt to
             call functions, in milliseconds, if events are not being used for update.
             Without this delay, errors occur.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinInitializeJEOLDelay</TD>
+          <TD>Minimum value for 'InitializeJEOLDelay'; if 'InitializeJEOLDelay' is beow this value
+            a warning will be printed in the log on startup.&nbsp; The default is 5500; set to 0 to disable 
+            warning.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolUpdateSleep</TD>

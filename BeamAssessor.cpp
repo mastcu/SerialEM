@@ -838,6 +838,8 @@ int CBeamAssessor::GetAboveCrossover(int spotSize, double intensity, int probe)
 {
   if (probe < 0 || probe > 1)
     probe = mScope->GetProbeMode();
+  if (!probe && mScope->GetConstantBrightInNano())
+    return 1;
   return (mScope->GetCrossover(spotSize, probe) > 0. && 
     intensity > mScope->GetCrossover(spotSize, probe)) ? 1 : 0;
 }
@@ -1230,6 +1232,8 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
   // If calibration exists at this spot size, use it
   AssignCrossovers();
   if (dtp->dose) {
+    if (!probe && mScope->GetConstantBrightInNano())
+      return exposure * dtp->dose;
     cumFactor = FindCurrentRatio(dtp->intensity, inIntensity, inSpotSize, aboveCross,
       probe);
     if (!cumFactor)
@@ -1270,6 +1274,8 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
       "crossover (spot %d int. %f  aC. %d)", inSpotSize, inIntensity, aboveCross);
     return 0.;
   }
+  if (!probe && mScope->GetConstantBrightInNano())
+    return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose;
 
   // Get the cumulative factor for going from calibrated intensity to intensity that
   // ratios were done at, at the calibrated spot size, then to current spot size, then

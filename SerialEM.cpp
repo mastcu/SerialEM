@@ -1581,7 +1581,10 @@ BOOL CSerialEMApp::InitInstance()
       break;
     }
   }
-
+  iSet = mScope->GetMinInitializeJeolDelay();
+  if (JEOLscope && iSet > 0 && mScope->GetInitializeJeolDelay() < iSet)
+    PrintfToLog("WARNING: The property InitializeJeolDelay is set to %d, less than the "
+      "recommended minimum value of %d", mScope->GetInitializeJeolDelay(), iSet);
   mShiftManager->ReportFallbackRotations(!mAdministrator);
 
   if (mLogWindow)

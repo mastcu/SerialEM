@@ -346,6 +346,7 @@ CEMscope::CEMscope()
   mAddToRawIntensity = 0.;
   mJeolUpdateSleep = 200;
   mInitializeJeolDelay = 3000;
+  mMinInitializeJeolDelay = 5500;
   mUpdateByEvent = true;
   mScreenByEvent = true;
   mSpectrumByEvent = false;
@@ -486,6 +487,7 @@ CEMscope::CEMscope()
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
   mUseInvertedMagRange = false;
+  mConstantBrightInNano = false;
   mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
   mFalcon4ReadoutInterval = 0.004021f;
