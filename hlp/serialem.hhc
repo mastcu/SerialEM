@@ -304,9 +304,9 @@
 			<A HREF="html/hidd_autocensetup.htm">Beam Autocentering Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Autocontouring Grid Squares dialog">
-			<param name="Local" value="html/hidd_autocontouring.htm">
+			<param name="Local" value="html/hidd_autocontour.htm">
 			</OBJECT>
-			<A HREF="html/hidd_autocontouring.htm">Autocontouring Grid Squares dialog</A><BR>
+			<A HREF="html/hidd_autocontour.htm">Autocontouring Grid Squares dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Specimen Cooking Setup dialog">
 			<param name="Local" value="html/hidd_cooksetup.htm">

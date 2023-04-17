@@ -874,13 +874,13 @@
     <None Include="hlp\html\hidd_coma_vs_is_cal.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
-    <None Include="hlp\html\hidd_autocontouring.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
     <None Include="hlp\html\hidd_navfiletype.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_step_and_adjust_is.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_autocontour.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
