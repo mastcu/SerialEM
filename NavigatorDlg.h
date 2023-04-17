@@ -729,7 +729,7 @@ float ContourArea(float *ptx, float *pty, int numPoints);
 void GetCurrentNavDir(CString &navPath);
 void SetCurrentNavFile(CString &inFile);
 void UpdateHiding();
-void ManageListHeader(CString str = "Label");
+void ManageListHeader(CString str = "");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();
 CButton m_butEditFocus;

@@ -11749,10 +11749,11 @@ void CNavigatorDlg::SetCollapsing(BOOL state)
 // str in Label, its default value.  Separate parts stay lined up at different DPIs
 void CNavigatorDlg::ManageListHeader(CString str)
 {
-  int ind, hideShow = str == "Label" ? SW_SHOW : SW_HIDE;
-  m_statListHeader.SetWindowText(str == "Label" ? mHeaderStart : str);
-  for (ind = 0; ind < 8; ind++) {
-    CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER2 + ind);
+  int ind, hideShow = str.IsEmpty() ? SW_SHOW : SW_HIDE;
+  m_statListHeader.SetWindowText(str);
+  m_statListHeader.ShowWindow(!str.IsEmpty() ? SW_SHOW : SW_HIDE);
+  for (ind = 0; ind < 9; ind++) {
+    CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER1 + ind);
     if (part)
       part->ShowWindow(hideShow);
   }
