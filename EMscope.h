@@ -499,6 +499,8 @@ public:
   GetMember(int, UnloadedCartridge);
   GetSetMember(int, FegFlashCounter);
   GetSetMember(int, SkipNormalizations);
+  GetSetMember(BOOL, ConstantBrightInNano);
+  GetSetMember(int, MinInitializeJeolDelay);
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
@@ -862,6 +864,8 @@ private:
   int mSkipNormalizations;     // Flag to not normalize on mag (1) or spot (2) change
   double mLastBeamCurrentTime; // Time when beam current was last gotten
   double mFEGBeamCurrent;      // Last value gotten
+  BOOL mConstantBrightInNano;  // Brightness does not change with intensity in nanoprobe
+  int mMinInitializeJeolDelay; // So a warning can be issued if it is too low
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

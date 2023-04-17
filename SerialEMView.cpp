@@ -2743,7 +2743,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
 // Zoom image with mouse wheel
 BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-  int clicksPerZoom = 3, deltaSign = -1;
+  int clicksPerZoom = 3, deltaSign = mWinApp->GetReverseWheelZoom() ? 1 : -1;
   double stepZoom, lastStep;
   int numClicks, step = 1;
   BOOL inWin, inLog = false, inNav = false;

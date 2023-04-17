@@ -513,6 +513,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_HIGH, OnUpdateNoTasksNoSTEM)
     ON_COMMAND(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnSetHoleOrderForRegularArray)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnUpdateNoTasks)
+    ON_COMMAND(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnReverseWheelZoomDirection)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3283,4 +3284,9 @@ void CMenuTargets::OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI)
 void CMenuTargets::OnMarkerToCenter()
 {
   mShiftManager->AlignmentShiftToMarker(false);
+}
+
+void CMenuTargets::OnReverseWheelZoomDirection()
+{
+  mWinApp->SetReverseWheelZoom(!mWinApp->GetReverseWheelZoom());
 }

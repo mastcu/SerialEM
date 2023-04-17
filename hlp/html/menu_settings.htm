@@ -9,6 +9,9 @@
       {
         width: 114px;
       }
+      .auto-style1 {
+        width: 256px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -17,53 +20,61 @@
       <P>The Settings menu offers the following commands:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_open">Open</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_open">Open</A></TD>
           <TD>Opens and reads a settings file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_readagain">Reload</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_readagain">Reload</A></TD>
           <TD>Reloads settings from the current file, which is indicated in this menu
             item.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_save">Save</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_save">Save</A></TD>
           <TD>Saves settings to file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_saveas">Save As</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_saveas">Save As</A></TD>
           <TD>Saves settings to a new file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_close">Close</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_close">Close</A></TD>
           <TD>Closes settings file to prevent saving to it upon exit.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_settings_discardonexit">Discard on Exit</a></TD>
+          <TD class="auto-style1"><a href="#hid_settings_discardonexit">Discard on Exit</a></TD>
           <TD>Prevents autosaving, saving on exit, and offers to save when reading settings</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
           <TD>Reads system default settings file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_settings_autosave">Autosave</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_settings_autosave">Autosave</A></TD>
           <TD>Periodically save settings to currently open file.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tiltseries_setaddress">Set Email Address</A></TD>
           <TD>Opens dialog box to set address to send emails to.</TD>
         </TR>
-          <TD class="style1"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
+          <TD class="auto-style1"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
           <TD>Changes the value of one program property setting.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_settings_basicmode">Basic Mode</a></TD>
+          <TD class="auto-style1"><a href="#hid_settings_basicmode">Basic Mode</a></TD>
           <TD>Toggles a mode with fewer menu and dialog items displayed if one is defined.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_settings_readbasicmodefile">Read Basic Mode File</a></TD>
+          <TD class="auto-style1"><a href="#hid_settings_readbasicmodefile">Read Basic Mode File</a></TD>
           <TD>Reads in a new file defining items to hide in Basic Mode.</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1"><strong>Miscellaneous Options</strong></TD>
+          <TD>Options with no other logical place, or not worth putting in a control panel</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_miscellaneousoptions_reversewheelzoomdirection">Reverse Wheel Zoom Direction</a></TD>
+          <TD>Sets which direction of mouse wheel movement zooms image up.</TD>
+        </TR>        
       </TABLE>
       <BR>
       <P><A NAME="about_settings"></A><B>About Settings Files</B></P>
@@ -192,6 +203,10 @@
        Mode.&nbsp; This filename will be stored in the settings file and reloaded when 
        the program is restarted with those settings, or when those settings are read 
        in.</p>
+       <P><A NAME="hid_miscellaneousoptions_reversewheelzoomdirection"></A><B>Reverse Wheel Zoom 
+         Direction command (Settings - Miscellaneous Options submenu)</B></P>
+      <p>Use this command to toggle whether moving the mouse wheel away from you zooms 
+        the image down (the default) or up (the behavior when the option is selected).</p>
     </basefont>
   </BODY>
 </HTML>

@@ -181,6 +181,7 @@ public:
   SetMember(CString, PyModulePath);
   GetMember(CString, EnteredName);
   SetMember(HWND, FocusedWndWhenSavedStatus);
+  GetSetMember(BOOL, KeepOneLineFocus);
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -446,6 +447,7 @@ protected:
   CString mStatusLines[NUM_CM_MESSAGE_LINES];
   bool mHighlightStatus[NUM_CM_MESSAGE_LINES];
   BOOL mMonospaceStatus;
+  BOOL mKeepOneLineFocus;
 
 public:
   void SetNumCamMacRows(int inVal);
@@ -625,6 +627,8 @@ public:
   afx_msg void OnScriptSetNumStatus();
   afx_msg void OnMonospaceStatusLines();
   afx_msg void OnUpdateMonospaceStatusLines(CCmdUI *pCmdUI);
+  afx_msg void OnKeepFocusOnOneLine();
+  afx_msg void OnUpdateKeepFocusOnOneLine(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

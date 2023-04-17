@@ -110,7 +110,8 @@ void COneLineScript::OnRunClicked(UINT nID)
   mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
   if (!m_strOneLine[ind].IsEmpty()) {
     mWinApp->mMacroProcessor->Run(MAX_MACROS + ind);
-    mWinApp->mMacroProcessor->SetFocusedWndWhenSavedStatus(m_editOneLine[ind].m_hWnd);
+    if (mWinApp->mMacroProcessor->GetKeepOneLineFocus())
+      mWinApp->mMacroProcessor->SetFocusedWndWhenSavedStatus(m_editOneLine[ind].m_hWnd);
   }
   mWinApp->RestoreViewFocus();
 }

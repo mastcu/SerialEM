@@ -46,7 +46,11 @@
           <TD class="auto-style2"><a href="#hid_script_runonecommand">Edit/Run One Line</a>...</TD>
           <TD class="auto-style1">Opens window to allow up to 5 one-line scripts.</TD>
         </TR>
-        <TR VALIGN="top">
+         <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_keepfocusononeline">Keep Focus on One Line</a>...</TD>
+          <TD class="auto-style1">Toggles whether keyboard focus returns to One-Line Script window after script runs.</TD>
+        </TR>
+       <TR VALIGN="top">
           <TD class="auto-style2"><A HREF="#hid_macro_stop">Stop</A></TD>
           <TD class="auto-style1">Stops script at next command.</TD>
         </TR>
@@ -193,10 +197,13 @@
       for cut, copy, and paste.&nbsp; Up and down arrows can be used to jump to the line 
       above or below.&nbsp; When a script is done, focus will return to the text box 
       of the script that was run, so you can easily change it and run again, or move 
-      to another script with an arrow key and run that. The Escape key will return 
+      to another script with an arrow key and run that.&nbsp; The Escape key will return 
       focus to the main program, without closing the window, so that other keyboard 
-      commands can be used.</P>
-    <P><A NAME="hid_macro_stop"></A><B>Stop command (Script menu)</B></P>
+      commands can be used.&nbsp; The focus can be kept from returning by turning off the next option.</P>
+       <P><A NAME="hid_script_keepfocusononeline"></A><B>Keep Focus on One Line command (Script menu)</B></P>
+    <p>Use this command to toggle whether keyboard focus returns to the line of the 
+      one-line script that is run.</p>
+        <P><A NAME="hid_macro_stop"></A><B>Stop command (Script menu)</B></P>
       <P>Use this command to stop a running script.</P>
       <P><A NAME="hid_macro_end"></A><B>End command (Script menu)</B></P>
       <P>Use this command to stop a running script at the end of a loop or the end of the 

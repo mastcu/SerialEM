@@ -160,8 +160,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNIFPROGRAMIDLE, OnUpdateRunIfProgramIdle)
   ON_COMMAND(ID_SCRIPT_SET_NUM_STATUS, OnScriptSetNumStatus)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_SET_NUM_STATUS, OnUpdateScriptSetpanelrows)
-  ON_COMMAND(ID_SCRIPT_MONOSPACESTATUSLINES, &CMacroProcessor::OnMonospaceStatusLines)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, &CMacroProcessor::OnUpdateMonospaceStatusLines)
+  ON_COMMAND(ID_SCRIPT_MONOSPACESTATUSLINES, OnMonospaceStatusLines)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, OnUpdateMonospaceStatusLines)
+  ON_COMMAND(ID_SCRIPT_KEEPFOCUSONONELINE, OnKeepFocusOnOneLine)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_KEEPFOCUSONONELINE, OnUpdateKeepFocusOnOneLine)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -236,6 +238,7 @@ CMacroProcessor::CMacroProcessor()
   for (i = 0; i < NUM_CM_MESSAGE_LINES; i++)
     mHighlightStatus[i] = false;
   mMonospaceStatus = false;
+  mKeepOneLineFocus = true;
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
@@ -487,6 +490,19 @@ void CMacroProcessor::OnUpdateMonospaceStatusLines(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mMonospaceStatus ? 1 : 0);
+}
+
+
+void CMacroProcessor::OnKeepFocusOnOneLine()
+{
+  mKeepOneLineFocus = !mKeepOneLineFocus;
+}
+
+
+void CMacroProcessor::OnUpdateKeepFocusOnOneLine(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mKeepOneLineFocus ? 1 : 0);
 }
 
 void CMacroProcessor::OnScriptListPersistentVars()

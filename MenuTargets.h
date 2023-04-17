@@ -425,6 +425,7 @@ public:
   afx_msg void OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI);
   afx_msg void OnCalHighDefocusIS();
   afx_msg void OnSetHoleOrderForRegularArray();
+  afx_msg void OnReverseWheelZoomDirection();
 };
 
 /////////////////////////////////////////////////////////////////////////////
