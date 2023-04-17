@@ -92,7 +92,7 @@ public:
   GetSetMember(CString, FrameTitle);
   int DoOpenNewFile(CString filename = "");
   void DoCloseFile();
-  void ManageExposure();
+  void ManageExposure(bool noMessage);
   int GetMontageParamsAndFile(BOOL frameSet, int xNframes = -1, int yNframes = -1,
                               CString filename = "");
   void InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes = -1,
@@ -277,7 +277,7 @@ public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
   int UserOpenOldMrcCFile(CFile ** file, CString &cFilename, bool imodOK);
   int OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK);
-  int OpenOldFile(CFile *file, CString cFilename, int err);
+  int OpenOldFile(CFile *file, CString cFilename, int err, bool skipMontDlg);
   KImageStore * GetStoreForSaving(int type);
   int FilePropForSaveFile(FileOptions * fileOptp, int openAnyway);
   int FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, CString & cFilename);
@@ -322,6 +322,7 @@ afx_msg void OnCloseAllFiles();
 afx_msg void OnUpdateCloseAllFiles(CCmdUI *pCmdUI);
 afx_msg void OnReadBasicModeFile();
 afx_msg void OnUpdateReadBasicModeFile(CCmdUI *pCmdUI);
+afx_msg void OnFileSetCurrentDirectory();
 };
 
 // FILE DIALOG CLASS and associated thread class and data

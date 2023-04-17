@@ -118,6 +118,10 @@
           <TD width="190"><A HREF="#hid_window_rescuelogwindow">Reset Log Position</A></TD>
           <TD>Makes the log window visible and moves it to the upper left corner.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_setcurrentdirectory">Set Current Directory...</A></TD>
+          <TD>Opens chooser for selecting the current working directory.</TD>
+        </TR>
           <TD width="190"><a href="#hid_file_open_mdoc">Open .mdoc for Frames</a></TD>
           <TD>Opens a file for saving metadata about saved camera movie frames</TD>
         </TR>
@@ -414,7 +418,12 @@
     <P>Use this command to make the log window visible in the upper left corner of the 
       display with its current size, or a minimum size if that size if smaller than 
       the minimum.</P>
-    <P><A NAME="hid_file_open_mdoc"></A><B>Open .mdoc for Frames command (File menu)</B></P>
+      <P><A NAME="hid_file_setcurrentdirectory"></A><B>Set Current Directory (File menu)</B></P>
+       <p>Use this command to select a new current working directory, which will become 
+         the directory where file choosers open as well as where files will be created or 
+         looked for by script commands when no path is specified.&nbsp; A directory 
+         chooser will open.</p>
+         <P><A NAME="hid_file_open_mdoc"></A><B>Open .mdoc for Frames command (File menu)</B></P>
       <P>Use this command to open a metadata autodoc file (.mdoc file) for saving 
         information about every set of frames saved from a direct detector camera.&nbsp; 
         The information will be virtually identical to that saved in the .mdoc file 

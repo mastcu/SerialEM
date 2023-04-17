@@ -159,6 +159,7 @@ BEGIN
         MENUITEM "&Use Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
         MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
         MENUITEM SEPARATOR
+        MENUITEM "Set Current Directory...",    ID_FILE_SETCURRENTDIRECTORY
         MENUITEM "Open .mdoc for &Frames",      ID_FILE_OPEN_MDOC
         MENUITEM "Close Frames .mdoc",          ID_FILE_CLOSE_MDOC
         MENUITEM SEPARATOR
@@ -182,6 +183,10 @@ BEGIN
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
         MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
         MENUITEM "Read Basic Mode &File",       ID_SETTINGS_READBASICMODEFILE
+        POPUP "Miscella&neous Options"
+        BEGIN
+            MENUITEM "Reverse Wheel Zoom Direction", ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION
+        END
     END
     POPUP "&Camera"
     BEGIN
@@ -469,6 +474,8 @@ BEGIN
             MENUITEM "Run 60",                      ID_MACRO_RUN60
         END
         MENUITEM "Edit/Run &One Line...",       ID_SCRIPT_RUNONECOMMAND
+        MENUITEM "Keep Focus on One Line",      ID_SCRIPT_KEEPFOCUSONONELINE
+        MENUITEM SEPARATOR
         MENUITEM "&Stop",                       ID_MACRO_STOP
         MENUITEM "E&nd",                        ID_MACRO_END
         MENUITEM "Resu&me",                     ID_MACRO_RESUME
@@ -1210,7 +1217,7 @@ BEGIN
     CONTROL         "Center image shift on tilt axis",IDC_CENTERONAXIS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,82,99,10
     CONTROL         "Trim dark borders in Autoalign",IDC_TRIMBORDERS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,102,106,10
-    PUSHBUTTON      "Set Autoalign Trim Fraction",IDC_SET_TRIM_FRAC,14,123,91,10
+    PUSHBUTTON      "Set Autoalign Trim Fraction",IDC_SET_TRIM_FRAC,14,113,91,10
     LTEXT           "Def. target = -8.12 um",IDC_STATDEFTARGET,50,38,67,8
     CONTROL         "Adjust image shift between mags",IDC_APPLYISOFFSET,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,92,111,10
@@ -1218,7 +1225,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,72,111,10
     PUSHBUTTON      "To Marker",IDC_BUT_TO_MARKER,47,10,40,12
     CONTROL         "Erase periodic peaks in Autoalign",IDC_ERASE_PERIODIC_PEAKS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,112,113,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,124,113,10
 END
 
 IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 512
@@ -1991,7 +1998,8 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,56,1
     CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,161,91,44,10
     PUSHBUTTON      "Go To XY",IDC_GOTO_XY,3,154,50,10
-    LTEXT           "       Label  ",IDC_STATLISTHEADER,57,102,196,8
+    LTEXT           " ",IDC_STATLISTHEADER,57,102,196,8
+    LTEXT           "Label",IDC_STATLISTHEADER1,70,102,20,8
     LTEXT           "Color",IDC_STATLISTHEADER2,104,102,20,8
     LTEXT           "X",IDC_STATLISTHEADER3,133,102,10,8
     LTEXT           "Y",IDC_STATLISTHEADER4,158,102,10,8
@@ -7267,6 +7275,11 @@ BEGIN
                             "Set number of status lines to show in Camera & Script panel"
     ID_SCRIPT_MONOSPACESTATUSLINES 
                             "Use monospaced font in status lines of Camera & Script control panel"
+    ID_SCRIPT_KEEPFOCUSONONELINE 
+                            "Bring keyboard focus back to same line when script finishes"
+    ID_FILE_SETCURRENTDIRECTORY "Choose a new working directory for files"
+    ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION 
+                            "Moving mouse wheel away from you zooms image up, not down"
 END
 
 #endif    // English (United States) resources

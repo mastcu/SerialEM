@@ -46,6 +46,7 @@
 #include "StateDlg.h"
 #include "DummyDlg.h"
 #include "XFolderDialog\XWinVer.h"
+#include "XFolderDialog\XFolderDialog.h"
 #include "Shared\\iimage.h"
 #include "Shared\b3dutil.h"
 
@@ -141,6 +142,8 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_FILE_CLOSEALLFILES, OnUpdateCloseAllFiles)
   ON_COMMAND(ID_SETTINGS_READBASICMODEFILE, OnReadBasicModeFile)
   ON_UPDATE_COMMAND_UI(ID_SETTINGS_READBASICMODEFILE, OnUpdateReadBasicModeFile)
+  ON_COMMAND(ID_FILE_SETCURRENTDIRECTORY, OnFileSetCurrentDirectory)
+  ON_UPDATE_COMMAND_UI(ID_FILE_SETCURRENTDIRECTORY, OnUpdateReadBasicModeFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -415,11 +418,11 @@ int CSerialEMDoc::DoFileOpenold()
   err = UserOpenOldMrcCFile(&file, cFilename, false);
   if (err != MRC_OPEN_NOERR && err != MRC_OPEN_ADOC && err != MRC_OPEN_HDF)
     return err;
-  return OpenOldFile(file, cFilename, err);
+  return OpenOldFile(file, cFilename, err, false);
 }
 
 // Common route for opening an old file. err is the code from calling OpenOldMrcCFile
-int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
+int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skipMontDlg)
 {
   MontParam *param;
   CameraParameters *cam;
@@ -534,8 +537,9 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
             param->moveStage = FieldAboveStageMoveThreshold(param, lowDose > 0,
               activeList[camInd]); 
           
-          OpenMontageDialog(true);
-          ManageExposure();
+          if (!skipMontDlg)
+            OpenMontageDialog(true);
+          ManageExposure(skipMontDlg);
           mWinApp->SetMontaging(true);
 
           if (numMissing)
@@ -591,7 +595,7 @@ void CSerialEMDoc::OnFileMontagesetup()
     xOverlap = param->xOverlap;
     yOverlap = param->yOverlap;
     if (!OpenMontageDialog(locked)) {
-      ManageExposure();
+      ManageExposure(false);
       if (!locked && (xNframes != param->xNframes || yNframes != param->yNframes ||
         xFrame != param->xFrame || yFrame != param->yFrame || 
         xOverlap != param->xOverlap || yOverlap != param->yOverlap)) {
@@ -677,7 +681,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
   }
 
   // If all is good, set up montaging in the controller
-  ManageExposure();
+  ManageExposure(false);
   mWinApp->SetMontaging(true);
   AddCurrentStore();
   return 0;
@@ -802,7 +806,7 @@ int CSerialEMDoc::OpenMontageDialog(BOOL locked)
   return 0;
 }
 
-void CSerialEMDoc::ManageExposure()
+void CSerialEMDoc::ManageExposure(bool noMessage)
 {
   MontParam *param = mWinApp->GetMontParam();
   int *activeList = mWinApp->GetActiveCameraList();
@@ -815,13 +819,14 @@ void CSerialEMDoc::ManageExposure()
   // If binning changed, set it in record set and adjust exposure at least
   // Note this overrides the drift-adjusting code in montage controller
   if (param->binning != cs->binning) {
-     if (param->setupInLowDose) {
+     if (param->setupInLowDose || noMessage) {
        float binDiv = BinDivisorF(camParam);
        PrintfToLog("WARNING: This montage was set up with binning %g, different from "
          "the binning (%g) in the %s parameter set\r\n"
-         "   Because this is a low-dose montage, the parameter set will be left as it was,"
+         "   Because this is a %s, the parameter set will be left as it was,"
          "\r\n   and the exposure time there will be assumed to work with both binnings",
-         param->binning / binDiv, cs->binning / binDiv, modeName[setNum]);
+         param->binning / binDiv, cs->binning / binDiv, modeName[setNum], 
+         noMessage ? "montage opened from script" : "low-dose montage");
     } else {
       float ratio = (float)param->binning / cs->binning;
       cs->binning = param->binning;
@@ -2471,6 +2476,22 @@ void CSerialEMDoc::OnReadBasicModeFile()
 void CSerialEMDoc::OnUpdateReadBasicModeFile(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+// Set current directory AND make it the browser directory
+void CSerialEMDoc::OnFileSetCurrentDirectory()
+{
+  char *cwd = _getcwd(NULL, _MAX_PATH);
+  CXFolderDialog dlg(cwd);
+  dlg.SetTitle("Choose a new current working directory");
+  free(cwd);
+  if (dlg.DoModal() != IDOK)
+    return;
+  if (_chdir((LPCTSTR)dlg.GetPath())) {
+    AfxMessageBox("Failed to change to that directory", MB_EXCLAME);
+    return;
+  }
+  SetInitialDirToCurrentDir();
 }
 
 // Append an entry to the log book file; return 1 if no log book defined, -1 if error

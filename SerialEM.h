@@ -630,6 +630,7 @@ public:
   GetSetMember(BOOL, MonospacedLog);
   GetSetMember(BOOL, SaveAutosaveLog);
   GetMember(bool, InRestoreViewFocus);
+  GetSetMember(BOOL, ReverseWheelZoom);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -934,6 +935,7 @@ private:
   BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
   bool mInRestoreViewFocus;     // Flag so draw can be skipped if it is just from SetFocus
   int mSuppressSomeMessages;    // For Jaap...
+  BOOL mReverseWheelZoom;        // "Normal" zoom has a deltaSign of -1
 
 public:
   void UpdateAllEditers(void);
