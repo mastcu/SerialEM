@@ -545,7 +545,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     if (mWinApp->GetSTEMMode()) {
       error = 4;
     } else {
-      error = mWinApp->mBeamAssessor->OutOfCalibratedRange(rawIntensity, inSpot, 
+      if (!inProbeMode && mWinApp->mScope->GetConstantBrightInNano())
+        error = 0;
+      else
+        error = mWinApp->mBeamAssessor->OutOfCalibratedRange(rawIntensity, inSpot,
         inProbeMode, junk, true);
       if (error) {
         if (error == BEAM_ENDING_OUT_OF_RANGE)
