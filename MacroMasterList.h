@@ -719,6 +719,9 @@ MAC_SAME_NAME_NOARG(ReportAutocontourStats, 0, 4, ReportAutocontourStats)
 MAC_SAME_NAME_ARG(SetupPolygonMontage, 3, 0, SETUPPOLYGONMONTAGE, IDS)
 MAC_SAME_FUNC_ARG(StopBackgroundTilt, 0, 0, BackgroundTilt, STOPBACKGROUNDTILT, d)
 MAC_SAME_FUNC_ARG(ReadMontagePiece, 3, 0, ReadFile, READMONTAGEPIECE, IIIs)
+MAC_SAME_FUNC_ARG(ReportMetadataValues, 2, 4, ImageMetadataToVar, REPORTMETADATAVALUES, SS)
+MAC_SAME_FUNC_ARG(ReportMetadataString, 2, 4, ImageMetadataToVar, REPORTMETADATASTRING, SS)
+MAC_SAME_NAME_NOARG(ReportSystemPath, 0, 4, REPORTSYSTEMPATH)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
