@@ -1673,6 +1673,19 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportMetadataValues buf key</TD>
+          <TD>Reports the values that would occur for the given <b>key</b> in an .mdoc file
+             if the image in <b>buf</b> were saved to file.&nbsp The value string will be broken 
+            into individual strings at the spaces and assigned to up to <i>reportedValues</i> as 
+            well as to variables at the end of the command.&nbsp Command added in 4.1, 13-Apr-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportMetadataString buf key</TD>
+          <TD>Like 'ReportMetadataValues', but simply assigns to the value string to <i>reportedValue1</i>
+            and, optionally, to an optional variable an the end of the command.&nbsp; If the string is a set
+            of numbers, it can then be assigned to an array variable.&nbsp; Command added in 4.1, 13-Apr-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ImageLowDoseSet [buf]</TD>
           <TD>Reports the parameter set that an image was taken with and whether it was taken
             in Low Dose mode, for the image in buffer A or in the buffer indicated by <b>buf</b>.&nbsp;
@@ -3482,7 +3495,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S] [#X] [#Y] [#W]</TD>
+          <TD class="scriptcommand">AlignTo buf [#N] [#T] [#P] [#S] [#X] [#Y] [#W] [#B]</TD>
           <TD>Aligns buffer A to given buffer <b>buf</b> (e.g. B or 2). Optionally, enter 1 for <b>#N</b> to
             avoid changing microscope image shift; 1 for <b>#T</b> to prevent trimming of
             dark borders; 1 for <b>#P</b> to force it to analyze for a periodic specimen and erase peaks
@@ -3490,7 +3503,8 @@
              cross-correlation or 3 or 5 to show one of the filtered images being correlated.&nbsp; Enter
             expected shifts for <b>[#X]</b> and <b>[#Y]</b>, and set <B>#W</B> with a sigma in pixels for 
             weighting by deviation from the expected shift (all as reported by RealignToItem with debug 
-            output 'h').&nbsp; Behaves like 'AutoAlign' on errors.</TD>
+            output 'h'); and <b>#B</b> with 0 for normal padding (borders), -1 for extra-large padding,
+             and 1 for small padding.&nbsp; Behaves like 'AutoAlign' on errors.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearAlignment [#N]</TD>
@@ -5326,6 +5340,11 @@
           <TD class="scriptcommand">ReportSettingsFile</TD>
           <TD>Reports the name of the current settings file and the name of the current script
             package file, or "None" if scripts were loaded from settings.&nbsp; Command added in 3.9, 1/8/21.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportSystemPath</TD>
+          <TD>Reports the &#39;system path&#39;, the directory where calibrations and properties 
+            files are located.</TD>
         </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>

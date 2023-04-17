@@ -1517,12 +1517,13 @@ int CMacCmd::NewArrayCmd(void)
   return 0;
 }
 
-// ImageMetadataToVar
+// ImageMetadataToVar, ReportMetadataValues, ReportMetadataString
 int CMacCmd::ImageMetadataToVar(void)
 {
   EMimageBuffer *imBuf;
   int index, adocInd, sectInd;
   char *sectName = "ImageMetadata";
+  char *valString;
   char buffer[20001];
   CString report, bufStr;
   buffer[20000] = 0x00;
@@ -1542,12 +1543,31 @@ int CMacCmd::ImageMetadataToVar(void)
   }
   if (report.IsEmpty() && KStoreADOC::SetValuesFromExtra(imBuf->mImage, sectName, 0))
     report = "Error putting metadata into autodoc structure";
-  if (report.IsEmpty() && AdocPrintToString(buffer, 20000, 1)) {
-    report = "Error converting autodoc to string";
-  } else {
-    bufStr = buffer;
-    mStrItems[2].MakeUpper();
-    SetVariable(mStrItems[2], bufStr.Trim(" \r\n"), VARTYPE_REGULAR, 0, false, &report);
+  if (report.IsEmpty() && CMD_IS(IMAGEMETADATATOVAR)) {
+    if (report.IsEmpty() && AdocPrintToString(buffer, 20000, 1)) {
+      report = "Error converting autodoc to string";
+    } else {
+      bufStr = buffer;
+      mStrItems[2].MakeUpper();
+      SetVariable(mStrItems[2], bufStr.Trim(" \r\n"), VARTYPE_REGULAR, 0, false, &report);
+    }
+  } else if (report.IsEmpty()) {
+    if (AdocGetString(sectName, 0, mStrItems[2], &valString)) {
+      report = "Key " + mStrItems[2] +
+        " does not exist in the metadata autodoc structure";
+    } else {
+      mLogRpt = "Value of " + mStrItems[2] + " is: " + CString(valString);
+      if (CMD_IS(REPORTMETADATASTRING)) {
+        SetOneReportedValue(&mStrItems[3], CString(valString), 1);
+      } else {
+        mParamIO->ParseString(valString, &mStrItems[9], MAX_MACRO_TOKENS - 10);
+        for (index = 0; index < 6; index++) {
+          if (mStrItems[9 + index].IsEmpty())
+            break;
+          SetOneReportedValue(&mStrItems[3], mStrItems[9 + index], index + 1);
+        }
+      }
+    }
   }
   AdocClear(adocInd);
   AdocReleaseMutex();
@@ -2645,7 +2665,8 @@ int CMacCmd::AutoAlign(void)
       mImBufs[index].mImage->setShifts(0., 0.);
     }
   }
-  index2 = mShiftManager->AutoAlign(index, 0, doShift, flags, NULL, 
+  index2 = mShiftManager->AutoAlign(index, mItemEmpty[9] ? 0 : mItemInt[9], doShift, 
+    flags, NULL, 
     mItemEmpty[6] ? 0.f : mItemFlt[6], mItemEmpty[7] ? 0.f : mItemFlt[7], (float)delX, 0.,
     0., NULL, NULL, true, NULL, NULL, mItemEmpty[8] ? 0.f : mItemFlt[8]);
   mDisableAlignTrim = false;
@@ -3567,7 +3588,7 @@ int CMacCmd::OpenOldFile(void)
     return 1;
   index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
   if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
-    index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index);
+    index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index, true);
   if (index != MRC_OPEN_NOERR)
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
   return 0;
@@ -7392,6 +7413,15 @@ int CMacCmd::ReportSettingsFile(void)
     mWinApp->AppendToLog("Current script package: " + report, mLogAction);
   }
   SetOneReportedValue(&mStrItems[1], report, 2);
+  return 0;
+}
+
+// ReportSystemPath
+int CMacCmd::ReportSystemPath(void)
+{
+  mStrCopy = mWinApp->mDocWnd->GetSystemPath();
+  mLogRpt = "System path is: " + mStrCopy;
+  SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
   return 0;
 }
 
