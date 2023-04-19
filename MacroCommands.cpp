@@ -514,7 +514,7 @@ int CMacCmd::NextCommand(bool startingOut)
       "variable value that is a control command on line: \n\n");
 
   mCmdIndex = LookupCommandIndex(mStrItems[0]);
-  if (!mItemEmpty[0] && mCmdIndex < 0)
+  if (!mStrItems[0].IsEmpty() && mCmdIndex < 0)
     ABORT_LINE("After variable substitution, " + mStrItems[0] + 
       " is not a valid command in line:\n\n");
 
