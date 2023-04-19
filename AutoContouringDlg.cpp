@@ -433,12 +433,18 @@ void CAutoContouringDlg::ExternalSetGroups(int numGroups, int which, int *showGr
   for (ind = 0; ind < numShow; ind++)
     if (showGroups[ind] >= 0)
       mShowGroup[ind] = showGroups[ind] ? 1 : 0;
+  if (!numShow && numGroups == 1)
+      mShowGroup[0] = 1;
   SetExclusionsAndGroups();
   if (mIsOpen) {
     m_strShowGroups.Format("Split into %d", mNumGroups);
     ManageGroupSelectors(2);
     UpdateData(false);
+  } else {
+    mMasterParams = mWinApp->mNavHelper->GetAutocontourParams();
+    mMasterParams->numGroups = mNumGroups;
   }
+  mParams.numGroups = mNumGroups;
 }
 
 // Start autocontouring
