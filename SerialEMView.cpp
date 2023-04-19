@@ -2675,7 +2675,8 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
 
             // Otherwise start or continue drawing a line if point is within image
-          } else if (!mDrawingLine) {
+          } else if (!mDrawingLine && !(imBuf->mCaptured == BUFFER_FFT || 
+            imBuf->mCaptured == BUFFER_LIVE_FFT)) {
             CPoint prev(m_iPrevMX, m_iPrevMY);
             if (!ConvertMousePoint(&rect, imBuf->mImage, &prev, prevX, prevY)) {
               prevX = shiftX;

@@ -900,6 +900,9 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   } else if (imBuf->mMagInd > 0)
     mMapID = -imBuf->mMagInd;
 
+  convertSave = mHelper->GetConvertMaps();
+  readBuf = mWinApp->mBufferManager->GetBufToReadInto();
+
   // Montaging: check preconditions first
   if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
     mMontage = -1;
@@ -930,14 +933,12 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
         
         // Save some params, get rid of store for now, and set params for reload
         overBinSave = masterMont->overviewBinning;
-        convertSave = mHelper->GetConvertMaps();
         loadUnbinSave = mHelper->GetLoadMapsUnbinned();
         if (mCurStore < 0)
           delete mImageStore;
         masterMont->overviewBinning = reloadBinning;
         mHelper->SetConvertMaps(false);
         mHelper->SetLoadMapsUnbinned(false);
-        readBuf = mWinApp->mBufferManager->GetBufToReadInto();
 
         // Reload and restore
         err = mNav->DoLoadMap(true, mNavItem, -1);
@@ -983,6 +984,19 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
         *mMiniOffsets = *imBuf->mMiniOffsets;
       }
     }
+
+    // But single frame byte images need to be reloaded too
+  } else if (image->getType() == kUBYTE && mNavItem) {
+    mHelper->SetConvertMaps(false);
+    mWinApp->mBufferManager->SetBufToReadInto(mBufInd);
+    err = mNav->DoLoadMap(true, mNavItem, -1);
+    mHelper->SetConvertMaps(convertSave);
+    mWinApp->mBufferManager->SetBufToReadInto(readBuf);
+    if (err) {
+      SEMMessageBox("Could not reload map to work with it as non-bytes");
+      return 1;
+    }
+    image = imBuf->mImage;
   }
 
   mLastTiltAngle = 0.;
