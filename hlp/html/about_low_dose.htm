@@ -29,7 +29,8 @@
         View area - this area is centered on the Record area. The magnification should
         be low (but not in Low Magnification mode) for several reasons: to provide an overview of a larger area, to
         minimize specimen exposure, and to provide reliable tracking in the various
-        SerialEM 'tasks' that require lower magnification views. Taking an image with the
+        SerialEM 'tasks' that require lower magnification views (but the latter is not 
+        essential, as explained below). Taking an image with the
         View camera parameters will acquire from this area. View camera parameters
         should be set up for a binned, low exposure image.</LI>
       <LI>
@@ -87,7 +88,9 @@
         dose, which sets a minimum magnification at which it should be run.&nbsp; When 
         the View magnification is higher than that minimum, and the Search magnification 
         is lower than View and not in LM mode, the program will use Search instead to 
-        minimize the risk of excessive shifts between images.&nbsp; See the
+        minimize the risk of excessive shifts between images.&nbsp; This means that you 
+        do not need to set up View to provide an adequate field of view for all tasks, if 
+        you have set up Search as a suitable alternative.&nbsp; See the
         <a href="menu_tasks.htm#hid_specializedoptions_tasksuseviewevenifsearchbetter">Tasks Use View Even if Search Better</a>
         command for more details.
       </LI>

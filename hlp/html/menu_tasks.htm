@@ -214,7 +214,15 @@
         </TR>
      </TABLE>
       <BR>
-       <P><A NAME="hid_eucentricity_coarse"></A><B>Rough Eucentricity command (Tasks - Eucentricity submenu)</B></P>
+       <P><A NAME="hid_eucentricity_coarse"></A><strong>A Note on Tasks in Low Dose Mode</strong></P>
+    <P>Tasks that use lower magnification tracking will generally use View images in 
+      Low Dose mode, although some have menu entries to control which area is used.&nbsp; 
+      However, each such task has a required minimum field of view when run outside of 
+      Low Dose, which sets a minimum magnification at which it should be run.&nbsp; When 
+      the View magnification is higher than that minimum, and the Search magnification 
+      is lower than View and not in LM mode, the program will use Search instead to 
+      minimize the risk of excessive shifts between images.</P>
+    <P><B>Rough Eucentricity command (Tasks - Eucentricity submenu)</B></P>
       <P>This command can be used to adjust the Z height to the eucentric point when the
         Z height might be off by more than 5-10 microns, which can often be the case
         when the specimen rod has just been inserted. This procedure will find
@@ -224,7 +232,8 @@
       <P>This procedure does not make any attempt to keep the starting specimen location
         in the field of view.</P>
       <P>The rough eucentricity procedure first switches to a low magnification (or, in
-        low dose mode, it uses the parameters of the View area). It takes pictures to
+        Low Dose mode, it uses the parameters of the View or Search area, as described 
+        above). It takes pictures to
         determine how far the specimen moves laterally upon tilting, starting with a
         very small tilt increment and working up to a total increment of 8 degrees. It
         may adjust the Z height more than once before finishing.</P>
@@ -238,7 +247,8 @@
         in the field of view. It can be run when not at zero tilt, and the program will
         return the stage to your pre-existing tilt at the end.</P>
       <P>The fine eucentricity procedure first switches to a low magnification (or, in
-        low dose mode, it uses the parameters of the View area). It then takes pictures
+        Low Dose mode, it uses the parameters of the View area or Search area, as 
+        described above). It then takes pictures
         at a set of tilts between -24 and +24 degrees. From the image displacements
         during this series, it can compute both the distance in Z from the eucentric
         point and the lateral displacement of the tilt axis from the optical axis. If
@@ -249,15 +259,15 @@
       'EucentricityMaxFineAngle' and 'EucentricityFineIntervalAtZero'.</P>
       <P><A NAME="hid_eucentricity_both"></A><B>Both Rough and Fine command (Tasks - Eucentricity submenu)</B></P>
       <P>Use this command to run the rough eucentricity procedure followed immediately by
-        the fine eucentricity procedure. This sequence does make any attempt to keep
+        the fine eucentricity procedure. This sequence not does make any attempt to keep
         the starting specimen location in the field of view.</P>
       <P><A NAME="hid_tasks_finerealign"></A><B>Refine &amp; Realign command (Tasks - Eucentricity submenu)</B></P>
       <P>Use this command to run the fine eucentricity procedure while retaining an item
         of interest centered in the field of view. The program will first take a
         low-magnification reference picture, then do the fine eucentricity procedure,
         then take another picture at the original tilt angle and use that to restore
-        the alignment. In low dose mode, the reference picture will be taken of the
-        View area. It is not necessary to be at zero tilt to run this command.</P>
+        the alignment. In Low Dose mode, the reference picture will be taken of the
+        View or Search area, as described above. It is not necessary to be at zero tilt to run this command.</P>
       <P><A NAME="hid_tasks_settiltaxisoffset"></A><B>Set Tilt Axis Offset command (Tasks
           - Eucentricity submenu)</B></P>
       <P>Use this command to set the offset of the tilt axis from the optical axis, which
@@ -277,9 +287,10 @@
         tilt axis' in the Image Alignment and Focus control panel.</P>
       <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks
           - Eucentricity submenu)</B></P>
-      <P>Use this command to select whether the Trial area rather than the View area will
+      <P>Use this command to select whether the Trial area rather than the View or 
+        Search area will
         be used for the tilted images that are taken when refining eucentricity. The
-        View area will still be used for the initial and final tracking images when the
+        View or Search area will still be used for the initial and final tracking images when the
         Refine and Realign procedure is used, and for the rough eucentricity procedure
         when both rough and fine procedures are run together. Using the Trial area will
         save a little dose but will reduce the range of Z heights over which the
@@ -287,7 +298,8 @@
         the tilt axis, the Trial area rather than the Record area will be brought to
         the eucentric height.</P>
      <P><A NAME="hid_tasks_roughusesearchifinlm"></A><B>Rough Use Search if in LM command (Tasks - Eucentricity submenu)</B></P>
-      <P>Toggle this entry to switch between using the View area for the rough
+      <P>Toggle this entry to switch between using the View or Search area (as described 
+        above) for the rough
         eucentricity procedure in Low Dose mode and using the Search area, if it is
         defined as being in low magnification <em>and</em> if the microscope is already
         in low magnification.&nbsp; Running this procedure in LM may be accurate enough
@@ -383,7 +395,7 @@
         with a tilt interval that is quite coarse at low angles and finer at high
         angles. Image shift will be reset whenever it gets too high, but no
         autofocusing is done. The pictures are taken with the Trial parameter set and,
-        if in low dose mode, the pictures are of the Trial area. If the magnification
+        if in Low Dose mode, the pictures are of the Trial area. If the magnification
         is too high for reliable tracking, the pictures will be taken at a lower
         magnification.</P>
       <P>If you choose a destination angle that is in the opposite direction from the
@@ -399,7 +411,7 @@
           dialog box</A> .</P>
       <P><A NAME="hid_tasks_use_view_in_lowdose"></A><B>Use View in LD command (Tasks menu)</B></P>
       <P>Use this command to select whether the Walk Up routine will be run with the
-        View area when in Low Dose mode.</P>
+        View or Search area (as described above) instead of the Trial area when in Low Dose mode.</P>
       <P><A NAME="hid_tasks_setincrements"></A><B>Set Increments command (Tasks menu)</B></P>
       <P>Use this command to set the minimum and maximum tilt increments for the Walk Up
         operation. The maximum increment is used at zero tilt, and the increment at any
@@ -461,7 +473,8 @@
          the end, image shift will no longer be zero because of this alignment; in fact,
          it can be as much as one-quarter of the original image shift because of
         inaccuracy in stage movement. The reference picture will be taken at low
-        magnification or, if in low dose mode, with the View parameters.</P>
+        magnification or, if in Low Dose mode, with the View or Search parameters, as 
+        described above.</P>
       <P>If you just want to reset image shift without having a feature stay centered,
         use the Reset Shifts button in the <A HREF="hidd_alignfocus.htm">Image Alignment
           &amp; Focus panel</A> .</P>
@@ -473,8 +486,8 @@
         taken before the reset. If image shift is still greater than this criterion, it
         will be reset again, and another image taken and aligned.</P>
       <P><A NAME="hid_tasks_usetrialinld"></A><B>Use Trial in LD command (Tasks menu)</B></P>
-      <P>Toggle this entry to switch between using the View and Trial areas for the Reset
-        IS &amp; Realign procedure. The View area is the default because the stage
+      <P>Toggle this entry to switch between using the View or Search area versus the Trial area for the Reset
+        IS &amp; Realign procedure. The View or Search area (as described above) is the default because the stage
         movement involved in resetting the shift is unpredictable, and the larger field
         of view of the View area is assumed to be needed to do the reset reliably. It
         may be safe to use the trial area if your limit for resetting image shift is
@@ -500,7 +513,8 @@
         take a reference picture, tilt far enough in the current direction to work out
         the backlash, tilt back to the starting angle, then take another picture and
         align it to the reference picture. The reference picture will be taken at low
-        magnification or, if in low dose mode, with the View parameters.</P>
+        magnification or, if in Low Dose mode, with the View or Search parameters, as 
+        described above.</P>
       <A NAME="hid_tasks_setupscopemanagement"></A><B>Setup Scope Management command (Tasks menu)</B></A>
       <p>Use this command to open the <a href="hidd_manage_dewars.htm">Dewar and Vacuum
         Management</a> dialog, which allows you to set parameters for a routine
