@@ -1667,6 +1667,18 @@ void CNavigatorDlg::ProcessCKey(void)
   SetChanged(true);
 }
 
+void CNavigatorDlg::ProcessRKey()
+{
+  if (!SetCurrentItem())
+    return;
+  if (mItem->IsPolygon())
+    return;
+  UpdateData(true);
+  m_bRegPoint = !m_bRegPoint;
+  UpdateData(false);
+  OnCheckRegpoint();
+}
+
 // Variants on the A key to toggle acquire state
 void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
 {

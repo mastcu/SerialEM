@@ -2885,6 +2885,8 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mNavigator->ProcessAkey(mCtrlPressed, mShiftPressed);
   } else if (navCanProcess && cChar == 'C' && !mCtrlPressed && !mShiftPressed) {
     mWinApp->mNavigator->ProcessCKey();
+  } else if (navCanProcess && cChar == 'R' && !mCtrlPressed && !mShiftPressed) {
+    mWinApp->mNavigator->ProcessRKey();
   } else if (navCanProcess && cChar == 'D' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessDKey();
   } else if (navCanProcess && cChar == 'T' && !mCtrlPressed && mShiftPressed) {

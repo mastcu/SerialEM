@@ -636,6 +636,7 @@ public:
   int TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int regDrawnOn, int curDrawnOn);
   int TransformFromRotAlign(int reg, ScaleMat aM, float *dxy);
   void ProcessCKey(void);
+  void ProcessRKey();
   ScaleMat * XformForStageStretch(bool usingIt);
   bool LineInsideContour(float * ptsX, float * ptsY, int numPoints, float xStart, float yStart, float xEnd, float yEnd);
   void FillItemWithCornerPoints(CMapDrawItem *itmp);

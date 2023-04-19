@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/18/23: Added hot key for toggling Registration point.
+
+4/18/23: Fixed SetAutocontourGroups command when dialog closed.
+
+4/18/23: Improved erasing of periodic signals by erasing in full-sized images
+and doing more FFTs to trim artifacts at edges.
+
 4/18/23: SEM_4-0-21
 4/18/23: Fixed problems with using a variable for a script command (In 4.0).
 
