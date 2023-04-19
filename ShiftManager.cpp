@@ -34,6 +34,7 @@
 #include "ProcessImage.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
+#include "Shared\\cfft.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -538,6 +539,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float xPeak[2], yPeak[2];
   float *Xpeaks, *Ypeaks, *peak;
   float tiltA = 0., tiltC = 0., tiltAngles[2] = {0., 0.}, axisAngle = 0.;
+  float *fillArray = NULL, *fillBrray = NULL, *fillCrray = NULL;
+  bool failed = true;
   int commonBin, size, sizeC, maxBin;
   float stretchAxis, alignLimit = -1.;
   ScaleMat str, strInv;
@@ -734,8 +737,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     stretchAxis -= 90.;
   }
   if (mImBufs[0].GetAxisAngle(axisAngle)) {
-    tiltAngles[0] = tiltA;
-    tiltAngles[1] = tiltC;
+    tiltAngles[0] = tiltC;
+    tiltAngles[1] = tiltA;
   }
 
   // Initialize str in case of no stretch
@@ -845,7 +848,6 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   }
   strInv = MatInv(str);
 
-  
   // Temporary replacement of imC:
   /*  mImC->UnLock();
     mDeleteC = false;
@@ -855,6 +857,51 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     mImC = mImBufs[toBuf].mImage;
     mImC->Lock();
   */ 
+
+  // To erase peaks from periodic signals, take the full-sized image with minimal padding
+  // and standard tapering
+  if (fillSpots) {
+    nxUse = B3DMAX(widthA, widthC);
+    nyUse = B3DMAX(heightA, heightC);
+    nxPad = XCorrNiceFrame((int)(1.05 * nxUse), 2, niceFFTlimit());
+    nyPad = XCorrNiceFrame((int)(1.05 * nyUse), 2, niceFFTlimit());
+    NewArray2(fillArray, float, nyPad, (nxPad + 2));
+    NewArray2(fillBrray, float, nyPad, (nxPad + 2));
+    NewArray2(fillCrray, float, nyPad, (nxPad + 2));
+    if (fillArray && fillBrray && fillCrray) {
+      nxTaper = (int)(mTaperFrac * nxUse);
+      nyTaper = (int)(mTaperFrac * nyUse);
+      XCorrTaperInPad(mDataA, typeA, widthA, 0, widthA - 1, 0, heightA - 1, fillArray,
+        nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
+      XCorrTaperInPad(mDataC, typeC, widthC, 0, widthC - 1, 0, heightC - 1, fillBrray,
+        nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
+
+      // Do the periodic correlation only up to point of erasing.  If it did erase,
+      // it returns fillBrray and fillArray erased, otherwise it will just return and
+      // we will use original images
+      if (XCorrPeriodicCorr(fillBrray, fillArray, fillCrray, nxPad, nyPad, 0., mCTFa,
+        tiltAngles, axisAngle, 1)) {
+
+        // Repack the images to match the original
+        nxTrimA = nxPad / 2 - widthA / 2;
+        nyTrimA = nyPad / 2 - heightA / 2;
+        repackFloatImage(fillArray, fillArray, nxPad + 2, nxTrimA, nxTrimA + widthA - 1,
+          nyTrimA, nyTrimA + heightA - 1);
+        nxTrimA = nxPad / 2 - widthC / 2;
+        nyTrimA = nyPad / 2 - heightC / 2;
+        repackFloatImage(fillBrray, fillBrray, nxPad + 2, nxTrimA, nxTrimA + widthC - 1,
+          nyTrimA, nyTrimA + heightC - 1);
+        failed = false;
+        trimFrac = B3DMAX(trimFrac, 0.1f);
+      }
+    }
+    if (failed) {
+      DELETE_ARR(fillArray);
+      DELETE_ARR(fillBrray);
+      fillSpots = false;
+    }
+    DELETE_ARR(fillCrray);
+  }
 
   //height = heightA > heightC ? heightA : heightC;
   //width = widthA > widthC ? widthA : widthC;
@@ -977,9 +1024,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   baseYshift = (int)(expectedYshift / needBinA);
   peakXoffset = -baseXshift;
   peakYoffset = -baseYshift;
-  if (fillSpots) {
-    baseXshift = baseYshift = 0;
-  }
+
   if (baseXshift || baseYshift) {
     extra = (int)(oversizeFrac * size);
     ShiftCoordinatesToOverlap(widthA, widthC, extra, baseXshift, ix0A, ix1A, ix0C, ix1C);
@@ -1012,8 +1057,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   // Back to the old way: take the larger area
   nxUse = B3DMAX(nxUseA, nxUseC);
   nyUse = B3DMAX(nyUseA, nyUseC);
-  nxPad = XCorrNiceFrame((int)((1. + fracPad) * nxUse), 2, 19);
-  nyPad = XCorrNiceFrame((int)((1. + fracPad) * nyUse), 2, 19);
+  nxPad = XCorrNiceFrame((int)((1. + fracPad) * nxUse), 2, niceFFTlimit());
+  nyPad = XCorrNiceFrame((int)((1. + fracPad) * nyUse), 2, niceFFTlimit());
   if (autoCorr) {
     nxPad = B3DMAX(nxPad, nyPad);
     nyPad = nxPad;
@@ -1041,8 +1086,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   frac = mTaperFrac / (1.f - 2.f * trimFrac);
   nxTaper = (int)(frac * nxUseA);
   nyTaper = (int)(frac * nyUseA);
-  XCorrTaperInPad(mDataA, typeA, widthA, ix0A, ix1A, iy0A, iy1A, mArray,
-        nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
+  XCorrTaperInPad(fillArray ? fillArray : mDataA, fillArray ? SLICE_MODE_FLOAT : typeA, 
+    widthA, ix0A, ix1A, iy0A, iy1A, mArray, nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
 
   if (tmplCorr) {
     nxTaper = 8;
@@ -1051,18 +1096,16 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     nxTaper = (int)(frac * nxUseC);
     nyTaper = (int)(frac * nyUseC);
   }
-  XCorrTaperInPad(mDataC, typeC, widthC, ix0C, ix1C, iy0C, iy1C, mBrray,
-        nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
+  XCorrTaperInPad(fillArray ? fillBrray : mDataC, fillArray ? SLICE_MODE_FLOAT: typeC,
+    widthC, ix0C, ix1C, iy0C, iy1C, mBrray, nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
 
   if (debugTime)
     time3 = wallTime() * 1000.;
 
-  if (fillSpots) {
-    fillSpots = XCorrPeriodicCorr(mBrray, mArray, mCrray, nxPad, nyPad, delta, mCTFa, 
-      tiltAngles, axisAngle);
-  } else {
-    XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
-  }
+  XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
+  
+  DELETE_ARR(fillArray);
+  DELETE_ARR(fillBrray);
   if (debugTime)
     time4 = wallTime() * 1000.;
 
@@ -1264,7 +1307,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   }
 
   if (debugTime)
-    PrintfToLog("%.1f to bin, %.1f to stretch, %.1f to pad, %.1f to correlate\r\n"
+    PrintfToLog("%.1f to bin, %.1f to stretch/erase, %.1f to pad, %.1f to correlate\r\n"
     "%.1f to find %d peaks and get CCCs",
     time1 - startTime, time2 - time1, time3 - time2, time4 - time3,
     time5 - time4, numRealPeaks);

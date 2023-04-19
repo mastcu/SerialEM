@@ -2321,8 +2321,6 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   if (!spacing && mGridMeshSize > 0)
     gridNM = 2.54e7 / mGridMeshSize;
-  if (findFlags & FIND_ACPK_HEX_GRID)
-    catalFac = sqrtf(3.);
 
   // Handle automatic target selection
   if (!targetSize) {
@@ -2408,7 +2406,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], 
     numPeaks, doCatalase ? 16 : 64, catalFac, 
-    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_RATIOS), markedX, markedY,
+    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS), markedX, markedY,
     &dist1, &dist2, &angle, vectors, num, &ind1, &messBuf[0], MAX_MESS_BUF);
 
   // Now take care of display regardless, display point

@@ -173,7 +173,7 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
  * Function to analyze for periodic specimen and erase peaks from FFTs before correlating
  * The filter is tobe applied to the correlation; autocorrelation has a fixed low 
  * frequency filter.
- * This function could go into IMOD wih SEMTrace removed
+ * This function could go into IMOD with SEMTrace removed
  */
 #define MAX_GRID_PEAKS 10000
 #define MAX_SCAN 64
@@ -182,11 +182,11 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 #define MAX_PERIOD_THREADS 8
 
 bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
-  float deltap, float *ctfp, float tiltAngles[2], float axisAngle)
+  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly)
 {
   float Xpeaks[MAX_GRID_PEAKS], Ypeaks[MAX_GRID_PEAKS], peak[MAX_GRID_PEAKS];
   float *arrays[2], *useArr;
-  float dist1[2], dist2[2], angles[2], vectors[2][6], pixFreq[6];
+  float dist1[2], dist2[2], angles[2], vectors[2][6], pixFreq[6], hexVec[6], hexAng[3];
   float xfreq, yfreq, length, vecAng, xx, yy, maxPix, noiseDist = 0, xcomp = 0, ycomp = 0;
   float dev1, dev2, outAvg = 0, outSd = 0, magSq = 0, bkgAvg = 0, bkgSd = 0, unitFreq;
   float dx = 0, dy = 0, bkgThresh = 0, maxMag = 0, radius = 0, dist = 0, freqRad = 0;
@@ -224,8 +224,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   * Carbon X1 laptop 50.9 - 14.4 for 6 (59%), 12.7 for 8 (50%)
   * A quick try with findSpacedXcorrPeaks gave a worse time (34 ms)
   */
-
-  for (ind = 0; ind < 2; ind++) {
+   for (ind = 0; ind < 2; ind++) {
     useArr = arrays[ind];
 
     // Forward FFT
@@ -245,9 +244,9 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
 
       // Find the peaks if any, make sure it is acceptable
       err = findAutoCorrPeaks(crray, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0],
-        numPeaks, MAX_SCAN, hexRatio, 
+        numPeaks, MAX_SCAN, 1., 
         (fabs(tiltAngles[ind]) > 1. ? FIND_ACPK_TILT_IN_VEC : 0) |
-        FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_RATIOS | FIND_ACPK_HEX_GRID, 0., 0.,
+        FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS | FIND_ACPK_HEX_GRID, 0., 0.,
         &dist1[ind], &dist2[ind], &angles[ind], &vectors[ind][0], &numFound[ind][0],
         &nearInd[ind], messBuf, MAX_MESS_BUF);
       wallNow = wallTime();
@@ -268,6 +267,9 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   doAutocorr = doAutocorr && fabs(dist1[0] - dist1[1]) / B3DMAX(dist1[0], dist1[1]) <
     distCrit && fabs(dist2[0] - dist2[1]) / B3DMAX(dist2[0], dist2[1]) < distCrit &&
     fabs(angles[0] - angles[1]) < angleCrit;
+
+  if (eraseOnly && !doAutocorr)
+    return false;
 
   // Set up parallel arrays
   pseudoVals[0] = 0;
@@ -292,20 +294,46 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   if (doAutocorr) {
     maxPix = 0;
     for (ind = 0; ind < 2; ind++) {
-      vecAng = acosf((vectors[ind][0] * vectors[ind][2] + vectors[ind][1] *
-        vectors[ind][3]) / (dist1[ind] * dist2[ind])) / RADIANS_PER_DEGREE;
       useArr = arrays[ind];
       xxVec.clear();
       yyVec.clear();
       if (numFound[ind][2]) {
 
-        // FWIW, if it is a hex pattern, use the two vectors with the most spots
-        if (numFound[ind][2] > numFound[ind][0] || numFound[ind][2] > numFound[ind][1]) {
-          ixy = 0;
-          if (numFound[ind][1] < numFound[ind][0])
-            ixy = 2;
-          B3DSWAP(vectors[ind][ixy], vectors[ind][4], xfreq);
-          B3DSWAP(vectors[ind][ixy + 1], vectors[ind][5], xfreq);
+        // Find longest vector 
+        ixMax = 0;
+        for (ixy = 0; ixy < 3; ixy++) {
+          if (numFound[ind][ixy] > ixMax) {
+            ixMax = numFound[ind][ixy];
+            iyMax = ixy;
+          }
+        }
+
+        // Repack vectors with longest first
+        ixMax = iyMax;
+        for (ixy = 0; ixy < 3; ixy++) {
+          hexVec[2 * ixy] = vectors[ind][2 * ixMax];
+          hexVec[2 * ixy + 1] = vectors[ind][2 * ixMax + 1];
+          hexAng[ixy] = atan2f(hexVec[2 * ixy + 1], hexVec[2 * ixy]) / RADIANS_PER_DEGREE;
+          ixMax = (ixMax + 1) % 3;
+        }
+
+        // Add vectors
+        dx = (fabs(hexAng[0] - hexAng[1]) > 90) ? -1. : 1.;
+        vectors[ind][0] = hexVec[0] + dx * hexVec[2];
+        vectors[ind][1] = hexVec[1] + dx * hexVec[3];
+        dx = (fabs(hexAng[0] - hexAng[2]) > 90) ? -1. : 1.;
+        vectors[ind][2] = hexVec[0] + dx * hexVec[4];
+        vectors[ind][3] = hexVec[1] + dx * hexVec[5];
+        dx = (fabs(hexAng[1] - hexAng[2]) > 90) ? -1. : 1.;
+        vectors[ind][4] = hexVec[2] + dx * hexVec[4];
+        vectors[ind][5] = hexVec[3] + dx * hexVec[5];
+
+        // lip the sign if not 1n quadrants 1 or 4
+        for (ixy = 0; ixy < 3; ixy++) {
+          if (vectors[ind][2 * ixy] < 0.) {
+            vectors[ind][2 * ixy] = -vectors[ind][2 * ixy];
+            vectors[ind][2 * ixy + 1] = -vectors[ind][2 * ixy + 1];
+          }
         }
 
         // Hex is missing the fundamental and its odd multiples, so cut the vectors by 2
@@ -328,8 +356,8 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
         ACCUM_MAX(maxPix, pixFreq[ixy]);
         ACCUM_MAX(maxPix, pixFreq[ixy + 1]);
         if (!ind)
-          SEMTrace('a', "Periodic spacing %d: %.1f %.1f", ixy / 2 + 1, pixFreq[ixy],
-            pixFreq[ixy + 1]);
+          SEMTrace('a', "Periodic spacing %d: %.1f %.1f -> %.1f %.1f", ixy / 2 + 1, 
+            vectors[ind][ixy], vectors[ind][ixy + 1], pixFreq[ixy], pixFreq[ixy + 1]);
       }
 
       // Loop on indexed positions and store ones in range
@@ -495,6 +523,11 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
               useArr[base] = outAvg + outSd * dev1;
               B3DCLAMP(dev2, -limDev, limDev);
               useArr[base + 1] = outAvg + outSd * dev2;
+              if (!ix) {
+                base = ((nyPad - iy) % nyPad) * (nxPad + 2);
+                useArr[base] = outAvg + outSd * dev1;
+                useArr[base + 1] = outAvg + outSd * dev2;
+              }
             }
           }
         }
@@ -508,18 +541,22 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   wallStart = wallNow;
   free(borderTemp);
 
-  // Now filter the arrays  and get the copy in C 
-  XCorrFilterPart(array, array, nxPad, nyPad, ctfp, deltap);
-  XCorrFilterPart(brray, brray, nxPad, nyPad, ctfp, deltap);
-  memcpy(crray, array, (nxPad + 2) * nyPad * sizeof(float));
+  if (!eraseOnly) {
 
-  // multiply array by complex conjugate of brray, put back in array
-  conjugateProduct(array, brray, nxPad, nyPad);
+    // Now filter the arrays  and get the copy in C 
+    XCorrFilterPart(array, array, nxPad, nyPad, ctfp, deltap);
+    XCorrFilterPart(brray, brray, nxPad, nyPad, ctfp, deltap);
+    memcpy(crray, array, (nxPad + 2) * nyPad * sizeof(float));
 
-  // Get all inverses
+    // multiply array by complex conjugate of brray, put back in array
+    conjugateProduct(array, brray, nxPad, nyPad);
+
+    // Get all inverses
+    todfftc(crray, nxPad, nyPad, 1);
+  }
+
   todfftc(array, nxPad, nyPad, 1);
   todfftc(brray, nxPad, nyPad, 1);
-  todfftc(crray, nxPad, nyPad, 1);
   SEMTrace('T', "Final FFTs %.1f", 1000. *(wallTime() - wallStart));
   return doAutocorr;
 }

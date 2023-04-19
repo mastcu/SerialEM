@@ -76,7 +76,7 @@
 
 /* Flags for call findautocorrpeaks */
 #define FIND_ACPK_NO_WAFFLE   0x1
-#define FIND_ACPK_BOTH_RATIOS 0x2
+#define FIND_ACPK_BOTH_GEOMS  0x2
 #define FIND_ACPK_HEX_GRID    0x4
 #define FIND_ACPK_TILT_IN_VEC 0x8
 
