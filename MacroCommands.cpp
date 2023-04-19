@@ -491,6 +491,9 @@ int CMacCmd::NextCommand(bool startingOut)
       "variable value that is a control command on line: \n\n");
 
   mCmdIndex = LookupCommandIndex(mStrItems[0]);
+  if (mCmdIndex < 0)
+    ABORT_LINE("After variable substitution, " + mStrItems[0] + 
+      " is not a valid command in line:\n\n");
 
   // Do arithmetic on selected commands
   if (mCmdIndex >= 0 && ArithmeticIsAllowed(mStrItems[0])) {
