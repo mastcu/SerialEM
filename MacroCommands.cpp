@@ -10253,7 +10253,8 @@ int CMacCmd::OpenNavigator(void)
   return 0;
 }
 
-// ChangeItemRegistration, ChangeItemColor, ChangeItemDraw, ChangeItemLabel, ChangeItemNote
+// ChangeItemRegistration, ChangeItemColor, ChangeItemDraw, ChangeItemLabel, 
+// ChangeItemNote, ChangeItemGroupID
 int CMacCmd::ChangeItemRegistration(void)
 {
   CString report;
@@ -10280,8 +10281,16 @@ int CMacCmd::ChangeItemRegistration(void)
       if (index2 < 0 || index2 >= NUM_ITEM_COLORS)
         ABORT_LINE(report);
       navItem->mColor = index2;
-    }
-    else if (CMD_IS(CHANGEITEMDRAW)) {
+    } else if (CMD_IS(CHANGEITEMGROUPID)) {
+      if (index2 < 0)
+        ABORT_LINE("The group ID cannot be negative in line:\n\n");
+      navItem->mGroupID = index2;
+      if (mNavigator->m_bCollapseGroups) {
+        mNavigator->MakeListMappings();
+        if (!mSuspendNavRedraw)
+          mNavigator->FillListBox();
+      }
+    } else if (CMD_IS(CHANGEITEMDRAW)) {
       if (mItemEmpty[2])
         navItem->mDraw = !navItem->mDraw;
       else

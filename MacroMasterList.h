@@ -722,6 +722,7 @@ MAC_SAME_FUNC_ARG(ReadMontagePiece, 3, 0, ReadFile, READMONTAGEPIECE, IIIs)
 MAC_SAME_FUNC_ARG(ReportMetadataValues, 2, 4, ImageMetadataToVar, REPORTMETADATAVALUES, SS)
 MAC_SAME_FUNC_ARG(ReportMetadataString, 2, 4, ImageMetadataToVar, REPORTMETADATASTRING, SS)
 MAC_SAME_NAME_NOARG(ReportSystemPath, 0, 4, REPORTSYSTEMPATH)
+MAC_SAME_FUNC_ARG(ChangeItemGroupID, 2, 4, ChangeItemRegistration, CHANGEITEMGROUPID, II)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

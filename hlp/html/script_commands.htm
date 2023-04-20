@@ -4324,6 +4324,14 @@
             5 = no realign)</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ChangeItemGroupID #I #G</TD>
+          <TD>Changes the group ID of the Navigator item with table index <b>#I</b> to <b>#G</b>, which
+            must not be negative.&nbsp; If groups are collapsed, the whole table is refilled, which can
+            be time-consuming if more than a few items are being operated on in a loop.&nbsp; In that case,
+            use the command 'SuspendNavRedraw' to prevent updating the table until all items are 
+            changed.&nbsp; Command added in 4.1, 19-Apr-2023.</TD>
+        </TR>
+       <TR>
           <TD class="scriptcommand">ChangeItemDraw #I [#D]</TD>
           <TD>Changes if the Navigator item with table index <b>#I</b> is drawn or not. If no <b>#D</b> is
             specified, the option is toggled, if <b>#D</b> is 0, drawing is disabled, any other numeric values
