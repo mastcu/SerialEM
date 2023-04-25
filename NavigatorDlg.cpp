@@ -2921,8 +2921,10 @@ void CNavigatorDlg::OnDrawPoints()
   mAddPointID = MakeUniqueID();
   if (mAddingPoints) {
     ManageListHeader("Use Backspace to remove added points one by one");
-  } else
+  } else {
     ManageListHeader();
+    Redraw();
+  }
 
   Update();
   mWinApp->RestoreViewFocus();
@@ -2994,6 +2996,8 @@ void CNavigatorDlg::OnMoveItem()
       
   m_butMoveItem.SetWindowText(mMovingItem ? "Move Item" : "Stop Moving");
   mMovingItem = !mMovingItem;
+  if (!mMovingItem)
+    Redraw();
   Update();
   mWinApp->RestoreViewFocus();
 }
@@ -11151,8 +11155,14 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
 // This is all that is needed for redraw
 void CNavigatorDlg::Redraw()
 {
-  if (!(mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw()))
-    mWinApp->mMainView->DrawImage();
+  if (!(mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw())) {
+    POSITION pos = mWinApp->mDocWnd->GetFirstViewPosition();
+    while (pos != NULL) {
+      CSerialEMView *pView = (CSerialEMView *)mWinApp->mDocWnd->GetNextView(pos);
+      pView->DrawImage();
+    }
+  }
+ //   mWinApp->mMainView->DrawImage();
 }
 
 // Get the current item into mItem and return true, or return false if no current item
