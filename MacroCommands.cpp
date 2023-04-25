@@ -514,9 +514,6 @@ int CMacCmd::NextCommand(bool startingOut)
       "variable value that is a control command on line: \n\n");
 
   mCmdIndex = LookupCommandIndex(mStrItems[0]);
-  if (!mStrItems[0].IsEmpty() && mCmdIndex < 0)
-    ABORT_LINE("After variable substitution, " + mStrItems[0] + 
-      " is not a valid command in line:\n\n");
 
   // Do arithmetic on selected commands
   if (mCmdIndex >= 0 && ArithmeticIsAllowed(mStrItems[0])) {
@@ -577,6 +574,10 @@ int CMacCmd::NextCommand(bool startingOut)
     (mStrItems[1].GetLength() == 1 && mItem1upper.GetAt(0) == mKeyPressed));
   if (mKeyBreak)
     mCmdIndex = CME_DOKEYBREAK;
+
+  if (!mStrItems[0].IsEmpty() && mCmdIndex < 0)
+    ABORT_LINE("After variable substitution, " + mStrItems[0] +
+      " is not a valid command in line:\n\n");
 
   // Call the function in the command list
   if ((this->*cmdList[mCmdIndex].func)())
