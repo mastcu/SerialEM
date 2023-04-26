@@ -3726,6 +3726,26 @@ int CMacCmd::SetFrameBaseName(void)
   return 0;
 }
 
+// ReportFrameSavingPath
+int CMacCmd::ReportFrameSavingPath(void)
+{
+  if (!(mCamParams->K2Type || mCamParams->canTakeFrames) || mCamParams->FEItype)
+    ABORT_NOLINE("ReportFrameSavingPath works only with Gatan and generic frame-saving"
+      " cameras");
+  if (mCamParams->K2Type)
+    mStrCopy = mCamera->GetDirForK2Frames();
+  else
+    mStrCopy = mCamParams->dirForFrameSaving;
+  if (mStrCopy.IsEmpty()) {
+    mLogRpt = "No frame-saving path is defined for " + mCamParams->name;
+    mStrCopy = "NONE";
+  } else
+    mLogRpt = "The frames saving path for " + mCamParams->name + " is " + mStrCopy;
+
+  SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
+  return 0;
+}
+
 // GetFileInWatchedDir, RunScriptInWatchedDir, RunScriptInFile, RunSerialEMSnapshot
 int CMacCmd::GetFileInWatchedDir(void)
 {
@@ -10852,7 +10872,8 @@ int CMacCmd::MakeNavPointsAtHoles(void)
     (float)((mItemEmpty[2] || mItemDbl[2] < -900000) ? EXTRA_NO_VALUE : mItemDbl[2]),
     (float)((mItemEmpty[3] || mItemDbl[3] < -900000) ? EXTRA_NO_VALUE : mItemDbl[3]),
     (float)((mItemEmpty[4] || mItemDbl[4] < 0.) ? - 1. : mItemDbl[4]) / 100.f,
-    (float)((mItemEmpty[5] || mItemDbl[5] < 0.) ? - 1. : mItemDbl[5]) / 100.f);
+    (float)((mItemEmpty[5] || mItemDbl[5] < 0.) ? - 1. : mItemDbl[5]) / 100.f,
+    (mItemEmpty[6] || mItemFlt[6] < 0.) ? -1.f : mItemFlt[6]);
   if (index < 0) {
     AbortMacro();
     return 1;
