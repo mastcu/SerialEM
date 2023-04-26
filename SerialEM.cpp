@@ -3009,6 +3009,10 @@ int SEMUseTEMScripting()
 {
   return ((CSerialEMApp *)AfxGetApp())->mScope->GetUseTEMScripting();
 }
+int DLL_IM_EX SEMUseUtapiScripting()
+{
+  return ((CSerialEMApp *)AfxGetApp())->mScope->GetUseUtapiScripting();;
+}
 HitachiParams *SEMGetHitachiParams()
 {
   return &((CSerialEMApp *)AfxGetApp())->mHitachiParams;

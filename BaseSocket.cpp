@@ -211,6 +211,16 @@ unsigned short CBaseSocket::GetServerPort(int typeID, unsigned short dfltPort)
   return dfltPort;
 }
 
+// Return the server IP if one is defined, or 127.0.0.1
+void CBaseSocket::GetServerIP(int typeID, std::string & serverIP)
+{
+  int ind = LookupTypeID(typeID);
+  if (ind < 0 || !mIPaddrByID[ind])
+    serverIP = "127.0.0.1";
+  else
+    serverIP = mIPaddrByID[ind];
+}
+
 // Look up whether the server with the given ID is remote
 bool CBaseSocket::ServerIsRemote(int typeID)
 {

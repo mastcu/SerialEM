@@ -184,6 +184,7 @@ CEMscope::CEMscope()
   vTrue = new _variant_t(true);
   mUseTEMScripting = 0;
   mSkipAdvancedScripting = 0;
+  mUseUtapiScripting = 0;
   mIncrement = 1.5;
   mStageThread = NULL;
   mScreenThread = NULL;

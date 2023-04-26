@@ -94,6 +94,7 @@ public:
   static void SetServerIP(int typeID, CString ipString);
   static void SetServerPort(int typeID, int port);
   static unsigned short GetServerPort(int typeID, unsigned short dfltPort);
+  static void GetServerIP(int typeID, std::string &serverIP);
   static int LookupTypeID(int typeID);
   void Release() {};   // Needed to keep macros happy
   static void CloseBeforeNextUse(int typeID);

@@ -487,6 +487,7 @@ public:
   GetSetMember(float, FilamentCurrentScale);
   GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);
+  GetSetMember(int, UseUtapiScripting);
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
   GetMember(int, HasSimpleOrigin);
@@ -576,6 +577,7 @@ private:
   static BOOL mLastEFTEMmode;  // Last value of EFTEM mode from update
   static char *mFEIInstrumentName;
   int mUseTEMScripting;
+  int mUseUtapiScripting;
   int mLastRegularMag;        // Keep track of last regular and EFTEM mags
   int mLastEFTEMmag;
   int mLastSTEMmag;
