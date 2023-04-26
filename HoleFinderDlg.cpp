@@ -1340,7 +1340,7 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
 {
   int ind;
   bool extreme;
-  float middle = (lowerMeanCutoff + lowerMeanCutoff) / 2.f;
+  float middle = (lowerMeanCutoff + upperMeanCutoff) / 2.f;
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
