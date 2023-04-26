@@ -2284,11 +2284,18 @@
         </TR>
        <TR>
           <TD class="scriptcommand">SetFrameBaseName #K #F #D name</TD>
-          <TD>Sets the base name with <B>name</B>and sets whether to use it in frame or directory names.&nbsp; Set 
+          <TD>Sets the base name with <B>name </B>and sets whether to use it in frame or directory names.&nbsp; Set 
             <b>#K</b> to 1 to keep these settings after the script ends; otherwise they will be restored.&nbsp;
               Set <b>#F</b> to 1 to use the name in frame file names, 0 not to, or -1 to leave the current 
             settings unchanged.&nbsp; Set <b>#D</b> to 1 to use it in directory names, 0 not to, or -1 to leave
              the setting as is.&nbsp; Command added in 4.0, 11/30/21.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportFrameSavingPath</TD>
+          <TD>Reports the path defined with the <b>Set Folder</b> button in the Camera Setup dialog for the current camera,
+            which must be either a Gatan or a generic frame-saving camera.&nbsp; Sets <i>reportedValue1</i> to the path, or
+            to NONE if it is not defined.&nbsp; Command added in 4.1, 26-Apr-23.
+          </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="montage"></A><B>Montage File Commands</B></TD>
@@ -4488,7 +4495,7 @@
             </TD>
         </TR>
        <TR>
-          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B]</TD>
+          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E]</TD>
           <TD>Makes positions found by the Hole Finder into Navigator points, using the various
             thresholds for exclusion set in
               the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
@@ -4499,8 +4506,8 @@
              may be entered to set alternative lower and/or upper mean thresholds for excluding points
             (enter -999999 for <b>#L</b> or <b>#U</b> to use the dialog setting);
             <b>#S</b> may be entered to set the SD cutoff
-             (or -1 to use the dialog value); and <b>#B</b> may be entered to set the cutoff for the
-            percentage of black pixels.</TD>
+             (or -1 to use the dialog value); <b>#B</b> may be entered to set the cutoff for the
+            percentage of black pixels; and <b>#E</b> may be entered to set the edge distance cutoff.</TD>
         </TR>
       <TR>
           <TD class="scriptcommand">ClearHoleFinder</TD>

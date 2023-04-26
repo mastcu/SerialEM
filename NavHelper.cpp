@@ -245,6 +245,7 @@ CNavHelper::CNavHelper(void)
   mHoleFinderParams.upperMeanCutoff = EXTRA_NO_VALUE;
   mHoleFinderParams.SDcutoff = EXTRA_NO_VALUE;
   mHoleFinderParams.blackFracCutoff = EXTRA_NO_VALUE;
+  mHoleFinderParams.edgeDistCutoff = 0.;
   mHoleFinderParams.showExcluded = true;
   mHoleFinderParams.layoutType = 0;
   mAutoContourParams.targetPixSizeUm = 2.f;

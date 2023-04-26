@@ -19,6 +19,7 @@
 #include "Utilities\XCorr.h"
 #include "EMmontageController.h"
 #include "HoleFinderDlg.h"
+#include "AutoContouringDlg.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
 #include "Shared\holefinder.h"
@@ -60,6 +61,9 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_fMaxError(0.05f)
   , m_bBracketLast(FALSE)
   , m_bHexArray(FALSE)
+  , m_intHullDist(0)
+  , m_strHullDist(_T(""))
+  , m_strMaxHullDist(_T(""))
 {
   mNonModal = true;
   mHaveHoles = false;
@@ -145,6 +149,12 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_TOGGLE_HOLES, m_butToggleHoles);
   DDX_Control(pDX, IDC_HEX_ARRAY, m_butHexArray);
   DDX_Check(pDX, IDC_HEX_ARRAY, m_bHexArray);
+  DDX_Control(pDX, IDC_SLIDER_HULL_DIST, m_sliderHullDist);
+  DDX_Slider(pDX, IDC_SLIDER_HULL_DIST, m_intHullDist);
+  DDV_MinMaxInt(pDX, m_intHullDist, 0, 255);
+  DDX_Control(pDX, IDC_EDIT_HULL_DIST, m_editHullDist);
+  DDX_Text(pDX, IDC_EDIT_HULL_DIST, m_strHullDist);
+  DDX_Text(pDX, IDC_STAT_MAX_HULL_DIST, m_strMaxHullDist);
 }
 
 
@@ -171,6 +181,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SET_SIZE_SPACE, OnButSetSizeSpace)
   ON_NOTIFY(NM_LDOWN, IDC_BUT_TOGGLE_HOLES, OnToggleDraw)
   ON_BN_CLICKED(IDC_HEX_ARRAY, OnHexArray)
+  ON_EN_KILLFOCUS(IDC_EDIT_HULL_DIST, OnKillfocusEditHullDist)
 END_MESSAGE_MAP()
 
 
@@ -188,10 +199,12 @@ BOOL CHoleFinderDlg::OnInitDialog()
   m_sliderUpperMean.SetRange(0, 255);
   m_sliderSDcutoff.SetRange(0, 255);
   m_sliderBlackPct.SetRange(0, 255);
+  m_sliderHullDist.SetRange(0, 255);
   m_sliderLowerMean.SetPageSize(4);
   m_sliderUpperMean.SetPageSize(4);
   m_sliderSDcutoff.SetPageSize(4);
   m_sliderBlackPct.SetPageSize(4);
+  m_sliderHullDist.SetPageSize(4);
   m_butToggleHoles.m_bNotifyOnDraws = true;
   ParamsToDialog();
   ManageEnables();
@@ -396,6 +409,18 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
   SetExclusionsAndDraw();
 }
 
+void CHoleFinderDlg::OnKillfocusEditHullDist()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+  mParams.edgeDistCutoff = (float)atof(m_strHullDist);
+  m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
+  m_intHullDist = (int)(255. * mParams.edgeDistCutoff / B3DMAX(1., mEdgeDistMax));
+  B3DCLAMP(m_intHullDist, 0, 255);
+  UpdateData(false);
+  SetExclusionsAndDraw();
+}
+
 // Respond to slider changes: change actual cutoff in parameters as well as output slider
 // value
 void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
@@ -432,6 +457,12 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
     wnd = GetDlgItem(IDC_STAT_PCT_LABEL);
     wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
+  if (pSlider == &m_sliderHullDist) {
+    mParams.edgeDistCutoff = (float)(m_intHullDist * mEdgeDistMax / 255.);
+    m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
+    wnd = GetDlgItem(IDC_STAT_HULL_DIST_LABEL);
+    wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
+  }
   UpdateData(false);
   SetExclusionsAndDraw();
   if (dropping)
@@ -466,17 +497,18 @@ void CHoleFinderDlg::OnButMakeNavPts()
 {
   mParams.layoutType = m_iLayoutType;
   DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
-    mParams.SDcutoff, mParams.blackFracCutoff);
+    mParams.SDcutoff, mParams.blackFracCutoff, mParams.edgeDistCutoff);
 }
 
 //Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
 // use the cutoffs in params
 int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff, 
-  float upperMeanCutoff, float sdCutoff, float blackCutoff)
+  float upperMeanCutoff, float sdCutoff, float blackCutoff, float edgeDistCutoff)
 {
   CMapDrawItem *poly = NULL;
   ShortVec gridX, gridY;
   int ind, numAdded = 0;
+  bool anyNonDflt = false;
   float avgLen = -1., avgAngle = -999.;
   float incStageX1, incStageY1, incStageX2, incStageY2;
   if (CheckAndSetNav("making Navigator points from hole positions"))
@@ -489,15 +521,28 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   // Use the set parameters if alternatives not passed, and run exclusion again
   if (lowerMeanCutoff < EXTRA_VALUE_TEST)
     lowerMeanCutoff = mParams.lowerMeanCutoff;
+  else
+    anyNonDflt = true;
   if (upperMeanCutoff < EXTRA_VALUE_TEST)
     upperMeanCutoff = mParams.upperMeanCutoff;
+  else
+    anyNonDflt = true;
   if (sdCutoff < 0.)
     sdCutoff = mParams.SDcutoff;
+  else
+    anyNonDflt = true;
   if (blackCutoff < 0.)
     blackCutoff = mParams.blackFracCutoff;
+  else
+    anyNonDflt = true;
+  if (edgeDistCutoff < 0)
+    edgeDistCutoff = mParams.edgeDistCutoff;
+  else
+    anyNonDflt = true;
   if (layoutType < 0)
     layoutType = mParams.layoutType;
-  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff);
+  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff, 
+    edgeDistCutoff);
   if (mIsOpen) {
     UpdateData(true);
     DialogToParams();
@@ -509,8 +554,11 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   for (ind = 0; ind < (int)mExcluded.size(); ind++)
     if (mExcluded[ind] <= 0)
       numAdded++;
-  if (!numAdded)
+  if (!numAdded) {
+    if (anyNonDflt)
+      SetExclusionsAndDraw();
     return 0;
+  }
 
   if (mBoundPolyID)
     poly = mNav->FindItemWithMapID(mBoundPolyID, false);
@@ -538,9 +586,10 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     if (mIsOpen)
       m_butMakeNavPts.EnableWindow(false);
     poly = mNav->GetOtherNavItem(mIndexOfGroupItem);
-    return numAdded;
   }
-  return 0;
+   if (anyNonDflt)
+     SetExclusionsAndDraw();
+   return mAddedGroupID ? numAdded : 0;
 }
 
 // Transfer values from the dialog to the parameters
@@ -609,10 +658,12 @@ void CHoleFinderDlg::ParamsToDialog()
     m_intSDcutoff = (int)(255. * (mParams.SDcutoff - mSDmin) / (mSDmax -mSDmin));
     m_intBlackPct = (int)(255. * (mParams.blackFracCutoff - mBlackFracMin) / 
       (mBlackFracMax - mBlackFracMin));
+    m_intHullDist = (int)(255. * mParams.edgeDistCutoff / B3DMAX(1., mEdgeDistMax));
     B3DCLAMP(m_intLowerMean, 0, 255);
     B3DCLAMP(m_intUpperMean, 0, 255);
     B3DCLAMP(m_intSDcutoff, 0, 255);
     B3DCLAMP(m_intBlackPct, 0, 255);
+    B3DCLAMP(m_intHullDist, 0, 255);
   } else {
     m_strSDcutoff = "";
     m_strBlackPct = "";
@@ -620,11 +671,13 @@ void CHoleFinderDlg::ParamsToDialog()
     m_intUpperMean = 255;
     m_intSDcutoff = 255;
     m_intBlackPct = 255;
+    m_intHullDist = 0;
   }
   m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff > EXTRA_VALUE_TEST ?
     mParams.lowerMeanCutoff : 0.);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff > EXTRA_VALUE_TEST ?
     mParams.upperMeanCutoff : 0.);
+  m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
   m_bHexArray = mParams.hexagonalArray;
   SizeAndSpacingToDialog(false, false);
   m_fMaxError = mParams.maxError;
@@ -658,7 +711,7 @@ void CHoleFinderDlg::ManageEnables()
     m_strMaxSDcutoff.Format("%.4g", mSDmax);
     m_strMinBlackPct.Format("%.1f", 100. * mBlackFracMin);
     m_strMaxBlackPct.Format("%.1f", 100. * mBlackFracMax);
-
+    m_strMaxHullDist.Format("%.1f", mEdgeDistMax);
   } else {
     m_strMinLowerMean = "";
     m_strMaxLowerMean = "";
@@ -668,6 +721,7 @@ void CHoleFinderDlg::ManageEnables()
     m_strMaxSDcutoff = "";
     m_strMinBlackPct = "";
     m_strMaxBlackPct = "";
+    m_strMaxHullDist = "";
   }
   m_butBracketLast.EnableWindow(mBestThreshInd >= 0);
   m_butShowExcluded.EnableWindow(mHaveHoles);
@@ -1158,7 +1212,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 {
   int err, ind;
   float sigUsed, threshUsed;
-  FloatVec peakVals, xMissing, yMissing, xCenClose, yCenClose;
+  FloatVec peakVals, xMissing, yMissing, xCenClose, yCenClose, xBound, yBound;
   FloatVec peakClose, xInPiece, yInPiece, xCenAlt, yCenAlt, peakAlt, xMissing2, yMissing2;
   float avgAngle, avgLen, anSpacing;
   IntVec pieceSavedAt, tileXnum, tileYnum, pieceIndex, secIxAliPiece, secIyAliPiece;
@@ -1395,6 +1449,14 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       mYmissing[ind]);
   }
 
+  // Get edge distances
+  xBound.resize(numPoints);
+  yBound.resize(numPoints);
+  mHoleEdgeDists.clear();
+  mHoleEdgeDists.resize(numPoints, 0);
+  CAutoContouringDlg::FindDistancesFromHull(mXstages, mYstages, xBound, yBound,
+    1., mHoleEdgeDists);
+
   // Get mins and maxes and set the sliders if necessary
   mMeanMin = *std::min_element(mHoleMeans.begin(), mHoleMeans.end());
   mMeanMax = *std::max_element(mHoleMeans.begin(), mHoleMeans.end());
@@ -1402,6 +1464,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   mSDmax = *std::max_element(mHoleSDs.begin(), mHoleSDs.end());
   mBlackFracMin = *std::min_element(mHoleBlackFracs.begin(), mHoleBlackFracs.end());
   mBlackFracMax = *std::max_element(mHoleBlackFracs.begin(), mHoleBlackFracs.end());
+  mEdgeDistMax = *std::max_element(mHoleEdgeDists.begin(), mHoleEdgeDists.end());
   if (mParams.lowerMeanCutoff < EXTRA_VALUE_TEST)
     mParams.lowerMeanCutoff = mMeanMin;
   if (mParams.upperMeanCutoff < EXTRA_VALUE_TEST)
@@ -1410,6 +1473,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mParams.SDcutoff = mSDmax;
   if (mParams.blackFracCutoff  < EXTRA_VALUE_TEST)
     mParams.blackFracCutoff = mBlackFracMax;
+  if (!mEdgeDistMax)
+    mParams.edgeDistCutoff = 0.;
   m_bShowIncluded = true;
   ParamsToDialog();
   ManageEnables();
@@ -1423,12 +1488,12 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 void CHoleFinderDlg::SetExclusionsAndDraw()
 {
   SetExclusionsAndDraw(mParams.lowerMeanCutoff, mParams.upperMeanCutoff, mParams.SDcutoff,
-    mParams.blackFracCutoff);
+    mParams.blackFracCutoff, mParams.edgeDistCutoff);
 }
 
 // Set the exclusions based on the current cutoffs
 void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff,
-  float sdCutoff, float blackCutoff)
+  float sdCutoff, float blackCutoff, float edgeDistCutoff)
 {
   int ind;
   bool extreme;
@@ -1442,7 +1507,8 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
     if (mExcluded[ind] >= 0 && mExcluded[ind] < 3) {
       mExcluded[ind] = 0;
       extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
-      if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle))
+      if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle) ||
+        mHoleEdgeDists[ind] < edgeDistCutoff)
         mExcluded[ind] = 1;
       if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
         mExcluded[ind] = 2;

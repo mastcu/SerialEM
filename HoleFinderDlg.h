@@ -25,7 +25,8 @@ public:
   bool HaveHolesToDrawOrMakePts();
   bool MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim, bool dragging);
   void SetExclusionsAndDraw();
-  void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff);
+  void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff,
+    float edgeDistCutoff);
   int ConvertHoleToISVectors(int index, bool setVecs, double *xVecs, double *yVecs, CString &errStr);
   GetMember(bool, FindingHoles);
   void GetGridImVecs(float *xVecs, float *yVecs) { xVecs = &mGridImXVecs[0]; yVecs = &mGridImYVecs[0]; };
@@ -39,7 +40,7 @@ public:
   bool CheckAndSetNav(const char *message = NULL);
   int DoFindHoles(EMimageBuffer *imBuf);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
-    float sdCutoff, float blackCutoff);
+    float sdCutoff, float blackCutoff, float edgeDistCutoff);
 
 
 // Dialog Data
@@ -69,10 +70,12 @@ private:
   float mMidMean;
   float mSDmin, mSDmax;
   float mBlackFracMin, mBlackFracMax;
+  float mEdgeDistMax;
   double mZstage;
   FloatVec mHoleMeans;
   FloatVec mHoleSDs;
   FloatVec mHoleBlackFracs;
+  FloatVec mHoleEdgeDists;
   FloatVec mXcenters, mYcenters;
   FloatVec mXstages, mYstages;
   FloatVec mXinPiece, mYinPiece;
@@ -199,4 +202,10 @@ public:
   CButton m_butHexArray;
   BOOL m_bHexArray;
   afx_msg void OnHexArray();
+  CSliderCtrl m_sliderHullDist;
+  int m_intHullDist;
+  CEdit m_editHullDist;
+  CString m_strHullDist;
+  CString m_strMaxHullDist;
+  afx_msg void OnKillfocusEditHullDist();
 };

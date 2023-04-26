@@ -85,7 +85,8 @@ struct HoleFinderParams
   float lowerMeanCutoff;  // Cutoff for the excluding dark holes
   float upperMeanCutoff;  // Cutoff for excluding light holes
   float SDcutoff;         // Cutoff for excluding highly variable holes
-  float blackFracCutoff;   // Cutoff for excluding holes with high # of black outliers
+  float blackFracCutoff;  // Cutoff for excluding holes with high # of black outliers
+  float edgeDistCutoff;   // Cutoff for distance from edge of convex hull
   BOOL showExcluded;      // Show the excluded holes
   int layoutType;         // How to order nav points
   BOOL hexagonalArray;    // Flag for hex grid

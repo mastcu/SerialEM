@@ -1347,7 +1347,7 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
 {
   int ind, ix, iy, ixStart, iyStart, ixEnd, iyEnd, nsum, numConts, xbase, numBelow;
   int ixSum, iySum;
-  float avg, sd, val, fracLow, size, perim = 0., scaleFac, xcen, ycen;
+  float avg, sd, val, fracLow, size, perim = 0., scaleFac, xcen;
   float avgAngle, cosAng, sinAng, xVecs[3], yVecs[3];
   float half, delx, dely, left, right, scaleForScan, area, sizeScale = redFac;
   double sum, sumsq;
@@ -1537,32 +1537,46 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
       imodContourDelete(rotCont);
     }
 
-
-    // Get convex boundary of centers and put in a contour;
-    convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0],
-      &numBelow, &xcen, &ycen, numConts);
-
-    // Put boundary in a contour and get distances
-    cont = imodContourNew();
-    if (!cont)
-      return;
-    cont->pts = B3DMALLOC(Ipoint, numBelow);
-    if (cont->pts) {
-      cont->psize = numBelow;
-      for (ind = 0; ind < numBelow; ind++) {
-        cont->pts[ind].x = xBound[ind];
-        cont->pts[ind].y = yBound[ind];
-        cont->pts[ind].z = 0.;
-      }
-
-      // Get distance of each center from boundary
-      for (ind = 0; ind < numConts; ind++) {
-        tpt.x = xCenters[ind];
-        tpt.y = yCenters[ind];
-        acd->boundDists[ind] = sizeScale * imodPointContDistance(cont, &tpt, 0, 0, &ix);
-      }
-    }
-    imodContourDelete(cont);
+    FindDistancesFromHull(xCenters, yCenters, xBound, yBound, sizeScale, acd->boundDists);
   }
+}
+
+// General function to find convex boundary of a set of points and compute distance of
+// each point from the hull
+int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCenters, 
+  FloatVec &xBound, FloatVec &yBound, float sizeScale, FloatVec &boundDists)
+{
+  int numConts = (int)xCenters.size();
+  float xcen, ycen;
+  Ipoint tpt;
+  Icont *cont;
+  int numBelow, ind, ix;
+
+  // Get convex boundary of centers
+  convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0],
+    &numBelow, &xcen, &ycen, numConts);
+
+  // Put boundary in a contour and get distances
+  cont = imodContourNew();
+  if (!cont)
+    return 1;
+  cont->pts = B3DMALLOC(Ipoint, numBelow);
+  if (cont->pts) {
+    cont->psize = numBelow;
+    for (ind = 0; ind < numBelow; ind++) {
+      cont->pts[ind].x = xBound[ind];
+      cont->pts[ind].y = yBound[ind];
+      cont->pts[ind].z = 0.;
+    }
+
+    // Get distance of each center from boundary
+    for (ind = 0; ind < numConts; ind++) {
+      tpt.x = xCenters[ind];
+      tpt.y = yCenters[ind];
+      boundDists[ind] = sizeScale * imodPointContDistance(cont, &tpt, 0, 0, &ix);
+    }
+  }
+  imodContourDelete(cont);
+  return 0;
 }
 

@@ -65,6 +65,8 @@ public:
   void StopAutoCont();
   static void SquareStatistics(AutoContData *acd, int nxRed, int nyRed, float minScale, float maxScale, 
     float redFac, float outlieCrit);
+  static int FindDistancesFromHull(FloatVec &xCenters, FloatVec & yCenters, FloatVec &xBound,
+    FloatVec &yBound, float sizeScale, FloatVec &boundDists);
   GetMember(bool, AutoContFailed);
   bool DoingAutoContour() { return mDoingAutocont; };
 

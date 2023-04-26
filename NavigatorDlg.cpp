@@ -9727,7 +9727,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       err = 1;
       if (mHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts()) {
         len = mHelper->mHoleFinderDlg->DoMakeNavPoints(-1, (float)EXTRA_NO_VALUE,
-          (float)EXTRA_NO_VALUE, -1., -1.);
+          (float)EXTRA_NO_VALUE, -1., -1., -1.);
         if (len > 0)
           PrintfToLog("Hole finder made %d Navigator points", len);
         else

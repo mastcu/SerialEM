@@ -1624,9 +1624,13 @@
 #define IDC_BUT_CLEAR_DATA              2643
 #define IDC_BRACKET_LAST                2644
 #define IDC_RON_IMAGE                   2645
+#define IDC_SLIDER_HULL_DIST            3180
 #define IDC_RIN_POLYGON                 2646
+#define IDC_EDIT_HULL_DIST              3181
 #define IDC_RSAME_GROUP                 2647
+#define IDC_STAT_MIN_HULL_DIST          3182
 #define IDC_BUT_COMBINE_PTS             2648
+#define IDC_STAT_MAX_HULL_DIST          3183
 #define IDC_BUT_UNDO_COMBINE            2649
 #define IDC_CHECK_DISPLAY_MULTI         2650
 #define IDC_CHECK_SECOND_RING           2651
@@ -1674,6 +1678,7 @@
 #define IDC_STAT_PCT_LABEL              2693
 #define IDC_BUT_TOGGLE_HOLES            2694
 #define IDC_BUT_TO_MACRO_LINE           2695
+#define IDC_STAT_HULL_DIST_LABEL        2695
 #define IDC_STAT_INDENT                 2696
 #define IDC_BUT_FIX_INDENT              2697
 #define IDC_BUT_ADD_INDENT              2698
@@ -2702,7 +2707,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        282
 #define _APS_NEXT_COMMAND_VALUE         33518
-#define _APS_NEXT_CONTROL_VALUE         3180
+#define _APS_NEXT_CONTROL_VALUE         3184
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

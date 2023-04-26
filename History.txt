@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/26/23: Added slider to hole finder dialog to exclude holes near edge of area
+of found holes.
+
+4/26/23: Added script command to report frame-saving path for Gatan and
+generic frame-saving cameras.
+
 4/25/23: Made sure all image windows are redrawn after some Navigator
 changes.
 

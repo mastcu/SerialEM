@@ -226,6 +226,12 @@
     <p><strong>Black pixel % cutoff</strong></p>
     <p>Use the slider to exclude holes where the pecentage of smoothed pixel values 
       that are negative outliers exceeds the selected value.</p>
+    <p><strong>Edge distance cutoff</strong></p>
+    <p>Use the slider or enter a value in the text box to exclude holes closer than 
+      this distance, in microns, from the edge of the region defined by the found 
+      holes.&nbsp; Specifically, the convex hull of the hole centers is found, and the 
+      distance from the hull is measured for each hole.&nbsp; The outer holes that 
+      form the hull will be excluded by any non-zero value.</p>
     <p><strong>Show Included</strong></p>
     <p>Use this option to toggle whether the included points (the ones passing all the 
       cutoffs) are displayed.&nbsp; Included points are displayed in magenta.</p>

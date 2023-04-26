@@ -3560,18 +3560,18 @@ BEGIN
     PUSHBUTTON      "Next && Go",IDC_PPCOND_NEXT_AND_GO,12,182,33,14
 END
 
-IDD_HOLE_FINDER DIALOGEX 0, 0, 154, 283
+IDD_HOLE_FINDER DIALOGEX 0, 0, 154, 304
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Hole Finder"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,233,36,10
-    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,43,233,66,10
-    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,109,233,40,10
-    GROUPBOX        "Layout of points",IDC_STATIC,3,224,147,24,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,21,267,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,82,267,50,12
+    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,254,36,10
+    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,43,254,66,10
+    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,109,254,40,10
+    GROUPBOX        "Layout of points",IDC_STATIC,3,245,147,24,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,21,288,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,82,288,50,12
     GROUPBOX        "Filters to try",IDC_STATIC,18,39,118,36
     LTEXT           "Gaussian sigmas",IDC_STATIC,23,48,53,8
     LTEXT           "Median filter iterations",IDC_STATIC,23,62,66,8
@@ -3607,11 +3607,11 @@ BEGIN
     LTEXT           "0",IDC_STAT_MIN_BLACKPCT,7,203,20,8
     RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,99,203,20,8
     LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,124,193,24,8
-    LTEXT           "Show:",IDC_STATIC,7,214,19,8
-    CONTROL         "Included",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,213,38,10
-    CONTROL         "Excluded",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,65,213,38,10
-    PUSHBUTTON      "?",IDC_BUTHELP,140,269,11,10
-    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,37,251,80,12
+    LTEXT           "Show:",IDC_STATIC,7,235,19,8
+    CONTROL         "Included",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,234,38,10
+    CONTROL         "Excluded",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,65,234,38,10
+    PUSHBUTTON      "?",IDC_BUTHELP,140,290,11,10
+    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,37,272,80,12
     LTEXT           "Maximum error",IDC_STATIC,10,19,45,8
     EDITTEXT        IDC_EDIT_MAX_ERROR,56,17,22,12,ES_AUTOHSCROLL
     LTEXT           "microns",IDC_STATIC,79,19,25,8
@@ -3619,9 +3619,14 @@ BEGIN
     CONTROL         "Bracket last filter/threshold values",IDC_BRACKET_LAST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,116,10
     PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,102,56,12
-    PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,212,44,12
+    PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,233,44,12
     LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,20,8
     CONTROL         "Hex grid",IDC_HEX_ARRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,112,19,35,10
+    CONTROL         "",IDC_SLIDER_HULL_DIST,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,213,118,12
+    CTEXT           "Distance from Edge",IDC_STAT_HULL_DIST_LABEL,27,224,71,8
+    EDITTEXT        IDC_EDIT_HULL_DIST,123,212,27,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_HULL_DIST,7,224,20,8
+    RTEXT           "3000",IDC_STAT_MAX_HULL_DIST,99,224,20,8
 END
 
 IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 112
@@ -4462,7 +4467,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 150
         TOPMARGIN, 3
-        BOTTOMMARGIN, 279
+        BOTTOMMARGIN, 300
     END
 
     IDD_MULTI_COMBINER, DIALOG
@@ -7235,6 +7240,8 @@ BEGIN
     IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
     IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
     IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
+    IDC_EDIT_HULL_DIST      "Enter a minimum distance from convex hull of found holes in microns"
+    IDC_SLIDER_HULL_DIST    "Adjust the minimum distance from convex hull of found holes in microns"
 END
 
 STRINGTABLE
