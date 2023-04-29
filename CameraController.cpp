@@ -362,6 +362,7 @@ CCameraController::CCameraController()
   mMinAlignFractionsLinear = 8;
   mMinAlignFractionsCounting = 32;
   mFalcon4RawSumSize = 7;
+  mFalcon4iRawSumSize = 9;
   mFalconAlignsWithoutSave = true;
   mSaveInEERformat = false;
   mCanSaveEERformat = -1;
@@ -1474,6 +1475,11 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
         mAllParams[i].falconFramePath = mLocalFalconFramePath;
       if (mAllParams[i].canTakeFrames)
         mAllParams[i].canTakeFrames = mAllParams[i].falconFramePath.IsEmpty() ? 1 : 3;
+      
+      // Workaround for 4.0, should be removed in 4.1
+      if (mAllParams[i].FEItype == FALCON4_TYPE && !mAllParams[i].falconVariant &&
+        mFalconReadoutInterval < 0.0035)
+        mAllParams[i].falconVariant = 1;
     }
   }
   if (anyGIF) {
@@ -6586,7 +6592,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
         // But falcon 4 "7-frame" is used for fractions so multiply by that if saving MRC
         else if (saveFrames && !GetSaveInEERformat())
-          baseTime *= mFalcon4RawSumSize;
+          baseTime *= GetFalconRawSumSize(camP);
       }
     }
 
@@ -6630,10 +6636,11 @@ int CCameraController::MakeAlignSaveFlags(BOOL save, BOOL align, int useFrameAli
 // Return a factor for rounding a constrained exposure time if appropriate
 float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 {
-  if (camP->K2Type == K2_BASE || IS_FALCON2_3_4(camP) ||
-    mWinApp->mDEToolDlg.HasFrameTime(camP))
+  if (camP->K2Type == K2_BASE || (IS_FALCON2_3_4(camP) &&
+    camP->falconVariant != FALCON4I_VARIANT) || mWinApp->mDEToolDlg.HasFrameTime(camP))
     return 200.f;
-  if (camP->OneViewType || camP->K2Type == K3_TYPE)
+  if (camP->OneViewType || camP->K2Type == K3_TYPE ||
+    camP->falconVariant == FALCON4I_VARIANT)
     return 1000.f;
   return 0;
 }
@@ -6658,7 +6665,7 @@ bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *c
 float CCameraController::FalconAlignFractionTime(CameraParameters * camP)
 {
   return (float)(GetFalconReadoutInterval(camP) * mFalcon3AlignFraction * 
-    (camP->FEItype == FALCON4_TYPE ? mFalcon4RawSumSize : 1));
+    GetFalconRawSumSize(camP));
 }
 
 // Return the count scaling being used for a K2 camera, or countsPerElectron otherwise
@@ -6783,7 +6790,14 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
 float CCameraController::GetFalconFractionDivisor(CameraParameters *param)
 {
   float readout = GetFalconReadoutInterval(param);
-  return param->FEItype == FALCON4_TYPE ? (mFalcon4RawSumSize * readout) : readout;
+  return (GetFalconRawSumSize(param) * readout);
+}
+
+int CCameraController::GetFalconRawSumSize(CameraParameters * param)
+{
+  if (param->FEItype == FALCON4_TYPE)
+    return (param->falconVariant ? mFalcon4iRawSumSize : mFalcon4RawSumSize);
+  return 1;
 }
 
 // The times array may have one time or a time per binning, or stop before all the
@@ -10805,6 +10819,8 @@ int CCameraController::CheckFilterSettings()
 
   // Check if the ZLP was aligned in the FEI interface
   if (camParam->filterIsFEI) {
+    if (mParam->FEItype && CameraBusy())
+      return 0;
     try {
       SEMSetFunctionCalled("GetZeroLossPeakShift", " in advanced scripting");
       eShift = mTD.scopePlugFuncs->GetZeroLossPeakShift();

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/28/23: Fixed exposure times being increased by 27% when saving as MRC from
+Falcon 4i by accounting for the unit for making fractions being 9 frames.
+
 4/26/23: Added slider to hole finder dialog to exclude holes near edge of area
 of found holes.
 

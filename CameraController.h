@@ -421,6 +421,7 @@ public:
   float GetMinK2FrameTime(CameraParameters *param, int binning = 0, int special = 0);
   float GetK2ReadoutInterval(CameraParameters *param, int binning = 0, int special = 0);
   float GetFalconFractionDivisor(CameraParameters *param);
+  int GetFalconRawSumSize(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
   GetSetMember(float, FalconReadoutInterval);
   float GetFalconReadoutInterval(CameraParameters *param) { 
@@ -895,6 +896,7 @@ public:
   BOOL mSaveInEERformat;        // Flag to save Falcon 4 frames as EER
   int mCanSaveEERformat;        // Flag that it is possible
   int mFalcon4RawSumSize;       // Size of initial sums that can go into fractions
+  int mFalcon4iRawSumSize;      // Size of initial sums for Falcon 4i
   CString mFalconReferenceDir;  // Gain reference directory for counting gain
   BOOL mFalconAlignsWithoutSave;  // A flag just in case this is wrong
   int mRotFlipInFalcon3ComFile; // Value to set in com file if default is wrong
