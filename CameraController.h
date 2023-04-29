@@ -110,6 +110,7 @@ enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE, K3_LINEAR_SET_MODE, K3_COUN
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4, DE_TYPE_APOLLO=5};
 enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE, FALCON4_TYPE};
 enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
+#define FALCON4I_VARIANT 1
 
 // This is not specific to K2, will give true for DE also
 #define IS_SUPERRES(p, ck2rm) (((p)->K2Type == K2_SUMMIT && (ck2rm) == SUPERRES_MODE) || \
@@ -417,6 +418,7 @@ public:
   float GetMinK2FrameTime(CameraParameters *param, int binning = 0, int special = 0);
   float GetK2ReadoutInterval(CameraParameters *param, int binning = 0, int special = 0);
   float GetFalconFractionDivisor(CameraParameters *param);
+  int GetFalconRawSumSize(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
   GetSetMember(float, FalconReadoutInterval);
   GetSetMember(float, Ceta2ReadoutInterval);
@@ -881,6 +883,7 @@ public:
   BOOL mSaveInEERformat;        // Flag to save Falcon 4 frames as EER
   int mCanSaveEERformat;        // Flag that it is possible
   int mFalcon4RawSumSize;       // Size of initial sums that can go into fractions
+  int mFalcon4iRawSumSize;      // Size of initial sums for Falcon 4i
   CString mFalconReferenceDir;  // Gain reference directory for counting gain
   BOOL mFalconAlignsWithoutSave;  // A flag just in case this is wrong
   int mRotFlipInFalcon3ComFile; // Value to set in com file if default is wrong

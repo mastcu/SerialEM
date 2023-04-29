@@ -85,6 +85,7 @@ END_MESSAGE_MAP()
 BOOL CFalconFrameDlg::OnInitDialog()
 {
   BOOL state = true;
+  CString str;
   int boxWidth, boxHeight, topDiff;
   CRect OKrect, boxRect;
   CBaseDlg::OnInitDialog();
@@ -127,9 +128,10 @@ BOOL CFalconFrameDlg::OnInitDialog()
   }
 
   if (mCamParams->FEItype == FALCON4_TYPE) {
-    ReplaceDlgItemText(IDC_STAT_SUBFRAME_TIME, "frame", "7-frame");
-    ReplaceDlgItemText(IDC_STAT_FRAME_GROUP, "frame", "7-frame");
-    ReplaceDlgItemText(IDC_STAT_NUM_CAM_LABEL, "frames", "7-frames");
+    str.Format("%d-frame", mWinApp->mCamera->GetFalconRawSumSize(mCamParams));
+    ReplaceDlgItemText(IDC_STAT_SUBFRAME_TIME, "frame", str);
+    ReplaceDlgItemText(IDC_STAT_FRAME_GROUP, "frame", str);
+    ReplaceDlgItemText(IDC_STAT_NUM_CAM_LABEL, "frame", str);
   }
 
   if (!mSummedFrameList.size()) {
