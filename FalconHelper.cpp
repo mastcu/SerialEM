@@ -269,8 +269,11 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   mUseFrameAlign = 0;
   mJustAlignNotSave = !conSet.saveFrames && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
-  if (eerMode)
-    numFrames = B3DNINT(conSet.exposure / mCamera->GetFalconReadoutInterval());
+  if (eerMode) {
+    ind = mCamera->GetFalconRawSumSize(camParams);
+    numFrames = ind * B3DNINT(conSet.exposure / 
+      (mCamera->GetFalconReadoutInterval(camParams) * ind));
+  }
   if (conSet.alignFrames && conSet.useFrameAlign == 1) {
     temp = eerMode ? B3DNINT(conSet.exposure / conSet.frameTime) : numFrames;
     mUseFrameAlign = conSet.useFrameAlign;

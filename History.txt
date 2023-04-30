@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/29/23: Added a property to increase exposure time when saving as EER so that
+the file actually has the expected number of frames.  Described procedures in
+the help for 'AddToEERExposure' and 'ReadoutInterval' for getting these frame
+counts to match.
+
+4/29/23: Added script commands to report and set camera properties.
+
 4/28/23: Fixed exposure times being increased by 27% when saving as MRC from
 Falcon 4i by accounting for the unit for making fractions being 9 frames
 instead of 7 (In 4.0).

@@ -422,6 +422,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].rotFlipToRestore = -1;
     mCamParams[i].postActionsOK = -1;     // -1 = Unspecified and OK
     mCamParams[i].addToExposure = -999.;
+    mCamParams[i].addToEERExposure = .02f;
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].falconEventScaling = 0.;
     mCamParams[i].falconVariant = 0;

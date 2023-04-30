@@ -3879,6 +3879,8 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   mTD.Exposure = mExposure;
   if (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0) {
+    if (IsSaveInEERMode(mParam, &conSet) && mParam->addToEERExposure > -1.)
+      mTD.Exposure += mParam->addToEERExposure;
     ind = B3DNINT(mTD.Exposure / GetFalconReadoutInterval(mParam));
 
     // This formula is wrong for Falcon 3 but the timings are based on it
@@ -6590,8 +6592,9 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
           readMode))
           baseTime = frameTime;
 
-        // But falcon 4 "7-frame" is used for fractions so multiply by that if saving MRC
-        else if (saveFrames && !GetSaveInEERformat())
+        // But falcon 4 or 4i takes in units of 7 or 9 frames regardless of whether taking
+        // fractions or saving as EER, so multiply by that
+        else if (saveFrames)
           baseTime *= GetFalconRawSumSize(camP);
       }
     }
@@ -6636,10 +6639,10 @@ int CCameraController::MakeAlignSaveFlags(BOOL save, BOOL align, int useFrameAli
 // Return a factor for rounding a constrained exposure time if appropriate
 float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 {
-  if (camP->K2Type == K2_BASE || (IS_FALCON2_3_4(camP) &&
+  if (camP->K2Type == K2_BASE || (IS_FALCON2_3_4(camP) && 
     camP->falconVariant != FALCON4I_VARIANT) || mWinApp->mDEToolDlg.HasFrameTime(camP))
     return 200.f;
-  if (camP->OneViewType || camP->K2Type == K3_TYPE ||
+  if (camP->OneViewType || camP->K2Type == K3_TYPE || 
     camP->falconVariant == FALCON4I_VARIANT)
     return 1000.f;
   return 0;
