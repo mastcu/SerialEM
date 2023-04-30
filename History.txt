@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/29/23: SEM_4-0-25
 4/29/23: Added a property to increase exposure time when saving as EER so that
 the file actually has the expected number of frames.  Described procedures in
 the help for 'AddToEERExposure' and 'ReadoutInterval' for getting these frame
