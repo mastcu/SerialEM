@@ -724,6 +724,8 @@ MAC_SAME_FUNC_ARG(ReportMetadataString, 2, 4, ImageMetadataToVar, REPORTMETADATA
 MAC_SAME_NAME_NOARG(ReportSystemPath, 0, 4, REPORTSYSTEMPATH)
 MAC_SAME_FUNC_ARG(ChangeItemGroupID, 2, 4, ChangeItemRegistration, CHANGEITEMGROUPID, II)
 MAC_SAME_NAME_NOARG(ReportFrameSavingPath, 0, 4, REPORTFRAMESAVINGPATH)
+MAC_SAME_NAME_ARG(ReportCameraProperty, 2, 4, ReportCameraProperty, IS)
+MAC_SAME_FUNC_ARG(SetCameraProperty, 3, 4, ReportCameraProperty, SETCAMERAPROPERTY, ISD)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

@@ -90,9 +90,11 @@ public:
   void StoreFloatsPerBinning(CString * strItems, const char * descrip, int iset, CString & strFileName, float * values);
   int MacroSetProperty(CString name, double value);
   void UserSetProperty(void);
+  int MacroSetCamProperty(CameraParameters *camP, CString &name, double value);
   int MacroSetSetting(CString name, double value);
   int MacroGetSetting(CString name, double &value);
   int MacroGetProperty(CString name, double &value);
+  int MacroGetCamProperty(CameraParameters *camP, CString &name, double &value);
   void WriteIndexedInts(const char *keyword, int *values, int numVal);
   void WriteIndexedFloats(const char *keyword, float *values, int numVal);
   int CheckForByteOrderMark(CString & item0, const char * tag, CString & filename, const char *descrip);

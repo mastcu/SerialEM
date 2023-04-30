@@ -2780,19 +2780,17 @@ int CParameterIO::ReadProperties(CString strFileName)
   std::set<std::string> noValOKprops(tmpnv, tmpnv + sizeof(tmpnv) / sizeof(tmpnv[0]));
   memset(&camEntered[0], 0, MAX_CAMERAS * sizeof(int));
 
-#define INT_PROP_TEST(a, b, c) \
-  else if (strItems[0].CompareNoCase(a) == 0) \
-    b##Set##c(itemInt[1]);
-#define BOOL_PROP_TEST(a, b, c) \
-  else if (strItems[0].CompareNoCase(a) == 0) \
-    b##Set##c(itemInt[1] != 0);
-#define FLOAT_PROP_TEST(a, b, c) \
-  else if (strItems[0].CompareNoCase(a) == 0) \
-    b##Set##c(itemFlt[1]);
-#define DBL_PROP_TEST(a, b, c) \
-  else if (strItems[0].CompareNoCase(a) == 0) \
-    b##Set##c(itemDbl[1]);
   
+#define INT_PROP_TEST(a, b) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    camP->b = itemInt[1];
+#define BOOL_PROP_TEST(a, b) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    camP->b = itemInt[1] != 0;
+#define FLOAT_PROP_TEST(a, b) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    camP->b = itemFlt[1];
+
   try {
     // Open the file for reading, verify that it is a properties file
     mFile = new CStdioFile(strFileName,
@@ -2881,10 +2879,6 @@ int CParameterIO::ReadProperties(CString strFileName)
             break;
           if (iset < 0)
             continue;
-          else if (MatchNoCase("CameraSizeX"))
-            camP->sizeX = itemInt[1];
-          else if (MatchNoCase("CameraSizeY"))
-            camP->sizeY = itemInt[1];
           else if (MatchNoCase("HalfSizes")) {
             index = 0;
             while (index < 2 * MAX_BINNINGS && !itemEmpty[index + 1]) {
@@ -2903,21 +2897,7 @@ int CParameterIO::ReadProperties(CString strFileName)
                 camP->quarterSizeX[index / 2] = B3DMAX(0, itemInt[index + 1]);
               index++;
             }
-          } else if (MatchNoCase("MakesUnsignedImages"))
-            camP->unsignedImages = itemInt[1] != 0;
-          else if (MatchNoCase("FourPortReadout"))
-            camP->fourPort = itemInt[1] != 0;
-          else if (MatchNoCase("CoordsMustBeMultiple"))
-            camP->coordsModulo = itemInt[1] != 0;
-          else if (MatchNoCase("GainRefXsizeEven"))
-            camP->refSizeEvenX = itemInt[1];
-          else if (MatchNoCase("GainRefYsizeEven"))
-            camP->refSizeEvenY = itemInt[1];
-          else if (MatchNoCase("LeftOffset"))
-            camP->leftOffset = itemInt[1];
-          else if (MatchNoCase("TopOffset"))
-            camP->topOffset = itemInt[1];
-          else if (MatchNoCase("XMustBeMultipleOf")) {
+          } else if (MatchNoCase("XMustBeMultipleOf")) {
             if (camP->moduloX >= 0)
               camP->moduloX = itemInt[1];
           } else if (MatchNoCase("YMustBeMultipleOf")) {
@@ -2939,17 +2919,7 @@ int CParameterIO::ReadProperties(CString strFileName)
                 camP->subareasBad = 2;
               }
             }
-          } else if (MatchNoCase("BasicCorrections"))
-            camP->corrections = itemInt[1];
-          else if (MatchNoCase("SizeCheckSwapped"))
-            camP->sizeCheckSwapped = itemInt[1];
-          else if (MatchNoCase("K2Type"))
-            camP->K2Type = itemInt[1];
-          else if (MatchNoCase("OneViewType")) {
-            camP->OneViewType = itemInt[1];
-          } else if (MatchNoCase("UseSocket"))
-            camP->useSocket = itemInt[1] != 0;
-          else if (MatchNoCase("FEICameraType")) {
+          } else if (MatchNoCase("FEICameraType")) {
             if (itemInt[1] == FALCON4_TYPE + 1 || itemInt[1] == FALCON4_TYPE + 11) {
               itemInt[1] -= 1;
               camP->falconVariant = FALCON4I_VARIANT;
@@ -2967,22 +2937,15 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->CamFlags |= DE_APOLLO_CAMERA;
               camP->DE_camType = DE_12;
             }
-          } else if (MatchNoCase("DEImageRotation"))
-            camP->DE_ImageRot = itemInt[1];
-          else if (MatchNoCase("DEImageInvertXAxis"))
-            camP->DE_ImageInvertX = itemInt[1];
-          else if (MatchNoCase("DEAutosaveFolder"))
+          } else if (MatchNoCase("DEAutosaveFolder"))
             StripItems(strLine, 1, camP->DE_AutosaveDir);
           else if (MatchNoCase("DECameraServerIP"))
             camP->DEServerIP = strItems[1];
-          else if (MatchNoCase("DECameraReadPort"))
-            camP->DE_ServerReadPort = itemInt[1];
-          else if (MatchNoCase("DECameraWritePort"))
-            camP->DE_ServerWritePort = itemInt[1];
-          else if (MatchNoCase("AlsoInsertCamera"))
-            camP->alsoInsertCamera = itemInt[1];
-          else if (MatchNoCase("SamePhysicalCamera"))
-            camP->samePhysicalCamera = itemInt[1];
+
+#define CAM_PROP_SECT1
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT1
+
           else if (MatchNoCase("TietzCameraType")) {
             camP->TietzType = itemInt[1];
             if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 ||
@@ -2992,23 +2955,11 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->moduloX = -9;
               camP->moduloY = -9;
             }
-          } else if (MatchNoCase("TietzCanPreExpose"))
-            camP->TietzCanPreExpose = itemInt[1] != 0;
-          else if (MatchNoCase("TietzRestoreBBmode"))
-            camP->restoreBBmode = itemInt[1];
-          else if (MatchNoCase("TietzGainIndex"))
-            camP->TietzGainIndex = itemInt[1];
-          else if (MatchNoCase("LowestGainIndex"))
-            camP->LowestGainIndex = itemInt[1];
-          else if (MatchNoCase("SubareasByCropping"))
-            camP->cropFullSizeImages = itemInt[1];
-          else if (MatchNoCase("DropFramesStartEnd")) {
+          } else if (MatchNoCase("DropFramesStartEnd")) {
             B3DCLAMP(itemInt[1], 0, TIETZ_DROP_FRAME_MASK);
             B3DCLAMP(itemInt[2], 0, TIETZ_DROP_FRAME_MASK);
             camP->dropFrameFlags = itemInt[1] + (itemInt[2] << TIETZ_DROP_FRAME_BITS);
-          } else if (MatchNoCase("TietzImageGeometry"))
-            camP->TietzImageGeometry = itemInt[1];
-          else if (MatchNoCase("TietzFlatfieldDir"))
+          } else if (MatchNoCase("TietzFlatfieldDir"))
             StripItems(strLine, 1, camP->TietzFlatfieldDir);
           else if (MatchNoCase("SubareasAreBad")) {
             if (camP->subareasBad < 2)
@@ -3028,50 +2979,20 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->ifHorizontalBoundary = itemInt[2];
           } else if (MatchNoCase("PluginName"))
             StripItems(strLine, 1, camP->pluginName);
-          else if (MatchNoCase("PluginCameraIndex"))
-            camP->cameraNumber = itemInt[1];
           else if (MatchNoCase("ShutterLabel1"))
             StripItems(strLine, 1, camP->shutterLabel1);
           else if (MatchNoCase("ShutterLabel2"))
             StripItems(strLine, 1, camP->shutterLabel2);
           else if (MatchNoCase("ShutterLabel3"))
             StripItems(strLine, 1, camP->shutterLabel3);
-          else if (MatchNoCase("PluginCanProcess"))
-            camP->pluginCanProcess = itemInt[1];
-          else if (MatchNoCase("PluginCanPreExpose"))
-            camP->canPreExpose = itemInt[1] != 0;
-          else if (MatchNoCase("RotationAndFlip"))
-            camP->rotationFlip = itemInt[1];
           else if (MatchNoCase("DMRotationAndFlip") || MatchNoCase("AlignedSumRotFlip"))
             camP->DMrotationFlip = itemInt[1];
-          else if (MatchNoCase("SetRestoreDMRotFlip"))
-            camP->setRestoreRotFlip = itemInt[1];
-          else if (MatchNoCase("TaskTargetSize"))
-            camP->taskTargetSize = itemInt[1];
-          else if (MatchNoCase("AllowPostActions"))
-            camP->postActionsOK = itemInt[1];
-          else if (MatchNoCase("AddToExposureTime"))
-            camP->addToExposure = itemFlt[1];
-          else if (MatchNoCase("CanTakeFrames"))
-            camP->canTakeFrames = itemInt[1];
           else if (MatchNoCase("MinimumFrameTimes"))
             StoreFloatsPerBinning(strItems, "minimum frame times", iset, strFileName,
               camP->minFrameTime);
           else if (MatchNoCase("FrameTimeDivisors"))
             StoreFloatsPerBinning(strItems, "divisor for frame times", iset, strFileName,
               camP->frameTimeDivisor);
-          else if (MatchNoCase("ReadoutInterval"))
-            camP->ReadoutInterval = itemFlt[1];
-          else if (MatchNoCase("ImageRotation"))
-            camP->imageRotation = itemInt[1];
-          else if (MatchNoCase("InvertFocusRamp"))
-            camP->invertFocusRamp = itemInt[1] != 0;
-          else if (MatchNoCase("STEMCamera"))
-            camP->STEMcamera = itemInt[1] != 0;
-          else if (MatchNoCase("AddedFlybackTime"))
-            camP->addedFlyback = itemFlt[1];
-          else if (MatchNoCase("MinimumPixelTime"))
-            camP->minPixelTime = itemFlt[1];
           else if (MatchNoCase("MaximumScanRate")) {
             camP->maxScanRate = itemFlt[1];
             if (itemEmpty[2])
@@ -3102,44 +3023,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->minMultiChanBinning[index] = itemInt[index];
               index++;
             }
-          } else if (MatchNoCase("NoShutter"))
-            camP->noShutter = itemInt[1];
-          else if (MatchNoCase("OnlyOneShutter"))
-            camP->onlyOneShutter = itemInt[1];
-          else if (MatchNoCase("BeamBlankShutter"))
-            camP->beamShutter = itemInt[1];
-          else if (MatchNoCase("SetAlternateShutterNormallyClosed"))
-            camP->setAltShutterNC = itemInt[1] != 0;
-          else if (MatchNoCase("CanDriveDMBeamShutter"))
-            camP->DMbeamShutterOK = itemInt[1] != 0;
-          else if (MatchNoCase("CanDriveDMDriftSettling"))
-            camP->DMsettlingOK = itemInt[1] != 0;
-          else if (MatchNoCase("CanUseDMOpenShutter"))
-            camP->DMopenShutterOK = itemInt[1] != 0;
-          else if (MatchNoCase("BuiltInSettling"))
-            camP->builtInSettling = itemFlt[1];
-          else if (MatchNoCase("StartupDelay"))
-            camP->startupDelay = itemFlt[1];
-          else if (MatchNoCase("StartDelayPerFrame"))
-            camP->startDelayPerFrame = itemFlt[1];
-          else if (MatchNoCase("ExtraUnblankTime"))
-            camP->extraUnblankTime =
-            itemFlt[1];
-          else if (MatchNoCase("ExtraOpenShutterTime"))
-            camP->extraOpenShutterTime =
-            itemFlt[1];
-          else if (MatchNoCase("ExtraBeamTime"))
-            camP->extraBeamTime = itemFlt[1];
-          else if (MatchNoCase("MinimumDriftSettling"))
-            camP->minimumDrift = itemFlt[1];
-          else if (MatchNoCase("MinimumBlankedExposure"))
-            camP->minBlankedExposure =
-            itemFlt[1];
-          else if (MatchNoCase("ShutterDeadTime"))
-            camP->deadTime = itemFlt[1];
-          else if (MatchNoCase("MinimumExposure"))
-            camP->minExposure = itemFlt[1];
-          else if (MatchNoCase("UsableAtMag")) {
+          } else if (MatchNoCase("UsableAtMag")) {
             montLim.camera = iset;
             montLim.magInd = itemInt[1];
             montLim.top = itemInt[2];
@@ -3152,19 +3036,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
           if (recognizedc1) {
 
-          } else if (MatchNoCase("InsertionDelay"))
-            camP->insertDelay = itemFlt[1];
-          else if (MatchNoCase("RetractionDelay"))
-            camP->retractDelay = itemFlt[1];
-          else if (MatchNoCase("PostBlankerDelay"))
-            camP->postBlankerDelay = itemFlt[1];
-          else if (MatchNoCase("PostIntensityTimeout"))
-            camP->postIntensityTimeout = itemFlt[1];
-          else if (MatchNoCase("Retractable"))
-            camP->retractable = itemInt[1] != 0;
-          else if (MatchNoCase("InsertingRetractsCam"))
-            camP->insertingRetracts = itemInt[1];
-          else if (MatchNoCase("GIF")) {
+          } else if (MatchNoCase("GIF")) {
             if (itemInt[1] != 0)
               camP->GIF = true;
           } else if (MatchNoCase("FEIFilterType")) {
@@ -3173,45 +3045,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->GIF = true;
               mWinApp->mScope->SetAdvancedScriptVersion(ASI_FILTER_FEG_LOAD_TEMP);
             }
-          } else if (MatchNoCase("HasTVCamera"))
-            camP->hasTVCamera = itemInt[1] != 0;
-          else if (MatchNoCase("InsertTVToUnblank"))
-            camP->useTVToUnblank = itemInt[1];
-          else if (MatchNoCase("SideMounted"))
-            camP->sideMount = itemInt[1] != 0;
-          else if (MatchNoCase("CheckStableTemperature"))
-            camP->checkTemperature = itemInt[1] != 0;
-          else if (MatchNoCase("Order"))
-            camP->order = itemInt[1];
-          else if (MatchNoCase("FilmToCameraMagnification"))
-            camP->magRatio = itemFlt[1];
-          else if (MatchNoCase("PixelSizeInMicrons"))
-            camP->pixelMicrons = itemFlt[1];
-          else if (MatchNoCase("CountsPerElectron"))
-            camP->countsPerElectron = itemFlt[1];
-          else if (MatchNoCase("FalconEventScaling"))
-            camP->falconEventScaling = itemFlt[1];
-          else if (MatchNoCase("LinearToCountingRatio"))
-            camP->linear2CountingRatio = itemFlt[1];
-          else if (MatchNoCase("LinearOffset"))
-            camP->linearOffset = itemFlt[1];
-          else if (MatchNoCase("K3CDSLinearRatio"))
-            camP->K3CDSLinearRatio = itemFlt[1];
-          else if (MatchNoCase("ExtraRotation"))
-            camP->extraRotation = itemFlt[1];
-          else if (MatchNoCase("ExtraGainReferences"))
-            camP->numExtraGainRefs = itemInt[1];
-          else if (MatchNoCase("NormalizeInSerialEM"))
-            camP->processHere = itemInt[1];
-          else if (MatchNoCase("UseMinDDDFocusBinning"))
-            camP->useMinDDDBinning = itemInt[1] != 0;
-          else if (MatchNoCase("AutoGainFactors"))
-            camP->autoGainAtBinning = itemInt[1];
-          else if (MatchNoCase("Falcon3ScalingPower"))
-            camP->falcon3ScalePower = itemInt[1];
-          else if (MatchNoCase("JeolDetectorID"))
-            camP->JeolDetectorID = itemInt[1];
-          else if (MatchNoCase("RotationAndPixel")) {
+          } else if (MatchNoCase("RotationAndPixel")) {
             magInd = itemInt[1];
             if (magInd < 1 || magInd >= MAX_MAGS) {
               message.Format("Mag index out of range in \"RotationAndPixel %d\" line for"
@@ -3262,10 +3096,14 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
 
-          } else if (MatchNoCase("DMGainReferenceName")) {
+          } else if (MatchNoCase("DMGainReferenceName"))
             StripItems(strLine, 1, camP->DMRefName);
 
-          } else if (MatchNoCase("FalconLocalFramePath")) {
+#define CAM_PROP_SECT2
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT2
+
+          else if (MatchNoCase("FalconLocalFramePath")) {
             StripItems(strLine, 1, camP->falconFramePath);
           } else if (MatchNoCase("FalconGainRefDir")) {
             StripItems(strLine, 1, camP->falconRefDir);
@@ -3377,21 +3215,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             rotXform.mat.ypx = itemFlt[4];
             rotXform.mat.ypy = itemFlt[5];
             rotXformArray->Add(rotXform);
-          } else if (MatchNoCase("HotPixelsAreImodCoords"))
-            camP->hotPixImodCoord = itemInt[1];
-          else if (MatchNoCase("DarkXRayAbsoluteCriterion"))
-            camP->darkXRayAbsCrit = itemFlt[1];
-          else if (MatchNoCase("DarkXRaySDCriterion"))
-            camP->darkXRayNumSDCrit = itemFlt[1];
-          else if (MatchNoCase("DarkXRayRequireBothCriteria"))
-            camP->darkXRayBothCrit = itemInt[1];
-          else if (MatchNoCase("MaximumXRayDiameter"))
-            camP->maxXRayDiameter = itemInt[1];
-          else if (MatchNoCase("ShowRemoveXRaysBox"))
-            camP->showImageXRayBox = itemInt[1];
-          else if (MatchNoCase("PixelMatchFactor"))
-            camP->matchFactor = itemFlt[1];
-          else if (MatchNoCase("DoseRateTable")) {
+          } else if (MatchNoCase("DoseRateTable")) {
             nMags = itemInt[1];
             scale = itemEmpty[2] ? 1.f : itemFlt[2];
             if (nMags <= 0 || scale <= 0) {
@@ -3435,6 +3259,21 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else
         recognizedc = false;
 
+#undef INT_PROP_TEST
+#undef BOOL_PROP_TEST
+#undef FLOAT_PROP_TEST
+#define INT_PROP_TEST(a, b, c) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    b##Set##c(itemInt[1]);
+#define BOOL_PROP_TEST(a, b, c) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    b##Set##c(itemInt[1] != 0);
+#define FLOAT_PROP_TEST(a, b, c) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    b##Set##c(itemFlt[1]);
+#define DBL_PROP_TEST(a, b, c) \
+  else if (strItems[0].CompareNoCase(a) == 0) \
+    b##Set##c(itemDbl[1]);
       if (recognizedc) {
 
       } else if (MatchNoCase("NumberOfCameras") || MatchNoCase("DigitalMicrographVersion")
@@ -6635,10 +6474,47 @@ void CParameterIO::UserSetProperty(void)
   if (fvalIn > EXTRA_VALUE_TEST)
     PrintfToLog("Property %s set to %f", (LPCTSTR)name, fval);
 }
+
+// Macros and function for setting a camera property
 #undef INT_PROP_TEST
 #undef BOOL_PROP_TEST
 #undef FLOAT_PROP_TEST
 #undef DBL_PROP_TEST
+#define INT_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    camP->b = (int)value;
+#define BOOL_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    camP->b = value != 0;
+#define FLOAT_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    camP->b = (float)value;
+
+int CParameterIO::MacroSetCamProperty(CameraParameters *camP, CString &name, double value)
+{
+  bool recognized = true;
+  if (false) {
+  }
+#define CAM_PROP_SECT1
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT1
+  else
+    recognized = false;
+  if (recognized) {
+    recognized = true;
+  }
+#define CAM_PROP_SECT2
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT2
+  else {
+    return 1;
+  }
+  return 0;
+}
+#undef INT_PROP_TEST
+#undef BOOL_PROP_TEST
+#undef FLOAT_PROP_TEST
+
 
 // Macros and Function for getting a property value from script
 #define INT_PROP_TEST(a, b, c) \
@@ -6703,11 +6579,47 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
   }
   return 0;
 }
+
+// Macros and function for getting a camera property
 #undef INT_PROP_TEST
 #undef BOOL_PROP_TEST
 #undef FLOAT_PROP_TEST
 #undef DBL_PROP_TEST
+#define INT_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = camP->b;
+#define BOOL_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = camP->b;
+#define FLOAT_PROP_TEST(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = camP->b;
 
+int CParameterIO::MacroGetCamProperty(CameraParameters *camP, CString &name, 
+  double &value)
+{
+  bool recognized = true;
+  if (false) {
+  }
+#define CAM_PROP_SECT1
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT1
+  else
+    recognized = false;
+  if (recognized) {
+    recognized = true;
+  }
+#define CAM_PROP_SECT2
+#include "PropertyTests.h"
+#undef CAM_PROP_SECT2
+  else {
+    return 1;
+  }
+  return 0;
+}
+#undef INT_PROP_TEST
+#undef BOOL_PROP_TEST
+#undef FLOAT_PROP_TEST
 
 
 // Macros and function for getting a user setting from a macro

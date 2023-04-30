@@ -4228,6 +4228,25 @@ int CMacCmd::ReportUserSetting(void)
   return 0;
 }
 
+// ReportCameraProperty, SetCameraProperty
+int CMacCmd::ReportCameraProperty(void)
+{
+  double value;
+  bool setProp = CMD_IS(SETCAMERAPROPERTY);
+  if (mItemInt[1]) {
+    if (mItemInt[1] < 0 || mItemInt[1] > mWinApp->GetActiveCamListSize())
+      ABORT_LINE("Active camera number is out of range in:\n\n")
+      mCamParams = mWinApp->GetCamParams() + mActiveList[mItemInt[1] - 1];
+  }
+  if ((setProp && mParamIO->MacroSetCamProperty(mCamParams, mStrItems[2], mItemDbl[3])) ||
+    (!setProp && mParamIO->MacroGetCamProperty(mCamParams, mStrItems[2], value)))
+      ABORT_LINE(mStrItems[2] + " is not a recognized camera property or cannot be "
+        "accessed by script command in:\n\n");
+  if (!setProp)
+    SetRepValsAndVars(3, value);
+  return 0;
+}
+
 // SetUserSetting
 int CMacCmd::SetUserSetting(void)
 {

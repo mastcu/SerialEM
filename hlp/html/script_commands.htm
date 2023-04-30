@@ -5299,7 +5299,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportProperty name [var]</TD>
-          <TD>Reports the value of one program property given by <b>name</b>.&nbsp; The command can
+          <TD>Reports the value of one general program property given by <b>name</b>.&nbsp; The command can
             be used with nearly all of the general (non-camera-specific) properties that
             contain just a single numeric entry and can be set by name in
             SerialEMproperties.txt.&nbsp; Follow with the full <b>name</b> of the property (case
@@ -5310,10 +5310,21 @@
             http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt</a></TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportCameraProperty #C name [var]</TD>
+          <TD>Like 'ReportProperty', but reports the value of a camera property given by <b>name</b>, where <b>#C</b> is the
+            active camera number in the Camera Setup dialog (numbered from 1), or 0 for the current 
+            camera.&nbsp; Command added in 4.1, 29-Apr-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetProperty name value</TD>
           <TD>Sets the value of one program property.&nbsp; This works just
             like &#39;ReportProperty&#39;.&nbsp; Follow with the full <b>name</b> of the property (case
             insensitive) and with its new <b>value</b>.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetCameraProperty # name value</TD>
+          <TD>Like 'SetProperty', but sets a camera property for active camera <b>#C</b> or the current camera
+            if <b>#C</b> is 0.&nbsp; Command added in 4.1, 29-Apr-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportUserSetting name [var]</TD>
