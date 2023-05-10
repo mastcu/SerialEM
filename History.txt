@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/10/23: Improved handling of blanking during transients for mag and spot
+changes and normalizations (In 4.0).
+
 4/29/23: SEM_4-0-25
 4/28/23: Fixed exposure times being increased by 27% when saving as MRC from
 Falcon 4i by accounting for the unit for making fractions being 9 frames
