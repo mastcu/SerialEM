@@ -38,8 +38,8 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mLastStackname = "";
   mNumDeferred = 0;
   mDeferredLines = "";
-  mMaxLinesToDefer = 100;
-  mMaxSecondsToDefer = 2.;
+  mMaxLinesToDefer = 500;
+  mMaxSecondsToDefer = 3.;
 }
 
 

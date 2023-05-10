@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/10/23: Increased limits for deferring log updates so the log is updated
+after 500 lines or 3 seconds.
+
+5/10/23: Fixed loss of checkbox to control erasing of periodic signals.
+
 4/29/23: SEM_4-0-25
 4/29/23: Added a property to increase exposure time when saving as EER so that
 the file actually has the expected number of frames.  Described procedures in
