@@ -5149,16 +5149,14 @@ BOOL CEMscope::GetBeamBlanked()
   return retval;
 }
 
-// Blanks beam for a routine creating transients if the flag is set, returns if it did
-// This and the unblank function are to be called from with a try block
+// Blanks beam for a routine creating transients if the flag is set, returns true if it
+// did.  This and the unblank function no longer need to be called from a try block
 bool CEMscope::BlankTransientIfNeeded(const char *routine)
 {   
   if ((mBlankTransients || mCamera->DoingContinuousAcquire()) && !sBeamBlanked &&
     mPlugFuncs->SetBeamBlank != NULL) {
-      mPlugFuncs->SetBeamBlank(*vTrue);
-      sBeamBlanked = true;
-      SEMTrace('B', "%s set beam blank ON", routine);
-      return true;
+    BlankBeam(true, routine);
+    return true;
   }
   return false;
 }
@@ -5166,16 +5164,8 @@ bool CEMscope::BlankTransientIfNeeded(const char *routine)
 // Unlbank after procedure if it was blanked
 void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 {
-  if (!needUnblank)
-    return;
-  try {
-    mPlugFuncs->SetBeamBlank(*vFalse);
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("unblanking after transient "));
-  }
-  sBeamBlanked = false;
-  SEMTrace('B', "%s set beam blank OFF", routine);
+  if (needUnblank)
+    BlankBeam(false, routine);
 }
 
 // Change to a new low dose area
