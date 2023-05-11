@@ -748,7 +748,9 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
     fromMag = mMSParams->customMagIndex;
     holeAngle = mMSParams->tiltOfCustomHoles;
-  } else if (mMSParams->holeMagIndex > 0 && mMSParams->doHexArray) {
+  } else if (mMSParams->holeMagIndex > 0 && 
+    ((mMSParams->doHexArray && !(numXholes && numYholes)) || 
+    (numXholes > 0 && numYholes == -1))) {
 
     // Hex positions: start at center
     fromISX.push_back(0.);
