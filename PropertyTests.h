@@ -221,6 +221,7 @@ FLOAT_PROP_TEST("MontageMinZigzagOverlap", mWinApp->mMontageController->, MinOve
 BOOL_PROP_TEST("MontageAutosaveLog", mWinApp->mMontageController->, AutosaveLog)
 INT_PROP_TEST("MontageScriptToRun", mWinApp->mMontageController->, MacroToRun)
 BOOL_PROP_TEST("MontageAllowHQinLD", mWinApp->mMontageController->, AllowHQMontInLD)
+BOOL_PROP_TEST("NoMontXCorrThread", mWinApp->mMontageController->, NoMontXCorrThread)
 
 #endif
 #ifdef PROP_TEST_SECT30

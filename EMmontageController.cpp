@@ -118,6 +118,7 @@ EMmontageController::EMmontageController()
   mMacroToRun = 0;
   mRunningMacro = false;
   mAllowHQMontInLD = false;
+  mNoMontXCorrThread = false;
 }
 
 EMmontageController::~EMmontageController()
@@ -2523,7 +2524,8 @@ int EMmontageController::SavePiece()
       if (debugLevel > 1) {
         mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
       }
-      if (mMiniBorderY && !(mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
+      if (mMiniBorderY && !mNoMontXCorrThread && 
+        !(mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
         mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()]) && !debugLevel
         && NextPieceIndex() / mParam->yNframes < mParam->xNframes) {
 

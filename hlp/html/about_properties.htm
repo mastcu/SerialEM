@@ -1070,7 +1070,7 @@
             there is more than one kind of Falcon camera, or multiple cameras needing different intervals; use the camera 
             property 'ReadoutInterval' for whichever camera requires a non-standard interval.&nbsp; If you determine
             a refined value to get the expected number of frames when saving as EER, as described in 
-            <a href = "readoutInterval>ReadoutInterval</a>, set the camera property instead.&nbsp; As of
+            <a href = "readoutInterval">ReadoutInterval</a>, set the camera property instead.&nbsp; As of
             SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
             SerialEM or FEI-SEMserver when saving frames.
           </TD>
@@ -3436,6 +3436,16 @@
             and possible crash the program, so use this with caution and do not assume that the 
             program can do too many different things at once.
           </TD>
+        </TR>
+        <TR>
+          <TD>MontageAllowHQinLD</TD>
+          <TD>Set to 1 to allow parameters for high-quality stage montages to be seen and 
+            set in Low Dose mode.</TD>
+        </TR>
+        <TR>
+          <TD>NoMontXCorrThread</TD>
+          <TD>Set to 1 to prevent cross-correlations for piece alignment from being run in a 
+            background thread while the next piece is acquired.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CheckAutofocusChange</TD>
