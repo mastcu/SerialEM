@@ -3207,7 +3207,7 @@ int CMacCmd::SetupPolygonMontage(void)
     return 1;
   if (navItem->IsNotPolygon())
     ABORT_LINE("Navigator item is not a polygon for line:\n\n");
-  if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
+  if (mItemFlt[2] < 0 || mItemFlt[2] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
   SubstituteLineStripItems(mStrLine, 3, mEnteredName);
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
@@ -8471,6 +8471,14 @@ int CMacCmd::ReportVacuumGauge(void)
   return 0;
 }
 
+// ReportVacuumStatus
+int CMacCmd::ReportVacuumStatus(void)
+{
+  mLogRpt.Format("Vacuum status index is %d", mWinApp->mScopeStatus.GetVacStatus());
+  SetRepValsAndVars(1, mWinApp->mScopeStatus.GetVacStatus());
+  return 0;
+}
+
 // ReportHighVoltage
 int CMacCmd::ReportHighVoltage(void)
 {
@@ -10076,6 +10084,19 @@ int CMacCmd::GetUniqueNavID(void)
   return 0;
 }
 
+// EndAcquireAtItems
+int CMacCmd::EndAcquireAtItems(void)
+{
+  ABORT_NONAV;
+  if (mNavigator->GetPausedAcquire())
+    mNavigator->EndAcquireWithMessage();
+  else if (mNavigator->GetAcquiring())
+    mNavigator->SetAcquireEnded(1);
+  else
+    ABORT_LINE("Navigator acquisition has not been started for line:\n\n");
+  return 0;
+}
+
 // SetMapAcquireState
 int CMacCmd::SetMapAcquireState(void)
 {
@@ -11260,6 +11281,24 @@ int CMacCmd::SetLDAddedBeamButton(void)
     mLDSetAddedBeamRestore = -1;
     mNumStatesToRestore--;
   }
+  return 0;
+}
+
+// CopyLowDoseArea
+int CMacCmd::CopyLowDoseArea(void)
+{
+  int from, area;
+  if (!mWinApp->LowDoseMode())
+    ABORT_LINE("You must be in low dose mode for line:\n\n");
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, from, mStrLine) ||
+    CheckAndConvertLDAreaLetter(mStrItems[2], 1, area, mStrLine))
+    return 1;
+  if (from == area)
+    ABORT_LINE("You must specify two different areas in line:\n\n");
+  if (mScope->GetLowDoseArea() == area)
+    ABORT_LINE("You cannot copy TO the current low dose area in:\n\n");
+  mWinApp->mLowDoseDlg.DoCopyArea(from, area);
+  mLogRpt.Format("Copied low dose area %s to %s", mStrItems[1], mStrItems[2]);
   return 0;
 }
 

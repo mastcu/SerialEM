@@ -3210,6 +3210,10 @@
               returned by the scope is divided by 4095).</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportVacuumStatus</TD>
+          <TD>For a Thermo/FEI scope, reports the index of the vacuum status in the Microscope panel as 0 for green, 1 for yellow, or 2 for red.&nbsp;Command added in 4.1, 12-May-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportHighVoltage</TD>
           <TD>Reports the current value of the high tension in kV.</TD>
         </TR>
@@ -3778,7 +3782,15 @@
               thereafter whenever one of the commands are used to change a relevant parameter.&nbsp;
               Set the optional <b>#K</b> non-zero to keep the parameter changes when the script ends;
               otherwise the parameters saved when this command is first given will be restored
-              on script end.&nbsp; A must be one of V, F, T, R, or S.</TD>
+              on script end.&nbsp; <b>area</b> must be one of V, F, T, R, or S.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CopyLowDoseArea from area</TD>
+          <TD>Copies parameters of low dose area <b>from</b> to the given <b>area</b>, both of which must be 
+            one of V, F, T, R, or S.&nbsp; The copying is the same as when one of the copy buttons is used
+             in the Low Dose control panel.&nbsp; Low Dose must be on, <b>area</b> cannot be the same as
+             <b>from</b>, and you cannot copy to the current area.&nbsp; The current area need not be set 
+            yet, i.e., if Low Dose has just been turned on.&nbsp;  Command added in 4.1, 12-May-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetLDAddedBeamButton [#]</TD>
@@ -4135,7 +4147,7 @@
         <TR>
           <TD class="scriptcommand">ReportIfNavOpen</TD>
           <TD>Reports whether the Navigator is open; sets <i>reportedValue1</i> to 1 if it is open
-            and 2 if there is a Navigator file defined 2.&nbsp; Virtually all of the commands
+            and 2 if there is a Navigator file defined.&nbsp; Virtually all of the commands
             described in this section will generate an error if the Navigator is not open.</TD>
         </TR>
         <TR>
@@ -4842,6 +4854,12 @@
             items will still be marked for Acquire.&nbsp; The Navigator must be acquiring at points.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">EndAcquireAtItems</TD>
+          <TD>Stops Navigator acquisition after the current item, equivalent to pressing 'End Nav' in the
+             Camera & Script control panel.&nbsp; Acquisition must be either running or 
+            paused.&nbsp;Command added in 4.1, 12-May-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SkipMoveInNavAcquire [#]</TD>
           <TD>Tells the Navigator to enable skipping the initial stage move for each
             following item to be acquired.&nbsp; This command is allowed only when the
@@ -5370,7 +5388,7 @@
         <TR>
           <TD class="scriptcommand">ReportSystemPath</TD>
           <TD>Reports the &#39;system path&#39;, the directory where calibrations and properties 
-            files are located.</TD>
+            files are located.&nbsp; Command added in 4.1, 16-Apr-23.</TD>
         </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>

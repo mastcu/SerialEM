@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/12/23: Added property to prevent montage correlations from using background
+thread.
+
+5/12/23: Added script commands to copy low dose area parameters, report vacuum
+status as 0-2 for FEI scopes, and end Navigator acquire at items.  Fixed
+SetupPolygonMontage when first entry is not 0.
+
 5/11/23: SEM_4-1-0beta16
 5/11/23: Made sure the pattern assigned when multiple holes are combined
 overrides the Hex grid option setting.

@@ -726,6 +726,9 @@ MAC_SAME_FUNC_ARG(ChangeItemGroupID, 2, 4, ChangeItemRegistration, CHANGEITEMGRO
 MAC_SAME_NAME_NOARG(ReportFrameSavingPath, 0, 4, REPORTFRAMESAVINGPATH)
 MAC_SAME_NAME_ARG(ReportCameraProperty, 2, 4, ReportCameraProperty, IS)
 MAC_SAME_FUNC_ARG(SetCameraProperty, 3, 4, ReportCameraProperty, SETCAMERAPROPERTY, ISD)
+MAC_SAME_NAME_ARG(CopyLowDoseArea, 2, 4, COPYLOWDOSEAREA, SS)
+MAC_SAME_NAME_NOARG(ReportVacuumStatus, 0, 4, REPORTVACUUMSTATUS)
+MAC_SAME_NAME_NOARG(EndAcquireAtItems, 0, 4, ENDACQUIREATITEMS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

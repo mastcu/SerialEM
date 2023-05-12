@@ -241,6 +241,7 @@ public:
   void SetBeamShiftButton(BOOL state);
   bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
   bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
+  void DoCopyArea(int from, int area);
   int m_iGoToArea;
 };
 

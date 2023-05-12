@@ -717,26 +717,32 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   //button->SetButtonStyle(BS_PUSHBUTTON);
   int area = nID - IDC_COPYTOVIEW;
   int from = mScope->GetLowDoseArea();
+  int consInd = (area == SEARCH_AREA ? SEARCH_CONSET : area);
   int fromCons = from;
-  int toVS = -1, fromVS = -1;
   if (from == SEARCH_AREA)
     fromCons = SEARCH_CONSET;
-  if (!area || area == SEARCH_AREA)
-    toVS = area ? 1 : 0;
-  if (!from || from == SEARCH_AREA)
-    fromVS = from ? 1 : 0;
-  int consInd = (area == SEARCH_AREA ? SEARCH_CONSET : area);
-  float focOffset;
-  bool toRec = area == RECORD_CONSET;
-  LowDoseParams *ldFrom = &mLDParams[from];
-  LowDoseParams *ldArea = &mLDParams[area];
-  if (area < 0 || area >= MAX_LOWDOSE_SETS || from < 0)
+  if (area < 0 || area >= MAX_LOWDOSE_SETS || from < 0 || area == from)
     return;
 
   if (AfxMessageBox("Are you sure you want to copy parameters from the " +  
     mModeNames[fromCons] + " area to the " + mModeNames[consInd] + " area?",
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
+  DoCopyArea(from, area);
+ }
+
+// Externally callable function to do the copy
+void CLowDoseDlg::DoCopyArea(int from, int area)
+{
+  int toVS = -1, fromVS = -1;
+  if (!area || area == SEARCH_AREA)
+    toVS = area ? 1 : 0;
+  if (!from || from == SEARCH_AREA)
+    fromVS = from ? 1 : 0;
+  float focOffset;
+  bool toRec = area == RECORD_CONSET;
+  LowDoseParams *ldFrom = &mLDParams[from];
+  LowDoseParams *ldArea = &mLDParams[area];
 
   // Convert IS to axis positions before changing the mag
   ConvertAxisPosition(false);

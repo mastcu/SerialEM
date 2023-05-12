@@ -155,6 +155,7 @@ public:
   CString m_strEMmode;
   BOOL m_iSpecVsCamDose;
   afx_msg void OnRspecVsCamDose();
+  GetMember(int, VacStatus);
 };
 
 //{{AFX_INSERT_LOCATION}}
