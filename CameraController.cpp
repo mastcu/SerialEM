@@ -442,6 +442,7 @@ CCameraController::CCameraController()
   mFrameStackMdocInd = -1;
   mLastShotUsedCDS = -1;
   mNoFilterControl = false;
+  mScreenInIfDetectorOut = -1;
   mLastJeolDetectorID = -1;
   mConsetsShareChannelList = false;
   mDoseAdjustmentFactor = 0.;
@@ -1730,6 +1731,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 {
   float offsetX = 0., offsetY = 0., lastX, lastY;
   double shiftX, shiftY;
+  BOOL wasSTEM = mParam->STEMcamera;
   mParam = &mAllParams[currentCam];
   mFilmShutter = 1 - mParam->beamShutter;
   mTD.Camera = activeCam;
@@ -1757,6 +1759,11 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     mScope->SetDetectorOffsets(offsetX, offsetY);
     if (lastX != offsetX || lastY != offsetY)
       mScope->SetImageShift(shiftX, shiftY);
+  }
+
+  if (!wasSTEM && mParam->STEMcamera && mScreenInIfDetectorOut >= 0) {
+    SEMTrace('R', "Lowering screen for STEM until detectors are set");
+    mScope->SynchronousScreenPos(spDown);
   }
 
   // And for scopes using IS, it can using the built-in mechanism with PLA

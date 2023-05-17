@@ -597,6 +597,7 @@ public:
   SetMember(int, NextDropFromTiltSum);
   SetMember(int, NextMinTiltGap);
   GetSetMember(BOOL, NoFilterControl);
+  GetSetMember(int, ScreenInIfDetectorOut);
   GetSetMember(BOOL, ConsetsShareChannelList);
   SetMember(BOOL, SaveInEERformat);
   GetSetMember(int, RotFlipInFalcon3ComFile);
@@ -850,6 +851,7 @@ public:
   CArray<ChannelSet, ChannelSet> mChannelSets;
   bool mFoundCombo;
   BOOL mConsetsShareChannelList;  // Flag that control sets should be kept synchronized
+  int mScreenInIfDetectorOut;   // Screen must be lowered to protect camera if this out
   BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;

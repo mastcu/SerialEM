@@ -4764,21 +4764,30 @@
         </TR>
         <TR VALIGN="top">
           <TD>MutuallyExcludeDetectors</TD>
-          <TD>Use this entry to indicate detectors that do not work together; follow with
-            the numbers of the detectors (numbered from 0).&nbsp; The program will not allow you
+          <TD>Use this entry to indicate STEM detectors that do not work together; follow with
+            the index numbers of the detectors (numbered from 0).&nbsp; The program will not allow you
             to select them together.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MappedToDSchannel</TD>
           <TD>On a JEOL, use this entry to indicate a mapping between one or more detectors
             and the channels in DigiScan.&nbsp; Follow with the number of the DigiScan channel
-            then one or more detector numbers (all numbered from 0).</TD>
+            then one or more detector index numbers (all numbered from 0).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DetectorBlocks</TD>
-          <TD>On a JEOL, use this entry to indicate that a detector with a JEOL ID blocks
-            one or more other detectors when inserted.&nbsp; Follow with the detector number of
-            the one that blocks, and the numbers of one or more detectors that are blocked.</TD>
+          <TD>On a JEOL, use this entry to indicate that a STEM detector with a JEOL ID blocks
+            one or more other STEM detectors when inserted.&nbsp; Follow with the detector 
+              index of
+            the one that blocks, and the indexes of one or more detectors that are blocked.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScreenInIfDetectorOut</TD>
+          <TD>On a JEOL, use this entry if the screen blocks a STEM detector and either that 
+              detector or the screen must be in to block the beam from hitting a camera below.&nbsp; 
+              Follow with the index of the detector in SerialEM, numbered from 0.&nbsp; Set 
+              LowerScreenForSTEM to 0 since&nbsp; the screen cannot be unconditionally raised 
+              or lowered in STEM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>InsertJeolDetectorDelay</TD>

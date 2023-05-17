@@ -511,6 +511,7 @@ public:
   int ScreenBusy();
   int GetScreenPos();
   BOOL SetScreenPos(int inPos);
+  BOOL SynchronousScreenPos(int inPos);
   int StageBusy(int ignoreOrTrustState = 0);
   BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false,
     int inBackground = 0, BOOL doRelax = false, BOOL doRestore = false);

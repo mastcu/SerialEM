@@ -3486,7 +3486,7 @@ BOOL CEMscope::SetScreenPos(int inPos)
   if (!sInitialized)
     return false;
   if (ScreenBusy() > 0) {
-    AfxMessageBox(_T("Screen is already moving"));
+    SEMMessageBox(_T("Screen is already moving"));
     return false;
   }
 
@@ -3505,6 +3505,20 @@ BOOL CEMscope::SetScreenPos(int inPos)
   // This used to be done for "singleTecnai"
   //mWinApp->AddIdleTask(TaskScreenBusy, NULL, TaskScreenError, 0, 60000);
   return true;
+}
+
+BOOL CEMscope::SynchronousScreenPos(int inPos)
+{
+  double startTime = GetTickCount();
+  if (!SetScreenPos(inPos))
+    return false;
+  while (SEMTickInterval(startTime) < 20000) {
+    if (!ScreenBusy())
+      return true;
+    SleepMsg(50);
+  }
+  SEMMessageBox("Timeout setting screen position");
+  return false;
 }
 
 int CEMscope::TaskScreenBusy()
@@ -9031,14 +9045,25 @@ void CEMscope::AddImageDetector(int id)
 
 bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
 {
-  bool allIn, retval = true;
+  bool allIn, retval = true, needScreenUp = false;
   int i, j, k, timeout = 5000;
   double startTime, insertedTime = -1., selectedTime = -1.;
-  int inserted;
+  int inserted, detectorID;
+  int detOrScreen = mCamera->GetScreenInIfDetectorOut();
   if (!sInitialized || !JEOLscope)
     return false;
   if (!mJeolSD.numDetectors)
     return true;
+  if (detOrScreen >= 0) {
+    if (numberInList(detOrScreen, detInd, numDet, 0))
+      needScreenUp = true;
+    else {
+      SEMTrace('R', "Lowering screen before unselecting/retracting detector %d",
+        mJeolSD.detectorIDs[detOrScreen]);
+      if (!SynchronousScreenPos(spDown))
+        return false;
+    }
+  }
 
   ScopeMutexAcquire("SelectJeolDetectors", true);
 
@@ -9060,10 +9085,12 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
 
         // A block was found - retract the detector and wait until out
         if (allIn) {
-          mPlugFuncs->SetDetectorPosition(mJeolSD.detectorIDs[i], 0);
+          detectorID = mJeolSD.detectorIDs[i];
+          SEMTrace('R', "Retracting detector %d", detectorID);
+          mPlugFuncs->SetDetectorPosition(detectorID, 0);
           startTime = GetTickCount();
           while (mJeolSD.detInserted[i] && SEMTickInterval(startTime) < timeout) {
-            inserted = mPlugFuncs->GetDetectorPosition(mJeolSD.detectorIDs[i]);
+            inserted = mPlugFuncs->GetDetectorPosition(detectorID);
             if (!inserted) {
               USE_DATA_MUTEX(mJeolSD.detInserted[i] = 0);
             } else {
@@ -9076,8 +9103,10 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
 
     // Insert ones that are not inserted
     for (i = 0; i < numDet; i++) {
-      if (detInd[i] < mJeolSD.numDetectors && !mJeolSD.detInserted[detInd[i]])
+      if (detInd[i] < mJeolSD.numDetectors && !mJeolSD.detInserted[detInd[i]]) {
+        SEMTrace('R', "Inserting detector %d", mJeolSD.detectorIDs[detInd[i]]);
         mPlugFuncs->SetDetectorPosition(mJeolSD.detectorIDs[detInd[i]], 1);
+      }
     }
 
     // Loop until they are all in desired state
@@ -9096,14 +9125,18 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
         }
       }
       if (!allIn)
-        Sleep(50);
+        SleepMsg(50);
     }
 
     // Now change selections of ALL detectors if needed
     for (i = 0; i < mJeolSD.numDetectors; i++) {
+      detectorID = mJeolSD.detectorIDs[i];
       inserted = (short)numberInList(i, detInd, numDet, 0);
+      if (inserted && detectorID == detOrScreen && GetScreenPos() != spUp)
+        needScreenUp = true;
       if (mJeolSD.detSelected[i] != inserted) {
-        mPlugFuncs->SetDetectorSelected(mJeolSD.detectorIDs[i], inserted);
+        SEMTrace('R', "%selecting detector %d", inserted ? "S" : "Des", detectorID);
+        mPlugFuncs->SetDetectorSelected(detectorID, inserted);
         USE_DATA_MUTEX(mJeolSD.detSelected[i] = inserted);
         selectedTime = GetTickCount();
       }
@@ -9127,6 +9160,11 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
     retval = false;
   } 
   ScopeMutexRelease("SelectJeolDetectors");
+  if (needScreenUp) {
+    SEMTrace('R', "Raising screen for detector %d", mJeolSD.detectorIDs[detOrScreen]);
+    if (!SynchronousScreenPos(spUp))
+      retval = false;
+  }
   return retval;
 }
 

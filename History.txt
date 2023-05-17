@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/17/23: Added ability to lower or raise screen in STEM just for a JEOL
+detector below the screen, to protect camera below.
+
 5/12/23: Added property to prevent montage correlations from using background
 thread.
 
