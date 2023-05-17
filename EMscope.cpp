@@ -9132,8 +9132,6 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
     for (i = 0; i < mJeolSD.numDetectors; i++) {
       detectorID = mJeolSD.detectorIDs[i];
       inserted = (short)numberInList(i, detInd, numDet, 0);
-      if (inserted && detectorID == detOrScreen && GetScreenPos() != spUp)
-        needScreenUp = true;
       if (mJeolSD.detSelected[i] != inserted) {
         SEMTrace('R', "%selecting detector %d", inserted ? "S" : "Des", detectorID);
         mPlugFuncs->SetDetectorSelected(detectorID, inserted);
