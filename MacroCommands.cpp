@@ -183,6 +183,9 @@ void CMacCmd::TaskDone(int param)
         if (mScrpLangData.threadDone < 0)
           mLastCompleted = true;
         AbortMacro();
+        if (mLastCompleted && mStartNavAcqAtEnd)
+          mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
+
       } else if (mScrpLangData.waitingForCommand) {
 
         // If waiting for command, it has arrived -check if in range

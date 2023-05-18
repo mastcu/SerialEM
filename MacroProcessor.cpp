@@ -4851,8 +4851,10 @@ int CMacroProcessor::StartNavAvqBusy(void)
 {
   if (DoingMacro())
     return 1;
-  if (mLastCompleted && mWinApp->mNavigator) 
+  if (mLastCompleted && mWinApp->mNavigator) {
+    mWinApp->mNavigator->SetCurAcqParmActions(mNavHelper->GetCurAcqParamIndex());
     mWinApp->mNavigator->AcquireAreas(false, false);
+  }
   return 0;
 }
 
