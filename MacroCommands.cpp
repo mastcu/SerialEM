@@ -10044,16 +10044,24 @@ int CMacCmd::RestoreBeamTilt(void)
   int index;
 
   index = mScope->GetProbeMode();
-  if (mBeamTiltXtoRestore[index] < EXTRA_VALUE_TEST) {
+  if (mBeamTiltXtoRestore[index] < EXTRA_VALUE_TEST && 
+    mAstigXtoRestore[index] < EXTRA_VALUE_TEST) {
     report = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
       "restored already";
     if (FEIscope)
       report += " for " + CString(index ? "micro" : "nano") + "probe mode";
     ABORT_NOLINE(report);
   }
-  mScope->SetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
-  mNumStatesToRestore--;
-  mBeamTiltXtoRestore[index] = mBeamTiltYtoRestore[index] = EXTRA_NO_VALUE;
+  if (mBeamTiltXtoRestore[index] > EXTRA_VALUE_TEST) {
+    mScope->SetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
+    mNumStatesToRestore--;
+    mBeamTiltXtoRestore[index] = mBeamTiltYtoRestore[index] = EXTRA_NO_VALUE;
+  }
+  if (mAstigXtoRestore[index] > EXTRA_VALUE_TEST) {
+    mScope->SetObjectiveStigmator(mAstigXtoRestore[index], mAstigYtoRestore[index]);
+    mNumStatesToRestore--;
+    mAstigXtoRestore[index] = mAstigYtoRestore[index] = EXTRA_NO_VALUE;
+  }
   mCompensatedBTforIS = false;
   return 0;
 }
