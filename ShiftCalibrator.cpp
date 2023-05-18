@@ -582,7 +582,7 @@ void CShiftCalibrator::ShiftDone()
 
     mSM->SetPeaksToEvaluate(1000, 0.2f);
     j = mSM->AutoAlign(1, -1, false,
-      ((mSM->GetNoDefaultPeakErasing() & 2) == 0 || mSM->GetErasePeriodicPeaks()) ?
+      ((mSM->GetNoDefaultPeakErasing() & 1) == 0 || mSM->GetErasePeriodicPeaks()) ?
       AUTOALIGN_FILL_SPOTS : 0, NULL, (float)mBaseShiftX[mShiftIndex - 1],
       -(float)mBaseShiftY[mShiftIndex - 1], 0., 0., 0., &aaCCC, NULL, true, &aaXshift,
       &aaYshift);
