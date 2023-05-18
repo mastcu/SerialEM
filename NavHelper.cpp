@@ -921,7 +921,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // Set up to use scaling in first if option selected and not low dose
   mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
   mRIautoAlignFlags = (mShiftManager->GetErasePeriodicPeaks() ||
-    (mWinApp->LowDoseMode() && (mShiftManager->GetNoDefaultPeakErasing() & 1) == 0)) ?
+    (mWinApp->LowDoseMode() && (mShiftManager->GetNoDefaultPeakErasing() & 2) == 0)) ?
     AUTOALIGN_FILL_SPOTS : 0;
 
   // Save state if desired; which will only work by forgetting prior state
