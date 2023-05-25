@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/25/23: Fixed diffraction focus for Hitachi to access the right lens and
+added difraction shift functions.
+
 5/24/23: Added script command to turn off Acquire for Navigator points too
 close to a supllied boundary or the convex hull of the points.
 
