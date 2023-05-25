@@ -729,6 +729,7 @@ MAC_SAME_FUNC_ARG(SetCameraProperty, 3, 4, ReportCameraProperty, SETCAMERAPROPER
 MAC_SAME_NAME_ARG(CopyLowDoseArea, 2, 4, COPYLOWDOSEAREA, SS)
 MAC_SAME_NAME_NOARG(ReportVacuumStatus, 0, 4, REPORTVACUUMSTATUS)
 MAC_SAME_NAME_NOARG(EndAcquireAtItems, 0, 4, ENDACQUIREATITEMS)
+MAC_SAME_NAME_ARG(SkipNavPointsNearEdge, 3, 4, SKIPNAVPOINTSNEAREDGE, IIDiss)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

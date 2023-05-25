@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/24/23: Added script command to turn off Acquire for Navigator points too
+close to a supllied boundary or the convex hull of the points.
+
+5/24/23: Changed installer in anticipation for when FrameGPU4.dll is no longer
+included in the package, which will occur on the next substantive change in
+the FrameGPU code.
+
 5/18/23: Fixed default disabling of peak erasing in Realign to Item.
 
 5/18/23: Made RestoreBeamTilt restore astigmatism also if saved (In 4.0).

@@ -9797,6 +9797,100 @@ int CMacCmd::SetItemAcquire(void)
   return 0;
 }
 
+// SkipNavPointsNearEdge
+int CMacCmd::SkipNavPointsNearEdge(void)
+{
+  ABORT_NONAV;
+  MapItemArray *itemArray = mNavigator->GetItemArray();
+  CMapDrawItem *item;
+  FloatVec xcen, ycen, xBord, yBord, dists;
+  Variable *xvar = NULL, *yvar = NULL;
+  int ind, vecInd = 0, numOff = 0;
+  int numItems = (int)itemArray->GetSize();
+  int indSt = mItemInt[1] - 1, indEnd = mItemInt[2] - 1;
+  bool excludeOff = !mItemEmpty[4] && mItemInt[4];
+
+  // Error checks
+  if (indSt < 0 || indSt >= numItems || indEnd < 1 || indEnd >= numItems ||
+    indSt > indEnd)
+    ABORT_LINE("Navigator indexes out of range or in wrong order in line:\n\n");
+  if (mItemFlt[3] <= 0.)
+    ABORT_LINE("Distance from edge must be positive in line:\n\n");
+  if (!mItemEmpty[5] && mItemEmpty[6])
+    ABORT_LINE("X array variable entered without Y variable in line:\n\n");
+
+  // Find variables
+  if (!mItemEmpty[5]) {
+    xvar = LookupVariable(mStrItems[5], ind);
+    yvar = LookupVariable(mStrItems[6], ind);
+    if (!xvar || !yvar)
+      ABORT_LINE("Variable not defined in line:\n\n");
+    if (xvar->rowsFor2d || yvar->rowsFor2d)
+      ABORT_LINE("One of the variables has a 2-D array for line:\n\n");
+  }
+
+  // Get eligible points
+  for (ind = indSt; ind <= indEnd; ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsPoint() && (!excludeOff || item->mAcquire)) {
+      xcen.push_back(item->mStageX);
+      ycen.push_back(item->mStageY);
+    }
+  }
+
+  // Skip if not enough points
+  if (xvar && !xcen.size()) {
+    PrintfToLog("No points %swithin specified range; nothing to do",
+      excludeOff ? "marked for acquire " : "");
+    return 0;
+  }
+  if (!xvar && xcen.size() < 4) {
+    PrintfToLog("Only %d points %swithin specified range; nothing to do", xcen.size(),
+      excludeOff ? "marked for acquire " : "");
+    return 0;
+  }
+
+  // Get supplied border and check
+  if (xvar) {
+    FillVectorFromArrayVariable(&xBord, NULL, xvar);
+    FillVectorFromArrayVariable(&yBord, NULL, yvar);
+    if (xBord.size() < 3 || yBord.size() < 3)
+      ABORT_LINE("Array variables must have at least 3 boundary points for line:\n\n");
+    if (xBord.size() != yBord.size())
+      ABORT_LINE("Array variables for boundary coordinates do not have the same number "
+        "of values in line:\n\n")
+  } else {
+    xBord.resize(xcen.size());
+    yBord.resize(xcen.size());
+  }
+
+  // Get distances
+  dists.resize(xcen.size());
+  if (CAutoContouringDlg::FindDistancesFromHull(xcen, ycen, xBord, yBord, 1., dists,
+    xvar != NULL))
+    ABORT_LINE("Error allocating contour for boundary points in line:\n\n");
+
+  // Turn off acquire for near points
+  for (ind = indSt; ind <= indEnd; ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsPoint() && (!excludeOff || item->mAcquire)) {
+      if (item->mAcquire && dists[vecInd] < mItemFlt[3]) {
+        item->mAcquire = false;
+        mNavigator->UpdateListString(ind);
+        numOff++;
+      }
+      vecInd++;
+    }
+  }
+  PrintfToLog("%d Acquire points too close to edge %swill be skipped", numOff, 
+    xvar ? "or outside boundary " : "");
+  if (numOff) {
+    mNavigator->Redraw();
+    mNavigator->SetChanged(true);
+  }
+  return 0;
+}
+
 // NavIndexWithLabel, NavIndexWithNote
 int CMacCmd::NavIndexWithLabel(void)
 {

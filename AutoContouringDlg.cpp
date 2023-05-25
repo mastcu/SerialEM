@@ -1544,7 +1544,8 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
 // General function to find convex boundary of a set of points and compute distance of
 // each point from the hull
 int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCenters, 
-  FloatVec &xBound, FloatVec &yBound, float sizeScale, FloatVec &boundDists)
+  FloatVec &xBound, FloatVec &yBound, float sizeScale, FloatVec &boundDists, 
+  bool useBound)
 {
   int numConts = (int)xCenters.size();
   float xcen, ycen;
@@ -1553,8 +1554,11 @@ int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCen
   int numBelow, ind, ix;
 
   // Get convex boundary of centers
-  convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0],
-    &numBelow, &xcen, &ycen, numConts);
+  if (useBound)
+    numBelow = (int)xBound.size();
+  else
+    convexBound(&xCenters[0], &yCenters[0], numConts, 0., 0., &xBound[0], &yBound[0],
+      &numBelow, &xcen, &ycen, numConts);
 
   // Put boundary in a contour and get distances
   cont = imodContourNew();
@@ -1574,6 +1578,8 @@ int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCen
       tpt.x = xCenters[ind];
       tpt.y = yCenters[ind];
       boundDists[ind] = sizeScale * imodPointContDistance(cont, &tpt, 0, 0, &ix);
+      if (useBound && !imodPointInsideCont(cont, &tpt))
+        boundDists[ind] = -boundDists[ind];
     }
   }
   imodContourDelete(cont);
