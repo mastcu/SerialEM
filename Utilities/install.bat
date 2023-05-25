@@ -410,7 +410,7 @@ echo Allow a little extra time if you have to close it.
 pause
 
 @echo off
-tasklist /fi "IMAGENAME eq DigitalMicrograph.exe" /nh | find "DigitalMicrograph.exe" > nul 
+tasklist /fi "IMAGENAME eq DigitalMicrograph.exe" /nh | find "DigitalMicrograph.exe" > nul 2>&1
 IF %errorlevel%==0 (
   echo Running instance of Digital Micrograph detected, requesting termination now, will forcibly end process in 15 seconds ...
   taskkill /im DigitalMicrograph.exe > nul
@@ -427,6 +427,7 @@ CALL %REGISTER%
 
 CD "%packDir%"
 
+Rem # Manage migration of FrameGPU and CUDA into Shrmemframe
 set GATANPLUGDIR=C:\ProgramData\Gatan\Plugins
 set SHRMEMDIR=C:\ProgramData\Gatan\Plugins\Shrmemframe
 set INPLUG4=0
@@ -523,7 +524,9 @@ IF NOT EXIST  %PLUGFRAME% GOTO :FrameGPUdone
 if EXIST %CUDA4LIB% IF EXIST %CUDA8LIB% (
   echo.
   echo Not updating %PLUGFRAME% because you have both CUDA 4
-  echo and CUDA 8 libraries.  You will have to do this manually
+  echo and CUDA 8 libraries.  You will have to do this manually.
+  echo You should eliminate CUDA 4 and use CUDA 8 if possible;
+  echo CUDA 4 is no longer supported
   GOTO :FrameGPUdone
 )
 
@@ -534,6 +537,18 @@ IF EXIST  %CUDA4LIB% IF EXIST FrameGPU4.dll (
   COPY /Y FrameGPU4.dll %PLUGFRAME%
   GOTO :FrameGPUdone
 )
+IF EXIST  %CUDA4LIB% IF NOT EXIST FrameGPU4.dll (
+  echo.
+  echo A new version of FrameGPU is available, but only for CUDA 8.
+  echo You should upgrade to CUDA 8 and remove the CUDA 4 libraries.
+  echo Obtain package and follow instructions at
+  echo http://bio3d.colorado.edu/SerialEM/download.html#FrameGPU
+  echo Unpack the package in the location of %PLUGFRAME%
+  echo The existing CUDA 4 FrameGPU.dll may continue to work until then
+  (echo FrameGPU.dll cannot be upgraded because CUDA 4 is no longer supported. & echo You should upgrade with a CUDA 8 package. & echo The existing CUDA 4 FrameGPU.dll may continue to work until then. & echo See details in installer window.) | msg * /TIME:300 /W 
+  GOTO :FrameGPUdone
+)
+
 IF EXIST  %CUDA8LIB% IF EXIST FrameGPU8.dll (
   echo.
   echo Updating %PLUGFRAME% with FrameGPU8.dll for CUDA 8

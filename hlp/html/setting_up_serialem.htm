@@ -3752,9 +3752,13 @@ MoveStage 0 0 -$zRange / 2.
       as the SerialEMCCD plugin or the SerialEM executable, respectively.&nbsp; To enable
       GPU use:</P>
     <ol>
-      <li>Get FrameGPU-CUDA4.exe or FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp;
-      The CUDA 8 version is much bigger and has not shown any speed advantage, but less likely to
-        have problems with newer CUDA drivers.</li>
+      <li>Get FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp;
+      The CUDA 4 version is still available in FrameGPU-CUDA4.exe, but can no longer be built
+        after changes to make the framealign code compatible with CUDA 12, 
+        so this package will become either out-of-date or unusable when there is a substantive change in 
+        the module.&nbsp; Use it only if the CUDA 8 package does not work, and let us know if that
+        is the case.
+        </li>
       <li>Run the package.&nbsp; Extract the files to
       C:\ProgramData\Gatan\Plugins\Shrmemframe for use with a Gatan camera, or to C:\Program Files\SerialEM
       or other SerialEM install location for DE, Falcon, and Tietz.</li>
