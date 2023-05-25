@@ -4843,6 +4843,18 @@
             end of the subset if one is being acquired.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SkipNavPointsNearEdge #S #E #D [#E] [xvar yvar]</TD>
+          <TD>Finds the distance from a boundary for Navigator points from starting index <b>#S</B> to 
+            ending index <b>#E</b> and sets ones less than the distance in <b>#D</b> (in microns) or outside
+            the boundary to not be acquired.&nbsp;  The X and Y coordinates of boundary points can be entered
+             with the optional variables <b>xvar</b> and <b>yvar</b>.&nbsp; If a boundary is not entered, the 
+            convex hull of all of the points will be used for the boundary, as in the Hole Finder dialog, or
+            points not already marked as Acquire will be excluded from the analysis if the optional <b>#E</b>
+            is non-zero.&nbsp; Command added in 4.1, 24-May-23.
+
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SkipAcquiringNavItem</TD>
           <TD>Tells the Navigator to skip the current item and move on to the next.&nbsp;
             This command has an effect only when included in a script being run as a
