@@ -1624,13 +1624,9 @@
 #define IDC_BUT_CLEAR_DATA              2643
 #define IDC_BRACKET_LAST                2644
 #define IDC_RON_IMAGE                   2645
-#define IDC_SLIDER_HULL_DIST            3180
 #define IDC_RIN_POLYGON                 2646
-#define IDC_EDIT_HULL_DIST              3181
 #define IDC_RSAME_GROUP                 2647
-#define IDC_STAT_MIN_HULL_DIST          3182
 #define IDC_BUT_COMBINE_PTS             2648
-#define IDC_STAT_MAX_HULL_DIST          3183
 #define IDC_BUT_UNDO_COMBINE            2649
 #define IDC_CHECK_DISPLAY_MULTI         2650
 #define IDC_CHECK_SECOND_RING           2651
@@ -2151,6 +2147,10 @@
 #define IDC_STAT_MESSAGE_LINE12         3178
 #define IDC_CHECK1                      3179
 #define IDC_ERASE_PERIODIC_PEAKS        3179
+#define IDC_SLIDER_HULL_DIST            3180
+#define IDC_EDIT_HULL_DIST              3181
+#define IDC_STAT_MIN_HULL_DIST          3182
+#define IDC_STAT_MAX_HULL_DIST          3183
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2699,6 +2699,7 @@
 #define ID_FILE_SETCURRENTDIRECTORY     33514
 #define ID_SETTINGS_MISCELLANEOUSOPTIONS 33515
 #define ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION 33516
+#define ID_NAVIGATOR_ERASEPERIODICCORR  33518
 
 // Next default values for new objects
 // 
@@ -2706,7 +2707,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        282
-#define _APS_NEXT_COMMAND_VALUE         33518
+#define _APS_NEXT_COMMAND_VALUE         33519
 #define _APS_NEXT_CONTROL_VALUE         3184
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

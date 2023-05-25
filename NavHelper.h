@@ -266,6 +266,7 @@ public:
   GetSetMember(BOOL, KeepColorsForPolygons);
   GetSetMember(float, MaxMontReuseWaste);
   SetMember(bool, RISkipNextZMove);
+  GetSetMember(BOOL, RIErasePeriodicPeaks);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -488,6 +489,7 @@ private:
   BOOL mReverseAutocontColors;   // Flag to use colors in reverse
   BOOL mKeepColorsForPolygons;   // Flag to keep same colors when converting to polygons
   float mMaxMontReuseWaste;      // Maximum fraction of area to waste when reusing montage
+  BOOL mRIErasePeriodicPeaks;    // Erase peaks in realign to item
 
 
 public:

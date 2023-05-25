@@ -166,6 +166,7 @@ INT_SETT_GETSET("MarkShftSaveType", mWinApp->mNavHelper->, MarkerShiftSaveType)
 INT_SETT_GETSET("MarkShftApplyWhich", mWinApp->mNavHelper->, MarkerShiftApplyWhich)
 BOOL_SETT_GETSET("ReverseAutocontColors", mWinApp->mNavHelper->, ReverseAutocontColors)
 BOOL_SETT_GETSET("KeepColorsForPolygons", mWinApp->mNavHelper->, KeepColorsForPolygons)
+BOOL_SETT_GETSET("RIErasePeriodicPeaks", mWinApp->mNavHelper->, RIErasePeriodicPeaks)
 
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
 INT_SETT_GETSET("ExtraDivideBy2", camera->, ExtraDivideBy2)

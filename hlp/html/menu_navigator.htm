@@ -187,6 +187,10 @@
             parameters.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
+          <TD>Find image scaling in first round of Realign to Item to adjust for shrinkage</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_search">Search + and - Scaling in Realign</A></TD>
           <TD>When finding scaling during  Realign to Item, try scalings above and below 0.</TD>
         </TR>
@@ -272,9 +276,11 @@
           <TD>Make Realign to Item align to center of map even if it has recently aligned to
             it.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
-          <TD>Find image scaling in first round of Realign to Item to adjust for shrinkage</TD>
+       <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_navigator_eraseperiodiccorr">Erase Periodic Peaks 
+            in LD</a></TD>
+          <TD>Erase periodic peaks in FFTs in cross-correlations for Realign to Item in Low 
+            Dose mode.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -412,6 +418,16 @@
       dose might be desired for the map to allow either better visualization of
       features or more reliable montage piece alignment, while less dose can be used
       for correlating with those maps.</P>
+      <P><A NAME="hid_navigator_realign_scaling"></A><B>Try Scaling in Realign
+        (Navigator - Options submenu)</B></P>
+      <P>This command toggles an option to try to adjust for specimen shrinkage when
+        doing <A HREF="#hid_navigator_aligntoitem">
+          Realign to Item </A>.&nbsp; On the first round of the realignment, where an
+        image is aligned to the center of a map frame, the program will search for the
+        image scaling that makes it align best to the map frame.&nbsp; This scaling is
+        then used to adjust the target position (which is not at the center) for the
+        shrinkage that occurs.&nbsp; The scaling will not be done if the program is in
+        Low Dose mode prior to the Realign operation.</P>
     <p><A NAME="hid_options_search"></A><B>Search + and - Scaling in Realign command
       (Navigator - Options submenu)</B></p>
       <p>This command toggles an option to try scalings both below and above 1 when
@@ -1062,16 +1078,17 @@
       first round if the same map was aligned to recently and the alignment error was
       low enough.&nbsp; If the first round fails, it may be necessary to use this
       command to prevent the skipping on the next attempt.</P>
-      <P><A NAME="hid_navigator_realign_scaling"></A><B>Try Scaling in Realign
-        (Navigator menu)</B></P>
-      <P>This command toggles an option to try to adjust for specimen shrinkage when
-        doing <A HREF="#hid_navigator_aligntoitem">
-          Realign to Item </A>.&nbsp; On the first round of the realignment, where an
-        image is aligned to the center of a map frame, the program will search for the
-        image scaling that makes it align best to the map frame.&nbsp; This scaling is
-        then used to adjust the target position (which is not at the center) for the
-        shrinkage that occurs.&nbsp; The scaling will not be done if the program is in
-        Low Dose mode prior to the Realign operation.</P>
+      <P><A NAME="#hid_navigator_eraseperiodiccorr"></A><B>Erase Periodic Peaks
+        in LD (Navigator menu)</B> &nbsp;</P>
+      <p>This command toggles whether alignment correlations for Realign to Item in Low 
+        Dose mode are done after trying to identify and erase periodic peaks in the FFTs 
+        used for the correlations.&nbsp; Erasing of peaks seems to work well for gold 
+        grids and is essential when working with ones having hexagonally spaced holes, 
+        which are much closer together.&nbsp; It does not work reliably for regular 
+        carbon grids, which may not have enough remaining non-periodic signal.&nbsp; 
+        This option alone determines whether erasing is done in Low Dose mode; the 
+        general option in the <a href="hidd_alignfocus.htm">Image Alignment &amp; Focus</a> 
+        control panel determines whether erasing is done outside of Low Dose mode.</p>
     </basefont>
   </BODY>
 </HTML>

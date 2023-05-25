@@ -3211,12 +3211,9 @@
         <TR VALIGN="top">
           <TD class="style4">NoDefaultPeakErasing</TD>
           <TD>By default, the autoalign routine will try to detect whether the specimen is periodic
-            and erase the peaks in the FFT caused by this periodicity in three cases: when the 
+            and erase the peaks in the FFT caused by this periodicity when calibrating
+             image or stage shift.&nbsp; Set to 1 to override this default, in which case the
             'Erase periodic peaks in Autoalign'
-            option in the Image Alignment &amp; Focus panel is set, when calibrating
-             image or stage shift, and when being run from the Realign to Item routine in Low Dose
-            mode.&nbsp; Enter the sum of 1 to override this default for calibrations, and 2 to override 
-            the default for Realign to Item.&nbsp; If either is overridden, the 
             option in the Image Alignment &amp; Focus panel governs whether erasing is attempted.
           </TD>
         </TR>
@@ -3383,7 +3380,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>MontageMinZigzagOverlap</TD>
-          <TD>Minimum number of microns of overlap between pieces for doing a montage in a
+          <TD>Minimum number of microns of overlap between pieces for doing a stage montage in a
             zigzag path, in which it goes up a column, down the next column, up the next
             column, etc.&nbsp; The default is 15.&nbsp; This should be at least 10% of the
             observed backlash when reversing directions.</TD>

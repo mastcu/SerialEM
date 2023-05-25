@@ -514,6 +514,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnSetHoleOrderForRegularArray)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY, OnUpdateNoTasks)
     ON_COMMAND(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnReverseWheelZoomDirection)
+    ON_COMMAND(ID_NAVIGATOR_ERASEPERIODICCORR, OnNavigatorErasePeriodicPeaks)
+    ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_ERASEPERIODICCORR, OnUpdateNavigatorErasePeriodicPeaks)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1284,6 +1286,18 @@ void CMenuTargets::OnNavigatorSetupAlign()
 void CMenuTargets::OnUpdateNavigatorSetupAlign(CCmdUI * pCmdUI)
 {
   pCmdUI->Enable(mWinApp->mNavigator && !DoingTasks());
+}
+
+void CMenuTargets::OnNavigatorErasePeriodicPeaks()
+{
+  mNavHelper->SetRIErasePeriodicPeaks(!mNavHelper->GetRIErasePeriodicPeaks());
+}
+
+
+void CMenuTargets::OnUpdateNavigatorErasePeriodicPeaks(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mNavHelper->GetRIErasePeriodicPeaks());
 }
 
 // DISTORTION

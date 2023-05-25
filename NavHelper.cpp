@@ -306,6 +306,7 @@ CNavHelper::CNavHelper(void)
   mKeepColorsForPolygons = true;
   mMaxMontReuseWaste = 0.2f;
   mRISkipNextZMove = false;
+  mRIErasePeriodicPeaks = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -920,9 +921,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // Set up to use scaling in first if option selected and not low dose
   mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
-  mRIautoAlignFlags = (mShiftManager->GetErasePeriodicPeaks() ||
-    (mWinApp->LowDoseMode() && (mShiftManager->GetNoDefaultPeakErasing() & 2) == 0)) ?
-    AUTOALIGN_FILL_SPOTS : 0;
+  mRIautoAlignFlags = ((!mWinApp->LowDoseMode() && mShiftManager->GetErasePeriodicPeaks()) ||
+    (mWinApp->LowDoseMode() && mRIErasePeriodicPeaks)) ? 
+    AUTOALIGN_FILL_SPOTS : AUTOALIGN_KEEP_SPOTS;
 
   // Save state if desired; which will only work by forgetting prior state
   mRIdidSaveState = false;

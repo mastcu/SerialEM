@@ -684,6 +684,7 @@ BEGIN
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
             MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
             MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
+            MENUITEM "Tr&y Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
             MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
         END
         MENUITEM SEPARATOR
@@ -698,8 +699,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Import Map...",               ID_NAVIGATOR_IMPORTMAP
         MENUITEM "Rotat&e Map",                 ID_NAVIGATOR_ROTATEMAP
-        MENUITEM "Adjust for &Backlash",        ID_NAVIGATOR_ADJUST_BACKLASH
-        MENUITEM "Bac&klash Settings...",       ID_NAVIGATOR_BACKLASHSETTINGS
+        MENUITEM "Ad&just for Backlash",        ID_NAVIGATOR_ADJUST_BACKLASH
+        MENUITEM "&Backlash Settings...",       ID_NAVIGATOR_BACKLASHSETTINGS
         MENUITEM SEPARATOR
         MENUITEM "Ope&n Imaging States ...",    ID_NAVIGATOR_OPENSTATEDLG
         MENUITEM "Set Ma&p Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
@@ -712,7 +713,7 @@ BEGIN
         MENUITEM "Real&ign to Item",            ID_NAVIGATOR_ALIGNTOITEM
         MENUITEM "Setup Align/Realign...",      ID_NAVIGATOR_SETUPALIGN
         MENUITEM "For&ce Center Align",         ID_NAVIGATOR_FORCE_CENTER_ALIGN
-        MENUITEM "Tr&y Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
+        MENUITEM "Erase Periodic Pea&ks in LD", ID_NAVIGATOR_ERASEPERIODICCORR
     END
     POPUP "Too&ls"
     BEGIN
@@ -5207,6 +5208,8 @@ STRINGTABLE
 BEGIN
     IDC_ERASE_PERIODIC_PEAKS 
                             "Remove peaks in FFTs due to periodic structures to reduce bad correlations"
+    IDC_SLIDER_HULL_DIST    "Adjust the minimum distance from convex hull of found holes in microns"
+    IDC_EDIT_HULL_DIST      "Enter a minimum distance from convex hull of found holes in microns"
 END
 
 STRINGTABLE
@@ -7240,8 +7243,6 @@ BEGIN
     IDC_EDIT_MAX_MEAN       "Enter a specific cutoff for maximum mean intensity"
     IDC_EDIT_MIN_SIZE       "Enter a specific cutoff for minimum contour size in microns"
     IDC_EDIT_BORDER_DIST    "Enter a minimum distance from edge of contoured area in microns"
-    IDC_EDIT_HULL_DIST      "Enter a minimum distance from convex hull of found holes in microns"
-    IDC_SLIDER_HULL_DIST    "Adjust the minimum distance from convex hull of found holes in microns"
 END
 
 STRINGTABLE
@@ -7287,6 +7288,8 @@ BEGIN
     ID_FILE_SETCURRENTDIRECTORY "Choose a new working directory for files"
     ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION 
                             "Moving mouse wheel away from you zooms image up, not down"
+    ID_NAVIGATOR_ERASEPERIODICCORR 
+                            "Remove periodic signal from FFTs when correlating for Realign in Low Dose"
 END
 
 #endif    // English (United States) resources

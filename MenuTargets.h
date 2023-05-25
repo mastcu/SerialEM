@@ -426,6 +426,8 @@ public:
   afx_msg void OnCalHighDefocusIS();
   afx_msg void OnSetHoleOrderForRegularArray();
   afx_msg void OnReverseWheelZoomDirection();
+  afx_msg void OnNavigatorErasePeriodicPeaks();
+  afx_msg void OnUpdateNavigatorErasePeriodicPeaks(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////
