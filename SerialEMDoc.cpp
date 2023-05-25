@@ -2022,6 +2022,10 @@ void CSerialEMDoc::SetSystemPath(CString sysPath)
 
   // See if a command line argument can modify the system path; look for properties file
   if (!sub.IsEmpty()) {
+    if (sub.GetAt(0) == '/')
+      sub = sub.Mid(1);
+    if (mSystemPath.GetAt(mSystemPath.GetLength() - 1) == '\\')
+      mSystemPath = mSystemPath.Left(mSystemPath.GetLength() - 1);
     strSys = mSystemPath + "\\" + sub + "\\" + mPropertiesName;
     if (CFile::GetStatus((LPCTSTR)strSys, status))
       mSystemPath += "\\" + sub;
