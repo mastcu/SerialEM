@@ -533,6 +533,12 @@
     <ClInclude Include="StepAdjustISDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CEOSFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\json.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1300,6 +1306,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="StepAdjustISDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CEOSFilter.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\json.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

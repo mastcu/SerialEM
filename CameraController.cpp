@@ -27,6 +27,7 @@
 #include "MultiShotDlg.h"
 #include "AutocenSetupDlg.h"
 #include "FalconHelper.h"
+#include "CEOSFilter.h"
 #include "PluginManager.h"
 #include "CalibCameraTiming.h"
 #include "AutoTuning.h"
@@ -443,6 +444,8 @@ CCameraController::CCameraController()
   mLastShotUsedCDS = -1;
   mNoFilterControl = false;
   mScreenInIfDetectorOut = -1;
+  mCEOSFilter = NULL;
+  mCEOSserverPort = 7081;
   mLastJeolDetectorID = -1;
   mConsetsShareChannelList = false;
   mDoseAdjustmentFactor = 0.;
@@ -562,6 +565,7 @@ CCameraController::~CCameraController()
   delete mConsDeferred;
   delete mBufDeferred;
   delete mExtraDeferred;
+  delete mCEOSFilter;
 }
 
 // Shut down timer to prevent updates
@@ -635,6 +639,7 @@ int CCameraController::Initialize(int whichCameras)
   float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
+  static bool firstTime = true;
   BOOL anyGIF = false;
   BOOL anyPreExp = false;
   bool differentK2s = false;
@@ -650,6 +655,26 @@ int CCameraController::Initialize(int whichCameras)
 
   
   CameraParameters *camP = &mAllParams[mWinApp->GetCurrentCamera()];
+  if (firstTime && !mCEOSserverIP.IsEmpty()) {
+    mCEOSFilter = new CCEOSFilter;
+    if (mCEOSFilter->Connect(mCEOSserverIP, mCEOSserverPort, report)) {
+      AfxMessageBox("Connection to CEOS filter failed with message:\n" + report +
+        "\n\nControl of the filter will not be available", MB_EXCLAME);
+      mNoFilterControl = true;
+    } else {
+      err = mCEOSFilter->GetFilterInfo(mNoSpectrumOffset);
+      if (err) {
+        report.Format("Getting information from CEOS filter failed with message:\n%s"
+          "\n\nControl of the filter will not be available", 
+          mCEOSFilter->GetErrorString(err));
+        AfxMessageBox(report, MB_EXCLAME);
+        mNoFilterControl = true;
+      }
+      mFilterUpdateID = ::SetTimer(NULL, 1, 500, FilterUpdateProc);
+    }
+  }
+  firstTime = false;
+
   if (mDynFocusInterval < 0)
     mDynFocusInterval = FEIscope ? 40 : 80;
   if (mStartDynFocusDelay < 0)
@@ -1206,7 +1231,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
     // If there is a GIF camera, first enforce the program state on the filter
     // then start an update timer to collect the state as it gets changed by other
     // interfaces
-    if (anyGIF && DMind == sGIFisSocket && !mNoFilterControl) {
+    if (anyGIF && DMind == sGIFisSocket && !mNoFilterControl && !mCEOSFilter) {
       if (SetupFilter())
         AfxMessageBox("An error occurred trying to initialize filter parameters.\n\n"
         "You probably need to start Filter Control and restart Digital Micrograph\n"
@@ -1483,7 +1508,7 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
         mAllParams[i].falconVariant = 1;
     }
   }
-  if (anyGIF) {
+  if (anyGIF && !mCEOSFilter) {
     if (!mTD.scopePlugFuncs)
       mTD.scopePlugFuncs = mScope->GetPlugFuncs();
     try {
@@ -10630,11 +10655,13 @@ int CCameraController::SetupFilter(BOOL acquiring)
 
   // Loss must be inverted if driving energy shift instead of spectrum offset for GIF
   double loss = mWinApp->mFilterControl.LossToApply() * 
-    ((mNoSpectrumOffset && !camParam->filterIsFEI) ? -1. : 1.);
+    ((mNoSpectrumOffset && !camParam->filterIsFEI && !mCEOSFilter) ? -1. : 1.);
   
   mIgnoreFilterDiffs = false;
   if (mSimulationMode || mNoFilterControl)
     return 0;
+
+  // FOR JEOL OMEGA FILTER
   if (JEOLscope && mScope->GetHasOmegaFilter() && mScope->GetInitialized()) {
     SEMAcquireJeolDataMutex();
     if (mTD.JeolSD->spectroscopy) {
@@ -10705,7 +10732,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
     return retval;
   }
 
-  // For Selectris filter
+  // FOR FEI SELECTRIS FILTER
   if (camParam->filterIsFEI) {
     double curWidth, curLoss, delOffset;
     int slitIsIn;
@@ -10737,6 +10764,45 @@ int CCameraController::SetupFilter(BOOL acquiring)
     return retval;
   }
  
+  // FOR CEOS FILTER
+  if (mCEOSFilter) {
+    BOOL slitIn;
+    float curWidth, curLoss, delOffset;
+    int mode;
+    retval = mCEOSFilter->GetFilterMode(mode);
+    if (!retval && mode > 0)
+      return 1;
+    if (!retval)
+      retval = mCEOSFilter->GetSlitState(slitIn, curWidth);
+    if (!retval && (!BOOL_EQUIV(slitIn, filtParam->slitIn) ||
+      fabs(filtParam->slitWidth - curWidth) > 0.04))
+      retval = mCEOSFilter->SetSlitState(filtParam->slitIn, filtParam->slitWidth);
+    if (!retval && !BOOL_EQUIV(slitIn, filtParam->slitIn))
+      Sleep((DWORD)mGIFslitInOutDelay);
+
+    if (!retval) {
+      retval = mCEOSFilter->GetEnergyLoss(curLoss);
+      delOffset = (float)fabs(loss - curLoss);
+      if (!retval && delOffset > 0.009) {
+        retval = mCEOSFilter->SetEnergyLoss((float)loss);
+        if (!retval) {
+          if (delOffset < mGIFoffsetDelayCrit)
+            Sleep((DWORD)(delayBase1 + delOffset * delaySlope1));
+          else
+            Sleep((DWORD)(delayBase2 + delOffset * delaySlope2));
+        }
+      }
+    }
+    if (retval) {
+      SEMMessageBox(CString("Error setting filter parameters: ") + 
+        mCEOSFilter->GetErrorString(retval));
+      return -1;
+    }
+    return 0;
+
+  }
+
+  // FOR GATAN FILTER
   if (!mDMInitialized[sGIFisSocket] && Initialize(INIT_GIF_CAMERA))
     return -1;
   if (CreateCamera(CREATE_FOR_GIF))
@@ -10848,91 +10914,119 @@ int CCameraController::CheckFilterSettings()
     return 0;
   }
 
-  // Initialize the energy shift time table
-  if (mShiftTimeIndex < 0) {
-    mShiftTimeIndex = 0;
-    for (int j = 0; j < MAX_ESHIFT_TIMES; j++)
-      eShiftTimes[j] = 0;
-    if (mNumZLPAlignChanges > MAX_ESHIFT_TIMES)
-      mNumZLPAlignChanges = MAX_ESHIFT_TIMES;
-  }
-
-  if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy || mTD.DoingTiltSums)
-    return 1;
-  if (CreateCamera(CREATE_FOR_GIF, false)) {
-    SetFilterSkipping();
-    return 2;
-  }
-  try {
-    if (mDebugMode) {
-      MainCallDMIndCamera(sGIFisSocket, SetDebugMode(false));
-    }
-    if (!mNoSpectrumOffset) {
-      command = "Number offset = IFCGetSpectrumOffset()\nExit(offset)";
-      offset = EasyRunScript(command, 0, sGIFisSocket); 
-    }
-    command = "Number retval = IFCGetSlitWidth() + 1000 * (IFCGetAperture() + "
-      "8 * IFCGetTVIn() + 16 *IFCGetSlitIn() + 32 * IFCGetFilterMode())\nExit(retval)";
-    width = EasyRunScript(command, 0, sGIFisSocket);
-    command = "Number shift = IFCGetEnergyShift()\nExit(shift)";
-    eShift = EasyRunScript(command, 0, sGIFisSocket);
-    if (mDebugMode) {
-      MainCallDMIndCamera(sGIFisSocket, SetDebugMode(true));
-    }
-    states = (int)floor(width / 1000. + 0.1);
-    width -= 1000. * states;
-    aperture = states & 7;
-    tvIn = (states & 8) > 0;
-    slitIn = (states & 16) > 0;
-    imageMode = (states & 32) > 0;
-
-    // Change slit width unless in spectroscopy mode or just came out of it
-    if (!mWasSpectroscopy && imageMode && fabs(width - filtParam->slitWidth) > 0.1) {
+  if (mCEOSFilter) {
+    float fwidth;
+    retval = mCEOSFilter->GetFilterMode(states);
+    imageMode = mWasSpectroscopy;
+    if (!retval)
+      imageMode = states == 0;
+    if (!retval)
+      retval = mCEOSFilter->GetSlitState(slitIn, fwidth);
+    if (!retval && mScope->GetSimulationMode() && filtParam->slitIn)
+      slitIn = true;
+    if (!retval && !mWasSpectroscopy && imageMode && (!BOOL_EQUIV(slitIn, filtParam) ||
+      fabs(fwidth - filtParam->slitWidth) > 0.1)) {
       changed = !mIgnoreFilterDiffs;
-      if (!timingOut && !mIgnoreFilterDiffs)
-        filtParam->slitWidth = (float)width;
-    }
-
-    // change slit in unless in spectroscopy mode or just came out of it
-    if (!mWasSpectroscopy && imageMode && 
-      (slitIn && !filtParam->slitIn || !slitIn && filtParam->slitIn)) {
-      changed = !mIgnoreFilterDiffs;
-      if (!timingOut && !mIgnoreFilterDiffs)
+      if (!timingOut && !mIgnoreFilterDiffs) {
+        filtParam->slitWidth = fwidth;
         filtParam->slitIn = slitIn;
-    }
-    
-    // If energy shift changed, record time and see if enough changes have happened
-    if (imageMode && fabs(eShift - mLastEnergyShift) > 0.1) {
-      mLastEnergyShift = eShift;
-      eShiftTimes[mShiftTimeIndex++] = curTime;
-      mShiftTimeIndex %= MAX_ESHIFT_TIMES;
-      timeDiff = 0.001 * curTime - 0.001 * eShiftTimes[(mShiftTimeIndex + 
-        MAX_ESHIFT_TIMES - mNumZLPAlignChanges) % MAX_ESHIFT_TIMES];
-      if (mDebugMode) {
-        report.Format("Energy shift change to %.1f at %.3f, %d-change time %.3f", 
-          eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
-      if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
-        mWinApp->mFilterControl.AdjustForZLPAlign();
-        mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       }
     }
+    if (retval) {
+      SetFilterSkipping();
+      retval = 3;
+    }
+  
+  } else {
 
-    // Do not touch energy loss - just let it be asserted by imaging
-    // Change energy loss if not in spectroscopy and TV is out
-    /*if (imageMode && !tvIn && fabs(offset - filtParam->energyLoss) > 0.1) {
-      changed = true;
-      filtParam->energyLoss = (float)offset;
-    } */
-    
-    // If the TV camera has been retracted, make sure flag is set to put it back in
-    // for using the other camera
-    if (camParam->hasTVCamera && camParam->useTVToUnblank && !tvIn)
-      camParam->useTVToUnblank = 1;
+    // Initialize the energy shift time table
+    if (mShiftTimeIndex < 0) {
+      mShiftTimeIndex = 0;
+      for (int j = 0; j < MAX_ESHIFT_TIMES; j++)
+        eShiftTimes[j] = 0;
+      if (mNumZLPAlignChanges > MAX_ESHIFT_TIMES)
+        mNumZLPAlignChanges = MAX_ESHIFT_TIMES;
+    }
+
+    if (!mDMInitialized[sGIFisSocket] || CameraBusy() || mCOMBusy || mTD.DoingTiltSums)
+      return 1;
+    if (CreateCamera(CREATE_FOR_GIF, false)) {
+      SetFilterSkipping();
+      return 2;
+    }
+    try {
+      if (mDebugMode) {
+        MainCallDMIndCamera(sGIFisSocket, SetDebugMode(false));
+      }
+      if (!mNoSpectrumOffset) {
+        command = "Number offset = IFCGetSpectrumOffset()\nExit(offset)";
+        offset = EasyRunScript(command, 0, sGIFisSocket);
+      }
+      command = "Number retval = IFCGetSlitWidth() + 1000 * (IFCGetAperture() + "
+        "8 * IFCGetTVIn() + 16 *IFCGetSlitIn() + 32 * IFCGetFilterMode())\nExit(retval)";
+      width = EasyRunScript(command, 0, sGIFisSocket);
+      command = "Number shift = IFCGetEnergyShift()\nExit(shift)";
+      eShift = EasyRunScript(command, 0, sGIFisSocket);
+      if (mDebugMode) {
+        MainCallDMIndCamera(sGIFisSocket, SetDebugMode(true));
+      }
+      states = (int)floor(width / 1000. + 0.1);
+      width -= 1000. * states;
+      aperture = states & 7;
+      tvIn = (states & 8) > 0;
+      slitIn = (states & 16) > 0;
+      imageMode = (states & 32) > 0;
+
+      // Change slit width unless in spectroscopy mode or just came out of it
+      if (!mWasSpectroscopy && imageMode && fabs(width - filtParam->slitWidth) > 0.1) {
+        changed = !mIgnoreFilterDiffs;
+        if (!timingOut && !mIgnoreFilterDiffs)
+          filtParam->slitWidth = (float)width;
+      }
+
+      // change slit in unless in spectroscopy mode or just came out of it
+      if (!mWasSpectroscopy && imageMode &&
+        (slitIn && !filtParam->slitIn || !slitIn && filtParam->slitIn)) {
+        changed = !mIgnoreFilterDiffs;
+        if (!timingOut && !mIgnoreFilterDiffs)
+          filtParam->slitIn = slitIn;
+      }
+
+      // If energy shift changed, record time and see if enough changes have happened
+      if (imageMode && fabs(eShift - mLastEnergyShift) > 0.1) {
+        mLastEnergyShift = eShift;
+        eShiftTimes[mShiftTimeIndex++] = curTime;
+        mShiftTimeIndex %= MAX_ESHIFT_TIMES;
+        timeDiff = 0.001 * curTime - 0.001 * eShiftTimes[(mShiftTimeIndex +
+          MAX_ESHIFT_TIMES - mNumZLPAlignChanges) % MAX_ESHIFT_TIMES];
+        if (mDebugMode) {
+          report.Format("Energy shift change to %.1f at %.3f, %d-change time %.3f",
+            eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
+          if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
+            mWinApp->mFilterControl.AdjustForZLPAlign();
+          mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+        }
+      }
+
+      // Do not touch energy loss - just let it be asserted by imaging
+      // Change energy loss if not in spectroscopy and TV is out
+      /*if (imageMode && !tvIn && fabs(offset - filtParam->energyLoss) > 0.1) {
+        changed = true;
+        filtParam->energyLoss = (float)offset;
+      } */
+
+      // If the TV camera has been retracted, make sure flag is set to put it back in
+      // for using the other camera
+      if (camParam->hasTVCamera && camParam->useTVToUnblank && !tvIn)
+        camParam->useTVToUnblank = 1;
+    }
+    catch (_com_error E) {
+      SetFilterSkipping();
+      retval = 3;
+    }
+    ReleaseCamera(CREATE_FOR_GIF);
   }
-  catch (_com_error E) {
-    SetFilterSkipping();
-    retval = 3;
-  }
+
   if (changed && !timingOut) {
     mWinApp->mFilterControl.UpdateSettings();
     if (mDebugMode) {
@@ -10941,7 +11035,6 @@ int CCameraController::CheckFilterSettings()
     }
   }
   
-  ReleaseCamera(CREATE_FOR_GIF);
 
   // The first time back from spectroscopy, reassert the filter params for slit etc
   if (!retval && imageMode && (mWasSpectroscopy || (timingOut && changed))) {

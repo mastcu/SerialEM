@@ -236,6 +236,14 @@
              is on the system path.
           </TD>
         </TR>
+       <TR VALIGN="top">
+          <TD>PythonIncludePath</TD>
+          <TD>List of directories to search for a file to be included in a Python script with 
+            '#includeFile'.&nbsp; The current directory will be searched first, then each directory in the
+            list until the file is found.&nbsp; Separate multiple directories with semicolons and do not
+            include any extra spaces before or after a directory.
+          </TD>
+        </TR>
         <TR VALIGN="top">
           <TD>EnableExternalPython</TD>
           <TD>Set to 1 to allow externally run Python scripts to control SerialEM.&nbsp; This property
@@ -1214,8 +1222,19 @@
       <P><A NAME="gif_properties"></A><B>Energy filter properties</B></P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
+          <TD>CEOSServerIP</TD>
+          <TD>IP address of a CEOS filter; this property alone indicates that the system has a
+            CEOS energy filter.&nbsp; The camera(s) on the end of this filter should have the
+             property 'GIF 1'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CEOSServerPort</TD>
+          <TD>Port for connecting to a CEOS filter; the default is 7081 and this property 
+            should not be needed.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>BiggestGIFApertureNumber</TD>
-          <TD>The number of the aperture that must be in place for imaging. You could image
+          <TD>The number of a GIF aperture that must be in place for imaging. You could image
             an aperture by entering its number here.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1241,7 +1260,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>FilterSlitInOutDelay</TD>
-          <TD>Delay time in DM ticks (60th of second) with a GIF, or in msec with an omega or Thermo/FEI
+          <TD>Delay time in DM ticks (60th of second) with a GIF, or in msec with an omega, Thermo/FEI, or CEOS
             filter, when inserting or retracting slit.&nbsp; Default is 18; for this and other filter delays,
             the default is not scaled to be used as msec so default delays are 16 times longer for GIFs.</TD>
         </TR>
@@ -1253,7 +1272,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>FilterOffsetDelayBase1</TD>
-          <TD>Base delay (in ticks for GIF, msec for Omega or Thermo/FEI filter) for offsets less than the criterion.
+          <TD>Base delay (in ticks for GIF, msec for Omega, Thermo/FEI, or CEOS filter) for offsets less than the criterion.
             Default is 10.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1263,7 +1282,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>FilterOffsetDelayBase2</TD>
-          <TD>Base delay (in ticks for GIF, msec for Omega or Thermo/FEI filter)) for offsets greater than the criterion.&nbsp;
+          <TD>Base delay (in ticks for GIF, msec for Omega, Thermo/FEI or CEOS filter)) for offsets greater than the criterion.&nbsp;
             Default is 30.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1273,9 +1292,16 @@
         </TR>
         <TR VALIGN="top">
           <TD>NoSpectrumOffset</TD>
-          <TD>Set to 1 to indicate that Spectrum Offset cannot be set and Energy Shift
+          <TD>Set to 1 for a GIF to indicate that Spectrum Offset cannot be set and Energy Shift
             should be set instead.&nbsp; This is generally needed on JEOLs, and is needed
-            with a Quantum Life Science energy filter that lacks spectroscopy mode.</TD>
+            with a Quantum Life Science energy filter that lacks spectroscopy mode.&nbsp; For a CEOS filter,
+            set to 1 to set energy loss using only the high tension offset.&nbsp; Otherwise, the 
+            liner tube voltage will be used if possible, and high tension offset will be adjusted instead 
+            only if setting the energy shift with liner tube voltage would make it go out of range.&nbsp; In
+            either case, the energy shift reported by the program is the sum of high tensin offset and liner 
+            tube voltage.&nbsp; It is recommended that the high tension offset be set to -50, and liner 
+            tube voltage adjusted to compensate, to avoid transitions between the two methods of setting shift.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>MaximumSlitWidth</TD>

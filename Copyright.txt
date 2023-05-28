@@ -68,7 +68,8 @@ SerialEM uses Intel Math Kernel Library FFT routines under a purchased
 license.
 
 SerialEM also uses a Set dialog DPI helper class, Copyright (C) 2003 by George
-Yohng, and XFolderDialog by Hans Dietrich.
+Yohng, XFolderDialog by Hans Dietrich, and simpleson by Gregory Eslinger,
+which is covered by an MIT license.
 
 This work was supported in the past by NIH P41 grants from NCRR and NIGMS to
 J. Richard McIntosh and Andreas Hoenger.

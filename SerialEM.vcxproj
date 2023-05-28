@@ -901,6 +901,7 @@
     <ClInclude Include="AutoContouringDlg.h" />
     <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="BaseServer.h" />
+    <ClInclude Include="CEOSFilter.h" />
     <ClInclude Include="ComaVsISCalDlg.h" />
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DefineScriptMacros.h" />
@@ -989,6 +990,7 @@
     <ClInclude Include="ImageLevelDlg.h" />
     <ClInclude Include="Shared\imodconfig.h" />
     <ClInclude Include="K2SaveOptionDlg.h" />
+    <ClInclude Include="Utilities\json.h" />
     <ClInclude Include="Utilities\KGetOne.h" />
     <ClInclude Include="Image\KImage.h" />
     <ClInclude Include="Image\KImageBase.h" />
@@ -1748,6 +1750,7 @@ echo.
     <ClCompile Include="AutoContouringDlg.cpp" />
     <ClCompile Include="AutoTuning.cpp" />
     <ClCompile Include="BaseServer.cpp" />
+    <ClCompile Include="CEOSFilter.cpp" />
     <ClCompile Include="ComaVsISCalDlg.cpp" />
     <ClCompile Include="CtffindParamDlg.cpp" />
     <ClCompile Include="DERefMakerDlg.cpp" />
@@ -2429,6 +2432,18 @@ echo.
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="K2SaveOptionDlg.cpp" />
+    <ClCompile Include="Utilities\json.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Utilities\KGetOne.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">Disabled</Optimization>

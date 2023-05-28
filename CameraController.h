@@ -25,6 +25,7 @@
 #include "EMscope.h"
 class DirectElectronCamera;
 struct CamPluginFuncs;
+class CCEOSFilter;
 
 #define MAX_DARK_REFS   10
 #define MAX_CHANNELS     8
@@ -598,6 +599,8 @@ public:
   SetMember(int, NextMinTiltGap);
   GetSetMember(BOOL, NoFilterControl);
   GetSetMember(int, ScreenInIfDetectorOut);
+  SetMember(CString, CEOSserverIP);
+  GetSetMember(int, CEOSserverPort);
   GetSetMember(BOOL, ConsetsShareChannelList);
   SetMember(BOOL, SaveInEERformat);
   GetSetMember(int, RotFlipInFalcon3ComFile);
@@ -1036,6 +1039,9 @@ public:
   BOOL mAcquireFloatImages;      // Flag to get float image back if camera supports it
   BOOL mWarnIfBeamNotOn;         // Do not warn if valves are closes when taking a picture
   BOOL mNoFilterControl;         // Flag that there is no control of the energy filter
+  int mCEOSserverPort;           // Port for CEOS
+  CString mCEOSserverIP;         // IP address
+  CCEOSFilter *mCEOSFilter;      // Module for interface
   int mLastJeolDetectorID;       // ID of last detector selected
   float mISXcameraOffset[MAX_CAMERAS];
   float mISYcameraOffset[MAX_CAMERAS];
