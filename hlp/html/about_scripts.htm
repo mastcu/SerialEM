@@ -832,11 +832,32 @@
         script to be included in another script.&nbsp; '#LongName' can also be included
          to specify a long name for the script.
       </li>
-      <li>Other Python scripts can be included at any point in the script, specified by their 
+      <li>Other Python scripts within SerialEM can be included at any point in the script, specified by their 
         names:<br /> #include name
         <br />The other scripts should all start with '#!Python' and a '#serialemPrefix' 
         or serialem import line so that the editor 
         behaves correctly, even if they are never run on their own.</li>
+      <li>Python scripts in separate files can be included at any point in the script 
+        with:<br />
+         #includeFile filename<br />
+        thus allowing you to edit scripts in an external editor of your choice and run 
+        them immediately within SerialEM.&nbsp; These points apply:
+        <ul><li>'includefile' is also recognized</li> 
+          <li>'filename' can be either the full path to the file or just the name of a file 
+            in either the current directory or one of the directories on a path list in the property 'PythonIncludePath'.</li>
+          <li> Like a 
+        Windows executable path, the list in 'PythonIncludePath' can have multiple directories separated by semicolons 
+        (but extra spaces must be avoided). The current directory is searched before the 
+        directories on the path list.</li>
+          <li> The filename can include a path relative to the current directory or one of 
+            the directories in the path list.&nbsp; The program simply appends 'filename' 
+            after each path in the list to look for the file.</li>
+          <li> Python exception reporting will show the line number within the file but not 
+            the text of the line.</li>
+          <li> There is no need for #!Python or a serialem import line unless you plan to 
+            edit within SerialEM also.</li>
+          </ul> 
+      </li>
       <li>The script sent to Python consists of some initial lines, your script indented 
         in a 'try' block, and exception handlers at the end.&nbsp; The additional lines 
         are referred to as the &quot;script wrapper&quot; below.</li>

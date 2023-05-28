@@ -182,6 +182,7 @@ public:
   GetMember(CString, EnteredName);
   SetMember(HWND, FocusedWndWhenSavedStatus);
   GetSetMember(BOOL, KeepOneLineFocus);
+  GetSetMember(CString, PyIncludePath);
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -416,6 +417,7 @@ protected:
   IntVec mMacStartLineInScrp;  // And the starting line of that block in the composite
   IntVec mFirstRealLineInPart; // Macro line number of first non-blank line in a block
   int mLastPythonErrorLine;    // Last line number and error happened on
+  std::vector<std::string> mIncludedFiles;
   std::vector<std::string> mPathsToPython;
   std::vector<std::string> mVersionsOfPython;
   CString mPyModulePath;       // Module path set by property or set as default
@@ -448,6 +450,7 @@ protected:
   bool mHighlightStatus[NUM_CM_MESSAGE_LINES];
   BOOL mMonospaceStatus;
   BOOL mKeepOneLineFocus;
+  CString mPyIncludePath;
 
 public:
   void SetNumCamMacRows(int inVal);

@@ -3427,7 +3427,11 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("PythonModulePath")) {
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetPyModulePath(message);
-      
+
+      } else if (MatchNoCase("PythonIncludePath")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mMacroProcessor->SetPyIncludePath(message);
+
       } else if (MatchNoCase("PathToPython")) {
         if (strItems[2].IsEmpty()) {
           AfxMessageBox("Entry must contain a version number then the path in properties"
@@ -3726,7 +3730,8 @@ int CParameterIO::ReadProperties(CString strFileName)
               channelSets->Add(chanSet);
           }
 
-      }
+      } else if (MatchNoCase("CEOSServerIP"))
+        camera->SetCEOSserverIP(strItems[1]);
 
       // Hitachi
       else if (MatchNoCase("HitachiIPaddress"))

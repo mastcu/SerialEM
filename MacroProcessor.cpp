@@ -4499,12 +4499,16 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   int currentInd, int lastInd, int startLine)
 {
   bool isPython;
-  int ind, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
+  int ind, fail, size, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
   int pyVersion = 0;
-  CString indentStr, modulePath = mPyModulePath;
+  CFile *file = NULL;
+  unsigned char *buffer = NULL;
+  CString indentStr, fileName, fileStr, errStr, modulePath = mPyModulePath;
+  CString includePath, tryPath;
+  CFileStatus status;
 
   // Test for scripting language
-  int includeInd, count;
+  int includeInd = -1, count;
   CString name, line;
   if (lastInd < 0)
     lastInd = mMacros[macNum].GetLength();
@@ -4583,6 +4587,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   mIndexOfSrcLine.clear();
   mMacNumAtScrpLine.clear();
   mMacStartLineInScrp.clear();
+  mIncludedFiles.clear();
   if (isPython) {
     startLine += 27;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
@@ -4644,6 +4649,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 
   mIndexOfSrcLine.push_back(0);
   mLineInSrcMacro.push_back(lineNum++);
+  mIncludedFiles.push_back("");
   mMacroForScrpLang += indentStr + line;
 
   // Now build up the string, indenting for python and inserting any #include scripts in
@@ -4669,19 +4675,111 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       continue;
     if (name.Find("#include") != 0)
       continue;
-    includeInd = FindCalledMacro(name.Mid(1), true);
-    if (includeInd < 0)
-      return 1;
+
+    // Process an #includeFile entry
+    if (name.Find("#includeFile") == 0 || name.Find("#includefile") == 0) {
+      fail = 0;
+      includePath = mPyIncludePath;
+
+      // get the file name
+      fileName = name.Mid(strlen("#includefile"));
+      while (fileName.GetLength() > 0 && fileName.GetAt(0) == ' ')
+        fileName = fileName.Mid(1);
+      if (fileName.IsEmpty()) {
+        SEMMessageBox("A filename must be included after #includeFile");
+        return 1;
+      }
+
+      // If there is no include path or it looks like an absolute path, use it as is
+      if (includePath.IsEmpty() || (fileName.GetAt(0) == '\\' || fileName.GetAt(0) == '/' ||
+        (fileName.GetLength() > 3 && fileName.GetAt(1) == ':' &&
+        (fileName.GetAt(2) == '\\' || fileName.GetAt(2) == '/')))) {
+        if (!CFile::GetStatus((LPCTSTR)fileName, status)) {
+          SEMMessageBox("File to be included does not exist: " + fileName);
+          return 1;
+        }
+      } else {
+
+        // Otherwise put current directory on front of path then extract each path entry
+        includePath = ".;" + includePath;
+        for (;;) {
+          ind = includePath.Find(";");
+          if (ind > 0) {
+            tryPath = includePath.Left(ind);
+
+            // Leave shorter path or set index -1 if at end
+            if (includePath.GetLength() > ind + 1)
+              includePath = includePath.Mid(ind + 1);
+            else
+              ind = -1;
+          } else
+            tryPath = includePath;
+
+          // If file is there, great, make full name and proceed
+          if (CFile::GetStatus((LPCTSTR)(tryPath + "\\" + fileName), status)) {
+            fileName = tryPath + "\\" + fileName;
+            break;
+          }
+
+          // If index is no good, it is all over, can't find it
+          if (ind <= 0) {
+            SEMMessageBox("Cannot find " + fileName +
+              " in the current path or on the PythonIncludePath");
+            return 1;
+          }
+        }
+      }
+
+      // Get the text just as when loading a script in editor
+      try {
+        errStr = "Opening included file " + fileName;
+        file = new CFile(fileName, CFile::modeRead | CFile::shareDenyWrite);
+        size = (int)file->GetLength();
+        NewArray(buffer, unsigned char, size + 5);
+        if (buffer) {
+          errStr = "Reading included file " + fileName;
+          ind = file->Read((void *)buffer, size);
+          B3DCLAMP(ind, 0, size);
+          buffer[ind] = 0x00;
+          fileStr = buffer;
+        } else {
+          errStr = "Allocating memory for reading included file " + fileName;
+          fail = 1;
+        }
+      }
+      catch (CFileException *err) {
+        err->Delete();
+        fail = 1;
+      }
+
+      // Clean up, error out if error
+      delete file;
+      delete buffer;
+      if (fail) {
+        SEMMessageBox(errStr);
+        return 1;
+      }
+
+    } else {
+
+      // regular include of other script
+      includeInd = FindCalledMacro(name.Mid(1), true);
+      if (includeInd < 0)
+        return 1;
+    }
 
     // Finish the previous block, set up new block for include and add it in
     mFirstRealLineInPart.push_back(firstRealLine);
     mMacNumAtScrpLine.push_back(includeInd);
     mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
-    IndentAndAppendToScript(mMacros[includeInd], mMacroForScrpLang, indentStr, isPython);
+    mIncludedFiles.push_back(includeInd < 0 ? (LPCTSTR)fileName : "");
+    IndentAndAppendToScript(includeInd < 0 ? fileStr : mMacros[includeInd], 
+      mMacroForScrpLang, indentStr, isPython);
 
     // Start new block of main script
     mMacNumAtScrpLine.push_back(macNum);
     mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
+    mIncludedFiles.push_back("");
     firstRealLine = -1;
   }
   mFirstRealLineInPart.push_back(firstRealLine);
@@ -4857,9 +4955,13 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
         lineInSrc = mLineInSrcMacro[lineNum];
         indInSrc = mIndexOfSrcLine[lineNum];
         macNum = mMacNumAtScrpLine[ind];
-        name = mMacNames[macNum];
-        if (name.IsEmpty())
-          name.Format("Script #%d", macNum + 1);
+        if (macNum < 0) {
+          name = mIncludedFiles[ind].c_str();
+        } else {
+          name = mMacNames[macNum];
+          if (name.IsEmpty())
+            name.Format("Script #%d", macNum + 1);
+        }
         numStr.Format("line %d, in %s", lineInSrc + 1, (LPCTSTR)name);
         mLastPythonErrorLine = lineInSrc + 1;
 
@@ -4878,12 +4980,13 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
             line += "   (or maybe just before #include " + name + ")";
           else
             line += "   (or maybe right at the end of " + 
-            mMacNames[mMacNumAtScrpLine[ind - 1]] + ")";
+            (mMacNumAtScrpLine[ind - 1] < 0 ? CString(mIncludedFiles[ind - 1].c_str()) : 
+              mMacNames[mMacNumAtScrpLine[ind - 1]]) + ")";
         }
         mWinApp->AppendToLog(line);
 
         // Output line itself
-        if (indComma >= 0) {
+        if (indComma >= 0 && macNum >= 0) {
           GetNextLine(&mMacros[macNum], indInSrc, line);
           line.TrimRight(" \r\n");
           mWinApp->AppendToLog(line);
@@ -4897,7 +5000,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
     mWinApp->AppendToLog(attribErr);
 
   // Try to show error
-  if (mLastPythonErrorLine > 0 && mMacroEditer[macNum]) 
+  if (macNum >= 0 && mLastPythonErrorLine > 0 && mMacroEditer[macNum]) 
     mMacroEditer[macNum]->SelectAndShowLine(mLastPythonErrorLine);
 }
 
