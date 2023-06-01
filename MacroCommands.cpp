@@ -6291,6 +6291,7 @@ int CMacCmd::ReportMeanCounts(void)
 int CMacCmd::ReportFileZsize(void)
 {
   int index;
+  MontParam *param = mWinApp->GetMontParam();
 
   if (!mWinApp->mStoreMRC)
     SUSPEND_LINE("because there is no open image file to report for line: \n\n");
@@ -6298,7 +6299,12 @@ int CMacCmd::ReportFileZsize(void)
     SUSPEND_NOLINE("because of file write error");
   index = mWinApp->mStoreMRC->getDepth();
   mLogRpt.Format("Z size of file = %d", index);
-  SetRepValsAndVars(1, (double)index);
+  if (mWinApp->Montaging()) {
+    mStrCopy.Format("   # of montage sections = %d", param->zCurrent);
+    SetRepValsAndVars(1, (double)index, param->zCurrent);
+    mLogRpt += mStrCopy;
+  } else
+    SetRepValsAndVars(1, (double)index);
   return 0;
 }
 
