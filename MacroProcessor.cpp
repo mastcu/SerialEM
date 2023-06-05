@@ -4682,7 +4682,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       includePath = mPyIncludePath;
 
       // get the file name
-      fileName = name.Mid(strlen("#includefile"));
+      fileName = name.Mid((int)strlen("#includefile"));
       while (fileName.GetLength() > 0 && fileName.GetAt(0) == ' ')
         fileName = fileName.Mid(1);
       if (fileName.IsEmpty()) {

@@ -914,8 +914,10 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   CmdItem *cmdList;
   CString substr, importName, nameSpace;
   const char *first, *other;
-  const char *prevKeys[] = {"LOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY", "CATCH"};
-  const char *curKeys[] = {"ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION", "CATCH",
+  const char *prevKeys[] = {"LOOP", "DOLOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY", 
+    "CATCH"};
+  const char *curKeys[] = {"ENDLOOP", "ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION",
+    "CATCH",
     "ENDTRY"};
   const char *curPythKeys[] = {"EXCEPT", "ELSE:", "ELIF"};
   char *pythKeywords[] = {"FOR", "IF", "ELSE:", "ELIF", "TRY:", "WHILE", "DEF", "RETURN",
