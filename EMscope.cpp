@@ -526,6 +526,7 @@ CEMscope::CEMscope()
   mFegFlashCounter = 0;
   mLastBeamCurrentTime = -1.e9;
   mSkipNormalizations = 0;
+  mUtapiConnected = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;

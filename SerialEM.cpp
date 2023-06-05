@@ -3012,7 +3012,15 @@ int SEMUseTEMScripting()
 }
 int DLL_IM_EX SEMUseUtapiScripting()
 {
-  return ((CSerialEMApp *)AfxGetApp())->mScope->GetUseUtapiScripting();;
+  return ((CSerialEMApp *)AfxGetApp())->mScope->GetUseUtapiScripting();
+}
+int DLL_IM_EX SEMGetSimulationMode()
+{
+  return ((CSerialEMApp *)AfxGetApp())->mScope->GetSimulationMode();
+}
+void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags)
+{
+  ((CSerialEMApp *)AfxGetApp())->mScope->SetUtapiConnected(flags);
 }
 HitachiParams *SEMGetHitachiParams()
 {

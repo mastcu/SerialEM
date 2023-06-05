@@ -502,6 +502,8 @@ public:
   GetSetMember(int, SkipNormalizations);
   GetSetMember(BOOL, ConstantBrightInNano);
   GetSetMember(int, MinInitializeJeolDelay);
+  GetSetMember(unsigned int, UtapiConnected);
+
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   void SetDetectorOffsets(float inX, float inY) { mDetectorOffsetX = inX; mDetectorOffsetY = inY; };
@@ -869,6 +871,7 @@ private:
   double mFEGBeamCurrent;      // Last value gotten
   BOOL mConstantBrightInNano;  // Brightness does not change with intensity in nanoprobe
   int mMinInitializeJeolDelay; // So a warning can be issued if it is too low
+  unsigned int mUtapiConnected; // Possible set of flags for capabilities available
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

@@ -399,6 +399,8 @@ int DLL_IM_EX SEMInitializeWinsock(void);
 double DLL_IM_EX SEMWallTime();
 int DLL_IM_EX SEMUseTEMScripting();
 int DLL_IM_EX SEMUseUtapiScripting();
+int DLL_IM_EX SEMGetSimulationMode();
+void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags);
 int DLL_IM_EX SEMNumFEIChannels();
 HitachiParams DLL_IM_EX *SEMGetHitachiParams();
 int DLL_IM_EX *SEMGetLastHitachiMember();
