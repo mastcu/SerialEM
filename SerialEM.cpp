@@ -4204,7 +4204,8 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
 
     // Switch EFTEM lens mode if needed
     needed = mEFTEMMode && (!mScope->GetCanControlEFTEM() ||
-      (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag));
+      (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag)) && 
+      !mScope->GetUseFilterInTEMMode();
     mScope->SetEFTEM(needed);
 
     // Restore low dose params, go to the area officially

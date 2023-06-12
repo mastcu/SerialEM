@@ -608,6 +608,7 @@ public:
   GetSetMember(BOOL, RamperWaitForBlank);
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
+  bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
   void GetProcessingCoords(int &binning, int &top, int &left, int &bot, int &right) {

@@ -527,6 +527,7 @@ CEMscope::CEMscope()
   mLastBeamCurrentTime = -1.e9;
   mSkipNormalizations = 0;
   mUtapiConnected = 0;
+  mUseFilterInTEMMode = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -1420,7 +1421,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     oldNeutralInd = mNeutralIndex;
     oldOffCalInd = newOffCalInd = (mWinApp->GetEFTEMMode() ? 1 : 0);
     toCam = mWinApp->GetCurrentCamera();
-    if (JEOLscope && !mHasOmegaFilter && mJeolSD.JeolEFTEM >= 0) {
+    if (JEOLscope && !mHasOmegaFilter && mJeolSD.JeolEFTEM >= 0 && !mUseFilterInTEMMode) {
       updateEFTEMSpectroscopy(EFTEM);
       changedJeolEFTEM = mNeutralIndex != (mWinApp->GetEFTEMMode() ? 1 : 0);
       newOffCalInd = mNeutralIndex;
@@ -2041,7 +2042,7 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
 
     // otherwise determine needed state of lenses: if screen is up or screen is
     // down and auto mag change disabled, it needs to be on
-    else if (mWinApp->GetEFTEMMode() && mCanControlEFTEM) {
+    else if (mWinApp->GetEFTEMMode() && mCanControlEFTEM && !mUseFilterInTEMMode) {
       needed = (screenPos == spUp || !mFiltParam->autoMag ||
         mWinApp->mMultiTSTasks->AutocenTrackingState());
       if (needed && !EFTEM || !needed && EFTEM) 

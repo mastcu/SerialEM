@@ -503,6 +503,7 @@ public:
   GetSetMember(BOOL, ConstantBrightInNano);
   GetSetMember(int, MinInitializeJeolDelay);
   GetSetMember(unsigned int, UtapiConnected);
+  GetSetMember(BOOL, UseFilterInTEMMode);
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -872,6 +873,7 @@ private:
   BOOL mConstantBrightInNano;  // Brightness does not change with intensity in nanoprobe
   int mMinInitializeJeolDelay; // So a warning can be issued if it is too low
   unsigned int mUtapiConnected; // Possible set of flags for capabilities available
+  BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

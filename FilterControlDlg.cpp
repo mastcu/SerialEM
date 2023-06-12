@@ -57,6 +57,7 @@ CFilterControlDlg::CFilterControlDlg(CWnd* pParent /*=NULL*/)
   mSlitOffset = 40.;
   mLastMagInLM = -1;
   mWarnedJeolLM = false;
+  mParam = NULL;
 }
 
 
@@ -264,7 +265,7 @@ BOOL CFilterControlDlg::OnInitDialog()
     if (mParam->positiveLossOnly)
       m_butOffsetSlit.ShowWindow(SW_SHOW);
   } else {
-    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() &&
+    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() && 
       !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? SW_SHOW : SW_HIDE);
     EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope);
   }
@@ -291,6 +292,7 @@ void CFilterControlDlg::Update()
   BOOL slitOK = true, lossOK = true, noControl = false;
   BOOL bEnable = !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode();
   BOOL bOmega = mWinApp->mScope->GetHasOmegaFilter();
+  BOOL bUseTEM = mWinApp->mScope->GetUseFilterInTEMMode();
   if (mWinApp->mCamera) {
     bEnable = bEnable && !mWinApp->mCamera->CameraBusy();
     noControl = mWinApp->mCamera->GetNoFilterControl();
@@ -302,7 +304,8 @@ void CFilterControlDlg::Update()
   }
   m_butEFTEMMode.EnableWindow(!mWinApp->DoingTasks() && !bOmega && 
     (mWinApp->mScope->GetCanControlEFTEM() || (JEOLscope && 
-    mWinApp->mScope->FastMagIndex() < mWinApp->mScope->GetLowestMModeMagInd())));
+    (mWinApp->mScope->FastMagIndex() < mWinApp->mScope->GetLowestMModeMagInd()) ||
+      mWinApp->mCamera->HasCEOSFilter())));
   m_butDoMagShifts.EnableWindow(bEnable && !noControl);
   m_butOffsetSlit.EnableWindow(bEnable && bOmega);
   EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope && bEnable);
@@ -319,14 +322,17 @@ void CFilterControlDlg::Update()
   m_sbcLoss.EnableWindow(bEnable);
   m_butAutoCamera.EnableWindow(!mWinApp->DoingComplexTasks() && 
     mWinApp->GetAdministrator() && !bOmega);
-  bEnable = !bOmega && !mWinApp->DoingTasks() && mParam->firstRegularCamera >= 0;
+  bEnable = !bOmega && !mWinApp->DoingTasks() && mParam->firstRegularCamera >= 0 && 
+    !bUseTEM;
   m_butMatchIntensity.EnableWindow(bEnable && !mWinApp->LowDoseMode());
   m_butMatchPixel.EnableWindow(bEnable);
-  m_butAutoMag.EnableWindow(!bOmega);
+  m_butAutoMag.EnableWindow(!bOmega && !bUseTEM);
 }
 
 void CFilterControlDlg::UpdateSettings()
 {
+  if (!mParam)
+    return;
   m_bAutoCamera = mParam->autoCamera;
   m_bAutoMag = mParam->autoMag;
   m_bMatchPixel = mParam->matchPixel;
@@ -367,7 +373,7 @@ void CFilterControlDlg::NewMagUpdate(int inMag, BOOL EFTEM)
   if (JEOLscope && !mWinApp->mScope->GetHasOmegaFilter() && inLM != mLastMagInLM 
     && mWinApp->mScope->GetUseJeolGIFmodeCalls() <= 0) {
     Update();
-    if (inLM && !mWarnedJeolLM) {
+    if (inLM && !mWarnedJeolLM && !mWinApp->mScope->GetUseFilterInTEMMode()) {
       mWarnedJeolLM = true;
       mWinApp->AppendToLog("\r\nWARNING: GIF MODE CANNOT BE DETECTED IN LOW MAG:\r\n"
         "   TOGGLE THE EFTEM MODE CHECKBOX WHEN YOU GO IN OR OUT OF GIF MODE IN LM\r\n");

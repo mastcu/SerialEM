@@ -310,11 +310,15 @@ int CCEOSFilter::GetFilterInfo(BOOL noSpectrumOffset)
 int CCEOSFilter::GetFilterMode(int &mode)
 {
   json::jobject params, result;
+  CString str;
   int err = PackSendReceiveAndUnpack(params, "getFilterMode", result);
   if (err)
     return err;
   try {
-    mode = ((std::string)result["mode"]).compare("esi") != 0 ? 1 : 0;
+
+    // It is esi on simulator and ESI for real
+    str = ((std::string)result["mode"]).c_str();
+    mode = str.CompareNoCase("esi") != 0 ? 1 : 0;
   }
   catch (json::invalid_key key) {
     return CEOSERR_NO_KEY;
@@ -386,7 +390,7 @@ int CCEOSFilter::GetSlitState(BOOL &slitIn, float &width)
   if (err)
     return err;
   try {
-    slitIn = ((std::string)result["configuration"]).compare("in") == 0;
+    slitIn = ((std::string)result["configuration"]).compare("window") == 0;
     if (result.has_key("width"))
       width = (float)result["width"];
   }
@@ -401,12 +405,10 @@ int CCEOSFilter::SetSlitState(BOOL slitIn, float width)
 {
   json::jobject params, result;
   int err;
-  params["configuration"] = slitIn ? "in" : "out";
+  params["configuration"] = slitIn ? "window" : "out";
   if (slitIn)
     params["width"] = width;
   err = PackSendReceiveAndUnpack(params, "setSlit", result);
-  if (mWinApp->mScope->GetSimulationMode() && err == CEOSERR_SERVER_ERR && slitIn)
-    return 0;
   return err;
 }
 

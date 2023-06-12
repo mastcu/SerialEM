@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/11/23: Added property to allow energy filter to be used without switching
+scope into EFTEM/GIF mode, and fixed problems with CEOS support.
+
 5/28/23: Added ability to include a file into a Python script.
 
 5/28/23: Added support for CEOS energy filter.
@@ -14,7 +17,7 @@ for Realign to Item in Low Dose mode.
 added difraction shift functions.
 
 5/24/23: Added script command to turn off Acquire for Navigator points too
-close to a supllied boundary or the convex hull of the points.
+close to a supplied boundary or the convex hull of the points.
 
 5/24/23: Changed installer in anticipation for when FrameGPU4.dll is no longer
 included in the package, which will occur on the next substantive change in
