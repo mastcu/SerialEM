@@ -902,6 +902,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
   if (mParam->K2Type == K3_TYPE && mCurSet->K2ReadMode > 0)
     mCurSet->K2ReadMode = COUNTING_MODE;
   *modeP = mCurSet->K2ReadMode;
+  if (IS_ALPINE(mParam) && !mCamera->GetShowLinearForAlpine() &&
+    mCurSet->K2ReadMode == K2_LINEAR_MODE)
+    *modeP = K2_COUNTING_MODE;
+
   if (CamHasDoubledBinnings(mParam)) {
     radio = (CButton *)GetDlgItem(IDC_RBIN1);
     radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
@@ -1385,7 +1389,7 @@ void CCameraSetupDlg::ManageCamera()
   int canConfig, state;
   BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, 0, true};
   bool twoRowPos;
-  bool alpine = IS_ALPINE(mParam);
+  bool alpine = IS_ALPINE(mParam) && !mCamera->GetShowLinearForAlpine();
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
     IDC_ALIGN_DOSE_FRAC, IDC_STAT_ANTIALIAS, IDC_STAT_SAVE_SUMMARY, 

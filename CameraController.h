@@ -608,6 +608,7 @@ public:
   GetSetMember(BOOL, RamperWaitForBlank);
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
+  GetSetMember(BOOL, ShowLinearForAlpine);
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
@@ -1052,6 +1053,7 @@ public:
   bool mSuspendFilterUpdates;    // Flag that current operation uses advanced scripting
   int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
   BOOL mRamperWaitForBlank;      // Flag to wait for blank when measuring STEMM flyback
+  BOOL mShowLinearForAlpine;     // Show linear mode in setup dialog for Alpine camera
 
 public:
   void SetNonGatanPostActionTime(void);

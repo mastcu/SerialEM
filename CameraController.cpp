@@ -454,6 +454,7 @@ CCameraController::CCameraController()
   mSuspendFilterUpdates = false;
   mRamperWaitForBlank = false;
   mTakeUnbinnedIfSavingEER = false;
+  mShowLinearForAlpine = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup

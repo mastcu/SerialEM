@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/13/23: Added property to show linear/counting mode buttons for an Alpine
+camera, and made setup dialog change the setting from linear to counting if
+those buttons are not shown.
+
 6/11/23: Added property to allow energy filter to be used without switching
 scope into EFTEM/GIF mode, and fixed problems with CEOS support.
 
