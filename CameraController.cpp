@@ -454,7 +454,7 @@ CCameraController::CCameraController()
   mSuspendFilterUpdates = false;
   mRamperWaitForBlank = false;
   mTakeUnbinnedIfSavingEER = false;
-  mShowLinearForAlpine = false;
+  mShowLinearForAlpine = true;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -3166,9 +3166,10 @@ void CCameraController::Capture(int inSet, bool retrying)
         conSet.processing = DARK_SUBTRACTED;
   }
 
-  // For Alpine, set mode to counting
-  if (IS_ALPINE(mParam))
-    conSet.K2ReadMode = COUNTING_MODE;
+  // For Alpine, DO NOT set mode to counting here, let the camera setup take care of this
+  // if appropriate
+  //if (IS_ALPINE(mParam))
+    //conSet.K2ReadMode = COUNTING_MODE;
 
   // For K3, unprocessed for counting mode is really raw and not the same as DS so promote
   if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
