@@ -1508,6 +1508,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   // Go ahead and compute the dose and set it so that the intensity can be checked
   mean = mWinApp->mProcessImage->WholeImageMean(imBuf);
   mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)mean, doseRate);
+
   pixel = 10000. * BinDivisorI(camParam) * 
     mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
   if (camParam->DE_camType && (camParam->CamFlags & DE_APOLLO_CAMERA))
@@ -1529,6 +1530,13 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
         addon.Format("\r\n    %.2f electrons/physical pixel/sec", doseRate);
         message += addon;
       }
+      if (camParam->deadTime > 0.01) {
+        addon.Format("\r\nAn exposure of %.3f sec is needed to match this dose because "
+          "this camera's shutter dead time is %.3f sec", 1. + camParam->deadTime, 
+          camParam->deadTime);
+        message += addon;
+      }
+
       mWinApp->AppendToLog(message, 
         interactive ? LOG_MESSAGE_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
       int timeStamp = mWinApp->MinuteTimeStamp();

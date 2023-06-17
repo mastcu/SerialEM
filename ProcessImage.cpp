@@ -3463,6 +3463,8 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
   if (imBuf->mDoseRatePerUBPix > 0.)
     doseRate = imBuf->mDoseRatePerUBPix;
+  doseRate *= imBuf->mExposure /
+    mCamera->SpecimenBeamExposure(imBuf->mCamera, imBuf->mExposure, 0., true);
   return 0;
 }
 
