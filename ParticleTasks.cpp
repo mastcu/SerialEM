@@ -2019,8 +2019,8 @@ void CParticleTasks::TemplateAlignNextTask(int param)
     // Got an image, align it
     mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
     alignErr = mWinApp->mShiftManager->AutoAlign(mATIterationNum ?
-      1 : mATParams.loadAndKeepBuf, 1, true, 0, NULL, 0., 0., 0., 0., 0., NULL, NULL,
-      GetDebugOutput('1'));
+      1 : mATParams.loadAndKeepBuf, 1, true, AUTOALIGN_KEEP_SPOTS, NULL, 0., 0., 0., 0.,
+      0., NULL, NULL, GetDebugOutput('1'));
     if (alignErr) {
       SEMMessageBox(alignErr < 0 ? "Template autoalignment failed to find a peak within"
         " the distance limit" : "Template autoalignment had a memory or other error");
