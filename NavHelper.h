@@ -495,6 +495,17 @@ private:
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
     int baseNum, int hideLDoff);
+  void ComputeStageToImage(EMimageBuffer *imBuf, float stageX, float stageY,
+    BOOL needAddIS, ScaleMat &aMat, float &delX, float &delY);
+  BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY,
+    float angle, float &stageX, float &stageY, EMimageBuffer *imBuf = NULL);
+  ScaleMat GetRotationMatrix(float rotAngle, BOOL inverted);
+  int PrepareMontAdjustments(EMimageBuffer * imBuf, ScaleMat & rMat, ScaleMat & rInv, float & rDelX, float & rDelY);
+  void AdjustMontImagePos(EMimageBuffer * imBuf, float & inX, float & inY, int *pcInd = NULL,
+    float *xInPiece = NULL, float *yInPiece = NULL);
+  int OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
+    int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd, float &xInPiece,
+    float &yInPiece);
   void StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX, float delY,
     int ix, int iy, float &stageX, float & stageY, float &montErrX, float &montErrY);
   void RealignNextTask(int param);

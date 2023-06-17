@@ -1813,7 +1813,7 @@ MapItemArray *CSerialEMView::GetMapItemsForImageCoords(
     delete mAcquireBox;
   if (!itemArray)
     return NULL;
-  mAdjustPt = mWinApp->mNavigator->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
+  mAdjustPt = mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
     mRdelY);
   return itemArray;
 }
@@ -1903,6 +1903,20 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
     outX = mRmat.xpx * testX + mRmat.xpy * testY + mRdelX;
     outY = mRmat.ypx * testX + mRmat.ypy * testY + mRdelY;
   }
+}
+
+// External call for one conversion needs to be supplied with the transformation, which
+// is stored, then it sets up montage adjustments and can call StageToImage
+void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, 
+  float delX, float delY, float inX, float inY, float &outX, float &outY)
+{
+  mStageErrX = mStageErrY = 0.;
+  mAmat = aMat;
+  mDelX = delX;
+  mDelY = delY;
+  mAdjustPt = mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
+    mRdelY);
+  StageToImage(imBuf, inX, inY, outX, outY);
 }
 
 // Draw a cross with the given pen and length

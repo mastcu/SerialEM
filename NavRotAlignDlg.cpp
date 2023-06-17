@@ -138,7 +138,7 @@ void CNavRotAlignDlg::OnButApplyIs()
     // Here we back-rotate the position, which is -shiftX, shiftY in right-handed coords,
     // then take the negative to get to a right-handed shift
     mImBufs->mImage->getShifts(shiftX, shiftY);
-    rMat = mNav->GetRotationMatrix(-mLastRotation, false);
+    rMat = mWinApp->mNavHelper->GetRotationMatrix(-mLastRotation, false);
     backX = (float)mImBufs[1].mBinning * (rMat.xpx * shiftX - rMat.xpy * shiftY);
     backY = (float)mImBufs[1].mBinning * (rMat.ypx * shiftX - rMat.ypy * shiftY);
     mWinApp->mShiftManager->ImposeImageShiftOnScope(&mImBufs[1], backX, backY,
@@ -291,14 +291,14 @@ int CNavRotAlignDlg::TransformItemsFromAlignment(void)
   // The position in right-handed coords is -shiftX, +shiftY (double inversion of Y)
   // And the image coordinates is position + X, -Y
   mImBufs->mImage->getShifts(shiftX, shiftY);
-  rMat = nav->GetRotationMatrix(-mLastRotation, false);
+  rMat = mWinApp->mNavHelper->GetRotationMatrix(-mLastRotation, false);
   backX = (float)mImBufs->mImage->getWidth() / 2.f +
     (-rMat.xpx * shiftX + rMat.xpy * shiftY);
   backY = (float)mImBufs->mImage->getHeight() / 2.f -
     (-rMat.ypx * shiftX + rMat.ypy * shiftY);
 
   // Adjust if necessary and convert to a stage coordinate, 
-  nav->AdjustMontImagePos(&mImBufs[1], backX, backY);
+  mWinApp->mNavHelper->AdjustMontImagePos(&mImBufs[1], backX, backY);
   aInv = MatInv(aMat);
   shiftX = aInv.xpx * (backX - delX) + aInv.xpy * (backY - delY);
   shiftY = aInv.ypx * (backX - delX) + aInv.ypy * (backY - delY);

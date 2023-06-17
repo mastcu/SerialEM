@@ -877,7 +877,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           delISX += ISX;
           delISY += ISY;
         }
-        mWinApp->mNavigator->ConvertIStoStageIncrement(mParam->magIndex,
+        mWinApp->mNavHelper->ConvertIStoStageIncrement(mParam->magIndex,
           mWinApp->GetCurrentCamera(), delISX, delISY, (float)mScope->FastTiltAngle(),
           stageX, stageY);
 

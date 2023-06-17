@@ -477,10 +477,10 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // Get potential adjustment for mag change if either the input item is a different
       // map from the current item or we will be restoring state at the end or we are in
       // low dose
-      mNav->ConvertIStoStageIncrement(item->mMapMagInd, item->mMapCamera, 0., 0.,
+      ConvertIStoStageIncrement(item->mMapMagInd, item->mMapCamera, 0., 0.,
         item->mMapTiltAngle, incLowX, incLowY);
       if (differentMap)
-        mNav->ConvertIStoStageIncrement(inItem->mMapMagInd, inItem->mMapCamera, 0., 0.,
+        ConvertIStoStageIncrement(inItem->mMapMagInd, inItem->mMapCamera, 0., 0.,
           item->mMapTiltAngle, incHighX, incHighY);
       else {
         ix = magIndex;
@@ -492,7 +492,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
           if (iy >= 0 && ldp[iy].magIndex)
             ix = ldp[iy].magIndex;
         }
-        mNav->ConvertIStoStageIncrement(ix, mWinApp->GetCurrentCamera(), 0., 0.,
+        ConvertIStoStageIncrement(ix, mWinApp->GetCurrentCamera(), 0., 0.,
           item->mMapTiltAngle, incHighX, incHighY);
       }
 
@@ -843,7 +843,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // Get rotation matrix of map images due to transformations only
   aMat = ItemStageToCamera(item);
   mRIrotAngle = mNav->RotationFromStageMatrices(aMat, mRImat, mRIinverted);
-  mRIrMat = mNav->GetRotationMatrix(mRIrotAngle, mRIinverted);
+  mRIrMat = GetRotationMatrix(mRIrotAngle, mRIinverted);
 
   // Set up to get target montage error in adjustment coming next
   montErrX = montErrY = 0.;
@@ -1572,7 +1572,7 @@ void CNavHelper::StartSecondRound(void)
   // Get a new rotation matrix for this item
   aMat = ItemStageToCamera(item);
   mRIrotAngle = mNav->RotationFromStageMatrices(aMat, item->mMapScaleMat, mRIinverted);
-  mRIrMat = mNav->GetRotationMatrix(mRIrotAngle, mRIinverted);
+  mRIrMat = GetRotationMatrix(mRIrotAngle, mRIinverted);
 
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   RestoreLowDoseConset();
@@ -2581,6 +2581,78 @@ void CNavHelper::RestoreLowDoseConset(void)
 /////  VARIOUS UTILITIES
 /////////////////////////////////////////////////
 
+// Actually compute from the given stage coordinates and other image properties
+void CNavHelper::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, float stageY,
+  BOOL needAddIS, ScaleMat &aMat, float &delX,
+  float &delY)
+{
+  float angle = RAW_STAGE_TEST - 1000.;
+  BOOL hasAngle = imBuf->GetTiltAngle(angle);
+
+  // Convert any image shift of image into an additional stage shift
+  if (needAddIS)
+    ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY,
+      angle, stageX, stageY, imBuf);
+
+  // Sign woes as usual.  This transform is a true transformation from the stage
+  // to the camera coordinate system, but invert Y to get to image coordinate system
+  // | 1  0 | * | xpx xpy | * | X |  = |  xpx  xpy | * | X |
+  // | 0 -1 |   | ypx ypy |   | Y |    | -ypx -ypy |   | Y |
+  aMat = mShiftManager->FocusAdjustedStageToCamera(imBuf);
+  aMat.xpx /= imBuf->mBinning;
+  aMat.xpy /= imBuf->mBinning;
+  aMat.ypx /= -imBuf->mBinning;
+  aMat.ypy /= -imBuf->mBinning;
+
+  // If tilt angle is available and it makes more than 0.02% difference, adjust matrix
+  if (hasAngle && fabs((double)angle) > 1.)
+    mShiftManager->AdjustStageToCameraForTilt(aMat, angle);
+  delX = imBuf->mImage->getWidth() / 2.f - aMat.xpx * stageX - aMat.xpy * stageY;
+  delY = imBuf->mImage->getHeight() / 2.f - aMat.ypx * stageX - aMat.ypy * stageY;
+}
+
+// If scaling exists, convert the image shift into additional stage shift
+BOOL CNavHelper::ConvertIStoStageIncrement(int magInd, int camera, double ISX,
+  double ISY, float angle, float &stageX, float &stageY, EMimageBuffer *imBuf)
+{
+  ScaleMat aMat, bMat, s2c;
+
+  // If scope did not already subtract mag offsets, do so now for given camera type
+  if (!mScope->GetApplyISoffset()) {
+    int gif = mCamParams[camera].GIF ? 1 : 0;
+    ISX -= mMagTab[magInd].calOffsetISX[gif];
+    ISY -= mMagTab[magInd].calOffsetISY[gif];
+  }
+
+  // If shifting to tilt axis is on, convert offset to stage and adjust position to get
+  // back to coordinates in unshifted system
+  if (mScope->GetShiftToTiltAxis()) {
+    aMat = mShiftManager->SpecimenToStage(1., 1.);
+    stageX += aMat.xpy * mScope->GetTiltAxisOffset();
+    stageY += aMat.ypy * mScope->GetTiltAxisOffset();
+  }
+
+  // Here the plus sign replicates the plus in image shift reset
+  if (imBuf)
+    aMat = mShiftManager->FocusAdjustedISToCamera(imBuf);
+  if (!imBuf || !aMat.xpx || magInd != imBuf->mMagInd || camera != imBuf->mCamera)
+    aMat = mShiftManager->IStoGivenCamera(magInd, camera);
+  if (aMat.xpx) {
+    if (imBuf)
+      s2c = mShiftManager->FocusAdjustedStageToCamera(imBuf);
+    if (!imBuf || !s2c.xpx || magInd != imBuf->mMagInd || camera != imBuf->mCamera)
+      s2c = mShiftManager->StageToCamera(camera, magInd);
+    bMat = MatInv(s2c);
+    if (angle > RAW_STAGE_TEST && fabs((double)angle) > 1.)
+      mShiftManager->AdjustCameraToStageForTilt(bMat, angle);
+    aMat = MatMul(aMat, bMat);
+    stageX += (float)(aMat.xpx * ISX + aMat.xpy * ISY);
+    stageY += (float)(aMat.ypx * ISX + aMat.ypy * ISY);
+    return true;
+  }
+  return false;
+}
+
 // Get the stage position of the center of a montage piece, adding previously found error
 void CNavHelper::StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX,
                                       float delY, int ix, int iy, float &stageX, 
@@ -2606,6 +2678,192 @@ void CNavHelper::StagePositionOfPiece(MontParam * param, ScaleMat aMat, float de
     if (retval)
       return;
   }
+}
+
+// Return a matrix for rotation including an inversion if any
+ScaleMat CNavHelper::GetRotationMatrix(float rotAngle, BOOL inverted)
+{
+  ScaleMat rMat;
+  float sign;
+  rMat.xpx = (float)cos(DTOR * rotAngle);
+  rMat.ypx = (float)sin(DTOR * rotAngle);
+  sign = inverted ? -1.f : 1.f;
+  rMat.xpy = -sign * rMat.ypx;
+  rMat.ypy = sign * rMat.xpx;
+  return rMat;
+}
+
+// Test for whether montage adjustments are needed; return -1 if not, 0 if so with
+// unrotated montage, or 1 for rotated map.  Return transformations in that case
+int CNavHelper::PrepareMontAdjustments(EMimageBuffer *imBuf, ScaleMat &rMat,
+  ScaleMat &rInv, float &rDelX, float &rDelY)
+{
+  CMapDrawItem *item = NULL;
+  float width = (float)imBuf->mImage->getWidth();
+  float height = (float)imBuf->mImage->getHeight();
+
+  // No offsets, nothing to do
+  if (!imBuf->mMiniOffsets)
+    return -1;
+  if (mNav)
+    item = mNav->FindItemWithMapID(imBuf->mMapID);
+  if (item || imBuf->mStage2ImMat.xpx) {
+
+    // If its a map with an item still and there is some sign of rotation,
+    // prepare the rotation transform and its inverse for inverted Y
+    if (imBuf->mRotAngle || imBuf->mInverted || width != imBuf->mLoadWidth ||
+      height != imBuf->mLoadHeight) {
+      rMat = GetRotationMatrix(imBuf->mRotAngle, imBuf->mInverted);
+      rMat.xpy *= -1.;
+      rMat.ypx *= -1.;
+      rInv = MatInv(rMat);
+      rDelX = (float)(width / 2. - rMat.xpx * (imBuf->mLoadWidth / 2.) -
+        rMat.xpy * (imBuf->mLoadHeight / 2.));
+      rDelY = (float)(height / 2. -
+        rMat.ypx * (imBuf->mLoadWidth / 2.) - rMat.ypy * (imBuf->mLoadHeight / 2.));
+      return 1;
+    }
+
+    // If it's a map with no item, forbid adjustment if obviously rotated
+  } else if (!item && (imBuf->mRotAngle || imBuf->mInverted))
+    return -1;
+  return 0;
+}
+
+// Adjust the given position if there is a montage with piece offsets in the buffer
+void CNavHelper::AdjustMontImagePos(EMimageBuffer *imBuf, float & inX, float & inY,
+  int *pcInd, float *xInPiece, float *yInPiece)
+{
+  ScaleMat rMat, rInv;
+  float rDelX, rDelY, testX, testY, minXinPc, minYinPc;
+  MiniOffsets *mini = imBuf->mMiniOffsets;
+  int minInd;
+  int adjust = PrepareMontAdjustments(imBuf, rMat, rInv, rDelX, rDelY);
+  if (pcInd)
+    *pcInd = -1;
+  if (xInPiece)
+    *xInPiece = -1.;
+  if (yInPiece)
+    *yInPiece = -1.;
+
+  // if nothing to adjust return;
+  if (adjust < 0)
+    return;
+  testX = inX;
+  testY = inY;
+
+  // If rotations, back-rotate coordinates to original map
+  if (adjust) {
+    testX = rInv.xpx * (inX - rDelX) + rInv.xpy * (inY - rDelY);
+    testY = rInv.ypx * (inX - rDelX) + rInv.ypy * (inY - rDelY);
+  }
+
+  if (OffsetMontImagePos(mini, 0, mini->xNframes - 1, 0, mini->yNframes - 1, testX,
+    testY, minInd, minXinPc, minYinPc))
+    return;
+
+  if (pcInd)
+    *pcInd = minInd;
+
+  // Return unbinned, right-handed coordinates in the piece
+  if (xInPiece)
+    *xInPiece = minXinPc * B3DMAX(1, imBuf->mOverviewBin);
+  if (yInPiece)
+    *yInPiece = minYinPc * B3DMAX(1, imBuf->mOverviewBin);
+  inX = testX;
+  inY = testY;
+  if (adjust) {
+    inX = rMat.xpx * testX + rMat.xpy * testY + rDelX;
+    inY = rMat.ypx * testX + rMat.ypy * testY + rDelY;
+  }
+}
+
+int CNavHelper::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
+  int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd, float &xInPiece,
+  float &yInPiece)
+{
+  int ix, iy, index, xst, xnd, yst, ynd, xDist, yDist, minInd, minDist, xTest, yTest;
+
+  // When there are two frames, the base is 0 and the delta is frame - overlap / 2
+  // So get a correct adjustment from xst/yst to real start of second piece
+  // which is also the amount to fix xnd/ynd when there are two pieces
+  int xstAdjForInPc = mini->xNframes == 2 ? mini->xFrame - mini->xDelta : mini->xBase;
+  int ystAdjForInPc = mini->yNframes == 2 ? mini->yFrame - mini->yDelta : mini->yBase;
+  xTest = (int)testX;
+  yTest = (int)testY;
+
+  // Loop on pieces in given range; this piece numbering iy is inverted in Y!
+  minDist = 100000000;
+  pcInd = -1;
+  xInPiece = yInPiece = -1.f;
+  for (ix = xPcStart; ix <= xPcEnd; ix++) {
+    for (iy = yPcStart; iy <= yPcEnd; iy++) {
+
+      // Piece index in the array; Y was done before X and in order, so these indexes
+      // follow normal right-hand numbering; incoming coordinates are inverted
+      index = (ix + 1) * mini->yNframes - 1 - iy;
+      if (mini->offsetX[index] == MINI_NO_PIECE)
+        continue;
+
+      // Get the boundaries for this piece, adding the offsets
+      xst = mini->xBase + ix * mini->xDelta + mini->offsetX[index];
+      xnd = xst + mini->xDelta;
+      if (!ix)
+        xst = mini->offsetX[index];
+      if (ix == mini->xNframes - 1) {
+        xnd = mini->xFrame + ix * mini->xDelta + mini->offsetX[index];
+        if (mini->xNframes == 2)
+          xnd -= xstAdjForInPc;
+      }
+      yst = mini->yBase + iy * mini->yDelta + mini->offsetY[index];
+      ynd = yst + mini->yDelta;
+      if (!iy)
+        yst = mini->offsetY[index];
+      if (iy == mini->yNframes - 1) {
+        ynd = mini->yFrame + iy * mini->yDelta + mini->offsetY[index];
+        if (mini->yNframes == 2)
+          ynd -= ystAdjForInPc;
+      }
+
+      // Get the "distance" from point to piece, negative if inside
+      if (xTest < xst)
+        xDist = xst - xTest;
+      else if (xTest > xnd)
+        xDist = xTest - xnd;
+      else
+        xDist = -B3DMIN(xTest - xst, xnd - xTest);
+      if (yTest < yst)
+        yDist = yst - yTest;
+      else if (yTest > ynd)
+        yDist = yTest - ynd;
+      else
+        yDist = -B3DMIN(yTest - yst, ynd - yTest);
+      xDist = B3DMAX(xDist, yDist);
+
+      // Keep track of closest piece
+      if (xDist < minDist) {
+        minDist = xDist;
+        minInd = index;
+        if (!mini->subsetLoaded) {
+          pcInd = minInd;
+
+          // Return coordinates in piece with the binning of overview, but right-handed
+          // Need to adjust starting coordinates by the base to be the actual coordinate
+          // of the full piece and not of the subset pasted in to the overview
+          xInPiece = (float)(testX - (xst - B3DCHOICE(ix > 0, xstAdjForInPc, 0)));
+          yInPiece = (float)(mini->yFrame + (yst - B3DCHOICE(iy > 0, ystAdjForInPc, 0)) -
+            testY);
+        }
+      }
+    }
+  }
+  if (minDist >= 10000000)
+    return 1;
+
+  // Subtract offsets to get coordinates in unshifted piece
+  testX -= mini->offsetX[minInd];
+  testY -= mini->offsetY[minInd];
+  return 0;
 }
 
 // Get the montage stage offset for the given piece; assumes the autodoc index has been
@@ -5693,7 +5951,7 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
 
     // Adjust the Y-inverted position and get piece it is on
     fy = mExtLoadHeight - fy;
-    mNav->OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0, 
+    OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0, 
       mMapMontP->yNframes - 1, fx, fy, pieceDrawnOn, xInPc, yInPc);
     fy = mExtLoadHeight - fy;
   }

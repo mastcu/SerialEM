@@ -1739,7 +1739,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
 
   // But first convert image to stage after adjusting for montage offsets
   if (mUseImageCoords) {
-    mNav->AdjustMontImagePos(mImBuf, stageX, stageY, &newItem->mPieceDrawnOn, 
+    mWinApp->mNavHelper->AdjustMontImagePos(mImBuf, stageX, stageY, &newItem->mPieceDrawnOn,
       &newItem->mXinPiece, &newItem->mYinPiece);
     tempX = mBITSmat.xpx * (stageX - mBSTIdelX) + mBITSmat.xpy * (stageY - mBSTIdelY);
     stageY = mBITSmat.ypx * (stageX - mBSTIdelX) + mBITSmat.ypy * (stageY - mBSTIdelY);

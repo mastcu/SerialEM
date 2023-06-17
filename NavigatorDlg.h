@@ -73,8 +73,6 @@ public:
 	void SetupSuperMontage(BOOL skewed);
 	void FullMontage(bool skipDlg, float overlapFac, bool forMacro = false);
   void AutoSave();
-	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
-    float angle, float &stageX, float &stageY, EMimageBuffer *imBuf = NULL);
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
 	int FindAndSetupNextAcquireArea();
@@ -116,8 +114,6 @@ public:
 	BOOL BackspacePressed();
 	BOOL BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, 
     float &delY);
-	void ComputeStageToImage(EMimageBuffer *imBuf, float stageX, float stageY, 
-    BOOL needAddIS, ScaleMat &aMat, float &delX, float &delY);
 	void ShiftItemPoints(CMapDrawItem *item, float delX, float delY);
 	void Redraw();
 	void Update();
@@ -517,10 +513,6 @@ public:
     float tiltAngle = 0.);
   int RotateMap(EMimageBuffer * imBuf, BOOL redraw);
   CMapDrawItem * FindItemWithMapID(int mapID, bool requireMap = true, bool matchGroup = false);
-  ScaleMat GetRotationMatrix(float rotAngle, BOOL inverted);
-  int PrepareMontAdjustments(EMimageBuffer * imBuf, ScaleMat & rMat, ScaleMat & rInv, float & rDelX, float & rDelY);
-  void AdjustMontImagePos(EMimageBuffer * imBuf, float & inX, float & inY, int *pcInd = NULL, 
-    float *xInPiece = NULL, float *yInPiece = NULL);
   float RotationFromStageMatrices(ScaleMat curMat, ScaleMat mapMat, BOOL &inverted);
   int AccessMapFile(CMapDrawItem * item, KImageStore *&storeMRC, int & curStore, MontParam *&montP, 
     float & useWidth, float & useHeight, bool readWrite = false);
@@ -675,9 +667,6 @@ public:
   int TargetLDAreaForRealign(void);
   int OKtoAverageCrops(void);
   CMapDrawItem *FindMontMapDrawnOn(CMapDrawItem * item);
-  int OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
-    int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd, float &xInPiece, 
-    float &yInPiece);
   void StageOrImageCoords(CMapDrawItem *item, float &posX, float &posY);
   void GridImageToStage(ScaleMat aInv, float delX, float delY, float posX, float posY, 
     float &stageX, float &stageY);

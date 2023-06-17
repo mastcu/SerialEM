@@ -964,7 +964,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       noMontReason = "the buffer has no ID for finding its Navigator map";
     else if (!mNavItem)
       noMontReason = "could not find the map item from the ID in the buffer";
-    if (mNavItem && mNav->PrepareMontAdjustments(imBuf, rMat, rInv, ptX,
+    if (mNavItem && mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, rMat, rInv, ptX,
       ptY) > 0)
       noMontReason = "the map is rotated";
     else if (mNavItem && mNav->AccessMapFile(mNavItem, mImageStore,
@@ -1421,7 +1421,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     // It turns out that the pieceOn values from above are not quite right or consistent
     // with what is needed for proper display, so replace them
     if (mMontage && mPieceOn.size())
-      mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
         &mYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
@@ -1443,7 +1443,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     ptY = yMissing[ind];
 
     if (mMontage && mPieceOn.size())
-      mNav->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], &mMissXinPiece[ind],
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], &mMissXinPiece[ind],
         &mMissYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissing[ind],
       mYmissing[ind]);
