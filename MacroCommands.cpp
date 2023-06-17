@@ -5563,6 +5563,50 @@ int CMacCmd::CameraToISMatrix(void)
   return 0;
 }
 
+// StageToBufImageMatrix, BufImageToStageMatrix, StagePosToBufImagePos
+// BufImagePosToStagePos
+int CMacCmd::StageToBufImageMatrix(void)
+{
+  int index, pcInd = -1;
+  ScaleMat aMat;
+  float delX, delY, stageX, stageY, outX, outY, xInPiece =  0., yInPiece = 0.;
+  bool im2st = CMD_IS(BUFIMAGETOSTAGEMATRIX) || CMD_IS(BUFIMAGEPOSTOSTAGEPOS);
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  if (!mImBufs[index].GetStagePosition(stageX, stageY))
+    ABORT_LINE("Image buffer has no stage coordinates stored for line:\n\n");
+  mNavHelper->ComputeStageToImage(&mImBufs[index], stageX, stageY, mItemInt[2] != 0, 
+    aMat, delX, delY);
+  if (im2st) {
+    aMat = MatInv(aMat);
+    mShiftManager->ApplyScaleMatrix(aMat, -delX, -delY, delX, delY);
+  }
+  if (!aMat.xpx)
+    ABORT_LINE("There is no transformation available for line:\n\n");
+  if (CMD_IS(BUFIMAGEPOSTOSTAGEPOS) || CMD_IS(STAGEPOSTOBUFIMAGEPOS)) {
+    if (im2st) {
+      mNavHelper->AdjustMontImagePos(&mImBufs[index], mItemFlt[3], mItemFlt[4], &pcInd, 
+        &xInPiece, &yInPiece);
+      mShiftManager->ApplyScaleMatrix(aMat, mItemFlt[3], mItemFlt[4], outX, outY);
+      outX += delX;
+      outY += delY;
+      mLogRpt.Format("Stage position is %.3f %.3f", outX, outY);
+      SetRepValsAndVars(5, outX, outY, pcInd, xInPiece, yInPiece);
+    } else {
+      mWinApp->mMainView->ExternalStageToImage(&mImBufs[index], aMat, delX, delY, 
+        mItemFlt[3], mItemFlt[4], outX, outY);
+      mLogRpt.Format("Image position is %.1f %.1f", outX, outY);
+      SetRepValsAndVars(5, outX, outY);
+    }
+  } else {
+    mLogRpt.Format("%s matrix is %5g %.5g %.5g %.5g  %.3f %.3f",
+      im2st ? "Image to stage" : "Stage to image",
+      aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy, delX, delY);
+    SetRepValsAndVars(3, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy, delX, delY);
+  }
+  return 0;
+}
+
 // ReportClock
 int CMacCmd::ReportClock(void)
 {
@@ -10143,7 +10187,7 @@ int CMacCmd::AdjustStagePosForNav(void)
       ABORT_LINE("The active camera number is out of range in line:\n\n");
     camera = mActiveList[mItemInt[5] - 1];
   }
-  mNavigator->ConvertIStoStageIncrement(magInd, camera, ISX, ISY, tilt, stageX, stageY);
+  mNavHelper->ConvertIStoStageIncrement(magInd, camera, ISX, ISY, tilt, stageX, stageY);
   mLogRpt.Format("Adjusted stage position %.3f  %.3f", stageX, stageY);
   SetReportedValues(stageX, stageY);
   return 0;
@@ -10786,7 +10830,7 @@ int CMacCmd::ShiftItemsByCurrentDiff(void)
     delISX -= stageX;
     delISY -= stageY;
   }
-  mNavigator->ConvertIStoStageIncrement(mScope->FastMagIndex(),
+  mNavHelper->ConvertIStoStageIncrement(mScope->FastMagIndex(),
       mCurrentCam, delISX, delISY, (float)mScope->FastTiltAngle(),
       shiftX, shiftY);
   shiftX -= navItem->mStageX;

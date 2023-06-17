@@ -1744,6 +1744,48 @@
             vertical strips.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">StageToBufImageMatrix buf #I</TD>
+          <td>For the image in buffer <b>buf></b>, reports the transformation from stage to image
+            coordinates: the 6 elements XperX, XperY. YperX, YperY delX, delY, where the transformation is <br />
+            Ximage = Xstage * XperX + Ystage * XperY + delX<br />
+            Yimage = Xstage * YperX + Ystage * YperY + delY <br />
+            Set <b>#I</b> 0 to consider just the stage coordinates, or non-zero to
+            consider microscope image shift when the image was taken, as well as various image shift offsets,
+            just as the Navigator does when relating magnification-independent stage positions and
+            positions in a specific image.&nbsp; The latter would be needed to work with stage positions
+            of Navigator items.&nbsp; Image Y is inverted: the origin for the image coordinates is at
+             the top of the image.&nbsp; Command added in 4.1, 16-Jun-23.
+          </td>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">BufImageToStageMatrix buf #I</TD>
+          <td>Like 'StageToBufImageMatrix', but reports the 6-element transformation from image to stage
+            coordinates.&nbsp; Command added in 4.1, 16-Jun-23.</td>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StagePosToBufImagePos buf #I #X #Y</TD>
+          <td>Reports the stage position (X and Y) corresponding to the position <b>#X</b>, <b>#Y</b>
+            in the image in buffer <b>buf</b>.&nbsp; Image coordinates are inverted in Y.&nbsp; Set <b>#I</b>
+             0 to consider just the stage coordinates, or non-zero to
+            consider microscope image shift when the image was taken, as well as various image shift offsets,
+            just as occurs when drawing navigator points on an image.&nbsp; In either case, if the image
+            is a stage montage overview, the offsets of pieces are taken into account in computing the position,
+            making this result different from what could be computed with the matrix 
+            from 'StageToBufImageMatrix'.&nbsp; Command added in 4.1, 16-Jun-23.
+          </td>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
+          <td>Like 'StagePosToBufImagePos', but reports the image position (X and Y) in the image in 
+            buffer <b>buf</b> of the stage position <b>#X</b>, <b>#Y</b>.&nbsp; These image coordinates are <I>left-handed</I>; 
+            i.e., Y is inverted.&nbsp; Coordinates account for image shift and montage piece alignments 
+            as in 'StagePosToBufImagePos'.&nbsp; If the image is a montage overview, it also reports the index of 
+            the montage position and the position within that piece (X and Y) in <I>right-handed coordinates</I>,
+             with 0 in Y at the bottom of each piece (see PieceOn and XYinPC in 
+            <a href="about_formats.htm#navigator">Navigator Files</a>).
+          </td>
+        </TR>
+       <TR>
           <TD colspan="2"><A name="image_process"></A><B>Image Processing Commands</B></TD>
         </TR>
         <TR>
@@ -5109,7 +5151,7 @@
             Yout = Xin * YperX + Yin * YperY <br />
             All commands return a matrix for the current camera where relevant, and all require an entry
              <b>#M</b> for the magnification index, or 0 to use the current
-            index.&nbsp; Variables to assign to can be entered after that.
+            index.&nbsp; Variables to assign to can be placed after this entry.
           </td>
         </TR>
         <TR>
@@ -5161,7 +5203,7 @@
           <TD class="scriptcommand">StageToSpecimenMatrix #M</TD>
           <td>Converts from stage to specimen coordinates.</td>
         </TR>
-        <TR>
+         <TR>
           <TD colspan="2"><A name="process_running"></A><B>Process-Running Commands</B></TD>
         </TR>
         <TR>
