@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/17/23: Assigned a different port for running Python from a Dummy instance of
+SerialEM (In 4.0).
+
+6/17/23: Fixed type of "feature" entry to SnapshotToFile from Python (In 4.0).
+
 6/16/23: Added script commands to get the transformations between image buffer
 and stage corrdinates, and to convert between stage and image positions.
 

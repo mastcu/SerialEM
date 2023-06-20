@@ -52,6 +52,7 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
 {
   int serverInd = (sockInd == RUN_PYTH_SOCK_ID ? 0 : 1);
   int err = 0;
+  int dfltPort = mWinApp->GetDummyInstance() ? 48887 : 48889;
   JOBOBJECT_EXTENDED_LIMIT_INFORMATION jobInfo;
   CString mess, code;
 
@@ -70,7 +71,7 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     return 1;
   }
 
-  mPort[serverInd] = CBaseSocket::GetServerPort(sockInd, serverInd ? 48888 : 48889);
+  mPort[serverInd] = CBaseSocket::GetServerPort(sockInd, serverInd ? 48888 : dfltPort);
   err = StartSocket(serverInd);
   if (err) {
     mess.Format("Cannot run %s Python scripts due to error (%d) in starting socket for"

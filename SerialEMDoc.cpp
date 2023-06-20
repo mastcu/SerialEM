@@ -373,6 +373,8 @@ int CSerialEMDoc::UserOpenOldMrcCFile(CFile **file, CString &cFilename, bool imo
 // Can return MRC_OPEN_ADOC, MRC_OPEN_NOTMRC, or MRC_OPEN_NOERR for valid files
 int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
 {
+  CString str;
+  char buffer[256];
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
   if (FileAlreadyOpen(cFilename, 
@@ -383,7 +385,10 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite);
   }
   catch (CFileException *err) {
-    SEMMessageBox("Error: Cannot open the selected file.", MB_EXCLAME);
+    str = "Error: Cannot open " + cFilename;
+    if (err->GetErrorMessage(buffer, 256))
+      str += ": " + CString(buffer);
+    SEMMessageBox(str);
     err->Delete();
     return MRC_OPEN_ERROR;
   }
