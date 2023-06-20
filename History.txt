@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/17/23: Added property for specifying a dummy instance.
+
+6/17/23: Kept track of whether a cropped image was centered and allowed
+Navigator display on such an image.
+
 6/17/23: Assigned a different port for running Python from a Dummy instance of
 SerialEM (In 4.0).
 
