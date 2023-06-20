@@ -845,7 +845,8 @@ void CProcessImage::OnUpdateProcessCropimage(CCmdUI *pCmdUI)
 }
 
 // Crop the image in the given buffer given the inclusive coordinate limits
-int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, int right)
+int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, 
+  int right)
 {
   Islice slice;
   Islice *newsl;
@@ -895,6 +896,8 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
     extra->mUncroppedX = -extra->mUncroppedX;
   if (extra && extra->mUncroppedY < 0)
     extra->mUncroppedY = -extra->mUncroppedY;
+  if (extra)
+    extra->mCenteredCrop = centered ? 1 : 0;
 
   return 0;
 }

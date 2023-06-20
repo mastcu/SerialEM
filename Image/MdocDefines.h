@@ -44,6 +44,7 @@ MDOC_STRING(mMultiHoleNum, ADOC_MULTI_POS, "MultishotHoleAndPosition")
 MDOC_FLOAT(mCamPixSize, 0., 0., ADOC_CAM_PIXEL, "CameraPixelSize")
 MDOC_FLOAT(mVoltage, 0., 0., ADOC_VOLTAGE, "Voltage")
 MDOC_TWO_INTS(mUncroppedX, mUncroppedY, 0, ADOC_UNCROPPED, "UncroppedSize")
+MDOC_INTEGER(mCenteredCrop, -1, ADOC_CENTER_CROP, "CenteredCrop");
 MDOC_INTEGER(mRotationAndFlip, -1, ADOC_ROTFLIP, "RotationAndFlip")
 MDOC_INTEGER(mSecondTimeStamp, 0, ADOC_SEC_STAMP, "TimeStamp")
 MDOC_INTEGER(mFlashCounter, -1, ADOC_FLASH_COUNT, "FlashCounter")

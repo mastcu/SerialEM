@@ -107,7 +107,7 @@ public:
   bool GetDefocus(float & focus);
   bool GetSpotSize(int &spot);
   bool GetIntensity(double & intensity);
-  bool GetUncroppedSize(int &uncroppedX, int &uncroppedY);
+  bool GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *centered = NULL);
   bool IsProcessedOKforMap();
   CString BinningText(void);
 };

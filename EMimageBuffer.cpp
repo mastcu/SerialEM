@@ -277,7 +277,7 @@ bool EMimageBuffer::GetIntensity(double & intensity)
   return true;
 }
 
-bool EMimageBuffer::GetUncroppedSize(int & uncroppedX, int & uncroppedY)
+bool EMimageBuffer::GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *centered)
 {
   if (!mImage)
     return false;
@@ -286,6 +286,8 @@ bool EMimageBuffer::GetUncroppedSize(int & uncroppedX, int & uncroppedY)
     return false;
   uncroppedX = extra->mUncroppedX;
   uncroppedY = extra->mUncroppedY;
+  if (centered)
+    *centered = extra->mCenteredCrop;
   return true;
 }
 

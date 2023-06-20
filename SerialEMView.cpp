@@ -1195,7 +1195,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Various tests for skipping navigator display
-  if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy) && ix > 0)) {
+  if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy, &ierr) && 
+    ix > 0 && ierr < 1)) {
     if (itemArray)
       delete mAcquireBox;
     return true;
