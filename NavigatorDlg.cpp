@@ -3864,8 +3864,9 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
                                     float &delX, float &delY)
 {
   float stageX, stageY, tmpX, tmpY;
+  int uncropX, uncropY;
   ScaleMat rMat;
-  if (!imBuf->mImage)
+  if (!imBuf->mImage || (imBuf->GetUncroppedSize(uncropX, uncropY) && uncropX > 0))
     return false;
   float width = (float)imBuf->mImage->getWidth();
   float height = (float)imBuf->mImage->getHeight();
