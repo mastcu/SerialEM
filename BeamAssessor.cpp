@@ -2023,6 +2023,7 @@ void CBeamAssessor::RefineShiftCalImage()
 void CBeamAssessor::CalibrateSpotIntensity()
 {
   int dimmestSpot = HitachiScope ? mScope->GetMinSpotSize() : mScope->GetNumSpotSizes();
+  int tempCalIndex = HitachiScope ? mNumSpotsToCal : mScope->GetMinSpotSize();
   mNumSpotsToCal = mScope->GetNumSpotSizes();
   mSpotCalStartSpot = mScope->GetSpotSize();
   ControlSet *conSet = mWinApp->GetConSets() + SPOT_CAL_CONSET;
@@ -2036,9 +2037,9 @@ void CBeamAssessor::CalibrateSpotIntensity()
 
   message.Format("Spot intensity calibration takes pictures with the %s" 
     " parameter set at a series of spot sizes.\n\n"
-    "You must make sure that the beam is spread enough so that it will\nfill the frame"
+    "You must make sure that the beam is spread enough so that\nit will fill the frame"
     " of a %s image at all the spot sizes to be measured."
-    "\n\nThe exposure time and brightness should be set so that you get a\nhigh number"
+    "\n\nThe exposure time and brightness should be set so that\nyou get a high number"
     " of counts (~2/3 of saturation) in a %s"
     " image at spot size %d.\n\nAre you ready to proceed?", 
     (LPCTSTR)modeNames[SPOT_CAL_CONSET], (LPCTSTR)modeNames[SPOT_CAL_CONSET],
@@ -2048,25 +2049,25 @@ void CBeamAssessor::CalibrateSpotIntensity()
 
   for (int ind = 1; ind <= mNumSpotsToCal; ind++)
     mTempIntensities[ind] = mTempCounts[ind] = 0.;
-  mSpotCalIndex = HitachiScope ? mNumSpotsToCal : mScope->GetMinSpotSize();
-  if (!KGetOneInt("Brightest spot number to measure:", mSpotCalIndex))
+  if (!KGetOneInt("Brightest spot number to measure:", tempCalIndex))
     return;
   if (!KGetOneInt("Dimmest spot number to measure:", dimmestSpot))
     return;
-  B3DCLAMP(mSpotCalIndex, mScope->GetMinSpotSize(), mNumSpotsToCal);
+  B3DCLAMP(tempCalIndex, mScope->GetMinSpotSize(), mNumSpotsToCal);
   B3DCLAMP(dimmestSpot, 1, mNumSpotsToCal);
-  mNumSpotsToCal = B3DCHOICE(HitachiScope, mSpotCalIndex + 1 - dimmestSpot,
-    dimmestSpot + 1 - mSpotCalIndex);
+  mNumSpotsToCal = B3DCHOICE(HitachiScope, tempCalIndex + 1 - dimmestSpot,
+    dimmestSpot + 1 - tempCalIndex);
   if (mNumSpotsToCal < 2)
     return;
 
-  mFirstSpotToCal = mSpotCalIndex;
-  if (mSpotCalStartSpot != mSpotCalIndex) {
-    if (SetAndCheckSpotSize(mSpotCalIndex, true))
+  mFirstSpotToCal = tempCalIndex;
+  if (mSpotCalStartSpot != tempCalIndex) {
+    if (SetAndCheckSpotSize(tempCalIndex, true))
       return;
   } else
     mScope->NormalizeCondenser();
   conSet->onceDark = 1;
+  mSpotCalIndex = tempCalIndex;
   mCamera->InitiateCapture(SPOT_CAL_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CAL_SPOT_INTENSITY, 0, 0);
   mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING SPOT INTENSITY");
