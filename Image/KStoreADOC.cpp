@@ -110,7 +110,8 @@ CString KStoreADOC::IsADOC(CString filename)
   CStdioFile *cFile = NULL;
   CString retval = "";
   try {
-    cFile = new CStdioFile(filename, CFile::modeRead |CFile::shareDenyWrite);
+    cFile = new CStdioFile(filename, CFile::modeRead |CFile::shareDenyWrite | 
+      CFile::modeNoInherit);
     if (cFile->ReadString(str)) {
       str = str.Trim();
       if (str.Left((int)strlen(ADOC_SERIES)) == ADOC_SERIES) {

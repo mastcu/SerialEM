@@ -382,7 +382,8 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     return MRC_OPEN_ALREADY_OPEN;
   
   try {
-    *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite);
+    *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite | 
+      CFile::modeNoInherit);
   }
   catch (CFileException *err) {
     str = "Error: Cannot open " + cFilename;
@@ -392,6 +393,7 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     err->Delete();
     return MRC_OPEN_ERROR;
   }
+
   if (!KStoreMRC::IsMRC(*file)) {
     (*file)->Close();
     delete *file;

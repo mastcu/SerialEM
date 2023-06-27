@@ -24,7 +24,7 @@ KImageStore::KImageStore(CString inFilename)
 
   // Pick most generic set of flags: create if necessary, do not truncate
   // if it exists
-  mFile = new CFile(inFilename, CFile::modeCreate | 
+  mFile = new CFile(inFilename, CFile::modeCreate | CFile::modeNoInherit |
     CFile::modeNoTruncate | CFile::modeReadWrite |CFile::shareDenyWrite);
 }
 

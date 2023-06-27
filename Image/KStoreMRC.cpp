@@ -182,7 +182,7 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
   
     // Open file with creation and truncation
     // The user has already confirmed that it is OK to overwrite
-    mFile = new CFile(inFilename, CFile::modeCreate | 
+    mFile = new CFile(inFilename, CFile::modeCreate | CFile::modeNoInherit |
        CFile::modeReadWrite |CFile::shareDenyWrite);
 
     Seek(0, CFile::begin);
