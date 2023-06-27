@@ -1054,6 +1054,11 @@ BOOL CSerialEMApp::InitInstance()
   // now in case someone has debugging output to the log
   mParamIO = new CParameterIO;
   mDocWnd->ReadSetPropCalFiles();
+  if (mNoExceptionHandler <= 0) {
+    SetUnhandledExceptionFilter(SEMExceptionFilter);
+    _set_invalid_parameter_handler(SEMInvalidParameterHandler);
+    set_terminate(SEMTerminateHandler);
+  }
   if (mScope->GetNoScope() && mNoCameras && mScope->GetSimulationMode())
     mDummyInstance = true;
 
@@ -1062,8 +1067,11 @@ BOOL CSerialEMApp::InitInstance()
     // If there is a previous instance, this will return a good handle with an error
     HANDLE hMutex = CreateMutex(NULL, FALSE, "SerialEMSingleInstance");
     if (hMutex) {
-      if (GetLastError() == ERROR_ALREADY_EXISTS)
+      if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        AfxMessageBox("There is a non-DUMMY instance of SerialEM still running.\n"
+          "It must be closed or killed before you can start another.");
         return FALSE;
+      }
     }
   }
 
