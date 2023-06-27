@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/27/23: Made JEOL's rotation angle be reasserted every time JEOL scope goes
+back into STEM.
+
+6/27/23: Changed UI Automation calls used to change aperture size, which fixed
+problems on at least one Windows 10 scope.
+
 6/27/23: Added DummyInstance property, changed program startup so it works.
 
 6/27/23: Made script stopped with Python error be properly marked as not
