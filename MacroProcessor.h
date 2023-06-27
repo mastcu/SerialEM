@@ -423,6 +423,8 @@ protected:
   CString mPyModulePath;       // Module path set by property or set as default
   int mScriptNumFound;         // Last script number (0-based) for FindScriptByName
   float mCumulRecordDose;      // Cumulative Record dose for tilt series
+  FloatVec mAreaRecordDoses;   // Record doses for separate areas
+  int mAreaForCumulDose;       // Current area index
   ImodImageFile *mShrMemFile;  // Shared memory file for a process
   DWORD mExtProcExitStatus;    // Exit status from external process run sychronously
   IntVec mGraphTypeList;       // Entered type list for graphs

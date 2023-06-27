@@ -206,7 +206,8 @@ KImageStore *UtilOpenOldMRCFile(CString filename)
     return NULL;
   }
   try {
-    file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite);
+    file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite | 
+      CFile::modeNoInherit);
   }
   catch (CFileException *err) {
     err->Delete();

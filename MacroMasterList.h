@@ -734,6 +734,8 @@ MAC_SAME_NAME_ARG(StageToBufImageMatrix, 2, 4, STAGETOBUFIMAGEMATRIX, SI)
 MAC_SAME_FUNC_ARG(BufImageToStageMatrix, 2, 4, StageToBufImageMatrix, BUFIMAGETOSTAGEMATRIX, SI)
 MAC_SAME_FUNC_ARG(StagePosToBufImagePos, 4, 4, StageToBufImageMatrix, STAGEPOSTOBUFIMAGEPOS, SIDD)
 MAC_SAME_FUNC_ARG(BufImagePosToStagePos, 4, 4, StageToBufImageMatrix, BUFIMAGEPOSTOSTAGEPOS, SIDD)
+MAC_SAME_NAME_ARG(AreaForCumulRecordDose, 1, 4, AREAFORCUMULRECORDDOSE, I)
+MAC_SAME_NAME_ARG(AddCirclePolygon, 1, 4, ADDCIRCLEPOLYGON, Ddd)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

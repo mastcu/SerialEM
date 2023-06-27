@@ -98,20 +98,28 @@ static char THIS_FILE[] = __FILE__;
 #define SUSPEND_NOLINE(a) \
 { \
   mCurrentIndex = mLastIndex; \
-  CString macStr = CString("Script suspended ") + (a);  \
+  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " : \
+    "Script suspended ") + (a);  \
   mWinApp->AppendToLog(macStr, mLogErrAction);  \
   SEMMessageBox(macStr, MB_EXCLAME); \
-  SuspendMacro(); \
+  if (mNoMessageBoxOnError) \
+    AbortMacro(); \
+  else \
+    SuspendMacro(); \
   return 1; \
 }
 
 #define SUSPEND_LINE(a) \
 { \
   mCurrentIndex = mLastIndex; \
-  CString macStr = CString("Script suspended ") + (a) + mStrLine;  \
+  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " : \
+    "Script suspended ") + (a) + mStrLine;  \
   mWinApp->AppendToLog(macStr, mLogErrAction);  \
   SEMMessageBox(macStr, MB_EXCLAME); \
-  SuspendMacro(); \
+  if (mNoMessageBoxOnError) \
+    AbortMacro(); \
+  else \
+    SuspendMacro(); \
   return 1; \
 }
 
@@ -181,10 +189,9 @@ void CMacCmd::TaskDone(int param)
 
         // If thread finished, clear flag and abort/terminate for real
         mRunningScrpLang = false;
-        if (mScrpLangData.threadDone > 0 || mScrpLangData.exitedFromWrapper)
+        mLastCompleted = mScrpLangData.threadDone < 0 && !mScrpLangData.exitedFromWrapper;
+        if (!mLastCompleted)
           SEMMessageBox("Error running Python script; see log for information");
-        if (mScrpLangData.threadDone < 0)
-          mLastCompleted = true;
         AbortMacro();
         if (mLastCompleted && mStartNavAcqAtEnd)
           mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
@@ -3364,7 +3371,7 @@ int CMacCmd::OpenTextFile(void)
   int index;
   CFileStatus status;
   FileForText *txFile;
-  UINT openFlags = CFile::typeText;
+  UINT openFlags = CFile::typeText | CFile::modeNoInherit;
   if (LookupFileForText(mItem1upper, TXFILE_MUST_NOT_EXIST, mStrLine, index))
     return 1;
   report = mStrItems[2].MakeUpper();
@@ -3596,7 +3603,7 @@ int CMacCmd::OpenOldFile(void)
   index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
   if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
     index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index, true);
-  if (index != MRC_OPEN_NOERR)
+  if (index != MRC_OPEN_NOERR) 
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
   return 0;
 }
@@ -6457,17 +6464,31 @@ int CMacCmd::CalibrateElectronDose(void)
   return 0;
 }
 
+// AreaForCumulRecordDose
+int CMacCmd::AreaForCumulRecordDose(void)
+{
+  int index = mItemInt[1] + 1;
+  if (index < 0 || index > 255)
+    ABORT_LINE("Record area number is out if range in line:\n\n");
+  if (index >= (int)mAreaRecordDoses.size())
+    mAreaRecordDoses.resize(index + 1, -1.);
+  mAreaForCumulDose = index;
+  mCumulRecordDose = mAreaRecordDoses[index];
+  return 0;
+}
+
 // AccumulateRecordDose
 int CMacCmd::AccumulateRecordDose(void)
 {
 
   // Disable it, or initialize it if it is disabled, or add to it
   if (mItemFlt[1] < 0.)
-    mCumulRecordDose = -1.;
-  else if (mCumulRecordDose < 0.)
-    mCumulRecordDose = mItemFlt[1];
+    mAreaRecordDoses[mAreaForCumulDose] = -1.;
+  else if (mAreaRecordDoses[mAreaForCumulDose] < 0.)
+    mAreaRecordDoses[mAreaForCumulDose] = mItemFlt[1];
   else
-    mCumulRecordDose += mItemFlt[1];
+    mAreaRecordDoses[mAreaForCumulDose] += mItemFlt[1];
+  mCumulRecordDose = mAreaRecordDoses[mAreaForCumulDose];
   return 0;
 }
 
@@ -7360,6 +7381,9 @@ int CMacCmd::CircleFromPoints(void)
 int CMacCmd::FindPixelSize(void)
 {
   float dist = 0., vectors[4];
+  if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER &&
+    mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
+    mBufferManager->CopyImageBuffer(1, 0);
   mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
   return 0;
 }
@@ -10221,6 +10245,18 @@ int CMacCmd::AddStagePosAsNavPoint(void)
   return 0;
 }
 
+// AddCirclePolygon
+int CMacCmd::AddCirclePolygon(void)
+{
+  ABORT_NONAV;
+  if (mItemFlt[1] <= 0.)
+    ABORT_LINE("Radius must be positive for line:\n\n");
+  if (mNavigator->DoAddCirclePolygon(mItemFlt[1], mItemFlt[2], mItemFlt[3],
+    mItemEmpty[3], mStrCopy))
+    ABORT_NOLINE("Cannot add polygon for \"" + mStrLine + "\":\n" + mStrCopy);
+  return 0;
+}
+
 // GetUniqueNavID
 int CMacCmd::GetUniqueNavID(void)
 {
@@ -10582,7 +10618,7 @@ int CMacCmd::SkipAcquiringNavItem(void)
   ABORT_NONAV;
   if (!mNavigator->GetAcquiring())
     mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
-    "    pre-script when acquiring Navigator items", mLogAction);
+    "    pre-script or main script when acquiring Navigator items", mLogAction);
   mNavigator->SetSkipAcquiringItem(mItemEmpty[1] || mItemInt[1] != 0);
   return 0;
 }

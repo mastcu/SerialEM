@@ -543,6 +543,7 @@ public:
   int MoveToItem(int index, bool skipZ = false);
   void ProcessAkey(BOOL ctrl, BOOL shift);
   void AddCirclePolygon(float radius);
+  int DoAddCirclePolygon(float radius, float stageX, float stageY, BOOL useMarker, CString &mess);
   BOOL SupermontLabel(CMapDrawItem * item, int & startNum, int & ix, int & iy);
   BOOL CurrentIsInGroup(void);
   void DeleteGroup(bool collapsedGroup);

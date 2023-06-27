@@ -825,7 +825,8 @@
       <P><A NAME="hid_process_findpixelsize"></A><B>Find Pixel Size command (Calibration
         - Pixel Size sub-menu)</B></P>
       <P>Use this command to analyze an image of the cross-line replica grating in
-        buffer A and determine the pixel size. The program will take a filtered
+        buffer A and determine the pixel size. &nbsp;If buffer A contains a montage center
+         and B has a montage overview, B will be copied to A and analyzed.&nbsp; The program will take a filtered
         autocorrelation, which produces a square grid of correlation peaks with the
         highest peak at the center, where the image correlates perfectly with itself. It
         finds a starting peak close to the center, then locates peaks progressively

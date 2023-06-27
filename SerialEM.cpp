@@ -937,16 +937,6 @@ BOOL CSerialEMApp::InitInstance()
     mSysSubpath = mSysSubpath.Trim();
   }
 
-  if (!mDummyInstance) {
-
-    // If there is a previous instance, this will return a good handle with an error
-    HANDLE hMutex = CreateMutex(NULL, FALSE, "SerialEMSingleInstance");
-    if (hMutex) {
-      if (GetLastError() == ERROR_ALREADY_EXISTS)
-        return FALSE;
-    }
-  }
-
   //if (!AfxOleInit()){
   if (CoInitializeEx(NULL, COINIT_MULTITHREADED) != S_OK) {
     AfxMessageBox(_T("COM Initialization failed!"));
@@ -996,11 +986,6 @@ BOOL CSerialEMApp::InitInstance()
   // Dispatch commands specified on the command line
   if (!ProcessShellCommand(cmdInfo))
     return FALSE;
-
-  // The main window has been initialized, so show and update it.
-  pMainFrame->ShowWindow(m_nCmdShow);
-  pMainFrame->UpdateWindow();
-  
   
   // Try to find the document 
   mDocWnd = NULL;
@@ -1069,13 +1054,23 @@ BOOL CSerialEMApp::InitInstance()
   // now in case someone has debugging output to the log
   mParamIO = new CParameterIO;
   mDocWnd->ReadSetPropCalFiles();
-  if (mNoExceptionHandler <= 0) {
-    SetUnhandledExceptionFilter(SEMExceptionFilter);
-    _set_invalid_parameter_handler(SEMInvalidParameterHandler);
-    set_terminate(SEMTerminateHandler);
-  }
   if (mScope->GetNoScope() && mNoCameras && mScope->GetSimulationMode())
     mDummyInstance = true;
+
+  if (!mDummyInstance) {
+
+    // If there is a previous instance, this will return a good handle with an error
+    HANDLE hMutex = CreateMutex(NULL, FALSE, "SerialEMSingleInstance");
+    if (hMutex) {
+      if (GetLastError() == ERROR_ALREADY_EXISTS)
+        return FALSE;
+    }
+  }
+
+  // The main window has been initialized, so show and update it.
+  pMainFrame->ShowWindow(m_nCmdShow);
+  pMainFrame->UpdateWindow();
+
   if (mDummyInstance) {
     mScope->SetNoScope(true);
     mCamera->SetSimulationMode(true);

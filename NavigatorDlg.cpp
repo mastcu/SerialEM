@@ -664,10 +664,6 @@ void CNavigatorDlg::Update()
     groupOK = numAcq && !numTS && !numFile;
   }
 
-  m_butMoveItem.EnableWindow(curExists && 
-    !(mAddingPoints || mAddingPoly || mLoadingMap) && noTasks);
-  m_butDrawPts.EnableWindow(!(mAddingPoly || mMovingItem || mLoadingMap) && noTasks);
-  m_butDrawPoly.EnableWindow(!(mAddingPoints || mMovingItem || mLoadingMap) && noTasks);
   //m_butUpdatePos.EnableWindow(curExists && mItem->IsNotMap() && noDrawing &&
   //  mAcquireIndex < 0);
   m_butUpdateZ.EnableWindow((curExists || grpExists) && noTasks && noDrawing);
@@ -735,9 +731,19 @@ CString CNavigatorDlg::FormatProgress(int numDone, int numTot, int numLeft,
   return str;
 }
 
-// A call specifically for the Add Marker button which depends on the active buffer
+// A call specifically for the Add Marker and other buttons depend on the active buffer
 void CNavigatorDlg::UpdateAddMarker(void)
 {
+  float delX, delY;
+  ScaleMat aMat;
+  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  BOOL curExists = SetCurrentItem();
+  BOOL noTasks = !mWinApp->DoingTasks() && mAcquireIndex < 0 &&
+    BufferStageToImage(imBuf, aMat, delX, delY);
+  m_butMoveItem.EnableWindow(curExists &&
+    !(mAddingPoints || mAddingPoly || mLoadingMap) && noTasks);
+  m_butDrawPts.EnableWindow(!(mAddingPoly || mMovingItem || mLoadingMap) && noTasks);
+  m_butDrawPoly.EnableWindow(!(mAddingPoints || mMovingItem || mLoadingMap) && noTasks);
   m_butAddMarker.EnableWindow(OKtoAddMarkerPoint(true));
   m_butGotoMarker.EnableWindow(OKtoAddMarkerPoint(false));
 }
@@ -3864,9 +3870,10 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
                                     float &delX, float &delY)
 {
   float stageX, stageY, tmpX, tmpY;
-  int uncropX, uncropY;
+  int uncropX, uncropY, centered;
   ScaleMat rMat;
-  if (!imBuf->mImage || (imBuf->GetUncroppedSize(uncropX, uncropY) && uncropX > 0))
+  if (!imBuf->mImage || (imBuf->GetUncroppedSize(uncropX, uncropY, &centered) && 
+    uncropX > 0 && centered < 1))
     return false;
   float width = (float)imBuf->mImage->getWidth();
   float height = (float)imBuf->mImage->getHeight();
@@ -4933,23 +4940,37 @@ void CNavigatorDlg::FinishMultipleDeletion(void)
 // Add a circle of the given radius
 void CNavigatorDlg::AddCirclePolygon(float radius)
 {
-  float delX, delY, ptX, ptY, stageX, stageY;
+  CString mess;
+  if (DoAddCirclePolygon(radius, 0., 0., true, mess))
+    SEMMessageBox(mess);
+}
+
+int CNavigatorDlg::DoAddCirclePolygon(float radius, float stageX, float stageY, 
+  BOOL useMarker, CString &mess)
+{
+  float delX, delY, ptX, ptY;
   int numPts = 120;
   double theta;
   ScaleMat aMat, aInv;
   CMapDrawItem *item;
  	EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
-    AfxMessageBox("The currently active image does not have enough information\n"
-      "to convert the marker point to a stage coordinate.", MB_EXCLAME);
-    return;
+  if (useMarker) {
+    if (!imBuf->mHasUserPt) {
+      mess = "There is no marker point in the currently active image";
+      return 1;
+    }
+    if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
+      mess = "The currently active image does not have enough information\n"
+        "to convert the marker point to a stage coordinate.";
+      return 1;
+    }
+    ptX = imBuf->mUserPtX;
+    ptY = imBuf->mUserPtY;
+    mHelper->AdjustMontImagePos(imBuf, ptX, ptY);
+    aInv = MatInv(aMat);
+    stageX = aInv.xpx * (ptX - delX) + aInv.xpy * (ptY - delY);
+    stageY = aInv.ypx * (ptX - delX) + aInv.ypy * (ptY - delY);
   }
-  ptX = imBuf->mUserPtX;
-  ptY = imBuf->mUserPtY;
-  mHelper->AdjustMontImagePos(imBuf, ptX, ptY);
-  aInv = MatInv(aMat);
-  stageX = aInv.xpx * (ptX - delX) + aInv.xpy * (ptY - delY);
-  stageY = aInv.ypx * (ptX - delX) + aInv.ypy * (ptY - delY);
   item = MakeNewItem(0);
   SetCurrentStagePos(mCurrentItem);
   item->mStageX = stageX;
@@ -4967,6 +4988,7 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
     item->AppendPoint(ptX, ptY);
   }
   UpdateForCurrentItemChange();
+  return 0;
 }
 
 // Add regular grid of points based on a template and/or in a polygon
@@ -7502,8 +7524,8 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   // If opening read-only, set the share permission to DenyNone so it will not try to
   // change the file's read/write status, which would be locked if a process has it open 
   // read/write
-  UINT openFlags = readWrite ? (CFile::modeReadWrite | CFile::shareDenyWrite) : 
-    (CFile::modeRead | CFile::shareDenyNone);
+  UINT openFlags = (readWrite ? (CFile::modeReadWrite | CFile::shareDenyWrite) : 
+    (CFile::modeRead | CFile::shareDenyNone)) | CFile::modeNoInherit;
 
   // Get the path/name of the file if it is located in the same directory as the nav file,
   // or use the current dir if there is no file
@@ -9601,7 +9623,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
     case ACQ_RUN_MACRO:
       ManageNumDoneAcquired();
       if (mMacroProcessor->GetLastCompleted()) {
-        SetItemSuccessfullyAcquired(item);
+        if (mSkipAcquiringItem)
+          SkipToNextItemInAcquire(item, "in main script");
+        else
+          SetItemSuccessfullyAcquired(item);
 
         // Allow acquisition to go on after failure if the flag is set
       } else if (mMacroProcessor->GetLastAborted() &&

@@ -898,7 +898,8 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
     extra->mUncroppedY = -extra->mUncroppedY;
   if (extra)
     extra->mCenteredCrop = centered ? 1 : 0;
-
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->UpdateAddMarker();
   return 0;
 }
 
@@ -2203,6 +2204,9 @@ void CProcessImage::OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI)
 void CProcessImage::OnProcessFindpixelsize()
 {
   float vectors[4], dist = 0.;
+  if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER && 
+    mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
+    mWinApp->mBufferManager->CopyImageBuffer(1, 0);
   FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
 }
 
@@ -2211,7 +2215,8 @@ void CProcessImage::OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI)
   int cap = mImBufs->mCaptured;
   pCmdUI->Enable(mImBufs->mImage && mImBufs->mImage->getMode() == kGray && 
     !mWinApp->DoingTasks() && cap != BUFFER_PROCESSED &&
-    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT); 
+    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT && 
+    (cap != BUFFER_MONTAGE_CENTER || mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)); 
 }
 
 void CProcessImage::OnProcessPixelsizefrommarker()

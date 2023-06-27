@@ -3,6 +3,26 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/27/23: Added DummyInstance property, changed program startup so it works.
+
+6/27/23: Made script stopped with Python error be properly marked as not
+completed, so Acquire at Items keeps Acquire flag on.
+
+6/27/23: Added script command to add a circle polygon.
+
+6/27/23: Made SkipAcquiringNavItem work when used in main script.
+
+6/27/23: Made scripts be stopped instead of suspended when run with
+NoMessageBoxOnError set.
+
+6/27/23: Added script command to accumulate Record dose in multiple areas and
+provide them as prior dose values in the mdoc files.
+
+6/27/23: Fixed problem with file locks preventing file removal and other
+operations when running a Python script.
+
+6/21/23: Allowed adding Navigator items on centered cropped image.
+
 6/21/23: Prevented adding Navigator items on a cropped image (In 4.0).
 
 6/17/23: Added property for specifying a dummy instance.

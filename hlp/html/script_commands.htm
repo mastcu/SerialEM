@@ -4155,7 +4155,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">FindPixelSize</TD>
-          <TD>Runs the routine to find the pixel size in an image of a cross-line grating.</TD>
+          <TD>Runs the routine to find the pixel size in an image of a cross-line grating.&nbsp; If
+             buffer A contains a montage center and B has a montage overview, B will be copied to A first.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AutoCorrPeakVectors buf #S [#T] [#D]</TD>
@@ -4741,6 +4742,11 @@
             item.&nbsp; The points for 'AddImagePosAsNavPoint' about image alignment, Z position, drawing, 
             and <i>reportedValue1</i> apply here.&nbsp; Command added in 4.1, 6-Jul-22.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">AddCirclePolygon #R [#X #Y]</TD>
+          <TD>Adds a circle polygon with a radius <b>#R</b> in microns at stage position <b>#X</b>,
+            <b>#Y</b>, or at the marker position if <b>#X</b> and <b>#Y</b> is omitted&nbsp; Command added in 4.1, 21-Jun-23.</TD>
+        </TR>
          <TR>
           <TD class="scriptcommand">DeleteNavigatorItem #</TD>
           <TD>Removes the Navigator item specified by <b>#I</b>
@@ -5311,15 +5317,25 @@
           <TD class="scriptcommand">AccumulateRecordDose #</TD>
           <TD>Adds <b>#</b> to a cumulative dose that will be assigned as the PriorRecordDose value
             for images that are taken while the script is running.&nbsp; This dose accumulator is disabled
-            when a script starts.&nbsp; Use this command with a <b>#</b> of 0 to enable the accumulator 
+            when a script starts.&nbsp; There are multiple dose accumulators available and the current one can
+            be selected by the 'AreaForCumulRecordDose' command; but it is not necessary to use 
+            that command if only using one accumulator.&nbsp; Use this command with a <b>#</b> of 0 to enable
+             the current accumulator 
             and initialize it to 0; the next image will have a PriorRecordDose.&nbsp; Thereafter,for each 
             Record image or montage, get the dose from a buffer ('A' after a Record, 'C' after a 
             montage) with the 'ImageConditions' command and use this command with that dose value 
-            for <b>#</b>.&nbsp; Use -1 for <b>#</b> to disable the accumulator again if needed.&nbsp; Command added in 4.1, 4/1/22.
+            for <b>#</b>.&nbsp; Use -1 for <b>#</b> to disable an accumulator again if needed.&nbsp; Command added in 4.1, 4/1/22.
+          </TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">AreaForCumulRecordDose #</TD>
+          <TD>Sets the current dose accummulator to <b>#</b>, which must be between 1 and 250.&nbsp;
+            If multiple accumulators are needed, use this command to set the area before the Record,
+            take the Record, then gets it dose and use 'AccumulateRecordDose'.&nbsp; Command added in 4.1, 6/21/23.
           </TD>
         </TR>
        <TR>
-          <TD width="207">Plugin name func [args]</TD>
+          <TD class="scriptcommand">Plugin name func [args]</TD>
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with appropriate
             list of arguments for that function.&nbsp; Arguments (<b>args</b>) are entered as items
             separated by spaces, except that a string argument at the end may consist of

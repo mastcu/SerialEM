@@ -111,6 +111,13 @@
           </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UseUtapiScripting</TD>
+          <TD>Set to 1 to try to connect to the new Thermo/FEI Utapi scripting, either on the local computer or
+            at the address used to connect to FEI-SEMserver.exe.&nbsp; For testing, set to 2 to connect to Utapi without 
+            trying to connect to the scope otherwise.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
             is being used (enables some actions on JEOL and is needed to use an Eagle camera in simulation mode).
@@ -133,8 +140,9 @@
         </TR>
         <TR VALIGN="top">
           <TD>DummyInstance</TD>
-          <TD>Set to 1 to have same effect as starting with argument /DUMMY or having 
-            NoScope and NoCameras set.</TD>
+          <TD>Set to 1 to have same effect as using the /DUMMY command line argument, namely allowing
+            a second instance of the progarm to run.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>GainReferencePath</TD>
@@ -1235,7 +1243,10 @@
           <TD>CEOSServerIP</TD>
           <TD>IP address of a CEOS filter; this property alone indicates that the system has a
             CEOS energy filter.&nbsp; The camera(s) on the end of this filter should have the
-             property 'GIF 1'.</TD>
+             property 'GIF 1'.&nbsp; If you have not used the RPC server before, you must enable it.&nbsp; In the 
+            CEOS Panta Rhei Image Viewer, select 'RPC server' in the CEFID menu.&nbsp; When you enable the server, a dialog
+            will pop up with an option to 'Enable on start'.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>CEOSServerPort</TD>
@@ -4887,8 +4898,8 @@
         <TR VALIGN="top">
           <TD>JeolSTEMrotation</TD>
           <TD>The rotation angle that should be set in the JEOL STEM user interface, a value
-            from 0 to 359.&nbsp; The program will set this angle when starting if this entry
-            exists.</TD>
+            from 0 to 359.&nbsp; The program will set this angle when starting, or every
+             time it switches into STEM, if this entry exists.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolSwitchSTEMsleep</TD>

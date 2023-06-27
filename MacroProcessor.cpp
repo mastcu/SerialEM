@@ -1271,6 +1271,8 @@ void CMacroProcessor::Run(int which)
   mMinAbsFocus = 0.;
   mMaxAbsFocus = 0.;
   mCumulRecordDose = -1.;
+  mAreaRecordDoses.resize(1, -1.);
+  mAreaForCumulDose = 0;
   mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
   mParseQuotes = false;
@@ -5066,6 +5068,9 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // This is based heavily on a Microsoft post
 
     // Set the bInheritHandle flag so pipe handles are inherited.
+    // This inherits all inheritable handles;  If you need to explicitly list ones to
+    // inherit in CreateProcess (Vista onwards), see
+    // https://devblogs.microsoft.com/oldnewthing/20111216-00/?p=8873
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
@@ -5358,7 +5363,8 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
   CStdioFile *sFile = NULL;
   try {
     action = "opening file";
-    sFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
+    sFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite |
+      CFile::modeNoInherit);
     action = "reading file";
     mMacros[index] = "";
     while (sFile->ReadString(line)) {
