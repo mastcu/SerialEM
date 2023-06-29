@@ -218,6 +218,8 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   if (inProbe != mLastProbeMode && FEIscope) {
     m_butNanoMicro.SetWindowText(inProbe == 0 ? "-> uPr" : "-> nPr");
   }
+  if (inSTEM != mLastSTEMmode)
+    m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes(inSTEM));
 
   if (inIntensity != mLastIntensity || inProbe != mLastProbeMode || 
     inSTEM != mLastSTEMmode || inSpot != mLastSpot || inMagInd != mLastMagInd || 
@@ -403,7 +405,7 @@ void CRemoteControl::OnDeltaposSpinSpot(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
   if (!NewSpinnerValue(pNMHDR, pResult, oldVal, mScope->GetMinSpotSize(),
-    mScope->GetNumSpotSizes(), mNewSpotIndex)) {
+    mScope->GetNumSpotSizes(-1), mNewSpotIndex)) {
       mSpotClicked = true;
       mDidExtendedTimeout = false;
       mTimerID = ::SetTimer(NULL, mTimerID, mMaxClickInterval, TimerProc);

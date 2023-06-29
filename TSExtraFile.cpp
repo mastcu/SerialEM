@@ -316,7 +316,7 @@ BOOL CTSExtraFile::OnInitDialog()
   m_editNewExposure.EnableWindow(m_bSetExposure);
   m_strExposures = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraExposures, NULL, 
     &mExtraExposures[0]);
-  mNumSpotSizes = mWinApp->mScope->GetNumSpotSizes();
+  mNumSpotSizes = mWinApp->mScope->GetNumSpotSizes(-1);
   m_sbcNewSpot.SetRange(1, mNumSpotSizes);
   m_sbcNewSpot.SetPos(mSpotSize);
   m_strNewSpot.Format("%d", mSpotSize);

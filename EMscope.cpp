@@ -256,6 +256,7 @@ CEMscope::CEMscope()
   mLowestMicroSTEMmag = 1;
   mNumShiftBoundaries = 0;
   mNumSpotSizes = -1;
+  mNumSTEMSpotSizes = -1;
   mNumAlphas = 3;
   mMinSpotSize = 1;
   for (i = 0; i <= MAX_SPOT_SIZE; i++) {
@@ -797,6 +798,8 @@ int CEMscope::Initialize()
       mMaxTiltAngle = mUseIllumAreaForC2 ? 69.9f : 79.9f;
     if (mLowestEFTEMNonLMind < 0)
       mLowestEFTEMNonLMind = mLowestMModeMagInd;
+    if (mNumSTEMSpotSizes < 0)
+      mNumSTEMSpotSizes = mNumSpotSizes;
 
     // Add a boundary for secondary mag range
     if (mLowestSecondaryMag && !mUsePLforIS && !HitachiScope) {
@@ -9950,4 +9953,12 @@ void CEMscope::SetHasSimpleOrigin(int inVal)
   B3DCLAMP(inVal, 0, 2);
   mHasSimpleOrigin = inVal;
   sSimpleOriginIndex = mHasSimpleOrigin - 1;
+}
+
+// Overloaded function returns number of spots in current mode for < 0, or for given mode
+int CEMscope::GetNumSpotSizes(int ifSTEM)
+{
+  if (ifSTEM < 0)
+    ifSTEM = mWinApp->GetSTEMMode() ? 1 : 0;
+  return ifSTEM ? mNumSTEMSpotSizes : mNumSpotSizes;
 }

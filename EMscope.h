@@ -232,7 +232,9 @@ public:
   GetSetMember(int, JeolExternalMagDelay);
   GetSetMember(int, JeolMagEventWait);
   GetSetMember(int, JeolSTEMPreMagDelay);
+  GetSetMember(int, NumSTEMSpotSizes);
   GetSetMember(int, NumSpotSizes);
+  int GetNumSpotSizes(int ifSTEM);
   GetSetMember(int, MinSpotSize);
   GetSetMember(int, NumAlphas);
   GetMember(int, NumShiftBoundaries);
@@ -683,6 +685,7 @@ private:
   float mC2IntensityFactor[2];   // Factor to scale intensity to C2 reading, each probe mode
   float mC2SpotOffset[MAX_SPOT_SIZE + 1][2];    // Offset for each spot size, each probe mode
   int mNumSpotSizes;          // Number of spot size
+  int mNumSTEMSpotSizes;      // Number in STEM
   int mMinSpotSize;           // Minimum usable spot size
   int mNumAlphas;             // Number of alphas
   int mNumRegularCamLens;     // Number of camera lengths in regulr and LAD mode
