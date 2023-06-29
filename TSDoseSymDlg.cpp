@@ -13,6 +13,8 @@
 #include "EMbufferManager.h"
 #include "CameraController.h"
 
+FloatVec CTSDoseSymDlg::mIdealAnglesToUse;
+bool CTSDoseSymDlg::mIgnoreAnglesToUse = false;
 
 // CTSDoseSymDlg dialog
 
@@ -95,6 +97,7 @@ BOOL CTSDoseSymDlg::OnInitDialog()
   ControlSet *cset = mWinApp->GetConSets() + RECORD_CONSET;
   BOOL async = mWinApp->mBufferManager->GetSaveAsynchronously();
   CBaseDlg::OnInitDialog();
+  CLEAR_RESIZE(mIdealAnglesToUse, float, 0);
   m_bIncGroup = mTSparam.dosymIncreaseGroups;
   m_bRunToEnd = mTSparam.dosymDoRunToEnd;
   m_fRunToEnd = mTSparam.dosymRunToEndAngle;
@@ -345,6 +348,10 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
     }
   }
 
+  if (mIdealAnglesToUse.size() > 1 && !mIgnoreAnglesToUse)
+    idealAngles = mIdealAnglesToUse;
+  mIgnoreAnglesToUse = false;
+
   // check that there is a sign reversal after the anchorIndex if it is set; if not, unset
   // the index; if so, set the index for the place where the anchor is needed
   if (anchorIndex > 0) {
@@ -360,4 +367,39 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
       }
   }
   anchorIndex = -1;
+}
+
+// Given a list of angles, check its validity and set it as list to use
+int CTSDoseSymDlg::SetAnglesToUse(TiltSeriesParam &tsParam, FloatVec &angles, 
+  CString &mess)
+{
+  FloatVec idealAngles;
+  ShortVec directions;
+  int ind, final;
+  if (angles.size() == 1) {
+    CLEAR_RESIZE(mIdealAnglesToUse, float, 0);
+    return 0;
+  }
+  mIgnoreAnglesToUse = true;
+  FindDoseSymmetricAngles(tsParam, idealAngles, directions, ind, final, NULL);
+
+  if (angles.size() != idealAngles.size()) {
+    mess = "The supplied list of angles is not the same size as the original list";
+    return 1;
+  }
+  for (ind = 0; ind < (int)angles.size(); ind++) {
+    if (!BOOL_EQUIV(idealAngles[ind] < tsParam.bidirAngle,
+      angles[ind] < tsParam.bidirAngle)) {
+      mess.Format("Supplied angle %d (%.2f) is not on the same side of the series"
+        " as the original angle (%.2f)", ind + 1, angles[ind], idealAngles[ind]);
+      return 1;
+    }
+  }
+  mIdealAnglesToUse = angles;
+  return 0;
+}
+
+void CTSDoseSymDlg::IgnoreAnglesToUseNextCall()
+{
+  mIgnoreAnglesToUse = true;
 }

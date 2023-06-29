@@ -46,6 +46,7 @@
 #include "NavHelper.h"
 #include "NavRotAlignDlg.h"
 #include "StateDlg.h"
+#include "TSDoseSymDlg.h"
 #include "FalconHelper.h"
 #include "ExternalTools.h"
 #include "ScreenShotDialog.h"
@@ -2366,6 +2367,48 @@ int CMacCmd::ReplaceFrameTSFocus(void)
   return 0;
 }
 
+// GetDoseSymmetricAngles, SetDoseSymmetricAngles
+int CMacCmd::GetDoseSymmetricAngles()
+{
+  FloatVec angles;
+  ShortVec directions;
+  int ind, final;
+  CString value, one;
+  Variable *var;
+  TiltSeriesParam *tsParam = mWinApp->mTSController->GetTiltSeriesParam();
+  if (!mWinApp->DoingTiltSeries())
+    mWinApp->mTSController->SyncOtherModulesToParam();
+  if (!mWinApp->LowDoseMode() || (!tsParam->doDoseSymmetric && !tsParam->doBidirectional))
+    ABORT_LINE("You must be in low dose mode and tilt series parameters must be set for "
+      "dose-symmetric for line:\n\n");
+  if (tsParam->tiltIncrement <= 0 || fabs(tsParam->startingTilt) < 2 ||
+    fabs(tsParam->startingTilt) > 80 || fabs(tsParam->endingTilt) < 2 ||
+    fabs(tsParam->endingTilt) > 80)
+    ABORT_LINE("Tilt series parameters are not adequately set up for line:\n\n");
+  if (CMD_IS(GETDOSESYMMETRICANGLES)) {
+    CTSDoseSymDlg::IgnoreAnglesToUseNextCall();
+    CTSDoseSymDlg::FindDoseSymmetricAngles(*tsParam, angles, directions, ind, final,
+      NULL);
+    for (ind = 0; ind < (int)angles.size(); ind++) {
+      one.Format("%.2f", angles[ind]);
+      if (ind)
+        value += "\n";
+      value += one;
+    }
+    if (SetVariable(mStrItems[1], value, VARTYPE_REGULAR, -1, false, &mStrCopy))
+      ABORT_NOLINE("Error setting a variable with dose-symmetric angles:\n" + mStrCopy);
+    return 0;
+  }
+
+  var = LookupVariable(mItem1upper, ind);
+  if (!var)
+    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+  FillVectorFromArrayVariable(&angles, NULL, var);
+  if (CTSDoseSymDlg::SetAnglesToUse(*tsParam, angles, mStrCopy))
+    ABORT_NOLINE("Error trying to change dose-symmetric angles: " + mStrCopy);
+  return 0;
+}
+
 // RetractCamera
 int CMacCmd::RetractCamera(void)
 {
@@ -4679,7 +4722,7 @@ int CMacCmd::SetSpotSize(void)
 
   index = B3DNINT(mItemDbl[1]);
   if (mItemEmpty[1] || index < mScope->GetMinSpotSize() ||
-    index > mScope->GetNumSpotSizes())
+    index > mScope->GetNumSpotSizes(-1))
     ABORT_LINE("Improper spot size in statement: \n\n");
   if (!mScope->SetSpotSize(index)) {
     AbortMacro();

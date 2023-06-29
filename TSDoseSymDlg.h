@@ -12,6 +12,8 @@ public:
 	virtual ~CTSDoseSymDlg();
   static void FindDoseSymmetricAngles(TiltSeriesParam &tsParam, FloatVec &idealAngles,
     ShortVec &directions, int &anchorIndex, int &finalPartIndex, CString *summary = NULL);
+  static int SetAnglesToUse(TiltSeriesParam &tsParam, FloatVec &angles, CString &mess);
+  static void IgnoreAnglesToUseNextCall();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -65,4 +67,6 @@ public:
   CString m_strAngleSummary;
   CStatic m_statEvery;
   BOOL m_bSkipBacklash;
+  static FloatVec mIdealAnglesToUse;
+  static bool mIgnoreAnglesToUse;
 };

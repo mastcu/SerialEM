@@ -1409,6 +1409,26 @@
         </TR>
 
         <TR>
+          <TD class="scriptcommand">GetDoseSymmetricAngles var</TD>
+          <TD>Fills an array variable <b>var</b> with the list of angles for the currently defined 
+            dose-symmetric tilt series.&nbsp; The program must be in Low Dose mode and a dose-symmetric
+            series must be specified in the current tilt series parameters; the Tilt Series Setup dialog 
+            must have been opened at least once and postponed.&nbsp; Command added in 4.1 28-Jun-23.
+          </TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">SetDoseSymmetricAngles var</TD>
+          <TD>Modifies the list of angles for a dose-symmetric series with the angles in the array 
+            variable <b>var</b>.&nbsp; Parameters must already be set, as for 'GetDoseSymmetricAngles'; the 
+            new list must have the same number of angles as the old one; and reversals of direction must all
+            happen at the same places as originally (i.e., group sizes must be the same).&nbsp; The original
+            list is restored whenever the dose-symmetric setup dialog is opened, and can be restored by using this
+            command with a variable having a single value in it.&nbsp; Command added in 4.1 28-Jun-23.
+          </TD>
+        </TR>
+
+        <TR>
           <TD colspan="2"><A name="hwspecific_camera"></A><B>Hardware Specific Camera Commands</B></TD>
         </TR>
         <TR>

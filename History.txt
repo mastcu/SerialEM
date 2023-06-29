@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/28/23: Added script commands to get dose-symmetric angles with current
+settings and to modify them as long as the same reversals occur.
+
+6/28/23: Added property to set number of spot sizes in STEM.
+
+6/28/23: SEM_4-1-0beta17 (in testing)
+6/28/23: Preliminary support added for new TFS UTAPI scripting interface,
+which will allow proper aperture control (requiring at least server 7.16.1).
+
 6/27/23: SEM_4-0-26
 6/27/23: Fixed program getting stuck or crashing when spot intensity
 calibration is canceled at one of the entry boxes (In 4.0).
