@@ -363,6 +363,8 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].extraUnblankTime = EXTRA_UNBLANK_TIME;
     mCamParams[i].extraBeamTime = EXTRA_BEAM_TIME;
     mCamParams[i].minimumDrift = MINIMUM_DRIFT;
+    mCamParams[i].maximumDrift = 0.;
+    mCamParams[i].maxExposure = 0.;
     mCamParams[i].minBlankedExposure = MIN_BLANKED_EXPOSURE;
     mCamParams[i].extraOpenShutterTime = EXTRA_OPEN_SHUTTER_TIME;
     mCamParams[i].deadTime = 0.;
@@ -730,6 +732,7 @@ CSerialEMApp::CSerialEMApp()
   mSettingSTEM = false;
   mSettingEFTEM = false;
   mScreenSwitchSTEM = false;
+  mInvertSTEMimages = false;
   mRetractToUnblankSTEM = false;
   mBlankBeamInSTEM = false;
   mMustUnblankWithScreen = false;

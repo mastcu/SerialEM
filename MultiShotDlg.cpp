@@ -899,8 +899,8 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
     if (ans == IDNO)
       mWinApp->mNavHelper->SetOKtoUseHoleVectors(true);
   }
-  mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
-    true, xVecs, yVecs, str2);
+  mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
+    mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), true, xVecs, yVecs, str2);
 }
 
 // New beam diameter
@@ -1075,15 +1075,12 @@ void CMultiShotDlg::ManageEnables(void)
     str.Format("Use custom pattern (%d positions defined)", 
     mActiveParams->customHoleX.size());
   m_butUseCustom.SetWindowText(str);
-  enable = enable && mWinApp->LowDoseMode() && ldp->magIndex > 0 && notRecording;
+  enable = enable && mWinApp->LowDoseMode() && 
+    mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex() > 0 && notRecording;
   if (enable) {
-    dir = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(ldp->magIndex,
-      false, holeXvec, holeYvec, str2);
-    enable = dir != 0.;
-    if (enable)
-      enable = fabs(mWinApp->mNavHelper->mHoleFinderDlg->GetLastTiltAngle() - 
-        B3DCHOICE(useCustom,
-        mActiveParams->tiltOfCustomHoles, mActiveParams->tiltOfHoleArray)) < 1.5;
+    dir = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
+      mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), false, holeXvec, holeYvec,
+      str2);
   }
   m_butUseLastHoleVecs.EnableWindow(enable);
   if (notRecording)

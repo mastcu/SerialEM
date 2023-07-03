@@ -76,6 +76,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   mFindingFromDialog = false;
   mSkipAutoCor = false;
   mLastUserSelectInd = -1;
+  mLastMagIndex = -1;
   for (int ind = 0; ind < 3; ind++) {
     mGridImXVecs[ind] = 0.;
     mGridImYVecs[ind] = 0.;
@@ -1055,6 +1056,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 
   mLastTiltAngle = 0.;
   imBuf->GetTiltAngle(mLastTiltAngle);
+  mLastMagIndex = imBuf->mMagInd;
 
   // Report failure, but go on
   if (mMontage && !noMontReason.IsEmpty()) {

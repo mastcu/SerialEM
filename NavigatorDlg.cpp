@@ -8299,6 +8299,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           ADOC_STR_TO_LIST(mWinApp->mParamIO->StringToEntryList(3, str2,
             tsParam->numExtraChannels, tsParam->extraChannels, NULL, MAX_STEM_CHANNELS));
         }
+        ADOC_OPTIONAL(AdocGetString("TSParam", ind1, "ExtraSuffixes", &adocStr));
+        ADOC_STR_ASSIGN(tsParam->extraFileSuffixes);
 
         // Varying items
         if (tsParam->numVaryItems) {
@@ -10058,7 +10060,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mNumExtraFilesToClose > 0) {
       len = -1;
       for (ind = 0; ind < MAX_EXTRA_SAVES; ind++) {
-        if (tsStoreExtra[ind]) {
+        if (tsStoreExtra[ind] || (ind == RECORD_CONSET && 
+          tsp->extraRecordType != NO_TS_EXTRA_RECORD)) {
           if (len >= 0) {
             len = -1;
             break;
@@ -10287,7 +10290,7 @@ int CNavigatorDlg::TaskAcquireBusy()
   // If we started a resumable macro or a suspended tilt series,
   // take sleep to preserve CPU and say busy
   if ((StartedMacro() && !mMacroProcessor->DoingMacro()) || mPausedAcquire ||
-    (mStartedTS && (mWinApp->StartedTiltSeries() && !mWinApp->DoingTiltSeries() ||
+    (mStartedTS && ((mWinApp->StartedTiltSeries() && !mWinApp->DoingTiltSeries()) ||
     mWinApp->mTSController->GetPostponed()))) {
     Sleep(10);
     return 1;
@@ -10582,7 +10585,9 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   MontParam *masterMont = mWinApp->GetMontParam();
   MontParam *montp;
   StateParams *state;
+  TiltSeriesParam *tsParam;
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
+  BOOL *tsStoreExtra = mWinApp->mTSController->GetStoreExtra();
 
   mNextFileOptInd = item->mFilePropIndex;
   mNextMontParInd = item->mMontParamIndex;
@@ -10673,6 +10678,22 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       SEMMessageBox("The file set to be opened for this item,\n" + *namep 
         + "\n" + "is already open.");
       return 1;
+    }
+
+    // Get suffixes from TS param if non defined by script
+    if (!mNumExtraFileSuffixes && item->mTSparamIndex >= 0) {
+      tsParam = mTSparamArray.GetAt(item->mTSparamIndex);
+      if ((tsParam->extraRecordType != NO_TS_EXTRA_RECORD || tsStoreExtra[0] || 
+        tsStoreExtra[1] || tsStoreExtra[2] || tsStoreExtra[4]) &&
+        !tsParam->extraFileSuffixes.IsEmpty()) {
+        mWinApp->mParamIO->ParseString(tsParam->extraFileSuffixes, mExtraFileSuffix,
+          MAX_STORES - 1);
+        for (ind = 0; ind < MAX_STORES - 1; ind++) {
+          if (mExtraFileSuffix[ind].IsEmpty())
+            break;
+          mNumExtraFileSuffixes++;
+        }
+      }
     }
 
     // Check the extra file(s) before proceeding too

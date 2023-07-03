@@ -2059,7 +2059,7 @@ void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetProcessHere() ? 1 : 0);
-  pCmdUI->Enable((!param->TietzType || 
+  pCmdUI->Enable(!param->STEMcamera && (!param->TietzType || 
     (param->TietzType && param->pluginCanProcess)) && (!param->AMTtype || 
     (param->AMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)) && 
     (!param->DE_camType || param->DE_camType >= 2) && 

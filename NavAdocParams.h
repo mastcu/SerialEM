@@ -149,6 +149,8 @@ if (tsParam->numExtraChannels) {
     tsParam->extraChannels, NULL);
   ADOC_PUT(KeyValue(ADOC_ARG, "ExtraChannels", (LPCTSTR)str));
 }
+if (!tsParam->extraFileSuffixes.IsEmpty())
+  ADOC_PUT(KeyValue(ADOC_ARG, "ExtraSuffixes", (LPCTSTR)tsParam->extraFileSuffixes));
 if (tsParam->numVaryItems) {
   outInd = 0;
   for (ind2 = 0; ind2 < tsParam->numVaryItems; ind2++) {

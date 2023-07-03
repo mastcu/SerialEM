@@ -2151,6 +2151,8 @@
 #define IDC_EDIT_HULL_DIST              3181
 #define IDC_STAT_MIN_HULL_DIST          3182
 #define IDC_STAT_MAX_HULL_DIST          3183
+#define IDC_EDIT1                       3184
+#define IDC_EDIT_SUFFIXES               3184
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2706,9 +2708,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        282
+#define _APS_NEXT_RESOURCE_VALUE        283
 #define _APS_NEXT_COMMAND_VALUE         33519
-#define _APS_NEXT_CONTROL_VALUE         3184
+#define _APS_NEXT_CONTROL_VALUE         3185
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

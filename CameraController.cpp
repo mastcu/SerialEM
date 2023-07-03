@@ -764,6 +764,9 @@ int CCameraController::Initialize(int whichCameras)
       if (param->TietzType >= MIN_XF416_TYPE)
         param->canTakeFrames = 3;
     }
+    if (IsDirectDetector(param))
+      param->canTakeFrames = 0;
+
     if (param->canTakeFrames) {
       if (param->TietzType >= 11) {
         jnd = TIETZ_ROTATING(param) ? param->sizeX : param->sizeY;
@@ -1280,12 +1283,14 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
     for (i = 0; i < numOrig; i++) {
       ind = originalList[i];
       param = &mAllParams[ind];
-      if (param->TietzType == 17 || param->TietzType == 18)
-        anyGPU = true;
-      else
-        anyNonGPU = true;
-      if (param->STEMcamera)
-        hasSTEM = true;
+      if (param->TietzType) {
+        if (param->TietzType == 17 || param->TietzType == 18)
+          anyGPU = true;
+        else
+          anyNonGPU = true;
+        if (param->STEMcamera)
+          hasSTEM = true;
+      }
     }
     if (hasSTEM && (!funcs->GetSTEMProperties || !funcs->AcquireSTEMImage)) {
       AfxMessageBox("The TietzPlugin is missing a required function for STEM access; no "
@@ -1586,7 +1591,7 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
-  int ind, i, err, num, idum, numGain, flags, ifSTEM;
+  int ind, i, err, num, idum, numGain, flags, ifSTEM, set;
   double minPixel, rotInc, ddum;
   CString report;
 
@@ -1682,9 +1687,13 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
 
 
         // For a STEM camera, send the camera number plus number of additional channels
+        // But subtract if they are going to same channel
         num = mAllParams[i].cameraNumber;
         if (mAllParams[i].STEMcamera)
           num += mAllParams[i].numChannels - 1;
+        for (set = 0; set < mChannelSets.GetSize(); set++)
+          num -= mChannelSets[set].numChans - 1;
+
         if (!err && mPlugFuncs[i]->InitializeCamera &&
           mPlugFuncs[i]->InitializeCamera(num) != 0) {
           report.Format("Failed to initialize camera %d %sin the plugin named %s",
@@ -6520,6 +6529,11 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     exposure = camP->minExposure;
     retval = true;
   }
+  if (camP->maxExposure > 0. && exposure > camP->maxExposure) {
+    exposure = camP->maxExposure;
+    retval = true;
+  }
+
   if (!camP->K2Type && !(IS_FALCON2_3_4(camP) || FCAM_CONTIN_SAVE(camP)) && 
     !mWinApp->mDEToolDlg.HasFrameTime(camP)
     && !camP->OneViewType && !(camP->canTakeFrames && doseFrac)) {

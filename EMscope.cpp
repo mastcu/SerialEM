@@ -8915,6 +8915,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
           params->minExposure = (float)minDrift;
         else
           params->minExposure = (float)B3DMAX(params->minExposure, minDrift);
+        params->maxExposure = params->maximumDrift;
+        params->maximumDrift = 0.;
       } else {
         params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
       }

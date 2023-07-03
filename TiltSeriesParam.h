@@ -90,7 +90,7 @@ struct TiltSeriesParam {
   BOOL centerBeamFromTrial;    // Flag to center beam in low dose from trial image
   BOOL closeValvesAtEnd;       // Flag to close valves at end
   BOOL manualTracking;         // Flag for manual tracking - stop after align
-  int extraRecordType;         // 0 = none, 1 = focus, 2 = filter
+  int extraRecordType;         // 0 = none, 1 = focus, 2 = filter, 3 = opp T, 4 = STEM chan
   int numExtraFocus;           // Number of extra focus values
   double extraFocus[MAX_EXTRA_RECORDS];   // Relative focus changes
   int numExtraFilter;          // Number of extra filter settings
@@ -109,6 +109,7 @@ struct TiltSeriesParam {
   int extraSpotSize;           // New spot size
   BOOL extraSetBinning;        // Flag to set binning for extra trials
   int extraBinIndex;           // New binning
+  CString extraFileSuffixes;   // Suffixes when running from Nav acquire
   VaryInSeries varyArray[MAX_TS_VARIES];
   int numVaryItems;            // Array for scheduled changes and number in array
   BOOL doVariations;           // Flag to use the changes

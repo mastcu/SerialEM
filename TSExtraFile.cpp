@@ -36,6 +36,7 @@ CTSExtraFile::CTSExtraFile(CWnd* pParent /*=NULL*/)
   , m_bKeepBidirAnchor(FALSE)
   , m_bConsecutiveFiles(FALSE)
   , m_statConsecList(_T(""))
+  , m_strSuffixes(_T(""))
 {
 	//{{AFX_DATA_INIT(CTSExtraFile)
 	m_bSaveView = FALSE;
@@ -102,6 +103,8 @@ void CTSExtraFile::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CONSECUTIVE_FILES, m_butConsecutiveFiles);
   DDX_Check(pDX, IDC_CONSECUTIVE_FILES, m_bConsecutiveFiles);
   DDX_Text(pDX, IDC_STAT_CONSEC_LIST, m_statConsecList);
+  DDX_Control(pDX, IDC_EDIT_SUFFIXES, m_editSuffixes);
+  DDX_Text(pDX, IDC_EDIT_SUFFIXES, m_strSuffixes);
 }
 
 

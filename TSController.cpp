@@ -4741,6 +4741,7 @@ void CTSController::Terminate()
     if (!mPostponed || mStartedTS)
       mLastSucceeded = 1;
     mTermFromMenu = true;
+    mPostponed = false;
     TerminateOnError();
     return;
   }
@@ -5635,9 +5636,22 @@ int CTSController::FindClosestStackReference(double curAngle, int direction,
 void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
 {
   CTSExtraFile extraDlg;
+  CArray<TiltSeriesParam *, TiltSeriesParam *> *paramArray;
   int i;
-  if (!tsParam)
+  if (!tsParam) {
+    if (mWinApp->mNavigator) {
+      paramArray = mWinApp->mNavigator->GetTSparamArray();
+      if (paramArray->GetSize() > 0)
+        AfxMessageBox("WARNING: when opened through the menu, changes to extra\n"
+          "Records (except for the file number) will have NO effect\n"
+          "for tilt series acquired for Navigator items, because\n"
+          "already-stored parameters will be used for the items and inherited by "
+          "new items.\n\n"
+          "Set extra Record parameters for an item with \"TS Params\"\n"
+          "and \"Set Extra Output\" in the Tilt Series Setup dialog.");
+    }
     tsParam = &mTSParam;
+  }
 
   // If tilt series started, reload the files array with actual file numbers
   if (mStartedTS && LookupProtectedFiles())
@@ -5680,6 +5694,7 @@ void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
   extraDlg.m_bTrialBin = tsParam->extraSetBinning;
   extraDlg.m_bKeepBidirAnchor = tsParam->retainBidirAnchor;
   extraDlg.m_bConsecutiveFiles = mSeparateExtraRecFiles;
+  extraDlg.m_strSuffixes = tsParam->extraFileSuffixes;
 
   if (extraDlg.DoModal() != IDOK)
     return;
@@ -5716,7 +5731,8 @@ void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
   }
   tsParam->retainBidirAnchor = extraDlg.m_bKeepBidirAnchor;
   mSeparateExtraRecFiles = extraDlg.m_bConsecutiveFiles;
-  
+  tsParam->extraFileSuffixes = extraDlg.m_strSuffixes;
+
   // Renew the protections with the potentially new file numbers
   if (mStartedTS) {
     EvaluateExtraRecord();

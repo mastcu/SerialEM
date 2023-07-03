@@ -3765,7 +3765,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   FileOptions *newFileOpt;
   CString inheritors;
   bool madeNewOpt = false, gotThisSched = false;
-  int movingStage, prevIndex, i, j, sharedInd;
+  int movingStage = 0, prevIndex, i, j, sharedInd;
   int *propIndexp = &item->mFilePropIndex;
   int *montIndexp = &item->mMontParamIndex;
   prevIndex = *montIndexp;

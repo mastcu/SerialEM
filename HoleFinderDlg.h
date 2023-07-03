@@ -32,6 +32,7 @@ public:
   void GetGridImVecs(float *xVecs, float *yVecs) { xVecs = &mGridImXVecs[0]; yVecs = &mGridImYVecs[0]; };
   void GetGridStageVecs(float *xVecs, float *yVecs) { xVecs = &mGridStageXVecs[0]; yVecs = &mGridStageYVecs[0]; };
   GetMember(float, LastTiltAngle);
+  GetMember(int, LastMagIndex);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
   void StopScanning(void);
@@ -119,6 +120,8 @@ private:
   float mLastHoleSize;
   float mLastHoleSpacing;
   float mLastTiltAngle;
+  int mLastMagIndex;
+  int mLastDrawMagIndex;
   bool mFindingFromDialog;
   bool mSkipAutoCor;
   CFont *mBoldFont;

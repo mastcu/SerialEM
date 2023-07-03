@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/2/23: Added an AutoIT compiled executable that is used to change aperture
+size for systems where the UI automation fails to do so (Win 7, some Win 10).
+
+7/2/23: When a single-channel JEOL STEM interface has multiple detectors, made
+it initialize the proper interface if there is an appropriate
+MappedToDSChannel or MutuallyExcludeDetectors property.
+
+6/29/23: Got maximum exposure time from FEI camera and enforced it.
+
 6/28/23: Added script commands to get dose-symmetric angles with current
 settings and to modify them as long as the same reversals occur.
 

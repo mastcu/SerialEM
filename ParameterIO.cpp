@@ -177,7 +177,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
   // When you split a section, you need to add "recognized" code here and in the two macro
   // get/set functions, and add another include in WriteSettings
-  BOOL recognized, recognized15, recognized2, recognized25, frameListOK;
+  BOOL recognized, recognized15, recognized2, recognized25, recognized3, frameListOK;
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
@@ -246,6 +246,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           recognized15 = true;
           recognized2 = true;
           recognized25 = true;
+          recognized3 = true;
           if (NAME_IS("SystemPath")) {
 
         // There could be multiple words - have to assume 
@@ -1237,8 +1238,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
 #undef SET_TEST_SECT3
+      else
+        recognized3 = false;
 
-      else if (NAME_IS("TiltSeriesLowMagIndex")) {
+      if (recognized || recognized3) {
+        recognized = true;
+      } else if (NAME_IS("TiltSeriesLowMagIndex")) {
         mTSParam->lowMagIndex[0] = itemInt[1];
         mTSParam->lowMagIndex[1] = itemInt[2];
         mTSParam->lowMagIndex[2] = itemInt[3];
@@ -1255,19 +1260,19 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         NAME_IS("DoseCalibration") || NAME_IS("ShootAfterAutofocus"))
         err = 0;
 
-      else if (NAME_IS("TiltSeriesFocusSeries") || 
+      else if (NAME_IS("TiltSeriesFocusSeries") ||
         NAME_IS("TiltSeriesFilterSeries") || NAME_IS("TiltSeriesExtraChannels") ||
         NAME_IS("TiltSeriesExtraExposure")) {
         strCopy = strLine;
         FindToken(strCopy, strItems[0]);
-        if (NAME_IS("TiltSeriesFocusSeries")) 
-          index = StringToEntryList(1, strCopy, mTSParam->numExtraFocus, NULL, 
+        if (NAME_IS("TiltSeriesFocusSeries"))
+          index = StringToEntryList(1, strCopy, mTSParam->numExtraFocus, NULL,
             mTSParam->extraFocus, MAX_EXTRA_RECORDS);
-        else if (NAME_IS("TiltSeriesExtraExposure")) 
-          index = StringToEntryList(1, strCopy, mTSParam->numExtraExposures, NULL, 
+        else if (NAME_IS("TiltSeriesExtraExposure"))
+          index = StringToEntryList(1, strCopy, mTSParam->numExtraExposures, NULL,
             mTSParam->extraExposures, MAX_EXTRA_RECORDS);
         else if NAME_IS("TiltSeriesFilterSeries")
-          index = StringToEntryList(2, strCopy, mTSParam->numExtraFilter, 
+          index = StringToEntryList(2, strCopy, mTSParam->numExtraFilter,
             mTSParam->extraSlits, mTSParam->extraLosses, MAX_EXTRA_RECORDS);
         else
           index = StringToEntryList(3, strCopy, mTSParam->numExtraChannels,
@@ -1323,6 +1328,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mTSController->SetEndOnHighDimImage(itemInt[1] != 0);
         mWinApp->mTSController->SetDimEndsAbsAngle(itemInt[2]);
         mWinApp->mTSController->SetDimEndsAngleDiff(itemInt[3]);
+      } else if (NAME_IS("TSExtraSuffixes")) {
+        StripItems(strLine, 1, mTSParam->extraFileSuffixes);
       } else if (MatchNoCase("CloseValvesDuringMessageBox")) {
         mWinApp->mTSController->SetMessageBoxCloseValves(itemInt[1] != 0);
         mWinApp->mTSController->SetMessageBoxValveTime(itemFlt[2]);
@@ -2160,6 +2167,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       oneState = EntryListToString(3, 2, mTSParam->numExtraChannels, 
         mTSParam->extraChannels, NULL);
       WriteString("TiltSeriesExtraChannels", oneState);
+    }
+    if (!mTSParam->extraFileSuffixes.IsEmpty()) {
+      WriteString("TSExtraSuffixes", mTSParam->extraFileSuffixes);
     }
     for (i = 0; i < mTSParam->numVaryItems; i++) {
       oneState.Format("TiltSeriesVariation %f %d %d %d %f\n", mTSParam->varyArray[i].angle,

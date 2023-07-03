@@ -120,6 +120,8 @@ public:
   CString m_statConsecList;
   afx_msg void OnConsecutiveFiles();
   afx_msg void OnKillfocusEditEntries();
+  CEdit m_editSuffixes;
+  CString m_strSuffixes;
 };
 
 //{{AFX_INSERT_LOCATION}}

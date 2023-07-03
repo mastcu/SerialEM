@@ -11096,6 +11096,8 @@ int CMacCmd::ReportLastHoleVectors(void)
   if (settingMulti) {
     mNavHelper->UpdateMultishotIfOpen();
     msParams = mNavHelper->GetMultiShotParams();
+    if (index < -1 && mNavHelper->mHoleFinderDlg->GetLastMagIndex() > 0)
+      index = mNavHelper->mHoleFinderDlg->GetLastMagIndex();
     if (index < 0) {
       index = msParams->holeMagIndex;
       if (!index)

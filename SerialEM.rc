@@ -961,7 +961,7 @@ BEGIN
     CONTROL         "Stage position",IDC_STAGEPOS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,260,59,10
     CONTROL         "Magnification",IDC_MAGNIFICATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,271,56,10
     CONTROL         "Exposure dose",IDC_EXPOSURE_DOSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,282,62,10
-    LTEXT           "Maximum number of sections:",IDC_MAXSECTSTEXT,33,300,89,8
+    RTEXT           "Maximum number of sections:",IDC_MAXSECTSTEXT,30,300,92,8
     LTEXT           "(Be generous)",IDC_BEGENEROUS,53,309,44,8
     EDITTEXT        IDC_MAXSECTSEDIT,124,301,27,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,34,349,50,14
@@ -2035,18 +2035,18 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,0,0,10,10,NOT WS_VISIBLE
 END
 
-IDD_TSEXTRAFILE DIALOGEX 0, 0, 155, 413
+IDD_TSEXTRAFILE DIALOGEX 0, 0, 155, 440
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Extra Output"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,17,173,30,10
-    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,17,184,51,10
-    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,17,196,47,10
+    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,17,200,30,10
+    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,17,211,51,10
+    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,17,223,47,10
     CONTROL         "Pair of Trials from opposite areas",IDC_OPPOSITETRIAL,
-                    "Button",BS_AUTORADIOBUTTON,17,208,113,10
-    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,17,220,91,10
-    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,11,163,131,70,WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON,17,235,113,10
+    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,17,247,91,10
+    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,11,190,131,70,WS_GROUP
     LTEXT           "Select an image type to save it",IDC_STATIC,7,39,49,17
     LTEXT           "Select the file to save images in",IDC_STATIC,62,39,49,17
     CONTROL         "View",IDC_TSSAVEVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,59,28,10
@@ -2062,39 +2062,41 @@ BEGIN
     CONTROL         "Spin1",IDC_SPINPREVIEW,"msctls_updown32",UDS_ARROWKEYS,52,108,9,14
     LTEXT           "10",IDC_STATPREVIEWNUM,65,111,82,8
     LTEXT           "Extra Records",IDC_STATEXTRAREC,8,128,43,8
-    CONTROL         "Spin1",IDC_SPINRECORD,"msctls_updown32",UDS_ARROWKEYS,52,125,9,14
+    CONTROL         "Spin1",IDC_SPINRECORD,"msctls_updown32",UDS_ARROWKEYS,52,125,11,14
     LTEXT           "10",IDC_STATRECORDNUM,65,128,82,8
-    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,237,140,8
-    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,247,140,8
-    LTEXT           "",IDC_STATINSTRUCT1,7,257,140,8
-    LTEXT           "",IDC_STATINSTRUCT2,8,267,139,8
-    EDITTEXT        IDC_EDITENTRIES,7,276,140,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,24,392,33,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,392,33,14
-    PUSHBUTTON      "?",IDC_BUTHELP,142,396,9,10
+    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,264,140,8
+    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,274,140,8
+    LTEXT           "",IDC_STATINSTRUCT1,7,284,140,8
+    LTEXT           "",IDC_STATINSTRUCT2,8,294,139,8
+    EDITTEXT        IDC_EDITENTRIES,7,303,140,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,24,419,33,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,419,33,14
+    PUSHBUTTON      "?",IDC_BUTHELP,142,423,9,10
     CONTROL         "Stack Record/Overview in separate window",IDC_STACKRECORD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,7,139,10
     LTEXT           "Bin to",IDC_STATIC,7,21,17,8
     CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,25,18,9,14
     LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,37,21,110,8
-    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,317,70,10
-    LTEXT           "Change intensity by factor of",IDC_STATIC,22,303,63,8
-    EDITTEXT        IDC_EDIT_DELTAC2,83,301,30,12,ES_AUTOHSCROLL
-    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,332,67,10
-    EDITTEXT        IDC_EDIT_NEWEXPOSURE,78,331,65,12,ES_AUTOHSCROLL
-    LTEXT           "Drift settling to",IDC_STATIC,33,348,44,8
-    EDITTEXT        IDC_EDIT_NEWDRIFT,78,346,26,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,90,315,9,14
-    LTEXT           "99",IDC_STAT_NEWSPOT,82,318,8,8
-    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,89,360,9,14
-    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,362,69,10
-    LTEXT           "16",IDC_STAT_TRIAL_BIN,80,363,9,8
-    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,292,140,85
+    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,344,70,10
+    LTEXT           "Change intensity by factor of",IDC_STATIC,22,330,63,8
+    EDITTEXT        IDC_EDIT_DELTAC2,83,328,30,12,ES_AUTOHSCROLL
+    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,359,67,10
+    EDITTEXT        IDC_EDIT_NEWEXPOSURE,78,358,65,12,ES_AUTOHSCROLL
+    LTEXT           "Drift settling to",IDC_STATIC,33,375,44,8
+    EDITTEXT        IDC_EDIT_NEWDRIFT,78,373,26,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,90,342,9,14
+    LTEXT           "99",IDC_STAT_NEWSPOT,82,345,8,8
+    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,89,387,9,14
+    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,389,69,10
+    LTEXT           "16",IDC_STAT_TRIAL_BIN,80,390,9,8
+    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,319,140,85
     CONTROL         "Keep file with bidirectional anchor images",IDC_CHECK_KEEP_ANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,379,137,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,406,137,10
     CONTROL         "Save multiple Records in consecutive files",IDC_CONSECUTIVE_FILES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,141,137,10
-    LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,18,152,120,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,168,137,10
+    LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,18,179,120,8
+    EDITTEXT        IDC_EDIT_SUFFIXES,7,151,141,14,ES_AUTOHSCROLL
+    LTEXT           "Suffixes for extra files to open in Nav Acquire:",IDC_STATIC,7,141,142,8
 END
 
 IDD_REFPOLICY DIALOGEX 0, 0, 248, 122
@@ -4204,7 +4206,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 148
         TOPMARGIN, 7
-        BOTTOMMARGIN, 406
+        BOTTOMMARGIN, 433
     END
 
     IDD_REFPOLICY, DIALOG
@@ -4844,6 +4846,11 @@ BEGIN
 END
 
 IDD_CAMERA_MACRO AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

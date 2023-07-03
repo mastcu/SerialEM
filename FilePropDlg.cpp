@@ -232,6 +232,8 @@ void CFilePropDlg::ManageStates()
   m_editMaxSect.EnableWindow(bEnable);
   m_statMaxSects.EnableWindow(bEnable);
   m_statGenerous.EnableWindow(bEnable);
+  if (mFileOpt.typext & MONTAGE_MASK)
+    ReplaceDlgItemText(IDC_MAXSECTSTEXT, "sections", "montages");
   m_butSaveMdoc.EnableWindow(!mFileOpt.montageInMdoc && !m_iFileType);
 }
 
