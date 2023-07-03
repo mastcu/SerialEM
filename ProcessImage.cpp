@@ -2298,7 +2298,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   float angle, dist1, dist2;
   double pixel1, pixel2;
   CString report, str;
-  int num[2];
+  int num[3];
   KImage *image = mImBufs[bufInd].mImage;
   if (!image) {
     SEMMessageBox("There is no image in buffer passed to FindPixelSize routine");
@@ -2414,7 +2414,8 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], 
     numPeaks, doCatalase ? 16 : 64, catalFac, 
-    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS), markedX, markedY,
+    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS | FIND_ACPK_HEX_GRID), 
+    markedX, markedY,
     &dist1, &dist2, &angle, vectors, num, &ind1, &messBuf[0], MAX_MESS_BUF);
 
   // Now take care of display regardless, display point

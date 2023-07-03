@@ -829,7 +829,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav;
   int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
   float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY, useDiameter;
-  float autocorSpacing, testSpacing, vectors[4], autocorCrit = 0.14f;
+  float autocorSpacing, testSpacing, vectors[6], autocorCrit = 0.14f;
   double tstageX, tstageY;
   ScaleMat rMat, rInv, aMat;
   MontParam *montP = &mMontParam;

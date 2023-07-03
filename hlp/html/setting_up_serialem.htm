@@ -223,6 +223,7 @@
         <BR>
         <A href="#separate_kv">Setting Up for a Separate Voltage</A><br />
         <a href="#nanoprobe">Setting Up to Use Nanoprobe TEM on Thermo/FEI Scopes </a>&nbsp;<BR>
+        <a href="#apertures">Controlling Apertures on Thermo/FEI Scopes </a>&nbsp;<BR>
         <a href="#alpha_beamshift">Alpha and Beam Shift Calibration Issues on JEOL scopes </a>&nbsp;<BR>
         <a href="#using_gpu">Setting Up to Use a GPU for Frame Alignment</a>&nbsp;<BR>
         <a href="#adding_nvidia">Adding an NVIDIA card to a K2/K3 Computer</a>&nbsp;<BR>
@@ -3176,10 +3177,14 @@ MoveStage 0 0 -$zRange / 2.
       detectors is selected.&nbsp; Retraction is not done automatically just because
       some detectors are mutually exclusive, because this might not be needed.</P>
         <P><i>For JEOL STEM</i>, there should be a &#39;ChannelName&#39; entry for each detector, with
-          whatever name is desired, but the entries must be in the same order that they
+          whatever name is desired.&nbsp; If there is a multichannel interface, the entries must be in the same order that they
           are listed by the plugin or server upon initialization with JEOL camera debugging turned on
-          (have DebugOutput set to &#39;j&#39;).&nbsp; Detectors are controlled by the STEM
-          interface so the other properties mentioned above are not needed.</P>
+          (have DebugOutput set to &#39;j&#39;).&nbsp; If there is a single channel 
+          interface with multiple detectors, i.e., if only one detector can be recorded at 
+          a time (as in JEOL 2100plus), there should be a property &#39;MappedtoDSChannel 0 0 
+          1&#39; to ensure that the plugin or server is initialized with a single-channel 
+          interface (add &#39;2&#39;, etc if there are more than two detectors.)&nbsp; 
+          &#39;ImageDetectorID&#39; properties are also required with multiple detectors.</P>
 <P><i><b>Screen and Camera Management Properties.</b></i> Because of the diversity
   of STEM setups, there are a host of confusing properties to control the behavior
   of the screen and CCD cameras, which may be selected by preference or by
@@ -3680,6 +3685,37 @@ MoveStage 0 0 -$zRange / 2.
       mode.&nbsp; After establishing the basic beam position in each mode with this
       procedure, you can then apply additional beam shifts as necessary.</p>
       <P>&nbsp;</P>
+        <p><a name="apertures"></a><B>Controlling Apertures on Thermo/FEI Scopes &nbsp;</B><BR>
+          <p>SerialEM can control apertures on Thermo/FEI scopes using Microsoft 'UI 
+            Automation' instead of with Thermo/FEI scripting commands.&nbsp;For this to work, the 
+            microscope software must be running on Windows 7 or above, the TEM user 
+            interface must not be minimized, and the Apertures panel must be included on 
+            some tab in the Workset area of the TEM user interface.&nbsp; The tab will be 
+            switched to if that panel is not currently visible.&nbsp; The UI Automation alone 
+            cannot change an aperture size in Windows 7, and in some Windows 10 systems.&nbsp; 
+            In these cases, cppy the compiled AutoIT program SEM-AutoIT.exe from the 
+            SerialEM program package to either the directory with the SerialEM executable 
+            (when running directly on the scope) or to the same location as 
+            FEI-SEMserver.exe, when running through that.&nbsp; If desired, you can place 
+            this file elsewhere and define the environment variable SEM_AUTOIT_DIR with the 
+            full path to that location.</p>
+      <p>When changing size fails on these systems, the TEM interface will show the 
+        desired change.&nbsp; To assess whether this is happening on a Windows 10 
+        system, go to a lower magnification where you can see the objective aperture in 
+        an image, and use a script command 'SetApertureSize 2 X' to change the size to 
+        'X'.&nbsp; </p>
+      <p>The aperture operations, and 'ReportSlotStatus', will hang FEI-SEMserver.exe on 
+        some Windows 7 systems, even though they work when SerialEM is running directly 
+        on the scope computer. &nbsp; If this occurs, set the environment variable 
+        FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from 
+        being attempted.&nbsp; </p>
+      <p>For some Thermo/FEI server version (possibly 7.16.1, possibly higher), the new 
+        Utapi scripting can be used to control the apertures.&nbsp; Access to this 
+        scripting is activated with a property 'UseUtapiScripting 1'.&nbsp; As of 
+        3-Jul-23, SerialEM will crash 20% of the time on startup rtrying to connect with 
+        the Utapi server, and when run directly on the scope, it will always crash on 
+        exiting.</p>
+      <p>&nbsp;</p>
         <p><a name="alpha_beamshift"></a><B>Alpha and Beam Shift Calibration Issues on JEOL scopes &nbsp;</B><BR>
           </p>
       <P>

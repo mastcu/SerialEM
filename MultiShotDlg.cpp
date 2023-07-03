@@ -891,9 +891,11 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
   int ans;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   if (!mWinApp->mNavHelper->GetOKtoUseHoleVectors()) {
-    ans = SEMThreeChoiceBox("Using last hole vectors will replace the currently defined "
-      "image shift vectors for the regular pattern\n\nAre you sure you want to do this?",
-      "Yes", "Yes Always", "No", MB_YESNOCANCEL | MB_ICONQUESTION);
+    str2.Format("Using last hole vectors will replace the currently defined "
+      "image shift vectors for the %s pattern\n\nAre you sure you want to do this?",
+      mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? "hex" : "regular");
+    ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No", 
+      MB_YESNOCANCEL | MB_ICONQUESTION);
     if (ans == IDCANCEL)
       return;
     if (ans == IDNO)
@@ -1081,6 +1083,7 @@ void CMultiShotDlg::ManageEnables(void)
     dir = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
       mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), false, holeXvec, holeYvec,
       str2);
+    enable = dir != 0.;
   }
   m_butUseLastHoleVecs.EnableWindow(enable);
   if (notRecording)

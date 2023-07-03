@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/3/23: Added entry for extra file suffixes in the Tilt Series Extra Output
+dialog to replace having to use 'SuffixForExtraFile' command.
+
+7/3/23: Fixed some problems finding holes in hex grids.
+
+7/2/23: Stopped disabling the "Use Last IS vectors" button if not previously
+defined or not at the same tilt angle as before.
+
 7/2/23: Added an AutoIT compiled executable that is used to change aperture
 size for systems where the UI automation fails to do so (Win 7, some Win 10).
 

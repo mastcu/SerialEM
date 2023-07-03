@@ -5940,6 +5940,7 @@ BEGIN
     IDC_EDIT_REF_FPS        "Enter the frames per second for the reference images"
     IDC_USE_REC_HARDWARE_ROI 
                             "Acquire reference image with hardware ROI in current Record subarea"
+    IDC_EDIT_SUFFIXES       "Suffixes for extra files when Navigator Acquire at Items opens a file"
 END
 
 STRINGTABLE

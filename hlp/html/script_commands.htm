@@ -3210,17 +3210,10 @@
           <TD>For Thermo/FEI scopes only, reports the size for the aperture whose index is <b>#</b>,
             which can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; The
             reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
-            moving or not enabled; or the position of a phase plate plus 1 (e.g., 3 for 'Ph P2') for the
-             objective aperture.&nbsp; The
-             microscope software must be running on Windows 7 or above, the TEM user interface must 
-            not be minimized, and the Apertures panel
-             must be included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
-            to if that panel is not currently visible.&nbsp; Aperture operations are done with Microsoft 
-            'UI Automation', not with Thermo/FEI scripting commands.&nbsp; These operations, and 'ReportSlotStatus',
-            will hang FEI-SEMserver.exe on some Windows 7 systems, even though they work when SerialEM is running 
-            directly on the scope computer. &nbsp; If this occurs, set the environment variable 
-            FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from being 
-            attempted.&nbsp; Command added in 4.1, 7-Feb-23.
+            moving or not enabled; or the position of a phase plate plus 1 for the
+             objective aperture (e.g., 3 for 'Ph P2', but only if the
+            phase plates are named that way in the combo box).&nbsp; See <a href="setting_up_serialem#apertures">Controlling Apertures on Thermo/FEI Scopes </a> for requirements and restrictions for using this command and 'SetApertureSize'.
+             &nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>
@@ -3229,7 +3222,7 @@
             is <b>#I</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
             value of <B>#S</B> can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
             size.&nbsp; For an objective aperture with phase plates, the size can also be 2 to 7 to specify the phase
-            plates in position 1 to 6.&nbsp; Setting a specific aperture size does not work for scopes running under Windows 7 and even for some scopes running Windows 10.&nbsp; Command added in 4.1, 7-Feb-23.
+            plates in position 1 to 6, provided that the phase plates are named like 'Ph Pn' in the combo box.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>
@@ -4645,10 +4638,11 @@
              values and assigns them as the hole vectors for doing multiple records in a regular pattern 
             of holes.&nbsp; If the optional [#] is absent or 0, the values are computed for the current
             Low Dose Record magnification; if it is positive, the vectors are computed for the given 
-            magnification index; if it is negative, they are computed for the magnification at which 
-            hole vectors were last defined.&nbsp; The magnification associated with the image shift vectors in the
+            magnification index; if it is -1, they are computed for the magnification at which 
+            hole IS vectors were last defined; if it is < -1, they are computed for the magnification of 
+            the image in which holes were detected.&nbsp; The magnification associated with the image shift vectors in the
             multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
-            the parameters is set to zero.&nbsp; Command added in 4.0, 1/28/22.
+            the parameters is that of the image in which holes were found.&nbsp; Command added in 4.0, 1/28/22.
           </TD>
         </TR>
         <TR>
@@ -4969,15 +4963,10 @@
           <TD class="scriptcommand">SuffixForExtraFile suffix [suffix] [suffix] [...]</TD>
           <TD>Sets one or more suffixes so that the Acquire at Items routine will open the
             corresponding number of extra files whenever it opens a regular file for
-            output.&nbsp;Follow with the suffices, separated by spaces (and thus a suffix cannot
-            contain a space). The name of each extra file
-            will be the root of the regular filename, plus the suffix, followed by the
-            extension of the regular filename.&nbsp; The extra files will be opened before
-            the regular file.&nbsp; They will be closed when the regular file is closed (at
-            the end of acquisition or before opening a new file).&nbsp; If any file has not had images
-            written to it, it will be removed after being closed, so you can use this command to specify
-            the maximum number of files needed, even if some items do not require all the files.&nbsp; The
-             suffixes are not persistent
+            output.&nbsp;Follow with the suffixes, separated by spaces (and thus a suffix cannot
+            contain a space). An entry here overrides the corresponding entry in the 
+            <a href="hidd_tsextrafile.htm#Suffixes">Tilt Series Extra Output</a> dialog; see the help there for details.&nbsp; The
+             suffixes entered here are not persistent
             and the command needs to be included in a script run before the main action.
           </TD>
         </TR>

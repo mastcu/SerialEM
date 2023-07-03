@@ -2145,13 +2145,11 @@
 #define IDC_STAT_MESSAGE_LINE10         3176
 #define IDC_STAT_MESSAGE_LINE11         3177
 #define IDC_STAT_MESSAGE_LINE12         3178
-#define IDC_CHECK1                      3179
 #define IDC_ERASE_PERIODIC_PEAKS        3179
 #define IDC_SLIDER_HULL_DIST            3180
 #define IDC_EDIT_HULL_DIST              3181
 #define IDC_STAT_MIN_HULL_DIST          3182
 #define IDC_STAT_MAX_HULL_DIST          3183
-#define IDC_EDIT1                       3184
 #define IDC_EDIT_SUFFIXES               3184
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772

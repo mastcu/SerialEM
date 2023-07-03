@@ -98,16 +98,29 @@
       size as the main output, but this is not required or done automatically by the 
       program; you have to set up the montage of the needed size when you open the 
       output file.</P>
-    <P>When running multiple tilt series from the Navigator, you can use the 
-      &#39;SuffixForExtraFile&#39; script command to have one or more files opened for extra 
-      output.&nbsp; These files will all be opened before the main tilt series output 
-      file.&nbsp; As of SerialEM 4.1, 10/23/22, if only one type of extra output is 
+    <P>If only one type of extra output is 
+      selected, and you enter the suffixes described next, the file number here is 
+      irrelevant.&nbsp;</P>
+    <P><a href="">#Suffixes</a><strong>Suffixes for extra files to open in Nav. Acquire</strong></P>
+    <P>This entry sets one or more suffixes so that the Acquire at Items routine will 
+      open the corresponding number of extra files whenever it opens a regular file 
+      for output.&nbsp;Enter the suffixes separated by spaces (a suffix cannot contain a 
+      space). The name of each extra file will be the root of the regular filename, 
+      plus the suffix, followed by the extension of the regular filename.&nbsp; The extra 
+      files will be opened before the regular file.&nbsp; They will be closed when the 
+      regular file is closed (at the end of acquisition or before opening a new 
+      file).&nbsp; If any file has not had images written to it, it will be removed after 
+      being closed, so you can use this command to specify the maximum number of files 
+      needed, even if some items do not require all the files.&nbsp; The entries here 
+      will be overridden by the &#39;SuffixForExtraFile&#39; script command if that is run 
+      prior to acquiring a particular item.&nbsp; If only one type of extra output is 
       selected (e.g, just extra Records), the program will automatically set the 
       starting file number to the first file opened, and the file number here is 
-      irrelevant.&nbsp; Prior to that, or if there is more than one type of output 
-      selected, you need to anticipate how many other files will be open when 
-      starting the batch acquisition and set the file numbers here appropriately.&nbsp; 
-      Specifically, if no other files are open, you need to set the lowest file number to 1.</P>
+      irrelevant.&nbsp; If there is more than one type of output selected (or if you 
+      use &#39;SuffixForExtraFile&#39; prior to SerialEM 4.1, 23-Oct-22), you need to 
+      anticipate how many other files will be open when starting the batch acquisition 
+      and set the file numbers here appropriately.&nbsp; Specifically, if no other 
+      files are open, you need to set the lowest file number to 1.</P>
     <P><b>Save multiple Records in consecutive files</b></P>
     <P>Select this option to have each extra Record image at one tilt angle saved into 
       a separate file, where the file numbers are consecutive from the one selected 
