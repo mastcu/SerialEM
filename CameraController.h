@@ -70,6 +70,7 @@ class CCEOSFilter;
 #define PLUGIN_MDOC_FOR_FRAME_TS 115
 #define PLUGIN_EXTRA_DIV_FLOATS  116
 #define PLUGIN_RETURNS_FISE_SUMS 117
+#define PLUGIN_CAN_SAVE_SUBAREAS 118
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -1185,6 +1186,7 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
+bool NoSubareasForDoseFrac(CameraParameters *param, BOOL alignFrames, int useFrameAlign);
 bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave, int readMode = -1);
 bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);

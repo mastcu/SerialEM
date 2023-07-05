@@ -1655,8 +1655,8 @@ void CCameraSetupDlg::ManageCamera()
     "Use Hardware ROI");
 
   // Disable many things for restricted sizes
-  ManageSizeAndPositionButtons(m_bDoseFracMode && (mParam->K2Type ||
-    (mParam->GatanCam && mParam->canTakeFrames)));
+  ManageSizeAndPositionButtons(m_bDoseFracMode && mCamera->NoSubareasForDoseFrac(mParam,
+    m_bAlignDoseFrac, mCurSet->useFrameAlign));
 
   // Decide whether to convert A bit Less to Square
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);
@@ -2399,12 +2399,12 @@ bool CCameraSetupDlg::AdjustCoords(int binning, bool alwaysUpdate)
   bool update;
   int left, right, top, bottom, sizeX, sizeY, ucrit = 4 * binning - 1;
   double dbin = binning;
-  bool doseFrac = (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames)) && 
-    m_bDoseFracMode;
+  bool noSubarea = m_bDoseFracMode && mCamera->NoSubareasForDoseFrac(mParam,
+      m_bAlignDoseFrac, mCurSet->useFrameAlign);
   if (mParam->TietzType && mParam->canTakeFrames)
     ManageExposure();
-  int moduloX = doseFrac ? -2 : mParam->moduloX;
-  int moduloY = doseFrac ? -2 : mParam->moduloY;
+  int moduloX = noSubarea ? -2 : mParam->moduloX;
+  int moduloY = noSubarea ? -2 : mParam->moduloY;
   left = mCoordScaling * m_eLeft / binning;
   right = mCoordScaling * m_eRight / binning;
   top = mCoordScaling * m_eTop / binning;
@@ -2691,7 +2691,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
       mUserSaveFrames, NULL);
   if (mParam->canTakeFrames)
     m_bDoseFracMode = m_bAlignDoseFrac || (mCanSaveFrames && m_bSaveFrames);
-  if (m_bDoseFracMode && !oldDF) {
+  if (m_bDoseFracMode && (!oldDF || (mParam->K2Type && m_bAlignDoseFrac))) {
     AdjustCoords(mBinnings[m_iBinning], true);
     UpdateData(FALSE);
     DrawBox();
@@ -2800,8 +2800,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   // This is vestigial from when save enabled align with UFA = 2
   m_statWhereAlign.EnableWindow(mCurSet->useFrameAlign < 2 || m_bSaveFrames);
 
-  ManageSizeAndPositionButtons(m_bDoseFracMode && (mParam->K2Type || 
-    (mParam->GatanCam && mParam->canTakeFrames)));
+  ManageSizeAndPositionButtons(m_bDoseFracMode && mCamera->NoSubareasForDoseFrac(mParam,
+    m_bAlignDoseFrac, mCurSet->useFrameAlign));
   ManageDarkRefs();
 }
 
@@ -3127,6 +3127,10 @@ void CCameraSetupDlg::OnButSetupAlign()
   FixButtonFocus(m_butDEsetupAlign);
   ManageFalcon4FrameSpec();
   ManageK2Binning();
+  ManageBinnedSize();
+  AdjustCoords(mBinnings[m_iBinning], true);
+  UpdateData(FALSE);
+  DrawBox();
   if (mDE_Type)
     ManageDEpanel();
   else

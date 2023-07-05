@@ -5130,9 +5130,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
                                              int &gainYoffset)
 {
   int csizeX, csizeY, block, leftOffset = 0, topOffset = 0, operation = 0;
-  int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, reducedSizeX, reducedSizeY;
+  int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, margin, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
   bool reduceAligned, binInPlugin, oneViewTakingFrames, mapForGeometry, cropSubarea;
+  bool noSubarea;
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
@@ -5140,6 +5141,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     !IsK3BinningSuperResFrames(&conSet, mParam);
   oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && conSet.doseFrac;
   doseFrac = (mParam->K2Type && conSet.doseFrac) || oneViewTakingFrames;
+  noSubarea = conSet.doseFrac && NoSubareasForDoseFrac(mParam,
+    conSet.alignFrames, conSet.useFrameAlign);
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
   antialiasInPlugin = mParam->K2Type && CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam)  
@@ -5177,8 +5180,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     AdjustSizes(reducedSizeX, mParam->sizeX, mParam->moduloX, tLeft, tRight, 
       reducedSizeY, mParam->sizeY, mParam->moduloY, tTop, tBot, mBinning);
   }
-  AdjustSizes(mDMsizeX, mParam->sizeX, doseFrac ? -2 : mParam->moduloX, mLeft, mRight, 
-    mDMsizeY, mParam->sizeY, doseFrac ? -2 : mParam->moduloY, mTop, mBottom, mBinning);
+  AdjustSizes(mDMsizeX, mParam->sizeX, noSubarea ? -2 : mParam->moduloX, mLeft, mRight,
+    mDMsizeY, mParam->sizeY, noSubarea ? -2 : mParam->moduloY, mTop, mBottom, mBinning);
   
   // Fix coordinates for Tietz geometry
   tsizeX = mDMsizeX;
@@ -5240,7 +5243,9 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     tRight = tRight * mBinning / 2;
     tTop = tTop * mBinning / 2;
     tBot = tBot * mBinning / 2;
-    if (doseFrac) {
+    margin = 2 * mBinning;
+    if (doseFrac && (noSubarea || (tLeft < margin && tRight >= csizeX / 2 - margin && 
+        tTop < margin && tBot >= csizeY / 2 - margin))) {
       tLeft = 0;
       tRight = csizeX / 2;
       tTop = 0;
@@ -12318,6 +12323,15 @@ void CCameraController::GetMergeK2DefectList(int DMind, CameraParameters *param,
     param->defects.K2Type = 1;
   }
   delete [] xyPairs;
+}
+
+bool CCameraController::NoSubareasForDoseFrac(CameraParameters *param, 
+  BOOL alignFrames, int useFrameAlign)
+{
+  return ((mParam->K2Type &&
+    (GetPluginVersion(param) < PLUGIN_CAN_SAVE_SUBAREAS ||
+    (alignFrames && !useFrameAlign && param->K2Type != K3_TYPE))) ||
+      (param->GatanCam && param->canTakeFrames));
 }
 
 // Restore Gatan camera orientations on exit if necessary
