@@ -2092,6 +2092,8 @@ int HoleFinder::analyzeNeighbors
   const int numKernBins = 180;
   const int noGridVal = 32767, hadGridVal = 32765, rejectGridVal = 32766;
 
+  if (numPoints < 2)
+    return 0;
   ptConnLists.resize(numPoints);
   xMissing.clear();
   yMissing.clear();
