@@ -722,8 +722,7 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
     if (!sGpuModule) {
       if (err)
 #ifdef GMS_MAJOR_VERSION
-        utilPrint("GPU is not directly available from SerialEMCCD plugin; it "
-          "could not load FrameGPU.dll\n");
+        utilPrint("GPU is not directly available from SerialEMCCD plugin\n");
 #else
         utilPrint("GPU is not available, could not load FrameGPU.dll\n");
 #endif

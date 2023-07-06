@@ -1080,6 +1080,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
   else if (mNumCameras > 1)
     m_strCopyCamera = mCamParam[mActiveCameraList[mLastCamera]].name;
 
+  // Disable many things for restricted sizes
+  ManageSizeAndPositionButtons(m_bDoseFracMode && mCamera->NoSubareasForDoseFrac(mParam,
+    m_bAlignDoseFrac, mCurSet->useFrameAlign));
+
   UpdateData(false);  
   ManageDrift();
   ManageTimingAvailable();
@@ -1653,10 +1657,6 @@ void CCameraSetupDlg::ManageCamera()
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
   m_butUseHwROI_OvDiff.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
     "Use Hardware ROI");
-
-  // Disable many things for restricted sizes
-  ManageSizeAndPositionButtons(m_bDoseFracMode && mCamera->NoSubareasForDoseFrac(mParam,
-    m_bAlignDoseFrac, mCurSet->useFrameAlign));
 
   // Decide whether to convert A bit Less to Square
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);
