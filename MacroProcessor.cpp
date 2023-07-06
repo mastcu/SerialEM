@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include <direct.h>
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include "MainFrm.h"
@@ -1104,6 +1105,9 @@ int CMacroProcessor::TaskBusy()
     GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess,
       &mExtProcExitStatus);
     report.Format("%s exited with status %d", (LPCTSTR)mEnteredName, mExtProcExitStatus);
+    if (mExtProcExitStatus == 1 && mRanCtfplotter)
+      report += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) + 
+        "\\ctfplotter.log for error messages";
     SetReportedValues(mExtProcExitStatus);
     if (mExtProcExitStatus || !mRanCtfplotter) {
       mWinApp->AppendToLog(report, mLogAction);
