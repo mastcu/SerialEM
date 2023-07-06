@@ -15,6 +15,7 @@
 #endif
 
 #include <vector>
+#include <set>
 #include "CorrectDefects.h"
 #include "gpuframe.h"
 
@@ -64,7 +65,8 @@ class FrameAlign {
                         float *rawYshifts, float *ringCorrs,
                         float deltaR, int &bestFilt, float *smoothDist, float *rawDist,
                         float *resMean, float *resSD, float *meanResMax, float *maxResMax,
-                        float *meanRawMax, float *maxRawMax);
+                        float *meanRawMax, float *maxRawMax,
+                        float *evenSum = NULL, float *oddSum = NULL);
   int getUnweightedSum(float *nonDWsum);
   void cleanup(void);
   int splineSmooth(float *xShifts, float *yShifts, int numShifts, 
@@ -91,9 +93,11 @@ class FrameAlign {
                                       float stackMargin, int inFlags, int &outFlags);
   int setTruncationLimit(void *array, int nx, int ny, int useMode, float truncLimit,
                          float &truncUse);
+  int getPaddedSumSize() {return (mSumXpad + 2) * mSumYpad;};
 
   
  private:
+  void doRegression(bool doRobust, int filt, int fitInd, std::set<int> &dropSet);
   int alignTwoFrames(int refInd, int binInd, float nearXshift, float nearYshift,
                      int filtInd, float &xShift, float &yShift, bool filterSubarea,
                      bool dump);
@@ -151,8 +155,8 @@ class FrameAlign {
   FloatVec mYshifts[MAX_FILTERS + 1];
   FloatVec mXallShifts[MAX_FILTERS];
   FloatVec mYallShifts[MAX_FILTERS];
-  float mXfitShifts[MAX_FILTERS][MAX_ALL_VS_ALL];
-  float mYfitShifts[MAX_FILTERS][MAX_ALL_VS_ALL];
+  float mXfitShifts[MAX_FILTERS + 1][MAX_ALL_VS_ALL];
+  float mYfitShifts[MAX_FILTERS + 1][MAX_ALL_VS_ALL];
   float mXnearShifts[MAX_ALL_VS_ALL];
   float mYnearShifts[MAX_ALL_VS_ALL];
   float mLastXfit[MAX_FILTERS + 1][MAX_ALL_VS_ALL];
@@ -223,6 +227,7 @@ class FrameAlign {
   float mResMeanSum[MAX_FILTERS+ 1], mResSDsum[MAX_FILTERS+ 1];
   float mResMaxSum[MAX_FILTERS+ 1], mMaxResMax[MAX_FILTERS+ 1];
   float mMaxRawMax[MAX_FILTERS+ 1], mRawMaxSum[MAX_FILTERS+ 1];
+  float mPredMeanSum[MAX_FILTERS + 1];
   float mFiltFunc[8193], mFiltDelta;
   int mGpuLibLoaded;          // If FrameGPU loaded: -1 untested, 0 not available, 1 yes,
   int mNumExpectedFrames;

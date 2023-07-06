@@ -222,6 +222,7 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
     mResMeanSum[filt] = mResSDsum[filt] = mMaxResMax[filt] = 0.;
     mResMaxSum[filt] = mMaxRawMax[filt] = mRawMaxSum[filt] = 0.;
     mCumulXdiff[filt] = mCumulYdiff[filt] = 0.;
+    mPredMeanSum[filt] = 0.;
   }
 
   divisor = binSum;
@@ -538,6 +539,8 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
     memset(mFullEvenSum, 0, (sumXpad + 2) * sumYpad * sizeof(float));
     memset(mFullOddSum, 0, (sumXpad + 2) * sumYpad * sizeof(float));
   }
+  if (mUnweightSum)
+    memset(mUnweightSum, 0, (sumXpad + 2) * sumYpad * sizeof(float));
   mWallFullFFT = mWallBinPad = mWallBinFFT = mWallReduce = mWallShift = 0.;
   mWallConjProd = mWallFilter = mWallPreProc = mWallNoise = 0.;
   mDoingDoseWeighting = false;
@@ -1378,11 +1381,13 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
     yOffset = (nyForBP - mNy) / 2;
 
     // Use zoomdown routine for binning, it is a lot faster
+    // Have to select the filter again because reading EER selects filter too
     START_TIMER;
     if (mBinAlign > 1) {
       for (ind = 0; ind < nyForBP; ind++)
         mLinePtrs[ind] = (unsigned char *)(fullArr + ind * nxDimForBP);
-      if (!zoomWithFilter(mLinePtrs, nxForBP, nyForBP, (float)(mXstart + xOffset),
+      if (selectZoomFilter(mAntiFiltType, 1. / mBinAlign, &ind) ||
+          !zoomWithFilter(mLinePtrs, nxForBP, nyForBP, (float)(mXstart + xOffset),
                           (float)(mYstart + yOffset), nxBin, nyBin,
                           nxBin, 0, MRC_MODE_FLOAT, binArr, NULL, NULL))
         needExtract = false;
@@ -1391,11 +1396,11 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
       extractWithBinning(fullArr, MRC_MODE_FLOAT, nxDimForBP, mXstart + xOffset,
                          mXend + xOffset, mYstart + yOffset, mYend + yOffset,
                          mBinAlign, binArr, 0, &nxBin, &nyBin);
-    //dumpImage(binArr, nxBin, nxBin, nyBin, 0, "binned");
+    //utilDumpImage(binArr, nxBin, nxBin, nyBin, 0, "binned");
 
     sliceTaperInPad(binArr, MRC_MODE_FLOAT, nxBin, 0, nxBin - 1, 0, nyBin - 1, binArr,
                     mAlignXpad + 2, mAlignXpad, mAlignYpad, nxTaper, nyTaper);
-    //dumpImage(binArr, mAlignXpad + 2, mAlignXpad, mAlignYpad, 0, "padded tapered");
+    //utilDumpImage(binArr, mAlignXpad + 2, mAlignXpad, mAlignYpad, 0, "padded tapered");
     ADD_TIME(mWallBinPad);;
     
   }
@@ -1542,22 +1547,18 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
  */
 void FrameAlign::findAllVsAllAlignment(bool justForLimits)
 {
-  int row, col, numData, numCol, numInCol, ref, ind, numIter, maxZeroWgt, filt, allInd;
-  int maxAsBest, indOfMax = -1;
+  int row, numData, numCol, numInCol, ref, ind, filt, allInd;
+  int maxAsBest, indOfMax = -1, maxDrop, numSets, dropRun, numPred, indMaxDist = 0;
   bool pickable, failed[MAX_FILTERS];
-  float solMat[2 * MAX_ALL_VS_ALL], xMean[MAX_ALL_VS_ALL], xSD[MAX_ALL_VS_ALL];
-  float maxChange = 0.02f;
-  float maxOscill = 0.05f;
-  int maxIter = 50;
   int numFrames = B3DMIN(mNumFrames, mNumAllVsAll + mGroupSize - 1);
   int numGroups = numFrames + 1 - mGroupSize;
-  float resMean[MAX_FILTERS], resSD[MAX_FILTERS];
+  float resMean[MAX_FILTERS], resSD[MAX_FILTERS], predMean[MAX_FILTERS];
   float maxWgtRes[MAX_FILTERS], maxRaw[MAX_FILTERS];
   int numFailed[MAX_FILTERS];
   
   bool doRobust = numFrames >= 5 && mKfactor > 0.;
-  float finalX = 0., finalY = 0.;
-  float errx, erry, resid, wgtResid, resSum, resSumSq, distFilt, dist0;
+  float finalX = 0., finalY = 0., fracDrop, predSum;
+  float errx, erry, resid, wgtResid, resSum, resSumSq, distFilt, dist0, weight;
   float minWgt = 2.f, minError = 1.e30f;
   float maxFitDist = 0., fitDist[MAX_FILTERS], errMeasure[MAX_FILTERS];
   float smoothDist[MAX_FILTERS], maxSmoothDist = 0.;
@@ -1566,6 +1567,11 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
   float absZeroCrit = (float)(0.15 * mBinAlign);
   float relZeroCrit = (float)(0.5 * mBinAlign);
   float closerRatio = 0.2f;
+  FloatVec fullWeights;
+  std::set<int> dropSet;
+  int indResMin = 0, indPredMin = 0;
+  numCol = numGroups + 3;
+  numInCol = numGroups - 1;
 
   // Evaluate failures of higher filters relative to lower ones
   for (filt = 0; filt < MAX_FILTERS; filt++)
@@ -1637,55 +1643,8 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
     } 
 
     // Otherwise, do the fitting
-    // Load the data matrix with the correlations
-    row = 0;
-    numCol = numGroups + 3;
-    numInCol = numGroups - 1;
-    for (ind = 1; ind < numGroups; ind++) {
-      for (ref = 0; ref <= ind - mGroupSize; ref++) {
-        mFitMat[numCol * row + numInCol] = mXallShifts[filt][ref * mNumAllVsAll + ind];
-        mFitMat[numCol * row + numInCol + 1] = 
-          mYallShifts[filt][ref * mNumAllVsAll + ind];
-        for (col = 0; col < numInCol; col++)
-          mFitMat[numCol * row + col] = ((ind == numGroups - 1) ? -1.f : 0.f);
-        mFitMat[numCol * row + ref] += -1.f;
-        if (ind < numGroups - 1)
-          mFitMat[numCol * row + ind] += 1.f;
-        /*for (col = 0; col < numInCol; col++)
-          printf("%.1f ", mFitMat[numCol * row + col]);
-          printf("%.2f %.2f\n", mFitMat[numCol * row + numInCol], 
-          mFitMat[numCol * row + numInCol + 1]); */
-        row++;
-      }
-    }
-    numData = row;
-    
-    // Do robust fitting if enough data, fall back to regular fit on error
-    maxZeroWgt = (int)B3DMIN(0.1 * numData, numFrames - 3);
-    if (doRobust) {
-      row = robustRegress(mFitMat, numCol, 1, numInCol, numData, 2, solMat, 
-                          numInCol, NULL, xMean, xSD, mFitWork, mKfactor, 
-                          &numIter, maxIter, maxZeroWgt, maxChange, maxOscill);
-      if (row) {
-        if (mDebug)
-          utilPrint("robustRegress failed with error %d\n", row);
-        doRobust = false;
-      }
-    }
-    if (!doRobust)
-      multRegress(mFitMat, numCol, 1, numInCol, numData, 2, 0, solMat, numInCol, NULL,
-                  xMean, xSD, mFitWork);
-    finalX = finalY = 0.;
-    for (ind = 0; ind < numInCol; ind++) {
-      finalX -= solMat[ind];
-      finalY -= solMat[ind + numInCol];
-      mXfitShifts[filt][ind] = solMat[ind];
-      mYfitShifts[filt][ind] = solMat[ind + numInCol];
-      //PRINT2(solMat[ind], solMat[ind + numInCol]);
-    }
-    mXfitShifts[filt][numInCol] = finalX;
-    mYfitShifts[filt][numInCol] = finalY;
-    //PRINT2(finalX, finalY);
+    dropSet.clear();
+    doRegression(doRobust, filt, filt, dropSet);
 
     // For first filter, copy to the shifts used for predictions
     if (!filt) {
@@ -1700,6 +1659,7 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
     // Compute residuals
     row = 0;
     fitDist[filt] = 0.;
+    fullWeights.clear();
     for (ind = 1; ind < numGroups; ind++) {
       for (ref = 0; ref <= ind - mGroupSize; ref++) {
         allInd = ref * mNumAllVsAll + ind;
@@ -1708,11 +1668,12 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
         erry = (mYfitShifts[filt][ind] - mYfitShifts[filt][ref]) - 
           mYallShifts[filt][allInd];
         resid = sqrt(errx * errx + erry * erry);
-        wgtResid = resid;
-        if (doRobust) {
-          wgtResid = resid * mFitMat[numCol * row + numInCol + 2];
-          minWgt = B3DMIN(minWgt, mFitMat[numCol * row + numInCol + 2]);
-        }
+        weight = 1.;
+        if (doRobust)
+          weight = mFitMat[numCol * row + numInCol + 2];
+        wgtResid = resid * weight;
+        ACCUM_MIN(minWgt, weight);
+        fullWeights.push_back(weight);
         resSum += wgtResid;
         resSumSq += wgtResid * wgtResid;
         ACCUM_MAX(maxRaw[filt], resid);
@@ -1724,16 +1685,65 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
                  pow((double)mYfitShifts[filt][ind] - mYfitShifts[filt][ref], 2.));
       }
     }
+
+    sumsToAvgSD(resSum, resSumSq, numData, &resMean[filt], &resSD[filt]);
+    predMean[filt] = resMean[filt];
+
+    // Cross-validation for >= 4 groups
+    if (numGroups >= 4) {
+
+      // This fancy graded ratio doesn't really matter, it ends up jumping to 2 points
+      // at 21 frames
+      fracDrop = (float)((0.01 * numData) / numGroups);
+      B3DCLAMP(fracDrop, 0.05f, 0.1f);
+      maxDrop = B3DMAX(1, (int)(fracDrop * numData));
+      numSets = (numData + maxDrop - 1) / maxDrop;
+      numPred = 0;
+      predSum = 0.;
+
+      // Loop on the runs, set up the drop set for a run, and do regression
+      for (dropRun = 0; dropRun < numSets; dropRun++) {
+        dropSet.clear();
+        for (ind = dropRun; ind < numData; ind += numSets)
+          dropSet.insert(ind);
+        doRobust = numData - dropSet.size() >= 2 * numGroups && mKfactor > 0.;
+        doRegression(doRobust, filt, MAX_FILTERS, dropSet);
+
+        // Compute the leave-out error
+        row = 0;
+        for (ind = 1; ind < numGroups; ind++) {
+          for (ref = 0; ref <= ind - mGroupSize; ref++) {
+            if (dropSet.count(row)) {
+              allInd = ref * mNumAllVsAll + ind;
+              errx = (mXfitShifts[MAX_FILTERS][ind] - mXfitShifts[MAX_FILTERS][ref]) -
+                mXallShifts[filt][allInd];
+              erry = (mYfitShifts[MAX_FILTERS][ind] - mYfitShifts[MAX_FILTERS][ref]) - 
+                mYallShifts[filt][allInd];
+              resid = sqrt(errx * errx + erry * erry);
+              predSum += (doRobust ? fullWeights[row] : 1.f) * resid;
+              numPred++;
+            }
+            row++;
+          }
+        }
+      }
+      predMean[filt] = predSum / numPred;
+    }
     
     // Maintain stats for this filter
-    sumsToAvgSD(resSum, resSumSq, numData, &resMean[filt], &resSD[filt]);
+    if (resMean[filt] < resMean[indResMin])
+      indResMin = filt;
+    if (predMean[filt] < predMean[indPredMin])
+      indPredMin = filt;
+    
+    mPredMeanSum[filt] += predMean[filt];
     mResMeanSum[filt] += resMean[filt];
     mResSDsum[filt] += resSD[filt];
     mResMaxSum[filt] += maxWgtRes[filt];
     mRawMaxSum[filt] += maxRaw[filt];
     ACCUM_MAX(mMaxResMax[filt], maxWgtRes[filt]);
     ACCUM_MAX(mMaxRawMax[filt], maxRaw[filt]);
-    errMeasure[filt] = (1.f - mMaxMaxWeight) * resMean[filt] + 
+    errMeasure[filt] = (1.f - mMaxMaxWeight) * predMean[filt] + 
       mMaxMaxWeight * maxWgtRes[filt];
     failed[filt] = numFailed[filt] >= B3DMAX(1, numFrames - 2);
     if (failed[filt])
@@ -1742,7 +1752,10 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
     if (mXshifts[filt].size() >= 3)
       smoothDist[filt] = smoothedTotalDistance(&mXshifts[filt][0], &mYshifts[filt][0],
                                                (int)mXshifts[filt].size(), dist0);
-    ACCUM_MAX(maxFitDist, fitDist[filt]);
+    if (maxFitDist < fitDist[filt]) {
+      indMaxDist = filt;
+      maxFitDist = fitDist[filt];
+    }
     ACCUM_MAX(maxSmoothDist, smoothDist[filt]);
     //PRINT3(filt, fitDist[filt],  smoothDist[filt]);
     if (maxAsBest < mNumAsBestFilt[filt]) {
@@ -1754,19 +1767,27 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
     if (filt == mNumFilters - 1) {
       //PRINT2(maxFitDist, maxSmoothDist);
 
+      // Determine the best filter, discounting ones that have a much lower distance than
+      // the maximum distance.  This is
+      // driven by assumption/finding that ones with lower distance were contaminated by
+      // bad fits from fixed pattern noise, but it should only be applied when the filter
+      // is higher than the one that gives the maximum distance.  In the other direction
+      // bigger distances reflect noise from overfitting.  
       for (ind = 0; ind < mNumFilters; ind++) {
         if (!mPickedBestFilt && mNumAsBestFilt[ind] > -mFailedOftenCrit && !failed[ind] &&
-            (errMeasure[ind] < minError && fitDist[ind] >= distCrit * maxFitDist) &&
+            errMeasure[ind] < minError && 
+            !(ind >= indMaxDist && fitDist[ind] < distCrit * maxFitDist) &&
             !(maxAsBest >= mNumAsBestFilt[ind] + mPickDiffCrit && 
               maxAsBest >= mPickRatioCrit * mNumAsBestFilt[ind])) {
           minError = errMeasure[ind];
           mBestFilt = ind;
         }
-        //utilPrint("%d  ", mNumAsBestFilt[ind]);
+        //utilPrint("%d  %.3f  ", mNumAsBestFilt[ind], errMeasure[ind]);
       }
       //PRINT2(mBestFilt, indOfMax);
 
       mResMeanSum[mNumFilters] += resMean[mBestFilt];
+      mPredMeanSum[mNumFilters] += predMean[mBestFilt];
       mResSDsum[mNumFilters] += resSD[mBestFilt];
       mResMaxSum[mNumFilters] += maxWgtRes[mBestFilt];
       mRawMaxSum[mNumFilters] += maxRaw[mBestFilt];
@@ -1776,7 +1797,10 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
       if (!mPickedBestFilt && mNumFilters > 1 && mNumFrames >= mNumAllVsAll + 
           mGroupSize -1) {
         mNumAsBestFilt[mBestFilt]++;
-        pickable = true;
+
+        // 3/15/22: Do not pick a filter at this point unless the hybrid solution is
+        // actually going to be used
+        pickable = mUseHybrid != 0;
         for (ind = 0; ind < mNumFilters; ind++) {
           if (ind != indOfMax && (maxAsBest < mNumAsBestFilt[ind] + mPickDiffCrit ||
                                   maxAsBest < mPickRatioCrit * mNumAsBestFilt[ind]))
@@ -1790,15 +1814,92 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
           mPickedBestFilt = true;
         }
       }
+  if (numGroups >= 4 && mDebug)
+    for (ind = 0; ind < mNumFilters; ind++)
+      if ((ind == indPredMin || ind == indResMin) && indResMin != indPredMin)
+      utilPrint("filt %d res %.3f%s  pred %.3f%s\n", ind, resMean[ind], ind == indResMin
+                ? "*":" ", predMean[ind], ind == indPredMin?"*":" ");
     }
     if (mDebug > 1) {
       utilPrint("%sresidual: mean = %.2f, SD = %.2f, max = %.2f,  n = %d\n", 
-                doRobust ? "weighted " : "", resMean[filt], resSD[filt], maxWgtRes[filt], numGroups);
+                doRobust ? "weighted " : "", resMean[filt], resSD[filt], maxWgtRes[filt],
+                numGroups);
       if (doRobust)
         utilPrint("    unweighted max residual = %.2f, min weight = %.3f\n",
                   maxRaw[filt], minWgt);
     }
   }
+}
+
+/*
+ * Fill matrix for regression, optionally dropping the ones in the set, do robust or
+ * regular regression, using values for filt but putting solution in fitInd
+ */
+void FrameAlign::doRegression(bool doRobust, int filt, int fitInd, std::set<int> &dropSet)
+{
+  int row, col, numData, numCol, numInCol, ref, ind, numIter, maxZeroWgt, allInd;
+  float solMat[2 * MAX_ALL_VS_ALL], xMean[MAX_ALL_VS_ALL], xSD[MAX_ALL_VS_ALL];
+  float maxChange = 0.02f;
+  float maxOscill = 0.05f;
+  int maxIter = 50;
+  int numFrames = B3DMIN(mNumFrames, mNumAllVsAll + mGroupSize - 1);
+  int numGroups = numFrames + 1 - mGroupSize;
+  float finalX = 0., finalY = 0.;
+
+  // Load the data matrix with the correlations
+  row = 0;
+  numCol = numGroups + 3;
+  numInCol = numGroups - 1;
+  allInd = 0;
+  for (ind = 1; ind < numGroups; ind++) {
+    for (ref = 0; ref <= ind - mGroupSize; ref++) {
+      if (dropSet.count(allInd++))
+        continue;
+      mFitMat[numCol * row + numInCol] = mXallShifts[filt][ref * mNumAllVsAll + ind];
+      mFitMat[numCol * row + numInCol + 1] = 
+        mYallShifts[filt][ref * mNumAllVsAll + ind];
+      for (col = 0; col < numInCol; col++)
+        mFitMat[numCol * row + col] = ((ind == numGroups - 1) ? -1.f : 0.f);
+      mFitMat[numCol * row + ref] += -1.f;
+      if (ind < numGroups - 1)
+        mFitMat[numCol * row + ind] += 1.f;
+      /*for (col = 0; col < numInCol; col++)
+        printf("%.1f ", mFitMat[numCol * row + col]);
+      printf("%.6f %.6f\n", mFitMat[numCol * row + numInCol], 
+      mFitMat[numCol * row + numInCol + 1]);*/
+      row++;
+    }
+  }
+  numData = row;
+    
+  // Do robust fitting if enough data, fall back to regular fit on error
+  maxZeroWgt = (int)B3DMIN(0.1 * numData, numFrames - 3);
+  if (doRobust) {
+    row = robustRegress(mFitMat, numCol, 1, numInCol, numData, 2, solMat, 
+                        numInCol, NULL, xMean, xSD, mFitWork, mKfactor, 
+                        &numIter, maxIter, maxZeroWgt, maxChange, maxOscill);
+    if (row) {
+      if (mDebug)
+        utilPrint("robustRegress%s failed with error %d\n",
+                  filt != fitInd ? " for CV" : "" ,row);
+      doRobust = false;
+    }
+  }
+  if (!doRobust)
+    multRegress(mFitMat, numCol, 1, numInCol, numData, 2, 0, solMat, numInCol, NULL,
+                xMean, xSD, mFitWork);
+
+  // Copy to the appropriate fitShifts
+  for (ind = 0; ind < numInCol; ind++) {
+    finalX -= solMat[ind];
+    finalY -= solMat[ind + numInCol];
+    mXfitShifts[fitInd][ind] = solMat[ind];
+    mYfitShifts[fitInd][ind] = solMat[ind + numInCol];
+    //PRINT2(solMat[ind], solMat[ind + numInCol]);
+  }
+  mXfitShifts[fitInd][numInCol] = finalX;
+  mYfitShifts[fitInd][numInCol] = finalY;
+  //PRINT2(finalX, finalY);
 }
 
 /*
@@ -1809,14 +1910,15 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
                                   float *alisum, float *xShifts, float *yShifts,
                                   float *rawXshifts, float *rawYshifts, float *ringCorrs,
                                   float deltaR, int &bestFilt, float *smoothDist,
-                                  float *rawDist, float *resMean, float *resSD,
+                                  float *rawDist, float *resMean, float *predMean,
                                   float *meanResMax, float *maxResMax, float *meanRawMax,
-                                  float *maxRawMax)
+                                  float *maxRawMax, float *evenSum, float *oddSum)
 {
   int ind, numPix, frame, maxAsBest, filt, useFilt, iter, ierr, useFrame, numAlign,binInd;
   float shiftX, shiftY, error, minError, maxRefine;
   FloatVec refXshift, refYshift, cumXshift, cumYshift, groupXshift, groupYshift;
   float *realSum = mFullEvenSum;
+  float *evenSource = mFullEvenSum;
   float *binArr;
   int nxBin = mNx / mBinSum;
   int nyBin = mNy / mBinSum;
@@ -1844,7 +1946,7 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
       mBestFilt = 0;
       minError = 1.e30f;
       for (ind = 0; ind < mNumFilters; ind++) {
-        error = (1.f - mMaxMaxWeight) * mResMeanSum[ind] / B3DMAX(1, mNumFits) +
+        error = (1.f - mMaxMaxWeight) * mPredMeanSum[ind] / B3DMAX(1, mNumFits) +
           mMaxMaxWeight * mMaxResMax[ind];
         if (mNumAsBestFilt[ind] > -mFailedOftenCrit && error < minError &&
             !(maxAsBest >= mNumAsBestFilt[ind] + mPickDiffCrit && 
@@ -2131,6 +2233,13 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
       utilDumpFFT(mFullOddSum, mSumXpad, mSumYpad, "odd sum", 1);
     }
     if (!mGpuSumming || !mGpuFlags) {
+
+      // If doing even and odd, copy the even FFT to output buffer before it is added to
+      if (evenSum && oddSum) {
+        evenSource = evenSum;
+        for (ind = 0; ind < (mSumXpad + 2) * mSumYpad; ind++)
+          evenSum[ind] = mFullEvenSum[ind];
+      }
       for (ind = 0; ind < (mSumXpad + 2) * mSumYpad; ind++)
         mFullEvenSum[ind] += mFullOddSum[ind];
       START_TIMER;
@@ -2139,6 +2248,16 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
     }
     extractWithBinning(realSum, MRC_MODE_FLOAT, mSumXpad + 2, xStart, xEnd, yStart,
                        yEnd, 1, alisum, 0, &nxBin, &nyBin);
+
+    // Do the even and odd sums if requested
+    if (evenSum && oddSum) {
+      todfftc(evenSource, mSumXpad, mSumYpad, 1);
+      todfftc(mFullOddSum, mSumXpad, mSumYpad, 1);
+      extractWithBinning(evenSource, MRC_MODE_FLOAT, mSumXpad + 2, xStart, xEnd, yStart,
+                         yEnd, 1, evenSum, 0, &nxBin, &nyBin);
+      extractWithBinning(mFullOddSum, MRC_MODE_FLOAT, mSumXpad + 2, xStart, xEnd, yStart,
+                         yEnd, 1, oddSum, 0, &nxBin, &nyBin);
+    }
   }
 
   // return best shifts
@@ -2156,11 +2275,12 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
                                                &refXshift[0], &refYshift[0]);
     ind = B3DMAX(1, mNumFits);
     resMean[filt] = mResMeanSum[filt] / ind;
-    resSD[filt] = mResSDsum[filt] / ind;
+    predMean[filt] = mPredMeanSum[filt] / ind;
     meanResMax[filt] = mResMaxSum[filt] / ind;
     maxResMax[filt] = mMaxResMax[filt];
     meanRawMax[filt] = mRawMaxSum[filt] / ind;
     maxRawMax[filt] = mMaxRawMax[filt];
+    mPredMeanSum[filt] /= ind;
   }
   if (mReportTimes)
     utilPrint("FullFFT %.3f  BinPad %.3f  BinFFT %.3f  Reduce %.3f  Shift %.3f Filt "
