@@ -47,4 +47,6 @@ public:
   afx_msg void OnDeltaposSpinDefOffset(NMHDR *pNMHDR, LRESULT *pResult);
   afx_msg void OnCheckSetDefOffset();
   void ManageEnables();
+  CButton m_butImageAfterIS;
+  BOOL m_bImageAfterIS;
 };

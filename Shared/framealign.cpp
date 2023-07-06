@@ -710,7 +710,7 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
         if (sGpuModule)
           break;
         lastErr = GetLastError();
-        utilPrint("Error %d occurred trying to load %s\n", lastErr, hereStr.c_str());
+        utilPrint("Could not load %s  (error %d)\n", hereStr.c_str(), lastErr);
         err = 1;
       }
     }
@@ -718,7 +718,12 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
     // Give message on definite failure to load
     if (!sGpuModule) {
       if (err)
+#ifdef GMS_MAJOR_VERSION
+        utilPrint("GPU is not directly available from SerialEMCCD plugin; it "
+          "could not load FrameGPU.dll\n");
+#else
         utilPrint("GPU is not available, could not load FrameGPU.dll\n");
+#endif
       mGpuLibLoaded = 0;
       return 0;
     }

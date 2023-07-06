@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/5/23: Added option to Step and Adjust IS dialog to take image after shifting
+to a position.
+
+7/5/23: Allowed taking subareas in dose fractionation mode for K2/K3, needs
+new plugin.
+
+7/3/23: SEM_4-1-0beta18
 7/3/23: Added entry for extra file suffixes in the Tilt Series Extra Output
 dialog to replace having to use 'SuffixForExtraFile' command.
 
@@ -25,7 +32,7 @@ settings and to modify them as long as the same reversals occur.
 
 6/28/23: Added property to set number of spot sizes in STEM.
 
-6/28/23: SEM_4-1-0beta17 (in testing)
+6/28/23: SEM_4-1-0beta17
 6/28/23: Preliminary support added for new TFS UTAPI scripting interface,
 which will allow proper aperture control (requiring at least server 7.16.1).
 

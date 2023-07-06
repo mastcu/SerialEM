@@ -12,6 +12,7 @@
 #include "EMscope.h"
 #include "ShiftManager.h"
 #include "AutoTuning.h"
+#include "CameraController.h"
 #include "MacroProcessor.h"
 #include "ParticleTasks.h"
 #include "SerialEMView.h"
@@ -572,6 +573,8 @@ void CMultiShotDlg::StartRecording(const char *instruct)
         (params->numHoles[1] - 1) * params->holeISYspacing[1]) / 2.;
     }
     mWinApp->mScope->IncImageShift(ISX, ISY);
+    if (params->stepAdjTakeImage && mWinApp->LowDoseMode())
+      mWinApp->mCamera->InitiateCapture(mAreaSaved);
   }
   ManageEnables();
 }
@@ -838,8 +841,11 @@ void CMultiShotDlg::OnButSaveIs()
 
   }
   m_statSaveInstructions.SetWindowText(str);
-  if (mSteppingAdjusting)
+  if (mSteppingAdjusting) {
     mWinApp->mScope->IncImageShift(ISX, ISY);
+    if (mActiveParams->stepAdjTakeImage && mWinApp->LowDoseMode())
+      mWinApp->mCamera->InitiateCapture(mAreaSaved);
+  }
 }
 
 // Separate button to end the custom pattern

@@ -18,6 +18,7 @@ CStepAdjustISDlg::CStepAdjustISDlg(CWnd* pParent /*=NULL*/)
   , m_strOtherMag(_T(""))
   , m_bSetDefOffset(FALSE)
   , m_strDefOffset(_T(""))
+  , m_bImageAfterIS(FALSE)
 {
 
 }
@@ -37,6 +38,8 @@ void CStepAdjustISDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_SET_DEF_OFFSET, m_bSetDefOffset);
   DDX_Text(pDX, IDC_STAT_DEF_OFFSET, m_strDefOffset);
   DDX_Control(pDX, IDC_SPIN_DEF_OFFSET, m_sbcDefOffset);
+  DDX_Control(pDX, IDC_CHECK_IMAGE_AFTER_IS, m_butImageAfterIS);
+  DDX_Check(pDX, IDC_CHECK_IMAGE_AFTER_IS, m_bImageAfterIS);
 }
 
 
@@ -69,6 +72,7 @@ BOOL CStepAdjustISDlg::OnInitDialog()
   m_iAreaToUse = mParam->stepAdjLDarea;
   m_iMagTypeToUse = mParam->stepAdjWhichMag;
   m_bSetDefOffset = mParam->stepAdjSetDefOff;
+  m_bImageAfterIS = mParam->stepAdjTakeImage;
   m_strOtherMag.Format("%d", MagForCamera(mWinApp->GetCurrentCamera(), mOtherMagInd));
   m_sbcOtherMag.SetRange(0, 10000);
   m_sbcOtherMag.SetPos(5000);
@@ -90,6 +94,7 @@ void CStepAdjustISDlg::OnOK()
   mParam->stepAdjLDarea = m_iAreaToUse;
   mParam->stepAdjWhichMag = m_iMagTypeToUse;
   mParam->stepAdjSetDefOff = m_bSetDefOffset;
+  mParam->stepAdjTakeImage = m_bImageAfterIS;
   CBaseDlg::OnOK();
 }
 

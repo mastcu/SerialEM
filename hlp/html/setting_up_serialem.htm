@@ -294,7 +294,7 @@
           full IMOD installation can be done to provide these programs, but an easier and 
           more lightweight option is to use a standalone 3dmod package, which simply 
           unpacks in 'C:\Program Files\3dmod' by default, but can be unzipped elsewhere if necessary.&nbsp; 
-          To use both of these programs, you need an installation of IMOD 4.12.32 or higher (available from the 
+          To use both of these programs, you need an installation of IMOD 4.12.47 or higher (available from the 
           <a href = "http://bio3d.colorado.edu/imod/download.html">IMOD download page</a>), or a standalone
           3dmod package based on this version or higher, available at
             <a href = "http://bio3d.colorado.edu/ftp/Windows3dmod">http://bio3d.colorado.edu/ftp/Windows3dmod</a>.
@@ -3709,12 +3709,9 @@ MoveStage 0 0 -$zRange / 2.
         on the scope computer. &nbsp; If this occurs, set the environment variable 
         FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from 
         being attempted.&nbsp; </p>
-      <p>For some Thermo/FEI server version (possibly 7.16.1, possibly higher), the new 
+      <p>For Thermo/FEI server versions past 7.16.1 (and possibly 7.16.1 also), the new 
         Utapi scripting can be used to control the apertures.&nbsp; Access to this 
-        scripting is activated with a property 'UseUtapiScripting 1'.&nbsp; As of 
-        3-Jul-23, SerialEM will crash 20% of the time on startup rtrying to connect with 
-        the Utapi server, and when run directly on the scope, it will always crash on 
-        exiting.</p>
+        scripting is activated with a property 'UseUtapiScripting 1'.</p>
       <p>&nbsp;</p>
         <p><a name="alpha_beamshift"></a><B>Alpha and Beam Shift Calibration Issues on JEOL scopes &nbsp;</B><BR>
           </p>

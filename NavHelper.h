@@ -71,6 +71,7 @@ struct MultiShotParams
   BOOL stepAdjSetDefOff; // Whether to change defocus offset
   int stepAdjDefOffset;  // Defocus offset to use
   int stepAdjWhichMag;   // Which kind of mag to use: current, recorded at, or other
+  BOOL stepAdjTakeImage; // Flag to take an image of current area
 };
 
 struct HoleFinderParams

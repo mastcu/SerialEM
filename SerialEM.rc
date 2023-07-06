@@ -3968,7 +3968,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,145,245,10,10
 END
 
-IDD_STEP_AND_ADJUST_IS DIALOGEX 0, 0, 153, 147
+IDD_STEP_AND_ADJUST_IS DIALOGEX 0, 0, 153, 161
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Step and Adjust IS Setup"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -3977,20 +3977,22 @@ BEGIN
     CONTROL         "View",IDC_STAA_VIEW,"Button",BS_AUTORADIOBUTTON,48,27,32,10
     CONTROL         "Record",IDC_STAA_RECORD,"Button",BS_AUTORADIOBUTTON,48,39,39,10
     GROUPBOX        "Low Dose area to use",IDC_STATIC,36,5,81,47,WS_GROUP
-    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,65,132,10
+    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,79,132,10
     CONTROL         "Mag at which shifts were recorded",IDC_STAA_PREV_MAG,
-                    "Button",BS_AUTORADIOBUTTON,14,77,129,10
-    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,89,49,10
-    GROUPBOX        "Magnification to use",IDC_STATIC,7,55,139,50,WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,7,126,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,75,126,50,14
-    RTEXT           "23000",IDC_STAT_OTHER_MAG,66,90,21,8
-    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,87,10,14
+                    "Button",BS_AUTORADIOBUTTON,14,91,129,10
+    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,103,49,10
+    GROUPBOX        "Magnification to use",IDC_STATIC,7,69,139,50,WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,7,140,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,75,140,50,14
+    RTEXT           "23000",IDC_STAT_OTHER_MAG,66,104,21,8
+    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,101,10,14
     CONTROL         "Change defocus offset to:",IDC_CHECK_SET_DEF_OFFSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,110,95,10
-    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,111,14,8
-    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,108,10,14
-    PUSHBUTTON      "?",IDC_BUTHELP,136,128,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,124,95,10
+    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,125,14,8
+    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,122,10,14
+    PUSHBUTTON      "?",IDC_BUTHELP,136,142,11,10
+    CONTROL         "Take image after shifting to position",IDC_CHECK_IMAGE_AFTER_IS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,55,130,10
 END
 
 
@@ -4558,7 +4560,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 146
         TOPMARGIN, 7
-        BOTTOMMARGIN, 140
+        BOTTOMMARGIN, 154
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -5940,7 +5942,13 @@ BEGIN
     IDC_EDIT_REF_FPS        "Enter the frames per second for the reference images"
     IDC_USE_REC_HARDWARE_ROI 
                             "Acquire reference image with hardware ROI in current Record subarea"
+END
+
+STRINGTABLE
+BEGIN
     IDC_EDIT_SUFFIXES       "Suffixes for extra files when Navigator Acquire at Items opens a file"
+    IDC_CHECK_IMAGE_AFTER_IS
+                            "Take an image of the selected area after stepping to each position"
 END
 
 STRINGTABLE
