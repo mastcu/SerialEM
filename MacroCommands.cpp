@@ -2573,12 +2573,22 @@ int CMacCmd::RotateMultiShotPattern(void)
 
   mNavHelper->UpdateMultishotIfOpen();
   index = mNavHelper->RotateMultiShotVectors(mNavHelper->GetMultiShotParams(),
-    mItemFlt[1], mItemInt[2] != 0);
+    mItemFlt[1], mItemInt[2]);
   if (index)
     ABORT_LINE(index > 1 ? "No image shift to specimen transformation available "
       "for line:\n\n" : "Selected pattern is not defined for line:/n/n");
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
+  return 0;
+}
+
+// AdjustMultiShotPattern
+int CMacCmd::AdjustMultiShotPattern()
+{
+  mNavHelper->UpdateMultishotIfOpen();
+  if (mNavHelper->AdjustMultiShotVectors(mNavHelper->GetMultiShotParams(),
+    mItemInt[1], mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
   return 0;
 }
 
@@ -2624,7 +2634,7 @@ int CMacCmd::SetCustomHoleShifts(void)
       ABORT_LINE("A magnification index must be included because there is none currently "
         "defined for custom holes");
   } else {
-    if (mItemEmpty[5] && !msParams->holeMagIndex)
+    if (mItemEmpty[5] && !msParams->holeMagIndex[0])
       ABORT_LINE("A magnification index must be included because there is none currently "
         "defined for regular hole vectors");
   }
@@ -2646,9 +2656,10 @@ int CMacCmd::SetCustomHoleShifts(void)
     msParams->holeISXspacing[1] = mItemDbl[3];
     msParams->holeISYspacing[1] = mItemDbl[4];
     if (!mItemEmpty[5] && mItemInt[5])
-      msParams->holeMagIndex = mItemInt[5];
+      msParams->holeMagIndex[0] = mItemInt[5];
     if (!mItemEmpty[6])
-      msParams->tiltOfHoleArray = mItemFlt[6];
+      msParams->tiltOfHoleArray[0] = mItemFlt[6];
+    msParams->origMagOfArray[0] = 0;
   }
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
@@ -11087,19 +11098,20 @@ int CMacCmd::SetHoleFinderParams(void)
 // ReportLastHoleVectors, UseHoleVectorsForMulti
 int CMacCmd::ReportLastHoleVectors(void)
 {
-  int numDir, index = mItemInt[1];
+  int numDir, index = mItemInt[1], hexInd;
   double xVecs[3], yVecs[3];
   bool settingMulti = CMD_IS(USEHOLEVECTORSFORMULTI);
   MultiShotParams *msParams;
   if (index > 0 && (index >= MAX_MAGS || !mMagTab[index].mag))
     ABORT_LINE("The magnification index is out of range in:\n\n");
   if (settingMulti) {
+    hexInd = mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? 1 : 0;
     mNavHelper->UpdateMultishotIfOpen();
     msParams = mNavHelper->GetMultiShotParams();
     if (index < -1 && mNavHelper->mHoleFinderDlg->GetLastMagIndex() > 0)
       index = mNavHelper->mHoleFinderDlg->GetLastMagIndex();
     if (index < 0) {
-      index = msParams->holeMagIndex;
+      index = msParams->holeMagIndex[hexInd];
       if (!index)
         ABORT_LINE("There is no existing hole magnification index to use for:\n\n");
     }

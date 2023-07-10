@@ -309,18 +309,38 @@
       the same sequence of positions as when first saving them.&nbsp; You should start 
       out positioned on the center of the pattern.&nbsp; If a regular pattern is selected 
       (i.e., if <strong>Use custom pattern </strong>is not checked), press <b>Step To and Adjust 
-      IS</b>, and the image shift will be set to reach the first corner of the pattern.&nbsp; Press
+      IS</b>, select the Low Dose area and magnification in the
+      <a href="hidd_step_and_adjust_is.htm">Step and Adjust IS Setup</a> dialog if in 
+      Low Dose mode, and the image shift will be set to reach the first corner of the pattern.&nbsp; Press
        <b>Save Image Shift</b> after adjusting the image shift (or not), and it will move on to the next position, 
-      eventually going to all four corners.&nbsp; 
+      eventually going to all four corners (or 6 corners for a hexagonal array).&nbsp; 
       If a custom pattern is selected, press <b>Step To and Adjust 
       IS</b>, then adjust the centering on the origin of the pattern if necessary.&nbsp; Press <b>Save Image Shift</b> 
       to store that reference location, and it will move to the first position to be 
       recorded.&nbsp; Continue through the rest of the positions to be recorded.&nbsp; 
-      When adjusting image shift, the magnification will be set to that at which image shifts were 
-      previously defined, and in Low Dose mode the Record magnification will be set 
-      that value as well as long as it is in not closer to the View magnification.&nbsp; 
+      When adjusting image shift outside of Low Dose mode, the magnification will be set to that at which image shifts were 
+      previously defined.&nbsp; 
       However, you are free to change the magnification at which you adjust the 
       shifts.</p>
+    <p> In most cases, an adjusting transformation will be saved when you complete the <b>Step To and Adjust 
+      IS</b> procedure for a regular rectangular or hexagonal array, along with the 
+      magnifications at which the pattern was originally defined and at which the 
+      positions were adjusted.&nbsp; If vectors are defined again at the same 
+      magnification, this transformation can be applied with the 
+      &#39;AdjustMultiShotPattern&#39; script command.&nbsp; Specifically, if vectors from a 
+      hole-finding operation are used to define image shift vectors, and you then 
+      adjust those vectors to be accurate at higher magnification with this procedure, 
+      a new set of hole vectors can be adjusted in the same way with that command.&nbsp; 
+      If you apply the adjusting transform to a pattern and then use the <b>Step To and Adjust 
+      IS</b> procedure and adjust positions at the same magnification as previously, 
+      the adjusting transformation will be modified by the changes in position.&nbsp; 
+      In this way, an adjusting transformation from a previous session should be a 
+      good starting point and can then be refined to apply to the current session.&nbsp; 
+      An adjusting transformation is not saved if the pattern was created with 
+      &#39;SetCustomHoleShifts&#39; or &#39;SetRegularHoleVectors&#39;, modified with 
+      &#39;RotateMultiShotPattern&#39;, or created from hole-finding vectors with 
+      &#39;UseHoleVectorsForMulti #&#39; and <strong>#</strong> greater than -2, the value that 
+      makes it use the magnification of the image on which holes were found.</p>
     <p> See above for instructions on how to save sufficiently accurate shift values 
       with these methods.</p>
       <p><b>IS to Nav Pt</b></p>

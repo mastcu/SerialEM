@@ -550,7 +550,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->holeISYspacing[1] = itemDbl[17];
           msParams->numHoles[0] = itemInt[18];
           msParams->numHoles[1] = itemInt[19];
-          msParams->holeMagIndex = itemInt[20];
+          msParams->holeMagIndex[0] = itemInt[20];
           msParams->customMagIndex = itemInt[21];
         }
         if (!itemEmpty[22]) {
@@ -560,7 +560,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->doSecondRing = itemInt[23] != 0;
           msParams->numShots[1] = itemInt[24];
           msParams->spokeRad[1] = itemFlt[25];
-          msParams->tiltOfHoleArray = itemFlt[26];
+          msParams->tiltOfHoleArray[0] = itemFlt[26];
           msParams->tiltOfCustomHoles = itemFlt[27];
           msParams->holeFinderAngle = itemFlt[28];
         }
@@ -571,6 +571,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->hexISXspacing[index] = itemDbl[2 * index + 3];
           msParams->hexISYspacing[index] = itemDbl[2 * index + 4];
         }
+        if (!itemEmpty[10]) {
+          msParams->holeMagIndex[1] = itemInt[9];
+          msParams->tiltOfHoleArray[1] = itemFlt[10];
+        } else {
+          msParams->holeMagIndex[1] = msParams->holeMagIndex[0];
+          msParams->tiltOfHoleArray[1] = msParams->tiltOfHoleArray[0];
+        }
       } else if (NAME_IS("StepAdjustParams")) {
         msParams->stepAdjLDarea = itemInt[1];
         msParams->stepAdjWhichMag = itemInt[2];
@@ -579,6 +586,16 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         msParams->stepAdjDefOffset = itemInt[5];
         if (!itemEmpty[6])
           msParams->stepAdjTakeImage = itemInt[6] != 0;
+      } else if (NAME_IS("HoleAdjustXform")) {
+        msParams->origMagOfArray[0] = itemInt[1];
+        msParams->origMagOfArray[2] = itemInt[2];
+        msParams->origMagOfCustom = itemInt[3];
+        msParams->xformFromMag = itemInt[4];
+        msParams->xformToMag = itemInt[5];
+        msParams->adjustingXform.xpx = itemFlt[6];
+        msParams->adjustingXform.xpy = itemFlt[7];
+        msParams->adjustingXform.ypx = itemFlt[8];
+        msParams->adjustingXform.ypy = itemFlt[9];
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back(itemFlt[index]);
@@ -1814,20 +1831,27 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->inHoleOrMultiHole, msParams->useCustomHoles ? 1 : 0,
       msParams->holeDelayFactor, msParams->holeISXspacing[0], msParams->holeISYspacing[0],
       msParams->holeISXspacing[1], msParams->holeISYspacing[1],
-      msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex,
+      msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex[0],
       msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0,
       msParams->doSecondRing ? 1 : 0, msParams->numShots[1], msParams->spokeRad[1],
-      msParams->tiltOfHoleArray, msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
+      msParams->tiltOfHoleArray[0], msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
     mFile->WriteString(oneState);
-    oneState.Format("MultiHexParams %d %d %f %f %f %f %f %f\n",
+    oneState.Format("MultiHexParams %d %d %f %f %f %f %f %f %d %f\n",
       msParams->doHexArray ? 1 : 0, msParams->numHexRings, msParams->hexISXspacing[0],
       msParams->hexISYspacing[0], msParams->hexISXspacing[1], msParams->hexISYspacing[1],
-      msParams->hexISXspacing[2], msParams->hexISYspacing[2]);
+      msParams->hexISXspacing[2], msParams->hexISYspacing[2], msParams->holeMagIndex[1],
+      msParams->tiltOfHoleArray[1]);
     mFile->WriteString(oneState);
     oneState.Format("StepAdjustParams %d %d %d %d %d %d\n", msParams->stepAdjLDarea,
       msParams->stepAdjWhichMag, msParams->stepAdjOtherMag,
       msParams->stepAdjSetDefOff ? 1 : 0, msParams->stepAdjDefOffset,
       msParams->stepAdjTakeImage ? 1 : 0);
+    mFile->WriteString(oneState);
+    oneState.Format("HoleAdjustXform %d %d %d %d %d %f %f %f %f\n",
+      msParams->origMagOfArray[0], msParams->origMagOfArray[1], msParams->origMagOfCustom,
+      msParams->xformFromMag, msParams->xformToMag, msParams->adjustingXform.xpx,
+      msParams->adjustingXform.xpy, msParams->adjustingXform.ypx, 
+      msParams->adjustingXform.ypy);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL,

@@ -4098,9 +4098,22 @@
           <TD class="scriptcommand">RotateMultiShotPattern #A [#C]</TD>
           <TD>Rotates the hole positions in the pattern set up in the
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> by angle
-            <b>#A</b>. &nbsp;Set optional <b>#C</b> non-zero to rotate the custom pattern instead
+            <b>#A</b>. &nbsp;Set optional <b>#C</b> positive to rotate the custom pattern or negative to
+            rotate the hexagonal pattern instead
             of the regular one. &nbsp;Generates an error if the selected pattern is not defined
             or the needed transformation is not available.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AdjustMultishotPattern #</TD>
+          <TD>Applies an adjusting transformation to a set of image shifts for multiple Records: to the regular
+            rectangular array vectors if <b>#</b> is 0, or to hexagonal array vectors or custom shifts 
+            if <b>#</b> is -1 or 1, respectively.&nbsp; The transformation is the one recorded the last
+            time that the <B>Step To and Adjust IS</B> procedure was run in the Multiple Record Setup 
+            dialog.&nbsp; Generates an error if the selected vectors are not defined, if they were
+             defined in a way that provides enough information for them to be adjusted, if there
+            is no adjusting transform, if this transformation was already applied, or if the magnification
+             at which the given vectors were defined does not match the starting magnification 
+            of the adjusting transformation. &nbsp;Command added in 4.1, 9-Jul-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">OpenMultiShotFiles name</TD>

@@ -3412,6 +3412,7 @@ ScaleMat CShiftManager::MatInv(ScaleMat aa)
 
 // Apply a scale matrix to x and Y values, adding to existing values if incremental is set
 // (default false).  Set testXpx to false for simple 90-degree matrix!
+// Double/float to float must have separate output from input
 void ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
   float &xTo, float &yTo, bool incremental, bool testXpx)
 {
@@ -3423,6 +3424,7 @@ void ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
   yTo += (float)(mat.ypx * xFrom + mat.ypy * yFrom);
 }
 
+// Double/float to double can have the output the same as the input
 void ApplyScaleMatrix(ScaleMat &mat, double xFrom, double yFrom,
   double &xTo, double &yTo, bool incremental, bool testXpx)
 {

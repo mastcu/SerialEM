@@ -3,6 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/10/23: Added check for whether multishot items are too close together, 
+suggesting hole combining wasn't run.
+
+7/10/23: Started storing a transformation when multishot vectors are adjusted
+with 'Step To and Adjust IS' and added script command to apply it to vectors.
+
+7/10/23: Fixed drawing of points outside the image when image is zoomed
+smaller than window, broken 3/1/23.
+
+7/10/23: Ctrl-left-double-click near the blue rectangle drawn for a map will
+make it load that map.
+
+7/10/23: It will try to load a regular settings file from the system location
+before loading the default settings file.
+
 7/5/23: Added option to Step and Adjust IS dialog to take image after shifting
 to a position.
 

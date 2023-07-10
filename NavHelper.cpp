@@ -211,9 +211,11 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.inHoleOrMultiHole = 1;
   mMultiShotParams.useCustomHoles = false;
   mMultiShotParams.holeDelayFactor = 1.5f;
-  mMultiShotParams.holeMagIndex = 0;
+  mMultiShotParams.holeMagIndex[0] = 0;
+  mMultiShotParams.holeMagIndex[1] = 0;
   mMultiShotParams.customMagIndex = 0;
-  mMultiShotParams.tiltOfHoleArray = -999.;
+  mMultiShotParams.tiltOfHoleArray[0] = -999.;
+  mMultiShotParams.tiltOfHoleArray[1] = -999.;
   mMultiShotParams.tiltOfCustomHoles = -999.;
   mMultiShotParams.holeFinderAngle = -999.;
   mMultiShotParams.stepAdjLDarea = 2;
@@ -221,6 +223,12 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.stepAdjOtherMag = -1;
   mMultiShotParams.stepAdjSetDefOff = false;
   mMultiShotParams.stepAdjDefOffset = -10;
+  mMultiShotParams.origMagOfArray[0] = 0;
+  mMultiShotParams.origMagOfArray[1] = 0;
+  mMultiShotParams.origMagOfCustom = 0;
+  mMultiShotParams.xformFromMag = 0;
+  mMultiShotParams.xformToMag = 0;
+  mMultiShotParams.adjustingXform = {0., 0., 0., 0.};
   mSkipAstigAdjustment = 0;
   mNavAlignParams.maxAlignShift = 1.;
   mNavAlignParams.resetISthresh = 0.2f;
@@ -4635,19 +4643,21 @@ void CNavHelper::StopDualMap(void)
 int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
 {
   ScheduledFile *sched;
-  CMapDrawItem *item;
+  CMapDrawItem *item, *item2;
   MontParam *montp;
   StateParams *state;
   TiltSeriesParam *tsp;
   CString mess, mess2, label;
   CString *names = mWinApp->GetModeNames();
-  int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err;
+  int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err, numClose;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
   NavAcqParams *navParam = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
   mAcqActions = mAllAcqActions[mCurAcqParamIndex];
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
+  float delX, delY, critDist, critDistSq;
+  double holeDist, dists[3], angle;
   bool seen;
   BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && IsMultishotSaving();
   int *seenGroups;
@@ -4695,6 +4705,58 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
     SEMMessageBox("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing", MB_EXCLAME);
     return 1;
+  }
+
+  // Check that positions are not too close together if doing multishot hex or >= 2x2
+  if (navParam->acquireType == ACQUIRE_MULTISHOT && !mMultiShotParams.useCustomHoles &&
+    (mMultiShotParams.doHexArray || 
+    (mMultiShotParams.numHoles[0] > 1 && mMultiShotParams.numHoles[1] > 1))) {
+    GetMultishotDistAndAngles(&mMultiShotParams, mMultiShotParams.doHexArray, dists, 
+      holeDist, angle);
+    if (holeDist > 0.) {
+      numClose = 0;
+      critDist = (float)(1.3 * holeDist);
+      critDistSq = critDist * critDist;
+
+      // Loop on pairs, considering only ones that are complete with given pattern
+      for (i = startInd; i <= endInd; i++) {
+        item = mItemArray->GetAt(i);
+        if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire &&
+          !item->mNumSkipHoles) {
+          for (j = startInd; j <= endInd; j++) {
+            if (j == i)
+              continue;
+            item2 = mItemArray->GetAt(j);
+            if (item2->mRegistration == mNav->GetCurrentRegistration() &&
+              item2->mAcquire && !item2->mNumSkipHoles) {
+              delX = item->mStageX - item2->mStageX;
+              delY = item->mStageY - item2->mStageY;
+
+              // Count close ones, save last labels
+              if (delX > -critDist && delX < critDist && delY > -critDist &&
+                delY < critDist && delX * delX + delY * delY < critDistSq) {
+                numClose++;
+                label = item->mLabel;
+                mess2 = item2->mLabel;
+              }
+            }
+          }
+        }
+      }
+
+      // Ask the user what to do
+      if (numClose > 0) {
+        mess.Format("%d item pairs (e.g., %s and %s) are less than %.2f um apart,"
+          " not much more than the hole spacing of %.2f um.\n\n"
+          "Was the Multi-hole Combiner not run on some points?\n\n"
+          "Press \"Yes - Stop\" to stop and fix the problem\n\n"
+          "Press \"No - Go On\" to ignore this and continue with acquisition", numClose, 
+          (LPCTSTR)label, (LPCTSTR)mess2, critDist, holeDist);
+        if (SEMThreeChoiceBox(mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, false) ==
+          IDYES)
+          return 1;
+      }
+    }
   }
 
   seenGroups = new int[mItemArray->GetSize()];
@@ -4909,6 +4971,36 @@ BOOL CNavHelper::IsMultishotSaving(bool *allZeroER)
     return false;
   }
   return mMultiShotParams.saveRecord;
+}
+
+void CNavHelper::GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, 
+  double dists[3], double &avgDist, double &angle)
+{
+  int dir, numDir = hexGrid ? 3 : 2, hexInd = hexGrid ? 1 : 0;
+  double *xVec, *yVec;
+  double delX, delY, angles[3];
+  int camera = mWinApp->GetCurrentCamera();
+  avgDist = 0.;
+  if (!params->holeMagIndex[hexGrid])
+    return;
+  ScaleMat s2c = mShiftManager->StageToCamera(camera,
+    params->holeMagIndex[hexGrid]);
+  ScaleMat is2c = mShiftManager->IStoCamera(params->holeMagIndex[hexGrid]);
+  if (s2c.xpx && is2c.xpx) {
+    ScaleMat bMat = MatMul(is2c, MatInv(s2c));
+    xVec = hexGrid ? &params->hexISXspacing[0] :
+      &params->holeISXspacing[0];
+    yVec = hexGrid ? &params->hexISYspacing[0] :
+      &params->holeISYspacing[0];
+    for (dir = 0; dir < numDir; dir++) {
+      ApplyScaleMatrix(bMat, xVec[dir], yVec[dir], delX, delY);
+      dists[dir] = sqrt(delX * delX + delY * delY);
+      avgDist += dists[dir] / numDir;
+      angles[dir] = atan2(delY, delX) / DTOR - dir * 180. / numDir;
+    }
+    angles[1] = UtilGoodAngle(angles[1] - angles[0]) / 2.;
+    angle = (float)(0.1 * B3DNINT(10. * (angles[0] + angles[1])));
+  }
 }
 
 // Find the item whose note or label starts with the given text
@@ -5557,12 +5649,12 @@ void CNavHelper::UpdateMultishotIfOpen(bool draw)
 }
 
 // Rotate either the regular or custom pattern in the given parameters by the given angle
-int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom)
+int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, 
+  int customOrHex)
 {
   ScaleMat aMat, aProd, rotMat;
-  int ind, numHoles = 2;
-  float transISX, transISY;
-  int magInd = custom ? params->customMagIndex : params->holeMagIndex;
+  int magInd = customOrHex > 0 ? params->customMagIndex :
+    params->holeMagIndex[customOrHex < 0 ? 1 : 0];
   if (!magInd)
     return 1;
 
@@ -5576,7 +5668,80 @@ int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, boo
   aProd = MatMul(MatMul(aMat, rotMat), MatInv(aMat));
 
   // Transform hole positions
-  if (custom) {
+  TransformMultiShotVectors(params, customOrHex, aProd);
+  if (customOrHex > 0)
+    params->origMagOfCustom = 0;
+  else
+    params->origMagOfArray[customOrHex < 0 ? 1 : 0] = 0;
+  return 0;
+}
+
+// Checks preconditions and applies the adjusting transform to a given set of multishot
+// vectors
+int CNavHelper::AdjustMultiShotVectors(MultiShotParams *params, int customOrHex,
+  CString &mess)
+{
+  int hexInd = customOrHex < 0 ? 1 : 0;
+  int magInd = customOrHex > 0 ? params->customMagIndex : params->holeMagIndex[hexInd];
+  int origInd = customOrHex > 0 ? params->origMagOfCustom :
+    params->origMagOfArray[hexInd];
+
+  if (!params->xformFromMag || !params->adjustingXform.xpx) {
+    mess = "No transform has been saved for adjusting hole positions";
+    return 1;
+  }
+  if (customOrHex > 0 && (!params->customHoleX.size() || !magInd)) {
+    mess = "No custom hole positions have been defined";
+    return 1;
+  }
+  if (!magInd) {
+    mess.Format("No %s hole array has been defined", hexInd ? "hexagonal" : "regular");
+    return 1;
+  }
+  if (!origInd) {
+    mess = "The requested hole vectors are not eligible for applying the adjustment "
+      "transform";
+    return 1;
+  }
+  if (origInd > 0) {
+    mess = "The requested hole vectors have already had the adjustment "
+    "transform applied";
+    return 1;
+  }
+  if (-origInd != params->xformFromMag) {
+    mess = "The requested hole vectors were not defined at the same magnification as "
+      "the adjustment transform";
+    return 1;
+  }
+
+  // Finally apply transform and mark as transformed by changing sign of original mag,
+  // set mag index to target mag of transform
+  TransformMultiShotVectors(params, customOrHex, params->adjustingXform);
+  if (customOrHex > 0) {
+    params->customMagIndex = params->xformToMag;
+    params->origMagOfCustom = -params->origMagOfCustom;
+  } else {
+    params->holeMagIndex[hexInd] = params->xformToMag;
+    params->origMagOfArray[hexInd] = -params->origMagOfArray[hexInd];
+  }
+  if (mMultiShotDlg)
+    mMultiShotDlg->UpdateSettings();
+  if (mNav)
+    mNav->Redraw();
+  return 0;
+}
+
+// Common routine for apply a transformation to a given set of multishot vectors
+void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOrHex,
+  ScaleMat &aProd)
+{
+  int ind;
+  float transISX, transISY;
+  double *xSpacing = customOrHex < 0 ? &params->hexISXspacing[0] :
+    &params->holeISXspacing[0];
+  double *ySpacing = customOrHex < 0 ? &params->hexISYspacing[0] :
+    &params->holeISYspacing[0];
+  if (customOrHex > 0) {
     for (ind = 0; ind < (int)params->customHoleX.size(); ind++) {
       ApplyScaleMatrix(aProd, params->customHoleX[ind],
         params->customHoleY[ind], transISX, transISY);
@@ -5584,14 +5749,13 @@ int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, boo
       params->customHoleY[ind] = transISY;
     }
   } else {
-    for (ind = 0; ind < 2; ind++) {
-      ApplyScaleMatrix(aProd, (float)params->holeISXspacing[ind],
-        (float)params->holeISYspacing[ind], transISX, transISY);
-      params->holeISXspacing[ind] = transISX;
-      params->holeISYspacing[ind] = transISY;
+    for (ind = 0; ind < (customOrHex < 0 ? 3 : 2); ind++) {
+      ApplyScaleMatrix(aProd, (float)xSpacing[ind],
+        (float)ySpacing[ind], transISX, transISY);
+      xSpacing[ind] = transISX;
+      ySpacing[ind] = transISY;
     }
   }
-  return 0;
 }
 
 void CNavHelper::OpenHoleFinder(void)

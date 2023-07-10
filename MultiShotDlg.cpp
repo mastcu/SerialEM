@@ -497,7 +497,8 @@ void CMultiShotDlg::OnButStepAdjust()
   CStepAdjustISDlg dlg;
   bool custom = m_bUseCustom && mActiveParams->customHoleX.size() > 0;
   if (mWinApp->LowDoseMode()) {
-    dlg.mPrevMag = custom ? mActiveParams->customMagIndex : mActiveParams->holeMagIndex;
+    dlg.mPrevMag = custom ? mActiveParams->customMagIndex : 
+      mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0];
     if (dlg.DoModal() == IDCANCEL)
       return;
   }
@@ -528,7 +529,7 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   // Set up saved area and mag to go to if adjusting
   if (mSteppingAdjusting) {
     prevMag = mSteppingAdjusting > 1 ? params->customMagIndex :
-      params->holeMagIndex;
+      params->holeMagIndex[m_bHexGrid ? 1 : 0];
     if (mWinApp->LowDoseMode()) {
       if (!params->stepAdjLDarea)
         mAreaSaved = SEARCH_AREA;
@@ -573,8 +574,10 @@ void CMultiShotDlg::StartRecording(const char *instruct)
         (params->numHoles[1] - 1) * params->holeISYspacing[1]) / 2.;
     }
     mWinApp->mScope->IncImageShift(ISX, ISY);
-    if (params->stepAdjTakeImage && mWinApp->LowDoseMode())
+    if (params->stepAdjTakeImage && mWinApp->LowDoseMode()) {
+      SEMTrace('1', "Initiate capture area %d", mAreaSaved);
       mWinApp->mCamera->InitiateCapture(mAreaSaved);
+    }
   }
   ManageEnables();
 }
@@ -686,9 +689,14 @@ void CMultiShotDlg::OnButSaveIs()
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, spot, probe, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
-  int lastInd, lastDir;
+  int lastInd, lastDir, magInd, hexInd = m_bHexGrid ? 1 : 0;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
+  ScaleMat newVec, oldVecInv = {0., 0., 0., 0.};
+  double *xSpacing = m_bHexGrid ? &mActiveParams->hexISXspacing[0] :
+    &mActiveParams->holeISXspacing[0];
+  double *ySpacing = m_bHexGrid ? &mActiveParams->hexISYspacing[0] :
+    &mActiveParams->holeISYspacing[0];
 
   // First time, record stage position and check for defocus
   area = mWinApp->mScope->GetLowDoseArea();
@@ -719,7 +727,7 @@ void CMultiShotDlg::OnButSaveIs()
     }
   }
 
-  // Get the IS and save it, compute spacing on 4th point for regular
+  // Get the IS and save it, compute spacing on 4th point for regular, 6th for hex
   mWinApp->mScope->GetImageShift(ISX, ISY);
 
   // But adjust IS for defocus first if possible
@@ -762,7 +770,28 @@ void CMultiShotDlg::OnButSaveIs()
     for (dir = 0; dir < 2; dir++)
       numSteps[dir] = B3DMAX(1, mActiveParams->numHoles[dir] - 1);
 
+    // Finishing up for regular or hex
     if (size == (m_bHexGrid ? 6 : 4)) {
+      magInd = mWinApp->mScope->GetMagIndex();
+
+      // If this is an adjustment from a defined original mag, or the holes have already
+      // been adjusted and mags match current transform, get the inverse of original
+      // vector matrix for refining it
+      if (mSteppingAdjusting && (mActiveParams->origMagOfArray[hexInd] < 0 ||
+        (mActiveParams->xformFromMag > 0 && magInd == mActiveParams->xformToMag &&
+          mActiveParams->origMagOfArray[hexInd] == mActiveParams->xformFromMag))) {
+
+        // TODO: Regression! for hex
+        oldVecInv.xpx = (float)xSpacing[0];
+        oldVecInv.xpy = (float)xSpacing[1];
+        oldVecInv.ypx = (float)ySpacing[0];
+        oldVecInv.ypy = (float)ySpacing[1];
+        oldVecInv = MatInv(oldVecInv);
+        if (mActiveParams->origMagOfArray[hexInd] > 0)
+          oldVecInv = MatMul(mActiveParams->adjustingXform, oldVecInv);
+      }
+
+      // Compute new vectors
       if (m_bHexGrid) {
         for (dir = 0; dir < 3; dir++) {
           mActiveParams->hexISXspacing[dir] = 0.5 * (mSavedISX[dir] - mSavedISX[dir + 3])
@@ -781,12 +810,29 @@ void CMultiShotDlg::OnButSaveIs()
             (mSavedISY[endInd2[dir]] - mSavedISY[startInd2[dir]])) / numSteps[dir];
         }
       }
-      mActiveParams->holeMagIndex = mWinApp->mScope->GetMagIndex();
-      mActiveParams->tiltOfHoleArray = (float)mWinApp->mScope->GetTiltAngle();
+
+      // Get the adjusting xform, record mags it applies to
+      if (oldVecInv.xpx) {
+        newVec.xpx = (float)xSpacing[0];
+        newVec.xpy = (float)xSpacing[1];
+        newVec.ypx = (float)ySpacing[0];
+        newVec.ypy = (float)ySpacing[1];
+        mActiveParams->adjustingXform = MatMul(oldVecInv, newVec);
+        mActiveParams->xformToMag = magInd;
+        mActiveParams->xformFromMag = B3DABS(mActiveParams->origMagOfArray[hexInd]);
+      }
+      mActiveParams->holeMagIndex[hexInd] = magInd;
+      mActiveParams->tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();
+
+      // Save negative of mag as original when recording from scratch
+      // Vectors adjusted this way are not eligible for transform, set to 0
+      mActiveParams->origMagOfArray[hexInd] = mSteppingAdjusting ? 0 : -magInd;
       StopRecording();
       ManageEnables();
       UpdateAndUseMSparams();
       return;
+
+      // Adjusting for regular or hex
     } else if (mSteppingAdjusting) {
       if (m_bHexGrid) {
         str.Format("Adjust shift for corner # %d in the hex array", size + 1);
@@ -810,7 +856,7 @@ void CMultiShotDlg::OnButSaveIs()
       }
     } else {
 
-      // Set up the instruction label
+      // Recording regular or hex: Set up the instruction label
       if (m_bHexGrid) {
         str.Format("Shift by %d holes to corner # %d in the hex array", 
           mActiveParams->numHexRings, size + 1);
@@ -822,6 +868,8 @@ void CMultiShotDlg::OnButSaveIs()
           str.Format("Shift by %d holes in second direction", numSteps[1]);
       }
     }
+
+    // Adjusting custom holes
   } else if (mSteppingAdjusting) {
     if (size == (int)mActiveParams->customHoleX.size()) {
     } else if (size > 1) {
@@ -834,6 +882,8 @@ void CMultiShotDlg::OnButSaveIs()
       ISX = mActiveParams->customHoleY[size - 1];
     }
   } else {
+
+    // Recording custom holes
     if (size > 1)
       str.Format("Shift to acquire position # %d in the pattern", size);
     else
@@ -843,8 +893,10 @@ void CMultiShotDlg::OnButSaveIs()
   m_statSaveInstructions.SetWindowText(str);
   if (mSteppingAdjusting) {
     mWinApp->mScope->IncImageShift(ISX, ISY);
-    if (mActiveParams->stepAdjTakeImage && mWinApp->LowDoseMode())
+    if (mActiveParams->stepAdjTakeImage && mWinApp->LowDoseMode()) {
+      SEMTrace('1', "Initiate capture area %d", mAreaSaved);
       mWinApp->mCamera->InitiateCapture(mAreaSaved);
+    }
   }
 }
 
@@ -859,6 +911,8 @@ void CMultiShotDlg::OnButEndPattern()
   mWinApp->mScope->GetImageShift(ISX, ISY);
   mActiveParams->customMagIndex = mWinApp->mScope->GetMagIndex();
   mActiveParams->tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
+  mActiveParams->origMagOfCustom = mSteppingAdjusting ?
+    0 : -mActiveParams->customMagIndex;
 
   // Accept the current position if it is different from the last
   if (!mSteppingAdjusting && 
@@ -1008,7 +1062,7 @@ void CMultiShotDlg::ManageEnables(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   CString str2, str = "Use custom pattern (NONE DEFINED)";
-  double *xVec, *yVec, holeXvec[3], holeYvec[3];
+  double holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   int dir, numDir = m_bHexGrid ? 3 : 2;
@@ -1075,7 +1129,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butEndPattern.EnableWindow(mRecordingCustom);
   m_butSetCustom.EnableWindow(m_bDoMultipleHoles && notRecording);
   m_butStepAdjust.EnableWindow(m_bDoMultipleHoles && notRecording && (useCustom ||
-    mActiveParams->holeMagIndex));
+    mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0]));
   m_butCalBTvsIS.EnableWindow(notRecording && !mSteppingAdjusting);
   m_butTestMultishot.EnableWindow(notRecording && !mSteppingAdjusting && !mDisabledDialog
     && (m_bDoMultipleHoles || m_bDoShotsInHoles) && comaVsIS->magInd > 0);
@@ -1099,35 +1153,17 @@ void CMultiShotDlg::ManageEnables(void)
   str = "No regular pattern defined";
 
   // Report spacing and angle
-  if (mActiveParams->holeMagIndex > 0) {
-    int camera = mWinApp->GetCurrentCamera();
-    ScaleMat s2c = mShiftManager->StageToCamera(camera, 
-      mActiveParams->holeMagIndex);
-    ScaleMat is2c = mShiftManager->IStoCamera(mActiveParams->holeMagIndex);
-    if (s2c.xpx && is2c.xpx) {
-      ScaleMat bMat = MatMul(is2c, MatInv(s2c));
-      double delX, delY, dists[3], angles[3], dist, angle;
-      xVec = m_bHexGrid ? &mActiveParams->hexISXspacing[0] :
-        &mActiveParams->holeISXspacing[0];
-      yVec = m_bHexGrid ? &mActiveParams->hexISYspacing[0] :
-        &mActiveParams->holeISYspacing[0];
-      dist = 0.;
-      for (dir = 0; dir < numDir; dir++) {
-        ApplyScaleMatrix(bMat, xVec[dir], yVec[dir], delX, delY);
-        dists[dir] = sqrt(delX * delX + delY * delY);
-        dist += dists[dir] / numDir;
-        angles[dir] = atan2(delY, delX) / DTOR - dir * 180. / numDir;
-      }
-      angles[1] = UtilGoodAngle(angles[1] - angles[0]) / 2.;
-      angle = (float)(0.1 * B3DNINT(10. * (angles[0] + angles[1])));
-      if (m_bHexGrid) {
-        str.Format("Spacing: %.2f  um   Maximum shift: %.1f um", dist,
-          mActiveParams->numHexRings * dist);
-      } else {
-        str.Format("Spacing: %.2f and %.2f um   Maximum shift: %.1f um", dists[0],
-          dists[1], 0.5 * sqrt(pow((mActiveParams->numHoles[0] - 1) * dists[0], 2.) +
-            pow((mActiveParams->numHoles[1] - 1) * dists[1], 2.)));
-      }
+  double dists[3], dist, angle;
+  mWinApp->mNavHelper->GetMultishotDistAndAngles(mActiveParams, m_bHexGrid, dists, dist,
+    angle);
+  if (dist > 0) {
+    if (m_bHexGrid) {
+      str.Format("Spacing: %.2f  um   Maximum shift: %.1f um", dist,
+        mActiveParams->numHexRings * dist);
+    } else {
+      str.Format("Spacing: %.2f and %.2f um   Maximum shift: %.1f um", dists[0],
+        dists[1], 0.5 * sqrt(pow((mActiveParams->numHoles[0] - 1) * dists[0], 2.) +
+          pow((mActiveParams->numHoles[1] - 1) * dists[1], 2.)));
     }
   }
   m_statSpacing.SetWindowText(str);

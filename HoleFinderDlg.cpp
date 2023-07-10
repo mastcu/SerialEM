@@ -1525,7 +1525,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
   double *yVecOut, CString &errStr)
 {
   ScaleMat st2is;
-  int dir, numVecs = mLastWasHexGrid ? 3 : 2;
+  int dir, numVecs = mLastWasHexGrid ? 3 : 2, hexInd = mLastWasHexGrid ? 1 : 0;
   float *xVecs, *yVecs;
   float ySign = 1.;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
@@ -1566,8 +1566,9 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
       xSpacing[dir] = xVecOut[dir];
       ySpacing[dir] = yVecOut[dir];
     }
-    msParams->holeMagIndex = index;
-    msParams->tiltOfHoleArray = mLastTiltAngle;
+    msParams->origMagOfArray[hexInd] = index == mLastMagIndex ? -index : 0;
+    msParams->holeMagIndex[hexInd] = index;
+    msParams->tiltOfHoleArray[hexInd] = mLastTiltAngle;
     msParams->doHexArray = mLastWasHexGrid;
     if (mWinApp->mNavHelper->mMultiShotDlg)
       mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();

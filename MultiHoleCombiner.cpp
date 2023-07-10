@@ -114,6 +114,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   mDebug = 0;
   mUseImageCoords = false;
   mGroupIDsInPoly.clear();
+  hexGrid = msParams->doHexArray ? 1 : 0;
 
   // Check for Nav
   mHelper = mWinApp->mNavHelper;
@@ -130,7 +131,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   mHelper->UpdateMultishotIfOpen();
   if (!(msParams->inHoleOrMultiHole & MULTI_HOLES))
     return ERR_HOLES_NOT_ON;
-  if (msParams->holeMagIndex <= 0)
+  if (msParams->holeMagIndex[hexGrid] <= 0)
     return ERR_NOT_DEFINED;
   if (msParams->useCustomHoles)
     return ERR_CUSTOM_HOLES;
@@ -251,7 +252,6 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   }
 
   // Get average angle and length with whichever positions
-  hexGrid = msParams->doHexArray ? 1 : 0;
   mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt,
     peakAlt, 0., 0., 0, spacing, xMissing, yMissing, hexGrid);
   mFindHoles->getGridVectors(gridXvecs, gridYvecs, avgAngle, spacing, hexGrid);
@@ -276,7 +276,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 
     is2st = MatInv(MatMul(s2c, MatInv(is2cam)));
     for (ind = 0; ind < 3; ind++) {
-      mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+      mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex[1],
         msParams->hexISXspacing[ind], msParams->hexISYspacing[ind], magInd, hx, hy, 
         camera);
       hxHex[ind] = (float)hx;
@@ -335,11 +335,11 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
     // st2is takes those positions to image shift positions
     // Transfer the hole vectors from where they were defined to the mag in question
     // Compute a transformation from IS space hole number to IS and take its inverse
-    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex[0],
       msParams->holeISXspacing[0], msParams->holeISYspacing[0], magInd, hx, hy, camera);
     holeInv.xpx = (float)hx;
     holeInv.ypx = (float)hy;
-    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+    mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex[0],
       msParams->holeISXspacing[1], msParams->holeISYspacing[1], magInd, hx, hy, camera);
     holeInv.xpy = (float)hx;
     holeInv.ypy = (float)hy;

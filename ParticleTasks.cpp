@@ -195,7 +195,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     RESTORE_MSP_RETURN(1);
   }
   if (multiHoles && !((mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
-    mMSParams->holeMagIndex > 0)) {
+    (!mMSUseCustomHoles && (mMSParams->holeMagIndex[0] > 0 || 
+      mMSParams->holeMagIndex[1] > 0)))) {
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
       RESTORE_MSP_RETURN(1);
   }
@@ -262,16 +263,23 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleISX.clear();
   mMSHoleISY.clear();
   mMSDoingHexGrid = false;
+  if (numXholes && numYholes)
+    mMSDoingHexGrid = numYholes == -1;
+  else
+    mMSDoingHexGrid = mMSParams->doHexArray && !mMSUseCustomHoles;
+  if (!mMSUseCustomHoles && !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0]) {
+    SEMMessageBox("Hole positions have not been defined for doing this type of "
+      "multiple Records");
+    RESTORE_MSP_RETURN(1);
+  }
+
   if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, true);
      mMSUseHoleDelay = true;
      useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
      useYholes = B3DABS(numYholes ? numYholes : mMSParams->numHoles[1]);
-     if (numXholes && numYholes)
-       mMSDoingHexGrid = numYholes == -1;
-     else
-       mMSDoingHexGrid = mMSParams->doHexArray;
+
      if (numXholes && numYholes && item->mNumSkipHoles)
        SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
          item->mNumSkipHoles, mMSNumHoles);
@@ -730,12 +738,15 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   std::vector<double> fromISX, fromISY;
   IntVec holeOrder;
   ScaleMat IStoSpec, specToIS;
+  int hexInd = (mMSParams->doHexArray && !mMSParams->useCustomHoles) ? 1 : 0;
+  if (startingMulti)
+    hexInd = (mMSDoingHexGrid && !mMSUseCustomHoles) ? 1 : 0;
 
   delISX.clear();
   delISY.clear();
   posIndex.clear();
-  holeAngle = mMSParams->tiltOfHoleArray;
-  fromMag = mMSParams->holeMagIndex;
+  holeAngle = mMSParams->tiltOfHoleArray[hexInd];
+  fromMag = mMSParams->holeMagIndex[hexInd];
   if (((!startingMulti && mMSParams->useCustomHoles) || 
     (startingMulti && mMSUseCustomHoles)) && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
@@ -748,7 +759,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
     fromMag = mMSParams->customMagIndex;
     holeAngle = mMSParams->tiltOfCustomHoles;
-  } else if (mMSParams->holeMagIndex > 0 && 
+  } else if (mMSParams->holeMagIndex[hexInd] > 0 && 
     ((mMSParams->doHexArray && !(numXholes && numYholes)) || 
     (numXholes > 0 && numYholes == -1))) {
 
@@ -783,7 +794,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       }
     }
 
-  } else if (mMSParams->holeMagIndex > 0) {
+  } else if (mMSParams->holeMagIndex[0] > 0) {
     if (numXholes && numYholes) {
       crossPattern = numXholes == -3 && numYholes == -3;
       if (crossPattern) {

@@ -46,7 +46,7 @@ struct MultiShotParams
   BOOL saveRecord;       // Whether to save Record shot
   BOOL adjustBeamTilt;   // Whether to adjust beam tilt if possible
   int inHoleOrMultiHole; // 1 to do pattern in hole, 2 to do multi-hole, 3 to do both
-  int holeMagIndex;      // Mag at which hole positions are measured
+  int holeMagIndex[2];   // Mag at which hole positions are measured for regular and hex
   BOOL useCustomHoles;   // Use the list of custom holes
   BOOL doHexArray;       // Flag to do hexagonal array
   float holeDelayFactor; // Factor by which to increase regular IS delay between holes
@@ -54,12 +54,12 @@ struct MultiShotParams
   double holeISYspacing[2];
   double hexISXspacing[3];  // Basic vectors for hex grid pattern - keep separate
   double hexISYspacing[3];
-  float tiltOfHoleArray;    // Tilt angle at which regular array defined
+  float tiltOfHoleArray[2];    // Tilt angle at which regular and hex array defined
   float holeFinderAngle;    // Angle found in hole finder associated with regular array
   int numHoles[2];       // Number of holes in each direction
   int numHexRings;       // NUmber of rings of hex
   BOOL skipCornersOf3x3; // Take cross pattern when it is 3x3
-  int customMagIndex;
+  int customMagIndex;    // Mag index at which custom holes defined
   float tiltOfCustomHoles;  // Tilt angle at which custom holes defined
   FloatVec customHoleX;  // For custom holes, list of hole IS relative
   FloatVec customHoleY;  // to item point
@@ -72,6 +72,11 @@ struct MultiShotParams
   int stepAdjDefOffset;  // Defocus offset to use
   int stepAdjWhichMag;   // Which kind of mag to use: current, recorded at, or other
   BOOL stepAdjTakeImage; // Flag to take an image of current area
+  int origMagOfArray[2]; // Negative of mag when defined, positive if adjusted
+  int origMagOfCustom;
+  int xformFromMag;      // Mag that adjusting transform is from and to
+  int xformToMag;
+  ScaleMat adjustingXform;  // Transform for adjustment
 };
 
 struct HoleFinderParams
@@ -572,6 +577,8 @@ public:
   void StopDualMap(void);
   int AssessAcquireProblems(int startInd, int endInd);
   BOOL IsMultishotSaving(bool *allZeroER = NULL);
+  void GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, double dists[3], 
+    double &avgDist, double &angle);
   int FindNearestItemMatchingText(float stageX, float stageY, CString &text, bool matchNote);
   BOOL GetNoMessageBoxOnError();
   void ListFilesToOpen(void);
@@ -619,7 +626,9 @@ public:
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void UpdateMultishotIfOpen(bool draw = true);
-  int RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom);
+  int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
+  int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, CString &mess);
+  void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);
