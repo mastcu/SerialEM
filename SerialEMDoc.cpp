@@ -1843,6 +1843,7 @@ int CSerialEMDoc::SaveBufferToFile(int bufNum, int fileNum, int inSect)
 void CSerialEMDoc::ReadSetPropCalFiles()
 {
   int err, trial;
+  BOOL settingsReadable;
   mSettingsReadable = false;
   mSettingsOpen = false;
   mSysSettingsReadable = false;
@@ -1850,13 +1851,14 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   CFileStatus status;
   mCurrentSettingsPath = "";
   mOriginalCwd = "";
-  CString strSys, firstSys, fname;
+  CString strSys, firstSys, fname, origSys;
 
   // Adjust the system path for shared application data for Windows Vista/7
   if (IsVersion(6, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL))
     mSystemPath = "C:\\ProgramData\\SerialEM";
   defaultSysPath = _strdup((LPCTSTR)mSystemPath);
   mSysPathForSettings = mSystemPath;
+  origSys = mSystemPath;
 
   // Get the current directory, then try to load local settings
   char *cwd = _getcwd(NULL, _MAX_PATH);
@@ -1870,8 +1872,9 @@ void CSerialEMDoc::ReadSetPropCalFiles()
     // compose full filename and get status
     mCurrentSettingsPath = strCwd + mSettingsName;
     if (!CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
-      AfxMessageBox(mCurrentSettingsPath + " does not exist; trying "
-        SETTINGS_NAME" instead", MB_EXCLAME);
+      if (mSettingsName.Compare(SETTINGS_NAME))
+        AfxMessageBox(mCurrentSettingsPath + " does not exist; trying "
+          SETTINGS_NAME" instead", MB_EXCLAME);
       mCurrentSettingsPath = strCwd + "\\" + SETTINGS_NAME;
     }
     if (CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
@@ -1888,25 +1891,45 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   } else
     AfxMessageBox("Error getting current working directory", MB_EXCLAME);
 
-  if (mSettingsReadable)
+  if (mSettingsReadable) {
     mRecentSettings->Add((LPCTSTR)mCurrentSettingsPath);
+    mOriginalSettingsPath = mCurrentSettingsPath;
+  }
+
+  settingsReadable = mSettingsReadable;
+
+  // Try for file in system location before going for default file
+  if (!mSettingsReadable) {
+    strSys = mSystemPath + "\\" + SETTINGS_NAME;
+    if (CFile::GetStatus((LPCTSTR)strSys, status)) {
+      if (mParamIO->ReadSettings(strSys, true)) {
+        AfxMessageBox("Error reading settings file in " + origSys, MB_EXCLAME);
+      } else {
+        AfxMessageBox("Settings read from settings file in " + origSys +
+          ", not local file", MB_EXCLAME);
+        settingsReadable = true;
+        mOriginalSettingsPath = strSys;
+      }
+    }
+  }
 
   // Find out status of system file
   strSys = mSystemPath + "\\" + mSystemSettingsName;
   mSysSettingsReadable = CFile::GetStatus((LPCTSTR)strSys, status);
 
   // If local file not read in full, try for system file
-  if (!mSettingsReadable && mSysSettingsReadable) {
+  if (!settingsReadable && mSysSettingsReadable) {
     if (mParamIO->ReadSettings(strSys, true)) {
       AfxMessageBox("Error reading system settings file", MB_EXCLAME);
       mSysSettingsReadable = false;
-    }
+    } else
+      mOriginalSettingsPath = strSys;
   }
 
   // Give message about results
-  if (!mSettingsReadable && mSysSettingsReadable)
+  if (!settingsReadable && mSysSettingsReadable)
     AfxMessageBox("Settings read from system default file, not local file", MB_EXCLAME);
-  else if (!mSettingsReadable)
+  else if (!settingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
 
   // Read properties; but first set gain reference path to system path

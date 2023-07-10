@@ -111,6 +111,7 @@ public:
   void SetSystemPath(CString sysPath);
   GetMember(CString, SysPathForSettings);
   GetMember(CString, CurrentSettingsPath);
+  GetMember(CString, OriginalSettingsPath);
   GetMember(BOOL, SettingsOpen);
   GetSetMember(CString, PluginPath)
   GetSetMember(CString, PluginPath2)
@@ -218,6 +219,7 @@ private:
   CString mSettingsName;         // Root name of default settings files
   CString mSystemSettingsName;   // Root name of system settings file
   CString mCurrentSettingsPath;  // Full name of current settings file
+  CString mOriginalSettingsPath; // Full name of settings file read in at startup
   CString mPropertiesName;       // Root name of properties file
   CString mCalibrationName;      // Root name of calibration file
   CString mOriginalCwd;          // Original working directory

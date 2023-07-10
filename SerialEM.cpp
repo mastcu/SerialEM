@@ -1566,7 +1566,7 @@ BOOL CSerialEMApp::InitInstance()
           "Post-exposure actions,\r\n"
           "  run Camera Timing in the Calibrate menu and update the StartupDelay.", iCam);
   }
-  AppendToLog("Read settings from: " + mDocWnd->GetCurrentSettingsPath(),
+  AppendToLog("Read settings from: " + mDocWnd->GetOriginalSettingsPath(),
     LOG_SWALLOW_IF_CLOSED);
   AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
     LOG_SWALLOW_IF_CLOSED);
