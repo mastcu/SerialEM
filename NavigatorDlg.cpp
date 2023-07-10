@@ -3059,6 +3059,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     (m_bEditMode || ctrlKey) && !mAddingPoints && !mAddingPoly;
   bool startingMultiDel = button == VK_LBUTTON && shiftKey && m_bEditMode &&
     !mAddingPoints && !mAddingPoly && mCurItemHoleXYpos.size();
+  bool startingMapDblClick = button == VK_LBUTTON && ctrlKey && !shiftKey &&
+    !mAddingPoints && !mAddingPoly;
   bool addingOne = m_bEditMode && button == VK_MBUTTON && !mAddingPoints && !mAddingPoly;
   bool movingOne = (m_bEditMode || mAddingPoints) && button == VK_RBUTTON && !mAddingPoly;
 
@@ -3071,10 +3073,16 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece, 
     yInPiece, pieceIndex))
     return false;
-  if (startingMultiDel) {
+
+  // Record stage position in same variables for multi-delete and map load, compute scale
+  // of microns to pixels for map load
+  if (startingMultiDel || startingMapDblClick) {
     mMultiDelStageX = stageX;
     mMultiDelStageY = stageY;
-    mLastSelectWasCurrent = true;
+    mLastSelectWasCurrent = startingMultiDel;
+    delX = (sqrtf(aInv.xpx * aInv.xpx + aInv.ypx * aInv.ypx) +
+      sqrtf(aInv.xpy * aInv.xpy + aInv.ypy * aInv.ypy)) / 2.f;
+    mMapDblClickScale = (delX > 1.e-20) ? 1.f / delX : 0.f;
     return true;
   }
 
@@ -3308,11 +3316,14 @@ bool CNavigatorDlg::MouseDragSelectPoint(EMimageBuffer * imBuf, float inX, float
 // Double click on the currently selected point deletes it
 void CNavigatorDlg::MouseDoubleClick(int button)
 {
-  int msNumXholes, msNumYholes, ind, jnd, minInd;
+  int msNumXholes, msNumYholes, ind, jnd, minInd = -1, next;
   int numHoles = (int)B3DMIN(mCurItemHoleIndex.size(), mCurItemHoleXYpos.size()) / 2;
   double dist, minDist = 1.e20, minInterHole = 1.e20;
+  float tval;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   unsigned char *newSkipPos;
+  Ipoint pt1, pt2, ptm;
+  CMapDrawItem *item;
   if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
     if (!shiftKey) {
       BackspacePressed();
@@ -3355,6 +3366,49 @@ void CNavigatorDlg::MouseDoubleClick(int button)
           SetChanged(true);
           Redraw();
         }
+      }
+    }
+
+    // Or Ctrl double click to load map if clicked near edge
+  } else if (button == VK_LBUTTON && !shiftKey && GetAsyncKeyState(VK_CONTROL) / 2 != 0) {
+    ptm.x = mMultiDelStageX;
+    ptm.y = mMultiDelStageY;
+    ptm.z = pt1.z = pt2.z = 0.;
+
+    // Measure distance to edge line of each map and find the minimum
+    for (ind = 0; ind < mItemArray.GetSize(); ind++) {
+      item = mItemArray[ind];
+      if (item->IsMap() && item->mRegistration == mCurrentRegistration && item->mDraw) {
+        for (jnd = 0; jnd < item->mNumPoints; jnd++) {
+          next = (jnd + 1) % item->mNumPoints;
+          pt1.x = item->mPtX[jnd];
+          pt1.y = item->mPtY[jnd];
+          pt2.x = item->mPtX[next];
+          pt2.y = item->mPtY[next];
+          dist = imodPointLineSegDistance(&pt1, &pt2, &ptm, &tval);
+          if (dist < minDist) {
+            minDist = dist;
+            minInd = ind;
+          }
+        }
+      }
+    }
+
+    // Scale it to pixels on screen, and compare to DPI-independent distance
+    // Load the map and set current item
+    if (minInd >= 0) {
+      item = mItemArray[minInd];
+      minDist = sqrt(minDist) * mMapDblClickScale;
+      if (minDist < mWinApp->ScaleValueForDPI(10.)) {
+        DoLoadMap(false, item, -1);
+        mCurrentItem = minInd;
+        mCurListSel = minInd;
+        if (m_bCollapseGroups)
+          mCurListSel = mItemToList[minInd];
+        m_listViewer.SetCurSel(mCurListSel);
+        mSelectedItems.clear();
+        ManageCurrentControls();
+        Redraw();
       }
     }
   }
@@ -3762,7 +3816,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
           IntVec holeIndex;
           CameraParameters *camParam = mWinApp->GetCamParams() + camera;
           bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
-          magForHoles = custom ? msParams->customMagIndex : msParams->holeMagIndex;
+          magForHoles = custom ? msParams->customMagIndex : 
+            msParams->holeMagIndex[msParams->doHexArray ? 1 : 0];
 
           // This is the inverse of the conversion of hole vectors to image shifts
           // it is done at the defined mag and hole IS positions are gotten at that
@@ -9058,7 +9113,7 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // Initiate Acquisition
 void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 {
-  int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
+  int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0, acqIndex;
   int groupID = -1;
   BOOL rangeErr = false;
   BOOL runPremacro, runPostmacro;
@@ -9210,6 +9265,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
     ManageAcquireDlgCleanup(fromMenu, dlgClosing);
     return;
   }
+  mHelper->UpdateMultishotIfOpen(false);
 
   // If there is no file open for regular acquire, make sure one will be opened on 
   // first item
@@ -9227,17 +9283,17 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   // Now if realigning, make sure there are suitable maps; and check for mismatches
   // in camera between state and parameters, or for changes in binning
   // Set acquire on first so the map finding assumes the correct low dose area
-  mAcquireIndex = 0;
+  acqIndex = 0;
   mEndingAcquireIndex = dlg->mNumArrayItems - 1;
   if (dlg->m_bDoSubset) {
-    mAcquireIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
+    acqIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
     mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
   }
-  if (mHelper->AssessAcquireProblems(mAcquireIndex, mEndingAcquireIndex)) {
-    mAcquireIndex = -1;
+  if (mHelper->AssessAcquireProblems(acqIndex, mEndingAcquireIndex)) {
     ManageAcquireDlgCleanup(fromMenu, dlgClosing);
     return;
   }
+  mAcquireIndex = acqIndex;
   mStartingAcquireIndex = mAcquireIndex;
 
   // done with dialog

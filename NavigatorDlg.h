@@ -483,6 +483,7 @@ private:
   FloatVec mCurItemHoleXYpos;  // Stage positions of the holes drawn around current point
   IntVec mCurItemHoleIndex;    // And the hole index for that item, needed for deletion
   float mMultiDelStageX, mMultiDelStageY;  // Stage position for shift double click deletion
+  float mMapDblClickScale;     // Scale microns to pixel for double click map load
   FloatVec *mHFxCenters;
   FloatVec *mHFyCenters;
   FloatVec *mHFxInPiece;
