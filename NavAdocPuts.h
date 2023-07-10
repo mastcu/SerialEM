@@ -144,6 +144,12 @@
         2 * item->mNumSkipHoles));
     }
   }
+  if (item->mXHoleISSpacing[0] != 0. || item->mYHoleISSpacing[0] != 0.) {
+    ADOC_PUT(ThreeFloats(ADOC_ARG, "HoleISXspacing", item->mXHoleISSpacing[0],
+      item->mXHoleISSpacing[1], item->mXHoleISSpacing[2]));
+    ADOC_PUT(ThreeFloats(ADOC_ARG, "HoleISYspacing", item->mYHoleISSpacing[0],
+      item->mYHoleISSpacing[1], item->mYHoleISSpacing[2]));
+  }
   if (item->mMarkerShiftX > EXTRA_VALUE_TEST) {
     ADOC_PUT(TwoFloats(ADOC_ARG, "MarkerShift", item->mMarkerShiftX, 
       item->mMarkerShiftY));

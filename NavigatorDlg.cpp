@@ -8538,6 +8538,12 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             item->mSkipHolePos[ind1] = holeSkips[ind1];
           item->mNumSkipHoles = numToGet / 2;
         }
+        ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISXspacing", 
+          &item->mXHoleISSpacing[0], &item->mXHoleISSpacing[1], 
+          &item->mXHoleISSpacing[2]));
+        ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISYspacing",
+          &item->mYHoleISSpacing[0], &item->mYHoleISSpacing[1], 
+          &item->mYHoleISSpacing[2]));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "MarkerShift",
           &item->mMarkerShiftX, &item->mMarkerShiftY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID", 

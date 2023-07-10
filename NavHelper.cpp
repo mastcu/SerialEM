@@ -5758,13 +5758,34 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
   }
 }
 
+// Use the hole vectors from a map item, stored when holes were found
+void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
+{
+  int dir, hexInd = (item->mXHoleISSpacing[2] || item->mYHoleISSpacing[2]) ? 1 : 0;
+  double *xSpacing = hexInd ? &mMultiShotParams.hexISXspacing[0] :
+    &mMultiShotParams.holeISXspacing[0];
+  double *ySpacing = hexInd ? &mMultiShotParams.hexISYspacing[0] :
+    &mMultiShotParams.holeISYspacing[0];
+  for (dir = 0; dir < 2 + hexInd; dir++) {
+    xSpacing[dir] = item->mXHoleISSpacing[dir];
+    ySpacing[dir] = item->mYHoleISSpacing[dir];
+  }
+  mMultiShotParams.origMagOfArray[hexInd] = -item->mMapMagInd;
+  mMultiShotParams.holeMagIndex[hexInd] = item->mMapMagInd;;
+  mMultiShotParams.tiltOfHoleArray[hexInd] = item->mMapTiltAngle;
+  mMultiShotParams.doHexArray = hexInd > 0;
+  if (mMultiShotDlg)
+    mMultiShotDlg->UpdateSettings();
+  if (mNav)
+    mNav->Redraw();
+}
+
 void CNavHelper::OpenHoleFinder(void)
 {
   if (mHoleFinderDlg->IsOpen()) {
     mHoleFinderDlg->BringWindowToTop();
     return;
   }
-  //mHoleFinderDlg = new CHoleFinderDlg();
   mHoleFinderDlg->Create(IDD_HOLE_FINDER);
   mWinApp->SetPlacementFixSize(mHoleFinderDlg, &mHoleFinderPlace);
   mWinApp->RestoreViewFocus();

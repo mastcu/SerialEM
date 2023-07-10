@@ -80,6 +80,8 @@ CMapDrawItem::CMapDrawItem()
   mFocusXoffset = mFocusYoffset = 0;
   mNumSkipHoles = mNumXholes = mNumYholes = 0;
   mSkipHolePos = NULL;
+  for (int ind = 0; ind < 3; ind++)
+    mXHoleISSpacing[ind] = mYHoleISSpacing[ind] = 0.;
   mTSstartAngle = EXTRA_NO_VALUE;
   mTSendAngle = EXTRA_NO_VALUE;
   mTSbidirAngle = EXTRA_NO_VALUE;

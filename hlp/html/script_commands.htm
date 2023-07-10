@@ -4655,8 +4655,18 @@
             hole IS vectors were last defined; if it is < -1, they are computed for the magnification of 
             the image in which holes were detected.&nbsp; The magnification associated with the image shift vectors in the
             multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
-            the parameters is that of the image in which holes were found.&nbsp; Command added in 4.0, 1/28/22.
+            the parameters is that of the image in which holes were found.&nbsp; Use -2 to be able to apply a
+            stored adjusting transformation to the vectors.&nbsp; Command added in 4.0, 1/28/22.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UseMapItemHoleVectors #</TD>
+          <TD>For the Navigator item indicated by <b>#</b> (0 for current item or item being acquired,
+             positive for index in table, negative for distance from end of table), assigns image shift 
+            values stored when holes were found on an associated image as the vectors for doing multiple 
+            records in a regular pattern of holes.&nbsp; If the given item is not a map, shift values are 
+            sought in the map that item was drawn on.&nbsp; This command has the same effect as running
+            'UseHoleVectorsFromMulti -2' when holes were first found.&nbsp; Command added in 4.1, 10-Jul-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] </TD>

@@ -629,6 +629,7 @@ public:
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
+  void AssignNavItemHoleVectors(CMapDrawItem * item);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);

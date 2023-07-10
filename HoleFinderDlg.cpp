@@ -1228,6 +1228,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv, adjInv;
   float delX, delY, ptX, ptY;
+  double xISvectors[3], yISvectors[3];
   CString noMontReason, statStr;
 
   if (!mFindingHoles)
@@ -1423,8 +1424,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     // It turns out that the pieceOn values from above are not quite right or consistent
     // with what is needed for proper display, so replace them
     if (mMontage && mPieceOn.size())
-      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], &mXinPiece[ind],
-        &mYinPiece[ind]);
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], 
+        &mXinPiece[ind], &mYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
@@ -1445,10 +1446,21 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     ptY = yMissing[ind];
 
     if (mMontage && mPieceOn.size())
-      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], &mMissXinPiece[ind],
-        &mMissYinPiece[ind]);
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], 
+        &mMissXinPiece[ind], &mMissYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissing[ind],
       mYmissing[ind]);
+  }
+
+  // Get the hole vectors as IS values and stpre in Nav item if it is a map
+  xISvectors[2] = yISvectors[2] = 0.;
+  if (mNavItem && ConvertHoleToISVectors(mLastMagIndex, false, &xISvectors[0],
+    &yISvectors[0], statStr)) {
+    for (ind = 0; ind < 3; ind++) {
+      mNavItem->mXHoleISSpacing[ind] = (float)xISvectors[ind];
+      mNavItem->mYHoleISSpacing[ind] = (float)yISvectors[ind];
+    }
+    mNav->SetChanged(true);
   }
 
   // Get edge distances

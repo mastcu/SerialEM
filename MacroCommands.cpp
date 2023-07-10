@@ -9890,7 +9890,7 @@ int CMacCmd::ReportItemAcquire(void)
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
- mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
+  mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
     (navItem->mAcquire == 0) ? "disabled" : "enabled");
   SetReportedValues(navItem->mAcquire);
   return 0;
@@ -11137,6 +11137,33 @@ int CMacCmd::ReportLastHoleVectors(void)
   else
     mLogRpt.Format("Hole %s vector  s are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
       "image", index ? "IS" : "stage"), xVecs[0], yVecs[0], xVecs[1], yVecs[1]);
+  return 0;
+}
+
+// UseMapItemHoleVectors
+int CMacCmd::UseMapItemHoleVectors()
+{
+  int index;
+  CMapDrawItem *navItem;
+  mStrCopy = "The Navigator map ";
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  if (!navItem->IsMap()) {
+    if (!navItem->mDrawnOnMapID)
+      ABORT_LINE("The Navigator item is not a map and does not have an ID for being "
+        "drawn on a map for line:\n\n");
+    navItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID, true);
+    if (!navItem)
+      ABORT_LINE("The map that the Navigator item was drawn on is no longer in the "
+        "table for line:\n\n");
+    mStrCopy += "this item was drawn on ";
+  }
+  if (!navItem->mXHoleISSpacing[0] && !navItem->mYHoleISSpacing[0])
+    ABORT_LINE(mStrCopy + "does not have hole vectors stored for line:\n\n");
+  mNavHelper->AssignNavItemHoleVectors(navItem);
   return 0;
 }
 
