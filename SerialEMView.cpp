@@ -603,7 +603,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy, group, numGroups;
   int adjSave;
-  float tempX, tempY, ptX, ptY;
+  float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, scale, rotation, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0., minLimX, minLimY, maxLimX, maxLimY;
@@ -1215,8 +1215,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
   }
 
-  // Get the stage limits, see if the image goes outside them and if so draw a red dashed
-  // rectangle
+  // Get the stage limits of the image, see if the image goes outside them and if so draw
+  // a red dashed rectangle
   minLimX = mWinApp->mScope->GetStageLimit(STAGE_MIN_X);
   minLimY = mWinApp->mScope->GetStageLimit(STAGE_MIN_Y);
   maxLimX = mWinApp->mScope->GetStageLimit(STAGE_MAX_X);
@@ -1237,6 +1237,23 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 0., 0., 0., 0., NULL, 
       NULL);
     cdc.SelectObject(pOldPen);
+  }
+
+  // Need the stage limits of the window instead for limiting drawing
+  minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
+  imXcenter = (float)(imageRect->getWidth() / 2. - m_iOffsetX);
+  imYcenter = (float)(imageRect->getHeight() / 2. + m_iOffsetY);
+  halfXwin = (float)(rect.Width() / (2 * mZoom));
+  halfYwin = (float)(rect.Height() / (2 * mZoom));
+  for (ix = -1; ix <= 1; ix += 2) {
+    for (iy = -1; iy <= 1; iy += 2) {
+      mWinApp->mShiftManager->ApplyScaleMatrix(aInv, imXcenter + ix * halfXwin - mDelX,
+        imYcenter + iy * halfYwin - mDelY, tempX, tempY);
+      ACCUM_MIN(minXstage, tempX);
+      ACCUM_MIN(minYstage, tempY);
+      ACCUM_MAX(maxXstage, tempX);
+      ACCUM_MAX(maxYstage, tempY);
+    }
   }
 
   tempX = 0.05f * (maxXstage - minXstage);
@@ -2237,10 +2254,12 @@ void CSerialEMView::SetupZoomAroundPoint(CPoint *point)
   mZoomupPoint = *point;
 }
 
+// Left double click goes to Navigator for editing points or loading map
 void CSerialEMView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
   if (mWinApp->mNavigator &&
-    !(GetAsyncKeyState(VK_CONTROL) / 2) && mWinApp->mNavigator->InEditMode())
+    ((!(GetAsyncKeyState(VK_CONTROL) / 2) && mWinApp->mNavigator->InEditMode()) ||
+      (GetAsyncKeyState(VK_CONTROL) / 2) && !(GetAsyncKeyState(VK_SHIFT) / 2)))
       mWinApp->mNavigator->MouseDoubleClick(VK_LBUTTON);
 }
 
