@@ -64,6 +64,7 @@ public:
   GetMember(bool, MSLastFailed);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
   SetMember(MultiShotParams *, NextMSParams);
+  GetSetMember(BOOL, LastHolesWereAdjusted);
 
 private:
   CSerialEMApp * mWinApp;
@@ -123,6 +124,7 @@ private:
   int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
   int mMSFirstSepFile;             // Number of first separate file when created
   int mMSHolePatternType;          // 0 for zigzag, 1 for raster, 2 for spiral
+  BOOL mLastHolesWereAdjusted;      // Flag that GetHolePositions applied inverse adjust
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters

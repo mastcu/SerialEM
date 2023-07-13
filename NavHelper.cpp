@@ -4656,6 +4656,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   mAcqActions = mAllAcqActions[mCurAcqParamIndex];
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
+  int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0;
   float delX, delY, critDist, critDistSq;
   double holeDist, dists[3], angle;
   bool seen;
@@ -4756,6 +4757,58 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
           IDYES)
           return 1;
       }
+    }
+  }
+
+  // Check for problems if map holes are to be used 
+  if (navParam->acquireType == ACQUIRE_MULTISHOT && !mMultiShotParams.useCustomHoles &&
+    navParam->useMapHoleVectors) {
+    numNoMap = 0;
+    for (i = startInd; i <= endInd; i++) {
+      item = mItemArray->GetAt(i);
+      if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire) {
+        curMap = i;
+        ind = mNav->GetMapOrMapDrawnOn(i, item2, mess);
+        if (ind < 0)
+          curMap = mNav->GetFoundItem();
+        if (ind > 0) {
+          numNoMap++;
+        } else if (curMap != lastMap) {
+          numMaps++;
+          lastMap = curMap;
+          if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0.)
+            numNoVec++;
+          else if (mMultiShotParams.xformFromMag && mMultiShotParams.adjustingXform.xpx &&
+            item2->mMapMagInd != mMultiShotParams.xformFromMag)
+            numNoXform++;
+        }
+      }
+    }
+
+    // Compose message with problems
+    if (numNoMap || numNoVec || numNoXform) {
+      mess = "The option to use map hole vectors for shifts is selected but"
+        " the following problems will arise:\n\n";
+      if (numNoMap) {
+        mess2.Format("Could not find the map the item was drawn on for %d items.\n",
+          numNoMap);
+        mess += mess2;
+      }
+      if (numNoVec) {
+        mess2.Format("Hole vector shifts were not stored for %d of %d maps.\n", numNoVec,
+          numMaps);
+        mess += mess2;
+      }
+      if (numNoXform) {
+        mess2.Format("The map was at a different magnification from the adjusting "
+          "transform for %d of %d maps.\n", numNoXform, numMaps);
+        mess += mess2;
+      }
+      mess += "\nPress \"Yes - Stop\" to stop and address the problems\n\n"
+        "Press \"No - Go On\" to ignore this and continue with acquisition";
+      if (SEMThreeChoiceBox(mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, false) ==
+        IDYES)
+        return 1;
     }
   }
 
@@ -5679,39 +5732,52 @@ int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle,
 // Checks preconditions and applies the adjusting transform to a given set of multishot
 // vectors
 int CNavHelper::AdjustMultiShotVectors(MultiShotParams *params, int customOrHex,
-  CString &mess)
+  bool statusOnly, CString &mess)
 {
   int hexInd = customOrHex < 0 ? 1 : 0;
+  int camera = mWinApp->GetCurrentCamera();
   int magInd = customOrHex > 0 ? params->customMagIndex : params->holeMagIndex[hexInd];
   int origInd = customOrHex > 0 ? params->origMagOfCustom :
     params->origMagOfArray[hexInd];
 
   if (!params->xformFromMag || !params->adjustingXform.xpx) {
-    mess = "No transform has been saved for adjusting hole positions";
+    mess = statusOnly ? "No adjustment transform available" :
+      "No transform has been saved for adjusting hole positions";
     return 1;
   }
   if (customOrHex > 0 && (!params->customHoleX.size() || !magInd)) {
-    mess = "No custom hole positions have been defined";
+    mess = statusOnly ? "" : "No custom hole positions have been defined";
     return 1;
   }
   if (!magInd) {
     mess.Format("No %s hole array has been defined", hexInd ? "hexagonal" : "regular");
+    if (statusOnly)
+      mess = "";
     return 1;
   }
   if (!origInd) {
-    mess = "The requested hole vectors are not eligible for applying the adjustment "
-      "transform";
+    mess = statusOnly ? "Not enough information to use adjustment transform" :
+      "The requested hole vectors are not eligible for applying the adjustment transform";
     return 1;
   }
   if (origInd > 0) {
-    mess = "The requested hole vectors have already had the adjustment "
-    "transform applied";
+    mess = statusOnly ? "Adjustment transform already applied" :
+      "The requested hole vectors have already had the adjustment transform applied";
     return 1;
   }
   if (-origInd != params->xformFromMag) {
-    mess = "The requested hole vectors were not defined at the same magnification as "
-      "the adjustment transform";
+    if (statusOnly)
+      mess.Format("Shifts defined at %dx, adjustment transform at %dx",
+        MagForCamera(camera, -origInd), MagForCamera(camera, params->xformFromMag));
+    else
+      mess = "The requested hole vectors were not defined at the same magnification as "
+        "the adjustment transform";
     return 1;
+  }
+  if (statusOnly) {
+    mess.Format("Adjustment transform available from %dx to %dx", MagForCamera(camera,
+      params->xformFromMag), MagForCamera(camera, params->xformToMag));
+    return 0;
   }
 
   // Finally apply transform and mark as transformed by changing sign of original mag,

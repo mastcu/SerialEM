@@ -36,7 +36,8 @@ IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INST
 IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
 IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, IDC_BUT_STEP_ADJUST,
-IDC_CHECK_HEX_GRID, PANEL_END,
+IDC_CHECK_HEX_GRID, IDC_STAT_ADJUST_STATUS, IDC_BUT_USE_MAP_VECTORS, 
+IDC_BUT_APPLY_ADJUSTMENT, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
@@ -75,6 +76,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_fRing2Dist(0.1f)
   , m_strNum2Shots(_T(""))
   , m_bHexGrid(FALSE)
+  , m_strAdjustStatus(_T("No adjustment available"))
 {
   mNonModal = true;
   mShiftManager = mWinApp->mShiftManager;
@@ -180,6 +182,9 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_TEST_MULTISHOT, m_butTestMultishot);
   DDX_Control(pDX, IDC_CHECK_HEX_GRID, m_butHexGrid);
   DDX_Check(pDX, IDC_CHECK_HEX_GRID, m_bHexGrid);
+  DDX_Text(pDX, IDC_STAT_ADJUST_STATUS, m_strAdjustStatus);
+  DDX_Control(pDX, IDC_BUT_USE_MAP_VECTORS, m_butUseMapVectors);
+  DDX_Control(pDX, IDC_BUT_APPLY_ADJUSTMENT, m_butApplyAdjustment);
 }
 
 
@@ -218,6 +223,8 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUTCAL_BT_VS_IS, OnButCalBtVsIs)
   ON_BN_CLICKED(IDC_BUT_TEST_MULTISHOT, OnButTestMultishot)
   ON_BN_CLICKED(IDC_CHECK_HEX_GRID, OnCheckHexGrid)
+  ON_BN_CLICKED(IDC_BUT_USE_MAP_VECTORS, OnButUseMapVectors)
+  ON_BN_CLICKED(IDC_BUT_APPLY_ADJUSTMENT, OnButApplyAdjustment)
 END_MESSAGE_MAP()
 
 
@@ -826,7 +833,8 @@ void CMultiShotDlg::OnButSaveIs()
 
       // Save negative of mag as original when recording from scratch
       // Vectors adjusted this way are not eligible for transform, set to 0
-      mActiveParams->origMagOfArray[hexInd] = mSteppingAdjusting ? 0 : -magInd;
+      mActiveParams->origMagOfArray[hexInd] = mSteppingAdjusting ? 
+        B3DABS(mActiveParams->origMagOfArray[hexInd]) : -magInd;
       StopRecording();
       ManageEnables();
       UpdateAndUseMSparams();
@@ -912,7 +920,7 @@ void CMultiShotDlg::OnButEndPattern()
   mActiveParams->customMagIndex = mWinApp->mScope->GetMagIndex();
   mActiveParams->tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
   mActiveParams->origMagOfCustom = mSteppingAdjusting ?
-    0 : -mActiveParams->customMagIndex;
+    B3DABS(mActiveParams->origMagOfCustom) : -mActiveParams->customMagIndex;
 
   // Accept the current position if it is different from the last
   if (!mSteppingAdjusting && 
@@ -943,26 +951,63 @@ void CMultiShotDlg::OnButAbort()
   ManageEnables();
 }
 
-
+// Use hole vectors from the hole finder
 void CMultiShotDlg::OnButUseLastHoleVecs()
 {
   CString str2;
   double xVecs[3], yVecs[3];
-  int ans;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  if (ConfirmReplacingShiftVectors("last", mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid()))
+    return;
+  mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
+    mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), true, xVecs, yVecs, str2);
+}
+
+// Use stored vectors in map for hole vectors
+void CMultiShotDlg::OnButUseMapVectors()
+{
+  CString str2;
+  CMapDrawItem *item;
+  if (!mWinApp->mNavigator || mWinApp->mNavigator->GetMapOrMapDrawnOn(-1, item, str2) > 0)
+    return;
+  if (!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0])
+    return;
+  if (ConfirmReplacingShiftVectors("map", item->mXHoleISSpacing[2] ||
+    item->mYHoleISSpacing[2]))
+    return;
+  mWinApp->mNavHelper->AssignNavItemHoleVectors(item);
+  mWinApp->mNavigator->Redraw();
+  ManageEnables();
+}
+
+// Common confirmation
+int CMultiShotDlg::ConfirmReplacingShiftVectors(const char *kind, BOOL hex)
+{
+  CString str2;
+  int ans;
   if (!mWinApp->mNavHelper->GetOKtoUseHoleVectors()) {
-    str2.Format("Using last hole vectors will replace the currently defined "
-      "image shift vectors for the %s pattern\n\nAre you sure you want to do this?",
-      mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? "hex" : "regular");
-    ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No", 
+    str2.Format("Using %s hole vectors will replace the currently defined "
+      "image shift vectors for the %s pattern.\n\nAre you sure you want to do this?",
+      kind, hex ? "hex" : "regular");
+    ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No",
       MB_YESNOCANCEL | MB_ICONQUESTION);
     if (ans == IDCANCEL)
-      return;
+      return 1;
     if (ans == IDNO)
       mWinApp->mNavHelper->SetOKtoUseHoleVectors(true);
   }
-  mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
-    mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), true, xVecs, yVecs, str2);
+  return 0;
+}
+
+// Apply existing adjustment
+void CMultiShotDlg::OnButApplyAdjustment()
+{
+  CString str;
+  mWinApp->mNavHelper->AdjustMultiShotVectors(mActiveParams,
+    B3DCHOICE(m_bUseCustom, 1, m_bHexGrid ? -1 : 0), false, str);
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
+  ManageEnables();
 }
 
 // New beam diameter
@@ -1065,6 +1110,7 @@ void CMultiShotDlg::ManageEnables(void)
   double holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  CMapDrawItem *item;
   int dir, numDir = m_bHexGrid ? 3 : 2;
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
@@ -1146,6 +1192,19 @@ void CMultiShotDlg::ManageEnables(void)
     enable = dir != 0.;
   }
   m_butUseLastHoleVecs.EnableWindow(enable);
+  enable = m_bDoMultipleHoles && !useCustom && mWinApp->mNavigator && notRecording;
+  if (enable) {
+    dir = mWinApp->mNavigator->GetMapOrMapDrawnOn(-1, item, str2);
+    enable = dir <= 0 && (item->mXHoleISSpacing[0] || item->mYHoleISSpacing[0]);
+  }
+  m_butUseMapVectors.EnableWindow(enable);
+  enable = notRecording && !mDisabledDialog;
+  m_strAdjustStatus = "";
+  if (enable)
+    enable = mWinApp->mNavHelper->AdjustMultiShotVectors(mActiveParams,
+      B3DCHOICE(m_bUseCustom, 1, m_bHexGrid ? -1 : 0), true, m_strAdjustStatus) == 0;
+  SetDlgItemText(IDC_STAT_ADJUST_STATUS, m_strAdjustStatus);
+  m_butApplyAdjustment.EnableWindow(enable);
   if (notRecording)
     m_statSaveInstructions.SetWindowText(canAdjustIS ? 
       "Measuring image shift on defocused View may work" : 

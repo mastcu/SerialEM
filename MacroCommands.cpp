@@ -2587,7 +2587,7 @@ int CMacCmd::AdjustMultiShotPattern()
 {
   mNavHelper->UpdateMultishotIfOpen();
   if (mNavHelper->AdjustMultiShotVectors(mNavHelper->GetMultiShotParams(),
-    mItemInt[1], mStrCopy))
+    mItemInt[1], false, mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
   return 0;
 }
@@ -11151,16 +11151,11 @@ int CMacCmd::UseMapItemHoleVectors()
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
-  if (!navItem->IsMap()) {
-    if (!navItem->mDrawnOnMapID)
-      ABORT_LINE("The Navigator item is not a map and does not have an ID for being "
-        "drawn on a map for line:\n\n");
-    navItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID, true);
-    if (!navItem)
-      ABORT_LINE("The map that the Navigator item was drawn on is no longer in the "
-        "table for line:\n\n");
+  index = mNavigator->GetMapOrMapDrawnOn(index, navItem, mStrCopy);
+  if (index > 0)
+    ABORT_LINE(mStrCopy + " for line:/n/n");
+  if (index < 0)
     mStrCopy += "this item was drawn on ";
-  }
   if (!navItem->mXHoleISSpacing[0] && !navItem->mYHoleISSpacing[0])
     ABORT_LINE(mStrCopy + "does not have hole vectors stored for line:\n\n");
   mNavHelper->AssignNavItemHoleVectors(navItem);
@@ -11299,7 +11294,10 @@ int CMacCmd::SetHelperParams(void)
 int CMacCmd::SetMontageParams(void)
 {
   CString report;
-  int index;
+  int index, act, cam, top, bot;
+  float binChange = 0.;
+  bool frameChange = false;
+  CameraParameters *camParam;
 
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
@@ -11308,38 +11306,57 @@ int CMacCmd::SetMontageParams(void)
     (mItemInt[4] > 0) || (mItemInt[5] > 0)))
       ABORT_LINE("After writing to the file, you cannot change frame size or overlaps "
         " in line:\n\n");
+  if (!mItemEmpty[7] && mItemDbl[7] >= 0.5) {
+    if (CheckCameraBinning(mItemDbl[7], index, report))
+      ABORT_LINE(report);
+    if (!(mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0))
+      binChange = (float)index / (float)mMontP->binning;
+    mMontP->binning = index;
+  }
+
   if (mItemInt[1] >= 0)
     mMontP->moveStage = mItemInt[1] > 0;
   if (!mItemEmpty[4] && mItemInt[4] > 0) {
     if (mItemInt[4] < mMontP->xOverlap * 2)
       ABORT_LINE("The X frame size is less than twice the overlap in statement:\n\n");
     mMontP->xFrame = mItemInt[4];
-  }
+    frameChange = true;
+  } else if (binChange)
+    mMontP->xFrame = 2 * B3DNINT(0.5 * mMontP->xFrame / binChange);
+
   if (!mItemEmpty[5] && mItemInt[5] > 0) {
     if (mItemInt[5] < mMontP->yOverlap * 2)
       ABORT_LINE("The Y frame size is less than twice the overlap in statement:\n\n");
     mMontP->yFrame = mItemInt[5];
-  }
+    frameChange = true;
+  } else if (binChange)
+    mMontP->yFrame = 2 * B3DNINT(0.5 * mMontP->yFrame / binChange);
+
   if (!mItemEmpty[2] && mItemInt[2] > 0) {
     if (mItemInt[2] > mMontP->xFrame / 2)
       ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
     if (mItemInt[2] < 16)
       ABORT_LINE("The X overlap must be at least 16 in line:\n\n");
     mMontP->xOverlap = mItemInt[2];
-  }
+  } else if (binChange)
+    mMontP->xOverlap = B3DNINT(mMontP->xOverlap / binChange);
+
   if (!mItemEmpty[3] && mItemInt[3] > 0) {
     if (mItemInt[3] > mMontP->yFrame / 2)
       ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
     if (mItemInt[2] < 16)
       ABORT_LINE("The Y overlap must be at least 16 in line:\n\n");
     mMontP->yOverlap = mItemInt[3];
-  }
+  } else if (binChange)
+    mMontP->yOverlap = B3DNINT(mMontP->yOverlap / binChange);
+
   if (!mItemEmpty[6] && mItemInt[6] >= 0)
     mMontP->skipCorrelations = mItemInt[6] != 0;
-  if (!mItemEmpty[7] && mItemDbl[7] >= 0.5) {
-    if (CheckCameraBinning(mItemDbl[7], index, report))
-      ABORT_LINE(report);
-    mMontP->binning = index;
+  if (frameChange || binChange) {
+    cam = mActiveList[mWinApp->mMontageController->GetMontageActiveCamera(mMontP)];
+    camParam = mWinApp->GetCamParams() + cam;
+    mCamera->CenteredSizes(mMontP->xFrame, camParam->sizeX, camParam->moduloX, act, index,
+      mMontP->yFrame, camParam->sizeY, camParam->moduloY, top, bot, mMontP->binning, cam);
   }
   mWinApp->mMontageController->SetNeedBoxSetup(true);
   mWinApp->mMontageWindow.UpdateSettings();

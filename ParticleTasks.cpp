@@ -730,7 +730,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   bool startingMulti)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
-  int ring, step, mainDir, sideDir, mainSign, sideSign;
+  int ring, step, mainDir, sideDir, mainSign, sideSign, origMag;
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   BOOL crossPattern = mMSParams->skipCornersOf3x3;
   bool adjustForTilt = false;
@@ -747,6 +747,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   posIndex.clear();
   holeAngle = mMSParams->tiltOfHoleArray[hexInd];
   fromMag = mMSParams->holeMagIndex[hexInd];
+  origMag = mMSParams->origMagOfArray[hexInd];
   if (((!startingMulti && mMSParams->useCustomHoles) || 
     (startingMulti && mMSUseCustomHoles)) && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
@@ -759,6 +760,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
     fromMag = mMSParams->customMagIndex;
     holeAngle = mMSParams->tiltOfCustomHoles;
+    origMag = mMSParams->origMagOfCustom;
   } else if (mMSParams->holeMagIndex[hexInd] > 0 && 
     ((mMSParams->doHexArray && !(numXholes && numYholes)) || 
     (numXholes > 0 && numYholes == -1))) {
@@ -880,10 +882,14 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
   }
 
+  mLastHolesWereAdjusted = origMag > 0 && mMSParams->adjustingXform.xpx != 0. && 
+    magInd == fromMag && origMag == mMSParams->xformFromMag && 
+    fromMag == mMSParams->xformToMag;
+
   // Transfer the image shifts and add to return vectors
   for (ind = 0; ind < numHoles; ind++) {
-    mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind], magInd,
-      transISX, transISY, camera);
+    mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind],
+      magInd, transISX, transISY, camera);
     if (adjustForTilt) {
       ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX, 
         specY);

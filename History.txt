@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/12/23: Add option to use map hole vectors and adjust them when doing
+multishot in Navigator Acquire at Items.
+
+7/12/23: Added buttons to apply an adjustment and to use hole vectors from a
+map to the multishot setup dialog.
+
+7/12/23: Fixed loss of missing points added by mouse and problems with
+double-toggling of included/excluded hole fimnder points.
+
 7/10/23: Image shift values corresponding to hole vectors are computed after
 finding holes on a map and stored in the Navigator file; they can be used
 later for multishot vectors with a script command.

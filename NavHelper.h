@@ -627,7 +627,7 @@ public:
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void UpdateMultishotIfOpen(bool draw = true);
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
-  int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, CString &mess);
+  int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
   void AssignNavItemHoleVectors(CMapDrawItem * item);
   void OpenHoleFinder(void);

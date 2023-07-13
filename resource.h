@@ -2152,6 +2152,10 @@
 #define IDC_STAT_MAX_HULL_DIST          3183
 #define IDC_EDIT_SUFFIXES               3184
 #define IDC_CHECK_IMAGE_AFTER_IS        3185
+#define IDC_BUT_USE_MAP_VECTORS         3186
+#define IDC_BUT_APPLY_ADJUSTMENT        3187
+#define IDC_STAT_ADJUST_STATUS          3188
+#define IDC_NA_USE_MAP_HOLES            3189
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2708,8 +2712,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        283
-#define _APS_NEXT_COMMAND_VALUE         33519
-#define _APS_NEXT_CONTROL_VALUE         3186
+#define _APS_NEXT_COMMAND_VALUE         33520
+#define _APS_NEXT_CONTROL_VALUE         3190
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

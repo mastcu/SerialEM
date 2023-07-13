@@ -2334,18 +2334,18 @@ BEGIN
     DEFPUSHBUTTON   "GO",IDOK,207,408,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,322,408,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,377,410,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,68,10
-    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,198,149,8
-    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,208,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,293,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,292,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,293,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,292,26,12,ES_AUTOHSCROLL
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,68,10
+    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,210,149,8
+    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,220,149,8
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,305,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,84,304,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,112,305,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,304,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,136,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,279,136,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,255,132,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,132,10
     PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,265,408,36,14
     EDITTEXT        IDC_EDIT_EVERY_N,220,309,24,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_EVERY_N,"msctls_updown32",UDS_ARROWKEYS,244,308,12,14
@@ -2368,9 +2368,9 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,306,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,392,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,360,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,359,10,8,NOT WS_GROUP
@@ -2384,9 +2384,9 @@ BEGIN
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,23,146,139,10
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,231,149,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,243,149,10
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,243,119,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,255,119,10
     CONTROL         "Mapping",IDC_RMAPPING,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,52,3,46,14
     CONTROL         "Final Data",IDC_RACQUISITION,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,3,53,14
     LTEXT           "Parameters for:",IDC_STAT_PARAM_FOR,4,5,46,10
@@ -2400,28 +2400,30 @@ BEGIN
     CONTROL         "Every",IDC_RNAVACQ_AFTER_MINUTES,"Button",BS_AUTORADIOBUTTON,188,345,30,10
     CONTROL         "When moved >",IDC_RNAVACQ_WHEN_MOVED,"Button",BS_AUTORADIOBUTTON,188,358,58,10
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,298,105,73,WS_GROUP
-    LTEXT           "",IDC_STAT_SPACER3,157,373,8,8
-    CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,183,39,10
-    CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,183,31,10
-    CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,183,38,10
-    GROUPBOX        "Acquire non-montage images in Low Dose with",IDC_STAT_WHICH_CONSET,8,173,150,23,WS_GROUP
-    LTEXT           "Task-related options",IDC_STAT_ACTION_OPTIONS,4,221,72,8
-    LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,283,62,8
+    LTEXT           "",IDC_STAT_SPACER3,157,385,8,8
+    CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,195,39,10
+    CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,195,31,10
+    CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,195,38,10
+    GROUPBOX        "Acquire non-montage images in Low Dose with",IDC_STAT_WHICH_CONSET,8,185,150,23,WS_GROUP
+    LTEXT           "Task-related options",IDC_STAT_ACTION_OPTIONS,4,233,72,8
+    LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,295,62,8
     LTEXT           "Primary Action-related options",IDC_STAT_TASK_OPTIONS,4,108,101,8
     LTEXT           "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,171,5,120,8
     LTEXT           "Currently selected task controls",IDC_STAT_SELECTED_GROUP,171,288,216,8
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,3,20,158,1
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,3,106,158,1
-    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,3,219,158,1
-    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,281,158,1
+    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,3,231,158,1
+    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,293,158,1
     CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,170,286,217,1
     CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,170,389,217,1
-    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,90,10
+    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,90,10
     LTEXT           "(Push button to show controls)",IDC_STAT_PUSH_BUT,291,5,96,8
     CONTROL         "Hardware dark reference",IDC_RADIO_NAVACQ_SEL19,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,188,269,78,10
     CONTROL         "",IDC_CHECK_NAVACQ_RUN19,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,269,11,10
     LTEXT           "When moved > 999.9 um",IDC_STAT_NAVACQ_WHEN19,274,270,76,8
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP19,358,269,24,10
+    CONTROL         "Use map hole vectors for shifts, with adjustment",IDC_NA_USE_MAP_HOLES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,172,151,10
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -3220,7 +3222,7 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,121,23,45,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 180, 412
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 180, 439
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Multiple Record Setup"
@@ -3230,36 +3232,36 @@ BEGIN
     CONTROL         "Before others",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,58,65,51,10
     CONTROL         "After others",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,118,65,48,10
     GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,13,56,155,23,WS_GROUP
-    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,251,120,10
-    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,261,110,10
-    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,18,271,94,10
+    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,278,120,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,288,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,18,298,94,10
     CONTROL         "Early return, except for full sum on first shot",IDC_RFIRST_FULL,
-                    "Button",BS_AUTORADIOBUTTON,18,281,140,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,20,293,110,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,131,291,22,12,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,12,241,150,64
-    DEFPUSHBUTTON   "OK",IDOK,33,395,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,109,395,40,14
+                    "Button",BS_AUTORADIOBUTTON,18,308,140,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,20,320,110,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,131,318,22,12,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,12,268,150,64
+    DEFPUSHBUTTON   "OK",IDOK,33,422,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,422,40,14
     LTEXT           "Number of shots in main ring around center:",IDC_STAT_NUM_PERIPHERAL,6,17,130,8
     CTEXT           "99",IDC_STAT_NUM_SHOTS,136,17,9,8
     CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,147,14,10,14
     LTEXT           "Distance from center to main ring of shots:",IDC_STAT_CENTER_DIST,6,32,124,8
     EDITTEXT        IDC_EDIT_SPOKE_DIST,130,30,30,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_CENTER_UM,162,32,11,8
-    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,231,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,5,371,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,88,369,26,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,118,371,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,258,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,5,398,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,88,396,26,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,118,398,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,382,166,10
-    PUSHBUTTON      "?",IDC_BUTHELP,165,399,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,311,89,8
-    LTEXT           "sec",IDC_STAT_SEC,120,311,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,309,26,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,409,166,10
+    PUSHBUTTON      "?",IDC_BUTHELP,165,426,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,338,89,8
+    LTEXT           "sec",IDC_STAT_SEC,120,338,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,336,26,12,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt && astig to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,325,170,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,335,163,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,343,157,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,352,170,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,362,163,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,370,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,4,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
@@ -3277,13 +3279,13 @@ BEGIN
     LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,6,98,133,8
     EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,138,96,28,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,82,172,1
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,227,172,1
-    GROUPBOX        "Save image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,172,68
-    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,198,55,12
-    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,198,39,12
-    PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,198,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,6,212,169,10
-    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,198,40,12
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,254,172,1
+    GROUPBOX        "Set image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,172,95
+    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,183,55,12
+    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,183,39,12
+    PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,183,21,12
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,6,197,169,10
+    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,183,40,12
     CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,134,147,10
     CONTROL         "Do second ring of ",IDC_CHECK_SECOND_RING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,45,66,10
@@ -3292,13 +3294,16 @@ BEGIN
     LTEXT           "um",IDC_STAT_RING2_UM,162,46,11,8
     CONTROL         "",IDC_SPIN_RING2_NUM,"msctls_updown32",UDS_ARROWKEYS,91,43,10,14
     EDITTEXT        IDC_EDIT_RING2_DIST,130,44,30,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Use Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,12,183,75,12
-    PUSHBUTTON      "Step To and Adjust IS",IDC_BUT_STEP_ADJUST,92,183,75,12
-    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,323,172,1
-    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,366,172,1
-    PUSHBUTTON      "Test Multishot Positions",IDC_BUT_TEST_MULTISHOT,93,352,78,12
-    PUSHBUTTON      "Calibrate Coma vs. IS",IDC_BUTCAL_BT_VS_IS,9,352,78,12
+    PUSHBUTTON      "Use Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,10,208,77,12
+    PUSHBUTTON      "Step To and Adjust IS",IDC_BUT_STEP_ADJUST,10,223,77,12
+    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,350,172,1
+    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,393,172,1
+    PUSHBUTTON      "Test Multishot Positions",IDC_BUT_TEST_MULTISHOT,93,379,78,12
+    PUSHBUTTON      "Calibrate Coma vs. IS",IDC_BUTCAL_BT_VS_IS,9,379,78,12
     CONTROL         "Hex grid",IDC_CHECK_HEX_GRID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,137,111,38,10
+    PUSHBUTTON      "Use Map Hole Vectors",IDC_BUT_USE_MAP_VECTORS,93,208,77,12
+    PUSHBUTTON      "Apply Stored Adjustment",IDC_BUT_APPLY_ADJUSTMENT,93,223,77,12
+    LTEXT           "Adjustment not available",IDC_STAT_ADJUST_STATUS,6,237,170,8
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -4409,7 +4414,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 176
         TOPMARGIN, 4
-        BOTTOMMARGIN, 408
+        BOTTOMMARGIN, 435
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -5947,8 +5952,12 @@ END
 STRINGTABLE
 BEGIN
     IDC_EDIT_SUFFIXES       "Suffixes for extra files when Navigator Acquire at Items opens a file"
-    IDC_CHECK_IMAGE_AFTER_IS
+    IDC_CHECK_IMAGE_AFTER_IS 
                             "Take an image of the selected area after stepping to each position"
+    IDC_BUT_USE_MAP_VECTORS "Assign hole finder-based vectors stored in current map as the shift vectors"
+    IDC_BUT_APPLY_ADJUSTMENT
+                            "Use stored adjustment to transform shifts to work at a higher mag"
+    IDC_NA_USE_MAP_HOLES    "Use hole vectors in map to set image shift for holes, adjusting if possible"
 END
 
 STRINGTABLE

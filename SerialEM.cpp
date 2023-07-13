@@ -629,6 +629,7 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].mapWithViewSearch = 0;
     mNavAcqParams[i].retractCameras = false;
     mNavAcqParams[0].saveAsMapChoice = i == 0;
+    mNavAcqParams[i].useMapHoleVectors = false;
   }
 
   mNavParams.warnedOnSkipMove = false;

@@ -2381,7 +2381,11 @@
             unchanged. The entries are: <b>#S</b> 1 to use stage movement or 0 not to; <b>#OX</b> overlap in X;
             <b>#OY</b> overlap in Y; <b>#FX</b> frame size in X; <b>#FY</b> frame size in Y, <b>#N</b> 1 to skip correlations or 0 not
             to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, 
-            and binnings cannot validly be changed after acquiring into the file.</TD>
+            and binnings cannot validly be changed after acquiring into the file.&nbsp; As of 12-Jul-23, if the 
+            binning is changed before acquiring, then whichever frame sizes and overlaps are specified as -1 
+            will be changed by the change in binning to maintain the same acquisition area.&nbsp; If binning 
+            is changed after acquiring, it will attempt to take frames with the same number of pixels
+             and the new binning, which may or may not work.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ParamSetToUseForMontage #</TD>
@@ -2431,7 +2435,7 @@
              any dialogs.&nbsp; For <b>#I</b>, enter 0 for
               the current Navigator item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the
-              table, where -1 is the last item.&nbsp; The indicated item must be a montage.&nbsp; The current 
+              table, where -1 is the last item.&nbsp; The indicated item must be a polygon.&nbsp; The current 
             acquisition parameters of the camera parameter set indicated 
             in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
             overlap factor for fitting the montage, overriding the corresponding entry in the setup 

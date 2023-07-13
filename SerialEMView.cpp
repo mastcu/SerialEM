@@ -1521,7 +1521,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) + 
             (ptY - cenY) * (ptY - cenY));
         }
-        CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(0, 255, 0)));
+        CPen circlePen(PS_SOLID, thick1, COLORREF(
+          RGB(mWinApp->mParticleTasks->GetLastHolesWereAdjusted() ? 255 : 0, 255, 0)));
 
         // Now if doing multiholes, draw a circle on each that is either acquire or
         // multi inhole radius
@@ -1580,8 +1581,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             useYholes != lastSpecialYholes) {
             numFullSpecHoles = mWinApp->mParticleTasks->GetHolePositions(specialFullISX,
               specialFullISY, fullHoleIndex, mWinApp->mNavigator->GetMagIndForHoles(),
-              mWinApp->mNavigator->GetCameraForHoles(), useXholes, 
-              useYholes, tiltAngle);
+              mWinApp->mNavigator->GetCameraForHoles(), useXholes,
+              useYholes, tiltAngle, false);
             lastSpecialXholes = useXholes;
             lastSpecialYholes = useYholes;
           }

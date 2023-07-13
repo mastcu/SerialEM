@@ -326,7 +326,8 @@
       IS</b> procedure for a regular rectangular or hexagonal array, along with the 
       magnifications at which the pattern was originally defined and at which the 
       positions were adjusted.&nbsp; If vectors are defined again at the same 
-      magnification, this transformation can be applied with the 
+      magnification, this transformation can be applied with the <strong>Apply 
+      Adjustment </strong>button or the 
       &#39;AdjustMultiShotPattern&#39; script command.&nbsp; Specifically, if vectors from a 
       hole-finding operation are used to define image shift vectors, and you then 
       adjust those vectors to be accurate at higher magnification with this procedure, 
@@ -374,9 +375,28 @@
       if you are sure you want to replace the current image shift values, in case the 
       button was pressed accidentally.&nbsp; You can press &#39;Yes Always&#39; to avoid that 
       confirmation for this session of the program.&nbsp; You must be in Low Dose mode for the button to be enabled.&nbsp; </p>
+    <p><strong>Use Map Hole Vectors</strong></p>
+    <p>Press this button to assign the shifts for a regular pattern from the image 
+      shift vectors stored in a map when the Hole Finder was run on it.&nbsp; The 
+      current Navigator item must be either such a map or an item drawn on such a map.&nbsp; 
+      This operation is equivalent to using the &#39;UseMapItemHoleVectors&#39; command.&nbsp; 
+      Just like for <strong>Use Last Hole Vectors</strong>, you will be asked to 
+      confirm that you want to use the shift vectors.</p>
     <p><strong>Step To and Adjust</strong></p>
     <p>Press this button to step to each of the positions of a defined pattern and 
       adjust the image shift there.&nbsp; See detailed instructions above.</p>
+    <p><strong>Apply Adjustment (and adjustment status line)</strong></p>
+    <p>Press this button to apply the adjustment stored when <strong>Step To and 
+      Adjust</strong> was last used to the current image shift values (which can be 
+      regular vectors or customs shifts).&nbsp; The magnification at which the current 
+      shifts were defined must match that of the shifts that were adjusted in that 
+      procedure.&nbsp; The button will be disabled when the operation is not possible, 
+      and the status line below the button will indicate the reason that it is 
+      disabled.&nbsp; See instructions above.</p>
+    <p>When shifts have been adjusted, the beam circles in the display will be yellow 
+      instead of green.&nbsp; This color is an indicator not only that shifts have 
+      been adjusted, but also that you should expect the positions not to be on the 
+      holes in the original map, since they have been modified from the positions that <em>are</em> on the holes.</p>
     <p><b>Save Record image</b></p>
     <p>Select this option to have the Record image saved in the current file.&nbsp;
       The option is disabled and its setting is irrelevant if an early return is

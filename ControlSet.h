@@ -488,6 +488,7 @@ struct NavAcqParams {
   BOOL saveAsMapChoice;     // Flag that option to save images/montages as maps is checked
   BOOL retractCameras;      // Flag to retract cameras at end
   BOOL runHoleCombiner;     // Flag to run the multi-hole combiner after hole finder
+  BOOL useMapHoleVectors;   // Flagto use hole vectors in new drawn-on map for multishot
 };
 
 // Other Nav parameters

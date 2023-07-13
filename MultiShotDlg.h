@@ -167,4 +167,10 @@ public:
   CButton m_butHexGrid;
   BOOL m_bHexGrid;
   afx_msg void OnCheckHexGrid();
+  CString m_strAdjustStatus;
+  CButton m_butUseMapVectors;
+  afx_msg void OnButUseMapVectors();
+  int ConfirmReplacingShiftVectors(const char *kind, BOOL hex);
+  CButton m_butApplyAdjustment;
+  afx_msg void OnButApplyAdjustment();
 };
