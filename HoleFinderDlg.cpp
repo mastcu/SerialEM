@@ -347,8 +347,10 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mYcenters, float, 0);
   CLEAR_RESIZE(mXstages, float, 0);
   CLEAR_RESIZE(mYstages, float, 0);
-  CLEAR_RESIZE(mXmissing, float, 0);
-  CLEAR_RESIZE(mYmissing, float, 0);
+  CLEAR_RESIZE(mXmissStage, float, 0);
+  CLEAR_RESIZE(mYmissStage, float, 0);
+  CLEAR_RESIZE(mXmissCen, float, 0);
+  CLEAR_RESIZE(mYmissCen, float, 0);
   CLEAR_RESIZE(mMissPieceOn, int, 0);
   CLEAR_RESIZE(mMissXinPiece, float, 0);
   CLEAR_RESIZE(mMissYinPiece, float, 0);
@@ -851,6 +853,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mMissXinPiece.clear();
   mMissYinPiece.clear();
   mPieceOn.clear();
+  mExcluded.clear();
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
@@ -1433,8 +1436,10 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   // Treat the missing points the same way so they can be added by mouse
   numMiss = (int)xMissing.size();
   if (numMiss) {
-    mXmissing.resize(numMiss);
-    mYmissing.resize(numMiss);
+    mXmissStage.resize(numMiss);
+    mYmissStage.resize(numMiss);
+    mXmissCen = xMissing;
+    mYmissCen = yMissing;
     if (mMontage && mPieceOn.size()) {
       mMissPieceOn.resize(numMiss);
       mMissXinPiece.resize(numMiss);
@@ -1448,8 +1453,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     if (mMontage && mPieceOn.size())
       mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], 
         &mMissXinPiece[ind], &mMissYinPiece[ind]);
-    ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissing[ind],
-      mYmissing[ind]);
+    ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissStage[ind],
+      mYmissStage[ind]);
   }
 
   // Get the hole vectors as IS values and stpre in Nav item if it is a map
@@ -1640,12 +1645,12 @@ bool CHoleFinderDlg::HaveHolesToDrawOrMakePts()
 }
 
 // Process Ctrl - left mouse action at the given position to include/exclude points
-bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY, 
+bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY,
   float imDistLim, bool dragging)
 {
   float selXlimit[4], selYlimit[4], selXwindow[4], selYwindow[4];
   float dist, distMin = 1.e10, distNext = 1.e10;
-  int ind, indMin, miss, numDo, missMin;
+  int ind, indMin = -1, miss, numDo, missMin;
   ScaleMat aInv;
   float delX, delY, stageX, stageY, xInPiece, yInPiece, distLim, stPtX, stPtY;
   int pieceIndex;
@@ -1654,7 +1659,7 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
   // and get limits intsage coordinates (which are not square)
   if (!mNav->OKtoMouseSelect())
     return false;
-  if (!mNav->ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, 
+  if (!mNav->ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY,
     xInPiece, yInPiece, pieceIndex))
     return false;
   distLim = imDistLim * sqrtf(aInv.xpx * aInv.xpx + aInv.ypx * aInv.ypx);
@@ -1663,10 +1668,10 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
 
   // Loop over actual and missing points to find nearest
   for (miss = 0; miss < 2; miss++) {
-    numDo = miss ? (int)mXmissing.size() : (int)mXstages.size();
+    numDo = miss ? (int)mXmissStage.size() : (int)mXstages.size();
     for (ind = 0; ind < numDo; ind++) {
-      stPtX = miss ? mXmissing[ind] : mXstages[ind];
-      stPtY = miss ? mYmissing[ind] : mYstages[ind];
+      stPtX = miss ? mXmissStage[ind] : mXstages[ind];
+      stPtY = miss ? mYmissStage[ind] : mYstages[ind];
       if (!(InsideContour(selXlimit, selYlimit, 4, stPtX, stPtY) ||
         InsideContour(selXwindow, selYwindow, 4, stPtX, stPtY)))
         continue;
@@ -1688,17 +1693,21 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
   // Apply same criteria for drag and click in this case; do not operate on last selected
   // item when dragging - but rearm the dragging when it goes outside a  bit
   if (distMin > distLim || distMin > 0.5 * distNext ||
-    (dragging && indMin == mLastUserSelectInd)) {
+    (indMin == mLastUserSelectInd && (dragging || mLastSelectWasDrag))) {
     if (dragging && indMin == mLastUserSelectInd && distMin > 1.1 * distLim &&
       distMin > 0.55 * distNext)
       mLastUserSelectInd = -1;
+    mLastSelectWasDrag = dragging;
     return false;
   }
+  mLastSelectWasDrag = dragging;
 
   // For missing point, add it to list of points, maintain pieceOn regardless
   if (missMin) {
-    mXstages.push_back(mXmissing[indMin]);
-    mYstages.push_back(mYmissing[indMin]);
+    mXstages.push_back(mXmissStage[indMin]);
+    mYstages.push_back(mYmissStage[indMin]);
+    mXcenters.push_back(mXmissCen[indMin]);
+    mYcenters.push_back(mYmissCen[indMin]);
     if (mXinPiece.size()) {
       mXinPiece.push_back(mMissXinPiece[indMin]);
       mYinPiece.push_back(mMissYinPiece[indMin]);
@@ -1709,7 +1718,7 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
     mExcluded.push_back(-1);
     mLastUserSelectInd = (int)mXstages.size() - 1;
 
-  } else {
+  } else if (indMin >= 0) {
 
     // For regular point, toggle exclude and set to special values
     if (mExcluded[indMin] <= 0)

@@ -81,12 +81,14 @@ private:
   FloatVec mXcenters, mYcenters;
   FloatVec mXstages, mYstages;
   FloatVec mXinPiece, mYinPiece;
-  FloatVec mXmissing, mYmissing;
+  FloatVec mXmissStage, mYmissStage;
+  FloatVec mXmissCen, mYmissCen;
   IntVec mMissPieceOn;
   FloatVec mMissXinPiece, mMissYinPiece;
   IntVec mPieceOn;
   std::vector<short> mExcluded;
   int mLastUserSelectInd;
+  bool mLastSelectWasDrag;
   double mSigmas[MAX_HOLE_TRIALS];
   double mThresholds[MAX_HOLE_TRIALS];
   int mIterations[MAX_HOLE_TRIALS];
