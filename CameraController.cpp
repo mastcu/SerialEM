@@ -9993,7 +9993,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mTD.TiltSumIndex < (int)mTD.FrameTSactualAngle.size())
         extra->m_fTilt = mTD.FrameTSactualAngle[mTD.TiltSumIndex];
       extra->m_fDose *= partialExposure / (float)mExposure;
-      extra->mPriorRecordDose = mPriorRecordDose;
+      if (extra->m_fDose || mPriorRecordDose)
+        extra->mPriorRecordDose = mPriorRecordDose;
       mPriorRecordDose += extra->m_fDose;
       extra->mSubFramePath = "";
       extra->mNumSubFrames = 0;
