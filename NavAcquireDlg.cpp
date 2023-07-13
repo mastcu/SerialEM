@@ -43,7 +43,8 @@ IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
 IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
 IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, 
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
-IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_STAT_SPACER3, IDC_TSS_LINE4, PANEL_END,
+IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_STAT_SPACER3, 
+IDC_TSS_LINE4, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
@@ -131,6 +132,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_iMapWithViewSearch(0)
   , m_bSaveAsMap(FALSE)
   , m_bRetractCams(FALSE)
+  , m_bUseMapHoles(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -141,6 +143,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   mAdjustBTenabled = true;
   mSkipMoveEnabled = true;
   mSkipSaveEnabled = true;
+  mUseMapHolesEnabled = true;
 }
 
 CNavAcquireDlg::~CNavAcquireDlg()
@@ -227,6 +230,8 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_SAVE_AS_MAP, m_butSaveAsMap);
   DDX_Check(pDX, IDC_NA_SAVE_AS_MAP, m_bSaveAsMap);
   DDX_Check(pDX, IDC_NA_RETRACT_CAMS, m_bRetractCams);
+  DDX_Control(pDX, IDC_NA_USE_MAP_HOLES, m_butUseMapHoles);
+  DDX_Check(pDX, IDC_NA_USE_MAP_HOLES, m_bUseMapHoles);
 }
 
 
@@ -294,6 +299,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS, 
     IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP, 
@@ -411,6 +417,9 @@ BOOL CNavAcquireDlg::OnInitDialog()
   EnableDlgItem(IDC_RMAPPING, navState != NAV_PAUSED);
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
+
+  if (!msParams->xformFromMag || !msParams->adjustingXform.xpx)
+    ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
 
   // Get params in and set everything right
   for (int which = 0; which < 2; which++) {
@@ -630,6 +639,7 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->noMBoxOnError = m_bNoMBoxOnError;
   mParam->earlyReturn = m_bEarlyReturn;
   mParam->numEarlyFrames = m_iEarlyFrames;
+  mParam->useMapHoleVectors = m_bUseMapHoles;
   mParam->macroIndex = mMacroNum;
   mParam->skipInitialMove = m_bSkipInitialMove;
   mParam->skipZmoves = m_bSkipZmoves;
@@ -668,6 +678,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bNoMBoxOnError = mParam->noMBoxOnError;
   m_bEarlyReturn = mParam->earlyReturn;
   m_iEarlyFrames = mParam->numEarlyFrames;
+  m_bUseMapHoles = mParam->useMapHoleVectors;
   m_bSkipSaving = mParam->skipSaving;
   m_bAdjustBTforIS = mParam->adjustBTforIS;
   m_bRelaxStage = mParam->relaxStage;
@@ -854,6 +865,7 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   int acquireType = OptionsToAcquireType();
   bool imageOrMap = acquireType == ACQUIRE_IMAGE_ONLY || acquireType == ACQUIRE_TAKE_MAP;
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   bool cycleOK = acquireType == ACQUIRE_DO_TS || acquireType == ACQUIRE_RUN_MACRO ||
     DOING_ACTION(NAACT_RUN_POSTMACRO) || DOING_ACTION(NAACT_RUN_PREMACRO) ||
     DOING_ACTION(NAACT_AUTOFOCUS) || 
@@ -864,6 +876,7 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
     && mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
     mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1;
   bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
+  bool useMapEnabled = acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset);
   m_editSubsetEnd.EnableWindow(m_bDoSubset);
@@ -896,6 +909,8 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   RebuildIfEnabled(acquireType == ACQUIRE_IMAGE_ONLY, mSkipSaveEnabled, doBuild);
   m_butHybridRealign.EnableWindow(hybridOK);
   RebuildIfEnabled(hybridOK, mHybridEnabled, doBuild);
+  m_butUseMapHoles.EnableWindow(useMapEnabled);
+  RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
 
   EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK);
   EnableDlgItem(IDC_RMAP_WITH_REC, consetOK);
@@ -1064,6 +1079,8 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
 
     if (!m_bAdjustBTforIS || !mAdjustBTenabled)
       mIDsToDrop.push_back(IDC_NA_ADJUST_BT_FOR_IS);
+    if (!m_bUseMapHoles || !mUseMapHolesEnabled)
+      mIDsToDrop.push_back(IDC_NA_USE_MAP_HOLES);
     if (!m_bHybridRealign || !mHybridEnabled)
       mIDsToDrop.push_back(IDC_NA_APPLY_REALIGN_ERR);
     if (!m_bRelaxStage)

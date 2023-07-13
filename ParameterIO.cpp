@@ -2489,6 +2489,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->retractCameras = itemInt[20] != 0;
       if (!itemEmpty[21])
         navParams->runHoleCombiner = itemInt[21] != 0;
+      if (!itemEmpty[22])
+        navParams->useMapHoleVectors = itemInt[22] != 0;
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
@@ -2553,7 +2555,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    "%d %d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
@@ -2563,7 +2565,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->adjustBTforIS ? 1 : 0, navParams->relaxStage ? 1 : 0,
     navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
     navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0,
-    navParams->runHoleCombiner ? 1 : 0);
+    navParams->runHoleCombiner ? 1 : 0, navParams->useMapHoleVectors ? 1 : 0);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";

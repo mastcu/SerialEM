@@ -556,6 +556,8 @@ void CNavigatorDlg::ManageCurrentControls()
   m_butDrawOne.EnableWindow(enableDraw);
   m_comboColor.EnableWindow(exists);
   UpdateData(false);
+  if (mHelper->mMultiShotDlg)
+    mHelper->mMultiShotDlg->ManageEnables();
   Update();
 }
 
@@ -1565,6 +1567,7 @@ void CNavigatorDlg::OnSelchangeListviewer()
   }
   mWinApp->RestoreViewFocus();
   AddFocusAreaPoint(true);
+  Redraw();
 }
 
 // An item has been dragged from the old index to the new
@@ -3720,6 +3723,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
   mMagIndForHoles = mCameraForHoles = 0;
+  mWinApp->mParticleTasks->SetLastHolesWereAdjusted(false);
 
   // Show multishot somehow if one or other type is on, and either the dialog is open
   // or acquire is on and "Show shots when show acquire" is checked
@@ -3839,7 +3843,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
               if (!imBuf->GetTiltAngle(tiltAngle))
                 tiltAngle = -999.;
               int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle);
+                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle, false);
               AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
             }
 
@@ -9333,6 +9337,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mResetAcquireIndex = false;
   mLastGroupID = 0;
   mGroupIDtoSkip = 0;
+  mLastMapForVectors = -1;
   mSelectedItems.clear();
   mSaveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
@@ -9394,7 +9399,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
-  CMapDrawItem *item, *nextItem;
+  CMapDrawItem *item, *nextItem, *mapItem;
   TiltSeriesParam *tsp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
@@ -9613,6 +9618,41 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mFocusCycleCounter = (mFocusCycleCounter + 1) % (mAcqParm->cycleSteps + 1);
       PrintfToLog("Target defocus set to %.2f um and scope defocus changed by %.2f", 
         target, target - oldTarget);
+    }
+
+    // Handle hole vectors for multishot
+    if (mAcqParm->acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles &&
+      mAcqParm->useMapHoleVectors) {
+      ind = mAcquireIndex;
+
+      // Get map item and process vectors if it is different from last
+      err = GetMapOrMapDrawnOn(mAcquireIndex, mapItem, str);
+      if (err < 0)
+        ind = mFoundItem;
+      if (err > 0) {
+
+      } else if (ind != mLastMapForVectors) {
+        mLastMapForVectors = ind;
+        if (mapItem->mXHoleISSpacing[0] == 0. && mapItem->mYHoleISSpacing[0] == 0.) {
+          PrintfToLog("Cannot change hole shifts for map %s; there are no stored vectors",
+            (LPCTSTR)mapItem->mLabel);
+          err = 1;
+        } else {
+
+          // Assign the vectors and adjust them if possible
+          mHelper->AssignNavItemHoleVectors(mapItem);
+          if (msParams->adjustingXform.xpx && msParams->xformFromMag) {
+            err = mHelper->AdjustMultiShotVectors(msParams, B3DCHOICE(
+              msParams->useCustomHoles, 1, msParams->doHexArray ? -1 : 0), false, str);
+            if (err)
+              PrintfToLog("Cannot apply adjustment to hole shifts %s: %s",
+                mapItem->mLabel, (LPCTSTR)str);
+          }
+        }
+        if (!err)
+          PrintfToLog("Changed hole shifts for items drawn on map %s", 
+          (LPCTSTR)mapItem->mLabel);
+      }
     }
 
   } else {
@@ -11235,6 +11275,36 @@ int CNavigatorDlg::GetCurrentOrAcquireItem(CMapDrawItem *&item)
     item = mItem;
   }
   return index;
+}
+
+int CNavigatorDlg::GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &mess)
+{
+  if (index < 0) {
+    index = GetCurrentOrAcquireItem(item);
+    if (index < 0) {
+      mess = "There is no current Navigator item";
+      return 1;
+    }
+  } else if (index > (int)mItemArray.GetSize() - 1) {
+    mess.Format("Navigator item index %d is out of range", index + 1);
+    return 1;
+  } else {
+    item = mItemArray[index];
+  }
+  if (item->IsMap())
+    return 0;
+  if (!item->mDrawnOnMapID) {
+    mess.Format("Navigator item %d is not a map and does not have an ID for being "
+      "drawn on a map", index + 1);
+    return 1;
+  }
+  item = FindItemWithMapID(item->mDrawnOnMapID, true);
+  if (!item) {
+    mess.Format("The map that Navigator item %d was drawn on is no longer in the "
+      " table", index + 1);
+    return 1;
+  }
+  return -1;
 }
 
 // Return the current item of start of current group

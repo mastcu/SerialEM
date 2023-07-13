@@ -466,6 +466,7 @@ private:
   int mPostponedSubsetEnd;
   BOOL mPostposedDoSubset;
   bool mAcqCycleDefocus;     // Flag that acquire is actually cycling focus given settings
+  int mLastMapForVectors;    // For keeping track of using map hole vectors
   bool mSettingUpFullMont;   // Flag so that fitting can not add extra area if skewed
   float mMaxAngleExtraFullMont;  // Maximum angle at which extra size will be added
   int mMinNewFileInterval;   // Interval at which to add new files when using Shift N
@@ -531,6 +532,7 @@ public:
   CButton m_butRealign;
   afx_msg void OnRealigntoitem();
   int GetCurrentOrAcquireItem(CMapDrawItem *&item);
+  int GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &mess);
   int RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
     int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
   int RealignToAnItem(CMapDrawItem * item, BOOL restore, float resetISalignCrit, 

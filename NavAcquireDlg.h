@@ -53,6 +53,7 @@ private:
   bool mAdjustBTenabled;
   bool mSkipMoveEnabled;
   bool mSkipSaveEnabled;
+  bool mUseMapHolesEnabled;
 
 public:
   int CheckActionOrder(int *order);
@@ -196,4 +197,6 @@ public:
   int OptionsToAcquireType();
   BOOL m_bRetractCams;
   afx_msg void OnRetractCams();
+  CButton m_butUseMapHoles;
+  BOOL m_bUseMapHoles;
 };

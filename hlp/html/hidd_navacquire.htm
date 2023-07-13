@@ -171,6 +171,23 @@
       the saving is finished, and return either an image with the given number of
       frames if a positive number is entered in the text box, no image if 0 is
       entered, or a sum of all the frames if -1 is entered. </P>
+    <P><strong>Use map hole vectors for shifts, with adjustment</strong></P>
+    <P>This option is enabled when acquiring multiple Records with a regular array of 
+      holes and makes the program set the image shifts vectors for the holes with the 
+      hole vectors found when Hole Finder was run on a map. The vectors are set from a 
+      map when the first item drawn on that map is encountered.&nbsp; If there is an 
+      adjustment saved from using the <strong>Step To and Adjust</strong> operation in 
+      the
+      <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>, it will be 
+      applied provided that the map&#39;s magnification matches the original magnification 
+      of the shifts that were last adjusted.&nbsp; It is important that the adjustment 
+      of hole vectors is known to give accurate hole positions from at the Record 
+      magnification before choosing this option. This will certainly be useful if a 
+      different grid is loaded, and may also be useful for some grid squares that are 
+      tilted or distorted.&nbsp; If this option is selected, the program will check 
+      before starting acquisition for whether maps have hole vector shifts and whether 
+      their magnifications match that of the adjustment.&nbsp; If there are problems, 
+      you will be asked whether to stop or go on.</P>
     <P><strong>Acquire non-montage images in Low Dose with</strong></P>
     <P>This set of radio buttons lets you take single images in Low Dose mode with 
       either the View or Search area, instead of just the Record area, just as you can 
