@@ -263,17 +263,19 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleISX.clear();
   mMSHoleISY.clear();
   mMSDoingHexGrid = false;
+  multiHoles = multiHoles || (numXholes && numYholes);
   if (numXholes && numYholes)
     mMSDoingHexGrid = numYholes == -1;
-  else
+  else if (multiHoles)
     mMSDoingHexGrid = mMSParams->doHexArray && !mMSUseCustomHoles;
-  if (!mMSUseCustomHoles && !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0]) {
+  if (multiHoles && !mMSUseCustomHoles && 
+    !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0]) {
     SEMMessageBox("Hole positions have not been defined for doing this type of "
       "multiple Records");
     RESTORE_MSP_RETURN(1);
   }
 
-  if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
+  if (multiHoles) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, true);
      mMSUseHoleDelay = true;
