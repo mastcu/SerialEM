@@ -5874,7 +5874,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     FillListBox(false, true);
 
     // See if this is a good division
-    if (numJgroups && !likeLast && !mMacroProcessor->DoingMacro()) {
+    if (numJgroups && !likeLast && !mMacroProcessor->DoingMacro() && mAcquireIndex < 0) {
      Redraw();
      label.Format("There are %d groups with %.1f points per group\n\n"
        "Do you want to keep this set of groups?", numJgroups, 
