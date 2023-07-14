@@ -102,6 +102,13 @@
     <P>Global data replicate some of the information that is in an MRC file header.&nbsp;
       In addition, the titles for an MRC file are stored in section headers of the
       type &quot;T&quot;.</P>
+    <P>It is important to realize that no steps in IMOD tilt series processing rely on 
+      information directly from an .mdoc file or require the presence of one.&nbsp; An 
+      .mdoc file is used for dose weighting, but only if the user specifies that as 
+      the source of dose information.&nbsp; It can be used with Alignframes to create 
+      a tilt series from frame files.&nbsp; Extracttilts and Extractpieces will fall 
+      back to looking for an .mdoc file if tilt angle or piece list values, 
+      respectively, are not in the image file header.</P>
     <P>&nbsp;The IMOD library used by SerialEM uses the same internal autodoc
       structure to access the metadata in HDF files.&nbsp; It is thus simple to
       extract all of these metadata information into a text file in the autodoc
@@ -213,7 +220,12 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">RotationAngle</TD>
-            <TD class="style5">Rotation of image from having tilt axis along X axis (CCW +)</TD>
+            <TD class="style5">Rotation of image from having the tilt axis along its X axis (CCW +).&nbsp; 
+              This corresponds to the definition of the approximate rotation angles reported 
+              by Thermo/FEI scripting.&nbsp; It is different from the &#39;Tilt axis angle&#39; in the second title 
+              of the file header and .mdoc, which follows the IMOD convention of tilt axis 
+              rotation relative to the Y axis of the image. Thus, the latter will be 90 
+              degrees less than the RotationAngle in a system with no axis inversions.</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">ExposureTime</TD>

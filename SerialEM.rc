@@ -2379,7 +2379,7 @@ BEGIN
     LTEXT           "Script to run:",IDC_STAT_POSTMACRO,192,54,41,8
     CONTROL         "",IDC_NA_TASK_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,191,82,49,2
     CONTROL         "",IDC_NA_TASK_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,330,82,49,2
-    CTEXT           "Primary Action inserts here",IDC_STAT_PRIMARY_LINE,241,79,88,8
+    CTEXT           "Primary Action (Multiple Records) occurs here",IDC_STAT_PRIMARY_LINE,212,79,148,8
     CONTROL         "Hide unused tasks",IDC_NA_HIDE_UNUSED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,174,393,74,10
     CONTROL         "Adjust beam tilt && astig for image shift",IDC_NA_ADJUST_BT_FOR_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,23,146,139,10
@@ -5955,7 +5955,7 @@ BEGIN
     IDC_CHECK_IMAGE_AFTER_IS 
                             "Take an image of the selected area after stepping to each position"
     IDC_BUT_USE_MAP_VECTORS "Assign hole finder-based vectors stored in current map as the shift vectors"
-    IDC_BUT_APPLY_ADJUSTMENT
+    IDC_BUT_APPLY_ADJUSTMENT 
                             "Use stored adjustment to transform shifts to work at a higher mag"
     IDC_NA_USE_MAP_HOLES    "Use hole vectors in map to set image shift for holes, adjusting if possible"
 END

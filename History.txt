@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/13/23: SEM_4-1-0beta20
+7/14/23: Fixed taking multishot only within holes, broken 7/10/23.
+
+7/13/23: Stopped confirmation message coming up when finding holes with the
+Navigator Acquire task and laying points out in groups.
+
 7/13/23: SEM_4-1-0beta19
 7/12/23: Add option to use map hole vectors and adjust them when doing
 multishot in Navigator Acquire at Items.

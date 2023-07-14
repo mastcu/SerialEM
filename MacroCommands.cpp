@@ -7576,17 +7576,21 @@ int CMacCmd::ReportEnvironVar(void)
 // ReportSettingsFile
 int CMacCmd::ReportSettingsFile(void)
 {
-  CString report;
+  CString report, scripts, dir, settings;
 
   report = mWinApp->mDocWnd->GetCurrentSettingsPath();
   mWinApp->AppendToLog("Current settings file: " + report, mLogAction);
   SetOneReportedValue(&mStrItems[1], report, 1);
-  report = "None";
+  scripts = "None";
   if (mWinApp->mDocWnd->GetReadScriptPack()) {
-    report = mWinApp->mDocWnd->GetCurScriptPackPath();
-    mWinApp->AppendToLog("Current script package: " + report, mLogAction);
+    scripts = mWinApp->mDocWnd->GetCurScriptPackPath();
+    if (scripts.Find(':') < 0 && scripts.GetAt(0) != '\\' && scripts.GetAt(0) != '/') {
+      UtilSplitPath(report, dir, settings);
+      scripts = dir + "\\" + scripts;
+    }
+    mWinApp->AppendToLog("Current script package: " + scripts, mLogAction);
   }
-  SetOneReportedValue(&mStrItems[1], report, 2);
+  SetOneReportedValue(&mStrItems[1], scripts, 2);
   return 0;
 }
 
