@@ -72,6 +72,7 @@ public:
   CString mOutputFile;
   BOOL mIfMontOutput;
   afx_msg void OnNaAcquiremap();
+  void ManagePrimaryLine();
   void ManageMacro(void);
   CButton m_butCloseValves;
   CButton m_butAcquireTS;

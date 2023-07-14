@@ -724,9 +724,19 @@ void CNavAcquireDlg::OnNaAcquiremap()
   UpdateData(true);
   UnloadTSdependentFromDlg(oldAcquire);
   LoadTSdependentToDlg();
+  ManagePrimaryLine();
   ManageEnables();
   ManageMacro();
   ManageOutputFile();
+}
+
+// Include the action for maximum clarity
+void CNavAcquireDlg::ManagePrimaryLine()
+{
+  const char *actions[4] = {"Acquire Image", "Main Script", "Tilt Series", 
+    "Multiple Records"};
+  SetDlgItemText(IDC_STAT_PRIMARY_LINE, "Primary Action (" + 
+    CString(actions[m_iAcquireChoice]) + ") occurs here");
 }
 
 // Checkbox to make a map
@@ -1125,6 +1135,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
 
   // Reform the window and set the group box
   states[2] = m_iSelectedPos >= 0;
+  ManagePrimaryLine();
   AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }
