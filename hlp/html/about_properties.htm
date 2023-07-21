@@ -1471,7 +1471,8 @@
         <TR VALIGN="top">
           <TD>OneViewType</TD>
           <TD>Set to 1 for a OneView camera or 2 for a Rio camera, which will be mapped internally to 3 or 4
-            for different sized cameras.&nbsp; Set to 5 for a Metro camera.</TD>
+            for different sized cameras.&nbsp; Set to 5 for a Metro camera, which is handled like a 
+            OneView even though it is similar to a K3.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
@@ -2246,14 +2247,14 @@
             LocalFalconFramePath general property or with the FalconLocalFramePath camera 
             property.&nbsp; Taking frames with the Ceta 2 also requires that the Advanced Scripting
             version be identified as high enough; this will require a property 
-            'AdvancedScriptingVersion 4' unless there is a Selectris filter. &nbsp; For a OneView
-             or Rio camera, saving and aligning are done through
+            'AdvancedScriptingVersion 4' unless there is a Selectris filter. &nbsp; For a OneView,
+             Rio, or Metro camera, saving and aligning are done through
              the SEMCCD plugin just as for a K2 or K3 camera.&nbsp;  For other cameras, saving and
             aligning are done within SerialEM.&nbsp; This is the same frame
               alignment that SerialEM provides for direct detectors, which is suitable for
               low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilities are
               turned on by default for a particular camera, enter 0 to have them not appear in
-              the Camera Setup dialog.  The default is 3 for Tietz XF416 and 0 otherwise.
+              the Camera Setup dialog.  The default is 3 for Tietz XF416 and Gatan Metro, and 0 otherwise.
           </TD>
         </TR>
         <TR VALIGN="top">

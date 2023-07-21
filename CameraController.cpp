@@ -748,16 +748,18 @@ int CCameraController::Initialize(int whichCameras)
           differentK2s = true;
         anyK2Type = param->K2Type;
       }
-      if (param->OneViewType && param->OneViewType != METRO_TYPE) {
+      if (param->OneViewType) {
         mNeedsReadMode[DMind] = true;
-        B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
-        if (param->OneViewType > 1) {
-          if (param->sizeX > 3500 && param->sizeY > 3500)
-            param->OneViewType = 3;
-          else if (param->sizeX < 2500 && param->sizeY < 3500)
-            param->OneViewType = 4;
-          else
-            param->OneViewType = 2;
+        if (param->OneViewType != METRO_TYPE) {
+          B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
+          if (param->OneViewType > 1) {
+            if (param->sizeX > 3500 && param->sizeY > 3500)
+              param->OneViewType = 3;
+            else if (param->sizeX < 2500 && param->sizeY < 3500)
+              param->OneViewType = 4;
+            else
+              param->OneViewType = 2;
+          }
         }
       }
     }
@@ -767,11 +769,11 @@ int CCameraController::Initialize(int whichCameras)
     if (param->canTakeFrames < 0) {
       param->canTakeFrames = 0;
 
-      // Turn it on for Tietz XF416 types
-      if (param->TietzType >= MIN_XF416_TYPE)
+      // Turn it on for Tietz XF416 types and Metro
+      if (param->TietzType >= MIN_XF416_TYPE || param->OneViewType == METRO_TYPE)
         param->canTakeFrames = 3;
     }
-    if (IsDirectDetector(param))
+    if (IsDirectDetector(param) && !param->OneViewType)
       param->canTakeFrames = 0;
 
     if (param->canTakeFrames) {
@@ -793,6 +795,8 @@ int CCameraController::Initialize(int whichCameras)
             if (jnd < 4) {
               if (param->frameTimeDivisor[jnd] < 0.00101f)
                 param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
+              else if (ovInd == METRO_TYPE - 1)
+                param->minFrameTime[jnd] = mOneViewMinExposure[ovInd][jnd];
               else
                 param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
             } else if (!jnd)
@@ -6712,7 +6716,8 @@ float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 
 bool CCameraController::IsDirectDetector(CameraParameters *camP)
 {
-  return camP->K2Type || IS_FALCON2_3_4(camP) || camP->DE_camType == DE_12;
+  return camP->K2Type || IS_FALCON2_3_4(camP) || camP->DE_camType == DE_12 || 
+    camP->OneViewType == METRO_TYPE;
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
