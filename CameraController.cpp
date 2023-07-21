@@ -347,9 +347,16 @@ CCameraController::CCameraController()
   // 2K Rio
   for (k = 0; k < 4; k++)
     mOneViewMinExposure[3][k] = 0.067f;
+
+  // Metro
+  mOneViewMinExposure[4][0] = 0.0244f;
+  mOneViewMinExposure[4][1] = 0.00609f;
+  mOneViewMinExposure[4][2] = mOneViewMinExposure[4][3] = 0.00203f;
+
   for (l = 1; l < MAX_1VIEW_TYPES; l++) {
     mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
-      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 0.001f;
+      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 
+      (l == METRO_TYPE - 1) ? 0.00203f : 0.001f;
   }
   for (l = 4; l < MAX_BINNINGS; l++) {
     for (k = 0; k < MAX_1VIEW_TYPES; k++) {
@@ -634,9 +641,9 @@ int CCameraController::Initialize(int whichCameras)
   int numDMListed[3], digiscan[3], numAdd[3];
   int numDEListed = 0;
   double addedFlyback;
-  float ovFrameDivisors[4][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
+  float ovFrameDivisors[MAX_1VIEW_TYPES][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
-  {0.066667f, 0.066667f, 0.066667f, 0.066667f}};
+  {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f}};
   float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
@@ -741,7 +748,7 @@ int CCameraController::Initialize(int whichCameras)
           differentK2s = true;
         anyK2Type = param->K2Type;
       }
-      if (param->OneViewType) {
+      if (param->OneViewType && param->OneViewType != METRO_TYPE) {
         mNeedsReadMode[DMind] = true;
         B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
         if (param->OneViewType > 1) {
@@ -3540,7 +3547,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.GatanReadMode = B3DCHOICE(mParam->K2Type > 0 || 
     (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)) ||
     (mParam->FEItype && FCAM_CAN_COUNT(mParam)), conSet.K2ReadMode, -1);
-  if (mParam->OneViewType)
+  if (mParam->OneViewType == METRO_TYPE)
+    mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -22 : -21;
+  else if (mParam->OneViewType)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
   if (mTD.GatanReadMode == 0) {
@@ -4706,8 +4715,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   }
   if (saving && CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam)) {
     numReadouts = B3DNINT(mTD.FrameTime / GetK2ReadoutInterval(mParam));
-    if ((K2Type && conSet.sumK2Frames && conSet.summedFrameList.size() > 0) ||
-      (mParam->OneViewType && mScope->GetSimulationMode() && numReadouts > 1)) {
+    if ((K2Type && conSet.sumK2Frames && conSet.summedFrameList.size() > 0)) {// ||
+      //(mParam->OneViewType && mScope->GetSimulationMode() && numReadouts > 1)) {
       flags |= K2_SAVE_SUMMED_FRAMES;
       if (K2Type) {
         for (int frm = 0; frm < (int)conSet.summedFrameList.size() / 2; frm++) {

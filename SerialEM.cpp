@@ -310,6 +310,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].alsoInsertCamera = -1;
     mCamParams[i].samePhysicalCamera = -1;
     mCamParams[i].K2Type = 0;
+    mCamParams[i].OneViewType = 0;
     mCamParams[i].useSocket = false;
     mCamParams[i].STEMcamera = false;
     mCamParams[i].beamShutter = BEAM_SHUTTER;
