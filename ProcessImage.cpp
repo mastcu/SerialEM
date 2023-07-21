@@ -1622,7 +1622,8 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   meanVal = (float)ProcImageMean(data, type, sizeX, sizeY, ix0, ix1, iy0, iy1);
   outCrit = mFindBeamOutsideFrac * meanVal;
   edgeCrit = edgeFrac * meanVal;
-  SEMTrace('p', "Centroid %.1f %.1f  mean %.0f", centX, centY, meanVal); 
+  SEMTrace('p', "Centroid %.1f %.1f  mean %.0f  outside crit %.1f  edge crit %.1f", centX,
+    centY, meanVal, outCrit, edgeCrit); 
 
   // Get points along edge then determine if one quadrant or more and get edge centroid
   numPts = ProcFindCircleEdges(data, type, sizeX, sizeY, centX, centY, border, angleInc,
