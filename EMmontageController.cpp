@@ -1384,7 +1384,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Build the control set
   if (!mReadingMontage && !preCooking  && !mUsingMultishot) {
-    if (cam->K2Type && mConSets[setNum].doseFrac) {
+    if (cam->K2Type && mConSets[setNum].doseFrac && mCamera->GetPluginVersion(cam) < PLUGIN_CAN_SAVE_SUBAREAS) {
       ix = cam->sizeX / mParam->binning;
       iy = cam->sizeY / mParam->binning;
       mCamera->CenteredSizes(ix, cam->sizeX, cam->moduloX, left, right, 
@@ -1394,7 +1394,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           "reopen the montage with full-sized frames\r\n(%d x %d at this binning)",
           (LPCTSTR)(*(mWinApp->GetModeNames() + useSetNum)), ix, iy);
         SEMMessageBox(CString("Montage frames cannot be subareas with Dose Fractionation"
-          " on\n\n") + mess);
+          " on unless the SEMCCD plugin is upgraded\n\n") + mess);
         mWinApp->AppendToLog(mess);
         return 1;
       }
