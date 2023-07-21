@@ -1105,9 +1105,11 @@ int CMacroProcessor::TaskBusy()
     GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess,
       &mExtProcExitStatus);
     report.Format("%s exited with status %d", (LPCTSTR)mEnteredName, mExtProcExitStatus);
-    if (mExtProcExitStatus == 1 && mRanCtfplotter)
-      report += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) + 
+    if (mExtProcExitStatus == 1 && mRanCtfplotter) {
+      report += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) +
         "\\ctfplotter.log for error messages";
+      mSaveCtfplotGraph = 0;
+    }
     SetReportedValues(mExtProcExitStatus);
     if (mExtProcExitStatus || !mRanCtfplotter) {
       mWinApp->AppendToLog(report, mLogAction);
@@ -1261,6 +1263,7 @@ void CMacroProcessor::Run(int which)
   mSkipFrameAliCheck = false;
   mAlignWholeTSOnly = false;
   mDisableAlignTrim = false;
+  mSaveCtfplotGraph = 0;
   mNeedClearTempMacro = -1;
   mBoxOnScopeText = "SerialEM message";
   mBoxOnScopeType = 0;

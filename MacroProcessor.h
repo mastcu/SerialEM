@@ -453,6 +453,9 @@ protected:
   BOOL mMonospaceStatus;
   BOOL mKeepOneLineFocus;
   CString mPyIncludePath;
+  int mSaveCtfplotGraph;       // 1 for png, 2 for tiff to save next ctfplotter graph
+  int mBufForCtfplotGraph;     // Buffer to load into when gotten (-1 not to)
+  CString mCtfplotGraphName;   // FIlename to save next ctfplotter graph to
 
 public:
   void SetNumCamMacRows(int inVal);

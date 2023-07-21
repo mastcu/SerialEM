@@ -52,7 +52,8 @@ public:
   ImodImageFile *SaveBufferToSharedMemory(int bufInd, CString nameSuffix, CString &filename);
   int MakeCtfplotterCommand(CString &memFile, int bufInd, float tiltOffset, 
     float defStart, float defEnd, int astigPhase, float phase,
-    int resolTune, float cropPixel, float fitStart, float fitEnd, CString &command);
+    int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
+    CString &saveName, CString &command);
   int ReadCtfplotterResults(float &defocus, float &astig, float &angle, float &phase,
     int &ifAstigPhase, float &fitFreq, float &CCC, CString &results, CString &errString);
   int StartGraph(std::vector<FloatVec> &values, IntVec &types, IntVec typeList, IntVec columnList, 

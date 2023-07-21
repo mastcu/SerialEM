@@ -363,6 +363,8 @@ int CMacCmd::NextCommand(bool startingOut)
 
   // If ctfplotter was run, see if succeeded
   if (mRanCtfplotter) {
+    cartInd = mSaveCtfplotGraph;
+    mSaveCtfplotGraph = 0;
     if (mExtProcExitStatus) {
       SetReportedValues(1., mExtProcExitStatus);
     } else {
@@ -375,6 +377,19 @@ int CMacCmd::NextCommand(bool startingOut)
       }
       if (index < 0)
         mWinApp->AppendToLog("WARNING: " + report);
+      if (cartInd && mBufForCtfplotGraph != -1) {
+        index = mBufferManager->GetBufToReadInto();
+        mBufferManager->SetOtherFile(mCtfplotGraphName);
+        if (mBufForCtfplotGraph >= 0)
+          mBufferManager->SetBufToReadInto(mBufForCtfplotGraph);
+        mBufferManager->SetNextSecToRead(0);
+        index2 = mBufferManager->RereadOtherFile(mStrCopy);
+        if (!index2)
+          mWinApp->DrawReadInImage();
+        else
+          PrintfToLog("WARNING: Failed to read ctfplotter graph: %s", (LPCTSTR)mStrCopy);
+        mBufferManager->SetBufToReadInto(index);
+      }
       mWinApp->AppendToLog(name, mLogAction);
       SetReportedValues(defocus, astig, angle, phase, fitFreq, ctfCCC);
     }
@@ -1166,6 +1181,9 @@ int CMacCmd::ParseQuotedStrings(void)
 int CMacCmd::StringArrayToScript(void)
 {
   int index;
+  if (mRunningScrpLang && (mItemEmpty[2] || mItemInt[2] >= 0))
+    ABORT_NOLINE("StringArrayToScript can be called from Python only with the negative"
+      " of a regular script number (-1 to -60)");
 
   index = MakeNewTempMacro(mStrItems[1], mStrItems[2], false, mStrLine);
   if (!index)
@@ -3804,9 +3822,26 @@ int CMacCmd::ReportFrameSavingPath(void)
     mLogRpt = "No frame-saving path is defined for " + mCamParams->name;
     mStrCopy = "NONE";
   } else
-    mLogRpt = "The frames saving path for " + mCamParams->name + " is " + mStrCopy;
+    mLogRpt = "The frame saving path for " + mCamParams->name + " is " + mStrCopy;
 
   SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
+  return 0;
+}
+
+// ReportFreeDiskSpace
+int CMacCmd::ReportFreeDiskSpace()
+{
+  ULARGE_INTEGER available;
+  float mbytes;
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  if (mStrCopy.Right(1) != "\\")
+    mStrCopy.Append("\\");
+  if (!GetDiskFreeSpaceEx((LPCTSTR)mStrCopy, &available, NULL, NULL))
+    ABORT_NOLINE("Error getting free disk space for directory name " + mStrCopy);
+  mbytes = (float)(available.QuadPart / (1024 * 1024));
+  mLogRpt.Format("Disk free space for directory %s is %.1f MBytes", (LPCTSTR)mStrCopy,
+    mbytes);
+  SetReportedValues(&mStrItems[2], mbytes);
   return 0;
 }
 
@@ -6952,7 +6987,7 @@ int CMacCmd::Ctfplotter(void)
   // Get the command and run it in a thread, set flags
   if (mWinApp->mExternalTools->MakeCtfplotterCommand(report, index, tiltOffset,
     mItemFlt[2], mItemFlt[3], astigPhase, phase, resolOrTune, cropPixel, fitStart, 
-    fitEnd, mEnteredName))
+    fitEnd, mSaveCtfplotGraph, mCtfplotGraphName, mEnteredName))
     ABORT_LINE(report + " in line:\n\n");
   if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""))) {
     AbortMacro();
@@ -6960,6 +6995,31 @@ int CMacCmd::Ctfplotter(void)
   }
   mRanExtProcess = true;
   mRanCtfplotter = true;
+  return 0;
+}
+
+// SaveNextCtfplotterGraph
+int CMacCmd::SaveNextCtfplotterGraph()
+{
+  mSaveCtfplotGraph = 2;
+  // 0 for read buf, -1 just save png, -2 just save tif
+  if (mStrItems[1] == "0" || mItemInt[1] < 0) {
+    if (mItemInt[1] < 0 && mItemEmpty[2])
+      ABORT_LINE("A filename must be entered if not reading in graph for line:\n\n");
+    if (mItemInt[1] == -1)
+      mSaveCtfplotGraph = 1;;
+    mBufForCtfplotGraph = mItemInt[1] - 1;
+  }
+  else if (ConvertBufferLetter(mStrItems[1], -1, false, mBufForCtfplotGraph, mStrCopy,
+    false))
+    ABORT_LINE(mStrCopy);
+  if (mItemEmpty[2])
+    mCtfplotGraphName = "ctfplotGraphTemp";
+  else if (CheckConvertFilename(mStrItems, mStrLine, 2, mCtfplotGraphName))
+    return 1;
+  mStrCopy = mCtfplotGraphName.Right(4);
+  if (mStrCopy.CompareNoCase(mSaveCtfplotGraph > 1 ? ".tif" : ".png"))
+    mCtfplotGraphName += (mSaveCtfplotGraph > 1 ? ".tif" : ".png");
   return 0;
 }
 

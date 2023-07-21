@@ -481,7 +481,10 @@
               to 5.&nbsp; A positive value <b>#E</b> can be entered to place a script into a
               previously used position or the next unused position.&nbsp; A negative value (-1
               to -40) can be used to replace the script in one of the regular script positions
-              that are editable and saved to settings.&nbsp; <br>Not from Python.</TD>
+              that are editable and saved to settings.&nbsp; <br>As of 21-Jul-23, This command
+            can be called from Python, but only with a regular script position (<b>#E</b> must
+             be entered and must be negative), and with either a 
+            SerialEM script that can be called with 'CallScript', or a Python script to be run later.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="other_control"></A><B>Other Script Operation
@@ -2029,6 +2032,19 @@
             start and end of the fitting range in reciprocal pixels.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SaveNextCtfplotGraph buf [file]</TD>
+          <TD>Saves the graph from the next run of Ctfplotter and reads it into the buffer 
+            given by <B>buf</B> if that is a positive number or letter, or into the standard read 
+            buffer if <b>buf</b> is 0.&nbsp; A specific filename <b>file</b> is optional if the
+            the graph is to be displayed, but the file will always be a TIFF file in this case.&nbsp; If
+            <b>buf</b> is -1 or -2, the graph will just be saved into a PNG or TIFF file, respectively, 
+            and <b>file</b> must be entered in this case.&nbsp; In either case, the program will attach
+            the extension '.tif' or '.png', depending on the file type, if the name does not already end 
+            in the right extension.&nbsp; Graph-saving requires IMOD 4.12.51 or 
+            higher.&nbsp; Command added in 4.1, 18-Jul-23.
+          </TD>
+        </TR>
+        <TR>
           <TD colspan="2"><A name="directory"></A><B>Directory and Miscellaneous Commands</B></TD>
         </TR>
         <TR>
@@ -2071,6 +2087,11 @@
           <TD class="scriptcommand">MakeDateTimeDir</TD>
           <TD>Creates a directory named by the date and time (e.g., Aug15_12.23.15) under the
             current directory and change to this as the new working directory.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportFreeDiskSpace dir</TD>
+          <TD>Reports the amount of free disk space in megabytes available on the 
+            filesystem containing directory <b>dir</b>.&nbsp; Command added in 4.1, 21-Jul-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DoesFileExist file</TD>

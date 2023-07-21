@@ -162,7 +162,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   HANDLE hChildStd_IN_Rd = NULL;
   HANDLE hChildStd_IN_Wr = NULL;
   DWORD dwWrite, dwWritten;
-  CString saveAutodoc;
+  CString saveAutodoc, saveIMODdir;
   bool pipeInput = !inputString.IsEmpty();
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
@@ -313,6 +313,11 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     if (getenv("IMOD_AUTODOC_DIR"))
       saveAutodoc = getenv("IMOD_AUTODOC_DIR");
     _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + m3dmodAutodocDir));
+    if (m3dmodAutodocDir.Find("3dmod") > m3dmodAutodocDir.GetLength() - 7 &&
+      getenv("IMOD_DIR")) {
+      saveIMODdir = getenv("IMOD_DIR");
+      _putenv("IMOD_DIR=");
+    }
   }
 
   // RUN THE PROCESS
@@ -324,6 +329,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   if (!m3dmodAutodocDir.IsEmpty()) {
     _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + saveAutodoc));
   }
+  if (!saveIMODdir.IsEmpty())
+    _putenv((LPCTSTR)("IMOD_DIR=" + saveIMODdir));
 
   if (!retval) {
     CloseFileHandles(hInFile, hFile);
@@ -466,7 +473,8 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
 // an error string on error; returns the ctfplotter command in command
 int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
   float tiltOffset, float defStart, float defEnd, int astigPhase, float phase, 
-  int resolTune, float cropPixel, float fitStart, float fitEnd, CString &command)
+  int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
+  CString &saveName, CString &command)
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + bufInd;
   CString args, str;
@@ -547,6 +555,10 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
   }
   if (mWinApp->mShiftManager->GetStageInvertsZAxis())
     args += " -invert";
+  if (saveType) {
+    args += saveType > 1 ? " -tiff 1" : " -png 1";
+    args += " -snap " + saveName;
+  }
   args += " > ctfplotter.log";
   memFile = args;
 

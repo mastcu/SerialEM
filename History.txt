@@ -3,6 +3,26 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/21/23: Preliminary support for Gatan Metro camera.
+
+7/21/23: Allowed StringArrayToScript to be used from Python and fixed
+StartNavAcquireAtEnd to select the right main action if dialog was never
+opened.
+
+7/21/23: When a transformation is done with registration points from an
+imported map to another map, the Z value of that map will be assigned to items
+drawn on the imported map.
+
+7/21/23: Added script command to save graph from ctfplotter and show it in a
+buffer (requires IMOD 4.12.51).
+
+7/21/23: Added script command to report free disk space.
+
+7/21/23: Allowed montage to take K2/K3 frames with subarea.
+
+7/17/23: Fixed crash during Navigator tilt series acquisition if program
+started with setting for groups collapsed.
+
 7/13/23: SEM_4-1-0beta20
 7/14/23: Fixed taking multishot only within holes, broken 7/10/23.
 

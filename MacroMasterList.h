@@ -84,7 +84,7 @@ MAC_SAME_FUNC(DoScript, 1, 4, DoMacro, DOSCRIPT)
 MAC_SAME_FUNC_ARG(CallScript, 1, 4, DoMacro, CALLSCRIPT, I)
 MAC_SAME_FUNC_ARG(CallStringArray, 1, 4, DoMacro, CALLSTRINGARRAY, Si)
 MAC_SAME_NAME(ParseQuotedStrings, 0, 4, PARSEQUOTEDSTRINGS)
-MAC_SAME_NAME(StringArrayToScript, 1, 4, STRINGARRAYTOSCRIPT)
+MAC_SAME_NAME_ARG(StringArrayToScript, 1, 4, STRINGARRAYTOSCRIPT, SI)
 MAC_SAME_NAME(OnStopCallFunc, 1, 4, ONSTOPCALLFUNC)
 MAC_SAME_NAME_ARG(NoMessageBoxOnError, 0, 4, NOMESSAGEBOXONERROR, i)
 MAC_SAME_NAME(Test, 1, 4, TEST)
@@ -740,6 +740,9 @@ MAC_SAME_NAME_ARG(GetDoseSymmetricAngles, 1, 4, GETDOSESYMMETRICANGLES, S)
 MAC_SAME_FUNC_ARG(SetDoseSymmetricAngles, 1, 4, GetDoseSymmetricAngles, SETDOSESYMMETRICANGLES, S)
 MAC_SAME_NAME_ARG(AdjustMultiShotPattern, 1, 4, ADJUSTMULTISHOTPATTERN, I)
 MAC_SAME_NAME_ARG(UseMapItemHoleVectors, 1, 4, USEMAPITEMHOLEVECTORS, I)
+MAC_SAME_NAME_ARG(SaveNextCtfplotterGraph, 1, 4, SAVENEXTCTFPLOTTERGRAPH, Ss)
+MAC_SAME_NAME_ARG(ReportFreeDiskSpace, 1, 4, REPORTFREEDISKSPACE, S)
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
