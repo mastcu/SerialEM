@@ -1520,6 +1520,7 @@ void CNavigatorDlg::OnCollapseGroups()
   int oldCurrent = mCurrentItem;
   UpdateData(true);
   mCurListSel = -1;
+  mHelper->SetCollapseGroups(m_bCollapseGroups);
   
   // Tell FillListBox not to manage controls because current item needs to be restored
   if (m_bCollapseGroups) {
@@ -6419,6 +6420,12 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
 {
   CMapDrawItem *item;
   int numDone = 0;
+  float xToAdopt = -9999.f;
+  if (RegistrationUseType(reg) == NAVREG_IMPORT && curDrawnOn > 0) {
+    item = FindItemWithMapID(curDrawnOn);
+    if (item)
+      xToAdopt = item->mStageZ;
+  }
   for (int i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
     if (item->mRegistration == reg && (!item->mRegPoint || item->mType==ITEM_TYPE_MAP)) {
@@ -6429,8 +6436,11 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
 
       // Set the imported flag negative now.  Also, if this was drawn on the imported map,
       // switch the drawn on ID to the map it was registered to
-      if (item->mImported > 0)
+      if (item->mImported > 0) {
         item->mImported = -item->mImported;
+        if (xToAdopt > -9990.)
+          item->mStageZ = xToAdopt;
+      }
       if (item->mDrawnOnMapID == regDrawnOn) {
         item->mOldDrawnOnID = item->mDrawnOnMapID;
         item->mDrawnOnMapID = curDrawnOn;
@@ -9172,10 +9182,14 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
       ManageCurrentControls();
       mWinApp->UpdateBufferWindows();
       return;
-    } else if ((mAcqParm->acquireType == ACQUIRE_DO_TS && !dlg->mAnyTSpoints) ||
-      (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints)) {
-      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
-      return;
+    
+    } else {
+      mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS : 
+        mAcqParm->nonTSacquireType;
+      if (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints) {
+        ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+        return;
+      }
     }
 
   } else {
