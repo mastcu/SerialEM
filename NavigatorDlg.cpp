@@ -3063,14 +3063,14 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     (m_bEditMode || ctrlKey) && !mAddingPoints && !mAddingPoly;
   bool startingMultiDel = button == VK_LBUTTON && shiftKey && m_bEditMode &&
     !mAddingPoints && !mAddingPoly && mCurItemHoleXYpos.size();
-  bool startingMapDblClick = button == VK_LBUTTON && ctrlKey && !shiftKey &&
+  bool startingMapDblClick = button == VK_MBUTTON && !ctrlKey && shiftKey &&
     !mAddingPoints && !mAddingPoly;
   bool addingOne = m_bEditMode && button == VK_MBUTTON && !mAddingPoints && !mAddingPoly;
   bool movingOne = (m_bEditMode || mAddingPoints) && button == VK_RBUTTON && !mAddingPoly;
 
   mLastSelectWasCurrent = false;
   if (!(mAddingPoints || mAddingPoly || mMovingItem || selecting || movingOne || 
-    addingOne || startingMultiDel))
+    addingOne || startingMultiDel || startingMapDblClick))
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
@@ -3374,7 +3374,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
     }
 
     // Or Ctrl double click to load map if clicked near edge
-  } else if (button == VK_LBUTTON && !shiftKey && GetAsyncKeyState(VK_CONTROL) / 2 != 0) {
+  } else if (button == VK_MBUTTON && shiftKey && GetAsyncKeyState(VK_CONTROL) / 2 == 0) {
     ptm.x = mMultiDelStageX;
     ptm.y = mMultiDelStageY;
     ptm.z = pt1.z = pt2.z = 0.;

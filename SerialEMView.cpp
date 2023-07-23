@@ -76,6 +76,7 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_RBUTTONDOWN()
   ON_WM_LBUTTONUP()
   ON_WM_LBUTTONDBLCLK()
+  ON_WM_MBUTTONDBLCLK()
   ON_WM_ERASEBKGND()
   ON_WM_RBUTTONUP()
   ON_WM_HELPINFO()
@@ -2255,13 +2256,20 @@ void CSerialEMView::SetupZoomAroundPoint(CPoint *point)
   mZoomupPoint = *point;
 }
 
-// Left double click goes to Navigator for editing points or loading map
+// Left double click goes to Navigator for editing points
 void CSerialEMView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
   if (mWinApp->mNavigator &&
-    ((!(GetAsyncKeyState(VK_CONTROL) / 2) && mWinApp->mNavigator->InEditMode()) ||
-      (GetAsyncKeyState(VK_CONTROL) / 2) && !(GetAsyncKeyState(VK_SHIFT) / 2)))
-      mWinApp->mNavigator->MouseDoubleClick(VK_LBUTTON);
+    !(GetAsyncKeyState(VK_CONTROL) / 2) && mWinApp->mNavigator->InEditMode())
+    mWinApp->mNavigator->MouseDoubleClick(VK_LBUTTON);
+}
+
+// Middle double click goes to Navigator for loading map
+void CSerialEMView::OnMButtonDblClk(UINT nFlags, CPoint point)
+{
+  if (mWinApp->mNavigator && (GetAsyncKeyState(VK_SHIFT) / 2) &&
+    !(GetAsyncKeyState(VK_CONTROL) / 2))
+    mWinApp->mNavigator->MouseDoubleClick(VK_MBUTTON);
 }
 
 // Release mouse if it was captured by this window
@@ -2543,12 +2551,14 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
   EMimageBuffer *imBuf;
   CString str;
   CRect rect;
-  if (GetAsyncKeyState(VK_CONTROL) / 2 && !(GetAsyncKeyState(VK_SHIFT) / 2)) {
+  bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  bool shifted = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
+  if (ctrl && !shifted) {
     SetupZoomAroundPoint(&point);
     ZoomUp();
   } else if (mImBufs && mImBufs[mImBufIndex].mImage && 
-    ((mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() && 
-    !(GetAsyncKeyState(VK_SHIFT) / 2)) || mImBufs[mImBufIndex].mCaptured == BUFFER_FFT ||
+    ((mWinApp->mNavigator && ((mWinApp->mNavigator->TakingMousePoints() && !shifted) ||
+      (shifted && !ctrl))) || mImBufs[mImBufIndex].mCaptured == BUFFER_FFT ||
     mImBufs[mImBufIndex].mCaptured == BUFFER_LIVE_FFT)) {
       imBuf = &mImBufs[mImBufIndex];
       GetClientRect(&rect);
