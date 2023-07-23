@@ -6233,6 +6233,18 @@ int CMacCmd::ReportCoil(void)
   return 0;
 }
 
+// SetLensByName
+int CMacCmd::SetLensByName()
+{
+  if (!HitachiScope)
+    ABORT_NOLINE("SetLensByName is available only for Hitachi scopes");
+  if (!mScope->SetLensByName(mStrItems[1], mItemDbl[2])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // SetFreeLensControl
 int CMacCmd::SetFreeLensControl(void)
 {

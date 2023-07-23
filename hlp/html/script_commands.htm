@@ -2821,13 +2821,15 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetMag #M [#D]</TD>
-          <TD>Sets the mag to an actual mag value in <b>#M</b>.&nbsp; In STEM mode, set the optional
+          <TD>Sets the mag to an actual mag value in <b>#M</b>, first changing from diffraction to 
+            imaging mode if necessary.&nbsp; In STEM mode, set the optional
             <b>#D</b> non-zero to set STEM mag directly to the given value, without trying to find
-            it in the mag table.</TD>
+            it in the mag table.&nbsp; </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">SetMagIndex #</TD>
-          <TD>Sets the magnification index to the given value</TD>
+          <TD>Sets the magnification index to the given value, first changing from diffraction to 
+            imaging mode if necessary.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeMag #</TD>
@@ -2853,7 +2855,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetCamLenIndex #</TD>
-          <TD>Sets the camera length index to the given number; on a Thermo/FEI scope, values higher
+          <TD>Sets the camera length index to the given number, first changing from imaging to 
+            diffraction mode if necessary.&nbsp; On a Thermo/FEI scope, values higher
             than 30 set the index to (<b>#</b> - 30) in LAD mode</TD>
         </TR>
         <TR>
@@ -3204,12 +3207,22 @@
           <TD class="scriptcommand">ReportLens name</TD>
           <TD>For a Hitachi or JEOL scope, reports the lens value by its abbreviated <b>name</b>.&nbsp;
             For JEOL, allowed <b>name</b>s are 'CL1', 'CL2', 'OM2', 'IL1', 'IL2', 'IL3', 'PL1', 'PL2', 'PL3', 'PL4',
-            'FLf', 'FLc', 'FLcomp1', 'FLcomp2'.  Value cannot be assigned to a variable at end of command</TD>
+            'FLf', 'FLc', 'FLcomp1', 'FLcomp2'.  Value cannot be assigned to a variable at end of command.&nbsp; For
+            Hitachi, allowed <b>name</b>s are 'C1', 'C2', 'OBJ', 'OM', 'I1', 'I2', 'P1', and 'P2'.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetLensByName name #</TD>
+          <TD>For a Hitachi scope only, sets the lens with the abbreviated <b>name</b> to the value <b>#</b>,
+             which ranges between 0 and 1.&nbsp; Allowed <b>name</b>s are 'C1', 'C2', 'OBJ',
+             'OM', 'I1', 'I2', 'P1', and 'P2'.&nbsp; Command added in 4.1, 22-Jul-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDeflector name</TD>
-          <TD>For a Hitachi scope, reports the X and Y values of deflector specified by its
-            abbreviated <b>name</b>.</TD>
+          <TD>For a Hitachi scope, reports the X and Y values of a deflector specified by its
+            abbreviated <b>name</b>.&nbsp; Allowed <b>name</b>s are 'GH', 'GT', 'CS', 'BH', 'BT',
+            'OS', 'ISF', 'IA', and 'PA'.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetFreeLensControl #L #S</TD>

@@ -15,9 +15,9 @@ typedef int (*CamAcquire)(short *, int, int, int *, int *);
 typedef int (*CamSTEMAcq)(short **, int, int, long *, double, int, int *, int *, int *);
 typedef int (*CamSTEMProp)(int, int, double *, double *, double *, double *, double *, int *,int *);
 typedef int (*CamGetTwoInt)(int *,int *);
-typedef int(*CamFourIntString)(int, int, int, int, const char *);
-typedef int(*CamSetupFrames)(double, int, int, int);
-typedef int(*CamGetFrame)(short *, int);
+typedef int (*CamFourIntString)(int, int, int, int, const char *);
+typedef int (*CamSetupFrames)(double, int, int, int);
+typedef int (*CamGetFrame)(short *, int);
 
 
 // Camera plugin functions
@@ -70,16 +70,17 @@ typedef void (*ScopeSetStage)(double, double, double, double, int);
 typedef void (*ScopeSetStageExtra)(double, double, double, double, double, double, int);
 typedef void (*ScopeGetGauge)(const char *, int *, double *);
 typedef double (*ScopeGetDblByName)(const char *);
+typedef double (*ScopeSetDblByName)(const char *, double);
 typedef void (*ScopeGetTwoDblByName)(const char *, double *, double *);
-typedef void(*ScopeSetTwoIntDbl)(int, int, double);
-typedef void(*ScopeSetIntTwoDbl)(int, double, double);
-typedef void(*ScopeGetIntTwoDbl)(int *, double *, double *);
+typedef void (*ScopeSetTwoIntDbl)(int, int, double);
+typedef void (*ScopeSetIntTwoDbl)(int, double, double);
+typedef void (*ScopeGetIntTwoDbl)(int *, double *, double *);
 typedef void (*ScopeSetIntGetTwoDbl)(int, double *, double*);
 typedef void (*ScopeSetIntGetIntDbl)(int, int *, double*);
 typedef int (*GetChannelList)(int, int, long *, const char **, BOOL, long *, long *,
                               BOOL *);
-typedef int(*GetBrightContrast)(const char *, double *, double *);
-typedef int(*SetBrightContrast)(const char *, double, double);
+typedef int (*GetBrightContrast)(const char *, double *, double *);
+typedef int (*SetBrightContrast)(const char *, double, double);
 typedef int (*LookupCamera)(const char *, BOOL, int, int *, double *, double *);
 typedef int (*FEIimage)(void *, int, int, int, double, double, int, int, int, long, long, 
                         long *, const char *, BOOL, int, BOOL, BOOL, long *);

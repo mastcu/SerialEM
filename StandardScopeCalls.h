@@ -150,6 +150,7 @@ SCOPE_SAMENAME(GetErrStr, GetLastErrorString);
 SCOPE_SAMENAME(ScopeGetBool, ScopeIsDisconnected);
 SCOPE_SAMENAME(ScopeGetTwoDblByName, GetDeflectorByName);
 SCOPE_SAMENAME(ScopeGetDblByName, GetLensByName);
+SCOPE_SAMENAME(ScopeSetDblByName, SetLensByName);
 SCOPE_SAMENAME(ScopeSetInt, SetObjFocus);
 SCOPE_SAMENAME(ScopeSetDbl, SetDiffractionFocus);
 SCOPE_SAMENAME(ScopeSetInt, SetFineFocus);

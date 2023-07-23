@@ -6398,6 +6398,24 @@ BOOL CEMscope::GetLensByName(CString &name, double &value)
   return result;
 }
 
+// Set any lens by name on Hitachi
+BOOL CEMscope::SetLensByName(CString & name, double value)
+{
+  BOOL result = true;
+  if (!sInitialized || !mPlugFuncs->SetLensByName)
+    return false;
+  ScopeMutexAcquire("setLensByName", true);
+  try {
+    value = mPlugFuncs->SetLensByName((LPCTSTR)name, value);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting lens by name "));
+    result = false;
+  }
+  ScopeMutexRelease("SetLensByName");
+  return result;
+}
+
 // Get any deflector coil by name from Hitachi
 BOOL CEMscope::GetDeflectorByName(CString &name, double &valueX, double &valueY)
 {

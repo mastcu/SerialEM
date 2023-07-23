@@ -1019,6 +1019,7 @@ public:
   int FastAlpha(void);
   BOOL GetColumnMode(int &mode, int &subMode);
   BOOL GetLensByName(CString &name, double &value);
+  BOOL SetLensByName(CString &name, double value);
   BOOL GetDeflectorByName(CString &name, double &valueX, double &valueY);
   bool MagChgResetsIS(int toInd);
   BOOL NormalizeAll(int illumProj);
