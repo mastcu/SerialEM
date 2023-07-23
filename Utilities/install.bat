@@ -14,9 +14,12 @@ IF "%CD%" == "C:\Program Files\SerialEM" (
 )
 
 set CUDA4DLL=cudart64_41_28.dll
+set CUDA6DLL=cudart64_65.dll
 set CUDA8DLL=cudart64_80.dll
 set CUDA4FFT=cufft64_41_28.dll
+set CUDA6FFT=cufft64_65.dll
 set CUDA8FFT=cufft64_80.dll
+set CUDA6FFTW=cufftw64_65.dll
 set CUDA8FFTW=cufftw64_80.dll
 
 rem Find out if there is an FEI or JEOL plugin already
@@ -435,11 +438,13 @@ set INPLUG8=0
 set INSHRMEM4=0
 set INSHRMEM8=0
 IF EXIST %GATANPLUGDIR%\FrameGPU.dll IF EXIST %GATANPLUGDIR%\%CUDA4DLL% IF EXIST %GATANPLUGDIR%\%CUDA4FFT% set INPLUG4=1
+IF EXIST %GATANPLUGDIR%\FrameGPU.dll IF EXIST %GATANPLUGDIR%\%CUDA6DLL% IF EXIST %GATANPLUGDIR%\%CUDA6FFT% IF EXIST %GATANPLUGDIR%\%CUDA6FFTW% set INPLUG6=1
 IF EXIST %GATANPLUGDIR%\FrameGPU.dll IF EXIST %GATANPLUGDIR%\%CUDA8DLL% IF EXIST %GATANPLUGDIR%\%CUDA8FFT% IF EXIST %GATANPLUGDIR%\%CUDA8FFTW% set INPLUG8=1
 IF EXIST %SHRMEMDIR%\FrameGPU.dll IF EXIST %SHRMEMDIR%\%CUDA4DLL% IF EXIST %SHRMEMDIR%\%CUDA4FFT% set INSHRMEM4=1
+IF EXIST %SHRMEMDIR%\FrameGPU.dll IF EXIST %SHRMEMDIR%\%CUDA6DLL% IF EXIST %SHRMEMDIR%\%CUDA6FFT% IF EXIST %SHRMEMDIR%\%CUDA6FFTW% set INSHRMEM6=1
 IF EXIST %SHRMEMDIR%\FrameGPU.dll IF EXIST %SHRMEMDIR%\%CUDA8DLL% IF EXIST %SHRMEMDIR%\%CUDA8FFT% IF EXIST %SHRMEMDIR%\%CUDA8FFTW% set INSHRMEM8=1
 
-IF %INPLUG4% == 1 IF %INSHRMEM4% == 0 IF %INSHRMEM8% == 0 (
+IF %INPLUG4% == 1 IF %INSHRMEM4% == 0 IF %INSHRMEM6% == 0 IF %INSHRMEM8% == 0(
    echo.
    echo Moving CUDA 4 .dlls from %GATANPLUGDIR% into Shrmemframe subfolder
    MOVE /Y %GATANPLUGDIR%\FrameGPU.dll %SHRMEMDIR%
@@ -447,7 +452,15 @@ IF %INPLUG4% == 1 IF %INSHRMEM4% == 0 IF %INSHRMEM8% == 0 (
    MOVE /Y %GATANPLUGDIR%\%CUDA4FFT% %SHRMEMDIR%
    set INSHRMEM4=1
 )
-IF %INPLUG8% == 1 IF %INSHRMEM8% == 0 IF %INSHRMEM4% == 0 (
+IF %INPLUG6% == 1 IF %INSHRMEM8% == 0 IF  %INSHRMEM6% == 0 IF %INSHRMEM4% == 0 (
+   echo.
+   echo Moving CUDA 6 .dlls from %GATANPLUGDIR% into Shrmemframe subfolder
+   MOVE /Y %GATANPLUGDIR%\FrameGPU.dll %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA6DLL% %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA6FFT% %SHRMEMDIR%
+   MOVE /Y %GATANPLUGDIR%\%CUDA6FFTW% %SHRMEMDIR%
+)
+IF %INPLUG8% == 1 IF %INSHRMEM8% == 0 IF  %INSHRMEM6% == 0 IF %INSHRMEM4% == 0 (
    echo.
    echo Moving CUDA 8 .dlls from %GATANPLUGDIR% into Shrmemframe subfolder
    MOVE /Y %GATANPLUGDIR%\FrameGPU.dll %SHRMEMDIR%
@@ -518,17 +531,15 @@ EXIT /B 0
 Rem # Update FrameGPU.dll if it is there
 :UpdateFrameGPU
 set CUDA4LIB=%~1\%CUDA4DLL%
+set CUDA6LIB=%~1\%CUDA6DLL%
 set CUDA8LIB=%~1\%CUDA8DLL%
 set PLUGFRAME=%~1\FrameGPU.dll
+
 IF NOT EXIST  %PLUGFRAME% GOTO :FrameGPUdone
-if EXIST %CUDA4LIB% IF EXIST %CUDA8LIB% (
-  echo.
-  echo Not updating %PLUGFRAME% because you have both CUDA 4
-  echo and CUDA 8 libraries.  You will have to do this manually.
-  echo You should eliminate CUDA 4 and use CUDA 8 if possible;
-  echo CUDA 4 is no longer supported
-  GOTO :FrameGPUdone
-)
+if EXIST %CUDA4LIB% IF EXIST %CUDA8LIB% GOTO :TwoCUDAs
+if EXIST %CUDA4LIB% IF EXIST %CUDA6LIB% GOTO :TwoCUDAs
+if EXIST %CUDA6LIB% IF EXIST %CUDA8LIB% GOTO :TwoCUDAs
+
 
 IF EXIST  %CUDA4LIB% IF EXIST FrameGPU4.dll (
   echo.
@@ -539,22 +550,38 @@ IF EXIST  %CUDA4LIB% IF EXIST FrameGPU4.dll (
 )
 IF EXIST  %CUDA4LIB% IF NOT EXIST FrameGPU4.dll (
   echo.
-  echo A new version of FrameGPU is available, but only for CUDA 8.
-  echo You should upgrade to CUDA 8 and remove the CUDA 4 libraries.
+  echo A new version of FrameGPU is available, but only for CUDA 6 and 8.
+  echo You should upgrade to CUDA 6 or 8 and remove the CUDA 4 libraries.
   echo Obtain package and follow instructions at
   echo http://bio3d.colorado.edu/SerialEM/download.html#FrameGPU
   echo Unpack the package in the location of %PLUGFRAME%
   echo The existing CUDA 4 FrameGPU.dll may continue to work until then
-  (echo FrameGPU.dll cannot be upgraded because CUDA 4 is no longer supported. & echo You should upgrade with a CUDA 8 package. & echo The existing CUDA 4 FrameGPU.dll may continue to work until then. & echo See details in installer window.) | msg * /TIME:300 /W 
+  (echo FrameGPU.dll cannot be upgraded because CUDA 4 is no longer supported. & echo You should upgrade with a CUDA 6 or 8 package. & echo The existing CUDA 4 FrameGPU.dll may continue to work until then. & echo See details in installer window.) | msg * /TIME:300 /W 
   GOTO :FrameGPUdone
 )
 
+IF EXIST  %CUDA6LIB% IF EXIST FrameGPU6.dll (
+  echo.
+  echo Updating %PLUGFRAME% with FrameGPU6.dll for CUDA 6
+  DEL %PLUGFRAME%
+  COPY /Y FrameGPU4.dll %PLUGFRAME%
+  GOTO :FrameGPUdone
+)
 IF EXIST  %CUDA8LIB% IF EXIST FrameGPU8.dll (
   echo.
   echo Updating %PLUGFRAME% with FrameGPU8.dll for CUDA 8
   DEL %PLUGFRAME%
   COPY /Y FrameGPU8.dll %PLUGFRAME%
+  GOTO :FrameGPUdone
 )
+
+:TwoCUDAs
+  echo.
+  echo Not updating %PLUGFRAME% because you have more than one set
+  echo of CUDA 8 libraries.  You will have to do this manually.
+  echo You should eliminate CUDA 4 and use CUDA 6 or 8 if possible;
+  echo CUDA 4 is no longer supported
+  GOTO :FrameGPUdone
 
 :FrameGPUdone
 EXIT /B 0
