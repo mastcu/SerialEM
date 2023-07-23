@@ -3637,7 +3637,7 @@ BEGIN
     RTEXT           "3000",IDC_STAT_MAX_HULL_DIST,99,224,20,8
 END
 
-IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 112
+IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 124
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Multiple Hole Combiner"
@@ -3647,11 +3647,11 @@ BEGIN
     CONTROL         "Inside current polygon",IDC_RIN_POLYGON,"Button",BS_AUTORADIOBUTTON,8,23,82,10
     CONTROL         "In same group as current point",IDC_RSAME_GROUP,"Button",BS_AUTORADIOBUTTON,8,33,105,10
     GROUPBOX        "Combine points marked as Acquire",IDC_STATIC,4,3,117,42,WS_GROUP
-    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,85,54,12
-    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,67,85,34,12
-    PUSHBUTTON      "?",IDC_BUTHELP,110,86,11,10
+    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,96,54,12
+    PUSHBUTTON      "Undo",IDC_BUT_UNDO_COMBINE,67,96,34,12
+    PUSHBUTTON      "?",IDC_BUTHELP,110,97,11,10
     CONTROL         "Display multi-shot before combine",IDC_CHECK_DISPLAY_MULTI,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,99,113,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,110,113,10
     CONTROL         "Turn off group items outside polygon",IDC_CHECK_REMOVE_OUTSIDE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,47,117,10
     CONTROL         "Delete points",IDC_CHECK_REMOVE_POINTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,58,52,10
@@ -3665,6 +3665,8 @@ BEGIN
     CONTROL         "",IDC_STAT_LDCP_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,63,7,1
     CONTROL         "",IDC_STAT_LDCP_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,115,63,7,1
     CONTROL         "",IDC_STAT_LDCP_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,121,63,1,20
+    CONTROL         "Skip averaging of hole positions",IDC_CHECK_SKIP_AVERAGING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,85,115,10
 END
 
 IDD_MACROSELECTER DIALOGEX 0, 0, 241, 72
@@ -4485,7 +4487,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 121
         TOPMARGIN, 3
-        BOTTOMMARGIN, 108
+        BOTTOMMARGIN, 119
     END
 
     IDD_MACROSELECTER, DIALOG
@@ -7210,6 +7212,8 @@ BEGIN
     IDC_CHECK_USE_PRIOR_AUTOFOCUS 
                             "Skip running the dirft routine if the last autofocus has a low enough drift"
     IDC_EDIT_PRIOR_THRESH   "Enter the maximum drift considered acceptable for the last autofocus"
+    IDC_CHECK_SKIP_AVERAGING
+                            "Just use stage position of center point instead of averaging all points"
 END
 
 STRINGTABLE

@@ -20,6 +20,7 @@ CMultiCombinerDlg::CMultiCombinerDlg(CWnd* pParent /*=NULL*/)
   , m_strHoleThresh(_T(""))
   , m_bRemovePoints(FALSE)
   , m_bTurnOffCombined(FALSE)
+  , m_bSkipAveraging(FALSE)
 {
   mNonModal = true;
 }
@@ -43,6 +44,7 @@ void CMultiCombinerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_REMOVE_POINTS, m_bRemovePoints);
   DDX_Control(pDX, IDC_CHECK_TURN_OFF_COMBINED, m_butTurnOffCombined);
   DDX_Check(pDX, IDC_CHECK_TURN_OFF_COMBINED, m_bTurnOffCombined);
+  DDX_Check(pDX, IDC_CHECK_SKIP_AVERAGING, m_bSkipAveraging);
 }
 
 
@@ -57,6 +59,7 @@ BEGIN_MESSAGE_MAP(CMultiCombinerDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_TURN_OFF_COMBINED, OnTurnOffCombined)
   ON_BN_CLICKED(IDC_CHECK_REMOVE_POINTS, OnCheckRemovePoints)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_HOLE_THRESH, OnDeltaposSpinHoleThresh)
+  ON_BN_CLICKED(IDC_CHECK_SKIP_AVERAGING, &CMultiCombinerDlg::OnCheckSkipAveraging)
 END_MESSAGE_MAP()
 
 
@@ -179,6 +182,12 @@ void CMultiCombinerDlg::OnDeltaposSpinHoleThresh(NMHDR *pNMHDR, LRESULT *pResult
   UpdateData(false);
 }
 
+void CMultiCombinerDlg::OnCheckSkipAveraging()
+{
+  UpdateData(true);
+  mHelper->SetMHCskipAveragingPos(m_bSkipAveraging);
+}
+
 void CMultiCombinerDlg::UpdateSettings()
 {
   m_iCombineType = mHelper->GetMHCcombineType();
@@ -189,6 +198,7 @@ void CMultiCombinerDlg::UpdateSettings()
   m_bTurnOffCombined = mHelper->GetMHCdelOrTurnOffIfFew() > 1;
   m_sbcHoleThresh.SetPos(mHelper->GetMHCthreshNumHoles());
   m_strHoleThresh.Format("%d", mHelper->GetMHCthreshNumHoles());
+  m_bSkipAveraging = mHelper->GetMHCskipAveragingPos();
   UpdateEnables();
   UpdateData(false);
 }

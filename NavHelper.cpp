@@ -298,6 +298,7 @@ CNavHelper::CNavHelper(void)
   mMHCturnOffOutsidePoly = true;
   mMHCdelOrTurnOffIfFew = 0;
   mMHCthreshNumHoles = 2;
+  mMHCskipAveragingPos = false;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;

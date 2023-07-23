@@ -53,4 +53,6 @@ public:
   afx_msg void OnTurnOffCombined();
   afx_msg void OnCheckRemovePoints();
   afx_msg void OnDeltaposSpinHoleThresh(NMHDR *pNMHDR, LRESULT *pResult);
+  BOOL m_bSkipAveraging;
+  afx_msg void OnCheckSkipAveraging();
 };

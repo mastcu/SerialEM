@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/22/23: Added option to multi-hole combiner to use just the position of the
+central point instead of averaging positions from all points in a pattern, and
+stabilized the point labels so they stay in same position.
+
+7/22/23: Fixed Ctrl-Left click for selecting a point by changing the new map
+loading to Shift-Middle-double click.
+
+7/22/23: Added a CUDA 6 FrameGPU.dll, posted CUDA library packages, and
+modified installer to update with the correct FrameGPU.dll.
+
+7/22/23: Add script command to set any lens on Hitachi.
+
 7/21/23: Preliminary support for Gatan Metro camera.
 
 7/21/23: Allowed StringArrayToScript to be used from Python and fixed

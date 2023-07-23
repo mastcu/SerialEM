@@ -259,6 +259,7 @@ public:
   GetSetMember(BOOL, MHCturnOffOutsidePoly);
   GetSetMember(int, MHCdelOrTurnOffIfFew);
   GetSetMember(int, MHCthreshNumHoles);
+  GetSetMember(BOOL, MHCskipAveragingPos);
   GetSetMember(int, SkipAstigAdjustment);
   GetSetMember(int, CurAcqParamIndex);
   GetMember(int, NumAcqActions);
@@ -481,6 +482,7 @@ private:
   BOOL mMHCturnOffOutsidePoly;    // Option to remove points outside if using polygon 
   int mMHCdelOrTurnOffIfFew;     // Delete points or turn off combined item if < threshold
   int mMHCthreshNumHoles;        // Threshold # of holes for delete or turn off
+  BOOL mMHCskipAveragingPos;     // Flag to skip averaging positions
   int mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
   IntVec mSavedMaShMapIDs;       // Saved map marker shift information: map ID
   IntVec mSavedMaShCohortIDs;    // The exiting cohort ID value

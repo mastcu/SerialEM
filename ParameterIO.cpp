@@ -638,6 +638,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mWinApp->mNavHelper->SetMHCdelOrTurnOffIfFew(itemInt[4]);
           mWinApp->mNavHelper->SetMHCthreshNumHoles(itemInt[5]);
         }
+        if (!itemEmpty[6])
+          mWinApp->mNavHelper->SetMHCskipAveragingPos(itemInt[6] != 0);
       } else if (NAME_IS("AutoContParams")) {
         contParams->targetSizePixels = itemInt[1];
         contParams->targetPixSizeUm = itemFlt[2];
@@ -1872,12 +1874,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     if (hfParams->thresholds.size())
       OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
         &hfParams->thresholds);
-    oneState.Format("HoleCombinerParams %d %d %d %d %d\n", 
+    oneState.Format("HoleCombinerParams %d %d %d %d %d %d\n", 
       mWinApp->mNavHelper->GetMHCcombineType(),
       mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0, 
       mWinApp->mNavHelper->GetMHCturnOffOutsidePoly() ? 1 : 0,
       mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew(), 
-      mWinApp->mNavHelper->GetMHCthreshNumHoles());
+      mWinApp->mNavHelper->GetMHCthreshNumHoles(),
+      mWinApp->mNavHelper->GetMHCskipAveragingPos() ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f\n",
       contParams->targetSizePixels, contParams->targetPixSizeUm,
