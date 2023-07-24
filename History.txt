@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/24/23: Prevented recursive variable substitutions; only variables originally
+present in a line will be substituted.
+
 7/22/23: Added option to multi-hole combiner to use just the position of the
 central point instead of averaging positions from all points in a pattern, and
 stabilized the point labels so they stay in same position.

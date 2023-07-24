@@ -2472,7 +2472,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
   int itemLen, global, nright2, leftInd, numElements;
   bool localVar, subArrSize;
 
-  // For each item, look for $ repeatedly
+  // For each item, look for $ until they are used up
   for (int ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++) {
     while (1) {
 
@@ -2606,12 +2606,16 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       newstr = "";
       if (subInd)
         newstr = strItems[ind].Left(subInd);
+
+      // Prevent recursion by replacing any $ with temporary string
+      value.Replace("$", "&?#{@");
       newstr += value;
       nright = strItems[ind].GetLength() - (nameInd + maxlen);
       if (nright)
         newstr += strItems[ind].Right(nright);
       strItems[ind] = newstr;
     }
+    strItems[ind].Replace("&?#{@", "$");
   }
   return 0;
 }
