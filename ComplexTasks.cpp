@@ -1483,10 +1483,11 @@ void CComplexTasks::FindEucentricity(int coarseFine)
   } else {
 
     // But if this is an internal call, and it is for fine after coarse,
-    // change the mag if the saved mag index is bigger than the fine one
+    // change the mag if the saved mag index is bigger than the fine one or if in Low Dose
+    // to give it a chance to switch between S and V
     // Have to do it the long way to keep beam intensity happy
     if (!(mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) && 
-      ((mSavedMagInd[stackInd] > mMaxFEFineMagInd && 
+      (((mSavedMagInd[stackInd] > mMaxFEFineMagInd || mWinApp->LowDoseMode()) &&
       mMaxFEFineMagInd != mMaxFECoarseMagInd) || 
       (mFEUseTrialInLD && mWinApp->LowDoseMode()))) {
       RestoreMagIfNeeded();
