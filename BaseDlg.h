@@ -10,6 +10,13 @@
 #define PANEL_END -1
 #define TABLE_END -2
 #define MAX_SKIP_IDS 8
+#define DDX_FLOAT(pd, id, mem, des) if (!Ddx_MinMaxFloat(pd, id, mem, 0., 0., des)) return;
+#define DDX_INT(pd, id, mem, des) if (!Ddx_MinMaxInt(pd, id, mem, 0, 0, des)) return;
+
+#define DDX_MM_FLOAT(pd, id, mem, mn, mx, des) if (!Ddx_MinMaxFloat(pd, id, mem, mn, mx, des)) return;
+#define DDX_MM_INT(pd, id, mem, mn, mx, des) if (!Ddx_MinMaxInt(pd, id, mem, mn, mx, des)) return;
+
+#define UPDATE_DATA_TRUE if (!UpdateData(true)) return;
 
 /////////////////////////////////////////////////////////////////////////////
 // CBaseDlg dialog
@@ -114,6 +121,8 @@ public:
     COLORREF color, int offset);
   void MinMaxFloat(UINT  nID, float &value, float minVal, float maxVal, const char *descrip);
   void MinMaxInt(UINT  nID, int &value, int minVal, int maxVal, const char *descrip);
+  BOOL Ddx_MinMaxFloat(CDataExchange* pDX, UINT nID, float &member, float minVal, float maxVal, const char *descrip);
+  BOOL Ddx_MinMaxInt(CDataExchange* pDX, UINT nID, int &member, int minVal, int maxVal, const char *descrip);
   void ManageHideableItems(UINT *hideableIDs, int numHideable);
   GetMember(int, NumPanels);
   GetMember(int, SetToHeight);

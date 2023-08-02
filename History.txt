@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/2/23: Replaced Microsoft validation of text fields, which was giving "Enter
+a number" errors on some systems, in Montage Setup, Tilt Series Setup,
+Navigator Acquire, and  Multiple Record setup dialog.
+
+8/2/23: When using "Eucentric-Both" in Low Dose, it will now switch between
+Search and View if appropriate for the fine operation.
+
 7/24/23: Prevented recursive variable substitutions; only variables originally
 present in a line will be substituted.
 

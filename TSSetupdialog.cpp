@@ -261,29 +261,27 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_LIMIT_DELTA_FOCUS, m_bLimitDeltaFocus);
   DDX_Control(pDX, IDC_STAT_DELTA_MICRONS, m_statDeltaMicrons);
   DDX_Control(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_editFocusMaxDelta);
-  DDX_Text(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_fFocusMaxDelta);
-  DDV_MinMaxFloat(pDX, m_fFocusMaxDelta, 0.1f, 100.f);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_fFocusMaxDelta, 0.1f, 100.f, 
+    "Maximum autofocus change");
   DDX_Check(pDX, IDC_COSINEINC, m_bCosineInc);
-  DDX_Text(pDX, IDC_EDITANCHOR, m_fAnchorAngle);
-  DDV_MinMaxFloat(pDX, m_fAnchorAngle, -80.f, 80.f);
-  DDX_Text(pDX, IDC_EDITBEAMTILT, m_fBeamTilt);
-  DDX_Text(pDX, IDC_EDITCHECKFOCUS, m_fCheckFocus);
-  DDX_Text(pDX, IDC_EDITCOUNTS, m_iCounts);
-  DDV_MinMaxInt(pDX, m_iCounts, 0, 1000000);
-  DDX_Text(pDX, IDC_EDITENDANGLE, m_fEndAngle);
-  DDV_MinMaxFloat(pDX, m_fEndAngle, -mMaxTiltAngle, mMaxTiltAngle);
-  DDX_Text(pDX, IDC_EDITINCREMENT, m_fIncrement);
-  DDV_MinMaxFloat(pDX, m_fIncrement, 0.05f, 30.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITANCHOR, m_fAnchorAngle, -80.f, 80.f, 
+    "Angle to leave mid-tilt anchor near");
+  DDX_FLOAT(pDX, IDC_EDITBEAMTILT, m_fBeamTilt, "Beam tilt for autofocus");
+  DDX_FLOAT(pDX, IDC_EDITCHECKFOCUS, m_fCheckFocus,
+    "Do autofocus at least every");
+  DDX_MM_INT(pDX, IDC_EDITCOUNTS, m_iCounts, 0, 1000000, "Target mean counts for Record");
+  DDX_MM_FLOAT(pDX, IDC_EDITENDANGLE, m_fEndAngle, -mMaxTiltAngle, mMaxTiltAngle,
+    "Ending tilt angle");
+  DDX_MM_FLOAT(pDX, IDC_EDITINCREMENT, m_fIncrement, 0.05f, 30.f, "Tilt increment");
   DDX_Control(pDX, IDC_STATLIMITIS, m_statLimitIS);
   DDX_Control(pDX, IDC_EDITLIMITIS, m_editLimitIS);
-  DDX_Text(pDX, IDC_EDITLIMITIS, m_fLimitIS);
-  DDV_MinMaxFloat(pDX, m_fLimitIS, 0.f, 25.f);
-  DDX_Text(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus);
-  DDV_MinMaxFloat(pDX, m_fRepeatFocus, 0.f, 20.f);
-  DDX_Text(pDX, IDC_EDITSTARTANGLE, m_fStartAngle);
-  DDV_MinMaxFloat(pDX, m_fStartAngle, -mMaxTiltAngle, mMaxTiltAngle);
-  DDX_Text(pDX, IDC_EDITTILTDELAY, m_fTiltDelay);
-  DDV_MinMaxFloat(pDX, m_fTiltDelay, 0.f, mMaxDelayAfterTilt);
+  DDX_MM_FLOAT(pDX, IDC_EDITLIMITIS, m_fLimitIS, 0.f, 25.f, "Image shift limit");
+  DDX_MM_FLOAT(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus, 0.f, 20.f, 
+    "Difference from prediction for repeating autofocus");
+  DDX_MM_FLOAT(pDX, IDC_EDITSTARTANGLE, m_fStartAngle, -mMaxTiltAngle, mMaxTiltAngle,
+    "Starting or Tilt to tilt angle");
+  DDX_MM_FLOAT(pDX, IDC_EDITTILTDELAY, m_fTiltDelay, 0.f, mMaxDelayAfterTilt,
+    "Delay time after tilting");
   DDX_Check(pDX, IDC_LEAVEANCHOR, m_bLeaveAnchor);
   DDX_Check(pDX, IDC_LOWMAGTRACK, m_bLowMagTrack);
   DDX_Radio(pDX, IDC_RCONSTANTBEAM, m_iBeamControl);
@@ -297,45 +295,42 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATTOTALTILT, m_strTotalTilt);
   DDX_Text(pDX, IDC_STATPOWER, m_strCosPower);
   DDX_Check(pDX, IDC_USEANCHOR, m_bUseAnchor);
-  DDX_Text(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord);
-  DDV_MinMaxFloat(pDX, m_fRepeatRecord, 0.f, 99.f);
-  DDX_Text(pDX, IDC_EDITFOCUSTARGET, m_fTargetDefocus);
-  DDV_MinMaxFloat(pDX, m_fTargetDefocus, -25.f, 25.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord, 0.f, 99.f, 
+    "Percentage of field loss for repeating Record");
+  DDX_MM_FLOAT(pDX, IDC_EDITFOCUSTARGET, m_fTargetDefocus, -25.f, 25.f, "Defocus target");
   DDX_Check(pDX, IDC_USEAFORREF, m_bUseAForRef);
   DDX_Check(pDX, IDC_ALWAYSFOCUS, m_bAlwaysFocus);
-  DDX_Text(pDX, IDC_EDITALWAYSFOCUS, m_fAlwaysAngle);
+  DDX_FLOAT(pDX, IDC_EDITALWAYSFOCUS, m_fAlwaysAngle, "Angle to focus every time above");
   DDX_Check(pDX, IDC_RAMPBEAM, m_bRampBeam);
-  DDX_Text(pDX, IDC_EDITTAPERANGLE, m_fTaperAngle);
-  DDV_MinMaxFloat(pDX, m_fTaperAngle, 0.f, 90.f);
-  DDX_Text(pDX, IDC_EDITTAPERCOUNTS, m_iTaperCounts);
-  DDV_MinMaxInt(pDX, m_iTaperCounts, 0, 60000);
-  DDX_Text(pDX, IDC_EDITNEWTRACKDIFF, m_fNewTrackDiff);
-  DDV_MinMaxFloat(pDX, m_fNewTrackDiff, 0.2f, 100.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITTAPERANGLE, m_fTaperAngle, 0.f, 90.f, 
+    "Angle above which to taper counts");
+  DDX_MM_INT(pDX, IDC_EDITTAPERCOUNTS, m_iTaperCounts, 0, 60000, "Counts to taper to");
+  DDX_MM_FLOAT(pDX, IDC_EDITNEWTRACKDIFF, m_fNewTrackDiff, 0.2f, 100.f,
+    "Get new track reference % difference");
   DDX_Check(pDX, IDC_ALIGNTRACKONLY, m_bAlignTrackOnly);
-  DDX_Text(pDX, IDC_EDITPREDICTERRORXY, m_fPredictErrorXY);
-  DDV_MinMaxFloat(pDX, m_fPredictErrorXY, 0.f, 100.f);
-  DDX_Text(pDX, IDC_EDITPREDICTERRORZ, m_fPredictErrorZ);
-  DDV_MinMaxFloat(pDX, m_fPredictErrorZ, 0.f, 10.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITPREDICTERRORXY, m_fPredictErrorXY, 0.f, 100.f,
+    "Error in X/Y predicting for getting track reference");
+  DDX_MM_FLOAT(pDX, IDC_EDITPREDICTERRORZ, m_fPredictErrorZ, 0.f, 10.f, 
+    "Prediction error for doing autofocus");
   DDX_Radio(pDX, IDC_RCAMERA1, m_iCamera);
   DDX_Check(pDX, IDC_CHECKAUTOFOCUS, m_bCheckAutofocus);
-  DDX_Text(pDX, IDC_EDITMINFOCUSRATIO, m_fMinFocusAccuracy);
-  DDV_MinMaxFloat(pDX, m_fMinFocusAccuracy, 0.f, 1.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITMINFOCUSRATIO, m_fMinFocusAccuracy, 0.f, 1.f,
+    "Factor for stop after check autofocus");
   DDX_Check(pDX, IDC_LIMITINTENSITY, m_bLimitIntensity);
   DDX_Check(pDX, IDC_PREVIEWBEFOREREF, m_bPreviewBeforeRef);
   DDX_Check(pDX, IDC_SKIPAUTOFOCUS, m_bSkipAutofocus);
-  DDX_Text(pDX, IDC_EDITFOCUSOFFSET, m_fFocusOffset);
-  DDV_MinMaxFloat(pDX, m_fFocusOffset, -30.f, 30.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITFOCUSOFFSET, m_fFocusOffset, -30.f, 30.f, "Autofocus offset");
   DDX_Radio(pDX, IDC_RTRACKBEFORE, m_iTrackAfterFocus);
   DDX_Check(pDX, IDC_LIMITTOCURRENT, m_bLimitToCurrent);
   DDX_Text(pDX, IDC_STATTOTALDOSE, m_strTotalDose);
   DDX_Check(pDX, IDC_USEINTENSITYATZERO, m_bIntensitySetAtZero);
   DDX_Check(pDX, IDC_AUTO_REFINE_ZLP, m_bRefineZLP);
-  DDX_Text(pDX, IDC_EDIT_ZLP_INTERVAL, m_iZlpInterval);
-  DDV_MinMaxInt(pDX, m_iZlpInterval, 0, 600);
+  DDX_MM_INT(pDX, IDC_EDIT_ZLP_INTERVAL, m_iZlpInterval, 0, 600, 
+    "Interval for refining ZLP");
   DDX_Text(pDX, IDC_STATMILLIRAD, m_statMilliRad);
   DDX_Check(pDX, IDC_STOPONBIGSHIFT, m_bStopOnBigShift);
-  DDX_Text(pDX, IDC_EDITBIGSHIFT, m_fBigShift);
-  DDV_MinMaxFloat(pDX, m_fBigShift, 0.f, 100.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITBIGSHIFT, m_fBigShift, 0.f, 100.f,
+    "Stop if autoalign shifts more than");
   DDX_Check(pDX, IDC_CLOSE_VALVES, m_bCloseValves);
   DDX_Check(pDX, IDC_MANUAL_TRACKING, m_bManualTrack);
   DDX_Check(pDX, IDC_AVERAGERECREF, m_bAverageDark);
@@ -370,10 +365,10 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_AC_ANGLE, m_editAutocenAngle);
   DDX_Check(pDX, IDC_AUTOCEN_AT_INTERVAL, m_bAutocenInterval);
   DDX_Check(pDX, IDC_AUTOCEN_AT_CROSSING, m_bAutocenCrossing);
-  DDX_Text(pDX, IDC_EDIT_AC_INTERVAL, m_iAutocenInterval);
-  DDV_MinMaxInt(pDX, m_iAutocenInterval, 1, 600);
-  DDX_Text(pDX, IDC_EDIT_AC_ANGLE, m_fAutocenAngle);
-  DDV_MinMaxFloat(pDX, m_fAutocenAngle, 1.f, 100.f);
+  DDX_MM_INT(pDX, IDC_EDIT_AC_INTERVAL, m_iAutocenInterval, 1, 600, 
+    "Autocenter beam interval");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_AC_ANGLE, m_fAutocenAngle, 1.f, 100.f, 
+    "Angle for autocentering beam in 2nd half of series");
   DDX_Control(pDX, IDC_BUT_SWAP_ANGLES, m_butSwapAngles);
   DDX_Control(pDX, IDC_EDITFOCUSOFFSET, m_editFocusOffset);
   DDX_Control(pDX, IDC_EDITBEAMTILT, m_editBeamTilt);
@@ -394,8 +389,8 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_BIDIR_FIELD_SIZE, m_statBidirFieldSize);
   DDX_Control(pDX, IDC_SPIN_BIDIR_MAG, m_sbcBidirMag);
   DDX_Control(pDX, IDC_BIDIR_ANGLE, m_editBidirAngle);
-  DDX_Text(pDX, IDC_BIDIR_ANGLE, m_fBidirAngle);
-  DDV_MinMaxFloat(pDX, m_fBidirAngle, -80.f, 80.f);
+  DDX_MM_FLOAT(pDX, IDC_BIDIR_ANGLE, m_fBidirAngle, -80.f, 80.f,
+    "Run series in two directions from angle");
   DDX_Check(pDX, IDC_DO_EARLY_RETURN, m_bDoEarlyReturn);
   DDX_Control(pDX, IDC_DO_EARLY_RETURN, m_butDoEarlyReturn);
   DDX_Text(pDX, IDC_STAT_NUM_EARLY_FRAMES, m_strNumEarlyFrames);
@@ -408,8 +403,8 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_DW_DEGREES, m_statDWdegrees);
   DDX_Check(pDX, IDC_TSWAITFORDRIFT, m_bWaitForDrift);
   DDX_Control(pDX, IDC_BUT_SETUP_DRIFT_WAIT, m_butSetupDriftWait);
-  DDX_Text(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh);
-  DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh, 0.05f, 50.f,
+    "Iteration threshold for autofocus");
   DDX_Control(pDX, IDC_STAT_STAR_TILT, m_statStarTilt);
   DDX_Control(pDX, IDC_STAT_STAR_BIDIR, m_statStarBidir);
   DDX_Control(pDX, IDC_STATTARGMICRONS, m_statTargMicrons);
@@ -873,7 +868,7 @@ void CTSSetupDialog::OnRcamera()
 {
   int lastSTEM = mSTEMindex;
   int lastCam = mCurrentCamera;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   int index = 2 * mSTEMindex + (mLowDoseMode ? 1 : 0);
   mCurrentCamera = mActiveCameraList[m_iCamera];
   CameraParameters *camP = &mCamParams[mCurrentCamera];
@@ -940,7 +935,7 @@ void CTSSetupDialog::ManageCamDependents(void)
 // Early Return handlers
 void CTSSetupDialog::OnDoEarlyReturn()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEarlyReturn();
 }
 
@@ -1096,8 +1091,7 @@ void CTSSetupDialog::OnAngleChanges()
   float oldStart = m_fStartAngle;
   float oldEnd = m_fEndAngle;
   float oldBidir = m_fBidirAngle;
-  if (!UpdateData(true))
-    return;
+  UPDATE_DATA_TRUE;
   ConstrainBidirAngle(true, oldStart != m_fStartAngle || oldEnd != m_fEndAngle
     || oldBidir != m_fBidirAngle);
   if (mBidirStage != BIDIR_NONE && (m_fBidirAngle < B3DMIN(m_fStartAngle, m_fEndAngle) ||
@@ -1115,7 +1109,7 @@ void CTSSetupDialog::OnButSwapAngles()
 {
   float temp;
   FixButtonStyle(IDC_BUT_SWAP_ANGLES);
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   temp = m_fStartAngle;
   m_fStartAngle = m_fEndAngle;
   m_fEndAngle = temp;
@@ -1155,7 +1149,7 @@ void CTSSetupDialog::OnButSetChanges()
 
 void CTSSetupDialog::OnCheckVaryParams()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_butSetChanges.EnableWindow(m_bVaryParams);
   ManageExposures();
   ManageTaperLine();
@@ -1257,19 +1251,19 @@ void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult)
 // Low mag button: Enable the tracking difference buttons
 void CTSSetupDialog::OnLowmagtrack() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageNewTrackDiff();
 }
 
 void CTSSetupDialog::OnAutoRefineZlp() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageRefineZLP();
 }
 
 void CTSSetupDialog::OnAutocenAtCrossing()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageAutocen();
 }
 
@@ -1294,37 +1288,37 @@ void CTSSetupDialog::ManageAutocen(void)
 
 void CTSSetupDialog::OnCheckautofocus() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editMinFocusAccuracy.EnableWindow(m_bCheckAutofocus);   
 }
 
 void CTSSetupDialog::OnLeaveanchor() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageInitialActions();
 }
 
 void CTSSetupDialog::OnUseanchor() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageInitialActions();
 }
 
 void CTSSetupDialog::OnRepeatrecord() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editRepeatRecord.EnableWindow(m_bRepeatRecord); 
 }
 
 void CTSSetupDialog::OnRepeatfocus() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editRepeatFocus.EnableWindow(m_bRepeatFocus);
 }
 
 void CTSSetupDialog::OnRintensitymean() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageExposures();
   ManageTaperLine();
   SetTotalTilts();
@@ -1332,26 +1326,26 @@ void CTSSetupDialog::OnRintensitymean()
 
 void CTSSetupDialog::OnLimittocurrent() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageTaperLine();
   SetTotalTilts();
 }
 
 void CTSSetupDialog::OnSkipautofocus() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageFocusIntervals();   	
 }
 
 void CTSSetupDialog::OnAlwaysfocus() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editAlwaysAngle.EnableWindow(m_bAlwaysFocus);
 }
 
 void CTSSetupDialog::OnAveragerecref() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mCamParams[mCurrentCamera].TSAverageDark = m_bAverageDark ? 1 : 0;
 }
 
@@ -1373,33 +1367,33 @@ void CTSSetupDialog::ManageFocusIntervals()
 
 void CTSSetupDialog::OnCheckLimitDeltaFocus()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageFocusIntervals();
 }
 
 void CTSSetupDialog::OnRampbeam() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageTaperLine();
 }
 
 void CTSSetupDialog::OnChangeAllExp()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageExposures();
   ManageTaperLine();
 }
 
 void CTSSetupDialog::OnChangeExposure()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageExposures();
   ManageTaperLine();
 }
 
 void CTSSetupDialog::OnStoponbigshift() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
  	m_editBigShift.EnableWindow(m_bStopOnBigShift);
 }
 
@@ -1468,7 +1462,7 @@ void CTSSetupDialog::ManageExposures(void)
 
 void CTSSetupDialog::OnAligntrackonly() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageNewTrackDiff();
 }
 
@@ -1504,7 +1498,7 @@ void CTSSetupDialog::ManageInitialActions()
 // Bidirectional series items
 void CTSSetupDialog::OnDoBidir()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageBidirectional();
   ManageInitialActions();
   ManageDriftWait();
@@ -1513,7 +1507,7 @@ void CTSSetupDialog::OnDoBidir()
 
 void CTSSetupDialog::OnBidirUseView()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageBidirectional();
   ManageAnchorMag(mCurrentCamera);
   UpdateData(false);
@@ -1530,7 +1524,7 @@ void CTSSetupDialog::OnDeltaposSpinBidirMag(NMHDR *pNMHDR, LRESULT *pResult)
   if (NewSpinnerValue(pNMHDR, pResult, mBidirMagInd[index], lowLim, hiLim, 
     mBidirMagInd[index]))
     return;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageAnchorMag(mCurrentCamera);
   UpdateData(false);
 }
@@ -1666,7 +1660,7 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
 // Dose-symmetric tilting turned on or off: swap the IS limits
 void CTSSetupDialog::OnUseDoseSym()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_bUseDoseSym) {
     mTSParam.ISlimit = m_fLimitIS;
     m_fLimitIS = mTSParam.dosymStartingISLimit;
@@ -1702,7 +1696,7 @@ void CTSSetupDialog::OnButSetupDoseSym()
 // Wait for drift checkbox handler and setup opener
 void CTSSetupDialog::OnWaitForDrift()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageDriftWait();
 }
 
@@ -1798,7 +1792,7 @@ void CTSSetupDialog::OnOK()
 
 void CTSSetupDialog::DoOK()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ConstrainBidirAngle(true, false);
   mTSParam.startingTilt = m_fStartAngle;
   mTSParam.endingTilt =  m_fEndAngle;

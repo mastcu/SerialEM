@@ -278,6 +278,71 @@ void CBaseDlg::MinMaxInt(UINT nID, int &value, int minVal, int maxVal,
   AfxMessageBox(str, MB_EXCLAME);
 }
 
+// Replacement function for DDX_Text with a float variable to improve on what MFC does and
+// fix it rejecting "0" for some float entries, with optional call to MinMaxFloat
+BOOL CBaseDlg::Ddx_MinMaxFloat(CDataExchange *pDX, UINT nID, float &member, float minVal,
+  float maxVal, const char *descrip)
+{
+  char *endPtr;
+  CString str;
+  int nchar;
+  if (!pDX->m_bSaveAndValidate)
+    str.Format("%g", member);
+  DDX_Text(pDX, nID, str);
+  if (pDX->m_bSaveAndValidate) {
+    nchar = str.GetLength();
+    if (!nchar) {
+      str = "Enter a number for " + CString(descrip);
+    } else {
+      member = (float)strtod((LPCTSTR)str, &endPtr);
+      if (endPtr - (LPCTSTR)str < str.GetLength()) {
+        str = CString(descrip) + " has non-numeric characters";
+        nchar = 0;
+      }
+    }
+    if (!nchar) {
+      AfxMessageBox(str, MB_EXCLAME);
+      pDX->Fail();
+      return FALSE;
+    }
+  }
+  if (minVal < maxVal)
+    MinMaxFloat(nID, member, minVal, maxVal, descrip);
+  return TRUE;
+}
+
+// Replacement function for DDX_Text with an int variable and optional call to MinMaxInt
+BOOL CBaseDlg::Ddx_MinMaxInt(CDataExchange *pDX, UINT nID, int &member, int minVal, 
+  int maxVal, const char *descrip)
+{
+  char *endPtr;
+  CString str;
+  int nchar;
+  if (!pDX->m_bSaveAndValidate)
+    str.Format("%d", member);
+  DDX_Text(pDX, nID, str);
+  if (pDX->m_bSaveAndValidate) {
+    nchar = str.GetLength();
+    if (!nchar) {
+      str = "Enter a number for " + CString(descrip);
+    } else {
+      member = (int)strtol((LPCTSTR)str, &endPtr, 10);
+      if (endPtr - (LPCTSTR)str < str.GetLength()) {
+        str = CString(descrip) + " has non-integer characters";
+        nchar = 0;
+      }
+    }
+    if (!nchar) {
+      AfxMessageBox(str, MB_EXCLAME);
+      pDX->Fail();
+      return FALSE;
+    }
+  }
+  if (minVal < maxVal)
+    MinMaxInt(nID, member, minVal, maxVal, descrip);
+  return TRUE;
+}
+
 // Setup call for the panel tables
 // The first item in the section for panel is recorded as the panelStart so it better be
 // the top item; probably best to end panel section with the bottom item too

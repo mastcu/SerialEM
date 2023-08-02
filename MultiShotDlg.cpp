@@ -102,12 +102,10 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   CBaseDlg::DoDataExchange(pDX);
   DDX_Text(pDX, IDC_STAT_NUM_SHOTS, m_strNumShots);
   DDX_Control(pDX, IDC_SPIN_NUM_SHOTS, m_sbcNumShots);
-  DDX_Text(pDX, IDC_EDIT_SPOKE_DIST, m_fSpokeDist);
-  MinMaxFloat(IDC_EDIT_SPOKE_DIST, m_fSpokeDist, 0.05f, 50.,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_SPOKE_DIST, m_fSpokeDist, 0.05f, 50.,
     "Main ring distance from center");
   DDX_Control(pDX, IDC_EDIT_EARLY_FRAMES, m_editEarlyFrames);
-  DDX_Text(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames);
-  MinMaxInt(IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 999,
+  DDX_MM_INT(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 999,
     "Early return number of frames");
   DDX_Check(pDX, IDC_CHECK_SAVE_RECORD, m_bSaveRecord);
   DDX_Control(pDX, IDC_CHECK_USE_ILLUM_AREA, m_butUseIllumArea);
@@ -115,14 +113,12 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_BEAM_DIAM, m_statBeamDiam);
   DDX_Control(pDX, IDC_STAT_BEAM_UM, m_statBeamMicrons);
   DDX_Control(pDX, IDC_EDIT_BEAM_DIAM, m_editBeamDiam);
-  DDX_Text(pDX, IDC_EDIT_BEAM_DIAM, m_fBeamDiam);
-  MinMaxFloat(IDC_EDIT_BEAM_DIAM, m_fBeamDiam, 0.05f, 50., "Beam diameter");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_BEAM_DIAM, m_fBeamDiam, 0.05f, 50., "Beam diameter");
   DDX_Radio(pDX, IDC_RNO_CENTER, m_iCenterShot);
   DDX_Control(pDX, IDC_STAT_NUM_EARLY, m_statNumEarly);
   DDX_Control(pDX, IDC_RNO_EARLY, m_butNoEarly);
   DDX_Radio(pDX, IDC_RNO_EARLY, m_iEarlyReturn);
-  DDX_Text(pDX, IDC_EDIT_EXTRA_DELAY, m_fExtraDelay);
-  MinMaxFloat(IDC_EDIT_EXTRA_DELAY, m_fExtraDelay, 0., 100.,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_EXTRA_DELAY, m_fExtraDelay, 0., 100.,
     "Extra delay after image shift");
   DDX_Control(pDX, IDC_CHECK_SAVE_RECORD, m_butSaveRecord);
   DDX_Control(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_butAdjustBeamTilt);
@@ -154,8 +150,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_CENTER_UM, m_statCenterUm);
   DDX_Control(pDX, IDC_STAT_HOLE_DELAY_FAC, m_statHoleDelayFac);
   DDX_Control(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_editHoleDelayFac);
-  DDX_Text(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac);
-  MinMaxFloat(IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac, 0.1f, 5.0f,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac, 0.1f, 5.0f,
     "Multiplier of delay after shifting to hole");
   DDX_Control(pDX, IDC_BUT_SAVE_IS, m_butSaveIS);
   DDX_Control(pDX, IDC_BUT_END_PATTERN, m_butEndPattern);
@@ -172,8 +167,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_RING2_UM, m_statRing2Um);
   DDX_Control(pDX, IDC_EDIT_RING2_DIST, m_editRing2Dist);
   DDX_Control(pDX, IDC_SPIN_RING2_NUM, m_sbcRing2Num);
-  DDX_Text(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist);
-  MinMaxFloat(IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f, "Distance to second ring");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f, 
+    "Distance to second ring");
   DDX_Text(pDX, IDC_STAT_NUM2_SHOTS, m_strNum2Shots);
   DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
   DDX_Control(pDX, IDC_BUT_USE_LAST_HOLE_VECS, m_butUseLastHoleVecs);
@@ -225,6 +220,8 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_HEX_GRID, OnCheckHexGrid)
   ON_BN_CLICKED(IDC_BUT_USE_MAP_VECTORS, OnButUseMapVectors)
   ON_BN_CLICKED(IDC_BUT_APPLY_ADJUSTMENT, OnButApplyAdjustment)
+  ON_EN_KILLFOCUS(IDC_EDIT_HOLE_DELAY_FAC, OnKillfocusEditHoleDelayFac)
+  ON_EN_KILLFOCUS(IDC_EDIT_EXTRA_DELAY, OnKillfocusEditHoleDelayFac)
 END_MESSAGE_MAP()
 
 
@@ -314,7 +311,7 @@ void CMultiShotDlg::PostNcDestroy()
 // OK, Cancel, handling returns in text fields
 void CMultiShotDlg::OnOK() 
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
   mWinApp->mNavHelper->GetMultiShotPlacement(false);
   StopRecording();
@@ -382,7 +379,7 @@ void CMultiShotDlg::ManagePanels(bool adjust)
 // Do multiple shots in hole check box
 void CMultiShotDlg::OnDoShotsInHole()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   ManagePanels();
   UpdateAndUseMSparams();
@@ -399,21 +396,21 @@ void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 // Center shot radio button
 void CMultiShotDlg::OnRnoCenter()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
 }
 
 // Off-center distance
 void CMultiShotDlg::OnKillfocusEditSpokeDist()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
 }
 
 // Checkbox to do second ring of shots
 void CMultiShotDlg::OnDoSecondRing()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -429,14 +426,20 @@ void CMultiShotDlg::OnDeltaposSpinRing2Num(NMHDR *pNMHDR, LRESULT *pResult)
 // Distance to second ring
 void CMultiShotDlg::OnKillfocusEditRing2Dist()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
+}
+
+// To get the validation done
+void CMultiShotDlg::OnKillfocusEditHoleDelayFac()
+{
+  UpdateData(true);
 }
 
 // Do multiple holes check box
 void CMultiShotDlg::OnDoMultipleHoles()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   ManagePanels();
   UpdateAndUseMSparams();
@@ -445,7 +448,7 @@ void CMultiShotDlg::OnDoMultipleHoles()
 // Use custom pattern check box
 void CMultiShotDlg::OnUseCustom()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -477,7 +480,7 @@ void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
 // For Hex Grid
 void CMultiShotDlg::OnCheckHexGrid()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageHexGrid();
   ManageEnables();
   UpdateAndUseMSparams();
@@ -1013,14 +1016,14 @@ void CMultiShotDlg::OnButApplyAdjustment()
 // New beam diameter
 void CMultiShotDlg::OnKillfocusEditBeamDiam()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
 }
 
 // Whether to use illuminated area
 void CMultiShotDlg::OnCheckUseIllumArea()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -1028,7 +1031,7 @@ void CMultiShotDlg::OnCheckUseIllumArea()
 // Early return radio button
 void CMultiShotDlg::OnRnoEarly()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   if (mWinApp->mNavigator && mWinApp->mNavigator->mNavAcquireDlg)
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
@@ -1037,7 +1040,7 @@ void CMultiShotDlg::OnRnoEarly()
 // Early return frames: manage 
 void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   if (mWinApp->mNavigator && mWinApp->mNavigator->mNavAcquireDlg)
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
@@ -1046,7 +1049,7 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 // Omit corners of 3 by 3 pattern
 void CMultiShotDlg::OnOmit3x3Corners()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   UpdateAndUseMSparams();
 }
@@ -1078,7 +1081,7 @@ void CMultiShotDlg::OnButTestMultishot()
 // Unload dialog parameters into the structure and redraw
 void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActiveParams->doEarlyReturn = m_iEarlyReturn;
   mActiveParams->numEarlyFrames = m_iEarlyFrames;
   mActiveParams->doCenter = m_iCenterShot == 1 ? -1 : (m_iCenterShot / 2);
@@ -1261,7 +1264,7 @@ void CMultiShotDlg::ManageEnables(void)
 
 void CMultiShotDlg::ManageHexGrid()
 {
-  ShowDlgItem(IDC_SPIN_NUM_Y_HOLES, !m_bHexGrid);
+  ShowDlgItem(IDC_SPIN_NUM_Y_HOLES, !m_bHexGrid && m_bDoMultipleHoles);
   m_strNumXholes.Format("%d", m_bHexGrid ? mActiveParams->numHexRings :
     mActiveParams->numHoles[0]);
   if (m_bHexGrid)

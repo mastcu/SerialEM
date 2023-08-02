@@ -173,4 +173,5 @@ public:
   int ConfirmReplacingShiftVectors(const char *kind, BOOL hex);
   CButton m_butApplyAdjustment;
   afx_msg void OnButApplyAdjustment();
+  afx_msg void OnKillfocusEditHoleDelayFac();
 };

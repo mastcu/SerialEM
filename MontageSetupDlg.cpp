@@ -137,18 +137,16 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPINBIN, m_sbcBinning);
   DDX_Control(pDX, IDC_SPINYFRAMES, m_sbcYnFrames);
   DDX_Control(pDX, IDC_SPINXFRAMES, m_sbcXnFrames);
-  DDX_Text(pDX, IDC_EDITXNFRAMES, m_iXnFrames);
-  DDX_Text(pDX, IDC_EDITYNFRAMES, m_iYnFrames);
-  DDX_Text(pDX, IDC_EDITXSIZE, m_iXsize);
-  DDX_Text(pDX, IDC_EDITYSIZE, m_iYsize);
+  DDX_INT(pDX, IDC_EDITXNFRAMES, m_iXnFrames, "Number of pieces in X");
+  DDX_INT(pDX, IDC_EDITYNFRAMES, m_iYnFrames, "Number of pieces in Y");
+  DDX_INT(pDX, IDC_EDITXSIZE, m_iXsize, "Piece size in X");
+  DDX_INT(pDX, IDC_EDITYSIZE, m_iYsize, "Piece size in Y");
   DDX_Text(pDX, IDC_STATTOTALAREA, m_strTotalArea);
   DDX_Text(pDX, IDC_STATPIXEL, m_strPixelSize);
   DDX_Text(pDX, IDC_STATMAG, m_strMag);
   DDX_Text(pDX, IDC_STATBIN, m_strBinning);
-  DDX_Text(pDX, IDC_EDITXOVERLAP, m_iXoverlap);
-  DDV_MinMaxInt(pDX, m_iXoverlap, 0, 30000);
-  DDX_Text(pDX, IDC_EDITYOVERLAP, m_iYoverlap);
-  DDV_MinMaxInt(pDX, m_iYoverlap, 0, 30000);
+  DDX_MM_INT(pDX, IDC_EDITXOVERLAP, m_iXoverlap, 0, 30000, "Overlap in X");
+  DDX_MM_INT(pDX, IDC_EDITYOVERLAP, m_iYoverlap, 0, 30000, "Overlap in Y");
   DDX_Text(pDX, IDC_STATTOTALPIXELS, m_strTotalPixels);
   DDX_Radio(pDX, IDC_RCAMERA1, m_iCamera);
   DDX_Check(pDX, IDC_MOVESTAGE, m_bMoveStage);
@@ -162,8 +160,8 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPINMINOV, m_sbcMinOv);
   DDX_Control(pDX, IDC_EDIT_SKIP_OUTSIDE, m_editSkipOutside);
   DDX_Control(pDX, IDC_CHECKOFFERMAP, m_butOfferMap);
-  DDX_Text(pDX, IDC_EDIT_SKIP_OUTSIDE, m_iInsideNavItem);
-  DDV_MinMaxInt(pDX, m_iInsideNavItem, 0, 4096);
+  DDX_MM_INT(pDX, IDC_EDIT_SKIP_OUTSIDE, m_iInsideNavItem, 0, 4096, 
+    "Skip pieces outside Navigator item");
   DDX_Control(pDX, IDC_CHECK_USE_HQ_SETTINGS, m_butUseHq);
   DDX_Check(pDX, IDC_CHECK_USE_HQ_SETTINGS, m_bUseHq);
   DDX_Check(pDX, IDC_CHECK_FOCUS_EACH, m_bFocusAll);
@@ -180,13 +178,13 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   //DDX_Text(pDX, IDC_EDITREALIGN, m_iRealignInterval);
   //DDV_MinMaxInt(pDX, m_iRealignInterval, MIN_Y_MONT_REALIGN, 1000);
   DDX_Control(pDX, IDC_EDITDELAY, m_editDelay);
-  DDX_Text(pDX, IDC_EDITDELAY, m_fDelay);
-  DDV_MinMaxFloat(pDX, m_fDelay, 0.f, 100.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITDELAY, m_fDelay, 0.f, 100.f, 
+    "Delay time after moving stage");
   DDX_Control(pDX, IDC_STATMINAND, m_statMinAnd);
   DDX_Control(pDX, IDC_STATMINMICRON, m_statMinMicron);
   DDX_Control(pDX, IDC_EDITMINOVERLAP, m_editMinMicron);
-  DDX_Text(pDX, IDC_EDITMINOVERLAP, m_fMinMicron);
-  DDV_MinMaxFloat(pDX, m_fMinMicron, 0.f, 10.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITMINOVERLAP, m_fMinMicron, 0.f, 10.f,
+    "Minimum overlap in microns");
 
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_BUT_RESET_OVERLAPS, m_butResetOverlaps);
@@ -194,14 +192,14 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_FOCUS_BLOCKS, m_butBlockFocus);
   DDX_Control(pDX, IDC_STATMAXALIGN, m_statMaxAlign);
   DDX_Control(pDX, IDC_EDITMAXALIGN, m_editMaxAlign);
-  DDX_Text(pDX, IDC_EDITMAXALIGN, m_iMaxAlign);
-  DDV_MinMaxInt(pDX, m_iMaxAlign, 5, 100);
+  DDX_MM_INT(pDX, IDC_EDITMAXALIGN, m_iMaxAlign, 5, 100, 
+    "Maximum alignment shift as % of piece");
   DDX_Control(pDX, IDC_CHECK_IS_REALIGN, m_butISrealign);
   DDX_Control(pDX, IDC_STATISMICRONS, m_statISmicrons);
   DDX_Control(pDX, IDC_EDIT_IS_REALIGN, m_editISlimit);
   DDX_Check(pDX, IDC_CHECK_IS_REALIGN, m_bISrealign);
-  DDX_Text(pDX, IDC_EDIT_IS_REALIGN, m_fISlimit);
-  DDV_MinMaxFloat(pDX, m_fISlimit, 0.f, 10.f);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_IS_REALIGN, m_fISlimit, 0.f, 10.f,
+    "Maximum image shift for realigning");
   DDX_Control(pDX, IDC_CHECK_USE_ANCHOR, m_butUseAnchor);
   DDX_Check(pDX, IDC_CHECK_USE_ANCHOR, m_bUseAnchor);
   DDX_Control(pDX, IDC_STAT_ANCHOR_MAG, m_statAnchorMag);
@@ -210,8 +208,8 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_REPEAT_FOCUS, m_butRepeatFocus);
   DDX_Check(pDX, IDC_CHECK_REPEAT_FOCUS, m_bRepeatFocus);
   DDX_Control(pDX, IDC_EDIT_NMPERSEC, m_editNmPerSec);
-  DDX_Text(pDX, IDC_EDIT_NMPERSEC, m_fNmPerSec);
-  DDV_MinMaxFloat(pDX, m_fNmPerSec, 0.1f, 30.f);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_NMPERSEC, m_fNmPerSec, 0.1f, 30.f, 
+    "Drift limit for repeating focus");
   DDX_Control(pDX, IDC_STATNMPERSEC, m_statNmPerSec);
   DDX_Check(pDX, IDC_CHECK_USE_VIEW_IN_LOWDOSE, m_bUseViewInLowDose);
   DDX_Control(pDX, IDC_CHECK_USE_VIEW_IN_LOWDOSE, m_butUseViewInLD);
@@ -221,8 +219,8 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_CONTINUOUS_MODE, m_butUseContinMode);
   DDX_Check(pDX, IDC_CHECK_CONTINUOUS_MODE, m_bUseContinMode);
   DDX_Control(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_editContinDelayFac);
-  DDX_Text(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_fContinDelayFac);
-  DDV_MinMaxFloat(pDX, m_fContinDelayFac, 0., 9.);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_fContinDelayFac, 0., 9.,
+    "Settling factor for continuous mode");
   DDX_Control(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_butUseSearchInLD);
   DDX_Check(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_bUseSearchInLD);
   DDX_Control(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_butUseMontMapParams);
@@ -798,7 +796,7 @@ void CMontageSetupDlg::OnEnKillfocusEditMinOverlap()
 {
   float overSave = m_fMinMicron;
   int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (mFittingItem) {
     if (CheckNavigatorFit(magIndex, mParam.binning, -1.f, m_fMinMicron)) {
       m_fMinMicron = overSave;
@@ -837,8 +835,9 @@ void CMontageSetupDlg::OnRcamera()
         break;
       }
     }
-  } else
-    UpdateData(true);
+  } else if (!UpdateData(true))
+    return;
+
   int newCam = mActiveCameraList[m_iCamera];
   int newScale = BinDivisorI(&mCamParams[newCam]);
   mParam.binning = newScale * (mParam.binning / mSizeScaling);
@@ -1034,7 +1033,7 @@ void CMontageSetupDlg::ValidateEdits()
 {
   int left, right, tempX, tempY, top, bot, minOverX, minOverY;
   CameraParameters *cam = &mCamParams[mCurrentCamera];
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UnloadOverlapBoxes();
   BOOL needUpdate = false;
 
@@ -1159,7 +1158,7 @@ void CMontageSetupDlg::OnMovestage()
   }
 
   // Get the new number into member variable then check if fitting
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (mFittingItem) {
     mForceStage = m_bMoveStage;
     if (CheckNavigatorFit(magIndex, mParam.binning, mParam.minOverlapFactor)) {
@@ -1179,19 +1178,19 @@ void CMontageSetupDlg::OnMovestage()
 
 void CMontageSetupDlg::OnCheckImshiftInBlocks()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageStageAndGeometry(false);
 }
 
 void CMontageSetupDlg::OnCheckSkipOutside()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editSkipOutside.EnableWindow(m_bSkipOutside);
 }
 
 void CMontageSetupDlg::OnCheckContinuousMode()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageCamAndStageEnables();
 }
 
@@ -1234,7 +1233,7 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
 
 void CMontageSetupDlg::OnCheckOfferMap()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
 }
 
 void CMontageSetupDlg::OnCheckUseHqSettings()
@@ -1243,7 +1242,7 @@ void CMontageSetupDlg::OnCheckUseHqSettings()
     mParam.noHQDriftCorr = m_bNoDriftCorr;
   else
     mParam.noDriftCorr = m_bNoDriftCorr;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_bNoDriftCorr = m_bUseHq ? mParam.noHQDriftCorr : mParam.noDriftCorr;
   UpdateData(false);
   ManageStageAndGeometry(true);
@@ -1251,7 +1250,7 @@ void CMontageSetupDlg::OnCheckUseHqSettings()
 
 void CMontageSetupDlg::OnCheckFocusEach()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_bFocusBlocks && m_bFocusAll) {
     m_bFocusBlocks = !m_bFocusAll;
     UpdateData(false);
@@ -1261,13 +1260,13 @@ void CMontageSetupDlg::OnCheckFocusEach()
 
 void CMontageSetupDlg::OnCheckRepeatFocus()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageStageAndGeometry(true);
 }
 
 void CMontageSetupDlg::OnCheckFocusBlocks()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_bFocusBlocks && m_bFocusAll) {
     m_bFocusAll = !m_bFocusBlocks;
     UpdateData(false);
@@ -1277,13 +1276,13 @@ void CMontageSetupDlg::OnCheckFocusBlocks()
 
 /*void CMontageSetupDlg::OnCheckRealign()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageStageAndGeometry(false);
 }*/
 
 void CMontageSetupDlg::OnCheckIsRealign()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   /*if (m_bRealign) {
     m_bRealign = false;
     UpdateData(false);
@@ -1292,7 +1291,7 @@ void CMontageSetupDlg::OnCheckIsRealign()
 }
 void CMontageSetupDlg::OnCheckUseAnchor()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageStageAndGeometry(false);
 }
 
@@ -1464,7 +1463,7 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag, BOOL &secondFlag)
     mLastRecordMoveStage = saveMoveStage;
   UnloadOverlapBoxes();
 
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (otherFlag || secondFlag) {
     otherFlag = false;
     secondFlag = false;

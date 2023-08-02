@@ -169,24 +169,23 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_FILE_SAVING_INTO, m_strFileSavingInto);
   DDX_Check(pDX, IDC_NA_DO_SUBSET, m_bDoSubset);
   DDX_Control(pDX, IDC_EDIT_SUBSET_START, m_editSubsetStart);
-  DDX_Text(pDX, IDC_EDIT_SUBSET_START, m_iSubsetStart);
+  DDX_INT(pDX, IDC_EDIT_SUBSET_START, m_iSubsetStart, "Do subset starting index");
   DDX_Control(pDX, IDC_EDIT_SUBSET_END, m_editSubsetEnd);
-  DDX_Text(pDX, IDC_EDIT_SUBSET_END, m_iSubsetEnd);
+  DDX_INT(pDX, IDC_EDIT_SUBSET_END, m_iSubsetEnd, "Do subset ending index");
   DDX_Control(pDX, IDC_NA_SKIP_INITIAL_MOVE, m_butSkipInitialMove);
   DDX_Check(pDX, IDC_NA_SKIP_INITIAL_MOVE, m_bSkipInitialMove);
   DDX_Check(pDX, IDC_NA_SKIP_Z_MOVES, m_bSkipZmoves);
   //DDX_Radio(pDX, IDC_RADIO_NAVACQ_SEL1, m_iSelectedPos);
   DDX_Radio(pDX, IDC_RNAVACQ_EVERY_N, m_iTimingType);
   DDX_Control(pDX, IDC_EDIT_EVERY_N, m_editEveryN);
-  DDX_Text(pDX, IDC_EDIT_EVERY_N, m_iEveryNitems);
-  MinMaxInt(IDC_EDIT_EVERY_N, m_iEveryNitems, 1, MAX_EVERY_N, "Interval between items");
+  DDX_MM_INT(pDX, IDC_EDIT_EVERY_N, m_iEveryNitems, 1, MAX_EVERY_N,
+    "Interval between items");
   DDX_Control(pDX, IDC_SPIN_EVERY_N, m_sbcEveryN);
   DDX_Control(pDX, IDC_EDIT_AFTER_MINUTES, m_editAfterMinutes);
-  DDX_Text(pDX, IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes);
-  MinMaxInt(IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500, "Time interval for action");
+  DDX_MM_INT(pDX, IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500, 
+    "Time interval for action");
   DDX_Control(pDX, IDC_EDIT_WHEN_MOVED, m_editWhenMoved);
-  DDX_Text(pDX, IDC_EDIT_WHEN_MOVED, m_fWhenMoved);
-  MinMaxFloat(IDC_EDIT_WHEN_MOVED, m_fWhenMoved, 0.1f, 2000.f, "Distance moved");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_WHEN_MOVED, m_fWhenMoved, 0.1f, 2000.f, "Distance moved");
   DDX_Check(pDX, IDC_NA_RUN_AT_OTHER, m_bRunAtOther);
   DDX_Radio(pDX, IDC_RGOTO_LABEL, m_iGotoLabelNote);
   DDX_Control(pDX, IDC_EDIT_GOTO_ITEM, m_editGotoItem);
@@ -197,18 +196,15 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_SETUP_MULTISHOT, m_butSetupMultishot);
   DDX_Check(pDX, IDC_NA_CYCLE_DEFOCUS, m_bCycleDefocus);
   DDX_Control(pDX, IDC_EDIT_CYCLE_FROM, m_editCycleFrom);
-  DDX_Text(pDX, IDC_EDIT_CYCLE_FROM, m_fCycleFrom);
-  MinMaxFloat(IDC_EDIT_CYCLE_FROM, m_fCycleFrom, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_CYCLE_FROM, m_fCycleFrom, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS,
     "Defocus cycle starting value");
   DDX_Control(pDX, IDC_EDIT_CYCLE_TO, m_editCycleTo);
-  DDX_Text(pDX, IDC_EDIT_CYCLE_TO, m_fCycleTo);
-  MinMaxFloat(IDC_EDIT_CYCLE_TO, m_fCycleTo, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_CYCLE_TO, m_fCycleTo, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS, 
     "Defocus cycle ending value");
   DDX_Text(pDX, IDC_STAT_CYCLE_UM, m_strCycleUm);
   DDX_Control(pDX, IDC_SPIN_CYCLE_DEF, m_sbcCycleDef);
   DDX_Control(pDX, IDC_EDIT_EARLY_FRAMES, m_editEarlyFrames);
-  DDX_Text(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames);
-  MinMaxInt(IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 300,
+  DDX_MM_INT(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 300,
     "Number of frames in early return");
   DDX_Control(pDX, IDC_STAT_ACTION_GROUP, m_statActionGroup);
   DDX_Control(pDX, IDC_STAT_SELECTED_GROUP, m_statSelectedGroup);
@@ -446,7 +442,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
 // OK: check for validity of other site item and of early return
 void CNavAcquireDlg::OnOK()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].everyNitems = m_iEveryNitems;
   mActions[mCurActSelected].minutes = m_iAfterMinutes;
   mActions[mCurActSelected].distance = m_fWhenMoved;
@@ -696,7 +692,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
 void CNavAcquireDlg::OnRadioCurParamSet()
 {
   int oldCur = m_iCurParamSet;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (CheckActionOrder(mCurrentOrder)) {
     m_iCurParamSet = oldCur;
     UpdateData(false);
@@ -721,7 +717,7 @@ void CNavAcquireDlg::OnRadioCurParamSet()
 void CNavAcquireDlg::OnNaAcquiremap()
 {
   int oldAcquire = OptionsToAcquireType();
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UnloadTSdependentFromDlg(oldAcquire);
   LoadTSdependentToDlg();
   ManagePrimaryLine();
@@ -742,7 +738,7 @@ void CNavAcquireDlg::ManagePrimaryLine()
 // Checkbox to make a map
 void CNavAcquireDlg::OnSaveAsMap()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
   ManageOutputFile();
 }
@@ -793,20 +789,20 @@ void CNavAcquireDlg::OnSelendokComboMacro()
 // Subset entries
 void CNavAcquireDlg::OnDoSubset()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageForSubset();
 }
 
 void CNavAcquireDlg::OnKillfocusSubsetStart()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   B3DCLAMP(m_iSubsetStart, 1, mNumArrayItems);
   ManageForSubset();
 }
 
 void CNavAcquireDlg::OnKillfocusSubsetEnd()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   B3DCLAMP(m_iSubsetEnd, 1, mNumArrayItems);
   ManageForSubset();
 }
@@ -814,7 +810,7 @@ void CNavAcquireDlg::OnKillfocusSubsetEnd()
 // Skipping initial move
 void CNavAcquireDlg::OnSkipInitialMove()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageOutputFile();
 }
 
@@ -1250,7 +1246,7 @@ void CNavAcquireDlg::ManageTimingEnables()
 // New timing type is selected
 void CNavAcquireDlg::OnRadioTimingType()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].timingType = m_iTimingType;
   FormatTimingString(mCurActSelected, m_iSelectedPos);
   ManageTimingEnables();
@@ -1263,7 +1259,7 @@ void CNavAcquireDlg::OnRadioSelectAction(UINT nID)
   BOOL states[5] = {true, true, true, true, true};
   CButton *button;
   int oldSelected = m_iSelectedPos;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (CheckNearestItemText()) {
     button = (CButton *)GetDlgItem(IDC_RADIO_NAVACQ_SEL1 + m_iSelectedPos);
     if (button)
@@ -1292,7 +1288,7 @@ void CNavAcquireDlg::OnRadioSelectAction(UINT nID)
 // New interval for every N
 void CNavAcquireDlg::OnEnKillfocusEditEveryN()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].everyNitems = m_iEveryNitems;
   FormatTimingString(mCurActSelected, m_iSelectedPos);
   ManageEnables();
@@ -1301,7 +1297,7 @@ void CNavAcquireDlg::OnEnKillfocusEditEveryN()
 // New time for running after an interval
 void CNavAcquireDlg::OnEnKillfocusEditAfterMinutes()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].minutes = m_iAfterMinutes;
   FormatTimingString(mCurActSelected, m_iSelectedPos);
 }
@@ -1309,7 +1305,7 @@ void CNavAcquireDlg::OnEnKillfocusEditAfterMinutes()
 // New distance for running after moving
 void CNavAcquireDlg::OnEnKillfocusEditWhenMoved()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].distance = m_fWhenMoved;
   FormatTimingString(mCurActSelected, m_iSelectedPos);
 }
@@ -1317,7 +1313,7 @@ void CNavAcquireDlg::OnEnKillfocusEditWhenMoved()
 // Running elsewhere is toggled
 void CNavAcquireDlg::OnNaRunAtOther()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_OTHER_SITE, 
     m_bRunAtOther ? 1 : 0);
   ManageTimingEnables();
@@ -1326,7 +1322,7 @@ void CNavAcquireDlg::OnNaRunAtOther()
 // New starting text for lable/note
 void CNavAcquireDlg::OnEnKillfocusEditGotoItem()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mActions[mCurActSelected].labelOrNote = m_strGotoItem;
 }
 
@@ -1345,7 +1341,7 @@ int CNavAcquireDlg::CheckNearestItemText()
 // Run action after task: rebuild everything
 void CNavAcquireDlg::OnNaRunAfterTask()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_AFTER_ITEM,
     m_bRunAfterTask ? 1 : 0);
   BuildActionSection();
@@ -1355,7 +1351,7 @@ void CNavAcquireDlg::OnNaRunAfterTask()
 // Switch between label and note
 void CNavAcquireDlg::OnRgotoLabel()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_MATCH_NOTE,
     m_iGotoLabelNote);
 }
@@ -1391,7 +1387,7 @@ void CNavAcquireDlg::MoveAction(int dir)
 // Hide the un-run actions
 void CNavAcquireDlg::OnNaHideUnused()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   BuildActionSection(!m_bHideUnusedActions);
 }
 
@@ -1432,7 +1428,7 @@ void CNavAcquireDlg::OnCheckRunAction(UINT nID)
   CButton *button = (CButton *)GetDlgItem(nID);
   if (!button)
     return;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   bool runIt = button->GetCheck() == BST_CHECKED;
   int posInd = nID - IDC_CHECK_NAVACQ_RUN1;
   if (posInd >= mNumShownActs)
@@ -1587,7 +1583,7 @@ void CNavAcquireDlg::OnNaSetupMultishot()
 // Change in spinner for every N
 void CNavAcquireDlg::OnDeltaposSpinEveryN(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (NewSpinnerValue(pNMHDR, pResult, m_iEveryNitems, 1, MAX_EVERY_N, m_iEveryNitems))
     return;
   mActions[mCurActSelected].everyNitems = m_iEveryNitems;
@@ -1599,13 +1595,13 @@ void CNavAcquireDlg::OnDeltaposSpinEveryN(NMHDR *pNMHDR, LRESULT *pResult)
 // Defocus cycling
 void CNavAcquireDlg::OnNaCycleDefocus()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
 }
 
 void CNavAcquireDlg::OnDeltaposSpinCycleDef(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   FormattedSpinnerValue(pNMHDR, pResult, 1, 30, mParam->cycleSteps, m_strCycleUm,
     "um in %d");
 }
@@ -1613,21 +1609,21 @@ void CNavAcquireDlg::OnDeltaposSpinCycleDef(NMHDR *pNMHDR, LRESULT *pResult)
 // Early return
 void CNavAcquireDlg::OnNaEarlyReturn()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageEnables();
 }
 
 // Skip saving
 void CNavAcquireDlg::OnNaSkipSaving()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageOutputFile();
 }
 
 
 void CNavAcquireDlg::OnHideUnselectedOptions()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   BuildActionSection();
 }
 
