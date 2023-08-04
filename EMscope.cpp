@@ -1001,9 +1001,9 @@ int CEMscope::Initialize()
     // Check for KV if warning set up, check for MAG/SAMAG mode unconditionally
     if (mWarnIfKVnotAt) {
       htval = GetHTValue();
-      if (fabs(htval - mWarnIfKVnotAt) > 1.) {
-        message.Format("WARNING: The scope is currently at %.0f kV\nand the program is "
-          "calibrated for %.0f kV", htval, mWarnIfKVnotAt);
+      if (fabs(htval - mWarnIfKVnotAt) > 0.8) {
+        message.Format("WARNING: The scope is currently at %.1f kV\nand the program is "
+          "calibrated for %.1f kV", htval, mWarnIfKVnotAt);
         AfxMessageBox(message, MB_EXCLAME);
       }
     }
