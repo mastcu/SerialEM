@@ -57,8 +57,7 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATACBBINNING, m_strBinning);
   DDX_Control(pDX, IDC_SPINACBSPOT, m_sbcSpot);
   DDX_Control(pDX, IDC_SPINACBBINNING, m_sbcBinning);
-  DDX_Text(pDX, IDC_EDITACBEXPOSURE, m_fExposure);
-  DDV_MinMaxFloat(pDX, m_fExposure, 0.001f, 10.f);
+  DDX_MM_FLOAT(pDX, IDC_EDITACBEXPOSURE, m_fExposure, 0.001f, 10.f, "Exposure time");
   DDX_Control(pDX, ID_TESTACQUIRE, m_butAcquire);
   DDX_Radio(pDX, IDC_RADIOUSEEDGE, m_iUseCentroid);
   DDX_Text(pDX, IDC_STATACBMAG, m_strMag);
@@ -76,8 +75,7 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_ACS_MICRONS, m_statMicrons);
   DDX_Control(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_editBeamShift);
   DDX_Check(pDX, IDC_ACS_SHIFT_BEAM, m_bShiftBeam);
-  DDX_Text(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift);
-  MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
     "Beam shift for centering");
   DDX_Text(pDX, IDC_STAT_ACS_ADDED_SHIFT, m_strAddedShift);
   DDX_Check(pDX, IDC_RECORD_ADDED_SHIFT, m_bRecordingAddedShift);
@@ -91,8 +89,7 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_SMALLER_TRIAL, m_strSmallerTrial);
   DDX_Control(pDX, IDC_STATSOURCE, m_statSource);
   DDX_Check(pDX, IDC_ACS_ITERATE, m_bIterate);
-  DDX_Text(pDX, IDC_EDIT_ACS_ITERATE, m_fIterThresh);
-  MinMaxFloat(IDC_EDIT_ACS_ITERATE, m_fIterThresh, 0.01f, 10.f,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_ACS_ITERATE, m_fIterThresh, 0.01f, 10.f,
     "Threshold for running twice");
   DDX_Check(pDX, IDC_SWITCH_MAG_TO_RUN, m_bSwitchMagToRun);
 }
@@ -251,7 +248,7 @@ BOOL CAutocenSetupDlg::PreTranslateMessage(MSG* pMsg)
 // Button to set and track scope state
 void CAutocenSetupDlg::OnSetbeamstate()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_bSetState)
     StartTrackingState();
   else
@@ -264,7 +261,7 @@ void CAutocenSetupDlg::OnSetbeamstate()
 // Check box to use the current mag when running
 void CAutocenSetupDlg::OnSwitchMagToRun()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
@@ -280,7 +277,7 @@ void CAutocenSetupDlg::OnDeltaposSpinSmallerTrial(NMHDR *pNMHDR, LRESULT *pResul
 // Button to use smaller trial
 void CAutocenSetupDlg::OnUseTrialSmaller()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mMultiTasks->SetUseEasyAutocen(m_bUseTrialSmaller);
   FetchParams();
@@ -381,7 +378,7 @@ void CAutocenSetupDlg::OnKillfocusEditExposure()
   ControlSet *conSet = mWinApp->GetConSets() + TRIAL_CONSET;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   float roundFac = mWinApp->mCamera->ExposureRoundingFactor(camParam);
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (mWinApp->mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode,
     conSet->binning, 0, 2, m_fExposure, conSet->frameTime)) {
     if (roundFac)
@@ -466,7 +463,7 @@ void CAutocenSetupDlg::OnRecordAddedShift()
   ScaleMat IStoBS, camToIS, BStoCam;
   float pixel;
   int magInd;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (!m_bRecordingAddedShift) {
 
     // Finished getting shift: convert to microns on the camera
@@ -519,7 +516,7 @@ void CAutocenSetupDlg::OnResetAddedShift()
 // Iterate checkbox
 void CAutocenSetupDlg::OnIterate()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   UpdateEnables();
   mWinApp->RestoreViewFocus();
 }
@@ -748,7 +745,8 @@ void CAutocenSetupDlg::RestoreScopeState(void)
 // Be sure to FetchParams if this returns true
 BOOL CAutocenSetupDlg::UpdateIfExposureChanged(void)
 {
-  UpdateData(true);
+  if (!UpdateData(true))
+    return false;
   if (fabs(m_fExposure - mParam->exposure) > 0.0001 * m_fExposure) {
     mParam->exposure = m_fExposure;
     if (mSynthesized) {

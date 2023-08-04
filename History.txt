@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/4/23: Changed criterion for kV warning on starting from > 1 to > 0.8.
+
+8/4/23: Added script commands to report multishot vectors in image shift units
+and to return a list of holes to be acquired for an item.
+
+8/4/23: Replaced field validation in Ctffind parameters, Hole Finder,
+Eucentricity by Focus, Autocontouring, and Beam Aucentering setup dialogs.
+
 8/2/23: Replaced Microsoft validation of text fields, which was giving "Enter
 a number" errors on some systems, in Montage Setup, Tilt Series Setup,
 Navigator Acquire, and  Multiple Record setup dialog.

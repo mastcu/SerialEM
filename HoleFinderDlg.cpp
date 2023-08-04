@@ -93,10 +93,8 @@ CHoleFinderDlg::~CHoleFinderDlg()
 void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
-  DDX_Text(pDX, IDC_EDIT_HOLE_SIZE, m_fHolesSize);
-  MinMaxFloat(IDC_EDIT_HOLE_SIZE, m_fHolesSize, 0.1f, 5, "Hole size");
-  DDX_Text(pDX, IDC_EDIT_SPACING, m_fSpacing);
-  MinMaxFloat(IDC_EDIT_SPACING, m_fSpacing, 0.5f, 10, "Hole spacing");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_HOLE_SIZE, m_fHolesSize, 0.1f, 5, "Hole size");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_SPACING, m_fSpacing, 0.5f, 10, "Hole spacing");
   DDX_Text(pDX, IDC_EDIT_SIGMAS, m_strSigmas);
   DDX_Text(pDX, IDC_EDIT_MEDIAN_ITERS, m_strIterations);
   DDX_Text(pDX, IDC_EDIT_THRESHOLDS, m_strThresholds);
@@ -140,8 +138,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_RIN_GROUPS, m_butInGroups);
   DDX_Radio(pDX, IDC_RZIGZAG, m_iLayoutType);
   DDX_Control(pDX, IDC_BUT_MAKE_NAV_PTS, m_butMakeNavPts);
-  DDX_Text(pDX, IDC_EDIT_MAX_ERROR, m_fMaxError);
-  MinMaxFloat(IDC_EDIT_MAX_ERROR, m_fMaxError, 0.001f, 1.f, "Maximum error");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_ERROR, m_fMaxError, 0.001f, 1.f, "Maximum error");
   DDX_Control(pDX, IDC_BUT_CLEAR_DATA, m_butClearData);
   DDX_Control(pDX, IDC_BRACKET_LAST, m_butBracketLast);
   DDX_Check(pDX, IDC_BRACKET_LAST, m_bBracketLast);
@@ -250,7 +247,7 @@ void CHoleFinderDlg::CloseWindow()
 // Handle simple edit boxes
 void CHoleFinderDlg::OnKillfocusEditHoleSize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageSizeSeparation(true);
   mWinApp->RestoreViewFocus();
 }
@@ -258,20 +255,20 @@ void CHoleFinderDlg::OnKillfocusEditHoleSize()
 
 void CHoleFinderDlg::OnKillfocusEditSpacing()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageSizeSeparation(true);
   mWinApp->RestoreViewFocus();
 }
 
 void CHoleFinderDlg::OnKillfocusEditMaxError()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 void CHoleFinderDlg::OnHexArray()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   SizeAndSpacingToDialog(true, true);
   mWinApp->RestoreViewFocus();
 }
@@ -280,7 +277,7 @@ void CHoleFinderDlg::OnHexArray()
 // Filter sigmas
 void CHoleFinderDlg::OnKillfocusEditSigmas()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->mParamIO->StringToEntryList(1, m_strSigmas, mNumSigmas,
     NULL, &mSigmas[0], MAX_HOLE_TRIALS, true);
   m_strSigmas = ListToString(1, mNumSigmas, &mSigmas[0]);
@@ -293,7 +290,7 @@ void CHoleFinderDlg::OnKillfocusEditSigmas()
 void CHoleFinderDlg::OnKillfocusEditMedianIters()
 {
   int ind, indOut = 1;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->mParamIO->StringToEntryList(3, m_strIterations, mNumIterations,
     &mIterations[0], NULL, MAX_HOLE_TRIALS, true);
   if (mNumIterations) {
@@ -312,7 +309,7 @@ void CHoleFinderDlg::OnKillfocusEditMedianIters()
 // Thresholds
 void CHoleFinderDlg::OnKillfocusEditThresholds()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->mParamIO->StringToEntryList(1, m_strThresholds, mNumThresholds,
     NULL, &mThresholds[0], MAX_HOLE_TRIALS, true);
   m_strThresholds = ListToString(1, mNumThresholds, &mThresholds[0]);
@@ -324,14 +321,14 @@ void CHoleFinderDlg::OnKillfocusEditThresholds()
 // Bracketing
 void CHoleFinderDlg::OnBracketLast()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 // Boundary contour
 void CHoleFinderDlg::OnExcludeOutside()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
@@ -388,7 +385,7 @@ void CHoleFinderDlg::OnToggleDraw(NMHDR *pNotifyStruct, LRESULT *result)
 // Edit boxes for mean limits: process string, set slider
 void CHoleFinderDlg::OnKillfocusEditLowerMean()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.lowerMeanCutoff = (float)atof(m_strLowerMean);
   m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
@@ -401,7 +398,7 @@ void CHoleFinderDlg::OnKillfocusEditLowerMean()
 
 void CHoleFinderDlg::OnKillfocusEditUpperMean()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
@@ -414,7 +411,7 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
 
 void CHoleFinderDlg::OnKillfocusEditHullDist()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.edgeDistCutoff = (float)atof(m_strHullDist);
   m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
@@ -431,7 +428,7 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
   bool takeNint = true;
   bool dropping = nSBCode != TB_THUMBTRACK;
   CWnd *wnd;
-  UpdateData(TRUE);
+  UPDATE_DATA_TRUE;
   CSliderCtrl *pSlider = (CSliderCtrl *)pScrollBar;
   if (pSlider == &m_sliderLowerMean) {
     mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMidMean - mMeanMin) / 255. +
@@ -476,14 +473,14 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 // Other options
 void CHoleFinderDlg::OnShowIncluded()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mWinApp->mMainView->DrawImage();
 }
 
 void CHoleFinderDlg::OnShowExcluded()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mWinApp->mMainView->DrawImage();
 }
@@ -491,7 +488,7 @@ void CHoleFinderDlg::OnShowExcluded()
 
 void CHoleFinderDlg::OnRadioLayoutType()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
@@ -622,7 +619,7 @@ void CHoleFinderDlg::SyncToMasterParams()
 {
   if (!mIsOpen)
     return;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   DialogToParams();
   *mMasterParams = mParams;
 }

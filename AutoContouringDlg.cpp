@@ -69,8 +69,7 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RTOPIXELS, m_iReduceToWhich);
   DDX_Radio(pDX, IDC_RRELATIVE_THRESH, m_iThreshType);
   DDX_Radio(pDX, IDC_RGROUP_BY_SIZE, m_iGroupType);
-  DDX_Text(pDX, IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels);
-  MinMaxInt(IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels, 200, 5000,
+  DDX_MM_INT(pDX, IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels, 200, 5000,
     "number of pixels to reduce to");
   DDX_Control(pDX, IDC_SPIN_NUM_GROUPS, m_sbcNumGroups);
   DDX_Text(pDX, IDC_EDIT_MIN_MEAN, m_strLowerMean);
@@ -91,16 +90,12 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_MAX_IRREGULAR, m_strMaxIrregular);
   DDX_Text(pDX, IDC_STAT_MAX_SQUARE_SD, m_strMaxSquareSD);
   DDX_Text(pDX, IDC_STAT_MAX_BORDER_DIST, m_strMaxBorderDist);
-  DDX_Text(pDX, IDC_EDIT_TO_PIX_SIZE, m_fReduceToPixSize);
-  MinMaxFloat(IDC_EDIT_TO_PIX_SIZE, m_fReduceToPixSize, .2f, 20.f,
-    "pixel size to reduce to");
-  DDX_Text(pDX, IDC_EDIT_REL_THRESH, m_fRelThresh);
-  MinMaxFloat(IDC_EDIT_REL_THRESH, m_fRelThresh, 0.f, 1.f, "relative threshold");
-  DDX_Text(pDX, IDC_EDIT_ABS_THRESH, m_fAbsThresh);
-  DDX_Text(pDX, IDC_EDIT_MINSIZE, m_fACminSize);
-  MinMaxFloat(IDC_EDIT_MINSIZE, m_fACminSize, 1.f, 500.f, "minimum contour size");
-  DDX_Text(pDX, IDC_EDIT_MAXSIZE, m_fACmaxSize);
-  MinMaxFloat(IDC_EDIT_MAXSIZE, m_fACmaxSize, 2.f, 500.f, "maximum contour size");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_TO_PIX_SIZE, m_fReduceToPixSize, .2f, 20.f,
+    "Pixel size to reduce to");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_REL_THRESH, m_fRelThresh, 0.f, 1.f, "Relative threshold");
+  DDX_FLOAT(pDX, IDC_EDIT_ABS_THRESH, m_fAbsThresh, "Absolute threshold");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MINSIZE, m_fACminSize, 1.f, 500.f, "Minimum contour size");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MAXSIZE, m_fACmaxSize, 2.f, 500.f, "Maximum contour size");
   DDX_Control(pDX, IDC_SLIDER_MIN_MEAN, m_sliderLowerMean);
   DDX_Control(pDX, IDC_SLIDER_MAX_MEAN, m_sliderUpperMean);
   DDX_Control(pDX, IDC_SLIDER_MIN_SIZE, m_sliderMinSize);
@@ -235,7 +230,7 @@ void CAutoContouringDlg::SyncToMasterParams()
     mNumGroups = mParams.numGroups;
     return;
   }
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   DialogToParams();
   *mMasterParams = mParams;
 }
@@ -360,7 +355,7 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
 // Choice to use relative or absolute threshold
 void CAutoContouringDlg::OnRRelativeThresh()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageACEnables();
   mWinApp->RestoreViewFocus();
 }
@@ -368,7 +363,7 @@ void CAutoContouringDlg::OnRRelativeThresh()
 // Choice to use pixels or pixel size
 void CAutoContouringDlg::OnRToPixels()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   ManageACEnables();
   mWinApp->RestoreViewFocus();
 }
@@ -376,7 +371,7 @@ void CAutoContouringDlg::OnRToPixels()
 // Grouping by size or value
 void CAutoContouringDlg::OnRGroupBySize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mParams.groupByMean = m_iGroupType;
   if (mHaveConts)
     SetExclusionsAndGroups();
@@ -386,26 +381,26 @@ void CAutoContouringDlg::OnRGroupBySize()
 // New values of target pixels and pixel size
 void CAutoContouringDlg::OnKillfocusEditToPixels()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 void CAutoContouringDlg::OnKillfocusEditToPixSize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 // New values of relative and absolute threshold
 void CAutoContouringDlg::OnKillfocusEditRelThresh()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 void CAutoContouringDlg::OnKillfocusEditAbsThresh()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
@@ -613,7 +608,7 @@ int CAutoContouringDlg::GetSquareStats(float &minMean, float &maxMean,
 // Lower mean cutoff
 void CAutoContouringDlg::OnKillfocusEditMinMean()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.lowerMeanCutoff = (float)atof(m_strLowerMean);
   m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
@@ -627,7 +622,7 @@ void CAutoContouringDlg::OnKillfocusEditMinMean()
 // Upper mean cutoff
 void CAutoContouringDlg::OnKillfocusEditMaxMean()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
@@ -641,7 +636,7 @@ void CAutoContouringDlg::OnKillfocusEditMaxMean()
 // Min size cutoff
 void CAutoContouringDlg::OnKillfocusEditMinSize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.minSizeCutoff = (float)atof(m_strUpperMean);
   m_strMinSize.Format("%.4g", mParams.minSizeCutoff);
@@ -655,7 +650,7 @@ void CAutoContouringDlg::OnKillfocusEditMinSize()
 // Border distance cutoff
 void CAutoContouringDlg::OnKillfocusEditBorderDist()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.borderDistCutoff = (float)atof(m_strBorderDist);
   m_strBorderDist.Format("%.4g", mParams.borderDistCutoff);
@@ -668,12 +663,14 @@ void CAutoContouringDlg::OnKillfocusEditBorderDist()
 // New entries for the size range to autocontour
 void CAutoContouringDlg::OnKillfocusEditACMinsize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
 }
 
 void CAutoContouringDlg::OnKillfocusEditACMaxsize()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
 }
 
 // Respond to a slider message, which may or may not be a change
@@ -691,7 +688,7 @@ void CAutoContouringDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollB
   int lastBorder = m_intBorderDist;
   bool changed = false;
 
-  UpdateData(TRUE);
+  UPDATE_DATA_TRUE;
   changed = lastBorder != m_intBorderDist || lastLower != m_intLowerMean ||
     lastUpper != m_intUpperMean || lastSize != m_intMinSize || lastSD != m_intSquareSD ||
     lastIrregular != m_intIrregular;

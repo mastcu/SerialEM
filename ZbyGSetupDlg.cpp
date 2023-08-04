@@ -65,20 +65,16 @@ void CZbyGSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_CUR_FOCUS_OFFSET, m_strCurOffset);
   DDX_Text(pDX, IDC_STAT_CAL_FOCUS_OFFSET, m_strCalOffset);
   DDX_Check(pDX, IDC_CHECK_USE_OFFSET, m_bUseOffset);
-  DDX_Text(pDX, IDC_EDIT_FOCUS_OFFSET, m_fFocusOffset);
-  MinMaxFloat(IDC_EDIT_FOCUS_OFFSET, m_fFocusOffset, -500, 100,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_FOCUS_OFFSET, m_fFocusOffset, -500, 100,
     "Focus offset to use in calibration");
   DDX_Control(pDX, IDC_EDIT_FOCUS_OFFSET, m_editFocusOffset);
-  DDX_Text(pDX, IDC_EDIT_BEAM_TILT, m_fBeamTilt);
-  MinMaxFloat(IDC_EDIT_BEAM_TILT, m_fBeamTilt, 0.09f, 25.f,
+  DDX_MM_FLOAT(pDX, IDC_EDIT_BEAM_TILT, m_fBeamTilt, 0.09f, 25.f,
     "Beam tilt for measuring defocus");
   DDX_Control(pDX, IDC_BUT_USE_TO_CAL, m_butUseToCal);
   DDX_Control(pDX, IDC_BUT_USE_TO_RECAL, m_butUseToRecal);
   DDX_Check(pDX, IDC_CHECK_USE_VIEW_IN_LD, m_bUseViewInLD);
-  DDX_Text(pDX, IDC_EDIT_MAX_CHANGE, m_iMaxChange);
-  MinMaxInt(IDC_EDIT_MAX_CHANGE, m_iMaxChange, 5, 500, "Maximum change in Z");
-  DDX_Text(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh);
-  MinMaxFloat(IDC_EDIT_ITER_THRESH, m_fIterThresh, 0.05f, 5.f,
+  DDX_MM_INT(pDX, IDC_EDIT_MAX_CHANGE, m_iMaxChange, 5, 500, "Maximum change in Z");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh, 0.05f, 5.f,
     "Threshold Z change for doing another iteration");
   DDX_Text(pDX, IDC_STAT_CUR_C2, m_strCurC2);
   DDX_Text(pDX, IDC_STAT_CAL_C2, m_strCalC2);
@@ -165,7 +161,7 @@ BOOL CZbyGSetupDlg::PreTranslateMessage(MSG* pMsg)
 // This needs to be called before running anything that needs these parameters
 void CZbyGSetupDlg::UnloadControlParams()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mParticleTasks->SetZBGMaxTotalChange(m_iMaxChange);
   mParticleTasks->SetZBGIterThreshold(m_fIterThresh);
   mParticleTasks->SetZbyGUseViewInLD(m_bUseViewInLD);
@@ -175,7 +171,7 @@ void CZbyGSetupDlg::UnloadControlParams()
 // Update scope and program state into dialog
 void CZbyGSetupDlg::OnButUpdateState()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   GetCurrentState();
   UpdateCalStateForMag();
   UpdateData(false);
@@ -185,35 +181,35 @@ void CZbyGSetupDlg::OnButUpdateState()
 // Manage enables for the check boxes
 void CZbyGSetupDlg::OnCheckCalWithBt()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editBeamTilt.EnableWindow(m_bCalWithBT);
   mWinApp->RestoreViewFocus();
 }
 
 void CZbyGSetupDlg::OnCheckUseOffset()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   m_editFocusOffset.EnableWindow(m_bUseOffset);
   mWinApp->RestoreViewFocus();
 }
 
 void CZbyGSetupDlg::OnCheckUseViewInLd()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   UpdateEnables();
 }
 
 void CZbyGSetupDlg::OnRadioViewSubset()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
 // All edit box values are just stored locally
 void CZbyGSetupDlg::OnKillfocusEditBox()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
 }
 
@@ -315,7 +311,7 @@ void CZbyGSetupDlg::GetCurrentState()
 void CZbyGSetupDlg::UpdateCalStateForMag()
 {
   int nearest;
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mCalParams = mWinApp->mParticleTasks->FindZbyGCalForMagAndArea(
     mCurParams.magIndex, mCurParams.lowDoseArea, mCurParams.camera, mIndexOfCal, nearest);
   if (mCalParams) {

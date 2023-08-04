@@ -41,22 +41,18 @@ void CCtffindParamDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
   DDX_Check(pDX, IDC_CHECK_SLOW_SEARCH, m_bSlowSearch);
-  DDX_Text(pDX, IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes);
-  MinMaxFloat(IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes, 0, 100, "Highest resolution to fit");
-  DDX_Text(pDX, IDC_EDIT_MIN_PHASE, m_iMinPhase);
-  MinMaxInt(IDC_EDIT_MIN_PHASE, m_iMinPhase, -30, 180, "Lower phase limit");
-  DDX_Text(pDX, IDC_EDIT_MAX_PHASE, m_iMaxPhase);
-  MinMaxInt(IDC_EDIT_MAX_PHASE, m_iMaxPhase, 0, 200, "Upper phase limit");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes, 0, 100, 
+    "Highest resolution to fit");
+  DDX_MM_INT(pDX, IDC_EDIT_MIN_PHASE, m_iMinPhase, -30, 180, "Lower phase limit");
+  DDX_MM_INT(pDX, IDC_EDIT_MAX_PHASE, m_iMaxPhase, 0, 200, "Upper phase limit");
   DDX_Check(pDX, IDC_CHECK_FIND_PHASE, m_bFindPhase);
   DDX_Check(pDX, IDC_CHECK_FIX_ASTIG_FOR_PHASE, m_bFixAstigForPhase);
   DDX_Check(pDX, IDC_CHECK_EXTRA_STATS, m_bExtraStats);
   DDX_Check(pDX, IDC_CHECK_DRAW_RINGS, m_bDrawRings);
-  DDX_Text(pDX, IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes);
-  MinMaxFloat(IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes, 0, 100, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes, 0, 100, 
     "Lowest resolution when fitting with phase");
   DDX_Text(pDX, IDC_STAT_DEFAULT_MAX_RES, m_strDfltMaxRes);
-  DDX_Text(pDX, IDC_EDIT_FIXED_PHASE, m_fFixedPhase);
-  MinMaxFloat(IDC_EDIT_FIXED_PHASE, m_fFixedPhase, -20, 200, "Fixed phase shift");
+  DDX_MM_FLOAT(pDX, IDC_EDIT_FIXED_PHASE, m_fFixedPhase, -20, 200, "Fixed phase shift");
 }
 
 
@@ -114,7 +110,7 @@ void CCtffindParamDlg::PostNcDestroy()
 void CCtffindParamDlg::OnOK()
 {
   SetFocus();
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->GetCtffindPlacement();
   mProcessImage->mCtffindParamDlg = NULL;
   DestroyWindow();
@@ -138,7 +134,7 @@ BOOL CCtffindParamDlg::PreTranslateMessage(MSG* pMsg)
 // Draw extra rings
 void CCtffindParamDlg::OnCheckDrawRings()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetDrawExtraCtfRings(m_bDrawRings ? 1 : 0);
   mWinApp->RestoreViewFocus();
 }
@@ -146,7 +142,7 @@ void CCtffindParamDlg::OnCheckDrawRings()
 // Slower search
 void CCtffindParamDlg::OnCheckSlowSearch()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetSlowerCtfFit(m_bSlowSearch);
   RefitToCurrentFFT();
 }
@@ -154,7 +150,7 @@ void CCtffindParamDlg::OnCheckSlowSearch()
 // Max res for fitting, limited to 3 A
 void CCtffindParamDlg::OnKillfocusEditMaxFitRes()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_fCustomMaxRes && m_fCustomMaxRes < 3.) {
     m_fCustomMaxRes = 3.;
     UpdateData(false);
@@ -166,7 +162,7 @@ void CCtffindParamDlg::OnKillfocusEditMaxFitRes()
 // Minimum res for fitting when phase is involved
 void CCtffindParamDlg::OnKillfocusEditPhaseMinRes()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetMinCtfFitResIfPhase(m_fPhaseMinRes);
   RefitToCurrentFFT();
 }
@@ -174,7 +170,7 @@ void CCtffindParamDlg::OnKillfocusEditPhaseMinRes()
 // Find phase
 void CCtffindParamDlg::OnCheckFindPhase()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetCtfFindPhaseOnClick(m_bFindPhase);
   RefitToCurrentFFT();
 }
@@ -182,7 +178,7 @@ void CCtffindParamDlg::OnCheckFindPhase()
 // Fix astigmatism when finding phase
 void CCtffindParamDlg::OnCheckFixAstigForPhase()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetCtfFixAstigForPhase(m_bFixAstigForPhase);
   RefitToCurrentFFT();
 }
@@ -190,7 +186,7 @@ void CCtffindParamDlg::OnCheckFixAstigForPhase()
 // Get extra stats for res fit to
 void CCtffindParamDlg::OnCheckExtraStats()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetExtraCtfStats(m_bExtraStats);
   RefitToCurrentFFT();
 }
@@ -198,7 +194,7 @@ void CCtffindParamDlg::OnCheckExtraStats()
 // Fixed phase
 void CCtffindParamDlg::OnKillfocusEditFixedPhase()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   mProcessImage->SetPlatePhase((float)DTOR * m_fFixedPhase);
   RefitToCurrentFFT();
 }
@@ -206,7 +202,7 @@ void CCtffindParamDlg::OnKillfocusEditFixedPhase()
 // Min and max phase for fitting
 void CCtffindParamDlg::OnEnKillfocusEditMinPhase()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_iMinPhase > m_iMaxPhase) {
     m_iMinPhase = m_iMaxPhase - 1;
     UpdateData(false);
@@ -217,7 +213,7 @@ void CCtffindParamDlg::OnEnKillfocusEditMinPhase()
 
 void CCtffindParamDlg::OnEnKillfocusEditMaxPhase()
 {
-  UpdateData(true);
+  UPDATE_DATA_TRUE;
   if (m_iMinPhase > m_iMaxPhase) {
     m_iMinPhase = m_iMaxPhase - 1;
     UpdateData(false);
