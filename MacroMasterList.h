@@ -743,6 +743,8 @@ MAC_SAME_NAME_ARG(UseMapItemHoleVectors, 1, 4, USEMAPITEMHOLEVECTORS, I)
 MAC_SAME_NAME_ARG(SaveNextCtfplotterGraph, 1, 4, SAVENEXTCTFPLOTTERGRAPH, Ss)
 MAC_SAME_NAME_ARG(ReportFreeDiskSpace, 1, 4, REPORTFREEDISKSPACE, S)
 MAC_SAME_NAME_ARG(SetLensByName, 2, 4, SETLENSBYNAME, SD)
+MAC_SAME_NAME_ARG(ReportMultishotVectors, 0, 4, REPORTMULTISHOTVECTORS, I)
+MAC_SAME_NAME_ARG(GetItemHolesToAcquire, 2, 4, REPORTHOLESTOACQUIRE, IS)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

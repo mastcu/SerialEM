@@ -11216,6 +11216,29 @@ int CMacCmd::ReportLastHoleVectors(void)
   return 0;
 }
 
+// ReportMultishotVectors
+int CMacCmd::ReportMultishotVectors()
+{
+  MultiShotParams *msParams;
+  double *xVecs, *yVecs;
+  bool hex = mItemInt[1] != 0;
+  mNavHelper->UpdateMultishotIfOpen();
+  msParams = mNavHelper->GetMultiShotParams();
+  xVecs = hex ? &msParams->hexISXspacing[0] : &msParams->holeISXspacing[0];
+  yVecs = hex ? &msParams->hexISYspacing[0] : &msParams->holeISYspacing[0];
+  if (hex)
+    SetRepValsAndVars(2, xVecs[0], yVecs[0], xVecs[1], yVecs[1], xVecs[2], yVecs[2]);
+  else
+    SetRepValsAndVars(2, xVecs[0], yVecs[0], xVecs[1], yVecs[1]);
+  mLogRpt.Format("%s IS vectors are %.4g, %.4g%s %.4g, %.4g", hex ? "Hexagonal" : 
+    "Rectangular", xVecs[0], yVecs[0], hex ? "," : " and", xVecs[1], yVecs[1]);
+  if (hex) {
+    mStrCopy.Format(", and %.4g, %.4g", xVecs[2], yVecs[2]);
+    mLogRpt += mStrCopy;
+  }
+  return 0;
+}
+
 // UseMapItemHoleVectors
 int CMacCmd::UseMapItemHoleVectors()
 {
@@ -11290,6 +11313,38 @@ int CMacCmd::UndoHoleCombining(void)
   mWinApp->mNavHelper->mCombineHoles->UndoCombination();
   return 0;
 }
+
+// ReportHolesToAcquire
+int CMacCmd::GetItemHolesToAcquire()
+{
+  int index;
+  CMapDrawItem *navItem;
+  FloatVec xVec, yVec;
+  IntVec holePos;
+  CString value, one;
+
+  index = mItemInt[1];
+  navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  mStrCopy.Format("Navigator item %d (%s) does not have a defined multishot pattern for"
+    " line:\n\n", index + 1, (LPCTSTR)navItem->mLabel);
+  if (!navItem->mNumXholes)
+    ABORT_LINE(mStrCopy);
+  index = mWinApp->mParticleTasks->GetHolePositions(xVec, yVec, holePos, 
+    mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.);
+  mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
+    navItem->mNumSkipHoles, index);
+  value.Format("%d\n%d", navItem->mNumXholes, navItem->mNumYholes);
+  for (index = 0; index < (int)holePos.size(); index++) {
+    one.Format("\n%d", holePos[index]);
+    value += one;
+  }
+  if (SetVariable(mStrItems[2], value, VARTYPE_REGULAR, -1, false, &mStrCopy))
+    ABORT_NOLINE("Error setting a variable with hole indexes:\n" + mStrCopy);
+  return 0;
+}
+
 
 // AutoContourGridSquares
 int CMacCmd::AutoContourGridSquares(void)
