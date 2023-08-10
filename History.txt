@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/10/23: SEM_4-0-27
+8/10/23: Fixed crash taking an image if Low Dose hidden on startup (In 4.0).
+
+8/9/23: Fixed K3 on GIFs with fast shutter having a default duty cycle of 50%
+in CDS mode and throwing away half the signal; this applies to systems with
+EELS (e.g., Quantum K3 1069 and BiocontinuumHD (1067HD with EELS)  (In 4.0).
+
 8/4/23: Changed criterion for kV warning on starting from > 1 to > 0.8.
 
 8/4/23: Added script commands to report multishot vectors in image shift units
@@ -119,7 +126,7 @@ settings and to modify them as long as the same reversals occur.
 
 6/28/23: SEM_4-1-0beta17
 6/28/23: Preliminary support added for new TFS UTAPI scripting interface,
-which will allow proper aperture control (requiring at least server 7.16.1).
+which will allow proper aperture control (requiring at server 7.17).
 
 6/27/23: SEM_4-0-26
 6/27/23: Fixed program getting stuck or crashing when spot intensity

@@ -1902,7 +1902,7 @@ void CLowDoseDlg::ApplyNewISifDefineArea(void)
 // Add a point to a new image if defining areas
 void CLowDoseDlg::AddDefineAreaPoint()
 {
-  if (!m_iDefineArea)
+  if (!m_iDefineArea || !mInitialized)
     return;
   mImBufs->mHasUserPt = true;
   FixUserPoint(mImBufs, -1);
