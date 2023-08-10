@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/10/23: SEM_4-1-0beta21
+8/10/23: Added script command to report if a camera is inserted.
+
+8/10/23: Fixed problem in ctffind library that impaired accuracy on lower dose
+images.
+
 8/10/23: SEM_4-0-27
 8/10/23: Fixed crash taking an image if Low Dose hidden on startup (In 4.0).
 

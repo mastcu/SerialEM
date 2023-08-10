@@ -904,8 +904,17 @@
             in and out of EFTEM mode or STEM mode if appropriate.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RetractCamera</TD>
-          <TD>Retracts all retractable cameras</TD>
+          <TD class="scriptcommand">RetractCameras</TD>
+          <TD>Retracts all retractable cameras; for backwards compatibility, 'RetractCamera' is still accepted.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportCameraInserted #</TD>
+          <TD>Reports whether the given camera is inserted, where <b>#</b> is either 0 for the current
+            camera or the position
+            of the camera in the ActiveCameraList property or Camera setup dialog, numbered
+            from 1.&nbsp; The reported value is 0 if retracted, 1 if inserted, -2 if no information is
+            available for the camera, or -1 for failure to create an interface for a
+            Gatan camera.&nbsp; Command added in 4.1, 6-Aug-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CameraProperties [#C] [#M]</TD>

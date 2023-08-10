@@ -4290,7 +4290,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
             (camP->order <= mParam->order || STEMretract)) || inSet == RETRACT_ALL) && 
             camP->canBlock) || insertingOther) {
               inserted = insertingOther ? 1 : 0;
-              TestCameraInserted(iCam, inserted);
+              TestCameraInserted(iCam, inserted, false);
 
               // Retract if it is known to be inserted
               // We used to do it if it was last thought to be in and we are just retracting
@@ -4362,7 +4362,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
 
           // If it is not inserted, set flag and thread parameters
           inserted = 1;
-          TestCameraInserted(mTD.Camera, inserted);
+          TestCameraInserted(mTD.Camera, inserted, false);
           if (!inserted) {
             mInserting = true;
             mITD.camera = mTD.SelectCamera;
@@ -12376,10 +12376,18 @@ void CCameraController::RestoreGatanOrientations(void)
 }
 
 // Test if a camera is inserted, return 1 if it is, 0 not, or leave inserted unchanged
-void CCameraController::TestCameraInserted(int actIndex, long &inserted)
+void CCameraController::TestCameraInserted(int actIndex, long &inserted, bool createGatan)
 {
   int camIndex = mActiveList[actIndex];
   CameraParameters *camP = &mAllParams[camIndex];
+  bool created = false;
+  if (createGatan && camP->GatanCam && !camP->AMTtype && mNumDMCameras[COM_IND] > 0) {
+    if (CreateCamera(CREATE_FOR_ANY)) {
+      inserted = -1;
+      return;
+    }
+  }
+
   if (camP->DMCamera) {
     int DMind = CAMP_DM_INDEX(camP);
     MainCallDMIndCamera(DMind, IsCameraInserted(camP->cameraNumber, &inserted));
@@ -12390,6 +12398,8 @@ void CCameraController::TestCameraInserted(int actIndex, long &inserted)
   } else if (camP->FEItype && FCAM_ADVANCED(camP)) {
     inserted = mTD.scopePlugFuncs->ASIisCameraInserted(camP->eagleIndex);
   }
+  if (created)
+    ReleaseCamera(CREATE_FOR_ANY);
 }
 
 // Let's see if this is usable...

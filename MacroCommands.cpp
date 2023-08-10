@@ -2439,6 +2439,26 @@ int CMacCmd::RetractCamera(void)
   return 0;
 }
 
+// ReportCameraInserted
+int CMacCmd::ReportCameraInserted()
+{
+  long inserted = -2;
+  int index = mItemInt[1];
+  if (index < 0 || index > mWinApp->GetNumActiveCameras())
+    ABORT_LINE("Active camera number is out of range in line:\n\n");
+  if (!index)
+    index = mWinApp->GetCurrentActiveCamera();
+  else
+    index--;
+  if (mCamera->CameraBusy())
+    mLastIndex = mCurrentIndex;
+  else {
+    mCamera->TestCameraInserted(index, inserted, true);
+    SetRepValsAndVars(2, inserted);
+  }
+  return 0;
+}
+
 // RecordAndTiltUp, RecordAndTiltDown, RecordAndTiltTo
 int CMacCmd::RecordAndTiltUp(void)
 {

@@ -1100,7 +1100,7 @@ public:
   static void ScriptDone(int param);
   bool OppositeLDAreaNextShot(void);
   bool InitiateIfPending(void);
-  void TestCameraInserted(int actIndex, long &inserted);
+  void TestCameraInserted(int actIndex, long &inserted, bool needCreateDM);
   void ComputePixelTime(CameraParameters *camParams, int sizeX, int sizeY, int lineSync,
     float pixelSize, float maxScanRate, float &exposure, double &pixelTime,
     double &scanRate);
