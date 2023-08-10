@@ -24,6 +24,7 @@ struct CtffindParams {
 	float 		known_astigmatism;
 	float 		known_astigmatism_angle;
 	bool 			compute_extra_stats;
+  bool      noisy_input_image;
 };
 
 typedef void (*CharArgType)(const char *);

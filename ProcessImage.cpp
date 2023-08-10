@@ -3420,6 +3420,7 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
   params.maximum_additional_phase_shift = 0.;
   params.additional_phase_shift_search_step = 0.1f;
   params.compute_extra_stats = false;
+  params.noisy_input_image = true;
   if (imBuf) {
     params.pixel_size_of_input_image = mShiftManager->GetPixelSize(imBuf) *
       10000.f;
