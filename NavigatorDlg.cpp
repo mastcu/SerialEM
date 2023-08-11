@@ -64,7 +64,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI", "Red", "Ora", 
-"Yel", "Grn", "Blu", "Cya", "Vio", "Mag", "SPC", "SPC", "SPC", "SPC"};
+"Yel", "Grn", "Cya", "Blu", "Vio", "Mag", "SPC", "SPC", "SPC", "SPC"};
 static char *typeString[] = {"Pt", "Poly", "Map", "Imp", "Anc"};
 
 #define MAX_REGPT_NUM 99

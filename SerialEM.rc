@@ -5960,6 +5960,8 @@ BEGIN
     IDC_BUT_APPLY_ADJUSTMENT 
                             "Use stored adjustment to transform shifts to work at a higher mag"
     IDC_NA_USE_MAP_HOLES    "Use hole vectors in map to set image shift for holes, adjusting if possible"
+    IDC_CHECK_SKIP_AVERAGING 
+                            "Just use stage position of center point instead of averaging all points"
 END
 
 STRINGTABLE
@@ -7212,8 +7214,6 @@ BEGIN
     IDC_CHECK_USE_PRIOR_AUTOFOCUS 
                             "Skip running the dirft routine if the last autofocus has a low enough drift"
     IDC_EDIT_PRIOR_THRESH   "Enter the maximum drift considered acceptable for the last autofocus"
-    IDC_CHECK_SKIP_AVERAGING
-                            "Just use stage position of center point instead of averaging all points"
 END
 
 STRINGTABLE
