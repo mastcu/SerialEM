@@ -3107,7 +3107,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     mItem->mStageX = stageX;
     mItem->mStageY = stageY;
 
-    // If this is actaully a different map from the one drawn on, adjust the ID and Z
+    // If this is actually a different map from the one drawn on, adjust the ID and Z
     if (mItem->mDrawnOnMapID && imBuf->mMapID && mItem->mDrawnOnMapID != imBuf->mMapID) {
       item = FindItemWithMapID(imBuf->mMapID);
       if (item) {
@@ -3153,6 +3153,9 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       item->mXinPiece = xInPiece;
       item->mYinPiece = yInPiece;
     }
+    if (imBuf->mCaptured == BUFFER_FFT ||
+      imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
+      item->mFlags |= NAV_FLAG_DRAWN_ON_FFT;
     UpdateListString(mCurrentItem);
     SetChanged(true);
     ManageCurrentControls();
@@ -8513,6 +8516,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         // The default original reg is the current one
         item->mOriginalReg = item->mRegistration;
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "OrigReg", &item->mOriginalReg));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "Flags", &item->mFlags));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "DrawnID", &item->mDrawnOnMapID));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "BklshXY",
           &item->mBacklashX, &item->mBacklashY));

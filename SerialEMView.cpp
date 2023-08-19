@@ -614,7 +614,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
   bool bufferOK, drawUserPt, filtering = false, saveCurHolePos = false;
-  BOOL drawIncluded, drawExcluded;
+  BOOL drawIncluded, drawExcluded, bufIsFFT = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
   MapItemArray *itemArray = NULL;
@@ -659,6 +659,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mImBufs) {
     imBuf = &mImBufs[mImBufIndex];
     imageRect = imBuf->mImage;
+    bufIsFFT = mFFTWindow || imBuf->mCaptured == BUFFER_FFT ||
+      imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW;
   }
 
   if (mWinApp->mNavigator) {
@@ -1041,11 +1043,29 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Get navigator array now so that we can tell if there is an LD area draw
-  if (navigator && !(mFFTWindow || imBuf->mCaptured == BUFFER_FFT ||
-    imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW))
+  // But if the image is an FFT, see if there are any points drawn on FFT
+  if (navigator) {
     itemArray = GetMapItemsForImageCoords(imBuf, false);
+    if (itemArray && bufIsFFT) {
+      iy = 0;
+      for (ix = 0; ix < (int)itemArray->GetSize(); ix++) {
+        item = itemArray->GetAt(ix);
+        if (item->mFlags & NAV_FLAG_DRAWN_ON_FFT) {
+          iy++;
+          break;
+        }
+      }
+
+      // If there are no FFT points, set as no array so drawing etc gets skipped
+      if (!iy) {
+        itemArray = NULL;
+        delete mAcquireBox;
+        mAcquireBox = NULL;
+      }
+    }
+  }
   mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
-    navigator->GetShowingLDareas());
+    navigator->GetShowingLDareas()) && !bufIsFFT;
 
   if (mMainWindow) {
 
@@ -1222,8 +1242,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   minLimY = mWinApp->mScope->GetStageLimit(STAGE_MIN_Y);
   maxLimX = mWinApp->mScope->GetStageLimit(STAGE_MAX_X);
   maxLimY = mWinApp->mScope->GetStageLimit(STAGE_MAX_Y);
-  if (minXstage < minLimX || maxXstage > maxLimX ||
-    minYstage < minLimY || maxYstage > maxLimY) {
+  if (!bufIsFFT && (minXstage < minLimX || maxXstage > maxLimX ||
+    minYstage < minLimY || maxYstage > maxLimY)) {
     FloatVec limCornX, limCornY;
     CPen pnDashPen(PS_DASHDOT, 1, RGB(255, 0, 0));
     limCornX.push_back(minLimX);
@@ -1266,8 +1286,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   mStageErrX = mStageErrY = 0.;
 
   // Draw hole finder points in two colors
-  if (mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
-      &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
+  if (!bufIsFFT && mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, 
+    &yHoleCens, &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
     CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
     CPen pnHighExclPen(PS_SOLID, thick2, highExcludeColor);
@@ -1292,9 +1312,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Draw autocontour polygons
-  polyArray = mWinApp->mNavHelper->mAutoContouringDlg->GetPolyArrayToDraw(&polyGroups, 
-    &holeExcludes, numGroups, &showGroup);
-  if (polyArray) {
+  if (!bufIsFFT)
+    polyArray = mWinApp->mNavHelper->mAutoContouringDlg->GetPolyArrayToDraw(&polyGroups,
+      &holeExcludes, numGroups, &showGroup);
+  if (!bufIsFFT && polyArray) {
     for (group = 0; group < numGroups; group++) {
       if (!showGroup[group])
         continue;
@@ -1363,7 +1384,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     float delPtX = 0., delPtY = 0.;
 
     if (iDraw < 0) {
-      if (!mAcquireBox)
+      if (!mAcquireBox || bufIsFFT)
         continue;
       item = mAcquireBox;
       thick = 1;
@@ -1379,7 +1400,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     thick = DSB_DPI_SCALE(thick);
 
     if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
-      (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
+      (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0) || 
+      !BOOL_EQUIV(bufIsFFT, (item->mFlags & NAV_FLAG_DRAWN_ON_FFT) != 0))
       continue;
     pieceDrawnOn = (imBuf->mMapID && item->mDrawnOnMapID == imBuf->mMapID) ?
       item->mPieceDrawnOn : -1;

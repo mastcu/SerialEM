@@ -28,6 +28,8 @@
 #define POLY_HIGHLIGHT_COLOR 17
 #define CONT_COLOR_BASE_IND 6
 
+#define NAV_FLAG_DRAWN_ON_FFT 0x1
+
 class CMapDrawItem
 {
 public:
@@ -65,6 +67,7 @@ public:
   BOOL mDraw;             // Flag to draw
   BOOL mAcquire;          // Flag to acquire area
   BOOL mRotOnLoad;        // Flag to rotate when load
+  int mFlags;             // Flags defined in NAV_FLAGS
   int mRegPoint;          // Registration point number
   int mRegistration;      // Registration at which item exists
   int mOriginalReg;       // Original registration

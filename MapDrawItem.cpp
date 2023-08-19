@@ -34,6 +34,7 @@ CMapDrawItem::CMapDrawItem()
   mCorner = false;
   mAcquire = false;
   mRotOnLoad = false;
+  mFlags = 0;
   mRegPoint = 0;
   mRegistration = 1;
   mOriginalReg = 1;

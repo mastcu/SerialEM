@@ -31,6 +31,8 @@
   // Put out original registration only if it differs
   if (item->mOriginalReg != item->mRegistration)
     ADOC_PUT(Integer(ADOC_ARG, "OrigReg", item->mOriginalReg));
+  if (item->mFlags)
+    ADOC_PUT(Integer(ADOC_ARG, "Flags", item->mFlags));
   if (item->mDrawnOnMapID)
     ADOC_PUT(Integer(ADOC_ARG, "DrawnID", item->mDrawnOnMapID));
   if (item->mBacklashX || item->mBacklashY)
