@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/19/23: Add script command to wait until user has clicked a new marker point.
+
+8/19/23: Kept track if Navigator points are marked on an FFT so items will be
+displayed either on FFTs or nonFFTs as appropriate.
+
 8/10/23: SEM_4-1-0beta21
 8/10/23: Added script command to report if a camera is inserted.
 
@@ -132,7 +137,7 @@ settings and to modify them as long as the same reversals occur.
 
 6/28/23: SEM_4-1-0beta17
 6/28/23: Preliminary support added for new TFS UTAPI scripting interface,
-which will allow proper aperture control (requiring at server 7.17).
+which will allow proper aperture control (requiring at least server 7.18).
 
 6/27/23: SEM_4-0-26
 6/27/23: Fixed program getting stuck or crashing when spot intensity

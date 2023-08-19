@@ -996,6 +996,7 @@ int CMacroProcessor::TaskBusy()
 {
   double diff, dose;
   int tbusy;
+  EMimageBuffer *imBuf;
   DWORD waitResult;
   CString report;
 
@@ -1072,6 +1073,21 @@ int CMacroProcessor::TaskBusy()
       }
     }
     return 0;
+  }
+
+  // If waiting for marker, evaluate whether a new one is present on the proper image
+  if (mWaitingForMarker) {
+    imBuf = mWinApp->GetActiveNonStackImBuf();
+    if (imBuf->mTimeStamp == mMarkerTimeStamp && 
+      imBuf->mCaptured == mMarkerImageCapFlag && imBuf->mHasUserPt && 
+      (!mStartedWithMarker || fabs(imBuf->mUserPtX - mOldMarkerX) > 0.01 ||
+        fabs(imBuf->mUserPtY - mOldMarkerY) > 0.01)) {
+      mWaitingForMarker = false;
+      mWinApp->SetStatusText(SIMPLE_PANE, "");
+    } else {
+      Sleep(10);
+      return 1;
+    }
   }
 
   // If sleeping, take little naps to avoid using lots of CPU
@@ -1343,6 +1359,7 @@ void CMacroProcessor::RunOrResume()
   mRanCtfplotter = false;
   mCamera->SetTaskWaitingForFrame(false);
   mFrameWaitStart = -1.;
+  mWaitingForMarker = false;
   mNumStatesToRestore = 0;
   mFocusToRestore = -999.;
   mFocusOffsetToRestore = -9999.;

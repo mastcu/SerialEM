@@ -90,7 +90,12 @@
       one, two, three, or many floating point or integer values in specified sections
       of the file.&nbsp; The autodoc format was chosen for SerialEM because of the
       ready availability of this library, the convenience of using such functions, and
-      compatibility with the autodoc-reading capability in IMOD.</P>
+      compatibility with the autodoc-reading capability in IMOD.&nbsp; IMOD also has a 
+      simple Python module, autodoc.py, with a function to take a set of autodoc lines 
+      and produce a top-level dictionary of the different types of sections, keyed by 
+      &#39;sectionType&#39;, with each entry containing an array of dictionaries, one for each 
+      section.&nbsp; Other functions will return a list of integer or floating point 
+      values from the value in a key-value pair.</P>
     <P>There are two kinds of image-associated autodoc files produced by SerialEM: </P>
     <P>1) The &quot;.mdoc&quot; file provides data about an MRC file and has the same name as
       the image file, with the additional extension &quot;.mdoc&quot;.&nbsp; In these files, the
@@ -698,6 +703,13 @@
       <TD class="style7">0</TD>
       <TD class="style8">mDrawnOnMapID</TD>
       <TD class="style9">ID of map point/polygon was drawn on</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Flags</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mFlags</TD>
+      <TD class="style9">Bit flags: bit 1 on if item was drawn on an FFT</TD>
     </TR>
     <TR VALIGN="top">
       <TD>BklshXY</TD>

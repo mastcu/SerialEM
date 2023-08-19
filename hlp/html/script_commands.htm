@@ -529,6 +529,14 @@
             <b>#M</b> (the minute from 0 to 59), the script will wait until <b>#A</b> minutes after
             midnight or the given time.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">WaitForNewMarkerPoint</TD>
+          <TD>Waits until a new marker point is placed in the currently active image buffer; 
+            and makes &#39;SET NEW MARKER&#39; flash in the status bar.&nbsp; The marker must be 
+            added to the image that is active when the wait is started, although the program 
+            may not be able to enforce this in some cases.&nbsp; Command added in 4.1, 
+            18-Aug-23.</TD>
+        </TR>
          <TR>
           <TD class="scriptcommand">ParseQuotedStrings [#]</TD>
           <TD>Allows strings that may have spaces to be enclosed in <B><i>single quotes</i></B> (e.g.,

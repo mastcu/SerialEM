@@ -4821,6 +4821,12 @@ int CMacCmd::SetProbeMode(void)
 int CMacCmd::Delay(void)
 {
   double delISX;
+  static bool warnedUnits = false;
+  if (mStrItems[2].IsEmpty() && !warnedUnits) {
+    mWinApp->AppendToLog("WARNING: Using \'Delay\' without a units entry is deprecated"
+      " and may be removed in a future version");
+    warnedUnits = true;
+  }
 
   delISX = mItemDbl[1];
   if (!mStrItems[2].CompareNoCase("MSEC"))
@@ -4863,7 +4869,7 @@ int CMacCmd::WaitForMidnight(void)
   delISX = time.GetHour() * 60 + time.GetMinute() + time.GetSecond() / 60.;
   delISY = ix0 * 60 + ix1 - delISX;
 
-  // If wthin the window at all, set up the sleep
+  // If within the window at all, set up the sleep
   if (delISY + delY > 0 && delISY < delX) {
     mSleepTime = 60000. * (delISY + delY);
     mSleepStart = GetTickCount();
@@ -4891,6 +4897,22 @@ int CMacCmd::WaitForDose(void)
   mDoseNextReport = mDoseTarget / (mNumDoseReports * 10);
   mDoseTime = GetTickCount();
   mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR DOSE");
+  return 0;
+}
+
+// WaitForNewMarkerPoint
+int CMacCmd::WaitForNewMarkerPoint()
+{
+  EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
+  if (!imBuf->mImage)
+    ABORT_LINE("The active buffer has no image for line:\n\n");
+  mMarkerTimeStamp = imBuf->mTimeStamp;
+  mStartedWithMarker = imBuf->mHasUserPt;
+  mOldMarkerX = imBuf->mUserPtX;
+  mOldMarkerY = imBuf->mUserPtY;
+  mMarkerImageCapFlag = imBuf->mCaptured;
+  mWaitingForMarker = true;
+  mWinApp->SetStatusText(SIMPLE_PANE, "SET NEW MARKER");
   return 0;
 }
 
