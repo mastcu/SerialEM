@@ -517,9 +517,10 @@
             but can be present as a comment.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Delay # [units]</TD>
-          <TD>Waits for given amount of time. The optional <B>units</B> can be 'msec', 'sec', or
-            'min'. If no units are given, a <B>#</B> &lt;= 60 is taken to be seconds, and a <B>#</B> &gt;
+          <TD class="scriptcommand">Delay # units</TD>
+          <TD>Waits for given amount of time, where <B>units</B> can be 'msec', 'ms', 'sec', 's', or
+            'min'. The units are actually optional but it is bad practice to leave them out.&nbsp; If no 
+            units are given, a <B>#</B> &lt;= 60 is taken to be seconds, and a <B>#</B> &gt;
             60 is taken to be milliseconds</TD>
         </TR>
         <TR>

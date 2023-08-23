@@ -66,7 +66,8 @@
       exceed the minimum ratio of mean to biggest mean that you see in the output.&nbsp;
       Try raising the ratio by 0.02-0.03; repeat if necessary.</P>
       <P><B>Adjust Slit Offset (JEOL with no negative energy shift)</B></P>
-      <P>If the filter allows only positive energy shifts, then several program features
+      <P>This button appears if the filter allows only positive energy shifts, in which 
+        case several program features
         will not work unless the slit is centered with an energy loss sufficiently far
         from zero. These include the procedure for refining the ZLP, the ability to
         apply magnification-dependent changes in the energy shift, and the procedure
@@ -76,7 +77,9 @@
         will be placed into spectroscopy mode with the slit in, allowing you to center
         the slit on the energy-shifted peak. After you make this adjustment, press OK.
         You should then be able to run the Refine ZLP routine to get the ZLP aligned as
-        well as it would be on a post-column filter.</P>
+        well as it would be on a post-column filter.&nbsp; The property 
+        OmegaCanDoNegativeShift defaults to 0 for omega filters and can be set to 1 to 
+        indicate negative shifts are possible.</P>
       <P><B>TEM mode with screen down (Thermo/FEI scope, or JEOL with control of GIF only)</B></P>
       <P>This button determines whether you see an image at normal magnification in TEM
         mode or in

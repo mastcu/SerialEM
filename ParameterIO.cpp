@@ -3849,6 +3849,8 @@ int CParameterIO::ReadProperties(CString strFileName)
         mFilterParam->maxWidth = itemFlt[1];
       else if (MatchNoCase("GIFadjustsForSlitWidth"))
         mFilterParam->adjustForSlitWidth = itemInt[1] == 0;
+      else if (MatchNoCase("OmegaCanDoNegativeShift"))
+        mFilterParam->positiveLossOnly = itemInt[1] > 0 ? 0 : 1;
       else if (MatchNoCase("EnergyShiftCalLowestMag"))
         err = 0;
       else if (MatchNoCase("PrintStartupInfo"))

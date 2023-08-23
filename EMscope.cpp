@@ -244,7 +244,7 @@ CEMscope::CEMscope()
   mFiltParam->minWidth = MINIMUM_SLIT_WIDTH;
   mFiltParam->maxWidth = MAXIMUM_SLIT_WIDTH;
   mFiltParam->adjustForSlitWidth = true;      // Need to adjust on GIF
-  mFiltParam->positiveLossOnly = false;
+  mFiltParam->positiveLossOnly = -1;
   mLowestMModeMagInd = 17;
   mLowestEFTEMNonLMind = -1;
   mLowestSecondaryMag = 0;
@@ -972,7 +972,8 @@ int CEMscope::Initialize()
       mFiltParam->autoMag = false;
       mFiltParam->autoCamera = false;
       mFiltParam->adjustForSlitWidth = false;
-      mFiltParam->positiveLossOnly = true;       // May need to be a property
+      if (mFiltParam->positiveLossOnly < 0)
+        mFiltParam->positiveLossOnly = 1;
     }
 
     if (startErr && startErr >= startCall - 1) {
@@ -996,6 +997,9 @@ int CEMscope::Initialize()
     }
   }
 
+  if (mFiltParam->positiveLossOnly < 0)
+   mFiltParam->positiveLossOnly = 0;
+  
   if (firstTime) {
 
     // Check for KV if warning set up, check for MAG/SAMAG mode unconditionally

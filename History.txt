@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/23/23: Added OmegaCanDoNegativeShift property that can be set to eliminate
+need for setting an energy offset.
+
 8/19/23: Add script command to wait until user has clicked a new marker point.
 
 8/19/23: Kept track if Navigator points are marked on an FFT so items will be
