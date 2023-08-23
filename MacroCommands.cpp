@@ -4823,15 +4823,15 @@ int CMacCmd::Delay(void)
   double delISX;
   static bool warnedUnits = false;
   if (mStrItems[2].IsEmpty() && !warnedUnits) {
-    mWinApp->AppendToLog("WARNING: Using \'Delay\' without a units entry is deprecated"
-      " and may be removed in a future version");
+    mWinApp->AppendToLog("WARNING: Using \'Delay\' without a units entry is not"
+      " recommended and may not be supported in a future version");
     warnedUnits = true;
   }
 
   delISX = mItemDbl[1];
-  if (!mStrItems[2].CompareNoCase("MSEC"))
+  if (!mStrItems[2].CompareNoCase("MSEC") || !mStrItems[2].CompareNoCase("MS"))
     mSleepTime = delISX;
-  else if (!mStrItems[2].CompareNoCase("SEC"))
+  else if (!mStrItems[2].CompareNoCase("SEC")|| !mStrItems[2].CompareNoCase("S"))
     mSleepTime = 1000. * delISX;
   else if (!mStrItems[2].CompareNoCase("MIN"))
     mSleepTime = 60000. * delISX;
