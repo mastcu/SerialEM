@@ -973,7 +973,7 @@ int CEMscope::Initialize()
       mFiltParam->autoCamera = false;
       mFiltParam->adjustForSlitWidth = false;
       if (mFiltParam->positiveLossOnly < 0)
-        mFiltParam->positiveLossOnly = 1;
+        mFiltParam->positiveLossOnly = mJeolHasNitrogenClass > 0 ? 0 : 1;
     }
 
     if (startErr && startErr >= startCall - 1) {
