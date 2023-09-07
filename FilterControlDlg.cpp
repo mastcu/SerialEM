@@ -258,6 +258,8 @@ BOOL CFilterControlDlg::OnInitDialog()
     m_butAutoMag.ShowWindow(SW_HIDE);
     m_butDoMagShifts.SetWindowPos(NULL, leftPos, topPos, 0, 0, 
       SWP_NOZORDER | SWP_NOSIZE);
+
+    // Couldn't figure out why this hiding  doesn't work - repeated it in Update
     m_butMore.ShowWindow(SW_HIDE);
     m_statMore.ShowWindow(SW_HIDE);
     m_butEFTEMMode.ShowWindow(SW_HIDE);
@@ -283,7 +285,7 @@ int CFilterControlDlg::GetMidHeight()
 {
   int height = CToolDlg::GetMidHeight();
   if (mWinApp->mScope->GetHasOmegaFilter())
-    height -= 14;
+    height -= mWinApp->ScaleValueForDPI(14);
   return height;
 }
 
@@ -327,6 +329,10 @@ void CFilterControlDlg::Update()
   m_butMatchIntensity.EnableWindow(bEnable && !mWinApp->LowDoseMode());
   m_butMatchPixel.EnableWindow(bEnable);
   m_butAutoMag.EnableWindow(!bOmega && !bUseTEM);
+  if (mWinApp->mScope->GetHasOmegaFilter()) {
+    m_butMore.ShowWindow(SW_HIDE);
+    m_statMore.ShowWindow(SW_HIDE);
+  }
 }
 
 void CFilterControlDlg::UpdateSettings()
