@@ -611,6 +611,7 @@ public:
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
   GetSetMember(BOOL, ShowLinearForAlpine);
+  GetSetMember(BOOL, UseAPI2ForDE);
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
@@ -1056,6 +1057,7 @@ public:
   int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
   BOOL mRamperWaitForBlank;      // Flag to wait for blank when measuring STEMM flyback
   BOOL mShowLinearForAlpine;     // Show linear mode in setup dialog for Alpine camera
+  BOOL mUseAPI2ForDE;            // Use the API 2 for DE camera connection and all calls
 
 public:
   void SetNonGatanPostActionTime(void);

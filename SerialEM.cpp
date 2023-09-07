@@ -3095,6 +3095,11 @@ bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int 
   return false;
 }
 
+BOOL DLL_IM_EX SEMUseAPI2ForDE()
+{
+  return ((CSerialEMApp *)AfxGetApp())->mCamera->GetUseAPI2ForDE();
+}
+
 // And global function for accessing ThreeChoiceBox through TSMessageBox
 int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
   CString cancelText, UINT type, int setDefault, BOOL terminate, int retval,

@@ -462,6 +462,7 @@ CCameraController::CCameraController()
   mRamperWaitForBlank = false;
   mTakeUnbinnedIfSavingEER = false;
   mShowLinearForAlpine = true;
+  mUseAPI2ForDE = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
