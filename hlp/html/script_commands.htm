@@ -4640,7 +4640,7 @@
             </TD>
         </TR>
       <TR>
-          <TD class="scriptcommand">CombineHolesToMulti #S [#O]</TD>
+          <TD class="scriptcommand">CombineHolesToMulti #S [#O] [#X #Y]</TD>
           <TD>Combines a set of Navigator points marked for acquisition into a subset suitable for
             acquisition of a rectangular array with 'MultipleRecords', using the parameters set in the
             <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A>.
@@ -4649,7 +4649,10 @@
             &nbsp; Set <b>#S</b> to 0 to select points on the currently displayed image, 1 to select points
             within the current polygon, or 2 to select points in the same group as the current point.&nbsp; Set 
             the optional <b>#O</b> to 1 to turn off points outside a polygon in the same groups as the ones combined,
-            or 0 not to, overriding the selection in the dialog.
+            or 0 not to, overriding the selection in the dialog, or -1 to use the dialog setting.&nbsp; To override 
+            the number of holes specified in the dialog, add both <b>#X</b> and <b>#Y</b> with either the number of
+            holes in X and Y in a rectangular pattern, or -3 and -3 for a cross pattern, or -1 and the number of 
+            rings in a hexagonal pattern.
             </TD>
         </TR>
         <TR>
@@ -4932,6 +4935,14 @@
           <TD colspan="2"><A name="acqcontrol"></A><B>Acquisition Control Commands</B></TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportIfNavAcquiring</TD>
+          <TD>Reports 1 if the Navigator is acquiring at items or 0 if not, and sets <i>reportedValue2</i> with value
+            for the state: 0 if not acquiring, 2 if paused, 3 or 4 if a tilt series is running or stopped, 5 or 6
+             if a script before or after a tilt series is running or stopped, 7 or 8 if a script started by the Navigator
+            is running or stopped.&nbsp; Command added in 4.1, 6-Sep-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportNumNavAcquire</TD>
           <TD>Reports the number of Navigator items marked for Acquire and marked for Tilt Series
             as two values; returns each as -1 if Navigator is not open.</TD>
@@ -4956,7 +4967,7 @@
             negative number (as in ReportItemAcquire).&nbsp; The item must have a stored hole pattern.&nbsp; The first
             two elements of the array are the number of positions n1 and n2 in the first and second direction 
             for a rectangular pattern, -3, -3 for a cross (a subset of 3x3), or -1 and the number of rings for a 
-            hexagonal pattern.&nbsp; Following that are pairs of positions indexes, in the order 
+            hexagonal pattern.&nbsp; Following that are pairs of position indexes, in the order 
             in which they would be acquired according to the current settings.  For a rectangular pattern, each
             pair is the index of a position in the first direction and its index in the second direction, numbered
             from 0.&nbsp; The effective index of the center of the pattern is (n1 - 1) / 2., (n2 - 1) / 2.&nbsp; For
@@ -4965,22 +4976,35 @@
             vector.&nbsp; Command added in 4.1, 3-Aug-23.</TR>
         <TR>
           <TD class="scriptcommand">ReportItemAcquire [#]</TD>
-          <TD>Reports the Acquire state of the Navigator item whose index in the table is <b>#</b>,
+          <TD>Reports the Acquire and Tilt Series state of the Navigator item whose index in the table is <b>#</b>,
             numbered from 1; or if <b>#</b> is negative, reports on item that many items from the
             end of the table (i.e., -1 reports on the last item), or if 0 or no <b>#</b> is specified, reports on
-            the current item.&nbsp; No optional assignment to variable.</TD>
+            the current item.&nbsp; Sets <i>reportedValue1</i> if 1 if Acquire is on and (as of 7-Sep-23) sets
+             <i>reportedValue2</i> to 1 if the item is set for a tilt series.&nbsp; No 
+            optional assignment to variable.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetItemAcquire [#I] [#A]</TD>
           <TD>Enables or disables Acquire for a Navigator item: if <b>#A</b> is 0, Acquire is disabled,
             if this parameter is not specified or nonzero, Acquire becomes enabled.&nbsp; The item index
             is specified by <b>#I</b> with a positive or negative number (as in ReportItemAcquire);
-             if 0 or no <b>#I</b> is specified the current item is changed.&nbsp; Acquire may not be turned
+             if 0 or no <b>#I</b> is specified the current item is changed.&nbsp; Acquire may not be turned on
              for an item marked for a tilt series.&nbsp; If this command is used
             from within a running acquisition, the item must not be within the range from the
             current acquisition point to the end of the range being acquired.&nbsp; The end of the range
             is the original end of the Navigator table when acquisition was started, or the
             end of the subset if one is being acquired.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetTiltSeriesAtItem [#I] [#T]</TD>
+          <TD>Enables or disables a tilt series for a Navigator item: if <b>#A</b> is 0, a tilt series is disabled,
+            if this parameter is not specified or nonzero, a tilt series is set up.&nbsp; The item index
+            is specified by <b>#I</b> with a positive or negative number (as in ReportItemAcquire);
+             if 0 or no <b>#I</b> is specified the current item is changed.&nbsp; Sets <i>reportedValue1</i>to 1 if the 
+            item is set for a tilt series and 0 if not; the latter is the value if the user cancels a dialog.&nbsp; A
+             tilt series may not be set up
+             for an item marked for Acquire.&nbsp; If acquisition is running, the same restrictions apply as in
+            'SetItemAcquire'.&nbsp; Command added in 4.1, 6-Sep-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipNavPointsNearEdge #S #E #D [#E] [xvar yvar]</TD>

@@ -27,7 +27,8 @@
 enum {
   ERR_NO_NAV = 1, ERR_NO_IMAGE, ERR_NOT_POLYGON, ERR_NO_GROUP, ERR_NO_CUR_ITEM,
   ERR_TOO_FEW_POINTS, ERR_MEMORY, ERR_CUSTOM_HOLES, ERR_HOLES_NOT_ON, ERR_NOT_DEFINED, 
-  ERR_NO_XFORM, ERR_BAD_UNIT_XFORM, ERR_LAST_ENTRY
+  ERR_NO_XFORM, ERR_BAD_UNIT_XFORM, ERR_TOO_MANY_HOLES, ERR_TOO_MANY_RINGS, 
+  ERR_BAD_GEOMETRY, ERR_LAST_ENTRY
 };
 
 const char *sMessages[] = {"Navigator is not open or item array not accessible",
@@ -40,7 +41,12 @@ const char *sMessages[] = {"Navigator is not open or item array not accessible",
 "The Multiple Record parameters do not have a regular hole geometry defined", 
 "No transformation from image to stage shift is available", 
 "Stage vectors for grid of holes do not correspond well enough to IS vectors for "
-"acquisition positions", ""};
+"acquisition positions", 
+"The number of holes specified to override dialog settings is above the limit",
+"The number of hexagonal rings specified to override dialog settings is above the limit",
+"The values for number of holes specified to override dialog settings are invalid",
+"",
+""};
 
 CMultiHoleCombiner::CMultiHoleCombiner(void)
 {
@@ -67,7 +73,8 @@ const char *CMultiHoleCombiner::GetErrorMessage(int error)
 /*
  * Main call to combine items, picked by the specified boundary type
  */
-int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
+int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inXholes,
+  int inYholes)
 {
   CMapDrawItem *item, *curItem;
   MapItemArray *itemArray;
@@ -77,6 +84,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
   IntVec navInds, altInds, boxAssigns, ixSkip, iySkip;
   ShortVec gridX, gridY;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  MultiShotParams msParamsCopy = *msParams;
   MontParam *montp;
   int *activeList;
   LowDoseParams *ldp;
@@ -112,6 +120,33 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside)
 
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
+  msParams = &msParamsCopy;
+
+  // Process optional setting of # of holes
+  if (inXholes != -9 && inYholes != -9) {
+    if (inXholes > 0 && inYholes > 0) {
+      if (inXholes > MAX_HOLE_SPINNERS || inYholes > MAX_HOLE_SPINNERS)
+        return ERR_TOO_MANY_HOLES;
+      msParams->doHexArray = false;
+      msParams->skipCornersOf3x3 = false;
+      msParams->numHoles[0] = inXholes;
+      msParams->numHoles[1] = inYholes;
+    } else if (inXholes == -3 && inYholes == -3) {
+      msParams->doHexArray = false;
+      msParams->skipCornersOf3x3 = true;
+      msParams->numHoles[0] = 3;
+      msParams->numHoles[1] = 3;
+    } else if (inXholes == -1) {
+      if (inYholes > MAX_HOLE_SPINNERS)
+        return ERR_TOO_MANY_RINGS;
+        msParams->doHexArray = true;
+      msParams->skipCornersOf3x3 = false;
+      msParams->numHexRings = inYholes;
+    } else {
+      return ERR_BAD_GEOMETRY;
+    }
+  }
+
   mDebug = 0;
   mUseImageCoords = false;
   mGroupIDsInPoly.clear();

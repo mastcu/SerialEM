@@ -9998,6 +9998,15 @@ int CMacCmd::ReportNavItem(void)
   return 0;
 }
 
+// ReportIfNavAcquiring
+int CMacCmd::ReportIfNavAcquiring()
+{
+  int acq = (mWinApp->mNavigator && mNavigator->GetAcquiring()) ? 1 : 0;
+  SetRepValsAndVars(1, acq, mWinApp->mCameraMacroTools.GetNavigatorState());
+  mLogRpt.Format("Navigator %s acquiring", acq ? "IS" : "is NOT");
+  return 0;
+}
+
 // ReportItemAcquire
 int CMacCmd::ReportItemAcquire(void)
 {
@@ -10008,17 +10017,20 @@ int CMacCmd::ReportItemAcquire(void)
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
-  mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
+  if (navItem->mTSparamIndex >= 0)
+    mLogRpt.Format("Navigator item %d is set for tilt series", index + 1);
+  else
+    mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
     (navItem->mAcquire == 0) ? "disabled" : "enabled");
-  SetReportedValues(navItem->mAcquire);
+  SetReportedValues(navItem->mAcquire, navItem->mTSparamIndex >= 0 ? 1 : 0);
   return 0;
 }
 
-// SetItemAcquire
+// SetItemAcquire, SetTiltSeriesAtItem
 int CMacCmd::SetItemAcquire(void)
 {
   BOOL truth;
-  int index;
+  int index, err = 0;
   CMapDrawItem *navItem;
 
   index = mItemEmpty[1] ? 0 : mItemInt[1];
@@ -10030,14 +10042,39 @@ int CMacCmd::SetItemAcquire(void)
     ABORT_NOLINE("When the Navigator is acquiring, you cannot set an\n"
       "item to Acquire within the range still being acquired");
   truth = (mItemEmpty[2] || (mItemInt[2] != 0));
-  if (truth && navItem->mTSparamIndex >= 0)
-    ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
-      "line:\n\n")
-  navItem->mAcquire = truth;
+  if (CMD_IS(SETITEMACQUIRE)) {
+    if (truth && navItem->mTSparamIndex >= 0)
+      ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
+        "line:\n\n");
+    mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
+      truth ? "enabled" : "disabled");
+    navItem->mAcquire = truth;
+  } else {
+    if (truth && navItem->mAcquire)
+      ABORT_LINE("You cannot do a tilt series at an item set to Acquire for "
+        "line:\n\n");
+    if (BOOL_EQUIV(truth, navItem->mTSparamIndex < 0)) {
+      if (truth) {
+        err = mNavHelper->NewAcquireFile(index, NAVFILE_TS, NULL);
+        if (err > 0) {
+          AbortMacro();
+          return 1;
+        }
+      } else {
+        mNavHelper->EndAcquireOrNewFile(navItem);
+      }
+      mLogRpt.Format("Tilt series %s for Navigator item %d", B3DCHOICE(truth, 
+        err < 0 ? "canceled by user" : "enabled", "disabled"), index + 1);
+      mNavigator->AddFocusAreaPoint(false);
+      SetReportedValues(err < 0 ? 0 : 1);
+    } else {
+      mLogRpt.Format("Tilt series is already %s for Navigator item %d",
+        truth ? "enabled" : "disabled", index + 1);
+      SetReportedValues(truth ? 1 : 0);
+    }
+  }
   mNavigator->UpdateListString(index);
   mNavigator->Redraw();
-  mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
-    truth ? "enabled" : "disabled");
   mNavigator->SetChanged(true);
   mLoopInOnIdle = !mNavigator->GetAcquiring();
   return 0;
@@ -11338,8 +11375,12 @@ int CMacCmd::CombineHolesToMulti(void)
   int index;
   ABORT_NONAV;
   B3DCLAMP(mItemInt[1], 0, 2);
+  if (!mItemEmpty[3] && mItemEmpty[4])
+    ABORT_LINE("Two optional values are needed to override dialog settings for number of"
+      " holes in line:\n\n");
   index = mNavHelper->mCombineHoles->CombineItems(mItemInt[1],
-    mItemEmpty[2] ? mNavHelper->GetMHCturnOffOutsidePoly() : mItemInt[2] != 0);
+    (mItemEmpty[2] || mItemInt[2] < 0) ? mNavHelper->GetMHCturnOffOutsidePoly() : 
+    mItemInt[2] != 0, mItemEmpty[3] ?-9 : mItemInt[3], mItemEmpty[4] ? -9 : mItemInt[4]);
   if (index)
     ABORT_NOLINE("Error trying to combine hole for multiple Records:\n" +
       CString(mNavHelper->mCombineHoles->GetErrorMessage(index)));

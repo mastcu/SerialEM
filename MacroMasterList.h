@@ -748,6 +748,8 @@ MAC_SAME_NAME_ARG(GetItemHolesToAcquire, 2, 4, REPORTHOLESTOACQUIRE, IS)
 MAC_SAME_NAME_ARG(ReportCameraInserted, 1, 0, REPORTCAMERAINSERTED, I)
 MAC_SAME_FUNC_NOARG(RetractCameras, 0, 0, RetractCamera, RETRACTCAMERAS)
 MAC_SAME_NAME_NOARG(WaitForNewMarkerPoint, 0, 0, WAITFORNEWMARKERPOINT)
+MAC_SAME_NAME_NOARG(ReportIfNavAcquiring, 0, 4, REPORTIFNAVACQUIRING)
+MAC_SAME_FUNC_ARG(SetTiltSeriesAtItem, 1, 0, SetItemAcquire, SETTILTSERIESATITEM, Ii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
