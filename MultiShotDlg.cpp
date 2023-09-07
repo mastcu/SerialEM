@@ -458,7 +458,8 @@ void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int minNum = mActiveParams->numHoles[1] == 1 ? 2 : 1;
   int oldVal = m_bHexGrid ? mActiveParams->numHexRings : mActiveParams->numHoles[0];
-  FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, oldVal, m_strNumXholes, "%d");
+  FormattedSpinnerValue(pNMHDR, pResult, minNum, MAX_HOLE_SPINNERS, oldVal, 
+    m_strNumXholes, "%d");
   if (m_bHexGrid)
     mActiveParams->numHexRings = oldVal;
   else
@@ -471,8 +472,8 @@ void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
 void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int minNum = mActiveParams->numHoles[0] == 1 ? 2 : 1;
-  FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, mActiveParams->numHoles[1], 
-    m_strNumYholes, "by %2d");
+  FormattedSpinnerValue(pNMHDR, pResult, minNum, MAX_HOLE_SPINNERS, 
+    mActiveParams->numHoles[1], m_strNumYholes, "by %2d");
   ManageEnables();
   UpdateAndUseMSparams();
 }

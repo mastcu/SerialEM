@@ -4,6 +4,8 @@
 #include "afxwin.h"
 #include "NavHelper.h"
 
+#define MAX_HOLE_SPINNERS 15
+
 // CMultiShotDlg dialog
 
 class CMultiShotDlg : public CBaseDlg
