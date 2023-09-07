@@ -3,8 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-8/23/23: Added OmegaCanDoNegativeShift property that can be set to eliminate
-need for setting an energy offset.
+9/7/23: Fixed installer copying shrmemframe, broken 7/22/23.
+
+9/7/23: Added optional arguments to set number of holes in the
+CombineHolesToMulti command, and added commands to set an item for tilt series
+and to report if the navigator is acquiring.
+
+9/7/23: Added OmegaCanDoNegativeShift property that can be set to eliminate
+need for setting an energy offset; this is defaulted on if
+JeolHasNitrogenClass is set.
 
 8/19/23: Add script command to wait until user has clicked a new marker point.
 
