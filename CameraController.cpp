@@ -9351,6 +9351,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   float frameTimeForDose, camLen;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
   FilterParams *filtParam = mWinApp->GetFilterParams();
+  float *diffRotations = mWinApp->GetDiffModeRotations();
   DWORD ticks;
   float partialExposure = (float)mExposure;
   short int *parray, *imin, *imout;
@@ -10123,9 +10124,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           extra->mDoseRate);
       if (mParam->STEMcamera)
         extra->mAxisAngle = mParam->imageRotation + mWinApp->GetAddedSTEMrotation();
-      else
-        extra->mAxisAngle = (float)mShiftManager->GetImageRotation(curCam, 
-        mMagBefore);
+      else if (!mMagBefore) {
+        ix = mScope->GetLastCamLenIndex();
+        if (ix >= 0 && ix <= MAX_CAMLENS && diffRotations[ix] > EXTRA_VALUE_TEST)
+          extra->mAxisAngle = diffRotations[ix];
+      } else
+        extra->mAxisAngle = (float)mShiftManager->GetImageRotation(curCam, mMagBefore);
       if (mParam->GIF || mScope->GetHasOmegaFilter()) {
         extra->slitWidth = filtParam->slitIn ? filtParam->slitWidth : 0.f;
         extra->energyLoss = (filtParam->slitIn && !filtParam->zeroLoss) ? 
