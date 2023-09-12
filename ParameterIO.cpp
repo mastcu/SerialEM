@@ -2761,6 +2761,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   int *activeList = mWinApp->GetActiveCameraList();
   int *camLengths = mWinApp->GetCamLenTable();
   float *camLenCal = mWinApp->GetCamLenCalibrated();
+  float *diffRotations = mWinApp->GetDiffModeRotations();
   int *C2apertures = mWinApp->mBeamAssessor->GetC2Apertures();
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
@@ -4085,6 +4086,8 @@ int CParameterIO::ReadProperties(CString strFileName)
          err = 0;
          if (!strItems[2].IsEmpty())
            camLenCal[index] = itemFlt[2];
+         if (!strItems[3].IsEmpty())
+           diffRotations[index] = itemFlt[3];
        }
        if (err > 0) {
          AfxMessageBox("Error reading camera length table, line\n" +

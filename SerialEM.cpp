@@ -572,6 +572,7 @@ CSerialEMApp::CSerialEMApp()
   for (i = 0; i < MAX_CAMLENS; i++) {
     mCamLengths[i] = 0;
     mCamLenCalibrated[i] = 0.;
+    mDiffModeRotations[i] = EXTRA_NO_VALUE;
   }
 
   mIdleArray.SetSize(0,5);

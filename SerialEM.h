@@ -551,6 +551,7 @@ public:
   MagTable *GetMagTable() { return mMagTab; };
   int *GetCamLenTable() { return &mCamLengths[0]; };
   float *GetCamLenCalibrated() { return &mCamLenCalibrated[0]; };
+  float *GetDiffModeRotations() { return &mDiffModeRotations[0]; };
   MacroControl *GetMacControl() { return &mMacControl; };
   int *GetInitialDlgState();
   GetMember(DialogTable *, DialogTable)
@@ -771,6 +772,7 @@ private:
   MagTable mMagTab[MAX_MAGS];
   int mCamLengths[MAX_CAMLENS];
   float mCamLenCalibrated[MAX_CAMLENS];
+  float mDiffModeRotations[MAX_CAMLENS];
   LowDoseParams mLowDoseParams[MAX_LOWDOSE_SETS];
   LowDoseParams mCamLowDoseParams[3][MAX_LOWDOSE_SETS];
   NavParams mNavParams;

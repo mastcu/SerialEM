@@ -3355,7 +3355,7 @@ void CProcessImage::GetDiffractionPixelSize(int camera, float &pixel, float &cam
   camLen = (float)(1000. * mScope->GetLastCameraLength());
   if (camera < 0 || camera >= MAX_CAMERAS)
     return;
-  if (index >= 0 || index <= MAX_CAMLENS) {
+  if (index >= 0 && index <= MAX_CAMLENS) {
     if (camLens[index] > 0.)
       camLen = (float)camLens[index];
     if (camLenCal[index] > 0)

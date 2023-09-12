@@ -1085,14 +1085,17 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW || 
         imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN || 
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER) && !(skipExtra & 1))) &&
-      imBuf->mCamera >= 0 && imBuf->mMagInd > 0) {
+      imBuf->mCamera >= 0 && (imBuf->mMagInd > 0 || 
+      (!imBuf->ImageWasReadIn() && imBuf->GetAxisAngle(tempY)))) {
       tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
       CPoint point = rect.CenterPoint();
-      tempY = 0.;
-      if (imBuf->mMagInd >= mWinApp->mScope->GetLowestMModeMagInd())
-        mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
-      tempY += (float)mShiftManager->GetImageRotation(imBuf->mCamera, 
+      if (imBuf->mMagInd > 0) {
+        tempY = 0.;
+        if (imBuf->mMagInd >= mWinApp->mScope->GetLowestMModeMagInd())
+          mShiftManager->GetScaleAndRotationForFocus(imBuf, ptX, tempY);
+        tempY += (float)mShiftManager->GetImageRotation(imBuf->mCamera,
           imBuf->mMagInd);
+      }
       if (imBuf->mRotAngle)
         tempY += imBuf->mInverted ? -imBuf->mRotAngle : imBuf->mRotAngle;
       ptX = (float)cos(DTOR * tempY) * tempX;
