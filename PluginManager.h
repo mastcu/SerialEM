@@ -1,8 +1,6 @@
 #pragma once
 #include <afxtempl.h>
-#ifdef _WIN64
 #include "DirectElectron\DE.h"
-#endif
 
 // Definitions for camera functions
 typedef double (*PluginFunction)(void);
@@ -158,10 +156,8 @@ typedef bool (*DEgetString)(std::string, std::string *);
 typedef bool (*DEsetMode)(bool);
 typedef void (*DEerrString)(std::string *);
 typedef bool (*DEstartAcquis)(int);
-#ifdef _WIN64
 typedef bool(*DEgetResult)(void *, unsigned int, DE::FrameType,
   DE::PixelFormat *, DE::ImageAttributes *);
-#endif
 
 // DE camera functions
 struct DEPluginFuncs {
@@ -182,9 +178,7 @@ struct DEPluginFuncs {
   CamNoArg getLastErrorCode;
   DEerrString getLastErrorDescription;
   DEstartAcquis StartAcquisition;
-#ifdef _WIN64
   DEgetResult GetResult;
-#endif
 };
 
 typedef int(*RunScriptLang)(const char *);

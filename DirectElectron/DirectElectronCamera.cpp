@@ -28,10 +28,7 @@
 #include "../SerialEM.h"
 
 #include "DirectElectronCamera.h"
-#ifdef _WIN64
 #include "DE.h"
-using namespace DE;
-#endif
 #include "DeInterface.Win32.h"
 
 using namespace std;
@@ -1007,7 +1004,6 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         mDateInPrevSetName = 0;
         return 1;
       }
-#ifdef _WIN64
       if (!api2Reference) {
         DE::ImageAttributes attributes;
         DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
@@ -1015,7 +1011,6 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
           mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
           DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
       }
-#endif
     } else {
       imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
     }
@@ -1151,14 +1146,12 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     // Get image
     double start = GetTickCount();
     if (sUsingAPI2) {
-#ifdef _WIN64
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
       imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
         td->electronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
         DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
       needStart = imageOK && attributes.acqIndex == numAcquis - 1;
-#endif
     } else {
       imageOK = td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2);
     }
