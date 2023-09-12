@@ -28,6 +28,10 @@
 #include "../SerialEM.h"
 
 #include "DirectElectronCamera.h"
+#ifdef _WIN64
+#include "DE.h"
+using namespace DE;
+#endif
 #include "DeInterface.Win32.h"
 
 using namespace std;
@@ -91,6 +95,8 @@ static DirectElectronCamPanel *DE_panel = NULL;
 static HANDLE sLiveMutex = NULL;
 #define LIVE_MUTEX_WAIT 2000
 static void CleanupLiveMode(LiveThreadData *td);
+static BOOL sUsingAPI2;                      // Flag to use API2
+
 
 ///////////////////////////////////////////////////////////////////
 // Constructor of the spectral camera controlling class.
@@ -105,6 +111,7 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   mCurCamIndex = -1;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mCamParams = mWinApp->GetCamParams();
+  sUsingAPI2 = SEMUseAPI2ForDE();
 
   // This will need to be false if the server can ever be connected to from multiple 
   // sources or can restart without our knowledge, and it should be false if server delays
@@ -186,7 +193,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastElectronCounting = -1;
   mLastSuperResolution = -1;
   mLastFPS = -1.;
-  mLastLiveMode = -1;
+  mLastLiveMode = sUsingAPI2 ? 0 : -1;
   mLastServerAlign = -1;
   mLastUseHardwareBin = -1;
   mLastUseHardwareROI = -1;
@@ -842,7 +849,9 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
   CString valStr;
   int actualSizeX, actualSizeY;
   double startTime = GetTickCount();
-  bool api2Reference = mServerVersion >= DE_HAS_API2 && mRepeatForServerRef > 0;
+  bool api2Reference = mServerVersion >= DE_HAS_API2 && mRepeatForServerRef > 0 &&
+    sUsingAPI2;
+  bool imageOK;
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
     m_STOPPING_ACQUISITION = false;
@@ -868,6 +877,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         mLiveTD.inSizeX = inSizeX;
         mLiveTD.inSizeY = inSizeY;
         mLiveTD.quitLiveMode = false;
+        mLiveTD.electronCounting = mLastElectronCounting;
         mLiveTD.returnedImage[0] =  mLiveTD.returnedImage[1] = false;
         NewArray2(mLiveTD.buffers[0], unsigned short, imageSizeX, imageSizeY);
         NewArray2(mLiveTD.buffers[1], unsigned short, imageSizeX, imageSizeY);
@@ -979,7 +989,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
          return 1;
 
     unsigned short *useBuf = image4k;
-    if (operation /*&& !api2Reference*/) {
+    if (operation && !api2Reference) {
       NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
       if (!useBuf) {
         SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
@@ -990,14 +1000,26 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
     SEMTrace('D', "About to get image from DE server now that all properties are set.");
 
     // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
-    /*if (api2Reference) {
-      if (mDeServer->StartAcquisition(mNumLeftServerRef)) {
-        mLastErrorString = ErrorTrace("ERROR: Could not start reference acquisitions");
+    if (sUsingAPI2) {
+      if (!mDeServer->StartAcquisition(api2Reference ? mNumLeftServerRef : 1)) {
+        mLastErrorString = ErrorTrace("ERROR: Could not start %s acquisition", 
+          api2Reference ? "reference" : "image");
         mDateInPrevSetName = 0;
         return 1;
       }
-    } else*/
-    if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2)) {
+#ifdef _WIN64
+      if (!api2Reference) {
+        DE::ImageAttributes attributes;
+        DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
+        imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
+          mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
+          DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
+      }
+#endif
+    } else {
+      imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
+    }
+    if (!api2Reference && !imageOK) {
       mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
       if (operation)
         delete useBuf;
@@ -1009,7 +1031,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
 
     // Try to read back the actual image size from these READ-ONLY properties and if it 
     // is different, truncate the Y size if necessary and set the return size from actual
-    if (/*!api2Reference &&*/ mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
+    if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
       mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
       (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
       if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
@@ -1050,10 +1072,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         return 1;
       }
     }
-    /*if (api2Reference) {
+    if (api2Reference) {
       memset(useBuf, 0, imageSizeX * imageSizeY * 2);
       return 0;
-    }*/
+    }
 
     // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
     if (operation) {
@@ -1110,9 +1132,16 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
 {
   LiveThreadData *td = (LiveThreadData *)pParam;
   int newInd, outX, outY, retval = 0;
+  int numAcquis = 1000;
   unsigned short *useBuf, *image4k;
+  BOOL needStart = sUsingAPI2, imageOK;
 
   while (!td->quitLiveMode) {
+
+    if (needStart && !td->DeServer->StartAcquisition(numAcquis)) {
+      retval = 1;
+      break;
+    }
 
     // Get the new index and buffer to place data into
     newInd = B3DCHOICE(td->outBufInd < 0, 0, 1 - td->outBufInd);
@@ -1121,7 +1150,19 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     
     // Get image
     double start = GetTickCount();
-    if (!td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2)) {
+    if (sUsingAPI2) {
+#ifdef _WIN64
+      DE::ImageAttributes attributes;
+      DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
+      imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
+        td->electronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
+        DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
+      needStart = imageOK && attributes.acqIndex == numAcquis - 1;
+#endif
+    } else {
+      imageOK = td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2);
+    }
+    if (!imageOK) {
       retval = 1;
       break;
     }
@@ -1157,7 +1198,10 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
 // Common place to turn off live mode and clear out the thread data
 static void CleanupLiveMode(LiveThreadData *td)
 {
-  td->DeServer->setLiveMode(false);
+  if (sUsingAPI2)
+    td->DeServer->abortAcquisition();
+  else
+    td->DeServer->setLiveMode(false);
   td->outBufInd = -2;
   for (int outX = 0; outX < 2; outX++) {
     delete td->buffers[0];
@@ -1493,7 +1537,8 @@ int DirectElectronCamera::SetLiveMode(int mode)
     mode = 1;
 
   if (slock.Lock(1000)) {
-    if ((mLastLiveMode < 0 || !mTrustLastSettings) && mDeServer->getIsInLiveMode)
+    if (!sUsingAPI2 && (mLastLiveMode < 0 || !mTrustLastSettings) && 
+      mDeServer->getIsInLiveMode)
       mLastLiveMode = mDeServer->getIsInLiveMode() ? 1 : 0;
     if (mode != mLastLiveMode) {
       if (mLastLiveMode > 1) {
@@ -1521,11 +1566,13 @@ int DirectElectronCamera::SetLiveMode(int mode)
       }
 
       // Set the new mode.
-      if (!mDeServer->setLiveMode(mode > 0)) {
-        mLastErrorString = ErrorTrace("ERROR: Could NOT set the live mode %s.", 
-          mode ? "ON" : "OFF");
-        return 1;
-      } 
+      if (!sUsingAPI2) {
+        if (!mDeServer->setLiveMode(mode > 0)) {
+          mLastErrorString = ErrorTrace("ERROR: Could NOT set the live mode %s.",
+            mode ? "ON" : "OFF");
+          return 1;
+        }
+      }
       SEMTrace('D', "Live mode turned %s (%d)", mode ? "ON" : "OFF", mode);
       mLastLiveMode = mode;
       mWinApp->mDEToolDlg.Update();

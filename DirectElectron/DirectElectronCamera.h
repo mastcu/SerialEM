@@ -38,6 +38,7 @@ struct LiveThreadData {
   int operation;
   int divideBy2;
   bool quitLiveMode;
+  int electronCounting;
 };
 
 

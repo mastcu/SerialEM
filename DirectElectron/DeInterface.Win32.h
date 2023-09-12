@@ -33,6 +33,8 @@ const char* g_Property_DE_ExposureTime = "Exposure Time (seconds)";
 const char* g_Property_DE_BinningX = "Binning X";
 const char* g_Property_DE_BinningY = "Binning Y";
 
+#ifndef DE_H
+
 // forward declaration of proxy
 class DEProtoProxy;
 class DEError;
@@ -83,5 +85,5 @@ private:
 	DEProtoProxy *proxy;
 	bool connected;
 };
-
+#endif  // not DE_H
 #endif // DEINTERFACE_WIN32_H
