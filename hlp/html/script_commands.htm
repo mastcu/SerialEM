@@ -2683,7 +2683,7 @@
           <TD>Stops tilting started by BackgroundTilt by issuing a new call to tilt at normal speed, at the 
             current angle or the current angle plus the optional <b>#</b>.&nbsp; This command works on JEOL scopes
              and has been seen to work on Thermo/FEI scopes with 7.x servers, but not with 6.x servers or 
-            earlier&nbsp; Command added in 4.1, 10-Apr-23.</TD>
+            earlier.&nbsp; Command added in 4.1, 10-Apr-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportTiltAngle</TD>
@@ -2707,11 +2707,22 @@
           <TD class="scriptcommand">MoveStageWithSpeed #X #Y #S</TD>
           <TD>Moves the stage by micron increments in X and/or Y with a speed factor <b>#S</b>.&nbsp; On Thermo/FEI scopes,
              this may work only with one axis set to 0 using standard scripting, but should work for moving both
-            axes when going through the Tommoniker interface.&nbsp; If the command
+            axes when going through the Tommoniker interface (although with that, it may move one axis then the other).&nbsp; If the command
               crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a> On 
             Hitachi scopes, the speed factor is relative to the stage speed that can be set with the property 
             HitachiStageSpeed; with the default value of 80000, the factor can range from 0.0025 to 2.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">BackgroundMoveStage #X #Y [#S]</TD>
+          <TD>Like 'BackgroundTilt', starts moving the stage in the background to <b>X</b>, <b>Y</b> with 
+            optional speed factor <b>S</b>&nbsp; The limitations described for 'MoveStageWithSpeed' apply.&nbsp; Command added in 4.1, 12-Sep-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StopBackgroundStage [#X #Y]</TD>
+          <TD>May stop the stage move started with 'BackgroundMoveStage' by issuing another call to
+             move the stage with normal speed to the current position, or that position plus the optional increments
+            <b>X</b> and <<B>Y></B>.&nbsp; It probably will not work for any Thermo/FEI scopes.&nbsp; Command added in 4.1, 12-Sep-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportStageXYZ</TD>

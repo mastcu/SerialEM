@@ -3015,14 +3015,18 @@
         <TR VALIGN="top">
           <TD>CameraLengthTable</TD>
           <TD>A table of camera lengths, needed on the JEOL to recognize diffraction mode
-            and on Hitachi to manipulate camera length in diffraction mode.
+            and on Hitachi to manipulate camera length in diffraction mode.  Entries can be added to
+            the table for calibrated camera lengths or tilt axis rotation angles.
             The line with this entry must contain the number of table entries to follow,
             then there must be that many lines following. The form of each line is:
             <BR>
             &nbsp;&nbsp;&nbsp; Index&nbsp;&nbsp;&nbsp; Camera length in mm<BR>
             Any line can also have an optional calibrated camera length after the nominal one, which
              will be used to set the pixel spacing in an image file
-            header and in an associated .mdoc file for images taken at that camera length.
+            header and in an associated .mdoc file for images taken at that camera length.  After the calibrated
+            camera length, or 0 if one is not available, a tilt axis rotation angle can be added, following the
+            same convention as for RotationAndPixel lines (rotation of tilt axis from the image X axis, 
+            counterclockwise positive).
             This table is obtained on a JEOL by selecting List Mags in the Calibration menu and
             appears after the magnification table. On Hitachi, it must be constructed by
             hand, listing each length found in HC mode.&nbsp; A table can also be added on a Thermo/FEI
