@@ -9561,8 +9561,8 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
   CString descrip;
-  int retval = 0, longOp, ind, error, dummy;
-  bool fillTransfer, loadCart;
+  int retval = 0, longOp, ind, error, idAtZero = -1;
+  bool fillTransfer, loadCart, valid;
   double startTime;
   const char *name;
   int slot, station, rotation, cartType;
@@ -9601,8 +9601,18 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
           if (JEOLscope) {
-            name = lod->plugFuncs->GetCartridgeInfo(0, &jcData.id, &station, &slot, 
-              &dummy, &dummy);
+            name = lod->plugFuncs->GetCartridgeInfo(0, &idAtZero, &station, &slot,
+              &rotation, &cartType);
+            if (idAtZero > 0) {
+              jcData.id = idAtZero;
+              valid = jcData.name && jcData.name[0] != 0x00;
+              jcData.name = valid ? name : "";
+              jcData.slot = valid ? slot : 0;
+              jcData.station = valid ? station: 0;
+              jcData.rotation = valid ? rotation : 0;
+              jcData.type = valid ? cartType : 0;
+              lod->cartInfo->Add(jcData);
+            }
 
             // For JEOL, get as much info as possible;
             lod->cartInfo->RemoveAll();
@@ -9616,7 +9626,10 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
                   jcData.rotation = rotation;
                   jcData.type = cartType;
                   jcData.name = name;
-                  lod->cartInfo->Add(jcData);
+                  if (jcData.id == idAtZero)
+                    lod->cartInfo->SetAt(0, jcData);
+                  else
+                    lod->cartInfo->Add(jcData);
                 }
               }
               catch (_com_error E) {
