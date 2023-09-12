@@ -1946,7 +1946,7 @@ int EMmontageController::DoNextPiece(int param)
         mMoveInfo.backY *= -1.;
       }
 
-      mScope->MoveStage(mMoveInfo, mNeedBacklash);
+      mScope->MoveStage(mMoveInfo, mNeedBacklash, precooking && mMoveInfo.speed > 0.);
       if (invertBacklash) {
         mMoveInfo.backX *= -1.;
         mMoveInfo.backY *= -1.;
@@ -1994,8 +1994,7 @@ int EMmontageController::DoNextPiece(int param)
           if (mNumStageErrors < 3) {
             mMovingStage = true;
             mAction = MOVE_STAGE;
-            mScope->MoveStage(mMoveInfo, mNeedBacklash, 
-              precooking && mMoveInfo.speed > 0.);
+            mScope->MoveStage(mMoveInfo, mNeedBacklash);
             mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
             return 0;
           }
