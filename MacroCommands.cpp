@@ -5978,34 +5978,49 @@ int CMacCmd::RelaxStage(void)
   return 0;
 }
 
-// BackgroundTilt, StopBackgroundTilt
+// BackgroundTilt, StopBackgroundTilt, BackgroundMoveStage, StopBackgroundStage
 int CMacCmd::BackgroundTilt(void)
 {
-  double delX;
   StageMoveInfo smi;
-  int background = 1;
-  if (CMD_IS(STOPBACKGROUNDTILT)) {
+  int background = 1, speedInd = 2;
+  double stageX, stageY, stageZ;
+  bool stopStage = CMD_IS(STOPBACKGROUNDSTAGE);
+  if (CMD_IS(STOPBACKGROUNDTILT) || stopStage) {
     if (!mScope->StageBusy())
       return 0;
     background = -1;
     if (mItemEmpty[1])
       mItemDbl[1] = 0.;
-    mItemDbl[1] += mScope->GetTiltAngle();
+    if (mItemEmpty[2])
+      mItemDbl[2] = 0.;
+    if (stopStage) {
+      mScope->GetStagePosition(stageX, stageY, stageZ);
+      mItemDbl[1] += stageX;
+      mItemDbl[2] += stageY;
+    } else {
+      mItemDbl[1] += mScope->GetTiltAngle();
+    }
   }
 
   if (background > 0 && mScope->StageBusy() > 0)
     mLastIndex = mCurrentIndex;
   else {
-    smi.alpha = mItemDbl[1];
-    delX = 1.;
+    if (CMD_IS(BACKGROUNDMOVESTAGE) || stopStage) {
+      smi.x = mItemDbl[1];
+      smi.y = mItemDbl[2];
+      speedInd = 3;
+      smi.axisBits = axisXY;
+    } else {
+      smi.alpha = mItemDbl[1];
+      smi.axisBits = axisA;
+    }
     smi.useSpeed = false;
-    if (!mItemEmpty[2]) {
-      smi.speed = mItemDbl[2];
+    if (!mItemEmpty[speedInd]) {
+      smi.speed = mItemDbl[speedInd];
       if (smi.speed <= 0.)
         ABORT_LINE("Speed entry must be positive in line:/n/n");
       smi.useSpeed = true;
     }
-    smi.axisBits = axisA;
     if (!mScope->MoveStage(smi, false, smi.useSpeed, background)) {
       AbortMacro();
       return 1;

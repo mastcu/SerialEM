@@ -750,6 +750,8 @@ MAC_SAME_FUNC_NOARG(RetractCameras, 0, 0, RetractCamera, RETRACTCAMERAS)
 MAC_SAME_NAME_NOARG(WaitForNewMarkerPoint, 0, 0, WAITFORNEWMARKERPOINT)
 MAC_SAME_NAME_NOARG(ReportIfNavAcquiring, 0, 4, REPORTIFNAVACQUIRING)
 MAC_SAME_FUNC_ARG(SetTiltSeriesAtItem, 1, 0, SetItemAcquire, SETTILTSERIESATITEM, Ii)
+MAC_SAME_FUNC_ARG(BackgroundMoveStage, 2, 1, BackgroundTilt, BACKGROUNDMOVESTAGE, DDd)
+MAC_SAME_FUNC_ARG(StopBackgroundStage, 0, 1, BackgroundTilt, STOPBACKGROUNDSTAGE, dd)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
