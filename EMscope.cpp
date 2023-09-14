@@ -6293,8 +6293,10 @@ int CEMscope::FastAlpha(void)
 BOOL CEMscope::SetAlpha(int inIndex)
 {
   BOOL result = true;
-  if (!sInitialized || mHasNoAlpha)
+  if (!sInitialized || mHasNoAlpha) {
+    inIndex = -999;
     return false;
+  }
 
   return RunSynchronousThread(SYNCHRO_DO_ALPHA, inIndex, 0, NULL);
 }
