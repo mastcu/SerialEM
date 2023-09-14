@@ -1889,6 +1889,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString strLine, prefix, argName, strItem[MAX_MACRO_TOKENS];
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
+  mParamIO = mWinApp->mParamIO;
   int scriptLang = 0;
   int currentIndex = 0, lastIndex = 0;
   if ((macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS) ||
