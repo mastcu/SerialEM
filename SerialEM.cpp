@@ -1623,6 +1623,11 @@ BOOL CSerialEMApp::InitInstance()
     }
 #endif // _WIN64
   }
+  message = mParamIO->GetPropsWithComments();
+  if (!message.IsEmpty())
+    AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
+      "have comments after a string entry; if so, the comments MUST be removed:" + 
+      message);
 
   mExternalTools->AddMenuItems();
   mMainFrame->RemoveHiddenItemsFromMenus();

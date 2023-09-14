@@ -41,6 +41,7 @@ public:
   int ReadAndParse(CString &strLine, CString *strItems, int maxItems, bool useQuotes = false);
   void CheckForSpecialChars(CString &strLine);
   CString *GetDupMessage(void) {return &mDupMessage;};
+  GetMember(CString, PropsWithComments);
   CParameterIO();
   virtual ~CParameterIO();
 
@@ -60,6 +61,9 @@ private:
   FilterParams *mFilterParam;
   CString mDupMessage;
   int mMaxReadInMacros;
+  CString mPropsWithComments;
+  bool mCheckForComments;
+
 public:
   void StripItems(CString strLine, int numItems, CString & strCopy, bool keepIndent = false, 
     int allowComment = 0);

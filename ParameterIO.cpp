@@ -103,6 +103,7 @@ CParameterIO::CParameterIO()
   mFilterParam = mWinApp->GetFilterParams();
   mNumLDSets = 5;
   mMaxReadInMacros = 20;
+  mCheckForComments = false;
 }
 
 CParameterIO::~CParameterIO()
@@ -2822,8 +2823,8 @@ int CParameterIO::ReadProperties(CString strFileName)
   std::string tmpnv[] = {"endcameraproperties"};
   std::set<std::string> noValOKprops(tmpnv, tmpnv + sizeof(tmpnv) / sizeof(tmpnv[0]));
   memset(&camEntered[0], 0, MAX_CAMERAS * sizeof(int));
+  mCheckForComments = true;
 
-  
 #define INT_PROP_TEST(a, b) \
   else if (strItems[0].CompareNoCase(a) == 0) \
     camP->b = itemInt[1];
@@ -2884,6 +2885,10 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (startCcomment) {
         while (strLine.Find("*/") < 0 && 
           (err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {}
+        if (err)
+          AfxMessageBox(CString(err < 0 ? "End of file was reached" :
+            "A read error occurred") + " looking for */ (the end of a C-style comment) in"
+            " SerialEMproperties.txt", MB_EXCLAME);
 
       } else if (MatchNoCase("CameraProperties")) {
         int iset = itemInt[1];
@@ -4178,6 +4183,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       "(only the last entry has any effect):\r\n" + mDupMessage;
     AfxMessageBox(mDupMessage, MB_EXCLAME);
   }
+  mCheckForComments = true;
 
   // Put the lowest M mode mag on the boundary list once whether it is default or entered
   mWinApp->mScope->AddShiftBoundary(mWinApp->mScope->GetLowestMModeMagInd());
@@ -5974,6 +5980,8 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
   else if (strCopy.GetLength() > 0 && strCopy.GetAt(0) == ' ')
     strCopy = strCopy.Mid(1);
   strCopy.TrimRight(" \t\r\n");
+  if (mCheckForComments && strCopy.Find(" #") >= 0)
+    mPropsWithComments += "\r\n" + strLine;
 }
 
 // Check that the file starts with the given tag.  Check for UTF-8 and remove that for
