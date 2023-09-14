@@ -205,6 +205,7 @@ public:
   double mViewShiftX[2], mViewShiftY[2];
   afx_msg void OnSetViewShift();
   afx_msg void OnZeroViewShift();
+  void AdjustAddedBSforViewShiftChange(double delVSX, double delVSY);
   int OKtoSetViewShift();
   void EnableSetViewShiftIfOK(void);
   CStatic m_statDegrees;

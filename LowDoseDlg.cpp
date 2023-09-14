@@ -924,6 +924,7 @@ void CLowDoseDlg::OnSetViewShift()
 {
   float shiftX, shiftY;
   double delX, delY, ISX, ISY;
+  double vsXstart = mViewShiftX[m_iOffsetShown], vsYstart = mViewShiftY[m_iOffsetShown];
   int mag, magv, shiftType, topInd = 0;
   CString mess, refText = mModeNames[RECORD_CONSET], areaText = mModeNames[VIEW_CONSET];
   char *bufferText[3] = {"buffer A", "buffer B", "buffer A and buffer B"};
@@ -1039,6 +1040,8 @@ void CLowDoseDlg::OnSetViewShift()
   // revise the actual IS of the view area appropriately
   ConvertAxisPosition(false);
   ConvertAxisPosition(true);
+  AdjustAddedBSforViewShiftChange(mViewShiftX[m_iOffsetShown] - vsXstart,
+    mViewShiftY[m_iOffsetShown] - vsYstart);
   Update();
   if (shiftType > 0) {
     if (mImBufs->mStageShiftedByMouse) {
@@ -1067,10 +1070,24 @@ void CLowDoseDlg::OnSetViewShift()
 void CLowDoseDlg::OnZeroViewShift()
 {
   mWinApp->RestoreViewFocus();  
+  AdjustAddedBSforViewShiftChange(-mViewShiftX[m_iOffsetShown],
+    -mViewShiftY[m_iOffsetShown]);
   mViewShiftX[m_iOffsetShown] = mViewShiftY[m_iOffsetShown] = 0.;
   ConvertAxisPosition(false);
   ConvertAxisPosition(true);
   Update();
+}
+
+// When the shift offset changes for an area, the beam shift corresponding to the change
+// in image shift needs to be added to the additional beam shifts for non-FEI
+void CLowDoseDlg::AdjustAddedBSforViewShiftChange(double delVSX, double delVSY)
+{
+  if (FEIscope)
+    return;
+  int area = m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET;
+  LowDoseParams *ldp = &mLDParams[area];
+  ScaleMat IS2BS = mShiftManager->GetBeamShiftCal(ldp->magIndex, (int)ldp->beamAlpha);
+  mShiftManager->ApplyScaleMatrix(IS2BS, delVSX, delVSY, ldp->beamDelX, ldp->beamDelY, true);
 }
 
 // Test if it is OK to set shift and return complicated set of values
