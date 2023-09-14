@@ -259,7 +259,7 @@ bool EMimageBuffer::GetSpotSize(int &spot)
 	if (!mImage)
     return false;
 	EMimageExtra *extra = mImage->GetUserData();
-	if (!extra || extra->mSpotSize == EXTRA_NO_VALUE)
+	if (!extra || extra->mSpotSize == 0)
     return false;
   spot = extra->mSpotSize;
   return true;
@@ -289,6 +289,16 @@ bool EMimageBuffer::GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *cent
   if (centered)
     *centered = extra->mCenteredCrop;
   return true;
+}
+
+bool EMimageBuffer::GetTimeStamp(int &timeStamp)
+{
+  if (!mImage)
+    return false;
+  EMimageExtra *extra = mImage->GetUserData();
+  if (!extra || !extra->mSecondTimeStamp)
+    return false;
+  timeStamp = extra->mSecondTimeStamp;
 }
 
 bool EMimageBuffer::IsProcessedOKforMap()

@@ -1086,7 +1086,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN || 
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER) && !(skipExtra & 1))) &&
       imBuf->mCamera >= 0 && (imBuf->mMagInd > 0 || 
-      (!imBuf->ImageWasReadIn() && imBuf->GetAxisAngle(tempY)))) {
+      (imBuf->GetTimeStamp(ix) && imBuf->GetAxisAngle(tempY) && ix > 116846126))) {
       tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
       CPoint point = rect.CenterPoint();
       if (imBuf->mMagInd > 0) {

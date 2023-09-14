@@ -108,6 +108,7 @@ public:
   bool GetSpotSize(int &spot);
   bool GetIntensity(double & intensity);
   bool GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *centered = NULL);
+  bool GetTimeStamp(int &timeStamp);
   bool IsProcessedOKforMap();
   CString BinningText(void);
 };
