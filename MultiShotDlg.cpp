@@ -514,6 +514,7 @@ void CMultiShotDlg::OnButStepAdjust()
       return;
   }
   mSteppingAdjusting = custom ? 2 : 1;
+  UpdateAndUseMSparams(false);
   mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
   StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
     "Adjust shift at first corner of pattern");

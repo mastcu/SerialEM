@@ -89,6 +89,7 @@ BOOL CStepAdjustISDlg::OnInitDialog()
 
 void CStepAdjustISDlg::OnOK()
 {
+  UpdateData(true);
   mParam->stepAdjDefOffset = mDefocusOffset;
   mParam->stepAdjOtherMag = mOtherMagInd;
   mParam->stepAdjLDarea = m_iAreaToUse;
