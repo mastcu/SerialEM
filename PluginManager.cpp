@@ -270,7 +270,6 @@ int CPluginManager::LoadPlugins(void)
           i = 0;
           DECAM_PROC(DEconnect, connectDE);
           DECAM_PROC(DEnoArg, close);
-          DECAM_PROC(DEnoArg, isConnected);
           DECAM_PROC(DEtwoChar, setProperty);
           DECAM_PROC(DEoneChar, setCameraName);
           DECAM_PROC(DEgetImage, getImage);

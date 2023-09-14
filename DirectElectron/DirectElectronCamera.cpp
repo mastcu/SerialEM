@@ -389,13 +389,15 @@ int DirectElectronCamera::initDEServer()
   SEMTrace('D', "Supposed readPort %d, write port: %d and de server: %s", mDE_READPORT, 
     mDE_WRITEPORT, mDE_SERVER_IP);
 
-  if (mDE_READPORT <= 0 || mDE_WRITEPORT <= 0 || mDE_SERVER_IP == "") {
+  if ((!sUsingAPI2 && (mDE_READPORT <= 0 || mDE_WRITEPORT <= 0)) || mDE_SERVER_IP == "") {
     AfxMessageBox("You did not properly setup the DE Server Properties!!!");
     SEMTrace('D', "ERROR: You did not properly setup the DE server properties, double "
       "check SerialEMProperties.txt");
     m_DE_CONNECTED = false;
     return -1;
   }
+  if (sUsingAPI2 && mDE_SERVER_IP == "127.0.0.1")
+    mDE_SERVER_IP = "localhost";
 
   if (mDeServer->connectDE((LPCTSTR)mDE_SERVER_IP, mDE_READPORT, mDE_WRITEPORT)) {
     SEMTrace('D', "Successfully connected to the DE Server.");
@@ -846,8 +848,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
   CString valStr;
   int actualSizeX, actualSizeY;
   double startTime = GetTickCount();
-  bool api2Reference = mServerVersion >= DE_HAS_API2 && mRepeatForServerRef > 0 &&
-    sUsingAPI2;
+  bool api2Reference = mServerVersion >= DE_HAS_API2 && mRepeatForServerRef > 0;
   bool imageOK;
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
@@ -994,7 +995,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       }
     }
 
-    SEMTrace('D', "About to get image from DE server now that all properties are set.");
+    SEMTrace('D', "Getting image from DE server now that all preconditions are set.");
 
     // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
     if (sUsingAPI2) {
@@ -1006,9 +1007,9 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       }
       if (!api2Reference) {
         DE::ImageAttributes attributes;
-        DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
+        DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
         imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
-          mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
+         mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
           DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
       }
     } else {
@@ -1291,15 +1292,15 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   CSingleLock slock(&m_mutex);
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
-  if (slock.Lock(1000)) {
-    if ((readMode == LINEAR_MODE && mLastElectronCounting != 0) || 
+  if (!IsApolloCamera() && slock.Lock(1000)) {
+    if ((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
       (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) {
         if (!setStringWithError(DE_PROP_COUNTING, readMode > 0 ? psEnable : psDisable))
           return 1;
         mLastElectronCounting = readMode > 0 ? 1 : 0;
     }
-    if (!IsApolloCamera() && ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
-      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings)) {
+    if ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
+      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) {
         if (!setStringWithError(DE_PROP_COUNTING" - Super Resolution", 
           superRes ? psEnable : psDisable))
             return 1;
@@ -1727,7 +1728,8 @@ float DirectElectronCamera::getWaterLineTemp()
   float temp = 0.;
   CString str;
 
-  if (!mDeServer->getFloatProperty("Temperature - Water Line (Celsius)", &temp)) {
+  if ( mServerVersion < 205000000 && 
+    !mDeServer->getFloatProperty("Temperature - Water Line (Celsius)", &temp)) {
 
     str.Format("Could NOT get the Water Line Temperature.");
     //AfxMessageBox(str);

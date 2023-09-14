@@ -163,7 +163,6 @@ typedef bool(*DEgetResult)(void *, unsigned int, DE::FrameType,
 struct DEPluginFuncs {
   DEconnect connectDE;
   DEnoArg close;
-  DEnoArg isConnected;
   DEtwoChar setProperty;
   DEoneChar setCameraName;
   DEgetImage getImage;
