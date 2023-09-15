@@ -9603,6 +9603,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
           if (JEOLscope) {
+            lod->cartInfo->RemoveAll();
             name = lod->plugFuncs->GetCartridgeInfo(0, &idAtZero, &station, &slot,
               &rotation, &cartType);
             if (idAtZero > 0) {
@@ -9617,7 +9618,6 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             }
 
             // For JEOL, get as much info as possible;
-            lod->cartInfo->RemoveAll();
             for (ind = 1; ind <= lod->maxLoaderSlots; ind++) {
               try {
                 name = mPlugFuncs->GetCartridgeInfo(ind, &jcData.id, &station, &slot,

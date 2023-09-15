@@ -299,6 +299,7 @@ bool EMimageBuffer::GetTimeStamp(int &timeStamp)
   if (!extra || !extra->mSecondTimeStamp)
     return false;
   timeStamp = extra->mSecondTimeStamp;
+  return true;
 }
 
 bool EMimageBuffer::IsProcessedOKforMap()
