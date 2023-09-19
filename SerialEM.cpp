@@ -487,6 +487,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.skipRecReblanks = false;
   mMontParam.wasFitToPolygon = false;
   mMontParam.focusBlockSize = 3;
+  mMontParam.maxBlockImShiftNonLM = mMontParam.maxBlockImShiftLM = 0.;
   mMontParam.focusInBlocks = false;
   mMontParam.imShiftInBlocks = false;
   mMontParam.hqDelayTime = 5.f;
@@ -1148,6 +1149,11 @@ BOOL CSerialEMApp::InitInstance()
     mActiveCamListSize = iSet;
   }
 
+  if (!mMontParam.maxBlockImShiftNonLM) {
+    mMontParam.maxBlockImShiftNonLM = mNavParams.maxMontageIS;
+    mMontParam.maxBlockImShiftLM = mNavParams.maxLMMontageIS;
+  }
+
   // Find out if STEM interface is to be started and check K2 scaling
   iSet = 0;
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
@@ -1726,9 +1732,10 @@ int CSerialEMApp::GetBuildDayStamp(void)
 }
 
 // Return the version in the form 10000 * generation + 100 * major + minor
-int CSerialEMApp::GetIntegerVersion(void)
+int CSerialEMApp::GetIntegerVersion(CString verStr)
 {
-  CString verStr = VERSION_STRING;
+  if (verStr.IsEmpty())
+    verStr = VERSION_STRING;
   int major, minor, gen, start = verStr.Find("ion ") + 4;
   verStr = verStr.Mid(start);
   sscanf((LPCTSTR)verStr, "%d.%d.%d", &gen, &major, &minor);

@@ -438,9 +438,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int ind, icx1, icx2, icy1, icy2, first, last, j, iDir, notSkipping;
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
-  int blockSizeInX, blockSizeInY;
+  int magInd, lowestM, blockSizeInY;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY, dist, minDist;
-  float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
+  float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac, pixelSize;
   float acqExposure, trialExposure, minContExp, polyRealignErrX, polyRealignErrY;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
   int already, borderTry, setNum, useSetNum;
@@ -453,7 +453,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   CMapDrawItem *navItem;
   KImageStore *storeMRC;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-
+  int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *cam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   mTrialMontage = inTrial;
   mReadingMontage = inReadMont;
@@ -468,16 +468,36 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   BlockSizesForNearSquare(mParam->xFrame, mParam->yFrame, mParam->xOverlap,
-    mParam->yOverlap, mParam->focusBlockSize, blockSizeInX, blockSizeInY);
+    mParam->yOverlap, mParam->focusBlockSize, mBlockSizeInX, blockSizeInY);
   mDoStageMoves = mParam->moveStage && !mUsingMultishot;
-  if (mDoStageMoves && mParam->imShiftInBlocks && blockSizeInX * blockSizeInY > 1 &&
-    blockSizeInX >= mParam->xNframes && blockSizeInY >= mParam->yNframes) {
-    mWinApp->AppendToLog("Doing montage with image shift because the montage is not\r\n"
-      "  larger than the block size for image shifting");
-    mDoStageMoves = false;
+
+  // Need to figure out image shift blocks early in case it is cancelling the stage move
+  if (mDoStageMoves && mParam->imShiftInBlocks && !mReadingMontage) {
+    magInd = mParam->magIndex;
+    if (mWinApp->LowDoseMode()) {
+      setNum = MontageConSetNum(mParam, true);
+      area = mCamera->ConSetToLDArea(setNum);
+      magInd = ldp[area].magIndex;
+    }
+    cam = mWinApp->GetCamParams() + activeList[mParam->cameraIndex];
+    lowestM = mScope->GetLowestNonLMmag(cam);
+    pixelSize = mShiftManager->GetPixelSize(activeList[mParam->cameraIndex], magInd) *
+      (float)mParam->binning;
+    ImageShiftBlockSizes(mParam->xFrame, mParam->yFrame, mParam->xOverlap,
+      mParam->yOverlap, pixelSize,
+      magInd < lowestM ? mParam->maxBlockImShiftLM : mParam->maxBlockImShiftNonLM,
+      mBlockSizeInX, blockSizeInY);
+    if (mBlockSizeInX * blockSizeInY > 1 &&
+      mBlockSizeInX >= mParam->xNframes && blockSizeInY >= mParam->yNframes) {
+      mWinApp->AppendToLog("Doing montage with image shift because the montage is not\r\n"
+        "  larger than the block size for image shifting");
+      mDoStageMoves = false;
+    } else
+      SEMTrace('1', "Image shifting will be done in %d x %d blocks", mBlockSizeInX, 
+        blockSizeInY);
   }
   mImShiftInBlocks = mDoStageMoves && mParam->imShiftInBlocks &&
-    blockSizeInX * blockSizeInY > 1 && !preCooking && !mReadingMontage;
+    mBlockSizeInX * blockSizeInY > 1 && !preCooking && !mReadingMontage;
   useHQ = mDoStageMoves && mParam->useHqParams && (!mWinApp->LowDoseMode() || 
     mAllowHQMontInLD);
   mUsingImageShift = !mDoStageMoves || mImShiftInBlocks;
@@ -1117,11 +1137,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   focusFeasible = useHQ && mParam->magIndex >= mScope->GetLowestNonLMmag()
     && !mReadingMontage && !mTrialMontage && !preCooking;
   mFocusAfterStage = focusFeasible && mParam->focusAfterStage;
-  mFocusInBlocks = focusFeasible && blockSizeInX * blockSizeInY > 1 && 
+  mFocusInBlocks = focusFeasible && mBlockSizeInX * blockSizeInY > 1 && 
     mParam->focusInBlocks && mNumPieces > 1 && !mFocusAfterStage && !mDoISrealign;
   icx1 = 1;
   if (mFocusInBlocks || mImShiftInBlocks) {
-    numBlocksX = 1 + (mParam->xNframes - 1) / blockSizeInX;
+    numBlocksX = 1 + (mParam->xNframes - 1) / mBlockSizeInX;
     numBlocksY = 1 + (mParam->yNframes - 1) / blockSizeInY;
     icx1 = numBlocksX * numBlocksY;
   }
@@ -4065,6 +4085,24 @@ void EMmontageController::BlockSizesForNearSquare(int xSize, int ySize, int xOve
   } else {
     numInY = blockSize;
     numInX = B3DNINT((yFull - xOverlap) / (float)(xSize - xOverlap));
+  }
+}
+
+// Get "blockSize" number and number of pieces in X and Y with less than the allowed IS
+void EMmontageController::ImageShiftBlockSizes(int sizeX, int sizeY, int xOverlap, 
+  int yOverlap, float pixelSize, float maxISallowed, int &numInX, int &numInY)
+{
+  int xExtent, yExtent, xNum, yNum;
+  double montIS;
+  for (int num = 1; num < 100; num++) {
+    BlockSizesForNearSquare(sizeX, sizeY, xOverlap, yOverlap, num, xNum, yNum);
+    xExtent = (sizeX - xOverlap) * (xNum - 1);
+    yExtent = (sizeY - yOverlap) * (yNum - 1);
+    montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * pixelSize / 2.;
+    if (montIS > maxISallowed)
+      break;
+    numInX = xNum;
+    numInY = yNum;
   }
 }
 

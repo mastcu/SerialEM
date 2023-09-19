@@ -1335,12 +1335,12 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,303,128,10
     CONTROL         "Close file when montage is done",IDC_CHECK_CLOSE_WHEN_DONE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,254,112,10
-    CONTROL         "Image shift in blocks of",IDC_CHECK_IMSHIFT_IN_BLOCKS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,202,78,10
-    RTEXT           "99.9 x 99.9",IDC_STAT_IS_BLOCKSIZE,92,203,34,8
-    CONTROL         "",IDC_SPIN_IS_BLOCKSIZE,"msctls_updown32",UDS_ARROWKEYS,128,200,10,14
-    LTEXT           "microns",IDC_STAT_IS_BLOCKPIECES,140,203,25,8
+    CONTROL         "Image shift in blocks, IS up to",IDC_CHECK_IMSHIFT_IN_BLOCKS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,202,95,10
+    LTEXT           "microns",IDC_STAT_IS_BLOCKPIECES,129,203,24,8
     CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,216,158,1
+    LTEXT           "***",IDC_STAT_IS_BLOCK_STARS,154,203,8,8
+    EDITTEXT        IDC_EDIT_MAX_BLOCK_IS,106,200,22,14,ES_AUTOHSCROLL
 END
 
 IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 108
@@ -6278,6 +6278,7 @@ BEGIN
     IDC_CHECK_FOCUS_EACH    "Run focus routine at each position in montage"
     IDC_CHECK_FOCUS_BLOCKS  "Acquire pieces in blocks and autofocus in center of each block"
     IDC_SPIN_BLOCK_SIZE     "Change size of blocks for acquisition and focusing"
+    IDC_EDIT_MAX_BLOCK_IS   "Maximum image shift radius when doing image shift in blocks"
 END
 
 STRINGTABLE

@@ -39,8 +39,9 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
   IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
   IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, IDC_CHECK_USE_MULTISHOT,
-  IDC_CHECK_CLOSE_WHEN_DONE, IDC_CHECK_IMSHIFT_IN_BLOCKS, IDC_STAT_IS_BLOCKSIZE,
-  IDC_STAT_IS_BLOCKPIECES, IDC_SPIN_IS_BLOCKSIZE, IDC_STAT_LINE3, PANEL_END,
+  IDC_CHECK_CLOSE_WHEN_DONE, IDC_CHECK_IMSHIFT_IN_BLOCKS, IDC_EDIT_MAX_BLOCK_IS,
+  IDC_STAT_IS_BLOCKPIECES, IDC_STAT_IS_BLOCK_STARS, IDC_STAT_LINE3,
+  PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS, 
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES, 
   IDC_SPIN_BLOCK_SIZE, IDC_STAT_DELAY, 
@@ -81,7 +82,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bUseMontMapParams(FALSE)
   , m_bUseMultishot(FALSE)
   , m_bImShiftInBlocks(FALSE)
-  , m_strISBlockSize(_T(""))
+  , m_fMaxBlockIS(1.f)
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -160,7 +161,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPINMINOV, m_sbcMinOv);
   DDX_Control(pDX, IDC_EDIT_SKIP_OUTSIDE, m_editSkipOutside);
   DDX_Control(pDX, IDC_CHECKOFFERMAP, m_butOfferMap);
-  DDX_MM_INT(pDX, IDC_EDIT_SKIP_OUTSIDE, m_iInsideNavItem, 0, 4096, 
+  DDX_MM_INT(pDX, IDC_EDIT_SKIP_OUTSIDE, m_iInsideNavItem, 0, 4096,
     "Skip pieces outside Navigator item");
   DDX_Control(pDX, IDC_CHECK_USE_HQ_SETTINGS, m_butUseHq);
   DDX_Check(pDX, IDC_CHECK_USE_HQ_SETTINGS, m_bUseHq);
@@ -178,7 +179,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   //DDX_Text(pDX, IDC_EDITREALIGN, m_iRealignInterval);
   //DDV_MinMaxInt(pDX, m_iRealignInterval, MIN_Y_MONT_REALIGN, 1000);
   DDX_Control(pDX, IDC_EDITDELAY, m_editDelay);
-  DDX_MM_FLOAT(pDX, IDC_EDITDELAY, m_fDelay, 0.f, 100.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITDELAY, m_fDelay, 0.f, 100.f,
     "Delay time after moving stage");
   DDX_Control(pDX, IDC_STATMINAND, m_statMinAnd);
   DDX_Control(pDX, IDC_STATMINMICRON, m_statMinMicron);
@@ -192,7 +193,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_FOCUS_BLOCKS, m_butBlockFocus);
   DDX_Control(pDX, IDC_STATMAXALIGN, m_statMaxAlign);
   DDX_Control(pDX, IDC_EDITMAXALIGN, m_editMaxAlign);
-  DDX_MM_INT(pDX, IDC_EDITMAXALIGN, m_iMaxAlign, 5, 100, 
+  DDX_MM_INT(pDX, IDC_EDITMAXALIGN, m_iMaxAlign, 5, 100,
     "Maximum alignment shift as % of piece");
   DDX_Control(pDX, IDC_CHECK_IS_REALIGN, m_butISrealign);
   DDX_Control(pDX, IDC_STATISMICRONS, m_statISmicrons);
@@ -208,7 +209,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_REPEAT_FOCUS, m_butRepeatFocus);
   DDX_Check(pDX, IDC_CHECK_REPEAT_FOCUS, m_bRepeatFocus);
   DDX_Control(pDX, IDC_EDIT_NMPERSEC, m_editNmPerSec);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_NMPERSEC, m_fNmPerSec, 0.1f, 30.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_NMPERSEC, m_fNmPerSec, 0.1f, 30.f,
     "Drift limit for repeating focus");
   DDX_Control(pDX, IDC_STATNMPERSEC, m_statNmPerSec);
   DDX_Check(pDX, IDC_CHECK_USE_VIEW_IN_LOWDOSE, m_bUseViewInLowDose);
@@ -229,9 +230,9 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_USE_MULTISHOT, m_bUseMultishot);
   DDX_Control(pDX, IDC_CHECK_IMSHIFT_IN_BLOCKS, m_butImShiftInBlocks);
   DDX_Check(pDX, IDC_CHECK_IMSHIFT_IN_BLOCKS, m_bImShiftInBlocks);
-  DDX_Control(pDX, IDC_STAT_IS_BLOCKSIZE, m_statISBlockSize);
-  DDX_Text(pDX, IDC_STAT_IS_BLOCKSIZE, m_strISBlockSize);
-  DDX_Control(pDX, IDC_SPIN_IS_BLOCKSIZE, m_sbcISBlocksize);
+  DDX_Control(pDX, IDC_EDIT_MAX_BLOCK_IS, m_editMaxBlockIS);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_BLOCK_IS, m_fMaxBlockIS, 1.0f, 1000.0f,
+    "Maximum image shift within blocks");
 }
 
 
@@ -262,7 +263,6 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_FOCUS_EACH, OnCheckFocusEach)
   ON_BN_CLICKED(IDC_CHECK_FOCUS_BLOCKS, OnCheckFocusBlocks)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BLOCK_SIZE, OnDeltaposSpinBlockSize)
-  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_IS_BLOCKSIZE, OnDeltaposSpinBlockSize)
 
 	//}}AFX_MSG_MAP
   //ON_BN_CLICKED(IDC_CHECK_REALIGN, OnCheckRealign)
@@ -278,6 +278,7 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_USE_MONT_MAP_PARAMS, OnUseMontMapParams)
   ON_BN_CLICKED(IDC_CHECK_USE_MULTISHOT, OnUseMultishot)
   ON_BN_CLICKED(IDC_CHECK_IMSHIFT_IN_BLOCKS, OnCheckImshiftInBlocks)
+  ON_EN_KILLFOCUS(IDC_EDIT_MAX_BLOCK_IS, OnKillfocusEditMaxBlockIs)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -430,8 +431,6 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_sbcMinOv.SetPos(100);
   m_sbcBlockSize.SetRange(0,100);
   m_sbcBlockSize.SetPos(50);
-  m_sbcISBlocksize.SetRange(0, 100);
-  m_sbcISBlocksize.SetPos(50);
   m_sbcAnchorMag.SetRange(0,200);
   m_sbcAnchorMag.SetPos(100);
   if (mParam.anchorMagInd <= 0)
@@ -529,6 +528,7 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_bUseSearchInLD = mParam.useSearchInLowDose;
   m_bUseMultishot = mParam.useMultiShot;
   LoadOverlapBoxes();
+  UpdateFocusBlockSizes();
   UpdateData(false);
   ValidateEdits();
   UpdateSizes();
@@ -729,6 +729,7 @@ void CMontageSetupDlg::OnDeltaposSpinmag(NMHDR* pNMHDR, LRESULT* pResult)
   // Output the mag and set the index
   mParam.magIndex = newVal;
   ManageStageAndGeometry(false);
+  UpdateFocusBlockSizes();
   UpdateSizes();
   *pResult = 0;
 }
@@ -877,21 +878,14 @@ void CMontageSetupDlg::OnOK()
 {
   NavParams *navp = mWinApp->GetNavParams();
   CString mess;
-  int numX, numY;
+  int xExtent, yExtent, maxPcX, maxPcY;
+  double maxIS, montIS;
   int lowestM = mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
   int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
   ValidateEdits();
-  int xExtent = (m_iXsize - mXoverlap) * (m_iXnFrames - 1);
-  int yExtent = (m_iYsize - mYoverlap) * (m_iYnFrames - 1);
-  if (m_bMoveStage && m_bImShiftInBlocks) {
-    mWinApp->mMontageController->BlockSizesForNearSquare(m_iXsize, m_iYsize, mXoverlap,
-      mYoverlap, mParam.focusBlockSize, numX, numY);
-    xExtent = (m_iXsize - mXoverlap) * (numX - 1);
-    yExtent = (m_iYsize - mYoverlap) * (numY - 1);
-  }
-  double maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
-  double montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * mParam.binning *
-    mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex) / 2.;
+  FindMaxExtents(m_bMoveStage && m_bImShiftInBlocks, xExtent, yExtent, maxPcX, maxPcY, 
+    maxIS, montIS);
+
   if (((!m_bMoveStage && !mFittingItem) || (m_bMoveStage && m_bImShiftInBlocks)) && 
     montIS > maxIS) {
     mess.Format("The largest image shift needed for the %s is\n"
@@ -915,7 +909,7 @@ void CMontageSetupDlg::OnOK()
     }
   }
 
-  if (xExtent > 65535 || yExtent > 65535)
+  if (maxPcX > 65535 || maxPcY > 65535)
     mWinApp->AppendToLog("Maximum piece coordinates are above 65535, too large to store "
       "in the image file header.\r\nPiece coordinates will be saved only in a Metadata "
       "Autodoc (.mdoc) file");
@@ -997,16 +991,54 @@ void CMontageSetupDlg::UpdateSizes()
 // Specifically update both of the block size spinner values
 void CMontageSetupDlg::UpdateFocusBlockSizes()
 {
-  int numX, numY, iTotalX, iTotalY;
-  int magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
-  float pixel = mParam.binning * mWinApp->mShiftManager->GetPixelSize(mCurrentCamera,
-    magIndex);
+  NavParams *navp = mWinApp->GetNavParams();
+  int numX, numY, lowestM;
+  int magIndex = GetMagIndexAndLowestNonLMInd(lowestM);
+  double maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
+  float pixelSize = (float)mParam.binning *
+    mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex);
+
   mWinApp->mMontageController->BlockSizesForNearSquare(m_iXsize, m_iYsize, mXoverlap,
     mYoverlap, mParam.focusBlockSize, numX, numY);
+  if (m_bImShiftInBlocks) {
+    mWinApp->mMontageController->ImageShiftBlockSizes(m_iXsize, m_iYsize, mXoverlap,
+      mYoverlap, pixelSize,
+      magIndex >= lowestM ? mParam.maxBlockImShiftNonLM : mParam.maxBlockImShiftLM,
+      numX, numY);
+  }
   m_strBlockSize.Format("%d x %d", numX, numY);
-  iTotalX = (numX * m_iXsize - (numX - 1) * mXoverlap);
-  iTotalY = (numY * m_iYsize - (numY - 1) * mYoverlap);
-  m_strISBlockSize = FormatMicronSize(iTotalX, iTotalY, pixel);
+  m_fMaxBlockIS = (magIndex < lowestM) ? mParam.maxBlockImShiftLM : 
+    mParam.maxBlockImShiftNonLM;
+  ShowDlgItem(IDC_STAT_IS_BLOCK_STARS, m_fMaxBlockIS > maxIS);
+  UpdateData(false);
+}
+
+void CMontageSetupDlg::FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExtent, 
+  int &maxPcX, int &maxPcY, double &maxIS, double &montIS)
+{
+  NavParams *navp = mWinApp->GetNavParams();
+  int numX, numY, lowestM;
+  int magIndex = GetMagIndexAndLowestNonLMInd(lowestM);
+  float pixelSize = (float)mParam.binning * 
+    mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex);
+  xExtent = maxPcX = (m_iXsize - mXoverlap) * (m_iXnFrames - 1);
+  yExtent = maxPcY = (m_iYsize - mYoverlap) * (m_iYnFrames - 1);
+  if (ISinBlocks) {
+    mWinApp->mMontageController->ImageShiftBlockSizes(m_iXsize, m_iYsize, mXoverlap,
+      mYoverlap, pixelSize,
+      magIndex >= lowestM ? mParam.maxBlockImShiftNonLM : mParam.maxBlockImShiftLM, 
+      numX, numY);
+    xExtent = (m_iXsize - mXoverlap) * (numX - 1);
+    yExtent = (m_iYsize - mYoverlap) * (numY - 1);
+  }
+  maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
+  montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * pixelSize / 2.;
+}
+
+int CMontageSetupDlg::GetMagIndexAndLowestNonLMInd(int &lowestM)
+{
+  lowestM = mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
+  return mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
 }
 
 // Make a string with Y x Y size in microns with minimal digits
@@ -1174,12 +1206,25 @@ void CMontageSetupDlg::OnMovestage()
   UpdateSizes();
   ManageStageAndGeometry(m_bUseHq);
   ManageCamAndStageEnables();
+  UpdateFocusBlockSizes();
 }
 
 void CMontageSetupDlg::OnCheckImshiftInBlocks()
 {
   UPDATE_DATA_TRUE;
   ManageStageAndGeometry(false);
+  UpdateFocusBlockSizes();
+}
+
+void CMontageSetupDlg::OnKillfocusEditMaxBlockIs()
+{
+  UPDATE_DATA_TRUE;
+  int lowestM, magIndex = GetMagIndexAndLowestNonLMInd(lowestM);
+  if (magIndex < lowestM)
+    mParam.maxBlockImShiftLM = m_fMaxBlockIS;
+  else
+    mParam.maxBlockImShiftNonLM = m_fMaxBlockIS;
+  UpdateFocusBlockSizes();
 }
 
 void CMontageSetupDlg::OnCheckSkipOutside()
@@ -1347,9 +1392,9 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
   m_statMinMicron.EnableWindow(tmpEnable);
   m_editMinMicron.EnableWindow(tmpEnable);
   m_butImShiftInBlocks.EnableWindow(tmpEnable);
-  m_sbcISBlocksize.EnableWindow(tmpEnable && m_bImShiftInBlocks);
-  m_statISBlockSize.EnableWindow(tmpEnable && m_bImShiftInBlocks);
+  m_editMaxBlockIS.EnableWindow(tmpEnable && m_bImShiftInBlocks);
   EnableDlgItem(IDC_STAT_IS_BLOCKPIECES, tmpEnable && m_bImShiftInBlocks);
+  EnableDlgItem(IDC_STAT_IS_BLOCK_STARS, tmpEnable && m_bImShiftInBlocks);
 
   m_butUseHq.EnableWindow(m_bMoveStage && (!mLowDoseMode ||
     mWinApp->mMontageController->GetAllowHQMontInLD()));

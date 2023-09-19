@@ -24,6 +24,8 @@ public:
 	void ValidateEdits();
 	void UpdateSizes();
   void UpdateFocusBlockSizes();
+  void FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExtent, int &maxPcX, int &maxPcY, double &maxIS, double &montIS);
+  int GetMagIndexAndLowestNonLMInd(int &lowestM);
   CString FormatMicronSize(int xxSize, int ySize, float Pixel);
 	BOOL mSizeLocked;
 	MontParam mParam;
@@ -220,9 +222,9 @@ public:
   CButton m_butImShiftInBlocks;
   BOOL m_bImShiftInBlocks;
   afx_msg void OnCheckImshiftInBlocks();
-  CStatic m_statISBlockSize;
-  CString m_strISBlockSize;
-  CSpinButtonCtrl m_sbcISBlocksize;
+  CEdit m_editMaxBlockIS;
+  float m_fMaxBlockIS;
+  afx_msg void OnKillfocusEditMaxBlockIs();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/19/23: Changed parameters for doing stage montage with image shift in
+blocks; instead of a number of blocks, which is mag-dependent, it is specified
+with the maximum allowed image shift.  BLOCK SIZES IN SETTINGS DO NOT APPLY.
+
 9/14/23: Added warning when a string property appears to have comment after
 it, and a message box if a C-style comment is unclosed.
 

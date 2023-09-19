@@ -28,7 +28,7 @@
       set up.&nbsp; Thus, you need to turn on Low Dose mode before setting up a 
       montage to be taken in Low Dose.&nbsp; Several parameters cannot be changed when 
       in Low Dose mode.</P>
-    <P>Electronic image shift is used in a several different ways depending on the 
+    <P>Electronic image shift is used in several different ways depending on the 
       options selected below: basic montaging with image shift, hybrid montaging with 
       image shift in blocks and stage shift to the blocks, and realigning to a piece 
       with image shift.&nbsp; If you are doing&nbsp;extensive acquisition in any of these 
@@ -114,18 +114,25 @@
         shift has a much higher range, so you may be able to use image shift instead of 
         stage shift at the highest LM mode magnifications. In area-fitting mode, the 
         fit will be recomputed and it may not be possible to change this setting.</P>
-    <P><b>Image shift in blocks of yy x zz microns</b></P>
+    <P><b>Image shift in blocks with IS up to xx microns</b></P>
     <P>With this option, a hybrid montage can be done with a mixture of stage and 
-      image shift.&nbsp; Image shift is used within an area of the selected size, and 
-      stage shift is used to move to the center of each block.&nbsp; The blocks should 
-      be small enough that image shift will stay within its allowed range; the size is 
-      specified in microns to give some indication of the image shift range required.&nbsp; 
-      When non-square pieces are being acquired, the number of image shift positions may be different 
+      image shift.&nbsp; Image shift is used within the biggest area for which the 
+      image shift at the corners of the block does not exceed the entered maximum 
+      value, and 
+      stage shift is used to move to the center of each block.&nbsp; A separate entry 
+      is stored for montages in and out of low magnification mode.&nbsp; The value 
+      should be smaller than the maximum range of image shift allowed by the 
+      microscope in the respective mode.&nbsp; If the value exceeds the maximum image 
+      shift allowed when fitting to a polygon, the program will show &#39;***&#39; after 
+      &#39;microns&#39; and warn you about this disparity when the dialog is closed.&nbsp; 
+      These maximum shifts are determined by property settings and larger shifts may 
+      be feasible for your situation.</P>
+    <P>When non-square pieces are being acquired, the number of image shift positions may be different 
       in X and Y if that will result in a more nearly square area for the block.&nbsp; 
       The overlap between pieces is the same regardless of which kind of shift is 
       used, so the overlap must be set as large as it would need to be for a  
       montage using just stage shift.&nbsp; If the montage size is not larger than the 
-      block size, the porgram falls back to doing a regular image shift montage.&nbsp; This option will save time only if the image shift 
+      block size, the program falls back to doing a regular image shift montage.&nbsp; This option will save time only if the image shift 
       settling times are fairly short (see paragraph on settling times at the beginning of this
        page).&nbsp; Before adopting this method for routine use, you 
       should assess whether it is indeed faster than a regular stage montage.</P>
@@ -134,6 +141,8 @@
       whole block is acquired (in columns just like a montage of that size), then the 
       next block is acquired in Y, etc. After finishing a column of blocks, the 
       program shifts over by the block size in X to start the next column.</P>
+    <P>Focusing in blocks can be used with this option, but the focus blocks are 
+      constrained to be the same as the image shift blocks.</P>
       <P><B>Skip pieces outside Navigator item</B></P>
       <P>With this option, it is possible to define a polygon in the Navigator and have 
         each montage that is taken include only pieces that have some portion inside 
@@ -273,8 +282,8 @@
         the two options change the same underlying number, with the number of pieces in 
         each dimension shown for this option and the size in microns shown for the
         <b>Image shift in blocks</b> option.&nbsp; When both options are 
-        selected, only the spin button for the&nbsp; <b>Image shift in blocks</b> 
-        option is enabled.</P>
+        selected, the spin button here is not enabled and the block size shown here is 
+        determined by the maximum image shift value for blocks.</P>
      <P><b>Repeat until drift is below a limit</b></P>
       <P style="Z-INDEX: 0">Select this option to have autofocus repeated if the drift, 
         in nanometers per second, is above the limit that you enter in the text 

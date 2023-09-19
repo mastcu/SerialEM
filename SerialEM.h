@@ -997,7 +997,7 @@ void SetMaxDialogWidth(void);
 void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
 int GetBuildDayStamp(void);
 void CleanupAndReportCrash(CString &message);
-int GetIntegerVersion(void);
+int GetIntegerVersion(CString verStr = "");
 void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin);
 void OpenOrCloseMacroEditors(void);

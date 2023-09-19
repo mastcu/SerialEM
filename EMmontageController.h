@@ -351,6 +351,7 @@ class EMmontageController
   bool mRunningMacro;             // Flag that we started a script
   BOOL mAllowHQMontInLD;          // Flag to enable HQ options in low dose
   BOOL mNoMontXCorrThread;        // Flag not to do correlations in thread
+  int mBlockSizeInX;              // Size of focus blocks in X, needed for IS realign
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
@@ -396,6 +397,8 @@ public:
   void SetMiniOffsetsParams(MiniOffsets & mini, int xNframes, int xFrame, int xDelta, int yNframes, int yFrame, int yDelta);
   void AddRemainingTime(CString &report);
   void BlockSizesForNearSquare(int sizeX, int sizeY, int xOverlap, int yOverlap, int blockSize,
+    int &numInX, int &numInY);
+  void ImageShiftBlockSizes(int sizeX, int sizeY, int xOverlap, int yOverlap, float pixelSize, float maxISallowed, 
     int &numInX, int &numInY);
   int GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int &ixPc, int &iyPc);
   int TestStageError(double ISX, double ISY, double &sterr);

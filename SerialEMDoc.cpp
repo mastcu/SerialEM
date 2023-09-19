@@ -2317,7 +2317,14 @@ void CSerialEMDoc::PostSettingsRead()
   RECT *dlgPlacements = mWinApp->GetDlgPlacements();
   int *colorIndex = mWinApp->GetDlgColorIndex();
   BOOL saveRemote = mWinApp->GetShowRemoteControl();
+  MontParam *montP = mWinApp->GetMontParam();
+  NavParams *navp = mWinApp->GetNavParams();
   mAbandonSettings = false;
+
+  if (!montP->maxBlockImShiftNonLM) {
+    montP->maxBlockImShiftNonLM = navp->maxMontageIS;
+    montP->maxBlockImShiftLM = navp->maxLMMontageIS;
+  }
 
   // Copy low dose params, restore low dose area, copy camera params and update windows
   FixSettingsForIALimitCal();
