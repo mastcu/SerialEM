@@ -25,6 +25,7 @@ EMimageBuffer::EMimageBuffer()
   mCurStoreChecksum = 0;
 	mImageChanged = 0;
 	mSaveCopyp = NULL;
+  mWrittenByVersion = 0;
   mChangeWhenSaved = 0;
 	mBinning = 0;
   mDivideBinToShow = 1;

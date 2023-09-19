@@ -12,6 +12,7 @@
 KStoreIMOD::KStoreIMOD(CString filename)
   : KImageStore()
 {
+  char *vers;
   CommonInit();
   mIIfile = iiOpen((char *)((LPCTSTR)filename), "rb+");
   if (!mIIfile)
@@ -28,6 +29,13 @@ KStoreIMOD::KStoreIMOD(CString filename)
   if (mIIfile->file == IIFILE_HDF) {
     mStoreType = STORE_TYPE_HDF;
     mAdocIndex = mIIfile->adocIndex;
+    if (AdocGetMutexSetCurrent(mAdocIndex) >= 0) {
+      if (!AdocGetString(ADOC_GLOBAL, 0, ADOC_PROG_VERS, &vers)) {
+        mWrittenByVersion = ((CSerialEMApp *)AfxGetApp())->GetIntegerVersion(vers);
+        free(vers);
+      }
+      AdocReleaseMutex();
+    }
   }
 }
 
@@ -70,6 +78,8 @@ KStoreIMOD::KStoreIMOD(CString inFilename, FileOptions inFileOpt)
   }
   if (!mIIfile)
     return;
+
+  mWrittenByVersion = ((CSerialEMApp *)AfxGetApp())->GetIntegerVersion();
 
   // Handle HDF, consult environment variable about compression level IF it is selected
   if (isHdf) {

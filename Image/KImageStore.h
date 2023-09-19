@@ -50,6 +50,7 @@ protected:
   float      mPixelSpacing;
   float      mUpdateTimePerSect;
   bool       mHasPixelSpacing;
+  int        mWrittenByVersion;
 
 public:
 	         KImageStore(CString inFilename);
@@ -123,6 +124,7 @@ public:
   virtual int ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz);
   virtual void AddTitleToLabelArray(char *label, int &numTitle, const char *inTitle);
   virtual int WriteHeader(bool adocAlso) { return 0; };
+  virtual int GetWrittenByVersion() { return mWrittenByVersion; };
 };
 
 

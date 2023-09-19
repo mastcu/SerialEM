@@ -147,6 +147,7 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
   mMontCoordsInMdoc = false;
   mNumWritten = 0;
   mMeanSum = 0.;
+  mWrittenByVersion = ((CSerialEMApp *)AfxGetApp())->GetIntegerVersion();
 
   mFileOpt = inFileOpt;
 
@@ -317,6 +318,12 @@ KStoreMRC::KStoreMRC(CFile *inFile)
         // Determine if montage coords solely in mdoc
         AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont);
         mMontCoordsInMdoc = (!(mHead->typext & MONTAGE_MASK) && ifmont);
+
+        // Get version
+        if (!AdocGetString(ADOC_GLOBAL, 0, ADOC_PROG_VERS, &single)) {
+          mWrittenByVersion = ((CSerialEMApp *)AfxGetApp())->GetIntegerVersion(single);
+          free(single);
+        }
       }
       AdocReleaseMutex();
     }

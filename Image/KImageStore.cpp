@@ -61,6 +61,7 @@ void KImageStore::CommonInit(void)
   mNumWritten = 0;
   mPixelSpacing = 1.;
   mHasPixelSpacing = false;
+  mWrittenByVersion = 0;
 }
 
 KImageStore::~KImageStore()

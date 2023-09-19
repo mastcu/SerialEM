@@ -26,6 +26,7 @@ using namespace AdocDefs;
 #define ADOC_IMAGE "Image"
 #define ADOC_SERIES "ImageSeries"
 #define ADOC_SINGLE "ImageFile"
+#define ADOC_PROG_VERS "Version"
 #define ADOC_PCOORD "PieceCoordinates"
 #define ADOC_SUPER "SuperMontCoords"
 #define ADOC_TITLE "T"

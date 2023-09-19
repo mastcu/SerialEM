@@ -39,6 +39,7 @@ public:
   unsigned int mCurStoreChecksum;
   int *mSaveCopyp;
   int mSecNumber;
+  int mWrittenByVersion;   // Valid for read-in images
   int mChangeWhenSaved;    // How the data were modified when saved
   int mConSetUsed;
   int mCaptured;

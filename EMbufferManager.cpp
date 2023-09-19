@@ -371,7 +371,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
       AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
         (float)mWinApp->mProcessImage->GetRecentVoltage());
-      AdocSetKeyValue(ADOC_GLOBAL, 0, "Version", 
+      AdocSetKeyValue(ADOC_GLOBAL, 0, ADOC_PROG_VERS,
         (LPCTSTR)mWinApp->GetVersionString());
       // Writing the adoc here made the first write from the background write to the
       // backup file when there was TS extra output too.  It was bizarre. 12/30/17
@@ -851,6 +851,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   toBuf->mPanX = 0;
   toBuf->mPanY = 0;
   toBuf->mCurStoreChecksum = 0;
+  toBuf->mWrittenByVersion = inStore->GetWrittenByVersion();
   if (inStore == mWinApp->mStoreMRC)
     toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
 
@@ -955,7 +956,9 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
         }
       }
   }
-  if (!toBuf->mMagInd)
+
+  // Replace 0 mag index with current mag unless it is known diffraction mode
+  if (!toBuf->mMagInd && !(extra && extra->mCameraLength > 0))
     toBuf->mMagInd = mWinApp->mScope->GetMagIndex();
 
   return 0;
