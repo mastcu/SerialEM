@@ -988,7 +988,7 @@ void CMontageSetupDlg::UpdateSizes()
   UpdateData(false);
 }
 
-// Specifically update both of the block size spinner values
+// Specifically update both of the block size spinner and the image shift block limit
 void CMontageSetupDlg::UpdateFocusBlockSizes()
 {
   NavParams *navp = mWinApp->GetNavParams();
@@ -1013,6 +1013,7 @@ void CMontageSetupDlg::UpdateFocusBlockSizes()
   UpdateData(false);
 }
 
+// Find maximum iage shift extent for montage as whole or for image shifting in blocks
 void CMontageSetupDlg::FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExtent, 
   int &maxPcX, int &maxPcY, double &maxIS, double &montIS)
 {
@@ -1035,6 +1036,7 @@ void CMontageSetupDlg::FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExten
   montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * pixelSize / 2.;
 }
 
+// Get magindex given conditions
 int CMontageSetupDlg::GetMagIndexAndLowestNonLMInd(int &lowestM)
 {
   lowestM = mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
