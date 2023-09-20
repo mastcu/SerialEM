@@ -468,7 +468,11 @@ void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *messa
     // give 0 return value and 0 error
     if (mLastWSAerror[sockInd] == WSAECONNRESET || (!retval && !mLastWSAerror[sockInd])) {
       DebugToLog(mMessageBuf[sockInd]);
+
+      // Set as disconnected and cancel any pending user stop error
       CMacroProcessor::mScrpLangData.disconnected = true;
+      if (CMacroProcessor::mScrpLangData.errorOccurred == SCRIPT_USER_STOP)
+        CMacroProcessor::mScrpLangData.errorOccurred = 0;
     } else
       ErrorToLog(mMessageBuf[sockInd]);
   } else {

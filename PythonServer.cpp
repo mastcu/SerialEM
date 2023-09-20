@@ -143,9 +143,14 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
 
   if (mLongArgs[sockInd][0] != PSS_OKtoRunExternalScript && sockInd > 0 && 
     !sScriptData->externalControl) {
-    TryToStartExternalControl();
+
+    // Try to start external control unless there is a pending STOP, use up the STOP
+    if (sScriptData->errorOccurred != SCRIPT_USER_STOP)
+      TryToStartExternalControl();
     if (!sScriptData->externalControl) {
-      SendArgsBack(sockInd, -9);
+      SendArgsBack(sockInd, sScriptData->errorOccurred == SCRIPT_USER_STOP ? -10 : -9);
+      if (sScriptData->errorOccurred == SCRIPT_USER_STOP)
+        sScriptData->errorOccurred = 0;
       return 0;
     }
   }
@@ -175,6 +180,7 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
       sScriptData->strItems[ind] = strArr;
       strArr += strlen(strArr) + 1;
     }
+    SEMTrace('[', "Command ready to execute, wait for done event");
     sScriptData->commandReady = 1;
     while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent, 1000)) {
       Sleep(2);

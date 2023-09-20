@@ -1529,8 +1529,12 @@ void CMacroProcessor::Stop(BOOL ifNow)
       UtilThreadCleanup(&mScrpLangThread);
 
     }
-    if (mRunningScrpLang && mScrpLangData.externalControl)
+
+    // Mark external as disconnected by set error as user stop so this case is recognized
+    if (mRunningScrpLang && mScrpLangData.externalControl) {
       mScrpLangData.disconnected = true;
+      mScrpLangData.errorOccurred = SCRIPT_USER_STOP;
+    }
       
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
@@ -1615,9 +1619,11 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   SEMTrace('[', "In abort");
 
   // Intercept abort when doing external script, set error flag and set wait for command
+  // Process user stop like any other exit, not like disconnect happened
   if ((mRunningScrpLang || mCalledFromScrpLang) && 
     (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
-    if (mScrpLangData.disconnected) {
+    if (mScrpLangData.disconnected && !(mScrpLangData.errorOccurred == SCRIPT_USER_STOP &&
+      mScrpLangData.commandReady)) {
       mScrpLangData.externalControl = 0;
     } else {
 
@@ -1639,7 +1645,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
 
       // Process true error
       if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
-        mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC) {
+        mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC &&
+        mScrpLangData.errorOccurred != SCRIPT_USER_STOP) {
         mScrpLangData.errorOccurred = 1;
         mScrpLangData.highestReportInd = 0;
         mScrpLangData.reportedStrs[0] = mWinApp->mTSController->GetLastNoBoxMessage();
@@ -1648,6 +1655,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       }
       mScrpLangData.waitingForCommand = 1;
       mScrpLangData.commandReady = 0;
+      if (mScrpLangData.disconnected)
+        mScrpLangData.externalControl = 0;
       SetEvent(mScrpLangDoneEvent);
       SEMTrace('[', "signal function done after Abort");
       if (mCalledFromSEMmacro && (mScrpLangData.errorOccurred != 1))

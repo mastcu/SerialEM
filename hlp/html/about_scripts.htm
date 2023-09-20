@@ -1145,17 +1145,21 @@
         the entry 'SocketServerPort 8' plus the alternative port.&nbsp; Do not use 48887 or 48889 
         - they are dedicated for running Python scripts from SerialEM.</li>
       <li>The first actual function call to SerialEM is considered to start a script, 
-        and it will leave the program waiting for another command, with 'EXTERNAL 
-        CONTROL' in the status bar.&nbsp; The program stays in this state until an Exit 
+        and it will leave the program waiting for another command, with &#39;EXTERNAL 
+        CONTROL&#39; in the status bar.&nbsp; The program stays in this state until an Exit 
         command is received or the external Python exits (i.e., when a script ends or an 
-        interactive Python is closed). The <strong>STOP</strong> button will be enabled 
-        and can be used to regain user control of the program.&nbsp; If this happens, 
-        the next command from Python should be able to re-establish the external 
-        control.&nbsp; If the program is busy when the first command it given, it will 
+        interactive Python is closed). If the program is busy when the first command it given, it will 
         raise a SEMmoduleError exception with text indicating that SerialEM 'is now 
         busy'.&nbsp; If you call Exit with no arguments or with a 1, it will not raise a 
         SEMexited exception; call with a 0 to have this exception be raised, such as if 
         you want to catch it from multiple places.</li>
+      <li>After the first command is received, the <strong>STOP</strong> button will be 
+        enabled and can be used to regain user control of the program.&nbsp; If this happens, 
+        SerialEM will return an error code on either the command that was being 
+        processed during the STOP, or on the next command from Python, if the script was 
+        doing something else when the button was pressed.&nbsp; The module will raise a 
+        SEMexited exception with the message &#39;User STOP&#39; instead of the usual&nbsp; 
+        &#39;Normal exit&#39;.</li>
       <li>Do not try to run two operations at once.&nbsp; If you are working in multiple 
         panes of a Jupyter notebook, be sure a command is completed before running one 
         in another pane.</li>
