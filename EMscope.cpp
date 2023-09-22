@@ -5985,8 +5985,36 @@ float CEMscope::GetC2SpotOffset(int spotSize, int probe)
 
 double CEMscope::GetCrossover(int spotSize, int probe) 
 {
+  static int numOut = 0;
+  static CString outVals = "BUG: GetCrossover values out of range in startup:\r\n";
+  static int numWarn = 0;
+  CString str;
   if (probe < 0 || probe > 1)
     probe = mProbeMode;
+
+  // Ridiculous stuff to find bug
+  if (!mWinApp->GetStartingProgram()) {
+    if (numOut && !outVals.IsEmpty()) {
+      mWinApp->AppendToLog(outVals);
+      numWarn++;
+    }
+    outVals = "";
+  }
+  if (probe < 0 || probe > 1 || spotSize < 0 || spotSize > MAX_SPOT_SIZE) {
+    if (mWinApp->GetStartingProgram()) {
+      str.Format(" %d %d ", probe, spotSize);
+      outVals += str;
+      numOut++;
+    } else {
+      if (numWarn < 5) {
+        PrintfToLog("BUG: GetCrossover values out of range: %d %d", probe, spotSize);
+        numWarn++;
+      }
+      numOut++;
+    }
+    B3DCLAMP(probe, 0, 1);
+    B3DCLAMP(spotSize, 0, MAX_SPOT_SIZE);
+  }
   return mCrossovers[spotSize][probe];
 }
 
