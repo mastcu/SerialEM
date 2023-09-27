@@ -315,8 +315,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   if (!m3dmodAutodocDir.IsEmpty() || localCtfplot) {
     if (getenv("AUTODOC_DIR"))
       saveAutodoc = getenv("AUTODOC_DIR");
-    _putenv((LPCTSTR)("AUTODOC_DIR=" + localCtfplot ? mLocalCtfplotPath : 
-      m3dmodAutodocDir));
+    _putenv((LPCTSTR)("AUTODOC_DIR=" + B3DCHOICE(localCtfplot, mLocalCtfplotPath,
+      m3dmodAutodocDir)));
     if (!m3dmodAutodocDir.IsEmpty() && m3dmodAutodocDir.Find("3dmod") > 
       m3dmodAutodocDir.GetLength() - 7 && getenv("IMOD_DIR")) {
       saveIMODdir = getenv("IMOD_DIR");
