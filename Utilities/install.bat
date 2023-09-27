@@ -43,7 +43,7 @@ for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg6
  libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
  hdf5.dll SerialEM_Snapshot.txt concrt140.dll mfc140.dll msvcp140.dll ucrtbase.dll^
  vcruntime140.dll msvcp120.dll msvcr120.dll DE.Win32.dll DE.Win64.dll svml_dispmd.dll^
- ctfplotter.exe) DO (
+ ctfplotter.exe ctfplotter.adoc) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 
@@ -127,6 +127,7 @@ COPY /Y imodzlib1.dll ..
 COPY /Y hdf5.dll ..
 IF EXIST svml_dispmd.dll  COPY /Y svml_dispmd.dll ..
 IF EXIST ctfplotter.exe  COPY /Y ctfplotter.exe ..
+IF EXIST ctfplotter.adoc  COPY /Y ctfplotter.adoc ..
 IF EXIST msvcp120.dll  COPY /Y msvcp120.dll ..
 IF EXIST msvcr120.dll  COPY /Y msvcr120.dll ..
 COPY /Y SerialEM_Snapshot.txt ..
