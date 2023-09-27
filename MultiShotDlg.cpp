@@ -515,7 +515,6 @@ void CMultiShotDlg::OnButStepAdjust()
   }
   mSteppingAdjusting = custom ? 2 : 1;
   UpdateAndUseMSparams(false);
-  mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
   StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
     "Adjust shift at first corner of pattern");
 }
@@ -533,6 +532,7 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   mAreaSaved = RECORD_CONSET;
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Update();
+  mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
   mSavedMouseStage = mShiftManager->GetMouseMoveStage();
   mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
@@ -601,8 +601,7 @@ void CMultiShotDlg::StopRecording(void)
   LowDoseParams curLDP;
   if (mRecordingCustom || mRecordingRegular || mSteppingAdjusting) {
     mRecordingCustom = mRecordingRegular = false;
-    if (mSteppingAdjusting)
-      mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
+    mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     if (mSavedLDForCamera >= 0) {
       if (mSteppingAdjusting && mAreaSaved != RECORD_CONSET &&

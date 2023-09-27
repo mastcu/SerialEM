@@ -6879,7 +6879,7 @@ int CMacCmd::ScaledSpectrum(void)
   if (sideBySide) {
     finalSize = B3DMIN(finalSize, padSize);
     if (finalSize < 100)
-      ABORT_LINE("The output size needs to eb either 0 or at least 100for:\n\n");
+      ABORT_LINE("The output size needs to be either 0 or at least 100 for:\n\n");
   } else if (finalSize < 100 || finalSize > padSize)
     ABORT_LINE("The output size needs to be either 0 or between 100 and the maximum"
       " dimension of the input image for:\n\n");

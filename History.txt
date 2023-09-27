@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/27/23: SEM_4-1-0beta23
+9/27/23: Incorporated new DE dll that fixes continuous mode for server
+versions before 2.5.
+
+9/27/23: Made starting image shift be restored at the end when recording image
+shift vectors for Multiple Records.
+
 9/27/23: Added a non-Qt version of Ctfplotter to install package and changed
 SerialEM to use this unconditionally unless a graph is being saved.
 

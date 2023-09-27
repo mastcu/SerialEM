@@ -1099,6 +1099,9 @@ BOOL CSerialEMApp::InitInstance()
     }
     CopyCameraToCurrentLDP();
   }
+  if (mScope->GetNoScope() && mShiftManager->GetStageInvertsZAxis() < 0) {
+    mShiftManager->SetStageInvertsZAxis(0);
+  }
   if (mSystemDPI != 120)
     mDisplayNotTruly120DPI = false;
   FixInitialPlacements();
