@@ -15,6 +15,7 @@
 #include "SerialEMDoc.h"
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
+#include "PluginManager.h"
 #include "Shared/iimage.h"
 #include "Shared/b3dutil.h"
 #include "Shared/ctfutils.h"
@@ -164,6 +165,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   DWORD dwWrite, dwWritten;
   CString saveAutodoc, saveIMODdir;
   bool pipeInput = !inputString.IsEmpty();
+  bool localCtfplot = !mLocalCtfplotPath.IsEmpty() &&
+    command.Find(mLocalCtfplotPath) == 0;
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
@@ -309,12 +312,13 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     return 1;
   }
 
-  if (!m3dmodAutodocDir.IsEmpty()) {
-    if (getenv("IMOD_AUTODOC_DIR"))
-      saveAutodoc = getenv("IMOD_AUTODOC_DIR");
-    _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + m3dmodAutodocDir));
-    if (m3dmodAutodocDir.Find("3dmod") > m3dmodAutodocDir.GetLength() - 7 &&
-      getenv("IMOD_DIR")) {
+  if (!m3dmodAutodocDir.IsEmpty() || localCtfplot) {
+    if (getenv("AUTODOC_DIR"))
+      saveAutodoc = getenv("AUTODOC_DIR");
+    _putenv((LPCTSTR)("AUTODOC_DIR=" + localCtfplot ? mLocalCtfplotPath : 
+      m3dmodAutodocDir));
+    if (!m3dmodAutodocDir.IsEmpty() && m3dmodAutodocDir.Find("3dmod") > 
+      m3dmodAutodocDir.GetLength() - 7 && getenv("IMOD_DIR")) {
       saveIMODdir = getenv("IMOD_DIR");
       _putenv("IMOD_DIR=");
     }
@@ -326,8 +330,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     &sinfo, &mExtProcInfo);
 
   // Restore 
-  if (!m3dmodAutodocDir.IsEmpty()) {
-    _putenv((LPCTSTR)("IMOD_AUTODOC_DIR=" + saveAutodoc));
+  if (!saveAutodoc.IsEmpty()) {
+    _putenv((LPCTSTR)("AUTODOC_DIR=" + saveAutodoc));
   }
   if (!saveIMODdir.IsEmpty())
     _putenv((LPCTSTR)("IMOD_DIR=" + saveIMODdir));
@@ -506,7 +510,9 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
   }
 
   // Make the command  The path may eventually be required
-  if (mCtfplotterPath.IsEmpty())
+  if (!mLocalCtfplotPath.IsEmpty() && !saveType)
+    command = mLocalCtfplotPath + "\\ctfplotter.exe";
+  else if (mCtfplotterPath.IsEmpty())
     command = "ctfplotter.exe";
   else
     command = mCtfplotterPath + "\\ctfplotter.exe";
@@ -672,9 +678,14 @@ void CExternalTools::CheckForIMODPath()
   
   mCheckedForIMOD = true;
 
+  path = mWinApp->mPluginManager->GetExePath();
+  if (CFile::GetStatus((LPCTSTR)(path + "\\ctfplotter.exe"), status) &&
+    CFile::GetStatus((LPCTSTR)(path + "\\ctfplotter.adoc"), status))
+    mLocalCtfplotPath = path;
+
   if (!mCtfplotterPath.IsEmpty()) {
     if (mCtfplotterPath.Find("3dmod") >= 0 &&
-      CFile::GetStatus((LPCTSTR)(mCtfplotterPath + "\\genhstplt.adoc"), status))
+      CFile::GetStatus((LPCTSTR)(mCtfplotterPath + "\\genhstplt.exe"), status))
       m3dmodAutodocDir = mCtfplotterPath;
     return;
   }

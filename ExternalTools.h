@@ -25,6 +25,7 @@ private:
   CArray<CString, CString> mCommands;
   CArray<CString, CString> mArgStrings;
   CString mCtfplotterPath;
+  CString mLocalCtfplotPath;
   int mLastPSresol;
   float mLastCropPixel;
   float mLastFitStart;
