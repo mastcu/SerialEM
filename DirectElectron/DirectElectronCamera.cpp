@@ -386,8 +386,8 @@ int DirectElectronCamera::initDEServer()
     return -1;
   }
 
-  SEMTrace('D', "Supposed readPort %d, write port: %d and de server: %s", mDE_READPORT, 
-    mDE_WRITEPORT, mDE_SERVER_IP);
+  SEMTrace('D', "Supposed readPort %d, write port: %d and de server: %s API: %d",
+    mDE_READPORT, mDE_WRITEPORT, mDE_SERVER_IP, sUsingAPI2 ? 2 : 1);
 
   if ((!sUsingAPI2 && (mDE_READPORT <= 0 || mDE_WRITEPORT <= 0)) || mDE_SERVER_IP == "") {
     AfxMessageBox("You did not properly setup the DE Server Properties!!!");
@@ -1629,6 +1629,7 @@ int DirectElectronCamera::setDebugMode()
 float DirectElectronCamera::getCameraTemp()
 {
   long param;
+  bool success;
 
   CSingleLock slock(&m_mutex);
 
@@ -1636,10 +1637,16 @@ float DirectElectronCamera::getCameraTemp()
 
     if (m_DE_CLIENT_SERVER) {
       float temp = 10;
-      if (!mDeServer->getFloatProperty("Temperature - Detector (Celsius)", &temp)) {
-        CString str = ErrorTrace("ERROR: Could NOT get the Temperature of DE camera ");
-        //AfxMessageBox(str);
+      int itemp = 10;
+      if (mServerVersion < 205390000) {
+        success = mDeServer->getFloatProperty("Temperature - Detector (Celsius)", &temp);
+      } else {
+        success = mDeServer->getIntProperty("Temperature - Detector (Celsius)", &itemp);
+        temp = (float)itemp;
       }
+      if (!success)
+        CString str = ErrorTrace("ERROR: Could NOT get the Temperature of DE camera ");
+        //AfxMessageBox(str); 
       m_camera_Temperature = temp;
 
     }
@@ -1728,8 +1735,7 @@ float DirectElectronCamera::getWaterLineTemp()
   float temp = 0.;
   CString str;
 
-  if ( mServerVersion < 205000000 && 
-    !mDeServer->getFloatProperty("Temperature - Water Line (Celsius)", &temp)) {
+  if (!mDeServer->getFloatProperty("Temperature - Water Line (Celsius)", &temp)) {
 
     str.Format("Could NOT get the Water Line Temperature.");
     //AfxMessageBox(str);

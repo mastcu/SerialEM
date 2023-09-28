@@ -118,6 +118,7 @@ struct LiveThreadData {
 #define DE_AUTOSAVE_RENAMES1    203000000
 #define DE_RETURNS_FRAME_PATH   205000000
 #define DE_HAS_API2             205000000
+#define DE_DETECTOR_TEMP_IS_INT 205380000
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
