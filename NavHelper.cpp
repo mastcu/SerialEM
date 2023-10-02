@@ -2332,6 +2332,10 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       if (mWinApp->GetFilterMode()) {
         mCamera->SetIgnoreFilterDiffs(true);        
         mWinApp->mFilterControl.UpdateSettings();
+
+        // Do setup on JEOL for same reasons as it is done when changing low dose area
+        if (JEOLscope)
+          mCamera->SetupFilter();
       }
     }
   }
