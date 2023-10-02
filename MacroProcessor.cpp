@@ -4661,6 +4661,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       for (ind = argInd; ind < MAX_MACRO_TOKENS; ind++) {
         if (mItemEmpty[ind])
           break;
+        if (mStrItems[ind].Replace("\\", "\\\\"))
+          mStrItems[ind].Replace("|\\\\", "\\");
         if (ind > argInd)
           mMacroForScrpLang += ", ";
         mMacroForScrpLang += "\"\"\"" + mStrItems[ind] + "\"\"\"";
@@ -4935,7 +4937,7 @@ int CMacroProcessor::CountLinesToCurIndex(int macNum, int curIndex)
 void CMacroProcessor::EnhancedExceptionToLog(CString &str)
 {
   CString line, numStr, name;
-  int indLine, indComma, lineNum, ind, lineInSrc, indInSrc, macNum, indMod;
+  int indLine, indComma, lineNum, ind, lineInSrc, indInSrc, macNum = -1, indMod;
   int currentInd = 0, length = str.GetLength();
   CString attribErr;
 
