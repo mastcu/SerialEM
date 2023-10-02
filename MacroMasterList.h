@@ -752,12 +752,15 @@ MAC_SAME_NAME_NOARG(ReportIfNavAcquiring, 0, 4, REPORTIFNAVACQUIRING)
 MAC_SAME_FUNC_ARG(SetTiltSeriesAtItem, 1, 0, SetItemAcquire, SETTILTSERIESATITEM, Ii)
 MAC_SAME_FUNC_ARG(BackgroundMoveStage, 2, 1, BackgroundTilt, BACKGROUNDMOVESTAGE, DDd)
 MAC_SAME_FUNC_ARG(StopBackgroundStage, 0, 1, BackgroundTilt, STOPBACKGROUNDSTAGE, dd)
+MAC_SAME_FUNC_ARG(ReportTiltSeriesAtItem, 1, 4, ReportItemAcquire, REPORTTILTSERIESATITEM, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
 // Use SubstituteLineStripItems or JustStripItems for trailing strings to work in Python
 // Update the argument list when you add arguments
+// Add a second "reserved" repVal when adding a command with one repVal if it might grow
+// Try not to expand from one to two repVals on existing commands, it breaks python script
 //
 // The longest command name is now 25 characters but 23 is a more common limit
 // # of args, 1 for arith allowed + 2 for not allowed in Set... + 4 looping in OnIdle OK

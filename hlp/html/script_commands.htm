@@ -868,6 +868,14 @@
             if the variable contains either a single numeric value or an array of numeric values</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReturnAllValuesAsTuples [#]</TD>
+          <TD>Make all <I>reportedValues</I> be returned as a tuple, even when there is a single 
+            reported value.&nbsp; Otherwise, a single value will be returned as a float, which can be problematic
+            for commands that return a single value sometimes and multiple values other times, or if a second
+             <I>reportedValue</I> is added to a command that previously had one.&nbsp; 
+            Set the optional <b>#</b> to 0 to turn off this feature.&nbsp; Command added in 4.1, 1-Oct-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">bufferImage(buf)</TD>
           <TD>Constructs an instance of the 'bufferImage' type that has an image pointer and other
             essential information about the image in buffer <b>buf</b>, which is a
@@ -4968,7 +4976,7 @@
             that number of hole position remaining after excluding some holes in the pattern.&nbsp; If the optional
             <B>#S</B> and <B>#E</B> are set with starting and ending item numbers in the Navigator table
              (numbered from 1), totals will include only items within those limits.&nbsp; Each value is returned as
-            -1 if Navigator is not open./TD>
+            -1 if Navigator is not open.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetItemHolesToAcquire # var</TD>
@@ -4987,12 +4995,10 @@
             vector.&nbsp; Command added in 4.1, 3-Aug-23.</TR>
         <TR>
           <TD class="scriptcommand">ReportItemAcquire [#]</TD>
-          <TD>Reports the Acquire and Tilt Series state of the Navigator item whose index in the table is <b>#</b>,
+          <TD>Reports the Acquire state of the Navigator item whose index in the table is <b>#</b>,
             numbered from 1; or if <b>#</b> is negative, reports on item that many items from the
             end of the table (i.e., -1 reports on the last item), or if 0 or no <b>#</b> is specified, reports on
-            the current item.&nbsp; Sets <i>reportedValue1</i> if 1 if Acquire is on and (as of 7-Sep-23) sets
-             <i>reportedValue2</i> to 1 if the item is set for a tilt series.&nbsp; No 
-            optional assignment to variable.</TD>
+            the current item.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetItemAcquire [#I] [#A]</TD>
@@ -5005,6 +5011,12 @@
             current acquisition point to the end of the range being acquired.&nbsp; The end of the range
             is the original end of the Navigator table when acquisition was started, or the
             end of the subset if one is being acquired.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportTiltSeriesAtItem #</TD>
+          <TD>Reports whether the item specified by <b>#</b> is set for a tilt series; set <b>#</b> 
+            0 for the current item, positive for the index of the item in the table, or negative for the
+            item that many items from the end of the table.&nbsp; Command added in 4.1, 1-Oct-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetTiltSeriesAtItem [#I] [#T]</TD>

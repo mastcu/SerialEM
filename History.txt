@@ -3,9 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/1/23: Added Python-only script command to make module return even a single
+value as a tuple; reverted ReportItemAcquire to reporting a single value, and
+added separate command to report if tilt series is set for an item.
+
+10/1/23: Fixed problems with backlashes in SEMargStrings passed to a Python
+script embedded in a regular one.
+
+10/1/23: Fixed GetCrossover being called with spot size out of range.
+
 9/27/23: SEM_4-1-0beta23
-9/27/23: Incorporated new DE dll that fixes continuous mode for server
-versions before 2.5.
+9/27/23: Incorporated new DE dll that fixes continuous mode.
 
 9/27/23: Made starting image shift be restored at the end when recording image
 shift vectors for Multiple Records.
