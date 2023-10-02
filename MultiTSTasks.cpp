@@ -798,11 +798,12 @@ AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int s
 {
   int aboveCross, aboveNeeded;
   AutocenParams *parmP;
-  aboveNeeded = mBeamAssessor->GetAboveCrossover(spot, roughInt, probe);
+  aboveNeeded = spot > MAX_SPOT_SIZE || 
+    mBeamAssessor->GetAboveCrossover(spot, roughInt, probe);
   for (index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];
-    aboveCross = mBeamAssessor->GetAboveCrossover(parmP->spotSize, parmP->intensity, 
-      parmP->probeMode);
+    aboveCross = parmP->spotSize > MAX_SPOT_SIZE || mBeamAssessor->GetAboveCrossover
+    (parmP->spotSize, parmP->intensity, parmP->probeMode);
     if (parmP->camera == camera && (camera < 0 || (parmP->magIndex == magInd && 
       parmP->spotSize == spot && aboveCross == aboveNeeded && parmP->probeMode == probe)))
       return parmP;
