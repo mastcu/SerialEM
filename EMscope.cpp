@@ -5993,7 +5993,7 @@ double CEMscope::GetCrossover(int spotSize, int probe)
     probe = mProbeMode;
 
   // Ridiculous stuff to find bug
-  if (!mWinApp->GetStartingProgram()) {
+  if (!(mWinApp->GetStartingProgram() || mWinApp->GetAppExiting())) {
     if (numOut && !outVals.IsEmpty()) {
       mWinApp->AppendToLog(outVals);
       numWarn++;
@@ -6001,7 +6001,7 @@ double CEMscope::GetCrossover(int spotSize, int probe)
     outVals = "";
   }
   if (probe < 0 || probe > 1 || spotSize < 0 || spotSize > MAX_SPOT_SIZE) {
-    if (mWinApp->GetStartingProgram()) {
+    if (mWinApp->GetStartingProgram() || mWinApp->GetAppExiting()) {
       str.Format(" %d %d ", probe, spotSize);
       outVals += str;
       numOut++;
