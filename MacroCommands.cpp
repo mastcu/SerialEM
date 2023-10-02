@@ -10035,7 +10035,7 @@ int CMacCmd::ReportItemAcquire(void)
   if (CMD_IS(REPORTTILTSERIESATITEM)) {
     mLogRpt.Format("Navigator item %d %s set for tilt series", index + 1, 
       navItem->mTSparamIndex >= 0 ? "IS" : "is NOT");
-    SetRepValsAndVars(2, navItem->mTSparamIndex >= 0 ? 1 : 0);
+    SetRepValsAndVars(2, navItem->mTSparamIndex >= 0 ? 1 : 0, 0);
   } else {
     mLogRpt.Format("Navigator item %d has Acquire %s", index + 1,
       (navItem->mAcquire == 0) ? "disabled" : "enabled");

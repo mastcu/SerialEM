@@ -5016,7 +5016,8 @@
           <TD class="scriptcommand">ReportTiltSeriesAtItem #</TD>
           <TD>Reports whether the item specified by <b>#</b> is set for a tilt series; set <b>#</b> 
             0 for the current item, positive for the index of the item in the table, or negative for the
-            item that many items from the end of the table.&nbsp; Command added in 4.1, 1-Oct-23.</TD>
+            item that many items from the end of the table.&nbsp; Also sets <i>reportedValue2</i> to 0 for now so
+             that Python returns a tuple.&nbsp; Command added in 4.1, 1-Oct-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetTiltSeriesAtItem [#I] [#T]</TD>
