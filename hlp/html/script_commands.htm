@@ -906,6 +906,14 @@
             must be specified in a property entry 'SocketServerPort 8'.
           </TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">ReportNumModuleFuncs</TD>
+          <TD>Returns the number of functions (an integer) defined in the serialem module through 
+            MacroMasterList.h (the count odes not include some of the functions listed in this section).&nbsp; Use 
+            the command 'ReportNumExeFuncs' to find the corresponding number in the SerialEM executable and 
+            thus determine whether the module needs to be updated to have the newest commands.&nbsp; Command added in 4.1, 3-Oct-23.
+          </TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A name="camera_commands"></A><B>Camera Commands</B></P>
@@ -5593,16 +5601,30 @@
           <TD>Reports the &#39;system path&#39;, the directory where calibrations and properties 
             files are located.&nbsp; Command added in 4.1, 16-Apr-23.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">ReportNumExeFuncs</TD>
+          <TD>Reports the number of script commands defined in MacroMasterList.h; use with 
+            ReportNumModuleFuncs in a Python script to determine if the serialem module is 
+            up to date.&nbsp; Command added in 4.1, 3-Oct-23.</TD>
+        </TR>
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>
       In addition to the commands starting with 'Set', these commands
     allow arithmetic arguments:
     <pre>
 AbsoluteFocusLimits
+AddImagePosAsNavPoint
+AddImages
+AddStagePosAsNavPoint
+AdjustStagePosForNav
+BackgroundMoveStage
 BackgroundTilt
 BeamTiltDirection
+CalibrateComaVsIS
+CalibrateHighFocusIS
 ChangeEnergyLoss
 ChangeFocus
+ChangeFrameAndExposure
 ChangeIntensityBy
 ChangeItemRegistration
 ChangeMag
@@ -5610,7 +5632,12 @@ ChangeMagAndIntensity
 CircleFromPoints
 CropImage
 CtfFind
+Ctfplotter
+CycleTargetDefocus
 Delay
+DivideImages
+DoLoop
+DriftWaitTask
 EarlyReturnNextShot
 EchoEval
 EchoNoLineEnd
@@ -5619,12 +5646,16 @@ ElapsedTickTime
 ExposeFilm
 FocusChangeLimits
 FrameThresholdNextShot
+GetUniqueNavID
 ImageShiftByMicrons
 ImageShiftByPixels
 ImageShiftByUnits
 IncPercentC2
 IncTargetDefocus
+LimitNextAutoAlign
+LimitNextRoughEucen
 LongOperation
+Loop
 ManualFilmExposure
 ModifyFrameTSShifts
 MoveBeamByFieldFraction
@@ -5635,19 +5666,25 @@ MoveStage
 MoveStageTo
 MoveStageWithSpeed
 MultipleRecords
+MultiplyImages
 PreCookMontage
 QuickFlyback
 RecordAndTiltTo
 ReduceImage
 RelaxStage
 ResetShiftIfAbove
+ScaleImage
+SetFreeLensControl
 SetSlitIn
+SetStageBAxis
 ShiftItemsByMicrons
 SmoothFocusNextShot
 SpecialExposeFilm
 StageShiftByPixels
 StepFocusNextShot
+StopBackgroundStage
 SubareaMean
+SubtractImages
 TestRelaxingStage
 TestSTEMshift
 TiltBy
@@ -5657,7 +5694,11 @@ UpdateHWDarkRef
 WaitForDose
 WaitForMidnight
 WalkUpTo
-ZemlinTableau</pre>
+ZemlinTableau
+</pre>
+      <p>This list is not kept up to date between stable releases.  Set DebugOutput to '%' in
+        the SerialEM properties file and start the program to see a current list.
+      </p>
     </basefont>
   </BODY>
 </HTML>

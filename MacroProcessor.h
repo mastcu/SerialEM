@@ -49,6 +49,7 @@ enum {TXFILE_READ_ONLY, TXFILE_WRITE_ONLY, TXFILE_MUST_EXIST, TXFILE_MUST_NOT_EX
 // An enum with indexes to true commands, preceded by special operations
 enum {
 #include "MacroMasterList.h"
+CME_ENUM_LENGTH
 };
 
 #define CME_NOTFOUND -1

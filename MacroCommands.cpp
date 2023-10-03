@@ -7677,6 +7677,15 @@ int CMacCmd::IsVersionAtLeast(void)
   return 0;
 }
 
+// ReportNumExeFuncs
+int CMacCmd::ReportNumExeFuncs()
+{
+  mLogRpt.Format("SerialEM executable has %d script commands (functions)", 
+    CME_ENUM_LENGTH);
+  SetRepValsAndVars(1, CME_ENUM_LENGTH);
+  return 0;
+}
+
 int CMacCmd::IsFFTWindowOpen(void)
 {
   int index;

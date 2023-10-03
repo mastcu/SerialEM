@@ -753,6 +753,7 @@ MAC_SAME_FUNC_ARG(SetTiltSeriesAtItem, 1, 0, SetItemAcquire, SETTILTSERIESATITEM
 MAC_SAME_FUNC_ARG(BackgroundMoveStage, 2, 1, BackgroundTilt, BACKGROUNDMOVESTAGE, DDd)
 MAC_SAME_FUNC_ARG(StopBackgroundStage, 0, 1, BackgroundTilt, STOPBACKGROUNDSTAGE, dd)
 MAC_SAME_FUNC_ARG(ReportTiltSeriesAtItem, 1, 4, ReportItemAcquire, REPORTTILTSERIESATITEM, I)
+MAC_SAME_NAME_NOARG(ReportNumExeFuncs, 0, 4, REPORTNUMEXEFUNCS)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

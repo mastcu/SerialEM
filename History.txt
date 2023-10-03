@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/3/23: Added script commands to determine number of functions defined in the
+SerialEM executable and serialem module, for checking if module is up to date.
+
 10/1/23: Added Python-only script command to make module return even a single
 value as a tuple; reverted ReportItemAcquire to reporting a single value, and
 added separate command to report if tilt series is set for an item.
