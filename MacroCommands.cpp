@@ -4954,6 +4954,28 @@ int CMacCmd::ReportScreenCurrent(void)
   return 0;
 }
 
+// ReportBeamStopPosition
+int CMacCmd::ReportBeamStopPosition()
+{
+  const char *posName[] = {"has unknown position", "is retracted", "is inserted", 
+    "is inserted halfway", "is moving"};
+  int pos = mScope->GetBeamStopPos();
+  if (pos < -1)
+    return 1;
+  mLogRpt.Format("The beam stop %s", posName[B3DMIN(4, pos + 1)]);
+  SetRepValsAndVars(1, pos);
+  return 0;
+}
+
+// SetBeamStopPosition
+int CMacCmd::SetBeamStopPosition()
+{
+  if (!mScope->SetBeamStopPos(mItemInt[1] ? 1 : 0))
+    return 1;
+  mMovedAperture = true;
+  return 0;
+}
+
 // ImageShiftByPixels
 int CMacCmd::ImageShiftByPixels(void)
 {
@@ -8731,8 +8753,8 @@ int CMacCmd::ReportVacuumGauge(void)
 
   if (!mScope->GetGaugePressure((LPCTSTR)mStrItems[1], index, delISX)) {
     if (JEOLscope && index < -1 && index > -4) {
-      report.Format("Name must be \"Pir\" or \"Pen\" followed by number between 0 and "
-        "9 in line:\n\n");
+      report.Format("Name must be \"Pir\" or \"Pen\" followed by number between"
+        " 0 and 9 in line:\n\n");
       ABORT_LINE(report);
     }
     AbortMacro();

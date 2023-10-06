@@ -250,6 +250,8 @@ SCOPE_SAMENAME(CamNoArg, FocusRamperInitialize);
 SCOPE_SAMENAME(DoFocRamp, DoFocusRamp);
 SCOPE_SAMENAME(FinishFocRamp, FinishFocusRamp);
 SCOPE_SAMENAME(ShowMB, ShowMessageBox);
+SCOPE_SAMENAME(ScopeGetInt, GetBeamStopper);
+SCOPE_SAMENAME(ScopeSetInt, SetBeamStopper);
 
 #undef SCOPE_SAMENAME
 #endif                                 

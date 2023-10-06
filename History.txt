@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/6/23: Added script commands and other functions to control beam stop on
+newer JEOL scopes and FEI scopes with UTAPI interface.
+
+10/6/23: Added ability to renew connection to JEOL scope when there is a time
+out in Navigator acquisition.
+
+10/6/23: Added "special debug levels" to get some specific output without all
+of the output activated by DebugOutout key letters.
+
 10/3/23: Added script commands to determine number of functions defined in the
 SerialEM executable and serialem module, for checking if module is up to date.
 

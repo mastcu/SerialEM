@@ -908,8 +908,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNumModuleFuncs</TD>
-          <TD>Returns the number of functions (an integer) defined in the serialem module through 
-            MacroMasterList.h (the count odes not include some of the functions listed in this section).&nbsp; Use 
+          <TD>Returns the number of functions defined in the serialem module through 
+            MacroMasterList.h (the count does not include some of the functions listed in this section).&nbsp; 
+            An integer is returned regardless of whether ReturnAllvaluesAsTuples was set.&nbsp; Use 
             the command 'ReportNumExeFuncs' to find the corresponding number in the SerialEM executable and 
             thus determine whether the module needs to be updated to have the newest commands.&nbsp; Command added in 4.1, 3-Oct-23.
           </TD>
@@ -3232,6 +3233,17 @@
         <TR>
           <TD class="scriptcommand">ReportScreenCurrent</TD>
           <TD>Reports the unsmoothed screen current in nA.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportBeamStopPosition</TD>
+          <TD>Reports 0 or 1 if the beam stop is out or in, -1 if it is in an unknown position, 
+            and on Thermo/FEI scopes, 2 if it is inserted halfway or 3 if it is moving.&nbsp; 
+            Should work on newer generation JEOL scopes (F200, various ARM's, also 2200FS) 
+            and on Thermo/FEI scopes with the UTAPI interface.&nbsp; Command added in 4.1, 6-Oct-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetBeamStopPosition #</TD>
+          <TD>Inserts or retracts the beam stop if <b>#</b> is non-zero or 0.&nbsp; Command added in 4.1, 6-Oct-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLens name</TD>
