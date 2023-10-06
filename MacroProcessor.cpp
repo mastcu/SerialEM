@@ -5269,7 +5269,7 @@ UINT CMacroProcessor::StdoutToLogProc(LPVOID pParam)
     bSuccess = ReadFile(*outRd, buffer, bufLen - 1, &dwRead, NULL);
     if (!bSuccess || dwRead == 0)
       break;
-    buffer[dwRead] = 0x00;
+    buffer[B3DMIN(bufLen - 1, dwRead)] = 0x00;
     SEMTrace('0', buffer);
   }
   CloseHandle(*outRd);
