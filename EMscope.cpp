@@ -1127,6 +1127,47 @@ int CEMscope::Initialize()
   return startErr;
 }
 
+
+// Disconnect and reconnect to JEOL to try to cure errors
+int CEMscope::RenewJeolConnection()
+{
+  int startErr = 0, startCall = 0, numTry = 5, trial, delay = 5000;
+  double startTime;
+  if (!JEOLscope)
+    return -1;
+  KillUpdateTimer();
+  sInitialized = false;
+  startTime = GetTickCount();
+  while (SEMTickInterval(startTime) < 5000)
+    SleepMsg(10);
+  for (trial = 0; trial < numTry; trial++) {
+    startErr = 0; startCall = 0;
+    mPlugFuncs->UninitializeScope();
+    startTime = GetTickCount();
+    while (SEMTickInterval(startTime) < delay)
+      SleepMsg(10);
+    mPlugFuncs->InitializeScope();
+    mPlugFuncs->GetNumStartupErrors(&startErr, &startCall);
+    if (!ResetDefocus(true))
+      startErr++;
+    startCall++;
+    if (!startErr || startErr < startCall - 1)
+      break;
+    if (trial < numTry - 1) {
+      PrintfToLog("Trial #%d reconnecting to JEOL scope had too many startup errors",
+        trial + 1);
+      delay += 3000;
+    } else {
+      PrintfToLog("Failed to reconnect to JEOL scope");
+      return 1;
+    }
+  }
+  sInitialized = true;
+  StartUpdate();
+
+  return 0;
+}
+
 void CEMscope::StartUpdate()
 {
   mUpdateID = ::SetTimer(NULL, 1, mUpdateInterval, UpdateProc);
@@ -7292,6 +7333,34 @@ int CEMscope::GetCurrentPhasePlatePos(void)
   return pos;
 }
 
+// Get position of beam stop
+int CEMscope::GetBeamStopPos()
+{
+  int pos = -2;
+  if (!sInitialized || !mPlugFuncs->GetBeamStopper)
+    return -2;
+  ScopeMutexAcquire("GetBeamStopPos", true);
+  try {
+    pos = mPlugFuncs->GetBeamStopper();
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting beam stop position "));
+  }
+  return pos;
+}
+
+// Set beam stop position through aperture thread
+bool CEMscope::SetBeamStopPos(int newPos)
+{
+  if (!sInitialized || !mPlugFuncs->SetBeamStopper)
+    return false;
+  mApertureTD.actionFlags = APERTURE_BEAM_STOP;
+  mApertureTD.apIndex = newPos;
+  if (StartApertureThread("setting beam stop position "))
+    return false;
+  return true;
+}
+
 // Start thread for aperture or phase plate movement
 int CEMscope::StartApertureThread(const char *descrip)
 {
@@ -7341,7 +7410,9 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
   ScopeMutexAcquire("ApertureMoveProc", true);
-  if (FEIscope) {
+
+  // Beam stop available only with Utapi, does not need thread
+  if (FEIscope && !(td->actionFlags & APERTURE_BEAM_STOP)) {
     if (td->plugFuncs->BeginThreadAccess(1, 0)) {
       sThreadErrString.Format("Error creating second instance of microscope object for"
         " moving %s", (td->actionFlags & APERTURE_NEXT_PP_POS) ? "phase plate" :
@@ -7364,6 +7435,9 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
         if (retval && td->plugFuncs->GetLastErrorString)
           td->description += td->plugFuncs->GetLastErrorString();
       }
+      if (td->actionFlags & APERTURE_BEAM_STOP) {
+        td->plugFuncs->SetBeamStopper(td->apIndex);
+      }
     }
     catch (_com_error E) {
 
@@ -7374,7 +7448,7 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
     }
   }
 
-  if (FEIscope) {
+  if (FEIscope && !(td->actionFlags & APERTURE_BEAM_STOP)) {
     td->plugFuncs->EndThreadAccess(1);
   }
   CoUninitialize();
@@ -8087,6 +8161,8 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
   // If updating by event, first wait to see it go non-ready, using the ready state flag
   if (JEOLscope) {
     for (i = 0; i < ntry; i++) {
+      if (!sInitialized)
+        return;
       if (useEvents)
         GetValuesFast(1);
       status = smi->plugFuncs->GetStageStatus();
@@ -8113,6 +8189,8 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
           sJeolReadStageForWait ? "reading" : "event", status, i * waitTime,
           SEMSecondsSinceStart());
         for (i = 0; i < ntryReady; i++) {
+          if (!sInitialized)
+            return;
           if (useEvents)
             GetValuesFast(1);
           status = smi->plugFuncs->GetStageStatus();
@@ -8144,6 +8222,8 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
   // If no event update or didn't see busy, or events never came through,
   // check status until it clears; otherwise just do a direct status read to make sure
   while (1) {
+    if (!sInitialized)
+      return;
     try {
       if (!SEMCheckStageTimeout()) {
         status = smi->plugFuncs->GetStageStatus();
@@ -8162,7 +8242,7 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
   }
 
   // Get actual position now and update state
-  if (JEOLscope) {
+  if (JEOLscope  && sInitialized) {
     try {
       smi->plugFuncs->GetStagePosition(&sx, &sy, &sz);
       if (smi->axisBits & axisXY) {

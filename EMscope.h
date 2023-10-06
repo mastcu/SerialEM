@@ -153,6 +153,7 @@ struct SynchroThreadData {
 #define APERTURE_SET_SIZE     1
 #define APERTURE_SET_POS      2
 #define APERTURE_NEXT_PP_POS  4
+#define APERTURE_BEAM_STOP    8
 
 struct ApertureThreadData {
   int actionFlags;
@@ -532,6 +533,7 @@ public:
   void SetCosineTilt(BOOL inVal) {m_bCosineTilt = inVal;};
   BOOL GetCosineTilt() {return m_bCosineTilt;};
   int Initialize();
+  int RenewJeolConnection();
   CEMscope();
   virtual ~CEMscope();
 
@@ -1041,6 +1043,8 @@ public:
   BOOL SetStageBAxis(double inVal);
   int CheckApertureKind(int kind);
   int GetCurrentPhasePlatePos(void);
+  int GetBeamStopPos();
+  bool SetBeamStopPos(int newPos);
   void PositionChangingPartOfIS(double curISX, double curISY, float &posChangingISX, float &posChangingISY);
   void IncOrAccumulateBeamShift(double beamDelX, double beamDelY, const char *descrip);
   bool HitachiNeedsBSforIS(int &magIndex);
