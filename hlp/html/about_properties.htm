@@ -560,6 +560,14 @@
           </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>SpecialDebugLevel</TD>
+          <TD>
+            Set to a number to specify a debug level for special output that can be obtained 
+            without all of the items output with DebugOutput 1.&nbsp; Currently 1 for failed 
+            JEOL calls, 2 for all calls except from update, and 3 for all calls including 
+            update (i.e, like &#39;J&#39; without all the output from &#39;1&#39;).jeol</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>DiscardSettings</TD>
           <TD>Set to 1 to have &#39;Discard on Exit&#39; in the Settings menu initially turned on. </TD>
         </TR>
@@ -4235,6 +4243,12 @@
             for the reusable file must be bigger than 1 minus this fraction; otherwise the polygon
             will be assigned to a smaller montage.&nbsp; The default is 0.2.
           </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxReconnectsInNavAcquire</TD>
+          <TD>For JEOL scopes only, set to the maximum number of times to try renewing the 
+            connection to the microscope when there is a time out received at the top level 
+            in Navigator Acquire at Items (default 0).</TD>
         </TR>
       </TABLE>
       <BR>

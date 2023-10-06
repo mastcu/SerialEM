@@ -657,6 +657,7 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.maxMontageIS = 7.f;
   mNavParams.maxLMMontageIS = 35.f;
   mNavParams.fitMontWithFullFrames = 0.;
+  mNavParams.maxReconnectsInAcq = 0;
 
   mCookParams.intensity = -1.;
   mCookParams.magIndex = -1;
@@ -773,6 +774,7 @@ CSerialEMApp::CSerialEMApp()
   mLastSystemDPI = 0;
   mIdleScriptIntervalSec = 60;
   SEMUtilInitialize();
+  mSpecialDebugLevel = 0;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -3147,6 +3149,11 @@ void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore)
   sIgnoreFunctionCalled = ignore;
 }
 
+bool DLL_IM_EX SEMIsIgnoringFunctionCalled()
+{
+  return sIgnoreFunctionCalled;
+}
+
 
 // Handy trace routine to log window, can be called from threads
 // Definitions:
@@ -3194,12 +3201,17 @@ void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore)
 //   y for background save start/end reports
 //   % list script commands allowing arithmetic
 //   } Crash program on next image acquire
+//   ! @ # $ used for special debug levels
 void SEMTrace(char key, char *fmt, ...)
 {
   va_list args;
   CString str;
+  CString specKeys = "!@#$";
+  int special = ((CSerialEMApp *)AfxGetApp())->GetSpecialDebugLevel();
+  int keyInd = specKeys.Find(key);
   if ((debugOutput.IsEmpty() || debugOutput == "0" || 
-    (key != '1' && debugOutput.Find(key) < 0)) && key != '0')
+    (key != '1' && debugOutput.Find(key) < 0)) && key != '0' && 
+    (keyInd < 0 || special <= keyInd))
     return;
   if (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) != WAIT_OBJECT_0)
     return;

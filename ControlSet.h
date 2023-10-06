@@ -511,6 +511,7 @@ struct NavParams {
   float maxMontageIS;      // Maximum image shift allowed for montaging with IS
   float maxLMMontageIS;    // Maximum shift allowed in low mag
   float fitMontWithFullFrames;  // Fit montage with full frames + frac to increase overlap
+  int maxReconnectsInAcq;  // maximum number of scope reconnections during acquire
 };
 
 // Cooker parameters

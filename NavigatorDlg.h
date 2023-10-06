@@ -505,6 +505,9 @@ private:
   int mScriptToRunAtEnd;       // Script # to run when current acquisition ends
   bool mRetractAtAcqEnd;
   int mNumAcqFilesLeftOpen;    // Flag that some files were left open
+  int mNumReconnectsInAcq;     // Number of reconnections that occurred during acquire
+  bool mReconnectedInAcq;      // flag that reconnect happened
+  double mReconnectStartTime;  // Time when reconnect started
 
 public:
   BOOL RegistrationChangeOK(void);

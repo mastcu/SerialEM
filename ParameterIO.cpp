@@ -2767,7 +2767,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
-  BOOL recognized15;
+  BOOL recognized15, recognized4;
   bool startCcomment, warned999 = false;
   CString strLine;
   CString strItems[MAX_TOKENS];
@@ -2859,6 +2859,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       recognized2 = true;
       recognized30 = true;
       recognized35 = true;
+      recognized4 = true;
       recognizedc = true;
       recognized15 = true;
 
@@ -3822,7 +3823,12 @@ int CParameterIO::ReadProperties(CString strFileName)
 #define PROP_TEST_SECT4
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT4
-      else if (MatchNoCase("TSXFitInterval"))
+      else
+        recognized4 = false;
+
+      if (recognized || recognized4) {
+        recognized = true;
+      } else if (MatchNoCase("TSXFitInterval"))
         mTSParam->fitIntervalX = itemFlt[1];
       else if (MatchNoCase("TSYFitInterval"))
         mTSParam->fitIntervalY = itemFlt[1];
@@ -4028,6 +4034,8 @@ int CParameterIO::ReadProperties(CString strFileName)
        navParams->maxLMMontageIS = itemFlt[1];
      } else if (MatchNoCase("FitMontageWithFullFrames")) {
        navParams->fitMontWithFullFrames = itemFlt[1];
+     } else if (MatchNoCase("MaxReconnectsInNavAcquire")) {
+       navParams->maxReconnectsInAcq = itemInt[1];
      } else if (MatchNoCase("SMTPServer")) {
        mWinApp->mMailer->SetServer(strItems[1]);
      } else if (MatchNoCase("SendMailFrom")) {

@@ -422,6 +422,7 @@ void SetNumFEIChannels(int inval);
 double DLL_IM_EX SEMSecondsSinceStart();
 void DLL_IM_EX SEMSetFunctionCalled(const char *name, const char *descrip = NULL);
 void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore);
+bool DLL_IM_EX SEMIsIgnoringFunctionCalled();
 LensRelaxData DLL_IM_EX *SEMLookupJeolRelaxData(int normInd);
 double DLL_IM_EX SEMRecentVoltage();
 CString DLL_IM_EX SEMLastNoBoxMessage();
@@ -637,6 +638,7 @@ public:
   GetSetMember(BOOL, SaveAutosaveLog);
   GetMember(bool, InRestoreViewFocus);
   GetSetMember(BOOL, ReverseWheelZoom);
+  GetSetMember(int, SpecialDebugLevel);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -943,6 +945,7 @@ private:
   bool mInRestoreViewFocus;     // Flag so draw can be skipped if it is just from SetFocus
   int mSuppressSomeMessages;    // For Jaap...
   BOOL mReverseWheelZoom;        // "Normal" zoom has a deltaSign of -1
+  int mSpecialDebugLevel;      // A way to get some output without everything from '1'
 
 public:
   void UpdateAllEditers(void);

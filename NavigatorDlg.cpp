@@ -9357,6 +9357,8 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mGroupIDtoSkip = 0;
   mLastMapForVectors = -1;
   mSelectedItems.clear();
+  mNumReconnectsInAcq = 0;
+  mReconnectedInAcq = false;
   mSaveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
   if (FindAndSetupNextAcquireArea()) {
@@ -9438,6 +9440,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   if (mAcquireIndex < 0)
     return;
+
+  if (mReconnectedInAcq && SEMTickInterval(mReconnectStartTime) < 5000) {
+    Sleep(10);
+    mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+    return;
+  }
   item = mItemArray[mAcquireIndex];
 
   if (mAcqStepIndex < 0) {
@@ -9675,8 +9683,20 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   } else {
 
+    // Check for reconnect after timeout and advance to next point
+    if (mReconnectedInAcq) {
+      mAcqSteps[mAcqStepIndex] = ACQ_MAX_STEPS + 1;
+      mReconnectedInAcq = false;
+    }
+
     // PROCESS THE PRECEDING ACTION
     switch (mAcqSteps[mAcqStepIndex]) {
+
+      // After reconnect
+    case ACQ_MAX_STEPS +1:
+      SkipToNextItemInAcquire(item, " that resulted in reconnecting to scope");
+      break;
+
 
       // After acquisition
     case ACQ_ACQUIRE:
@@ -10431,9 +10451,34 @@ int CNavigatorDlg::TaskAcquireBusy()
 
 void CNavigatorDlg::AcquireCleanup(int error)
 {
-  if (error == IDLE_TIMEOUT_ERROR)
-    SEMMessageBox(B3DCHOICE(mAcqParm->acquireType != ACQUIRE_RUN_MACRO, 
-    _T("Time out acquiring images"), _T("Time out running script")));
+  CString toText = B3DCHOICE(mAcqParm->acquireType != ACQUIRE_RUN_MACRO,
+    _T("Time out acquiring images"), _T("Time out running script"));
+  if (error == IDLE_TIMEOUT_ERROR) {
+    if (JEOLscope && mParam->maxReconnectsInAcq > 0) {
+      if (mNumReconnectsInAcq < mParam->maxReconnectsInAcq) {
+        mWinApp->AppendToLog(toText + 
+          ": TRYING TO RENEW CONNECTION TO SCOPE; THE USER INTERFACE WILL FREEZE");
+        mWinApp->SetStatusText(SIMPLE_PANE, "RENEWING SCOPE");
+        if (mScope->RenewJeolConnection()) {
+          mWinApp->SetStatusText(SIMPLE_PANE, "");
+          toText += "; failed to renew connection to scope";
+        } else {
+          mReconnectedInAcq = true;
+          mNumReconnectsInAcq++;
+          PrintfToLog("Reconnection # %d succeeded, skipping to next item",
+            mNumReconnectsInAcq);
+          mReconnectStartTime = GetTickCount();
+          mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+          mWinApp->SetStatusText(SIMPLE_PANE, "");
+          return;
+        }
+      } else {
+        toText += " and the connection to the scope has been "
+          "renewed the maximum number of times";
+      }
+    }
+    SEMMessageBox(toText);
+  }
 
   // Should this be called?  ErrorOccurred will call it too
   StopAcquiring();
