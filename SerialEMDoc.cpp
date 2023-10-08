@@ -1444,6 +1444,7 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
   KImageStore *store;
   int fileType = fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType;
   CString str = "Error Opening File";
+  int ind, numErr = 0;
   if (FileAlreadyOpen(cFilename, 
     "A new file was not opened; you need to close the existing one first."))
     return NULL;
@@ -1502,6 +1503,20 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
     }
 
     store->AddTitle(title);
+    if (mGlobalAdocKeys.GetSize() > 0 &&  store->GetAdocIndex() >= 0) {
+      if (AdocAcquireMutex()) {
+        for (ind = 0; ind < (int)mGlobalAdocKeys.GetSize(); ind++)
+          if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, (LPCTSTR)mGlobalAdocKeys[ind],
+            (LPCTSTR)mGlobalAdocValues[ind]))
+            numErr++;
+        if (numErr)
+          PrintfToLog("WARNING: Error adding %d entries to global section of autodoc", 
+            numErr);
+        AdocReleaseMutex();
+      } else
+        mWinApp->AppendToLog("WARNING: Failed to get mutex for adding global entries to "
+          "autodoc");
+    }
     mBufferWindow->UpdateSaveCopy();
   }
   return store;

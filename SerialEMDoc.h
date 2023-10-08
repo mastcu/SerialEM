@@ -124,6 +124,8 @@ public:
   SetMember(CString, SettingsName);
   GetSetMember(CString, BasicModeFile);
   GetSetMember(BOOL, AbandonSettings);
+  CArray<CString, CString> *GetGlobalAdocKeys() { return &mGlobalAdocKeys; };
+  CArray<CString, CString> *GetGlobalAdocValues() { return &mGlobalAdocValues; };
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void FixSettingsForIALimitCal();
@@ -213,6 +215,8 @@ private:
   float   mMaxTrunc;
 
   CParameterIO *mParamIO;
+  CArray<CString, CString> mGlobalAdocKeys;     // Key-value pairs to add to global 
+  CArray<CString, CString> mGlobalAdocValues;   // section of autodoc
   CString mSystemPath;           // Path for system settings & properties
   CString mSysPathForSettings;   // String to rewrite into settnigs file
   CString mFullSystemDir;        // Full system directory path

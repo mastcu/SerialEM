@@ -2779,6 +2779,8 @@ int CParameterIO::ReadProperties(CString strFileName)
   CameraParameters *mCamParam = mWinApp->GetCamParams();
   CameraParameters *camP;
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
+  CArray<CString, CString> *globalValues = mWinApp->mDocWnd->GetGlobalAdocValues();
+  CArray<CString, CString> *globalKeys = mWinApp->mDocWnd->GetGlobalAdocKeys();
   MacroControl *macControl = mWinApp->GetMacControl();
   ShortVec *bsBoundaries = mShiftManager->GetBeamShiftBoundaries();
 #define PROP_MODULES
@@ -2814,7 +2816,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
     "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
-    "toolarguments", "pathtopython", "endifversionbelow"};
+    "toolarguments", "pathtopython", "endifversionbelow", "globalautodocentry"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
@@ -3902,6 +3904,19 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         message.Replace("\\n", "\n");
         mWinApp->mDocWnd->SetFrameTitle(message);
+
+      } else if (MatchNoCase("GlobalAutodocEntry")) {
+        ind = 2;
+        if (strItems[2] == "=")
+          ind = 3;
+        if (strItems[ind].IsEmpty()) {
+          AfxMessageBox("Invalid key-value pair entry in property entry:\n\n" + strLine,
+            MB_EXCLAME);
+        } else {
+          StripItems(strLine, ind, message);
+          globalKeys->Add(strItems[1]);
+          globalValues->Add(message);
+        }
 
       } else if (MatchNoCase("LogBookPathName")) {
         StripItems(strLine, 1, message);
