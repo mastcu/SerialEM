@@ -197,7 +197,7 @@
           <TD>Finds the number of the script whose name is <b>text</b> and stores its number internally
             so that it can be used in a following 'CallScript -1'. &nbsp;Names are case-sensitive
              and  must match exactly, including spaces.<br />
-            Not from Python./TD>
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Call text</TD>
@@ -250,7 +250,7 @@
             Optional arguments can be added and will be placed into a list of strings named
             'SEMargStrings' in the Python script. &nbsp;This is equivalent to having the Python
             text by itself in a different script and calling it with 'CallScript'. <br />
-            Not from Python./TD>
+            Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndPythonScript</TD>
@@ -561,14 +561,14 @@
           <TD>Disables updating of the table list box in the Navigator window and redrawing of
             the image window when Navigator items are changed, to speed up scripting changes of
             multiple items.&nbsp; Updating is reenabled and done when this command is given again
-            with 0 for the optional <b>#</b> or when the script ends./TD>
+            with 0 for the optional <b>#</b> or when the script ends.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DeferLogUpdates [#]</TD>
           <TD>Makes output to the log window be held in a buffer and added to the window
              periodically, to speed up repetitive printing to log.&nbsp; The buffering ends
              when this command is given again with 0 for the optional <b>#</b> or when the script
-             ends./TD>
+             ends.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ErrorsToLog [#]</TD>
@@ -600,7 +600,7 @@
         <TR>
           <TD class="scriptcommand">IsFFTWindowOpen</TD>
           <TD>Reports whether the FFT window is open; the value can be assigned to a
-            variable after the command./TD>
+            variable after the command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RunScriptInWatchedDir pattern</TD>
@@ -784,7 +784,7 @@
             strings to have multiple lines of text for the header or descriptions.&nbsp; Use a line with
             just 'header @=' to make a variable for omitting the header text.&nbsp; The number of the
             choice (1, 2, or 3) is placed in <i>reportedValue1</i>.&nbsp; See Three Choice Box in
-            <A HREF="about_scripts.htm#examples">Advanced Examples</A>./TD>
+            <A HREF="about_scripts.htm#examples">Advanced Examples</A>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
@@ -810,7 +810,7 @@
           <TD>Opens a file chooser for a user to open an existing MRC, HDF or .idoc file and opens the file,
             just like the <a href="menu_file.htm#hidm_file_openold">Open Old</a> item in the File menu.
             The script is suspended if the user cancels or pick a file that cannot be
-            opened./TD>
+            opened.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetStatusLine #L text</TD>
@@ -1131,7 +1131,7 @@
             <i>reportedValue1-3</i> are set with the number of fractions, mean fraction time, and exposure 
             time.&nbsp; For Falcon 4, the frame time for aligning
             EER frames is also modified as when parameters are set for saving as EER, but not set 
-            in <I>reportedValue1</I>./TD>
+            in <I>reportedValue1</I>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportCurrentPixelSize set</TD>
@@ -1307,7 +1307,7 @@
             directory name without path separators is required for DE cameras and Thermo/FEI cameras run with
              Advanced Scripting.&nbsp; For other cameras, an absolute path is required,
              either a network path starting with two slashes or one starting with a drive
-            letter./TD>
+            letter.</TD>
         </TR>
                 <TR>
           <TD class="scriptcommand">FrameThresholdNextShot #T [#S] [#E] [#D]</TD>
@@ -1624,7 +1624,7 @@
           <TD class="scriptcommand">SetDoseAdjustmentFactor #</TD>
           <TD>Sets a factor for adjusting the exposure dose and frame doses stored in an
             .mdoc file for an image.&nbsp; Set to 0 to eliminate the adjustment; the
-            factor will be reset to 0 when the script ends./TD>
+            factor will be reset to 0 when the script ends.</TD>
         </TR>
 
         <TR>
@@ -1686,7 +1686,7 @@
           <TD class="scriptcommand">ReportCurrentBuffer</TD>
           <TD>Returns the letter of the buffer currently open in the main window in <i>reportedValue1</i>
           and 0 or 1 in <i>reportedValue2</i> indicating if the buffer contains an image or not. FFT windows
-          or image windows other than the main window are ignored./TD>
+          or image windows other than the main window are ignored.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportActiveViewTitle</TD>
@@ -1891,7 +1891,7 @@
             Filterplot in IMOD for a complete description and ability to graph any filter.&nbsp;
             The units are reciprocal pixels (0 to 0.5 along an axis).&nbsp; The floating point output is
             placed into buffer A, and top buffers are rolled, unless the optional <b>obuf</b>
-            is added specifying a different buffer, which can be <b>buf</b>./TD>
+            is added specifying a different buffer, which can be <b>buf</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddImages buf1 buf2 [obuf]</TD>
@@ -1911,7 +1911,7 @@
         <TR>
           <TD class="scriptcommand">DivideImages buf1 buf2 [obuf]</TD>
           <TD>Like 'AddImages', except that <b>buf1</b> is divided by <b>buf2</b>, with 0 in the
-            output at pixels where <b>buf2</b> is zero./TD>
+            output at pixels where <b>buf2</b> is zero.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ScaleImage buf #S #A [obuf] [#K]</TD>
@@ -1921,7 +1921,7 @@
             is added specifying a different buffer, which can be <b>buf</b> unless that is in
              the FFT window.&nbsp; The resulting image
             is floating point unless the optional <b>#K</b> is non-zero to keep the existing image
-            type./TD>
+            type.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ComputeIceThickness buf1 buf2 [obuf] [#C]</TD>
@@ -2200,7 +2200,7 @@
           <TD class="scriptcommand">ListAllCalibrations</TD>
           <TD>Print tables with image shift, stage shift, focus, astigmatism via CTF, beam shift, beam
           intensity, spot intensity, and high focus mag calibrations to the log window for diagnostic purposes.
-          &nbsp; It also reports rotation problems and inconsistencies between stage calibrations./TD>
+          &nbsp; It also reports rotation problems and inconsistencies between stage calibrations.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ListISVectorsToGraph #P #C #W</TD>
@@ -3045,7 +3045,7 @@
           <TD class="scriptcommand">SetImageBeamTilt #X #Y</TD>
           <TD>Sets the image-beam tilt on a Thermo/FEI scope to the given values in
             milliradians.&nbsp; The Thermo/FEI scripting documentation cautions against using both this
-            kind of beam tilt and the dark field tilt./TD>
+            kind of beam tilt and the dark field tilt.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportImageBeamTilt</TD>
@@ -3211,7 +3211,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportFEGEmissionState</TD>
-          <TD>Reports whether the FEG emission is on (non-zero) or off (0), on JEOL's only./TD>
+          <TD>Reports whether the FEG emission is on (non-zero) or off (0), on JEOL's only.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetFEGEmissionState #</TD>
@@ -3521,7 +3521,7 @@
           <TD>Reports the number of remaining refills, the minutes until the next refill (or a negative value
             if there are no refills left), whether filling is underway, whether the system is active, and the sensor temperature
             for a SimpleOrigin system.&nbsp; Values can be assigned to variables at end of 
-            command./TD>
+            command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetSimpleOriginActive #</TD>
@@ -3536,7 +3536,7 @@
           <TD class="scriptcommand">IsFEGFlashingAdvised #</TD>
           <TD>Reports whether flashing of a cold FEG is advisable on a Thermo/FEI scope, where <b>#</b> should be 0 for
             a low-temperature flash and non-zero for a high-temperature flash.  FEG flashing commands are available on Thermo/FEI scopes only if there is a Selectris filter or a property entry 'AdvancedScriptingVersion 4' or higher.&nbsp; Value can be assigned
-          to a variable at end of command./TD>
+          to a variable at end of command.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportFEGBeamCurrent</TD>
@@ -3548,7 +3548,7 @@
           <TD class="scriptcommand">NextFEGFlashHighTemp [#]</TD>
           <TD>Sets the next FEG flashing done with 'LongOperation FF' on a Thermo/FEI scope to be high-temperature,
             unless the option <b>#</b> is 0.&nbsp; A call for a high-temperature flash will fail unless it is
-            advisable, so test with' IsFEGFlashingAdvised 1' first./TD>
+            advisable, so test with' IsFEGFlashingAdvised 1' first.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
@@ -4018,7 +4018,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetTiltAxisOffset #</TD>
-          <TD>Sets the lateral offset of the tilt axis to <b>#</b>./TD>
+          <TD>Sets the lateral offset of the tilt axis to <b>#</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">WalkUpTo #</TD>
@@ -4310,13 +4310,13 @@
         <TR>
           <TD class="scriptcommand">OpenNavigator [name]</TD>
           <TD>Opens the Navigator window, which must not already be open.&nbsp; If the optional
-             <b>name</b> is entered, this file is set as the Navigator file to save to./TD>
+             <b>name</b> is entered, this file is set as the Navigator file to save to.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CloseNavigator</TD>
           <TD>Closes the Navigator window, which must be open.&nbsp; If there are unsaved changes
             and the <A HREF="menu_navigator.htm#hid_navigator_autosave">Autosave Nav File</A>
-            option is not on, the user will be asked whether to save./TD>
+            option is not on, the user will be asked whether to save.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">SaveNavigator [name]</TD>
@@ -4507,7 +4507,7 @@
           <TD class="scriptcommand">ChangeItemDraw #I [#D]</TD>
           <TD>Changes if the Navigator item with table index <b>#I</b> is drawn or not. If no <b>#D</b> is
             specified, the option is toggled, if <b>#D</b> is 0, drawing is disabled, any other numeric values
-            for <b>#D</b> enable drawing./TD>
+            for <b>#D</b> enable drawing.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeItemLabel #I text</TD>
@@ -4613,7 +4613,7 @@
             When <b>TS Params</b> is pressed for an item with angles set, the angles that
             appear in setup dialog will be the ones in the parameter set, which may apply to many tilt
             series, and <i>not</i> these set values.&nbsp; There will be a <b>*</b> after the text box to
-            indicate that they are being overridden./TD>
+            indicate that they are being overridden.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
@@ -4622,7 +4622,7 @@
             end). &nbsp;Up to 8 user values are currently allowed, with a number from 1 to 8 specified by
              <b>#V</b> (numbers do not have to be used sequentially). &nbsp;The <b>text</b> on the
              rest of the line is assigned as the value after variable substitution but not arithmetic;
-             text can be omitted to clear out a value./TD>
+             text can be omitted to clear out a value.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportItemUserValue #I #V</TD>
@@ -5463,7 +5463,7 @@
             button or Shift P hot key to center the feature with image shift only.<br />
             Run this command.&nbsp; It will report the existing and new offsets.<br />
             Iterate if desired for a more accurate result.&nbsp; If aligning more than two
-            cameras, use one camera as a reference for aligning each of the others to./TD>
+            cameras, use one camera as a reference for aligning each of the others to.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">AccumulateRecordDose #</TD>
@@ -5601,7 +5601,7 @@
           <TD class="scriptcommand">ReportEnvironVar name</TD>
           <TD>Reports whether the environment variable given by <b>name</b> exists in <i>reportedValue1</i>
             and its value in <I>reportedValue2</I> if so or 'none' if not.&nbsp; The name must be a single word
-             without spaces./TD>
+             without spaces.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportSettingsFile</TD>
