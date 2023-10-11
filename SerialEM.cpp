@@ -1790,8 +1790,8 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
         "as well as one or two \"proxy-stub\" dlls (with \"ps\" in their names)";
     } else if (!sFunctionCalled.IsEmpty()) {
       message = "SerialEM is crashing trying to call\r\n" + sFunctionCalled +
-      "\r\nwhich may mean that function does not exist in\r\n"
-      "the version of the object being called.\r\n\r\n";
+        "\r\nwhich may mean that function does not exist in\r\n"
+        "the version of the object being called.\r\n\r\n";
 
     } else {
       message.Format("%s is crashing due to an unhandled exception\r\n(Exception "
@@ -1800,7 +1800,6 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
         ExceptionInfo->ExceptionRecord->ExceptionCode, 
         ExceptionInfo->ExceptionRecord->ExceptionAddress, SEMTrace);
     
-      // Not clear if this will be any more useful than the address we were given
       AddBackTraceToMessage(message);
     }
   }
@@ -1866,6 +1865,9 @@ void AddBackTraceToMessage(CString &message)
 void CSerialEMApp::CleanupAndReportCrash(CString &message)
 {
   CString name;
+  if (mProcessImage->GetBufIndForCtffind() >= 0)
+    mProcessImage->SaveCtffindCrashImage(message);
+
   try {
     // First try to close the valves immediately
     if (mTSController->GetMessageBoxCloseValves() &&

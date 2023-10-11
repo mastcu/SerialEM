@@ -96,6 +96,7 @@ public:
   GetMember(float, BeamShiftFromImage);
   GetSetMember(float, ThicknessCoefficient);
   SetMember(float, NextThicknessCoeff);
+  GetMember(int, BufIndForCtffind);
 
 
 // Overrides
@@ -192,6 +193,8 @@ private:
   BOOL mCtfFixAstigForPhase;
   float mThicknessCoefficient;  // Coefficient in thickness calculation 
   float mNextThicknessCoeff;    // Value to use on next call
+  int mBufIndForCtffind;        // Index of buffer that can be saved if crash
+  CtffindParams *mCurCtffindParams;   // Pointer to params being used in call
  
 public:
   afx_msg void OnProcessMinmaxmean();
@@ -272,6 +275,7 @@ float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
 int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
 afx_msg void OnProcessReduceimage();
 int RunCtffind(EMimageBuffer *imBuf, CtffindParams &params, float results_array[7], bool skipOutput = false);
+void SaveCtffindCrashImage(CString &message);
 int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
 afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);

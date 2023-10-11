@@ -94,6 +94,7 @@ CProcessImage::CProcessImage()
   mCtfMaxPhase = 120;
   mCtfFindPhaseOnClick = false;
   mCtfFixAstigForPhase = true;
+  mBufIndForCtffind = -1;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
@@ -3515,10 +3516,17 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
     params.pixel_size_of_input_image *= (float)useBox / (float)params.box_size;
   }
 
+  // Save parameters in case of crash
+  mBufIndForCtffind = (int)(imBuf - mImBufs);
+  if (mBufIndForCtffind >= MAX_BUFFERS)
+    mBufIndForCtffind = -1;
+  mCurCtffindParams = &params;
+
   // Run the fit and report results
   if (!err && ctffind(params, spectrum, params.box_size + 2, results_array, NULL,
                  NULL, NULL, numPoints, lastBinFreq)) {
-    mess.Format("Ctffind: defocus: %.3f um,  astig: %.3f um,  angle: %.1f,  ",  
+    mBufIndForCtffind = -1;
+    mess.Format("Ctffind: defocus: %.3f um,  astig: %.3f um,  angle: %.1f,  ",
       -(results_array[0] + results_array[1]) / 20000., 
       (results_array[0] - results_array[1]) / 10000., results_array[2]);
     if (params.find_additional_phase_shift) {
@@ -3541,9 +3549,71 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   } else {
     err = 1;
   }
+  mBufIndForCtffind = -1;
   delete [] spectrum;
   params.pixel_size_of_input_image = pixelSave;
   return err;
+}
+
+// Try to save image and output parameters for ctffind crash
+void CProcessImage::SaveCtffindCrashImage(CString &message)
+{
+  CString name;
+  CTime ctDateTime = CTime::GetCurrentTime();
+  if (mBufIndForCtffind < 0)
+    return;
+  message += "\r\nThis occurred calling ctffind\r\n";
+  name.Format("%s\\ctffindCrash%02d%02d%02d.mrc", mWinApp->mDocWnd->GetSystemPath(), 
+    ctDateTime.GetHour(), ctDateTime.GetMinute(), ctDateTime.GetSecond());
+  if (mWinApp->mDocWnd->SaveToOtherFile(mBufIndForCtffind, STORE_TYPE_MRC, 0, &name)) {
+    message += "Failed to save image that crashed ctffind to file\r\n";
+    return;
+  }
+  message += "Image that crashed ctffind saved to file:\r\n" + name;
+  name.Format("\r\n\r\nCtffind parameters:\r\n"
+              "pixel_size_of_input_image: %f\r\n",
+              mCurCtffindParams->pixel_size_of_input_image); message += name;
+  name.Format("acceleration_voltage: %f\r\n",
+              mCurCtffindParams->acceleration_voltage); message += name;
+  name.Format("spherical_aberration: %f\r\n",
+              mCurCtffindParams->spherical_aberration); message += name;
+  name.Format("amplitude_contrast: %f\r\n",
+              mCurCtffindParams->amplitude_contrast); message += name;
+  name.Format("box_size: %d\r\n",
+              mCurCtffindParams->box_size); message += name;
+  name.Format("minimum_resolution: %f\r\n",
+              mCurCtffindParams->minimum_resolution); message += name;
+  name.Format("maximum_resolution: %f\r\n",
+              mCurCtffindParams->maximum_resolution); message += name;
+  name.Format("minimum_defocus: %f\r\n",
+              mCurCtffindParams->minimum_defocus); message += name;
+  name.Format("maximum_defocus: %f\r\n",
+              mCurCtffindParams->maximum_defocus); message += name;
+  name.Format("defocus_search_step: %f\r\n",
+              mCurCtffindParams->defocus_search_step); message += name;
+  name.Format("slower_search: %d\r\n",
+              mCurCtffindParams->slower_search?1:0); message += name;
+  name.Format("astigmatism_tolerance: %f\r\n",
+              mCurCtffindParams->astigmatism_tolerance); message += name;
+  name.Format("find_additional_phase_shift: %d\r\n",
+              mCurCtffindParams->find_additional_phase_shift?1:0); message += name;
+  name.Format("minimum_additional_phase_shift: %f\r\n",
+              mCurCtffindParams->minimum_additional_phase_shift); message += name;
+  name.Format("maximum_additional_phase_shift: %f\r\n",
+              mCurCtffindParams->maximum_additional_phase_shift); message += name;
+  name.Format("additional_phase_shift_search_step: %f\r\n",
+              mCurCtffindParams->additional_phase_shift_search_step); message += name;
+  name.Format("astigmatism_is_known: %d\r\n",
+              mCurCtffindParams->astigmatism_is_known?1:0); message += name;
+  name.Format("known_astigmatism: %f\r\n",
+              mCurCtffindParams->known_astigmatism); message += name;
+  name.Format("known_astigmatism_angle: %f\r\n",
+              mCurCtffindParams->known_astigmatism_angle); message += name;
+  name.Format("compute_extra_stats: %d\r\n",
+              mCurCtffindParams->compute_extra_stats?1:0); message += name;
+  name.Format("noisy_input_image: %d\r\n",
+              mCurCtffindParams->noisy_input_image?1:0); message += name;
+  message += "\r\nPlease send the image, mdoc file, and this log to David\r\n";
 }
 
 
