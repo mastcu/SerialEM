@@ -3657,8 +3657,10 @@ int CMacCmd::UserSetDirectory(void)
   if (dlg.DoModal() == IDOK) {
     if (_chdir((LPCTSTR)dlg.GetPath()))
       SUSPEND_NOLINE("because of failure to change directory to " + dlg.GetPath());
-  }
-  SetOneReportedValue(dlg.GetPath(), 1);
+    SetOneReportedValue(dlg.GetPath(), 1);
+  } else
+    SetOneReportedValue(CString("Cancel"), 1);
+
   return 0;
 }
 
@@ -5989,7 +5991,7 @@ int CMacCmd::RelaxStage(void)
 {
   double delX = mItemEmpty[1] ? mScope->GetStageRelaxation() : mItemDbl[1];
   int err = DoStageRelaxation(delX);
-  if (err < 0)
+  if (err > 0)
     SUSPEND_NOLINE("because of failure to get stage position");
   if (!err) {
     mMovedStage = true;

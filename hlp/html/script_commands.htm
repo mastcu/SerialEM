@@ -2093,7 +2093,8 @@
           <TD>Opens a directory chooser dialog to allow user to select or make a directory,
             and change the working directory to it.&nbsp; If the optional <b>prompt</b> string is
             not supplied, the dialog title is &#39;Choose a new current working directory&#39;.&nbsp;
-            The chosen directory is stored in <I>reportedValue1</I>.&nbsp; This is the
+            The chosen directory is stored in <I>reportedValue1</I>.&nbsp;  If the user cancels the chooser, that
+            value is set to 'Cancel' and can be tested with 'CompareStrings'.&nbsp; This is the
             directory where script commands will access files when given a name with a path.
             but file choosers will not open there unless the &#39;OpenChooserInCurrentDir&#39;
             command is used.</TD>
