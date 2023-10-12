@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/12/23: Added automatic pruning of log window.
+
+10/12/23: Fixed swapped error messages from RelaxStage command and made
+UserSetDirectory return 'Cancel' if the user cancels the chooser.
+
 10/11/23: Made it save image that crashes in ctffind and output parameters.
 
 10/8/23: Added property to specify key-value pairs to add to autodocs.
@@ -14,7 +19,7 @@ newer JEOL scopes and FEI scopes with UTAPI interface.
 out in Navigator acquisition.
 
 10/6/23: Added "special debug levels" to get some specific output without all
-of the output activated by DebugOutout key letters.
+of the output activated by DebugOutput key letters.
 
 10/3/23: Added script commands to determine number of functions defined in the
 SerialEM executable and serialem module, for checking if module is up to date.

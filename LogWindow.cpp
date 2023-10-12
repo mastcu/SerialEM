@@ -23,6 +23,7 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CLogWindow dialog
 
+static const char *sPruneEnding = " for pruned lines...\r\n";
 
 CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   : CBaseDlg(CLogWindow::IDD, pParent)
@@ -40,6 +41,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mDeferredLines = "";
   mMaxLinesToDefer = 500;
   mMaxSecondsToDefer = 3.;
+  mPrunedLength = 0;
 }
 
 
@@ -94,7 +96,9 @@ void CLogWindow::Append(CString &inString, int lineFlags)
 // The real routine for adding text to the log
 void CLogWindow::DoAppend(CString &inString, int lineFlags)
 {
-  int oldLen, newLen, lastEnd;
+  int oldLen, newLen, lastEnd, pruneInd, lastPrune;
+  int pruneCrit = mWinApp->GetAutoPruneLogLines() * 42;
+  UINT mode = CFile::modeWrite | CFile::shareDenyWrite;
   UpdateData(true);
   oldLen = m_strLog.GetLength();
   if (lineFlags & 2) {
@@ -103,22 +107,55 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags)
       m_strLog = m_strLog.Left(lastEnd + 1);
   }
   m_strLog += _T(inString);
-  UpdateData(false);
   mUnsaved = true;
   newLen = m_strLog.GetLength();
   mAppendedLength += newLen - oldLen;
 
   // Scroll to the end - still can't get cursor there
+  UpdateAndScrollToEnd();
+
+  // See if it is time to autoprune
+  if (pruneCrit > 0 && newLen > pruneCrit * 2) {
+    lastPrune = 0;
+    pruneInd = 0;
+    while (pruneInd < newLen - pruneCrit) {
+      lastPrune = pruneInd;
+      pruneInd = m_strLog.Find('\n', pruneInd) + 1;
+    }
+    pruneInd = lastPrune;
+    if (pruneInd > 100) {
+      if (mSaveFile.IsEmpty() && mTempPruneName.IsEmpty()) {
+        mTempPruneName = mWinApp->mDocWnd->GetSystemPath() + "\\AUTOPRUNETEMP.log";
+        UtilRemoveFile(mTempPruneName);
+        mode |= CFile::modeCreate;
+      }
+      OpenAndWriteFile(mode, pruneInd, 0);
+      mPrunedLength += pruneInd;
+      mPrunedPosition = mLastPosition;
+      m_strLog = "See " + (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) +
+        sPruneEnding + m_strLog.Mid(pruneInd);
+      mAppendedLength = m_strLog.GetLength();
+      UpdateAndScrollToEnd();
+    }
+  }
+
+  if (mWinApp->GetContinuousSaveLog()) {
+    if (mSaveFile.IsEmpty() || newLen != mAppendedLength + mLastSavedLength - 
+      mPrunedLength)
+      Save();
+    else
+      OpenAndWriteFile(CFile::modeWrite | CFile::shareDenyWrite,
+        mAppendedLength, mLastSavedLength);
+  }
+}
+
+// Scroll to the end - still can't get cursor there
+void CLogWindow::UpdateAndScrollToEnd()
+{
+  UpdateData(false);
   int line = m_editWindow.GetLineCount();
   m_editWindow.LineScroll(line);
 
-  if (mWinApp->GetContinuousSaveLog()) {
-    if (mSaveFile.IsEmpty() || newLen != mAppendedLength + mLastSavedLength)
-      Save();
-    else
-      OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite, 
-        mAppendedLength, mLastSavedLength);
-  }
 }
 
 void CLogWindow::FlushDeferredLines()
@@ -132,10 +169,11 @@ void CLogWindow::FlushDeferredLines()
 
 int CLogWindow::SaveAs()
 {
+  CString oldFile = mTempPruneName.IsEmpty() ? mSaveFile : mTempPruneName;
   mLastStackname = "";
   if (GetFileName(FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL))
     return 1;
-  return (DoSave());
+  return (DoSave(oldFile));
 }
 
 // Do a save, but if no file is defined, make one up based on date/time and offer it
@@ -185,12 +223,29 @@ int CLogWindow::Save()
     return (DoSave());
 }
 
-int CLogWindow::DoSave()
+int CLogWindow::DoSave(CString oldFile)
 {
+  CFileStatus status;
   FlushDeferredLines();
   UpdateData(true);
+  if (!oldFile.IsEmpty() && mPrunedLength) {
+
+    // Try to copy it to new name
+    if (CFile::GetStatus((LPCTSTR)mSaveFile, status))
+      UtilRemoveFile(mSaveFile);
+    if (!CopyFile((LPCTSTR)oldFile, (LPCTSTR)mSaveFile, false)) {
+      PrintfToLog("WARNING: could not copy log with pruned lines, %s, to new log file"
+        " (error %d)", (LPCTSTR)oldFile, GetLastError());
+      mPrunedLength = 0;
+    } else if (!mTempPruneName.IsEmpty()) {
+      UtilRemoveFile(mTempPruneName);
+    }
+    mTempPruneName = "";
+
+  }
   int length = m_strLog.GetLength();
-  return (OpenAndWriteFile(CFile::modeCreate | CFile::modeWrite |CFile::shareDenyWrite,
+  return (OpenAndWriteFile((mPrunedLength ? 0 : CFile::modeCreate) | CFile::modeWrite |
+    CFile::shareDenyWrite,
     length, 0));
 }
 
@@ -250,32 +305,56 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
   // otherwise rewrite from scratch
   UpdateData(true);
   int length = m_strLog.GetLength();
-  if (length != mLastSavedLength + mAppendedLength)
+  if (length != mLastSavedLength + mAppendedLength - mPrunedLength)
     return (DoSave());
 
   return (OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite, 
-    mAppendedLength, mLastSavedLength));
+    mAppendedLength, mLastSavedLength - mPrunedLength));
 }
 
 // Open the given file and write it
 int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
 {
   CFile *cFile = NULL;
-  int retval = 0;
+  int retval = 0, addOff = 0, tempInd;
+  CString saveFile = mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile;
   mLastFilePath = "";
+  CString message;
   try {
     // Open the file for writing 
-    cFile = new CFile(mSaveFile, flags);
-    cFile->SeekToEnd();
+    cFile = new CFile(saveFile, flags);
+    message = "Error seeking in file " + saveFile;
+    if (mPrunedLength) {
+      cFile->Seek(mPrunedPosition, CFile::begin);
+      if (m_strLog.Find("See ") == 0) {
+        tempInd = m_strLog.Find(sPruneEnding);
+        if (tempInd < MAX_PATH + 4) {
+          tempInd += (int)strlen(sPruneEnding);
+          if (length > tempInd)
+            addOff = tempInd;
+        }
+      }
+    } else {
+      cFile->SeekToEnd();
+    }
 
-    cFile->Write((void *)((LPCTSTR)m_strLog + offset), length);
-    mUnsaved = false;
-    mLastSavedLength = length + offset;
-    mAppendedLength = 0;
+    message = "Error writing log to file " + saveFile;
+    cFile->Write((void *)((LPCTSTR)m_strLog + offset + addOff), length - addOff);
+
+    // Maintain lengths, savedLength includes pruned
+    mLastSavedLength = mPrunedLength + length + offset;
+    mAppendedLength -= length;
+    mUnsaved = mAppendedLength > length;
+    if (addOff) {
+      m_strLog = "See " + (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) +
+        sPruneEnding + m_strLog.Mid(addOff);
+      mAppendedLength = m_strLog.GetLength();
+      UpdateAndScrollToEnd();
+    }
+    mLastPosition = cFile->GetPosition();
   }
   catch(CFileException *perr) {
     perr->Delete();
-    CString message = "Error writing log to file " + mSaveFile;
     SEMMessageBox(message, MB_EXCLAME);
     retval = -1;
   } 
@@ -305,6 +384,12 @@ int CLogWindow::ReadAndAppend()
   }
   if (mSaveFile == oldSave)
     return 0;
+  if (mPrunedLength && AfxMessageBox("The log window has already been pruned.\n"
+    "The pruned part will not be included in the appended\n"
+    "log and will stay in " + (oldSave.IsEmpty() ? mTempPruneName : oldSave) +
+    "\n\nAre you sure you want to proceed with Read and Append?", MB_QUESTION) ==
+    IDNO)
+    return 1;
   try {
 
     // Open the file for reading, get buffer, read into it and terminate string
@@ -338,6 +423,7 @@ int CLogWindow::ReadAndAppend()
   if (retval)
     mSaveFile = oldSave;
   else {
+    mPrunedLength = 0;
     retval = DoSave();
     mLastStackname = "";
   }

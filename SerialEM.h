@@ -639,6 +639,7 @@ public:
   GetMember(bool, InRestoreViewFocus);
   GetSetMember(BOOL, ReverseWheelZoom);
   GetSetMember(int, SpecialDebugLevel);
+  GetSetMember(int, AutoPruneLogLines);
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -756,6 +757,8 @@ public:
   afx_msg void OnHelp();
   afx_msg void OnHelpUsing();
   afx_msg void OnFileReadappend();
+  afx_msg void OnFileAutopruneLogWindow();
+  afx_msg void OnUpdateFileAutopruneLogWindow(CCmdUI *pCmdUI);
   //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 
@@ -860,6 +863,7 @@ private:
   bool mReopenMacroEditor[MAX_MACROS + 1];   // Flags for reopening macro editors
   BOOL mDeferBufWinUpdates;    // Ignore calls to UpdateBufferWindows
   BOOL mContinuousSaveLog;     // Do continuous save of log file
+  int mAutoPruneLogLines;      // Number of lines to prune to
   int mTssPanelStates[NUM_TSS_PANELS];   // States of tilt series dialog panels
   BOOL mNonGIFMatchPixel;      // Flags to match pixel size/intensity between nonGIF cameras
   BOOL mNonGIFMatchIntensity;

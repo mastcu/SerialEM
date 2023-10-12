@@ -25,12 +25,13 @@ public:
   int Save();
   int SaveAs();
   int SaveAndOfferName();
-  int DoSave();
+  int DoSave(CString oldFile = "");
   SetMember(BOOL, Unsaved);
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
   void Append(CString &inString, int lineFlags);
   void DoAppend(CString &inString, int lineFlags);
+  void UpdateAndScrollToEnd();
   void FlushDeferredLines();
   CLogWindow(CWnd* pParent = NULL);   // standard constructor
 
@@ -78,6 +79,10 @@ private:
   double mStartedDeferTime;  // Time when this started being accumulate
   int mMaxLinesToDefer;      // Maximum number of lines to hold
   float mMaxSecondsToDefer;  // And maximum time to hold lines
+  int mPrunedLength;         // Cumulative length pruned from start of text string
+  ULONGLONG mPrunedPosition; // Position of file where pruned length was written
+  ULONGLONG mLastPosition;   // Last one saved to
+  CString mTempPruneName;    // Temporary (or not) file for saving pruned if no file set
 
 public:
   BOOL SaveFileNotOnStack(CString stackName);

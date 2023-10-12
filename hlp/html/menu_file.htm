@@ -107,6 +107,10 @@
           <TD>Saves the log window to a file immediately and keeps it up to date thereafter.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_autoprunelogwindow">Autoprune Log Window</A>&nbsp;</TD>
+          <TD>Removes lines from the log window after saving them to file to prevent slowdown.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD width="190"><A HREF="#hid_file_continuoussave">Continuous Save</A></TD>
           <TD>Toggles saving to file after each line of output to log window.</TD>
         </TR>
@@ -362,7 +366,11 @@
       <P>Use this command to open a Log Window for recording messages from the program. 
         Once the window is open, some messages will be logged there instead of 
         presented in message boxes. You can control how much output goes to the window 
-        by selecting Verbose in various menus (Focus, Tasks, Tilt Series).</P>
+        by selecting Verbose in various menus (Focus, Tasks, Tilt Series).&nbsp; Adding 
+        text to this window becomes progressively slower the more it contains, which can 
+        significantly slow down long-term acquisition that writes to the log.&nbsp; The 
+        program will thus periodically prune the beginning of the text in the window after 
+        saving it to file.&nbsp; See <A HREF="#hid_file_autoprunelogwindow">Autoprune Log Window</A> for details.</P>
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
@@ -389,7 +397,8 @@
         file. You will enter the <A HREF="afx_hidd_fileopen.htm">File Open dialog box</A>
         to select a file. The program will then read in the contents of this file, 
         place it before any text already in the Log Window, then write the window back 
-        out to the file.</P>
+        out to the file.&nbsp; If pruning has already happened, you will be warned that 
+        pruned lines will not be included and asked if you want to continue.</P>
     <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
@@ -405,6 +414,23 @@
      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
+      <P><A NAME="hid_file_autoprunelogwindow"></A><B>Autoprune Log Window command (File menu)</B></P>
+      <p>Use this command to set the amount of text that will be retained in the Log 
+        Window when the program prunes text from the beginning of the window.&nbsp; 
+        Pruning keeps the program from running progressively slower as more text is 
+        added to the log.&nbsp; Enter the minimum number of lines to be left in the 
+        window if lines average 40 characters each.&nbsp; If lines are shorter than 40, 
+        on average, then more will be kept.&nbsp; You can enter 0 instead to disable 
+        pruning. Internally, the pruning is based on the number of characters in the 
+        window.&nbsp;&nbsp; Pruning occurs when the number of characters reaches twice 
+        the minimum.&nbsp; Lines are pruned to the half-way point and written to a file.&nbsp; 
+        If a log file has not been defined yet, they are written to a file 
+        'AUTOPRUNETEMP.log' in the system directory (the one with properties and 
+        calibrations files).&nbsp; When saving to a selected file, pruned lines are 
+        copied from this temporary file to the new file.&nbsp; Similarly, pruned lines 
+        are copied when using Save As to save to a different file.&nbsp; After pruning, 
+        the first line in the window will show the file that the pruned lines can be 
+        found in.&nbsp; </p>
       <P><A NAME="hid_file_continuoussave"></A><B>Continuous Save command (File menu)</B></P>
       <P>Use this command to control whether each line of output to the Log Window is 
         saved immediately to a log file. If there is no log file open when you turn 

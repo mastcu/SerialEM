@@ -155,6 +155,7 @@ BEGIN
         MENUITEM "Save Log As...",              ID_FILE_SAVELOGAS
         MENUITEM "Read && Append...",           ID_FILE_READAPPEND
         MENUITEM "Save && Autosave...",         ID_FILE_AUTOSAVELOG
+        MENUITEM "Autoprune Log Window...",     ID_FILE_AUTOPRUNELOGWINDOW
         MENUITEM "Continuous Save",             ID_FILE_CONTINUOUSSAVE
         MENUITEM "&Use Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
         MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
@@ -5962,6 +5963,7 @@ BEGIN
     IDC_NA_USE_MAP_HOLES    "Use hole vectors in map to set image shift for holes, adjusting if possible"
     IDC_CHECK_SKIP_AVERAGING 
                             "Just use stage position of center point instead of averaging all points"
+    IDC_EDIT_MAX_BLOCK_IS   "Maximum image shift radius when doing image shift in blocks"
 END
 
 STRINGTABLE
@@ -6278,7 +6280,6 @@ BEGIN
     IDC_CHECK_FOCUS_EACH    "Run focus routine at each position in montage"
     IDC_CHECK_FOCUS_BLOCKS  "Acquire pieces in blocks and autofocus in center of each block"
     IDC_SPIN_BLOCK_SIZE     "Change size of blocks for acquisition and focusing"
-    IDC_EDIT_MAX_BLOCK_IS   "Maximum image shift radius when doing image shift in blocks"
 END
 
 STRINGTABLE
@@ -7320,6 +7321,12 @@ BEGIN
                             "Moving mouse wheel away from you zooms image up, not down"
     ID_NAVIGATOR_ERASEPERIODICCORR 
                             "Remove periodic signal from FFTs when correlating for Realign in Low Dose"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_AUTOPRUNELOGWINDOW 
+                            "Limit # of lines in window by saving to file and pruning lines in window"
 END
 
 #endif    // English (United States) resources

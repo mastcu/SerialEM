@@ -185,6 +185,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_FILE_USEMONOSPACEDFONT, OnUpdateFileUseMonospacedFont)
   ON_COMMAND(ID_FILE_AUTOSAVELOG, OnFileAutosaveLog)
   ON_UPDATE_COMMAND_UI(ID_FILE_AUTOSAVELOG, OnUpdateFileAutosaveLog)
+  ON_COMMAND(ID_FILE_AUTOPRUNELOGWINDOW, OnFileAutopruneLogWindow)
+  ON_UPDATE_COMMAND_UI(ID_FILE_AUTOPRUNELOGWINDOW, OnUpdateFileAutopruneLogWindow)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -230,6 +232,7 @@ CSerialEMApp::CSerialEMApp()
   mLogWindow = NULL;
   mContinuousSaveLog = false;
   mSaveAutosaveLog = false;
+  mAutoPruneLogLines = 500;
   mNavigator = NULL;
   mNavHelper = NULL;
   mStageMoveTool = NULL;
@@ -3974,6 +3977,25 @@ void CSerialEMApp::OnUpdateFileAutosaveLog(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
   pCmdUI->SetCheck(mSaveAutosaveLog ? 1 : 0);
+}
+
+void CSerialEMApp::OnFileAutopruneLogWindow()
+{
+  if (!KGetOneInt("Log window text will be pruned when there is twice the minimum amount"
+    " of text", "Minimum # of lines to keep in log window at 40 characters/line (or 0"
+    " not to prune):", mAutoPruneLogLines))
+    return;
+  if (mAutoPruneLogLines < 0)
+    mAutoPruneLogLines = 0;
+  else if (mAutoPruneLogLines > 0)
+    mAutoPruneLogLines = B3DMAX(mAutoPruneLogLines, 25);
+}
+
+
+void CSerialEMApp::OnUpdateFileAutopruneLogWindow(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mAutoPruneLogLines > 0 ? 1 : 0);
 }
 
 // Toggle the option to use a monospaced font
