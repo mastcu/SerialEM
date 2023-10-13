@@ -154,6 +154,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CString strLine, strCopy, unrecognized = "";
   CString strItems[MAX_TOKENS];
   CString message;
+  char absPath[_MAX_PATH];
+  char *fullp;
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
@@ -402,6 +404,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
       } else if (NAME_IS("ScriptPackagePath")) {
         StripItems(strLine, 1, strCopy);
+        fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
+        if (fullp)
+          strCopy = fullp;
         mWinApp->mDocWnd->SetCurScriptPackPath(strCopy);
       } else if (NAME_IS("ScriptToRunAtStart")) {
         StripItems(strLine, 1, strCopy);
