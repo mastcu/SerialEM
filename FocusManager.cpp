@@ -648,7 +648,8 @@ void CFocusManager::OnAutofocusListCalibrations()
     if (mSFnormalizedSlope[0])
       str = "\r\nSTEM autofocus is calibrated";
     if (FEIscope) {
-      str += " in nanoprobe";
+      if (mSFnormalizedSlope[0])
+        str += " in nanoprobe";
       if (mSFnormalizedSlope[1])
         str += "\r\nSTEM autofocus is calibrated in microprobe";
     }
