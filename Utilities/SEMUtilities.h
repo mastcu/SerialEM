@@ -32,6 +32,7 @@ int UtilStandardizePath(std::string &dir);
 int UtilRelativePath(CString fromDir, CString toDir, CString &relPath);
 int UtilStandardizePath(CString &dir);
 int UtilRecursiveMakeDir(CString dir, CString &mess);
+bool UtilIsDirectoryUsable(CString &dir, int &error);
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
 void UtilSplitString(CString fullStr, const char *delim, std::vector<std::string> &strList);
 char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descrip);

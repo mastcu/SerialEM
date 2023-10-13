@@ -496,6 +496,21 @@ int UtilRecursiveMakeDir(CString dir, CString &mess)
   return 0;
 }
 
+// Tests whether a file can be created in a directory with read/write permission
+bool UtilIsDirectoryUsable(CString &dir, int &error)
+{
+  CString tempFile = dir + "\\SEMtestWritableDir.txt";
+  error = 0;
+  HANDLE tdir = CreateFile((LPCSTR)tempFile, GENERIC_READ | GENERIC_WRITE, 
+    0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  error = GetLastError();
+  if (tdir == INVALID_HANDLE_VALUE)
+    return false;
+  CloseHandle(tdir);
+  UtilRemoveFile(tempFile);
+  return true;
+}
+
 // Append a component to a string with the given separator if the string is not empty
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
 {

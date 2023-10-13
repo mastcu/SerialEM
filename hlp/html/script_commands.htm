@@ -301,12 +301,12 @@
             not included in the label in the 'SkipTo' statement.&nbsp; <br>Not from Python.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Try</TD>
+          <TD class="scriptcommand">Try [#]</TD>
           <TD>Starts a block within which an error will result in the script jumping to the
             line after the following &#39;Catch&#39; statement instead of a message box appearing.&nbsp;
             See <A HREF="about_scripts.htm#tryCatch">Error Handling and TRY - CATCH - ENDTRY Blocks</A>.
-
-            &nbsp; <br>Not from Python.</TD>
+            &nbsp; As of SerialEM 4.1, 13-Oct-23, setthe optional <b>#</b> non-zero to suppress
+             the log output.<br>Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Catch</TD>
@@ -337,7 +337,7 @@
         <TR>
           <TD class="scriptcommand">Return [r1] [r2] [r3] [r4] r[5] [r6]</TD>
           <TD>Without executing to the end of the current script, returns to calling script or
-            ends execution if this is the top-level script.&nbsp; As of SerialEM 3.9, 4.28.21, up to 6
+            ends execution if this is the top-level script.&nbsp; Up to 6
              return values can be placed in <i>reportedValue1</i> to <i>reportValue6</i> with optional
             arguments <b>r1</b> to <b>r6</b>&nbsp; If any such arguments are included, existing reported
             values will be cleared; otherwise they will be preserved.&nbsp; If there is any chance that a script relying on this
@@ -2087,6 +2087,14 @@
           <TD class="scriptcommand">ReportDirectory</TD>
           <TD>Reports the current working directory, which is where a file will be created
             if it is opened from a script command without a full path.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">IsDirectoryWritable dir</TD>
+          <TD>Tests whether directory <b>dir</b> is writable by trying to create a file with
+             read/write access using the Windows CreateFile function.&nbsp; Sets <i>reportedValue1</i>
+             to 1 if writable, 0 if not, and <i>reportedValue2</i> with the error code from 
+            GetLastError.&nbsp; Command added in 4.1, 13-Oct-23.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">UserSetDirectory [prompt]</TD>

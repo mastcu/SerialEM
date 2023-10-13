@@ -1592,7 +1592,8 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
     str = "Jumping to \"CATCH\" error handler";
     if (mess && !mess->IsEmpty())
       str += ": " + *mess;
-    mWinApp->AppendToLog(str);
+    if (!mNoCatchOutput[B3DMAX(0, mTryCatchLevel)])
+      mWinApp->AppendToLog(str);
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
     return 1;
   }

@@ -5000,13 +5000,14 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   CString valve;
   bool noEmpty, cancelEmpty;
   CMacroProcessor *macProc = mWinApp->mMacroProcessor;
+  int tryLevel = macProc->GetTryCatchLevel();
+  bool *noCatchMess = macProc->GetNoCatchOutput();
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
   mLastNoBoxMessage = "";
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
-    (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() ||
-      macProc->GetTryCatchLevel() > 0)) || 
+    (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() || tryLevel > 0)) || 
     (!DoingTiltSeries() && mWinApp->mNavHelper->GetNoMessageBoxOnError())) {
     for (int ind = 0; ind < message.GetLength(); ind++) {
       if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
@@ -5017,12 +5018,12 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     }
     if (macProc->DoingMacro() || !mWinApp->mNavHelper->GetNoMessageBoxOnError())
       valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
-      (macProc->GetTryCatchLevel() > 0 || macProc->GetRunningScrpLang())) ?
-        "ERROR" : "STOPPING");
+      (tryLevel > 0 || macProc->GetRunningScrpLang())) ? "ERROR" : "STOPPING");
     else
       valve = "\r\nERROR DURING NAVIGATOR ACQUIRE WITH THIS MESSAGE:\r\n";
     mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
-    mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
+    if (!(tryLevel > 0 && tryLevel <= MAX_LOOP_DEPTH && noCatchMess[tryLevel - 1]))
+      mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     return retval;
   }
 

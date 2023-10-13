@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/13/23: Added script command to find out if a directory is writable, and
+added option argument on Try command to suppress output.
+
 10/12/23: Added automatic pruning of log window.
 
 10/12/23: Fixed swapped error messages from RelaxStage command and made
@@ -43,7 +46,7 @@ shift vectors for Multiple Records.
 SerialEM to use this unconditionally unless a graph is being saved.
 
 9/20/23: Fixed external scripts hanging when STOP is pressed and made module
-raus a SEMexited exception with a different message.
+raise a SEMexited exception with a different message.
 
 9/19/23: Changed parameters for doing stage montage with image shift in
 blocks; instead of a number of blocks, which is mag-dependent, it is specified

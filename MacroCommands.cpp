@@ -896,7 +896,7 @@ int CMacCmd::Try(void)
       " deep at line: \n\n:");
   mBlockDepths[mCallLevel]++;
   mLoopLimit[mBlockLevel] = LOOP_LIMIT_FOR_TRY;
-  mTryCatchLevel++;
+  mNoCatchOutput[mTryCatchLevel++] = mItemInt[1] != 0;
   return 0;
 }
 
@@ -3668,6 +3668,18 @@ int CMacCmd::UserSetDirectory(void)
 int CMacCmd::OpenChooserInCurrentDir(void)
 {
   mWinApp->mDocWnd->SetInitialDirToCurrentDir();
+  return 0;
+}
+
+// IsDirectoryWritable
+int CMacCmd::IsDirectoryWritable()
+{
+  int err, writable;
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  writable = UtilIsDirectoryUsable(mStrCopy, err) ? 1 : 0;
+  SetReportedValues(writable, err);
+  mLogRpt.Format("%s %s writable (test error %d)", mStrCopy, writable ? "IS" : " is NOT",
+    err);
   return 0;
 }
 
