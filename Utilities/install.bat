@@ -289,6 +289,13 @@ IF EXIST JeolCamPlugin.dll IF EXIST  ..\JeolCamPlugin.dll (
   COPY /Y  JeolCamPlugin.dll "..\"
 )
 
+IF EXIST PythonModules (
+  echo.
+  echo Copying Python modules
+  IF EXIST ..\PythonModules RMDIR /Q /S ..\PythonModules
+  XCOPY /Q /S /Y /I PythonModules ..\PythonModules
+)
+
 set REGISTER=0
 IF EXIST "C:\Program Files\Gatan\DigitalMicrograph\Plugins" (
 
@@ -570,7 +577,7 @@ IF EXIST  %CUDA6LIB% IF EXIST FrameGPU6.dll (
   echo.
   echo Updating %PLUGFRAME% with FrameGPU6.dll for CUDA 6
   DEL %PLUGFRAME%
-  COPY /Y FrameGPU4.dll %PLUGFRAME%
+  COPY /Y FrameGPU6.dll %PLUGFRAME%
   GOTO :FrameGPUdone
 )
 IF EXIST  %CUDA8LIB% IF EXIST FrameGPU8.dll (
