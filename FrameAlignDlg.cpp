@@ -367,10 +367,8 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
 {
   int notOK;
   CString mess, mess2;
-  int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *camConSets = mWinApp->GetCamConSets();
-  ControlSet *conSet = &camConSets[mConSetSelected + activeList[mCameraSelected] *
-    MAX_CONSETS];
+  ControlSet *conSet = &camConSets[mConSetSelected + mCameraSelected * MAX_CONSETS];
   if (whereAlign < 0)
     whereAlign = conSet->useFrameAlign;
   if (curIndex < 0)
@@ -515,7 +513,7 @@ void CFrameAlignDlg::OnButDeleteSet()
 {
   int numActive = mWinApp->GetNumActiveCameras();
   int *activeList = mWinApp->GetActiveCameraList();
-  int act, cam, set, curActive = mWinApp->GetCurrentActiveCamera();
+  int act, cam, set, curCamera = mWinApp->GetCurrentCamera();
   ControlSet *camConSets = mWinApp->GetCamConSets();
   ControlSet *conSets = mWinApp->GetConSets();
   ControlSet *consp;
@@ -539,8 +537,8 @@ void CFrameAlignDlg::OnButDeleteSet()
       if (consp->faParamSetInd >= mCurParamInd) {
         if (consp->faParamSetInd == mCurParamInd && consp->alignFrames && 
           consp->useFrameAlign && 
-          !(set == mConSetSelected && ((act < 0 && mCameraSelected == curActive) || 
-          (act >= 0 && mCameraSelected == act))))
+          !(set == mConSetSelected && ((act < 0 && mCameraSelected == curCamera) || 
+          (act >= 0 && mCameraSelected == cam))))
           anyChanged = true;
         consp->faParamSetInd--;
       }
