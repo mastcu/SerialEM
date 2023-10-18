@@ -2159,6 +2159,8 @@
 #define IDC_CHECK_SKIP_AVERAGING        3190
 #define IDC_STAT_IS_BLOCK_STARS         3192
 #define IDC_EDIT_MAX_BLOCK_IS           3193
+#define IDC_STAT_USE_VECS               3194
+#define IDC_BUT_USE_NAV_PTS             3195
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2717,7 +2719,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        283
 #define _APS_NEXT_COMMAND_VALUE         33521
-#define _APS_NEXT_CONTROL_VALUE         3194
+#define _APS_NEXT_CONTROL_VALUE         3196
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

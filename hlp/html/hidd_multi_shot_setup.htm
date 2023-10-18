@@ -61,7 +61,7 @@
       offset is not a problem, scaling or rotation is).&nbsp; You can try an easier
       method first and see if it is adequate for your situation.&nbsp; See the section
       at the end of this page on how to assess that point .</p>
-    <p>The goal is the save image shifts at <i>consistent</i> positions, not
+    <p>The goal is to save image shifts at <i>consistent</i> positions, not
       necessarily the ones at the center of the holes, because only the differences
       between shifts matter.&nbsp; It is just as good to save the shift at the edge of
       each hole, if a corresponding point on the edge can be picked accurately enough.&nbsp;
@@ -79,12 +79,19 @@
         image.&nbsp; Note the distance from the hole edge to the image center on the
         first hole and try to reproduce that difference on successive holes.</li>
     </ul>
-    <p>All of these methods require the Navigator to be open and suggest that you add
+    <p>The three methods below require the Navigator to be open and suggest that you add
       a group of points on an image at the locations where you want to save image
-      shift values.&nbsp; This step is helpful if you have more than a 2x2 pattern of
+      shift values.&nbsp; In fact, this step would allow you to use the &#39;Use:&#39; <strong>Nav Pts</strong> 
+      button to convert them directly to image shift vectors, followed by <strong>Step 
+      To and Adjust IS</strong> to position the holes accurately at a chosen 
+      magnification.&nbsp; This sequence should be easier and more flexible than the 
+      procedures given next.&nbsp; Even if want to use those procedures, having 
+      Navigator points is helpful when you have more than a 2x2 pattern of
       holes, to avoid losing track of which hole you are on. You should add those
       points in the order in which their positions will be saved (see &#39;Save Image
-      Shift Values at Holes&#39; below.)&nbsp; When you press the
+      Shift Values at Holes&#39; below.)&nbsp; </p>
+    <p>&nbsp;If you are not using <strong>Nav Pts</strong> then <strong>Step To and 
+      Adjust IS,</strong> then when you press the
       button to start saving image shift values, the Navigator buttons on the left
       change, &#39;Go To XY&#39; and &#39;Go To Marker&#39; change to &#39;IS to XY&#39; and &#39;IS to Marker&#39;
       respectively.&nbsp; They can be used to move to marked positions with image
@@ -368,20 +375,30 @@
       that of the last saved point.</p>
     <p><b>Abort</b></p>
     <p>Press this button to stop entering or adjusting shifts and throw away all entries.</p>
-    <p><strong>Use Last Hole Vectors</strong></p>
+    <p>&#39;Use:&#39;<strong> Last Hole Vectors</strong></p>
     <p>Press this button to convert the vectors from the last hole-finding operation 
       to image shift values for a regular pattern.&nbsp; This operation is equivalent 
       to using the &#39;UseHoleVectorsForMulti&#39; script command.&nbsp; The program will ask 
       if you are sure you want to replace the current image shift values, in case the 
       button was pressed accidentally.&nbsp; You can press &#39;Yes Always&#39; to avoid that 
       confirmation for this session of the program.&nbsp; You must be in Low Dose mode for the button to be enabled.&nbsp; </p>
-    <p><strong>Use Map Hole Vectors</strong></p>
+    <p>'Use:' <strong>Map Hole Vectors</strong></p>
     <p>Press this button to assign the shifts for a regular pattern from the image 
       shift vectors stored in a map when the Hole Finder was run on it.&nbsp; The 
       current Navigator item must be either such a map or an item drawn on such a map.&nbsp; 
       This operation is equivalent to using the &#39;UseMapItemHoleVectors&#39; command.&nbsp; 
       Just like for <strong>Use Last Hole Vectors</strong>, you will be asked to 
       confirm that you want to use the shift vectors.</p>
+    <p>'Use:' <strong>Nav Pts</strong></p>
+    <p>Press this button to convert the group of Navigator&nbsp;items to which the 
+      currently selected item belongs into image shift vectors.&nbsp; The button will 
+      be enabled only when preconditions are met.&nbsp; Specifically, the Navigator 
+      must be open and there must be 4 points in the current group if a regular 
+      rectangular array is selected, 6 points if a hexagonal array is selected, or 
+      more than one point if a custom pattern is selected.&nbsp; As a special case, 
+      when no custom pattern has been defined yet, the program will let you use this 
+      button and ask whether you want to define a custom pattern when there are not 4 
+      points (if <strong>Hex grid</strong> is not selected) or 6 points (if <strong>Hex grid</strong> is selected) in the group. </p>
     <p><strong>Step To and Adjust</strong></p>
     <p>Press this button to step to each of the positions of a defined pattern and 
       adjust the image shift there.&nbsp; See detailed instructions above.</p>

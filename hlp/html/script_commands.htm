@@ -4759,6 +4759,17 @@
             'UseHoleVectorsFromMulti -2' when holes were first found.&nbsp; Command added in 4.1, 10-Jul-23.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">UseNavGroupForMultishot #K [#X] [#Y]</TD>
+          <TD>Converts the relative stage positions of items in the current Navigator group to hole 
+            image shift vectors of the kind specified by <b>#K</b>: 0 for a regular rectangular pattern, 1 for 
+            a hexagonal pattern, or 2 for a custom pattern. &nbsp;There must be 4, 6, or at least 2 points in
+            the group, respectively, and points in a rectangle or hexagon must occur in a regular progression 
+            around the pattern.&nbsp; Enter the optional <b>#X</b> and <b>#Y</b> to specify the number of holes
+            in each direction over which these points apply for a regular pattern, or <b>#X</b> to specify the number
+            of rings for a hexagonal pattern; otherwise the values in the Multiple Record dialog 
+            apply.&nbsp; Command added in 4.1, 18-Oct-23.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] </TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the

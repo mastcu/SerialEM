@@ -757,6 +757,7 @@ MAC_SAME_NAME_NOARG(ReportNumExeFuncs, 0, 4, REPORTNUMEXEFUNCS)
 MAC_SAME_NAME_NOARG(ReportBeamStopPosition, 0, 4, REPORTBEAMSTOPPOSITION)
 MAC_SAME_NAME_ARG(SetBeamStopPosition, 1, 0, SETBEAMSTOPPOSITION, I)
 MAC_SAME_NAME_ARG(IsDirectoryWritable, 1, 4, ISDIRECTORYWRITABLE, S)
+MAC_SAME_NAME_ARG(UseNavGroupForMultishot, 1, 4, USENAVGROUPFORMULTISHOT, Iii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

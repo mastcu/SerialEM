@@ -36,8 +36,8 @@ IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INST
 IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
 IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, IDC_BUT_STEP_ADJUST,
-IDC_CHECK_HEX_GRID, IDC_STAT_ADJUST_STATUS, IDC_BUT_USE_MAP_VECTORS, 
-IDC_BUT_APPLY_ADJUSTMENT, PANEL_END,
+IDC_CHECK_HEX_GRID, IDC_STAT_ADJUST_STATUS, IDC_BUT_USE_MAP_VECTORS, IDC_BUT_USE_NAV_PTS,
+IDC_BUT_APPLY_ADJUSTMENT, IDC_STAT_USE_VECS, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
@@ -167,7 +167,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_RING2_UM, m_statRing2Um);
   DDX_Control(pDX, IDC_EDIT_RING2_DIST, m_editRing2Dist);
   DDX_Control(pDX, IDC_SPIN_RING2_NUM, m_sbcRing2Num);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f,
     "Distance to second ring");
   DDX_Text(pDX, IDC_STAT_NUM2_SHOTS, m_strNum2Shots);
   DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
@@ -180,6 +180,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_ADJUST_STATUS, m_strAdjustStatus);
   DDX_Control(pDX, IDC_BUT_USE_MAP_VECTORS, m_butUseMapVectors);
   DDX_Control(pDX, IDC_BUT_APPLY_ADJUSTMENT, m_butApplyAdjustment);
+  DDX_Control(pDX, IDC_BUT_USE_NAV_PTS, m_butUseNavPts);
 }
 
 
@@ -222,6 +223,7 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_APPLY_ADJUSTMENT, OnButApplyAdjustment)
   ON_EN_KILLFOCUS(IDC_EDIT_HOLE_DELAY_FAC, OnKillfocusEditHoleDelayFac)
   ON_EN_KILLFOCUS(IDC_EDIT_EXTRA_DELAY, OnKillfocusEditHoleDelayFac)
+  ON_BN_CLICKED(IDC_BUT_USE_NAV_PTS, OnButUseNavPts)
 END_MESSAGE_MAP()
 
 
@@ -298,6 +300,7 @@ void CMultiShotDlg::UpdateSettings(void)
   m_strNumShots.Format("%d", mActiveParams->numShots[0]);
   m_strNum2Shots.Format("%d", mActiveParams->numShots[1]);
   UpdateData(false);
+
   ManagePanels();
   mWinApp->mMainView->DrawImage();
 }
@@ -526,6 +529,7 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   MultiShotParams *params = mActiveParams;
   CString *modeNames = mWinApp->GetModeNames();
   int prevMag;
+  ScaleMat focMat;
   double ISX, ISY;
   mSavedISX.clear();
   mSavedISY.clear();
@@ -585,6 +589,9 @@ void CMultiShotDlg::StartRecording(const char *instruct)
       ISY = -((params->numHoles[0] - 1) * params->holeISYspacing[0] +
         (params->numHoles[1] - 1) * params->holeISYspacing[1]) / 2.;
     }
+    focMat = ISfocusAdjustmentForBufOrArea(NULL, mAreaSaved);
+    if (focMat.xpx)
+      ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
     mWinApp->mScope->IncImageShift(ISX, ISY);
     if (params->stepAdjTakeImage && mWinApp->LowDoseMode()) {
       SEMTrace('1', "Initiate capture area %d", mAreaSaved);
@@ -652,7 +659,8 @@ void CMultiShotDlg::OnButIsToPt()
         "You will be reponsible for selecting the next point\n"
         "BEFORE pressing this button again");
       mNavPointIncrement = 0;
-    } else if (groupStart == itemInd || (mRecordingRegular && numInGroup == 4)) {
+    } else if (groupStart == itemInd || 
+      (mRecordingRegular && numInGroup == (m_bHexGrid ? 6 : 4))) {
       mNavPointIncrement = 1;
       if (groupStart != itemInd) {
         mess = "The first point in the group was selected for moving to with IS\n";
@@ -690,16 +698,16 @@ void CMultiShotDlg::OnButIsToPt()
 // Save one image shift, or finish up for regular pattern when there are 4
 void CMultiShotDlg::OnButSaveIs()
 {
-  double ISX, ISY, stageX, stageY, stageZ, intensity;
+  double ISX, ISY, stageX, stageY, stageZ;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
-  float scale, rotation, defocus = 0., focusLim = -20.;
+  float defocus = 0., focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString str;
-  ScaleMat sclMat, focMat;
+  ScaleMat focMat;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
-  int dir, area, spot, probe, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
+  int dir, area, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
   int lastInd, lastDir, magInd, hexInd = m_bHexGrid ? 1 : 0;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
@@ -743,35 +751,9 @@ void CMultiShotDlg::OnButSaveIs()
 
   // But adjust IS for defocus first if possible
   if (canAdjustIS) {
-
-    // Use parameters from image in A or from current area
-    if (imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
-      imBufs->mConSetUsed == SEARCH_CONSET)) {
-      defocus = imBufs->mViewDefocus;
-      imBufs->GetSpotSize(spot);
-      probe = imBufs->mProbeMode;
-      ind = imBufs->mMagInd;
-      imBufs->GetIntensity(intensity);
-    } else if (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area)) {
-      ldp += area;
-      defocus = mWinApp->mScope->GetLDViewDefocus(area);
-      probe = ldp->probeMode;
-      spot = ldp->spotSize;
-      ind = ldp->magIndex;
-      intensity = ldp->intensity;
-    }
-    if (defocus) {
-
-      // Convert IS to camera coordinates, back-rotate and scale them, and convert back to
-      // unfocused IS values
-      mShiftManager->GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
-        rotation);
-      sclMat = mShiftManager->MatScaleRotate(
-        mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), ind,
-          spot, probe, intensity, defocus), 1.f / scale, -rotation);
-      focMat = MatMul(sclMat, mShiftManager->CameraToIS(ind));
+    focMat = ISfocusAdjustmentForBufOrArea(imBufs, area);
+    if (focMat.xpx)
       ApplyScaleMatrix(focMat, ISX, ISY, ISX, ISY);
-    }
   }
 
   mSavedISX.push_back(ISX);
@@ -866,6 +848,8 @@ void CMultiShotDlg::OnButSaveIs()
         ISY = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISYspacing[ind]) *
           dir;
       }
+      if (canAdjustIS && focMat.xpx)
+        ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
     } else {
 
       // Recording regular or hex: Set up the instruction label
@@ -893,6 +877,8 @@ void CMultiShotDlg::OnButSaveIs()
       ISX = mActiveParams->customHoleX[size - 1];
       ISX = mActiveParams->customHoleY[size - 1];
     }
+    if (canAdjustIS && focMat.xpx)
+      mShiftManager->ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
   } else {
 
     // Recording custom holes
@@ -910,6 +896,53 @@ void CMultiShotDlg::OnButSaveIs()
       mWinApp->mCamera->InitiateCapture(mAreaSaved);
     }
   }
+}
+
+// Get a matrix for adjusting IS determined on a defocused image to unfocused IS,
+// given the image buffer (which can be NULL to use just area) or LD area
+ScaleMat CMultiShotDlg::ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area)
+{
+  ScaleMat focMat, sclMat;
+  float scale, rotation, defocus = 0.;
+  int spot, probe, ind;
+  double intensity;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  focMat.xpx = 0.;
+  if (!mShiftManager->GetFocusISCals()->GetSize() ||
+    !mShiftManager->GetFocusMagCals()->GetSize())
+    return focMat;
+
+  // Use image buffer if it qualifies
+  if (imBufs && imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
+    imBufs->mConSetUsed == SEARCH_CONSET)) {
+    defocus = imBufs->mViewDefocus;
+    imBufs->GetSpotSize(spot);
+    probe = imBufs->mProbeMode;
+    ind = imBufs->mMagInd;
+    imBufs->GetIntensity(intensity);
+  } else if (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area)) {
+
+    // Or use specifed area
+    ldp += area;
+    defocus = mWinApp->mScope->GetLDViewDefocus(area);
+    probe = ldp->probeMode;
+    spot = ldp->spotSize;
+    ind = ldp->magIndex;
+    intensity = ldp->intensity;
+  }
+  if (defocus) {
+
+    // Convert IS to camera coordinates, back-rotate and scale them, and convert back to
+    // unfocused IS values
+    mShiftManager->GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
+      rotation);
+    sclMat = mShiftManager->MatScaleRotate(
+      mShiftManager->FocusAdjustedISToCamera(mWinApp->GetCurrentCamera(), ind,
+        spot, probe, intensity, defocus), 1.f / scale, -rotation);
+    focMat = MatMul(sclMat, mShiftManager->CameraToIS(ind));
+  }
+
+  return focMat;
 }
 
 // Separate button to end the custom pattern
@@ -961,7 +994,8 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
   CString str2;
   double xVecs[3], yVecs[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
-  if (ConfirmReplacingShiftVectors("last", mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid()))
+  if (ConfirmReplacingShiftVectors(0, 
+    mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? 1: 0))
     return;
   mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
     mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), true, xVecs, yVecs, str2);
@@ -976,29 +1010,55 @@ void CMultiShotDlg::OnButUseMapVectors()
     return;
   if (!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0])
     return;
-  if (ConfirmReplacingShiftVectors("map", item->mXHoleISSpacing[2] ||
-    item->mYHoleISSpacing[2]))
+  if (ConfirmReplacingShiftVectors(1, (item->mXHoleISSpacing[2] ||
+    item->mYHoleISSpacing[2]) ? 1 : 0))
     return;
   mWinApp->mNavHelper->AssignNavItemHoleVectors(item);
   mWinApp->mNavigator->Redraw();
   ManageEnables();
 }
 
+// Use current navigator group for hole vectors
+void CMultiShotDlg::OnButUseNavPts()
+{
+  int type, groupStart, groupEnd, hexInd = m_bHexGrid ? 1 : 0;
+  int pattern = hexInd;
+  CString mess;
+  UpdateAndUseMSparams(false);
+  if (m_bUseCustom)
+    pattern = 3;
+  type = mWinApp->mNavHelper->OKtoUseNavPtsForVectors(pattern, groupStart, groupEnd);
+  if (!type)
+    return;
+  if (type > 1 && !m_bUseCustom) {
+    mess.Format("Using this group of Navigator points will set the custom hole "
+      "vectors because the number of points is not what would be needed for a %s pattern."
+      "\n\nAre you sure you want to do this?", m_bHexGrid ? "hexagonal" : "regular");
+    if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
+      return;
+  } else if (ConfirmReplacingShiftVectors(2, B3DCHOICE(type > 1, 2, hexInd)))
+    return;
+  mWinApp->mNavHelper->UseNavPointsForVectors(pattern, 0, 0);
+}
+
 // Common confirmation
-int CMultiShotDlg::ConfirmReplacingShiftVectors(const char *kind, BOOL hex)
+int CMultiShotDlg::ConfirmReplacingShiftVectors(int kind, int vecType)
 {
   CString str2;
-  int ans;
-  if (!mWinApp->mNavHelper->GetOKtoUseHoleVectors()) {
-    str2.Format("Using %s hole vectors will replace the currently defined "
+  const char *kindText[] = {"last hole vectors", "map hole vectors", "navigator points"};
+  int kindFlags[3] = {1, 2, 4};
+  const char *vecText[] = {"regular", "hex", "custom"};
+  int ans, okToUse = mWinApp->mNavHelper->GetOKtoUseHoleVectors();
+  if (!(okToUse & kindFlags[kind])) {
+    str2.Format("Using %s will replace the currently defined "
       "image shift vectors for the %s pattern.\n\nAre you sure you want to do this?",
-      kind, hex ? "hex" : "regular");
+      kindText[kind], vecText[vecType]);
     ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No",
       MB_YESNOCANCEL | MB_ICONQUESTION);
     if (ans == IDCANCEL)
       return 1;
     if (ans == IDNO)
-      mWinApp->mNavHelper->SetOKtoUseHoleVectors(true);
+      mWinApp->mNavHelper->SetOKtoUseHoleVectors(okToUse | kindFlags[kind]);
   }
   return 0;
 }
@@ -1098,8 +1158,8 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   mActiveParams->useIllumArea = m_bUseIllumArea;
   mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
   mActiveParams->useCustomHoles = m_bUseCustom;
-  mActiveParams->inHoleOrMultiHole = (m_bDoShotsInHoles ? 1 : 0) +
-    (m_bDoMultipleHoles ? 2 : 0);
+  mActiveParams->inHoleOrMultiHole = (m_bDoShotsInHoles ? MULTI_IN_HOLE : 0) +
+    (m_bDoMultipleHoles ? MULTI_HOLES : 0);
   if (draw)
     mWinApp->mMainView->DrawImage();
   mWinApp->RestoreViewFocus();
@@ -1115,7 +1175,7 @@ void CMultiShotDlg::ManageEnables(void)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   CMapDrawItem *item;
-  int dir, numDir = m_bHexGrid ? 3 : 2;
+  int dir, gst, gnd, numDir = m_bHexGrid ? 3 : 2, pattern = m_bHexGrid ? 1 : 0;
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
   bool notRecording = !recording && !mSteppingAdjusting;
@@ -1202,6 +1262,12 @@ void CMultiShotDlg::ManageEnables(void)
     enable = dir <= 0 && (item->mXHoleISSpacing[0] || item->mYHoleISSpacing[0]);
   }
   m_butUseMapVectors.EnableWindow(enable);
+
+  if (m_bUseCustom)
+    pattern = 3;
+  enable = notRecording && m_bDoMultipleHoles && 
+    mWinApp->mNavHelper->OKtoUseNavPtsForVectors(pattern, gst, gnd) > 0;
+  m_butUseNavPts.EnableWindow(enable);
   enable = notRecording && !mDisabledDialog;
   m_strAdjustStatus = "";
   if (enable)

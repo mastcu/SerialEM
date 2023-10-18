@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/17/23: Added button in multishot dialog and script command to use the
+current group of Navigator points to define vectors.
+
+10/17/23: PythonModules is now included in the install package and will be
+updated by the installer.
+
 10/13/23: Added script command to find out if a directory is writable, and
 added option argument on Try command to suppress output.
 

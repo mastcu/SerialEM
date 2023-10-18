@@ -128,6 +128,7 @@ public:
   CButton m_butEndPattern;
   CButton m_butAbort;
   afx_msg void OnButSaveIs();
+  ScaleMat ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area);
   afx_msg void OnButEndPattern();
   afx_msg void OnButAbort();
   CStatic m_statSaveInstructions;
@@ -172,8 +173,10 @@ public:
   CString m_strAdjustStatus;
   CButton m_butUseMapVectors;
   afx_msg void OnButUseMapVectors();
-  int ConfirmReplacingShiftVectors(const char *kind, BOOL hex);
+  int ConfirmReplacingShiftVectors(int kind, int vecType);
   CButton m_butApplyAdjustment;
   afx_msg void OnButApplyAdjustment();
   afx_msg void OnKillfocusEditHoleDelayFac();
+  CButton m_butUseNavPts;
+  afx_msg void OnButUseNavPts();
 };

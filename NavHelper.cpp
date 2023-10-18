@@ -308,7 +308,7 @@ CNavHelper::CNavHelper(void)
   mDoingMultipleFiles = 0;
   mCurAcqParamIndex = 0;
   mSettingState = false;
-  mOKtoUseHoleVectors = false;
+  mOKtoUseHoleVectors = 0;
   mMarkerShiftApplyWhich = 0;
   mMarkerShiftSaveType = 0;
   mReverseAutocontColors = false;
@@ -5849,6 +5849,152 @@ void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
     mMultiShotDlg->UpdateSettings();
   if (mNav)
     mNav->Redraw();
+}
+
+// If OK to use the current navigator group to define hole vectors, return 1 for regular/
+// hex or 2 for custom, 0 if not.  Return limits of group, transform matrix, and reason if
+// it is not OK.  Pattern should be 0 for regular, 1 for hex, 2 for custom from script 
+// (i.e., force custom), 3 for custom from dialog
+int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &groupEnd,
+  ScaleMat *ISmat, CString *reason)
+{
+  int itemInd, numInGroup, magInd, custom;
+  BOOL doHex = false;
+  CNavigatorDlg *nav = mWinApp->mNavigator;
+  ScaleMat stage2IS;
+
+  // Make custom be 1 from script, 2 from dialog
+  if (pattern > 1) {
+    custom = pattern - 1;
+  } else {
+    custom = 0;
+    doHex = pattern > 0;
+  }
+  if (!nav) {
+    if (reason)
+      *reason = "The Navigator is not open";
+    return 0;
+  }
+
+  // Get matrix
+  magInd = mWinApp->mScope->GetMagIndex();
+  stage2IS = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), magInd),
+    mShiftManager->CameraToIS(magInd));
+  if (!stage2IS.xpx) {
+    if (reason)
+      *reason = "There is no matrix for stage to image shift at current magnification";
+    return 0;
+  }
+  if (ISmat)
+    *ISmat = stage2IS;
+  itemInd = nav->GetCurrentIndex();
+  if (itemInd < 0) {
+    if (reason)
+      *reason = "There is no current Navigator item";
+    return 0;
+  }
+
+  // Get group limits
+  numInGroup = nav->LimitsOfContiguousGroup(itemInd, groupStart, groupEnd);
+  if (numInGroup == 1) {
+    if (reason)
+      *reason = "There is only one item in the current group";
+    return 0;
+  }
+
+  // Regular/ hex if number matches and not custom
+  if (!custom && numInGroup == (doHex ? 6 : 4))
+    return 1;
+
+  // From dialog, any other size is assumed to be custom if custom is not yet defined
+  // But if they are defined, custom must be on
+  // From script, custom entry must rule
+  if (custom == 1 || (mMultiShotParams.customHoleX.size() > 0 && custom > 1) ||
+    !mMultiShotParams.customHoleX.size())
+    return 2;
+  if (reason)
+    reason->Format("The current group has the wrong number of points to define %s "
+      "vectors", doHex ? "hexagonal" : "regular");
+  return 0;
+}
+
+// Use group of Nav points for hole vectors; pattern as defined above in OKtoUse
+// UpdateAndUseMSParams should be called before this
+int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes)
+{
+  int magInd, type, dir, ind, groupStart, groupEnd, hexInd = (pattern == 1 ? 1 : 0);
+  int numHoles[2];
+  CNavigatorDlg *nav = mWinApp->mNavigator;
+  ScaleMat stage2IS;
+  CMapDrawItem *item, *prevItem;
+  FloatVec ISXvec, ISYvec;
+  int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1},
+    endInd2[2] = {2, 2};
+  type = OKtoUseNavPtsForVectors(pattern, groupStart, groupEnd, &stage2IS);
+  if (!type)
+    return 1;
+  magInd = mWinApp->mScope->GetMagIndex();
+  if (numXholes <= 0)
+    numXholes = hexInd ? mMultiShotParams.numHexRings : mMultiShotParams.numHoles[0];
+  if (numYholes <= 0)
+    numYholes = mMultiShotParams.numHoles[1];
+  numHoles[0] = numXholes;
+  numHoles[1] = numYholes;
+
+  // Convert all to image shift relative to first, arbitrary but minimizes error
+  prevItem = nav->GetOtherNavItem(groupStart);
+  ISXvec.resize(groupEnd + 1 - groupStart);
+  ISYvec.resize(groupEnd + 1 - groupStart);
+  for (ind = groupStart; ind <= groupEnd; ind++) {
+    item = nav->GetOtherNavItem(ind);
+    mShiftManager->ApplyScaleMatrix(stage2IS, item->mStageX - prevItem->mStageX,
+      item->mStageY - prevItem->mStageY, ISXvec[ind - groupStart],
+      ISYvec[ind - groupStart]);
+  }
+
+  if (type > 1) {
+
+    // Custom holes
+    ISXvec.erase(ISXvec.begin());
+    mMultiShotParams.customHoleX = ISXvec;
+    ISYvec.erase(ISYvec.begin());
+    mMultiShotParams.customHoleY = ISYvec;
+    mMultiShotParams.customMagIndex = magInd;
+    mMultiShotParams.tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
+    mMultiShotParams.origMagOfCustom = -magInd;
+
+  } else {
+
+    // Regular holes of each type
+    if (hexInd) {
+      for (dir = 0; dir < 3; dir++) {
+        mMultiShotParams.hexISXspacing[dir] = 0.5 * (ISXvec[dir] - ISXvec[dir + 3])
+          / numXholes;
+        mMultiShotParams.hexISYspacing[dir] = 0.5 * (ISYvec[dir] - ISYvec[dir + 3])
+          / numXholes;
+      }
+
+    } else {
+      for (dir = 0; dir < 2; dir++) {
+        mMultiShotParams.holeISXspacing[dir] =
+          0.5 * ((ISXvec[endInd1[dir]] - ISXvec[startInd1[dir]]) +
+          (ISXvec[endInd2[dir]] - ISXvec[startInd2[dir]])) / B3DMAX(1, numHoles[dir] - 1);
+        mMultiShotParams.holeISYspacing[dir] =
+          0.5 * ((ISYvec[endInd1[dir]] - ISYvec[startInd1[dir]]) +
+          (ISYvec[endInd2[dir]] - ISYvec[startInd2[dir]])) / B3DMAX(1, numHoles[dir] - 1);
+      }
+    }
+    mMultiShotParams.holeMagIndex[hexInd] = magInd;
+    mMultiShotParams.tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();
+    mMultiShotParams.origMagOfArray[hexInd] = -magInd;
+  }
+
+  // Update
+  if (mMultiShotDlg)
+    mMultiShotDlg->UpdateSettings();
+  if (mNav)
+    mNav->Redraw();
+  return 0;
 }
 
 void CNavHelper::OpenHoleFinder(void)

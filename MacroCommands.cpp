@@ -2726,6 +2726,21 @@ int CMacCmd::SetCustomHoleDefocus(void)
   return 0;
 }
 
+// UseNavGroupForMultishot
+int CMacCmd::UseNavGroupForMultishot()
+{
+  int gst, gnd, type;
+  if (mItemInt[1] < 0 || mItemInt[1] > 2)
+    ABORT_LINE("The entry must be between 0 and 2 for line:\n\n");
+  mNavHelper->UpdateMultishotIfOpen(false);
+  type = mNavHelper->OKtoUseNavPtsForVectors(mItemInt[1], gst, gnd, NULL,
+    &mStrCopy);
+  if (!type)
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  mNavHelper->UseNavPointsForVectors(mItemInt[1], mItemEmpty[2] ? 0 : mItemInt[2], 
+    mItemEmpty[3] ? 0 : mItemInt[3]);
+  return 0;
+}
 
 // ReorderMontageByTilt
 int CMacCmd::ReorderMontageByTilt(void)

@@ -3295,16 +3295,18 @@ BEGIN
     LTEXT           "um",IDC_STAT_RING2_UM,162,46,11,8
     CONTROL         "",IDC_SPIN_RING2_NUM,"msctls_updown32",UDS_ARROWKEYS,91,43,10,14
     EDITTEXT        IDC_EDIT_RING2_DIST,130,44,30,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Use Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,10,208,77,12
+    PUSHBUTTON      "Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,21,208,58,12
     PUSHBUTTON      "Step To and Adjust IS",IDC_BUT_STEP_ADJUST,10,223,77,12
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,350,172,1
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,393,172,1
     PUSHBUTTON      "Test Multishot Positions",IDC_BUT_TEST_MULTISHOT,93,379,78,12
     PUSHBUTTON      "Calibrate Coma vs. IS",IDC_BUTCAL_BT_VS_IS,9,379,78,12
     CONTROL         "Hex grid",IDC_CHECK_HEX_GRID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,137,111,38,10
-    PUSHBUTTON      "Use Map Hole Vectors",IDC_BUT_USE_MAP_VECTORS,93,208,77,12
+    PUSHBUTTON      "Map Hole Vectors",IDC_BUT_USE_MAP_VECTORS,82,208,58,12
     PUSHBUTTON      "Apply Stored Adjustment",IDC_BUT_APPLY_ADJUSTMENT,93,223,77,12
     LTEXT           "Adjustment not available",IDC_STAT_ADJUST_STATUS,6,237,170,8
+    LTEXT           "Use:",IDC_STAT_USE_VECS,6,209,15,8
+    PUSHBUTTON      "Nav Pts",IDC_BUT_USE_NAV_PTS,143,208,33,12
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -6781,6 +6783,7 @@ END
 
 STRINGTABLE
 BEGIN
+    ID_NAVIGATOR_WRITEASXMLFILE "Save the navigator file in XML format"
     ID_WINDOW_SHOWSCOPECONTROLPANEL 
                             "Toggle whether scope control panel appears"
     ID_OPTIONS_SETPOINTLABELTHRESHOLD 
@@ -7297,6 +7300,7 @@ BEGIN
                             "For combined item with too few points, set not acquire or be drawn"
     IDC_CHECK_REMOVE_POINTS "Remove the points belonging to a combined item with too few holes"
     IDC_SPIN_HOLE_THRESH    "Set minimum number of holes in combined item to be retained"
+    IDC_BUT_USE_NAV_PTS     "Use group of Nav points to make image shift vectors for current pattern"
 END
 
 STRINGTABLE

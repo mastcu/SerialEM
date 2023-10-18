@@ -266,7 +266,7 @@ public:
   GetMember(int, RIconSetNum);
   GetMember(bool, RIstayingInLD);
   GetMember(bool, SettingState);
-  GetSetMember(bool, OKtoUseHoleVectors);
+  GetSetMember(int, OKtoUseHoleVectors);
   GetSetMember(int, MarkerShiftSaveType);
   GetSetMember(int, MarkerShiftApplyWhich);
   GetSetMember(BOOL, ReverseAutocontColors);
@@ -459,7 +459,7 @@ private:
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
   int mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
-  bool mOKtoUseHoleVectors;      // Flag that it is OK to use vectors without confirmation
+  int mOKtoUseHoleVectors;       // Flag that it is OK to use vectors without confirmation
   float mHFtargetDiamPix;        // Hole finder parameters: see holefinder source
   int mHFretainFFTs;
   int mHFminNumForTemplate;
@@ -632,6 +632,9 @@ public:
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
   void AssignNavItemHoleVectors(CMapDrawItem * item);
+  int OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &groupEnd, ScaleMat *ISmat = NULL,
+    CString *reason = NULL);
+  int UseNavPointsForVectors(int pattern, int numXholes, int numYholes);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);
