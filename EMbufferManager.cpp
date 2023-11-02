@@ -982,7 +982,7 @@ int EMbufferManager::FindSectionForPiece(KImageStore *inStore, MontParam &param,
 }
 
 int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY, 
-              int inBuf, int inCap, int inConSet, bool fftBuf)
+              int inBuf, int inCap, int inConSet, bool fftBuf, bool display)
 {
   EMimageBuffer *toBuf = B3DCHOICE(fftBuf, mWinApp->GetFFTBufs(), mImBufsp) + inBuf;
   toBuf->DeleteImage();
@@ -1028,8 +1028,8 @@ int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
 
   int current = mWinApp->GetImBufIndex(fftBuf);
 
-  // If the copy was into the current display, draw it regardless
-  if (current == inBuf) {
+  // If the copy was into the current display, draw it unless told not to
+  if (current == inBuf && display) {
     if (fftBuf) {
       if (mWinApp->mFFTView)
         mWinApp->mFFTView->DrawImage();
