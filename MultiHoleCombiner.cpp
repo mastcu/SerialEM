@@ -1338,11 +1338,12 @@ void CMultiHoleCombiner::EvaluateLineOfBoxes(int xStart, int yStart, bool doCol,
     }
   }
   sdOfNums = 0;
-  if (xnums.size() > 1)
+  if (xnums.size() > 1) {
     avgSD(&xnums[0], (int)xnums.size(), &avg, &sdOfNums, &sem);
-  if (mDebug)
-    PrintfToLog("xs %d  ys %d col %d  numbox %d  avg %.1f sd %.2f", xStart, yStart, 
-      doCol ? 1 : 0, xnums.size(), avg, sdOfNums);
+    if (mDebug)
+      PrintfToLog("xs %d  ys %d col %d  numbox %d  avg %.1f sd %.2f", xStart, yStart,
+        doCol ? 1 : 0, xnums.size(), avg, sdOfNums);
+  }
 }
 
 // Find grid points inside a box and compute the limits actually occupied for the box
@@ -1803,6 +1804,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
 
   // But first convert image to stage after adjusting for montage offsets
   if (mUseImageCoords) {
+
     mWinApp->mNavHelper->AdjustMontImagePos(mImBuf, stageX, stageY, &newItem->mPieceDrawnOn,
       &newItem->mXinPiece, &newItem->mYinPiece);
     tempX = mBITSmat.xpx * (stageX - mBSTIdelX) + mBITSmat.xpy * (stageY - mBSTIdelY);
