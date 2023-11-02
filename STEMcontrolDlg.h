@@ -24,6 +24,7 @@ private:
   int mLastProbeMode;
   int mLastSTEMmode;
   BOOL mLastBlanked;
+  int mLastMagIndex;
 
 public:
   CButton m_butScreenSwitches;
@@ -39,7 +40,7 @@ public:
   BOOL m_bStemMode;
   CStatic m_statOnOff;
   afx_msg void OnStemMode();
-  void UpdateSTEMstate(int probeMode);
+  void UpdateSTEMstate(int probeMode, int magInd = -1);
   CString m_strOnOff;
   CButton m_butInvertContrast;
   BOOL m_bInvertContrast;

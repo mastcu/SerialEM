@@ -211,17 +211,21 @@ void CSTEMcontrolDlg::UpdateSettings(void)
   UpdateData(false);
 }
 
-void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode)
+void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode, int magInd)
 {
   BOOL mode = mWinApp->GetSTEMMode();
   if (mLastProbeMode < -1)
     return;
-  if (probeMode == mLastProbeMode && mode == mLastSTEMmode)
+  if (magInd < 0)
+    magInd = mWinApp->mScope->GetMagIndex();
+  if (probeMode == mLastProbeMode && mode == mLastSTEMmode && magInd == mLastMagIndex)
     return;
   if (!mode)
     m_strOnOff = "OFF";
   else if (JEOLscope)
     m_strOnOff = "ON";
+  else if (mWinApp->mScope->MagIsInFeiLMSTEM(magInd))
+    m_strOnOff = "LM";
   else if (probeMode)
     m_strOnOff = "MICRO";
   else
@@ -229,6 +233,7 @@ void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode)
   m_bStemMode = mode;
   mLastProbeMode = probeMode;
   mLastSTEMmode = mode;
+  mLastMagIndex = magInd;
   UpdateEnables();
   UpdateData(false);
 }
