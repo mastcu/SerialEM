@@ -3464,8 +3464,10 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("DisableOrHideFile")) {
         StripItems(strLine, 1, message);
+        mCheckForComments = false;
         ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
           mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings());
+        mCheckForComments = true;
 
       } else if (MatchNoCase("BasicModeDisableHideFile")) {
         StripItems(strLine, 1, message);
@@ -4211,7 +4213,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       "(only the last entry has any effect):\r\n" + mDupMessage;
     AfxMessageBox(mDupMessage, MB_EXCLAME);
   }
-  mCheckForComments = true;
+  mCheckForComments = false;
 
   // Put the lowest M mode mag on the boundary list once whether it is default or entered
   mWinApp->mScope->AddShiftBoundary(mWinApp->mScope->GetLowestMModeMagInd());
