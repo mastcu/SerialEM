@@ -235,6 +235,7 @@ IF  EXIST HitachiPlugin.dll IF %HASHITACHIPLUG% EQU 1 (
   set SCOPEPLUG=1
   set REMOTEHITACHI=1
   set SCOPEDLL=HitachiPlugin.dll
+  GOTO :ScopePlug
 )
 
 Rem # Nothing at all: ask first about FEI
@@ -265,8 +266,8 @@ IF %SCOPEPLUG% EQU 1 (
 
 :NoScopePlug
 
-IF %FEISCOPE% EQU 0 GOTO :NoFEIserver
 set COPYSERVER=0
+IF %FEISCOPE% EQU 0 GOTO :NoFEIserver
 IF NOT EXIST b3dregsvr32.exe (
   echo Copying FEI-SEMserver.exe to SerialEM folder because this is a 64-bit FEI scope
   set COPYSERVER=1
@@ -280,6 +281,23 @@ IF %COPYSERVER% EQU 1 (
 )
 
 :NoFEIserver
+
+Rem # Copy AutoIT to be with FEI components or to update it
+set COPYAUTOIT=0
+IF EXIST ..\FeiScopePlugin.dll (
+  echo Copying SEM-AutoIT.exe to SerialEM folder to be with FEI plugin
+  set COPYAUTOIT=1
+) ELSE IF EXIST ..\FEI-SEMserver.exe (
+  echo Copying SEM-AutoIT.exe to SerialEM folder to be with FEI-SEMserver
+  set COPYAUTOIT=1
+) ELSE IF EXIST ..\SEM-AutoIT.exe (
+  echo Copying SEM-AutoIT.exe to SerialEM folder to replace the version there
+  set COPYAUTOIT=1
+)
+IF %COPYAUTOIT% EQU 1 (
+  IF EXIST ..\SEM-AutoIT.exe DEL ..\SEM-AutoIT.exe
+  COPY /Y SEM-AutoIT.exe "..\"
+)
 
 Rem # Update JeolCamPlugin.dll if it is there
 IF EXIST JeolCamPlugin.dll IF EXIST  ..\JeolCamPlugin.dll (

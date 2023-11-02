@@ -374,8 +374,8 @@ int CBaseServer::PrepareCommand(int sockInd, int numBytes, ArgDescriptor *funcTa
   while (funcTable[ind].funcCode >= 0 && funcTable[ind].funcCode != funcCode)
     ind++;
   if (funcTable[ind].funcCode < 0) {
-    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Function code not found: %d%s",
-      funcCode, upgradeMess);
+    _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "Function code not found: %d - "
+      "%s", funcCode, upgradeMess);
     ErrorToLog(mMessageBuf[sockInd]);
     SendArgsBack(sockInd, -1);
     return 1;
