@@ -1301,6 +1301,7 @@ void CMacroProcessor::Run(int which)
   mParseQuotes = false;
   mNoLineWrapInMessageBox = false;
   mLogAction = LOG_OPEN_IF_CLOSED;
+  mLogInfoAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;
   mStartClock = GetTickCount();
   mOverwriteOK = false;
@@ -1340,6 +1341,7 @@ void CMacroProcessor::ClearGraphVariables()
   mGraphXmax = EXTRA_NO_VALUE;
   mGraphYmin = EXTRA_NO_VALUE;
   mGraphYmax = EXTRA_NO_VALUE;
+  mGraphSaveName = "";
 }
 
 // Do all the common initializations for running or restarting a macro

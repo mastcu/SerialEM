@@ -553,8 +553,17 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SuppressReports [#]</TD>
-          <TD>Disables printing of reports and other script output, and just assigns the values to report
+          <TD>Disables printing of reports and some other script output, and just assigns the values to report
             variables.&nbsp; Including 0 for the optional <b>#</b> reenables printing.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SuppressInfoOutput [#]</TD>
+          <TD>Disables printing of most other script outputs that provide information and that are still printed
+            with 'SuppressReports'.&nbsp; Including 0 for the optional <b>#</b> reenables printing.&nbsp; There
+            is no consistent distinction between which such output is suppressed by this command instead of
+            'SuppressReports'; if you think an item should be moved between categories, let us know.&nbsp; 
+            Command added in 4.1, 31-Oct-23.  
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SuspendNavRedraw [#]</TD>
@@ -877,7 +886,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">bufferImage(buf)</TD>
-          <TD>Constructs an instance of the 'bufferImage' type that has an image pointer and other
+          <TD>Returns an image from a buffer by constructing an instance of the 'bufferImage' type that has
+             an image pointer and other
             essential information about the image in buffer <b>buf</b>, which is a
             non-numeric string and can specify an FFT buffer.&nbsp; This type instance can
             provide the image to other classes via the Python &#39;Buffer Protocol&#39;.&nbsp; To convert to
@@ -2045,19 +2055,20 @@
             completion generates a script error, but a non-zero exit status will not.&nbsp; Three files will
             be created in the current directory: 'single.defocus' with the basic results, 'ctfplotter.log' 
             with program output, and 'ctfplotter.info' with stored settings plus the CCC and fit-to-resolution values.
-            <br />To use this command, Ctfplotter must be available to SerialEM; see <a href="setting_up_serialem.htm#addedPackages">
-              Additional Packages for GPU and Python Support, and for Displaying Graphs and Using Ctfplotter</a>
-             for details on how to achieve this.
-            &nbsp; With IMOD 4.12.31 or higher, Ctfplotter is about as fast as Ctffind and will give significantly more
+            <br />Ctfplotter is about as fast as Ctffind and will give significantly more
             accurate results for images with weaker signals or ones taken at higher tilt.
             To save some time, use autotuning (the default) on an initial image and use last 
-            parameters (-1 for <B>#T</B>) on a similar image.</TD>
+            parameters (-1 for <B>#T</B>) on a similar image.&nbsp; Command added in 4.1, 24-Aug-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportCtplotterTuning</TD>
           <TD>Reports the values set from the last autotuning in Ctfplotter: power spectrum 
             resolution, pixel size to which spectra are cropped or 0 if no cropping, and 
-            start and end of the fitting range in reciprocal pixels.</TD>
+            start and end of the fitting range in reciprocal pixels then in Angstroms.&nbsp; If there was cropping, the
+            range in reciprocal pixels applies to the pixel size after cropping; otherwise the range applies to the
+            pixel size of the original image (not of the possibly reduced image sent to Ctfplotter).&nbsp; These reciprocal
+             pixel values are appropriate entries for the 'Ctfplotter' command with and without cropping specified, respectively.
+            &nbsp; Command added in 4.1, 24-Aug-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SaveNextCtfplotGraph buf [file]</TD>
@@ -2068,8 +2079,11 @@
             <b>buf</b> is -1 or -2, the graph will just be saved into a PNG or TIFF file, respectively, 
             and <b>file</b> must be entered in this case.&nbsp; In either case, the program will attach
             the extension '.tif' or '.png', depending on the file type, if the name does not already end 
-            in the right extension.&nbsp; Graph-saving requires IMOD 4.12.51 or 
-            higher.&nbsp; Command added in 4.1, 18-Jul-23.
+            in the right extension.&nbsp; Graph-saving requires either a full installation or 3dmod package
+             from IMOD 4.12.51 or higher; see <a href="setting_up_serialem.htm#addedPackages">
+              Additional Packages for GPU and Python Support, and for Displaying General and Ctfplotter Graphs</a>
+             for details on how to achieve this.&nbsp; The Ctfplotter packed with SerialEM will be used instead unless 
+            a graph is being saved.&nbsp; Command added in 4.1, 18-Jul-23.
           </TD>
         </TR>
         <TR>
@@ -5260,7 +5274,7 @@
             the first one will each be plotted versus the first column.</td>
           </TR>
        <TR>
-          <TD class="scriptcommand">SetGraphSymbolss # [# ...]</TD>
+          <TD class="scriptcommand">SetGraphSymbols # [# ...]</TD>
           <td>
             Sets a list of symbols to be substituted for the default ones in the next graphing
              command&nbsp; These can be numbers from -1 to 19: open and
@@ -5303,8 +5317,18 @@
         <TR>
           <TD class="scriptcommand">SetGraphKeyLabel text</TD>
           <td>
-            Sets one label to appear after a symbol in the key ion the right in the bext graph.&nbsp; This
+            Sets one label to appear after a symbol in the key on the right in the bext graph.&nbsp; This
              command can be used multiple times, once for each type or column being graphed.</td>
+          </TR>
+        <TR>
+          <TD class="scriptcommand">SaveNextGraphAndExit #T file</TD>
+          <td>
+            Makes the next graph be saved in <b>file</b> as a PNG or a compressed TIFF if <b>#T</b> is 0 
+            or non-zero, respectively, then exits the graph program.&nbsp; The filename should have the appropriate
+            extension; it is not added automatically.&nbsp; Saving as TIFF requires IMOD 4.12.55 or 
+            higher.&nbsp; If you want to read in the graph to display in SerialEM, it must be a TIFF, and you 
+            should delay at least 2 seconds before trying to read it.&nbsp; Command added in 4.1, 19-Oct-23.
+          </td>
           </TR>
         <TR>
           <TD class="scriptcommand">CloseAllGraphs</TD>

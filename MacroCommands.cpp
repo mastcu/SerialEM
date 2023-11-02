@@ -881,7 +881,8 @@ int CMacCmd::Break(void)
   if (mBlockLevel >= 0 && (CMD_IS(BREAK) || mKeyBreak))
     mLoopCount[mBlockLevel] = mLoopLimit[mBlockLevel];
   if (mKeyBreak) {
-    PrintfToLog("Broke out of loop after %c key pressed", (char)mKeyPressed);
+    if (mLogInfoAction != LOG_IGNORE)
+      PrintfToLog("Broke out of loop after %c key pressed", (char)mKeyPressed);
     mKeyPressed = 0;
   }
   return 0;
@@ -3026,7 +3027,7 @@ int CMacCmd::Save(void)
     else
       report.Format("Saved Z =%4d, %6.2f degrees to file #%d", mImBufs[i].mSecNumber,
         extra->m_fTilt, index2 + 1);
-    mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
+    mWinApp->AppendToLog(report, mLogInfoAction);
   }
   return 0;
 }
@@ -3208,7 +3209,7 @@ int CMacCmd::OpenNewFile(void)
   if (CMD_IS(OPENFRAMESUMFILE)) {
     SubstituteLineStripItems(mStrLine, index, mStrCopy);
     report = mCamera->GetFrameFilename() + mStrCopy;
-    mWinApp->AppendToLog("Opening file: " + report, LOG_SWALLOW_IF_CLOSED);
+    mWinApp->AppendToLog("Opening file: " + report, mLogInfoAction);
   } else if (CheckConvertFilename(mStrItems, mStrLine, index, report))
     return 1;
 
@@ -3253,13 +3254,13 @@ int CMacCmd::SetupWaffleMontage(void)
   iy0 = PiecesForMinimumSize(backlashX, sizeY, 0.1f);
   if (ix0 < 2 && iy0 < 2) {
     mWinApp->AppendToLog("No montage is needed to measure pixel size at this "
-      "magnification");
+      "magnification", mLogInfoAction);
     SetReportedValues(0.);
   } else {
     if (mWinApp->Montaging() && mMontP->xNframes == ix0 && mMontP->yNframes == iy0) {
       mMontP->magIndex = mScope->GetMagIndex();
       mWinApp->AppendToLog("Existing montage can be used to measure pixel size at "
-        "this magnification");
+        "this magnification", mLogInfoAction);
     } else {
 
                  // If it is montaging already, close file
@@ -3282,7 +3283,8 @@ int CMacCmd::SetupWaffleMontage(void)
       if (index2)
         ABORT_NOLINE("Error trying to open new montage the right size for current"
         " magnification");
-      PrintfToLog("Opened file %s for %d x %d montage", (LPCTSTR)report, ix0, iy0);
+      report.Format("Opened file %s for %d x %d montage", (LPCTSTR)report, ix0, iy0);
+      mWinApp->AppendToLog(report, mLogInfoAction);
     }
     mMontP->warnedMagChange = true;
     mMontP->overviewBinning = 1;
@@ -4006,10 +4008,11 @@ int CMacCmd::SetDirectory(void)
       SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy);
   } else {
     if (CFile::GetStatus((LPCTSTR)mStrCopy, status)) {
-      mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists");
+      mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists",
+        mLogInfoAction);
     } else {
       if (!UtilRecursiveMakeDir(mStrCopy, mess))
-        mWinApp->AppendToLog("Created directory " + mStrCopy);
+        mWinApp->AppendToLog("Created directory " + mStrCopy, mLogInfoAction);
       else
         SUSPEND_NOLINE("because of failure to create directory " + mStrCopy + ":\n" + 
           mess);
@@ -4054,7 +4057,7 @@ int CMacCmd::MakeDateTimeDir(void)
     SUSPEND_NOLINE("because of failure to create directory " + mStrCopy);
   if (_chdir((LPCTSTR)mStrCopy))
     SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy);
-  mWinApp->AppendToLog("Created directory " + mStrCopy);
+  mWinApp->AppendToLog("Created directory " + mStrCopy, mLogInfoAction);
   return 0;
 }
 
@@ -4327,7 +4330,7 @@ int CMacCmd::SaveCalibrations(void)
     mWinApp->mDocWnd->SaveCalibrations();
   else
     mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode "
-     "not enabled");
+     "not enabled", mLogInfoAction);
   return 0;
 }
 
@@ -4668,7 +4671,7 @@ int CMacCmd::SetObjFocus(void)
   mScope->SetObjFocus(index);
   delY = mScope->GetDefocus();
   report.Format("Defocus before = %.4f   after = %.4f", delX, delY);
-  mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
+  mWinApp->AppendToLog(report, mLogInfoAction);
   return 0;
 }
 
@@ -4831,6 +4834,14 @@ int CMacCmd::SetSpotSize(void)
 int CMacCmd::SetProbeMode(void)
 {
   int index;
+  BOOL inSTEM;
+  if (FEIscope) {
+    index = mScope->GetMagIndex();
+    inSTEM = mScope->GetSTEMmode();
+    if ((inSTEM && mScope->MagIsInFeiLMSTEM(index)) ||
+      (!inSTEM && index && index < mScope->GetLowestMModeMagInd()))
+      mWinApp->AppendToLog("WARNING: Setting probe mode has no effect in LM");
+  }
 
   if (mItem1upper.Find("MICRO") == 0 || mItem1upper == "1")
     index = 1;
@@ -5049,7 +5060,7 @@ int CMacCmd::ImageShiftByUnits(void)
   delY = aMat.ypx * delISX + aMat.ypy * delISY;
   specDist = 1000. * sqrt(delX * delX + delY * delY);
   mStrCopy.Format("%.1f nm shifted on specimen", specDist);
-  mWinApp->AppendToLog(mStrCopy, LOG_OPEN_IF_CLOSED);
+  mWinApp->AppendToLog(mStrCopy, mLogInfoAction);
   return 0;
 }
 
@@ -5571,6 +5582,16 @@ int CMacCmd::SuppressReports(void)
     mLogAction = LOG_OPEN_IF_CLOSED;
   else
     mLogAction = LOG_IGNORE;
+  return 0;
+}
+
+// SuppressInfoOutput
+int CMacCmd::SuppressInfoOutput()
+{
+  if (!mItemEmpty[1] && !mItemInt[1])
+    mLogInfoAction = LOG_OPEN_IF_CLOSED;
+  else
+    mLogInfoAction = LOG_IGNORE;
   return 0;
 }
 
@@ -6434,8 +6455,9 @@ int CMacCmd::SetCameraPLAOffset(void)
   mScope->GetDetectorOffsets(floatX, floatY);
   shiftX = floatX + (float)(delISX - mImBufs[1].mISX);
   shiftY = floatY + (float)(delISY - mImBufs[1].mISY);
-  PrintfToLog("Camera offset changed from %.3f  %.3f to %.3f %.3f", floatX, floatY,
-    shiftX, shiftY);
+  if (mLogInfoAction != LOG_IGNORE)
+    PrintfToLog("Camera offset changed from %.3f  %.3f to %.3f %.3f", floatX, floatY,
+      shiftX, shiftY);
   mCamera->SetCameraISOffset(mWinApp->GetCurrentCamera(), shiftX, shiftY);
   mScope->SetDetectorOffsets(shiftX, shiftY);
   mScope->SetImageShift(delISX, delISY);
@@ -7040,6 +7062,7 @@ int CMacCmd::Ctfplotter(void)
 {
   CString report, command;
   float phase = 0., imPixel, cropPixel = 0., fitStart = -1., fitEnd = 0., tiltOffset = 0.;
+  float reduction = 1.f;
   int index, astigPhase = 1, resolOrTune = 1;
 
   if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
@@ -7049,6 +7072,7 @@ int CMacCmd::Ctfplotter(void)
   imPixel = 1000.f * mShiftManager->GetPixelSize(&mImBufs[index]);
   if (!imPixel)
     ABORT_LINE("No pixel size is available for the image for line:\n\n");
+  reduction = B3DMAX(1.f, mProcessImage->GetMinCtfplotterPixel() / imPixel);
   
   if (mItemDbl[2] > 0. || mItemDbl[3] > 0. || mItemDbl[2] < -100 || mItemDbl[3] < -100)
     ABORT_LINE("Minimum and maximum defocus must be negative and in microns");
@@ -7076,10 +7100,10 @@ int CMacCmd::Ctfplotter(void)
       fitStart = mItemFlt[9];
       fitEnd = mItemFlt[10];
       if (fitStart > 0.51)
-        fitStart = 10.f * imPixel / fitStart;
+        fitStart = 10.f * (cropPixel ? cropPixel : imPixel) / fitStart;
       if (fitEnd > 0.51)
-        fitEnd = 10.f * imPixel / fitEnd;
-      if (fitStart > fitEnd || (fitStart >= 0 && fitStart < 0.1)) {
+        fitEnd = 10.f * (cropPixel ? cropPixel : imPixel) / fitEnd;
+      if (fitStart > fitEnd || (fitStart >= 0 && fitStart < 0.01)) {
         report.Format("The start of the fitting range (%.3f/pixel) is too small or past "
           "the end of the range (%.2f/pixel) in line:\n\n", fitStart, fitEnd);
         ABORT_LINE(report);
@@ -7100,13 +7124,13 @@ int CMacCmd::Ctfplotter(void)
 
   // Save the image to shared memory
   mShrMemFile = mWinApp->mExternalTools->SaveBufferToSharedMemory(index,
-    "ctftmp.mrc", report);
+    "ctftmp.mrc", report, reduction);
   if (!mShrMemFile)
     ABORT_LINE(report + " in line:\n\n");
 
   // Get the command and run it in a thread, set flags
-  if (mWinApp->mExternalTools->MakeCtfplotterCommand(report, index, tiltOffset,
-    mItemFlt[2], mItemFlt[3], astigPhase, phase, resolOrTune, cropPixel, fitStart, 
+  if (mWinApp->mExternalTools->MakeCtfplotterCommand(report, reduction, index, tiltOffset,
+    mItemFlt[2], mItemFlt[3], 0., astigPhase, phase, resolOrTune, cropPixel, fitStart, 
     fitEnd, mSaveCtfplotGraph, mCtfplotGraphName, mEnteredName))
     ABORT_LINE(report + " in line:\n\n");
   if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""))) {
@@ -7150,13 +7174,15 @@ int CMacCmd::ReportCtplotterTuning(void)
   float crop = mWinApp->mExternalTools->GetLastCropPixel();
   float fitStart = mWinApp->mExternalTools->GetLastFitStart();
   float fitEnd = mWinApp->mExternalTools->GetLastFitEnd();
+  float angsStart = mWinApp->mExternalTools->GetLastAngstromStart();
+  float angsEnd = mWinApp->mExternalTools->GetLastAngstromEnd();
   if (!resol) {
     mLogRpt = "There are no stored values from previous autotuning";
     SetReportedValues(&mStrItems[1], 0);
   } else {
     mLogRpt.Format("Tuned parameters are psResol = %d,  crop to pixel %.3f, fit to %.3f"
-      " - %.3f/pixel", resol, crop, fitStart, fitEnd);
-    SetReportedValues(&mStrItems[1], resol, crop, fitStart, fitEnd);
+      " - %.3f/pixel, %.2f - %.2f A", resol, crop, fitStart, fitEnd, angsStart, angsEnd);
+    SetReportedValues(&mStrItems[1], resol, crop, fitStart, fitEnd, angsStart, angsEnd);
   }
   return 0;
 }
@@ -7212,7 +7238,8 @@ int CMacCmd::GraphValuesInArrays(void)
     ifTypes ? mStoredGraphTypes : dummy, mGraphTypeList, mGraphColumns, mGraphSymbols, 
     mGraphAxisLabel, mGraphKeys, errString, mConnectGraph,
     mGraphVsOrdinals, mGraphColorOpt, mGraphXlogSqrt, mGraphXlogBase, mGraphYlogSqrt, 
-    mGraphYlogBase, mGraphXmin, mGraphXmax, mGraphYmin, mGraphYmax);
+    mGraphYlogBase, mGraphXmin, mGraphXmax, mGraphYmin, mGraphYmax, mGraphSaveName,
+    mGraphSaveTiff);
   if (ind) {
     if (!errString.IsEmpty())
       ABORT_LINE(errString + " in line\n\n");
@@ -7255,6 +7282,14 @@ int CMacCmd::SetGraphColumns(void)
 int CMacCmd::SetGraphSymbols(void)
 {
   SetGraphListVec(mGraphSymbols);
+  return 0;
+}
+
+// SaveNextGraphAndExit
+int CMacCmd::SaveNextGraphAndExit()
+{
+  mGraphSaveTiff = mItemInt[1] != 0;
+  SubstituteLineStripItems(mStrLine, 2, mGraphSaveName);
   return 0;
 }
 
@@ -7604,8 +7639,7 @@ int CMacCmd::CircleFromPoints(void)
       mWinApp->AppendToLog("The three points are too close to being on a straight line"
         , LOG_OPEN_IF_CLOSED);
   } else {
-    report.Format("Circle center = %.2f  %.2f  radius = %.2f", xcen, ycen, radius);
-    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    mLogRpt.Format("Circle center = %.2f  %.2f  radius = %.2f", xcen, ycen, radius);
     SetRepValsAndVars(7, xcen, ycen, radius);
   }
   return 0;
@@ -8880,7 +8914,7 @@ int CMacCmd::RefineZLP(void)
     SEMTickInterval(1000. * mFiltParam->alignZLPTimeStamp) > 60000. *mItemDbl[1]) {
     CTime ctdt = CTime::GetCurrentTime();
     report.Format("%02d:%02d:%02d", ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
-    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    mWinApp->AppendToLog(report, mLogInfoAction);
     mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2]);
   }
   return 0;
@@ -9114,14 +9148,16 @@ int CMacCmd::SetExposureForMean(void)
     bmin = (float)(delISY / index2);
     mCamera->ConstrainFrameTime(bmin, mCamParams);
     if (fabs(bmin - mConSets[index].frameTime) < 0.0001) {
-      PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
+      if (mLogInfoAction != LOG_IGNORE)
+        PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
         "too small a change in frame time", (LPCTSTR)mStrItems[1], delISX);
       bmean = 0.;
     } else {
       SaveControlSet(index);
       mConSets[index].frameTime = bmin;
       bmean = index2 * bmin;
-      PrintfToLog("In SetExposureForMean %s, frame time changed to %.4f, exposure time"
+      if (mLogInfoAction != LOG_IGNORE)
+        PrintfToLog("In SetExposureForMean %s, frame time changed to %.4f, exposure time"
         " changed to %.4f", (LPCTSTR)mStrItems[1], mConSets[index].frameTime,
         bmean);
     }
@@ -9138,7 +9174,8 @@ int CMacCmd::SetExposureForMean(void)
       mCamera->MakeAlignSaveFlags(&mConSets[index]), ix1, bmean,
       mConSets[index].frameTime, iy1, mConSets[index].mode);
     if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
-      PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
+      if (mLogInfoAction != LOG_IGNORE)
+        PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
         "too small a change in exposure time", (LPCTSTR)mStrItems[1], delISX);
       bmean = 0.;
     } else {
@@ -9152,7 +9189,8 @@ int CMacCmd::SetExposureForMean(void)
         report+= strCopy;
       }
       mWinApp->AppendToLog(report); */
-      PrintfToLog("In SetExposureForMean %s, exposure time changed to %.4f",
+      if (mLogInfoAction != LOG_IGNORE)
+        PrintfToLog("In SetExposureForMean %s, exposure time changed to %.4f",
         (LPCTSTR)mStrItems[1], bmean);
     }
   }
@@ -10201,12 +10239,14 @@ int CMacCmd::SkipNavPointsNearEdge(void)
 
   // Skip if not enough points
   if (xvar && !xcen.size()) {
-    PrintfToLog("No points %swithin specified range; nothing to do",
+    if (mLogInfoAction != LOG_IGNORE)
+      PrintfToLog("No points %swithin specified range; nothing to do",
       excludeOff ? "marked for acquire " : "");
     return 0;
   }
   if (!xvar && xcen.size() < 4) {
-    PrintfToLog("Only %d points %swithin specified range; nothing to do", xcen.size(),
+    if (mLogInfoAction != LOG_IGNORE)
+      PrintfToLog("Only %d points %swithin specified range; nothing to do", xcen.size(),
       excludeOff ? "marked for acquire " : "");
     return 0;
   }
@@ -10243,7 +10283,8 @@ int CMacCmd::SkipNavPointsNearEdge(void)
       vecInd++;
     }
   }
-  PrintfToLog("%d Acquire points too close to edge %swill be skipped", numOff, 
+  if (mLogInfoAction != LOG_IGNORE)
+    PrintfToLog("%d Acquire points too close to edge %swill be skipped", numOff,
     xvar ? "or outside boundary " : "");
   if (numOff) {
     mNavigator->Redraw();
@@ -11162,11 +11203,13 @@ int CMacCmd::ShiftItemsByCurrentDiff(void)
   if (specDist <= mItemDbl[1]) {
     mNavigator->ShiftItemsAtRegistration(shiftX, shiftY,
       navItem->mRegistration);
-    PrintfToLog("Items at registration %d shifted by %.2f, %.2f",
+    if (mLogInfoAction != LOG_IGNORE)
+      PrintfToLog("Items at registration %d shifted by %.2f, %.2f",
       navItem->mRegistration, shiftX, shiftY);
     mNavigator->SetChanged(true);
   } else {
-    PrintfToLog("Current stage position is too far from item position (%.2f microns);"
+    if (mLogInfoAction != LOG_IGNORE)
+      PrintfToLog("Current stage position is too far from item position (%.2f microns);"
       "nothing was shifted", specDist);
   }
   return 0;

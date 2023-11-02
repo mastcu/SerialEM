@@ -303,6 +303,7 @@ protected:
   WINDOWPLACEMENT mOneLinePlacement;
   int mLogErrAction;      // Log argument for error messages
   int mLogAction;         // Parameterized log argument for suppressing reports
+  int mLogInfoAction;     // Log argument for info messages
   std::vector<ControlSet> mConsetsSaved; // COntrol sets saved from changes
   std::vector<ControlSet> mChangedConsets; // Modified Control sets if suspend
   std::vector<std::string> mSavedSettingNames;   // Names and values of user settings that
@@ -452,6 +453,8 @@ protected:
   float mGraphXmax;
   float mGraphYmin;
   float mGraphYmax;
+  CString mGraphSaveName;       // Name of file to save and exit
+  bool mGraphSaveTiff;         // Whether to save tiff instead of png
   IntVec mStoredGraphTypes;    // Stored type data
   std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
   CString mInputToNextProcess; // Input to pipe in when running next process
