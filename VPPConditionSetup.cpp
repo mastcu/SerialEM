@@ -96,9 +96,9 @@ BEGIN_MESSAGE_MAP(CVPPConditionSetup, CBaseDlg)
   ON_BN_CLICKED(IDC_RWITHNOTE, OnRwithLabel)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINPPCONDDOSE, OnDeltaposSpinPPcondCharge)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINPPCONDTIME, OnDeltaposSpinPPcondTime)
-  ON_BN_CLICKED(IDC_PPCOND_NEXT_AND_GO, &CVPPConditionSetup::OnCloseNextAndGo)
-  ON_EN_KILLFOCUS(IDC_EDITPPCONDDOSE, &CVPPConditionSetup::OnKillfocusPPcondCharge)
-  ON_EN_KILLFOCUS(IDC_EDITPPCONDTIME, &CVPPConditionSetup::OnKillfocusPPcondTime)
+  ON_BN_CLICKED(IDC_PPCOND_NEXT_AND_GO, OnCloseNextAndGo)
+  ON_EN_KILLFOCUS(IDC_EDITPPCONDDOSE, OnKillfocusPPcondCharge)
+  ON_EN_KILLFOCUS(IDC_EDITPPCONDTIME, OnKillfocusPPcondTime)
 END_MESSAGE_MAP()
 
 
@@ -298,7 +298,7 @@ void CVPPConditionSetup::ManageSettingEnables()
   m_statAlpha.EnableWindow(enable);
   enable = (enable && mParams.magIndex >= 0) || (!enable && mWinApp->LowDoseMode());
   m_butPPcondGo.EnableWindow(enable);
-  m_butNextAndGo.EnableWindow(enable);
+  m_butNextAndGo.EnableWindow(enable && mScope->GetScopeHasPhasePlate());
 }
 
 // Manges enables related to using the Nav point
