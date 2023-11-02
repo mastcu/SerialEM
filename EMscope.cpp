@@ -228,6 +228,7 @@ CEMscope::CEMscope()
   mSearchDefocus = 0.;
   mSelectedEFTEM = false;
   mSelectedSTEM = 0;
+  mFeiSTEMprobeModeInLM = 0;
   mHasOmegaFilter = false;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mMagTab = mWinApp->GetMagTable();
@@ -1266,7 +1267,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   mAutosaveCount++;
-  if (!sInitialized || mSelectedSTEM < 0)
+  if (!sInitialized || mSelectedSTEM < 0 || inUpdate)
     return;
   mWinApp->ManageBlinkingPane(GetTickCount());
 
@@ -1348,7 +1349,21 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       CHECK_TIME(3);
 
       if (STEMmode) {
+
         PLUGSCOPE_GET(STEMMagnification, curMag, 1);
+
+        // Hijack the probe logic if in LM and assert it when property set
+        if (mFeiSTEMprobeModeInLM > 0) {
+          tmpMag = LookupSTEMmagFEI(curMag, probe, minDiff2);
+          if (minDiff2 > 0. && MagIsInFeiLMSTEM(tmpMag)) {
+            probe = B3DMIN(1, mFeiSTEMprobeModeInLM - 1);
+            if (probe != mProbeMode) {
+              SEMTrace('g', "ScopeUpdate: setting probe mode to %d in LM for "
+                "FeiSTEMprobeModeInLM = %d", probe, mFeiSTEMprobeModeInLM);
+              mProbeMode = probe;
+            }
+          }
+        }
 
         // The scope changes from nano to microprobe before leaving STEM
         // Thus, need to wait for over a second after first seeing a probe mode change
@@ -1385,8 +1400,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
             rawISY = mLastISY;
           }
         }
+
         STEMmode += mProbeMode;
-        mWinApp->mSTEMcontrol.UpdateSTEMstate(mProbeMode);
+        mWinApp->mSTEMcontrol.UpdateSTEMstate(mProbeMode, magIndex);
       } else {
 
         // TEM mode.  Need mag index and diffraction values here
@@ -3845,6 +3861,14 @@ int CEMscope::LookupSTEMmagFEI(double curMag, int curMode, double & minDiff)
       result = i;
     }
   }
+
+  // If we are using only one STEM LM mag range, transpose to other range
+  if (mFeiSTEMprobeModeInLM == 1 && result >= mLowestMicroSTEMmag && 
+    result < mLowestSTEMnonLMmag[1])
+    result -= mLowestMicroSTEMmag - 1;
+  else if (mFeiSTEMprobeModeInLM > 1 && result < mLowestSTEMnonLMmag[0] && 
+    mLowestSTEMnonLMmag[1] > mLowestMicroSTEMmag)
+    result += mLowestMicroSTEMmag - 1;
   return result;
 }
 
@@ -7556,6 +7580,7 @@ BOOL CEMscope::SetProbeOrAdjustLDArea(int inProbe)
 int CEMscope::ReadProbeMode(void)
 {
   int subMode, retval = 1;
+  bool inSTEM;
   if (!sInitialized)
     return 0;
   ScopeMutexAcquire("ReadProbeMode", true);
@@ -7563,10 +7588,18 @@ int CEMscope::ReadProbeMode(void)
     try {
       if (!mLastMagIndex)
         PLUGSCOPE_GET(SubMode, subMode, 1);
-      if (mLastMagIndex < GetLowestMModeMagInd() && 
-        (mLastMagIndex > 0 || subMode == psmLAD) &&
-        (!mWinApp->ScopeHasSTEM() || !mPlugFuncs->GetSTEMMode())) {
+      inSTEM = !(!mWinApp->ScopeHasSTEM() || !mPlugFuncs->GetSTEMMode());
+      if (!inSTEM && mLastMagIndex < GetLowestMModeMagInd() &&
+        (mLastMagIndex > 0 || subMode == psmLAD)) {
         mProbeMode = retval = 1;
+      } else if (inSTEM && MagIsInFeiLMSTEM(mLastMagIndex)) {
+
+        // Keep the current probe mode if option not set, or return and set mode to
+        // option value minus 1
+        if (!mFeiSTEMprobeModeInLM)
+          retval = mProbeMode;
+        else
+          mProbeMode = retval = B3DMIN(1, mFeiSTEMprobeModeInLM - 1);
       } else {
         PLUGSCOPE_GET(ProbeMode, retval, 1);
         mReturnedProbeMode = mProbeMode = retval;
@@ -7581,6 +7614,13 @@ int CEMscope::ReadProbeMode(void)
   }
   ScopeMutexRelease("ReadProbeMode");
   return retval;
+}
+
+// Simply test if the mag is in either LM range
+bool CEMscope::MagIsInFeiLMSTEM(int inMag)
+{
+  return (inMag < mLowestSTEMnonLMmag[0] ||
+    (inMag >= mLowestMicroSTEMmag && inMag < mLowestSTEMnonLMmag[1]));
 }
 
 // Directly determine whether scope is in STEM mode

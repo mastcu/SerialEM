@@ -12,6 +12,7 @@
 #include "ShiftManager.h"
 #include "ProcessImage.h"
 #include "ExternalTools.h"
+#include "EMbufferManager.h"
 #include "SerialEMDoc.h"
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
@@ -31,6 +32,7 @@ CExternalTools::CExternalTools(void)
   mNumToolsAdded = 0;
   mPopupMenu = NULL;
   mLastPSresol = 0;
+  mLastCtfplotPixel = 0.;
   mAllowWindow = false;
   mCheckedForIMOD = false;
 }
@@ -167,6 +169,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   bool pipeInput = !inputString.IsEmpty();
   bool localCtfplot = !mLocalCtfplotPath.IsEmpty() &&
     command.Find(mLocalCtfplotPath) == 0;
+  bool isCtfplotter = command.Find("ctfplotter") >= 0;
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
@@ -323,6 +326,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
       _putenv("IMOD_DIR=");
     }
   }
+  if (isCtfplotter)
+    _putenv("PIP_PRINT_ENTRIES=1");
 
   // RUN THE PROCESS
   retval = CreateProcess(isBatch  ? (LPCTSTR)cstrCmd : NULL, cmdString, NULL, NULL, TRUE,
@@ -335,6 +340,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   }
   if (!saveIMODdir.IsEmpty())
     _putenv((LPCTSTR)("IMOD_DIR=" + saveIMODdir));
+  if (isCtfplotter)
+    _putenv("PIP_PRINT_ENTRIES=");
 
   if (!retval) {
     CloseFileHandles(hInFile, hFile);
@@ -374,13 +381,15 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   return retval ? 0 : 1;
 }
 
-// Convenience function to close both file handles
+// Convenience function to close both file handles, or any pair of them, leaving them NULL
 void CExternalTools::CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile)
 {
   if (hOutFile != NULL && hOutFile != INVALID_HANDLE_VALUE)
     CloseHandle(hOutFile);
+  hOutFile = NULL;
   if (hInFile != NULL && hInFile != INVALID_HANDLE_VALUE)
     CloseHandle(hInFile);
+  hInFile = NULL;
 }
 
 // Substitute every occurrence of the keyword in the argumnet string, quoting the whole 
@@ -426,10 +435,11 @@ void CExternalTools::SubstituteAndQuote(CString &argString, const char *keyword,
 // name; returns the full name in filename and the iiFile for the shared memory object,
 // which must be deleted after finishing the process using the file
 ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd, 
-  CString nameSuffix, CString &filename)
+  CString nameSuffix, CString &filename, float reduction)
 {
   ImodImageFile *iiFile;
   int err;
+  EMimageBuffer saveBuf;
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + bufInd;
   FileOptions *otherOpt = mWinApp->mDocWnd->GetOtherFileOpt();
   int nx, ny, pixSize, channels, kbSize, modeSave = otherOpt->mode;
@@ -437,26 +447,39 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
     filename = "Incorrect buffer index or no image in buffer";
     return NULL;
   }
-  imBuf->mImage->getSize(nx, ny);
   if (dataSizeForMode(imBuf->mImage->getType(), &pixSize, &channels) < 0 || channels> 1) {
     filename = "Unsupported data type for saving to shared memory file";
     return NULL;
   }
-  kbSize = (pixSize * nx * ny) / 1024 + 3;
-  filename.Format("%s%d_%s", SHR_MEM_NAME_TAG, kbSize, (LPCTSTR)nameSuffix);
   iiFile = iiNew();
   if (!iiFile) {
     filename = "Error creating new ImodImageFile structure";
     return NULL;
   }
+
+  if (reduction > 1.) {
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &saveBuf, false);
+    if (mWinApp->mProcessImage->ReduceImage(imBuf, reduction, &filename, bufInd, false)) {
+      free(iiFile);
+      return NULL;
+    }
+  }
+
+  imBuf->mImage->getSize(nx, ny);
+  kbSize = (pixSize * nx * ny) / 1024 + 3;
+  filename.Format("%s%d_%s", SHR_MEM_NAME_TAG, kbSize, (LPCTSTR)nameSuffix);
   if (iiShrMemCreate((LPCTSTR)filename, iiFile)) {
     filename.Format("Error creating shared memory file of size %d kBytes");
     free(iiFile);
+    if (reduction > 1.)
+      mWinApp->mBufferManager->CopyImBuf(&saveBuf, imBuf, false);
     return NULL;
   }
   otherOpt->mode = imBuf->mImage->getType();
   err = mWinApp->mDocWnd->SaveToOtherFile(bufInd, STORE_TYPE_IIMRC, 0, &filename);
   otherOpt->mode = modeSave;
+  if (reduction > 1.)
+    mWinApp->mBufferManager->CopyImBuf(&saveBuf, imBuf, false);
   if (err) {
     if (err == 1)
       filename = "Background save error prevented saving to shared memory file";
@@ -475,9 +498,9 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
 // Compose a command for running Ctfplotter with the given set of parameters and the 
 // shared memory file whose full name is in memFile, returns the arguments in memFile or
 // an error string on error; returns the ctfplotter command in command
-int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
-  float tiltOffset, float defStart, float defEnd, int astigPhase, float phase, 
-  int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
+int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int bufInd,
+  float tiltOffset, float defStart, float defEnd, float defExpect, int astigPhase, 
+  float phase, int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
   CString &saveName, CString &command)
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + bufInd;
@@ -486,8 +509,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
 
   CheckForIMODPath();
 
-  // Get important information from the image buffer
-  float imPixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  // Get important information from the image buffer: use pixel being fit in shared mem
+  float imPixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf) * reduction;
   if (!imPixel) {
     memFile = "No pixel size is available for running Ctfplotter on this image";
     return 1;
@@ -526,11 +549,17 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
     B3DNINT(mWinApp->mProcessImage->GetRecentVoltage()),
     mWinApp->mProcessImage->GetSphericalAber(), mWinApp->mProcessImage->GetAmpRatio(),
     (LPCTSTR)memFile);
-  if (fabs(defStart - defEnd) < 0.01)
+  if (fabs(defStart - defEnd) < 0.01) {
     str.Format(" -expDef %.0f", -1000. * defStart);
-  else
+    args += str;
+  } else {
     str.Format(" -scan %.0f,%.0f", -1000. * defStart, -1000. * defEnd);
-  args += str;
+    args += str;
+    if (defExpect < 0.) {
+      str.Format(" -expDef %.0f", -1000. * defExpect);
+      args += str;
+    }
+  }
 
   // Handle PS resolution or tuning value, and other params
   if (resolTune == 1) {
@@ -544,7 +573,21 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
       fitStart = mLastFitStart;
       fitEnd = mLastFitEnd;
       cropPixel = mLastCropPixel;
+
+      // If no cropping happened, scale fit back up to pixel size in the reduced image
+      // and scale for change in pixel size
+      if (!cropPixel && mLastTunedPixel > 0.) {
+        fitStart *= mLastTunedReduction * imPixel / mLastTunedPixel;
+        fitEnd = B3DMIN(0.475f, mLastTunedReduction * fitEnd * imPixel / mLastTunedPixel);
+      }
       resolTune = mLastPSresol;
+    } else if (!cropPixel && reduction > 1) {
+      
+      // If cropping not specifed here, scale passed in 1/pixel values by reduction
+      if (fitStart > 0 && fitStart < 1.)
+        fitStart *= reduction;
+      if (fitEnd > 0. && fitEnd < 1.)
+        fitEnd = B3DMIN(0.475f, fitEnd * reduction);
     }
     if (resolTune) {
       str.Format(" -psRes %d", resolTune);
@@ -572,6 +615,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, int bufInd,
   mFitAstigPhase = astigPhase;
   mLastStartPhase = phase;
   mDidAutotune = resolTune == 1;
+  mLastCtfplotPixel = imPixel;
+  mLastReduction = reduction;
   return 0;
 }
 
@@ -627,8 +672,20 @@ int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &a
     err += AdocGetFloat(ADOC_GLOBAL_NAME, 0, "FittingEnd", &mLastFitEnd);
     mLastFitStart /= 2.f;
     mLastFitEnd /= 2.f;
-    if (!cropSpec)
+    mLastTunedPixel = mLastCtfplotPixel;
+    mLastTunedReduction = mLastReduction;
+
+    // If there was no cropping, store fitting range in original pixel size
+    if (!cropSpec) {
       mLastCropPixel = 0.;
+      mLastAngstromStart = mLastCtfplotPixel / mLastFitStart;
+      mLastAngstromEnd = mLastCtfplotPixel / mLastFitEnd;
+      mLastFitStart /= mLastReduction;
+      mLastFitEnd /= mLastReduction;
+    } else {
+      mLastAngstromStart = 10.f * mLastCropPixel / mLastFitStart;
+      mLastAngstromEnd = 10.f * mLastCropPixel / mLastFitEnd;
+    }
     if (err) {
       AdocClear(adocInd);
       errString = "Some parameters from autotuning were not found in ctfplotter.info";
@@ -870,7 +927,8 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
   IntVec typeList, IntVec columnList, IntVec symbolList, CString &axisLabel,
   std::vector<std::string> &keys,
   CString &errString, bool connect, int ordinals, int colors, int xlog, float xbase,
-  int ylog, float ybase, float xmin, float xmax, float ymin, float ymax)
+  int ylog, float ybase, float xmin, float xmax, float ymin, float ymax, CString pngName,
+  bool saveTiff)
 {
   CString dataStr;
   CFileStatus status;
@@ -1065,7 +1123,11 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
   AddSingleValueLine(input, 0);
   AddSingleValueLine(input, 0);
   AddSingleValueLine(input, -11);
-  AddSingleValueLine(input, -8);
+  if (!pngName.IsEmpty()) {
+    AddSingleValueLine(input, saveTiff ? -13 : -7);
+    input += pngName + "\r\n8\r\n";
+  } else
+    AddSingleValueLine(input, -8);
   //mWinApp->AppendToLog(input);
 
   // Make the command 

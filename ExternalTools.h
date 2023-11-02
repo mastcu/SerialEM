@@ -12,6 +12,8 @@ public:
   GetMember(float, LastCropPixel);
   GetMember(float, LastFitStart);
   GetMember(float, LastFitEnd);
+  GetMember(float, LastAngstromStart);
+  GetMember(float, LastAngstromEnd);
   GetSetMember(CString, CtfplotterPath);
   GetSetMember(BOOL, AllowWindow);
   PROCESS_INFORMATION mExtProcInfo;
@@ -26,10 +28,16 @@ private:
   CArray<CString, CString> mArgStrings;
   CString mCtfplotterPath;
   CString mLocalCtfplotPath;
+  float mLastCtfplotPixel;
+  float mLastTunedPixel;
+  float mLastReduction;
+  float mLastTunedReduction;
   int mLastPSresol;
   float mLastCropPixel;
   float mLastFitStart;
   float mLastFitEnd;
+  float mLastAngstromStart;
+  float mLastAngstromEnd;
   int mFitAstigPhase;
   bool mDidAutotune;
   float mLastStartPhase;
@@ -50,9 +58,9 @@ public:
   void AddMenuItems();
   void SubstituteAndQuote(CString &argString, const char *keyword, CString &replacement,
     bool doQuotes = true);
-  ImodImageFile *SaveBufferToSharedMemory(int bufInd, CString nameSuffix, CString &filename);
-  int MakeCtfplotterCommand(CString &memFile, int bufInd, float tiltOffset, 
-    float defStart, float defEnd, int astigPhase, float phase,
+  ImodImageFile *SaveBufferToSharedMemory(int bufInd, CString nameSuffix, CString &filename, float reduction);
+  int MakeCtfplotterCommand(CString &memFile, float reduction, int bufInd, float tiltOffset,
+    float defStart, float defEnd, float defExpect, int astigPhase, float phase,
     int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
     CString &saveName, CString &command);
   int ReadCtfplotterResults(float &defocus, float &astig, float &angle, float &phase,
@@ -61,7 +69,7 @@ public:
     IntVec symbolList, CString &axisLabel,
     std::vector<std::string> &keys, CString &errString, bool connect, int ordinals, int colors, int xlog,
     float xbase, int ylog, float ybase, float xmin = EXTRA_NO_VALUE, float xmax = EXTRA_NO_VALUE,
-    float ymin = EXTRA_NO_VALUE, float ymax = EXTRA_NO_VALUE);
+    float ymin = EXTRA_NO_VALUE, float ymax = EXTRA_NO_VALUE, CString pngName = "", bool saveTiff = false);
   void CloseAllGraphs();
   bool CheckIfGraphsOpen();
   void AddSingleValueLine(CString &input, int value);

@@ -188,8 +188,8 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     m_sbcMag.EnableWindow((inMagInd > 0 || inCamLen > 0) && baseEnable && !doingOffset
       && !stageBusy);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
-    m_butNanoMicro.EnableWindow((mWinApp->GetSTEMMode() || 
-      inMagInd >= mScope->GetLowestMModeMagInd() || 
+    m_butNanoMicro.EnableWindow(((inSTEM && !mScope->MagIsInFeiLMSTEM(inMagInd)) ||
+      (!inSTEM && inMagInd >= mScope->GetLowestMModeMagInd()) || 
       (!inMagInd && inCamLen < LAD_INDEX_BASE)) && baseEnable && !stageBusy);
     m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable && 
       !stageBusy);
@@ -351,8 +351,13 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
       index = mScope->GetMagIndex();
       mStartMagIndex = index;
     }
+
+    // This keeps it from going into LM in FEI STEM, then test for going out of LM
     index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index,
-      pNMUpDown->iDelta > 0 ? 1 : -1);
+      pNMUpDown->iDelta > 0 ? 1 : -1, FEIscope && mLastSTEMmode);
+    if (FEIscope && mLastSTEMmode && (index == mScope->GetLowestSTEMnonLMmag(0) - 1 ||
+      index == mScope->GetLowestSTEMnonLMmag(1) - 1) && pNMUpDown->iDelta > 0)
+      index2 = -1;
   } else if (mLastCamLenInd > 0) {
     mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens); 
     if (mMagClicked)
