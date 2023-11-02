@@ -507,6 +507,7 @@ public:
   GetSetMember(int, MinInitializeJeolDelay);
   GetSetMember(unsigned int, UtapiConnected);
   GetSetMember(BOOL, UseFilterInTEMMode);
+  GetSetMember(int, FeiSTEMprobeModeInLM);
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -636,6 +637,7 @@ private:
   int mDiffractOrSTEMwait;    // Milliseconds to wait after seeing 0 mag index if STEM
   int mLastSTEMmode;          // Last STEM mode from update loop
   bool mNeedSTEMneutral;      // Flag that STEM neutral hasn't been gotten yet
+  int mFeiSTEMprobeModeInLM;  // 0 to leave mode as is, 1 to say it is nano, 2 micro
 
  private:
   static UINT StageMoveProc(LPVOID pParam);
@@ -1026,6 +1028,7 @@ public:
   bool MagChgResetsIS(int toInd);
   BOOL NormalizeAll(int illumProj);
   int ReadProbeMode(void);
+  bool MagIsInFeiLMSTEM(int inMag);
   void SetCheckPosOnScreenError(BOOL inVal);
   BOOL GetCheckPosOnScreenError();
   static void GetValuesFast(int enable);
