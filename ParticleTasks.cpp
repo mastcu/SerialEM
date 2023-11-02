@@ -2057,7 +2057,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         shiftX *= mImBufs->mBinning;
         shiftY *= -mImBufs->mBinning;
         ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
-        PrintfToLog("Shift in Align to Template is %.2f, %.2f microns",
+        PrintfToLog("Shift in Align to Template is %.3f, %.3f microns",
           backlashX, backlashY);
       }
     }
