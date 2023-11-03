@@ -1267,7 +1267,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   mAutosaveCount++;
-  if (!sInitialized || mSelectedSTEM < 0 || inUpdate)
+  if (!sInitialized || mSelectedSTEM < 0)
     return;
   mWinApp->ManageBlinkingPane(GetTickCount());
 
