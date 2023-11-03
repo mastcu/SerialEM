@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/2/23: Added options to use Ctfplotter instead of Ctffind for CTF fitting
+when click in FFT and for coma/astigmatism correction.
+
+11/2/23: Added script command to make next graph be saved as TIFF so it can be
+read in.
+
+11/2/23: Added script command to suppress information output still present
+with SuppressReports.
+
+11/2/23: Added property to specify what probe mode to use in LM with FEI
+STEM.
+
 10/17/23: Added button in multishot dialog and script command to use the
 current group of Navigator points to define vectors.
 

@@ -413,10 +413,21 @@
         </TR>
         <TR VALIGN="top">
           <TD>CtfplotterPath</TD>
-          <TD>Full path to Ctfplotter executable.&nbsp; This entry should not be needed if
+          <TD>Full path to Ctfplotter executable, if you are using one in an IMOD or 3dmod package for viewing
+            CTF plots.&nbsp; This entry should not be needed if
             this directory is in a standard location or on the system path.&nbsp; See 
             <a href="setting_up_serialem.htm#addedPackages">Additional Packages for GPU and Python 
-              Support, and for Displaying Graphs and Using Ctfplotter</a> for details</TD>
+              Support, and for Displaying Gnereal and Ctfplotter Graphs</a> for details</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinCtfplotterPixel</TD>
+          <TD>Minimum pixel size, in nanometers, for images to be sent to Ctfplotter.&nbsp; 
+            When fitting an image with a smaller pixel size than this, SerialEM will reduce 
+            the image to this pixel size.&nbsp; This both speeds up Ctfplotter, and avoids 
+            crashes with versions below 4.12.57, before Ctfplotter itself automatically did 
+            an initial cropping to 0.105 nm if it received images with smaller pixel sizes.&nbsp; 
+            The default is 0.115 nm.&nbsp; A larger value may be desired if images with 
+            smaller pixel sizes are routinely fit.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GridLinesPerMM</TD>
@@ -4776,6 +4787,16 @@
           <TD>LowestMicroSTEMmag</TD>
           <TD>On a Thermo/FEI, the index of the lowest microprobe magnification, as output by <A HREF="menu_calibration.htm#hid_calibration_listmags">
               List Mags</A> in the Calibration menu.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FeiSTEMprobeModeInLM</TD>
+          <TD>On a Thermo/FEI, this property determines how probe mode is treated in LM.&nbsp; With it set to
+            1 or 2, it will internally consider the mode to be nanoprobe or microprobe, respectively,
+            magnification indexes will be set picked in the respective range of the magnification table,
+            and calibrations will be stored and accessed under those mag indexes.&nbsp; With the default of 0,
+            the internal mode will stay the same as the mode from which LM was entered, and calibrations
+            need to be available in that mode.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolSTEMmagUnitsAreX</TD>

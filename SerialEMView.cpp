@@ -36,6 +36,7 @@
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
 #include "RemoteControl.h"
+#include "ExternalTools.h"
 #include "Image\KStoreIMOD.h"
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
@@ -2426,18 +2427,21 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
   double &defocus, FloatVec &radii)
 {
-  int imX, imY, loop;
-  float phase;
+  int imX, imY, loop, astigPhase = 1;
+  float phase = 0., plotterPhase = 0., fitStart = -1.;
+  float plotterDef, astig, angle, fitToFreq, CCC, reduction;
   double mmDefocus, newRad;
   CProcessImage *processImg = mWinApp->mProcessImage;
   EMimageBuffer *mainImBufs = mWinApp->GetImBufs();
   CtffindParams param;
+  CString command, filename, saveName, results;
+  BOOL usePlotter = processImg->GetClickUseCtfplotter();
   float resultsArray[7];
   for (imX = 0; imX < MAX_BUFFERS; imX++)
     if (imBuf->mTimeStamp == mainImBufs[imX].mTimeStamp && imBuf != &mainImBufs[imX])
       break;
 
-  // For an FFT, run Ctffind if option selected
+  // For an FFT, run Ctffind or ctfplotter if option selected
   if (imX >= MAX_BUFFERS)
     return -1;
   if (processImg->InitializeCtffindParams(&mainImBufs[imX], param))
@@ -2452,29 +2456,43 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
     param.astigmatism_is_known = true;
     param.known_astigmatism = 0.;
     param.known_astigmatism_angle = 0.;
+    astigPhase = 0;
   }
 
   // Assumed phase is stored in radians, passed here in radians and 
-  // the params to ctffid are in radians
+  // the params to ctffind are in radians
   if (processImg->GetPlatePhase() > 0.001 || processImg->GetCtfFindPhaseOnClick()) {
     param.minimum_additional_phase_shift =
       param.maximum_additional_phase_shift = (float)(processImg->GetPlatePhase());
     param.find_additional_phase_shift = true;
+    plotterPhase = (float)(processImg->GetPlatePhase() / DTOR);
+    if (processImg->GetMinCtfFitResIfPhase() > 0.)
+      fitStart = processImg->GetMinCtfFitResIfPhase();
 
     // But the min and max for fitting are stored as degrees
     if (processImg->GetCtfFindPhaseOnClick()) {
+      astigPhase += 2;
       param.minimum_additional_phase_shift = (float)(processImg->GetCtfMinPhase() * DTOR);
       param.maximum_additional_phase_shift = (float)(processImg->GetCtfMaxPhase() * DTOR);
       if (processImg->GetCtfFixAstigForPhase()) {
         param.astigmatism_is_known = true;
         param.known_astigmatism = 0.;
         param.known_astigmatism_angle = 0.;
+        astigPhase -= 1;
       }
     }
 
     // Get defocus and radii from middle of phase search range for setting the params
-    processImg->GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus,
-      (param.minimum_additional_phase_shift + param.maximum_additional_phase_shift) / 2.f);
+    phase = (param.minimum_additional_phase_shift + param.maximum_additional_phase_shift)
+      / 2.f;
+    if (usePlotter && processImg->GetCtfFindPhaseOnClick()) {
+      plotterPhase = (float)processImg->GetCtfExpectedPhase();
+      phase = (float)(plotterPhase * DTOR);
+      param.minimum_additional_phase_shift = phase - (float)(60. * DTOR);
+      param.maximum_additional_phase_shift = phase + (float)(60. * DTOR);
+
+    }
+    processImg->GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus, phase);
 
   }
   processImg->SetCtffindParamsForDefocus(param, defocus, false);
@@ -2490,40 +2508,82 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
         phase = loop ? param.maximum_additional_phase_shift :
         param.minimum_additional_phase_shift;
       newRad = radii[0] -
-        B3DMAX(10. / (imY * mZoom), 1.0 * (radii[1] - radii[0]));
+        B3DMAX(10. / (imY * mZoom), (usePlotter ? 2.0 : 1.0) * (radii[1] - radii[0]));
       if (mWinApp->mProcessImage->DefocusFromPointAndZeros(newRad, 1,
         param.pixel_size_of_input_image / 10.f, 0., NULL, mmDefocus, phase))
         ACCUM_MIN(param.maximum_defocus, (float)(mmDefocus * 10000.));
       newRad = radii[0] +
-        B3DMAX(10. / (imY * mZoom), 0.5 * (radii[1] - radii[0]));
+        B3DMAX(10. / (imY * mZoom), (usePlotter ? 1.0 : 0.5) * (radii[1] - radii[0]));
       if (mWinApp->mProcessImage->DefocusFromPointAndZeros(newRad, 1,
         param.pixel_size_of_input_image / 10.f, 0., NULL, mmDefocus, phase))
         ACCUM_MAX(param.minimum_defocus, (float)(mmDefocus * 10000.));
     }
   }
 
-  // Boost search step for big defocus ranges
-  if (param.slower_search)
-    ACCUM_MAX(param.defocus_search_step,
-    (param.maximum_defocus - param.minimum_defocus) / 100.f);
-  SEMTrace('1', "Search defocus range %.0f  %.0f  step %.0f  resolution "
-    "range %.1f %.1f", param.minimum_defocus, param.maximum_defocus,
-    param.defocus_search_step, param.minimum_resolution,
-    param.maximum_resolution);
-
-  if (processImg->RunCtffind(&mainImBufs[imX], param, resultsArray))
-    return -3;
-  imBuf->mCtfFocus1 = resultsArray[0] / 10000.f;
-  imBuf->mCtfFocus2 = resultsArray[1] / 10000.f;
-  imBuf->mCtfAngle = resultsArray[2];
-  imBuf->mCtfPhase = param.find_additional_phase_shift ? resultsArray[3] : 
-    (float)EXTRA_NO_VALUE;
-  lenstr.Format("Defocus -%.2f  astig %.3f um", (imBuf->mCtfFocus1 +
-    imBuf->mCtfFocus2) / 2., imBuf->mCtfFocus1 - imBuf->mCtfFocus2);
   imBuf->mMaxRingFreq = 0.;
-  if (param.compute_extra_stats && resultsArray[5] > 0.)
-    imBuf->mMaxRingFreq = param.pixel_size_of_input_image /
-    resultsArray[5];
+  if (usePlotter) {
+
+    // CTFPLOTTER:  Tried wider defocus range and sending expected defocus, it did not
+    // help with highly astigmatic images (> 0.8 micron?)
+    if (processImg->MakeCtfplotterShrMemFile(imX, filename, reduction)) {
+      mWinApp->AppendToLog(filename);
+      return -3;
+    }
+
+    if (mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, imX, 0.,
+      -param.minimum_defocus / 10000.f, -param.maximum_defocus / 10000.f, 0.,//-defocus,
+      astigPhase, plotterPhase, 1, 0., fitStart, 0., 0, saveName, command)) {
+      mWinApp->AppendToLog(command);
+      processImg->DeletePlotterShrMemFile();
+      return -3;
+    }
+    if (processImg->RunCtfplotterOnBuffer(filename, command, 5000)) {
+      mWinApp->AppendToLog(command);
+      return -3;
+    }
+    if (mWinApp->mExternalTools->ReadCtfplotterResults(plotterDef, astig, angle, phase,
+      astigPhase, fitToFreq, CCC, results, command)) {
+      mWinApp->AppendToLog(command);
+      return -3;
+    }
+
+    // Store the result for use in tuning etc.
+    mWinApp->AppendToLog(results);
+    imBuf->mCtfFocus1 = -plotterDef + astig / 2.f;
+    imBuf->mCtfFocus2 = -plotterDef - astig / 2.f;
+    imBuf->mCtfAngle = angle;
+    imBuf->mCtfPhase = (float)(param.find_additional_phase_shift ? phase * DTOR :
+      EXTRA_NO_VALUE);
+    lenstr.Format("Defocus %.2f  astig %.3f um", plotterDef, astig);
+    if (fitToFreq > 0)
+      imBuf->mMaxRingFreq = param.pixel_size_of_input_image / fitToFreq;
+
+  } else {
+
+    // CTFFIND
+    // Boost search step for big defocus ranges
+    if (param.slower_search)
+      ACCUM_MAX(param.defocus_search_step,
+      (param.maximum_defocus - param.minimum_defocus) / 100.f);
+    SEMTrace('1', "Search defocus range %.0f  %.0f  step %.0f  resolution "
+      "range %.1f %.1f", param.minimum_defocus, param.maximum_defocus,
+      param.defocus_search_step, param.minimum_resolution,
+      param.maximum_resolution);
+
+    if (processImg->RunCtffind(&mainImBufs[imX], param, resultsArray))
+      return -3;
+    imBuf->mCtfFocus1 = resultsArray[0] / 10000.f;
+    imBuf->mCtfFocus2 = resultsArray[1] / 10000.f;
+    imBuf->mCtfAngle = resultsArray[2];
+    imBuf->mCtfPhase = param.find_additional_phase_shift ? resultsArray[3] :
+      (float)EXTRA_NO_VALUE;
+    lenstr.Format("Defocus -%.2f  astig %.3f um", (imBuf->mCtfFocus1 +
+      imBuf->mCtfFocus2) / 2., imBuf->mCtfFocus1 - imBuf->mCtfFocus2);
+    if (param.compute_extra_stats && resultsArray[5] > 0.)
+      imBuf->mMaxRingFreq = param.pixel_size_of_input_image /
+      resultsArray[5];
+  }
+
   return param.find_additional_phase_shift ? 1 : 0;
 }
 

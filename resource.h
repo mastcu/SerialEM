@@ -2161,6 +2161,12 @@
 #define IDC_EDIT_MAX_BLOCK_IS           3193
 #define IDC_STAT_USE_VECS               3194
 #define IDC_BUT_USE_NAV_PTS             3195
+#define IDC_CHECK_FIT_ON_CLICK          3196
+#define IDC_CHECK_FOR_TUNING            3197
+#define IDC_STAT_CUSTOM_HIGH_RES        3198
+#define IDC_STAT_ANGSTROM1              3199
+#define IDC_STAT_ANGSTROM2              3200
+#define IDC_STAT_TO_MAX                 3201
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2717,9 +2723,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        283
+#define _APS_NEXT_RESOURCE_VALUE        284
 #define _APS_NEXT_COMMAND_VALUE         33521
-#define _APS_NEXT_CONTROL_VALUE         3196
+#define _APS_NEXT_CONTROL_VALUE         3202
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

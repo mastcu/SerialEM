@@ -18,6 +18,7 @@
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
 #include "CameraController.h"
+#include "ExternalTools.h"
 #include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
 #include "Utilities\XCorr.h"
@@ -59,7 +60,9 @@ CAutoTuning::CAutoTuning(void)
   mMinRingsForCtf = 3;
   mMaxRingsForCtf = 20;
   mMinCenteredScore = 0.1f;
+  mMinPlotterCenScore = 0.5f;
   mMinScoreRatio = 0.33f;
+  mMinPlotterScoreRatio = 0.6f;
   mAstigBacklash = -0.02f;
   mBeamTiltBacklash = -999.;
   mBacklashDelay = 100;
@@ -1213,11 +1216,13 @@ void CAutoTuning::SetRecordConSetForCTF()
 void CAutoTuning::CtfBasedNextTask(int tparm)
 {
   CtffindParams param;
-  CString str;
+  CProcessImage *processImg = mWinApp->mProcessImage;
+  CString str, filename, command;
   int ind, calInd, xyInd, minusInd, plusInd, numInLineFit = 0, numInDat = 36;
   EMimageBuffer *fftBuf = mWinApp->GetFFTBufs();
   float scaling = FEIscope ? 1.f : mWinApp->mFocusManager->EstimatedBeamTiltScaling();
   FloatVec radii;
+  BOOL usePlotter = processImg->GetTuneUseCtfplotter();
   float fourXfacs[5] = {-1., 1., 0., 0.};
   float fourYfacs[5] = {0., 0., -1., 1.};
   const float sqrt2 = (float)sqrt(2.);
@@ -1229,10 +1234,12 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   float resultsArray[7], solution[4];
   float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
   float intercept, diff1, diff9, rotateImage, astig, minAstig, maxAstig;
+  float plotterDef, phase;
   const int maxInLineFit = 50;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
   double xmax = 0., ymax = 0., nextXval, nextYval, assumedPosFocus;
-  int numOperations = 4;
+  float minDef, maxDef, expectDef, reduction;
+  int astigPhase, numOperations = 4;
   bool iterating = false;
   CtfBasedCalib calUse;
   CString suggest = "You may need more exposure time, a different binning, or more "
@@ -1295,7 +1302,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   } else {
 
     // An image is ready to analyze
-    if (mWinApp->mProcessImage->InitializeCtffindParams(imBufs, param)) {
+    if (processImg->InitializeCtffindParams(imBufs, param)) {
       ErrorInCtfBased("An error occurred setting up Ctffind parameters");
       return;
     }
@@ -1304,60 +1311,113 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     assumedPosFocus = -mInitialDefocus;
     if (mOperationInd > 0)
       assumedPosFocus = -mCenteredDefocus;
-    mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, 
+    processImg->DefocusFromPointAndZeros(0., 0, 
       param.pixel_size_of_input_image, 0.4f, &radii, assumedPosFocus);
     if ((int)radii.size() > (2 * mMaxRingsForCtf) / 3)
       param.box_size = 384;
 
     // Get the default focus range and limit it
-    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, assumedPosFocus, false);
-    ACCUM_MAX(param.minimum_defocus, 10000.f * ((float)assumedPosFocus - 1.f));
-    ACCUM_MIN(param.maximum_defocus, 10000.f * ((float)assumedPosFocus + 1.5f));
-    param.compute_extra_stats = true;
-    SEMTrace('1', "rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
-    param.maximum_resolution, param.minimum_defocus, param.maximum_defocus);
-    if (mWinApp->mProcessImage->RunCtffind(imBufs, param, resultsArray)) {
-      ErrorInCtfBased("An error occurred running the Ctffind operation");
-      return;
+    // 11/1/23: change -1.0 -> -1.5, 1.5->2.0 because Chen thought it was losing some runs
+    processImg->SetCtffindParamsForDefocus(param, assumedPosFocus, false);
+    ACCUM_MAX(param.minimum_defocus, 10000.f * ((float)assumedPosFocus - 1.5f));
+    ACCUM_MIN(param.maximum_defocus, 10000.f * ((float)assumedPosFocus + 2.0f));
+    if (usePlotter) {
+      expectDef = (float)(mOperationInd ? mCenteredDefocus : -assumedPosFocus);
+      if (mOperationInd) {
+
+        // Defocus is lower for the beam-tilted images on F20: this is a compromise value
+        // Scanning is not reliable for highly astigmatic images
+        expectDef *= 0.75f;
+        minDef = maxDef = expectDef;
+      } else {
+        minDef = -param.minimum_defocus / 10000.f;
+        maxDef = -param.maximum_defocus / 10000.f;
+      }
+      if (processImg->MakeCtfplotterShrMemFile(0, filename, reduction)) {
+        ErrorInCtfBased(filename);
+        return;
+      }
+      if (mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, 0, 0.,
+        minDef, maxDef, expectDef, 1, 0., mOperationInd ? -1 : 1, 0., 0., 0., 0, str, 
+        command)) {
+        processImg->DeletePlotterShrMemFile();
+        ErrorInCtfBased(command);
+        return;
+      }
+      if (processImg->RunCtfplotterOnBuffer(filename, command, 5000)) {
+        ErrorInCtfBased(command);
+        return;
+      }
+      if (mWinApp->mExternalTools->ReadCtfplotterResults(plotterDef, astig, 
+        resultsArray[2], phase, astigPhase, resultsArray[5], resultsArray[4], str, 
+        command)) {
+        ErrorInCtfBased(command);
+        return;
+      }
+      mWinApp->AppendToLog(str);
+
+    } else {
+      param.compute_extra_stats = true;
+      SEMTrace('1', "rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
+        param.maximum_resolution, param.minimum_defocus, param.maximum_defocus);
+      if (processImg->RunCtffind(imBufs, param, resultsArray)) {
+        ErrorInCtfBased("An error occurred running the Ctffind operation");
+        return;
+      }
     }
 
     // reality check on fit to centered image
-    negMicrons = -(resultsArray[0] + resultsArray[1]) / 20000.f;
+    negMicrons = usePlotter ? plotterDef : -(resultsArray[0] + resultsArray[1]) / 20000.f;
     if (!mOperationInd) {
       mCenteredScore = resultsArray[4];
       mCenteredDefocus = negMicrons;
       if (fabs(negMicrons - mInitialDefocus) > 2. || 
         negMicrons > mMinCtfBasedDefocus + 0.5) {
-          str.Format("The defocus from Ctffind, %.2f um, is too far from the\r\n"
-            "expected defocus of %.2f or too low to proceed (below %.2f)", negMicrons,
-            mInitialDefocus, mMinCtfBasedDefocus + 0.5);
+          str.Format("The defocus from Ctf%s, %.2f um, is too far from the\r\n"
+            "expected defocus of %.2f or too low to proceed (below %.2f)\r\n"
+            "Check that starting defocus really is near %.2f", usePlotter ? 
+            "plotter" : "find", negMicrons, mInitialDefocus, mMinCtfBasedDefocus + 0.5,
+            mLastMeasuredFocus);
+
+          // To force refocusing on some of these errors
+          mGotFocusMinuteStamp -= 60;
           ErrorInCtfBased(str);
           return;
       }
-      if (mCenteredScore < mMinCenteredScore) {
-        str.Format("The score from the Ctffind fit, %.3f, is below the\r\n"
+      if (mCenteredScore < (usePlotter ? mMinPlotterCenScore : mMinCenteredScore)) {
+        str.Format("The %s from the Ctf%s fit, %.3f, is below the\r\n"
           " minimum (%.3f) and probably too low for a reliable result.\r\n\r\n",
-          mCenteredScore, mMinCenteredScore);
+          usePlotter ? "CCC" : "score", usePlotter ? "plotter" : "find", mCenteredScore,
+          usePlotter ? mMinPlotterCenScore : mMinCenteredScore); 
+        mGotFocusMinuteStamp -= 60;
         ErrorInCtfBased(str + suggest);
         return;
       }
     }
 
     // Check general results
-    if (resultsArray[4] < mMinScoreRatio * mCenteredScore) {
-      str.Format("The score from the Ctffind fit, %.3f, has changed\r\n"
-        "by %.2f from the initial fit so fitting may be unreliable", resultsArray[4],
+    if (resultsArray[4] < (usePlotter ? mMinPlotterScoreRatio : mMinScoreRatio) * 
+      mCenteredScore) {
+      str.Format("The %s from the Ctf%s fit, %.3f, has changed\r\n"
+        "by %.2f from the initial fit so fitting may be unreliable", 
+        usePlotter ? "CCC" : "score", usePlotter ? "plotter" : "find", resultsArray[4],
         resultsArray[4] / mCenteredScore);
       ErrorInCtfBased(str);
       return;
     }
 
     // Check fit to resolution, but try to ignore infinite result
-    if (resultsArray[5] > param.minimum_resolution && resultsArray[5] < 
+    if (!usePlotter && resultsArray[5] > param.minimum_resolution && resultsArray[5] < 
       10. * imBufs->mImage->getWidth() * param.pixel_size_of_input_image) {
       str.Format("The resolution to which Thon rings fit,\r\n"
         "%.0f A is very high and indicates that CTF fitting is not working.\r\n\r\n",
         resultsArray[5]);
+      if (!mOperationInd) {
+        mGotFocusMinuteStamp -= 60;
+        command.Format("Check that starting defocus really is near %.2f\r\n",
+          mLastMeasuredFocus);
+        suggest = command + suggest;
+      }
       ErrorInCtfBased(str + suggest);
       return;
     }
@@ -1370,9 +1430,13 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     }
 
     // Store the results for all but first cal astig shot. Convert to negative microns
-
-    resultsArray[0] /= -10000.;
-    resultsArray[1] /= -10000.;
+    if (usePlotter) {
+      resultsArray[0] = plotterDef - astig / 2.f;
+      resultsArray[1] = plotterDef + astig / 2.f;
+    } else {
+      resultsArray[0] /= -10000.;
+      resultsArray[1] /= -10000.;
+    }
     if (mOperationInd > 0 || mCtfComaFree || !mCtfCalibrating) {
       for (ind = 0; ind < 3; ind++)
         mCtfCal.fitValues[3 * mCtfCal.numFits + ind] = resultsArray[ind];
@@ -1381,13 +1445,13 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
     // Display the circles if side-by-side FFT and new images
     // Take FFT if it wasn't done automatically or if side-by-side not open yet
-    if (mCtfActionType / 2 == 0 && mWinApp->mProcessImage->GetSideBySideFFT()) {
-        if (!mWinApp->mProcessImage->GetAutoSingleFFT() || !mWinApp->mFFTView)
-          mWinApp->mProcessImage->GetFFT(imBufs, 1, BUFFER_FFT);
+    if (mCtfActionType / 2 == 0 && processImg->GetSideBySideFFT()) {
+        if (!processImg->GetAutoSingleFFT() || !mWinApp->mFFTView)
+          processImg->GetFFT(imBufs, 1, BUFFER_FFT);
         fftBuf->mCtfFocus1 = -resultsArray[0];
         fftBuf->mCtfFocus2 = -resultsArray[1];
         fftBuf->mCtfAngle = resultsArray[2];
-        fftBuf->mMaxRingFreq = mWinApp->mProcessImage->GetDrawExtraCtfRings() ?
+        fftBuf->mMaxRingFreq = processImg->GetDrawExtraCtfRings() ?
           param.pixel_size_of_input_image / resultsArray[5] : 0;
         mWinApp->mFFTView->DrawImage();
     }

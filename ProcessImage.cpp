@@ -10,11 +10,13 @@
 //
 
 #include "stdafx.h"
+#include <direct.h>
 #include "SerialEM.h"
 #include ".\ProcessImage.h"
 #include "Utilities\XCorr.h"
 #include "Shared\b3dutil.h"
 #include "Shared\mrcslice.h"
+#include "Shared\iimage.h"
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
 #include "SerialEMView.h"
@@ -28,6 +30,7 @@
 #include "NavigatorDlg.h"
 #include "GainRefMaker.h"
 #include "CtffindParamDlg.h"
+#include "ExternalTools.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -92,9 +95,15 @@ CProcessImage::CProcessImage()
   mCtffindDlgPlace.rcNormalPosition.right = 0;
   mCtfMinPhase = 30;
   mCtfMaxPhase = 120;
+  mCtfExpectedPhase = 90;
   mCtfFindPhaseOnClick = false;
   mCtfFixAstigForPhase = true;
   mBufIndForCtffind = -1;
+  mClickUseCtfplotter = false;
+  mTuneUseCtfplotter = false;
+  mRunningCtfplotter = 0;
+  mMinCtfplotterPixel = 0.115f;  // Nanometers
+  mShrMemIIFile = NULL;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
@@ -758,12 +767,13 @@ int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
 // Common routine for putting a newly processed image based on the given buffer into 
 // buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
-                                      int nx, int ny, double moreBinning, int capFlag,
-                                      bool fftWindow, int toBufNum)
+  int nx, int ny, double moreBinning, int capFlag, bool fftWindow, int toBufNum, 
+  bool display)
 {
   EMbufferManager *bufferManager = mWinApp->mBufferManager;
-  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) +toBufNum;
+  EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) + toBufNum;
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
+  EMimageExtra *extra;
   float userPtXsave = toImBuf->mUserPtX;
   float userPtYsave = toImBuf->mUserPtY;
   int ind;
@@ -784,12 +794,12 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   bufferManager->CopyImBuf(imBuf, &imBufTmp, false);
 
   // Roll the buffers just like on acquire if going to A
-  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1, 
+  int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1,
     bufferManager->GetShiftsOnAcquire());
   if ((!toImBuf->GetSaveCopyFlag() && toImBuf->mCaptured > 0 && mLiveFFT &&
-    toImBuf == mImBufs) || toBufNum > 0)
+    toImBuf == mImBufs) || toBufNum > 0 || !display)
     nRoll = 0;
-  for (int i = nRoll; i > 0 ; i--)
+  for (int i = nRoll; i > 0; i--)
     bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
 
   // Make sure it's OK to destroy A now: if not delete data
@@ -804,7 +814,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
 
   // Replace the image, again cleaning up on failure
   if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
-    imBuf->mConSetUsed, fftWindow) ) {
+    imBuf->mConSetUsed, fftWindow, display) ) {
     delete [] brray;
     return;
   }
@@ -813,7 +823,12 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   toImBuf->mBinning = B3DNINT(imBufTmp.mBinning * moreBinning);
   toImBuf->mPixelSize = imBufTmp.mPixelSize * (float)moreBinning;
   if (imBufTmp.mImage) {
-    toImBuf->mImage->SetUserData(imBufTmp.mImage->GetUserData());
+    extra = imBufTmp.mImage->GetUserData();
+    toImBuf->mImage->SetUserData(extra);
+    if (extra) {
+      extra->mBinning *= (float)moreBinning;
+      extra->mPixel *= (float)moreBinning;
+    }
     imBufTmp.mImage->SetUserData(NULL);
   }
   imBufTmp.DeleteImage();
@@ -825,7 +840,8 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
     toImBuf->mUserPtY = userPtYsave;
   }
 
-  mWinApp->SetCurrentBuffer(toBufNum, fftWindow);
+  if (display)
+    mWinApp->SetCurrentBuffer(toBufNum, fftWindow);
 }
 
 void CProcessImage::OnProcessCropimage()
@@ -914,12 +930,14 @@ void CProcessImage::OnProcessReduceimage()
     mReductionFactor, 1))
     return;
   mReductionFactor = B3DMAX(1.f, mReductionFactor);
+  
   ReduceImage(imBuf, mReductionFactor);
 }
 
 // Reduce the image in the given buffer by the given amount, returning an optional error 
 // string or just putting up a message box
-int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr)
+int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr,
+  int toBufInd, bool display)
 {
   int nx, ny, newX, newY, mode, retval = 0, dataSize, numChan, zoomErr = 0;
   void *data;
@@ -982,7 +1000,8 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
       retval = 5;
       delete [] filtImage;
     } else {
-      NewProcessedImage(imBuf, (short *)filtImage, mode, newX, newY, B3DNINT(factor));
+      NewProcessedImage(imBuf, (short *)filtImage, mode, newX, newY, factor, -1,
+        false, toBufInd, display);
     }
   }
   B3DFREE(linePtrs);
@@ -3615,6 +3634,77 @@ void CProcessImage::SaveCtffindCrashImage(CString &message)
               mCurCtffindParams->noisy_input_image?1:0); message += name;
   message += "\r\nPlease send the image, mdoc file, and this log to David\r\n";
 }
+
+// Open a shared memory file for ctfplotter
+int CProcessImage::MakeCtfplotterShrMemFile(int bufInd, CString &filename,
+  float &reduction)
+{
+  float imPixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(&mImBufs[bufInd]);
+  if (!imPixel) {
+    filename = "No pixel size is available for running Ctfplotter on this image";
+    return 1;
+  }
+  reduction = B3DMAX(1.f, mMinCtfplotterPixel / imPixel);
+  mShrMemIIFile = mWinApp->mExternalTools->SaveBufferToSharedMemory(bufInd,
+    "ctftmp.mrc", filename, reduction);
+  if (!mShrMemIIFile)
+    return 1;
+  return 0;
+}
+
+// Clean up the file if necessary
+void CProcessImage::DeletePlotterShrMemFile()
+{
+  if (mShrMemIIFile)
+    iiDelete(mShrMemIIFile);
+  mShrMemIIFile = NULL;
+}
+
+// Runs the already-developed command,
+// and waits until done, or timeout or user stop, terminating it in those case
+// Error string is returned in command, following practice with related functions here
+int CProcessImage::RunCtfplotterOnBuffer(CString &filename, CString &command, int timeOut)
+{
+  int retVal = 0;
+  DWORD waitResult, exitStatus;
+  double startTime = GetTickCount();
+  if (mWinApp->mExternalTools->RunCreateProcess(command, filename, true, CString(""))) {
+    DeletePlotterShrMemFile();
+    return 2;
+  }
+  mRunningCtfplotter = 1;
+  while (SEMTickInterval(startTime) < timeOut && mRunningCtfplotter > 0) {
+    waitResult = WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 20);
+    if (waitResult == WAIT_OBJECT_0) {
+      mRunningCtfplotter = 0;
+      break;
+    }
+
+    // Maybe implement user stop and updating windows later if needed...
+    //SleepMsg(2);
+  }
+  if (!mRunningCtfplotter) {
+    GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, &exitStatus);
+    if (exitStatus) {
+      command.Format("ctfplotter exited with status %d", exitStatus);
+      if (exitStatus == 1)
+        command += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) +
+        "\\ctfplotter.log for error messages";
+    }
+  } else if (mWinApp->mExternalTools->mExtProcInfo.hProcess) {
+    TerminateProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, 1);
+    command = mRunningCtfplotter > 0 ? "Ctfplotter timed out and was killed" :
+      "Ctfplotter was terminated by user";
+    retVal = 3;
+  }
+  mWinApp->mExternalTools->CloseFileHandles(
+    mWinApp->mExternalTools->mExtProcInfo.hProcess,
+    mWinApp->mExternalTools->mExtProcInfo.hThread);
+  DeletePlotterShrMemFile();
+  mRunningCtfplotter = 0;
+  return retVal;
+}
+
 
 
 // DOSE RATE AND LINEARIZATION ROUTINES

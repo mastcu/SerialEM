@@ -17,11 +17,25 @@
         Fitting Parameters Dialog</span></p>
     <p>This dialog allows you to set parameters controlling CTF fitting to
     FFTs; they all affect the fitting when clicking in an FFT, and some also
-    affect fitting with the Ctffind script command.&nbsp; The dialog can be kept open 
+    affect fitting with the Ctffind and Ctfplotter script commands.&nbsp; The dialog can be kept open 
         while getting images and fitting to them.&nbsp; If an FFT is being displayed 
         with a CTF fit drawn on it, then the program will redo the fit whenever you 
-        change a value in this dialog.</p>
-    <p><b>Use slower search, needed for high astigmatism </b></p>
+        change most values in this dialog.</p>
+    <p><strong>Use Ctfplotter for: Fit on Click</strong></p>
+    <p>Select this option to use Ctfplotter instead Ctffind for CTF fitting when 
+      clicking in an FFT.&nbsp; Ctfplotter gives ~10-30% less variable results for 
+      astigmatism, on average, with typical images, and takes somewhat longer to run.&nbsp; 
+      It shows significant advantages with weaker CTF signal and tilted images.&nbsp; 
+      If you find that you need to turn off astigmatism fitting with Ctffind, try 
+      Ctfplotter.</p>
+    <p><strong>Use Ctfplotter for: Fits for tuning</strong></p>
+    <p>Select this option to use Ctfplotter instead Ctffind for CTF fitting when 
+      calibrating or correcting astigmatism or when correcting coma.&nbsp; Tests at 
+      200 kV with a cross-line gratig showed that Ctfplotter was ~30% more accurate 
+      for coma correction, but no better for astigmatism correction.&nbsp; Ctfplotter 
+      may not work correctly in this context with images having high astigmatism (&gt;= 1 
+      micron), but then Ctfplotter may not either.</p>
+    <p><b>Use slower search, needed for high astigmatism&nbsp; <em>(Ctffind only)</em></b></p>
     <p>Select this option to do a slower 2-D initial exhaustive search instead of the default 
         1-D search with a rotational averaged spectrum.&nbsp; This search is needed if 
         the astigmatism is large (for example, if analyzing images with beam-tilt). 
@@ -31,14 +45,17 @@
         too slow.&nbsp; The 2-D search 
         is parallelized so its speed will depend heavily on the number of computer cores 
         available.&nbsp; Including phase in the search will slow it down considerably.</p>
-    <p><b>Compute resolution to which Thon rings fit </b></p>
+    <p><b>Compute resolution to which Thon rings fit <em>(Ctffind only)</em></b></p>
     <p>Select this option do the extra computations needed to determine the resolution to 
         which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
         increase the fitting time by 10-20%, which may be noticeable.</p>
-    <p><b>Draw rings to computed resolution </b></p>
-    <p>Select this option to draw half-rings on the image out to the resolution determined by 
-        these extra computations if they were done, or 0 not to.</p>
-    <p><b>Custom value of highest resolution to fit </b></p>
+    <p><b>Draw rings to computed resolution <em>(Ctffind)</em> or to end of fitting 
+      range <em>(Ctfplotter)</em></b></p>
+    <p>Select this option to draw half-rings on the image either out to the resolution determined by 
+        these extra computations if they were done with Ctffind, or to the end of the 
+      fitting range used with Ctfplotter, which is based on a local correlation 
+      between the power spectrum and fitted CTF curve.</p>
+    <p><b>Custom value of highest resolution to fit&nbsp; <em>(Ctffind only)</em></b></p>
     <p>Enter a limiting value to the maximum resolution to which to fit the amplitude 
         spectrum, in Angstroms.&nbsp; A smaller value fits farther out in frequency 
         space.&nbsp; The minimum allowed value is 3 unless you enter 0 to revert to the 

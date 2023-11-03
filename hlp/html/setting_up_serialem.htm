@@ -87,7 +87,7 @@
           and their Contents</a>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#addedPackages">Additional Packages for GPU
-          and Python Support, and for Displaying Graphs and Using Ctfplotter</a>
+          and Python Support, and for Displaying General and Ctfplotter Graphs</a>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#pluginVersions">Versions of
           the DigitalMicrograph Plugin and Compatibility with Leginon</a>
@@ -273,7 +273,7 @@
         2008
         and with GMS 2.x.</P>
       <p><a name="addedPackages"><I>Additional Packages for GPU
-          and Python Support, and for Displaying Graphs and Using Ctfplotter</I></a>.&nbsp;
+          and Python Support, and for Displaying  General and Ctfplotter Graphs</I></a>.&nbsp;
     Depending on your situation, you may need one or more other packages.</P>
       <ul>
         <li>&nbsp;If
@@ -285,13 +285,17 @@
         <li>To do frame alignment with a GPU for any camera,
       you will need a FrameGPU package.&nbsp;  See <a href="#using_gpu">Setting Up to
       Use a GPU for Frame Alignment</a>.</li>
-        <li>To use Python with SerialEM, you will need a PythonModules package; see
+        <li>To use Python with SerialEM, you will need a PythonModules package; this is now installed
+          along with SerialEM, but to access commands newer than the current installation package, an 
+          up-to-date module can be obtained from a Testing directory on the download site.&nbsp; See
           <a href="about_scripts.htm#pythonInstall">Installation Options</a> in the 
           scripting guide.</li>
-        <li>SerialEM can display graphs with the Genhstplt program in IMOD, and do CTF 
+        <li>SerialEM can display graphs with the Genhstplt program in IMOD.&nbsp; It can do CTF 
           fitting with the Ctfplotter program, which performs better than the built-in 
-          Ctffind module on tilted images, especially when finding astigmatism.&nbsp; A 
-          full IMOD installation can be done to provide these programs, but an easier and 
+          Ctffind module on tilted images, especially when finding astigmatism.&nbsp; The install package
+          has a non-graphical build of Ctfplotter, but if you wish to display Ctfplotter graphs, a regular 
+          build is needed.&nbsp; A 
+          full IMOD installation can be done to provide these Genhstplt and the full build of Ctfplotter, but an easier and 
           more lightweight option is to use a standalone 3dmod package, which simply 
           unpacks in 'C:\Program Files\3dmod' by default, but can be unzipped elsewhere if necessary.&nbsp; 
           To use both of these programs, you need an installation of IMOD 4.12.47 or higher (available from the 
@@ -3785,11 +3789,11 @@ MoveStage 0 0 -$zRange / 2.
       as the SerialEMCCD plugin or the SerialEM executable, respectively.&nbsp; To enable
       GPU use:</P>
     <ol>
-      <li>Get FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp;
-      The CUDA 4 version is still available in FrameGPU-CUDA4.exe, but can no longer be built
+      <li>Get FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp; If this does not work, 
+        next try the CUDA 6 version.&nbsp; The CUDA 4 version is still available in FrameGPU-CUDA4.exe, but can no longer be built
         after changes to make the framealign code compatible with CUDA 12, 
         so this package will become either out-of-date or unusable when there is a substantive change in 
-        the module.&nbsp; Use it only if the CUDA 8 package does not work, and let us know if that
+        the module.&nbsp; Use it only if the CUDA 6 and CUDA 8 packages do not work, and let us know if that
         is the case.
         </li>
       <li>Run the package.&nbsp; Extract the files to
@@ -3804,9 +3808,11 @@ MoveStage 0 0 -$zRange / 2.
         suboptimal because frames have to be passed through shared memory, but at least
         the GPU is then working.&nbsp; The GPU files are now placed in the Shrmemframe
         folder instead of the Plugins folder; that arrangement also allows direct GPU
-        access by the plugin if that still works.</li>
-      <li>To see debug output from frame alignment and get diagnostic information about a failure to connect to
-        the GPU:</li>
+        access by the plugin if that still works.&nbsp; In one site with GMS 3.53, the 
+        CUDA 8 version was directly accessible while the CUDA 6 version was not, hence 
+        the advice to try CUDA 8 first.</li>
+      <li>To see debug output from frame alignment, get diagnostic information about a failure to connect to
+        the GPU, or just to determine what CUDA version the Nvidia driver supports:</li>
         <ul>
         <li>For a Gatan camera, add or set the property &#39;StartCameraInDebugMode 1&#39;.&nbsp; Close
           SerialEM and DM. Restart
@@ -3816,7 +3822,8 @@ MoveStage 0 0 -$zRange / 2.
           SERIALEMCCD_DEBUG to 10.</li>
         <li>For Falcon, DE, and Tietz, set the property DebugOutput to 'E', 'D', or 'T', respectively,
           and restart SerialEM. The initial lines from framealign will appear in the
-          SerialEM log.&nbsp; Timing output will also go into the log.</li>
+          SerialEM log, including the runtime version (the CUDA version of FrameGPU that 
+          you installed) and the driver CUDA version.&nbsp; Timing output will also go into the log.</li>
         </ul>
     </ol>
     <P>The SerialEM install package comes with files named FrameGPU4.dll and

@@ -431,9 +431,10 @@ void CExternalTools::SubstituteAndQuote(CString &argString, const char *keyword,
   }
 }
 
-// Save the given buffer a shared memory file  with the given suffix after the standard
+// Save the given buffer to a shared memory file  with the given suffix after the standard
 // name; returns the full name in filename and the iiFile for the shared memory object,
-// which must be deleted after finishing the process using the file
+// which must be deleted after finishing the process using the file.  "reduction" makes
+// it save an image reduced by that amount (> 1).
 ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd, 
   CString nameSuffix, CString &filename, float reduction)
 {
@@ -457,6 +458,8 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
     return NULL;
   }
 
+  // For reduction, save the current image in a temp buffer and reduce this on in place,
+  // preventing display
   if (reduction > 1.) {
     mWinApp->mBufferManager->CopyImBuf(imBuf, &saveBuf, false);
     if (mWinApp->mProcessImage->ReduceImage(imBuf, reduction, &filename, bufInd, false)) {
@@ -465,6 +468,7 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
     }
   }
 
+  // Make the file of the right size
   imBuf->mImage->getSize(nx, ny);
   kbSize = (pixSize * nx * ny) / 1024 + 3;
   filename.Format("%s%d_%s", SHR_MEM_NAME_TAG, kbSize, (LPCTSTR)nameSuffix);
@@ -475,6 +479,8 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
       mWinApp->mBufferManager->CopyImBuf(&saveBuf, imBuf, false);
     return NULL;
   }
+
+  // Save to file
   otherOpt->mode = imBuf->mImage->getType();
   err = mWinApp->mDocWnd->SaveToOtherFile(bufInd, STORE_TYPE_IIMRC, 0, &filename);
   otherOpt->mode = modeSave;
@@ -497,7 +503,9 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
 
 // Compose a command for running Ctfplotter with the given set of parameters and the 
 // shared memory file whose full name is in memFile, returns the arguments in memFile or
-// an error string on error; returns the ctfplotter command in command
+// an error string on error; returns the ctfplotter command in command.  All defocus
+// arguments are negative.  Set defStart = defEnd to skip scan and set expected focus to
+// that; set defExpact to set expected focus with a scan
 int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int bufInd,
   float tiltOffset, float defStart, float defEnd, float defExpect, int astigPhase, 
   float phase, int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
@@ -549,6 +557,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int
     B3DNINT(mWinApp->mProcessImage->GetRecentVoltage()),
     mWinApp->mProcessImage->GetSphericalAber(), mWinApp->mProcessImage->GetAmpRatio(),
     (LPCTSTR)memFile);
+
+  // Handle defocus scan and expected defocus
   if (fabs(defStart - defEnd) < 0.01) {
     str.Format(" -expDef %.0f", -1000. * defStart);
     args += str;
@@ -587,7 +597,7 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int
       if (fitStart > 0 && fitStart < 1.)
         fitStart *= reduction;
       if (fitEnd > 0. && fitEnd < 1.)
-        fitEnd = B3DMIN(0.475f, fitEnd * reduction);
+        fitEnd = B3DMIN(0.479f, fitEnd * reduction);
     }
     if (resolTune) {
       str.Format(" -psRes %d", resolTune);

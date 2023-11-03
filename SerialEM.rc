@@ -2890,7 +2890,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CONTROL         "STEM mode",IDC_CHECK_STEM_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,9,51,10
-    LTEXT           "OFF",IDC_STATONOFF,56,8,24,10,SS_CENTERIMAGE
+    LTEXT           "OFF",IDC_STATONOFF,56,8,29,10,SS_CENTERIMAGE
     PUSHBUTTON      "-",IDC_BUTMORE,4,41,9,7
     LTEXT           "Options",IDC_STATMORE,15,41,24,8
     CONTROL         "Invert contrast of image data",IDC_CHECK_INVERT_CONTRAST,
@@ -3362,41 +3362,45 @@ BEGIN
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,109,66,25,12
 END
 
-IDD_CTFFINDDLG DIALOGEX 0, 0, 180, 131
+IDD_CTFFINDDLG DIALOGEX 0, 0, 183, 146
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "CTF Fitting Parameters"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,29,115,42,12
-    PUSHBUTTON      "Cancel",IDCANCEL,98,115,42,12
+    DEFPUSHBUTTON   "OK",IDOK,29,130,42,12
+    PUSHBUTTON      "Cancel",IDCANCEL,98,130,42,12
     CONTROL         "Compute resolution to which Thon rings fit",IDC_CHECK_EXTRA_STATS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,14,155,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,29,155,10
     CONTROL         "Draw rings to computed resolution",IDC_CHECK_DRAW_RINGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,25,118,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,40,118,10
     CONTROL         "Use slower search, needed for high astigmatism",IDC_CHECK_SLOW_SEARCH,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,3,164,10
-    LTEXT           "Custom value of highest resolution to fit:",IDC_STATIC,7,35,134,8
-    EDITTEXT        IDC_EDIT_MAX_FIT_RES,125,33,24,12,ES_AUTOHSCROLL
-    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,13,45,144,8
-    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,7,94,137,8
-    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,143,92,24,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,18,164,10
+    LTEXT           "Custom value of highest resolution to fit:",IDC_STAT_CUSTOM_HIGH_RES,7,50,134,8
+    EDITTEXT        IDC_EDIT_MAX_FIT_RES,125,48,24,12,ES_AUTOHSCROLL
+    LTEXT           "(0 for default value of  A; applies to Ctffind in script)",IDC_STAT_DEFAULT_MAX_RES,13,60,166,8
+    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,7,109,137,8
+    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,143,107,24,12,ES_AUTOHSCROLL
     CONTROL         "Find phase with search limits",IDC_CHECK_FIND_PHASE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,71,98,10
-    EDITTEXT        IDC_EDIT_MIN_PHASE,103,70,24,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MAX_PHASE,138,70,24,12,ES_AUTOHSCROLL
-    LTEXT           "deg",IDC_STATIC,163,72,13,8
-    LTEXT           "to",IDC_STATIC,130,72,8,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,86,105,10
+    EDITTEXT        IDC_EDIT_MIN_PHASE,103,85,24,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_PHASE,138,85,24,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STATIC,163,87,13,8
+    LTEXT           "to",IDC_STAT_TO_MAX,130,87,8,8
     CONTROL         "Omit astigmatism when searching for phase",IDC_CHECK_FIX_ASTIG_FOR_PHASE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,82,157,10
-    LTEXT           "A",IDC_STATIC,151,35,8,8
-    LTEXT           "A",IDC_STATIC,168,94,8,8
-    PUSHBUTTON      "?",IDC_BUTHELP,165,117,11,10
-    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,13,104,156,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,4,54,169,1
-    LTEXT           "Fixed phase shift when not finding phase:",IDC_STATIC,7,58,127,8
-    LTEXT           "deg",IDC_STATIC,155,58,13,8
-    EDITTEXT        IDC_EDIT_FIXED_PHASE,130,56,24,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,97,157,10
+    LTEXT           "A",IDC_STAT_ANGSTROM1,151,50,8,8
+    LTEXT           "A",IDC_STAT_ANGSTROM2,168,109,8,8
+    PUSHBUTTON      "?",IDC_BUTHELP,165,132,11,10
+    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,13,119,156,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,4,69,169,1
+    LTEXT           "Fixed phase shift when not finding phase:",IDC_STATIC,7,73,127,8
+    LTEXT           "deg",IDC_STATIC,155,73,13,8
+    EDITTEXT        IDC_EDIT_FIXED_PHASE,130,71,24,12,ES_AUTOHSCROLL
+    LTEXT           "Use Ctfplotter for:",IDC_STATIC,6,4,57,8
+    CONTROL         "Fit on Click",IDC_CHECK_FIT_ON_CLICK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,66,4,50,10
+    CONTROL         "Fits for tuning",IDC_CHECK_FOR_TUNING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,4,59,10
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,15,169,1
 END
 
 IDD_TSDOSESYM DIALOGEX 0, 0, 227, 163
@@ -4440,9 +4444,9 @@ BEGIN
     IDD_CTFFINDDLG, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 176
+        RIGHTMARGIN, 179
         TOPMARGIN, 3
-        BOTTOMMARGIN, 127
+        BOTTOMMARGIN, 142
     END
 
     IDD_TSDOSESYM, DIALOG
@@ -4863,6 +4867,11 @@ BEGIN
 END
 
 IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_STEMCONTROL AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5966,6 +5975,7 @@ BEGIN
     IDC_CHECK_SKIP_AVERAGING 
                             "Just use stage position of center point instead of averaging all points"
     IDC_EDIT_MAX_BLOCK_IS   "Maximum image shift radius when doing image shift in blocks"
+    IDC_BUT_USE_NAV_PTS     "Use group of Nav points to make image shift vectors for current pattern"
 END
 
 STRINGTABLE
@@ -6966,6 +6976,8 @@ BEGIN
     IDC_CHECK_INC_GROUP     "Start increasing group sizes when the given angle is reached"
     IDC_EDIT_INC_GROUP_ANGLE "Angle at which to start increasing group sizes"
     IDC_SPIN_MIN_FOR_ANCHOR "Minimum number of tilts in first non-alternating segment for taking anchor"
+    IDC_CHECK_FIT_ON_CLICK  "Use Ctfplotter instead of Ctffind to fit when mouse is clicked in an FFT"
+    IDC_CHECK_FOR_TUNING    "Use Ctfplotter instead of Ctffind to fit for fixing astigmatism or coma"
 END
 
 STRINGTABLE
@@ -7300,7 +7312,6 @@ BEGIN
                             "For combined item with too few points, set not acquire or be drawn"
     IDC_CHECK_REMOVE_POINTS "Remove the points belonging to a combined item with too few holes"
     IDC_SPIN_HOLE_THRESH    "Set minimum number of holes in combined item to be retained"
-    IDC_BUT_USE_NAV_PTS     "Use group of Nav points to make image shift vectors for current pattern"
 END
 
 STRINGTABLE

@@ -55,7 +55,7 @@ public:
   void GetFFT(int binning, int capFlag);
   void GetFFT(EMimageBuffer *imBuf, int binning, int capFlag);
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,
-    double moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false, int toBufNum = 0);
+    double moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false, int toBufNum = 0, bool display = true);
   void RotateImage(BOOL bLeft);
   int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2);
   int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);
@@ -90,6 +90,7 @@ public:
   GetSetMember(float, MinCtfFitResIfPhase);
   GetSetMember(int, CtfMinPhase);
   GetSetMember(int, CtfMaxPhase);
+  GetSetMember(int, CtfExpectedPhase);
   GetSetMember(BOOL, CtfFindPhaseOnClick);
   GetSetMember(BOOL, CtfFixAstigForPhase);
   GetSetMember(float, FindBeamOutsideFrac);
@@ -97,6 +98,10 @@ public:
   GetSetMember(float, ThicknessCoefficient);
   SetMember(float, NextThicknessCoeff);
   GetMember(int, BufIndForCtffind);
+  GetSetMember(BOOL, ClickUseCtfplotter);
+  GetSetMember(BOOL, TuneUseCtfplotter);
+  GetSetMember(int, RunningCtfplotter);
+  GetSetMember(float, MinCtfplotterPixel);
 
 
 // Overrides
@@ -189,12 +194,18 @@ private:
   WINDOWPLACEMENT mCtffindDlgPlace;
   int mCtfMinPhase;
   int mCtfMaxPhase;
+  int mCtfExpectedPhase;        // Value for Ctfplotter
   BOOL mCtfFindPhaseOnClick;
   BOOL mCtfFixAstigForPhase;
   float mThicknessCoefficient;  // Coefficient in thickness calculation 
   float mNextThicknessCoeff;    // Value to use on next call
   int mBufIndForCtffind;        // Index of buffer that can be saved if crash
   CtffindParams *mCurCtffindParams;   // Pointer to params being used in call
+  BOOL mClickUseCtfplotter;     // Use Ctfplotter for fit on click
+  BOOL mTuneUseCtfplotter;      // Use ctfplotter for tuning operations
+  int mRunningCtfplotter;       // 1 if running, -1 is external signal to stop
+  ImodImageFile *mShrMemIIFile; // File created with buffer in shared memory
+  float mMinCtfplotterPixel;    // Minimum pixel size, reduce to this in shared mem file
  
 public:
   afx_msg void OnProcessMinmaxmean();
@@ -272,11 +283,14 @@ int DoseRateFromMean(EMimageBuffer * imBuf, float mean, float & doseRate);
 double GetRecentVoltage(bool *valueWasRead = NULL);
 void GetDiffractionPixelSize(int camera, float &pixel, float &camLen);
 float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
-int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
+int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL, int toBufInd = 0, bool display = true);
 afx_msg void OnProcessReduceimage();
 int RunCtffind(EMimageBuffer *imBuf, CtffindParams &params, float results_array[7], bool skipOutput = false);
 void SaveCtffindCrashImage(CString &message);
 int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
+int MakeCtfplotterShrMemFile(int bufInd, CString &filename, float &reduction);
+void DeletePlotterShrMemFile();
+int RunCtfplotterOnBuffer(CString &filename, CString &command, int timeOut);
 afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetCtffindOptions();

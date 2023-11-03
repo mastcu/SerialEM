@@ -186,8 +186,10 @@ private:
   float mAddToMinForAstigCTF;     // Amount of extra defocus to require for astig cal/coma
   float mCenteredScore;           // Score of first "centered" shot
   float mMinCenteredScore;        // Minimum score required for first "centered" shot
+  float mMinPlotterCenScore;      // Minimum score required for first ctfplotter
   float mCenteredDefocus;         // Defocus determined for that shot
   float mMinScoreRatio;           // Minimum ratio for score from starting one
+  float mMinPlotterScoreRatio;    // Minimum ratio for ctfplotter
   CtfBasedCalib mCtfCal;          // The current calibration structure
   float mAstigBacklash;           // Amount of backlash to apply to stigmator
   float mBeamTiltBacklash;        // Amount of backlash to apply for beam tilt

@@ -49,7 +49,12 @@ public:
   afx_msg void OnEnKillfocusEditMaxPhase();
   CString m_strDfltMaxRes;
   void UpdateSettings();
+  void ManageForCtfplotter();
   void RefitToCurrentFFT();
   afx_msg void OnKillfocusEditFixedPhase();
   float m_fFixedPhase;
+  BOOL m_bPlotterFitOnClick;
+  BOOL m_bPlotterForTuning;
+  afx_msg void OnCheckFitOnClick();
+  afx_msg void OnCheckForTuning();
 };

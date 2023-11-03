@@ -29,6 +29,8 @@ CCtffindParamDlg::CCtffindParamDlg(CWnd* pParent /*=NULL*/)
   , m_fPhaseMinRes(0)
   , m_strDfltMaxRes(_T(""))
   , m_fFixedPhase(0)
+  , m_bPlotterFitOnClick(FALSE)
+  , m_bPlotterForTuning(FALSE)
 {
   mNonModal = true;
 }
@@ -41,7 +43,7 @@ void CCtffindParamDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
   DDX_Check(pDX, IDC_CHECK_SLOW_SEARCH, m_bSlowSearch);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes, 0, 100, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes, 0, 100,
     "Highest resolution to fit");
   DDX_MM_INT(pDX, IDC_EDIT_MIN_PHASE, m_iMinPhase, -30, 180, "Lower phase limit");
   DDX_MM_INT(pDX, IDC_EDIT_MAX_PHASE, m_iMaxPhase, 0, 200, "Upper phase limit");
@@ -49,10 +51,12 @@ void CCtffindParamDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_FIX_ASTIG_FOR_PHASE, m_bFixAstigForPhase);
   DDX_Check(pDX, IDC_CHECK_EXTRA_STATS, m_bExtraStats);
   DDX_Check(pDX, IDC_CHECK_DRAW_RINGS, m_bDrawRings);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes, 0, 100, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes, 0, 100,
     "Lowest resolution when fitting with phase");
   DDX_Text(pDX, IDC_STAT_DEFAULT_MAX_RES, m_strDfltMaxRes);
   DDX_MM_FLOAT(pDX, IDC_EDIT_FIXED_PHASE, m_fFixedPhase, -20, 200, "Fixed phase shift");
+  DDX_Check(pDX, IDC_CHECK_FIT_ON_CLICK, m_bPlotterFitOnClick);
+  DDX_Check(pDX, IDC_CHECK_FOR_TUNING, m_bPlotterForTuning);
 }
 
 
@@ -66,7 +70,9 @@ BEGIN_MESSAGE_MAP(CCtffindParamDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_EXTRA_STATS, OnCheckExtraStats)
   ON_EN_KILLFOCUS(IDC_EDIT_MIN_PHASE, OnEnKillfocusEditMinPhase)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_PHASE, OnEnKillfocusEditMaxPhase)
-  ON_EN_KILLFOCUS(IDC_EDIT_FIXED_PHASE, &CCtffindParamDlg::OnKillfocusEditFixedPhase)
+  ON_EN_KILLFOCUS(IDC_EDIT_FIXED_PHASE, OnKillfocusEditFixedPhase)
+  ON_BN_CLICKED(IDC_CHECK_FIT_ON_CLICK, OnCheckFitOnClick)
+  ON_BN_CLICKED(IDC_CHECK_FOR_TUNING, OnCheckForTuning)
 END_MESSAGE_MAP()
 
 
@@ -77,14 +83,17 @@ BOOL CCtffindParamDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   UpdateSettings();
+  ManageForCtfplotter();
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
 }
 
-// Load the varaibales for initial or changed settings
+// Load the variables for initial or changed settings
 void CCtffindParamDlg::UpdateSettings()
 {
   mProcessImage = mWinApp->mProcessImage;
+  m_bPlotterFitOnClick = mProcessImage->GetClickUseCtfplotter();
+  m_bPlotterForTuning = mProcessImage->GetTuneUseCtfplotter();
   m_bSlowSearch = mProcessImage->GetSlowerCtfFit();
   m_bExtraStats = mProcessImage->GetExtraCtfStats();
   m_fCustomMaxRes = mProcessImage->GetUserMaxCtfFitRes();
@@ -93,11 +102,31 @@ void CCtffindParamDlg::UpdateSettings()
   m_bFindPhase = mProcessImage->GetCtfFindPhaseOnClick();
   m_bFixAstigForPhase = mProcessImage->GetCtfFixAstigForPhase();
   m_iMinPhase = mProcessImage->GetCtfMinPhase();
-  m_iMaxPhase = mProcessImage->GetCtfMaxPhase();
+  m_iMaxPhase = m_bPlotterFitOnClick ? mProcessImage->GetCtfExpectedPhase() :
+    mProcessImage->GetCtfMaxPhase();
   m_fFixedPhase = (float)(mProcessImage->GetPlatePhase() / DTOR);
-  m_strDfltMaxRes.Format("(0 for default = %.1f A; applies to script fitting)",
+  m_strDfltMaxRes.Format("(0 for default = %.1f A; applies to Ctffind in script)",
     mProcessImage->GetDefaultMaxCtfFitRes());
+  ManageForCtfplotter();
   UpdateData(false);
+}
+
+void CCtffindParamDlg::ManageForCtfplotter()
+{
+  EnableDlgItem(IDC_CHECK_SLOW_SEARCH, !m_bPlotterFitOnClick);
+  EnableDlgItem(IDC_CHECK_EXTRA_STATS, !m_bPlotterFitOnClick);
+  SetDlgItemText(IDC_CHECK_DRAW_RINGS, m_bPlotterFitOnClick ? 
+    "Draw rings to end of fitting range" : "Draw rings to computed resolution");
+  SetDlgItemText(IDC_CHECK_FIND_PHASE, m_bPlotterFitOnClick ?
+    "Find phase with expected phase" : "Find phase with search limits");
+  ShowDlgItem(IDC_STAT_TO_MAX, !m_bPlotterFitOnClick);
+  ShowDlgItem(IDC_EDIT_MIN_PHASE, !m_bPlotterFitOnClick);
+  EnableDlgItem(IDC_EDIT_MIN_PHASE, m_bFindPhase);
+  EnableDlgItem(IDC_EDIT_MAX_PHASE, m_bFindPhase);
+  EnableDlgItem(IDC_STAT_CUSTOM_HIGH_RES, !m_bPlotterFitOnClick);
+  EnableDlgItem(IDC_EDIT_MAX_FIT_RES, !m_bPlotterFitOnClick);
+  EnableDlgItem(IDC_STAT_ANGSTROM1, !m_bPlotterFitOnClick);
+  EnableDlgItem(IDC_STAT_DEFAULT_MAX_RES, !m_bPlotterFitOnClick);
 }
 
 void CCtffindParamDlg::PostNcDestroy()
@@ -129,6 +158,32 @@ BOOL CCtffindParamDlg::PreTranslateMessage(MSG* pMsg)
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
     SetFocus();
   return CDialog::PreTranslateMessage(pMsg);
+}
+
+// Use ctfplotter for click fits
+void CCtffindParamDlg::OnCheckFitOnClick()
+{
+  UPDATE_DATA_TRUE;
+  if (m_bPlotterFitOnClick) {
+    mProcessImage->SetCtfMaxPhase(m_iMaxPhase);
+    m_iMaxPhase = mProcessImage->GetCtfExpectedPhase();
+  } else {
+    mProcessImage->SetCtfExpectedPhase(m_iMaxPhase);
+    m_iMaxPhase = mProcessImage->GetCtfMaxPhase();
+  }
+  UpdateData(false);
+  mProcessImage->SetClickUseCtfplotter(m_bPlotterFitOnClick);
+  ManageForCtfplotter();
+  mWinApp->RestoreViewFocus();
+  RefitToCurrentFFT();
+}
+
+// Use Ctfplotter for tuning
+void CCtffindParamDlg::OnCheckForTuning()
+{
+  UPDATE_DATA_TRUE;
+  mProcessImage->SetTuneUseCtfplotter(m_bPlotterForTuning);
+  mWinApp->RestoreViewFocus();
 }
 
 // Draw extra rings
@@ -172,6 +227,7 @@ void CCtffindParamDlg::OnCheckFindPhase()
 {
   UPDATE_DATA_TRUE;
   mProcessImage->SetCtfFindPhaseOnClick(m_bFindPhase);
+  ManageForCtfplotter();
   RefitToCurrentFFT();
 }
 
@@ -214,11 +270,15 @@ void CCtffindParamDlg::OnEnKillfocusEditMinPhase()
 void CCtffindParamDlg::OnEnKillfocusEditMaxPhase()
 {
   UPDATE_DATA_TRUE;
-  if (m_iMinPhase > m_iMaxPhase) {
-    m_iMinPhase = m_iMaxPhase - 1;
-    UpdateData(false);
+  if (m_bPlotterFitOnClick)
+    mProcessImage->SetCtfExpectedPhase(m_iMaxPhase);
+  else {
+    if (m_iMinPhase > m_iMaxPhase) {
+      m_iMinPhase = m_iMaxPhase - 1;
+      UpdateData(false);
+    }
+    mProcessImage->SetCtfMaxPhase(m_iMaxPhase);
   }
-  mProcessImage->SetCtfMaxPhase(m_iMaxPhase);
   RefitToCurrentFFT();
 }
 
