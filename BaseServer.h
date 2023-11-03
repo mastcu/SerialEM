@@ -79,6 +79,7 @@ class CBaseServer
   static void ShutdownSocket(int sockInd);
   static void Cleanup(int sockInd);
   static DWORD WINAPI SocketProc(LPVOID pParam);
+  static int ReallocArgsBufIfNeeded(int needSize, int sockInd);
   static int FinishGettingBuffer(int sockInd, int numReceived, int numExpected);
   static void CloseClient(int sockInd);
   static int SendBuffer(int sockInd, char *buffer, int numBytes);

@@ -272,17 +272,10 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
         memcpy(&numExpected, &mArgsBuffer[sockInd][0], sizeof(int));
 
         // Reallocate buffer if necessary
-        if (numExpected > mArgBufSize[sockInd] - 4) {
-          mArgBufSize[sockInd] = ((numExpected + ARGS_BUFFER_CHUNK - 1) /
-                                  ARGS_BUFFER_CHUNK) * ARGS_BUFFER_CHUNK;
-          mArgsBuffer[sockInd] = (char *)realloc(mArgsBuffer[sockInd],
-                                                 mArgBufSize[sockInd]);
-          if (!mArgsBuffer[sockInd]) {
-            mStartupError[sockInd] = 8;
-            ErrorToLog("Failed to reallocate buffer for receiving data");
-            return mStartupError[sockInd];
-          }
-          DebugToLog("Reallocated the argument buffer");
+        if (ReallocArgsBufIfNeeded(numExpected, sockInd)) {
+          mStartupError[sockInd] = 8;
+          ErrorToLog("Failed to reallocate buffer for receiving data");
+          return mStartupError[sockInd];
         }
 
         if (!FinishGettingBuffer(sockInd, numBytes, numExpected)) {
@@ -314,6 +307,26 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
     }
   }
  
+  return 0;
+}
+
+// Reallocate the argument buffer if needed; if it fails, return 1 and leave things as
+// they were
+int CBaseServer::ReallocArgsBufIfNeeded(int needSize, int sockInd)
+{
+  int newSize;
+  char *newBuf;
+  if (needSize < mArgBufSize[sockInd] - 4)
+    return 0;
+  newSize = ((needSize + ARGS_BUFFER_CHUNK - 1) / ARGS_BUFFER_CHUNK) * ARGS_BUFFER_CHUNK;
+  newBuf = (char *)malloc(newSize);
+  if (!newBuf)
+    return 1;
+  memcpy(newBuf, mArgsBuffer, mArgBufSize[sockInd]);
+  free(mArgsBuffer[sockInd]);
+  mArgBufSize[sockInd] = newSize;
+  mArgsBuffer[sockInd] = newBuf;
+  DebugToLog("Reallocated the argument buffer");
   return 0;
 }
 
@@ -548,7 +561,7 @@ int CBaseServer::SendArgsBack(int sockInd, int retval)
     mSendLongArray[sockInd] = false;
   }
   if (PackDataToSend(sockInd)) {
-    ErrorToLog("DATA BUFFER NOT BIG ENOUGH TO SEND REPLY TO REQUESTER");
+    ErrorToLog("FAILED TO REALLOCATE DATA BUFFER BIG ENOUGH TO SEND REPLY TO REQUESTER");
     SendArgsBack(sockInd, -3);
     return 1;
   }
@@ -661,33 +674,31 @@ int CBaseServer::UnpackReceivedData(int sockInd)
 }
 
 
-#define ADD_TO_BUFFER(a) \
-  if (numAdd + mNumBytesSend[sockInd] > mArgBufSize[sockInd]) \
-    return 1; \
-  memcpy(&mArgsBuffer[sockInd][mNumBytesSend[sockInd]], a, numAdd); \
-  mNumBytesSend[sockInd] += numAdd;
+#define ADD_TO_BUFFER(a, num) \
+  if (num) {   \
+    memcpy(&mArgsBuffer[sockInd][mNumBytesSend[sockInd]], a, num); \
+    mNumBytesSend[sockInd] += num; \
+  }
 
 // Pack the data into the argument buffer as longs, BOOLS, doubles
 int CBaseServer::PackDataToSend(int sockInd)
 {
-  int numAdd;
+  int numAddLong = mNumLongSend[sockInd] * sizeof(long);
+  int numAddBool = mNumBoolSend[sockInd] * sizeof(BOOL);
+  int numAddDbl = mNumDblSend[sockInd] * sizeof(double);
+  int numAddArr = mSendLongArray[sockInd] ? 
+    mLongArgs[sockInd][mNumLongSend[sockInd] - 1] * sizeof(long) : 0;
+  int totAdd = numAddLong + numAddBool + numAddDbl + numAddArr;
+
+  // Make sure buffer is big enough
   mNumBytesSend[sockInd] = sizeof(int);
-  if (mNumLongSend[sockInd]) {
-    numAdd = mNumLongSend[sockInd] * sizeof(long);
-    ADD_TO_BUFFER(mLongArgs[sockInd]);
-  }
-  if (mNumBoolSend[sockInd]) {
-    numAdd = mNumBoolSend[sockInd] * sizeof(BOOL);
-    ADD_TO_BUFFER(&mBoolArgs[sockInd]);
-  }
-  if (mNumDblSend[sockInd]) {
-    numAdd = mNumDblSend[sockInd] * sizeof(double);
-    ADD_TO_BUFFER(&mDoubleArgs[sockInd]);
-  }
-  if (mSendLongArray[sockInd]) {
-    numAdd = mLongArgs[sockInd][mNumLongSend[sockInd] - 1] * sizeof(long);
-    ADD_TO_BUFFER(mLongArray[sockInd]);
-  }
+  if (ReallocArgsBufIfNeeded(totAdd + mNumBytesSend[sockInd], sockInd))
+    return 1;
+
+  ADD_TO_BUFFER(mLongArgs[sockInd], numAddLong);
+  ADD_TO_BUFFER(mBoolArgs[sockInd], numAddBool);
+  ADD_TO_BUFFER(mDoubleArgs[sockInd], numAddDbl);
+  ADD_TO_BUFFER(mLongArray[sockInd], numAddArr);
 
   // Put the number of bytes at the beginning of the message
   memcpy(&mArgsBuffer[sockInd][0], &mNumBytesSend[sockInd], sizeof(int));
