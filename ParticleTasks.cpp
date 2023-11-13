@@ -1610,7 +1610,7 @@ void CParticleTasks::ZbyGNextTask(int param)
           SEMTrace('1', "Change scale to %f for being past AF calibration", scaling);
         }
         
-        delZ *= scaling;
+        delZ *= scaling / mShiftManager->GetDefocusZFactor();
 
         // compute an error factor
         if (mZBGIterationNum)
