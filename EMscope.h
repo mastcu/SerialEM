@@ -508,6 +508,7 @@ public:
   GetSetMember(unsigned int, UtapiConnected);
   GetSetMember(BOOL, UseFilterInTEMMode);
   GetSetMember(int, FeiSTEMprobeModeInLM);
+  GetSetMember(int, ScanningMags);
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -881,6 +882,7 @@ private:
   int mMinInitializeJeolDelay; // So a warning can be issued if it is too low
   unsigned int mUtapiConnected; // Possible set of flags for capabilities available
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
+  int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

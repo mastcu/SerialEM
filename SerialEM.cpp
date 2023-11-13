@@ -3469,7 +3469,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 
 BOOL CSerialEMApp::DoingTasks()
 {
-  bool trulyBusy = DoingImagingTasks()|| 
+  bool trulyBusy = DoingImagingTasks() ||
     mMacroProcessor->DoingMacro() || mNavHelper->mAutoContouringDlg->DoingAutoContour() ||
     mShiftManager->ResettingIS() || mParticleTasks->GetDVDoingDewarVac() ||
     mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
@@ -3477,7 +3477,8 @@ BOOL CSerialEMApp::DoingTasks()
     (mNavigator && (mNavigator->GetLoadingMap() || mNavigator->DoingNewFileRange())) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
-    (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot();
+    (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot() ||
+    mScope->GetScanningMags();
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
   mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
     mBufferManager->DoingSychroThread());

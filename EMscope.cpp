@@ -530,6 +530,7 @@ CEMscope::CEMscope()
   mSkipNormalizations = 0;
   mUtapiConnected = 0;
   mUseFilterInTEMMode = false;
+  mScanningMags = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -4279,7 +4280,7 @@ BOOL CEMscope::ScanMagnifications()
   long magVal;
   int rot, magInd, magSet, curMode, startingMode, firstBase;
   double startingSMag, curSMag, lastSMag;
-  int lastMag, baseIndex = 0;
+  int lastMag, baseIndex = 0, lowestNonLM[2] = {0, 0};
   BOOL retval = true;
   CString report, str;
   int functionModes[] = {JEOL_LOWMAG_MODE, JEOL_MAG1_MODE, JEOL_DIFF_MODE, 1, 3};
@@ -4333,51 +4334,61 @@ BOOL CEMscope::ScanMagnifications()
       if (startingMode)
         PLUGSCOPE_SET(ProbeMode, imNanoProbe);
 
-      report = "In STEM mode, you need to go to the lowest STEM magnification then\r\n"
+      report = "In STEM mode, you need to go to the lowest STEM\r\nmagnification then "
         "step through the mags with the magnification knob.\r\nYou will step through the "
-        "mags in nanoprobe mode then in microprobe mode.\r\nBe sure to enable LMscan in "
-        "the microscope interface and start at the lowest LM mag,\r\n"
-        "unless NO ONE is EVER going to use the LM mags.\r\n\r\nYou will close a "
-        "confirmation dialog box after each mag step.\r\nMake sure that turning the knob "
-        "does not take two mag steps instead of one";
+        "mags in nanoprobe mode then in microprobe mode; press the \"End\" button when "
+        "you reach the highest mag in each mode.\r\nBe sure to enable LMscan in "
+        "the microscope interface in order to start at the lowest LM mag.\r\n"
+        "Do not try to step to the next mag until the previous step shows up in the "
+        "log window!\r\n\r\nNow go to the lowest mag in LM.";
       mWinApp->AppendToLog(report);
       AfxMessageBox(report, MB_EXCLAME);
 
       // Loop on each mode
       magInd = 1;
+      mScanningMags = 1;
+      mWinApp->UpdateBufferWindows();
       for (curMode = 0; curMode < 2; curMode++) {
         baseIndex = magInd;
-        report = "Go to the lowest magnification in ";
         if (curMode) {
-          report += "microprobe mode\n\n";
           PLUGSCOPE_SET(ProbeMode, imMicroProbe);
-        } else
-          report += "nanoprobe mode\n\n";
+          AfxMessageBox("Go to the lowest LM magnification again for microprobe mode", 
+            MB_EXCLAME);
+        }
 
         // Loop within the mode until they say it is done
-        for (; magInd < 2 * MAX_MAGS; magInd++) {
-          report += "Press OK or Enter when the magnification is set\n\n"
-            "Press Cancel when the magnification will not go any higher";
-          if (AfxMessageBox(report, MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL)
-            break;
+        for (; magInd < 2 * MAX_MAGS && mScanningMags > 0; magInd++) {
           report = "Go to the next higher magnification\n\n";
-          PLUGSCOPE_GET(STEMMagnification, curSMag, 1.);
-          if (magInd > 1 && curSMag == lastSMag) {
-            if (AfxMessageBox("The mag is the same as last time\nWas there really a mag "
-              "step to record?", MB_YESNO | MB_ICONQUESTION) == IDNO) {
-                magInd--;
-                continue;
+          while (mScanningMags > 0) {
+            PLUGSCOPE_GET(STEMMagnification, curSMag, 1.);
+            if (curSMag < lastSMag && magInd > baseIndex) {
+              if (!lowestNonLM[curMode])
+                lowestNonLM[curMode] = magInd;
+              else
+                lowestNonLM[curMode] = -1;
             }
+            if (curSMag != lastSMag)
+              break;
+            SleepMsg(50);
           }
           str.Format("%d %.1f", magInd, curSMag);
           mWinApp->AppendToLog(str);
           lastSMag = curSMag;
         }
+        if (!mScanningMags)
+          break;
+        if (!curMode)
+          mScanningMags = 1;
       }
-      report.Format("Set:\r\n LowestMicroSTEMmag %d\r\n  Also note the two indexes where"
-        " non LM mags start,\r\n  and put both in a LowestSTEMnonLMmag property entry", 
-        baseIndex);
-      mWinApp->AppendToLog(report);
+      mScanningMags = 0;
+      mWinApp->UpdateBufferWindows();
+      report.Format("Set:\r\n LowestMicroSTEMmag %d\r\n", baseIndex);  
+      if (lowestNonLM[0] > 0 && lowestNonLM[1] > 0)
+        str.Format(" LowestSTEMnonLMmag  %d %d\r\n", lowestNonLM[0], lowestNonLM[1]);
+      else
+        str = "Also note the two indexes where"
+        " non LM mags start,\r\n  and put both in a LowestSTEMnonLMmag property entry";
+      mWinApp->AppendToLog(report + str);
       if (!startingMode)
         PLUGSCOPE_SET(ProbeMode, imNanoProbe);
       PLUGSCOPE_SET(STEMMagnification, startingSMag);

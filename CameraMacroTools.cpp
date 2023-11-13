@@ -473,7 +473,9 @@ void CCameraMacroTools::OnButstop()
   CString str;
   int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
-  if (navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED)
+  if (mWinApp->mScope->GetScanningMags())
+    mWinApp->mScope->SetScanningMags(0);
+  else if (navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED)
     mNav->SetAcquireEnded(1);
   else if (navState == NAV_SCRIPT_STOPPED) {
     mMacProcessor->SetNonResumable();
@@ -505,7 +507,9 @@ void CCameraMacroTools::OnButend()
 {
   int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
-  if (mWinApp->NavigatorStartedTS() && mWinApp->mTSController->GetPostponed())
+  if (mWinApp->mScope->GetScanningMags())
+    mWinApp->mScope->SetScanningMags(-1);
+  else if (mWinApp->NavigatorStartedTS() && mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->Terminate();
   else if (mDoingTS) 
     mWinApp->mTSController->EndLoop();
@@ -638,7 +642,8 @@ void CCameraMacroTools::Update()
   else if (mNav && mNav->StartedMacro() && mMacProcessor->IsResumable())
     SetDlgItemText(IDC_BUTEND, "End Script");
   else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && !mDoingCalISO &&
-    (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch())) {
+    (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch()) && 
+    !mWinApp->mScope->GetScanningMags()) {
       SetDlgItemText(IDC_BUTEND, "Search");
       mEnabledSearch = true;
   } else 
@@ -676,7 +681,7 @@ void CCameraMacroTools::Update()
       !mMacProcessor->GetRunningScrpLang()) || mDoingCalISO || 
       (mEnabledSearch && shotOK) || (navState != NO_NAV_RUNNING && 
       navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) || 
-      mWinApp->mMultiTSTasks->GetAssessingRange());
+      mWinApp->mMultiTSTasks->GetAssessingRange() || mWinApp->mScope->GetScanningMags());
 
   // Manage camera name
   if (!mWinApp->GetNoCameras()) {

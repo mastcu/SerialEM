@@ -1685,12 +1685,17 @@
       by index values, so it is necessary to step through the magnifications with the
       knob on the microscope.&nbsp; The program will tell you to enable &quot;LM scan&quot; in
       the microscope STEM interface, and start at the lowest magnification that is
-      reached with that enabled.&nbsp; You can skip this if no one will ever use those
-      LM magnifications; the advantage of doing so is that it avoids having
-      magnifications whose mode cannot be determined, which will show up as &quot;S?&quot; in
-      the microscope status panel.&nbsp; You will need to step through the magnifications twice,
-      first in nanoprobe then in microprobe mode.&nbsp; At the end, the program will
-      output the table, two entries for LowestSTEMnonLMmag, and an entry for LowestMicroSTEMmag.</P>
+      reached with that enabled.&nbsp; &nbsp; You will need to step through the magnifications twice,
+      first in nanoprobe then in microprobe mode.&nbsp; Be very careful not to turn the 
+        knob again until the program has printed a new magnification in the log. At the end, the program will
+      output the table, two entries for LowestSTEMnonLMmag, and an entry for LowestMicroSTEMmag.&nbsp; 
+        You may find that some magnifications show up in both LM and nonLM.&nbsp; The 
+        program has no good way to distinguish these and they will show up as &quot;S?&quot; in 
+        the microscope status panel.&nbsp; This may not be a problem in practice.&nbsp; 
+        One solution would be to skip the LM magnifications, but a better solution would 
+        be to go through a microscope alignment that sets the STEM magnifications and 
+        set slightly different values that avoid the duplications.&nbsp; Have this done 
+        before doing any calibrations, and get a new new listing of the magnifications.</P>
       <P><em>On a Thermo/FEI scope</em>, this routine will not produce a camera length table.&nbsp;
           The only purpose for such a table is to allow the program to display &#39;-&gt;&#39; and
           the camera length to be changed to when using the magnification/camera length

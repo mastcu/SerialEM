@@ -13,9 +13,9 @@
     <P>Sections of interest below:</P>
     <ul>
       <li> <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2/K3</A></li>
-      <li><a href="#norm_frames">Gain-normalizing frames during post-processing.</a></li>
+      <li><a href="#norm_frames">Gain-normalizing K2/K3 frames during post-processing.</a></li>
       <li><a href="#k3differences">Principal Differences between K2 and K3</a></li>
-      <li><a href="#k3problems">Remaining Problems with the K3</a></li>
+      <li><a href="#EERfiles">Handling Falcon 4 EER files in IMOD</a></li>
     </ul>
       <P>The first part of this page explains some features of CCD cameras.  Direct 
       electron detectors have significantly different behavior and some of their features
@@ -329,16 +329,18 @@
       values are close to integer values anyway; 2) the SNR is so low in the images.&nbsp; To put this loss in 
       perspective, with a loss of 0.0005, you would need 10005 particles instead of 
       10000 particles to reach a certain resolution.<p>
-      <b><a name="norm_frames">Gain-normalizing frames during post-processing.</a></b>&nbsp; If you choose to 
+      <b><a name="norm_frames">Gain-normalizing K2/K3 frames during post-processing.</a></b>&nbsp; If you choose to 
       save frames without software gain normalizing, the plugin will make sure that 
       there is a valid copy of the appropriate gain reference in the folder where the 
       frames are saved, provided that the plugin can find the gain reference.&nbsp; 
       (This used to be done by specifying the full paths to the gain references in the SerialEM property file, 
       but now a correct entry for the camera property DMGainReferenceName is 
       sufficient.)&nbsp;&nbsp; In addition, since there is no defect 
-      correction in these images with GMS 2.3.1 or higher, the plugin will save a file 
+      correction in K2 images with GMS 2.3.1 or higher, the plugin will save a file 
       &#39;defects...txt&#39; describing the defects that need to be corrected in 
-      post-processing. You can convert the gain reference to an MRC 
+      post-processing. For K3, DM does do defect correction, so no 'defects...txt' 
+      file is produced unless there are addition bad columns or rows identified in the 
+      SerialEMproperties. You can convert the gain reference to an MRC 
       file with the IMOD program &#39;dm2mrc&#39; or, again, use it directly in any 
       program.&nbsp; The gain reference may need to be rotated 
       and/or flipped by the same operations described in the camera configuration in 
@@ -346,7 +348,7 @@
       option in the
       <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. 
     <p>
-      The header of the frame stacks will have a title line with the text &#39;r/f&#39; 
+      If reoriented frames are saved, the header of the frame stacks will have a title line with the text &#39;r/f&#39; 
       followed by a value corresponding to a RotationAndFlip entry in the SerialEM 
       properties file.&nbsp; This value is the rotation counterclockwise divided by 90 
       (i.e., 1, 2, or 3 for angles of 90, 180 or 270) plus 4 for a flip around the Y 
@@ -355,19 +357,19 @@
       the title line will have the text &#39;r/f 0 need&#39; followed by the rotation/flip value that 
       was not applied to the frames. The gain reference does not need to be rotated, 
       but the final aligned sums do need to be rotated by this operation to match 
-      images returned to SerialEM.&nbsp; With &#39;alignframes&#39; in IMOD 4.12.18 or higher, 
+      images returned to SerialEM and restore handedness if a flip is needed.&nbsp; With &#39;alignframes&#39; in IMOD 4.12.18 or higher, 
       the option &#39;-rotation -2&#39; or &#39;-rfsum -1&#39; can be used to apply the operation 
       specified in the &#39;need&#39; value.<p>
       There are several ways to handle the rotation of the 
       gain reference:<ol>
       <li>With &#39;alignframes&#39; in IMOD, there is no need to normalize the data separately; 
-        the gain reference and defect file can be given to the program and the option 
-        &#39;-rotation -1&#39; can be used to read the r/f value from the frame stack header. </li>
-      <li>With IMOD 4.9.2 or higher, or 4.10.1 or higher, the &#39;clip&#39; program can do the 
-        rotation with the universal &#39;norm&#39; command given below in the section starting &#39;<i>In IMOD version 4.8.41 or higher.</i>&#39;&nbsp; 
-        It must be given the &#39;-R&#39; option with either the SerialEM rotation/flip value 
-        applied to the frames, or -1 to read the r/f value from the frame stack header.</li>
-      <li>In the general case, use the IMOD commands<br />
+        the option '-title' can be used to apply the gain reference and defect file 
+        listed in the frame stack header, and the option 
+        &#39;-rotation -1&#39; can be used to read the r/f value from the header. </li>
+      <li>With &#39;clip&#39; in IMOD, the &#39;norm&#39; command will rotate the 
+        reference&nbsp;if it is given the &#39;-R&#39; option with either the SerialEM rotation/flip value 
+        applied to the frames or -1 to read the r/f value from the frame stack header.</li>
+      <li>For other situations, use the IMOD commands<br />
 &nbsp;&nbsp;&nbsp; clip flipy reference.dm4 flipped.mrc<br />
         first for a r/f value of 4-7, followed by 
         <br />
@@ -375,67 +377,25 @@
         90 times the r/f value modulo 4 (e.g., 1 if r/f is 5) </li>
     </ol>
       <p>
-        Once you have the reference in the right orientation, you can use the program 
-        &#39;clip&#39; in IMOD to apply gain normalization (and defect correction with version 4.8.6 or higher).&nbsp; In 
-        the following, &#39;scalingFactor&#39; is the regular scaling factor applied to summed 
-        images, &#39;fileWithFrames&#39; is the data file to normalize, &#39;gainReference.mrc&#39; 
-        is the reoriented gain reference, and &#39;normalizedFrames.mrc&#39; is the desired 
-        output file. The alternatives for GMS 2.3.0 or lower are:<ul>
-      <li><i>Counting mode, not packed:</i>&nbsp; The data need to be scaled to preserve 
-        precision after normalization.&nbsp; The command is<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; fileWithFrames.mrc&nbsp; 
-        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
-      <li><i>Super-resolution mode, not packed:</i>&nbsp; The data need to be scaled to 
-        preserve precision after normalization.&nbsp; To have the same scaling by 16 
-        that the plugin would apply, the command is<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n 16&nbsp; fileWithFrames&nbsp; 
-        gainReference.mrc&nbsp; normalizedFrames.mrc<br />
-        but if you want to apply the regular scaling factor, the output will need to be 
-        integers and the command is<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; 
-        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
-      <li><i>Counting mode, packed as bytes:</i>&nbsp; The data need to be scaled to 
-        preserve precision and output as integers to preserve the range.&nbsp; The 
-        command is<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; 
-        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
-      <li><i>Super-resolution mode, packed as 4-bit numbers:</i> By default, the data 
-        will be scaled by 16 when unpacking with normalization, so the command to get 
-        this scaling is just<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip unpack&nbsp; fileWithFrames&nbsp; gainReference.mrc&nbsp; 
-        normalizedFrames.mrc<br />
-        but if you want to apply the regular scaling factor, the output will need to be 
-        integers and the command is<br />
-&nbsp;&nbsp;&nbsp;&nbsp; clip unpack -n scalingFactor&nbsp; -m 1&nbsp; 
-        fileWithFrames&nbsp; gainReference.mrc&nbsp; normalizedFrames.mrc<br />
-        It is also possible to remove extreme values from the data at the same time with 
-        the &#39;-h&#39; and &#39;-l&#39; options.&nbsp; For example, adding &#39;-h 6 -l 1&#39; after the 
-        &#39;unpack&#39; will replace all values above 6 with 1.</li>
-        </ul>
-        <p>
-       To apply defect correction to files from GMS 2.3.1 or higher, add &#39;-D 
-        defects...txt&#39; before &#39;fileWithFrames&#39; in the appropriate command, where 
-        &#39;defects...txt&#39; is the file saved by the plugin.</p>
-    <p>
-        <i>In IMOD version 4.8.41 or higher</i>, all programs can read 4-bit files directly.&nbsp; 
-        The &#39;clip unpack&#39; command has thus been changed so that it can be used for 
-        normalizing any kind of data, and it can also be invoked as either &#39;clip unpack&#39; 
-        or &#39;clip norm&#39;.&nbsp; A command that works for all of the above cases is<br />
-&nbsp;&nbsp;&nbsp; clip norm -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; gainReference.mrc 
-        normalizedFrames.mrc<br />
-        where the default scaling factor is 16, extreme values can be removed with &#39;-l&#39; 
-        and &#39;-h&#39; options, and &#39;-D defects...txt&#39; would be added for files from GMS 
-        2.3.1 or higher.&nbsp; With IMOD 4.9.2/4.10.1 or higher, you can add add &#39;-R -1&#39; 
-        and use the DM reference directly instead of a rotated reference.</p>
-    <p>
-        For K3 frames, you should specify a scaling factor of 32.</p>
-    <p>
-        In all of these situations, conversion to floating point can be used instead of, 
+        A 'clip' command that will normalize all kinds of saved frames (4-bit packed, 
+        8-bit, 16-bit, mode 101) is:<p>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clip norm -n scalingFactor&nbsp; -m 1&nbsp; -R -1&nbsp; 
+        -D defects....txt&nbsp; fileWithFrames&nbsp; gainReferenceFile 
+        normalizedFrames.mrc<p>
+        &nbsp; Here, &#39;scalingFactor&#39; is the regular scaling factor applied to summed 
+        images, 'Defects....txt' is the defects file, &#39;fileWithFrames&#39; is the data file to normalize, &#39;gainReferenceFile' 
+        is the gain reference, and 'normalizedFrames.mrc' is the desired output file. 
+        The default scaling factor is 16, but you probably want to apply the appropriate 
+        value for counts per electron, which is 32 for K3.&nbsp; The '-D' option would 
+        be omitted if there is no defects file.&nbsp; Extreme values can be removed by 
+        adding '-l' and '-h' options.<p>
+        Conversion to floating point can be used instead of, 
         or in addition to, the scaling to guarantee absolutely no information loss from 
-        rounding to integers.&nbsp; To convert to float, use &quot;-m 2&quot; instead of &quot;-m 1&quot; or 
-        add &quot;-m 2&quot; to a command when the data are already integers.&nbsp; The extra 
+        rounding to integers.&nbsp; To convert to float, use &quot;-m 2&quot; instead of &quot;-m 1&quot;.&nbsp; The extra 
         storage required will not be an issue if the normalized data are only being used 
-        temporarily for alignment and averaging of frames.</p>
+        temporarily for alignment and averaging of frames.&nbsp; Enter '-n 1' to prevent 
+        the scaling.&nbsp; With IMOD 4.12.17 or higher, you can use '-m 16' to produce 
+        16-bit floating point values.</p>
     <p>
         Finally, if you want to run MotionCor2 directly on the unnormalized data, you 
         should give it a defect map file as well as the gain reference file.&nbsp; You 
@@ -506,7 +466,7 @@
         thus hold up to 7 electrons.</li>
       <li>The readout rate of the K3 is 3.75 times higher than the K2 and it can thus 
         count electrons arriving at dose rates per pixel that are higher by this amount.&nbsp; 
-        The optimal dose rate is around 30 electrons per physical pixel per second 
+        Based on this difference alone, the optimal dose rate is around 30 electrons per physical pixel per second 
         instead of 8.&nbsp; (Sensor pixels are referred to as physical pixels.)</li>
       <li>Linear mode is even less useful for the K3 than for the K2 because of this 
         higher dose rate range for electron counting.&nbsp; It may still be useful for 
@@ -514,31 +474,66 @@
         to match the 32 counts per electron of counting mode.</li>
       <li>The processors in the K3 computer are much less occupied during the time when 
         it is feeding frames to SerialEM&#39;s plugin to DM, so parallelization of various 
-        frame processing steps in the plugin is more effective.&nbsp; The plugin has 
-        thus gotten faster just as the camera has.</li>
+        frame processing steps in the plugin is more effective.&nbsp; The plugin thus 
+        processes K3 frames faster than K2 ones.</li>
     </ol>
+          <p>
+       <b><a name="EERfiles">Handling Falcon EER files in IMOD</a></b></p>
+      <p>
+
+        The support for EER files in IMOD is designed to alleviate the problem that 
+        single 4x4 super-resolution frames are unwieldy for many purposes, particularly 
+        for tilt series data.&nbsp; EER files are handled directly in the TIFF-reading 
+        module, which can return images that are:</p>
+    <ul>
+      <li>Summed from successive non-overlapping sets of frames, where either the amount 
+        of summing or the total number of summed frames can be specified</li>
+      <li>Reduced to a specified resolution with optional antialiasing, where the 
+        reduction can be by more than 2 if antialiasing is applied</li>
+      <li>Gain-normalized before reduction</li>
+    </ul>
     <p>
-      <b><a name="k3problems">Remaining Problems with the K3</a></b></p>
+
+      Three programs, 3dmod, Alignframes, and Clip, have specific options controlling 
+      these features, with defaults that can be overridden by the environment 
+      variables IMOD_DFLT_EER_SUPER_RES and IMOD_DFLT_EER_Z_SUMMING .&nbsp; All other programs will see the files by default as 16K and 
+      containing all the frames, but the frame-summing and reduction can be controlled 
+      by setting other environment variables.&nbsp; Run 'imodhelp imodenv' and search 
+      for 'EER' to find descriptions of these environment variables.</p>
     <p>
-      This list will be continually updated and eventually removed as Gatan either 
-        solves the problem or clarifies the situation.&nbsp; (Last update January 29, 
-      2021)</p>
-    <ol>
-      <li>Linear mode images during continuous acquisition have an incorrect offset 
-        which would give a misleading dose rate estimate.&nbsp; This is currently 
-        adjusted for in SerialEM.&nbsp; If the problem is ever resolved, there will 
-        probably be a property setting to prevent the adjustment.</li>
-      <li>Hardware binning in counting mode is constrained to producing normalized data in bytes.&nbsp; This 
-        could potentially saturate frames taken with the option for hardware binning by 
-        2 with long frame times.&nbsp; Also, continuous mode for counting images with a 
-        binning selection of 1 or higher uses hardware binning by 2 and can saturate with high dose 
-        rates or with longer exposures, and hardware binning 
-        by 4 is simply not used for these images because it 
-        saturates so easily.</li>
-      <li>SerialEM has no control over the alignment of frames by MotionCor2 available 
-        in DM as an option, and apparently cannot trigger this alignment or access the 
-        result.</li>
-    </ol>
-    </basefont>
+
+      You should have IMOD 4.12.13 or higher to have all the capabilities described 
+      here.</p>
+    <p>
+
+      3dmod will read EER files by default with 
+      antialiased reduction by 2 to 8K and Z-summing by 
+      10; these defaults can be set in its Preferences dialog and also overridden with 
+      options at the command line and in its startup window.&nbsp; Simple 3dmod 
+      packages for Windows are available and suitable for use on microscope and camera 
+      computers.</p>
+    <p>
+      Alignframes also reads EER files by default with antialiased reduction by 2 and 
+      Z-summing by 10, and there are options to override these defaults.&nbsp; For 
+      example, to reduce by 4 and sum by 16, enter the option '-es 0,16,-1' or set 
+      environment variables IMOD_DFLT_EER_SUPER_RES to 0 and IMOD_DFLT_EER_Z_SUMMING to 15.&nbsp; 
+      The gain reference needs to supplied with the '-gain' option, and then defect 
+      correction will be done based on the defect list in the gain reference.</p>
+    <p>
+      Clip applies no Z summing or reduction by default and has options '-es' to 
+      specify reduction, '-ez' to specify summing, and '-ea' to activate antialiasing.&nbsp; 
+      With antialiasing, the default scaling is by 100 and the output is to 16-bit 
+      integers by default.&nbsp; For example, to produce normalized, defect-corrected 
+      frames based on sums of 8 frames and reduced by 2 with antialiasing:</p>
+    <p>
+      &nbsp;&nbsp;&nbsp; clip norm -es 1&nbsp; -ez 8&nbsp; -ea 1&nbsp; fileWithFrames.eer&nbsp; 
+      gainReferenceFile.tiff normalizedFrames.mrc</p>
+    <p>
+      Where 'fileWithFrames.eer' is the frame file, 'gainReferenceFile.tif' is the 
+      gain reference, and&nbsp; 'normalizedFrames.mrc' is the output.&nbsp; Without 
+      antialiasing, you would need to add '-n scalingFactor' to scale by other than 16 
+      and '-m 1' to get integer output.&nbsp; In either case, '-m 2' can be used to 
+      get 32-bit floating point output and '-m 16' to get 16-bit floats.</p>
+   </basefont>
   </BODY>
 </HTML>

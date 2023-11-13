@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/11/23: Changed List Mags routine for FEI STEM to avoid having to confirm a
+dialog after each step, and to report the transitions out of LM.
+
+11/11/23: Made Eucentricity by Focus take DeltaZtoDefocus scaling into
+account.
+
+11/4/23: SEM_4-1-0beta24
 11/3/23: Fixed limit on how big the return values to Python script could be.
 
 11/2/23: Added options to use Ctfplotter instead of Ctffind for CTF fitting
