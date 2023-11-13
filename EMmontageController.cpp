@@ -2453,7 +2453,7 @@ int EMmontageController::SavePiece()
     SEMTrace('M', "SaveImage Processing");
 
     if (mXCorrThread) {
-      if (WaitForXCorrProc(5000)) {
+      if (WaitForXCorrProc(20000)) {
         SEMMessageBox("Piece correlation thread timed out");
         StopMontage();
         return 1;
