@@ -3826,7 +3826,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
         PLUGSCOPE_GET(ProbeMode, mProbeMode, 1);
         mProbeMode = (mProbeMode == imMicroProbe) ? 1 : 0;
         result = LookupSTEMmagFEI(curMag, mProbeMode, minDiff);
-        if (minDiff >= 1.)
+        if (minDiff >= 1. && !mScanningMags)
           SEMTrace('1', "WARNING: GetMagIndex did not find exact match to %.0f in STEM"
           " mag table", curMag);
       } else {
@@ -4336,8 +4336,8 @@ BOOL CEMscope::ScanMagnifications()
 
       report = "In STEM mode, you need to go to the lowest STEM\r\nmagnification then "
         "step through the mags with the magnification knob.\r\nYou will step through the "
-        "mags in nanoprobe mode then in microprobe mode; press the \"End\" button when "
-        "you reach the highest mag in each mode.\r\nBe sure to enable LMscan in "
+        "mags in nanoprobe mode then in microprobe mode;\r\npress the \"End\" button when"
+        " you reach the highest mag in each mode.\r\nBe sure to enable LMscan in "
         "the microscope interface in order to start at the lowest LM mag.\r\n"
         "Do not try to step to the next mag until the previous step shows up in the "
         "log window!\r\n\r\nNow go to the lowest mag in LM.";
@@ -4371,8 +4371,10 @@ BOOL CEMscope::ScanMagnifications()
               break;
             SleepMsg(50);
           }
-          str.Format("%d %.1f", magInd, curSMag);
-          mWinApp->AppendToLog(str);
+          if (curSMag != lastSMag) {
+            str.Format("%d %.1f", magInd, curSMag);
+            mWinApp->AppendToLog(str);
+          }
           lastSMag = curSMag;
         }
         if (!mScanningMags)
