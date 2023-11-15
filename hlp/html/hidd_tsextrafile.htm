@@ -26,23 +26,8 @@
         not constrained to being at the same binning as regular Trial images.&nbsp; 
         Fourth, in STEM mode, images from other detectors than the primary one can be 
         saved into a file.&nbsp; When there is more than one extra Record image, they 
-        can each be saved into a separate file instead of all into the same file.</P>
-    <P>When acquiring multiple tilt series through the Navigator, it is possible to 
-      have one or more extra files opened for each tilt series and closed at the end of the 
-      series.&nbsp; Set up a script with the line<br />
-&nbsp;&nbsp;&nbsp; SuffixForExtraFile&nbsp; suffix1 
-      suffix2 ...<br />
-      where &#39;suffix1&#39;, 
-      &#39;suffix2&#39;, etc, will be added to the root of the filename of the regular tilt 
-      series output file.&nbsp; For example, if the regular filename is &#39;series1.mrc&#39; 
-      and a suffix is &#39;_trial&#39;, the extra file will be named &#39;series1_trial.mrc&#39;.&nbsp; 
-      In the
-      <A HREF="hidd_navacquire.htm">Navigator Acquire dialog</A>, turn on the option 
-      to run a script before the main action and select the script with this command.&nbsp; 
-      The extra files will be opened before the regular file, so set the file numbers 
-      for the extra output to start from 1 if there will be no other files open when 
-      the acquisition is started.&nbsp; If there will be other files open, start the file 
-      numbers one past the number of the highest file that will be open.</P>
+        can each be saved into a separate file instead of all into the same file, and 
+        named automatically with suffixies entered here.</P>
     <P>When setting up tilt series for acquisition in the Navigator, the current 
       values in this dialog are incorporated into the tilt series parameters only for 
       the first item designated as a tilt series.&nbsp; If you then open this dialog 
@@ -101,7 +86,7 @@
     <P>If only one type of extra output is 
       selected, and you enter the suffixes described next, the file number here is 
       irrelevant.&nbsp;</P>
-    <P><a href="">#Suffixes</a><strong>Suffixes for extra files to open in Nav. Acquire</strong></P>
+    <P><a href="#Suffixes"></a><strong>Suffixes for extra files to open in Nav. Acquire</strong></P>
     <P>This entry sets one or more suffixes so that the Acquire at Items routine will 
       open the corresponding number of extra files whenever it opens a regular file 
       for output.&nbsp;Enter the suffixes separated by spaces (a suffix cannot contain a 
@@ -187,6 +172,30 @@
       series in a file and deletes the file at the end of the tilt series.&nbsp; If 
       this option is selected, the image used to realign to the anchor is appended to 
       the file and the file is not deleted.</p>
+    <p>
+      <strong>Make low-tilt map if run from Nav Acquire</strong></p>
+    <p>
+      Use this option to have a map entry created in the Navigator table for each tilt 
+      series run from the Navigator Acquire at Items routine, making it possible to 
+      browse through low tilt images for all the series afterwards.&nbsp; For 
+      bidirectional or dose-symmetric series, the first image will be used; for 
+      unidirectional series, an image at or near zero-tilt will be used.&nbsp; 
+      Montaged and single-frame tilt series are treated differently: for the latter, 
+      the image will be saved to a separate file, with an option to filter it first.&nbsp; 
+      The file will be named with the root of the tilt series file and '_LTmap.mrc', 
+      and the map item label will be based on the label of the item currently being 
+      acquired plus '-LT'.&nbsp; For a montage, the map entry will point to that view 
+      in the tilt series file itself, and filtering cannot be done.&nbsp; That map 
+      entry is adjusted after a bidirectional or dose-symmetric series is reordered.</p>
+    <p>
+      <strong>Filter non-mont: cutoff ... falloff</strong></p>
+    <p>
+      Select this option to apply a high-frequency Fourier filter to the low-tilt 
+      image from a single-frame tilt series before saving it as a map.&nbsp; The
+      <strong>cutoff</strong> entry is the start of the Gaussian falloff, referred to 
+      as 'radius2' in other places, and the <strong>falloff</strong> entry is the sigma 
+      value for the Gaussian, referred to as 'sigma2'.&nbsp; Both are in reciprocal 
+      pixels that range from 0 to 0.5.</p>
     </basefont>
   </BODY>
 </HTML>

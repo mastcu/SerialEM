@@ -122,6 +122,13 @@ public:
   afx_msg void OnKillfocusEditEntries();
   CEdit m_editSuffixes;
   CString m_strSuffixes;
+  afx_msg void OnCheckLowTiltMap();
+  afx_msg void OnCheckFilterMap();
+  void ManageMapMaking();
+  BOOL m_bMakeLowTiltMap;
+  BOOL m_bFilterMap;
+  float m_fMapFilterCutoff;
+  float m_fMapFalloff;
 };
 
 //{{AFX_INSERT_LOCATION}}

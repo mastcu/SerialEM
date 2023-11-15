@@ -323,6 +323,8 @@ private:
   int mAnchorBuf;             // Buf for anchor
   float mAnchorAngle;         // Actual angle of anchor image
   BOOL mCanFindEucentricity;  // Flag that start was near enough to zero to do eucen.
+  int mSaveLowTiltMap;        // 1 that it still needs making, 2 to make map after saving
+  int mLowTiltMapNavIndex;    // Index of nav item that may need changing after inversion
   BOOL mStartingOut;          // Flag for initial loop
   BOOL mDidWalkup;            // Flag that a walkup was done
   BOOL mWalkupImageUsable;    // Flag that walkup should leave a good reference
@@ -583,6 +585,8 @@ public:
   void EvaluateExtraRecord();
   int SetExtraRecordState(void);
   void RestoreFromExtraRec(void);
+  int CheckSaveLowTiltMap();
+  void ReviseLowTiltMapSection();
   void SyncParamToOtherModules(void);
   void SyncOtherModulesToParam(void);
   void CopyTSParam(TiltSeriesParam * fromParam, TiltSeriesParam * toParam);

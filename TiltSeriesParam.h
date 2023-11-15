@@ -126,6 +126,10 @@ struct TiltSeriesParam {
   BOOL anchorBidirWithView;    // Flag to anchor with View in Low Dose
   BOOL walkBackForBidir;       // Use walkup to return to starting angle
   BOOL retainBidirAnchor;      // Flag to store second image and keep file
+  BOOL makeLowTiltMap;         // Flag to make a map at 0 tilt or starting angle
+  BOOL filterLowTiltMap;       // Flag to filter it
+  float mapFilterRadius2;      // Filter parameters in standard form
+  float mapFilterSigma2;
   BOOL doDoseSymmetric;        // Flag to do alternating images on both sides of start
   int dosymBaseGroupSize;      // Initial size of group to do on each side
   BOOL dosymIncreaseGroups;    // Flag to use parameters for increasing group size

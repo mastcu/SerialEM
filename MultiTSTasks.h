@@ -140,6 +140,7 @@ private:
   IntVec mBfcSectOrder;           // Section numbers to copy in order
   KImageStore *mBfcSortedStore;   // Output file for sorted images
   bool mBfcReorderWholeFile;      // Flag to close dose-symmetric output file when done
+  int mBfcSecZeroMapsTo;          // Last Z value section 0 mapped to
 
   // Bidirection anchor image (mBai) variables
   int mBaiSavedViewMag;           // View mag if used a lower mag for anchor
@@ -204,6 +205,7 @@ public:
   GetSetMember(float, AutoCenIterThresh);
   SetMember(bool, BfcIgnoreNextStop);
   GetSetMember(int, AutoCenUseMagInd);
+  GetMember(int, BfcSecZeroMapsTo);
 
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};

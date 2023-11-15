@@ -2167,6 +2167,11 @@
 #define IDC_STAT_ANGSTROM1              3199
 #define IDC_STAT_ANGSTROM2              3200
 #define IDC_STAT_TO_MAX                 3201
+#define IDC_CHECK_LOW_TILT_MAP          3202
+#define IDC_CHECK_FILTER_MAP            3203
+#define IDC_EDIT_MAP_CUTOFF             3204
+#define IDC_EDIT_MAP_FALLOFF            3205
+#define IDC_STAT_MAP_FALLOFF            3206
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2725,7 +2730,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        284
 #define _APS_NEXT_COMMAND_VALUE         33521
-#define _APS_NEXT_CONTROL_VALUE         3202
+#define _APS_NEXT_CONTROL_VALUE         3207
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

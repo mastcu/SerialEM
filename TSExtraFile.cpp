@@ -37,6 +37,10 @@ CTSExtraFile::CTSExtraFile(CWnd* pParent /*=NULL*/)
   , m_bConsecutiveFiles(FALSE)
   , m_statConsecList(_T(""))
   , m_strSuffixes(_T(""))
+  , m_bMakeLowTiltMap(FALSE)
+  , m_bFilterMap(FALSE)
+  , m_fMapFilterCutoff(0.01f)
+  , m_fMapFalloff(0)
 {
 	//{{AFX_DATA_INIT(CTSExtraFile)
 	m_bSaveView = FALSE;
@@ -105,6 +109,12 @@ void CTSExtraFile::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_CONSEC_LIST, m_statConsecList);
   DDX_Control(pDX, IDC_EDIT_SUFFIXES, m_editSuffixes);
   DDX_Text(pDX, IDC_EDIT_SUFFIXES, m_strSuffixes);
+  DDX_Check(pDX, IDC_CHECK_LOW_TILT_MAP, m_bMakeLowTiltMap);
+  DDX_Check(pDX, IDC_CHECK_FILTER_MAP, m_bFilterMap);
+  DDX_Text(pDX, IDC_EDIT_MAP_CUTOFF, m_fMapFilterCutoff);
+  DDV_MinMaxFloat(pDX, m_fMapFilterCutoff, .01f, 0.5f);
+  DDX_Text(pDX, IDC_EDIT_MAP_FALLOFF, m_fMapFalloff);
+	DDV_MinMaxFloat(pDX, m_fMapFalloff, 0, 0.5f);
 }
 
 
@@ -129,6 +139,8 @@ BEGIN_MESSAGE_MAP(CTSExtraFile, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_TRIAL_BIN, OnDeltaposSpinTrialBin)
   ON_BN_CLICKED(IDC_CONSECUTIVE_FILES, OnConsecutiveFiles)
   ON_EN_KILLFOCUS(IDC_EDITENTRIES, OnKillfocusEditEntries)
+  ON_BN_CLICKED(IDC_CHECK_LOW_TILT_MAP, OnCheckLowTiltMap)
+  ON_BN_CLICKED(IDC_CHECK_FILTER_MAP, OnCheckFilterMap)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -359,6 +371,7 @@ BOOL CTSExtraFile::OnInitDialog()
     mWinApp->mScope->GetFEIChannelList(mCamParam, true);
   m_editNewDrift.EnableWindow(m_bSetExposure && m_iWhichRecord != TS_OTHER_CHANNELS);
   ManageExtraRecords();
+  ManageMapMaking();
 	return TRUE;
 }
 
@@ -392,6 +405,27 @@ void CTSExtraFile::OnRecordRadio()
     return;
   }
   ManageExtraRecords();
+}
+
+// Respond to the options for making a low tilt map and manage enables there
+void CTSExtraFile::OnCheckLowTiltMap()
+{
+  UPDATE_DATA_TRUE;
+  ManageMapMaking();
+}
+
+void CTSExtraFile::OnCheckFilterMap()
+{
+  UPDATE_DATA_TRUE;
+  ManageMapMaking();
+}
+
+void CTSExtraFile::ManageMapMaking()
+{
+  EnableDlgItem(IDC_CHECK_FILTER_MAP, m_bMakeLowTiltMap);
+  EnableDlgItem(IDC_EDIT_MAP_CUTOFF, m_bMakeLowTiltMap && m_bFilterMap);
+  EnableDlgItem(IDC_EDIT_MAP_FALLOFF, m_bMakeLowTiltMap && m_bFilterMap);
+  EnableDlgItem(IDC_STAT_MAP_FALLOFF, m_bMakeLowTiltMap && m_bFilterMap);
 }
 
 // For a given selection of which extra record, manage the instructions and put the list

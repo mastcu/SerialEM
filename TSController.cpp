@@ -329,6 +329,10 @@ CTSController::CTSController()
   mTSParam.anchorBidirWithView = true;
   mTSParam.walkBackForBidir = false;
   mTSParam.retainBidirAnchor = false;
+  mTSParam.makeLowTiltMap = false;
+  mTSParam.filterLowTiltMap = false;
+  mTSParam.mapFilterRadius2 = 0.25f;
+  mTSParam.mapFilterSigma2 = 0.04f;
   mTSParam.doDoseSymmetric = false;
   mTSParam.dosymBaseGroupSize = 1;
   mTSParam.dosymIncreaseGroups = false;
@@ -1230,6 +1234,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mFirstExposure = 0.;
     mDidWalkup = false;
     mStartingOut = true;
+    mSaveLowTiltMap = mTSParam.makeLowTiltMap ? 1 : 0;
+    mLowTiltMapNavIndex = -1;
     mStopAtLoopEnd = false;
     mReachedEndAngle = false;
     mFinishEmailSent = false;
@@ -2589,6 +2595,10 @@ void CTSController::NextAction(int param)
       // Initialize extra record counter and flag
       mExtraRecIndex = 0;
       mTookExtraRec = false;
+      if (mSaveLowTiltMap && mWinApp->NavigatorStartedTS() &&
+        (((mTSParam.doBidirectional || mDoingDoseSymmetric) && mStartingOut) ||
+          fabs(mCurrentTilt) < 0.67 * mTSParam.tiltIncrement))
+        mSaveLowTiltMap = 2;
       SetTrueStartTiltIfStarting();
 
       // Update the BW mean value and copy to align buffer
@@ -2605,6 +2615,11 @@ void CTSController::NextAction(int param)
           ErrorStop();
           return;
         }
+      }
+
+      if (CheckSaveLowTiltMap()) {
+        ErrorStop();
+        return;
       }
 
       mBufferManager->CopyImageBuffer(0, mAlignBuf);
@@ -2939,6 +2954,7 @@ void CTSController::NextAction(int param)
           TerminateOnError();
         return;
       }
+      ReviseLowTiltMapSection();
 
       // Set a task for synchronous copy with VERY generous timeout
       if (error < 0) {
@@ -4524,6 +4540,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
       mFrameAlignInIMOD || saveFailed);
     if (error > 3 && error != 11)
       mClosedDoseSymFile = true;
+    if (error <= 0)
+      ReviseLowTiltMapSection();
 
     // Set a task for synchronous copy with VERY generous timeout
     if (error < 0) {
@@ -5694,6 +5712,10 @@ void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
   extraDlg.mBinIndex = tsParam->extraBinIndex;
   extraDlg.m_bTrialBin = tsParam->extraSetBinning;
   extraDlg.m_bKeepBidirAnchor = tsParam->retainBidirAnchor;
+  extraDlg.m_bMakeLowTiltMap = tsParam->makeLowTiltMap;
+  extraDlg.m_bFilterMap = tsParam->filterLowTiltMap;
+  extraDlg.m_fMapFilterCutoff = tsParam->mapFilterRadius2;
+  extraDlg.m_fMapFalloff = tsParam->mapFilterSigma2;
   extraDlg.m_bConsecutiveFiles = mSeparateExtraRecFiles;
   extraDlg.m_strSuffixes = tsParam->extraFileSuffixes;
 
@@ -5731,7 +5753,10 @@ void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
     tsParam->extraBinIndex = extraDlg.mBinIndex;
   }
   tsParam->retainBidirAnchor = extraDlg.m_bKeepBidirAnchor;
-  mSeparateExtraRecFiles = extraDlg.m_bConsecutiveFiles;
+  tsParam->makeLowTiltMap = extraDlg.m_bMakeLowTiltMap;
+  tsParam->filterLowTiltMap = extraDlg.m_bFilterMap;
+  tsParam->mapFilterRadius2 = extraDlg.m_fMapFilterCutoff;
+  tsParam->mapFilterSigma2 = extraDlg.m_fMapFalloff;
   tsParam->extraFileSuffixes = extraDlg.m_strSuffixes;
 
   // Renew the protections with the potentially new file numbers
@@ -6349,6 +6374,95 @@ void CTSController::RestoreFromExtraRec(void)
     mBufferManager->CopyImBuf(mSavedBufForExtra, mImBufs, false);
     delete mSavedBufForExtra;
     mSavedBufForExtra = NULL;
+  }
+}
+
+// Check whether it is time to svae a low tilt map and do so
+int CTSController::CheckSaveLowTiltMap()
+{
+  EMimageBuffer tempBuf;
+  int navInd, prevInd, storeInd = mDocWnd->GetCurrentStore();
+  CString newNote = mTSParam.doBidirectional ? "Starting TS image" :
+    "Low tilt TS image";
+  CString mapName, ext;
+  CMapDrawItem *item;
+  if (mSaveLowTiltMap != 2)
+    return 0;
+
+  // For single-frame: get the name and open the file
+  if (!mMontaging) {
+    UtilSplitExtension(mWinApp->mStoreMRC->getFilePath(), mapName, ext);
+    mapName += "_LTmap.mrc";
+
+    if (mDocWnd->DoOpenNewFile(mapName))
+      return 1;
+
+    // Copy buffer to temp and filter if desired, suppressing tests and display
+    if (mTSParam.filterLowTiltMap) {
+      mBufferManager->CopyImBuf(mImBufs, &tempBuf, false);
+      if (mProcessImage->FilterImage(mImBufs, 0, 0.,
+        mTSParam.mapFilterSigma2, 0., mTSParam.mapFilterRadius2, false))
+        return 1;
+      mImBufs->mCaptured = tempBuf.mCaptured;
+    }
+
+    // Save
+    if (mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC, true)) {
+      if (mTSParam.filterLowTiltMap)
+        mBufferManager->CopyImBuf(&tempBuf, mImBufs, false);
+      return 1;
+    }
+  }
+
+  // Get current nav state then make the map and set the table back
+  prevInd = mWinApp->mNavigator->GetCurListSel();
+  item = mWinApp->mNavigator->GetCurrentItem();
+  if (mWinApp->mNavigator->NewMap(true, 1, &newNote))
+    return 1;
+  mWinApp->mNavigator->SetCurListSel(prevInd);
+  mWinApp->mNavigator->m_listViewer.SetCurSel(prevInd);
+
+  // Close the file, restore the image if filtered
+  if (!mMontaging) {
+    if (mTSParam.filterLowTiltMap)
+      mBufferManager->CopyImBuf(&tempBuf, mImBufs, false);
+    mDocWnd->DoCloseFile();
+    mDocWnd->SwitchToFile(storeInd);
+  }
+
+  // Set the label and save index in case it needs change after reorering
+  if (item) {
+    mapName = item->mLabel;
+    navInd = mWinApp->mNavigator->GetNumberOfItems() - 1;
+    item = mWinApp->mNavigator->GetOtherNavItem(navInd);
+    if (item) {
+      item->mLabel = mapName + "-LT";
+      if (mMontaging)
+        mLowTiltMapNavIndex = navInd;
+      mWinApp->mNavigator->UpdateListString(navInd);
+    }
+  }
+  mSaveLowTiltMap = 0;
+  return 0;
+}
+
+// When the file inversion starts and the montage reordering is done, change the
+// map item to point to its new Z
+void CTSController::ReviseLowTiltMapSection()
+{
+  CMapDrawItem *item;
+  CString newSec;
+  if (mMontaging && mLowTiltMapNavIndex >= 0 && mWinApp->mNavigator &&
+    mWinApp->mNavigator->GetNumberOfItems() > mLowTiltMapNavIndex) {
+    item = mWinApp->mNavigator->GetOtherNavItem(mLowTiltMapNavIndex);
+    if (item) {
+      newSec.Format("Sec %d", mMultiTSTasks->GetBfcSecZeroMapsTo());
+      item->mMapSection = mMultiTSTasks->GetBfcSecZeroMapsTo();
+      item->mNote.Replace("Sec 0", newSec);
+      mWinApp->mNavigator->UpdateListString(mLowTiltMapNavIndex);
+      mWinApp->mNavigator->SetChanged(true);
+      mLowTiltMapNavIndex = -1;
+    }
   }
 }
 

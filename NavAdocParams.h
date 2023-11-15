@@ -69,6 +69,10 @@ BOOL_SETT_ASSIGN("TiltSeriesDoVariations", tsParam->doVariations)
 BOOL_SETT_ASSIGN("TiltSeriesChangeRecExposure", tsParam->changeRecExposure)
 BOOL_SETT_ASSIGN("TiltSeriesChangeAllExposures", tsParam->changeAllExposures)
 BOOL_SETT_ASSIGN("TiltSeriesChangeSettling", tsParam->changeSettling)
+BOOL_SETT_ASSIGN("TSMakeLowTiltMap", tsParam->makeLowTiltMap)
+BOOL_SETT_ASSIGN("TSFilterLowTiltMap", tsParam->filterLowTiltMap)
+FLOAT_SETT_ASSIGN("TSMapFilterRadius2", tsParam->mapFilterRadius2)
+FLOAT_SETT_ASSIGN("TSMapFilteSigma2", tsParam->mapFilterSigma2)
 #endif
 #ifdef NAV_OTHER_TS_PARAMS
 BOOL_SETT_ASSIGN("AnchorBidirWithView", tsParam->anchorBidirWithView)

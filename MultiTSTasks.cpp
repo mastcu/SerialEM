@@ -1807,6 +1807,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous,
   sectMap.resize(zmax);
   for (ind = 0; ind < zmax; ind++)
     sectMap[mBfcSectOrder[ind]] = ind;
+  mBfcSecZeroMapsTo = sectMap[0];
 
   if (mWinApp->Montaging()) {
     err = mWinApp->mStoreMRC->ReorderPieceZCoords(&sectMap[0]);
