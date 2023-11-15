@@ -57,7 +57,8 @@ public:
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,
     double moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false, int toBufNum = 0, bool display = true);
   void RotateImage(BOOL bLeft);
-  int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2);
+  int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2, bool display = true);
+  int FilterImage(KImage *image, float **outArray, float sigma1, float sigma2, float radius1, float radius2);
   int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);
   int ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, float offset, bool retainType);
   int PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2, int outBufNum, bool vertical);

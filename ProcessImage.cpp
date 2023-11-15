@@ -18,6 +18,7 @@
 #include "Shared\mrcslice.h"
 #include "Shared\iimage.h"
 #include "Shared\ctffind.h"
+#include "Shared\cfft.h"
 #include "Utilities\KGetOne.h"
 #include "SerialEMView.h"
 #include "SerialEMDoc.h"
@@ -266,7 +267,7 @@ void CProcessImage::GetFFT(EMimageBuffer *imBuf, int binning, int capFlag)
 
   // Get padded size of a square frame for image
   int nFinalSize = (nx > ny ? nx : ny) /binning;
-  int nPadSize = XCorrNiceFrame(nFinalSize, 2, 19);
+  int nPadSize = XCorrNiceFrame(nFinalSize, 2, niceFFTlimit());
 
   // Get memory for the real FFT and for the scaled int image
   NewArray2(fftarray, float, nPadSize, (nPadSize + 2));
@@ -473,13 +474,34 @@ void CProcessImage::RotateImage(BOOL bLeft)
 
 // Filter the image in the given buffer with the standard filter parameters
 int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1,
-  float sigma2, float radius1, float radius2)
+  float sigma2, float radius1, float radius2, bool display)
 {
   KImage *image = imBuf->mImage;
+  int nx, ny, err;
+  float *brray;
+  int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
+  image->getSize(nx, ny);
+  
+  err = FilterImage(image, &brray, sigma1, sigma2, radius1, radius2);
+  if (err)
+    return err;
+
+  // If the destination buffer has no image, copy the source first to keep 
+  // NewprocessedImage happy
+  if (!mImBufs[outBufNum].mImage)
+    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, newProc, false, outBufNum,
+    display);
+  return 0;
+}
+
+// Filter the image in the given KImage, allocating the output array
+int CProcessImage::FilterImage(KImage *image, float **outArray, float sigma1, 
+  float sigma2, float radius1, float radius2)
+{
   int nx, ny, nxpad, nypad, nxdim, dir = 1;
   float ctf[8193], delta, *brray;
   float padFrac = 0.05f;
-  int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
   if (!image)
     return -1;
   if (image->getType() == kRGB) {
@@ -487,25 +509,20 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
     return 1;
   }
   image->getSize(nx, ny);
-  nxpad = XCorrNiceFrame((int)((1. + padFrac) * nx), 2, 19);
-  nypad = XCorrNiceFrame((int)((1. + padFrac) * ny), 2, 19);
+  nxpad = XCorrNiceFrame((int)((1. + padFrac) * nx), 2, niceFFTlimit());
+  nypad = XCorrNiceFrame((int)((1. + padFrac) * ny), 2, niceFFTlimit());
   nxdim = nxpad + 2;
   NewArray2(brray, float, nxdim, nypad);
   if (!brray) {
     SEMMessageBox("Failed to get memory for filtering image");
     return 1;
   }
+  *outArray = brray;
   XCorrSetCTF(sigma1, sigma2, radius1, radius2, ctf, nxpad, nypad, &delta);
   image->Lock();
-  XCorrFilter((float *)image->getData(), image->getType(), nx, ny, brray, nxpad, nypad, 
+  XCorrFilter((float *)image->getData(), image->getType(), nx, ny, brray, nxpad, nypad,
     delta, ctf);
   image->UnLock();
-
-  // If the destination buffer has no image, copy the source first to keep 
-  // NewprocessedImage happy
-  if (!mImBufs[outBufNum].mImage)
-    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
-  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, newProc, false, outBufNum);
   return 0;
 }
 
@@ -2412,8 +2429,8 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   iy1 = ny - trimY - 1;
 
   // Get padded size and array
-  nxPad = XCorrNiceFrame(2 * (ix1 + 1 - trimX), 2, 19);
-  nyPad = XCorrNiceFrame(2 * (iy1 + 1 - trimY), 2, 19);
+  nxPad = XCorrNiceFrame(2 * (ix1 + 1 - trimX), 2, niceFFTlimit());
+  nyPad = XCorrNiceFrame(2 * (iy1 + 1 - trimY), 2, niceFFTlimit());
   NewArray2(array, float, (nxPad + 2), nyPad);
   if (!array) {
     SEMMessageBox("Failed to get memory for autocorrelation array", MB_EXCLAME);
@@ -2892,9 +2909,9 @@ void CProcessImage::OnProcessCropAverage()
 
   // Set up tapering/padding and get arrays
   pad = B3DMAX(4, (int)(padFrac * boxXsize));
-  nxPad = XCorrNiceFrame(boxYsize + 2 * pad, 2, 19);
+  nxPad = XCorrNiceFrame(boxYsize + 2 * pad, 2, niceFFTlimit());
   pad = B3DMAX(4, (int)(padFrac * boxYsize));
-  nyPad = XCorrNiceFrame(boxYsize + 2 * pad, 2, 19);
+  nyPad = XCorrNiceFrame(boxYsize + 2 * pad, 2, niceFFTlimit());
   nxTaper = B3DMAX(4, (int)(taperFrac * boxXsize));
   nyTaper = B3DMAX(4, (int)(taperFrac * boxYsize));
   boxDim = (size_t)boxXsize * boxYsize;
@@ -3517,7 +3534,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
     return 1;
   image->Lock();
   padSize = B3DMAX(image->getWidth(), image->getHeight());
-  padSize = XCorrNiceFrame(padSize, 2, 19);
+  padSize = XCorrNiceFrame(padSize, 2, niceFFTlimit());
   image->flipY();
   err = spectrumScaled(image->getData(), image->getType(), image->getWidth(), 
     image->getHeight(), spectrum, -padSize, useBox, 0, 0., -1, twoDfft);
