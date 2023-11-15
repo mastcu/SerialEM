@@ -8083,29 +8083,72 @@ int CMacCmd::CompareNoCase(void)
   return 0;
 }
 
+// FindSubstring
+int CMacCmd::FindSubstring(void)
+{
+  int index, index2;
+  CString val, substr;
+  Variable *var = LookupVariable(mItem1upper, index2);
+  SubstituteLineStripItems(mStrLine, 3, mStrCopy);
+  val = var->value;
+  substr = mStrCopy;
+  if (mItemInt[2] > 0 || mItemInt[2] < -1) {
+    val.MakeUpper();
+    substr.MakeUpper();
+  }
+  if (mItemInt[2] < 0) {
+    index = -1;
+    while (index < val.GetLength() - 1) {
+      index2 = val.Find(substr, index + 1);
+      if (index2 < 0)
+        break;
+      index = index2;
+    }
+  } else
+    index = val.Find(substr);
+  if (index < 0)
+    mLogRpt.Format("%s does not occur in variable %s", mStrCopy, mStrItems[1]);
+  else
+    mLogRpt.Format("%s occurrence of %s in variable %s is at index %d",
+      mItemInt[2] < 0 ? "Last" : "First", mStrCopy, mStrItems[1], index);
+  SetReportedValues(index, 0);
+  return 0;
+}
+
 // TrimString
 int CMacCmd::TrimString(void)
 {
   int index, index2;
   Variable *var;
-  bool front = mItemInt[2] != 0;
+  bool front = mItemInt[2] > 0 || mItemInt[2] < -1;
 
   var = LookupVariable(mItem1upper, index2);
   if (!var)
     ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
 
-  index = var->value.Find(mStrItems[3]);
-  if (index < 0)
-    ABORT_LINE("The string \"" + var->value + "\" does not contain \"" + mStrItems[3] +
-      "\" in line:\n\n");
-  if (front) {
-    mStrCopy = var->value.Mid(index + mStrItems[3].GetLength());
+  if (mItemInt[2] < 0) {
+    index = mItemInt[3];
+    if (index <= 0 || index >= var->value.GetLength())
+      ABORT_LINE("The index is out of range of the variable length in ine:\n\n");
+    index2 = 0;
   } else {
-    for (;;) {
-      index2 = var->value.Find(mStrItems[3], index + 1);
-      if (index2 < 0)
-        break;
-      index = index2;
+    index = var->value.Find(mStrItems[3]);
+    if (index < 0)
+      ABORT_LINE("The string \"" + var->value + "\" does not contain \"" + mStrItems[3] +
+        "\" in line:\n\n");
+    index2 = mStrItems[3].GetLength();
+  }
+  if (front) {
+    mStrCopy = var->value.Mid(index + index2);
+  } else {
+    if (mItemInt[2] >= 0) {
+      index = -1;
+      while (index < var->value.GetLength() - 1) {
+        index2 = var->value.Find(mStrItems[3], index + 1);
+        if (index2 < 0)
+          break;
+        index = index2;
+      }
     }
     mStrCopy = var->value.Left(index);
   }

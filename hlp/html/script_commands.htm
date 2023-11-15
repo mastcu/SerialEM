@@ -379,12 +379,23 @@
             number and assigned to <I>reportedValue1</I>.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">TrimString var #F token</TD>
-          <TD>Trims a string in variable <B>var</B>from either the back or the front, depending on whether
-             <B>#F</B> is 0 or nonzero.&nbsp; Trimming from the back, it starts at and includes the 
-            last occurrence of <b>token</b> (one character or word without spaces).&nbsp; From 
-            the front, it trims through the first occurrence of <b>token</b>.&nbsp; The result can be assigned
-             to a variable at the end of the command.&nbsp; Command added in 4.1, 14-Jul-22.</TD>
+          <TD class="scriptcommand">FindSubstring var #D text</TD>
+          <TD>Finds the substring in <b>text</b> in the given variable <b>var</b> and sets <I>reportedValue1</I>
+             with the index, numbered from 0, or -1 if it is not found; also sets <I>reportedValue2</I> to 
+            0.&nbsp; It finds the first occurrence if <b>#D</b> is 0 or 1, or the last occurrence, and if <b>#D</b>
+             is -1 or -2&nbsp; The search is case-insensitive if <b>#D</b> is 1 or -2.&nbsp; Command added in 4.1, 14-Nov-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">TrimString var #F token/#I</TD>
+          <TD>Trims a string in variable <B>var</B>from either the back or the front, and either from a 
+            specified index in <b>token</b> (numbered from 0) or from the location of a substring in 
+            <b>token</b> within the string.  If <b>#F</b> is 0 or 1, <b>token</b> is taken to be a substring 
+              (one character or word without spaces).&nbsp; Trimming from the back (<b>#F</b> 0), it starts at and includes the 
+            last occurrence of <b>token</b>.&nbsp; From 
+            the front (<b>#F</b> 1), it trims through the first occurrence of <b>token</b>.&nbsp; With <b>#F</b> -1, it trims off the
+            end starting at the index in <b>token</b>; with <b>#F</b> -2, it trims everything before that index, which 
+            cannot be 0 in either case.&nbsp; The result can be assigned
+             to a variable at the end of the command.&nbsp; Command added in 4.1, 14-Jul-22; expanded to take indexes, 14-Nov-23.</TD>
         </TR>
         <TR>
             <TD class="scriptcommand">ListVars</TD>
