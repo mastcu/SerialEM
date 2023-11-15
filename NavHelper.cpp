@@ -441,7 +441,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   float toEdge, netViewShiftX, netViewShiftY;
   float incLowX, incLowY, incHighX, incHighY, targetX, targetY, borderDist, borderMax;
   double firstISX, firstISY;
-  BOOL betterMap, differentMap, stayInLD;
+  BOOL betterMap, differentMap, stayInLD, mapInLM, maxInLM;
   ScaleMat aMat, bMat;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   float delX, delY, distMin, distMax, firstDelX, firstDelY;
@@ -454,6 +454,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   maxDrawn = 0;
   maxSamePos = 0;
   borderMax = 0.;
+  maxInLM = false;
   for (mapInd = 0; mapInd < mItemArray->GetSize(); mapInd++) {
     item = mItemArray->GetAt(mapInd);
     if (item->IsNotMap() || item->mRegistration != inItem->mRegistration ||
@@ -462,8 +463,8 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
 
     // Allow low mag mode if the camera field of view is smaller than the limit, which is
     // determined by objective aperture size
-    if (item->mMapMagInd < mScope->GetLowestNonLMmag(&mCamParams[item->mMapCamera]) &&
-      mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
+    mapInLM = item->mMapMagInd < mScope->GetLowestNonLMmag(&mCamParams[item->mMapCamera]);
+    if (mapInLM && mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
       B3DMAX(mCamParams[item->mMapCamera].sizeX, mCamParams[item->mMapCamera].sizeY) >
       mRImaxLMfield)
       continue;
@@ -600,20 +601,22 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
         " mdr %d dmax %f bdis %.2f bmax %.2f", mapInd, samePosMap, maxSamePos, betterMap,
         distMin, mMinMarginWanted, alignedMap, maxAligned, drawnMap, maxDrawn, distMax,
         borderDist, borderMax);
-      if ((samePosMap && !maxSamePos && (betterMap || distMin >= mMinMarginWanted)) ||
-        ((!maxSamePos || distMin < mMinMarginWanted) && 
-        (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) || 
-        (((alignedMap && !maxAligned) || (drawnMap && !maxDrawn)) && 
-        (betterMap || distMin >= mMinMarginWanted)) ||
-        (betterMap && (!(((!alignedMap && maxAligned) || (!drawnMap && maxDrawn)) && 
-        distMax >= mMinMarginWanted) ||
-        (distMin == distMax && borderDist > borderMax)))))) {
+      if ((samePosMap && !maxSamePos && (betterMap || distMin >= mMinMarginWanted || 
+        (maxInLM && !mapInLM))) ||
+        ((!maxSamePos || distMin < mMinMarginWanted) &&
+        (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) ||
+          (((alignedMap && !maxAligned) || (drawnMap && !maxDrawn)) &&
+          (betterMap || distMin >= mMinMarginWanted || (maxInLM && !mapInLM))) ||
+            (betterMap && (!(((!alignedMap && maxAligned) || (!drawnMap && maxDrawn)) &&
+          (distMax >= mMinMarginWanted || (mapInLM && !maxInLM))) ||
+            (distMin == distMax && borderDist > borderMax)))))) {
         SEMTrace('h', "Accepted %d as better", mapInd);
           distMax = distMin;
           borderMax = borderDist;
           maxAligned = alignedMap;
           maxDrawn = drawnMap;
           maxSamePos = samePosMap;
+          maxInLM = mapInLM;
           mRIitemInd = mapInd;
           magMax = item->mMapMagInd;
           mRImat = aMat;
