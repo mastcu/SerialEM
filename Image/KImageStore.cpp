@@ -379,8 +379,10 @@ int KImageStore::GetStageCoordFromAdoc(const char *sectName, int inSect, double 
 // This takes a map from current section number to new section number
 int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int nz)
 {
-  int ind, pcX, pcY, pcZ, adocSect, retval = 0;
+  int ind, pcX, pcY, pcZ, tmpZ, numSect, adocSect, maxZ = -1, retval = 0;
   CString mdocName;
+  char *montName;
+  char buf[32];
 
   if (mAdocIndex >= 0) {
     if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
@@ -393,9 +395,32 @@ int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int 
       RELEASE_RETURN_ON_ERR(adocSect < 0, 7);
       RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(sectName, adocSect, ADOC_PCOORD, &pcX,
         &pcY, &pcZ), 4);
+      ACCUM_MAX(maxZ, pcZ);
       pcZ = sectOrder[pcZ];
       RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, adocSect, ADOC_PCOORD, pcX,
         pcY, pcZ), 5);
+      if (!AdocGetThreeIntegers(sectName, adocSect, ADOC_ALI_COORD, &pcX,
+        &pcY, &tmpZ)) {
+        RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, adocSect, ADOC_ALI_COORD,
+          pcX, pcY, pcZ), 5);
+      }
+      if (!AdocGetThreeIntegers(sectName, adocSect, ADOC_ALI_COORDVS, &pcX,
+        &pcY, &tmpZ)) {
+        RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(sectName, adocSect, ADOC_ALI_COORDVS,
+          pcX, pcY, pcZ), 5);
+      }
+    }
+
+    numSect = AdocGetNumberOfSections(ADOC_MONT_SECT);
+    for (ind = 0; ind < numSect; ind++) {
+      RELEASE_RETURN_ON_ERR(AdocGetSectionName(ADOC_MONT_SECT, ind, &montName), 6);
+      pcZ = atoi(montName);
+      free(montName);
+      if (pcZ >= 0 && pcZ <= maxZ) {
+        _snprintf(buf, 31, "%d", sectOrder[pcZ]);
+        buf[31] = 0x00;
+        RELEASE_RETURN_ON_ERR(AdocChangeSectionName(ADOC_MONT_SECT, ind, buf), 7);
+      }
     }
     if (mStoreType != STORE_TYPE_HDF) {
       mdocName = getAdocName();
