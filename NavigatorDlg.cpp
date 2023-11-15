@@ -11309,7 +11309,8 @@ void CNavigatorDlg::Redraw()
 BOOL CNavigatorDlg::SetCurrentItem(bool groupOK)
 {
   if (mCurrentItem < 0 || mCurrentItem >= mItemArray.GetSize() || mCurListSel < 0 ||
-    (!groupOK && m_bCollapseGroups && mListToItem[mCurListSel] < 0))
+    (!groupOK && m_bCollapseGroups && 
+    (mCurListSel >= (int)mListToItem.size() || mListToItem[mCurListSel] < 0)))
     return false;
   IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
   mItem = mItemArray[mCurrentItem];
@@ -11732,7 +11733,7 @@ bool CNavigatorDlg::GetCollapsedGroupLimits(int listInd, int &start, int &end)
 bool CNavigatorDlg::IndexOfSingleOrFirstInGroup(int listInd, int & itemInd)
 {
   itemInd = listInd;
-  if (m_bCollapseGroups && listInd >= 0) {
+  if (m_bCollapseGroups && listInd >= 0 && listInd < (int)mListToItem.size()) {
     if (mListToItem[listInd] < 0) {
       itemInd = -1 - mListToItem[listInd];
       return true;
