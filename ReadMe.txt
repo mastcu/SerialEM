@@ -54,6 +54,7 @@ CalibCameraTiming.cpp Calibrates camera timing
 CameraController.cpp  Runs the camera and energy filter via SerialEMCCD
 ChildFrm.cpp          Standard MFC MDI component, contains an individual
                          instance of a CSerialEMView window
+CEOSFilter.cpp        Controls a CEOS filter, using json.cpp to communicate
 ComplexTasks.cpp      Performs tasks invvolving multiple image acquisitions and
                          stage movement: finding eucentricity, resetting image
                          shift, reversing tilt direction and walking up.
@@ -163,6 +164,8 @@ NavBacklashDlg.cpp   To set preferences for correcting new maps for backlash
 NavFileTypeDlg.cpp   To select whether an acquired file will be montage
 NavImportDlg.cpp     To import a tiff file as a Navigator map
 RefPolicyDlg.cpp     To set policies for which gain references to use
+StepAndAdjustIS.dlg  To set conditions for adjusting image shifts used for
+                        Multiple Records
 ThreeChoiceBox.cpp   To provide an option box with intelligible choices
                         instead of yes-No-Cancel
 TSBackupDlg.cpp      To select a section to back up to in a tilt series
@@ -213,7 +216,7 @@ UTILITY FILES in Utilities
 AskOneDlg.cpp         A modal dialog box for getting a one-line entry
 b3dregsvr.c           Simple registration program used because regsvr32 hung
 dpiaware.manifest     Manifest used for Debug builds to specify DPI aware
-install.bat           Program installer
+INSTALL.bat           Program installer
 KGetOne.cpp           Has routines for getting one integer, float, or string
                          using AskOneDlg
 makeHideDisable       Script to produce about_hide_disable.htm file
@@ -227,6 +230,36 @@ XCorr.cpp             Free standing functions for computations, prefixed with
                          XCorr, Proc, or Stat generally.  This is one
                          module that gets optimized for a debug build
 
+HEADER FILES WITH MACROS FOR USE IN MULTIPLE PLACES
+MacroMasterList.h     Centralized description of each script command, used to
+                         make command function declarations in
+                         MacroCommands.h, the enum list defining CME_ plus the
+                         upper case of each name in MacroProcessor.h,
+                         the cmdList table of names and properties in
+                         MacroCommands.cpp, and the functions and tables in
+                         the Python serialem module.
+SettingsTests.h       Macros for settings that have a single value, used to
+                         read/write settings and report and set values
+                         generically from script in ParameterIO.cpp
+PropertyTests.h       Macros for properties that have a single value, used to
+                         read in properties and report and set values
+                         generically from script in ParameterIO.cpp
+NavAdocPuts.h         Code lines including macros used to write either
+                         directly to the Navigator file instead of through the
+                         autodoc structures, or to an XML file
+NavAdocParams.h       A hybrid file with macros for reading/writing montage,
+                         tilt series, and file option parameter to both
+                         settings and navigator files, and code writing other
+                         parameters to the Navigator file.
+Image/MdocDefines.h   Centralized description of most items in EMimageExtra
+                         and saved in the mdoc file, used in EMimageExtra.h to
+                         define structure members and in EMimageExtra.cpp to
+                         set their default values, and used in KStoreADOC.cpp
+                         to define string variables for ADOC_ strings, in
+                         KStoreADOC.h to make extern statements for accessing
+                         those strings, and in KStoreADOC.cpp to get values in
+                         and out of EMimageExtra with the Adoc... autodoc
+                         functions
 
 FILES SHARED WITH IMOD OR PLUGINS in Shared
 Except for imodconfig.h, the master copy of each file is

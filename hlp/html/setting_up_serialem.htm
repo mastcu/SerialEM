@@ -315,7 +315,7 @@
           'C:\Cygwin\usr\local\IMOD\bin', using the first one that it finds 
             as the path (although it rejects 'C:\Program Files\3dmod' if it does not contain 'genhstplt.exe'). 
           If the programs are in a non-standard location and not on the path, you need to 
-          set the property 'CtfplotterPath' with the path to the executables.<br />
+          set the property 'CtfplotterPath' with the path to the executables.<br />`
         </li>
       </ul>
     <P><a name="pluginVersions"><i>Versions of the DigitalMicrograph Plugin and Compatibility with Leginon</i></a>.&nbsp;
@@ -338,7 +338,7 @@
       <P style="Z-INDEX: 0">
         <a name="runningInstaller"><i>Running the Installer.</i></a>&nbsp;
         For initial installation or upgrading to a new version, simply click on
-        'install.bat' in the SerialEM_4-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you
+        'INSTALL.bat' in the SerialEM_4-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you
         will need to right click and select 'Run as Administrator'.&nbsp; If you have a
         Gatan camera, make sure that DigitalMicrograph is not running.&nbsp; The
         installer does the following: </P>
@@ -394,7 +394,7 @@
           Files\Gatan\Plugins for GMS 2 32-bit, and C:\ProgramData\Gatan\Plugins for GMS 2-3
           64-bit) and register the DLL's; this should result in 2 or 3 message boxes saying
            that registration succeeded.&nbsp; For 64-bit versions, it will also copy or update
-          components needed for alignment of K2/K3 frames through the CPU.</P>
+          components needed for alignment of K2/K3 frames through the CPU or GPU.</P>
       </li>
       <li>
         <P style="Z-INDEX: 0">
@@ -4222,9 +4222,9 @@ Device Settings:
         like disable the HT until the computer is rebooted.)</P>
     <P>&nbsp;</P>
     <P><A name="package_files"></A><B>Files in the SerialEM Install Package</B></P>
-    <P>The SerialEM_4-0-x.exe package will create a subfolder SerialEM_4-0-x under
+    <P>The SerialEM_4-1-x.exe package will create a subfolder SerialEM_4-1-x under
       C:\Program Files\SerialEM with the following files (not all included in a 64-bit
-      SerialEM package).&nbsp; The &#39;Microsoft.VC90&#39; folders and all of the DLL&#39;s above
+      SerialEM package).&nbsp; The &#39;Microsoft.VC140&#39; folder and all of the DLL&#39;s above
       that line below are required for SerialEM to run.</P>
     <table class="style1">
         <tr>
@@ -4272,16 +4272,45 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
-            Microsoft.VC90.CRT, Microsoft.VC90.MFC</td>
+            msvcp120.dll</td>
           <td class="style3">
-            Folders with DLL's and manifests for running the program compiled with Visual
-            Studio 2008</td>
+            Library needed by libctffind.dll and ctfplotter.exe, compiled with Visual Studio 2013</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            msvcr120.dll</td>
+          <td class="style3">
+            Library needed by libctffind.dll and ctfplotter.exe</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Microsoft.VC140</td>
+          <td class="style3">
+            Folder with DLL&#39;s for running the program compiled with Visual Studio 2015</td>
         </tr>
         <tr>
           <td class="style2">
             SerialEM.chm</td>
           <td class="style3">
             The help file</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            ctfplotter.exe</td>
+          <td class="style3">
+            Ctf fitting program from IMOD</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            ctfplotter.adoc</td>
+          <td class="style3">
+            Options file for this version of Ctfplotter</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            svml_dispmd.dll</td>
+          <td class="style3">
+            Intel library needed by Ctfplotter</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4297,6 +4326,20 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
+            FEI-SEMserver-Win2K.exe</td>
+          <td class="style3">
+            A server version that will run on Windows 2000 and may be needed for some scopes 
+            on Windows XP before SP3.</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEM-AutoIT.exe</td>
+          <td class="style3">
+            A compiled AutoIT script for controlling apertures on Thermo/FEI scopes running 
+            Windows 7 or 10 where built UI automation does not work</td>
+        </tr>
+        <tr>
+          <td class="style2">
             JeolScopePlugin.dll</td>
           <td class="style3">
             A plugin for communicating with a JEOL microscope</td>
@@ -4305,13 +4348,13 @@ Device Settings:
           <td class="style2">
             HitachiPlugin.dll</td>
           <td class="style3">
-            A plugin for communicating with a Hitachi HT7700 microscope</td>
+            A plugin for communicating with a Hitachi HT7700/HT7800 microscope</td>
         </tr>
         <tr>
           <td class="style2">
             ShMemSEMserver.exe</td>
           <td class="style3">
-            A server for shared memory values that is copied to the HT7700 computer when
+            A server for shared memory values that is copied to the HT7700 /HT7800 computer when
             running on another computer</td>
         </tr>
         <tr>
@@ -4342,25 +4385,31 @@ Device Settings:
           <td class="style2">
             SEMCCD-GMS3.01-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3.01 - 3.30</td>
+            The plugin to DigitalMicrograph for GMS 3.01 - 3.30</td>
         </tr>
         <tr>
           <td class="style2">
             SEMCCD-GMS3.31-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3.31 - 3.3x</td>
+            The plugin to DigitalMicrograph for GMS 3.31 - 3.3x</td>
         </tr>
         <tr>
           <td class="style2">
             SEMCCD-GMS3.42-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3.4</td>
+            The plugin to DigitalMicrograph for GMS 3.4</td>
         </tr>
         <tr>
           <td class="style2">
-            EMCCD-GMS3.50-64.dll</td>
+            SEMCCD-GMS3.50-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3.5</td>
+            The plugin to DigitalMicrograph for GMS 3.5</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS3.60-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for GMS 3.6</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4382,18 +4431,25 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
-            shrmemframe.exe</td>
+            Shrmemframe</td>
           <td class="style3">
-            A program that the plugin to 64-bit DM uses for frame alignment with the CPU,
-            with data passed through shared memory.&nbsp; Requires libmmd.dll,
-            libiomp5md.dll, and Microsoft.VC90.CRT</td>
+            A folder with shrmemframe.exe and its needed libraries from older Microsotf and Intel
+             compilers.&nbsp; This is a program that the plugin to 64-bit DM uses for frame 
+            alignment with the CPU or GPU, with data passed through shared memory.
         </tr>
         <tr>
           <td class="style2">
             FrameGPU4.dll</td>
           <td class="style3">
-            A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the
+            A DLL for using the GPU of an NVIDIA card for doing frame alignment in the
             plugin to DM or in SerialEM itself, built with CUDA 4</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FrameGPU6.dll</td>
+          <td class="style3">
+            A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the 
+            plugin to DM or in SerialEM itself, built with CUDA 6</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4484,16 +4540,23 @@ Device Settings:
         </tr>
         <tr>
           <td class="auto-style1">
-            DeInterface.Win32.dll</td>
+            DE.Win32.dll or DE.Win64.dll</td>
           <td class="auto-style2">
             A DLL from Direct Electron for connecting with the DE server</td>
         </tr>
         <tr>
           <td class="style2">
-            install.bat</td>
+            INSTALL.bat</td>
           <td class="style3">
             A batch file for copying appropriate files to the folder above and registering
             needed items</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SerialEM_Snapshot.txt</td>
+          <td class="style3">
+            Guenter Resch's script for collecting a snapshot of the SerialEM installation 
+            and configuration</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4506,13 +4569,13 @@ Device Settings:
           <td class="style13">
             GPL.txt</td>
           <td class="style14">
-            GPL license covering the SerialEMCCD plugin to DM</td>
+            GPL license covering the SerialEMCCD plugin to DM and Ctfplotter</td>
         </tr>
         <tr>
           <td class="style2">
             LGPL.txt</td>
           <td class="style3">
-            LGPL licence covering libcfshr, libiimod, and libifft libraries
+            LGPL licence covering libcfshr, libiimod, libimod, and libifft libraries
             from IMOD</td>
         </tr>
         <tr>

@@ -333,9 +333,7 @@
       save frames without software gain normalizing, the plugin will make sure that 
       there is a valid copy of the appropriate gain reference in the folder where the 
       frames are saved, provided that the plugin can find the gain reference.&nbsp; 
-      (This used to be done by specifying the full paths to the gain references in the SerialEM property file, 
-      but now a correct entry for the camera property DMGainReferenceName is 
-      sufficient.)&nbsp;&nbsp; In addition, since there is no defect 
+      This requires a correct entry for the camera property DMGainReferenceName.&nbsp; In addition, since there is no defect 
       correction in K2 images with GMS 2.3.1 or higher, the plugin will save a file 
       &#39;defects...txt&#39; describing the defects that need to be corrected in 
       post-processing. For K3, DM does do defect correction, so no 'defects...txt' 
@@ -467,7 +465,10 @@
       <li>The readout rate of the K3 is 3.75 times higher than the K2 and it can thus 
         count electrons arriving at dose rates per pixel that are higher by this amount.&nbsp; 
         Based on this difference alone, the optimal dose rate is around 30 electrons per physical pixel per second 
-        instead of 8.&nbsp; (Sensor pixels are referred to as physical pixels.)</li>
+        instead of 8.&nbsp; (Sensor pixels are referred to as physical pixels.)&nbsp; 
+        Correlated double sampling (CDS) mode requires half the dose rate.&nbsp; 
+        However, many people use lower dose rates than these 
+        theoretical optimum values to take data with the K3.</li>
       <li>Linear mode is even less useful for the K3 than for the K2 because of this 
         higher dose rate range for electron counting.&nbsp; It may still be useful for 
         continuous mode.&nbsp; It consists of very high counts in DM; these get scaled 

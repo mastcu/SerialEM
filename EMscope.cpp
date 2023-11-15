@@ -1048,7 +1048,7 @@ int CEMscope::Initialize()
           if (plugVers < FEISCOPE_PLUGIN_VERSION) {
             message.Format("The FEI scope plugin (FeiScopePlugin.dll) is version %d\n"
               "and should be upgraded to the current version (%d)\n\n"
-              "This is usually accomplished by running install.bat\n"
+              "This is usually accomplished by running INSTALL.bat\n"
               "in a current SerialEM installation package\n"
               "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)",
               plugVers, FEISCOPE_PLUGIN_VERSION);

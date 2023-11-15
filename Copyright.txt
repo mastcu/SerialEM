@@ -50,15 +50,14 @@ Because SerialEM uses the libjpeg library, this software is based in part on
 the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
 which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
 
-SerialEM uses the libcfshr, libiimod, and libifft libraries from IMOD, which
-are covered by the GNU Lesser General Public License (LGPL), a copy of which
-is in LGPL.txt.  SerialEM also includes the Mini-XML library from IMOD,
-which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
-modified Library GPL in Mini-XML.txt.  SerialEM also includes the ctffind
+SerialEM uses the libcfshr, libiimod, libimod, and libifft libraries from
+IMOD, which are covered by the GNU Lesser General Public License (LGPL), a
+copy of which is in LGPL.txt.  SerialEM also includes the Mini-XML library
+from IMOD, which is Copyright 2003-2016 by Michael R. Sweet and is covered by
+the modified Library GPL in Mini-XML.txt.  SerialEM also includes the ctffind
 library from IMOD, adapted from the ctffind program of Alexis Rohou and
 Nikolaus Grigorieff, which is Copyright (c) 2018, Howard Hughes Medical
-Institute, and is covered by the Janelia Research Campus Software License
-1.2.
+Institute, and is covered by the Janelia Research Campus Software License 1.2.
 
 SerialEM uses HDF5 libraries which are Copyright 1998-2006 by the Board of
 Trustees of the University of Illinois and Copyright 2006-2014 by The HDF
@@ -70,6 +69,10 @@ license.
 SerialEM also uses a Set dialog DPI helper class, Copyright (C) 2003 by George
 Yohng, XFolderDialog by Hans Dietrich, and simpleson by Gregory Eslinger,
 which is covered by an MIT license.
+
+The SerialEM package includes ctfplotter.exe, part of IMOD and covered by the
+license in GPL.txt, and SEM-AutoIT.exe, a script compiled with the AutoIT
+program from http://www.autoitscript.com.
 
 This work was supported in the past by NIH P41 grants from NCRR and NIGMS to
 J. Richard McIntosh and Andreas Hoenger.

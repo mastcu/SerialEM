@@ -2036,7 +2036,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,0,0,10,10,NOT WS_VISIBLE
 END
 
-IDD_TSEXTRAFILE DIALOGEX 0, 0, 155, 440
+IDD_TSEXTRAFILE DIALOGEX 0, 0, 155, 465
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Extra Output"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2070,9 +2070,9 @@ BEGIN
     LTEXT           "",IDC_STATINSTRUCT1,7,284,140,8
     LTEXT           "",IDC_STATINSTRUCT2,8,294,139,8
     EDITTEXT        IDC_EDITENTRIES,7,303,140,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,24,419,33,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,419,33,14
-    PUSHBUTTON      "?",IDC_BUTHELP,142,423,9,10
+    DEFPUSHBUTTON   "OK",IDOK,24,444,33,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,444,33,14
+    PUSHBUTTON      "?",IDC_BUTHELP,142,448,9,10
     CONTROL         "Stack Record/Overview in separate window",IDC_STACKRECORD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,7,139,10
     LTEXT           "Bin to",IDC_STATIC,7,21,17,8
@@ -2098,6 +2098,12 @@ BEGIN
     LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,18,179,120,8
     EDITTEXT        IDC_EDIT_SUFFIXES,7,151,141,14,ES_AUTOHSCROLL
     LTEXT           "Suffixes for extra files to open in Nav Acquire:",IDC_STATIC,7,141,142,8
+    CONTROL         "Make low-tilt map if run from Nav Acquire",IDC_CHECK_LOW_TILT_MAP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,417,143,10
+    CONTROL         "Filter non-mont: cutoff",IDC_CHECK_FILTER_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,429,74,10
+    EDITTEXT        IDC_EDIT_MAP_CUTOFF,86,428,21,14,ES_AUTOHSCROLL
+    LTEXT           "falloff",IDC_STAT_MAP_FALLOFF,109,430,17,8
+    EDITTEXT        IDC_EDIT_MAP_FALLOFF,127,428,21,14,ES_AUTOHSCROLL
 END
 
 IDD_REFPOLICY DIALOGEX 0, 0, 248, 122
@@ -4222,7 +4228,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 148
         TOPMARGIN, 7
-        BOTTOMMARGIN, 433
+        BOTTOMMARGIN, 458
     END
 
     IDD_REFPOLICY, DIALOG
@@ -5976,6 +5982,8 @@ BEGIN
                             "Just use stage position of center point instead of averaging all points"
     IDC_EDIT_MAX_BLOCK_IS   "Maximum image shift radius when doing image shift in blocks"
     IDC_BUT_USE_NAV_PTS     "Use group of Nav points to make image shift vectors for current pattern"
+    IDC_CHECK_FIT_ON_CLICK  "Use Ctfplotter instead of Ctffind to fit when mouse is clicked in an FFT"
+    IDC_CHECK_FOR_TUNING    "Use Ctfplotter instead of Ctffind to fit for fixing astigmatism or coma"
 END
 
 STRINGTABLE
@@ -6976,8 +6984,6 @@ BEGIN
     IDC_CHECK_INC_GROUP     "Start increasing group sizes when the given angle is reached"
     IDC_EDIT_INC_GROUP_ANGLE "Angle at which to start increasing group sizes"
     IDC_SPIN_MIN_FOR_ANCHOR "Minimum number of tilts in first non-alternating segment for taking anchor"
-    IDC_CHECK_FIT_ON_CLICK  "Use Ctfplotter instead of Ctffind to fit when mouse is clicked in an FFT"
-    IDC_CHECK_FOR_TUNING    "Use Ctfplotter instead of Ctffind to fit for fixing astigmatism or coma"
 END
 
 STRINGTABLE
@@ -7342,6 +7348,10 @@ STRINGTABLE
 BEGIN
     ID_FILE_AUTOPRUNELOGWINDOW 
                             "Limit # of lines in window by saving to file and pruning lines in window"
+    IDC_CHECK_LOW_TILT_MAP  "Make map from lowest tilt Record or first Record of bidir/dose-sym series"
+    IDC_CHECK_FILTER_MAP    "Apply Fourier filter to the map for a single-frame tilt series"
+    IDC_EDIT_MAP_CUTOFF     "Start of low-pass Gaussian falloff (radius2) in reciprocal pixels (0-0.5)"
+    IDC_EDIT_MAP_FALLOFF    "Gaussian sigma of falloff (sigma2) in reciprocal pixels (0-0.5)"
 END
 
 #endif    // English (United States) resources

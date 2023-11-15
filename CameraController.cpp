@@ -990,7 +990,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
               report.Format("The SerialEMCCD plugin to DigitalMicrograph on this computer"
                 "\nis version %d and should be upgraded to the current version (%d)\n\n"
                 "This is usually accomplished by exiting DM and running\n"
-                "install.bat in a current SerialEM installation package\n"
+                "INSTALL.bat in a current SerialEM installation package\n"
                 "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)",
                 plugVersion, SEMCCD_PLUGIN_VERSION);
             AfxMessageBox(report, MB_ICONINFORMATION | MB_OK);
@@ -1003,7 +1003,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
       // The plugin knows the DM version, so get it from there.  And AMT has a version too
       mNewFunctionCalled = "a new function to get the build number: try closing DM"
-        " and rerunning install.bat";
+        " and rerunning INSTALL.bat";
       if (DMind == AMT_IND || mPluginVersion[DMind] < PLUGIN_CAN_GIVE_BUILD) {
         MainCallDMIndCamera(DMind, GetDMVersion(&version));
       } else {
