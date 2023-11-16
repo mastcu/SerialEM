@@ -10741,6 +10741,17 @@ int CMacCmd::OpenImagingStateDialog(void)
   return 0;
 }
 
+// OpenDialog
+int CMacCmd::OpenDialog()
+{
+  if (mItem1upper.Find("MUL") == 0)
+    mNavHelper->OpenMultishotDlg();
+  else
+    ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
+      "can be opened for line:\n\n");
+  return 0;
+}
+
 // ReportNumNavAcquire
 int CMacCmd::ReportNumNavAcquire(void)
 {
