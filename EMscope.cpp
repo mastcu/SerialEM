@@ -2561,6 +2561,9 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
   destY = 0.;
   destZ = 0.;
 
+  // Make sure this is initialized so timeouts are sensible
+  info->finishedTick = GetTickCount();
+
   // If doing backlash, set up a first move with backlash added
   // Only change axes that are specified in axisBits
   // First do a backlash move if specified, then do the move to an overshoot if relaxing
