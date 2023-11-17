@@ -352,11 +352,14 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
       mStartMagIndex = index;
     }
 
-    // This keeps it from going into LM in FEI STEM, then test for going out of LM
+    // Call with noLM true for FEI STEM kept it from CHANGING in micro STEM, so test
+    // here for going in or out
     index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index,
-      pNMUpDown->iDelta > 0 ? 1 : -1, FEIscope && mLastSTEMmode);
-    if (FEIscope && mLastSTEMmode && (index == mScope->GetLowestSTEMnonLMmag(0) - 1 ||
-      index == mScope->GetLowestSTEMnonLMmag(1) - 1) && pNMUpDown->iDelta > 0)
+      pNMUpDown->iDelta > 0 ? 1 : -1);
+    if (FEIscope && mLastSTEMmode && (((index == mScope->GetLowestSTEMnonLMmag(0) - 1 ||
+      index == mScope->GetLowestSTEMnonLMmag(1) - 1) && pNMUpDown->iDelta > 0) ||
+      ((index == mScope->GetLowestSTEMnonLMmag(0) ||
+        index == mScope->GetLowestSTEMnonLMmag(1) && pNMUpDown->iDelta < 0))))
       index2 = -1;
   } else if (mLastCamLenInd > 0) {
     mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens); 

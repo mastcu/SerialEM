@@ -296,7 +296,7 @@
           <TD>Measure rotation and change in magnification at a large underfocus value.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_imagestageshift_high">High-Defocus IS</A></TD>
+          <TD class="style1"><A href="#hid_imagestageshift_high">High-Defocus IS</A></TD>
           <TD>Calibrate image shift as a function of defocus and intensity.&nbsp;</TD>
         </TR>
         <TR vAlign="top">
@@ -606,10 +606,13 @@
       calibrations have a specimen to stage matrix clearly different from the rest.&nbsp; </P>
       <P><A name="hid_calibration_magisoffsets"></A><B>Mag IS Offsets command
         (Calibration - Image &amp; Stage Shift sub-menu)</B></P>
-      <P>Use this command to determine image shift offsets that will keep a feature
-        centered as magnification is changed. This calibration is needed to get the best
+      <P>Use this command to determine image shift offsets that will keep a feature 
+        centered as magnification is changed. This calibration may be needed to get the best
         performance from the Navigator, such as when a position is marked on an image at
-        one magnification and then sought at a much higher magnification. One of the
+        one magnification and then sought at a much higher magnification. However, the 
+        image shift offsets for View and Search in Low Dose mode, and the mechanism of 
+        taking anchor maps at the same position as a target to be aligned to, provide 
+        good alternatives to having this calibration.&nbsp; One of the
         limitations to this kind of localization is the degree to which the image shifts
         when the beam is moved, which can be particularly severe in LM mode depending on
         the focus setting. To minimize the effect of this shifting, you will be advised

@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/15/23: Fixed unreasonable timeout after a COM error moving stage.
+
+11/15/23: Added script command to open a dialog, currently just multishot.
+
 11/14/23: Added script command to find a substring in a string and expanded
 TrimString to take an index.
 
