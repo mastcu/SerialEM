@@ -4377,7 +4377,8 @@ BOOL CEMscope::ScanMagnifications()
           if (curSMag != lastSMag) {
             str.Format("%d %.1f", magInd, curSMag);
             mWinApp->AppendToLog(str);
-          }
+          } else
+            magInd--;
           lastSMag = curSMag;
         }
         if (!mScanningMags)
