@@ -7225,11 +7225,11 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
 
         // Calculate the proper ROI and set the binning
         if (!retval)
+          retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY,
+            -1);
+        if (!retval)
           retval = td->DE_Cam->setROI(td->Left * binning, td->Top * binning, 
             td->CallSizeX * binning, td->CallSizeY * binning, -1);
-        if (!retval)
-          retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY,
-          -1);
         if (!retval)
           retval = td->DE_Cam->AcquireDarkImage((float)ref->Exposure);	
         bool imageFinished = false;
