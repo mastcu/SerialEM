@@ -14,6 +14,9 @@
 static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, 
                                       DWORD dwTime);
 
+static const char *sSetpointOld = "Temperature Control - Setpoint (Celsius)";
+static const char *sSetpointNew = "Temperature - Cool Down Setpoint (Celsius)";
+
 IMPLEMENT_DYNAMIC(DirectElectronToolDlg, CToolDlg)
 
 DirectElectronToolDlg::DirectElectronToolDlg(CWnd *pParent /*=NULL*/)
@@ -60,6 +63,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     index = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + index;
   BOOL curIsDE = camParam->DE_camType > 0;
+  bool newNames = mDECamera->GetAPI2Server();
   if (!initialCall && curIsDE && mWinApp->mCamera->CameraBusy())
     return;
   if (GetDebugOutput('D')) {
@@ -89,7 +93,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     if (isDE12) {
       if (mTemperSetpoint <= -999 && curIsDE &&
         (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
-        if (mDECamera->getIntProperty(DE_PROP_TEMP_SET_PT, temp_int)) {
+        if (mDECamera->getIntProperty(newNames ? sSetpointNew : sSetpointOld, temp_int)) {
           value.Format("Setpoint(C): %d", temp_int);
           ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
           mTemperSetpoint = temp_int;
@@ -97,7 +101,8 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       }
 
       // Read temperature control
-      if (!mChangingCooling && mDECamera->getStringProperty("Temperature Control", value))
+      if (!mChangingCooling && mDECamera->getStringProperty(newNames ?
+        "Temperature - Control" : "Temperature Control", value))
         ((CButton *) GetDlgItem(IDC_COOLCAM))->SetCheck(value == "Cool Down" ? 1 : 0);
     }
 
@@ -265,7 +270,8 @@ void DirectElectronToolDlg::ApplyUserSettings()
   if (isDE12 && mTemperSetpoint > -999 && (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
     value.Format("Setpoint(C): %d", mTemperSetpoint);
     ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
-    mDECamera->setIntProperty(DE_PROP_TEMP_SET_PT, mTemperSetpoint);
+    mDECamera->setIntProperty(mDECamera->GetAPI2Server() ?
+      sSetpointNew : sSetpointOld, mTemperSetpoint);
   }
   if (isDE12)
     ((CWnd *) GetDlgItem(ID_DE_temperSet))->EnableWindow

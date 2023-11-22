@@ -728,6 +728,17 @@
             microscope interface and use it from SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UseAPI2For DE</TD>
+          <TD>Set to 1 to connect to the DE server with API 2.&nbsp; This new interface was 
+              added in server 2.5, but can only be used with server DE 2.7 or higher.&nbsp; 
+              Currently the only advantage of API 2 is that continuous (live) mode works 
+              properly.&nbsp; SerialEM cannot switch connection methods after it determines 
+              the server version, so this property is the only way to access API 2.&nbsp; The 
+              default read port for API 2 is 13240 (see DECameraReadPort).&nbsp;&nbsp; If 
+              you change this property after connecting to the server, you will probably need 
+              to restart the server.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SkipAdvancedScripting</TD>
           <TD>Set to 1 to prevent Thermo/FEI cameras from trying to use the advanced scripting
             interface and to prevent attempts to use other functionality in advanced scripting.&nbsp; Set
@@ -2442,7 +2453,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>DECameraReadPort</TD>
-          <TD>Set to a port number for reading from DE server, typically 48880.</TD>
+          <TD>Set to a port number for reading from DE server, typically 48880 with API 1 and 13240 with API 2.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DECameraWritePort</TD>

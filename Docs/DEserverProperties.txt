@@ -1,63 +1,60 @@
 These properties are used in current versions:
 
-ADUs Per Electron
+ADUs Per Electron    2.5 -> ADUs Per Electron Bin1x  -> BACK in 2.7!
 Auto Repeat Reference - Multiple Acquisitions  ELIM
-Auto Repeat Reference - Remaining Acquisitions  ?? 
-Auto Repeat Reference - Total Number of Acquisitions ??
+Auto Repeat Reference - Remaining Acquisitions  2.5 -> Remaining Number of Acquisitions
+Auto Repeat Reference - Total Number of Acquisitions  elim in 2.5
+Autosave Counted Movie Frames File Path   2.7 ->  Autosave Movie Frames File Path  DONE
+Autosave Integrated Movie Frames File Path   2.7 ->  Autosave Movie Frames File Path  DPME
 Autosave Directory
 Autosave File Format (2.3 on)
-Autosave Filename Suffix (User Input)    2.5 ->  Autosave Filename Suffix
+Autosave Filename Suffix (User Input)    2.5 ->  Autosave Filename Suffix  DONE
 Autosave Final Image
-Autosave Final Image - Sum Count
+Autosave Final Image - Sum Count    2.5 -> Autosave Final Image Sum Count   DONE
 Autosave Frames - Format (before 2.3)
 Autosave Frames - Previous Dataset Name (before 2.3)
 Autosave Movie
-Autosave Movie - Completed
+Autosave Movie - Completed  (before 2.5)
 Autosave Movie - Correction Mode
 Autosave Movie - Format for Unnormalized Movie  (before 2.3)
-Autosave Movie - Frames Written in Last Exposure  2.5 -> Autosave Integrated Movie Frames Written
-Autosave Movie - Ignored Frames   2.5 -> Autosave Movie - Frames to Ignore
+Autosave Movie - Frames Written in Last Exposure  2.5 -> Autosave Integrated Movie Frames Written  2.7 ->
+         2.5  Autosave Counting Movie Frames Written  2.7 -> Autosave Movie Frames Written
+Autosave Movie - Ignored Frames   2.5 -> Autosave Movie - Frames to Ignore   DONE
 Autosave Movie - Pixel Depth      2.5 -> Autosave Integrated Movie Pixel Format
-Autosave Movie - Sum Count        2.5 -> Autosave Final Image Sum Count
-Autosave Previous Dataset Name (2.3 on)  2.5 - >  Dataset Name
+Autosave Movie - Sum Count        2.5 -> Autosave Movie Sum Count  DONE
+Autosave Previous Dataset Name (2.3 on)  2.5 - >  Dataset Name   DONE
 Autosave Raw Frames
-Binning Algorithm    2.5 -> Binning Method
-Camera Position      2.5 -> Camera Position Status
-Camera Position Status
+Autosave Status   (2.5 on)   DONE
+Binning Algorithm    2.5 -> Binning Method   2.7 elim
+Camera Position      2.5 -> Camera Position Control (Extend, Retract) to set, Status to get
+              Camera Position Status  (Extended, Retracted)        DONE
 Correction Mode Counting Gain Reference Status
-Correction Mode Dark Reference Status   2.5 -> Reference - Dark
-Correction Mode Gain Reference Status   2.5 -> Reference - Gain
-Electron Counting    2.5 -> Image Processing - Mode
-Electron Counting - Apply Post-Counting Gain   2.5 -> Event Counting - Apply Post-Counting Gain
-Electron Counting - Dose Fractionation Number of Frames   2.5 -> Autosave Movie Sum Count
-Electron Counting - Super Resolution    2.5 -> Event Counting - Super Resolution
+Correction Mode Dark Reference Status   2.5 -> Reference - Dark  DONE
+Correction Mode Gain Reference Status   2.5 -> Reference - Gain  DONE
+Electron Counting    2.5 -> Image Processing - Mode   (Integrating vs. Counting)  (but Electron Counting is still a listed prop)
+Electron Counting - Apply Post-Counting Gain   2.5 -> Event Counting - Apply Post-Counting Gain  DONE
+Electron Counting - Counts Per Electron    2.5 -> Event Counting - Value Per Event   DONE
+Electron Counting - Dose Fractionation Number of Frames   2.5 -> Autosave Movie Sum Count   DONE
+Electron Counting - Super Resolution    2.5 -> Event Counting - Super Resolution   DONE
 Exposure Time Max (seconds)
-Faraday Plate - Last Exposure Peak Density (pA/cm^2)   2.5 -> Faraday Plate - Peak Intensity (pA/cm^2)
+Faraday Plate - Last Exposure Peak Density (pA/cm^2)   2.5 -> Faraday Plate - Peak Intensity (pA/cm^2) DONE
 Frames Per Second
 Frames Per Second (Max)
-Ignore Number of Frames    2.5 -> Readout - Frames to Ignore
+Ignore Number of Frames    2.5 -> Readout - Frames to Ignore    DONE
 Image Processing - Motion Correction
 Motion Correction   (before 2.1)
-Preexposure Time (seconds)
+Preexposure Time (seconds)   2.5 -> Pre-Exposure Time (seconds)    DONE
 Protection Cover Delay (milliseconds)
 Protection Cover Operation Mode
-Sensor Hardware Binning   2.5 -> Binning Mode
-Sensor Hardware ROI       2.5 -> ROI Mode
-Autosave Movie - Frames Written in Last Exposure (before 2.5)
-Autosave Integrated Movie Frames Written (2.5 on)
-Autosave Counting Movie Frames Written (2.5 on)
-Autosave Movie - Completed  (before 2.5)
-Autosave Status   (2.5 on)
+Sensor Hardware Binning   2.5 -> Binning Mode  2.7 -> Hardware Binning X OR Y,    DONE
+Sensor Hardware ROI       2.5 -> ROI Mode   2.7 -> Hardware ROI Size X OR Y, Hardware ROI Offset X OR Y    DONE
 Sensor Module SN
 Sensor Readout Delay (milliseconds)
 Server Software Version
 Temperature - Detector (Celsius)
-Temperature - Detector (Celsius)
 Temperature - Water Line (Celsius)
-Temperature Control                 2.5 -> Temperature - Control
-Temperature Control - Setpoint (Celsius)  2.5 -> Temperature - Cool Down Setpoint (Celsius)
-Autosave Previous Dataset Name (2.3 - 2.4)
-Dataset Name (2.5 on)
+Temperature Control                 2.5 -> Temperature - Control  DONE
+Temperature Control - Setpoint (Celsius)  2.5 -> Temperature - Cool Down Setpoint (Celsius)  DONE
 
 
 These are only referred to by these globals in the header file

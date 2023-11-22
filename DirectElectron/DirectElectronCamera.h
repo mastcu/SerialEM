@@ -98,7 +98,6 @@ struct LiveThreadData {
 #define DE_CAM_STATE_INSERTED "Extended"
 #define DE_KEEP_COVER_OPEN "Always Open During Operation"
 #define DE_OPEN_CLOSE_COVER "Open/Close During Each Exposure"
-#define DE_PROP_TEMP_SET_PT "Temperature Control - Setpoint (Celsius)"
 #define DE_PROP_AUTOSAVE_DIR "Autosave Directory"
 
 // DE server versions for capabilities
@@ -119,6 +118,7 @@ struct LiveThreadData {
 #define DE_RETURNS_FRAME_PATH   205000000
 #define DE_HAS_API2             205000000
 #define DE_DETECTOR_TEMP_IS_INT 205380000
+#define DE_AUTOSAVE_RENAMES2    207000000
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
@@ -211,6 +211,7 @@ public:
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);
+  GetMember(bool, API2Server);
   GetMember(int, LastLiveMode);
   GetMember(int, CurCamIndex);
   GetMember(bool, NormAllInServer);
@@ -232,6 +233,7 @@ public:
   bool IsReferenceValid(int checksum, std::map<int, int> &map, int minuteNow, 
     const char *propStr, const char *messStr);
   bool GetPreviousDatasetName(float timeout, int ageLimitSec, bool predictName, CString &name);
+  void FormatFramesWritten(BOOL saveSums, CString &str);
   void VerifyLastSetNameIfPredicted(float timeout);
   float GetLastCountScaling();
 
@@ -313,6 +315,7 @@ private:
   CString mSoftwareVersion;             // String for server version
   CString mDE12SensorSN;
   int mServerVersion;                   // 1000000 * major + 10000 * middle + minor
+  bool mAPI2Server;                     // A common fact to want to test
   int mInitializingIndex;               // Index of camera being initialized
   int mRepeatForServerRef;              // Number of repeats for doing reference in server
   int mModeForServerRef;                // Processing mode to set for server reference
