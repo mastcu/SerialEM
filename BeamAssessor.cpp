@@ -2354,6 +2354,10 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
       (LPCTSTR)mess, 1))
       btp->numIntensities = 0;
+    btp->minIntensity = (float)mScope->IntensityAfterApertureChange(
+      btp->minIntensity, fromAp, currentAp, btp->spotSize, btp->probeMode);
+    btp->maxIntensity = (float)mScope->IntensityAfterApertureChange(
+      btp->maxIntensity, fromAp, currentAp, btp->spotSize, btp->probeMode);
   }
 
   // scale crossovers, electron doses, and spot tables
