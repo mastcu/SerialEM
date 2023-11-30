@@ -2692,7 +2692,7 @@ void CTSController::NextAction(int param)
         mSpecimenY[mTiltIndex - 1], mSpecimenZ[mTiltIndex - 1]);
       message += message2;
       mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-      if (mAutosaveLog || (mExternalControl && mAutoSavePolicy))
+      if (mAutosaveLog)
         mWinApp->mLogWindow->UpdateSaveFile(true, mWinApp->mStoreMRC->getName());
       mDidFocus[mTiltIndex] = false;
       SetFileZ();
