@@ -460,7 +460,7 @@ CCameraController::CCameraController()
   mSkipFiltCheckCount = 0;
   mSuspendFilterUpdates = false;
   mRamperWaitForBlank = false;
-  mTakeUnbinnedIfSavingEER = false;
+  mTakeUnbinnedIfSavingEER = true;
   mShowLinearForAlpine = true;
   mUseAPI2ForDE = false;
 }

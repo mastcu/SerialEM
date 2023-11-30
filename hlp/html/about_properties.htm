@@ -728,11 +728,11 @@
             microscope interface and use it from SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>UseAPI2For DE</TD>
+          <TD>UseAPI2ForDE</TD>
           <TD>Set to 1 to connect to the DE server with API 2.&nbsp; This new interface was 
               added in server 2.5, but can only be used with server DE 2.7 or higher.&nbsp; 
-              Currently the only advantage of API 2 is that continuous (live) mode works 
-              properly.&nbsp; SerialEM cannot switch connection methods after it determines 
+              Currently the only advantage of API 2 is that continuous (live) mode works well 
+            and can give much higher frames per second.&nbsp; SerialEM cannot switch connection methods after it determines 
               the server version, so this property is the only way to access API 2.&nbsp; The 
               default read port for API 2 is 13240 (see DECameraReadPort).&nbsp;&nbsp; If 
               you change this property after connecting to the server, you will probably need 
@@ -1227,12 +1227,14 @@
         </TR>
         <TR VALIGN="top">
           <TD>TakeUnbinnedIfSavingEER</TD>
-          <TD>Set to 1 if a Falcon 4 camera gives an error when acquiring binned or subarea images and 
-            frames are being saved as EER or just aligned in SerialEM. FEIScopePlugin or 
-            FEI-SEMserver will request such images unbinned and full sized, and bin and extract 
-            the subarea from them in software.&nbsp; 
-            This error has been found with the 7.12 and 7.13 server but not 7.8; it is not 
-            yet known if it occurs before 7.12 or if it is a bug that will be fixed.</TD>
+          <TD>Somewhere between server 7.8 and 7.12, the Falcon 4 camera started giving an error
+             when acquiring binned or subarea images and 
+            frames are being saved as EER or just aligned in SerialEM.&nbsp; This property controls whether
+            FEIScopePlugin or FEI-SEMserver will request such images unbinned and full sized, and bin and extract 
+            the subarea from them in software.&nbsp; It is now on by default; you can set it to 0 to avoid the
+            extra computation if you have an earlier
+            server that does not have the new behavior.
+            </TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>
