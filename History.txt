@@ -3,7 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-11/30/23: SEM_4-1-0beta25
+11/30/23: SEM_4-1-0beta26
+11/30/23: Fixed saving of frame mdoc for multishots with early returns.
+
 11/30/23: DE code and DLL updated to work with 2.7 server; API 2 can now be
 used with 2.7 but not earlier servers and gives fast continuous mode.
 
