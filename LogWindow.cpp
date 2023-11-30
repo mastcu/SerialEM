@@ -11,6 +11,7 @@
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include "MacroProcessor.h"
+#include "NavigatorDlg.h"
 #include "MacroEditer.h"
 #include ".\LogWindow.h"
 
@@ -355,7 +356,11 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
   }
   catch(CFileException *perr) {
     perr->Delete();
-    SEMMessageBox(message, MB_EXCLAME);
+    if (mWinApp->DoingTiltSeries() || mWinApp->mMacroProcessor->DoingMacro() ||
+      (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))
+      Append("WARNING:" + message, 0);
+    else
+      SEMMessageBox(message);
     retval = -1;
   } 
   if (cFile) {
