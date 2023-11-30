@@ -4,6 +4,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance, for the stable release version
 ============================================================================
 11/30/23: SEM_4-1-0beta25
+11/30/23: DE code and DLL updated to work with 2.7 server; API 2 can now be
+used with 2.7 but not earlier servers and gives fast continuous mode.
+
 11/30/23: Made TakeUnbinnedIfSavingEER be on by default.
 
 11/30/23: Stopped updating log file on each tilt during batch tilt series.
