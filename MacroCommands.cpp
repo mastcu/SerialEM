@@ -10202,7 +10202,7 @@ int CMacCmd::SetItemAcquire(void)
       "item to Acquire within the range still being acquired");
   truth = (mItemEmpty[2] || (mItemInt[2] != 0));
   if (CMD_IS(SETITEMACQUIRE)) {
-    if (truth && navItem->mTSparamIndex >= 0)
+    if (truth && navItem->mTSparamIndex > 0)
       ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
         "line:\n\n");
     mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
@@ -10635,6 +10635,24 @@ int CMacCmd::GetUniqueNavID(void)
   ABORT_NONAV;
   ID = mNavigator->MakeUniqueID();
   SetRepValsAndVars(1, ID);
+  return 0;
+}
+
+// ReportLastMarkerShift
+int CMacCmd::ReportLastMarkerShift()
+{
+  float shiftX, shiftY;
+  ABORT_NONAV;
+  int reg = mNavigator->GetMarkerShiftReg();
+  if (!reg) {
+    mLogRpt = "There is no last marker shift available";
+    SetRepValsAndVars(1, 0.);
+  } else {
+    mNavigator->GetLastMarkerShift(shiftX, shiftY);
+    mLogRpt.Format("The last marker shift was at registration %d, %.3f  %.3f", reg,
+      shiftX, shiftY);
+    SetRepValsAndVars(1, reg, shiftX, shiftY);
+  }
   return 0;
 }
 

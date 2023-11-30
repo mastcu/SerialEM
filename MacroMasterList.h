@@ -762,6 +762,7 @@ MAC_SAME_NAME_ARG(SaveNextGraphAndExit, 2, 4, SAVENEXTGRAPHANDEXIT, IS)
 MAC_SAME_NAME_ARG(SuppressInfoOutput, 0, 4, SUPPRESSINFOOUTPUT, i)
 MAC_SAME_NAME_ARG(FindSubstring, 3, 4, FINDSUBSTRING, SIS)
 MAC_SAME_NAME_ARG(OpenDialog, 1, 0, OPENDIALOG, S)
+MAC_SAME_NAME_NOARG(ReportLastMarkerShift, 0, 4, REPORTLASTMARKERSHIFT)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
