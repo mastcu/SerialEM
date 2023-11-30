@@ -160,7 +160,8 @@ public:
   CArray<MontParam *, MontParam *> *GetMontParArray() {return &mMontParArray;};
   CArray<StateParams *, StateParams *> *GetAcqStateArray() {return &mAcqStateArray;};
 	void OnOK();
-  GetMember(int, MarkerShiftReg)
+  GetMember(int, MarkerShiftReg);
+  void GetLastMarkerShift(float &outX, float &outY) { outX = mMarkerShiftX; outY = mMarkerShiftY; };
   GetMember(int, AcquireEnded)
   GetMember(BOOL, LoadingMap)
   GetMember(int, NumSavedRegXforms)

@@ -4409,6 +4409,12 @@
           <TD>Sets the current registration of the Navigator window to the given number.&nbsp;
             No item registration values are changed.</TD>
         </TR>
+                <TR>
+          <TD class="scriptcommand">ReportLastMarkerShift</TD>
+          <TD>Reports the registration and shift in X and Y of the last Shift to Marker 
+            operation, or just 0 for the registration if no shift has been done or it was 
+            undone.</TD>
+        </TR>
         <TR>
           <TD colspan="2"><A name="navigatoritems"></A><B>Item and Group Commands</B></TD>
         </TR>
@@ -4864,7 +4870,7 @@
         <TR>
           <TD class="scriptcommand">AdjustStagePosForNav #SX #SY [#IX #IY] [#C] [#M] [#T]</TD>
           <TD>Adjusts a stage position <B>#SX</B>, <B>#SY</B> so that it is suitable for assigning to a Navigator item, 
-            accounting for the optional image shift values in <b>#IX></b>, <b>#IY</b>, with possible
+            accounting for the optional image shift values in <b>#IX</b>, <b>#IY</b>, with possible
              adjustments for tilt axis offset and image shift offsets. and a tilt angle given in the 
             optional <b>#T</b>.&nbsp; These adjustments depend on the active camera number, which can be entered
             <b>#C</b> (numbered from 1, use -1 for current camera), on the magnification index, which can be
