@@ -804,7 +804,7 @@ void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom, bool
     deskTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
     firstTime = false;
   }
-  if (*right <= 0)
+  if (*right == NO_PLACEMENT)
     return;
   if (scale && sWinApp->GetLastSystemDPI()) {
     ratio = (float)sWinApp->GetSystemDPI() / (float)sWinApp->GetLastSystemDPI();

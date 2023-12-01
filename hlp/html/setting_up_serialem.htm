@@ -428,7 +428,7 @@
           it as needed, as described below in the section on <i>
           <a href="#connectDMsocket">To connect to
         DigitalMicrograph through a socket interface</a>.&nbsp; </i>When running a Thermo/FEI
-          scope remotely, a new version of FEI-SEMserver.exe would be copied to the scope
+          scope remotely, a new version of FEI-SEMserver.exe or FEI-SEMserver-Win2K.exe would be copied to the scope
           computer.</P>
     <P style="Z-INDEX: 0">
           Existing properties, calibrations, and settings files are always compatible when
@@ -697,7 +697,7 @@
         on older
         64-bit Thermo/FEI systems.&nbsp; A
         connection is possible in these cases by using a network socket connection to a small server
-        (<nobr>FEI-SEMserver.exe</nobr>) on the Thermo/FEI computer.&nbsp; This server makes a
+        (<nobr>FEI-SEMserver.exe or FEI-SEMserver-Win2k.exe</nobr>) on the Thermo/FEI computer.&nbsp; This server makes a
         COM connection to the scripting adapter.&nbsp; The server needs to be started
         every time that a user logs in.&nbsp; This server supports all interactions with
         the Thermo/FEI microscope, including acquisition from Thermo/FEI cameras (Eagle, Falcon, Ceta) and from STEM detectors.&nbsp;
@@ -757,7 +757,11 @@
               three ports.</li>
       <li>Copy the server, FEI-SEMserver.exe, into some appropriate location on the Thermo/FEI
         computer from which it can be run by all users.&nbsp; (You can create C:\Program
-        Files\SerialEM just for this purpose if no other place is preferred.)</li>
+        Files\SerialEM just for this purpose if no other place is preferred.)&nbsp; For 
+        a Windows 2000 computer (yes there are still some!), copy 
+        FEI-SEMserver-Win2k.exe instead.&nbsp; For a Windows XP system that is SP1 or 
+        SP2, try FEI-SEMserver.exe first, and if that fails to run, use 
+        FEI-SEMserver-Win2k.exe instead.</li>
       <li>Make a shortcut to the server in C:\Documents and Settings\All Users\Desktop</li>
       <li>If you are using STEM through the Thermo/FEI interface, also copy FocusRamper.exe
         and register-Ramper.bat onto the Thermo/FEI computer (into C:\Program Files\SerialEM or
@@ -3713,8 +3717,8 @@ MoveStage 0 0 -$zRange / 2.
         on the scope computer. &nbsp; If this occurs, set the environment variable 
         FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from 
         being attempted.&nbsp; </p>
-      <p>For Thermo/FEI server version 7.18 and higher, the new 
-        Utapi scripting can be used to control the apertures.&nbsp; Access to this 
+      <p>For some Thermo/FEI server version, possibly available in April 2024, the new 
+        UTAPI scripting can be used to control the apertures.&nbsp; Access to this 
         scripting is activated with a property 'UseUtapiScripting 1'.</p>
       <p>&nbsp;</p>
         <p><a name="alpha_beamshift"></a><B>Alpha and Beam Shift Calibration Issues on JEOL scopes &nbsp;</B><BR>

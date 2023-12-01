@@ -4514,6 +4514,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
     setting->right = setting->left + orig->right - orig->left;
     setting->bottom = setting->top + orig->bottom - orig->top;
     lastPlacement->showCmd = 1;
+    ConstrainWindowPlacement(lastPlacement, false);
     window->SetWindowPlacement(lastPlacement);
   }
   window->ShowWindow(SW_SHOW);
