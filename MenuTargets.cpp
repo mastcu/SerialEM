@@ -572,7 +572,7 @@ void CMenuTargets::OnTasksNavigator()
   mWinApp->mNavigator = mNavigator;
   mNavHelper->NavOpeningOrClosing(true);
   mNavigator->Create(IDD_NAVIGATOR);
-  if (placement->rcNormalPosition.right > 0) {
+  if (placement->rcNormalPosition.right != NO_PLACEMENT) {
     mNavigator->GetWindowPlacement(&curPlace);
     curHeight = curPlace.rcNormalPosition.bottom - curPlace.rcNormalPosition.top;
     if (placement->rcNormalPosition.bottom - placement->rcNormalPosition.top < curHeight)

@@ -716,11 +716,13 @@ CSerialEMApp::CSerialEMApp()
 
   // Initialize dialog panel placements and log window status
   for (i = 0; i < MAX_TOOL_DLGS; i++)
-    mDlgPlacements[i].right = 0;
-  mLogPlacement.rcNormalPosition.right = 0;
-  mNavPlacement.rcNormalPosition.right = 0;
-  mCamSetupPlacement.rcNormalPosition.right = 0;
-  mScreenShotPlacement.rcNormalPosition.right = 0;
+    mDlgPlacements[i].right = NO_PLACEMENT;
+  mLogPlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mNavPlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mCamSetupPlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mScreenShotPlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mFirstSEMplacement.rcNormalPosition.right = NO_PLACEMENT;
+  mStageToolPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mRightBorderFrac = 0.;
   mBottomBorderFrac = 0.;
   mMainFFTsplitFrac = 0.5f;
@@ -1112,7 +1114,7 @@ BOOL CSerialEMApp::InitInstance()
   FixInitialPlacements();
   if (mReopenLog) {
     if (mLogWindow) {
-      if (mLogPlacement.rcNormalPosition.right > 0)
+      if (mLogPlacement.rcNormalPosition.right != NO_PLACEMENT)
         mLogWindow->SetWindowPlacement(&mLogPlacement);
     } else {
       OnFileOpenlog();
@@ -3299,6 +3301,8 @@ BOOL CSerialEMApp::GetWindowPlacement(WINDOWPLACEMENT *winPlace)
 
 BOOL CSerialEMApp::SetWindowPlacement(WINDOWPLACEMENT *winPlace)
 {
+  if (mFirstSEMplacement.rcNormalPosition.right == NO_PLACEMENT)
+    mFirstSEMplacement = *winPlace;
   return m_pMainWnd->SetWindowPlacement(winPlace);
 }
 
@@ -3777,7 +3781,7 @@ void CSerialEMApp::OnFileOpenlog()
   mLogWindow = new CLogWindow();
   mLogWindow->Create(IDD_LOGWINDOW);
   mLogPlacement.showCmd = SW_SHOWNORMAL;
-  if (mLogPlacement.rcNormalPosition.right > 0)
+  if (mLogPlacement.rcNormalPosition.right != NO_PLACEMENT)
     mLogWindow->SetWindowPlacement(&mLogPlacement);
   RestoreViewFocus();
   mNavOrLogHadFocus = -1;
@@ -4052,7 +4056,7 @@ void CSerialEMApp::OpenStageMoveTool()
   mStageMoveTool = new CStageMoveTool();
   mStageMoveTool->m_bImageAfterMove = mImageWithStageToolMove;
   mStageMoveTool->Create(IDD_STAGEMOVETOOL);
-  if (mStageToolPlacement.rcNormalPosition.right > 0)
+  if (mStageToolPlacement.rcNormalPosition.right != NO_PLACEMENT)
     SetPlacementFixSize(mStageMoveTool, &mStageToolPlacement);
   else
     mStageMoveTool->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100, 
@@ -4077,7 +4081,7 @@ void CSerialEMApp::OpenScreenShotDlg()
   }
   mScreenShotDialog = new CScreenShotDialog();
   mScreenShotDialog->Create(IDD_SCREENSHOT);
-  if (mScreenShotPlacement.rcNormalPosition.right > 0)
+  if (mScreenShotPlacement.rcNormalPosition.right != NO_PLACEMENT)
     SetPlacementFixSize(mScreenShotDialog, &mScreenShotPlacement);
   else
     mScreenShotDialog->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100,
@@ -4506,7 +4510,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
   RECT *setting = &lastPlacement->rcNormalPosition;
 
   window->GetWindowPlacement(&origPlace);
-  if (setting->right > 0){
+  if (setting->right != NO_PLACEMENT){
     setting->right = setting->left + orig->right - orig->left;
     setting->bottom = setting->top + orig->bottom - orig->top;
     lastPlacement->showCmd = 1;
@@ -4553,7 +4557,9 @@ void CSerialEMApp::FixInitialPlacements(void)
   }
   GetWindowPlacement(place);
   ConstrainWindowPlacement(place, true);
-  if (place->rcNormalPosition.right > 0 && place->rcNormalPosition.bottom > 0)
+  if (mFirstSEMplacement.rcNormalPosition.right != NO_PLACEMENT)
+    place->showCmd = mFirstSEMplacement.showCmd;
+  if (place->rcNormalPosition.right != NO_PLACEMENT && place->rcNormalPosition.bottom > 0)
     SetWindowPlacement(place);
 }
 
@@ -4873,7 +4879,7 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
       mMacroEditer[ind]->JustCloseWindow();
     } else if (mMacroEditer[ind]) {
       place = mMacroProcessor->GetEditerPlacement() + ind;
-      if (place->rcNormalPosition.right > 0)
+      if (place->rcNormalPosition.right != NO_PLACEMENT)
         mMacroEditer[ind]->SetWindowPlacement(place);
     }
   }

@@ -211,7 +211,7 @@ CSerialEMDoc::CSerialEMDoc()
   mRecentSettings = new CRecentFileList(0, "MRUList", "Settings%d", MAX_SETTINGS_MRU, 80);
   mRecentSettings->ReadList();
   mReadFileDlg = NULL;
-  mReadDlgPlace.rcNormalPosition.right = 0;
+  mReadDlgPlace.rcNormalPosition.right = NO_PLACEMENT;
   mFrameAdocIndex = -1;
   CalibrationWasDone(CAL_DONE_CLEAR_ALL);
   mNumCalsAskThresh[CAL_DONE_IS] = 3;
@@ -1243,7 +1243,7 @@ void CSerialEMDoc::OnFileRead()
   mReadFileDlg = new CReadFileDlg();
   mReadFileDlg->m_iSection = section;
   mReadFileDlg->Create(IDD_READFILEDLG);
-  if (mReadDlgPlace.rcNormalPosition.right > 0)
+  if (mReadDlgPlace.rcNormalPosition.right != NO_PLACEMENT)
     mWinApp->SetPlacementFixSize(mReadFileDlg, &mReadDlgPlace);
   else
     mReadFileDlg->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100, 

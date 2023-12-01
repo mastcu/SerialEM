@@ -155,6 +155,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   mClosing = FALSE;
   mMinExposure = 0.0001f;
   mWarnedOnCDS = false;
+  mPlacement.rcNormalPosition.right = NO_PLACEMENT;
 }
 
 
@@ -2018,7 +2019,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
     
   // Unload the control set
   LoadConsetToDialog();
-  if (mPlacement.rcNormalPosition.right > 0)
+  if (mPlacement.rcNormalPosition.right != NO_PLACEMENT)
     SetWindowPlacement(&mPlacement);
   CButton *button = (CButton *)GetDlgItem(IDOK);
   button->SetFocus();

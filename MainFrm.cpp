@@ -300,7 +300,7 @@ void CMainFrame::InitializeOnePosition(int tableInd, int absInd, int state,
 
   // If the window is floating and there is a placement rectangle, set the position
   if ((state & TOOL_FLOATDOCK) &&
-    dlgPlacement->right > 0 && dlgPlacement->bottom > 0) {
+    dlgPlacement->right != NO_PLACEMENT && dlgPlacement->bottom > 0) {
     dlg->GetWindowPlacement(&winPlace);
     winPlace.rcNormalPosition = *dlgPlacement;
     dlg->SetWindowPlacement(&winPlace);

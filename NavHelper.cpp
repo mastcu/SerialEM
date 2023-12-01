@@ -148,18 +148,18 @@ CNavHelper::CNavHelper(void)
   }
   mStateArray.SetSize(0, 4);
   mStateDlg = NULL;
-  mStatePlacement.rcNormalPosition.right = 0;
+  mStatePlacement.rcNormalPosition.right = NO_PLACEMENT;
   mRotAlignDlg = NULL;
   mRotAlignCenter = 0.f;
   mRotAlignRange = 20.f;
   mSearchRotAlign = true;
-  mRotAlignPlace.rcNormalPosition.right = 0;
+  mRotAlignPlace.rcNormalPosition.right = NO_PLACEMENT;
   mMultiShotDlg = NULL;
-  mMultiShotPlace.rcNormalPosition.right = 0;
-  mHoleFinderPlace.rcNormalPosition.right = 0;
+  mMultiShotPlace.rcNormalPosition.right = NO_PLACEMENT;
+  mHoleFinderPlace.rcNormalPosition.right = NO_PLACEMENT;
   mMultiCombinerDlg = NULL;
-  mMultiCombinerPlace.rcNormalPosition.right = 0;
-  mAutoContDlgPlace.rcNormalPosition.right = 0;
+  mMultiCombinerPlace.rcNormalPosition.right = NO_PLACEMENT;
+  mAutoContDlgPlace.rcNormalPosition.right = NO_PLACEMENT;
   mComaVsISCalDlg = NULL;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
@@ -4445,7 +4445,7 @@ void CNavHelper::OpenStateDialog(void)
   }
   mStateDlg = new CStateDlg();
   mStateDlg->Create(IDD_STATEDLG);
-  if (mStatePlacement.rcNormalPosition.right > 0)
+  if (mStatePlacement.rcNormalPosition.right != NO_PLACEMENT)
     mStateDlg->SetWindowPlacement(&mStatePlacement);
   mStateDlg->ShowWindow(SW_SHOW);
   mWinApp->RestoreViewFocus();

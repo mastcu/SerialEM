@@ -121,6 +121,7 @@ struct JeolParams;
 #define MAX_TS_VARIES  50
 #define MAX_VARY_TYPES  6
 #define MAX_TOOL_DLGS  16
+#define NO_PLACEMENT   -123456
 #define MAX_LOWDOSE_SETS 5
 #define LAD_INDEX_BASE  30
 #define IDLE_TIMEOUT_ERROR  -99
@@ -817,6 +818,7 @@ private:
   WINDOWPLACEMENT mCamSetupPlacement;
   WINDOWPLACEMENT mStageToolPlacement;
   WINDOWPLACEMENT mScreenShotPlacement; 
+  WINDOWPLACEMENT mFirstSEMplacement;
   BOOL mReopenLog;
   ScreenShotParams mScreenShotParams;
 

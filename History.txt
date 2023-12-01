@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/30/23: Made restoring of window positions work properly when there are two
+monitors with the primary one on the right; fixed reopening program maximized.
+
 11/30/23: SEM_4-1-0beta26
 11/30/23: Fixed saving of frame mdoc for multishots with early returns.
 

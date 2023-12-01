@@ -231,7 +231,7 @@ CMacroProcessor::CMacroProcessor()
   mNonMacroDeferring = false;
   mScrpLangData.externalControl = 0;
   mShrMemFile = NULL;
-  mToolPlacement.rcNormalPosition.right = 0;
+  mToolPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mNumToolButtons = 10;
   mToolButHeight = 0;
   mNumCamMacRows = 1;
@@ -245,12 +245,12 @@ CMacroProcessor::CMacroProcessor()
   mUseMonoFont = false;
   mFocusedWndWhenSavedStatus = NULL;
   mRestoreMacroEditors = true;
-  mOneLinePlacement.rcNormalPosition.right = 0;
+  mOneLinePlacement.rcNormalPosition.right = NO_PLACEMENT;
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < MAX_MACROS; i++) {
     mStrNum[i].Format("%d", i + 1);
     mFuncArray[i].SetSize(0, 4);
-    mEditerPlacement[i].rcNormalPosition.right = 0;
+    mEditerPlacement[i].rcNormalPosition.right = NO_PLACEMENT;
   }
   for (i = 0; i < MAX_TOT_MACROS; i++)
     mReadOnlyStart[i] = -1;
@@ -796,7 +796,7 @@ void CMacroProcessor::OnScriptRunOneCommand()
   }
   mOneLineScript->mMacros = mMacros;
   mOneLineScript->Create(IDD_ONELINESCRIPT);
-  if (mOneLinePlacement.rcNormalPosition.right > 0)
+  if (mOneLinePlacement.rcNormalPosition.right != NO_PLACEMENT)
     mOneLineScript->SetWindowPlacement(&mOneLinePlacement);
   mOneLineScript->ShowWindow(SW_SHOW);
   mWinApp->RestoreViewFocus();

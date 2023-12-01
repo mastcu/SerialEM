@@ -93,7 +93,7 @@ CProcessImage::CProcessImage()
   mTestCtfPixelSize = 0.;
   mMinCtfFitResIfPhase = 0.;
   mCtffindParamDlg = NULL;
-  mCtffindDlgPlace.rcNormalPosition.right = 0;
+  mCtffindDlgPlace.rcNormalPosition.right = NO_PLACEMENT;
   mCtfMinPhase = 30;
   mCtfMaxPhase = 120;
   mCtfExpectedPhase = 90;

@@ -163,7 +163,7 @@ BOOL CMacroEditer::OnInitDialog()
   mWinApp->RestoreViewFocus();
   mWinApp->UpdateMacroButtons();
 
-  if (place->rcNormalPosition.right > 0)
+  if (place->rcNormalPosition.right != NO_PLACEMENT)
     SetWindowPlacement(place);
 
   return FALSE;  // return TRUE unless you set the focus to a control

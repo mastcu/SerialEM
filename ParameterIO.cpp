@@ -135,7 +135,7 @@ CParameterIO::~CParameterIO()
     b = (float)itemDbl[1];
 
 #define SET_PLACEMENT(tag, win) \
-  if (NAME_IS(tag) && win != NULL && place->rcNormalPosition.right > 0) \
+  if (NAME_IS(tag) && win != NULL && place->rcNormalPosition.right != NO_PLACEMENT) \
     win->SetWindowPlacement(place);
 
 // BEWARE: FOR ANYTHING THAT CAN BE ON MULTIPLE LINES AND IS JUST ADDED TO A VECTOR,
@@ -966,7 +966,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         winPlace.rcNormalPosition.right = itemInt[6];
         winPlace.rcNormalPosition.bottom = itemInt[7];
         ConstrainWindowPlacement(&winPlace, !startingProg);
-        if (winPlace.rcNormalPosition.right > 0 && 
+        if (winPlace.rcNormalPosition.right != NO_PLACEMENT &&
           winPlace.rcNormalPosition.bottom > 0)
           mWinApp->SetWindowPlacement(&winPlace);
 
@@ -6062,7 +6062,7 @@ void CParameterIO::CheckForSpecialChars(CString & strLine)
 void CParameterIO::WritePlacement(const char *string, int open, WINDOWPLACEMENT *place)
 {
   CString oneState;
-  if (place->rcNormalPosition.right <= 0)
+  if (place->rcNormalPosition.right == NO_PLACEMENT)
     return;
   oneState.Format("%s %d %d %d %d %d %d %d %d %d %d\n", string,
     open, place->showCmd,
