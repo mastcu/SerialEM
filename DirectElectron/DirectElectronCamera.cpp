@@ -56,7 +56,11 @@ static const char *psNoSave = "Discard";
 static const char *psReadoutDelay = "Sensor Readout Delay (milliseconds)";
 static const char *psServerVersion = "Server Software Version";
 static const char *psHardwareBin = "Sensor Hardware Binning";
+static const char *psBinMode = "Binning Mode";
+static const char *psROIMode = "ROI Mode";
 static const char *psHardwareROI = "Sensor Hardware ROI";
+static const char *psHWandSW = "Hardware and Software";
+static const char *psSWonly = "Software Only";
 static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisitions";
 static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
@@ -453,12 +457,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString str;
     CString tmp, tmp2;
     std::string propValue;
-    bool result;
+    bool result, sawHWROI = false, sawHWbinning = false;
     BOOL debug = GetDebugOutput('D');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
       "Temperature Control - Setpoint (Celsius)", 
       "Temperature - Cool Down Setpoint (Celsius)", psReadoutDelay, psHardwareBin,
-      "Hardware Binning X", psHardwareROI,"Hardware ROI Size X", psCountsPerElec,
+      psBinMode, psHardwareROI, psROIMode, psCountsPerElec,
       psCountsPerEvent, psADUsPerElectron, "ADUs Per Electron Bin1x"};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN, 
       DE_HAS_TEMP_SET_PT, DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN,
@@ -500,6 +504,10 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       for (int j = 0; j < numFlags; j++)
         if (!camProps[i].compare(propsToCheck[j]))
           mCamParams[camIndex].CamFlags |= flagsToSet[j];
+      if (!camProps[i].compare("Hardware Binning X"))
+        sawHWbinning = true;
+      if (!camProps[i].compare("Hardware ROI Size X"))
+        sawHWROI = true;
       if (debug && camProps[i].find("Preset") != 0) {
         listProps += camProps[i].c_str();
         if (mDeServer->getProperty(camProps[i], &propValue))
@@ -522,6 +530,15 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       str += "\r\nProperties for : " + listProps;
       str += "\r\n\r\n";
       PrintfToLog("%s", str);
+    }
+
+    // FWIW, if it saw these properties (which are ubiquitous) for server 2.7, set the
+    // flags for the hardware.  Maybe only cameras with hardware binning/ROI are supported
+    if (mServerVersion >= DE_AUTOSAVE_RENAMES2) {
+      if (sawHWROI)
+        mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_ROI;
+      if (sawHWbinning)
+        mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_BIN;
     }
 
     // Set some properties that are not going to be managed
@@ -1247,8 +1264,11 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
       if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
       {
         SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
-        if (mServerVersion < DE_AUTOSAVE_RENAMES2) {
+        if (mServerVersion < DE_HAS_API2) {
           if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
+            return 1;
+        } else if (mServerVersion < DE_AUTOSAVE_RENAMES2) {
+          if (!setStringWithError(psBinMode, hardwareBin > 0 ? psHWandSW : psSWonly))
             return 1;
         } else {
           if (!justSetIntProperty("Hardware Binning X", hardwareBin > 0 ? 2 : 1) ||
@@ -1266,7 +1286,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
       if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
         if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) || 
           !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
-           mLastErrorString = ErrorTrace("ERROR: Could NOT set thesoftware binning "
+           mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
              "parameters of X: %d and Y: %d", x / lessBin, y / lessBin);
             return 1;
         } else {
@@ -1389,8 +1409,11 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
       if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
         (newProp && hardwareROI > 0 && (needSize || needOffset)) ||
           !mTrustLastSettings)) {
-        if (!newProp) {
+        if (mServerVersion < DE_HAS_API2) {
           if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
+            return 1;
+        } else if (!newProp) {
+          if (!setStringWithError(psROIMode, hardwareROI > 0 ? psHWandSW : psSWonly))
             return 1;
         } else {
 
