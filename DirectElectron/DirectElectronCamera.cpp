@@ -532,13 +532,27 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       PrintfToLog("%s", str);
     }
 
-    // FWIW, if it saw these properties (which are ubiquitous) for server 2.7, set the
-    // flags for the hardware.  Maybe only cameras with hardware binning/ROI are supported
+    // If saw HW ROI for 2.7 on, check the features and turn it on if either X or Y is
+    // available (both may not be)
     if (mServerVersion >= DE_AUTOSAVE_RENAMES2) {
-      if (sawHWROI)
-        mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_ROI;
-      if (sawHWbinning)
+      if (sawHWROI) {
+        if ((mDeServer->getProperty("Feature - HW ROI X", &propValue) &&
+          propValue == "On") || (mDeServer->getProperty("Feature - HW ROI Y",
+            &propValue) && propValue == "On"))
+          mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_ROI;
+      }
+
+      // Check if there is a non-empty string for hardware bin
+      // and supersede the counting detection with this feature value
+      if (sawHWbinning && mDeServer->getProperty("Hardware Binning X", &propValue) &&
+        propValue.length() > 0)
         mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_BIN;
+      if (mDeServer->getProperty("Feature - Counting", &propValue)) {
+        if (propValue == "On")
+          mCamParams[camIndex].CamFlags |= DE_CAM_CAN_COUNT;
+        else 
+          mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
+      }
     }
 
     // Set some properties that are not going to be managed
