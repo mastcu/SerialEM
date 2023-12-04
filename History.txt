@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/4/23: Fixed optional arguments to CombineHolesToMulti when called from
+Python.
+
 12/1/23: Fixed detection of lack of hardware binning and ROI for DE cameras,
 broken in beta26.
 
