@@ -74,7 +74,8 @@ IDC_STAT_SCANRATE, IDC_BUT_MAX_SCAN_RATE, IDC_STAT_TIMING_AVAIL,
 IDC_CHECK_DYNFOCUS, IDC_CHECK_LINESYNC, IDC_STATCHANACQ, IDC_STATCHAN1, IDC_STATCHAN2,
 IDC_STATCHAN3, IDC_STATCHAN4, IDC_STATCHAN5, IDC_STATCHAN6, IDC_STATCHAN7, IDC_STATCHAN8,
 IDC_COMBOCHAN1,IDC_COMBOCHAN2, IDC_COMBOCHAN3, IDC_COMBOCHAN4, IDC_COMBOCHAN5, 
-IDC_COMBOCHAN6, IDC_COMBOCHAN7, IDC_COMBOCHAN8, PANEL_END,
+IDC_COMBOCHAN6, IDC_COMBOCHAN7, IDC_COMBOCHAN8, IDC_STAT_PREPIXEL, IDC_EDIT_PREPIXEL,
+PANEL_END,
 IDC_STAT_K2MODE, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, IDC_DOSE_FRAC_MODE, 
 IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRAC,
 IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
@@ -126,6 +127,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bSaveK2Sums(FALSE)
   , m_bUseCorrDblSamp(FALSE)
   , m_bTakeK3Binned(FALSE)
+  , m_iPrepixel(0)
 {
   //{{AFX_DATA_INIT(CCameraSetupDlg)
   m_iBinning = -1;
@@ -312,6 +314,10 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_INTERMEDIATE_ONOFF, m_statIntermediateOnOff);
   DDX_Control(pDX, IDC_CHECK_TAKE_K3_BINNED, m_butTakeK3Binned);
   DDX_Check(pDX, IDC_CHECK_TAKE_K3_BINNED, m_bTakeK3Binned);
+  DDX_Control(pDX, IDC_EDIT_PREPIXEL, m_editPrepixel);
+  DDX_Control(pDX, IDC_STAT_PREPIXEL, m_statPrepixel);
+  DDX_Text(pDX, IDC_EDIT_PREPIXEL, m_iPrepixel);
+  DDV_MinMaxInt(pDX, m_iPrepixel, 0, 1000);
 }
 
 
@@ -420,6 +426,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DE_SUM_NUM, OnDeltaposSpinDeSumNum)
   ON_BN_CLICKED(IDC_CHECK_TAKE_K3_BINNED, OnTakeK3Binned)
   ON_BN_CLICKED(IDC_CHECK_HARDWARE_ROI, OnUseHwROI_OvDiff)
+  ON_EN_KILLFOCUS(IDC_EDIT_PREPIXEL, OnKillfocusEditPrepixel)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -496,6 +503,8 @@ void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
     UpdateData(FALSE);
     DrawBox();
   }
+  if (mParam->STEMcamera)
+    ManageDrift();
 }
 
 void CCameraSetupDlg::OnButsmaller10() 
@@ -971,6 +980,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_bLineSync = mCurSet->lineSync > 0;
   m_bDynFocus = mCurSet->dynamicFocus > 0;
   m_iIntegration = mCurSet->integration;
+  if (mTietzType && mParam->STEMcamera)
+    m_iPrepixel = mCurSet->numSkipBefore;
   B3DCLAMP(m_iIntegration, 1, mMaxIntegration);
 
   // Initialize dark ref averaging to defaults if out of range
@@ -1131,7 +1142,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam))
     mCurSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
   mCurSet->summedFrameList = mSummedFrameList;
-  mCurSet->numSkipBefore = mNumSkipBefore;
+  mCurSet->numSkipBefore = (mTietzType && mParam->STEMcamera) ? m_iPrepixel:
+    mNumSkipBefore;
   mCurSet->numSkipAfter = mNumSkipAfter;
   mCurSet->userFrameFractions = mUserFrameFrac;
   mCurSet->userSubframeFractions = mUserSubframeFrac;
@@ -1672,6 +1684,8 @@ void CCameraSetupDlg::ManageCamera()
 
   // Make modifications for STEM camera
   m_butLineSync.EnableWindow(mParam->GatanCam);
+  m_statPrepixel.ShowWindow(mTietzType ? SW_SHOW : SW_HIDE);
+  m_editPrepixel.ShowWindow(mTietzType ? SW_SHOW : SW_HIDE);
   maxChan = mCamera->GetMaxChannels(mParam);
   for (i = 0; i < MAX_STEM_CHANNELS; i++) {
     m_butmaxScanRate.EnableWindow(mParam->maxScanRate > 0.);
@@ -2254,6 +2268,11 @@ void CCameraSetupDlg::OnKillfocusEditIntegration()
 {
   UpdateData(TRUE);
   ManageIntegration();
+}
+
+void CCameraSetupDlg::OnKillfocusEditPrepixel()
+{
+  UpdateData(true);
 }
 
 void CCameraSetupDlg::OnKillfocusEditsettling() 

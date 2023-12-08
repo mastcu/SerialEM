@@ -293,6 +293,10 @@ CCameraController::CCameraController()
   mLowerScreenForSTEM = 1;
   mRamperInstance = false;
   mTD.ContinuousSTEM = 0;
+  mTD.ReturnPartialScan = 0;
+  mPartialScanThreshExp = 0.5f;
+  mTietzScanCoordRange = 18500;
+  mInvertTietzScan = false;
   mDSextraShotDelay = 100;
   mDSshouldFlip = -1;         // Will be 0 or 1 if read in
   mDSglobalRotOffset = 0.;    // Won't be tested unless flip is read in too
@@ -1267,9 +1271,8 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 int CCameraController::InitializeTietz(int whichCameras, int *originalList, int numOrig, 
                                         BOOL anyPreExp)
 {
-  int i, ind, flags, type, plugVers, servVers, idum;
+  int i, ind, flags, type, plugVers, servVers;
   bool anyGPU = false, anyNonGPU = false, hasSTEM = false, lockFailed = false;
-  double minPixel, rotInc, ddum;
   CString mess;
   CameraParameters *param;
   CamPluginFuncs *funcs;
@@ -1298,9 +1301,9 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
       if (param->TietzType) {
         if (param->TietzType == 17 || param->TietzType == 18)
           anyGPU = true;
-        else
+        else if (!param->STEMcamera)
           anyNonGPU = true;
-        if (param->STEMcamera)
+        else
           hasSTEM = true;
       }
     }
@@ -1337,7 +1340,8 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
           if (anyPreExp && !mShutterInstance)
             param->TietzCanPreExpose = false;
           mPlugFuncs[ind] = funcs;
-          param->cameraNumber = param->STEMcamera ? -1 : param->TietzType;
+          param->cameraNumber = (param->STEMcamera && param->TietzType >= 0) ? -1 : 
+            param->TietzType;
           if (flags & PLUGFLAG_FLOATS_BY_FLAG)
             param->CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
           if (flags & PLUGFLAG_CAN_DIV_MORE)
@@ -1363,12 +1367,13 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
             if (param->useContinuousMode < 0)
               param->useContinuousMode = (type >= 11 && type != 13) ? 1 : 0;
           } else {
-
-            funcs->GetSTEMProperties(param->sizeX, param->sizeY,
-              &minPixel, &param->maxPixelTime, &param->pixelTimeIncrement,
-              &rotInc, &ddum, &param->maxIntegration, &idum);
-            if (minPixel > 0)
-              mAllParams[i].minPixelTime = (float)minPixel;
+            // camera number is -1 for scan. -2 for LUT, -3 and -4 for simulation
+            B3DCLAMP(param->cameraNumber, -4, -1);
+            if (param->sizeY != param->sizeX) {
+              AfxMessageBox("The Tietz plugin requires a square STEM camera size; the X"
+                " size will be used", MB_EXCLAME);
+              param->sizeY = param->sizeX;
+            }
           }
         }
       }
@@ -1916,7 +1921,8 @@ void CCameraController::InitiateCapture(int inSet)
 
   // If the last shot was a single frame, do the auto-shift to the extent specified
   if (((mSingleContModeUsed == SINGLE_FRAME || mLastWasContinForTask) && 
-    !(mParam->K2Type && mNextAsyncSumFrames == 0)) || mRequiredRoll) {
+    !(mParam->K2Type && mNextAsyncSumFrames == 0) && mTD.ReturnPartialScan <= 0) ||
+    mRequiredRoll) {
     int nRoll = mBufferManager->GetShiftsOnAcquire();
     if (nRoll < mRequiredRoll)
       nRoll = mRequiredRoll;
@@ -1936,10 +1942,13 @@ void CCameraController::InitiateCapture(int inSet)
 // keepIndexCurrent displayed if it is not 0 or less.
 void CCameraController::RollBuffers(int nRoll, int keepIndexCurrent)
 {
+  mRollBufKeptIndex = 0;
   for (int i = nRoll; i > 0 ; i--) {
-    mBufferManager->CopyImageBuffer(i - 1, i);
-    if (keepIndexCurrent > 0 && keepIndexCurrent == i - 1)
+    mBufferManager->CopyImageBuffer(i - 1, i, false);
+    if (keepIndexCurrent > 0 && keepIndexCurrent == i - 1) {
       mWinApp->SetCurrentBuffer(keepIndexCurrent + 1);
+      mRollBufKeptIndex = keepIndexCurrent;
+    }
   }
 }
 
@@ -1970,7 +1979,7 @@ void CCameraController::StopCapture(int ifNow)
 
   // Clear the repeat flag
   TurnOffRepeatFlag();
-  if (!CameraBusy()) {
+  if (!CameraBusy() || mTD.ReturnPartialScan) {
     StopContinuousSTEM();
     return;
   }
@@ -2014,8 +2023,9 @@ BOOL CCameraController::CameraReady()
 BOOL CCameraController::CameraBusy()
 {
   return mRaisingScreen || mInserting || mSettling >= 0 || mAcquiring || mEnsuringDark ||
-   mWaitingForStacking > 0 || mStartedFalconAlign || mStartedExtraForDEalign ||
-   mScriptThread != NULL || mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
+    mWaitingForStacking > 0 || mStartedFalconAlign || mStartedExtraForDEalign ||
+    mScriptThread != NULL || mScope->LongOperationBusy(LONG_OP_HW_DARK_REF)
+    || mTD.ReturnPartialScan > 0;
 }
 
 int CCameraController::GetServerFramesLeft()
@@ -3963,6 +3973,18 @@ void CCameraController::Capture(int inSet, bool retrying)
     (mTD.DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   mTD.integration = conSet.integration;
   mTD.PluginVersion = GetPluginVersion(mParam);
+
+  // Set partial scan to 2 the first time to signal that buffers need to be rolled
+  if (mParam->STEMcamera && mParam->TietzType && conSet.exposure >= mPartialScanThreshExp)
+  {
+    mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
+  } else
+    mTD.ReturnPartialScan = 0;
+
+  if (mTD.ReturnPartialScan)
+    mTD.PlugSTEMacquireFlags |= PLUGCAM_PARTIAL_SCAN;
+  if (mParam->STEMcamera && mParam->TietzType && mInvertTietzScan)
+    mTD.PlugSTEMacquireFlags |= PLUGCAM_INVERT_SCAN;
   
   if (mSingleContModeUsed == CONTINUOUS && mNeedShotToInsert < 0) {
     if (mParam->STEMcamera && mParam->GatanCam)
@@ -5283,9 +5305,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   if (oneViewTakingFrames)
     swapXYinAcquire = mParam->rotationFlip % 2;
 
-  SEMTrace('T', "Size & LRTB, user: %d %d %d %d %d %d\r\n     mTD: %d %d %d %d %d %d   "
-    "gain offset %d %d", mDMsizeX, mDMsizeY, mLeft, mRight, mTop, mBottom, tsizeX, tsizeY,
-    tLeft, tRight, tTop, tBot, gainXoffset, gainYoffset);
+  if (mTD.ReturnPartialScan <= 0)
+    SEMTrace('T', "Size & LRTB, user: %d %d %d %d %d %d\r\n     mTD: %d %d %d %d %d %d   "
+      "gain offset %d %d", mDMsizeX, mDMsizeY, mLeft, mRight, mTop, mBottom, tsizeX, 
+      tsizeY, tLeft, tRight, tTop, tBot, gainXoffset, gainYoffset);
 
   // load some thread data
   // If sizes have been swapped in the tsize variables, unswap them here and save sizes
@@ -5399,6 +5422,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     }
     SetNonGatanPostActionTime();
     mTD.DMsettling = 0.;
+    if (mParam->TietzType)
+      mTD.UseHardwareROI = conSet.numSkipBefore;
 
   } else if (mParam->GatanCam) {
 
@@ -7365,7 +7390,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
     td->Binning, td->DMSizeX * td->Binning, td->DMSizeY * td->Binning, td->Binning);
   if (!retval)
     retval = td->plugFuncs->SetExposure(td->STEMcamera ? td->PixelTime : td->Exposure, 
-    settling);
+      (td->STEMcamera && tietzImage) ? td->UseHardwareROI : settling);
   if (!retval && td->plugFuncs->SetAcquireFlags) {
     if (td->STEMcamera)
       td->plugFuncs->SetAcquireFlags(td->PlugSTEMacquireFlags);
@@ -7390,18 +7415,26 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   // This sets shuttermode, it does have to be set to beam blank at some point when in
   // rolling shutter mode, so don't just skip it
   if (!retval && tietzImage && !tietzAlreadyLive)
-    retval = td->plugFuncs->PrepareForAcquire(td->STEMcamera ? -1 : td->TietzType,
-      td->ShutterMode);
+    retval = td->plugFuncs->PrepareForAcquire(td->STEMcamera ? td->SelectCamera : 
+      td->TietzType, td->ShutterMode);
   if (!retval && blanker)
     StartBlankerThread(td);
 
   // Get the image
   if (!retval) {
     numAcquired = 1;
-    if (td->STEMcamera)
+    if (td->STEMcamera) {
       retval = td->plugFuncs->AcquireSTEMImage((short **)array, arrSize, td->NumChannels,
-      td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY, &numAcquired);
-    else
+        td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY, 
+        &numAcquired);
+
+      // Set partial scan negative if it is over, signaled by negative numAcquired;
+      // fix sign of numAcquired
+      if (td->ReturnPartialScan > 0 && numAcquired < 0) {
+        td->ReturnPartialScan = -td->ReturnPartialScan;
+      }
+      numAcquired = B3DABS(numAcquired);
+    } else
       retval = td->plugFuncs->AcquireImage(((short **)array)[0], arrSize, processing, 
         &sizeX, &sizeY);
   }
@@ -9336,7 +9369,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 {
   double stX, stZ, ISX, ISY;
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
-  int alignErr, sumCount, camFrames, typext = 0, ldSet = 0, darkScale = 1;
+  int alignErr, sumCount, curBuf, camFrames, typext = 0, ldSet = 0, darkScale = 1;
   BOOL lowDoseMode, hasUserPtSave = false;
   bool nameConfirmed, readLocally = false, reportContinAlign = false;
   float axoff, ayoff, specRate, camRate;
@@ -9358,6 +9391,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int conSetUsed = mLastConSet, errForCleanup = 0;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
+  int rollKeptIndex = mRollBufKeptIndex;
   float pixelSize = (float)(mBinning * 10000. * 
     mShiftManager->GetPixelSize(curCam, mMagBefore));
   bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
@@ -9932,7 +9966,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mImBufs->DeleteOffsets();
         mImBufs->mImage = image;
         mImBufs->mCaptured = 1;
-        mWinApp->mBufferManager->FindScaling(mImBufs);
+        mWinApp->mBufferManager->FindScaling(mImBufs, 
+          mParam->STEMcamera && mTD.ReturnPartialScan > 0);
       }
 
       imBuf->mBinning = mBinning;
@@ -10398,7 +10433,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // If there are more channels, roll the buffers
     if (chan)
-      RollBuffers(mBufferManager->GetShiftsOnAcquire(), 0);
+      RollBuffers(B3DABS(mTD.ReturnPartialScan) == 1 ? mTD.NumChannels - 1 :
+        mBufferManager->GetShiftsOnAcquire(), 0);
 
     // Delete image if it is a no-return shot
     if (mTD.NumAsyncSumFrames == 0)
@@ -10425,10 +10461,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // For live FFT, or a regular FFT if side-by-side is open and this is enabled, 
     // do an FFT instead of setting current buffer
     // But set the buffer if not 0 so the FFT is of the right buffer
+    curBuf = mWinApp->GetImBufIndex();
     if ((mSingleContModeUsed == CONTINUOUS && mWinApp->mProcessImage->GetLiveFFT()) ||
       (mSingleContModeUsed != CONTINUOUS && mWinApp->mProcessImage->GetSideBySideFFT() &&
       mWinApp->mProcessImage->GetAutoSingleFFT() && mWinApp->mFFTView)) {
-      if (mWinApp->GetImBufIndex())
+      if (curBuf)
         mWinApp->SetCurrentBuffer(0);
       if (!mWinApp->mProcessImage->GetSideBySideFFT())
         mImBufs->mHasUserPt = hasUserPtSave;
@@ -10436,6 +10473,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mSingleContModeUsed == CONTINUOUS ? BUFFER_LIVE_FFT : BUFFER_FFT);
       if (mWinApp->mProcessImage->GetSideBySideFFT())
         mWinApp->SetCurrentBuffer(0);
+    } else if (mTD.ReturnPartialScan && curBuf >= 0 && curBuf <= mTD.NumChannels) {
+      if (rollKeptIndex > 0)
+        curBuf = rollKeptIndex;
+      mRollBufKeptIndex = 0;
+      if (curBuf < mTD.NumChannels)
+        mWinApp->SetCurrentBuffer(curBuf);
     } else
       mWinApp->SetCurrentBuffer(0);
     mWinApp->SetDeferBufWinUpdates(false);
@@ -10446,6 +10489,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   if (errForCleanup && mRepFlag >= 0) {
     TurnOffRepeatFlag();
     StopContinuousSTEM();
+  }
+
+  if (mTD.ReturnPartialScan > 0 && (errForCleanup || mHalting)) {
+    mTD.plugFuncs->StopContinuous();
+    mTD.PlugSTEMacquireFlags |= PLUGCAM_ABORT_SCAN;
+    mTD.plugFuncs->SetAcquireFlags(mTD.PlugSTEMacquireFlags);
+    mTD.ReturnPartialScan = 0;
   }
 
   ErrorCleanup(errForCleanup);
@@ -10468,10 +10518,18 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mPending = -1;
     return;
   }
-  if (mRepFlag < 0)
+
+  // Stop continuous mode if flag cleared for that
+  if (mRepFlag < 0 && !mTD.ReturnPartialScan)
     StopContinuousSTEM();
+
+  // Start new capture if getting partial scans
+  if (mTD.ReturnPartialScan > 0) {
+    Capture(mLastConSet);
+    return;
+  }
   
-  // Check for whether to start another capture
+  // Check for whether to start pending capture
   if (InitiateIfPending())
     return;
 
@@ -10600,8 +10658,9 @@ void CCameraController::ErrorCleanup(int error)
   // clear flags for one-shot type items, mostly set from elsewhere
   ClearOneShotFlags();
 
-  if (error || (mRepFlag < 0 && !mTD.DoingTiltSums) || mHalting || mPending >= 0 ||
-    (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))
+  if (error || mHalting || (mTD.ReturnPartialScan <= 0 && 
+    ((mRepFlag < 0 && !mTD.DoingTiltSums) || mPending >= 0 || 
+    (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))))
     mScope->SetCameraAcquiring(false);
   if (mParam->noShutter == 1 && !mTD.ReblankTime && mWinApp->mCalibTiming->Calibrating())
     mScope->BlankBeam(true, "ErrorCleanup for NoShutter 2 timing");
@@ -10622,7 +10681,7 @@ void CCameraController::ErrorCleanup(int error)
     SEMMessageBox(mTD.errMess, MB_EXCLAME);
   mTD.errFlag = 0;
   mNoMessageBoxOnError = 0;
-  if (error || mRepFlag < 0 || mHalting || mPending >= 0)
+  if (error || (mRepFlag < 0 && mTD.ReturnPartialScan <= 0) || mHalting || mPending >= 0)
     mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   if (mRepFlag >= 0 && !mPreventUserToggle)
@@ -11140,7 +11199,8 @@ BOOL CCameraController::IsCameraFaux()
 int CCameraController::LockInitializeTietz(BOOL firstTime)
 {
   int nlist = mWinApp->GetActiveCamListSize();
-  int i, ind, err, chipX, chipY;
+  int i, ind, err, chipX, chipY, idum;
+  double minPixel, rotInc, ddum;
   int numGain, xsize, ysize;
   CString report;
   CameraParameters *camP;
@@ -11150,7 +11210,7 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
     ind = mActiveList[i];
     camP = &mAllParams[ind];
     if (camP->TietzType && !camP->failedToInitialize) {
-      err = mPlugFuncs[ind]->InitializeCamera(camP->STEMcamera ? -1 : camP->TietzType);
+      err = mPlugFuncs[ind]->InitializeCamera(camP->TietzType);
       if (err) {
         report = mPlugFuncs[ind]->GetLastErrorString();
 
@@ -11167,6 +11227,11 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
           return 1;
         camP->failedToInitialize = true;
       } else if (camP->STEMcamera) {
+        mPlugFuncs[ind]->GetSTEMProperties(camP->sizeX, mTietzScanCoordRange,
+          &minPixel, &camP->maxPixelTime, &camP->pixelTimeIncrement,
+          &rotInc, &ddum, &camP->maxIntegration, &idum);
+        if (minPixel > 0)
+          mAllParams[i].minPixelTime = (float)minPixel;
       } else {
         if (camP->LowestGainIndex < 0)
           camP->LowestGainIndex = (camP->TietzType >= MIN_XF416_TYPE) ? 2 : 1;
@@ -12837,7 +12902,8 @@ void CCameraController::StopContinuousSTEM(void)
 {
   HRESULT hr;
   mContinuousDelayFrac = 0.;
-  if (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD))
+  if (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) &&
+    !mTD.ReturnPartialScan)
     return;
   if (mScope->GetCameraAcquiring())
     mScope->SetCameraAcquiring(false);
@@ -12845,6 +12911,7 @@ void CCameraController::StopContinuousSTEM(void)
   // Plugin camera
   if (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) {
     mTD.plugFuncs->StopContinuous();
+    mTD.ReturnPartialScan = 0;
     return;
   }
 

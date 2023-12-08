@@ -3011,6 +3011,8 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->moduloX = -9;
               camP->moduloY = -9;
             }
+            if (camP->TietzType < 0)
+              camP->STEMcamera = true;
           } else if (MatchNoCase("DropFramesStartEnd")) {
             B3DCLAMP(itemInt[1], 0, TIETZ_DROP_FRAME_MASK);
             B3DCLAMP(itemInt[2], 0, TIETZ_DROP_FRAME_MASK);

@@ -3255,18 +3255,48 @@ MoveStage 0 0 -$zRange / 2.
           the program of these restrictions and the camera setup dialog can limit binning
           selections accordingly.&nbsp; If you are satisfied with taking no more than
           2048x2048 from two detectors, you can make the following entries:</P>
-        <P>&nbsp;&nbsp;&nbsp; CameraSizeX 4096 <br />
+        <P>&nbsp;&nbsp;&nbsp;&nbsp; CameraSizeX 4096 <br />
           &nbsp;&nbsp;&nbsp; CameraSizeY 4096 <br />
           &nbsp;&nbsp;&nbsp; MinMultiChannelBinning 2 4 4<br />
           &nbsp;&nbsp;&nbsp; Binnings 1 2 4 8 16 32<br />
         </P>
         <P>However, it is possible to access the full 3072x3072 capability by defining the
           camera as 3 times larger with a minimum binning of 3:</P>
-        <P>&nbsp;&nbsp;&nbsp; CameraSizeX 12288 <br />
+        <P>&nbsp;&nbsp;&nbsp;&nbsp; CameraSizeX 12288 <br />
           &nbsp;&nbsp;&nbsp; CameraSizeY 12288 <br />
           &nbsp;&nbsp;&nbsp; MinMultiChannelBinning 4 12 12<br />
           &nbsp;&nbsp;&nbsp; Binnings 3 4 6&nbsp; 8 12 16 24 32 48</P>
         <P>where you might not want all of those binning values.</P>
+      <P><strong>Using the Tietz scan generator.</strong>&nbsp; This STEM interface is 
+        identified with a &#39;TietzCameraType&#39; of -1 (the property &#39;STEMcamera&#39; is set 
+        automatically).&nbsp; The scan generator uses an internal coordinate system with 
+        a range of 65535.&nbsp; SerialEM scales the STEM coordinates that the user sees 
+        into a subset of this range, determined by the property &#39;TietzScanRange&#39;.&nbsp; 
+        The default is a range of 18500, which will produce full-field scans about the 
+        same size as those produced by the native scan generators on Thermo/FEI scopes 
+        and some JEOL scopes.&nbsp; General image distortions (i.e., ones other than a 
+        distortion at the left size of the scan lines) may be caused by using too large 
+        a value.&nbsp; The best way to assess such distortion is to take two images 
+        overlapping by half, align them, and toggle between them.&nbsp; If this 
+        distortion is a concern, assess it for different ranges and settle on a new 
+        value before starting any calibrations.</P>
+      <P>Because of this coordinate scaling, the number of pixels specified in 
+        properties is somewhat arbitrary, although it must be the same in X and Y.&nbsp; 
+        A size of 8192x8192 with binnings up to 32 would provide much flexibility, but 
+        you can set it to 4096x4096 to avoid using such high binnings, or you could even 
+        set it much higher, like 16384x16384, to have access to fine detail in very 
+        small subareas.&nbsp; This is another item that must be settled before doing any 
+        calibrations.</P>
+      <P>Finally, take an image with recognizable features and compare it with the image 
+        on the flu-cam, screen, or another camera.&nbsp; If it is flipped relative to 
+        these projections (i.e., cannot be brought to the same orientation with rotation 
+        alone), add the property &#39;InvertTietzScan&#39;.</P>
+      <P>This is the only STEM interface that provides access to the scan before it is 
+        complete and allows it to be aborted.&nbsp; For frame times longer than 0.5 sec 
+        (or whatever minimum the property &#39;PartialScanThreshold&#39; specifies), SerialEM 
+        will display the scan as it becomes available.&nbsp; If you are acquiring 
+        multiple channels, it will let you toggle between them during the scan.&nbsp; 
+        The STOP button will stop the acquisition.&nbsp; </P>
     <P><b><i>Camera Timing. </i></b>Run the <A href="menu_calibration.htm#hid_calibration_cameratiming">
       Camera Timing</A> command in the Calibration menu, accepting the default
       parameters for exposure, binning, and number of test images.&nbsp; At the end,
@@ -3711,7 +3741,8 @@ MoveStage 0 0 -$zRange / 2.
         desired change.&nbsp; To assess whether this is happening on a Windows 10 
         system, go to a lower magnification where you can see the objective aperture in 
         an image, and use a script command 'SetApertureSize 2 X' to change the size to 
-        'X'.&nbsp; </p>
+        'X'.&nbsp; Aperture control has been found not to work on more than one Glacios and 
+        at least one Krios running WIndows 10.</p>
       <p>The aperture operations, and 'ReportSlotStatus', will hang FEI-SEMserver.exe on 
         some Windows 7 systems, even though they work when SerialEM is running directly 
         on the scope computer. &nbsp; If this occurs, set the environment variable 

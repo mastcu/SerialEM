@@ -186,7 +186,7 @@ struct CameraThreadData {
   int ImageType;              // Type of image
   long Binning;                // Binning
   int UseHardwareBinning;     // Hardware binning flag for DE
-  int UseHardwareROI;         // Hardware ROI flag for DE
+  int UseHardwareROI;         // Hardware ROI flag for DE; or prepixel time for Tietz STEM
   double FramesPerSec;        // FPS value when ther is counting mode for DE
   double Exposure;            // Exposure in sec. after forcing bump if any
   long Processing;
@@ -287,6 +287,7 @@ struct CameraThreadData {
   double IndexPerMs;           // Table step per ms
   int ContinuousSTEM;
   int PlugSTEMacquireFlags;    // Acquire flags for plugin STEM
+  int ReturnPartialScan;       // Flag that STEM is to return a partial scan
   BOOL MakeFEIerrorTimeout;    // Turn FEI COM error into timeout
   int GatanReadMode;           // The read mode of Gatan camera, -1 not to set it
   bool NeedsReadMode;          // Flag that plugin needs to be told the read mode
@@ -612,6 +613,10 @@ public:
   SetMember(bool, SuspendFilterUpdates);
   GetSetMember(BOOL, ShowLinearForAlpine);
   GetSetMember(BOOL, UseAPI2ForDE);
+  GetSetMember(int, TietzScanCoordRange);
+  GetSetMember(BOOL, InvertTietzScan);
+  GetSetMember(float, PartialScanThreshExp);
+  bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
@@ -860,6 +865,9 @@ public:
   bool mFoundCombo;
   BOOL mConsetsShareChannelList;  // Flag that control sets should be kept synchronized
   int mScreenInIfDetectorOut;   // Screen must be lowered to protect camera if this out
+  float mPartialScanThreshExp;  // Threshold exposure for asking for a partial scan
+  int mTietzScanCoordRange;     // Range of coordinates to use for a TVIPS scan
+  BOOL mInvertTietzScan;        // Flip the VY vectors
   BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;
@@ -1058,6 +1066,7 @@ public:
   BOOL mRamperWaitForBlank;      // Flag to wait for blank when measuring STEMM flyback
   BOOL mShowLinearForAlpine;     // Show linear mode in setup dialog for Alpine camera
   BOOL mUseAPI2ForDE;            // Use the API 2 for DE camera connection and all calls
+  int mRollBufKeptIndex;         // Last buffer that was redisplayed in RollBuffers
 
 public:
   void SetNonGatanPostActionTime(void);

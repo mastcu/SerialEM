@@ -74,7 +74,7 @@ struct ControlSet {
   ShortVec summedFrameList;
   FloatVec userFrameFractions;
   FloatVec userSubframeFractions;
-  int numSkipBefore;
+  int numSkipBefore;  // Also used for prepixel time in microseconds in Tietz STEM
   int numSkipAfter;
   int DEsumCount;     // DE sum count only for linear mode
 };

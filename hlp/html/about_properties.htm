@@ -1459,6 +1459,7 @@
         <TR VALIGN="top">
           <TD>TietzCameraType</TD>
           <TD>0 for a non-Tietz camera<br />
+            -1 for Tietz STEM camera or -3 for STEM simulator<br />
             1 for Tietz simulation camera<br />
             2 for PXL camera
             (older F214, F224 with the PXL controller)<br />
@@ -5015,6 +5016,26 @@
             Control panel is checked.&nbsp; With a value of 0, they will never be inverted.&nbsp; With
             a value of -1, they will be inverted when the button is NOT checked, so that
             bright and dark field images will always have the same contrast polarity.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PartialScanThreshold</TD>
+          <TD>Minimum exposure time for displaying partial scans as a STEM image is acquired, for
+            situations that support this (currently just the Tietz scan generator).&nbsp; The default is 0.5 sec.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzScanCoordRange</TD>
+          <TD>Range of internal coordinates to use with the Tietz scan generator.&nbsp; The coordinates have a
+            full range of 65535 and SerialEM can use a range up to 42000 to allow for rotations
+             of up to 45 degrees.&nbsp; The default is 18500, which should give an image size comparable
+             to that with the native STEM on most scopes.&nbsp; Changing this value will invalidate calibrations.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InvertTietzScan</TD>
+          <TD>Set to 1 if the Tietz scan generator gives an image that is flipped, not just rotated,
+            relative to the viewing screen and other cameras.&nbsp; Changing this property will invalidate 
+            calibrations.</TD>
         </TR>
       </TABLE>
       <BR>

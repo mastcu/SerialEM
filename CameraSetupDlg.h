@@ -372,6 +372,10 @@ void ManageK2Binning(void);
   afx_msg void OnUseHwROI_OvDiff();
   CButton m_butTakeK3Binned;
   int CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, BOOL useSave, const char *descrip);
+  CEdit m_editPrepixel;
+  CStatic m_statPrepixel;
+  int m_iPrepixel;
+  afx_msg void OnKillfocusEditPrepixel();
 };
 
 //{{AFX_INSERT_LOCATION}}
