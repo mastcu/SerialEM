@@ -101,12 +101,12 @@ void KImageScale::DoRamp(unsigned int *inRamp, int inRampSize)
 
 // Find the image scaling that saturates a fraction of pixels
 void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, float fracUse,
-  int FFTbkgdGray, float FFTTruncDiam)
+  int FFTbkgdGray, float FFTTruncDiam, bool partialScan)
 {
   float nSample = 10000.;
   float matt = 0.5f * (1.f - fracUse);
   int ix, iy, nx, ny, type, ixStart, iyStart, nxUse, nyUse, loop, dsize = 1;
-  int maxRing, minRing, nsum;
+  int maxRing, minRing, nsum, numSame = 0, nyUsable;
   float sample, scaleLo, scaleHi, val, sum, valMax, valSecond, bkgd;
   double ringRad, rad;
   char *theImage;
@@ -122,15 +122,31 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
     inImage->UnLock();
     return;
   }
+  nyUsable = ny;
+
+  // If the caller indicates it could be a partial scan, loop from bottom and find first
+  // row with non-fill value
+  if (partialScan) {
+    valSecond = GetImageValue(linePtrs, type, nx, ny, nx / 2, ny - 1);
+    for (iy = ny - 2; iy > 0; iy--) {
+      val = GetImageValue(linePtrs, type, nx, ny, nx / 2, iy);
+      if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
+        numSame++;
+      else
+        break;
+    }
+    if (numSame > matt * ny && numSame < ny - 4)
+      nyUsable = (ny - numSame);
+  }
 
   // Loop twice, first finding the normal sample, then getting a much denser sample to set
   // the limits for the black/white sliders
   for (loop = 0; loop < 2; loop ++) {
     ixStart = (int)(nx * matt);
     nxUse = nx - 2 * ixStart;
-    iyStart = (int)(ny * matt);
-    nyUse = ny - 2 * iyStart;
-    sample = nSample / (fracUse * nx * fracUse * ny);
+    iyStart = (int)(nyUsable * matt);
+    nyUse = nyUsable - 2 * iyStart;
+    sample = nSample / (fracUse * nx * fracUse * nyUsable);
     if (sample > 1.0)
       sample = 1.0;
     if (percentileStretch(linePtrs, type, nx, ny, sample, ixStart, iyStart, nxUse, nyUse,
