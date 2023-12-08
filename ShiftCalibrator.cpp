@@ -347,14 +347,13 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
     
     // Now check if the deviations take the shift outside the allowed range
     // BUt not for doing from scratch, where this is based on a potentially bad cal
-    if (!mFirstCal && 
+    if (!mFirstCal &&
       !(mSM->ImageShiftIsOK(xOut, 0., true) && mSM->ImageShiftIsOK(-xOut, 0., true) &&
-      mSM->ImageShiftIsOK(0., yOut, true) && mSM->ImageShiftIsOK(0., -yOut, true))) {
+        mSM->ImageShiftIsOK(0., yOut, true) && mSM->ImageShiftIsOK(0., -yOut, true))) {
       AfxMessageBox(_T(
         "The image shift is too close to the end of its range\n"
         "or the computed output values are too large.\n\n"
         "Reset the image shifts to zero or try calibrating from scratch."), MB_EXCLAME);
-      if (ifRep)
         StopCalibrating();
       return;
     }
@@ -836,6 +835,7 @@ void CShiftCalibrator::ShiftDone()
         " the\r\nFind Pixel Size routine at this mag before trying again.");
       AfxMessageBox(report, MB_EXCLAME);
       mWinApp->AppendToLog(report);
+      StopCalibrating();
       return;
     }
     mShiftIndex = -1;
