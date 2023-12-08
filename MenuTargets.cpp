@@ -516,6 +516,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_COMMAND(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnReverseWheelZoomDirection)
     ON_COMMAND(ID_NAVIGATOR_ERASEPERIODICCORR, OnNavigatorErasePeriodicPeaks)
     ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_ERASEPERIODICCORR, OnUpdateNavigatorErasePeriodicPeaks)
+    ON_COMMAND(ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE, OnNavRunScriptInMultishot)
+    ON_UPDATE_COMMAND_UI(ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE, OnUpdateNavRunScriptInMultishot)
+    ON_COMMAND(ID_NAV_SETSCRIPTTORUN, OnNavSetScriptToRun)
+    ON_UPDATE_COMMAND_UI(ID_NAV_SETSCRIPTTORUN, OnUpdateNoTasks)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1298,6 +1302,30 @@ void CMenuTargets::OnUpdateNavigatorErasePeriodicPeaks(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
   pCmdUI->SetCheck(mNavHelper->GetRIErasePeriodicPeaks());
+}
+
+void CMenuTargets::OnNavRunScriptInMultishot()
+{
+  mWinApp->mParticleTasks->SetMSRunMacro(!mWinApp->mParticleTasks->GetMSRunMacro());
+}
+
+void CMenuTargets::OnUpdateNavRunScriptInMultishot(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mWinApp->mParticleTasks->GetMSRunMacro());
+}
+
+void CMenuTargets::OnNavSetScriptToRun()
+{
+  CMacroSelector dlg;
+
+  // This macro is numbered from 0
+  dlg.mMacroIndex = mWinApp->mParticleTasks->GetMSMacroToRun();
+
+  dlg.m_strEntryText = "Select script to run instead of Record in Multiple Records";
+  if (dlg.DoModal() == IDCANCEL)
+    return;
+  mWinApp->mParticleTasks->SetMSMacroToRun(dlg.mMacroIndex);
 }
 
 // DISTORTION

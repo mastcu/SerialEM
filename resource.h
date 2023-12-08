@@ -2172,6 +2172,8 @@
 #define IDC_EDIT_MAP_CUTOFF             3204
 #define IDC_EDIT_MAP_FALLOFF            3205
 #define IDC_STAT_MAP_FALLOFF            3206
+#define IDC_STAT_PREPIXEL               3207
+#define IDC_EDIT_PREPIXEL               3208
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2722,6 +2724,8 @@
 #define ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION 33516
 #define ID_NAVIGATOR_ERASEPERIODICCORR  33518
 #define ID_FILE_AUTOPRUNELOGWINDOW      33520
+#define ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 33521
+#define ID_NAV_SETSCRIPTTORUN           33522
 
 // Next default values for new objects
 // 
@@ -2729,8 +2733,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        284
-#define _APS_NEXT_COMMAND_VALUE         33521
-#define _APS_NEXT_CONTROL_VALUE         3207
+#define _APS_NEXT_COMMAND_VALUE         33523
+#define _APS_NEXT_CONTROL_VALUE         3209
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

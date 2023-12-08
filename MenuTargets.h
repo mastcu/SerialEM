@@ -428,6 +428,9 @@ public:
   afx_msg void OnReverseWheelZoomDirection();
   afx_msg void OnNavigatorErasePeriodicPeaks();
   afx_msg void OnUpdateNavigatorErasePeriodicPeaks(CCmdUI *pCmdUI);
+  afx_msg void OnNavRunScriptInMultishot();
+  afx_msg void OnUpdateNavRunScriptInMultishot(CCmdUI *pCmdUI);
+  afx_msg void OnNavSetScriptToRun();
 };
 
 /////////////////////////////////////////////////////////////////////////////
