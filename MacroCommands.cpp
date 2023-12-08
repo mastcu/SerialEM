@@ -8184,7 +8184,7 @@ int CMacCmd::StripEndingDigits(void)
 // SetNextEmailAddress
 int CMacCmd::SetNextEmailAddress(void)
 {
-  if (mItemInt < 0)
+  if (mItemInt[1] < 0)
     mStrCopy = "";
   else
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
