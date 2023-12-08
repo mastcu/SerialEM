@@ -196,6 +196,10 @@ struct JeolParams;
 #define PLUGCAM_DIVIDE_BY2         1
 #define PLUGCAM_CONTINUOUS         2
 // See SEMCCDDefines.h for bits 17-21
+#define PLUGCAM_PARTIAL_SCAN  (1 << 22)
+#define PLUGCAM_ABORT_SCAN    (1 << 23)
+#define PLUGCAM_INVERT_SCAN   (1 << 24)
+
 // These are copied to FeiScope.h
 #define PLUGFEI_MAKE_CAMERA        2
 #define PLUGFEI_MAKE_STAGE         4

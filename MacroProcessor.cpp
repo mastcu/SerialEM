@@ -1154,7 +1154,9 @@ int CMacroProcessor::TaskBusy()
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
-    mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
+    (mWinApp->mComplexTasks->DoingTasks() && 
+      !mWinApp->mParticleTasks->GetMSRunningMacro()) || 
+    mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
 // Clean up handles from external process, and kill it if it is still running, and close

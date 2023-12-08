@@ -680,13 +680,19 @@ BEGIN
         BEGIN
             MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
             MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
+            MENUITEM SEPARATOR
             MENUITEM "&Autosave Nav File",          ID_NAVIGATOR_AUTOSAVE
             MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
+            MENUITEM SEPARATOR
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
             MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
+            MENUITEM SEPARATOR
             MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
             MENUITEM "Tr&y Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
             MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
+            MENUITEM SEPARATOR
+            MENUITEM "Run Script in &Multi-shot",   ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE
+            MENUITEM "Set Script to &Run",          ID_NAV_SETSCRIPTTORUN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
@@ -1197,6 +1203,8 @@ BEGIN
     LTEXT           "99.99 e/sq A per frame",IDC_STAT_DOSE_PER_FRAME,27,302,97,8
     CONTROL         "Use correlated double sampling (CDS)",IDC_CHECK_USE_CORR_DBL_SAMP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,427,135,10
+    LTEXT           "Pre-pixel time (usec)",IDC_STAT_PREPIXEL,127,336,64,8
+    EDITTEXT        IDC_EDIT_PREPIXEL,192,334,24,12,ES_AUTOHSCROLL
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 136
@@ -2326,9 +2334,9 @@ BEGIN
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP16,358,233,24,10
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP17,358,245,24,10
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP18,358,257,24,10
-    CONTROL         "label",IDC_RGOTO_LABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,257,374,28,10
-    CONTROL         "note starting with",IDC_RGOTO_NOTE,"Button",BS_AUTORADIOBUTTON,287,374,61,10
-    CONTROL         "Run at nearest item with ",IDC_NA_RUN_AT_OTHER,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,174,374,82,10
+    CONTROL         "label",IDC_RGOTO_LABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,256,374,26,10
+    CONTROL         "note    starting with",IDC_RGOTO_NOTE,"Button",BS_AUTORADIOBUTTON,283,374,65,10
+    CONTROL         "Run at nearest item with ",IDC_NA_RUN_AT_OTHER,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,174,374,80,10
     COMBOBOX        IDC_COMBO_MACRO,55,90,93,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Setup",IDC_NA_SETUP_MULTISHOT,97,67,28,10
     CONTROL         "Make Navigator map",IDC_NA_SAVE_AS_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,42,82,10
@@ -2363,7 +2371,7 @@ BEGIN
     PUSHBUTTON      "Move Up",IDC_BUT_MOVE_UP,315,309,50,12
     PUSHBUTTON      "Move Down",IDC_BUT_MOVE_DOWN,315,324,50,12
     GROUPBOX        "Position in sequence",IDC_STAT_ORDER_GROUP,305,298,70,44
-    EDITTEXT        IDC_EDIT_GOTO_ITEM,349,373,34,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_GOTO_ITEM,350,373,34,12,ES_AUTOHSCROLL
     CONTROL         "Cycle defocus target in autofocus, drift wait && TS",IDC_NA_CYCLE_DEFOCUS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,118,153,10
     EDITTEXT        IDC_EDIT_CYCLE_FROM,34,130,24,12,ES_AUTOHSCROLL
@@ -7348,6 +7356,13 @@ STRINGTABLE
 BEGIN
     ID_FILE_AUTOPRUNELOGWINDOW 
                             "Limit # of lines in window by saving to file and pruning lines in window"
+    ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 
+                            "Run script instead of Record when running from Acquire at Items"
+    ID_NAV_SETSCRIPTTORUN   "Select the script to run during Multi-shots"
+END
+
+STRINGTABLE
+BEGIN
     IDC_CHECK_LOW_TILT_MAP  "Make map from lowest tilt Record or first Record of bidir/dose-sym series"
     IDC_CHECK_FILTER_MAP    "Apply Fourier filter to the map for a single-frame tilt series"
     IDC_EDIT_MAP_CUTOFF     "Start of low-pass Gaussian falloff (radius2) in reciprocal pixels (0-0.5)"

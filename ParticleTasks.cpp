@@ -51,6 +51,9 @@ CParticleTasks::CParticleTasks(void)
   mMSNumSepFiles = -1;
   mMSHolePatternType = 2;
   mMSsaveToMontage = false;
+  mMSRunMacro = false;
+  mMSRunningMacro = false;
+  mMSMacroToRun = 0;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -167,6 +170,19 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. && 
     mMSSkipAstigBT <= 0;
 
+  mMSDoStartMacro = false;
+  if (!testRun && mMSRunMacro) {
+    if (mWinApp->mMacroProcessor->DoingMacro()) {
+      mWinApp->AppendToLog("Not doing script in multishot because it is being run from a"
+        " script");
+    } else {
+      if (mWinApp->mMacroProcessor->EnsureMacroRunnable(mMSMacroToRun)) {
+        RESTORE_MSP_RETURN(1);
+      }
+      mMSDoStartMacro = true;
+    }
+  }
+
   // Adjust some parameters for test runs
   if (testRun) {
     mMSIfEarlyReturn = 0;
@@ -179,10 +195,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
 
   mMSSaveRecord = (mMSsaveToMontage || !(multiHoles && mWinApp->Montaging())) && !testComa
-    && (saveRec || mMSNumSepFiles >= 0);
+    && (saveRec || mMSNumSepFiles >= 0) && !mMSDoStartMacro;
 
   // Then test other conditions
-  if (mMSIfEarlyReturn && !camParam->K2Type) {
+  if (mMSIfEarlyReturn && !camParam->K2Type && !mMSDoStartMacro) {
     SEMMessageBox("The current camera must be a K2/K3 to use early return for multiple "
        "shots");
     RESTORE_MSP_RETURN(1);
@@ -467,6 +483,7 @@ void CParticleTasks::MultiShotNextTask(int param)
     return;
 
   // Save Record
+  mMSRunningMacro = false;
   mRecConSet->alignFrames = mSavedAlignFlag;
   if (mMSSaveRecord && mMSImageReturned) {
     if (mMSsaveToMontage) {
@@ -515,7 +532,8 @@ int CParticleTasks::MultiShotBusy(void)
 {
   return (DoingMultiShot() && (mWinApp->mCamera->CameraBusy() || 
     (mWinApp->mMontageController->DoingMontage() && !mMSsaveToMontage) || 
-    mWinApp->mAutoTuning->GetDoingCtfBased())) ? 1 : 0;
+    mWinApp->mAutoTuning->GetDoingCtfBased()) ||
+    (mMSRunningMacro && mWinApp->mMacroProcessor->DoingMacro())) ? 1 : 0;
 }
 
 // Cleanup call on error/timeout
@@ -555,6 +573,7 @@ void CParticleTasks::StopMultiShot(void)
   mRecConSet->alignFrames = mSavedAlignFlag;
   mMSCurIndex = -2;
   mMSTestRun = 0;
+  mMSRunningMacro = false;
   mMSParams = mNavHelper->GetMultiShotParams();
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
@@ -695,7 +714,8 @@ int CParticleTasks::StartOneShotOfMulti(void)
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   bool earlyRet = ((mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
-      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type;
+      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type && 
+    !mMSDoStartMacro;
   if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
     mMSEarlyRetFrames, false, GetNextShotAndHole(nextShot, nextHole))) {
     StopMultiShot();
@@ -708,6 +728,10 @@ int CParticleTasks::StartOneShotOfMulti(void)
     mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, true, false);
   } else if (mMSTestRun && mWinApp->Montaging()) {
     mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
+  } else if (mMSDoStartMacro) {
+    mMSRunningMacro = true;
+    mWinApp->mMacroProcessor->Run(mMSMacroToRun);
+
   } else {
     mCamera->InitiateCapture(RECORD_CONSET);
     mMSImageReturned = !earlyRet || mMSEarlyRetFrames != 0;

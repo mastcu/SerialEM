@@ -62,6 +62,9 @@ public:
   GetMember(bool, DVDoingDewarVac);
   GetMember(bool, ATLastFailed);
   GetMember(bool, MSLastFailed);
+  GetSetMember(int, MSMacroToRun);
+  GetSetMember(BOOL, MSRunMacro);
+  GetMember(BOOL, MSRunningMacro);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
   SetMember(MultiShotParams *, NextMSParams);
   GetSetMember(BOOL, LastHolesWereAdjusted);
@@ -124,7 +127,11 @@ private:
   int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
   int mMSFirstSepFile;             // Number of first separate file when created
   int mMSHolePatternType;          // 0 for zigzag, 1 for raster, 2 for spiral
-  BOOL mLastHolesWereAdjusted;      // Flag that GetHolePositions applied inverse adjust
+  BOOL mLastHolesWereAdjusted;     // Flag that GetHolePositions applied inverse adjust
+  int mMSMacroToRun;               // Number of macro to run instead of Record
+  BOOL mMSRunMacro;                // User flag to run the macro
+  bool mMSDoStartMacro;            // Runtime flag to do it.
+  bool mMSRunningMacro;            // Flag that it is started
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters

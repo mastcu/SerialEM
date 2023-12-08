@@ -106,7 +106,7 @@ BOOL_SETT_GETSET("MoveStageOnBigMouseShift", mWinApp->mShiftManager->, MouseMove
 BOOL_SETT_GETSET("BacklashMouseAndISR", mWinApp->mShiftManager->, BacklashMouseAndISR)
 FLOAT_SETT_GETSET("MouseStageThreshold", mWinApp->mShiftManager->, MouseStageThresh)
 FLOAT_SETT_GETSET("MouseStageAbsoluteThreshold", mWinApp->mShiftManager->,
-             MouseStageAbsThresh)
+  MouseStageAbsThresh)
 FLOAT_SETT_GETSET("TiltDelay", mWinApp->mShiftManager->, TiltDelay)
 BOOL_SETT_ASSIGN("MacroLimitRuns", macControl->limitRuns)
 BOOL_SETT_ASSIGN("MacroLimitScaleMax", macControl->limitScaleMax)
@@ -132,6 +132,8 @@ INT_SETT_GETSET("ZbyGMaxTotalChange", mWinApp->mParticleTasks->, ZBGMaxTotalChan
 FLOAT_SETT_GETSET("ZbyGIterThreshold", mWinApp->mParticleTasks->, ZBGIterThreshold)
 BOOL_SETT_GETSET("ZbyGUseViewInLD", mWinApp->mParticleTasks->, ZbyGUseViewInLD)
 INT_SETT_GETSET("MultishotPatternType", mWinApp->mParticleTasks->, MSHolePatternType)
+BOOL_SETT_GETSET("MultishotRunScript", mWinApp->mParticleTasks->, MSRunMacro)
+INT_SETT_GETSET("MultishotScriptToRun", mWinApp->mParticleTasks->, MSMacroToRun)
 
 #endif
 #ifdef SET_TEST_SECT2
