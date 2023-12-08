@@ -630,6 +630,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
 {
   int invBeforeMap[8] = {6, 7, 4, 5, 2, 3, 0, 1};
   int ind, eerFlags, totalSubframes = 0, start, end, retval = 0;
+  char errStr[160];
   CFileStatus status;
   CString str, str2;
   CFile file;
@@ -717,10 +718,14 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     }
     mFrameFP = iiFOpen((LPCTSTR)localPath, "rb");
     if (!mFrameFP) {
-      SEMTrace('E', "Error opening frame stack at local path: %s", (LPCTSTR)localPath);
+      _get_errno(&ind);
+      strerror_s(errStr, 160, ind);
+      SEMTrace('E', "Error opening frame stack at local path: %s\r\n    %s", 
+        (LPCTSTR)localPath, errStr);
       return FIF_OPEN_OLD;
     }
     if (mrc_head_read(mFrameFP, &mMrcHeader)) {
+      SEMTrace('E', "Error reading frame stack header: %s", b3dGetError());
       iiFClose(mFrameFP);
       return FIF_OPEN_OLD;
     }
