@@ -46,7 +46,7 @@ public :
     { return mConfirmDestroy[inWhich]; }
   void SetConfirmBeforeDestroy(int inWhich, int inVal)
     {  mConfirmDestroy[inWhich] = inVal; }
-  int CopyImageBuffer(int inFrom, int inTo);
+  int CopyImageBuffer(int inFrom, int inTo, BOOL display = true);
   int CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf, BOOL display = true);
   int SaveImageBuffer(KImageStore *inStoreMRC, bool skipCheck = false, int inSect = -1);
   BOOL IsBufferSavable(EMimageBuffer *toBuf, KImageStore *inStoreMRC = NULL);
@@ -113,7 +113,7 @@ public :
 
 public:
   int AddToStackWindow(int bufNum, int binning, int secNum, bool convert, int angleOrder);
-  void FindScaling(EMimageBuffer * imBuf);
+  void FindScaling(EMimageBuffer * imBuf, bool partialScan = false);
   void DeleteOtherStore() {delete mOtherStoreMRC;};
   int StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int section);
   int StartAsyncSave(KImageStore *store, KImage *image, int section, int deleteFlags);

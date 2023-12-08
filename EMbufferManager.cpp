@@ -81,7 +81,7 @@ EMbufferManager::~EMbufferManager()
 }
 
 // The old copy routine for going from one regular buffer to another
-int EMbufferManager::CopyImageBuffer(int inFrom, int inTo)
+int EMbufferManager::CopyImageBuffer(int inFrom, int inTo, BOOL display)
 {
   if (inFrom == inTo)
     return 0;
@@ -89,7 +89,7 @@ int EMbufferManager::CopyImageBuffer(int inFrom, int inTo)
   EMimageBuffer *toBuf = mImBufsp + inTo;
 
   // Call the new routine with the ImBufs
-  return CopyImBuf(fromBuf, toBuf);
+  return CopyImBuf(fromBuf, toBuf, display);
 }
 
 // Copy from one ImBuf to another
@@ -1178,7 +1178,7 @@ int EMbufferManager::AutoalignBasicIndex()
 }
 
 // Create new imageScale if needed then find stretch with standard parameters
-void EMbufferManager::FindScaling(EMimageBuffer * imBuf)
+void EMbufferManager::FindScaling(EMimageBuffer * imBuf, bool partialScan)
 {
   float pctLo, pctHi;
   if (imBuf->mImageScale == NULL)
@@ -1189,7 +1189,7 @@ void EMbufferManager::FindScaling(EMimageBuffer * imBuf)
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, pctLo, pctHi,
     mWinApp->GetPctAreaFraction(), 
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
-    mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
+    mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), partialScan);
 }
 
 // Initiate saving to file on a separate thread
