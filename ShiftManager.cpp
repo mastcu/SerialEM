@@ -2067,8 +2067,12 @@ float CShiftManager::GetPixelSize(EMimageBuffer *imBuf, float *focusRot)
 // Get the image rotation: replaced by new methods 11/30/06
 double CShiftManager::GetImageRotation(int inCamera, int inMagInd)
 {
+  if (inCamera < 0 || inCamera >= MAX_CAMERAS)
+    return 0.;
   if (mCamParams[inCamera].STEMcamera)
     return mCamParams[inCamera].imageRotation;
+  if (inMagInd < 0 || inMagInd >= MAX_MAGS)
+    return 0.;
   return mMagTab[inMagInd].rotation[inCamera];
 }
 
