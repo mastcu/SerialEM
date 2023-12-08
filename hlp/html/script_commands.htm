@@ -40,6 +40,9 @@
       .auto-style1 {
         height: 24px;
       }
+      .auto-style2 {
+        height: 42px;
+      }
       </style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -267,15 +270,15 @@
           <TD>Ends a block started with 'If'.&nbsp; <br>Not from Python.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Elseif expression</TD>
+          <TD class="scriptcommand">ElseIf expression</TD>
           <TD>Inside of an If/Endif block, starts a block that is executed conditionally on
             the value of 'expression' if the expressions in the starting 'If' statement and
-            any preceding 'Elseif' statements were not true.&nbsp; <br>Not from Python.</TD>
+            any preceding 'ElseIf' statements were not true.&nbsp; <br>Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Else</TD>
           <TD>Inside of an If/Endif block, starts a block that is executed if the expression
-            after the 'If' and any preceding 'Elseif' commands is false.&nbsp; <br>Not from Python.</TD>
+            after the 'If' and any preceding 'ElseIf' commands is false.&nbsp; <br>Not from Python.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Break</TD>
@@ -346,7 +349,7 @@
             are always cleared.&nbsp; The returned arguments must all be strings.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">Exit [text]</TD>
+          <TD class="scriptcommand">Exit [text] or Exit [#exc] [text] (from Python)</TD>
           <TD>Ends execution unconditionally and prints the optional <b>text</b> to the log.&nbsp;
             <br />
             Callable from Python: From a Python script, there are <i>two</i> optional arguments, an integer then a
@@ -494,7 +497,7 @@
               extra script.&nbsp; Extra scripts are added sequentially to positions numbered 1
               to 5.&nbsp; A positive value <b>#E</b> can be entered to place a script into a
               previously used position or the next unused position.&nbsp; A negative value (-1
-              to -40) can be used to replace the script in one of the regular script positions
+              to -60) can be used to replace the script in one of the regular script positions
               that are editable and saved to settings.&nbsp; <br>As of 21-Jul-23, This command
             can be called from Python, but only with a regular script position (<b>#E</b> must
              be entered and must be negative), and with either a 
@@ -530,7 +533,8 @@
         <TR>
           <TD class="scriptcommand">Delay # units</TD>
           <TD>Waits for given amount of time, where <B>units</B> can be 'msec', 'ms', 'sec', 's', or
-            'min'. The units are actually optional but it is bad practice to leave them out.&nbsp; If no 
+            'min'. The units are actually optional but it is bad practice to leave them out and a 
+            message will be printed if you do.&nbsp; If no 
             units are given, a <B>#</B> &lt;= 60 is taken to be seconds, and a <B>#</B> &gt;
             60 is taken to be milliseconds</TD>
         </TR>
@@ -1233,7 +1237,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetLiveSettleFraction #</TD>
-          <TD>Sets the fraction of the usual settling time to apply in continuous mode after
+          <TD class="auto-style2">Sets the fraction of the usual settling time to apply in continuous mode after
             image shift or stage movement.&nbsp; By default, no settling is applied in
             continuous mode (i.e., the fraction is 0), but some settling may be needed when
             a script or other operation is using continuous frames.&nbsp; The fraction is
@@ -1257,8 +1261,7 @@
             refinement off), and the group size (negative if using groups is off).</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetFrameAliParams #B [#K]<br />
-&nbsp;&nbsp;&nbsp; [#S] [#A] [#R] [#G]</TD>
+          <TD class="scriptcommand">SetFrameAliParams #B [#K] [#S] [#A] [#R] [#G]</TD>
           <TD>In the frame alignment parameter set selected to be used for Record images,
             sets the binning to <b>#B</b> if <b>#B</b> is 1-16 or the target size to <b>#B</b> otherwise, and optionally sets whether to keep precision during
             early returns or GPU frame alignment if <b>#K</b> is 1, the strategy from
@@ -1276,8 +1279,7 @@
             whether to use hybrid shifts, and the three filter radii.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetFrameAli2 #G [#T] [#H]<br />
-&nbsp;&nbsp;&nbsp; [#R1] [#R2] [#R3]</TD>
+          <TD class="scriptcommand">SetFrameAli2 #G [#T] [#H] [#R1] [#R2] [#R3]</TD>
           <TD>Sets whether to use GPU for frame alignment (<b>#G</b> 0 or 1) and, in the frame alignment
             parameters for Record, optionally sets truncation limit from the
             absolute value of <b>#T</b> and to truncate
@@ -1623,7 +1625,7 @@
         </TR>
 
         <TR>
-          <TD class="scriptcommand"><a name="tiltDuringRecord">TiltDuringRecord #A #D [#S]</a></TD>
+          <TD class="scriptcommand"><a name="tiltDuringRecord"></a>TiltDuringRecord #A #D [#S]</TD>
           <TD>Starts a Record acquisition and starts the stage tilting to angle <b>#A</b> after the
             delay <b>#D</b> in milliseconds.&nbsp; On Thermo/FEI scopes with recent enough versions of Thermo/FEI
             scripting, or JEOL scopes with recent versions of TemExt.dll, <b>#S</b> can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for
@@ -2006,8 +2008,7 @@
               greater than 1 or less than 0.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CtfFind buf #M #N [#F] [#B] [#P0] [#P9] [#S]
-            [#A]</TD>
+          <TD class="scriptcommand">CtfFind buf #M #N [#F] [#B] [#P0] [#P9] [#S] [#A]</TD>
           <TD>Determines defocus and astigmatism by fitting to Thon rings in an FFT of the
             image in the given buffer.&nbsp; Follow the buffer letter/number with the minimum (<b>#M</b>) and
             maximum (<b>#N</b>) defocus for the search (in microns, underfocus negative), and with these
@@ -2082,7 +2083,7 @@
             &nbsp; Command added in 4.1, 24-Aug-22.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SaveNextCtfplotGraph buf [file]</TD>
+          <TD class="scriptcommand">SaveNextCtfplotterGraph buf [file]</TD>
           <TD>Saves the graph from the next run of Ctfplotter and reads it into the buffer 
             given by <B>buf</B> if that is a positive number or letter, or into the standard read 
             buffer if <b>buf</b> is 0.&nbsp; A specific filename <b>file</b> is optional if the
@@ -3294,7 +3295,7 @@
              'OM', 'I1', 'I2', 'P1', and 'P2'.&nbsp; Command added in 4.1, 22-Jul-23.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ReportDeflector name</TD>
+          <TD class="scriptcommand">ReportCoil name</TD>
           <TD>For a Hitachi scope, reports the X and Y values of a deflector specified by its
             abbreviated <b>name</b>.&nbsp; Allowed <b>name</b>s are 'GH', 'GT', 'CS', 'BH', 'BT',
             'OS', 'ISF', 'IA', and 'PA'.
@@ -3797,7 +3798,7 @@
           <TD>Sets beam tilt direction for autofocusing to <b>#</b> (a value from 0 to 3)</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">OppositeAutofocus [#]</TD>
+          <TD class="scriptcommand">OppositeAutoFocus [#]</TD>
           <TD>In low dose mode, runs autofocus in area on opposite side of Record from the defined
             Focus area; if optional <b>#</b> is -1, just measure defocus without changing.&nbsp;
             Not available if 'Balance Shifts' is on.</TD>
@@ -3822,7 +3823,7 @@
           <TD>Reports the drift estimate from the last autofocus, if available</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ReportAutofocus</TD>
+          <TD class="scriptcommand">ReportAutoFocus</TD>
           <TD>Reports measured defocus from last autofocus, or whether it failed.&nbsp; The
             defocus is placed into <I>reportedValue1</I> and a failure code in <I>reportedValue2</I> (1
             for inconsistent focus, 2 for absolute limits exceeded, 3 for focus change
@@ -3841,7 +3842,7 @@
             after starting to take images.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FixComaByCtf&nbsp; [#M] [#L] [#F]&nbsp; [#S]</TD>
+          <TD class="scriptcommand">FixComaByCTF&nbsp; [#M] [#L] [#F]&nbsp; [#S]</TD>
           <TD>Measures beam-tilt misalignment by CTF fitting, outputs beam tilt change needed to the log,
             and corrects for it (or just measures, if the optional <b>#M</b> is nonzero).&nbsp; Image
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; The user setting for
@@ -4032,7 +4033,7 @@
             (1), refine only (2), both steps (3), refine and realign (6), or Eucentricity by Focus (-1).&nbsp; In
             the latter case, whether View is used to measure defocus in Low Dose mode depends
             on the setting in the <a href="hidd_z_by_g_setup.htm">Eucentricity by Focus Setup dialog</a>,
-          unless <b>#W</b> is entered as a 0 to use Focus or non-zero to use View.
+          unless <b>#V</b> is entered as a 0 to use Focus or non-zero to use View.
           </TD>
         </TR>
         <TR>
@@ -4074,7 +4075,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AutocenterBeam [#M] [#P]</TD>
+          <TD class="scriptcommand">AutoCenterBeam [#M] [#P]</TD>
           <TD>Starts the Beam Autocenter routine.&nbsp; The optional <b>#M</b> sets a maximum
             beam shift in microns; the beam will not be moved if the shift determined
             from the circle fit to the beam edges exceeds this value.&nbsp; If the optional [#P] is
@@ -4217,7 +4218,7 @@
             or the needed transformation is not available.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AdjustMultishotPattern #</TD>
+          <TD class="scriptcommand">AdjustMultiShotPattern #</TD>
           <TD>Applies an adjusting transformation to a set of image shifts for multiple Records: to the regular
             rectangular array vectors if <b>#</b> is 0, or to hexagonal array vectors or custom shifts 
             if <b>#</b> is -1 or 1, respectively.&nbsp; The transformation is the one recorded the last
@@ -4274,7 +4275,7 @@
             Command added in 4.1, 1-Dec-22.</TD>
         </TR>
        <TR>
-          <TD class="scriptcommand" style="height: 24px">ReportMultishotVectors #</TD>
+          <TD class="scriptcommand">ReportMultishotVectors #</TD>
           <TD class="auto-style1">Reports the image shift vectors (in IS units) between holes in the X 
             and Y directions for a rectangular pattern (if <b>#</b> is 0) and in three directions for a
             hexagonal pattern (if <b>#</b> is nonzero).&nbsp; Command added in 4.1, 2-Aug-23.
@@ -5093,7 +5094,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetTiltSeriesAtItem [#I] [#T]</TD>
-          <TD>Enables or disables a tilt series for a Navigator item: if <b>#A</b> is 0, a tilt series is disabled,
+          <TD>Enables or disables a tilt series for a Navigator item: if <b>#T</b> is 0, a tilt series is disabled,
             if this parameter is not specified or nonzero, a tilt series is set up.&nbsp; The item index
             is specified by <b>#I</b> with a positive or negative number (as in ReportItemAcquire);
              if 0 or no <b>#I</b> is specified the current item is changed.&nbsp; Sets <i>reportedValue1</i>to 1 if the 
@@ -5121,10 +5122,11 @@
             preliminary action before the main action.&nbsp; The item will still be marked for Acquire.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SkipAcquiringGroup [#I]</TD>
+          <TD class="scriptcommand">SkipAcquiringGroup [#I] [#T]</TD>
           <TD>Tells the Navigator to skip points whose group ID match either the group ID of
             the current acquire item, or the optional <b>#I</b> entered with the command.&nbsp; The
-            items will still be marked for Acquire.&nbsp; The Navigator must be acquiring at points.</TD>
+            items will still be marked for Acquire unless the optional <b>#T</b> is nonzero.&nbsp; The 
+            Navigator must be acquiring at points.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndAcquireAtItems</TD>
@@ -5228,10 +5230,10 @@
               HHMM.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ProgramTimeStamps [#s] [#o]</TD>
+          <TD class="scriptcommand">ProgramTimeStamps [#S] [#O]</TD>
           <TD>Prints the program version and build date, plus the current date and time, or
-            the date and time of program startup if the optional <b>#s</b> is positive.&nbsp; If the
-            optional <b>#o</b> is nonzero, it also prints the report of special options set that 
+            the date and time of program startup if the optional <b>#S</b> is positive.&nbsp; If the
+            optional <b>#O</b> is nonzero, it also prints the report of special options set that 
             is printed on program startup.&nbsp; If <b>#s</b> is negative, it prints only the 
             current date and time.
           </TD>
@@ -5592,7 +5594,8 @@
           <TD>If <B>#</B> is 0, sets the email address(es) to be used on the next sending of email by any 
             source to <b>addr</b>, which can contain several addresses separated by commas.&nbsp; If
             <b>#</b> is 1, it appends to the addresses defined in the user settings.&nbsp; If <b>#</b> is -1, 
-            an address set by a previous command and not used yet is canceled.&nbsp; Command added in 4.1, 23-Apr-22.</TD>
+            an address set by a previous command and not used yet is canceled, and <b>addr</b> should
+            not be entered.&nbsp; Command added in 4.1, 23-Apr-22.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SendEmail text</TD>
