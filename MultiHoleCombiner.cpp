@@ -1368,7 +1368,7 @@ void CMultiHoleCombiner::EvaluateBoxAtPosition(int xStart, int yStart, PositionD
     }
   }
   if ((mNumXholes * mNumYholes) % 2 != 0 && data.endX + 1 - data.startX == mNumXholes &&
-    data.endY + 1 - data.startY == mNumXholes && 
+    data.endY + 1 - data.startY == mNumYholes && 
     mGrid[yStart + mNumYholes / 2][xStart + mNumXholes / 2] < 0)
     data.cenMissing = 1;
 }

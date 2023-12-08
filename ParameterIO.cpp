@@ -5522,8 +5522,8 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         }
 
       } else if (!strItems[0].IsEmpty())
-        AfxMessageBox("Unrecognized entry in short term calibration file " + strFileName
-        + " : " + strLine , MB_EXCLAME);
+        mWinApp->AppendToLog("Unrecognized entry in short term calibration file " + 
+          strFileName + " : " + strLine);
     }
     if (err > 0)
       retval = err;
