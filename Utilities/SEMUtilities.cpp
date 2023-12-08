@@ -1259,7 +1259,7 @@ BOOL SleepMsg(DWORD dwTime_ms)
 {
   DWORD dwStart = GetTickCount();
   DWORD dwElapsed;
-  while ((dwElapsed = GetTickCount() - dwStart) < dwTime_ms) {
+  while ((dwElapsed = (DWORD)SEMTickInterval(dwStart)) < dwTime_ms) {
     DWORD dwStatus = MsgWaitForMultipleObjects(0, NULL, FALSE,
       dwTime_ms - dwElapsed, QS_ALLINPUT);
 
