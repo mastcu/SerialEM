@@ -11630,7 +11630,7 @@ int CNavigatorDlg::CountItemsInGroup(int curID, CString & label, CString & lastl
     indexVec->clear();
   for (int i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
-    if (item->mGroupID == curID) {
+    if (item && item->mGroupID == curID) {
       num++;
       if (item->mAcquire)
         numAcquire++;

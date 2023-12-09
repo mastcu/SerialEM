@@ -3,6 +3,26 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/9/23: Fixed bugs in combining hex grid items.
+n
+12/9/23: Fixed display and acquisition of combined hex grid items if number of
+rings is changed in dialog.
+
+12/8/23: Fixed recording custom multishot pattern, broken 9/27.
+
+12/8/23: Fixed IS calibration not properly stopping on two error conditions
+and requiring program to be exited.
+
+12/8/23: Added menu item for selecting a script to run instead of taking
+Record in Multiple Records run from Acquire at Items.
+
+12/8/23: Fixed argument lists for 12 scrpit commands if called from Python and
+some various problems in script help.
+
+12/8/23: Added support for STEM with Tietz scan generator.
+
+12/8/23: Fixed a crash when using ctffind from PACEtomo (new package needed).
+
 12/8/23: Fixed crash combining with non-square pattern (In 4.0).
 
 12/4/23: Fixed optional arguments to CombineHolesToMulti when called from

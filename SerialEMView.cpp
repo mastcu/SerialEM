@@ -1397,6 +1397,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       numPoints = B3DMIN(5, item->mNumPoints);
     } else {
       item = itemArray->GetAt(iDraw);
+      if (!item)
+        continue;
       thick = (item->IsPoint()  || (item->IsPolygon() && item->mGroupID)) ? 3 : 2;
       highlight = selectedItems->count(iDraw) > 0;
       thick = highlight ? thick : 1;

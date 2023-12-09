@@ -23,6 +23,8 @@
 #include <algorithm>
 #include "Shared\b3dutil.h"
 
+#define XY_IN_GRID(xx, yy) (xx >= 0 && xx < mNxGrid && yy >= 0 && yy < mNyGrid)
+
 // Error reporting
 enum {
   ERR_NO_NAV = 1, ERR_NO_IMAGE, ERR_NOT_POLYGON, ERR_NO_GROUP, ERR_NO_CUR_ITEM,
@@ -108,7 +110,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   int ring, step, mainDir, sideDir, mainSign, sideSign, xCen, yCen, assignTemp = 1000000;
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
   float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm, minDist, dist;
-  int realXstart, realYstart, realXend, realYend, baseInd, gridInd;
+  int realXstart, realYstart, realXend, realYend, baseInd, gridInd, extraHexNum, useHex;
   int hexIndXvecs[3] = {1, 0, -1}, hexIndYvecs[3] = {0, 1, 1};
   IntVec tripletsDelX[3];
   IntVec tripletsDelY[3];
@@ -147,7 +149,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     }
   }
 
-  mDebug = 0;
+  mDebug = 0; //GetDebugOutput('C');
   mUseImageCoords = false;
   mGroupIDsInPoly.clear();
   hexGrid = msParams->doHexArray ? 1 : 0;
@@ -319,12 +321,22 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         camera);
       hxHex[ind] = (float)hx;
       hyHex[ind] = (float)hy;
+      if (mDebug)
+        PrintfToLog("%d: Grid %.3f %.3f  IS %.3f %.3f", ind, gridXvecs[ind], 
+          gridYvecs[ind], hx, hy);
     }
+    if (mDebug)
+      PrintfToLog("GridStMat %.3f %.3f %.3f %.3f", gridStMat.xpx, gridStMat.ypx,
+        gridStMat.xpy, gridStMat.ypy);
+
 
     // This gives best estimate of first two vectors in IS space at the given mag
     // multiply by IS to Stage to get these vectors in stage space
     lsFit2(xfit, yfit, hxHex, 3, &holeInv.xpx, &holeInv.xpy, NULL);
     lsFit2(xfit, yfit, hyHex, 3, &holeInv.ypx, &holeInv.ypy, NULL);
+    if (mDebug)
+      PrintfToLog("holeInv %.3f %.3f %.3f %.3f", holeInv.xpx, holeInv.ypx,
+        holeInv.xpy, holeInv.ypy);
     holeMat = MatMul(holeInv, is2st);
     gridAng1 = (float)(atan2f(gridStMat.ypx, gridStMat.xpx) / DTOR);
     gridDist1 = sqrtf(gridStMat.xpx * gridStMat.xpx + gridStMat.ypx * gridStMat.ypx);
@@ -334,8 +346,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     holeDist1 = sqrtf(holeMat.xpx * holeMat.xpx + holeMat.ypx * holeMat.ypx);
     holeAng2 = (float)(atan2f(holeMat.ypy, holeMat.xpy) / DTOR);
     holeDist2 = sqrtf(holeMat.xpy * holeMat.xpy + holeMat.ypy * holeMat.ypy);
-    angDiff1 = (float)UtilGoodAngle(holeAng1 - gridAng1);
-    angDiff2 = (float)UtilGoodAngle(holeAng2 - gridAng2);
+    angDiff1 = (float)UtilGoodAngle(gridAng1 - holeAng1);
+    angDiff2 = (float)UtilGoodAngle(gridAng2 - holeAng2);
     if (angDiff1 < -30.)
       angDiff1 += 360.;
     if (angDiff1 >= 330.)
@@ -362,8 +374,18 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         holeDist1, holeAng1, holeDist2, holeAng2, angDiff1, angDiff2);
       return ERR_BAD_UNIT_XFORM;
     }
+
     posRotInvertDir = hexPosRot2 != hexPosRot1;
     avgAngle = (float)(atan2f(gridMat.ypx, gridMat.xpx) / DTOR);
+    if (mDebug) {
+      PrintfToLog("  Stage vectors from actual positions: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
+        "  Stage vectors from IS vectors: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
+        " Rotations between corresponding vectors: %.1f  %.1f deg",
+        gridDist1, gridAng1, gridDist2, gridAng2,
+        holeDist1, holeAng1, holeDist2, holeAng2, angDiff1, angDiff2);
+      PrintfToLog("posRotInvert %d  avgAngle %f posrot1 %d posrot2 %d", posRotInvertDir,
+        avgAngle, hexPosRot1, hexPosRot2);
+    }
 
   } else {
 
@@ -406,19 +428,22 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
       return ERR_BAD_UNIT_XFORM;
     }
+    if (mDebug)
+      PrintfToLog(
+        " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
+        "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
+        "holeMat: %.3f %.3f %.3f %.3f", mUseImageCoords ? "image" : "stage",
+        prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
+        gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
+        mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+        holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
   }
-  /*PrintfToLog(
-    " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
-    "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
-    "holeMat: %.3f %.3f %.3f %.3f", mUseImageCoords ? "image" : "stage",
-    prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
-    gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
-    mUseImageCoords ? "image" : "stage", st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
-    holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);*/
 
   // Now get grid positions
   mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing, 
     hexGrid);
+  if (mDebug)
+    mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
   /*for (ind = 0; ind < numPoints; ind++) {
     item = itemArray->GetAt(navInds[ind]);
     PrintfToLog("%s  %d  %d %.2f %.2f", item->mLabel, gridX[ind], gridY[ind], 
@@ -457,9 +482,6 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
   mIDsOutsidePoly.clear();
-
-  if (mDebug)
-    mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
 
   if (hexGrid) {
 
@@ -512,10 +534,10 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           // Might as well take the rotation into account here!
           if (posRotInvertDir) {
             if (ind)
-              mOneDIndexToPosInRing[point] = ((5 + hexPosRot1 - step) % 6) * ring + ring -
-              ind;
+              mOneDIndexToPosInRing[point] = ((11 - hexPosRot1 - step) % 6) * ring + 
+              ring - ind;
             else
-              mOneDIndexToPosInRing[point] = ((6 + hexPosRot1 - step) % 6) * ring;
+              mOneDIndexToPosInRing[point] = ((12 - hexPosRot1 - step) % 6) * ring;
 
           } else {
             mOneDIndexToPosInRing[point] = ((step + hexPosRot1) % 6) * ring + ind;
@@ -556,11 +578,14 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
       }
     }
     // PrintfToLog("Best ind %d ix %d", bestInd, bestIx);
-
+    mHexToItemIndex.clear();
     mHexToItemIndex.resize(bestFullArray.GetSize(), -1);
+    extraHexNum = bestFullArray.GetSize();
 
     // Loop on boxes in three rounds: center at original pos, center moved, and missing
     for (ind = 0; ind >= -1; ind--) {
+      if (mDebug)
+        PrintfToLog("Adding hex with %s", ind ? "cen moved" : "original cen");
       for (hex = 0; hex < bestFullArray.GetSize(); hex++) {
         if (bestFullArray[hex].cenMissing == ind)
           AddPointsToHexItem(itemArray, bestFullArray[hex], hex, boxAssigns, navInds,
@@ -591,11 +616,10 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
       for (ind = 0; ind < 3; ind++) {
         ix = xCen + hexIndXvecs[ind];
         iy = yCen + hexIndYvecs[ind];
-        if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
-          mGrid[iy][ix] >= 0) {
+        if (XY_IN_GRID(ix, iy) && mGrid[iy][ix] >= 0) {
           ix = xCen - hexIndXvecs[ind];
           iy = yCen - hexIndYvecs[ind];
-          if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0) {
+          if (XY_IN_GRID(ix, iy) && mGrid[iy][ix] >= 0) {
 
             // Can split in two
             // Set temporary assigns
@@ -608,7 +632,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
                 0) {
                 bx = xCen + mHexDelX[jnd];
                 by = yCen + mHexDelY[jnd];
-                if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+                if (XY_IN_GRID(bx, by) &&
                   mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] < 0)
                   boxAssigns[mGrid[by][bx]] = assignTemp;
               }
@@ -622,7 +646,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
             for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
               bx = xCen + mHexDelX[jnd];
               by = yCen + mHexDelY[jnd];
-              if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+              if (XY_IN_GRID(bx, by) &&
                 mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] == assignTemp)
                 boxAssigns[mGrid[by][bx]] = -1;
             }
@@ -630,7 +654,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
             // Add around the other center
             data.xCen = xCen + hexIndXvecs[ind];
             data.yCen = yCen + hexIndYvecs[ind];
-            AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+            mHexToItemIndex.resize(extraHexNum + 1);
+            AddPointsToHexItem(itemArray, data, extraHexNum++, boxAssigns, navInds,
               xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
             handled = true;
             break;
@@ -646,8 +671,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         for (vnd = 0; vnd < 3; vnd++) {
           ix = xCen + tripletsDelX[vnd][ind];
           iy = yCen + tripletsDelY[vnd][ind];
-          if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0 &&
-            boxAssigns[mGrid[iy][ix]] < 0)
+          if (XY_IN_GRID(ix, iy) && mGrid[iy][ix] >= 0 && boxAssigns[mGrid[iy][ix]] < 0)
             bx++;
           else
             break;
@@ -663,8 +687,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
             ix = xCen + mHexDelX[jnd];
             iy = yCen + mHexDelY[jnd];
-            if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0
-              && boxAssigns[mGrid[iy][ix]] < 0) {
+            if (XY_IN_GRID(ix, iy) && mGrid[iy][ix] >= 0 && 
+              boxAssigns[mGrid[iy][ix]] < 0) {
               minDist = 1.e10f;
               bx = 0;
               xfApply(restore, 0., 0., (float)mHexDelX[jnd], (float)mHexDelY[jnd], &boxDx,
@@ -688,13 +712,18 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
             for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
               bx = xCen + mHexDelX[jnd];
               by = yCen + mHexDelY[jnd];
-              if (bx >= 0 && bx < mNxGrid && by >= 0 && by < mNyGrid &&
+              if (XY_IN_GRID(bx, by) &&
                 mGrid[by][bx] >= 0 && boxAssigns[mGrid[by][bx]] == assignTemp + vnd)
                 boxAssigns[mGrid[by][bx]] = -1;
             }
             data.xCen = xCen + tripletsDelX[vnd][ind];
             data.yCen = yCen + tripletsDelY[vnd][ind];
-            AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+            useHex = hex;
+            if (vnd) {
+              useHex = extraHexNum++;
+              mHexToItemIndex.resize(extraHexNum);
+            }
+            AddPointsToHexItem(itemArray, data, useHex, boxAssigns, navInds,
               xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
           }
 
@@ -707,16 +736,21 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
 
       // Stuck.  Start to dispose of points however we can: find first available
       // center and add points around it, loop through all points in hex
+      bx = 0;
       for (jnd = 0; jnd < (int)mHexDelX.size(); jnd++) {
         ix = xCen + mHexDelX[jnd];
         iy = yCen + mHexDelY[jnd];
-        if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] >= 0
-          && boxAssigns[mGrid[iy][ix]] < 0) {
+        if (XY_IN_GRID(ix, iy) && mGrid[iy][ix] >= 0 && boxAssigns[mGrid[iy][ix]] < 0) {
           data.xCen = ix;
           data.yCen = iy;
-          bx = 1;
-          AddPointsToHexItem(itemArray, data, hex, boxAssigns, navInds,
+          useHex = hex;
+          if (bx) {
+            useHex = extraHexNum++;
+            mHexToItemIndex.resize(extraHexNum);
+          }
+          AddPointsToHexItem(itemArray, data, useHex, boxAssigns, navInds,
             xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
+          bx = 1;
         }
       }
     }
@@ -724,7 +758,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     // Loop on points and transfer items to temp array in order of point acquisition
     for (ind = 0; ind < numPoints; ind++) {
       hex = boxAssigns[ind];
-      if (hex >= 0) {
+      if (hex >= 0 && hex < (int)mHexToItemIndex.size()) {
         jnd = mHexToItemIndex[hex];
         if (jnd >= 0 && itemArray->GetAt(jnd)) {
           tempArray.Add(itemArray->GetAt(jnd));
@@ -1712,7 +1746,7 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
   int ind, ix, iy, xCen, yCen, numInBox, ptNum, groupID, bx, by, fullInd;
   int acqXcen, acqYcen, baseInd, itemInd;
   float stageX, stageY, boxDx, boxDy, cenDist, cenStageX, cenStageY, minCenDist = 1.e30f;
-  bool useCenStage;
+  bool useCenStage = false;
   std::set<int> cenSet;
   ixSkip.clear();
   iySkip.clear();
@@ -1731,7 +1765,8 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
     }
   }
   if (mDebug)
-    PrintfToLog("Hex %d  cen %d %d  acq cen %d %d", hex, xCen, yCen, acqXcen, acqYcen);
+    PrintfToLog("Hex %d  cen %d %d  acq cen %d %d   numAdded start %d", hex, xCen, yCen, 
+      acqXcen, acqYcen, numAdded);
   for (ind = 0; ind < (int)mHexDelX.size(); ind++) {
     bx = mHexDelX[ind];
     by = mHexDelY[ind];
@@ -1756,7 +1791,7 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
           hex, boxDx, boxDy, mUseImageCoords ? "image" : "stage", xCenters[ptNum],
           yCenters[ptNum], xCenters[ptNum] - (boxDx * gridMat.xpx + boxDy *
           gridMat.xpy), yCenters[ptNum] - (boxDx * gridMat.ypx + boxDy * gridMat.ypy));
-      cenDist = boxDx * boxDy + boxDy * boxDy;
+      cenDist = boxDx * boxDx + boxDy * boxDy;
       if (cenDist < minCenDist) {
         minCenDist = cenDist;
         groupID = item->mGroupID;
@@ -1765,6 +1800,8 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
           cenStageX = xCenters[ptNum];
           cenStageY = yCenters[ptNum];
           useCenStage = true;
+          if (mDebug)
+            PrintfToLog("Set center stage %.3f %.3f", cenStageX, cenStageY);
         }
       }
     } else {
@@ -1779,8 +1816,14 @@ void CMultiHoleCombiner::AddPointsToHexItem(MapItemArray *itemArray,
   AddMultiItemToArray(itemArray, baseInd, useCenStage ? cenStageX : (stageX / numInBox),
     useCenStage ? cenStageY : (stageY / numInBox), mNumRings,
     -1, 0., 0., ixSkip, iySkip, groupID, numInBox, numAdded);
-  if (itemArray->GetSize() > itemInd)
+  if (itemArray->GetSize() > itemInd) {
+    if (mDebug && mHexToItemIndex[hex] > 0) {
+      item = itemArray->GetAt(mHexToItemIndex[hex]);
+      PrintfToLog("HEX INDEX %d ALREADY ASSIGNED TO ITEM %d  %s", hex, 
+        mHexToItemIndex[hex], item->mLabel);
+    }
     mHexToItemIndex[hex] = itemInd;
+  }
 }
 
 // Add an item to the nav array with locked-in multi-shot parameters and skipped points
