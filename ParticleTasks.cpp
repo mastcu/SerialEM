@@ -756,7 +756,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   bool startingMulti)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
-  int ring, step, mainDir, sideDir, mainSign, sideSign, origMag;
+  int ring, step, mainDir, sideDir, mainSign, sideSign, origMag, numRings;
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   BOOL crossPattern = mMSParams->skipCornersOf3x3;
   bool adjustForTilt = false;
@@ -764,7 +764,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   std::vector<double> fromISX, fromISY;
   IntVec holeOrder;
   ScaleMat IStoSpec, specToIS;
-  int hexInd = (mMSParams->doHexArray && !mMSParams->useCustomHoles) ? 1 : 0;
+  int hexInd = ((mMSParams->doHexArray && !mMSParams->useCustomHoles)  ||
+    (numXholes > 0 && numYholes == -1)) ? 1 : 0;
   if (startingMulti)
     hexInd = (mMSDoingHexGrid && !mMSUseCustomHoles) ? 1 : 0;
 
@@ -796,11 +797,12 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     fromISY.push_back(0.);
     posIndex.push_back(0);
     posIndex.push_back(0);
-    ring = mMSParams->numHexRings;
+    numRings = (numXholes > 0 && numYholes == -1) ? numXholes : mMSParams->numHexRings;
+    ring = numRings;
     numHoles = 3 * ring * (ring + 1) + 1;
 
     // Loop on rings and steps in rings
-    for (ring = 1; ring <= mMSParams->numHexRings; ring++) {
+    for (ring = 1; ring <= numRings; ring++) {
       for (step = 0; step < 6; step++) {
 
         // For minimum shifts, step out from last point of previous ring, so this backs
