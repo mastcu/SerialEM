@@ -950,10 +950,11 @@ void CMultiShotDlg::OnButEndPattern()
 {
   int ind, size = (int)mSavedISX.size() - 1;
   double ISX, ISY;
+  if (size >= 0)
+    mWinApp->mScope->GetImageShift(ISX, ISY);
   StopRecording();
   if (size < 0)
     return;
-  mWinApp->mScope->GetImageShift(ISX, ISY);
   mActiveParams->customMagIndex = mWinApp->mScope->GetMagIndex();
   mActiveParams->tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
   mActiveParams->origMagOfCustom = mSteppingAdjusting ?
