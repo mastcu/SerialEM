@@ -26,6 +26,7 @@
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
 #include "Shared\b3dutil.h"
+#define FORMAT4OR5G(a) Format(((a) >= 1.e4 && (a) < 1.e5) ? "%.0f" : "%.4g", a)
 
 // CHoleFinderDlg dialog
 
@@ -64,6 +65,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_intHullDist(0)
   , m_strHullDist(_T(""))
   , m_strMaxHullDist(_T(""))
+  , m_bUseBestSubset(FALSE)
 {
   mNonModal = true;
   mHaveHoles = false;
@@ -153,6 +155,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_HULL_DIST, m_editHullDist);
   DDX_Text(pDX, IDC_EDIT_HULL_DIST, m_strHullDist);
   DDX_Text(pDX, IDC_STAT_MAX_HULL_DIST, m_strMaxHullDist);
+  DDX_Check(pDX, IDC_USE_BEST_SUBSET, m_bUseBestSubset);
 }
 
 
@@ -180,6 +183,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_NOTIFY(NM_LDOWN, IDC_BUT_TOGGLE_HOLES, OnToggleDraw)
   ON_BN_CLICKED(IDC_HEX_ARRAY, OnHexArray)
   ON_EN_KILLFOCUS(IDC_EDIT_HULL_DIST, OnKillfocusEditHullDist)
+  ON_BN_CLICKED(IDC_USE_BEST_SUBSET, OnUseBestSubset)
 END_MESSAGE_MAP()
 
 
@@ -270,6 +274,7 @@ void CHoleFinderDlg::OnHexArray()
 {
   UPDATE_DATA_TRUE;
   SizeAndSpacingToDialog(true, true);
+  EnableDlgItem(IDC_USE_BEST_SUBSET, m_bHexArray);
   mWinApp->RestoreViewFocus();
 }
 
@@ -352,6 +357,8 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mMissXinPiece, float, 0);
   CLEAR_RESIZE(mMissYinPiece, float, 0);
   CLEAR_RESIZE(mExcluded, short, 0);
+  CLEAR_RESIZE(mHexSubset, unsigned char, 0);
+  CLEAR_RESIZE(mMissHexSubset, unsigned char, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mWinApp->mNavHelper->mFindHoles->clearAll();
   mWinApp->mMainView->DrawImage();
@@ -388,7 +395,7 @@ void CHoleFinderDlg::OnKillfocusEditLowerMean()
   UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.lowerMeanCutoff = (float)atof(m_strLowerMean);
-  m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
+  m_strLowerMean.FORMAT4OR5G(mParams.lowerMeanCutoff);
   m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMeanMin) /
     (mMidMean - mMeanMin));
   B3DCLAMP(m_intLowerMean, 0, 255);
@@ -401,7 +408,7 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
   UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
-  m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
+  m_strUpperMean.FORMAT4OR5G(mParams.upperMeanCutoff);
   m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMidMean) /
     (mMeanMax - mMidMean));
   B3DCLAMP(m_intUpperMean, 0, 255);
@@ -433,20 +440,20 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
   if (pSlider == &m_sliderLowerMean) {
     mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMidMean - mMeanMin) / 255. +
       mMeanMin);
-    m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
+    m_strLowerMean.FORMAT4OR5G(mParams.lowerMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_LOW_MEAN_LABEL);
     wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderUpperMean) {
     mParams.upperMeanCutoff = (float)(m_intUpperMean * (mMeanMax - mMidMean) / 255. +
       mMidMean);
-    m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
+    m_strUpperMean.FORMAT4OR5G(mParams.upperMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_UP_MEAN_LABEL);
     wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderSDcutoff) {
     mParams.SDcutoff = (float)(m_intSDcutoff * (mSDmax - mSDmin) / 255. + mSDmin);
-    m_strSDcutoff.Format("%.4g", mParams.SDcutoff);
+    m_strSDcutoff.FORMAT4OR5G(mParams.SDcutoff);
     wnd = GetDlgItem(IDC_STAT_SD_LABEL);
     wnd->SetFont(dropping ? m_statStatusOutput.GetFont() : mBoldFont);
   }
@@ -471,6 +478,18 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
 }
 
 // Other options
+void CHoleFinderDlg::OnUseBestSubset()
+{
+  UPDATE_DATA_TRUE;
+  mParams.useHexDiagonals = m_bUseBestSubset;
+  mWinApp->RestoreViewFocus();
+  SetExclusionsAndDraw();
+
+  // Keep the nav map vectors up to date with the state of this setting
+  if (mHaveHoles)
+    SetNavMapHoleVectors();
+}
+
 void CHoleFinderDlg::OnShowIncluded()
 {
   UPDATE_DATA_TRUE;
@@ -497,13 +516,15 @@ void CHoleFinderDlg::OnButMakeNavPts()
 {
   mParams.layoutType = m_iLayoutType;
   DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
-    mParams.SDcutoff, mParams.blackFracCutoff, mParams.edgeDistCutoff);
+    mParams.SDcutoff, mParams.blackFracCutoff, mParams.edgeDistCutoff,
+    mParams.useHexDiagonals ? 1 : 0);
 }
 
 //Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
 // use the cutoffs in params
 int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff, 
-  float upperMeanCutoff, float sdCutoff, float blackCutoff, float edgeDistCutoff)
+  float upperMeanCutoff, float sdCutoff, float blackCutoff, float edgeDistCutoff,
+  int useHexDiagonals)
 {
   CMapDrawItem *poly = NULL;
   ShortVec gridX, gridY;
@@ -541,8 +562,10 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     anyNonDflt = true;
   if (layoutType < 0)
     layoutType = mParams.layoutType;
+  if (useHexDiagonals < 0)
+    useHexDiagonals = mParams.useHexDiagonals ? 1 : 0;
   SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff, 
-    edgeDistCutoff);
+    edgeDistCutoff, useHexDiagonals != 0);
   if (mIsOpen) {
     UpdateData(true);
     DialogToParams();
@@ -599,6 +622,7 @@ void CHoleFinderDlg::DialogToParams()
   if (!mIsOpen)
     return;
   mParams.useBoundary = m_bExcludeOutside;
+  mParams.useHexDiagonals = m_bUseBestSubset;
   mParams.showExcluded = m_bShowExcluded;
   mParams.layoutType = m_iLayoutType;
   mParams.hexagonalArray = m_bHexArray;
@@ -649,7 +673,7 @@ void CHoleFinderDlg::ParamsToDialog()
 
   // If there are holes, set up the sliders and cutoffs; clamp sliders not actual cutoffs
   if (mHaveHoles) {
-    m_strSDcutoff.Format("%.4g", mParams.SDcutoff);
+    m_strSDcutoff.FORMAT4OR5G(mParams.SDcutoff);
     m_strBlackPct.Format("%.1f", 100. * mParams.blackFracCutoff);
     m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMeanMin) /
       (mMidMean - mMeanMin));
@@ -673,9 +697,9 @@ void CHoleFinderDlg::ParamsToDialog()
     m_intBlackPct = 255;
     m_intHullDist = 0;
   }
-  m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff > EXTRA_VALUE_TEST ?
+  m_strLowerMean.FORMAT4OR5G(mParams.lowerMeanCutoff > EXTRA_VALUE_TEST ?
     mParams.lowerMeanCutoff : 0.);
-  m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff > EXTRA_VALUE_TEST ?
+  m_strUpperMean.FORMAT4OR5G(mParams.upperMeanCutoff > EXTRA_VALUE_TEST ?
     mParams.upperMeanCutoff : 0.);
   m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
   m_bHexArray = mParams.hexagonalArray;
@@ -683,6 +707,7 @@ void CHoleFinderDlg::ParamsToDialog()
   m_fMaxError = mParams.maxError;
   m_bExcludeOutside = mParams.useBoundary;
   m_bBracketLast = mParams.bracketLast;
+  m_bUseBestSubset = mParams.useHexDiagonals;
   m_bShowExcluded = mParams.showExcluded;
   m_iLayoutType = mParams.layoutType;
   UpdateData(false);
@@ -703,12 +728,12 @@ void CHoleFinderDlg::ManageEnables()
   m_editUpperMean.EnableWindow(mHaveHoles);
   m_butSetSizeSpace.EnableWindow(mLastHoleSize > 0.);
   if (mHaveHoles) {
-    m_strMinLowerMean.Format("%.4g", mMeanMin);
-    m_strMaxLowerMean.Format("%.4g", mMidMean);
-    m_strMinUpperMean.Format("%.4g", mMidMean);
-    m_strMaxUpperMean.Format("%.4g", mMeanMax);
-    m_strMinSDcutoff.Format("%.4g", mSDmin);
-    m_strMaxSDcutoff.Format("%.4g", mSDmax);
+    m_strMinLowerMean.FORMAT4OR5G(mMeanMin);
+    m_strMaxLowerMean.FORMAT4OR5G(mMidMean);
+    m_strMinUpperMean.FORMAT4OR5G(mMidMean);
+    m_strMaxUpperMean.FORMAT4OR5G(mMeanMax);
+    m_strMinSDcutoff.FORMAT4OR5G(mSDmin);
+    m_strMaxSDcutoff.FORMAT4OR5G(mSDmax);
     m_strMinBlackPct.Format("%.1f", 100. * mBlackFracMin);
     m_strMaxBlackPct.Format("%.1f", 100. * mBlackFracMax);
     m_strMaxHullDist.Format("%.1f", mEdgeDistMax);
@@ -724,6 +749,7 @@ void CHoleFinderDlg::ManageEnables()
     m_strMaxHullDist = "";
   }
   m_butBracketLast.EnableWindow(mBestThreshInd >= 0);
+  EnableDlgItem(IDC_USE_BEST_SUBSET, m_bHexArray);
   m_butShowExcluded.EnableWindow(mHaveHoles);
   m_butShowIncluded.EnableWindow(mHaveHoles);
   m_butToggleHoles.EnableWindow(mHaveHoles);
@@ -851,6 +877,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mMissYinPiece.clear();
   mPieceOn.clear();
   mExcluded.clear();
+  mHexSubset.clear();
+  mMissHexSubset.clear();
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
@@ -1213,6 +1241,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 void CHoleFinderDlg::ScanningNextTask(int param)
 {
   int err, ind;
+  int cen, bestCen = -1, maxCenNum = 0;
+  int subsetXcen[3] = {0, 1, 0};
+  int subsetYcen[3] = {0, 0, 1};
+  ShortVec gridX, gridY;
   float sigUsed, threshUsed;
   FloatVec peakVals, xMissing, yMissing, xCenClose, yCenClose, xBound, yBound;
   FloatVec peakClose, xInPiece, yInPiece, xCenAlt, yCenAlt, peakAlt, xMissing2, yMissing2;
@@ -1224,11 +1256,10 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   MontParam *montP = &mMontParam;
   EMimageBuffer *allBufs = mWinApp->GetImBufs();
   EMimageBuffer *imBuf = &allBufs[mBufInd];
-  int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf, numMiss;
+  int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf, numMiss, xGrid, yGrid, subset;
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv, adjInv;
   float delX, delY, ptX, ptY;
-  double xISvectors[3], yISvectors[3];
   CString noMontReason, statStr;
 
   if (!mFindingHoles)
@@ -1454,16 +1485,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       mYmissStage[ind]);
   }
 
-  // Get the hole vectors as IS values and stpre in Nav item if it is a map
-  xISvectors[2] = yISvectors[2] = 0.;
-  if (mNavItem && ConvertHoleToISVectors(mLastMagIndex, false, &xISvectors[0],
-    &yISvectors[0], statStr)) {
-    for (ind = 0; ind < 3; ind++) {
-      mNavItem->mXHoleISSpacing[ind] = (float)xISvectors[ind];
-      mNavItem->mYHoleISSpacing[ind] = (float)yISvectors[ind];
-    }
-    mNav->SetChanged(true);
-  }
+  // Get the hole vectors as IS values and store in Nav item if it is a map
+  mIDofNavItem = 0;
+  SetNavMapHoleVectors();
 
   // Get edge distances
   xBound.resize(numPoints);
@@ -1498,20 +1522,62 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
   if (!mIsOpen)
     *mMasterParams = mParams;
+
+  // Analyze hex subset for real and missing points
+  if (mLastWasHexGrid) {
+
+    // Concatenate real and missing points
+    xMissing = mXcenters;
+    yMissing = mYcenters;
+    if (mXmissStage.size()) {
+      xMissing.insert(xMissing.end(), mXmissCen.begin(), mXmissCen.end());
+      yMissing.insert(yMissing.end(), mYmissCen.begin(), mYmissCen.end());
+    }
+
+    // Get the grid positions
+    mHexSubset.resize(mXcenters.size());
+    mMissHexSubset.resize(mXmissCen.size());
+    avgLen = -1.; 
+    avgAngle = -999.;
+    mHelper->mFindHoles->assignGridPositions(xMissing, yMissing, gridX, gridY, avgAngle,
+      avgLen);
+
+    // For each center position, see if difference from center satisfied relation for
+    // subset that X - Y is a multiple of 3
+    for (ind = 0; ind < (int)xMissing.size(); ind++) {
+      xGrid = gridX[ind];
+      yGrid = gridY[ind];
+      subset = -1;
+      for (cen = 0; cen < 3 && subset < 0; cen++) {
+        xGrid = gridX[ind] - subsetXcen[cen];
+        yGrid = gridY[ind] - subsetYcen[cen];
+        if ((xGrid - yGrid) % 3 == 0) {
+          subset = cen;
+          break;
+        }
+      }
+
+      // Assign the subset #
+      if (ind >= (int)mXcenters.size())
+        mMissHexSubset[ind - mXcenters.size()] = subset;
+      else
+        mHexSubset[ind] = subset;
+    }
+  }
   SetExclusionsAndDraw();
 }
 
 void CHoleFinderDlg::SetExclusionsAndDraw()
 {
   SetExclusionsAndDraw(mParams.lowerMeanCutoff, mParams.upperMeanCutoff, mParams.SDcutoff,
-    mParams.blackFracCutoff, mParams.edgeDistCutoff);
+    mParams.blackFracCutoff, mParams.edgeDistCutoff, mParams.useHexDiagonals);
 }
 
 // Set the exclusions based on the current cutoffs
 void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff,
-  float sdCutoff, float blackCutoff, float edgeDistCutoff)
+  float sdCutoff, float blackCutoff, float edgeDistCutoff, BOOL useHexDiagonals)
 {
-  int ind;
+  int ind, numInSubset[3] = {0, 0, 0};
   bool extreme;
   float middle = (lowerMeanCutoff + upperMeanCutoff) / 2.f;
   if (!mHaveHoles)
@@ -1519,8 +1585,13 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
 
     // -1 and 3 are user include and exclude and are permanent; 1 and 2 are for "dark"
-    // and "light" exclusions
-    if (mExcluded[ind] >= 0 && mExcluded[ind] < 3) {
+    // and "light" exclusions.  -1 becomes -2 and 3 becomes 5 for points in excluded
+    // hex subsets, so first restore those values for the regular exclusion logic
+    if (mExcluded[ind] < -1)
+      mExcluded[ind] = -1;
+    if (mExcluded[ind] > 4)
+      mExcluded[ind] = 3;
+    if (mExcluded[ind] != -1 && mExcluded[ind] != 3) {
       mExcluded[ind] = 0;
       extreme = mHoleSDs[ind] > sdCutoff || mHoleBlackFracs[ind] > blackCutoff;
       if (mHoleMeans[ind] < lowerMeanCutoff || (extreme && mHoleMeans[ind] <= middle) ||
@@ -1528,6 +1599,31 @@ void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMean
         mExcluded[ind] = 1;
       if (mHoleMeans[ind] > upperMeanCutoff || (extreme && mHoleMeans[ind] > middle))
         mExcluded[ind] = 2;
+    }
+  }
+
+  // Find best hex subset: first count up non-excluded points in each subset and get best
+  mCurHexSubset = -1;
+  if (mLastWasHexGrid && useHexDiagonals) {
+    for (ind = 0; ind < (int)mXcenters.size(); ind++)
+      if ((!mExcluded[ind] || mExcluded[ind] == -1) && mHexSubset[ind] >= 0)
+        numInSubset[mHexSubset[ind]]++;
+    mCurHexSubset = 0;
+    if (numInSubset[1] > numInSubset[0])
+      mCurHexSubset = 1;
+    if (numInSubset[2] > numInSubset[mCurHexSubset])
+      mCurHexSubset = 2;
+
+    // Set exclusion 4 for other points, or -2/5 for user include/excludes
+    for (ind = 0; ind < (int)mXcenters.size(); ind++) {
+      if (mHexSubset[ind] != mCurHexSubset) {
+        if (mExcluded[ind] < 0)
+          mExcluded[ind] = -2;
+        else if (mExcluded[ind] == 3)
+          mExcluded[ind] = 5;
+        else
+          mExcluded[ind] = 4;
+      }
     }
   }
   mWinApp->mMainView->DrawImage();
@@ -1542,6 +1638,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
   int dir, numVecs = mLastWasHexGrid ? 3 : 2, hexInd = mLastWasHexGrid ? 1 : 0;
   float *xVecs, *yVecs;
   float ySign = 1.;
+  float diagXvecs[3], diagYvecs[3];
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   double *xSpacing = mLastWasHexGrid ? &msParams->hexISXspacing[0] :
     &msParams->holeISXspacing[0];
@@ -1559,10 +1656,21 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
     errStr = "The hole finder has not saved any vectors";
     return 0;
   }
+  if (mLastWasHexGrid && mCurHexSubset >= 0) {
+    diagXvecs[0] = xVecs[0] - xVecs[2];
+    diagYvecs[0] = yVecs[0] - yVecs[2];
+    diagXvecs[1] = xVecs[0] + xVecs[1];
+    diagYvecs[1] = yVecs[0] + yVecs[1];
+    diagXvecs[2] = xVecs[1] + xVecs[2];
+    diagYvecs[2] = yVecs[1] + yVecs[2];
+    xVecs = &diagXvecs[0];
+    yVecs = &diagYvecs[0];
+  }
   for (dir = 0; dir < numVecs; dir++) {
     xVecOut[dir] = xVecs[dir];
     yVecOut[dir] = ySign * yVecs[dir];
   }
+
   if (index > 0) {
     st2is = MatMul(mWinApp->mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
       index), mWinApp->mShiftManager->CameraToIS(index));
@@ -1590,6 +1698,23 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
   return numVecs;
 }
 
+// Get the hole vectors as IS values and store in Nav item if it is a map
+void CHoleFinderDlg::SetNavMapHoleVectors()
+{
+  CString statStr;
+  double xISvectors[3], yISvectors[3];
+  int ind;
+  xISvectors[2] = yISvectors[2] = 0.;
+  if (mNavItem && ConvertHoleToISVectors(mLastMagIndex, false, &xISvectors[0],
+    &yISvectors[0], statStr)) {
+    for (ind = 0; ind < 3; ind++) {
+      mNavItem->mXHoleISSpacing[ind] = (float)xISvectors[ind];
+      mNavItem->mYHoleISSpacing[ind] = (float)yISvectors[ind];
+    }
+    mNav->SetChanged(true);
+    mIDofNavItem = mNavItem->mMapID;
+  }
+}
 
 // This should not be called
 void CHoleFinderDlg::ScanningCleanup(int error)
@@ -1667,6 +1792,9 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
   for (miss = 0; miss < 2; miss++) {
     numDo = miss ? (int)mXmissStage.size() : (int)mXstages.size();
     for (ind = 0; ind < numDo; ind++) {
+      if (mCurHexSubset >= 0 && (miss ? mMissHexSubset[ind] : mHexSubset[ind]) !=
+        mCurHexSubset)
+        continue;
       stPtX = miss ? mXmissStage[ind] : mXstages[ind];
       stPtY = miss ? mYmissStage[ind] : mYstages[ind];
       if (!(InsideContour(selXlimit, selYlimit, 4, stPtX, stPtY) ||
@@ -1705,6 +1833,8 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
     mYstages.push_back(mYmissStage[indMin]);
     mXcenters.push_back(mXmissCen[indMin]);
     mYcenters.push_back(mYmissCen[indMin]);
+    if (mMissHexSubset.size())
+      mHexSubset.push_back(mMissHexSubset[indMin]);
     if (mXinPiece.size()) {
       mXinPiece.push_back(mMissXinPiece[indMin]);
       mYinPiece.push_back(mMissYinPiece[indMin]);
@@ -1724,7 +1854,10 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
       mExcluded[indMin] = -1;  // User include
     mLastUserSelectInd = indMin;
   }
-  mWinApp->mMainView->DrawImage();
+  if (m_bUseBestSubset)
+    SetExclusionsAndDraw();
+  else
+    mWinApp->mMainView->DrawImage();
   return true;
 }
 

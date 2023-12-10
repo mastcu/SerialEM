@@ -6033,7 +6033,7 @@ void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat 
     // Look for matching grid index for non-excluded point
     for (int ind = 0; ind < (int)mHFgridXpos->size(); ind++) {
       if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && 
-        mHFexclude->at(ind) <= 0){
+        (!mHFexclude->at(ind) || mHFexclude->at(ind) == -1)){
         xx = mHFxCenters->at(ind);
         yy = mHFyCenters->at(ind);
         if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0 && 
@@ -9823,7 +9823,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       err = 1;
       if (mHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts()) {
         len = mHelper->mHoleFinderDlg->DoMakeNavPoints(-1, (float)EXTRA_NO_VALUE,
-          (float)EXTRA_NO_VALUE, -1., -1., -1.);
+          (float)EXTRA_NO_VALUE, -1., -1., -1., -1);
         if (len > 0)
           PrintfToLog("Hole finder made %d Navigator points", len);
         else

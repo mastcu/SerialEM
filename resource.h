@@ -2174,6 +2174,7 @@
 #define IDC_STAT_MAP_FALLOFF            3206
 #define IDC_STAT_PREPIXEL               3207
 #define IDC_EDIT_PREPIXEL               3208
+#define IDC_USE_BEST_SUBSET             3209
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2734,7 +2735,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        284
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3209
+#define _APS_NEXT_CONTROL_VALUE         3210
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

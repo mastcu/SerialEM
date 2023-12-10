@@ -232,6 +232,15 @@
       holes.&nbsp; Specifically, the convex hull of the hole centers is found, and the 
       distance from the hull is measured for each hole.&nbsp; The outer holes that 
       form the hull will be excluded by any non-zero value.</p>
+    <p><strong>Use best 1/3 subset of holes, 1.07 um apart</strong></p>
+    <p>Use this option with a hex grid to select a subset of holes spaced apart on the 
+      diagonals between nearest neighbors, at a nominal periodicity of 1.07 micron.&nbsp; 
+      There are three such subsets, and the program will always pick the one with the 
+      most points after applying all other exclusions.&nbsp; This means that it may 
+      switch from one subset of points to another as the sliders are changed or points 
+      are manually deleted.&nbsp; This option may be needed if fringe-free 
+      illumination is not available and the beam cannot illuminate one hole well 
+      without hitting a neighboring hole.</p>
     <p><strong>Show Included</strong></p>
     <p>Use this option to toggle whether the included points (the ones passing all the 
       cutoffs) are displayed.&nbsp; Included points are displayed in magenta.</p>

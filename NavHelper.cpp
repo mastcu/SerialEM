@@ -256,6 +256,7 @@ CNavHelper::CNavHelper(void)
   mHoleFinderParams.edgeDistCutoff = 0.;
   mHoleFinderParams.showExcluded = true;
   mHoleFinderParams.layoutType = 0;
+  mHoleFinderParams.useHexDiagonals = false;
   mAutoContourParams.targetPixSizeUm = 2.f;
   mAutoContourParams.targetSizePixels = 1500;
   mAutoContourParams.usePixSize = true;

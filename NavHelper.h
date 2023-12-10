@@ -98,6 +98,7 @@ struct HoleFinderParams
   BOOL hexagonalArray;    // Flag for hex grid
   float hexDiameter;      // Set diameter and spacing for hex
   float hexSpacing;
+  BOOL useHexDiagonals;   // Flag to select best 1/3 of holes
 };
 
 struct AutoContourParams

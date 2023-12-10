@@ -26,8 +26,9 @@ public:
   bool MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY, float imDistLim, bool dragging);
   void SetExclusionsAndDraw();
   void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff,
-    float edgeDistCutoff);
+    float edgeDistCutoff, BOOL useHexDiagonals);
   int ConvertHoleToISVectors(int index, bool setVecs, double *xVecs, double *yVecs, CString &errStr);
+  void SetNavMapHoleVectors();
   GetMember(bool, FindingHoles);
   void GetGridImVecs(float *xVecs, float *yVecs) { xVecs = &mGridImXVecs[0]; yVecs = &mGridImYVecs[0]; };
   void GetGridStageVecs(float *xVecs, float *yVecs) { xVecs = &mGridStageXVecs[0]; yVecs = &mGridStageYVecs[0]; };
@@ -42,7 +43,7 @@ public:
   bool CheckAndSetNav(const char *message = NULL);
   int DoFindHoles(EMimageBuffer *imBuf);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
-    float sdCutoff, float blackCutoff, float edgeDistCutoff);
+    float sdCutoff, float blackCutoff, float edgeDistCutoff, int useHexDiagonals);
 
 
 // Dialog Data
@@ -87,6 +88,8 @@ private:
   FloatVec mMissXinPiece, mMissYinPiece;
   IntVec mPieceOn;
   std::vector<short> mExcluded;
+  std::vector<unsigned char> mHexSubset, mMissHexSubset;
+  int mCurHexSubset;
   int mLastUserSelectInd;
   bool mLastSelectWasDrag;
   double mSigmas[MAX_HOLE_TRIALS];
@@ -117,6 +120,7 @@ private:
   int mSigInd, mThreshInd, mBestSigInd, mBestThreshInd;
   MontParam mMontParam;
   CMapDrawItem *mNavItem;
+  int mIDofNavItem;
   int mFullYsize, mFullBinning;
   int mBufBinning;
   MiniOffsets *mMiniOffsets;
@@ -213,4 +217,6 @@ public:
   CString m_strHullDist;
   CString m_strMaxHullDist;
   afx_msg void OnKillfocusEditHullDist();
+  BOOL m_bUseBestSubset;
+  afx_msg void OnUseBestSubset();
 };

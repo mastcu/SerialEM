@@ -580,7 +580,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     // PrintfToLog("Best ind %d ix %d", bestInd, bestIx);
     mHexToItemIndex.clear();
     mHexToItemIndex.resize(bestFullArray.GetSize(), -1);
-    extraHexNum = bestFullArray.GetSize();
+    extraHexNum = (int)bestFullArray.GetSize();
 
     // Loop on boxes in three rounds: center at original pos, center moved, and missing
     for (ind = 0; ind >= -1; ind--) {

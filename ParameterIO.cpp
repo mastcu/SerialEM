@@ -626,6 +626,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
         if (!itemEmpty[14])
           hfParams->edgeDistCutoff = itemFlt[14];
+        if (!itemEmpty[15])
+          hfParams->useHexDiagonals = itemInt[15] != 0;
       } else if (NAME_IS("HoleFiltSigmas")) {
         hfParams->sigmas.clear();
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
@@ -1867,12 +1869,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL,
         &msParams->customHoleY);
     }
-    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d %d %f %f %f\n", 
+    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d %d %f %f %f %d\n", 
       hfParams->spacing, hfParams->diameter, hfParams->useBoundary ? 1 : 0, 
       hfParams->lowerMeanCutoff, hfParams->upperMeanCutoff, hfParams->SDcutoff, 
       hfParams->blackFracCutoff, hfParams->showExcluded ? 1 : 0, hfParams->layoutType, 
       hfParams->bracketLast ? 1 : 0, hfParams->hexagonalArray ? 1 : 0, 
-      hfParams->hexSpacing, hfParams->hexDiameter, hfParams->edgeDistCutoff);
+      hfParams->hexSpacing, hfParams->hexDiameter, hfParams->edgeDistCutoff,
+      hfParams->useHexDiagonals);
     mFile->WriteString(oneState);
     if (hfParams->sigmas.size())
       OutputVector("HoleFiltSigmas", (int)hfParams->sigmas.size(), NULL,

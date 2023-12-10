@@ -11546,7 +11546,8 @@ int CMacCmd::MakeNavPointsAtHoles(void)
     (float)((mItemEmpty[3] || mItemDbl[3] < -900000) ? EXTRA_NO_VALUE : mItemDbl[3]),
     (float)((mItemEmpty[4] || mItemDbl[4] < 0.) ? - 1. : mItemDbl[4]) / 100.f,
     (float)((mItemEmpty[5] || mItemDbl[5] < 0.) ? - 1. : mItemDbl[5]) / 100.f,
-    (mItemEmpty[6] || mItemFlt[6] < 0.) ? -1.f : mItemFlt[6]);
+    (mItemEmpty[6] || mItemFlt[6] < 0.) ? -1.f : mItemFlt[6], 
+    (mItemEmpty[7] || mItemInt[7] < 0) ? -1 : mItemInt[7]);
   if (index < 0) {
     AbortMacro();
     return 1;

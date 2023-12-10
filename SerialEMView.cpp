@@ -1308,6 +1308,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       tempY = yHoleCens->at(ix);
       exclude = holeExcludes->at(ix);
       if ((exclude > 0 && !drawExcluded) || (exclude <= 0 && !drawIncluded) ||
+        exclude < -1 || exclude > 3 ||
         tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
         continue;
       StageToImage(imBuf, tempX, tempY, ptX, ptY, iy ? pieceOn->at(ix) : -1);
