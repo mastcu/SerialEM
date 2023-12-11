@@ -2067,13 +2067,22 @@ float CShiftManager::GetPixelSize(EMimageBuffer *imBuf, float *focusRot)
 // Get the image rotation: replaced by new methods 11/30/06
 double CShiftManager::GetImageRotation(int inCamera, int inMagInd)
 {
-  if (inCamera < 0 || inCamera >= MAX_CAMERAS)
-    return 0.;
-  if (mCamParams[inCamera].STEMcamera)
+  CString warning;
+  if (inCamera < 0 || inCamera >= MAX_CAMERAS) {
+    warning.Format("WARNING: camera index %d out of range in call to GetImageRotation",
+      inCamera);
+  } else if (mCamParams[inCamera].STEMcamera) {
     return mCamParams[inCamera].imageRotation;
-  if (inMagInd < 0 || inMagInd >= MAX_MAGS)
-    return 0.;
-  return mMagTab[inMagInd].rotation[inCamera];
+  } else if (inMagInd < 0 || inMagInd >= MAX_MAGS) {
+    warning.Format("WARNING: mag index %d out of range in call to GetImageRotation",
+      inMagInd);
+  } else {
+    return mMagTab[inMagInd].rotation[inCamera];
+  }
+  warning += "\r\nPlease send this log with backtrace to David; this is NOT a crash";
+  AddBackTraceToMessage(warning);
+  mWinApp->AppendToLog(warning);
+  return 0.;
 }
 
 // Compute a pixel size for all mags by propagating any calibration information,
