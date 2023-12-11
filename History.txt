@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/11/23: SEM_4-0-28
 12/11/23: Added script command to set montage control panel parameters.
 
 12/10/23: Fixed hex multishot pattern for 8 or more rings.
@@ -32,6 +33,9 @@ some various problems in script help.
 
 12/8/23: Fixed crash combining with non-square pattern (In 4.0).
 
+11/30/23: Fixed problem converting beam calibrations between aperture sizes
+that made dose calibration say beam was not in calibrated range (In 4.0).
+
 12/4/23: Fixed optional arguments to CombineHolesToMulti when called from
 Python.
 
@@ -57,7 +61,6 @@ allowed acquire to be turned off for current Navigator item when acquiring.
 11/30/23: Made an error writing to log file during a script, tilt series, or
 Navigator Acquire put warning in log instead of throwing an error.
 
-11/30/23: Fixed problem converting beam calibrations between aperture sizes to
 that made dose calibration say beam was not in calibrated range (In 4.0).
 
 11/15/23: Fixed unreasonable timeout after a COM error moving stage.
