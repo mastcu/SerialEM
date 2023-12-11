@@ -3,9 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/11/23: SEM_4-0-28
 12/8/23: Fixed crash combining with non-square pattern (In 4.0).
 
-11/30/23: Fixed problem converting beam calibrations between aperture sizes to
+11/30/23: Fixed problem converting beam calibrations between aperture sizes
 that made dose calibration say beam was not in calibrated range (In 4.0).
 
 8/10/23: SEM_4-0-27
