@@ -2480,6 +2480,15 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetMontPanelParams #V [#A #B #M]</TD>
+          <TD>Sets parameters in the montage control panel; enter: 1 for <b>#V</b> to treat as very sloppy or 0 not to;
+            1 for optional <b>#A</b> to align pieces in overview or 0 not to, optional <b>#B</b> with an 
+            overview binning; and 1 for optional <b>#M</b> to assess multiple peaks or 0 not to.&nbsp; Enter
+            -1 for any of these to leave it unchanged.&nbsp; Setting overview binning has no real effect unless
+            montaging is on, in which case it is limited by the allowed maximum binning.&nbsp; Command added in 4.1, 10-Dec-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetupWaffleMontage #B file</TD>
           <TD>Opens a montage file or adjust the current file&#39;s properties so that it will
             hold an image of the cross-line (waffle) replica grating with at least <b>#B</b> blocks
@@ -4701,7 +4710,7 @@
             </TD>
         </TR>
        <TR>
-          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E] [#H}</TD>
+          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E] [#H]</TD>
           <TD>Makes positions found by the Hole Finder into Navigator points, using the various
             thresholds for exclusion set in
               the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog

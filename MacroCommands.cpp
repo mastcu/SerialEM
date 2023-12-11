@@ -11794,6 +11794,28 @@ int CMacCmd::ParamSetToUseForMontage(void)
   return 0;
 }
 
+// SetMontPanelParams
+int CMacCmd::SetMontPanelParams()
+{
+  MontParam *param = mWinApp->GetMontParam();
+  if (mItemInt[1] >= 0)
+    param->verySloppy = mItemInt[1] > 0;
+  if (!mItemEmpty[2] && mItemInt[2] >= 0)
+    param->shiftInOverview = mItemInt[2] > 0;
+  if (!mItemEmpty[3] && mItemInt[3] > 0) {
+    if (mWinApp->Montaging() && mItemInt[3] > param->maxOverviewBin) {
+      mLogRpt.Format("Overview binning is set to the maximum, %d, not the requested %d",
+        param->maxOverviewBin, mItemInt[3]);
+      mItemInt[3] = param->maxOverviewBin;
+    }
+    param->overviewBinning = mItemInt[3];
+  }
+  if (!mItemEmpty[4] && mItemInt[4] >= 0)
+    param->evalMultiplePeaks = mItemInt[4] > 0;
+  mWinApp->mMontageWindow.UpdateSettings();
+  return 0;
+}
+
 // ManualFilmExposure
 int CMacCmd::ManualFilmExposure(void)
 {
