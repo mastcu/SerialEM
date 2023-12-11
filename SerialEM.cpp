@@ -105,7 +105,6 @@ static void SEMInvalidParameterHandler(const wchar_t* expression, const wchar_t*
   const wchar_t* file, unsigned int line, uintptr_t pReserved);
 static void SEMTerminateHandler();
 static void CommonErrorHandler(const char *cause);
-void AddBackTraceToMessage(CString &message);
 
 typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 typedef USHORT(WINAPI *BackTraceFunc)(ULONG, ULONG, PVOID *, PULONG);
@@ -1845,7 +1844,7 @@ void CommonErrorHandler(const char *cause)
 void AddBackTraceToMessage(CString &message)
 {
   BackTraceFunc btFunc;
-  PVOID backTrace[12];
+  PVOID backTrace[15];
   HMODULE module = AfxLoadLibrary("Kernel32.dll");
   CString str;
   if (module) {
@@ -1853,7 +1852,7 @@ void AddBackTraceToMessage(CString &message)
     // This requires WIN32_WINNT=0x0600 in preprocessor defs so we try to load it instead
     btFunc = (BackTraceFunc)GetProcAddress(module, "RtlCaptureStackBackTrace");
     if (btFunc) {
-      int numBack = btFunc(2, 12, &backTrace[0], NULL);
+      int numBack = btFunc(2, 15, &backTrace[0], NULL);
       if (numBack) {
         str.Format("\r\nSEMTrace is 0x%x; backtrace:", SEMTrace);
         message += str;
@@ -1863,6 +1862,7 @@ void AddBackTraceToMessage(CString &message)
         message += str;
       }
     }
+    FreeLibrary(module);
   }
 }
 
