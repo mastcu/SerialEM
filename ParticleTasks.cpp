@@ -807,7 +807,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
 
         // For minimum shifts, step out from last point of previous ring, so this backs
         // it up one position per ring
-        ind = (step + 7 - ring) % 6;
+        ind = (step + 607 - ring) % 6;
 
         // Direction along side is 2 past main direction; set up indexes and signs of each
         DirectionIndexesForHexSide(ind, mainDir, mainSign, sideDir, sideSign);
