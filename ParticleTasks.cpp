@@ -331,7 +331,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     RESTORE_MSP_RETURN(0);
   }
 
-  if (!testRun) {
+  if (!testRun || GetDebugOutput('W')) {
     str.Format("Starting multiple Records (%d position%s in %d hole%s) %s %s%s%s "
       "compensation", mMSNumPeripheral + (mMSDoCenter ? 1 : 0), mMSNumPeripheral + 
       mMSDoCenter > 1 ? "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
