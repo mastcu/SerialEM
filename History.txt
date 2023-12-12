@@ -24,17 +24,14 @@ and requiring program to be exited.
 12/8/23: Added menu item for selecting a script to run instead of taking
 Record in Multiple Records run from Acquire at Items.
 
-12/8/23: Fixed argument lists for 12 scrpit commands if called from Python and
-some various problems in script help.
+12/8/23: Fixed argument lists for 12 script commands if called from Python and
+various problems in script help.
 
 12/8/23: Added support for STEM with Tietz scan generator.
 
 12/8/23: Fixed a crash when using ctffind from PACEtomo (new package needed).
 
 12/8/23: Fixed crash combining with non-square pattern (In 4.0).
-
-11/30/23: Fixed problem converting beam calibrations between aperture sizes
-that made dose calibration say beam was not in calibrated range (In 4.0).
 
 12/4/23: Fixed optional arguments to CombineHolesToMulti when called from
 Python.
@@ -48,7 +45,7 @@ monitors with the primary one on the right; fixed reopening program maximized.
 11/30/23: SEM_4-1-0beta26
 11/30/23: Fixed saving of frame mdoc for multishots with early returns.
 
-11/30/23: DE code and DLL updated to work with 2.7 server; API 2 can now be
+* 11/30/23: DE code and DLL updated to work with 2.7 server; API 2 can now be
 used with 2.7 but not earlier servers and gives fast continuous mode.
 
 11/30/23: Made TakeUnbinnedIfSavingEER be on by default.
@@ -61,6 +58,7 @@ allowed acquire to be turned off for current Navigator item when acquiring.
 11/30/23: Made an error writing to log file during a script, tilt series, or
 Navigator Acquire put warning in log instead of throwing an error.
 
+11/30/23: Fixed problem converting beam calibrations between aperture sizes
 that made dose calibration say beam was not in calibrated range (In 4.0).
 
 11/15/23: Fixed unreasonable timeout after a COM error moving stage.
@@ -70,7 +68,7 @@ that made dose calibration say beam was not in calibrated range (In 4.0).
 11/14/23: Added script command to find a substring in a string and expanded
 TrimString to take an index.
 
-11/14/23: Added option to Tilt Series Extra Output to make a map from a
+* 11/14/23: Added option to Tilt Series Extra Output to make a map from a
 low-tilt Record for each series run from Acquire at Items.
 
 11/14/23: Fixed Z values of aligned piece coordinates and numbering of
@@ -88,7 +86,7 @@ account.
 11/4/23: SEM_4-1-0beta24
 11/3/23: Fixed limit on how big the return values to Python script could be.
 
-11/2/23: Added options to use Ctfplotter instead of Ctffind for CTF fitting
+* 11/2/23: Added options to use Ctfplotter instead of Ctffind for CTF fitting
 when click in FFT and for coma/astigmatism correction.
 
 11/2/23: Added script command to make next graph be saved as TIFF so it can be
@@ -100,16 +98,16 @@ with SuppressReports.
 11/2/23: Added property to specify what probe mode to use in LM with FEI
 STEM.
 
-10/17/23: Added button in multishot dialog and script command to use the
+* 10/17/23: Added button in multishot dialog and script command to use the
 current group of Navigator points to define vectors.
 
-10/17/23: PythonModules is now included in the install package and will be
+* 10/17/23: PythonModules is now included in the install package and will be
 updated by the installer.
 
 10/13/23: Added script command to find out if a directory is writable, and
 added option argument on Try command to suppress output.
 
-10/12/23: Added automatic pruning of log window.
+* 10/12/23: Added automatic pruning of log window.
 
 10/12/23: Fixed swapped error messages from RelaxStage command and made
 UserSetDirectory return 'Cancel' if the user cancels the chooser.
@@ -118,7 +116,7 @@ UserSetDirectory return 'Cancel' if the user cancels the chooser.
 
 10/8/23: Added property to specify key-value pairs to add to autodocs.
 
-10/6/23: Added script commands and other functions to control beam stop on
+* 10/6/23: Added script commands and other functions to control beam stop on
 newer JEOL scopes and FEI scopes with UTAPI interface.
 
 10/6/23: Added ability to renew connection to JEOL scope when there is a time
@@ -145,7 +143,7 @@ script embedded in a regular one.
 9/27/23: Made starting image shift be restored at the end when recording image
 shift vectors for Multiple Records.
 
-9/27/23: Added a non-Qt version of Ctfplotter to install package and changed
+* 9/27/23: Added a non-Qt version of Ctfplotter to install package and changed
 SerialEM to use this unconditionally unless a graph is being saved.
 
 9/20/23: Fixed external scripts hanging when STOP is pressed and made module
@@ -263,13 +261,13 @@ Navigator Acquire task and laying points out in groups.
 7/12/23: Add option to use map hole vectors and adjust them when doing
 multishot in Navigator Acquire at Items.
 
-7/12/23: Added buttons to apply an adjustment and to use hole vectors from a
+* 7/12/23: Added buttons to apply an adjustment and to use hole vectors from a
 map to the multishot setup dialog.
 
 7/12/23: Fixed loss of missing points added by mouse and problems with
-double-toggling of included/excluded hole fimnder points.
+double-toggling of included/excluded hole finder points.
 
-7/10/23: Image shift values corresponding to hole vectors are computed after
+* 7/10/23: Image shift values corresponding to hole vectors are computed after
 finding holes on a map and stored in the Navigator file; they can be used
 later for multishot vectors with a script command.
 
@@ -282,7 +280,7 @@ with 'Step To and Adjust IS' and added script command to apply it to vectors.
 7/10/23: Fixed drawing of points outside the image when image is zoomed
 smaller than window, broken 3/1/23.
 
-7/10/23: Ctrl-left-double-click near the blue rectangle drawn for a map will
+* 7/10/23: Shift-middle-double-click near the blue rectangle drawn for a map will
 make it load that map.
 
 7/10/23: It will try to load a regular settings file from the system location
@@ -291,11 +289,11 @@ before loading the default settings file.
 7/5/23: Added option to Step and Adjust IS dialog to take image after shifting
 to a position.
 
-7/5/23: Allowed taking subareas in dose fractionation mode for K2/K3, needs
+* 7/5/23: Allowed taking subareas in dose fractionation mode for K2/K3, needs
 new plugin.
 
 7/3/23: SEM_4-1-0beta18
-7/3/23: Added entry for extra file suffixes in the Tilt Series Extra Output
+* 7/3/23: Added entry for extra file suffixes in the Tilt Series Extra Output
 dialog to replace having to use 'SuffixForExtraFile' command.
 
 7/3/23: Fixed some problems finding holes in hex grids.
@@ -303,7 +301,7 @@ dialog to replace having to use 'SuffixForExtraFile' command.
 7/2/23: Stopped disabling the "Use Last IS vectors" button if not previously
 defined or not at the same tilt angle as before.
 
-7/2/23: Added an AutoIT compiled executable that is used to change aperture
+* 7/2/23: Added an AutoIT compiled executable that is used to change aperture
 size for systems where the UI automation fails to do so (Win 7, some Win 10).
 
 7/2/23: When a single-channel JEOL STEM interface has multiple detectors, made
@@ -351,13 +349,11 @@ provide them as prior dose values in the mdoc files.
 6/27/23: Fixed problem with file locks preventing file removal and other
 operations when running a Python script.
 
-6/21/23: Allowed adding Navigator items on centered cropped image.
+* 6/21/23: Allowed adding Navigator items on centered cropped image.
 
 6/21/23: Prevented adding Navigator items on a cropped image (In 4.0).
 
-6/17/23: Added property for specifying a dummy instance.
-
-6/17/23: Kept track of whether a cropped image was centered and allowed
+* 6/17/23: Kept track of whether a cropped image was centered and allowed
 Navigator display on such an image.
 
 6/17/23: Assigned a different port for running Python from a Dummy instance of
@@ -381,7 +377,7 @@ to counting if those buttons are not shown, but show the buttons by default.
 6/11/23: Added property to allow energy filter to be used without switching
 scope into EFTEM/GIF mode, and fixed problems with CEOS support.
 
-5/28/23: Added ability to include a file into a Python script.
+* 5/28/23: Added ability to include a file into a Python script.
 
 5/28/23: Added support for CEOS energy filter.
 
@@ -441,7 +437,7 @@ counts to match.
 Falcon 4i by accounting for the unit for making fractions being 9 frames
 instead of 7 (In 4.0).
 
-4/26/23: Added slider to hole finder dialog to exclude holes near edge of area
+* 4/26/23: Added slider to hole finder dialog to exclude holes near edge of area
 of found holes.
 
 4/26/23: Added script command to report frame-saving path for Gatan and
@@ -481,7 +477,7 @@ file.
 
 4/16/23: Added File menu entry to set the current directory.
 
-4/16/23: Added Script menu entry to prevent program from retunring keyboard
+* 4/16/23: Added Script menu entry to prevent program from returning keyboard
 focus to one-line script window.
 
 4/16/23: Added property to allow dose calibrations to be used with fringe-free
@@ -500,7 +496,7 @@ better by not trimming images being correlated to their overlapping region.
 4/10/23: Made peak detection for erasing in FFTs adjust for tilt angle; made
 peak erasing for Realign to Item be off by default for now.
 
-4/10/23: Added details about shots, remaining numbers, and rates to progress
+* 4/10/23: Added details about shots, remaining numbers, and rates to progress
 line during Acquire at Items.
 
 4/10/23: Added StopBackgroundTilt command that seems to work on JEOL and
@@ -508,9 +504,9 @@ latest FEI scope server versions.
 
 4/10/23: Added script command to read one piece of a montage.
 
-4/10/23: Added flags to MultiplRecords force doing regular or custom holes.
+4/10/23: Added flags to MultipleRecords for doing regular or custom holes.
 
-3/31/23: One-line script changes: focus now returns the the text box of the
+* 3/31/23: One-line script changes: focus now returns to the text box of the
 script that was run when it finishes.  Enabled Ctrl-C and Ctrl-V for copy and
 paste, Ctrl-U to delete the line, and up and down arrows to move between
 lines.
@@ -524,7 +520,7 @@ that extend beyond it.
 
 3/31/23: Fixed crash in autocontouring when there are no contours found.
 
-3/30/23: Added ability to enter multiple commands separated by commas in
+* 3/30/23: Added ability to enter multiple commands separated by semicolons in
 one-line script window.
 
 3/30/23: Added dose rate linearization table for Falcon 4i.
@@ -537,7 +533,7 @@ one-line script window.
 
 3/30/23: Allowed maximum shift of 25 um in template alignment dialog (In 4.0).
 
-3/30/23: Added ability to do alignment correlations after erasing peaks in
+* 3/30/23: Added ability to do alignment correlations after erasing peaks in
 FFTs from periodic structures; this is used by default for stage and image
 shift calibrations and in Realign to Item in low dose mode, subject to
 override by a property, and otherwise controlled by an option in the Image
@@ -570,10 +566,10 @@ loading them from settings, and eliminated duplicates when loading.
 3/20/23: SEM_4-1-0beta14
 3/20/23: Fixed spiral hole pattern for non-square patterns.
 
-3/9/23: Added capability for "status lines" at the bottom of the Camera &
+* 3/9/23: Added capability for "status lines" at the bottom of the Camera &
 Script control panel that can be written to by script command.
 
-3/9/23: Fixed error processing when GetApertureSize command files and added
+3/9/23: Fixed error processing when GetApertureSize command fails and added
 environment variable to keep FEI-SEMserver from trying to access aperture or
 autoloader dialogs if that makes it hang on Windows 7.
 
@@ -599,7 +595,7 @@ measured in the coma vs IS calibration and adjusted for in multishot etc.
 
 3/1/23: Added script command to skip Z move in next Realign to Item.
 
-3/1/23: A dashed red rectangle will be drawn when an image extends beyond
+* 3/1/23: A dashed red rectangle will be drawn when an image extends beyond
 property-based stage limits.
 
 3/1/23: Fixed ReportApertureSize to assign to reported value and variable.
@@ -635,7 +631,7 @@ montage.
 phase plates.
 
 2/12/23: Fixed problems with aperture commands; improved acquisition order of
-combined items for hex grids, which is still nearly not optimal.
+combined items for hex grids, which is still not nearly optimal.
 
 2/11/23: Made precombine.holes file not be written on an autosave, so that the
 Undo button stays enabled (In 4.0).
@@ -644,14 +640,14 @@ SEM_4-1-0-beta12
 2/7/23: New versions of FEI-SEMserver will not run on Windows 2000, but it
 still seems to work on non-SP3 XP.
 
-2/7/23: Used Microsoft "UI Automation" to add aperture support for FEI scopes
+* 2/7/23: Used Microsoft "UI Automation" to add aperture support for FEI scopes
 on Windows 7 or above to retrieve names from the Autoloader panel with
 ReportSlotStatus.
 
-2/7/23: Added options to Coma vs IS calibrtaion setup dialog and script
+2/7/23: Added options to Coma vs IS calibration setup dialog and script
 command to use full array for coma measurements.
 
-2/7/23: Added dialog for setting imaging conditions before imposing first
+* 2/7/23: Added dialog for setting imaging conditions before imposing first
 image shift in the Step To and Adjust IS procedure for multi-shot setup.
 
 2/7/23: Fixed ReadOtherFile command reading from montage (In 4.0).
@@ -679,13 +675,13 @@ needs updating.
 1/29/23: Prevented crash from pushing Calibrate button in coma vs. image shift
 dialog when program is busy.
 
-1/29/23: Added option to the multi-hole combiner to remove or turn off
+* 1/29/23: Added option to the multi-hole combiner to remove or turn off
 combined items with fewer than a selected number of holes.
 
-1/29/23: Added ability to toggle points to be included or excluded with the
+* 1/29/23: Added ability to toggle points to be included or excluded with the
 mouse after finding holes and before making Navigator points.
 
-1/29/23: Added support for grids with hexagonal arrays of holes.  Processing
+* 1/29/23: Added support for grids with hexagonal arrays of holes.  Processing
 is slow, not all optimized, and not in the background - be patient.
 
 1/29/23: Fixed so that correct image shift offset calibration is used
@@ -729,22 +725,21 @@ range (In 4.0).
 
 1/16/23: Fixed OpenOldFile command with HDF file (In 4.0).
 
-1/18/23: When doing multishots in a regular array of holes, the routine will
+* 1/18/23: When doing multishots in a regular array of holes, the routine will
 now move to the holes in a spiral path by default, with a menu entry to select
 the old zigzag path or a raster path instead.
 
-1/18/23: Added Script menu entry to set a script to run periodically when the
+* 1/18/23: Added Script menu entry to set a script to run periodically when the
 program is idle.
 
-1/16/23:Added option to do a hybrid montage with image shifting with in blocks
+* 1/16/23:Added option to do a hybrid montage with image shifting within blocks
 of pieces and stage shifting between the blocks.
 
 1/16/23: Added property to specify a script to run during a montage between
 acquisition and saving, and a script command to get information on the current
 or next piece.
 
-
-1/13/23: Made it possible to set marker point outside image for shifting to
+* 1/13/23: Made it possible to set marker point outside image for shifting to
 marker (shift-P and To Marker button) and Go to Marker in Navigator.
 
 1/13/23: SEM_4-0-17
@@ -752,7 +747,7 @@ marker (shift-P and To Marker button) and Go to Marker in Navigator.
 ..._pre-combine.holes, for narrowing down the source of a bug where Realign to
 Item fails on points after combining holes (In 4.0).
 
-1/13/23: Made some changes to reduce the possibility of the a script being run
+1/13/23: Made some changes to reduce the possibility of a script being run
 when Enter is pressed in its editing window (In 4.0).
 
 1/10/23: SEM_4-1-0beta10
@@ -763,7 +758,7 @@ contrast of an FEI STEM detector.
 frame-saving shot can be taken sooner after an early return.  This is only
 enabled by a property because tests so far have not shown any benefit.
 
-1/4/23: Added a high-defocus image shift calibration, which improves many
+* 1/4/23: Added a high-defocus image shift calibration, which improves many
 operations when working with defocused View and Search images.
 
 1/4/23: Improved positions for coma-vs-IS cal when drawn on defocused View.
@@ -774,7 +769,7 @@ rather than one per file.
 
 12/29/22: Started storing the Collapse groups state in settings.
 
-12/29/22: Made all 5 range-selecting keys in Navigator work with groups
+* 12/29/22: Made all 5 range-selecting keys in Navigator work with groups
 collapsed.  Allowed easy deletion of multiple maps in a range with Shift D.
 
 12/29/22: Made program able to open MRC files missing some sections at the
@@ -783,7 +778,7 @@ end.
 12/28/22: Fixed initialization of overlap and byte scaling when reading
 montage parameters for new file at item from Navigator file (In 4.0).
 
-12/23/22: Added dialog for autocontouring grid squares and converting selected
+* 12/23/22: Added dialog for autocontouring grid squares and converting selected
 ones to polygons.
 
 12/22/22: Fixed SEMCCD getting frames for just aligning with
@@ -797,7 +792,7 @@ for all Falcons when appropriate.
 12/18/22: Allowed script buttons in Camera/Script Tools to grow if their
 spinners are hidden.
 
-12/16/22: Added dialog to run Coma vs. Image Shift calibration; the positions
+* 12/16/22: Added dialog to run Coma vs. Image Shift calibration; the positions
 tested can seen on a View image and distance and rotation of vectors to
 positions can be adjusted in dialog.
 
@@ -810,7 +805,7 @@ through to Setup on Hole Finder.
 
 12/15/22: Restored BlankWhenRetractingCamera property.
 
-12/15/22: Allowed images from ScaleImage and FilterImage to be made maps, as
+* 12/15/22: Allowed images from ScaleImage and FilterImage to be made maps, as
 well as ones resulting from arithmetic operations as long as both contributing
 images are eligible to be maps.
 
@@ -842,7 +837,7 @@ Advanced Scripting (In 4.0).
 file with elements to hide so that items supported in newer versions can be
 ignored (in 4.0).
 
-12/9/22: Incorporated improved montage piece alignment routine recently
+* 12/9/22: Incorporated improved montage piece alignment routine recently
 implemented in IMOD.  Added checkbox to Montage Control window to make it
 evaluate multiple peaks with cross-correlations weighted by deviation from
 expected shift, which helps when there are regularly spaced holes.  Made it
@@ -861,7 +856,7 @@ adjustment for montage position.
 
 12/1/22: Added command to set image shift vectors of regular hole pattern.
 
-11/30/22: Made the Basic Mode filename be saved and loaded from settings, and
+* 11/30/22: Made the Basic Mode filename be saved and loaded from settings, and
 added a menu entry to load a different file.
 
 11/29/22: Allowed single shots to occur when saving frames from Tietz cameras,
@@ -890,15 +885,15 @@ cameras (In 4.0).
 11/16/22: Added script commands to forget prior state and calibrate electron
 dose.
 
-11/16/22: Added AutoContourGridSquares command to make polygons around grid
+* 11/16/22: Added AutoContourGridSquares command to make polygons around grid
 squares.
 
-11/16/22: Made label display and selecting of polygons behave like points when
+* 11/16/22: Made label display and selecting of polygons behave like points when
 the polygons are members of a group.
 
 11/16/22: Added optional entry to UpdateItemZ to specify item index.
 
-11/16/22: Added ability to have up to 3 more rows of script buttons and
+* 11/16/22: Added ability to have up to 3 more rows of script buttons and
 spinners in the Camera & Script control panel.
 
 11/16/22: Fixed some problems with the false color display.
@@ -920,14 +915,14 @@ give an error when saving EER.
 11/10/22: Made Navigator Align to Template setup allow making the image in A
 a map even if it is not cropped.
 
-11/10/22: Removed New Map and Delete Item from Navigator menu.
+* 11/10/22: Removed New Map and Delete Item from Navigator menu.
 
 11/10/22: Added ability to bin images in FEI scope plugin/server because of
 error when binning is requested while saving EER files in new TEM server
 versions; property 'TakeUnbinnedIfSavingEER' enables this.
 
-11/10/22: Added camera type of 6 Falcon 4i and a default readout interval, and
-made it skip waiting on the next acquisition after a frame-saving one.
+11/10/22: Added camera type of 6 for Falcon 4i and a default readout interval,
+and made it skip waiting on the next acquisition after a frame-saving one.
 
 11/10/22: Fixed missing line break after last FEI ZLP shift in short term
 calibrations (In 4.0).
@@ -942,13 +937,13 @@ build (In 4.0).
 11/8/22: Fixed vulnerability in drawing routine that probably caused crash (In
 4.0).
 
-11/8/22: Started saving shifts from Shift to Marker in settings and added a
+* 11/8/22: Started saving shifts from Shift to Marker in settings and added a
 list box to allow removing shifts.
 
 0/8/22: Disabled all radio buttons about saving shifts when no saving is
 possible in Shift to Marker dialog (In 4.0).
 
-11/7/22: Switched distribution to being built with Visual C++ 2015 tools.
+* 11/7/22: Switched distribution to being built with Visual C++ 2015 tools.
 SerialEM will no longer run directly on Windows 2000 and XP SP1 or SP2 but has
 to be run on a separate computer connecting to FEI-SEMserver on the scope
 computer.   A Visual C++ 2015 redistributable package must be installed to run
@@ -957,7 +952,7 @@ on Windows XP SP 3.
 11/1/22: Added script commands ImageMarkerPosition, GetNavGroupStageCoords,
 GetNavGroupImageCoords, LoadSettingsFile, and SetupFullMontage.
 
-11/1/22: Added task to Acquire at Items to run hole finder and combiner after
+* 11/1/22: Added task to Acquire at Items to run hole finder and combiner after
 acquiring a map.
 
 10/31/22: Set flag to force an autofocus after taking or aligning to
@@ -977,15 +972,15 @@ was given the adjustment for Falcon 4 on 2/3/21 (In 4.0).
 10/28/22: Added ability to pipe input to a program run with RunProcess,
 CreateProcess, or RunExternalTool.
 
-10/27/22: Added false color display with F12 as a hot key and replaced the
+* 10/27/22: Added false color display with F12 as a hot key and replaced the
 Autozoom button in the Image Display panel with this.
 
-10/27/22: Added script commands for drawing graphs with genhstplt in IMOD.
+* 10/27/22: Added script commands for drawing graphs with genhstplt in IMOD.
 
-10/27/22: Added script command to computer ice thickness from energy-
+* 10/27/22: Added script command to computer ice thickness from energy-
 filtered/unfiltered pair of images.
 
-10/23/22: Automatically set the file number of the first extra Record output
+* 10/23/22: Automatically set the file number of the first extra Record output
 file when running batch tilt series.
 
 10/23/22: Fixed setup of extra output parameters for batch to store the
@@ -1053,7 +1048,7 @@ timing calibrations starting after the scan with FEI STEM.
 9/21/22: Added message box for RotationAndPixel pixel sizes of 999 (In 4.0).
 
 9/20/22: SEM_4-1-0beta3
-9/20/22: Added ability to save Focus and Trial states in Low Dose, and
+* 9/20/22: Added ability to save Focus and Trial states in Low Dose, and
 automatically restored prior state when Low Dose is turned on or off.
 
 9/20/22: Added optional argument to turn off acquire flag for
@@ -1071,7 +1066,7 @@ scope instead of assuming it exists.
 in STEM mode on JEOL (In 4.0).
 
 9/15/22: SEM_4-1-0beta2
-9/15/22: Added buttons to the multiple Record setup dialog to step to
+* 9/15/22: Added buttons to the multiple Record setup dialog to step to
 positions in an existing pattern and adjust image shift values, and to use the
 vectors from the last hole-finding for a regular pattern.
 
@@ -1085,10 +1080,10 @@ of just in server window.
 9/15/22: Added property to specify staying in or out of STEM on startup even
 when InitialCurrentCamera setting would cause a state change.
 
-9/15/22: Added File menu entries to close all open files and to specify
+* 9/15/22: Added File menu entries to close all open files and to specify
 initial saving and autosaving of the log.
 
-9/15/22: Moved calibration of beam tilt versus image shift to Focus/Tune menu
+* 9/15/22: Moved calibration of beam tilt versus image shift to Focus/Tune menu
 and move electron dose calibration from Calibration to Tasks menu, so that the
 Calibration menu can be omitted in basic mode.  Added a reminder to calibrate
 dose if it expired in the last week.
@@ -1107,10 +1102,10 @@ montage (In 4.0).
 8/25/22: Fixed Camera - Divide 16 Bit by 2 being disabled for FEI cameras
 (In 4.0).
 
-8/24/22: Added ability to run the Ctfplotter program from IMOD instead of the
+* 8/24/22: Added ability to run the Ctfplotter program from IMOD instead of the
 built in Ctffind.
 
-8/24/22: Made "SuppressMessages' suppressed the output from 'Ctffind'.
+8/24/22: Made "SuppressMessages" suppress the output from 'Ctffind'.
 
 8/24/22: Added a RunProcess script command to avoid opening DOS window.
 
@@ -1141,7 +1136,7 @@ smaller than the previous one (In 4.0).
 7/22/22: Fixed using the wrong information about what piece a point is drawn
 on when drawing on an image that is not the original map drawn on (In 4.0).
 
-7/19/22: Added ability to toggle drawing of a range of Navigator items with
+* 7/19/22: Added ability to toggle drawing of a range of Navigator items with
 the V key, as for A, D, etc.
 
 7/19/22: Added property to skip normalizations after mag and/or spot change.
@@ -1241,7 +1236,7 @@ on tilted image (In 4.0).
 
 5/21/22: Allowed script spinners in Camera & Script panel to be hidden.
 
-5/21/22: Changed "Ask about making map" to "Make map..." in montage setup
+* 5/21/22: Changed "Ask about making map" to "Make map..." in montage setup
 dialog, so it will no longer ask, just do it as specified.
 
 5/21/22: Added montage option to close file when montage is done.
@@ -1362,7 +1357,7 @@ find a map for realigning to (In 4.0).
 3/28/22: Fixed transfer of image shift between mags for FEI/Thermo scopes where
 lowest nonLM mag index is different in EFTEM mode.
 
-3/28/22: There can now be up to 100 files open.
+* 3/28/22: There can now be up to 100 files open.
 
 3/28/22: Changed "Balanced Shifts" in Low Dose dialog to be a single button
 with mutable label that is green when shifts are balanced.

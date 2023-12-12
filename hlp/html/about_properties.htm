@@ -552,7 +552,7 @@
               S for stage and montaging information<BR>
               T for Tietz setup/reset time, camera coords, auotoalign time<BR>
               V for vacuum gauge status output<br />
-              W for Winkler LD axis position bug/autoloader/preventing DE retraction on exit<br />
+              W for Winkler LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
               X for EMSIS and DECTRIS cameras<BR>
               a for alignment correlation coefficients; GPU frame alignment choices/memory usage<br />
               b for beam shift<BR>
@@ -1134,7 +1134,7 @@
             there is more than one kind of Falcon camera, or multiple cameras needing different intervals; use the camera 
             property 'ReadoutInterval' for whichever camera requires a non-standard interval.&nbsp; If you determine
             a refined value to get the expected number of frames when saving as EER, as described in 
-            <a href = "readoutInterval">ReadoutInterval</a>, set the camera property instead.&nbsp; As of
+            <a href = "#readoutInterval">ReadoutInterval</a>, set the camera property instead.&nbsp; As of
             SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
             SerialEM or FEI-SEMserver when saving frames.
           </TD>

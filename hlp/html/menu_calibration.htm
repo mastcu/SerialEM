@@ -612,8 +612,12 @@
         one magnification and then sought at a much higher magnification. However, the 
         image shift offsets for View and Search in Low Dose mode, and the mechanism of 
         taking anchor maps at the same position as a target to be aligned to, provide 
-        good alternatives to having this calibration.&nbsp; One of the
-        limitations to this kind of localization is the degree to which the image shifts
+        good alternatives to having this calibration.&nbsp; The disadvantage of the calibration is that it gets off over time more easily
+      than other calibrations, and becomes invalid when magnification alignment in the
+      scope itself is redone.&nbsp; It should be done only if someone is committed to 
+        keeping it up to date, otherwise the Navigator will apply incorrect shifts that 
+        may be worse than the uncorrected intrinsic shifts.&nbsp; </P>
+    <P>One of the limitations in determining reliable offsets is the degree to which the image shifts
         when the beam is moved, which can be particularly severe in LM mode depending on
         the focus setting. To minimize the effect of this shifting, you will be advised
         to keep the beam centered in LM mode during this calibration. More importantly,
@@ -621,11 +625,6 @@
         this is defined by default to be at 'eucentric focus'; on a JEOL, a
         numeric value for the standard focus needs to be determined with the
         'ReportFocus' script command and entered as the property StandardLowMagFocus.</P>
-    <P>The disadvantage of the calibration is that it gets off over time more easily
-      than other calibrations, and becomes invalid when magnification alignment in the
-      scope itself is redone.&nbsp; When working in Low Dose mode, it is possible to
-      use Search and View offsets for all mapping and navigating, and this will
-      obviate the need for this calibration.</P>
       <P>It is recommended that the offsets be calibrated from the highest magnification
         where there is an obvious misalignment between magnifications, down to the
         lowest magnification to be used for Navigator mapping. The entire range does not

@@ -198,6 +198,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#isMacro">A script for image
         shift and pixel size calibrations</a><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#isProcedure">The procedure</a><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#isBoundaries">Assessing and setting image shift boundaries</a><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#isAlignImages">Measuring
         further relative rotations and pixel sizes by aligning images</a><br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#absRotAngle">Absolute rotation angle</a>
@@ -299,9 +300,9 @@
           more lightweight option is to use a standalone 3dmod package, which simply 
           unpacks in 'C:\Program Files\3dmod' by default, but can be unzipped elsewhere if necessary.&nbsp; 
           To use both of these programs, you need an installation of IMOD 4.12.47 or higher (available from the 
-          <a href = "http://bio3d.colorado.edu/imod/download.html">IMOD download page</a>), or a standalone
+          <a href = "https://bio3d.colorado.edu/imod/download.html">IMOD download page</a>), or a standalone
           3dmod package based on this version or higher, available at
-            <a href = "http://bio3d.colorado.edu/ftp/Windows3dmod">http://bio3d.colorado.edu/ftp/Windows3dmod</a>.
+            <a href = "https://bio3d.colorado.edu/ftp/Windows3dmod/">https://bio3d.colorado.edu/ftp/Windows3dmod/</a>.
           For just graphing, you can use an older installation of IMOD, but it will take 
           an extra second to display a graph.<br />
             In order for SerialEM to run these programs, the directory containing the 
@@ -634,7 +635,7 @@
         not contain many essential entries for JEOL or Hitachi microscopes.&nbsp; If you
         download and unpack the GenericFramework.exe file, you should also download
         GenericProperties.txt from the Tools folder on the SerialEM download site
-        (http://bio3d.colorado.edu/ftp/SerialEM/Tools), rename it to
+        (https://bio3d.colorado.edu/ftp/SerialEM/Tools), rename it to
         SerialEMproperties.txt, and replace the file from the framework. Then download
         and incorporate camera properties and magnification table files from the Tools
         folder.
@@ -2022,8 +2023,12 @@
       <P>The minimal requirement is to measure one pixel size in each magnification
         range where the relationship between image shift and movement on the specimen is
         constant, and to measure an absolute rotation angle somewhere plus the rotation
-        of images between those magnification ranges. On Thermo/FEI scopes, there are just two
-        such ranges, LM mode and regular mag mode. On JEOL and Hitachi scopes, there are
+        of images between those magnification ranges. On Thermo/FEI scopes, there are 
+        typically just two
+        such ranges, LM mode and regular mag mode. However, some Talos microscopes have 
+        show variations in the strength of image shift at the lowest few nonLM 
+        magnifications, where additional measurements of pixel size and rotation angle 
+        are required&nbsp; It is possible that Glacios would have the same problem.&nbsp; On JEOL and Hitachi scopes, there are
         often multiple ranges together with progressive changes in image shift strength
         within a range. In practice, it is recommended that redundant measurements be
         made, and the procedures have been refined to ease this task.</P>
@@ -2040,20 +2045,21 @@
           <TD width="46%">JEOL and Hitachi</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="47%">Image shift from lowest M-mode to highest mag needed</TD>
+          <TD width="47%">Image shift from lowest nonLM-mode to highest mag needed</TD>
           <TD width="7%">&nbsp;</TD>
           <TD width="46%">Image shift from lowest non LM-mode to highest mag needed</TD>
         </TR>
         <TR vAlign="top">
           <TD width="47%">Minimal requirement: one pixel size, one absolute rotation angle
-            in regular mag range</TD>
+            in regular mag range if no image shift boundaries</TD>
           <TD width="7%">&nbsp;</TD>
           <TD width="46%">Minimal requirement: one pixel size in each image shift range,
             relative rotation across each boundary, one absolute rotation angle</TD>
         </TR>
         <TR vAlign="top">
           <TD width="47%">Recommended: Pixel size for all mags where data is likely to be
-            taken (rotations optional)</TD>
+            taken and at image shift boundaries (rotations optional except across image 
+            shift boundaries)</TD>
           <TD width="7%">&nbsp;</TD>
           <TD width="46%">Recommended: Pixel size and relative rotations between all mags
             from lowest non LM-mode to highest mag needed</TD>
@@ -2090,32 +2096,36 @@
           <TD width="46%">Pixel size for all LM mags down to lowest needed</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="47%">Relative rotation from highest LM to lowest M mag</TD>
+          <TD width="47%">Relative rotation from highest LM to lowest nonLM mag</TD>
           <TD width="7%">&nbsp;</TD>
           <TD width="46%">Relative rotations between all mags, from lowest LM needed to
             lowest non LM mag</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="47%">Stage calibration: lowest M-mode mag, 2 or 3 mags in LM
+          <TD width="47%">Stage calibration: lowest nonLM-mode mag, 2 or 3 mags in LM
           </TD>
           <TD width="7%">&nbsp;</TD>
           <TD width="46%">Stage calibration: lowest good non LM-mode mag, 2 or 3 mags in LM</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="47%">Image shift offsets from ~10-20K down to lowest LM mag needed</TD>
+          <TD width="47%">Image shift offsets from ~10-20K down to lowest LM mag may be needed</TD>
           <TD width="7%">&nbsp;</TD>
-          <TD width="46%">Image shift offsets from ~10-20K down to lowest LM mag needed</TD>
+          <TD width="46%">Image shift offsets from ~10-20K down to lowest LM mag may be needed</TD>
         </TR>
       </TABLE>
       <BR>
       <P>
         ----------------------------------------------------------------------------------------</P>
       <P><B><I>Thermo/FEI</I>:</B> For work at regular magnifications, calibrate image shift
-        from the lowest M-mode mag up to the highest mag where tilt series might be
-        taken. It is recommended that you calibrate pixel size over the range of
-        magnifications where users would typically expect an accurate pixel size, using
-        the procedures described below, which will also yield relative rotations. You should definitely enter a calibrated rotation angle for one
-        mag at which tilt series are typically run.</P>
+        from the lowest nonLM-mode mag up to the highest mag where tilt series might be 
+        taken. It is recommended that you calibrate pixel size over the range of 
+        magnifications where users would typically expect an accurate pixel size, using 
+        the procedures described below, which will also yield relative rotations. For 
+        Talos and Glacios, run that procedure down to the lowest nonLM magnification in 
+        case image shift is not invariant at the lowest few maginfications.&nbsp; You 
+        should definitely enter a calibrated rotation angle for one mag at which tilt 
+        series are typically run, or a rotation angle from a stage calibration at a 
+        lower nonLM magnification.</P>
       <P>To enable Navigator use, measure the pixel size with the calibration grating at the
         highest LM-mode mag. Switch to a non-periodic specimen suitable for
         lower mag work and calibrate image shift at all LM mags down to the lowest mag
@@ -2369,6 +2379,41 @@
         Follow the procedures in <B><I>Measuring further relative rotations and pixel sizes
         by aligning images.</I></B></li>
     </ul>
+      <P><a name="isBoundaries"><b><i>Assessing and setting image shift boundaries: </i></b></a>This step is 
+        routinely needed on JEOL and Hitachi scopes, and should be done for Talos and 
+        possibly Glacios. After image shifts 
+        are calibrated, run <a href="menu_calibration.htm#hid_calibration_listisvectors">List IS Vectors</a> 
+        and examine both the lengths and angles of the vectors.&nbsp; (If you have IMOD 
+        or a recent <a href="#addedPackages">3dmod package for Windows</a> installed, you can use ListISVectorsToGraph and 
+        GraphPreStoredValues script commands to make graphs that are much easier to 
+        interpret.)&nbsp; Places where there is 
+        a consistent change of more than ~2% should have an image shift boundary 
+        specified.&nbsp; For example, here is a vector listing using calibrated pixel sizes 
+        and rotations where available: </P>
+      <pre>
+   17    1250        0.998          0.997      -25.7        65.6
+  18    1600        0.997          0.995      -25.7        65.6
+  19    2000        0.999          0.997      -25.7        65.6
+  20    2600        1.104          1.094      -27.1        63.7
+  21    3400        1.105          1.095      -27.1        63.7
+  22    4300        1.102          1.094      -27.1        63.7
+  23    5300        1.028          1.017      -31.7        59.3
+  24    6700        1.098          1.090      -30.9        60.0
+  25    8500        1.099          1.093      -31.2        59.7
+  26   11000        1.097          1.091      -31.4        59.5 
+      </pre>
+
+      <P>There are discontinuities between indexes 19 and 20, and from 22 to 24.&nbsp;&nbsp; 
+        The index to specify is the one <em>above</em> the discontinuity; thus 20 
+        instead of 19 here.&nbsp; Where there is one magnification out of line with the 
+        ones above and below, two indexes are required; thus both 23 and 24 and not just 23 
+        here.&nbsp; The latter case should be treated as a boundary only after seeing if 
+        the magnification is still off in a vector listing based on the nominal 
+        magnifications and carefully 
+        checking both the image shift calibration and the pixel size for the aberrant 
+        magnification.&nbsp; The line needed in the properties file would be:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;OtherShiftBoundaries 20 23 24
+      </P>
       <P><a name="isAlignImages"><B><I>Measuring further relative rotations and pixel sizes by aligning images:</I></B></a>
         This procedure is needed only under the two circumstance described above.&nbsp; Open a copy
         of the mag calibration spreadsheet. Set the binning and the size of the pixels

@@ -135,12 +135,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autoalign">Autoalign-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autofocus">Autofocus/Autotuning-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#low_dose">Low Dose Commands</A><br>
-      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#task_commands">Task-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#multi_shot">Multiple Record-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#task_commands">Other Task-Related Commands</A><br>
       <A href="#navigator">Navigator</A>
       <br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatorlist">Navigator Window and List Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritems">Item and Group Commands</A><br>
-	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritemgen">Item Generating Commands</A><br>
+	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#hole_square_finding">Hole and Grid Square Finding Commands</A><br>
+	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritemgen">Other Item Generating Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatorali">Alignment and Shift Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#acqcontrol">Acquisition Control Commands</A><br>
       <A href="#miscellaneous">Miscellaneous Commands</A><br />
@@ -1470,27 +1472,7 @@
             operating mode was switched to or not.</TD>
         </TR>
 
-        <TR>
-          <TD class="scriptcommand">GetDoseSymmetricAngles var</TD>
-          <TD>Fills an array variable <b>var</b> with the list of angles for the currently defined 
-            dose-symmetric tilt series.&nbsp; The program must be in Low Dose mode and a dose-symmetric
-            series must be specified in the current tilt series parameters; the Tilt Series Setup dialog 
-            must have been opened at least once and postponed.&nbsp; Command added in 4.1 28-Jun-23.
-          </TD>
-        </TR>
-
-        <TR>
-          <TD class="scriptcommand">SetDoseSymmetricAngles var</TD>
-          <TD>Modifies the list of angles for a dose-symmetric series with the angles in the array 
-            variable <b>var</b>.&nbsp; Parameters must already be set, as for 'GetDoseSymmetricAngles'; the 
-            new list must have the same number of angles as the old one; and reversals of direction must all
-            happen at the same places as originally (i.e., group sizes must be the same).&nbsp; The original
-            list is restored whenever the dose-symmetric setup dialog is opened, and can be restored by using this
-            command with a variable having a single value in it.&nbsp; Command added in 4.1 28-Jun-23.
-          </TD>
-        </TR>
-
-        <TR>
+         <TR>
           <TD colspan="2"><A name="hwspecific_camera"></A><B>Hardware Specific Camera Commands</B></TD>
         </TR>
         <TR>
@@ -2042,7 +2024,7 @@
             optional entries: 
             <br />&nbsp; <b>#AP</b> sum of 1 to find astigmatism and 2 to find phase; the default is 1
             <br />&nbsp; <b>#P</b> expected phase shift in degrees; if it is 0, it will use the
-            phase shift set in the <A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A>
+            phase shift set in the <A HREF="menu_process.htm#hid_process_setphaseplateshift">Set Phase Plate Shift</A>
             menu item
             <br />&nbsp; <b>#O</b> tilt angle offset used in adjusting spectra for tilt-dependent defocus changes,
              such as a lamellar pretilt
@@ -3336,7 +3318,7 @@
             reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
             moving or not enabled; or the position of a phase plate plus 1 for the
              objective aperture (e.g., 3 for 'Ph P2', but only if the
-            phase plates are named that way in the combo box).&nbsp; See <a href="setting_up_serialem#apertures">Controlling Apertures on Thermo/FEI Scopes </a> for requirements and restrictions for using this command and 'SetApertureSize'.
+            phase plates are named that way in the combo box).&nbsp; See <a href="setting_up_serialem.htm#apertures">Controlling Apertures on Thermo/FEI Scopes </a> for requirements and restrictions for using this command and 'SetApertureSize'.
              &nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
@@ -3379,21 +3361,6 @@
         <TR>
           <TD class="scriptcommand">ReportPhasePlatePos</TD>
           <TD>Reports the current phase plate position number, numbered from 1 (Thermo/FEI scopes only)</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportVacuumGauge name</TD>
-          <TD>Reports the status and pressure reading from a vacuum gauge identified by the
-              given <b>name</b>.&nbsp; For Thermo/FEI scopes, <b>name</b> is of the style accepted in the
-              WatchGauge property; status values are 0 for undefined, 1 for underflow, 2 for
-              overflow, 3 for invalid, and 4 for valid; pressure is in pascals.&nbsp; For JEOL
-              scopes, the command requires a relatively recent version of TemExt; names can be
-              Pir0 to Pir9 or Pen0 to Pen9; status values are 0 for not ready, 1 for low, 2
-              for high, and 3 for ready; and pressure values are between 0 and 1 (the value
-              returned by the scope is divided by 4095).</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportVacuumStatus</TD>
-          <TD>For a Thermo/FEI scope, reports the index of the vacuum status in the Microscope panel as 0 for green, 1 for yellow, or 2 for red.&nbsp;Command added in 4.1, 12-May-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportHighVoltage</TD>
@@ -3570,6 +3537,21 @@
         <TR>
           <TD class="scriptcommand">SetSimpleOriginActive #</TD>
           <TD>Turns the Simple Origin system off if <b>#</b> is zero or on if it is non-zero.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportVacuumGauge name</TD>
+          <TD>Reports the status and pressure reading from a vacuum gauge identified by the
+              given <b>name</b>.&nbsp; For Thermo/FEI scopes, <b>name</b> is of the style accepted in the
+              WatchGauge property; status values are 0 for undefined, 1 for underflow, 2 for
+              overflow, 3 for invalid, and 4 for valid; pressure is in pascals.&nbsp; For JEOL
+              scopes, the command requires a relatively recent version of TemExt; names can be
+              Pir0 to Pir9 or Pen0 to Pen9; status values are 0 for not ready, 1 for low, 2
+              for high, and 3 for ready; and pressure values are between 0 and 1 (the value
+              returned by the scope is divided by 4095).</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportVacuumStatus</TD>
+          <TD>For a Thermo/FEI scope, reports the index of the vacuum status in the Microscope panel as 0 for green, 1 for yellow, or 2 for red.&nbsp;Command added in 4.1, 12-May-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsPVPRunning</TD>
@@ -4020,7 +4002,134 @@
               area so that it is assigned the current state.</TD>
         </TR>
         <TR>
-          <TD colspan="2"><A name="task_commands"></A><B>Task-Related Commands</B></TD>
+          <TD colspan="2"><A name="multi_shot"></A><B>Multiple Record-Related Commands</B></TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2]</TD>
+          <TD>Acquires multiple Record images around the periphery of a hole and/or in multiple holes, using image
+            shift to move to each off-center position.&nbsp; The parameters set in the
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the
+            operation of this task, but any subset of them can be overridden by entering
+            optional parameters here.&nbsp; The value in the dialog is used if -9 is entered
+            for the corresponding parameter here, or if the optional entries end before the
+            given parameter.&nbsp; The parameters are: <br /> 1) <b>#N</b> for number of
+            shots around the center<br /> 2) <b>#C</b> -1 or 1 for a shot in the center before or after the
+            off-center shots, or 0 for none<br /> 3) <b>#O</b> for the distance from center of the off-center shots,
+            in microns<br /> 4) <b>#D</b> for the extra delay after the image shift, in seconds<br /> 5) <b>#S</b> 1 to
+            save a Record image at each position or 0 not to<br /> 6) <b>#E</b> 1 or 2 to use early
+            return for a K2/K3 camera after the last shot or after all shots, or 3 for early return on all shots
+            with a full sum returned on the first one<br /> 7) <b>#F</b> for the
+            number of frames in the early returned image (or -1 for all, 0 for none)<br /> 8) <b>#B</b> 1 to
+            adjust beam tilt to compensate for image shift or 0 not to<br /> 9) <b>#H</b> the sum of 1 to do
+            shots around a center (within a hole) and 2 to do shots in multiple holes or
+            specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing
+            image locations or 8 for testing the coma correction, plus 16 to force it to use a regular 
+            array of holes or 32 to force it to use custom holes.)<br /> 10)
+             <b>#R2</b> greater than 0 to do a second ring of positions<br /> 11) <b>#N2</b>
+            with the number of positions in the second ring <br /> 12) <b>#O2</b> for the distance from center
+            of the second ring
+             <br /> For example,
+            &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save
+            Records, but take all other parameters from the dialog.&nbsp; When the operation starts successfully,
+            <i>ReportedValue1</i> is set to the total number of Record images to be taken.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">TestNextMultiShot #</TD>
+          <TD>Sets a variable so that the next MultipleRecords command will test image
+            location by acquiring a Record or montage at each location (if <b>#</b> is 1) or by
+            measuring coma at each location (if <b>#</b> is 2).&nbsp; See
+            <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a> for details on
+            this testing.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StageToLastMultiHole</TD>
+          <TD>Moves the stage to the center of the last hole position acquired with
+              MultipleRecords.&nbsp; This command can be used to position over a hole for
+              occasional post-acquisition tasks when using a hole pattern centered on the
+              support film.&nbsp; There is no backlash correction.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImageShiftToLastMultiHole</TD>
+          <TD>Changes image shift by the offset to the last hole position acquired with
+              MultipleRecords.&nbsp; This command combined with &#39;ResetImageShift&#39; will be more
+              accurate than &#39;StageToLastMultiHole&#39; if backlash correction is needed and
+              enabled in the Image Alignment &amp; Focus control panel.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RotateMultiShotPattern #A [#C]</TD>
+          <TD>Rotates the hole positions in the pattern set up in the
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> by angle
+            <b>#A</b>. &nbsp;Set optional <b>#C</b> positive to rotate the custom pattern or negative to
+            rotate the hexagonal pattern instead
+            of the regular one. &nbsp;Generates an error if the selected pattern is not defined
+            or the needed transformation is not available.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AdjustMultiShotPattern #</TD>
+          <TD>Applies an adjusting transformation to a set of image shifts for multiple Records: to the regular
+            rectangular array vectors if <b>#</b> is 0, or to hexagonal array vectors or custom shifts 
+            if <b>#</b> is -1 or 1, respectively.&nbsp; The transformation is the one recorded the last
+            time that the <B>Step To and Adjust IS</B> procedure was run in the Multiple Record Setup 
+            dialog.&nbsp; Generates an error if the selected vectors are not defined, if they were
+             defined in a way that provides enough information for them to be adjusted, if there
+            is no adjusting transform, if this transformation was already applied, or if the magnification
+             at which the given vectors were defined does not match the starting magnification 
+            of the adjusting transformation. &nbsp;Command added in 4.1, 9-Jul-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">OpenMultiShotFiles name</TD>
+          <TD>Opens a set of files, one for each of the positions specified in the current settings of
+            the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> (which need not be 
+            open).&nbsp; The file names will be based on <b>name</b> (which can include a full path), with
+            each name being <i>rootname_ShotPosition.ext</i>, where <i>rootname</i> and <i>ext</i> are the
+            root and extension of <b>name</b>, amd <i>ShotPosition</i> is the same text used to label frame 
+            files from different positions.&nbsp; After this command is given, and until the files are
+            closed with the next command, the Multiple Record routine 
+            will save the image at each position into its respective file, regardless of whether saving is
+            selected in the dialog.&nbsp; This command is intended to allow parallel tilt series but is
+            probably not useful until a more sophisticated alignment procedure is added.&nbsp; Command added in 4.1, 23-Apr-22.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CloseMultiShotFiles</TD>
+          <TD>Closes the set of files opened with 'OpenMultiShotFiles' and returns the Multiple Record
+            routine to its normal operation of saving into a single file if at all.&nbsp; Command added in 4.1, 23-Apr-22.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetCustomHoleShifts xvar yvar [#M] [#T]</TD>
+          <TD>Defines the custom hole shifts for multiple Records with the image shift 
+            values in two array variables, <b>xvar</b> and <B>yvar</B>, with the X and Y components,
+             respectively.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
+            magnification index and tilt angle at which the image shift values apply (enter
+            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
+            Command added in 4.1, 5-Sept-2.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetCustomHoleDefocus var</TD>
+          <TD>Defines a defocus offset to be applied for each custom hole position to be 
+            acquired with the Multiple Records routine.&nbsp; If there are fewer defocus 
+            values than hole positions, the offset will be zero for the remaining positions.&nbsp; 
+            Command added in 4.1, 5-Sept-22.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetRegularHoleVectors #X1 #Y1 #X2 #Y2 [#M] [#T]</TD>
+          <TD>Defines the image shifts for multiple Records taken with a regular pattern with 
+            <b>#X1</b>, <b>#Y1</b> specifying the X and Y components of image shift between adjacent holes
+             in one direction and <b>#X2</b>, <b>#Y2</b> specifying the shift in the orthogonal 
+            direction.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
+            magnification index and tilt angle at which the image shift values apply (enter
+            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
+            Command added in 4.1, 1-Dec-22.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportMultishotVectors #</TD>
+          <TD class="auto-style1">Reports the image shift vectors (in IS units) between holes in the X 
+            and Y directions for a rectangular pattern (if <b>#</b> is 0) and in three directions for a
+            hexagonal pattern (if <b>#</b> is nonzero).&nbsp; Command added in 4.1, 2-Aug-23.
+          </TD>
+        </TR>
+        <TR>
+          <TD colspan="2"><A name="task_commands"></A><B>Other Task-Related Commands</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ResetImageShift [#B] [#R]</TD>
@@ -4167,130 +4276,6 @@
             first, provided this is supported by scripting on the microscope.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2]</TD>
-          <TD>Acquires multiple Record images around the periphery of a hole and/or in multiple holes, using image
-            shift to move to each off-center position.&nbsp; The parameters set in the
-            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the
-            operation of this task, but any subset of them can be overridden by entering
-            optional parameters here.&nbsp; The value in the dialog is used if -9 is entered
-            for the corresponding parameter here, or if the optional entries end before the
-            given parameter.&nbsp; The parameters are: <br /> 1) <b>#N</b> for number of
-            shots around the center<br /> 2) <b>#C</b> -1 or 1 for a shot in the center before or after the
-            off-center shots, or 0 for none<br /> 3) <b>#O</b> for the distance from center of the off-center shots,
-            in microns<br /> 4) <b>#D</b> for the extra delay after the image shift, in seconds<br /> 5) <b>#S</b> 1 to
-            save a Record image at each position or 0 not to<br /> 6) <b>#E</b> 1 or 2 to use early
-            return for a K2/K3 camera after the last shot or after all shots, or 3 for early return on all shots
-            with a full sum returned on the first one<br /> 7) <b>#F</b> for the
-            number of frames in the early returned image (or -1 for all, 0 for none)<br /> 8) <b>#B</b> 1 to
-            adjust beam tilt to compensate for image shift or 0 not to<br /> 9) <b>#H</b> the sum of 1 to do
-            shots around a center (within a hole) and 2 to do shots in multiple holes or
-            specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing
-            image locations or 8 for testing the coma correction, plus 16 to force it to use a regular 
-            array of holes or 32 to force it to use custom holes.)<br /> 10)
-             <b>#R2</b> greater than 0 to do a second ring of positions<br /> 11) <b>#N2</b>
-            with the number of positions in the second ring <br /> 12) <b>#O2</b> for the distance from center
-            of the second ring
-             <br /> For example,
-            &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save
-            Records, but take all other parameters from the dialog.&nbsp; When the operation starts successfully,
-            <i>ReportedValue1</i> is set to the total number of Record images to be taken.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">TestNextMultiShot #</TD>
-          <TD>Sets a variable so that the next MultipleRecords command will test image
-            location by acquiring a Record or montage at each location (if <b>#</b> is 1) or by
-            measuring coma at each location (if <b>#</b> is 2).&nbsp; See
-            <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a> for details on
-            this testing.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">StageToLastMultiHole</TD>
-          <TD>Moves the stage to the center of the last hole position acquired with
-              MultipleRecords.&nbsp; This command can be used to position over a hole for
-              occasional post-acquisition tasks when using a hole pattern centered on the
-              support film.&nbsp; There is no backlash correction.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ImageShiftToLastMultiHole</TD>
-          <TD>Changes image shift by the offset to the last hole position acquired with
-              MultipleRecords.&nbsp; This command combined with &#39;ResetImageShift&#39; will be more
-              accurate than &#39;StageToLastMultiHole&#39; if backlash correction is needed and
-              enabled in the Image Alignment &amp; Focus control panel.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">RotateMultiShotPattern #A [#C]</TD>
-          <TD>Rotates the hole positions in the pattern set up in the
-            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> by angle
-            <b>#A</b>. &nbsp;Set optional <b>#C</b> positive to rotate the custom pattern or negative to
-            rotate the hexagonal pattern instead
-            of the regular one. &nbsp;Generates an error if the selected pattern is not defined
-            or the needed transformation is not available.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">AdjustMultiShotPattern #</TD>
-          <TD>Applies an adjusting transformation to a set of image shifts for multiple Records: to the regular
-            rectangular array vectors if <b>#</b> is 0, or to hexagonal array vectors or custom shifts 
-            if <b>#</b> is -1 or 1, respectively.&nbsp; The transformation is the one recorded the last
-            time that the <B>Step To and Adjust IS</B> procedure was run in the Multiple Record Setup 
-            dialog.&nbsp; Generates an error if the selected vectors are not defined, if they were
-             defined in a way that provides enough information for them to be adjusted, if there
-            is no adjusting transform, if this transformation was already applied, or if the magnification
-             at which the given vectors were defined does not match the starting magnification 
-            of the adjusting transformation. &nbsp;Command added in 4.1, 9-Jul-23.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">OpenMultiShotFiles name</TD>
-          <TD>Opens a set of files, one for each of the positions specified in the current settings of
-            the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> (which need not be 
-            open).&nbsp; The file names will be based on <b>name</b> (which can include a full path), with
-            each name being <i>rootname_ShotPosition.ext</i>, where <i>rootname</i> and <i>ext</i> are the
-            root and extension of <b>name</b>, amd <i>ShotPosition</i> is the same text used to label frame 
-            files from different positions.&nbsp; After this command is given, and until the files are
-            closed with the next command, the Multiple Record routine 
-            will save the image at each position into its respective file, regardless of whether saving is
-            selected in the dialog.&nbsp; This command is intended to allow parallel tilt series but is
-            probably not useful until a more sophisticated alignment procedure is added.&nbsp; Command added in 4.1, 23-Apr-22.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">CloseMultiShotFiles</TD>
-          <TD>Closes the set of files opened with 'OpenMultiShotFiles' and returns the Multiple Record
-            routine to its normal operation of saving into a single file if at all.&nbsp; Command added in 4.1, 23-Apr-22.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetCustomHoleShifts xvar yvar [#M] [#T]</TD>
-          <TD>Defines the custom hole shifts for multiple Records with the image shift 
-            values in two array variables, <b>xvar</b> and <B>yvar</B>, with the X and Y components,
-             respectively.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
-            magnification index and tilt angle at which the image shift values apply (enter
-            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
-            Command added in 4.1, 5-Sept-2.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetCustomHoleDefocus var</TD>
-          <TD>Defines a defocus offset to be applied for each custom hole position to be 
-            acquired with the Multiple Records routine.&nbsp; If there are fewer defocus 
-            values than hole positions, the offset will be zero for the remaining positions.&nbsp; 
-            Command added in 4.1, 5-Sept-22.</TD>
-        </TR>
-       <TR>
-          <TD class="scriptcommand">SetRegularHoleVectors #X1 #Y1 #X2 #Y2 [#M] [#T]</TD>
-          <TD>Defines the image shifts for multiple Records taken with a regular pattern with 
-            <b>#X1</b>, <b>#Y1</b> specifying the X and Y components of image shift between adjacent holes
-             in one direction and <b>#X2</b>, <b>#Y2</b> specifying the shift in the orthogonal 
-            direction.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
-            magnification index and tilt angle at which the image shift values apply (enter
-            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
-            Command added in 4.1, 1-Dec-22.</TD>
-        </TR>
-       <TR>
-          <TD class="scriptcommand">ReportMultishotVectors #</TD>
-          <TD class="auto-style1">Reports the image shift vectors (in IS units) between holes in the X 
-            and Y directions for a rectangular pattern (if <b>#</b> is 0) and in three directions for a
-            hexagonal pattern (if <b>#</b> is nonzero).&nbsp; Command added in 4.1, 2-Aug-23.
-          </TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
           <TD>Calibrates image shift at the current mag. Do the calibration from scratch if
             the optional <b>#</b> is nonzero.</TD>
@@ -4335,10 +4320,30 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ShiftImageForDrift #X #Y #U</TD>
-          <TD>Applys image shift during the next exposure to compensate for a drift in X and Y
+          <TD>Applies image shift during the next exposure to compensate for a drift in X and Y
             given by <b>#X</b> and <b>#Y</b>; <b>#U</b> should be 0 if the drift is in unbinned pixels/sec and 1
             if it is in nm/sec</TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">GetDoseSymmetricAngles var</TD>
+          <TD>Fills an array variable <b>var</b> with the list of angles for the currently defined 
+            dose-symmetric tilt series.&nbsp; The program must be in Low Dose mode and a dose-symmetric
+            series must be specified in the current tilt series parameters; the Tilt Series Setup dialog 
+            must have been opened at least once and postponed.&nbsp; Command added in 4.1 28-Jun-23.
+          </TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">SetDoseSymmetricAngles var</TD>
+          <TD>Modifies the list of angles for a dose-symmetric series with the angles in the array 
+            variable <b>var</b>.&nbsp; Parameters must already be set, as for 'GetDoseSymmetricAngles'; the 
+            new list must have the same number of angles as the old one; and reversals of direction must all
+            happen at the same places as originally (i.e., group sizes must be the same).&nbsp; The original
+            list is restored whenever the dose-symmetric setup dialog is opened, and can be restored by using this
+            command with a variable having a single value in it.&nbsp; Command added in 4.1 28-Jun-23.
+          </TD>
+        </TR>
+
         </TABLE>
         <P><A name="navigator"></A><B>Navigator</B></P>
         <TABLE border="1" cols="2">
@@ -4683,25 +4688,9 @@
             value.<TD>
         </TR>
         <TR>
-          <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating and Hole Finder Commands</B></TD>
+          <TD colspan="2"><A name="hole_square_finding"></A><B>Hole and Grid Square Finding Commands</B></TD>
         </TR>
-        <TR>
-          <TD class="scriptcommand">NewMap [#N text]</TD>
-          <TD>Makes a new Navigator map from the current image in buffer A or the current montage 
-            with overview in buffer B.&nbsp; A montage must belong to the current open file; a single image in A
-            must have been saved already, or be savable in the current file.&nbsp; If an optional <b>#N</b>
-            is entered, <b>text</b> after that replaces, or is added to, the standard note for a
-            map.&nbsp; <b>text</b> replaces the standard note if <b>#N</b> is 0, is added before it if
-            <b>#N</b> is &lt; 0, or is added after it if <b>#N</b> &gt; 0.&nbsp; Places the index of the
-            new map in <i>reportedValue1</i>.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">MakeAnchorMap</TD>
-          <TD>Calls the routine to make an anchor map and does the same tests and operations
-            as when run from the button in the dialog, including saving the current image
-            and making it a map if it is not already.</TD>
-        </TR>
-               <TR>
+              <TR>
           <TD class="scriptcommand">FindHoles [buf]</TD>
           <TD>Runs the Hole Finder routine on the image in the current buffer, or in the
             buffer optionally specified by <b>buf</b>, using all of the
@@ -4871,7 +4860,26 @@
             <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum border distance, in microns.
              &nbsp;</TD>
         </TR>
+       <TR>
+          <TD colspan="2"><A name="navigatoritemgen"></A><B>Other Item Generating Commands</B></TD>
+        </TR>
         <TR>
+          <TD class="scriptcommand">NewMap [#N text]</TD>
+          <TD>Makes a new Navigator map from the current image in buffer A or the current montage 
+            with overview in buffer B.&nbsp; A montage must belong to the current open file; a single image in A
+            must have been saved already, or be savable in the current file.&nbsp; If an optional <b>#N</b>
+            is entered, <b>text</b> after that replaces, or is added to, the standard note for a
+            map.&nbsp; <b>text</b> replaces the standard note if <b>#N</b> is 0, is added before it if
+            <b>#N</b> is &lt; 0, or is added after it if <b>#N</b> &gt; 0.&nbsp; Places the index of the
+            new map in <i>reportedValue1</i>.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MakeAnchorMap</TD>
+          <TD>Calls the routine to make an anchor map and does the same tests and operations
+            as when run from the button in the dialog, including saving the current image
+            and making it a map if it is not already.</TD>
+        </TR>
+         <TR>
           <TD class="scriptcommand">GetUniqueNavID</TD>
           <TD>Creates an ID value unique from any current Navigator items and places it in <i>reportedValue1</i>;
              it can be assigned to a variable after the command.&nbsp; The ID can be used with 
@@ -5631,8 +5639,8 @@
             insensitive) and with an optional variable name <b>var</b> for the value.&nbsp;An error will
             result if the name does not match one of the properties that can be reported.&nbsp;
             The list of available properties in the development version of SerialEM is in
-            <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt">
-            http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt</a></TD>
+            <a href="https://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt">
+            https://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt</a></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportCameraProperty #C name [var]</TD>
@@ -5660,7 +5668,7 @@
             variable name <b>var</b> for the value.&nbsp; An error will result if the name does not match
             one of the settings that can be set.&nbsp; The list of available settings in
           the development version of SerialEM is in
-          <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt">http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt</a></TD>
+          <a href="https://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt">https://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt</a></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetUserSetting name val [#K]</TD>
