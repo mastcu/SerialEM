@@ -880,7 +880,7 @@ BOOL CSerialEMApp::InitInstance()
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
   bool anyFrameSavers = false;
   CameraParameters *camP;
-  CString message, dropCameras, settingsFile;
+  CString message, dropCameras, settingsFile, str;
   void *toolDlgs[] = {&mStatusWindow, &mBufferWindow, &mImageLevel, &mScopeStatus,
   &mRemoteControl, &mTiltWindow, &mCameraMacroTools, &mAlignFocusWindow, &mLowDoseDlg,
     &mMontageWindow, &mSTEMcontrol, &mFilterControl, &mDEToolDlg};
@@ -1643,6 +1643,19 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
       "have comments after a string entry; if so, the comments MUST be removed:" + 
       message);
+
+  float *gridLimits = mNavHelper->GetGridLimits();
+  if (gridLimits[0] || gridLimits[1] || gridLimits[2] || gridLimits[3]) {
+    message = "There are Navigator settings for grid limits: ";
+    for (iCam = 0; iCam < 4; iCam++) {
+      if (gridLimits[iCam]) {
+        str.Format("  %s%s %.0f", iCam % 2 ? "+" : "-", iCam > 1 ? "Y" : "X",
+          gridLimits[iCam]);
+        message += str;
+      }
+    }
+    AppendToLog(message);
+  }
 
   mExternalTools->AddMenuItems();
   mMainFrame->RemoveHiddenItemsFromMenus();
