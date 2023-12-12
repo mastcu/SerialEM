@@ -608,7 +608,21 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     mWinApp->mMainView->DrawImage();
     if (mIsOpen)
       m_butMakeNavPts.EnableWindow(false);
-    poly = mNav->GetOtherNavItem(mIndexOfGroupItem);
+    if (mPieceOn.size() && *std::min_element(mPieceOn.begin(), mPieceOn.end()) < 
+      *std::max_element(mPieceOn.begin(), mPieceOn.end())) {
+      int minpc = 1000;
+      int maxpc = -1000;
+      for (ind = mIndexOfGroupItem; ind < mIndexOfGroupItem + numAdded; ind++) {
+        poly = mNav->GetOtherNavItem(ind);
+        if (poly) {
+          ACCUM_MIN(minpc, poly->mPieceDrawnOn);
+          ACCUM_MAX(maxpc, poly->mPieceDrawnOn);
+        }
+      }
+      if (minpc >= maxpc)
+        PrintfToLog("WARNING: \"PieceDrawnOn\" values are wrong after making items "
+          "(min %d, max %d)", minpc, maxpc);
+    }
   }
    if (anyNonDflt)
      SetExclusionsAndDraw();
@@ -1390,10 +1404,23 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
       // Invert the Y positions in piece and fix up the pieceOn for right-handed order
       InvertVectorInY(mYinPiece, montP->yFrame);
+      int minBefore = 1000, maxBefore = -1000, minAfter = 1000, maxAfter = -1000;
       for (ind = 0; ind < (int)mPieceOn.size(); ind++) {
+        ACCUM_MIN(minBefore, mPieceOn[ind]);
+        ACCUM_MAX(maxBefore, mPieceOn[ind]);
         xcoord = mPieceOn[ind] / montP->yNframes;
         ycoord = mPieceOn[ind] % montP->yNframes;
         mPieceOn[ind] = (montP->yNframes - 1) - ycoord + xcoord * montP->yNframes;
+        ACCUM_MIN(minAfter, mPieceOn[ind]);
+        ACCUM_MAX(maxAfter, mPieceOn[ind]);
+      }
+      if (montP->xNframes * montP->yNframes > 3 && mPieceOn.size() > 40) {
+        if (minBefore == maxBefore)
+          PrintfToLog("WARNING: The \"pieceOn\" value before inversion is the same for"
+            " all points, %d", minBefore);
+        else if (minAfter == maxAfter)
+          PrintfToLog("WARNING: The \"pieceOn\" value after inversion is the same for"
+            " all points, %d", minBefore);
       }
     }
 
