@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/11/23: SEM_4-1-0 stable
 12/11/23: SEM_4-0-28
 12/11/23: Added script command to set montage control panel parameters.
 
