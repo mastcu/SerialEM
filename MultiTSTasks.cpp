@@ -58,6 +58,7 @@ CMultiTSTasks::CMultiTSTasks(void)
   mCkAlignStep = 0.02f;
   mCkNumStepCuts = 2;
   mAutoCentering = false;
+  mAutoCenUseMagInd = 0;
   mRangeConsets[0] = TRIAL_CONSET;
   mRangeConsets[1] = RECORD_CONSET;
   mRangeConsets[2] = -1;
