@@ -44,8 +44,6 @@ using namespace std;
 #include "..\GainRefMaker.h"
 #include "..\Utilities\XCorr.h"
 
-#include "DirectElectronCamPanel.h"
-
 // UPDATE Docs/DEserverProperties.txt FOR ADDED OR DISCONTINUED PROPERTIES
 
 // Property strings used more than once but only here
@@ -77,24 +75,8 @@ static const char *psADUsPerElectron = "ADUs Per Electron";
 #define DE_PROP_AUTOSUM "Autosave Sum Frames - "
 
 
-///////////////////////////////////////////////////////////////////
-// Added a special properties files for reading properties specific to the LC1100.
-// This was also placed in the typical
-// These properties include reading the .dcf , .set, .cfg , the COM port number
-// that the camera is connected to, whether the peltier device should turn on
-// upon initialization of the camera, and finally a flag to trigger
-// whether there should be some basic interpolation applied to
-///////////////////////////////////////////////////////////////////
-#define NUM_OF_LINES 6
-#define FILE_PROPERTIES "C:\\Program Files\\SerialEM\\LC1100Properties.txt"
-
-
 bool FIX_COLUMNS = false;
 #define VALID_REF_MINUTES 5
-
-//Customized panel:
-//The dialog window that is specific to non-DDD cameras
-static DirectElectronCamPanel *DE_panel = NULL;
 
 static HANDLE sLiveMutex = NULL;
 #define LIVE_MUTEX_WAIT 2000
@@ -122,10 +104,6 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   // are eliminated
   mTrustLastSettings = true;
 
-  // DNM: need to initialize these because uninitialize is called by destructor
-  m_sink = NULL;
-  m_FSMObject = NULL;
-  m_LCCaptureInterface = NULL;
   m_DE_CONNECTED = false;
   mServerVersion = 0;
   mAPI2Server = false;
@@ -216,169 +194,56 @@ DirectElectronCamera::~DirectElectronCamera(void)
 }
 
 ///////////////////////////////////////////////////////////////////
-//unInitialize() routine will check for available references
-// to the pointers that were allocated to control the camera.
-// if they actually point to some memory address go ahead and
-// properly deallocate.
+//unInitialize() routine will disconnect from the server after retracting camera unless
+// W debug output is set
 //
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::unInitialize()
 {
-  if (m_DE_CLIENT_SERVER) {
-    if (mDeServer) {
-      if (m_DE_CONNECTED) {
-        if (!GetDebugOutput('W'))
-          mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition, 
-            mAPI2Server ? "Retract" : DE_CAM_STATE_RETRACTED);
-        mDeServer->close();
-      }
+  if (mDeServer) {
+    if (m_DE_CONNECTED) {
+      if (!GetDebugOutput('W'))
+        mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
+          mAPI2Server ? "Retract" : DE_CAM_STATE_RETRACTED);
+      mDeServer->close();
     }
-    mDeServer = NULL;
-  } else {
-
-    if (m_FSMObject) {
-      m_FSMObject->FreeShort();
-      //Release Memory object
-      m_FSMObject->Release();
-    }
-    if (m_LCCaptureInterface)
-      m_LCCaptureInterface->Release();
-    if (m_sink) {
-      delete m_sink;
-    }
-
-    m_sink = NULL;
-    m_FSMObject = NULL;
-    m_LCCaptureInterface = NULL;
-
   }
+  mDeServer = NULL;
   return 1;
 }
 
 
 ///////////////////////////////////////////////////////////////////
-//initialize() routine.  Will create the necessary instances
-// for communicating with the camera, will read out the camera properties
-// from the specral4k and also initialize the camera to its "default"
-// settings.  This means setting the appropriate image format
-// and binning settings etc.
+//initialize() routine.  Will initialize the server and set the current camera
 //
 //
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::initialize(CString camName, int camIndex)
 {
-  if (m_DE_CLIENT_SERVER) {
+  if (!m_DE_CLIENT_SERVER) {
+    AfxMessageBox("The LC1100 is no longer supported");
+    return -1;
+  }
 
-    //pull the reference to the ToolDialog box for DE.
-    //We need to give our dialogs the camera reference.
-    mWinApp->mDEToolDlg.setCameraReference(this);
+  //pull the reference to the ToolDialog box for DE.
+  //We need to give our dialogs the camera reference.
+  mWinApp->mDEToolDlg.setCameraReference(this);
 
-    //initialize the DE server.
-    int check = -1;
-    if (!m_DE_CONNECTED) {
-      check = initDEServer();
-      if (check == -1)
-        return check;
-    }
-    mInitializingIndex = camIndex;
-    mCamType = mCamParams[camIndex].DE_camType;
-    check = initializeDECamera(camName, camIndex);
-    mInitializingIndex = -1;
+  //initialize the DE server.
+  int check = -1;
+  if (!m_DE_CONNECTED) {
+    check = initDEServer();
     if (check == -1)
       return check;
-    mCurCamIndex = camIndex;
-
-  } else {
-
-    HRESULT hr =  CoCreateInstance(CLSID_CoSoliosFor4000, NULL, CLSCTX_INPROC_SERVER,
-                                   IID_ICameraCtrl, (void **)&m_LCCaptureInterface);
-    if (SEMTestHResult(hr, " getting instance of SoliosFor4000 for DE camera"))
-      return -1;
-    hr = CoCreateInstance(CLSID_FSM_MemoryObject, NULL, CLSCTX_INPROC_SERVER,
-                          IID_IFSM_MemoryObject, (void **)&m_FSMObject);
-    if (SEMTestHResult(hr, " getting instance of FSM_MemoryObject for DE camera"))
-      return -1;
-
-    //read in a properties file to know how to assign
-    //Read in the information as this is very critical
-    int check;
-    check = readCameraProperties();
-
-
-    if (check == -1) {
-      ErrorTrace("ERROR reading camera properties for DE camera");
-      return -1; //couldnt read the properties so return.
-    }
-
-    //sets the path of the dcf file.
-    m_LCCaptureInterface->SetDCFPath(0, 0, m_dcf_file);
-    //allocate the memory to store the image.
-    m_FSMObject->AllocateShort(MAX_IMAGE_SIZE, 1);
-    m_FSMObject->GetDataPtrShort(0, &m_pCapturedDataShort);
-
-    //Properly Cast to set the image buffer.
-    m_LCCaptureInterface->SetImageBuffer((IFSM_MemoryObject *)m_FSMObject);
-
-    m_sink = new CLC1100CamSink(m_LCCaptureInterface, m_pCapturedDataShort);
-
-    //read in the file that represents all the parameters from the camera
-    m_LCCaptureInterface->SetParamTablePath(m_filename, m_tablefilename);
-    //read the file that has the configuration parameters specific to the camera
-    //See the Direct Electron Camera Manual on the LC1100 for all the details for
-    //the parameters
-    m_LCCaptureInterface->SetConfigTablePath(m_filename, m_tablefilename);
-    //m_CaptureInterface->ReadoutParam_RecAllFromHost();
-    //m_CaptureInterface->ConfigParam_RecAllFromHost();
-
-    //read out all the config params
-    m_LCCaptureInterface->ConfigParam_TransToHost();
-    m_LCCaptureInterface->Status_TransToHost();
-    //read out the status params
-
-    m_LCCaptureInterface->SetOrigin(ORIGIN_X, 0);
-
-
-    //make sure window heater is on
-    m_LCCaptureInterface->put_ConfigParam(WINDOW_HEATER, 1);
-
-    //Just initially disply the Configuration parameters
-    long param;
-    m_LCCaptureInterface->get_ConfigParam(INSRUMENT_MODEL, &param);
-    m_instrument_model = param;
-    m_LCCaptureInterface->get_ConfigParam(SERIAL_HEAD, &param);
-    m_head_serial = param;
-    m_LCCaptureInterface->get_ConfigParam(SHUTTER_CLOSE_DELAY, &param);
-    m_shutter_close_delay = param;
-    m_LCCaptureInterface->get_ConfigParam(PRE_EXPOSE_DELAY, &param);
-    m_pre_expose_delay = param;
-    m_LCCaptureInterface->get_ConfigParam(CCD_TEMP_SETPOINT, &param);
-    m_ccd_temp_setPoint = (float)((param / 10) - 273.15);
-    m_LCCaptureInterface->get_ConfigParam(WINDOW_HEATER, &param);
-    m_window_heater = param;
-
-
-    //make sure window heater is on
-    m_LCCaptureInterface->put_ConfigParam(WINDOW_HEATER, 1);
-    //update the camera
-    m_LCCaptureInterface->ConfigParam_RecAllFromHost();
-
-    //trigger the peltier device to turn on.
-    m_LCCaptureInterface->ExternalRelayTurnOn();
-
-
-    //At this point it would be good to check the pressure and temperature of the
-    //camera before proceding
-    readinTempandPressure();
-
-    if (!DE_panel) {
-      DE_panel = new DirectElectronCamPanel();
-      DE_panel->setCameraReference(this);
-      DE_panel->Create(IDD_DirectElectronDialog);
-      DE_panel->ShowWindow(SW_SHOW);
-
-    }
-
   }
+  mInitializingIndex = camIndex;
+  mCamType = mCamParams[camIndex].DE_camType;
+  check = initializeDECamera(camName, camIndex);
+  mInitializingIndex = -1;
+  if (check == -1)
+    return check;
+  mCurCamIndex = camIndex;
+
 
   return 1;
 }
@@ -448,7 +313,7 @@ int DirectElectronCamera::initDEServer()
   return 1;
 }
 
-// Initialize a particular DE camera
+// Initialize a particular DE camera, getting its properties and setting flags
 int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 {
   //read in a properties file to know how to assign
@@ -715,38 +580,35 @@ void DirectElectronCamera::setCameraName(CString camName)
 
   //Check to make sure we dont set camera name if its
   //already set.
-  if (m_DE_CLIENT_SERVER) {
 
-    CameraParameters *camP = &mCamParams[mWinApp->GetCurrentCamera()];
+  CameraParameters *camP = &mCamParams[mWinApp->GetCurrentCamera()];
 
-    //set to the current Values from the camera.
-    //Just in case in the future we need to
-    mDE_SERVER_IP = camP->DEServerIP;
-    mDE_READPORT = camP->DE_ServerReadPort;
-    mDE_WRITEPORT = camP->DE_ServerWritePort;
-    m_DE_ImageRot = camP->DE_ImageRot;
-    m_DE_ImageInvertX = camP->DE_ImageInvertX;
+  //set to the current Values from the camera.
+  //Just in case in the future we need to
+  mDE_SERVER_IP = camP->DEServerIP;
+  mDE_READPORT = camP->DE_ServerReadPort;
+  mDE_WRITEPORT = camP->DE_ServerWritePort;
+  m_DE_ImageRot = camP->DE_ImageRot;
+  m_DE_ImageInvertX = camP->DE_ImageInvertX;
 
-    if (m_DE_CurrentCamera == camName) {
-      return;
-    }
+  if (m_DE_CurrentCamera == camName) {
+    return;
+  }
 
-    if (!mDeServer->setCameraName((LPCTSTR)camName)) {
-      CString str = ErrorTrace("Could NOT set the camera name to %s in the DE server.",
-        (LPCTSTR)camName);
-      AfxMessageBox(str);
-    } else {
+  if (!mDeServer->setCameraName((LPCTSTR)camName)) {
+    CString str = ErrorTrace("Could NOT set the camera name to %s in the DE server.",
+      (LPCTSTR)camName);
+    AfxMessageBox(str);
+  } else {
 
-      //Now set the new camera.
-      m_DE_CurrentCamera = camName;
-      mCamType = camP->DE_camType;
-      mCurCamIndex = mWinApp->GetCurrentCamera();
+    //Now set the new camera.
+    m_DE_CurrentCamera = camName;
+    mCamType = camP->DE_camType;
+    mCurCamIndex = mWinApp->GetCurrentCamera();
 
-      //its ok to update the panel after sending out any settings that exist
-      SEMTrace('D', "Set the camera to:  %s", (LPCTSTR)camName);
-      FinishCameraSelection(false, camP);
-    }
-
+    //its ok to update the panel after sending out any settings that exist
+    SEMTrace('D', "Set the camera to:  %s", (LPCTSTR)camName);
+    FinishCameraSelection(false, camP);
   }
 }
 
@@ -784,8 +646,6 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
 {
   bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true, ret6 = true;
   bool ret7 = true;
-  if (!m_DE_CLIENT_SERVER)
-    return 1;
 
   // With old server, should get DE_SAVE_FRAMES to save single frames and DE_SAVE_SUMS
   // to save sums that are NOT single frames
@@ -865,22 +725,16 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-      if (fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) {
-        if (!justSetDoubleProperty(mAPI2Server ? "Pre-Exposure Time (seconds)" : 
-          "Preexposure Time (seconds)", preExpMillisecs / 1000.))
-        {
-          mLastErrorString = ErrorTrace("ERROR: Could NOT set the pre-exposure time"
-            " to %.3f", preExpMillisecs / 1000.);
-          return 1;
-        }
-        SEMTrace('D', "Pre-exposure time set to:  %.3f", preExpMillisecs / 1000.);
-        mLastPreExposure = preExpMillisecs;
+    if (fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) {
+      if (!justSetDoubleProperty(mAPI2Server ? "Pre-Exposure Time (seconds)" :
+        "Preexposure Time (seconds)", preExpMillisecs / 1000.))
+      {
+        mLastErrorString = ErrorTrace("ERROR: Could NOT set the pre-exposure time"
+          " to %.3f", preExpMillisecs / 1000.);
+        return 1;
       }
-    } else {
-      m_LCCaptureInterface->ConfigParam_TransToHost();
-      m_LCCaptureInterface->put_ConfigParam(PRE_EXP_DELAY, (long)preExpMillisecs);
-      m_LCCaptureInterface->ConfigParam_RecAllFromHost();
+      SEMTrace('D', "Pre-exposure time set to:  %.3f", preExpMillisecs / 1000.);
+      mLastPreExposure = preExpMillisecs;
     }
 
     return 0;
@@ -889,14 +743,14 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 }
 
 ///////////////////////////////////////////////////////////////////
-//copyImageData() routine.  Copy the data from what was acquired
-//from the camera into an appropriately sized array for
-//SerialEM to use for its acquisition process.  For DE server, this starts the acquire
+//copyImageData() routine.  Set up and start the acquisition, then copy the data from what
+// as acquired from the camera into an appropriately sized array for
+//SerialEM to use for its acquisition process. 
 //
 ///////////////////////////////////////////////////////////////////
 
-int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSizeX, 
-                                        long &imageSizeY, int divideBy2)
+int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSizeX,
+  long &imageSizeY, int divideBy2)
 {
   CString valStr;
   int actualSizeX, actualSizeY;
@@ -910,266 +764,244 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
   }
 
   m_STOPPING_ACQUISITION = false;
-  if (m_DE_CLIENT_SERVER) {
-    // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
+
+  // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
     // library was producing clockwise rotation of image
-    int operation = OperationForRotateFlip(m_DE_ImageRot, m_DE_ImageInvertX);
-    int inSizeX, inSizeY, outX, outY, status;
-    bool startedThread = false;
-    inSizeX = imageSizeX;
-    inSizeY = imageSizeY;
-    if (mLastLiveMode > 1) {
-      if (mLiveTD.outBufInd == -1) {
+  int operation = OperationForRotateFlip(m_DE_ImageRot, m_DE_ImageInvertX);
+  int inSizeX, inSizeY, outX, outY, status;
+  bool startedThread = false;
+  inSizeX = imageSizeX;
+  inSizeY = imageSizeY;
+  if (mLastLiveMode > 1) {
+    if (mLiveTD.outBufInd == -1) {
 
-        // Setup the thread data and allocate buffers
-        mLiveTD.DeServer = mDeServer;
-        mLiveTD.operation = operation;
-        mLiveTD.divideBy2 = divideBy2;
-        mLiveTD.inSizeX = inSizeX;
-        mLiveTD.inSizeY = inSizeY;
-        mLiveTD.quitLiveMode = false;
-        mLiveTD.electronCounting = mLastElectronCounting;
-        mLiveTD.returnedImage[0] =  mLiveTD.returnedImage[1] = false;
-        NewArray2(mLiveTD.buffers[0], unsigned short, imageSizeX, imageSizeY);
-        NewArray2(mLiveTD.buffers[1], unsigned short, imageSizeX, imageSizeY);
-        if (operation)
-          NewArray2(mLiveTD.rotBuf, unsigned short, imageSizeX, imageSizeY);
-        if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)){
-          CleanupLiveMode(&mLiveTD);
-          SEMTrace('D', "Failed to get memory for live mode buffers");  
-          return 1;
-        }
-
-        // Start the thread as usual
-        mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
-          0, CREATE_SUSPENDED);
-        mLiveThread->m_bAutoDelete = false;
-        mLiveThread->ResumeThread();
-
-        // Loop until it has gotten an image: 
-        for (outX = 0; outX < 100; outX++) {
-          Sleep(100);
-          if (mLiveTD.outBufInd != -1)
-            break;
-        }
-        startedThread = true;
-      }
-
-      // Clean up if it didn't start correctly; or check status and error out
-      // if there is a problem
-      if (mLiveTD.outBufInd < 0) {
-        if (UtilThreadBusy(&mLiveThread) > 0)
-          UtilThreadCleanup(&mLiveThread);
-        status = -1;
-      } else
-        status = UtilThreadBusy(&mLiveThread);
-      if (status <= 0) {
-        if (mLiveTD.outBufInd == -1) {
-          SetAndTraceErrorString("Live mode did not get started in timely manner");
-        } else if (status < 0) {
-          mLastErrorString = ErrorTrace("ERROR: Live mode ended with an error");
-        } else if (startedThread) {
-          SetAndTraceErrorString("Live mode ended without error right after being "
-            "started");
-        } else {
-          SetAndTraceErrorString("Live mode flag is set after thread was told to quit");
-        }
-        CleanupLiveMode(&mLiveTD);
-        return 1;
-      }
-
-      // Loop until the output buffer is new; let SEM kill this thread if it times out?
-      for (;;) {
-        WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
-        if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
-          memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
-          mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
-          ReleaseMutex(sLiveMutex);
-          return 0;
-        }
-        ReleaseMutex(sLiveMutex);
-        Sleep(10);
-      }
-    }
-
-    // Resume code for NORMAL SINGLE IMAGE ACQUISITION
-
-    // Get a checksum of current conditions and time stamp
-    int checksum = B3DNINT(1000 * mLastExposureTime) + B3DNINT(1005 * mLastPreExposure) +
-      B3DNINT(105. * mLastFPS) + 17 * mLastXbinning + 23 * mLastXoffset + 
-      29 * mLastYoffset + 31 * mLastROIsizeX + 37 * mLastROIsizeY + 41 * mLastXimageSize +
-      43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin +
-      59 * mLastSuperResolution + 61 * mLastUseHardwareROI;
-    int minuteNow = mWinApp->MinuteTimeStamp();
-
-    // Check exposure time and FPS if needed
-    if (!CheckMapForValidState(checksum, mExpFPSchecks, minuteNow)) {
-      float maxFPS = mLastFPS, maxExp = mLastExposureTime;
-      getFloatProperty("Frames Per Second (Max)" , maxFPS);
-      getFloatProperty("Exposure Time Max (seconds)", maxExp);
-      if (mLastExposureTime > maxExp || mLastFPS > maxFPS) {
-        if (mLastExposureTime > maxExp)
-          mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
-            "under current conditions (%.3f)", mLastExposureTime, maxExp);
-        else
-          mLastErrorString.Format("The frames per second of %.2f exceeds the maximum "
-          "allowed under current conditions (%.2f)", mLastFPS, maxFPS);
-        SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
-        return 1;
-      }
-      AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
-    }
-
-    // Check dark reference if any processing or counting mode
-    if ((mLastProcessing != UNPROCESSED || mLastElectronCounting > 0) &&
-      !IsReferenceValid(checksum, mDarkChecks, minuteNow, mAPI2Server ? 
-        "Reference - Dark" : "Correction Mode Dark Reference Status", "dark"))
-         return 1;
-
-    // Check gain reference if normalized or counting mode
-    if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting > 0) &&
-      !IsReferenceValid(checksum, mGainChecks, minuteNow, mAPI2Server ?
-        "Reference - Gain" : "Correction Mode Gain Reference Status", "gain"))
-         return 1;
-
-    // Check counting gain reference if normalized and counting mode
-    if (mServerVersion < DE_HAS_ONE_GAIN_STATUS &&
-      (mLastNormCounting > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
-      !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
-        "Correction Mode Counting Gain Reference Status", "post-counting gain"))
-         return 1;
-
-    unsigned short *useBuf = image4k;
-    if (operation && !api2Reference) {
-      NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
-      if (!useBuf) {
-        SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
-        return 1;
-      }
-    }
-
-    SEMTrace('D', "Getting image from DE server now that all preconditions are set.");
-
-    // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
-    if (sUsingAPI2) {
-      if (!mDeServer->StartAcquisition(api2Reference ? mNumLeftServerRef : 1)) {
-        mLastErrorString = ErrorTrace("ERROR: Could not start %s acquisition", 
-          api2Reference ? "reference" : "image");
-        mDateInPrevSetName = 0;
-        return 1;
-      }
-      if (!api2Reference) {
-        DE::ImageAttributes attributes;
-        DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
-        imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
-         mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
-          DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
-      }
-    } else {
-      imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
-    }
-    if (!api2Reference && !imageOK) {
-      mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
+      // Setup the thread data and allocate buffers
+      mLiveTD.DeServer = mDeServer;
+      mLiveTD.operation = operation;
+      mLiveTD.divideBy2 = divideBy2;
+      mLiveTD.inSizeX = inSizeX;
+      mLiveTD.inSizeY = inSizeY;
+      mLiveTD.quitLiveMode = false;
+      mLiveTD.electronCounting = mLastElectronCounting;
+      mLiveTD.returnedImage[0] = mLiveTD.returnedImage[1] = false;
+      NewArray2(mLiveTD.buffers[0], unsigned short, imageSizeX, imageSizeY);
+      NewArray2(mLiveTD.buffers[1], unsigned short, imageSizeX, imageSizeY);
       if (operation)
-        delete useBuf;
-      mDateInPrevSetName = 0;
+        NewArray2(mLiveTD.rotBuf, unsigned short, imageSizeX, imageSizeY);
+      if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)) {
+        CleanupLiveMode(&mLiveTD);
+        SEMTrace('D', "Failed to get memory for live mode buffers");
+        return 1;
+      }
+
+      // Start the thread as usual
+      mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
+        0, CREATE_SUSPENDED);
+      mLiveThread->m_bAutoDelete = false;
+      mLiveThread->ResumeThread();
+
+      // Loop until it has gotten an image: 
+      for (outX = 0; outX < 100; outX++) {
+        Sleep(100);
+        if (mLiveTD.outBufInd != -1)
+          break;
+      }
+      startedThread = true;
+    }
+
+    // Clean up if it didn't start correctly; or check status and error out
+    // if there is a problem
+    if (mLiveTD.outBufInd < 0) {
+      if (UtilThreadBusy(&mLiveThread) > 0)
+        UtilThreadCleanup(&mLiveThread);
+      status = -1;
+    } else
+      status = UtilThreadBusy(&mLiveThread);
+    if (status <= 0) {
+      if (mLiveTD.outBufInd == -1) {
+        SetAndTraceErrorString("Live mode did not get started in timely manner");
+      } else if (status < 0) {
+        mLastErrorString = ErrorTrace("ERROR: Live mode ended with an error");
+      } else if (startedThread) {
+        SetAndTraceErrorString("Live mode ended without error right after being "
+          "started");
+      } else {
+        SetAndTraceErrorString("Live mode flag is set after thread was told to quit");
+      }
+      CleanupLiveMode(&mLiveTD);
       return 1;
     }
-    SEMTrace('D', api2Reference ? " Started reference acquisitions" : 
-      "Got something back from DE Server..");
 
-    // Try to read back the actual image size from these READ-ONLY properties and if it 
-    // is different, truncate the Y size if necessary and set the return size from actual
-    if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
-      mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
-      (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
-      if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
-        actualSizeY = (imageSizeX * imageSizeY) / actualSizeX;
-      imageSizeX = actualSizeX;
-      imageSizeY = actualSizeY;
-      inSizeX = imageSizeX;
-      inSizeY = imageSizeY;
-    }
-
-    // If doing ref in server, loop until all the acquisitions are done
-    double maxInterval = 2. * SEMTickInterval(startTime);
-    maxInterval = B3DMAX(maxInterval, 15000. * mLastExposureTime);
-    while (mNumLeftServerRef > 0 && !m_STOPPING_ACQUISITION) {
-      int remaining;
-      bool ret1;
-      startTime = GetTickCount();
-      mDateInPrevSetName = 0;
-      while (SEMTickInterval(startTime) < maxInterval && !m_STOPPING_ACQUISITION) {
-        ret1 = mDeServer->getIntProperty(api2Reference ? 
-          "Remaining Number of Acquisitions": 
-          "Auto Repeat Reference - Remaining Acquisitions", &remaining);
-        if (ret1 && remaining != mNumLeftServerRef)
-          break;
-        Sleep(100);
+    // Loop until the output buffer is new; let SEM kill this thread if it times out?
+    for (;;) {
+      WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+      if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
+        memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
+        mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
+        ReleaseMutex(sLiveMutex);
+        return 0;
       }
-      if (m_STOPPING_ACQUISITION)
-        break;
-      if (remaining != mNumLeftServerRef)
-        mNumLeftServerRef = remaining;
-      else {
-        mLastErrorString = ret1 ? "Time out getting server reference; remaining "
-          "acquisitions did not drop fast enough" : "Error getting remaining acquisitions"
-          " when getting server reference";
-        SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
-        if (operation)
-          delete useBuf;
-        return 1;
-      }
-    }
-    if (api2Reference) {
-      memset(useBuf, 0, imageSizeX * imageSizeY * 2);
-      return 0;
-    }
-
-    // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
-    if (operation) {
-      ProcRotateFlip((short *)useBuf, kUSHORT, inSizeX, inSizeY, operation, 0, 
-        (short *)image4k, &outX, &outY);
-      delete useBuf;
-    }
-    if (mLastElectronCounting > 0 && mCountScaling != 1.) {
-      float scale = mCountScaling * (divideBy2 ? 0.5f : 1.f);
-      int val, maxVal = divideBy2 ? 32767 : 65535;
-      if (mLastNormCounting && mElecCountsScaled > 0)
-        scale /= mElecCountsScaled;
-      SEMTrace('D', "mcs %f mlastnorm %d melecsc %d  scale %f", mCountScaling,
-        mLastNormCounting ? 1 : 0, mElecCountsScaled, scale);
-      for (int i = 0; i < imageSizeX * imageSizeY; i++) {
-        val = (int)(scale * (float)image4k[i] + 0.5f);
-        B3DCLAMP(val, 0, maxVal);
-        image4k[i] = val;
-      }
-
-    } else if (divideBy2) {
-      for (int i = 0; i < imageSizeX * imageSizeY; i++)
-        image4k[i] = image4k[i] >> 1;
+      ReleaseMutex(sLiveMutex);
+      Sleep(10);
     }
   }
 
-  else { //LC1100 code
+  // Resume code for NORMAL SINGLE IMAGE ACQUISITION
 
-    int xsize = imageSizeX;
-    int ysize = imageSizeY;
-    int outX, outY;
-    SEMTrace('D', "copyImageData: requested size %d x %d, image %d x %d", xsize, ysize,
-      m_sink->getImageSizeX(), m_sink->getImageSizeY());
+  // Get a checksum of current conditions and time stamp
+  int checksum = B3DNINT(1000 * mLastExposureTime) + B3DNINT(1005 * mLastPreExposure) +
+    B3DNINT(105. * mLastFPS) + 17 * mLastXbinning + 23 * mLastXoffset +
+    29 * mLastYoffset + 31 * mLastROIsizeX + 37 * mLastROIsizeY + 41 * mLastXimageSize +
+    43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin +
+    59 * mLastSuperResolution + 61 * mLastUseHardwareROI;
+  int minuteNow = mWinApp->MinuteTimeStamp();
 
-    // There was a transposition of X and Y in copying the data from the array
-    // This will produce a transposition around upper-left to lower-right diagonal of an
-    // image with inverted Y.  This is the same as flip followed by 90 CCW
-    unsigned short *data = m_sink->getData();
-    ProcRotateFlip((short *)data, kUSHORT, m_sink->getImageSizeX(), 
-      m_sink->getImageSizeY(), 5, 0, (short *)image4k, &outX, &outY);
-    if (divideBy2)
-      for (int i = 0; i < outX * outY; i++)
-        image4k[i] = image4k[i] >> 1;
+  // Check exposure time and FPS if needed
+  if (!CheckMapForValidState(checksum, mExpFPSchecks, minuteNow)) {
+    float maxFPS = mLastFPS, maxExp = mLastExposureTime;
+    getFloatProperty("Frames Per Second (Max)", maxFPS);
+    getFloatProperty("Exposure Time Max (seconds)", maxExp);
+    if (mLastExposureTime > maxExp || mLastFPS > maxFPS) {
+      if (mLastExposureTime > maxExp)
+        mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
+          "under current conditions (%.3f)", mLastExposureTime, maxExp);
+      else
+        mLastErrorString.Format("The frames per second of %.2f exceeds the maximum "
+          "allowed under current conditions (%.2f)", mLastFPS, maxFPS);
+      SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
+      return 1;
+    }
+    AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
+  }
 
-    // Removed hard-coded column defect correction which failed on subareas in 3.4
+  // Check dark reference if any processing or counting mode
+  if ((mLastProcessing != UNPROCESSED || mLastElectronCounting > 0) &&
+    !IsReferenceValid(checksum, mDarkChecks, minuteNow, mAPI2Server ?
+      "Reference - Dark" : "Correction Mode Dark Reference Status", "dark"))
+    return 1;
+
+  // Check gain reference if normalized or counting mode
+  if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting > 0) &&
+    !IsReferenceValid(checksum, mGainChecks, minuteNow, mAPI2Server ?
+      "Reference - Gain" : "Correction Mode Gain Reference Status", "gain"))
+    return 1;
+
+  // Check counting gain reference if normalized and counting mode
+  if (mServerVersion < DE_HAS_ONE_GAIN_STATUS &&
+    (mLastNormCounting > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
+    !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
+      "Correction Mode Counting Gain Reference Status", "post-counting gain"))
+    return 1;
+
+  unsigned short *useBuf = image4k;
+  if (operation && !api2Reference) {
+    NewArray2(useBuf, unsigned short, imageSizeX, imageSizeY);
+    if (!useBuf) {
+      SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
+      return 1;
+    }
+  }
+
+  SEMTrace('D', "Getting image from DE server now that all preconditions are set.");
+
+  // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
+  if (sUsingAPI2) {
+    if (!mDeServer->StartAcquisition(api2Reference ? mNumLeftServerRef : 1)) {
+      mLastErrorString = ErrorTrace("ERROR: Could not start %s acquisition",
+        api2Reference ? "reference" : "image");
+      mDateInPrevSetName = 0;
+      return 1;
+    }
+    if (!api2Reference) {
+      DE::ImageAttributes attributes;
+      DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
+      imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
+        mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
+        DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
+    }
+  } else {
+    imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
+  }
+  if (!api2Reference && !imageOK) {
+    mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
+    if (operation)
+      delete useBuf;
+    mDateInPrevSetName = 0;
+    return 1;
+  }
+  SEMTrace('D', api2Reference ? " Started reference acquisitions" :
+    "Got something back from DE Server..");
+
+  // Try to read back the actual image size from these READ-ONLY properties and if it 
+  // is different, truncate the Y size if necessary and set the return size from actual
+  if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
+    mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
+    (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
+    if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
+      actualSizeY = (imageSizeX * imageSizeY) / actualSizeX;
+    imageSizeX = actualSizeX;
+    imageSizeY = actualSizeY;
+    inSizeX = imageSizeX;
+    inSizeY = imageSizeY;
+  }
+
+  // If doing ref in server, loop until all the acquisitions are done
+  double maxInterval = 2. * SEMTickInterval(startTime);
+  maxInterval = B3DMAX(maxInterval, 15000. * mLastExposureTime);
+  while (mNumLeftServerRef > 0 && !m_STOPPING_ACQUISITION) {
+    int remaining;
+    bool ret1;
+    startTime = GetTickCount();
+    mDateInPrevSetName = 0;
+    while (SEMTickInterval(startTime) < maxInterval && !m_STOPPING_ACQUISITION) {
+      ret1 = mDeServer->getIntProperty(api2Reference ?
+        "Remaining Number of Acquisitions" :
+        "Auto Repeat Reference - Remaining Acquisitions", &remaining);
+      if (ret1 && remaining != mNumLeftServerRef)
+        break;
+      Sleep(100);
+    }
+    if (m_STOPPING_ACQUISITION)
+      break;
+    if (remaining != mNumLeftServerRef)
+      mNumLeftServerRef = remaining;
+    else {
+      mLastErrorString = ret1 ? "Time out getting server reference; remaining "
+        "acquisitions did not drop fast enough" : "Error getting remaining acquisitions"
+        " when getting server reference";
+      SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
+      if (operation)
+        delete useBuf;
+      return 1;
+    }
+  }
+  if (api2Reference) {
+    memset(useBuf, 0, imageSizeX * imageSizeY * 2);
+    return 0;
+  }
+
+  // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
+  if (operation) {
+    ProcRotateFlip((short *)useBuf, kUSHORT, inSizeX, inSizeY, operation, 0,
+      (short *)image4k, &outX, &outY);
+    delete useBuf;
+  }
+  if (mLastElectronCounting > 0 && mCountScaling != 1.) {
+    float scale = mCountScaling * (divideBy2 ? 0.5f : 1.f);
+    int val, maxVal = divideBy2 ? 32767 : 65535;
+    if (mLastNormCounting && mElecCountsScaled > 0)
+      scale /= mElecCountsScaled;
+    SEMTrace('D', "mcs %f mlastnorm %d melecsc %d  scale %f", mCountScaling,
+      mLastNormCounting ? 1 : 0, mElecCountsScaled, scale);
+    for (int i = 0; i < imageSizeX * imageSizeY; i++) {
+      val = (int)(scale * (float)image4k[i] + 0.5f);
+      B3DCLAMP(val, 0, maxVal);
+      image4k[i] = val;
+    }
+
+  } else if (divideBy2) {
+    for (int i = 0; i < imageSizeX * imageSizeY; i++)
+      image4k[i] = image4k[i] >> 1;
   }
   return 0;
 }
@@ -1272,82 +1104,50 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-
-      // Set hardware binning first and if it has changed, force setting new binning
-      if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
-      {
-        SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
-        if (mServerVersion < DE_HAS_API2) {
-          if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
-            return 1;
-        } else if (mServerVersion < DE_AUTOSAVE_RENAMES2) {
-          if (!setStringWithError(psBinMode, hardwareBin > 0 ? psHWandSW : psSWonly))
-            return 1;
-        } else {
-          if (!justSetIntProperty("Hardware Binning X", hardwareBin > 0 ? 2 : 1) ||
-            !justSetIntProperty("Hardware Binning Y", hardwareBin > 0 ? 2 : 1)) {
-            mLastErrorString = ErrorTrace("ERROR: Could NOT set the hardware binning");
-            return 1;
-          }
-          mLastROIsizeX = mLastXoffset = -1;
+    // Set hardware binning first and if it has changed, force setting new binning
+    if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
+    {
+      SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
+      if (mServerVersion < DE_HAS_API2) {
+        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
+          return 1;
+      } else if (mServerVersion < DE_AUTOSAVE_RENAMES2) {
+        if (!setStringWithError(psBinMode, hardwareBin > 0 ? psHWandSW : psSWonly))
+          return 1;
+      } else {
+        if (!justSetIntProperty("Hardware Binning X", hardwareBin > 0 ? 2 : 1) ||
+          !justSetIntProperty("Hardware Binning Y", hardwareBin > 0 ? 2 : 1)) {
+          mLastErrorString = ErrorTrace("ERROR: Could NOT set the hardware binning");
+          return 1;
         }
-        mLastXbinning = -1;
+        mLastROIsizeX = mLastXoffset = -1;
       }
-      mLastUseHardwareBin = hardwareBin;
-
-      // set binning if it does not match last value
-      if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
-        if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) || 
-          !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
-           mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
-             "parameters of X: %d and Y: %d", x / lessBin, y / lessBin);
-            return 1;
-        } else {
-          m_binFactor = x;
-          SEMTrace('D', "Software binning factors now set to X: %d Y: %d x %d lb %d", x / lessBin,
-            y / lessBin, x, lessBin);
-        }
-      }
-
-      // Save last values regardless
-      mLastXbinning = x;
-      mLastYbinning = y;
-
-      // DO NOT set size, those properties are read-only
-      
-      mLastXimageSize = sizex;
-      mLastYimageSize = sizey;
-
-    } else { //LC1100 DE code
-      m_LCCaptureInterface->SetBinning(x, y);
-      m_binFactor = x;
-      int OriginX = 0;
-      int OriginY = 0;
-
-
-      // NOTE hard-coded inversion of X and Y sizes, anticipating a rotation
-      int swamp = sizey;
-      sizey = sizex;
-      sizex = swamp;
-
-      //Had to adjust the size for binning 4.  The origin of the camera
-      //has to be (48,0).  Currently there is no support for binning x8.
-      if (m_binFactor == 4) {
-        OriginX = (IMAGE_X_OFFSET + ORIGIN_X_BIN4) - ((sizex * x) / 2);
-        OriginY = (IMAGE_Y_OFFSET - ((sizey * y) / 2));
-        m_LCCaptureInterface->SetOrigin(OriginX, OriginY);
-      } else { //This was tested and works well for binning x1 and binning x2
-        OriginX = (IMAGE_X_OFFSET + ORIGIN_X) - ((sizex * x) / 2);
-        OriginY = (IMAGE_Y_OFFSET - ((sizey * y) / 2));
-        m_LCCaptureInterface->SetOrigin(OriginX, OriginY);
-      }
-      m_FSMObject->AllocateShort(sizex * sizey, 1);
-      //Reverse the sizes so that when rotated it looks correct.
-      m_LCCaptureInterface->SetImageSize((sizex / 2), (sizey / 2));
-      SEMTrace('D', "Capture dimensions set to %d x %d", sizex, sizey);
-
+      mLastXbinning = -1;
     }
+    mLastUseHardwareBin = hardwareBin;
+
+    // set binning if it does not match last value
+    if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
+      if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) ||
+        !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
+        mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
+          "parameters of X: %d and Y: %d", x / lessBin, y / lessBin);
+        return 1;
+      } else {
+        m_binFactor = x;
+        SEMTrace('D', "Software binning factors now set to X: %d Y: %d x %d lb %d", x / lessBin,
+          y / lessBin, x, lessBin);
+      }
+    }
+
+    // Save last values regardless
+    mLastXbinning = x;
+    mLastYbinning = y;
+
+    // DO NOT set size, those properties are read-only
+
+    mLastXimageSize = sizex;
+    mLastYimageSize = sizey;
 
     return 0;
   }
@@ -1405,7 +1205,7 @@ int DirectElectronCamera::SetAlignInServer(int alignFrames)
 
 // Set size and offset in unbinned coordinates as returned by the server; the caller
 // now takes care of setting these correctly from the final user's coordinates
-int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysize, 
+int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysize,
   int hardwareROI)
 {
   CSingleLock slock(&m_mutex);
@@ -1415,112 +1215,109 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
 
     bool needOffset, needSize, ret1 = true, ret2 = true, ret3 = true;
     int hwXoff, hwYoff, hwXsize, hwYsize, swXoff, swYoff, swXsize, swYsize, xbin, ybin;
-    if (m_DE_CLIENT_SERVER) {
 
-      // Set hardware ROI first and if it has changed, force setting new ROI
-      needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset;
-      needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY;
-      if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
-        (newProp && hardwareROI > 0 && (needSize || needOffset)) ||
-          !mTrustLastSettings)) {
-        if (mServerVersion < DE_HAS_API2) {
-          if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
-            return 1;
-        } else if (!newProp) {
-          if (!setStringWithError(psROIMode, hardwareROI > 0 ? psHWandSW : psSWonly))
-            return 1;
-        } else {
+    // Set hardware ROI first and if it has changed, force setting new ROI
+    needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset;
+    needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY;
+    if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
+      (newProp && hardwareROI > 0 && (needSize || needOffset)) ||
+      !mTrustLastSettings)) {
+      if (mServerVersion < DE_HAS_API2) {
+        if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
+          return 1;
+      } else if (!newProp) {
+        if (!setStringWithError(psROIMode, hardwareROI > 0 ? psHWandSW : psSWonly))
+          return 1;
+      } else {
 
-          // New API: follow same procedure of setting 0 offset, then size, then offset
-          if (hardwareROI != mLastUseHardwareROI || (needSize && needOffset)) {
-            ret3 = justSetIntProperty("Hardware ROI Offset X", 0)
-              && justSetIntProperty("Hardware ROI Offset Y", 0);
-            SEMTrace('D', "Hardware ROI offset set to 0 before setting size and offset,"
-              " ret: %d", ret3 ? 1 : 0);
-          }
-
-          // It is either the specified ROI if hardware, or the full size if not
-          hwXoff = hardwareROI > 0 ? offset_x : 0;
-          hwYoff = hardwareROI > 0 ? offset_y : 0;
-          hwXsize = hardwareROI > 0 ? xsize : camP->sizeX;
-          hwYsize = hardwareROI > 0 ? ysize : camP->sizeY;
-          if (hardwareROI != mLastUseHardwareROI || needSize) {
-            ret2 = justSetIntProperty("Hardware ROI Size X",
-              hwXsize) && justSetIntProperty("Hardware ROI Size Y", hwYsize);
-            SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXsize,
-              hwYsize, ret2 ? 1 : 0);
-          }
-          if (hardwareROI != mLastUseHardwareROI || needOffset) {
-            ret1 = justSetIntProperty("Hardware ROI Offset X",
-              hwXoff) && justSetIntProperty("Hardware ROI Offset Y", hwYoff);
-            SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXoff,
-              hwYoff, ret1 ? 1 : 0);
-          }
-          if (!ret1 || !ret2 || !ret3) {
-            mLastErrorString.Format("Error setting hardware offset and size "
-              "(%d - %d - %d)", ret1, ret2, ret3);
-            mLastXoffset = mLastROIsizeX = -1;
-            return 1;
-          }
-
+        // New API: follow same procedure of setting 0 offset, then size, then offset
+        if (hardwareROI != mLastUseHardwareROI || (needSize && needOffset)) {
+          ret3 = justSetIntProperty("Hardware ROI Offset X", 0)
+            && justSetIntProperty("Hardware ROI Offset Y", 0);
+          SEMTrace('D', "Hardware ROI offset set to 0 before setting size and offset,"
+            " ret: %d", ret3 ? 1 : 0);
         }
-        mLastXoffset = mLastROIsizeX = -1;
-      }
-      mLastUseHardwareROI = hardwareROI;
 
-      // Now do software ROI that depends on hardware ROI and binning in new API
-      // EValuate what needs setting; of both need to be set, it may be best practice to
-      // set to offset to 0 first so the new size is always valid
-      needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset || 
-        !mTrustLastSettings;
-      needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
-     if (needOffset && needSize) {
-        ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX, 0)
-          && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
-        SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
-          ret3 ? 1 : 0);
-      }
+        // It is either the specified ROI if hardware, or the full size if not
+        hwXoff = hardwareROI > 0 ? offset_x : 0;
+        hwYoff = hardwareROI > 0 ? offset_y : 0;
+        hwXsize = hardwareROI > 0 ? xsize : camP->sizeX;
+        hwYsize = hardwareROI > 0 ? ysize : camP->sizeY;
+        if (hardwareROI != mLastUseHardwareROI || needSize) {
+          ret2 = justSetIntProperty("Hardware ROI Size X",
+            hwXsize) && justSetIntProperty("Hardware ROI Size Y", hwYsize);
+          SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXsize,
+            hwYsize, ret2 ? 1 : 0);
+        }
+        if (hardwareROI != mLastUseHardwareROI || needOffset) {
+          ret1 = justSetIntProperty("Hardware ROI Offset X",
+            hwXoff) && justSetIntProperty("Hardware ROI Offset Y", hwYoff);
+          SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXoff,
+            hwYoff, ret1 ? 1 : 0);
+        }
+        if (!ret1 || !ret2 || !ret3) {
+          mLastErrorString.Format("Error setting hardware offset and size "
+            "(%d - %d - %d)", ret1, ret2, ret3);
+          mLastXoffset = mLastROIsizeX = -1;
+          return 1;
+        }
 
-     // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
-     xbin = ( newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-     ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-     swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
-     swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
-     swXsize = xsize / xbin;
-     swYsize = ysize / ybin;
+      }
+      mLastXoffset = mLastROIsizeX = -1;
+    }
+    mLastUseHardwareROI = hardwareROI;
 
-      // Set size
-      if (needSize) {
-        ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX, 
-          swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
-            g_Property_DE_RoiDimensionY, swYsize);
-        SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
-          ret2 ? 1 : 0);
-      }
-
-      //Set offset
-      if (needOffset) {
-        ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
-          swXoff) && justSetIntProperty(newProp ?
-            "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
-        SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
-          swYoff, ret1 ? 1 : 0);
-      }
-      if (!ret1 || !ret2 || !ret3) {
-        mLastErrorString.Format("Error setting offset and size for region of interest "
-          "(%d - %d - %d)", ret1, ret2, ret3);
-        mLastXoffset = mLastROIsizeX = -1;
-       return 1;
-      }
-      mLastXoffset = offset_x;
-      mLastYoffset = offset_y;
-      mLastROIsizeX = xsize;
-      mLastROIsizeY = ysize;
+    // Now do software ROI that depends on hardware ROI and binning in new API
+    // EValuate what needs setting; of both need to be set, it may be best practice to
+    // set to offset to 0 first so the new size is always valid
+    needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset ||
+      !mTrustLastSettings;
+    needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
+    if (needOffset && needSize) {
+      ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX, 0)
+        && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
+      SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
+        ret3 ? 1 : 0);
     }
 
-    return 0;
+    // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
+    xbin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+    ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+    swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
+    swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
+    swXsize = xsize / xbin;
+    swYsize = ysize / ybin;
+
+    // Set size
+    if (needSize) {
+      ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX,
+        swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
+          g_Property_DE_RoiDimensionY, swYsize);
+      SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
+        ret2 ? 1 : 0);
+    }
+
+    //Set offset
+    if (needOffset) {
+      ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
+        swXoff) && justSetIntProperty(newProp ?
+          "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
+      SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
+        swYoff, ret1 ? 1 : 0);
+    }
+    if (!ret1 || !ret2 || !ret3) {
+      mLastErrorString.Format("Error setting offset and size for region of interest "
+        "(%d - %d - %d)", ret1, ret2, ret3);
+      mLastXoffset = mLastROIsizeX = -1;
+      return 1;
+    }
+    mLastXoffset = offset_x;
+    mLastYoffset = offset_y;
+    mLastROIsizeX = xsize;
+    mLastROIsizeY = ysize;
   }
-  return 1;
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -1536,33 +1333,14 @@ int DirectElectronCamera::AcquireImage(float seconds)
 
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-      if (mRepeatForServerRef > 0)
-        mode = mModeForServerRef;
-      else
-        mode = mWinApp->mGainRefMaker->GetTakingRefImages() ? DE_GAIN_IMAGE : 
-          DE_NORMAL_IMAGE;
-      if (SetExposureTimeAndMode(seconds, mode))
-        return 1;
+    if (mRepeatForServerRef > 0)
+      mode = mModeForServerRef;
+    else
+      mode = mWinApp->mGainRefMaker->GetTakingRefImages() ? DE_GAIN_IMAGE :
+      DE_NORMAL_IMAGE;
+    if (SetExposureTimeAndMode(seconds, mode))
+      return 1;
 
-    } else {  // LC1100
-      m_LCCaptureInterface->ConfigParam_TransToHost();
-      long atten;
-      long dsi_time;
-
-      m_LCCaptureInterface->get_ReadoutParam(ATTENUATION_PARAM, &atten);
-      m_LCCaptureInterface->get_ReadoutParam(DSI_TIME, &dsi_time);
-      SEMTrace('D', "DE_CAMERA: In AcquireImage:  attenuation_param %d and DSI_TIME %d", 
-        atten, dsi_time);
-      m_sink->setDataIsNotReady();
-      m_STOPPING_ACQUISITION = false;
-      m_LCCaptureInterface->put_ExposureTime((long)((float)(seconds * 1000)));
-      m_LCCaptureInterface->CCD_ReadAndExpose();
-
-      while (!isImageAcquistionDone()) //wait until the image is finish acquiring
-        ;
-
-    }
   }
   return 0;
 }
@@ -1580,27 +1358,8 @@ int DirectElectronCamera::AcquireDarkImage(float seconds)
 
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-      if (SetExposureTimeAndMode(seconds, DE_DARK_IMAGE))
-        return 1;
-
-    } else {
-      //read out the configs.
-      m_LCCaptureInterface->ConfigParam_TransToHost();
-      long atten;
-      long dsi_time;
-      m_LCCaptureInterface->get_ReadoutParam(ATTENUATION_PARAM, &atten);
-      m_LCCaptureInterface->get_ReadoutParam(DSI_TIME, &dsi_time);
-      SEMTrace('D', "DE_CAMERA: In AquireDarkImage:  attenuation_param %d and DSI_TIME %d"
-        , atten, dsi_time);
-      m_sink->setDataIsNotReady();
-      m_STOPPING_ACQUISITION = false;
-      m_LCCaptureInterface->put_ExposureTime((long)((float)(seconds * 1000)));
-      m_LCCaptureInterface->CCD_ReadNoExpose();
-
-      while (!isImageAcquistionDone()) //wait until the image is finish acquiring
-        ;
-    }
+    if (SetExposureTimeAndMode(seconds, DE_DARK_IMAGE))
+      return 1;
 
   }
   return 0;
@@ -1716,14 +1475,10 @@ int DirectElectronCamera::SetLiveMode(int mode)
 ///////////////////////////////////////////////////////////////////
 void DirectElectronCamera::StopAcquistion()
 {
-  if (m_DE_CLIENT_SERVER && mServerVersion >= DE_ABORT_WORKS) {
+  if (mServerVersion >= DE_ABORT_WORKS) {
     mDeServer->abortAcquisition();
     m_STOPPING_ACQUISITION = true;
-  } else if (!m_DE_CLIENT_SERVER) {
-    m_LCCaptureInterface->AbortReadout();
-    m_LCCaptureInterface->ClearFrame();
-    m_STOPPING_ACQUISITION = true;
-  }
+  } 
 }
 
 
@@ -1734,17 +1489,7 @@ void DirectElectronCamera::StopAcquistion()
 ///////////////////////////////////////////////////////////////////
 bool DirectElectronCamera::isImageAcquistionDone()
 {
-  if (m_DE_CLIENT_SERVER) {
-    return true;
-
-  } else {
-    if (m_STOPPING_ACQUISITION == true)
-      return true;
-    else
-      return m_sink->checkDataReady();
-  }
-
-  return false;
+  return true;
 }
 
 int DirectElectronCamera::setDebugMode()
@@ -1759,35 +1504,27 @@ int DirectElectronCamera::setDebugMode()
 ///////////////////////////////////////////////////////////////////
 float DirectElectronCamera::getCameraTemp()
 {
-  long param;
   bool success;
 
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-      float temp = 10;
-      int itemp = 10;
-      if (mServerVersion < 205390000) {
-        success = mDeServer->getFloatProperty("Temperature - Detector (Celsius)", &temp);
-      } else {
-        success = mDeServer->getIntProperty("Temperature - Detector (Celsius)", &itemp);
-        temp = (float)itemp;
-      }
-      if (!success)
-        CString str = ErrorTrace("ERROR: Could NOT get the Temperature of DE camera ");
-        //AfxMessageBox(str); 
-      m_camera_Temperature = temp;
-
+    float temp = 10;
+    int itemp = 10;
+    if (mServerVersion < 205390000) {
+      success = mDeServer->getFloatProperty("Temperature - Detector (Celsius)", &temp);
+    } else {
+      success = mDeServer->getIntProperty("Temperature - Detector (Celsius)", &itemp);
+      temp = (float)itemp;
     }
-
-    else {
-      m_LCCaptureInterface->get_StatusParam(CAMERA_TEMP, &param);
-      m_camera_Temperature = (float)((param / 10) - 273.15);
-    }
+    if (!success)
+      CString str = ErrorTrace("ERROR: Could NOT get the Temperature of DE camera ");
+    //AfxMessageBox(str); 
+    m_camera_Temperature = temp;
 
   }
+
   return m_camera_Temperature;
 }
 
@@ -1798,18 +1535,15 @@ int DirectElectronCamera::insertCamera()
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
 
-    if (m_DE_CLIENT_SERVER) {
-      if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
-        mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
-        CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
-        //AfxMessageBox(str);
-      } else {
-        WaitForInsertionState(DE_CAM_STATE_INSERTED);
-        return 0;
-
-      }
-    } else //LC1100 camera return
+    if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
+      mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
+      CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
+      //AfxMessageBox(str);
+    } else {
+      WaitForInsertionState(DE_CAM_STATE_INSERTED);
       return 0;
+
+    }
   }
   return 1;
 }
@@ -2491,381 +2225,4 @@ float DirectElectronCamera::GetLastCountScaling()
   if (mLastNormCounting && mElecCountsScaled > 0)
     return mCountScaling / mElecCountsScaled;
   return mCountScaling;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////
-// LC1100 only calls
-/////////////////////////////////////////////////////////////////////////////////////
-
-
-///////////////////////////////////////////////////////////////////
-//readCameraProperties() routine.  This function reads in
-//the properties that were determined useful for the user
-//to manipulate.  See the Spectral4kProperties.txt for the actual
-//properties.
-//
-//
-///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::readCameraProperties()
-{
-  if (m_DE_CLIENT_SERVER) {
-  } else {
-    string  camera_properties[NUM_OF_LINES];
-    ifstream inFile;
-    inFile.open(FILE_PROPERTIES);
-
-    if (!inFile) {
-      AfxMessageBox("Could not read properties file, ensure a properties file exists!", 
-        MB_OK | MB_ICONEXCLAMATION);
-      return -1;
-    }
-    if (inFile.is_open()) {
-
-
-      int i = 0;
-
-      try {
-        while (i < NUM_OF_LINES) {
-          getline(inFile, camera_properties[i++]);
-        }
-        inFile.close();
-      } catch (...) {
-        return -1;
-      }
-    }
-
-    //should read in :  C:\\camerafiles\\SI1100.dcf
-    m_dcf_file = SysAllocString(A2BSTR(camera_properties[0].c_str()));
-    //should read in :  C:\\camerafiles\\1100-106 250kHz.set
-    m_filename = SysAllocString(A2BSTR(camera_properties[1].c_str()));
-    //should read in a C:\\camerafiles\\x4839A+2.str
-    m_tablefilename = SysAllocString(A2BSTR(camera_properties[2].c_str()));
-    //should read in the port number, typically 3
-    m_camera_port_number = atoi(camera_properties[3].c_str());
-    m_LCCaptureInterface->put_COMPort(m_camera_port_number);
-
-    //Determine if the TEC should automatically turn on upon init
-    //IF "ON" is not found then will proceed to turn off the TEC cooler.
-
-    if (camera_properties[4] == "ON")
-      m_LCCaptureInterface->ExternalRelayTurnOn();
-
-    else
-      m_LCCaptureInterface->ExternalRelayTurnOff();
-
-
-
-    if (camera_properties[5] == "FIX_COLUMNS")
-      FIX_COLUMNS = true;
-    else
-      FIX_COLUMNS = false;
-
-
-  }
-  return 1;
-}
-
-// unused
-int DirectElectronCamera::setOrigin(int x, int y)
-{
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    if (m_DE_CLIENT_SERVER) {
-    } else
-      m_LCCaptureInterface->SetOrigin(x, y);
-  }
-  return 1;
-}
-
-
-
-int DirectElectronCamera::reAllocateMemory(int mem)
-{
-  if (m_DE_CLIENT_SERVER) {
-  } else
-    m_FSMObject->AllocateShort(mem, 1);
-  return 1;
-}
-
-unsigned short *DirectElectronCamera::getImageData()
-{
-  return m_sink->getData();
-}
-
-void DirectElectronCamera::setGainSetting(short index)
-{
-
-  /*here are the parameters for the three gain settings for camera S/N 142 (University of Queensland):
-
-  Mode     DSI time     Attenuation     Gain     Pixel clock     Noise (electrons approx)
-  00          0                0         Low        2000 KHz      15
-  01          17               0         Med        1000 KHz       10
-  02          67               3         High       500 KHz         7
-  */
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    if (index == MODE_0) {
-      m_LCCaptureInterface->put_ReadoutParam(ATTENUATION_PARAM, 0);
-      m_LCCaptureInterface->put_ReadoutParam(DSI_TIME, 0);
-
-    } else if (index == MODE_1) {
-      m_LCCaptureInterface->put_ReadoutParam(ATTENUATION_PARAM, 0);
-      m_LCCaptureInterface->put_ReadoutParam(DSI_TIME, 17);
-    } else if (index == MODE_2) {
-      m_LCCaptureInterface->put_ReadoutParam(ATTENUATION_PARAM, 3);
-      m_LCCaptureInterface->put_ReadoutParam(DSI_TIME, 67);
-
-    } else {
-      AfxMessageBox("Could not properly set a mode for the Gain Setting. Please recheck your selection");
-      return;
-
-    }
-    //update the camera with the latests readout Parameters.
-
-    SEMTrace('D', "DE_CAMERA: about to readout form the camera.");
-    m_LCCaptureInterface->ReadoutParam_RecAllFromHost();
-    SEMTrace('D', "DE_CAMERA: done reading out form the camera.");
-
-    //read out the configs.
-    m_LCCaptureInterface->ConfigParam_TransToHost();
-    long atten;
-    long dsi_time;
-    m_LCCaptureInterface->get_ReadoutParam(ATTENUATION_PARAM, &atten);
-    m_LCCaptureInterface->get_ReadoutParam(DSI_TIME, &dsi_time);
-
-    SEMTrace('D', "DE_CAMERA: after sending commands to the camera reading back these are the results for mode %d:  attenuation_param %d and DSI_TIME %d", index, atten, dsi_time);
-  }
-}
-
-///////////////////////////////////////////////////////////////////
-//getCameraBackplateTemp() routine.  Function will return the current
-//backplate Temperature of the camera in degrees Celcius.
-///////////////////////////////////////////////////////////////////
-float DirectElectronCamera::getCameraBackplateTemp()
-{
-  long param;
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-    if (m_DE_CLIENT_SERVER) {
-
-    } else {
-      m_LCCaptureInterface->get_StatusParam(BACK_PLATE_TEMP, &param);
-      m_camera_BackPlateTemp = (float)((param / 10) - 273.15);
-    }
-
-  }
-
-  return m_camera_BackPlateTemp;
-}
-
-
-///////////////////////////////////////////////////////////////////
-//getCameraPressure() routine.  Function will return the pressure.
-///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::getCameraPressure()
-{
-  long param;
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    if (m_DE_CLIENT_SERVER) {
-
-    } else {
-      m_LCCaptureInterface->get_StatusParam(CAMERA_PRESSURE, &param);
-      m_camera_Pressure = (long) param;
-    }
-  }
-
-  return m_camera_Pressure;
-}
-
-///////////////////////////////////////////////////////////////////
-//readinTempandPressure() routine.  This function reads in
-//the properties of the temperature and pressure. Simple
-//conversion is used to convert to celcius for the temp.
-//
-//
-///////////////////////////////////////////////////////////////////
-void DirectElectronCamera::readinTempandPressure()
-{
-  long param;
-
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    //read out the latest values from the camera
-    m_LCCaptureInterface->ConfigParam_TransToHost();
-    m_LCCaptureInterface->Status_TransToHost();
-
-    m_LCCaptureInterface->get_StatusParam(CAMERA_TEMP, &param);
-    m_camera_Temperature = (float)((param / 10) - 273.15);
-    m_LCCaptureInterface->get_StatusParam(BACK_PLATE_TEMP, &param);
-    m_camera_BackPlateTemp = (float)((param / 10) - 273.15);
-    m_LCCaptureInterface->get_StatusParam(CAMERA_PRESSURE, &param);
-    m_camera_Pressure = (long)param;
-    m_LCCaptureInterface->get_ConfigParam(PRE_EXPOSE_DELAY, &param);
-    m_pre_expose_delay = param;
-    m_LCCaptureInterface->get_ConfigParam(SHUTTER_DELAY, &param);
-    m_shutter_close_delay = (int)param;
-
-    //m_CaptureInterface->Status_TransToHost();
-
-  }
-}
-
-
-long DirectElectronCamera::getValue(int i)
-{
-
-  long param;
-
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    if (m_DE_CLIENT_SERVER) {
-
-    } else
-      m_LCCaptureInterface->get_ConfigParam(i, &param);
-
-  }
-
-  return param;
-}
-
-void DirectElectronCamera::setShutterDelay(int delay)
-{
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-    if (m_DE_CLIENT_SERVER) {
-
-    } else {
-      m_LCCaptureInterface->ConfigParam_TransToHost();
-      m_LCCaptureInterface->put_ConfigParam(SHUTTER_DELAY, delay);
-      m_LCCaptureInterface->ConfigParam_RecAllFromHost();
-    }
-  }
-}
-
-long DirectElectronCamera::getInstrumentModel()
-{
-  return m_instrument_model;
-}
-
-long DirectElectronCamera::getSerialNumber()
-{
-  return m_head_serial;
-}
-
-long DirectElectronCamera::getShutterDelay()
-{
-  return m_shutter_close_delay;
-}
-
-long DirectElectronCamera::getPreExposureDelay()
-{
-
-  long param;
-  CSingleLock slock(&m_mutex);
-
-  if (slock.Lock(1000)) {
-
-    if (m_DE_CLIENT_SERVER) {
-
-    } else {
-      m_LCCaptureInterface->ConfigParam_TransToHost();
-      m_LCCaptureInterface->get_ConfigParam(PRE_EXPOSE_DELAY, &param);
-      m_pre_expose_delay = param;
-    }
-
-  }
-  return m_pre_expose_delay;
-}
-
-float DirectElectronCamera::getCCDSetPoint()
-{
-  return m_ccd_temp_setPoint;
-}
-
-long DirectElectronCamera::getWindowHeaterStatus()
-{
-  return m_window_heater;
-}
-
-
-
-
-int DirectElectronCamera::turnWindowHeaterON()
-{
-  if (m_LCCaptureInterface && !(m_DE_CLIENT_SERVER)) {
-    //read out all the config params
-    m_LCCaptureInterface->ConfigParam_TransToHost();
-    //make sure window heater is on
-    m_LCCaptureInterface->put_ConfigParam(WINDOW_HEATER, 1);
-    //update the camera
-    m_LCCaptureInterface->ConfigParam_RecAllFromHost();
-
-
-    AfxMessageBox("You have turned the window heater ON!");
-
-    return 1;
-
-  } else
-    return 0;
-
-
-}
-
-int DirectElectronCamera::turnWindowHeatherOFF()
-{
-  if (m_LCCaptureInterface && !(m_DE_CLIENT_SERVER)) {
-    //read out all the config params
-    m_LCCaptureInterface->ConfigParam_TransToHost();
-    //make sure window heater is on
-    m_LCCaptureInterface->put_ConfigParam(WINDOW_HEATER, 0);
-    //update the camera
-    m_LCCaptureInterface->ConfigParam_RecAllFromHost();
-
-
-    AfxMessageBox("You have turned the window heater OFF!");
-
-    return 1;
-
-  } else
-    return 0;
-
-}
-
-
-int DirectElectronCamera::turnTEC_ON()
-{
-
-  //trigger the peltier device to turn on.
-  if (m_LCCaptureInterface && !(m_DE_CLIENT_SERVER)) {
-    m_LCCaptureInterface->ExternalRelayTurnOn();
-    AfxMessageBox("You have turned the TEC ON!");
-    return 1;
-  } else
-    return 0;
-}
-
-int DirectElectronCamera::turnTEC_OFF()
-{
-  //trigger the peltier device to turn off.
-  if (m_LCCaptureInterface && !(m_DE_CLIENT_SERVER)) {
-    m_LCCaptureInterface->ExternalRelayTurnOff();
-    AfxMessageBox("You have turned the TEC OFF!");
-    return 1;
-  } else
-    return 0;
-
 }

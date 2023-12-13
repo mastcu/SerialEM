@@ -16,13 +16,6 @@
 ///////////////////////////////////////////////////////////////////
 
 
-// DNM: switch to include fixed tlh until the tlb can be updated properly
-
-#include "soliosfor4000.tlh"
-//#import "SoliosFor4000.tlb" no_namespace named_guids raw_interfaces_only
-#include "fsm_memorylib.tlh"
-//#import "FSM_MEMORYLib.tlb" no_namespace named_guids raw_interfaces_only
-#include "LC1100CamSink.h"
 #include <map>
 
 struct DEPluginFuncs;
@@ -41,56 +34,10 @@ struct LiveThreadData {
   int electronCounting;
 };
 
-
-//This was discovered to be the appropriate origin size for
-//when the camera was in bin 4 mode.  
-#define ORIGIN_X_BIN4 48
-#define ORIGIN_Y_BIN4 0
-
-// The camera only supports binning 2 and 4.  
-// For binning 1 and 2 uses the origin x,y of 50,0.
-#define ORIGIN_X 50
-
-// The following image offsets are based on what was
-// determined and defined in the .dcf file
-// For binning 1 and 2 uses the origin x,y of 50,0.
-#define IMAGE_X_OFFSET 2048
-#define IMAGE_Y_OFFSET 2056
-
-
-// The max size of the chip is
-// 4112 x 4096 but I have rotated it 
-// so the image looks like what you see on the
-// phosphor screen.  Therefore the width and height 
-// are defined as such.
-#define MAX_IMAGE_WIDTH 4096
-#define MAX_IMAGE_HEIGHT 4112
-#define MAX_IMAGE_SIZE (4096*4112)
-
-//Definitions of the registers
-#define PRE_EXP_DELAY 12
-//Definition of attenuation/sensitivity gain setting
-#define ATTENUATION_PARAM 11
-#define DSI_TIME 10
-#define CAMERA_TEMP 0
-#define BACK_PLATE_TEMP 1 
-#define CAMERA_PRESSURE 3
-
-//shutter close delay
-#define SHUTTER_DELAY 11
-#define WINDOW_HEATER 18
-#define INSRUMENT_MODEL 0
-#define SERIAL_HEAD 1
-#define SHUTTER_CLOSE_DELAY 11
-#define PRE_EXPOSE_DELAY 12
-#define CCD_TEMP_SETPOINT 14
-
 // Defines for normal, gain, and dark; gain does not work in a call to set mode
 #define DE_GAIN_IMAGE 2
 #define DE_DARK_IMAGE 1
 #define DE_NORMAL_IMAGE 0
-#define DE_COOL_DOWN 1
-#define DE_WARM_UP 0
 
 // Strings needed in multiple places
 #define DE_LCNAME "LC1100"
@@ -120,12 +67,6 @@ struct LiveThreadData {
 #define DE_DETECTOR_TEMP_IS_INT 205380000
 #define DE_AUTOSAVE_RENAMES2    207000000
 
-//The following define the different
-//gain/dsi setting modes for the LC1100
-#define MODE_0 0
-#define MODE_1 1
-#define MODE_2 2
-
 #include "afxmt.h"
 
 class DirectElectronCamera
@@ -134,39 +75,19 @@ public:
 	DirectElectronCamera(int camType,int index);
 	~DirectElectronCamera(void);
 	int initialize(CString camName, int camIndex);
-	int readCameraProperties();
-	void readinTempandPressure();
 	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
 	int AcquireImage(float seconds);
 	int AcquireDarkImage(float seconds);
 	void StopAcquistion();
 	int setPreExposureTime(double preExpSeconds);
 	bool isImageAcquistionDone();
-	unsigned short* getImageData();
-	int setOrigin(int x, int y);
-	int reAllocateMemory(int mem);
 	int setDebugMode();
 	int unInitialize();
 	int copyImageData(unsigned short *image4k, long &ImageSizeX, long &ImageSizeY, 
     int divideBy2);
 	float getCameraTemp();
-	float getCameraBackplateTemp();
-	int getCameraPressure();
-	void setGainSetting(short index);
-	long getInstrumentModel();
-    long getSerialNumber();
-    long getShutterDelay();
-    long getPreExposureDelay();
-    float getCCDSetPoint();
-    long getWindowHeaterStatus();
-	void setShutterDelay(int delay);
-	long getValue(int i);
-	int turnWindowHeaterON();
-	int turnWindowHeatherOFF();
-	int turnTEC_ON();
-	int turnTEC_OFF();
 
-	//functions below added for DE12 and future
+  //functions below added for DE12 and future
 	int initDEServer();
 	int initializeDECamera(CString camName, int camIndex);
   void FinishCameraSelection(bool initialCall, CameraParameters *camP);
@@ -251,9 +172,6 @@ private:
 	//DE properties
 	//added for client/server model.
   DEPluginFuncs *mDeServer;
-	ICameraCtrl *m_LCCaptureInterface;
-	IFSM_MemoryObject *m_FSMObject;
-	CLC1100CamSink* m_sink;
 
 	int m_camera_port_number;
 	float m_camera_Temperature;

@@ -2579,40 +2579,6 @@ BEGIN
     PUSHBUTTON      "Previous",IDC_BUTPREVSEC,77,17,33,12
 END
 
-IDD_DirectElectronDialog DIALOGEX 0, 0, 270, 185
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Direct Electron Camera Panel"
-FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
-BEGIN
-    GROUPBOX        "Gain/Attenuation",IDC_GainGroupBox,7,7,84,42
-    GROUPBOX        "Camera Attributes",IDC_CameraAttGroup,98,7,145,53
-    LTEXT           "Camera Temp(C):",IDC_STATIC,104,16,52,8
-    LTEXT           "BackPlate Temp(C):",IDC_STATIC,104,31,58,8
-    LTEXT           "Pressure:",IDC_STATIC,104,44,29,8
-    LTEXT           "0",IDC_CAMTEMP,164,15,30,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP,165,30,37,12
-    LTEXT           "0",IDC_CAMPRESSURE,137,44,38,12
-    COMBOBOX        IDC_AttenCombo,17,19,43,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Config Parameters",IDC_STATIC,7,88,222,53
-    LTEXT           "Inst Model: ",IDC_STATIC,13,99,35,8
-    LTEXT           "Head Serial: ",IDC_STATIC,13,112,38,8
-    LTEXT           "Shutter Close Delay(ms): ",IDC_STATIC,13,127,75,8
-    LTEXT           "Pre-Exposure Delay(ms): ",IDC_STATIC,122,99,75,8
-    LTEXT           "CCD Temp SetPoint(C):  ",IDC_STATIC,121,113,72,8
-    LTEXT           "Window Heater:  ",IDC_STATIC,122,127,52,8
-    LTEXT           "0",IDC_INST_MODEL,52,99,47,8
-    LTEXT           "0",IDC_HEAD_SERIAL,52,113,47,8
-    LTEXT           "0",IDC_Shutter_Delay,91,127,26,8
-    LTEXT           "0",IDC_PreExposureDelay,197,99,24,8
-    LTEXT           "0",IDC_CCDSetPoint,193,114,26,8
-    LTEXT           "0",IDC_WindowHeater,174,128,34,8
-    LTEXT           "0",IDC_TIME_STAMP,7,160,179,18
-    LTEXT           "Shutter Close Delay (ms):",IDC_STATIC,7,72,75,8
-    EDITTEXT        IDC_ShutterCloseEdit,85,68,45,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Set",IDC_ShutterSetButton,135,68,33,14
-    PUSHBUTTON      "Read Values",IDC_ReadPressure,173,68,63,14
-END
-
 IDD_TSRANGE DIALOGEX 0, 0, 169, 188
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Range Finder"
@@ -4302,13 +4268,6 @@ BEGIN
         BOTTOMMARGIN, 44
     END
 
-    IDD_DirectElectronDialog, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 178
-    END
-
     IDD_TSRANGE, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -4631,17 +4590,6 @@ BEGIN
 0x6956, 0x6c6f, 0x7465, "\000" 
     IDC_COMBOCOLOR, 0x403, 8, 0
 0x614d, 0x6567, 0x746e, 0x0061, 
-    0
-END
-
-IDD_DirectElectronDialog DLGINIT
-BEGIN
-    IDC_AttenCombo, 0x403, 7, 0
-0x6f4d, 0x6564, 0x3120, "\000" 
-    IDC_AttenCombo, 0x403, 7, 0
-0x6f4d, 0x6564, 0x3220, "\000" 
-    IDC_AttenCombo, 0x403, 7, 0
-0x6f4d, 0x6564, 0x3320, "\000" 
     0
 END
 

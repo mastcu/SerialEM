@@ -77,9 +77,6 @@
     <ClInclude Include="DirectElectron\DirectElectronCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirectElectron\DirectElectronCamPanel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DirectElectron\DirectElectronToolDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -183,9 +180,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Image\KStoreMRC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectElectron\LC1100CamSink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LogWindow.h">
@@ -936,9 +930,6 @@
     <ClCompile Include="DirectElectron\DirectElectronCamera.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectElectron\DirectElectronCamPanel.cpp">
-      <Filter>CSource Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronToolDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
@@ -1030,9 +1021,6 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="Image\KStoreMRC.cpp">
-      <Filter>CSource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectElectron\LC1100CamSink.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="LogWindow.cpp">

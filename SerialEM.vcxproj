@@ -963,7 +963,6 @@
     <ClInclude Include="CookerSetupDlg.h" />
     <ClInclude Include="Shared\CorrectDefects.h" />
     <ClInclude Include="DirectElectron\DirectElectronCamera.h" />
-    <ClInclude Include="DirectElectron\DirectElectronCamPanel.h" />
     <ClInclude Include="DirectElectron\DirectElectronToolDlg.h" />
     <ClInclude Include="DistortionTasks.h" />
     <ClInclude Include="DoseMeter.h" />
@@ -1000,7 +999,6 @@
     <ClInclude Include="Image\KStoreADOC.h" />
     <ClInclude Include="Image\KStoreIMOD.h" />
     <ClInclude Include="Image\KStoreMRC.h" />
-    <ClInclude Include="DirectElectron\LC1100CamSink.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="LowDoseDlg.h" />
     <ClInclude Include="MacroControl.h" />
@@ -2071,8 +2069,6 @@ echo.
     </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronCamera.cpp">
     </ClCompile>
-    <ClCompile Include="DirectElectron\DirectElectronCamPanel.cpp">
-    </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronToolDlg.cpp">
     </ClCompile>
     <ClCompile Include="DistortionTasks.cpp">
@@ -2600,7 +2596,6 @@ echo.
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="DirectElectron\LC1100CamSink.cpp" />
     <ClCompile Include="LogWindow.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">Disabled</Optimization>

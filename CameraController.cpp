@@ -35,7 +35,6 @@
 #include "Utilities\SEMUtilities.h"
 #include "Image\KStoreADOC.h"
 #include "DirectElectron\DirectElectronCamera.h"
-#include "DirectElectron\DirectElectronCamPanel.h"
 #include "GatanSocket.h"
 #include <mmsystem.h>
 #include "Shared\b3dutil.h"

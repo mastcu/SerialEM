@@ -46,7 +46,6 @@
 #define IDD_COOKSETUP                   184
 #define IDD_AUTOCENSETUP                185
 #define IDD_READFILEDLG                 189
-#define IDD_DirectElectronDialog        190
 #define IDD_TSRANGE                     193
 #define IDD_TSSETANGLE                  194
 #define IDD_NAVFILETYPE                 196
@@ -679,8 +678,6 @@
 #define IDC_STATCAMNAME                 1633
 #define IDC_BUTNEXTSEC                  1634
 #define IDC_BUTPREVSEC                  1635
-#define IDC_GainGroupBox                1636
-#define IDC_CameraAttGroup              1637
 #define IDC_CAMTEMP                     1638
 #define IDC_CAMBACKPLATETEMP            1639
 #define IDC_CAMPRESSURE                 1640
@@ -692,10 +689,7 @@
 #define IDC_WindowHeater                1646
 #define IDC_TIME_STAMP                  1647
 #define IDC_HEAD_SERIAL                 1648
-#define IDC_ShutterSetButton            1649
-#define IDC_ShutterCloseEdit            1650
 #define IDC_ShutterBoxEdit              1651
-#define IDC_ReadPressure                1652
 #define IDC_CHILLERFLOW                 1653
 #define IDC_CHECK_OVERLAY               1655
 #define IDC_EDIT_OVERLAY                1656
