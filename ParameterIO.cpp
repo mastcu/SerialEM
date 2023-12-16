@@ -2655,7 +2655,7 @@ void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams,
 void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
   std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
 {
-  CStdioFile *file;
+  CStdioFile *file = NULL;
   int err = 0, type, ind, space;
   int numInTable = sizeof(sDisableHideList) / sizeof(DisableHideItem);
   CString strLine, tag, mess = "Error opening", unknown;
