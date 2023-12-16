@@ -3222,7 +3222,7 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal)
       numTotal = 5;
     }
   }
-  if (!MultipleHolesAreSelected() || !xnum || !ynum)
+  if (!MultipleHolesAreSelected())
     numTotal = 1;
   return xnum != 0 && ynum != 0;
 }

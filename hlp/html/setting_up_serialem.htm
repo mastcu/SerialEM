@@ -273,16 +273,23 @@
         See this section also for instructions on modifications needed under Windows 7/Server
         2008
         and with GMS 2.x.</P>
-      <p><a name="addedPackages"><I>Additional Packages for GPU
+      <p><a name="addedPackages"><I>Additional Packages for Windows XP, GPU
           and Python Support, and for Displaying  General and Ctfplotter Graphs</I></a>.&nbsp;
     Depending on your situation, you may need one or more other packages.</P>
       <ul>
-        <li>&nbsp;If
+        <li>SerialEM will run directly on a scope computer running Windows XP SP3 and may 
+          also work under SP1 or SP2, but to do so requires a Visual Studio 2015 
+          Redistributables package no newer than the one provided on the SerialEM download 
+          site (<em>not</em> 
+          the latest available such package).&nbsp; You will need to install SerialEM on a 
+          separate computer if it does not work on XP SP1 or SP2, or if the scope is 
+          Windows 2000.</li>
+        <li>If
       you are running a K2 or K3 camera and SerialEM is either running on a different
       computer or is a 32-bit version on the K2/3 computer, then you need a
       Shrmemframe package specific to your version of GMS.&nbsp; Simply run this
       package on the K2/3 computer and it will place the needed files in
-      C:\ProgramData\Gatan\Plugins.  </li>
+      C:\ProgramData\Gatan\Plugins. </li>
         <li>To do frame alignment with a GPU for any camera,
       you will need a FrameGPU package.&nbsp;  See <a href="#using_gpu">Setting Up to
       Use a GPU for Frame Alignment</a>.</li>
@@ -2388,31 +2395,26 @@
         GraphPreStoredValues script commands to make graphs that are much easier to 
         interpret.)&nbsp; Places where there is 
         a consistent change of more than ~2% should have an image shift boundary 
-        specified.&nbsp; For example, here is a vector listing using calibrated pixel sizes 
-        and rotations where available: </P>
+        specified.&nbsp; For example, here is a vector listing from a Talos Arctica using calibrated pixel sizes 
+        and rotations: </P>
       <pre>
-   17    1250        0.998          0.997      -25.7        65.6
-  18    1600        0.997          0.995      -25.7        65.6
-  19    2000        0.999          0.997      -25.7        65.6
-  20    2600        1.104          1.094      -27.1        63.7
-  21    3400        1.105          1.095      -27.1        63.7
-  22    4300        1.102          1.094      -27.1        63.7
-  23    5300        1.028          1.017      -31.7        59.3
-  24    6700        1.098          1.090      -30.9        60.0
-  25    8500        1.099          1.093      -31.2        59.7
-  26   11000        1.097          1.091      -31.4        59.5 
+   17    1250        1.001          1.016      -28.6        60.2
+  18    1600        0.991          1.008      -28.7        60.3
+  19    2000        0.991          1.008      -28.8        60.4
+  20    2600        1.086          1.096      -30.8        59.1
+  21    3400        1.084          1.096      -30.8        59.2
+  22    4300        1.084          1.098      -30.8        59.2
       </pre>
 
-      <P>There are discontinuities between indexes 19 and 20, and from 22 to 24.&nbsp;&nbsp; 
+      <P>There is a significant discontinuity between indexes 19 and 20.&nbsp;&nbsp; 
         The index to specify is the one <em>above</em> the discontinuity; thus 20 
-        instead of 19 here.&nbsp; Where there is one magnification out of line with the 
-        ones above and below, two indexes are required; thus both 23 and 24 and not just 23 
-        here.&nbsp; The latter case should be treated as a boundary only after seeing if 
-        the magnification is still off in a vector listing based on the nominal 
-        magnifications and carefully 
-        checking both the image shift calibration and the pixel size for the aberrant 
-        magnification.&nbsp; The line needed in the properties file would be:<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;OtherShiftBoundaries 20 23 24
+        instead of 19 here.&nbsp; &nbsp; The line needed in the properties file would be:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;OtherShiftBoundaries 20
+        <br />If there is one magnification out of line with the 
+        ones above and below, two indexes would be required.&nbsp; Such a case should be treated as
+         a boundary only after seeing if the magnification is still off in a vector listing based on the nominal 
+        magnifications and carefully checking both the image shift calibration and the pixel size for the aberrant 
+        magnification.
       </P>
       <P><a name="isAlignImages"><B><I>Measuring further relative rotations and pixel sizes by aligning images:</I></B></a>
         This procedure is needed only under the two circumstance described above.&nbsp; Open a copy
