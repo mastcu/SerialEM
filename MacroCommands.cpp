@@ -1144,6 +1144,7 @@ int CMacCmd::PythonScript(void)
     startLine);
   if (err > 0) {
     AbortMacro();
+    return err;
   }
   if (!err)
     ABORT_NOLINE("Did not find #!Python after a PythonScript line");
