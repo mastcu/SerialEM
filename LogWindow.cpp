@@ -43,6 +43,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mMaxLinesToDefer = 500;
   mMaxSecondsToDefer = 3.;
   mPrunedLength = 0;
+  mAppendedLength = 0;
 }
 
 
@@ -438,16 +439,6 @@ int CLogWindow::ReadAndAppend()
 
 int CLogWindow::AskIfSave(CString strReason)
 {
-  CString tracePref;
-  if (strReason == "exiting?" && mWinApp->mNavigator && 
-    mWinApp->mNavigator->GetAcquiring()) {
-    tracePref = "The following backtrace is to help track down how this function"
-      " gets called erroneously.\r\n  If you did not intend to exit SerialEM, please"
-      " send this log to David.  This is NOT a crash.";
-    AddBackTraceToMessage(tracePref);
-    Append(tracePref, 0);
-  }
-
   if (!mUnsaved)
     return 0;
 
