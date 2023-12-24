@@ -3142,18 +3142,6 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("RelativeGainFactors")) {
             StoreFloatsPerBinning(strItems, "gain factor", iset, strFileName,
               camP->gainFactor);
-          } else if (MatchNoCase("OneViewMinExposures")) {
-            StoreFloatsPerBinning(strItems, "OneView minimum exposure", -1, strFileName,
-              camera->GetOneViewMinExposure(0));
-          } else if (MatchNoCase("OneViewDeltaExposures")) {
-            StoreFloatsPerBinning(strItems, "OneView exposure increment", -1, strFileName,
-              camera->GetOneViewDeltaExposure(0));
-          } else if (MatchNoCase("RioMinExposures")) {
-            StoreFloatsPerBinning(strItems, "Rio minimum exposure", -1, strFileName,
-              camera->GetOneViewMinExposure(1));
-          } else if (MatchNoCase("RioDeltaExposures")) {
-            StoreFloatsPerBinning(strItems, "Rio exposure increment", -1, strFileName,
-              camera->GetOneViewDeltaExposure(1));
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
 
@@ -3360,6 +3348,33 @@ int CParameterIO::ReadProperties(CString strFileName)
         camera->SetDarkMaxMeanCrit(itemFlt[1]);
         if (!itemEmpty[2])
           camera->SetDarkMaxSDcrit(itemFlt[2]);
+      } else if (MatchNoCase("OneViewMinExposures")) {
+        StoreFloatsPerBinning(strItems, "OneView minimum exposure", -1, strFileName,
+          camera->GetOneViewMinExposure(0));
+      } else if (MatchNoCase("OneViewDeltaExposures")) {
+        StoreFloatsPerBinning(strItems, "OneView exposure increment", -1, strFileName,
+          camera->GetOneViewDeltaExposure(0));
+      } else if (MatchNoCase("RioMinExposures")) {
+        StoreFloatsPerBinning(strItems, "Rio minimum exposure", -1, strFileName,
+          camera->GetOneViewMinExposure(1));
+      } else if (MatchNoCase("RioDeltaExposures")) {
+        StoreFloatsPerBinning(strItems, "Rio exposure increment", -1, strFileName,
+          camera->GetOneViewDeltaExposure(1));
+      } else if (MatchNoCase("OneViewLikeMinExposures") ||
+        MatchNoCase("OneViewLikeDeltaExposures")) {
+        index = itemInt[1];
+        if (index < 1 || index > MAX_1VIEW_TYPES) {
+          message.Format("OneView type value of %d is out of range in %s entry\n"
+            "in properties file %s", index, strItems[0], strFileName);
+          AfxMessageBox(message, MB_EXCLAME);
+        } else {
+          if (MatchNoCase("OneViewLikeMinExposures"))
+            StoreFloatsPerBinning(&strItems[1], "OneView-like minimum exposure", -1,
+              strFileName, camera->GetOneViewMinExposure(index - 1));
+          else
+            StoreFloatsPerBinning(&strItems[1], "OneView-like exposure increment", -1,
+              strFileName, camera->GetOneViewDeltaExposure(index - 1));
+        }
       } else if (MatchNoCase("K2FilterName")) {
         ind = camera->GetNumK2Filters();
         if (ind < MAX_K2_FILTERS && ind > 0) {

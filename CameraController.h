@@ -33,7 +33,7 @@ class CCEOSFilter;
 #define MAX_IGNORE_GATAN 10
 #define MAX_K2_FILTERS  8
 #define MAX_FILTER_NAME_LEN 64
-#define MAX_1VIEW_TYPES   5
+#define MAX_1VIEW_TYPES   6
 #define DARK_REFERENCE  0
 #define GAIN_REFERENCE  1
 #define NEW_GAIN_REFERENCE 2
@@ -122,6 +122,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 // There is a K3 variant that is 3456 x 3456; this is midway between Alpine and that
 #define IS_ALPINE(p) (p->K2Type == K3_TYPE && p->sizeX * p->sizeY < 4 * 9600000)
 #define METRO_TYPE  5
+#define CLEARVIEW_TYPE 6
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)

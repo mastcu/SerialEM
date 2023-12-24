@@ -357,9 +357,14 @@ CCameraController::CCameraController()
   mOneViewMinExposure[4][1] = 0.00609f;
   mOneViewMinExposure[4][2] = mOneViewMinExposure[4][3] = 0.00203f;
 
+  // ClearView
+  mOneViewMinExposure[5][0] = 0.02f;
+  mOneViewMinExposure[5][2] = mOneViewMinExposure[5][3] = mOneViewMinExposure[5][3] = 
+    0.005f;
+
   for (l = 1; l < MAX_1VIEW_TYPES; l++) {
     mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
-      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 
+      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] =
       (l == METRO_TYPE - 1) ? 0.00203f : 0.001f;
   }
   for (l = 4; l < MAX_BINNINGS; l++) {
@@ -755,7 +760,7 @@ int CCameraController::Initialize(int whichCameras)
       }
       if (param->OneViewType) {
         mNeedsReadMode[DMind] = true;
-        if (param->OneViewType != METRO_TYPE) {
+        if (param->OneViewType != METRO_TYPE  && param->OneViewType != CLEARVIEW_TYPE) {
           B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
           if (param->OneViewType > 1) {
             if (param->sizeX > 3500 && param->sizeY > 3500)
@@ -3565,7 +3570,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->OneViewType == METRO_TYPE)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -22 : -21;
   else if (mParam->OneViewType)
-    mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
+    mTD.GatanReadMode = (conSet.K2ReadMode != 0 && mParam->OneViewType != CLEARVIEW_TYPE) 
+    ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
   if (mTD.GatanReadMode == 0) {
     mTD.CountScaling = mParam->K2Type == K2_BASE ? mK2BaseModeScaling : 1.;
@@ -6647,7 +6653,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     }
 
     // UNVERIFIED: constraints are times 4 for diffraction mode
-    if (readMode > 0) {
+    if (readMode > 0 && ovInd != CLEARVIEW_TYPE - 1) {
       baseTime *= 4;
       minExp *= 4;
     }
