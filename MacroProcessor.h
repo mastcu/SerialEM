@@ -507,7 +507,7 @@ public:
   int EvaluateIfStatement(CString * strItems, int maxItems, CString line, BOOL &truth);
   int EvaluateBooleanClause(CString * strItems, int maxItems, CString line, BOOL &truth);
   void ReplaceWithResult(double result, CString * strItems, int index, int & numItems,
-    int numDrop);
+    int numDrop, CString format = "");
   void OpenMacroToolbar(void);
   void SetComplexPane(void);
   WINDOWPLACEMENT *FindEditerPlacement(int index);

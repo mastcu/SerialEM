@@ -493,6 +493,20 @@
           Fractional difference between two numbers: absolute value of difference divided 
           by maximum of the two absolute values</td>
       </tr>
+      <tr>
+        <td class="style3" colspan="2">
+          Output formatting function</td>
+        <td class="style4">
+          The first entry is a C-style formatting string ending in one of d, e, E, f, g, G, x or X; the 
+          second entry is a value to be formatted the given way.&nbsp; For floating formats, the 
+          string can have the form 'w.pc', where 'w' is the minimum field width, 'p' is the 
+          precision (number of decimal places, or number of digits for g or G), and 'c' is the conversion
+           letter (e, E, f, g, or G).&nbsp; 'w' and 'p' are both optional; the string can be 'wc', '.pc', 
+          or just 'c'.&nbsp; For integer formats (d, x, or X), the allowed form is 'wc'.&nbsp; A leading 0 
+          will give a string zero-padded on the left (e.g., 03d will output 3 digit numbers for making
+          filenames that list sequentially).&nbsp;  Function added in 4.2, 12/15/23.
+        </td>
+      </tr>
     </table>
     <P>
       As of SerialEM 3.7, arithmetic expressions can be used in a wide 

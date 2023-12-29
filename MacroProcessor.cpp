@@ -177,7 +177,7 @@ CMacroProcessor::CMacroProcessor()
   std::string tmpOp1[] = { "SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT",
     "LOG", "LOG10", "EXP" };
   std::string tmpOp2[] = { "ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS",
-    "FRACDIFF", "MIN", "MAX" };
+    "FRACDIFF", "MIN", "MAX", "FORMAT" };
   std::string keywords[] = { "REPEAT", "ENDLOOP", "DOMACRO", "LOOP", "CALLMACRO", "DOLOOP"
     , "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
     "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT",
@@ -3044,10 +3044,14 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
 int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems, 
                                               CString line, int &numItems)
 {
-  int ind, loop;
+  int ind, dig, loop;
   double left, right, result = 0.;
   CString str, *strp;
   std::string stdstr;
+  bool isFormat, gotDec = false;
+  CString format = "";
+  char conv;
+  CString allowedConv = "d f g G e E x X";
   numItems = 0;
   for (ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++)
     numItems++;
@@ -3108,6 +3112,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
   for (ind = 0; ind < numItems; ind++) {
     str = strItems[ind];
     str.MakeUpper();
+    isFormat = str == "FORMAT";
 
     // First process items without arguments
     if (str == "RAND") {
@@ -3150,7 +3155,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = exp(right);
       ReplaceWithResult(result, strItems, ind, numItems, 1);
     } else if (mFunctionSet2.count(stdstr) > 0) {
-      if (ItemToDouble(strItems[ind + 1], line, left) ||
+      if ((!isFormat && ItemToDouble(strItems[ind + 1], line, left)) ||
         ItemToDouble(strItems[ind + 2], line, right))
         return 1;
       if (str == "ATAN2")
@@ -3179,7 +3184,39 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = B3DMIN(left, right);
       else if (str == "MAX")
         result = B3DMAX(left, right);
-      ReplaceWithResult(result, strItems, ind, numItems, 2);
+      else if (isFormat) {
+        format = strItems[ind + 1];
+        conv = format.GetAt(format.GetLength() - 1);
+        if (allowedConv.Find(conv) < 0) {
+          SEMMessageBox("The format string " + format + " does not end in one of: " + 
+            allowedConv);
+          return 1;
+        }
+        for (dig = 0; dig < format.GetLength() - 1; dig++) {
+          char let = format.GetAt(dig);
+          if (let == '.') {
+            if (gotDec) {
+              SEMMessageBox("The format string " + format +
+                " has more than one decimal point");
+              return 1;
+            }
+            if (conv == 'x' || conv == 'X' || conv == 'd') {
+              SEMMessageBox("The format string " + format +
+                " for integer conversion should not have a decimal point");
+              return 1;
+            }
+            gotDec = true;
+
+          } else if (let < '0' || let > '9') {
+            SEMMessageBox("The format string " + format + 
+              " has a non-numeric character before the end");
+            return 1;
+          }
+        }
+        format = "%" + format;
+        result = right;
+      }
+      ReplaceWithResult(result, strItems, ind, numItems, 2, format);
     }
   }
   return 0;
@@ -3391,10 +3428,19 @@ BOOL CMacroProcessor::ItemToDouble(CString str, CString line, double & value)
 // Replace the item at index in the array of items with text for the result value
 // and shift the remainder of the items down as needed (by 1 or 2)
 void CMacroProcessor::ReplaceWithResult(double result, CString * strItems, int index,
-                                        int & numItems, int numDrop)
+                                        int & numItems, int numDrop, CString format)
 {
-  strItems[index].Format("%f", result);
-  UtilTrimTrailingZeros(strItems[index]);
+  char conv;
+  if (format.IsEmpty()) {
+    strItems[index].Format("%f", result);
+    UtilTrimTrailingZeros(strItems[index]);
+  } else {
+    conv = format.GetAt(format.GetLength() - 1);
+    if (conv == 'x' || conv == 'X' || conv == 'd')
+      strItems[index].Format(format, B3DNINT(result));
+    else
+      strItems[index].Format(format, result);
+  }
   numItems -= numDrop;
   for (int lr = index + 1; lr < numItems; lr++)
     strItems[lr] = strItems[lr + numDrop];
