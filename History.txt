@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/28/23: Fixed some uninitialized variables and expected size of saved frames
+when saving a subarea from K2/K3 (In 4.1).
+
+12/28/23: Preventing system path (where calibrations are saved) from being
+changed after startup (In 4.1).
+
+12/24/23: Added basic support for Gatan ClearView (In 4.1).
+
+12/22/23: Fixed Go button in tilt series setup opening Extra Output dialog
+when trying to resume from "postponed" after a stop in batch mode (In 4.1).
+
 12/18/23: SEM_4-1-1
 12/18/23: Fixed messages to save log before closing during batch tilt series
 (In 4.1).

@@ -2062,8 +2062,15 @@ void CSerialEMDoc::SetSystemPath(CString sysPath)
 {
   CString strSys, sub = mWinApp->GetSysSubpath();
   CFileStatus status;
-  mSystemPath = sysPath;
   mSysPathForSettings = sysPath;
+  if (!mWinApp->GetStartingProgram()) {
+    if (sub.IsEmpty() && sysPath != mSystemPath)
+      mWinApp->AppendToLog("WARNING: SystemPath in this settings file, " + sysPath +
+        ",\r\n   differs from the originally set one and these settings may or may not "
+        "\r\n   be appropriate with the current properties and calibrations");
+    return;
+  }
+  mSystemPath = sysPath;
 
   // See if a command line argument can modify the system path; look for properties file
   if (!sub.IsEmpty()) {

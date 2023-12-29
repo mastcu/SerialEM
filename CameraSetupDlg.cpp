@@ -1666,7 +1666,8 @@ void CCameraSetupDlg::ManageCamera()
   m_butCorrDrift_DeHwBin.SetWindowText(mParam->OneViewType ? "Correct drift" : 
     "Use hardware binning");
 
-  m_butUseHwROI_OvDiff.ShowWindow((mParam->OneViewType ||
+  m_butUseHwROI_OvDiff.ShowWindow((
+    (mParam->OneViewType && mParam->OneViewType != CLEARVIEW_TYPE) ||
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
   m_butUseHwROI_OvDiff.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
     "Use Hardware ROI");
@@ -2888,6 +2889,7 @@ void CCameraSetupDlg::OnSaveFrames()
   }
   ManageFalcon4FrameSpec();
   ManageK2Binning();
+  ManageExposure();
   ManageDoseFrac();
   ManageDrift();
   ManageAntialias();

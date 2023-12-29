@@ -975,16 +975,31 @@
         </TR>
         <TR VALIGN="top">
           <TD>RioMinExposures</TD>
-          <TD>Minimum exposure times for Rio camera at each binning, in seconds.&nbsp;
-            The defaults are 0.0667, 0.0667, 0.0667, 0.0667 for 2K Rio;; 0.0667, 0.0167, 0.0167, 0.0167 for
-              3K Rio; and 0.05, 0.0125, 0.0062, 0.0062 for 4K Rio.</TD>
+          <TD>Minimum exposure times for 4K Rio camera at each binning, in seconds.&nbsp;
+            The defaults are 0.05, 0.0125, 0.0062, 0.0062.&nbsp;<b>Use
+                   OneViewLikeMinExposures for 3K and 2K Rio.</b></TD>
         </TR>
         <TR VALIGN="top">
           <TD>RioDeltaExposures</TD>
-          <TD>Allowed increment in exposure times for Rio camera at each binning, in
-            seconds.&nbsp; The defaults are 0.001, 0.001, 0.001, 0.001.</TD>
+          <TD>Allowed increment in exposure times for 4K Rio camera at each binning, in
+            seconds.&nbsp; The defaults are 0.001, 0.001, 0.001, 0.001.&nbsp;<b>Use 
+                OneViewLikeDeltaExposures for 3K and 2K Rio.</b</TD>
         </TR>
          <TR VALIGN="top">
+          <TD>OneViewLikeMinExposures</TD>
+          <TD>Minimum exposure times for any OneView-like camera at each binning, in seconds.&nbsp;<b>Follow
+               with the actual OneViewType value (i.e., 3 for 3K Rio, 4 for 2K Rio) then one or more new values</b>&nbsp;
+            The defaults are 0.0667, 0.0667, 0.0667, 0.0667 for 2K Rio; 0.0667, 0.0167, 0.0167, 0.0167 for
+              3K Rio; 0.05, 0.0125, 0.0062, 0.0062 for 4K Rio, 0.02, 0.005, 0.005 for ClearView, and
+               0.0244, 0.00609, 0.00203, 0.00203 for Metro.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OneViewLikeDeltaExposures</TD>
+          <TD>Allowed increment in exposure times for 4K Rio camera at each binning, in
+            seconds.&nbsp;<b>Follow with the OneViewType value then one or more new values</b>&nbsp; The 
+              defaults are 0.001, 0.001, 0.001, 0.001, or 0.00203 for Metro.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SmoothFocusExtraTime</TD>
           <TD>Set the extra time in millisec for the focus ramp activated by the script
             command SmoothFocusNextShot.&nbsp; The ramp will start prior to the expected
@@ -1517,8 +1532,8 @@
         <TR VALIGN="top">
           <TD>OneViewType</TD>
           <TD>Set to 1 for a OneView camera or 2 for a Rio camera, which will be mapped internally to 3 or 4
-            for different sized cameras.&nbsp; Set to 5 for a Metro camera, which is handled like a 
-            OneView even though it is similar to a K3.</TD>
+            for 3K or 2K cameras.&nbsp; Set to 5 for a Metro camera, which is handled like a 
+            OneView even though it is similar to a K3.&nbsp; Set to 6 for a ClearView camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>

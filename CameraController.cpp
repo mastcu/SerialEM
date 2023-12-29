@@ -356,9 +356,14 @@ CCameraController::CCameraController()
   mOneViewMinExposure[4][1] = 0.00609f;
   mOneViewMinExposure[4][2] = mOneViewMinExposure[4][3] = 0.00203f;
 
+  // ClearView
+  mOneViewMinExposure[5][0] = 0.02f;
+  mOneViewMinExposure[5][2] = mOneViewMinExposure[5][3] = mOneViewMinExposure[5][3] = 
+    0.005f;
+
   for (l = 1; l < MAX_1VIEW_TYPES; l++) {
     mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
-      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 
+      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] =
       (l == METRO_TYPE - 1) ? 0.00203f : 0.001f;
   }
   for (l = 4; l < MAX_BINNINGS; l++) {
@@ -647,7 +652,8 @@ int CCameraController::Initialize(int whichCameras)
   double addedFlyback;
   float ovFrameDivisors[MAX_1VIEW_TYPES][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
-  {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f}};
+  {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f},
+  {0.000625f,0.000625f, 0.000625f}};
   float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
@@ -754,7 +760,7 @@ int CCameraController::Initialize(int whichCameras)
       }
       if (param->OneViewType) {
         mNeedsReadMode[DMind] = true;
-        if (param->OneViewType != METRO_TYPE) {
+        if (param->OneViewType != METRO_TYPE  && param->OneViewType != CLEARVIEW_TYPE) {
           B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
           if (param->OneViewType > 1) {
             if (param->sizeX > 3500 && param->sizeY > 3500)
@@ -797,7 +803,9 @@ int CCameraController::Initialize(int whichCameras)
         if (param->minFrameTime[jnd] <= 0.) {
           if (ovInd >= 0) {
             if (jnd < 4) {
-              if (param->frameTimeDivisor[jnd] < 0.00101f)
+              if (ovInd == CLEARVIEW_TYPE - 1)
+                param->minFrameTime[jnd] = mOneViewMinExposure[ovInd][jnd];
+              else if (param->frameTimeDivisor[jnd] < 0.00101f)
                 param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
               else if (ovInd == METRO_TYPE - 1)
                 param->minFrameTime[jnd] = mOneViewMinExposure[ovInd][jnd];
@@ -1672,6 +1680,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           err = 1;
         }
         mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
+        if (flags & PLUGFLAG_FLOATS_BY_FLAG)
+          mAllParams[i].CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
         if (flags & PLUGFLAG_NO_DIV_BY_2)
           mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
         if (flags & PLUGFLAG_SINGLE_OK_IF_SAVE)
@@ -3564,7 +3574,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->OneViewType == METRO_TYPE)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -22 : -21;
   else if (mParam->OneViewType)
-    mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
+    mTD.GatanReadMode = (conSet.K2ReadMode != 0 && mParam->OneViewType != CLEARVIEW_TYPE) 
+    ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
   if (mTD.GatanReadMode == 0) {
     mTD.CountScaling = mParam->K2Type == K2_BASE ? mK2BaseModeScaling : 1.;
@@ -4642,7 +4653,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int nameSize = sdlen + rootlen + tiltLen + 4;
   int stringSize = 4;
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
-  int aliRefLen = 0, aliComLen, dataSize;
+  int aliRefLen = 0, aliComLen = 0, dataSize;
   CString refFile, sumList, tmpStr, aliComName;
   if (K2Type) {
     if (isSuperRes || K2Type == K3_TYPE)
@@ -5347,7 +5358,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if (((mParam->OneViewType && !oneViewTakingFrames) || 
+  if (((mParam->OneViewType && mParam->OneViewType != CLEARVIEW_TYPE &&
+    !oneViewTakingFrames) || 
     (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
     !(mParam->coordsModulo && mParam->moduloX && mParam->moduloX % 32 == 0 && 
     mParam->moduloY && mParam->moduloY % 16 == 0)))
@@ -6495,8 +6507,8 @@ bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX,
     (param->cropFullSizeImages == 1 && !fastContinuous && flatFielding) ||
     (param->cropFullSizeImages == 2 && !fastContinuous) ||
     (param->cropFullSizeImages == 3 && flatFielding));
-    ySizeOnChip = 0;
-  if (subarea && !crop)
+  ySizeOnChip = 0;
+  if (param->TietzType && subarea && !crop)
     ySizeOnChip = TIETZ_ROTATING(param) ? ubSizeX : ubSizeY;
   return crop;
 }
@@ -6646,7 +6658,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     }
 
     // UNVERIFIED: constraints are times 4 for diffraction mode
-    if (readMode > 0) {
+    if (readMode > 0 && ovInd != CLEARVIEW_TYPE - 1) {
       baseTime *= 4;
       minExp *= 4;
     }
@@ -12415,7 +12427,7 @@ bool CCameraController::NoSubareasForDoseFrac(CameraParameters *param,
   return ((mParam->K2Type &&
     (GetPluginVersion(param) < PLUGIN_CAN_SAVE_SUBAREAS ||
     (alignFrames && !useFrameAlign && param->K2Type != K3_TYPE))) ||
-      (param->GatanCam && param->canTakeFrames));
+      (param->GatanCam && param->canTakeFrames && param->OneViewType != CLEARVIEW_TYPE));
 }
 
 // Restore Gatan camera orientations on exit if necessary
