@@ -3777,8 +3777,8 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   frameTime = mVaryFrameTime ? setValues[TS_VARY_FRAME_TIME] : recSet->frameTime;
   if (mCamParams->K2Type)
     SEMTrace('1', "Frame time for constraint is %.4f", frameTime);
-  mCamera->CropTietzSubarea(mCamParams, recSet->right - recSet->left,
-    recSet->bottom - recSet->top, recSet->processing, recSet->mode, special);
+  mCamera->CropTietzSubarea(mCamParams, recSet->right, recSet->left,
+    recSet->bottom, recSet->top, recSet->processing, recSet->mode, special);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
     recSet->binning, mCamera->MakeAlignSaveFlags(recSet),
     mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, special, 

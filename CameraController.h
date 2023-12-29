@@ -71,6 +71,7 @@ class CCEOSFilter;
 #define PLUGIN_EXTRA_DIV_FLOATS  116
 #define PLUGIN_RETURNS_FISE_SUMS 117
 #define PLUGIN_CAN_SAVE_SUBAREAS 118
+#define PLUGIN_CAN_SET_EXPOSURE  119
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -426,6 +427,7 @@ public:
   GetSetMember(float, K3CDSLinearRatio);
   float GetMinK2FrameTime(CameraParameters *param, int binning = 0, int special = 0);
   float GetK2ReadoutInterval(CameraParameters *param, int binning = 0, int special = 0);
+  void AdjustClearViewMinForSubarea(CameraParameters *param, int subareaY, float &time);
   float GetFalconFractionDivisor(CameraParameters *param);
   int GetFalconRawSumSize(CameraParameters *param);
   CString *GetK2FilterNames() { return &mK2FilterNames[0]; };
@@ -1248,7 +1250,7 @@ void ProcessImageOrFrame(short *array, int imageType, int processing, int remove
 bool CanFramealignProcessSubarea(ControlSet *lastConSetp, DarkRef **darkp, DarkRef **gainp);
 void DeleteOneReference(int index);
 int CheckFrameStacking(bool updateIfDone, bool testIfStacking);
-bool CropTietzSubarea(CameraParameters *param, int ubSizeX, int ubSizeY, int processing,
+bool CropTietzSubarea(CameraParameters *param, int right, int left, int bottom, int top, int processing,
   int singleContinMode, int &ySizeOnChip);
 void CleanUpFromTiltSums(void);
 BOOL GetTiltSumProperties(int &index, int &numFrames, float &angle, int &firstFrame, int &lastFrame);

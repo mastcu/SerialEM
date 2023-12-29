@@ -794,6 +794,8 @@ void CCameraSetupDlg::ManageBinnedSize()
   str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
     sizeY * pixel, pixel * 1000.);
   SetDlgItemText(IDC_STATMICRON, str);
+  if (mParam->OneViewType == CLEARVIEW_TYPE)
+    ManageExposure();
 }
 
 // Returns either the currented mag index or the one for current camera and set
@@ -896,8 +898,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
     mCurSet->useFrameAlign = 0;
   m_fFrameTime = mCurSet->frameTime;
   if (mParam->K2Type || mParam->canTakeFrames || mFEItype == FALCON4_TYPE) {
-    mCamera->CropTietzSubarea(mParam, mCurSet->right - mCurSet->left,
-      mCurSet->bottom - mCurSet->top, mCurSet->processing, mCurSet->mode, special);
+    mCamera->CropTietzSubarea(mParam, mCurSet->right, mCurSet->left,
+      mCurSet->bottom, mCurSet->top, mCurSet->processing, mCurSet->mode, special);
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
       (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
   }
@@ -1236,7 +1238,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   bool saySaving, savingDE = m_bDEsaveMaster || m_bDEalignFrames;
 
   // General call and computations
-  mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+  mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
     m_iProcessing, 1 - m_iContSingle, special);
   BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode,
@@ -2342,7 +2344,7 @@ void CCameraSetupDlg::ManageDose()
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
   float realExp = m_eExposure;
-  mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+  mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
     m_iProcessing, 1 - m_iContSingle, special);
   mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode, mBinnings[m_iBinning],
@@ -2737,7 +2739,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   if (mParam->K2Type || mParam->canTakeFrames || 
     mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
       mCurSet->useFrameAlign, m_iK2Mode)) {
-    mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+    mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
       m_iProcessing, 1 - m_iContSingle, special);
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam, mParam->binnings[m_iBinning],
       (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special);
@@ -3191,7 +3193,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if ((mParam->K2Type || mParam->canTakeFrames) && m_bDoseFracMode) {
-    mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+    mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
       m_iProcessing, 1 - m_iContSingle, special);
     mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
       mParam->OneViewType ? m_bUseHwROI_OvDiff : m_iK2Mode,

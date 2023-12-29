@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    117     // TODO TEMP RAISE TO 118 FOR BETA
+#define SEMCCD_PLUGIN_VERSION    119
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -53,6 +53,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define K3_USE_CORR_DBL_SAMP   (1 << 6)    // 40
 #define K2_MAKE_ALIGN_COM      (1 << 11)   // 800
 #define K2_SAVE_COM_AFTER_MDOC (1 << 13)   // 2000
+#define K2_OVW_SET_EXPOSURE    (1 << 14)   // 4000
 #define K2_REDUCED_Y_SCALE     100000.
 
 // Definitions for camera return types: to be sent with SetK2Parameters flags

@@ -9210,8 +9210,8 @@ int CMacCmd::SetExposureForMean(void)
     // Just adjusting exposure time
     bmean = (float)delISY;
     ix1 = mCamera->DESumCountForConstraints(mCamParams, &mConSets[index]);
-    mCamera->CropTietzSubarea(mCamParams, mConSets[index].right - mConSets[index].left,
-      mConSets[index].bottom - mConSets[index].top, mConSets[index].processing,
+    mCamera->CropTietzSubarea(mCamParams, mConSets[index].right, mConSets[index].left,
+      mConSets[index].bottom, mConSets[index].top, mConSets[index].processing,
       mConSets[index].mode, iy1);
     mCamera->ConstrainExposureTime(mCamParams, mConSets[index].doseFrac,
       mConSets[index].K2ReadMode, mConSets[index].binning,
@@ -9353,8 +9353,8 @@ int CMacCmd::SetFrameTime(void)
   } else {
     mCamSet->frameTime = mItemFlt[2];
   }
-  mCamera->CropTietzSubarea(mCamParams, mCamSet->right - mCamSet->left,
-    mCamSet->bottom - mCamSet->top, mCamSet->processing,
+  mCamera->CropTietzSubarea(mCamParams, mCamSet->right, mCamSet->left,
+    mCamSet->bottom, mCamSet->top, mCamSet->processing,
     mCamSet->mode, iy1);
   mCamera->ConstrainFrameTime(mCamSet->frameTime, mCamParams,
     mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:iy1);

@@ -363,8 +363,9 @@ CCameraController::CCameraController()
 
   for (l = 1; l < MAX_1VIEW_TYPES; l++) {
     mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
-      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] =
-      (l == METRO_TYPE - 1) ? 0.00203f : 0.001f;
+      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 
+      B3DCHOICE(l == METRO_TYPE - 1, 0.00203f, 
+        l == CLEARVIEW_TYPE - 1 ? 0.0005f : 0.001f);
   }
   for (l = 4; l < MAX_BINNINGS; l++) {
     for (k = 0; k < MAX_1VIEW_TYPES; k++) {
@@ -3054,7 +3055,7 @@ int CCameraController::ReplaceFrameTSFocusChange(FloatVec &changes)
 
 void CCameraController::Capture(int inSet, bool retrying)
 {
-  int ind, error, setState, binIndex, sumCount, binDiv;
+  int ind, error, setState, binIndex, sumCount, binDiv, special;
   BOOL bEnsureDark = false;
   CString logmess;
   FrameAliParams faParam;
@@ -3717,7 +3718,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (IS_FALCON2_3_4(mParam) && !weCanAlignFalcon)
     conSet.useFrameAlign = 0;
   mTD.DoseFrac = conSet.doseFrac;
-  B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam), 10.f);
+  CropTietzSubarea(mParam, conSet.right, conSet.left, conSet.bottom, conSet.top, 
+    conSet.processing, conSet.mode, special);
+  B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam, conSet.binning, special), 10.f);
   if ((conSet.doseFrac || (IS_FALCON2_3_4(mParam) && FCAM_ADVANCED(mParam)) || 
     (IS_BASIC_FALCON2(mParam) && weCanAlignFalcon)) && 
     conSet.alignFrames && conSet.useFrameAlign) {
@@ -5197,8 +5200,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     conSet.binning > (superRes ? 1 : 2) && mTD.NumAsyncSumFrames != 0;
   binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
      mAntialiasBinning > 0) || conSet.mode == CONTINUOUS);
-  cropSubarea = CropTietzSubarea(mParam, conSet.right - conSet.left, 
-    conSet.bottom - conSet.top, conSet.processing, conSet.mode, tsizeY);
+  cropSubarea = CropTietzSubarea(mParam, conSet.right, conSet.left, 
+    conSet.bottom, conSet.top, conSet.processing, conSet.mode, tsizeY);
   mapForGeometry = mParam->TietzType && mParam->TietzImageGeometry > 0 && !cropSubarea;
   if (cropSubarea)
     mTD.PluginAcquireFlags |= TIETZ_CROP_SUBAREA;
@@ -5364,6 +5367,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     mParam->moduloY && mParam->moduloY % 16 == 0)))
     && !mParam->subareasBad && (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
     mTD.K2ParamFlags |= K2_OVW_MAKE_SUBAREA;
+
+  // For a ClearView, set flag to set exposure after read area
+  if (mParam->OneViewType == CLEARVIEW_TYPE && CAN_PLUGIN_DO(CAN_SET_EXPOSURE, mParam))
+    mTD.K2ParamFlags |= K2_OVW_SET_EXPOSURE;
 
 }
 
@@ -6487,11 +6494,14 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
 
 // Determine if a subarea is being taken from a Tietz camera and if it should be done
 // by cropping full field; also return Y size on chip if so, for adjusting constraints
-bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX, 
-  int ubSizeY, int processing, int singleContinMode, int &ySizeOnChip)
+// The bizarre order of the coordinates is because it used to get size and the callers
+// all had right - left, bottom - top
+bool CCameraController::CropTietzSubarea(CameraParameters *param, int right, int left, 
+  int bottom, int top, int processing, int singleContinMode, int &ySizeOnChip)
 {
   int sizeX = param->sizeX, sizeY = param->sizeY;
   bool crop, subarea;
+  int ubSizeX = right - left, ubSizeY = bottom - top;
   bool fastContinuous = param->useContinuousMode && singleContinMode == CONTINUOUS;
   bool flatFielding = param->pluginCanProcess &&
     !(mProcessHere && CanProcessHere(param)) && processing == GAIN_NORMALIZED;
@@ -6509,6 +6519,12 @@ bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX,
   ySizeOnChip = 0;
   if (param->TietzType && subarea && !crop)
     ySizeOnChip = TIETZ_ROTATING(param) ? ubSizeX : ubSizeY;
+  if (param->OneViewType == CLEARVIEW_TYPE && subarea && 
+    CAN_PLUGIN_DO(CAN_SET_EXPOSURE, param)) {
+    ubSizeX = 2 * B3DMAX(right - sizeX / 2, sizeX / 2 - left);
+    ubSizeY = 2 * B3DMAX(bottom - sizeY / 2, sizeY / 2 - top);
+    ySizeOnChip = (param->rotationFlip % 2) ? ubSizeX : ubSizeY;
+  }
   return crop;
 }
 
@@ -6550,7 +6566,7 @@ BOOL CCameraController::GetTiltSumProperties(int &index, int &numFrames, float &
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet *consP) 
 {
   int special = 0;
-  CropTietzSubarea(camP, consP->right - consP->left, consP->bottom - consP->top,
+  CropTietzSubarea(camP, consP->right, consP->left, consP->bottom, consP->top,
     consP->processing, consP->mode, special);
   return ConstrainExposureTime(camP, consP->doseFrac > 0, consP->K2ReadMode, 
     consP->binning, MakeAlignSaveFlags(consP), 
@@ -6661,6 +6677,10 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
       baseTime *= 4;
       minExp *= 4;
     }
+    if (ovInd == CLEARVIEW_TYPE - 1) {
+      AdjustClearViewMinForSubarea(camP, special, minExp);
+    }
+
     if (exposure < minExp) {
       exposure = minExp;
       retval = true;
@@ -6744,6 +6764,8 @@ float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
   if (camP->K2Type == K2_BASE || (IS_FALCON2_3_4(camP) && 
     camP->falconVariant != FALCON4I_VARIANT) || mWinApp->mDEToolDlg.HasFrameTime(camP))
     return 200.f;
+  if (camP->OneViewType == CLEARVIEW_TYPE)
+    return 2000.f;
   if (camP->OneViewType || camP->K2Type == K3_TYPE || 
     camP->falconVariant == FALCON4I_VARIANT)
     return 1000.f;
@@ -6859,8 +6881,13 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
-    if (ONEVIEW_NOT_CLEARVIEW(param) && special)
-      time *= 4.f;
+    if (param->OneViewType && special) {
+      if (param->OneViewType == CLEARVIEW_TYPE) {
+        AdjustClearViewMinForSubarea(param, special, time);
+      } else {
+        time *= 4.f;
+      }
+    }
     if (param->TietzType && special) {
       numBlocks = (float)B3DNINT(B3DCHOICE(TIETZ_ROTATING(param), param->sizeX,
         param->sizeY) / 1024.);
@@ -6885,12 +6912,29 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->frameTimeDivisor[0]);
-    if (ONEVIEW_NOT_CLEARVIEW(param) && special)
-      time *= 4.f;
+    if (param->OneViewType && special) {
+      if (param->OneViewType == CLEARVIEW_TYPE)
+        AdjustClearViewMinForSubarea(param, special, time);
+      else
+        time *= 4.f;
+    }
     return time;
   }
   return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mK3ReadoutInterval,
     mK2ReadoutInterval);
+}
+
+// Reduces the given time if there is a subarea in Y being read out (maximum extent from
+// center as determined by CropTietz routine).  Allow gradations by 16ths down to 1/8.
+void CCameraController::AdjustClearViewMinForSubarea(CameraParameters *param, 
+  int subareaY, float &time)
+{
+  if (!subareaY)
+    return;
+  int sizeY = (param->rotationFlip % 2) ? param->sizeX : param->sizeY;
+  int stepSize = (sizeY + 15) / 16;
+  int numSteps = B3DMAX(2, (subareaY + stepSize - 1) / stepSize);
+  time = (float)(time * numSteps / 16.);
 }
 
 float CCameraController::GetFalconFractionDivisor(CameraParameters *param)
