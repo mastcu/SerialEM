@@ -653,7 +653,8 @@ int CCameraController::Initialize(int whichCameras)
   double addedFlyback;
   float ovFrameDivisors[MAX_1VIEW_TYPES][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
-  {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f}};
+  {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f},
+  {0.000625f,0.000625f, 0.000625f}};
   float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
@@ -803,7 +804,9 @@ int CCameraController::Initialize(int whichCameras)
         if (param->minFrameTime[jnd] <= 0.) {
           if (ovInd >= 0) {
             if (jnd < 4) {
-              if (param->frameTimeDivisor[jnd] < 0.00101f)
+              if (ovInd == CLEARVIEW_TYPE - 1)
+                param->minFrameTime[jnd] = mOneViewMinExposure[ovInd][jnd];
+              else if (param->frameTimeDivisor[jnd] < 0.00101f)
                 param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
               else if (ovInd == METRO_TYPE - 1)
                 param->minFrameTime[jnd] = mOneViewMinExposure[ovInd][jnd];
@@ -4649,7 +4652,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int nameSize = sdlen + rootlen + tiltLen + 4;
   int stringSize = 4;
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
-  int aliRefLen = 0, aliComLen, dataSize;
+  int aliRefLen = 0, aliComLen = 0, dataSize;
   CString refFile, sumList, tmpStr, aliComName;
   if (K2Type) {
     if (isSuperRes || K2Type == K3_TYPE)
@@ -5354,7 +5357,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if (((mParam->OneViewType && !oneViewTakingFrames) || 
+  if (((mParam->OneViewType && mParam->OneViewType != CLEARVIEW_TYPE &&
+    !oneViewTakingFrames) || 
     (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
     !(mParam->coordsModulo && mParam->moduloX && mParam->moduloX % 32 == 0 && 
     mParam->moduloY && mParam->moduloY % 16 == 0)))
@@ -6502,8 +6506,8 @@ bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX,
     (param->cropFullSizeImages == 1 && !fastContinuous && flatFielding) ||
     (param->cropFullSizeImages == 2 && !fastContinuous) ||
     (param->cropFullSizeImages == 3 && flatFielding));
-    ySizeOnChip = 0;
-  if (subarea && !crop)
+  ySizeOnChip = 0;
+  if (param->TietzType && subarea && !crop)
     ySizeOnChip = TIETZ_ROTATING(param) ? ubSizeX : ubSizeY;
   return crop;
 }
@@ -12422,7 +12426,7 @@ bool CCameraController::NoSubareasForDoseFrac(CameraParameters *param,
   return ((mParam->K2Type &&
     (GetPluginVersion(param) < PLUGIN_CAN_SAVE_SUBAREAS ||
     (alignFrames && !useFrameAlign && param->K2Type != K3_TYPE))) ||
-      (param->GatanCam && param->canTakeFrames));
+      (param->GatanCam && param->canTakeFrames && param->OneViewType != CLEARVIEW_TYPE));
 }
 
 // Restore Gatan camera orientations on exit if necessary
