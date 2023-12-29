@@ -1898,13 +1898,17 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
 {
   int superResDiv = (IS_SUPERRES(camParams, conSet->K2ReadMode) && 
     !mCamera->IsK3BinningSuperResFrames(conSet, camParams)) ? 1 : 2;
-  BOOL maybeSwap;
+  BOOL maybeSwap = false;
   if (camParams->K2Type) {
     if (!acquiredSize && conSet->processing == GAIN_NORMALIZED && 
       !mCamera->GetSaveUnnormalizedFrames() && mCamera->GetSaveSuperResReduced())
       superResDiv = 2;
     frameX = camParams->sizeX / superResDiv;
     frameY = camParams->sizeY / superResDiv;
+    if (mCamera->GetPluginVersion(camParams) >= PLUGIN_CAN_SAVE_SUBAREAS) {
+      frameX = (conSet->right - conSet->left) / superResDiv;
+      frameY = (conSet->bottom - conSet->top) / superResDiv;
+    }
     maybeSwap = mCamera->GetSkipK2FrameRotFlip();
   } else if (camParams->FEItype) {
     frameX = (conSet->right - conSet->left) / conSet->binning;
@@ -1919,6 +1923,8 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
   } else if (camParams->canTakeFrames) {
     frameX = camParams->sizeX / conSet->binning;
     frameY = camParams->sizeY / conSet->binning;
+    if (camParams->OneViewType)
+      maybeSwap = mCamera->GetSkipK2FrameRotFlip();
   } else {
     superResDiv = SuperResHardwareBinDivisor(camParams, conSet);
     frameX = (camParams->sizeX * 2) / superResDiv;
