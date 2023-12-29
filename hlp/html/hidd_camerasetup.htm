@@ -17,7 +17,7 @@
       ones for Falcon cameras in <a href="#FalconControls">Controls for Thermo/FEI Falcon
       Cameras</a>. The simpler set of options for other cameras that can take frames are described in
       <A href="#FrameControls">Controls for Other Cameras that Can Take Frames
-      (OneView, Rio, Metro, Tietz XF416/Fn16, Ceta 2)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing
+      (OneView, Rio, ClearView, Metro, Tietz XF416/Fn16, Ceta 2)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing
       controls, are described in
       <A HREF="#STEMcontrols">Controls in STEM Mode.</A>
     </P>
@@ -574,9 +574,9 @@
       name subfolders will not be available in the other dialog.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="FrameControls"></A><B><FONT size="3">Controls for Other Cameras that Can Take Frames
-      (OneView, Rio, Metro, Tietz XF416/Fn16, and Ceta 2)</FONT></B></i></P>
-    <P>For a camera capable of taking frames, controls in this section will appear
-      based on an entry in SerialEMproperties.txt: either ones related to saving
+      (OneView, Rio, Clearview, Metro, Tietz XF416/Fn16, and Ceta 2)</FONT></B></i></P>
+    <P>For a camera capable of taking frames, controls in this section will appear 
+      based on the CanTakeFrames entry in SerialEMproperties.txt: either ones related to saving
       frames, or ones related to aligning frames, or both.&nbsp; </P>
     <P><b>Frame Time</b></P>
     <P>The frame time entry is enabled, and becomes relevant, when either saving or
@@ -607,7 +607,7 @@
       specified in the Camera menu, so that their counts match those of the summed
       images.</P>
     <P>When saving frames without aligning them, it may be possible to do other 
-      operations before the saving is completed.&nbsp; For OneView and Rio cameras, 
+      operations before the saving is completed.&nbsp; For OneView, Rio, and ClearView cameras, 
       the situation is the same as for K2/K3 cameras: the &#39;EarlyReturnNextShot&#39; script 
       command can be used to allow other operations to proceed, including single-shot 
       images after the frames are stored in a temporary stack in the SerialEMCCD 
@@ -617,6 +617,9 @@
       plugin passes a flag indicating that is the case.&nbsp; For the Tietz and other 
       plugin-based cameras, a new frame-saving shot can be requested while saving and 
       will start as soon as the saving is done.</P>
+    <P>For OneView and Rio, frames are constrained to be full-sized but can be saved 
+      with the selected binning.&nbsp; For ClearView, subareas can be saved, since 
+      they are taken directly on the camera.</P>
     <P><b>Set File Options</b></P>
     <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
       Options dialog</a>, which allows you to control the names of these files and to
