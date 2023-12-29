@@ -6637,7 +6637,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
     // Generic camera taking frames (including oneview) or Ceta2
     if (ConstrainFrameTime(frameTime, camP, binning, 
-      (ONEVIEW_NOT_CLEARVIEW(camP)) ? readMode : special))
+      ONEVIEW_NOT_CLEARVIEW(camP) ? readMode : special))
       retval = true;
     baseTime = frameTime;
   } else if (camP->OneViewType) {
