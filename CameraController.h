@@ -123,6 +123,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define IS_ALPINE(p) (p->K2Type == K3_TYPE && p->sizeX * p->sizeY < 4 * 9600000)
 #define METRO_TYPE  5
 #define CLEARVIEW_TYPE 6
+#define ONEVIEW_NOT_CLEARVIEW(p) (p->OneViewType && p->OneViewType != CLEARVIEW_TYPE)
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)

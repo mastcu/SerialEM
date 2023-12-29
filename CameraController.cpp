@@ -5359,8 +5359,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if (((mParam->OneViewType && mParam->OneViewType != CLEARVIEW_TYPE &&
-    !oneViewTakingFrames) || 
+  if (((ONEVIEW_NOT_CLEARVIEW(mParam) && !oneViewTakingFrames) || 
     (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
     !(mParam->coordsModulo && mParam->moduloX && mParam->moduloX % 32 == 0 && 
     mParam->moduloY && mParam->moduloY % 16 == 0)))
@@ -6639,7 +6638,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
     // Generic camera taking frames (including oneview) or Ceta2
     if (ConstrainFrameTime(frameTime, camP, binning, 
-      (camP->OneViewType && camP->OneViewType != CLEARVIEW_TYPE) ? readMode : special))
+      (ONEVIEW_NOT_CLEARVIEW(camP)) ? readMode : special))
       retval = true;
     baseTime = frameTime;
   } else if (camP->OneViewType) {
@@ -6861,7 +6860,7 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
-    if (param->OneViewType && special)
+    if (ONEVIEW_NOT_CLEARVIEW(param) && special)
       time *= 4.f;
     if (param->TietzType && special) {
       numBlocks = (float)B3DNINT(B3DCHOICE(TIETZ_ROTATING(param), param->sizeX,
@@ -6887,7 +6886,7 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->frameTimeDivisor[0]);
-    if (param->OneViewType && special)
+    if (ONEVIEW_NOT_CLEARVIEW(param) && special)
       time *= 4.f;
     return time;
   }
@@ -12428,7 +12427,7 @@ bool CCameraController::NoSubareasForDoseFrac(CameraParameters *param,
   return ((mParam->K2Type &&
     (GetPluginVersion(param) < PLUGIN_CAN_SAVE_SUBAREAS ||
     (alignFrames && !useFrameAlign && param->K2Type != K3_TYPE))) ||
-      (param->GatanCam && param->canTakeFrames && param->OneViewType != CLEARVIEW_TYPE));
+      (ONEVIEW_NOT_CLEARVIEW(param) && param->canTakeFrames));
 }
 
 // Restore Gatan camera orientations on exit if necessary
