@@ -1782,7 +1782,7 @@ int CTSSetupDialog::MagIndWithClosestFieldSize(int oldCam, int oldMag, int newCa
 // Unload all the parameters back to the structure
 void CTSSetupDialog::OnOK()
 {
-  if (mFuture) {
+  if (mFuture > 0) {
     FixButtonStyle(IDC_TSGO);
     mWinApp->mTSController->SetExtraOutput(&mTSParam);
   } else {
