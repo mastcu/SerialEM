@@ -1681,6 +1681,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           err = 1;
         }
         mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
+        if (flags & PLUGFLAG_FLOATS_BY_FLAG)
+          mAllParams[i].CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
         if (flags & PLUGFLAG_NO_DIV_BY_2)
           mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
         if (flags & PLUGFLAG_SINGLE_OK_IF_SAVE)
