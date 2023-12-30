@@ -358,7 +358,7 @@ CCameraController::CCameraController()
 
   // ClearView
   mOneViewMinExposure[5][0] = 0.02f;
-  mOneViewMinExposure[5][2] = mOneViewMinExposure[5][3] = mOneViewMinExposure[5][3] = 
+  mOneViewMinExposure[5][1] = mOneViewMinExposure[5][2] = mOneViewMinExposure[5][3] = 
     0.005f;
 
   for (l = 1; l < MAX_1VIEW_TYPES; l++) {
