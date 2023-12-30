@@ -171,13 +171,13 @@
       camera. These options are provided because camera readout time is dominated by
       the number of rows being read out, and a rectangle gives more pixels of data per
       unit time than a square.</P>
-    <P><B>10% Less - 10% More - A Bit Less or Square</B></P>
+    <P><B>10% Less - 10% More - A Bit Less or Square or Eighth</B></P>
     <P>These buttons provide a convenient way to adjust the area being acquired to
       sizes other than the stock ones provided by the buttons above. Again, the
       changes are in linear dimensions, not areas. Because of rounding, the '10% Less'
       button will not exactly undo the change made by the '10% More' button, and vice
       versa. To get back to a regular size, just push one of the upper buttons.</P>
-    <P>The 'A Bit Less' button was useful for creating parameter sets with a slightly
+    <P>The 'A Bit Less' button was useful for creating parameter sets with slightly
       different sizes so that they would have independent dark references in DM. For
       older versions of DM, if you had two parameter sets with the same image size and
       binning but different exposures, DM would take a new dark reference every time
@@ -186,7 +186,9 @@
       reference per binning regardless of size, making this trick ineffective. For a
       camera that is not within 10% of being square, this button is converted to
       'Square', which will make a square area by trimming the current size in its long
-      dimension to match the short dimension.</P>
+      dimension to match the short dimension.&nbsp; For a Gatan ClearView camera, the 
+        button is converted to &#39;Eighth&#39; to give easy access to a size that allows the 
+        smallest frame time available, 0.000625 sec.</P>
     <P><B>Dose readout and Update Dose button</B></P>
     <P>If electron dose is calibrated for the current spot size and intensity, the
       estimated dose will be shown for the given exposure. This readout is refreshed

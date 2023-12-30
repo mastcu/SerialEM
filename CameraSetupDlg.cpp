@@ -555,17 +555,21 @@ void CCameraSetupDlg::OnButabitless()
   int sizeX = mCoordScaling * (m_eRight - m_eLeft);
   int sizeY = mCoordScaling * (m_eBottom - m_eTop);
   UpdateData(TRUE);
-  if (mParam->moduloX > 0 && mParam->moduloY > 0 && 
-    B3DMAX(mParam->moduloX, mParam->moduloY) > 8)
-    deltaX = deltaY = -B3DMAX(mParam->moduloX, mParam->moduloY);
-  if (mSquareForBitLess) {
-    deltaX = deltaY = 0;
-    if (sizeY < sizeX)
-      deltaX = (sizeY - sizeX) / 2;
-    else
-      deltaY = (sizeX - sizeY) / 2;
+  if (mEighthForBitless) {
+    SetFractionalSize(8, 8);
+  } else {
+    if (mParam->moduloX > 0 && mParam->moduloY > 0 &&
+      B3DMAX(mParam->moduloX, mParam->moduloY) > 8)
+      deltaX = deltaY = -B3DMAX(mParam->moduloX, mParam->moduloY);
+    if (mSquareForBitLess) {
+      deltaX = deltaY = 0;
+      if (sizeY < sizeX)
+        deltaX = (sizeY - sizeX) / 2;
+      else
+        deltaY = (sizeX - sizeY) / 2;
+    }
+    SetAdjustedSize(deltaX, deltaY);
   }
-  SetAdjustedSize(deltaX, deltaY);
   FixButtonFocus(m_butABitLess);
 }
 
@@ -794,8 +798,10 @@ void CCameraSetupDlg::ManageBinnedSize()
   str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
     sizeY * pixel, pixel * 1000.);
   SetDlgItemText(IDC_STATMICRON, str);
-  if (mParam->OneViewType == CLEARVIEW_TYPE)
+  if (mParam->OneViewType == CLEARVIEW_TYPE) {
     ManageExposure();
+    ManageK2SaveSummary();
+  }
 }
 
 // Returns either the currented mag index or the one for current camera and set
@@ -1254,7 +1260,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     m_eExposure = realExp;
 
   if (mParam->K2Type == K3_TYPE || (mParam->OneViewType && mParam->canTakeFrames))
-    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime, mParam);
 
   // Special for DE
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
@@ -1677,8 +1683,11 @@ void CCameraSetupDlg::ManageCamera()
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);
   mSquareForBitLess = (showbox - B3DMIN(mCameraSizeX, mCameraSizeY) >= 0.1 * showbox ||
     mTietzBlocks) && !mParam->squareSubareas;
+  mEighthForBitless = !mSquareForBitLess && mParam->OneViewType == CLEARVIEW_TYPE;
   if (mSquareForBitLess)
     m_butABitLess.SetWindowText("Square");
+  else if (mEighthForBitless)
+    m_butABitLess.SetWindowText("Eighth");
   else
     m_butABitLess.SetWindowText("A Bit Less");
   if (!mSquareForBitLess && mTietzBlocks)
@@ -2355,7 +2364,7 @@ void CCameraSetupDlg::ManageDose()
     m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * 
     (m_bDEsaveMaster ? 1 : m_iSumCount));
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
-    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime, mParam);
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
   if (dose)
@@ -2749,7 +2758,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames) ||
     mFEItype == FALCON4_TYPE)
-    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime, mParam);
   if (fabs(startFrame - m_fFrameTime) > 1.e-5)
     UpdateData(false);
   ManageExposure();
@@ -2839,7 +2848,7 @@ void CCameraSetupDlg::ManageFalcon4FrameSpec(void)
   ShowDlgItem(IDC_STAT_FRAME_SEC, show);
   ShowDlgItem(IDC_SETUP_FALCON_FRAMES, mFalconCanSave && !show);
   if (show)
-    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime, mParam);
 }
 
 // Make the align summary line
@@ -3274,7 +3283,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   }
   m_eExposure = dlg.mExposure;
   if (mParam->K2Type)
-    m_fFrameTime = RoundedDEframeTime(dlg.mReadoutInterval);
+    m_fFrameTime = RoundedDEframeTime(dlg.mReadoutInterval, mParam);
   UpdateData(false);
   mNumSkipBefore = dlg.mNumSkipBefore;
   mNumSkipAfter = dlg.mNumSkipAfter;
@@ -3451,9 +3460,9 @@ void CCameraSetupDlg::OnDeltaposSpinDeSumNum(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 // Round the DE frame time for display
-float CCameraSetupDlg::RoundedDEframeTime(float frameTime)
+float CCameraSetupDlg::RoundedDEframeTime(float frameTime, CameraParameters *param)
 {
-  float roundFac = 0.0005f;
+  float roundFac = (param && param->OneViewType == CLEARVIEW_TYPE) ? 0.0003125f : 0.0005f;
   return roundFac * B3DNINT(frameTime / roundFac);
 }
 

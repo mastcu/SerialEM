@@ -365,7 +365,7 @@ CCameraController::CCameraController()
     mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
       mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 
       B3DCHOICE(l == METRO_TYPE - 1, 0.00203f, 
-        l == CLEARVIEW_TYPE - 1 ? 0.0005f : 0.001f);
+        l == (CLEARVIEW_TYPE - 1) ? 0.0005f : 0.001f);
   }
   for (l = 4; l < MAX_BINNINGS; l++) {
     for (k = 0; k < MAX_1VIEW_TYPES; k++) {

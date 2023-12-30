@@ -46,6 +46,7 @@ public:
   BOOL mDMsettlingOK;
   BOOL mDMbeamShutterOK;
   BOOL mSquareForBitLess;
+  BOOL mEighthForBitless;
   float mMinDualSettling;
   float mMinExposure;
   int mLastCamera;
@@ -363,7 +364,7 @@ afx_msg void OnKillfocusDeFrameTime();
 void ManageDEpanel(void);
 afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
-float RoundedDEframeTime(float frameTime);
+float RoundedDEframeTime(float frameTime, CameraParameters *param = NULL);
 int GetMagIndexForCamAndSet(void);
 float ActualFrameTime(float roundedTime);
 void ManageK2Binning(void);
