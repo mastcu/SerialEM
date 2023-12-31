@@ -15,7 +15,7 @@ void DLL_IM_EX XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, i
 void DLL_IM_EX XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int nypad, 
 	float deltap, float *ctfp);
 bool DLL_IM_EX XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
-  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly);
+  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly, float boostMinNums);
 void DLL_IM_EX XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int nxpad, int nypad,
                  float delta, float *ctf);
 void DLL_IM_EX ProcScaleImage(void *array, int type, int nx, int ny, float factor, float offset,

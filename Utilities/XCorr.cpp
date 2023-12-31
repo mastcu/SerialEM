@@ -182,7 +182,8 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 #define MAX_PERIOD_THREADS 8
 
 bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
-  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly)
+  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly, 
+  float boostMinNums)
 {
   float Xpeaks[MAX_GRID_PEAKS], Ypeaks[MAX_GRID_PEAKS], peak[MAX_GRID_PEAKS];
   float *arrays[2], *useArr;
@@ -215,6 +216,11 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   arrays[0] = array;
   arrays[1] = brray;
   XCorrSetCTF(sigma1, 0.f, 0.f, 0.f, ctfA, nxPad, nyPad, &deltaA);
+  if (boostMinNums > 0.) {
+    minFound = B3DNINT(minFound * boostMinNums);
+    minTotFound = B3DNINT(minTotFound * boostMinNums);
+  }
+
 
   /* Times on K3 for bin 1/2/8 are: 
   * initial FFT to autocorr: 14 ms (2 images)
