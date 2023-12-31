@@ -520,6 +520,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   bool fillSpots = (corrFlags & AUTOALIGN_FILL_SPOTS) != 0 || (mErasePeriodicPeaks &&
     !(corrFlags & AUTOALIGN_KEEP_SPOTS));
   BOOL debugTime = GetDebugOutput('T');
+  float boostNumSpots = (corrFlags & AUTOALIGN_MORE_SPOTS) ? 2.6f : 0.;
   if (inSmallPad > 0)
     fracPad = 0.05f;
   else if (inSmallPad < 0)
@@ -880,7 +881,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
       // it returns fillBrray and fillArray erased, otherwise it will just return and
       // we will use original images
       if (XCorrPeriodicCorr(fillBrray, fillArray, fillCrray, nxPad, nyPad, 0., mCTFa,
-        tiltAngles, axisAngle, 1)) {
+        tiltAngles, axisAngle, 1, boostNumSpots)) {
 
         // Repack the images to match the original
         nxTrimA = nxPad / 2 - widthA / 2;
