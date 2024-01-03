@@ -3,9 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/3/24: Made autofocus routine erase periodic peaks if checkbox in Align&Focus
+panel is set for that.
+
+1/3/24: Added script command to report maximum image shift available at a
+given mag based on property settings and deflector limits on a JEOL.
+
 12/30/23: Made periodic peak erasing require 2.5 times more peaks when being
 done for image shift and stage calibrations; trying  to prevent failures when
 the field of view is in the range of 2-4 microns (In 4.1).
+
+12/29/23: Added "format" script function to apply C-style formatting when
+storing or outputting a variable or value.
+
+12/29/23: Supported shorter exposure times for subareas for ClearView (needs
+new SEMCCD plugin).
 
 12/28/23: Fixed some uninitialized variables and expected size of saved frames
 when saving a subarea from K2/K3 (In 4.1).

@@ -124,8 +124,8 @@
         not be adequate and a larger fraction is needed to exclude peripheral parts of 
         the image with strong contrast. Because this is needed so rarely, this value is 
         not stored in the settings file between SerialEM sessions.</P>
-    <P><strong>Erase periodic peaks in Autoalign</strong></P>
-    <P>When this check box is selected, the autoalign routine will analyze an 
+    <P><strong>Erase periodic peaks in Align/Focus</strong></P>
+    <P>When this check box is selected, the autoalign and autofocus routines will analyze an 
       autocorrelation of each image to find periodic peaks from repeated structures 
       (except when used for Realign to Item in Low Dose mode).&nbsp; If at least 2 
       peaks are found in each direction (and at least 5 total), they go out far enough 
@@ -137,7 +137,8 @@
       hexagonal patterns; it should work as well with regular gold foil grids, but has 
       been found to be unreliable for 
       carbon foil grids having regular hole arrangements.&nbsp; This erasing is done 
-      by default when doing image or stage shift calibrations; this default can be 
+      by default when doing image or stage shift calibrations but requires 2.5 times 
+      more peaks to be found before erasing is done; this default can be 
       overridden with the property &#39;NoDefaultPeakErasing&#39; set to 1, in which case the 
       option set here prevails.&nbsp; The option here determines whether erasing is 
       done when running Realign to Item outside of Low Dose mode, but in Low Dose 

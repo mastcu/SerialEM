@@ -1508,6 +1508,7 @@ void CFocusManager::FocusDone()
   int  ix0, ix1, iy0, iy1, ind1, ind2;
   KImage *imA;
   void *data, *temp;
+  float *cArray = NULL;
   float xPeak1[2], yPeak1[2], xPeak2[2], yPeak2[2], peak1[2], peak2[2];
   float xShift, yShift, xDrift, yDrift, interval;
   CString report;
@@ -1516,10 +1517,11 @@ void CFocusManager::FocusDone()
   float radius2use = mRadius2;
   float sigma2use = mSigma2;
   int nxTaper, nyTaper;
-  float delta;
+  float delta, tiltA, tiltAngles[2] = {0., 0.}, axisAngle = 0.;
   void *stretchData = NULL;
   BOOL doStretch;
   bool removeData = false;
+  BOOL erasePeaks = mShiftManager->GetErasePeriodicPeaks();
   double imRot, CCC, elapsed;
   UINT tickTime;
   float tilt, pixel, cosphi, sinphi, tanTilt, a11, a12, a21, a22;
@@ -1715,10 +1717,27 @@ void CFocusManager::FocusDone()
 
   //  All three shots done, get the triple correlation  
   XCorrSetCTF(mSigma1, sigma2use, 0., radius2use, mCTFa, nxpad, nypad, &delta);
+
+  if (erasePeaks) {
+    NewArray2(cArray, float, nypad, (nxpad + 2));
+    if (!cArray)
+      erasePeaks = false;
+    if (mImBufs->GetTiltAngle(tiltA) && mImBufs->GetAxisAngle(axisAngle))
+      tiltAngles[0] = tiltAngles[1] = tiltA;
+  }
   
   if (mNumShots == 3) {
-    XCorrTripleCorr(mFocusBuf[0], mFocusBuf[1], mFocusBuf[2], nxpad, nypad,
-           delta, mCTFa);
+    if (erasePeaks) {
+      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa, 
+        tiltAngles, axisAngle, 0, 0.);
+      memcpy(mFocusBuf[1], mFocusBuf[4], 4 * nypad * (nxpad + 2));
+      XCorrPeriodicCorr(mFocusBuf[1], mFocusBuf[2], cArray, nxpad, nypad, delta, mCTFa,
+        tiltAngles, axisAngle, 0, 0.);
+
+    } else {
+      XCorrTripleCorr(mFocusBuf[0], mFocusBuf[1], mFocusBuf[2], nxpad, nypad,
+        delta, mCTFa);
+    }
 
     XCorrPeakFind(mFocusBuf[0], nxpad+2, nypad, xPeak1, yPeak1, peak1, 2);
     XCorrPeakFind(mFocusBuf[1], nxpad+2, nypad, xPeak2, yPeak2, peak2, 2);
@@ -1731,12 +1750,18 @@ void CFocusManager::FocusDone()
     xDrift = binning * (xPeak2[ind2] + xPeak1[ind1]) / 2;
     yDrift = -binning * (yPeak2[ind2] + yPeak1[ind1]) / 2;
   } else {
-    XCorrCrossCorr(mFocusBuf[0], mFocusBuf[1], nxpad, nypad, delta, mCTFa);
+    if (erasePeaks) {
+      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa, 
+        tiltAngles, axisAngle, 0, 0.);
+    } else {
+      XCorrCrossCorr(mFocusBuf[0], mFocusBuf[1], nxpad, nypad, delta, mCTFa);
+    }
     XCorrPeakFind(mFocusBuf[0], nxpad+2, nypad, xPeak1, yPeak1, peak1, 2);
     ind1 = CheckZeroPeak(xPeak1, yPeak1, peak1, binning);
     xShift =  binning * xPeak1[ind1];
     yShift = -binning * yPeak1[ind1];
   }
+  delete [] cArray;
 
   // Display correlation in buffer A if requested
   if (mFocusWhere == FOCUS_SHOW_CORR) {
