@@ -764,6 +764,7 @@ MAC_SAME_NAME_ARG(FindSubstring, 3, 4, FINDSUBSTRING, SIS)
 MAC_SAME_NAME_ARG(OpenDialog, 1, 0, OPENDIALOG, S)
 MAC_SAME_NAME_NOARG(ReportLastMarkerShift, 0, 4, REPORTLASTMARKERSHIFT)
 MAC_SAME_NAME_ARG(SetMontPanelParams, 1, 4, SETMONTPANELPARAMS, Iiii)
+MAC_SAME_NAME_ARG(ReportMaxImageShift, 1, 4, REPORTMAXIMAGESHIFT, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

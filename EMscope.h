@@ -223,7 +223,7 @@ public:
     GetSetMember(BOOL, NoScope)
     GetMember(BOOL, ApplyISoffset)
     void SetApplyISoffset(BOOL inVal);
-  void GetTiltAxisIS(double &ISX, double&ISY);
+  void GetTiltAxisIS(double &ISX, double&ISY, int magInd = -1);
   GetSetMember(float, TiltAxisOffset)
     void SetStageLimit(int index, float inVal) { mStageLimit[index] = inVal; };
   float GetStageLimit(int index) { return mStageLimit[index]; };
@@ -559,6 +559,7 @@ public:
   BOOL SetSpectroscopyMode(int which);
   int GetSpectroscopyMode();
   static int WaitForLensRelaxation(int type, double earliestTime);
+  float GetMaxJeolImageShift(int magInd);
   static void WaitForStageDone(StageMoveInfo *smi, char *procName);
 
   // General variables that need to be public

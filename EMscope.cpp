@@ -2966,7 +2966,7 @@ bool CEMscope::HitachiNeedsBSforIS(int &magIndex)
 
 // Get the image shift offsets needed to center on the tilt axis, if mode selected
 // In any event, add the neutral value and user offset
-void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
+void CEMscope::GetTiltAxisIS(double &ISX, double &ISY, int magInd)
 {
   static BOOL firstTime = true;
   int STEMmode = mLastSTEMmode;
@@ -2977,8 +2977,10 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
   ISY = 0.;
   if (!mLastMagIndex && firstTime)
     mLastMagIndex = GetMagIndex();
+  if (magInd < 0)
+    magInd = mLastMagIndex;
   firstTime = false;
-  if (!mLastMagIndex || mLastMagIndex >= MAX_MAGS)
+  if (!magInd || magInd >= MAX_MAGS)
     return;
 
   // Set image shift value to the sum of neutral and offset values
@@ -2988,15 +2990,15 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
     if (jeolEFTEM) {
 
       // When JEOL EFTEM is switching, the neutral index has the new state, needed here
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
-        (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISX[mNeutralIndex] : 0.);
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
-        (mApplyISoffset ? mMagTab[mLastMagIndex].calOffsetISY[mNeutralIndex] : 0.);
+      ISX = mMagTab[magInd].neutralISX[mNeutralIndex] + mDetectorOffsetX +
+        (mApplyISoffset ? mMagTab[magInd].calOffsetISX[mNeutralIndex] : 0.);
+      ISY = mMagTab[magInd].neutralISY[mNeutralIndex] + mDetectorOffsetY +
+        (mApplyISoffset ? mMagTab[magInd].calOffsetISY[mNeutralIndex] : 0.);
     } else {
-      ISX = mMagTab[mLastMagIndex].neutralISX[mNeutralIndex] + mDetectorOffsetX +
-        mMagTab[mLastMagIndex].offsetISX;
-      ISY = mMagTab[mLastMagIndex].neutralISY[mNeutralIndex] + mDetectorOffsetY +
-        mMagTab[mLastMagIndex].offsetISY;
+      ISX = mMagTab[magInd].neutralISX[mNeutralIndex] + mDetectorOffsetX +
+        mMagTab[magInd].offsetISX;
+      ISY = mMagTab[magInd].neutralISY[mNeutralIndex] + mDetectorOffsetY +
+        mMagTab[magInd].offsetISY;
     }
   } else if (JEOLscope) {
     ISX = mSTEMneutralISX;
@@ -3012,7 +3014,7 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY)
   if (jeolEFTEM && (mWinApp->GetEFTEMMode() ? 1 : 0) != mNeutralIndex)
     toCam = mActiveCamList[B3DMAX(0, mNeutralIndex ? mFiltParam->firstGIFCamera : 
         mFiltParam->firstRegularCamera)];
-  ScaleMat aMat = mShiftManager->IStoSpecimen(mLastMagIndex, toCam);
+  ScaleMat aMat = mShiftManager->IStoSpecimen(magInd, toCam);
   if (!aMat.xpx)
     return;
   aMat = mShiftManager->MatInv(aMat);
@@ -8435,6 +8437,31 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
     return 1;
   }
   return 0;
+}
+
+// Get the maximum image shift allowed by deflectors at the given mag with current offsets
+float CEMscope::GetMaxJeolImageShift(int magInd)
+{
+  double axisISX, axisISY, maxISX, maxISY;
+  const double Jeol_IS1X_to_um = 0.00508;
+  const double Jeol_IS1Y_to_um = 0.00434;
+  if (!JEOLscope)
+    return 0.0f;
+
+  // Get neutral and other relevant values at this mag
+  GetTiltAxisIS(axisISX, axisISY, magInd);
+  SEMAcquireJeolDataMutex();
+
+  // Convert maximum deflector value just as in plugin, subtract axis component
+  maxISX = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1X_to_um) - 
+    fabs(axisISX);
+  maxISY = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1Y_to_um) - 
+    fabs(axisISY);
+  SEMReleaseJeolDataMutex();
+
+  // Retrun minimum of the two shifts
+  return (float)B3DMIN(mShiftManager->RadialShiftOnSpecimen(maxISX, 0., magInd),
+    mShiftManager->RadialShiftOnSpecimen(0., maxISY, magInd));
 }
 
 // Gets and sets for the properties

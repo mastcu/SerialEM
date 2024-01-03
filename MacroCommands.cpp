@@ -5455,6 +5455,22 @@ int CMacCmd::ReportTiltAxisOffset(void)
   return 0;
 }
 
+// ReportMaxImageShift
+int CMacCmd::ReportMaxImageShift()
+{
+  int index = mItemInt[1] ? mItemInt[1] : mScope->FastMagIndex();
+  float maxIS = mScope->GetMaxJeolImageShift(index);
+  float limit = index >= mScope->GetLowestMModeMagInd() ? 
+    mShiftManager->GetRegularShiftLimit() : mShiftManager->GetLowMagShiftLimit();
+  mLogRpt.Format("Image shift limit from properties is %.1f um", limit);
+  if (maxIS) {
+    mStrCopy.Format("; max shift without clipping is %.2f", maxIS);
+    mLogRpt += mStrCopy;
+  }
+  SetRepValsAndVars(2, limit, maxIS);
+  return 0;
+}
+
 // SetObjectiveStigmator
 int CMacCmd::SetObjectiveStigmator(void)
 {

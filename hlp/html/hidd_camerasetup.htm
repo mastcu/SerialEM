@@ -88,8 +88,16 @@
     <P>These radio buttons present the options for binning an image directly as it is
       read out of the CCD camera.</P>
     <P><B>Exposure time</B></P>
-    <P>This text box allows you to enter the exposure time in seconds. Unlike in DM,
-      exposure time will not change when you change binning.</P>
+    <P>This text box allows you to enter the exposure time in seconds. Exposure time will not change when you change binning 
+      to keep the counts the same.&nbsp; However, some cameras (OneView, Rio, 
+      ClearView) have binning-dependent minimum exposure times, so if the exposure 
+      time is at the minimum for a particular binning, it may be adjusted up when 
+      binning is decreased.&nbsp; For Tietz XF416 and ClearView cameras, the minimum 
+      exposure also depends on the extent in Y on the chip, so an exposure at the 
+      minimum value will be adjusted up if the area becomes larger.&nbsp; For the 
+      XF416, the extent in Y matters regardless of position.&nbsp; For the ClearView, 
+      the maximum distance from the midline in Y (on the chip) determines the minimum 
+      exposure time and frame time.</P>
     <P><B>Drift settling</B></P>
     <P>This text box allows you to enter the amount of time that the specimen will be
       exposed to the beam before the picture begins being recorded on the CCD camera.
