@@ -88,6 +88,7 @@
 #define IDD_COMA_VS_IS_CAL              274
 #define IDD_AUTOCONTOUR                 276
 #define IDD_STEP_AND_ADJUST_IS          279
+#define IDD_MULTI_GRID                  284
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2169,6 +2170,48 @@
 #define IDC_STAT_PREPIXEL               3207
 #define IDC_EDIT_PREPIXEL               3208
 #define IDC_USE_BEST_SUBSET             3209
+#define IDC_CHECK_MULGRID_RUN1          3210
+#define IDC_CHECK_MULGRID_RUN2          3211
+#define IDC_CHECK_MULGRID_RUN3          3212
+#define IDC_CHECK_MULGRID_RUN4          3213
+#define IDC_CHECK_MULGRID_RUN5          3214
+#define IDC_CHECK_MULGRID_RUN6          3215
+#define IDC_CHECK_MULGRID_RUN7          3216
+#define IDC_CHECK_MULGRID_RUN8          3217
+#define IDC_CHECK_MULGRID_RUN9          3218
+#define IDC_CHECK_MULGRID_RUN10         3219
+#define IDC_CHECK_MULGRID_RUN11         3220
+#define IDC_CHECK_MULGRID_RUN12         3221
+#define IDC_CHECK_MULGRID_RUN13         3222
+#define IDC_CHECK_MULGRID_RUN14         3223
+#define IDC_CHECK_MULGRID_RUN15         3224
+#define IDC_CHECK_MULGRID_RUN16         3225
+#define IDC_CHECK_MULGRID_RUN17         3226
+#define IDC_CHECK_MULGRID_RUN18         3227
+#define IDC_CHECK_MULGRID_RUN19         3228
+#define IDC_CHECK_MULGRID_RUN20         3229
+#define IDC_EDIT_MULGRID_NAME1          3230
+#define IDC_EDIT_MULGRID_NAME2          3231
+#define IDC_EDIT_MULGRID_NAME3          3232
+#define IDC_EDIT_MULGRID_NAME4          3233
+#define IDC_EDIT_MULGRID_NAME5          3234
+#define IDC_EDIT_MULGRID_NAME6          3235
+#define IDC_EDIT_MULGRID_NAME7          3236
+#define IDC_EDIT_MULGRID_NAME8          3237
+#define IDC_EDIT_MULGRID_NAME9          3238
+#define IDC_EDIT_MULGRID_NAME10         3239
+#define IDC_EDIT_MULGRID_NAME11         3240
+#define IDC_EDIT_MULGRID_NAME12         3241
+#define IDC_EDIT_MULGRID_NAME13         3242
+#define IDC_EDIT_MULGRID_NAME14         3243
+#define IDC_EDIT_MULGRID_NAME15         3244
+#define IDC_EDIT_MULGRID_NAME16         3245
+#define IDC_EDIT_MULGRID_NAME17         3246
+#define IDC_EDIT_MULGRID_NAME18         3247
+#define IDC_EDIT_MULGRID_NAME19         3248
+#define IDC_EDIT_MULGRID_NAME20         3249
+#define IDC_STAT_RUN                    3251
+#define IDC_STAT_NAME                   3252
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2727,9 +2770,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        284
+#define _APS_NEXT_RESOURCE_VALUE        286
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3210
+#define _APS_NEXT_CONTROL_VALUE         3253
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
