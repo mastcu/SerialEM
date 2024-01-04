@@ -1360,6 +1360,7 @@ void CMacroProcessor::RunOrResume()
   mLastCompleted = false;
   mLastAborted = false;
   mLastTestResult = true;
+  mInInitialSubEval = false;
   mRanCtfplotter = false;
   mCamera->SetTaskWaitingForFrame(false);
   mFrameWaitStart = -1.;
@@ -1585,6 +1586,14 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
         mTryCatchLevel = 0;
         return 0;
       }
+    }
+
+    // If the error is occurring in a statement that starts a block, then raise the 
+    // blocklevel before dropping it by number of pops
+    if (mInInitialSubEval) {
+      if (!mStrItems[0].CompareNoCase("IF") || !mStrItems[0].CompareNoCase("LOOP") ||
+        !mStrItems[0].CompareNoCase("DOLOOP") || !mStrItems[0].CompareNoCase("TRY"))
+        mBlockLevel++;
     }
     for (i = 0; i < numPops && mBlockLevel >= 0; i++) {
       ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
@@ -4027,6 +4036,11 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
       strItems[0].MakeUpper();
       cmdIndex = LookupCommandIndex(strItems[0]);
       isCATCH = CMD_IS(CATCH);
+
+      // mTryCatchLevel is decremented on the catch because you are out of try at that
+      // point, so we need to keep track of changes that need to be applied to that var
+      // separate from the number of try levels that are popping, which is popTry and
+      // is incremented on try and decremented on endtry
       if (isCATCH)
         tryLevel--;
 
@@ -4043,11 +4057,13 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
         continue;
 
       // If we're at same block level as we started and we find end, return
+      // Go to next statement for catch and and else, otherwise run the statement we
+      // skipped to
       if ((!ifLevel && ((type == SKIPTO_ELSE_ENDIF && (CMD_IS(ELSE) || CMD_IS(ELSEIF)))
         || ((type == SKIPTO_ENDIF || type == SKIPTO_ELSE_ENDIF) && CMD_IS(ENDIF))) ||
         (!loopLevel && type == SKIPTO_ENDLOOP && CMD_IS(ENDLOOP))) ||
         (!popTry && type == SKIPTO_CATCH && isCATCH) || 
-        (!tryLevel && type == SKIPTO_ENDTRY && CMD_IS(ENDTRY))) {
+        (!popTry && type == SKIPTO_ENDTRY && CMD_IS(ENDTRY))) {
         if (CMD_IS(ELSE) || isCATCH)
           mCurrentIndex = nextIndex;
         if (numPops)

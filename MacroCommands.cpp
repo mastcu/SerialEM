@@ -519,6 +519,7 @@ int CMacCmd::NextCommand(bool startingOut)
   }
 
   // Substitute variables in parsed items and check for control word substitution
+  mInInitialSubEval = true;
   report = mStrItems[0];
   if (SubstituteVariables(mStrItems, MAX_MACRO_TOKENS, mStrLine)) {
     AbortMacro();
@@ -561,6 +562,7 @@ int CMacCmd::NextCommand(bool startingOut)
       return 1;
     }
   }
+  mInInitialSubEval = false;
 
   // Evaluate emptiness, ints and doubles
   for (i = 0; i < MAX_MACRO_TOKENS; i++) {

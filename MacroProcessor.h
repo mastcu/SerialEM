@@ -288,6 +288,7 @@ protected:
   int mBlockLevel;         // Index for block level, 0 in top block or -1 if not in block
   int mCallLevel;          // Index for call level, 0 in main macro
   int mTryCatchLevel;      // Level of try blocks, raised at Try, dropped at Catch
+  bool mInInitialSubEval;  // Flag to test if in a block-raising statement if error
   bool mNoCatchOutput[MAX_LOOP_DEPTH];  // Flag to suppress output, index 0 for level 1
   int mBlockDepths[MAX_CALL_DEPTH];  // Block level reached in current call level
   int mCallMacro[MAX_CALL_DEPTH];   // Current macro for given call level

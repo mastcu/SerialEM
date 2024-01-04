@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/4/24: Fixed problem with Try-Catch inside of a Catch block and with keeping
+track of block level when an error occurs on a statement starting a block
+(In 4.1).
+
 12/30/23: Made periodic peak erasing require 2.5 times more peaks when being
 done for image shift and stage calibrations; trying  to prevent failures when
 the field of view is in the range of 2-4 microns (In 4.1).
