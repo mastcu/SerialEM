@@ -1164,7 +1164,8 @@
         <TR>
           <TD class="scriptcommand">ReportCurrentPixelSize set</TD>
           <TD>Reports the pixel size for images that would be acquired by <b>set</b> (i.e., with 
-            its binning) at the current magnification.</TD>
+            its binning) under the current conditions, namely at the current magnification if outside 
+            Low Dose mode, or at the magnification of the corresponding area in Low Dose mode.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDoseFracParams set #D [#S] [#A] [#M] [#C]&nbsp;</TD>
@@ -4113,14 +4114,15 @@
             Command added in 4.1, 5-Sept-22.</TD>
         </TR>
        <TR>
-          <TD class="scriptcommand">SetRegularHoleVectors #X1 #Y1 #X2 #Y2 [#M] [#T]</TD>
+          <TD class="scriptcommand">SetRegularHoleVectors #X1 #Y1 #X2 #Y2 [#M] [#T] [#X3] [#Y3]</TD>
           <TD>Defines the image shifts for multiple Records taken with a regular pattern with 
             <b>#X1</b>, <b>#Y1</b> specifying the X and Y components of image shift between adjacent holes
              in one direction and <b>#X2</b>, <b>#Y2</b> specifying the shift in the orthogonal 
             direction.&nbsp; The optional entries <b>#M</b> and <b>#T</b> can specify the 
-            magnification index and tilt angle at which the image shift values apply (enter
-            0 for <b>#M</b> to specify a tilt angle without changing the magnification index).&nbsp; 
-            Command added in 4.1, 1-Dec-22.</TD>
+            magnification index and tilt angle at which the image shift values apply.&nbsp; For vectors 
+            of a hex grid, enter the third vector in <b>#X3</b>, <b>#Y3</b>.&nbsp; Enter
+            0 for <b>#M</b> to not change the magnification index, and -999 for <b>#T</b> to not
+            change the tilt angle.&nbsp; Command added in 4.1, 1-Dec-22; hex added 7-Jan-24.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportMultishotVectors #</TD>

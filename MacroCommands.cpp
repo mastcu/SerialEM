@@ -2659,6 +2659,7 @@ int CMacCmd::SetCustomHoleShifts(void)
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
   Variable *yvar, *xvar;
   bool custom = CMD_IS(SETCUSTOMHOLESHIFTS);
+  bool hex = !mItemEmpty[8];
   if (custom) {
     xvar = LookupVariable(mItem1upper, index);
     if (!xvar)
@@ -2676,14 +2677,15 @@ int CMacCmd::SetCustomHoleShifts(void)
       ABORT_LINE("A magnification index must be included because there is none currently "
         "defined for custom holes");
   } else {
-    if (mItemEmpty[5] && !msParams->holeMagIndex[0])
+    if ((mItemEmpty[5] || mItemInt[5] == 0) && !msParams->holeMagIndex[hex ? 0 : 1])
       ABORT_LINE("A magnification index must be included because there is none currently "
-        "defined for regular hole vectors");
+        "defined for regular hole vectors in line:\n\n");
   }
   index = custom ? 3 : 5;
   if (!mItemEmpty[index] && (mItemInt[index] < 0 || mItemInt[index] >= MAX_MAGS))
     ABORT_LINE("The magnification index is out of range in line:\n\n");
-  if (!mItemEmpty[index + 1] && fabs(mItemFlt[index + 1]) > mScope->GetMaxTiltAngle())
+  if (!mItemEmpty[index + 1] && mItemFlt[index + 1] > -900. && 
+    fabs(mItemFlt[index + 1]) > mScope->GetMaxTiltAngle())
     ABORT_LINE("The tilt angle is out of range in line:\n\n");
   if (custom) {
     FillVectorFromArrayVariable(&msParams->customHoleX, NULL, xvar);
@@ -2693,15 +2695,26 @@ int CMacCmd::SetCustomHoleShifts(void)
     if (!mItemEmpty[4])
       msParams->tiltOfCustomHoles = mItemFlt[4];
   } else {
-    msParams->holeISXspacing[0] = mItemDbl[1];
-    msParams->holeISYspacing[0] = mItemDbl[2];
-    msParams->holeISXspacing[1] = mItemDbl[3];
-    msParams->holeISYspacing[1] = mItemDbl[4];
-    if (!mItemEmpty[5] && mItemInt[5])
-      msParams->holeMagIndex[0] = mItemInt[5];
-    if (!mItemEmpty[6])
-      msParams->tiltOfHoleArray[0] = mItemFlt[6];
-    msParams->origMagOfArray[0] = 0;
+    if (!hex) {
+      index = 0;
+      msParams->holeISXspacing[0] = mItemDbl[1];
+      msParams->holeISYspacing[0] = mItemDbl[2];
+      msParams->holeISXspacing[1] = mItemDbl[3];
+      msParams->holeISYspacing[1] = mItemDbl[4];
+    } else {
+      msParams->hexISXspacing[0] = mItemDbl[1];
+      msParams->hexISYspacing[0] = mItemDbl[2];
+      msParams->hexISXspacing[1] = mItemDbl[3];
+      msParams->hexISYspacing[1] = mItemDbl[4];
+      msParams->hexISXspacing[2] = mItemDbl[7];
+      msParams->hexISYspacing[2] = mItemDbl[8];
+      index = 1;
+    }
+    if (!mItemEmpty[5] && mItemInt[5] > 0)
+      msParams->holeMagIndex[index] = mItemInt[5];
+    if (!mItemEmpty[6] && mItemFlt[6] > -900.)
+      msParams->tiltOfHoleArray[index] = mItemFlt[6];
+    msParams->origMagOfArray[index] = 0;
   }
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
@@ -9036,13 +9049,16 @@ int CMacCmd::ReportCameraSetArea(void)
 // ReportCurrentPixelSize
 int CMacCmd::ReportCurrentPixelSize(void)
 {
-  int index;
+  int index, magInd;
   float value;
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  value = mShiftManager->GetPixelSize(mCurrentCam, mScope->FastMagIndex()) *
+  magInd = mWinApp->LowDoseMode() ? mLdParam[mCamera->ConSetToLDArea(index)].magIndex :
+    mScope->FastMagIndex();
+  value = mShiftManager->GetPixelSize(mCurrentCam, magInd) *
     (float)mConSets[index].binning * 1000.f;
-  mLogRpt.Format("%s pixel size is %.4g nm", mModeNames[index], value);
+  mLogRpt.Format("%s%s pixel size is %.4g nm", mModeNames[index],
+    mWinApp->LowDoseMode() ? " area" : "", value);
   SetRepValsAndVars(2, value);
   return 0;
 }
