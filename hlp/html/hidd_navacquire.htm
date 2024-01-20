@@ -8,6 +8,7 @@
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
+    <P>&nbsp;</P>
     <P><A NAME="hidd_navacquire"></A><B><FONT size="3">Navigator Acquire Dialog</FONT></B></P>
 <p>   <a HREF="#intro">Introduction</a><br>
     <A HREF="#primaryAction">Primary Action</a><br>
@@ -278,6 +279,11 @@
       from must be specified in the SerialEM properties file.&nbsp; The program keeps
       track of this option setting separately for tilt series and other kinds of
       primary tasks.</P>
+    <P><strong>Run script at end</strong></P>
+    <P>Select this option to run a script after acquisition finishes, and select the 
+      script in the combo box.&nbsp; The script is checked before acquisition is 
+      started and cannot be changed if acquisition is paused.&nbsp; A script specified 
+      here overrides one set with the &#39;RunScriptAfterNavAcquire&#39; script command.</P>
     <P><strong>Hide unselected options</strong></P>
     <P>This option allows you to simplify the left side of the dialog by hiding all
       options that are not checked.&nbsp; However, if you uncheck an option when

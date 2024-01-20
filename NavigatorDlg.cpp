@@ -9221,7 +9221,10 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   }
  
   if (!mResumedFromPause) {
-    mScriptToRunAtEnd = mRunScriptAfterNextAcq;
+    if (mAcqParm->runEndMacro)
+      mScriptToRunAtEnd = mAcqParm->endMacroInd - 1;
+    else if (mRunScriptAfterNextAcq >= 0)
+      mScriptToRunAtEnd = mRunScriptAfterNextAcq;
     mRunScriptAfterNextAcq = -1;
     if (mScriptToRunAtEnd >= 0 && 
       mMacroProcessor->EnsureMacroRunnable(mScriptToRunAtEnd)) {

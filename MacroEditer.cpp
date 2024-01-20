@@ -1,7 +1,6 @@
 // MacroEditer.cpp:      Macro editing window
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2024 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -14,6 +13,7 @@
 #include ".\MacroEditer.h"
 #include "MacroToolbar.h"
 #include "MacroProcessor.h"
+#include "NavigatorDlg.h"
 #include "ParameterIO.h"
 #include "Utilities\KGetOne.h"
 
@@ -728,16 +728,25 @@ int CMacroEditer::GetLineSelectLimits(int &startInd, int &endInd, int &indentSiz
 // any tasks are being done
 void CMacroEditer::UpdateButtons()
 {
+  int navScript = -2;
   BOOL inactive = !mProcessor->DoingMacro();
+  if (inactive && mWinApp->mCameraMacroTools.GetNavigatorState() == NAV_PAUSED &&
+    mWinApp->mNavigator) {
+    navScript = mWinApp->mNavigator->GetScriptToRunAtEnd();
+    if (navScript == m_iMacroNumber)
+      inactive = false;
+  }
   m_butOK.EnableWindow(inactive);
   m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
     !mWinApp->mScope->GetMovingStage());
   m_editMacro.EnableWindow(inactive);
   m_butLoad.EnableWindow(inactive);
-  m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0);
-  m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0);
+  m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0 && 
+    AdjacentMacro(-1) != navScript);
+  m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0 &&
+    AdjacentMacro(1) != navScript);
   inactive = inactive && (!mWinApp->GetShiftScriptOnlyInAdmin() || 
-    mWinApp->GetAdministrator());
+    mWinApp->GetAdministrator()) && navScript < 0;
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
 }

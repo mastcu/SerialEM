@@ -2383,7 +2383,7 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,378,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,392,83,12
@@ -2439,6 +2439,8 @@ BEGIN
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP19,358,269,24,10
     CONTROL         "Use map hole vectors for shifts, with adjustment",IDC_NA_USE_MAP_HOLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,172,151,10
+    CONTROL         "Run script at end",IDC_NA_RUN_SCRIPT_AT_END,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,60,10
+    COMBOBOX        IDC_COMBO_MACRO_AT_END,72,365,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -6085,6 +6087,10 @@ BEGIN
     IDC_NA_RESTORE_STATE    "Restore microscope to current state after realigning to item"
     IDC_NA_ROUGH_EUCEN      "Run rough eucentricty task after moving to position"
     IDC_NA_CLOSE_VALVES     "Close valves/turn off beam after doing operations at all areas"
+    IDC_NA_RUN_SCRIPT_AT_END
+                            "Run selected script at end of acquisition"
+    IDC_NA_RETRACT_CAMS     "Retract all cameras at end of acquisition"
+    IDC_COMBO_MACRO_AT_END  "Select the script to run at the end of acquisition"
 END
 
 STRINGTABLE

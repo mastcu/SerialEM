@@ -65,6 +65,7 @@ public:
   int mMacroNum;
   int mPremacNum;
   int mPostmacNum;
+  int mEndMacroNum;
   int mNumArrayItems;
   int mNumAcqBeforeFile;
   int mNumFilesToOpen;
@@ -200,4 +201,8 @@ public:
   afx_msg void OnRetractCams();
   CButton m_butUseMapHoles;
   BOOL m_bUseMapHoles;
+  afx_msg void OnNaRunScriptAtEnd();
+  BOOL m_bEndRunMacro;
+  CComboBox m_comboEndMacro;
+  afx_msg void OnSelendokComboMacroAtEnd();
 };

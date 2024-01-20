@@ -43,8 +43,8 @@ IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
 IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
 IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, 
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
-IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_STAT_SPACER3, 
-IDC_TSS_LINE4, PANEL_END,
+IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIPT_AT_END,
+IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
@@ -133,6 +133,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bSaveAsMap(FALSE)
   , m_bRetractCams(FALSE)
   , m_bUseMapHoles(FALSE)
+  , m_bEndRunMacro(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -182,7 +183,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
     "Interval between items");
   DDX_Control(pDX, IDC_SPIN_EVERY_N, m_sbcEveryN);
   DDX_Control(pDX, IDC_EDIT_AFTER_MINUTES, m_editAfterMinutes);
-  DDX_MM_INT(pDX, IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500, 
+  DDX_MM_INT(pDX, IDC_EDIT_AFTER_MINUTES, m_iAfterMinutes, 5, 1500,
     "Time interval for action");
   DDX_Control(pDX, IDC_EDIT_WHEN_MOVED, m_editWhenMoved);
   DDX_MM_FLOAT(pDX, IDC_EDIT_WHEN_MOVED, m_fWhenMoved, 0.1f, 2000.f, "Distance moved");
@@ -199,7 +200,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_MM_FLOAT(pDX, IDC_EDIT_CYCLE_FROM, m_fCycleFrom, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS,
     "Defocus cycle starting value");
   DDX_Control(pDX, IDC_EDIT_CYCLE_TO, m_editCycleTo);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_CYCLE_TO, m_fCycleTo, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_CYCLE_TO, m_fCycleTo, MIN_CYCLE_FOCUS, MAX_CYCLE_FOCUS,
     "Defocus cycle ending value");
   DDX_Text(pDX, IDC_STAT_CYCLE_UM, m_strCycleUm);
   DDX_Control(pDX, IDC_SPIN_CYCLE_DEF, m_sbcCycleDef);
@@ -228,6 +229,8 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_NA_RETRACT_CAMS, m_bRetractCams);
   DDX_Control(pDX, IDC_NA_USE_MAP_HOLES, m_butUseMapHoles);
   DDX_Check(pDX, IDC_NA_USE_MAP_HOLES, m_bUseMapHoles);
+  DDX_Check(pDX, IDC_NA_RUN_SCRIPT_AT_END, m_bEndRunMacro);
+  DDX_Control(pDX, IDC_COMBO_MACRO_AT_END, m_comboEndMacro);
 }
 
 
@@ -284,6 +287,8 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RMAP_WITH_SEARCH, OnMapWithRecViewSearch)
   ON_BN_CLICKED(IDC_NA_SAVE_AS_MAP, OnSaveAsMap)
   ON_BN_CLICKED(IDC_NA_RETRACT_CAMS, OnRetractCams)
+  ON_BN_CLICKED(IDC_NA_RUN_SCRIPT_AT_END, OnNaRunScriptAtEnd)
+  ON_CBN_SELENDOK(IDC_COMBO_MACRO_AT_END, OnSelendokComboMacroAtEnd)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -399,6 +404,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   LoadMacrosIntoDropDown(m_comboPremacro, false, false);
   LoadMacrosIntoDropDown(m_comboPostmacro, false, false);
   LoadMacrosIntoDropDown(m_comboMacro, false, false);
+  LoadMacrosIntoDropDown(m_comboEndMacro, false, false);
 
   // Adjust some text
   if (mWinApp->mScope->GetNoColumnValve())
@@ -413,6 +419,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   EnableDlgItem(IDC_RMAPPING, navState != NAV_PAUSED);
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
+  EnableDlgItem(IDC_NA_RUN_SCRIPT_AT_END, navState != NAV_PAUSED);
 
   if (!msParams->xformFromMag || !msParams->adjustingXform.xpx)
     ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
@@ -654,6 +661,8 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
     mParam->nonTSacquireType = mParam->acquireType;
   mParam->saveAsMapChoice = m_bSaveAsMap;
   mParam->mapWithViewSearch = m_iMapWithViewSearch;
+  mParam->runEndMacro = m_bEndRunMacro;
+  mParam->endMacroInd = mEndMacroNum;
   UnloadTSdependentFromDlg(OptionsToAcquireType());
 }
 
@@ -681,6 +690,9 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bHybridRealign = mParam->hybridRealign;
   m_bHideUnselectedOpts = mParam->hideUnselectedOpts;
   m_iMapWithViewSearch = mParam->mapWithViewSearch;
+  m_bEndRunMacro = mParam->runEndMacro;
+  mEndMacroNum = mParam->endMacroInd;
+  B3DCLAMP(mEndMacroNum, 1, MAX_MACROS);
   mLastNonTStype = mParam->nonTSacquireType;
   // m_iAcquireChoice is handled by caller
   if (m_iAcquireChoice)
@@ -762,12 +774,12 @@ void CNavAcquireDlg::ManageMacro(void)
   m_comboPremacro.SetCurSel(mPremacNum - 1);
   m_comboPostmacro.SetCurSel(mPostmacNum - 1);
   m_comboMacro.SetCurSel(mMacroNum - 1);
+  m_comboEndMacro.SetCurSel(mEndMacroNum - 1);
   m_comboMacro.EnableWindow(OptionsToAcquireType() == ACQUIRE_RUN_MACRO);
   m_comboPremacro.EnableWindow(DOING_ACTION(NAACT_RUN_PREMACRO));
   m_comboPostmacro.EnableWindow(DOING_ACTION(NAACT_RUN_POSTMACRO));
   EnableDlgItem(IDC_STAT_PREMACRO, DOING_ACTION(NAACT_RUN_PREMACRO));
   EnableDlgItem(IDC_STAT_POSTMACRO, DOING_ACTION(NAACT_RUN_POSTMACRO));
-  m_comboPostmacro.EnableWindow(DOING_ACTION(NAACT_RUN_POSTMACRO));
   UpdateData(false);
 }
 
@@ -784,6 +796,17 @@ void CNavAcquireDlg::OnSelendokComboPostmacro()
 void CNavAcquireDlg::OnSelendokComboMacro()
 {
   mMacroNum = m_comboMacro.GetCurSel() + 1;
+}
+
+void CNavAcquireDlg::OnNaRunScriptAtEnd()
+{
+  UPDATE_DATA_TRUE;
+  m_comboEndMacro.EnableWindow(m_bEndRunMacro);
+}
+
+void CNavAcquireDlg::OnSelendokComboMacroAtEnd()
+{
+  mEndMacroNum = m_comboEndMacro.GetCurSel() + 1;
 }
 
 // Subset entries
@@ -915,6 +938,8 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   RebuildIfEnabled(acquireType == ACQUIRE_IMAGE_ONLY, mSkipSaveEnabled, doBuild);
   m_butHybridRealign.EnableWindow(hybridOK);
   RebuildIfEnabled(hybridOK, mHybridEnabled, doBuild);
+  m_comboEndMacro.EnableWindow(m_bEndRunMacro && 
+    mWinApp->mCameraMacroTools.GetNavigatorState() != NAV_PAUSED);
   m_butUseMapHoles.EnableWindow(useMapEnabled);
   RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
 
@@ -1109,7 +1134,11 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       mIDsToDrop.push_back(IDC_NA_RETRACT_CAMS);
     if (!m_bSendEmail)
       mIDsToDrop.push_back(IDC_NA_SENDEMAIL);
-    if (m_iAcquireChoice > 0) {
+    if (!m_bEndRunMacro) {
+      mIDsToDrop.push_back(IDC_NA_RUN_SCRIPT_AT_END);
+      mIDsToDrop.push_back(IDC_COMBO_MACRO_AT_END);
+    }
+     if (m_iAcquireChoice > 0) {
       mIDsToDrop.push_back(IDC_NA_ACQUIREMAP);
       mIDsToDrop.push_back(IDC_NA_SAVE_AS_MAP);
       mIDsToDrop.push_back(IDC_NA_SKIP_SAVING);

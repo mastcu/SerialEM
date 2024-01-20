@@ -186,6 +186,7 @@ public:
   GetMember(bool, DidEucentricity);
   GetMember(bool, ShowingLDareas);
   SetMember(int, RunScriptAfterNextAcq);
+  GetMember(int, ScriptToRunAtEnd);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
 
 

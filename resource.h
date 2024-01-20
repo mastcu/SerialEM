@@ -1281,6 +1281,7 @@
 #define IDC_COMBO_PREMACRO              2280
 #define IDC_COMBO_MACRO                 2281
 #define IDC_CHECK_LIMIT_ABS_FOCUS       2282
+#define IDC_COMBO_MACRO_AT_END          3250
 #define IDC_CHECK_LIMIT_DELTA_FOCUS     2283
 #define IDC_EDIT_FOCUS_MAX_DELTA        2284
 #define IDC_STAT_DELTA_MICRONS          2285
@@ -2212,6 +2213,7 @@
 #define IDC_EDIT_MULGRID_NAME20         3249
 #define IDC_STAT_RUN                    3251
 #define IDC_STAT_NAME                   3252
+#define IDC_NA_RUN_SCRIPT_AT_END        3253
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2772,7 +2774,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        286
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3253
+#define _APS_NEXT_CONTROL_VALUE         3254
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
