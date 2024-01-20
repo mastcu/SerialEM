@@ -467,23 +467,38 @@ void CMultiTSTasks::TiltAndMoveScreen(bool tilt, double angle, bool move, int po
 // Pass startScale of <= 0 to use the raw peak value (0 is default)
 // Otherwise it will use the overlap-adjusted CCC
 // Pass startScale negative to do symmetric search around 1 with twice the number of steps
+// doPart can be 1 to do just the scan, and 2 to resume from that and do search after
+// simple bracketing of the incoming scale value
 int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
-  float startScale, float rotation)
+  float startScale, float rotation, float scaleRange, int doPart, float *maxPtr, 
+  float shiftLimit)
 {
-  int numSteps = mCkNumAlignSteps;
+  int numSteps, baseSteps = mCkNumAlignSteps;
   int ist, idir;
   FloatVec vecScale, vecPeak;
   float peakmax = -1.e30f;
   float scale, curMax, peak, shiftX, shiftY, CCC, fracPix, usePeak;
   float step = mCkAlignStep;
+  int smallPad = shiftLimit > 0 ? 1 : 0;
   float *CCCp = &CCC, *fracPixP = &fracPix;
   double overlapPow = 0.166667;
   CString report;
 
+  if (doPart && !maxPtr) {
+    mWinApp->AppendToLog("Program error, no pointer for max peak supplied for doing part"
+      " of scaling alignment");
+    return 4;
+  }
+  if (scaleRange > 0)
+    baseSteps = (int)ceil(scaleRange / step);
+  if (doPart > 1)
+    baseSteps = 2;
+  numSteps = baseSteps;
+
   if (startScale <= 0.) {
     if (startScale < 0) {
-      numSteps = 2 * mCkNumAlignSteps - 1;
-      startScale = (float)(1. - step * (mCkNumAlignSteps - 1));
+      numSteps = 2 * baseSteps - 1;
+      startScale = (float)((doPart > 1 ? -startScale : 1.) - step * (baseSteps - 1));
     } else
       startScale = 1.;
     CCCp = NULL;
@@ -493,12 +508,21 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     scale = startScale + (float)ist * step;
-    if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., 
-      scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
-      return 1;
-    usePeak = peak;
-    if (CCCp)
-      usePeak = (float)(CCC * pow((double)fracPix, overlapPow));
+    if (doPart > 1 && ist == 1) {
+      usePeak = *maxPtr;
+    } else {
+      if (shiftLimit > 0)
+        mShiftManager->SetNextAutoalignLimit(shiftLimit);
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, 0, &peak, 0., 0., 0.,
+        scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+        if (shiftLimit > 0)
+          continue;
+        return 3;
+      }
+      usePeak = peak;
+      if (CCCp)
+        usePeak = (float)(CCC * pow((double)fracPix, overlapPow));
+    }
     vecScale.push_back(scale);
     vecPeak.push_back(usePeak);
     if (usePeak > peakmax) {
@@ -515,6 +539,16 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     }
   }
+  if (!vecPeak.size()) {
+    mWinApp->AppendToLog("No correlation peak was found within the limits for any "
+      "scaling tested");
+    return 2;
+  }
+
+  if (doPart == 1) {
+    *maxPtr = peakmax;
+    return 0;
+  }
 
   // Cut the step and look on either side of the peak 
   for (ist = 0; ist < mCkNumStepCuts; ist++) {
@@ -522,9 +556,14 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     curMax = scaleMax;
     for (idir = -1; idir <= 1; idir += 2) {
       scale = curMax + idir * step;
-      if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scale,
-        rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
+      if (shiftLimit > 0)
+        mShiftManager->SetNextAutoalignLimit(shiftLimit);
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, 0, &peak, 0., 0., 0., scale,
+        rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+        if (shiftLimit > 0)
+          continue;
         return 1;
+      }
       if (CCCp)
         peak = (float)(CCC * pow((double)fracPix, overlapPow));
       vecScale.push_back(scale);
@@ -549,11 +588,17 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Align for real at the best peak.  Need to reset shifts of image for
   // scope image shift to work right
   if (!CCCp) {
-    report.Format("The two images correlate most strongly assuming a shrinkage of %.1f%%",
-      100. * (scaleMax - 1.));
+    if (doPart)
+      report.Format("The two images correlate most strongly with a scaling of %.3f",
+        scaleMax);
+    else
+      report.Format("The two images correlate most strongly assuming a shrinkage of "
+        "%.1f%%", 100. * (scaleMax - 1.));
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   }
-  return mShiftManager->AutoAlign(buffer, 0, doImShift, 0, &peak, 0., 0., 0., 
+  if (shiftLimit > 0.)
+    mShiftManager->SetNextAutoalignLimit(shiftLimit);
+  return mShiftManager->AutoAlign(buffer, smallPad, doImShift, 0, &peak, 0., 0., 0.,
         scaleMax, rotation);
 }
 
