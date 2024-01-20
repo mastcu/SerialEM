@@ -36,6 +36,7 @@
 #include "MultiCombinerDlg.h"
 #include "ComaVsISCalDlg.h"
 #include "AutoContouringDlg.h"
+#include "MultiGridDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
@@ -160,6 +161,8 @@ CNavHelper::CNavHelper(void)
   mMultiCombinerDlg = NULL;
   mMultiCombinerPlace.rcNormalPosition.right = NO_PLACEMENT;
   mAutoContDlgPlace.rcNormalPosition.right = NO_PLACEMENT;
+  mMultiGridDlg = NULL;
+  mMultiGridPlace.rcNormalPosition.right = NO_PLACEMENT;
   mComaVsISCalDlg = NULL;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
@@ -5522,17 +5525,18 @@ int CNavHelper::GetUserValue(CMapDrawItem *item, int number, CString &value)
 
 // Align an image, searching for best rotation, with possible scaling as well
 int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRange, 
-                                  float &rotBest, float &shiftXbest, float &shiftYbest,
-                                  float scaling)
+  float &rotBest, float &shiftXbest, float &shiftYbest, float scaling, int doPart, 
+  float *maxPtr, float shiftLimit, int corrFlags)
 {
   float step = 1.5f;
   int numSteps = B3DNINT(angleRange / step) + 1;
-  int ist, idir, istMax, numStepCuts = 5;
+  int ist, idir, istMax = 1, numStepCuts = 5;
   float peakmax = -1.e30f;
   float rotation, curMax, peak, shiftX, shiftY, CCC, fracPix;
   float peakBelow = -1.e30f, peakAbove = -1.e30f;
   float *CCCp = &CCC, *fracPixP = &fracPix;
   double overlapPow = 0.166667;
+  int smallPad = shiftLimit > 0 ? 1 : 0;
   FloatVec vecRot, vecPeak;
   CString report;
 
@@ -5544,15 +5548,33 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
   step = 0.;
   if (numSteps > 1)
     step = angleRange / (numSteps - 1);
+  if (doPart && !maxPtr) {
+    mWinApp->AppendToLog("Program error, no pointer for max peak supplied for doing part"
+      " of rotation alignment");
+    return 4;
+  }
+  if (doPart > 1) {
+    numSteps = 3;
+    angleRange = 3 * step;
+  }
 
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     rotation = centerAngle - 0.5f * angleRange + (float)ist * step;
-    if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scaling, 
-      rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
-      return 1;
-    if (CCCp)
-      peak = (float)(CCC * pow((double)fracPix, overlapPow));
+    if (doPart > 1 && ist == 1) {
+      peak = *maxPtr;
+    } else {
+      if (shiftLimit > 0)
+        mShiftManager->SetNextAutoalignLimit(shiftLimit);
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
+        scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+        if (shiftLimit > 0)
+          continue;
+        return 3;
+      }
+      if (CCCp)
+        peak = (float)(CCC * pow((double)fracPix, overlapPow));
+    }
     vecRot.push_back(rotation);
     vecPeak.push_back(peak);
     if (peak > peakmax) {
@@ -5565,24 +5587,37 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
     SEMTrace('1', "Rotation %.2f  peak  %g  shift %.1f %.1f", rotation, peak,
       shiftX, shiftY);
   }
-
+  if (istMax < 0) {
+    mWinApp->AppendToLog("No correlation peak was found within the limits for any "
+      "rotation tested");
+    return 2;
+  }
   if (numSteps > 2 && (istMax == 0 || istMax == numSteps - 1)) {
     mWinApp->AppendToLog("The best correlation was found at the end of the range tested;"
     "\r\nyou should redo this with a different angular range");
     if (CCCp)
       return 1;
   }
+  if (maxPtr)
+    *maxPtr = peakmax;
+  if (doPart == 1)
+    return 0;
 
   // Cut the step and look on either side of the peak 
-  if (numSteps > 2 && !(istMax == 0 || istMax == numSteps - 1)) {
+  if (numSteps > 2 && !(istMax == 0 || istMax == numSteps - 1) && doPart >= 0) {
     for (ist = 0; ist < numStepCuts; ist++) {
       step /= 2.f;
       curMax = rotBest;
       for (idir = -1; idir <= 1; idir += 2) {
         rotation = curMax + idir * step;
-        if (mShiftManager->AutoAlign(buffer, 0, false, 0, &peak, 0., 0., 0., scaling,
-          rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
-          return 1;
+        if (shiftLimit > 0)
+          mShiftManager->SetNextAutoalignLimit(shiftLimit);
+        if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0.,
+          0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+          if (shiftLimit > 0)
+            continue;
+          return 3;
+        }
         if (CCCp)
           peak = (float)(CCC * pow((double)fracPix, overlapPow));
 
@@ -5612,6 +5647,27 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
   return 0;
 }
 
+// Top-level call for aligning with both scaling and rotation
+int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scaleRange, 
+  float angleRange, float &scaleMax, float &rotation, float shiftLimit)
+{
+  float startScale = -1.;
+  float maxPeak, shiftXbest, shiftYbest;
+  int err;
+  rotation = 0.;
+  err = mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -1.,
+    rotation, scaleRange, 1, &maxPeak, shiftLimit);
+  if (err)
+    return err;
+  err = AlignWithRotation(buffer, 0., angleRange, rotation, shiftXbest, shiftYbest,
+    scaleMax, -1, &maxPeak, shiftLimit);
+  if (err)
+    return err;
+  return mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -scaleMax,
+    rotation, scaleRange, 2, &maxPeak, shiftLimit);
+}
+
+// Returns whether the Align with Rotation dialog can be opened
 int CNavHelper::OKtoAlignWithRotation(void)
 {
   ScaleMat aMat;
@@ -6071,12 +6127,32 @@ void CNavHelper::OpenAutoContouring(void)
   mWinApp->RestoreViewFocus();
 }
 
-WINDOWPLACEMENT * CNavHelper::GetAutoContDlgPlacement(void)
+WINDOWPLACEMENT *CNavHelper::GetAutoContDlgPlacement(void)
 {
   if (mAutoContouringDlg->IsOpen()) {
     mAutoContouringDlg->GetWindowPlacement(&mAutoContDlgPlace);
   }
   return &mAutoContDlgPlace;
+}
+
+void CNavHelper::OpenMultiGrid(void)
+{
+  if (mMultiGridDlg) {
+    mMultiGridDlg->BringWindowToTop();
+    return;
+  }
+  mMultiGridDlg = new CMultiGridDlg();
+  mMultiGridDlg->Create(IDD_MULTI_GRID);
+  mWinApp->SetPlacementFixSize(mMultiGridDlg, &mMultiGridPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT *CNavHelper::GetMultiGridPlacement(void)
+{
+  if (mMultiGridDlg) {
+    mMultiGridDlg->GetWindowPlacement(&mMultiCombinerPlace);
+  }
+  return &mMultiCombinerPlace;
 }
 
 WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)

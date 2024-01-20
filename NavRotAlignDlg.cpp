@@ -260,7 +260,8 @@ int CNavRotAlignDlg::AlignToMap(float centerAngle, float range, float &bestRot)
   ScaleMat aMat;
   mBufManager->CopyImageBuffer(1, 0);
   if (mHelper->AlignWithRotation(mBufManager->GetBufToReadInto(),
-    centerAngle, range, mLastRotation, shiftX, shiftY)) {
+    centerAngle, range, mLastRotation, shiftX, shiftY, 0., 0, NULL, -1., 
+    AUTOALIGN_NO_ROT_ADJUST)) {
     SEMMessageBox("The alignment procedure failed with the current parameters",
       MB_EXCLAME);
     return 1;

@@ -13,13 +13,16 @@ class CMultiHoleCombiner;
 class CMultiCombinerDlg;
 class CComaVsISCalDlg;
 class CAutoContouringDlg;
+class CMultiGridDlg;
 
-#define MULTI_IN_HOLE   0x1
-#define MULTI_HOLES     0x2
-#define MULTI_TEST_IMAGE 0x4
-#define MULTI_TEST_COMA 0x8
+#define MULTI_IN_HOLE       0x1
+#define MULTI_HOLES         0x2
+#define MULTI_TEST_IMAGE    0x4
+#define MULTI_TEST_COMA     0x8
 #define MULTI_FORCE_REGULAR 0x10
-#define MULTI_FORCE_CUSTOM 0x20
+#define MULTI_FORCE_CUSTOM  0x20
+#define MULTI_NO_3X3_CROSS  0x40
+#define MULTI_DO_CROSS_3X3  0x80
 
 // Structure for keeping track of parameters that enable skipping center align in round 1
 struct CenterSkipData
@@ -293,6 +296,7 @@ public:
   CMultiCombinerDlg *mMultiCombinerDlg;
   CComaVsISCalDlg *mComaVsISCalDlg;
   CAutoContouringDlg *mAutoContouringDlg;
+  CMultiGridDlg *mMultiGridDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -413,6 +417,7 @@ private:
   WINDOWPLACEMENT mAcquireDlgPlace;
   WINDOWPLACEMENT mComaVsISDlgPlace;
   WINDOWPLACEMENT mAutoContDlgPlace;
+  WINDOWPLACEMENT mMultiGridPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -587,7 +592,10 @@ public:
   void ListFilesToOpen(void);
   bool NameToOpenUsed(CString name);
   int AlignWithRotation(int buffer, float centerAngle, float angleRange,
-    float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0.);
+    float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0., int doPart = 0,
+    float *maxPtr = NULL, float shiftLimit = -1.f, int corrFlags = 0);
+  int AlignWithScaleAndRotation(int buffer, bool doImshift, float scaleRange, float angleRange,
+    float &scaleMax, float &rotation, float shiftLimit); 
   int OKtoAlignWithRotation(void);
   void OpenRotAlignDlg(void);
   WINDOWPLACEMENT * GetRotAlignPlacement(void);
@@ -644,6 +652,8 @@ public:
   WINDOWPLACEMENT *GetComaVsISDlgPlacement();
   void OpenAutoContouring(void);
   WINDOWPLACEMENT *GetAutoContDlgPlacement(void);
+  void OpenMultiGrid(void);
+  WINDOWPLACEMENT *GetMultiGridPlacement(void);
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
   void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
