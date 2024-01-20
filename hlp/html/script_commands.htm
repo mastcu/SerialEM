@@ -1931,6 +1931,26 @@
             type.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">TransformToMatchBuffer buf1 buf2 [obuf] [#CX] 
+            [#CY] [#XS] [#YS]</TD>
+          <TD>Scales and rotates the image in buffer <b>buf1</b> to match the pixel size of the image in <b>buf2</b>&nbsp; Enter
+            an optional buffer <B>obuf</B> to place the result in, or -1 for the default (A).&nbsp; Enter
+            optional <b>#CX</b> and <b>#CY</b> to set the center of the operation, or -1 and -1 for the
+            default, the center of the image.&nbsp; Enter <b>#XS</b> and <b>#YS</b> to set the size of the transformed
+            image, or -1 to use the default size in a dimension, which is the full scaled down size when scaling down,
+            or the size of a camera frame for the other buffer.&nbsp; Command added in 4.2, 19-Jan-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] {#CY] [#XS] 
+            [#YS] [#B] [#C]</TD>
+          <TD>Scales and rotates the image in buffer <b>buf</b> to match the pixel size at magnification index
+            <b>#M</b>.&nbsp; This command is similar to 'TransformtoMatchBuffer' except that the binning and
+            camera to match are optionally specified with <b>#B</b> and <b>#C</b> (-1 for the same as the
+            image in <b>buf</b>.&nbsp; Command added in 4.2, 19-Jan-24.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ComputeIceThickness buf1 buf2 [obuf] [#C]</TD>
           <TD>Computes an ice thickness image from an unfiltered image (U) in <b>buf1</b> and an energy-filtered
             image (F) in <b>buf2</b>, using the equation C * ln( U / F ).&nbsp; The coefficient is
@@ -3719,6 +3739,30 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">AlignBetweenMags buf #CX #CY #M [#S] [#A] [#I]</TD>
+          <TD>Aligns buffer A to the given buffer <b>buf</b> with an image from another magnification
+             or camera, or to the regular autoalign buffer if <b>buf</b> is -1.&nbsp; If a higher 
+            magnification image is in A, then the default behavior is to scale up and rotate a region of the reference
+             centered on <b>#CX</b>, <b>#CY</b> and align to that, testing a small range of additional rotations and
+            scalings.&nbsp; Enter -1 for <b>#CX</b> and <b>#CY</b> to align to the center of the reference.&nbsp; The
+            scaled reference will be left in the B buffer.&nbsp; The size of scaled up region is
+             determined by <b>#M</b>, which sets the maximum allowed shift in microns in the autoalignments;
+             if possible, the size is set so that an aligned image at that shift will still fully 
+            overlap the scaled reference.&nbsp; A negative value of <b>#M</b> specifies the number of fields
+            of view to add to the size of the image in A, or equivalently the number of FOVs of shift 
+            that can occur with full overlap.&nbsp; A value of -1 would make the reference about 3 times as big
+            as the image in A.&nbsp; The optional <b>#S</b> sets the range of additional scaling to be tested; the default is 0.06
+            to test from 0.97 to 1.03.&nbsp; Set <b>#A</b> to the range of rotations to be tested; the
+            default is 6, which is 3 degrees each way.&nbsp; Set <b>#I</b> greater than 0 to suppress the
+            change in microscope image shift. <br />
+            If the lower magnification image is in A or a negative value is entered for <b>#S</b>, the higher mag image
+            is scaled down and an area of the lower mag image is cropped out, with the center determined by 
+            <b>#CX</b> and <b>#CY</b> and the size by <b>#M</b> as described for the other method.  A and B end up with
+            the two images being aligned; the original image from A is left in C and the reference is left in D if
+            it came from a rolling buffer and there are at least 4 rolling buffers.&nbsp; Command added in 4.2, 19-Jan-24.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportAlignTrimming</TD>
           <TD>Reports the sum of left and right borders and the sum of top and bottom borders
             in the last autoalign for the image in A and for the reference image.&nbsp; The
@@ -4023,26 +4067,56 @@
             operation of this task, but any subset of them can be overridden by entering
             optional parameters here.&nbsp; The value in the dialog is used if -9 is entered
             for the corresponding parameter here, or if the optional entries end before the
-            given parameter.&nbsp; The parameters are: <br /> 1) <b>#N</b> for number of
-            shots around the center<br /> 2) <b>#C</b> -1 or 1 for a shot in the center before or after the
-            off-center shots, or 0 for none<br /> 3) <b>#O</b> for the distance from center of the off-center shots,
-            in microns<br /> 4) <b>#D</b> for the extra delay after the image shift, in seconds<br /> 5) <b>#S</b> 1 to
-            save a Record image at each position or 0 not to<br /> 6) <b>#E</b> 1 or 2 to use early
-            return for a K2/K3 camera after the last shot or after all shots, or 3 for early return on all shots
-            with a full sum returned on the first one<br /> 7) <b>#F</b> for the
-            number of frames in the early returned image (or -1 for all, 0 for none)<br /> 8) <b>#B</b> 1 to
-            adjust beam tilt to compensate for image shift or 0 not to<br /> 9) <b>#H</b> the sum of 1 to do
-            shots around a center (within a hole) and 2 to do shots in multiple holes or
+            given parameter.&nbsp; The parameters are: <br /> 
+            1) <b>#N</b> for number of shots around the center<br />
+            2) <b>#C</b> -1 or 1 for a shot in the center before or after the off-center shots, or 0 for none<br />
+            3) <b>#O</b> for the distance from center of the off-center shots, in microns<br />
+            4) <b>#D</b> for the extra delay after the image shift, in seconds<br />
+            5) <b>#S</b> 1 to save a Record image at each position or 0 not to<br />
+            6) <b>#E</b> 1 or 2 to use early return for a K2/K3 camera after the last shot or after all 
+            shots, or 3 for early return on all shots with a full sum returned on the first one<br />
+            7) <b>#F</b> for the number of frames in the early returned image (or -1 for all, 0 for none)<br />
+            8) <b>#B</b> 1 to adjust beam tilt to compensate for image shift or 0 not to<br />
+            9) <b>#H</b> the sum of 1 to do shots around a center (within a hole) and 2 to do shots in multiple holes or
             specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing
             image locations or 8 for testing the coma correction, plus 16 to force it to use a regular 
-            array of holes or 32 to force it to use custom holes.)<br /> 10)
-             <b>#R2</b> greater than 0 to do a second ring of positions<br /> 11) <b>#N2</b>
-            with the number of positions in the second ring <br /> 12) <b>#O2</b> for the distance from center
-            of the second ring
+            array of holes, 32 to force it to use custom holes, 64 to force it not to use a 
+            cross pattern, or 128 to force it to use a cross pattern if the hole pattern is 
+            3 x 3.&nbsp; Note that arithmetic is allowed, so you can enter each flag 
+            separately with + signs and spaces between them)<br />
+            10) <b>#R2</b> greater than 0 to do a second ring of positions<br />
+            11) <b>#N2</b> with the number of positions in the second ring <br /> 
+            12) <b>#O2</b> for the distance from center of the second ring
              <br /> For example,
             &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save
             Records, but take all other parameters from the dialog.&nbsp; When the operation starts successfully,
             <i>ReportedValue1</i> is set to the total number of Record images to be taken.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetMultiShotParams #N [#C] [#O] [#D] [#S] [#E] [#F] [#B] 
+            [#H] [#R2] [#N2] [#O2] [#X #Y] [#DH] </TD>
+          <TD>Sets parameters for Multiple Records persistently.&nbsp; The first 12 parameters have 
+            exactly the same meaning as for the &#39;MultipleRecords&#39; command, except that the 
+            entry for <b>#H</b> can be the sum of 1, 2, 16 or 32, and 64 or 128.&nbsp; In addition:<br />
+            13-14) <b>#X</b> and <b>#Y</b> with the number of shots in X and Y for a rectangular pattern,
+            or with the number of rings and -1 for a hexagonal array <br />
+            15) Additional delay when moving between holes. <br />
+            Enter -9 for any parameter to skip setting it.&nbsp; Command added in 4.2, 18-Jan-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportMultishotParams #</TD>
+          <TD>Sets <i>reportedvalues</i> with particular parameters: <br />
+            With <b>#</b> set to 1: 1) number of shots in first ring inside hole; 2) -1, 0, or 1 for shot in center;
+            3) radius of ring; 4) 1 to do a second ring or 0 not; 5) number of shots in second ring; 
+            6) radius of ring.<br />
+            With <b>#</b> set to 2: 1&amp;2) number of holes in X and Y for rectangular pattern, -3 and -3 for
+             a cross pattern, number of rings and -1 for a hexagonal pattern, or number of positions and 0 for 
+            a custom pattern; 3) sum of 1 for shots in hole, 2 for multiple holes, and 4 for custom holes; 
+            4) 1 to 
+            save Records or 0 not to; 5) 0-3 for controlling early returns; 6) number of frames in early return. <br />
+            With <b>#</b> set to 3: 1) extra delay after image shift; 2) extra delay when moving between holes.
+            &nbsp; Command added in 4.2, 18-Jan-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">TestNextMultiShot #</TD>

@@ -139,6 +139,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSUseCustomHoles = true;
   else if (inHoleOrMulti & MULTI_FORCE_REGULAR)
     mMSUseCustomHoles = false;
+  mMSNoCornersOf3x3 = mMSParams->skipCornersOf3x3;
+  if (inHoleOrMulti & MULTI_DO_CROSS_3X3)
+    mMSNoCornersOf3x3 = true;
+  else if (inHoleOrMulti & MULTI_NO_3X3_CROSS)
+    mMSNoCornersOf3x3 = false;
 
   // Check conditions, first for test runs
   if (testImage && testComa) {
@@ -758,7 +763,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   int ring, step, mainDir, sideDir, mainSign, sideSign, origMag, numRings;
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
-  BOOL crossPattern = mMSParams->skipCornersOf3x3;
+  BOOL crossPattern = startingMulti ? mMSNoCornersOf3x3 : mMSParams->skipCornersOf3x3;
   bool adjustForTilt = false;
   float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;

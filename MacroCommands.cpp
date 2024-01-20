@@ -2567,7 +2567,7 @@ int CMacCmd::TestNextMultiShot(void)
 int CMacCmd::MultipleRecords(void)
 {
   BOOL doSave;
-  int doEarly, index2, ix0, ix1, iy1, numEarly, maxFlags = MULTI_FORCE_CUSTOM * 2 - 1;
+  int doEarly, index2, ix0, ix1, iy1, numEarly, maxFlags = MULTI_DO_CROSS_3X3 * 2 - 1;
 
   mNavHelper->UpdateMultishotIfOpen();
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
@@ -2605,6 +2605,119 @@ int CMacCmd::MultipleRecords(void)
     return 1;
   }
   SetReportedValues(-iy1);
+  return 0;
+}
+
+// SetMultishotParams
+int CMacCmd::SetMultishotParams()
+{
+  int index2, maxFlags = MULTI_DO_CROSS_3X3 * 2 - 1;
+  MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
+  mNavHelper->UpdateMultishotIfOpen();
+
+  // Check for gross errors before changing anything
+  if (!mItemEmpty[14] && mItemInt[14] > -9 &&
+    (mItemInt[13] <= 0 || mItemInt[14] == 0 || mItemInt[14] < -1 || 
+      mItemInt[13] > MAX_HOLE_SPINNERS || mItemInt[14] > MAX_HOLE_SPINNERS))
+    ABORT_LINE("Specification for regular hole pattern in entries 13 and 14 is invalid "
+      "in line:\n\n");
+  if ((mItemInt[1] >= -8 && (mItemInt[1] < 2 || mItemInt[1] > MAX_PERIPHERAL_SHOTS)) ||
+    (!mItemEmpty[1] && mItemInt[11] >= -8 && (mItemInt[11] < 2 ||
+      mItemInt[11] > MAX_PERIPHERAL_SHOTS)) ||
+      (!mItemEmpty[3] && mItemDbl[3] >= -8. && mItemDbl[3] < 0.01) ||
+    (!mItemEmpty[12] && mItemDbl[12] >= -8. && mItemDbl[12] < 0.01))
+    ABORT_LINE("Invalid entry for number of shots inside hole or radius of ring in "
+      "line:\n\n");
+
+  if (!mItemEmpty[9] && mItemInt[9] > -9) {
+    index2 = mItemInt[9];
+    if (index2 < 1 || index2 > maxFlags) {
+      mStrCopy.Format("The ninth entry for doing within holes or\n"
+        "in multiple holes must be between 1 and %d in line:\n\n", maxFlags);
+      ABORT_LINE(mStrCopy);
+    }
+    msParams->inHoleOrMultiHole = index2 & (MULTI_IN_HOLE | MULTI_HOLES);
+    if (index2 & MULTI_FORCE_CUSTOM)
+      msParams->useCustomHoles = true;
+    else if (index2 & MULTI_FORCE_REGULAR)
+      msParams->useCustomHoles = false;
+    if (index2 & MULTI_DO_CROSS_3X3)
+      msParams->skipCornersOf3x3 = true;
+    else if (index2 & MULTI_NO_3X3_CROSS)
+      msParams->skipCornersOf3x3 = false;
+  }
+  if (mItemInt[1] >= -8)
+    msParams->numShots[0] = mItemInt[1];
+  if (!(mItemEmpty[2] || mItemInt[2] < -8))
+    msParams->doCenter = mItemInt[2];
+  if (!(mItemEmpty[3] || mItemDbl[3] < -8.))
+    msParams->spokeRad[0] = mItemFlt[3];
+  if (!(mItemEmpty[12] || mItemDbl[12] < -8.))
+    msParams->spokeRad[1] = mItemFlt[12];
+  if (!(mItemEmpty[4] || mItemDbl[4] < -8.))
+    msParams->extraDelay = mItemFlt[4];
+  if (!(mItemEmpty[5] || mItemInt[5] < -8))
+    msParams->saveRecord = mItemInt[5] != 0;
+  if (!(mItemEmpty[6] || mItemInt[6] < -8))
+    msParams->doEarlyReturn = mItemInt[6];
+  if (!(mItemEmpty[7] || mItemInt[7] < -8))
+    msParams->numEarlyFrames = mItemInt[7];
+  if (!(mItemEmpty[8] || mItemInt[8] < -8))
+      msParams->adjustBeamTilt = mItemInt[8] != 0;
+  if (!mItemEmpty[10] && mItemInt[10] > -9)
+    msParams->doSecondRing = mItemInt[10] != 0;
+  if (!(mItemEmpty[11] || mItemInt[11] < -8))
+    msParams->numShots[1] = mItemInt[11];
+  if (!(mItemEmpty[12] || mItemDbl[12] < -8.))
+    msParams->spokeRad[1] = mItemFlt[12];
+  if (!(mItemEmpty[14] || mItemInt[14] < -8)) {
+    if (mItemInt[14] == -1) {
+      msParams->numHexRings = mItemInt[13];
+      msParams->doHexArray = true;
+    } else {
+      msParams->numHoles[0] = mItemInt[13];
+      msParams->numHoles[1] = mItemInt[14];
+      msParams->doHexArray = false;
+    }
+  }
+  if (!(mItemEmpty[15] || mItemDbl[15] < -8.))
+    msParams->holeDelayFactor = mItemFlt[15];
+  if (mNavHelper->mMultiShotDlg)
+    mNavHelper->mMultiShotDlg->UpdateSettings();
+  mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
+// ReportMultishotParams
+int CMacCmd::ReportMultishotParams()
+{
+  MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
+  mNavHelper->UpdateMultishotIfOpen();
+  int numX, numY, ind;
+  if (mItemInt[1] == 1) {
+    SetRepValsAndVars(2, msParams->numShots[0], msParams->doCenter, msParams->spokeRad[0],
+      msParams->doSecondRing ? 1 : 0, msParams->numShots[1], msParams->spokeRad[1]);
+  } else if (mItemInt[1] == 2) {
+    numX = msParams->numHoles[0];
+    numY = msParams->numHoles[1];
+    ind = msParams->inHoleOrMultiHole;
+    if (msParams->useCustomHoles && msParams->customMagIndex) {
+      ind += 4;
+      numX = (int)msParams->customHoleX.size();
+      numY = 0;
+    } else if (msParams->doHexArray) {
+      numX = msParams->numHexRings;
+      numY = -1;
+    } else if (msParams->skipCornersOf3x3 && numX == 3 && numY == 3) {
+      numX = -3;
+      numY = -3;
+    }
+    SetRepValsAndVars(2, numX, numY, ind, msParams->saveRecord ? 1 : 0,
+      msParams->doEarlyReturn, msParams->numEarlyFrames);
+  } else if (mItemInt[1] == 3) {
+    SetRepValsAndVars(2, msParams->extraDelay, msParams->holeDelayFactor);
+  } else
+    ABORT_LINE("A value of 1 to 3 must be entered for line:\n\n");
   return 0;
 }
 
@@ -2836,6 +2949,26 @@ int CMacCmd::AlignWithRotation(void)
     shiftX, shiftY))
     ABORT_LINE("Failure to autoalign in:\n\n");
   SetRepValsAndVars(4, bmin, shiftX, shiftY);
+  return 0;
+}
+
+// AlignBetweenMags
+int CMacCmd::AlignBetweenMags()
+{
+  CString report;
+  int index;
+  float scaleMax, rotation;
+  if (mItemInt[1] < 0)
+    index = mBufferManager->AutoalignBufferIndex();
+  else if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  if (!mItemEmpty[5] && (fabs(mItemFlt[5]) < 0.02 || fabs(mItemFlt[5]) > 0.5))
+    ABORT_LINE("The scaling search range should be between 0.02 and 0.5 in line\n\n");
+  if (mProcessImage->AlignBetweenMagnifications(index, mItemFlt[2], mItemFlt[3],
+    mItemFlt[4], mItemEmpty[5] ? 0.06f : mItemFlt[5], mItemEmpty[6] ? 6.f : mItemFlt[6],
+    mItemEmpty[7] || mItemInt[7] <= 0, scaleMax, rotation, report))
+    ABORT_LINE(report + " for line:\n\n");
+  SetReportedValues(scaleMax, rotation);
   return 0;
 }
 
@@ -7019,6 +7152,44 @@ int CMacCmd::ScaledSpectrum(void)
   } else 
     mProcessImage->NewProcessedImage(&mImBufs[index], (short *)buf, kUBYTE, finalSize,
       finalSize, 1);
+  return 0;
+}
+
+// TransformToOtherMag
+int CMacCmd::TransformToOtherMag()
+{
+  CString report;
+  int outInd = 0, index;
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  if (mItemInt[2] < 1 || mItemInt[2] >= MAX_MAGS)
+    ABORT_LINE("Magnification index out of range in line:\n\n");
+  if (!mItemEmpty[3] && mItemInt[3] >= 0 &&
+    ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
+    ABORT_LINE(report);
+  if (mProcessImage->TransformToOtherMag(&mImBufs[index], outInd, mItemInt[2], report,
+    mItemEmpty[9] ? -1 : mItemInt[9], mItemEmpty[8] ? -1 : mItemInt[8],
+    mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
+    mItemEmpty[6] ? -1 : mItemInt[6], mItemEmpty[7] ? -1 : mItemInt[7]))
+    ABORT_LINE(report + " for line\n\n");
+  return 0;
+}
+
+// TransformToMatchBuffer
+int CMacCmd::TransformToMatchBuffer()
+{
+  CString report;
+  int outInd = 0, index, other;
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report) || 
+    ConvertBufferLetter(mStrItems[2], -1, true, other, report))
+    ABORT_LINE(report);
+   if (!mItemEmpty[4] && mItemInt[3] >= 0 &&
+    ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
+    ABORT_LINE(report);
+  if (mProcessImage->TransformToOtherMag(&mImBufs[index], &mImBufs[other], outInd, 
+    report, mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
+    mItemEmpty[6] ? -1 : mItemInt[6], mItemEmpty[7] ? -1 : mItemInt[7]))
+    ABORT_LINE(report + " for line\n\n");
   return 0;
 }
 

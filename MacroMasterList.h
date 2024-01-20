@@ -765,6 +765,11 @@ MAC_SAME_NAME_ARG(OpenDialog, 1, 0, OPENDIALOG, S)
 MAC_SAME_NAME_NOARG(ReportLastMarkerShift, 0, 4, REPORTLASTMARKERSHIFT)
 MAC_SAME_NAME_ARG(SetMontPanelParams, 1, 4, SETMONTPANELPARAMS, Iiii)
 MAC_SAME_NAME_ARG(ReportMaxImageShift, 1, 4, REPORTMAXIMAGESHIFT, I)
+MAC_SAME_NAME_ARG(TransformToOtherMag, 2, 4, TRANSFORMTOOTHERMAG, SIsddiiii)
+MAC_SAME_NAME_ARG(TransformToMatchBuffer, 2, 4, TRANSFORMTOMATCHBUFFER, SSsddii)
+MAC_SAME_NAME_ARG(AlignBetweenMags, 4, 4, ALIGNBETWEENMAGS, SDDDddi)
+MAC_SAME_NAME_ARG(SetMultishotParams, 1, 4, SETMULTISHOTPARAMS, Iddiiiiiiid)
+MAC_SAME_NAME_ARG(ReportMultishotParams, 1, 4, REPORTMULTISHOTPARAMS, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

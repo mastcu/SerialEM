@@ -93,6 +93,7 @@ private:
   int mMSSkipAstigBT;             // Convenient copy of value from NavHelper
   float mMSRadiusOnCam[2];        // Radius to peripheral shots in camera coords
   BOOL mMSUseCustomHoles;         // Flag to do custom holes during acquisition
+  BOOL mMSNoCornersOf3x3;         // Flag for cross pattern if 3x3 during acquisition
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position
   double mBaseBeamTiltX, mBaseBeamTiltY;  // Starting beam tilt
@@ -104,7 +105,7 @@ private:
   int mMSHoleIndex;               // Current hole index if any
   int mMSNumHoles;                // Number of holes to do
   BOOL mMSDoingHexGrid;           // Flag that it is doing hex array
-  bool mMSUseHoleDelay;           // Flag to use extra hole delay instead of regular one
+  BOOL mMSUseHoleDelay;           // Flag to use extra hole delay instead of regular one
   FloatVec mMSHoleISX, mMSHoleISY;  // IS values for all the holes
   IntVec mMSPosIndex;              // Position index of hole being acquired
   int mMSLastShotIndex;           // Last index of multishots in hole
