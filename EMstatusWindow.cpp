@@ -174,36 +174,38 @@ void EMstatusWindow::SetStatusText(int indStat, int whichBuf)
   char letter = 'A' + whichBuf;
   CString string;;
   int saveFlag = buf->GetSaveCopyFlag();
+  int capt = buf->mCaptured;
   if (!buf->mImage)
     string.Format("%c: Empty", letter);
-  else if (saveFlag >= 0 && buf->mCaptured) {
+  else if (saveFlag >= 0 && capt) {
     // If unsaved, say so and include name of camera mode
-    if (saveFlag && buf->mCaptured > 0)
+    if (saveFlag && capt  > 0)
       string.Format("%c: %s%s", letter, "UNSAVED, ", mModeNames[setUsed]);
-    else if (buf->mCaptured == BUFFER_PROCESSED || 
-      buf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
+    else if (capt  == BUFFER_PROCESSED || 
+      capt  == BUFFER_PROC_OK_FOR_MAP || 
+      capt  == BUFFER_AUTOCOR_OVERVIEW)
       string.Format("%c: %s%s", letter, "Processed, ", mModeNames[setUsed]);
-    else if (buf->mCaptured == BUFFER_CROPPED)
+    else if (capt  == BUFFER_CROPPED)
       string.Format("%c: %s%s", letter, "Cropped, ", mModeNames[setUsed]);
-    else if (buf->mCaptured == BUFFER_FFT || buf->mCaptured == BUFFER_LIVE_FFT)
+    else if (capt  == BUFFER_FFT || capt  == BUFFER_LIVE_FFT)
       string.Format("%c: %s%s", letter, "FFT, ", mModeNames[setUsed]);
-    else if (buf->mCaptured == BUFFER_MONTAGE_OVERVIEW)
+    else if (capt  == BUFFER_MONTAGE_OVERVIEW)
       string.Format("%c: %s", letter, "Montage Overview");
-    else if (buf->mCaptured == BUFFER_PRESCAN_OVERVIEW)
+    else if (capt  == BUFFER_PRESCAN_OVERVIEW)
       string.Format("%c: %s", letter, "Prescan Overview");
-    else if (buf->mCaptured == BUFFER_MONTAGE_PRESCAN)
+    else if (capt  == BUFFER_MONTAGE_PRESCAN)
       string.Format("%c: %s", letter, "Prescan frame");
-    else if (buf->mCaptured == BUFFER_MONTAGE_CENTER)
+    else if (capt  == BUFFER_MONTAGE_CENTER)
       string.Format("%c: %s", letter, "Montage Center");
-    else if (buf->mCaptured == BUFFER_MONTAGE_PIECE)
+    else if (capt  == BUFFER_MONTAGE_PIECE)
       string.Format("%c: %s", letter, "Montage Piece");
-    else if (buf->mCaptured == BUFFER_PRESCAN_CENTER)
+    else if (capt  == BUFFER_PRESCAN_CENTER)
       string.Format("%c: %s", letter, "Prescan Center");
-    else if (buf->mCaptured == BUFFER_CALIBRATION)
+    else if (capt  == BUFFER_CALIBRATION)
       string.Format("%c: %s", letter, "Calibration image");
-    else if (buf->mCaptured == BUFFER_TRACKING)
+    else if (capt  == BUFFER_TRACKING)
       string.Format("%c: %s", letter, "Tracking image");
-    else if (buf->mCaptured == BUFFER_ANCHOR)
+    else if (capt  == BUFFER_ANCHOR)
       string.Format("%c: %s", letter, "Anchor image");
     else
       string.Format("%c: %s%s", letter, "Continuous, ", mModeNames[setUsed]);

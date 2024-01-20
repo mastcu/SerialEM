@@ -29,6 +29,7 @@
 #define AUTOALIGN_SHOW_FILTA  8
 #define AUTOALIGN_SHOW_FILTC 16
 #define AUTOALIGN_MORE_SPOTS 32
+#define AUTOALIGN_NO_ROT_ADJUST  64
 
 
 // Globals
@@ -329,6 +330,7 @@ public:
     double intensity, float defocus);
   ScaleMat FocusAdjustedISToCamera(EMimageBuffer *imBuf);
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
+  void MakeScaleRotTransXform(float xf[6], float scale, float rot, float dx, float dy);
   void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
   void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,

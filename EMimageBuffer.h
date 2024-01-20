@@ -59,7 +59,8 @@ public:
   float mSampleMean;
   float mSampleSD;
   float mDoseRatePerUBPix;  // Dose rate per unbinned pixel
-  float mEffectiveBin;  // Set for a montage overview to make it display nicely
+  float mEffectiveBin;  // Set for a montage overview to make it display nicely, but temp
+                        // negative value in autoalign says how much image was scaled up
   int mOverviewBin;     // Binning of a montage overview
   BOOL mDynamicFocused;
   BOOL mStageShiftedByMouse;  // Flag that the shift resulted in a stage shift

@@ -60,6 +60,11 @@ public:
   int FilterImage(EMimageBuffer *imBuf, int outImBuf, float sigma1, float sigma2, float radius1, float radius2, bool display = true);
   int FilterImage(KImage *image, float **outArray, float sigma1, float sigma2, float radius1, float radius2);
   int CombineImages(int bufNum1, int bufNum2, int outBufNum, int operation);
+  int TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum, int magInd, CString &errStr, int camera = -1,
+    int binning = -1, float xcen = -1., float ycen = -1., int xsize = -1, int ysize = -1, 
+    float otherScale = 1., float otherRotation = 0., float *xform = NULL);
+  int TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *otherBuf, int outBufNum, CString &errStr, 
+    float xcen = -1., float ycen = -1., int xsize = -1, int ysize = -1, float *xform = NULL);
   int ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, float offset, bool retainType);
   int PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2, int outBufNum, bool vertical);
   BOOL GetLiveFFT() {return mLiveFFT;};
@@ -149,6 +154,7 @@ private:
   CCameraController *mCamera;
   CEMscope *mScope;
   CShiftManager *mShiftManager;
+  EMbufferManager *mBufferManager;
   float mInnerXRayDistance;   // minimum and maximum distances from X ray patch
   float mOuterXRayDistance;   // for neighboring pixels to average
   int mXRayCritIterations;    // Number of times to try oversized patch with higher crit
@@ -240,6 +246,8 @@ public:
   afx_msg void OnProcessMakecoloroverlay();
   afx_msg void OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI);
   int CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, int right);
+  int AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, float maxShiftUm,
+    float scaleRange, float angleRange, bool doImShift, float &scaleMax, float &rotation, CString &errStr);
   afx_msg void OnProcessCropimage();
   afx_msg void OnUpdateProcessCropimage(CCmdUI *pCmdUI);
   afx_msg void OnListRelativeRotations();

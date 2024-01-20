@@ -506,7 +506,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float trimCenFrac = 0.2f;
   float trimPassRatio = 0.3f;
   float oversizeFrac = 0.1f;
-  float freqScale = 1.;
+  float freqScale = 1., hiFreqScale = 1.;
   bool centered = true;
   int numPeaks = mMaxNumPeaksToEval;
   int xInd, yInd;
@@ -516,6 +516,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   if (mWinApp->mNavHelper->GetRealigning() || mWinApp->mShiftCalibrator->CalibratingIS())
     trimFrac = 0.04f;
   bool tmplCorr = inSmallPad > 1;
+  bool transformedA = false;
   bool showCor = (corrFlags & AUTOALIGN_SHOW_CORR) != 0;
   bool fillSpots = (corrFlags & AUTOALIGN_FILL_SPOTS) != 0 || (mErasePeriodicPeaks &&
     !(corrFlags & AUTOALIGN_KEEP_SPOTS));
@@ -700,6 +701,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     widthA /= needBinA;
     mDataA = (void *)tempA;
     mDeleteA = true;
+
+    // A negative value here signals that image was scaled up by this amount, so it is
+    // appropriate to scale the filters by this divided by the binning here 
+    if (mImBufs[0].mEffectiveBin < 0)
+      hiFreqScale = B3DMIN(1.f, -1.f / (mImBufs[0].mEffectiveBin / (float)needBinA));
   }
   
   if (needBinC > 1) {
@@ -717,6 +723,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     widthC /= needBinC;
     mDataC = (void *)tempC;
     mDeleteC = true;
+    if (mImBufs[toBuf].mEffectiveBin < 0)
+      hiFreqScale = B3DMIN(hiFreqScale, -1.f / (mImBufs[toBuf].mEffectiveBin / 
+      (float)needBinC));
   }
 
   if (debugTime)
@@ -802,6 +811,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     } else
       XCorrStretch(mDataA, typeA, widthA, heightA, stretch, stretchAxis,
             tempA, &str.xpx, &str.xpy, &str.ypx, &str.ypy);
+    transformedA = true;
     if (mDeleteA)
       delete [] mDataA;
     mDataA = tempA;
@@ -1064,8 +1074,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     nxPad = B3DMAX(nxPad, nyPad);
     nyPad = nxPad;
   }
-  XCorrSetCTF(mSigma1 * freqScale, mSigma2 * freqScale, 0.f, mRadius2 * freqScale, mCTFa,
-    nxPad, nyPad, &delta);
+  XCorrSetCTF(mSigma1 * freqScale, mSigma2 * freqScale * hiFreqScale, 0.f, 
+    mRadius2 * freqScale * hiFreqScale, mCTFa, nxPad, nyPad, &delta);
   if (delta)
     for (int jj = 0; jj < 8193; jj++)
       mCTFa[jj] = (float)sqrt((double)mCTFa[jj]);
@@ -1295,8 +1305,10 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
 
   // This returned the shift to apply to A to align it to C, except that Y is inverted
   // But deStretch the shift if A was stretched; invert Y for this operation
-  // This is needed for scaled data too, but not for rotated
-  if (!swapStretch && rotation == 0.) {
+  // This is needed for scaled data too, but not for rotated in original use because
+  // NavRotAlign was going to transform image and wanted the shift that applied to it.
+  // Now it is required to pass this flag to suppress correction for rotation
+  if (transformedA && (rotation == 0. || !(corrFlags &  AUTOALIGN_NO_ROT_ADJUST))) {
     tempX = Xpeaks[indMaxPeak];
     tempY = -Ypeaks[indMaxPeak];
     Xpeaks[indMaxPeak] = strInv.xpx * tempX + strInv.xpy * tempY;
@@ -1335,10 +1347,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   // But also need to adjust shift to center the tilt on the center of shifted image
   // and this turns out to be the stretch (or destretch) of C's shift
   // Need to invert Y before and after this operation
-  if (swapStretch) {
+  // 1/17/24: I think this applies only to true stretch between different tilts
+  if (swapStretch && stretch != 1.0) {
     cshiftX = str.xpx * tempX + str.xpy * tempY;
     cshiftY = -(str.ypx * tempX + str.ypy * tempY);
-  } else {
+  } else if (stretch != 1.0) {
     cshiftX = strInv.xpx * tempX + strInv.xpy * tempY;
     cshiftY = -(strInv.ypx * tempX + strInv.ypy * tempY);
   }
@@ -3469,6 +3482,18 @@ ScaleMat CShiftManager::MatScaleRotate(ScaleMat aMat, float scale, float rotatio
   rotMat.xpy = -sin(rotation * DTOR) * scale;
   rotMat.ypx = -rotMat.xpy;
   return MatMul(aMat, rotMat);
+}
+
+// Sets up an IMOD-style transform qith scale, rotation, and shift
+void CShiftManager::MakeScaleRotTransXform(float xf[6], float scale, float rot, 
+  float dx, float dy)
+{
+  xf[0] = scale * (float)cos(rot * DTOR);
+  xf[2] = -scale * (float)sin(rot * DTOR);
+  xf[1] = -xf[2];
+  xf[3] = xf[0];
+  xf[4] = dx;
+  xf[5] = dy;
 }
 
 ////////////////////////////////////////////////////////////////////

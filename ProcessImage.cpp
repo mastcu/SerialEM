@@ -118,6 +118,7 @@ void CProcessImage::Initialize(void)
   mShiftManager = mWinApp->mShiftManager;
   mCamera = mWinApp->mCamera;
   mScope = mWinApp->mScope;
+  mBufferManager = mWinApp->mBufferManager;
   if (!mDefaultMaxCtfFitRes)
     mDefaultMaxCtfFitRes = GetRecentVoltage() > 125. ? 5.f : 10.f;
 }
@@ -489,7 +490,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   // If the destination buffer has no image, copy the source first to keep 
   // NewprocessedImage happy
   if (!mImBufs[outBufNum].mImage)
-    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+    mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
   NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1, newProc, false, outBufNum,
     display);
   return 0;
@@ -652,13 +653,214 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
     delete[] inArray2;
 
   if (!mImBufs[outBufNum].mImage)
-    mWinApp->mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
+    mBufferManager->CopyImBuf(&mImBufs[bufNum1], &mImBufs[outBufNum], false);
   NewProcessedImage(&mImBufs[bufNum1], (short *)outArray, kFLOAT, nx, ny, 1, newProc,
     false, outBufNum);
   return 0;
 }
 
-// Multiple by a factor and add an offset to the image in imBuf, put in the indicated
+// Transform the image buffer to match size/rotation of another magnification, allowing
+// a change of binning or camera, and extracting the image from the given center (default
+// at the middle) and making the image a specified size (default is scaled size, limited
+// by binned camera size)
+// otherScale and otherRotation are the high-defocus scaling and rotation to match
+// The IMOD-type transform is returned in xform
+int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum, 
+  int magInd, CString &errStr, int camera, int binning, float xcen, float ycen, int xsize,
+  int ysize, float otherScale, float otherRotation, float *xform)
+{
+  KImage *image = imBuf->mImage;
+  if (!image)
+    return -1;
+  int type = image->getType();
+  int nx, ny, width, err = 0, scaleXsize, scaleYsize, cubXin, cubYin, dataSize, ind;
+  int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : BUFFER_PROCESSED;
+  float fromPixel, toPixel, fromRot, toRot, scaling, rotation, rotScale;
+  float aMat[2][2], xfCen[6], xfTrans[6], xfProd[6], cosRot, sinRot, edgeMean;
+  float zoomThresh = 0.8f, focusScale = 1., focusRot = 0.;
+  int filtType = 5;
+  bool doZoom;
+  CString mess;
+  void *imData;
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  int *activeList = mWinApp->GetActiveCameraList();
+  float *rotBuf = NULL, *sclBuf = NULL, *fltBuf = NULL, *inArray;
+  image->getSize(nx, ny);
+
+  // Basic sanity check and assign defaults for camera, binning, and center
+  if (!imBuf->mMagInd || imBuf->mCamera < 0 || !imBuf->mBinning) {
+    errStr = "The image buffer is missing mag, binning, or camera information";
+    return 1;
+  }
+  if (camera < 0) {
+    camera = imBuf->mCamera;
+  } else {
+    if (camera >= mWinApp->GetActiveCamListSize()) {
+      errStr = "The camera number is out of range for the # of active cameras";
+      return 1;
+    }
+    camera = activeList[camera];
+  }
+  if (binning <= 0)
+    binning = imBuf->mBinning;
+  if (xcen <= 0)
+    xcen = (float)(nx / 2.);
+  if (ycen <= 0)
+    ycen = (float)(ny / 2.);
+  if (xcen >= nx || ycen >= ny) {
+    errStr = "The center coordinates for the transformation are out of range";
+    return 1;
+  }
+
+  // Compute the scaling and rotation between images, invert rotation for Y inversion
+  mShiftManager->GetScaleAndRotationForFocus(imBuf, focusScale, focusRot);
+  PrintfToLog("this sc %.3f rot %.2f oher %.3f %.2f", focusScale, focusRot, otherScale, otherRotation);
+  fromPixel = (float)(mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd) * 
+    imBuf->mBinning) / focusScale;
+  toPixel = (float)(mShiftManager->GetPixelSize(camera, magInd) * binning) / otherScale;
+  fromRot = (float)mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd) +
+    focusRot;
+  toRot = (float)mShiftManager->GetImageRotation(camera, magInd) + otherRotation;
+  scaling = fromPixel / toPixel;
+  rotation = fromRot - toRot;
+  cosRot = (float)cos(rotation * DTOR);
+  sinRot = (float)sin(rotation * DTOR);
+
+  // Compute the scaled size, limit to what the camera can take at the given binning
+  scaleXsize = 2 * (((int)(scaling * nx)) / 2);
+  scaleYsize = 2 * (((int)(scaling * ny)) / 2);
+  if (scaling > 1) {
+    ACCUM_MIN(scaleXsize, camParams[camera].sizeX / binning);
+    ACCUM_MIN(scaleYsize, camParams[camera].sizeY / binning);
+  }
+
+  // But take supplied values as is.
+  if (xsize > 0)
+    scaleXsize = 2 * (xsize / 2);
+  if (ysize > 0)
+    scaleYsize = 2 * (ysize / 2);
+  doZoom = scaling < zoomThresh;
+
+  // Transform the center offset as in newstack "applyfirst"
+  xfUnit(xfCen, 1., 2);
+  xfCen[4] = (float)(nx / 2.) - xcen;
+  xfCen[5] = (float)(ny / 2.) - ycen;
+  mShiftManager->MakeScaleRotTransXform(xfTrans, scaling, rotation, 0., 0.);
+  xfMult(xfCen, xfTrans, xfProd, 2);
+  if (xform)
+    for (ind = 0; ind < 6; ind++)
+      xform[ind] = xfProd[ind];
+
+
+  // Set up input for cubinterp and if scaling down, set up filter and modify the input
+  rotScale = scaling;
+  cubXin = nx;
+  cubYin = ny;
+  if (doZoom) {
+    rotScale = 1.;
+    cubXin = scaleXsize;
+    cubYin = scaleYsize;
+    err = selectZoomFilter(filtType, scaling, &width);
+    if (err) {
+      errStr.Format("Error %d selecting  zoom filter type % for scaling %g", err, 
+        filtType, scaling);
+      return 1;
+    }
+  }
+
+  // Set up matrix for cubinterp
+  aMat[0][0] = rotScale * cosRot;
+  aMat[1][0] = -rotScale * sinRot;
+  aMat[0][1] = -aMat[1][0];
+  aMat[1][1] = aMat[0][0];
+  image->Lock();
+  imData = image->getData();
+  mrc_getdcsize(type, &dataSize, &width);
+
+  // Get arrays needed
+  if (type == kFLOAT) {
+    inArray = (float *)imData;
+  } else {
+    NewArray2(fltBuf, float, nx*2, ny);
+    inArray = fltBuf;
+  }
+  if (inArray)
+    NewArray2(rotBuf, float, scaleXsize*4, scaleYsize);
+  if (inArray && rotBuf && doZoom) {
+    NewArray2(sclBuf, float, scaleXsize*4, scaleYsize);
+  }
+  if (!rotBuf || (type != kFLOAT && !fltBuf) || !inArray || (doZoom && !sclBuf)) {
+    err = 1;
+    errStr = "Failed to allocate memory for new array";
+  }
+
+  // Get the edge mean and convert to float if necessary
+  if (!err) {
+    edgeMean = imageEdgeMean(imData, type, image->getRowBytes() / dataSize, 1, nx - 2, 1,
+      ny - 2);
+
+    if (type != kFLOAT)
+      sliceTaperOutPad(imData, type, nx, ny, inArray, nx, nx, ny, 1, edgeMean);
+  }
+
+  // Zoom down
+  if (!err && doZoom) {
+    err = zoomFiltInterp(inArray, sclBuf, nx, ny, scaleXsize, scaleYsize,
+        (float)(nx / 2.), (float)(ny / 2.), 0., 0., edgeMean);
+    if (err) {
+      errStr.Format("Error %d from zoomFiltInterp to scale down image by %g", err, 
+        scaling);
+    }
+    inArray = sclBuf;
+    cubXin = scaleXsize;
+    cubYin = scaleYsize;
+  }
+
+  // Apply interpolation for rotation and scaling up
+  if (!err)
+    cubinterp(inArray, rotBuf, cubXin, cubYin, scaleXsize, scaleYsize, aMat, 
+      (float)(cubXin / 2.), (float)(cubYin / 2.), xfProd[4], xfProd[5], 1.f, edgeMean, 1);
+  delete[] fltBuf;
+  delete[] sclBuf;
+  image->UnLock();
+  
+  if (err) {
+    delete[] rotBuf;
+    return err;
+  }
+  
+  // Assign the buffer properties
+  if (!mImBufs[outBufNum].mImage)
+    mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+  NewProcessedImage(imBuf, (short *)rotBuf, kFLOAT, scaleXsize, scaleYsize, 1, newProc,
+    false, outBufNum, outBufNum == 0);
+  mImBufs[outBufNum].mBinning = binning;
+  mImBufs[outBufNum].mCamera = camera;
+  mImBufs[outBufNum].mEffectiveBin = (float)binning;
+  mImBufs[outBufNum].mMagInd = magInd;
+  mImBufs[outBufNum].mPixelSize = toPixel;
+  mWinApp->SetCurrentBuffer(outBufNum);
+  return 0;
+}
+
+// Overloaded version that takes the other image buffer directly and supplies needed
+// values from it
+int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *otherBuf, 
+  int outBufNum, CString &errStr, float xcen, float ycen, int xsize, int ysize, 
+  float *xform)
+{
+  float otherScale = 1., otherRot = 0.;
+  if (!otherBuf->mMagInd || otherBuf->mCamera < 0 || !otherBuf->mBinning) {
+    errStr = "The other image buffer is missing mag, binning, or camera information";
+    return 1;
+  }
+  mShiftManager->GetScaleAndRotationForFocus(otherBuf, otherScale, otherRot);
+  return TransformToOtherMag(imBuf, outBufNum, otherBuf->mMagInd, errStr, 
+    mWinApp->LookupActiveCamera(otherBuf->mCamera), otherBuf->mBinning, xcen, ycen, xsize,
+    ysize, otherScale, otherRot, xform);
+}
+
+// Multiply by a factor and add an offset to the image in imBuf, put in the indicated
 // output buffer, keeping the same type if retainType is true
 int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, 
   float offset, bool retainType)
@@ -701,7 +903,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
     array);
   image->UnLock();
   if (!mImBufs[outBufNum].mImage)
-    mWinApp->mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
+    mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
   NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, newProc, false, outBufNum);
   return 0;
 }
@@ -727,7 +929,7 @@ int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
 
   // Convert each to byte first - the size may change to be a multiple of 4
   if (type1 != kUBYTE) {
-    if (mWinApp->mBufferManager->CopyImBuf(imBuf1, &copy1, false))
+    if (mBufferManager->CopyImBuf(imBuf1, &copy1, false))
       return 1;
     copy1.UpdatePixMap();
     if (!copy1.ConvertToByte(0., 0.)) {
@@ -738,7 +940,7 @@ int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
     image1->getSize(nx1, ny1);
   }
   if (type2 != kUBYTE) {
-    if (mWinApp->mBufferManager->CopyImBuf(imBuf2, &copy2, false))
+    if (mBufferManager->CopyImBuf(imBuf2, &copy2, false))
       return 1;
     copy2.UpdatePixMap();
     if (!copy2.ConvertToByte(0., 0.)) {
@@ -774,7 +976,7 @@ int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
   // Put it in the output buffer as usual, give it less binning so it displays fully
   // at same zoom
   if (!mImBufs[outBufNum].mImage)
-    mWinApp->mBufferManager->CopyImBuf(imBuf1, &mImBufs[outBufNum], false);
+    mBufferManager->CopyImBuf(imBuf1, &mImBufs[outBufNum], false);
   moreBin = 1. / B3DMAX(nxOut / (float)nx1, nyOut / (float)ny1);
   NewProcessedImage(imBuf1, (short *)outBuf, kUBYTE, nxOut, nyOut, moreBin, -1, false,
     outBufNum);
@@ -787,7 +989,6 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
   int nx, int ny, double moreBinning, int capFlag, bool fftWindow, int toBufNum, 
   bool display)
 {
-  EMbufferManager *bufferManager = mWinApp->mBufferManager;
   EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) + toBufNum;
   BOOL hasUserPtSave = toImBuf->mHasUserPt;
   EMimageExtra *extra;
@@ -808,29 +1009,29 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
 
   // Make a temporary copy of the imBuf because it may get displaced on the roll
   EMimageBuffer imBufTmp;
-  bufferManager->CopyImBuf(imBuf, &imBufTmp, false);
+  mBufferManager->CopyImBuf(imBuf, &imBufTmp, false);
 
   // Roll the buffers just like on acquire if going to A
   int nRoll = B3DCHOICE(fftWindow, MAX_FFT_BUFFERS - 1,
-    bufferManager->GetShiftsOnAcquire());
+    mBufferManager->GetShiftsOnAcquire());
   if ((!toImBuf->GetSaveCopyFlag() && toImBuf->mCaptured > 0 && mLiveFFT &&
     toImBuf == mImBufs) || toBufNum > 0 || !display)
     nRoll = 0;
   for (int i = nRoll; i > 0; i--)
-    bufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
+    mBufferManager->CopyImBuf(&toImBuf[i - 1], &toImBuf[i]);
 
   // Make sure it's OK to destroy A now: if not delete data
-  if (!fftWindow && !bufferManager->OKtoDestroy(toBufNum, "Processing this image")) {
+  if (!fftWindow && !mBufferManager->OKtoDestroy(toBufNum, "Processing this image")) {
     delete [] brray;
     return;
   }
 
   // Copy the imbuf to inherit any neat properties not managed by replaceImage
   imBufTmp.mCaptured = BUFFER_PROCESSED;
-  bufferManager->CopyImBuf(&imBufTmp, toImBuf, false);
+  mBufferManager->CopyImBuf(&imBufTmp, toImBuf, false);
 
   // Replace the image, again cleaning up on failure
-  if (bufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
+  if (mBufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
     imBuf->mConSetUsed, fftWindow, display) ) {
     delete [] brray;
     return;
@@ -1034,6 +1235,290 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
       SEMMessageBox(mess);
   }
   return retval;
+}
+
+/*
+ * AlignBetweenMagnifications aligns the image in A to the buffer toBufNum, or the
+ * autoalign buffer if it is negative, with scaling and rotation based on the mags
+ * If the higher mag image is in A, xcen, ycen specify the point to align to in the lower
+ * mag image; otherwise it is the center point of the image to extract from A for aligning
+ * to the higher mag image, where the default is the center if values are negative
+ * maxShiftUm is either the maximum shift in microns, in which correlation will be done 
+ * with a lower mag image big enough to allow full overlap at that shift if possible;
+ * or it is the negative of the number of FOV (geometric mean size of higher mag image)
+ * to add to the size of the higher mag image.
+ * scaleRange is the total range of scale values; if negative forces higher mag image in
+ * to be scaled down for aligning to cropped reference; otherwise reference is scaled up
+ * angleRange is the total range of rotations to try
+ * doImShift true means to do the image shift
+ * best scale and rotation are returned in scaleMax and rotation; error string in errStr
+ */
+int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, 
+  float maxShiftUm, float scaleRange, float angleRange, bool doImShift, float &scaleMax,
+  float &rotation, CString &errStr)
+{
+  int nxAli, nxRef, nyAli, nyRef, err, zoomInd, cropInd, ind;
+  int nxCrop, nyCrop, ixCen, iyCen, ixStart, ixEnd, iyStart, iyEnd, type, dataSize;
+  int bxOffset = 0, byOffset = 0, nroll = mBufferManager->GetShiftsOnAcquire();
+  float fromPixel, toPixel, aMat[2][2] = {{1.f, 0.f}, {0.f, 1.f}}, edgeMean;
+  float zoomXform[6], aliXform[6], zoomXfInv[6], prodXf[6], xShift, yShift;
+  float effBinSave;
+  EMimageBuffer aliCopy, refCopy, zoomCopy;
+  unsigned char *cropBuf;
+  KImage *image;
+  bool aliBigger = false, interpUp = false, useFOV = false;
+  if (toBufNum < 0)
+    toBufNum = mBufferManager->AutoalignBufferIndex();
+  cropInd = toBufNum;
+  zoomInd = 0;
+
+  // Sanity checks of the buffer contents
+  if (toBufNum >= MAX_BUFFERS || !mImBufs[toBufNum].mImage) {
+    errStr = "Buffer to align to is out of range or has no image";
+    return 1;
+  }
+
+  fromPixel = mShiftManager->GetPixelSize(&mImBufs[0]);
+  toPixel = mShiftManager->GetPixelSize(&mImBufs[toBufNum]);
+  if (!fromPixel || !mImBufs->mMagInd || !mImBufs->mBinning || mImBufs->mCamera < 0) {
+    errStr = "The image to align is missing pixel size, binning, mag, or camera "
+      "information";
+    return 1;
+  }
+  if (!toPixel || !mImBufs[toBufNum].mMagInd || !mImBufs[toBufNum].mBinning || 
+    mImBufs[toBufNum].mCamera < 0) {
+    errStr = "The reference image is missing pixel size, binning, mag, or camera "
+      "information";
+    return 1;
+  }
+  if (mImBufs->mMagInd == mImBufs[toBufNum].mMagInd &&
+    mImBufs->mCamera == mImBufs[toBufNum].mCamera) {
+    errStr = "The images are from the same mag and camera; regular autoalign should "
+      "be used";
+    return 1;
+  }
+
+  // Compare size of each image in microns and insist one be consistently bigger than
+  // the other.
+  mImBufs->mImage->getSize(nxAli, nyAli);
+  mImBufs[toBufNum].mImage->getSize(nxRef, nyRef);
+  if (nxAli * fromPixel > nxRef * toPixel && nyAli * fromPixel > nyRef * toPixel) {
+    B3DSWAP(zoomInd, cropInd, err);
+    aliBigger = true;
+
+  } else if (!(nxAli * fromPixel < nxRef * toPixel &&
+    nyAli * fromPixel < nyRef * toPixel)) {
+    errStr = "One image must have a larger field of view than the other in both"
+      " dimensions";
+    return 1;
+  }
+
+  // Default is to scale reference up if higher mag is in A, overridden by a negative
+  // scakeRange value
+  interpUp = !aliBigger;
+  if (scaleRange < 0) {
+    interpUp = false;
+    scaleRange = -scaleRange;
+  }
+
+  // Positive max shift is taken literally; negative is number of fields of view to add
+  if (maxShiftUm < 0) {
+    useFOV = true;
+    maxShiftUm = -maxShiftUm;
+  }
+
+  image = mImBufs[cropInd].mImage;
+  image->getSize(nxRef, nyRef);
+  type = image->getType();
+
+  // Set up center to crop or scale from in the larger image: point to align to
+  if (xcen < 0)
+    xcen = (float)(nxRef / 2.);
+  if (ycen < 0)
+    ycen = (float)(nyRef / 2.);
+  if (xcen >= nxRef || ycen >= nyRef) {
+    errStr = "The center coordinate is outside the range of the image with larger field"
+      " of view";
+    return 1;
+  }
+
+  // Common case of higher mag in A and scaling up reference is simpler
+  if (interpUp) {
+    mImBufs[zoomInd].mImage->getSize(nxAli, nyAli);
+
+    // Set up size to scale to
+    toPixel = mShiftManager->GetPixelSize(mImBufs);
+    if (useFOV) {
+      ind = (int)sqrt(nxAli * nyAli);
+      nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm * ind), 16000);
+      nyCrop = B3DMIN(nyAli + 2 * (int)(maxShiftUm * ind), 16000);
+      maxShiftUm = B3DMAX(0.5f, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
+        (float)(nyCrop - nyAli) * toPixel / 2.f));
+    } else {
+      nxCrop = nxAli + 2 * (int)(maxShiftUm / toPixel);
+      nyCrop = nyAli + 2 * (int)(maxShiftUm / toPixel);
+    }
+
+    // Roll buffers if possible since scaled image will be put in B
+    for (ind = nroll - 1; ind >= 1; ind--)
+      mBufferManager->CopyImageBuffer(ind - 1, ind, false);
+    if (TransformToOtherMag(&mImBufs[toBufNum], mImBufs, 1, errStr, xcen, ycen,
+      nxCrop, nyCrop, zoomXform))
+      return 1;
+
+    // Pass the scaling that occurred to autoalign so it can adjust high frequency filter
+    // to ignore empty resolution, setting this negative temporarily
+    effBinSave = mImBufs[1].mEffectiveBin;
+    mImBufs[1].mEffectiveBin = -(float)sqrt(zoomXform[0] * zoomXform[0] + 
+      zoomXform[1] * zoomXform[1]);
+
+    // Do the alignment, restore effective bin, make error messages, and leave
+    err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, doImShift, scaleRange,
+      angleRange, scaleMax, rotation, maxShiftUm);
+    mImBufs[1].mEffectiveBin = effBinSave;
+    if (err == 2)
+      errStr = "No correlation peaks were found within the allowed range";
+    else if (err == 1)
+      errStr = "The best correlation was at the end of the rotation search range and a "
+      "wider range is needed";
+    else if (err)
+      errStr = "An error occurred in the autoalignments";
+    return err;
+  }
+
+  // The first way I tried, scaling higher mag image down and cropping from lower mag one
+  // Still the only way if aligning lower to higher mag
+  // Make copies of image buffers because the rolling is a mess in this case
+  mrc_getdcsize(type, &dataSize, &err);
+  toPixel = mShiftManager->GetPixelSize(&mImBufs[cropInd]);
+  mBufferManager->CopyImBuf(mImBufs, &aliCopy);
+  mBufferManager->CopyImBuf(&mImBufs[toBufNum], &refCopy);
+
+  // Scale down entire higher mag image to match the lower mag ine
+  if (TransformToOtherMag(&mImBufs[zoomInd], &mImBufs[cropInd], 0, errStr, -1., -1., -1,
+    -1, zoomXform))
+    return 1;
+
+  // Set up cropping size based on FOV or max shift that allows full area to overlap
+  mImBufs->mImage->getSize(nxAli, nyAli);
+  if (useFOV) {
+    ind = (int)sqrt(nxAli * nyAli);
+    nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm * ind), nxRef);
+    nyCrop = B3DMIN(nyAli + 2 * (int)(maxShiftUm * ind), nyRef);
+    maxShiftUm = B3DMAX(0.5f, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
+      (float)(nyCrop - nyAli) * toPixel / 2.f));
+  } else {
+    nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm / toPixel), nxRef);
+    nyCrop = B3DMIN(nyAli + 2 * (int)(maxShiftUm / toPixel), nyRef);
+  }
+
+  // Save the zoomed down image if it is reference
+  if (aliBigger)
+    mBufferManager->CopyImBuf(mImBufs, &zoomCopy);
+
+  NewArray2(cropBuf, unsigned char, dataSize * nxCrop, nyCrop);
+  if (!cropBuf) {
+    errStr = "Failed to allocate memory for array to crop into";
+    return 1;
+  }
+
+  // Set up crop area and get mean
+  ixCen = B3DNINT(xcen);
+  iyCen = B3DNINT(ycen);
+  ixStart = B3DMAX(0, ixCen - nxCrop / 2);
+  ixEnd = B3DMIN(nxRef - 1, ixCen + (nxCrop - nxCrop / 2) - 1);
+  iyStart = B3DMAX(0, iyCen - nyCrop / 2);
+  iyEnd = B3DMIN(nyRef - 1, iyCen + (nyCrop - nyCrop / 2 - 1));
+  image = aliBigger ? aliCopy.mImage : refCopy.mImage;
+  image->Lock();
+  edgeMean = imageEdgeMean(image->getData(), type, image->getRowBytes() / dataSize,
+    ixStart + 1, ixEnd - 1, iyStart + 1, iyEnd - 1);
+  err = B3DNINT(edgeMean);
+
+  // Fill the output array with the mean
+  // This could be a function in xcorr
+  switch (type) {
+  case MRC_MODE_BYTE:
+    for (ind = 0; ind < nxCrop * nyCrop; ind++)
+      cropBuf[ind] = err;
+    break;
+  case MRC_MODE_USHORT:
+    for (ind = 0; ind < nxCrop * nyCrop; ind++)
+      ((unsigned short *)cropBuf)[ind] = err;
+    break;
+  case MRC_MODE_SHORT:
+    for (ind = 0; ind < nxCrop * nyCrop; ind++)
+      ((short *)cropBuf)[ind] = err;
+    break;
+  case MRC_MODE_FLOAT:
+    for (ind = 0; ind < nxCrop * nyCrop; ind++)
+      ((float *)cropBuf)[ind] = edgeMean;
+    break;
+  default:
+    delete[]cropBuf;
+    errStr = "Reference image is an unsupported data type";
+    image->UnLock();
+    return 1;
+  }
+
+  // Set offsets if there is empty area on left/top, and extract it
+  if (ixCen < nxCrop / 2)
+    bxOffset = nxCrop / 2 - ixCen;
+  if (iyCen < nyCrop / 2)
+    byOffset = nyCrop / 2 - iyCen;
+  err = extractAndBinIntoArray(image->getData(), type, image->getRowBytes() / dataSize,
+    ixStart, ixEnd, iyStart, iyEnd, 1, cropBuf, nxCrop, bxOffset, byOffset, 0, &nxAli,
+    &nyAli);
+  image->UnLock();
+  if (err) {
+    errStr.Format("Program error: extractAndBinIntoArray returned %d", err);
+    delete[] cropBuf;
+    return 1;
+  }
+
+  // taper edges if there is a fill area
+  taperAtFill(cropBuf, type, nxCrop, nyCrop, b3dIMin(3, 16, nxCrop / 20, nyCrop / 20), 1);
+  if ((nroll == 4 && toBufNum >= nroll) || nroll > 4) {
+    err = aliBigger ? 2 : 1;
+    for (ind = nroll - 1; ind - err >= 0; ind--)
+      mBufferManager->CopyImageBuffer(ind - err, ind, false);
+  }
+
+  // Put image in A or B, copy zoomed down one back to B if this went to A
+  NewProcessedImage(aliBigger ? &aliCopy : &refCopy, (short *)cropBuf, type, nxCrop,
+    nyCrop, 1., -1, false, aliBigger ? 0 : 1, false);
+  if (aliBigger)
+    mBufferManager->CopyImBuf(&zoomCopy, &mImBufs[1]);
+
+  // Tricky rolling to preserve original A then reference if necessary
+  if (nroll >= 3)
+    mBufferManager->CopyImBuf(&aliCopy, &mImBufs[2], false);
+  if (nroll >= 4 && toBufNum < nroll)
+    mBufferManager->CopyImBuf(&refCopy, &mImBufs[3], false);
+
+  // Align without doing image shift
+  err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, false, scaleRange, 
+    angleRange, scaleMax, rotation, maxShiftUm);
+  if (err || !doImShift)
+    return err;
+
+
+  mImBufs->mImage->getShifts(xShift, yShift);
+
+  // If aligned image bigger, account for the shift in cropping
+  if (aliBigger) {
+    prodXf[4] = xShift - (ixCen - nxRef / 2);
+    prodXf[5] = yShift - (iyCen - nyRef / 2);
+  } else {
+
+    // Or invert the zoom transform and multiply by that to get shift of center in 4 & 5
+    mShiftManager->MakeScaleRotTransXform(aliXform, 1., 0., xShift, yShift);
+    xfInvert(zoomXform, zoomXfInv, 2);
+    xfMult(aliXform, zoomXfInv, prodXf, 2);
+  }
+  return mShiftManager->ImposeImageShiftOnScope(&aliCopy, prodXf[4] * aliCopy.mBinning,
+    -prodXf[5] * aliCopy.mBinning, aliCopy.mMagInd, aliCopy.mCamera, false, false) ?
+    0 : 1;
 }
 
 // Allocate a new array and copy a scaled correlation into, assign to buffer A
@@ -2201,8 +2686,8 @@ void CProcessImage::OnProcessShowcrosscorr()
 void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() && 
-    !(mWinApp->mBufferManager->GetAlignToB() && 
-    mWinApp->mBufferManager->GetShiftsOnAcquire() < 2)); 
+    !(mBufferManager->GetAlignToB() && 
+    mBufferManager->GetShiftsOnAcquire() < 2)); 
 }
 
 void CProcessImage::OnProcessAutocorrelation()
@@ -2244,7 +2729,7 @@ void CProcessImage::OnProcessFindpixelsize()
   float vectors[4], dist = 0.;
   if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER && 
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
-    mWinApp->mBufferManager->CopyImageBuffer(1, 0);
+    mBufferManager->CopyImageBuffer(1, 0);
   FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
 }
 
@@ -2268,7 +2753,7 @@ void CProcessImage::OnProcessPixelsizefrommarker()
     minScale = mImBufs->mImageScale->GetMinScale();
     maxScale = mImBufs->mImageScale->GetMaxScale();
   }
-  mWinApp->mBufferManager->CopyImageBuffer(1, 0);
+  mBufferManager->CopyImageBuffer(1, 0);
   FindPixelSize(markedX, markedY, minScale, maxScale, 0, 0, dist, vectors);
 }
 
