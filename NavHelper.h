@@ -584,6 +584,7 @@ public:
   void DualMapCleanup(int error);
   void StopDualMap(void);
   int AssessAcquireProblems(int startInd, int endInd);
+  int CheckForBadParamIndexes();
   BOOL IsMultishotSaving(bool *allZeroER = NULL);
   void GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, double dists[3], 
     double &avgDist, double &angle);

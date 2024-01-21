@@ -9059,6 +9059,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     SEMMessageBox(str, MB_EXCLAME);
     returnVal = 1;
   }
+  mHelper->CheckForBadParamIndexes();
 
   // Set up list box and counters
   SetCurrentRegFromMax();

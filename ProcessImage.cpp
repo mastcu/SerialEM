@@ -532,6 +532,8 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
 {
   KImage *image1 = mImBufs[bufNum1].mImage;
   KImage *image2 = mImBufs[bufNum2].mImage;
+  if (!image1 || !image2)
+    return -1;
   int type1 = image1->getType();
   int type2 = image2->getType();
   int nx, ny, ind, delx, dely, ix, iy, ix2, iy2, ind2;
@@ -539,8 +541,6 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
   float *inArray1, *inArray2, *outArray;
   float coeff = (mNextThicknessCoeff > 0.) ? mNextThicknessCoeff : mThicknessCoefficient;
   int newProc = -1;
-  if (!image1 || !image2)
-    return -1;
   image1->getSize(nx, ny);
   if (type1 == kRGB || type2 == kRGB) {
     SEMMessageBox("You cannot do arithmetic operations on RGB images");

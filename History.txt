@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/24: Added checks for bad tilt series and montage parameter indexes after
+loading in a Navigator file and before starting acquisition (In 4.1).
+
 1/19/24: Added ability to transform an image to match one at another mag, and
 to align between images at differents mags, with script commands for these
 operations.

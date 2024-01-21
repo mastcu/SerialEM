@@ -5019,6 +5019,59 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       IDYES)
       return 1;
   }
+  if (CheckForBadParamIndexes())
+    return 1;
+  return 0;
+}
+
+// Make sure no indexes are out of range, which can crash when indexes are not checked
+int CNavHelper::CheckForBadParamIndexes()
+{
+  int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0;
+  int numTS = (int)mTSparamArray->GetSize();
+  int numMont = (int)mMontParArray->GetSize();
+  int numProp = (int)mFileOptArray->GetSize();
+  CMapDrawItem *item;
+  CString str, badTSlist, badMontList, badPropList, mess;
+  for (ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    if (item->mTSparamIndex >= numTS) {
+      str.Format(" %d", ind + 1);
+      numBadTS++;
+      badTSlist += str;
+      item->mTSparamIndex = -1;
+    }
+    if (item->mMontParamIndex >= numMont) {
+      str.Format(" %d", ind + 1);
+      numBadMont++;
+      badMontList += str;
+      item->mMontParamIndex = -1;
+    }
+    if (item->mFilePropIndex >= numProp) {
+      str.Format(" %d", ind + 1);
+      numBadProp++;
+      badPropList += str;
+      item->mFilePropIndex = -1;
+    }
+  }
+  if (numBadTS) {
+    mess.Format("%d items had tilt series parameter indexes out of range:\r\n", numBadTS);
+    mess += badTSlist + "\r\n\r\n";
+  }
+  if (numBadMont) {
+    str.Format("%d items had montage parameter indexes out of range:\r\n", numBadMont);
+    mess += str + badMontList + "\r\n\r\n";
+  }
+  if (numBadProp) {
+    str.Format("%d items had file property parameter indexes out of range:\r\n", 
+      numBadProp);
+    mess += str + badPropList + "\r\n\r\n";
+  }
+  if (!mess.IsEmpty()) {
+    mess += "These indexes have all been cleared out";
+    mWinApp->AppendToLog(mess);
+    SEMMessageBox(mess);
+  }
   return 0;
 }
 
