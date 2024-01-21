@@ -2985,7 +2985,10 @@ MoveStage 0 0 -$zRange / 2.
 -        dose rates such as there is
 -        for the K2/K3; if this becomes established or you have measurements indicating that
 -        it occurs, multiply the value by the efficiency factor (1 minus the fraction
--        lost).</p>
+-        lost).&nbsp; Note that this value for counts received from the Thermo/FEI software is 
+              not the same as what applies to the images you see and the value placed in 
+              &#39;.mdoc&#39; files, because it is adjusted for the scaling controlled by the property 
+              &#39;Falcon3ScalingPower&#39;.</p>
         <p>For Falcon 4, a different property is needed for scaling raw electron counts when aligning frames being saved as EER, 
               or aligning without permanently saving (in this case frames are saved into 
           an EER file).&nbsp; This scaling factor is needed to make the counts in aligned 
