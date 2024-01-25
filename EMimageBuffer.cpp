@@ -68,6 +68,7 @@ EMimageBuffer::EMimageBuffer()
   mStage2ImMat.xpx = 0.;
   mStage2ImDelX = 0.;
   mStage2ImDelY = 0.;
+  mUseWidth = 0;  // Non-zero is a sign of a map
 }
 
 // For complete destruction of an image buffer

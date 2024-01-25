@@ -143,6 +143,7 @@ INT_PROP_TEST("DewarVacCapabilities", scope->, DewarVacCapabilities)
 INT_PROP_TEST("ScopeCanFlashFEG", scope->, ScopeCanFlashFEG)
 INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
 INT_PROP_TEST("SkipNormalizations", scope->, SkipNormalizations)
+BOOL_PROP_TEST("UseImageBeamTilt", scope->, UseImageBeamTilt)
 
 #endif
 #ifdef PROP_TEST_SECT2
@@ -364,6 +365,9 @@ FLOAT_PROP_TEST("RealignItemFocusChangeLimit", navHelper->, RIdefocusChangeLimit
 BOOL_PROP_TEST("ConvertMapsToBytesDefault", navHelper->, ConvertMaps)
 INT_PROP_TEST("SkipAstigAdjustmentForIS", navHelper->, SkipAstigAdjustment)
 FLOAT_PROP_TEST("MaxMontReuseWaste", navHelper->, MaxMontReuseWaste)
+FLOAT_PROP_TEST("ScaledAliDfltMaxRot", navHelper->, ScaledAliDfltMaxRot)
+FLOAT_PROP_TEST("ScaledAliDfltPctChg", navHelper->, ScaledAliDfltPctChg)
+
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
 BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 #endif

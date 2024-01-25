@@ -509,6 +509,7 @@ public:
   GetSetMember(BOOL, UseFilterInTEMMode);
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
+  GetSetMember(BOOL, UseImageBeamTilt);
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -884,6 +885,7 @@ private:
   unsigned int mUtapiConnected; // Possible set of flags for capabilities available
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
+  BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

@@ -3445,6 +3445,12 @@
             allowing it to be run on Cs-corrected scopes.
           </TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="style4">UseImageBeamTilt</TD>
+          <TD>Set to 1 on a Thermo/FEI scope to use image-beam tilt instead of rotation 
+            center to set the beam tilt for autofocus and all other beam-tilting operations.&nbsp; 
+            For experimental use only.</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="task_properties"></A><B>Task and montage operation properties</B></P>
@@ -4202,6 +4208,16 @@
             realigning to a View or Search mode map if the map&#39;s defocus offset differs from
             the current offset by more than the given amount.&nbsp; Should be useful only
             for testing behavior when leaving low dose.</TD>
+        </TR>
+        <TR>
+          <TD height="20">ScaledAliDfltPctChg</TD>
+          <TD height="20">The default maximum percent change in size to test in the scaling search when 
+            Realign to Item does a second-round alignment to a scaled-up map.&nbsp;The default is 4.</TD>
+        </TR>
+        <TR>
+          <TD height="20">ScaledAliDfltMaxRot</TD>
+          <TD height="20">The default maximum angle to test in the rotation search when 
+            Realign to Item does a second-round alignment to a scaled-up map.&nbsp;The default is 3 degrees.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImportStageToImage</TD>

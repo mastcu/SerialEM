@@ -531,6 +531,7 @@ CEMscope::CEMscope()
   mUtapiConnected = 0;
   mUseFilterInTEMMode = false;
   mScanningMags = 0;
+  mUseImageBeamTilt = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -3121,7 +3122,10 @@ BOOL CEMscope::GetBeamTilt(double &tiltX, double &tiltY)
   ScopeMutexAcquire("GetBeamTilt", true);
   
   try {
-    mPlugFuncs->GetBeamTilt(&tiltX, &tiltY);
+    if (FEIscope && mUseImageBeamTilt)
+      mPlugFuncs->GetImageBeamTilt(&tiltX, &tiltY);
+    else
+      mPlugFuncs->GetBeamTilt(&tiltX, &tiltY);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting Beam Tilt "));
@@ -3153,11 +3157,17 @@ BOOL CEMscope::ChangeBeamTilt(double tiltX, double tiltY, BOOL bInc)
 
   try {
     if (bInc) {
-      mPlugFuncs->GetBeamTilt(&plugX, &plugY);
+      if (FEIscope && mUseImageBeamTilt)
+        mPlugFuncs->GetImageBeamTilt(&plugX, &plugY);
+      else
+        mPlugFuncs->GetBeamTilt(&plugX, &plugY);
       tiltX += plugX;
       tiltY += plugY;
     }
-    mPlugFuncs->SetBeamTilt(tiltX, tiltY);
+    if (FEIscope && mUseImageBeamTilt)
+      mPlugFuncs->SetImageBeamTilt(tiltX, tiltY);
+    else
+      mPlugFuncs->SetBeamTilt(tiltX, tiltY);
     SEMTrace('b', "SetBeamTilt %.3f %.3f", tiltX, tiltY);
   }
   catch (_com_error E) {

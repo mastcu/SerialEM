@@ -851,6 +851,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   toBuf->mPanX = 0;
   toBuf->mPanY = 0;
   toBuf->mCurStoreChecksum = 0;
+  toBuf->mUseWidth = 0;
   toBuf->mWrittenByVersion = inStore->GetWrittenByVersion();
   if (inStore == mWinApp->mStoreMRC)
     toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();

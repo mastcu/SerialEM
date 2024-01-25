@@ -3496,6 +3496,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.JeolMagChangeDelay = mScope->GetJeolPostMagDelay();
   mTD.RestoreBBmode = mParam->restoreBBmode != 0;
   mTD.scopeSimulation = mScope->GetSimulationMode();
+  mTD.useImageBeamTilt = FEIscope && mScope->GetUseImageBeamTilt();
 
   // Set up all the shuttering and timing parameters
   CapSetupShutteringTiming(conSet, inSet, bEnsureDark);
@@ -8958,11 +8959,18 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
       td->ISTicks = ::GetTickCount();
       if (td->PostBeamTilt) {
         if (td->BTBacklashDelay > 0) {
-          td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX + td->BeamTiltBacklash,
-            td->BeamTiltY + td->BeamTiltBacklash);
+          if (td->useImageBeamTilt)
+            td->scopePlugFuncs->SetImageBeamTilt(td->BeamTiltX + td->BeamTiltBacklash,
+              td->BeamTiltY + td->BeamTiltBacklash);
+          else
+            td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX + td->BeamTiltBacklash,
+              td->BeamTiltY + td->BeamTiltBacklash);
           Sleep(td->BTBacklashDelay);
         }
-        td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX, td->BeamTiltY);
+        if (td->useImageBeamTilt)
+          td->scopePlugFuncs->SetImageBeamTilt(td->BeamTiltX, td->BeamTiltY);
+        else
+          td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX, td->BeamTiltY);
       }
       if (td->PostStigmator) {
         if (td->AstigBacklashDelay > 0) {
@@ -10026,6 +10034,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
       imBuf->mBinning = mBinning;
       imBuf->mEffectiveBin = (float)mBinning;
+      imBuf->mUseWidth = 0;
       CUR_OR_DEFD_TO_BUF(mDivideBinToShow, BinDivisorI(mParam));
       CUR_OR_DEFD_TO_BUF(mDividedBy2, mDivBy2ForImBuf > 0);
       CUR_OR_DEFD_TO_BUF(mCamera, curCam);

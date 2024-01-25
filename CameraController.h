@@ -308,6 +308,7 @@ struct CameraThreadData {
   bool GetDoseRate;             // Flag to call for dose rate from image/frames
   double LastDoseRate;          // and returned dose rate
   BOOL imageReturned;           // Flag that blanker proc can proceed
+  bool useImageBeamTilt;        // Flag to use this instead of beam tilt
   int GetDeferredSum;           // Just get a deferred sum (2 for tilt sum)
   bool UseFrameAlign;
   double FaRawDist, FaSmoothDist, FaResMean, FaMaxResMax, FaMeanRawMax, FaMaxRawMax;
