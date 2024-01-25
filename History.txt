@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/25/24: Adjusted default readout interval for Falcon 4i to give correct
+number of frames for 6-sec exposures (In 4.1).
+
+1/25/24: Fixed bad value for autofocus beam tilt being set if Check Autofocus
+is stopped (In 4.1).
+
+1/25/24: Allowed Realign to Item to work with groups collapsed (In 4.1).
+
 1/20/24: Added checks for bad tilt series and montage parameter indexes after
 loading in a Navigator file and before starting acquisition (In 4.1).
 

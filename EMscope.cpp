@@ -494,7 +494,7 @@ CEMscope::CEMscope()
   mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
   mFalcon4ReadoutInterval = 0.004021f;
-  mFalcon4iReadoutInterval = 0.003147f;
+  mFalcon4iReadoutInterval = 0.003133f;
   mMinFalcon4CountAlignFrac = 8;
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;

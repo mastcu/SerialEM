@@ -949,8 +949,12 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
     int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
 {
-  if (GetCurrentOrAcquireItem(mItem) < 0)
-    return 1;
+  if (!GetAcquiring()) {
+    mItem = GetSingleSelectedItem();
+    if (!mItem)
+      return -1;
+  } else if (GetCurrentOrAcquireItem(mItem) < 0)
+    return -1;
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
     justMoveIfSkipCen);
 }
