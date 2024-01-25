@@ -1867,6 +1867,7 @@ void CFocusManager::CheckAccuracy(int logging)
   mCheckLogging = logging;
   mCalDefocus = 0.;
   mFCindex = 0;
+  mCalSavedBeamTilt = mBeamTilt;
   mAccuracyMeasured = false;
   report.Format("Checking accuracy of autofocus by measuring defocus at\r\n"
     "current value and at %.1f microns above and below current defocus", mCalDelta);
