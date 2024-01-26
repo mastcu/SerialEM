@@ -1310,7 +1310,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     // Make box bigger if there are a lot of rings
     assumedPosFocus = -mInitialDefocus;
     if (mOperationInd > 0)
-      assumedPosFocus = -mCenteredDefocus;
+      assumedPosFocus = -0.9f * mCenteredDefocus;
     processImg->DefocusFromPointAndZeros(0., 0, 
       param.pixel_size_of_input_image, 0.4f, &radii, assumedPosFocus);
     if ((int)radii.size() > (2 * mMaxRingsForCtf) / 3)
@@ -1319,7 +1319,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     // Get the default focus range and limit it
     // 11/1/23: change -1.0 -> -1.5, 1.5->2.0 because Chen thought it was losing some runs
     processImg->SetCtffindParamsForDefocus(param, assumedPosFocus, false);
-    ACCUM_MAX(param.minimum_defocus, 10000.f * ((float)assumedPosFocus - 1.5f));
+    ACCUM_MAX(param.minimum_defocus, 10000.f * ((float)(assumedPosFocus - 
+      B3DMAX(1.5, 0.3 * assumedPosFocus))));
     ACCUM_MIN(param.maximum_defocus, 10000.f * ((float)assumedPosFocus + 2.0f));
     if (usePlotter) {
       expectDef = (float)(mOperationInd ? mCenteredDefocus : -assumedPosFocus);
@@ -1421,10 +1422,14 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       ErrorInCtfBased(str + suggest);
       return;
     }
-    if (fabs(negMicrons - mCenteredDefocus) > 1.) {
+    if (fabs(negMicrons - mCenteredDefocus) > B3DMAX(1., -0.33 * mCenteredDefocus)) {
       str.Format("The mean defocus from this fit, %.2f um, is\r\n"
         "%.2f from the defocus in the initial fit, the fit may be unreliable",
         negMicrons, fabs(negMicrons - mCenteredDefocus));
+      if (B3DCHOICE(usePlotter, astig, fabs(resultsArray[0] - resultsArray[1]) / 10000.) >
+        1.0)
+        str += "\r\n\r\nIf the fit seems good, try a smaller beam tilt to get closer to"
+        " coma-free; after it is close you maybe able to raise the beam tilt again";
       ErrorInCtfBased(str);
       return;
     }
