@@ -27,6 +27,7 @@
 #include "BeamAssessor.h"
 #include "MacroProcessor.h"
 #include "StateDlg.h"
+#include "ProcessImage.h"
 #include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "MultiTSTasks.h"
@@ -238,6 +239,10 @@ CNavHelper::CNavHelper(void)
   mNavAlignParams.maxNumResetIS = 0;
   mNavAlignParams.leaveISatZero = false;
   mNavAlignParams.loadAndKeepBuf = 'S' - 'A';
+  mNavAlignParams.scaledAliMaxRot = -1.;
+  mNavAlignParams.scaledAliPctChg = -1.;
+  mNavAlignParams.scaledAliExtraFOV = 0.5f;
+  mNavAlignParams.scaledAliLoadBuf = MAX_BUFFERS - 1;
   float thresholds[] = {2.4f, 3.6f, 4.8f};
   mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
     &thresholds[0], &thresholds[3]);
@@ -320,6 +325,8 @@ CNavHelper::CNavHelper(void)
   mMaxMontReuseWaste = 0.2f;
   mRISkipNextZMove = false;
   mRIErasePeriodicPeaks = false;
+  mScaledAliDfltMaxRot = 3.;
+  mScaledAliDfltPctChg = 4.;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -459,6 +466,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   maxSamePos = 0;
   borderMax = 0.;
   maxInLM = false;
+  mRIstartingMagInd = magIndex;
   for (mapInd = 0; mapInd < mItemArray->GetSize(); mapInd++) {
     item = mItemArray->GetAt(mapInd);
     if (item->IsNotMap() || item->mRegistration != inItem->mRegistration ||
@@ -803,7 +811,7 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
   if (!mapItem)
     return item->mDrawnOnMapID ? 9 : 8;
   mRIdrawnTargetItem = item;
-  err = RealignToItem(mapItem, restoreState, 0., 0, 0, false);
+  err = RealignToItem(mapItem, restoreState, 0., 0, 0, false, -1);
   if (err)
     mRIdrawnTargetItem = NULL;
   return err;
@@ -811,7 +819,8 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
 
 // Realign to the coordinates in the given item by correlating with maps,
 int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen,
+  int setForScaled)
 {
   int i, ix, iy, ind, axes, action; 
   CMapDrawItem *item;
@@ -821,8 +830,10 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   ScaleMat aMat;
   NavAcqParams *navParams = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
   CenterSkipData cenSkip;
+  LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   float finalX, finalY, stageX, stageY, firstDelX, firstDelY, mapAngle, angle;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+
   i = FindMapForRealigning(inItem, restoreState);
   mRIContinuousMode = mContinuousRealign;
   mContinuousRealign = 0;
@@ -835,11 +846,24 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   item = mItemArray->GetAt(mRIitemInd);
   mSecondRoundID = 0;
+  mRISetNumForScaledAlign = -1;
   if (inItem->IsMap() && item->mMapID != inItem->mMapID && 
     inItem->mColor != NO_REALIGN_COLOR)
     mSecondRoundID = inItem->mMapID;
   else if (mRIdrawnTargetItem)
     return 10;
+  else if (setForScaled >= 0 && inItem->mMapID) {
+    ind = mRIstartingMagInd;
+    if (mWinApp->LowDoseMode()) {
+      ix = mCamera->ConSetToLDArea(setForScaled);
+      ind = ldParams[ix].magIndex;
+    }
+    if (ind > item->mMapMagInd) {
+      mSecondRoundID = inItem->mMapID;
+      mRISetNumForScaledAlign = setForScaled;
+      mRIContinuousMode = 0;
+    }
+  }
   SEMTrace('1', "(Initial) alignment to map %d (%s)", mRIitemInd, (LPCTSTR)item->mLabel);
 
   // Use the passed-in values for resetting IS and leaving IS at 0 if no second round
@@ -943,7 +967,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // Save state if desired; which will only work by forgetting prior state
   mRIdidSaveState = false;
-  if (restoreState) {
+  if (restoreState || mRISetNumForScaledAlign >= 0) {
     mRIdidSaveState = true;
     ForgetSavedState();
     SaveCurrentState(STATE_MAP_ACQUIRE, 0, item->mMapCamera, 0);
@@ -952,7 +976,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
   PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 
-    (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0);
+    (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0, 
+    1);
   if (mRIstayingInLD)
     mRIContinuousMode = 0;   // To avoid this, need to set/restore mode in LD conset
   if (mRIContinuousMode) {
@@ -1371,10 +1396,34 @@ void CNavHelper::RealignNextTask(int param)
       return;
 
     case TASK_FINAL_SHOT:
-      mShiftManager->AutoAlign(1, 0, true, mRIautoAlignFlags, NULL, 0., 0., 0., 0., 0.,
-        NULL, NULL, GetDebugOutput('1'));
+      item = mNav->FindItemWithMapID(mSecondRoundID, mRISetNumForScaledAlign < 0);
+      if (!item) {
+        SEMMessageBox("Could not find item for second round of alignment");
+        StopRealigning();
+        return;
+      }
+
+      if (mRISetNumForScaledAlign >= 0) {
+        mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mRIbufWithMapToScale], 
+          true);
+        mWinApp->mMainView->GetItemImageCoords(&mImBufs[mRIbufWithMapToScale], item,
+          shiftX, shiftY, item->mPieceDrawnOn);
+
+        if (mWinApp->mProcessImage->AlignBetweenMagnifications(mRIbufWithMapToScale,
+          shiftX, shiftY, -mNavAlignParams.scaledAliExtraFOV, 
+          GetScaledRealignPctChg() / 50.f, GetScaledRealignMaxRot() * 2.f, true, scaling, 
+          overlap, mRIautoAlignFlags, report)) {
+          SEMMessageBox("Failure aligning to scaled map: " + report);
+          StopRealigning();
+          return;
+        }
+      } else {
+        mShiftManager->AutoAlign(1, 0, true, mRIautoAlignFlags, NULL, 0., 0., 0., 0., 0.,
+          NULL, NULL, GetDebugOutput('1'));
+      }
       mImBufs->mImage->getShifts(shiftX, shiftY);
-      SEMTrace('1', "Realigned to map item itself with image shift of %.1f %.1f pixels",
+      SEMTrace('1', "Realigned to %s with image shift of %.1f %.1f pixels", 
+        mRISetNumForScaledAlign >= 0 ? "scaled map" : "map item itself",
         shiftX, shiftY);
       mRInumRounds++;
 
@@ -1383,13 +1432,16 @@ void CNavHelper::RealignNextTask(int param)
       mNav->GetAdjustedStagePos(stageX, stageY, cenMontErrX);
       mStageErrX = stageX - mRIabsTargetX;
       mStageErrY = stageY - mRIabsTargetY;
-      item = mNav->FindItemWithMapID(mSecondRoundID);
-      bMat = ItemStageToCamera(item);
+      if (mRISetNumForScaledAlign >= 0)
+        bMat = mShiftManager->StageToCamera(mImBufs->mCamera, mImBufs->mMagInd);
+      else
+        bMat = ItemStageToCamera(item);
       bInv = MatInv(bMat);
       stageX = -mImBufs->mBinning * (bInv.xpx * shiftX - bInv.xpy * shiftY);
       stageY = -mImBufs->mBinning * (bInv.ypx * shiftX - bInv.ypy * shiftY);
-      report.Format("Disparity in stage position after aligning to map item itself: "
-        "%.2f %.2f  (align shift %.2f %.2f)", mStageErrX, mStageErrY, stageX, stageY);
+      report.Format("Disparity in stage position after aligning to %s: %.2f %.2f  "
+        "(align shift %.2f %.2f)", mRISetNumForScaledAlign >= 0 ? "scaled map" :
+        "map item itself", mStageErrX, mStageErrY, stageX, stageY);
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
       report.Format("Finished aligning to item in %d rounds", mRInumRounds);
 
@@ -1532,16 +1584,7 @@ void CNavHelper::StopRealigning(void)
     delete mMapStore;
 
   // Restore state if saved
-  RestoreLowDoseConset();
-  RestoreMapOffsets();
-  if (mRIdidSaveState)
-    RestoreSavedState();
-  else if (!mRIstayingInLD && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0) {
-    mSettingState = true;
-    mWinApp->mLowDoseDlg.SetLowDoseMode(true);
-    mSettingState = false;
-  }
-  mRIdidSaveState = false;
+  RestoreForStopOrScaledAlign();
   mCamera->ChangePreventToggle(-1);
   if (mRIContinuousMode == 1)
     mCamera->StopCapture(0);
@@ -1554,6 +1597,21 @@ void CNavHelper::StopRealigning(void)
   mWinApp->UpdateBufferWindows();
 }
 
+// Restore state if saved when stopping or when going from first stage to scaled map align
+void CNavHelper::RestoreForStopOrScaledAlign()
+{
+  RestoreLowDoseConset();
+  RestoreMapOffsets();
+  if (mRIdidSaveState)
+    RestoreSavedState();
+  else if (!mRIstayingInLD && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0) {
+    mSettingState = true;
+    mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    mSettingState = false;
+  }
+  mRIdidSaveState = false;
+}
+
 // If aligning to a map item after a first round at lower mag, set up conditions
 void CNavHelper::StartSecondRound(void)
 {
@@ -1562,11 +1620,70 @@ void CNavHelper::StartSecondRound(void)
   CString report;
   ScaleMat aMat;
   KImageStore *imageStore;
-  CMapDrawItem *item = mNav->FindItemWithMapID(mSecondRoundID);
+  CMapDrawItem *item;
+  int buf, readBuf, nonRoll, copyFromBuf = -1;
+  float shiftX, shiftY;
+  BOOL rotSave, unbinSave;
 
-  // Undo the image shift imposed in the first round if any
+  // Undo the image shift imposed before the first round if any
   if (mRIfirstISX || mRIfirstISY)
     mScope->IncImageShift(-mRIfirstISX, -mRIfirstISY);
+
+  if (mRISetNumForScaledAlign >= 0) {
+    mRIbufWithMapToScale = -1;
+    item = mItemArray->GetAt(mRIitemInd);
+    readBuf = mBufferManager->GetBufToReadInto();
+    nonRoll = mBufferManager->GetShiftsOnAcquire() + (mWinApp->LowDoseMode() ? 2 : 1);
+
+    // Aligning to scaled map: find map in non-rolling, non-read-in buffer and either
+    // not a montage or it is an unbinned montage
+    for (buf = MAX_BUFFERS - 1; buf >= 1; buf--) {
+      if (mImBufs[buf].mImage)
+        mImBufs[buf].mImage->getShifts(shiftX, shiftY);
+      if (mImBufs[buf].mImage && mRImapID == mImBufs[buf].mMapID && !shiftX && !shiftY &&
+        ((item->mMapMontage && item->mMontBinning == mImBufs[buf].mBinning) ||
+          !item->mMapMontage) && mImBufs[buf].mUseWidth) {
+        if (buf != readBuf && buf >= nonRoll) {
+          mRIbufWithMapToScale = buf;
+          break;
+        }
+        copyFromBuf = buf;
+      }
+    }
+    if (mRIbufWithMapToScale < 0) {
+
+      // If we don't find it, load it without rotation and unbinned; make sure user's
+      // buffer is still suitable
+      mRIbufWithMapToScale = mNavAlignParams.scaledAliLoadBuf;
+      if (mRIbufWithMapToScale < nonRoll || mRIbufWithMapToScale == readBuf)
+        mRIbufWithMapToScale = MAX_BUFFERS - 1;
+      if (copyFromBuf < 0) {
+        rotSave = item->mRotOnLoad;
+        unbinSave = mLoadMapsUnbinned;
+        item->mRotOnLoad = false;
+        mLoadMapsUnbinned = true;
+        SEMTrace('1', "Loading into %d", mRIbufWithMapToScale);
+        buf = mNav->DoLoadMap(true, item, mRIbufWithMapToScale, false);
+        item->mRotOnLoad = rotSave;
+        mLoadMapsUnbinned = unbinSave;
+        if (buf) {
+          RealignCleanup(1);
+          return;
+        }
+      } else {
+        SEMTrace('1', "Copying %d to %d", copyFromBuf, mRIbufWithMapToScale);
+        mBufferManager->CopyImageBuffer(copyFromBuf, mRIbufWithMapToScale, false);
+      }
+    }
+
+    RestoreForStopOrScaledAlign();
+    mCamera->InitiateCapture(mRISetNumForScaledAlign);
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_NAV_REALIGN, TASK_FINAL_SHOT, 0);
+    return;
+  }
+
+  // Regular align to higher mag item
+  item = mNav->FindItemWithMapID(mSecondRoundID);
   if (!item) {
     StopRealigning();
     report.Format("Finished aligning to item in %d rounds", mRInumRounds);
@@ -1592,7 +1709,7 @@ void CNavHelper::StartSecondRound(void)
 
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   RestoreLowDoseConset();
-  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 1);
+  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 1, 1);
   if (mRIstayingInLD)
     RestoreMapOffsets();
   else
@@ -1639,7 +1756,7 @@ void CNavHelper::StartRealignCapture(bool useContinuous, int nextTask)
 
 // Set scope and filter parameters and set up a control set imaging a map area
 void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param, 
-                                     ControlSet *conSet, int baseNum, int hideLDoff) 
+  ControlSet *conSet, int baseNum, int hideLDoff, int noFrames)
 {
   ControlSet *conSets = mWinApp->GetConSets();
   int  binning, xFrame, yFrame, area, top, left, bottom, right;
@@ -1730,10 +1847,19 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
     mRIleaveISX = ldp->ISX;
     mRIleaveISY = ldp->ISY;
   }
+
   SEMTrace('I', "PrepareToReimageMap set intensity to %.5f  %.3f%%", stateParam.intensity
     , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity, 
       stateParam.probeMode));
   SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff);
+
+  // Prevent frame saving, retain frame-aligning
+  if (noFrames > 0) {
+    conSets[mRIconSetNum].saveFrames = 0;
+    if (conSets[mRIconSetNum].alignFrames &&
+      (conSets[mRIconSetNum].useFrameAlign > 1 || noFrames > 1))
+      conSets[mRIconSetNum].alignFrames = 0;
+  }
 }
 
 // Determine if the realign routine can stay in low dose
@@ -1950,7 +2076,8 @@ void CNavHelper::RestoreSavedState(void)
 }
 
 // Set the scope and camera parameter state to that used to acquire a map item
-int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff)
+int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff,
+  int noFrames)
 {
   int camera, curStore, err, retval = 0;
   float width, height;
@@ -2010,7 +2137,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int h
   }
 
   tmpSet = *conSet;
-  PrepareToReimageMap(item, mMapMontP, &tmpSet, RECORD_CONSET, hideLDoff);
+  PrepareToReimageMap(item, mMapMontP, &tmpSet, RECORD_CONSET, hideLDoff, noFrames);
   camera = mWinApp->GetCurrentCamera();
   /*if (conSet->binning != tmpSet.binning || conSet->exposure != tmpSet.exposure ||
     conSet->drift != tmpSet.drift)
@@ -5702,22 +5829,25 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
 
 // Top-level call for aligning with both scaling and rotation
 int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scaleRange, 
-  float angleRange, float &scaleMax, float &rotation, float shiftLimit)
+  float angleRange, float &scaleMax, float &rotation, float shiftLimit, int corrFlags)
 {
   float startScale = -1.;
   float maxPeak, shiftXbest, shiftYbest;
   int err;
   rotation = 0.;
-  err = mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -1.,
-    rotation, scaleRange, 1, &maxPeak, shiftLimit);
-  if (err)
-    return err;
+  scaleMax = 1.;
+  if (scaleRange >= 0.) {
+    err = mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -1.,
+      rotation, scaleRange, angleRange > 0 ? 1 : 0, &maxPeak, shiftLimit, corrFlags);
+    if (err || angleRange <= 0.)
+      return err;
+  }
   err = AlignWithRotation(buffer, 0., angleRange, rotation, shiftXbest, shiftYbest,
-    scaleMax, -1, &maxPeak, shiftLimit);
-  if (err)
-    return err;
+    scaleMax, -1, &maxPeak, shiftLimit, corrFlags);
+  if (err || scaleRange <= 0.)
+    return err == 1 ? 0 : err;
   return mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -scaleMax,
-    rotation, scaleRange, 2, &maxPeak, shiftLimit);
+    rotation, scaleRange, 2, &maxPeak, shiftLimit, corrFlags);
 }
 
 // Returns whether the Align with Rotation dialog can be opened

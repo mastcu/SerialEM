@@ -41,7 +41,8 @@ IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_
 IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISITION,
 IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
 IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
-IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, 
+IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, IDC_RREALI_REC,
+IDC_NA_REALIGN_SCALED_MAP, IDC_RREALI_VIEW, IDC_RREALI_PREV, IDC_RREALI_SEARCH,
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
 IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIPT_AT_END,
 IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, PANEL_END,
@@ -134,6 +135,8 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bRetractCams(FALSE)
   , m_bUseMapHoles(FALSE)
   , m_bEndRunMacro(FALSE)
+  , m_iRealignConset(0)
+  , m_bRealignScaledMap(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -231,6 +234,10 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_NA_USE_MAP_HOLES, m_bUseMapHoles);
   DDX_Check(pDX, IDC_NA_RUN_SCRIPT_AT_END, m_bEndRunMacro);
   DDX_Control(pDX, IDC_COMBO_MACRO_AT_END, m_comboEndMacro);
+  DDX_Radio(pDX, IDC_RREALI_PREV, m_iRealignConset);
+  DDV_MinMaxInt(pDX, m_iRealignConset, 0, 3);
+  DDX_Control(pDX, IDC_NA_REALIGN_SCALED_MAP, m_butRealignScaledMap);
+  DDX_Check(pDX, IDC_NA_REALIGN_SCALED_MAP, m_bRealignScaledMap);
 }
 
 
@@ -289,6 +296,11 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_RETRACT_CAMS, OnRetractCams)
   ON_BN_CLICKED(IDC_NA_RUN_SCRIPT_AT_END, OnNaRunScriptAtEnd)
   ON_CBN_SELENDOK(IDC_COMBO_MACRO_AT_END, OnSelendokComboMacroAtEnd)
+  ON_BN_CLICKED(IDC_RREALI_PREV, OnRadioRealiConset)
+  ON_BN_CLICKED(IDC_RREALI_REC, OnRadioRealiConset)
+  ON_BN_CLICKED(IDC_RREALI_VIEW, OnRadioRealiConset)
+  ON_BN_CLICKED(IDC_RREALI_SEARCH, OnRadioRealiConset)
+  ON_BN_CLICKED(IDC_NA_REALIGN_SCALED_MAP, OnNaRealignScaledMap)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -636,6 +648,7 @@ void CNavAcquireDlg::LoadTSdependentToDlg(void)
 // Get dialog elements into current parameter set
 void CNavAcquireDlg::UnloadDialogToCurParams()
 {
+  int radioToConset[] = {PREVIEW_CONSET, RECORD_CONSET, VIEW_CONSET, SEARCH_CONSET};
   mParam->cycleDefocus = m_bCycleDefocus;
   mParam->cycleDefTo = m_fCycleTo;
   mParam->cycleDefFrom = m_fCycleFrom;
@@ -663,12 +676,16 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->mapWithViewSearch = m_iMapWithViewSearch;
   mParam->runEndMacro = m_bEndRunMacro;
   mParam->endMacroInd = mEndMacroNum;
+  mParam->realignToScaledMap = m_bRealignScaledMap;
+  B3DCLAMP(m_iRealignConset, 0, 3);
+  mParam->conSetForScaledAli = radioToConset[m_iRealignConset];
   UnloadTSdependentFromDlg(OptionsToAcquireType());
 }
 
 // Get parameters from current set into dialog
 void CNavAcquireDlg::LoadParamsToDialog()
 {
+  int consetToRadio[] = {2, 0, 0, 1, 0, 3};
   m_bHideUnusedActions = mParam->hideUnusedActs;
   m_iSelectedPos = mParam->acqDlgSelectedPos;
   mMacroNum = mParam->macroIndex;
@@ -693,6 +710,9 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bEndRunMacro = mParam->runEndMacro;
   mEndMacroNum = mParam->endMacroInd;
   B3DCLAMP(mEndMacroNum, 1, MAX_MACROS);
+  m_bRealignScaledMap = mParam->realignToScaledMap;
+  B3DCLAMP(mParam->realignToScaledMap, 0, SEARCH_CONSET);
+  m_iRealignConset = consetToRadio[mParam->conSetForScaledAli];
   mLastNonTStype = mParam->nonTSacquireType;
   // m_iAcquireChoice is handled by caller
   if (m_iAcquireChoice)
@@ -949,6 +969,13 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK);
   RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
 
+  m_butRealignScaledMap.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM));
+  consetOK = DOING_ACTION(NAACT_REALIGN_ITEM) && m_bRealignScaledMap;
+  EnableDlgItem(IDC_RREALI_REC, consetOK);
+  EnableDlgItem(IDC_RREALI_PREV, consetOK);
+  EnableDlgItem(IDC_RREALI_VIEW, consetOK);
+  EnableDlgItem(IDC_RREALI_SEARCH, consetOK);
+
   for (pos = 0; pos < mNumShownActs; pos++) {
     if (mShownPosToIndex[pos] == NAACT_HOLE_FINDER) {
       EnableDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
@@ -1107,7 +1134,13 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       mIDsToDrop.push_back(IDC_RMAP_WITH_VIEW);
       mIDsToDrop.push_back(IDC_RMAP_WITH_SEARCH);
     }
-
+    if (!DOING_ACTION(NAACT_REALIGN_ITEM) || !m_bRealignScaledMap) {
+      mIDsToDrop.push_back(IDC_NA_REALIGN_SCALED_MAP);
+      mIDsToDrop.push_back(IDC_RREALI_REC);
+      mIDsToDrop.push_back(IDC_RREALI_PREV);
+      mIDsToDrop.push_back(IDC_RREALI_VIEW);
+      mIDsToDrop.push_back(IDC_RREALI_SEARCH);
+    }
     if (!m_bAdjustBTforIS || !mAdjustBTenabled)
       mIDsToDrop.push_back(IDC_NA_ADJUST_BT_FOR_IS);
     if (!m_bUseMapHoles || !mUseMapHolesEnabled)
@@ -1551,6 +1584,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
   case NAACT_ALIGN_TEMPLATE:
   {
     CNavRealignDlg dlg;
+    dlg.mForRealignOnly = -1;
     dlg.DoModal();
   }
   break;
@@ -1559,7 +1593,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
   case NAACT_REALIGN_ITEM:
   {
     CNavRealignDlg dlg;
-    dlg.mForRealignOnly = true;
+    dlg.mForRealignOnly = 1;
     dlg.DoModal();
   }
   break;
@@ -1665,4 +1699,17 @@ void CNavAcquireDlg::OnMapWithRecViewSearch()
 void CNavAcquireDlg::OnRetractCams()
 {
   UpdateData(true);
+}
+
+
+void CNavAcquireDlg::OnRadioRealiConset()
+{
+  UpdateData(true);
+}
+
+
+void CNavAcquireDlg::OnNaRealignScaledMap()
+{
+  UpdateData(true);
+  ManageEnables();
 }

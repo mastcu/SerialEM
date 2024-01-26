@@ -947,7 +947,7 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 // Invokes the realign routine for the current item, or for the item being acquired
 // if a macro is being run at acquire points
 int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled)
 {
   if (!GetAcquiring()) {
     mItem = GetSingleSelectedItem();
@@ -956,27 +956,28 @@ int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit,
   } else if (GetCurrentOrAcquireItem(mItem) < 0)
     return -1;
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
-    justMoveIfSkipCen);
+    justMoveIfSkipCen, setForScaled);
 }
 
 // Or, aligns to another item by index
 int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled)
 {
   if (!GetOtherNavItem(index)) {
     SEMMessageBox("The Navigator item index is out of range", MB_EXCLAME);
     return 1;
   }
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
-    justMoveIfSkipCen);
+    justMoveIfSkipCen, setForScaled);
 }
 
 // The actual routine for calling the helper and giving error messages
 int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen)
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen,
+  int setForScaled)
 {
   int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
-    leaveZeroIS, justMoveIfSkipCen);
+    leaveZeroIS, justMoveIfSkipCen, setForScaled);
   if (err && err < 4) 
     SEMMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
   if (err == 4 || err == 5) 
@@ -1004,7 +1005,7 @@ int CNavigatorDlg::MoveToItem(int index, bool skipZ)
 void CNavigatorDlg::OnRealigntoitem()
 {
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true, 0., 0, 0, false);
+  RealignToCurrentItem(true, 0., 0, 0, false, -1);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3726,7 +3727,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   if (m_bCollapseGroups)
     mItem = GetSingleSelectedItem();
   *acquireBox = NULL;
-  if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
+  aMat.xpx = 0.;
+  if (!BufferStageToImage(imBuf, aMat, delX, delY) || m_bDrawNone)
     return NULL;
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
@@ -3947,7 +3949,7 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
   CMapDrawItem *item = FindItemWithMapID(imBuf->mMapID);
 
   // If the buffer has a map ID and a matching map item, return its scaling
-  if (item || imBuf->mStage2ImMat.xpx) {
+  if ((item && imBuf->mUseWidth != 0) || imBuf->mStage2ImMat.xpx) {
     if (imBuf->mStage2ImMat.xpx) {
       aMat = imBuf->mStage2ImMat;
       delX = imBuf->mStage2ImDelX;
@@ -7404,7 +7406,8 @@ void CNavigatorDlg::OnLoadMap()
     DoLoadMap(false, NULL, -1);
 }
 
-int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto)
+int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto,
+  BOOL display)
 {
   int err;
   static MontParam mntp;
@@ -7418,6 +7421,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
     return 1;
   mOriginalStore = mDocWnd->GetCurrentStore();
   mLoadItem = mItem;
+  mShowAfterLoad = display;
 
   // Get the pointers to file, open if necessary
   err = AccessMapFile(mItem, mLoadStoreMRC, mCurStore, montP, mUseWidth, mUseHeight);
@@ -7555,12 +7559,13 @@ void CNavigatorDlg::FinishLoadMap(void)
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
   // then copy it again so that both buffers have the map data
   if (mLoadItem->mMapMontage)
-    mBufferManager->CopyImageBuffer(1, mBufToLoadInto);
+    mBufferManager->CopyImageBuffer(1, mBufToLoadInto, mShowAfterLoad);
   if (mLoadItem->mRotOnLoad)
     RotateMap(&mImBufs[mBufToLoadInto], false);
-  mWinApp->SetCurrentBuffer(mBufToLoadInto);
-
-  Redraw();
+  if (mShowAfterLoad) {
+    mWinApp->SetCurrentBuffer(mBufToLoadInto);
+    Redraw();
+  }
 }
 
 // Clean up from trying to load a map
@@ -9225,10 +9230,13 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
     }
   }
  
+  // Set up to run script at end if it is legal index
+  mScriptToRunAtEnd = -1;
   if (!mResumedFromPause) {
-    if (mAcqParm->runEndMacro)
+    if (mAcqParm->runEndMacro && mAcqParm->endMacroInd >= 0 && 
+      mAcqParm->endMacroInd < MAX_MACROS)
       mScriptToRunAtEnd = mAcqParm->endMacroInd - 1;
-    else if (mRunScriptAfterNextAcq >= 0)
+    else if (mRunScriptAfterNextAcq >= 0 && mRunScriptAfterNextAcq < MAX_MACROS)
       mScriptToRunAtEnd = mRunScriptAfterNextAcq;
     mRunScriptAfterNextAcq = -1;
     if (mScriptToRunAtEnd >= 0 && 
@@ -9932,7 +9940,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mWillDoTemplateAlign ? false : aliParams->leaveISatZero, 
       mAcqParm->hybridRealign && mWillDoTemplateAlign && 
       mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS && 
-      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1);
+      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1, 
+      mAcqParm->realignToScaledMap ? mAcqParm->conSetForScaledAli : -1);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
       if (err < 4)

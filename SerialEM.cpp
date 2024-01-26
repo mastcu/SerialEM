@@ -637,6 +637,8 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].useMapHoleVectors = false;
     mNavAcqParams[i].runEndMacro = false;
     mNavAcqParams[i].endMacroInd = 1;
+    mNavAcqParams[i].realignToScaledMap = false;
+    mNavAcqParams[i].conSetForScaledAli = PREVIEW_CONSET;
   }
 
   mNavParams.warnedOnSkipMove = false;

@@ -214,7 +214,8 @@ public:
   
   void TiltAndMoveScreen(bool tilt, double angle, bool move, int position);
   int AlignWithScaling(int buffer, bool doImShift, float &scaleMax, float startScale = 0.,
-    float rotation = 0., float scaleRange = -1., int doPart = 0, float *maxPtr = NULL, float shiftLimit = -1.f);
+    float rotation = 0., float scaleRange = -1., int doPart = 0, float *maxPtr = NULL, float shiftLimit = -1.f,
+    int corrFlags = 0);
   void StartTrackingShot(bool lowerMag, int nextAction);
   void RestoreScopeState(void);
   CArray<AutocenParams *, AutocenParams *> *GetAutocenParams() {return &mAcParamArray;};

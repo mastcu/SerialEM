@@ -381,6 +381,7 @@ private:
   int mOverviewBinSave;
   BOOL mLoadingMap;         // Flag that map is being loaded
   int mBufToLoadInto;      // Buffer being loaded to
+  BOOL mShowAfterLoad;     // Flag to display after loading map
   int mShiftAIndex;        // Starting index for doing shift A
   int mShiftDIndex;        // Starting index for doing shift D
   int mShiftTIndex;        // Starting index for doing shift T
@@ -524,7 +525,7 @@ public:
   int AccessMapFile(CMapDrawItem * item, KImageStore *&storeMRC, int & curStore, MontParam *&montP, 
     float & useWidth, float & useHeight, bool readWrite = false);
   int RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
   void GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ);
   void ShiftToMarker(void);
   void UndoShiftToMarker(void);
@@ -539,9 +540,9 @@ public:
   int GetCurrentOrAcquireItem(CMapDrawItem *&item);
   int GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &mess);
   int RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
   int RealignToAnItem(CMapDrawItem * item, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
   CMapDrawItem * GetOtherNavItem(int index);
   BOOL mMovingStage;
   BOOL StartedMacro(void);
@@ -586,7 +587,7 @@ public:
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
   int ShiftItemsByAlign(void);
-  int DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto);
+  int DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto, BOOL display = true);
   CButton m_butTiltSeries;
   BOOL m_bTiltSeries;
   CButton m_butFileAtItem;

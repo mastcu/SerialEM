@@ -247,7 +247,8 @@ public:
   afx_msg void OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI);
   int CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, int right);
   int AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, float maxShiftUm,
-    float scaleRange, float angleRange, bool doImShift, float &scaleMax, float &rotation, CString &errStr);
+    float scaleRange, float angleRange, bool doImShift, float &scaleMax, float &rotation, 
+    int corrFlags, CString &errStr);
   afx_msg void OnProcessCropimage();
   afx_msg void OnUpdateProcessCropimage(CCmdUI *pCmdUI);
   afx_msg void OnListRelativeRotations();

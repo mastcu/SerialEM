@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/25/24: Added ability to do second round of Realign to Item with scaled-up
+extract from lower mag map.
+
+1/25/24: Prevented saving of frames when re-imaging in a map state unless
+specified in script to command to goto map state.
+
+1/25/24: Fixed crash from 1/19 change for script at end of acquire.
+
+1/25/24: Allowed Step To & Adjust procedure to concatenate the transformation
+between mag 1 and mag 2 with a refining transform between mag 2 and mag 3 to
+give a transformation directly from mag 1 to mag 3.
+
 1/25/24: Adjusted default readout interval for Falcon 4i to give correct
 number of frames for 6-sec exposures (In 4.1).
 

@@ -132,6 +132,34 @@ struct BaseMarkerShift
   int toMagInd;           // Mag of image with marker point
 };
 
+// Structure for an acquisition action (task)
+struct NavAcqAction {
+  CString name;           // Label for check box
+  unsigned int flags;     // Flags for hiding, has setup button
+  int timingType;         // Type of timing to use
+  int everyNitems;        // Do every N items, 1, 2, etc
+  int minutes;            // Minutes between doing it
+  float distance;         // Minimum distance between places where it is done
+  CString labelOrNote;    // Text to match at start
+  int timeLastDone;       // Minute time stamp
+  float lastDoneAtX;      // Location where done
+  float lastDoneAtY;
+};
+
+// Structure for template align and realign to item params
+struct NavAlignParams {
+  CString templateLabel;     // Label for template map
+  int loadAndKeepBuf;        // Buffer to save it in
+  float maxAlignShift;       //  Maximum alignments shift
+  int maxNumResetIS;         // Maximum number of reset shifts: can be negative to retain
+  float resetISthresh;       // Threshold IS for resetting
+  BOOL leaveISatZero;        // Flag to leave IS at zero
+  float scaledAliMaxRot;     // Maximum rotation in realign to scaled map
+  float scaledAliPctChg;     // Maximum percent size change in realign to scaled
+  float scaledAliExtraFOV;   // Extra A fields of View to add
+  int scaledAliLoadBuf;      // Buffer to keep map in
+};
+
 // BEWARE.  Nav Actions are the "other tasks" in user terminology
 
 // Add new default definition flags to "navActions[index].flags |=" in ParameterIO.cpp
@@ -165,30 +193,6 @@ enum {
   ACQ_MAX_STEPS // End with this
 };
 
-// Structure for an acquisition action (task)
-struct NavAcqAction {
-  CString name;           // Label for check box
-  unsigned int flags;     // Flags for hiding, has setup button
-  int timingType;         // Type of timing to use
-  int everyNitems;        // Do every N items, 1, 2, etc
-  int minutes;            // Minutes between doing it
-  float distance;         // Minimum distance between places where it is done
-  CString labelOrNote;    // Text to match at start
-  int timeLastDone;       // Minute time stamp
-  float lastDoneAtX;      // Location where done
-  float lastDoneAtY;
-};
-
-// Structure for template align and realign to item params
-struct NavAlignParams {
-  CString templateLabel;     // Label for template map
-  int loadAndKeepBuf;        // Buffer to save it in
-  float maxAlignShift;       //  Maximum alignments shift
-  int maxNumResetIS;         // Maximum number of reset shifts: can be negative to retain
-  float resetISthresh;       // Threshold IS for resetting
-  BOOL leaveISatZero;        // Flag to leave IS at zero
-};
-
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
 
 class CNavHelper
@@ -197,7 +201,7 @@ public:
   CNavHelper(void);
   ~CNavHelper(void);
   int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit,
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen);
+    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
   GetMember(int, Realigning)
   GetSetMember(float, RImaximumIS)
@@ -278,6 +282,10 @@ public:
   GetSetMember(float, MaxMontReuseWaste);
   SetMember(bool, RISkipNextZMove);
   GetSetMember(BOOL, RIErasePeriodicPeaks);
+  GetSetMember(float, ScaledAliDfltMaxRot);
+  GetSetMember(float, ScaledAliDfltPctChg);
+  float GetScaledRealignPctChg() { return mNavAlignParams.scaledAliPctChg < 0 ? mScaledAliDfltPctChg : mNavAlignParams.scaledAliPctChg; };
+  float GetScaledRealignMaxRot() { return mNavAlignParams.scaledAliMaxRot < 0 ? mScaledAliDfltMaxRot : mNavAlignParams.scaledAliMaxRot; };
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -360,6 +368,7 @@ private:
   float mRImaxLMfield;          // Maximum field of view for realigning to LM map
   bool mRItryScaling;           // Flag to do scaling in this realign
   int mRIautoAlignFlags;        // corrFlags vale for autoalign
+  int mRIstartingMagInd;        // Current mag index, saved by FindMapForRealign
   BOOL mUseMontCenter;          // Flag to align to montage center instead of a piece
   float mExpectedXshift;        // Expected shift to feed to autoalign in align to target
   float mExpectedYshift;
@@ -450,6 +459,8 @@ private:
   float mRITiltTolerance;       // Maximum tilt difference for not tilting before realign
   bool mRIJustMoving;           // Flag just to do stage move when skip center
   bool mRISkipNextZMove;        // Flag to skip the Z move in next nav Realign if script
+  int mRIbufWithMapToScale;
+  int mRISetNumForScaledAlign;
   float mGridGroupSize;         // Radius in microns for adding points in groups
   BOOL mDivideIntoGroups;       // Flag for whether to do it
   bool mEditReminderPrinted;     // Flag that reminder printed when edit mode turned on
@@ -504,11 +515,12 @@ private:
   BOOL mKeepColorsForPolygons;   // Flag to keep same colors when converting to polygons
   float mMaxMontReuseWaste;      // Maximum fraction of area to waste when reusing montage
   BOOL mRIErasePeriodicPeaks;    // Erase peaks in realign to item
-
+  float mScaledAliDfltMaxRot;    // Default maximum rotation in search of scaled realign
+  float mScaledAliDfltPctChg;    // Default maximum % size change in search of scaled realign
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
-    int baseNum, int hideLDoff);
+    int baseNum, int hideLDoff, int noFrames);
   void ComputeStageToImage(EMimageBuffer *imBuf, float stageX, float stageY,
     BOOL needAddIS, ScaleMat &aMat, float &delX, float &delY);
   BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY,
@@ -525,6 +537,7 @@ public:
   void RealignNextTask(int param);
   void RealignCleanup(int error);
   void StopRealigning(void);
+  void RestoreForStopOrScaledAlign();
   int RotateForAligning(int bufNum);
   int TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat, int sizingWidth,
     int sizingHeight, float sizingFrac, ScaleMat rMat);
@@ -539,7 +552,7 @@ public:
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);
   void RestoreSavedState(void);
-  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff = 0);
+  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff = 0, int noFrames = 1);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
   CString NextAutoFilename(CString inStr, CString oldLabel = "", CString newLabel = "");
@@ -596,7 +609,7 @@ public:
     float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0., int doPart = 0,
     float *maxPtr = NULL, float shiftLimit = -1.f, int corrFlags = 0);
   int AlignWithScaleAndRotation(int buffer, bool doImshift, float scaleRange, float angleRange,
-    float &scaleMax, float &rotation, float shiftLimit); 
+    float &scaleMax, float &rotation, float shiftLimit, int corrFlags); 
   int OKtoAlignWithRotation(void);
   void OpenRotAlignDlg(void);
   WINDOWPLACEMENT * GetRotAlignPlacement(void);

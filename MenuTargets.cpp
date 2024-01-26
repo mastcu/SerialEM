@@ -1102,7 +1102,7 @@ void CMenuTargets::OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAligntoitem()
 {
-  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, false);
+  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, false, -1);
 }
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
@@ -1171,7 +1171,7 @@ void CMenuTargets::OnNavigatorSetacquirestate()
   if (mNavigator->GetCurrentOrAcquireItem(item) < 0)
     return;
   mNavHelper->SetToMapImagingState(item, true, 
-    (mWinApp->LowDoseMode() && item->mMapLowDoseConSet >= 0) ? -1 : 0);
+    (mWinApp->LowDoseMode() && item->mMapLowDoseConSet >= 0) ? -1 : 0, 1);
 }
 
 void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)

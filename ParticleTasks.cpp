@@ -2000,7 +2000,7 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
 
   // See if it is in the buffer and load if not.  Load gives messages on error
   if (!imBuf->mImage || imBuf->mMapID != map->mMapID) {
-    if (mWinApp->mNavigator->DoLoadMap(true, map, mATParams.loadAndKeepBuf))
+    if (mWinApp->mNavigator->DoLoadMap(true, map, mATParams.loadAndKeepBuf, false))
       return 1;
   }
 
@@ -2010,7 +2010,7 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
     mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, map->mMapCamera, 0);
   }
   mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState 
-    || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0);
+    || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0, 1);
   if (!mNavHelper->GetRIstayingInLD())
     mNavHelper->SetMapOffsetsIfAny(map);
 

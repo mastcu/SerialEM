@@ -205,4 +205,9 @@ public:
   BOOL m_bEndRunMacro;
   CComboBox m_comboEndMacro;
   afx_msg void OnSelendokComboMacroAtEnd();
+  afx_msg void OnRadioRealiConset();
+  int m_iRealignConset;
+  afx_msg void OnNaRealignScaledMap();
+  CButton m_butRealignScaledMap;
+  BOOL m_bRealignScaledMap;
 };

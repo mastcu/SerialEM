@@ -471,7 +471,7 @@ void CMultiTSTasks::TiltAndMoveScreen(bool tilt, double angle, bool move, int po
 // simple bracketing of the incoming scale value
 int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   float startScale, float rotation, float scaleRange, int doPart, float *maxPtr, 
-  float shiftLimit)
+  float shiftLimit, int corrFlags)
 {
   int numSteps, baseSteps = mCkNumAlignSteps;
   int ist, idir;
@@ -513,7 +513,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     } else {
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, 0, &peak, 0., 0., 0.,
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
         scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
           continue;
@@ -558,8 +558,8 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       scale = curMax + idir * step;
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, 0, &peak, 0., 0., 0., scale,
-        rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
+        scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
           continue;
         return 1;
@@ -588,7 +588,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Align for real at the best peak.  Need to reset shifts of image for
   // scope image shift to work right
   if (!CCCp) {
-    if (doPart)
+    if (numSteps > baseSteps)
       report.Format("The two images correlate most strongly with a scaling of %.3f",
         scaleMax);
     else
@@ -598,8 +598,8 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   }
   if (shiftLimit > 0.)
     mShiftManager->SetNextAutoalignLimit(shiftLimit);
-  return mShiftManager->AutoAlign(buffer, smallPad, doImShift, 0, &peak, 0., 0., 0.,
-        scaleMax, rotation);
+  return mShiftManager->AutoAlign(buffer, smallPad, doImShift, corrFlags, &peak, 0., 0.,
+    0., scaleMax, rotation);
 }
 
 // Do common actions for starting a tracking shot

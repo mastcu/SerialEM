@@ -3751,10 +3751,11 @@
             overlap the scaled reference.&nbsp; A negative value of <b>#M</b> specifies the number of fields
             of view to add to the size of the image in A, or equivalently the number of FOVs of shift 
             that can occur with full overlap.&nbsp; A value of -1 would make the reference about 3 times as big
-            as the image in A.&nbsp; The optional <b>#S</b> sets the range of additional scaling to be tested; the default is 0.06
-            to test from 0.97 to 1.03.&nbsp; Set <b>#A</b> to the range of rotations to be tested; the
-            default is 6, which is 3 degrees each way.&nbsp; Set <b>#I</b> greater than 0 to suppress the
-            change in microscope image shift. <br />
+            as the image in A.&nbsp; The optional <b>#S</b> sets the maximum percent change in size to be tested; the default is
+            the value of the property 'ScaledAliDfltPctChg', which defaults to 4
+            to test scalings from 0.96 to 1.04.&nbsp; Set <b>#A</b> to the maximum rotation to be tested; the
+            default is the value of the property 'ScaledAliDfltMaxRot', which defaults to 3 degrees.&nbsp; Set
+             <b>#I</b> greater than 0 to suppress the change in microscope image shift. <br />
             If the lower magnification image is in A or a negative value is entered for <b>#S</b>, the higher mag image
             is scaled down and an area of the lower mag image is cropped out, with the center determined by 
             <b>#CX</b> and <b>#CY</b> and the size by <b>#M</b> as described for the other method.  A and B end up with
@@ -4663,11 +4664,13 @@
             deletes the note if <b>text</b> is not specified.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetMapAcquireState #</TD>
-          <TD>Sets the state with which the specified map item was acquired.&nbsp; For <b>#</b>,
+          <TD class="scriptcommand">SetMapAcquireState #I [#S]</TD>
+          <TD>Sets the state with which the specified map item was acquired.&nbsp; For <b>#I</b>,
               enter 0 for the current item or the item being acquired; an index greater than 0
               for the item with that index in the table; or a value less than 0 to count back
-              from the end of the table, where -1 is the last item.</TD>
+              from the end of the table, where -1 is the last item.&nbsp; The optional <b>#S determines 
+                whether taking frames is allowed in the camera parameter set; 0 allows frames to be saved,
+                 1 (the default) turns off frame saving but allows frame aligning; 2 turns off aligning also.</b></TD>
         </TR>
          <TR>
           <TD class="scriptcommand">GoToImagingState name</TD>
@@ -5031,7 +5034,7 @@
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RealignToNavItem #R [#C] [#S #N #Z]</TD>
+          <TD class="scriptcommand">RealignToNavItem #R [#C] [#S #N #Z] [#P]</TD>
           <TD>Realigns to the current Navigator item, or to the item that this script is being
             run on. For <b>#R</b>, enter 1 to restore the microscope state to the current state
             after the procedure, or 0 not to.&nbsp; For optional <b>#C</b>, enter 1 to use
@@ -5045,7 +5048,10 @@
             shift reset and stage movement.&nbsp; This procedure occurs only if realignment
             is to a single map.&nbsp; All three values must be entered if any are, plus a
             value for <b>#C</b>.&nbsp; An entry of 0 for <b>#N</b> and 1 for <b>#Z</b> will make it move the
-            stage to the target position and skip the regular realignment there.</TD>
+            stage to the target position and skip the regular realignment there.&nbsp; The optional
+            entry [#P] indicates a camera parameter set to use for a second round of alignment to a scaled-up
+            extract from the map.&nbsp; It can be P, R, V, or S.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RealignToOtherItem #I #R [#C] [#S #N #Z]</TD>

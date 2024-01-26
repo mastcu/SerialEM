@@ -215,6 +215,15 @@
       its positioning (i.e., older Tecnai compustages).&nbsp; However, for typical
       center-to-center spacing between holes in a carbon film, the hybrid approach may
       well work with such stages.</P>
+    <P><strong>Realign to scaled map with P, R, V or S</strong></P>
+    <P>This option can be used instead of having a higher-magnification map (real or 
+      virtual) for a second round of alignment in Realign to Item.&nbsp; The program 
+      will scale up and rotate a portion of the map used for the first round of 
+      alignment, and align to that.&nbsp; The parameters for this operation are set in the 
+      bottom part of the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
+        dialog.&nbsp; See there and
+      <a href="menu_navigator.htm#hid_navigator_aligntoitem">Realign to Item</a> for 
+      more details.</P>
     <P><b>Relax stage after final movement</b></P>
     <P>Select this option to move the stage by a small amount opposite to the
       direction of the last movement, provided that the stage is in a known backlash
@@ -396,7 +405,7 @@
       There will be some error in realigning to the map because of the Z height
       difference.&nbsp; This error will be recorded for the new map and taken into
       account when realigning to this pair of maps in the future.&nbsp; The <strong>
-      Setup</strong> button opens the lower part of the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
+      Setup</strong> button opens the middle and lower parts of the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
         dialog, where there are options for resetting image shift after the alignment
       operation.&nbsp; This task will restore microscope state afterwards when not in 
       Low Dose mode, but not when in Low Dose mode.&nbsp; There used to be an option 
@@ -416,7 +425,8 @@
         Refine &amp; Realign command</A>).</P>
     <P><strong>Align to Template -</strong> This task will align to a map containing a
       template image, such as a cropped image of one hole in the carbon film.&nbsp;
-      The <strong>Setup</strong> button opens the full <a href="hidd_navrealign.htm">Navigator Align Setup</a>
+      The <strong>Setup</strong> button opens the top and middle parts of the
+       <a href="hidd_navrealign.htm">Navigator Align Setup</a>
         dialog, where the label of the template map and the maximum shift for the
       alignment can be set.&nbsp; Image shift can also be reset after this alignment.&nbsp;
       If both Realign to Item and this task are being run and image shift is being

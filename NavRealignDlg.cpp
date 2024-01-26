@@ -24,6 +24,11 @@ IDC_STAT_MAXALI_UM, IDC_STAT_LINE, IDC_STAT_WHY_A_NO_GOOD, PANEL_END,
 IDC_STAT_RESET_IS_TITLE, IDC_CHECK_RESET_IS, IDC_STAT_PARAMS_SHARED, IDC_STAT_ONLY_ONCE,
 IDC_EDIT_RESET_IS, IDC_STAT_RESET_UM, IDC_STAT_REPEAT_RESET, IDC_STAT_RESET_TIMES,
 IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, PANEL_END,
+IDC_STAT_SCALED_TITLE, IDC_STAT_EXTRA_AREA,
+IDC_EDIT_EXTRA_FOVS, IDC_STAT_X_FOVS, IDC_STAT_SIZE_CHANGE, IDC_EDIT_MAX_PCT_CHANGE, 
+IDC_STAT_PCT, IDC_STAT_ROTATION, IDC_EDIT_MAX_ROTATION, IDC_STAT_DEG, IDC_STAT_LINE3,
+IDC_STAT_REF_MAP_LABEL, IDC_STAT_REF_MAP_BUF, IDC_SPIN_REF_MAP_BUF, 
+IDC_STAT_REF_BUF_ROLLS, PANEL_END,
 IDOK, IDCANCEL, IDC_BUTHELP, IDC_STAT_SPACER, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
@@ -41,8 +46,13 @@ CNavRealignDlg::CNavRealignDlg(CWnd* pParent /*=NULL*/)
   , m_strRepeatReset(_T(""))
   , m_bLeaveISzero(FALSE)
   , m_bResetIS(FALSE)
+  , m_strRefMapBuf(_T(""))
+  , m_fExtraFOVs(0)
+  , m_fMaxPctChange(0)
+  , m_fMaxRotation(0)
 {
-  mForRealignOnly = false;
+  mForRealignOnly = 0;
+  mMaxRotChgd = mMaxPctChgd = false;
 }
 
 CNavRealignDlg::~CNavRealignDlg()
@@ -68,6 +78,18 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_LEAVE_IS_ZERO, m_bLeaveISzero);
   DDX_Control(pDX, IDC_SPIN_TEMPLATE_BUF, m_sbcTemplateBuf);
   DDX_Check(pDX, IDC_CHECK_RESET_IS, m_bResetIS);
+  DDX_Control(pDX, IDC_SPIN_REF_MAP_BUF, n_sbcRefMapBuf);
+  DDX_Control(pDX, IDC_STAT_REF_MAP_BUF, m_statRefMapBuf);
+  DDX_Text(pDX, IDC_STAT_REF_MAP_BUF, m_strRefMapBuf);
+  DDX_Text(pDX, IDC_EDIT_EXTRA_FOVS, m_fExtraFOVs);
+  DDV_MinMaxFloat(pDX, m_fExtraFOVs, 0, 3.);
+  DDX_Text(pDX, IDC_EDIT_MAX_PCT_CHANGE, m_fMaxPctChange);
+  DDV_MinMaxFloat(pDX, m_fMaxPctChange, 0, 25.);
+  DDX_Text(pDX, IDC_EDIT_MAX_ROTATION, m_fMaxRotation);
+  DDV_MinMaxFloat(pDX, m_fMaxRotation, 0, 25.);
+  DDX_Control(pDX, IDC_STAT_TEMPLATE_TITLE, m_statTemplateTitle);
+  DDX_Control(pDX, IDC_STAT_RESET_IS_TITLE, m_statResetISTitle);
+  DDX_Control(pDX, IDC_STAT_SCALED_TITLE, m_statScaledTitle);
 }
 
 
@@ -80,6 +102,10 @@ BEGIN_MESSAGE_MAP(CNavRealignDlg, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RESET_TIMES, OnDeltaposSpinResetTimes)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_TEMPLATE_BUF, OnDeltaposSpinTemplateBuf)
   ON_BN_CLICKED(IDC_CHECK_LEAVE_IS_ZERO, OnCheckLeaveIsZero)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_REF_MAP_BUF, OnDeltaposSpinRefMapBuf)
+  ON_EN_KILLFOCUS(IDC_EDIT_EXTRA_FOVS, OnKillfocusEditExtraFovs)
+  ON_EN_KILLFOCUS(IDC_EDIT_MAX_PCT_CHANGE, OnKillfocusEditMaxPctChange)
+  ON_EN_KILLFOCUS(IDC_EDIT_MAX_ROTATION, OnKillfocusEditMaxRotation)
 END_MESSAGE_MAP()
 
 
@@ -87,17 +113,21 @@ END_MESSAGE_MAP()
 BOOL CNavRealignDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  BOOL states[3] = {true, true, true};
+  BOOL states[4] = {true, true, true, true};
+  CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
+  mHelper = mWinApp->mNavHelper;
   m_sbcResetTimes.SetRange(0, 10000);
   m_sbcTemplateBuf.SetRange(0, 10000);
+  n_sbcRefMapBuf.SetRange(0, 10000);
   m_sbcResetTimes.SetPos(5000);
   m_sbcTemplateBuf.SetPos(5000);
-  mMasterParams = mWinApp->mNavHelper->GetNavAlignParams();
+  n_sbcRefMapBuf.SetPos(5000);
+  mMasterParams = mHelper->GetNavAlignParams();
   mParams = *mMasterParams;
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
-  if (mForRealignOnly)
-    states[0] = false;
+  states[0] = mForRealignOnly <= 0;
+  states[2] = mForRealignOnly >= 0;
 
   m_strMapLabel = mParams.templateLabel;
   m_fAlignShift = mParams.maxAlignShift;
@@ -109,10 +139,20 @@ BOOL CNavRealignDlg::OnInitDialog()
   B3DCLAMP(mParams.loadAndKeepBuf, 1, MAX_BUFFERS - 1);
   char letter = 'A' + mParams.loadAndKeepBuf;
   m_strSelectedBuf = letter;
+  m_fExtraFOVs = mParams.scaledAliExtraFOV;
+  m_fMaxPctChange = mHelper->GetScaledRealignPctChg();
+  m_fMaxRotation = mHelper->GetScaledRealignMaxRot();
+  letter = 'A' + mParams.scaledAliLoadBuf;
+  m_strRefMapBuf = letter;
+  m_statTemplateTitle.SetFont(boldFont);
+  m_statResetISTitle.SetFont(boldFont);
+  m_statScaledTitle.SetFont(boldFont);
   UpdateData(false);
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
-  if (!mForRealignOnly)
+  ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
+  ManageBufferUseStatus(IDC_STAT_REF_BUF_ROLLS, mParams.scaledAliLoadBuf);
+  if (mForRealignOnly <= 0)
     ManageMap();
   ManageResetIS();
   return TRUE;
@@ -122,7 +162,7 @@ BOOL CNavRealignDlg::OnInitDialog()
 void CNavRealignDlg::OnOK()
 {
   UpdateData(true);
-  if (m_strMapLabel.IsEmpty() && !mForRealignOnly) {
+  if (m_strMapLabel.IsEmpty() && mForRealignOnly <= 0) {
     AfxMessageBox("You must enter a label for the Navigator map to align to", MB_EXCLAME);
     return;
   }
@@ -134,6 +174,12 @@ void CNavRealignDlg::OnOK()
     mParams.maxNumResetIS = mMaxNumResets;
   else
     mParams.maxNumResetIS = -mMaxNumResets;
+  mParams.scaledAliExtraFOV = m_fExtraFOVs;
+  if (mMaxPctChgd)
+    mParams.scaledAliPctChg = m_fMaxPctChange;
+  if (mMaxRotChgd)
+    mParams.scaledAliMaxRot = m_fMaxRotation;
+
   *mMasterParams = mParams;
   CBaseDlg::OnOK();
 }
@@ -262,13 +308,48 @@ void CNavRealignDlg::OnDeltaposSpinTemplateBuf(NMHDR *pNMHDR, LRESULT *pResult)
   char letter = 'A' + mParams.loadAndKeepBuf;
   m_strSelectedBuf = letter;
   UpdateData(false);
-  ManageMap();
+  ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
 }
 
 
 void CNavRealignDlg::OnCheckLeaveIsZero()
 {
   UpdateData(true);
+}
+
+void CNavRealignDlg::OnDeltaposSpinRefMapBuf(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  if (NewSpinnerValue(pNMHDR, pResult, mParams.scaledAliLoadBuf, 1, MAX_BUFFERS - 1,
+    mParams.scaledAliLoadBuf))
+    return;
+  char letter = 'A' + mParams.scaledAliLoadBuf;
+  m_strRefMapBuf = letter;
+  UpdateData(false);
+  ManageBufferUseStatus(IDC_STAT_REF_BUF_ROLLS, mParams.scaledAliLoadBuf);
+}
+
+
+void CNavRealignDlg::OnKillfocusEditExtraFovs()
+{
+  UpdateData(true);
+}
+
+
+void CNavRealignDlg::OnKillfocusEditMaxPctChange()
+{
+  float value = m_fMaxPctChange;
+  UPDATE_DATA_TRUE;
+  if (m_fMaxPctChange != value)
+    mMaxPctChgd = true;
+}
+
+
+void CNavRealignDlg::OnKillfocusEditMaxRotation()
+{
+  float value = m_fMaxRotation;
+  UPDATE_DATA_TRUE;
+  if (m_fMaxRotation != value)
+    mMaxRotChgd = true;
 }
 
 // Set enables and text in upper section
@@ -289,8 +370,6 @@ void CNavRealignDlg::ManageMap()
   SetDlgItemText(IDC_STAT_NOT_EXIST, notMap ? "The item with that label is not a map" :
     (isMont ? "The item with that label is a montage map" :
       "No item exists with that label"));
-  ShowDlgItem(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf <
-    mWinApp->mBufferManager->GetShiftsOnAcquire());
   exists = true;
   if (imBuf->mImage) {
     badBin = imBuf->mOverviewBin > 1;
@@ -319,4 +398,19 @@ void CNavRealignDlg::ManageResetIS()
   m_statResetTimes.EnableWindow(m_bResetIS);
   m_sbcResetTimes.EnableWindow(m_bResetIS);
   m_butLeaveISzero.EnableWindow(m_bResetIS);
+}
+
+void CNavRealignDlg::ManageBufferUseStatus(int nID, int bufNum)
+{
+  BOOL show = true;
+  if (bufNum <= mWinApp->mBufferManager->GetShiftsOnAcquire())
+    SetDlgItemText(nID, "Buffer is currently rolling");
+  else if (bufNum <= mWinApp->mBufferManager->GetShiftsOnAcquire() +
+    (mWinApp->LowDoseMode() ? 2 : 1))
+    SetDlgItemText(nID, "Buffer is currently an autoalign buffer");
+  else if (bufNum == mWinApp->mBufferManager->GetBufToReadInto())
+    SetDlgItemText(nID, "Buffer is currently the Read buffer");
+  else
+    show = false;
+  ShowDlgItem(nID, show);
 }

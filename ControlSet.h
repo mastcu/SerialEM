@@ -491,6 +491,8 @@ struct NavAcqParams {
   BOOL useMapHoleVectors;   // Flag to use hole vectors in new drawn-on map for multishot
   int endMacroInd;          // Macro to run at end of acquisition
   BOOL runEndMacro;         // Flag for whether to run it
+  BOOL realignToScaledMap;  // Flag to do Realign to Item to scaled map
+  int conSetForScaledAli;   // Control set to use for it
 };
 
 // Other Nav parameters

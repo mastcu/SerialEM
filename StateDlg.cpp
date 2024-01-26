@@ -485,7 +485,7 @@ void CStateDlg::OnButSetMapState()
   if (!item || item->IsNotMap())
     return;
   mHelper->SetToMapImagingState(item, true, 
-    !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0) ? -1 : 0);
+    !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0) ? -1 : 0, 1);
 }
 
 // Set imaging state from scheduled state of a Nav acquire

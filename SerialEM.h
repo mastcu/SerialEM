@@ -112,7 +112,7 @@ enum JeolScreenPosition
 struct JeolStateData;
 struct JeolParams;
 
-#define MAX_BUFFERS  20
+#define MAX_BUFFERS  22
 #define MAX_ROLL_BUFFERS 14
 #define MAX_FFT_BUFFERS 8
 #define MAX_STORES    100

@@ -1281,7 +1281,6 @@
 #define IDC_COMBO_PREMACRO              2280
 #define IDC_COMBO_MACRO                 2281
 #define IDC_CHECK_LIMIT_ABS_FOCUS       2282
-#define IDC_COMBO_MACRO_AT_END          3250
 #define IDC_CHECK_LIMIT_DELTA_FOCUS     2283
 #define IDC_EDIT_FOCUS_MAX_DELTA        2284
 #define IDC_STAT_DELTA_MICRONS          2285
@@ -2211,9 +2210,29 @@
 #define IDC_EDIT_MULGRID_NAME18         3247
 #define IDC_EDIT_MULGRID_NAME19         3248
 #define IDC_EDIT_MULGRID_NAME20         3249
+#define IDC_COMBO_MACRO_AT_END          3250
 #define IDC_STAT_RUN                    3251
 #define IDC_STAT_NAME                   3252
 #define IDC_NA_RUN_SCRIPT_AT_END        3253
+#define IDC_EDIT_MAX_PCT_CHANGE         3254
+#define IDC_EDIT_MAX_ROTATION           3255
+#define IDC_EDIT_EXTRA_FOVS             3256
+#define IDC_STAT_REF_MAP_BUF            3257
+#define IDC_SPIN_REF_MAP_BUF            3258
+#define IDC_STAT_REF_BUF_ROLLS          3259
+#define IDC_STAT_SCALED_TITLE           3260
+#define IDC_STAT_EXTRA_AREA             3261
+#define IDC_STAT_PCT                    3262
+#define IDC_STAT_DEG                    3263
+#define IDC_STAT_SIZE_CHANGE            3264
+#define IDC_STAT_ROTATION               3265
+#define IDC_STAT_REF_MAP_LABEL          3266
+#define IDC_STAT_X_FOVS                 3268
+#define IDC_NA_REALIGN_SCALED_MAP       3269
+#define IDC_RREALI_REC                  3270
+#define IDC_RREALI_PREV                 3271
+#define IDC_RREALI_VIEW                 3272
+#define IDC_RREALI_SEARCH               3273
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2774,7 +2793,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        286
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3254
+#define _APS_NEXT_CONTROL_VALUE         3274
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

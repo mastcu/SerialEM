@@ -27,15 +27,16 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  int mPanelStart[3];
-  int mNumInPanel[3];
+  int mPanelStart[4];
+  int mNumInPanel[4];
   NavAlignParams *mMasterParams;
   NavAlignParams mParams;
   int mMaxNumResets;
-  int mLoadBuf;
+  CNavHelper *mHelper;
+  bool mMaxRotChgd, mMaxPctChgd;
 
 public:
-  bool mForRealignOnly;
+  int mForRealignOnly;
   afx_msg void OnEnKillfocusEditMapLabel();
   CString m_strMapLabel;
   afx_msg void OnMakeTemplateMap();
@@ -57,6 +58,20 @@ public:
   afx_msg void OnCheckLeaveIsZero();
   void ManageMap();
   void ManageResetIS();
+  void ManageBufferUseStatus(int nID, int bufNum);
   CSpinButtonCtrl m_sbcTemplateBuf;
   BOOL m_bResetIS;
+  CSpinButtonCtrl n_sbcRefMapBuf;
+  afx_msg void OnDeltaposSpinRefMapBuf(NMHDR *pNMHDR, LRESULT *pResult);
+  CStatic m_statRefMapBuf;
+  CString m_strRefMapBuf;
+  float m_fExtraFOVs;
+  afx_msg void OnKillfocusEditExtraFovs();
+  float m_fMaxPctChange;
+  afx_msg void OnKillfocusEditMaxPctChange();
+  float m_fMaxRotation;
+  afx_msg void OnKillfocusEditMaxRotation();
+  CStatic m_statTemplateTitle;
+  CStatic m_statResetISTitle;
+  CStatic m_statScaledTitle;
 };

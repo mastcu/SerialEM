@@ -2349,18 +2349,18 @@ BEGIN
     DEFPUSHBUTTON   "GO",IDOK,207,408,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,322,408,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,377,410,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,68,10
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,68,10
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,210,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,220,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,305,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,304,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,305,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,304,26,12,ES_AUTOHSCROLL
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,84,316,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,112,317,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,316,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,279,136,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,291,136,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,132,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,279,132,10
     PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,265,408,36,14
     EDITTEXT        IDC_EDIT_EVERY_N,220,309,24,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_EVERY_N,"msctls_updown32",UDS_ARROWKEYS,244,308,12,14
@@ -2383,9 +2383,9 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,378,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,390,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,299,392,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,360,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,359,10,8,NOT WS_GROUP
@@ -2401,7 +2401,7 @@ BEGIN
     CONTROL         "Do hybrid Realign to Item/Align to Template",IDC_NA_APPLY_REALIGN_ERR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,243,149,10
     CONTROL         "Relax stage after final movement",IDC_NA_RELAX_STAGE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,255,119,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,119,10
     CONTROL         "Mapping",IDC_RMAPPING,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,52,3,46,14
     CONTROL         "Final Data",IDC_RACQUISITION,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,100,3,53,14
     LTEXT           "Parameters for:",IDC_STAT_PARAM_FOR,4,5,46,10
@@ -2415,23 +2415,23 @@ BEGIN
     CONTROL         "Every",IDC_RNAVACQ_AFTER_MINUTES,"Button",BS_AUTORADIOBUTTON,188,345,30,10
     CONTROL         "When moved >",IDC_RNAVACQ_WHEN_MOVED,"Button",BS_AUTORADIOBUTTON,188,358,58,10
     GROUPBOX        "How often to run task",IDC_STAT_INTERVAL_GROUP,183,298,105,73,WS_GROUP
-    LTEXT           "",IDC_STAT_SPACER3,157,385,8,8
+    LTEXT           "",IDC_STAT_SPACER3,157,397,8,8
     CONTROL         "Record",IDC_RMAP_WITH_REC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,195,39,10
     CONTROL         "View",IDC_RMAP_WITH_VIEW,"Button",BS_AUTORADIOBUTTON,62,195,31,10
     CONTROL         "Search",IDC_RMAP_WITH_SEARCH,"Button",BS_AUTORADIOBUTTON,101,195,38,10
     GROUPBOX        "Acquire non-montage images in Low Dose with",IDC_STAT_WHICH_CONSET,8,185,150,23,WS_GROUP
     LTEXT           "Task-related options",IDC_STAT_ACTION_OPTIONS,4,233,72,8
-    LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,295,62,8
+    LTEXT           "General options",IDC_STAT_GEN_OPTIONS,4,307,62,8
     LTEXT           "Primary Action-related options",IDC_STAT_TASK_OPTIONS,4,108,101,8
     LTEXT           "Tasks before or after Primary Action",IDC_STAT_ACTION_GROUP,171,5,120,8
     LTEXT           "Currently selected task controls",IDC_STAT_SELECTED_GROUP,171,288,216,8
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,3,20,158,1
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,3,106,158,1
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,3,231,158,1
-    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,293,158,1
+    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,305,158,1
     CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,170,286,217,1
     CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,170,389,217,1
-    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,90,10
+    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,90,10
     LTEXT           "(Push button to show controls)",IDC_STAT_PUSH_BUT,291,5,96,8
     CONTROL         "Hardware dark reference",IDC_RADIO_NAVACQ_SEL19,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,188,269,78,10
     CONTROL         "",IDC_CHECK_NAVACQ_RUN19,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,269,11,10
@@ -2439,8 +2439,14 @@ BEGIN
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP19,358,269,24,10
     CONTROL         "Use map hole vectors for shifts, with adjustment",IDC_NA_USE_MAP_HOLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,172,151,10
-    CONTROL         "Run script at end",IDC_NA_RUN_SCRIPT_AT_END,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,60,10
-    COMBOBOX        IDC_COMBO_MACRO_AT_END,72,365,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Run script at end",IDC_NA_RUN_SCRIPT_AT_END,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,378,60,10
+    COMBOBOX        IDC_COMBO_MACRO_AT_END,72,377,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "P",IDC_RREALI_PREV,"Button",BS_AUTORADIOBUTTON | WS_GROUP,100,255,15,10
+    CONTROL         "R",IDC_RREALI_REC,"Button",BS_AUTORADIOBUTTON,116,255,15,10
+    CONTROL         "V",IDC_RREALI_VIEW,"Button",BS_AUTORADIOBUTTON,132,255,15,10
+    CONTROL         "S",IDC_RREALI_SEARCH,"Button",BS_AUTORADIOBUTTON,148,255,16,10
+    CONTROL         "Realign to scaled map with",IDC_NA_REALIGN_SCALED_MAP,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,9,255,89,10
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -3774,14 +3780,15 @@ BEGIN
     CTEXT           "Static",IDC_STAT_INFO_LINE1,7,9,276,8
 END
 
-IDD_NAVREALIGN DIALOGEX 0, 0, 174, 219
+IDD_NAVREALIGN DIALOGEX 0, 0, 174, 306
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Navigator Align Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,28,199,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,89,199,50,14
-    LTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,55,8,63,8
+    LTEXT           "",IDC_STAT_SPACER,0,292,8,8
+    DEFPUSHBUTTON   "OK",IDOK,28,286,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,89,286,50,14
+    CTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,41,8,93,8
     LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,21,111,8
     EDITTEXT        IDC_EDIT_MAP_LABEL,121,18,42,14,ES_AUTOHSCROLL
     CTEXT           "Map does not exist yet",IDC_STAT_NOT_EXIST,7,32,130,8
@@ -3789,11 +3796,11 @@ BEGIN
     LTEXT           "Buffer to load and keep template in:",IDC_STAT_LOAD_KEEP,9,74,106,8
     CTEXT           "W",IDC_STAT_SELECTED_BUF,116,74,8,8
     CONTROL         "",IDC_SPIN_TEMPLATE_BUF,"msctls_updown32",UDS_ARROWKEYS,125,71,10,14
-    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,10,97,73,8
-    EDITTEXT        IDC_EDIT_MAX_SHIFT,86,94,23,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_MAXALI_UM,112,97,25,8
+    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,9,97,73,8
+    EDITTEXT        IDC_EDIT_MAX_SHIFT,85,94,23,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_MAXALI_UM,111,97,25,8
     CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,9,111,157,1
-    LTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,33,116,108,8
+    CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,116,126,8
     CONTROL         "Reset image shift and realign if >",IDC_CHECK_RESET_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,158,108,10
     EDITTEXT        IDC_EDIT_RESET_IS,118,156,22,14,ES_AUTOHSCROLL
@@ -3803,12 +3810,26 @@ BEGIN
     CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,170,10,14
     CONTROL         "Leave IS at 0 (skip last realign)",IDC_CHECK_LEAVE_IS_ZERO,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,185,107,10
-    PUSHBUTTON      "?",IDC_BUTHELP,157,201,10,10
-    LTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,30,83,76,8
-    LTEXT           "",IDC_STAT_SPACER,0,205,8,8
+    PUSHBUTTON      "?",IDC_BUTHELP,157,288,10,10
+    CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,83,106,8
     CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,10,127,157,16
     CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,144,160,8
     CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,59,156,8
+    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,198,157,1
+    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,203,130,8
+    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,233,108,8
+    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,230,23,14,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STAT_PCT,143,233,8,8
+    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,249,94,8
+    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,246,23,14,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_DEG,129,249,27,8
+    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,217,93,8
+    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,214,23,14,ES_AUTOHSCROLL
+    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,217,32,8
+    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,264,112,8
+    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,264,8,8
+    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,261,10,14
+    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,273,106,8
 END
 
 IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
@@ -4549,7 +4570,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 167
         TOPMARGIN, 7
-        BOTTOMMARGIN, 212
+        BOTTOMMARGIN, 299
     END
 
     IDD_MANAGE_DEWARS, DIALOG
@@ -5261,6 +5282,7 @@ STRINGTABLE
 BEGIN
     IDC_USE_TRIAL_SMALLER   "Center with Trial parameters set at the time, with smaller beam"
     IDC_SPIN_SMALLER_TRIAL  "Set the percentage reduction in diameter for the Trial beam to use"
+    IDC_NA_RETRACT_CAMS     "Retract all cameras at end of acquisition"
     IDC_ACS_ITERATE         "Take a second image and center again when using beam edges to center"
     IDC_REFINE_WITH_TRIAL   "Use modified Trial instead of Preview images for Refine ZLP in Low Dose"
     IDC_CHECK_USE_MULTISHOT "Use the Multiple Records routine to get montage in Low Dose mode"
@@ -6087,10 +6109,12 @@ BEGIN
     IDC_NA_RESTORE_STATE    "Restore microscope to current state after realigning to item"
     IDC_NA_ROUGH_EUCEN      "Run rough eucentricty task after moving to position"
     IDC_NA_CLOSE_VALVES     "Close valves/turn off beam after doing operations at all areas"
-    IDC_NA_RUN_SCRIPT_AT_END
-                            "Run selected script at end of acquisition"
-    IDC_NA_RETRACT_CAMS     "Retract all cameras at end of acquisition"
+END
+
+STRINGTABLE
+BEGIN
     IDC_COMBO_MACRO_AT_END  "Select the script to run at the end of acquisition"
+    IDC_NA_RUN_SCRIPT_AT_END "Run selected script at end of acquisition"
 END
 
 STRINGTABLE
@@ -7366,6 +7390,16 @@ BEGIN
     ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 
                             "Run script instead of Record when running from Acquire at Items"
     ID_NAV_SETSCRIPTTORUN   "Select the script to run during Multi-shots"
+    IDC_EDIT_EXTRA_FOVS     "Scaled reference will be bigger than A by this fraction of A on all sides"
+    IDC_EDIT_MAX_ROTATION   "Maximum angle to test in rotation search, in degrees"
+    IDC_EDIT_MAX_PCT_CHANGE "Maximum percantage change in size to test in scaling search"
+    IDC_SPIN_REF_MAP_BUF    "Buffer to store full reference image in, if it needs to be loaded or moved"
+    IDC_NA_REALIGN_SCALED_MAP
+                            "Do second round of alignment at higher mag to scaled extract from map"
+    IDC_RREALI_PREV         "Use Preview parameters for second round of alignment"
+    IDC_RREALI_REC          "Use Record parameters for second round of alignment"
+    IDC_RREALI_VIEW         "Use View parameters for second round of alignment"
+    IDC_RREALI_SEARCH       "Use Search parameters for second round of alignment"
 END
 
 STRINGTABLE

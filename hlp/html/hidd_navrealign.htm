@@ -19,7 +19,9 @@
       can be run either from a script command or from the Navigator during the Acquire 
       at Items procedure.&nbsp; A subset of these parameters govern whether image 
       shift is reset after an alignment and are also used for the Realign to Item 
-      operation when it is run from Acquire at Items.</p>
+      operation when it is run from Acquire at Items.&nbsp; A third section of the 
+      dialog has parameters applied when using Realign to Item with a second round of 
+      alignment to a scaled-up area of the map used on the first round.</p>
     <p> A template is an image of some generic feature, like a hole in the carbon 
       film, to which other images can be aligned.&nbsp; Aligning to a template 
       requires specifying two things: where the image is, and how to acquire an image 
@@ -96,5 +98,61 @@
       This final reset counts towards the maximum.&nbsp; If the maximum is 1, it will 
       simply reset the image shift after aligning to the template, and not acquire 
       another image.</p>
+    <p> <em><strong>Parameters for Realign to Item Aligning to Scaled Map</strong></em></p>
+    <p> When aligning to a point marked on a map at a magnification lower than that to 
+      be used for acquisition, Realign to Item can do a second round of alignment at 
+      that higher magnification, taking an image there and correlating it with a 
+      scaled-up extract from the map.&nbsp; The extract is rotated and scaled 
+      according to the pixel size and rotation angles provided by the various 
+      calibrations.&nbsp; Since this transformation may not be optimal, the program 
+      can then search for a rotation and scaling that gives a better correlation, 
+      which will presumably result in a more accurate alignment shift.&nbsp; If the 
+      calibration is sufficiently off, the search may be essential for the routine to 
+      work.&nbsp; After the procedure finishes, the actual higher-magnification image 
+      is in A, and the scaled-up, rotated extract is in B.&nbsp; If there is much 
+      additional rotation or scaling as a result of the search, they will not line up 
+      since that additionally transformed image is not displayed, but it should be 
+      possible to see that the center is aligned.</p>
+    <p> <strong>Extra area for scaled reference</strong></p>
+    <p> The scaled extract of the map will be the size of the image in A plus tan 
+      amount added to each side that is the fraction entered here times the field of 
+      view (FOV) of A, which is computed as the geometric mean of the sizes in X and 
+      Y.&nbsp; The fraction also corresponds to the fraction of the FOV that the image 
+      in A can be shifted and still be fully overlapping with the reference.&nbsp; 
+      Full overlap is good for maintaining correlation strength.&nbsp; The shift will 
+      also be limited to this amount if it is 0.5 or higher.&nbsp; Below 0.5, a shift 
+      of 0.5 times the FOV will still be allowed.&nbsp; A larger value would be 
+      appropriate if the image has a good chance of needing a shift that large, but 
+      large shifts can be problematic if there are repeating structures that might be 
+      aligned to instead.&nbsp; The initial default of 0.5 is a good starting point.</p>
+    <p> <strong>Maximum added size change to test</strong></p>
+    <p> This entry sets the limits of the initial scanning step of the scaling search 
+      in percent; e.g., with 4%, the program tries scalings from 0.96 to 1.04.&nbsp; 
+      It is best for this to be at least 1% more than the expected maximum percent 
+      change in size, because the refinement step of the search happens only if the 
+      best correlation is not found at the end of the initial range.&nbsp; It should 
+      be a multiple of 2%, the current search step.&nbsp; It is acceptable to enter 0, 
+      for no scaling search.&nbsp; If you never change this value, it has a default 
+      value controlled by the property &#39;ScaledAliDfltPctChg&#39;, which itself defaults to 
+      4%.&nbsp; Once you change it, it becomes your setting and that property has no 
+      effect.</p>
+    <p> <strong>Maximum added rotation to test</strong></p>
+    <p> TThis entry sets the limits of the initial scanning step of the rotation 
+      search in degrees.&nbsp; It is best for this to be at least 0.8 degree more than 
+      the expected maximum rotation, because the refinement step of the search happens 
+      only if the best correlation is not found at the end of the initial range.&nbsp; 
+      It should be a multiple of 1.5%, the current search step.&nbsp; It is acceptable 
+      to enter 0, for no rotation search.&nbsp; If you never change this value, it has 
+      a default value controlled by the property &#39;ScaledAliDfltMaxRot&#39;, which itself 
+      defaults to 3 degrees.&nbsp; Once you change it, it becomes your setting and 
+      that property has no effect.</p>
+    <p> <strong>Buffer to load and keep whole map in</strong></p>
+    <p> The program needs to have the whole reference image loaded, and if it is a 
+      montage, it needs to be loaded unbinned.&nbsp; For efficiency with repeated use, 
+      this image should be kept in a buffer not subject to being overwritten, i.e., 
+      not a rolling or other dedicated buffer.&nbsp; If the program does not find the 
+      map in a suitable buffer, it will load or copy it to the buffer selected here.&nbsp; 
+      The default is the highest buffer available.</p>
+    <p> &nbsp;</p>
   </body>
 </html>

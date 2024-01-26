@@ -714,12 +714,11 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
 
   // Compute the scaling and rotation between images, invert rotation for Y inversion
   mShiftManager->GetScaleAndRotationForFocus(imBuf, focusScale, focusRot);
-  PrintfToLog("this sc %.3f rot %.2f oher %.3f %.2f", focusScale, focusRot, otherScale, otherRotation);
-  fromPixel = (float)(mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd) * 
-    imBuf->mBinning) / focusScale;
-  toPixel = (float)(mShiftManager->GetPixelSize(camera, magInd) * binning) / otherScale;
-  fromRot = (float)mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd) +
-    focusRot;
+  fromPixel = mShiftManager->GetPixelSize(imBuf) / focusScale;
+  toPixel = (float)(mShiftManager->GetPixelSize(camera, magInd)  * binning) / otherScale;
+  if (!imBuf->GetAxisAngle(fromRot))
+    fromRot = (float)mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd);
+  fromRot += focusRot + imBuf->mRotAngle;
   toRot = (float)mShiftManager->GetImageRotation(camera, magInd) + otherRotation;
   scaling = fromPixel / toPixel;
   rotation = fromRot - toRot;
@@ -849,12 +848,23 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *othe
   int outBufNum, CString &errStr, float xcen, float ycen, int xsize, int ysize, 
   float *xform)
 {
-  float otherScale = 1., otherRot = 0.;
+  float otherScale = 1., otherRot = 0., axisAngle;
   if (!otherBuf->mMagInd || otherBuf->mCamera < 0 || !otherBuf->mBinning) {
     errStr = "The other image buffer is missing mag, binning, or camera information";
     return 1;
   }
   mShiftManager->GetScaleAndRotationForFocus(otherBuf, otherScale, otherRot);
+
+  // Give priority to axis angle and pixel size that came in from an mdoc;
+  // pass the difference or ratio of this value to the mag/camera derived value so the
+  // main routine will replace mag/camera value with this
+  // Add rotate-on-load image rotation
+  if (otherBuf->GetAxisAngle(axisAngle))
+    otherRot += axisAngle - (float)mShiftManager->GetImageRotation(otherBuf->mCamera, 
+      otherBuf->mMagInd);
+  otherRot += otherBuf->mRotAngle;
+  otherScale *= mShiftManager->GetPixelSize(otherBuf->mCamera, otherBuf->mMagInd) *
+    (float)otherBuf->mBinning / mShiftManager->GetPixelSize(otherBuf);
   return TransformToOtherMag(imBuf, outBufNum, otherBuf->mMagInd, errStr, 
     mWinApp->LookupActiveCamera(otherBuf->mCamera), otherBuf->mBinning, xcen, ycen, xsize,
     ysize, otherScale, otherRot, xform);
@@ -1255,7 +1265,7 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
  */
 int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, 
   float maxShiftUm, float scaleRange, float angleRange, bool doImShift, float &scaleMax,
-  float &rotation, CString &errStr)
+  float &rotation, int corrFlags, CString &errStr)
 {
   int nxAli, nxRef, nyAli, nyRef, err, zoomInd, cropInd, ind;
   int nxCrop, nyCrop, ixCen, iyCen, ixStart, ixEnd, iyStart, iyEnd, type, dataSize;
@@ -1373,14 +1383,21 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       zoomXform[1] * zoomXform[1]);
 
     // Do the alignment, restore effective bin, make error messages, and leave
-    err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, doImShift, scaleRange,
-      angleRange, scaleMax, rotation, maxShiftUm);
+    if (scaleRange > 0 || angleRange > 0) {
+      err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, doImShift, scaleRange,
+        angleRange, scaleMax, rotation, maxShiftUm, corrFlags);
+      if (err == 1) {
+        errStr = "The best correlation was at the end of the rotation search range and a "
+          "wider range is needed";
+        return err;
+      }
+    } else {
+      mShiftManager->SetNextAutoalignLimit(maxShiftUm);
+      err = mShiftManager->AutoAlign(1, 1, doImShift);
+    }
     mImBufs[1].mEffectiveBin = effBinSave;
     if (err == 2)
       errStr = "No correlation peaks were found within the allowed range";
-    else if (err == 1)
-      errStr = "The best correlation was at the end of the rotation search range and a "
-      "wider range is needed";
     else if (err)
       errStr = "An error occurred in the autoalignments";
     return err;
@@ -1497,11 +1514,25 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     mBufferManager->CopyImBuf(&refCopy, &mImBufs[3], false);
 
   // Align without doing image shift
-  err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, false, scaleRange, 
-    angleRange, scaleMax, rotation, maxShiftUm);
+
+  if (scaleRange > 0 || angleRange > 0) {
+    err = mWinApp->mNavHelper->AlignWithScaleAndRotation(1, false, scaleRange,
+    angleRange, scaleMax, rotation, maxShiftUm, corrFlags);
+    if (err == 1) {
+      errStr = "The best correlation was at the end of the rotation search range and a "
+        "wider range is needed";
+      return err;
+    }
+  } else {
+    mShiftManager->SetNextAutoalignLimit(maxShiftUm);
+    err = mShiftManager->AutoAlign(1, 1, doImShift);
+  }
+  if (err == 2)
+    errStr = "No correlation peaks were found within the allowed range";
+  else if (err)
+    errStr = "An error occurred in the autoalignments";
   if (err || !doImShift)
     return err;
-
 
   mImBufs->mImage->getShifts(xShift, yShift);
 

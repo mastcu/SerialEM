@@ -730,7 +730,14 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         navAliParm->maxNumResetIS = itemInt[3];
         navAliParm->resetISthresh = itemFlt[4];
         navAliParm->leaveISatZero = itemInt[5] != 0;
-      } else if (NAME_IS("NavAliMapLabel")) {
+        if (!itemEmpty[9]) {
+          navAliParm->scaledAliMaxRot = itemFlt[6];
+          navAliParm->scaledAliPctChg = itemFlt[7];
+          navAliParm->scaledAliExtraFOV = itemFlt[8];
+          navAliParm->scaledAliLoadBuf = itemInt[9];
+        }
+      }
+      else if (NAME_IS("NavAliMapLabel")) {
         StripItems(strLine, 1, navAliParm->templateLabel);
 
       } else if (NAME_IS("MarkerShift")) {
@@ -1911,9 +1918,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteNavAcqParams(i, mWinApp->GetNavAcqParams(i),
       mWinApp->mNavHelper->GetAcqActions(i),
       mWinApp->mNavHelper->GetAcqActCurrentOrder(i), false);
-    oneState.Format("NavAlignParams %d %f %d %f %d\n", navAliParm->loadAndKeepBuf,
-      navAliParm->maxAlignShift, navAliParm->maxNumResetIS, navAliParm->resetISthresh,
-      navAliParm->leaveISatZero ? 1 : 0);
+    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d\n", 
+      navAliParm->loadAndKeepBuf, navAliParm->maxAlignShift, navAliParm->maxNumResetIS,
+      navAliParm->resetISthresh, navAliParm->leaveISatZero ? 1 : 0, 
+      navAliParm->scaledAliMaxRot, navAliParm->scaledAliPctChg, navAliParm->scaledAliExtraFOV,
+      navAliParm->scaledAliLoadBuf);
     mFile->WriteString(oneState);
     mFile->WriteString("NavAliMapLabel " + navAliParm->templateLabel + "\n");
 
@@ -2507,6 +2516,10 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->endMacroInd = itemInt[23];
         navParams->runEndMacro = itemInt[24] != 0;
       }
+      if (!itemEmpty[25]) {
+        navParams->realignToScaledMap = itemInt[25] != 0;
+        navParams->conSetForScaledAli = itemInt[26];
+      }
 
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
@@ -2572,7 +2585,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    "%d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,
@@ -2583,7 +2596,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
     navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0,
     navParams->runHoleCombiner ? 1 : 0, navParams->useMapHoleVectors ? 1 : 0,
-    navParams->endMacroInd, navParams->runEndMacro ? 1 : 0);
+    navParams->endMacroInd, navParams->runEndMacro ? 1 : 0, 
+    navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";
