@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/25/24: Relaxed defocus criteria for acceptable CTF fit in coma-free
+alignment and add suggestion to try lower beam til temporarily (In 4.1).
+
 1/25/24: Added ability to do second round of Realign to Item with scaled-up
 extract from lower mag map.
 
