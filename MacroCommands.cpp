@@ -2962,11 +2962,14 @@ int CMacCmd::AlignBetweenMags()
     index = mBufferManager->AutoalignBufferIndex();
   else if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
     ABORT_LINE(report);
-  if (!mItemEmpty[5] && (fabs(mItemFlt[5]) < 0.02 || fabs(mItemFlt[5]) > 0.5))
-    ABORT_LINE("The scaling search range should be between 0.02 and 0.5 in line\n\n");
+  if (!mItemEmpty[5] && mItemFlt[5] && 
+    (fabs(mItemFlt[5]) < 1 || fabs(mItemFlt[5]) > 25))
+    ABORT_LINE("The maximum scaling to test should be either 0 or between 1% and 25% in "
+      "line\n\n");
   if (mProcessImage->AlignBetweenMagnifications(index, mItemFlt[2], mItemFlt[3],
-    mItemFlt[4], mItemEmpty[5] ? 0.06f : mItemFlt[5], mItemEmpty[6] ? 6.f : mItemFlt[6],
-    mItemEmpty[7] || mItemInt[7] <= 0, scaleMax, rotation, report))
+    mItemFlt[4], (mItemEmpty[5] ? mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[5]) /
+    50.f, 2.f * (mItemEmpty[6] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[6]),
+    mItemEmpty[7] || mItemInt[7] <= 0, scaleMax, rotation, 0, report))
     ABORT_LINE(report + " for line:\n\n");
   SetReportedValues(scaleMax, rotation);
   return 0;
@@ -10215,7 +10218,7 @@ int CMacCmd::RealignToNavItem(void)
 {
   CString report;
   BOOL truth, justMove = false;
-  int index, index2, ix0, ix1, iy0;
+  int index, index2, ix0, ix1, iy0, setForScaled = 0;
   float bmax;
   ABORT_NONAV;
   truth = CMD_IS(REALIGNTOOTHERITEM);
@@ -10234,12 +10237,18 @@ int CMacCmd::RealignToNavItem(void)
   }
   if (!mItemEmpty[index2 + 1])
     mNavHelper->SetContinuousRealign(mItemInt[index2 + 1]);
+  if (!mItemEmpty[index2 + 5] && CheckAndConvertCameraSet(mStrItems[index2 + 5], 
+    mItemInt[index2 + 5], setForScaled, mStrCopy))
+      ABORT_LINE(mStrCopy);
+  if ((setForScaled == FOCUS_CONSET || setForScaled == TRIAL_CONSET) &&
+    mWinApp->LowDoseMode())
+    ABORT_LINE("Realign to scaled map can not be done with Focus or Trial area");
   if (truth)
     iy0 = mNavigator->RealignToOtherItem(index, mItemInt[index2] != 0, bmax, ix0,
-      ix1, justMove);
+      ix1, justMove, setForScaled);
   else
     iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, bmax, ix0, ix1,
-      justMove);
+      justMove, setForScaled);
   mNavHelper->SetContinuousRealign(0);
   if (iy0) {
     report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
@@ -10889,7 +10898,8 @@ int CMacCmd::SetMapAcquireState(void)
     ABORT_LINE(report);
   }
   if (mNavHelper->SetToMapImagingState(navItem, true, 
-    (mWinApp->LowDoseMode() && navItem->mMapLowDoseConSet >= 0) ? -1 : 0))
+    (mWinApp->LowDoseMode() && navItem->mMapLowDoseConSet >= 0) ? -1 : 0),
+    mItemEmpty[2] ? 1 : mItemInt[2])
     ABORT_LINE("Failed to set map imaging state for line:\n\n");
   return 0;
 }
