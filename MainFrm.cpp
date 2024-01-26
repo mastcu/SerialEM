@@ -157,9 +157,7 @@ void CMainFrame::Dump(CDumpContext& dc) const
 void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
 {
   char cChar = char(nChar);
-  char text[32];
-  sprintf(text, "Code %u, char %c", nChar, cChar);
-  MessageBox(CString(text));
+  SEMTrace('1', "MainFrame OnKeyDown received Code %u, char %c", nChar, cChar);
   
   CMDIFrameWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
