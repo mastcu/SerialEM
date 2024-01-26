@@ -344,6 +344,13 @@
       the adjusting transformation will be modified by the changes in position.&nbsp; 
       In this way, an adjusting transformation from a previous session should be a 
       good starting point and can then be refined to apply to the current session.&nbsp; 
+      In addition, the adjusting transform can be refined in two stages.&nbsp; After 
+      defining the pattern and using <b>Step To and Adjust 
+      IS</b> to adjust at an intermediate magnification, you can simply press <b>Step To and Adjust 
+      IS</b> again and adjust the shifts at a higher magnification.&nbsp; When that 
+      adjustment is finished, the product of adjusting transformations is saved and 
+      will be available to transform all the way from the original magnification to 
+      the high one.&nbsp; 
       An adjusting transformation is not saved if the pattern was created with 
       &#39;SetCustomHoleShifts&#39; or &#39;SetRegularHoleVectors&#39;, modified with 
       &#39;RotateMultiShotPattern&#39;, or created from hole-finding vectors with 
@@ -406,7 +413,7 @@
     <p>Press this button to apply the adjustment stored when <strong>Step To and 
       Adjust</strong> was last used to the current image shift values (which can be 
       regular vectors or customs shifts).&nbsp; The magnification at which the current 
-      shifts were defined must match that of the shifts that were adjusted in that 
+      shifts were defined must match either the original or current magnification of the shifts that were adjusted in that 
       procedure.&nbsp; The button will be disabled when the operation is not possible, 
       and the status line below the button will indicate the reason that it is 
       disabled.&nbsp; See instructions above.</p>

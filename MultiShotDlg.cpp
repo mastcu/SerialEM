@@ -771,8 +771,9 @@ void CMultiShotDlg::OnButSaveIs()
       // been adjusted and mags match current transform, get the inverse of original
       // vector matrix for refining it
       if (mSteppingAdjusting && (mActiveParams->origMagOfArray[hexInd] < 0 ||
-        (mActiveParams->xformFromMag > 0 && magInd == mActiveParams->xformToMag &&
-          mActiveParams->origMagOfArray[hexInd] == mActiveParams->xformFromMag))) {
+        (mActiveParams->xformFromMag > 0 && ((magInd == mActiveParams->xformToMag &&
+          mActiveParams->origMagOfArray[hexInd] == mActiveParams->xformFromMag)) || 
+          (mActiveParams->xformToMag == mActiveParams->holeMagIndex[hexInd])))) {
 
         // TODO: Regression! for hex
         oldVecInv.xpx = (float)xSpacing[0];
