@@ -2968,7 +2968,7 @@ int CMacCmd::AlignBetweenMags()
       "line\n\n");
   if (mProcessImage->AlignBetweenMagnifications(index, mItemFlt[2], mItemFlt[3],
     mItemFlt[4], (mItemEmpty[5] ? mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[5]) /
-    50.f, 2.f * (mItemEmpty[6] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[6]),
+    100.f, 2.f * (mItemEmpty[6] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[6]),
     mItemEmpty[7] || mItemInt[7] <= 0, scaleMax, rotation, 0, report))
     ABORT_LINE(report + " for line:\n\n");
   SetReportedValues(scaleMax, rotation);

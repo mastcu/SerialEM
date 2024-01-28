@@ -122,6 +122,7 @@ class EMmontageController
   GetSetMember(bool, RunningMacro);
   GetSetMember(BOOL, AllowHQMontInLD);
   GetSetMember(BOOL, NoMontXCorrThread);
+  GetSetMember(BOOL, NoDrawOnRead);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -352,6 +353,7 @@ class EMmontageController
   BOOL mAllowHQMontInLD;          // Flag to enable HQ options in low dose
   BOOL mNoMontXCorrThread;        // Flag not to do correlations in thread
   int mBlockSizeInX;              // Size of focus blocks in X, needed for IS realign
+  BOOL mNoDrawOnRead;              // Flag not to draw when reading
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);

@@ -7395,11 +7395,11 @@ BEGIN
     IDC_EDIT_MAX_PCT_CHANGE "Maximum percantage change in size to test in scaling search"
     IDC_SPIN_REF_MAP_BUF    "Buffer to store full reference image in, if it needs to be loaded or moved"
     IDC_NA_REALIGN_SCALED_MAP
-                            "Do second round of alignment at higher mag to scaled extract from map"
-    IDC_RREALI_PREV         "Use Preview parameters for second round of alignment"
-    IDC_RREALI_REC          "Use Record parameters for second round of alignment"
-    IDC_RREALI_VIEW         "Use View parameters for second round of alignment"
-    IDC_RREALI_SEARCH       "Use Search parameters for second round of alignment"
+                            "Do third round of alignment at higher mag to scaled extract from map"
+    IDC_RREALI_PREV         "Use Preview parameters for third round of alignment"
+    IDC_RREALI_REC          "Use Record parameters for third round of alignment"
+    IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
+    IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
 END
 
 STRINGTABLE

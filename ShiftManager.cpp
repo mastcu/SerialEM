@@ -890,6 +890,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
       // Do the periodic correlation only up to point of erasing.  If it did erase,
       // it returns fillBrray and fillArray erased, otherwise it will just return and
       // we will use original images
+      SEMTrace('1', "Erasing peaks if sufficient # found");
       if (XCorrPeriodicCorr(fillBrray, fillArray, fillCrray, nxPad, nyPad, 0., mCTFa,
         tiltAngles, axisAngle, 1, boostNumSpots)) {
 

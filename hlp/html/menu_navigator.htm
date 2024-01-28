@@ -1016,8 +1016,10 @@
         one frame of the map if it is a montage, then take an image and align it to
         determine the error in stage position. It will then move the stage to the
         position of the item, take a new image, and align it to work out the error from
-        that small stage movement.
-        <LI>
+        that small stage movement.  If this procedure has been run on a nearby area 
+          recently enough, the program is able to use the results of previously aligning 
+          to the map center and go directly to the second round of alignment at the item 
+          position.<LI>
         The item is a map that is not located in a larger map, so it must itself be
         large enough for reliable localization. The program proceeds as just described,
         except that it ends up aligned to the center of the map.
@@ -1025,7 +1027,7 @@
           The item is a map located within a significantly larger map. In this case, the
           larger map must be the minimum required size, but the item being aligned to can
           be small. The program proceeds as above to find the item position by
-          correlating with the larger map. Then it raises the magnification to that of
+          correlating with the larger map. Then it does a third round of alignment by raising the magnification to that of
           the item itself, takes a new picture, and aligns it with the map item using
           image shift. This image shift should be relatively small provided that the
           position was found accurately at the lower magnification, and that the
@@ -1033,11 +1035,11 @@
         <LI>
           The item is a position on a map at a lower magnification than that at which 
           images are to be acquired, and the operation is run in a way that allows it to 
-          realign an image at the higher magnification to an appropriately scaled and 
+          do a third round of alignment between an image at the higher magnification an appropriately scaled and 
           rotated portion of the map centered on that point.&nbsp; This method is only 
           available when running through the Navigator Acquire at Items procedure or from 
           a script command, not through the menu or the button in the Navigator window.&nbsp; 
-          If the position can be marked accurately enough on the map, it has two advantages:
+          If the position can be marked accurately enough on the map, it has three advantages:
         <UL>
          <LI> There is no need to store a map at the higher magnification as in situation 
            3.
@@ -1047,12 +1049,18 @@
             that the image is not dominated by periodic structures.&nbsp; This is also an 
             advantage over the virtual maps of Schorb et al., Nature Methods 16: 471–477 
             (2019).</LI>
+          <LI> If the higher magnification image has a large enough field of view (10 
+            microns by default) and the routine is able to skip the first round of 
+            alignment, it will skip the second round as well, go directly to the item 
+            position, and just do the third round.&nbsp; This is particularly useful for 
+            aligning at an intermediate magnification to an LM map, as it avoids going in 
+            and out of LM.</LI>
 
         </UL>
           This method requires a camera parameter set or Low Dose area to be designated for the
           image to be aligned.&nbsp; In Low Dose mode, the area must be at a higher 
           magnification than the map.&nbsp; Outside of Low Dose, the routine must start at 
-          a higher magnification than the map.&nbsp; The second round will simply be 
+          a higher magnification than the map.&nbsp; The third round will simply be 
           skipped if these conditions are not met.&nbsp; Parameters for this method are 
           set in the <a href="hidd_navrealign.htm">Navigator Align Setup</a> dialog.</LI>
      </OL>

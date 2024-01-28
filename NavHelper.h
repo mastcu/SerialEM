@@ -286,6 +286,7 @@ public:
   GetSetMember(float, ScaledAliDfltPctChg);
   float GetScaledRealignPctChg() { return mNavAlignParams.scaledAliPctChg < 0 ? mScaledAliDfltPctChg : mNavAlignParams.scaledAliPctChg; };
   float GetScaledRealignMaxRot() { return mNavAlignParams.scaledAliMaxRot < 0 ? mScaledAliDfltMaxRot : mNavAlignParams.scaledAliMaxRot; };
+  GetSetMember(float, RISkipItemPosMinField);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -339,7 +340,7 @@ private:
   StateParams mPriorState;
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
-  int mSecondRoundID;           // Map ID of map itself for 2nd round alignment
+  int mThirdRoundID;           // Map ID of map itself for 2nd round alignment
   KImageStore *mMapStore;       // Pointer to file to use
   MontParam *mMapMontP;         // Pointer to montage params to use
   MontParam mMapMontParam;      // Our set of params for non-open file
@@ -517,6 +518,7 @@ private:
   BOOL mRIErasePeriodicPeaks;    // Erase peaks in realign to item
   float mScaledAliDfltMaxRot;    // Default maximum rotation in search of scaled realign
   float mScaledAliDfltPctChg;    // Default maximum % size change in search of scaled realign
+  float mRISkipItemPosMinField;  // Min field for skipping second round if scaled realign
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
@@ -541,7 +543,7 @@ public:
   int RotateForAligning(int bufNum);
   int TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat, int sizingWidth,
     int sizingHeight, float sizingFrac, ScaleMat rMat);
-  void StartSecondRound(void);
+  void StartThirdRound(void);
   float PieceToEdgeDistance(MontParam * montP, int ixPiece, int iyPiece);
   int GetLastStageError(float &stageErrX, float &stageErrY, float &localErrX,
     float &localErrY);

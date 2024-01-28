@@ -20,7 +20,7 @@
       at Items procedure.&nbsp; A subset of these parameters govern whether image 
       shift is reset after an alignment and are also used for the Realign to Item 
       operation when it is run from Acquire at Items.&nbsp; A third section of the 
-      dialog has parameters applied when using Realign to Item with a second round of 
+      dialog has parameters applied when using Realign to Item with a third round of 
       alignment to a scaled-up area of the map used on the first round.</p>
     <p> A template is an image of some generic feature, like a hole in the carbon 
       film, to which other images can be aligned.&nbsp; Aligning to a template 
@@ -100,7 +100,7 @@
       another image.</p>
     <p> <em><strong>Parameters for Realign to Item Aligning to Scaled Map</strong></em></p>
     <p> When aligning to a point marked on a map at a magnification lower than that to 
-      be used for acquisition, Realign to Item can do a second round of alignment at 
+      be used for acquisition, Realign to Item can do a third round of alignment at 
       that higher magnification, taking an image there and correlating it with a 
       scaled-up extract from the map.&nbsp; The extract is rotated and scaled 
       according to the pixel size and rotation angles provided by the various 
@@ -108,7 +108,9 @@
       can then search for a rotation and scaling that gives a better correlation, 
       which will presumably result in a more accurate alignment shift.&nbsp; If the 
       calibration is sufficiently off, the search may be essential for the routine to 
-      work.&nbsp; After the procedure finishes, the actual higher-magnification image 
+      work.&nbsp; If you need a scaling or rotation range much bigger than the 
+      default, searches have a risk of failing, and it is advisable to improve the 
+      calibrations&nbsp; After the procedure finishes, the actual higher-magnification image 
       is in A, and the scaled-up, rotated extract is in B.&nbsp; If there is much 
       additional rotation or scaling as a result of the search, they will not line up 
       since that additionally transformed image is not displayed, but it should be 
@@ -139,8 +141,8 @@
     <p> <strong>Maximum added rotation to test</strong></p>
     <p> TThis entry sets the limits of the initial scanning step of the rotation 
       search in degrees.&nbsp; It is best for this to be at least 0.8 degree more than 
-      the expected maximum rotation, because the refinement step of the search happens 
-      only if the best correlation is not found at the end of the initial range.&nbsp; 
+      the expected maximum rotation, because a more accurate interpolated rotation 
+      angle can be obtained only if the best correlation is not found at the end of the initial range.&nbsp; 
       It should be a multiple of 1.5%, the current search step.&nbsp; It is acceptable 
       to enter 0, for no rotation search.&nbsp; If you never change this value, it has 
       a default value controlled by the property &#39;ScaledAliDfltMaxRot&#39;, which itself 

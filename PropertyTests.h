@@ -367,7 +367,7 @@ INT_PROP_TEST("SkipAstigAdjustmentForIS", navHelper->, SkipAstigAdjustment)
 FLOAT_PROP_TEST("MaxMontReuseWaste", navHelper->, MaxMontReuseWaste)
 FLOAT_PROP_TEST("ScaledAliDfltMaxRot", navHelper->, ScaledAliDfltMaxRot)
 FLOAT_PROP_TEST("ScaledAliDfltPctChg", navHelper->, ScaledAliDfltPctChg)
-
+FLOAT_PROP_TEST("SkipToScaledRealignMinField", navHelper->, RISkipItemPosMinField)
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
 BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 #endif

@@ -119,6 +119,7 @@ EMmontageController::EMmontageController()
   mRunningMacro = false;
   mAllowHQMontInLD = false;
   mNoMontXCorrThread = false;
+  mNoDrawOnRead = false;
 }
 
 EMmontageController::~EMmontageController()
@@ -3001,7 +3002,7 @@ int EMmontageController::SavePiece()
 
     if (mBufferManager->ReplaceImage((char *)mMiniData, miniType, mMiniSizeX, mMiniSizeY,
       1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW, 
-      MONTAGE_CONSET)) {
+      MONTAGE_CONSET, false, !mNoDrawOnRead)) {
       delete [] mMiniData;
     } else {
 
@@ -3093,10 +3094,11 @@ int EMmontageController::SavePiece()
         i = 1;
         if (mReadingMontage) {
           i = mBufToCopyTo;
-          if (i == 1 || mBufferManager->CopyImageBuffer(1, i))
+          if (i == 1 || mBufferManager->CopyImageBuffer(1, i, !mNoDrawOnRead))
             i = 1;
         }
-        mWinApp->SetCurrentBuffer(i);
+        if (!mNoDrawOnRead)
+          mWinApp->SetCurrentBuffer(i);
       }
     }
     mMiniData = NULL;
@@ -3296,7 +3298,7 @@ int EMmontageController::SavePiece()
   if (mBufferManager->ReplaceImage((char *)mCenterData, 
     cenType == kUBYTE ? kSHORT : cenType,  mParam->xFrame, mParam->yFrame, 0,
     mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, 
-    mImBufs[0].mConSetUsed)) {
+    mImBufs[0].mConSetUsed, false, !mNoDrawOnRead)) {
       delete [] mCenterData;
       if (extra0)
         delete extra1;
@@ -3330,6 +3332,7 @@ int EMmontageController::SavePiece()
   }
 
   mLastFailed = false;
+  mNoDrawOnRead = false;
   mRequiredBWMean = -1.;  // A required mean must be registered each time
   CleanPatches();
   if (!mRestoringStage)
@@ -3553,7 +3556,6 @@ void EMmontageController::StopMontage(int error)
       StageRestoreDone();
     return;
   }
-
   if (mXCorrThread)
     WaitForXCorrProc(5000);
   
@@ -3593,7 +3595,8 @@ void EMmontageController::StopMontage(int error)
   CleanPatches();
   delete mMultiShotParams;
   mMultiShotParams = NULL;
-  
+  mNoDrawOnRead = false;
+
   for (int i = 0; i < 4; i++) {
     delete mCenterImage[i];
     mCenterImage[i] = NULL;

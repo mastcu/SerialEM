@@ -878,6 +878,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   KImage *image = imBuf->mImage;
   int nx, ny, type, newType = kFLOAT, dataSize = 4, numChan = 1;
   unsigned char *array;
+  double zoom = imBuf->mZoom;
   void *inArray;
   int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
   if (!image)
@@ -915,6 +916,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   if (!mImBufs[outBufNum].mImage)
     mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
   NewProcessedImage(imBuf, (short *)array, newType, nx, ny, 1, newProc, false, outBufNum);
+  mImBufs[1].mZoom = zoom;
   return 0;
 }
 
@@ -1352,7 +1354,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     return 1;
   }
 
-  // Common case of higher mag in A and scaling up reference is simpler
+  // COMMON CASE OF HIGHER MAG IN A AND SCALING UP REFERENCE
   if (interpUp) {
     mImBufs[zoomInd].mImage->getSize(nxAli, nyAli);
 
@@ -1403,7 +1405,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     return err;
   }
 
-  // The first way I tried, scaling higher mag image down and cropping from lower mag one
+  // SCALING HIGHER MAG IMAGE DOWN AND CROPPING FROM LOWER MAG ONE, the first way I tried
   // Still the only way if aligning lower to higher mag
   // Make copies of image buffers because the rolling is a mess in this case
   mrc_getdcsize(type, &dataSize, &err);

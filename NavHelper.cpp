@@ -327,6 +327,8 @@ CNavHelper::CNavHelper(void)
   mRIErasePeriodicPeaks = false;
   mScaledAliDfltMaxRot = 3.;
   mScaledAliDfltPctChg = 4.;
+  mRISkipItemPosMinField = 10.;
+  mRIJustMoving = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -442,8 +444,10 @@ void CNavHelper::UpdateSettings()
 /////  REALIGN TO ITEM
 /////////////////////////////////////////////////
 
-// Finds the best map for realigning to the given item and sets all the member variables
-// for the realign operation
+/*
+ * Finds the best map for realigning to the given item and sets all the member variables
+ * for the realign operation
+ */
 int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
 {
   int mapInd, magMax, ix, iy, ixPiece, iyPiece, ixSafer, iySafer, xFrame, yFrame, binning; 
@@ -652,8 +656,10 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   return 0;
 }
 
-// Find distance to edge of map; for a montage, find the best piece for initial and
-// target alignments
+/*
+ * Find distance to edge of map; for a montage, find the best piece for initial and
+ * target alignments
+ */
 int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float targetY,
   int pcDrawnOn, int mapInd, ScaleMat &aMat, float &delX, float &delY, float &distMin, 
   int &ixPiece, int &iyPiece, int &ixSafer, int &iySafer, int &imageX, int &imageY,
@@ -817,7 +823,9 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
   return err;
 }
 
-// Realign to the coordinates in the given item by correlating with maps,
+/*
+ * REALIGN TO ITEM: Realign to the coordinates in the given item by correlating with maps
+ */
 int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
   float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen,
   int setForScaled)
@@ -833,6 +841,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   float finalX, finalY, stageX, stageY, firstDelX, firstDelY, mapAngle, angle;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+  ControlSet *consForScale;
 
   i = FindMapForRealigning(inItem, restoreState);
   mRIContinuousMode = mContinuousRealign;
@@ -845,11 +854,11 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRIabsTargetY = inItem->mStageY;
 
   item = mItemArray->GetAt(mRIitemInd);
-  mSecondRoundID = 0;
+  mThirdRoundID = 0;
   mRISetNumForScaledAlign = -1;
   if (inItem->IsMap() && item->mMapID != inItem->mMapID && 
     inItem->mColor != NO_REALIGN_COLOR)
-    mSecondRoundID = inItem->mMapID;
+    mThirdRoundID = inItem->mMapID;
   else if (mRIdrawnTargetItem)
     return 10;
   else if (setForScaled >= 0 && inItem->mMapID) {
@@ -859,17 +868,24 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
       ind = ldParams[ix].magIndex;
     }
     if (ind > item->mMapMagInd) {
-      mSecondRoundID = inItem->mMapID;
+
+      // Set up third round if mag is higher and size is big enough
+      mThirdRoundID = inItem->mMapID;
       mRISetNumForScaledAlign = setForScaled;
       mRIContinuousMode = 0;
+      consForScale = mWinApp->GetConSets() + setForScaled;
+      if (mShiftManager->GetPixelSize(item->mMapCamera, ind) *
+        sqrt((consForScale->right - consForScale->left) *
+          (consForScale->bottom - consForScale->top)) >= mRISkipItemPosMinField)
+        justMoveIfSkipCen = true;
     }
   }
   SEMTrace('1', "(Initial) alignment to map %d (%s)", mRIitemInd, (LPCTSTR)item->mLabel);
 
-  // Use the passed-in values for resetting IS and leaving IS at 0 if no second round
-  mRIresetISCritForAlign = mSecondRoundID ? 0.f : resetISalignCrit;
-  mRIresetISmaxNumAlign = mSecondRoundID ? 0 : maxNumResetAlign;
-  mRIresetISleaveZero = mSecondRoundID ? 0 : leaveZeroIS;
+  // Use the passed-in values for resetting IS and leaving IS at 0 if no thirs round
+  mRIresetISCritForAlign = mThirdRoundID ? 0.f : resetISalignCrit;
+  mRIresetISmaxNumAlign = mThirdRoundID ? 0 : maxNumResetAlign;
+  mRIresetISleaveZero = mThirdRoundID ? 0 : leaveZeroIS;
   mRIresetISnumDone = 0;
   
   // Get access to map file again
@@ -973,11 +989,55 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     SaveCurrentState(STATE_MAP_ACQUIRE, 0, item->mMapCamera, 0);
   }
 
+  // If the mapID doesn't match, clear the center skip list; otherwise look up this
+  // position in the list, and if time is within limit, skip first round
+  firstDelX = firstDelY = 0.;
+  action = TASK_FIRST_MOVE;
+  if (mRImapID != item->mMapID)
+    mCenterSkipArray.RemoveAll();
+  mCenSkipIndex = -1;
+  mRIJustMoving = false;
+  for (ind = 0; ind < mCenterSkipArray.GetSize(); ind++) {
+    if (mRIfirstStageX == mCenterSkipArray[ind].firstStageX &&
+      mRIfirstStageY == mCenterSkipArray[ind].firstStageY &&
+      mRIfirstISX == mCenterSkipArray[ind].firstISX &&
+      mRIfirstISY == mCenterSkipArray[ind].firstISY) {
+      mCenSkipIndex = ind;
+      if (mWinApp->MinuteTimeStamp() - mCenterSkipArray[ind].timeStamp <=
+        mRIskipCenTimeCrit) {
+        firstDelX = mCenterSkipArray[ind].baseDelX + mRItargetX + mRItargMontErrX;
+        firstDelY = mCenterSkipArray[ind].baseDelY + mRItargetY + mRItargMontErrY;
+        action = TASK_SECOND_MOVE;
+        if (justMoveIfSkipCen && !mThirdRoundID) {
+          mRIJustMoving = true;
+          mWinApp->AppendToLog("Just moving to target after skipping first"
+            " round alignment to center");
+        } else if (justMoveIfSkipCen && mRISetNumForScaledAlign >= 0) {
+          mRIJustMoving = true;
+          mWinApp->AppendToLog("Just moving to target and skipping both "
+            " rounds of alignment to map");
+        } else {
+          if (LoadForAlignAtTarget(item))
+            return 7;
+          mWinApp->AppendToLog("Skipping first round alignment to center of map frame");
+        }
+      }
+      break;
+    }
+  }
+
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
-  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 
-    (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0, 
-    1);
+  if (!mRIJustMoving) {
+    PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET,
+      (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0,
+      1);
+  } else {
+    mRIstayingInLD = mWinApp->LowDoseMode() == TRUE;
+    mRIconSetNum = TRIAL_CONSET;
+    mRInetViewShiftX = mRInetViewShiftY = 0.;
+    mRIcalShiftX = mRIcalShiftY = 0.;
+  }
   if (mRIstayingInLD)
     mRIContinuousMode = 0;   // To avoid this, need to set/restore mode in LD conset
   if (mRIContinuousMode) {
@@ -995,40 +1055,6 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     InterpMontStageOffset(mMapStore, mMapMontP, ItemStageToCamera(item), mPieceSavedAt, 
       mRItargetX - (item->mStageX + mPreviousErrX), 
       mRItargetY - (item->mStageY + mPreviousErrY), mRItargMontErrX, mRItargMontErrY);
-
-  firstDelX = firstDelY = 0.;
-  action = TASK_FIRST_MOVE;
-
-  // If the mapID doesn't match, clear the center skip list; otherwise look up this
-  // position in the list, and if time is within limit, skip first round
-  if (mRImapID != item->mMapID)
-    mCenterSkipArray.RemoveAll();
-  mCenSkipIndex = -1;
-  mRIJustMoving = false;
-  for (ind = 0; ind < mCenterSkipArray.GetSize(); ind++) {
-    if (mRIfirstStageX == mCenterSkipArray[ind].firstStageX && 
-      mRIfirstStageY == mCenterSkipArray[ind].firstStageY && 
-      mRIfirstISX == mCenterSkipArray[ind].firstISX && 
-      mRIfirstISY == mCenterSkipArray[ind].firstISY) {
-        mCenSkipIndex = ind;
-        if (mWinApp->MinuteTimeStamp() - mCenterSkipArray[ind].timeStamp <=
-          mRIskipCenTimeCrit) {
-          firstDelX = mCenterSkipArray[ind].baseDelX + mRItargetX + mRItargMontErrX;
-          firstDelY = mCenterSkipArray[ind].baseDelY + mRItargetY + mRItargMontErrY;
-          action = TASK_SECOND_MOVE;
-          if (justMoveIfSkipCen && !mSecondRoundID) {
-            mRIJustMoving = true;
-            mWinApp->AppendToLog("Just moving to target after skipping first"
-              " round alignment to center");
-          } else {
-            if (LoadForAlignAtTarget(item))
-              return 7;
-            mWinApp->AppendToLog("Skipping first round alignment to center of map frame");
-          }
-        }
-        break;
-    }
-  }
 
   // If there was no match, add this operation to the array with a zero time stamp since
   // it is not completely usable yet
@@ -1082,7 +1108,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   return 0;
 }
 
-// Perform the next task in the sequence
+/*
+ * Perform the next task in the realign sequence
+ */
 void CNavHelper::RealignNextTask(int param)
 {
   CMapDrawItem *item = mItemArray->GetAt(mRIitemInd);
@@ -1104,7 +1132,11 @@ void CNavHelper::RealignNextTask(int param)
   if (!mRealigning)
     return;
   if (mRIJustMoving) {
-    StopRealigning();
+    if (mRISetNumForScaledAlign >= 0) {
+      StartThirdRound();
+      mRIJustMoving = false;
+    } else
+      StopRealigning();
     return;
   }
   if (item->mMapMontage)
@@ -1316,7 +1348,7 @@ void CNavHelper::RealignNextTask(int param)
             mRInetViewShiftX)) - (mRItargetX - mPreviousErrX);
           mStageErrY = (stageY - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftY, 
             mRInetViewShiftY)) - (mRItargetY - mPreviousErrY);
-          StartSecondRound();
+          StartThirdRound();
           return;
       }
 
@@ -1341,7 +1373,7 @@ void CNavHelper::RealignNextTask(int param)
 
     case TASK_SECOND_MOVE:
       if (mRIresetISleaveZero > 0 && mRIresetISmaxNumAlign <= 0) 
-        StartSecondRound();
+        StartThirdRound();
       else
         StartRealignCapture(mRIContinuousMode != 0, TASK_SECOND_SHOT);
       return;
@@ -1392,13 +1424,13 @@ void CNavHelper::RealignNextTask(int param)
         StartResetISorFinish(item->mMapMagInd);
         return;
       }
-      StartSecondRound();
+      StartThirdRound();
       return;
 
     case TASK_FINAL_SHOT:
-      item = mNav->FindItemWithMapID(mSecondRoundID, mRISetNumForScaledAlign < 0);
+      item = mNav->FindItemWithMapID(mThirdRoundID, mRISetNumForScaledAlign < 0);
       if (!item) {
-        SEMMessageBox("Could not find item for second round of alignment");
+        SEMMessageBox("Could not find item for third round of alignment");
         StopRealigning();
         return;
       }
@@ -1408,10 +1440,9 @@ void CNavHelper::RealignNextTask(int param)
           true);
         mWinApp->mMainView->GetItemImageCoords(&mImBufs[mRIbufWithMapToScale], item,
           shiftX, shiftY, item->mPieceDrawnOn);
-
         if (mWinApp->mProcessImage->AlignBetweenMagnifications(mRIbufWithMapToScale,
           shiftX, shiftY, -mNavAlignParams.scaledAliExtraFOV, 
-          GetScaledRealignPctChg() / 50.f, GetScaledRealignMaxRot() * 2.f, true, scaling, 
+          GetScaledRealignPctChg() / 100.f, GetScaledRealignMaxRot() * 2.f, true, scaling, 
           overlap, mRIautoAlignFlags, report)) {
           SEMMessageBox("Failure aligning to scaled map: " + report);
           StopRealigning();
@@ -1471,7 +1502,7 @@ void CNavHelper::RealignNextTask(int param)
       if (mRIresetISneedsAlign)
         StartRealignCapture(mRIContinuousMode != 0, TASK_RESET_SHOT);
       else
-        StartSecondRound();
+        StartThirdRound();
       return;
 
       // Realign the shot after a reset, then do another operation or finish up
@@ -1502,7 +1533,7 @@ void CNavHelper::StartResetISorFinish(int magInd)
     return;
   }
   SEMTrace('1', "Leaving final IS dist = %.2f", delISX); 
-  StartSecondRound();
+  StartThirdRound();
 }
 
 
@@ -1578,6 +1609,7 @@ void CNavHelper::StopRealigning(void)
     return;
 
   mRealigning = 0;
+  mRIJustMoving = false;
 
   // Close file if not part of open sets
   if (mCurStoreInd < 0 && mMapStore)
@@ -1612,8 +1644,11 @@ void CNavHelper::RestoreForStopOrScaledAlign()
   mRIdidSaveState = false;
 }
 
-// If aligning to a map item after a first round at lower mag, set up conditions
-void CNavHelper::StartSecondRound(void)
+/*
+ * If aligning to a map item or scaled up image after the two rounds at lower mag, 
+ * set up conditions
+ */
+void CNavHelper::StartThirdRound(void)
 {
   float useWidth, useHeight;
 
@@ -1683,7 +1718,7 @@ void CNavHelper::StartSecondRound(void)
   }
 
   // Regular align to higher mag item
-  item = mNav->FindItemWithMapID(mSecondRoundID);
+  item = mNav->FindItemWithMapID(mThirdRoundID);
   if (!item) {
     StopRealigning();
     report.Format("Finished aligning to item in %d rounds", mRInumRounds);
@@ -1793,13 +1828,13 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
           binning / BinDivisorF(camP));
       else
         SEMTrace('1', "Map matches low dose %s; staying in low dose but with exp %.3f "
-          "intensity %.5f bin %g", (LPCTSTR)names[mRIconSetNum], item->mMapExposure, 
+          "intensity %.5f bin %g", (LPCTSTR)names[mRIconSetNum], item->mMapExposure,
           item->mMapIntensity, binning / BinDivisorF(camP));
 
       // Save the conSet and modify it to the map parameters
       mSavedConset = conSets[mRIconSetNum];
-      /*StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
-        conSets[mRIconSetNum].left, conSets[mRIconSetNum].right, 
+      /*StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning,
+        conSets[mRIconSetNum].left, conSets[mRIconSetNum].right,
         conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);*/
       top = mSavedConset.top / binning;
       left = mSavedConset.left / binning;
@@ -1831,6 +1866,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       }
       mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(mRIconSetNum));
       mRIareaDefocusChange = 0.;
+
       if (!mRIuseCurrentLDparams && IS_SET_VIEW_OR_SEARCH(mRIconSetNum)) {
         defocus = mScope->GetLDViewDefocus(area);
         if (fabs(item->mDefocusOffset - defocus) > 0.1) {
@@ -5746,7 +5782,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
     } else {
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, 
+        (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS, &peak, 0., 0., 0.,
         scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
           continue;
@@ -5792,8 +5829,10 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
         rotation = curMax + idir * step;
         if (shiftLimit > 0)
           mShiftManager->SetNextAutoalignLimit(shiftLimit);
-        if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0.,
-          0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+        if (mShiftManager->AutoAlign(buffer, smallPad, false, 
+          (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
+          ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS) : corrFlags, &peak,
+          0., 0., 0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
           if (shiftLimit > 0)
             continue;
           return 3;
@@ -5836,18 +5875,20 @@ int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scal
   int err;
   rotation = 0.;
   scaleMax = 1.;
-  if (scaleRange >= 0.) {
+  if (scaleRange > 0.) {
     err = mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -1.,
-      rotation, scaleRange, angleRange > 0 ? 1 : 0, &maxPeak, shiftLimit, corrFlags);
+      rotation, scaleRange, angleRange > 0 ? 1 : 0, &maxPeak, shiftLimit, 
+      corrFlags | AUTOALIGN_SEARCH_KEEP);
     if (err || angleRange <= 0.)
       return err;
   }
   err = AlignWithRotation(buffer, 0., angleRange, rotation, shiftXbest, shiftYbest,
-    scaleMax, -1, &maxPeak, shiftLimit, corrFlags);
+    scaleMax, -1, &maxPeak, shiftLimit,
+    (scaleRange > 0. ? AUTOALIGN_SEARCH_KEEP : 0) |corrFlags);
   if (err || scaleRange <= 0.)
     return err == 1 ? 0 : err;
   return mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -scaleMax,
-    rotation, scaleRange, 2, &maxPeak, shiftLimit, corrFlags);
+    rotation, scaleRange, 2, &maxPeak, shiftLimit, corrFlags | AUTOALIGN_SEARCH_KEEP);
 }
 
 // Returns whether the Align with Rotation dialog can be opened

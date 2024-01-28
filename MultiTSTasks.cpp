@@ -490,7 +490,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     return 4;
   }
   if (scaleRange > 0)
-    baseSteps = (int)ceil(scaleRange / step);
+    baseSteps = (int)ceil(scaleRange / step) + 1;
   if (doPart > 1)
     baseSteps = 2;
   numSteps = baseSteps;
@@ -508,21 +508,21 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     scale = startScale + (float)ist * step;
-    if (doPart > 1 && ist == 1) {
-      usePeak = *maxPtr;
-    } else {
+
+    // It did not work to use passed in max for middle of search on restart, 
+    // rotation used CCC
+    if (shiftLimit > 0)
+      mShiftManager->SetNextAutoalignLimit(shiftLimit);
+    if (mShiftManager->AutoAlign(buffer, smallPad, false,
+      (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS, &peak, 0., 0., 0.,
+      scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
       if (shiftLimit > 0)
-        mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
-        scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
-        if (shiftLimit > 0)
-          continue;
-        return 3;
-      }
-      usePeak = peak;
-      if (CCCp)
-        usePeak = (float)(CCC * pow((double)fracPix, overlapPow));
+        continue;
+      return 3;
     }
+    usePeak = peak;
+    if (CCCp)
+      usePeak = (float)(CCC * pow((double)fracPix, overlapPow));
     vecScale.push_back(scale);
     vecPeak.push_back(usePeak);
     if (usePeak > peakmax) {
@@ -533,7 +533,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       SEMTrace('p', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
         usePeak, CCC, fracPix, shiftX, shiftY);
     } else {
-      report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX, 
+      report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX,
         shiftY);
       if (mComplexTasks->GetVerbose())
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
@@ -558,8 +558,10 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       scale = curMax + idir * step;
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, corrFlags, &peak, 0., 0., 0.,
-        scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+      if (mShiftManager->AutoAlign(buffer, smallPad, false, 
+        (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
+        ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS): corrFlags, &peak,
+        0., 0., 0., scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
           continue;
         return 1;
@@ -567,7 +569,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       if (CCCp)
         peak = (float)(CCC * pow((double)fracPix, overlapPow));
       vecScale.push_back(scale);
-      vecPeak.push_back(usePeak);
+      vecPeak.push_back(peak);
       if (peak > peakmax) {
         peakmax = peak;
         scaleMax = scale;

@@ -3,11 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/27/24: Fixed various things in realigning to a scaled map and added ability
+to skip both rounds of alignment at the lower mag.
+
 1/25/24: SEM_4-2-0beta1
 1/25/24: Relaxed defocus criteria for acceptable CTF fit in coma-free
 alignment and add suggestion to try lower beam til temporarily (In 4.1).
 
-1/25/24: Added ability to do second round of Realign to Item with scaled-up
+1/25/24: Added ability to do third round of Realign to Item with scaled-up
 extract from lower mag map.
 
 1/25/24: Prevented saving of frames when re-imaging in a map state unless

@@ -7452,10 +7452,12 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   // Read in the appropriate way for the file
   mLoadingMap = true;
   mBufToLoadInto = bufToReadInto >= 0 ? bufToReadInto :mBufferManager->GetBufToReadInto();
-  if (mLoadItem->mMapMontage && !mReadingOther)
-    err = mWinApp->mMontageController->ReadMontage(mLoadItem->mMapSection, NULL, NULL, 
+  if (mLoadItem->mMapMontage && !display)
+    mWinApp->mMontageController->SetNoDrawOnRead(true);
+  if (mLoadItem->mMapMontage && !mReadingOther) {
+    err = mWinApp->mMontageController->ReadMontage(mLoadItem->mMapSection, NULL, NULL,
       false, synchronous, bufToReadInto);
-  else
+  } else
     err = mBufferManager->ReadFromFile(mLoadStoreMRC, mLoadItem->mMapSection,
       bufToReadInto, false, synchronous);
 
