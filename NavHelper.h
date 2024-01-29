@@ -287,6 +287,7 @@ public:
   float GetScaledRealignPctChg() { return mNavAlignParams.scaledAliPctChg < 0 ? mScaledAliDfltPctChg : mNavAlignParams.scaledAliPctChg; };
   float GetScaledRealignMaxRot() { return mNavAlignParams.scaledAliMaxRot < 0 ? mScaledAliDfltMaxRot : mNavAlignParams.scaledAliMaxRot; };
   GetSetMember(float, RISkipItemPosMinField);
+  GetSetMember(BOOL, ShowStateNumbers);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -383,6 +384,7 @@ private:
   BOOL mRIuseCurrentLDparams;   // Flag to use current low dose parameters in realign
   int mTypeOfSavedState;        // Type of saved state: 1 imaging, 2 map acquire
   int mSavedLowDoseArea;        // Low dose area when saved state
+  BOOL mShowStateNumbers;       // Flag to show state # before name
   float mMaxMarginNeeded;       // Maximum center to edge distance for preferring a map
   float mMinMarginWanted;
   float mMinMarginNeeded;       // Minimum center to edge distance for doing realign

@@ -29,6 +29,7 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CStateDlg::IDD, pParent)
   , m_strName(_T(""))
   , m_strPriorSummary(_T(""))
+  , m_bShowNumber(FALSE)
 {
   mCurrentItem = -1;
   mInitialized = false;
@@ -62,6 +63,7 @@ void CStateDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_SAVE_DEFOCUS, m_butSaveDefocus);
   DDX_Text(pDX, IDC_STAT_PRIOR_SUMMARY, m_strPriorSummary);
   DDX_Control(pDX, IDC_BUT_ADD_MONT_MAP, m_butAddMontMap);
+  DDX_Check(pDX, IDC_CHECK_SHOW_NUMBER, m_bShowNumber);
 }
 
 
@@ -82,6 +84,7 @@ BEGIN_MESSAGE_MAP(CStateDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_UPDATE_STATE, OnButUpdateState)
   ON_BN_CLICKED(IDC_BUT_SAVE_DEFOCUS, OnButSaveDefocus)
   ON_BN_CLICKED(IDC_BUT_ADD_MONT_MAP, OnButAddMontMap)
+  ON_BN_CLICKED(IDC_CHECK_SHOW_NUMBER, OnCheckNumber)
 END_MESSAGE_MAP()
 
 // CStateDlg message handlers
@@ -95,6 +98,7 @@ BOOL CStateDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   mHelper = mWinApp->mNavHelper;
   mStateArray = mHelper->GetStateArray();
+  m_bShowNumber = mHelper->GetShowStateNumbers();
 
   GetClientRect(clientRect);
   m_editName.GetWindowRect(editRect);
@@ -285,6 +289,14 @@ void CStateDlg::OnEnChangeStatename()
   UpdateData(true); 
   mParam->name = m_strName;
   UpdateListString(mCurrentItem);
+}
+
+// Toggle whether to show numbers in front of names
+void CStateDlg::OnCheckNumber()
+{
+  UPDATE_DATA_TRUE;
+  mHelper->SetShowStateNumbers(m_bShowNumber);
+  FillListBox();
 }
 
 // Selection changes
@@ -653,7 +665,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   int *activeList = mWinApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
   CString *names = mWinApp->GetModeNames();
-  CString prbal, magstr, defstr, lds = state->lowDose ? "SL" : "ST";
+  CString prbal, magstr, defstr, numName, lds = state->lowDose ? "SL" : "ST";
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
   bool selected = false;
@@ -699,11 +711,15 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   selected = index >= 0 && numberInList(index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
     0);
 
+  if (m_bShowNumber && index >= 0)
+    numName.Format("%d: %s", index + 1, (LPCTSTR)state->name);
+  else
+    numName = state->name;
   string.Format("%s%s%d%s%s%s%d%s%s%.1f%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,  
     sep, active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, percentC2, sep,
     (LPCTSTR)defstr, sep, state->exposure, sep, mWinApp->BinningText(state->binning, camp)
     , sep, state->xFrame / 1000., state->yFrame / 1000., state->montMapConSet ? "M" : "", 
-    sep, selected ? (char)0x86 : ' ', sep, (LPCTSTR)state->name);
+    sep, selected ? (char)0x86 : ' ', sep, (LPCTSTR)numName);
 }
 
 

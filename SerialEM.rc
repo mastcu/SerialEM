@@ -2664,15 +2664,15 @@ CAPTION "Imaging States"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     LISTBOX         IDC_LIST_STATES,3,109,158,46,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,3,5,72,10
+    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,3,5,58,10
     PUSHBUTTON      "Add Map Acquire State to Table",IDC_BUT_ADDNAVSTATE,26,63,100,10
     PUSHBUTTON      "Delete It",IDC_BUT_DELSTATE,123,30,38,10
     PUSHBUTTON      "Go to Selected State",IDC_BUT_SETIMSTATE,3,30,72,10
     PUSHBUTTON      "Go to Map Acquire State",IDC_BUT_SETMAPSTATE,5,51,79,10
     PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,3,78,70,10
     PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,77,78,70,10
-    LTEXT           "Name:",IDC_STAT_STATE_NAME,78,5,21,8
-    EDITTEXT        IDC_EDIT_STATENAME,98,4,63,12,ES_AUTOHSCROLL
+    LTEXT           "Name:",IDC_STAT_STATE_NAME,81,6,21,8
+    EDITTEXT        IDC_EDIT_STATENAME,102,4,59,12,ES_AUTOHSCROLL
     LTEXT           "LD Cam Mag Sp    Int     Def    Exp   Bin  Frame  Name",IDC_STAT_TITLELINE,3,100,158,8
     PUSHBUTTON      "?",IDC_BUTHELP,149,78,10,10
     PUSHBUTTON      "Go to Scheduled State",IDC_BUT_SETSCHEDSTATE,88,51,71,10
@@ -2681,6 +2681,7 @@ BEGIN
     PUSHBUTTON      "Save Target Defocus",IDC_BUT_SAVE_DEFOCUS,85,18,76,10
     LTEXT           "Prior: Rec.  1  39000  5nP   50.23     1.5   1     4kx4k",IDC_STAT_PRIOR_SUMMARY,4,90,142,8
     PUSHBUTTON      "Add Mont-Map State",IDC_BUT_ADD_MONT_MAP,3,18,72,10
+    CONTROL         "#",IDC_CHECK_SHOW_NUMBER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,5,14,10
 END
 
 IDD_NAVROTALIGN DIALOGEX 0, 0, 166, 65
@@ -6115,6 +6116,10 @@ STRINGTABLE
 BEGIN
     IDC_COMBO_MACRO_AT_END  "Select the script to run at the end of acquisition"
     IDC_NA_RUN_SCRIPT_AT_END "Run selected script at end of acquisition"
+    IDC_EDIT_MAX_PCT_CHANGE "Maximum percantage change in size to test in scaling search"
+    IDC_EDIT_MAX_ROTATION   "Maximum angle to test in rotation search, in degrees"
+    IDC_EDIT_EXTRA_FOVS     "Scaled reference will be bigger than A by this fraction of A on all sides"
+    IDC_SPIN_REF_MAP_BUF    "Buffer to store full reference image in, if it needs to be loaded or moved"
 END
 
 STRINGTABLE
@@ -7390,16 +7395,17 @@ BEGIN
     ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 
                             "Run script instead of Record when running from Acquire at Items"
     ID_NAV_SETSCRIPTTORUN   "Select the script to run during Multi-shots"
-    IDC_EDIT_EXTRA_FOVS     "Scaled reference will be bigger than A by this fraction of A on all sides"
-    IDC_EDIT_MAX_ROTATION   "Maximum angle to test in rotation search, in degrees"
-    IDC_EDIT_MAX_PCT_CHANGE "Maximum percantage change in size to test in scaling search"
-    IDC_SPIN_REF_MAP_BUF    "Buffer to store full reference image in, if it needs to be loaded or moved"
-    IDC_NA_REALIGN_SCALED_MAP
+END
+
+STRINGTABLE
+BEGIN
+    IDC_NA_REALIGN_SCALED_MAP 
                             "Do third round of alignment at higher mag to scaled extract from map"
-    IDC_RREALI_PREV         "Use Preview parameters for third round of alignment"
     IDC_RREALI_REC          "Use Record parameters for third round of alignment"
+    IDC_RREALI_PREV         "Use Preview parameters for third round of alignment"
     IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
     IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
+    IDC_CHECK_SHOW_NUMBER   "Show state index number before name in table"
 END
 
 STRINGTABLE

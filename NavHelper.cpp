@@ -329,6 +329,7 @@ CNavHelper::CNavHelper(void)
   mScaledAliDfltPctChg = 4.;
   mRISkipItemPosMinField = 10.;
   mRIJustMoving = false;
+  mShowStateNumbers = false;
 }
 
 CNavHelper::~CNavHelper(void)

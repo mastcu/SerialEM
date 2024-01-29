@@ -2233,6 +2233,7 @@
 #define IDC_RREALI_PREV                 3271
 #define IDC_RREALI_VIEW                 3272
 #define IDC_RREALI_SEARCH               3273
+#define IDC_CHECK_SHOW_NUMBER           3275
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2793,7 +2794,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        286
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3274
+#define _APS_NEXT_CONTROL_VALUE         3276
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

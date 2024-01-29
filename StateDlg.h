@@ -93,4 +93,6 @@ public:
   afx_msg void OnButAddMontMap();
   SetMember(int, CamOfSetState);
 
+  BOOL m_bShowNumber;
+  afx_msg void OnCheckNumber();
 };

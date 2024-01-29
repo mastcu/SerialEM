@@ -10218,7 +10218,7 @@ int CMacCmd::RealignToNavItem(void)
 {
   CString report;
   BOOL truth, justMove = false;
-  int index, index2, ix0, ix1, iy0, setForScaled = 0;
+  int index, index2, ix0, ix1, iy0, setForScaled = -1;
   float bmax;
   ABORT_NONAV;
   truth = CMD_IS(REALIGNTOOTHERITEM);
