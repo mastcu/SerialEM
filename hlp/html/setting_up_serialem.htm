@@ -231,7 +231,7 @@
         <A href="#using_film_setup">Using Film</A><BR>
         <A href="#package_files">Files in a SerialEM Install Package</A></P>
       <P><A name="setup_install"></A><B>Program Installation</B></P>
-    <P><a name="packagesContents"><i>The Basic Packages and their Contents</i></a>.&nbsp;
+    <P><a name="packagesContents"><i><B>The Basic Packages and their Contents</B></i></a>.&nbsp;
       The files needed to run SerialEM consist of executable programs and libraries,
       which are distributed in a package SerialEM_4-x-x.exe, and configuration and
       data files, some of which are obtained from a 'framework' package.&nbsp; The
@@ -273,8 +273,8 @@
         See this section also for instructions on modifications needed under Windows 7/Server
         2008
         and with GMS 2.x.</P>
-      <p><a name="addedPackages"><I>Additional Packages for Windows XP, GPU
-          and Python Support, and for Displaying  General and Ctfplotter Graphs</I></a>.&nbsp;
+      <p><a name="addedPackages"><I><B>Additional Packages for Windows XP, GPU
+          and Python Support, and for Displaying  General and Ctfplotter Graphs</B></I></a>.&nbsp;
     Depending on your situation, you may need one or more other packages.</P>
       <ul>
         <li>SerialEM will run directly on a scope computer running Windows XP SP3 and may 
@@ -326,7 +326,7 @@
           set the property 'CtfplotterPath' with the path to the executables.<br />`
         </li>
       </ul>
-    <P><a name="pluginVersions"><i>Versions of the DigitalMicrograph Plugin and Compatibility with Leginon</i></a>.&nbsp;
+    <P><a name="pluginVersions"><i><b>Versions of the DigitalMicrograph Plugin and Compatibility with Leginon</b></i></a>.&nbsp;
       The version number on the SEMCCD plugin does not need to match the GMS version
       exactly; the versions provided in the package are compatible with the full range
       of GMS versions.&nbsp; Specifically, the 32-bit version built with GMS 2.30
@@ -344,7 +344,7 @@
       it should be the version distributed with SerialEM.&nbsp; The SerialEM installer
       will remove any existing plugins from </P>
       <P style="Z-INDEX: 0">
-        <a name="runningInstaller"><i>Running the Installer.</i></a>&nbsp;
+        <a name="runningInstaller"><i><b>Running the Installer.</b></i></a>&nbsp;
         For initial installation or upgrading to a new version, simply click on
         'INSTALL.bat' in the SerialEM_4-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you
         will need to right click and select 'Run as Administrator'.&nbsp; If you have a
@@ -414,7 +414,7 @@
       </li>
     </ol>
         <P style="Z-INDEX: 0">
-          <a name="backup"><i>Backing up your SerialEM installation.</i></a>&nbsp;
+          <a name="backup"><i><b>Backing up your SerialEM installation.</b></i></a>&nbsp;
 		      To backup your SerialEM installation on Windows 7 and later, copy
 		      C:\ProgramData\SerialEM to a safe location, a backup of C:\Program
 		      Files\SerialEM is not required if the installation was performed as
@@ -425,7 +425,7 @@
 		      user settings.
           </P>
         <P style="Z-INDEX: 0">
-          <a name="upgradingNew"><i>Upgrading to a New Version.</i></a>&nbsp;
+          <a name="upgradingNew"><i><b>Upgrading to a New Version.</b></i></a>&nbsp;
           What the installer will <i>NOT</i> do is update the plugin to DigitalMicrograph
           on a remote computer, or the server on a remote Thermo/FEI microscope, so you may need
           to do this manually.&nbsp; SerialEM will determine
@@ -441,7 +441,7 @@
     <P style="Z-INDEX: 0">
           Existing properties, calibrations, and settings files are always compatible when
           upgrading; there is no need to recalibrate the program.</P>
-    <P><a name="runAsAdmin"><i>Permissions and Running as Administrator.</i></a>&nbsp; Make sure that all files in the program folder (C:\Program Files\SerialEM) are
+    <P><a name="runAsAdmin"><i><b>Permissions and Running as Administrator.</b></i></a>&nbsp; Make sure that all files in the program folder (C:\Program Files\SerialEM) are
         readable by users.&nbsp; Make sure that users can write to the configuration and
         data file folder, which is the default location for the gain references to be
         placed. In Windows 7/Server 2008, be sure to do this before starting the program.&nbsp;
@@ -452,20 +452,25 @@
         then 'Add' the appropriate user group (or select 'Everyone') and turn on 'Full
         Control'.</P>
     <P>In Windows 7/Server 2008/Server 2012 with GMS 2.x or 3.x, it may be necessary to run SerialEM as
-      Administrator.&nbsp; If there is an initial error connecting to the SerialEMCCD
+      Administrator.&nbsp; One reason this can happen is that the COM connection 
+      between SerialEM and DigitalMicrograph works only if both are run as 
+      non-administrator or both as administrator. If there is an initial error connecting to the SerialEMCCD
       plugin, try right-clicking on the SerialEM shortcut and selecting &quot;Run as
       Administrator&quot;.&nbsp; If this is successful, you can set up any shortcut to run
       the program this way; right-click the shortcut, select Properties, select the
-      &quot;Compatibility&quot; tab, and check &quot;Run as Administrator&quot;.&nbsp;
-      An alternative to this requirement is to connect with a socket interface (see
-      below) instead of the security-laden COM interface.&nbsp; </P>
+      &quot;Compatibility&quot; tab, and check &quot;Run as Administrator&quot;.&nbsp; 
+      However, running this way may make it hard to open files written by SerialEM, 
+      and is generally inadvisable from a security standpoint.&nbsp; A better 
+      alternative to this requirement is to connect with a socket interface (see 
+      below) instead of the security-laden COM interface (or to not run 
+      DigitalMicrograph as administrator, if that is the issue.)</P>
     <P>When connecting with a JEOL scope on Windows 7, running as Administrator was
       always needed until recently.&nbsp; When SerialEM has to be run as Administrator, if DigitalMicrograph is not also run as
       Administrator, SerialEM will probably fail to connect to it.&nbsp; The
-      alternatives here are to run DM as Administrator or to connect with the socket
+      alternatives here are to run DM as Administrator or, preferably, to connect with the socket
       interface. </P>
     <p>
-        <a name="gettingIP"><i>Determining IP addresses on a shared network</i></a>.&nbsp; When the SerialEM
+        <a name="gettingIP"><i><b>Determining IP addresses on a shared network</b></i></a>.&nbsp; When the SerialEM
         setup requires communication between two computers, it may not be
         straightforward to find out the IP address that is needed.&nbsp; A general
         procedure is to open a Command Prompt window on each computer and run
@@ -474,7 +479,7 @@
         the computers (often 192.168.0 or 192.168.1).&nbsp; You can then test the
         communication in each direction with the command &#39;ping&#39; followed by the IP
         address of the other computer.</p>
-    <P><a name="environmentVar"><i>Defining an Environment Variable.</i></a>&nbsp; In several situations, you may
+    <P><a name="environmentVar"><i><b>Defining an Environment Variable.</b></i></a>&nbsp; In several situations, you may
       have to define a system environment variable to provide information for one of
       the components that SerialEM connects to.&nbsp; The procedure is:</P>
       <ul>
@@ -487,7 +492,7 @@
           name of the variable in the name
             box and the specified value in the value box.&nbsp; Press OK, Close, etc.</li>
     </ul>
-      <P><a name="shortcutsArgs"><i>Shortcuts, Command Line Arguments, and Administrator mode.</i></a>&nbsp;
+      <P><a name="shortcutsArgs"><i><b>Shortcuts, Command Line Arguments, and Administrator mode.</b></i></a>&nbsp;
         When users log in to their own accounts, users should start SerialEM by means of a shortcut on their desktops. After
         creating the shortcut, always edit its properties to start in a folder belonging
         to the particular user. That way, each user will have their own settings file,
@@ -714,7 +719,7 @@
         computers with older versions of Thermo/FEI software where a direct connection did not
         work.&nbsp; </p>
     <p>
-        <a name="needNetwork"><i>Yes, You Need a Network Connection between the Computers</i></a>.&nbsp; SerialEM
+        <a name="needNetwork"><i><b>Yes, You Need a Network Connection between the Computers</b></i></a>.&nbsp; SerialEM
         does not use DigitalMicrograph&#39;s serial-port based communication with the scope;
         it requires a network connection between the computers.&nbsp;&nbsp; These points
         may be helpful if you do not have a connection.</p>
@@ -741,7 +746,7 @@
         192.168.2.2.</li>
     </ul>
     <p>
-        <a name="pluginServer"><i>Setting Up the Plugin and Server</i></a>.&nbsp; These steps need to occur:</p>
+        <a name="pluginServer"><i><b>Setting Up the Plugin and Server</b></i></a>.&nbsp; These steps need to occur:</p>
     <ul>
       <li>The plugin FEIScopePlugin.dll needs to be copied from the package directory into
         the upper SerialEM directory.&nbsp; This will be done by the SerialEM installer
@@ -787,7 +792,7 @@
       put output in a log file at C:\Program Files\SerialEM\FEIServerDebug.txt if that
       folder exists.</p>
     <p>
-      <a name="movingTo64"><i>Moving an Existing Installation from a Thermo/FEI Computer to a 64-bit Computer</i></a>.&nbsp;
+      <a name="movingTo64"><i><b>Moving an Existing Installation from a Thermo/FEI Computer to a 64-bit Computer</b></i></a>.&nbsp;
       If already have SerialEM running on a Thermo/FEI computer and want to run it on a
       64-bit computer instead, some steps are needed in addition to the ones
       listed above:</p>
@@ -829,14 +834,14 @@
         &quot;SystemPath&quot;. ProgramData\SerialEM</li>
     </ul>
     <p>
-      <a name="upgradePlugServer"><i>Upgrading to the New Plugin and Server from SerialEM 3.4.</i></a>&nbsp;
+      <a name="upgradePlugServer"><i><b>Upgrading to the New Plugin and Server from SerialEM 3.4.</b></i></a>&nbsp;
       As SerialEM will inform you when you upgrade, you need to update the
       <nobr>FEI-SEMserver.exe</nobr> on the microscope computer.&nbsp;&nbsp; If you
       had to make a firewall opening for the one port before, open the additional
       three
       ports.</p>
     <p>
-      <a name="run64bitFEI"><i>Running 64-bit SerialEM on a 64-bit Thermo/FEI Computer</i></a>.&nbsp; This is more
+      <a name="run64bitFEI"><i><b>Running 64-bit SerialEM on a 64-bit Thermo/FEI Computer</b></i></a>.&nbsp; This is more
       straightforward.&nbsp; With a new system, first try to run the 64-bit version of
       SerialEM without the server.&nbsp; If you get a message about the &#39;dark field
       element&#39;, use the server with these steps:</p>
@@ -849,7 +854,7 @@
       <li>Make a shortcut to the server in C:\Users\All Users\Desktop</li>
     </ul>
     <p>
-      <a name="upgradingK2toK3"><i>Upgrading from a K2 to a K3 camera</i></a>.&nbsp;This
+      <a name="upgradingK2toK3"><i><b>Upgrading from a K2 to a K3 camera</b></i></a>.&nbsp;This
     requires a few modifications of the SerialEMproperties.txt file and
     recalibrating SerialEM.&nbsp; There are three cases to consider:</p>
     <ol>
@@ -937,7 +942,7 @@
         acquisitions when switching between parameter sets, unless dark references are
         coming from a file.)&nbsp; Newer Gatan cameras
         (K2/K3 and OneView/Rio) will always normalize in DigitalMicrograph.</P>
-      <P><a name="cameraOrientation"><i>Camera Configuration for Image Orientation</i></a>.&nbsp; Before you start any calibrations, make sure that your camera is configured so
+      <P><a name="cameraOrientation"><i><b>Camera Configuration for Image Orientation</b></i></a>.&nbsp; Before you start any calibrations, make sure that your camera is configured so
         that images acquired on the camera have the same orientation as images on the
         viewing screen. If you have a Gatan 4-port readout camera with First Light
         controller, the camera configuration should generally be set in DigitalMicrograph to flip
@@ -1061,7 +1066,7 @@
         </td>
       </tr>
     </table>
-      <P><a name="generalCamParams"><i>General camera related parameters</i></a> (and a few other things that could be dealt
+      <P><a name="generalCamParams"><i><b>General camera related parameters</b></i></a> (and a few other things that could be dealt
         with later, but you might as well attend to them now or be aware of them.)
         (First 3 are Priority 1):</P>
       <UL>
@@ -1164,7 +1169,7 @@
           this can now be done automatically when taking the gain reference.
         <LI>
           Leave 'RotationAndPixel' lines, if any, commented out.</LI></UL>
-      <P><a name="forTietz"><i>For a Tietz camera</i></a>, attend to the following settings:</P>
+      <P><a name="forTietz"><i><b>For a Tietz camera</b></i></a>, attend to the following settings:</P>
       <UL>
         <LI>
           Set TietzCameraType according to the instructions in<A href="about_properties.htm#per_camera_properties">
@@ -1212,8 +1217,8 @@
           To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a
         GPU for Frame Alignment</a>, but ignore statements about the K2 or K3 and its card
           configurations.</LI></UL>
-      <P><a name="connectDMsocket"><i>To connect to
-        DigitalMicrograph through a socket interface</i></a> on the same or a different
+      <P><a name="connectDMsocket"><i><b>To connect to
+        DigitalMicrograph through a socket interface</b></i></a> on the same or a different
         computer, <i>such as</i> <i>for a K2/K3 camera with SerialEM running on a Thermo/FEI microscope</i>, you need to do the following:</P>
     <ul>
       <li>Determine the IP address of the computer running DM on the network which that
@@ -1264,7 +1269,7 @@
       </li>
     </ul>
     <p>
-      <a name="K2details"><i>For a K2/K3 camera in particular</i></a>, there is more to do:</p>
+      <a name="K2details"><i><b>For a K2/K3 camera in particular</b></i></a>, there is more to do:</p>
     <ul>
       <li>The camera property
         &#39;RotationAndFlip&#39; (see <A href="about_properties.htm#per_camera_properties">Properties for one camera</A>)
@@ -1310,7 +1315,7 @@
         GPU for Frame Alignment</a>.</li>
     </ul>
       <p>
-        <a name="OneViewDetails"><i>To set up a OneView or Rio camera to save frames</i></a>,
+        <a name="OneViewDetails"><i><b>To set up a OneView or Rio camera to save frames</b></i></a>,
         two camera property entries are needed and one or two others may be as well.&nbsp;
         Frame handling is done through the SEMCCD plugin to DigitalMicrograph, exactly
         as it is done for K2 and K3 cameras, so many of the same options are available.&nbsp;
@@ -1357,7 +1362,7 @@
         which case your choices are limited.</li>
       </ul>
       <p>
-      <a name="DEdetails"><i>For a Direct Electron direct detection camera</i></a>, particularly if you are
+      <a name="DEdetails"><i><b>For a Direct Electron direct detection camera</b></i></a>, particularly if you are
       upgrading from a version before SerialEM 3.4, note these
       points:</p>
     <ul>
@@ -1387,8 +1392,8 @@
         GPU for Frame Alignment</a>.</li>
     </ul>
       <p>
-        <a name="FalconDetails"><i>For a Falcon 2 camera that can save
-        intermediate frames, under original scripting interface</i></a>: </p>
+        <a name="FalconDetails"><i><b>For a Falcon 2 camera that can save
+        intermediate frames, under original scripting interface</b></i></a>: </p>
     <ul>
       <li>Add the general property &#39;FalconFrameConfigFile&#39; with
         the full path and name of the XML configuration file that controls frame-saving.&nbsp;
@@ -1425,7 +1430,7 @@
         &#39;SetModeInFalconConfig 1&#39;.</li>
     </ul>
       <p>
-        <a name="Falcon2NewDetails"><i>For a Falcon 2 camera under the new advanced scripting interface: </i></a>
+        <a name="Falcon2NewDetails"><i><b>For a Falcon 2 camera under the new advanced scripting interface: </b></i></a>
     </p>
     <ul>
       <li>If the frame rate is 17 FPS instead of 17.9 FPS,
@@ -1443,8 +1448,8 @@
         computer.</li>
     </ul>
     <p>
-      <i><a name="Falcon3Details">For a Falcon 3 or 4 camera with the advanced scripting
-      interface:</a></i></p>
+      <i><a name="Falcon3Details"><b>For a Falcon 3 or 4 camera with the advanced scripting
+      interface:</b></a></i></p>
     <ul>
       <li>For a <em>Falcon 3</em>, if the frame rate is not 40 FPS,
         add the general property &#39;FalconReadoutInterval&#39; with the inverse of the
@@ -1509,14 +1514,14 @@
 
     </ul>
     <p>
-      <i>For a Falcon 3 camera with the standard scripting interface:</i> You will be
+      <i><b>For a Falcon 3 camera with the standard scripting interface:</b></i> You will be
       able to take images in linear mode only, with no possibility of frame saving or
       alignment.&nbsp; SerialEM will scale images by their exposure times and adjust
       this scaling so that binning is done by averaging.&nbsp; The scaling can be
       adjusted by factors of 2 with the property &#39;<a href="about_properties.htm#scalepower">Falcon3ScalingPower</a>&#39;.&nbsp;
       The property &#39;RelativeGainFactors 1 0.25 0.0625&#39; is needed.</p>
       <p>
- <a name="Ceta2Details"><i>For a Ceta 2 camera (Ceta with speed enhancement option):</i></a></p>
+ <a name="Ceta2Details"><i><b>For a Ceta 2 camera (Ceta with speed enhancement option):</b></i></a></p>
       <p>You can save and/or align frames from a Ceta camera with the speed enhancement 
         option if you have microscope server version 7.8 or higher with Advanced Scripting 
         installed.&nbsp; These property settings are relevant:</p>
@@ -1536,8 +1541,8 @@
           filter.</li>
       </ul>
          <p>
-      <a name="FalconGPU"><i>To use a GPU for aligning frames in SerialEM with any of these Falcon
-      configurations or the Ceta 2:</i></a></p>
+      <a name="FalconGPU"><i><b>To use a GPU for aligning frames in SerialEM with any of these Falcon
+      configurations or the Ceta 2:</b></i></a></p>
     <ul>
       <li>The GPU currently works only with 64-bit SerialEM but could be available for
         32-bit SerialEM if there is enough need.</li>
@@ -1551,7 +1556,7 @@
         to E for diagnostic output.</li>
     </ul>
       <p>
-        <a name="JeolCamera"><i>For accessing a JEOL camera or STEM signals</i></a>,
+        <a name="JeolCamera"><i><b>For accessing a JEOL camera or STEM signals</b></i></a>,
         copy the file JeolCamPlugin.dll from the package directory to the main SerialEM
         directory.&nbsp; (The file could be placed in a 'Plugins' folder inside
         C:\Program Files\SerialEM instead, but this is no longer necessary and could
@@ -1578,7 +1583,7 @@
       as Administrator to guarantee that various JEOL DLLs can be copied to the folder where
       the server is located.
        <p>
-        <a name="RemoteTietz"><i>For accessing a Tietz camera remotely</i></a>,
+        <a name="RemoteTietz"><i><b>For accessing a Tietz camera remotely</b></i></a>,
         copy the file Tietz-SEMServer.exe to the Tietz camera computer.&nbsp; Put it in
          some logical place and make a shortcut to it on the desktop so that it can be
          run easily. By default, this connection uses port 48897, although a different

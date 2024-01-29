@@ -1981,12 +1981,13 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   // Give the instructions if not done in this session
   if (!mGaveFocusMagMessage) {
     mess.Format("The procedure for this calibration is:\r\n"
+      "0. Reset defocus before you start if you want to do that\r\n"
       "1. Take an image within a few microns of 0 defocus (such as a View image with"
       " 0 defocus offset).\r\n"
       "2. Copy it to the Autoalign buffer shown in the \"Align to\" button AFTER you "
       "take the image.\r\n"
-      "3. Take an image of the same area with the chosen amount of additional defocus."
-      "\r\n"
+      "3. Take an image of the same kind and of the same area with the chosen amount of"
+      " additional defocus.\r\n"
       "4. If there is not an existing calibration at this defocus, then you need to"
       " draw corresponding lines in each image.\r\n"
       "  a. Find two well-spaced and well-defined points that are visible in both\r\n"
@@ -2072,18 +2073,22 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(scaleNumSteps);
 
   // Do scaling then rotation
-  mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, initialAngle);
-
-  if (mWinApp->mNavHelper->AlignWithRotation(0, initialAngle, angleRange, rotation, 
+  mess = "";
+  if (mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, initialAngle))
+  {
+    mess = "Autoalignment failed in the scaling search";
+  } else if (mWinApp->mNavHelper->AlignWithRotation(0, initialAngle, angleRange, rotation,
     shiftX, shiftY, scale)) {
-      mess = CString("The best rotation angle was at the end of the search range\n\n") +
-        B3DCHOICE(haveLines, "You need to draw the lines more accurately",
+    mess = CString("The best rotation angle was at the end of the search range\n\n") +
+      B3DCHOICE(haveLines, "You need to draw the lines more accurately",
         "You need to draw lines between corresponding points in the images");
-      AfxMessageBox(mess, MB_EXCLAME);
-      mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
-      mWinApp->mMultiTSTasks->SetCkNumStepCuts(saveStepCuts);
-      mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
-      return;
+  }
+  if (!mess.IsEmpty()) {
+    AfxMessageBox(mess, MB_EXCLAME);
+    mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
+    mWinApp->mMultiTSTasks->SetCkNumStepCuts(saveStepCuts);
+    mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
+    return;
   }
 
   // Then a final scaling search
@@ -2093,12 +2098,16 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   mWinApp->mMultiTSTasks->SetCkAlignStep(scaleStep);
   mWinApp->mMultiTSTasks->SetCkNumStepCuts(4);
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(scaleNumSteps);
-  mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, rotation);
+  ind = mWinApp->mMultiTSTasks->AlignWithScaling(0, false, scale, startScale, rotation);
 
   // Restore, report, and flash
   mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
   mWinApp->mMultiTSTasks->SetCkNumStepCuts(saveStepCuts);
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
+  if (ind) {
+    AfxMessageBox("Autoalignment failed in the second scaling search", MB_EXCLAME);
+    return;
+  }
   PrintfToLog("Correlations give final scale %.3f  rotation %.1f", scale, rotation);
   aMat = mSM->StretchCorrectedRotation(mImBufs->mCamera, mImBufs->mMagInd, rotation);
   aMat.xpx *= scale;
