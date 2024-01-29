@@ -572,7 +572,7 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
 {
   StateParams *state;
   CString ucName = name.Trim(), stateName;
-  int ind, selInd = -1, selNum;
+  int ind, selInd = -1, selNum, numExact = 0;
   bool numOK, twoMatch = false;
   const char *namePtr = (LPCTSTR)name;
   char *endPtr;
@@ -581,15 +581,18 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
   ucName.MakeUpper();
   selNum = strtol(namePtr, &endPtr, 10) - 1;
   numOK = endPtr - namePtr == ucName.GetLength();
-  selInd >= 0 && selInd < (int)mStateArray->GetSize() &&
-    ucName.Trim().GetLength() == stateName.GetLength();
 
   // Find a match or more than one
   for (ind = 0; ind < (int)mStateArray->GetSize(); ind++) {
     state = mStateArray->GetAt(ind);
     stateName = state->name;
     stateName.MakeUpper();
-    if (!stateName.IsEmpty() && stateName.Find(ucName) == 0) {
+    if (stateName == ucName) {
+      if (!numExact)
+        selInd = ind;
+      numExact++;
+    }
+    if (!numExact && !stateName.IsEmpty() && stateName.Find(ucName) == 0) {
       if (selInd < 0)
         selInd = ind;
       else
@@ -602,7 +605,11 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
     errStr = "There is no state whose name starts with " + name;
     return 1;
   }
-  if (twoMatch && !numOK) {
+  if (numExact > 1 && !numOK) {
+    errStr.Format("There are %d states whose names are %s", numExact, (LPCTSTR)name);
+    return 2;
+  }
+  if (!numExact && twoMatch && !numOK) {
     errStr = "There are two states whose names start with " + name;
     return 2;
   }
