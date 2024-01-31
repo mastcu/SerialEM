@@ -770,6 +770,10 @@ MAC_SAME_NAME_ARG(TransformToMatchBuffer, 2, 4, TRANSFORMTOMATCHBUFFER, SSsddii)
 MAC_SAME_NAME_ARG(AlignBetweenMags, 4, 4, ALIGNBETWEENMAGS, SDDDddi)
 MAC_SAME_NAME_ARG(SetMultishotParams, 1, 4, SETMULTISHOTPARAMS, Iddiiiiiiid)
 MAC_SAME_NAME_ARG(ReportMultishotParams, 1, 4, REPORTMULTISHOTPARAMS, I)
+MAC_SAME_NAME_ARG(GetItemPointArray, 3, 4, GETITEMPOINTARRAY, ISS)
+MAC_SAME_NAME_ARG(IsImageFileOpen, 1, 4, ISIMAGEFILEOPEN, S)
+MAC_SAME_NAME_NOARG(ReportNumOpenFiles, 0, 4, REPORTNUMOPENFILES)
+MAC_SAME_FUNC_ARG(ReportOpenImageFile, 1, 4, ReportCurrentFilename, REPORTOPENIMAGEFILE, Ii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

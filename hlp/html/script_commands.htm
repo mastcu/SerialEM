@@ -2398,6 +2398,15 @@
           <TD>Makes the given file number, numbered from 1, be the current open file.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportNumOpenFiles</TD>
+          <TD>Reports the number of open image files.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">IsImageFileOpen name</TD>
+          <TD>Reports whether the file given by <b>name</b> is open; a full or relative path must be used
+            if the file is not in the current directory.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportFileZsize</TD>
           <TD>Reports the number of frames in currently open file, and if the file is a montage, also reports the 
             number of sections of montage.
@@ -2410,6 +2419,11 @@
             filename including the path in <I>reportedValue1</I>, the extension (including the dot) in
             <I>reportedValue2</I>, the path only in <I>reportedValue3</I>, and the rest of the rootname
             in <I>reportedValue4</I>.&nbsp; No optional assignment to variable.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportOpenImageFile #F [#P]</TD>
+          <TD>Like 'ReportCurrentFilename', but reports the name of the file whose index is <b>#F</b> (numbered
+            from 1) and reporting parts of the name if <b>#P</b> is non-zero.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddTitleToFile #F title</TD>
@@ -4608,6 +4622,13 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">GetItemPointArray #I xvar yvar</TD>
+          <TD>Fills the variables <b>xvar</b> and <b>yvar</b> with the X and Y stage coordinates in the
+            point array for the current Navigator item or the one being acquired if <b>#I</b> is 0, or for
+            the item whose index in the table is <B>#I</B> if <B>#I</B> is positive, or that number of items
+             from the end if it is negative.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">GetNavGroupStageCoords #I xvar yvar [zvar]</TD>
           <TD>Returns the stage coordinates of all Navigator points with the group ID <b>#I</b> into
             variables named <b>xvar</b> and <b>yvar</b>, and also returns the Z coordinates if the optional
@@ -5041,7 +5062,8 @@
             continuous acquisition mode and end it at end of procedure, or 2 to leave it
             running if possible. The three optional entries <b>#S</b>, <b>#N</b>, <b>#Z</b> control the resetting
             of image shift at the end of the procedure when aligning a single map at one
-            magnification.&nbsp; It will reset image shift and move the stage to compensate,
+            magnification.&nbsp; (Entries in the Navigator Align Setup dialog do <i>not</i> apply
+             here).&nbsp; It will reset image shift and move the stage to compensate,
             realigning with a new image up to <b>#N</b> times and if the starting shift is more
             than the criterion <b>#S</b>.&nbsp; Enter 0 or 1 for <b>#Z</b> to end with nonzero or zero
             image shift, respectively, i.e. with the image realigned or with a final image

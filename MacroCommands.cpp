@@ -3924,11 +3924,13 @@ int CMacCmd::RemoveFile(void)
   return 0;
 }
 
-// ReportCurrentFilename, ReportLastFrameFile, ReportNavFile
+// ReportCurrentFilename, ReportLastFrameFile, ReportNavFile, ReportOpenImageFile
 int CMacCmd::ReportCurrentFilename(void)
 {
   CString report;
   BOOL truth;
+  KImageStore *store;
+  int optInd = 1;
 
   truth = !CMD_IS(REPORTLASTFRAMEFILE);
   if (CMD_IS(REPORTCURRENTFILENAME)) {
@@ -3936,6 +3938,13 @@ int CMacCmd::ReportCurrentFilename(void)
       SUSPEND_LINE("because there is no file open currently for statement:\n\n");
     report = mWinApp->mStoreMRC->getFilePath();
     mStrCopy = "Current open image file is: ";
+  } else if (CMD_IS(REPORTOPENIMAGEFILE)) {
+    if (mItemInt[1] < 1 || mItemInt[1] >  mWinApp->mDocWnd->GetNumStores())
+      ABORT_LINE("Index is out of range in line:\n\n");
+    store = mWinApp->mDocWnd->GetStoreMRC(mItemInt[1] - 1);
+    report.Format("Open image file #%d is %s", mItemInt[1], 
+      (LPCTSTR)store->getFilePath());
+    optInd = 2;
   }
   else if (truth) {
     ABORT_NONAV;
@@ -3953,13 +3962,13 @@ int CMacCmd::ReportCurrentFilename(void)
   mWinApp->AppendToLog(mStrCopy + report, mLogAction);
   CString root = report;
   CString ext;
-  if (mItemInt[1] && truth)
+  if (mItemInt[optInd] && truth)
     UtilSplitExtension(report, root, ext);
   SetOneReportedValue(!truth ? &mStrItems[1] : NULL, root, 1);
 
   if (!ext.IsEmpty())
     SetOneReportedValue(ext, 2);
-  if (mItemInt[1] && truth) {
+  if (mItemInt[optInd] && truth) {
     UtilSplitPath(root, report, ext);
     SetOneReportedValue(report, 3);
     SetOneReportedValue(ext, 4);
@@ -3969,6 +3978,30 @@ int CMacCmd::ReportCurrentFilename(void)
     SetOneReportedValue(&mStrItems[1], report, 2);
     SetOneReportedValue(&mStrItems[1], ext, 3);
   }
+  return 0;
+}
+
+// IsImageFileOpen
+int CMacCmd::IsImageFileOpen()
+{
+  CString report;
+  int index;
+  if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
+    return 1;
+  index = mWinApp->mDocWnd->StoreIndexFromName(report);
+  if (index < 0)
+    mLogRpt = mStrItems[1] + " is not open";
+  else
+    mLogRpt.Format("%s is open file #%d", (LPCTSTR)mStrItems[1], index + 1);
+  SetReportedValues(index + 1);
+  return 0;
+}
+
+// ReportNumOpenFiles
+int CMacCmd::ReportNumOpenFiles()
+{
+  mLogRpt.Format("There are %d open image files", mWinApp->mDocWnd->GetNumStores());
+  SetRepValsAndVars(1, mWinApp->mDocWnd->GetNumStores());
   return 0;
 }
 
@@ -10367,6 +10400,32 @@ int CMacCmd::ReportNavItem(void)
     mNavigator->DoLoadMap(false, navItem, ix0);
     mLoadingMap = true;
   }
+  return 0;
+}
+
+// GetItemPointArray
+int CMacCmd::GetItemPointArray()
+{
+  CString xval, yval, one;
+  int index = mItemInt[1];
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  for (index = 0; index < navItem->mNumPoints; index++) {
+    if (index) {
+      xval += "\n";
+      yval += "\n";
+    }
+    one.Format("%.3f", navItem->mPtX[index]);
+    xval += one;
+    one.Format("%.3f", navItem->mPtY[index]);
+    yval += one;
+  }
+  if (SetVariable(mStrItems[2], xval, VARTYPE_REGULAR, -1, false, &mStrCopy) || 
+    SetVariable(mStrItems[3], yval, VARTYPE_REGULAR, -1, false, &mStrCopy))
+    ABORT_NOLINE("Error setting a variable with item point coordinates:\n" + mStrCopy);
+  return 0;
+
   return 0;
 }
 
