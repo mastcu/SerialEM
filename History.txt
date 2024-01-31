@@ -3,9 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/31/24: Added script commands for getting the point array of a Navigator
+item,  testing if an image file is already open, and finding name of file at a
+given index.
+
+1/31/24: Allowed image shift to be reset as part of Realign to Item aligning
+to a scaled map if field of view at final mag is large enough.
+
+1/31/24: Fixed Realign to Item skipping alignment to center frame when
+switching to a new frame and going to last frame used (broken 1/27).
+
 1/31/24: Fixed adjustment when assigning current stage positions to a
 Navigator item and improved the "disparity in stage position" reports from
 Realign to Item by using just the shifts in the images (In 4.1).
+
 1/31/24: SEM_4-1-3
 1/31/24: Fixed output of ReporCameraLength command in STEM mode (In 4.1).
 

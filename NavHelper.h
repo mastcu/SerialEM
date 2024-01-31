@@ -452,6 +452,8 @@ private:
   int mRIresetISleaveZero;      // Whether to leave IS at zero
   int mRIresetISnumDone;        // Counter for number done
   bool mRIresetISneedsAlign;    // Whether the reset needs an alignment after it
+  bool mRIresetISAfter3rdRound; // Flag to do reset IS after scaled align
+  int mRIResetISmagInd;         // Mag index it is to be done at
   LowDoseParams mRIsavedLDparam;
   float mRIareaDefocusChange;   // Change in defocus offset when staying in low dose
   float mRIdefocusChangeLimit;  // Maximum defocus change for it to stay in LD
@@ -541,6 +543,7 @@ public:
   void RealignNextTask(int param);
   void RealignCleanup(int error);
   void StopRealigning(void);
+  void StopAndReportFinish(void);
   void RestoreForStopOrScaledAlign();
   int RotateForAligning(int bufNum);
   int TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat, int sizingWidth,
