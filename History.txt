@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/31/24: SEM_4-1-3
+1/31/24: Fixed output of ReporCameraLength command in STEM mode (In 4.1).
+
 1/28/24: Fixed GoToImagingState command to accept a full name if it is unique
 even if it matches the start of another name (In 4.1).
 

@@ -6201,10 +6201,11 @@ int CMacCmd::ReportCameraLength(void)
   double delX;
 
   delX = 0;
-  if (!mScope->GetMagIndex())
+  if (mWinApp->GetSTEMMode() || !mScope->GetMagIndex()) {
     delX = mScope->GetLastCameraLength();
-  mLogRpt.Format("%s %g%s", delX ? "Camera length is " : "Not in diffraction mode - (",
-    delX, delX ? " m" : ")");
+    mLogRpt.Format("Camera length is %g m", delX);
+  } else
+    mLogRpt = "Not in STEM or diffraction mode - no camera length available";
   SetRepValsAndVars(1,  delX);
   return 0;
 }
