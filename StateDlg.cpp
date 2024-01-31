@@ -91,8 +91,8 @@ END_MESSAGE_MAP()
 BOOL CStateDlg::OnInitDialog()
 {
   // [LD], camera, mag, spot, C2, defocus, exposure, binning, frame, name
-  int fields[12] = {9,8,18,18,17,16,17,12,28,5,2,2};
-  int tabs[12], i;
+  int fields[24] = {9,8,18,18,17,16,17,12,28,5,2,2,1,1,1,1,1,1,1,1,1,1,1,1};
+  int tabs[24], i;
   BOOL states[2] = {true, true};
   CRect clientRect, editRect;
   CBaseDlg::OnInitDialog();
@@ -664,7 +664,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   int mag, active, spot, probe, ldArea;
   int *activeList = mWinApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
-  CString *names = mWinApp->GetModeNames();
+  CString *names = mWinApp->GetModeNames(), intStr;
   CString prbal, magstr, defstr, numName, lds = state->lowDose ? "SL" : "ST";
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
@@ -692,6 +692,10 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
     intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
     probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
     percentC2 = mWinApp->mScope->GetC2Percent(spot, intensity);
+    if (percentC2 > 99.)
+      intStr.Format("%.0f", percentC2);
+    else
+      intStr.Format("%.1f", percentC2);
     if (state->lowDose) {
       ldArea = B3DCHOICE(state->lowDose > 0, RECORD_CONSET, -1 - state->lowDose);
       if (ldArea == SEARCH_AREA)
@@ -715,8 +719,8 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
     numName.Format("%d: %s", index + 1, (LPCTSTR)state->name);
   else
     numName = state->name;
-  string.Format("%s%s%d%s%s%s%d%s%s%.1f%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,  
-    sep, active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, percentC2, sep,
+  string.Format("%s%s%d%s%s%s%d%s%s%s%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,  
+    sep, active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, intStr, sep,
     (LPCTSTR)defstr, sep, state->exposure, sep, mWinApp->BinningText(state->binning, camp)
     , sep, state->xFrame / 1000., state->yFrame / 1000., state->montMapConSet ? "M" : "", 
     sep, selected ? (char)0x86 : ' ', sep, (LPCTSTR)numName);
