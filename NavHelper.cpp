@@ -888,7 +888,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRIresetISmaxNumAlign = mThirdRoundID ? 0 : maxNumResetAlign;
   mRIresetISleaveZero = mThirdRoundID ? 0 : leaveZeroIS;
   mRIresetISnumDone = 0;
-  
+
   // Get access to map file again
   mMapMontP = &mMapMontParam;
   i = mNav->AccessMapFile(item, imageStore, mCurStoreInd, mMapMontP, useWidth, useHeight);
@@ -1343,12 +1343,8 @@ void CNavHelper::RealignNextTask(int param)
           mImBufs->SetImageChanged(1);
           mNav->Redraw();
 
-          // Revise error based on current position and original adjusted target position
-          mNav->GetAdjustedStagePos(stageX, stageY, shiftX);
-          mStageErrX = (stageX - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftX, 
-            mRInetViewShiftX)) - (mRItargetX - mPreviousErrX);
-          mStageErrY = (stageY - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftY, 
-            mRInetViewShiftY)) - (mRItargetY - mPreviousErrY);
+          // 1/31/24: Gave up on revising the error from adjusted stage position and 
+          // offsets, it just didn't work
           StartThirdRound();
           return;
       }
@@ -1397,13 +1393,10 @@ void CNavHelper::RealignNextTask(int param)
         mLocalErrX, mLocalErrY, mLocalErrX + mStageErrX, mLocalErrY + mStageErrY);
       mRInumRounds++;
 
-      // Get new stage position and revise and report error, based on original adjusted
-      // target position.  The net shift adjustments are sadly empirical
-      mNav->GetAdjustedStagePos(stageX, stageY, shiftX);
-      mStageErrX = (stageX - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftX, 
-        mRInetViewShiftX)) - (mRItargetX - mPreviousErrX);
-      mStageErrY = (stageY - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftY, 
-        mRInetViewShiftY)) - (mRItargetY - mPreviousErrY);
+      // 1/31/24: Gave up on computing the error from adjusted stage position and offsets,
+      // it just didn't work, so add the local error here
+      mStageErrX += mLocalErrX;
+      mStageErrY += mLocalErrY;
       report.Format("Disparity in stage position after aligning to target position: "
         "%.2f %.2f  (2nd move error %.2f %.2f)", mStageErrX, mStageErrY,
         mLocalErrX, mLocalErrY);

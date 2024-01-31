@@ -527,6 +527,7 @@ public:
   int RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
     int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
   void GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ);
+  void AdjustISandMagForStageConversion(int &magInd, double &ISX, double &ISY);
   void ShiftToMarker(void);
   void UndoShiftToMarker(void);
   int ShiftItemsAtRegistration(float shiftX, float shiftY, int registration, int saveOrRestore = 0);
