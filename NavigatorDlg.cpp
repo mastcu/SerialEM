@@ -2754,7 +2754,6 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
 {
   StageMoveInfo smi;
   double shiftX, shiftY, curStageX, curStageY, curStageZ, moveX, moveY;
-  double viewX, viewY, searchX, searchY;
   float validX, validY, stageDx = 0., stageDy = 0.;
   bool validBack;
   BOOL doBacklash = mParam->stageBacklash != 0.;
@@ -2768,25 +2767,8 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   if (aMat.xpx)
     mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
 
-  // In low dose mode, if balance shifts is on, need to leave that IS also
-  if (mWinApp->LowDoseMode()) {
-    LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
-    int area = mScope->GetLowDoseArea();
-    if (mLowDoseDlg->ShiftsBalanced()) {
-      leaveISX += ldp->ISX;
-      leaveISY += ldp->ISY;
-    }
-
-    // And unless the compensation has been done (painfully) in realign or there are no
-    // view offsets set in View or Search, set up to compensate to the Record area in the
-    // next call
-    mLowDoseDlg->GetFullViewShift(viewX, viewY, VIEW_CONSET);
-    mLowDoseDlg->GetFullViewShift(searchX, searchY, SEARCH_AREA);
-    if (!mHelper->GetRealigning() && ldp->magIndex && !(area == VIEW_CONSET && 
-      !viewX && !viewY) && !(area == SEARCH_AREA && !searchX && !searchY))
-        magInd = ldp->magIndex;
-  }
-
+  AdjustISandMagForStageConversion(magInd, leaveISX, leaveISY);
+ 
   // If scope not applying mag offsets, this adjusts actual stage position to compensate
   mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), leaveISX, 
     leaveISY, (float)mScope->FastTiltAngle(), stageDx, stageDy);
@@ -11286,15 +11268,44 @@ void CNavigatorDlg::SetCurrentStagePos(int index)
 void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ)
 {
   double dStageZ, ISX, ISY;
+  int magInd = mScope->GetMagIndex();
   mScope->GetStagePosition(mLastScopeStageX, mLastScopeStageY, dStageZ);
   stageX = (float)mLastScopeStageX;
   stageY = (float)mLastScopeStageY;
   stageZ = (float)dStageZ;
+  mScope->GetLDCenteredShift(ISX, ISY);
+  AdjustISandMagForStageConversion(magInd, ISX, ISY);
 
   // Convert the current image shift into additional stage shift
-  mScope->GetLDCenteredShift(ISX, ISY);
-  mHelper->ConvertIStoStageIncrement(mScope->GetMagIndex(), mWinApp->GetCurrentCamera(), 
+  mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), 
     ISX, ISY, (float)mScope->FastTiltAngle(), stageX, stageY);
+}
+
+// As one step in getting to and from mag-independent stage positions, adjust image shifts
+// for balance shifts, and set mag index to record mag if appropriate
+void CNavigatorDlg::AdjustISandMagForStageConversion(int &magInd, double &ISX, 
+  double &ISY)
+{
+  double viewX, viewY, searchX, searchY;
+
+  // In low dose mode, if balance shifts is on, need to add that IS
+  if (mWinApp->LowDoseMode()) {
+    LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    int area = mScope->GetLowDoseArea();
+    if (mLowDoseDlg->ShiftsBalanced()) {
+      ISX += ldp->ISX;
+      ISY += ldp->ISY;
+    }
+
+    // And unless the compensation has been done (painfully) in realign or there are no
+    // view offsets set in View or Search, set up to compensate to the Record area in
+    // ConvertIStoStageIncrement
+    mLowDoseDlg->GetFullViewShift(viewX, viewY, VIEW_CONSET);
+    mLowDoseDlg->GetFullViewShift(searchX, searchY, SEARCH_AREA);
+    if (!mHelper->GetRealigning() && ldp->magIndex && !(area == VIEW_CONSET &&
+      !viewX && !viewY) && !(area == SEARCH_AREA && !searchX && !searchY))
+      magInd = ldp->magIndex;
+  }
 }
 
 // This is all that is needed for redraw
