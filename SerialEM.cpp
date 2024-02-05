@@ -3147,7 +3147,7 @@ BOOL DLL_IM_EX SEMUseAPI2ForDE()
 // And global function for accessing ThreeChoiceBox through TSMessageBox
 int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
   CString cancelText, UINT type, int setDefault, BOOL terminate, int retval,
-  bool noLineWrap)
+  bool noLineWrap, bool monofont)
 {
   CTSController *tsc = ((CSerialEMApp *)AfxGetApp())->mTSController;
   tsc->SetTCBoxYesText(yesText);
@@ -3156,6 +3156,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
   tsc->SetCallFromThreeChoice(true);
   tsc->SetTCBoxDefault(setDefault);
   tsc->SetTCBoxNoLineWrap(noLineWrap);
+  tsc->SetTCBoxUseMonofont(monofont);
   return tsc->TSMessageBox(message, type, terminate, retval);
 }
 

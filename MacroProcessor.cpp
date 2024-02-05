@@ -1302,6 +1302,7 @@ void CMacroProcessor::Run(int which)
   mNumTempMacros = 0;
   mParseQuotes = false;
   mNoLineWrapInMessageBox = false;
+  mMonospacedMessageBox = false;
   mLogAction = LOG_OPEN_IF_CLOSED;
   mLogInfoAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;

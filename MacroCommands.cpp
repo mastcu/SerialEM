@@ -8158,10 +8158,11 @@ int CMacCmd::Pause(void)
       report += "\n\nDo you want to proceed with the script?";
       index = AfxMessageBox(report, doAbort ? MB_EXCLAME : MB_QUESTION);
     } else {
-      if (doAbort || !mNoLineWrapInMessageBox)
+      if (doAbort || (!mNoLineWrapInMessageBox && !mMonospacedMessageBox))
         index = SEMMessageBox(report, doAbort ? MB_EXCLAME : MB_QUESTION);
       else
-        index = SEMThreeChoiceBox(report, "Yes", "No", "", MB_QUESTION, 0, 0, 0, true);
+        index = SEMThreeChoiceBox(report, "Yes", "No", "", MB_QUESTION, 0, 0, 0, 
+          mNoLineWrapInMessageBox, mMonospacedMessageBox);
     }
     if ((doPause && index == IDNO) || doAbort) {
       SuspendMacro(doAbort);
@@ -8178,8 +8179,9 @@ int CMacCmd::OKBox(void)
   CString report;
 
   SubstituteLineStripItems(mStrLine, 1, report);
-  if (mNoLineWrapInMessageBox)
-    SEMThreeChoiceBox(report, "OK", "", "", MB_OK | MB_ICONINFORMATION, 0, 0, 0, true);
+  if (mNoLineWrapInMessageBox || mMonospacedMessageBox)
+    SEMThreeChoiceBox(report, "OK", "", "", MB_OK | MB_ICONINFORMATION, 0, 0, 0, 
+      mNoLineWrapInMessageBox, mMonospacedMessageBox);
   else
     AfxMessageBox(report, MB_OK | MB_ICONINFORMATION);
   return 0;
@@ -8272,7 +8274,7 @@ int CMacCmd::ThreeChoiceBox(void)
   i = SEMThreeChoiceBox(report, buttons[0], buttons[1], buttons[2], 
     B3DCHOICE(numButtons == 1, MB_OK | MB_ICONINFORMATION, 
     (numButtons == 2 ? MB_YESNO : MB_YESNOCANCEL) | MB_ICONQUESTION), 0, false, 0, 
-    mNoLineWrapInMessageBox);
+    mNoLineWrapInMessageBox, mMonospacedMessageBox);
   if (i == IDYES)
     index = 1;
   else if (i == IDNO)
@@ -8289,6 +8291,7 @@ int CMacCmd::ThreeChoiceBox(void)
 int CMacCmd::NoLineWrapInMessageBox(void)
 {
   mNoLineWrapInMessageBox = mItemEmpty[1] || mItemInt[1];
+  mMonospacedMessageBox = !mItemEmpty[2] && mItemInt[2];
   return 0;
 }
 

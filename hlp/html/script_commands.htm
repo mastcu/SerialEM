@@ -778,16 +778,16 @@
             can be answered with yes or no. Sets <I>reportedValue1</I> to 1 or 0 for a yes or no
             answer.&nbsp; If NoMessageBoxOnError is set, no box appears, the text is printed to the
             log, and <I>reportedValue1</I> is 0.&nbsp; If you do not like the way lines are broken in
-            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
-            with Yes and No buttons will be used instead.
+            the standard message box or want to use a monospaced font, use the command 'NoLineWrapInMessageBox'
+             and a 'three-choice box' with Yes and No buttons will be used instead.
           </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">OKBox text</TD>
           <TD>Opens a message box with the given <b>text</b> and just an OK button.&nbsp; The box is
             not suppressed by NoMessageBoxOnError.&nbsp; If you do not like the way lines are broken in
-            the standard message box, use the command 'NoLineWrapInMessageBox' and a 'three-choice box'
-            with one OK button will be used instead.
+            the standard message box or want to use a monospaced font, use the command 'NoLineWrapInMessageBox' 
+            and a 'three-choice box' with one OK button will be used instead.
           </TD>
         </TR>
         <TR>
@@ -823,9 +823,10 @@
             <A HREF="about_scripts.htm#examples">Advanced Examples</A>.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">NoLineWrapInMessageBox [#]</TD>
-          <TD>Disables line wrapping in the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
-            and OKBox', or re-enables it with if the optional <b>#</b> is 0.&nbsp; Command added 4.0, 1/24/22.</TD>
+          <TD class="scriptcommand">NoLineWrapInMessageBox [#W] [#M]</TD>
+          <TD>Sets parameters for the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
+            and OKBox'.  Enter no arguments or a non-zero value for <b>#W</b> to disable line wrapping; enter
+            a non-zero value for <B>#M</B> to use a monospaced font.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EnterNameOpenFile [prompt]</TD>

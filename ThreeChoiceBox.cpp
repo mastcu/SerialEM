@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "MacroEditer.h"
 #include "ThreeChoiceBox.h"
 
 
@@ -21,6 +22,7 @@ CThreeChoiceBox::CThreeChoiceBox(CWnd* pParent /*=NULL*/)
   mChoice = -1;
   mSetDefault = 0;
   mNoLineWrap = false;
+  mMonospace = false;
 }
 
 CThreeChoiceBox::~CThreeChoiceBox()
@@ -58,6 +60,7 @@ BOOL CThreeChoiceBox::OnInitDialog()
   int allButWidth, addedWidth, pixPerLine, totLines, numWrap, endInd, addedHeight;
   int margin = mWinApp->ScaleValueForDPI(16);
   int allButTop, butRight, panelTop, numLinesOrig = 1;
+  float monoHeightFac = mMonospace ? 1.2f : 1.f;
   CSize size;
   CString line, mess;
   CButton *defBut = &m_butOK;
@@ -67,6 +70,12 @@ BOOL CThreeChoiceBox::OnInitDialog()
   // Create background color
   mBkgdColor = RGB(255, 255, 255);    // At least on laptop, default is 212, 208, 200
   mBkgdBrush.CreateSolidBrush(mBkgdColor);
+
+  if (mMonospace) {
+    CMacroEditer::MakeMonoFont(&m_statMessage);
+    if (CMacroEditer::mHasMonoFont > 0 && mWinApp->GetMonospacedLog())
+      m_statMessage.SetFont(&CMacroEditer::mMonoFont);
+  }
 
   // Set the labels
   SetDlgItemText(IDOK, (LPCTSTR)mYesText);
@@ -120,7 +129,7 @@ BOOL CThreeChoiceBox::OnInitDialog()
     ixOffset;
 
   // Count lines of text included estimate of wrapped lines needed for long lines
-  pixPerLine = statRect.Height() / numLinesOrig;
+  pixPerLine = B3DNINT(monoHeightFac * statRect.Height() / numLinesOrig);
   mess = m_strMessage;
   totLines = 0;
   do {

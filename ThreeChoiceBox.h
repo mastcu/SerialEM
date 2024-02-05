@@ -38,6 +38,7 @@ public:
   int mChoice;
   int mSetDefault;     // 1 to set to No, 2 to set to cancel
   bool mNoLineWrap;
+  bool mMonospace;
   CString m_strMessage;
   CStatic m_statMessage;
   CStatic m_statGrayPanel;

@@ -416,6 +416,7 @@ protected:
   float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
   ControlSet *mCamSet;       // Control set, set by call to CheckAndConvertCameraSet
   bool mNoLineWrapInMessageBox;  // Flag for messages boxes without line wrap
+  bool mMonospacedMessageBox; // Flag to use monospaced font
 
   bool mRunningScrpLang;     // Flag that external interpreter is running the script
   bool mCalledFromScrpLang;  // Flag that regular script called from language script

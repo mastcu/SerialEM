@@ -399,7 +399,7 @@ int DLL_IM_EX SEMMessageBox(CString message, UINT type = MB_OK | MB_ICONEXCLAMAT
     BOOL terminate = true, int retval = 0);
 int DLL_IM_EX SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
   CString cancelText, UINT type = MB_YESNO | MB_ICONQUESTION, int setDefault = 0, 
-    BOOL terminate = true, int retval = 0, bool noLineWrap = false);
+    BOOL terminate = true, int retval = 0, bool noLineWrap = false, bool monofont = false);
 int DLL_IM_EX SEMInitializeWinsock(void);
 double DLL_IM_EX SEMWallTime();
 int DLL_IM_EX SEMUseTEMScripting();

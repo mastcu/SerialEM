@@ -427,6 +427,8 @@ CTSController::CTSController()
   mAllowContinuous = false;
   mRunMacroInTS = false;
   mMacroToRun = 0;
+  mTCBoxUseMonofont = false;
+  mTCBoxNoLineWrap = false;
   mFrameAlignInIMOD = false;
   mDosymFitPastReversals = 2;
   mStepAfterMacro = TSMACRO_PRE_RECORD;
@@ -5083,6 +5085,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         tcb.mCancelText = mTCBoxCancelText;
         tcb.mSetDefault = mTCBoxDefault;
         tcb.mNoLineWrap = mTCBoxNoLineWrap;
+        tcb.mMonospace = mTCBoxUseMonofont;
         tcb.m_strMessage = message;
         tcb.DoModal();
         retval = tcb.mChoice;

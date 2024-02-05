@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/5/24: Added ability to get message boxes from scripts with monospaced font.
+
 2/5/24: Changed "Fix" button in script editor to re-indent selected lines
 properly, equivalent to typing Tab on each one.
 

@@ -121,6 +121,7 @@ public:
   SetMember(CString, TCBoxCancelText);
   SetMember(int, TCBoxDefault);
   SetMember(bool, TCBoxNoLineWrap);
+  SetMember(bool, TCBoxUseMonofont);
   GetSetMember(float, TrialCenterMaxRadFrac);
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
@@ -566,6 +567,7 @@ private:
   CString mTCBoxCancelText;
   int mTCBoxDefault;           // Default button
   bool mTCBoxNoLineWrap;       // Flag for no line wrap
+  bool mTCBoxUseMonofont;      // Flag for mono font;
   float mTrialCenterMaxRadFrac; // Maximum radius as fraction of diagonal to center with T
   int mRestoreStageXYonTilt;   // Flag to restore stage position after tilt
   double mStageXtoRestore;     // X and Y positions, or NO_EXTRA_VALUE when not set
