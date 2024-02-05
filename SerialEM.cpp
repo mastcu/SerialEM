@@ -4544,6 +4544,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
 void CSerialEMApp::FixInitialPlacements(void)
 {
   WINDOWPLACEMENT *place;
+  WINDOWPLACEMENT appPlace;
   int ind;
   RECT *dlgRect;
   FIX_PLACEMENT(mScopeStatus.GetMeterPlacement());
@@ -4573,6 +4574,7 @@ void CSerialEMApp::FixInitialPlacements(void)
     ConstrainWindowPlacement((int *)&dlgRect->left, (int *)&dlgRect->top, 
       (int *)&dlgRect->right, (int *)&dlgRect->bottom, true);
   }
+  place = &appPlace;
   GetWindowPlacement(place);
   ConstrainWindowPlacement(place, true);
   if (mFirstSEMplacement.rcNormalPosition.right != NO_PLACEMENT)

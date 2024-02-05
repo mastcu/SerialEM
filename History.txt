@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/4/24: Allowed variables in promps for userSetDirectory and EnterNameOpenFile
+(In 4.1).
+
+2/4/24: Fixed window placement of script editor #60 (In 4.1).
+
 1/31/24: Added script commands for getting the point array of a Navigator
 item,  testing if an image file is already open, and finding name of file at a
 given index.
