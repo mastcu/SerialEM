@@ -3401,7 +3401,7 @@ int CMacCmd::EnterNameOpenFile(void)
 {
   mStrCopy = "Enter name for new file:";
   if (!mStrItems[1].IsEmpty())
-    JustStripItems(mStrLine, 1, mStrCopy);
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (!KGetOneString(mStrCopy, mEnteredName, 100))
     SUSPEND_NOLINE("because no new file was opened");
   if (mWinApp->mDocWnd->DoOpenNewFile(mEnteredName))
@@ -3682,7 +3682,7 @@ int CMacCmd::UserSetDirectory(void)
 {
   mStrCopy = "Choose a new current working directory:";
   if (!mStrItems[1].IsEmpty())
-    JustStripItems(mStrLine, 1, mStrCopy);
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   char *cwd = _getcwd(NULL, _MAX_PATH);
   CXFolderDialog dlg(cwd);
   dlg.SetTitle(mStrCopy);
