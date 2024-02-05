@@ -1,0 +1,136 @@
+#!/usr/bin/python -u
+# Script to create an include file with array of argument signatures for script commands
+
+progname = 'makeSignatures'
+prefix = 'ERROR: ' + progname + ' - '
+
+def exitError(mess):
+ sys.stdout.write(mess + '\n')
+ sys.exit(1)
+
+# Copied from imodpy for reading and writing a file
+def readTextFile(filename):
+   try:
+      errString = "Opening"
+      textfile = open(filename, 'r')
+      errString = "Reading"
+      lines = textfile.readlines()
+
+   except IOError:
+      errString = errString + ' ' + filename + '  - ' + str(sys.exc_info()[1])
+      exitError(errString)
+
+   textfile.close()
+   for i in range(len(lines)):
+      lines[i] = lines[i].rstrip(' \t\r\n')
+   return lines
+
+def writeTextFile(filename, strings):
+   try:
+      action = 'Opening'
+      comf = open(filename, 'w')
+      action = 'Writing to'
+      for line in strings:
+         comf.write(line + '\r\n')
+      comf.close()
+   except IOError:
+      errString = action + " file: " + filename + "  - " + str(sys.exc_info()[1])
+      exitError(errString)
+
+
+# Find the end of the command and the argument string after it, add to dictionary
+def extractEntry(line, nameInd):
+   global argDict
+   spaceInd = line.find(' ', nameInd)
+   closeInd = line.find('<', nameInd)
+   parenInd = line.find('(', nameInd)
+   if parenInd >= 0 and (spaceInd < 0 or (spaceInd >= 0 and parenInd < spaceInd)):
+      spaceInd = parenInd
+   nameAlt = ''
+   if closeInd < 0:
+      exitError('No < after name on line: ' + line)
+   if spaceInd < 0:
+      endInd = closeInd
+   else:
+      endInd = min(closeInd, spaceInd)
+   if endInd < len(line) - 4 and line[endInd:].startswith(' or '):
+      nameAlt = line[nameInd:endInd]
+      nameInd = endInd + 4
+      spaceInd = line.find(' ', nameInd)
+   name = line[nameInd:endInd]
+   sig = ''
+   if spaceInd > 0 and spaceInd < closeInd:
+      
+      # Python-only commands are written with a ( instead of a space;
+      # taken parens and commas away
+      sig = line[spaceInd + 1:closeInd].strip().replace('&nbsp;', ' ').replace('  ', ' ')
+      if parenInd == spaceInd:
+         sig = sig.replace('(', '').replace(')', '').replace(', ', ' ')
+   argDict[name.upper()] = sig
+   if nameAlt:
+      argDict[nameAlt.upper()] = sig
+      
+
+# Define files
+incFile = 'MacroArguments.h'
+masterFile = 'MacroMasterList.h'
+helpFile = 'hlp/html/script_commands.htm'
+
+# load System Libraries
+import os, sys
+
+# Run if help file is newer than include file
+if os.path.exists(incFile):
+   incTime = os.path.getmtime(incFile)
+   helpTime = os.path.getmtime(helpFile)
+   if helpTime < incTime:
+      sys.exit(0)
+
+# Read the files
+helpLines = readTextFile(helpFile)
+masterLines = readTextFile(masterFile)
+
+# Make an array of the names in the macro file
+nameArr = []
+for line in masterLines:
+   lstrip = line.strip()
+   if lstrip.startswith('MAC_') and '(' in line and lstrip.endswith(')'):
+      nameInd = line.find('(') + 1
+      comInd = line.find(',', nameInd)
+      name = line[nameInd:comInd].strip()
+      nameArr.append(name.upper())
+      
+# Make dictionary of the signatures in the help file
+argDict = {}
+doSynonym = False
+for line in helpLines:
+   lstrip = line.strip().upper()
+   if doSynonym:
+      lcstrip = line.strip()
+      extractEntry(lcstrip, 0)
+      doSynonym = '<BR' in lstrip
+      
+   elif lstrip.startswith('<TD') and 'scriptcommand' in line and 'colspan' not in line:
+      nameInd = line.find('>') + 1
+      extractEntry(line, nameInd)
+      doSynonym = '<BR' in lstrip
+
+# Make up the output lines
+incLines = ['static const int sNumSignatures = ' + str(len(nameArr)) + ';',
+            'static const char *sSignatures[] = {']
+for ind in range(len(nameArr)):
+   sig = '""'
+   if nameArr[ind] in argDict:
+      sig = '"' + argDict[nameArr[ind]] + '"'
+   if ind < len(nameArr) - 1:
+      sig += ','
+   incLines.append(sig)
+   
+incLines.append('};')
+
+# Write file
+writeTextFile(incFile, incLines)
+sys.stdout.write('New signature include file written\n')
+
+sys.exit(0)
+

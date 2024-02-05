@@ -162,7 +162,7 @@ BOOL CNavRealignDlg::OnInitDialog()
 void CNavRealignDlg::OnOK()
 {
   UpdateData(true);
-  if (m_strMapLabel.IsEmpty() && mForRealignOnly <= 0) {
+  if (m_strMapLabel.IsEmpty() && mForRealignOnly < 0) {
     AfxMessageBox("You must enter a label for the Navigator map to align to", MB_EXCLAME);
     return;
   }

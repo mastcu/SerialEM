@@ -49,13 +49,17 @@
       all of the selected lines if possible.&nbsp; If any lines are indented by less 
       than one unit, nothing will be done.</P>
     </basefont>
-    <P><b>Completions and Auto-indenting</b> - Below these buttons is a line of text that starts out with a reminder that you 
+    <P><b>Completions, Arguments Lists, and Auto-indenting</b> - Below these buttons is a line of text that starts out with a reminder that you 
       can use Tab or ` (the back-tick character) to automatically complete a command 
       name (the first word on a line) as well as convert it to a standard mixed-case 
       form.&nbsp; Tab may not work on non-US keyboards, but ` always will.&nbsp; When 
       you start editing in a window, this line will list up to 10 possible completions 
       of the current text as you type a command.&nbsp; Only a few will show up at the 
       default window size; make the window wider to see more completions.&nbsp; </P>
+    <p>
+      When the command is completed, or when you type Tab or ` in the middle or at the 
+      end of a command name, the program will use the completion line to show the 
+      summary of command arguments from the script help file.</p>
     <P>Another consequence of typing Tab or ` anywhere on the line is that the editor 
       will set the indentation of the current line based on the indentation of the 
       previous line, whether the previous line starts a block (i.e., with If, Else, 

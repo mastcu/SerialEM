@@ -27,13 +27,15 @@ CFont CMacroEditer::mMonoFont;
 CFont CMacroEditer::mDefaultFont;
 int CMacroEditer::mHasMonoFont = -1;
 
+#include "MacroArguments.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CMacroEditer dialog
 
 
 CMacroEditer::CMacroEditer(CWnd* pParent /*=NULL*/)
   : CBaseDlg(CMacroEditer::IDD, pParent)
-  , m_strCompletions(_T("Tab or  `  to complete command"))
+  , m_strCompletions(_T("Tab or  `  to complete command or show args"))
 {
   //{{AFX_DATA_INIT(CMacroEditer)
   m_strMacro = _T("");
@@ -910,15 +912,15 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   int &sel2, bool &setCompletions, bool &completing, bool oneLine)
 {
 
-  int sel1, delStart, numDel, i, numCommands, lineStart, numMatch, saveStart;
-  int indentSize, prevStart, needIndent, curIndent;
+  int sel1, delStart, numDel, i, numCommands, lineStart, numMatch, saveStart, wordEnd;
+  int indentSize, prevStart, needIndent, curIndent, lenEnd;
   int maxCompletions = 10;
   unsigned int lenMatch;
   char ch;
   short *matchList;
   bool matched, atWordEnd, foundText, isPython, hasSpace = false, needsNamespace = false;
   bool isBlank, afterBlank, isContinued, afterColon, isKeyword  = false;
-  bool removeIndent = false;
+  bool removeIndent = false, gotComment = false;
   int prevEnd, backStart, backEnd, afterContinue;
   CmdItem *cmdList;
   CString substr, importName, nameSpace;
@@ -968,6 +970,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     if (ch == '#') {
       lineStart = -1;
       atWordEnd = false;
+      gotComment = true;
       break;
     }
     if (ch == '\n' || ch == '\r')
@@ -975,7 +978,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   }
 
   // Find the beginning of the line or a previous space/tab
-  if (atWordEnd) {
+  if (!gotComment) {
     saveStart = -1;
     for (lineStart = sel2 - 1; lineStart > 0; lineStart--) {
       ch = strMacro.GetAt(lineStart - 1);
@@ -998,8 +1001,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     // If position was saved, set it as start
     if (lineStart >= 0 && saveStart >= 0)
       lineStart = saveStart;
-  } else
-    lineStart = -1;
+  }
 
   // Wipe out the completion line unless it hasn't been changed from original
   numMatch = 0;
@@ -1018,11 +1020,34 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     i = substr.Find(".");
     if (i > 0) {
       nameSpace = substr.Left(i);
+      if (substr.ReverseFind(' ') >= 0)
+        substr = substr.Mid(substr.ReverseFind(' ') + 1);
       if (nameSpace == importName) {
         lineStart += i + 1;
         needsNamespace = false;
       } else {
         lineStart = -1;
+      }
+    }
+  }
+
+  // Go forward to end of token
+  if (completing && lineStart >= 0 && !atWordEnd) {
+    wordEnd = -1;
+    for (i = delStart + 1; i < strMacro.GetLength(); i++) {
+      ch = strMacro.GetAt(i);
+      if (ch == ' ' && wordEnd < 0)
+        wordEnd = i;
+
+      if ((isPython && ch == '(') || ch == '\r' || ch == '\n') {
+        if (wordEnd < 0)
+          wordEnd = i;
+        break;
+      }
+      if (ch != ' ' && wordEnd > 0) {
+        if (ch == '@' || ch == ':' || ch == '=')
+          lineStart = -1;
+        break;
       }
     }
   }
@@ -1036,6 +1061,12 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     substr = strMacro.Mid(lineStart, lenMatch);
     if (substr == "\r" || substr == "\n")
       break;
+    if (!atWordEnd && wordEnd > 0) {
+      lenEnd = wordEnd - (delStart + 1);
+      if (lenEnd <= 0)
+        break;
+      substr += strMacro.Mid(delStart + 1, lenEnd);
+    }
     substr.MakeUpper();
     if (isPython) {
 
@@ -1052,28 +1083,41 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
         break;
       }
 
+      // Find matches, but if not at end, break out on exact match
       for (i = 0; i < numCommands; i++)
-        if (!(cmdList[i].arithAllowed & 8) && cmdList[i].cmd.find(substr) == 0)
-          matchList[numMatch++] = i;
+        if (!(cmdList[i].arithAllowed & 8) && cmdList[i].cmd.find(substr) == 0) {
+          if (!atWordEnd && CString(cmdList[i].cmd.c_str()) == substr) {
+            numMatch = 1;
+            matchList[0] = i;
+            break;
+          } else
+            matchList[numMatch++] = i;
+        }
 
     } else {
 
-      // for regular compare to string
+      // for regular compare to string, again find matches and break on exact match
       for (i = CME_EXIT; i < numCommands; i++)
-        if (cmdList[i].cmd.find(substr) == 0 && 
-          !CMacroProcessor::mPythonOnlyCmdSet.count(i))
-          matchList[numMatch++] = i;
+        if (cmdList[i].cmd.find(substr) == 0 &&
+          !CMacroProcessor::mPythonOnlyCmdSet.count(i)) {
+          if (!atWordEnd && CString(cmdList[i].cmd.c_str()) == substr) {
+            numMatch = 1;
+            matchList[0] = i;
+            break;
+          } else
+            matchList[numMatch++] = i;
+        }
     }
 
-    // If there are no matches, try one less character
-    if (!numMatch) {
+    // If there are no matches and we are completing, try one less character
+    if (!numMatch && atWordEnd) {
       delStart--;
       numDel++;
       continue;
     }
 
     // That's all we need to list completions
-    if (!completing)
+    if (!completing || !atWordEnd)
       break;
 
     // If there are multiple matches, find the point where they diverge
@@ -1126,6 +1170,20 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     if (numMatch > maxCompletions)
       strCompletions += " ...";
     setCompletions = true;
+  } else {
+    strCompletions = "";
+    setCompletions = true;
+  }
+  if (numMatch == 1 && matchList[0] < sNumSignatures) {
+    if (isPython) {
+      strCompletions = sSignatures[matchList[0]];
+      strCompletions.Replace(" ", ", ");
+      strCompletions = CString(cmdList[matchList[0]].mixedCase) + "(" + strCompletions +
+        ")";
+    } else {
+      strCompletions = CString(cmdList[matchList[0]].mixedCase) + " " +
+        sSignatures[matchList[0]];
+    }
   }
 
   if (completing) {
@@ -1135,7 +1193,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     sel2 -= numDel;
 
     // Then insert a matching string if any and adjust caret
-    if (numMatch) {
+    if (numMatch && atWordEnd) {
       strMacro.Insert(delStart, substr);
       sel2 += lenMatch;
     }
