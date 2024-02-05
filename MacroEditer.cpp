@@ -1117,6 +1117,8 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   delete [] matchList;
 }
 
+// Indent the line where sel2 is based on previous line and relevant keywords,
+// adjust sel2 as needed, and return number of characters added (- if removed)
 int CMacroEditer::IndentCurrentLine(CString &strMacro, int &sel2, bool isPython)
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
