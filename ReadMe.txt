@@ -2,7 +2,7 @@ SerialEM is currently developed in Visual Studio 2015 with the v140_xp
 platform toolset so that it can still run on XP SP3, but it includes a pure
 v140 configuration as well.  Using the v140_xp configuration requires the
 Windows 7.1A Platform SDK, but at least when installing VS 2015, there is an
-option to supportthis toolset which takes care of the dependencies.
+option to support this toolset which takes care of the dependencies.
 Beware: the first time that you open the solution in a higher
 version of Visual Studio, it will want to upgrade the project to use the
 current toolset on all configurations.  Just cancel this message, then adjust
@@ -38,6 +38,10 @@ compilation, copy libctffind-VCOMP.dll from SerialEMLibs or SerialEMLibs/x64
 to the executable directory, and copy hdf5.dll and imodzlib1.dll from the
 appropriate SerialEM distribution.
 
+The build requires Python to run two scripts in Utilities.  This is specified
+in the Pre-Build Event of the project properties and it is currently set to
+access Cygwin Python.  The path can be changed to a specific Python or omitted
+if Python is on the system path.
 
 The rest of this file contains a description of the modules in SerialEM.  This
 is unlikely to be up-to-date.  Every .cpp file has a corresponding .h file.
@@ -220,6 +224,8 @@ INSTALL.bat           Program installer
 KGetOne.cpp           Has routines for getting one integer, float, or string
                          using AskOneDlg
 makeHideDisable       Script to produce about_hide_disable.htm file
+makeSignatures        Script to produce MacroArguments.h from script help and
+                         MacroMasterList.h
 Smoother.cpp          A class for smoothing a noisy data stream, used for
                          the screen meter
 STEMfocus.cpp         Has routines for analyzing power spectra and finding

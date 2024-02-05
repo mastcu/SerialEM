@@ -545,100 +545,22 @@ void CMacroEditer::SelectAndShowLine(int lineFromOne)
 // Fix the indentation
 void CMacroEditer::OnButFixIndent()
 {
-  int startInd, endInd, ind, size, currentInd, numSpace, fix, line;
-  int numOneSpace = 0, numBig = 0, numAmbig = 0;
-  bool even, fixAll = true;
+  int startInd, endInd, size, currentInd;
+  bool isPython;
   CString strLine, bit;
-  ShortVec fixIndent;
   if (GetLineSelectLimits(startInd, endInd, size))
     return;
 
   // Go through the lines computing how much to fix by and counting types of fixes
-  even = (size % 2) == 0;
+  isPython = CheckForPythonAndImport(m_strMacro, bit);
   currentInd = startInd;
   while (currentInd < endInd) {
-    numSpace = 0;
-    for (ind = currentInd; ind < endInd; ind++) {
-      if (m_strMacro.GetAt(ind) == ' ')
-        numSpace++;
-      else
-        break;
-    }
-    fix = numSpace % size;
-    if (fix == size / 2 && even) {
-      numAmbig++;
-      fixIndent.push_back(0);
-    } else {
-      if (fix > size / 2)
-        fix = size - fix;
-      else
-        fix = -fix;
-      if (B3DABS(fix) == 1)
-        numOneSpace++;
-      else if (fix)
-        numBig++;
-      fixIndent.push_back(fix);
-    }
+    endInd += IndentCurrentLine(m_strMacro, currentInd, isPython);
     mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
-  }
 
-  // Find out what they want to do if there are big ones or ambiguous ones
-  if (numAmbig || numBig) {
-    strLine = "";
-    if (numOneSpace)
-      strLine.Format("%d of %d lines are off by one space", numOneSpace,
-        fixIndent.size());
-    if (numBig) {
-      bit.Format("%d lines are off by more than one space but fixable", numBig);
-      if (!strLine.IsEmpty())
-        strLine += '\n';
-      strLine += bit;
-    }
-    if (numAmbig) {
-      bit.Format("%d lines are off by half the indent size and unfixable", numAmbig);
-      if (strLine.IsEmpty()) {
-        AfxMessageBox(bit, MB_EXCLAME);
-        return;
-      }
-      strLine += '\n' + bit;
-    }
-    if (numOneSpace && numBig) {
-      strLine += "\n\nPress:\n\n\"One Space Only\" to fix just the ones off by one space"
-        "\n\n\"Multiple Spaces\" to fix ones off by multiple spaces also";
-      if (numAmbig)
-        strLine += "\n\n\"Cancel\" to fix nothing and examine the situation.";
-      ind = SEMThreeChoiceBox(strLine, "One Space Only", "Multiple Spaces",
-        numAmbig ? "Cancel" : "", numAmbig ? MB_YESNOCANCEL : MB_YESNO);
-      if (ind == IDCANCEL)
-        return;
-      fixAll = ind == IDNO;
-    } else {
-      if (AfxMessageBox(strLine + "\n\nDo you want to fix whatever can be fixed?",
-        MB_QUESTION) == IDNO)
-        return;
-    }
   }
-
-  // Proceed with the fixes
-  line = 0;
-  currentInd = startInd;
-  while (currentInd < endInd) {
-    fix = fixIndent[line];
-    if (fixAll || B3DABS(fix) == 1) {
-      if (fix < 0) {
-        m_strMacro.Delete(currentInd, -fix);
-      } else if (fix > 0) {
-        for (ind = 0; ind < fix; ind++)
-          m_strMacro.Insert(currentInd, ' ');
-      }
-      endInd += fix;
-    }
-    mProcessor->GetNextLine(&m_strMacro, currentInd, strLine, true);
-    line++;
-  }
-
   UpdateData(false);
-  m_editMacro.SetSel(startInd, endInd);
+  m_editMacro.SetSel(startInd, currentInd);
   mProcessor->ScanForName(m_iMacroNumber);
 }
 
@@ -912,31 +834,21 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   int &sel2, bool &setCompletions, bool &completing, bool oneLine)
 {
 
-  int sel1, delStart, numDel, i, numCommands, lineStart, numMatch, saveStart, wordEnd;
-  int indentSize, prevStart, needIndent, curIndent, lenEnd;
+  int delStart, numDel, i, numCommands, lineStart, numMatch, saveStart, wordEnd;
+  int lenEnd;
   int maxCompletions = 10;
   unsigned int lenMatch;
   char ch;
   short *matchList;
-  bool matched, atWordEnd, foundText, isPython, hasSpace = false, needsNamespace = false;
-  bool isBlank, afterBlank, isContinued, afterColon, isKeyword  = false;
+  bool matched, atWordEnd, isPython, hasSpace = false, needsNamespace = false;
+  bool isKeyword  = false;
   bool removeIndent = false, gotComment = false;
-  int prevEnd, backStart, backEnd, afterContinue;
   CmdItem *cmdList;
   CString substr, importName, nameSpace;
   const char *first, *other;
-  const char *prevKeys[] = {"LOOP", "DOLOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY", 
-    "CATCH"};
-  const char *curKeys[] = {"ENDLOOP", "ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION",
-    "CATCH",
-    "ENDTRY"};
-  const char *curPythKeys[] = {"EXCEPT", "ELSE:", "ELIF"};
   char *pythKeywords[] = {"FOR", "IF", "ELSE:", "ELIF", "TRY:", "WHILE", "DEF", "RETURN",
     "GLOBAL", "BREAK", "CONTINUE", "EXCEPT:", "PASS", "WITH", "FINALLY", "CLASS", 
     "RAISE", "PRINT", "LISTTOSEMARRAY", "SEMARRAYTOFLOATS", "SEMARRAYTOINTS"};
-  int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
-  int numCurKeys = sizeof(curKeys) / sizeof(const char *);
-  int numCurPyth = sizeof(curPythKeys) / sizeof(const char *);
   int numPythKeywords = sizeof(pythKeywords) / sizeof(const char *);
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
 
@@ -1032,8 +944,8 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   }
 
   // Go forward to end of token
+  wordEnd = -1;
   if (completing && lineStart >= 0 && !atWordEnd) {
-    wordEnd = -1;
     for (i = delStart + 1; i < strMacro.GetLength(); i++) {
       ch = strMacro.GetAt(i);
       if (ch == ' ' && wordEnd < 0)
@@ -1200,91 +1112,112 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
 
 
     // Indentation: 
-    indentSize = winApp->mMacroProcessor->GetAutoIndentSize();
-    if (indentSize > 0) {
-
-      // Find start of current line
-      for (lineStart = sel2; lineStart > 0; lineStart--) {
-        ch = strMacro.GetAt(lineStart - 1);
-        if (ch == '\n' || ch == '\r')
-          break;
-      }
-      
-      // Find start of previous non-continuation line with text
-      // Keep track of number of previous continuation lines, whether previous 
-      // nonblank line ends with a : for python, and whether previous line is blank
-      isBlank = GetPrevLineIndexes(strMacro, lineStart, isPython, prevStart, prevEnd, 
-        isContinued);
-      afterBlank = isBlank;
-      foundText = !isBlank && prevStart >= 0;
-      afterContinue = isContinued ? 1 : 0;
-      afterColon = isPython && foundText && strMacro.GetAt(prevEnd) == ':';
-      if (prevStart > 0) {
-        for (;;) {
-          isBlank = GetPrevLineIndexes(strMacro, prevStart, isPython, backStart, backEnd,
-            isContinued);
-
-          // Stop if at start already or we have found nonblank line and this not a
-          // continuation line
-          if (backStart < 0 || (foundText && !isContinued))
-            break;
-
-          // Or, if we are after a continuation line and it is not the first one,
-          // keep track of that and stop because we retain the indent
-          if (afterContinue && isContinued) {
-            afterContinue++;
-            break;
-          }
-
-          // Otherwise adopt this as potentially previous line and keep track if found
-          // a non-blank line and if the first non-blank line ended in :
-          prevStart = backStart;
-          prevEnd = backEnd;
-          if (!isBlank) {
-            if (isPython && !foundText && strMacro.GetAt(prevEnd) == ':')
-              afterColon = true;
-            foundText = true;
-          }
-        }
-      }
-       
-      // Get the previous line indent and add if it matches a keyword, or is after a
-      // colon, or if this is the first continuation line
-      needIndent = 0;
-      if (foundText && (FindIndentAndMatch(strMacro, prevStart, lineStart, prevKeys, 
-        (isPython || afterContinue) ? 0 : numPrevKeys, needIndent) || afterColon ||
-        afterContinue == 1))
-        needIndent += indentSize;
-
-      // Get the current line indent and subtract from needed indent if keyword matches
-      // Also allow toggling if a Python line is after a blank line and is already
-      // at the sam eindent as last line
-      sel1 = strMacro.Find('\r', sel2);
-      i = strMacro.Find('\n', sel2);
-      if (sel1 < 0 && i < 0)
-        sel1 = strMacro.GetLength();
-      else
-        sel1 = B3DMAX(sel1, i);
-      if (FindIndentAndMatch(strMacro, lineStart, sel1, isPython ? curPythKeys : curKeys,
-        B3DCHOICE(afterContinue, 0, isPython ? numCurPyth : numCurKeys), curIndent) || 
-        (isPython && curIndent == needIndent && afterBlank && !afterColon))
-        needIndent = B3DMAX(0, needIndent - indentSize);
-      if (removeIndent)
-        needIndent = B3DMAX(0, curIndent - indentSize);
-
-      // Adjust by deletion or addition
-      numDel = curIndent - needIndent;
-      if (numDel > 0) {
-        strMacro.Delete(lineStart, numDel);
-      } else {
-        for (i = 0; i < -numDel; i++)
-          strMacro.Insert(lineStart, " ");
-      }
-      sel2 -=numDel;
-    }
-
+    IndentCurrentLine(strMacro, sel2, isPython);
   }
   delete [] matchList;
+}
+
+int CMacroEditer::IndentCurrentLine(CString &strMacro, int &sel2, bool isPython)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int lineStart, indentSize, prevStart, needIndent, curIndent, i, sel1;
+  bool foundText;
+  bool isBlank, afterBlank, isContinued, afterColon, isKeyword = false;
+  bool removeIndent = false;
+  int prevEnd, backStart, backEnd, afterContinue, numDel;
+  char ch;
+  const char *prevKeys[] = {"LOOP", "DOLOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY",
+    "CATCH"};
+  const char *curKeys[] = {"ENDLOOP", "ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION",
+    "CATCH", "ENDTRY"};
+  const char *curPythKeys[] = {"EXCEPT", "ELSE:", "ELIF"};
+  int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
+  int numCurKeys = sizeof(curKeys) / sizeof(const char *);
+  int numCurPyth = sizeof(curPythKeys) / sizeof(const char *);
+
+  indentSize = winApp->mMacroProcessor->GetAutoIndentSize();
+  if (indentSize <= 0)
+    return 0;
+
+  // Find start of current line
+  for (lineStart = sel2; lineStart > 0; lineStart--) {
+    ch = strMacro.GetAt(lineStart - 1);
+    if (ch == '\n' || ch == '\r')
+      break;
+  }
+
+  // Find start of previous non-continuation line with text
+  // Keep track of number of previous continuation lines, whether previous 
+  // nonblank line ends with a : for python, and whether previous line is blank
+  isBlank = GetPrevLineIndexes(strMacro, lineStart, isPython, prevStart, prevEnd,
+    isContinued);
+  afterBlank = isBlank;
+  foundText = !isBlank && prevStart >= 0;
+  afterContinue = isContinued ? 1 : 0;
+  afterColon = isPython && foundText && strMacro.GetAt(prevEnd) == ':';
+  if (prevStart > 0) {
+    for (;;) {
+      isBlank = GetPrevLineIndexes(strMacro, prevStart, isPython, backStart, backEnd,
+        isContinued);
+
+      // Stop if at start already or we have found nonblank line and this not a
+      // continuation line
+      if (backStart < 0 || (foundText && !isContinued))
+        break;
+
+      // Or, if we are after a continuation line and it is not the first one,
+      // keep track of that and stop because we retain the indent
+      if (afterContinue && isContinued) {
+        afterContinue++;
+        break;
+      }
+
+      // Otherwise adopt this as potentially previous line and keep track if found
+      // a non-blank line and if the first non-blank line ended in :
+      prevStart = backStart;
+      prevEnd = backEnd;
+      if (!isBlank) {
+        if (isPython && !foundText && strMacro.GetAt(prevEnd) == ':')
+          afterColon = true;
+        foundText = true;
+      }
+    }
+  }
+
+  // Get the previous line indent and add if it matches a keyword, or is after a
+  // colon, or if this is the first continuation line
+  needIndent = 0;
+  if (foundText && (FindIndentAndMatch(strMacro, prevStart, lineStart, prevKeys,
+    (isPython || afterContinue) ? 0 : numPrevKeys, needIndent) || afterColon ||
+    afterContinue == 1))
+    needIndent += indentSize;
+
+  // Get the current line indent and subtract from needed indent if keyword matches
+  // Also allow toggling if a Python line is after a blank line and is already
+  // at the sam eindent as last line
+  sel1 = strMacro.Find('\r', sel2);
+  i = strMacro.Find('\n', sel2);
+  if (sel1 < 0 && i < 0)
+    sel1 = strMacro.GetLength();
+  else
+    sel1 = B3DMAX(sel1, i);
+  if (FindIndentAndMatch(strMacro, lineStart, sel1, isPython ? curPythKeys : curKeys,
+    B3DCHOICE(afterContinue, 0, isPython ? numCurPyth : numCurKeys), curIndent) ||
+    (isPython && curIndent == needIndent && afterBlank && !afterColon))
+    needIndent = B3DMAX(0, needIndent - indentSize);
+  if (removeIndent)
+    needIndent = B3DMAX(0, curIndent - indentSize);
+
+  // Adjust by deletion or addition
+  numDel = curIndent - needIndent;
+  if (numDel > 0) {
+    strMacro.Delete(lineStart, numDel);
+  } else {
+    for (i = 0; i < -numDel; i++)
+      strMacro.Insert(lineStart, " ");
+  }
+  sel2 = B3DMAX(lineStart, sel2 - numDel);
+  return -numDel;
 }
 
 // Check the start of a script for #!pyth... and importing of serialem

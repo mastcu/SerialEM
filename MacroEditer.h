@@ -118,6 +118,7 @@ public:
     int & curIndent);
   static void HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
     int &sel2, bool &setCompletions, bool &completing, bool oneLine);
+  static int IndentCurrentLine(CString &strMacro, int &sel2, bool isPython);
   static bool CheckForPythonAndImport(CString &strMacro, CString &importName);
   static bool GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython, 
     int &indStart, int &indEnd, bool &isContinued);
