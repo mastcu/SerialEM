@@ -922,7 +922,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   const char *curPythKeys[] = {"EXCEPT", "ELSE:", "ELIF"};
   char *pythKeywords[] = {"FOR", "IF", "ELSE:", "ELIF", "TRY:", "WHILE", "DEF", "RETURN",
     "GLOBAL", "BREAK", "CONTINUE", "EXCEPT:", "PASS", "WITH", "FINALLY", "CLASS", 
-    "RAISE"};
+    "RAISE", "PRINT", "LISTTOSEMARRAY", "SEMARRAYTOFLOATS", "SEMARRAYTOINTS"};
   int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
   int numCurKeys = sizeof(curKeys) / sizeof(const char *);
   int numCurPyth = sizeof(curPythKeys) / sizeof(const char *);
@@ -953,6 +953,18 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     atWordEnd = hasSpace || ch == '\n' || ch == '\r';
   }
 
+  // Look back for comment character and prevent further scanning
+  for (lineStart = sel2 - 1; lineStart > 0; lineStart--) {
+    ch = strMacro.GetAt(lineStart - 1);
+    if (ch == '#') {
+      lineStart = -1;
+      atWordEnd = false;
+      break;
+    }
+    if (ch == '\n' || ch == '\r')
+      break;
+  }
+
   // Find the beginning of the line or a previous space/tab
   if (atWordEnd) {
     saveStart = -1;
@@ -962,7 +974,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
         break;
 
       // Save the position of the first character after white space
-      if (ch == ' ' || ch == '\t') {
+      if (ch == ' ' || ch == '\t' || ch == '(') {
         if (saveStart < 0)
           saveStart = lineStart;
 
