@@ -2366,12 +2366,16 @@ void CSerialEMDoc::PostSettingsRead()
       dlgPlacements, colorIndex);
     mWinApp->OpenOrCloseMacroEditors();
   }
+  if (mWinApp->mLogWindow)
+    mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
   mWinApp->AppendToLog("Read settings from: " + mCurrentSettingsPath,
     LOG_SWALLOW_IF_CLOSED);
-  if (mReadScriptPack)
+  if (mReadScriptPack) {
+    if (mWinApp->mLogWindow)
+      mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
     mWinApp->AppendToLog("Read scripts from " + mCurScriptPackPath,
       LOG_SWALLOW_IF_CLOSED);
-  else if (!mCurScriptPackPath.IsEmpty())
+  } else if (!mCurScriptPackPath.IsEmpty())
     mWinApp->AppendToLog("Scripts will be saved to " + mCurScriptPackPath +
       "\r\n   unless you do \"Scripts - Save Package As\" to a different name");
   if (mBasicModeFile.CompareNoCase(mPreReadBasicFile))

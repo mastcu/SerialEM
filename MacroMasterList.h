@@ -774,7 +774,7 @@ MAC_SAME_NAME_ARG(GetItemPointArray, 3, 4, GETITEMPOINTARRAY, ISS)
 MAC_SAME_NAME_ARG(IsImageFileOpen, 1, 4, ISIMAGEFILEOPEN, S)
 MAC_SAME_NAME_NOARG(ReportNumOpenFiles, 0, 4, REPORTNUMOPENFILES)
 MAC_SAME_FUNC_ARG(ReportOpenImageFile, 1, 4, ReportCurrentFilename, REPORTOPENIMAGEFILE, Ii)
-MAC_SAME_NAME_ARG(SetNextLogOutputColor, 1, 4, SETNEXTLOGOUTPUTCOLOR, Iii)
+MAC_SAME_NAME_ARG(SetNextLogOutputStyle, 1, 4, SETNEXTLOGOUTPUTSTYLE, Iiii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

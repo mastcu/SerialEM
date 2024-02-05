@@ -1569,7 +1569,8 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog(mStartupMessage, LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
   if (mStartupInfo) {
     GetStartupMessage();
-    mLogWindow->SetNextLineColor(2);
+    if (mLogWindow)
+      mLogWindow->SetNextLineColorStyle(2, 0);
     AppendToLog(mStartupMessage, LOG_SWALLOW_IF_CLOSED);
     if (mScope->GetNoScope())
       AppendToLog("Running with no microscope connection", LOG_SWALLOW_IF_CLOSED);
@@ -1590,13 +1591,20 @@ BOOL CSerialEMApp::InitInstance()
           "Post-exposure actions,\r\n"
           "  run Camera Timing in the Calibrate menu and update the StartupDelay.", iCam);
   }
+  if (mLogWindow)
+    mLogWindow->SetNextLineColorStyle(0, 1);
   AppendToLog("Read settings from: " + mDocWnd->GetOriginalSettingsPath(),
     LOG_SWALLOW_IF_CLOSED);
+  if (mLogWindow)
+    mLogWindow->SetNextLineColorStyle(0, 1);
   AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
     LOG_SWALLOW_IF_CLOSED);
-  if (mDocWnd->GetReadScriptPack())
+  if (mDocWnd->GetReadScriptPack()) {
+    if (mLogWindow)
+      mLogWindow->SetNextLineColorStyle(0, 1);
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
       LOG_SWALLOW_IF_CLOSED);
+  }
   std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
   message = "";
   for (iCam = 0; iCam < (int)pyVersions->size(); iCam++)

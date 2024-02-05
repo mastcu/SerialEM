@@ -30,11 +30,11 @@ public:
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
   void Append(CString &inString, int lineFlags);
-  void Append(CString &inString, int lineFlags, int colorIndex);
-  void Append(CString &inString, int lineFlags, int red, int green, int blue);
-  int SetNextLineColor(int colorIndex);
-  int SetNextLineColor(int red, int green, int blue);
-  void DoAppend(CString &inString, int lineFlags, int red, int green, int blue);
+  void Append(CString &inString, int lineFlags, int colorIndex, int style);
+  void Append(CString &inString, int lineFlags, int red, int green, int blue, int style);
+  int SetNextLineColorStyle(int colorIndex, int style);
+  int SetNextLineColorStyle(int red, int green, int blue, int style);
+  void DoAppend(CString &inString, int lineFlags, int red, int green, int blue, int style);
   void UpdateAndScrollToEnd();
   void FlushDeferredLines();
   int GetNumVisibleLines();
@@ -90,6 +90,7 @@ private:
   ULONGLONG mLastPosition;   // Last one saved to
   CString mTempPruneName;    // Temporary (or not) file for saving pruned if no file set
   int mNextRed, mNextGreen, mNextBlue;
+  int mNextStyle;
 
 public:
   BOOL SaveFileNotOnStack(CString stackName);

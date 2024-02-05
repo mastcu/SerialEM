@@ -48,6 +48,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mPrunedLength = 0;
   mAppendedLength = 0;
   mNextRed = -1;
+  mNextStyle = -1;
 }
 
 
@@ -76,7 +77,8 @@ END_MESSAGE_MAP()
 // CLogWindow message handlers
 
 // External calls to add text with either a color index or RGB values
-void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, int blue)
+void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, int blue,
+  int style)
 {
   bool deferring = (mWinApp->mMacroProcessor->DoingMacro() || 
     mWinApp->mMacroProcessor->GetNonMacroDeferring()) &&
@@ -97,24 +99,24 @@ void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, i
     mNumDeferred++;
     return;
   }
-  DoAppend(inString, lineFlags, red, green, blue);
+  DoAppend(inString, lineFlags, red, green, blue, style);
 }
 
 
-void CLogWindow::Append(CString & inString, int lineFlags, int colorIndex)
+void CLogWindow::Append(CString & inString, int lineFlags, int colorIndex, int style)
 {
   B3DCLAMP(colorIndex, 0, sizeof(sRGBs) / (3 * sizeof(int)) - 1);
   DoAppend(inString, lineFlags, sRGBs[colorIndex][0], sRGBs[colorIndex][1],
-    sRGBs[colorIndex][2]);
+    sRGBs[colorIndex][2], style);
 }
 
 void CLogWindow::Append(CString &inString, int lineFlags)
 {
-  Append(inString, lineFlags, 0, 0, 0);
+  Append(inString, lineFlags, 0, 0, 0, 0);
 }
 
 // Separate route for setting the color, more conveniently
-int CLogWindow::SetNextLineColor(int colorIndex)
+int CLogWindow::SetNextLineColorStyle(int colorIndex, int style)
 {
   int maxIndex = sizeof(sRGBs) / (3 * sizeof(int)) - 1;
   int retVal = colorIndex < 0 ? maxIndex : 0;
@@ -124,21 +126,26 @@ int CLogWindow::SetNextLineColor(int colorIndex)
   mNextRed = sRGBs[colorIndex][0];
   mNextGreen = sRGBs[colorIndex][1];
   mNextBlue = sRGBs[colorIndex][2];
+  B3DCLAMP(style, 0, 7);
+  mNextStyle = style;
   return retVal;
 }
 
-int CLogWindow::SetNextLineColor(int red, int green, int blue)
+int CLogWindow::SetNextLineColorStyle(int red, int green, int blue, int style)
 {
   int retVal = (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || 
     blue > 255) ? 1 : 0;
   mNextRed = B3DMAX(0, B3DMIN(255, red));
   mNextGreen = B3DMAX(0, B3DMIN(255, green));
   mNextBlue = B3DMAX(0, B3DMIN(255, blue));
+  B3DCLAMP(style, 0, 7);
+  mNextStyle = style;
   return retVal;
 }
 
 // The real routine for adding text to the log
-void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, int blue)
+void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, int blue,
+  int style)
 {
   int oldLen, newLen, lastEnd, pruneInd, lastPrune, pruneSel;
   int pruneCrit = mWinApp->GetAutoPruneLogLines() * 42;
@@ -171,17 +178,35 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
     blue = mNextBlue;
     mNextRed = -1;
   }
+  if (mNextStyle >= 0)
+    style = mNextStyle;
+  mNextStyle = -1;
 
   // If coloring, get the selection index at new end and apply the color to new text
-  if (red || green || blue) {
+  if (red || green || blue || style) {
     m_editWindow.SetSel(-1, -1);
     m_editWindow.GetSel(sel2, sel2);
     CHARFORMAT cf;
     m_editWindow.SetSel(sel1, sel2);
     cf.cbSize = sizeof(CHARFORMAT);
-    cf.dwMask = CFM_COLOR;
-    cf.crTextColor = RGB(red, green, blue);
+    cf.dwMask = 0;
     cf.dwEffects = 0;
+    if (red || green || blue) {
+      cf.dwMask = CFM_COLOR;
+      cf.crTextColor = RGB(red, green, blue);
+    }
+    if (style & 1) {
+      cf.dwMask |= CFM_BOLD;
+      cf.dwEffects = CFM_BOLD;
+    }
+    if (style & 2) {
+      cf.dwMask |= CFM_ITALIC;
+      cf.dwEffects |= CFM_ITALIC;
+    }
+    if (style & 4) {
+      cf.dwMask |= CFM_UNDERLINE;
+      cf.dwEffects |= CFM_UNDERLINE;
+    }
     m_editWindow.SetWordCharFormat(cf);
     m_editWindow.SetSel(-1, -1);
   }
@@ -281,7 +306,7 @@ int CLogWindow::StringIndexToRichEditSel(CString &str, int index)
 void CLogWindow::FlushDeferredLines()
 {
   if (mNumDeferred > 0 || !mDeferredLines.IsEmpty()) {
-    DoAppend(mDeferredLines, 0, 0, 0, 0);
+    DoAppend(mDeferredLines, 0, 0, 0, 0, 0);
     mNumDeferred = 0;
     mDeferredLines = "";
   }

@@ -759,13 +759,15 @@
             no text, without substituting variables.&nbsp; <br>Not from Python.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetNextLogOutputColor #I [#G #B]</TD>
-          <TD>Sets the color of the next output printed to the log with either the stock color given by index <b>#I</b>
+          <TD class="scriptcommand">SetNextLogOutputStyle #S [#I] [#G #B]</TD>
+          <TD>Sets the type style and color of the next output printed to the log.&nbsp; The style is set with
+            <b>#S</b>, which can be the sum of 1 for bold, 2 for italics, and 4 for underlined.&nbsp; The
+            color is set with either the stock color given by index <b>#I</b>
             or a custom color specified by red, green, and blue values in <b>#I</b>, <b>#G</b>, and <b>#B</b>. &nbsp;
             Stock colors with indexes 0 to 6 are black, red, green, blue, orange, magenta, and cyan.&nbsp; The
-            color will apply to one of the echo statements or to the first line put out by some other 
-            operation.&nbsp; If the next output to contains multiple lines, they will all be 
-            colored.&nbsp; Command added in 4.2, 4-Feb-24.</TD>
+            color and style will apply to one of the echo statements or to the first line put out by some other 
+            operation.&nbsp; If the next output to the log contains multiple lines, they will all be 
+            modified.&nbsp; Command added in 4.2, 5-Feb-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Pause [text]</TD>

@@ -5043,7 +5043,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
       valve = "\r\nERROR DURING NAVIGATOR ACQUIRE WITH THIS MESSAGE:\r\n";
     mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
     if (!(tryLevel > 0 && tryLevel <= MAX_LOOP_DEPTH && noCatchMess[tryLevel - 1])) {
-      mWinApp->mLogWindow->SetNextLineColor(1);
+      if (mWinApp->mLogWindow)
+        mWinApp->mLogWindow->SetNextLineColorStyle(1, 0);
       mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     }
     return retval;
@@ -5119,7 +5120,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   else
     mLastNoBoxMessage = CString("\r\nTILT SERIES CONTINUING WITH THIS ERROR MESSAGE:\r\n") +
       message;
-  mWinApp->mLogWindow->SetNextLineColor(1);
+  if (mWinApp->mLogWindow)
+    mWinApp->mLogWindow->SetNextLineColorStyle(1, 0);
   mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
   mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
   if (terminate) {

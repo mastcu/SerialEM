@@ -8,8 +8,9 @@ significance, for the stable release version
 2/5/24: Changed "Fix" button in script editor to re-indent selected lines
 properly, equivalent to typing Tab on each one.
 
-2/4/24: Added ability to set text colors in log window and a script command to
-set the color for the next output; SEMMessageBox outputs will be red.
+2/4/24: Added ability to set text colors and type styles OBin log window and a
+script command to set the color and style for the next output; SEMMessageBox
+outputs will be red.
 
 2/4/24: Put argument list summary from script help file on the completions
 line od a script editor when completion character is typed within or at end of

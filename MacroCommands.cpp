@@ -7960,23 +7960,29 @@ int CMacCmd::EchoEval(void)
   return 0;
 }
 
-// SetNextLogOutputColor
-int CMacCmd::SetNextLogOutputColor(void)
+// SetNextLogOutputStyle
+int CMacCmd::SetNextLogOutputStyle(void)
 {
   int maxInd;
+  if (mWinApp->mLogWindow)
+    mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED, 1);
   if (mItemEmpty[2]) {
-    maxInd = mWinApp->mLogWindow->SetNextLineColor(mItemInt[1]);
+    mWinApp->mLogWindow->SetNextLineColorStyle(0, mItemInt[1]);
+  } else if (mItemEmpty[3]) {
+    maxInd = mWinApp->mLogWindow->SetNextLineColorStyle(mItemInt[2], mItemInt[1]);
     if (maxInd) {
-      PrintfToLog("Warning: color indexes must be between 0 and %d", maxInd);
-      mWinApp->mLogWindow->SetNextLineColor(mItemInt[1]);
+      PrintfToLog("Warning: stock color indexes must be between 0 and %d", maxInd);
+      mWinApp->mLogWindow->SetNextLineColorStyle(mItemInt[2], mItemInt[1]);
     }
   } else {
-    if (mItemEmpty[3])
+    if (mItemEmpty[4])
       ABORT_LINE("You must enter one color index value or red, green, blue values for"
         " line:\n\n");
-    if (mWinApp->mLogWindow->SetNextLineColor(mItemInt[1], mItemInt[2], mItemInt[3])) {
+    if (mWinApp->mLogWindow->SetNextLineColorStyle(mItemInt[2], mItemInt[3], mItemInt[4],
+      mItemInt[1])) {
       mWinApp->AppendToLog("WARNING: red, green, blue values must be between 0 and 255");
-      mWinApp->mLogWindow->SetNextLineColor(mItemInt[1], mItemInt[2], mItemInt[3]);
+      mWinApp->mLogWindow->SetNextLineColorStyle(mItemInt[2], mItemInt[3], mItemInt[4],
+        mItemInt[1]);
     }
   }
   return 0;
