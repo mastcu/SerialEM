@@ -893,6 +893,7 @@ BOOL CSerialEMApp::InitInstance()
 
   AfxEnableControlContainer();
   sMainThreadID = GetCurrentThreadId();
+  AfxInitRichEdit2();
 
   // Uncomment lines in stdafx.h to enable this.  The break can be used if you can get
   // leaks to come out at the same memory allocation #
@@ -1568,6 +1569,7 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog(mStartupMessage, LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
   if (mStartupInfo) {
     GetStartupMessage();
+    mLogWindow->SetNextLineColor(2);
     AppendToLog(mStartupMessage, LOG_SWALLOW_IF_CLOSED);
     if (mScope->GetNoScope())
       AppendToLog("Running with no microscope connection", LOG_SWALLOW_IF_CLOSED);

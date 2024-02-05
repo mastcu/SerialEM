@@ -759,6 +759,15 @@
             no text, without substituting variables.&nbsp; <br>Not from Python.&nbsp; Command added in 4.9, 1/8/21.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetNextLogOutputColor #I [#G #B]</TD>
+          <TD>Sets the color of the next output printed to the log with either the stock color given by index <b>#I</b>
+            or a custom color specified by red, green, and blue values in <b>#I</b>, <b>#G</b>, and <b>#B</b>. &nbsp;
+            Stock colors with indexes 0 to 6 are black, red, green, blue, orange, magenta, and cyan.&nbsp; The
+            color will apply to one of the echo statements or to the first line put out by some other 
+            operation.&nbsp; If the next output to contains multiple lines, they will all be 
+            colored.&nbsp; Command added in 4.2, 4-Feb-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">Pause [text]</TD>
           <TD>Opens message box with optional <b>text</b> plus question of whether to proceed with
             script.&nbsp; Is not suppressed by NoMessageBoxOnError.</TD>
@@ -1931,8 +1940,7 @@
             type.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">TransformToMatchBuffer buf1 buf2 [obuf] [#CX] 
-            [#CY] [#XS] [#YS]</TD>
+          <TD class="scriptcommand">TransformToMatchBuffer buf1 buf2 [obuf] [#CX] [#CY] [#XS] [#YS]</TD>
           <TD>Scales and rotates the image in buffer <b>buf1</b> to match the pixel size of the image in <b>buf2</b>&nbsp; Enter
             an optional buffer <B>obuf</B> to place the result in, or -1 for the default (A).&nbsp; Enter
             optional <b>#CX</b> and <b>#CY</b> to set the center of the operation, or -1 and -1 for the
@@ -1942,8 +1950,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] {#CY] [#XS] 
-            [#YS] [#B] [#C]</TD>
+          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] {#CY] [#XS] [#YS] [#B] [#C]</TD>
           <TD>Scales and rotates the image in buffer <b>buf</b> to match the pixel size at magnification index
             <b>#M</b>.&nbsp; This command is similar to 'TransformtoMatchBuffer' except that the binning and
             camera to match are optionally specified with <b>#B</b> and <b>#C</b> (-1 for the same as the
@@ -4108,8 +4115,7 @@
             <i>ReportedValue1</i> is set to the total number of Record images to be taken.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetMultiShotParams #N [#C] [#O] [#D] [#S] [#E] [#F] [#B] 
-            [#H] [#R2] [#N2] [#O2] [#X #Y] [#DH] </TD>
+          <TD class="scriptcommand">SetMultiShotParams #N [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2] [#X #Y] [#DH] </TD>
           <TD>Sets parameters for Multiple Records persistently.&nbsp; The first 12 parameters have 
             exactly the same meaning as for the &#39;MultipleRecords&#39; command, except that the 
             entry for <b>#H</b> can be the sum of 1, 2, 16 or 32, and 64 or 128.&nbsp; In addition:<br />
@@ -5057,32 +5063,34 @@
         <TR>
           <TD class="scriptcommand">RealignToNavItem #R [#C] [#S #N #Z] [#P]</TD>
           <TD>Realigns to the current Navigator item, or to the item that this script is being
-            run on. For <b>#R</b>, enter 1 to restore the microscope state to the current state
-            after the procedure, or 0 not to.&nbsp; For optional <b>#C</b>, enter 1 to use
+            run on. <br />
+            &nbsp;&nbsp; For <b>#R</b>, enter 1 to restore the microscope state to the current state
+            after the procedure, or 0 not to.&nbsp; <br />
+            &nbsp;&nbsp; For optional <b>#C</b>, enter 1 to use
             continuous acquisition mode and end it at end of procedure, or 2 to leave it
-            running if possible. The three optional entries <b>#S</b>, <b>#N</b>, <b>#Z</b> control the resetting
-            of image shift at the end of the procedure when aligning a single map at one
-            magnification.&nbsp; (Entries in the Navigator Align Setup dialog do <i>not</i> apply
+            running if possible. <br />
+            &nbsp;&nbsp; The three optional entries <b>#S</b>, <b>#N</b>, <b>#Z</b> 
+            control the resetting of image shift at the end of the procedure when aligning to a single 
+            map.&nbsp; (Entries in the Navigator Align Setup dialog do <i>not</i> apply
              here).&nbsp; It will reset image shift and move the stage to compensate,
             realigning with a new image up to <b>#N</b> times and if the starting shift is more
             than the criterion <b>#S</b>.&nbsp; Enter 0 or 1 for <b>#Z</b> to end with nonzero or zero
             image shift, respectively, i.e. with the image realigned or with a final image
             shift reset and stage movement.&nbsp; This procedure occurs only if realignment
-            is to a single map.&nbsp; All three values must be entered if any are, plus a
+            is to a single map or a scaled map at a low enough magnification.&nbsp; All three values must be entered if any are, plus a
             value for <b>#C</b>.&nbsp; An entry of 0 for <b>#N</b> and 1 for <b>#Z</b> will make it move the
-            stage to the target position and skip the regular realignment there.&nbsp; The optional
-            entry [#P] indicates a camera parameter set to use for a third round of alignment to a scaled-up
+            stage to the target position and skip the regular realignment there.&nbsp; Enter -1 for any
+             of these values to use the corresponding setting in the <a href="hidd_navrealign.htm">Navigator Align Setup</a> dialog.&nbsp; <i>Unlike
+            more recent commands, these settings do not apply as defaults if none of these arguments are entered.</i>&nbsp;<br />
+            &nbsp;&nbsp;  The optional
+            entry <b>[#P]</b> indicates a camera parameter set to use for a third round of alignment to a scaled-up
             extract from the map.&nbsp; It can be P, R, V, or S.
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RealignToOtherItem #I #R [#C] [#S #N #Z]</TD>
+          <TD class="scriptcommand">RealignToOtherItem #I #R [#C] [#S #N #Z] [#P]</TD>
           <TD>Realigns to the Navigator item whose index in the table is <b>#I</b>, numbered from 1.
-            For <b>#R</b>, enter 1 to restore the microscope state to the current state after the
-            procedure, or 0 not to.&nbsp; For optional <b>#C</b>, enter 1 to use continuous
-            acquisition mode and end it at end of procedure, or 2 to leave it running if
-            possible.&nbsp; Entries for <b>#S</b>, <b>#N</b>, and <b>#Z</b> control image shift reset when
-            aligning to a single map, as described for &#39;RealignToNavItem&#39;.</TD>
+            Other entries are as described for &#39;RealignToNavItem&#39;.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RealignToMapDrawnOn #I #R</TD>

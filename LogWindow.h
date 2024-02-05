@@ -30,15 +30,21 @@ public:
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
   void Append(CString &inString, int lineFlags);
-  void DoAppend(CString &inString, int lineFlags);
+  void Append(CString &inString, int lineFlags, int colorIndex);
+  void Append(CString &inString, int lineFlags, int red, int green, int blue);
+  int SetNextLineColor(int colorIndex);
+  int SetNextLineColor(int red, int green, int blue);
+  void DoAppend(CString &inString, int lineFlags, int red, int green, int blue);
   void UpdateAndScrollToEnd();
   void FlushDeferredLines();
+  int GetNumVisibleLines();
+  int StringIndexToRichEditSel(CString &str, int index);
   CLogWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
   //{{AFX_DATA(CLogWindow)
   enum { IDD = IDD_LOGWINDOW };
-  CEdit m_editWindow;
+  CRichEditCtrl m_editWindow;
   CString m_strLog;
   //}}AFX_DATA
 
@@ -83,10 +89,12 @@ private:
   ULONGLONG mPrunedPosition; // Position of file where pruned length was written
   ULONGLONG mLastPosition;   // Last one saved to
   CString mTempPruneName;    // Temporary (or not) file for saving pruned if no file set
+  int mNextRed, mNextGreen, mNextBlue;
 
 public:
   BOOL SaveFileNotOnStack(CString stackName);
   void CloseLog(void) {OnCancel();};
+  CEdit m_editDummy;
 };
 
 //{{AFX_INSERT_LOCATION}}

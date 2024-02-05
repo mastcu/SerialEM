@@ -1387,8 +1387,9 @@ STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_
 CAPTION "Log"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_LOGEDIT,3,3,276,129,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON      "?",IDC_BUTHELP,104,0,10,10,NOT WS_VISIBLE
+    EDITTEXT        IDC_EDIT_DUMMY,55,11,40,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    CONTROL         "",IDC_LOGEDIT,"RichEdit20A",ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL,6,6,276,129
 END
 
 IDD_MACRO DIALOGEX 0, 0, 132, 187
@@ -3813,7 +3814,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,185,107,10
     PUSHBUTTON      "?",IDC_BUTHELP,157,288,10,10
     CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,83,106,8
-    CTEXT           "These settings apply to both Align to Template and Realign to Item, but only when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,127,164,16
+    CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,127,164,16
     CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,144,160,8
     CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,59,156,8
     CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,198,157,1
@@ -4911,6 +4912,11 @@ BEGIN
 END
 
 IDD_MULTI_GRID AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_LOGWINDOW AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

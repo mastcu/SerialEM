@@ -25,6 +25,9 @@ static char THIS_FILE[] = __FILE__;
 // CLogWindow dialog
 
 static const char *sPruneEnding = " for pruned lines...\r\n";
+static int sRGBs[][3] = {{0, 0, 0},  {210, 0, 0},{0, 140, 0}, {0, 0, 210}, {255, 130, 0},
+{210, 0, 210}, {0, 180, 180}};
+
 
 CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   : CBaseDlg(CLogWindow::IDD, pParent)
@@ -44,6 +47,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mMaxSecondsToDefer = 3.;
   mPrunedLength = 0;
   mAppendedLength = 0;
+  mNextRed = -1;
 }
 
 
@@ -53,8 +57,9 @@ void CLogWindow::DoDataExchange(CDataExchange* pDX)
   //{{AFX_DATA_MAP(CLogWindow)
   DDX_Control(pDX, IDC_LOGEDIT, m_editWindow);
   DDX_Text(pDX, IDC_LOGEDIT, m_strLog);
-	DDV_MaxChars(pDX, m_strLog, 25000000);
-	//}}AFX_DATA_MAP
+  DDV_MaxChars(pDX, m_strLog, 25000000);
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_EDIT_DUMMY, m_editDummy);
 }
 
 
@@ -70,8 +75,8 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CLogWindow message handlers
 
-// External call to add text
-void CLogWindow::Append(CString &inString, int lineFlags)
+// External calls to add text with either a color index or RGB values
+void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, int blue)
 {
   bool deferring = (mWinApp->mMacroProcessor->DoingMacro() || 
     mWinApp->mMacroProcessor->GetNonMacroDeferring()) &&
@@ -92,14 +97,52 @@ void CLogWindow::Append(CString &inString, int lineFlags)
     mNumDeferred++;
     return;
   }
-  DoAppend(inString, lineFlags);
+  DoAppend(inString, lineFlags, red, green, blue);
+}
+
+
+void CLogWindow::Append(CString & inString, int lineFlags, int colorIndex)
+{
+  B3DCLAMP(colorIndex, 0, sizeof(sRGBs) / (3 * sizeof(int)) - 1);
+  DoAppend(inString, lineFlags, sRGBs[colorIndex][0], sRGBs[colorIndex][1],
+    sRGBs[colorIndex][2]);
+}
+
+void CLogWindow::Append(CString &inString, int lineFlags)
+{
+  Append(inString, lineFlags, 0, 0, 0);
+}
+
+// Separate route for setting the color, more conveniently
+int CLogWindow::SetNextLineColor(int colorIndex)
+{
+  int maxIndex = sizeof(sRGBs) / (3 * sizeof(int)) - 1;
+  int retVal = colorIndex < 0 ? maxIndex : 0;
+  if (colorIndex < 0 || colorIndex > maxIndex)
+    retVal = maxIndex;
+  B3DCLAMP(colorIndex, 0, maxIndex);
+  mNextRed = sRGBs[colorIndex][0];
+  mNextGreen = sRGBs[colorIndex][1];
+  mNextBlue = sRGBs[colorIndex][2];
+  return retVal;
+}
+
+int CLogWindow::SetNextLineColor(int red, int green, int blue)
+{
+  int retVal = (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || 
+    blue > 255) ? 1 : 0;
+  mNextRed = B3DMAX(0, B3DMIN(255, red));
+  mNextGreen = B3DMAX(0, B3DMIN(255, green));
+  mNextBlue = B3DMAX(0, B3DMIN(255, blue));
+  return retVal;
 }
 
 // The real routine for adding text to the log
-void CLogWindow::DoAppend(CString &inString, int lineFlags)
+void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, int blue)
 {
-  int oldLen, newLen, lastEnd, pruneInd, lastPrune;
+  int oldLen, newLen, lastEnd, pruneInd, lastPrune, pruneSel;
   int pruneCrit = mWinApp->GetAutoPruneLogLines() * 42;
+  long sel1, sel2;
   UINT mode = CFile::modeWrite | CFile::shareDenyWrite;
   UpdateData(true);
   oldLen = m_strLog.GetLength();
@@ -108,12 +151,42 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags)
     if (lastEnd > 0)
       m_strLog = m_strLog.Left(lastEnd + 1);
   }
+
+  // The rich edit won't tell us directly the length of internal string, so set selection
+  // to end and get the value
+  m_editWindow.SetSel(-1, -1);
+  m_editWindow.GetSel(sel1, sel1);
   m_strLog += _T(inString);
   mUnsaved = true;
   newLen = m_strLog.GetLength();
   mAppendedLength += newLen - oldLen;
 
-  // Scroll to the end - still can't get cursor there
+  // Add text with Replace of empty selection at end
+  m_editWindow.ReplaceSel((LPCTSTR)inString);
+
+  // Use up the next color
+  if (mNextRed >= 0) {
+    red = mNextRed;
+    green = mNextGreen;
+    blue = mNextBlue;
+    mNextRed = -1;
+  }
+
+  // If coloring, get the selection index at new end and apply the color to new text
+  if (red || green || blue) {
+    m_editWindow.SetSel(-1, -1);
+    m_editWindow.GetSel(sel2, sel2);
+    CHARFORMAT cf;
+    m_editWindow.SetSel(sel1, sel2);
+    cf.cbSize = sizeof(CHARFORMAT);
+    cf.dwMask = CFM_COLOR;
+    cf.crTextColor = RGB(red, green, blue);
+    cf.dwEffects = 0;
+    m_editWindow.SetWordCharFormat(cf);
+    m_editWindow.SetSel(-1, -1);
+  }
+
+  // Scroll to the end (no more update there)
   UpdateAndScrollToEnd();
 
   // See if it is time to autoprune
@@ -134,8 +207,14 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags)
       OpenAndWriteFile(mode, pruneInd, 0);
       mPrunedLength += pruneInd;
       mPrunedPosition = mLastPosition;
-      m_strLog = "See " + (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) +
-        sPruneEnding + m_strLog.Mid(pruneInd);
+
+      // Need to operate on the internal string; replace what is being pruned with the 
+      // "See ..." text
+      pruneSel = StringIndexToRichEditSel(m_strLog, pruneInd);
+      m_editWindow.SetSel(0, pruneSel);
+      m_editWindow.ReplaceSel((LPCTSTR)("See " +
+        (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) + sPruneEnding));
+      UpdateData(true);
       mAppendedLength = m_strLog.GetLength();
       UpdateAndScrollToEnd();
     }
@@ -151,19 +230,58 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags)
   }
 }
 
-// Scroll to the end - still can't get cursor there
+// Scroll to the end
 void CLogWindow::UpdateAndScrollToEnd()
 {
-  UpdateData(false);
-  int line = m_editWindow.GetLineCount();
-  m_editWindow.LineScroll(line);
-
+  int nVisible = GetNumVisibleLines();
+  m_editWindow.LineScroll(INT_MAX);
+  m_editWindow.LineScroll(-nVisible);
 }
 
+// Get the number of visible lines, from
+// https://www.codeproject.com/Articles/12093/Using-RichEditCtrl-to-Display-Formatted-Logs
+int CLogWindow::GetNumVisibleLines()
+{
+  CRect rect;
+  long nFirstChar, nLastChar;
+  long nFirstLine, nLastLine;
+
+  // Get client rect of rich edit control
+  m_editWindow.GetClientRect(rect);
+
+  // Get character index close to upper left corner
+  nFirstChar = m_editWindow.CharFromPos(CPoint(0, 0));
+
+  // Get character index close to lower right corner
+  nLastChar = m_editWindow.CharFromPos(CPoint(rect.right, rect.bottom));
+  if (nLastChar < 0)
+  {
+    nLastChar = m_editWindow.GetTextLength();
+  }
+
+  // Convert to lines
+  nFirstLine = m_editWindow.LineFromChar(nFirstChar);
+  nLastLine = m_editWindow.LineFromChar(nLastChar);
+
+  return (nLastLine - nFirstLine);
+}
+
+// The only way to get from the index in a string  to the internal selection index is to
+// count lines in the string
+int CLogWindow::StringIndexToRichEditSel(CString &str, int index)
+{
+  int ind = -1;
+  int selInd = index;
+  while ((ind = str.Find("\r\n", ind + 1)) >= 0 && ind < index)
+    selInd--;
+  return selInd;
+}
+
+// Dump deferred lines as one string in black
 void CLogWindow::FlushDeferredLines()
 {
   if (mNumDeferred > 0 || !mDeferredLines.IsEmpty()) {
-    DoAppend(mDeferredLines, 0);
+    DoAppend(mDeferredLines, 0, 0, 0, 0);
     mNumDeferred = 0;
     mDeferredLines = "";
   }
@@ -318,7 +436,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
 int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
 {
   CFile *cFile = NULL;
-  int retval = 0, addOff = 0, tempInd;
+  int retval = 0, addOff = 0, tempInd, addSel;
   CString saveFile = mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile;
   mLastFilePath = "";
   CString message;
@@ -348,8 +466,13 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
     mAppendedLength -= length;
     mUnsaved = mAppendedLength > length;
     if (addOff) {
-      m_strLog = "See " + (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) +
-        sPruneEnding + m_strLog.Mid(addOff);
+
+      // Modify internal string
+      addSel = StringIndexToRichEditSel(m_strLog, addOff);
+      m_editWindow.SetSel(0, addSel);
+      m_editWindow.ReplaceSel((LPCTSTR)("See " + 
+        (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) + sPruneEnding));
+      UpdateData(true);
       mAppendedLength = m_strLog.GetLength();
       UpdateAndScrollToEnd();
     }
@@ -404,8 +527,11 @@ int CLogWindow::ReadAndAppend()
     buffer = new char[length + 10];
     nread = cFile->Read(buffer, length + 9);
     buffer[nread] = 0x00;
-    m_strLog = CString(buffer) + m_strLog;
-    UpdateData(false);
+    m_editWindow.SetSel(0, 0);
+    m_editWindow.ReplaceSel(buffer);
+    UpdateAndScrollToEnd();
+    //m_strLog = CString(buffer) + m_strLog;
+    //UpdateData(false);
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -502,7 +628,7 @@ void CLogWindow::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
 BOOL CLogWindow::OnInitDialog() 
 {
   CBaseDlg::OnInitDialog();
-  CMacroEditer::MakeMonoFont(&m_editWindow);
+  CMacroEditer::MakeMonoFont(&m_editDummy);
   if (CMacroEditer::mHasMonoFont > 0 && mWinApp->GetMonospacedLog())
     m_editWindow.SetFont(&CMacroEditer::mMonoFont);
   

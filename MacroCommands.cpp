@@ -7960,6 +7960,28 @@ int CMacCmd::EchoEval(void)
   return 0;
 }
 
+// SetNextLogOutputColor
+int CMacCmd::SetNextLogOutputColor(void)
+{
+  int maxInd;
+  if (mItemEmpty[2]) {
+    maxInd = mWinApp->mLogWindow->SetNextLineColor(mItemInt[1]);
+    if (maxInd) {
+      PrintfToLog("Warning: color indexes must be between 0 and %d", maxInd);
+      mWinApp->mLogWindow->SetNextLineColor(mItemInt[1]);
+    }
+  } else {
+    if (mItemEmpty[3])
+      ABORT_LINE("You must enter one color index value or red, green, blue values for"
+        " line:\n\n");
+    if (mWinApp->mLogWindow->SetNextLineColor(mItemInt[1], mItemInt[2], mItemInt[3])) {
+      mWinApp->AppendToLog("WARNING: red, green, blue values must be between 0 and 255");
+      mWinApp->mLogWindow->SetNextLineColor(mItemInt[1], mItemInt[2], mItemInt[3]);
+    }
+  }
+  return 0;
+}
+
 // verbose
 int CMacCmd::Verbose(void)
 {
@@ -10252,21 +10274,23 @@ int CMacCmd::RealignToNavItem(void)
 {
   CString report;
   BOOL truth, justMove = false;
-  int index, index2, ix0, ix1, iy0, setForScaled = -1;
-  float bmax;
+  NavAlignParams *params = mNavHelper->GetNavAlignParams();
+  int index, index2, iters, ifZero, iy0, setForScaled = -1;
+  float thresh;
   ABORT_NONAV;
   truth = CMD_IS(REALIGNTOOTHERITEM);
   index2 = truth ? 2 : 1;
   index = mItemInt[1] - 1;
-  bmax = 0.;
-  ix1 = ix0 = 0;
+  thresh = 0.;
+  ifZero = iters = 0;
   if (!mItemEmpty[index2 + 2]) {
     if (mItemEmpty[index2 + 4])
       ABORT_LINE("Entry requires three values for controlling image shift reset in:"
       "\n\n");
-    bmax = mItemFlt[index2 + 2];
-    ix0 = mItemInt[index2 + 3];
-    ix1 = mItemInt[index2 + 4];
+    thresh = mItemFlt[index2 + 2] < 0 ? params->resetISthresh : mItemFlt[index2 + 2];
+    iters = mItemInt[index2 + 3] < 0 ? params->maxNumResetIS : mItemInt[index2 + 3];
+    ifZero = B3DCHOICE(mItemInt[index2 + 4] < 0, params->leaveISatZero ? 1 : 0, 
+      mItemInt[index2 + 4]);
     justMove = !mItemEmpty[index2 + 5] && mItemInt[index2 + 5] != 0;
   }
   if (!mItemEmpty[index2 + 1])
@@ -10278,10 +10302,10 @@ int CMacCmd::RealignToNavItem(void)
     mWinApp->LowDoseMode())
     ABORT_LINE("Realign to scaled map can not be done with Focus or Trial area");
   if (truth)
-    iy0 = mNavigator->RealignToOtherItem(index, mItemInt[index2] != 0, bmax, ix0,
-      ix1, justMove, setForScaled);
+    iy0 = mNavigator->RealignToOtherItem(index, mItemInt[index2] != 0, thresh, iters,
+      ifZero, justMove, setForScaled);
   else
-    iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, bmax, ix0, ix1,
+    iy0 = mNavigator->RealignToCurrentItem(mItemInt[index2] != 0, thresh, iters, ifZero,
       justMove, setForScaled);
   mNavHelper->SetContinuousRealign(0);
   if (iy0) {
