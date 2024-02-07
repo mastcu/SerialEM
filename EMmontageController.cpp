@@ -1713,6 +1713,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   mNumSinceRealign = 0;
   mNumOverwritePieces = 0;
   mDriftRepeatCount = 0;
+  mDidBlockIS = 0;
 
   // If doing multishot, fetch and set up the parameters
   if (mUsingMultishot) {
@@ -1984,45 +1985,48 @@ int EMmontageController::DoNextPiece(int param)
       mMovingStage = true;
       return 0;
     
-    } else if (mAction == CHECK_STAGE && moveStage && !precooking)
-    {
+    } else if (mAction == CHECK_STAGE && moveStage && !precooking) {
+      if (mDidBlockIS > 0) {
+        mDidBlockIS = 0;
+      } else {
 
-      // For HQ use, set the extra delay time if this wasn't done in premove
-      delay = 1000. * mParam->hqDelayTime;
-      if (!mPreMovedStage && mParam->useHqParams && 
-        delay > mShiftManager->GetStageMovedDelay())
+        // For HQ use, set the extra delay time if this wasn't done in premove
+        delay = 1000. * mParam->hqDelayTime;
+        if (!mPreMovedStage && mParam->useHqParams &&
+          delay > mShiftManager->GetStageMovedDelay())
           mShiftManager->SetStageDelayToUse(delay);
 
-      mPreMovedStage = false;
-      if (GetDebugOutput('S')) {
-        mScope->FastStagePosition(stageX, stageY, sterr);
-        gotStageXY = true;
-        SEMTrace('S', "Piece %d %d %d at actual stage coords %.3f %.3f", mPieceX, 
-          mPieceY, mParam->zCurrent, stageX, stageY);
-      }
-
-      // If stage did not move far enough try a few times
-      if (mMaxStageError > 0.) {
-        if (!gotStageXY)
+        mPreMovedStage = false;
+        if (GetDebugOutput('S')) {
           mScope->FastStagePosition(stageX, stageY, sterr);
-        gotStageXY = true;
-        ix = TestStageError(stageX, stageY, sterr);
-        if (ix > 0) {
-          report.Format("Stage is %.2f microns from intended position; %s", sterr,
-            mNumStageErrors >= 3 ? (mStopOnStageError ? "giving up and stopping" :
-              "giving up and going on") : "trying again");
-          mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-          if (mNumStageErrors < 3) {
-            mMovingStage = true;
-            mAction = MOVE_STAGE;
-            mScope->MoveStage(mMoveInfo, mNeedBacklash);
-            mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
-            return 0;
-          }
-          if (mStopOnStageError) {
-            mMovingStage = false;
-            StopMontage();
-            return 1;
+          gotStageXY = true;
+          SEMTrace('S', "Piece %d %d %d at actual stage coords %.3f %.3f", mPieceX,
+            mPieceY, mParam->zCurrent, stageX, stageY);
+        }
+
+        // If stage did not move far enough try a few times
+        if (mMaxStageError > 0.) {
+          if (!gotStageXY)
+            mScope->FastStagePosition(stageX, stageY, sterr);
+          gotStageXY = true;
+          ix = TestStageError(stageX, stageY, sterr);
+          if (ix > 0) {
+            report.Format("Stage is %.2f microns from intended position; %s", sterr,
+              mNumStageErrors >= 3 ? (mStopOnStageError ? "giving up and stopping" :
+                "giving up and going on") : "trying again");
+            mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+            if (mNumStageErrors < 3) {
+              mMovingStage = true;
+              mAction = MOVE_STAGE;
+              mScope->MoveStage(mMoveInfo, mNeedBacklash);
+              mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
+              return 0;
+            }
+            if (mStopOnStageError) {
+              mMovingStage = false;
+              StopMontage();
+              return 1;
+            }
           }
         }
       }
@@ -2051,12 +2055,13 @@ int EMmontageController::DoNextPiece(int param)
     } else if (mAction == SET_IMAGE_SHIFT && (!moveStage || mImShiftInBlocks)) {
 
       // Do shift unconditionally because the predicted error may have changed
-      ISX = mMoveInfo.x;
-      ISY = mMoveInfo.y;
+      ISX = mImShiftInBlocks ? mBlockISMoveInfo.x : mMoveInfo.x;
+      ISY = mImShiftInBlocks ? mBlockISMoveInfo.y : mMoveInfo.y;
       mScope->SetImageShift(ISX, ISY);
       mShiftManager->SetISTimeOut(delayFactor * mShiftManager->GetLastISDelay());
       SEMTrace('S', "Piece %d, shifting to %.4f, %.4f with delay %.3f", mPieceIndex,
         ISX, ISY, MONTAGE_DELAY_FACTOR * mShiftManager->GetLastISDelay());
+      mDidBlockIS = mImShiftInBlocks ? 1 : 0;
 
       // Change focus if called for
       if (mParam->adjustFocus && !mReadingMontage)
@@ -2072,14 +2077,15 @@ int EMmontageController::DoNextPiece(int param)
           postISY = mBaseISY;
         } else {
           ComputeMoveToPiece(nextPiece, false, iDelX, iDelY, adjISX, adjISY);
-          postISX = mMoveInfo.x;
-          postISY = mMoveInfo.y;
+          postISX = mImShiftInBlocks ? mBlockISMoveInfo.x : mMoveInfo.x;
+          postISY = mImShiftInBlocks ? mBlockISMoveInfo.y : mMoveInfo.y;
         }
         delay = (int)(1000. * delayFactor *
           mShiftManager->ComputeISDelay(postISX - ISX, postISY - ISY));
         mCamera->QueueImageShift(postISX, postISY, delay);
         SEMTrace('S', "Piece %d, queueing IS to %.4f, %.4f with delay %.3f",
           mPieceIndex, postISX, postISY, 0.001 * delay);
+        mDidBlockIS = mImShiftInBlocks ? -1 : 0;
 
       }
 
@@ -2136,12 +2142,14 @@ int EMmontageController::DoNextPiece(int param)
     } else if (mAction == ACQUIRE_PIECE && !precooking) {
       if (mCamera->CameraBusy())
         timeOut += 60000;
-      SEMTrace('M', "DoNextPiece Starting capture%s", mPreMovedStage ? 
-        " with stage move":"");
+      SEMTrace('M', "DoNextPiece Starting capture%s", B3DCHOICE(mPreMovedStage,  
+        mDidBlockIS ? " with image shift" : " with stage move", ""));
       if (mWinApp->GetSTEMMode())
         mCamera->SetMaxChannelsToGet(1);
       if (mParam->useHqParams && mParam->skipRecReblanks && !mUseContinuousMode)
         mCamera->SetSkipNextReblank(true);
+      if (mDidBlockIS < 0)
+        mDidBlockIS = 1;
       if (!mUseContinuousMode || !mCamera->DoingContinuousAcquire()) {
         if (mUseContinuousMode) {
           mCamera->SetContinuousDelayFrac(mParam->continDelayFactor);
@@ -4188,6 +4196,7 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
 {
   double postISX, postISY, stageAdjX, stageAdjY;
   int ubOffX, ubOffY, block;
+  StageMoveInfo *moveInfo = &mMoveInfo;
   stageAdjX = stageAdjY = adjISX = adjISY = 0.;
   if (mImShiftInBlocks || focusBlock) {
     block = mFocusBlockInd[pieceInd];
@@ -4201,6 +4210,7 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
       mPredictedErrorY);
     postISX = mCamToIS.xpx * iDelX + mCamToIS.xpy * iDelY + mBaseISX;
     postISY = mCamToIS.ypx * iDelX + mCamToIS.ypy * iDelY + mBaseISY;
+    moveInfo = &mBlockISMoveInfo;
   } else {
     if (mDoISrealign && !focusBlock) {
       GetAdjustmentsForISrealign(pieceInd, stageAdjX, stageAdjY, adjISX, adjISY,
@@ -4220,10 +4230,10 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
   }
 
   // This is relevant only for post-action moves
-  mMoveInfo.distanceMoved = B3DMAX(fabs(postISX - mMoveInfo.x), 
-    fabs(postISY - mMoveInfo.y));
-  mMoveInfo.x = postISX;
-  mMoveInfo.y = postISY;
+  moveInfo->distanceMoved = B3DMAX(fabs(postISX - moveInfo->x), 
+    fabs(postISY - moveInfo->y));
+  moveInfo->x = postISX;
+  moveInfo->y = postISY;
 }
 
 // Compute the adjustment to nominal stage position when doing an IS realign, the image

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/24: Fixed screwed up hybrid montages when property StageMontageMaxError is
+set (In 4.1).
+
 2/5/24: Added ability to get message boxes from scripts with monospaced font.
 
 2/5/24: Changed "Fix" button in script editor to re-indent selected lines
@@ -22,7 +25,7 @@ reset parameters in the Navigtaion Align Setup dialog.
 2/4/24: Fixed some problems when completion character is typed in script editor
 with Python (In 4.1).
 
-2/4/24: Allowed variables in promps for userSetDirectory and EnterNameOpenFile
+2/4/24: Allowed variables in prompts for userSetDirectory and EnterNameOpenFile
 (In 4.1).
 
 2/4/24: Fixed window placement of script editor #60 (In 4.1).
