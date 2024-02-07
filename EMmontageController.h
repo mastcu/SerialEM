@@ -179,6 +179,7 @@ class EMmontageController
   ScaleMat mBinv;                 // Matrix to get from pixels to Image or Stage Shift
   ScaleMat mCamToIS;              // Pixels to image shift matrix for IS in blocks
   StageMoveInfo mMoveInfo;        // Structure for stage moves
+  StageMoveInfo mBlockISMoveInfo; // Separate structure for IS moves in doing IS in blocks
   bool mDoStageMoves;             // Replacement for moveStage in param, in case multishot
   BOOL mMovingStage;              // Flag that stage is being moved
   BOOL mRestoringStage;           // Flag for final stage move at end
@@ -187,6 +188,7 @@ class EMmontageController
   bool mImShiftInBlocks;          // Flag that we are image shifting in blocks
   int mFirstResumePiece;          // Index of first piece after resume for block actions
   bool mUsingImageShift;          // Convenience flag for not stage or doing block IS
+  int mDidBlockIS;                // -1 if IS queued, 1 if done, to deter stage testing
 
   int   mXCorrBinning;            // Binning to apply to extracted boxes
   int   mXYpieceSize[2];          // Frame size and overlap in arrays for montXC functions
