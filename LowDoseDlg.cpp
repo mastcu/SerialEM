@@ -1271,6 +1271,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   mInitialized = true;
   UpdateSettings();
   SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
+  ManagePanels();
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -1297,6 +1298,12 @@ void CLowDoseDlg::UpdateSettings()
   ManageAxisPosition();
 
   Update();
+}
+
+void CLowDoseDlg::ManagePanels()
+{
+  CToolDlg::ManagePanels();
+  m_statBlanked.ShowWindow(mLastBlanked ? SW_SHOW : SW_HIDE);
 }
 
 // Just update the defocus offset - for multishot step and adjust

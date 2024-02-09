@@ -40,6 +40,7 @@ public:
 	void ShiftImageInA(double delAxis);
 	void ChangeAllShifts(double delAxis);
 	void UpdateSettings();
+  void ManagePanels();
   void UpdateDefocusOffset();
 	void SetLowDoseMode(BOOL inVal, BOOL hideOffState = FALSE);
 	void AddDefineAreaPoint();

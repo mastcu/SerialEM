@@ -1666,6 +1666,10 @@ BOOL CSerialEMApp::InitInstance()
   if (mEnableExternalPython)
     SetEnableExternalPython(true);
   UpdateBufferWindows();
+
+  // The "Blanked" indicator is quire resistant to getting hidden on startup - this did it
+  mLowDoseDlg.BlankingUpdate(true);
+  mLowDoseDlg.BlankingUpdate(false);
   iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
   if (iCam >= 0)
     mMacroProcessor->Run(iCam);
