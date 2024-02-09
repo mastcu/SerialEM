@@ -8035,8 +8035,10 @@ int CMacCmd::ThreeChoiceBox(void)
   else
     index = 3;
   SetReportedValues(index);
-  if (numButtons > 1)
+  if (numButtons > 1) {
+    buttons[index - 1].Replace("&&", "&");
     mLogRpt = "\"" + buttons[index - 1] + "\" was chosen";
+  }
   return 0;
 }
 
