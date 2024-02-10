@@ -1565,8 +1565,11 @@ BOOL CSerialEMApp::InitInstance()
   mFalconHelper->Initialize(-3);
   
   pMainFrame->SetWindowText("SerialEM");
-  if (!mStartupMessage.IsEmpty())
+  if (!mStartupMessage.IsEmpty()) {
+    if (mLogWindow)
+      mLogWindow->SetNextLineColorStyle(0, 1);
     AppendToLog(mStartupMessage, LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
+  }
   if (mStartupInfo) {
     GetStartupMessage();
     if (mLogWindow)
@@ -4865,6 +4868,9 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   mMainFrame->RemoveHiddenItemsFromMenus();
   UpdateBufferWindows();
   UpdateWindowSettings();
+  BOOL blanked = mScope->GetBeamBlanked();
+  mLowDoseDlg.BlankingUpdate(!blanked);
+  mLowDoseDlg.BlankingUpdate(blanked);
 }
 
 // Show or hide the options sections in control panels AND take care of calling 
