@@ -123,6 +123,9 @@ public:
   void MinMaxInt(UINT  nID, int &value, int minVal, int maxVal, const char *descrip);
   BOOL Ddx_MinMaxFloat(CDataExchange* pDX, UINT nID, float &member, float minVal, float maxVal, const char *descrip);
   BOOL Ddx_MinMaxInt(CDataExchange* pDX, UINT nID, int &member, int minVal, int maxVal, const char *descrip);
+  int TopOffsetForFillingRectangle(CRect &winRect);
+  void FillDialogItemRectangle(CPaintDC &dc, CRect &winRect, CWnd *wnd, int topOffset,
+    COLORREF color, CRect &dcRect);
   void ManageHideableItems(UINT *hideableIDs, int numHideable);
   GetMember(int, NumPanels);
   GetMember(int, SetToHeight);

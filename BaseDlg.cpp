@@ -343,6 +343,35 @@ BOOL CBaseDlg::Ddx_MinMaxInt(CDataExchange *pDX, UINT nID, int &member, int minV
   return TRUE;
 }
 
+// First step in doing a rectangle draw in OnPaint: get the offset to subtract from top
+int CBaseDlg::TopOffsetForFillingRectangle(CRect &winRect)
+{
+  CRect clientRect;
+  int border;
+  GetWindowRect(&winRect);
+  GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  return (winRect.Height() - clientRect.Height() - border);
+}
+
+// Fill the rectange of a dialog item with the given color, return the rect in the dc
+// so text can be drawn there
+void CBaseDlg::FillDialogItemRectangle(CPaintDC &dc, CRect &winRect, CWnd *wnd,
+  int topOffset, COLORREF color, CRect &dcRect)
+{
+  int iLeft, iTop;
+  CRect statRect;
+  wnd->GetWindowRect(statRect);
+  iLeft = statRect.left - winRect.left;
+  iTop = statRect.top - winRect.top - topOffset;
+  dcRect.SetRect(iLeft, iTop, iLeft + statRect.Width(), iTop + statRect.Height());
+  dc.FillSolidRect(&dcRect, color);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  PANELS, HIDING, AND LAYOUT MANAGEMENT
+////////////////////////////////////////////////////////////////////////////////
+
 // Setup call for the panel tables
 // The first item in the section for panel is recorded as the panelStart so it better be
 // the top item; probably best to end panel section with the bottom item too

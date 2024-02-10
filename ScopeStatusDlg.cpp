@@ -625,40 +625,29 @@ WINDOWPLACEMENT *CScopeStatusDlg::GetMeterPlacement()
 
 void CScopeStatusDlg::OnPaint() 
 {
-  int iLeft, iTop, border;
-  CRect winRect;
-  CRect statRect;
-  CRect clientRect;
+  int border;
+  CRect winRect, dcRect;
   COLORREF vacColors[3] = {RGB(0,255,0), RGB(255, 255, 0), RGB(255, 0, 0)};
   COLORREF intColors[5] = {RGB(0,192,255), RGB(128, 255, 255), RGB(255,128,0),  
     RGB(255, 0, 255), RGB(212, 208, 200)};
   CPaintDC dc(this); // device context for painting
-  GetWindowRect(&winRect);
-  GetClientRect(&clientRect);
-  border = (winRect.Width() - clientRect.Width()) / 2;
-
   DrawSideBorders(dc);
   if (mVacStatus < 0 && mIntCalStatus < 0) {
     return;
   }
 
+  border = TopOffsetForFillingRectangle(winRect);
   if (mIntCalStatus >= 0) {
-    m_statSpotLabel.GetWindowRect(&statRect);
-    iLeft = statRect.left - winRect.left;
-    iTop = statRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border);
-    CRect dcRecti(iLeft, iTop, iLeft + statRect.Width(), iTop + statRect.Height());
+    FillDialogItemRectangle(dc, winRect, &m_statSpotLabel, border, 
+      intColors[mIntCalStatus], dcRect);
     dc.SelectObject(&mProbeFont);
-    dc.FillSolidRect(&dcRecti, intColors[mIntCalStatus]);
-    dc.DrawText(mTEMnanoProbe ? "nPr" : "Spot", &dcRecti, 
+    dc.DrawText(mTEMnanoProbe ? "nPr" : "Spot", &dcRect, 
       DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
 
   if (mVacStatus >= 0) {
-    m_statVacuum.GetWindowRect(&statRect);
-    iLeft = statRect.left - winRect.left;
-    iTop = statRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border);
-    CRect dcRect(iLeft, iTop, iLeft + statRect.Width(), iTop + statRect.Height());
-    dc.FillSolidRect(&dcRect, vacColors[mVacStatus]);
+    FillDialogItemRectangle(dc, winRect, &m_statVacuum, border, vacColors[mVacStatus], 
+      dcRect);
     dc.SelectObject(&mMedFont);
     dc.DrawText("VAC", &dcRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
