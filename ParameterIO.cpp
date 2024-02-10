@@ -904,8 +904,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mRemoteControl.m_bMagIntensity = itemInt[4] != 0;
 
         // set the beam/stage selector before either of its increments
-        if (!itemEmpty[6])
-          mWinApp->mRemoteControl.SetBeamOrStage(itemInt[6]);
+        //if (!itemEmpty[6])
+          //mWinApp->mRemoteControl.SetBeamOrStage(itemInt[6]);
         if (!itemEmpty[5])
           mWinApp->mRemoteControl.SetFocusIncrementIndex(itemInt[5]);
         if (!itemEmpty[7])
@@ -2064,7 +2064,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mRemoteControl.GetIntensityIncrement(), 
       mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0,
       mWinApp->mRemoteControl.GetFocusIncrementIndex(), 
-      mWinApp->mRemoteControl.m_iStageNotBeam, mWinApp->mRemoteControl.GetStageIncIndex());
+      0, mWinApp->mRemoteControl.GetStageIncIndex());
     mFile->WriteString(oneState);
 
     // Get window placement and write it out

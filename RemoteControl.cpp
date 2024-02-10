@@ -32,7 +32,8 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_strC2Delta(_T(""))
   , m_strC2Name(_T(""))
   , m_strFocusStep(_T(""))
-  , m_iStageNotBeam(0)
+  , m_strStageDelta(_T(""))
+  , m_strMagWithC2(_T(""))
 {
   SEMBuildTime(__DATE__, __TIME__);
   mBeamIncrement = 0.05f;
@@ -53,8 +54,8 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   CToolDlg::DoDataExchange(pDX);
   DDX_Control(pDX, IDC_BUT_VALVES, m_butValves);
   DDX_Control(pDX, IDC_BUT_NANO_MICRO, m_butNanoMicro);
-  DDX_Control(pDX, IDC_CHECK_MAGINTENSITY, m_checkMagIntensity);
-  DDX_Check(pDX, IDC_CHECK_MAGINTENSITY, m_bMagIntensity);
+  //DDX_Control(pDX, IDC_CHECK_MAGINTENSITY, m_checkMagIntensity);
+  //DDX_Check(pDX, IDC_CHECK_MAGINTENSITY, m_bMagIntensity);
   DDX_Control(pDX, IDC_SPIN_RCMAG, m_sbcMag);
   DDX_Control(pDX, IDC_SPIN_RCSPOT, m_sbcSpot);
   DDX_Control(pDX, IDC_SPIN_RCBEAM, m_sbcBeamShift);
@@ -74,16 +75,26 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_DELFOCUSMINUS, m_butDelFocusMinus);
   DDX_Control(pDX, IDC_BUT_DELFOCUSPLUS, m_butDelFocusPlus);
   DDX_Control(pDX, IDC_BUT_SCREEN_UPDOWN, m_butScreenUpDown);
-  DDX_Control(pDX, IDC_RBEAM_CONTROL, m_butBeamControl);
-  DDX_Control(pDX, IDC_RSTAGE_CONTROL, m_butStageControl);
-  DDX_Radio(pDX, IDC_RBEAM_CONTROL, m_iStageNotBeam);
+  DDX_Control(pDX, IDC_SPIN_STAGE_UP_DOWN, m_sbcStageUpDown);
+  DDX_Control(pDX, IDC_SPIN_STAGE_LEFT_RIGHT, m_sbcStageLeftRight);
+  DDX_Control(pDX, IDC_DELSTAGE_MINUS, m_butDelStageMinus);
+  DDX_Control(pDX, IDC_DELSTAGE_PLUS, m_butDelStagePlus);
+  DDX_Control(pDX, IDC_STAT_DELSTAGE, m_statStageDelta);
+  DDX_Text(pDX, IDC_STAT_DELSTAGE, m_strStageDelta);
+  DDX_Control(pDX, IDC_BLANK_UNBLANK, m_butBlankUnblank);
+  DDX_Text(pDX, IDC_STAT_WITH_C2, m_strMagWithC2);
+  //DDX_Control(pDX, IDC_STAT_BOX1, m_statBox1);
+  DDX_Control(pDX, IDC_STAT_BEAM_LABEL, m_statBeamLabel);
+  DDX_Control(pDX, IDC_STAT_BEAMDELTA, m_statBeamDelta);
+  DDX_Control(pDX, IDC_STAT_FOCUS_LABEL, m_statFocusLabel);
+  DDX_Control(pDX, IDC_STAT_FOCUS_STEP, m_statFocusDelta);
 }
 
 
 BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_VALVES, OnButValves)
   ON_BN_CLICKED(IDC_BUT_NANO_MICRO, OnButNanoMicro)
-  ON_BN_CLICKED(IDC_CHECK_MAGINTENSITY, OnCheckMagIntensity)
+  //ON_BN_CLICKED(IDC_CHECK_MAGINTENSITY, OnCheckMagIntensity)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RCMAG, OnDeltaposSpinMag)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RCSPOT, OnDeltaposSpinSpot)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RCBEAM, OnDeltaposSpinBeamShift)
@@ -98,9 +109,12 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_DELFOCUSMINUS, OnDelFocusMinus)
   ON_BN_CLICKED(IDC_BUT_DELFOCUSPLUS, OnDelFocusPlus)
   ON_BN_CLICKED(IDC_BUT_SCREEN_UPDOWN, OnButScreenUpdown)
-  ON_BN_CLICKED(IDC_RBEAM_CONTROL, OnBeamControl)
-  ON_BN_CLICKED(IDC_RSTAGE_CONTROL, OnBeamControl)
   ON_WM_PAINT()
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_STAGE_UP_DOWN, OnDeltaposSpinStageUpDown)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_STAGE_LEFT_RIGHT, OnDeltaposSpinStageLeftRight)
+  ON_BN_CLICKED(IDC_BLANK_UNBLANK, OnBlankUnblank)
+  ON_BN_CLICKED(IDC_DELSTAGE_PLUS, OnDelStagePlus)
+  ON_BN_CLICKED(IDC_DELSTAGE_MINUS, OnDelStageMinus)
 END_MESSAGE_MAP()
 
 
@@ -108,9 +122,40 @@ END_MESSAGE_MAP()
 // CRemoteControl message handlers
 BOOL CRemoteControl::OnInitDialog()
 {
+  UINT needBold[] = {
+  IDC_DELSTAGE_PLUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELFOCUSPLUS, IDC_BUT_DELC2PLUS,
+    IDC_DELSTAGE_MINUS, IDC_BUT_DELBEAMMINUS, IDC_BUT_DELFOCUSMINUS, IDC_BUT_DELC2MINUS};
+  UINT needLittle[] = {IDC_STAT_BEAMDELTA, IDC_STAT_DELSTAGE, IDC_STAT_FOCUS_STEP,
+    IDC_STAT_C2DELTA};
+  int ind;
   CToolDlg::OnInitDialog();
+  CWnd *wnd;
+  CFont *boldFont = mWinApp->GetBoldFont(&m_statAlpha);
+  CFont *smallFont = &mDeltaFont;
   mScope = mWinApp->mScope;
   mShiftManager = mWinApp->mShiftManager;
+  CRect rect;
+  if (mWinApp->GetSystemDPI() >= 120 && !mWinApp->GetDisplayNotTruly120DPI()) {
+    m_statBeamDelta.GetClientRect(rect);
+    mDeltaFont.CreateFont(B3DNINT((mWinApp->GetSystemDPI() > 130 ? 0.87 : 0.82) 
+      * rect.Height()), 0, 0, 0, FW_MEDIUM,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, mBigFontName);
+  } else
+    smallFont = mLittleFont;
+
+  // em-dash and en-dash (0x97 and 0x96) gave vertical lines, so that is all we can do
+  for (ind = 0; ind < sizeof(needBold) / sizeof(UINT); ind++) {
+    wnd = GetDlgItem(needBold[ind]);
+    if (wnd)
+      wnd->SetFont(boldFont);
+  }
+  for (ind = 0; ind < sizeof(needLittle) / sizeof(UINT); ind++) {
+    wnd = GetDlgItem(needLittle[ind]);
+    if (wnd)
+      wnd->SetFont(smallFont);
+  }
   if (HitachiScope || mScope->GetNoScope())
     m_butValves.ShowWindow(SW_HIDE);
   if (!FEIscope)
@@ -129,6 +174,12 @@ BOOL CRemoteControl::OnInitDialog()
   m_sbcAlpha.SetPos(0);
   m_sbcFocus.SetRange(-30000, 30000);
   m_sbcFocus.SetPos(0);
+  m_sbcBeamLeftRight.SetRange(-30000, 30000);
+  m_sbcBeamLeftRight.SetPos(0);
+  m_sbcStageUpDown.SetRange(-30000, 30000);
+  m_sbcStageLeftRight.SetRange(-30000, 30000);
+  m_sbcStageUpDown.SetPos(0);
+  m_sbcStageLeftRight.SetPos(0);
   m_butDelBeamMinus.SetFont(&mButFont);
   m_butDelBeamPlus.SetFont(&mButFont);
   m_butDelC2Minus.SetFont(&mButFont);
@@ -141,13 +192,15 @@ BOOL CRemoteControl::OnInitDialog()
   mLastScreenPos = -1;
   mLastGunOn = -2;
   mLastIntensity = -1.;
+  mLastBlanked = -1;
   mLastAlpha = -999;
+  m_butBlankUnblank.m_bShowSpecial = true;
   mSpotClicked = mMagClicked = false;
   mTimerID = NULL;
   mInitialized = true;
   SetIntensityIncrement(mIntensityIncrement);
-  SetBeamOrStage(m_iStageNotBeam);
-  SetBeamOrStageIncrement(1., 0);
+  SetBeamOrStageIncrement(1., 0, 0);
+  SetBeamOrStageIncrement(1., 0, 1);
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
   m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
@@ -155,9 +208,26 @@ BOOL CRemoteControl::OnInitDialog()
   return TRUE;
 }
 
+// For Guenter's white bands
 void CRemoteControl::OnPaint()
 {
+  //CRect winRect, dcRect;
+  //COLORREF light = RGB(250, 250, 250);
   CPaintDC dc(this); // device context for painting
+  /*int offset = TopOffsetForFillingRectangle(winRect);
+
+  // Objects must be set not visible to avoid being redrawn
+  FillDialogItemRectangle(dc, winRect, m_statBox1, offset, light, dcRect);
+  dc.SelectObject(m_statBeamDelta.GetFont());
+  FillDialogItemRectangle(dc, winRect, m_statBeamDelta, offset, light, dcRect);
+  dc.DrawText(m_strBeamDelta, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
+  FillDialogItemRectangle(dc, winRect, m_statFocusDelta, offset, light, dcRect);
+  dc.DrawText(m_strFocusStep, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
+  dc.SelectObject(m_statBeamLabel.GetFont());
+  FillDialogItemRectangle(dc, winRect, m_statBeamLabel, offset, light, dcRect);
+  dc.DrawText("Beam", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
+  FillDialogItemRectangle(dc, winRect, m_statFocusLabel, offset, light, dcRect);
+  dc.DrawText("Focus", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);*/
 
   DrawSideBorders(dc);
 }
@@ -165,11 +235,13 @@ void CRemoteControl::OnPaint()
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
-  int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos)
+  int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked)
 {
   int junk;
-  bool enable;
+  //bool enable;
   CString str;
+  if (!mInitialized)
+    return;
   BOOL doingOffset = mWinApp->mShiftCalibrator && 
     mWinApp->mShiftCalibrator->CalibratingOffset();
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
@@ -215,6 +287,17 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     Invalidate();
   }
 
+  if ((beamBlanked ? 1 : 0) != mLastBlanked) {
+    if (baseEnable) {
+      m_butBlankUnblank.m_bShowSpecial = true;
+      m_butBlankUnblank.mSpecialColor = beamBlanked ? RGB(255, 255, 0) : RGB(0, 255, 0);
+    } else {
+      m_butBlankUnblank.m_bShowSpecial = false;
+    }
+    m_butBlankUnblank.SetWindowText(beamBlanked ? "Unblank" : "Blank");
+    mLastBlanked = beamBlanked ? 1 : 0;
+  }
+
   if (inProbe != mLastProbeMode && FEIscope) {
     m_butNanoMicro.SetWindowText(inProbe == 0 ? "-> uPr" : "-> nPr");
   }
@@ -225,11 +308,11 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     inSTEM != mLastSTEMmode || inSpot != mLastSpot || inMagInd != mLastMagInd || 
     inCamLen != mLastCamLenInd) {
       if (inSTEM || inMagInd== 0)
-        enable = false;
+        mMagIntensityOK = false;
       else
-        enable = mWinApp->mBeamAssessor->OutOfCalibratedRange(inIntensity, inSpot, 
-          inProbe, junk) == 0;
-      m_checkMagIntensity.EnableWindow(enable);
+        mMagIntensityOK = mWinApp->mBeamAssessor->OutOfCalibratedRange(inIntensity, 
+          inSpot, inProbe, junk) == 0;
+      //m_checkMagIntensity.EnableWindow(enable);
   }
 
   mLastCamera = mWinApp->GetCurrentCamera();
@@ -281,6 +364,7 @@ void CRemoteControl::UpdateEnables(void)
   m_butScreenUpDown.EnableWindow(enable && !continuous && !stageBusy);
   m_sbcBeamShift.EnableWindow(enable && !stageBusy);
   m_sbcBeamLeftRight.EnableWindow(enable && !stageBusy);
+  m_butBlankUnblank.EnableWindow(enable);
 
   if (enable) {
     mLastSpot = -1;
@@ -332,17 +416,18 @@ void CRemoteControl::OnButNanoMicro()
 }
 
 // Intensity zoom equivalent
-void CRemoteControl::OnCheckMagIntensity()
+/*void CRemoteControl::OnCheckMagIntensity()
 {
   UpdateData(true);
   SetFocus();
   mWinApp->RestoreViewFocus();
-}
+}*/
 
 // Mag
 void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  CString str;
   int index, index2, numRegCamLens, numLADCamLens;
   if (mLastMagInd > 0) {
     if (mMagClicked) {
@@ -390,6 +475,9 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
     return;
   }
   mMagClicked = true;
+  if (!mWinApp->GetSTEMMode() && mLastMagInd > 0 && mMagIntensityOK && mShiftPressed)
+    str.Format("&& %s", mScope->GetC2Name());
+  SetDlgItemText(IDC_STAT_WITH_C2, str);
   if (mLastMagInd > 0)
     mNewMagIndex = index2;
   else
@@ -438,6 +526,7 @@ void CRemoteControl::SetMagOrSpot(void)
 {
   double delta, newInt, outFac;
   int curCam, err;
+  bool magIntensity = false;
   if (mTimerID)
     ::KillTimer(NULL, mTimerID);
   mTimerID = NULL;
@@ -454,20 +543,23 @@ void CRemoteControl::SetMagOrSpot(void)
     m_sbcMag.EnableWindow(false);
     RedrawWindow();
     if (mLastMagInd > 0) {
+      magIntensity = mMagIntensityOK && mShiftPressed;
       curCam = mWinApp->GetCurrentCamera();
-      if (m_bMagIntensity) {
+      if (magIntensity) {
         delta = pow((double)mShiftManager->GetPixelSize(curCam, mStartMagIndex) /
           mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
         err = mWinApp->mBeamAssessor->AssessBeamChange(delta, newInt, outFac, -1);
-      }
+      } else
+        SetDlgItemText(IDC_STAT_WITH_C2, "");
       mScope->SetMagOrAdjustLDArea(mNewMagIndex);
-      if (m_bMagIntensity && !err)
+      if (magIntensity && !err)
         mScope->DelayedSetIntensity(newInt, GetTickCount());
       mWinApp->mAlignFocusWindow.UpdateAutofocus(mNewMagIndex);
     } else if (mLastCamLenInd > 0) {
       mScope->SetCamLenIndex(mNewCamLenIndex);
     }
     mMagClicked = false;
+    SetDlgItemText(IDC_STAT_WITH_C2, "");
     m_sbcMag.EnableWindow(true);
     mWinApp->mCamera->InitiateIfPending();
   }
@@ -504,6 +596,18 @@ void CRemoteControl::CtrlChanged(bool pressed)
     SetMagOrSpot();
 }
 
+void CRemoteControl::ShiftChanged(bool pressed)
+{
+  CString str;
+  mShiftPressed = pressed;
+  if (!mMagClicked)
+    return;
+  if (!mWinApp->GetSTEMMode() && mLastMagInd > 0 && mMagIntensityOK &&
+    pressed)
+    str.Format("&& %s", mScope->GetC2Name());
+  SetDlgItemText(IDC_STAT_WITH_C2, str);
+}
+
 // Alpha
 void CRemoteControl::OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult)
 {
@@ -525,34 +629,25 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (m_iStageNotBeam) {
-    MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
-  } else {
-    if (mLastMagInd > 0)
-      mWinApp->mProcessImage->MoveBeamByCameraFraction(0.,
-        mBeamIncrement * pNMUpDown->iDelta, true);
-    else if (mLastCamLenInd > 0)
-      ChangeDiffShift(0, pNMUpDown->iDelta);
-  }
+  if (mLastMagInd > 0)
+    mWinApp->mProcessImage->MoveBeamByCameraFraction(0.,
+      mBeamIncrement * pNMUpDown->iDelta, true);
+  else if (mLastCamLenInd > 0)
+    ChangeDiffShift(0, pNMUpDown->iDelta);
 }
 
 // Beam or stage left-right: the horizontal spin box is backwards
 void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  *pResult = 0;
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (m_iStageNotBeam) {
-    MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
-  } else {
-    if (mLastMagInd > 0)
-      mWinApp->mProcessImage->MoveBeamByCameraFraction(
-        -mBeamIncrement * pNMUpDown->iDelta, 0., true);
-    else if (mLastCamLenInd > 0)
-      ChangeDiffShift(pNMUpDown->iDelta, 0);
-  }
+  if (mLastMagInd > 0)
+    mWinApp->mProcessImage->MoveBeamByCameraFraction(
+      -mBeamIncrement * pNMUpDown->iDelta, 0., true);
+  else if (mLastCamLenInd > 0)
+    ChangeDiffShift(pNMUpDown->iDelta, 0);
 }
 
 void CRemoteControl::ChangeDiffShift(int deltaX, int deltaY)
@@ -617,56 +712,31 @@ void CRemoteControl::OnDeltaposSpinIntensity(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   ChangeIntensityByIncrement(pNMUpDown->iDelta);
-  /*double newVal = mScope->GetIntensity() + 0.01 * mIntensityIncrement * pNMUpDown->iDelta 
-    / mScope->GetC2IntensityFactor();
-  if (newVal > 0. && newVal < 1.0)
-    mScope->SetIntensity(newVal);*/
   *pResult = 0;
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
 
-// Buttons to switch between controlling beam or stage
-void CRemoteControl::OnBeamControl()
-{
-  UpdateData(true);
-  SetBeamOrStage(m_iStageNotBeam);
-  SetBeamOrStageIncrement(1., 0);
-  SetFocus();
-  mWinApp->RestoreViewFocus();
-}
-
-// Central call to handle setting the choice of beam or stage
-void CRemoteControl::SetBeamOrStage(int inVal)
-{
-  bool needUpdate = m_iStageNotBeam != inVal;
-  m_iStageNotBeam = inVal;
-  if (!mInitialized)
-    return;
-  SetDlgItemText(IDC_STAT_BEAM_STAGE, inVal ? "Stage" : "Beam");
-  if (needUpdate)
-    UpdateData(false);
-}
-
 // Change the beam or stage step sizes
 void CRemoteControl::OnButDelBeamMinus()
 {
-  SetBeamOrStageIncrement(0.707107f, -1);
+  SetBeamOrStageIncrement(0.707107f, -1, 0);
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
 
 void CRemoteControl::OnButDelBeamPlus()
 {
-  SetBeamOrStageIncrement(1.414214f, 1);
+  SetBeamOrStageIncrement(1.414214f, 1, 0);
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
 
 // Set the appropriate increment
-void CRemoteControl::SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd)
+void CRemoteControl::SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd,
+  int stageNotBeam)
 {
-  if (m_iStageNotBeam)
+  if (stageNotBeam)
     SetStageIncrementIndex(mStageIncIndex + stageIndAdd);
   else
     SetBeamIncrement(beamIncFac * mBeamIncrement);
@@ -679,20 +749,17 @@ void CRemoteControl::SetBeamIncrement(float inVal)
     return;
   B3DCLAMP(inVal, MIN_BEAM_DELTA, MAX_BEAM_DELTA);
   mBeamIncrement = inVal;
-  if (!mInitialized || m_iStageNotBeam)
+  if (!mInitialized)
     return;
-  m_strBeamDelta.Format("%.3f", mBeamIncrement);
+  m_strBeamDelta.Format("%c%.1f%%", 0xB1, 100. * mBeamIncrement);
   UpdateData(false);
 }
 
 // Set increment for stage shift and update display if it is open and stage is selected
 void CRemoteControl::SetStageIncrementIndex(int inVal)
 {
-  if (m_iStageNotBeam)
-    SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal, 
-      MAX_STAGE_INDEX, MAX_STAGE_DECIMALS, m_strBeamDelta);
-  else
-    mStageIncIndex = B3DMAX(0, B3DMIN(MAX_STAGE_INDEX, inVal));
+  SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal, 
+    MAX_STAGE_INDEX, MAX_STAGE_DECIMALS, m_strStageDelta);
 }
 
 // Set C2 step size
@@ -713,7 +780,7 @@ void CRemoteControl::OnButDelC2Plus()
 // Set the increment for intensity changes
 void CRemoteControl::SetIntensityIncrement(float inVal)
 {
-  float maxDelta = (mWinApp->mScope && mWinApp->mScope->GetUseIllumAreaForC2()) ?
+  float maxDelta = (mWinApp->mScope && !mWinApp->mScope->GetUseIllumAreaForC2()) ?
     MAX_IA_DELTA : MAX_PCTC2_DELTA;
   if (inVal < MIN_PCTC2_DELTA - 0.0001 || inVal > maxDelta + 0.0001)
     return;
@@ -721,7 +788,8 @@ void CRemoteControl::SetIntensityIncrement(float inVal)
   mIntensityIncrement = inVal;
   if (!mInitialized)
     return;
-  m_strC2Delta.Format("%.3f", mIntensityIncrement);
+  m_strC2Delta.Format("%c%s%s", 0xB1, FormattedNumber(mIntensityIncrement, "", 1, 3, 1.f, true)
+    , maxDelta == MAX_IA_DELTA ? "um" : "%");
  UpdateData(false);
 }
 
@@ -791,7 +859,7 @@ void CRemoteControl::SetIncrementFromIndex(float &incrVal, int &incrInd, int new
   incrInd = newInd;
   if (!mInitialized)
     return;
-  str.Format("%g", incrVal);
+  str.Format("%c%gum", 0xB1, incrVal);
   UpdateData(false);
 }
 
@@ -825,4 +893,46 @@ void CRemoteControl::TaskCleanup(int error)
       _T("Time out setting screen position"));
   TaskDone(0);
   mWinApp->ErrorOccurred(1);
+}
+
+
+void CRemoteControl::OnDeltaposSpinStageUpDown(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+  *pResult = 0;
+  MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
+}
+
+
+void CRemoteControl::OnDeltaposSpinStageLeftRight(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+  *pResult = 0;
+  MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
+}
+
+
+void CRemoteControl::OnBlankUnblank()
+{
+  mScope->BlankBeam(!mLastBlanked, "scope control");
+}
+
+
+void CRemoteControl::OnDelStagePlus()
+{
+  SetBeamOrStageIncrement(1.414214f, 1, 1);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CRemoteControl::OnDelStageMinus()
+{
+  SetBeamOrStageIncrement(0.707107f, -1, 1);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
 }

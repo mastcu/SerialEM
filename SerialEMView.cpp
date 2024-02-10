@@ -2963,6 +2963,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   char cChar = char(nChar);
   bool mainOrFFT = mMainWindow || mFFTWindow;
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  bool shift = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   bool navCanProcess = mWinApp->mNavigator && !mWinApp->mNavigator->mNavAcquireDlg;
   mWinApp->mMacroProcessor->SetKeyPressed((int)cChar);
 
@@ -2973,8 +2974,10 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mShiftPressed = true; */
   if (!BOOL_EQUIV(ctrl, mCtrlPressed))
     mWinApp->mRemoteControl.CtrlChanged(ctrl);
+  if (!BOOL_EQUIV(shift, mShiftPressed))
+    mWinApp->mRemoteControl.ShiftChanged(shift);
   mCtrlPressed = ctrl;
-  mShiftPressed = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
+  mShiftPressed = shift;
   SEMTrace('k', "Code %u, char %c  ctrl %d shift %d", nChar, cChar, mCtrlPressed,
     mShiftPressed);
 

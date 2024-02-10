@@ -25,7 +25,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   void Update(int inMag, int inCamLen, int inSpot, double inIntensity, int inProbe, int inGun, 
-    int inSTEM, int inAlpha, int inScreenPos);
+    int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked);
   void UpdateSettings();
   void UpdateEnables(void);
   void ChangeIntensityByIncrement(int delta);
@@ -43,14 +43,14 @@ public:
   GetMember(bool, MagClicked);
   void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd,
   int maxIndex, int maxDecimals, CString &str);
-  void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd);
+  void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd, int stageNotBeam);
   CMyButton m_butValves;
   afx_msg void OnButValves();
   CButton m_butNanoMicro;
   afx_msg void OnButNanoMicro();
-  CButton m_checkMagIntensity;
+  //CButton m_checkMagIntensity;
   BOOL m_bMagIntensity;
-  afx_msg void OnCheckMagIntensity();
+  //afx_msg void OnCheckMagIntensity();
   CSpinButtonCtrl m_sbcMag;
   afx_msg void OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult);
   CSpinButtonCtrl m_sbcSpot;
@@ -81,6 +81,7 @@ private:
   int mLastCamera;
   int mLastAlpha;
   int mLastScreenPos;
+  int mLastBlanked;             // 1 if blanked, 0 if not, -1 not set yet
   CEMscope *mScope;             // Convenience pointers
   CShiftManager *mShiftManager;
   float mBeamIncrement;         // Increments for beam and C2  
@@ -98,8 +99,12 @@ private:
   UINT_PTR mTimerID;
   int mMaxClickInterval;        // Maximum interval between clicks befor changing
   bool mCtrlPressed;            // Flag that Ctrl was pressed
+  bool mShiftPressed;           // Flag that Shift was pressed
   bool mDidExtendedTimeout;     // Flag for long timeout with Ctrl pressed started
   int mDoingTask;               // 1 if doing screen, 2 if doing stage
+  bool mMagIntensityOK;
+  CFont mDeltaFont;
+
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
@@ -107,6 +112,7 @@ public:
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, int &pendingCamLen);
   void CtrlChanged(bool pressed);
+  void ShiftChanged(bool pressed);
   CStatic m_statAlpha;
   CSpinButtonCtrl m_sbcAlpha;
   afx_msg void OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult);
@@ -123,8 +129,24 @@ public:
   afx_msg void OnButScreenUpdown();
   void TaskDone(int param);
   void TaskCleanup(int error);
-  afx_msg void OnBeamControl();
-  int m_iStageNotBeam;
   void MoveStageByMicronsOnCamera(double delCamX, double delCamY);
   void ChangeDiffShift(int deltaX, int deltaY);
+  CSpinButtonCtrl m_sbcStageUpDown;
+  CSpinButtonCtrl m_sbcStageLeftRight;
+  afx_msg void OnDeltaposSpinStageUpDown(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnDeltaposSpinStageLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnBlankUnblank();
+  afx_msg void OnDelStagePlus();
+  afx_msg void OnDelStageMinus();
+  CButton m_butDelStageMinus;
+  CButton m_butDelStagePlus;
+  CStatic m_statStageDelta;
+  CString m_strStageDelta;
+  CMyButton m_butBlankUnblank;
+  CString m_strMagWithC2;
+  //CStatic m_statBox1;
+  CStatic m_statBeamLabel;
+  CStatic m_statBeamDelta;
+  CStatic m_statFocusLabel;
+  CStatic m_statFocusDelta;
 };

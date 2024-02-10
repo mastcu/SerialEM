@@ -1251,6 +1251,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double diffFocus = -999.;
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
+  static int firstTime = 1;
 
   if (reportTime)
     wallStart = wallTime();
@@ -1306,6 +1307,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     UpdateStage(stageX, stageY, stageZ, bReady);
     checkpoint = "stage";
     CHECK_TIME(0);
+
+    if (firstTime && mPlugFuncs->GetBeamBlank)
+      sBeamBlanked = mPlugFuncs->GetBeamBlank();
+    firstTime = 0;
 
     // Get the mag and determine if it has changed
     lastMag = mLastMagIndex;
@@ -1742,7 +1747,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       else if (mPlugFuncs->GetGunValve)
         gunState = mPlugFuncs->GetGunValve();
       mWinApp->mRemoteControl.Update(magIndex, mLastCamLenIndex, spotSize, rawIntensity,
-        mProbeMode, gunState, STEMmode, (int)alpha, screenPos);
+        mProbeMode, gunState, STEMmode, (int)alpha, screenPos, sBeamBlanked);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
       stageZ, screenPos == spUp, smallScreen != 0, sBeamBlanked, EFTEM, STEMmode,spotSize, 
@@ -1931,8 +1936,8 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
 void CEMscope::UpdateGauges(int &vacStatus)
 {
   static int lastVacStatus = -1;
-  if (!FEIscope)
-    return;
+  //if (!FEIscope)
+    //return;
   if (mVacCount++ >= 1700 / mUpdateInterval ||
     (GetDebugOutput('u') && (mAutosaveCount % 50 == 0))) {
       mVacCount = 0;

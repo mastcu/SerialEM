@@ -2235,6 +2235,17 @@
 #define IDC_RREALI_SEARCH               3273
 #define IDC_CHECK_SHOW_NUMBER           3275
 #define IDC_EDIT_DUMMY                  3277
+#define IDC_BLANK_UNBLANK               3278
+#define IDC_STAT_DELSTAGE               3279
+#define IDC_SPIN_STAGE_UP_DOWN          3280
+#define IDC_SPIN_STAGE_LEFT_RIGHT       3281
+#define IDC_DELSTAGE_PLUS               3282
+#define IDC_DELSTAGE_MINUS              3283
+#define IDC_STAT_BEAM_LABEL             3284
+#define IDC_STAT_FOCUS_LABEL            3285
+#define IDC_STAT_SPOT_LABEL             3286
+#define IDC_STAT_WITH_C2                3288
+#define IDC_STAT_BOX1                   3289
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2795,7 +2806,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3278
+#define _APS_NEXT_CONTROL_VALUE         3290
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
