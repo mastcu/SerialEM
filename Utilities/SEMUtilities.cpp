@@ -1238,7 +1238,7 @@ int UtilWriteTextFile(CString fileName, CString text)
 // the minimum and maximum number of decimal places, and switchVal is a number between 1
 // and 10 where it will switch between the number of decimal places
 CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec,
-  float switchVal)
+  float switchVal, bool skipTrim)
 {
   CString format, retStr;
   int ndec = maxDec;
@@ -1248,7 +1248,7 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
   B3DCLAMP(ndec, minDec, maxDec);
   format.Format("%%.%df", ndec);
   retStr.Format(format, value);
-  if (ndec > 0)
+  if (ndec > 0 && !skipTrim)
     retStr = retStr.TrimRight('0');
   retStr = retStr.TrimRight('.');
   return retStr + suffix;

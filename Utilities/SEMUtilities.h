@@ -76,6 +76,6 @@ double UtilGoodAngle(double angle);
 int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, bool takeK3Binned, 
   int whereAlign, int curIndex, int &newIndex, CString *message);
 int UtilWriteTextFile(CString fileName, CString text);
-CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec, float switchVal);
+CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec, float switchVal, bool skipTrim = false);
 BOOL SleepMsg(DWORD dwTime_ms);
 #endif
