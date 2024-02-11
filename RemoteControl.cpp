@@ -12,7 +12,7 @@
 #include "ShiftCalibrator.h"
 
 #define MIN_BEAM_DELTA  0.00625f
-#define MAX_BEAM_DELTA  0.8f
+#define MAX_BEAM_DELTA  0.81f
 #define MIN_PCTC2_DELTA 0.015625f
 #define MAX_PCTC2_DELTA 4.f
 #define MAX_IA_DELTA   32.f
