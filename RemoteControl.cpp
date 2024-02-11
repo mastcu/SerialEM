@@ -788,8 +788,8 @@ void CRemoteControl::SetIntensityIncrement(float inVal)
   mIntensityIncrement = inVal;
   if (!mInitialized)
     return;
-  m_strC2Delta.Format("%c%s%s", 0xB1, FormattedNumber(mIntensityIncrement, "", 1, 3, 1.f, true)
-    , maxDelta == MAX_IA_DELTA ? "um" : "%");
+  m_strC2Delta.Format("%c%s%s", 0xB1, FormattedNumber(mIntensityIncrement, "", 1, 3, 1.f, 
+    true), mScope->GetC2Units());
  UpdateData(false);
 }
 
