@@ -3574,6 +3574,7 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
         stageY);
       item->AppendPoint(stageX, stageY);
     }
+    item->AppendPoint(item->mPtX[0], item->mPtY[0]);
   }
   return 0;
 }
