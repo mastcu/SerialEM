@@ -63,7 +63,7 @@ static char THIS_FILE[]=__FILE__;
 #define FAIL_CHECK_LINE(a) \
 { \
   CString macStr = CString("Script failed initial checking - nothing was executed."  \
-  "\r\n\r\n") + (a) + errmess + ":\r\n\r\n" + strLine;          \
+  "\r\n\r\n") + (a) + errmess + " on line:\r\n\r\n" + strLine;          \
   mWinApp->AppendToLog(macStr, mLogErrAction);  \
   SEMMessageBox(macStr, MB_EXCLAME); \
   return 99; \
@@ -3543,7 +3543,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
       strItems[0].MakeUpper();
       strtod((LPCTSTR)strItems[0], &endPtr);
       if (endPtr - (LPCTSTR)strItems[0] == strItems[0].GetLength())
-        FAIL_CHECK_LINE("A command cannot start with a number in line");
+        FAIL_CHECK_LINE("A command cannot start with a number");
       cmdIndex = LookupCommandIndex(strItems[0]);
 
       // Check validity of variable assignment then skip further checks
@@ -3558,11 +3558,11 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
             FAIL_CHECK_LINE("Array delimiters \"{}\" are not at start and end of values");
         }
         if (strItems[1] == "=" && strItems[index].IsEmpty())
-          FAIL_CHECK_LINE("Empty assignment in line");
+          FAIL_CHECK_LINE("Empty assignment");
         if (WordIsReserved(strItems[0]))
-          FAIL_CHECK_LINE("Assignment to reserved command name in line");
+          FAIL_CHECK_LINE("Assignment to reserved command name");
         if (strItems[0].GetAt(0) == '$')
-          FAIL_CHECK_LINE("You cannot assign to a name that is a variable in line");
+          FAIL_CHECK_LINE("You cannot assign to a name that is a variable");
         if (!stringAssign &&
           CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess,
             mCheckingParseQuotes))
@@ -3573,7 +3573,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
       // If the command is a variable, skip checks except to make sure it is not a label
       if (strItems[0].GetAt(0) == '$') {
         if (strItems[0].GetAt(strItems[0].GetLength() - 1) == ':')
-          FAIL_CHECK_LINE("Label cannot be a variable in line");
+          FAIL_CHECK_LINE("Label cannot be a variable");
         continue;
       }
       if (CMD_IS(PARSEQUOTEDSTRINGS))
@@ -3618,7 +3618,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
       length = strItems[0].GetLength();
       if (strItems[0].GetAt(length - 1) == ':') {
         if (!strItems[1].IsEmpty())
-          FAIL_CHECK_LINE("Label must not be followed by anything in line");
+          FAIL_CHECK_LINE("Label must not be followed by anything");
         if (length == 1)
           FAIL_CHECK_LINE("Empty label in line");
         if (numLabels >= MAX_MACRO_LABELS)
@@ -3626,7 +3626,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         strLabels[numLabels] = strItems[0].Left(length - 1);
         for (i = 0; i < numLabels; i++) {
           if (strLabels[i] == strLabels[numLabels])
-            FAIL_CHECK_LINE("Duplicate of label already used in line")
+            FAIL_CHECK_LINE("Duplicate of label already used")
         }
         labelCurIndex[numLabels] = currentIndex;
         labelBlockLevel[numLabels] = blockLevel;
@@ -3826,7 +3826,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
             "DOLOOP block");
 
       } else if (CMD_IS(THROW) && tryLevel <= 0) {
-        FAIL_CHECK_LINE("THROW seems not to be contained in any TRY block in line");
+        FAIL_CHECK_LINE("THROW seems not to be contained in any TRY block");
 
       } else if (CMD_IS(SKIPTO) && !strItems[1].IsEmpty()) {
 
@@ -3874,7 +3874,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         if (i == 17)
           return 17;
         if (i)
-          FAIL_CHECK_LINE("Unrecognized command in line");
+          FAIL_CHECK_LINE("Unrecognized command");
       }
 
       // Check commands where arithmetic is allowed
