@@ -1224,7 +1224,7 @@ void CNavigatorDlg::OnEditMode()
       "    Left-double-click to delete point if already selected\r\n"
       "    Shift-Left-double-click to remove one position from multiple Record array\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"
-      "    Backspace to delete current point\r\n");
+      "    Backspace to delete current point or polygon\r\n");
     mHelper->SetEditReminderPrinted(true);
   }
   if (m_bEditFocus) {
@@ -2868,7 +2868,7 @@ void CNavigatorDlg::OnDeleteitem()
   // actual current item and make sure (again) that it is a point
   if (m_bEditMode && mRemoveItemOnly && !mAddingPoints) {
     mItem = GetSingleSelectedItem(&delIndex);
-    if (!mItem || mItem->IsNotPoint())
+    if (!mItem || mItem->IsMap() || (mItem->IsPolygon() && !mItem->mGroupID))
       return;
     if (m_bCollapseGroups) {
       GetCollapsedGroupLimits(mCurListSel, start, end);
@@ -3675,7 +3675,7 @@ BOOL CNavigatorDlg::BackspacePressed()
       return false;
     if (m_bEditMode && !mAddingPoints) {
       item = GetSingleSelectedItem();
-      if (!item || item->IsNotPoint())
+      if (!item || item->IsMap() || (item->IsPolygon() && !item->mGroupID))
         return false;
     }
     mRemoveItemOnly = true;
