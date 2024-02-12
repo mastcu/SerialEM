@@ -144,7 +144,7 @@ public:
   CString m_strStageDelta;
   CMyButton m_butBlankUnblank;
   CString m_strMagWithC2;
-  //CStatic m_statBox1;
+  CStatic m_statBox1;
   CStatic m_statBeamLabel;
   CStatic m_statBeamDelta;
   CStatic m_statFocusLabel;

@@ -83,7 +83,7 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_DELSTAGE, m_strStageDelta);
   DDX_Control(pDX, IDC_BLANK_UNBLANK, m_butBlankUnblank);
   DDX_Text(pDX, IDC_STAT_WITH_C2, m_strMagWithC2);
-  //DDX_Control(pDX, IDC_STAT_BOX1, m_statBox1);
+  DDX_Control(pDX, IDC_STAT_BOX1, m_statBox1);
   DDX_Control(pDX, IDC_STAT_BEAM_LABEL, m_statBeamLabel);
   DDX_Control(pDX, IDC_STAT_BEAMDELTA, m_statBeamDelta);
   DDX_Control(pDX, IDC_STAT_FOCUS_LABEL, m_statFocusLabel);
@@ -158,6 +158,10 @@ BOOL CRemoteControl::OnInitDialog()
   }
   if (HitachiScope || mScope->GetNoScope())
     m_butValves.ShowWindow(SW_HIDE);
+  if (mScope->GetNoColumnValve())
+    m_butValves.SetWindowText("Turn On Beam");
+  else
+    m_butValves.SetWindowText(JEOLscope ? "Open Valve" : "Open Valves");
   if (!FEIscope)
     m_butNanoMicro.ShowWindow(SW_HIDE);
   if (!JEOLscope || mScope->GetHasNoAlpha()) {
@@ -211,23 +215,23 @@ BOOL CRemoteControl::OnInitDialog()
 // For Guenter's white bands
 void CRemoteControl::OnPaint()
 {
-  //CRect winRect, dcRect;
-  //COLORREF light = RGB(250, 250, 250);
+  CRect winRect, dcRect;
+  COLORREF light = RGB(250, 250, 250);
   CPaintDC dc(this); // device context for painting
-  /*int offset = TopOffsetForFillingRectangle(winRect);
+  int offset = TopOffsetForFillingRectangle(winRect);
 
   // Objects must be set not visible to avoid being redrawn
-  FillDialogItemRectangle(dc, winRect, m_statBox1, offset, light, dcRect);
+  FillDialogItemRectangle(dc, winRect, &m_statBox1, offset, light, dcRect);
   dc.SelectObject(m_statBeamDelta.GetFont());
-  FillDialogItemRectangle(dc, winRect, m_statBeamDelta, offset, light, dcRect);
+  FillDialogItemRectangle(dc, winRect, &m_statBeamDelta, offset, light, dcRect);
   dc.DrawText(m_strBeamDelta, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
-  FillDialogItemRectangle(dc, winRect, m_statFocusDelta, offset, light, dcRect);
+  FillDialogItemRectangle(dc, winRect, &m_statFocusDelta, offset, light, dcRect);
   dc.DrawText(m_strFocusStep, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
   dc.SelectObject(m_statBeamLabel.GetFont());
-  FillDialogItemRectangle(dc, winRect, m_statBeamLabel, offset, light, dcRect);
+  FillDialogItemRectangle(dc, winRect, &m_statBeamLabel, offset, light, dcRect);
   dc.DrawText("Beam", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
-  FillDialogItemRectangle(dc, winRect, m_statFocusLabel, offset, light, dcRect);
-  dc.DrawText("Focus", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);*/
+  FillDialogItemRectangle(dc, winRect, &m_statFocusLabel, offset, light, dcRect);
+  dc.DrawText("Focus", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
 
   DrawSideBorders(dc);
 }
