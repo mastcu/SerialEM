@@ -2414,7 +2414,7 @@ void CCameraSetupDlg::ManageDose()
   UpdateData(FALSE);
 }
 
-bool CCameraSetupDlg::AdjustCoords(int binning, bool alwaysUpdate)
+bool CCameraSetupDlg::AdjustCoords(int binning, bool updateIfNoSubarea)
 {
   bool update;
   int left, right, top, bottom, sizeX, sizeY, ucrit = 4 * binning - 1;
@@ -2440,7 +2440,7 @@ bool CCameraSetupDlg::AdjustCoords(int binning, bool alwaysUpdate)
 
   // Update parameters in the conset and the screen if there is a substantial change
   // this is to avoid losing pixels when going between binnings
-  if (update || alwaysUpdate) {
+  if (update || (updateIfNoSubarea && noSubarea)) {
     m_eLeft = left * binning / mCoordScaling;
     m_eRight = right * binning / mCoordScaling;
     m_eTop = top * binning / mCoordScaling;

@@ -233,7 +233,7 @@ public:
   CButton m_butMatchPixel;
   CButton m_butMatchIntensity;
   afx_msg void OnSwapXY();
-  bool AdjustCoords(int binning, bool alwaysUpdate = false);
+  bool AdjustCoords(int binning, bool updateIfNoSubarea = false);
   CEdit m_editExposure;
   CButton m_butLineSync;
   BOOL m_bLineSync;
