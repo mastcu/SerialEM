@@ -368,6 +368,25 @@ void CBaseDlg::FillDialogItemRectangle(CPaintDC &dc, CRect &winRect, CWnd *wnd,
   dc.FillSolidRect(&dcRect, color);
 }
 
+// Return top, left coordinates that can be used in a SetWindowPos call for the 
+// given element; will set window and client rect only if necessary
+// See Navigator for an example
+void CBaseDlg::TopLeftForSetWindowPos(CWnd *wnd, CRect &wndRect, CRect &clientRect, 
+  int &left, int &top)
+{
+  int ixOffset;
+  CRect butRect;
+  wnd->GetWindowRect(butRect);
+  if (!wndRect.Width())
+    GetWindowRect(wndRect);
+  if (!clientRect.Width())
+    GetClientRect(clientRect);
+  ixOffset = (wndRect.Width() - clientRect.Width()) / 2;
+  left = butRect.left - wndRect.left - ixOffset;
+  top = (butRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height()) +
+    ixOffset;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //  PANELS, HIDING, AND LAYOUT MANAGEMENT
 ////////////////////////////////////////////////////////////////////////////////

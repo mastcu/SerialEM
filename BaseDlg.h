@@ -126,6 +126,7 @@ public:
   int TopOffsetForFillingRectangle(CRect &winRect);
   void FillDialogItemRectangle(CPaintDC &dc, CRect &winRect, CWnd *wnd, int topOffset,
     COLORREF color, CRect &dcRect);
+  void TopLeftForSetWindowPos(CWnd *wnd, CRect &wndRect, CRect &clientRect, int &left, int &top);
   void ManageHideableItems(UINT *hideableIDs, int numHideable);
   GetMember(int, NumPanels);
   GetMember(int, SetToHeight);
