@@ -1979,7 +1979,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       "or by changing the properties in the shortcut used to start SerialEM", MB_EXCLAME);
   }
 
-  // Set up basic mode file name if in neither settinsg nor properties
+  // Set up basic mode file name if in neither settings nor properties
   if (mBasicModeFile.IsEmpty()) {
     strSys = mSystemPath + "\\" + BASIC_MODE_NAME;
     if (CFile::GetStatus((LPCTSTR)strSys, status))
@@ -2094,8 +2094,8 @@ void CSerialEMDoc::OnSettingsOpen()
       return;
   }
 
-  CString newSettings;
-  if (GetTextFileName(true, true, newSettings)) 
+  CString newSettings, curDir = GetCurrentSettingsDir();
+  if (GetTextFileName(true, true, newSettings, NULL, &curDir)) 
     return;
 
   ReadNewSettingsFile(newSettings);
@@ -2108,7 +2108,8 @@ int CSerialEMDoc::GetTextFileName(bool openOld, bool originalDir, CString &pathn
   static char szFilter[] = "Text files (*.txt)|*.txt|All files (*.*)|*.*||";
   if (!filter)
     filter = &szFilter[0];
-  MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, filter);
+  MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, filter, NULL,
+    !(originalDir || initialDir));
 
   // Set the original directory.  Note this no longer works in Windows 7
   if (initialDir && !initialDir->IsEmpty())
@@ -2198,8 +2199,8 @@ void CSerialEMDoc::OnSettingsSaveas()
 
 int CSerialEMDoc::SettingsSaveAs() 
 {
-  CString newFile;
-  if (GetTextFileName(false, true, newFile))
+  CString newFile, setDir = GetCurrentSettingsDir();
+  if (GetTextFileName(false, true, newFile, NULL, &setDir))
     return 1;
 
   // Force a backup if it exists
@@ -2382,6 +2383,42 @@ void CSerialEMDoc::PostSettingsRead()
     mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
       mWinApp->GetBasicHideStrings());
+  ManageReadInCurrentDir();
+}
+
+// Set directory to the directory from settings and output bolded message to log
+void CSerialEMDoc::ManageReadInCurrentDir()
+{
+  if (!mCurrentDirReadIn.IsEmpty()) {
+    if (_chdir((LPCTSTR)mCurrentDirReadIn)) {
+      mWinApp->AppendToLog("Failed to set current directory from settings file to: " +
+        mCurrentDirReadIn);
+    } else {
+      SetInitialDirToCurrentDir();
+      if (mWinApp->mLogWindow)
+        mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
+      mWinApp->AppendToLog("Current working directory set to " + mCurrentDirReadIn,
+        LOG_SWALLOW_IF_CLOSED);
+    }
+  }
+}
+
+// Return the directory of the current settings file
+CString CSerialEMDoc::GetCurrentSettingsDir()
+{
+  CString curDir, str;
+  UtilSplitPath(mCurrentSettingsPath, curDir, str);
+  return curDir;
+}
+
+// Return the directory for the guven file if non-empty, or the current settings dir
+void CSerialEMDoc::DirFromCurrentOrSettingsFile(const CString &curFile, CString &direc)
+{
+  CString file;
+  if (!curFile.IsEmpty())
+    UtilSplitPath(curFile, direc, file);
+  else
+    direc = GetCurrentSettingsDir();
 }
 
 // Make previous version a backup if it exists and this hasn't been done before
@@ -2528,8 +2565,9 @@ void CSerialEMDoc::OnUpdateSettingsBasicmode(CCmdUI *pCmdUI)
 // Read new file
 void CSerialEMDoc::OnReadBasicModeFile()
 {
-  CString newFile;
-  if (GetTextFileName(true, true, newFile))
+  CString newFile, setDir;
+  DirFromCurrentOrSettingsFile(mBasicModeFile, setDir);
+  if (GetTextFileName(true, true, newFile, NULL, &setDir))
     return;
   if (!mBasicModeFile.CompareNoCase(newFile))
     return;
@@ -2874,11 +2912,17 @@ int CSerialEMDoc::WriteFrameMdoc(void)
   return retval;
 }
 
+// Stored string for "initialDir" which is now maintained as the current working dir
 static char sInitialDir[_MAX_PATH + 1] = "";
 
 void CSerialEMDoc::SetInitialDirToCurrentDir()
 {
   _getcwd(sInitialDir, _MAX_PATH + 1);
+}
+
+const char * CSerialEMDoc::GetInitialDir()
+{
+  return &sInitialDir[0];
 }
 
 
@@ -2889,7 +2933,7 @@ static char emptyString[] = "";
 
 MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt, 
     LPCTSTR lpszFileName, DWORD dwFlags,
-    LPCTSTR lpszFilter, CWnd* pParentWnd)
+    LPCTSTR lpszFilter, CWnd* pParentWnd, BOOL setCurrentDir)
 {
 #ifdef USE_SDK_FILEDLG
 
@@ -2913,6 +2957,7 @@ MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
   }
 #endif
   mfdTD.lpstrInitialDir = (LPCTSTR)sInitialDir;
+  mfdTD.bSetCurrentDir = setCurrentDir;
 }
 
 MyFileDialog::~MyFileDialog()
@@ -2926,7 +2971,6 @@ MyFileDialog::~MyFileDialog()
 // Function for the DoModal operation
 int MyFileDialog::DoModal()
 {
-  bool changeInitial = mfdTD.lpstrInitialDir == (LPCTSTR)sInitialDir;
   CString newDir, str;
   int retval;
 #ifdef USE_SDK_FILEDLG
@@ -2956,16 +3000,18 @@ int MyFileDialog::DoModal()
   retval = (int)mFileDlg->DoModal();
   mfdTD.pathName = mFileDlg->GetPathName();
   mfdTD.fileName = mFileDlg->GetFileName();
-  if (startDir) {
+
+  // Restore starting directory if not changing dir (would it become cwd otherwise?)
+  if (startDir && !(mfdTD.bSetCurrentDir && retval == IDOK))
     _chdir(startDir);
     free(startDir);
-  }
 #endif
 
-  // keep track of change in directory IF it was not set by caller
-  if (changeInitial && retval == IDOK) {
+  // Change working directory if argument says to and it is not canceled
+  if (mfdTD.bSetCurrentDir && retval == IDOK) {
     UtilSplitPath(mfdTD.pathName, newDir, str);
     strncpy(sInitialDir, (LPCTSTR)newDir, _MAX_PATH);
+    _chdir((LPCTSTR)newDir);
   }
   return retval;
 }

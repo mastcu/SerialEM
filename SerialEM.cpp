@@ -975,6 +975,7 @@ BOOL CSerialEMApp::InitInstance()
   LoadStdProfileSettings();  // Load standard INI file options (including MRU)
 
   // Create this first so ANY created class can set this pointer
+  // All but this class can set pointer to mDocWnd too
   mShiftManager = new CShiftManager();
 
   // Register the application's document templates.  Document templates
@@ -1608,6 +1609,7 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
       LOG_SWALLOW_IF_CLOSED);
   }
+  mDocWnd->ManageReadInCurrentDir();
   std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
   message = "";
   for (iCam = 0; iCam < (int)pyVersions->size(); iCam++)

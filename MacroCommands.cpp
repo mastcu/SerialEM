@@ -3158,7 +3158,7 @@ int CMacCmd::Save(void)
     ABORT_LINE(report);
   if (!mItemEmpty[2]) {
     index2 = mItemInt[2] - 1;
-    if (index2 < 0 || index2 >= mWinApp->mDocWnd->GetNumStores())
+    if (index2 < 0 || index2 >= mDocWnd->GetNumStores())
       ABORT_LINE("File # to save to is beyond range of open file numbers in "
         "statement: \n\n");
   }
@@ -3168,8 +3168,8 @@ int CMacCmd::Save(void)
     !mBufferManager->IsBufferSavable(mImBufs + i)))
     SUSPEND_NOLINE("because buffer " + report + " is not savable to current file");
   if (mItemEmpty[1])
-    mWinApp->mDocWnd->SaveRegularBuffer();
-  else if (mWinApp->mDocWnd->SaveBufferToFile(i, index2))
+    mDocWnd->SaveRegularBuffer();
+  else if (mDocWnd->SaveBufferToFile(i, index2))
     SUSPEND_LINE("because of error saving to file in statement: \n\n");
   EMimageExtra *extra = (EMimageExtra * )mImBufs[i].mImage->GetUserData();
   if (extra) {
@@ -3324,7 +3324,7 @@ int CMacCmd::SaveToOtherFile(void)
       ABORT_LINE("Error taking snapshot, " + report + " for line:\n\n");
     }
   } else {
-    iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
+    iy1 = mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
     if (iy1 == 1)
       return 1;
     if (iy1) {
@@ -3370,9 +3370,9 @@ int CMacCmd::OpenNewFile(void)
     SUSPEND_NOLINE("opening new file because " + report + " already exists");
 
   if (index == 1)
-    index2 = mWinApp->mDocWnd->DoOpenNewFile(report);
+    index2 = mDocWnd->DoOpenNewFile(report);
   else {
-    mWinApp->mDocWnd->LeaveCurrentFile();
+    mDocWnd->LeaveCurrentFile();
     mMontP->xNframes = ix0;
     mMontP->yNframes = iy0;
     setNum = MontageConSetNum(mMontP, false);
@@ -3381,7 +3381,7 @@ int CMacCmd::OpenNewFile(void)
     // If the binning has changed, start from scratch on frame sizes and overlaps
     if (mConSets[setNum].binning != mMontP->binning)
       xFrame = 0;
-    index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(xFrame > 0, ix0, iy0,
+    index2 = mDocWnd->GetMontageParamsAndFile(xFrame > 0, ix0, iy0,
       report);
   }
   if (index2)
@@ -3417,12 +3417,12 @@ int CMacCmd::SetupWaffleMontage(void)
 
                  // If it is montaging already, close file
       if (mWinApp->Montaging())
-        mWinApp->mDocWnd->DoCloseFile();
+        mDocWnd->DoCloseFile();
 
                  // Follow same procedure as above for opening montage file
       if (CheckConvertFilename(mStrItems, mStrLine, 2, report))
         return 1;
-      mWinApp->mDocWnd->LeaveCurrentFile();
+      mDocWnd->LeaveCurrentFile();
       mMontP->xNframes = ix0;
       mMontP->yNframes = iy0;
       mMontP->binning = mConSets[RECORD_CONSET].binning;
@@ -3430,7 +3430,7 @@ int CMacCmd::SetupWaffleMontage(void)
       mMontP->yFrame = sizeY / mMontP->binning;
       mMontP->xOverlap = mMontP->xFrame / 10;
       mMontP->yOverlap = mMontP->yFrame / 10;
-      index2 = mWinApp->mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
+      index2 = mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
       mWinApp->mBufferWindow.UpdateSaveCopy();
       if (index2)
         ABORT_NOLINE("Error trying to open new montage the right size for current"
@@ -3540,7 +3540,7 @@ int CMacCmd::EnterNameOpenFile(void)
     SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   if (!KGetOneString(mStrCopy, mEnteredName, 100))
     SUSPEND_NOLINE("because no new file was opened");
-  if (mWinApp->mDocWnd->DoOpenNewFile(mEnteredName))
+  if (mDocWnd->DoOpenNewFile(mEnteredName))
     SUSPEND_NOLINE("because of error opening new file by that name");
   return 0;
 }
@@ -3552,7 +3552,7 @@ int CMacCmd::ChooserForNewFile(void)
   int index;
 
   index = (mItemInt[1] != 0) ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
-  if (mWinApp->mDocWnd->FilenameForSaveFile(mItemInt[1], NULL, mStrCopy)) {
+  if (mDocWnd->FilenameForSaveFile(mItemInt[1], NULL, mStrCopy)) {
     AbortMacro();
     return 1;
   }
@@ -3827,6 +3827,7 @@ int CMacCmd::UserSetDirectory(void)
     if (_chdir((LPCTSTR)dlg.GetPath()))
       SUSPEND_NOLINE("because of failure to change directory to " + dlg.GetPath());
     SetOneReportedValue(dlg.GetPath(), 1);
+    mDocWnd->SetInitialDirToCurrentDir();
   } else
     SetOneReportedValue(CString("Cancel"), 1);
 
@@ -3836,7 +3837,8 @@ int CMacCmd::UserSetDirectory(void)
 // OpenChooserInCurrentDir
 int CMacCmd::OpenChooserInCurrentDir(void)
 {
-  mWinApp->mDocWnd->SetInitialDirToCurrentDir();
+  mDocWnd->SetInitialDirToCurrentDir();
+  mLogRpt = "OpenChooserInCurrentDir is no longer needed";
   return 0;
 }
 
@@ -3855,7 +3857,7 @@ int CMacCmd::IsDirectoryWritable()
 // SetNewFileType
 int CMacCmd::SetNewFileType(void)
 {
-  FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
+  FileOptions *fileOpt = mDocWnd->GetFileOpt();
   if (mItemInt[2] != 0)
     fileOpt->montFileType = mItemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC;
   else
@@ -3875,9 +3877,9 @@ int CMacCmd::OpenOldFile(void)
     ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
   if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, report, false);
+  index = mDocWnd->OpenOldMrcCFile(&cfile, report, false);
   if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
-    index = mWinApp->mDocWnd->OpenOldFile(cfile, report, index, true);
+    index = mDocWnd->OpenOldFile(cfile, report, index, true);
   if (index != MRC_OPEN_NOERR) 
     SUSPEND_LINE("because of error opening old file in statement:\n\n");
   return 0;
@@ -3888,7 +3890,7 @@ int CMacCmd::UserOpenOldFile(void)
   if (mWinApp->mMontageController->DoingMontage() &&
     mWinApp->mMontageController->GetRunningMacro())
     ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
-  if (mWinApp->mDocWnd->DoFileOpenold())
+  if (mDocWnd->DoFileOpenold())
     SUSPEND_LINE("because existing image file was not opened in line:\n\n");
   return 0;
 }
@@ -3900,7 +3902,7 @@ int CMacCmd::CloseFile(void)
     mWinApp->mMontageController->GetRunningMacro())
     ABORT_LINE("Trying to do file operation in script run from montage in line:\n\n");
   if (mWinApp->mStoreMRC) {
-    mWinApp->mDocWnd->DoCloseFile();
+    mDocWnd->DoCloseFile();
   } else if (!mItemEmpty[1]) {
     SUSPEND_LINE("Script suspended on CloseFile because there is no open file");
   }
@@ -3939,9 +3941,9 @@ int CMacCmd::ReportCurrentFilename(void)
     report = mWinApp->mStoreMRC->getFilePath();
     mStrCopy = "Current open image file is: ";
   } else if (CMD_IS(REPORTOPENIMAGEFILE)) {
-    if (mItemInt[1] < 1 || mItemInt[1] >  mWinApp->mDocWnd->GetNumStores())
+    if (mItemInt[1] < 1 || mItemInt[1] >  mDocWnd->GetNumStores())
       ABORT_LINE("Index is out of range in line:\n\n");
-    store = mWinApp->mDocWnd->GetStoreMRC(mItemInt[1] - 1);
+    store = mDocWnd->GetStoreMRC(mItemInt[1] - 1);
     report.Format("Open image file #%d is %s", mItemInt[1], 
       (LPCTSTR)store->getFilePath());
     optInd = 2;
@@ -3988,7 +3990,7 @@ int CMacCmd::IsImageFileOpen()
   int index;
   if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  index = mWinApp->mDocWnd->StoreIndexFromName(report);
+  index = mDocWnd->StoreIndexFromName(report);
   if (index < 0)
     mLogRpt = mStrItems[1] + " is not open";
   else
@@ -4000,8 +4002,8 @@ int CMacCmd::IsImageFileOpen()
 // ReportNumOpenFiles
 int CMacCmd::ReportNumOpenFiles()
 {
-  mLogRpt.Format("There are %d open image files", mWinApp->mDocWnd->GetNumStores());
-  SetRepValsAndVars(1, mWinApp->mDocWnd->GetNumStores());
+  mLogRpt.Format("There are %d open image files", mDocWnd->GetNumStores());
+  SetRepValsAndVars(1, mDocWnd->GetNumStores());
   return 0;
 }
 
@@ -4237,7 +4239,7 @@ int CMacCmd::DoesFileExist(void)
 // MakeDateTimeDir
 int CMacCmd::MakeDateTimeDir(void)
 {
-  mStrCopy = mWinApp->mDocWnd->DateTimeForFrameSaving();
+  mStrCopy = mDocWnd->DateTimeForFrameSaving();
   if (_mkdir((LPCTSTR)mStrCopy))
     SUSPEND_NOLINE("because of failure to create directory " + mStrCopy);
   if (_chdir((LPCTSTR)mStrCopy))
@@ -4252,10 +4254,10 @@ int CMacCmd::SwitchToFile(void)
   int index;
 
   index = mItemInt[1];
-  if (index < 1 || index > mWinApp->mDocWnd->GetNumStores())
+  if (index < 1 || index > mDocWnd->GetNumStores())
     ABORT_LINE("Number of file to switch to is absent or out of range in statement:"
       " \n\n");
-  mWinApp->mDocWnd->SetCurrentStore(index - 1);
+  mDocWnd->SetCurrentStore(index - 1);
   return 0;
 }
 
@@ -4264,7 +4266,7 @@ int CMacCmd::ReportFileNumber(void)
 {
   int index;
 
-  index = mWinApp->mDocWnd->GetCurrentStore();
+  index = mDocWnd->GetCurrentStore();
   if (index >= 0) {
     index++;
     mLogRpt.Format("Current open file number is %d", index);
@@ -4283,9 +4285,9 @@ int CMacCmd::AddTitleToFile(void)
     if (!store)
       ABORT_LINE("There is no open image file for:\n\n");
   } else {
-    if (index < 0 || index > mWinApp->mDocWnd->GetNumStores())
+    if (index < 0 || index > mDocWnd->GetNumStores())
       ABORT_LINE("File number is out of range in:\n\n");
-    store = mWinApp->mDocWnd->GetStoreMRC(index - 1);
+    store = mDocWnd->GetStoreMRC(index - 1);
   }
   if (!store->getDepth())
     ABORT_LINE("at least one image must be saved before running:\n\n");
@@ -4349,10 +4351,10 @@ int CMacCmd::AddToFrameMdoc(void)
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
     if (!mRunningScrpLang)
       mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);
-    index = mWinApp->mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
+    index = mDocWnd->AddValueToFrameMdoc(mStrItems[1], mStrCopy);
   }
   else {
-    index = mWinApp->mDocWnd->WriteFrameMdoc();
+    index = mDocWnd->WriteFrameMdoc();
   }
   if (index > 0)
     ABORT_LINE(CString(frameMsg[index - 1]));
@@ -4364,7 +4366,7 @@ int CMacCmd::ReportFrameMdocOpen(void)
 {
   int index;
 
-  index = mWinApp->mDocWnd->GetFrameAdocIndex() >= 0 ? 1 : 0;
+  index = mDocWnd->GetFrameAdocIndex() >= 0 ? 1 : 0;
   SetRepValsAndVars(1, index);
   mLogRpt.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
   return 0;
@@ -4373,7 +4375,7 @@ int CMacCmd::ReportFrameMdocOpen(void)
 // DeferWritingFrameMdoc
 int CMacCmd::DeferWritingFrameMdoc(void)
 {
-  mWinApp->mDocWnd->SetDeferWritingFrameMdoc(true);
+  mDocWnd->SetDeferWritingFrameMdoc(true);
   return 0;
 }
 
@@ -4383,11 +4385,11 @@ int CMacCmd::OpenFrameMdoc(void)
   CString report;
 
   SubstituteVariables(&mStrLine, 1, mStrLine);
-  if (mWinApp->mDocWnd->GetFrameAdocIndex() >= 0)
+  if (mDocWnd->GetFrameAdocIndex() >= 0)
     ABORT_LINE("The frame mdoc file is already open for line:\n\n");
   if (CheckConvertFilename(mStrItems, mStrLine, 1, report))
     return 1;
-  if (mWinApp->mDocWnd->DoOpenFrameMdoc(report))
+  if (mDocWnd->DoOpenFrameMdoc(report))
     SUSPEND_LINE("because of error opening frame mdoc file in statement:\n\n")
   return 0;
 }
@@ -4395,9 +4397,9 @@ int CMacCmd::OpenFrameMdoc(void)
 // CloseFrameMdoc
 int CMacCmd::CloseFrameMdoc(void)
 {
-  if (mItemInt[1] && mWinApp->mDocWnd->GetFrameAdocIndex() < 0)
+  if (mItemInt[1] && mDocWnd->GetFrameAdocIndex() < 0)
     ABORT_LINE("There is no frame mdoc file open for line:\n\n");
-  mWinApp->mDocWnd->DoCloseFrameMdoc();
+  mDocWnd->DoCloseFrameMdoc();
   return 0;
 }
 
@@ -4470,7 +4472,7 @@ int CMacCmd::SaveLogOpenNew(void)
     mWinApp->mLogWindow->SetUnsaved(false);
       mWinApp->mLogWindow->CloseLog();
   }
-  mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+  mWinApp->AppendToLog(mDocWnd->DateTimeForTitle());
   if (!mItemEmpty[1] && !truth) {
     SubstituteLineStripItems(mStrLine, 1, report);
     mWinApp->mLogWindow->UpdateSaveFile(true, report);
@@ -4512,7 +4514,7 @@ int CMacCmd::DeferLogUpdates(void)
 int CMacCmd::SaveCalibrations(void)
 {
   if (mWinApp->GetAdministrator())
-    mWinApp->mDocWnd->SaveCalibrations();
+    mDocWnd->SaveCalibrations();
   else
     mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode "
      "not enabled", mLogInfoAction);
@@ -4522,7 +4524,7 @@ int CMacCmd::SaveCalibrations(void)
 // SaveSettings
 int CMacCmd::SaveSettings(void)
 {
-  if (mWinApp->mDocWnd->ExtSaveSettings())
+  if (mDocWnd->ExtSaveSettings())
     ABORT_LINE("Failed to save settings for line:\n\n");
   return 0;
 }
@@ -4530,12 +4532,12 @@ int CMacCmd::SaveSettings(void)
 // LoadSettingsFile
 int CMacCmd::LoadSettingsFile(void)
 {
-  CString curFile = mWinApp->mDocWnd->GetCurrentSettingsPath();
+  CString curFile = mDocWnd->GetCurrentSettingsPath();
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   
-  if (mWinApp->mDocWnd->GetSettingsOpen() && !curFile.IsEmpty())
+  if (mDocWnd->GetSettingsOpen() && !curFile.IsEmpty())
     mWinApp->mParamIO->WriteSettings(curFile);
-  mWinApp->mDocWnd->ReadNewSettingsFile(mStrCopy);
+  mDocWnd->ReadNewSettingsFile(mStrCopy);
   return 0;
 }
 
@@ -6070,7 +6072,7 @@ int CMacCmd::SetCustomTime(void)
       custIter->second = index;
     else
       mCustomTimeMap.insert(std::pair < std::string, int > (sstr, index));
-    mWinApp->mDocWnd->SetShortTermNotSaved();
+    mDocWnd->SetShortTermNotSaved();
   } else {
     if (index2) {
       index -= custIter->second;
@@ -7998,7 +8000,7 @@ int CMacCmd::Verbose(void)
 // ProgramTimeStamps
 int CMacCmd::ProgramTimeStamps(void)
 {
-  const char **months = mWinApp->mDocWnd->GetMonthStrings();
+  const char **months = mDocWnd->GetMonthStrings();
   if (mItemInt[1] < 0) {
     CTime ctdt = CTime::GetCurrentTime();
     PrintfToLog("Current date  %s %d %d  %02d:%02d:%02d", months[ctdt.GetMonth() - 1],
@@ -8069,12 +8071,12 @@ int CMacCmd::ReportSettingsFile(void)
 {
   CString report, scripts, dir, settings;
 
-  report = mWinApp->mDocWnd->GetCurrentSettingsPath();
+  report = mDocWnd->GetCurrentSettingsPath();
   mWinApp->AppendToLog("Current settings file: " + report, mLogAction);
   SetOneReportedValue(&mStrItems[1], report, 1);
   scripts = "None";
-  if (mWinApp->mDocWnd->GetReadScriptPack()) {
-    scripts = mWinApp->mDocWnd->GetCurScriptPackPath();
+  if (mDocWnd->GetReadScriptPack()) {
+    scripts = mDocWnd->GetCurScriptPackPath();
     if (scripts.Find(':') < 0 && scripts.GetAt(0) != '\\' && scripts.GetAt(0) != '/') {
       UtilSplitPath(report, dir, settings);
       scripts = dir + "\\" + scripts;
@@ -8088,7 +8090,7 @@ int CMacCmd::ReportSettingsFile(void)
 // ReportSystemPath
 int CMacCmd::ReportSystemPath(void)
 {
-  mStrCopy = mWinApp->mDocWnd->GetSystemPath();
+  mStrCopy = mDocWnd->GetSystemPath();
   mLogRpt = "System path is: " + mStrCopy;
   SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
   return 0;

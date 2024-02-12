@@ -63,6 +63,9 @@ public:
 	void LeaveCurrentFile();
 	void ReadNewSettingsFile(CString newSettings);
 	void PostSettingsRead();
+  void ManageReadInCurrentDir();
+  CString GetCurrentSettingsDir();
+  void DirFromCurrentOrSettingsFile(const CString &curFile, CString &direc);
 	void PreSettingsRead();
   GetMember(CTime, StartupTime)
   GetMember(CString, OriginalCwd)
@@ -113,6 +116,7 @@ public:
   GetMember(CString, CurrentSettingsPath);
   GetMember(CString, OriginalSettingsPath);
   GetMember(BOOL, SettingsOpen);
+  SetMember(CString, CurrentDirReadIn);
   GetSetMember(CString, PluginPath)
   GetSetMember(CString, PluginPath2)
   GetMember(CString, FlybackName);
@@ -224,6 +228,7 @@ private:
   CString mSystemSettingsName;   // Root name of system settings file
   CString mCurrentSettingsPath;  // Full name of current settings file
   CString mOriginalSettingsPath; // Full name of settings file read in at startup
+  CString mCurrentDirReadIn;     // Current directory read from settings
   CString mPropertiesName;       // Root name of properties file
   CString mCalibrationName;      // Root name of calibration file
   CString mOriginalCwd;          // Original working directory
@@ -308,6 +313,7 @@ public:
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);
   void SetInitialDirToCurrentDir();
+  const char *GetInitialDir();
   int UpdateLastMdocFrame(KImage * image);
   void ComposeTitlebarLine(void);
   void CalibrationWasDone(int type);
@@ -345,6 +351,7 @@ struct MyFileDlgThreadData
   CString pathName;
   int retval;
   BOOL done;
+  BOOL bSetCurrentDir;
 };
 
 
@@ -353,7 +360,7 @@ class MyFileDialog
 public:
   MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt = NULL,
     LPCTSTR lpszFileName = NULL, DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-    LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL);
+    LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL, BOOL setCurrentDir = true);
   ~MyFileDialog();
   int DoModal();
   CString GetFileName() {return mfdTD.fileName;};

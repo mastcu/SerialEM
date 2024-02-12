@@ -384,12 +384,11 @@ void CMacroEditer::OnSavemacro()
 
 void CMacroEditer::OnSavemacroas() 
 {
+  CString direc;
   UpdateData(true);
-
-  // 4/29/14: Switched to function.  It never tried to go to original directory and that
-  // will stop working Windows 7, so forget it
-  if (mWinApp->mDocWnd->GetTextFileName(false, false, mSaveFile[m_iMacroNumber],
-    &mFileName[m_iMacroNumber]))
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(mSaveFile[m_iMacroNumber], direc);
+  if (mWinApp->mDocWnd->GetTextFileName(false, true, mSaveFile[m_iMacroNumber],
+    &mFileName[m_iMacroNumber], &direc))
     return;
   DoSave();
 }
@@ -428,8 +427,9 @@ void CMacroEditer::OnLoadmacro()
   int memErr = 0;
   int fileErr = 0;
   static char szFilter[] = "Script files (*.txt, *.py)|*.txt; *.py|All files (*.*)|*.*||";
-  CString cPathname, filename;
-  if (mWinApp->mDocWnd->GetTextFileName(true, false, cPathname, &filename, NULL,
+  CString cPathname, filename, direc;
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(mSaveFile[m_iMacroNumber], direc);
+  if (mWinApp->mDocWnd->GetTextFileName(true, true, cPathname, &filename, &direc,
     &szFilter[0]))
     return;
   

@@ -2119,9 +2119,9 @@
           <TD class="scriptcommand">SetDirectory dir</TD>
           <TD>Changes the working directory to <b>dir</b>, which can contain spaces.&nbsp;
             The working directory is the location where script commands will access files
-            when the names given to commands do not include a path, but it is not the
-            directory where file choosers will open unless the &#39;OpenChooserInCurrentDir&#39;
-            command is used.</TD>
+            when the names given to commands do not include a path.  It is  also the
+             directory where file choosers will open, except for files like settings 
+            and scripts (as of SerialEM 4.2.0beta, 12-Feb-24).</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDirectory</TD>
@@ -2143,17 +2143,12 @@
             not supplied, the dialog title is &#39;Choose a new current working directory&#39;.&nbsp;
             The chosen directory is stored in <I>reportedValue1</I>.&nbsp;  If the user cancels the chooser, that
             value is set to 'Cancel' and can be tested with 'CompareStrings'.&nbsp; This is the
-            directory where script commands will access files when given a name with a path.
-            but file choosers will not open there unless the &#39;OpenChooserInCurrentDir&#39;
-            command is used.</TD>
+            directory where script commands will access files when given a name with a path, and
+            where file choosers will open, except for files like settings and scripts.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">OpenChooserInCurrentDir</TD>
-          <TD>Makes the next file chooser dialog open in the current working directory.&nbsp;
-            If the user selects a different directory in the chooser, the next file chooser
-            will open in that directory, just as if this command was not given, although the
-            location will be kept track of by the program rather than by the operating
-            system.</TD>
+          <TD>This command is unnecessary as of SerialEM 4.2.0beta, 12-Feb-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">MakeDirectory dir</TD>

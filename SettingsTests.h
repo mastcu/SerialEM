@@ -176,6 +176,7 @@ BOOL_SETT_GETSET("ReverseAutocontColors", mWinApp->mNavHelper->, ReverseAutocont
 BOOL_SETT_GETSET("KeepColorsForPolygons", mWinApp->mNavHelper->, KeepColorsForPolygons)
 BOOL_SETT_GETSET("RIErasePeriodicPeaks", mWinApp->mNavHelper->, RIErasePeriodicPeaks)
 BOOL_SETT_GETSET("ShowStateNumbers", mWinApp->mNavHelper->, ShowStateNumbers)
+BOOL_SETT_GETSET("ShowTableIndexes", mWinApp->mNavHelper->, ShowTableIndexes)
 
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
 INT_SETT_GETSET("ExtraDivideBy2", camera->, ExtraDivideBy2)
