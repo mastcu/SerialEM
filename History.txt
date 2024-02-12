@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/12/24: Added option to Navigator window to show item numbers in first
+column.
+
+2/12/24: Made file choosers start in the current directory, changed current
+directory to that of chosen file, saved current directory in settings and set
+it when loading settings.  This does not apply to settings and script-related
+files, which consistently default to the current settings directory.
+
 2/11/24: SEM_4-1-4
 2/11/24: Made backspace in Edit mode delete the current polygon if it was
 created with autocontouring (In 4.1).

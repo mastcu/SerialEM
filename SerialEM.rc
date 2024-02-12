@@ -1954,7 +1954,7 @@ BEGIN
     CONTROL         "Autosave sum of raw frames",IDC_AUTOSAVE_RAW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,213,100,10
 END
 
-IDD_NAVIGATOR DIALOGEX 0, 0, 255, 260
+IDD_NAVIGATOR DIALOGEX 0, 0, 284, 261
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Navigator"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1966,11 +1966,11 @@ BEGIN
     CONTROL         "Spin2",IDC_SPIN_REGPT_NUM,"msctls_updown32",UDS_ARROWKEYS,137,3,10,14
     CONTROL         "Corner point (C)",IDC_CHECKCORNER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,154,5,62,10
     LTEXT           "Note:",IDC_STATIC,55,36,17,8
-    EDITTEXT        IDC_EDIT_PTNOTE,73,34,164,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PTNOTE,73,34,209,12,ES_AUTOHSCROLL
     LTEXT           "Registration",IDC_STATIC,59,79,37,8
     RTEXT           "99",IDC_STAT_CURRENTREG,97,79,9,8
     CONTROL         "Spin1",IDC_SPINCURRENT_REG,"msctls_updown32",UDS_ARROWKEYS,108,76,10,14
-    LISTBOX         IDC_LISTVIEWER,69,114,184,141,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LISTVIEWER,55,114,227,141,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "Add Polygon",IDC_DRAW_POLYGON,3,102,50,10
     PUSHBUTTON      "Add Points",IDC_DRAW_POINTS,3,89,50,10
     PUSHBUTTON      "Move Item",IDC_MOVE_ITEM,3,128,50,10
@@ -1983,7 +1983,7 @@ BEGIN
     COMBOBOX        IDC_COMBOCOLOR,23,19,48,63,CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "Color",IDC_STATIC,3,21,17,8
     CONTROL         "Acquire (A)",IDC_CHECK_ACQUIRE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,49,49,10
-    PUSHBUTTON      "?",IDC_BUTHELP,243,3,10,10
+    PUSHBUTTON      "?",IDC_BUTHELP,272,3,10,10
     CONTROL         "All reg.",IDC_DRAW_ALL_REG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,78,33,10
     CONTROL         "Rotate when load",IDC_CHECKROTATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,107,20,68,10
     PUSHBUTTON      "Realign to Item",IDC_REALIGNTOITEM,3,245,50,10
@@ -1995,36 +1995,38 @@ BEGIN
     PUSHBUTTON      "Imaging State",IDC_BUT_NAV_STATE,57,61,45,10
     PUSHBUTTON      "TS Params",IDC_BUT_NAV_TSPARAMS,106,61,38,10
     PUSHBUTTON      "Filename",IDC_BUT_NAV_FILENAME,148,61,32,10
-    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,236,61,17,8
+    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,235,61,47,8
     CONTROL         "",IDC_STAT_NAV_HORIZLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,2,73,235,1
     PUSHBUTTON      "Update Z",IDC_BUT_UPDATEZ,3,141,50,10
     CONTROL         "For anchor state",IDC_CHECK_DUALMAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,20,61,10
     PUSHBUTTON      "Anchor Map",IDC_BUT_DUAL_MAP,3,219,50,10
     LTEXT           "# 99999-99999",IDC_STAT_NAVITEMNUM,5,36,48,8
-    CONTROL         "Collapse",IDC_COLLAPSE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,59,91,43,10
-    CONTROL         "Show Acquire",IDC_SHOW_ACQUIRE_AREA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,103,91,57,10
+    CONTROL         "Collapse",IDC_COLLAPSE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,59,91,40,10
+    CONTROL         "Show Acquire",IDC_SHOW_ACQUIRE_AREA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,139,91,50,10
     PUSHBUTTON      "Add At Marker",IDC_ADD_MARKER,3,115,50,10
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,126,56,1
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,152,56,1
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,56,1
-    CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,161,91,44,10
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,126,54,1
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,152,54,1
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,54,1
+    CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,195,91,42,10
     PUSHBUTTON      "Go To XY",IDC_GOTO_XY,3,154,50,10
-    LTEXT           " ",IDC_STATLISTHEADER,57,102,196,8
-    LTEXT           "Label",IDC_STATLISTHEADER1,70,102,20,8
-    LTEXT           "Color",IDC_STATLISTHEADER2,104,102,20,8
-    LTEXT           "X",IDC_STATLISTHEADER3,133,102,10,8
-    LTEXT           "Y",IDC_STATLISTHEADER4,158,102,10,8
-    LTEXT           "Z",IDC_STATLISTHEADER5,179,102,10,8
-    LTEXT           "Type",IDC_STATLISTHEADER6,187,102,16,8
-    LTEXT           "Reg.",IDC_STATLISTHEADER7,206,102,14,8
-    LTEXT           "Acq.",IDC_STATLISTHEADER8,223,102,13,8
-    LTEXT           "Note",IDC_STATLISTHEADER9,239,102,15,8
+    LTEXT           "",IDC_STATLISTHEADER,57,102,218,8
+    LTEXT           "#",IDC_STAT_HEADER_INDEX,57,102,8,8
+    LTEXT           "Label",IDC_STATLISTHEADER1,57,102,20,8
+    LTEXT           "Color",IDC_STATLISTHEADER2,91,102,20,8
+    LTEXT           "X",IDC_STATLISTHEADER3,120,102,10,8
+    LTEXT           "Y",IDC_STATLISTHEADER4,145,102,10,8
+    LTEXT           "Z",IDC_STATLISTHEADER5,166,102,10,8
+    LTEXT           "Type",IDC_STATLISTHEADER6,174,102,16,8
+    LTEXT           "Reg.",IDC_STATLISTHEADER7,193,102,14,8
+    LTEXT           "Acq.",IDC_STATLISTHEADER8,210,102,13,8
+    LTEXT           "Note",IDC_STATLISTHEADER9,226,102,15,8
     CONTROL         "Draw",IDC_DRAW_ONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,20,32,10
     CONTROL         "None",IDC_DRAW_NONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,78,29,10
     LTEXT           "Draw:",IDC_STAT_NAV_DRAW,122,79,18,8
     CONTROL         "Labels",IDC_DRAW_LABELS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,208,78,34,10
     PUSHBUTTON      "Focus Pos",IDC_BUT_NAV_FOCUS_POS,184,61,36,10
-    CONTROL         "Edit Focus",IDC_EDIT_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,208,91,43,10
+    CONTROL         "Edit Focus",IDC_EDIT_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,241,91,43,10
+    CONTROL         "Item #s",IDC_TABLE_INDEXES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,101,91,35,10
 END
 
 IDD_DUMMYDLG DIALOG 0, 0, 44, 26
@@ -3165,6 +3167,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
+    LTEXT           "",IDC_STAT_BOX1,1,38,116,19,NOT WS_VISIBLE
     CONTROL         "",IDC_SPIN_STAGE_UP_DOWN,"msctls_updown32",UDS_ARROWKEYS,31,59,11,16
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "?",IDC_BUTHELP,110,0,9,7
@@ -3176,7 +3179,7 @@ BEGIN
     CONTROL         "",IDC_SPIN_RCSPOT,"msctls_updown32",UDS_ARROWKEYS,53,21,11,16
     RTEXT           "C2",IDC_STAT_RCC2IA,79,21,11,8
     CONTROL         "",IDC_SPIN_RCINTENSITY,"msctls_updown32",UDS_ARROWKEYS,97,21,11,16
-    LTEXT           "Beam",IDC_STAT_BEAM_LABEL,9,40,19,8
+    LTEXT           "Beam",IDC_STAT_BEAM_LABEL,9,40,19,8,NOT WS_VISIBLE
     CTEXT           "Stage",IDC_STAT_BEAM_STAGE,8,59,22,9
     CONTROL         "",IDC_SPIN_RCBEAM,"msctls_updown32",UDS_ARROWKEYS,31,40,11,16
     PUSHBUTTON      "Turn Beam Off",IDC_BUT_VALVES,2,9,48,10
@@ -3184,15 +3187,15 @@ BEGIN
     PUSHBUTTON      "-",IDC_BUT_DELBEAMMINUS,57,48,9,8
     PUSHBUTTON      "+",IDC_BUT_DELC2PLUS,108,21,9,8
     PUSHBUTTON      "-",IDC_BUT_DELC2MINUS,108,29,9,8
-    RTEXT           "0.900",IDC_STAT_BEAMDELTA,2,48,28,8
+    RTEXT           "0.900",IDC_STAT_BEAMDELTA,2,48,28,8,NOT WS_VISIBLE
     RTEXT           "0.1000",IDC_STAT_C2DELTA,66,30,30,8
     CONTROL         "",IDC_SPIN_BEAM_LEFT_RIGHT,"msctls_updown32",UDS_ARROWKEYS | UDS_HORZ,42,40,15,16
     PUSHBUTTON      "-> uPr",IDC_BUT_NANO_MICRO,4,23,27,12,BS_CENTER | BS_MULTILINE
     CONTROL         "",IDC_SPIN_ALPHA,"msctls_updown32",UDS_ARROWKEYS,23,21,11,16
     LTEXT           "Alpha",IDC_STAT_ALPHA,4,25,18,8
     CONTROL         "",IDC_SPIN_FOCUS,"msctls_updown32",UDS_ARROWKEYS,97,40,11,16
-    RTEXT           "Focus",IDC_STAT_FOCUS_LABEL,74,40,20,8
-    RTEXT           "0.05",IDC_STAT_FOCUS_STEP,71,48,25,8
+    RTEXT           "Focus",IDC_STAT_FOCUS_LABEL,74,40,20,8,NOT WS_VISIBLE
+    RTEXT           "0.05",IDC_STAT_FOCUS_STEP,71,48,25,8,NOT WS_VISIBLE
     PUSHBUTTON      "+",IDC_BUT_DELFOCUSPLUS,108,40,9,8
     PUSHBUTTON      "-",IDC_BUT_DELFOCUSMINUS,108,48,9,8
     PUSHBUTTON      "Lower Scrn",IDC_BUT_SCREEN_UPDOWN,81,9,38,10
@@ -4248,9 +4251,9 @@ BEGIN
     IDD_NAVIGATOR, DIALOG
     BEGIN
         LEFTMARGIN, 2
-        RIGHTMARGIN, 253
+        RIGHTMARGIN, 282
         TOPMARGIN, 3
-        BOTTOMMARGIN, 257
+        BOTTOMMARGIN, 258
         HORZGUIDE, 167
     END
 
@@ -6888,10 +6891,10 @@ BEGIN
     IDC_SPIN_RCMAG          "Increase or decrease magnification; multiple clicks do several steps at once"
     IDC_SPIN_RCSPOT         "Increase or decrease spot size; do multiple clicks for several steps at once"
     IDC_SPIN_RCINTENSITY    "Change the intensity lens value by step (hot keys Ctrl Up/Down arrows)"
-    IDC_SPIN_RCBEAM         "Shift up or down in Y on current camera (beam hot keys Shift Up/Down arrows)"
+    IDC_SPIN_RCBEAM         "Shift beam up or down in Y on current camera (hot keys Shift Up/Down arrows)"
     IDC_BUT_VALVES          "Toggle state of beam valves or filament"
-    IDC_BUT_DELBEAMPLUS     "Increase step size for beam or stage move by 1.4 (beam hot key > )"
-    IDC_BUT_DELBEAMMINUS    "Reduce step size for beam or stage move by 1.4 (beam hot key < )"
+    IDC_BUT_DELBEAMPLUS     "Increase step size for beam move by 1.4 (hot key > )"
+    IDC_BUT_DELBEAMMINUS    "Reduce step size for beam move by 1.4 (hot key < )"
     IDC_BUT_DELC2PLUS       "Increase step size for intensity lens change by 1.4 (hot key Ctrl period)"
     IDC_BUT_DELC2MINUS      "Decrease step size for intensity lens change by 1.4 (hot key Ctrl comma)"
 END
@@ -7418,6 +7421,13 @@ BEGIN
     IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
     IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
     IDC_CHECK_SHOW_NUMBER   "Show state index number before name in table"
+    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
+    IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
+    IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
+    IDC_SPIN_STAGE_LEFT_RIGHT
+                            "Move stage by one step to move camera image left or right"
+    IDC_SPIN_STAGE_UP_DOWN
+                            "Move stage by one step to move camera image up or down"
 END
 
 STRINGTABLE

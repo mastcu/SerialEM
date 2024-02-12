@@ -322,6 +322,7 @@ private:
   int mCurrentItem;         // Current item
   int mCurListSel;          // Current list selection in collapsed mode
   std::set<int> mSelectedItems;  // Set of selected items indexes
+  int mNumDigitsForIndex;   // Number of digits when showing indexes
   int mRegPointNum;
   int mNewItemNum;
   BOOL mAddingPoints;
@@ -511,6 +512,8 @@ private:
   int mNumReconnectsInAcq;     // Number of reconnections that occurred during acquire
   bool mReconnectedInAcq;      // flag that reconnect happened
   double mReconnectStartTime;  // Time when reconnect started
+  int mListHeaderTop;          // Common top and individual left positions for top labels
+  int mListHeaderLefts[9];
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -740,6 +743,9 @@ void SetChanged(BOOL inVal);
 void AddFocusAreaPoint(bool drawFirst);
 bool AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd);
 bool GetHolePositionVectors(FloatVec **xypos, IntVec **index);
+CButton m_butTableIndexes;
+BOOL m_bTableIndexes;
+afx_msg void OnTableIndexes();
 };
 
 //{{AFX_INSERT_LOCATION}}

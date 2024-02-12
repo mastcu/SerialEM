@@ -311,6 +311,7 @@ CNavHelper::CNavHelper(void)
   mMHCskipAveragingPos = false;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
+  mShowTableIndexes = false;
   mRIstayingInLD = false;
   mRIuseCurrentLDparams = false;
   mNav = NULL;

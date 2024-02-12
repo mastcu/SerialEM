@@ -116,6 +116,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   , m_bEditMode(FALSE)
   , m_bDrawLabels(TRUE)
   , m_bEditFocus(FALSE)
+  , m_bTableIndexes(FALSE)
 {
 	//{{AFX_DATA_INIT(CNavigatorDlg)
 	m_bRegPoint = FALSE;
@@ -134,6 +135,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
   mInitialized = false;
   mNonModal = true;
+  mNumDigitsForIndex = -1;
   mItemArray.SetSize(0, 5);
   mGroupFiles.SetSize(0, 4);
   mFileOptArray.SetSize(0, 4);
@@ -262,6 +264,8 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_NAV_FOCUS_POS, m_butNavFocusPos);
   DDX_Control(pDX, IDC_EDIT_FOCUS, m_butEditFocus);
   DDX_Check(pDX, IDC_EDIT_FOCUS, m_bEditFocus);
+  DDX_Control(pDX, IDC_TABLE_INDEXES, m_butTableIndexes);
+  DDX_Check(pDX, IDC_TABLE_INDEXES, m_bTableIndexes);
 }
 
 
@@ -316,6 +320,7 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_DRAW_LABELS, OnDrawLabels)
   ON_BN_CLICKED(IDC_BUT_NAV_FOCUS_POS, OnButNavFocusPos)
   ON_BN_CLICKED(IDC_EDIT_FOCUS, OnEditFocus)
+  ON_BN_CLICKED(IDC_TABLE_INDEXES, OnTableIndexes)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -323,9 +328,6 @@ END_MESSAGE_MAP()
 
 BOOL CNavigatorDlg::OnInitDialog() 
 {
-  // label, color, X, Y, Z, type, reg, corner, extras
-  int fields[10] = {37,16,25,25,21,15,19,15,8,8};
-  int tabs[10], i;
 	CBaseDlg::OnInitDialog();
   mDocWnd = mWinApp->mDocWnd;
 	mMagTab = mWinApp->GetMagTable();
@@ -341,8 +343,16 @@ BOOL CNavigatorDlg::OnInitDialog()
   mLowDoseDlg = &mWinApp->mLowDoseDlg;
   mMacroProcessor = mWinApp->mMacroProcessor;
 
-  CRect editRect, clientRect;
+  CRect editRect, clientRect, wndRect;
   GetClientRect(clientRect);
+  for (int ind = 0; ind < 9; ind++) {
+    mListHeaderLefts[ind] = 0;
+    CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER1 + ind);
+    if (part)
+      TopLeftForSetWindowPos(part, wndRect, clientRect, mListHeaderLefts[ind],
+        mListHeaderTop);
+  }
+
   m_editPtNote.GetWindowRect(editRect);
   mNoteBorderX = clientRect.Width() - editRect.Width();
   mNoteHeight = editRect.Height();
@@ -357,13 +367,10 @@ BOOL CNavigatorDlg::OnInitDialog()
   mFilenameBorderX = clientRect.Width() - editRect.Width();
   mInitialized = true;
   m_bCollapseGroups = mHelper->GetCollapseGroups();
+  m_bTableIndexes = mHelper->GetShowTableIndexes();
   m_iColor = 0;
   SetDropDownHeight(&m_comboColor, CONT_COLOR_BASE_IND + MAX_AUTOCONT_GROUPS);
 
-  tabs[0] = fields[0];
-  for (i = 1; i < 10; i++)
-    tabs[i] = tabs[i - 1] + fields[i];
-  m_listViewer.SetTabStops(10, tabs);
   m_sbcCurrentReg.SetRange(1,MAX_CURRENT_REG);
   m_sbcRegPtNum.SetRange(1,MAX_REGPT_NUM);
 
@@ -424,6 +431,7 @@ void CNavigatorDlg::OnCancel()
   if (AskIfSave("closing window?"))
     return;
   mHelper->SetCollapseGroups(m_bCollapseGroups);
+  mHelper->SetShowTableIndexes(m_bTableIndexes);
   if (!mWinApp->mMainFrame->GetClosingProgram())
     Redraw();
 
@@ -556,6 +564,11 @@ void CNavigatorDlg::ManageCurrentControls()
   m_butDrawOne.EnableWindow(enableDraw);
   m_comboColor.EnableWindow(exists);
   UpdateData(false);
+  if (m_bTableIndexes && mNumDigitsForIndex > 0) {
+    if (mItemArray.GetSize() < pow(10, mNumDigitsForIndex - 1) ||
+      mItemArray.GetSize() >= pow(10, mNumDigitsForIndex))
+      FillListBox(true, true);
+  }
   if (mHelper->mMultiShotDlg)
     mHelper->mMultiShotDlg->ManageEnables();
   Update();
@@ -1547,6 +1560,14 @@ void CNavigatorDlg::OnCollapseGroups()
   mWinApp->RestoreViewFocus();
 }
 
+void CNavigatorDlg::OnTableIndexes()
+{
+  UpdateData(true);
+  mHelper->SetShowTableIndexes(m_bTableIndexes);
+  FillListBox(true, true);
+  mWinApp->RestoreViewFocus();
+}
+
 /////////////////////////////////////////////////////////////////////
 // LIST BOX MESSAGE RESPONSES AND ROUTINES TO MANAGE LIST BOX TEXT
 
@@ -2109,8 +2130,13 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
   if (m_bCollapseGroups && GetCollapsedGroupLimits(mItemToList[index], start, end)) {
     item = mItemArray[start];
     item2 = mItemArray[end];
-    string.Format("   Group of %d items, ID ...%04d,  labels %s to %s", 
-      end + 1 - start, item->mGroupID % 10000, item->mLabel, item2->mLabel);
+    if (m_bTableIndexes)
+      string.Format("   %d items, %d to %d, ID ...%04d, labels %s to %s",
+        end + 1 - start, start + 1, end + 1, item->mGroupID % 10000, item->mLabel,
+        item2->mLabel);
+    else
+      string.Format("   Group of %d items, ID ...%04d, labels %s to %s",
+        end + 1 - start, item->mGroupID % 10000, item->mLabel, item2->mLabel);
     for (j = start; j <= end; j++) {
       item2 = mItemArray[j];
       if (item2->mAcquire)
@@ -2132,7 +2158,10 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
   } else {
     if (item->IsMap() && item->mMapID == mDualMapID) 
       type = ITEM_TYPE_MAP + 2;
-    string = item->mLabel + "\t" + CString(item->mDraw ? colorNames[item->mColor] : "Off")
+    string = "";
+    if (mNumDigitsForIndex)
+      string.Format("%d\t", index + 1);
+    string += item->mLabel + "\t" + CString(item->mDraw ? colorNames[item->mColor] : "Off")
       + "\t" + FormatCoordinate(item->mStageX, 7) + FormatCoordinate(item->mStageY, 7) +
       FormatCoordinate(item->mStageZ, 6) + typeString[type];
     substr.Format("\t%d\t", item->mRegistration);
@@ -2206,9 +2235,55 @@ void CNavigatorDlg::UpdateGroupStrings(int groupID)
 void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
 {
   CString string;
-  int updated = -1;
-  int i;
+  HDWP positions;
+  int offset = 0, updated = -1;
+  int numDig = 0, noIndex = m_bTableIndexes ? 0 : 1, i = mItemArray.GetSize();
+
+  // label, color, X, Y, Z, type, reg, corner, extras
+  const int numTabs = 11;
+  int fields[numTabs] = {0,37,16,25,25,21,15,19,15,8,8};
+  int tabs[numTabs];
+
   m_listViewer.ResetContent();
+
+  // Find number of digits to display
+  if (m_bTableIndexes) {
+    numDig = 1;
+    while ((i = i / 10) > 0)
+      numDig++;
+  }
+
+  // If it has changed, compute the first field width for the index and the offset to
+  // apply to the label positions, both empirically done by finding offsets for 
+  // different digits and DPI scalings
+  if (numDig != mNumDigitsForIndex) {
+    m_statListHeader.GetWindowText(string);
+    ShowDlgItem(IDC_STAT_HEADER_INDEX, (numDig > 0 && string.IsEmpty()));
+    mNumDigitsForIndex = numDig;
+    if (numDig) {
+      fields[0] = B3DNINT(3.1 + 3.75 * numDig);
+      offset = mWinApp->ScaleValueForDPI(23. * fields[0] / 12.);
+    }
+    tabs[0] = fields[noIndex];
+    for (i = 1; i < numTabs - noIndex; i++)
+      tabs[i] = tabs[i - 1] + fields[i + noIndex];
+
+    // Set the tab stops and shift the column labels
+    m_listViewer.SetTabStops(numTabs - noIndex, tabs);
+    positions = BeginDeferWindowPos(9);
+    if (positions) {
+      for (i = 0; i < 9; i++) {
+        CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER1 + i);
+        if (part && mListHeaderLefts[i])
+          positions = DeferWindowPos(positions, part->m_hWnd, NULL,
+            mListHeaderLefts[i] + offset, mListHeaderTop, 0, 0,
+            SWP_NOZORDER | SWP_NOSIZE);
+      }
+      EndDeferWindowPos(positions);
+    }
+  }
+
+  // Fill the table with new list strings
   if (mItemArray.GetSize()) {
     for (i = 0; i < mItemArray.GetSize(); i++) {
       if (!m_bCollapseGroups || mItemToList[i] != updated) {
@@ -11796,6 +11871,8 @@ void CNavigatorDlg::ManageListHeader(CString str)
     if (part)
       part->ShowWindow(hideShow);
   }
+  ShowDlgItem(IDC_STAT_HEADER_INDEX, (str.IsEmpty() && m_bTableIndexes && 
+    mNumDigitsForIndex));
 }
 
 // Store suffixes of extra files to open

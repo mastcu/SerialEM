@@ -245,6 +245,7 @@ public:
   GetSetMember(float, RIdefocusChangeLimit);
   GetSetMember(BOOL, RIuseCurrentLDparams);
   GetSetMember(BOOL, CollapseGroups);
+  GetSetMember(BOOL, ShowTableIndexes);
   SetMember(int, ExtDrawnOnID);
   GetSetMember(BOOL, SkipMontFitDlgs);
   GetSetMember(int, DoingMultipleFiles);
@@ -470,6 +471,7 @@ private:
   BOOL mDivideIntoGroups;       // Flag for whether to do it
   bool mEditReminderPrinted;     // Flag that reminder printed when edit mode turned on
   BOOL mCollapseGroups;         // To keep "collapse" setting for dialog
+  BOOL mShowTableIndexes;       // To keep "Indexes" setting for dialog
   int mExtDrawnOnID;            // ID of current map for external points
   float  mExtUseWidth, mExtUseHeight;    // Parameters of current map for external items
   int mExtXframe, mExtYframe;

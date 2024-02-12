@@ -2245,7 +2245,9 @@
 #define IDC_STAT_FOCUS_LABEL            3285
 #define IDC_STAT_SPOT_LABEL             3286
 #define IDC_STAT_WITH_C2                3288
-#define IDC_STAT_BOX1                   3289
+#define IDC_STAT_BOX1                   3290
+#define IDC_TABLE_INDEXES               3291
+#define IDC_STAT_HEADER_INDEX           3293
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2806,7 +2808,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         33523
-#define _APS_NEXT_CONTROL_VALUE         3290
+#define _APS_NEXT_CONTROL_VALUE         3294
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

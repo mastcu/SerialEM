@@ -582,8 +582,8 @@ int CNavAcquireDlg::CheckActionOrder(int * order)
 // Save parameters
 void CNavAcquireDlg::OnSaveParams()
 {
-  CString cPathname, filename;
-  if (mWinApp->mDocWnd->GetTextFileName(false, false, cPathname, &filename))
+  CString cPathname, filename, direc = mWinApp->mDocWnd->GetCurrentSettingsDir();
+  if (mWinApp->mDocWnd->GetTextFileName(false, true, cPathname, &filename, &direc))
     return;
   UnloadDialogToCurParams();
   mWinApp->mParamIO->WriteAcqParamsToFile(mParam, mActions, mCurrentOrder, cPathname);
@@ -592,8 +592,8 @@ void CNavAcquireDlg::OnSaveParams()
 // Read parameters
 void CNavAcquireDlg::OnReadParams()
 {
-  CString cPathname, filename;
-  if (mWinApp->mDocWnd->GetTextFileName(true, false, cPathname, &filename))
+  CString cPathname, filename, direc = mWinApp->mDocWnd->GetCurrentSettingsDir();
+  if (mWinApp->mDocWnd->GetTextFileName(true, true, cPathname, &filename, &direc))
     return;
   mWinApp->mParamIO->ReadAcqParamsFromFile(mParam, mActions, mCurrentOrder, cPathname);
   if (!mAnyTSpoints && mAnyAcquirePoints)
