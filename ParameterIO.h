@@ -48,7 +48,8 @@ public:
 private:
   ControlSet * mConSets;
   CString * mModeNames;
-  CSerialEMApp * mWinApp;
+  CSerialEMApp *mWinApp;
+  CSerialEMDoc *mDocWnd;
   MagTable *mMagTab;
   CStdioFile *mFile;
   int mNumLDSets;

@@ -203,6 +203,7 @@ CMacroProcessor::CMacroProcessor()
   mReservedWords.insert(keywords, keywords + sizeof(keywords) / sizeof(std::string));
   mPythonOnlyCmdSet.insert(pythonOnlyCmds, pythonOnlyCmds + sizeof(pythonOnlyCmds) / 
     sizeof(int));
+  mDocWnd = mWinApp->mDocWnd;
   mMaxCmdToLoopOnIdle = 100;
   mMaxSecToLoopOnIdle = 1.;
   mDoingMacro = false;
@@ -586,8 +587,10 @@ void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
 // Read and write many macros
 void CMacroProcessor::OnMacroReadMany()
 {
-  CString filename;
-  if (mWinApp->mDocWnd->GetTextFileName(true, false, filename))
+  CString filename, direc;
+  mDocWnd->DirFromCurrentOrSettingsFile(mDocWnd->GetCurScriptPackPath(),
+    direc);
+  if (mDocWnd->GetTextFileName(true, true, filename, NULL, &direc))
     return;
   mParamIO->ReadMacrosFromFile(filename, "", MAX_MACROS);
   UpdateAllForNewScripts(false);
@@ -609,15 +612,14 @@ void CMacroProcessor::OnScriptLoadNewPackage()
 {
   CString filename, path, filen, oldFile;
   bool saveCurrent = false;
-  oldFile = mWinApp->mDocWnd->GetCurScriptPackPath();
+  oldFile = mDocWnd->GetCurScriptPackPath();
+  mDocWnd->DirFromCurrentOrSettingsFile(oldFile, path);
 
   // Find out if want to save
-  if (!oldFile.IsEmpty()) {
-    UtilSplitPath(oldFile, path, filen);
+  if (!oldFile.IsEmpty())
     saveCurrent = AfxMessageBox("Save current scripts to current file before loading a new"
       " package file?", MB_QUESTION) == IDYES;
-  }
-  if (mWinApp->mDocWnd->GetTextFileName(true, false, filename, NULL, &path))
+  if (mDocWnd->GetTextFileName(true, true, filename, NULL, &path))
     return;
   LoadNewScriptPackage(filename, saveCurrent);
 }
@@ -627,9 +629,9 @@ int CMacroProcessor::LoadNewScriptPackage(CString & filename, bool saveCurrent)
 {
   CString filen, oldFile;
   int retval = 0;
-  oldFile = mWinApp->mDocWnd->GetCurScriptPackPath();
+  oldFile = mDocWnd->GetCurScriptPackPath();
   if (saveCurrent) {
-    mWinApp->mDocWnd->ManageScriptPackBackup();
+    mDocWnd->ManageScriptPackBackup();
     mParamIO->WriteMacrosToFile(oldFile, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
   }
   mWinApp->ClearAllMacros();
@@ -642,7 +644,7 @@ int CMacroProcessor::LoadNewScriptPackage(CString & filename, bool saveCurrent)
     retval = 1;
     if (mParamIO->ReadMacrosFromFile(filename, "",  MAX_MACROS + MAX_ONE_LINE_SCRIPTS,
       true)) {
-      oldFile = mWinApp->mDocWnd->GetCurrentSettingsPath();
+      oldFile = mDocWnd->GetCurrentSettingsPath();
       UtilSplitExtension(oldFile, filename, filen);
       filename += "-scripts.txt";
       mWinApp->AppendToLog("Unable to reload last script package; scripts will be saved "
@@ -650,8 +652,8 @@ int CMacroProcessor::LoadNewScriptPackage(CString & filename, bool saveCurrent)
       retval = 2;
     }
   }
-  mWinApp->mDocWnd->SetCurScriptPackPath(filename);
-  mWinApp->mDocWnd->SetScriptPackBackedUp(false);
+  mDocWnd->SetCurScriptPackPath(filename);
+  mDocWnd->SetScriptPackBackedUp(false);
   UpdateAllForNewScripts(true);
   mWinApp->AppendToLog("Current script package file is now " + filename);
   return retval;
@@ -673,7 +675,7 @@ void CMacroProcessor::UpdateAllForNewScripts(bool oneLinersToo)
 // Save to currently defined package file
 void CMacroProcessor::OnScriptSavePackage()
 {
-  CString filename = mWinApp->mDocWnd->GetCurScriptPackPath();
+  CString filename = mDocWnd->GetCurScriptPackPath();
   if (filename.IsEmpty())
     OnScriptSavePackageAs();
   else
@@ -683,15 +685,14 @@ void CMacroProcessor::OnScriptSavePackage()
 // Save to new package file
 void CMacroProcessor::OnScriptSavePackageAs()
 {
-  CString filename, path, filen, oldFile;
-  oldFile = mWinApp->mDocWnd->GetCurScriptPackPath();
-  if (!oldFile.IsEmpty())
-    UtilSplitPath(oldFile, path, filen);
-  if (mWinApp->mDocWnd->GetTextFileName(false, false, filename, NULL, &path))
+  CString filename, path;
+  mDocWnd->DirFromCurrentOrSettingsFile(mDocWnd->GetCurScriptPackPath(),
+    path);
+  if (mDocWnd->GetTextFileName(false, true, filename, NULL, &path))
     return;
   mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
-  mWinApp->mDocWnd->SetCurScriptPackPath(filename);
-  mWinApp->mDocWnd->SetScriptPackBackedUp(false);
+  mDocWnd->SetCurScriptPackPath(filename);
+  mDocWnd->SetScriptPackBackedUp(false);
   mWinApp->AppendToLog("Current script package file is now " + filename);
 }
 
@@ -1827,7 +1828,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   mCamera->StopFrameTSTilting();
   mWinApp->mScopeStatus.SetWatchDose(false);
-  mWinApp->mDocWnd->SetDeferWritingFrameMdoc(false);
+  mDocWnd->SetDeferWritingFrameMdoc(false);
   if (!mPackToLoadAtEnd.IsEmpty())
     LoadNewScriptPackage(mPackToLoadAtEnd, mSaveCurrentPack);
   for (ind = 0; ind < 3; ind++) {

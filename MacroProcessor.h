@@ -238,6 +238,7 @@ protected:
   CProcessImage *mProcessImage;
   CFocusManager *mFocusManager;
   CParameterIO *mParamIO;
+  CSerialEMDoc *mDocWnd;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;
   CString mModeCaps[5];

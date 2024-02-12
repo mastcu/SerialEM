@@ -91,6 +91,7 @@ CParameterIO::CParameterIO()
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mShiftManager = mWinApp->mShiftManager;
+  mDocWnd = mWinApp->mDocWnd;
   mModeNames = mWinApp->GetModeNames();
   mConSets = mWinApp->GetCamConSets();
   mMagTab = mWinApp->GetMagTable();
@@ -161,8 +162,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   double itemDbl[MAX_TOKENS];
   float itemFlt[MAX_TOKENS];
   int nLines = 0;
-  FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
-  FileOptions *otherFileOpt = mWinApp->mDocWnd->GetOtherFileOpt();
+  FileOptions *defFileOpt = mDocWnd->GetDefFileOpt();
+  FileOptions *otherFileOpt = mDocWnd->GetOtherFileOpt();
   int *initialDlgState = mWinApp->GetInitialDlgState();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   float pctLo, pctHi;
@@ -221,7 +222,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   msParams->customHoleY.clear();
   for (index = 0; index <= MAX_MACROS; index++)
     mWinApp->SetReopenMacroEditor(index, false);
-  mWinApp->mDocWnd->SetCurScriptPackPath("");
+  mDocWnd->SetCurScriptPackPath("");
   mWinApp->ClearAllMacros();
   mWinApp->SetSettingsFixedForIACal(false);
 
@@ -245,12 +246,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     while (retval == 0 && (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt,
                                                 itemDbl, itemFlt,MAX_TOKENS))
            == 0) {
-          recognized = true;
-          recognized15 = true;
-          recognized2 = true;
-          recognized25 = true;
-          recognized3 = true;
-          if (NAME_IS("SystemPath")) {
+      recognized = true;
+      recognized15 = true;
+      recognized2 = true;
+      recognized25 = true;
+      recognized3 = true;
+      if (NAME_IS("SystemPath")) {
 
         // There could be multiple words - have to assume 
         // separated by spaces
@@ -258,7 +259,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         index = 2;
         while (!strItems[index].IsEmpty() && index < MAX_TOKENS)
           path += " " + strItems[index++];
-        mWinApp->mDocWnd->SetSystemPath(path);
+        mDocWnd->SetSystemPath(path);
 
       } else if (NAME_IS("CameraControlSet")) {
         int iset = itemInt[1];
@@ -407,7 +408,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
         if (fullp)
           strCopy = fullp;
-        mWinApp->mDocWnd->SetCurScriptPackPath(strCopy);
+        mDocWnd->SetCurScriptPackPath(strCopy);
+      } else if (NAME_IS("CurrentDirectory")) {
+        StripItems(strLine, 1, strCopy);
+        mDocWnd->SetCurrentDirReadIn(strCopy);
       } else if (NAME_IS("ScriptToRunAtStart")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunAtStart(strCopy);
@@ -419,7 +423,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->SetScriptToRunOnIdle(strCopy);
       } else if (MatchNoCase("BasicModeFile")) {
         StripItems(strLine, 1, strCopy);
-        mWinApp->mDocWnd->SetBasicModeFile(strCopy);
+        mDocWnd->SetBasicModeFile(strCopy);
       } else if (NAME_IS("LastDPI")) {
         mWinApp->SetLastSystemDPI(itemInt[1]);
       } else if (NAME_IS("FrameNameData")) {
@@ -1018,7 +1022,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
           } else if (NAME_IS("ReadDlgPlacement"))
-            place = mWinApp->mDocWnd->GetReadDlgPlacement();
+            place = mDocWnd->GetReadDlgPlacement();
           else if (NAME_IS("StageToolPlacement"))
             place = mWinApp->GetStageToolPlacement();
           else if (NAME_IS("MacroEditerPlacement"))
@@ -1065,7 +1069,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("ZbyGSetupPlacement", mWinApp->mParticleTasks->mZbyGsetupDlg);
             SET_PLACEMENT("SnapshotPlacement", mWinApp->mScreenShotDialog);
             SET_PLACEMENT("StatePlacement", mWinApp->mNavHelper->mStateDlg);
-            SET_PLACEMENT("ReadDlgPlacement", mWinApp->mDocWnd->mReadFileDlg);
+            SET_PLACEMENT("ReadDlgPlacement", mDocWnd->mReadFileDlg);
             SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
             SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
             SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
@@ -1509,28 +1513,28 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CTSVariationsDlg::PurgeVariations(mTSParam->varyArray, mTSParam->numVaryItems, index);
 
   // Keep track if reading the script pack fails
-  strLine = mWinApp->mDocWnd->GetCurScriptPackPath();
+  strLine = mDocWnd->GetCurScriptPackPath();
   recognized = true;
   if (!strLine.IsEmpty()) {
     if (ReadMacrosFromFile(strLine, strFileName, MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
       recognized = false;
       strLine = "";
     } else
-      mWinApp->mDocWnd->SetCurScriptPackPath(strLine);
+      mDocWnd->SetCurScriptPackPath(strLine);
   }
-  mWinApp->mDocWnd->SetReadScriptPack(!strLine.IsEmpty());
+  mDocWnd->SetReadScriptPack(!strLine.IsEmpty());
 
   // If no package read, set the name of the output package, switching to current name
   // of system settings being read.  Then try to read THAT package so we don't just blow
   // it away
   if (strLine.IsEmpty()) {
-    message = readingSys ? mWinApp->mDocWnd->GetCurrentSettingsPath() : strFileName;
+    message = readingSys ? mDocWnd->GetCurrentSettingsPath() : strFileName;
     UtilSplitExtension(message, strLine, strCopy);
     strLine += "-scripts.txt";
-    mWinApp->mDocWnd->SetCurScriptPackPath(strLine);
+    mDocWnd->SetCurScriptPackPath(strLine);
     if (!recognized && !ReadMacrosFromFile(strLine, message,
       MAX_MACROS + MAX_ONE_LINE_SCRIPTS))
-      mWinApp->mDocWnd->SetReadScriptPack(true);
+      mDocWnd->SetReadScriptPack(true);
 
     // But if there was no script pack defined in settings, we need to stick with macros
     // in there if any but save an existing file
@@ -1581,8 +1585,8 @@ void CParameterIO::WriteSettings(CString strFileName)
 {
   ControlSet *cs;
   float pctLo, pctHi;
-  FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
-  FileOptions *otherFileOpt = mWinApp->mDocWnd->GetOtherFileOpt();
+  FileOptions *fileOpt = mDocWnd->GetFileOpt();
+  FileOptions *otherFileOpt = mDocWnd->GetOtherFileOpt();
 #define SETTINGS_MODULES
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
@@ -1605,7 +1609,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *dosePlace = mWinApp->mScopeStatus.GetDosePlacement();
   WINDOWPLACEMENT *toolPlace = mWinApp->mMacroProcessor->GetToolPlacement();
   WINDOWPLACEMENT *oneLinePlace = mWinApp->mMacroProcessor->GetOneLinePlacement();
-  WINDOWPLACEMENT *readPlace = mWinApp->mDocWnd->GetReadDlgPlacement();
+  WINDOWPLACEMENT *readPlace = mDocWnd->GetReadDlgPlacement();
   WINDOWPLACEMENT *stageToolPlace = mWinApp->GetStageToolPlacement();
   WINDOWPLACEMENT *ctffindPlace = mWinApp->mProcessImage->GetCtffindPlacement();
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
@@ -1665,8 +1669,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       CFile::modeWrite | CFile::shareDenyWrite);
 
     mFile->WriteString("SerialEMSettings\n");
-    WriteString("SystemPath", mWinApp->mDocWnd->GetSysPathForSettings());
-    WriteString("ScriptPackagePath", mWinApp->mDocWnd->GetCurScriptPackPath());
+    WriteString("SystemPath", mDocWnd->GetSysPathForSettings());
+    WriteString("ScriptPackagePath", mDocWnd->GetCurScriptPackPath());
+    WriteString("CurrentDirectory", mDocWnd->GetInitialDir());
     oneState = mWinApp->GetScriptToRunAtStart();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunAtStart", oneState);
@@ -1676,7 +1681,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunOnIdle();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunOnIdle", oneState);
-    oneState = mWinApp->mDocWnd->GetBasicModeFile();
+    oneState = mDocWnd->GetBasicModeFile();
     if (!oneState.IsEmpty())
       WriteString("BasicModeFile", oneState);
     WriteInt("LastDPI", mWinApp->GetSystemDPI());
@@ -2329,7 +2334,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile = NULL;
   }
 
-  WriteMacrosToFile(mWinApp->mDocWnd->GetCurScriptPackPath(), 
+  WriteMacrosToFile(mDocWnd->GetCurScriptPackPath(), 
     MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
 }
@@ -2806,9 +2811,9 @@ int CParameterIO::ReadProperties(CString strFileName)
   CString message;
   CameraParameters *mCamParam = mWinApp->GetCamParams();
   CameraParameters *camP;
-  FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
-  CArray<CString, CString> *globalValues = mWinApp->mDocWnd->GetGlobalAdocValues();
-  CArray<CString, CString> *globalKeys = mWinApp->mDocWnd->GetGlobalAdocKeys();
+  FileOptions *defFileOpt = mDocWnd->GetDefFileOpt();
+  CArray<CString, CString> *globalValues = mDocWnd->GetGlobalAdocValues();
+  CArray<CString, CString> *globalKeys = mDocWnd->GetGlobalAdocKeys();
   MacroControl *macControl = mWinApp->GetMacControl();
   ShortVec *bsBoundaries = mShiftManager->GetBeamShiftBoundaries();
 #define PROP_MODULES
@@ -3511,8 +3516,8 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("BasicModeDisableHideFile")) {
         StripItems(strLine, 1, message);
-        if (mWinApp->mDocWnd->GetBasicModeFile().IsEmpty())
-          mWinApp->mDocWnd->SetBasicModeFile(message);
+        if (mDocWnd->GetBasicModeFile().IsEmpty())
+          mDocWnd->SetBasicModeFile(message);
 
       } else if (MatchNoCase("ProgramTitleText")) {
         StripItems(strLine, 1, message);
@@ -3562,7 +3567,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         B3DCLAMP(itemInt[1], 0, 2);
         if (itemInt[1] > 1)
           itemInt[1] = MRC_MODE_USHORT;
-        mWinApp->mDocWnd->SetSTEMfileMode(itemInt[1]);
+        mDocWnd->SetSTEMfileMode(itemInt[1]);
       } else if (MatchNoCase("FileOptionsExtraFlags"))
         defFileOpt->typext = (short)itemInt[1];
       else if (MatchNoCase("FileOptionsMaxSections"))
@@ -3729,9 +3734,9 @@ int CParameterIO::ReadProperties(CString strFileName)
           vec->push_back(itemFlt[index]);
         }
       } else if (MatchNoCase("MontageInitialPieces")) {
-        mWinApp->mDocWnd->SetDefaultMontXpieces(itemInt[1]);
+        mDocWnd->SetDefaultMontXpieces(itemInt[1]);
         if (itemInt[2] > 0)
-          mWinApp->mDocWnd->SetDefaultMontYpieces(itemInt[2]);
+          mDocWnd->SetDefaultMontYpieces(itemInt[2]);
       }
       else if (MatchNoCase("StageMontageMaxError")) {
         mWinApp->mMontageController->SetMaxStageError(itemFlt[1]);
@@ -3945,12 +3950,12 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("MRCHeaderTitle")) {
         StripItems(strLine, 1, message);
         message = message.Left(45);
-        mWinApp->mDocWnd->SetTitle(message);
+        mDocWnd->SetTitle(message);
 
       } else if (MatchNoCase("FrameFileTitle")) {
         StripItems(strLine, 1, message);
         message.Replace("\\n", "\n");
-        mWinApp->mDocWnd->SetFrameTitle(message);
+        mDocWnd->SetFrameTitle(message);
 
       } else if (MatchNoCase("GlobalAutodocEntry")) {
         ind = 2;
@@ -3967,7 +3972,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("LogBookPathName")) {
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetLogBook(message);
+        mDocWnd->SetLogBook(message);
 
       } else if (MatchNoCase("StartupMessage")) {
         StripItems(strLine, 1, message);
@@ -3976,20 +3981,20 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("PluginPath")) {
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetPluginPath(message);
+        mDocWnd->SetPluginPath(message);
 
       } else if (MatchNoCase("PluginPath2")) {
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetPluginPath2(message);
+        mDocWnd->SetPluginPath2(message);
       } else if (MatchNoCase("PluginPath2-32")) {
 #ifndef _WIN64
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetPluginPath2(message);
+        mDocWnd->SetPluginPath2(message);
 #endif
       } else if (MatchNoCase("PluginPath2-64")) {
 #ifdef _WIN64
         StripItems(strLine, 1, message);
-        mWinApp->mDocWnd->SetPluginPath2(message);
+        mDocWnd->SetPluginPath2(message);
 #endif
 
       } else if (MatchNoCase("ExternalTool")) {
@@ -5517,7 +5522,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
           filtP->alignZLPTimeStamp = itemDbl[4];
           filtP->usedOldAlign = true;
         }
-        mWinApp->mDocWnd->SetShortTermNotSaved();
+        mDocWnd->SetShortTermNotSaved();
 
       } else if (NAME_IS("LastFeiZLPshift")) {
         if (filtP->usedOldAlign)
