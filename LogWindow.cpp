@@ -462,9 +462,13 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
 {
   CFile *cFile = NULL;
   int retval = 0, addOff = 0, tempInd, addSel;
+  static bool saving = false;
+  if (saving)
+    return 0;
+  saving = true;
   CString saveFile = mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile;
   mLastFilePath = "";
-  CString message;
+  CString message = "Error opening " + saveFile;
   try {
     // Open the file for writing 
     cFile = new CFile(saveFile, flags);
@@ -503,23 +507,22 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
     }
     mLastPosition = cFile->GetPosition();
   }
-  catch(CFileException *perr) {
+  catch (CFileException *perr) {
     perr->Delete();
     if (mWinApp->DoingTiltSeries() || mWinApp->mMacroProcessor->DoingMacro() ||
       (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))
-      Append("WARNING:" + message, 0);
+      Append("WARNING: " + message + "\r\n", 0);
     else
       SEMMessageBox(message);
     retval = -1;
-  } 
+  }
   if (cFile) {
     mLastFilePath = cFile->GetFilePath();
     cFile->Close();
     delete cFile;
   }
-    
+  saving = false;
   return retval;
-
 }
 
 // Open an existing file, read it in an place before current log contents
