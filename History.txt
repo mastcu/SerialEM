@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/14/24: Fixed message to log from failure to save log from going into an
+infinite loop (In 4.1).
+
 2/12/24: Fixed change in acquire coordinates at binning 4+ when turning on
 dose fractionation for K2/K3, broken 7/5/23 (In 4.1).
 
