@@ -2026,7 +2026,7 @@ BEGIN
     CONTROL         "Labels",IDC_DRAW_LABELS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,208,78,34,10
     PUSHBUTTON      "Focus Pos",IDC_BUT_NAV_FOCUS_POS,184,61,36,10
     CONTROL         "Edit Focus",IDC_EDIT_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,241,91,43,10
-    CONTROL         "Item #s",IDC_TABLE_INDEXES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,101,91,35,10
+    CONTROL         "Indexes",IDC_TABLE_INDEXES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,101,91,35,10
 END
 
 IDD_DUMMYDLG DIALOG 0, 0, 44, 26
@@ -7421,13 +7421,16 @@ BEGIN
     IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
     IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
     IDC_CHECK_SHOW_NUMBER   "Show state index number before name in table"
-    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_SPIN_STAGE_UP_DOWN  "Move stage by one step to move camera image up or down"
+    IDC_SPIN_STAGE_LEFT_RIGHT 
+                            "Move stage by one step to move camera image left or right"
     IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
     IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
-    IDC_SPIN_STAGE_LEFT_RIGHT
-                            "Move stage by one step to move camera image left or right"
-    IDC_SPIN_STAGE_UP_DOWN
-                            "Move stage by one step to move camera image up or down"
+    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
 END
 
 STRINGTABLE
