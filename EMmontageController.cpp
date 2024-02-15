@@ -1899,7 +1899,10 @@ int EMmontageController::DoNextPiece(int param)
         mCamera->StopCapture(-1);
       if (!mPreMovedStage) {
 
-        // For block focusing, start the stage move and return
+        // For block focusing, reset the image shift for hybrid montage, 
+        // then start the stage move and return
+        if (mImShiftInBlocks)
+          mScope->SetImageShift(mBaseISX, mBaseISY);
         ComputeMoveToPiece(mPieceIndex, true, iDelX, iDelY, adjISX, adjISY);
         mScope->MoveStage(mMoveInfo, mImShiftInBlocks);
         SEMTrace('S', "DoNextPiece moving stage to %.3f %.3f for %s block",
