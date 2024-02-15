@@ -4495,8 +4495,8 @@ int CMacCmd::SaveLog(void)
       mWinApp->OnFileSavelog();
   } else {
     SubstituteLineStripItems(mStrLine, 2, report);
-    mWinApp->mLogWindow->UpdateSaveFile(true, report, true, mItemInt[1] != 0);
-    mWinApp->mLogWindow->DoSave();
+    if (!mWinApp->mLogWindow->UpdateSaveFile(true, report, true, mItemInt[1] != 0))
+      mWinApp->mLogWindow->DoSave();
   }
   return 0;
 }

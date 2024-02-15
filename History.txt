@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/15/24: SEM_4-1-5
+2/15/24: Fixed autofocus in hybrid montage being done at image shift of
+corner piece in previous block (In 4.1).
+
 2/14/24: Fixed message to log from failure to save log from going into an
 infinite loop (In 4.1).
 

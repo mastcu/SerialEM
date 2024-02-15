@@ -468,7 +468,7 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
   saving = true;
   CString saveFile = mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile;
   mLastFilePath = "";
-  CString message = "Error opening " + saveFile;
+  CString warning, message = "Error opening " + saveFile;
   try {
     // Open the file for writing 
     cFile = new CFile(saveFile, flags);
@@ -510,9 +510,12 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
   catch (CFileException *perr) {
     perr->Delete();
     if (mWinApp->DoingTiltSeries() || mWinApp->mMacroProcessor->DoingMacro() ||
-      (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))
+      (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())) {
+      warning = "\r\nPlease send this log with backtrace to David; this is NOT a crash";
+      AddBackTraceToMessage(warning);
+      Append(warning + "\r\n\r\n", 0);
       Append("WARNING: " + message + "\r\n", 0);
-    else
+    } else
       SEMMessageBox(message);
     retval = -1;
   }
