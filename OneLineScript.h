@@ -46,6 +46,7 @@ private:
   int m_iCompLeft;
   int m_iCompOffset;
   int m_iCompWidthOrig;
+  int mLineForSignature;
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnKillfocusEditOneLine(UINT nID);

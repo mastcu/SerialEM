@@ -21,6 +21,7 @@ COneLineScript::COneLineScript(CWnd* pParent /*=NULL*/)
   mNonModal = true;
   mInitialized = false;
   mLineWithFocus = -1;
+  mLineForSignature = -1;
 }
 
 COneLineScript::~COneLineScript()
@@ -240,7 +241,7 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
   CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2, 
-    setCompletions, completing, true);
+    setCompletions, completing, true, mLineForSignature, 0);
   if (setCompletions)
     SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
   if (completing) {
@@ -261,6 +262,7 @@ void COneLineScript::OnEnSetfocusEditOneLine(UINT nID)
   but = (CButton *)GetDlgItem(mLineWithFocus + IDC_RUN_ONE_LINE1);
   but->SetFont(mWinApp->GetBoldFont(GetDlgItem(IDC_STAT_COMPLETIONS)));
   but->SetButtonStyle(BS_DEFPUSHBUTTON);
+  mLineForSignature = -1;
 }
 
 // When focus lost, set line to -1

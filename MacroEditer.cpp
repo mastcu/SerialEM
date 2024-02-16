@@ -50,6 +50,7 @@ CMacroEditer::CMacroEditer(CWnd* pParent /*=NULL*/)
   mMacroName = mWinApp->GetMacroNames();
   mProcessor = mWinApp->mMacroProcessor;
   mEditer = &mWinApp->mMacroEditer[0];
+  mLineForSignature = -1;
 }
 
 
@@ -812,7 +813,7 @@ void CMacroEditer::OnEnChangeEditmacro()
   if (!rejecting) {
     UpdateData(true);
     HandleCompletionsAndIndent(m_strMacro, m_strCompletions, sel2, setCompletions,
-      completing, false);
+      completing, false, mLineForSignature, m_editMacro.LineFromChar(sel2));
     if (setCompletions)
       SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
   }
@@ -831,7 +832,8 @@ void CMacroEditer::OnEnChangeEditmacro()
 // Process a change in an edit control and do 'backtick' completion or list completions,
 // and indentation of the current line
 void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
-  int &sel2, bool &setCompletions, bool &completing, bool oneLine)
+  int &sel2, bool &setCompletions, bool &completing, bool oneLine, int &lineForSignature,
+  int curLineNum)
 {
 
   int delStart, numDel, i, numCommands, lineStart, numMatch, saveStart, wordEnd;
@@ -917,7 +919,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
 
   // Wipe out the completion line unless it hasn't been changed from original
   numMatch = 0;
-  if (strCompletions.Left(6).Compare("Tab or"))
+  if (strCompletions.Left(6).Compare("Tab or") && curLineNum != lineForSignature)
     strCompletions = "";
 
   // Skip comments
@@ -1082,7 +1084,8 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     if (numMatch > maxCompletions)
       strCompletions += " ...";
     setCompletions = true;
-  } else {
+    lineForSignature = -1;
+  } else if (curLineNum != lineForSignature) {
     strCompletions = "";
     setCompletions = true;
   }
@@ -1096,6 +1099,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
       strCompletions = CString(cmdList[matchList[0]].mixedCase) + " " +
         sSignatures[matchList[0]];
     }
+    lineForSignature = curLineNum;
   }
 
   if (completing) {
