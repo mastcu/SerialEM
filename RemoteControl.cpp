@@ -122,15 +122,11 @@ END_MESSAGE_MAP()
 // CRemoteControl message handlers
 BOOL CRemoteControl::OnInitDialog()
 {
-  UINT needBold[] = {
-  IDC_DELSTAGE_PLUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELFOCUSPLUS, IDC_BUT_DELC2PLUS,
-    IDC_DELSTAGE_MINUS, IDC_BUT_DELBEAMMINUS, IDC_BUT_DELFOCUSMINUS, IDC_BUT_DELC2MINUS};
   UINT needLittle[] = {IDC_STAT_BEAMDELTA, IDC_STAT_DELSTAGE, IDC_STAT_FOCUS_STEP,
     IDC_STAT_C2DELTA};
   int ind;
   CToolDlg::OnInitDialog();
   CWnd *wnd;
-  CFont *boldFont = mWinApp->GetBoldFont(&m_statAlpha);
   CFont *smallFont = &mDeltaFont;
   mScope = mWinApp->mScope;
   mShiftManager = mWinApp->mShiftManager;
@@ -145,12 +141,6 @@ BOOL CRemoteControl::OnInitDialog()
   } else
     smallFont = mLittleFont;
 
-  // em-dash and en-dash (0x97 and 0x96) gave vertical lines, so that is all we can do
-  for (ind = 0; ind < sizeof(needBold) / sizeof(UINT); ind++) {
-    wnd = GetDlgItem(needBold[ind]);
-    if (wnd)
-      wnd->SetFont(boldFont);
-  }
   for (ind = 0; ind < sizeof(needLittle) / sizeof(UINT); ind++) {
     wnd = GetDlgItem(needLittle[ind]);
     if (wnd)
@@ -355,6 +345,7 @@ void CRemoteControl::UpdateEnables(void)
 {
   if (!mInitialized)
     return;
+  static int numTimes = 0;
   BOOL doingOffset = mWinApp->mShiftCalibrator &&
     mWinApp->mShiftCalibrator->CalibratingOffset();
   BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
@@ -370,6 +361,22 @@ void CRemoteControl::UpdateEnables(void)
   m_sbcBeamLeftRight.EnableWindow(enable && !stageBusy);
   m_butBlankUnblank.EnableWindow(enable);
 
+  if (numTimes++ < 4) {
+    UINT needBold[] = {
+    IDC_DELSTAGE_PLUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELFOCUSPLUS, IDC_BUT_DELC2PLUS,
+    IDC_DELSTAGE_MINUS, IDC_BUT_DELBEAMMINUS, IDC_BUT_DELFOCUSMINUS, IDC_BUT_DELC2MINUS};
+    CFont *boldFont = mWinApp->GetBoldFont(&m_statAlpha);
+    CString str;
+    str.Format("%c", 0x96);
+    for (int ind = 0; ind < sizeof(needBold) / sizeof(UINT); ind++) {
+      CWnd *wnd = GetDlgItem(needBold[ind]);
+      if (wnd) {
+        wnd->SetFont(boldFont);
+        if (ind >= 4)
+          wnd->SetWindowText(str);
+      }
+    }
+  }
   if (enable) {
     mLastSpot = -1;
     mLastGunOn = -2;
