@@ -2598,7 +2598,7 @@ void CSerialEMDoc::AutoSaveFiles()
   if (mAutoSaveSettings && mSettingsOpen && !mAbandonSettings &&
     !mWinApp->mTSController->StartedTiltSeries())
     OnSettingsSave();
-  if (mWinApp->mLogWindow && (mWinApp->mTSController->GetAutosaveLog() || saveAuto)) {
+  if (mWinApp->mLogWindow && saveAuto) {
     if (saveAuto && (mWinApp->mLogWindow->GetSaveFile()).IsEmpty() && 
       !mWinApp->DoingTasks())
       mWinApp->mLogWindow->SaveAndOfferName();
