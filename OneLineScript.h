@@ -30,6 +30,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   CString m_strCompletions;
+  CStatic m_statCompletions;
   CEdit m_editOneLine[MAX_ONE_LINE_SCRIPTS];
   CString m_strOneLine[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnChangeEditOneLine(UINT nID);
@@ -42,6 +43,9 @@ private:
   int m_iWinXorig;
   bool mInitialized;
   int mLineWithFocus;
+  int m_iCompLeft;
+  int m_iCompOffset;
+  int m_iCompWidthOrig;
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnKillfocusEditOneLine(UINT nID);

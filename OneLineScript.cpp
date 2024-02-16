@@ -31,6 +31,7 @@ void COneLineScript::DoDataExchange(CDataExchange* pDX)
 {
   CDialog::DoDataExchange(pDX);
   DDX_Text(pDX, IDC_STAT_COMPLETIONS, m_strCompletions);
+  DDX_Control(pDX, IDC_STAT_COMPLETIONS, m_statCompletions);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE, m_editOneLine[0]);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE2, m_editOneLine[1]);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE3, m_editOneLine[2]);
@@ -81,6 +82,11 @@ BOOL COneLineScript::OnInitDialog()
   m_iWinXorig = wndRect.Width();
   m_iEditXorig = editRect.Width();
   m_iEditHeight = editRect.Height();
+  m_statCompletions.GetWindowRect(editRect);
+  m_iCompOffset = (editRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset;
+  m_iCompLeft = editRect.left - wndRect.left - iXoffset;
+  m_iCompWidthOrig = editRect.Width();
 
   // Resize to a bit longer than the last non-empty string: this is overriden by the
   // placement once that exists in settings
@@ -154,6 +160,10 @@ void COneLineScript::OnSize(UINT nType, int cx, int cy)
     m_butRun[ind].SetWindowPos(NULL, B3DMAX(5, m_iRunLeftOrig + delta), m_iRunTop[ind], 0,
       0, SWP_NOZORDER | SWP_NOSIZE);
   }
+  m_statCompletions.GetWindowRect(editRect);
+  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset, 
+    m_iCompWidthOrig + delta, editRect.Height(), SWP_NOZORDER);
+  m_statCompletions.RedrawWindow();
 }
 
 // Translate tab to our completion character.  It is good on US standard keyboards only
