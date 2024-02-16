@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/15/14: Made completion line in One-Line Script window resize with width of
+window (In 4.1).
+
 2/15/24: Made Autosave Log in Tilt Series menu do just what the help says,
 saved after every tlt, and not activate a general autosave (In 4.1).
 
