@@ -28,6 +28,13 @@ class CComplexTasks : public CCmdTarget
   BOOL DoingBacklashAdjust() {return mDoingBASP > 0;};
   GetSetMember(float, MinBASPField);
   void StopBacklashAdjust();
+  bool DoingLDSO() { return mDoingLDSO; };
+  int FindLowDoseShiftOffset(bool searchToView, float maxMicrons, float maxPctCng,
+    float maxRot);
+  void LDSONextTask(int param);
+  void LDSOCleanup(int error);
+  int LDShiftOffsetBusy();
+  void StopFindingShiftOffset();
   void BASPNextTask(int param);
   void BASPCleanup(int error);
   GetSetMember(float, MinTaskExposure)
@@ -89,6 +96,8 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, MaxFEFineAngle);
   GetSetMember(float, MaxFEFineInterval);
   GetSetMember(BOOL, DebugRoughEucen);
+  GetSetMember(float, LDShiftOffsetResetISThresh);
+  GetSetMember(float, LDShiftOffsetIterThresh);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -200,6 +209,15 @@ class CComplexTasks : public CCmdTarget
   float mMinBASPField;            // Minimum field for backlash adjust
   float mBASPBackX, mBASPBackY;   // Backlash to apply
   float mBASPDeltaX, mBASPDeltaY; // For saving starting position and leaving delta values
+
+  bool mDoingLDSO;                // Flag for doing low dose shift offsets
+  int mLDSOLowerConsNum;          // Lower mag conset
+  int mLDSOHigherConsNum;         // higher mag conset
+  float mLDSOMaxMicrons;          // Maximum shift already in microns if passed as FOV
+  float mLDSOMaxPctChg;           // Limits on rotation/scaling search
+  float mLDSOMaxRot;
+  float mLDShiftOffsetResetISThresh;  // Threshold for doing reset IS at start
+  float mLDShiftOffsetIterThresh;     // Threshold for doing second iteration
 
   int mNumWalkAngles;             // Number of angles
   double mWalkStartAngle;         // Starting angle

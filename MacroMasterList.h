@@ -775,7 +775,12 @@ MAC_SAME_NAME_ARG(IsImageFileOpen, 1, 4, ISIMAGEFILEOPEN, S)
 MAC_SAME_NAME_NOARG(ReportNumOpenFiles, 0, 4, REPORTNUMOPENFILES)
 MAC_SAME_FUNC_ARG(ReportOpenImageFile, 1, 4, ReportCurrentFilename, REPORTOPENIMAGEFILE, Ii)
 MAC_SAME_NAME_ARG(SetNextLogOutputStyle, 1, 4, SETNEXTLOGOUTPUTSTYLE, Iiii)
-
+MAC_SAME_NAME_ARG(FindLowDoseShiftOffset, 1, 1, FINDLOWDOSESHIFTOFFSET, Iddd)
+MAC_SAME_NAME_ARG(ReportLDShiftOffset, 1, 4, REPORTLDSHIFTOFFSET, I)
+MAC_SAME_NAME_NOARG(RevertAutoLDShiftOffset, 0, 4, REVERTAUTOLDSHIFTOFFSET)
+MAC_SAME_NAME_ARG(ChooserForTextFile, 1, 0, CHOOSERFORTEXTFILE, I)
+MAC_SAME_NAME_ARG(SetSelectedNavItem, 1, 4, SETSELECTEDNAVITEM, Ii)
+MAC_SAME_NAME_ARG(SetLowDoseShiftOffset, 3, 4, SETLOWDOSESHIFTOFFSET, IDD)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

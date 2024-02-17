@@ -241,8 +241,7 @@ void CMacCmd::TaskDone(int param)
         }
         if (!isEcho)
           mStrLine += ")";
-        if (mVerbose)
-          mWinApp->AppendToLog(mStrLine);
+        mWinApp->VerboseAppendToLog(mVerbose, mStrLine);
         mItem1upper = mStrItems[1];
         mItem1upper.MakeUpper();
         mScrpLangData.waitingForCommand = 0;
@@ -513,8 +512,7 @@ int CMacCmd::NextCommand(bool startingOut)
       inComment = mStrLine.Find("*/") < 0;
       continue;
     }
-    if (mVerbose > 0)
-      mWinApp->AppendToLog("COMMAND: " + mStrLine, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, "COMMAND: " + mStrLine);
     mStrItems[0].MakeUpper();
   }
 
@@ -3564,6 +3562,16 @@ int CMacCmd::ChooserForNewFile(void)
   return 0;
 }
 
+// ChooserForTextFile
+int CMacCmd::ChooserForTextFile()
+{
+  mStrCopy = "NONE";
+  if (mDocWnd->GetTextFileName(mItemInt[1] == 0, false, mStrCopy))
+    mLogRpt = "The file chooser for a text file was canceled";
+  SetOneReportedValue(&mStrItems[2], mStrCopy, 1);
+  return 0;
+}
+
 // ReadTextFile, Read2DTextFile, ReadStringsFromFile
 int CMacCmd::ReadTextFile(void)
 {
@@ -4103,7 +4111,7 @@ int CMacCmd::GetFileInWatchedDir(void)
         " line:\n\n");
   }
   if (doSnapshot) {
-    report = mWinApp->mPluginManager->GetExePath() + "\\SerialEM_Snapshot.txt";
+    report = mWinApp->GetExePath() + "\\SerialEM_Snapshot.txt";
     if (!CFile::GetStatus((LPCTSTR)report, status)) {
       report = "C:\\Program Files\\SerialEM\\SerialEM_Snapshot.txt";
       if (!CFile::GetStatus((LPCTSTR)report, status))
@@ -8643,6 +8651,53 @@ int CMacCmd::ReverseTilt(void)
   return 0;
 }
 
+// FindLowDoseShiftOffset
+int CMacCmd::FindLowDoseShiftOffset()
+{
+  if (!mWinApp->LowDoseMode())
+    ABORT_LINE("You must be in Low Dose mode for line:\n\n");
+  if (mWinApp->mComplexTasks->FindLowDoseShiftOffset(mItemInt[1] != 0,
+    (mItemEmpty[2] || !mItemFlt[2]) ? -0.25f : mItemFlt[2],
+    mItemEmpty[3] ? mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[3],
+    mItemEmpty[4] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[4])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
+// ReportLDShiftOffset
+int CMacCmd::ReportLDShiftOffset()
+{
+  double delX, delY;
+  if (mItemInt[1] > 1)
+    ABORT_LINE("The shift type must be 0, 1, or negative for line:\n\n");
+  if (mWinApp->mLowDoseDlg.GetViewShiftOffset(mItemInt[1], delX, delY))
+    ABORT_LINE("There is no change from FindLowDoseShiftOffset available for line:\n\n");
+  mLogRpt.Format("%s is %.2f, %.2f microns",
+    B3DCHOICE(mItemInt[1] < 0, "Change from last FindLowDoseShiftOffset",
+      mItemInt[1] ? "Search shift offset" : "View shift offset"), delX, delY);
+  SetRepValsAndVars(2, delX, delY);
+  return 0;
+}
+
+// SetLowDoseShiftOffset
+int CMacCmd::SetLowDoseShiftOffset()
+{
+  mWinApp->mLowDoseDlg.SetViewShiftOffset(mItemInt[1] ? 1 : 0, mItemDbl[2], mItemDbl[3]);
+  return 0;
+}
+
+// RevertAutoLDShiftOffset
+int CMacCmd::RevertAutoLDShiftOffset()
+{
+  if (!mWinApp->LowDoseMode())
+    ABORT_LINE("You must be in Low Dose mode for line:\n\n");
+  if (mWinApp->mLowDoseDlg.RevertLastAutoViewShift())
+    ABORT_LINE("There is no shift from FindLowDoseShiftOffset to revert for line:\n\n");
+  return 0;
+}
+
 // DriftWaitTask
 int CMacCmd::DriftWaitTask(void)
 {
@@ -10494,6 +10549,17 @@ int CMacCmd::ReportItemAcquire(void)
       (navItem->mAcquire == 0) ? "disabled" : "enabled");
     SetReportedValues(navItem->mAcquire);
   }
+  return 0;
+}
+
+// SetSelectedNavItem
+int CMacCmd::SetSelectedNavItem()
+{
+  ABORT_NONAV;
+  if (mNavigator->GetAcquiring())
+    ABORT_LINE("The Navigator cannot be acquiring for line:\n\n");
+  if (mNavigator->SetSelectedItem(mItemInt[1] - 1, mItemEmpty[2] || !mItemInt[2]))
+    ABORT_LINE("The Navigator index is out of range in line:\n\n");
   return 0;
 }
 

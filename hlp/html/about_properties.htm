@@ -340,6 +340,36 @@
             directory.&nbsp; See <A HREF="about_hide_disable.htm">Hiding and Disabling Menu and Dialog Items</A> for details.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD><strong>Log Window Colors</strong></TD>
+          <TD>Different kinds of output have different dedicated colors that can be set with 
+            the following five properties.&nbsp; There are 6 stock colors: 1&nbsp; - gray; 2 
+            - red; 3 - green; 4 - blue; 5 - purple; 6 - brown.&nbsp; Each of these colors 
+            can be specified by a single stock index, or by the three red, green, and blue 
+            values from 0 to 255.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ErrorColor</TD>
+          <TD>Color for error messages printed instead of popping up as message boxes in 
+            scripts and Navigator acquisition (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WarningColor</TD>
+          <TD>Color for messages starting with WARNING: or Warning: (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InsertedColor</TD>
+          <TD>Color for text manually written into the log window (default 4).&nbsp; This 
+            text will not appear in color until the program writes new output to the log.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DebugColor</TD>
+          <TD>Color for output activated by setting the debug output keys (default 1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>VerboseColor</TD>
+          <TD>Color for output that appears because of a Verbose menu setting (default 1).</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>IgnoreShortTermCals</TD>
           <TD>Set to 1 to prevent the program from reading in "Short term calibrations" when
             starting and from saving them when exiting. This might be useful when first
@@ -3750,6 +3780,16 @@
           <TD>Minimum camera field of view, in microns, for the reference image used to
             realign to the current point after visiting a Navigator point for a special
             operation (such as phase plate conditioning). Default is 8.0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LDShiftOffsetResetISThresh</TD>
+          <TD>Threshold image shift in microns for doing a Reset Shift &amp; Realign at the 
+            beginning of the routine that measures Low Dose shift offset (default 0.5).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LDShiftOffsetIterThresh</TD>
+          <TD>Threshold image shift in microns for iterating after the first measurement in 
+            the routine that measures Low Dose shift offset (default 0.1).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TiltBacklash</TD>

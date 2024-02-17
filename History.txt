@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/16/24: To try a narrower font being considered as the default monospaced
+font, place NanumGothicCoding-Regular.ttf in SerialEM executable directory and
+set property 'ScriptMonospaceFont NanumGothicCoding'.
+
+2/16/24: Added routine for measuring View or Search shift offsets using
+correlations between images at different mags; added script command for
+running this and other for manipulating these offsets.
+
+2/16/24: Added script commands for opening a file chooser for a text file
+name and setting the current Navigator item.
+
+2/16/24: Revised colors available; defined default colors for errors, warning,
+verbose and debug output, and user-inserted text, with properties to set
+these, and applied some formatting to calibration listings.
+
+2/16/24: Made montage capture all STEM channels when set up to run a script.
+
 2/15/14: Made completion line in One-Line Script window resize with width of
 window (In 4.1).
 
@@ -41,7 +58,7 @@ set (In 4.1).
 2/5/24: Changed "Fix" button in script editor to re-indent selected lines
 properly, equivalent to typing Tab on each one.
 
-2/4/24: Added ability to set text colors and type styles OBin log window and a
+2/4/24: Added ability to set text colors and type styles in log window and a
 script command to set the color and style for the next output; SEMMessageBox
 outputs will be red.
 

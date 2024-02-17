@@ -501,7 +501,14 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         defFileOpt->pctTruncLo = itemFlt[1];
       else if (MatchNoCase("FileOptionsPctTruncHi"))
         defFileOpt->pctTruncHi = itemFlt[1];
-      else if (NAME_IS("AutofocusEucenAbsParams")) {
+      else if (MatchNoCase("AutoPruneLogLines")) {
+        if (itemInt[1] && itemInt[1] != 500 &&
+          itemInt[1] < mWinApp->GetAutoPruneLogLines()) {
+          strCopy.Format("The number of lines for log pruning has been changed to "
+            "the new default of %d", mWinApp->GetAutoPruneLogLines());
+          AfxMessageBox(strCopy, MB_OK | MB_ICONINFORMATION);
+        }
+      } else if (NAME_IS("AutofocusEucenAbsParams")) {
         mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
         itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
       } else if (NAME_IS("AssessMultiplePeaksInAlign") || NAME_IS("AutoZoom")) {
@@ -2835,6 +2842,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   RotStretchXform rotXform;
   LensRelaxData relax;
   FloatVec *vec;
+  unsigned char *palette = mWinApp->GetPaletteColors();
   short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
     pnmAll};
   PiezoScaling pzScale;
@@ -3978,6 +3986,29 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         message.Replace("\\n", "\r\n");
         mWinApp->SetStartupMessage(message);
+
+      } else if (MatchNoCase("ErrorColor") || MatchNoCase("WarningColor") ||
+        MatchNoCase("InsertedColor") || MatchNoCase("DebugColor") || 
+        MatchNoCase("VerboseColor")) {
+        ind = ERROR_COLOR_IND;
+        if (MatchNoCase("WarningColor"))
+          ind = WARNING_COLOR_IND;
+        else if (MatchNoCase("InsertedColor"))
+          ind = INSERTED_COLOR_IND;
+        else if (MatchNoCase("DebugColor"))
+          ind = DEBUG_COLOR_IND;
+        else if (MatchNoCase("VerboseColor"))
+          ind = VERBOSE_COLOR_IND;
+        if (itemEmpty[3]) {
+          B3DCLAMP(itemInt[1], 0, MAX_STOCK_COLORS - 1);
+          for (index = 0; index < 3; index++)
+            palette[ind * 3 + index] = palette[itemInt[1] * 3 + index];
+        } else {
+          for (index = 0; index < 3; index++) {
+            B3DCLAMP(itemInt[index + 1], 0, 255);
+            palette[ind * 3 + index] = itemInt[index + 1];
+          }
+        }
 
       } else if (MatchNoCase("PluginPath")) {
         StripItems(strLine, 1, message);

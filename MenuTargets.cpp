@@ -1565,7 +1565,9 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
     iCam = active[actCam];
     str.Format("\r\nImage shift calibration vectors for %s  (using %s pixel sizes)",
       camP[iCam].name, useCalPixel ? "calibrated" : "mag-derived");
+    mWinApp->SetNextLogColorStyle(0, 1);
     mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
+    mWinApp->SetNextLogColorStyle(0, 4);
     mWinApp->AppendToLog("Index  Mag     X length     Y length   X angle  Y angle",
       LOG_OPEN_IF_CLOSED);
     mWinApp->GetNumMagRanges(iCam, numRanges, lowestMicro);
@@ -1646,6 +1648,7 @@ void CMenuTargets::DoListStageCals()
   double xtheta, ytheta, angle;
   bool needCam;
   str = CString("\r\nSpecimen to stage matrices  -   implied tilt axis angles");
+  mWinApp->SetNextLogColorStyle(0, 5);
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
