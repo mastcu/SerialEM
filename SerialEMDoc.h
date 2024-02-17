@@ -308,7 +308,7 @@ public:
   int SaveFrameDataInMdoc(KImage * image);
   afx_msg void OnUpdateFileOpenMdoc(CCmdUI *pCmdUI);
   int GetTextFileName(bool openOld, bool originalDir, CString &pathname,
-    CString *filename = NULL, CString *initialDir = NULL, const char *filter = NULL);
+    CString *filename = NULL, CString *initialDir = NULL, const char *filter = NULL, bool allowOverwrite = false);
   void DateTimeComponents(CString & date, CString & time, BOOL numericDate, bool unique = true);
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);

@@ -688,7 +688,7 @@ void CMacroProcessor::OnScriptSavePackageAs()
   CString filename, path;
   mDocWnd->DirFromCurrentOrSettingsFile(mDocWnd->GetCurScriptPackPath(),
     path);
-  if (mDocWnd->GetTextFileName(false, true, filename, NULL, &path))
+  if (mDocWnd->GetTextFileName(false, true, filename, NULL, &path, NULL, true))
     return;
   mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
   mDocWnd->SetCurScriptPackPath(filename);

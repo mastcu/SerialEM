@@ -2103,13 +2103,14 @@ void CSerialEMDoc::OnSettingsOpen()
 
 // Utility function to open a text file, optionally in the original directory
 int CSerialEMDoc::GetTextFileName(bool openOld, bool originalDir, CString &pathname,
-  CString *filename, CString *initialDir, const char *filter)
+  CString *filename, CString *initialDir, const char *filter, bool allowOverwrite)
 {
   static char szFilter[] = "Text files (*.txt)|*.txt|All files (*.*)|*.*||";
   if (!filter)
     filter = &szFilter[0];
-  MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, filter, NULL,
-    !(originalDir || initialDir));
+  MyFileDialog fileDlg(openOld, ".txt", NULL, 
+    OFN_HIDEREADONLY | (allowOverwrite ? 0 : OFN_OVERWRITEPROMPT),
+    filter, NULL, !(originalDir || initialDir));
 
   // Set the original directory.  Note this no longer works in Windows 7
   if (initialDir && !initialDir->IsEmpty())
@@ -2200,7 +2201,7 @@ void CSerialEMDoc::OnSettingsSaveas()
 int CSerialEMDoc::SettingsSaveAs() 
 {
   CString newFile, setDir = GetCurrentSettingsDir();
-  if (GetTextFileName(false, true, newFile, NULL, &setDir))
+  if (GetTextFileName(false, true, newFile, NULL, &setDir, NULL, true))
     return 1;
 
   // Force a backup if it exists
@@ -2367,13 +2368,11 @@ void CSerialEMDoc::PostSettingsRead()
       dlgPlacements, colorIndex);
     mWinApp->OpenOrCloseMacroEditors();
   }
-  if (mWinApp->mLogWindow)
-    mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
+  mWinApp->SetNextLogColorStyle(0, 1);
   mWinApp->AppendToLog("Read settings from: " + mCurrentSettingsPath,
     LOG_SWALLOW_IF_CLOSED);
   if (mReadScriptPack) {
-    if (mWinApp->mLogWindow)
-      mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
+    mWinApp->SetNextLogColorStyle(0, 1);
     mWinApp->AppendToLog("Read scripts from " + mCurScriptPackPath,
       LOG_SWALLOW_IF_CLOSED);
   } else if (!mCurScriptPackPath.IsEmpty())
@@ -2395,8 +2394,7 @@ void CSerialEMDoc::ManageReadInCurrentDir()
         mCurrentDirReadIn);
     } else {
       SetInitialDirToCurrentDir();
-      if (mWinApp->mLogWindow)
-        mWinApp->mLogWindow->SetNextLineColorStyle(0, 1);
+      mWinApp->SetNextLogColorStyle(0, 1);
       mWinApp->AppendToLog("Current working directory set to " + mCurrentDirReadIn,
         LOG_SWALLOW_IF_CLOSED);
     }
