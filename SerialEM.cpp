@@ -186,6 +186,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_FILE_AUTOSAVELOG, OnUpdateFileAutosaveLog)
   ON_COMMAND(ID_FILE_AUTOPRUNELOGWINDOW, OnFileAutopruneLogWindow)
   ON_UPDATE_COMMAND_UI(ID_FILE_AUTOPRUNELOGWINDOW, OnUpdateFileAutopruneLogWindow)
+  ON_COMMAND(ID_LOGWINDOW_USERTFFORMATTOSAVE, OnUseRTFformatToSave)
+  ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_USERTFFORMATTOSAVE, OnUpdateUseRTFformatToSave)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -194,6 +196,8 @@ END_MESSAGE_MAP()
 CSerialEMApp::CSerialEMApp()
 {
   // Place all significant initialization in InitInstance
+  unsigned char palette[MAX_PALETTE_COLORS][3] = {{0, 0, 0}, {128, 128, 128},
+  {244, 75, 63}, {0, 176, 80}, {25, 118, 210}, {174, 2, 154}, {153, 102, 0}};
   int i, j, k;
 	EnableHtmlHelp();
   mBufferManager = NULL;
@@ -231,7 +235,8 @@ CSerialEMApp::CSerialEMApp()
   mLogWindow = NULL;
   mContinuousSaveLog = false;
   mSaveAutosaveLog = false;
-  mAutoPruneLogLines = 500;
+  mAutoPruneLogLines = 2500;
+  mSaveLogAsRTF = false;
   mNavigator = NULL;
   mNavHelper = NULL;
   mStageMoveTool = NULL;
@@ -243,6 +248,16 @@ CSerialEMApp::CSerialEMApp()
   mEFTEMMode = false;
   mSTEMMode = false;
   mAppExiting = false;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < MAX_STOCK_COLORS; j++)
+      mPaletteColors[j][i] = palette[j][i];
+    mPaletteColors[ERROR_COLOR_IND][i] = palette[2][i];  // red
+    mPaletteColors[WARNING_COLOR_IND][i] = palette[2][i];  // red 
+    mPaletteColors[INSERTED_COLOR_IND][i] = palette[4][i];  // blue
+    mPaletteColors[DEBUG_COLOR_IND][i] = palette[1][i];    // gray
+    mPaletteColors[VERBOSE_COLOR_IND][i] = palette[1][i];    // gray
+  }
+
   for (i = 0; i < MAX_MACROS; i++) {
     mMacroEditer[i] = NULL;
     mMacroSaveFile[i] = "";
@@ -783,6 +798,8 @@ CSerialEMApp::CSerialEMApp()
   mIdleScriptIntervalSec = 60;
   SEMUtilInitialize();
   mSpecialDebugLevel = 0;
+  mNextLogColor = -1;
+  mNextLogStyle = -1;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -883,6 +900,7 @@ BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
   bool anyFrameSavers = false;
+  char fullPath[MAX_PATH + 10];
   CameraParameters *camP;
   CString message, dropCameras, settingsFile, str;
   void *toolDlgs[] = {&mStatusWindow, &mBufferWindow, &mImageLevel, &mScopeStatus,
@@ -901,6 +919,11 @@ BOOL CSerialEMApp::InitInstance()
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
   //_CrtSetBreakAlloc(64098);
 #endif
+
+  // Get executable path for macro editor, plugin manager
+  iCam = GetModuleFileName(NULL, fullPath, MAX_PATH + 10);
+  if (iCam && iCam < MAX_PATH + 10)
+    UtilSplitPath(CString(fullPath), mExePath, str);
 
   // Standard initialization
   // If you are not using these features and wish to reduce the size
@@ -1567,14 +1590,12 @@ BOOL CSerialEMApp::InitInstance()
   
   pMainFrame->SetWindowText("SerialEM");
   if (!mStartupMessage.IsEmpty()) {
-    if (mLogWindow)
-      mLogWindow->SetNextLineColorStyle(0, 1);
+    SetNextLogColorStyle(0, 1);
     AppendToLog(mStartupMessage, LOG_MESSAGE_IF_NOT_ADMIN_OR_OPEN);
   }
   if (mStartupInfo) {
     GetStartupMessage();
-    if (mLogWindow)
-      mLogWindow->SetNextLineColorStyle(2, 0);
+    SetNextLogColorStyle(5, 1);
     AppendToLog(mStartupMessage, LOG_SWALLOW_IF_CLOSED);
     if (mScope->GetNoScope())
       AppendToLog("Running with no microscope connection", LOG_SWALLOW_IF_CLOSED);
@@ -1595,17 +1616,14 @@ BOOL CSerialEMApp::InitInstance()
           "Post-exposure actions,\r\n"
           "  run Camera Timing in the Calibrate menu and update the StartupDelay.", iCam);
   }
-  if (mLogWindow)
-    mLogWindow->SetNextLineColorStyle(0, 1);
+  SetNextLogColorStyle(0, 1);
   AppendToLog("Read settings from: " + mDocWnd->GetOriginalSettingsPath(),
     LOG_SWALLOW_IF_CLOSED);
-  if (mLogWindow)
-    mLogWindow->SetNextLineColorStyle(0, 1);
+  SetNextLogColorStyle(0, 1);
   AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
     LOG_SWALLOW_IF_CLOSED);
   if (mDocWnd->GetReadScriptPack()) {
-    if (mLogWindow)
-      mLogWindow->SetNextLineColorStyle(0, 1);
+    SetNextLogColorStyle(0, 1);
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
       LOG_SWALLOW_IF_CLOSED);
   }
@@ -2478,6 +2496,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiTSTasks->VppConditionBusy();
     else if (idc->source == TASK_EUCENTRICITY)
       busy = mComplexTasks->EucentricityBusy();
+    else if (idc->source == TASK_LD_SHIFT_OFFSET)
+      busy = mComplexTasks->LDShiftOffsetBusy();
     else if (idc->source == TASK_Z_BY_G)
       busy = mParticleTasks->ZbyGBusy();
     else if (idc->source == TASK_TEMPLATE_ALIGN)
@@ -2571,6 +2591,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->TASMNextTask(idc->param);
         else if (idc->source == TASK_BACKLASH_ADJUST)
           mComplexTasks->BASPNextTask(idc->param);
+        else if (idc->source == TASK_LD_SHIFT_OFFSET)
+          mComplexTasks->LDSONextTask(idc->param);
         else if (idc->source == TASK_COOKER)
           mMultiTSTasks->CookerNextTask(idc->param);
         else if (idc->source == TASK_TILT_RANGE)
@@ -2705,6 +2727,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mComplexTasks->TASMCleanup(busy);
         else if (idc->source == TASK_BACKLASH_ADJUST)
           mComplexTasks->BASPCleanup(busy);
+        else if (idc->source == TASK_LD_SHIFT_OFFSET)
+          mComplexTasks->LDSOCleanup(busy);
         else if (idc->source == TASK_COOKER)
           mMultiTSTasks->CookerCleanup(busy);
         else if (idc->source == TASK_TILT_RANGE)
@@ -2856,6 +2880,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mComplexTasks->StopTiltAfterMove();
   if (mComplexTasks->DoingBacklashAdjust())
     mComplexTasks->StopBacklashAdjust();
+  if (mComplexTasks->DoingLDSO())
+    mComplexTasks->StopFindingShiftOffset();
   if (mMultiTSTasks->GetCooking())
     mMultiTSTasks->StopCooker();
   if (mMultiTSTasks->GetAssessingRange())
@@ -3274,8 +3300,10 @@ void SEMTrace(char key, char *fmt, ...)
 
   // If this is the main thread, dump the output immediately
   if (GetCurrentThreadId() == appThreadID) {
-    for (int len = 0; len < sNumTraceMsg; len++)
+    for (int len = 0; len < sNumTraceMsg; len++) {
+      ((CSerialEMApp *)AfxGetApp())->mLogWindow->SetNextLineColorStyle(DEBUG_COLOR_IND, 0);
       ((CSerialEMApp *)AfxGetApp())->AppendToLog(sTraceMsg[len], LOG_OPEN_IF_CLOSED);
+    }
     sNumTraceMsg = 0;
     if (debugOutput.Find('A') >= 0)
       ((CSerialEMApp *)AfxGetApp())->mLogWindow->UpdateSaveFile(false);
@@ -3857,8 +3885,13 @@ void CSerialEMApp::OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI)
 void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
 {
   CString str;
+  int color = mNextLogColor, style = mNextLogStyle;
   if (mAppExiting)
     return;
+
+  // Use up color/style regardless of whether there is output
+  mNextLogColor = -1;
+  mNextLogStyle = -1;
 
   // Process complex administrative-dependent flags
   switch (inAction) {
@@ -3916,6 +3949,8 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
       return;
     inAction = LOG_OPEN_IF_CLOSED;
     if (mLogWindow) {
+      if (color >= 0 || style >= 0)
+        mLogWindow->SetNextLineColorStyle(color, style);
       str.Format("%.3f: ", SEMSecondsSinceStart());
       mLogWindow->Append(str, 0);
     } 
@@ -3947,7 +3982,24 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
     else
       inString += "\r\n";
   }
+  if (color >= 0 || style >= 0)
+    mLogWindow->SetNextLineColorStyle(color, style);
   mLogWindow->Append(inString, lineFlags);
+}
+
+// Convenience functions to avoid having to test if log is open and include LogWindow.h
+void CSerialEMApp::SetNextLogColorStyle(int colorInd, int style)
+{
+  mNextLogColor = colorInd;
+  mNextLogStyle = style;
+}
+
+void CSerialEMApp::VerboseAppendToLog(BOOL verbose, CString str)
+{
+  if (!verbose)
+    return;
+  SetNextLogColorStyle(VERBOSE_COLOR_IND, 0);
+  AppendToLog(str, LOG_OPEN_IF_CLOSED);
 }
 
 // Handy formatted output to log with variable arguments
@@ -4036,8 +4088,20 @@ void CSerialEMApp::OnFileAutopruneLogWindow()
 
 void CSerialEMApp::OnUpdateFileAutopruneLogWindow(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->Enable(!DoingTasks() && !mSaveLogAsRTF && 
+    !(mLogWindow && mLogWindow->GetTypeOfFileSaved() > 1));
   pCmdUI->SetCheck(mAutoPruneLogLines > 0 ? 1 : 0);
+}
+
+void CSerialEMApp::OnUseRTFformatToSave()
+{
+  mSaveLogAsRTF = !mSaveLogAsRTF;
+}
+
+void CSerialEMApp::OnUpdateUseRTFformatToSave(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mSaveLogAsRTF ? 1 : 0);
 }
 
 // Toggle the option to use a monospaced font
