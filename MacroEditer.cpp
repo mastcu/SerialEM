@@ -178,29 +178,35 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
 {
   CFont *font;
   LOGFONT logFont;
+  CFileStatus status;
+  bool gotNanum = false;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   CString exePath, str,propFont = winApp->mMacroProcessor->GetMonoFontName();
-  const char *tryNames[] = {"Lucida Console", "Consolas", "Lucida Sans Typewriter",
-    "Courier New"};
+  const char *tryNames[] = {"NanumGothicCoding", "Lucida Console", "Consolas", 
+    "Lucida Sans Typewriter", "Courier New"};
   int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
 
   if (mHasMonoFont < 0) {
     exePath = winApp->GetExePath();
     exePath += "\\";
-    exePath +="NanumGothicCoding-Regular.ttf";
-    ind = AddFontResourceEx(
-      exePath, 		// font file name
-      FR_PRIVATE,    	// font characteristics
-      NULL);
-    if (ind > 0)
-      winApp->SetNanumFontPath(exePath);
+    exePath += "NanumGothicCoding-Regular.ttf";
+    if (CFile::GetStatus(exePath, status)) {
+      ind = AddFontResourceEx(
+        exePath, 		// font file name
+        FR_PRIVATE,    	// font characteristics
+        NULL);
+      if (ind > 0) {
+        winApp->SetNanumFontPath(exePath);
+        gotNanum = true;
+      }
+    }
     font = edit->GetFont();
     font->GetLogFont(&logFont);
     height = logFont.lfHeight;
     mHasMonoFont = 0;
     if (mDefaultFont.CreateFontIndirect(&logFont)) {
       for (ind = -1; ind <= lastFont; ind++) {
-        if (ind < 0 && propFont.IsEmpty())
+        if ((ind < 0 && propFont.IsEmpty()) || (ind == 0 && !gotNanum))
           continue;
         if (mMonoFont.CreateFont(logFont.lfHeight, 0, 0, 0,
           ind < lastFont ? logFont.lfWeight : FW_SEMIBOLD,
