@@ -2147,7 +2147,7 @@ int EMmontageController::DoNextPiece(int param)
         timeOut += 60000;
       SEMTrace('M', "DoNextPiece Starting capture%s", B3DCHOICE(mPreMovedStage,  
         mDidBlockIS ? " with image shift" : " with stage move", ""));
-      if (mWinApp->GetSTEMMode())
+      if (mWinApp->GetSTEMMode() && !(mMacroToRun > 0 && mMacroToRun <= MAX_MACROS))
         mCamera->SetMaxChannelsToGet(1);
       if (mParam->useHqParams && mParam->skipRecReblanks && !mUseContinuousMode)
         mCamera->SetSkipNextReblank(true);
