@@ -55,6 +55,7 @@ static char THIS_FILE[]=__FILE__;
 #define FE_FINE_ALIGNSHOT2 11
 enum {TASM_FIRST_SHOT, TASM_TILTED, TASM_SECOND_SHOT};
 enum {BASP_FIRST_SHOT, BASP_MOVED, BASP_SECOND_SHOT};
+enum { LDSO_RESET_SHIFT, LDSO_HIGHER_MAG, LDSO_FIRST_LOWER, LDSO_SECOND_LOWER };
 
 BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   //{{AFX_MSG_MAP(CComplexTasks)
@@ -122,6 +123,9 @@ CComplexTasks::CComplexTasks()
 
   mDoingTASM = false;
   mDoingBASP = 0;
+  mDoingLDSO = 0;
+  mLDShiftOffsetResetISThresh = 0.5f;
+  mLDShiftOffsetIterThresh = 0.1f;
 
   mWalkShiftLimit = 2.0;
   mWULowDoseISLimit = 1.3f;
@@ -416,7 +420,7 @@ BOOL CComplexTasks::DoingTasks()
     tsTasks->GetAssessingRange() || tsTasks->DoingAnchorImage() || 
     tsTasks->GetConditioningVPP() || particle->DoingZbyG() ||
     particle->DoingTemplateAlign() || particle->DoingMultiShot() || 
-    particle->GetWaitingForDrift();
+    particle->GetWaitingForDrift() || mDoingLDSO;
 }
 
 // Strangely enough, nothing in this collection is a complex enough task...
@@ -1621,8 +1625,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       mFECoarseIncrement = B3DMAX(mFECurrentAngle - mFEReferenceAngle, 0.1);
       report.Format("Angle = %.2f, increment = %.2f, shift = %.1f %.1f pixels, %.3f um Y",
         mFECurrentAngle, mFECoarseIncrement, shiftX, shiftY, movedY);
-      if (mVerbose)
-        mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      mWinApp->VerboseAppendToLog(mVerbose, report);
 
       // If not close to target move, and not at max tilt, and not at max increment
       // then tilt again, setting increment that will reach target but not 
@@ -1676,8 +1679,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ) {
       report.Format("Rough eucentricity change of %.1f um exceeds limit of %.0f um;"
         " procedure is ending with no change", delZ, mFEUseCoarseMaxDeltaZ);
-      mWinApp->AppendToLog(report,
-        mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
+      mWinApp->VerboseAppendToLog(mVerbose, report);
       mFELastCoarseFailed = true;
       StopEucentricity();
       return;
@@ -1706,8 +1708,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     DoubleMoveStage(mFECurrentZ, backlashZ, true, 0., 0., false, action);
     report.Format("Rough eucentricity: changing Z by %.2f to %.2f, %s", delZ,
       mFECurrentZ, action == FE_COARSE_MOVED ? "continuing..." : "finished.");
-    mWinApp->AppendToLog(report, 
-      mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, report);
     return;
 
   case FE_COARSE_LAST_MOVE:
@@ -1797,8 +1798,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       /*", Cumul, Y = %.3f"/*, %.3f*/", IS = %.3f, %.3f",
       mFEFineAngles[mFEFineIndex], shiftX, shiftY, movedX, movedY,
       /*mCumMovedX, mFEFineShifts[mFEFineIndex],*/ specX, specY);
-    if (mVerbose)
-      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, report);
     radians = DTOR * mFEFineAngles[mFEFineIndex];
     mAngleSines[mFEFineIndex] = -(float)sin(radians);
     mAngleCosines[mFEFineIndex++] = (float)cos(radians);
@@ -1868,8 +1868,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       report.Format("General solution delZ %.2f, delY %.2f, yZero %.2f\r\n"
         " solution with assumed YZero %.2f: delZ %.2f, delY %.2f", delZ, delY,
         yZeroGen, yZero, delZact, delYact);
-      if (mVerbose)
-        mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      mWinApp->VerboseAppendToLog(mVerbose, report);
     }
 
     // Issue report after negating delY for consistency with old usage
@@ -2265,4 +2264,133 @@ void CComplexTasks::StopBacklashAdjust()
   mCamera->SetRequiredRoll(0);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
+}
+
+////////////////////////////////////////////////////////////////////////
+// Finding View/Search shift offsets
+////////////////////////////////////////////////////////////////////////
+
+// Start the procedure: which type to use, maximum shift or negative fraction of FOV
+// and the search limits
+int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons, 
+  float maxPctCng, float maxRot)
+{
+  float pixel, camSize, field;
+  double ISX, ISY;
+  int biggerArea = searchToView ? SEARCH_AREA : VIEW_CONSET;
+  mLDSOHigherConsNum = searchToView ? VIEW_CONSET : PREVIEW_CONSET;
+  LowDoseParams *bigParams = mWinApp->GetLowDoseParams() + biggerArea;
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
+
+  if (!mWinApp->LowDoseMode()) {
+    SEMMessageBox("Low Dose mode must be on to find shift offsets");
+    return 1;
+  }
+
+  // Convert fraction of field to microns
+  if (maxMicrons < 0) {
+    pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), bigParams->magIndex);
+    camSize = (float)sqrt(camParams->sizeX * camParams->sizeY);
+    field = pixel * camSize;
+    maxMicrons = -field * maxMicrons;
+  }
+  mLDSOMaxMicrons = maxMicrons;
+
+  // Set search variables
+  if (maxPctCng < 0)
+    maxPctCng = mWinApp->mNavHelper->GetScaledAliDfltPctChg();
+  if (maxRot < 0)
+    maxRot = mWinApp->mNavHelper->GetScaledAliDfltMaxRot();
+  mLDSOMaxPctChg = maxPctCng;
+  mLDSOMaxRot = maxRot;
+  mLDSOLowerConsNum = searchToView ? SEARCH_CONSET : VIEW_CONSET;
+
+  // Reset image to start, if necessary
+  mDoingLDSO = true;
+  mWinApp->UpdateBufferWindows();
+  mScope->GetLDCenteredShift(ISX, ISY);
+  if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->GetMagIndex()) <
+    mLDShiftOffsetResetISThresh) {
+    LDSONextTask(LDSO_RESET_SHIFT);
+  } else {
+    ResetShiftRealign();
+    mWinApp->AddIdleTask(TASK_LD_SHIFT_OFFSET, LDSO_RESET_SHIFT, 0);
+  }
+  return 0;
+}
+
+// Do the next operation in finding shift
+void CComplexTasks::LDSONextTask(int param)
+{
+  int err, nextAct = LDSO_FIRST_LOWER, consNum = mLDSOLowerConsNum;
+  float scaleMax, rotation;
+  double ISX, ISY;
+  CString errStr;
+
+  if (!mDoingLDSO)
+    return;
+  if (param == LDSO_RESET_SHIFT) {
+
+    // Start it for real
+    mCamera->SetRequiredRoll(3);
+    nextAct = LDSO_HIGHER_MAG;
+    consNum = mLDSOHigherConsNum;
+    mWinApp->SetStatusText(MEDIUM_PANE, "FINDING SHIFT OFFSET");
+
+  } else if (param != LDSO_HIGHER_MAG) {
+
+    // Align images
+    err = mWinApp->mProcessImage->AlignBetweenMagnifications(1, -1., -1., mLDSOMaxMicrons,
+      mLDSOMaxPctChg / 100.f, 2.f * mLDSOMaxRot, true, scaleMax, rotation, 0, errStr);
+    if (!err) {
+      err = mWinApp->mLowDoseDlg.DoSetViewShift(param == LDSO_SECOND_LOWER ? 2 : 1);
+      errStr.Format("There is no matrix available for image shift to camera at the %s "
+        "magnification", mWinApp->GetModeNames() + mImBufs->mConSetUsed);
+    }
+    mWinApp->mLowDoseDlg.GetViewShiftOffset(-1, ISX, ISY);
+
+    // Stop if done or error
+    if (err || param == LDSO_SECOND_LOWER || 
+      mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->FastMagIndex()) <
+      mLDShiftOffsetIterThresh) {
+      StopFindingShiftOffset();
+      if (err)
+        SEMMessageBox(errStr);
+      return;
+    }
+
+    // Go on to iteration shot
+    mBufferManager->CopyImageBuffer(3, 0, 0);
+    nextAct = LDSO_SECOND_LOWER;
+  }
+
+  mWinApp->mCamera->SetCancelNextContinuous(true);
+  mCamera->InitiateCapture(consNum);
+  mWinApp->AddIdleTask(TASK_LD_SHIFT_OFFSET, nextAct, 0);
+}
+
+// Standard cleanup
+void CComplexTasks::LDSOCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    mTSController->TSMessageBox(_T("Time out in the routine to find shift offset"));
+  StopFindingShiftOffset();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Busy: test for camera and reset image shift
+int CComplexTasks::LDShiftOffsetBusy()
+{
+  return (mCamera->CameraBusy() || DoingResetShiftRealign()) ? 1 : 0;
+}
+
+// Stop
+void CComplexTasks::StopFindingShiftOffset()
+{
+  if (!mDoingLDSO)
+    return;
+  mDoingLDSO = false;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mCamera->SetRequiredRoll(0);
 }

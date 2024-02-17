@@ -70,6 +70,7 @@ public:
   SetMember(float, FocusPiezoDelayFac);
   SetMember(float, TVPiezoDelayFac);
   GetMember(BOOL, TieFocusTrialPos);
+  GetMember(int, LastAutoShiftType);
 
 
 // Dialog Data
@@ -176,6 +177,9 @@ private:
   double mStartingBeamX, mStartingBeamY;
   double mStartingBTiltX, mStartingBTiltY;
   double mStampViewShift[2];  // Time stamp of image used to set view/search shift
+  double mXshiftAtAutoStart;  // Saved shift values before first iteration of auto
+  double mYshiftAtAutoStart;
+  int mLastAutoShiftType;     // 1 for view, 2 for search, 0 invalid 
   float mPiezoScaleFac;
   float mPiezoMinToUse;
   float mPiezoMaxToUse;
@@ -206,9 +210,13 @@ public:
   double mViewShiftX[2], mViewShiftY[2];
   afx_msg void OnSetViewShift();
   afx_msg void OnZeroViewShift();
+  int DoSetViewShift(int automatic);
   void AdjustAddedBSforViewShiftChange(double delVSX, double delVSY);
   int OKtoSetViewShift();
   void EnableSetViewShiftIfOK(void);
+  int RevertLastAutoViewShift();
+  int SetViewShiftOffset(int type, double xShift, double yShift);
+  int GetViewShiftOffset(int type, double &xShift, double &yShift);
   CStatic m_statDegrees;
   CEdit m_editAxisAngle;
   int m_iAxisAngle;
