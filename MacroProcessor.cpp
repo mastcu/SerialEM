@@ -297,7 +297,7 @@ void CMacroProcessor::Initialize()
         mWinApp->AppendToLog(mCmdList[i].mixedCase);
   }
   if (mPyModulePath.IsEmpty())
-    mPyModulePath = mWinApp->mPluginManager->GetExePath() + "\\PythonModules";
+    mPyModulePath = mWinApp->GetExePath() + "\\PythonModules";
   mPyModulePath.Replace("\\", "/");
 }
 

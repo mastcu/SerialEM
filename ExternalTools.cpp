@@ -745,7 +745,7 @@ void CExternalTools::CheckForIMODPath()
   
   mCheckedForIMOD = true;
 
-  path = mWinApp->mPluginManager->GetExePath();
+  path = mWinApp->GetExePath();
   if (CFile::GetStatus((LPCTSTR)(path + "\\ctfplotter.exe"), status) &&
     CFile::GetStatus((LPCTSTR)(path + "\\ctfplotter.adoc"), status))
     mLocalCtfplotPath = path;

@@ -85,7 +85,6 @@ int CPluginManager::LoadPlugins(void)
   PluginData *newPlug;
   PluginCall newCall;
   CamPluginFuncs *cfuncs;
-  char fullPath[MAX_PATH + 10];
   const char *namep, *actionp;
   int numFuncs = 0, err = 0, flags, i, j, dirLoop = 0;
   double dum1, dum2, dum3, dum4;
@@ -107,11 +106,7 @@ int CPluginManager::LoadPlugins(void)
       path = plugPath;
       mess = path + "\\*.dll";
     } else {
-      i = GetModuleFileName(NULL, fullPath, MAX_PATH + 10);
-      if (!i || i >= MAX_PATH + 10) 
-        continue;
-      UtilSplitPath(CString(fullPath), mExePath, mess);
-      path = mExePath;
+      path = mWinApp->GetExePath();
       if (path.IsEmpty())
         continue;
       mess = path + "\\*Plugin*.dll";
