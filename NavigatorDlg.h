@@ -725,6 +725,7 @@ public:
     float *defocusOffset);
 void MoveStageOrDoImageShift(int axisBits);
 void SetCurrentSelection(int listInd);
+int SetSelectedItem(int itemInd, bool redraw = true);
 int LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd);
 void IStoXYandAdvance(int &direction);
 CMapDrawItem *FindNextAcquireItem(int &index);

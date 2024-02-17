@@ -2237,7 +2237,7 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
   CString string;
   HDWP positions;
   int offset = 0, updated = -1;
-  int numDig = 0, noIndex = m_bTableIndexes ? 0 : 1, i = mItemArray.GetSize();
+  int numDig = 0, noIndex = m_bTableIndexes ? 0 : 1, i = (int)mItemArray.GetSize();
 
   // label, color, X, Y, Z, type, reg, corner, extras
   const int numTabs = 11;
@@ -9811,6 +9811,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mLastAcquireTicks = ticks;
       if (mAcqParm->acquireType != ACQUIRE_TAKE_MAP)
         report += "\r\n----------------------------------------------------------------";
+      mWinApp->SetNextLogColorStyle(0, 1);
       mWinApp->AppendToLog(report);
 
       item->mDraw = mAcqParm->acquireType != ACQUIRE_TAKE_MAP;
@@ -12106,6 +12107,27 @@ void CNavigatorDlg::SetCurrentSelection(int listInd)
     mCurrentItem = mListToItem[listInd];
   ManageCurrentControls();
   Redraw();
+}
+
+// Sets the given item as the current one and as the only selected item
+int CNavigatorDlg::SetSelectedItem(int itemInd, bool redraw)
+{
+  if (itemInd < 0 || itemInd > mItemArray.GetSize())
+    return 1;
+  if (mAcquireIndex >= 0)
+    return 2;
+  mCurrentItem = itemInd;
+  if (m_bCollapseGroups)
+    mCurListSel = mItemToList[itemInd];
+  else
+    mCurListSel = itemInd;
+  m_listViewer.SetCurSel(mCurListSel);
+  mSelectedItems.clear();
+  mSelectedItems.insert(itemInd);
+  ManageCurrentControls();
+  if (redraw)
+    Redraw();
+  return 0;
 }
 
 // Returns the area inside the contour points
