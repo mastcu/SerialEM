@@ -180,7 +180,7 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
   LOGFONT logFont;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   CString exePath, str,propFont = winApp->mMacroProcessor->GetMonoFontName();
-  const char *tryNames[] = {"NanumGothicCoding", "Lucida Console", "Consolas", "Lucida Sans Typewriter",
+  const char *tryNames[] = {"Lucida Console", "Consolas", "Lucida Sans Typewriter",
     "Courier New"};
   int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
 

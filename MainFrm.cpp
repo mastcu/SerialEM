@@ -494,6 +494,8 @@ void CMainFrame::DoClose(bool afterScript)
 
   mWinApp->SetAppExiting(true);
   mWinApp->mCamera->CheckAndFreeK2References(true);
+  if (!mWinApp->GetNanumFontPath().IsEmpty())
+    RemoveFontResourceEx(mWinApp->GetNanumFontPath(), FR_PRIVATE, NULL);
 
   // If this is closed automatically, there are activation context errors on exit
   if (mWinApp->mProcessImage->GetSideBySideFFT() && mWinApp->mFFTView)
