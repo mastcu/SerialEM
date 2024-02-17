@@ -7,7 +7,6 @@ C
 D
 E
 F
-G
 I
 K
 L
@@ -17,11 +16,20 @@ O
 P
 R
 S
-T
-U
 V
 W
 X
+ Log Window:
+ A
+ C
+ F
+ M
+ O
+ P
+ R
+ S
+ T
+ V
 
 Settings:
 A

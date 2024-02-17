@@ -2800,6 +2800,8 @@
 #define ID_FILE_AUTOPRUNELOGWINDOW      33520
 #define ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 33521
 #define ID_NAV_SETSCRIPTTORUN           33522
+#define ID_FILE_LOWWINDOW               33523
+#define ID_LOGWINDOW_USERTFFORMATTOSAVE 33524
 
 // Next default values for new objects
 // 
@@ -2807,7 +2809,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
-#define _APS_NEXT_COMMAND_VALUE         33523
+#define _APS_NEXT_COMMAND_VALUE         33525
 #define _APS_NEXT_CONTROL_VALUE         3294
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

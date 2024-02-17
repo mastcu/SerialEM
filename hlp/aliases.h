@@ -93,6 +93,7 @@ hid_file_readappend							= SerialEM.chm::/html\menu_file.htm#hid_file_readappen
 hid_file_continuoussave					= SerialEM.chm::/html\menu_file.htm#hid_file_continuoussave
 hid_file_autosavelog            = SerialEM.chm::/html\menu_file.htm#hid_file_autosavelog
 hid_file_autoprunelogwindow     = SerialEM.chm::/html\menu_file.htm#hid_file_autoprunelogwindow
+hid_logwindow_usertfformattosave = SerialEM.chm::/html\menu_file.htm#hid_logwindow_usertfformattosave
 hid_file_usemonospacedfont      = SerialEM.chm::/html\menu_file.htm#hid_file_usemonospacedfont
 hid_window_rescuelogwindow      = SerialEM.chm::/html\menu_file.htm#hid_window_rescuelogwindow
 hid_file_open_mdoc    					= SerialEM.chm::/html\menu_file.htm#hid_file_open_mdoc

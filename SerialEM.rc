@@ -150,15 +150,20 @@ BEGIN
         MENUITEM "R&ead from Other",            IDM_FILE_READOTHER
         MENUITEM "Rea&d Piece",                 ID_FILE_READPIECE
         MENUITEM SEPARATOR
-        MENUITEM "Open &Log",                   ID_FILE_OPENLOG
-        MENUITEM "Save Lo&g...",                ID_FILE_SAVELOG
-        MENUITEM "Save Log As...",              ID_FILE_SAVELOGAS
-        MENUITEM "Read && Append...",           ID_FILE_READAPPEND
-        MENUITEM "Save && Autosave...",         ID_FILE_AUTOSAVELOG
-        MENUITEM "Autoprune Log Window...",     ID_FILE_AUTOPRUNELOGWINDOW
-        MENUITEM "Continuous Save",             ID_FILE_CONTINUOUSSAVE
-        MENUITEM "&Use Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
-        MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
+        POPUP "&Log Window"
+        BEGIN
+            MENUITEM "&Open Log",                   ID_FILE_OPENLOG
+            MENUITEM "&Save Log...",                ID_FILE_SAVELOG
+            MENUITEM "Save Log &As...",             ID_FILE_SAVELOGAS
+            MENUITEM "&Read && Append...",          ID_FILE_READAPPEND
+            MENUITEM "Sa&ve && Autosave...",        ID_FILE_AUTOSAVELOG
+            MENUITEM SEPARATOR
+            MENUITEM "Autoprune Log Window...",     ID_FILE_AUTOPRUNELOGWINDOW
+            MENUITEM "Use RTF &Format to Save",     ID_LOGWINDOW_USERTFFORMATTOSAVE
+            MENUITEM "&Continuous Save",            ID_FILE_CONTINUOUSSAVE
+            MENUITEM "Use &Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
+            MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
+        END
         MENUITEM SEPARATOR
         MENUITEM "Set Current Directory...",    ID_FILE_SETCURRENTDIRECTORY
         MENUITEM "Open .mdoc for &Frames",      ID_FILE_OPEN_MDOC
@@ -7410,6 +7415,8 @@ BEGIN
     ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE 
                             "Run script instead of Record when running from Acquire at Items"
     ID_NAV_SETSCRIPTTORUN   "Select the script to run during Multi-shots"
+    ID_LOGWINDOW_USERTFFORMATTOSAVE 
+                            "Save log in RTF format to preserve colors and styles"
 END
 
 STRINGTABLE

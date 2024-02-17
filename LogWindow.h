@@ -29,6 +29,7 @@ public:
   SetMember(BOOL, Unsaved);
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
+  GetMember(int, TypeOfFileSaved);
   void Append(CString &inString, int lineFlags);
   void Append(CString &inString, int lineFlags, int colorIndex, int style);
   void Append(CString &inString, int lineFlags, int red, int green, int blue, int style);
@@ -91,6 +92,9 @@ private:
   CString mTempPruneName;    // Temporary (or not) file for saving pruned if no file set
   int mNextRed, mNextGreen, mNextBlue;
   int mNextStyle;
+  unsigned char *mPalette;
+  long mLastAppendSel;        // Selection index after last append
+  int mTypeOfFileSaved;       // 0 not saved yet, 1 as text, 0 as rtf
 
 public:
   BOOL SaveFileNotOnStack(CString stackName);

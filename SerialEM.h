@@ -90,7 +90,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
   TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
-  TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO
+  TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -148,6 +148,14 @@ struct JeolParams;
 #define LOG_IF_ADMIN_OPEN_IF_CLOSED      10
 #define LOG_IF_DEBUG_OPEN_IF_CLOSED      11
 #define LOG_IGNORE                       12
+
+#define MAX_STOCK_COLORS    7
+#define ERROR_COLOR_IND     MAX_STOCK_COLORS
+#define WARNING_COLOR_IND   (MAX_STOCK_COLORS + 1)
+#define INSERTED_COLOR_IND  (MAX_STOCK_COLORS + 2)
+#define DEBUG_COLOR_IND     (MAX_STOCK_COLORS + 3)
+#define VERBOSE_COLOR_IND   (MAX_STOCK_COLORS + 4)
+#define MAX_PALETTE_COLORS  (MAX_STOCK_COLORS + 5)
 
 #define SIMPLE_PANE 3
 #define MEDIUM_PANE 2
@@ -494,6 +502,8 @@ public:
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
   void ErrorOccurred(int error);
   void AppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
+  void SetNextLogColorStyle(int colorInd, int style);
+  void VerboseAppendToLog(BOOL verbose, CString str);
   void LogClosing();
   WINDOWPLACEMENT *GetLogPlacement() { return &mLogPlacement; };
   WINDOWPLACEMENT *GetNavPlacement() { return &mNavPlacement; };
@@ -642,10 +652,14 @@ public:
   GetSetMember(int, NavOrLogHadFocus);
   GetSetMember(BOOL, MonospacedLog);
   GetSetMember(BOOL, SaveAutosaveLog);
+  GetSetMember(BOOL, SaveLogAsRTF);
   GetMember(bool, InRestoreViewFocus);
   GetSetMember(BOOL, ReverseWheelZoom);
   GetSetMember(int, SpecialDebugLevel);
   GetSetMember(int, AutoPruneLogLines);
+  GetMember(CString, ExePath);
+  GetSetMember(CString, NanumFontPath);
+  unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
   std::set<int>  *GetLineHideIDs() { return &mLineHideIDs; };
@@ -847,6 +861,7 @@ private:
   CArray<IdleCallBack *, IdleCallBack *> mIdleArray;
   CString mMacros[MAX_TOT_MACROS];
   MacroControl mMacControl;
+  CString mExePath;           // Path to executable;
 
   float mMemoryLimit;                  // Limit on memory available for buffers
   CString mBlinkText;          // Text for simple (rightmost) pane, to blink
@@ -953,10 +968,15 @@ private:
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
   BOOL mMonospacedLog;          // Flag that log window should use monospaced font
   BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
+  BOOL mSaveLogAsRTF;            // Flag to save log as RTF
   bool mInRestoreViewFocus;     // Flag so draw can be skipped if it is just from SetFocus
   int mSuppressSomeMessages;    // For Jaap...
   BOOL mReverseWheelZoom;        // "Normal" zoom has a deltaSign of -1
   int mSpecialDebugLevel;      // A way to get some output without everything from '1'
+  unsigned char mPaletteColors[MAX_PALETTE_COLORS][3];
+  int mNextLogColor;            // Color index for next output to log
+  int mNextLogStyle;            // Style for next output to log
+  CString mNanumFontPath;       // Path to font that needs removing
 
 public:
   void UpdateAllEditers(void);
@@ -1027,6 +1047,8 @@ afx_msg void OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI);
 afx_msg void OnFileAutosaveLog();
 afx_msg void OnUpdateFileAutosaveLog(CCmdUI *pCmdUI);
 bool FilterIsSelectris() {return mFilterParams.firstGIFCamera >= 0 && mCamParams[mActiveCameraList[mFilterParams.firstGIFCamera]].filterIsFEI ; };
+afx_msg void OnUseRTFformatToSave();
+afx_msg void OnUpdateUseRTFformatToSave(CCmdUI *pCmdUI);
 };
 
 

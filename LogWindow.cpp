@@ -25,8 +25,6 @@ static char THIS_FILE[] = __FILE__;
 // CLogWindow dialog
 
 static const char *sPruneEnding = " for pruned lines...\r\n";
-static int sRGBs[][3] = {{0, 0, 0},  {210, 0, 0},{0, 140, 0}, {0, 0, 210}, {255, 130, 0},
-{210, 0, 210}, {0, 180, 180}};
 
 
 CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
@@ -40,6 +38,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mInitialized = false;
   mSaveFile = "";
   mLastSavedLength = 0;
+  mTypeOfFileSaved = 0;
   mLastStackname = "";
   mNumDeferred = 0;
   mDeferredLines = "";
@@ -49,6 +48,8 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mAppendedLength = 0;
   mNextRed = -1;
   mNextStyle = -1;
+  mLastAppendSel = -1;
+  mPalette = mWinApp->GetPaletteColors();
 }
 
 
@@ -105,27 +106,31 @@ void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, i
 
 void CLogWindow::Append(CString & inString, int lineFlags, int colorIndex, int style)
 {
-  B3DCLAMP(colorIndex, 0, sizeof(sRGBs) / (3 * sizeof(int)) - 1);
-  DoAppend(inString, lineFlags, sRGBs[colorIndex][0], sRGBs[colorIndex][1],
-    sRGBs[colorIndex][2], style);
+  B3DCLAMP(colorIndex, 0, MAX_PALETTE_COLORS - 1);
+  DoAppend(inString, lineFlags, mPalette[colorIndex * 3], mPalette[colorIndex * 3 + 1],
+    mPalette[colorIndex * 3 + 2], style);
 }
 
 void CLogWindow::Append(CString &inString, int lineFlags)
 {
-  Append(inString, lineFlags, 0, 0, 0, 0);
+  CString str = inString.Left(8);
+  int ind = 0;
+  if (str == "WARNING:" || str == "Warning:")
+    ind = WARNING_COLOR_IND;
+  Append(inString, lineFlags, ind, ind ? 1 : 0);
 }
 
 // Separate route for setting the color, more conveniently
 int CLogWindow::SetNextLineColorStyle(int colorIndex, int style)
 {
-  int maxIndex = sizeof(sRGBs) / (3 * sizeof(int)) - 1;
+  int maxIndex = MAX_PALETTE_COLORS - 1;
   int retVal = colorIndex < 0 ? maxIndex : 0;
   if (colorIndex < 0 || colorIndex > maxIndex)
     retVal = maxIndex;
   B3DCLAMP(colorIndex, 0, maxIndex);
-  mNextRed = sRGBs[colorIndex][0];
-  mNextGreen = sRGBs[colorIndex][1];
-  mNextBlue = sRGBs[colorIndex][2];
+  mNextRed = mPalette[colorIndex * 3];
+  mNextGreen = mPalette[colorIndex * 3 + 1];
+  mNextBlue = mPalette[colorIndex * 3 + 2];
   B3DCLAMP(style, 0, 7);
   mNextStyle = style;
   return retVal;
@@ -149,6 +154,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
 {
   int oldLen, newLen, lastEnd, pruneInd, lastPrune, pruneSel;
   int pruneCrit = mWinApp->GetAutoPruneLogLines() * 42;
+  int ind = INSERTED_COLOR_IND * 3;
   long sel1, sel2;
   UINT mode = CFile::modeWrite | CFile::shareDenyWrite;
   UpdateData(true);
@@ -163,6 +169,16 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   // to end and get the value
   m_editWindow.SetSel(-1, -1);
   m_editWindow.GetSel(sel1, sel1);
+  if (mLastAppendSel > 0 && sel1 > mLastAppendSel && 
+    (mPalette[ind] || mPalette[ind + 1] || mPalette[ind + 2])) {
+    CHARFORMAT cf;
+    m_editWindow.SetSel(mLastAppendSel, sel1);
+    cf.dwEffects = 0;
+    cf.dwMask = CFM_COLOR;
+    cf.crTextColor = RGB(mPalette[ind], mPalette[ind + 1], mPalette[ind + 2]);
+    m_editWindow.SetWordCharFormat(cf);
+    m_editWindow.SetSel(-1, -1);
+  }
   m_strLog += _T(inString);
   mUnsaved = true;
   newLen = m_strLog.GetLength();
@@ -215,7 +231,8 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   UpdateAndScrollToEnd();
 
   // See if it is time to autoprune
-  if (pruneCrit > 0 && newLen > pruneCrit * 2) {
+  if (pruneCrit > 0 && newLen > pruneCrit * 2 && mTypeOfFileSaved < 2 && 
+    (mPrunedLength > 0 || !mWinApp->GetSaveLogAsRTF())) {
     lastPrune = 0;
     pruneInd = 0;
     while (pruneInd < newLen - pruneCrit) {
@@ -229,6 +246,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
         UtilRemoveFile(mTempPruneName);
         mode |= CFile::modeCreate;
       }
+      mTypeOfFileSaved = 1;
       OpenAndWriteFile(mode, pruneInd, 0);
       mPrunedLength += pruneInd;
       mPrunedPosition = mLastPosition;
@@ -253,6 +271,8 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
       OpenAndWriteFile(CFile::modeWrite | CFile::shareDenyWrite,
         mAppendedLength, mLastSavedLength);
   }
+  m_editWindow.SetSel(-1, -1);
+  m_editWindow.GetSel(sel1, mLastAppendSel);
 }
 
 // Scroll to the end
@@ -340,10 +360,16 @@ int CLogWindow::SaveAndOfferName()
 // Get file name for new or existing file
 int CLogWindow::GetFileName(BOOL oldFile, UINT flags, LPCTSTR offerName)
 {
-  static char BASED_CODE szFilter[] = 
+  static char logFilter[] =
     "Log files (*.log)|*.log|All files (*.*)|*.*||";
+  static char rtfFilter[] =
+    "Log files (*.rtf)|*.rtf|All files (*.*)|*.*||";
+  static char bothFilter[] =
+    "Log files (*.log, *.rtf)|*.log; *.rtf|All files (*.*)|*.*||";
+  int saveRTF = (mWinApp->GetSaveLogAsRTF() && !mPrunedLength) ? 1 : 0;
 
-  MyFileDialog fileDlg(oldFile, ".log", offerName, flags, szFilter);
+  MyFileDialog fileDlg(oldFile, saveRTF ? ".rtf" : ".log", offerName, flags,
+    B3DCHOICE(oldFile, bothFilter, saveRTF ? rtfFilter : logFilter));
 
   int result = fileDlg.DoModal();
   mWinApp->RestoreViewFocus();
@@ -356,6 +382,8 @@ int CLogWindow::GetFileName(BOOL oldFile, UINT flags, LPCTSTR offerName)
   int trimCount = mSaveFile.GetLength() - (mSaveFile.ReverseFind('\\') + 1);
   CString trimmedName = mSaveFile.Right(trimCount);
   SetWindowText("Log:  " + trimmedName);
+  if (!oldFile)
+    mTypeOfFileSaved = saveRTF + 1;
   return 0;
 }
 
@@ -390,8 +418,7 @@ int CLogWindow::DoSave(CString oldFile)
   }
   int length = m_strLog.GetLength();
   return (OpenAndWriteFile((mPrunedLength ? 0 : CFile::modeCreate) | CFile::modeWrite |
-    CFile::shareDenyWrite,
-    length, 0));
+    CFile::shareDenyWrite, length, 0));
 }
 
 // Flush new text to the save file, asking for a new one if createifNone is true and no
@@ -402,6 +429,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
   int dirInd, extInd, fileNo;
   CString name;
   CFileStatus status;
+  int saveRTF = (mWinApp->GetSaveLogAsRTF() && !mPrunedLength) ? 1 : 0;
   FlushDeferredLines();
   if (mSaveFile.IsEmpty() || (createIfNone && !stackName.IsEmpty() && replace)) {
     if (createIfNone) {
@@ -417,15 +445,16 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
 
       // Use name as is now if overwrite flag is set
       if (overwrite) {
-        mSaveFile = stackName + ".log";
+        mSaveFile = stackName + (saveRTF ? ".rtf" : ".log");
       } else {
 
         // Othewise loop until finding a file name that does not exist
         for (fileNo = 0; fileNo < 1000; fileNo++) {
           if (fileNo)
-            name.Format("%s-%d.log", (LPCTSTR)stackName, fileNo);
+            name.Format("%s-%d.%s", (LPCTSTR)stackName, fileNo, saveRTF ? ".rtf" :
+              ".log");
           else
-            name.Format("%s.log", (LPCTSTR)stackName, fileNo);
+            name.Format("%s.%s", (LPCTSTR)stackName, fileNo, saveRTF ? ".rtf" : ".log");
           if (!CFile::GetStatus((LPCTSTR)name, status))
             break;
         }
@@ -450,12 +479,33 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
   // otherwise rewrite from scratch
   UpdateData(true);
   int length = m_strLog.GetLength();
-  if (length != mLastSavedLength + mAppendedLength - mPrunedLength)
+  if (length != mLastSavedLength + mAppendedLength - mPrunedLength ||
+    mTypeOfFileSaved > 1)
     return (DoSave());
 
   return (OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite, 
     mAppendedLength, mLastSavedLength - mPrunedLength));
 }
+
+
+// Callbacks for RTF operations
+static DWORD CALLBACK
+MyStreamOutCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+{
+  CFile *cFile = (CFile *)dwCookie;
+  cFile->Write(pbBuff, cb);
+  *pcb = cb;
+  return 0;
+}
+
+static DWORD CALLBACK
+MyStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+{
+  CFile *cFile = (CFile *)dwCookie;
+  *pcb = cFile->Read(pbBuff, cb);
+  return 0;
+}
+
 
 // Open the given file and write it
 int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
@@ -488,7 +538,14 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
     }
 
     message = "Error writing log to file " + saveFile;
-    cFile->Write((void *)((LPCTSTR)m_strLog + offset + addOff), length - addOff);
+    if (mTypeOfFileSaved < 2) {
+      cFile->Write((void *)((LPCTSTR)m_strLog + offset + addOff), length - addOff);
+    } else {
+      EDITSTREAM es;
+      es.dwCookie = (DWORD_PTR)cFile;
+      es.pfnCallback = MyStreamOutCallback;
+      m_editWindow.StreamOut(SF_RTF, es);
+    }
 
     // Maintain lengths, savedLength includes pruned
     mLastSavedLength = mPrunedLength + length + offset;
@@ -538,6 +595,7 @@ int CLogWindow::ReadAndAppend()
   int nread;
   UpdateData(true);
   CString oldSave = mSaveFile;
+  CString str;
   if (GetFileName(TRUE, OFN_HIDEREADONLY, NULL)) {
     mSaveFile = oldSave;
     return 1;
@@ -554,15 +612,29 @@ int CLogWindow::ReadAndAppend()
 
     // Open the file for reading, get buffer, read into it and terminate string
     cFile = new CFile(mSaveFile, CFile::modeRead);
-    length = (int)cFile->GetLength();
-    buffer = new char[length + 10];
-    nread = cFile->Read(buffer, length + 9);
-    buffer[nread] = 0x00;
-    m_editWindow.SetSel(0, 0);
-    m_editWindow.ReplaceSel(buffer);
+    if (mSaveFile.Mid(mSaveFile.GetLength() - 4) != ".rtf") {
+      length = (int)cFile->GetLength();
+      buffer = new char[length + 10];
+      nread = cFile->Read(buffer, length + 9);
+      buffer[nread] = 0x00;
+      m_editWindow.SetSel(0, 0);
+      m_editWindow.ReplaceSel(buffer);
+      mTypeOfFileSaved = 1;
+    } else {
+
+      // Or set up the RTF stream, save the existing text, read and add text at end
+      EDITSTREAM es;
+      es.pfnCallback = MyStreamInCallback;
+      es.dwCookie = (DWORD_PTR)cFile;
+      str = m_strLog;
+      m_editWindow.StreamIn(SF_RTF, es);
+      m_editWindow.SetSel(-1, -1);
+      m_editWindow.ReplaceSel(str);
+      mTypeOfFileSaved = 2;
+    }
     UpdateAndScrollToEnd();
-    //m_strLog = CString(buffer) + m_strLog;
-    //UpdateData(false);
+    m_editWindow.SetSel(-1, -1);
+    m_editWindow.GetSel(mLastAppendSel, mLastAppendSel);
   }
   catch(CFileException *perr) {
     perr->Delete();
