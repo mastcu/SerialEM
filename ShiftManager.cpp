@@ -3327,12 +3327,14 @@ void CShiftManager::ListBeamShiftCals()
     }
   }
 
+  mWinApp->SetNextLogColorStyle(0, 1);
   mWinApp->AppendToLog("\r\nBeam shift calibrations as specimen to beam shift matrices:");
   str1 = "Ind ";
   if (FEIscope)
     str1 += "Probe";
   else if (hasAlpha)
     str1 += "Alpha";
+  mWinApp->SetNextLogColorStyle(0, 4);
   mWinApp->AppendToLog(str1 + "    Matrix                                        Mag"
     + CString(JEOLscope ? "  Refined" : ""));
   for (jnd = 0; jnd < mNumBeamShiftCals; jnd++) {

@@ -623,8 +623,10 @@ void CFocusManager::OnAutofocusListCalibrations()
   AstigCalib astig;
   ComaCalib coma;
   CString str, str2;
-  mWinApp->AppendToLog("\r\nFocus calibrations:\r\n"
-    "Camera    Mag  Index  Direction Range");
+  mWinApp->SetNextLogColorStyle(0, 1);
+  mWinApp->AppendToLog("\r\nFocus calibrations:");
+  mWinApp->SetNextLogColorStyle(0, 4);
+  mWinApp->AppendToLog("Camera    Mag  Index  Direction Range");
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
@@ -671,8 +673,10 @@ void CFocusManager::OnAutofocusListCalibrations()
   }
 
   if (ctfAstigCals->GetSize()) {
-    PrintfToLog("\r\nCTF-fitting based astigmatism calibrations:\r\n"
-      "Mag  Index  Stigmator delta");
+    mWinApp->SetNextLogColorStyle(0, 1);
+    mWinApp->AppendToLog("\r\nCTF-fitting based astigmatism calibrations:");
+    mWinApp->SetNextLogColorStyle(0, 4);
+    mWinApp->AppendToLog("Mag  Index  Stigmator delta");
     for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
       ctfCal = ctfAstigCals->GetAt(ind);
        PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd, 
@@ -681,7 +685,10 @@ void CFocusManager::OnAutofocusListCalibrations()
   }
 
   if (astigCal->GetSize()) {
-    PrintfToLog("\r\nBTID astigmatism calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
+    mWinApp->SetNextLogColorStyle(0, 1);
+    mWinApp->AppendToLog("\r\nBTID astigmatism calibrations:");
+    mWinApp->SetNextLogColorStyle(0, 4);
+    PrintfToLog("Mag  Index  Tilt  Defocus  %s",
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < astigCal->GetSize(); ind++) {
       astig = astigCal->GetAt(ind);
@@ -698,7 +705,10 @@ void CFocusManager::OnAutofocusListCalibrations()
   }
 
   if (comaCal->GetSize()) {
-    PrintfToLog("\r\nOld (BTID) coma calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
+    mWinApp->SetNextLogColorStyle(0, 1);
+    mWinApp->AppendToLog("\r\nOld (BTID) coma calibrations:");
+    mWinApp->SetNextLogColorStyle(0, 4);
+    PrintfToLog("Mag  Index  Tilt  Defocus  %s",
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < comaCal->GetSize(); ind++) {
       coma = comaCal->GetAt(ind);
@@ -1818,7 +1828,7 @@ void CFocusManager::FocusDone()
   
     case FOCUS_AUTOFOCUS:
       if (mVerbose && !mWinApp->mParticleTasks->GetWaitingForDrift())
-        mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+        mWinApp->VerboseAppendToLog(true, report);
       AutoFocusData(xShift, yShift);
       break;
 
@@ -2190,7 +2200,7 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal,
   if (peakVal[1] > ratio * peakVal[0]) {
     report.Format("Using peak at %.1f,%.1f, rejecting %.2f times higher peak at "
       "%.1f,%.1f", xPeak[1], yPeak[1], peakVal[0] / peakVal[1], xPeak[0], yPeak[0]);
-    mWinApp->AppendToLog(report, mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, report);
     return 1;
   }
   return 0;

@@ -1896,16 +1896,14 @@ void CTSController::NextAction(int param)
             fabs(mScope->GetUnoffsetDefocus() -mPredictedFocus) > mTSParam.maxFocusDiff)){
             mFocusForDriftWasOK = true;
             mDidFocus[mTiltIndex] = true;
-            if (mNeedFocus && mVerbose)
-              mWinApp->AppendToLog("Last autofocus of drift measurement gave "
-                "adequate focus");
+            mWinApp->VerboseAppendToLog(mVerbose,
+              "Last autofocus of drift measurement gave adequate focus");
           }
         } else if (!mNeedFocus) {
 
           // Or make sure autofocus is done if iteration was still needed
-          if (mVerbose)
-            mWinApp->AppendToLog("Need to autofocus; last autofocus of drift measurement "
-              "had too large a change");
+          mWinApp->VerboseAppendToLog(mVerbose, "Need to autofocus; last autofocus of"
+            " drift measurement had too large a change");
           mNeedFocus = true;
         }
       }
@@ -1968,7 +1966,7 @@ void CTSController::NextAction(int param)
           specErrorX = mImBufs->mBinning * (aInv.xpx * shiftX - aInv.xpy * shiftY);
           specErrorY = mImBufs->mBinning * (aInv.ypx * shiftX - aInv.ypy * shiftY);
           message.Format("Record image shifted %.3f, %.3f um", specErrorX, specErrorY);
-          mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(true, message);
         }
  
         // See if need to shift an extra reference by the same amount
@@ -1991,8 +1989,7 @@ void CTSController::NextAction(int param)
           specErrorY = mTSParam.binning * (aInv.ypx * shiftX - aInv.ypy * shiftY);
           message.Format("%s reference shifted by %.1f,%.1f pixels, %.3f,%.3f um",
             mLowDoseMode ? "Tracking" : "Low mag", delX, -delY, specErrorX, specErrorY);
-          if (mVerbose)
-            mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(mVerbose, message);
         }
         
         // Now evaluate error, resolved into components relative to tilt axis
@@ -2038,18 +2035,16 @@ void CTSController::NextAction(int param)
         if (mLowDoseMode && mDidRegularTrack &&
           (fracErrorX > maxError || fracErrorY > maxError)) {
           mHaveTrackRef = false;
-          if (mVerbose)
-            mWinApp->AppendToLog("Getting a new tracking reference after"
-            " Record to reduce reference conflicts", LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(mVerbose, "Getting a new tracking reference after"
+            " Record to reduce reference conflicts");
         }
 
         // resolve low-mag ref disparity by forcing new reference there
         if (mNeedLowMagTrack && mUsableLowMagRef && !mDidRegularTrack &&
           (fracErrorX > maxError || fracErrorY > maxError)) {
           mRoughLowMagRef = true;
-          if (mVerbose)
-            mWinApp->AppendToLog("Getting a new low mag reference after"
-            " Record to reduce reference conflicts", LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(mVerbose, "Getting a new low mag reference after"
+            " Record to reduce reference conflicts");
         }
 
         // now check for redo criterion
@@ -2059,8 +2054,7 @@ void CTSController::NextAction(int param)
           message.Format("This Record image has more than the"
             " specified fraction of data loss\r\n"
             "       (lost fractions %.3f in X, %.3f in Y)", missingX, missingY);
-          if (mVerbose)
-            mWinApp->AppendToLog(message);
+          mWinApp->VerboseAppendToLog(mVerbose, message);
         }
         
         // In low dose, have user confirm taking another picture or allow going on
@@ -2122,9 +2116,8 @@ void CTSController::NextAction(int param)
     if (mActIndex == mActOrder[RECORD_OR_MONTAGE] && needRedo)
       mLastRedoIndex = mTiltIndex;
     if (mActIndex == mActOrder[RECORD_OR_MONTAGE] && needRedo && mPreTilted) {
-      if (mVerbose)
-        mWinApp->AppendToLog("Backing up to redo " + recordMontage + reason,
-          LOG_OPEN_IF_CLOSED);
+      mWinApp->VerboseAppendToLog(mVerbose, "Backing up to redo " + recordMontage + 
+        reason);
 
       // Tracking flags will be set properly by this routine.  
       // Set dosym state to that prior to the Record in case it helps recover.
@@ -2140,7 +2133,7 @@ void CTSController::NextAction(int param)
         recordMontage = "Autofocus";
       else if (mActIndex != mActOrder[RECORD_OR_MONTAGE])
         recordMontage = "image";
-      mWinApp->AppendToLog("Redoing " + recordMontage + reason, LOG_OPEN_IF_CLOSED);
+      mWinApp->VerboseAppendToLog(true, "Redoing " + recordMontage + reason);
     }
   }
 
@@ -2159,8 +2152,10 @@ void CTSController::NextAction(int param)
     // RUN A MACRO IF THE STEP HAS BEEN REACHED
     if (!mRunningMacro && mDoRunMacro && 
       mActOrder[mTableOfSteps[mStepAfterMacro - 1]] == mActIndex) {
-        if (mVerbose)
-          PrintfToLog("Running script # %d", mMacroToRun);
+      if (mVerbose) {
+        mWinApp->SetNextLogColorStyle(VERBOSE_COLOR_IND, 0);
+        PrintfToLog("Running script # %d", mMacroToRun);
+      }
         mRunningMacro = true;
         mWinApp->mMacroProcessor->Run(mMacroToRun - 1);
         mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
@@ -2273,9 +2268,7 @@ void CTSController::NextAction(int param)
           mBufferManager->CopyImageBuffer(mAnchorBuf, mAlignBuf);
         if (mTiltIndex > 0)
           mDisturbance[mTiltIndex - 1] |= NEW_REFERENCE;
-        if (mVerbose)
-          mWinApp->AppendToLog("Replacing reference image with anchor",
-            LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(mVerbose, "Replacing reference image with anchor");
       }
 
      // CHECK WHETHER TO RESET IMAGE SHIFTS
@@ -2293,8 +2286,7 @@ void CTSController::NextAction(int param)
           mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
           if (mTiltIndex > 0) 
             mDisturbance[mTiltIndex - 1] |= IMAGE_SHIFT_RESET;
-          if (mVerbose)
-            mWinApp->AppendToLog("Resetting image shifts", LOG_OPEN_IF_CLOSED);
+          mWinApp->VerboseAppendToLog(mVerbose, "Resetting image shifts");
           return;
         }
 
@@ -2428,7 +2420,7 @@ void CTSController::NextAction(int param)
         delY = (float)(mCmat.ypx * ISX + mCmat.ypy * ISY);
         message.Format("Tracking image shifted %.3f, %.3f um;  position %.3f, %.3f",
           specErrorX, specErrorY, delX, delY);
-        mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+        mWinApp->VerboseAppendToLog(true, message);
       }
 
       // Adjust the focus if this was taken after an autofocus
@@ -2693,6 +2685,7 @@ void CTSController::NextAction(int param)
       message2.Format("X/Y/Z = %7.3f  %7.3f  %7.3f", mSpecimenX[mTiltIndex - 1],
         mSpecimenY[mTiltIndex - 1], mSpecimenZ[mTiltIndex - 1]);
       message += message2;
+      mWinApp->SetNextLogColorStyle(0, 1);
       mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
       if (mAutosaveLog)
         mWinApp->mLogWindow->UpdateSaveFile(true, mWinApp->mStoreMRC->getName());
@@ -5043,8 +5036,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
       valve = "\r\nERROR DURING NAVIGATOR ACQUIRE WITH THIS MESSAGE:\r\n";
     mLastNoBoxMessage = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";
     if (!(tryLevel > 0 && tryLevel <= MAX_LOOP_DEPTH && noCatchMess[tryLevel - 1])) {
-      if (mWinApp->mLogWindow)
-        mWinApp->mLogWindow->SetNextLineColorStyle(1, 0);
+        mWinApp->SetNextLogColorStyle(ERROR_COLOR_IND, 1);
       mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
     }
     return retval;
@@ -5120,8 +5112,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   else
     mLastNoBoxMessage = CString("\r\nTILT SERIES CONTINUING WITH THIS ERROR MESSAGE:\r\n") +
       message;
-  if (mWinApp->mLogWindow)
-    mWinApp->mLogWindow->SetNextLineColorStyle(1, 0);
+    mWinApp->SetNextLogColorStyle(ERROR_COLOR_IND, 1);
   mWinApp->AppendToLog(mLastNoBoxMessage, LOG_OPEN_IF_CLOSED);
   mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
   if (terminate) {
@@ -5957,8 +5948,7 @@ int CTSController::SaveExtraImage(int index, char *message)
   if (mSwitchedToMontFrom >= 0) {
     report.Format("%s montage saved to file #%d, Z = %d", message, fileNum + 1, 
       mMontParam->zCurrent - 1);
-    if (mVerbose)
-      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, report);
     ManageZafterNewExtraRec();
     return 0;
   }
@@ -5988,8 +5978,7 @@ int CTSController::SaveExtraImage(int index, char *message)
     }
     report.Format("%s image saved to file #%d, Z = %d", message, fileUse + 1, 
       mImBufs[buf].mSecNumber);
-    if (mVerbose)
-      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, report);
     if (index == RECORD_CONSET && (!mSeparateExtraRecFiles || !mExtraRecIndex))
       ManageZafterNewExtraRec();
   }
@@ -6537,8 +6526,8 @@ void CTSController::ComputePredictions(double angle)
   } else
     lastErrorZ = 0.;
 
-  if (!message.IsEmpty() && mVerbose)
-    mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+  if (!message.IsEmpty())
+    mWinApp->AppendToLog(message);
 
   if (mTiltIndex) {
 
@@ -6652,12 +6641,10 @@ void CTSController::ComputePredictions(double angle)
 
     message.Format("Predicted X = %7.3f  StdErr = %7.3f  nFit = %d  nDrop = %d", 
       mPredictedX, stdErrorX, nFitX, nDropX);
-    if (mVerbose)
-      mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, message);
     message.Format("Predicted Y = %7.3f  StdErr = %7.3f  nFit = %d  nDrop = %d", 
       mPredictedY, stdErrorY, nFitY, nDropY);
-    if (mVerbose)
-      mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, message);
   }
   
   // Now do Z, which may have gaps in data
@@ -6747,8 +6734,7 @@ void CTSController::ComputePredictions(double angle)
 
     message.Format("Predicted Z = %7.3f  StdErr = %7.3f  nFit = %d  nDrop = %d", 
       mPredictedZ, stdErrorZ, nFitZ, nDropZ);
-    if (mVerbose)
-      mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+    mWinApp->VerboseAppendToLog(mVerbose, message);
   }
 
   // force tracking if user stopped, because of unknown time delay
@@ -6873,8 +6859,8 @@ void CTSController::ComputePredictions(double angle)
     message += "  Need tilt with tracking  - ";
   if (mNeedFocus)
     message += "  Need autofocus";
-  if (!message.IsEmpty() && mVerbose)
-    mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+  if (!message.IsEmpty())
+    mWinApp->VerboseAppendToLog(mVerbose, message);
 }
 
 void CTSController::BestPredFit(float *x1fit, float *x2fit, float *yfit, int &nFit, 

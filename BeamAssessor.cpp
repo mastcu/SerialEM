@@ -2877,10 +2877,12 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
 void CBeamAssessor::ListIntensityCalibrations() {
   int i, j;
   CString report, s, t;
+  mWinApp->SetNextLogColorStyle(0, 1);
   mWinApp->AppendToLog("\r\nBeam intensity calibrations:", LOG_OPEN_IF_CLOSED);
   s = (FEIscope ? "Probe   " : "");
   t = (FEIscope && mScope->GetUseIllumAreaForC2() ? "C2 Aperture" : "");
   // TODO DNM Test output for JEOL
+  mWinApp->SetNextLogColorStyle(0, 4);
   report.Format("Spot   %sSide of crossover   Intensity range   Fold change   %s", s, t);
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   for (i = 0; i < mNumTables; i++) {
@@ -2910,7 +2912,9 @@ void CBeamAssessor::ListSpotCalibrations() {
       s = (FEIscope ? (mSpotTables[i].probeMode ? "uP, " : "nP, ") : "");
       t = (mSpotTables[i].intensity[1] < mSpotTables[i].crossover[1] ? "below" : "above");
       report.Format("\r\nSpot intensity calibrations (%s%s crossover):", s, t);
+      mWinApp->SetNextLogColorStyle(0, 1);
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      mWinApp->SetNextLogColorStyle(0, 4);
       mWinApp->AppendToLog("Spot  Ratio", LOG_OPEN_IF_CLOSED);
       for (j = 1; j <= mScope->GetNumSpotSizes(); j++) {
         report.Format("   %4d   %.4f", j, mSpotTables[i].ratio[j]);
