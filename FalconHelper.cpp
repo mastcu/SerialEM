@@ -373,7 +373,8 @@ int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
   superFac = GetEERsuperFactor(mEERsuperRes);
   iiFile = iiOpen((LPCTSTR)refName, "rb");
   if (!iiFile) {
-    SEMMessageBox("Error opening EER gain reference: " + refName);
+    SEMMessageBox("Error opening EER gain reference: " + refName + "\r\n   (" +
+    CString(b3dGetError()) + ")");
     return 1;
   }
 
@@ -440,13 +441,16 @@ CString CFalconHelper::FindEERGainReference()
   HANDLE hFind = NULL;
   double curRefTime, bestRefTime = 0.;
   CString refDir = mCamera->GetFalconReferenceDir();
-  CString str = refDir + "\\*EER_GainReference*";
+  CString tmp, str = refDir + "\\*EER_GainReference*";
 
   hFind = FindFirstFile((LPCTSTR)str, &FindFileData);
   if (hFind == INVALID_HANDLE_VALUE)
     return "";
 
   do {
+    tmp = FindFileData.cFileName;
+    if (tmp.Right(4) != ".tif" && tmp.Right(5) != ".gain" && tmp.Right(5) != ".tiff")
+      continue;
     curRefTime = B3DMAX(429.4967296 * FindFileData.ftCreationTime.dwHighDateTime +
       1.e-7 * FindFileData.ftCreationTime.dwLowDateTime,
       429.4967296 * FindFileData.ftLastWriteTime.dwHighDateTime +
