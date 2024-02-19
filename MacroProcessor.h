@@ -410,6 +410,7 @@ protected:
   bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
   bool mDeferLogUpdates;     // Flag for log window to defer its updates and accumulate
   bool mNonMacroDeferring;   // Flag that some other module is deferring
+  bool mDeferSettingsUpdate; // Flag not to update windows after SetUserSetting
   bool mLoopInOnIdle;        // Flag for OnIdle to keep calling TaskDone
   int mNumCmdSinceAddIdle;   // Number of commands run with looping in OnIdle
   double mLastAddIdleTime;   // Time of last call to AddIdleTask

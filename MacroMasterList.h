@@ -781,6 +781,7 @@ MAC_SAME_NAME_NOARG(RevertAutoLDShiftOffset, 0, 4, REVERTAUTOLDSHIFTOFFSET)
 MAC_SAME_NAME_ARG(ChooserForTextFile, 1, 0, CHOOSERFORTEXTFILE, I)
 MAC_SAME_NAME_ARG(SetSelectedNavItem, 1, 4, SETSELECTEDNAVITEM, Ii)
 MAC_SAME_NAME_ARG(SetLowDoseShiftOffset, 3, 4, SETLOWDOSESHIFTOFFSET, IDD)
+MAC_SAME_NAME_NOARG(DeferSettingsUpdate, 0, 4, DEFERSETTINGSUPDATE)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

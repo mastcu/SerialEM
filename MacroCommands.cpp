@@ -562,6 +562,11 @@ int CMacCmd::NextCommand(bool startingOut)
   }
   mInInitialSubEval = false;
 
+  if (mDeferSettingsUpdate && mCmdIndex != CME_SETUSERSETTING) {
+    mWinApp->UpdateWindowSettings();
+    mDeferSettingsUpdate = false;
+  }
+
   // Evaluate emptiness, ints and doubles
   for (i = 0; i < MAX_MACRO_TOKENS; i++) {
     mItemEmpty[i] = mStrItems[i].IsEmpty();
@@ -4518,6 +4523,13 @@ int CMacCmd::DeferLogUpdates(void)
   return 0;
 }
 
+// DeferSettingsUpdate
+int CMacCmd::DeferSettingsUpdate()
+{
+  mDeferSettingsUpdate = true;
+  return 0;
+}
+
 // SaveCalibrations
 int CMacCmd::SaveCalibrations(void)
 {
@@ -4604,7 +4616,8 @@ int CMacCmd::SetUserSetting(void)
     mParamIO->MacroSetSetting(mStrItems[1], mItemDbl[2]))
       ABORT_LINE(mStrItems[1] + " is not a recognized setting or cannot be set by "
       "script command in:\n\n");
-  mWinApp->UpdateWindowSettings();
+  if (!mDeferSettingsUpdate)
+    mWinApp->UpdateWindowSettings();
 
   // See if property already saved
   truth = false;

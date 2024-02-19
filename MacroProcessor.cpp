@@ -1379,6 +1379,7 @@ void CMacroProcessor::RunOrResume()
   mRestoreConsetAfterShot = false;
   mSuspendNavRedraw = false;
   mDeferLogUpdates = false;
+  mDeferSettingsUpdate = false;
   mCropXafterShot = -1;
   mNextProcessArgs = "";
   mInputToNextProcess = "";
@@ -1704,7 +1705,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
     mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mSavedSettingValues[ind]);
-  if (mSavedSettingNames.size())
+  if (mSavedSettingNames.size() || mDeferSettingsUpdate)
     mWinApp->UpdateWindowSettings();
   for (ind = 0; ind < MAX_LOWDOSE_SETS; ind++)
     if (mKeepOrRestoreArea[ind] > 0)

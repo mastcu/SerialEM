@@ -598,6 +598,13 @@
              ends.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">DeferSettingsUpdate</TD>
+          <TD>Prevents control panels from being updated for new settings when 
+            'SetUserSetting' is run; the update will occur before the next command that is 
+            not 'SetUserSetting'.&nbsp; Use this before doing a consecutive series of settings
+             changes.&nbsp; Command added in 4.2, 19-Feb-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ErrorsToLog [#]</TD>
           <TD>Makes most script error messages be duplicated in the log
             window.&nbsp; Follow with a 0 to turn off the feature again.</TD>
@@ -5852,7 +5859,8 @@
             is suspended, the new value will be set again when it is resumed.&nbsp; Multiple
             changes in the same setting can be done; the original value or last kept new
             value will be restored when the script stops, and the latest new value will be
-            set on resume.</TD>
+            set on resume.&nbsp; If you have many settings to change, do them all in a row after
+            a 'DeferSettingsUpdate' command to prevent control panels from flashing.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LoadScriptPackAtEnd #S name</TD>

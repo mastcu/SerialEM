@@ -6,6 +6,9 @@ significance, for the stable release version
 2/19/24: Made it consider only files with extension .gain, .tif, or .tiff
 when looking for Falcon EER gain reference (In 4.1).
 
+2/19/14: Added script command to defer updating control panels during a series
+of SetUserSettings commands.
+
 2/17/24: To try a narrower font being considered as the default monospaced
 font, place NanumGothicCoding-Regular.ttf (from Testing-4.2 download
 directories) in SerialEM executable directory.
