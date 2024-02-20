@@ -1001,7 +1001,7 @@ public:
   CString PixelFormat(float pixelInNm, float pixScale = 1.);
   int CountOpenViews(void);
   void SetPlacementFixSize(CWnd * window, WINDOWPLACEMENT * lastPlacement);
-  void FixInitialPlacements(void);
+  void FixInitialPlacements(bool startMinimized);
   void ReopenCameraSetup(void);
   void SetSTEMMode(BOOL inState);
   void GetNumMagRanges(int camera, int &numRanges, int &lowestMicro);

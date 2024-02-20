@@ -527,7 +527,7 @@
         3.3.1, this is done by having the shortcut include an argument specifying the
         subfolder where the files are located (see
         <A href="#separate_kv">Setting Up for a Separate Voltage</A>).</P>
-    <P>Four other entries besides a subfolder are allowed as command line arguments on
+    <P>Five other entries besides a subfolder are allowed as command line arguments on
       the target line of a shortcut.&nbsp; They can be in any order, as long as they
       appear <i>before</i> a final subfolder for the location of system files, if any.&nbsp;
       They are:&nbsp; </P>
@@ -562,6 +562,9 @@
         test version of a microscope plugin; however, on some systems, you may have to
         copy the Microsoft.VC90.CRT and Microsoft.VC90.MFC folders into the folder with
         the test plugin.</li>
+      <li>&#39;/Minimized&#39; will start the program with the main window minimized; the log 
+        window and script window will still open if they were open upon the previous 
+        exit.</li>
       <li>Any one of these entries can be &#39;commented out&#39; by placing a &#39;#&#39; after the 
         &#39;/&#39;, i.e., &#39;/#NoCam:1&#39; will be ignored.&nbsp; This feature makes it easy to 
         leave out or add back an argument, if that has to be done frequently.</li>

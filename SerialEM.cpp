@@ -899,7 +899,7 @@ CSerialEMApp theApp;
 BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
-  bool anyFrameSavers = false;
+  bool anyFrameSavers = false, startMinimized = false;
   char fullPath[MAX_PATH + 10];
   CameraParameters *camP;
   CString message, dropCameras, settingsFile, str;
@@ -966,6 +966,8 @@ BOOL CSerialEMApp::InitInstance()
             mArgPlugDir = mSysSubpath.Left(indSpace);
           mArgPlugDir = mArgPlugDir.Mid(9);
         }
+      } else if (mSysSubpath.Find("/Minimized") == 0) {
+        startMinimized = true;
       } else if (mSysSubpath.Find("/#") == 0) {
       } else
         break;
@@ -1139,7 +1141,7 @@ BOOL CSerialEMApp::InitInstance()
   }
   if (mSystemDPI != 120)
     mDisplayNotTruly120DPI = false;
-  FixInitialPlacements();
+  FixInitialPlacements(startMinimized);
   if (mReopenLog) {
     if (mLogWindow) {
       if (mLogPlacement.rcNormalPosition.right != NO_PLACEMENT)
@@ -4625,7 +4627,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
   place = get; \
   ConstrainWindowPlacement(place, true);
 
-void CSerialEMApp::FixInitialPlacements(void)
+void CSerialEMApp::FixInitialPlacements(bool startMinimized)
 {
   WINDOWPLACEMENT *place;
   WINDOWPLACEMENT appPlace;
@@ -4663,8 +4665,12 @@ void CSerialEMApp::FixInitialPlacements(void)
   ConstrainWindowPlacement(place, true);
   if (mFirstSEMplacement.rcNormalPosition.right != NO_PLACEMENT)
     place->showCmd = mFirstSEMplacement.showCmd;
-  if (place->rcNormalPosition.right != NO_PLACEMENT && place->rcNormalPosition.bottom > 0)
+  if (place->rcNormalPosition.right != NO_PLACEMENT &&
+    place->rcNormalPosition.bottom > 0) {
+    if (startMinimized)
+      place->showCmd = SW_SHOWMINIMIZED;
     SetWindowPlacement(place);
+  }
 }
 
 // Returns the number of mag ranges to consider for a camera and the index of the second
