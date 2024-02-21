@@ -4130,7 +4130,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
 }
 
 // Setup a montage for the full area (or user specified area)
-void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
+int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
@@ -4138,6 +4138,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
   float cornerExtra = 93.;
   float *gridLim = mHelper->GetGridLimits();
   float nominalLim = JEOLscope ? 1200.f : 1000.f;
+  int err = 0;
   MontParam *montp = mWinApp->GetMontParam();
   mWinApp->RestoreViewFocus();
 	CMapDrawItem *itmp = new CMapDrawItem;
@@ -4194,7 +4195,7 @@ void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
     AfxMessageBox("Your grid limits for the full montage are set less than 10 microns"
       " apart\n\nCannot set up a full montage with these limits", MB_EXCLAME);
     delete itmp;
-    return;
+    return 1;
   }
   
   itmp->AppendPoint(minX, midY);
@@ -4207,14 +4208,15 @@ void CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
   itmp->AppendPoint(minCornerX, minCornerY);
 
   mSettingUpFullMont = true;
-  SetupMontage(itmp, NULL, skipDlg, overlapFac, forMacro);
+  err = SetupMontage(itmp, NULL, skipDlg, overlapFac, forMacro);
   mSettingUpFullMont = false;
-  if (mWinApp->Montaging()) {
+  if (!err && mWinApp->Montaging()) {
     montp->forFullMontage = true;
     montp->fullMontStageX = itmp->mStageX;
     montp->fullMontStageY = itmp->mStageY;
   }
   delete itmp;
+  return err;
 }
 
 // Common routine to set up a montage

@@ -71,7 +71,7 @@ public:
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
     BOOL forceStage, float overlapFac = 0.);
 	void SetupSuperMontage(BOOL skewed);
-	void FullMontage(bool skipDlg, float overlapFac, bool forMacro = false);
+	int FullMontage(bool skipDlg, float overlapFac, bool forMacro = false);
   void AutoSave();
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
