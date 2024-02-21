@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/20/24: Fixed SetupFullMontage and SetupPolygonMontage to convert filename to
+full path, wait for stage move to finish, and stop on error (In 4.1).
+
 2/19/24: Added command line argument to start with main window minimized.
 
 2/19/24: Made it consider only files with extension .gain, .tif, or .tiff

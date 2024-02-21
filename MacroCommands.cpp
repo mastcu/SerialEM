@@ -3457,13 +3457,16 @@ int CMacCmd::SetupFullMontage(void)
   ABORT_NONAV;
   if (mItemFlt[1] < 0 || mItemFlt[1] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
-  SubstituteLineStripItems(mStrLine, 2, mEnteredName);
+  if (CheckConvertFilename(mStrItems, mStrLine, 2, mEnteredName))
+    return 1;
 
   // Check if file already exists
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
-    SUSPEND_NOLINE("opening setting up a full montage because " + mEnteredName +
+    SUSPEND_NOLINE("setting up a full montage because " + mEnteredName +
       " already exists");
-  mNavigator->FullMontage(true, mItemFlt[1], true);
+  if (mNavigator->FullMontage(true, mItemFlt[1], true))
+    ABORT_LINE("An error occurred setting up a full montage for line:\n\n");
+  mMovedStage = true;
   return 0;
 }
 
@@ -3483,12 +3486,15 @@ int CMacCmd::SetupPolygonMontage(void)
     ABORT_LINE("Navigator item is not a polygon for line:\n\n");
   if (mItemFlt[2] < 0 || mItemFlt[2] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
-  SubstituteLineStripItems(mStrLine, 3, mEnteredName);
+  if (CheckConvertFilename(mStrItems, mStrLine, 3, mEnteredName))
+    return 1;
+
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
-    SUSPEND_NOLINE("opening setting up a polygon  montage because " + mEnteredName +
+    SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
       " already exists");
   if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
+  mMovedStage = true;
   return 0;
 }
 
