@@ -62,6 +62,7 @@ void KImageStore::CommonInit(void)
   mPixelSpacing = 1.;
   mHasPixelSpacing = false;
   mWrittenByVersion = 0;
+  mMadeNameBeFullPath = false;
 }
 
 KImageStore::~KImageStore()
@@ -480,6 +481,19 @@ CString KImageStore::getFilePath()
   if (!mFile)
     return "";
   return mFile->GetFilePath();
+}
+
+void KImageStore::MakeNameBeFullPath()
+{
+  char absPath[_MAX_PATH];
+  char *fullp;
+  if (mMadeNameBeFullPath)
+    return;
+  fullp = _fullpath(absPath, (LPCTSTR)mFilename, _MAX_PATH);
+  if (fullp) {
+    mFilename = fullp;
+    mMadeNameBeFullPath = true;
+  }
 }
 
 int KImageStore::FixInappropriateMontage()

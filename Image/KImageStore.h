@@ -51,6 +51,7 @@ protected:
   float      mUpdateTimePerSect;
   bool       mHasPixelSpacing;
   int        mWrittenByVersion;
+  bool       mMadeNameBeFullPath;
 
 public:
 	         KImageStore(CString inFilename);
@@ -88,6 +89,7 @@ public:
   virtual void    setTime(int inTime);
 	virtual void    setSection(int inSection);
 	virtual CString getName(void) {return mFilename;};
+  virtual void    MakeNameBeFullPath();
 	virtual BOOL    FileOK() { return (mFile != NULL); };
   static int      lookupPixSize(int inMode);
 	virtual void    SetTruncation(float inTruncLo, float inTruncHi)

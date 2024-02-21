@@ -1764,6 +1764,7 @@ int CSerialEMDoc::StoreIndexFromName(CString name)
     // Special case, the current store is being replaced and it has been closed; skip it
     if (i == mCurrentStore && !mWinApp->mStoreMRC)
       continue;
+    mStoreList[i].store->MakeNameBeFullPath();
     if (!name.CompareNoCase(mStoreList[i].store->getName()))
       return i;
   }
