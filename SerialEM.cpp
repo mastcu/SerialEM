@@ -3303,7 +3303,7 @@ void SEMTrace(char key, char *fmt, ...)
   // If this is the main thread, dump the output immediately
   if (GetCurrentThreadId() == appThreadID) {
     for (int len = 0; len < sNumTraceMsg; len++) {
-      ((CSerialEMApp *)AfxGetApp())->mLogWindow->SetNextLineColorStyle(DEBUG_COLOR_IND, 0);
+      ((CSerialEMApp *)AfxGetApp())->SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
       ((CSerialEMApp *)AfxGetApp())->AppendToLog(sTraceMsg[len], LOG_OPEN_IF_CLOSED);
     }
     sNumTraceMsg = 0;
