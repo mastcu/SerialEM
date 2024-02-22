@@ -681,7 +681,7 @@ int CMacCmd::ScriptEnd(void)
       }
     } else if (mRunningScrpLang || mCalledFromScrpLang)
       mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
-    AbortMacro();
+    AbortMacro(true);
     mLastCompleted = !mExitAtFuncEnd;
     if (mLastCompleted && mStartNavAcqAtEnd)
       mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
