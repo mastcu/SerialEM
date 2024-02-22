@@ -1619,12 +1619,14 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
 
 ///////////////////////////////////////////////////////
 
-void CMacroProcessor::AbortMacro()
+// Abort means end the script and is not pejorative - but call with true when ending
+void CMacroProcessor::AbortMacro(bool ending)
 {
-  SuspendMacro(true);
+  SuspendMacro(ending ? -1 : 1);
 }
 
-void CMacroProcessor::SuspendMacro(BOOL abort)
+// Suspend or permanently end the script
+void CMacroProcessor::SuspendMacro(int abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
   int probe, ind;
@@ -1694,11 +1696,11 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   CleanupExternalProcess();
   if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
     return;
-  if (TestAndStartFuncOnStop())
+  if (abort > 0 && TestAndStartFuncOnStop())
     return;
   if (mNeedClearTempMacro >= 0) {
     mMacros[mNeedClearTempMacro] = "";
-    abort = true;
+    abort = 1;
   }
 
   // restore user settings

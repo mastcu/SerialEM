@@ -146,8 +146,8 @@ public:
   BOOL IsResumable();
   void SetNonResumable() { mCurrentMacro = -1; };
   void SetMontageError(float inErr) { mLastMontError = inErr; };
-  void SuspendMacro(BOOL abort = false);
-  void AbortMacro();
+  void SuspendMacro(int abort = 0);
+  void AbortMacro(bool ending = false);
   GetMember(BOOL, LastCompleted)
     GetMember(BOOL, LastAborted)
     GetMember(BOOL, OpenDE12Cover);

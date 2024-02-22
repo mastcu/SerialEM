@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/22/24: Kept function set with OnStopCallFunc from being called on normal
+script exit (In 4.1).
+
 2/20/24: Fixed IsImageFileOpen to make sure stored filenames of open files
 were converted to full paths before testing.
 
