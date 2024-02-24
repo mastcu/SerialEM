@@ -4606,8 +4606,10 @@ int CMacCmd::ReportCameraProperty(void)
     (!setProp && mParamIO->MacroGetCamProperty(mCamParams, mStrItems[2], value)))
       ABORT_LINE(mStrItems[2] + " is not a recognized camera property or cannot be "
         "accessed by script command in:\n\n");
-  if (!setProp)
+  if (!setProp) {
     SetRepValsAndVars(3, value);
+    mLogRpt.Format("Value of camera property %s is %g", (LPCTSTR)mStrItems[2], value);
+  }
   return 0;
 }
 

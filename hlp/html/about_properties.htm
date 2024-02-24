@@ -1179,10 +1179,9 @@
             &nbsp; Do not set this property unless it is needed, and do not use this property if 
             there is more than one kind of Falcon camera, or multiple cameras needing different intervals; use the camera 
             property 'ReadoutInterval' for whichever camera requires a non-standard interval.&nbsp; If you determine
-            a refined value to get the expected number of frames when saving as EER, as described in 
-            <a href = "#readoutInterval">ReadoutInterval</a>, set the camera property instead.&nbsp; As of
-            SerialEM 3.9, 1/30/21, a value that is not long enough should no longer cause crashes in
-            SerialEM or FEI-SEMserver when saving frames.
+            a refined value to avoid exposure time adjustments when saving as EER, as described in 
+            <a href = "setting_up_serialem.htm#falcon4timing">Adjusting timing for Falcon 4 camera</a>, set the 
+            camera property instead.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -1740,7 +1739,8 @@
             readout intervals (see the general property 'FalconReadoutInterval'), this 
             interval should be assigned correctly by the program and this property should 
             not need to be entered.&nbsp; However, a refined value may be desired to get 
-            the expected number of frames efficiently from Falcon 4 when saving as EER.&nbsp; See the procedure for
+            the expected number of frames from Falcon 4 efficiently (without exposure time adjustment) 
+            when saving as EER.&nbsp; See the procedure for
             assessing the readout interval described in 
             <a href = "setting_up_serialem.htm#falcon4timing">Adjusting timing for Falcon 4 camera</a>.
           </TD>
