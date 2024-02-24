@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/23/24: Made FEI scope plugin and server adjust the exposure time to get the
+expected number of EER frames even if camera timing hasn't been tuned; made
+camera dialog show true dose including frames lost for CDS in counting mode;
+put the exposure time and dose including theselost frames in the mdoc file
+(In 4.1).
+
+2/23/24: Fixed Test Multishot Positions to not apply the beam tilt adjustments
+if the option is off (In 4.1).
+
+2/23/24: Made UseNavGroupForMultishot use the group currently being acquired
+when acquiring (In 4.1).
+
 2/22/24: Kept function set with OnStopCallFunc from being called on normal
 script exit (In 4.1).
 

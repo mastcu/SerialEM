@@ -3956,6 +3956,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   mTD.Exposure = mExposure;
+  mAdjustedExpForDose = (float)mExposure;
   if (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0) {
     if (IsSaveInEERMode(mParam, &conSet) && mParam->addToEERExposure > -1.)
       mTD.Exposure += mParam->addToEERExposure;
@@ -3967,6 +3968,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       B3DCHOICE(mParam->FEItype == FALCON3_TYPE, (ind + ind / 32), (ind * 32 + 30) / 31);
     SEMTrace('E', "Adjusted exposure time for lost frames in counting from %.3f to %.3f",
       mExposure, mTD.Exposure);
+    mAdjustedExpForDose = (float)mTD.Exposure;
   }
   if (mParam->addToExposure > -1. && 
     mParam->addToExposure + mExposure > mParam->minExposure)
@@ -6690,8 +6692,8 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
       if (camP->FEItype == FALCON4_TYPE) {
 
         // If saving as EER and aligning in framealign somewhere, take user's frame time
-        if (alignAtAll && IsSaveInEERMode(camP, saveFrames, alignAtAll, 
-          (alignAtAll ? 1 : 0) + ((alignSaveFlags & AS_FLAG_IMOD_ALIGN) ? 1 : 0), 
+        if (alignAtAll && IsSaveInEERMode(camP, saveFrames, alignAtAll,
+          (alignAtAll ? 1 : 0) + ((alignSaveFlags & AS_FLAG_IMOD_ALIGN) ? 1 : 0),
           readMode))
           baseTime = frameTime;
 
@@ -10131,7 +10133,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
       extra->mLowDoseConSet = lowDoseMode ? conSetUsed + 1 : -conSetUsed;
       extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ,
-        SpecimenBeamExposure(curCam, lastConSetp, true));
+        SpecimenBeamExposure(curCam, 
+          IS_FALCON3_OR_4(mParam) ? mAdjustedExpForDose : lastConSetp->exposure, 
+          lastConSetp->drift, true));
       if (mDoseAdjustmentFactor > 0.)
         extra->m_fDose *= mDoseAdjustmentFactor;
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
@@ -10141,7 +10145,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mSpotSize = spotSize;
       extra->mISX = (float)mStartingISX;
       extra->mISY = (float)mStartingISY;
-      extra->mExposure = (float)mExposure;
+      extra->mExposure = IS_FALCON3_OR_4(mParam) ? mAdjustedExpForDose : (float)mExposure;
       extra->mBinning = (float)mBinning / BinDivisorF(mParam);
       extra->mCamera = curCam;
       if (FEIscope)
