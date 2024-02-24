@@ -162,7 +162,6 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         " image shift: there is no calibration of coma versus image shift");
       RESTORE_MSP_RETURN(1);
     }
-    mMSAdjustBeamTilt = true;
     mMSSaveRecord = false;
     mMSDoCenter = -1;
   }
