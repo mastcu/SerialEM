@@ -1523,14 +1523,14 @@
           MRC (e.g., 15 2-second summed frames).&nbsp; Look for the debugging output<br />
            'Changed exposure to xx.xx to get N instead of M frames'.<br />
            If this appears, multiply the existing readout interval by N / M and put this 
-          number in a ReadoutInterval line in the camera's property section.</li>
+          number in a ReadoutInterval line in the camera's property section.&nbsp; To determine the existing value if there
+          is no entry in the property file for this property or the general property 'FalconReadoutInterval',
+          see the property help on 'FalconReadoutInterval' for the defaults, or 
+          run the script command 'ReportCameraProperty 0 ReadoutInterval' or 'ReportProperty FalconReadoutInterval'.
+        </li>
         </ul>
-      <li>When saving EER files from a <em>Falcon 4</em>, the actual number of frames may not 
-        match the expected number shown in SerialEM.&nbsp; To make this match, first 
-        adjust the amount to add to the exposure time with short exposures as described 
-        for the property <a href = "about_properties.htm#addToEER">AddToEERExposure</a>, then refine the camera&#39;s readout interval 
-        with a long exposure saved as MRC as described for the property <a href = "about_properties.htm#readoutInterval">ReadoutInterval</a>.</li>
-      <li>There are two things that can speed up frame alignment in SerialEM: most
+      
+       <li>There are two things that can speed up frame alignment in SerialEM: most
         importantly, not reading the frames across a 1 gigabit network connection;
         secondly, using the GPU of an NVIDIA card for alignment.&nbsp; The simplest step
         is to run SerialEM on the storage server, but it may not be possible to install
