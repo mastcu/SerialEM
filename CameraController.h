@@ -720,6 +720,7 @@ public:
   int mPending;           // Set number for a pending capture
   int mNumRetries;        // Number of retries after timeout
   int mRetryLimit;        // Limit on number of retries (default 0 to disable)
+  float mAdjustedExpForDose;  // Adjusted Falcon exposure for computing dose
 
   DarkRef *mDarkp;        // pointer to current dark ref
   DarkRef *mGainp;        // Pointer to gain reference

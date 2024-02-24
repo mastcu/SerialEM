@@ -243,6 +243,14 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
     readPtr = &mReadouts[0];
   }
   
+  // For EER, replace numFrames and send it as the ending frame # so plugin can adjust
+  // exposure
+  if (eerMode) {
+    ind = mCamera->GetFalconRawSumSize(camParams);
+    numFrames = ind * B3DNINT(conSet.exposure /
+      (mCamera->GetFalconReadoutInterval(camParams) * ind));
+    mReadouts[0] = numFrames;
+  }
   if (mDoingAdvancedFrames) {
     ind = -1;
     //if (camParams->FEItype == FALCON2_TYPE)
@@ -269,11 +277,6 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   mUseFrameAlign = 0;
   mJustAlignNotSave = !conSet.saveFrames && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
-  if (eerMode) {
-    ind = mCamera->GetFalconRawSumSize(camParams);
-    numFrames = ind * B3DNINT(conSet.exposure / 
-      (mCamera->GetFalconReadoutInterval(camParams) * ind));
-  }
   if (conSet.alignFrames && conSet.useFrameAlign == 1) {
     temp = eerMode ? B3DNINT(conSet.exposure / conSet.frameTime) : numFrames;
     mUseFrameAlign = conSet.useFrameAlign;

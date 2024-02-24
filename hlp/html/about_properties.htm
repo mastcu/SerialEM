@@ -1740,13 +1740,9 @@
             readout intervals (see the general property 'FalconReadoutInterval'), this 
             interval should be assigned correctly by the program and this property should 
             not need to be entered.&nbsp; However, a refined value may be desired to get 
-            the expected number of frames from Falcon 4 when saving as EER.&nbsp; The best way
-            to determine the value is to activate debugging output either by setting DebugOutput to 'E'
-            (when running directly on the scope computer) or setting the environment variable
-            FEISEMSERVER_DEBUG to 1 on the scope computer (when using FEI-SEMserver).&nbsp; Take
-            a 30 second exposure and save frames as MRC (e.g., 15 2-second summed frames).&nbsp; Look for 
-            the debugging output 'Changed exposure to xx.xx to get N instead of M frames'.&nbsp; Multiply the
-             existing readout interval by N / M.
+            the expected number of frames efficiently from Falcon 4 when saving as EER.&nbsp; See the procedure for
+            assessing the readout interval described in 
+            <a href = "setting_up_serialem.htm#falcon4timing">Adjusting timing for Falcon 4 camera</a>.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -2125,11 +2121,10 @@
         <TR VALIGN="top">
           <TD><A NAME = "addToEER">AddToEERExposure</A></TD>
           <TD>Amount to add to Falcon 4 exposure time (in addition to 'AddToExposureTime' value) when saving 
-            frames as EER (default 0.02 sec). &nbsp; This value can be adjusted to make the number of frames actually taken 
-            match the number shown in SerialEM.&nbsp; To determine a robust value, set the exposure time to around 0.06 sec
-            and take images with saving as EER, examining the actual number of frames saved.&nbsp; Vary the 
-            property in steps of 0.005 (using the script command 'SetCameraProperty') and find the lowest and 
-            highest values that give the correct number.&nbsp; Set this entry to the midpoint of that range.
+            frames as EER (default 0.02 sec). &nbsp; This value should be set to avoid adjustments in 
+            the exposure time just prior to taking each image.&nbsp; See the procedure for
+            assessing this property described in 
+            <a href = "setting_up_serialem.htm#falcon4timing">Adjusting timing for Falcon 4 camera</a>.
           </TD>
         </TR>
         <TR VALIGN="top">

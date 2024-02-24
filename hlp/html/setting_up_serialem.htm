@@ -1500,6 +1500,33 @@
         counting mode images produced by aligning EER frames match the counts in other 
         counting mode images; this is estimated as described in
         <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
+      <li><a name="falcon4timing"><em>Adjusting timing for Falcon 4 camera:</em></a> 
+        When saving frames from a Falcon 4, the routine that takes the exposure may have 
+        to adjust the exposure time to get the expected number of camera readouts, which 
+        is worth avoiding because it takes time and also results in slightly incorrect 
+        exposure time and dose values in the mdoc file.&nbsp; There are 
+        two parameters involved for getting the number of frames right when saving as 
+        EER: 'AddToEERExposure' and 'ReadoutInterval'.&nbsp; To assess these parameters, activate debugging
+        output either by setting DebugOutput to 'E' (when running directly on the scope computer) or 
+        setting the environment variable FEISEMSERVER_DEBUG to 1 on the scope computer (when using 
+        FEI-SEMserver).&nbsp; Be sure to remove or rename the environment variable when 
+        you are done. </li>
+      <UL>
+        <li>First assess 'AddToEERExposure' by setting an exposure time of 0.06 sec and 
+          saving frames as EER.&nbsp; Look for debugging output like <br />
+          'Expected frames: 18  calculated #: 18'<br />
+          Use a one-line script<br />
+          SetCameraProperty 0 AddToEERExposure 0.01<br />
+          to set the amount to add, take an exposure, and see if the numbers match in that output.
+
+          Vary the value in steps of 0.005 and find the lowest value (going below 0 as 
+          needed) and the highest value that give matching numbers.&nbsp; Set the property 
+          to the midpoint of this range.</li>
+        <li>To assess the 'ReadoutInterval', take a 30 second exposure and save frames as 
+          MRC (e.g., 15 2-second summed frames).&nbsp; Look for the debugging output<br />
+           'Changed exposure to xx.xx to get N instead of M frames'.<br />
+           Multiply the existing readout interval by N / M.</li>
+        </ul>
       <li>When saving EER files from a <em>Falcon 4</em>, the actual number of frames may not 
         match the expected number shown in SerialEM.&nbsp; To make this match, first 
         adjust the amount to add to the exposure time with short exposures as described 

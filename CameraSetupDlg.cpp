@@ -2343,7 +2343,7 @@ void CCameraSetupDlg::OnKillfocusEditaverage()
 
 void CCameraSetupDlg::ManageDose()
 {
-  int spotSize, special;
+  int spotSize, special, frames;
   double intensity, dose;
   CString saveType;
   int camera = mActiveCameraList[mCurrentCamera];
@@ -2365,6 +2365,13 @@ void CCameraSetupDlg::ManageDose()
     (m_bDEsaveMaster ? 1 : m_iSumCount));
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime, mParam);
+  if (IS_FALCON3_OR_4(mParam) && m_iK2Mode) {
+    if (mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+      mCurSet->useFrameAlign, m_iK2Mode))
+      realExp += mParam->addToEERExposure;
+    frames = B3DNINT(realExp / mCamera->GetFalconReadoutInterval(mParam));
+    realExp = mCamera->GetFalconReadoutInterval(mParam) * (frames * 32 + 30) / 31;
+  }
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
   if (dose)
