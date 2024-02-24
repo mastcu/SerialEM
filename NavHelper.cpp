@@ -5912,6 +5912,7 @@ int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &group
   BOOL doHex = false;
   CNavigatorDlg *nav = mWinApp->mNavigator;
   ScaleMat stage2IS;
+  CMapDrawItem *item;
 
   // Make custom be 1 from script, 2 from dialog
   if (pattern > 1) {
@@ -5937,7 +5938,7 @@ int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &group
   }
   if (ISmat)
     *ISmat = stage2IS;
-  itemInd = nav->GetCurrentIndex();
+  itemInd = nav->GetCurrentOrAcquireItem(item);
   if (itemInd < 0) {
     if (reason)
       *reason = "There is no current Navigator item";
