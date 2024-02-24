@@ -1522,7 +1522,8 @@
         <li>To assess the 'ReadoutInterval', take a 30 second exposure and save frames as 
           MRC (e.g., 15 2-second summed frames).&nbsp; Look for the debugging output<br />
            'Changed exposure to xx.xx to get N instead of M frames'.<br />
-           Multiply the existing readout interval by N / M.</li>
+           If this appears, multiply the existing readout interval by N / M and put this 
+          number in a ReadoutInterval line in the camera's property section.</li>
         </ul>
       <li>When saving EER files from a <em>Falcon 4</em>, the actual number of frames may not 
         match the expected number shown in SerialEM.&nbsp; To make this match, first 
