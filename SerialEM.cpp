@@ -2439,8 +2439,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
   // Dump debug output to log window
   if (debugOutput &&
     (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) == WAIT_OBJECT_0)) {
-    for (i = 0; i < sNumTraceMsg; i++)
+    for (i = 0; i < sNumTraceMsg; i++) {
+      SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
       AppendToLog(sTraceMsg[i], LOG_OPEN_IF_CLOSED);
+    }
     sNumTraceMsg = 0;
     ReleaseMutex(traceMutexHandle);
   }

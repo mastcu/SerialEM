@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/24/24: Fixed debug output from threads not coming out gray.
+
 2/23/24: Made FEI scope plugin and server adjust the exposure time to get the
 expected number of EER frames even if camera timing hasn't been tuned; made
 camera dialog show true dose including frames lost for CDS in counting mode;
