@@ -6646,6 +6646,39 @@ int CMacCmd::SetJeolSTEMflags(void)
   return 0;
 }
 
+// GetFastScopeStatus
+int CMacCmd::GetFastScopeStatus()
+{
+  int type = VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM;
+  CString str;
+  double ISX, ISY, stageX, stageY, stageZ, rawISX, rawISY;
+  mScope->GetRawImageShift(rawISX, rawISY);
+  mWinApp->mScopeStatus.GetStagePosition(stageX, stageY, stageZ);
+  mWinApp->mScopeStatus.GetImageShift(ISX, ISY);
+
+  if (SetVariable("FastMagIndex", mScope->GetLastMagIndex(), type, -1, false) ||
+    SetVariable("FastISX", ISX, type, -1, false) ||
+    SetVariable("FastISY", ISY, type, -1, false) ||
+    SetVariable("FastRawISX", rawISX, type, -1, false) ||
+    SetVariable("FastRawISY", rawISY, type, -1, false) ||
+    SetVariable("FastStageX", stageX, type, -1, false) ||
+    SetVariable("FastStageY", stageY, type, -1, false) ||
+    SetVariable("FastStageZ", stageZ, type, -1, false) ||
+    SetVariable("FastBlanked", mScope->GetLastBeamBlanked(), type, -1, false) ||
+    SetVariable("FastCameraLength", mScope->GetLastCameraLength(), type, -1, false) ||
+    SetVariable("FastCamLenIndex", mScope->GetLastCamLenIndex(), type, -1, false) ||
+    SetVariable("FastProbeMode", mScope->GetProbeMode(), type, -1, false) ||
+    SetVariable("FastMagnification", mWinApp->mScopeStatus.GetMagnification(), type, -1, false) ||
+    SetVariable("FastDefocus", mWinApp->mScopeStatus.GetDefocus(), type, -1, false) ||
+    SetVariable("FastSpotSize", mWinApp->mScopeStatus.GetSpot(), type, -1, false) ||
+    SetVariable("FastAlpha", mWinApp->mScopeStatus.GetBeamAlpha(), type, -1, false) ||
+    SetVariable("FastIntensity", mWinApp->mScopeStatus.GetIntensity(), type, -1, false) ||
+    SetVariable("FastRawIntensity", mWinApp->mScopeStatus.GetRawIntensity(), type, -1, false) ||
+    SetVariable("FastEMmode", mWinApp->mScopeStatus.GetEMmode(), type, -1, false))
+    ABORT_LINE("Setting a variable with a fast value for line:\n\n");
+  return 0;
+}
+
 // GetSTEMBrightContrast, SetSTEMBrightContrast
 int CMacCmd::GetSTEMBrightContrast(void)
 {

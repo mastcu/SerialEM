@@ -40,6 +40,15 @@ public:
   GetMember(double, FullCumDose)
   SetMember(BOOL, WatchDose)
   SetMember(BOOL, ShowIntensityCal);
+  void GetStagePosition(double &x, double &y, double &z) { x = mStageX; y = mStageY, z = mStageZ; };
+  void GetImageShift(double &ISX, double &ISY) { ISX = mISX; ISY = mISY; };
+  int GetMagnification() { return mMag; };
+  GetMember(int, Spot);
+  GetMember(double, Defocus);
+  GetMember(int, BeamAlpha);
+  GetMember(double, Intensity);
+  GetMember(double, RawIntensity);
+  GetMember(int, EMmode);
 
 // Dialog Data
 	//{{AFX_DATA(CScopeStatusDlg)

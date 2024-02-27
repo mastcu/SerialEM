@@ -66,9 +66,7 @@ static VOID CALLBACK UpdateProc(
 );
 
 static void debugCallback(char *msg);
-static void ManageTiltReversalVars();
 
-static double sTiltAngle;
 static BOOL sInitialized = false;
 static int sSuspendCount = 0;            // Count for update suspension
 static double sReversalTilt = 100.;
@@ -78,7 +76,6 @@ static float sTiltReversalThresh = 0.1f;    // Set below to 0.2 for JEOL and max
 static BOOL sScanningMags = false;
 static float sJEOLstageRounding = 0.001f;  // Round to this in microns
 static float sJEOLpiezoRounding = 0.f;   // Round these in microns, or 0 to skip piezo
-static BOOL sBeamBlanked = false;        // To keep track of actual blank state
 static _variant_t *vFalse;
 static _variant_t *vTrue;
 static BOOL sMessageWhenClipIS = true;
@@ -128,6 +125,26 @@ static HANDLE sDataMutexHandle;
 static int spJeolToFEI[] = {spUp, spDown, spUnknown};
 static int spFEItoJeol[] = {0, spUnknownJeol, spUpJeol, spDownJeol};
 
+// Class statics
+HANDLE CEMscope::mScopeMutexHandle;
+char * CEMscope::mScopeMutexOwnerStr;
+char * CEMscope::mScopeMutexLenderStr;
+DWORD  CEMscope::mScopeMutexOwnerId;
+int    CEMscope::mScopeMutexOwnerCount;
+int    CEMscope::mLastMagIndex;
+double CEMscope::mTiltAngle;
+int    CEMscope::mLastEFTEMmode;
+BOOL   CEMscope::mMagChanged;
+int    CEMscope::mInternalPrevMag;
+double CEMscope::mInternalMagTime = 0;
+double CEMscope::mLastISX = 0.;
+double CEMscope::mLastISY = 0.;
+double CEMscope::mPreviousISX;
+double CEMscope::mPreviousISY;
+BOOL   CEMscope::mBeamBlanked = false;
+char * CEMscope::mFEIInstrumentName;
+ScopePluginFuncs *CEMscope::mPlugFuncs;
+
 #define VAR_BOOL(a) ((a) ? *vTrue : *vFalse)
 
 #define AUTONORMALIZE_SET(v) { \
@@ -157,23 +174,6 @@ static bool SimpleOriginStatus(CRegKey &key, int &numRefills,
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-
-HANDLE CEMscope::mScopeMutexHandle; 
-char * CEMscope::mScopeMutexOwnerStr;
-char * CEMscope::mScopeMutexLenderStr;
-DWORD  CEMscope::mScopeMutexOwnerId;
-int    CEMscope::mScopeMutexOwnerCount;
-int    CEMscope::mLastMagIndex;
-int    CEMscope::mLastEFTEMmode;
-BOOL   CEMscope::mMagChanged;
-int    CEMscope::mInternalPrevMag;
-double CEMscope::mInternalMagTime = 0;
-double CEMscope::mLastISX = 0.;
-double CEMscope::mLastISY = 0.;
-double CEMscope::mPreviousISX;
-double CEMscope::mPreviousISY;
-char * CEMscope::mFEIInstrumentName;
-ScopePluginFuncs *CEMscope::mPlugFuncs;
 
 CEMscope::CEMscope()
 {
@@ -277,6 +277,8 @@ CEMscope::CEMscope()
   mStageLimit[STAGE_MAX_X] = mStageLimit[STAGE_MAX_Y] = 990.;
   mTiltAxisOffset = 0.;
   mShiftToTiltAxis = false;
+  mLastCameraLength = -1.;
+  mLastCamLenIndex = -1;
   mLastMagIndex = 0;
   mLastSeenMagInd = -1;
   mLastRegularMag = 0;
@@ -1309,7 +1311,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     CHECK_TIME(0);
 
     if (firstTime && mPlugFuncs->GetBeamBlank)
-      sBeamBlanked = mPlugFuncs->GetBeamBlank();
+      mBeamBlanked = mPlugFuncs->GetBeamBlank();
     firstTime = 0;
 
     // Get the mag and determine if it has changed
@@ -1341,9 +1343,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       CHECK_TIME(2);
       if (mUpdateBeamBlank > 0 && mPlugFuncs->GetBeamBlank) {
         blanked = mPlugFuncs->GetBeamBlank();
-        if ((blanked ? 1 : 0) != (sBeamBlanked ? 1 : 0))
+        if ((blanked ? 1 : 0) != (mBeamBlanked ? 1 : 0))
           SEMTrace('B', "Update saw beam blank %s", blanked ? "ON" : "OFF");
-        sBeamBlanked = blanked;
+        mBeamBlanked = blanked;
       }
 
       // Get probe mode or assign proper value based on STEM or not
@@ -1705,8 +1707,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // Determine reversals of tilting
     // First initialize the values
     if (sReversalTilt > 90.) {
-      sReversalTilt = sTiltAngle;
-      sExtremeTilt = sTiltAngle;
+      sReversalTilt = mTiltAngle;
+      sExtremeTilt = mTiltAngle;
     }
     ManageTiltReversalVars();
 
@@ -1747,10 +1749,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       else if (mPlugFuncs->GetGunValve)
         gunState = mPlugFuncs->GetGunValve();
       mWinApp->mRemoteControl.Update(magIndex, mLastCamLenIndex, spotSize, rawIntensity,
-        mProbeMode, gunState, STEMmode, (int)alpha, screenPos, sBeamBlanked);
+        mProbeMode, gunState, STEMmode, (int)alpha, screenPos, mBeamBlanked);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
-      stageZ, screenPos == spUp, smallScreen != 0, sBeamBlanked, EFTEM, STEMmode,spotSize, 
+      stageZ, screenPos == spUp, smallScreen != 0, mBeamBlanked, EFTEM, STEMmode,spotSize, 
       rawIntensity, intensity, objective, vacStatus, mLastCameraLength, mProbeMode, 
       gunState, (int)alpha);
 
@@ -1870,7 +1872,7 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
 {
   float backX, backY;
   if (JEOLscope) {
-    sTiltAngle = mJeolSD.tiltAngle;
+    mTiltAngle = mJeolSD.tiltAngle;
     stageX = mJeolSD.stageX;
     stageY = mJeolSD.stageY;
     stageZ = mJeolSD.stageZ;
@@ -1881,17 +1883,17 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
     stageX *= 1.e6;
     stageY *= 1.e6;
     stageZ *= 1.e6;
-    sTiltAngle = mPlugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = mPlugFuncs->GetTiltAngle() / DTOR;
     bReady = mPlugFuncs->GetStageStatus() == 0;
   }
 
   // 12/15/04: just use internal blanked flag instead of getting from scope
   GetValidXYbacklash(stageX, stageY, backX, backY);
   GetValidZbacklash(stageZ, backY);
-  mWinApp->mTiltWindow.TiltUpdate(sTiltAngle, bReady);
-  mWinApp->mLowDoseDlg.BlankingUpdate(sBeamBlanked);
+  mWinApp->mTiltWindow.TiltUpdate(mTiltAngle, bReady);
+  mWinApp->mLowDoseDlg.BlankingUpdate(mBeamBlanked);
   if (mWinApp->ScopeHasSTEM())
-    mWinApp->mSTEMcontrol.BlankingUpdate(sBeamBlanked);
+    mWinApp->mSTEMcontrol.BlankingUpdate(mBeamBlanked);
 }
 
 // Get the other items for the scope status window
@@ -2148,19 +2150,19 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
 //////////////////////////////////////
 
 // Takes care of the reversal, extreme and direction variables given current tilt angle
-static void ManageTiltReversalVars()
+void CEMscope::ManageTiltReversalVars()
 {
-  if (sTiltDirection * (sTiltAngle - sExtremeTilt) > 0) 
+  if (sTiltDirection * (mTiltAngle - sExtremeTilt) > 0) 
 
     // Moving in the same direction: replace the extreme value
-    sExtremeTilt = sTiltAngle;
-  else if (sTiltDirection * (sTiltAngle - sExtremeTilt) < -sTiltReversalThresh) {
+    sExtremeTilt = mTiltAngle;
+  else if (sTiltDirection * (mTiltAngle - sExtremeTilt) < -sTiltReversalThresh) {
 
     // Moving in opposite direction by more than threshold: reverse,
     // make the reversal be the last extreme, and replace the extreme
     sTiltDirection = -sTiltDirection;
     sReversalTilt = sExtremeTilt;
-    sExtremeTilt = sTiltAngle;
+    sExtremeTilt = mTiltAngle;
   }
 }
 
@@ -2187,7 +2189,7 @@ double CEMscope::GetTiltAngle(BOOL forceGet)
     ScopeMutexAcquire("GetTiltAngle",true);
 
   try {
-    sTiltAngle = mPlugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = mPlugFuncs->GetTiltAngle() / DTOR;
     if (getFast && !wasGettingFast)
       GetValuesFast(-1);
   }
@@ -2196,7 +2198,7 @@ double CEMscope::GetTiltAngle(BOOL forceGet)
   }
   if (!getFast)
     ScopeMutexRelease("GetTiltAngle");
-  return sTiltAngle;
+  return mTiltAngle;
 }
 
 // Used to get tilt angle fast for JEOL by using update value, but setting fast won't be
@@ -2654,7 +2656,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       return;
     if (HitachiScope || JEOLscope)
       WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");         
-    sTiltAngle = std->info->plugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = std->info->plugFuncs->GetTiltAngle() / DTOR;
     ManageTiltReversalVars();
     if ((step == 2 && !info->doRestoreXY) || (restore && step == 3)) {
       std->info->plugFuncs->GetStagePosition(&xpos, &ypos, &zpos);
@@ -5202,7 +5204,7 @@ void CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
   int blankBefore = NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0;
   mCameraAcquiring = inVal;
   if (blankBefore != (NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0) ||
-    (inVal && sBeamBlanked && B3DABS(mShutterlessCamera) < 2)) {
+    (inVal && mBeamBlanked && B3DABS(mShutterlessCamera) < 2)) {
       BlankBeam(!inVal, "SetCameraAcquiring");
       if (waitTime >= 0.001)
         Sleep(B3DNINT(1000. * waitTime));
@@ -5251,7 +5253,7 @@ void CEMscope::BlankBeam(BOOL inVal, const char *fromWhere)
     SEMReportCOMError(E, _T("setting beam blank "));
   }
   mBeamBlankSet = inVal;
-  sBeamBlanked = inVal;
+  mBeamBlanked = inVal;
   ScopeMutexRelease("BlankBeam");
 }
 
@@ -5275,7 +5277,7 @@ BOOL CEMscope::GetBeamBlanked()
 // did.  This and the unblank function no longer need to be called from a try block
 bool CEMscope::BlankTransientIfNeeded(const char *routine)
 {   
-  if ((mBlankTransients || mCamera->DoingContinuousAcquire()) && !sBeamBlanked &&
+  if ((mBlankTransients || mCamera->DoingContinuousAcquire()) && !mBeamBlanked &&
     mPlugFuncs->SetBeamBlank != NULL) {
     BlankBeam(true, routine);
     return true;
@@ -8217,7 +8219,7 @@ void CEMscope::SetLDViewDefocus(float inVal, int area)
 
 void CEMscope::SetBlankingFlag(BOOL state)
 {
-  sBeamBlanked = state;
+  mBeamBlanked = state;
 }
 
 
@@ -8777,7 +8779,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
   long err = 0, shutterStatus = 0, externalStatus = 0;
   ITAdaExpPtr myAda;
   HRESULT hr;
-  BOOL startingBlank = sBeamBlanked;
+  BOOL startingBlank = mBeamBlanked;
 
   // 4/5/11: user must have up to date adaexp because the shutter signals are switched
   // in a few versions of Tecnai 4.0
@@ -8825,7 +8827,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
 
         // Blank the beam
         info->plugFuncs->SetBeamBlank(*vTrue);
-        sBeamBlanked = true;
+        mBeamBlanked = true;
 
         // Close the film shutter internally
         if (shutterStatus == shutterOpen) {
@@ -8861,7 +8863,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
         // If there is a pre-exposure, open the beam shutter and wait for the delay
         if (preTicks > 0) {
           info->plugFuncs->SetBeamBlank(*vFalse);
-          sBeamBlanked = false;
+          mBeamBlanked = false;
           Sleep(preTicks);
         }
 
@@ -8872,10 +8874,10 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
         FILM_WAIT_LOOP(10, myAda->GetShutterStatus(), shutterOpen, 7);
 
         // Open beam shutter if not opened before, but let film shutter effect settle
-        if (sBeamBlanked) {
+        if (mBeamBlanked) {
           Sleep(preUnblankDelay);
           info->plugFuncs->SetBeamBlank(*vFalse);
-          sBeamBlanked = false;
+          mBeamBlanked = false;
         }
 
         // Wait for the exposure time
@@ -8885,7 +8887,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
 
         // Close the beam shutter then the film shutter
         info->plugFuncs->SetBeamBlank(*vTrue);
-        sBeamBlanked = true;
+        mBeamBlanked = true;
         err = myAda->GetCloseShutter();
         FILM_WAIT_LOOP(10, myAda->GetShutterStatus(), shutterClosed, 8);
 
@@ -8931,7 +8933,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
         if (info->plugFuncs->SetScreenDim)
           info->plugFuncs->SetScreenDim(*vFalse);
         info->plugFuncs->SetBeamBlank(VAR_BOOL(startingBlank));
-        sBeamBlanked = startingBlank;
+        mBeamBlanked = startingBlank;
       }
       catch (_com_error E) {
       }

@@ -441,6 +441,8 @@ public:
   void SetShutterlessCamera(int inVal);
   BOOL GetBlankSet() { return mBeamBlankSet; };
   BOOL GetBeamBlanked();
+  BOOL GetLastBeamBlanked() { return mBeamBlanked; };
+  double GetLastTiltAngle() { return mTiltAngle; };
   void ScreenCleanup();
   BOOL SetDefocus(double inVal, BOOL incremental = false);
   BOOL IncDefocus(double inVal);
@@ -510,6 +512,8 @@ public:
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
   GetSetMember(BOOL, UseImageBeamTilt);
+  GetMember(int, LastMagIndex);
+  void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -552,6 +556,7 @@ public:
   static char *GetInstrumentName() {return mFEIInstrumentName;};
   static void StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async,
     double &destX, double &destY, double &destZ, double &destAlpha);
+  static void ManageTiltReversalVars();
 
 
   // JEOL functions
@@ -585,8 +590,10 @@ private:
   static double mLastISY;
   static double mPreviousISX;  // IS before the last one seen in update
   static double mPreviousISY;
+  static double mTiltAngle;
   int mLastCamLenIndex;        // Last value of camera length index
   static BOOL mLastEFTEMmode;  // Last value of EFTEM mode from update
+  static BOOL mBeamBlanked;    // To keep track of actual blank state
   static char *mFEIInstrumentName;
   int mUseTEMScripting;
   int mUseUtapiScripting;

@@ -3249,6 +3249,27 @@
           <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">GetFastScopeStatus</TD>
+          <TD>Sets a collection of variables with existing information about the microscope 
+            state, with no calls to the microscope:
+<br> &nbsp;&nbsp; <i>fastISX</i>, <i>fastISY</i>: Image shift components as displayed (with scaling) in the 
+            scope status panel after all offsets have been subtracted (e.g., for low dose areas)
+<br> &nbsp;&nbsp; <i>fastRawISX</i>, <i>fastRawISY</i>: Raw image shift values
+<br> &nbsp;&nbsp; <i>fastStageX</i>, <i>fastStageY</i>, <i>fastStageZ</i>: Stage position in microns
+<br> &nbsp;&nbsp; <i>fastBlanked</i>: 1 if beam blanked, 0 if not
+<br> &nbsp;&nbsp; <i>fastCameraLength</i>: Camera length, valid in diffraction and STEM modes
+<br> &nbsp;&nbsp; <i>fastCamLenIndex</i>: Camera length index, valid in diffraction and STEM modes
+<br> &nbsp;&nbsp; <i>fastProbeMode</i>: 1 for microprobe, 0 for nanoprobe
+<br> &nbsp;&nbsp; <i>fastMagnification</i>: Magnification as displayed in the scope status panel
+<br> &nbsp;&nbsp; <i>fastDefocus</i>: Defocus as displayed in the scope status panel
+<br> &nbsp;&nbsp; <i>fastSpotSize</i>: Spot size
+<br> &nbsp;&nbsp; <i>fastAlpha</i>: Alpha value on JEOL
+<br> &nbsp;&nbsp; <i>fastIntensity</i>: Intensity value displayed in scope status panel
+<br> &nbsp;&nbsp; <i>fastRawIntensity</i>: Raw intensity value (between 0 and 1)
+<br> &nbsp;&nbsp; <i>fastEMmode</i>: 0 for TEM, 1 for EFTEM, 2 for STEM, 3 for diffraction
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetObjectiveStigmator #X #Y</TD>
           <TD>Sets the objective lens stigmator to the given values (between -1 and 1)</TD>
         </TR>
