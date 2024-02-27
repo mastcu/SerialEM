@@ -763,7 +763,8 @@ void CRemoteControl::SetBeamIncrement(float inVal)
   if (!mInitialized)
     return;
   m_strBeamDelta.Format("%c%.1f%%", 0xB1, 100. * mBeamIncrement);
-  UpdateData(false);
+  Invalidate();
+  //UpdateData(false);
 }
 
 // Set increment for stage shift and update display if it is open and stage is selected
@@ -858,6 +859,7 @@ void CRemoteControl::SetFocusIncrementIndex(int inVal)
     return;
   m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
+  Invalidate();
 }
 
 // Set an increment via its index
