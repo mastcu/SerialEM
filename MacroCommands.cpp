@@ -4504,8 +4504,8 @@ int CMacCmd::ReportCurrentBuffer(void)
   isImage = (imBuf->mImage != NULL) ? 1 : 0 ;
   char letter = 'A' + index;
   letString = letter;
-  SetOneReportedValue(letString, 1);
-  SetOneReportedValue(isImage, 2);
+  SetOneReportedValue(&mStrItems[1], letString, 1);
+  SetOneReportedValue(&mStrItems[1], isImage, 2);
   mLogRpt.Format("Current buffer is %s and%s empty", letString, isImage ? " not" : "");
   return 0;
 }
@@ -4515,8 +4515,8 @@ int CMacCmd::ReportActiveViewTitle(void)
 {
   CChildFrame *parent = (CChildFrame *)(mWinApp->mActiveView->GetParent());
   parent->GetWindowTextA(mStrCopy);
-  mLogRpt = "The active view is:" + mStrCopy;
-  SetOneReportedValue(&mStrItems[1], mStrCopy, 0);
+  mLogRpt = "The active view is: " + mStrCopy;
+  SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
   return 0;
 }
 
