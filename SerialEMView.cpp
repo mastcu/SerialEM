@@ -3505,7 +3505,7 @@ void CSerialEMView::ShowImageValue(KImage * image, int imX, int imY, int pane)
 }
 
 void CSerialEMView::GetLineLength(EMimageBuffer *imBuf, float &pixels, float &nanometers,
-                                  float &angle)
+                                  float &angle, bool skipAngleAndjust)
 {
   double dx = imBuf->mLineEndX - imBuf->mUserPtX;
   double dy = imBuf->mUserPtY - imBuf->mLineEndY;
@@ -3515,7 +3515,7 @@ void CSerialEMView::GetLineLength(EMimageBuffer *imBuf, float &pixels, float &na
     pixels);
   angle = 0.;
   if (pixels)
-    angle = (float)(atan2(dy, dx) / DTOR) - focusRot;
+    angle = (float)(atan2(dy, dx) / DTOR) - (skipAngleAndjust ? 0. : focusRot);
 }
 
 void CSerialEMView::GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, float & xnm,

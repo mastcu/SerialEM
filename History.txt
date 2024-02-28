@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/26/24: Fixed initial angle set from lines in high-focus mag calibration to
+omit adjustments for high focus (In 4.1).
+
 2/23/24: Made FEI scope plugin and server adjust the exposure time to get the
 expected number of EER frames even if camera timing hasn't been tuned; made
 camera dialog show true dose including frames lost for CDS in counting mode;

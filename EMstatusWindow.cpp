@@ -116,8 +116,12 @@ void EMstatusWindow::Update()
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
             m_sTiltText.Format("Tilt: %.2f", extra->m_fTilt);
           if (mShowDefocus) {
-            if (extra->mDefocus > EXTRA_VALUE_TEST)
-              m_strDefocus.Format("Def: %.2f", extra->mDefocus);
+            if (extra->mDefocus > EXTRA_VALUE_TEST) {
+              if (fabs(extra->mDefocus) < 99.)
+                m_strDefocus.Format("Def: %.2f", extra->mDefocus);
+              else
+                m_strDefocus.Format("Def: %.1f", extra->mDefocus);
+            }
           } else {
             if (extra->m_iMag > 0) {
               if (extra->m_iMag >= 100000000)
