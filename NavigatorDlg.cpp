@@ -3502,7 +3502,6 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
 { 
   CMapDrawItem *item;
   item = MakeNewItem(groupID);
-  SetCurrentStagePos(mCurrentItem);
   item->mStageX = stageX;
   item->mStageY = stageY;
 
@@ -3516,6 +3515,7 @@ void CNavigatorDlg::SetupItemMarkedOnBuffer(EMimageBuffer *imBuf, CMapDrawItem *
 {
   CMapDrawItem *mapItem;
   float stageZ;
+  double stageX, stageY, zdbl;
 
   // The registration of the buffer rules.  If it doesn't have one, assign current reg
   if (!imBuf->mRegistration)
@@ -3536,6 +3536,10 @@ void CNavigatorDlg::SetupItemMarkedOnBuffer(EMimageBuffer *imBuf, CMapDrawItem *
     item->mStageZ = mapItem->mStageZ;
   else if (imBuf->GetStageZ(stageZ))
     item->mStageZ = stageZ;
+  else {
+    mScope->GetStagePosition(stageX, stageY, zdbl);
+    item->mStageZ = (float)zdbl;
+  }
   if (!item->mDrawnOnMapID)
     item->mMapMagInd = imBuf->mMagInd;
   TransferBacklash(imBuf, item);
@@ -11215,7 +11219,8 @@ CMapDrawItem *CNavigatorDlg::MakeNewItem(int groupID)
     mItemToList.push_back(mCurListSel);
   }
 
-  if (!mDeferAddingToViewer) {
+  if (!(mDeferAddingToViewer || (mMacroProcessor->DoingMacro() &&
+    mMacroProcessor->GetSuspendNavRedraw()))) {
     ItemToListString(mCurrentItem, str);
     if (addstr)
       m_listViewer.AddString(str);
@@ -11331,8 +11336,10 @@ void CNavigatorDlg::SetPolygonCenterToMidpoint(CMapDrawItem * item)
 // Common operations needed after adding an item or some operations on current item
 void CNavigatorDlg::UpdateForCurrentItemChange()
 {
-  UpdateListString(mCurrentItem);
   SetChanged(true);
+  if (mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw())
+    return;
+  UpdateListString(mCurrentItem);
   ManageCurrentControls();
   Redraw();
 }
