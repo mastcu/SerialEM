@@ -3518,7 +3518,7 @@ void CSerialEMView::GetLineLength(EMimageBuffer *imBuf, float &pixels, float &na
     pixels);
   angle = 0.;
   if (pixels)
-    angle = (float)(atan2(dy, dx) / DTOR) - (skipAngleAndjust ? 0. : focusRot);
+    angle = (float)(atan2(dy, dx) / DTOR) - (skipAngleAndjust ? 0.f : focusRot);
 }
 
 void CSerialEMView::GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, float & xnm,
