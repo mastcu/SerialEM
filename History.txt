@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/26/24: Fixed initial angle set from lines in high-focus mag calibration to
+omit adjustments for high focus (In 4.1).
+
 2/27/24: Added script command to set variables for many scope state values
 without a call to the scope.
 

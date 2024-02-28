@@ -218,7 +218,8 @@ public:
   void ChangeAllRegistrations(int mapID, int fromReg, int toReg);
   void DrawScaleBar(CDC * cdc, CRect * rect, EMimageBuffer * imBuf, float sizeScaling);
   void ShowImageValue(KImage * image, int imX, int imY, int pane);
-  void GetLineLength(EMimageBuffer *imBuf, float &pixels, float &nanometers, float &angle);
+  void GetLineLength(EMimageBuffer *imBuf, float &pixels, float &nanometers, float &angle,
+    bool skipAngleAndjust = false);
   void GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, float & xnm, float & ynm);
   int ZoomedPixelYAdjustment(CRect *rect, KImage *image);
   MapItemArray *GetMapItemsForImageCoords(EMimageBuffer *imBuf,

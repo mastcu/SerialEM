@@ -2029,8 +2029,8 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   if (haveLines) {
 
     // If there are lines, set up scale/rotation and a more restricted search
-    mWinApp->mMainView->GetLineLength(mImBufs, underPixels, dummy, underAngle);
-    mWinApp->mMainView->GetLineLength(refBuf, refPixels, dummy, refAngle);
+    mWinApp->mMainView->GetLineLength(mImBufs, underPixels, dummy, underAngle, true);
+    mWinApp->mMainView->GetLineLength(refBuf, refPixels, dummy, refAngle, true);
     if (underPixels < 100 || refPixels < 100) {
       AfxMessageBox("The lines should be at least 100 pixels long", MB_EXCLAME);
       return;
