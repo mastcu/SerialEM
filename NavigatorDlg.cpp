@@ -2206,7 +2206,7 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
 {
   CString string;
   int updated = -1;
-  int i;
+  int i, lim;
   m_listViewer.ResetContent();
   if (mItemArray.GetSize()) {
     for (i = 0; i < mItemArray.GetSize(); i++) {
@@ -2220,6 +2220,9 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
     if (!keepSel) {
       mCurrentItem = 0;
       mCurListSel = 0;
+    } else {
+      lim = (int)(m_bCollapseGroups ? mListToItem.size() : mItemArray.GetSize()) - 1;
+      B3DCLAMP(mCurListSel, 0, lim);
     }
     m_listViewer.SetCurSel(mCurListSel);
     ManageListScroll();

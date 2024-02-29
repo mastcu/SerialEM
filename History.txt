@@ -4,8 +4,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance, for the stable release version
 ============================================================================
 2/28/24: Prevented some unneeded updates when using SuspendNavUpdate and
-stopped getting stage position from scope when adding points marked on buffer
-(In 4.1).
+stopped getting stage position from scope when adding points marked on buffer;
+fixed a crash using that with collapsed groups (In 4.1).
 
 2/28/24: Fixed setting variables on command line for ReportCurrentBuffer and
 ReportActiveViewTitle (In 4.1).

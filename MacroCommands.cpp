@@ -11090,6 +11090,7 @@ int CMacCmd::SuspendNavRedraw(void)
   ABORT_NONAV;
   mSuspendNavRedraw = mItemEmpty[1] || mItemInt[1] != 0;
   if (!mSuspendNavRedraw) {
+    mNavigator->MakeListMappings();
     mNavigator->FillListBox(false, true);
     mNavigator->Redraw();
   }
