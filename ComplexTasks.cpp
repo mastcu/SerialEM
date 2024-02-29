@@ -2279,13 +2279,17 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
   double ISX, ISY;
   int biggerArea = searchToView ? SEARCH_AREA : VIEW_CONSET;
   mLDSOHigherConsNum = searchToView ? VIEW_CONSET : PREVIEW_CONSET;
-  LowDoseParams *bigParams = mWinApp->GetLowDoseParams() + biggerArea;
+  LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
+  LowDoseParams *bigParams = ldParams + biggerArea;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
 
   if (!mWinApp->LowDoseMode()) {
     SEMMessageBox("Low Dose mode must be on to find shift offsets");
     return 1;
   }
+
+  if (searchToView && ldParams[SEARCH_AREA].magIndex > ldParams[VIEW_CONSET].magIndex)
+    mLDSOHigherConsNum = PREVIEW_CONSET;
 
   // Convert fraction of field to microns
   if (maxMicrons < 0) {
