@@ -10496,7 +10496,7 @@ int CMacCmd::ReportNavItem(void)
     if (index < 0) {
       mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
       SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
-      SetReportedValues(-1, 0.);
+      SetRepValsAndVars(1, -1, 0.);
     }
   } else {
     if (mItemInt[1] < 0) {
@@ -10515,7 +10515,7 @@ int CMacCmd::ReportNavItem(void)
       navItem->mStageZ, (LPCTSTR)navItem->mLabel);
     if (!navItem->mNote.IsEmpty())
       mLogRpt += "\r\n    Note: " + navItem->mNote;
-    SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY,
+    SetRepValsAndVars(1, index + 1., navItem->mStageX, navItem->mStageY,
       navItem->mStageZ, (double)navItem->mType);
     report.Format("%d", index + 1);
     SetVariable("NAVINDEX", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
