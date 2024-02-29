@@ -10620,7 +10620,7 @@ int CMacCmd::SetSelectedNavItem()
 // SetItemAcquire, SetTiltSeriesAtItem
 int CMacCmd::SetItemAcquire(void)
 {
-  BOOL truth;
+  BOOL turnOn, inRange;
   int index, err = 0;
   CMapDrawItem *navItem;
 
@@ -10628,24 +10628,27 @@ int CMacCmd::SetItemAcquire(void)
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
-  if (mNavigator->GetAcquiring() && index >= mNavigator->GetAcquireIndex() &&
-    index <= mNavigator->GetEndingAcquireIndex())
+  inRange = mNavigator->GetAcquiring() && index >= mNavigator->GetAcquireIndex() &&
+    index <= mNavigator->GetEndingAcquireIndex();
+  turnOn = (mItemEmpty[2] || (mItemInt[2] != 0));
+  if (turnOn && inRange)
     ABORT_NOLINE("When the Navigator is acquiring, you cannot set an\n"
       "item to Acquire within the range still being acquired");
-  truth = (mItemEmpty[2] || (mItemInt[2] != 0));
   if (CMD_IS(SETITEMACQUIRE)) {
-    if (truth && navItem->mTSparamIndex > 0)
+    if (turnOn && navItem->mTSparamIndex > 0)
       ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
         "line:\n\n");
     mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
-      truth ? "enabled" : "disabled");
-    navItem->mAcquire = truth;
+      turnOn ? "enabled" : "disabled");
+    if (!navItem->mAcquire)
+      inRange = false;
+    navItem->mAcquire = turnOn;
   } else {
-    if (truth && navItem->mAcquire)
+    if (turnOn && navItem->mAcquire)
       ABORT_LINE("You cannot do a tilt series at an item set to Acquire for "
         "line:\n\n");
-    if (BOOL_EQUIV(truth, navItem->mTSparamIndex < 0)) {
-      if (truth) {
+    if (BOOL_EQUIV(turnOn, navItem->mTSparamIndex < 0)) {
+      if (turnOn) {
         err = mNavHelper->NewAcquireFile(index, NAVFILE_TS, NULL);
         if (err > 0) {
           AbortMacro();
@@ -10654,16 +10657,19 @@ int CMacCmd::SetItemAcquire(void)
       } else {
         mNavHelper->EndAcquireOrNewFile(navItem);
       }
-      mLogRpt.Format("Tilt series %s for Navigator item %d", B3DCHOICE(truth, 
+      mLogRpt.Format("Tilt series %s for Navigator item %d", B3DCHOICE(turnOn, 
         err < 0 ? "canceled by user" : "enabled", "disabled"), index + 1);
       mNavigator->AddFocusAreaPoint(false);
       SetReportedValues(err < 0 ? 0 : 1);
     } else {
       mLogRpt.Format("Tilt series is already %s for Navigator item %d",
-        truth ? "enabled" : "disabled", index + 1);
-      SetReportedValues(truth ? 1 : 0);
+        turnOn ? "enabled" : "disabled", index + 1);
+      SetReportedValues(turnOn ? 1 : 0);
+      inRange = false;
     }
   }
+  if (inRange && index > mNavigator->GetAcquireIndex())
+    mNavigator->SetNumDoneAcq(mNavigator->GetNumDoneAcq() + 1);
   mNavigator->UpdateListString(index);
   mNavigator->Redraw();
   mNavigator->SetChanged(true);
@@ -10771,18 +10777,18 @@ int CMacCmd::SkipNavPointsNearEdge(void)
 // NavIndexWithLabel, NavIndexWithNote
 int CMacCmd::NavIndexWithLabel(void)
 {
-  BOOL truth;
+  BOOL doNote;
   int index;
   ABORT_NONAV;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  truth = CMD_IS(NAVINDEXWITHNOTE);
-  mNavigator->FindItemWithString(mStrCopy, truth);
+  doNote = CMD_IS(NAVINDEXWITHNOTE);
+  mNavigator->FindItemWithString(mStrCopy, doNote);
   index = mNavigator->GetFoundItem() + 1;
   if (index > 0)
-    mLogRpt.Format("Item with %s %s has index %d", truth ? "note" : "label",
+    mLogRpt.Format("Item with %s %s has index %d", doNote ? "note" : "label",
       (LPCTSTR)mStrCopy, index);
   else
-    mLogRpt.Format("No item has %s %s", truth ? "note" : "label", (LPCTSTR)mStrCopy);
+    mLogRpt.Format("No item has %s %s", doNote ? "note" : "label", (LPCTSTR)mStrCopy);
   SetReportedValues(index);
   return 0;
 }
@@ -11291,11 +11297,11 @@ int CMacCmd::ReportIfNavOpen(void)
 // ReadNavFile, MergeNavFile
 int CMacCmd::ReadNavFile(void)
 {
-  BOOL truth;
+  BOOL merge;
   CFileStatus status;
 
-  truth = CMD_IS(MERGENAVFILE);
-  if (truth) {
+  merge = CMD_IS(MERGENAVFILE);
+  if (merge) {
     ABORT_NONAV;
   } else  {
     mWinApp->mMenuTargets.OpenNavigatorIfClosed();
@@ -11448,10 +11454,16 @@ int CMacCmd::SetItemSeriesAngles(void)
 // SkipAcquiringNavItem
 int CMacCmd::SkipAcquiringNavItem(void)
 {
+  CMapDrawItem *navItem = NULL;
   ABORT_NONAV;
+  int index = mNavigator->GetCurrentOrAcquireItem(navItem);
   if (!mNavigator->GetAcquiring())
     mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
     "    pre-script or main script when acquiring Navigator items", mLogAction);
+  else if (!mItemEmpty[1] && mItemInt[1] && navItem && navItem->mAcquire) {
+    navItem->mAcquire = false;
+    mNavigator->UpdateListString(index);
+  }
   mNavigator->SetSkipAcquiringItem(true);
   return 0;
 }

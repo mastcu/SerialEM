@@ -187,6 +187,7 @@ public:
   GetMember(bool, ShowingLDareas);
   SetMember(int, RunScriptAfterNextAcq);
   GetMember(int, ScriptToRunAtEnd);
+  GetSetMember(int, NumDoneAcq);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
 
 

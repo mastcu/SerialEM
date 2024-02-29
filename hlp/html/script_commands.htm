@@ -5300,8 +5300,9 @@
             is specified by <b>#I</b> with a positive or negative number (as in ReportItemAcquire);
              if 0 or no <b>#I</b> is specified the current item is changed.&nbsp; Acquire may not be turned on
              for an item marked for a tilt series.&nbsp; If this command is used
-            from within a running acquisition, the item must not be within the range from the
-            current acquisition point to the end of the range being acquired.&nbsp; The end of the range
+            from within a running acquisition for an item within the range from the
+            current acquisition point to the end of the range being acquired, it can only turn Acquire off, 
+            not on.&nbsp; The end of the range
             is the original end of the Navigator table when acquisition was started, or the
             end of the subset if one is being acquired.</TD>
         </TR>
@@ -5336,10 +5337,11 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SkipAcquiringNavItem</TD>
+          <TD class="scriptcommand">SkipAcquiringNavItem [#T]</TD>
           <TD>Tells the Navigator to skip the current item and move on to the next.&nbsp;
             This command has an effect only when included in a script being run as a
-            preliminary action before the main action.&nbsp; The item will still be marked for Acquire.</TD>
+            preliminary action before the main action.&nbsp; The item will still be marked for 
+            Acquire unless the optional <b>#T</b> is nonzero.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipAcquiringGroup [#I] [#T]</TD>
