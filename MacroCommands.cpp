@@ -11049,7 +11049,7 @@ int CMacCmd::SkipAcquiringNavItem(void)
   if (!mNavigator->GetAcquiring())
     mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
     "    pre-script or main script when acquiring Navigator items", mLogAction);
-  mNavigator->SetSkipAcquiringItem(mItemEmpty[1] || mItemInt[1] != 0);
+  mNavigator->SetSkipAcquiringItem(true);
   return 0;
 }
 
