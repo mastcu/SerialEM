@@ -9852,7 +9852,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       ManageNumDoneAcquired();
       if (mMacroProcessor->GetLastCompleted()) {
         if (mSkipAcquiringItem)
-          SkipToNextItemInAcquire(item, "in main script");
+          SkipToNextItemInAcquire(item, "in main script", true);
         else
           SetItemSuccessfullyAcquired(item);
 
@@ -10617,9 +10617,11 @@ void CNavigatorDlg::SetItemSuccessfullyAcquired(CMapDrawItem * item)
 }
 
 // Set up step position so it will go to next item after failure
-void CNavigatorDlg::SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep)
+void CNavigatorDlg::SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep,
+  bool skipManage)
 {
-  ManageNumDoneAcquired();
+  if (!skipManage)
+    ManageNumDoneAcquired();
   mAcqStepIndex = mNumAcqSteps - 2;
   PrintfToLog("Skipping item # %d with label %s due to failure %s",
     mAcquireIndex + 1, (LPCTSTR)item->mLabel, failedStep);
