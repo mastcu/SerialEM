@@ -132,7 +132,8 @@ static int sThreadError = 0;
 static HANDLE traceMutexHandle;
 #define TRACE_MUTEX_WAIT  1000
 #define MAX_TRACE_LIST 20
-CString sTraceMsg[MAX_TRACE_LIST];
+static CString sTraceMsg[MAX_TRACE_LIST];
+static bool sTraceIsDebug[MAX_TRACE_LIST];
 static int sNumTraceMsg = 0;
 static double sStartTime;
 static CString debugOutput = "";
@@ -2440,7 +2441,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
   if (debugOutput &&
     (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) == WAIT_OBJECT_0)) {
     for (i = 0; i < sNumTraceMsg; i++) {
-      SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
+      if (sTraceIsDebug[i])
+        SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
       AppendToLog(sTraceMsg[i], LOG_OPEN_IF_CLOSED);
     }
     sNumTraceMsg = 0;
@@ -3293,6 +3295,7 @@ void SEMTrace(char key, char *fmt, ...)
   if (sNumTraceMsg >= MAX_TRACE_LIST)
     sNumTraceMsg = MAX_TRACE_LIST - 1;
   
+  sTraceIsDebug[sNumTraceMsg] = key != '0';
   if (key == '0')
     sTraceMsg[sNumTraceMsg] = "";
   else
@@ -3305,7 +3308,8 @@ void SEMTrace(char key, char *fmt, ...)
   // If this is the main thread, dump the output immediately
   if (GetCurrentThreadId() == appThreadID) {
     for (int len = 0; len < sNumTraceMsg; len++) {
-      ((CSerialEMApp *)AfxGetApp())->SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
+      if (sTraceIsDebug[len])
+        ((CSerialEMApp *)AfxGetApp())->SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
       ((CSerialEMApp *)AfxGetApp())->AppendToLog(sTraceMsg[len], LOG_OPEN_IF_CLOSED);
     }
     sNumTraceMsg = 0;

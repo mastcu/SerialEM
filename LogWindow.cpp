@@ -107,7 +107,7 @@ void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, i
 void CLogWindow::Append(CString & inString, int lineFlags, int colorIndex, int style)
 {
   B3DCLAMP(colorIndex, 0, MAX_PALETTE_COLORS - 1);
-  DoAppend(inString, lineFlags, mPalette[colorIndex * 3], mPalette[colorIndex * 3 + 1],
+  Append(inString, lineFlags, mPalette[colorIndex * 3], mPalette[colorIndex * 3 + 1],
     mPalette[colorIndex * 3 + 2], style);
 }
 
