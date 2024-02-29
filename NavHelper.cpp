@@ -5810,8 +5810,9 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
       if (mShiftManager->AutoAlign(buffer, smallPad, false, 
-        (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS, &peak, 0., 0., 0.,
-        scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+        (corrFlags & AUTOALIGN_SEARCH_KEEP) ?
+        ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS) : corrFlags, &peak,
+        0., 0., 0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
           continue;
         return 3;
@@ -5828,8 +5829,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       shiftXbest = shiftX;
       shiftYbest = shiftY;
     }
-    SEMTrace('1', "Rotation %.2f  peak  %g  shift %.1f %.1f", rotation, peak,
-      shiftX, shiftY);
+    SEMTrace('1', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, peak,
+      fracPix, shiftX, shiftY);
   }
   if (istMax < 0) {
     mWinApp->AppendToLog("No correlation peak was found within the limits for any "
@@ -5877,8 +5878,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
           shiftXbest = shiftX;
           shiftYbest = shiftY;
         }
-        SEMTrace('1', "Rotation %.2f  peak  %g  shift %.1f %.1f", rotation, 
-          peak, shiftX, shiftY);
+        SEMTrace('1', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
+          peak, fracPix, shiftX, shiftY);
       }
     }
   }

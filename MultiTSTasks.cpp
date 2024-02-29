@@ -514,8 +514,9 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     if (shiftLimit > 0)
       mShiftManager->SetNextAutoalignLimit(shiftLimit);
     if (mShiftManager->AutoAlign(buffer, smallPad, false,
-      (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS, &peak, 0., 0., 0.,
-      scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
+      (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
+      (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS : corrFlags, &peak, 0., 
+      0., 0., scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
       if (shiftLimit > 0)
         continue;
       return 3;
