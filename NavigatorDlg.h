@@ -715,7 +715,7 @@ public:
   int OKtoSkipStageMove(NavAcqParams *param);
   int OKtoSkipStageMove(NavAcqAction *actions, int acqType);
   int EndAcquireWithMessage(void);
-  void SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep);
+  void SkipToNextItemInAcquire(CMapDrawItem *item, const char *failedStep, bool skipManage = false);
   int GetCurrentGroupSizeAndPoints(int maxPoints, float * stageX, float * stageY, 
     float *defocusOffset);
 void MoveStageOrDoImageShift(int axisBits);
