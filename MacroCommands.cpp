@@ -8708,12 +8708,15 @@ int CMacCmd::ReverseTilt(void)
 // FindLowDoseShiftOffset
 int CMacCmd::FindLowDoseShiftOffset()
 {
+  CLowDoseDlg *ldDlg = &mWinApp->mLowDoseDlg;
+  bool search = mItemInt[1] != 0;
+  float defMax = search ? ldDlg->mAutoSearchMaxShift : ldDlg->mAutoViewMaxShift;
   if (!mWinApp->LowDoseMode())
     ABORT_LINE("You must be in Low Dose mode for line:\n\n");
-  if (mWinApp->mComplexTasks->FindLowDoseShiftOffset(mItemInt[1] != 0,
-    (mItemEmpty[2] || !mItemFlt[2]) ? -0.25f : mItemFlt[2],
-    mItemEmpty[3] ? mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[3],
-    mItemEmpty[4] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[4])) {
+  if (mWinApp->mComplexTasks->FindLowDoseShiftOffset(search,
+    (mItemEmpty[2] || !mItemFlt[2]) ?  defMax : mItemFlt[2],
+    mItemEmpty[3] ? ldDlg->MaxPctChgForAutoShift() : mItemFlt[3],
+    mItemEmpty[4] ? ldDlg->MaxRotationForAutoShift() : mItemFlt[4])) {
     AbortMacro();
     return 1;
   }

@@ -506,10 +506,11 @@
           second entry is a value to be formatted the given way.&nbsp; For floating formats, the 
           string can have the form 'w.pc', where 'w' is the minimum field width, 'p' is the 
           precision (number of decimal places, or number of digits for g or G), and 'c' is the conversion
-           letter (e, E, f, g, or G).&nbsp; 'w' and 'p' are both optional; the string can be 'wc', '.pc', 
-          or just 'c'.&nbsp; For integer formats (d, x, or X), the allowed form is 'wc'.&nbsp; A leading 0 
+           letter (e, E, f, g, or G).&nbsp; 'w' and 'p' are both optional; the string can be of the form 'wc', '.pc', 
+          or just 'c'.&nbsp; For decimal and hexadecimal formats (d, x, or X), the allowed form is 'wc'.&nbsp; A leading 0 
           will give a string zero-padded on the left (e.g., 03d will output 3 digit numbers for making
-          filenames that list sequentially).&nbsp;  Function added in 4.2, 12/15/23.
+          filenames that list sequentially).&nbsp; A string with a hexadecimal number can be converted to decimal
+          form by starting it with '0x', as in 'FORMAT d 0xb3ef'. &nbsp; Function added in 4.2, 12/15/23.
         </td>
       </tr>
     </table>

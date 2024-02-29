@@ -1000,7 +1000,7 @@ BEGIN
     LTEXT           "Size:",IDC_SIZETEXT,4,22,73,8
     LTEXT           "Stage:",IDC_STAGETEXT,4,31,74,8
     LTEXT           "Tilt:",IDC_TILTTEXT,81,22,34,8
-    LTEXT           "Def:",IDC_STATDEFOCUS,81,31,34,8
+    LTEXT           "Def:",IDC_STATDEFOCUS,81,31,35,8
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
 END
@@ -1804,7 +1804,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,100,137,10,10
 END
 
-IDD_LOWDOSE DIALOGEX 0, 0, 119, 235
+IDD_LOWDOSE DIALOGEX 0, 0, 119, 238
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1816,16 +1816,13 @@ BEGIN
     CONTROL         "Set",IDC_SET_BEAM_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,103,25,10
     PUSHBUTTON      "Reset",IDC_RESET_BEAM_SHIFT,37,103,25,10
     CTEXT           "0.00, 0.00",IDC_STATBEAMSHIFT,65,103,46,9,SS_CENTERIMAGE
-    GROUPBOX        "Additional beam shift",IDC_STAT_ADD_SHIFT_BOX,6,94,108,22
-    CONTROL         "View",IDC_RVIEW_OFFSET,"Button",BS_AUTORADIOBUTTON | WS_GROUP,40,118,31,8
-    CONTROL         "Search",IDC_RSEARCH_OFFSET,"Button",BS_AUTORADIOBUTTON,72,118,34,8
-    LTEXT           "Offsets for:",IDC_STAT_VS_OFFSETS,7,118,32,8
-    LTEXT           "Defocus:",IDC_STATVIEWDEFLABEL,3,129,27,8
-    RTEXT           "-199",IDC_STATVIEWDEFOCUS,30,129,14,8
-    CONTROL         "",IDC_SPINVIEWDEFOCUS,"msctls_updown32",UDS_ARROWKEYS,45,127,10,12
-    LTEXT           "Shift:",IDC_STAT_VS_SHIFT,58,129,15,8
-    PUSHBUTTON      "Set",IDC_SET_VIEW_SHIFT,73,128,20,10
-    PUSHBUTTON      "Zero",IDC_ZERO_VIEW_SHIFT,96,128,20,10
+    GROUPBOX        "Additional beam shift",IDC_STAT_ADD_SHIFT_BOX,6,94,111,22
+    LTEXT           "View",IDC_STATVIEWDEFLABEL,4,128,19,8
+    RTEXT           "-199",IDC_STATVIEWDEFOCUS,28,128,14,8
+    CONTROL         "",IDC_SPINVIEWDEFOCUS,"msctls_updown32",UDS_ARROWKEYS,43,126,10,12
+    LTEXT           "Search",IDC_STAT_VS_SHIFT,4,142,23,8
+    PUSHBUTTON      "Set",IDC_SET_VIEW_SHIFT,57,127,18,10
+    PUSHBUTTON      "Zero",IDC_ZERO_VIEW_SHIFT,77,127,18,10
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CTEXT           "Low Dose Control",IDC_STATTOPLINE,33,0,67,8
@@ -1836,40 +1833,43 @@ BEGIN
     LTEXT           "80000x    Sp 12    C2 99.99%",IDC_STATMAGSPOTC2,34,19,83,8
     CONTROL         "Continuous update (see tooltip)",IDC_CONTINUOUSUPDATE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,27,111,10
-    CONTROL         "BLANK BEAM when screen down",IDC_BLANKBEAM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,159,112,10
-    PUSHBUTTON      "Unblank",IDC_UNBLANK,50,144,30,12
-    LTEXT           "Blanked",IDC_STATBLANKED,20,143,26,8,NOT WS_VISIBLE
-    PUSHBUTTON      "-",IDC_BUTMORE,4,151,9,7
-    LTEXT           "Options",IDC_STATMORE,14,151,24,8
+    CONTROL         "BLANK BEAM when screen down",IDC_BLANKBEAM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,161,112,10
+    PUSHBUTTON      "-",IDC_BUTMORE,4,154,9,7
+    LTEXT           "Options",IDC_STATMORE,14,154,24,8
     CONTROL         "Normalize beam through View",IDC_LDNORMALIZE_BEAM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,169,105,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,171,105,10
     CONTROL         "Keep Focus and Trial identical",IDC_TIEFOCUSTRIAL,
-                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,179,112,10
-    PUSHBUTTON      "V",IDC_COPYTOVIEW,13,199,14,8
-    PUSHBUTTON      "F",IDC_COPYTOFOCUS,33,199,14,8
-    PUSHBUTTON      "T",IDC_COPYTOTRIAL,53,199,14,8
-    PUSHBUTTON      "R",IDC_COPYTORECORD,73,199,14,8
-    PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,33,211,54,10
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,181,112,10
+    PUSHBUTTON      "V",IDC_COPYTOVIEW,13,201,14,8
+    PUSHBUTTON      "F",IDC_COPYTOFOCUS,33,201,14,8
+    PUSHBUTTON      "T",IDC_COPYTOTRIAL,53,201,14,8
+    PUSHBUTTON      "R",IDC_COPYTORECORD,73,201,14,8
+    PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,33,213,54,10
     LTEXT           "Position on tilt axis:",IDC_STATPOSITION,3,60,59,8
     EDITTEXT        IDC_EDITPOSITION,63,58,25,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um",IDC_STATMICRON,91,60,10,8
     LTEXT           "Maximum area separation:  -90.23 um",IDC_STATOVERLAP,3,70,114,8
-    GROUPBOX        "Copy current area settings to",IDC_STAT_COPY_LD_AREA,6,189,108,20
-    CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,224,76,10
-    LTEXT           "deg",IDC_STAT_LD_DEG,104,224,13,8
-    EDITTEXT        IDC_EDIT_AXISANGLE,81,222,22,12,ES_CENTER | ES_AUTOHSCROLL
-    CONTROL         "",IDC_STAT_LDCP_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,0,141,119,1
-    CONTROL         "",IDC_STAT_LDCP_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,0,122,1,19
-    CONTROL         "",IDC_STAT_LDCP_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,0,122,6,1
-    CONTROL         "",IDC_STAT_LDCP_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,111,122,8,1
-    CONTROL         "",IDC_STAT_LDCP_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,118,122,1,19
-    PUSHBUTTON      "S",IDC_COPYTOSEARCH,93,199,14,8
+    GROUPBOX        "Copy current area settings to",IDC_STAT_COPY_LD_AREA,6,191,108,20
+    CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,226,76,10
+    LTEXT           "deg",IDC_STAT_LD_DEG,104,226,13,8
+    EDITTEXT        IDC_EDIT_AXISANGLE,81,224,22,12,ES_CENTER | ES_AUTOHSCROLL
+    PUSHBUTTON      "S",IDC_COPYTOSEARCH,93,201,14,8
     PUSHBUTTON      "Vie.",IDC_GOTO_VIEW,23,80,16,12
     PUSHBUTTON      "Foc.",IDC_GOTO_FOCUS,42,80,17,12
     PUSHBUTTON      "Tri.",IDC_GOTO_TRIAL,62,80,16,12
     PUSHBUTTON      "Rec.",IDC_GOTO_RECORD,81,80,16,12
     PUSHBUTTON      "Sea.",IDC_GOTO_SEARCH,100,80,16,12
     LTEXT           "Go to:",IDC_STAT_LDCP_GO,3,81,18,8
+    GROUPBOX        "Defocus offsets ----- Shift offsets",IDC_STATVS_BOX,3,117,115,37
+    LTEXT           "Blanked",IDC_STATBLANKED,44,154,26,8,NOT WS_VISIBLE
+    PUSHBUTTON      "Auto",IDC_AUTO_VIEW_SHIFT,97,127,18,10
+    RTEXT           "-399",IDC_STATSEARCHDEFOCUS,28,142,14,8
+    CONTROL         "",IDC_SPINSEARCHDEFOCUS,"msctls_updown32",UDS_ARROWKEYS,43,140,10,12
+    PUSHBUTTON      "Set",IDC_SET_SEARCH_SHIFT,57,141,18,10
+    PUSHBUTTON      "Zero",IDC_ZERO_SEARCH_SHIFT,77,141,18,10
+    PUSHBUTTON      "Auto",IDC_AUTO_SEARCH_SHIFT,97,141,18,10
+    CONTROL         "",IDC_STAT_LDCP_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,55,124,1,30
+    PUSHBUTTON      "Setup Auto Shift",IDC_SETUP_AUTO_SHIFT,75,154,40,8
 END
 
 IDD_SCREENMETER DIALOGEX 0, 0, 74, 26
@@ -4232,7 +4232,7 @@ BEGIN
 
     IDD_LOWDOSE, DIALOG
     BEGIN
-        BOTTOMMARGIN, 234
+        RIGHTMARGIN, 116
     END
 
     IDD_SCREENMETER, DIALOG
@@ -4931,6 +4931,11 @@ BEGIN
 END
 
 IDD_LOGWINDOW AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_BUFFERSTATUS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5657,7 +5662,8 @@ BEGIN
     IDC_BUT_APPLY_IS        "Change image shift to center current center of shifted, rotated image"
     IDC_BUT_TRANSFORM       "Use alignment to transform all Navigator items from old to new registration"
     IDC_EDIT_AXISANGLE      "Angle between inter-area axis and tilt axis (CCW positive)"
-    IDC_ZERO_VIEW_SHIFT     "Reset the shift offset for View mode to zero"
+    IDC_ZERO_VIEW_SHIFT     "Reset the shift offset for View mode to zero or undo Auto shift"
+    IDC_ZERO_SEARCH_SHIFT     "Reset the shift offset for Search mode to zeroor undo Auto shift"
     IDC_SPIN_NA_PREMACNUM   "Set script number to run before tilt series"
 END
 
@@ -5931,7 +5937,10 @@ BEGIN
     IDC_LDNORMALIZE_BEAM    "Normalize beam on area change with scope call or with View beam settings"
     IDC_RESET_BEAM_SHIFT    "Set additional beam shift for this area back to zero"
     IDC_SET_BEAM_SHIFT      "Set up independent beam shift for this area"
-    IDC_SET_VIEW_SHIFT      "Set shift offset for View from shift of image in buffer A (shift to enable)"
+    IDC_SET_VIEW_SHIFT      "Set shift offset for View from shift of image in buffer A or markers in A&B"
+    IDC_SET_SEARCH_SHIFT    "Set shift offset for Search from shift of image in A or markers in A and B"
+    IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
+    IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
 END
 
 STRINGTABLE

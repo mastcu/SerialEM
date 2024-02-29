@@ -4116,23 +4116,21 @@
               area so that it is assigned the current state.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FindLowDoseShiftOffset #T [#M] [#S] [#A]</TD>
-          <TD>Runs a routine to determine the Low Dose View or Search shift offset if <b>#T</b> is
+          <TD class="scriptcommand">FindLowDoseShiftOffset #S [#M] [#S] [#A]</TD>
+          <TD>Runs a routine to determine the Low Dose View or Search shift offset if <b>#S</b> is
             0 or 1 respectively, using the alignment method invoked by the 'AlignBetweenMagnifications'
              command.&nbsp; Preview is used to find the View offset, so there must be 
             unique features for alignment present in a Preview.&nbsp; The higher magnification image
-            is scaled down, so it does not need a particularly good signal-to-noise ratio.&nbsp; The lower
+            is scaled down, so it does not need a particularly good signal-to-noise ratio.&nbsp; If no other values are
+            entered, they are all taken from the values set with the <a href="hidd_lowdose.htm#setupAutoShift"><B>Setup Auto Shift</B></a> button in the Low Dose control panel.&nbsp; The lower
             magnification image is cropped based on the maximum allowed shift specified by <b>#M</b>: 
             either a positive distance in microns, or the negative fraction of the field of view of 
-            the lower magnification image.&nbsp; The default (used if <B>#M</B> is 0) is -0.25, which means that the feature
-            in the higher mag image must be in the central half of the lower mag image.&nbsp; A lower
+            the lower magnification image.&nbsp; Enter 0 for the value set for the particular image type in
+             <B>Setup Auto Shift</B>.&nbsp; A lower
             limit may be needed if there are periodic features like holes.&nbsp; The maximum percent size
              change and rotation angle to be searched can be entered with <b>#S</b> and <B>#A</B>; otherwise the
-            values of the properties ScaledAliDfltPctChg and ScaledAliDfltMaxRot are used.&nbsp; Image
-             shift is reset at the start if it exceeds 0.5 micron (set with property 
-            LDShiftOffsetResetISThresh).&nbsp; The alignment is iterated if the image shift of the
-            first alignment exceeds 0.1 micron (set with property 
-            LDShiftOffsetIterThresh).&nbsp; Command added in 4.2, 16-Feb-24.
+            values set in <B>Setup Auto Shift</B> are used (enter -1 for <b>#S</b> to use a value set 
+            there and enter a specific value for <b>#A</b>.&nbsp; Command added in 4.2, 16-Feb-24.
           </TD>
         </TR>
         <TR>

@@ -619,7 +619,9 @@
 #define IDC_STATVIEWDEFOCUS             1572
 #define IDC_STATVIEWDEFLABEL            1573
 #define IDC_CHECK_SKIP_OUTSIDE          1574
+#define IDC_STATSEARCHDEFOCUS           1574
 #define IDC_EDIT_SKIP_OUTSIDE           1575
+#define IDC_SPINSEARCHDEFOCUS           1575
 #define IDC_FOCUS_AFTER_STAGE           1576
 #define IDC_XFORMCOMBO                  1577
 #define IDC_EDITSECTION                 1578
@@ -2248,6 +2250,12 @@
 #define IDC_STAT_BOX1                   3290
 #define IDC_TABLE_INDEXES               3291
 #define IDC_STAT_HEADER_INDEX           3293
+#define IDC_STATVS_BOX                  3294
+#define IDC_SETUP_AUTO_SHIFT            3295
+#define IDC_AUTO_VIEW_SHIFT             3287
+#define IDC_ZERO_SEARCH_SHIFT           3289
+#define IDC_AUTO_SEARCH_SHIFT           3292
+#define IDC_SET_SEARCH_SHIFT            3296
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2810,7 +2818,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         33525
-#define _APS_NEXT_CONTROL_VALUE         3294
+#define _APS_NEXT_CONTROL_VALUE         3297
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

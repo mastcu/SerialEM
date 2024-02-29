@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/29/24: Split the View/Search defocus and shift offset controls into two rows
+and added Auto buttons to find the shift offsets automatically.
+
+2/29/24: Fixed some log output coming out the wrong color or even when output
+is deferred.
+
+2/29/24: Allowed SetItemAcquire to turn off Acquire for item in range being
+acquired, and added argument to SkipAcquiringNavItem to turn off its Acquire.
+
 2/29/24: Fixed double counting item skipped in main script as done (In 4.1).
 
 2/28/24: Fixed assignment to variables on ReportNavItem line (In 4.1).

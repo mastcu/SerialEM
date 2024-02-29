@@ -131,9 +131,8 @@
       and can no longer be, to avoid inadvertently setting undesired values for Record
       and reduce confusion.&nbsp; Existing values from a previous version will be used
       until they are cleared out with &#39;Reset&#39;.</P>
-    <P><B>Defocus offset for View or Search</B></P>
-    <P>You can use this control to set an additional underfocus for the View or Search area,
-      depending on which radio button is selected.
+    <P><B>Defocus offsets for View and Search</B></P>
+    <P>You can use these controls to set an additional underfocus for the View or Search area.
       Focus will be changed by this amount when going to the View or Search area
       (e.g., by taking an image) and then will be restored when going to another area. For
       example, if you have a focus target of -4 microns, set the offset to -8 to get
@@ -146,23 +145,53 @@
       the microscope may restore the last defocus seen in the new magnification range,
       and the offset is then applied to that.</P>
       <P>Defocus offsets are disabled in diffraction mode.&nbsp; An absolute diffraction focus value is recorded as part of the area settings, and can be modified when continuous update is turned on.&nbsp; This absolute value is restored whenever going back to an area in diffraction mode.</P>
-    <P><a name="viewShiftOffset"></a><B>Shift offset for View or Search</B></a></P>
-    <P>If image features shift when going between the View or Search and Record areas, the <B>Set</B>
-      button allows you to correct for this shift. The are two methods for setting the
-      shift offset: 1) applying a shift with the mouse button to bring the image in
-      buffer A into alignment with a reference image; 2) placing the green marker
+    <P><a name="viewShiftOffset"></a><B>Shift offsets for View and Search</B></a></P>
+    <P>If image features shift when going between the View or Search and Record areas, 
+      one of the <B>Set</B>
+      buttons allows you to correct for this shift. There are two methods for setting the
+      shift offset: 1) using image shift to align an image in buffer A with a reference image, 
+      which can be done manually by applying a shift with the mouse button or 
+      automatically with the <strong>Auto</strong> button; 2) placing the green marker
       point at corresponding locations in the images in buffers A and B.&nbsp;&nbsp;
       Method 1 is more direct and potentially more accurate, but may be more
-      difficult.&nbsp; Method 2 is simple but depends on the accuracy of image shift
+      difficult to do manually.&nbsp; Method 2 is simple but depends on the accuracy of image shift
       calibrations and may also depend on the accuracy of rotation angle and pixel
-      size calibrations.&nbsp; The Set button is enabled whenever there is a shift in
-      the A buffer for an image of the type
-      selected with the <b>View</b> or <b>Search</b> radio buttons, or whenever there
+      size calibrations.&nbsp; The <strong>Set</strong> button for View or Search is enabled whenever there is a shifted 
+      View or Search in
+      the A buffer, respectively, or whenever there
       are marker points on images of appropriate types in buffers A and B. However, the <B>Set</B>
       button should be pressed only if the shift in A brings the image into alignment with a Record or Preview image,
-      or if the makrers are indeed on corresponding points.
+      or if the markers are indeed on corresponding points.
       </P>
-    <P><b><i>1) Setting shift offset with an alignment shift:</i></b> The procedure for setting a shift for View is:</P>
+    <P><strong><em>1) Setting shift offset automatically:</em></strong> When you press 
+      the <strong>Auto</strong> button for View, the program will take a Preview then a 
+      View image, attempt to align them and set the shift offset, then take another 
+      View to refine the offset.&nbsp; With the Search <strong>Auto</strong> button, 
+      it will take a View if it has a higher magnification than Search, otherwise it 
+      will take Preview, then take Search images to align.&nbsp;&nbsp; Specifically, 
+      it will scale down the higher-magnification image and crop out as much of the 
+      lower-magnification image as is needed to find the maximum shift with full 
+      overlap between the two images.&nbsp; The cropped image is left in buffer A and 
+      the scaled down image in buffer B, so you can toggle between them to assess 
+      whether they are correctly aligned.&nbsp; Image
+      shift is reset at the start if it exceeds 0.5 micron (this threshold can be set with the property 
+      LDShiftOffsetResetISThresh).&nbsp; The alignment is iterated if the image shift of the
+      first alignment exceeds 0.1 micron (a limit set with the property 
+      LDShiftOffsetIterThresh).&nbsp; The <strong>Zero</strong> button is 
+      labeled <strong>Undo</strong> after setting a shift automatically, and you can 
+      use that button to revert to the previous offset if necessary.&nbsp; Only the 
+      last shift done can be reverted.&nbsp; There are two important points about the 
+      automatic aligment:</P>
+    <ul>
+      <li><em>There must be a well-defined feature in the higher-magnification image 
+        that is unique and easily recognizable in the lower-magnification one, and 
+        within the central half of that image</em> (unless the maximum allowed shift has 
+        been set differently from the default; see <strong>Setup Auto Shift</strong> 
+        below). </li>
+      <li>Be sure to find the View offset before the Search offset (butthis does not 
+        matter if Search is at a higher magnification than View).</li>
+    </ul>
+    <P><b><i>2) Setting shift offset with an alignment shift:</i></b> The procedure for setting a shift for View is:</P>
     <OL>
       <LI>
         In the Image Alignment &amp; Focus panel, turn off 'Move stage for big mouse
@@ -184,14 +213,15 @@
         a new Record image in order to check the offset.)</LI>
       <LI>
         If the new View image is not centered (such as if you are using a large defocus
-        offset or the image shift calibration is not good), center the feature and press         <b>Set</b> again. The new shift will be added to the existing one.&nbsp; Repeat
+        offset or the image shift calibration is not good), center the feature and press 
+        <b>Set</b> again. The new shift will be added to the existing one.&nbsp; Repeat
         if necessary.</LI>
       <LI>
         Turn 'Move stage for big mouse shifts' back on if desired.</LI></OL>
     <P>The procedure is the same for setting the offset for Search, although here you
       may want to use a View image instead of Record or Preview as your reference.&nbsp;
       If so, be sure to align View with Record first.</P>
-    <P><b><i>2) Setting shift offset with corresponding marker points:</i></b> The
+    <P><b><i>3) Setting shift offset with corresponding marker points:</i></b> The
       images from a reference area and from the area whose offset is being set can be
       taken in either order.&nbsp; To minimize the effect of inaccuracies in the
       calibrations, try to pick the points near the center of the images, especially
@@ -215,23 +245,45 @@
       offset, it cannot be used again; you need to acquire new images.</p>
     <P>If for some reason this shift offset becomes inappropriate, you can set it to
       zero with the <B>Zero</B> button.&nbsp; However, do not zero out the shifts
-      after taking images for setting the shift and before setting the shift with them</P>
+      after taking images for setting the shift and before setting the shift with them.</P>
     <P>If the image shift offsets between magnifications are calibrated, this
       adjustment will work together with that calibration. You can set this
       adjustment with the option to 'Adjust image shift between mags' either on or
       off. Once you have set an adjustment, it should work equally well if you turn
       'Adjust image shift between mags' on or off.</P>
-    <P><B>Blank/Unblank button and blanked indicator</B></P>
-    <P>The beam is kept blanked in Low Dose mode when the screen is up.&nbsp; When the
-      beam is blanked, this button is labeled &#39;Unblank&#39; and can be used to unblank the beam until the next image
-      acquisition, which will restore blanking when it is done. (Other actions may
-      also turn the blanking back on.)&nbsp; When the beam is not blanked, the button
-      is labeled &#39;Blank&#39; and can be used to blank the beam.&nbsp; The principal use of this button is to unblank
-      the beam before aligning an energy filter. To the right of the button, the text
-      'Blanked' will appear whenever the beam is blanked, even transiently during
-      exposures when not in low dose mode.
-    </P>
-    <P><B>BLANK BEAM when screen downn</B></P>
+    <P><a name="setupAutoShift"><strong>Setup Auto Shift</strong></P>
+    <P>Use this button to set parameters for automatically finding shift offsets.&nbsp; 
+      Currently there are four parameters and they are specified in sequential entry 
+      boxes; canceling in any of them will leave that one and the later ones 
+      unchanged.</P>
+    <ol>
+      <li>For measuring the View shift offset, enter the maximum microns of shift 
+        allowed as a positive value, or the negative of a fraction of the field of view 
+        of the View image corresponding to the desired maximum shift.&nbsp; For example, 
+        -0.25 constrains it to finding the center of the Preview within the central half 
+        of the View image.&nbsp; This is the initial default value.</li>
+      <li>For measuring the Search shift offset, enter the maximum microns of shift 
+        allowed as a positive value, or the negative of a fraction of the field of view 
+        of the Search image corresponding to this maximum shift.</li>
+      <li>Enter the maximum percent size change allowed in the search when trying to 
+        align the cropped image to the scaled-up image.&nbsp; The default is set by the 
+        property &#39;ScaledAliDfltPctChg&#39; (which itself has a default of 4%) and you will 
+        continue to use a value based on the property setting until you set a different 
+        value.&nbsp; You can return to using the property-based default with an entry of 
+        -1.</li>
+      <li>Enter the maximum rotation angle allowed in the search when trying to align 
+        the cropped image to the scaled-up image.&nbsp; The default is set by the 
+        property &#39;ScaledAliDfltMaxRot&#39; (which itself has a default of 3 degrees) and you 
+        will continue to use a value based on the property setting until you set a 
+        different value.&nbsp; You can return to using the property-based default with 
+        an entry of -1.</li>
+    </ol>
+    <P><B>Blanked indicator</B></P>
+    <P>The beam is kept blanked in Low Dose mode when the screen is up.&nbsp; Next to 
+      the Options button, the text &#39;Blanked&#39; will appear whenever the beam is blanked, 
+      even transiently during exposures when not in low dose mode.&nbsp; Blanking and 
+      unblanking can be done with the button in the Microscope Control panel.</P>
+    <P><B>BLANK BEAM when screen down</B></P>
     <P>This option will prevent specimen exposure while the screen is down. Ctrl-B is a hot key
       for toggling this setting.</P>
     <P><B>Normalize beam through View / Normalize condenser lenses</B></P>

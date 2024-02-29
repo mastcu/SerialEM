@@ -71,6 +71,10 @@ public:
   SetMember(float, TVPiezoDelayFac);
   GetMember(BOOL, TieFocusTrialPos);
   GetMember(int, LastAutoShiftType);
+  float mAutoShiftMaxPctChg;  // User's value of max % change or < 0 for prop default
+  float mAutoShiftMaxRot;     // User's value of max rotation or < 0 for prop default
+  float mAutoViewMaxShift;    // Maximum shift for auto view shift, - for frac of FOV
+  float mAutoSearchMaxShift;  // Maximum shift for auto search shift, - for frac of FOV
 
 
 // Dialog Data
@@ -83,7 +87,6 @@ public:
 	CButton	m_butNormalizeBeam;
 	CStatic	m_statElecDose;
 	CStatic	m_statBlanked;
-	CButton	m_butUnblank;
 	CButton	m_butCopyToRecord;
 	CButton	m_butCopyToTrial;
 	CButton	m_butCopyToFocus;
@@ -130,7 +133,6 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CLowDoseDlg)
-	afx_msg void OnBlankbeam();
 	afx_msg void OnLowdosemode();
 	afx_msg void OnRdefine();
 	afx_msg void OnTiefocustrial();
@@ -198,11 +200,11 @@ public:
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
     ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
   void ManageDefines(int area);
-  CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
   CString m_strViewDefocus;
   CSpinButtonCtrl m_sbcViewDefocus;
   afx_msg void OnDeltaposSpinviewdefocus(NMHDR *pNMHDR, LRESULT *pResult);
+  void OnDeltaposSpinDefocus(NMHDR *pNMHDR, LRESULT *pResult, int area);
   CStatic m_statViewDefLabel;
   void CheckSeparationChange(int magIndex);
   CButton m_butSetViewShift;
@@ -211,8 +213,8 @@ public:
   afx_msg void OnSetViewShift();
   afx_msg void OnZeroViewShift();
   int DoSetViewShift(int automatic);
-  void AdjustAddedBSforViewShiftChange(double delVSX, double delVSY);
-  int OKtoSetViewShift();
+  void AdjustAddedBSforViewShiftChange(int type, double delVSX, double delVSY);
+  int OKtoSetViewShift(int area);
   void EnableSetViewShiftIfOK(void);
   int RevertLastAutoViewShift();
   int SetViewShiftOffset(int type, double xShift, double yShift);
@@ -235,7 +237,6 @@ public:
   void ApplyNewISifDefineArea(void);
   int NewAxisPosition(int area, double position, int angle, bool setAngle);
   afx_msg void OnRadioShowOffset();
-  int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
   void SetTieFocusTrialPos(BOOL inVal);
   void SyncPosOfFocusAndTrial(int fromArea);
@@ -253,6 +254,23 @@ public:
   bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
   void DoCopyArea(int from, int area);
   int m_iGoToArea;
+  CSpinButtonCtrl m_sbcSearchDefocus;
+  afx_msg void OnDeltaposSpinSearchDefocus(NMHDR *pNMHDR, LRESULT *pResult);
+  CStatic m_statSearchDefocus;
+  CString m_strSearchDefocus;
+  afx_msg void OnSetSearchShift();
+  afx_msg void OnAutoViewShift();
+  afx_msg void OnZeroSearchShift();
+  afx_msg void OnAutoSearchShift();
+  float MaxPctChgForAutoShift();
+  float MaxRotationForAutoShift();
+  CButton m_butSetSearchShift;
+  CButton m_butZeroSearchShift;
+  CButton m_butAutoViewShift;
+  CButton m_butAutoSearchShift;
+  CStatic m_statSearchOffsets;
+  CButton m_butSetupAutoShift;
+  afx_msg void OnSetupAutoShift();
 };
 
 //{{AFX_INSERT_LOCATION}}

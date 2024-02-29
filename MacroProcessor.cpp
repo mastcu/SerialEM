@@ -3169,7 +3169,10 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = exp(right);
       ReplaceWithResult(result, strItems, ind, numItems, 1);
     } else if (mFunctionSet2.count(stdstr) > 0) {
-      if ((!isFormat && ItemToDouble(strItems[ind + 1], line, left)) ||
+      if (isFormat && strItems[ind + 2].GetLength() > 2 && strItems[ind + 2].Find("0x") == 0) {
+        sscanf(((LPCTSTR)strItems[ind + 2]) + 2, "%x", &dig);
+        right = dig;
+      } else if ((!isFormat && ItemToDouble(strItems[ind + 1], line, left)) ||
         ItemToDouble(strItems[ind + 2], line, right))
         return 1;
       if (str == "ATAN2")
