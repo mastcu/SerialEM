@@ -2236,7 +2236,7 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
 {
   CString string;
   HDWP positions;
-  int offset = 0, updated = -1;
+  int lim, offset = 0, updated = -1;
   int numDig = 0, noIndex = m_bTableIndexes ? 0 : 1, i = (int)mItemArray.GetSize();
 
   // label, color, X, Y, Z, type, reg, corner, extras
@@ -2296,6 +2296,9 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
     if (!keepSel) {
       mCurrentItem = 0;
       mCurListSel = 0;
+    } else {
+      lim = (int)(m_bCollapseGroups ? mListToItem.size() : mItemArray.GetSize()) - 1;
+      B3DCLAMP(mCurListSel, 0, lim);
     }
     m_listViewer.SetCurSel(mCurListSel);
     ManageListScroll();
