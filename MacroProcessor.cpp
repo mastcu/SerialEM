@@ -2329,6 +2329,34 @@ bool CMacroProcessor::SetVariable(CString name, double value, int type,
   return SetVariable(name, str, type, index, mustBeNew, errStr, rowsFor2d);
 }
 
+// Globally callable functions; can only be used to set regular or persistent variables.
+// Return true for error
+bool SEMSetVariableWithStr(CString name, CString value, bool persistent, bool mustBeNew,
+  CString *errStr)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  if (!winApp->mMacroProcessor->DoingMacro()) {
+    if (errStr)
+      *errStr = "A script must be running to define a variable";
+    return true;
+  }
+  return winApp->mMacroProcessor->SetVariable(name, value, 
+    persistent ? VARTYPE_PERSIST : VARTYPE_REGULAR, -1, mustBeNew, errStr);
+}
+
+bool SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mustBeNew,
+  CString *errStr)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  if (!winApp->mMacroProcessor->DoingMacro()) {
+    if (errStr)
+      *errStr = "A script must be running to define a variable";
+    return true;
+  }
+  return winApp->mMacroProcessor->SetVariable(name, value,
+    persistent ? VARTYPE_PERSIST : VARTYPE_REGULAR, -1, mustBeNew, errStr);
+}
+
 // Test whether a local variable is already defined as global, issue message and 
 // return 1 if it is, return 0 if not defined, -1 if already local
 int CMacroProcessor::LocalVarAlreadyDefined(CString & item, CString &strLine)

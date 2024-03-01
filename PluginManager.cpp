@@ -22,19 +22,20 @@ typedef double (*Func1Int)(int);
 typedef double (*Func2Int)(int, int);
 typedef double (*Func3Int)(int, int, int);
 typedef double (*FuncNoarg)(void);
-typedef double (*Func1DblStr)(double, char *);
-typedef double (*Func2DblStr)(double, double, char *);
-typedef double (*Func3DblStr)(double, double, double, char *);
-typedef double (*Func4DblStr)(double, double, double, double, char *);
-typedef double (*Func5DblStr)(double, double, double, double, double, char *);
-typedef double (*Func6DblStr)(double, double, double, double, double, double, char *);
-typedef double (*Func1IntStr)(int, char *);
-typedef double (*Func2IntStr)(int, int, char *);
-typedef double (*Func3IntStr)(int, int, int, char *);
-typedef double (*FuncStr)(char *);
+typedef double (*Func1DblStr)(double, const char *);
+typedef double (*Func2DblStr)(double, double, const char *);
+typedef double (*Func3DblStr)(double, double, double, const char *);
+typedef double (*Func4DblStr)(double, double, double, double, const char *);
+typedef double (*Func5DblStr)(double, double, double, double, double, const char *);
+typedef double (*Func6DblStr)(double, double, double, double, double, double, const char *);
+typedef double (*Func1IntStr)(int, const char *);
+typedef double (*Func2IntStr)(int, int, const char *);
+typedef double (*Func3IntStr)(int, int, int, const char *);
+typedef double (*FuncStr)(const char *);
 typedef double (*Func1DblOut)(double *);
 typedef double (*Func2DblOut)(double *, double *);
 typedef double (*Func3DblOut)(double *, double *, double *);
+typedef double(*Func3DblStrInOut)(double, double, double, const char *, const char **);
 #define MAX_CALL_INTS 3
 #define MAX_CALL_DBLS 6
 #define MAX_CALL_OUTDBLS 3
@@ -431,13 +432,14 @@ void CPluginManager::ReleasePlugins(void)
 }
 
 double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *itemDbl,
-                                      BOOL *itemEmpty, CString &report, double &outD1, 
-                                      double &outD2, double &outD3, int &numOut,int &err)
+  BOOL *itemEmpty, CString &report, double &outD1, double &outD2, double &outD3, 
+  int &numOut, CString &retString, int &err)
 {
   CString mess;
   CString strItems[4];
   PluginData *plugin;
   PluginCall call;
+  const char *retChar;
   int plug, ind, args;
   double retval;
   err = 1;
@@ -468,9 +470,10 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     AfxMessageBox(mess + strLine, MB_OK);
     return 0.;
   }
-  if (call.ifString >= 0 && (call.numInts > MAX_CALL_INTS || call.numDbls > MAX_CALL_DBLS
-    || (call.numInts > 0 && call.numDbls > 0)) || call.ifString < 0 &&
-    (call.numInts > 0 || call.numDbls < 1 || call.numDbls > MAX_CALL_OUTDBLS)) {
+  if ((call.ifString > 1 && (call.numInts || call.numDbls != 3)) ||
+    (call.ifString >= 0 && (call.numInts > MAX_CALL_INTS || call.numDbls > MAX_CALL_DBLS
+    || (call.numInts > 0 && call.numDbls > 0))) || (call.ifString < 0 &&
+    (call.numInts > 0 || call.numDbls < 1 || call.numDbls > MAX_CALL_OUTDBLS))) {
     mess.Format("The plugin function %s requires a list of "
       "arguments that the program cannot send, in statement:\n\n", strItems[2]);
     AfxMessageBox(mess + strLine, MB_OK);
@@ -496,6 +499,8 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     args = -call.numDbls;
     numOut = call.numDbls;
   }
+  if (call.ifString > 1)
+    args += 100;
   switch (args) {
     case 0:
       retval = ((FuncNoarg)call.func)();
@@ -530,39 +535,44 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
       retval = ((Func3Int)call.func)(itemInt[3], itemInt[4], itemInt[5]);
       break;
     case 100:
-      retval = ((FuncStr)call.func)((char *)(LPCTSTR)mess);
+      retval = ((FuncStr)call.func)((const char *)(LPCTSTR)mess);
       break;
     case 101:
-      retval = ((Func1DblStr)call.func)(itemDbl[3], (char *)(LPCTSTR)mess);
+      retval = ((Func1DblStr)call.func)(itemDbl[3], (const char *)(LPCTSTR)mess);
       break;
     case 102:
-      retval = ((Func2DblStr)call.func)(itemDbl[3], itemDbl[4], (char *)(LPCTSTR)mess);
+      retval = ((Func2DblStr)call.func)(itemDbl[3], itemDbl[4], (const char *)(LPCTSTR)mess);
       break;
     case 103:
       retval = ((Func3DblStr)call.func)(itemDbl[3], itemDbl[4], itemDbl[5],
-        (char *)(LPCTSTR)mess);
+        (const char *)(LPCTSTR)mess);
+      break;
+    case 203:
+      retval = ((Func3DblStrInOut)call.func)(itemDbl[3], itemDbl[4], itemDbl[5],
+        (const char *)(LPCTSTR)mess, &retChar);
+      retString = retChar;
       break;
     case 104:
       retval = ((Func4DblStr)call.func)(itemDbl[3], itemDbl[4], itemDbl[5], itemDbl[6],
-        (char *)(LPCTSTR)mess);
+        (const char *)(LPCTSTR)mess);
       break;
     case 105:
       retval = ((Func5DblStr)call.func)(itemDbl[3], itemDbl[4], itemDbl[5], itemDbl[6],
-        itemDbl[7], (char *)(LPCTSTR)mess);
+        itemDbl[7], (const char *)(LPCTSTR)mess);
       break;
     case 106:
       retval = ((Func6DblStr)call.func)(itemDbl[3], itemDbl[4], itemDbl[5], itemDbl[6],
-        itemDbl[7], itemDbl[8], (char *)(LPCTSTR)mess);
+        itemDbl[7], itemDbl[8], (const char *)(LPCTSTR)mess);
       break;
     case 110:
-      retval = ((Func1IntStr)call.func)(itemInt[3], (char *)(LPCTSTR)mess);
+      retval = ((Func1IntStr)call.func)(itemInt[3], (const char *)(LPCTSTR)mess);
       break;
     case 120:
-      retval = ((Func2IntStr)call.func)(itemInt[3], itemInt[4], (char *)(LPCTSTR)mess);
+      retval = ((Func2IntStr)call.func)(itemInt[3], itemInt[4], (const char *)(LPCTSTR)mess);
       break;
     case 130:
       retval = ((Func3IntStr)call.func)(itemInt[3], itemInt[4], itemInt[5],
-        (char *)(LPCTSTR)mess);
+        (const char *)(LPCTSTR)mess);
       break;
     case -1:
       retval = ((Func1DblOut)call.func)(&outD1);
@@ -574,7 +584,6 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
       retval = ((Func3DblOut)call.func)(&outD1, &outD2, &outD3);
       break;
   }
-
   report.Format("The return value from %s was %6g", call.name, retval);
   return retval;
 }
@@ -668,6 +677,8 @@ void CPluginManager::ListCalls(void)
         if (args)
           mess += ", ";
         mess += "string";
+        if (call.ifString > 1)
+          mess += " (returns string)";
       }
       mess += ")";
       mWinApp->AppendToLog(mess);

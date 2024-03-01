@@ -3260,6 +3260,7 @@
 <br> &nbsp;&nbsp; <i>fastCameraLength</i>: Camera length, valid in diffraction and STEM modes
 <br> &nbsp;&nbsp; <i>fastCamLenIndex</i>: Camera length index, valid in diffraction and STEM modes
 <br> &nbsp;&nbsp; <i>fastProbeMode</i>: 1 for microprobe, 0 for nanoprobe
+<br> &nbsp;&nbsp; <i>fastMagIndex</i>: Magnification index
 <br> &nbsp;&nbsp; <i>fastMagnification</i>: Magnification as displayed in the scope status panel
 <br> &nbsp;&nbsp; <i>fastDefocus</i>: Defocus as displayed in the scope status panel
 <br> &nbsp;&nbsp; <i>fastSpotSize</i>: Spot size
@@ -5784,7 +5785,7 @@
             list of arguments for that function.&nbsp; Arguments (<b>args</b>) are entered as items
             separated by spaces, except that a string argument at the end may consist of
             multiple words.&nbsp; The return value of the function is reported and placed
-            into <i>reportedValue1</i>.</TD>
+            into <i>reportedValue1</i>; additional return values may be placed in <i>reportedValues2-4</i>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ListPluginCalls</TD>
@@ -5793,7 +5794,8 @@
             should be one item provided on the command line calling the function, with all
             items separated by spaces as usual.&nbsp; Two exceptions to this are: a string
             argument at the end can include spaces; an argument listed as [out]double is a
-            returned value, assigned to <i>reportedValue2</i> or higher.</TD>
+            returned value, assigned to <i>reportedValue2</i> or higher.&nbsp; When a function returns a
+             string, it is assigned to <i>reportedValue2</i>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportMontagePiece #</TD>

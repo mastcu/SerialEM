@@ -1850,7 +1850,7 @@ BEGIN
     LTEXT           "um",IDC_STATMICRON,91,60,10,8
     LTEXT           "Maximum area separation:  -90.23 um",IDC_STATOVERLAP,3,70,114,8
     GROUPBOX        "Copy current area settings to",IDC_STAT_COPY_LD_AREA,6,191,108,20
-    CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,226,76,10
+    CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,225,76,10
     LTEXT           "deg",IDC_STAT_LD_DEG,104,226,13,8
     EDITTEXT        IDC_EDIT_AXISANGLE,81,224,22,12,ES_CENTER | ES_AUTOHSCROLL
     PUSHBUTTON      "S",IDC_COPYTOSEARCH,93,201,14,8
@@ -5663,8 +5663,20 @@ BEGIN
     IDC_BUT_TRANSFORM       "Use alignment to transform all Navigator items from old to new registration"
     IDC_EDIT_AXISANGLE      "Angle between inter-area axis and tilt axis (CCW positive)"
     IDC_ZERO_VIEW_SHIFT     "Reset the shift offset for View mode to zero or undo Auto shift"
-    IDC_ZERO_SEARCH_SHIFT     "Reset the shift offset for Search mode to zeroor undo Auto shift"
     IDC_SPIN_NA_PREMACNUM   "Set script number to run before tilt series"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_SPIN_STAGE_UP_DOWN  "Move stage by one step to move camera image up or down"
+    IDC_SPIN_STAGE_LEFT_RIGHT 
+                            "Move stage by one step to move camera image left or right"
+    IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
+    IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
+    IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
+    IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zeroor undo Auto shift"
+    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
+    IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
 END
 
 STRINGTABLE
@@ -5938,9 +5950,11 @@ BEGIN
     IDC_RESET_BEAM_SHIFT    "Set additional beam shift for this area back to zero"
     IDC_SET_BEAM_SHIFT      "Set up independent beam shift for this area"
     IDC_SET_VIEW_SHIFT      "Set shift offset for View from shift of image in buffer A or markers in A&B"
+END
+
+STRINGTABLE
+BEGIN
     IDC_SET_SEARCH_SHIFT    "Set shift offset for Search from shift of image in A or markers in A and B"
-    IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
-    IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
 END
 
 STRINGTABLE
@@ -7437,16 +7451,6 @@ BEGIN
     IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
     IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
     IDC_CHECK_SHOW_NUMBER   "Show state index number before name in table"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_SPIN_STAGE_UP_DOWN  "Move stage by one step to move camera image up or down"
-    IDC_SPIN_STAGE_LEFT_RIGHT 
-                            "Move stage by one step to move camera image left or right"
-    IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
-    IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
-    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
 END
 
 STRINGTABLE

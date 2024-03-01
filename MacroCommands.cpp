@@ -1647,13 +1647,13 @@ int CMacCmd::LocalLoopIndexes(void)
 // Plugin
 int CMacCmd::Plugin(void)
 {
-  CString report;
+  CString report, retString;
   double delISX, delISY, delX, delY;
   int index, index2;
 
   SubstituteVariables(&mStrLine, 1, mStrLine);
   delX = mWinApp->mPluginManager->ExecuteCommand(mStrLine, mItemInt, mItemDbl,
-    mItemEmpty, report, delY, delISX, delISY, index2, index);
+    mItemEmpty, report, delY, delISX, delISY, index2, retString, index);
   if (index) {
     AbortMacro();
     return 1;
@@ -1670,6 +1670,10 @@ int CMacCmd::Plugin(void)
     mStrCopy.Format(" and it returned %6g", delY);
   } else
     SetReportedValues(delX);
+  if (!retString.IsEmpty()) {
+    mStrCopy += ",  " + retString;
+    SetOneReportedValue(retString, index2 + 2);
+  }
   report += mStrCopy;
   mWinApp->AppendToLog(report, mLogAction);
   return 0;

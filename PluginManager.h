@@ -242,7 +242,7 @@ private:
 public:
   int LoadPlugins(void);
   double ExecuteCommand(CString strLine, int *itemInt, double *itemDbl, BOOL *itemEmpty,
-    CString &report, double &outD1, double &outD2, double &outD3, int &numOut, int &err);
+    CString &report, double &outD1, double &outD2, double &outD3, int &numOut, CString &retString, int &err);
   void ListCalls(void);
   CamPluginFuncs *GetCameraFuncs(CString name, int &flags);
   CString GetScopePluginName();

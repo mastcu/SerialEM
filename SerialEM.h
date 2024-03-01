@@ -444,6 +444,10 @@ void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBy
 bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int sizeX, int sizeY,
   int &bufInd, int &ifFFT);
 BOOL DLL_IM_EX SEMUseAPI2ForDE();
+bool DLL_IM_EX SEMSetVariableWithStr(CString name, CString value, bool persistent, bool mustBeNew,
+  CString *errStr);
+bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mustBeNew,
+  CString *errStr);
 void AddBackTraceToMessage(CString &message);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
