@@ -1662,10 +1662,10 @@ int CMacCmd::Plugin(void)
   if (index2 == 3) {
     SetReportedValues(delX, delY, delISX, delISY);
     mStrCopy.Format(" and it returned %6g, %6g, %6g", delY, delISX, delISY);
-  } else if (index == 2) {
+  } else if (index2 == 2) {
     SetReportedValues(delX, delY, delISX);
     mStrCopy.Format(" and it returned %6g, %6g", delY, delISX);
-  } else if (index == 1) {
+  } else if (index2 == 1) {
     SetReportedValues(delX, delY);
     mStrCopy.Format(" and it returned %6g", delY);
   } else

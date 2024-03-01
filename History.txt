@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/1/24: Fixed setting reoported values from plugin functions with 1 or 2
+returned doubles (In 4.1).
+
 2/29/24: Split the View/Search defocus and shift offset controls into two rows
 and added Auto buttons to find the shift offsets automatically.
 
