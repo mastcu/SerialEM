@@ -10208,6 +10208,8 @@ int CMacCmd::CameraProperties(void)
   SetReportedValues((double)index, (double)index2,
     (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX,
     (double)actNum);
+  SetVariable("NUMBEROFCAMERAS", mWinApp->GetNumActiveCameras(), VARTYPE_REGULAR, -1,
+    false);
   return 0;
 }
 
