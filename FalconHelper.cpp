@@ -191,7 +191,7 @@ int CFalconHelper::CheckFalconConfig(int setState, int &state, const char *messa
 // Call the plugin/server to modify the configuration file to save the desired frames, or 
 // put out a dummy file if no frame-saving is selected, or just save the list of readouts
 // for advanced interface.  Also set up frame alignment
-int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath, 
+int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString localPath,
   CString &directory, CString &filename, CString &configFile, BOOL stackingDeferred, 
   CameraParameters *camParams, long &numFrames)
 {
@@ -200,7 +200,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   long temp = 1;
   long *readPtr = &temp;
   float frameInterval = mCamera->GetFalconReadoutInterval();
-  int ind, block;
+  int ind, block, numInFracs, numRawFrames = 0;
   bool saveFrames = conSet.saveFrames || (conSet.alignFrames && conSet.useFrameAlign);
   bool eerMode = mCamera->IsSaveInEERMode(camParams, &conSet);
   mDoingAdvancedFrames = FCAM_ADVANCED(camParams) != 0;
@@ -227,6 +227,19 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
     }
   }
 
+  // Get number of raw frames, constrained to the sum size, and for MRC saving, 
+  // check that the summed frame list is consistent and fix it if not
+  if (camParams->FEItype == FALCON4_TYPE) {
+    ind = mCamera->GetFalconRawSumSize(camParams);
+    numRawFrames = ind * B3DNINT(conSet.exposure /
+      (mCamera->GetFalconReadoutInterval(camParams) * ind));
+    if (!eerMode && numRawFrames > 0) {
+      GetFrameTotals(conSet.summedFrameList, numInFracs);
+      if (numInFracs != numRawFrames / ind)
+        AdjustSumsForExposure(camParams, &conSet, conSet.exposure, consNum);
+    }
+  }
+
   // Build the list of readouts
   mReadouts.clear();
   if (eerMode || FCAM_CONTIN_SAVE(camParams)) {
@@ -246,9 +259,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   // For EER, replace numFrames and send it as the ending frame # so plugin can adjust
   // exposure
   if (eerMode) {
-    ind = mCamera->GetFalconRawSumSize(camParams);
-    numFrames = ind * B3DNINT(conSet.exposure /
-      (mCamera->GetFalconReadoutInterval(camParams) * ind));
+    numFrames = numRawFrames;
     mReadouts[0] = numFrames;
   }
   if (mDoingAdvancedFrames) {
@@ -1701,12 +1712,12 @@ float CFalconHelper::AdjustForExposure(ShortVec &summedFrameList, int numSkipBef
 // Adjusts frame sums for exposure if appropriate
 // This should be called only for RECORD or an argument added
 float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams, 
-  ControlSet *conSet, float exposure)
+  ControlSet *conSet, float exposure, int consNum)
 {
   bool falconCanSave = IS_FALCON2_3_4(camParams) && 
     mCamera->GetMaxFalconFrames(camParams) && 
     (mCamera->GetFrameSavingEnabled() || FCAM_ADVANCED(camParams));
-  if (falconCanSave || (mCamera->IsConSetSaving(conSet, RECORD_CONSET, camParams, true) && 
+  if (falconCanSave || (mCamera->IsConSetSaving(conSet, consNum, camParams, true) && 
     conSet->sumK2Frames))
     return AdjustForExposure(conSet->summedFrameList, 
       falconCanSave ? conSet->numSkipBefore : 0, falconCanSave ? conSet->numSkipAfter : 0, 
