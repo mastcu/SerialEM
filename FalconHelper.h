@@ -150,7 +150,7 @@ private:
   int mGpuForContinuousAli;
 
 public:
-  int SetupConfigFile(ControlSet &conSet, CString localPath, CString &directory, 
+  int SetupConfigFile(ControlSet &conSet, int consNum, CString localPath, CString &directory, 
     CString &filename, CString &configFile, BOOL stackingDeferred, 
     CameraParameters *camParams, long &numFrames);
   int ManageFalconReference(bool saving, bool aligning, CString localFramePath);
@@ -167,7 +167,7 @@ public:
   void CheckAsyncSave(void);
   int GetFrameTotals(ShortVec & summedFrameList, int & totalSubframes, 
     int maxFrames = -1);
-  float AdjustSumsForExposure(CameraParameters * camParams, ControlSet * conSet, float exposure);
+  float AdjustSumsForExposure(CameraParameters * camParams, ControlSet * conSet, float exposure, int conSsum = RECORD_CONSET);
   int CheckFalconConfig(int setState, int & state, const char * message);
   int SetupFrameAlignment(ControlSet & conSet, CameraParameters *camParams, float gpuMemory,
     int * useGPU, int numFrames);

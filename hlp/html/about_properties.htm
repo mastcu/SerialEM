@@ -2040,7 +2040,10 @@
             value of 1, the program will unblank before requesting an image and reblank
             after receiving one.&nbsp; With a value of 2, it will unblank just for the exposure
             time in a separate thread; this can be used if the camera has predictable timing
-            and the beam unblanking/reblanking itself does not produce image artifacts.</TD>
+            and the beam unblanking/reblanking itself does not produce image artifacts.&nbsp; For a
+            STEM camera, this property has no effect; it is superceded by the option 'BLANK BEAM in 
+            STEM mode' in the STEM Controls panel.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SetAlternateShutterNormallyClosed</TD>

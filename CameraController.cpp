@@ -3365,7 +3365,7 @@ void CCameraController::Capture(int inSet, bool retrying)
           ComposeFramePathAndName(aligningOnly);
       else
         mFrameFolder = mDirForFalconFrames;
-      if (mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
+      if (mFalconHelper->SetupConfigFile(conSet, inSet, mLocalFalconFramePath, 
         mFrameFolder, mFrameFilename, mFalconFrameConfig, mStackingWasDeferred, mParam,
         mTD.NumFramesSaved)) {
           ErrorCleanup(1);
@@ -3963,7 +3963,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0) {
     if (IsSaveInEERMode(mParam, &conSet) && mParam->addToEERExposure > -1.)
       mTD.Exposure += mParam->addToEERExposure;
-    ind = B3DNINT(mTD.Exposure / GetFalconReadoutInterval(mParam));
+
+    // Make sure number of frames will be a multiple of constraint for Flacon 4
+    sumCount = GetFalconRawSumSize(mParam);
+    ind = sumCount * B3DNINT(mTD.Exposure / 
+      (GetFalconReadoutInterval(mParam) * sumCount));
 
     // This formula is wrong for Falcon 3 but the timings are based on it
     // In a message about Falcon 4 TFS used the formula ceil(n * 32 / 31)
