@@ -210,4 +210,5 @@ public:
   afx_msg void OnNaRealignScaledMap();
   CButton m_butRealignScaledMap;
   BOOL m_bRealignScaledMap;
+  BOOL m_bSkipZinRunAtNearest;
 };

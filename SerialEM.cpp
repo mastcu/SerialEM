@@ -626,6 +626,7 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].runPostmacroNonTS = false;
     mNavAcqParams[i].skipInitialMove = false;
     mNavAcqParams[i].skipZmoves = false;
+    mNavAcqParams[i].skipZinRunAtNearest = false;
     mNavAcqParams[i].restoreOnRealign = true;
     mNavAcqParams[i].sendEmail = false;
     mNavAcqParams[i].sendEmailNonTS = false;

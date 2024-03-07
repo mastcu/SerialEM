@@ -2246,16 +2246,18 @@
 #define IDC_STAT_BEAM_LABEL             3284
 #define IDC_STAT_FOCUS_LABEL            3285
 #define IDC_STAT_SPOT_LABEL             3286
+#define IDC_AUTO_VIEW_SHIFT             3287
 #define IDC_STAT_WITH_C2                3288
+#define IDC_ZERO_SEARCH_SHIFT           3289
 #define IDC_STAT_BOX1                   3290
 #define IDC_TABLE_INDEXES               3291
+#define IDC_AUTO_SEARCH_SHIFT           3292
 #define IDC_STAT_HEADER_INDEX           3293
 #define IDC_STATVS_BOX                  3294
 #define IDC_SETUP_AUTO_SHIFT            3295
-#define IDC_AUTO_VIEW_SHIFT             3287
-#define IDC_ZERO_SEARCH_SHIFT           3289
-#define IDC_AUTO_SEARCH_SHIFT           3292
 #define IDC_SET_SEARCH_SHIFT            3296
+#define IDC_NA_RUN_AT_ITEM_Z            3297
+#define IDC_STAT_SKIP_Z_IN              3298
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2818,7 +2820,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         33525
-#define _APS_NEXT_CONTROL_VALUE         3297
+#define _APS_NEXT_CONTROL_VALUE         3299
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -2496,6 +2496,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->saveAsMapChoice = navParams->nonTSacquireType == 0;
       else
         navParams->saveAsMapChoice = itemInt[21] != 0;
+      if (!itemEmpty[22])
+        navParams->skipZinRunAtNearest = itemInt[22] != 0;
 
     } else if (NAME_IS("AcquireParams2")) {
       navParams->cycleDefocus = itemInt[1] != 0;
@@ -2583,7 +2585,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
   else
     WriteInt("NavAcquireParams", which);
   oneState.Format("AcquireParams1 %d %d %d %d %d %d %d %d %d %d %d %d %d"
-    " %d %d %d %d %d %d %d %d\n", DOING_ACTION(NAACT_AUTOFOCUS),
+    " %d %d %d %d %d %d %d %d %d\n", DOING_ACTION(NAACT_AUTOFOCUS),
     DOING_ACTION(NAACT_FINE_EUCEN),
     DOING_ACTION(NAACT_REALIGN_ITEM), navParams->restoreOnRealign ? 1 : 0,
     DOING_ACTION(NAACT_ROUGH_EUCEN), navParams->nonTSacquireType,
@@ -2594,10 +2596,12 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->sendEmailNonTS ? 1 : 0, navParams->skipInitialMove ? 1 : 0,
     navParams->skipZmoves ? 1 : 0, navParams->postMacroInd,
     navParams->runPostmacro ? 1 : 0, navParams->postMacroIndNonTS,
-    navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0);
+    navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0,
+    navParams->skipZinRunAtNearest ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0, navParams->cycleDefFrom,
+    "%d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
+    navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
     navParams->noMBoxOnError ? 1 : 0, navParams->skipSaving ? 1 : 0,

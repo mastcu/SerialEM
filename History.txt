@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/6/22: Added option to Nav Acquire to skip Z move when running a task at a
+different litem location.
+
 3/5/24: Fixed frame sums before requesting MRC frame from a Falcon 4 so tuning
 of camera timing can be checked/iterated without revisiting dialog (In 4.1).
 

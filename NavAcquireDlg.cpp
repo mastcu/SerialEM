@@ -45,7 +45,8 @@ IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, IDC_RREALI
 IDC_NA_REALIGN_SCALED_MAP, IDC_RREALI_VIEW, IDC_RREALI_PREV, IDC_RREALI_SEARCH,
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
 IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIPT_AT_END,
-IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, PANEL_END,
+IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, IDC_STAT_SKIP_Z_IN,
+IDC_NA_RUN_AT_ITEM_Z, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
@@ -137,6 +138,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bEndRunMacro(FALSE)
   , m_iRealignConset(0)
   , m_bRealignScaledMap(FALSE)
+  , m_bSkipZinRunAtNearest(FALSE)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -238,6 +240,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxInt(pDX, m_iRealignConset, 0, 3);
   DDX_Control(pDX, IDC_NA_REALIGN_SCALED_MAP, m_butRealignScaledMap);
   DDX_Check(pDX, IDC_NA_REALIGN_SCALED_MAP, m_bRealignScaledMap);
+  DDX_Check(pDX, IDC_NA_RUN_AT_ITEM_Z, m_bSkipZinRunAtNearest);
 }
 
 
@@ -659,6 +662,7 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->macroIndex = mMacroNum;
   mParam->skipInitialMove = m_bSkipInitialMove;
   mParam->skipZmoves = m_bSkipZmoves;
+  mParam->skipZinRunAtNearest = m_bSkipZinRunAtNearest;
   mParam->skipSaving = m_bSkipSaving;
   mParam->closeValves = m_bCloseValves;
   mParam->retractCameras = m_bRetractCams;
@@ -691,6 +695,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   mMacroNum = mParam->macroIndex;
   m_bSkipInitialMove = mParam->skipInitialMove;
   m_bSkipZmoves = mParam->skipZmoves;
+  m_bSkipZinRunAtNearest = mParam->skipZinRunAtNearest;
   m_bCloseValves = mParam->closeValves;
   m_bRetractCams = mParam->retractCameras;
   m_fCycleFrom = mParam->cycleDefFrom;
@@ -1149,8 +1154,11 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       mIDsToDrop.push_back(IDC_NA_APPLY_REALIGN_ERR);
     if (!m_bRelaxStage)
       mIDsToDrop.push_back(IDC_NA_RELAX_STAGE);
-    if (!m_bSkipZmoves)
+    if (!m_bSkipZmoves && !m_bSkipZinRunAtNearest) {
       mIDsToDrop.push_back(IDC_NA_SKIP_Z_MOVES);
+      mIDsToDrop.push_back(IDC_NA_RUN_AT_ITEM_Z);
+      mIDsToDrop.push_back(IDC_STAT_SKIP_Z_IN);
+    }
     if (!m_bSkipInitialMove || !mSkipMoveEnabled)
       mIDsToDrop.push_back(IDC_NA_SKIP_INITIAL_MOVE);
     if (!m_bDoSubset) {

@@ -1000,7 +1000,7 @@ int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore,
 }
 
 // Simply move to an item; current or acquire item if index < 0
-int CNavigatorDlg::MoveToItem(int index, bool skipZ)
+int CNavigatorDlg::MoveToItem(int index, BOOL skipZ)
 {
   if (index < 0) {
     if (GetCurrentOrAcquireItem(mItem) < 0)
@@ -10402,7 +10402,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     next = mHelper->FindNearestItemMatchingText(item->mStageX, item->mStageY,
       mAcqActions[act].labelOrNote,
       (mAcqActions[act].flags & NAA_FLAG_MATCH_NOTE) != 0);
-    if (MoveToItem(next)) {
+    if (MoveToItem(next, mAcqParm->skipZinRunAtNearest)) {
       StopAcquiring();
       return;
     }

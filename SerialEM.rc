@@ -2367,8 +2367,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_SUBSET_END,122,316,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,291,136,10
-    CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,279,132,10
+    CONTROL         "Initial move && Realign",IDC_NA_SKIP_Z_MOVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,279,75,10
     PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,265,408,36,14
     EDITTEXT        IDC_EDIT_EVERY_N,220,309,24,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_EVERY_N,"msctls_updown32",UDS_ARROWKEYS,244,308,12,14
@@ -2455,6 +2454,8 @@ BEGIN
     CONTROL         "S",IDC_RREALI_SEARCH,"Button",BS_AUTORADIOBUTTON,148,255,16,10
     CONTROL         "Realign to scaled map with",IDC_NA_REALIGN_SCALED_MAP,
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,9,255,89,10
+    LTEXT           "Skip Z in:",IDC_STAT_SKIP_Z_IN,4,280,27,9
+    CONTROL         "Run at nearest",IDC_NA_RUN_AT_ITEM_Z,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,109,279,53,10
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -5955,6 +5956,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_SET_SEARCH_SHIFT    "Set shift offset for Search from shift of image in A or markers in A and B"
+    IDC_NA_RUN_AT_ITEM_Z    "Do not move stage in Z when going to another item location to run a task"
 END
 
 STRINGTABLE
