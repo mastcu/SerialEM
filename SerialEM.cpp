@@ -1740,25 +1740,31 @@ void CSerialEMApp::SetEnableExternalPython(BOOL inVal)
 void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
 {
   int iSet, mag;
+  CameraParameters *camP = &mCamParams[iCam];
   float pixelDiv = 2.f;
-  if (mCamParams[iCam].DE_camType && !(mCamParams[iCam].CamFlags & DE_CAM_CAN_COUNT)) {
+  if (camP->DE_camType && !(camP->CamFlags & DE_CAM_CAN_COUNT)) {
     pixelDiv = 0.5f;
-    for (iSet = 1 ; iSet < mCamParams[iCam].numBinnings; iSet++)
-      mCamParams[iCam].binnings[iSet - 1] = mCamParams[iCam].binnings[iSet] / 2;
-    mCamParams[iCam].numBinnings--;
+    for (iSet = 1 ; iSet < camP->numBinnings; iSet++)
+      camP->binnings[iSet - 1] = camP->binnings[iSet] / 2;
+    camP->numBinnings--;
   } else {
-    for (iSet = B3DMIN(mCamParams[iCam].numBinnings - 1, MAX_BINNINGS - 2); iSet >= 0;
+    for (iSet = B3DMIN(camP->numBinnings - 1, MAX_BINNINGS - 2); iSet >= 0;
       iSet--)
-      mCamParams[iCam].binnings[iSet + 1] = mCamParams[iCam].binnings[iSet] * 2;
-    mCamParams[iCam].binnings[0] = 1;
-    mCamParams[iCam].numBinnings = B3DMIN(mCamParams[iCam].numBinnings + 1, 
+      camP->binnings[iSet + 1] = camP->binnings[iSet] * 2;
+    camP->binnings[0] = 1;
+    camP->numBinnings = B3DMIN(camP->numBinnings + 1, 
       MAX_BINNINGS);
   }
-  mCamParams[iCam].sizeX = B3DNINT(mCamParams[iCam].sizeX * pixelDiv);
-  mCamParams[iCam].sizeY = B3DNINT(mCamParams[iCam].sizeY * pixelDiv);
+  camP->sizeX = B3DNINT(camP->sizeX * pixelDiv);
+  camP->sizeY = B3DNINT(camP->sizeY * pixelDiv);
+  if (camP->K2Type == K3_TYPE && (camP->leftOffset || camP->topOffset)) {
+    camP->coordsModulo = true;
+    ACCUM_MAX(camP->moduloX, 32);
+    ACCUM_MAX(camP->moduloY, 16);
+  }
 
   // Divide the pixel sizes by 2; they are based on native pixels
-  mCamParams[iCam].pixelMicrons /= pixelDiv;
+  camP->pixelMicrons /= pixelDiv;
   for (mag = 1; mag < MAX_MAGS; mag++)
     mMagTab[mag].pixelSize[iCam] /= pixelDiv;
 }

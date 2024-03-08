@@ -1747,7 +1747,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>
-          <TD>Size of camera or maximum number of pixels to acquire in X.</TD>
+          <TD>Size of camera or maximum number of pixels to acquire in X.&nbsp; NOTE: For a K3 camera,
+            if you set the size in X or Y less than the true size and you do NOT set either 'TopOffset' or
+            'LeftOffset', you must also have the properties 'XMustBeMultipleOf 32', 'YMustBeMultipleOf 16',
+            and 'CoordsMustBeMultiple 1' so that the subareas will be taken by the camera software.&nbsp; These
+            entries are set internally when either 'TopOffset' or 'LeftOffset is nonzero.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeY</TD>
@@ -1760,7 +1765,7 @@
             less than its true size to trim off large borders that are unusable.&nbsp; The
             sum of &#39;CameraSizeX&#39; and this entry must be no more than the true camera size in
             X.&nbsp; This entry must be a multiple of the &#39;XMustBeMultipleOf&#39; and the
-            maximum binning.&nbsp; Offsets cannot be entered for K2/K3, Thermo/FEI, or Tietz
+            maximum binning (and of 32 for a K3).&nbsp; Offsets cannot be entered for Thermo/FEI or Tietz
             F216/416/816 cameras.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1768,7 +1773,7 @@
           <TD>Number of pixels to add to unbinned top and bottom coordinates for each camera
             acquisition.&nbsp; The sum of &#39;CameraSizeY&#39; and this entry must be no more than
             the true camera size in Y.&nbsp; This entry must be a multiple of the &#39;YMustBeMultipleOf&#39;
-            and the maximum binning. </TD>
+            and the maximum binning (and of 16 for a K3). </TD>
         </TR>
         <TR VALIGN="top">
           <TD>XMustBeMultipleOf</TD>
