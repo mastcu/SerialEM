@@ -3,10 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/8/24: Allowed use of LeftOffset, TopOffset, and smaller than full chip size
+in CameraSizeX/Y for K2/K3 (In 4.1).
+
 3/5/24: Fixed frame sums before requesting MRC frame from a Falcon 4 so tuning
 of camera timing can be checked/iterated without revisiting dialog (In 4.1).
 
-3/1/24: Fixed setting reoported values from plugin functions with 1 or 2
+3/1/24: Fixed setting reported values from plugin functions with 1 or 2
 returned doubles (In 4.1).
 
 2/29/24: Fixed double counting item skipped in main script as done (In 4.1).

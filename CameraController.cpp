@@ -5352,10 +5352,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       mTD.K2ParamFlags |= K3_USE_CORR_DBL_SAMP;
   }
 
-  if (!(mParam->K2Type || mParam->FEItype || mParam->subareasBad || 
-    mParam->TietzType == 8 || mParam->TietzType > 11)) {
-    leftOffset = mParam->leftOffset / mBinning;
-    topOffset = mParam->topOffset / mBinning;
+  if (!(mParam->FEItype || mParam->subareasBad || mParam->TietzType == 8 || 
+    mParam->TietzType > 11)) {
+    leftOffset = mParam->leftOffset / (unbinnedK2 ? 1 : mBinning);
+    topOffset = mParam->topOffset / (unbinnedK2 ? 1 : mBinning);
   }
 
   mTD.Left = tLeft + leftOffset;
