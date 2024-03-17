@@ -1262,6 +1262,7 @@ void CMacroProcessor::Run(int which)
   mExitAtFuncEnd = false;
   mLoopIndsAreLocal = false;
   mStartNavAcqAtEnd = false;
+  mUseTempNavParams = false;
   mPackToLoadAtEnd = "";
   mConsetNums.clear();
   mConsetsSaved.clear();
@@ -5401,8 +5402,9 @@ int CMacroProcessor::StartNavAvqBusy(void)
   if (DoingMacro())
     return 1;
   if (mLastCompleted && mWinApp->mNavigator) {
-    mWinApp->mNavigator->SetCurAcqParmActions(mNavHelper->GetCurAcqParamIndex());
-    mWinApp->mNavigator->AcquireAreas(false, false);
+    mWinApp->mNavigator->SetCurAcqParmActions(mUseTempNavParams ? 2 :
+      mNavHelper->GetCurAcqParamIndex());
+    mWinApp->mNavigator->AcquireAreas(false, false, mUseTempNavParams);
   }
   return 0;
 }

@@ -108,6 +108,9 @@ public:
   GetSetMember(BOOL, TuneUseCtfplotter);
   GetSetMember(int, RunningCtfplotter);
   GetSetMember(float, MinCtfplotterPixel);
+  GetMember(float, LastPixelSize);
+  GetMember(float, LastFPSAngle);
+
 
 
 // Overrides
@@ -176,6 +179,8 @@ private:
   BOOL mCatalaseForPixel;
   float mShortCatalaseNM;
   float mLongCatalaseNM;
+  float mLastPixelSize;
+  float mLastFPSAngle;
   float mCorrMaxScale;
   float mFindBeamOutsideFrac; // Fraction that periphery has to be below mean
   float mBeamShiftFromImage;  // Last value of micron shift centering from image

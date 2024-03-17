@@ -73,6 +73,7 @@ typedef void (*ScopeGetGauge)(const char *, int *, double *);
 typedef double (*ScopeGetDblByName)(const char *);
 typedef double (*ScopeSetDblByName)(const char *, double);
 typedef void (*ScopeGetTwoDblByName)(const char *, double *, double *);
+typedef void (*ScopeSet2DblIntByName)(const char *, double, double, int);
 typedef void (*ScopeSetTwoIntDbl)(int, int, double);
 typedef void (*ScopeSetIntTwoDbl)(int, double, double);
 typedef void (*ScopeGetIntTwoDbl)(int *, double *, double *);

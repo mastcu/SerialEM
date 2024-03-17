@@ -6611,6 +6611,18 @@ int CMacCmd::SetLensByName()
   return 0;
 }
 
+// SetCoilByName
+int CMacCmd::SetCoilByName()
+{
+  if (!HitachiScope)
+    ABORT_NOLINE("SetCoilByName is available only for Hitachi scopes");
+  if (!mScope->SetDeflectorByName(mStrItems[1], mItemDbl[2], mItemDbl[3], mItemInt[4])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // SetFreeLensControl
 int CMacCmd::SetFreeLensControl(void)
 {
@@ -7960,7 +7972,9 @@ int CMacCmd::FindPixelSize(void)
   if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER &&
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
     mBufferManager->CopyImageBuffer(1, 0);
-  mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
+  if (mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors))
+    return 1;
+  SetRepValsAndVars(1, mProcessImage->GetLastPixelSize(), mProcessImage->GetLastFPSAngle());
   return 0;
 }
 
@@ -11530,6 +11544,83 @@ int CMacCmd::StartNavAcquireAtEnd(void)
     ABORT_NOLINE(CString("You cannot use StartNavAcquireAtEnd when ") +
       (mWinApp->DoingTiltSeries() ? "a tilt series is running" :
       "Navigator is already acquiring"));
+  return 0;
+}
+
+// NavAcqAtEndUseParams
+int CMacCmd::NavAcqAtEndUseParams()
+{
+  NavAcqAction *useAct, *actions = mNavHelper->GetAcqActions(2);
+  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
+  int *useOrder, *order = mNavHelper->GetAcqActCurrentOrder(2);
+  int ind, which = 0;
+  ABORT_NONAV;
+  if (mNavigator->GetAcquiring())
+    ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
+  
+  if (!mStrItems[1].CompareNoCase("R")) {
+    if (mItemEmpty[2])
+      ABORT_LINE("You must include a filename with Navigator parameters in line:\n\n");
+
+    SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+    if (mParamIO->ReadAcqParamsFromFile(params, actions, order, mStrCopy))
+      ABORT_LINE("Error reading Navigator parameters from file for line:\n\n");
+  } else {
+    if (!mStrItems[1].CompareNoCase("F"))
+      which = 1;
+    else if (mStrItems[1].CompareNoCase("M"))
+      ABORT_LINE("Parameter set to use must be M, F, or R in line:\n\n");
+    useAct = mNavHelper->GetAcqActions(which);
+    useParam = mWinApp->GetNavAcqParams(which);
+    useOrder = mNavHelper->GetAcqActCurrentOrder(which);
+    *params = *useParam;
+    for (ind = 0; ind < mNavHelper->GetNumAcqActions(); ind++) {
+      order[ind] = useOrder[ind];
+      actions[ind] = useAct[ind];
+    }
+  }
+  mUseTempNavParams = true;
+  return 0;
+}
+
+// SetNavAcqAtEndParams
+int CMacCmd::SetNavAcqAtEndParams()
+{
+  int ind, ival;
+  CString *opt;
+  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
+  if (!mUseTempNavParams)
+    ABORT_NOLINE("NavAcqAtEndUseParams must be called before SetNavAcqAtEndParams");
+  for (ind = 1; ind < MAX_MACRO_TOKENS - 1; ind += 2) {
+    if (mItemEmpty[ind])
+      break;
+    if (mItemEmpty[ind + 1])
+      ABORT_LINE("Last option name not followed by value in line:\n\n");
+    opt = &mStrItems[ind];
+    ival = mItemInt[ind + 1];
+    if (!opt->Find("prim")) {
+      if (ival > 4)
+        ABORT_LINE("Primary action type must be 0-4 for line:\n\n");
+      params->acquireType = ival;
+    } else if (!opt->Find("scrp-")) {
+      if (ival < (opt->GetAt(5) == 'p' ? 1 : 0) ||
+        ival > MAX_MACROS)
+        ABORT_LINE("Script number out of range in entry for " + *opt + " in line:\n\n");
+      if (opt->GetAt(5) == 'p') {
+        params->macroIndex = ival;
+      } else if (opt->GetAt(5) == 'b') {
+        params->runPremacro = ival > 0;
+        if (ival > 0)
+          params->preMacroInd = ival;
+      } else if (opt->GetAt(5) == 'a') {
+        params->runPostmacro = ival > 0;
+        if (ival > 0)
+          params->postMacroInd = ival;
+      } else
+        ABORT_LINE("Option name scrp- must be followed by p, b, or a in line:\n\n");
+    } else
+      ABORT_LINE("Option " + *opt + " not recognized in lie:\n\n");
+  }
   return 0;
 }
 

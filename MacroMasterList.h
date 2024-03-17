@@ -783,6 +783,10 @@ MAC_SAME_NAME_ARG(SetSelectedNavItem, 1, 4, SETSELECTEDNAVITEM, Ii)
 MAC_SAME_NAME_ARG(SetLowDoseShiftOffset, 3, 4, SETLOWDOSESHIFTOFFSET, IDD)
 MAC_SAME_NAME_NOARG(DeferSettingsUpdate, 0, 4, DEFERSETTINGSUPDATE)
 MAC_SAME_NAME_NOARG(GetFastScopeStatus, 0, 4, GETFASTSCOPESTATUS)
+MAC_SAME_NAME_ARG(SetCoilByName, 4, 0, SETCOILBYNAME, SDDI)
+MAC_SAME_NAME_ARG(NavAcqAtEndUseParams, 1, 4, NAVACQATENDUSEPARAMS, Ss)
+MAC_SAME_NAME_ARG(SetNavAcqAtEndParams, 2, 4, SETNAVACQATENDPARAMS, SDsdsdsdsdsdsdsdsd)
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

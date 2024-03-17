@@ -3106,6 +3106,8 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
       mWinApp->mDocWnd->SetShortTermNotSaved();
     }
   }
+  mLastPixelSize = (float)pixel;
+  mLastFPSAngle = (float)angle;
   return 0;
 }
 

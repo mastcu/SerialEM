@@ -3384,6 +3384,15 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetCoilByName name #X #Y #I</TD>
+          <TD>For a Hitachi scope, sets the X and Y values of a deflector specified by its 
+            abbreviated <b>name</b> with the values <b>#X</b> and <b>#Y</b>, with rounding indicated by the increment in <b>#I</b>&nbsp; The range of values is -1 to 1.&nbsp; Allowed <b>name</b>s are 'GH', 'GT', 'CS', 'BH', 'BT',
+            'OS', 'ISF', 'IA', and 'PA'.&nbsp; Increments are set to 1 in the plugin for 'BH' and 'ISF',
+            and 1024 for all others used there ('CS' is not used).&nbsp; The actual increment needed on
+            newer interfaces or scopes is unknown; try setting with smaller increments and see if a change occurs or not.&nbsp; An integer increment of 1 corresponds to an increment of 0.000005 in the value.&nbsp; Command added in 4.2, 15-Mar-23.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetFreeLensControl #L #S</TD>
           <TD>On a JEOL with scripting support for free lens control, turns free lens control
             for the lens given by <b>#L</b> off if <b>#S</b> is 0 and on otherwise.&nbsp;&nbsp; Lens
@@ -4477,7 +4486,10 @@
         <TR>
           <TD class="scriptcommand">FindPixelSize</TD>
           <TD>Runs the routine to find the pixel size in an image of a cross-line grating.&nbsp; If
-             buffer A contains a montage center and B has a montage overview, B will be copied to A first.</TD>
+             buffer A contains a montage center and B has a montage overview, B will be copied to A 
+            first.&nbsp; Sets <i>reportedValue1</i> and <i>2</i> with the unbinned pixel size in nm and the
+            grid angle; these can be assigned to variables at the end of the command.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AutoCorrPeakVectors buf #S [#T] [#D]</TD>
@@ -5372,6 +5384,31 @@
             successfully, using the parameters last defined in the
       		<A HREF="hidd_navacquire.htm">Navigator Acquire</A> dialog.&nbsp; The command cannot
             be used when Navigator is already acquiring or a tilt series is running.</TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">NavAcqAtEndUseParams kind [file]</TD>
+          <TD>Selects the parameter set to use when starting Navigator acquisition with 'StartNavAcquireAtEnd' and 
+            copies parameters into temporary structures so that they can be modified without 
+            affecting the user's settings.&nbsp; <b>kind</b> should be 'M' or 'm' for Mapping, 
+            'F' or 'f' for Final Data, or 'R' or 'r' to read from a file of saved parameters, in
+             which case <b>file</b> should be entered with the filename.
+          </TD>
+        </TR>
+
+        <TR>
+          <TD class="scriptcommand">SetNavAcqAtEndParams opt val [opt val ...]</TD>
+          <TD>Sets values in the temporary Navigator acquire parameters set up by 'NavAcqAtEndUseParams', which must be used first.&nbsp; Multiple pairs of options
+            and values can be entered sequentially; this command can also be entered multiple
+            times.&nbsp; An option name can be longer than what is shown here.&nbsp; Thus far, these options can be specified: <br>
+            &nbsp;&nbsp;&nbsp; prim: set primary action with 0 for saving images, 1 for saving maps
+            2 to run a script, 3 to run tilt serie, or 4 to do multishot <br />
+            &nbsp;&nbsp;&nbsp; scrp-p: set script number for primary action <br />
+            &nbsp;&nbsp;&nbsp; scrp-b: set script number to run before primary action, or 0 not to
+            run a script <br />
+            &nbsp;&nbsp;&nbsp; scrp-a: set script number to run after primary action, or 0 not to
+            run a script
+          </TD>
         </TR>
 
         <TR>
