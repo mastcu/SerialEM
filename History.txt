@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/17/24: Fixed Acquire at Items dialog to handle the script selections
+correctly when switching between tilt series and other actions or between
+Mapping and Final Data (when there are both TS and A items) (In 4.1).
+
+3/17/24: Fixed beam radius in multishot display to be set for the Record probe
+mode instead of current one (In 4.1).
+
 3/8/24: Allowed use of LeftOffset, TopOffset, and smaller than full chip size
 in CameraSizeX/Y for K2/K3 (In 4.1).
 

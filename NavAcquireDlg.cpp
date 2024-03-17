@@ -608,21 +608,37 @@ void CNavAcquireDlg::UnloadTSdependentFromDlg(int acquireType)
 // Load items into dialog that are stored separately for TS and nonTS
 void CNavAcquireDlg::LoadTSdependentToDlg(void)
 {
+  CButton *button;
+  int pos, runPre, runPost;
   if (OptionsToAcquireType() == ACQUIRE_DO_TS) {
     mPremacNum = mParam->preMacroInd;
     mPostmacNum = mParam->postMacroInd;
-    SET_ACTION(mActions, NAACT_RUN_PREMACRO, mParam->runPremacro);
-    SET_ACTION(mActions, NAACT_RUN_POSTMACRO, mParam->runPostmacro);
+    runPre = mParam->runPremacro;
+    runPost = mParam->runPostmacro;
     m_bSendEmail = mParam->sendEmail;
   } else {
     mPremacNum = mParam->preMacroIndNonTS;
     mPostmacNum = mParam->postMacroIndNonTS;
-    SET_ACTION(mActions, NAACT_RUN_PREMACRO, mParam->runPremacroNonTS);
-    SET_ACTION(mActions, NAACT_RUN_POSTMACRO, mParam->runPostmacroNonTS);
+    runPre = mParam->runPremacroNonTS;
+    runPost = mParam->runPostmacroNonTS;
     m_bSendEmail = mParam->sendEmailNonTS;
   }
   B3DCLAMP(mPremacNum, 1, MAX_MACROS);
   B3DCLAMP(mPostmacNum, 1, MAX_MACROS);
+  SET_ACTION(mActions, NAACT_RUN_PREMACRO, runPre);
+  SET_ACTION(mActions, NAACT_RUN_POSTMACRO, runPost);
+  for (pos = 0; pos < mNumShownActs; pos++) {
+    if (mShownPosToIndex[pos] == NAACT_RUN_PREMACRO) {
+      button = (CButton *)GetDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos);
+      if (button)
+        button->SetCheck(runPre);
+    }
+    if (mShownPosToIndex[pos] == NAACT_RUN_POSTMACRO) {
+      button = (CButton *)GetDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos);
+      if (button)
+        button->SetCheck(runPost);
+    }
+  }
   ManageMacro();
 }
 
@@ -702,12 +718,12 @@ void CNavAcquireDlg::OnRadioCurParamSet()
   mParam = &mAllCurParam[m_iCurParamSet];
   mActions = &mAllActions[m_iCurParamSet][0];
   mCurrentOrder = &mAllOrders[m_iCurParamSet][0];
-  LoadParamsToDialog();
   AcquireTypeToOptions(mParam->acquireType);
   if (!mAnyTSpoints && mAnyAcquirePoints)
     AcquireTypeToOptions(mParam->nonTSacquireType);
   if (mAnyTSpoints && !mAnyAcquirePoints)
     AcquireTypeToOptions(ACQUIRE_DO_TS);
+  LoadParamsToDialog();
   ManageEnables(true);
   ManageOutputFile();
   BuildActionSection();
