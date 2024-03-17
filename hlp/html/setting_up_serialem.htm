@@ -1589,6 +1589,27 @@
         startup about whether this GPU is available.&nbsp; If it is not, set DebugOutput
         to E for diagnostic output.</li>
     </ul>
+      <p><b><i>To run a camera with Advanced Scripting through a second FEI-SEMserver:</i></b></p>
+      <p>The second server would run on a computer different from the microscope computer; this 
+        second server must be running Advanced Scripting (and standard scripting, for now) and be
+        able to control the camera, while the scope computer cannot.&nbsp; On the 
+        SerialEM computer, define environment variable 'FEISCOPE_TWO_SERVERS' as 1.&nbsp; 
+        Pick two ports numbers that differ by two - 48902 and 48904 are recommended.&nbsp; 
+        Add the properties:<br />
+        &nbsp;&nbsp;&nbsp;
+        SocketServerIP 3 IP_of_2nd_server <br />
+        &nbsp;&nbsp;&nbsp;
+        SocketServerPort 3 higher_port_# (e.g., 48904) <br />
+        &nbsp;&nbsp;&nbsp;
+        SocketServerIP 6 IP_of_2nd_server <br />
+        &nbsp;&nbsp;&nbsp;
+        SocketServerPort 6 lower_port_#  (e.g., 48902) <br />
+        The property 'AdvancedScriptingVersion 4' will probably also be required for a Falcon 4 or Ceta 2.&nbsp;
+
+        This directs the plugin to connect the regular camera channel to the second 
+        server, and to connect a second basic channel there as well.&nbsp; On the second 
+        computer, define environment variable FEISEMSERVER_PORT&nbsp; with the lower 
+        port number (e.g., 48902).</p>
       <p>
         <a name="JeolCamera"><i><b>For accessing a JEOL camera or STEM signals</b></i></a>,
         copy the file JeolCamPlugin.dll from the package directory to the main SerialEM
