@@ -1781,6 +1781,8 @@ int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag,
   double minRatio = 1.e30, ratio;
   int indMin = -1;
   double magAngle, calAngle;
+  if (mWinApp->GetCurrentCamera() < 0 || magInd < 0)
+    return -1;
   magAngle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),magInd);
   for (int ind = 0; ind < mCtfBasedCals.GetSize(); ind++) {
     if (BOOL_EQUIV(mCtfBasedCals[ind].comaType, coma)) {
