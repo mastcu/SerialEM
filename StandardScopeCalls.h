@@ -178,6 +178,7 @@ SCOPE_SAMENAME(ScopeSetInt, GetValuesFast);
 SCOPE_SAMENAME(GetErrStr, GetLastErrorString);
 SCOPE_SAMENAME(ScopeGetBool, ScopeIsDisconnected);
 SCOPE_SAMENAME(ScopeGetTwoDblByName, GetDeflectorByName);
+SCOPE_SAMENAME(ScopeSet2DblIntByName, SetDeflectorByName);
 SCOPE_SAMENAME(ScopeGetDblByName, GetLensByName);
 SCOPE_SAMENAME(ScopeSetDblByName, SetLensByName);
 SCOPE_SAMENAME(ScopeSetInt, SetObjFocus);

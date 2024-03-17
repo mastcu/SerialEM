@@ -6569,6 +6569,24 @@ BOOL CEMscope::GetDeflectorByName(CString &name, double &valueX, double &valueY)
   return result;
 }
 
+// Set any recognized coil by name in Hitachi
+BOOL CEMscope::SetDeflectorByName(CString & name, double valueX, double valueY, int incr)
+{
+  BOOL result = true;
+  if (!sInitialized || !HitachiScope || !mPlugFuncs->SetDeflectorByName)
+    return false;
+  ScopeMutexAcquire("SetDeflectorByName", true);
+  try {
+    mPlugFuncs->SetDeflectorByName((LPCTSTR)name, valueX, valueY, incr);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting deflector by name "));
+    result = false;
+  }
+  ScopeMutexRelease("SetDeflectorByName");
+  return result;
+}
+
 // Set free lens control on or off on JEOL for one or all lenses
 BOOL CEMscope::SetFreeLensControl(int lens, int arg)
 {

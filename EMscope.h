@@ -1037,6 +1037,7 @@ public:
   BOOL GetLensByName(CString &name, double &value);
   BOOL SetLensByName(CString &name, double value);
   BOOL GetDeflectorByName(CString &name, double &valueX, double &valueY);
+  BOOL SetDeflectorByName(CString &name, double valueX, double valueY, int incr);
   bool MagChgResetsIS(int toInd);
   BOOL NormalizeAll(int illumProj);
   int ReadProbeMode(void);
