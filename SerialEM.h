@@ -805,7 +805,7 @@ private:
   LowDoseParams mLowDoseParams[MAX_LOWDOSE_SETS];
   LowDoseParams mCamLowDoseParams[3][MAX_LOWDOSE_SETS];
   NavParams mNavParams;
-  NavAcqParams mNavAcqParams[2];
+  NavAcqParams mNavAcqParams[3];
   CookParams mCookParams;
   RangeFinderParams mTSRangeParams[2];
   CString mMacroName[MAX_TOT_MACROS];

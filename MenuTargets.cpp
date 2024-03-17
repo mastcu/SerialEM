@@ -745,7 +745,7 @@ void CMenuTargets::OnMontageListFilesToOpen()
 
 void CMenuTargets::OnNavigatorAcquire() 
 {
-  mNavigator->AcquireAreas(true, false);	
+  mNavigator->AcquireAreas(true, false, false);	
 }
 
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 

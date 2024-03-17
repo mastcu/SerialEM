@@ -5130,11 +5130,11 @@ int CNavigatorDlg::DoAddCirclePolygon(float radius, float stageX, float stageY,
 // Add regular grid of points based on a template and/or in a polygon
 void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 {
-  CString label;
+  CString label, prompt1, prompt2;
   CMapDrawItem *item, *poly, *patItems[8], *searchPoly[2];
   int i, j, k, kstart, kend, dir, registration, numInPat = 0;
   int jmn, kmn, imin, start1, start2, end1, end2, num;
-  int jdir, jstart, jend, drawnOnID;
+  int jdir, jstart, jend, drawnOnID, labelIter;
   int numPairsOnAxes, numPairs, indPair[15], pairJ[15], pairK[15];
   int groupInd, groupNum[6], grpj, grpk, numInGrp[6], groupTmp[6][6], lineGroup[6][6];
   float vecx[6], vecy[6], length[6], angles[15], stageZ, polyArea[2], itemArea;
@@ -5142,8 +5142,9 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   float inSpacing = mLastGridInSpacing > 0. ? mLastGridInSpacing : 1.0f;
   float incStageX1, incStageX2, incStageY1, incStageY2, groupExtent, jSpacing, kSpacing;
   float xcorner, ycorner;
-  bool acquire, refresh, awayFromFocus = false;
+  bool acquire, refresh, checkLabel, awayFromFocus = false;
   double err, errmin, diff, diffmax, axis;
+  char *endPtr;
   ScaleMat aMat, aInv;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
 
@@ -5370,11 +5371,64 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
       } else {
 
-        // Ask about polygon and process the entered label
-        if (!KGetOneString("Enter label of a polygon or map to fill with this grid, or "
-          "nothing for a rectangular grid", label)) {
-          mLastGridPatternPoly = -1;
-          return;
+        labelIter = 1;
+        jstart = 0;
+        jend = (int)mItemArray.GetSize() - 1;
+        prompt1 = "";
+        while (labelIter > 0) {
+
+          // Ask about polygon by label or index
+          prompt2 = labelIter > 1 ? "Enter negative of table index" :
+            "Enter label (or negative of table index)";
+          if (!KGetOneString(prompt1, prompt2 + " of a polygon or map to"
+            " fill with this grid (OK for rectangular grid)", label, 0)) {
+            mLastGridPatternPoly = -1;
+            return;
+          }
+
+          if (!label.IsEmpty()) {
+            checkLabel = true;
+
+            // If it seems to be a negative number, convert to integer and detect if
+            // there were extra characters
+            if (label.GetAt(0) == '-' && label.GetLength() > 1) {
+              kstart = -strtol((LPCTSTR)label, &endPtr, 10);
+              if (endPtr == ((char *)(LPCTSTR)label) + label.GetLength()) {
+
+                // If OK number, make sure its OK and set range and real label
+                checkLabel = false;
+                if (kstart == 0 || kstart > jend + 1) {
+                  prompt1 = "The table index you entered is out of range";
+                  labelIter++;
+                } else {
+                  jstart = kstart - 1;
+                  jend = jstart;
+                  labelIter = 0;
+                  item = mItemArray[jstart];
+                  label = item->mLabel;
+                }
+              }
+            }
+
+            // Check label for uniqueness
+            if (checkLabel) {
+              kstart = 0;
+              for (i = 0; i < mItemArray.GetSize(); i++) {
+                item = mItemArray[i];
+                if (item->mLabel == label)
+                  kstart++;
+              }
+              if (kstart > 1) {
+                prompt1 = "The label you entered is not unique";
+                labelIter++;
+              } else if (!kstart) {
+                prompt1 = "There is no item with the label that you entered";
+                labelIter = 1;
+              } else {
+                labelIter = 0;
+              }
+            }
+          }
         }
 
         // Have to redo this after every message box because the redraw sets new transform!
@@ -5384,7 +5438,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
         SetCurrentItem(true);
         mLastGridFillItem = !label.IsEmpty();
         if (mLastGridFillItem) {
-          for (i = 0; i < mItemArray.GetSize(); i++) {
+          for (i = jstart; i <= jend; i++) {
             item = mItemArray[i];
             if (item->mLabel == label) {
               if (item->IsNotPolygon() && item->IsNotMap()) {
@@ -9214,7 +9268,7 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // ACQUIRING SEQUENCE OF MARKED AREAS AND MAKING MAPS / RUNNING MACRO / DOING TILT SERIES
 
 // Initiate Acquisition
-void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
+void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempParams)
 {
   int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0, acqIndex;
   int groupID = -1;
@@ -9234,6 +9288,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
         "open");
     return;
   }
+  mUseTempAcqParams = useTempParams;
 
   if (!dlgClosing) {
     mNavAcquireDlg = new CNavAcquireDlg();
@@ -9241,7 +9296,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
 
     // If postponed, set subset from postponed values; otherwise initialize to no subset
     dlg->mNumArrayItems = (int)mItemArray.GetSize();
-    if (mAcqDlgPostponed) {
+    if (mAcqDlgPostponed && !useTempParams) {
       dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
       dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
       dlg->m_bDoSubset = mPostposedDoSubset;
@@ -9267,7 +9322,8 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
       return;
     
     } else {
-      mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS : 
+      if (!useTempParams)
+        mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS :
         mAcqParm->nonTSacquireType;
       if (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints) {
         ManageAcquireDlgCleanup(fromMenu, dlgClosing);
@@ -9317,15 +9373,16 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
   mRetractAtAcqEnd = mWinApp->GetAnyRetractableCams() && mAcqParm->retractCameras;
 
   runPremacro = mAcqParm->runPremacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS)
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS && !useTempParams)
     runPremacro = mAcqParm->runPremacroNonTS;
   runPostmacro = mAcqParm->runPostmacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS)
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS && !useTempParams)
     runPostmacro = mAcqParm->runPostmacroNonTS;
   setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
 
-  if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0) {
+  if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0 && 
+    (fromMenu || dlgClosing)) {
     loop = IDYES;
     if (mParam->warnedOnSkipMove)
       mWinApp->AppendToLog("WARNING: Skipping stage move when possible; relying on your"
@@ -9349,11 +9406,11 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing)
     for (loop = loopStart; loop < loopEnd; loop++) {
       macnum = -1;
       if (loop == 1 && runPremacro)
-        macnum = (mAcqParm->acquireType == ACQUIRE_DO_TS ? mAcqParm->preMacroInd : 
-          mAcqParm->preMacroIndNonTS) - 1;
+        macnum = ((mAcqParm->acquireType == ACQUIRE_DO_TS || useTempParams) ? 
+        mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1;
       if (loop == 2 && runPostmacro)
-        macnum = (mAcqParm->acquireType == ACQUIRE_DO_TS ? mAcqParm->postMacroInd : 
-          mAcqParm->postMacroIndNonTS) - 1;
+        macnum = ((mAcqParm->acquireType == ACQUIRE_DO_TS || useTempParams) ? 
+          mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1;
       if (loop == 0)
         macnum = mAcqParm->macroIndex - 1;
       if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum)) {
@@ -9517,7 +9574,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   int *tsExtraFileStarts = mWinApp->mTSController->GetExtraFileStarts();
   mMovingStage = false;
   mStartedTS = false;
-  int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetCurAcqParamIndex());
+  int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetAcqParamIndexToUse());
   const char *stepNames[ACQ_MAX_STEPS] = {"", "", "", "", "", "", "", "", "", "", "", "",
     "", "", "", "", "", "", "Setup next item", "Open file if needed", 
     "Acquire image/montage", "Do multishot", "Run script", "Tilt series", "Move to item",
@@ -10435,7 +10492,7 @@ void CNavigatorDlg::AcquireDlgClosing()
     ResumeFromPause();
     mWinApp->SetStatusText(COMPLEX_PANE, "");
   } else
-    AcquireAreas(false, true);
+    AcquireAreas(false, true, false);
 }
 
 // Resuming from pause: test for a change in the output file type, change flags

@@ -839,7 +839,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   float useWidth, useHeight, montErrX, montErrY, itemBackX, itemBackY, field;
   MontParam *montP;
   ScaleMat aMat;
-  NavAcqParams *navParams = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
+  NavAcqParams *navParams = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse());
   CenterSkipData cenSkip;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   float finalX, finalY, stageX, stageY, firstDelX, firstDelY, mapAngle, angle;
@@ -4854,8 +4854,8 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err, numClose;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
-  NavAcqParams *navParam = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
-  mAcqActions = mAllAcqActions[mCurAcqParamIndex];
+  NavAcqParams *navParam = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse(true));
+  mAcqActions = mAllAcqActions[GetAcqParamIndexToUse(true)];
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
   int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0;
@@ -5265,6 +5265,13 @@ int CNavHelper::CheckForBadParamIndexes()
   return 0;
 }
 
+// Return the index of acquire parameters to use: mCurAcqParamIndex or 2 if using temp
+int CNavHelper::GetAcqParamIndexToUse(bool starting)
+{
+  return (mNav && (mNav->GetAcquiring() || starting) && mNav->GetUseTempAcqParams()) ? 2 :
+    mCurAcqParamIndex;
+}
+
 // Test if multishot would save with current params and set allZero if it is because
 // it is set for all empty early returns 
 BOOL CNavHelper::IsMultishotSaving(bool *allZeroER)
@@ -5340,7 +5347,7 @@ BOOL CNavHelper::GetNoMessageBoxOnError()
   NavAcqParams *params;
   if (!mNav || !mNav->GetAcquiring())
     return false;
-  params = mWinApp->GetNavAcqParams(mCurAcqParamIndex);
+  params = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse());
   return params->noMBoxOnError;
 }
 

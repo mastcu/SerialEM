@@ -83,7 +83,7 @@ public:
 	void AcquireCleanup(int error);
 	int TaskAcquireBusy();
 	void AcquireNextTask(int param);
-  void AcquireAreas(bool fromMenu, bool dlgClosing);
+  void AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempParams);
   void ManageAcquireDlgCleanup(bool fromMenu, bool dlgClosing);
   void AcquireDlgClosing();
   BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
@@ -188,8 +188,8 @@ public:
   SetMember(int, RunScriptAfterNextAcq);
   GetMember(int, ScriptToRunAtEnd);
   GetSetMember(int, NumDoneAcq);
+  GetMember(bool, UseTempAcqParams);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
-
 
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};
@@ -316,6 +316,7 @@ private:
   CArray<MontParam *, MontParam *> mMontParArray;
   CArray<StateParams *, StateParams *> mAcqStateArray;
   NavAcqAction *mAcqActions;
+  bool mUseTempAcqParams;
   std::vector<int> mListToItem;
   std::vector<int> mItemToList;
   std::set<int> mSetOfIDs;

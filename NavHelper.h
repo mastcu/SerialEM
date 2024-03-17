@@ -336,7 +336,7 @@ private:
   int mEnableMultiShot;
   HoleFinderParams mHoleFinderParams;
   AutoContourParams mAutoContourParams;
-  NavAcqAction mAllAcqActions[2][NAA_MAX_ACTIONS];
+  NavAcqAction mAllAcqActions[3][NAA_MAX_ACTIONS];
   NavAcqAction *mAcqActions;
   NavAlignParams mNavAlignParams;
   StateParams mPriorState;
@@ -514,7 +514,7 @@ private:
   FloatVec mSavedMaShYshift;
   int mNumAcqActions;
   static int mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1];    // A modifiable default order
-  int mAcqActCurrentOrder[2][NAA_MAX_ACTIONS];    // Current order
+  int mAcqActCurrentOrder[3][NAA_MAX_ACTIONS];    // Current order
   int mCurAcqParamIndex;         // Current acquire param set
   int mMarkerShiftApplyWhich;    // Saved dialog selection for which ones to apply to
   int mMarkerShiftSaveType;      // And whether/how to save shifts  
@@ -607,6 +607,7 @@ public:
   void StopDualMap(void);
   int AssessAcquireProblems(int startInd, int endInd);
   int CheckForBadParamIndexes();
+  int GetAcqParamIndexToUse(bool starting = false);
   BOOL IsMultishotSaving(bool *allZeroER = NULL);
   void GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, double dists[3], 
     double &avgDist, double &angle);
