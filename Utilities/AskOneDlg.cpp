@@ -87,6 +87,7 @@ BOOL CAskOneDlg::OnInitDialog()
   
   CRect rectNeed, rectWnd, rectOK, rectCancel, rectText, rectInfo, rectEdit, rectClient;
   int editWidth;
+  int widthLimit = winApp->ScaleValueForDPI(1000.);
 
   // Figure out size needed for text
   CDC *pDC = m_statText.GetDC();
@@ -125,9 +126,9 @@ BOOL CAskOneDlg::OnInitDialog()
   // The desired width for window: if it has to be limited, cut text size
   int clientWidth = 2 * borderX + textWidth + editWidth +
     rectEdit.left - rectText.right;
-  if (clientWidth > 1000) {
-    textWidth -= clientWidth - 1000;
-    clientWidth = 1000;
+  if (clientWidth > widthLimit) {
+    textWidth -= clientWidth - widthLimit;
+    clientWidth = widthLimit;
   }
 
   // But enforce minimum size for the buttons, and impose offset on text & edit
