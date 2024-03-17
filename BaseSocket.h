@@ -8,6 +8,7 @@
 #define JEOLCAM_SOCK_ID  4
 #define TIETZ_SOCK_ID    5
 #define HITACHI_SOCK_ID  6
+#define FEI2ND_SOCK_ID   6
 #define RUN_PYTH_SOCK_ID 7
 #define EXT_PYTH_SOCK_ID 8
 // Note that SavvyScan was given 9!

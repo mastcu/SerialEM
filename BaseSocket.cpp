@@ -457,7 +457,8 @@ void CBaseSocket::SendAndReceiveArgs(int sockInd)
    return;
  }
  if (mLongArgs[sockInd][0] < 0) {
-   SEMTrace('K', "BaseSocket: Server return code %d", mLongArgs[sockInd][0]);
+   SEMTrace('K', "BaseSocket: Server return code %d on chan %d", mLongArgs[sockInd][0], 
+     sockInd);
    return;
  }
  if (err < 0) {
