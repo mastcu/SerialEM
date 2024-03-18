@@ -4218,14 +4218,16 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
-  float fullCornXmin, fullCornXmax, fullCornYmin, fullCornYmax;
+  float fullCornXmin, fullCornXmax, fullCornYmin, fullCornYmax, searchPix = 0., viewPix;
   float cornerExtra = 93.;
   float *gridLim = mHelper->GetGridLimits();
   float nominalLim = JEOLscope ? 1200.f : 1000.f;
   int err = 0;
+  bool inView, inSearch;
   MontParam *montp = mWinApp->GetMontParam();
-  mWinApp->RestoreViewFocus();
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
 	CMapDrawItem *itmp = new CMapDrawItem;
+  mWinApp->RestoreViewFocus();
 
   // First get limits based on system defaults
   minX = mScope->GetStageLimit(STAGE_MIN_X);
@@ -4290,6 +4292,23 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
   itmp->AppendPoint(maxCornerX, minCornerY);
   itmp->AppendPoint(midX, minY);
   itmp->AppendPoint(minCornerX, minCornerY);
+
+  // Switch to the current low dose area, view or search, if it is at least 5 times
+  // bigger pixel size than the other one
+  if (mWinApp->LowDoseMode()) {
+    inView = mScope->GetLowDoseArea() == VIEW_CONSET;
+    inSearch = mScope->GetLowDoseArea() == SEARCH_AREA;
+    viewPix = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+      ldp[VIEW_CONSET].magIndex);
+    if (ldp[SEARCH_AREA].magIndex > 0)
+      searchPix = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
+        ldp[SEARCH_AREA].magIndex);
+    if ((inView && (!searchPix || viewPix > 5. * searchPix)) || 
+      (inSearch && searchPix > 5. * viewPix)) {
+      montp->useViewInLowDose = inView;
+      montp->useSearchInLowDose = inSearch;
+    }
+  }
 
   mSettingUpFullMont = true;
   err = SetupMontage(itmp, NULL, skipDlg, overlapFac, forMacro);

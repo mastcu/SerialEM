@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/18/24: In setting up full montage, made it switch the montage to use View or
+Search if it is the current area and has a 5x bigger pixel than the other area
+(In 4.1).
+
 3/17/24: Set reported values from FindPixelSize.
 
 3/17/24: Added script commands to control what acquisition parameters are used

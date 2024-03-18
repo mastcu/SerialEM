@@ -493,7 +493,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       mWinApp->AppendToLog("Doing montage with image shift because the montage is not\r\n"
         "  larger than the block size for image shifting");
       mDoStageMoves = false;
-    } else
+    } else if (mBlockSizeInX * blockSizeInY == 1)
+      SEMTrace('1', "No image shift will be used");
+    else
       SEMTrace('1', "Image shifting will be done in %d x %d blocks", mBlockSizeInX, 
         blockSizeInY);
   }
