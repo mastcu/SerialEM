@@ -301,6 +301,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
     IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP, 
     IDC_STAT_SELECTED_GROUP, IDC_STAT_PRIMARY_LINE};
   mNumActions = mWinApp->mNavHelper->GetNumAcqActions();
+  mNumShownActs = 0;
   mSecondColPanel = 1;
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
