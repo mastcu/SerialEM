@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/19/24: SEM_4-1-8
+3/19/24: Fixed crash opening Acquire at Items from 3/17/24 change.
+
 3/18/24: SEM_4-1-7
 3/18/24: In setting up full montage, made it switch the montage to use View or
 Search if it is the current area and has a 5x bigger pixel than the other area
