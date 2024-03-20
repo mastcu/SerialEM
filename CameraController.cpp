@@ -489,6 +489,7 @@ void CCameraController::ClearOneShotFlags()
   mLDwasSetToArea = -1;
   mSettling = -1;
   mNextAsyncSumFrames = -1;
+  mImmediateReturn = false;
   mNoStackNextAsync = false;
   mNextFrameSkipThresh = 0.;
   mNextPartialStartThresh = mNextPartialEndThresh = 0.;
@@ -2191,8 +2192,8 @@ bool CCameraController::OppositeLDAreaNextShot(void)
 // Sets up for early return on next K2 shot, return true for error
 bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum, bool noStack)
 {
-  if (!mParam->K2Type) {
-    SEMMessageBox("Early return works only with a K2/K3 camera");
+  if (!mParam->K2Type && !mParam->OneViewType) {
+    SEMMessageBox("Early return works only with K2/K3 or OneView/Rio type cameras");
     return true;
   }
   if (inVal == 65535 && mDMversion[CAMP_DM_INDEX(mParam)] < DM_K2_API_CHANGED_LOTS) {
@@ -2204,7 +2205,8 @@ bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum, bool noS
     SEMMessageBox("Early return with synchronous saving is not possible after GMS 2.3.0");
     return true;
   }
-  mNextAsyncSumFrames = inVal;
+  mImmediateReturn = inVal < 0;
+  mNextAsyncSumFrames = B3DMAX(0, inVal);
   mDeferSumOnNextAsync = deferSum;
   mNoStackNextAsync = noStack;
   return false;
@@ -3264,6 +3266,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Finally the one-shot flag can be cleared since we are done leaving and coming back
   mNextAsyncSumFrames = -1;
+  mImmediateReturn = false;
   mNoStackNextAsync = false;
   mDeferSumOnNextAsync = false;
   mNextFrameSkipThresh = 0.;
@@ -4933,6 +4936,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     numAsyncSum = mTD.NumAsyncSumFrames;
     flags |= K2_EARLY_RETURN;
     alignFlags |= K2_EARLY_RETURN;
+    if (mImmediateReturn) {
+      flags |= K2_IMMEDIATE_RETURN;
+      alignFlags |= K2_IMMEDIATE_RETURN;
+    }
     if (mDeferSumOnNextAsync)
       flags |= K2_MAKE_DEFERRED_SUM;
     if (mDeferSumOnNextAsync || trulyAligning) {

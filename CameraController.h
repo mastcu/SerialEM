@@ -964,6 +964,7 @@ public:
   int mDMbuild[3];
   int mPluginVersion[3];
   int mNextAsyncSumFrames;      // 0 for async next shot, > 0 to return partial sum
+  bool mImmediateReturn;        // Flag for immediate return on early return
   bool mNoStackNextAsync;       // Do not do a grab stack on early return shot
   DWORD mLastAsyncTimeout;      // timeout for last async shot
   double mAsyncTickStart;       // time it started

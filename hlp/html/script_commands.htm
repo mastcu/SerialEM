@@ -1335,7 +1335,8 @@
           <TD>Returns as early as possible from the next acquisition, which must involve
             either aligning or saving dose-fractionation frames from a K2/K3 camera.&nbsp; Follow with the number
             of frames <b>#N</b> to be summed in the returned image, 0 to return without any summed
-            image, or -1 to return with the full sum.&nbsp; The optional <b>#D</b> should be 1 to make a deferred
+            image, -1 to return with the full sum, or -9 to return immediately after starting the 
+            acquisition, without waiting for the exposure to end.&nbsp; The optional <b>#D</b> should be 1 to make a deferred
             full sum when not aligning in the plugin; this sum is always made when aligning in the plugin
             for an ordinary acquisition.&nbsp; If the optional <b>#S</b> is non-zero, the plugin will <i>not</i> 
             stack frames, which is done by default in order to allow another single-shot image to be taken as 

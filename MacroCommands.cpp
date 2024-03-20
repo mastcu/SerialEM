@@ -2036,7 +2036,7 @@ int CMacCmd::EarlyReturnNextShot(void)
   int index;
 
   index = mItemInt[1];
-  if (index < 0)
+  if (index > -9 && index < 0)
     index = 65535;
   if (mCamera->SetNextAsyncSumFrames(index, mItemInt[2] > 0, mItemInt[3] != 0)) {
     AbortMacro();
