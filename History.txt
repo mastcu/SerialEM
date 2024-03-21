@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/21/24: Fixed peak erasing not being done when angles from autocorrelation
+analysis were not in the same quadrant (In 4.1).
+
 3/20/24:  SEM_4-2-0beta4
 3/19/24: Added ability to get early return from OneView type cameras and to
 get immediate early return instead of waiting for exposure to end.

@@ -191,7 +191,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   float xfreq, yfreq, length, vecAng, xx, yy, maxPix, noiseDist = 0, xcomp = 0, ycomp = 0;
   float dev1, dev2, outAvg = 0, outSd = 0, magSq = 0, bkgAvg = 0, bkgSd = 0, unitFreq;
   float dx = 0, dy = 0, bkgThresh = 0, maxMag = 0, radius = 0, dist = 0, freqRad = 0;
-  float deltaA, ctfA[8193];
+  float angRange, angDiff, deltaA, ctfA[8193];
   float sigma1 = 0.02f;
   float threshNumSd = 0.5f, limDev = 1.5f;
   float *borderTemp = NULL;
@@ -200,7 +200,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   int numFound[2][3], nearInd[3], numSteps[3];
   int ix = 0, iy = 0, xst = 0, xnd = 0, yst = 0, ynd = 0, numSum = 0, base = 0;
   int numVecxy = 4, ixMax = 0, iyMax = 0, iyPos = 0;
-  int ind, err, ixy, numPeaks = MAX_GRID_PEAKS;
+  int ind, err, errSum = 0, ixy, numPeaks = MAX_GRID_PEAKS;
   int numThreads, thrd, vecInd;
   FloatVec xxVec, yyVec;
   IntVec sortInd;
@@ -230,7 +230,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   * Carbon X1 laptop 50.9 - 14.4 for 6 (59%), 12.7 for 8 (50%)
   * A quick try with findSpacedXcorrPeaks gave a worse time (34 ms)
   */
-   for (ind = 0; ind < 2; ind++) {
+  for (ind = 0; ind < 2; ind++) {
     useArr = arrays[ind];
 
     // Forward FFT
@@ -250,11 +250,12 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
 
       // Find the peaks if any, make sure it is acceptable
       err = findAutoCorrPeaks(crray, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0],
-        numPeaks, MAX_SCAN, 1., 
+        numPeaks, MAX_SCAN, 1.,
         (fabs(tiltAngles[ind]) > 1. ? FIND_ACPK_TILT_IN_VEC : 0) |
         FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS | FIND_ACPK_HEX_GRID, 0., 0.,
         &dist1[ind], &dist2[ind], &angles[ind], &vectors[ind][0], &numFound[ind][0],
         &nearInd[ind], messBuf, MAX_MESS_BUF);
+      errSum += err;
       wallNow = wallTime();
       SEMTrace('T', "Peak find %.1f", 1000. *(wallNow - wallStart));
       wallStart = wallNow;
@@ -263,19 +264,37 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
       if (err || numFound[ind][0] < minFound || numFound[ind][1] < minFound ||
         numFound[ind][0] + numFound[ind][1] < minTotFound ||
         dist1[ind] * numFound[ind][0] < minPixExtent ||
-        dist2[ind] * numFound[ind][1] < minPixExtent)
+        dist2[ind] * numFound[ind][1] < minPixExtent) {
+        if (!err)
+          SEMTrace('a', "No erasing: found %d and %d  mins %d and %d, dists %.0f  %.0f "
+            "min %d", numFound[ind][0], numFound[ind][1], minFound, minTotFound,
+            dist1[ind] * numFound[ind][0], dist2[ind] * numFound[ind][1], minPixExtent);
         doAutocorr = false;
+      }
       if (err)
         SEMTrace('a', "%s", messBuf);
     }
   }
 
+  // Need to reduce difference to being near axis
+  angDiff = fabs(angles[0] - angles[1]);
+  if (!errSum) {
+    angRange = numFound[0][2] ? 60.f : 90.f;
+    while (angDiff >= angRange / 2.)
+      angDiff -= angRange;
+  }
   doAutocorr = doAutocorr && fabs(dist1[0] - dist1[1]) / B3DMAX(dist1[0], dist1[1]) <
     distCrit && fabs(dist2[0] - dist2[1]) / B3DMAX(dist2[0], dist2[1]) < distCrit &&
-    fabs(angles[0] - angles[1]) < angleCrit;
+    angDiff < angleCrit;
 
-  if (eraseOnly && !doAutocorr)
+  if (eraseOnly && !doAutocorr) {
+    if (!err)
+      SEMTrace('a', "dist ratios %.4f  %.4f  crit %.3f  angdiff %.2f  crit %.2f",
+        fabs(dist1[0] - dist1[1]) / B3DMAX(dist1[0], dist1[1]),
+        fabs(dist2[0] - dist2[1]) / B3DMAX(dist2[0], dist2[1]), distCrit,
+        angDiff, angleCrit);
     return false;
+  }
 
   // Set up parallel arrays
   pseudoVals[0] = 0;
