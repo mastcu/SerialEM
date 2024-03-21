@@ -2080,6 +2080,8 @@ double CShiftManager::GetImageRotation(int inCamera, int inMagInd)
   } else {
     return mMagTab[inMagInd].rotation[inCamera];
   }
+  if (mScope->GetNoScope())
+    return 0.;
   warning += "\r\nPlease send this log with backtrace to David; this is NOT a crash";
   AddBackTraceToMessage(warning);
   mWinApp->AppendToLog(warning);
