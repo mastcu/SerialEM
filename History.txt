@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/25/24: Fixed bad image shift being set when mag is change externally on a
+JEOL after a low dose V -> R change that changes alpha (In 4.1).
+
 3/21/24: Fixed peak erasing not being done when angles from autocorrelation
 analysis were not in the same quadrant (In 4.1).
 
