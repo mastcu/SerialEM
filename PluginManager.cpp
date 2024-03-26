@@ -18,6 +18,7 @@ typedef double (*Func3Dbl)(double, double, double);
 typedef double (*Func4Dbl)(double, double, double, double);
 typedef double (*Func5Dbl)(double, double, double, double, double);
 typedef double (*Func6Dbl)(double, double, double, double, double, double);
+typedef double (*Func7Dbl)(double, double, double, double, double, double, double);
 typedef double (*Func1Int)(int);
 typedef double (*Func2Int)(int, int);
 typedef double (*Func3Int)(int, int, int);
@@ -34,10 +35,11 @@ typedef double (*Func3IntStr)(int, int, int, const char *);
 typedef double (*FuncStr)(const char *);
 typedef double (*Func1DblOut)(double *);
 typedef double (*Func2DblOut)(double *, double *);
-typedef double (*Func3DblOut)(double *, double *, double *);
+typedef double(*Func3DblOut)(double *, double *, double *);
+typedef double(*Func1IntIn3DblOut)(int, double *, double *, double *);
 typedef double(*Func3DblStrInOut)(double, double, double, const char *, const char **);
 #define MAX_CALL_INTS 3
-#define MAX_CALL_DBLS 6
+#define MAX_CALL_DBLS 7
 #define MAX_CALL_OUTDBLS 3
 
 #define CAMERA_PROC(a,b) cfuncs->b = (a)GetProcAddress(module, #b)
@@ -473,7 +475,7 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   if ((call.ifString > 1 && (call.numInts || call.numDbls != 3)) ||
     (call.ifString >= 0 && (call.numInts > MAX_CALL_INTS || call.numDbls > MAX_CALL_DBLS
     || (call.numInts > 0 && call.numDbls > 0))) || (call.ifString < 0 &&
-    (call.numInts > 0 || call.numDbls < 1 || call.numDbls > MAX_CALL_OUTDBLS))) {
+    (call.numInts > 1 || call.numDbls < 1 || call.numDbls > MAX_CALL_OUTDBLS))) {
     mess.Format("The plugin function %s requires a list of "
       "arguments that the program cannot send, in statement:\n\n", strItems[2]);
     AfxMessageBox(mess + strLine, MB_OK);
@@ -498,6 +500,7 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   else {
     args = -call.numDbls;
     numOut = call.numDbls;
+    args -= 10 * B3DMAX(0, call.numInts);
   }
   if (call.ifString > 1)
     args += 100;
@@ -524,6 +527,10 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     case 6:
       retval = ((Func6Dbl)call.func)(itemDbl[3], itemDbl[4], itemDbl[5], itemDbl[6],
         itemDbl[7], itemDbl[8]);
+      break;
+    case 7:
+      retval = ((Func7Dbl)call.func)(itemDbl[3], itemDbl[4], itemDbl[5], itemDbl[6],
+        itemDbl[7], itemDbl[8], itemDbl[9]);
       break;
     case 10:
       retval = ((Func1Int)call.func)(itemInt[3]);
@@ -582,6 +589,9 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
       break;
     case -3:
       retval = ((Func3DblOut)call.func)(&outD1, &outD2, &outD3);
+      break;
+    case -13:
+      retval = ((Func1IntIn3DblOut)call.func)(itemInt[3], &outD1, &outD2, &outD3);
       break;
   }
   report.Format("The return value from %s was %6g", call.name, retval);
