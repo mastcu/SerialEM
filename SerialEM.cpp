@@ -4901,6 +4901,11 @@ int SEMNumFEIChannels()
   return sNumFEIChannels;
 }
 
+void SEMAppendToLog(CString inString, int inAction, int lineFlags)
+{
+  ((CSerialEMApp *)AfxGetApp())->AppendToLog(inString, inAction, lineFlags);
+};
+
 double CSerialEMApp::ProgramStartTime(void)
 {
   return sStartTime;
