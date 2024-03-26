@@ -449,6 +449,7 @@ bool DLL_IM_EX SEMSetVariableWithStr(CString name, CString value, bool persisten
 bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mustBeNew,
   CString *errStr);
 void AddBackTraceToMessage(CString &message);
+void DLL_IM_EX SEMAppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {
