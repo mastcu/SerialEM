@@ -276,7 +276,7 @@ public:
   void SetLowDoseDownArea(int inArea);
   GetMember(int, LowDoseDownArea);
   void GotoLowDoseArea(int inArea);
-  void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY);
+  void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY, bool registerMagIS);
   int GetLowDoseArea() { return mLowDoseSetArea; };
   void KillUpdateTimer();
   double GetReversalTilt();

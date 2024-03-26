@@ -2015,10 +2015,10 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
   mATSavedShiftsOnAcq = mWinApp->mBufferManager->GetShiftsOnAcquire();
   mWinApp->mBufferManager->SetShiftsOnAcquire(B3DMAX(1, mATSavedShiftsOnAcq));
   mCamera->SetCancelNextContinuous(true);
+  mCamera->SetRequiredRoll(1);
   mWinApp->mCamera->InitiateCapture(
     mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : TRACK_CONSET);
 
-  mCamera->SetRequiredRoll(1);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "ALIGNING TO TEMPLATE");
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);

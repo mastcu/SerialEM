@@ -5418,7 +5418,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
     (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha &&
     mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
-    DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY);
+    DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY, 
+      oldArea >= 0 && mLdsaParams->magIndex == ldArea->magIndex);
 
   // If leaving view or search area, set defocus back first
   if (!STEMmode && mLDViewDefocus && fromViewOK && 
@@ -5586,7 +5587,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // Shift image now after potential mag change
   if (!ISdone)
-    DoISforLowDoseArea(newArea, ldArea->magIndex, delISX, delISY);
+    DoISforLowDoseArea(newArea, ldArea->magIndex, delISX, delISY, true);
 
   // Do incremental beam shift if any; but if area is undefined, assume coming from Record
   if (!STEMmode) {
@@ -5661,7 +5662,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
 }
 
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift
-void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY)
+void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY,
+  bool registerMagIS)
 {
   double oldISX, oldISY, useISX = 0., useISY = 0., posChgX = 0., posChgY = 0.;
   double vsXshift, vsYshift, curISX, curISY, adjISX, adjISY, transISX, transISY;
@@ -5787,6 +5789,8 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
   if (!delISX && !delISY)
     return;
   SEMTrace('l', "Changing IS for LD area change by %.3f, %.3f", delISX, delISY);
+  if (JEOLscope && registerMagIS)
+    mPlugFuncs->UseMagInNextSetISXY(curMag);
   IncImageShift(delISX, delISY);
   delay = ldParams[inArea].delayFactor * mShiftManager->GetLastISDelay();
   mShiftManager->SetISTimeOut(delay);
