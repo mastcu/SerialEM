@@ -6690,7 +6690,8 @@ int CMacCmd::GetFastScopeStatus()
     SetVariable("FastAlpha", mWinApp->mScopeStatus.GetBeamAlpha(), type, -1, false) ||
     SetVariable("FastIntensity", mWinApp->mScopeStatus.GetIntensity(), type, -1, false) ||
     SetVariable("FastRawIntensity", mWinApp->mScopeStatus.GetRawIntensity(), type, -1, false) ||
-    SetVariable("FastEMmode", mWinApp->mScopeStatus.GetEMmode(), type, -1, false))
+    SetVariable("FastEMmode", mWinApp->mScopeStatus.GetEMmode(), type, -1, false) ||
+    SetVariable("FastDarkField", mScope->GetDarkFieldMode(), type, -1, false))
     ABORT_LINE("Setting a variable with a fast value for line:\n\n");
   return 0;
 }
