@@ -6668,6 +6668,9 @@ int CMacCmd::GetFastScopeStatus()
   int type = VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM;
   CString str;
   double ISX, ISY, stageX, stageY, stageZ, rawISX, rawISY;
+  int darkMode = 0;
+  if (FEIscope)
+    mScope->GetDarkFieldTilt(darkMode, ISX, ISY);
   mScope->GetRawImageShift(rawISX, rawISY);
   mWinApp->mScopeStatus.GetStagePosition(stageX, stageY, stageZ);
   mWinApp->mScopeStatus.GetImageShift(ISX, ISY);
@@ -6691,7 +6694,7 @@ int CMacCmd::GetFastScopeStatus()
     SetVariable("FastIntensity", mWinApp->mScopeStatus.GetIntensity(), type, -1, false) ||
     SetVariable("FastRawIntensity", mWinApp->mScopeStatus.GetRawIntensity(), type, -1, false) ||
     SetVariable("FastEMmode", mWinApp->mScopeStatus.GetEMmode(), type, -1, false) ||
-    SetVariable("FastDarkField", mScope->GetDarkFieldMode(), type, -1, false))
+    SetVariable("FastDarkField", darkMode, type, -1, false))
     ABORT_LINE("Setting a variable with a fast value for line:\n\n");
   return 0;
 }
