@@ -120,10 +120,20 @@
       <li>When Focus or Trial is set and the scope is currently in that area (or the 
         other area, if they are kept at the same position), the program will switch to 
         Record area before changing the parameters of the state being set.</li>
-      <li>&nbsp;If a state is set and then Low Dose mode is turned on or off, either by 
-        setting a different state, by toggling the mode in the Low Dose panel, or with a 
-        script command, the prior state is restored to avoid inconsistent changes and 
-        loss of some parameters.</li>
+      <li>&nbsp;If one or more states are set in Low Dose and then the mode is turned off, 
+        the prior state of Low Dose parameters is restored to avoid inconsistent changes 
+        and loss of some parameters.</li>
+      <li>When Low Dose mode is toggled, what happens to the prior state is governed by 
+        internal factors and depends on the 
+        circumstances:</li>
+      <UL>
+        <li>When entering Low Dose by setting a state, a prior state is kept or set.</li>
+        <li>When entering Low Dose by toggling the mode in the Low Dose panel or with a 
+          script command, a prior state is cleared.</li>
+        <li>When leaving Low Dose by setting a state, a previous prior state is cleared 
+          but a new one is set with the last Low Dose state.</li>
+        <li>When leaving Low Dose otherwise, the prior state is cleared.</li>
+      </UL>
       <li>Each currently set state is marked in the table with a &dagger; after the 
         frame size.</li>
     </ul>
