@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/28/24: Fixed AutocorrPeakVectors to stop script properly after an error
+(In 4.1).
+
 3/28/24: Fixed some needless scope changes when setting or leaving Low Dose
 mode with states set and fixed image shift being left after changing between
 View or Search states with different shift offsets (in 4.1).

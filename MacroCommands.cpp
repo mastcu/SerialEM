@@ -7693,8 +7693,10 @@ int CMacCmd::AutoCorrPeakVectors(void)
     flags |= FIND_PIX_NO_TRIM;
   if (!mItemEmpty[4] && mItemInt[4])
     flags |= FIND_PIX_NO_DISPLAY;
-  if (mProcessImage->FindPixelSize(0., 0., 0., 0., bufInd, flags, spacing, vectors))
+  if (mProcessImage->FindPixelSize(0., 0., 0., 0., bufInd, flags, spacing, vectors)) {
+    AbortMacro();
     return 1;
+  }
   mLogRpt.Format("Average spacing is %.1f pixels, vectors %.1f, %.1f and %.1f, %.1f",
     spacing, vectors[0], vectors[1], vectors[2], vectors[3]);
   SetReportedValues(spacing, vectors[0], vectors[1], vectors[2], vectors[3]);
@@ -11742,6 +11744,8 @@ int CMacCmd::SetMontageParams(void)
 
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
+  cam = mActiveList[mWinApp->mMontageController->GetMontageActiveCamera(mMontP)];
+  camParam = mWinApp->GetCamParams() + cam;
   if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
     ((mItemInt[2] > 0) || (mItemInt[3] > 0) ||
     (mItemInt[4] > 0) || (mItemInt[5] > 0)))
@@ -11773,6 +11777,14 @@ int CMacCmd::SetMontageParams(void)
   } else if (binChange)
     mMontP->yFrame = 2 * B3DNINT(0.5 * mMontP->yFrame / binChange);
 
+  if (mMontP->xFrame * mMontP->binning > camParam->sizeX ||
+    mMontP->yFrame * mMontP->binning > camParam->sizeY) {
+    mStrCopy.Format("The binning of %d and frame size of %dx%d gives more unbinned pixels"
+      " (%dx%d) than the camera size in line:\n\n", mMontP->binning, mMontP->xFrame,
+      mMontP->yFrame, mMontP->xFrame * mMontP->binning, mMontP->yFrame * mMontP->binning);
+    ABORT_LINE(mStrCopy);
+  }
+
   if (!mItemEmpty[2] && mItemInt[2] > 0) {
     if (mItemInt[2] > mMontP->xFrame / 2)
       ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
@@ -11794,8 +11806,6 @@ int CMacCmd::SetMontageParams(void)
   if (!mItemEmpty[6] && mItemInt[6] >= 0)
     mMontP->skipCorrelations = mItemInt[6] != 0;
   if (frameChange || binChange) {
-    cam = mActiveList[mWinApp->mMontageController->GetMontageActiveCamera(mMontP)];
-    camParam = mWinApp->GetCamParams() + cam;
     mCamera->CenteredSizes(mMontP->xFrame, camParam->sizeX, camParam->moduloX, act, index,
       mMontP->yFrame, camParam->sizeY, camParam->moduloY, top, bot, mMontP->binning, cam);
   }
