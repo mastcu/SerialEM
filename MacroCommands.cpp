@@ -7976,8 +7976,10 @@ int CMacCmd::FindPixelSize(void)
   if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER &&
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
     mBufferManager->CopyImageBuffer(1, 0);
-  if (mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors))
+  if (mProcessImage->FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors)) {
+    AbortMacro();
     return 1;
+  }
   SetRepValsAndVars(1, mProcessImage->GetLastPixelSize(), mProcessImage->GetLastFPSAngle());
   return 0;
 }
