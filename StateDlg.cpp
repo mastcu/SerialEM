@@ -445,8 +445,11 @@ int CStateDlg::DoSetImState(CString & errStr)
     mWarnedNoMontMap = true;
   }
 
-  if (type == STATE_IMAGING && !BOOL_EQUIV(mParam->lowDose != 0, mWinApp->LowDoseMode()))
-    OnButRestoreState();
+  // Restore state when leaving low dose mode, which restores LD params, doesn't assert 
+  // prior state because calling with the skipScope flag, and end up in R state
+  // Do not restore when entering, it is a needless change
+  if (type == STATE_IMAGING && mParam->lowDose == 0 && mWinApp->LowDoseMode())
+    DoRestoreState(true);
 
   conSet += setNum;
 
@@ -546,12 +549,17 @@ void CStateDlg::OnButSaveDefocus()
 // Restore state in the appropriate way
 void CStateDlg::OnButRestoreState()
 {
+  DoRestoreState(false);
+}
+
+void CStateDlg::DoRestoreState(bool skipScope)
+{
   mWinApp->RestoreViewFocus();
   mCamOfSetState = -1;
   if (mHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE)
     mHelper->RestoreFromMapState();
   else {
-    mHelper->RestoreSavedState();
+    mHelper->RestoreSavedState(skipScope);
     Update();
   }
   DisableUpdateButton();

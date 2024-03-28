@@ -69,6 +69,7 @@ public:
   int DoSetImState(CString &errStr);
   afx_msg void OnButSetMapState();
   afx_msg void OnButRestoreState();
+  void DoRestoreState(bool skipScope);
   afx_msg void OnButForgetState();
   int SetStateByNameOrNum(CString name, CString &errStr);
   void Update(void);

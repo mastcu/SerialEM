@@ -533,7 +533,7 @@ public:
   void UpdateSettings();
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);
-  void RestoreSavedState(void);
+  void RestoreSavedState(bool skipScope = false);
   int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int hideLDoff = 0);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
@@ -560,7 +560,7 @@ public:
   void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-    int hideLDoff = 0);
+    int hideLDoff = 0, bool skipScope = false);
   void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
   void SaveCurrentState(int type, int saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false);
   void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs, BOOL montMap);
