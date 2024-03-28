@@ -7972,14 +7972,15 @@ void CNavigatorDlg::AutoSave()
 void CNavigatorDlg::RemoveAutosaveFile(void)
 {
   CFileStatus status;
-  if (mParam->autosaveFile.IsEmpty() || !CFile::GetStatus((LPCTSTR)mParam->autosaveFile, 
-    status))
+  if (mParam->autosaveFile.IsEmpty())
     return;
-  try {
-    CFile::Remove(mParam->autosaveFile);
-  }
-  catch (CFileException *err) {
-    err->Delete();
+  if (CFile::GetStatus((LPCTSTR)mParam->autosaveFile, status)) {
+    try {
+      CFile::Remove(mParam->autosaveFile);
+    }
+    catch (CFileException *err) {
+      err->Delete();
+    }
   }
   mParam->autosaveFile = "";
   mDocWnd->SetShortTermNotSaved();
@@ -8347,12 +8348,14 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   if (checkAutosave) {
     if (mParam->autosaveFile.IsEmpty())
       return 1;
-    if (!CFile::GetStatus((LPCTSTR)mParam->autosaveFile, status))
+    if (!CFile::GetStatus((LPCTSTR)mParam->autosaveFile, status)) {
+      RemoveAutosaveFile();
       return 1;
+    }
     if (AfxMessageBox("There is an autosaved Navigator file from your previous session:"
       "\n" + mParam->autosaveFile + "\n\nDo you want to recover this file?",
       MB_YESNO | MB_ICONQUESTION) == IDNO) {
-      mParam->autosaveFile = "";
+      RemoveAutosaveFile();
       return 1;
     } else
       name = mParam->autosaveFile;

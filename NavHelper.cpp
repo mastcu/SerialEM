@@ -2078,9 +2078,9 @@ void CNavHelper::RestoreMapOffsets()
 /////////////////////////////////////////////////
 
 // Restore state if it was saved
-void CNavHelper::RestoreSavedState(void)
+void CNavHelper::RestoreSavedState(bool skipScope)
 {
-  int area, destCam, ind, setNum, curCam = mWinApp->GetCurrentCamera();
+  int area, destCam, ind, setNum, ifse, curCam = mWinApp->GetCurrentCamera();
   ControlSet *conSets;
   LowDoseParams *ldp;
   LowDoseParams ldsaParams;
@@ -2101,11 +2101,21 @@ void CNavHelper::RestoreSavedState(void)
         mScope->SetLdsaParams(&ldsaParams);
         mScope->GotoLowDoseArea(area);
 
-        // But if this is trial or focus and the axis position is changing, have to go
-        // to Record to avoid changing the position while in the area 
-        if ((area == FOCUS_CONSET || area == TRIAL_CONSET) &&
+        // But if this is trial or focus and the axis position is changing, or if it view
+        // or search and the offset is changing, have to go
+        // to Record to avoid changing the position or offset while in the area 
+        ifse = area == SEARCH_AREA ? 1 : 0;
+        PrintfToLog("cur shift %f %f  param %f %f", mWinApp->mLowDoseDlg.mViewShiftX[ifse],
+          mWinApp->mLowDoseDlg.mViewShiftY[ifse], mSavedStates[ind].ldShiftOffsetX,
+          mSavedStates[ind].ldShiftOffsetY);
+        if (((area == FOCUS_CONSET || area == TRIAL_CONSET) &&
           (fabs(ldp[area].ISX - mSavedStates[ind].ldParams.ISX) > 1.e-4 ||
-            fabs(ldp[area].ISY - mSavedStates[ind].ldParams.ISY) > 1.e-4))
+            fabs(ldp[area].ISY - mSavedStates[ind].ldParams.ISY) > 1.e-4)) ||
+          ((area == VIEW_CONSET || ifse) && 
+            (fabs(mWinApp->mLowDoseDlg.mViewShiftX[ifse] - 
+              mSavedStates[ind].ldShiftOffsetX) > 1.e-4 ||
+              fabs(mWinApp->mLowDoseDlg.mViewShiftY[ifse] -
+                mSavedStates[ind].ldShiftOffsetY) > 1.e-4)))
           mScope->GotoLowDoseArea(RECORD_CONSET);
       }
       ldp[area] = mSavedStates[ind].ldParams;
@@ -2128,7 +2138,7 @@ void CNavHelper::RestoreSavedState(void)
         conSets = mWinApp->GetConSets();
       else
         conSets = mWinApp->GetCamConSets() + destCam * MAX_CONSETS;
-      SetStateFromParam(&mSavedStates[0], conSets + setNum, setNum);
+      SetStateFromParam(&mSavedStates[0], conSets + setNum, setNum, 0, skipScope);
       if (mSavedStates[0].lowDose && mSavedLowDoseArea >= 0)
         mScope->GotoLowDoseArea(mSavedLowDoseArea);
     }
@@ -2448,7 +2458,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
 
 // Set scope state and control set state from the given state param
 void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-                                   int hideLDoff)
+                                   int hideLDoff, bool skipScope)
 {
   int i, alpha, ldArea;
   FilterParams *filtParam = mWinApp->GetFilterParams();
@@ -2503,24 +2513,26 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
 
   } else {
     mWinApp->mLowDoseDlg.SetLowDoseMode(false, hideLDoff > 0);
-    mScope->SetMagIndex(param->magIndex);
-    if (param->probeMode >= 0)
-      mScope->SetProbeMode(param->probeMode, true);
+    if (!skipScope) {
+      mScope->SetMagIndex(param->magIndex);
+      if (param->probeMode >= 0)
+        mScope->SetProbeMode(param->probeMode, true);
 
-    if (param->beamAlpha >= 0) {
-      alpha = mScope->GetAlpha();
-      if (alpha >= 0)
-        mScope->ChangeAlphaAndBeam(alpha, param->beamAlpha);
+      if (param->beamAlpha >= 0) {
+        alpha = mScope->GetAlpha();
+        if (alpha >= 0)
+          mScope->ChangeAlphaAndBeam(alpha, param->beamAlpha);
+      }
+
+      // Set the spot size before intensity to make sure the intensity is legal for this
+      // spot size on a FEI, and maybe to handle spot-size dependent changes elsewhere
+      mScope->SetSpotSize(param->spotSize);
+      if (!camP->STEMcamera)
+        mScope->DelayedSetIntensity(param->intensity, GetTickCount(), param->spotSize,
+          param->probeMode);
     }
 
-    // Set the spot size before intensity to make sure the intensity is legal for this
-    // spot size on a FEI, and maybe to handle spot-size dependent changes elsewhere
-    mScope->SetSpotSize(param->spotSize);
-    if (!camP->STEMcamera)
-      mScope->DelayedSetIntensity(param->intensity, GetTickCount(), param->spotSize, 
-        param->probeMode);
-
-    // Modify filter parameters if they are present: but don't update unless in filter mode
+    // Modify filter parameters if they are present but don't update unless in filter mode
     if (param->slitWidth > 0.) {
       filtParam->slitIn = param->slitIn;
       filtParam->slitWidth = param->slitWidth;
@@ -2531,7 +2543,7 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
         mWinApp->mFilterControl.UpdateSettings();
 
         // Do setup on JEOL for same reasons as it is done when changing low dose area
-        if (JEOLscope)
+        if (JEOLscope && !skipScope)
           mCamera->SetupFilter();
       }
     }

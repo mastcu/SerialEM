@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -997,9 +998,9 @@ BEGIN
     CONTROL         "Spin1",IDC_SPINCURRENTBUF,"msctls_updown32",UDS_ARROWKEYS,4,8,10,14
     LTEXT           "Static",IDC_OTHERBUF1,11,40,85,8
     LTEXT           "Static",IDC_OTHERBUF2,11,49,85,8
-    LTEXT           "Size:",IDC_SIZETEXT,4,22,73,8
+    LTEXT           "Size:",IDC_SIZETEXT,4,22,81,8
     LTEXT           "Stage:",IDC_STAGETEXT,4,31,74,8
-    LTEXT           "Tilt:",IDC_TILTTEXT,81,22,34,8
+    LTEXT           "Tilt:",IDC_TILTTEXT,85,22,30,8
     LTEXT           "Def:",IDC_STATDEFOCUS,81,31,35,8
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
@@ -3056,17 +3057,17 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,298,161,10
 END
 
-IDD_STAGEMOVETOOL DIALOGEX 0, 0, 86, 106
+IDD_STAGEMOVETOOL DIALOGEX 0, 0, 86, 107
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Stage Move Tool"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "?",IDC_BUTHELP,73,94,10,10
-    LTEXT           "-1200.02",IDC_STATSTAGEx,11,86,29,8,0,WS_EX_RIGHT
-    LTEXT           "-1220.02",IDC_STATSTAGEY,51,86,29,8,0,WS_EX_RIGHT
+    PUSHBUTTON      "?",IDC_BUTHELP,74,95,10,10
+    LTEXT           "-1200.02",IDC_STATSTAGEx,10,95,24,8,0,WS_EX_RIGHT
+    LTEXT           "-1220.02",IDC_STATSTAGEY,48,95,24,8,0,WS_EX_RIGHT
     LTEXT           "X:",IDC_STATIC,2,95,8,8
-    LTEXT           "Y:",IDC_STATIC,39,95,8,8
+    LTEXT           "Y:",IDC_STATIC,40,95,8,8
     CONTROL         "Take Trial after move",IDC_IMAGE_AFTER_MOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,2,84,81,10
 END
 
@@ -4445,7 +4446,7 @@ BEGIN
     BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 84
-        BOTTOMMARGIN, 104
+        BOTTOMMARGIN, 105
     END
 
     IDD_FRAMEALIGN, DIALOG
@@ -4922,6 +4923,11 @@ BEGIN
 END
 
 IDD_STEMCONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_BUFFERSTATUS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -7487,7 +7493,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

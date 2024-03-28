@@ -449,7 +449,7 @@ void CLowDoseDlg::OnLowdosemode()
     saveTruly = mTrulyLowDose;
     saveLDmode = m_bLowDoseMode;
     saveHideOff = mHideOffState;
-    mWinApp->mNavHelper->RestoreSavedState();
+    mWinApp->mNavHelper->RestoreSavedState(!m_bLowDoseMode);
     if (mWinApp->mNavHelper->mStateDlg) {
       mWinApp->mNavHelper->mStateDlg->Update();
       mWinApp->mNavHelper->mStateDlg->DisableUpdateButton();
