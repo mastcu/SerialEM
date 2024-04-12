@@ -57,7 +57,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mOtherFile = "";
   mImBufsp = inImBufs;
-  mStackWinMaxXY = 512;
+  mStackWinMaxXY = -1;
   mRotateAxisAngle = -1;
   mDrawCrosshairs = false;
   mDrawTiltAxis = false;
