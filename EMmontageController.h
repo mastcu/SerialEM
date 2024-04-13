@@ -360,7 +360,8 @@ class EMmontageController
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
   int ListMontagePieces(KImageStore * storeMRC, MontParam * param, int zValue,
-    IntVec &pieceSavedAt);
+    IntVec &pieceSavedAt, IntVec *xVec = NULL, IntVec *yVec = NULL, FloatVec *xStage = NULL,
+    FloatVec *yStage = NULL, FloatVec *meanVec = NULL, float *zStage = NULL);
   void ReadingDone(void);
   void StartStageRestore(void);
   void StageRestoreDone(void);

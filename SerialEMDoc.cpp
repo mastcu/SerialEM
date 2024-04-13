@@ -42,6 +42,7 @@
 #include "ReadFileDlg.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "MultiGridDlg.h"
 #include "MainFrm.h"
 #include "StateDlg.h"
 #include "DummyDlg.h"
@@ -2917,6 +2918,8 @@ static char sInitialDir[_MAX_PATH + 1] = "";
 void CSerialEMDoc::SetInitialDirToCurrentDir()
 {
   _getcwd(sInitialDir, _MAX_PATH + 1);
+  if (mWinApp->mNavHelper->mMultiGridDlg)
+    mWinApp->mNavHelper->mMultiGridDlg->UpdateSettings();
 }
 
 const char * CSerialEMDoc::GetInitialDir()

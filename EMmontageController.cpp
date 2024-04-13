@@ -3898,12 +3898,18 @@ void EMmontageController::GetCurrentCoords(int &outX, int &outY, int &outZ)
 // Make a list of the pieces in the file at the given z value, return the section #
 // for each piece indexed in Y then X order in pieceSavedAt; return value # of pieces
 // and also clear and reallocate the vector pieceSavedAt
+// Optionally return piece coordinates if ixVec, iyVec non-NULL, and stage coordinates
+// if there is an autodoc and xStage, yStage are non-NULL
 int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *param, 
-                                           int zValue, std::vector<int> &pieceSavedAt)
+  int zValue, IntVec &pieceSavedAt, IntVec *ixVec, IntVec *iyVec, FloatVec *xStage,
+  FloatVec *yStage, FloatVec *meanVec, float *zStage)
 {
-  int already, nsec, ind, ix, iy, iz;
-  bool gotMutex = storeMRC->GetAdocIndex() >= 0 && 
+  int already, nsec, ind, ix, iy, iz, fullNum = param->xNframes * param->yNframes;
+  float amin, amax;
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
+  bool gotMutex = storeMRC->GetAdocIndex() >= 0 &&
     (storeMRC->getStoreType() != STORE_TYPE_MRC || storeMRC->montCoordsInAdoc());
+  int nameInd = storeMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
   if (param->xNframes <= 0 || param->yNframes <= 0 || param->xFrame - param->xOverlap <= 0
     || param->yFrame - param->yOverlap <= 0 || param->xNframes >= 10000 ||
     param->yNframes >= 10000 || param->xFrame > 17000 || param->yFrame > 17000) {
@@ -3912,19 +3918,54 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
       param->xOverlap, param->yOverlap);
     return -1;
   }
-  CLEAR_RESIZE(pieceSavedAt, int, param->xNframes * param->yNframes);
+  CLEAR_RESIZE(pieceSavedAt, int, fullNum);
+  if (ixVec && iyVec) {
+    ixVec->resize(fullNum);
+    iyVec->resize(fullNum);
+  }
   mBufferManager->CheckAsyncSaving();
   for (ind = 0; ind < param->xNframes * param->yNframes; ind++)
     pieceSavedAt[ind] = -1;
   already = 0;
   nsec = storeMRC->getDepth();
+  if (xStage && yStage)
+    gotMutex = true;
   if (gotMutex && AdocGetMutexSetCurrent(storeMRC->GetAdocIndex()) < 0)
     return 0;
+  if (xStage && yStage && gotMutex) {
+    yStage->resize(fullNum);
+    xStage->resize(fullNum);
+    if (meanVec)
+      meanVec->resize(fullNum);
+  }
+  if (zStage)
+    *zStage = EXTRA_NO_VALUE;
   for (int isec = 0; isec <  nsec ; isec++) {
     if (!storeMRC->getPcoord(isec, ix, iy, iz, gotMutex) && iz == zValue) {
       ind = (ix / (param->xFrame - param->xOverlap) ) * 
         param->yNframes + iy / (param->yFrame - param->yOverlap);
       pieceSavedAt[ind] = isec;
+      if (ixVec && iyVec) {
+        ixVec->at(ind) = ix;
+        iyVec->at(ind) = iy;
+      }
+      if (xStage && yStage && gotMutex) {
+        if (AdocGetTwoFloats(names[nameInd], isec, ADOC_STAGE, &xStage->at(ind),
+          &yStage->at(ind))) {
+          already = 0;
+          break;
+        }
+        if (meanVec && AdocGetThreeFloats(names[nameInd], isec, ADOC_MINMAXMEAN, &amin,
+          &amax, &meanVec->at(ind))) {
+          already = 0;
+          break;
+        }
+        if (zStage && *zStage < EXTRA_VALUE_TEST && AdocGetFloat(names[nameInd], isec, 
+          ADOC_STAGEZ, zStage)) {
+          already = 0;
+          break;
+        }
+      }
       already++;
     }
   }

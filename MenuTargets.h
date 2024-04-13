@@ -431,6 +431,8 @@ public:
   afx_msg void OnNavRunScriptInMultishot();
   afx_msg void OnUpdateNavRunScriptInMultishot(CCmdUI *pCmdUI);
   afx_msg void OnNavSetScriptToRun();
+  afx_msg void OnMultipleGridOperations();
+  afx_msg void OnUpdateMultipleGridOperations(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

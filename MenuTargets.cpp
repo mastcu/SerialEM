@@ -520,6 +520,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE, OnUpdateNavRunScriptInMultishot)
     ON_COMMAND(ID_NAV_SETSCRIPTTORUN, OnNavSetScriptToRun)
     ON_UPDATE_COMMAND_UI(ID_NAV_SETSCRIPTTORUN, OnUpdateNoTasks)
+    ON_COMMAND(ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS, OnMultipleGridOperations)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS, OnUpdateMultipleGridOperations)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -930,6 +932,17 @@ void CMenuTargets::OnAutocontourGridSquares()
   mNavHelper->OpenAutoContouring();
 }
 
+void CMenuTargets::OnMultipleGridOperations()
+{
+  mNavHelper->OpenMultiGrid();
+}
+
+// TEMPORARY SPIKE
+void CMenuTargets::OnUpdateMultipleGridOperations(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator && false);
+}
+
 void CMenuTargets::OnCombinePointsIntoMultiShots()
 {
   mNavHelper->OpenMultiCombiner();
@@ -1102,7 +1115,7 @@ void CMenuTargets::OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAligntoitem()
 {
-  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, false, -1);
+  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, 0, -1);
 }
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)

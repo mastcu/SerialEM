@@ -3390,7 +3390,7 @@ bool CShiftManager::BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd,
 double CShiftManager::GetStageTiltFactors(float & xTiltFac, float & yTiltFac)
 {
   double angle = mScope->GetTiltAngle();
-  float cosa = cos(DTOR * mScope->GetTiltAngle());
+  float cosa = cos(DTOR * angle);
   xTiltFac = (HitachiScope ? cosa : 1.f);
   yTiltFac = (HitachiScope ? 1.f : cosa);
   return angle;
