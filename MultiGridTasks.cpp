@@ -45,7 +45,7 @@ void CMultiGridTasks::Initialize()
 
 int CMultiGridTasks::ReplaceBadCharacters(CString &str)
 {
-  const char *mandatory = "`\'\"$*?:\\/";
+  const char *mandatory = "`\'\"$?:*\\/";
   const char *optional = "!#%&(){};|";
   const char *charList = mandatory;
   int indCh, loop, retVal = 0;
