@@ -46,6 +46,8 @@
 #include "NavHelper.h"
 #include "NavRotAlignDlg.h"
 #include "MultiShotDlg.h"
+#include "MultiGridTasks.h"
+#include "MultiGridDlg.h"
 #include "ComaVsISCalDlg.h"
 #include "AutocenSetupDlg.h"
 #include "CalibCameraTiming.h"
@@ -867,6 +869,7 @@ CSerialEMApp::~CSerialEMApp()
   delete mComplexTasks;
   delete mMultiTSTasks;
   delete mParticleTasks;
+  delete mMultiGridTasks;
   delete mBeamAssessor;
   delete mProcessImage;
   delete mTSController;
@@ -1064,6 +1067,7 @@ BOOL CSerialEMApp::InitInstance()
   mComplexTasks = new CComplexTasks();
   mMultiTSTasks = new CMultiTSTasks();
   mParticleTasks = new CParticleTasks();
+  mMultiGridTasks = new CMultiGridTasks();
   mBeamAssessor = new CBeamAssessor();
   mProcessImage = new CProcessImage();
   mTSController = new CTSController();
@@ -1397,6 +1401,7 @@ BOOL CSerialEMApp::InitInstance()
   mComplexTasks->Initialize();
   mMultiTSTasks->Initialize();
   mParticleTasks->Initialize();
+  mMultiGridTasks->Initialize();
   mBeamAssessor->Initialize();
   mTSController->Initialize();
   mFilterTasks->Initialize();
@@ -2466,6 +2471,14 @@ BOOL CSerialEMApp::CheckIdleTasks()
     mMacroProcessor->CheckAndSetupExternalControl();
   }
 
+  // Check for scheduled script; pop it and start it
+  if (mScheduledScripts.size() > 0) {
+    i = mScheduledScripts.front();
+    mScheduledScripts.pop();
+    mMacroProcessor->SaveStatusPanes(i);
+    mMacroProcessor->Run(i);
+  }
+
   // Check for idle script
   if (!mIdleArray.GetSize() && !mScriptToRunOnIdle.IsEmpty() && mIdleScriptIntervalSec >
     0 && SEMTickInterval(time, mLastIdleScriptTime) > 1000. * mIdleScriptIntervalSec) {
@@ -2547,6 +2560,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMacroProcessor->DoingMacro() ? 1 : 0;
     else if (idc->source == TASK_AUTO_CONTOUR)
       busy = mNavHelper->mAutoContouringDlg->AutoContBusy();
+    else if (idc->source == TASK_MULTI_SHOT)
+      busy = mMultiGridTasks->MultiGridBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -2698,6 +2713,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->AutoContDone();
+        else if (idc->source == TASK_MULTI_GRID)
+          mMultiGridTasks->MultiGridNextTask(idc->param);
         else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
           CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
         else if (idc->source == TASK_NAV_FILE_RANGE && mNavigator)
@@ -2807,6 +2824,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->StopScanning();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
+        else if (idc->source == TASK_MULTI_SHOT)
+          mMultiGridTasks->CleanupMultiGrid(busy);
      }
 
       // Delete task from memory and drop index
@@ -2973,6 +2992,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopComaVsISCal();
   if (mNavHelper->mAutoContouringDlg->DoingAutoContour())
     mNavHelper->mAutoContouringDlg->StopAutoCont();
+  if (mMultiGridTasks->GetDoingMultiGrid())
+    mMultiGridTasks->StopMultiGrid();
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);
@@ -3139,6 +3160,17 @@ HitachiParams *SEMGetHitachiParams()
 int *SEMGetLastHitachiMember()
 {
   return &((CSerialEMApp *)AfxGetApp())->mHitachiParams.lastMember;
+}
+
+// Adds a script identified by name or number to queue to run on idle, return 1 if
+// no script found
+int SEMQueueScriptNextIdle(CString name)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int i = winApp->mMacroProcessor->FindMacroByNameOrTextNum(name);
+  if (i >= 0)
+    winApp->mScheduledScripts.push(i);
+  return i < 0 ? 1 : 0;
 }
 
 // Global convenience function for accessing TSMessageBox
@@ -3469,6 +3501,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mParticleTasks->mZbyGsetupDlg->UpdateEnables();
   if (mScreenShotDialog)
     mScreenShotDialog->UpdateRunnable();
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->UpdateEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
   mInUpdateWindows = false;
@@ -3522,6 +3556,8 @@ void CSerialEMApp::UpdateWindowSettings()
     mNavHelper->mMultiCombinerDlg->UpdateSettings();
   if (mParticleTasks->mZbyGsetupDlg)
     mParticleTasks->mZbyGsetupDlg->UpdateSettings();
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->UpdateSettings();
 }
 
 
@@ -3547,7 +3583,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mCalibTiming->DoingDeadTime() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
-    mNavHelper->GetRealigning() ||
+    mNavHelper->GetRealigning() || mMultiGridTasks->GetDoingMultiGrid() ||
     mNavHelper->GetAcquiringDual())) || mAutoTuning->DoingAutoTune() ||
     (mStageMoveTool && mStageMoveTool->GetGoingToAcquire()) ||
     DoingTiltSeries() || (mPlugImagingTask && mPlugDoingFunc && mPlugDoingFunc()));

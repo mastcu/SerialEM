@@ -42,6 +42,7 @@
 #include <math.h>
 #include <afxtempl.h>
 #include <set>
+#include <queue>
 #include <string>
 #include "resource.h"       // main symbols
 #include "EMimageBuffer.h"  // Added by ClassView
@@ -90,7 +91,8 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
   TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
-  TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET
+  TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
+  TASK_MULTI_GRID
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -296,6 +298,9 @@ typedef bool (*PlugDoingFunc)(void);
   a.swap(std::vector<b>(a)); \
   a.resize(c); }
 
+#define VECTOR_MIN(vec) *std::min_element(vec.begin(), vec.end())
+#define VECTOR_MAX(vec) *std::max_element(vec.begin(), vec.end())
+
 #define IS_SET_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_CONSET)
 #define IS_AREA_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_AREA)
 
@@ -355,6 +360,7 @@ class CExternalTools;
 class CScreenShotDialog;
 class CMainFrame;
 class CPythonServer;
+class CMultiGridTasks;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMApp:
@@ -448,6 +454,7 @@ bool DLL_IM_EX SEMSetVariableWithStr(CString name, CString value, bool persisten
   CString *errStr);
 bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mustBeNew,
   CString *errStr);
+int DLL_IM_EX SEMQueueScriptNextIdle(CString name);
 void AddBackTraceToMessage(CString &message);
 void DLL_IM_EX SEMAppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
 
@@ -742,6 +749,7 @@ public:
   CScreenShotDialog *mScreenShotDialog;
   CMultiTSTasks *mMultiTSTasks;
   CParticleTasks *mParticleTasks;
+  CMultiGridTasks *mMultiGridTasks;
   CMailer *mMailer;
   CGatanSocket *mGatanSocket;
   CPluginManager *mPluginManager;
@@ -753,6 +761,7 @@ public:
   CString  m_strTitle;
   HitachiParams mHitachiParams;
   CString mStartupMessage;     // Message to display in box or log window on startup
+  std::queue<int> mScheduledScripts;
 
   // Overrides
   // ClassWizard generated virtual function overrides
@@ -1055,7 +1064,6 @@ bool FilterIsSelectris() {return mFilterParams.firstGIFCamera >= 0 && mCamParams
 afx_msg void OnUseRTFformatToSave();
 afx_msg void OnUpdateUseRTFformatToSave(CCmdUI *pCmdUI);
 };
-
 
 /////////////////////////////////////////////////////////////////////////////
 
