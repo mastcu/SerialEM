@@ -1679,6 +1679,8 @@ BOOL CSerialEMApp::InitInstance()
     }
 #endif // _WIN64
   }
+  if (mBufferManager->GetStackWinMaxXY() <= 0)
+    mBufferManager->SetStackWinMaxXY(mMemoryLimit > 5.e9 ? 1024 : 512);
   message = mParamIO->GetPropsWithComments();
   if (!message.IsEmpty())
     AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
