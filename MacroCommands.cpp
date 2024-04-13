@@ -35,6 +35,7 @@
 #include "ProcessImage.h"
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
 #include "AutoContouringDlg.h"
@@ -10426,7 +10427,7 @@ int CMacCmd::AlignToTemplate(void)
 int CMacCmd::RealignToNavItem(void)
 {
   CString report;
-  BOOL truth, justMove = false;
+  BOOL truth, justMove = 0;
   NavAlignParams *params = mNavHelper->GetNavAlignParams();
   int index, index2, iters, ifZero, iy0, setForScaled = -1;
   float thresh;
@@ -10444,7 +10445,8 @@ int CMacCmd::RealignToNavItem(void)
     iters = mItemInt[index2 + 3] < 0 ? params->maxNumResetIS : mItemInt[index2 + 3];
     ifZero = B3DCHOICE(mItemInt[index2 + 4] < 0, params->leaveISatZero ? 1 : 0, 
       mItemInt[index2 + 4]);
-    justMove = !mItemEmpty[index2 + 5] && mItemInt[index2 + 5] != 0;
+    justMove = (!mItemEmpty[index2 + 5] && mItemInt[index2 + 5] != 0) ? 
+      REALI2ITEM_JUST_MOVE : 0;
   }
   if (!mItemEmpty[index2 + 1])
     mNavHelper->SetContinuousRealign(mItemInt[index2 + 1]);
@@ -10465,6 +10467,21 @@ int CMacCmd::RealignToNavItem(void)
     report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
     ABORT_NOLINE(report);
   }
+  return 0;
+}
+
+// RealignToReloadedGrid
+int CMacCmd::RealignReloadedGrid()
+{
+  CMapDrawItem *navItem;
+
+  navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  if (!navItem)
+    return 1;
+
+  if (mWinApp->mMultiGridTasks->RealignReloadedGrid(navItem, mItemFlt[2], 
+    mItemInt[3] != 0, mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
   return 0;
 }
 

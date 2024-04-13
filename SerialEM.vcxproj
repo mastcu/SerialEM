@@ -663,7 +663,7 @@
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)SerialEM.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -918,6 +918,7 @@
     <ClInclude Include="ManageDewarsDlg.h" />
     <ClInclude Include="MultiCombinerDlg.h" />
     <ClInclude Include="MultiGridDlg.h" />
+    <ClInclude Include="MultiGridTasks.h" />
     <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
     <ClInclude Include="MyButton.h" />
@@ -1762,6 +1763,7 @@ echo.
     <ClCompile Include="ManageDewarsDlg.cpp" />
     <ClCompile Include="MultiCombinerDlg.cpp" />
     <ClCompile Include="MultiGridDlg.cpp" />
+    <ClCompile Include="MultiGridTasks.cpp" />
     <ClCompile Include="MultiHoleCombiner.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />
     <ClCompile Include="MyButton.cpp" />

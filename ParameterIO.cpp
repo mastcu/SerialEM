@@ -37,6 +37,7 @@
 #include "MultiTSTasks.h"
 #include "HoleFinderDlg.h"
 #include "AutoContouringDlg.h"
+#include "MultiGridDlg.h"
 #include "Mailer.h"
 #include "MultiShotDlg.h"
 #include "MultiCombinerDlg.h"
@@ -1013,6 +1014,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mNavHelper->GetMultiCombinerPlacement();
           else if (NAME_IS("AutoContPlacement"))
             place = mWinApp->mNavHelper->GetAutoContDlgPlacement();
+          else if (NAME_IS("MultiGridPlacement"))
+            place = mWinApp->mNavHelper->GetMultiGridPlacement();
           else if (NAME_IS("NavAcqPlacement"))
             place = mWinApp->mNavHelper->GetAcquireDlgPlacement(false);
           else if (NAME_IS("CtffindPlacement"))
@@ -1068,8 +1071,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("RotAlignPlacement", mWinApp->mNavHelper->mRotAlignDlg);
             SET_PLACEMENT("LogPlacement", mWinApp->mLogWindow);
             SET_PLACEMENT("MultiShotPlacement", mWinApp->mNavHelper->mMultiShotDlg);
-            SET_PLACEMENT("MultiCombinerPlacement", 
+            SET_PLACEMENT("MultiCombinerPlacement",
               mWinApp->mNavHelper->mMultiCombinerDlg);
+            SET_PLACEMENT("MultiGridPlacement", mWinApp->mNavHelper->mMultiGridDlg);
             SET_PLACEMENT("CtffindPlacement", mWinApp->mProcessImage->mCtffindParamDlg);
             SET_PLACEMENT("AutocenPlacement", mWinApp->mAutocenDlg);
             SET_PLACEMENT("VppCondPlacement", mWinApp->mVPPConditionSetup);
@@ -2123,6 +2127,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetMultiCombinerPlacement());
     WritePlacement("AutoContPlacement", 0, 
       mWinApp->mNavHelper->GetAutoContDlgPlacement());
+    WritePlacement("MultiGridPlacement", 0, mWinApp->mNavHelper->GetMultiGridPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);

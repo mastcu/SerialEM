@@ -536,6 +536,9 @@
     <ClInclude Include="MultiGridDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MultiGridTasks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1306,6 +1309,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiGridDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiGridTasks.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>
