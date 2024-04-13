@@ -851,9 +851,11 @@ int CEMscope::Initialize()
   }
   try {
     if (mPlugFuncs->ASIsetVersion && mSkipAdvancedScripting <= 0) {
-      if (mAdvancedScriptVersion > 0)
+      str = "getting";
+      if (mAdvancedScriptVersion > 0) {
+        str = "setting";
         mPlugFuncs->ASIsetVersion(mAdvancedScriptVersion);
-      else
+      } else
         mAdvancedScriptVersion = mPlugFuncs->ASIgetVersion();
     }
     if (mScopeCanFlashFEG < 0) {
@@ -869,7 +871,7 @@ int CEMscope::Initialize()
     }
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, "accessing the advanced scripting version ");
+    SEMReportCOMError(E, str + " the advanced scripting version ");
   }
   if (FEIscope && mScopeHasPhasePlate < 0)
     mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
