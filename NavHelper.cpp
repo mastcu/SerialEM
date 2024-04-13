@@ -820,7 +820,7 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
   if (!mapItem)
     return item->mDrawnOnMapID ? 9 : 8;
   mRIdrawnTargetItem = item;
-  err = RealignToItem(mapItem, restoreState, 0., 0, 0, false, -1);
+  err = RealignToItem(mapItem, restoreState, 0., 0, 0, 0, -1);
   if (err)
     mRIdrawnTargetItem = NULL;
   return err;
@@ -830,10 +830,11 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
  * REALIGN TO ITEM: Realign to the coordinates in the given item by correlating with maps
  */
 int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen,
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, int realiFlags,
   int setForScaled)
 {
-  int i, ix, iy, ind, axes, action; 
+  int i, ix, iy, ind, axes, action;
+  BOOL justMoveIfSkipCen = (realiFlags & REALI2ITEM_JUST_MOVE) ? 1 : 0;
   CMapDrawItem *item;
   KImageStore *imageStore;
   float useWidth, useHeight, montErrX, montErrY, itemBackX, itemBackY, field;
@@ -3162,11 +3163,13 @@ void CNavHelper::InterpMontStageOffset(KImageStore *imageStore, MontParam *montP
 }
 
 // Rotating the image in the given buffer by current rotation matrix, or skip if identity 
-int CNavHelper::RotateForAligning(int bufNum)
+int CNavHelper::RotateForAligning(int bufNum, ScaleMat *useMat)
 {
   int width, height, err;
   float sizingFrac = 0.5f;
   EMimageBuffer *imBuf = &mImBufs[bufNum];
+  if (useMat)
+    mRIrMat = *useMat;
   if (fabs(mRIrMat.xpx - 1.) < 1.e-6 && fabs(mRIrMat.xpy) < 1.e-6 && 
     fabs(mRIrMat.ypx) < 1.e-6 && fabs(mRIrMat.ypy - 1.) < 1.e-6)
     return 0;
@@ -3175,7 +3178,7 @@ int CNavHelper::RotateForAligning(int bufNum)
   height = imBuf->mImage->getHeight();
   err = TransformBuffer(imBuf, mRIrMat, width, height, sizingFrac, mRIrMat);
   if (err)
-    AfxMessageBox("Insufficient memory to rotate the image for aligning", MB_EXCLAME);
+    SEMMessageBox("Insufficient memory to rotate the image for aligning", MB_EXCLAME);
   return err;
 }
 
@@ -6422,9 +6425,9 @@ void CNavHelper::OpenMultiGrid(void)
 WINDOWPLACEMENT *CNavHelper::GetMultiGridPlacement(void)
 {
   if (mMultiGridDlg) {
-    mMultiGridDlg->GetWindowPlacement(&mMultiCombinerPlace);
+    mMultiGridDlg->GetWindowPlacement(&mMultiGridPlace);
   }
-  return &mMultiCombinerPlace;
+  return &mMultiGridPlace;
 }
 
 WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)

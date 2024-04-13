@@ -960,7 +960,7 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 // Invokes the realign routine for the current item, or for the item being acquired
 // if a macro is being run at acquire points
 int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled)
+    int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled)
 {
   if (!GetAcquiring()) {
     mItem = GetSingleSelectedItem();
@@ -969,28 +969,28 @@ int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit,
   } else if (GetCurrentOrAcquireItem(mItem) < 0)
     return -1;
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
-    justMoveIfSkipCen, setForScaled);
+    realiFlags, setForScaled);
 }
 
 // Or, aligns to another item by index
 int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled)
+    int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled)
 {
   if (!GetOtherNavItem(index)) {
     SEMMessageBox("The Navigator item index is out of range", MB_EXCLAME);
     return 1;
   }
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS,
-    justMoveIfSkipCen, setForScaled);
+    realiFlags, setForScaled);
 }
 
 // The actual routine for calling the helper and giving error messages
 int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore, 
-  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen,
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, int realiFlags,
   int setForScaled)
 {
   int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
-    leaveZeroIS, justMoveIfSkipCen, setForScaled);
+    leaveZeroIS, realiFlags, setForScaled);
   if (err && err < 4) 
     SEMMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
   if (err == 4 || err == 5) 
@@ -1018,7 +1018,7 @@ int CNavigatorDlg::MoveToItem(int index, BOOL skipZ)
 void CNavigatorDlg::OnRealigntoitem()
 {
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true, 0., 0, 0, false, -1);
+  RealignToCurrentItem(true, 0., 0, 0, 0, -1);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -4335,11 +4335,14 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   float askLimitRatio = 0.9f;    // Ask user if Record frame smaller than camera by this
   int magIndex = mScope->GetMagIndex();
   BOOL lowDose = mWinApp->LowDoseMode();
-  int trial, numTry = 1;
+  int trial, numTry = 1, initCons = RECORD_CONSET, useCons;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   MontParam *montParam = mMontParam;
   CString *modeNames = mWinApp->GetModeNames();
+  float viewPixel, searchPixel = 0.;
   BOOL forceStage = false;
+  BOOL useViewSave, useSearchSave;
+
   if (montDlg) {
     magIndex = montDlg->mParam.magIndex;
     montParam = &montDlg->mParam;
@@ -4366,9 +4369,22 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   mMontItemCam->mMapTiltAngle = item->mMapTiltAngle;
   mMontItem = item;
 
-  if (lowDose && !montParam->useViewInLowDose && !(montParam->useSearchInLowDose && 
-    ldp[SEARCH_AREA].magIndex))
-    numTry = 2;
+  // If low dose, set up to loop on different areas
+  if (lowDose) {
+    viewPixel = mShiftManager->GetPixelSize(iCam, ldp[VIEW_CONSET].magIndex);
+    if (ldp[SEARCH_AREA].magIndex)
+      searchPixel = mShiftManager->GetPixelSize(iCam, ldp[SEARCH_AREA].magIndex);
+    useViewSave = montParam->useViewInLowDose;
+    useSearchSave = montParam->useSearchInLowDose;
+    if (!useViewSave && !useSearchSave) {
+      numTry = searchPixel > 0 ? 3 : 2;
+    } else if ((useViewSave && searchPixel > 0. && searchPixel > viewPixel) ||
+      (useSearchSave && searchPixel > 0. && searchPixel < viewPixel)) {
+      numTry = 2;
+      initCons = useViewSave ? VIEW_CONSET : SEARCH_CONSET;
+    }
+  }
+  useCons = initCons;
 
   for (trial = 0; trial < numTry; trial++) {
     int consetNum = MontageConSetNum(montParam, false);
@@ -4395,10 +4411,25 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
     if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac))) {
-      if (lowDose && !montParam->useViewInLowDose) {
-        montParam->useViewInLowDose = true;
+
+      // If it fails and there are more trials, switch from View to Search or vice-versa,
+      // or do search if it is smaller pixel, or do view
+      if (trial < numTry - 1) {
+        if (montParam->useViewInLowDose) {
+          montParam->useViewInLowDose = false;
+          montParam->useSearchInLowDose = true;
+        } else if (montParam->useSearchInLowDose) {
+          montParam->useViewInLowDose = true;
+          montParam->useSearchInLowDose = false;
+        } else if (searchPixel > 0. && searchPixel < viewPixel) {
+          montParam->useSearchInLowDose = true;
+        } else {
+          montParam->useViewInLowDose = true;
+        }
+        useCons = montParam->useViewInLowDose ? VIEW_CONSET : SEARCH_CONSET;
         continue;
       }
+
       AfxMessageBox(err == 2 ? "The amount of overlap between frames required to do a\n"
         "montage with stage movement is too high (more than half the frame size) at this"
         " magnification.\nOpen the Montage Setup dialog from the File menu,\nselect"
@@ -4409,14 +4440,14 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
         mDocWnd->RestoreCurrentFile();
       mMontItem = NULL;
       delete mMontItemCam;
-      if (numTry == 2)
-        montParam->useViewInLowDose = false;
+      montParam->useViewInLowDose = useViewSave;
+      montParam->useSearchInLowDose = useSearchSave;
       return 1;
     }
   }
-  if (numTry == 2 && montParam->useViewInLowDose)
-    AfxMessageBox("Turning on \"Use " + modeNames[VIEW_CONSET] + " in Low Dose\" because "
-    "area could not be fit with " + modeNames[RECORD_CONSET] + " parameters", MB_EXCLAME);
+  if (numTry > 1 && initCons != useCons)
+    AfxMessageBox("Turning on \"Use " + modeNames[useCons] + " in Low Dose\" because "
+    "area could not be fit with " + modeNames[initCons] + " parameters", MB_EXCLAME);
 
   // Call with argument to indicate frame set up.  It takes care of restoring current
   // file if it is aborted
@@ -10087,9 +10118,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mWillDoTemplateAlign ? 0.f : aliParams->resetISthresh, 
       mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS, 
       mWillDoTemplateAlign ? false : aliParams->leaveISatZero, 
-      mAcqParm->hybridRealign && mWillDoTemplateAlign && 
+      (mAcqParm->hybridRealign && mWillDoTemplateAlign && 
       mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS && 
-      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1, 
+      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1) ? REALI2ITEM_JUST_MOVE : 0, 
       mAcqParm->realignToScaledMap ? mAcqParm->conSetForScaledAli : -1);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();

@@ -24,6 +24,8 @@ class CMultiGridDlg;
 #define MULTI_NO_3X3_CROSS  0x40
 #define MULTI_DO_CROSS_3X3  0x80
 
+#define REALI2ITEM_JUST_MOVE   0x1
+
 // Structure for keeping track of parameters that enable skipping center align in round 1
 struct CenterSkipData
 {
@@ -201,7 +203,7 @@ public:
   CNavHelper(void);
   ~CNavHelper(void);
   int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit,
-    int maxNumResetAlign, int leaveZeroIS, BOOL justMoveIfSkipCen, int setForScaled);
+    int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
   GetMember(int, Realigning)
   GetSetMember(float, RImaximumIS)
@@ -547,7 +549,7 @@ public:
   void StopRealigning(void);
   void StopAndReportFinish(void);
   void RestoreForStopOrScaledAlign();
-  int RotateForAligning(int bufNum);
+  int RotateForAligning(int bufNum, ScaleMat *useMat = NULL);
   int TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat, int sizingWidth,
     int sizingHeight, float sizingFrac, ScaleMat rMat);
   void StartThirdRound(void);
