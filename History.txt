@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/12/24: SEM_4-2-0beta5
+4/12/24: Added mechanism for a plugin to set up a script to run once when
+program is idle.
+
+4/12/24: Made montage fitting to an area try Search as well as View in Low
+Dose when there are too many pieces; made full montage use current area in Low
+Dose mode if it is View or Search and has a much larger pixel size.
+
+4/12/24: Fixed early return, which became immediate on 3/19 (beta4).
+
 4/12/24: Set default for MaxStackWindowSizeXY to 1024 if total memory limit
 is above 5 GB (In 4.1).
 
