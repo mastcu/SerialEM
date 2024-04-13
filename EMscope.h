@@ -104,6 +104,7 @@ struct JeolCartridgeData {
   short slot;
   short type;
   short rotation;
+  CString userName;
 };
 
 #define LONGOP_FLASH_HIGH    1
@@ -971,7 +972,7 @@ public:
   void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize,
                                      double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha);
-  BOOL CassetteSlotStatus(int slot, int &status, CString &names);
+  BOOL CassetteSlotStatus(int slot, int &status, CString &names, int *numSlotsP = NULL);
   int FindCartridgeWithID(int ID, CString &errStr);
   int LoadCartridge(int slot);
   int UnloadCartridge(void);

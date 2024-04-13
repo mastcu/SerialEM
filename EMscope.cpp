@@ -6785,7 +6785,7 @@ double CEMscope::GetHTValue()
 
 // Functions for dealing with FEI or JEOL autoloader
 // Get the status of a slot; slots are apparently numbered from 1
-BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
+BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *numSlotsPtr)
 {
   BOOL success = false;
   bool gettingName = false;
@@ -6798,6 +6798,8 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
   try {
     numSlots = mPlugFuncs->NumberOfLoaderSlots();
     SEMTrace('W', "Number of slots is %d", numSlots);
+    if (numSlotsPtr)
+      *numSlotsPtr = numSlots;
     if (slot > 0 && slot <= numSlots) {
       csstat = mPlugFuncs->LoaderSlotStatus(slot);
       if (csstat == CassetteSlotStatus_Empty)
@@ -6808,7 +6810,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names)
         status = -1;
       success = true;
     }
-    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo) {
+    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo && !numSlotsPtr) {
       success = true;
       if (!slot)
         status = 0;
