@@ -437,8 +437,15 @@
       <P><A NAME="hid_corner_montage"></A><B>Setup Corner Montage command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to set up a montage to capture the area within the current set
-        of corner points. Be sure to go to the desired magnification before activating
-        this command. You will be opening a new image file for the montage, so if there
+        of corner points. The following description applies to this command and next two 
+        that involve fitting a montage to an area.&nbsp; Outside of Low Dose, be sure to go to the desired magnification before activating
+        this command.&nbsp; In Low Dose mode, the program will use the pre-existing 
+        settings of the &#39;Use View in Low Dose Mode&#39; and &#39;Use Search in Low Dose mode&#39; to 
+        determine how to fit the area.&nbsp; If it finds that the fit requires too many 
+        pieces, it will switch to a mode with a larger field of view.&nbsp; More likely, 
+        it will open anyway with the wrong area selected and you will have to change 
+        this selection.</P>
+    <P>&nbsp;You will be opening a new image file for the montage, so if there
         is already a file open the program will ask whether you want to close it. The
         program will compute the number of montage frames in X and Y required to
         capture the area, and decide whether the montage should be acquired with image
@@ -450,8 +457,9 @@
         frames, you will then go on to the <A HREF="hidd_montagesetup.htm">Montage Setup
           dialog box</A>, in which you will see the number of frames and their size
         and overlap. If the size of the montage is not reasonable (e.g., bigger than
-        10K by 10K pixels), you can change the magnification to adjust the number of
-        frames and achieve the desired image size. You can also adjust the percentage
+        20K by 20K pixels), outside of Low Dose you can change the magnification to adjust the number of
+        frames and achieve the desired image size.&nbsp; In Low Dose mode, you can 
+      only switch to using View or Search mode instead. You can also adjust the percentage
         overlap, which may also change the number of frames needed to fit the desired
         area. Once you have set up a reasonable montage, go on to the <A HREF="hidd_fileproperties.htm">
           File Properties dialog box</A> then the <A HREF="afx_hidd_filesave.htm">Save As
@@ -470,7 +478,10 @@
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to set up a montage to capture the whole grid area. A set of
         points will be composed that contain the grid area. The command then works the
-        same as the <A HREF="#hid_corner_montage">Setup Corner Montage command </A>.&nbsp; 
+        same as the <A HREF="#hid_corner_montage">Setup Corner Montage command</A>, 
+        except that in Low Dose mode, it will automatically switch to using the current 
+        Low Dose area if it is View or Search and &nbsp;has a pixel size 5 times larger 
+        than the other area.&nbsp; 
         After the montage is acquired and displayed, if the Navigator is open, you will likely see a dashed red 
         rectangle indicating the limits of stage movement.&nbsp; Note that if there are 
         image shift offset calibrations, the coordinates of the red rectangle are based 
