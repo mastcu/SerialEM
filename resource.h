@@ -2258,6 +2258,19 @@
 #define IDC_SET_SEARCH_SHIFT            3296
 #define IDC_NA_RUN_AT_ITEM_Z            3297
 #define IDC_STAT_SKIP_Z_IN              3298
+#define IDC_BUT_MG_GET_NAMES            3299
+#define IDC_BUT_MG_INVENTORY            3300
+#define IDC_STAT_MG_PREFIX              3301
+#define IDC_EDIT_MG_PREFIX              3302
+#define IDC_CHECK_MG_APPEND_NAME        3304
+#define IDC_BUT_MG_RESET_NAMES          3305
+#define IDC_BUT_MG_CLEAR                3306
+#define IDC_STAT_MG_ROOTNAME            3307
+#define IDC_STAT_MG_CURRENT_DIR         3308
+#define IDC_BUT_SET_CURRENT_DIR         3309
+#define IDC_CHECK_MG_USE_SUBDIRS        3310
+#define IDC_BUT_MG_SETUP                3312
+#define IDC_STAT_MG_GRID_SETUP          3313
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2812,6 +2825,7 @@
 #define ID_NAV_SETSCRIPTTORUN           33522
 #define ID_FILE_LOWWINDOW               33523
 #define ID_LOGWINDOW_USERTFFORMATTOSAVE 33524
+#define ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS 33525
 
 // Next default values for new objects
 // 
@@ -2819,8 +2833,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
-#define _APS_NEXT_COMMAND_VALUE         33525
-#define _APS_NEXT_CONTROL_VALUE         3299
+#define _APS_NEXT_COMMAND_VALUE         33526
+#define _APS_NEXT_CONTROL_VALUE         3314
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
