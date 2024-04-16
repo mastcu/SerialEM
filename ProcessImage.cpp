@@ -714,7 +714,7 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
 
   // Compute the scaling and rotation between images, invert rotation for Y inversion
   mShiftManager->GetScaleAndRotationForFocus(imBuf, focusScale, focusRot);
-  fromPixel = mShiftManager->GetPixelSize(imBuf) / focusScale;
+  fromPixel = mShiftManager->GetPixelSize(imBuf);
   toPixel = (float)(mShiftManager->GetPixelSize(camera, magInd)  * binning) / otherScale;
   if (!imBuf->GetAxisAngle(fromRot))
     fromRot = (float)mShiftManager->GetImageRotation(imBuf->mCamera, imBuf->mMagInd);
@@ -780,13 +780,13 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
   if (type == kFLOAT) {
     inArray = (float *)imData;
   } else {
-    NewArray2(fltBuf, float, nx*2, ny);
+    NewArray2(fltBuf, float, nx, ny);
     inArray = fltBuf;
   }
   if (inArray)
-    NewArray2(rotBuf, float, scaleXsize*4, scaleYsize);
+    NewArray2(rotBuf, float, scaleXsize, scaleYsize);
   if (inArray && rotBuf && doZoom) {
-    NewArray2(sclBuf, float, scaleXsize*4, scaleYsize);
+    NewArray2(sclBuf, float, scaleXsize, scaleYsize);
   }
   if (!rotBuf || (type != kFLOAT && !fltBuf) || !inArray || (doZoom && !sclBuf)) {
     err = 1;
@@ -863,8 +863,8 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *othe
     otherRot += axisAngle - (float)mShiftManager->GetImageRotation(otherBuf->mCamera, 
       otherBuf->mMagInd);
   otherRot += otherBuf->mRotAngle;
-  otherScale *= mShiftManager->GetPixelSize(otherBuf->mCamera, otherBuf->mMagInd) *
-    (float)otherBuf->mBinning / mShiftManager->GetPixelSize(otherBuf);
+  otherScale = (mShiftManager->GetPixelSize(otherBuf->mCamera, otherBuf->mMagInd) *
+    (float)otherBuf->mBinning / otherScale) / mShiftManager->GetPixelSize(otherBuf);
   return TransformToOtherMag(imBuf, outBufNum, otherBuf->mMagInd, errStr, 
     mWinApp->LookupActiveCamera(otherBuf->mCamera), otherBuf->mBinning, xcen, ycen, xsize,
     ysize, otherScale, otherRot, xform);
@@ -1278,7 +1278,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
   EMimageBuffer aliCopy, refCopy, zoomCopy;
   unsigned char *cropBuf;
   KImage *image;
-  bool aliBigger = false, interpUp = false, useFOV = false;
+  bool aliBigger = false, interpUp = false, useFOV = false, sameMagCam;
   if (toBufNum < 0)
     toBufNum = mBufferManager->AutoalignBufferIndex();
   cropInd = toBufNum;
@@ -1303,30 +1303,28 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       "information";
     return 1;
   }
-  if (mImBufs->mMagInd == mImBufs[toBufNum].mMagInd &&
-    mImBufs->mCamera == mImBufs[toBufNum].mCamera) {
-    errStr = "The images are from the same mag and camera; regular autoalign should "
-      "be used";
-    return 1;
-  }
-
+  sameMagCam = mImBufs->mMagInd == mImBufs[toBufNum].mMagInd &&
+    mImBufs->mCamera == mImBufs[toBufNum].mCamera;
+ 
   // Compare size of each image in microns and insist one be consistently bigger than
   // the other.
   mImBufs->mImage->getSize(nxAli, nyAli);
   mImBufs[toBufNum].mImage->getSize(nxRef, nyRef);
-  if (nxAli * fromPixel > nxRef * toPixel && nyAli * fromPixel > nyRef * toPixel) {
+  if (nxAli * fromPixel > nxRef * toPixel && nyAli * fromPixel > nyRef * toPixel &&
+    !sameMagCam) {
     B3DSWAP(zoomInd, cropInd, err);
     aliBigger = true;
 
   } else if (!(nxAli * fromPixel < nxRef * toPixel &&
     nyAli * fromPixel < nyRef * toPixel)) {
-    errStr = "One image must have a larger field of view than the other in both"
-      " dimensions";
+    errStr = sameMagCam ? "For images are from the same mag and camera, the reference"
+      " image" : "One image";
+    errStr += " must have a larger field of view than the other in both dimensions";
     return 1;
   }
 
   // Default is to scale reference up if higher mag is in A, overridden by a negative
-  // scakeRange value
+  // scaleRange value
   interpUp = !aliBigger;
   if (scaleRange < 0) {
     interpUp = false;
