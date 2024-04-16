@@ -2377,6 +2377,13 @@ int EMmontageController::SavePiece()
 
   // Save the image
   if (!mReadingMontage && !mTrialMontage) {
+    if (mImShiftInBlocks) {
+      extra0 = mImBufs->mImage->GetUserData();
+      if (extra0) {
+        extra0->mNominalStageX = mNominalStageX;
+        extra0->mNominalStageY = mNominalStageY;
+      }
+    }
     isave = mPieceSavedAt[mPieceIndex];
     if (isave < 0) {
       if (mBufferManager->CheckAsyncSaving())
@@ -3955,6 +3962,13 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
           already = 0;
           break;
         }
+
+        // Replace with nominal stage coordinates for hybrid montage
+        if (!AdocGetTwoFloats(names[nameInd], isec, ADOC_NOMINAL_STAGE, &amin, &amax)) {
+          xStage->at(ind) = amin;
+          yStage->at(ind) = amax;
+        }
+
         if (meanVec && AdocGetThreeFloats(names[nameInd], isec, ADOC_MINMAXMEAN, &amin,
           &amax, &meanVec->at(ind))) {
           already = 0;
@@ -4238,9 +4252,9 @@ void EMmontageController::AdjustShiftInCenter(MontParam *param, float &shiftX,
 // Sets up mMoveInfo with X/Y (image shift or stage value) to move to for a given piece
 // or for a focus block, also returns unbinned pixel distance from center of frame
 void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int &iDelX,
-                                             int &iDelY, double &adjISX, double &adjISY)
+  int &iDelY, double &adjISX, double &adjISY)
 {
-  double postISX, postISY, stageAdjX, stageAdjY;
+  double postISX, postISY, stageAdjX, stageAdjY, regularX, regularY;
   int ubOffX, ubOffY, block;
   StageMoveInfo *moveInfo = &mMoveInfo;
   stageAdjX = stageAdjY = adjISX = adjISY = 0.;
@@ -4257,22 +4271,29 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
     postISX = mCamToIS.xpx * iDelX + mCamToIS.xpy * iDelY + mBaseISX;
     postISY = mCamToIS.ypx * iDelX + mCamToIS.ypy * iDelY + mBaseISY;
     moveInfo = &mBlockISMoveInfo;
+  }
+
+  if (mDoISrealign && !focusBlock) {
+    GetAdjustmentsForISrealign(pieceInd, stageAdjX, stageAdjY, adjISX, adjISY,
+      ubOffX, ubOffY);
+    iDelX = mParam->binning * (mMontageX[pieceInd] - mMontCenterX);
+    iDelY = mParam->binning * (mMontageY[pieceInd] - mMontCenterY);
   } else {
-    if (mDoISrealign && !focusBlock) {
-      GetAdjustmentsForISrealign(pieceInd, stageAdjX, stageAdjY, adjISX, adjISY,
-        ubOffX, ubOffY);
-      iDelX = mParam->binning * (mMontageX[pieceInd] - mMontCenterX);
-      iDelY = mParam->binning * (mMontageY[pieceInd] - mMontCenterY);
-    } else {
-      iDelX = mParam->binning * (((focusBlock ? mBlockCenX[block] :
-        mMontageX[pieceInd]) - mMontCenterX) + mPredictedErrorX);
-      iDelY = mParam->binning * (((focusBlock ? mBlockCenY[block] :
-        mMontageY[pieceInd]) - mMontCenterY) + mPredictedErrorY);
-    }
-    postISX = mBinv.xpx * iDelX + mBinv.xpy * iDelY +
-      (mDoStageMoves ? mBaseStageX : mBaseISX) + stageAdjX;
-    postISY = mBinv.ypx * iDelX + mBinv.ypy * iDelY +
-      (mDoStageMoves ? mBaseStageY : mBaseISY) + stageAdjY;
+    iDelX = mParam->binning * (((focusBlock ? mBlockCenX[block] :
+      mMontageX[pieceInd]) - mMontCenterX) + mPredictedErrorX);
+    iDelY = mParam->binning * (((focusBlock ? mBlockCenY[block] :
+      mMontageY[pieceInd]) - mMontCenterY) + mPredictedErrorY);
+  }
+  regularX = mBinv.xpx * iDelX + mBinv.xpy * iDelY +
+    (mDoStageMoves ? mBaseStageX : mBaseISX) + stageAdjX;
+  regularY = mBinv.ypx * iDelX + mBinv.ypy * iDelY +
+    (mDoStageMoves ? mBaseStageY : mBaseISY) + stageAdjY;
+  if (mImShiftInBlocks && !focusBlock) {
+    mNominalStageX = regularX;
+    mNominalStageY = regularY;
+  } else {
+    postISX = regularX;
+    postISY = regularY;
   }
 
   // This is relevant only for post-action moves
@@ -5240,6 +5261,7 @@ int EMmontageController::MapParamsToAutodoc(void)
 
   errSum = KStoreADOC::SetValuesFromExtra(mImBufs[1].mImage, ADOC_MONT_SECT, index);
   AdocDeleteKeyValue(ADOC_MONT_SECT, index, ADOC_PCOORD);
+  AdocDeleteKeyValue(ADOC_MONT_SECT, index, ADOC_NOMINAL_STAGE);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_SIZE,
     mParam->xNframes * mParam->xFrame - (mParam->xNframes - 1) * mParam->xOverlap,
     mParam->yNframes * mParam->yFrame - (mParam->yNframes - 1) * mParam->yOverlap);

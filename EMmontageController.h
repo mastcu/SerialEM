@@ -181,6 +181,8 @@ class EMmontageController
   ScaleMat mCamToIS;              // Pixels to image shift matrix for IS in blocks
   StageMoveInfo mMoveInfo;        // Structure for stage moves
   StageMoveInfo mBlockISMoveInfo; // Separate structure for IS moves in doing IS in blocks
+  float mNominalStageX;           // Computed stage coordinates for hybrid montage
+  float mNominalStageY;
   bool mDoStageMoves;             // Replacement for moveStage in param, in case multishot
   BOOL mMovingStage;              // Flag that stage is being moved
   BOOL mRestoringStage;           // Flag for final stage move at end
