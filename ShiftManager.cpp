@@ -1193,7 +1193,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
           xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2, (nyPad - nyUseC) / 2 + 2,
           (nxPad - nxUseA) / 2 + 2, (nyPad - nyUseA) / 2 + 2 , minPixel, &numPixel);
         if (numPixel >= minPixel) {
-          fracHere = (float)numPixel / (nxUse * nyUse);
+          fracHere = (float)numPixel / (B3DMIN(nxUseA, nxUseC) * B3DMIN(nyUseA, nyUseC));
           wgtCCC = CCChere * pow((double)fracHere, overlapPow);
           if (probSigma > 0) {
             distsq = (float)((pow((double)xPeak[ix] + peakXoffset, 2.) + 
@@ -3499,6 +3499,30 @@ void CShiftManager::MakeScaleRotTransXform(float xf[6], float scale, float rot,
   xf[3] = xf[0];
   xf[4] = dx;
   xf[5] = dy;
+}
+
+// Sets up an IMOD-style transform from a ScaleMat and delta values.
+void CShiftManager::ScaleMatToIMODxform(ScaleMat mat, float delx, float dely, float xf[6])
+{
+  xf[0] = mat.xpx;
+  xf[2] = mat.xpy;
+  xf[1] = mat.ypx;
+  xf[3] = mat.ypy;
+  xf[4] = delx;
+  xf[5] = dely;
+}
+
+// Returns a ScaleMat and delta values from an IMOD-style transform
+ScaleMat CShiftManager::IMODxformToScaleMat(float xf[6], float &delx, float &dely)
+{
+  ScaleMat mat;
+  mat.xpx = xf[0];
+  mat.xpy = xf[2];
+  mat.ypx = xf[1];
+  mat.ypy = xf[3];
+  delx = xf[4];
+  dely = xf[5];
+  return mat;
 }
 
 ////////////////////////////////////////////////////////////////////

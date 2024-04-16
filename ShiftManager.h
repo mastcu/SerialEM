@@ -332,6 +332,8 @@ public:
   ScaleMat FocusAdjustedISToCamera(EMimageBuffer *imBuf);
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
   void MakeScaleRotTransXform(float xf[6], float scale, float rot, float dx, float dy);
+  void ScaleMatToIMODxform(ScaleMat mat, float delx, float dely, float xf[6]);
+  ScaleMat IMODxformToScaleMat(float xf[6], float &delx, float &dely);
   void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
   void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
