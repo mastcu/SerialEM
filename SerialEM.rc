@@ -5157,7 +5157,7 @@ BEGIN
     IDC_EDITMAXTILTFITY     "Enter largest tilt interval over which to fit movements across tilt axis"
     IDC_EDITMINFOCUSRATIO   "Set threshold autofocusing capability needed to continue"
     IDC_BUTBIGGER10         "Increase linear dimensions of area by 10%"
-    IDC_BUTMONTAGE          "Start montage or acquire image with fifth parameter set"
+    IDC_BUTMONTAGE          "Acquire image with Preview parameters, or start montage if montaging"
     IDC_BUTFLOAT            "Launch a floating window showing screen current"
     IDC_TSGO                "Start or resume the tilt series"
     IDC_TILT_DELAY          "Set delay between tilting by basic increment and acquiring image"
@@ -5588,7 +5588,7 @@ BEGIN
     IDC_EDITFOCUSTARGET     "Enter the target defocus for autofocusing"
     IDC_USEAFORREF          "Select if Buffer A has a starting reference image for alignment"
     IDC_BUTRESUME           "Resume script, tilt series, or Navigator acquire from where it stopped"
-    IDC_BUTEND              "End script or tilt series at end of repeat or loop"
+    IDC_BUTEND              "Acquire Search image, or end script or tilt series at end of repeat or loop"
 END
 
 STRINGTABLE
