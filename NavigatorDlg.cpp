@@ -6621,7 +6621,7 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
         if (xToAdopt > -9990.)
           item->mStageZ = xToAdopt;
       }
-      if (item->mDrawnOnMapID == regDrawnOn) {
+      if (regDrawnOn && item->mDrawnOnMapID == regDrawnOn) {
         item->mOldDrawnOnID = item->mDrawnOnMapID;
         item->mDrawnOnMapID = curDrawnOn;
       }
@@ -8354,7 +8354,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     "a montage map file having no mdoc file",
     "an error accessing the mdoc file by its autodoc index", "", "", "", ""};
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
-  float xx, yy, fvals[4], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  float xx, yy, fvals[6], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
   int numExternal, externalType, numParams, curNum, numDig, maxNum;
   int holeSkips[2000];
   std::set<std::string> filesNotFound;
@@ -8829,6 +8829,14 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             item->mMapScaleMat.xpy = fvals[1];
             item->mMapScaleMat.ypx = fvals[2];
             item->mMapScaleMat.ypy = fvals[3];
+          }
+          numToGet = 6;
+          ADOC_OPTIONAL(AdocGetFloatArray("Item", sectInd, "GridMapXform", &fvals[0],
+            &numToGet, 6));
+          if (!retval) {
+            item->mGridMapXform = new float[6];
+            for (i = 0; i < 6; i++)
+              item->mGridMapXform[i] = fvals[i];
           }
           ADOC_REQUIRED(AdocGetTwoIntegers("Item", sectInd, "MapWidthHeight",
             &item->mMapWidth, &item->mMapHeight));

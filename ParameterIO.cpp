@@ -35,6 +35,7 @@
 #include "FalconHelper.h"
 #include "EMmontageController.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "HoleFinderDlg.h"
 #include "AutoContouringDlg.h"
 #include "MultiGridDlg.h"

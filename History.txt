@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/16/24: Added routine to realign to a reloaded grid and transform Navigator
+items to a new registration.
+
+4/16/24: Fixed extensions added when SaveLog command is used with no
+extension on the name.
+
+4/16/24: Added support for frame handling from AMT cameras.
+
+4/13/24: Fixed function to get advanced scripting version in FEI server.
+
 4/12/24: SEM_4-2-0beta5
 4/12/24: Added mechanism for a plugin to set up a script to run once when
 program is idle.

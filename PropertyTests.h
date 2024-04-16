@@ -372,6 +372,7 @@ FLOAT_PROP_TEST("ScaledAliDfltPctChg", navHelper->, ScaledAliDfltPctChg)
 FLOAT_PROP_TEST("SkipToScaledRealignMinField", navHelper->, RISkipItemPosMinField)
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
 BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
+FLOAT_PROP_TEST("GridReloadMaxRotation", mWinApp->mMultiGridTasks->, RRGMaxRotation)
 #endif
 #ifdef PROP_TEST_SECT4
 FLOAT_PROP_TEST("TSDefaultStartAngle", tsController->, DefaultStartAngle)

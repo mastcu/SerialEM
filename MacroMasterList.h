@@ -786,7 +786,7 @@ MAC_SAME_NAME_NOARG(GetFastScopeStatus, 0, 4, GETFASTSCOPESTATUS)
 MAC_SAME_NAME_ARG(SetCoilByName, 4, 0, SETCOILBYNAME, SDDI)
 MAC_SAME_NAME_ARG(NavAcqAtEndUseParams, 1, 4, NAVACQATENDUSEPARAMS, Ss)
 MAC_SAME_NAME_ARG(SetNavAcqAtEndParams, 2, 4, SETNAVACQATENDPARAMS, SDsdsdsdsdsdsdsdsd)
-MAC_SAME_NAME_ARG(RealignReloadedGrid, 1, 0, REALIGNRELOADEDGRID, D)
+MAC_SAME_NAME_ARG(RealignReloadedGrid, 2, 0, REALIGNRELOADEDGRID, IDidi)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

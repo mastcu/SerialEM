@@ -139,6 +139,7 @@ public:
   int mFocusYoffset;
   int mSuperMontX;        // Camera coordinate of this montage in supermontage
   int mSuperMontY;
+  float *mGridMapXform;   // Full transform from reload, if used on items (new/delete)
   signed char mNumXholes, mNumYholes;  // Defined array size for multi-hole acquire
   short mNumSkipHoles;            // Number of holes to skip
   unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)

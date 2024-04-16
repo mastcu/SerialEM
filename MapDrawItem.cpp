@@ -79,6 +79,7 @@ CMapDrawItem::CMapDrawItem()
   mRotateFocusAxis = false;
   mFocusAxisAngle = 0;
   mFocusXoffset = mFocusYoffset = 0;
+  mGridMapXform = NULL;
   mNumSkipHoles = mNumXholes = mNumYholes = 0;
   mSkipHolePos = NULL;
   for (int ind = 0; ind < 3; ind++)
@@ -102,6 +103,7 @@ CMapDrawItem::CMapDrawItem(CMapDrawItem *item)
   mMaxPoints = 0;
   mNumSkipHoles = mNumXholes = mNumYholes = 0;
   mSkipHolePos = NULL;
+  mGridMapXform = NULL;
 }
 
 CMapDrawItem::~CMapDrawItem()
@@ -112,6 +114,7 @@ CMapDrawItem::~CMapDrawItem()
   }
   if (mNumSkipHoles)
     delete[] mSkipHolePos;
+  delete[] mGridMapXform;
 }
 
 // Creates a duplicate of the item with independent point array so they can both be safely

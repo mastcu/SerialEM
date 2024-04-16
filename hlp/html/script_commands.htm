@@ -3826,7 +3826,9 @@
             the value of the property 'ScaledAliDfltPctChg', which defaults to 4
             to test scalings from 0.96 to 1.04.&nbsp; Set <b>#A</b> to the maximum rotation to be tested; the
             default is the value of the property 'ScaledAliDfltMaxRot', which defaults to 3 degrees.&nbsp; Set
-             <b>#I</b> greater than 0 to suppress the change in microscope image shift. <br />
+             <b>#I</b> greater than 0 to suppress the change in microscope image shift. This 
+            same procedure can also be used if the images are from the same magnification 
+            and camera, provided that the reference has a larger field off view.<br />
             If the lower magnification image is in A or a negative value is entered for <b>#S</b>, the higher mag image
             is scaled down and an area of the lower mag image is cropped out, with the center determined by 
             <b>#CX</b> and <b>#CY</b> and the size by <b>#M</b> as described for the other method.  A and B end up with
@@ -5225,6 +5227,35 @@
              and <b>label</b> as the label of the Navigator item to use as a template.&nbsp; For any of the
             numbers, enter -1 to use the value from the dialog.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RealignReloadedGrid #I #E [#Z] [#R] [#T]</TD>
+          <TD>Runs a procedure to align a grid that has been reloaded or rotated to a montage map and transforms
+             Navigator items to a new registration.&nbsp; The procedure picks a montage piece near the stage
+            center and 4 pieces 3/4 of the way out from the map center in 4 directions, testing 4 pieces in
+            the vicinity to try to avoid particularly dark ones.&nbsp; Then it aligns to the center piece 
+            with a rotation search, uses the result to refine the position at which to seek the peripheral
+            pieces, and aligns to those with the rotation corrected.&nbsp; From the 5 positions, it solves
+            for a transformation with rotation and shift.&nbsp; Finally, by default, it transforms items from the current
+            registration to a new one.&nbsp;<br />
+             <b>#I</b> specifies the maps and can be its
+            index in the table, 0 for the current item, or the negative of the distance from the end of
+             the table.&nbsp; <br />
+            <b>#E</b> specifies the expected rotation and should be 0 for mesh grids that
+               might already have some small rotation (to make sure that it aligns to a map extract twice
+                the size of piece, which should be more robust with grid bars present).&nbsp;<br />
+               The optional <b>#Z</b> can be set to 1 to
+                set the stage Z to that of the map,or 0 not to.&nbsp; <br />
+              <B>#R</B> can be set with the 
+               maximum rotation to be tested in the search; 0 or a negative or no value will make it use
+                the value set by the property 'GridReloadMaxRotation', whose default is 15 
+               degrees.&nbsp; (If there is a known starting rotation from a previous reload that could make
+                a difference, increase the search range.)&nbsp; <br />
+              Set <b>#T</b> to 0 to prevent transforming
+                of items.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
+               The routine has not yet been tested with large (i.e., 90 degree) rotations.&nbsp; Command added in 4.2, 16-Apr-24.
+ 
+                        </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ShiftItemsByAlignment</TD>

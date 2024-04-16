@@ -65,6 +65,9 @@
     fvals[2] = item->mMapScaleMat.ypx;
     fvals[3] = item->mMapScaleMat.ypy;
     ADOC_PUT(FloatArray(ADOC_ARG, "MapScaleMat", &fvals[0], 4));
+    if (item->mGridMapXform) {
+      ADOC_PUT(FloatArray(ADOC_ARG, "GridMapXform", &item->mGridMapXform[0], 6));
+    }
     ADOC_PUT(TwoIntegers(ADOC_ARG, "MapWidthHeight", item->mMapWidth,
                          item->mMapHeight));
 

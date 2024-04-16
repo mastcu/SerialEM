@@ -166,6 +166,11 @@
             <TD class="style5">X and Y stage position in microns</TD>
           </TR>
           <TR VALIGN="top">
+            <TD class="style1">NominalStageXY</TD>
+            <TD class="style5">Stage position that a piece would be take at without image 
+              shift for a hybrid montage using image shift in blocks</TD>
+          </TR>
+          <TR VALIGN="top">
             <TD class="style1">StageZ</TD>
             <TD class="style5">Z stage position in microns</TD>
           </TR>
@@ -919,6 +924,14 @@
       <TD class="style9">Stage to pixel scale matrix for drawing, based on pixels of
         initial map image.&nbsp; For montage, needs to be adjusted by ratio of currently
         loaded map width/height to initial map width/height</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>GridMapXform</TD>
+      <TD class="style10">Six Floats</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">mGridMapXform</TD>
+      <TD class="style9">Transformation matrix and shift found by the last run of the routine 
+        to realign a reloaded grid that transformed items</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapWidthHeight</TD>

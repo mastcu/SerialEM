@@ -10480,7 +10480,9 @@ int CMacCmd::RealignReloadedGrid()
     return 1;
 
   if (mWinApp->mMultiGridTasks->RealignReloadedGrid(navItem, mItemFlt[2], 
-    mItemInt[3] != 0, mStrCopy))
+    !mItemEmpty[3] && mItemInt[3] != 0, (mItemEmpty[4] || mItemFlt[4] <= 0.) ? 
+    mWinApp->mMultiGridTasks->GetRRGMaxRotation() : mItemFlt[4], 
+    mItemEmpty[5] || mItemInt[5] != 0, mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
   return 0;
 }
