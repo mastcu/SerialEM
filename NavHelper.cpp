@@ -5935,8 +5935,13 @@ int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scal
   err = AlignWithRotation(buffer, 0., angleRange, rotation, shiftXbest, shiftYbest,
     scaleMax, -1, &maxPeak, shiftLimit,
     (scaleRange > 0. ? AUTOALIGN_SEARCH_KEEP : 0) |corrFlags);
-  if ((err && err != 1) || scaleRange <= 0.)
+  if ((err && err != 1) || scaleRange <= 0.) {
+    if (scaleRange <= 0.) {
+      mImBufs->mImage->setShifts(shiftXbest, shiftYbest);
+      mImBufs->SetImageChanged(1);
+    }
     return err == 1 ? 0 : err;
+  }
   return mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -scaleMax,
     rotation, scaleRange, 2, &maxPeak, shiftLimit, corrFlags | AUTOALIGN_SEARCH_KEEP);
 }
