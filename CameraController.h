@@ -15,7 +15,7 @@
 //#import "..\SerialEMCCD\SerialEMCCD.tlb" no_namespace
 #include "serialemccd.tlh"
 
-//#import "AmtCamera.tlb" no_namespace
+//#import "..\ThirdParty\SerialEmAMTdev\AmtCamera.tlb" no_namespace
 #include "amtcamera.tlh"
 
 //#import "..\FocusRamper\FocusRamper.tlb" no_namespace

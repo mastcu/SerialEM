@@ -832,6 +832,7 @@ void CFalconHelper::StackNextTask(int param)
   float *useGainArr = NULL;
   bool saving = !mJustAlignNotSave && !mDoingAdvancedFrames;
   bool hasDefects;
+  long amtErr;
   int rotateForSave = saving ? mRotateFlip : 0;
   int skipAlign = 0;
   mStackError = 0;
@@ -937,7 +938,18 @@ void CFalconHelper::StackNextTask(int param)
   // past the end
   if (!mStackError) {
     if (mProcessingPlugin) {
-      ind = mCamTD->plugFuncs->GetNextFrame(outPtr, mNx * mNy);
+      if (camParam->AMTtype) {
+        try {
+          mCamTD->amtCam->GetNextFrame(outPtr, mNx * mNy, &amtErr);
+          ind = amtErr;
+        }
+        catch (_com_error E) {
+          ind = 1;
+        }
+
+      } else {
+        ind = mCamTD->plugFuncs->GetNextFrame(outPtr, mNx * mNy);
+      }
       if (ind)
         mStackError = ind < 0 ? FIF_NO_MORE_FRAMES : FIF_ERR_PLUGIN_FRAME;
     } else if (mReadLocally) {

@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9a5e8dc7).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 14.00.24215.1 (13134d13).
 //
-// c:\users\mast\documents\scope\serialem\release\amtcamera.tli
+// c:\users\mast\documents\scope\serialem\x64\release\amtcamera.tli
 //
-// Wrapper implementations for Win32 type library AmtCamera.tlb
-// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+// Wrapper implementations for type library ..\ThirdParty\SerialEmAMTdev\AmtCamera.tlb
+// compiler-generated file created 04/16/24 at 11:37:56 - DO NOT EDIT!
 
 #pragma once
 
@@ -109,6 +109,18 @@ inline HRESULT IAMTCamInterface::SetShutterNormallyClosed ( long camera, long sh
 
 inline HRESULT IAMTCamInterface::SetNoDMSettling ( long camera ) {
     HRESULT _hr = raw_SetNoDMSettling(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetupFrameAcquire ( double frameTime, long numReadouts, long flags, long idum ) {
+    HRESULT _hr = raw_SetupFrameAcquire(frameTime, numReadouts, flags, idum);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetNextFrame ( short * array, long arrSize, long * error ) {
+    HRESULT _hr = raw_GetNextFrame(array, arrSize, error);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
     return _hr;
 }

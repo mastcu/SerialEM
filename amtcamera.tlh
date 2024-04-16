@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9a5e8dc7).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 14.00.24215.1 (13134d13).
 //
-// c:\users\mast\documents\scope\serialem\release\amtcamera.tlh
+// c:\users\mast\documents\scope\serialem\x64\release\amtcamera.tlh
 //
-// C++ source equivalent of Win32 type library AmtCamera.tlb
-// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+// C++ source equivalent of type library ..\ThirdParty\SerialEmAMTdev\AmtCamera.tlb
+// compiler-generated file created 04/16/24 at 11:37:56 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -122,6 +122,15 @@ IAMTCamInterface : IDispatch
         long shutter );
     HRESULT SetNoDMSettling (
         long camera );
+    HRESULT SetupFrameAcquire (
+        double frameTime,
+        long numReadouts,
+        long flags,
+        long idum );
+    HRESULT GetNextFrame (
+        short * array,
+        long arrSize,
+        long * error );
 
     //
     // Raw methods provided by interface
@@ -208,6 +217,15 @@ IAMTCamInterface : IDispatch
         /*[in]*/ long shutter ) = 0;
       virtual HRESULT __stdcall raw_SetNoDMSettling (
         /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_SetupFrameAcquire (
+        /*[in]*/ double frameTime,
+        /*[in]*/ long numReadouts,
+        /*[in]*/ long flags,
+        /*[in]*/ long idum ) = 0;
+      virtual HRESULT __stdcall raw_GetNextFrame (
+        /*[out]*/ short * array,
+        /*[in]*/ long arrSize,
+        /*[in,out]*/ long * error ) = 0;
 };
 
 //
@@ -217,3 +235,4 @@ IAMTCamInterface : IDispatch
 #include "amtcamera.tli"
 
 #pragma pack(pop)
+

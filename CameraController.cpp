@@ -799,7 +799,7 @@ int CCameraController::Initialize(int whichCameras)
           if (ovInd >= 0) {
             if (jnd < 4)
               param->frameTimeDivisor[jnd] = ovFrameDivisors[ovInd][jnd];
-          } else if (!jnd)
+          } else if (!jnd || param->AMTtype)
             param->frameTimeDivisor[jnd] = 0.001f;
         }
         if (param->minFrameTime[jnd] <= 0.) {
@@ -817,7 +817,8 @@ int CCameraController::Initialize(int whichCameras)
               param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
           } else if (param->TietzType >= 11) {
             param->minFrameTime[jnd] = tietzFrame;
-          }
+          } else if (param->AMTtype)
+            param->minFrameTime[jnd] = 0.033f;
         }
         ACCUM_MAX(param->minFrameTime[jnd], 
           param->frameTimeDivisor[jnd]);
@@ -3683,7 +3684,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mAligningPluginFrames = false;
   if (mParam->TietzType && mParam->canTakeFrames)
     mTD.PluginAcquireFlags |= TIETZ_SET_BURST_MODE;
-  if (mTD.plugFuncs && conSet.doseFrac) {
+  if ((mTD.plugFuncs || (mParam->AMTtype && mParam->canTakeFrames)) && conSet.doseFrac) {
 
     // Set readouts per frame in case it is needed and meaningful
     mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam, 
@@ -8167,6 +8168,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               //SEMTrace('1', "Calling GetAcquireImage with divideby2 %d", td->DivideBy2);
               askedForContinuous = (td->ProcessingPlus & CONTINUOUS_USE_THREAD) != 0;
               td->BlankerWaitForSignal = false;
+              if (td->DoseFrac && sAmtCurrent)
+                td->amtCam->SetupFrameAcquire(td->FrameTime, td->ReadoutsPerFrame,
+                  td->PluginFrameFlags, 0);
               CallDMCamera(pGatan, td->amtCam, GetAcquiredImage(td->Array[0], &longSize, 
                 &td->DMSizeX, &td->DMSizeY, td->ProcessingPlus, td->Exposure, td->Binning, 
                 td->Top, td->Left, td->Bottom, td->Right, td->ShutterMode,
