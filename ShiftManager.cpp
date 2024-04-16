@@ -1002,7 +1002,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
           report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d", 
           nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop, 
           nxTrimC, nxTrimCright, nyTrimC, nyTrimCtop);
-        if (!scaling && trimOutput)
+        if ((!scaling && trimOutput) || GetDebugOutput('1'))
           mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     }
   }
