@@ -451,10 +451,10 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
         // Othewise loop until finding a file name that does not exist
         for (fileNo = 0; fileNo < 1000; fileNo++) {
           if (fileNo)
-            name.Format("%s-%d.%s", (LPCTSTR)stackName, fileNo, saveRTF ? ".rtf" :
-              ".log");
+            name.Format("%s-%d.%s", (LPCTSTR)stackName, fileNo, saveRTF ? "rtf" :
+              "log");
           else
-            name.Format("%s.%s", (LPCTSTR)stackName, fileNo, saveRTF ? ".rtf" : ".log");
+            name.Format("%s.%s", (LPCTSTR)stackName, saveRTF ? "rtf" : "log");
           if (!CFile::GetStatus((LPCTSTR)name, status))
             break;
         }
