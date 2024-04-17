@@ -157,7 +157,10 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   int ind = INSERTED_COLOR_IND * 3;
   long sel1, sel2;
   UINT mode = CFile::modeWrite | CFile::shareDenyWrite;
-  UpdateData(true);
+
+  // Needed to prevent crash from JEOLTemExtPlugin
+  if (!mWinApp->GetStartingProgram())
+    UpdateData(true);
   oldLen = m_strLog.GetLength();
   if (lineFlags & 2) {
     lastEnd = m_strLog.ReverseFind('\n');

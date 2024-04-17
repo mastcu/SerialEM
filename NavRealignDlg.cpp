@@ -14,10 +14,14 @@
 #include "NavRealignDlg.h"
 #include "NavigatorDlg.h"
 #include "EMbufferManager.h"
+#include "ShiftManager.h"
 #include "Utilities\KGetOne.h"
+#include "Shared\b3dutil.h"
 
 
-static int sIdTable[] = {IDC_STAT_TEMPLATE_TITLE, IDC_STAT_TEMP_LABEL, IDC_EDIT_MAP_LABEL,
+static int sIdTable[] = {IDC_STAT_DISABLE_TRIM, IDC_CHECK_DISABLE_TRIM, IDC_STAT_LINE2,
+PANEL_END,
+IDC_STAT_TEMPLATE_TITLE, IDC_STAT_TEMP_LABEL, IDC_EDIT_MAP_LABEL,
 IDC_STAT_NOT_EXIST, IDC_STAT_BUFFER_ROLLS, IDC_MAKE_TEMPLATE_MAP, IDC_STAT_LOAD_KEEP,
 IDC_STAT_SELECTED_BUF, IDC_SPIN_TEMPLATE_BUF, IDC_EDIT_MAX_SHIFT, IDC_STAT_ALIGN_LIMIT,
 IDC_STAT_MAXALI_UM, IDC_STAT_LINE, IDC_STAT_WHY_A_NO_GOOD, PANEL_END,
@@ -50,6 +54,7 @@ CNavRealignDlg::CNavRealignDlg(CWnd* pParent /*=NULL*/)
   , m_fExtraFOVs(0)
   , m_fMaxPctChange(0)
   , m_fMaxRotation(0)
+  , m_bDisableTrim(FALSE)
 {
   mForRealignOnly = 0;
   mMaxRotChgd = mMaxPctChgd = false;
@@ -90,6 +95,8 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_TEMPLATE_TITLE, m_statTemplateTitle);
   DDX_Control(pDX, IDC_STAT_RESET_IS_TITLE, m_statResetISTitle);
   DDX_Control(pDX, IDC_STAT_SCALED_TITLE, m_statScaledTitle);
+  DDX_Check(pDX, IDC_CHECK_DISABLE_TRIM, m_bDisableTrim);
+  DDX_Control(pDX, IDC_STAT_DISABLE_TRIM, m_statDisableTrim);
 }
 
 
@@ -113,7 +120,7 @@ END_MESSAGE_MAP()
 BOOL CNavRealignDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  BOOL states[4] = {true, true, true, true};
+  BOOL states[5] = {true, true, true, true, true};
   CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
   mHelper = mWinApp->mNavHelper;
   m_sbcResetTimes.SetRange(0, 10000);
@@ -126,13 +133,15 @@ BOOL CNavRealignDlg::OnInitDialog()
   mParams = *mMasterParams;
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
-  states[0] = mForRealignOnly <= 0;
-  states[2] = mForRealignOnly >= 0;
+  states[1] = mForRealignOnly <= 0;
+  states[3] = mForRealignOnly >= 0;
 
   m_strMapLabel = mParams.templateLabel;
   m_fAlignShift = mParams.maxAlignShift;
   m_fResetThresh = mParams.resetISthresh;
   m_bLeaveISzero = mParams.leaveISatZero;
+  m_bDisableTrim = (mWinApp->mShiftManager->GetDisableAutoTrim() & NOTRIM_REALIGN_ITEM)
+    != 0;
   mMaxNumResets = B3DMAX(1, B3DABS(mParams.maxNumResetIS));
   m_bResetIS = mParams.maxNumResetIS > 0;
   m_strRepeatReset.Format("Reset IS up to %d", mMaxNumResets);
@@ -147,6 +156,7 @@ BOOL CNavRealignDlg::OnInitDialog()
   m_statTemplateTitle.SetFont(boldFont);
   m_statResetISTitle.SetFont(boldFont);
   m_statScaledTitle.SetFont(boldFont);
+  m_statDisableTrim.SetFont(boldFont);
   UpdateData(false);
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
@@ -161,11 +171,14 @@ BOOL CNavRealignDlg::OnInitDialog()
 // Closing: require entry in map label
 void CNavRealignDlg::OnOK()
 {
+  b3dUInt32 disable = mWinApp->mShiftManager->GetDisableAutoTrim();
   UpdateData(true);
   if (m_strMapLabel.IsEmpty() && mForRealignOnly < 0) {
     AfxMessageBox("You must enter a label for the Navigator map to align to", MB_EXCLAME);
     return;
   }
+  setOrClearFlags(&disable, NOTRIM_REALIGN_ITEM, m_bDisableTrim ? 1 : 0);
+  mWinApp->mShiftManager->SetDisableAutoTrim(disable);
   mParams.templateLabel = m_strMapLabel;
   mParams.maxAlignShift = m_fAlignShift;
   mParams.resetISthresh = m_fResetThresh;

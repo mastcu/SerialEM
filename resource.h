@@ -2271,6 +2271,8 @@
 #define IDC_CHECK_MG_USE_SUBDIRS        3310
 #define IDC_BUT_MG_SETUP                3312
 #define IDC_STAT_MG_GRID_SETUP          3313
+#define IDC_STAT_DISABLE_TRIM           3314
+#define IDC_CHECK_DISABLE_TRIM          3315
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2834,7 +2836,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         33526
-#define _APS_NEXT_CONTROL_VALUE         3314
+#define _APS_NEXT_CONTROL_VALUE         3316
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

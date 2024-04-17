@@ -27,8 +27,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  int mPanelStart[4];
-  int mNumInPanel[4];
+  int mPanelStart[5];
+  int mNumInPanel[5];
   NavAlignParams *mMasterParams;
   NavAlignParams mParams;
   int mMaxNumResets;
@@ -74,4 +74,6 @@ public:
   CStatic m_statTemplateTitle;
   CStatic m_statResetISTitle;
   CStatic m_statScaledTitle;
+  BOOL m_bDisableTrim;
+  CStatic m_statDisableTrim;
 };

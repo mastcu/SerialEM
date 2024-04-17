@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -3797,56 +3796,60 @@ BEGIN
     CTEXT           "Static",IDC_STAT_INFO_LINE1,7,9,276,8
 END
 
-IDD_NAVREALIGN DIALOGEX 0, 0, 174, 306
+IDD_NAVREALIGN DIALOGEX 0, 0, 174, 335
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Navigator Align Setup"
+CAPTION "Z"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "",IDC_STAT_SPACER,0,292,8,8
-    DEFPUSHBUTTON   "OK",IDOK,28,286,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,89,286,50,14
-    CTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,41,8,93,8
-    LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,21,111,8
-    EDITTEXT        IDC_EDIT_MAP_LABEL,121,18,42,14,ES_AUTOHSCROLL
-    CTEXT           "Map does not exist yet",IDC_STAT_NOT_EXIST,7,32,130,8
-    PUSHBUTTON      "Make Map from Image in A",IDC_MAKE_TEMPLATE_MAP,35,43,102,14
-    LTEXT           "Buffer to load and keep template in:",IDC_STAT_LOAD_KEEP,9,74,106,8
-    CTEXT           "W",IDC_STAT_SELECTED_BUF,116,74,8,8
-    CONTROL         "",IDC_SPIN_TEMPLATE_BUF,"msctls_updown32",UDS_ARROWKEYS,125,71,10,14
-    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,9,97,73,8
-    EDITTEXT        IDC_EDIT_MAX_SHIFT,85,94,23,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_MAXALI_UM,111,97,25,8
-    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,9,111,157,1
-    CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,116,126,8
+    LTEXT           "",IDC_STAT_SPACER,0,320,8,8
+    DEFPUSHBUTTON   "OK",IDOK,28,314,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,89,314,50,14
+    CTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,41,36,93,8
+    LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,49,111,8
+    EDITTEXT        IDC_EDIT_MAP_LABEL,121,46,42,14,ES_AUTOHSCROLL
+    CTEXT           "Map does not exist yet",IDC_STAT_NOT_EXIST,7,60,130,8
+    PUSHBUTTON      "Make Map from Image in A",IDC_MAKE_TEMPLATE_MAP,35,71,102,14
+    LTEXT           "Buffer to load and keep template in:",IDC_STAT_LOAD_KEEP,9,102,106,8
+    CTEXT           "W",IDC_STAT_SELECTED_BUF,116,102,8,8
+    CONTROL         "",IDC_SPIN_TEMPLATE_BUF,"msctls_updown32",UDS_ARROWKEYS,125,99,10,14
+    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,9,125,73,8
+    EDITTEXT        IDC_EDIT_MAX_SHIFT,85,122,23,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_MAXALI_UM,111,125,25,8
+    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,9,139,157,1
+    CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,144,126,8
     CONTROL         "Reset image shift and realign if >",IDC_CHECK_RESET_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,158,108,10
-    EDITTEXT        IDC_EDIT_RESET_IS,118,156,22,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_RESET_UM,142,159,25,8
-    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,173,48,8
-    LTEXT           "times",IDC_STAT_RESET_TIMES,71,173,17,8
-    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,170,10,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,186,108,10
+    EDITTEXT        IDC_EDIT_RESET_IS,118,184,22,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_RESET_UM,142,187,25,8
+    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,201,48,8
+    LTEXT           "times",IDC_STAT_RESET_TIMES,71,201,17,8
+    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,198,10,14
     CONTROL         "Leave IS at 0 (skip last realign)",IDC_CHECK_LEAVE_IS_ZERO,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,185,107,10
-    PUSHBUTTON      "?",IDC_BUTHELP,157,288,10,10
-    CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,83,106,8
-    CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,127,164,16
-    CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,144,160,8
-    CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,59,156,8
-    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,198,157,1
-    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,203,130,8
-    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,233,108,8
-    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,230,23,14,ES_AUTOHSCROLL
-    LTEXT           "%",IDC_STAT_PCT,143,233,8,8
-    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,249,94,8
-    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,246,23,14,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STAT_DEG,129,249,27,8
-    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,217,93,8
-    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,214,23,14,ES_AUTOHSCROLL
-    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,217,32,8
-    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,264,112,8
-    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,264,8,8
-    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,261,10,14
-    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,273,106,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,213,107,10
+    PUSHBUTTON      "?",IDC_BUTHELP,157,316,10,10
+    CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,111,106,8
+    CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,155,164,16
+    CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,172,160,8
+    CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,87,156,8
+    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,226,157,1
+    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,231,130,8
+    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,261,108,8
+    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,258,23,14,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STAT_PCT,143,261,8,8
+    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,277,94,8
+    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,274,23,14,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_DEG,129,277,27,8
+    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,245,93,8
+    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,242,23,14,ES_AUTOHSCROLL
+    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,245,32,8
+    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,292,112,8
+    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,292,8,8
+    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,289,10,14
+    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,301,106,8
+    CTEXT           "Trimming Dark Borders in Rounds 1&&2 of Realign to Item and in Align to Template IS Resets",IDC_STAT_DISABLE_TRIM,7,3,160,16
+    CONTROL         "Disable trimming in these alignments",IDC_CHECK_DISABLE_TRIM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,21,131,10
+    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,33,157,1
 END
 
 IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
@@ -4602,7 +4605,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 167
         TOPMARGIN, 7
-        BOTTOMMARGIN, 299
+        BOTTOMMARGIN, 328
     END
 
     IDD_MANAGE_DEWARS, DIALOG
@@ -7479,6 +7482,7 @@ BEGIN
     IDC_EDIT_MAP_CUTOFF     "Start of low-pass Gaussian falloff (radius2) in reciprocal pixels (0-0.5)"
     IDC_EDIT_MAP_FALLOFF    "Gaussian sigma of falloff (sigma2) in reciprocal pixels (0-0.5)"
     IDC_USE_BEST_SUBSET     "Select biggest subset of holes on diagonals at 1.07 um periodicity"
+    IDC_CHECK_DISABLE_TRIM  "Do not trim dark borders in the indicated steps of these two tasks"
 END
 
 #endif    // English (United States) resources
@@ -7504,8 +7508,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

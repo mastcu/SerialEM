@@ -2938,7 +2938,7 @@ void CMenuTargets::OnSpecialDisableDarkTrimInAlign()
   if (SetTwoFlags("Enter 0 for automatic trimming of dark borders in lower mag tasks",
     "   or 1 to disable it in tilt series, or 2 to disable it always", 
     NOTRIM_TASKS_TS, NOTRIM_TASKS_ALL, disable)) {
-      SetTwoFlags("Enter 0 for automatic trimming in first round of Realign to Item",
+      SetTwoFlags("Enter 0 for automatic trimming in first two rounds of Realign to Item",
         "   and after IS resets in Align to Template, or 1 to disable it", 
         NOTRIM_REALIGN_ITEM, 0,disable);
   }

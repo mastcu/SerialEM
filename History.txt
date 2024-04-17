@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-4/12/24: SEM_4-1-9
+4/16/24: Added option to disable trimming of dark borders to the Navigator
+Align Setup dialog, duplicating one entry in the specialized option for this.
+
+4/16/24: SEM_4-1-9
 4/16/24: Added routine to realign to a reloaded grid and transform Navigator
 items to a new registration.
 
