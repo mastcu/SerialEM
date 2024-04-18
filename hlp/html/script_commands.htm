@@ -74,6 +74,8 @@
       <LI>set - A camera parameter set, given by a single letter or number</LI>
       <LI>var - A SerialEM scripting variable name, without leading $</LI>
     </UL>
+    <P>Any place where an integer entry is expect, an entry starting with '0x' can be 
+      used to specify a hexadecimal value.</P>
     <P>Commands assign the primary values that they report to the variables <i>reportedVariable1</i>, etc.&nbsp; 
       When the command description lists the various values that it reports, with no 
       other details, it can be assumed that these variables are each assigned to one 
@@ -2477,6 +2479,35 @@
               Set <b>#F</b> to 1 to use the name in frame file names, 0 not to, or -1 to leave the current 
             settings unchanged.&nbsp; Set <b>#D</b> to 1 to use it in directory names, 0 not to, or -1 to leave
              the setting as is.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportFrameNameFormat</TD>
+          <TD>Reports the variable governing the frame file name format, which is a sum of 
+            flags:<br />
+            0x1:  Use the base name in the folder name<br />
+            0x2:  Use the root of the current open file name in the folder name
+            0x4:  Use the Navigator item label in the folder name
+            0x8:  Use the base name in the file name<br />
+            0x10:  Use the root of the current open file name in the file name<br />
+            0x20:  Use the Navigator item label in the file name<br />
+            0x40:  Use a sequential number<br />
+            0x80:  Use month and day<br />
+            0x100:  Use the hour, minute, and second<br />
+            0x200:  Use the Navigator label only if running from Acquire at Items<br />
+            0x400:  Use the tilt angle <br />
+            0x800:  Use a full date-time prefix <br />
+            0x1000:  Use hole and position in hole when doing Multiple Records<br />
+          Command added in 4.2, 18-Apr-24./TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetFrameNameFormat #K #S #B</TD>
+          <TD>Sets or clears bits in the variable governing the frame file name format, as listed 
+            in 'ReportFrameNameFormat'.&nbsp; Set <b>#K to 1 to keep the change after the script ends, 
+              otherwise the original format will be restored.&nbsp; Set <b>#S</b> to 1 to set the bits listed in <b>#B</b>, 
+              0 to clear them, or -1 to set the format variable to just what is given in <B>#B</B> (such
+               as if restoring a value saved from 'ReportFrameNameFormat').&nbsp; <#B> can be entered as a single hex
+              number starting with 0x as above, or as a sum of hex numbers (as can any integer 
+              entry).&nbsp; Command added in 4.2, 18-Apr-24.</b></TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportFrameSavingPath</TD>

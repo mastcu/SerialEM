@@ -574,7 +574,10 @@ int CMacCmd::NextCommand(bool startingOut)
     mItemInt[i] = 0;
     mItemDbl[i] = 0.;
     if (!mItemEmpty[i]) {
-      mItemInt[i] = atoi((LPCTSTR)mStrItems[i]);
+      if (mStrItems[i].Find("0x") == 0)
+        sscanf(((LPCTSTR)mStrItems[i]) + 2, "%x", &mItemInt[i]);
+      else
+        mItemInt[i] = atoi((LPCTSTR)mStrItems[i]);
       mItemDbl[i] = atof((LPCTSTR)mStrItems[i]);
       mLastNonEmptyInd = i;
     }
@@ -4057,8 +4060,10 @@ int CMacCmd::SetFrameBaseName(void)
 
   if (!mItemInt[1]) {
     mSavedFrameBaseName = mCamera->GetFrameBaseName();
-    mSavedFrameNameFormat = format;
-    mNumStatesToRestore++;
+    if (mSavedFrameNameFormat < 0) {
+      mSavedFrameNameFormat = format;
+      mNumStatesToRestore++;
+    }
   }
   if (mItemInt[2] >= 0)
     setOrClearFlags(&format, FRAME_FILE_ROOT, mItemInt[2]);
@@ -4067,6 +4072,31 @@ int CMacCmd::SetFrameBaseName(void)
   mCamera->SetFrameNameFormat(format);
   SubstituteLineStripItems(mStrLine, 4, mStrCopy);
   mCamera->SetFrameBaseName(mStrCopy);
+  return 0;
+}
+
+// SetFrameNameFormat
+int CMacCmd::SetFrameNameFormat()
+{
+  unsigned int format = (unsigned int)mCamera->GetFrameNameFormat();
+  if (!mItemInt[1] && mSavedFrameNameFormat < 0) {
+    mSavedFrameNameFormat = format;
+    mNumStatesToRestore++;
+  }
+  if (mItemInt[2] < 0)
+    format = mItemInt[3];
+  else
+    setOrClearFlags(&format, mItemInt[3], mItemInt[2] ? 1 : 0);
+  mCamera->SetFrameNameFormat(format);
+  return 0;
+}
+
+// ReportFrameNameFormat
+int CMacCmd::ReportFrameNameFormat()
+{
+  int format = mCamera->GetFrameNameFormat();
+  mLogRpt.Format("Frame file name format is 0x%x", format);
+  SetRepValsAndVars(1, format);
   return 0;
 }
 

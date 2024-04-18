@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/18/24: Add script commands for reporting and setting the variable governing
+the components of the frame filename.
+
+4/18/23: Allowed hexadecimal values (starting with 0x) to be entered in script
+commands when an integer is expected, making it easier to set flag values.
+
 4/16/24: Added option to disable trimming of dark borders to the Navigator
 Align Setup dialog, duplicating one entry in the specialized option for this.
 

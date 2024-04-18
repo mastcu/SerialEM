@@ -1377,6 +1377,7 @@ void CMacroProcessor::RunOrResume()
   mK3CDSmodeToRestore = -1;
   mRestoreGridLimits = false;
   mSavedFrameNameFormat = -1;
+  mSavedFrameBaseName = "";
   mRestoreConsetAfterShot = false;
   mSuspendNavRedraw = false;
   mDeferLogUpdates = false;
@@ -1786,7 +1787,8 @@ void CMacroProcessor::SuspendMacro(int abort)
       if (mK3CDSmodeToRestore >= 0)
         mCamera->SetUseK3CorrDblSamp(mK3CDSmodeToRestore > 0);
       if (mSavedFrameNameFormat >= 0) {
-        mCamera->SetFrameBaseName(mSavedFrameBaseName);
+        if (!mSavedFrameBaseName.IsEmpty())
+          mCamera->SetFrameBaseName(mSavedFrameBaseName);
         mCamera->SetFrameNameFormat(mSavedFrameNameFormat);
       }
       if (mRestoreGridLimits) {

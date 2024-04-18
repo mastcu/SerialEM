@@ -787,7 +787,8 @@ MAC_SAME_NAME_ARG(SetCoilByName, 4, 0, SETCOILBYNAME, SDDI)
 MAC_SAME_NAME_ARG(NavAcqAtEndUseParams, 1, 4, NAVACQATENDUSEPARAMS, Ss)
 MAC_SAME_NAME_ARG(SetNavAcqAtEndParams, 2, 4, SETNAVACQATENDPARAMS, SDsdsdsdsdsdsdsdsd)
 MAC_SAME_NAME_ARG(RealignReloadedGrid, 2, 0, REALIGNRELOADEDGRID, IDidi)
-
+MAC_SAME_NAME_ARG(SetFrameNameFormat, 3, 4, SETFRAMENAMEFORMAT, III)
+MAC_SAME_NAME_NOARG(ReportFrameNameFormat, 0, 4, REPORTFRAMENAMEFORMAT)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

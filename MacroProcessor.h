@@ -363,8 +363,8 @@ protected:
   int mK3CDSmodeToRestore;  // -1 or value of mode to restore at end
   float mGridLimitsToRestore[4];   // User grid limits to restore at end
   bool mRestoreGridLimits;
-  int mSavedFrameNameFormat;   // set >=0 if this and name need to be restored
-  CString mSavedFrameBaseName;
+  int mSavedFrameNameFormat;   // set >=0 if this needs to be restored
+  CString mSavedFrameBaseName; // It needs to be restored also if non-empty
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
