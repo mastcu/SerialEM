@@ -183,7 +183,7 @@ CMacroProcessor::CMacroProcessor()
     "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT",
     "TRY", "CATCH", "ENDTRY", "THROW"};
   int pythonOnlyCmds[] = {CME_SETVARIABLE, CME_SETPERSISTENTVAR, CME_GETVARIABLE,
-  CME_SETFLOATVARIABLE};
+  CME_SETFLOATVARIABLE, CME_PLUGINALLDOUBLES, CME_PLUGINSTRING, CME_PLUGINDOUBLESTRING};
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
@@ -1283,6 +1283,7 @@ void CMacroProcessor::Run(int which)
   mSkipFrameAliCheck = false;
   mAlignWholeTSOnly = false;
   mDisableAlignTrim = false;
+  mLastPluginCalled = "";
   mSaveCtfplotGraph = 0;
   mNeedClearTempMacro = -1;
   mBoxOnScopeText = "SerialEM message";

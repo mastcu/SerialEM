@@ -3,6 +3,7 @@
 #include "SerialEMDoc.h"
 #include ".\PluginManager.h"
 #include "ParameterIO.h"
+#include "MacroProcessor.h"
 #include "TSController.h"
 #include "PiezoAndPPControl.h"
 
@@ -435,10 +436,10 @@ void CPluginManager::ReleasePlugins(void)
 
 double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *itemDbl,
   BOOL *itemEmpty, CString &report, double &outD1, double &outD2, double &outD3, 
-  int &numOut, CString &retString, int &err)
+  int &numOut, CString &retString, int &err, CString *strItems)
 {
   CString mess;
-  CString strItems[4];
+  CString strItemsHere[4];
   PluginData *plugin;
   PluginCall call;
   const char *retChar;
@@ -448,7 +449,10 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   numOut = 0;
   
   // Lookup the plugin name
-  mWinApp->mParamIO->ParseString(strLine, strItems, 4);
+  if (!strItems) {
+    strItems = &strItemsHere[0];
+    mWinApp->mParamIO->ParseString(strLine, strItems, 4);
+  }
   for (plug = 0; plug < mPlugins.GetSize(); plug++) {
     plugin = mPlugins[plug];
     if (plugin->shortName == strItems[1])
@@ -492,7 +496,8 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   }
   err = 0;
   if (call.ifString)
-    mWinApp->mParamIO->StripItems(strLine, 2 + args, mess);
+    mWinApp->mMacroProcessor->JustStripItems(strLine, 2 + args, mess);
+  //mWinApp->mParamIO->StripItems(strLine, 2 + args, mess);
 
   if (call.ifString >= 0)
     args = 100 * (call.ifString ? 1 : 0) + 10 * B3DMAX(0,call.numInts) + 

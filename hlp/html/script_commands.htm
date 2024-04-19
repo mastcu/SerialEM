@@ -958,6 +958,23 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">PluginAllDoubles(name, func, [,#D, #D, #D, #D, #D, #D, #D]</TD> 
+          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with up to 7 optional 
+            floating point values.&nbsp; <b>func</b> and <b>name</b> are string arguments and <b>name</b>
+            can be ':' to use the last plugin called.&nbsp; Command added in 4.2, 19-Apr-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">PluginString(name, func, text)</TD>
+          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with the string in
+            <b>text</b>.&nbsp; Command added in 4.2, 19-Apr-24.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">PluginDoubleString(name, func, #D, text)</TD>
+          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with the floating point value
+             in <b>#D</b> and the string in <b>text</b>.&nbsp; Command added in 4.2, 19-Apr-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ConnectToSEM([#P, IP])</TD>
           <TD>When running Python externally to control SerialEM, this function can be used
             optionally as the first call to SerialEM
@@ -5883,8 +5900,9 @@
         </TR>
        <TR>
           <TD class="scriptcommand">Plugin name func [args]</TD>
-          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with appropriate
-            list of arguments for that function.&nbsp; Arguments (<b>args</b>) are entered as items
+          <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with an appropriate
+            list of arguments for that function.&nbsp; <b>name</b> may be ':' to use the same 
+            plugin as was last called.  Arguments (<b>args</b>) are entered as items
             separated by spaces, except that a string argument at the end may consist of
             multiple words.&nbsp; The return value of the function is reported and placed
             into <i>reportedValue1</i>; additional return values may be placed in <i>reportedValues2-4</i>.</TD>

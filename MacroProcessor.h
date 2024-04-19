@@ -473,6 +473,7 @@ protected:
   int mSaveCtfplotGraph;       // 1 for png, 2 for tiff to save next ctfplotter graph
   int mBufForCtfplotGraph;     // Buffer to load into when gotten (-1 not to)
   CString mCtfplotGraphName;   // FIlename to save next ctfplotter graph to
+  CString mLastPluginCalled;   // Keep track so it is easier to call again with ":"
 
 public:
   void SetNumCamMacRows(int inVal);

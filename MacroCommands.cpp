@@ -1656,8 +1656,11 @@ int CMacCmd::Plugin(void)
   int index, index2;
 
   SubstituteVariables(&mStrLine, 1, mStrLine);
+  if (mStrItems[1] == ":" && !mLastPluginCalled.IsEmpty())
+    mStrItems[1] = mLastPluginCalled;
+  mLastPluginCalled = mStrItems[1];
   delX = mWinApp->mPluginManager->ExecuteCommand(mStrLine, mItemInt, mItemDbl,
-    mItemEmpty, report, delY, delISX, delISY, index2, retString, index);
+    mItemEmpty, report, delY, delISX, delISY, index2, retString, index, &mStrItems[0]);
   if (index) {
     AbortMacro();
     return 1;
