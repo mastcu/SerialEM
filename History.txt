@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/20/24: Changed how SEM-AutoIT selects an aperture size on Windows 10 so it
+now works on Glacios (In 4.1).
+
+4/20/24: Fixed initial assignment of fallback rotation angles to go between
+mag ranges instead of leaving one range unassigned (In 4.1).
+
 4/12/24: SEM_4-1-9
 4/12/24: Set default for MaxStackWindowSizeXY to 1024 if total memory limit
 is above 5 GB (In 4.1).
