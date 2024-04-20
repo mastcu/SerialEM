@@ -3817,7 +3817,7 @@ MoveStage 0 0 -$zRange / 2.
             some tab in the Workset area of the TEM user interface.&nbsp; The tab will be 
             switched to if that panel is not currently visible.&nbsp; The UI Automation alone 
             cannot change an aperture size in Windows 7, and in some Windows 10 systems.&nbsp; 
-            In these cases, cppy the compiled AutoIT program SEM-AutoIT.exe from the 
+            In these cases, copy the compiled AutoIT program SEM-AutoIT.exe from the 
             SerialEM program package to either the directory with the SerialEM executable 
             (when running directly on the scope) or to the same location as 
             FEI-SEMserver.exe, when running through that.&nbsp; If desired, you can place 
@@ -3828,14 +3828,30 @@ MoveStage 0 0 -$zRange / 2.
         system, go to a lower magnification where you can see the objective aperture in 
         an image, and use a script command 'SetApertureSize 2 X' to change the size to 
         'X'.&nbsp; Aperture control has been found not to work on more than one Glacios and 
-        at least one Krios running WIndows 10.</p>
+        at least one Krios running Windows 10 when using the UI Automation.</p>
+      <p>By default, SEM-AutoIT will select an aperture by its index on Windows 7 and by 
+        its size on Windows 10, because selecting by index failed on some Windows 10 
+        systems (the same ones where UI Automation fails).&nbsp; The disadvantage of 
+        selecting by size is that if the size passed in does not match an available 
+        size, either no change will occur or it will select an aperture with the same 
+        starting digit, and no error message is generated.&nbsp; An environment 
+        variable, FEISEM_APERTURE_BY_SIZE, can be set on the microscope computer to 1 to 
+        make the program select by size on Windows 7, or to 0 to make it select by index 
+        on Windows 10.&nbsp; As always, restart FEI-SEMserver.exe after changing any of 
+        the relevant environment variables.</p>
       <p>The aperture operations, and 'ReportSlotStatus', will hang FEI-SEMserver.exe on 
         some Windows 7 systems, even though they work when SerialEM is running directly 
         on the scope computer. &nbsp; If this occurs, set the environment variable 
         FEISEMSERVER_AUTOMATION to 0 to prevent any automation-based operations from 
         being attempted.&nbsp; </p>
-      <p>For some Thermo/FEI server version, possibly available in April 2024, the new 
-        UTAPI scripting can be used to control the apertures.&nbsp; Access to this 
+      <p>Finally, the UI Automation uses both a &quot;Select&quot; and an &quot;Invoke&quot; call to set the 
+        aperture size because that works on most systems, but at least one site needed 
+        to have only the Select call.&nbsp; Two environment variables can be set to 
+        control whether it calls just one or both: FEISEM_NO_INVOKE_APERTURE to use just 
+        Select, or FEISEM_NO_SELECT_APERTURE to use just Invoke.</p>
+      <p>For Thermo/FEI server version 7.18.1 and higher, the new 
+        UTAPI scripting can be used to control the apertures, provided that a license is 
+        installed.&nbsp; Access to this 
         scripting is activated with a property 'UseUtapiScripting 1'.</p>
       <p>&nbsp;</p>
         <p><a name="alpha_beamshift"></a><B>Alpha and Beam Shift Calibration Issues on JEOL scopes &nbsp;</B><BR>
