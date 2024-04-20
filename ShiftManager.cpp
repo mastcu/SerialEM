@@ -2710,6 +2710,31 @@ void CShiftManager::FallbackToRotationDifferences(int actCamToDo, int & derived)
           }
         }
       }
+
+      // Pick up from nearest mag if nothing was in the mag range
+      for (iMag = limlo; iMag <= limhi; iMag++) {
+        if (magT[iMag].rotation[iCam] < 900. || !MagForCamera(iCam, iMag))
+          continue;
+        for (delta = 1; delta < MAX_MAGS && magT[iMag].rotation[iCam] > 900.; delta++) {
+          for (iDir = -1; iDir <= 1; iDir += 2) {
+            mag2 = iMag + delta * iDir;
+            if (magT[mag2].rotDerived[iCam] < derived && MagForCamera(iCam, mag2)) {
+              if (camP[iCam].STEMcamera)
+                magT[iMag].rotation[iCam] = magT[mag2].rotation[iCam];
+              else
+                magT[iMag].rotation[iCam] = GoodAngle(magT[mag2].rotation[iCam] +
+                (camP[iCam].GIF ?
+                  (magT[iMag].EFTEMtecnaiRotation - magT[mag2].EFTEMtecnaiRotation)
+                  : (magT[iMag].tecnaiRotation - magT[mag2].tecnaiRotation)));
+              magT[iMag].rotDerived[iCam] = derived + 1;
+              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by nominal diff from mag %d"
+                , iMag, iCam, magT[iMag].rotation[iCam], mag2);
+
+            }
+            break;
+          }
+        }
+      }
     }
   }
 }
