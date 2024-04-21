@@ -999,6 +999,8 @@ public:
   bool SetObjectiveStigmator(double stigX, double stigY);
   bool GetCondenserStigmator(double & stigX, double & stigY);
   bool SetCondenserStigmator(double stigX, double stigY);
+  bool GetDiffractionStigmator(double & stigX, double & stigY);
+  bool SetDiffractionStigmator(double stigX, double stigY);
   int GetXLensDeflector(int which, double &outX, double &outY);
   int SetXLensDeflector(int which, double inX, double inY);
   int GetXLensFocus(double &outX);

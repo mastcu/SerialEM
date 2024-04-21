@@ -792,6 +792,8 @@ MAC_SAME_NAME_NOARG(ReportFrameNameFormat, 0, 4, REPORTFRAMENAMEFORMAT)
 MAC_SAME_FUNC_ARG(PluginAllDoubles, 2, 1, Plugin, PLUGINALLDOUBLES, SSddddddd)
 MAC_SAME_FUNC_ARG(PluginString, 3, 1, Plugin, PLUGINSTRING, SSS)
 MAC_SAME_FUNC_ARG(PluginDoubleString, 4, 1, Plugin, PLUGINDOUBLESTRING, SSDS)
+MAC_SAME_NAME_ARG(SetDiffractionStigmator, 2, 0, SETDIFFRACTIONSTIGMATOR, DD)
+MAC_SAME_NAME_NOARG(ReportDiffractionStigmator, 0, 0, REPORTDIFFRACTIONSTIGMATOR)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

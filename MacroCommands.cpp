@@ -5752,6 +5752,21 @@ int CMacCmd::SetCondenserStigmator(void)
   return 0;
 }
 
+// SetDiffractionStigmator
+int CMacCmd::SetDiffractionStigmator(void)
+{
+  double delX, delY;
+
+  delX = mItemDbl[1];
+  delY = mItemDbl[2];
+  if (!mScope->SetDiffractionStigmator(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
+
 // ReportXLensDeflector, SetXLensDeflector, ReportXLensFocus, SetXLensFocus
 int CMacCmd::ReportXLensDeflector(void)
 {
@@ -5841,6 +5856,20 @@ int CMacCmd::ReportCondenserStigmator(void)
     return 1;
   }
   mLogRpt.Format("Condenser stigmator is %.5f %.5f", delX, delY);
+  SetRepValsAndVars(1, delX, delY);
+  return 0;
+}
+
+// ReportDiffractionStigmator
+int CMacCmd::ReportDiffractionStigmator(void)
+{
+  double delX, delY;
+
+  if (!mScope->GetDiffractionStigmator(delX, delY)) {
+    AbortMacro();
+    return 1;
+  }
+  mLogRpt.Format("Diffraction stigmator is %.5f %.5f", delX, delY);
   SetRepValsAndVars(1, delX, delY);
   return 0;
 }

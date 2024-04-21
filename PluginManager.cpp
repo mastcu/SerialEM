@@ -447,12 +447,14 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   double retval;
   err = 1;
   numOut = 0;
-  
-  // Lookup the plugin name
+
+  // Parse for strings unless they are passed in
   if (!strItems) {
     strItems = &strItemsHere[0];
     mWinApp->mParamIO->ParseString(strLine, strItems, 4);
   }
+
+  // Lookup the plugin name
   for (plug = 0; plug < mPlugins.GetSize(); plug++) {
     plugin = mPlugins[plug];
     if (plugin->shortName == strItems[1])
@@ -464,7 +466,6 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     return 0.;
   }
     
-  // Lookup the function
   for (ind = 0; ind < plugin->calls.GetSize(); ind++) {
     call = plugin->calls[ind];
     if (call.name == strItems[2])
@@ -497,7 +498,6 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
   err = 0;
   if (call.ifString)
     mWinApp->mMacroProcessor->JustStripItems(strLine, 2 + args, mess);
-  //mWinApp->mParamIO->StripItems(strLine, 2 + args, mess);
 
   if (call.ifString >= 0)
     args = 100 * (call.ifString ? 1 : 0) + 10 * B3DMAX(0,call.numInts) + 

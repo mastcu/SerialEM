@@ -3410,6 +3410,46 @@ bool CEMscope::SetCondenserStigmator(double stigX, double stigY)
   return success;
 }
 
+// Get the diffraction stigmator, range -1 to 1
+bool CEMscope::GetDiffractionStigmator(double & stigX, double & stigY)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->GetDiffractionStigmator)
+    return false;
+
+  ScopeMutexAcquire("GetDiffractionStigmator", true);
+
+  try {
+    mPlugFuncs->GetDiffractionStigmator(&stigX, &stigY);
+  }
+  catch (_com_error E) {
+    success = false;
+    SEMReportCOMError(E, _T("getting Diffraction Stigmator "));
+  }
+  ScopeMutexRelease("GetDiffractionStigmator");
+  return success;
+}
+
+// Set the diffraction stigmator
+bool CEMscope::SetDiffractionStigmator(double stigX, double stigY)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->SetDiffractionStigmator)
+    return false;
+
+  ScopeMutexAcquire("SetDiffractionStigmator", true);
+
+  try {
+    mPlugFuncs->SetDiffractionStigmator(stigX, stigY);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting Diffraction Stigmator "));
+    success = false;
+  }
+  ScopeMutexRelease("SetDiffractionStigmator");
+  return success;
+}
+
 // X LENS FUNCTIONS
 #define XLENS_ERROR_STARTUP(a) \
   int retval = 0; \
