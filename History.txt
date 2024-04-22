@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/22/24: SEM_4-2-0beta6
 4/22/24: SEM_4-1-10
 4/20/24: Changed how SEM-AutoIT selects an aperture size on Windows 10 so it
 now works on Glacios (In 4.1).
@@ -12,8 +13,8 @@ mag ranges instead of leaving one range unassigned (In 4.1).
 
 4/19/24: Added ability to call some general plugin functions from Python.
 
-4/18/24: Add script commands for reporting and setting the variable governing
-the components of the frame filename.
+4/18/24: Added script commands for reporting and setting the variable
+governing the components of the frame filename.
 
 4/18/23: Allowed hexadecimal values (starting with 0x) to be entered in script
 commands when an integer is expected, making it easier to set flag values.
