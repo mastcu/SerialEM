@@ -4,16 +4,14 @@
 
 ;#include <MsgBoxConstants.au3>
 
-Func Main()
-    If StringInStr($CmdLine[1], "aperture") Then
-       Call("Aperture", $CmdLine[2], $CmdLine[3])
-       Exit(0)
-    ElseIf StringInStr($CmdLine[1], "apBySize") Then
-       Call("ApertureBySize", $CmdLine[2], $CmdLine[3])
-       Exit(0)
-    Endif
-    Exit(1)
-EndFunc
+If StringInStr($CmdLine[1], "aperture") Then
+   Call("Aperture", $CmdLine[2], $CmdLine[3])
+   Exit(0)
+ElseIf StringInStr($CmdLine[1], "apBySize") Then
+   Call("ApertureBySize", $CmdLine[2], $CmdLine[3])
+   Exit(0)
+Endif
+Exit(1)
 
 Func Aperture($AP, $SEL)
     Local $comboNames[5]
