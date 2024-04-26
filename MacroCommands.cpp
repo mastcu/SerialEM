@@ -12420,7 +12420,7 @@ int CMacCmd::ParamSetToUseForMontage(void)
   int index = B3DABS(mItemInt[1]);
   if (index > 1 && mWinApp->LowDoseMode() && mWinApp->Montaging())
     ABORT_LINE("The parameter set to use in Low Dose mode should be selected before a "
-      "montage is opened")
+      "montage is opened in line:\n\n")
     if (index == 1)
       mMontP->useMontMapParams = mItemInt[1] > 0;
   if (index == 2) {
